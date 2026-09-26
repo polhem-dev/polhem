@@ -9,6 +9,7 @@ The first is a public document.
 | Scope | Content |
 |-------|---------|
 | Repository root | `README.md` / `README.zh-TW.md`, `CHANGELOG.md` / `CHANGELOG.zh-TW.md` |
+| `docs/changelogs/` | The detailed notes of each version behind the root changelog, `<version>.md` / `<version>.zh-TW.md` |
 | `docs/README.md` and `docs/<lang>/` | The language entry page and every `.md` under each language folder (architecture overview, API reference, database guides, glossary, development guidelines and constraints, and each language's `README.md` index) |
 | `docs/adr/` | Every ADR: the long-lived decision records, and the main source for outside readers to understand why the design is the way it is |
 | **Every** `README.md` / `README.zh-TW.md` | Wherever it is: `src/*/`, `samples/*/`, `apps/*/`, `tools/*/` |
@@ -73,7 +74,8 @@ by anyone else at all. Naming the directory to describe a convention is fine. Ma
 ### 4. Keeping languages in sync
 
 **Under `docs/`**: `docs/en/` is the source and every other language folder is a translation. The ADRs in `docs/adr/`
-pair by file name instead: `<name>.md` is the English source and `<name>.zh-TW.md` next to it is a translation. The
+and the detailed changelogs in `docs/changelogs/` pair by file name instead: `<name>.md` is the English source and
+`<name>.zh-TW.md` next to it is a translation. The
 list of languages, each one's policy (strict / partial) and the folders that pair by file name are written only in the
 header of `check-docs-i18n.sh`; they are not repeated here. That script enforces them, and the Docs Check workflow runs
 it on every push.

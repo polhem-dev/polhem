@@ -198,4 +198,4 @@ See [CONTRIBUTING.md](https://github.com/polhem-dev/polhem/blob/main/CONTRIBUTIN
 ## 📬 Contact & Follow
 You're welcome to follow my technical notes and hands-on experience sharing
 
-[Facebook](https://www.facebook.com/profile.php?id=61574839666569) ｜ [HackMD](https://hackmd.io/@jeff377) ｜ [GitHub](https://github.com/jeff377) ｜ [NuGet](https://www.nuget.org/profiles/jeff377)
+[Facebook](https://www.facebook.com/profile.php?id=61574839666569) | [HackMD](https://hackmd.io/@jeff377) | [GitHub](https://github.com/jeff377) | [NuGet](https://www.nuget.org/profiles/jeff377)

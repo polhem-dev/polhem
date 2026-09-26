@@ -27,7 +27,7 @@ TRANSLATIONS="zh-TW:strict"
 # Folders under docs/ whose documents pair by file name instead of by language folder: <name>.md is the source,
 # written in SOURCE_LANG, and <name>.<language>.md next to it is a translation. Only the files directly in the
 # folder count. The policies above apply to them in the same way.
-SUFFIX_DIRS="adr"
+SUFFIX_DIRS="adr changelogs"
 
 # The label on the language switch line is always the language's own name (autonym). A new language is added
 # both here and to TRANSLATIONS.

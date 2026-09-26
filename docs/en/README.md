@@ -81,6 +81,7 @@ Look things up while you work.
 | Folder | Description |
 |--------|-------------|
 | [`adr/`](../adr/README.md) | Architecture Decision Records — the primary source for *why* a design is the way it is. The index lists every ADR with its status (accepted / superseded) |
+| [`changelogs/`](../changelogs/) | Per-version change detail behind the root `CHANGELOG.md` |
 
 ---
 

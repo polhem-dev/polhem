@@ -1,4 +1,4 @@
-<!-- source: en/README.md blob: 414755ffb5401ec796fce2836297860719e75cea -->
+<!-- source: en/README.md blob: 2a854b97d77c7e827e1f3560da0710e781ca415b -->
 # Polhem 文件
 
 [English](../en/README.md)
@@ -82,6 +82,7 @@
 | 目錄 | 說明 |
 |------|------|
 | [`adr/`](../adr/README.zh-TW.md) | 架構決策紀錄 —— 理解「為何這樣設計」的主要來源。索引列出全部 ADR 與其狀態（已採納 / 已取代） |
+| [`changelogs/`](../changelogs/) | 根 `CHANGELOG.zh-TW.md` 背後的逐版變更明細 |
 
 ---
 
