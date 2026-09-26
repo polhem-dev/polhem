@@ -164,6 +164,10 @@ namespace Polhem.Hosting
             //       check worth failing before anything else comes up.
             services.AddHostedService<Registry.ReservedProgIdRegistrationService>();
 
+            // 6b-3. Startup warning naming the forms that declare no permission model, which every
+            //       authenticated user of the company can read and write. Logs only; never fails.
+            services.AddHostedService<Registry.UnguardedFormWarningService>();
+
             // 6c. Cache-notify polling hosted service. The poller publishes observed versions to
             //     CacheInfo.NotifyVersions; each cache entry carrying a matching ChangeNotifyKey
             //     expires on its next read. The poller is only registered when enabled; hosts without

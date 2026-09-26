@@ -106,7 +106,10 @@ namespace Polhem.Api.Core.UnitTests.Form
             Assert.NotNull(stubRepository.LastSortFields);
             Assert.Single(stubRepository.LastSortFields!);
             Assert.Equal("sys_id", stubRepository.LastSortFields![0].FieldName);
-            Assert.Null(stubRepository.LastPaging);
+            // A request without paging reaches the repository as the first page of the framework cap.
+            Assert.NotNull(stubRepository.LastPaging);
+            Assert.Equal(1, stubRepository.LastPaging!.Page);
+            Assert.Equal(PagingOptions.MaxPageSize, stubRepository.LastPaging.PageSize);
         }
 
         [Fact]

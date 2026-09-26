@@ -1,1 +1,2 @@
 #nullable enable
+virtual Polhem.Business.Form.FormBusinessObject.LookupAppliesRecordScope.get -> bool

@@ -68,13 +68,6 @@ namespace Polhem.Repository.Form
             _schema = schema ?? throw new ArgumentNullException(nameof(schema));
         }
 
-        /// <summary>
-        /// The framework-wide upper bound for <see cref="PagingOptions.PageSize"/>.
-        /// Values above this cap are clamped on the server to prevent callers from
-        /// accidentally loading huge result sets (for example via <c>int.MaxValue</c>).
-        /// </summary>
-        private const int MaxPageSize = 1000;
-
         /// <inheritdoc/>
         public DataFormListResult GetList(
             string selectFields,
@@ -102,7 +95,9 @@ namespace Polhem.Repository.Form
             // Paged path: clamp PageSize, supply a deterministic ORDER BY, run optional
             // COUNT, then the paged SELECT. When IncludeTotalCount is false we take an
             // extra probe row (PageSize + 1) to compute HasMore without a COUNT round-trip.
-            var pageSize = Math.Clamp(paging.PageSize, 1, MaxPageSize);
+            // Clamped so a caller cannot load a huge result set through the page size (for example
+            // `int.MaxValue`).
+            var pageSize = Math.Clamp(paging.PageSize, 1, PagingOptions.MaxPageSize);
             var page = Math.Max(paging.Page, 1);
             var skip = (page - 1) * pageSize;
 

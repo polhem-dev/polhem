@@ -29,8 +29,8 @@ namespace Polhem.Api.Core.Messages.Form
         public SortFieldCollection? SortFields { get; set; }
 
         /// <summary>
-        /// Gets or sets the paging options; <c>null</c> means the query is unpaged and
-        /// returns every matching row.
+        /// Gets or sets the paging options; <c>null</c> is served as the first page of
+        /// <see cref="Polhem.Definition.Paging.PagingOptions.MaxPageSize"/> rows.
         /// </summary>
         public PagingOptions? Paging { get; set; }
     }

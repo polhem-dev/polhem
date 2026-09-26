@@ -1,1 +1,3 @@
 #nullable enable
+Polhem.Db.Manager.ConnectionStringTemplate
+static Polhem.Db.Manager.ConnectionStringTemplate.Resolve(string! template, string! dbName, string! userId, string! password) -> string!

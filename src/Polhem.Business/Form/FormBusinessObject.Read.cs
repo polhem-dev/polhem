@@ -26,11 +26,20 @@ namespace Polhem.Business.Form
         /// </summary>
         /// <param name="args">The input arguments.</param>
         /// <remarks>
-        /// When <see cref="GetListArgs.Paging"/> is <c>null</c> the query is unpaged
-        /// and callers should supply a <c>Filter</c> that bounds the result set,
-        /// otherwise an unbounded query against a large table loads every matching
-        /// row into memory on both the server and the client. Set <c>Paging</c> to
-        /// page through large result sets.
+        /// <para>
+        /// When <see cref="GetListArgs.Paging"/> is <c>null</c> the call is served as the first page of
+        /// <see cref="PagingOptions.MaxPageSize"/> rows, so no request reads a whole table. The result
+        /// then carries <see cref="GetListResult.Paging"/>, whose <see cref="PagingInfo.HasMore"/> tells
+        /// the caller that rows were left out. Set <c>Paging</c> to page through larger result sets.
+        /// </para>
+        /// <para>
+        /// A paged read needs a deterministic order: without <see cref="GetListArgs.SortFields"/> the
+        /// master table's <c>sys_no</c> is used, and a table without one requires an explicit sort.
+        /// </para>
+        /// <para>
+        /// Filter and sort fields must be fields the form's table declares; any other name, and any
+        /// <see cref="Polhem.Definition.ProtectedFields"/> column, is refused.
+        /// </para>
         /// </remarks>
         [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated)]
         public virtual GetListResult GetList(GetListArgs args)
@@ -39,8 +48,9 @@ namespace Polhem.Business.Form
             Authorize(PermissionAction.Read);
 
             var filter = CombineWithScope(args.Filter, ResolveScopeFilter(PermissionAction.Read));
+            var paging = args.Paging ?? new PagingOptions { PageSize = PagingOptions.MaxPageSize };
             var repository = CreateDataFormRepository(ProgId);
-            var listResult = repository.GetList(args.SelectFields, filter, args.SortFields, args.Paging);
+            var listResult = repository.GetList(args.SelectFields, filter, args.SortFields, paging);
 
             return new GetListResult
             {
@@ -57,13 +67,24 @@ namespace Polhem.Business.Form
         /// </summary>
         /// <param name="args">The input arguments.</param>
         /// <remarks>
+        /// <para>
         /// Unlike <see cref="GetList"/>, this action is intentionally not gated by the
         /// form's <c>Read</c> permission: a user who may not browse the target form's
         /// list still needs to pick a reference value from it. Exposure is bounded by
-        /// the <see cref="FormSchema.LookupFields"/> declaration. Override
-        /// <see cref="GetLookupFilter"/> to constrain the candidate rows (e.g. active
-        /// records only). When <see cref="GetLookupArgs.Paging"/> is <c>null</c> a
+        /// the <see cref="FormSchema.LookupFields"/> declaration.
+        /// </para>
+        /// <para>
+        /// Record scope still applies: the candidates are limited to the rows the caller's
+        /// <c>Read</c> scope on the form's permission model covers, the same rows
+        /// <see cref="GetList"/> would return. A caller with no <c>Read</c> grant on that model
+        /// therefore sees no candidates. A business object whose lookup must offer every row
+        /// opts out by overriding <see cref="LookupAppliesRecordScope"/>.
+        /// </para>
+        /// <para>
+        /// Override <see cref="GetLookupFilter"/> to constrain the candidate rows further (e.g.
+        /// active records only). When <see cref="GetLookupArgs.Paging"/> is <c>null</c> a
         /// default page size of 100 is applied.
+        /// </para>
         /// </remarks>
         [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated)]
         public virtual GetLookupResult GetLookup(GetLookupArgs args)
@@ -75,8 +96,8 @@ namespace Polhem.Business.Form
             var selectFields = string.Join(",",
                 lookupFields.Select(f => f.FieldName).Prepend(SysFields.RowId));
             var filter = CombineWithScope(
-                BuildLookupSearchFilter(lookupFields, args.SearchText),
-                GetLookupFilter());
+                CombineWithScope(BuildLookupSearchFilter(lookupFields, args.SearchText), GetLookupFilter()),
+                LookupAppliesRecordScope ? ResolveScopeFilter(PermissionAction.Read) : null);
             var paging = args.Paging ?? new PagingOptions { PageSize = DefaultLookupPageSize };
 
             var repository = CreateDataFormRepository(ProgId);
@@ -95,6 +116,24 @@ namespace Polhem.Business.Form
         /// a non-null filter is AND-combined with the search filter.
         /// </summary>
         protected virtual FilterNode? GetLookupFilter() => null;
+
+        /// <summary>
+        /// Gets whether <see cref="GetLookup"/> limits its candidates to the caller's <c>Read</c>
+        /// record scope. The default is <c>true</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Override and return <c>false</c> only for a form whose rows every user may pick, whatever
+        /// record scope they have — a shared master such as a unit or currency list. The lookup then
+        /// returns every row that <see cref="GetLookupFilter"/> and the search text admit, to any
+        /// authenticated caller, including rows outside the caller's own, department or subtree scope.
+        /// </para>
+        /// <para>
+        /// A form without a permission model has no record scope, so this setting makes no difference
+        /// to it.
+        /// </para>
+        /// </remarks>
+        protected virtual bool LookupAppliesRecordScope => true;
 
         /// <summary>
         /// Builds the OR-combined LIKE filter that matches <paramref name="searchText"/>

@@ -28,6 +28,7 @@ namespace Polhem.Business.Form
         /// <code>
         /// NormalizeDateTimes  outside the transaction
         /// DoBeforeSave        outside the transaction
+        /// new-value scope     outside the transaction
         /// DoSave              INSIDE the transaction
         /// change audit        outside the transaction
         /// DoAfterSave         outside the transaction
@@ -36,6 +37,14 @@ namespace Polhem.Business.Form
         /// Customise by overriding one of those three, not this method: the authorization and
         /// write-scope checks above them live here, and an override that replaces this method takes
         /// them over as well.
+        /// </para>
+        /// <para>
+        /// On a form with a permission model, record scope is checked twice. Before anything runs, every
+        /// stored row the save updates or deletes must be inside the caller's scope. After
+        /// <c>DoBeforeSave</c> and the <c>BeforeSave</c> plugins, the values a new or changed master
+        /// row is about to store must be inside the caller's Create or Update scope, so a save does not
+        /// assign a record to an owner or department the caller could not reach. Both are covered by
+        /// <c>FormBusinessObjectWriteScopeTests</c>.
         /// </para>
         /// <para>
         /// Because the audit write sits outside the transaction, a record can persist while its
@@ -81,6 +90,10 @@ namespace Polhem.Business.Form
             // Plugins run after the step's final implementation — which may be an override in a
             // custom business object — so both extension routes can be used together.
             plugins.RunBeforeSave(context);
+
+            // Layer-2 record scope on the values being stored. After BeforeSave, so the owner and
+            // department values checked are the ones defaults and plugins leave behind.
+            EnforceNewValueScope(args.DataSet);
 
             // Capture the change set (before/after) and the master key/kind before persistence,
             // because the ADO.NET adapter calls AcceptChanges on success and discards RowState /

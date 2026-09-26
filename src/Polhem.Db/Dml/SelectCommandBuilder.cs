@@ -37,6 +37,10 @@ namespace Polhem.Db.Dml
         /// <param name="sortFields">The sort field collection.</param>
         /// <param name="skip">Rows to skip; null means no offset.</param>
         /// <param name="take">Rows to take; null means no row limit.</param>
+        /// <exception cref="InvalidOperationException">
+        /// A select, filter or sort field is not declared by the table, has no column to read, or is a
+        /// <see cref="Polhem.Definition.ProtectedFields"/> column.
+        /// </exception>
         /// <remarks>
         /// When paging is requested without a sort, the resulting SQL may fail on
         /// dialects that require ORDER BY with OFFSET/FETCH (SQL Server, Oracle).
@@ -55,6 +59,7 @@ namespace Polhem.Db.Dml
                 throw new InvalidOperationException($"Cannot find the specified table: {tableName}");
 
             var selectContext = GetSelectContext(formTable, selectFields, filter, sortFields);
+            SelectFieldGuard.ValidateFilterAndSort(formTable, filter, sortFields, selectContext);
 
             var sqlParts = new List<string>
             {
@@ -91,6 +96,10 @@ namespace Polhem.Db.Dml
         /// </summary>
         /// <param name="tableName">The table name.</param>
         /// <param name="filter">The filter condition.</param>
+        /// <exception cref="InvalidOperationException">
+        /// A filter field is not declared by the table, has no column to read, or is a
+        /// <see cref="Polhem.Definition.ProtectedFields"/> column.
+        /// </exception>
         public DbCommandSpec BuildCount(string tableName, FilterNode? filter = null)
         {
             if (string.IsNullOrWhiteSpace(tableName))
@@ -101,6 +110,7 @@ namespace Polhem.Db.Dml
                 throw new InvalidOperationException($"Cannot find the specified table: {tableName}");
 
             var selectContext = GetCountContext(formTable, filter);
+            SelectFieldGuard.ValidateFilterAndSort(formTable, filter, null, selectContext);
 
             var sqlParts = new List<string>
             {

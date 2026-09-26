@@ -313,12 +313,14 @@ namespace Polhem.Db.Providers.SqlServer
             {
                 case "CHAR":
                 case "VARCHAR":
-                    defaultValue = defaultValue.LeftRightCut("('", "')");
+                    // The emitted literal doubles embedded quotes (`SqlSchemaSyntax.EscapeSqlString`),
+                    // so undo that here or a default containing a quote never compares equal.
+                    defaultValue = defaultValue.LeftRightCut("('", "')").Replace("''", "'", StringComparison.Ordinal);
                     break;
                 case "NCHAR":
                 case "NVARCHAR":
                     defaultValue = defaultValue.LeftRightCut("(N'", "')");
-                    defaultValue = defaultValue.LeftRightCut("('", "')");
+                    defaultValue = defaultValue.LeftRightCut("('", "')").Replace("''", "'", StringComparison.Ordinal);
                     break;
                 case "BIT":
                 case "INT":

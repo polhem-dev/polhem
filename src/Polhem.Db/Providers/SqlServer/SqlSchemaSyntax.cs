@@ -126,11 +126,11 @@ namespace Polhem.Db.Providers.SqlServer
                 case FieldDbType.String:
                 case FieldDbType.Text:
                 case FieldDbType.Time:
-                    return StringUtilities.Format("N'{0}'", StringUtilities.IsEmpty(field.DefaultValue) ? originalDefaultValue : field.DefaultValue);
+                    return StringUtilities.Format("N'{0}'", StringUtilities.IsEmpty(field.DefaultValue) ? originalDefaultValue : EscapeSqlString(field.DefaultValue));
                 case FieldDbType.AutoIncrement:
                     return string.Empty;
                 default:
-                    return StringUtilities.IsEmpty(field.DefaultValue) ? originalDefaultValue : field.DefaultValue;
+                    return StringUtilities.IsEmpty(field.DefaultValue) ? originalDefaultValue : DefaultValueLiteral.Require(field);
             }
         }
 

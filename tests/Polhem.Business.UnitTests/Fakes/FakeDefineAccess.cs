@@ -29,7 +29,10 @@ namespace Polhem.Business.UnitTests.Fakes
         public SystemSettings GetSystemSettings() => throw new NotImplementedException();
         public void SaveSystemSettings(SystemSettings settings) => throw new NotImplementedException();
         public void SaveDatabaseSettings(DatabaseSettings settings) => throw new NotImplementedException();
-        public ProgramSettings GetProgramSettings() => throw new NotImplementedException();
+        /// <summary>The type registry returned by <see cref="GetProgramSettings"/>; empty by default.</summary>
+        public ProgramSettings ProgramSettings { get; set; } = new ProgramSettings();
+
+        public ProgramSettings GetProgramSettings() => ProgramSettings;
         public void SaveProgramSettings(ProgramSettings settings) => throw new NotImplementedException();
         public DbCategorySettings GetDbCategorySettings() => throw new NotImplementedException();
         public void SaveDbCategorySettings(DbCategorySettings settings) => throw new NotImplementedException();

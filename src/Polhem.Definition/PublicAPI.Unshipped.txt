@@ -1,1 +1,2 @@
 #nullable enable
+const Polhem.Definition.Paging.PagingOptions.MaxPageSize = 1000 -> int

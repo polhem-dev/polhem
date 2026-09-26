@@ -167,6 +167,10 @@ namespace Polhem.Api.Client
         /// <summary>
         /// Asynchronously gets the system settings.
         /// </summary>
+        /// <remarks>
+        /// Server-side definition: this succeeds on a local connection (tooling) and is rejected on a
+        /// remote one. The server serves remote callers only the definition types clients render from.
+        /// </remarks>
         public Task<SystemSettings> GetSystemSettingsAsync()
         {
             return GetDefineAsync<SystemSettings>(DefineType.SystemSettings);
@@ -175,6 +179,10 @@ namespace Polhem.Api.Client
         /// <summary>
         /// Asynchronously gets the database settings.
         /// </summary>
+        /// <remarks>
+        /// Server-side definition: this succeeds on a local connection (tooling) and is rejected on a
+        /// remote one. The server serves remote callers only the definition types clients render from.
+        /// </remarks>
         public Task<DatabaseSettings> GetDatabaseSettingsAsync()
         {
             return GetDefineAsync<DatabaseSettings>(DefineType.DatabaseSettings);
@@ -185,9 +193,7 @@ namespace Polhem.Api.Client
         /// </summary>
         /// <remarks>
         /// Server-side definition: this succeeds on a local connection (tooling) and is rejected
-        /// on a remote one, alongside <see cref="GetSystemSettingsAsync"/> and
-        /// <see cref="GetDatabaseSettingsAsync"/>. A shell wanting navigation calls
-        /// <see cref="GetMenuSettingsAsync"/> instead.
+        /// on a remote one. A shell wanting navigation calls <see cref="GetMenuSettingsAsync"/> instead.
         /// </remarks>
         public Task<ProgramSettings> GetProgramSettingsAsync()
         {
@@ -206,6 +212,10 @@ namespace Polhem.Api.Client
         /// <summary>
         /// Asynchronously gets the permission model registry.
         /// </summary>
+        /// <remarks>
+        /// Server-side definition: this succeeds on a local connection (tooling) and is rejected on a
+        /// remote one. The server serves remote callers only the definition types clients render from.
+        /// </remarks>
         public Task<PermissionModels> GetPermissionModelsAsync()
         {
             return GetDefineAsync<PermissionModels>(DefineType.PermissionModels);
@@ -214,6 +224,10 @@ namespace Polhem.Api.Client
         /// <summary>
         /// Asynchronously gets the database category settings.
         /// </summary>
+        /// <remarks>
+        /// Server-side definition: this succeeds on a local connection (tooling) and is rejected on a
+        /// remote one. The server serves remote callers only the definition types clients render from.
+        /// </remarks>
         public Task<DbCategorySettings> GetDbCategorySettingsAsync()
         {
             return GetDefineAsync<DbCategorySettings>(DefineType.DbCategorySettings);
@@ -224,6 +238,10 @@ namespace Polhem.Api.Client
         /// </summary>
         /// <param name="categoryId">The database category id.</param>
         /// <param name="tableName">The table name.</param>
+        /// <remarks>
+        /// Server-side definition: this succeeds on a local connection (tooling) and is rejected on a
+        /// remote one. The server serves remote callers only the definition types clients render from.
+        /// </remarks>
         public Task<TableSchema> GetTableSchemaAsync(string categoryId, string tableName)
         {
             return GetDefineAsync<TableSchema>(DefineType.TableSchema, new string[] { categoryId, tableName });

@@ -26,8 +26,13 @@ namespace Polhem.Db.Dml
         /// <param name="formTable">The form table.</param>
         /// <param name="selectFields">A comma-separated string of field names to retrieve; an empty string retrieves all fields.</param>
         /// <param name="selectContext">The field source mappings and table JOIN relationships for the query.</param>
+        /// <exception cref="InvalidOperationException">
+        /// A named field does not exist in the table, or is a <see cref="Polhem.Definition.ProtectedFields"/> column.
+        /// An empty <paramref name="selectFields"/> leaves protected columns out instead.
+        /// </exception>
         public string Build(FormTable formTable, string selectFields, SelectContext selectContext)
         {
+            bool allFields = string.IsNullOrWhiteSpace(selectFields);
             var selectFieldNames = GetSelectFields(formTable, selectFields);
             var selectParts = new List<string>();
             foreach (var fieldName in selectFieldNames)
@@ -35,6 +40,18 @@ namespace Polhem.Db.Dml
                 var field = formTable.Fields!.GetOrDefault(fieldName);
                 if (field == null)
                     throw new InvalidOperationException($"Field '{fieldName}' does not exist in table '{formTable.TableName}'.");
+
+                // "Every field" means every field the caller may read: a protected column is left out
+                // rather than refused, so a form that declares one still loads. Naming it is refused.
+                if (allFields)
+                {
+                    if (SelectFieldGuard.IsProtected(formTable, field, selectContext)) { continue; }
+                }
+                else
+                {
+                    SelectFieldGuard.RequireSelectable(formTable, field, selectContext);
+                }
+
                 if (field.Type == FieldType.DbField)
                 {
                     selectParts.Add($"    A.{QuoteIdentifier(fieldName)}");

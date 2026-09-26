@@ -108,13 +108,15 @@ namespace Polhem.Api.Client.Connectors
         /// </param>
         /// <param name="filter">The filter condition tree; <c>null</c> for an unfiltered query.</param>
         /// <param name="sortFields">The sort field collection; <c>null</c> uses the default ordering.</param>
-        /// <param name="paging">The paging options; <c>null</c> returns every matching row.</param>
+        /// <param name="paging">
+        /// The paging options; <c>null</c> is served as the first page of
+        /// <see cref="PagingOptions.MaxPageSize"/> rows.
+        /// </param>
         /// <remarks>
-        /// When <paramref name="paging"/> is <c>null</c> callers should supply a
-        /// <paramref name="filter"/> that bounds the result set, otherwise an
-        /// unbounded query against a large table loads every matching row into memory
-        /// on both the server and the client. Pass a <see cref="PagingOptions"/> to
-        /// page through large result sets.
+        /// The server never returns more than <see cref="PagingOptions.MaxPageSize"/> rows in one
+        /// response. When the response's paging metadata reports more rows, pass a
+        /// <see cref="PagingOptions"/> to page through them, or narrow the result with
+        /// <paramref name="filter"/>.
         /// </remarks>
         public virtual async Task<GetListResponse> GetListAsync(
             string selectFields = "",
