@@ -1,4 +1,4 @@
-<!-- source: en/development-cookbook.md blob: 8bc2fa4c7aa1cba2ff93a8063a2a277b60c7d507 -->
+<!-- source: en/development-cookbook.md blob: 19634091b8a385e169373f452017da7a30260bda -->
 # 端到端開發指引
 
 [English](../en/development-cookbook.md) · [← 文件索引](README.md)

@@ -299,7 +299,7 @@ var repo = new MonthlySalesReportRepo(Services.GetRequiredService<IDbAccessFacto
 | `Log` | Fixed `"log"` | No (Login / Logout etc. can write audit log pre-EnterCompany) |
 | `Company` | `SessionInfo.CompanyId` → `CompanyInfo.CompanyDatabaseId` | Yes — throws `UnauthorizedAccessException` / `CompanyNotEntered` if not ready |
 
-See [ADR-010 §「後續延伸：執行時路由」](../adr/adr-010-logical-database-category.md) for the routing design and [ADR-012](../adr/adr-012-session-company-context.md) for the session lifecycle that drives `DbScope.Company`.
+See [ADR-010 § "Later extension: runtime routing"](../adr/adr-010-logical-database-category.md) for the routing design and [ADR-012](../adr/adr-012-session-company-context.md) for the session lifecycle that drives `DbScope.Company`.
 
 ### Customising the BO for a ProgId
 

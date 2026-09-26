@@ -1,4 +1,4 @@
-<!-- source: en/database-settings-guide.md blob: 041aab71f4bdc2abea0eec521905dd6907a88ed4 -->
+<!-- source: en/database-settings-guide.md blob: 2d765c2008f9e135e984aad73abb99cfa1367b74 -->
 # DatabaseSettings 與 DbCategorySettings 指引
 
 [English](../en/database-settings-guide.md) · [← 文件索引](README.md)

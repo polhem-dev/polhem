@@ -411,7 +411,7 @@ Application code chooses `databaseId` based on "which logical category the data 
 
 Regardless of the underlying scenario, the application always uses the same entry `IDatabaseSettingsProvider.GetItem(databaseId)`; the only difference is "how to derive the databaseId string from the current context".
 
-For bo repos (the BO-layer Repositories) the framework provides `IRepositoryDatabaseRouter` (see [ADR-010 §「後續延伸：執行時路由」](../adr/adr-010-logical-database-category.md)) so that BO code does not have to derive the databaseId by hand:
+For bo repos (the BO-layer Repositories) the framework provides `IRepositoryDatabaseRouter` (see [ADR-010 § "Later extension: runtime routing"](../adr/adr-010-logical-database-category.md)) so that BO code does not have to derive the databaseId by hand:
 
 | Source | How the databaseId is derived |
 |--------|------------------------------|
