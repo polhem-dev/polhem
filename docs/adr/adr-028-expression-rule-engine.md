@@ -1,55 +1,108 @@
-# ADR-028：自訂運算式與規則引擎（減少 BO 手寫程式碼）
+# ADR-028: Custom expressions and a rule engine (less hand-written BO code)
 
-## 狀態
+[繁體中文](adr-028-expression-rule-engine.zh-TW.md)
 
-已採納（2026-07-09）
+## Status
 
-> **組件配置已由 [ADR-038](adr-038-definition-dependency-boundary.md) 修訂（2026-08-11）**：
-> `IExpressionEvaluator` / `ExpressionPolicy` / `ExpressionEvaluationException` 三個抽象型別
-> 移至 `Polhem.Base.Expressions`，`Polhem.Expressions` 只留 `DynamicExpressoEvaluator`。
-> 本 ADR 的求值語意、`FormExpressionCalculator` 留在定義層、以及 client/server 共用
-> 單一實作的結論**均不變**——變的只是抽象與實作分居兩個組件。
+Accepted (2026-07-09)
 
-## 背景
+> **The assembly layout was revised by [ADR-038](adr-038-definition-dependency-boundary.md) (2026-08-11)**:
+> the three abstract types `IExpressionEvaluator` / `ExpressionPolicy` / `ExpressionEvaluationException`
+> moved to `Polhem.Base.Expressions`, and `Polhem.Expressions` keeps only `DynamicExpressoEvaluator`.
+> This ADR's evaluation semantics, `FormExpressionCalculator` staying in the definition layer, and the conclusion that
+> client and server share a single implementation **are all unchanged**; the only change is that the abstraction and
+> the implementation live in two assemblies.
 
-業務邏輯中大量「欄位運算」與「存檔/刪除前檢查」原本必須在自訂 BO 以 C# 手寫：連「金額 = 單價 × 數量」這種一行公式也要開一個 BO 覆寫 `Save`。痛點有二——樣板碼多、且**客戶無法自訂**（改一條驗證條件就要改程式、重編、重佈）。
+## Context
 
-目標是讓這類邏輯改以**宣告式運算式**存在 `FormSchema` 定義檔，客戶於設計期即可自訂：
+Much of the business logic, "field calculations" and "checks before save/delete", used to have to be hand-written in
+C# in a custom BO: even a one-line formula like "amount = unit price × quantity" meant creating a BO that overrides
+`Save`. There were two pain points: a lot of boilerplate, and **customers could not customize it** (changing one
+validation condition meant changing code, recompiling and redeploying).
 
-- **欄位運算**：計算欄（`金額 = 單價 * 數量`），存檔前重算回填。
-- **存檔前驗證 / 刪除前檢查**：條件不通過顯示訊息、中斷動作。
-- **欄位預設值運算式**：新增資料時以運算式產生預設值。
+The goal is to have this kind of logic live as **declarative expressions** in the `FormSchema` definition file, so
+customers can customize it at design time:
 
-此能力橫跨定義層（`Polhem.Definition`）、新求值引擎（`Polhem.Expressions`）與商業邏輯層（`Polhem.Business`），是框架對外 API surface 的結構性契約，故立此 ADR。使用者指引見 `docs/zh-TW/expression-rules.md`。
+- **Field calculations**: computed fields (`Amount = UnitPrice * Quantity`), recomputed and filled in before save.
+- **Validation before save / checks before delete**: when a condition fails, show a message and abort the action.
+- **Field default value expressions**: when adding data, produce the default value with an expression.
 
-## 考慮過的選項
+This capability spans the definition layer (`Polhem.Definition`), a new evaluation engine (`Polhem.Expressions`) and
+the business logic layer (`Polhem.Business`), and is a structural contract of the framework's external API surface,
+hence this ADR. The user guide is `docs/en/expression-rules.md`.
 
-1. **求值引擎自研 mini parser**：完全可控、零外部相依。**否決**——重造輪子、維運成本高。改採 **DynamicExpresso**（`DynamicExpresso.Core`，MIT）：C# 語法子集直譯器、預設不曝露任何型別（未註冊識別字於 parse 期即報錯，天然沙箱）、可 parse-once 編譯成 delegate 快取。比 Roslyn Scripting 輕、比 NCalc 更貼近 C# 語法。
+## Options considered
 
-2. **前端為權威、或前後端各自實作運算**：欄位運算在 UI 即時算完直接送存。**否決**——資料完整性不能託付前端（可被竄改/算錯）。採**後端為唯一權威**：存檔前後端一定依 schema 重算並覆蓋前端送來的計算欄值；前端即時運算是純 UX 預覽。
+1. **A home-made mini parser as the evaluation engine**: fully under control, zero external dependencies.
+   **Rejected**: reinventing the wheel, high maintenance cost. **DynamicExpresso** (`DynamicExpresso.Core`, MIT) is
+   used instead: an interpreter for a subset of C# syntax that exposes no types by default (an unregistered identifier
+   is an error at parse time, a natural sandbox), and can parse once and compile to a delegate for caching. Lighter
+   than Roslyn Scripting, and closer to C# syntax than NCalc.
 
-3. **捨入在運算式引擎內自建（依 `DbField.Scale`）**：就近處理。**否決**——`DbField.Scale` 是建表 DDL 精度，與業務捨入是兩套系統（見 ADR-026）。計算欄數值結果**委派既有 `NumberFormatResolver.RoundByKind`**（依 `NumberKind`），免費繼承公司/幣別/單位可調位數與 round-then-sum；引擎本身只算全精度、對 NumberKind 無知，保持可攜。
+2. **The frontend is authoritative, or frontend and backend each implement the calculations**: field calculations are
+   done live in the UI and sent straight to save. **Rejected**: data integrity cannot be entrusted to the frontend (it
+   can be tampered with / miscalculate). **The backend is the only authority**: before saving, the backend always
+   recomputes from the schema and overwrites the computed field values sent by the frontend; the frontend's live
+   calculation is purely a UX preview.
 
-4. **子類別覆寫整個 `Save`（現況）**：沿用既有擴充方式。**否決**——「override 整包 `Save`」讓框架日後擴增功能與子類覆寫互相打架，且每個自訂點都要重抄授權/稽核樣板。改把 `Save`/`Delete` 重構為**模板方法**（見下）。
+3. **Build rounding into the expression engine (by `DbField.Scale`)**: handle it where it happens. **Rejected**:
+   `DbField.Scale` is the DDL precision for creating tables, and business rounding is a separate system (see ADR-026).
+   Numeric results of computed fields are **delegated to the existing `NumberFormatResolver.RoundByKind`** (by
+   `NumberKind`), inheriting for free the company/currency/unit adjustable decimals and round-then-sum; the engine
+   itself only computes at full precision and knows nothing of NumberKind, which keeps it portable.
 
-5. **`FormRule` 適用性用內嵌蘊含式（`!When || Condition`）**：少一個欄位。**否決**——蘊含式對客戶/顧問設定者易靜默寫反。改用結構化的選填 `When`（適用條件）+ `Condition`（驗證條件）兩段式，並取名 `When`（對齊 .NET FluentValidation `.When()`，避開 Design-by-Contract 中「precondition 不成立＝錯誤」的語意落差）。
+4. **Subclasses override the whole `Save` (the current state)**: keep the existing way of extending. **Rejected**:
+   "overriding the whole `Save`" makes future framework features and subclass overrides fight each other, and every
+   customization point has to copy the authorization/audit boilerplate again. Instead `Save`/`Delete` are refactored
+   into **template methods** (see below).
 
-## 決策
+5. **`FormRule` applicability through an inline implication (`!When || Condition`)**: one field fewer. **Rejected**:
+   an implication is easy for customers / consultants configuring it to get silently backwards. A structured two-part
+   form is used instead, an optional `When` (the applicability condition) + `Condition` (the validation condition),
+   named `When` (aligned with .NET FluentValidation's `.When()`, avoiding the semantic mismatch with Design by
+   Contract, where "a precondition that does not hold = an error").
 
-- **定義層**：`FormField` 新增 `ValueExpression`（計算欄）、`DefaultValueExpression`（預設值運算式）；`FormSchema` 新增 `FormRule` 集合（`When` / `Condition` / `Message` / `Trigger`＝`BeforeSave`｜`BeforeDelete` / `TargetTable` / `Enabled` / `Order`）。`FormSchema` 以 **XML 為唯一傳輸序列化路徑**（後端 `XmlCodec.Serialize` → 前端 `XmlCodec.Deserialize`）。
+## Decision
 
-- **求值引擎（`Polhem.Expressions`，可攜共用）**：只依賴 `Polhem.Base` + DynamicExpresso，無 server-only 相依，供後端 BO 與未來前端共用同一引擎與同一 `ExpressionPolicy`（型別對映、`DBNull`→型別預設 0/空），確保前端預覽值 = 後端存檔值。沙箱只曝露欄位變數 + 白名單函式（`Today`/`Now`/`IsNullOrEmpty`）+ `Guid`。
+- **Definition layer**: `FormField` gains `ValueExpression` (computed field) and `DefaultValueExpression` (default
+  value expression); `FormSchema` gains a `FormRule` collection (`When` / `Condition` / `Message` / `Trigger` =
+  `BeforeSave` | `BeforeDelete` / `TargetTable` / `Enabled` / `Order`). `FormSchema` uses **XML as the only transport
+  serialization path** (backend `XmlCodec.Serialize` → frontend `XmlCodec.Deserialize`).
 
-- **BO 生命週期（模板方法）**：`FormBusinessObject.Save`/`Delete` 重構為編排層——授權（`AuthorizeSave`）、記錄範圍（`EnforceWriteScope`）、稽核**固定不可覆寫**；中間開 `DoBeforeSave`/`DoSave`/`DoAfterSave`（及 Delete 對應）三個 `protected virtual` 覆寫點。基底 `DoBeforeSave` 依 schema 自動套用預設值 → 計算欄（委派 `RoundByKind` 捨入）→ `BeforeSave` 驗證；一般 CRUD 表單**零 BO 程式碼**。子類覆寫 `Do*` 時先呼叫 `base.Do*` 再疊自訂。
+- **Evaluation engine (`Polhem.Expressions`, portable and shared)**: depends only on `Polhem.Base` + DynamicExpresso,
+  with no server-only dependencies, so that backend BOs and a future frontend share the same engine and the same
+  `ExpressionPolicy` (type mapping, `DBNull`→the type's default 0/empty), ensuring the frontend preview value = the
+  backend saved value. The sandbox exposes only the field variables + whitelisted functions
+  (`Today`/`Now`/`IsNullOrEmpty`) + `Guid`.
 
-- **後端為權威**：前端即時運算（Phase 2，首要 Avalonia）為 UX 加分；存檔以後端重算為準，前端算不了（AOT 邊界）最壞退回無預覽、正確性不受影響。
+- **BO lifecycle (template methods)**: `FormBusinessObject.Save`/`Delete` are refactored into an orchestration layer.
+  Authorization (`AuthorizeSave`), record scope (`EnforceWriteScope`) and auditing are **fixed and cannot be
+  overridden**; in between there are three `protected virtual` override points, `DoBeforeSave`/`DoSave`/`DoAfterSave`
+  (and their Delete counterparts). The base `DoBeforeSave` automatically applies, from the schema, default values →
+  computed fields (rounding delegated to `RoundByKind`) → `BeforeSave` validation; ordinary CRUD forms need **zero BO
+  code**. A subclass overriding `Do*` calls `base.Do*` first and then adds its own logic.
 
-## 影響
+- **The backend is authoritative**: live calculation on the frontend (Phase 2, Avalonia first) is a UX bonus; saving
+  follows the backend's recomputation. If the frontend cannot calculate (the AOT boundary), the worst case falls back
+  to no preview, and correctness is unaffected.
 
-- **正面**：客戶可純靠定義做欄位運算與存檔/刪除前驗證，不寫 BO；框架擴增功能落在編排層或特定 `Do*`，不與子類覆寫打架；捨入沿用單一數值子系統（round-then-sum 一致）。
+## Consequences
 
-- **示範**：`apps/Polhem.Northwind` 的 `OrderBO` 由「override `Save`」遷移為「override `DoBeforeSave`」——明細金額改 `ValueExpression`、客戶/產品/數量必填改 `FormRule`；僅「至少一筆明細」「表頭合計（跨列 SUM）」「狀態轉移（需查存量狀態）」「單號產生（需 DB 序列）」留在 `DoBeforeSave`，清楚標定宣告式的當前邊界。
+- **Positive**: customers can do field calculations and validation before save/delete purely through definitions,
+  without writing a BO; new framework features land in the orchestration layer or in a specific `Do*`, without
+  fighting subclass overrides; rounding reuses the single numeric subsystem (round-then-sum stays consistent).
 
-- **邊界（另案，本 ADR 不涵蓋）**：跨列/明細聚合（`SUM(detail)`）、虛擬顯示計算欄、`BeforeInsert`/`BeforeUpdate` 更細觸發、多捨入模式（銀行家/無條件捨去/進位，屬數值子系統擴充）、求值 timeout 與 Session 變數曝露。
+- **Demonstration**: `OrderBO` in `apps/Polhem.Northwind` migrated from "override `Save`" to "override
+  `DoBeforeSave`": the detail amount became a `ValueExpression`, and the required customer/product/quantity checks
+  became `FormRule`s; only "at least one detail row", "the header total (a cross-row SUM)", "status transitions (need
+  to look up the stored status)" and "document number generation (needs a DB sequence)" stay in `DoBeforeSave`,
+  clearly marking the current boundary of the declarative approach.
 
-- **相依**：新增第三方套件 `DynamicExpresso.Core`（MIT）。引擎經 `Expression.Compile()`，行動端/WASM AOT 目標的即時運算需另行實測（同 ADR-025 的 trim/AOT 脈絡）——但因後端為權威，此風險僅影響前端預覽、不影響資料正確性。
+- **Boundaries (separate work, not covered by this ADR)**: cross-row/detail aggregation (`SUM(detail)`), virtual
+  display computed fields, finer-grained `BeforeInsert`/`BeforeUpdate` triggers, more rounding modes (banker's /
+  round down / round up, an extension of the numeric subsystem), evaluation timeouts, and exposing session variables.
+
+- **Dependency**: adds the third-party package `DynamicExpresso.Core` (MIT). The engine goes through
+  `Expression.Compile()`, so live calculation on mobile/WASM AOT targets needs separate measurement (the same
+  trim/AOT context as ADR-025); but because the backend is authoritative, this risk only affects the frontend preview,
+  not data correctness.

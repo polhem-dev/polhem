@@ -13,7 +13,7 @@ Polhem 的權限分為**三個維度**，套用於**兩個把關點**——**後
 
 **動作維度在*兩個*把關點都套用**：後端在方法層 enforce（真正的邊界），前端則把它反映成命令／按鈕狀態，讓使用者不會被提供他做不到的動作。**列權限僅在後端**。**欄權限僅在前端**——是 UX 輔助、非資料邊界（見[第 10 節](#10-在-host-app-啟用-capabilityopt-in)警語）。
 
-兩個後端維度皆於請求時完全走記憶體快照（DB 只在載入快取、登入、`EnterCompany`、改配置時碰）。授權與 `ApiAccessControlAttribute`（管加密等級與是否需登入）**正交**。設計理由見 [ADR-019](../adr/adr-019-permission-authorization-model.md)。
+兩個後端維度皆於請求時完全走記憶體快照（DB 只在載入快取、登入、`EnterCompany`、改配置時碰）。授權與 `ApiAccessControlAttribute`（管加密等級與是否需登入）**正交**。設計理由見 [ADR-019](../adr/adr-019-permission-authorization-model.zh-TW.md)。
 
 三個維度全部**以公司為範圍**。屬於整個部署、不屬於任何公司的資產 —— API 金鑰，以及部署端日後新增的其他項目 —— 由另一條平行判定管轄，見**第三部分**。
 

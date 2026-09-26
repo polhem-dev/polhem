@@ -1,134 +1,230 @@
-# ADR-026：數值語意、公司/貨幣/單位位數與 round-then-sum
+# ADR-026: Numeric semantics, company/currency/unit decimals, and round-then-sum
 
-## 狀態
+[繁體中文](adr-026-numeric-semantics-rounding.zh-TW.md)
 
-已採納（2026-07-01）
+## Status
 
-## 背景
+Accepted (2026-07-01)
 
-ERP 數值（單價、成本、數量、重量、金額、百分比、匯率）各有不同的小數位數、顯示格式與捨入規則，且位數來源不一致：非貨幣類每公司可自訂、金額跟貨幣走（JPY=0 / USD=2 / BHD=3）、數量/重量跟計量單位走（KG=3 / PCS=0）、匯率是系統固定的中間換算因子。實作前的現況把這些需求散落在互不連動的載體：
+## Context
 
-| 概念 | 現況載體 | 缺口 |
+ERP numbers (unit price, cost, quantity, weight, amount, percentage, exchange rate) each have their own decimal
+places, display format and rounding rule, and the decimals come from different sources: non-monetary kinds can be
+customized per company, amounts follow the currency (JPY=0 / USD=2 / BHD=3), quantities/weights follow the unit of
+measure (KG=3 / PCS=0), and the exchange rate is a system-fixed intermediate conversion factor. Before the
+implementation, these needs were scattered across carriers that did not work together:
+
+| Concept | Current carrier | Gap |
 |------|---------|------|
-| 儲存精度 | `DbField.Precision/Scale` | 與顯示/計算/貨幣無連動 |
-| 顯示格式 | `FormField.NumberFormat` → `LayoutColumnFactory` → `GridControl.FormatCell` | 每欄手填、非公司/貨幣/單位感知 |
-| 語意 preset | `NumberFormatPresets` | 孤立、0 production caller |
-| 計算捨入 | 無 | 無統一入口 |
+| Storage precision | `DbField.Precision/Scale` | Not linked to display/calculation/currency |
+| Display format | `FormField.NumberFormat` → `LayoutColumnFactory` → `GridControl.FormatCell` | Filled in by hand per field, not aware of company/currency/unit |
+| Semantic presets | `NumberFormatPresets` | Isolated, 0 production callers |
+| Calculation rounding | None | No single entry point |
 
-沒有統一的數值語意，導致三個 ERP 級別的正確性問題無處著力：**合計 ≠ 明細加總**（浮動精度或全精度加總後才捨）、**對來源值誤捨**（把單價/匯率捨到顯示位數注入下游誤差）、**跨 provider 儲存精度不一致**（多餘小數丟給 DB 引擎，SQLite 不強制 scale、其餘 provider 四捨五入，同筆資料存出不同精度）。
+Without unified numeric semantics, three ERP-grade correctness problems had nowhere to be addressed: **total ≠ sum of
+details** (floating precision, or summing at full precision and rounding afterwards), **wrongly rounding source
+values** (rounding unit prices/exchange rates to display decimals, injecting error downstream), and **inconsistent
+storage precision across providers** (extra decimals are left to the DB engine; SQLite does not enforce scale and the
+other providers round, so the same data is stored with different precision).
 
-此設計借鏡 SAP ECC/S4（CURR/CUKY、QUAN/UNIT、TCURX、T006、T001R、逐行捨入）與 Odoo（`res_currency` decimal_places、`float_round`、`round_per_line`），並依本框架 FormSchema-driven 架構簡化。它橫跨定義層（`Polhem.Definition`）、商業邏輯層（`Polhem.Business`）、資料存取層（`Polhem.Repository`）與 UI 層（`Polhem.UI.Avalonia`），是框架對外 API surface 的結構性契約，故立此 ADR。本 ADR 收斂「為何如此」與拒絕的替代方案，供 cookbook 引用。
+The design draws on SAP ECC/S4 (CURR/CUKY, QUAN/UNIT, TCURX, T006, T001R, per-line rounding) and Odoo
+(`res_currency` decimal_places, `float_round`, `round_per_line`), simplified to fit this framework's FormSchema-driven
+architecture. It spans the definition layer (`Polhem.Definition`), the business logic layer (`Polhem.Business`), the
+data access layer (`Polhem.Repository`) and the UI layer (`Polhem.UI.Avalonia`), and is a structural contract of the
+framework's external API surface, hence this ADR. This ADR collects the "why" and the rejected alternatives, for the
+cookbook to cite.
 
-## 考慮過的選項
+## Options considered
 
-以下逐一列出關鍵決策點上「看似合理但被否決」的替代方案（採納方案見下節）。
+The following lists, one by one, the alternatives at the key decision points that "looked reasonable but were
+rejected" (the adopted design is in the next section).
 
-1. **全精度加總後一次捨入**（`total = round(Σ 全精度明細)`）：直覺、少一次逐筆捨入。**否決**——ERP 憑證要求「表頭合計逐字等於明細欄加總」，全精度重算會讓 `total ≠ Σ 已顯示明細`，對不上帳。SAP SD pricing、Odoo `round_per_line` 皆採逐行捨入正是此故。
+1. **Sum at full precision and round once** (`total = round(Σ full-precision details)`): intuitive, one less per-line
+   rounding. **Rejected**: ERP documents require "the header total equals the sum of the detail column, digit for
+   digit", and recomputing at full precision makes `total ≠ Σ displayed details`, so the books do not balance. This is
+   exactly why SAP SD pricing and Odoo `round_per_line` both round per line.
 
-2. **對單價/成本/匯率依「建議顯示位數」捨入後儲存**：讓資料乾淨、位數一致。**否決**——這三類是計算來源，捨到顯示位數會把誤差注入所有下游計算（金額 = 數量 × 單價）。顯示位數純為呈現，非儲存邊界；來源值必須以輸入精度原樣保存。
+2. **Round unit prices/costs/exchange rates to the "suggested display decimals" before storing**: keeps the data clean
+   and the decimals consistent. **Rejected**: these three kinds are calculation sources, and rounding them to display
+   decimals injects error into every downstream calculation (amount = quantity × unit price). Display decimals are
+   purely for presentation, not a storage boundary; source values must be kept as-is at input precision.
 
-3. **金額顯示格式於交付時一併 bake**（與百分比/匯率同路徑，交付時就把 `NumberFormat` 寫死）：一致、client 端零解析。**否決**——金額位數取決於**單據貨幣**，而貨幣是**會變動的單據資料**（使用者在 UI 改幣別、明細列各自不同幣）。交付時的公司 session 固定，但貨幣不固定；把 `N2` 寫死會在切幣別時失準。金額/單位位數必須 runtime 解析。
+3. **Bake the amount display format at delivery time** (the same path as percentages/exchange rates, writing
+   `NumberFormat` in at delivery): consistent, zero resolution on the client. **Rejected**: the decimals of an amount
+   depend on the **document currency**, and the currency is **document data that changes** (the user changes the
+   currency in the UI, detail rows each have a different currency). The company session is fixed at delivery time, but
+   the currency is not; hard-coding `N2` goes wrong when the currency is switched. Amount/unit decimals must be
+   resolved at runtime.
 
-4. **per-company / per-currency 調整 DB 欄位 scale**（讓儲存精度貼齊業務位數）：省儲存空間、schema 語意精確。**否決**——會導致每加一間公司或一種貨幣就要 `ALTER TABLE`，運維不可行。DB scale 應是與顯示/計算正交的單一高容量上限。
+4. **Adjust the DB column scale per company / per currency** (so the storage precision matches the business
+   decimals): saves storage space, precise schema semantics. **Rejected**: every added company or currency would
+   require an `ALTER TABLE`, which is not operationally feasible. DB scale should be a single high-capacity ceiling,
+   orthogonal to display/calculation.
 
-5. **公司覆寫表用 `Dictionary<NumberKind,int>`**：語意直觀。**否決**——`XmlSerializer` 無法乾淨序列化 `Dictionary`，且違反 `definition-collection-convention`（定義層集合一律走 `KeyCollectionBase`）。改用鍵值集合。
+5. **Use `Dictionary<NumberKind,int>` for the company override table**: semantically intuitive. **Rejected**:
+   `XmlSerializer` cannot serialize a `Dictionary` cleanly, and it violates `definition-collection-convention`
+   (definition-layer collections always use `KeyCollectionBase`). A key-value collection is used instead.
 
-6. **沿用 `NumberFormatPresets` 靜態表**：不動既有碼。**否決**——它是孤立、非語意驅動、0 production caller 的格式字串表，無法承載捨入策略與位數來源。重構為 `NumberKind` enum + `NumberKindProfile`。
+6. **Keep the static `NumberFormatPresets` table**: no change to existing code. **Rejected**: it is an isolated table
+   of format strings, not semantics-driven, with 0 production callers, and it cannot carry the rounding strategy or
+   the source of the decimals. It is refactored into the `NumberKind` enum + `NumberKindProfile`.
 
-## 決策
+## Decision
 
-採「以 `NumberKind` 語意欄為中樞，位數來源四分、捨入兩層、儲存精度正交」的整體設計。六項核心決策：
+Adopt an overall design "centered on the `NumberKind` semantic attribute, with four sources of decimals, two layers of
+rounding, and storage precision kept orthogonal". Six core decisions:
 
-- **D1 — `NumberKind` 語意欄驅動三件事**：`FormField`（傳遞至 `LayoutFieldBase`）帶 `NumberKind`，決定 (a) 顯示格式種類（`N`/`P`）、(b) 是否於寫入時捨入（`Round` vs `Preserve`）、(c) 位數來源。成員與框架預設是簽核契約：
+- **D1: the `NumberKind` semantic attribute drives three things**: `FormField` (passed on to `LayoutFieldBase`)
+  carries `NumberKind`, which decides (a) the kind of display format (`N`/`P`), (b) whether to round on write
+  (`Round` vs `Preserve`), and (c) the source of the decimals. The members and framework defaults are a signed-off
+  contract:
 
-  | `NumberKind` | 捨入策略 | 位數來源 | 框架預設 |
+  | `NumberKind` | Rounding strategy | Source of decimals | Framework default |
   |-------------|---------|---------|:-------:|
-  | `Quantity` / `Weight` | `Round` | 計量單位（綁 `UnitField`；無則退公司） | 0 / 3 |
-  | `Amount` | `Round` | 貨幣（綁 `CurrencyField`；無則退主檔/公司） | 2 |
-  | `Percent` | `Round` | 公司 × Kind | 2 |
-  | `UnitPrice` / `Cost` | `Preserve` | 公司（僅顯示） | 4 |
-  | `ExchangeRate` | `Preserve` | 系統固定 | 5 |
+  | `Quantity` / `Weight` | `Round` | Unit of measure (bound to `UnitField`; falls back to the company if absent) | 0 / 3 |
+  | `Amount` | `Round` | Currency (bound to `CurrencyField`; falls back to the master / company if absent) | 2 |
+  | `Percent` | `Round` | Company × Kind | 2 |
+  | `UnitPrice` / `Cost` | `Preserve` | Company (display only) | 4 |
+  | `ExchangeRate` | `Preserve` | Fixed by the system | 5 |
 
-- **D2 — round-then-sum（ERP 鐵則）**：`Round` 類的合計 = **已捨入明細值之和**，絕不全精度重算。每筆明細先以 `RoundByKind` 捨到其位數再加總，由構造保證 `Σ 明細 == 合計`。原幣/本幣各依自己的貨幣鍵欄獨立 round-then-sum。
+- **D2: round-then-sum (the ERP iron rule)**: the total of a `Round` kind = **the sum of the rounded detail values**,
+  never recomputed at full precision. Each detail line is first rounded to its decimals with `RoundByKind` and then
+  summed, so `Σ details == total` holds by construction. Transaction currency and home currency each do round-then-sum
+  independently by their own currency key field.
 
-- **D3 — 兩層捨入分離**：明細層捨到**幣別自然小數 / 單位小數**（系統層 `CurrencySettings` / `UnitSettings`）；單據最終層再選配套用**現金捨入單位**（公司可覆寫，SAP T001R 式，如 CHF→0.05），只作用於最終應付額、刻意產生捨入差額（記 DIFF 科目）。幣別小數永遠系統層、現金捨入單位可公司層，兩者不混淆。
+- **D3: two layers of rounding are kept apart**: the detail layer rounds to the **currency's natural decimals / the
+  unit's decimals** (system level: `CurrencySettings` / `UnitSettings`); the final document layer then optionally
+  applies a **cash rounding unit** (overridable by the company, SAP T001R style, such as CHF→0.05), which acts only on
+  the final amount payable and deliberately produces a rounding difference (booked to a DIFF account). Currency
+  decimals are always system level, the cash rounding unit can be company level, and the two are not mixed up.
 
-- **D4 — `Preserve` 永不回寫捨入值**：`UnitPrice` / `Cost` / `ExchangeRate` 以輸入精度原樣保存，位數僅供顯示（顯示捨入不回寫綁定值）。`RoundByKind` 對這些 kind 原值返回。唯一硬邊界是 DB scale 容量上限（見 D6）。
+- **D4: `Preserve` never writes back a rounded value**: `UnitPrice` / `Cost` / `ExchangeRate` are kept as-is at input
+  precision, and the decimals are for display only (display rounding does not write back to the bound value).
+  `RoundByKind` returns the original value for these kinds. The only hard boundary is the DB scale capacity ceiling
+  (see D6).
 
-- **D5 — 非貨幣類交付時 bake、貨幣/單位 runtime 解析**：
-  - 公司位數（`Percent`、單價/成本）與系統固定（匯率）於 `SystemBusinessObject.LoadAndLocalizeSchema` 的 **per-call clone** 上 bake（`NumberFormatApplier.Bake` 寫入 `FormField.NumberFormat`）；作者手填的 `NumberFormat` 永遠優先；快取 schema 絕不 mutate。
-  - `Amount`（跟貨幣）與綁了 `UnitField` 的 `Quantity`/`Weight`（跟單位）**不 bake**——交付時只標記參照欄名，位數依該欄當前值 runtime 解析（UI 改幣別/單位即重算；BO 依單據貨幣/單位捨入）。採 SAP per-field CUKY/UNIT：金額欄綁 `FormField.CurrencyField`（未指定退主檔 `sys_currency` → 公司 `DefaultCurrency` → 框架 2）、數量/重量欄綁 `FormField.UnitField`。
+- **D5: non-monetary kinds are baked at delivery, currency/unit are resolved at runtime**:
+  - Company decimals (`Percent`, unit price/cost) and system-fixed ones (exchange rate) are baked on the **per-call
+    clone** in `SystemBusinessObject.LoadAndLocalizeSchema` (`NumberFormatApplier.Bake` writes
+    `FormField.NumberFormat`); a `NumberFormat` filled in by the author always takes precedence; the cached schema is
+    never mutated.
+  - `Amount` (following the currency) and `Quantity`/`Weight` bound to a `UnitField` (following the unit) are **not
+    baked**: at delivery only the referenced field name is marked, and the decimals are resolved at runtime from that
+    field's current value (the UI recomputes when the currency/unit changes; the BO rounds by the document's
+    currency/unit). This follows SAP's per-field CUKY/UNIT: an amount field binds `FormField.CurrencyField` (if not
+    specified, falls back to the master's `sys_currency` → the company's `DefaultCurrency` → the framework's 2), and a
+    quantity/weight field binds `FormField.UnitField`.
 
-- **D6 — DB scale 是容量天花板，與顯示/計算正交**：數值欄用 `Decimal` + 框架統一高 scale（如 8），無 per-company/per-currency `ALTER`。顯示位數（`NumberFormat`）與計算位數（`RoundByKind`）與 DB scale 無關。API 匯入超過 scale 時於 Repository 寫入層**顯式** `decimal.Round(value, DbField.Scale, AwayFromZero)`（不可依賴 DB 隱式轉換——跨 provider 不一致）；此為儲存容量物理截斷，非業務捨入，且 scale 遠超業務意義，不抵觸 D4。
+- **D6: DB scale is a capacity ceiling, orthogonal to display/calculation**: numeric columns use `Decimal` + a single
+  high framework-wide scale (such as 8), with no per-company/per-currency `ALTER`. Display decimals (`NumberFormat`)
+  and calculation decimals (`RoundByKind`) have nothing to do with the DB scale. When an API import exceeds the scale,
+  the Repository write layer **explicitly** applies `decimal.Round(value, DbField.Scale, AwayFromZero)` (implicit DB
+  conversion cannot be relied on; it is inconsistent across providers); this is physical truncation to the storage
+  capacity, not business rounding, and the scale is far beyond business significance, so it does not conflict with
+  D4.
 
-## 影響
+## Consequences
 
-- **正確性**：合計恆等於明細加總（D2）；來源值零誤差傳播（D4）；跨 provider 儲存精度一致（D6）。
-- **多租戶/多幣別**：同一 schema 交付給兩間公司可帶不同格式（`Percent` P2 vs P4）；同一單據原幣/本幣、同一欄不同列可不同幣別/單位，位數各自 runtime 解析。
-- **相容性（既有資料不需遷移）**：`FormField`/`LayoutFieldBase` 加 `NumberKind`、`FormSchema` 加 `CurrencyField`，皆 `[DefaultValue]` 空 → 既有 XML 反序列化不變；`st_company` 新增四欄（`number_formats_xml`/`default_currency`/`cash_rounding_xml`/`allowed_currencies_xml`）與 `CompanyInfo` `[Key(4)]`~`[Key(7)]`，舊資料欄空即全退框架預設；MessagePack 尾端加 key 相容。
-- **新定義型別**：`DefineType.CurrencySettings`（TCURX 式，系統層 ISO 4217 curated 表）與 `DefineType.UnitSettings`（T006 式），走既有 `IDefineStorage` 雙模式（檔案/`st_define`）+ 三棲序列化 + 隨 `GetDefine` ship 給 client；無定義則各自 fallback。
-- **後續規範（新增數值欄時）**：宣告語意欄一律設 `NumberKind`；金額欄視需要綁 `CurrencyField`（原幣可省，走主檔 `sys_currency`）、數量/重量欄綁 `UnitField`；BO 計算一律 `decimal` 且走 `RoundByKind` round-then-sum，禁止全精度加總後才捨、禁止對 `Preserve` 類捨入。
-- **未做（未來項）**：匯率 factor（TCURF）、price unit（KPEIN）、header DIFF 捨入差吸收、Maui/Blazor `NumericEdit` 移植。
+- **Correctness**: the total always equals the sum of the details (D2); zero error propagation from source values
+  (D4); consistent storage precision across providers (D6).
+- **Multi-tenant / multi-currency**: the same schema delivered to two companies can carry different formats
+  (`Percent` P2 vs P4); within the same document, transaction and home currency, and different rows of the same
+  column, can have different currencies/units, each with its decimals resolved at runtime.
+- **Compatibility (existing data needs no migration)**: `FormField`/`LayoutFieldBase` gain `NumberKind` and
+  `FormSchema` gains `CurrencyField`, all with an empty `[DefaultValue]` → existing XML deserializes unchanged;
+  `st_company` gains four columns (`number_formats_xml`/`default_currency`/`cash_rounding_xml`/
+  `allowed_currencies_xml`) and `CompanyInfo` gains `[Key(4)]`~`[Key(7)]`; when the columns are empty in old data,
+  everything falls back to the framework defaults; appending keys at the end is MessagePack compatible.
+- **New definition types**: `DefineType.CurrencySettings` (TCURX style, a curated system-level ISO 4217 table) and
+  `DefineType.UnitSettings` (T006 style) use the existing dual mode of `IDefineStorage` (file/`st_define`) + triple
+  serialization + are shipped to the client with `GetDefine`; without a definition each falls back on its own.
+- **Follow-up rules (when adding a numeric field)**: a field declaring semantics always sets `NumberKind`; an amount
+  field binds `CurrencyField` as needed (the transaction currency can omit it and use the master's `sys_currency`), a
+  quantity/weight field binds `UnitField`; BO calculations always use `decimal` and go through `RoundByKind`
+  round-then-sum; summing at full precision and rounding afterwards is forbidden, and so is rounding a `Preserve`
+  kind.
+- **Not done (future items)**: exchange rate factors (TCURF), price unit (KPEIN), absorbing the DIFF rounding
+  difference in the header, porting `NumericEdit` to Maui/Blazor.
 
-## 修訂紀錄
+## Revision history
 
-### 2026-09-10：公司本幣改為必填
+### 2026-09-10: the company's home currency becomes mandatory
 
-原決策允許公司本幣（`CompanyInfo.DefaultCurrency`）空白：金額沒有參照幣別時，D5 的遞補鏈一路退到框架預設 2 位，
-「相容性」一條也寫明「舊資料欄空即全退框架預設」。**現改為公司一定要有本幣**，空白屬設定錯誤。
+The original decision allowed the company's home currency (`CompanyInfo.DefaultCurrency`) to be blank: when an amount
+had no referenced currency, the fallback chain of D5 went all the way down to the framework default of 2 decimals,
+and the "Compatibility" item also said "when the columns are empty in old data, everything falls back to the
+framework defaults". **Now a company must have a home currency, and a blank one is a configuration error.**
 
-**改變的只有一條路徑**：金額欄沒有參照幣別（未綁 `CurrencyField`、主檔沒有 `sys_currency`，或該格仍空）、
-**且有公司上下文**時，`NumberFormatResolver` 改為擲 `InvalidOperationException`，不再退框架預設。
-**沒有公司上下文**（UI 進入公司前、`RoundingContext.ForCompany(null)`）仍退框架預設 2 位——那不是設定錯誤。
-檢查與是否部署幣別主檔無關。
+**Only one path changes**: when an amount field has no referenced currency (no `CurrencyField` bound, no
+`sys_currency` on the master, or that cell is still empty) **and there is a company context**, `NumberFormatResolver`
+now throws `InvalidOperationException` instead of falling back to the framework default.
+**Without a company context** (in the UI before entering a company, `RoundingContext.ForCompany(null)`) it still falls
+back to the framework default of 2 decimals; that is not a configuration error.
+The check does not depend on whether a currency master is deployed.
 
-理由：
+Reasons:
 
-- **退路換到的是靜默的錯誤位數。** 公司沒選本幣時退 2 位，看起來一切正常，但那個位數不是該公司任何幣別決定的，
-  本位幣金額（`home_amount`）也會一併以錯的位數捨入。
-- **失敗時點落在計算，不落在載入或進公司。** 框架本身不寫入 `st_company`（公司主檔由外部維護），寫入時沒有檢查的落點；
-  若在進公司時就擋，只讀公司名稱、不碰金額的呼叫也會跟著失敗。
+- **The fallback buys silently wrong decimals.** Falling back to 2 decimals when the company has not chosen a home
+  currency looks perfectly normal, but those decimals were not decided by any of the company's currencies, and
+  home-currency amounts (`home_amount`) are rounded with the wrong decimals as well.
+- **The failure happens at calculation, not at loading or entering the company.** The framework itself does not write
+  `st_company` (the company master is maintained externally), so there is no place to check on write; blocking it
+  when entering the company would also make calls that only read the company name, and never touch amounts, fail.
 
-連帶：
+As a consequence:
 
-- 框架不代選預設幣別。`st_company.default_currency` 仍無資料庫預設值，由建立公司資料的一方寫入。
-- 既有部署中本幣空白的公司，升級後含金額計算的單據存檔與 UI 即時計算會擲例外，須先補值。
+- The framework does not pick a default currency on the company's behalf. `st_company.default_currency` still has no
+  database default value; whoever creates the company data writes it.
+- In an existing deployment, a company whose home currency is blank will, after upgrading, throw when saving documents
+  with amount calculations and during live UI calculation; the value must be filled in first.
 
-### 2026-09-11：數量／重量必須綁定計量單位
+### 2026-09-11: quantity / weight must be bound to a unit of measure
 
-原決策 D1 表格寫「計量單位（綁 `UnitField`；無則退公司）」，D5 也讓未綁單位的數量／重量欄於交付時 bake 公司位數。
-**現改為：標成 `Quantity`／`Weight` 的欄位必須綁 `UnitField`，公司不再決定數量與重量的位數。**
-不需要單位的數值（件數、箱數這類單位隱含在語意裡的計數）用一般數值，不標 `NumberKind`。
+The D1 table of the original decision said "Unit of measure (bound to `UnitField`; falls back to the company if
+absent)", and D5 also baked the company decimals at delivery into quantity/weight fields with no unit bound.
+**Now: a field marked `Quantity` / `Weight` must bind a `UnitField`, and the company no longer decides the decimals
+of quantities and weights.**
+A number that needs no unit (a count such as number of pieces or boxes, where the unit is implied by the meaning)
+uses a plain number without a `NumberKind`.
 
-理由：
+Reasons:
 
-- **兩條遞補鏈原本退到不同的東西。** 金額的遞補鏈每一步拿到的都是一個幣別代碼，公司只決定「用哪個幣別」，
-  位數由系統層幣別主檔決定；數量的遞補鏈第二步卻是公司直接給位數。
-- **單位沒有「本幣」的對應物。** 公司會有本幣當預設幣別，但不會有預設單位——同一張訂單可以同時賣 PCS 與 KG。
-  金額的遞補鏈能對齊到單位的只有「一定要綁定」那一段。
-- SAP 的 ABAP Dictionary 同樣要求 `QUAN` 型別的欄位指定參照的單位欄；不帶單位的數值用 `DEC`。
+- **The two fallback chains used to fall back to different things.** Every step of the amount fallback chain yields a
+  currency code; the company only decides "which currency", and the decimals are decided by the system-level currency
+  master. The second step of the quantity fallback chain, however, had the company provide decimals directly.
+- **Units have no counterpart to the "home currency".** A company has a home currency as its default currency, but it
+  has no default unit: the same order can sell PCS and KG at the same time. The only part of the amount fallback
+  chain that can be matched on the unit side is "binding is mandatory".
+- SAP's ABAP Dictionary likewise requires a `QUAN` field to name its reference unit field; numbers without a unit use
+  `DEC`.
 
-執行期行為對齊多幣別，只在單位沒有對應物的地方分開：
+Runtime behavior is aligned with multi-currency, and differs only where units have no counterpart:
 
-| 情況 | 數量／重量 | 對照金額 |
+| Situation | Quantity / weight | Compared with amounts |
 |------|-----------|---------|
-| 未綁 `UnitField` | `FormExpressionCalculator` 捨入計算欄時擲 `InvalidOperationException`；顯示與 bake 不擲 | 公司沒有本幣時同樣是計算時擲、顯示不擲 |
-| 綁了但該列單位代碼空 | `RoundByKind` 原值返回，不捨入 | 金額退到表頭幣別、再退公司本幣；單位沒有可退的對象，拿不到位數就不丟資訊 |
-| 單位代碼不在單位主檔 | 退框架預設（Quantity 0／Weight 3） | 幣別退 0.01 |
-| 沒有部署單位主檔 | 退框架預設，不經公司 | 幣別會先查公司位數表 |
+| No `UnitField` bound | `FormExpressionCalculator` throws `InvalidOperationException` when rounding a computed field; display and bake do not throw | When the company has no home currency it likewise throws at calculation and not at display |
+| Bound, but the row's unit code is empty | `RoundByKind` returns the original value, no rounding | An amount falls back to the header currency, then the company's home currency; a unit has nothing to fall back to, and without decimals no information is thrown away |
+| The unit code is not in the unit master | Falls back to the framework default (Quantity 0 / Weight 3) | A currency falls back to 0.01 |
+| No unit master deployed | Falls back to the framework default, bypassing the company | A currency first consults the company's decimals table |
 
-連帶：
+As a consequence:
 
-- `NumberFormatApplier.Bake` 對所有 `Quantity`／`Weight` 欄一律不 bake，與金額一致。
-- 公司位數表（`CompanyInfo.NumberFormats`）裡的 `Quantity`／`Weight` 項不再生效。
-- 公司多載 `RoundByKind(value, kind, company)` 沒有單位代碼，對數量／重量原值返回；明細捨入要改用帶單位代碼的多載。
-- 原決策 D5 寫「於 `SystemBusinessObject.LoadAndLocalizeSchema` 的 per-call clone 上 bake」已不成立：
-  定義 API 照原樣供應 schema，bake 由消費端做（.NET 各 head 在 `Polhem.Api.Client` 的 `FormDefinitionLoader`）。
+- `NumberFormatApplier.Bake` never bakes any `Quantity` / `Weight` field, consistent with amounts.
+- The `Quantity` / `Weight` entries in the company decimals table (`CompanyInfo.NumberFormats`) no longer take effect.
+- The company overload `RoundByKind(value, kind, company)` has no unit code and returns the original value for
+  quantities/weights; detail rounding must use the overload that takes a unit code.
+- The original D5 statement "baked on the per-call clone in `SystemBusinessObject.LoadAndLocalizeSchema`" no longer
+  holds: the definition API supplies the schema as-is, and baking is done by the consumer (the .NET heads, in
+  `FormDefinitionLoader` of `Polhem.Api.Client`).
 
-## 參考
+## References
 
-- cookbook：`docs/en/development-cookbook.md` §Numeric Semantics, Company Decimals, and Rounding（how-to 與 API 入口）
-- 相關 ADR：[ADR-005](adr-005-formschema-driven.md)（FormSchema 驅動）、[ADR-012](adr-012-session-company-context.md)（session 公司上下文）、[ADR-017](adr-017-db-cache-invalidation.md)（cache 失效）
-- 記憶：`erp-round-then-sum`、`db-param-scale-not-enforced`
-- SAP：ABAP CURR/QUAN 必綁 CUKY/UNIT、ALV `CFIELDNAME`、幣別小數 TCURX、單位小數 T006（ANDEC/DECAN）、逐行捨入/現金捨入 T001R
-- Odoo：`res_currency`（decimal_places/rounding）、`float_round`、稅務 `round_per_line`（預設）vs `round_globally`
+- Cookbook: `docs/en/development-cookbook.md` §Numeric Semantics, Company Decimals, and Rounding (how-to and API
+  entry points)
+- Related ADRs: [ADR-005](adr-005-formschema-driven.md) (FormSchema-driven),
+  [ADR-012](adr-012-session-company-context.md) (session company context),
+  [ADR-017](adr-017-db-cache-invalidation.md) (cache invalidation)
+- Memory: `erp-round-then-sum`, `db-param-scale-not-enforced`
+- SAP: ABAP CURR/QUAN must bind CUKY/UNIT, ALV `CFIELDNAME`, currency decimals TCURX, unit decimals T006
+  (ANDEC/DECAN), per-line rounding / cash rounding T001R
+- Odoo: `res_currency` (decimal_places/rounding), `float_round`, tax `round_per_line` (default) vs `round_globally`

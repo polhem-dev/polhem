@@ -106,7 +106,7 @@ graph BT
 | Polhem.Api.Contracts / Polhem.Api.Client / Polhem.Repository.Abstractions / Polhem.UI.Core | *(none)* |
 
 > `Polhem.Api.Core` 的 MessagePack 是框架內**唯一**的傳輸格式套件，而讓它維持唯一正是
-> [ADR-036](../adr/adr-036-wire-serialization-externalized.md) 的用意。僅建置期的參考
+> [ADR-036](../adr/adr-036-wire-serialization-externalized.zh-TW.md) 的用意。僅建置期的參考
 > （`PrivateAssets="all"`：SourceLink、公開 API 分析器、本 repo 自己的 analyzer）
 > 不列入 —— 它們不會流到任何消費者。
 
@@ -130,14 +130,14 @@ graph BT
 ## 架構要點
 
 - **Polhem.Base** 為最底層基礎套件，無任何內部相依性。
-- **Polhem.Expressions** 只承載 `DynamicExpressoEvaluator`——運算式引擎以 DynamicExpresso 為底的實作。**抽象**（`IExpressionEvaluator`、`ExpressionPolicy`、`ExpressionEvaluationException`）位於 `Polhem.Base.Expressions`，因此 `Polhem.Definition`（`FormExpressionCalculator`）與 `Polhem.Business`（規則處理器）消費引擎時不會相依 DynamicExpresso；只有決定用哪個實作的組裝層（`Polhem.Hosting` 的 DI 註冊、`Polhem.UI.Avalonia` 的前端即時預覽）才引用本套件。這個分界讓定義層不帶第三方套件，同時維持前端算值與後端存檔一致。見 [adr-028](../adr/adr-028-expression-rule-engine.md) 與 [adr-038](../adr/adr-038-definition-dependency-boundary.md)。
+- **Polhem.Expressions** 只承載 `DynamicExpressoEvaluator`——運算式引擎以 DynamicExpresso 為底的實作。**抽象**（`IExpressionEvaluator`、`ExpressionPolicy`、`ExpressionEvaluationException`）位於 `Polhem.Base.Expressions`，因此 `Polhem.Definition`（`FormExpressionCalculator`）與 `Polhem.Business`（規則處理器）消費引擎時不會相依 DynamicExpresso；只有決定用哪個實作的組裝層（`Polhem.Hosting` 的 DI 註冊、`Polhem.UI.Avalonia` 的前端即時預覽）才引用本套件。這個分界讓定義層不帶第三方套件，同時維持前端算值與後端存檔一致。見 [adr-028](../adr/adr-028-expression-rule-engine.zh-TW.md) 與 [adr-038](../adr/adr-038-definition-dependency-boundary.zh-TW.md)。
 - **Polhem.Definition** 為被依賴次數最多的專案，共有 7 個直接相依者（Contracts、Db、RepoAbs、Caching、Business、Api.Core、UI.Avalonia）。
 - **Polhem.Api.Contracts** 是共用契約／抽象層，並非應用層級的 API 專案。雖名為「API」，但 `Polhem.Business` 與 `Polhem.Api.Core` 都相依於它（`Business → Contracts`、`Core → Contracts`），故其位置在兩者**之下** —— 圖上歸入 **共用契約層**，而非 API 應用層。
 - **Polhem.Hosting** 為 composition root：將後端服務（`Polhem.Api.Core`、`Polhem.Business`、`Polhem.Db`、`Polhem.Repository`、`Polhem.ObjectCaching`）整合於一個 `IServiceCollection.AddPolhemFramework` 擴充入口，不依賴 ASP.NET Core。非 web 宿主（WinForms、Console、Worker Service）直接引用此套件。圖上獨立列為 **組合根** 而非歸入 API 層：橫跨各層本就是組合根的職責，故「API 層不得直接引用 Repository 層」的限制不適用於它。真正適用的限制是**它不得自帶資料存取** —— SQL 語句歸 `Polhem.Db` / `Polhem.Repository`，Hosting 只留 hosted service 外殼與 DI 接線。
 - **Polhem.Api.AspNetCore** 為 ASP.NET Core 整合層（`UsePolhemFramework` middleware 與 `ApiServiceController`），透過遞移引用 `Polhem.Hosting`，使 web 宿主一次引用即取得 DI 註冊與 middleware。
 - 用戶端（Polhem.Api.Client）與伺服器端（Polhem.Api.AspNetCore）皆透過 **Polhem.Api.Core** 共享協定邏輯，確保序列化與加解密行為一致。
 - **Polhem.UI.Core** 為跨平台 UI 共通層（`ClientInfo` / `IEndpointStorage` / `IUIViewService` / `VersionInfo`），供所有 native UI family（目前為 Avalonia，以單一專案涵蓋桌面 / iOS / Android / WASM；未來 WinForms / WPF）共用 client-side 連線狀態與 endpoint 持久化邏輯；不含任何平台專屬 UI 程式碼，只依 `Polhem.Api.Client`。
-- **Polhem.UI.Avalonia** 為 Avalonia 桌面控制項套件（Windows / macOS / Linux）。內含 FormSchema 驅動控制項（`FormView` 單筆、`ListView` 清單、`GridControl` 表格，加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞）與檔案後端 `FileEndpointStorage`，單一 `net10.0` TFM。下限版本鎖在 `Avalonia 12.0.0` + `Avalonia.Controls.DataGrid 12.0.0`（後者目前 stable 最高就是 12.0.0），host 可以透過 transitive 帶更新的 12.0.x。DataGrid 為何不走 `Binding "[FieldName]"` 詳見 [adr-020](../adr/adr-020-avalonia-datagrid-binding-strategy.md)，編輯策略詳見 [adr-021](../adr/adr-021-avalonia-datagrid-editing-strategy.md)。
+- **Polhem.UI.Avalonia** 為 Avalonia 桌面控制項套件（Windows / macOS / Linux）。內含 FormSchema 驅動控制項（`FormView` 單筆、`ListView` 清單、`GridControl` 表格，加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞）與檔案後端 `FileEndpointStorage`，單一 `net10.0` TFM。下限版本鎖在 `Avalonia 12.0.0` + `Avalonia.Controls.DataGrid 12.0.0`（後者目前 stable 最高就是 12.0.0），host 可以透過 transitive 帶更新的 12.0.x。DataGrid 為何不走 `Binding "[FieldName]"` 詳見 [adr-020](../adr/adr-020-avalonia-datagrid-binding-strategy.zh-TW.md)，編輯策略詳見 [adr-021](../adr/adr-021-avalonia-datagrid-editing-strategy.zh-TW.md)。
 - **`Polhem.UI.*` family 判別準則**：是否消費 `Polhem.UI.Core` 抽象（`ClientInfo` / `IEndpointStorage` / `IUIViewService` 等）。
   - 消費 → 歸 `Polhem.UI.*`（目前：`Polhem.UI.Core`、`Polhem.UI.Avalonia`；未來：`Polhem.UI.WinForms`、`Polhem.UI.Wpf` 等同理）
   - 不消費，自有狀態管理 → 走獨立 family prefix（如 `Polhem.Web.Blazor.*`：Blazor circuit 無檔案 IO 與 dialog service 概念，獨立路線合理）

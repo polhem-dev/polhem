@@ -1,66 +1,101 @@
-# ADR-022：Avalonia DataGrid 清單儲存格不啟用模板回收
+# ADR-022: Avalonia DataGrid list cells do not enable template recycling
 
-## 狀態
+[繁體中文](adr-022-avalonia-datagrid-cell-recycling.zh-TW.md)
 
-已採納（2026-06-14）
+## Status
 
-## 背景
+Accepted (2026-06-14)
 
-[ADR-020](adr-020-avalonia-datagrid-binding-strategy.md) 確立 `GridControl`（當時直接繼承 `Avalonia.Controls.DataGrid`，現已重構為 `ContentControl` 組合式、內部 `DataGrid` 以 `InnerGrid` 公開）的儲存格策略：用 `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>`，在 template 內以 code 顯式取值（`row.Row[fieldName]`）而非 Avalonia binding，因為 Avalonia binding engine 不會 dispatch 到 `DataRowView` 的 `ICustomTypeDescriptor` string indexer。
+## Context
 
-ADR-020 當時的範例（含實作）對**唯讀清單純文字 cell**使用 `supportsRecycling: true`：
+[ADR-020](adr-020-avalonia-datagrid-binding-strategy.md) established the cell strategy of `GridControl` (which at the
+time inherited `Avalonia.Controls.DataGrid` directly, and has since been refactored into a `ContentControl` composite
+whose inner `DataGrid` is exposed as `InnerGrid`): use `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>`
+and fetch values explicitly in code inside the template (`row.Row[fieldName]`) instead of through Avalonia binding,
+because the Avalonia binding engine does not dispatch to the `ICustomTypeDescriptor` string indexer of `DataRowView`.
 
-```csharp
-templateColumn.CellTemplate = new FuncDataTemplate<DataRowView>(
-    (row, _) => new TextBlock { Text = FormatCell(row, fieldName, ...) },
-    supportsRecycling: true);   // ← 與「Text 算死、非 binding」相沖
-```
-
-關鍵衝突：這個 `Text` 是在 template **建立當下**用當時的 `row` 算出的**固定字串**，**不是**綁定到 cell DataContext 的值。
-
-Avalonia `DataGrid` 為效能維持一個 presenter 池，捲動／重新實體化時**把同一個 cell 視覺重複用到不同列**，只替換 `DataContext`。當 `supportsRecycling: true`，回收重用時**不會重跑** `FuncDataTemplate` 的建立委派 —— 它預期內容是 binding、會自行跟著 DataContext 更新。
-
-兩者相撞的後果：presenter 被回收到另一列時，底層 `DataRowView` 換了，但算死的 `Text` 停在**舊列**的字。於是**畫面顯示的文字與底層實際的列脫鉤**。
-
-此 bug 在 lookup picker 上最明顯：使用者看到某格顯示「SALES」便點它，框架取的是該視覺列**底層真正的** `DataRowView`（`SelectedItem.Row` 一直正確），結果帶回的是**別列**的資料 —— 即「開窗畫面顯示資料與取回實際資料不對應」。
-
-> 為何潛伏未爆：資料少、照順序、初次實體化時每格各建一次（尚未觸發池重用）時顯示正確；一旦回收重用（多次開窗、捲動、重綁）才錯位。由 Polhem.Northwind demo 階段 3 的 Employee→Department lookup 仔細測試逼出。
-
-## 決策
-
-**`GridControl` 的清單純文字 cell 模板改用 `supportsRecycling: false`。**
+The example in ADR-020 at the time (and the implementation) used `supportsRecycling: true` for **plain-text cells in
+read-only lists**:
 
 ```csharp
 templateColumn.CellTemplate = new FuncDataTemplate<DataRowView>(
     (row, _) => new TextBlock { Text = FormatCell(row, fieldName, ...) },
-    supportsRecycling: false);   // 每列各建一個 cell，文字永遠對應該列
+    supportsRecycling: true);   // <- conflicts with "Text is computed once, not bound"
 ```
 
-這同時是**回歸一致**：`GridControl` 內其他所有 cell 模板（lookup 顯示 cell、互動 cell〔ComboBox/DatePicker〕、`CellEditingTemplate`）**本來就都是 `false`**，只有這個唯讀清單純文字 cell 是 `true`，是漏網之魚。
+The key conflict: this `Text` is a **fixed string** computed from the `row` of that moment **when the template is
+built**; it is **not** a value bound to the cell's DataContext.
 
-## 後果
+For performance, the Avalonia `DataGrid` keeps a pool of presenters, and when scrolling / re-realizing it **reuses the
+same cell visual for different rows**, replacing only the `DataContext`. With `supportsRecycling: true`, reuse
+**does not rerun** the build delegate of the `FuncDataTemplate`; it expects the content to be bindings that follow
+the DataContext by themselves.
 
-### 正面
+The result of the two colliding: when a presenter is recycled to another row, the underlying `DataRowView` changes,
+but the precomputed `Text` stays at the text of the **old row**. So **the text shown on screen comes apart from the
+actual underlying row**.
 
-- **顯示與底層列恆一致**：每列拿到自己新建、`Text` 當場以該列算出的 cell；presenter 不跨列重用 → 不再有「看到 A、取回 B」
-- **修在框架、全面受惠**：所有用到 `GridControl` 清單顯示之處（`ListView` 清單、lookup picker、master-detail 明細 grid）一次修好
-- **與控件內其他模板策略一致**：全部 cell 模板皆「fresh per row」
+The bug is most visible in the lookup picker: the user sees a cell showing "SALES" and clicks it, the framework takes
+**the actual underlying** `DataRowView` of that visual row (`SelectedItem.Row` was always correct), and what comes
+back is the data of **another row**; that is, "the data shown in the lookup window does not match the data actually
+returned".
 
-### 負面
+> Why it stayed latent: with little data, in order, and each cell built once at the first realization (before pool
+> reuse kicks in), the display is correct; it only goes out of line once recycling happens (opening the window
+> several times, scrolling, rebinding). It was forced out by careful testing of the Employee→Department lookup in
+> stage 3 of the Polhem.Northwind demo.
 
-- **放棄回收帶來的視覺重用**：每列各配置一個 `TextBlock`。對本框架的清單／picker（資料量小、單頁為主）成本可忽略；大資料量清單若日後成為瓶頸，正解是改走「真正的 binding cell」（見下）而非重新開回收
+## Decision
 
-### 中性
+**The plain-text list cell template of `GridControl` switches to `supportsRecycling: false`.**
 
-- **另一條正解：改用 binding 而非算死字串**，如此 `supportsRecycling: true` 也安全。但本控件其餘 cell 皆採「fresh per row（false）」策略，且 ADR-020 已說明為何不走 Avalonia binding（`DataRowView` string indexer 不被 binding engine 支援）；改 `false` 與既有策略最一致、改動最小、風險最低
-- **不影響選取／寫回正確性**：選取一直是物件參考（`SelectedItem.Row`）、寫回（`ApplyLookupSelection`）一直以欄位名存取，兩者本來就正確；本 ADR 只修**顯示層**讓使用者看到的文字對應正確的列
+```csharp
+templateColumn.CellTemplate = new FuncDataTemplate<DataRowView>(
+    (row, _) => new TextBlock { Text = FormatCell(row, fieldName, ...) },
+    supportsRecycling: false);   // each row builds its own cell, so the text always matches that row
+```
 
-## 相關連結
+This is also a **return to consistency**: every other cell template in `GridControl` (the lookup display cell, the
+interactive cells (ComboBox/DatePicker), `CellEditingTemplate`) **was already `false`**; only this read-only
+plain-text list cell was `true`, the one that slipped through.
 
-- [ADR-020：Avalonia DataGrid 對 DataTable 列的綁定策略](adr-020-avalonia-datagrid-binding-strategy.md) — 本 ADR 修正其範例中的 `supportsRecycling: true`
-- [ADR-021：Avalonia DataGrid in-cell / EditForm 編輯策略](adr-021-avalonia-datagrid-editing-strategy.md)
-- `src/Polhem.UI.Avalonia/Controls/GridControl.cs` — `BuildColumn` 清單純文字 cell 模板
+## Consequences
 
-## 不在範圍
+### Positive
 
-- **大資料量清單的虛擬化／回收效能**：若日後需要，改走真正的 binding cell（需先解決 `DataRowView` indexer 的 binding 支援，屬 Avalonia upstream 議題），不在本 ADR
+- **The display always matches the underlying row**: each row gets its own newly built cell, whose `Text` is computed
+  on the spot from that row; presenters are not reused across rows → no more "see A, get B back"
+- **Fixed in the framework, everyone benefits**: every place that uses the `GridControl` list display (the
+  `ListView` list, the lookup picker, the detail grid of master-detail) is fixed at once
+- **Consistent with the other template strategies in the control**: every cell template is "fresh per row"
+
+### Negative
+
+- **Gives up the visual reuse that recycling brings**: each row allocates its own `TextBlock`. For this framework's
+  lists / pickers (small data volumes, mostly a single page) the cost is negligible; if large lists become a
+  bottleneck later, the right fix is to move to "real binding cells" (see below), not to turn recycling back on
+
+### Neutral
+
+- **The other right fix: use binding instead of a precomputed string**, which would make `supportsRecycling: true`
+  safe too. But every other cell in this control uses the "fresh per row (false)" strategy, and ADR-020 already
+  explains why Avalonia binding is not used (the `DataRowView` string indexer is not supported by the binding
+  engine); switching to `false` is the most consistent with the existing strategy, the smallest change, and the
+  lowest risk
+- **Selection / write-back correctness is unaffected**: selection has always been an object reference
+  (`SelectedItem.Row`), and write-back (`ApplyLookupSelection`) has always accessed columns by field name, so both
+  were already correct; this ADR only fixes the **display layer** so that the text the user sees matches the correct
+  row
+
+## Related links
+
+- [ADR-020: How the Avalonia DataGrid binds to DataTable rows](adr-020-avalonia-datagrid-binding-strategy.md): this
+  ADR corrects the `supportsRecycling: true` in its example
+- [ADR-021: Avalonia DataGrid in-cell / EditForm editing strategy](adr-021-avalonia-datagrid-editing-strategy.md)
+- `src/Polhem.UI.Avalonia/Controls/GridControl.cs`: the plain-text list cell template in `BuildColumn`
+
+## Out of scope
+
+- **Virtualization / recycling performance for large lists**: if needed later, move to real binding cells (which
+  first requires solving binding support for the `DataRowView` indexer, an Avalonia upstream issue); not part of this
+  ADR

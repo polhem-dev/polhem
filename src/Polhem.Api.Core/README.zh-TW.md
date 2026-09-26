@@ -40,7 +40,7 @@
 
 僅涵蓋 `Encoded` 與 `Encrypted`。`Plain` 沒有封套，任何防重放欄位都能被改寫，因此不帶 frame；
 `Encoded` 帶 frame 但無 HMAC，只擋無腦原樣重送。完整邊界、啟用順序與已知限制見
-[ADR-042](../../docs/adr/adr-042-api-replay-protection.md)。
+[ADR-042](../../docs/adr/adr-042-api-replay-protection.zh-TW.md)。
 
 ### 授權與存取控制
 
@@ -64,7 +64,7 @@
 - `MessagePackCodec` -- MessagePack 序列化的編解碼器。
 - `WireContracts` -- 全部 wire 型別的顯式 formatter 註冊。contractless resolver 只是桌面端的
   便利退路、不是承載機制：.NET for iOS 關閉動態碼，未註冊的型別在那裡直接失敗
-  （見 [ADR-037](../../docs/adr/adr-037-wire-explicit-registration.md)）。
+  （見 [ADR-037](../../docs/adr/adr-037-wire-explicit-registration.zh-TW.md)）。
 - `WireValueFormatter` -- `object` 型別成員（條件值、參數值、資料表儲存格）的判別式封套。
 
 ### 內建系統操作
@@ -128,6 +128,6 @@ Polhem.Api.Core/
   （根目錄）         ApiServiceOptions（使用者啟動配置入口）
 ```
 
-命名空間佈局遵循 [ADR-008](../../docs/adr/adr-008-polhem-db-namespace-layout.md) 的設計原則：
+命名空間佈局遵循 [ADR-008](../../docs/adr/adr-008-polhem-db-namespace-layout.zh-TW.md) 的設計原則：
 契約依職能歸類（`Messages` 放訊息型別、`Conversion` 放型別轉換、`Transformers` 放 byte 層級管線等）；
 根層只保留跨切面基礎設施（此處僅 `ApiServiceOptions`）。

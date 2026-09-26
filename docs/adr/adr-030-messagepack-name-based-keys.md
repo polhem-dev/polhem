@@ -1,125 +1,197 @@
-# ADR-030：MessagePack 合約改採 property-name key（keyAsPropertyName）
+# ADR-030: MessagePack contracts switch to property-name keys (keyAsPropertyName)
 
-## 狀態
+[繁體中文](adr-030-messagepack-name-based-keys.zh-TW.md)
 
-> **部分經 [ADR-036](adr-036-wire-serialization-externalized.md) 修訂（2026-08-09）。**
-> 核心決策（wire 鍵以屬性名為準）維持不變，但實現方式已改為 contractless 加顯式
-> formatter，兩者 wire 格式相同。下列兩項結論**不再成立**：
-> 1. 「`[Union]` 型別不得改 `keyAsPropertyName`，新增多型階層沿用整數 `[Key]` + `[Union]`」
->    —— 多型改由 `FilterNodeFormatter` 以 `Kind` 判別碼處理，`POLHEM4003` 已退役。
-> 2. 「集合型別的裸 `[MessagePackObject]` 為 `ApiContractRegistry` 的判斷依據，不可移除」
->    —— 該判定有誤：映射表恆為空、轉換路徑惰性，移除後行為完全相同。
+## Status
+
+> **Partly amended by [ADR-036](adr-036-wire-serialization-externalized.md) (2026-08-09).**
+> The core decision (wire keys are property names) stands, but the implementation has changed to contractless plus
+> explicit formatters; the wire format of the two is the same. The following two conclusions **no longer hold**:
+> 1. "`[Union]` types must not switch to `keyAsPropertyName`; new polymorphic hierarchies keep integer `[Key]` +
+>    `[Union]`": polymorphism is now handled by `FilterNodeFormatter` with a `Kind` discriminator, and `POLHEM4003`
+>    has been retired.
+> 2. "The bare `[MessagePackObject]` on collection types is what `ApiContractRegistry` decides by and must not be
+>    removed": that judgement was wrong. The mapping table is always empty and the conversion path is inert, so
+>    behavior is exactly the same after removal.
 >
-> 詳見 ADR-036「對 ADR-030 的修訂」。
+> See "Revisions to ADR-030" in ADR-036 for details.
 
 
-**已採納（Accepted，2026-07-22；範圍於 2026-07-27 擴大）** —— 決策已執行。合約與多數 DTO / 集合 item 型別改為 name-based（`keyAsPropertyName`），`SerializableData*` 於 2026-07-27 補做收斂；`[Union]` 多型階層等為記錄在案的例外（見「執行結果與最終範圍」）。
+**Accepted (2026-07-22; scope widened on 2026-07-27)**: the decision has been carried out. Contracts and most DTO /
+collection item types have switched to name-based keys (`keyAsPropertyName`), and `SerializableData*` was brought in
+line on 2026-07-27; `[Union]` polymorphic hierarchies and the like are recorded exceptions (see "Outcome and final
+scope").
 
-> **go/no-go 決議（2026-07-22，定案）**：**立即執行**。關鍵事實 —— **目前無外部實際消費者**，故 breaking wire change 無相容性成本；先前「綁下一個 major」的暫緩理由（相容性衝擊）消失。以極低代價拿下「消滅 ctor-order footgun + 消滅跨繼承 key 編號協調 + 統一 JSON/MessagePack 心智」。
+> **Go/no-go resolution (2026-07-22, final)**: **carry it out now**. The key fact: **there are currently no real
+> external consumers**, so a breaking wire change has no compatibility cost; the earlier reason for deferring it
+> ("tie it to the next major", because of the compatibility impact) no longer applies. For a very low price this
+> gains "eliminate the ctor-order footgun + eliminate key-number coordination across inheritance + unify the JSON and
+> MessagePack mental models".
 
-本 ADR 重新評估 [ADR-004](adr-004-messagepack-payload.md) 「Schema Evolution：`[Key]` 支援欄位新增/移除」一節所隱含的**整數鍵**策略，不改變「MessagePack 作為 API Payload 格式」本身的決策。
+This ADR re-evaluates the **integer key** strategy implied by the "Schema Evolution: `[Key]` supports adding/removing
+fields" section of [ADR-004](adr-004-messagepack-payload.md). It does not change the decision "MessagePack as the API
+Payload format" itself.
 
-## 執行結果與最終範圍（2026-07-22）
+## Outcome and final scope (2026-07-22)
 
-`[Union]` 多型階層**依決策維持整數鍵**（Union 以整數鍵陣列 + 型別判別碼序列化，讓整個階層共用單一 keying 策略），故未做「全 90 型別轉換」，最終採 **category-aware** 範圍：
+`[Union]` polymorphic hierarchies **keep integer keys by decision** (a Union is serialized as an integer-keyed array
+plus a type discriminator, so the whole hierarchy shares a single keying strategy). The "convert all 90 types" plan
+was therefore not carried out; the final scope is **category-aware**:
 
-| 類別 | 處置 | 型別 |
-|------|------|------|
-| 合約 Request/Response | ✅ 轉 keyAsPropertyName | 57 個 `Polhem.Api.Core.Messages.*`（+ `ApiMessageBase.Parameters` 移除 `[Key(0)]`） |
-| 純 DTO | ✅ 轉 | PackageUpdateInfo/Query、RecordFieldChange、CompanyInfo、DepartmentTree、Paging* |
-| 非-Union 集合 item | ✅ 轉（footgun 消滅點） | *Item、SortField、DepartmentNode、Parameter |
-| **`[Union]` 多型階層** | ❌ **例外**（整數鍵，依決策） | FilterNode / FilterCondition / FilterGroup |
-| 集合容器 | ➖ 不受影響（走自訂 formatter / proxy） | MessagePackCollectionBase/KeyCollectionBase 子型別 |
-| DataSet/DataTable wire plumbing | ✅ 轉（2026-07-27 補做，見下） | SerializableData* |
+| Category | Treatment | Types |
+|----------|-----------|-------|
+| Contract Request/Response | ✅ Switched to keyAsPropertyName | 57 `Polhem.Api.Core.Messages.*` (+ `[Key(0)]` removed from `ApiMessageBase.Parameters`) |
+| Plain DTOs | ✅ Switched | PackageUpdateInfo/Query, RecordFieldChange, CompanyInfo, DepartmentTree, Paging* |
+| Non-Union collection items | ✅ Switched (where the footgun is eliminated) | *Item, SortField, DepartmentNode, Parameter |
+| **`[Union]` polymorphic hierarchies** | ❌ **Exception** (integer keys, by decision) | FilterNode / FilterCondition / FilterGroup |
+| Collection containers | ➖ Not affected (go through a custom formatter / proxy) | MessagePackCollectionBase/KeyCollectionBase subtypes |
+| DataSet/DataTable wire plumbing | ✅ Switched (done later on 2026-07-27, see below) | SerializableData* |
 
-**約束記錄**：`[Union]` 型別**不得**改 `keyAsPropertyName`。新增多型 MessagePack 階層時沿用整數 `[Key]` + `[Union]`。此約束由 **POLHEM4003** 在編譯期把關（涵蓋帶 `[Union]` 的基底與其所有子類，含多層繼承）；放寬的條件是改變本 ADR 的決定，而非新的相容性證據——`keyAsPropertyName` 在 union 階層上經實測可正常 round-trip，維持整數鍵是為了讓階層共用單一 keying 策略。
+**Recorded constraint**: `[Union]` types **must not** switch to `keyAsPropertyName`. New polymorphic MessagePack
+hierarchies keep integer `[Key]` + `[Union]`. This constraint is enforced at compile time by **POLHEM4003** (covering
+a base with `[Union]` and all of its subclasses, including multi-level inheritance). Relaxing it requires changing
+this ADR's decision, not new compatibility evidence: `keyAsPropertyName` has been measured to round-trip correctly on
+a union hierarchy, and integer keys are kept so that the hierarchy shares a single keying strategy.
 
-### 補做：SerializableData\* 收斂（2026-07-27）
+### Follow-up: bringing SerializableData\* in line (2026-07-27)
 
-原表將 `SerializableData*` 列為「維持整數鍵」，屬**未經論證的遺留**而非有技術理由的例外——
-這五個型別（`SerializableDataSet` / `DataTable` / `DataColumn` / `DataRow` / `DataRelation`）
-是純 DTO，無 `[Union]`、無唯讀成員、無 ctor 位置對號，不具備任何阻礙 `keyAsPropertyName` 的性質。
-留著整數鍵反而讓「MessagePack 一律 name-based」這條規則多出一個需要記憶的例外。
+The original table listed `SerializableData*` as "keeps integer keys". That was an **unexamined leftover**, not an
+exception with a technical reason. These five types (`SerializableDataSet` / `DataTable` / `DataColumn` / `DataRow` /
+`DataRelation`) are plain DTOs, with no `[Union]`, no read-only members and no ctor positional mapping; none of them
+has any property that would block `keyAsPropertyName`. Keeping integer keys only added one more exception to remember
+to the rule "MessagePack is always name-based".
 
-→ 五個型別全數轉 `keyAsPropertyName: true`，移除 22 個 `[Key(n)]`。
+→ All five types switch to `keyAsPropertyName: true`, and 22 `[Key(n)]`s are removed.
 
-**唯一實質代價**：`SerializableDataRow` 是**逐列**序列化，三個成員鍵由整數改為
-`CurrentValues` / `OriginalValues` / `RowState`，每列 wire 增加約 35 bytes。
-惟這些鍵在列間完全重複，payload 管線的 GZip 對此類重複的壓縮率極高，實際淨成本可忽略。
+**The only real cost**: `SerializableDataRow` is serialized **row by row**, and its three member keys change from
+integers to `CurrentValues` / `OriginalValues` / `RowState`, adding about 35 bytes per row on the wire. But these keys
+repeat exactly from row to row, and the GZip in the payload pipeline compresses that kind of repetition extremely
+well, so the actual net cost is negligible.
 
-**確認為真例外、維持整數鍵者**（全 repo 掃描後僅此二處）：
+**Confirmed as true exceptions that keep integer keys** (only these two places after a scan of the whole repository):
 
-| 位置 | 理由 |
-|------|------|
-| `FilterNode` / `FilterCondition` / `FilterGroup` | `[Union]` 多型，依決策維持整數鍵以共用單一 keying 策略（由 POLHEM4003 把關） |
-| `MessagePackKeyCollectionBase<T>.ItemsForSerialization`（`[Key(0)]` proxy，唯一子型別 `ParameterCollection`） | opt-out membership 會把 `KeyedCollection` 的 `Count` / `Comparer` / indexer 一併拉上 wire。proxy property 的整數鍵是刻意的最小序列化表面 |
+| Location | Reason |
+|----------|--------|
+| `FilterNode` / `FilterCondition` / `FilterGroup` | `[Union]` polymorphism; integer keys are kept by decision so the hierarchy shares a single keying strategy (enforced by POLHEM4003) |
+| `MessagePackKeyCollectionBase<T>.ItemsForSerialization` (a `[Key(0)]` proxy; the only subtype is `ParameterCollection`) | Opt-out membership would pull `KeyedCollection`'s `Count` / `Comparer` / indexer onto the wire as well. The integer key on the proxy property is a deliberately minimal serialization surface |
 
-`MessagePackCollectionBase<T>` 的八個子型別（`CurrencySettings` / `UnitSettings` /
+The eight subtypes of `MessagePackCollectionBase<T>` (`CurrencySettings` / `UnitSettings` /
 `FilterNodeCollection` / `SortFieldCollection` / `DepartmentNodeCollection` /
-`CompanyNumberFormats` / `CompanyCashRounding` / `CompanyAllowedCurrencies`）走
-`CollectionBaseFormatter` 序列化為 array，鍵style 不適用；其裸 `[MessagePackObject]` 標記
-仍為 `ApiContractRegistry.ConvertForSerialization` 的判斷依據，**不可移除**。
+`CompanyNumberFormats` / `CompanyCashRounding` / `CompanyAllowedCurrencies`) are serialized as arrays through
+`CollectionBaseFormatter`, so key style does not apply; their bare `[MessagePackObject]` marker is still what
+`ApiContractRegistry.ConvertForSerialization` decides by, and **must not be removed**.
 
-**驗證**：Phase 0 AOT 冒煙（reflection-only 下 keyAsPropertyName OK）；Definition 序列化 201 + Api.Core 序列化/合約 237 全過；全 solution Release build 0 error / 0 warning。（DB 相依 end-to-end 測試因本機 Docker 未啟動未跑，與序列化改動無關。）
+**Verification**: Phase 0 AOT smoke test (keyAsPropertyName OK under reflection-only); Definition serialization 201 +
+Api.Core serialization/contract 237 all pass; full-solution Release build 0 errors / 0 warnings. (The DB-dependent
+end-to-end tests were not run because Docker was not running locally; they are unrelated to the serialization
+change.)
 
-## 背景
+## Context
 
-現況（掃描於 2026-07-22）：
+Current state (scanned on 2026-07-22):
 
-- `MessagePackCodec` 的 resolver 鏈以 `ContractlessStandardResolver.Instance` 為 primary，屬 **hybrid**：**90 個 `[MessagePackObject]` 型別**走整數 `[Key(n)]`，未標記型別才走 contractless（屬性名為鍵）。
-- 整數鍵有**跨繼承協調**負擔：`ApiMessageBase` 用 `[Key(0)]`（`Parameters`），`LoginRequest` 等 derived 用 `[Key(100+)]` 避免與 base 撞號。
-- 集合以字串鍵一致比對（key 大小寫、欄位名、ProgId 等識別碼型字串比對場景），與整數鍵的位置語意存在心智落差。
+- The resolver chain of `MessagePackCodec` has `ContractlessStandardResolver.Instance` as primary, which makes it a
+  **hybrid**: **90 `[MessagePackObject]` types** use integer `[Key(n)]`, and only unmarked types go through
+  contractless (property names as keys).
+- Integer keys carry a **coordination burden across inheritance**: `ApiMessageBase` uses `[Key(0)]` (`Parameters`),
+  and derived types such as `LoginRequest` use `[Key(100+)]` to avoid colliding with the base.
+- Collections match consistently by string keys (the scenarios of comparing identifier-like strings: key case, field
+  names, ProgId and so on), which is a mental mismatch with the positional semantics of integer keys.
 
-觸發重新評估的三個問題：
+Three problems triggered the re-evaluation:
 
-1. **整數鍵的位置對號 footgun**：`MessagePackCollectionItem` 子型別的參數化 ctor 參數順序若 ≠ `[Key]` 順序，wire round-trip 會**悄悄對調欄位**，XML/JSON 抓不到。此為已記錄的真實踩雷。
-2. **JSON 與 MessagePack 兩套相容規則**：JSON wire 以屬性名為合約，MessagePack 以整數鍵位置為合約 —— 同一次改名對兩者的破壞方式不同，心智負擔重。
-3. **行動端 AOT**：MessagePack 是行動端（iOS/Android 原生 client）authenticated wire 的必經路徑，而 `MessagePackCodec` 用 Emit-based resolver；real-device AOT round-trip 尚未驗證。若被逼上 MessagePack source generator，source-gen **需要 `[MessagePackObject]` 標記**。
+1. **The positional-mapping footgun of integer keys**: if the parameter order of the parameterized ctor of a
+   `MessagePackCollectionItem` subtype ≠ the `[Key]` order, a wire round-trip **silently swaps fields**, and XML/JSON
+   cannot catch it. This is a real, recorded pitfall.
+2. **Two sets of compatibility rules for JSON and MessagePack**: the JSON wire uses property names as the contract,
+   while MessagePack uses integer key positions. The same rename breaks the two in different ways, which is a heavy
+   mental burden.
+3. **Mobile AOT**: MessagePack is the mandatory path of the authenticated wire for mobile (native iOS/Android
+   clients), yet `MessagePackCodec` uses an Emit-based resolver; a real-device AOT round-trip has not been verified.
+   If we are forced onto the MessagePack source generator, source-gen **requires the `[MessagePackObject]` marker**.
 
-## 決策
+## Decision
 
-**目標**：合約 wire 鍵改為 **name-based（屬性名為鍵）**，消滅整數鍵的位置對號脆弱與跨繼承編號協調。
+**Goal**: contract wire keys become **name-based (property names as keys)**, eliminating the positional-mapping
+fragility of integer keys and the key-number coordination across inheritance.
 
-**實作方式**：採 **`[MessagePackObject(keyAsPropertyName: true)]`**（保留標記），**不採**「純去標記、全靠 `ContractlessStandardResolver`」的做法。
+**Implementation**: use **`[MessagePackObject(keyAsPropertyName: true)]`** (keeping the marker), **not** the approach
+of "remove the markers entirely and rely on `ContractlessStandardResolver`".
 
-**執行條件（gated）**：這是 breaking wire change，不做獨立 breaking release；若做，綁進下一個規劃中的 major 版本，並先通過 Phase 0（AOT 冒煙 + 範圍決定）與 go/no-go。
+**Condition for carrying it out (gated)**: this is a breaking wire change, so there is no standalone breaking release;
+if it is done, it is tied to the next planned major version, and must first pass Phase 0 (AOT smoke test + scope
+decision) and a go/no-go.
 
-## 理由
+## Rationale
 
-- **消滅位置對號 footgun**：name-based 以屬性名對應，ctor 參數順序不再影響 wire。
-- **消滅跨繼承 key 編號協調**：不再需要 base `[Key(0)]` / derived `[Key(100+)]` 的避撞規劃。
-- **統一心智模型**：JSON 與 MessagePack 皆以「屬性名」為 wire 合約，一套規則。
-- **保留 source generator 退路**：keyAsPropertyName 仍需 `[MessagePackObject]` 標記，日後行動端 AOT 若被逼上 source-gen，標記已在位，不必回頭全補。純去標記的 contractless 會**關掉這道門**（source-gen 需要標記），故不採。
-  - **註（Phase 0，2026-07-22）**：AOT 冒煙實測已證實 MessagePack 3.x 在 `IsDynamicCodeSupported=false`（無 Emit）下有 **reflection-based fallback**，整數 key 與 keyAsPropertyName **皆正常 round-trip** —— 故 source-gen **並非現行必需**，此條「退路」的急迫性下降。惟保留標記仍是**低成本保險**（免費保留 source-gen 選項），且 B 另外三條理由（消滅 footgun、消滅編號協調、統一心智）不受影響，故決策維持 B。
-  - **補正（2026-08-10）**：上註的實測結果正確，但**適用範圍須限縮**——整數 key 與 keyAsPropertyName **兩者都是有標註的型別**，該 fallback 只涵蓋帶 `[MessagePackObject]` 標註的合約型別，`ContractlessStandardResolver` **沒有** fallback（NativeAOT 對照實驗證實）。故本條「退路」不只是保險：**標記同時撐住 fallback 與 source-gen 兩條路**，去掉標記兩條一起沒。此點在 [ADR-036](adr-036-wire-serialization-externalized.md) 的「未決事項」有完整結算。
+- **Eliminates the positional-mapping footgun**: name-based keys map by property name, so the ctor parameter order no
+  longer affects the wire.
+- **Eliminates key-number coordination across inheritance**: no more planning of base `[Key(0)]` / derived
+  `[Key(100+)]` to avoid collisions.
+- **Unified mental model**: both JSON and MessagePack use "the property name" as the wire contract; one set of rules.
+- **Keeps the source generator as a fallback**: keyAsPropertyName still needs the `[MessagePackObject]` marker, so if
+  mobile AOT ever forces us onto source-gen, the markers are already in place and do not have to be added back
+  everywhere. Contractless without markers would **close this door** (source-gen needs the marker), so it is not
+  adopted.
+  - **Note (Phase 0, 2026-07-22)**: the AOT smoke test measured that MessagePack 3.x has a **reflection-based
+    fallback** under `IsDynamicCodeSupported=false` (no Emit), and both integer keys and keyAsPropertyName
+    **round-trip correctly**. So source-gen is **not currently required**, and the urgency of this "fallback" point
+    drops. Keeping the markers is still **cheap insurance** (it keeps the source-gen option for free), and B's other
+    three reasons (eliminating the footgun, eliminating number coordination, unifying the mental model) are
+    unaffected, so the decision stays B.
+  - **Correction (2026-08-10)**: the measurement in the note above is correct, but **its scope must be narrowed**:
+    integer keys and keyAsPropertyName are **both annotated types**, and that fallback only covers contract types
+    annotated with `[MessagePackObject]`; `ContractlessStandardResolver` has **no** fallback (confirmed by a NativeAOT
+    control experiment). So this "fallback" point is more than insurance: **the marker holds up both the fallback and
+    the source-gen path**, and removing the marker loses both. The full accounting of this point is in "Open issues"
+    of [ADR-036](adr-036-wire-serialization-externalized.md).
 
-## 取捨
+## Trade-offs
 
-- **Breaking wire change**（最大代價）：整數鍵 **array** 格式 → 字串鍵 **map** 格式，wire 不相容。框架以 NuGet 對外發佈，外部消費端若 client/server 未同版升級即破裂 —— 必須版本 bump、changelog 明標 breaking、協調升級。
-- **opt-in → opt-out membership**（永久成本）：整數 `[Key]` 只序列化標鍵成員（opt-in）；keyAsPropertyName 序列化所有 public 成員（opt-out）。此後每個新增 public 屬性都須記得 `[IgnoreMember]`，否則外洩上 wire。
-- **wire 變大**：字串鍵大於整數鍵，惟 payload 管線含 GZip，壓縮後淨成本不高。
-- **跨型別 byte-reinterpret 對 polhem 為潛在、非現行**：polhem 目前 wire↔BO args 走**顯式 property-copy**（`ApiInputConverter`/`ApiOutputConverter`），未使用 byte-reinterpret，故此好處對 polhem 並非現行需求。
+- **Breaking wire change** (the biggest cost): integer-keyed **array** format → string-keyed **map** format; the wire
+  is incompatible. The framework is published on NuGet, so external consumers break if client and server are not
+  upgraded to the same version: this requires a version bump, a changelog entry clearly marked breaking, and a
+  coordinated upgrade.
+- **Opt-in → opt-out membership** (a permanent cost): integer `[Key]` serializes only members that have a key
+  (opt-in); keyAsPropertyName serializes every public member (opt-out). From now on every new public property must
+  remember `[IgnoreMember]`, or it leaks onto the wire.
+- **Larger wire**: string keys are larger than integer keys, but the payload pipeline includes GZip, so the net cost
+  after compression is not high.
+- **Cross-type byte reinterpretation is potential, not current, for polhem**: polhem currently goes wire ↔ BO args
+  through **explicit property copy** (`ApiInputConverter`/`ApiOutputConverter`) and does not use byte
+  reinterpretation, so this benefit is not a current need for polhem.
 
-## 未採納的替代方案
+## Alternatives not adopted
 
-- **維持整數 `[Key]`（現況）**：位置對號 footgun 與跨繼承編號協調持續存在，且與 JSON 的名為合約規則分歧。
-- **純去標記、全靠 `ContractlessStandardResolver`**：最少 boilerplate，但關掉 MessagePack source generator 退路（source-gen 需要標記）；對行動端 AOT 是不可接受的風險。
+- **Keep integer `[Key]` (the current state)**: the positional-mapping footgun and the key-number coordination across
+  inheritance remain, and it diverges from JSON's name-as-contract rule.
+- **Remove the markers entirely and rely on `ContractlessStandardResolver`**: the least boilerplate, but it closes the
+  MessagePack source generator fallback (source-gen needs the marker); an unacceptable risk for mobile AOT.
 
-## 影響
+## Consequences
 
-**本 ADR（提議階段）僅新增此文件，並於 [ADR-004](adr-004-messagepack-payload.md) 加一行交叉引用。**
+**This ADR (at the proposal stage) only adds this document and one cross-reference line in
+[ADR-004](adr-004-messagepack-payload.md).**
 
-採納並執行時：
+When adopted and carried out:
 
-- `[ADR-004]` 「Schema Evolution：`[Key]` 支援欄位新增/移除」一節改為指向本 ADR 的 name-based 策略。
-- 90 個 `[MessagePackObject]` 型別轉 `keyAsPropertyName: true`、移除整數 `[Key(n)]`；opt-out membership 稽核補 `[IgnoreMember]`。
-- 集合容器型別（`MessagePackKeyCollectionBase<T>` 的 `ItemsForSerialization` proxy、`CollectionBaseFormatter<T>` 註冊為 array 的型別）個別處理，僅轉其 item 型別。
-- 公開文件 `docs/en/api-bo-contract-design.md`（雙語）更新 wire 鍵描述。
-- （條件式）導入 MessagePack source generator 與 `[GeneratedMessagePackResolver]`。
+- The "Schema Evolution: `[Key]` supports adding/removing fields" section of `[ADR-004]` changes to point to this
+  ADR's name-based strategy.
+- 90 `[MessagePackObject]` types switch to `keyAsPropertyName: true` and have their integer `[Key(n)]`s removed; an
+  opt-out membership audit adds `[IgnoreMember]` where needed.
+- Collection container types (the `ItemsForSerialization` proxy of `MessagePackKeyCollectionBase<T>`, and the types
+  registered as arrays with `CollectionBaseFormatter<T>`) are handled individually; only their item types switch.
+- The public document `docs/en/api-bo-contract-design.md` (bilingual) updates its description of wire keys.
+- (Conditional) introduce the MessagePack source generator and `[GeneratedMessagePackResolver]`.
 
-**回歸守衛**：`tests/Polhem.Api.Core.UnitTests/Contracts/ApiContractSerializationTests.cs`（反射掃全合約、MessagePack + JSON 雙格式 round-trip 保真）為主要 regression guard —— 注意其只驗「同格式 round-trip 保真」，**不驗跨版本 wire 相容**（新舊 wire 本就不相容，屬預期的 breaking）。
+**Regression guard**: `tests/Polhem.Api.Core.UnitTests/Contracts/ApiContractSerializationTests.cs` (scans every
+contract by reflection and checks round-trip fidelity in both MessagePack and JSON) is the main regression guard.
+Note that it only verifies "round-trip fidelity within the same format" and **does not verify wire compatibility
+across versions** (the old and new wires are incompatible by design, an expected breaking change).
 
-## 相關
+## Related
 
-- [ADR-004：使用 MessagePack 作為 API Payload 序列化格式](adr-004-messagepack-payload.md) —— 本 ADR revisit 其整數鍵的 schema-evolution 理由。
-- [ADR-025：定義型別 AOT XmlSerializer 相容](adr-025-define-types-aot-xmlserializer-compat.md) —— 行動端 AOT 序列化的相鄰脈絡。
+- [ADR-004: Use MessagePack as the API Payload serialization format](adr-004-messagepack-payload.md): this ADR
+  revisits its schema-evolution reasoning for integer keys.
+- [ADR-025: AOT XmlSerializer compatibility for definition types](adr-025-define-types-aot-xmlserializer-compat.md):
+  the neighboring context of mobile AOT serialization.

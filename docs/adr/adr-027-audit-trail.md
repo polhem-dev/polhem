@@ -1,63 +1,135 @@
-# ADR-027：資料軌跡 / 稽核日誌（六軸 `st_log_*` 設計）
+# ADR-027: Data trail / audit log (the six-axis `st_log_*` design)
 
-## 狀態
+[繁體中文](adr-027-audit-trail.zh-TW.md)
 
-已採納（2026-07-08）
+## Status
 
-## 背景
+Accepted (2026-07-08)
 
-資料軌跡是 ERP 的核心需求——「誰登入、誰把哪個欄位從什麼改成什麼、誰看了哪筆敏感資料、哪個動作 / DB 指令出了異常」是合規稽核、責任追溯與效能調校的基礎。實作前的現況：
+## Context
 
-| 面向 | 現況 | 缺口 |
+A data trail is a core ERP requirement: "who logged in, who changed which field from what to what, who viewed which
+sensitive record, which action / DB command went wrong" is the basis of compliance auditing, accountability and
+performance tuning. The situation before the implementation:
+
+| Aspect | Current state | Gap |
 |------|------|------|
-| `log` 資料庫分類 | 已存在（`DbCategoryIds.Log`），但 `<Tables />` 為空 | 框架無任何自帶稽核表 |
-| 診斷日誌 | `ILogWriter` / `LogEntry` / `Tracer` / `TraceContext` | 記憶體 / UI 導向、**未持久化**、屬 observability 非業務稽核 |
-| DB 異常門檻 | `DbAccessAnomalyLogOptions`（`ExecutionTimeThreshold` 等） | **定義了卻無消費者**（0 caller） |
+| The `log` database category | Exists (`DbCategoryIds.Log`), but `<Tables />` is empty | The framework ships no audit tables at all |
+| Diagnostic logging | `ILogWriter` / `LogEntry` / `Tracer` / `TraceContext` | In-memory / UI oriented, **not persisted**, observability rather than business auditing |
+| DB anomaly thresholds | `DbAccessAnomalyLogOptions` (`ExecutionTimeThreshold` and so on) | **Defined but with no consumer** (0 callers) |
 
-此設計借鏡 SAP（Security Audit Log、Change Documents `CDHDR`/`CDPOS`、Table Logging `DBTABLOG`、Read Access Logging、System Log `SM21`、`SLG1`/`SM37`）與 Odoo（Chatter `mail.tracking.value`、OCA `auditlog`、`ir.logging`、`res.users.log`），並依本框架 DataSet-centric 與 FormSchema-driven 架構簡化。它橫跨 `Polhem.Definition`（型別 / 設定）、`Polhem.Business`（BO 埋點）、`Polhem.Db`（DB 異常）、`Polhem.Api.Core`（API 異常）與 `Polhem.Hosting`（背景寫入 / DI），是框架對外 API surface 的結構性契約，故立此 ADR。本 ADR 收斂「為何如此」與拒絕的替代方案。
+The design draws on SAP (Security Audit Log, Change Documents `CDHDR`/`CDPOS`, Table Logging `DBTABLOG`, Read Access
+Logging, System Log `SM21`, `SLG1`/`SM37`) and Odoo (Chatter `mail.tracking.value`, OCA `auditlog`, `ir.logging`,
+`res.users.log`), simplified to fit this framework's DataSet-centric and FormSchema-driven architecture. It spans
+`Polhem.Definition` (types / settings), `Polhem.Business` (BO instrumentation), `Polhem.Db` (DB anomalies),
+`Polhem.Api.Core` (API anomalies) and `Polhem.Hosting` (background writing / DI), and is a structural contract of the
+framework's external API surface, hence this ADR. This ADR collects the "why" and the rejected alternatives.
 
-## 考慮過的選項
+## Options considered
 
-以下逐一列出關鍵決策點上「看似合理但被否決」的替代方案（採納方案見下節）。
+The following lists, one by one, the alternatives at the key decision points that "looked reasonable but were
+rejected" (the adopted design is in the next section).
 
-1. **執行記錄全記每次 `JsonRpcExecutor` 呼叫**：直覺、完整覆蓋「誰做了什麼」。**否決**——讀取遠多於寫入，全記量體爆炸，且與登入（項 1）/ 異動（項 2）重複記錄。SAP（SAL 選擇性 filter、STAD 短期統計、SLG1 opt-in）與 Odoo（`ir.logging` opt-in、OCA per-rule、read 模式昂貴）**皆不全記**。改為只記「有問題的」＝**異常記錄**。
+1. **The execution log records every `JsonRpcExecutor` call**: intuitive, full coverage of "who did what".
+   **Rejected**: reads far outnumber writes, so recording everything explodes the volume, and it duplicates the login
+   (item 1) / change (item 2) records. SAP (SAL's selective filter, STAD's short-term statistics, SLG1 opt-in) and
+   Odoo (`ir.logging` opt-in, OCA per-rule, an expensive read mode) **both avoid recording everything**. Instead, only
+   "what went wrong" is recorded = **anomaly records**.
 
-2. **異動記錄採逐欄 EAV（`st_log_change_field`，SAP `CDPOS` 式）為預設**：欄位級可 SQL 查詢 / 統計。**否決為預設**——列數 = 異動次數 × 欄數，且需自訂 diff 程式碼；換來的欄位級查詢力多數 ERP「看某單改了什麼」用不到。改採 **DataSet DiffGram 單欄**（框架原生 `GetChanges()`，一次全記 master+detail 新舊值、零自訂 diff、XML→DataSet 還原即可顯示）。EAV 降為選配的「可查詢模式」。
+2. **The change log uses per-field EAV (`st_log_change_field`, SAP `CDPOS` style) as the default**: field-level SQL
+   queries / statistics. **Rejected as the default**: the row count = number of changes × number of fields, and it
+   needs custom diff code; the field-level query power it buys is not needed by most ERP use ("see what was changed on
+   a document"). Instead, a **single DataSet DiffGram column** is used (the framework-native `GetChanges()` records the
+   old and new values of master+detail in one go, with zero custom diff, and can be displayed simply by restoring
+   XML→DataSet). EAV is demoted to an optional "queryable mode".
 
-3. **異動記錄採 transactional outbox（強一致）**：業務 commit ⇔ log 落地。**否決**——落到實作需 per-company outbox 表、多租戶跨庫輪詢 flush、`IDataFormRepository.Save` 簽章改動、交易內寫入，成本過重。改採 **best-effort 非同步**（BO 於 commit 後走既有 `IAuditLogWriter`；漏失窗口極小，且可對 change 強制同步縮小）。零漏失需求出現時再升級 outbox（additive）。
+3. **The change log uses a transactional outbox (strong consistency)**: business commit ⇔ log persisted.
+   **Rejected**: implementing it needs a per-company outbox table, multi-tenant cross-database polling to flush, a
+   change to the `IDataFormRepository.Save` signature, and writing inside the transaction; the cost is too high.
+   Instead it is **best-effort and asynchronous** (the BO goes through the existing `IAuditLogWriter` after the commit;
+   the window for loss is very small, and it can be narrowed further by forcing change entries to be synchronous).
+   Upgrade to an outbox when a zero-loss requirement appears (additive).
 
-4. **系統 / 錯誤做成 observability 稽核表（`st_log_trace`，把 `Tracer` / `ITraceWriter` 導一份）**：一次涵蓋系統事件。**否決**——`Tracer` / `TraceContext` 是**開發階段偵錯執行流程**用，不可作稽核來源；系統 / 錯誤本質是 observability（維運 / 除錯），歸 `ILogWriter` / host `ILogger`（檔案 / Seq / APM），與業務稽核分離（對齊 SAP SM21 / Odoo `ir.logging`）。軸⑤改以精準定義的**異常記錄**實現。
+4. **Make system / error events an observability audit table (`st_log_trace`, sending a copy of `Tracer` /
+   `ITraceWriter` there)**: covers system events in one go. **Rejected**: `Tracer` / `TraceContext` are for
+   **debugging the execution flow during development** and cannot be an audit source; system / error events are
+   observability by nature (operations / debugging) and belong to `ILogWriter` / the host's `ILogger` (files / Seq /
+   APM), separate from business auditing (aligned with SAP SM21 / Odoo `ir.logging`). Axis ⑤ is implemented instead
+   as precisely defined **anomaly records**.
 
-5. **日誌列存 `user_rowid`（正規化參照）**：省欄位、指向 `st_user`。**否決**——`log` 資料庫與 `common`/`company` **實體分離**，跨庫 join 不可行；純 rowid 需 join 才有意義。改**去正規化**存 `user_id` + `user_name`、`company_id` + `company_name`，每列**自足**。
+5. **Log rows store `user_rowid` (a normalized reference)**: saves columns, points to `st_user`. **Rejected**: the
+   `log` database is **physically separate** from `common`/`company`, so cross-database joins are not feasible; a bare
+   rowid only means something with a join. Instead the rows are **denormalized**, storing `user_id` + `user_name` and
+   `company_id` + `company_name`, so every row is **self-contained**.
 
-6. **API / DB 異常合併單表（`layer` 欄區分）**：一張表、少一個型別。**否決**——兩者視角不同、記的資訊不同（API＝哪個動作 + who；DB＝哪個 `database_id` + command），且 `DbAccess` 無 session context、取不到 who。改 **API / DB 分表**（`st_log_anomaly_api` / `st_log_anomaly_db`），DB 表精簡無 who。
+6. **Merge API / DB anomalies into one table (distinguished by a `layer` column)**: one table, one type fewer.
+   **Rejected**: the two have different viewpoints and record different information (API = which action + who; DB =
+   which `database_id` + command), and `DbAccess` has no session context and cannot get the who. Instead **API and DB
+   get separate tables** (`st_log_anomaly_api` / `st_log_anomaly_db`), and the DB table is lean, with no who.
 
-7. **`DbAccessFactory` 直接注入 `IAuditLogWriter`**：最直接。**否決**——形成 `IDbAccessFactory → IAuditLogWriter → AuditLogDbSink → IDbAccessFactory` 建構循環相依。改以 `Func<IAuditLogWriter?>` 延遲解析（在 `Create()` 時才取），並讓 log DB 自身的 `DbAccess` 不做異常偵測以避免遞迴。
+7. **Inject `IAuditLogWriter` directly into `DbAccessFactory`**: the most direct. **Rejected**: it forms the
+   construction cycle `IDbAccessFactory → IAuditLogWriter → AuditLogDbSink → IDbAccessFactory`. Instead it is resolved
+   lazily through `Func<IAuditLogWriter?>` (taken only in `Create()`), and the `DbAccess` of the log DB itself does no
+   anomaly detection, to avoid recursion.
 
-## 決策
+## Decision
 
-採「統一 `IAuditLogWriter` 寫入、六軸 `st_log_*` 表、opt-in、best-effort、去正規化自足」的整體設計。核心決策：
+Adopt an overall design of "a unified `IAuditLogWriter` for writing, six-axis `st_log_*` tables, opt-in, best-effort,
+denormalized and self-contained". Core decisions:
 
-- **D1 — 六軸收斂**：基礎設施 ＋ 登入（①）＋ 異動（③，含安全⑥以 `is_sensitive` 旗標併入）＋ 檢視（②）＋ 異常（④/⑤）。軸⑤系統以**異常記錄**實現，非 observability 稽核表。
-- **D2 — 統一寫入抽象 `IAuditLogWriter`**：`AuditEntry` 抽象基底（共通欄可覆寫的 `AddCommonColumns`）＋ 型別化子類；預設背景批次寫入（bounded channel，滿載退化同步、log DB 不可用落地檔），無 host 時同步直寫。放 `Polhem.Definition.Logging`。
-- **D3 — `st_log_*` 於 `log` 分類、opt-in**：`AuditLogOptions`（掛 `BackendConfiguration`）各軸獨立開關，**預設全關**，零回歸。5 張表：`st_log_login` / `st_log_change` / `st_log_access` / `st_log_anomaly_api` / `st_log_anomaly_db`。
-- **D4 — 日誌獨立性**：log 列自足、查詢不 join；去正規化 who / company（**2026-07-30 起併入呼叫端應用**：`api_key_id` + `api_key_name`，同理由——`st_api_key` 在 `common`，跨庫 join 不可行。四張帶 who 的表皆有此欄，`st_log_anomaly_db` 因覆寫 `AddCommonColumns` 自然不含）；`log` 可依年份分庫（`log_YYYY`，當年可寫、歷史唯讀），寫入目標未來以解析器選當年可寫 DB（現以固定 `DbCategoryIds.Log`）。
-- **D5 — 異動 = DataSet DiffGram 單表**：`st_log_change.changes_xml` 存 `GetChanges()` 的 DiffGram（master+detail 新舊值）。兩條鐵則：**擷取在 `Save` 的 `AcceptChanges` 之前**、**序列化必用 `DiffGram`**（普通 `WriteXml` 丟舊值）。`Delete` 於刪除前載入記錄、存**完整 before-image**。
-- **D6 — 異常 = 五類、API/DB 分表**：`Error` / `Timeout`（獨立於錯誤，屬 infra/效能訊號）/ `Slow` / `LargeAffected` / `LargeResult`。掛 `JsonRpcExecutor.ExecuteAsyncCore`（API）與 `DbAccess.Execute`（DB），實作既有 `DbAccessAnomalyLogOptions` 門檻。
-- **D7 — 安全**：不記完整 SQL 與參數值（只存 `{0}` 模板）、error 訊息消毒（無堆疊、無內部路徑）；沿用 `security.md` / `scanning.md` 既有規則。
+- **D1: converging the six axes**: infrastructure + login (①) + change (③, with security ⑥ folded in through an
+  `is_sensitive` flag) + view (②) + anomaly (④/⑤). Axis ⑤, system, is implemented as **anomaly records**, not an
+  observability audit table.
+- **D2: a unified writing abstraction, `IAuditLogWriter`**: an abstract base `AuditEntry` (with an overridable
+  `AddCommonColumns` for the common columns) + typed subclasses; by default it writes in background batches (a bounded
+  channel that degrades to synchronous when full, and falls back to a file when the log DB is unavailable), and writes
+  synchronously and directly when there is no host. Placed in `Polhem.Definition.Logging`.
+- **D3: `st_log_*` in the `log` category, opt-in**: `AuditLogOptions` (hung on `BackendConfiguration`) has an
+  independent switch per axis, **all off by default**, so nothing regresses. 5 tables: `st_log_login` /
+  `st_log_change` / `st_log_access` / `st_log_anomaly_api` / `st_log_anomaly_db`.
+- **D4: log independence**: log rows are self-contained, and queries do not join; who / company are denormalized
+  (**since 2026-07-30 the calling application is included too**: `api_key_id` + `api_key_name`, for the same reason:
+  `st_api_key` is in `common`, and a cross-database join is not feasible. The four tables that carry who all have these
+  columns; `st_log_anomaly_db` naturally does not, because it overrides `AddCommonColumns`); `log` can be split into
+  databases by year (`log_YYYY`, the current year writable and past years read-only), and in the future the write
+  target will be chosen by a resolver as the current year's writable DB (currently the fixed `DbCategoryIds.Log`).
+- **D5: change = a single DataSet DiffGram table**: `st_log_change.changes_xml` stores the DiffGram of `GetChanges()`
+  (the old and new values of master+detail). Two iron rules: **capture before `AcceptChanges` in `Save`**, and
+  **always serialize with `DiffGram`** (a plain `WriteXml` drops the old values). `Delete` loads the record before
+  deleting and stores the **complete before-image**.
+- **D6: anomaly = five kinds, API/DB in separate tables**: `Error` / `Timeout` (separate from errors; an
+  infrastructure/performance signal) / `Slow` / `LargeAffected` / `LargeResult`. Hooked into
+  `JsonRpcExecutor.ExecuteAsyncCore` (API) and `DbAccess.Execute` (DB), implementing the existing thresholds of
+  `DbAccessAnomalyLogOptions`.
+- **D7: security**: complete SQL and parameter values are not recorded (only the `{0}` template is stored), and error
+  messages are sanitized (no stack traces, no internal paths); the existing rules of `security.md` / `scanning.md`
+  apply.
 
-## 後果 / 影響
+## Consequences
 
-- **正面**：可回溯的業務資料軌跡（登入 / 異動含新舊值與 delete before-image / 檢視 / 異常）；一致的 opt-in、best-effort、去正規化自足、安全消毒設計；量體受控（檢視敏感度驅動、異常只記問題）。
-- **取捨**：異動記錄以「簡潔 + 可還原顯示」換取「欄位級 SQL 查詢力」（有需要再開選配 EAV）；best-effort 有極小漏失窗口（有需要再升 transactional outbox，entry / schema 不變）。
-- **相關**：系統表登記見 [framework-reserved-names §1.3](../en/framework-reserved-names.md)；`DbScope.Log` 路由見 [ADR-010](adr-010-logical-database-category.md)；DataForm Save 管線見 [ADR-024](adr-024-dataform-save-dataadapter.md)。
-- **待辦**：~~per-form 稽核規則~~（**已實作，見 [ADR-041](adr-041-per-form-audit-rule.md)**）；`ExecuteBatch` / `UpdateDataTables` 的 DB 異常偵測（目前僅 `Execute` 主路徑）；`st_cache_notify` 既有 SQL Server 升級 idempotency bug（另案）。
+- **Positive**: a traceable trail of business data (login / change with old and new values and the delete
+  before-image / view / anomaly); a consistent design that is opt-in, best-effort, denormalized and self-contained, and
+  security-sanitized; volume under control (view logging driven by sensitivity, anomalies recording only problems).
+- **Trade-offs**: the change log trades "field-level SQL query power" for "simplicity + restorable display" (the
+  optional EAV can be turned on if needed); best-effort has a very small window for loss (upgrade to a transactional
+  outbox if needed, with the entries / schema unchanged).
+- **Related**: the registration of the system tables is in
+  [framework-reserved-names §1.3](../en/framework-reserved-names.md); `DbScope.Log` routing is in
+  [ADR-010](adr-010-logical-database-category.md); the DataForm Save pipeline is in
+  [ADR-024](adr-024-dataform-save-dataadapter.md).
+- **To do**: ~~per-form audit rules~~ (**implemented, see [ADR-041](adr-041-per-form-audit-rule.md)**); DB anomaly
+  detection for `ExecuteBatch` / `UpdateDataTables` (currently only the main `Execute` path); an existing SQL Server
+  upgrade idempotency bug in `st_cache_notify` (a separate issue).
 
-## 後記（2026-08-07）：診斷日誌的型別已變
+## Postscript (2026-08-07): the diagnostic logging types have changed
 
-上方〈背景〉表與選項 4 提到的 `ILogWriter` / `LogEntry` **已於 Phase 5 隨 `BackendInfo` 的
-Logging 死碼一併移除**（[`5037c128`](https://github.com/jeff377/bee-library/commit/5037c128) / [`32f84941`](https://github.com/jeff377/bee-library/commit/32f84941)），本 ADR 的決策不受影響——那兩個型別在
-決策當下就已被歸類為「未持久化、屬 observability 非業務稽核」，移除只是把死碼清掉。
+The `ILogWriter` / `LogEntry` mentioned in the "Context" table and in option 4 above **were removed in Phase 5
+together with the dead Logging code of `BackendInfo`**
+([`5037c128`](https://github.com/jeff377/bee-library/commit/5037c128) /
+[`32f84941`](https://github.com/jeff377/bee-library/commit/32f84941)). The decision of this ADR is unaffected: at the
+time of the decision those two types had already been classified as "not persisted, observability rather than
+business auditing", and removing them only cleared out dead code.
 
-現行的診斷 / 追蹤面是 `Tracer` / `TraceContext` / `ITraceWriter`（`src/Polhem.Base/Tracing/`）
-加上宿主自己的 `ILogger`。上文保留原文字是為了保存決策當下的盤點，不是現況描述。
+The current diagnostics / tracing surface is `Tracer` / `TraceContext` / `ITraceWriter` (`src/Polhem.Base/Tracing/`)
+plus the host's own `ILogger`. The text above is kept as it was to preserve the inventory at the time of the decision;
+it is not a description of the current state.

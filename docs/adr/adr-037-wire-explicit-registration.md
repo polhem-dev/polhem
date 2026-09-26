@@ -1,120 +1,133 @@
-# ADR-037：wire 型別一律顯式註冊 formatter，`object` 值改用判別式封套
+# ADR-037: Every wire type registers a formatter explicitly; `object` values use a discriminated envelope
 
-## 狀態
+[繁體中文](adr-037-wire-explicit-registration.zh-TW.md)
 
-**已採納（Accepted，2026-08-10）** —— 決策已執行。
+## Status
 
-相關：[ADR-030](adr-030-messagepack-name-based-keys.md)、[ADR-036](adr-036-wire-serialization-externalized.md)
+**Accepted (2026-08-10)**: the decision has been carried out.
 
-## 背景
+Related: [ADR-030](adr-030-messagepack-name-based-keys.md), [ADR-036](adr-036-wire-serialization-externalized.md)
 
-[ADR-036](adr-036-wire-serialization-externalized.md) 把 MessagePack 標註全數移除，
-wire 型別改由 `ContractlessStandardResolver` 承載。該決策的依據是「MessagePack 3.x 有
-reflection fallback，行動端 AOT 可用」。
+## Context
 
-**這個依據不成立。** 2026-08-10 的實測（NativeAOT 對照實驗）顯示：
+[ADR-036](adr-036-wire-serialization-externalized.md) removed every MessagePack attribute, and wire types came to be
+carried by `ContractlessStandardResolver`. That decision rested on "MessagePack 3.x has a reflection fallback, so it
+works under mobile AOT".
 
-| 案例 | 結果 |
+**That basis does not hold.** The measurement on 2026-08-10 (a controlled experiment under NativeAOT) showed:
+
+| Case | Result |
 |------|------|
-| `[MessagePackObject(keyAsPropertyName: true)]` 型別 + `StandardResolver` | ✅ round-trip 正常 |
-| 無標註 POCO + `ContractlessStandardResolver` | ❌ `FormatterNotRegisteredException` |
+| `[MessagePackObject(keyAsPropertyName: true)]` type + `StandardResolver` | ✅ Round-trips correctly |
+| Unattributed POCO + `ContractlessStandardResolver` | ❌ `FormatterNotRegisteredException` |
 
-**contractless 沒有 reflection fallback**；MessagePack 的 fallback 只涵蓋帶標註的合約型別。
-而 .NET for iOS SDK 對 iOS / tvOS / MacCatalyst 的**每一種組態**預設
-`DynamicCodeSupport=false`（映射為 `RuntimeFeature.IsDynamicCodeSupported`），
-因此 ADR-036 之後，iOS 端幾乎每個 payload 型別都無法序列化。
+**Contractless has no reflection fallback**; MessagePack's fallback only covers attributed contract types. And the
+.NET for iOS SDK sets `DynamicCodeSupport=false` (mapped to `RuntimeFeature.IsDynamicCodeSupported`) by default for
+**every configuration** of iOS / tvOS / MacCatalyst, so after ADR-036 almost no payload type could be serialized on
+iOS.
 
-同時另有一處早於 ADR-036 的缺陷：`Parameter.Value` / `FilterCondition.Value` 這類
-`object` 成員走 `TypelessFormatter`，其非基本型別路徑經
-`MessagePackSerializer.NonGeneric` 傳遞 `ref struct` writer，需要 `Reflection.Emit`。
-`String` / `Int32` / `Boolean` / `Int64` / `Double` 因有 primitive 快路徑而通過，
-`Decimal` / `Guid` / `DateTime` / `DateOnly` / `Byte[]` 則否。
+There was also a separate defect older than ADR-036: `object` members such as `Parameter.Value` /
+`FilterCondition.Value` go through `TypelessFormatter`, whose path for non-primitive types passes a `ref struct`
+writer through `MessagePackSerializer.NonGeneric`, which needs `Reflection.Emit`. `String` / `Int32` / `Boolean` /
+`Int64` / `Double` pass because they have a primitive fast path; `Decimal` / `Guid` / `DateTime` / `DateOnly` /
+`Byte[]` do not.
 
-## 決策
+## Decision
 
-### 1. wire 型別閉包內的每個型別都顯式註冊 formatter
+### 1. Every type in the wire type closure registers a formatter explicitly
 
-不再把 contractless 當作預設承載機制。閉包涵蓋：
+Contractless is no longer the default carrying mechanism. The closure covers:
 
-- 訊息合約型別（`Polhem.Api.Core.Messages.*`、`Polhem.Api.Contracts.*`）
-- 其遞移可達的定義層型別與框架集合
-- 封閉泛型具現：`List<T>` / `Dictionary<K,V>` / `T?` / 陣列 / **列舉**
-  （這些同樣經 `MakeGenericType` 建立，在 AOT 上沒有原生碼）
+- Message contract types (`Polhem.Api.Core.Messages.*`, `Polhem.Api.Contracts.*`)
+- The definition-layer types and framework collections transitively reachable from them
+- Closed generic instantiations: `List<T>` / `Dictionary<K,V>` / `T?` / arrays / **enums** (these are also created
+  through `MakeGenericType` and have no native code under AOT)
 
-多數型別以 `WireContract.For<T>().Member(...)` 宣告成員；`WireObjectFormatter<T>` 依該表
-逐一具名讀寫。關鍵在於 `Member<TValue>` 的 `TValue` 是**編譯期**泛型參數，
-序列化呼叫因而全程是封閉泛型，不觸及反射或動態碼。
+Most types declare their members with `WireContract.For<T>().Member(...)`; `WireObjectFormatter<T>` reads and writes
+them by name, one by one, according to that table. The key is that the `TValue` of `Member<TValue>` is a
+**compile-time** generic parameter, so the serialization calls are closed generics throughout and never touch
+reflection or dynamic code.
 
-contractless 仍留在 resolver 鏈末端，但定位改為**桌面端的便利退路**（例如 host 自己塞進
-`Parameter.Value` 的型別），不再是框架型別的承載機制。
+Contractless still sits at the end of the resolver chain, but its role becomes **a convenience fallback on desktop**
+(for example for types a host puts into `Parameter.Value` itself); it is no longer the carrying mechanism for
+framework types.
 
-### 2. `object` 值改用判別式封套
+### 2. `object` values use a discriminated envelope
 
-`TypelessFormatter` 由 `WireValueFormatter` 取代。封套是兩元素陣列：
+`TypelessFormatter` is replaced by `WireValueFormatter`. The envelope is a two-element array:
 
 ```
-[ <判別碼:int> | <型別名:string> , <值> ]
+[ <discriminator:int> | <type name:string> , <value> ]
 ```
 
-- **判別碼**：框架自有的封閉型別集（`Boolean`…`DataTable`、`DBNull`、`object[]`），
-  每個型別在類別初始化時建立封閉泛型的讀寫委派。
-- **型別名**：`SysInfo.AllowedTypeNamespaces` 這個可設定擴充點的逃生門。
-  它仍走非泛型多載，**因此仍只在有動態碼的 runtime 上可用**。
+- **Discriminator**: the framework's own closed set of types (`Boolean`...`DataTable`, `DBNull`, `object[]`); each
+  type builds closed generic read and write delegates when the class is initialized.
+- **Type name**: the escape hatch for the configurable extension point `SysInfo.AllowedTypeNamespaces`. It still goes
+  through the non-generic overload, **so it still only works on a runtime with dynamic code**.
 
-白名單語意不變（`WireTypeWhitelist`），但檢查**提前到寫入端**，且讀取端在
-`Type.GetType` **之前**先篩型別名——白名單外的型別自始不會被載入。
+The whitelist semantics are unchanged (`WireTypeWhitelist`), but the check **moves forward to the writing side**, and
+the reading side filters the type name **before** `Type.GetType`: a type outside the whitelist is never loaded at all.
 
-### 3. 漂移由測試把關，不由人工常數
+### 3. Drift is guarded by tests, not by manual constants
 
-ADR-036 以每支 formatter 的 `WireMemberCount` 常數當守衛。改為
-`WireContractDriftTests` 兩條檢查：
+ADR-036 used a `WireMemberCount` constant on each formatter as the guard. It is replaced by two checks in
+`WireContractDriftTests`:
 
-1. 走一次 wire 型別閉包，斷言每個型別都有顯式註冊的 formatter；
-2. 逐一比對每個 `WireContract` 的成員清單與型別當下的形狀。
+1. Walk the wire type closure once and assert that every type has an explicitly registered formatter;
+2. Compare the member list of each `WireContract` with the current shape of its type, one by one.
 
-wire 成員的定義與 JSON 相同：public 可讀可寫、未標 `[JsonIgnore]` 的屬性
-（框架管理成員如 `Tag` / `Key` / `SerializeState` 本就帶該標註）。
+A wire member is defined the same way as for JSON: a public readable and writable property not marked `[JsonIgnore]`
+(framework-managed members such as `Tag` / `Key` / `SerializeState` already carry that attribute).
 
-### 4. 回歸閘門
+### 4. Regression gate
 
-`dotnet test … -p:DynamicCodeSupport=false` 納入 CI。`DynamicCodeSupport` 是 .NET SDK
-的標準屬性，iOS SDK 用的就是它——這一關跑的不是模擬情境，是行動端建置的實際設定。
+`dotnet test … -p:DynamicCodeSupport=false` is added to CI. `DynamicCodeSupport` is a standard .NET SDK property, and
+it is exactly what the iOS SDK uses: this gate does not run a simulated scenario, it runs the actual setting of a
+mobile build.
 
-## 後果
+## Consequences
 
-### 正面
+### Positive
 
-- iOS 端的 wire 由「幾乎全不可用」變為可用。驗證於五個環境：`DynamicCodeSupport=false`
-  閘門（0 失敗 / 718）、NativeAOT、**Mac Catalyst Release**、**iOS 模擬器 Release**
-  （後兩者為真 Mono、皆回報 `IsDynamicCodeSupported = False`），
-  以及 iOS 裝置 target 的 full-AOT 編譯。此外 `apps/Polhem.Northwind` 的四個 head
-  （Desktop / Browser / iOS / Android）已對同一台 server 端到端實測通過。
-- `object` 通道不再以完整組件限定名描述每個值，payload 變小，也不再於 wire 上點名 CLR 組件。
-- 反序列化攻擊面縮小：框架自有值走封閉判別集合，不經型別名解析。
-- 漂移守衛由人工維護的常數變成自動比對，新增屬性忘記註冊會被測試擋下。
+- The wire on iOS goes from "almost entirely unusable" to usable. Verified in five environments: the
+  `DynamicCodeSupport=false` gate (0 failures / 718), NativeAOT, **Mac Catalyst Release**, **iOS simulator Release**
+  (the last two are real Mono and both report `IsDynamicCodeSupported = False`), and the full-AOT compilation of the
+  iOS device target. In addition, the four heads of `apps/Polhem.Northwind` (Desktop / Browser / iOS / Android) have
+  been tested end to end against the same server.
+- The `object` channel no longer describes each value with a full assembly-qualified name, so payloads get smaller
+  and the wire no longer names CLR assemblies.
+- The deserialization attack surface shrinks: the framework's own values go through a closed discriminated set, with
+  no type name resolution.
+- The drift guard changes from a manually maintained constant to an automatic comparison; forgetting to register a
+  new property is caught by the tests.
 
-### 代價
+### Costs
 
-- **破壞性 wire 變更**：`object` 值的封套格式改變，client 與 server 必須同版升級。
-- 新增 wire 型別時必須補註冊。這不是額外負擔而是把既有的隱性要求顯性化——
-  漏補會被 `WireContractDriftTests` 當場擋下，而不是留到行動端才炸。
-- 註冊清單體積不小。它由型別閉包機械產生，維護方式是重跑閉包而非人工增刪。
+- **Breaking wire change**: the envelope format of `object` values changes, so client and server must be upgraded to
+  the same version.
+- Adding a wire type requires adding its registration. This is not an extra burden but an existing implicit
+  requirement made explicit: a missed registration is caught on the spot by `WireContractDriftTests`, instead of
+  blowing up later on mobile.
+- The registration list is not small. It is generated mechanically from the type closure, and it is maintained by
+  re-running the closure, not by adding and removing entries by hand.
 
-### 對 ADR-036 的修正
+### Correction to ADR-036
 
-ADR-036 的核心決策（定義層不得相依傳輸格式套件）**維持不變**——本 ADR 沒有把
-MessagePack 標註放回 `Polhem.Definition`。改變的是該決策的**實作代價**：
-手寫 formatter 的覆蓋範圍從「有需排除成員的型別」擴大到「全部 wire 型別」。
+The core decision of ADR-036 (the definition layer must not depend on a transport format package) **stays
+unchanged**: this ADR does not put MessagePack attributes back into `Polhem.Definition`. What changes is **the
+implementation cost** of that decision: the coverage of hand-written formatters widens from "types with members to
+exclude" to "every wire type".
 
-ADR-036「放棄 source generator 退路」那條代價的依據（reflection fallback 可用）已被推翻，
-但結論仍成立：顯式註冊同樣不需要標註，且比 source generator 更可控。
+The basis for ADR-036's cost "the source generator fallback is given up" (that the reflection fallback works) has been
+overturned, but the conclusion still holds: explicit registration does not need attributes either, and is more
+controllable than a source generator.
 
-## 未納入
+## Not covered
 
-- **iOS 實機的執行期尚未實測**（需 Apple Developer 簽章與實機）。已驗證的環境有五個：
-  CoreCLR 搭配關閉的開關、NativeAOT、Mac Catalyst Release、iOS 模擬器 Release，
-  以及 iOS 裝置 target 的 full-AOT 編譯。後兩者是真 Mono、皆回報
-  `IsDynamicCodeSupported = False`。實機相對模擬器的唯一差異是「Mono 完全沒有 JIT」，
-  而該面向已由 NativeAOT 涵蓋，故列為低風險的形式缺口。
-- **具名型別逃生門在行動端仍不可用**。要讓 host 自訂型別也能上行動端的 wire，
-  需要另一套「host 註冊自己的 formatter」機制，本 ADR 不處理。
+- **Runtime behavior on a physical iOS device has not been tested yet** (it needs Apple Developer signing and a
+  device). Five environments have been verified: CoreCLR with the switch turned off, NativeAOT, Mac Catalyst Release,
+  iOS simulator Release, and the full-AOT compilation of the iOS device target. The last two are real Mono and both
+  report `IsDynamicCodeSupported = False`. The only difference between a device and the simulator is that "Mono has no
+  JIT at all", and that aspect is already covered by NativeAOT, so this is listed as a low-risk formal gap.
+- **The named-type escape hatch is still unusable on mobile**. Letting host-defined types onto the mobile wire as well
+  needs a separate mechanism of "the host registers its own formatters", which this ADR does not address.

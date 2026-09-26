@@ -225,7 +225,7 @@ ORDER BY A.[sys_id] ASC
 | `Polhem.Db.Dml.WhereBuilder` | 產生 `WHERE` 子句與參數化 |
 | `Polhem.Db.Dml.SortBuilder` | 產生 `ORDER BY` 子句 |
 | `Polhem.Db.Dml.SelectCommandBuilder` | 整合上述四個 builder，產出最終 SELECT `DbCommandSpec` |
-| `Polhem.Db.Dml.DeleteCommandBuilder` | 從 `FormSchema` 與 `FilterNode` 產出單表 DELETE `DbCommandSpec`（`Delete()` 使用；無 JOIN、識別子依方言 quote）。Insert/Update 不再逐列：`DataFormRepository.Save` 改以 `TableSchemaCommandBuilder` 產 `DataTableUpdateSpec`、經 `DataAdapter.Update` 套用（見 [ADR-024](../adr/adr-024-dataform-save-dataadapter.md)） |
+| `Polhem.Db.Dml.DeleteCommandBuilder` | 從 `FormSchema` 與 `FilterNode` 產出單表 DELETE `DbCommandSpec`（`Delete()` 使用；無 JOIN、識別子依方言 quote）。Insert/Update 不再逐列：`DataFormRepository.Save` 改以 `TableSchemaCommandBuilder` 產 `DataTableUpdateSpec`、經 `DataAdapter.Update` 套用（見 [ADR-024](../adr/adr-024-dataform-save-dataadapter.zh-TW.md)） |
 | `Polhem.Db.Dml.IFormCommandBuilder` | 各 DB 方言的入口介面（`SqlFormCommandBuilder` / `PgFormCommandBuilder`），方法 `Build{Select,Count,Delete}` 委派至上述共用核心 |
 
 ---
@@ -247,7 +247,7 @@ ORDER BY A.[sys_id] ASC
 - 已知不需要動態欄位、且能接受 ORM 編譯成本的場景
 
 > **雙軌策略：`FormSchema` 驅動的 CRUD 由框架產生語法，任意形狀的 SQL 走 BO + AnyCode。**
-> 詳見 [development-cookbook.md](../en/development-cookbook.md)。
+> 詳見 [development-cookbook.md](development-cookbook.md)。
 
 ---
 
@@ -267,7 +267,7 @@ ORDER BY A.[sys_id] ASC
 ## 8. 延伸閱讀
 
 - [架構總覽](architecture-overview.md)：Polhem 的整體架構
-- [ADR-005：FormSchema 定義驅動架構](../adr/adr-005-formschema-driven.md)：本文做法上位的設計決策
+- [ADR-005：FormSchema 定義驅動架構](../adr/adr-005-formschema-driven.zh-TW.md)：本文做法上位的設計決策
 - [專有名詞對照表](terminology.md)：相關名詞的中英文對照
 - [Polhem.Db README](../../src/Polhem.Db/README.zh-TW.md)：Polhem.Db 套件總覽
-- [開發指引](../en/development-cookbook.md)：FormSchema 驅動開發、雙軌策略
+- [開發指引](development-cookbook.md)：FormSchema 驅動開發、雙軌策略

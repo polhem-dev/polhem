@@ -141,4 +141,4 @@ change 軸採**清單 / 明細**二段式：`GetChangeLog` 只回輕量事件**�
 
 - [API 合約 & BO 參數設計](api-bo-contract-design.md) — Contract / Args / Result 分層設計原理
 - [權限與授權](permission-authorization.md) —— 各個 `[ApiAccessControl]` 要求在執行期的實際語意
-- [ADR-004](../adr/adr-004-messagepack-payload.md) 與 [ADR-044](../adr/adr-044-payload-codec-negotiation.md) —— payload 管線與逐請求 codec 協商
+- [ADR-004](../adr/adr-004-messagepack-payload.zh-TW.md) 與 [ADR-044](../adr/adr-044-payload-codec-negotiation.zh-TW.md) —— payload 管線與逐請求 codec 協商

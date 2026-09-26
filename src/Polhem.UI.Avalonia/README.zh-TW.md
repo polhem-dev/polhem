@@ -55,7 +55,7 @@ ClientInfo.ApplyApiKey("my-app");
 
 - 所有控件子類都覆寫 `StyleKeyOverride` 指向原生基底，host 主題才會持續生效（漏覆寫控件會隱形）。
 - `FieldValueChanged` 由 ADO.NET `DataTable` 事件橋接——任何寫入路徑（編輯器、grid cell、直接寫 `DataRow`）都會發布，寫入者不需手動引發。
-- DataGrid 的綁定與編輯策略記錄於 [ADR-020](../../docs/adr/adr-020-avalonia-datagrid-binding-strategy.md) 與 [ADR-021](../../docs/adr/adr-021-avalonia-datagrid-editing-strategy.md)。
+- DataGrid 的綁定與編輯策略記錄於 [ADR-020](../../docs/adr/adr-020-avalonia-datagrid-binding-strategy.zh-TW.md) 與 [ADR-021](../../docs/adr/adr-021-avalonia-datagrid-editing-strategy.zh-TW.md)。
 
 ## 範例
 

@@ -1,56 +1,100 @@
-# ADR-029：欄位名稱一律小寫（定義 / 資料 / UI 三層一致）
+# ADR-029: Field names are always lowercase (consistent across the definition, data and UI layers)
 
-## 狀態
+[繁體中文](adr-029-lowercase-field-names.zh-TW.md)
 
-已採納（2026-07-09）
+## Status
 
-> 原則即刻生效（欄名一律小寫 `snake_case`）。記憶體 `DataSet` 欄名已由大寫**遷移為小寫**（`AddColumn` / `LowercaseColumnNames` 於 `DbAccess` 讀取邊界套用），此為破壞性 wire 變更、第一方 client 已同步。
+Accepted (2026-07-09)
 
-## 背景
+> The principle takes effect immediately (field names are always lowercase `snake_case`). The column names of the
+> in-memory `DataSet` have been **migrated from uppercase to lowercase** (`AddColumn` / `LowercaseColumnNames` are
+> applied at the `DbAccess` read boundary). This is a breaking wire change, and the first-party client has been
+> updated to match.
 
-欄名的「大小寫」在系統各層若不一致，會反覆造成問題，因為**有多個子系統以欄名字串、且區分大小寫做比對**：
+## Context
 
-- **早期 UI 控制項資料繫結** 區分大小寫。框架當時的解法是把記憶體 `DataSet` 欄名一律正規化為**大寫**（讀取資料庫後 `UppercaseColumnNames()`、以及 `DataTableExtensions.AddColumn` 內 `ToUpper()`），讓繫結一致。
-- **運算式引擎（ADR-028）** 的識別字區分大小寫（DynamicExpresso）。`FormExpressionCalculator.BuildVariables` 一度以大寫 `DataColumn.ColumnName` 當變數 key，但運算式引用的是宣告的小寫欄名（如 `quantity`）→ `UnknownIdentifierException`；伺服器存檔時未處理即成 JSON-RPC `-32000`。
+When the letter case of field names differs between the layers of the system, it causes problems again and again,
+because **several subsystems compare field names as strings, case-sensitively**:
 
-這兩次是**同一類問題**：大小寫敏感的名稱比對，遇上「同一欄名在不同層有不同大小寫」。資料庫命名規範（見 `docs/en/database-naming-conventions.md` §1–2）本就要求全小寫 `snake_case`，`FormField.FieldName` 慣例上也是小寫；不一致的只有「記憶體 `DataSet` 欄名存大寫」這個歷史正規化，而它還會透過序列化洩漏到 wire。
+- **Data binding in the early UI controls** was case-sensitive. The framework's fix at the time was to normalize the
+  column names of the in-memory `DataSet` to **uppercase** everywhere (`UppercaseColumnNames()` after reading from the
+  database, and `ToUpper()` inside `DataTableExtensions.AddColumn`), so that binding was consistent.
+- **The expression engine (ADR-028)** has case-sensitive identifiers (DynamicExpresso).
+  `FormExpressionCalculator.BuildVariables` once used the uppercase `DataColumn.ColumnName` as the variable key, but
+  expressions refer to the declared lowercase field names (such as `quantity`) → `UnknownIdentifierException`; when
+  the server saved without handling it, it became a JSON-RPC `-32000`.
 
-## 考慮過的選項
+These two are **the same kind of problem**: a case-sensitive name comparison meets "the same field name has a
+different case in different layers". The database naming conventions (see `docs/en/database-naming-conventions.md`
+§1–2) already require all-lowercase `snake_case`, and `FormField.FieldName` is lowercase by convention as well. The
+only inconsistency is the historical normalization "the in-memory `DataSet` stores column names in uppercase", and it
+also leaks onto the wire through serialization.
 
-1. **逐一為每個區分大小寫的消費端解耦**（現況補丁式）：如運算式引擎改以 `FormField.FieldName` 綁定變數（已於 commit [`96821c04`](https://github.com/jeff377/bee-library/commit/96821c04) 修好）。**部分採納作為當前止血**——它讓運算式層與 DataSet 儲存大小寫解耦、正確且零風險；但無法根治「未來新子系統若做大小寫敏感比對又要各自解耦」。
+## Options considered
 
-2. **全面 case-insensitive**：不動儲存大小寫，改讓每個名稱比對點都大小寫無關。**否決為長期方向**——沒達成「三層欄名字面一致」，且「哪裡仍大小寫敏感」需持續盯防，容易再出漏網。
+1. **Decouple each case-sensitive consumer one by one** (the current patch-by-patch approach): for example, the
+   expression engine now binds variables by `FormField.FieldName` (fixed in commit
+   [`96821c04`](https://github.com/jeff377/bee-library/commit/96821c04)). **Partly adopted as the immediate
+   stopgap**: it decouples the expression layer from the case the DataSet stores, and it is correct and carries zero
+   risk; but it cannot cure "every future subsystem that does a case-sensitive comparison has to decouple itself
+   again".
 
-3. **全層小寫正規化（採納）**：讓定義（`FormField.FieldName`）、資料（實體 DB + 記憶體 `DataSet`）、UI 三層欄名一律小寫 `snake_case`，即資料庫既有的寫法。單一標準大小寫，從源頭消除整類問題。**代價**：記憶體 `DataSet` 欄名由大寫改小寫會改變 wire 上的欄名（JSON / MessagePack payload key），破壞現有讀大寫 key 的 JS/TS 前端 → 屬破壞性變更，須於 major 版邊界協調釋出。
+2. **Make everything case-insensitive**: leave the stored case alone and make every name comparison point
+   case-insensitive instead. **Rejected as the long-term direction**: it does not achieve "field names that are
+   literally identical across the three layers", and "where is it still case-sensitive" has to be watched
+   continuously, so things easily slip through again.
 
-## 決策
+3. **Normalize to lowercase in every layer (adopted)**: field names in the definition (`FormField.FieldName`), the
+   data (the physical DB + the in-memory `DataSet`) and the UI are all lowercase `snake_case`, which is what the
+   database already uses. A single canonical case removes the whole class of problems at the source. **Cost**:
+   changing the in-memory `DataSet` column names from uppercase to lowercase changes the field names on the wire (the
+   JSON / MessagePack payload keys) and breaks existing JS/TS front ends that read uppercase keys → a breaking change
+   that has to be released in coordination at a major version boundary.
 
-**欄位名稱在所有層一律採小寫 `snake_case`，作為系統唯一的標準寫法**：
+## Decision
 
-| 層級 | 欄名載體 |
-|------|---------|
-| 定義 | `FormField.FieldName`、`DbField.FieldName`、`TableSchema` 欄位 |
-| 資料（實體） | 資料庫表欄位 |
-| 資料（記憶體） | `DataSet` / `DataTable` 的 `DataColumn.ColumnName`（**目標狀態；遷移中**） |
-| 運算式 | `ValueExpression` / `FormRule.Condition` 內識別字＝精確的宣告 `FieldName` |
-| UI | 欄位編輯器／表格欄繫結 key |
+**Field names are always lowercase `snake_case` in every layer; this is the single canonical spelling of the
+system**:
 
-配套原則：
+| Layer | Carrier of the field name |
+|-------|---------------------------|
+| Definition | `FormField.FieldName`, `DbField.FieldName`, `TableSchema` fields |
+| Data (physical) | Database table columns |
+| Data (in memory) | `DataColumn.ColumnName` of a `DataSet` / `DataTable` (**target state; migration in progress**) |
+| Expressions | Identifiers in `ValueExpression` / `FormRule.Condition` = the exact declared `FieldName` |
+| UI | Binding keys of field editors / grid columns |
 
-- **撰寫端**：schema / layout / 運算式各處一律以小寫 `snake_case` 寫欄名。
-- **程式端**：比對欄名一律大小寫無關（`DataColumnCollection` 索引器本就如此）；**禁止**依賴特定大小寫做字面比較。
-- **運算式綁定**：`BuildVariables` 以 `FormField.FieldName`（宣告大小寫）為變數 key，與 `DataColumn` 儲存大小寫解耦——即使記憶體 DataSet 尚未遷移到小寫，運算式仍正確（此為選項 1 的止血，長期在選項 3 落地後自然一致）。
+Accompanying principles:
 
-## 後果
+- **Authoring**: field names are written in lowercase `snake_case` everywhere in schemas, layouts and expressions.
+- **Code**: field name comparisons are always case-insensitive (the `DataColumnCollection` indexer already is);
+  literal comparisons that depend on a particular case are **forbidden**.
+- **Expression binding**: `BuildVariables` uses `FormField.FieldName` (the declared case) as the variable key,
+  decoupled from the case `DataColumn` stores. Expressions stay correct even before the in-memory DataSet is migrated
+  to lowercase (this is option 1's stopgap; in the long run it becomes consistent naturally once option 3 lands).
 
-- **正向**：欄名全系統只有一種寫法；消除「大小寫敏感名稱比對」整類 bug 的根源；新子系統無需各自解耦；wire 上的欄名對齊 DB / schema，對前端消費端長期更直覺（`row.current.sys_rowid`）。
-- **已執行（破壞性）**：記憶體 `DataSet` 欄名由大寫改小寫是 **wire breaking change**——影響 JSON + MessagePack 兩種 payload 的 key、第一方與第三方 JS/TS 前端、以及變更稽核既有 DiffGram 歷史（欄名大寫）。落地情形：
-  - 核心切換（`AddColumn` / `LowercaseColumnNames` / `DbAccess`）＋第一方前端（`Web.Js.Demo`）已同步；wire converter 直出 `ColumnName` 故自動小寫。
-  - 稽核既有資料以「解析端相容新舊大小寫」處理（下游比對本就大小寫無關），不回填改寫不可變的稽核歷史。
-  - **前置稽核已完成**：C# 端 0 處大寫字面比較（皆走大小寫無關 `DataColumnCollection`）；Avalonia head 繫結大小寫無關；其餘 UI head（WinForms / Blazor / MAUI）尚未實作，趁此時遷移使其天生一致。
-  - **剩餘**：多 DB provider 容器全回歸（SQLite 已驗證）；**發佈時**於 CHANGELOG 標 breaking + 附遷移指南（依 `releasing.md`，CHANGELOG 累積至發版統整）。
+## Consequences
 
-## 相關
+- **Positive**: field names have only one spelling across the whole system; the root of the whole class of
+  "case-sensitive name comparison" bugs is removed; new subsystems do not need to decouple themselves; field names on
+  the wire match the DB / schema, which is more intuitive for front-end consumers in the long run
+  (`row.current.sys_rowid`).
+- **Done (breaking)**: changing the in-memory `DataSet` column names from uppercase to lowercase is a **wire breaking
+  change**. It affects the keys of both JSON and MessagePack payloads, first-party and third-party JS/TS front ends,
+  and the existing DiffGram history of the change audit (whose field names are uppercase). How it landed:
+  - The core switch (`AddColumn` / `LowercaseColumnNames` / `DbAccess`) + the first-party front end (`Web.Js.Demo`)
+    have been updated; the wire converter emits `ColumnName` directly, so it is lowercase automatically.
+  - Existing audit data is handled by "the parsing side accepts both the old and the new case" (downstream comparisons
+    are case-insensitive anyway); the immutable audit history is not backfilled or rewritten.
+  - **The preliminary audit is complete**: 0 literal uppercase comparisons on the C# side (all go through the
+    case-insensitive `DataColumnCollection`); the Avalonia head binds case-insensitively; the other UI heads
+    (WinForms / Blazor / MAUI) are not implemented yet, and migrating now makes them consistent from birth.
+  - **Remaining**: a full regression across the multi-DB provider containers (SQLite verified); **at release time**,
+    mark it as breaking in the CHANGELOG and attach a migration guide (per `releasing.md`, the CHANGELOG accumulates
+    until the release is consolidated).
 
-- ADR-028（自訂運算式與規則引擎）——大小寫敏感比對第二次咬人的來源。
-- `docs/en/database-naming-conventions.md` §1–2、§6——欄名小寫規範與跨層一致性。
+## Related
+
+- ADR-028 (custom expression and rule engine): the source of the second time a case-sensitive comparison bit.
+- `docs/en/database-naming-conventions.md` §1–2, §6: the lowercase field name convention and cross-layer
+  consistency.

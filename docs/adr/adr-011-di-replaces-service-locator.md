@@ -1,67 +1,95 @@
-# ADR-011：採用 DI 取代靜態 Service Locator
+# ADR-011: Adopt DI to replace the static Service Locator
 
-## 狀態
+[繁體中文](adr-011-di-replaces-service-locator.zh-TW.md)
 
-已採納（2026-05-13）
+## Status
 
-Supersedes [ADR-003](adr-003-static-service-locator.md)。
+Accepted (2026-05-13)
 
-## 背景
+Supersedes [ADR-003](adr-003-static-service-locator.md).
 
-ADR-003（採用靜態 Service Locator）的前提已不再適用：
+## Context
 
-- 框架已從 netstandard2.0 改為 **net10.0**，可直接使用 `Microsoft.Extensions.DependencyInjection`，不再需要避開 DI 容器以維持跨 target 相容性
-- 靜態 facade 累積的測試隔離成本超過原本「簡化初始化」的收益 —— 主計畫盤點顯示 BackendInfo 系靜態類別被 **159 個測試**引用，需要 `GlobalFixture` / `TempDefinePath` / `[Collection("Initialize")]` 等多重機制維持隔離，仍頻繁出現 process-wide static race
-- BO 隱含相依（呼叫端的依賴關係不在建構子中明確宣告）、初始化順序敏感（違反會在執行時期才發現）、不符現代 .NET 慣例
+The premises of ADR-003 (use a static Service Locator) no longer apply:
 
-## 決策
+- The framework has moved from netstandard2.0 to **net10.0** and can use `Microsoft.Extensions.DependencyInjection`
+  directly; there is no longer any need to avoid a DI container to stay compatible across targets
+- The test isolation cost accumulated by the static facades exceeds the original benefit of "simpler
+  initialization": the inventory in the main plan showed that the BackendInfo family of static classes was referenced
+  by **159 tests**, which needed several mechanisms such as `GlobalFixture` / `TempDefinePath` /
+  `[Collection("Initialize")]` to stay isolated, and process-wide static races still occurred frequently
+- BOs have implicit dependencies (a caller's dependencies are not declared explicitly in its constructor), are
+  sensitive to initialization order (a violation is only discovered at runtime), and do not follow modern .NET
+  conventions
 
-全面採用建構式注入（ctor injection）；以 `IServiceCollection.AddPolhemFramework(BackendConfiguration, PathOptions)` 為框架服務註冊入口，由 `Polhem.Hosting` 套件提供（4.3 起；4.2 以前由 `Polhem.Api.AspNetCore` 提供）。`Polhem.Api.AspNetCore` 仍負責 ASP.NET Core 整合（`UsePolhemFramework` 與 `ApiServiceController`）。
+## Decision
 
-設計範圍、不變條件與設計原則見下方「決策」與「後果」兩節。
+Adopt constructor injection (ctor injection) throughout; `IServiceCollection.AddPolhemFramework(BackendConfiguration,
+PathOptions)` is the entry point for registering framework services, provided by the `Polhem.Hosting` package (from
+4.3; up to 4.2 it was provided by `Polhem.Api.AspNetCore`). `Polhem.Api.AspNetCore` remains responsible for the
+ASP.NET Core integration (`UsePolhemFramework` and `ApiServiceController`).
 
-## 理由
+The design scope, invariants and design principles are in the "Decision" and "Consequences" sections below.
 
-- **可見的依賴宣告**：所有服務依賴出現在建構式參數列；編譯期可見、IDE 可靜態分析、code review 容易
-- **可測試性**：測試直接 `new BO(testCtx, ...)` 注入 mock，無需 process-wide reset 機制；測試 fixture 改為 per-class `IServiceProvider`，xUnit 平行恢復
-- **Lifetime 語意明確**：Singleton / Scoped / Transient 對應到 DI 容器，per-request scope 邊界清楚（過去以「執行緒上下文 + 靜態服務」混搭）
-- **Options Pattern 啟動期驗證**：`IValidateOptions<T>` 比 `BackendInfo.Initialize` 內部偷偷拋例外更早失敗
-- **服務可置換性保留**：`SystemSettings.xml` 內 `BackendComponents` 仍宣告每個替換介面的具體型別名稱；`AddPolhemFramework` 讀取後將設定的型別註冊到 DI 容器
+## Rationale
 
-## 取捨
+- **Visible dependency declarations**: every service dependency appears in the constructor's parameter list; visible
+  at compile time, statically analyzable by the IDE, and easy to review
+- **Testability**: tests inject mocks directly with `new BO(testCtx, ...)`, with no process-wide reset mechanism; test
+  fixtures become a per-class `IServiceProvider`, and xUnit parallelism is restored
+- **Clear lifetime semantics**: Singleton / Scoped / Transient map onto the DI container, and the per-request scope
+  boundary is clear (previously a mix of "thread context + static services")
+- **Startup validation with the Options pattern**: `IValidateOptions<T>` fails earlier than an exception thrown
+  quietly inside `BackendInfo.Initialize`
+- **Services stay replaceable**: `BackendComponents` in `SystemSettings.xml` still declares the concrete type name for
+  each replaceable interface; `AddPolhemFramework` reads it and registers the configured types in the DI container
 
-- **近端模式（`Polhem.Api.Client` in-process）需處理 ServiceProvider 注入點**：在 client process 內呼叫後端邏輯時，目前以 `ApiClientInfo.LocalServiceProvider` 過渡保留靜態 holder。待後續 `Polhem.Api.Client` 重構時再決定如何套用本 ADR 的 DI 註冊邏輯
-- **BO 子類仍走零 DI 註冊**：ERP 應用會有上千個 `FormBusinessObject` 子類，由 progId XML 表派發；應用開發者寫新 BO 時不應接觸 DI API。改採 `IPolhemContext` 聚合 BO 必用核心服務 + `ActivatorUtilities.CreateInstance(sp, boType, accessToken, progId, isLocalCall)` 由 factory 建構（見主計畫 §「設計原則 §4」）
-- **遷移為 v5.0 破壞性變更**：採全 DI 路徑、不留 `[Obsolete]` 過渡層、不引入 dual-ctor 或相容 adapter。每個 phase 在單一 PR 內完成該層所有靜態 facade 引用的刪除
+## Trade-offs
 
-## 影響
+- **The local mode (`Polhem.Api.Client` in-process) has to deal with the ServiceProvider injection point**: when
+  back-end logic is called inside a client process, a static holder, `ApiClientInfo.LocalServiceProvider`, is kept
+  for now as a transition. How to apply this ADR's DI registration logic will be decided when `Polhem.Api.Client` is
+  refactored later
+- **BO subclasses still need zero DI registration**: an ERP application will have thousands of `FormBusinessObject`
+  subclasses, dispatched from the progId XML table; application developers writing a new BO should not have to touch
+  the DI API. Instead, `IPolhemContext` aggregates the core services every BO needs, and the factory constructs the
+  BO with `ActivatorUtilities.CreateInstance(sp, boType, accessToken, progId, isLocalCall)` (see the main plan
+  § "Design principles §4")
+- **The migration is a v5.0 breaking change**: it takes the full DI path, leaves no `[Obsolete]` transition layer,
+  and introduces no dual constructors or compatibility adapters. Each phase removes every reference to that layer's
+  static facades within a single PR
 
-### 移除的靜態 facade（全 Polhem 範圍）
+## Consequences
 
-| 類別 | 原所在套件 | 角色 |
-|------|-----------|------|
-| `BackendInfo` | Polhem.Definition | 8 個服務 + 加密金鑰 + 配置值的全域入口 |
-| `RepositoryInfo` | Polhem.Repository.Abstractions | Repository Provider 全域入口 |
-| `CacheFunc` / `CacheContainer` | Polhem.ObjectCaching | 快取操作 facade、cache singleton |
-| `DefinePathInfo` | Polhem.Definition | 定義檔路徑全域入口 |
-| `DbConnectionManager` | Polhem.Db | 資料庫連線資訊靜態 facade |
+### Static facades removed (across all of Polhem)
 
-### 保留的 process-wide static（registry-style 一次寫入，不影響並行）
+| Class | Original package | Role |
+|-------|------------------|------|
+| `BackendInfo` | Polhem.Definition | The global entry point for 8 services + encryption keys + configuration values |
+| `RepositoryInfo` | Polhem.Repository.Abstractions | The global entry point for the Repository provider |
+| `CacheFunc` / `CacheContainer` | Polhem.ObjectCaching | The cache operation facade and the cache singletons |
+| `DefinePathInfo` | Polhem.Definition | The global entry point for definition file paths |
+| `DbConnectionManager` | Polhem.Db | The static facade for database connection information |
 
-- `SysInfo` —— process-wide debug flag / payload options（一次寫入）
-- `CacheInfo.Provider` —— cache backend（per-host 設定一次）
-- `DbProviderRegistry` —— ADO.NET `DbProviderFactory` 註冊表
-- `DbDialectRegistry` —— framework `IDialectFactory` 註冊表
-- `ApiServiceOptions` —— API 序列化 / 壓縮 / 加密元件全域配置（per-host 設定一次）
+### Process-wide statics kept (registry-style, written once, no effect on concurrency)
 
-> **補記（2026-07-28）**：`ApiServiceOptions` 原列於上方「移除的靜態 facade」表，
-> 但實作時並未隨 v5.0 一併移除，本文與程式碼因而長期不一致。經檢視後**確認保留**並
-> 移入本節——它與 `BackendInfo` 系不同，不持有 per-session 狀態、不是測試隔離成本的
-> 來源，形態上就是 registry-style 的一次寫入配置，與 `CacheInfo.Provider` 同類。
-> 唯一的並行風險在測試中改寫它，已由 `[Collection("ApiServiceOptionsState")]` 序列化處理。
-- `ApiClientInfo.LocalServiceProvider` —— `Polhem.Api.Client` 近端模式過渡 holder（待後續 ADR 處理）
+- `SysInfo` — process-wide debug flag / payload options (written once)
+- `CacheInfo.Provider` — the cache backend (set once per host)
+- `DbProviderRegistry` — the registry of ADO.NET `DbProviderFactory`s
+- `DbDialectRegistry` — the registry of the framework's `IDialectFactory`s
+- `ApiServiceOptions` — global configuration of the API serialization / compression / encryption components (set
+  once per host)
 
-### 後端宿主啟動流程
+> **Addendum (2026-07-28)**: `ApiServiceOptions` was originally listed in the "Static facades removed" table above,
+> but in the implementation it was not removed along with v5.0, so this document and the code disagreed for a long
+> time. After review it was **confirmed as kept** and moved into this section: unlike the `BackendInfo` family, it
+> holds no per-session state and is not a source of test isolation cost; in shape it is a registry-style,
+> written-once configuration, of the same kind as `CacheInfo.Provider`.
+> The only concurrency risk is rewriting it in tests, which is serialized by `[Collection("ApiServiceOptionsState")]`.
+- `ApiClientInfo.LocalServiceProvider` — the transitional holder for the local mode of `Polhem.Api.Client` (to be
+  handled by a later ADR)
+
+### Back-end host startup flow
 
 ```text
 1. paths = new PathOptions { DefinePath = "..." }
@@ -69,20 +97,22 @@ ADR-003（採用靜態 Service Locator）的前提已不再適用：
 3. SysInfo.Initialize(settings.CommonConfiguration)
 4. services.AddPolhemFramework(settings.BackendConfiguration, paths)
 5. provider = services.BuildServiceProvider()
-6. app.UsePolhemFramework()   // ASP.NET only — 啟動期檢查（API key gate 未生效時發警告）
+6. app.UsePolhemFramework()   // ASP.NET only — startup checks (warns when the API key gate is not in effect)
 ```
 
-完整參考見 [docs/en/development-cookbook.md § Framework Initialization Order](../en/development-cookbook.md#framework-initialization-order)。
+For the full reference see
+[docs/en/development-cookbook.md § Framework Initialization Order](../en/development-cookbook.md#framework-initialization-order).
 
-### 測試基礎設施
+### Test infrastructure
 
-- `[Collection("Initialize")]` / `GlobalFixture` / `PolhemTestServices` / `TempDefinePath` 全數移除
-- 取代為 `IClassFixture<PolhemTestFixture>`（per-class `IServiceProvider`）+ `SharedDbFixture`（process-wide shared DB schema/seed）
-- xUnit 平行恢復：本機 wall-clock ~2.7x parallel speedup（2749 tests）
+- `[Collection("Initialize")]` / `GlobalFixture` / `PolhemTestServices` / `TempDefinePath` are all removed
+- Replaced by `IClassFixture<PolhemTestFixture>` (a per-class `IServiceProvider`) + `SharedDbFixture` (process-wide
+  shared DB schema/seed)
+- xUnit parallelism restored: a local wall-clock parallel speedup of about 2.7x (2749 tests)
 
-## 實作參考
+## Implementation references
 
-| 文件 | 內容 |
-|------|------|
-| [docs/en/development-cookbook.md](../en/development-cookbook.md) | DI 化後的初始化流程與請求管線 |
-| [docs/en/development-constraints.md](../en/development-constraints.md) | 初始化順序限制（DI 模型） |
+| Document | Content |
+|----------|---------|
+| [docs/en/development-cookbook.md](../en/development-cookbook.md) | The initialization flow and request pipeline after the move to DI |
+| [docs/en/development-constraints.md](../en/development-constraints.md) | Initialization order constraints (DI model) |

@@ -1,39 +1,52 @@
-# ADR-001：使用 DataSet 作為跨層 DTO
+# ADR-001: Use DataSet as the cross-layer DTO
 
-## 狀態
+[繁體中文](adr-001-dataset-as-dto.zh-TW.md)
 
-已採納
+## Status
 
-## 背景
+Accepted
 
-框架需要一個跨層資料傳輸物件（DTO），在 Business Object、Repository、API 之間傳遞 Master-Detail 表單資料。常見選項包括：
+## Context
 
-1. 強型別 POCO / Entity 類別
+The framework needs a cross-layer data transfer object (DTO) to carry Master-Detail form data between Business
+Objects, Repositories and the API. The common options are:
+
+1. Strongly typed POCO / entity classes
 2. ADO.NET DataSet / DataTable
-3. Dictionary / dynamic 動態物件
+3. Dictionary / dynamic objects
 
-## 決策
+## Decision
 
-採用 ADO.NET `DataSet` 作為跨層 DTO。
+Use the ADO.NET `DataSet` as the cross-layer DTO.
 
-## 理由
+## Rationale
 
-- **動態結構**：FormSchema 在執行時期定義欄位，表單結構不是編譯時期已知的。DataSet 天然支援動態欄位，不需要為每個表單產生 POCO 類別。
-- **BPM 電子表單支援**：框架除了事先設計好的 ERP / HRM 系統外，在執行階段還支援 BPM（Business Process Management），使用者可動態建置電子表單並與 ERP / BPM 流程做關連。這些表單的結構在編譯時期完全未知，強型別 POCO 無法適用，DataSet 是唯一能同時承載預定義表單與動態 BPM 表單的 DTO。
-- **Master-Detail 原生支援**：DataSet 包含多個 DataTable，可自然對應表單的主表與明細表（Master-Detail）關係，無需額外包裝。
-- **變更追蹤**：DataRow 內建 `RowState`（Added / Modified / Deleted / Unchanged），Repository 層可直接根據狀態產生對應的 INSERT / UPDATE / DELETE，不需要額外的 Change Tracker。
-- **序列化成熟**：DataSet 的 XML / Binary 序列化在 .NET 生態系中已高度成熟，搭配自訂 MessagePack Formatter 也能高效傳輸。
-- **跨框架相容**：netstandard2.0 原生支援 DataSet，不依賴新版 API。
+- **Dynamic structure**: FormSchema defines fields at runtime, so the structure of a form is not known at compile
+  time. DataSet naturally supports dynamic fields, and no POCO class has to be generated for each form.
+- **BPM electronic forms**: besides ERP / HRM systems designed in advance, the framework supports BPM (Business
+  Process Management) at runtime: users can build electronic forms dynamically and link them to ERP / BPM processes.
+  The structure of these forms is entirely unknown at compile time, so strongly typed POCOs cannot be used. DataSet
+  is the only DTO that can carry both predefined forms and dynamic BPM forms.
+- **Native Master-Detail support**: a DataSet contains several DataTables, which map naturally onto the master and
+  detail tables of a form (Master-Detail) with no extra wrapping.
+- **Change tracking**: DataRow has a built-in `RowState` (Added / Modified / Deleted / Unchanged). The Repository
+  layer can generate the matching INSERT / UPDATE / DELETE directly from the state, without a separate change
+  tracker.
+- **Mature serialization**: XML / binary serialization of DataSet is highly mature in the .NET ecosystem, and with a
+  custom MessagePack formatter it can also be transmitted efficiently.
+- **Cross-framework compatibility**: netstandard2.0 supports DataSet natively, with no dependency on newer APIs.
 
-## 取捨
+## Trade-offs
 
-- **型別安全性降低**：欄位存取以字串索引，編譯時期無法檢查欄位名稱拼寫錯誤。
-- **IntelliSense 支援較差**：不像強型別 POCO 有屬性提示。
-- **不符合現代 .NET 慣例**：多數新框架偏好強型別 POCO + EF Core，DataSet 被視為「較舊」的做法。
+- **Less type safety**: fields are accessed by string index, so misspelled field names cannot be caught at compile
+  time.
+- **Weaker IntelliSense support**: there are no property hints as with strongly typed POCOs.
+- **Not in line with modern .NET conventions**: most new frameworks prefer strongly typed POCOs + EF Core, and
+  DataSet is seen as the "older" approach.
 
-## 影響
+## Consequences
 
-- 所有跨層資料傳遞統一使用 DataSet，不混用 POCO DTO
-- FormSchema 驅動的 CRUD 操作依賴 DataRow.RowState 判斷操作類型
-- 自訂 MessagePack Formatter（位於 `Polhem.Api.Core/MessagePack/`）負責 DataSet 的高效序列化
-- `Polhem.Base/Data/` 提供 DataTable / DataSet / DataRow 擴展方法簡化操作
+- All cross-layer data transfer uses DataSet; POCO DTOs are not mixed in
+- FormSchema-driven CRUD operations rely on DataRow.RowState to decide the kind of operation
+- Custom MessagePack formatters (in `Polhem.Api.Core/MessagePack/`) handle efficient serialization of DataSet
+- `Polhem.Base/Data/` provides DataTable / DataSet / DataRow extension methods to simplify common operations

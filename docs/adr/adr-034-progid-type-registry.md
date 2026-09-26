@@ -1,202 +1,229 @@
-# ADR-034：ProgramSettings 作為全框架型別註冊表
+# ADR-034: ProgramSettings as the framework-wide type registry
 
-## 狀態
+[繁體中文](adr-034-progid-type-registry.zh-TW.md)
 
-**已採納（Accepted，2026-08-04）** —— 決策已執行。`ProgramSettings` 收斂為純型別註冊表、
-選單分離為 `MenuSettings`、BO 與 Repository 皆以 progId 綁定，並已落地於 `apps/Polhem.Northwind`。
+## Status
 
-本 ADR 記錄三個長效決策：**ProgramSettings 作為全框架型別註冊表**（含 COM+ 淵源）、
-**選單與註冊表分離**、**Repository 1:1 規則只適用表單軌**。
+**Accepted (2026-08-04)**. The decision has been carried out. `ProgramSettings` has been reduced to a pure type
+registry, the menu has been split out into `MenuSettings`, both BOs and Repositories are bound by progId, and all of it
+is in use in `apps/Polhem.Northwind`.
 
-## 淵源：COM+ 的登錄模型
+This ADR records three long-lived decisions: **ProgramSettings as the framework-wide type registry** (including its
+COM+ origin), **separating the menu from the registry**, and **the Repository 1:1 rule applies only to the form
+track**.
 
-`ProgramSettings` 的參照來源是 **COM+ 的登錄模型**：以機碼登錄 ProgID 與其對應的元件型別，
-ProgID 代表一個獨立的功能或程式。框架延續這個模型 —— **整個框架都以 ProgId 定義物件型別**。
+## Origin: the COM+ registration model
 
-這個定位帶出三個直接推論：
+The reference model for `ProgramSettings` is **the COM+ registration model**: a ProgID and its corresponding component
+type are registered under a registry key, and a ProgID represents an independent function or program. The framework
+continues this model: **the whole framework defines object types by ProgId**.
 
-1. **所有 BO 都是註冊表的項目**，包含 `SystemBusinessObject`、`LogBusinessObject`
-   以及未來新增的任何 BO —— 而不是只有 form BO。
-2. **Repository 比照辦理** —— 同一個 progId 底下綁定它的 BO 與 Repository。
-3. **客製化以 ProgId 為單位覆寫型別**，套裝與客製完全隔離、互不影響。
+This positioning leads to three direct inferences:
 
-COM+ 的登錄檔只管「ProgID → 型別」，不管「這個程式在功能表的哪個位置」。第二個決策即據此而來。
+1. **Every BO is an entry in the registry**, including `SystemBusinessObject`, `LogBusinessObject` and any BO added in
+   the future, not only form BOs.
+2. **Repositories follow suit**: the same progId binds both its BO and its Repository.
+3. **Customization overrides types per ProgId**, so the packaged product and the customizations are completely
+   isolated and do not affect each other.
 
-## 決策一：ProgramSettings 只管 progId → 型別
+The COM+ registry only handles "ProgID → type", not "where this program sits in the menu". The second decision follows
+from this.
 
-`ProgramSettings.xml` 收斂為單層攤平的 `ProgramItem` 清單，每筆帶 `BusinessObject` 與
-`Repository` 兩個組件限定型別名。
+## Decision 1: ProgramSettings only handles progId → type
 
-### 為何攤平
+`ProgramSettings.xml` is reduced to a single flat list of `ProgramItem`s, each carrying two assembly-qualified type
+names, `BusinessObject` and `Repository`.
 
-註冊表的前提是「progId 是唯一的鍵」。巢狀（`ProgramCategory` → `ProgramItem`）結構下，
-這個保證只存在於分類之內：同一個 progId 出現在兩個分類時，**哪一筆生效取決於 XML 的文件順序**。
-攤平後 `ProgramItemCollection` 的 key 機制**本身就是**全域唯一性保證，重複在載入期即被擋下，
-且查找成為單層 key lookup。分類概念只存在於選單定義，不會兩邊不同步。
+### Why flatten
 
-### 為何連保留字 progId 也納入
+The premise of a registry is that "the progId is a unique key". With a nested structure (`ProgramCategory` →
+`ProgramItem`), that guarantee only exists within a category: when the same progId appears in two categories, **which
+entry takes effect depends on the document order of the XML**. After flattening, the key mechanism of
+`ProgramItemCollection` **is itself** the guarantee of global uniqueness, duplicates are rejected at load time, and a
+lookup becomes a single-level key lookup. The concept of categories exists only in the menu definition, so the two
+sides cannot get out of sync.
 
-`System` 與 `AuditLog` 本來就是 progId，卻曾經繞過註冊表走硬編分派 —— 同樣是 progId、兩套待遇，
-與淵源不一致。納入後，`JsonRpcExecutor` 的三岔分支整段消失，且 SystemBO 首次獲得
-per-progId、per-tenant 的客製能力（先前唯一辦法是整個換掉工廠，且是 process-wide、不分租戶）。
+### Why even the reserved progIds are included
 
-代價是 bootstrap 懸崖：註冊表是唯一來源，缺項就解析不到。解法是**啟動時逐筆檢查保留字、
-缺哪筆補哪筆**，且補寫結果**先進記憶體並立即生效**，落檔只是後續的持久化嘗試 ——
-唯讀部署因此仍能啟動。
+`System` and `AuditLog` were always progIds, yet they used to bypass the registry through hard-coded dispatch: the same
+kind of thing, progIds, with two kinds of treatment, inconsistent with the origin. Once they were included, the
+three-way branch in `JsonRpcExecutor` disappeared entirely, and SystemBO gained per-progId, per-tenant customization for
+the first time (previously the only way was to replace the whole factory, which was process-wide and not per tenant).
 
-### 保留字的失敗策略比一般 progId 嚴格
+The cost is a bootstrap cliff: the registry is the only source, and a missing entry cannot be resolved. The solution is
+to **check the reserved names one by one at startup and add whichever is missing**, and the added entries **go into
+memory first and take effect immediately**, with writing them to the file only a subsequent attempt at persistence;
+a read-only deployment can therefore still start.
 
-| progId | 型別載不到 / 基底不符 |
+### The failure strategy for reserved progIds is stricter than for ordinary ones
+
+| progId | Type cannot be loaded / base type does not match |
 |--------|---------------------|
-| 一般（如 `Order`） | 靜默退回 `FormBusinessObject`（BO 軸） |
-| 保留字（`System` / `AuditLog`） | **直接拋**，並加上 per-progId 的預期基底約束 |
+| Ordinary (such as `Order`) | Silently falls back to `FormBusinessObject` (BO axis) |
+| Reserved (`System` / `AuditLog`) | **Throws directly**, with an additional per-progId constraint on the expected base type |
 
-理由是**故障的面貌**。`FormBusinessObject` 沒有 `Login`，`System` 若沿用靜默退回，症狀會是
-JSON-RPC「找不到方法 Login」，把診斷者導向 API 層或 client，而非真正的成因（註冊表）。
-且 `FormBusinessObject` 的 ctor 接受 progId，會成功建構，故障浮現得晚且面貌錯誤。
+The reason is **what the failure looks like**. `FormBusinessObject` has no `Login`; if `System` used the silent
+fallback, the symptom would be a JSON-RPC "method Login not found", which steers whoever is diagnosing it towards the
+API layer or the client rather than the real cause (the registry). And since the constructor of `FormBusinessObject`
+accepts a progId, construction would succeed, so the failure would surface late and look like something else.
 
-未採用「內建預設兜底」：服務雖不中斷，但**客製打錯字會靜默失效** —— 而客製化正是納入註冊表的主要動機。
+"A built-in default as a safety net" was not adopted: the service would not be interrupted, but **a typo in a
+customization would silently fail to take effect**, and customization is the main motivation for including them in the
+registry.
 
-> **修訂（2026-08-16）：兩軸的失敗策略已收斂為一致，一律直接拋。**
-> 上表「一般 progId → 靜默退回」與下一節「`Repository` 與 `BusinessObject` 相反」是
-> **當時的決定，記錄保留原文**；現行行為見本 ADR 末的〈修訂紀錄〉。
+> **Revision (2026-08-16): the failure strategies of the two axes have been converged; both always throw directly.**
+> The table above, "ordinary progId → silent fallback", and the next section, "`Repository` is the opposite of
+> `BusinessObject`", are **the decision at the time; the original text is kept as a record**. For the current behavior,
+> see "Revision history" at the end of this ADR.
 
-### `Repository` 的失敗策略與 `BusinessObject` 相反
+### The failure strategy of `Repository` is the opposite of `BusinessObject`
 
-`Repository` 型別載不到或不衍生自 `DataFormRepository`，**一律直接拋，不 fallback**，
-即使是一般 progId。
+When a `Repository` type cannot be loaded or does not derive from `DataFormRepository`, **it always throws directly,
+with no fallback**, even for an ordinary progId.
 
-`Order` 的 BO 名稱打錯只是退化成通用 CRUD —— 惱人，不是災難。Repository 名稱打錯卻會讓
-這支程式的讀寫**改跑作者刻意替換掉的通用 SQL**。Fallback 不會避免故障，只會把它推遲到
-資料已經錯了的時候。資料存取沒有無害的降級模式。
+A typo in the BO name of `Order` only degrades it to generic CRUD: annoying, not a disaster. A typo in the Repository
+name, however, makes this program's reads and writes **run the generic SQL that the author deliberately replaced**.
+A fallback does not avoid the failure; it only postpones it until the data is already wrong. Data access has no
+harmless degraded mode.
 
-### 僅供 server 端
+### Server side only
 
-註冊表承載組件限定型別名，client 端毫無用處。選單分離後 client 不再需要它，因此遠端
-`GetDefine` 比照 `SystemSettings` / `DatabaseSettings` 一併擋下 —— 型別名不上 wire。
-這是選單分離的直接附帶效益，不是額外加的防護。
+The registry carries assembly-qualified type names, which are of no use on the client. Once the menu is split out, the
+client no longer needs it, so remote `GetDefine` blocks it just as it blocks `SystemSettings` / `DatabaseSettings`:
+type names do not go onto the wire. This is a direct side benefit of splitting out the menu, not an extra protection
+added on purpose.
 
-## 決策二：選單與註冊表分離
+## Decision 2: Separate the menu from the registry
 
-選單改為獨立的 `MenuSettings.xml`，每個 `MenuEntry` 對應一個 progId。
+The menu becomes a separate `MenuSettings.xml`, where each `MenuEntry` corresponds to a progId.
 
-### 為何分家
+### Why split
 
-兩職的**讀者、生命週期與敏感度都不同**：註冊表只有 server 需要（且含組件限定型別名），
-選單只有 client 需要（且需要排序、i18n、可見性等純呈現屬性）。COM+ 的登錄檔也只管
-ProgID → 型別。
+The two roles have **different readers, lifecycles and sensitivity**: only the server needs the registry (and it
+contains assembly-qualified type names), while only the client needs the menu (and it needs pure presentation
+attributes such as ordering, i18n and visibility). The COM+ registry, too, only handles ProgID → type.
 
-分家還連帶解掉一個具體問題：client 建選單時無條件走訪所有項目、不做過濾，因此一旦把
-`System` / `AuditLog` 納入註冊表，它們會直接變成兩個選單項。原本要靠可見性旗標或保留分類迴避，
-分離後不需要。
+Splitting also solves a concrete problem: when the client builds the menu, it walks all entries unconditionally
+without filtering, so once `System` / `AuditLog` were included in the registry, they would have turned straight into
+two menu items. Avoiding that would have required a visibility flag or a reserved category; after the split it is not
+needed.
 
-### 結構決策
+### Structural decisions
 
-| 項目 | 決定 | 理由 |
+| Item | Decision | Reason |
 |------|------|------|
-| **層數** | 多層遞迴，不設固定層數 | ERP 選單三層以上常見；事後改為公開定義檔是破壞性變更 |
-| **節點分型** | `MenuFolder` / `MenuEntry` 分兩型，共同基底 `MenuNodeBase` | 屬性本就不一致。分型後「功能項不得有子節點」由**型別保證**，不需執行期驗證 |
-| **葉節點命名** | `MenuEntry`，**不用 `MenuItem`** | `MenuItem` 幾乎被每個 UI 框架佔用（WPF / WinForms / Avalonia / DevExpress）。定義型別會被**所有** UI head 消費，且撞名處恰是「依定義建選單」那段程式碼 —— 衝突是必然而非偶然 |
-| **key** | 獨立的 `Id`，`ProgId` 是另一個屬性，且 `Id` **全樹唯一** | 允許同一支程式出現在選單多處（訂單與退貨單可共用同一個 BO），並讓節點可被穩定參照（深層連結、最近使用） |
-| **客製 overlay** | **整份取代** | 選單是整體版面，per-item 疊加會產生難以預期的混合結果 |
+| **Depth** | Recursive, multi-level, with no fixed number of levels | ERP menus with three or more levels are common; changing a public definition file afterwards is a breaking change |
+| **Node types** | Two types, `MenuFolder` / `MenuEntry`, with the common base `MenuNodeBase` | Their attributes differ anyway. With separate types, "a function entry must not have child nodes" is **guaranteed by the type** and needs no runtime validation |
+| **Leaf node name** | `MenuEntry`, **not `MenuItem`** | `MenuItem` is taken by almost every UI framework (WPF / WinForms / Avalonia / DevExpress). Definition types are consumed by **every** UI head, and the collision happens exactly in the code that "builds the menu from the definition", so the conflict is certain, not accidental |
+| **Key** | A separate `Id`, with `ProgId` as a different attribute, and `Id` **unique across the whole tree** | Allows the same program to appear in several places in the menu (orders and return orders can share one BO), and lets nodes be referenced stably (deep links, recently used) |
+| **Customization overlay** | **Replaces the whole file** | The menu is an overall layout; per-item overlays would produce hard-to-predict mixtures |
 
-### 連帶影響
+### Knock-on effects
 
-**`ProgId` → 選單節點是 1:N。** 需要「目前開啟的表單對應哪個選單項」（麵包屑、選單高亮）時，
-必須以 `Id` 而非 `ProgId` 追蹤，client 導覽狀態應攜帶 `Id`。
+**`ProgId` → menu node is 1:N.** When you need "which menu entry corresponds to the currently open form" (breadcrumbs,
+menu highlighting), you must track it by `Id` rather than `ProgId`, and client navigation state should carry the `Id`.
 
-**`Visible` 不是權限機制。** 它是設計期開關，對每個使用者都一樣；逐使用者的可見性屬
-[權限與授權](adr-019-permission-authorization-model.md) 的職責。**client 目前對選單不做任何權限過濾。**
+**`Visible` is not a permission mechanism.** It is a design-time switch that is the same for every user; per-user
+visibility is the responsibility of [permissions and authorization](adr-019-permission-authorization-model.md).
+**The client currently does no permission filtering of the menu at all.**
 
-## 決策三：Repository 的 1:1 規則只適用表單軌
+## Decision 3: The Repository 1:1 rule applies only to the form track
 
-「一個 progId 一個 BO 一個 Repository」在**表單軌完全成立**，在框架軌不成立。
-`IRepositoryFactory` 因此有兩個方法而非一個：
+"One progId, one BO, one Repository" **holds completely on the form track**, and does not hold on the framework track.
+`IRepositoryFactory` therefore has two methods rather than one:
 
 ```csharp
 T CreateFormRepository<T>(Guid accessToken, string progId) where T : class, IDataFormRepository;
 T Create<T>(Guid accessToken = default) where T : class;
 ```
 
-這不是妥協，而是誠實反映消費者結構。**BO 軸可以完全 ProgId 化，Repository 軸不行**，
-原因有二：
+This is not a compromise but an honest reflection of how the consumers are structured. **The BO axis can be fully
+ProgId-based; the Repository axis cannot**, for two reasons:
 
-**破口一：`System` 一個 progId 對應多個 Repository。** SystemBO 在單一 progId 底下用掉
-session / user / company / api-key 等多個系統表的 Repository，`CreateFormRepository(token, "System")`
-無從決定回哪一個。（這**不影響** BO 軸 —— 一個 progId 對一個 **BO** 型別完全成立。）
+**Gap one: the single progId `System` corresponds to several Repositories.** Under a single progId, SystemBO uses the
+Repositories of several system tables, such as session / user / company / api-key, and
+`CreateFormRepository(token, "System")` has no way of deciding which one to return. (This **does not affect** the BO
+axis: one progId to one **BO** type holds completely.)
 
-**破口二：部分消費者不在請求脈絡內，也不是 BO。**
+**Gap two: some consumers are not in a request context, and are not BOs either.**
 
-| 消費者 | 情境 | 為何給不出 progId |
+| Consumer | Situation | Why it cannot supply a progId |
 |--------|------|------------------|
-| `ExpiredSessionCleanupService` | `BackgroundService`，計時器驅動清理過期 session | 沒有請求、沒有 session、沒有 token |
-| `EmployeeContextResolver` | session 建立 / 進公司時解析員工脈絡 | 在任何 progId 請求**之前**執行，且單一方法內要用兩個 Repository |
+| `ExpiredSessionCleanupService` | A `BackgroundService` that cleans up expired sessions on a timer | No request, no session, no token |
+| `EmployeeContextResolver` | Resolves the employee context when a session is created / a company is entered | Runs **before** any progId request, and needs two Repositories within a single method |
 
-`SessionCompanyBinder`、`DeploymentAuthorizationService`、`CacheDataSourceProvider` 屬同一類。
-**這些消費者根本不是 BO**，BO 軸的 ProgId 化對它們毫無影響，也無法涵蓋它們。
+`SessionCompanyBinder`, `DeploymentAuthorizationService` and `CacheDataSourceProvider` are of the same kind.
+**These consumers are not BOs at all**; making the BO axis ProgId-based has no effect on them and cannot cover them.
 
-### 為何系統 Repository 維持 per-table 介面
+### Why system Repositories keep per-table interfaces
 
-| | 表單軌 | 框架軌 |
+| | Form track | Framework track |
 |---|---|---|
-| 資料存取形狀 | 一個 progId 一張主檔（＋明細），FormSchema 驅動 | 多張彼此無關的系統表 |
-| DB scope | 單一，由 `FormSchema.CategoryId` 決定 | 跨 scope：session / user / api-key 在 common，department / employee / role-grant 在 company |
-| Repository 的擁有者 | 該 BO 私有 | **跨消費者的共用基礎設施** |
+| Shape of data access | One master table (+ details) per progId, driven by FormSchema | Several unrelated system tables |
+| DB scope | Single, decided by `FormSchema.CategoryId` | Crosses scopes: session / user / api-key in common, department / employee / role-grant in company |
+| Owner of the Repository | Private to that BO | **Shared infrastructure across consumers** |
 
-強行併成單一 `ISystemRepository` 會產出一個橫跨兩個 DB scope、數十個方法的 god interface，
-且迫使這些非 BO 的消費者去依賴某個 BO 的介面。
+Forcing them into a single `ISystemRepository` would produce a god interface spanning two DB scopes with dozens of
+methods, and would force these non-BO consumers to depend on the interface of some BO.
 
-### 兩個方法皆為泛型
+### Both methods are generic
 
-新增 Repository 因此**不需異動介面**。這正是本決策要解決的問題：被取代的
-`ISystemRepositoryFactory` 每加一張系統表就長一個方法，且兩個手工測試 fake 各為了用
-一個 Repository 而實作九個方法。
+Adding a Repository therefore **does not require changing the interface**. That is exactly the problem this decision
+set out to solve: the replaced `ISystemRepositoryFactory` grew a method for every system table added, and two
+hand-written test fakes each implemented nine methods just to use one Repository.
 
-### 表單軌的專屬介面樣式
+### The dedicated interface pattern of the form track
 
-`IXxxRepository : IDataFormRepository`（**擴充，非取代**）。`FormBusinessObject` 的 CRUD 與
-`SaveContext` / `DeleteContext` 都寫在基底介面上，取代等於仍要實作每個成員、只是不說出口。
-BO 端以自己的介面取得它，免 cast：
+`IXxxRepository : IDataFormRepository` (**extends, does not replace**). The CRUD of `FormBusinessObject` and
+`SaveContext` / `DeleteContext` are all written against the base interface, so replacing it would still mean
+implementing every member, just without saying so. The BO obtains it through its own interface, with no cast:
 
 ```csharp
 private IOrderRepository Repository() => CreateFormRepository<IOrderRepository>();
 ```
 
-實例見 `apps/Polhem.Northwind/Polhem.Northwind.Server/Repositories/IOrderRepository.cs` 與
-同目錄的 `OrderRepository.cs`。
+For an example, see `apps/Polhem.Northwind/Polhem.Northwind.Server/Repositories/IOrderRepository.cs` and
+`OrderRepository.cs` in the same directory.
 
-## 修訂紀錄
+## Revision history
 
-### 2026-08-16：兩軸的失敗策略收斂為一致（一律直接拋）
+### 2026-08-16: The failure strategies of the two axes converge (always throw directly)
 
-原決策讓兩軸的失敗策略**刻意相反**：`BusinessObject` 靜默退回、`Repository` 直接拋。
-現改為**一律直接拋**——一般 progId 的 `BusinessObject` 型別載不到或基底不符，
-與保留字、與 `Repository` 軸一樣擲 `InvalidOperationException`。
+The original decision made the failure strategies of the two axes **deliberately opposite**: `BusinessObject` fell back
+silently, and `Repository` threw directly. It is now **always throw directly**: when the `BusinessObject` type of an
+ordinary progId cannot be loaded or its base type does not match, it throws `InvalidOperationException`, just like the
+reserved names and the `Repository` axis.
 
-**改變的只有「宣告了一個名字、但那個名字解析不出可用型別」這一條路徑。**
-沒宣告（註冊表沒這筆 progId，或 `BusinessObject` 留空）仍解析為框架預設——
-一般 progId 得 `FormBusinessObject`、保留字得該軸的框架物件。**那不是失敗**，
-自我註冊補寫與「只為需要客製的 progId 填 `BusinessObject`」都仍然成立。
+**The only thing that changed is the one path of "a name was declared, but that name does not resolve to a usable
+type".** When nothing is declared (the registry has no entry for the progId, or `BusinessObject` is left empty), it
+still resolves to the framework default: an ordinary progId gets `FormBusinessObject`, and a reserved name gets that
+axis's framework object. **That is not a failure**; self-registration of missing entries and "fill in `BusinessObject`
+only for the progIds that need customization" both still hold.
 
-理由是原決策自己就已經寫過、只是當時沒推到一般 progId 身上：
+The reasons were already written in the original decision; they just were not applied to ordinary progIds at the time:
 
-- **退路換到的只有「看起來還在跑」。** `FormBusinessObject` 的建構子接受任何 progId，
-  一定建構成功，所以故障浮現得晚、面貌又指向 API 層而非註冊表——這正是原決策
-  拿來說明「保留字為何要拋」的同一段推理。差別只在保留字的症狀是「找不到 `Login`」、
-  一般 progId 的症狀是「這支程式行為變成通用 CRUD」，而後者可能整批交易寫完才被發現。
-- **兩軸相反本身就是負擔。** 同一筆 `ProgramItem`、兩個屬性、兩種失敗語意，
-  維護者與框架使用者都得記住哪個是哪個。
-- **「一個壞項不該拖垮整個系統」在多租戶下不成立。** 客製打錯字若靜默失效，
-  受害的是那個租戶而沒有人會知道——而客製化正是納入註冊表的主要動機。
+- **All the fallback buys is "it looks like it is still running".** The constructor of `FormBusinessObject` accepts any
+  progId and always constructs successfully, so the failure surfaces late and looks like it points to the API layer
+  rather than the registry. That is the very same reasoning the original decision used to explain "why reserved names
+  must throw". The only difference is that the symptom for a reserved name is "`Login` not found", while the symptom for
+  an ordinary progId is "this program now behaves like generic CRUD", and the latter may only be discovered after a
+  whole batch of transactions has been written.
+- **Having the two axes opposite is itself a burden.** The same `ProgramItem`, two attributes, two failure semantics:
+  maintainers and framework users alike have to remember which is which.
+- **"One bad entry should not bring down the whole system" does not hold under multi-tenancy.** If a typo in a
+  customization silently fails to take effect, the victim is that tenant and nobody will know, and customization is
+  the main motivation for including them in the registry.
 
-連帶：解析失敗**不進 type cache**（`GetOrAdd` 的 factory 擲例外時不會寫入），
-因此每次呼叫都會拋，不會第二次起靜默通過。
-`ProgramSettingsBoTypeResolver` 的 `ILogger` 建構子多載保留（既有呼叫端仍可編譯與繫結），
-但已無用途——退路沒了，那則 degrade log 也就沒有對象。
+As a consequence, a resolution failure **does not enter the type cache** (when the factory of `GetOrAdd` throws,
+nothing is written), so every call throws, and it does not silently pass from the second call on.
+The `ILogger` constructor overload of `ProgramSettingsBoTypeResolver` is kept (existing callers still compile and
+bind), but it no longer has a purpose: with the fallback gone, that degrade log has nothing to report.
 
-## 相關
+## Related
 
-- [ADR-007](adr-007-convention-based-type-resolution.md) —— 約定式型別解析
-- [ADR-016](adr-016-multitenant-customization-overlay.md) —— 多租戶客製 overlay，本 ADR 的 per-progId 取代沿用其機制
-- [ADR-010](adr-010-logical-database-category.md) —— 邏輯資料庫分類，決定表單軌 Repository 的路由目標
-- [定義檔總覽](../zh-TW/definition-files-overview.md) —— 兩份定義檔的使用說明
+- [ADR-007](adr-007-convention-based-type-resolution.md): convention-based type resolution
+- [ADR-016](adr-016-multitenant-customization-overlay.md): the multi-tenant customization overlay; this ADR's per-progId
+  replacement reuses its mechanism
+- [ADR-010](adr-010-logical-database-category.md): logical database categories, which decide the routing target of
+  form-track Repositories
+- [Definition Files Overview](../en/definition-files-overview.md): how to use the two definition files

@@ -130,7 +130,7 @@ Host=localhost;Port=5432;Database={@DbName};Username={@UserId};Password={@Passwo
 
 `Time` 以固定寬度的 `"HH:mm"` 字串承載，而非各家原生時間型別。原生時間型別在範圍、精度、
 以及「代表間隔還是時鐘讀數」上差異太大，無法可靠地 round-trip 一個牆上時間；且時刻永遠不做
-時區轉換——見 [ADR-033](../../docs/adr/adr-033-time-of-day-semantics.md)。
+時區轉換——見 [ADR-033](../../docs/adr/adr-033-time-of-day-semantics.zh-TW.md)。
 
 > 要自訂 dialect？`GetDefaultValueExpression(FieldDbType)` 與型別對映**都**必須處理 `Time`。
 > 它是附加在列舉末端的，所以既有的 `switch` 編譯照樣通過，只會靜默落入 default 分支。
@@ -210,7 +210,7 @@ Polhem.Db/
                    # DbConnectionScope、DbParameterSpec、DbParameterSpecCollection、
 ```
 
-命名空間佈局遵循三項原則（見 [ADR-008](../../docs/adr/adr-008-polhem-db-namespace-layout.md)）：
+命名空間佈局遵循三項原則（見 [ADR-008](../../docs/adr/adr-008-polhem-db-namespace-layout.zh-TW.md)）：
 
 1. **語法層（`Polhem.Db.Ddl` / `Polhem.Db.Dml`）vs 模型層（`Polhem.Db.Schema`）** — 產 SQL 字串者歸 `Ddl` / `Dml`；操作 `TableSchema` 模型者歸 `Schema`。
 2. **契約依職能歸類，實作依 provider 歸類** — 抽象契約進對應職能命名空間；具體 per-provider 實作不論是 DDL、DML、或 schema 讀取都統一歸 `Polhem.Db.Providers.{X}`。

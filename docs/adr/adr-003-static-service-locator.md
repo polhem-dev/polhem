@@ -1,44 +1,61 @@
-# ADR-003：使用靜態 Service Locator 而非依賴注入
+# ADR-003: Use a static Service Locator instead of dependency injection
 
-## 狀態
+[繁體中文](adr-003-static-service-locator.zh-TW.md)
 
-**Superseded by [ADR-011](adr-011-di-replaces-service-locator.md)（2026-05）** —— 框架已全面改為 DI ctor 注入。本 ADR 保留作為歷史決策紀錄。
+## Status
 
-## 原狀態
+**Superseded by [ADR-011](adr-011-di-replaces-service-locator.md) (2026-05)** — the framework has switched entirely to
+DI constructor injection. This ADR is kept as a record of the historical decision.
 
-已採納
+## Original status
 
-## 背景
+Accepted
 
-框架需要一個機制讓各層存取共用的 Provider（如 BusinessObjectProvider、RepositoryProvider、DefineAccess 等）。常見選項：
+## Context
 
-1. **依賴注入（DI）**：透過建構子或屬性注入，由 DI 容器管理生命週期
-2. **靜態 Service Locator**：透過靜態類別提供全域存取點
+The framework needs a mechanism that lets every layer reach shared providers (such as BusinessObjectProvider,
+RepositoryProvider and DefineAccess). The common options:
 
-## 決策
+1. **Dependency injection (DI)**: injected through the constructor or a property, with lifetimes managed by a DI
+   container
+2. **Static Service Locator**: a global access point provided through static classes
 
-採用靜態 Service Locator 模式，透過 `BackendInfo`、`RepositoryInfo`、`CacheFunc`、`ApiServiceOptions` 等靜態類別提供全域存取。
+## Decision
 
-## 理由
+Use the static Service Locator pattern, providing global access through static classes such as `BackendInfo`,
+`RepositoryInfo`, `CacheFunc` and `ApiServiceOptions`.
 
-- **跨宿主環境**：框架需同時支援 ASP.NET Core（有內建 DI）、WinForms、Console App、Blazor 等多種宿主環境。靜態存取不依賴特定 DI 容器，所有環境一致。
-- **歷史相容性**：框架早期目標為 netstandard2.0，無法依賴 `Microsoft.Extensions.DependencyInjection`。雖然現已改採 net10.0，但此模式已為既有慣例。
-- **簡化初始化**：應用程式啟動時只需按順序設定靜態屬性，不需要建構複雜的 ServiceCollection 註冊流程。
-- **確定性初始化**：靜態建構子確保 Provider 在首次存取時初始化，避免 DI 容器解析順序不明確的問題。
-- **既有慣例**：框架從 .NET Framework 時代延續此模式，WinForms 等非 DI 環境的使用者已習慣此 API。
+## Rationale
 
-## 取捨
+- **Across host environments**: the framework must support several host environments at once: ASP.NET Core (with
+  built-in DI), WinForms, console apps, Blazor and others. Static access does not depend on any particular DI
+  container and is the same in every environment.
+- **Historical compatibility**: the framework originally targeted netstandard2.0 and could not depend on
+  `Microsoft.Extensions.DependencyInjection`. It now targets net10.0, but this pattern is already the established
+  convention.
+- **Simpler initialization**: at application startup the static properties only need to be set in order; there is no
+  need to build a complex ServiceCollection registration flow.
+- **Deterministic initialization**: static constructors guarantee that a provider is initialized on first access,
+  avoiding an unclear resolution order in a DI container.
+- **Established convention**: the framework has carried this pattern over from the .NET Framework era, and users in
+  non-DI environments such as WinForms are used to this API.
 
-- **測試困難**：靜態狀態難以在測試間隔離，需要額外的 reset 機制。
-- **隱含相依**：呼叫端的相依關係不在建構子中明確宣告，閱讀程式碼時不容易看出。
-- **初始化順序敏感**：必須嚴格遵守初始化順序（見 `docs/en/development-constraints.md`），違反會在執行時期才發現。
-- **不符合現代 .NET 慣例**：新的 .NET 專案普遍採用 DI。
+## Trade-offs
 
-## 影響
+- **Hard to test**: static state is hard to isolate between tests and needs an extra reset mechanism.
+- **Implicit dependencies**: a caller's dependencies are not declared explicitly in its constructor, so they are hard
+  to see when reading the code.
+- **Sensitive to initialization order**: the initialization order must be followed strictly (see
+  `docs/en/development-constraints.md`), and a violation is only discovered at runtime.
+- **Not in line with modern .NET conventions**: new .NET projects generally use DI.
 
-- `BackendInfo`（Polhem.Definition）：Provider 與安全金鑰的全域入口
-- `RepositoryInfo`（Polhem.Repository.Abstractions）：Repository Provider 的全域入口
-- `CacheFunc`（Polhem.ObjectCaching）：快取操作的全域 Facade
-- `ApiServiceOptions`（Polhem.Api.Core）：API 序列化/壓縮/加密元件的全域配置
-- `ApiClientInfo`（Polhem.Api.Client）：用戶端連線配置的全域入口
-- 初始化順序記錄於 `docs/en/development-constraints.md` 和 `docs/en/development-cookbook.md`
+## Consequences
+
+- `BackendInfo` (Polhem.Definition): the global entry point for providers and security keys
+- `RepositoryInfo` (Polhem.Repository.Abstractions): the global entry point for the Repository provider
+- `CacheFunc` (Polhem.ObjectCaching): the global facade for cache operations
+- `ApiServiceOptions` (Polhem.Api.Core): the global configuration of the API serialization / compression /
+  encryption components
+- `ApiClientInfo` (Polhem.Api.Client): the global entry point for client connection configuration
+- The initialization order is documented in `docs/en/development-constraints.md` and
+  `docs/en/development-cookbook.md`

@@ -62,7 +62,7 @@
 
 - `IExpressionEvaluator` -- 對一組具名變數求值運算式。以 DynamicExpresso 為底的實作位於
   `Polhem.Expressions`；抽象放在這裡，讓定義層與商業邏輯層消費引擎時不必相依第三方套件
-  （[ADR-038](../../docs/adr/adr-038-definition-dependency-boundary.md)）
+  （[ADR-038](../../docs/adr/adr-038-definition-dependency-boundary.zh-TW.md)）
 - `ExpressionPolicy` -- 欄位值餵進引擎前套用的共用型別／null 政策，使計算欄在伺服端與
   UI 用戶端得到相同結果
 - `ExpressionEvaluationException` -- 運算式無法解析或編譯時擲出

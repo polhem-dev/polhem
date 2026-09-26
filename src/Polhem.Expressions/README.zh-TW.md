@@ -16,7 +16,7 @@ UI 用戶端（輸入時的即時預覽）共用，因此同一個計算欄位�
 `IExpressionEvaluator`、`ExpressionPolicy`、`ExpressionEvaluationException` 在
 `Polhem.Base.Expressions`，不在本套件。這個分界讓 `Polhem.Definition` 與 `Polhem.Business` 完全不相依
 DynamicExpresso——它們透過抽象消費引擎，只有組裝層（`Polhem.Hosting`，或自建 evaluator 的
-UI head）才引用本套件。見 [ADR-038](../../docs/adr/adr-038-definition-dependency-boundary.md)。
+UI head）才引用本套件。見 [ADR-038](../../docs/adr/adr-038-definition-dependency-boundary.zh-TW.md)。
 
 **需要「挑一個實作」時引用本套件；只需要「接受一個實作」時引用 `Polhem.Base` 即可。**
 
@@ -24,7 +24,7 @@ UI head）才引用本套件。見 [ADR-038](../../docs/adr/adr-038-definition-d
 
 `Evaluate` 接收 `timeZoneId`。讀取時鐘的 helper（`Today()`、`Now()`）依該時區解析，
 因此從其他地區建立的資料列仍以使用者自己的今天為預設。`UtcNow()` 則明示 UTC。
-時區 id 為空即代表 UTC。見 [ADR-032](../../docs/adr/adr-032-datetime-timezone.md)。
+時區 id 為空即代表 UTC。見 [ADR-032](../../docs/adr/adr-032-datetime-timezone.zh-TW.md)。
 
 ## 安全性
 

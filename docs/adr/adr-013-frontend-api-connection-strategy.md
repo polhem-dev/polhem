@@ -1,133 +1,163 @@
-# ADR-013：前端 API 連線策略 — `Polhem.UI.*` 與 `Polhem.Web.*` 兩條 family 分流
+# ADR-013: Front-end API connection strategy — separate `Polhem.UI.*` and `Polhem.Web.*` families
 
-## 狀態
+[繁體中文](adr-013-frontend-api-connection-strategy.zh-TW.md)
 
-已採納（2026-05-22）
+## Status
 
-## 背景
+Accepted (2026-05-22)
 
-Polhem 在 v4.4 階段同時擁有三類前端 host:
+## Context
 
-| 前端類型 | 代表套件 | 部署 / 執行環境 |
+At the v4.4 stage Polhem had three kinds of front-end host at the same time:
+
+| Front-end kind | Representative packages | Deployment / runtime environment |
 |---------|---------|----------------|
-| **桌面端 / native UI** | `Polhem.UI.Core`(共通)、`Polhem.UI.Avalonia`、`Polhem.UI.Maui`、`Polhem.UI.WinForms`(未來,獨立 repo) | iOS / Android / macOS / Windows / Linux / 桌面 OS native |
-| **Blazor Server** | `Polhem.Web.Blazor.Server` | ASP.NET Core server-rendered,with SignalR circuit |
-| **Blazor WASM** | `Polhem.Web.Blazor.Wasm` | Browser sandbox(WebAssembly) |
+| **Desktop / native UI** | `Polhem.UI.Core` (shared), `Polhem.UI.Avalonia`, `Polhem.UI.Maui`, `Polhem.UI.WinForms` (future, separate repository) | iOS / Android / macOS / Windows / Linux / desktop OS native |
+| **Blazor Server** | `Polhem.Web.Blazor.Server` | ASP.NET Core server-rendered, with SignalR circuit |
+| **Blazor WASM** | `Polhem.Web.Blazor.Wasm` | Browser sandbox (WebAssembly) |
 
-這三類前端**對「如何取得 / 持久化 API 連線狀態」的需求結構性不同**:
+These three kinds of front end **have structurally different needs for "how to obtain / persist the API connection
+state"**:
 
-| 維度 | 桌面端 | Blazor Server | Blazor WASM |
+| Dimension | Desktop | Blazor Server | Blazor WASM |
 |------|--------|---------------|-------------|
-| 連線資訊存放 | 本機檔案(`{ExeName}.Settings.xml`) | Server 端 DI scope / circuit state | Browser 端記憶體 / localStorage |
-| Endpoint 設定流程 | 啟動時讀檔 → 不可達則彈 dialog 讓使用者輸入 | 由宿主 startup 注入或讀 appsettings | 由宿主 startup 注入或讀 JS interop |
-| Token 管理 | **single-user** static singleton(`ClientInfo._accessToken` 為 `private static Guid`) | **multi-user per circuit**,每個 SignalR circuit 各自一份 token | **multi-user per app instance**,每個 Browser tab / WASM heap 各自一份 token |
-| Token 承載人數 | 1(一個 process = 一個使用者) | N(一個 server process 同時服務多個 SignalR 連線) | 1 per browser instance,但同 server 對應 N tabs |
-| UI 互動需求 | 需要對話框服務(`IUIViewService.ShowApiConnectAsync()`) | 走 Razor component 流程,無 dialog 抽象 | 同 Server |
-| 連線方式 | Local 或 Remote(可雙模式) | Local(in-process)或 Remote(HTTP) | **只能 Remote(HTTP)** —— Browser 無法載入後端組件 |
+| Where connection information is kept | Local file (`{ExeName}.Settings.xml`) | Server-side DI scope / circuit state | Browser memory / localStorage |
+| Endpoint setup flow | Read the file at startup → if unreachable, pop up a dialog for the user to enter it | Injected at host startup or read from appsettings | Injected at host startup or read through JS interop |
+| Token management | **single-user** static singleton (`ClientInfo._accessToken` is a `private static Guid`) | **multi-user per circuit**: each SignalR circuit has its own token | **multi-user per app instance**: each browser tab / WASM heap has its own token |
+| Users per token holder | 1 (one process = one user) | N (one server process serves several SignalR connections at once) | 1 per browser instance, but the same server faces N tabs |
+| UI interaction needs | Needs a dialog service (`IUIViewService.ShowApiConnectAsync()`) | Goes through the Razor component flow, with no dialog abstraction | Same as Server |
+| Connection mode | Local or Remote (both modes possible) | Local (in-process) or Remote (HTTP) | **Remote (HTTP) only** — the browser cannot load backend assemblies |
 
-如果強要**單一連線抽象**涵蓋三類前端,會出現結構性矛盾:
+Forcing a **single connection abstraction** to cover all three kinds of front end produces structural contradictions:
 
-1. **桌面端需要的 `IUIViewService.ShowApiConnectAsync()` dialog 抽象,在 Blazor 環境無對應**(Razor component 模型完全不同),抽象會變空殼或語意錯置
-2. **`ClientInfo` 用 static singleton 維持狀態 fits 桌面端,但對 Web 端是 cross-user security bug**:
-   - `Polhem.UI.Core.ClientInfo._accessToken` 是 `private static Guid` —— 一個 process 內**只能存一個使用者的 AccessToken**
-   - 桌面端 OK(一個 App process = 一個登入使用者)
-   - Blazor Server **完全錯誤**:同一個 ASP.NET Core process 同時服務 N 個 SignalR circuit 連線,
-     N 個使用者並行操作。若都讀寫 `ClientInfo.AccessToken`,**後登入的使用者會覆蓋先前的 token**,
-     先前使用者所有後續 API 呼叫都會帶錯誤身分送出 —— 不只是「state 不對」,是嚴重 cross-user data leak
-   - WASM 雖然每個 Browser tab 有獨立 heap(N tabs = N WASM instances),
-     但靜態狀態仍與 Blazor 的 DI scope / component lifecycle 不對齊,難以維護
-3. **桌面端的檔案 IO 持久化**(`{ExeName}.Settings.xml`)在 Browser WASM 沙箱內**根本不可用**;
-   Blazor Server 若多 user 共享同一個檔案,寫入也會 race
+1. **The `IUIViewService.ShowApiConnectAsync()` dialog abstraction the desktop needs has no counterpart in a Blazor
+   environment** (the Razor component model is completely different), so the abstraction would become an empty shell
+   or carry misplaced semantics
+2. **`ClientInfo` keeping state in a static singleton fits the desktop, but on the web it is a cross-user security
+   bug**:
+   - `Polhem.UI.Core.ClientInfo._accessToken` is a `private static Guid` — one process **can hold only one user's
+     AccessToken**
+   - On the desktop this is fine (one app process = one logged-in user)
+   - For Blazor Server it is **completely wrong**: the same ASP.NET Core process serves N SignalR circuit connections
+     at once, with N users working in parallel. If they all read and write `ClientInfo.AccessToken`, **a user who logs
+     in later overwrites the earlier token**, and every later API call of the earlier user goes out with the wrong
+     identity — not just "the state is wrong" but a serious cross-user data leak
+   - Although in WASM each browser tab has its own heap (N tabs = N WASM instances), static state is still out of step
+     with Blazor's DI scope / component lifecycle and hard to maintain
+3. **The desktop's file IO persistence** (`{ExeName}.Settings.xml`) is **not available at all** inside the browser
+   WASM sandbox; and if several users in Blazor Server shared the same file, writes would race
 
-歷史上 v4.3 之前 `Polhem.UI.Core` 設計時只想到桌面端,`ClientInfo` 自然走 static singleton。
-v4.4 加入 Blazor RCL 時若強行讓 Blazor 走 `Polhem.UI.Core`,就會踩到上述問題。
+Historically, before v4.3, `Polhem.UI.Core` was designed with only the desktop in mind, so `ClientInfo` naturally used
+a static singleton. When the Blazor RCL was added in v4.4, forcing Blazor through `Polhem.UI.Core` would have hit the
+problems above.
 
-## 決策
+## Decision
 
-採**兩條 family 分流**:
+Adopt **two separate families**:
 
-### Family A:`Polhem.UI.*`(消費 `Polhem.UI.Core` 抽象)
+### Family A: `Polhem.UI.*` (consumes the `Polhem.UI.Core` abstractions)
 
-- **消費對象**:`ClientInfo` static singleton、`IEndpointStorage`、`IUIViewService`、`VersionInfo`
-- **適用前端**:桌面端 / native UI(MAUI、WinForms、WPF、Avalonia 等)
-- **連線模型**:
-  - `ClientInfo.InitializeAsync(uiService, supportedConnectTypes)` 在 App 啟動時呼叫
-  - `ClientInfo.SetEndpointAsync(endpoint)` 設定 endpoint(Local 路徑或 Remote URL),內部呼叫 `SystemApiConnector.InitializeAsync()`
-  - `ClientInfo.ApplyLoginResult(loginResponse)` 套用登入結果
-  - 透過 `ClientInfo.SystemApiConnector` / `ClientInfo.CreateFormApiConnector(progId)` 取得 connector
-  - 持久化由 `IEndpointStorage`(預設實作:檔案);UI 對話流程由 `IUIViewService` 提供
-- **目前成員**(現況見文末後記):
-  - `Polhem.UI.Core`(共通)
-  - `Polhem.UI.Avalonia`(桌面 — Windows / macOS / Linux,Avalonia 12.x;行動端 iOS / Android 亦由此覆蓋。DataGrid binding 策略見 [ADR-020](adr-020-avalonia-datagrid-binding-strategy.md))
-  - 未來:`Polhem.UI.WinForms`、`Polhem.UI.Wpf` 等同理
+- **What it consumes**: the `ClientInfo` static singleton, `IEndpointStorage`, `IUIViewService`, `VersionInfo`
+- **Applicable front ends**: desktop / native UI (MAUI, WinForms, WPF, Avalonia and so on)
+- **Connection model**:
+  - `ClientInfo.InitializeAsync(uiService, supportedConnectTypes)` is called at app startup
+  - `ClientInfo.SetEndpointAsync(endpoint)` sets the endpoint (a Local path or a Remote URL) and internally calls
+    `SystemApiConnector.InitializeAsync()`
+  - `ClientInfo.ApplyLoginResult(loginResponse)` applies the login result
+  - Connectors are obtained through `ClientInfo.SystemApiConnector` / `ClientInfo.CreateFormApiConnector(progId)`
+  - Persistence goes through `IEndpointStorage` (default implementation: a file); the UI dialog flow is provided by
+    `IUIViewService`
+- **Current members** (for the current state see the postscript at the end):
+  - `Polhem.UI.Core` (shared)
+  - `Polhem.UI.Avalonia` (desktop — Windows / macOS / Linux, Avalonia 12.x; mobile iOS / Android is covered by it
+    too. For the DataGrid binding strategy see [ADR-020](adr-020-avalonia-datagrid-binding-strategy.md))
+  - Future: `Polhem.UI.WinForms`, `Polhem.UI.Wpf` and the like follow the same pattern
 
-### Family B:`Polhem.Web.*`(獨立 family,**不**消費 `Polhem.UI.Core`)
+### Family B: `Polhem.Web.*` (a separate family that does **not** consume `Polhem.UI.Core`)
 
-- **不消費 `Polhem.UI.Core`**:Blazor 環境無檔案 IO / dialog service 概念,共通抽象無對應
-- **適用前端**:Blazor Server、Blazor WASM,以及未來其他 Web framework(`Polhem.Web.React.*` 等)
-- **連線模型**:
-  - 透過宿主 `IServiceCollection.AddPolhemFramework(...)` 或自訂 DI 設定 `IJsonRpcProvider`
-  - `LocalApiProvider`(in-process,Blazor Server 可選)或 `RemoteApiProvider`(HTTP,WASM 強制)
-  - `SystemApiConnector` / `FormApiConnector` 由 DI scope 注入到 Razor component
-  - 狀態管理由 component / `CascadingValue` / Razor scoped service 處理
-  - **WASM 嚴禁相依任何後端組件**(Repository / Business / Hosting 等),由相依鏈強制
-- **目前成員**:`Polhem.Web.Blazor.Server`(現況見文末後記)
+- **Does not consume `Polhem.UI.Core`**: a Blazor environment has no concept of file IO or a dialog service, so the
+  shared abstractions have no counterpart
+- **Applicable front ends**: Blazor Server, Blazor WASM, and other web frameworks in the future
+  (`Polhem.Web.React.*` and so on)
+- **Connection model**:
+  - `IJsonRpcProvider` is set up through the host's `IServiceCollection.AddPolhemFramework(...)` or custom DI
+    configuration
+  - `LocalApiProvider` (in-process, optional for Blazor Server) or `RemoteApiProvider` (HTTP, mandatory for WASM)
+  - `SystemApiConnector` / `FormApiConnector` are injected into Razor components from the DI scope
+  - State management is handled by components / `CascadingValue` / Razor scoped services
+  - **WASM must never depend on any backend assembly** (Repository / Business / Hosting and so on); this is enforced
+    by the dependency chain
+- **Current members**: `Polhem.Web.Blazor.Server` (for the current state see the postscript at the end)
 
-### Family 判別準則(新加套件時依此判斷)
+### Criterion for choosing the family (apply it when adding a package)
 
-> **是否消費 `Polhem.UI.Core` 抽象(`ClientInfo` / `IEndpointStorage` / `IUIViewService` 等)?**
+> **Does it consume the `Polhem.UI.Core` abstractions (`ClientInfo` / `IEndpointStorage` / `IUIViewService` and so
+> on)?**
 >
-> - **消費** → 歸 `Polhem.UI.*` family
-> - **不消費,有自己的狀態管理 / dialog 模型** → 走獨立 family prefix(如 `Polhem.Web.*`)
+> - **It consumes them** → it belongs to the `Polhem.UI.*` family
+> - **It does not, and has its own state management / dialog model** → it takes a separate family prefix (such as
+>   `Polhem.Web.*`)
 
-這個準則是「**現實對應**」而非「**理想分類**」:`Polhem.UI.Core` 抽象是為桌面端設計,
-Web / Blazor 環境結構性不同,**不該勉強套用**。
+This criterion is "**matching reality**" rather than "**an ideal classification**": the `Polhem.UI.Core`
+abstractions were designed for the desktop, and web / Blazor environments are structurally different, so **they
+should not be forced onto them**.
 
-## 後果
+## Consequences
 
-### 正面
+### Positive
 
-- **桌面端 vs Web 端各自簡潔**:沒有「兩邊都要委屈」的共通抽象
-- **WASM 安全性自動保護**:`Polhem.Web.*` 不依賴 `Polhem.UI.Core` 連帶不依賴任何 server-only 組件
-- **Family 判別準則明確**:未來加新前端套件時不需再開一輪辯論
-- **演進獨立**:`Polhem.UI.Core` 可以為桌面端優化(如 async 化 `ClientInfo`),不影響 Blazor;反之亦然
+- **Desktop and web are each kept simple**: there is no shared abstraction that "compromises both sides"
+- **WASM security is protected automatically**: since `Polhem.Web.*` does not depend on `Polhem.UI.Core`, it does not
+  depend on any server-only assembly either
+- **The family criterion is clear**: adding a new front-end package in the future does not need another round of
+  debate
+- **Independent evolution**: `Polhem.UI.Core` can be optimized for the desktop (for example making `ClientInfo`
+  async) without affecting Blazor, and vice versa
 
-### 負面
+### Negative
 
-- **看似「重複」**:兩條 family 都各自有 `SystemApiConnector` 包裝、connection state 管理,
-  讀者第一眼會問「為何不共用?」。本 ADR 即為回答此問題的文件
-- **跨 family 共用組件成本**:若未來真有「兩 family 都需要」的共通邏輯,
-  需要往更下層放(如 `Polhem.Api.Client` 已是兩 family 共用的最低層)
-- **新 family 的命名負擔**:若未來出現「既不是 native UI 又不是 Web」的前端
-  (如 CLI tool、background worker UI),要再決定 prefix(可能走 `Polhem.Console.*` 等)
+- **Looks like "duplication"**: both families have their own `SystemApiConnector` wrapping and connection state
+  management, and a reader's first question is "why not share them?". This ADR is the document that answers that
+  question
+- **Cost of components shared across families**: if shared logic that "both families need" really appears in the
+  future, it has to go into a lower layer (for example, `Polhem.Api.Client` is already the lowest layer shared by
+  both families)
+- **Naming burden for a new family**: if a front end that is "neither native UI nor web" appears in the future (such
+  as a CLI tool or a background worker UI), a prefix has to be decided again (possibly `Polhem.Console.*` or the like)
 
-### 中性
+### Neutral
 
-- **`Polhem.Api.Client` 是兩 family 共用的最低層**:不在分流之內,維持為純通訊 / 序列化 / 加密層,
-  兩 family 都消費它(Blazor 直接消費;`Polhem.UI.Core` 包裝後給桌面端消費)
+- **`Polhem.Api.Client` is the lowest layer shared by both families**: it is outside the split and stays a pure
+  communication / serialization / encryption layer that both families consume (Blazor consumes it directly;
+  `Polhem.UI.Core` wraps it for the desktop to consume)
 
-## 相關連結
+## Related
 
-- 依賴關係視覺化:`docs/en/dependency-map.md`
-- 各前端的實際操作範例:`docs/en/development-cookbook.md` §「Frontend API Connection Patterns」
-- 後端 DI 取代靜態 Service Locator(影響 Blazor host 註冊方式):[ADR-011](adr-011-di-replaces-service-locator.md)
+- Visualization of the dependencies: `docs/en/dependency-map.md`
+- Working examples for each front end: `docs/en/development-cookbook.md` § "Frontend API Connection Patterns"
+- Backend DI replaces the static Service Locator (affects how a Blazor host registers):
+  [ADR-011](adr-011-di-replaces-service-locator.md)
 
-## 不在範圍
+## Out of scope
 
-- **未來「同時提供 ClientInfo + DI」的混合模式**:目前未需要,實際 use case 出現再評估
-- **`Polhem.UI.Core` 本身的 static state DI 化**:屬於桌面端 family 內的重構,不影響 Web family,留後續獨立決策
-- **Blazor Hybrid(MAUI 內嵌 Blazor)**:可能需要橫跨兩 family,屆時開新 ADR 評估
+- **A future hybrid mode that "offers both ClientInfo and DI"**: not needed now; to be evaluated when a real use case
+  appears
+- **Moving the static state of `Polhem.UI.Core` itself to DI**: a refactoring inside the desktop family that does not
+  affect the web family; left for a separate decision later
+- **Blazor Hybrid (Blazor embedded in MAUI)**: may need to span both families; a new ADR will evaluate it at that time
 
-## 後記(2026-07-31)—— 成員名冊更新
+## Postscript (2026-07-31) — member roster update
 
-**本 ADR 的決策不變**:兩條 family 分流、以及「是否消費 `Polhem.UI.Core` 抽象」的判別準則,
-今日仍然有效。變的只是名冊 —— UI 於 2026-07-28 收斂為 **Avalonia + Blazor.Server 雙軌**,
-`Polhem.UI.Maui` 與 `Polhem.Web.Blazor.Wasm` 兩個套件已移除:
+**The decision of this ADR is unchanged**: the split into two families, and the criterion "does it consume the
+`Polhem.UI.Core` abstractions", still hold today. Only the roster has changed — on 2026-07-28 the UI converged on
+**two tracks, Avalonia + Blazor.Server**, and the two packages `Polhem.UI.Maui` and `Polhem.Web.Blazor.Wasm` were
+removed:
 
-| 原成員 | 現況 | 原因 |
+| Original member | Current state | Reason |
 |--------|------|------|
-| `Polhem.UI.Maui` | **已移除** | `Polhem.UI.Avalonia` 的 `net10.0-ios` / `net10.0-android` head 已覆蓋行動端,不需第二套 native family |
-| `Polhem.Web.Blazor.Wasm` | **已移除** | 夾在 Avalonia(離線 / native 體驗)與 Blazor Server(SEO、嵌入既有網站、螢幕閱讀器、免下載 runtime)之間,無獨有的適用區間 |
+| `Polhem.UI.Maui` | **Removed** | The `net10.0-ios` / `net10.0-android` heads of `Polhem.UI.Avalonia` already cover mobile, so a second native family is not needed |
+| `Polhem.Web.Blazor.Wasm` | **Removed** | Squeezed between Avalonia (offline / native experience) and Blazor Server (SEO, embedding in an existing website, screen readers, no runtime download), it has no range of use of its own |
 
-因此 Family A 現存成員為 `Polhem.UI.Core` + `Polhem.UI.Avalonia`,Family B 為 `Polhem.Web.Blazor.Server`。
-上文「背景」一節的三類前端表格描述的是 v4.4 當時的狀態,保留以呈現決策脈絡。
+So the current members of Family A are `Polhem.UI.Core` + `Polhem.UI.Avalonia`, and Family B is
+`Polhem.Web.Blazor.Server`. The table of three front-end kinds in the "Context" section above describes the state at
+v4.4 and is kept to show the context of the decision.

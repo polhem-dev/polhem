@@ -27,18 +27,18 @@
 | `st_session` | Session / Access Token。 |
 | `st_api_key` | 已發放的 API 金鑰（`X-Api-Key`）：應用識別，以雜湊存放。 |
 | `st_define` | DB-backed 定義儲存（FormSchema / TableSchema 等，非 XML 檔案版本）。 |
-| `st_cache_notify` | 跨節點 cache 失效通道（[ADR-017](../adr/adr-017-db-cache-invalidation.md)）。 |
+| `st_cache_notify` | 跨節點 cache 失效通道（[ADR-017](../adr/adr-017-db-cache-invalidation.zh-TW.md)）。 |
 
 ### 1.2 公司資料庫（per-tenant）
 
 | 表名 | 用途 |
 |------|------|
-| `st_role` | 角色定義（[ADR-019](../adr/adr-019-permission-authorization-model.md)）。 |
+| `st_role` | 角色定義（[ADR-019](../adr/adr-019-permission-authorization-model.zh-TW.md)）。 |
 | `st_role_grant` | 角色↔資源授權（per model / action）。 |
 | `st_user_role` | 使用者↔角色綁定。 |
 | `st_department` | 組織部門。 |
 | `st_employee` | 員工（連結 common DB 的 `st_user` 至 per-company 的組織位置）。 |
-| `st_audit_rule` | per-form 稽核規則（哪些表單要記異動／檢視，見 [ADR-027](../adr/adr-027-audit-trail.md)）。 |
+| `st_audit_rule` | per-form 稽核規則（哪些表單要記異動／檢視，見 [ADR-027](../adr/adr-027-audit-trail.zh-TW.md)）。 |
 
 > `st_department` / `st_employee` 雖位於公司資料庫，但仍是 **框架所有**（record-scope 與組織樹功能所需），不是業務資料。Per-company 業務表請使用 `ft_` 前綴。
 
@@ -52,9 +52,9 @@
 | `st_log_anomaly_api` | API 層異常（Error / Timeout / Slow）——哪個動作偏離正常。 |
 | `st_log_anomaly_db` | DB 層異常（Error / Timeout / Slow / 大量列數）——哪個資料庫 + 指令偏離正常。 |
 
-> 這五張表是兩件不同的事共用一個資料庫。前三張是**稽核軌跡** —— 誰對哪一筆做了什麼，經 `IAuditLogWriter` 寫入。後兩張是**執行異常** —— 哪一次執行偏離了正常，經 `IAnomalyLogWriter` 寫入；它們是維運訊號而非業務紀錄，所以 `st_log_anomaly_db` 連觸發者都沒有。見 [ADR-040](../adr/adr-040-audit-trail-taxonomy.md)。
+> 這五張表是兩件不同的事共用一個資料庫。前三張是**稽核軌跡** —— 誰對哪一筆做了什麼，經 `IAuditLogWriter` 寫入。後兩張是**執行異常** —— 哪一次執行偏離了正常，經 `IAnomalyLogWriter` 寫入；它們是維運訊號而非業務紀錄，所以 `st_log_anomaly_db` 連觸發者都沒有。見 [ADR-040](../adr/adr-040-audit-trail-taxonomy.zh-TW.md)。
 >
-> Log 表**預設關閉（opt-in）**且自足：去正規化觸發者的 user / company，查詢不需跨資料庫 join（log 資料庫實體分離）。log 資料庫可依年份分庫（`log_2024`、`log_2025`…），當年度可寫、歷史唯讀。設計理由見 [ADR-027](../adr/adr-027-audit-trail.md)。
+> Log 表**預設關閉（opt-in）**且自足：去正規化觸發者的 user / company，查詢不需跨資料庫 join（log 資料庫實體分離）。log 資料庫可依年份分庫（`log_2024`、`log_2025`…），當年度可寫、歷史唯讀。設計理由見 [ADR-027](../adr/adr-027-audit-trail.zh-TW.md)。
 
 ---
 
@@ -101,4 +101,4 @@
 - [資料庫命名規範](database-naming-conventions.md)——`st_` / `ft_` 區分背後的命名規則。
 - [API 方法參考](api-method-reference.md)——完整 BO 方法目錄。
 - [架構總覽](architecture-overview.md)——`st_*` 表在整體 N-tier + clean architecture 中的位置。
-- [ADR-019：權限授權模型](../adr/adr-019-permission-authorization-model.md)——為何 `st_role` / `st_user_role` / `st_employee` 是框架所有。
+- [ADR-019：權限授權模型](../adr/adr-019-permission-authorization-model.zh-TW.md)——為何 `st_role` / `st_user_role` / `st_employee` 是框架所有。

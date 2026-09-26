@@ -165,7 +165,7 @@ plugin 綁定。
 
 **`FormSchema` 與 `TableSchema` 永久排除。** 兩者同時驅動資料庫結構與驗證規則，不只驅動 UI；
 逐租戶分歧會讓實體 schema 裂開。這是裁決不是缺口——見
-[ADR-016](../adr/adr-016-multitenant-customization-overlay.md)。
+[ADR-016](../adr/adr-016-multitenant-customization-overlay.zh-TW.md)。
 
 值得先納入規劃的推論：**租戶不能多一個欄位**。它能有的是既有欄位的不同標題、一張藏起該欄位的
 表單、一個對該欄位處理方式不同的 BO，或一個負責填它的 plugin。若某租戶真的需要自己的資料，
@@ -180,5 +180,5 @@ plugin 綁定。
 |---|---|
 | 覆蓋層機制：完整路徑、各型別的疊加粒度、`customizeId` 怎麼解析 | [定義檔總覽](definition-files-overview.md) 第 7 節 |
 | 怎麼寫客製 BO、Repository 或 plugin | [端到端開發指引](development-cookbook.md) |
-| 為什麼這樣設計 | [ADR-016](../adr/adr-016-multitenant-customization-overlay.md) |
+| 為什麼這樣設計 | [ADR-016](../adr/adr-016-multitenant-customization-overlay.zh-TW.md) |
 | 維護 API 的存取控制 | [API 方法總覽](api-method-reference.md) |

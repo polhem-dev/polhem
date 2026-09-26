@@ -1,291 +1,333 @@
-# ADR-040：稽核軌跡的分類軸與寫入策略
+# ADR-040: Classification axes and write strategy of the audit trail
 
-## 狀態
+[繁體中文](adr-040-audit-trail-taxonomy.zh-TW.md)
 
-**已採納（Accepted，2026-07-05 定案；2026-08-20 補記為 ADR）**
+## Status
 
-決策於 2026-07-05 定案並分項落地，寫入側與查詢側均已完成。本 ADR 是事後補記：
-原始脈絡寫在一份母計畫裡，而 plan 是階段性文件、封存後會被清除，
-「為何稽核分成這幾軸」這種長效理由不該只活在那裡。
+**Accepted (decided 2026-07-05; recorded as an ADR on 2026-08-20)**
 
-## 背景
+The decision was made on 2026-07-05 and landed item by item; both the write side and the query side are complete.
+This ADR is recorded after the fact: the original context was written in a parent plan, and a plan is a document for
+one stage of work that is cleared once archived, so a lasting reason such as "why the audit trail is split into these
+axes" should not live only there.
 
-框架原本**只有診斷用日誌，沒有業務資料軌跡**：
+## Context
 
-- `ILogWriter` / `LogEntry` —— 系統診斷輸出
-- `TraceContext` / `Tracer` —— 請求層級追蹤，記憶體 / UI 導向，未持久化
+The framework originally had **only diagnostic logs, no trail of business data**:
 
-缺的是「誰在何時登入、看了哪筆敏感資料、把哪個欄位從什麼改成什麼、
-哪次呼叫失敗了」——這些是業務稽核，與技術 observability 是兩件事。
-`DbScope.Log` 與 log 資料庫分類當時已備好，但底下一張表也沒有。
+- `ILogWriter` / `LogEntry`: system diagnostic output
+- `TraceContext` / `Tracer`: request-level tracing, memory / UI oriented, not persisted
 
-設計時以 **SAP 與 Odoo 兩套成熟做法為藍本**，因為稽核分類的難處不在實作，
-而在「該切成幾件事」。兩者的共同結構是：
+What was missing was "who logged in when, who viewed which sensitive record, who changed which field from what to
+what, which call failed": that is business auditing, a different matter from technical observability. `DbScope.Log`
+and the log database category were already in place at the time, but there was not a single table under them.
 
-| 關注點 | SAP | Odoo |
+The design took **the mature approaches of SAP and Odoo as its blueprint**, because the difficulty of an audit
+taxonomy lies not in the implementation but in "how many things to cut it into". The structure the two have in common:
+
+| Concern | SAP | Odoo |
 |--------|-----|------|
-| 登入 / 安全事件 | Security Audit Log（`SM19`/`SM20`） | `res.users.log` |
-| 業務物件欄位級變更 | Change Documents（`CDHDR` / `CDPOS`） | `mail.tracking.value`、OCA `auditlog` |
-| 表級變更（多用於 config） | Table Logging（`DBTABLOG`） | `auditlog` on ACL / groups |
-| 敏感資料被**讀取** | Read Access Logging（`SRALMANAGER`） | `auditlog` read 模式 |
-| 技術 / 系統錯誤 | System Log（`SM21`） | `ir.logging` |
-| 批次 / 應用處理訊息 | `SM37`、Application Log（`SLG1`） | `ir.logging`、server actions |
+| Login / security events | Security Audit Log (`SM19`/`SM20`) | `res.users.log` |
+| Field-level changes to business objects | Change Documents (`CDHDR` / `CDPOS`) | `mail.tracking.value`, OCA `auditlog` |
+| Table-level changes (mostly for config) | Table Logging (`DBTABLOG`) | `auditlog` on ACL / groups |
+| Sensitive data being **read** | Read Access Logging (`SRALMANAGER`) | `auditlog` read mode |
+| Technical / system errors | System Log (`SM21`) | `ir.logging` |
+| Batch / application processing messages | `SM37`, Application Log (`SLG1`) | `ir.logging`, server actions |
 
-從中得到三個對設計有決定性影響的觀察：
+Three observations from this had a decisive influence on the design:
 
-1. **「事件發生」與「欄位改了什麼」是兩套表、兩種量體特性**——SAP 用 SAL 與
-   Change Documents 分開處理，不是同一張表加個欄位。
-2. **讀取記錄必須是選擇性的**。SAP RAL 只針對標記的敏感資料記錄，Odoo 官方明示
-   read 全記成本過高、不建議對整個 model 開啟。讀 ≫ 寫，全記必然爆量。
-3. **before/after 的儲存法有真實取捨**：SAP `CDPOS` 用單一字串欄（通用但型別資訊遺失），
-   Odoo `mail.tracking.value` 依型別分欄（型別正確但 schema 寬）。
+1. **"An event happened" and "what a field changed" are two sets of tables with two different volume
+   characteristics**: SAP handles them separately with SAL and Change Documents, not as one table with an extra
+   column.
+2. **Read logging must be selective**. SAP RAL logs only data marked as sensitive, and Odoo states officially that
+   logging every read costs too much and advises against enabling it for a whole model. Reads far outnumber writes, so
+   logging everything inevitably explodes in volume.
+3. **How to store before/after involves a real trade-off**: SAP `CDPOS` uses a single string column (generic, but type
+   information is lost), while Odoo `mail.tracking.value` has a column per type (correctly typed, but a wide schema).
 
-## 決策
+## Decision
 
-### 一、六軸分類，收斂為四項實作
+### 1. Six classification axes, consolidated into four implementations
 
-分析出六條軸線（登入／檢視／異動／執行／系統／安全組態），實作時收斂為四項：
+The analysis produced six axes (login / view / change / execution / system / security configuration), consolidated
+into four items at implementation time:
 
-| 實作項 | 涵蓋軸線 | 理由 |
+| Implementation | Axes covered | Reason |
 |--------|---------|------|
-| 登入記錄 | ① 登入 | — |
-| 異動記錄 | ③ 異動 ＋ ⑥ 安全組態 | 見決策三 |
-| 檢視記錄 | ② 檢視 | 見決策四 |
-| 異常記錄 | ④ 執行 ＋ ⑤ 系統 | 見決策二 |
+| Login log | (1) Login | — |
+| Change log | (3) Change + (6) Security configuration | See decision 3 |
+| Access log | (2) View | See decision 4 |
+| Anomaly log | (4) Execution + (5) System | See decision 2 |
 
-共通最小欄位模型：`who`（user）／ `when`（UTC）／ `what`（物件＋key＋欄位，或動作名）／
-`where`（method／channel／IP／session）／ `before-after`（僅異動）／ `result`。
+The common minimal field model: `who` (user) / `when` (UTC) / `what` (object + key + field, or the action name) /
+`where` (method / channel / IP / session) / `before-after` (changes only) / `result`.
 
-> 實際表名與欄位以 [框架保留命名](../zh-TW/framework-reserved-names.md) §1 與原始碼為準，
-> 本 ADR 不複寫。
+> The actual table and column names follow [Framework-Reserved Names](../en/framework-reserved-names.md) §1 and the
+> source code; this ADR does not copy them.
 
-### 二、「執行記錄全記」取消，改為異常記錄
+### 2. "Log every execution" is dropped in favor of an anomaly log
 
-原本規劃記錄每次執行，實作前推翻：全記的價值主要落在異常那部分，而其餘內容與登入、
-異動記錄重複。改為只持久化 **API 與 DB 的異常**——錯誤、逾時、過慢——供 bug 追蹤與
-效能調校。逾時與過慢獨立於錯誤，它們是基礎設施／效能訊號而非程式缺陷。
+The original plan was to record every execution, which was overturned before implementation: the value of logging
+everything lies mainly in the anomalous part, while the rest duplicates the login and change logs. Instead, only
+**API and DB anomalies** are persisted (errors, timeouts, slowness) for bug tracking and performance tuning. Timeouts
+and slowness are separate from errors: they are infrastructure / performance signals, not program defects.
 
-純技術 observability 仍走 `ILogWriter` / host `ILogger`（檔案／Seq／APM），
-**與業務稽核分離**，對齊 SAP `SM21` 與 Odoo `ir.logging` 的定位。
-`Tracer` / `TraceContext` 是開發期偵錯工具，不作為稽核來源。
+Purely technical observability still goes through `ILogWriter` / the host's `ILogger` (file / Seq / APM), **separate
+from business auditing**, matching the positioning of SAP `SM21` and Odoo `ir.logging`. `Tracer` / `TraceContext` are
+development-time debugging tools and are not a source for auditing.
 
-### 三、安全／組態軸併入異動記錄，不另建表
+### 3. The security / configuration axis merges into the change log, with no separate table
 
-軸⑥（權限、設定變更）本質上就是「某個東西被改了」，與軸③同構。以 `is_sensitive` 旗標
-與 `prog_id` 過濾區分，不為它另立一張結構雷同的表。
+Axis (6) (changes to permissions and settings) is in essence "something was changed", isomorphic to axis (3). It is
+distinguished by the `is_sensitive` flag and by filtering on `prog_id`, rather than getting a separate table of the
+same structure.
 
-### 四、檢視記錄預設關閉，且由敏感度驅動
+### 4. The access log is off by default and driven by sensitivity
 
-這是六軸中唯一「不能全記」的：
+This is the only one of the six axes that "cannot log everything":
 
-1. **預設關閉**，opt-in 啟用
-2. **敏感度驅動**：只記錄標記為敏感的欄位
-3. **限定入口**：只在指定 ProgId／動作記錄，而非每次讀取
+1. **Off by default**, enabled by opt-in
+2. **Driven by sensitivity**: only fields marked as sensitive are logged
+3. **Limited entry points**: logging happens only for specified ProgIds / actions, not on every read
 
-取樣只適用於行為分析，**不可用於合規舉證**——合規場景通常要求敏感資料存取全記。
+Sampling is only suitable for behavior analysis and **must not be used as compliance evidence**: compliance scenarios
+usually require every access to sensitive data to be logged.
 
-> **實作進度補記（2026-08-26）。** 本條三項要求中，「預設關閉」自始即成立，
-> 「限定入口」與「敏感度驅動」直到 [ADR-041](adr-041-per-form-audit-rule.md) 才落地，
-> 且**只落到表單層**：
+> **Implementation progress note (2026-08-26).** Of the three requirements in this item, "off by default" held from
+> the start, while "limited entry points" and "driven by sensitivity" only landed with
+> [ADR-041](adr-041-per-form-audit-rule.md), and **only at the form level**:
 >
-> | 決策四要求 | 現況 |
+> | Decision 4 requirement | Current state |
 > |-----------|------|
-> | 預設關閉、opt-in | ✅ `AuditLogOptions.AccessEnabled` 預設 `false` |
-> | 限定 ProgId／動作 | ✅ ProgId 維度（`st_audit_rule`）；**動作維度未做**——檢視目前只在 `GetData` 埋一個點，現階段無實際差別 |
-> | 敏感度驅動 | ⚠️ **表單層**（`st_audit_rule.is_sensitive`）；**欄位層未做**——「只記錄標記為敏感的欄位」要動 DiffGram 過濾邏輯，另案 |
+> | Off by default, opt-in | ✅ `AuditLogOptions.AccessEnabled` defaults to `false` |
+> | Limited to ProgIds / actions | ✅ The ProgId dimension (`st_audit_rule`); **the action dimension is not done**: views are currently instrumented at a single point, `GetData`, so for now it makes no practical difference |
+> | Driven by sensitivity | ⚠️ **Form level** (`st_audit_rule.is_sensitive`); **field level not done**: "log only fields marked as sensitive" requires changing the DiffGram filtering logic, handled separately |
 >
-> 也就是說本條在**量體控制**上已成立（可逐張表單開關），但在**「只記敏感欄位」**
-> 這個更細的字面要求上尚未完成。合規舉證的判斷要看這個差別。
+> In other words, this item holds for **volume control** (it can be switched on or off per form), but the finer
+> literal requirement **"log only sensitive fields"** is not yet complete. Judgements about compliance evidence depend
+> on this difference.
 
-### 五、before/after 採 DataSet DiffGram 單欄
+### 5. before/after uses a single DataSet DiffGram column
 
-四個候選中選了框架原生的一條：DataSet 的 `GetChanges()` + DiffGram 本來就同時保留新舊值，
-一次涵蓋 master + detail、多列多欄，不必自訂 diff 演算法，讀取時還原成 DataSet 即可直接顯示。
+Of the four candidates, the framework-native one was chosen: a DataSet's `GetChanges()` + DiffGram already keeps both
+the old and new values, covers master + detail and multiple rows and columns in one go, needs no custom diff
+algorithm, and can be restored into a DataSet on reading for direct display.
 
-> 「還原成 DataSet」這半在當初的實作中**並不成立**，直到 4.30.0 補上內嵌 schema 才成真。
-> 原委與兩種 payload 並存的規則見下方「八、payload 帶內嵌 schema」。
+> The "restored into a DataSet" half **did not hold** in the original implementation, and only became true in 4.30.0
+> when an embedded schema was added. The story and the rules for the two coexisting payloads are in "8. The payload
+> carries an embedded schema" below.
 
-代價是欄位級無法直接以 SQL 查詢統計（需解析 XML）。查詢需求由**表頭的實體欄位**
-（who／when／prog_id／row_key…）承擔；只有在真的需要「跨紀錄的欄位級統計」時，
-才對指定表加開選配的 EAV 模式。等同 Odoo auditlog 的 fast（預設）／ full（選配）兩檔位。
+The cost is that the field level cannot be queried or aggregated directly with SQL (the XML has to be parsed). Query
+needs are carried by **physical columns in the header** (who / when / prog_id / row_key...); only when "field-level
+statistics across records" are really needed is an optional EAV mode turned on for a specified table. This is
+equivalent to the fast (default) / full (optional) levels of Odoo auditlog.
 
-> **鐵則**：序列化必須用 **DiffGram**（含 before 區塊），普通 `WriteXml` 只寫 current、
-> 舊值會遺失；且擷取必須在 `Save` 套用 `AcceptChanges` **之前**。
+> **Iron rule**: serialization must use **DiffGram** (including the before block); a plain `WriteXml` writes only the
+> current values and the old values are lost. Capture must also happen **before** `Save` applies `AcceptChanges`.
 
-### 六、寫入採 best-effort 非同步，不採 transactional outbox
+### 6. Writes are best-effort and asynchronous, not a transactional outbox
 
-原設計是 transactional outbox：業務交易內先寫 outbox 列（同交易 commit，強一致），
-再由背景 worker 搬到 log DB。實作時重評並**推翻**——它需要 per-company-DB 的 outbox 表、
-多租戶跨庫 flush、以及 repository 簽章改動，代價與收益不成比例。
+The original design was a transactional outbox: inside the business transaction an outbox row is written first
+(committed in the same transaction, strongly consistent), then a background worker moves it to the log DB. It was
+re-evaluated at implementation time and **overturned**: it needs an outbox table per company DB, cross-database flushes
+for multiple tenants, and changes to repository signatures, a cost out of proportion to the benefit.
 
-改為由 BO 在 commit 後走 `IAuditLogWriter`，異動記錄可強制同步寫以縮小漏失窗口。
-**outbox 保留為升級路徑**：真正出現「零漏失」需求時再加，且該變更是 additive 的。
+Instead, the BO goes through `IAuditLogWriter` after the commit, and change log entries can be forced to write
+synchronously to narrow the loss window. **The outbox is kept as an upgrade path**: it is added when a real "zero loss"
+requirement appears, and that change is additive.
 
-> **best-effort 涵蓋 commit 之後的整個稽核步驟**（2026-09-11 補）。原本只有寫入端本身是
-> best-effort，組 payload、解析操作者身分這幾步擲出的例外會直接冒到呼叫端。後果是
-> **資料已經寫入，API 卻回傳失敗**，稽核沒記到，AfterSave / AfterDelete 與外掛也被跳過。
-> 實際觸發條件很平常：使用者在欄位貼入一個控制字元，XML 序列化就會擲例外。部署層的
-> `CreateApiKey` 更嚴重，金鑰已寫入，呼叫端卻拿不到唯一一份祕密段。
+> **Best-effort covers the whole audit step after the commit** (added 2026-09-11). Originally only the writer itself
+> was best-effort, and exceptions thrown while building the payload or resolving the operator's identity went straight
+> up to the caller. The consequence: **the data had been written, yet the API returned a failure**, the audit entry was
+> not recorded, and AfterSave / AfterDelete and plugins were skipped. The actual trigger is quite ordinary: a user
+> pastes a control character into a field, and XML serialization throws. The deployment-level `CreateApiKey` was worse:
+> the key had been written, yet the caller never received the one and only copy of the secret part.
 >
-> 現在表單的 Save / Delete 與部署層作業都把整個稽核步驟包在同一個守衛裡：失敗時記 error log
-> （帶 prog id、作業名與記錄鍵，不帶欄位值），呼叫照常完成。這不改變本決策接受的漏失窗口，
-> 只是讓漏失**留下紀錄**，也不再連帶讓已完成的寫入看起來像失敗。
+> Now the form's Save / Delete and the deployment-level operations wrap the whole audit step in a single guard: on
+> failure it writes an error log (with the prog id, operation name and record key, but no field values), and the call
+> completes normally. This does not change the loss window this decision accepts; it only makes a loss **leave a
+> record**, and it no longer makes a completed write look like a failure as well.
 
-### 七、寫入介面依決策二的分界拆成兩個（2026-08-24 補）
+### 7. The write interface is split in two along decision 2's boundary (added 2026-08-24)
 
-決策二把「系統／錯誤」判為 observability、與業務稽核分離，但**寫入面一直只有一個
-`IAuditLogWriter`**：登入／異動／檢視與 API／DB 異常都走它。實作當時合在一起的理由是
-**寫入管線共用**（有上限佇列、批次、退路檔案、log 資料庫自己的 `DbAccess` 不做異常偵測），
-不是因為兩者回答同一種問題。
+Decision 2 classified "system / errors" as observability, separate from business auditing, but **the write side always
+had just one `IAuditLogWriter`**: login / change / access logs and API / DB anomalies all went through it. The reason
+they were combined at implementation time was **a shared write pipeline** (a bounded queue, batching, a fallback file,
+and the log database's own `DbAccess` doing no anomaly detection), not that the two answer the same kind of question.
 
-盤點消費端後拆開：**七個呼叫點沿這條分界乾淨二分，沒有任何一個同時寫兩種**——
-`Polhem.Business` 那四個只寫稽核，`Polhem.Db` 與 `Polhem.Api.*` 那三個只寫異常，
-而後者的欄位與參數**早就自己叫 `anomalyWriter`**，等於用命名補一個型別系統沒有表達的區分。
+They were split after surveying the consumers: **the seven call sites divide cleanly along this boundary, and not one
+writes both kinds**. The four in `Polhem.Business` write only audit entries, the three in `Polhem.Db` and
+`Polhem.Api.*` write only anomalies, and the fields and parameters of the latter **were already called
+`anomalyWriter`**, using naming to make a distinction the type system did not express.
 
-| 面向 | 處置 |
+| Aspect | Handling |
 |------|------|
-| 介面 | `IAuditLogWriter`（收 `AuditEntry`）與 `IAnomalyLogWriter`（收 `AnomalyEntry`） |
-| 記錄型別 | 新增 `AnomalyEntry : AuditEntry` 中間基底，`ApiAnomalyEntry` / `DbAnomalyEntry` 改繼承它，兩者重複的五個欄位（`Kind` / `ElapsedMs` / `ThresholdMs` / `ErrorType` / `ErrorMessage`）上提 |
-| 寫入管線 | **不拆**。sink、write repository、佇列、批次、退路檔案完全共用，同一個實例實作兩個介面 |
-| 開關 | `AuditLogOptions` **不拆**。拆出獨立的 anomaly 選項會改 `SystemSettings.xml` 的結構，是所有既有部署都要跟著改的破壞性變更，而 `AnomalyEnabled` 本來就分得開 |
+| Interfaces | `IAuditLogWriter` (takes `AuditEntry`) and `IAnomalyLogWriter` (takes `AnomalyEntry`) |
+| Entry types | A new intermediate base `AnomalyEntry : AuditEntry`; `ApiAnomalyEntry` / `DbAnomalyEntry` now inherit it, and the five fields the two duplicated (`Kind` / `ElapsedMs` / `ThresholdMs` / `ErrorType` / `ErrorMessage`) move up |
+| Write pipeline | **Not split**. The sink, write repository, queue, batching and fallback file are fully shared; one instance implements both interfaces |
+| Switches | `AuditLogOptions` is **not split**. Splitting out separate anomaly options would change the structure of `SystemSettings.xml`, a breaking change every existing deployment would have to follow, and `AnomalyEnabled` is already separate |
 
-> **保護是單向的，不要讀成雙向。** `AnomalyEntry` 繼承 `AuditEntry`（兩者共用一條寫入管線），
-> 所以 `IAuditLogWriter` 仍然收得下一筆異常記錄。型別系統擋住的只有反方向——
-> **異常的產生者寫不了登入、異動或檢視記錄**。風險方向上要防的正是那一向。
-> 要雙向就得改成平行基底，代價是共通欄位得複製兩份、且會動到 `IAuditLogWriteRepository`
-> 的公開簽章，不划算。
+> **The protection is one-way; do not read it as two-way.** `AnomalyEntry` inherits `AuditEntry` (the two share one
+> write pipeline), so `IAuditLogWriter` can still accept an anomaly entry. The type system blocks only the other
+> direction: **producers of anomalies cannot write login, change or access entries**. That is exactly the direction
+> the risk calls for guarding. Making it two-way would require parallel bases, at the cost of duplicating the common
+> fields and changing the public signature of `IAuditLogWriteRepository`, which is not worth it.
 
-**why 不下放 who／company 到中間層**：`ApiAnomalyEntry` 有 session 脈絡、共通欄照填，
-只有 `DbAnomalyEntry` 沒有——它覆寫 `AddCommonColumns` 成空的，並且保持原樣。
-一份共通結構要決定的不是有哪些共通欄，是誰可以整組不要。
+**Why who / company are not pushed down to the intermediate layer**: `ApiAnomalyEntry` has a session context and fills
+the common columns as usual; only `DbAnomalyEntry` does not have one. It overrides `AddCommonColumns` to be empty, and
+that stays as it is. What a shared structure has to decide is not which columns are common, but who may do without the
+whole set.
 
-**未納入本次**：讀取側仍由 `LogBusinessObject` 一併服務，九支查詢方法共用保留 progId
-`AuditLog` 的授權。合規稽核與維運排錯在 ERP 是兩種角色，把讀取權限拆開價值更高，
-但那是權限模型的題目、不是寫入介面的題目，另案處理。
+**Not included this time**: the read side is still served entirely by `LogBusinessObject`, and its nine query methods
+share the authorization of the reserved progId `AuditLog`. In an ERP, compliance auditing and operational
+troubleshooting are two different roles, so splitting read permissions would be more valuable, but that is a question
+for the permission model, not for the write interface, and is handled separately.
 
-### 八、payload 帶內嵌 schema（2026-09-09 補）
+### 8. The payload carries an embedded schema (added 2026-09-09)
 
-決策五說 DiffGram 的好處之一是「讀取時還原成 DataSet 即可直接顯示」，但寫入端當時輸出的是
-**無 schema 的裸 DiffGram**，而 `DataSet.ReadXml` 對這種 payload 用全新 `DataSet` 讀回會得到
-**零張表**——實測六種 `XmlReadMode` 皆同。讀取端因此只能改以 `XDocument` 自行解析、
-靠 `diffgr:id` 配對 before 列。也就是說**該項好處從未兌現**，而沒有任何機制會發現：
-編譯器不看散文，測試驗的是讀取端自己那條路。
+Decision 5 said one of the benefits of DiffGram is that "it can be restored into a DataSet on reading for direct
+display", but at the time the write side produced **a bare DiffGram without a schema**, and reading such a payload back
+with `DataSet.ReadXml` into a fresh `DataSet` yields **zero tables**; measured, all six `XmlReadMode`s behave the same.
+The read side therefore had to parse it itself with `XDocument` and pair up before rows through `diffgr:id`. In other
+words, **that benefit was never delivered**, and no mechanism would have noticed: the compiler does not read prose, and
+the tests verified the read side's own path.
 
-改法是寫入端在 DiffGram 前加寫一份內嵌 XSD，兩者包在單一外層元素 `AuditChanges` 內
-（`DataSet.WriteXmlSchema` + `DataSet.WriteXml`，見 `src/Polhem.Business/AuditLog/AuditDiffGram.cs`）。
-如此 payload 自帶欄位結構，可用它自己的 schema 重建成真正的 `DataSet`，
-變更明細改由比對 `DataRowVersion.Original` 與 `Current` 得出。
+The fix is for the write side to write an embedded XSD before the DiffGram, both wrapped in a single outer element
+`AuditChanges` (`DataSet.WriteXmlSchema` + `DataSet.WriteXml`, see `src/Polhem.Business/AuditLog/AuditDiffGram.cs`).
+This way the payload carries its own column structure and can be rebuilt into a real `DataSet` with its own schema, and
+the change details are derived by comparing `DataRowVersion.Original` with `Current`.
 
-| 面向 | 決定 |
+| Aspect | Decision |
 |------|------|
-| 新舊並存 | 各種 payload 以 **root 元素**分派（新格式 `AuditChanges`、舊格式 `diffgr:diffgram`、最小刪除標記 `DeletedRow`、刪除原單 `AuditDeletedRecord`——見第十節），互斥且不需版本欄位 |
-| 既有資料 | **一列都不遷移**，舊格式由 `SchemalessDiffGramReader` 繼續讀，**不設落日期限** |
-| 體積 | schema 是固定成本（Northwind 訂單那組 26 欄／2 表約 +4.2 KB／列），與資料量無關；異動記錄寫進獨立的 `log` 資料庫，不壓到業務庫 |
-| 值的字串化 | 一律 `XmlConvert`，與舊格式的 XML 原文逐字一致且 culture 無關；用 `ToString()` 會讓同一筆異動因儲存格式不同而顯示不同 |
-| XML 不允許的字元（2026-09-11 補） | 控制字元與 U+FFFE / U+FFFF 寫成字元參照（如 `&#x1;`），讀取端關閉字元檢查後讀回原值；CR 寫成 `&#xD;`，避免讀回時被正規化成 LF；落單 surrogate 沒有任何 XML 表示法，換成 U+FFFD。代價是含這類字元的 payload 不是嚴格合法的 XML 1.0，外部工具直接解析 `changes_xml` 時要關閉字元檢查 |
+| Old and new coexisting | Each kind of payload is dispatched by its **root element** (the new format `AuditChanges`, the old format `diffgr:diffgram`, the minimal deletion marker `DeletedRow`, the deleted original record `AuditDeletedRecord`: see section 10); they are mutually exclusive and need no version field |
+| Existing data | **Not a single row is migrated**; the old format continues to be read by `SchemalessDiffGramReader`, **with no sunset date** |
+| Size | The schema is a fixed cost (about +4.2 KB per row for the Northwind order set of 26 columns / 2 tables), independent of the data volume; change log entries are written to a separate `log` database and do not weigh on the business database |
+| Stringifying values | Always `XmlConvert`, identical character for character to the XML text of the old format and culture-independent; using `ToString()` would make the same change display differently depending on the storage format |
+| Characters XML does not allow (added 2026-09-11) | Control characters and U+FFFE / U+FFFF are written as character references (such as `&#x1;`), and the read side reads the original value back with character checking turned off; CR is written as `&#xD;` so that it is not normalized to LF on reading; a lone surrogate has no XML representation at all and is replaced with U+FFFD. The cost is that a payload containing such characters is not strictly valid XML 1.0, and external tools that parse `changes_xml` directly must turn off character checking |
 
-**刻意不做的三件事**：不追宣告型別（`Date` vs `DateTime`）——`FormSchema` 才是欄位結構的
-權威來源，payload 不該再複寫一份；不改 `RecordFieldChange`，因此**沒有 wire 形狀變更**；
-不動資料庫層面。
+**Three things deliberately not done**: the declared type (`Date` vs `DateTime`) is not tracked, because `FormSchema`
+is the authoritative source of the column structure and the payload should not copy it again; `RecordFieldChange` is
+not changed, so there is **no wire shape change**; the database level is not touched.
 
-**為何不用 `XmlSerializer`。** `DataSet` 實作 `IXmlSerializable`，其 `WriteXml` 就是上述兩支
-BCL 方法，因此 `XmlSerializer` 產出的 payload 與此等價。不走它是為了讓
-[ADR-025](adr-025-define-types-aot-xmlserializer-compat.md) 的反射路徑疑慮永久不必再論證。
-附帶查證：`changes_xml` 的讀取端只存在於伺服端（`Polhem.Business` 不被任何行動／WASM head 引用），
-且 `changes_xml` 從不上 wire——client 收到的是已攤平的 `RecordFieldChange`。
+**Why not `XmlSerializer`.** `DataSet` implements `IXmlSerializable`, and its `WriteXml` is exactly the two BCL
+methods above, so the payload `XmlSerializer` produces would be equivalent. Not going through it means the reflection
+path concerns of [ADR-025](adr-025-define-types-aot-xmlserializer-compat.md) never need to be argued again. Also
+verified along the way: the reader of `changes_xml` exists only on the server (`Polhem.Business` is not referenced by
+any mobile / WASM head), and `changes_xml` never goes on the wire; the client receives the already flattened
+`RecordFieldChange`.
 
-### 九、payload 維持 XML，不改用 JSON（2026-09-11 補）
+### 9. The payload stays XML and does not switch to JSON (added 2026-09-11)
 
-評估過改用傳輸序列化既有的 `DataSetJsonConverter` / `DataTableJsonConverter` 儲存 payload。
-以 Northwind 訂單（主檔 16 欄、明細 10 欄），以及「每種 `FieldDbType` 一欄、含極值與 DBNull」的表實測：
+Storing the payload with the existing wire serialization's `DataSetJsonConverter` / `DataTableJsonConverter` was
+evaluated. Measured with a Northwind order (16 master columns, 10 detail columns) and with a table having "one column
+per `FieldDbType`, including extreme values and DBNull":
 
-| 指標 | JSON 相對現行 XML |
+| Metric | JSON relative to the current XML |
 |---|---|
-| 體積 | 54%～70%；與不縮排的 XML 比為 67%～82%，差距有一部分來自縮排 |
-| 序列化時間 | 24%～30% |
-| 還原時間 | 37%～82%（修改列越多差距越小） |
-| 還原度 | 全部 `FieldDbType`（含新增／修改／刪除、多語系）兩者皆完整還原，讀取端產出的欄位異動清單逐筆相同 |
+| Size | 54% to 70%; 67% to 82% compared with unindented XML, so part of the gap comes from indentation |
+| Serialization time | 24% to 30% |
+| Restore time | 37% to 82% (the more modified rows, the smaller the gap) |
+| Fidelity | For every `FieldDbType` (including inserts / updates / deletes and multiple languages) both restore completely, and the field change lists the read side produces are identical entry by entry |
 
-效能數字量於第八節補上不允許字元的處理之前；該補強對一般資料的 payload 逐字不變（實測），體積與還原度數字不受影響。
+The performance numbers were measured before section 8 added the handling of disallowed characters; that addition
+leaves the payload for ordinary data unchanged character for character (measured), so the size and fidelity numbers
+are unaffected.
 
-**決定維持 XML。** 理由如下：
+**The decision is to stay with XML.** The reasons:
 
-- **還原度等價。** 異動記錄的查看需求是「哪些欄位從什麼值改成什麼值」，兩種格式在這點上等價。
-  第八節補上不允許字元的處理後，實測 CR、CRLF、控制字元、NUL 在 XML 往返中皆讀回原值，
-  落單 surrogate 兩種格式都換成 U+FFFD。
-- **效能差距不構成理由。** 異動記錄一次只寫入或讀取單筆表單資料，序列化差距在每次數十到一百多微秒的量級。
-- **體積差距不構成理由。** 異動記錄寫進與業務庫分離的 `log` 資料庫。框架目前固定寫入單一 `log` 資料庫，
-  量體增長時可由部署端以分庫或封存緩解。
-- **做法已長期驗證。** 維護者在既有系統中以 `DataSet` XML 記錄異動已使用十年以上。
+- **Fidelity is equivalent.** What the change log is viewed for is "which fields changed from what value to what
+  value", and the two formats are equivalent on that point. After section 8 added the handling of disallowed
+  characters, CR, CRLF, control characters and NUL were measured to read back as the original values in an XML round
+  trip, and a lone surrogate becomes U+FFFD in both formats.
+- **The performance gap is not a reason.** A change log entry writes or reads only a single form record at a time, and
+  the serialization gap is on the order of tens to a little over a hundred microseconds each time.
+- **The size gap is not a reason.** Change log entries are written to a `log` database separate from the business
+  database. The framework currently always writes to a single `log` database, and when the volume grows the deployment
+  can mitigate it by splitting databases or archiving.
+- **The approach has been proven over a long time.** The maintainer has recorded changes as `DataSet` XML in existing
+  systems for more than ten years.
 
-改用 JSON 反而要付出：
+Switching to JSON would instead cost:
 
-- 以 UTF-8 原字儲存 BMP 以外的字元（emoji、CJK 擴充 B 區）時，System.Text.Json 的內建編碼器都會跳脫，
-  需要自訂 `JavaScriptEncoder`，而它必須覆寫的方法是指標簽章，得開啟 unsafe 程式碼；
-- 持久化資料從此依賴 wire 的 JSON 形狀，改動 wire 會牽動既有稽核列能否讀回；
-- JSON 只支援 `FieldDbType` 對應的 CLR 型別（`TimeSpan`、`DateTimeOffset` 擲例外，`double`、`char` 讀回後型別改變）；
-- 讀取端再多一種格式分支，而既有兩種 XML 格式仍須永久可讀。
+- To store characters outside the BMP (emoji, CJK Extension B) as raw UTF-8, every built-in encoder of
+  System.Text.Json escapes them, which needs a custom `JavaScriptEncoder`, and the methods it must override have
+  pointer signatures, so unsafe code has to be enabled;
+- Persisted data would from then on depend on the JSON shape of the wire, so changing the wire would affect whether
+  existing audit rows can be read back;
+- JSON only supports the CLR types corresponding to `FieldDbType` (`TimeSpan` and `DateTimeOffset` throw; `double` and
+  `char` come back with a different type);
+- The read side would get one more format branch, while the two existing XML formats must remain readable forever.
 
-**也不需要為 `DateOnly` / `TimeOnly` 做特別處理。** Date 欄以 `DateTime`、Time 欄以字串存在 `DataSet` 中，
-值與欄位標記都能完整還原。日期欄只顯示日期、時間點欄換算時區，屬顯示層依 `FormSchema` 欄位型別處理的事，
-與第八節「不追宣告型別」一致。
+**Nor does `DateOnly` / `TimeOnly` need special handling.** Date columns are stored in the `DataSet` as `DateTime` and
+Time columns as strings, and both the values and the column markers restore completely. Showing only the date for a
+date column and converting time zones for an instant column are matters for the display layer to handle according to
+the `FormSchema` field type, consistent with section 8's "the declared type is not tracked".
 
-### 十、刪除記錄存完整原單，不再把列標成 Deleted（2026-09-11 補）
+### 10. A deletion record stores the complete original record and no longer marks rows as Deleted (added 2026-09-11)
 
-`Form.Delete` 的實際刪除是 `DELETE … WHERE sys_rowid = …`（明細以 `sys_master_rowid` 為條件），
-不經過 DataSet。稽核要記的是**刪掉的那張單長什麼樣子**——刪除沒有欄位異動。
+The actual deletion of `Form.Delete` is `DELETE … WHERE sys_rowid = …` (details are conditioned on `sys_master_rowid`)
+and does not go through a DataSet. What the audit needs to record is **what the deleted record looked like**: a
+deletion has no field changes.
 
-原本的寫法卻把刪除前原單的每一列 `row.Delete()` 標成 Deleted，再 `GetChanges()` 寫成 DiffGram，
-讓刪除內容落在 `diffgr:before` 區塊。也就是把「一張被刪掉的單」偽裝成「每一列都被刪除的變更集」，
-只為了沿用 Save 那條 payload 形狀。
+The original implementation, however, marked every row of the original record as Deleted with `row.Delete()` before
+deletion, then wrote it as a DiffGram with `GetChanges()`, so that the deleted content ended up in the
+`diffgr:before` block. In other words, it disguised "a record that was deleted" as "a change set in which every row
+was deleted", just to reuse the payload shape of the Save path.
 
-這個偽裝有實際代價：標記作用在 `DeleteContext.Snapshot` 本身，而 `DoAfterDelete` 與 AfterDelete
-外掛拿到的正是同一份。**稽核開啟時，外掛以預設版本讀欄位會擲 `DeletedRowInaccessibleException`；
-稽核關閉時同樣的寫法正常**——同一個外掛能不能用，竟取決於稽核開關。
+The disguise had a real cost: the marking acted on `DeleteContext.Snapshot` itself, and `DoAfterDelete` and AfterDelete
+plugins receive exactly that same object. **With auditing on, a plugin reading fields with the default version threw
+`DeletedRowInaccessibleException`; with auditing off, the same code worked**: whether a plugin worked depended on the
+audit switch.
 
-| 面向 | 決定 |
+| Aspect | Decision |
 |------|------|
-| payload | root `AuditDeletedRecord`，內含 XSD 與 DiffGram。原單原樣寫出、不 `GetChanges()`，列維持 Unchanged，沒有 before 區塊 |
-| 字元處理 | 與 `AuditChanges` 共用同一組 writer 設定，第八節的字元處理照樣生效 |
-| 讀取 | 每一列以現值產出 `Delete` 欄位（舊值為原值），輸出與舊的刪除記錄逐筆相同，由 `DeletedRecordPayloadTests` 釘住 |
-| `Snapshot` | 稽核只讀不改，AfterDelete 看到的列狀態與稽核開關無關，由 `Delete_AfterDeletePlugin_ReadsSnapshotWithAuditEnabled` 釘住 |
-| 既有資料 | **一列都不遷移**。4.30.0 起標成 Deleted 的刪除記錄照讀 |
-| Save 路徑 | 不變：用戶端送來的 DataSet 帶真實列狀態，整單刪除也仍是變更集 |
-| 降版 | 舊版讀取端不認得新 root，會把 `xs:schema` 當成資料，讀出一筆無意義欄位；資料本身完整，回到新版即可正常讀出 |
+| Payload | Root `AuditDeletedRecord`, containing the XSD and the DiffGram. The original record is written as is, without `GetChanges()`; the rows stay Unchanged and there is no before block |
+| Character handling | Shares the same writer settings as `AuditChanges`, so the character handling of section 8 applies as well |
+| Reading | Each row produces `Delete` field entries from its current values (the old value is the original value); the output is identical entry by entry to the old deletion records, pinned by `DeletedRecordPayloadTests` |
+| `Snapshot` | The audit only reads and never changes it, so the row state AfterDelete sees does not depend on the audit switch, pinned by `Delete_AfterDeletePlugin_ReadsSnapshotWithAuditEnabled` |
+| Existing data | **Not a single row is migrated**. Deletion records marked as Deleted since 4.30.0 are still read |
+| Save path | Unchanged: the DataSet the client sends carries real row states, and deleting a whole record is still a change set |
+| Downgrade | An older read side does not recognize the new root and treats `xs:schema` as data, reading out one meaningless field; the data itself is intact and reads correctly again after returning to the new version |
 
-## 理由
+## Rationale
 
-**為什麼照抄兩套 ERP 的分類而不自創。** 稽核分類的成本不在寫程式，而在事後發現切錯了——
-表已經長滿資料，改分類等於資料遷移。SAP 與 Odoo 的切法經過長期實務驗證，且兩者
-**獨立收斂到相同結構**（事件與欄位變更分離、讀取記錄選擇性），這種一致性本身就是證據。
+**Why copy the taxonomy of two ERPs instead of inventing one.** The cost of an audit taxonomy is not in writing the
+code but in discovering afterwards that it was cut wrong: by then the tables are full of data, and changing the
+taxonomy means migrating data. The way SAP and Odoo cut it has been proven in long practice, and the two **converged
+independently on the same structure** (events separated from field changes, selective read logging); that agreement is
+itself evidence.
 
-**為什麼檢視記錄要犧牲完整性。** 因為別無選擇：讀取次數比寫入高一到數個數量級，全記會同時
-拖垮效能與儲存。SAP 與 Odoo 各自獨立得到同一個結論，沒有第三條路。
+**Why the access log sacrifices completeness.** Because there is no choice: reads outnumber writes by one to several
+orders of magnitude, and logging everything would drag down both performance and storage. SAP and Odoo each reached
+the same conclusion independently; there is no third way.
 
-**為什麼 DiffGram 勝過型別正確的方案。** 這是「dogfood 既有機制」與「查詢便利」的取捨。
-框架的資料交換單位本來就是 DataSet，DiffGram 是它原生的差異表示——選它等於不引入新概念。
-欄位級查詢是少數場景，留給選配的 EAV 檔位。
+**Why DiffGram beats the correctly typed option.** This is a trade-off between "dogfooding an existing mechanism" and
+"query convenience". The framework's unit of data exchange is the DataSet already, and DiffGram is its native
+representation of differences: choosing it introduces no new concept. Field-level queries are a minority scenario,
+left to the optional EAV level.
 
-## 後果
+## Consequences
 
-**正面**：
+**Positive**:
 
-- 稽核軌跡與技術 observability 分屬兩套管線，各自的保留期與量體策略互不干擾。
-- 異動記錄零自訂 diff 邏輯（差異由 `GetChanges()` 產生），且自 4.30.0 起能還原成 DataSet 直接呈現。
-- 檢視記錄的預設關閉讓「開啟稽核」不會意外變成效能事故。
+- The audit trail and technical observability belong to two separate pipelines, so their retention periods and volume
+  strategies do not interfere with each other.
+- The change log has zero custom diff logic (differences come from `GetChanges()`), and since 4.30.0 it can be
+  restored into a DataSet for direct display.
+- With the access log off by default, "turning on auditing" does not accidentally turn into a performance incident.
 
-**負面 / 成本**：
+**Negative / costs**:
 
-- 異動記錄的欄位級查詢需解析 XML，或改用選配的 EAV 檔位。
-- best-effort 寫入有漏失窗口。這是刻意接受的——需要零漏失時升級為 outbox。
+- Field-level queries on the change log require parsing XML, or switching to the optional EAV level.
+- Best-effort writes have a loss window. This is deliberately accepted; when zero loss is needed, upgrade to the
+  outbox.
 
-**後續增強**：per-form 稽核規則已實作——管理員以一份執行期規則選擇哪些 ProgId 要做異動／檢視記錄，
-對齊 Odoo `auditlog.rule`，見 [ADR-041](adr-041-per-form-audit-rule.md)。
+**Later enhancement**: per-form audit rules have been implemented. Administrators use a runtime rule to choose which
+ProgIds get change / access logging, matching Odoo `auditlog.rule`; see [ADR-041](adr-041-per-form-audit-rule.md).
 
-## 參考
+## References
 
-- 保留與分區（依年分庫、append-only、hash-chain）的設計方向見
-  [資料庫設定指引](../zh-TW/database-settings-guide.md) 的多資料庫情境。
-- 相關 ADR：[ADR-017](adr-017-db-cache-invalidation.md)、
-  [ADR-018](adr-018-db-define-storage.md)、
-  [ADR-019](adr-019-permission-authorization-model.md)。
+- The design direction for retention and partitioning (databases split by year, append-only, hash chain) is in the
+  multi-database scenarios of the [database settings guide](../en/database-settings-guide.md).
+- Related ADRs: [ADR-017](adr-017-db-cache-invalidation.md), [ADR-018](adr-018-db-define-storage.md),
+  [ADR-019](adr-019-permission-authorization-model.md).

@@ -1,121 +1,155 @@
-# ADR-012：Session 公司情境模型（兩階段 session lifecycle）
+# ADR-012: Session company context model (two-phase session lifecycle)
 
-## 狀態
+[繁體中文](adr-012-session-company-context.zh-TW.md)
 
-已採納（2026-05-15）
+## Status
 
-## 背景
+Accepted (2026-05-15)
 
-Polhem 採三類邏輯 DB（[ADR-010](adr-010-logical-database-category.md)），其中 `company` 分類的實際資料庫由「使用者目前操作的是哪家公司」決定。要支援這個多公司能力，session 必須帶上「當前公司」資訊；但「使用者帳密驗證」與「綁定操作公司」是兩個獨立的關注點：
+## Context
 
-- 使用者通常先輸入帳密通過認證，**之後才知道自己可以進哪些公司**
-- 同一使用者可能擁有多家公司的存取權，需要在 session 中途切換
-- 部分跨公司操作（Login、Logout、Ping、寫 audit log 等）發生在「進公司之前」或「離開公司之後」
+Polhem uses three kinds of logical database ([ADR-010](adr-010-logical-database-category.md)). For the `company`
+category, the actual database is determined by "which company the user is currently working in". To support this
+multi-company capability, the session has to carry "current company" information. But "verifying the user's
+credentials" and "binding the company being worked in" are two independent concerns:
 
-如果把這兩件事塞進單一 `Login(account, password, companyId)`，會碰到結構性問題：
+- A user usually enters credentials and is authenticated first, and **only then learns which companies they may
+  enter**
+- The same user may have access to several companies and needs to switch in the middle of a session
+- Some cross-company operations (Login, Logout, Ping, writing the audit log and so on) happen "before entering a
+  company" or "after leaving a company"
 
-1. **使用者體驗反向**：要先告訴系統「我要進哪家公司」才能開始驗證，但「我能進哪些公司」要驗證後才知道
-2. **切換成本**：切換公司 = 完整 logout + 重新 login，重發 token、重建加密金鑰
-3. **跨公司流程被卡死**：「列出我可以進的公司」這種操作沒有合適的執行階段
-4. **狀態語意混亂**：「已登入但未進公司」這個 in-between state 無處表達
+Putting both into a single `Login(account, password, companyId)` runs into structural problems:
 
-需要一個明確的兩階段 session lifecycle：先完成身份驗證，再綁定公司情境。
+1. **The user experience runs backwards**: you have to tell the system "which company I want to enter" before
+   authentication can even start, but "which companies I can enter" is only known after authentication
+2. **Switching cost**: switching company = a full logout + a new login, reissuing the token and rebuilding the
+   encryption key
+3. **Cross-company flows are stuck**: an operation such as "list the companies I can enter" has no suitable phase to
+   run in
+4. **Confused state semantics**: the in-between state "logged in but not in a company" has nowhere to be expressed
 
-## 決策
+An explicit two-phase session lifecycle is needed: complete authentication first, then bind the company context.
 
-引入**兩階段 session 模型**，由四個對稱方法構成完整 lifecycle：
+## Decision
+
+Introduce a **two-phase session model**, in which four symmetric methods form the complete lifecycle:
 
 ```
 Login(account, password)   ←→  Logout()
 EnterCompany(companyId)    ←→  LeaveCompany()
 ```
 
-`SessionInfo` 加 `CompanyId`（`string?`，nullable）欄位表達 in-between state；`null` = 已登入但未進公司，非 null = 當前綁定該公司。
+`SessionInfo` gains a `CompanyId` field (`string?`, nullable) to express the in-between state: `null` = logged in
+but not in a company; non-null = currently bound to that company.
 
-### 四項核心要點
+### Four key points
 
-1. **`Login` 只負責身份驗證**，不接受 `companyId`
+1. **`Login` only authenticates** and does not accept a `companyId`
 
-   - 成功後建立 `SessionInfo`（含 `AccessToken`、`UserId`、`UserName` 等），`SessionInfo.CompanyId == null`
-   - 回傳 `AccessToken`，client 端用此 token 呼叫後續所有方法
-   - 之後可呼叫「列出可進入公司」等跨公司方法（共用 `common` DB）
+   - On success it creates the `SessionInfo` (including `AccessToken`, `UserId`, `UserName` and so on), with
+     `SessionInfo.CompanyId == null`
+   - It returns the `AccessToken`, which the client uses to call every subsequent method
+   - Afterwards, cross-company methods such as "list the companies I can enter" can be called (they share the
+     `common` DB)
 
-2. **`EnterCompany` 負責綁定公司情境**，直接覆寫即為切換
+2. **`EnterCompany` binds the company context**, and overwriting it directly is how you switch
 
-   - 驗證 `CompanyId` 存在於 `ICompanyInfoService`（未來會加入使用者-公司權限驗證）
-   - 寫入 `SessionInfo.CompanyId`，覆寫舊值（首次進入與切換用同一方法，無 `LeaveCompany` + `EnterCompany` 兩步驟）
-   - 切換是原子操作：要嘛切換成功並指向新公司，要嘛拋例外維持原 `CompanyId`
-   - 回傳完整 `CompanyInfo` 物件給 client（顯示用）
+   - It verifies that the `CompanyId` exists in `ICompanyInfoService` (user-company permission checks will be added
+     later)
+   - It writes `SessionInfo.CompanyId`, overwriting the old value (first entry and switching use the same method;
+     there is no two-step `LeaveCompany` + `EnterCompany`)
+   - Switching is atomic: either the switch succeeds and points to the new company, or an exception is thrown and the
+     original `CompanyId` is kept
+   - It returns the complete `CompanyInfo` object to the client (for display)
 
-3. **`LeaveCompany` 是顯式「離開公司但保留 session」**
+3. **`LeaveCompany` is an explicit "leave the company but keep the session"**
 
-   - 清掉 `SessionInfo.CompanyId`，保留其他 session 狀態
-   - Idempotent：對未進公司的 session 呼叫不報錯，方便前端不必先檢查狀態
-   - 切換公司**不**透過 `LeaveCompany` + `EnterCompany` 兩步驟（避免非原子操作中間狀態）；`LeaveCompany` 的主要用途是「回到公司選擇頁」之類顯式 UX 動作
+   - It clears `SessionInfo.CompanyId` and keeps the rest of the session state
+   - Idempotent: calling it on a session that has not entered a company does not raise an error, so the front end
+     does not have to check the state first
+   - Switching company does **not** go through the two steps `LeaveCompany` + `EnterCompany` (to avoid the
+     intermediate state of a non-atomic operation); the main use of `LeaveCompany` is an explicit UX action such as
+     "go back to the company selection page"
 
-4. **`Logout` 隱含 `LeaveCompany` 清理，再銷毀整個 session**
+4. **`Logout` implies the `LeaveCompany` cleanup, then destroys the whole session**
 
-   - 內部流程：清 `SessionInfo.CompanyId`（若非空）→ 移除整個 session entry
-   - Idempotent：對不存在的 token 不報錯（避免被攻擊者用來探測 token 存在性）
-   - 呼叫端不需要先 `LeaveCompany` 再 `Logout`，一個方法 cover
+   - Internal flow: clear `SessionInfo.CompanyId` (if not empty) → remove the whole session entry
+   - Idempotent: it does not raise an error for a token that does not exist (so an attacker cannot use it to probe
+     whether a token exists)
+   - The caller does not need to call `LeaveCompany` before `Logout`; one method covers it
 
-## 理由
+## Rationale
 
-### 為何 `SessionInfo.CompanyId` 是 nullable（而非預設空字串）
+### Why `SessionInfo.CompanyId` is nullable (rather than defaulting to an empty string)
 
-`null` 與「真實的空字串 CompanyId」語意不同。`null` 明確表達「未綁定公司」，空字串可能被誤判為合法值。本專案已全 enable nullable reference types，加 `?` annotation 不產生額外維護成本。
+`null` and "a real empty-string CompanyId" mean different things. `null` states clearly "no company is bound", while
+an empty string could be mistaken for a legitimate value. This project has nullable reference types enabled
+everywhere, so adding the `?` annotation costs no extra maintenance.
 
-### 為何 `Logout` 隱含 `LeaveCompany`
+### Why `Logout` implies `LeaveCompany`
 
-兩種 API 設計方案：
+Two API designs:
 
-| 方案 | 評估 |
+| Option | Assessment |
 |------|------|
-| **`Logout` 內部隱含清理 ✅** | 一個動作搞定，呼叫端不需要操心順序；server 端能保證「session 銷毀時必清乾淨」 |
-| `Logout` 要求呼叫端先 `LeaveCompany` | 呼叫端容易漏；若忘記，會在 audit log 看到「session 有 CompanyId 但已 expired」的奇怪狀態 |
+| **`Logout` cleans up internally ✅** | One action does it all, and the caller does not have to worry about order; the server can guarantee "when a session is destroyed, it is always cleaned up" |
+| `Logout` requires the caller to call `LeaveCompany` first | Callers easily forget; if they do, the audit log shows the odd state "the session has a CompanyId but has already expired" |
 
-採前者，符合 idempotent 設計原則：呼叫端不需要記得多步驟。
+The former was adopted, in line with the idempotent design principle: the caller does not have to remember several
+steps.
 
-### 為何 `CompanyAccessDenied` 合併「無權限」與「不存在」
+### Why `CompanyAccessDenied` merges "no permission" and "does not exist"
 
-`EnterCompany` 可能失敗的兩種情境：
+`EnterCompany` can fail in two situations:
 
-- 該 `CompanyId` 不存在
-- 該使用者對該 `CompanyId` 無存取權
+- The `CompanyId` does not exist
+- The user has no access to the `CompanyId`
 
-若兩者用不同錯誤碼，攻擊者可以透過反覆嘗試判斷哪些 `CompanyId` 存在於系統中（user enumeration attack）。合併為單一 `CompanyAccessDenied` (-32003, HTTP 403) 後，無權限的使用者無法區分「真的不存在」與「存在但我不能進」。
+If the two used different error codes, an attacker could determine by repeated attempts which `CompanyId`s exist in
+the system (a user enumeration attack). With both merged into a single `CompanyAccessDenied` (-32003, HTTP 403), a
+user without permission cannot tell "really does not exist" from "exists but I cannot enter".
 
-### 為何 `EnterCompany` 直接覆寫而非要求先 `LeaveCompany`
+### Why `EnterCompany` overwrites directly instead of requiring `LeaveCompany` first
 
-切換公司若拆兩步（`LeaveCompany` + `EnterCompany(newId)`），存在三個風險：
+If switching company were split into two steps (`LeaveCompany` + `EnterCompany(newId)`), there would be three risks:
 
-1. **非原子**：兩步驟之間若有錯誤或網路斷線，session 卡在「未進公司」狀態
-2. **權限失效視窗**：兩步驟之間 UI 可能短暫嘗試呼叫某 company-bound BO method，會被拒
-3. **語意混亂**：「我要切到 B 公司」本意是 atomic intent，不應被表達成兩個獨立動作
+1. **Not atomic**: if an error or a network disconnection happens between the two steps, the session is stuck in the
+   "not in a company" state
+2. **A window of failed permissions**: between the two steps the UI may briefly try to call some company-bound BO
+   method and be rejected
+3. **Confused semantics**: "I want to switch to company B" is by nature an atomic intent and should not be expressed
+   as two independent actions
 
-採直接覆寫後，切換是單一 RPC，要嘛成功切換要嘛失敗回滾，無中間狀態。
+With direct overwriting, switching is a single RPC: it either switches successfully or fails and rolls back, with no
+intermediate state.
 
-## 替代方案（已評估後不採納）
+## Alternatives considered (evaluated and rejected)
 
-1. **單階段 `Login(account, password, companyId)`**
-   - 拒絕原因：使用者通常需先驗證身份才能查詢可進入的公司清單；強制先選公司違反實務流程
+1. **Single-phase `Login(account, password, companyId)`**
+   - Reason for rejection: users usually need to authenticate before they can look up the list of companies they may
+     enter; forcing them to choose a company first goes against how things work in practice
 
-2. **`Login` 後自動綁定第一家可存取公司**
-   - 拒絕原因：使用者需要顯式選擇（避免誤入；多家公司情境下「第一家」語意不明確）
+2. **Automatically bind the first accessible company after `Login`**
+   - Reason for rejection: users need to choose explicitly (to avoid entering the wrong one; with several companies,
+     "the first one" has no clear meaning)
 
-3. **省略 `LeaveCompany`，切換完全靠 `EnterCompany` 覆寫**
-   - 拒絕原因：失去「顯式離開」的能力；UI 要回公司選擇頁時無對應 API
-   - 採折衷：保留 `LeaveCompany` 但**不**讓它成為切換的必要前置步驟
+3. **Omit `LeaveCompany` and switch purely by overwriting with `EnterCompany`**
+   - Reason for rejection: it loses the ability to "leave explicitly"; there is no API for the UI to go back to the
+     company selection page
+   - Compromise adopted: keep `LeaveCompany`, but do **not** make it a required step before switching
 
-4. **省略 `Logout`，靠 token 過期自然失效**
-   - 拒絕原因：被動式登出延遲長（token 通常 1 小時 TTL），無法支援「使用者明確登出」UX；audit log 也需要顯式 logout 事件
+4. **Omit `Logout` and rely on the token expiring naturally**
+   - Reason for rejection: passive logout has a long delay (a token usually has a 1-hour TTL) and cannot support the
+     UX of "the user explicitly logs out"; the audit log also needs an explicit logout event
 
-5. **`CompanyId` 用 enum 替代 string**
-   - 拒絕原因：companyId 是部署設定產生的字串值（可能含租戶代碼、年份等），無法在程式碼層 enum 化
+5. **Use an enum instead of a string for `CompanyId`**
+   - Reason for rejection: a companyId is a string value produced by deployment settings (it may contain a tenant
+     code, a year and so on) and cannot be turned into an enum at the code level
 
-## 結果
+## Consequences
 
-### Session 狀態轉移
+### Session state transitions
 
 ```text
               Login()
@@ -139,68 +173,79 @@ EnterCompany(companyId)    ←→  LeaveCompany()
                             (none)
 ```
 
-### 合法 / 非法呼叫路徑
+### Valid and invalid call paths
 
-| 路徑 | 結果 |
+| Path | Result |
 |------|------|
-| `Login → EnterCompany(A) → [業務] → LeaveCompany → EnterCompany(B) → Logout` | ✅ |
-| `Login → EnterCompany(A) → Logout`（隱含 LeaveCompany） | ✅ |
-| `Login → Logout`（未進公司直接登出） | ✅ |
-| `Login → LeaveCompany`（未進公司直接 Leave） | ✅ idempotent |
-| 未 `Login` → 任何方法（除 `Login` / `Ping` 等 Anonymous） | ❌ `Unauthorized` (-32001) |
-| 已 `Login` 但未 `EnterCompany` → company 類 BO 方法 | ❌ `CompanyNotEntered` (-32002) |
-| `EnterCompany(不存在或無權限)` | ❌ `CompanyAccessDenied` (-32003) |
+| `Login → EnterCompany(A) → [business] → LeaveCompany → EnterCompany(B) → Logout` | ✅ |
+| `Login → EnterCompany(A) → Logout` (implies LeaveCompany) | ✅ |
+| `Login → Logout` (log out without entering a company) | ✅ |
+| `Login → LeaveCompany` (Leave without entering a company) | ✅ idempotent |
+| No `Login` → any method (except Anonymous ones such as `Login` / `Ping`) | ❌ `Unauthorized` (-32001) |
+| `Login` done but no `EnterCompany` → a company-category BO method | ❌ `CompanyNotEntered` (-32002) |
+| `EnterCompany(nonexistent or no permission)` | ❌ `CompanyAccessDenied` (-32003) |
 
-### 新增錯誤碼
+### New error codes
 
-| 錯誤碼 | 數值 | HTTP 對應 | 用途 |
+| Error code | Value | HTTP mapping | Purpose |
 |--------|------|----------|------|
-| `Unauthorized`（既有） | -32001 | 401 | session 無效或過期 |
-| `CompanyNotEntered`（新增） | -32002 | 409 | 已登入但未進公司，呼叫了需要公司情境的 method |
-| `CompanyAccessDenied`（新增） | -32003 | 403 | `EnterCompany` 失敗（公司不存在 / 無權限，刻意合併） |
+| `Unauthorized` (existing) | -32001 | 401 | The session is invalid or expired |
+| `CompanyNotEntered` (new) | -32002 | 409 | Logged in but not in a company, and a method that needs a company context was called |
+| `CompanyAccessDenied` (new) | -32003 | 403 | `EnterCompany` failed (the company does not exist / no permission, deliberately merged) |
 
-### 對外 API 變更
+### Public API changes
 
-| 範圍 | 變更 |
+| Scope | Change |
 |------|------|
-| `SystemBusinessObject` | 新增 `EnterCompany` / `LeaveCompany` / `Logout` 三個 public method |
-| `ISystemBusinessObject` | 加 `Login` / `EnterCompany` / `LeaveCompany` / `Logout` 介面宣告（給跨 BO 呼叫用） |
-| `SessionInfo` | 加 `CompanyId` (string?) 欄位 |
-| `Polhem.Definition.Identity.CompanyInfo` | **新增**類別（3 欄位：`CompanyId` / `CompanyName` / `CompanyDatabaseId`） |
-| `ICompanyInfoService` / `CompanyInfoCache` | **新增**：類比 `ISessionInfoService` / `SessionInfoCache` 模式 |
-| `SystemActions` | 加 `EnterCompany` / `LeaveCompany` / `Logout` 常數 |
-| `JsonRpcErrorCode` | 加 `CompanyNotEntered` / `CompanyAccessDenied` |
-| `SystemApiConnector` | 加對應 client wrapper（async + sync 各一） |
+| `SystemBusinessObject` | Adds three public methods: `EnterCompany` / `LeaveCompany` / `Logout` |
+| `ISystemBusinessObject` | Adds the interface declarations `Login` / `EnterCompany` / `LeaveCompany` / `Logout` (for cross-BO calls) |
+| `SessionInfo` | Adds the `CompanyId` (string?) field |
+| `Polhem.Definition.Identity.CompanyInfo` | **New** class (3 fields: `CompanyId` / `CompanyName` / `CompanyDatabaseId`) |
+| `ICompanyInfoService` / `CompanyInfoCache` | **New**: modeled on the `ISessionInfoService` / `SessionInfoCache` pattern |
+| `SystemActions` | Adds the `EnterCompany` / `LeaveCompany` / `Logout` constants |
+| `JsonRpcErrorCode` | Adds `CompanyNotEntered` / `CompanyAccessDenied` |
+| `SystemApiConnector` | Adds the matching client wrappers (one async and one sync each) |
 
-## 取捨
+## Trade-offs
 
-### 公司權限驗證延後
+### Company permission checks are deferred
 
-`EnterCompany` 目前只做「公司是否存在」檢查，**不做使用者-公司權限驗證**。完整權限模型（user-company 對映 schema、角色 / 可見性規則）由後續 ADR + plan 接手。`EnterCompany` 內部已留 TODO 註解標明擴充點，未來在「存在性檢查」與「寫入 SessionInfo」之間插入權限驗證即可。權限失敗的錯誤碼與「公司不存在」一致（`CompanyAccessDenied`），未來新增權限驗證不需改錯誤碼結構。
+For now `EnterCompany` only checks "whether the company exists" and **does not check user-company permissions**. The
+full permission model (the user-company mapping schema, role / visibility rules) is taken over by a later ADR and
+plan. `EnterCompany` already has a TODO comment marking the extension point; in the future a permission check only
+needs to be inserted between the "existence check" and "writing SessionInfo". A permission failure uses the same
+error code as "the company does not exist" (`CompanyAccessDenied`), so adding permission checks later does not
+require changing the error code structure.
 
-### `CompanyInfo` 從 cache miss 不洩漏 `CompanyId`
+### A `CompanyInfo` cache miss does not leak the `CompanyId`
 
-`EnterCompany` 寫入 `SessionInfo.CompanyId` 前已驗證 `CompanyInfo` 存在，理論上後續查 `CompanyInfo` cache 不應 miss。若發生（譬如 cache 被 invalidate），錯誤訊息不洩漏 `CompanyId`，避免 attacker 用 cache invalidation 配合錯誤訊息差異探測 ID。
+`EnterCompany` has verified that the `CompanyInfo` exists before writing `SessionInfo.CompanyId`, so in theory later
+lookups of the `CompanyInfo` cache should not miss. If one does (for example because the cache was invalidated), the
+error message does not leak the `CompanyId`, so an attacker cannot combine cache invalidation with differences in
+error messages to probe IDs.
 
-### `LeaveCompany` 在切換場景不必要
+### `LeaveCompany` is unnecessary when switching
 
-`LeaveCompany` 不參與「切換公司」流程（`EnterCompany` 直接覆寫），可能讓部分開發者覺得它「沒什麼用」。設計上保留是為了：
-- 顯式「離開公司」UX 動作（回公司選擇頁）
-- 與 `Logout` 對稱（`Logout` 內部走 `LeaveCompany` 邏輯）
-- 未來若需要「session timeout 但保留登入」之類降級行為，已有清掉公司 context 的 API
+`LeaveCompany` takes no part in the "switch company" flow (`EnterCompany` overwrites directly), which may make some
+developers feel it is "not much use". It is kept by design for:
+- The explicit "leave the company" UX action (going back to the company selection page)
+- Symmetry with `Logout` (`Logout` runs the `LeaveCompany` logic internally)
+- If a degraded behavior such as "session timeout but stay logged in" is needed in the future, an API that clears the
+  company context already exists
 
-## 影響範圍
+## Affected areas
 
-| 範圍 | 影響 |
+| Scope | Impact |
 |------|------|
-| `src/Polhem.Definition.Identity` | 新增 `CompanyInfo` 類別、`ICompanyInfoService` 介面；`SessionInfo` 加 `CompanyId` 欄位 |
-| `src/Polhem.ObjectCaching` | 新增 `CompanyInfoCache`、`CompanyInfoService`；`ICacheContainer` 加 `CompanyInfo` |
-| `src/Polhem.Business/System` | `SystemBusinessObject` 加 3 個方法；`ISystemBusinessObject` 介面更新 |
-| `src/Polhem.Api.Core` | 新增 `EnterCompany` / `LeaveCompany` / `Logout` 的 wire DTO 與 contract 介面；`JsonRpcErrorCode` 加 2 個值 |
-| `src/Polhem.Api.Client` | `SystemApiConnector` 加 3 組 async + sync wrapper |
-| `src/Polhem.Definition.SystemActions` | 加 3 個常數 |
-| 測試 | 11 個 P3 EnterCompany 測試 + 6 個 P4 LeaveCompany 測試 + 6 個 P5 Logout 測試 + 4 個 P6 lifecycle 整合測試 |
+| `src/Polhem.Definition.Identity` | New `CompanyInfo` class and `ICompanyInfoService` interface; `SessionInfo` gains the `CompanyId` field |
+| `src/Polhem.ObjectCaching` | New `CompanyInfoCache` and `CompanyInfoService`; `ICacheContainer` gains `CompanyInfo` |
+| `src/Polhem.Business/System` | `SystemBusinessObject` gains 3 methods; the `ISystemBusinessObject` interface is updated |
+| `src/Polhem.Api.Core` | New wire DTOs and contract interfaces for `EnterCompany` / `LeaveCompany` / `Logout`; `JsonRpcErrorCode` gains 2 values |
+| `src/Polhem.Api.Client` | `SystemApiConnector` gains 3 pairs of async + sync wrappers |
+| `src/Polhem.Definition.SystemActions` | Adds 3 constants |
+| Tests | 11 P3 EnterCompany tests + 6 P4 LeaveCompany tests + 6 P5 Logout tests + 4 P6 lifecycle integration tests |
 
-## 相關文件
+## Related
 
-- [ADR-010：邏輯資料庫分類（DbCategory）](adr-010-logical-database-category.md) — `company` 類 DB 是本 ADR 的主要消費者
+- [ADR-010: Logical database category (DbCategory)](adr-010-logical-database-category.md) — the `company` category
+  DB is the main consumer of this ADR

@@ -1,113 +1,171 @@
-# ADR-017：資料庫快取相依/失效機制（通知表 + 輪詢 + 慣例分派）
+# ADR-017: Database cache dependency and invalidation (notify table + polling + convention-based dispatch)
 
-## 狀態
+[繁體中文](adr-017-db-cache-invalidation.zh-TW.md)
 
-已採納（2026-06-01）
+## Status
 
-## 背景
+Accepted (2026-06-01)
 
-`Polhem.ObjectCaching` 為 in-process 快取（[ADR-009](adr-009-cache-implementation.md)）。落地時失效機制只有兩種：
+## Context
 
-1. `IDefineAccess.SaveX() → _cache.XXX.Remove()` —— 主動失效，但**只在發生寫入的那個 process 生效**。
-2. XML 定義檔的 `ChangeMonitorFilePaths`（file-watch）—— 只涵蓋**檔案來源**的快取，且依賴共享檔案系統。
+`Polhem.ObjectCaching` is an in-process cache ([ADR-009](adr-009-cache-implementation.md)). When it landed, there
+were only two invalidation mechanisms:
 
-兩個缺口：
+1. `IDefineAccess.SaveX() → _cache.XXX.Remove()` — active invalidation, but **only effective in the process where the
+   write happened**.
+2. `ChangeMonitorFilePaths` (file-watch) of the XML definition files — covers only caches **sourced from files**, and
+   depends on a shared file system.
 
-- **由資料庫載入的快取**（`CompanyInfoCache`、未來的組織快取等）沒有「來源資料異動 → 跨 process/節點重取」的通道。
-- **定義改存資料庫後**（[ADR-018](adr-018-db-define-storage.md) 的 `DbDefineStorage`）沒有檔案可 watch，file-watch 這條免費的跨 process 失效信號隨之消失。
+Two gaps:
 
-多節點 / 雲端部署不應依賴共享檔案系統。需求：當來源資料（可能跨多張表）異動、且**應用程式判斷該異動有意義**時，能通知（可能在別的 process / 別的節點上的）對應快取重置。
+- **Caches loaded from the database** (`CompanyInfoCache`, future organization caches and so on) have no channel for
+  "the source data changed → reload across processes / nodes".
+- **Once definitions are stored in the database** (`DbDefineStorage` of [ADR-018](adr-018-db-define-storage.md)),
+  there is no file to watch, and file-watch, the free cross-process invalidation signal, disappears with it.
 
-## 決策
+Multi-node / cloud deployments should not depend on a shared file system. The requirement: when source data (possibly
+across several tables) changes, and **the application judges the change to be meaningful**, the matching cache
+(possibly in another process / on another node) can be notified to reset.
 
-採「**資料庫通知表 + 各節點輪詢 + 版本號冪等 + 慣例式分派**」：
+## Decision
 
-1. **通知表 `st_cache_notify`**（單表三欄，一個邏輯快取 key 一列、UPSERT）：
-   - `cache_key`(PK) = `"群組:實體"` 慣例字串（如 `"OrgInfo:0001"`、`"FormSchema:Employee"`、單物件快取 `"SystemSettings:*"`）。
-   - `cache_version`(bigint) = 每-key 單調自增版本號。
-   - `sys_update_time` = DB 伺服器時間，增量抓取游標（欄名 `sys_` 前綴因其為 `SysFields.UpdateTime` 系統欄；`cache_key`/`cache_version` 非系統欄不加前綴，見 [database-naming-conventions](../en/database-naming-conventions.md)）。
+Adopt "**a database notify table + polling on each node + idempotent version numbers + convention-based
+dispatch**":
 
-2. **bump 原語 `ICacheNotifyService.Touch(cacheKey, transaction, databaseType)`**（置於 `Polhem.Db`）：在**呼叫端傳入的同一 transaction** 內以單一 UPSERT 原子遞增 `cache_version`、刷新 `sys_update_time`。各方言用原生 UPSERT（PG/SQLite `ON CONFLICT`、MySQL `ON DUPLICATE KEY`、SQL Server / Oracle `MERGE`）。
+1. **The notify table `st_cache_notify`** (a single table with three columns, one row per logical cache key, UPSERT):
+   - `cache_key` (PK) = a `"group:entity"` convention string (such as `"OrgInfo:0001"`, `"FormSchema:Employee"`, and
+     `"SystemSettings:*"` for a single-object cache).
+   - `cache_version` (bigint) = a monotonically increasing per-key version number.
+   - `sys_update_time` = DB server time, the cursor for incremental fetching (the column name has the `sys_` prefix
+     because it is the `SysFields.UpdateTime` system field; `cache_key` / `cache_version` are not system fields and
+     have no prefix, see [database-naming-conventions](../en/database-naming-conventions.md)).
 
-3. **輪詢器 `CacheNotifyPoller : BackgroundService`**（置於 `Polhem.Hosting`，`PeriodicTimer` 迴圈，預設 5 秒）：各節點持 in-memory 鏡像 `{cache_key → version}`，首輪只取基準游標不 evict；之後抓 `sys_update_time >= highWater - margin` 的列，`version` 變大才 evict，並推進 highWater。
+2. **The bump primitive `ICacheNotifyService.Touch(cacheKey, transaction, databaseType)`** (in `Polhem.Db`): within
+   **the same transaction passed in by the caller**, a single UPSERT atomically increments `cache_version` and
+   refreshes `sys_update_time`. Each dialect uses its native UPSERT (PG/SQLite `ON CONFLICT`, MySQL
+   `ON DUPLICATE KEY`, SQL Server / Oracle `MERGE`).
 
-4. **慣例式分派**（取代手動路由 registry）：每個快取實作 `IEvictableCache`（`CacheGroup` 預設 = 被快取型別名），`CacheContainerService` 自動建「群組 → 快取」表並提供 `ICacheContainer.TryEvict(cacheKey)`。poller 只丟 `container.TryEvict(cacheKey)`，依群組分派到對應快取 `Remove`。`Polhem.ObjectCaching` 不需引用 DB 層。
+3. **The poller `CacheNotifyPoller : BackgroundService`** (in `Polhem.Hosting`, a `PeriodicTimer` loop, 5 seconds
+   by default): each node keeps an in-memory mirror `{cache_key → version}`; the first round only takes the baseline
+   cursor and does not evict; after that it fetches rows with `sys_update_time >= highWater - margin`, evicts only
+   when the `version` has grown, and advances highWater.
 
-   > ⚠️ **此項已於實作演進中被取代**，`IEvictableCache` 與 `ICacheContainer.TryEvict` 均已移除。見文末〈實作演進〉。
+4. **Convention-based dispatch** (replacing a manual routing registry): each cache implements `IEvictableCache`
+   (`CacheGroup` defaults to the name of the cached type), and `CacheContainerService` automatically builds a
+   "group → cache" table and provides `ICacheContainer.TryEvict(cacheKey)`. The poller just calls
+   `container.TryEvict(cacheKey)`, which dispatches by group to the matching cache's `Remove`.
+   `Polhem.ObjectCaching` does not need to reference the DB layer.
 
-### 核心不變式（凌駕一切實作便利）
+   > ⚠️ **This item was superseded as the implementation evolved**: `IEvictableCache` and `ICacheContainer.TryEvict`
+   > have both been removed. See "Implementation evolution" at the end.
 
-1. **bump 必須與資料變更在同一 transaction 提交。** 否則通知先被輪詢看到、資料 commit 尚未可見 → reload 讀到舊值並標記為新鮮 → **永久 stale**。`Touch` 顯式收 `DbTransaction` 即保證此點。
+### Core invariants (they override every implementation convenience)
 
-2. **以 `version` 而非時間判定真異動。** `sys_update_time` 只負責「便宜地抓增量」；`cache_version` 單調自增 + 鏡像比對負責「冪等地判定」。delta 用 `>=` + 安全餘量 `margin` 重疊回看 → 不漏；`version` 沒變大就不 evict → 不重。兩者搭配在「同一時間刻度多筆異動」「長交易 update_time 早於 commit 可見」等邊界都正確。
+1. **The bump must be committed in the same transaction as the data change.** Otherwise the notification is seen by
+   the poller first while the data commit is not yet visible → the reload reads the old value and marks it fresh →
+   **permanently stale**. `Touch` taking a `DbTransaction` explicitly guarantees this.
 
-3. **時間一律用 DB 伺服器時鐘，絕不用 app 端時鐘。** 寫入、highWater、threshold 三者全部同源（DB 時鐘）且全程不轉時區；多節點各自讀同一台 DB 的時鐘，避免節點時鐘偏移。DB 伺服器設為 **UTC+0** 時所有值即 UTC。機制不依賴 app 主機時區。
+2. **Real changes are determined by `version`, not by time.** `sys_update_time` is only responsible for "fetching the
+   increment cheaply"; the monotonically increasing `cache_version` + comparison against the mirror is responsible for
+   "deciding idempotently". The delta uses `>=` + a safety `margin` to look back with overlap → nothing is missed; no
+   eviction unless `version` has grown → nothing is duplicated. Together they are correct at edge cases such as
+   "several changes within the same time tick" and "in a long transaction, update_time is earlier than when the
+   commit becomes visible".
 
-4. **失效動作不重載，只讓下次讀取拿到新值。** 沒人在讀的 key 不白白重載；複用既有 lazy `CreateInstance` / service 層 load-on-miss。
+3. **Time always comes from the DB server clock, never from the app-side clock.** The write, highWater and threshold
+   all share the same source (the DB clock), and no time zone conversion happens anywhere; multiple nodes each read
+   the clock of the same DB, avoiding node clock skew. When the DB server is set to **UTC+0**, all values are UTC. The
+   mechanism does not depend on the app host's time zone.
 
-   > 原文為「evict（`Remove`）+ lazy 重載」。不變式本身（不主動重載）維持有效，但達成手段已改為發布 notify-key 版本、由既有條目 lazy 過期。見文末〈實作演進〉。
+4. **Invalidation does not reload; it only makes the next read get the new value.** Keys nobody is reading are not
+   reloaded for nothing; it reuses the existing lazy `CreateInstance` / the service layer's load-on-miss.
 
-5. **新增快取零註冊。** 群組名 = 型別名的慣例使任何加進 `ICacheContainer` 的快取自動可失效，不必維護路由表 —— 對 ERP 大量 DB 相依快取可擴展。
+   > The original text was "evict (`Remove`) + lazy reload". The invariant itself (no active reload) still holds, but
+   > the means of achieving it changed to publishing notify-key versions and letting existing entries expire lazily.
+   > See "Implementation evolution" at the end.
 
-## 結果
+5. **Adding a cache requires zero registration.** The convention group name = type name makes any cache added to
+   `ICacheContainer` automatically invalidatable, with no routing table to maintain — scalable to the large number of
+   DB-dependent caches in an ERP.
 
-### 元件與落點
+## Consequences
 
-| 元件 | 落點 |
+### Components and where they live
+
+| Component | Location |
 |------|------|
-| `st_cache_notify.TableSchema.xml` | `tests/Define/TableSchema/common/`（系統表 define 目錄） |
-| `ICacheNotifyService` / `CacheNotifyService` | `Polhem.Db`（與 `DbDefineStorage` 共同的最低交會點） |
-| ~~`IEvictableCache` / `ICacheContainer.TryEvict`~~（已移除，見〈實作演進〉） | `Polhem.ObjectCaching`（與快取註冊同層，無 DB 依賴） |
-| `CacheNotifyPoller` / `CacheNotifyPollSession` | `Polhem.Hosting`（`Microsoft.Extensions.Hosting.Abstractions`） |
-| `CacheNotifyOptions` | `Polhem.Definition.Settings`（`BackendConfiguration.CacheNotifyOptions`） |
+| `st_cache_notify.TableSchema.xml` | `tests/Define/TableSchema/common/` (the define directory for system tables) |
+| `ICacheNotifyService` / `CacheNotifyService` | `Polhem.Db` (the lowest point shared with `DbDefineStorage`) |
+| ~~`IEvictableCache` / `ICacheContainer.TryEvict`~~ (removed, see "Implementation evolution") | `Polhem.ObjectCaching` (the same layer as cache registration, no DB dependency) |
+| `CacheNotifyPoller` / `CacheNotifyPollSession` | `Polhem.Hosting` (`Microsoft.Extensions.Hosting.Abstractions`) |
+| `CacheNotifyOptions` | `Polhem.Definition.Settings` (`BackendConfiguration.CacheNotifyOptions`) |
 
-### 設定（`BackendConfiguration.CacheNotifyOptions`）
+### Configuration (`BackendConfiguration.CacheNotifyOptions`)
 
-| 鍵 | 預設 | 說明 |
+| Key | Default | Description |
 |----|------|------|
-| `Enabled` | `true` | 啟用 poller；純單一 process 單節點可關（本地寫入即時失效） |
-| `IntervalSeconds` | `5` | 輪詢間隔。穩態每輪只是一筆走索引、多回 0 列的查詢，成本可忽略；此值本質是「跨節點失效延遲」旋鈕 |
-| `MarginSeconds` | `5` | 增量重疊回看餘量，cover 長交易的殘留邊界 |
-| `DatabaseId` | `common` | 被輪詢的通知表所在資料庫 |
+| `Enabled` | `true` | Enables the poller; it can be turned off for a pure single-process, single-node setup (local writes invalidate immediately) |
+| `IntervalSeconds` | `5` | Polling interval. In steady state each round is just one indexed query that mostly returns 0 rows, so the cost is negligible; this value is essentially the "cross-node invalidation delay" knob |
+| `MarginSeconds` | `5` | Overlapping look-back margin for the increment, covering the residual edge of long transactions |
+| `DatabaseId` | `common` | The database where the polled notify table lives |
 
-> ⚠️ 「單機」不等於「單 process」：同機多 app pool / 多 process 各有獨立 in-memory 快取，仍需 poller 做跨 process 失效。只有確定**單一 process** 才停用。
+> ⚠️ "Single machine" does not mean "single process": several app pools / processes on the same machine each have
+> their own in-memory cache and still need the poller for cross-process invalidation. Disable it only when you are
+> sure there is **a single process**.
 
-### 韌性
+### Resilience
 
-`CacheNotifyPoller` 每輪以 `try/catch (DbException / InvalidOperationException)` 包住，DB 瞬斷只記 log、不中斷迴圈（.NET 預設 `BackgroundServiceExceptionBehavior.StopHost` 會因未處理例外停掉整個 Host）。
+Each round of `CacheNotifyPoller` is wrapped in `try/catch (DbException / InvalidOperationException)`; a transient DB
+outage is only logged and does not break the loop (.NET's default `BackgroundServiceExceptionBehavior.StopHost` would
+stop the whole Host on an unhandled exception).
 
-## 替代方案（已評估後不採納）
+## Alternatives considered (evaluated and rejected)
 
-1. **DB trigger 自動 bump** —— 拒絕：相依是「語意」非「整張表」，來源可跨多表、常是特定欄位異動才需重置；只有應用程式碼能判斷「這次異動是否有意義」，trigger 無法表達此粒度。
+1. **Automatic bump by a DB trigger** — rejected: the dependency is "semantic", not "the whole table"; the source can
+   span several tables, and often only a change to specific columns needs a reset; only application code can judge
+   "whether this change is meaningful", and a trigger cannot express that granularity.
 
-2. **`SqlDependency`（SQL Server）/ `LISTEN`/`NOTIFY`（PostgreSQL）** —— 拒絕：綁單一方言，破壞 Polhem 的多 DB 支援；且 `SqlDependency` 需 Service Broker、營運複雜。
+2. **`SqlDependency` (SQL Server) / `LISTEN`/`NOTIFY` (PostgreSQL)** — rejected: tied to a single dialect, which
+   breaks Polhem's multi-DB support; and `SqlDependency` needs Service Broker, which is operationally complex.
 
-3. **Redis pub/sub 或訊息匯流排** —— 拒絕：與現有 in-process 單節點架構不符、引入額外基礎設施相依，過度。DB 通知表天然支援多節點（各節點獨立輪詢同一表）。
+3. **Redis pub/sub or a message bus** — rejected: does not fit the existing in-process single-node architecture and
+   brings in an extra infrastructure dependency; overkill. A DB notify table naturally supports multiple nodes (each
+   node polls the same table independently).
 
-4. **per-instance 動態註冊路由** —— 拒絕：ERP 大量 DB 相依快取下逐一註冊不可擴展，且會把路由狀態與反註冊生命週期帶進來。改用慣例式分派（群組 = 型別名）+ lazy evict，快取本身即 registry。
+4. **Per-instance dynamic routing registration** — rejected: registering one by one does not scale to the large number
+   of DB-dependent caches in an ERP, and it would bring routing state and a deregistration lifecycle along. Use
+   convention-based dispatch (group = type name) + lazy evict instead; the caches themselves are the registry.
 
-5. **以時間戳（而非版本號）判定異動** —— 拒絕：時鐘偏移、同毫秒多次更新、輪詢邊界三個雷。改用單調 `version` 逐 key 比對最穩（時間只作便宜的增量游標）。
+5. **Determining changes by timestamp (rather than version number)** — rejected: three pitfalls, clock skew, several
+   updates in the same millisecond, and polling boundaries. A monotonic `version` compared per key is the most robust
+   (time only serves as a cheap incremental cursor).
 
-## 實作演進
+## Implementation evolution
 
-ADR 記錄的是決策當下的設計，以下為後續實作的偏離，供讀者對照現行程式碼：
+An ADR records the design at the time of the decision. The following are later deviations in the implementation, for
+readers comparing with the current code:
 
-**`IEvictableCache` 與 `ICacheContainer.TryEvict` 已退役**（[`c45ff350`](https://github.com/jeff377/bee-library/commit/c45ff350)）。原設計以「群組 → 快取」
-註冊表把 poller 的通知分派到對應快取執行 `Remove`；現行做法改為 poller 發布 notify-key 版本，
-由 `MemoryCacheProvider` 的 `CacheNotifyToken` 在下次讀取時使條目過期。
+**`IEvictableCache` and `ICacheContainer.TryEvict` have been retired**
+([`c45ff350`](https://github.com/jeff377/bee-library/commit/c45ff350)). The original design used a "group → cache"
+registry to dispatch the poller's notifications to the matching cache to run `Remove`; the current approach instead has
+the poller publish notify-key versions, and `CacheNotifyToken` of `MemoryCacheProvider` expires the entry on the next
+read.
 
-決策層的四條核心不變式**全部維持有效** —— 同 transaction bump、以 version 判定、DB 時鐘單一來源、
-不主動重載。改變的只是最後一項的達成手段：從「主動 Remove」變成「標記版本、讓既有條目自然過期」，
-少了一份需要維護的路由表，也不再需要每個快取型別實作額外介面。
+The four core invariants at the decision level **all still hold** — bump in the same transaction, decide by version,
+the DB clock as the single source, no active reload. Only the means of achieving the last one changed: from "actively
+Remove" to "mark the version and let existing entries expire naturally", which removes a routing table that needed
+maintenance and no longer requires every cache type to implement an extra interface.
 
-**DB 伺服器時區已不影響正確性。** 不變式 3 原文提到「DB 伺服器設為 UTC+0 時所有值即 UTC」；
-現行 `CacheNotifyService` 改由各 dialect 的 `GetDefaultValueExpression(FieldDbType.DateTime)`
-取值，五種資料庫一律回 UTC，與伺服器時區設定無關。
+**The DB server time zone no longer affects correctness.** The original text of invariant 3 said "when the DB server
+is set to UTC+0, all values are UTC"; the current `CacheNotifyService` instead takes the value from each dialect's
+`GetDefaultValueExpression(FieldDbType.DateTime)`, and all five databases return UTC regardless of the server's time
+zone setting.
 
-## 相關文件
+## Related
 
-- [ADR-009](adr-009-cache-implementation.md)：`Polhem.ObjectCaching` 快取實作
-- 機制總覽：[快取機制](../zh-TW/caching.md)（本機制在整體快取層中的位置）
-- [ADR-018](adr-018-db-define-storage.md)：定義儲存於資料庫（本機制的主要消費端之一）
-- 使用指引：[`development-cookbook.md`](../en/development-cookbook.md) §跨 process 快取失效
-- 命名慣例：[`database-naming-conventions.md`](../en/database-naming-conventions.md)
+- [ADR-009](adr-009-cache-implementation.md): the `Polhem.ObjectCaching` cache implementation
+- Mechanism overview: [Caching](../en/caching.md) (where this mechanism sits in the overall cache layer)
+- [ADR-018](adr-018-db-define-storage.md): definitions stored in the database (one of the main consumers of this
+  mechanism)
+- Usage guide: [`development-cookbook.md`](../en/development-cookbook.md) § Cross-Process Cache Invalidation
+- Naming conventions: [`database-naming-conventions.md`](../en/database-naming-conventions.md)

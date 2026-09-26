@@ -1,168 +1,223 @@
-# ADR-015：`MasterKeySource` 預設改為 `Environment` — 對齊 12-factor「config in env」
+# ADR-015: `MasterKeySource` defaults to `Environment` — aligning with 12-factor "config in env"
 
-## 狀態
+[繁體中文](adr-015-master-key-environment-default.zh-TW.md)
 
-已採納（2026-05-26）
+## Status
 
-## 背景
+Accepted (2026-05-26)
 
-`SystemSettings.SecurityKeySettings.MasterKeySource` 決定 server 從何處讀取 **master key**（衍生 `ApiEncryptionKey` 與 `KeyEncryptionKey` 的根密鑰）。v4.5 之前 `Type` 預設為 `File` + `Value=Master.key`，部署時若該檔不存在會 auto-generate 並寫入 `DefinePath` 下。
+## Context
 
-這個預設在早期本機開發 / 單機部署情境工作得不錯：開箱即跑、無需額外設定。但隨著 production 部署形態演進，痛點逐漸放大：
+`SystemSettings.SecurityKeySettings.MasterKeySource` determines where the server reads the **master key** from (the
+root key from which `ApiEncryptionKey` and `KeyEncryptionKey` are derived). Before v4.5, `Type` defaulted to `File` +
+`Value=Master.key`; if that file did not exist at deployment, it was auto-generated and written under `DefinePath`.
 
-| 痛點 | 描述 |
+This default worked well for early local development / single-machine deployment: it ran out of the box with no extra
+configuration. But as production deployment forms evolved, the pain points grew:
+
+| Pain point | Description |
 |------|------|
-| **違反 [12-factor app](https://12factor.net/config) 的「config in env」原則** | secret 屬 config 範疇，應與 build artifact 分離；存進檔案會使 secret 綁定特定 host 檔案系統 |
-| **container 化部署摩擦** | Docker / Kubernetes 部署需 `mount` 額外 volume 或在 build step `COPY` 檔案，破壞 image 的「**無狀態 + 不可變**」屬性 |
-| **多實例同步成本** | 水平擴展時 N 個節點需同步同一份 `Master.key` 檔案內容，需要額外的 secret 分發機制 |
-| **與 secret 管理工具整合困難** | K8s Secret、HashiCorp Vault、AWS Secrets Manager、Azure Key Vault 等業界主流工具一律以 env var 注入 secret，無「自動讀取磁碟檔案」的接點 |
-| **檔案 artifacts 留在檔案系統** | 部署後 `Master.key` 與其他 config 檔混在同目錄，scan / backup 流程容易誤含 secret |
+| **Violates the "config in env" principle of the [12-factor app](https://12factor.net/config)** | A secret belongs to config and should be kept apart from the build artifact; storing it in a file ties the secret to a particular host's file system |
+| **Friction in containerized deployment** | Docker / Kubernetes deployments need to `mount` an extra volume or `COPY` the file in a build step, breaking the image's "**stateless + immutable**" property |
+| **Cost of keeping multiple instances in sync** | When scaling horizontally, N nodes must share the same `Master.key` file contents, which needs an extra secret distribution mechanism |
+| **Hard to integrate with secret management tools** | Mainstream tools such as K8s Secret, HashiCorp Vault, AWS Secrets Manager and Azure Key Vault all inject secrets as env vars; none has a hook for "automatically read a file from disk" |
+| **File artifacts are left on the file system** | After deployment, `Master.key` sits in the same directory as the other config files, and scan / backup processes easily include the secret by mistake |
 
-需要把 master key 來源從「**檔案**」對齊到「**env var**」這個業界共識；同時保留既有 `File` 選項供既有部署 / 本機開發。
+The master key source needs to move from "**a file**" to "**an env var**", the industry consensus, while keeping the
+existing `File` option for existing deployments / local development.
 
-## 決策
+## Decision
 
-**`MasterKeySource.Type` 預設從 `File` 改為 `Environment`；既有 `Type=File` 部署完全不受影響。**
+**The default of `MasterKeySource.Type` changes from `File` to `Environment`; existing `Type=File` deployments are
+completely unaffected.**
 
-### 四項核心要點
+### Four key points
 
-1. **Code default 改為 `Environment`**
+1. **The code default changes to `Environment`**
 
-   `MasterKeySource` ctor 預設 `Type = MasterKeySourceType.Environment`、`Value = "POLHEM_MASTER_KEY"`：
+   The `MasterKeySource` ctor defaults to `Type = MasterKeySourceType.Environment`, `Value = "POLHEM_MASTER_KEY"`:
 
-   - 新部署若未明確設定 `<MasterKeySource>` 區塊 → 從 `$POLHEM_MASTER_KEY` 讀
-   - 既有 `SystemSettings.xml` 已明確寫 `<Type>File</Type>` → **不受影響**，繼續從檔案讀
-   - 既有 `SystemSettings.xml` 已明確寫 `<Type>Environment</Type>` → **不受影響**（已對齊）
+   - A new deployment that does not set a `<MasterKeySource>` block explicitly → reads from `$POLHEM_MASTER_KEY`
+   - An existing `SystemSettings.xml` that explicitly says `<Type>File</Type>` → **unaffected**, keeps reading from
+     the file
+   - An existing `SystemSettings.xml` that explicitly says `<Type>Environment</Type>` → **unaffected** (already
+     aligned)
 
-2. **`MasterKeySourceType.File` 保留為合法選項**
+2. **`MasterKeySourceType.File` stays a valid option**
 
-   - 不移除 `File` enum 值，向下相容必須保留
-   - 本機開發若不想設環境變數，仍可手動標 `<Type>File</Type>`
-   - 某些 air-gapped 部署（secret 透過 USB 拷貝、無 env injection 機制）仍合理使用 `File`
+   - The `File` enum value is not removed; it must stay for backward compatibility
+   - For local development, anyone who does not want to set an environment variable can still mark
+     `<Type>File</Type>` by hand
+   - Some air-gapped deployments (secrets copied over USB, no env injection mechanism) still reasonably use `File`
 
-3. **Sample / test bootstrap auto-set demo key（zero-setup 體驗）**
+3. **The sample / test bootstrap auto-sets a demo key (zero-setup experience)**
 
-   開放 env var 預設後，sample / test 跑起來需要使用者**先設環境變數**才能 boot — 這對 first-run experience 是重大退化。對策：
+   With the env var as the default, running a sample / test would require the user to **set the environment variable
+   first** before it could boot — a major regression for the first-run experience. The countermeasure:
 
-   - `samples/Polhem.Samples.Shared/DemoBackend.cs` 與 `tests/Polhem.Tests.Shared/TestProcessBootstrap.cs` 在 process bootstrap 階段檢查 `POLHEM_MASTER_KEY`，若未設則 auto-set 一個 **hardcoded demo key**
-   - `DemoMasterKey` 常數放在 `DemoCredentials.cs`（與 `DemoCredentials.UserId="demo"` 同檔），值為固定 Base64 編碼的 AES-CBC-HMAC 合併金鑰
-   - `TestMasterKey` 與 `DemoMasterKey` **獨立常數**（不共用），避免 sample 與 test 互相 leak
+   - `samples/Polhem.Samples.Shared/DemoBackend.cs` and `tests/Polhem.Tests.Shared/TestProcessBootstrap.cs` check
+     `POLHEM_MASTER_KEY` during process bootstrap, and if it is not set, auto-set a **hardcoded demo key**
+   - The `DemoMasterKey` constant lives in `DemoCredentials.cs` (the same file as `DemoCredentials.UserId="demo"`),
+     and its value is a fixed Base64-encoded combined AES-CBC-HMAC key
+   - `TestMasterKey` and `DemoMasterKey` are **separate constants** (not shared), so that samples and tests do not
+     leak into each other
 
-   這沿用既有 hardcoded demo（`DemoCredentials.UserId="demo"` / `Password="demo"`）的安全等級：sample / test 本來就是 demo，與「`demo` / `demo`」帳密同等風險，可接受。
+   This keeps the security level of the existing hardcoded demo (`DemoCredentials.UserId="demo"` /
+   `Password="demo"`): samples / tests are demos to begin with, with the same risk as the "`demo` / `demo`"
+   credentials, which is acceptable.
 
-4. **Production 必須明確 override demo key**
+4. **Production must explicitly override the demo key**
 
-   - Sample README（中英）與 `samples/QuickStart.Server/README*.md` 已標明：「demo backend 為 zero-setup 體驗會自動注入 hardcoded master key；**production host 必須在 process 啟動前以真實的 secret 注入 `POLHEM_MASTER_KEY`**」
-   - 加密金鑰本身的特性是「**hardcoded master key = 加密形同無加密**」（任何人拿到 source 就能解密 payload），這條規則無法在 framework 層自動強制，依賴 deployment 文化與 README 提醒
+   - The samples README (Chinese and English) and `samples/QuickStart.Server/README*.md` already state: "for a
+     zero-setup experience the demo backend automatically injects a hardcoded master key; **a production host must
+     inject `POLHEM_MASTER_KEY` with a real secret before the process starts**"
+   - The nature of an encryption key is that "**a hardcoded master key = encryption that is as good as none**"
+     (anyone who has the source can decrypt the payload). This rule cannot be enforced automatically at the
+     framework level; it relies on deployment culture and README reminders
 
-## 理由
+## Rationale
 
-### 為何不選「全自動 generate 新 key」（autoCreate 每 run）
+### Why not "generate a new key fully automatically" (autoCreate on every run)
 
-評估過讓 process 啟動時若 env var 未設**自動生成新 key 並僅存記憶體**：
+Having the process **automatically generate a new key kept only in memory** when the env var is not set at startup
+was evaluated:
 
-- ✅ 不留檔案 artifact
-- ❌ 跨 process run **金鑰不一致**：`quickstart.db` 等 SQLite 持久化資料以舊 key 加密，下次 run 用新 key 解不開
-- ❌ 跨實例水平擴展**金鑰不一致**：N 個節點各自 generate 一份 key，互相無法解對方加密的資料
+- ✅ Leaves no file artifact
+- ❌ **Keys differ across process runs**: SQLite persisted data such as `quickstart.db` is encrypted with the old key,
+  and the next run cannot decrypt it with the new key
+- ❌ **Keys differ across horizontally scaled instances**: N nodes each generate their own key and cannot decrypt
+  each other's encrypted data
 
-實務上「持久化資料」必須以**穩定金鑰**加解密，跨 process / 跨節點都必須對齊。autoCreate per-run 破壞這個前提。
+In practice "persisted data" must be encrypted and decrypted with a **stable key**, aligned across processes and
+nodes. autoCreate per run breaks that premise.
 
-### 為何不選「手動 export」（無 auto-set）
+### Why not "manual export" (no auto-set)
 
-評估過 sample / test 啟動時若 env var 未設**直接報錯，要求使用者手動 export**：
+Having samples / tests **fail immediately and ask the user to export manually** when the env var is not set at startup
+was evaluated:
 
-- ✅ Production-like：使用者習慣「啟動前要設環境變數」的儀式
-- ❌ Sample / test first-run experience 退化：每個新接觸的開發者第一次 clone repo 跑 `./test.sh` / `dotnet run --project samples/QuickStart.Server` 都會看到 error，必須先去翻 README 找到要 export 什麼
-- ❌ 「忘了 export」會持續困擾 returning developer（switch machine、新 shell session、CI runner 不同 job 等）
+- ✅ Production-like: users get used to the ritual of "set the environment variable before starting"
+- ❌ The sample / test first-run experience regresses: every developer new to the project who clones the repo for the
+  first time and runs `./test.sh` / `dotnet run --project samples/QuickStart.Server` sees an error, and has to dig
+  through the README to find what to export
+- ❌ "Forgot to export" keeps bothering returning developers (switching machines, a new shell session, a different
+  CI runner job and so on)
 
-採 bootstrap auto-set demo key 平衡兩端：本機 / CI 自動 zero-setup，production 由 deployment 機制（K8s Secret、env file、Vault 注入等）覆寫 env var，**完全不需要改 code**。
+Bootstrap auto-setting a demo key balances both ends: local / CI is zero-setup automatically, and production
+overrides the env var through its deployment mechanism (K8s Secret, env file, Vault injection and so on) **without any
+code change**.
 
-### 為何 `Value` 寫 `POLHEM_MASTER_KEY`（明示 env var 名）而非留空
+### Why `Value` says `POLHEM_MASTER_KEY` (naming the env var explicitly) instead of being left empty
 
-`samples/Define/SystemSettings.xml` 與 `tests/Define/SystemSettings.xml` 內 `<Value>` 明確寫 `POLHEM_MASTER_KEY` 而非空字串：
+The `<Value>` in `samples/Define/SystemSettings.xml` and `tests/Define/SystemSettings.xml` explicitly says
+`POLHEM_MASTER_KEY` rather than an empty string:
 
-- ✅ 讀檔的人**立刻**看到要設哪個 env var，不必去 source 追 fallback 預設
-- ✅ 未來若有部署想換 env var 名（如多租戶 `TENANT_A_MASTER_KEY` / `TENANT_B_MASTER_KEY`），改 XML 即可
-- ⚠️ 與「code default 也是 `POLHEM_MASTER_KEY`」重複，但顯式 > 隱式，多寫一行不算成本
+- ✅ Whoever reads the file **immediately** sees which env var to set, without tracing the fallback default in the
+  source
+- ✅ If a deployment wants a different env var name in the future (such as multi-tenant `TENANT_A_MASTER_KEY` /
+  `TENANT_B_MASTER_KEY`), changing the XML is enough
+- ⚠️ It duplicates "the code default is also `POLHEM_MASTER_KEY`", but explicit > implicit, and one more line is no
+  real cost
 
-### 為何不在 framework 層強制「production 必須 override demo key」
+### Why the framework does not enforce "production must override the demo key"
 
-- framework 無法可靠判別「目前是 production 還是 sample」（環境變數 / `ASPNETCORE_ENVIRONMENT` 都可被偽造或忘記設定）
-- 即使能判別，硬性 throw 會誤殺合法情境（如 staging 想跑 demo data）
-- 真正的防護線是 **deployment review process**：每個 production deploy 應有 secret 注入檢查清單，與 framework 層的 enforcement 無關
+- The framework cannot reliably tell "is this production or a sample" (environment variables /
+  `ASPNETCORE_ENVIRONMENT` can both be faked or forgotten)
+- Even if it could, a hard throw would wrongly kill legitimate scenarios (such as staging wanting to run demo data)
+- The real line of defense is the **deployment review process**: every production deploy should have a secret
+  injection checklist, which has nothing to do with enforcement at the framework level
 
-依賴 README 警語 + CHANGELOG migration note 提醒使用者，配合 `samples/README.md` 的 master key 段落明確區隔 demo / production 流程。
+It relies on README warnings + a CHANGELOG migration note to remind users, together with the master key section of
+`samples/README.md`, which clearly separates the demo and production flows.
 
-## 替代方案（已評估後不採納）
+## Alternatives considered (evaluated and rejected)
 
-1. **保留 `File` 為預設，新增 `Environment` 選項供使用者切換**
-   - 拒絕原因：使用者必須主動知道「**有這個更好的選項**」並動手切換 — 業界主流早已是 env var，預設值不對齊等於把 onboarding 摩擦留給每個新使用者
+1. **Keep `File` as the default and add an `Environment` option for users to switch to**
+   - Reason for rejection: users would have to know actively that "**there is this better option**" and switch
+     themselves — the industry mainstream has long been env vars, and a default that does not align leaves the
+     onboarding friction to every new user
 
-2. **完全移除 `MasterKeySourceType.File`**
-   - 拒絕原因：air-gapped 部署、本機開發等場景仍有合理使用情境；移除違反「不破壞既有 deployment」原則
+2. **Remove `MasterKeySourceType.File` completely**
+   - Reason for rejection: scenarios such as air-gapped deployment and local development still have reasonable uses;
+     removing it violates the principle of "do not break existing deployments"
 
-3. **autoCreate per-run（記憶體生成）**
-   - 拒絕原因：見〈為何不選「全自動 generate 新 key」〉
+3. **autoCreate per run (generated in memory)**
+   - Reason for rejection: see "Why not 'generate a new key fully automatically'"
 
-4. **手動 export，無 auto-set demo key**
-   - 拒絕原因：見〈為何不選「手動 export」〉
+4. **Manual export, no auto-set demo key**
+   - Reason for rejection: see "Why not 'manual export'"
 
-5. **demo key 改成「per-developer 自動 generate 並寫進 user-local 設定」**
-   - 拒絕原因：過度設計；hardcoded demo key 與 hardcoded demo 帳密（`demo` / `demo`）同等風險，已可接受。Per-developer generation 引入額外的 keyring / user profile / cross-machine sync 複雜度，不值得
+5. **Make the demo key "automatically generated per developer and written into user-local settings"**
+   - Reason for rejection: over-engineering; a hardcoded demo key has the same risk as the hardcoded demo credentials
+     (`demo` / `demo`), which is already acceptable. Per-developer generation brings extra keyring / user profile /
+     cross-machine sync complexity, and is not worth it
 
-6. **整合 `dotnet user-secrets`**
-   - 拒絕原因：`user-secrets` 是 ASP.NET Core dev-time 機制，將 secret 移到 user profile 內 JSON 檔，**仍是「config in file」**，與 env var 路徑分歧；且非所有 Polhem 部署都跑在 ASP.NET Core 內（QuickStart.Console 純 console、未來其他 host 可能也不是）
+6. **Integrate `dotnet user-secrets`**
+   - Reason for rejection: `user-secrets` is an ASP.NET Core dev-time mechanism that moves the secret into a JSON file
+     in the user profile, so it **is still "config in file"** and diverges from the env var path; and not every
+     Polhem deployment runs inside ASP.NET Core (QuickStart.Console is pure console, and other future hosts may not be
+     either)
 
-## 後果
+## Consequences
 
-### 部署矩陣
+### Deployment matrix
 
-| 部署情境 | 動作 |
+| Deployment scenario | Action |
 |---------|------|
-| **新部署，無既有 `SystemSettings.xml`** | host 啟動前 `export POLHEM_MASTER_KEY=<base64>`，預設 code default 拿到 |
-| **新部署，自寫 `SystemSettings.xml`** | 預設範本內已是 `<Type>Environment</Type><Value>POLHEM_MASTER_KEY</Value>` |
-| **既有部署，`<Type>File</Type>` 已 explicit 設定** | **不需任何動作**，繼續從檔案讀 |
-| **既有部署，想遷移到 env var** | 兩步：(1) `export POLHEM_MASTER_KEY="$(cat $DEFINE_PATH/Master.key)"`；(2) 改 XML 為 `<Type>Environment</Type>` |
-| **Sample / test 本機跑** | **不需任何動作**，bootstrap auto-set demo key |
-| **CI fresh checkout** | **不需任何動作**，bootstrap auto-set demo key（每次 fresh，無 file artifact 殘留）|
+| **New deployment, no existing `SystemSettings.xml`** | `export POLHEM_MASTER_KEY=<base64>` before the host starts; the code default picks it up |
+| **New deployment, own `SystemSettings.xml`** | The default template already has `<Type>Environment</Type><Value>POLHEM_MASTER_KEY</Value>` |
+| **Existing deployment, `<Type>File</Type>` set explicitly** | **No action needed**; it keeps reading from the file |
+| **Existing deployment that wants to migrate to the env var** | Two steps: (1) `export POLHEM_MASTER_KEY="$(cat $DEFINE_PATH/Master.key)"`; (2) change the XML to `<Type>Environment</Type>` |
+| **Running samples / tests locally** | **No action needed**; the bootstrap auto-sets the demo key |
+| **CI fresh checkout** | **No action needed**; the bootstrap auto-sets the demo key (fresh every time, no leftover file artifact) |
 
-### 安全模型變化
+### Change in the security model
 
-| 維度 | 改變前（File 預設） | 改變後（Environment 預設） |
+| Dimension | Before (File default) | After (Environment default) |
 |------|------------------|--------------------------|
-| Secret 存放位置 | host 檔案系統（`$DefinePath/Master.key`） | host 進程環境變數 |
-| Secret 在 image / build artifact 內 | 可能（若 COPY 進去）| 否（env var 由 deployment 注入） |
-| Secret 在 backup / log 內 | 風險：檔案 backup 流程可能誤含 | 風險：env var 可能被 `ps auxe` / `/proc/<pid>/environ` 讀到（需 host-level 防護） |
-| Container 部署 | 需 mount volume 或 build step | 直接 `--env-file` / `-e POLHEM_MASTER_KEY=...` |
-| Multi-instance 同步 | 需檔案分發 | 同一 env var 由 secret store 注入所有節點 |
-| Secret rotation | 改檔 → 所有節點同步 → 重啟 | 改 secret store → restart pods（cloud-native standard flow）|
+| Where the secret is stored | Host file system (`$DefinePath/Master.key`) | Host process environment variable |
+| Secret inside the image / build artifact | Possible (if COPYed in) | No (the env var is injected by deployment) |
+| Secret in backups / logs | Risk: the file backup process may include it by mistake | Risk: the env var may be read through `ps auxe` / `/proc/<pid>/environ` (needs host-level protection) |
+| Container deployment | Needs a mounted volume or a build step | Directly `--env-file` / `-e POLHEM_MASTER_KEY=...` |
+| Multi-instance sync | Needs file distribution | The same env var is injected into every node by the secret store |
+| Secret rotation | Change the file → sync every node → restart | Change the secret store → restart pods (the cloud-native standard flow) |
 
-兩種方式各有 attack surface，**env var 路徑與業界 secret 管理工具對齊**是主要動機，不是「絕對更安全」。
+Each approach has its own attack surface. **Aligning the env var path with industry secret management tools** is the
+main motivation, not being "absolutely more secure".
 
-### 對既有部署的零成本承諾
+### Zero-cost commitment to existing deployments
 
-- 既有 `<Type>File</Type>` deployment：**完全無改動需要**
-- 既有 `Master.key` 檔案：可繼續用，不需刪
-- `MasterKeyProvider` 讀取邏輯：File / Environment 分支皆既有實作，無 breaking
-- CHANGELOG 內已寫明 migration 步驟與「不需動」的情境
+- Existing `<Type>File</Type>` deployments: **no change needed at all**
+- Existing `Master.key` files: can keep being used, no need to delete them
+- The read logic of `MasterKeyProvider`: both the File and Environment branches were already implemented, so nothing
+  breaks
+- The CHANGELOG already spells out the migration steps and the "no action needed" scenarios
 
-### CHANGELOG 標記為 breaking
+### Marked as breaking in the CHANGELOG
 
-依嚴格 SemVer，「**預設值改變影響新部署**」屬 breaking change（即使既有部署不受影響）。`CHANGELOG.md` v4.6.0 已標 **breaking** 並附 migration 指引；pre-stable 政策下版本以 minor (4.6.0) 發佈，與 v4.4 / v4.5 一致。
+Under strict SemVer, "**a default change that affects new deployments**" is a breaking change (even if existing
+deployments are unaffected). `CHANGELOG.md` v4.6.0 already marks it **breaking** with migration guidance; under the
+pre-stable policy the version is released as a minor (4.6.0), consistent with v4.4 / v4.5.
 
-## 相關連結
+## Related
 
-- `src/Polhem.Definition/Settings/SystemSettings/MasterKeySource.cs` — config model 與 ctor 預設
-- `src/Polhem.Definition/Security/MasterKeyProvider.cs` — File / Environment 分支讀取邏輯
-- `samples/Polhem.Samples.Shared/DemoCredentials.cs` — `DemoMasterKey` hardcoded 常數
-- `tests/Polhem.Tests.Shared/TestProcessBootstrap.cs` — `TestMasterKey` 常數與 bootstrap auto-set 邏輯
-- [samples/README.zh-TW.md](../../samples/README.zh-TW.md) — master key 段落，標明 demo vs production 區隔
-- [12-factor app: Config](https://12factor.net/config) — 對齊的業界原則
+- `src/Polhem.Definition/Settings/SystemSettings/MasterKeySource.cs` — the config model and the ctor default
+- `src/Polhem.Definition/Security/MasterKeyProvider.cs` — the read logic of the File / Environment branches
+- `samples/Polhem.Samples.Shared/DemoCredentials.cs` — the hardcoded `DemoMasterKey` constant
+- `tests/Polhem.Tests.Shared/TestProcessBootstrap.cs` — the `TestMasterKey` constant and the bootstrap auto-set logic
+- [samples/README.md](../../samples/README.md) — the master key section, separating demo from production
+- [12-factor app: Config](https://12factor.net/config) — the industry principle aligned with
 
-## 不在範圍
+## Out of scope
 
-- **Cloud secret manager 整合樣板（K8s Secret / Vault / AWS Secrets Manager helper）** — 視未來實際 production deployment 需求另開 plan
-- **Secret rotation flow** — env var 改變後的 process restart / hot-reload 機制，目前依賴 deployment 工具，framework 層不介入
-- **多租戶 / per-tenant master key** — 目前 framework 單一 master key 模型尚未到分租戶階段，未來若需要再開 ADR
-- **`MasterKeySourceType.File` 退場時程** — 短期內持續維護，移除日期視 production 部署遷移進度評估
-- **`Value` 內容用第二層間接（如 `$POLHEM_MASTER_KEY_FILE` 指向檔案路徑、再從檔案讀）** — 為 secret 管理工具產生短暫檔案的場景；目前由 deployment 工具直接 inject env var 已能涵蓋，不引入第二層
+- **Integration templates for cloud secret managers (K8s Secret / Vault / AWS Secrets Manager helpers)** — a separate
+  plan depending on actual future production deployment needs
+- **Secret rotation flow** — the process restart / hot-reload mechanism after the env var changes currently relies on
+  deployment tools; the framework does not get involved
+- **Multi-tenant / per-tenant master key** — the framework's single master key model has not reached the per-tenant
+  stage; if needed in the future, a new ADR will be opened
+- **Timeline for retiring `MasterKeySourceType.File`** — maintained for the near term; the removal date depends on how
+  production deployments migrate
+- **A second level of indirection for the `Value` contents (such as `$POLHEM_MASTER_KEY_FILE` pointing to a file path,
+  which is then read)** — for scenarios where a secret management tool produces a short-lived file; deployment tools
+  injecting the env var directly already covers this, so no second level is introduced

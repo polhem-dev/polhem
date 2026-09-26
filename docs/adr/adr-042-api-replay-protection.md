@@ -1,138 +1,157 @@
-# ADR-042：API 重放防護 —— 加密封套內的 wire frame
+# ADR-042: API replay protection: a wire frame inside the encrypted envelope
 
-## 狀態
+[繁體中文](adr-042-api-replay-protection.zh-TW.md)
 
-**已採納（Accepted，2026-09-01）**
+## Status
 
-## 背景
+**Accepted (2026-09-01)**
 
-一個合法的 JSON-RPC 封包被原樣重送時，伺服器過去會完整執行第二次。
-[ADR-036](adr-036-wire-serialization-externalized.md) 建立的 payload 管線以
-AES-CBC-HMAC 保證封包**改不了**，但不保證它**沒被送過第二次** —— 加密防的是機密性與竄改，
-不是重複。
+## Context
 
-攻擊者不需要解得開封包，只要把整段 request 原樣再送一次即可。取得管道由高到低：
-合法但惡意的用戶端（自己抓自己的封包重送，TLS 完全無效）、log 外洩（gateway 或 APM
-記錄完整 request body）、企業 MITM proxy、以及無 TLS 的內網部署。
+When a legitimate JSON-RPC packet was resent unchanged, the server used to execute it a second time in full.
+The payload pipeline established by [ADR-036](adr-036-wire-serialization-externalized.md) uses AES-CBC-HMAC to
+guarantee that a packet **cannot be altered**, but not that it **has not been sent a second time**: encryption
+protects confidentiality and integrity, not against repetition.
 
-其中最容易被低估的是第一項 —— 攻擊者往往是**合法登入的使用者**，拿自己那張已核准單據的
-封包重送數十次。傳輸層加密對這種情形毫無作用。
+An attacker does not need to be able to decrypt the packet; resending the whole request unchanged is enough. The ways
+to obtain one, from most to least likely: a legitimate but malicious client (capturing and resending its own packets,
+against which TLS is completely useless), leaked logs (a gateway or APM recording full request bodies), a corporate
+MITM proxy, and internal deployments without TLS.
 
-## 決策
+The most easily underestimated is the first: the attacker is often **a legitimately logged-in user** who resends the
+packet for their own already-approved document dozens of times. Transport-layer encryption does nothing against this.
 
-### 一、frame 放進加密封套，不放 `ApiPayload` 的明文欄位
+## Decision
 
-防重放需要一個攻擊者無法偽造的綁定，而綁定需要秘密。`ApiPayload` 的 `Format` 與 `TypeName`
-是**明文信封**，只有 `Value` 被加密 —— 在其上新增 `Timestamp` / `Sequence` 屬性，兩個值會落在
-明文層讓攻擊者任意改寫（改成當下時間、改成更大的序號），那就是一個全新的合法請求，
-等於沒防。
+### 1. The frame goes inside the encrypted envelope, not into plaintext fields of `ApiPayload`
 
-正解是在 `Encode`（序列化 + 壓縮）之後、`Encrypt` 之前把 frame 前置到 bytes：
+Replay protection needs a binding the attacker cannot forge, and a binding needs a secret. `Format` and `TypeName` of
+`ApiPayload` are a **plaintext envelope**; only `Value` is encrypted. Adding `Timestamp` / `Sequence` properties to it
+would put both values in the plaintext layer, where the attacker can rewrite them at will (to the current time, to a
+larger sequence number). That makes a brand-new legitimate request, which is no protection at all.
+
+The correct approach is to prepend the frame to the bytes after `Encode` (serialize + compress) and before `Encrypt`:
 
 ```
 [ version(1) | timestamp(8, Unix ms) | sequence(8) ] ++ body
 ```
 
-三者皆 big-endian，version 1 固定 17 bytes。實作見
-[`ApiPayloadFrame`](../../src/Polhem.Api.Core/JsonRpc/ApiPayloadFrame.cs) 與
-[`ApiPayloadConverter`](../../src/Polhem.Api.Core/JsonRpc/ApiPayloadConverter.cs)。
-frame 掛在 `ApiPayload.Frame`（`[JsonIgnore]`）供呼叫端存取，但不隨信封序列化。
+All three are big-endian, and version 1 is a fixed 17 bytes. For the implementation see
+[`ApiPayloadFrame`](../../src/Polhem.Api.Core/JsonRpc/ApiPayloadFrame.cs) and
+[`ApiPayloadConverter`](../../src/Polhem.Api.Core/JsonRpc/ApiPayloadConverter.cs).
+The frame hangs on `ApiPayload.Frame` (`[JsonIgnore]`) so callers can access it, but it is not serialized with the
+envelope.
 
-### 二、version 位元組的存在理由是 frame 無法自我描述長度
+### 2. The version byte exists because the frame cannot describe its own length
 
-frame 沒有長度前綴，body 緊接其後也沒有分隔符 —— 讀取端必須在碰 body 之前就知道要吃掉
-幾個 byte。日後 frame 若要加欄位，新舊長度不同而長度無從判斷，沒有 version 就只能再做一次
-全體斷裂升級。
+The frame has no length prefix, and there is no separator before the body that follows it: the reader must know how
+many bytes to consume before it touches the body. If the frame ever gains a field, the old and new lengths differ and
+there is no way to tell which is which; without a version, the only option would be another all-at-once breaking
+upgrade.
 
-**在 version 1 這個位元組對安全沒有任何貢獻**：攻擊者可以偽造它，只是仍得過 HMAC。
-它此刻唯一的作用是讓舊用戶端得到一句清楚的錯誤，而不是把 body 亂數解讀成 timestamp 後
-報出離譜的時間偏差。
+**In version 1 this byte contributes nothing to security**: an attacker can forge it, but still has to get past the
+HMAC. Its only role right now is to give an old client a clear error, instead of reading random body bytes as a
+timestamp and reporting an absurd clock skew.
 
-### 三、防護強度依 `PayloadFormat` 分級，且文件必須誠實
+### 3. The strength of the protection depends on `PayloadFormat`, and the documentation must be honest about it
 
-| Format | 有無 HMAC | 效力 |
-|--------|----------|------|
-| `Encrypted` | 有 | 完整 —— frame 改不動 |
-| `Encoded` | 無 | 僅擋無腦原樣重送；會改封包的攻擊者可自行改 frame |
-| `Plain` | 無 | 無防護，且不帶 frame |
+| Format | HMAC? | Effect |
+|--------|-------|--------|
+| `Encrypted` | Yes | Complete: the frame cannot be altered |
+| `Encoded` | No | Only blocks naive unchanged resends; an attacker who alters packets can alter the frame |
+| `Plain` | No | No protection, and no frame |
 
-`Encoded` 這一格是**限制而非缺陷**，但不得在任何對外描述中宣稱它防重放。
+The `Encoded` row is **a limitation, not a defect**, but no outward-facing description may claim that it protects
+against replay.
 
-### 四、frame 的有無由部署設定決定，不由封包自述
+### 4. Whether a frame is present is decided by deployment settings, not by the packet itself
 
-兩端讀同一個開關 `ApiServiceOptions.RequireWireFrame`。**伺服器不「偵測」frame 在不在** ——
-一旦允許「看起來沒有 frame 就當作沒有」，攻擊者只要把 frame 拿掉就能關閉防護，那正是要防的
-降級攻擊。
+Both ends read the same switch, `ApiServiceOptions.RequireWireFrame`. **The server does not "detect" whether a frame is
+present**: once "if it looks like there is no frame, treat it as having none" is allowed, an attacker can turn off the
+protection just by removing the frame, which is exactly the downgrade attack to be prevented.
 
-代價是兩端設定不一致必然失敗，這是刻意的。開關預設關閉（行為與導入前完全相同），
-啟用順序為：**兩端先升套件，再同時開啟兩端開關**。
+The cost is that mismatched settings on the two ends always fail, and that is deliberate. The switch is off by default
+(behavior exactly the same as before this was introduced), and the order for enabling it is: **upgrade the packages on
+both ends first, then turn on the switch on both ends together**.
 
-### 五、序號用滑動視窗，不用 nonce 集合
+### 5. Sequence numbers use a sliding window, not a nonce set
 
-nonce 集合需要無界儲存或每次資料庫往返。改用 per-session 單調遞增序號加 64-bit 位圖
-（IPsec anti-replay window，RFC 6479 的做法）：每個 session 只存 `highest` 與位圖共 16 bytes，
-判斷是幾個位元運算，**零資料庫往返**。實作見
-[`ReplayWindow`](../../src/Polhem.Api.Core/JsonRpc/ReplayWindow.cs)。
+A nonce set needs unbounded storage or a database round trip every time. Instead, a per-session monotonically
+increasing sequence number plus a 64-bit bitmap is used (the IPsec anti-replay window, the approach of RFC 6479): each
+session stores only `highest` and the bitmap, 16 bytes in total, the check is a few bit operations, and there are
+**zero database round trips**. For the implementation see
+[`ReplayWindow`](../../src/Polhem.Api.Core/JsonRpc/ReplayWindow.cs).
 
-容忍亂序是必要條件而非額外好處：取號是原子的，但並行請求的送達順序不固定，
-嚴格遞增會誤殺正常流量。
+Tolerating out-of-order arrival is a requirement, not an extra benefit: taking a number is atomic, but concurrent
+requests do not arrive in a fixed order, and strictly increasing numbers would reject normal traffic by mistake.
 
-三項衍生決定：
+Three derived decisions:
 
-- **視窗存活期 = 2× 時間戳容許時窗。** 用舊序號的重放其時間戳必定也過期、已被時窗檢查擋下，
-  因此視窗只在該期間內有意義。這讓清理與 session 生命週期完全解耦，記憶體上界是
-  「時窗內活躍的 session 數」。
-- **前跳設上限（`MaxForwardJump`）。** 沒有上限的話，用戶端一次整數運算失誤送出接近
-  `long.MaxValue` 的序號，該 session 之後所有正常請求都落在視窗外而卡死 —— token 有效、
-  金鑰正確卻全部失敗，幾乎無法診斷。
-- **匿名呼叫不檢查序號。** 序號是 per session 的，匿名呼叫共用同一個空 token，
-  若也檢查，不同用戶端會互相把對方的序號用掉而大量誤拒。
+- **The window lives for 2× the timestamp tolerance.** A replay with an old sequence number necessarily has an
+  expired timestamp too and is already stopped by the time-window check, so the window only matters within that
+  period. This decouples cleanup completely from the session lifecycle, and the memory bound is "the number of
+  sessions active within the time window".
+- **Forward jumps are capped (`MaxForwardJump`).** Without a cap, a single integer arithmetic mistake on a client that
+  sends a sequence number close to `long.MaxValue` would leave every later normal request of that session outside the
+  window, stuck: the token is valid and the key is correct, yet everything fails, which is almost impossible to
+  diagnose.
+- **Anonymous calls do not check sequence numbers.** Sequence numbers are per session, and anonymous calls share the
+  same empty token; if they were checked too, different clients would use up each other's sequence numbers and cause
+  large numbers of false rejections.
 
-### 六、逐方法宣告，不全域套用
+### 6. Declared per method, not applied globally
 
-`ApiAccessControlAttribute` 新增第三維度
-[`ApiReplayProtection`](../../src/Polhem.Definition/Security/ApiReplayProtection.cs)，
-預設 `None`。查詢類方法重放無害，全面套用只是徒增每次呼叫的判斷。
+`ApiAccessControlAttribute` gains a third dimension,
+[`ApiReplayProtection`](../../src/Polhem.Definition/Security/ApiReplayProtection.cs), with a default of `None`.
+Replaying a query method is harmless, and applying it everywhere would only add a check to every call.
 
-目前宣告 `UniqueSequence` 的是 `Save`、`Delete`、`ExecFunc`、`EnterCompany`、`LeaveCompany`
-—— 這是「遠端可達且有副作用」的完整集合。其餘寫入方法（`SaveDefine`、
-`SaveCustomizePluginSettings`、`SetDeploymentAdmin`）皆為 `LocalOnly`，遠端呼叫不到。
+The methods that currently declare `UniqueSequence` are `Save`, `Delete`, `ExecFunc`, `EnterCompany` and
+`LeaveCompany`: this is the complete set of "remotely reachable and with side effects". The other write methods
+(`SaveDefine`, `SaveCustomizePluginSettings`, `SetDeploymentAdmin`) are all `LocalOnly` and cannot be called remotely.
 
-新維度是**屬性而非建構子參數**：對已發佈的公開建構子加上選擇性參數是二進位破壞性變更。
+The new dimension is **a property, not a constructor parameter**: adding an optional parameter to a published public
+constructor is a binary breaking change.
 
-### 七、多節點退化可接受，並留下出路
+### 7. Degradation on multiple nodes is acceptable, and a way out is left open
 
-`IReplayWindowStore` 的預設實作是 process-local。多節點且無 token affinity 時每個節點各持
-一份視窗，**重放次數上限等於節點數，而非無限** —— 比「時窗內無限重放」好一個量級。
-需要跨節點強一致的部署可替換為共享實作，不必改框架。
+The default implementation of `IReplayWindowStore` is process-local. With multiple nodes and no token affinity, each
+node holds its own window, so **the maximum number of replays equals the number of nodes, not infinity**: an order of
+magnitude better than "unlimited replays within the time window". A deployment that needs strong consistency across
+nodes can replace it with a shared implementation without changing the framework.
 
-## 明確不納入
+## Explicitly out of scope
 
-- **冪等鍵。** 序號解的是「拒絕重放」，冪等鍵解的是「安全重試」，兩者不可互相取代。
-  取號後若請求逾時，重送用同號會被視窗拒（即使伺服器其實已處理成功、只是回應遺失），
-  用新號則業務層執行兩次 —— 兩條都不對，因為這不是序號能解的問題。
-  **啟用序號檢查後，逾時重送會失敗而非重試成功**；需要安全重試的場景應自行實作冪等鍵。
-  框架目前沒有自動重試機制，因此啟用不會打壞既有框架行為，但應用層自己包的重試迴圈、
-  以及使用者手動「重新送出」都會踩到。
-- **收斂 `ApiProtectionLevel.Public`。** `Save` / `Delete` / `ExecFunc` 目前允許以 `Plain`
-  呼叫，該路徑不帶 frame、不受檢查，是一條降級繞道。提升保護等級會要求呼叫端實作
-  MessagePack、壓縮、AES-CBC-HMAC 與 RSA 金鑰交換，JS 呼叫端做不到這一整套，
-  貿然提升會直接把它們鎖死。此議題需獨立評估，另案處理。
+- **Idempotency keys.** Sequence numbers solve "reject replays"; idempotency keys solve "retry safely". Neither can
+  replace the other. If a request times out after taking a number, resending it with the same number is rejected by
+  the window (even if the server actually processed it successfully and only the response was lost), while using a
+  new number makes the business layer execute twice. Both are wrong, because this is not a problem sequence numbers
+  can solve. **Once sequence checking is enabled, a resend after a timeout fails instead of succeeding as a retry**;
+  scenarios that need safe retries should implement idempotency keys themselves. The framework currently has no
+  automatic retry mechanism, so enabling it does not break existing framework behavior, but retry loops wrapped by
+  the application layer, and a user manually choosing "submit again", will both run into it.
+- **Tightening `ApiProtectionLevel.Public`.** `Save` / `Delete` / `ExecFunc` currently allow calls in `Plain`; that
+  path carries no frame and is not checked, so it is a downgrade detour. Raising the protection level would require
+  callers to implement MessagePack, compression, AES-CBC-HMAC and RSA key exchange; JS callers cannot do that whole
+  set, and raising it rashly would lock them out outright. This issue needs its own evaluation and is handled
+  separately.
 
-  **繞道的實際代價小於表面**：要利用它，行為者必須知道封包內容才能構造等效的 `Plain` 請求，
-  而主要威脅 —— 撿到加密封包原樣重送的攻擊者 —— 看不懂內容，構造不出來。
-  能走繞道的是已知內容且持有效 token 的人，那種人本來就能直接發任意請求。
-- **業務層守門不因此省略。** 狀態機檢查（已核准的單不能再核准）與樂觀鎖版本號仍應獨立存在，
-  它們同時擋掉使用者連按兩下送出這類非攻擊情形。
+  **The real cost of the detour is smaller than it looks**: to exploit it, an actor has to know the packet's contents
+  to construct an equivalent `Plain` request, and the main threat, an attacker who picks up an encrypted packet and
+  resends it unchanged, cannot read the contents and cannot construct one. Those who can take the detour know the
+  contents and hold a valid token, and such a person could send arbitrary requests directly anyway.
+- **Business-layer guards are not dropped because of this.** State machine checks (an approved document cannot be
+  approved again) and optimistic-locking version numbers should still exist independently; they also stop non-attack
+  cases such as a user double-clicking submit.
 
-## 後果 / 影響
+## Consequences
 
-- 開關預設關閉，導入本身**零行為變化**。
-- 啟用後每個 Encoded / Encrypted 請求多 17 bytes；回應方向也帶 frame（兩端共用同一份
-  converter 的自然結果），用戶端剝離後丟棄不檢查，該方向目前是純開銷。
-- 重放拒絕回傳專屬錯誤碼 `JsonRpcErrorCode.ReplayRejected`（-32005），讓呼叫端能區分
-  「重試不會成功」與「憑證無效」；並記為
-  [`AnomalyKind.Replay`](../../src/Polhem.Definition/Logging/AnomalyKind.cs) 而非泛用 `Error`
-  —— 折進 `Error` 的話，「某 session 連續被拒」這個訊號就看不見了，而那正是判別用戶端
-  時鐘偏移或有人重送封包的依據。
-- 本機呼叫（`IsLocalCall`）不受影響。
+- The switch is off by default, so introducing this has **zero behavior change** in itself.
+- Once enabled, every Encoded / Encrypted request carries 17 more bytes; the response direction carries a frame too (a
+  natural result of both ends sharing the same converter), which the client strips and discards without checking, so
+  that direction is currently pure overhead.
+- A replay rejection returns a dedicated error code, `JsonRpcErrorCode.ReplayRejected` (-32005), so callers can tell
+  "retrying will not succeed" from "invalid credentials"; and it is recorded as
+  [`AnomalyKind.Replay`](../../src/Polhem.Definition/Logging/AnomalyKind.cs) rather than the generic `Error`. Folded
+  into `Error`, the signal "a session is being rejected repeatedly" would disappear, and that is exactly what tells a
+  client clock skew from someone resending packets.
+- Local calls (`IsLocalCall`) are not affected.

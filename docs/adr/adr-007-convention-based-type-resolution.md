@@ -1,95 +1,119 @@
-# ADR-007：以命名慣例自動推導 API 型別
+# ADR-007: Derive API types automatically by naming convention
 
-## 狀態
+[繁體中文](adr-007-convention-based-type-resolution.zh-TW.md)
 
-已採納（2026-04-16）
+## Status
 
-## 背景
+Accepted (2026-04-16)
 
-框架採用 API/BO 兩層分離的型別設計（見 [API 合約與 BO 參數設計原則](../en/api-bo-contract-design.md)）：
+## Context
 
-- **BO 層**：`{Action}Args` / `{Action}Result`（純 POCO）
-- **API 層**：`{Action}Request` / `{Action}Response`（含 MessagePack 序列化屬性）
+The framework separates types into an API layer and a BO layer (see
+[API Contract and BO Parameter Design Principles](../en/api-bo-contract-design.md)):
 
-`JsonRpcExecutor` 執行 BO 方法後，必須把 BO 回傳的 `{Action}Result` 轉成對應的 API `{Action}Response`，用戶端才能正確反序列化。
+- **BO layer**: `{Action}Args` / `{Action}Result` (plain POCOs)
+- **API layer**: `{Action}Request` / `{Action}Response` (with MessagePack serialization attributes)
 
-### 原本的做法
+After `JsonRpcExecutor` runs a BO method, it must convert the `{Action}Result` returned by the BO into the matching
+API `{Action}Response`, so that the client can deserialize it correctly.
 
-原先透過 `ApiContractRegistry.Register<TContract, TApi>()` 靜態註冊 Contract 介面 → API 型別的對應：
+### The previous approach
+
+Previously the mapping from a contract interface to an API type was registered statically through
+`ApiContractRegistry.Register<TContract, TApi>()`:
 
 ```csharp
-// 必須在應用程式啟動時針對每一個 API 方法手動呼叫
+// Must be called by hand at application startup for every API method
 ApiContractRegistry.Register<ILoginResponse, LoginResponse>();
 ApiContractRegistry.Register<IPingResponse, PingResponse>();
 // ...
 ```
 
-### 問題
+### Problems
 
-1. **容易遺漏**：新增 API 方法時如忘記註冊，BO 回傳值會直接上拋 `InvalidCastException`，錯誤訊息不直接指向根因。
-2. **新增步驟繁瑣**：每個新 Action 都需要額外改動註冊碼，違反「命名慣例即契約」的設計哲學。
-3. **實際使用狀況**：檢視 repo 內原始碼與啟動流程，並無任何地方呼叫 `ApiContractRegistry.Register`，顯示手動註冊機制在實務上難以維護。
+1. **Easy to miss**: if a new API method is not registered, the BO's return value throws an `InvalidCastException`
+   straight up, and the error message does not point directly at the root cause.
+2. **Tedious extra step**: every new action needs an extra change to the registration code, which goes against the
+   design philosophy of "the naming convention is the contract".
+3. **Actual usage**: a review of the source code and startup flow in the repository found no call to
+   `ApiContractRegistry.Register` anywhere, which shows that the manual registration mechanism is hard to maintain in
+   practice.
 
-## 決策
+## Decision
 
-改用**反射 + 命名慣例**自動推導 API 回應型別，由 `ApiOutputConverter` 統一處理：
+Derive the API response type automatically with **reflection + naming convention** instead, handled in one place by
+`ApiOutputConverter`:
 
 ```
-BO 回傳：{Action}Result   ──反射搜尋 Polhem.Api.Core 組件──▶   API 回應：{Action}Response
+BO returns: {Action}Result   ──reflection search of the Polhem.Api.Core assembly──▶   API response: {Action}Response
 ```
 
-### 實作要點
+### Implementation points
 
-- 新增 [`ApiOutputConverter`](../../src/Polhem.Api.Core/Conversion/ApiOutputConverter.cs)，於 `JsonRpcExecutor.ExecuteAsyncCore` 完成 BO 呼叫後立即進行型別轉換
-- 反射結果以 `ConcurrentDictionary<Type, Type>` 快取，每個 BO 型別只掃描一次
-- 透過 `typeof(void)` 作為 sentinel 表示「找不到對應型別」（因 `ConcurrentDictionary` 不接受 null 值）
-- 找不到對應型別時回傳原值，不中斷流程（向後相容）
+- Add [`ApiOutputConverter`](../../src/Polhem.Api.Core/Conversion/ApiOutputConverter.cs), which converts the type
+  right after `JsonRpcExecutor.ExecuteAsyncCore` finishes the BO call
+- Reflection results are cached in a `ConcurrentDictionary<Type, Type>`, so each BO type is scanned only once
+- `typeof(void)` is used as a sentinel meaning "no matching type found" (because `ConcurrentDictionary` does not
+  accept null values)
+- When no matching type is found, the original value is returned and the flow is not interrupted (backward
+  compatible)
 
-### 命名慣例（強制規範）
+### Naming convention (mandatory)
 
-自動推導依賴以下命名慣例，違反者將無法自動轉換：
+Automatic derivation relies on the following naming convention; types that violate it cannot be converted
+automatically:
 
-| 層級 | 輸入 | 輸出 |
-|------|------|------|
-| BO（`Polhem.Business`） | `{Action}Args` | `{Action}Result` |
-| API（`Polhem.Api.Core`） | `{Action}Request` | `{Action}Response` |
-| Contract（`Polhem.Api.Contracts`） | `I{Action}Request` | `I{Action}Response` |
+| Layer | Input | Output |
+|-------|-------|--------|
+| BO (`Polhem.Business`) | `{Action}Args` | `{Action}Result` |
+| API (`Polhem.Api.Core`) | `{Action}Request` | `{Action}Response` |
+| Contract (`Polhem.Api.Contracts`) | `I{Action}Request` | `I{Action}Response` |
 
-例：`PingResult` → `PingResponse`、`LoginResult` → `LoginResponse`。
+For example: `PingResult` → `PingResponse`, `LoginResult` → `LoginResponse`.
 
-## 取捨
+## Trade-offs
 
-### 優點
+### Advantages
 
-- **零樣板**：新增 API 方法不需動到啟動碼，只要遵守命名即可自動對應
-- **錯誤更早浮現**：命名不一致會在第一個測試就明顯地失敗，不會在註冊缺漏時悄悄運行
-- **程式碼集中**：型別轉換邏輯集中在 `ApiOutputConverter`，與 `ApiInputConverter`（輸入端）對稱
+- **Zero boilerplate**: adding an API method does not touch the startup code; following the naming is enough for
+  the mapping to happen automatically
+- **Errors surface earlier**: a naming mismatch fails visibly in the first test, instead of running silently with a
+  missing registration
+- **Centralized code**: the type conversion logic is gathered in `ApiOutputConverter`, symmetric with
+  `ApiInputConverter` (the input side)
 
-### 代價
+### Costs
 
-- **首次呼叫有反射成本**：需要 `Assembly.GetTypes()` 掃描一次；透過快取消除後續影響
-- **命名偏離無法自動處理**：違反 `{Action}Result` / `{Action}Response` 的型別需要個別處理（目前無例外）
-- **跨組件搜尋限制**：目前僅搜尋 `Polhem.Api.Core` 組件，若未來 API 型別分散到多組件需擴充搜尋範圍
+- **Reflection cost on the first call**: `Assembly.GetTypes()` has to scan once; the cache removes the impact after
+  that
+- **Naming deviations cannot be handled automatically**: types that break the `{Action}Result` / `{Action}Response`
+  pattern need individual handling (there are currently no exceptions)
+- **Limited to one assembly**: currently only the `Polhem.Api.Core` assembly is searched; if API types are spread
+  across several assemblies in the future, the search scope has to be widened
 
-## 影響
+## Consequences
 
-### 程式碼
+### Code
 
-- **新增**：`src/Polhem.Api.Core/ApiOutputConverter.cs`（其後移至 `Conversion/` 子資料夾）
-- **修改**：`src/Polhem.Api.Core/JsonRpc/JsonRpcExecutor.cs`（新增 1 行呼叫）
-- **修改**：`src/Polhem.Api.Core/ApiInputConverter.cs`（補強 `JsonElement` 反序列化路徑；
-  其後移至 `Conversion/` 子資料夾）
-- **保留**：`ApiContractRegistry`（供 Encoded/Encrypted 格式的 MessagePack 序列化轉換使用）
-  —— **該型別其後已移除**，見 [ADR-004](adr-004-messagepack-payload.md) 的註記。
+- **Added**: `src/Polhem.Api.Core/ApiOutputConverter.cs` (later moved into the `Conversion/` subfolder)
+- **Changed**: `src/Polhem.Api.Core/JsonRpc/JsonRpcExecutor.cs` (one added line of calling code)
+- **Changed**: `src/Polhem.Api.Core/ApiInputConverter.cs` (strengthened the `JsonElement` deserialization path;
+  later moved into the `Conversion/` subfolder)
+- **Kept**: `ApiContractRegistry` (used for the MessagePack serialization conversion of the Encoded/Encrypted formats)
+  — **this type has since been removed**; see the note in [ADR-004](adr-004-messagepack-payload.md).
 
-### 文件
+### Documents
 
-- 本 ADR
-- 更新 [API 合約與 BO 參數設計原則](../en/api-bo-contract-design.md) 移除手動註冊步驟
-- 更新 [端到端開發指引](../en/development-cookbook.md) 說明 `ApiOutputConverter` 的角色
-- 更新 [開發限制與反模式](../en/development-constraints.md) 的 API 契約段落
+- This ADR
+- Updated [API Contract and BO Parameter Design Principles](../en/api-bo-contract-design.md) to remove the manual
+  registration step
+- Updated the [End-to-End Development Cookbook](../en/development-cookbook.md) to explain the role of
+  `ApiOutputConverter`
+- Updated the API contract section of [Development Constraints and Anti-Patterns](../en/development-constraints.md)
 
-### 對開發人員的意義
+### What it means for developers
 
-- 新增 API 方法時，只要遵守命名慣例，框架會自動完成型別轉換
-- 命名偏離慣例會導致 BO 回傳值直接流到用戶端（可能造成型別錯誤），應在程式碼審查時嚴格檢查
+- When adding an API method, the framework completes the type conversion automatically as long as the naming
+  convention is followed
+- A name that deviates from the convention lets the BO's return value flow straight to the client (which may cause
+  type errors), and should be checked strictly in code review

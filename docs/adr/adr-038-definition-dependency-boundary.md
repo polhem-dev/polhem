@@ -1,154 +1,167 @@
-# ADR-038：定義層相依邊界——運算式抽象下沉至 `Polhem.Base`，判準以閘門固化
+# ADR-038: The definition layer's dependency boundary: the expression abstraction moves down to `Polhem.Base`, and the criterion is enforced by gates
 
-## 狀態
+[繁體中文](adr-038-definition-dependency-boundary.zh-TW.md)
 
-**已採納（Accepted，2026-08-11）** —— 決策已執行。
+## Status
 
-本 ADR 延續 [ADR-036](adr-036-wire-serialization-externalized.md) 的判準並補上其界線定義，
-同時修訂 [ADR-028](adr-028-expression-rule-engine.md) 中「抽象與實作同住 `Polhem.Expressions`」
-的組件配置（求值語意與 client/server 共用單一實作的結論不變）。
+**Accepted (2026-08-11)**: the decision has been carried out.
 
-## 背景
+This ADR continues the criterion of [ADR-036](adr-036-wire-serialization-externalized.md) and adds the definition of
+its boundary. It also revises the assembly layout in [ADR-028](adr-028-expression-rule-engine.md) where "the
+abstraction and the implementation live together in `Polhem.Expressions`" (the conclusions about evaluation semantics
+and a single implementation shared by client and server are unchanged).
 
-ADR-036 把 MessagePack 趕出定義層時立下的判準是：
+## Context
 
-> 判準不是「是不是傳輸格式」，而是**「會不會讓定義層長出外部套件相依」**。
+When ADR-036 moved MessagePack out of the definition layer, it set this criterion:
 
-該判準當時是以人眼 grep「傳輸格式」相關關鍵字落實的，因此漏掉了另一條相依鏈：
+> The criterion is not "is it a transport format" but **"would it give the definition layer an external package
+> dependency"**.
+
+At the time, the criterion was applied by a human grepping for keywords related to "transport format", so it missed
+another dependency chain:
 
 ```
 Polhem.Definition ──ProjectReference──> Polhem.Expressions ──PackageReference──> DynamicExpresso.Core
 ```
 
-`Polhem.Definition.4.19.0.nuspec` 因而把 `Polhem.Expressions` 列為相依，
-**任何安裝 `Polhem.Definition` 的消費者都會被拉進一個運算式引擎**——包含只想讀定義的
-純 UI head 與定義檔工具。掃過 `src/` 全部 17 個專案後，這是唯一一處違規。
+As a result, `Polhem.Definition.4.19.0.nuspec` listed `Polhem.Expressions` as a dependency, and **every consumer that
+installs `Polhem.Definition` was pulled into an expression engine**, including pure UI heads and definition file tools
+that only want to read definitions. After scanning all 17 projects under `src/`, this was the only violation.
 
-成因不是架構放錯位置，而是**抽象與實作同住一個組件**：`Polhem.Expressions` 的四個公開型別中，
-只有 `DynamicExpressoEvaluator` 真正碰到 DynamicExpresso，其餘三個的公開表面只有 BCL 型別
-與 `Polhem.Base.Data.FieldDbType`。
+The cause was not an architectural misplacement but **the abstraction and the implementation living in the same
+assembly**: of the four public types in `Polhem.Expressions`, only `DynamicExpressoEvaluator` actually touches
+DynamicExpresso; the public surface of the other three consists only of BCL types and `Polhem.Base.Data.FieldDbType`.
 
-## 決策
+## Decision
 
-### 一、抽象下沉至 `Polhem.Base`，實作留在 `Polhem.Expressions`
+### 1. The abstraction moves down to `Polhem.Base`; the implementation stays in `Polhem.Expressions`
 
-| 型別 | 新位置 | 理由 |
+| Type | New location | Reason |
 |------|--------|------|
-| `IExpressionEvaluator` | `Polhem.Base.Expressions` | 抽象，公開表面零外部型別 |
-| `ExpressionEvaluationException` | `Polhem.Base.Expressions` | 介面契約的一部分（介面以 `<exception cref>` 標註） |
-| `ExpressionPolicy` | `Polhem.Base.Expressions` | 純政策，只依賴 `Polhem.Base.Data.FieldDbType` |
-| `DynamicExpressoEvaluator` | 維持 `Polhem.Expressions` | **唯一**碰到 DynamicExpresso 的型別 |
+| `IExpressionEvaluator` | `Polhem.Base.Expressions` | An abstraction; its public surface has zero external types |
+| `ExpressionEvaluationException` | `Polhem.Base.Expressions` | Part of the interface contract (the interface documents it with `<exception cref>`) |
+| `ExpressionPolicy` | `Polhem.Base.Expressions` | Pure policy; depends only on `Polhem.Base.Data.FieldDbType` |
+| `DynamicExpressoEvaluator` | Stays in `Polhem.Expressions` | The **only** type that touches DynamicExpresso |
 
-`ExpressionEvaluationException` 放 `Polhem.Base.Expressions` 而非 `Polhem.Base.Exceptions`：
-它與介面的內聚性高於「所有例外集中」，而 `Polhem.Base.Exceptions` 現有成員
-（`ForbiddenException` / `UserMessageException`）都是跨領域通用例外，性質不同。
+`ExpressionEvaluationException` goes in `Polhem.Base.Expressions` rather than `Polhem.Base.Exceptions`: its cohesion
+with the interface is stronger than "keep all exceptions together", and the existing members of
+`Polhem.Base.Exceptions` (`ForbiddenException` / `UserMessageException`) are general-purpose cross-domain exceptions,
+which are of a different nature.
 
-相依鏈隨之改變：
+The dependency chain changes accordingly:
 
-| 專案 | 對 `Polhem.Expressions` 的引用 | 理由 |
+| Project | Reference to `Polhem.Expressions` | Reason |
 |------|---------------------------|------|
-| `Polhem.Definition` | ❌ 移除 | 只用抽象（`FormExpressionCalculator` 由建構子注入 evaluator） |
-| `Polhem.Business` | ❌ 移除 | 同上（`FormRuleProcessor`） |
-| `Polhem.Hosting` | ✅ 保留 | 組裝層，DI 註冊時要指定具體 evaluator |
-| `Polhem.UI.Avalonia` | ✅ 保留 | client 端自建 evaluator 做即時預覽 |
+| `Polhem.Definition` | ❌ Removed | Uses only the abstraction (`FormExpressionCalculator` takes the evaluator through constructor injection) |
+| `Polhem.Business` | ❌ Removed | Same as above (`FormRuleProcessor`) |
+| `Polhem.Hosting` | ✅ Kept | The composition layer; DI registration has to name a concrete evaluator |
+| `Polhem.UI.Avalonia` | ✅ Kept | The client builds its own evaluator for live preview |
 
-**`FormExpressionCalculator` 不搬離定義層**：`FormSchema` 宣告 `ValueExpression` 與驗證規則，
-求值是定義語意的一部分；且 server 存檔前與 client 即時預覽共用同一份實作，正是
-ADR-028「client 算出的值等於 server 寫入的值」的保證來源。搬走會斷掉這條線。
+**`FormExpressionCalculator` does not move out of the definition layer**: `FormSchema` declares `ValueExpression` and
+validation rules, so evaluation is part of the definition's semantics; and the server before saving and the client's
+live preview share the same implementation, which is exactly where ADR-028's guarantee that "the value the client
+computes equals the value the server writes" comes from. Moving it would break that link.
 
-### 二、「外部套件」的界線
+### 2. The boundary of "external package"
 
-ADR-036 的判準只說「外部套件相依」，未定義界線。本 ADR 補上：
+ADR-036's criterion only says "external package dependency" and does not define the boundary. This ADR adds it:
 
-| 類別 | 例 | 定義層可否相依 |
+| Category | Example | May the definition layer depend on it? |
 |------|-----|--------------|
-| BCL / 平台詞彙 | `System.Xml.Serialization`、`[JsonIgnore]` | ✅ 可 |
-| **Microsoft 第一方、純抽象、隨 .NET 版本走** | `Microsoft.Extensions.Localization.Abstractions` | ✅ 可 |
-| 第三方套件 | `DynamicExpresso.Core`、`MessagePack` | ❌ 不可 |
-| 第一方**實作**套件 | 帶具體實作、獨立版本節奏者 | ❌ 不可（比照第三方） |
+| BCL / platform vocabulary | `System.Xml.Serialization`, `[JsonIgnore]` | ✅ Yes |
+| **Microsoft first-party, pure abstraction, versioned with .NET** | `Microsoft.Extensions.Localization.Abstractions` | ✅ Yes |
+| Third-party package | `DynamicExpresso.Core`, `MessagePack` | ❌ No |
+| First-party **implementation** package | Carries a concrete implementation and has its own release cadence | ❌ No (treated like third-party) |
 
-判別法：**這個相依有沒有替消費者做出技術選擇？** 純抽象套件沒有——它不帶實作、
-不鎖定引擎，且版本隨 .NET 走而非隨供應商走。`Microsoft.Extensions.Localization.Abstractions`
-（`Language/PolhemStringLocalizer.cs` 使用）因此留在定義層。
+To decide: **does this dependency make a technology choice on the consumer's behalf?** A pure abstraction package
+does not: it carries no implementation, does not lock in an engine, and its version follows .NET rather than a vendor.
+`Microsoft.Extensions.Localization.Abstractions` (used by `Language/PolhemStringLocalizer.cs`) therefore stays in the
+definition layer.
 
-### 三、判準改由閘門執行
+### 3. The criterion is now enforced by gates
 
-判準只寫在 ADR 裡就會像這次一樣被漏掉，故以兩道互補的閘門執行：
+A criterion written only in an ADR gets missed, as it did this time, so it is enforced by two complementary gates:
 
-| 閘門 | 位置 | 涵蓋範圍 |
+| Gate | Location | Coverage |
 |------|------|---------|
-| **建置期鎖** | `src/Directory.Build.targets`（診斷碼 `POLHEM9001`） | 受鎖組件**直接**宣告的 `PackageReference` / `ProjectReference`（清單見該檔的 `PolhemEnforceDependencyBoundary` 條件，此處不複寫） |
-| **傳遞閉包測試** | `tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs` | `Polhem.Definition` 的**整個傳遞相依閉包** |
+| **Build-time lock** | `src/Directory.Build.targets` (diagnostic `POLHEM9001`) | `PackageReference` / `ProjectReference` declared **directly** by a locked assembly (the list is in the `PolhemEnforceDependencyBoundary` condition in that file and is not copied here) |
+| **Transitive closure test** | `tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs` | **The whole transitive dependency closure** of `Polhem.Definition` |
 
-兩道都需要，因為各自看不到對方那一半：建置期鎖看不到「經由某個 `ProjectReference`
-間接帶進來的套件」——DynamicExpresso 正是這樣進來的；閉包測試則要跑測試才會知道，
-而寫 csproj 的那一刻不會。
+Both are needed, because each cannot see the other's half: the build-time lock cannot see "a package brought in
+indirectly through some `ProjectReference`", which is exactly how DynamicExpresso got in; the closure test only tells
+you when tests run, not at the moment you write the csproj.
 
-建置期鎖只檢查**會流到消費者**的參考：`PrivateAssets="all"` 的套件（SourceLink、analyzer）
-與 `ReferenceOutputAssembly="false"` 的專案參考（`Polhem.Analyzers` 的建置排序）不算，
-因為它們不會出現在 nuspec。
+The build-time lock checks only references that **flow to consumers**: packages with `PrivateAssets="all"`
+(SourceLink, analyzers) and project references with `ReferenceOutputAssembly="false"` (the build ordering of
+`Polhem.Analyzers`) do not count, because they do not appear in the nuspec.
 
-閉包測試讀的是測試組件自己的 `.deps.json`，從 `Polhem.Definition` 這個節點做 BFS。
-選 `deps.json` 而非 `Assembly.GetReferencedAssemblies()`，是因為後者只反映「實際被 IL 引用」
-的組件——宣告了卻尚未使用的套件相依會漏掉，而那正是本閘門要攔的東西。
+The closure test reads the test assembly's own `.deps.json` and does a BFS from the `Polhem.Definition` node. It uses
+`deps.json` rather than `Assembly.GetReferencedAssemblies()` because the latter only reflects assemblies "actually
+referenced by IL": a package dependency that is declared but not yet used would be missed, and that is exactly what
+this gate is meant to stop.
 
-**要放行一個新相依，三處都要改**（`PolhemAllowedDependency`、測試白名單、本 ADR 的理由），
-**逼出一次決策而非默默通過**。
+**Allowing a new dependency requires changes in three places** (`PolhemAllowedDependency`, the test allowlist, and the
+reasoning in this ADR), **forcing a decision instead of letting it pass silently**.
 
-## 理由
+## Rationale
 
-### 為何不用「新增 `Polhem.Expressions.Abstractions` 套件」
+### Why not "add a `Polhem.Expressions.Abstractions` package"
 
-抽象／實作分包是更「正統」的做法，但要為三個型別多發一個 NuGet 套件（框架已有 17 個），
-消費者也多一個要認的名字。`Polhem.Base` 本來就是全框架都依賴的那層，抽象放在那裡
-**不多花任何人一分成本**，也不新增任何套件。分包只在日後 `Polhem.Base` 也想瘦身時才更划算。
+Splitting abstraction and implementation into separate packages is the more "orthodox" approach, but it means shipping
+one more NuGet package for three types (the framework already has 17), and one more name for consumers to learn.
+`Polhem.Base` is already the layer the whole framework depends on, so putting the abstraction there **costs nobody
+anything extra** and adds no package. A separate package would only pay off if `Polhem.Base` itself needs slimming
+later.
 
-### 為何不讓定義層自宣告一個極小介面
+### Why not let the definition layer declare a tiny interface of its own
 
-那樣不必動 `Polhem.Expressions`，但會出現兩個平行介面加一個轉接器，長期比下沉更亂。
+That would avoid touching `Polhem.Expressions`, but it would produce two parallel interfaces plus an adapter, which in
+the long run is messier than moving the abstraction down.
 
-### 搬得動，因為抽象面是乾淨的
+### It can be moved because the abstraction surface is clean
 
-`grep DynamicExpresso src/Polhem.Expressions/*.cs` 除 `DynamicExpressoEvaluator.cs` 外零命中。
-這是機械式搬移，不是重設計——求值邏輯一行未改。
+`grep DynamicExpresso src/Polhem.Expressions/*.cs` has zero hits apart from `DynamicExpressoEvaluator.cs`. This is a
+mechanical move, not a redesign: not one line of the evaluation logic changed.
 
-## 後果
+## Consequences
 
-### 破壞性變更（source-breaking）
+### Breaking change (source-breaking)
 
-三個公開型別換命名空間，且三個公開建構子的參數型別隨之改變：
+Three public types change namespace, and the parameter types of three public constructors change with them:
 
-| 成員 | 變更 |
+| Member | Change |
 |------|------|
 | `Polhem.Expressions.IExpressionEvaluator` | → `Polhem.Base.Expressions.IExpressionEvaluator` |
 | `Polhem.Expressions.ExpressionEvaluationException` | → `Polhem.Base.Expressions.ExpressionEvaluationException` |
 | `Polhem.Expressions.ExpressionPolicy` | → `Polhem.Base.Expressions.ExpressionPolicy` |
-| `FormExpressionCalculator(IExpressionEvaluator)` | 參數型別換 namespace |
-| `FormRuleProcessor(IExpressionEvaluator)` | 參數型別換 namespace |
-| `FormLiveComputation(FormSchema, RoundingContext?, IExpressionEvaluator?)` | 參數型別換 namespace |
+| `FormExpressionCalculator(IExpressionEvaluator)` | Parameter type changes namespace |
+| `FormRuleProcessor(IExpressionEvaluator)` | Parameter type changes namespace |
+| `FormLiveComputation(FormSchema, RoundingContext?, IExpressionEvaluator?)` | Parameter type changes namespace |
 
-型別名與成員簽章本身不變，外部消費端的改動是機械式的（改 `using`）。
-框架處於 pre-stable（v4.x），此類變更允許但必須在 CHANGELOG 明列。
+The type names and member signatures themselves are unchanged, so the change for external consumers is mechanical
+(change the `using`). The framework is pre-stable (v4.x); changes of this kind are allowed but must be listed in the
+CHANGELOG.
 
-### 行為零變更
+### Zero behavior change
 
-純搬移，求值邏輯、捨入政策、時區處理一律未動。
+A pure move: evaluation logic, rounding policy and time zone handling are all untouched.
 
-### `RS0026` 的例外
+### The `RS0026` exception
 
-`IExpressionEvaluator` 的兩個 `Evaluate` 多載都帶選擇性參數 `timeZoneId`，
-在 `Polhem.Base` 屬「新增 API」，故觸發
-`RS0026: Do not add multiple overloads with optional parameters`。
-兩處以 `[SuppressMessage]` 標註並附理由：該多載對**不是**新 API，兩者一直是同進同出的一組，
-不存在「呼叫端被靜默改綁到另一個多載」的風險——而那正是 RS0026 要防的事。
+Both `Evaluate` overloads of `IExpressionEvaluator` take the optional parameter `timeZoneId`, and in `Polhem.Base`
+they count as "new API", so they trigger `RS0026: Do not add multiple overloads with optional parameters`. Both places
+are marked with `[SuppressMessage]` and a justification: this pair of overloads is **not** new API, the two have always
+come and gone together as a set, and there is no risk of "a caller being silently rebound to the other overload",
+which is exactly what RS0026 guards against.
 
-### 驗證
+### Verification
 
-| 項目 | 結果 |
+| Item | Result |
 |------|------|
-| `dotnet list src/Polhem.Definition package --include-transitive` | 不再出現 `DynamicExpresso.Core` |
-| `Polhem.Definition.nuspec` 相依 | 只剩 `Polhem.Base` + `Microsoft.Extensions.Localization.Abstractions` |
-| 傳遞閉包測試 | 搬移前紅（抓到 `Polhem.Expressions, DynamicExpresso.Core`）、搬移後綠；刻意注入 `MessagePack` 後再次轉紅（連其傳遞相依 `MessagePack.Annotations` / `Microsoft.NET.StringTools` 一併列出） |
-| 建置期鎖 | 對 `Polhem.Base` / `Polhem.Definition` 各注入一次 `MessagePack`，兩者皆以 `POLHEM9001` 中止建置；還原後 0 warning / 0 error |
-| clean Release build | 0 warning / 0 error |
-| 全套單元測試 | 16 個測試專案全綠 |
+| `dotnet list src/Polhem.Definition package --include-transitive` | `DynamicExpresso.Core` no longer appears |
+| `Polhem.Definition.nuspec` dependencies | Only `Polhem.Base` + `Microsoft.Extensions.Localization.Abstractions` remain |
+| Transitive closure test | Red before the move (catches `Polhem.Expressions, DynamicExpresso.Core`), green after the move; red again after deliberately injecting `MessagePack` (listing its transitive dependencies `MessagePack.Annotations` / `Microsoft.NET.StringTools` as well) |
+| Build-time lock | Injecting `MessagePack` once into `Polhem.Base` and once into `Polhem.Definition` stops the build with `POLHEM9001` in both; 0 warnings / 0 errors after reverting |
+| clean Release build | 0 warnings / 0 errors |
+| Full unit test suite | All 16 test projects green |

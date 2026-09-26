@@ -1,137 +1,186 @@
-# ADR-010：邏輯資料庫分類（DbCategory）解耦資料庫部署彈性
+# ADR-010: Logical database categories (DbCategory) decouple database deployment flexibility
 
-> **註記**：本文中 `BackendInfo.GetDatabaseItem(databaseId)` 範例現已等價為 `IDatabaseSettingsProvider.GetItem(databaseId)`（DI ctor 注入）。設計理念不變。
+[繁體中文](adr-010-logical-database-category.zh-TW.md)
 
-## 狀態
+> **Note**: the `BackendInfo.GetDatabaseItem(databaseId)` examples in this document are now equivalent to
+> `IDatabaseSettingsProvider.GetItem(databaseId)` (DI constructor injection). The design idea is unchanged.
 
-已採納（2026-05-10）
+## Status
 
-## 背景
+Accepted (2026-05-10)
 
-企業應用系統通常包含多種用途的資料表：跨公司共用的系統表（使用者、Session）、各公司獨立的業務資料、寫入頻繁的稽核 / 操作記錄等。這些表在實體部署上有兩種典型需求：
+## Context
 
-- **合併部署**：所有表放在單一實體資料庫，省維運成本（中小型導入）
-- **分散部署**：依用途切到不同實體資料庫（如業務 DB 走主從複寫、日誌 DB 走獨立寫入優化）
+Enterprise application systems usually contain tables with several purposes: system tables shared across companies
+(users, sessions), business data kept separate per company, and frequently written audit / operation records. For
+physical deployment these tables have two typical needs:
 
-同一份系統定義也常同時面對多公司 / 多租戶部署、跨環境部署（dev / staging / prod）等場景，實體資料庫的數量與命名會隨之變動。
+- **Consolidated deployment**: all tables in a single physical database, to save operating cost (small and medium
+  implementations)
+- **Distributed deployment**: split into different physical databases by purpose (for example, the business DB uses
+  master-replica replication and the log DB is tuned separately for writes)
 
-如果框架只有「實體資料庫」這一層概念（即 `DatabaseSettings.Items` 直接對應實體 DB），會碰到三個結構性問題：
+The same system definition also often faces multi-company / multi-tenant deployment and cross-environment deployment
+(dev / staging / prod) at the same time, and the number and names of the physical databases change accordingly.
 
-1. **schema 部署沒有依據**：建表 / 升級工具需要回答「這個實體 DB 應該包含哪些表」。沒有分類維度，工具只能掃描所有 schema 檔案靠命名前綴或 hardcode 規則歸類。
-2. **部署彈性靠呼叫端寫死**：「合併」或「分散」這個決策若無框架支援，每個專案都要自寫派送邏輯（哪些表寫入哪個 DB）。
-3. **業務程式對部署細節敏感**：實體 DB 命名（如 `erp_acme_main_v2`）會隨公司、環境變動，業務程式若直接綁實體 DB 名稱，跨環境部署需修程式或大量字串替換。
+If the framework had only the concept of a "physical database" (that is, `DatabaseSettings.Items` maps directly to
+physical DBs), it would run into three structural problems:
 
-需要一層**穩定、與環境無關、語意表達用途**的中介，把「資料的用途分類」與「實體部署設定」徹底解耦。
+1. **Schema deployment has nothing to go on**: table creation / upgrade tools need to answer "which tables should this
+   physical DB contain". Without a category dimension, tools can only scan all schema files and classify them by name
+   prefix or hardcoded rules.
+2. **Deployment flexibility is hardcoded by callers**: without framework support, the "consolidated" or "distributed"
+   decision means every project writes its own dispatch logic (which tables are written to which DB).
+3. **Business code is sensitive to deployment details**: physical DB names (such as `erp_acme_main_v2`) change with
+   the company and the environment. If business code binds directly to physical DB names, deploying across
+   environments requires code changes or large-scale string replacement.
 
-## 決策
+What is needed is an intermediate layer that is **stable, environment-independent and expresses purpose**, fully
+decoupling "the purpose category of the data" from "the physical deployment settings".
 
-引入 `DbCategory`（邏輯資料庫分類），集中宣告於 `DbCategorySettings.xml`，作為實體部署的對應中介。`DbCategory` 與 `DatabaseItem` 採 **多對一** 字串對應，僅於 schema 設計與部署階段使用，執行時不參與。
+## Decision
 
-### 四項核心要點
+Introduce `DbCategory` (logical database category), declared centrally in `DbCategorySettings.xml`, as the mapping
+layer for physical deployment. `DbCategory` and `DatabaseItem` are mapped **many-to-one** by string, used only during
+schema design and deployment, and not involved at runtime.
 
-1. **DbCategory 是純邏輯抽象**
+### Four key points
 
-   DbCategory 只回答「**這個分類包含哪些表**」，不對應任何實體連線。預設提供三類慣用分類，但**不硬編碼於框架**：
+1. **DbCategory is a purely logical abstraction**
 
-   | Id | 用途 |
-   |----|------|
-   | `common` | 跨公司共用的系統表（如使用者、Session） |
-   | `company` | 業務資料、各公司獨立 |
-   | `log` | 寫入頻繁的稽核 / 操作記錄 |
+   DbCategory only answers "**which tables does this category contain**"; it does not map to any physical connection.
+   Three customary categories are provided by default, but they are **not hardcoded in the framework**:
 
-   分類定義完全由 `DbCategorySettings.xml` 控制，專案可自訂分類。
+   | Id | Purpose |
+   |----|---------|
+   | `common` | System tables shared across companies (such as users and sessions) |
+   | `company` | Business data, kept separate per company |
+   | `log` | Frequently written audit / operation records |
 
-2. **DatabaseItem 是邏輯分類的實體載體；同一分類可對應多筆 DatabaseItem**
+   The category definitions are controlled entirely by `DbCategorySettings.xml`, and a project can define its own
+   categories.
 
-   `DatabaseItem.CategoryId` 為單一字串，宣告該實體連線承載哪個邏輯分類的所有表。但 `DbCategory` 與 `DatabaseItem` 是 **多對一** 關係 —— 同一個分類可以有多筆 DatabaseItem 對應，每筆指向不同實體 DB，但所有 DB 內含的表結構完全相同（皆來自 `DbCategory[cid].Tables`）。常見觸發情境：
+2. **A DatabaseItem is the physical carrier of a logical category; one category can map to several DatabaseItems**
 
-   - **單一實體載體**（如 `common`）：1 筆 DatabaseItem
-   - **多租戶切分**（如 `company`）：N 家公司有 N 筆 DatabaseItem（`company001`、`company002`...），各指向該公司獨立的實體 DB
-   - **時間封存切分**（如 `log`）：依年份切分有多筆 DatabaseItem（`log_2024`、`log_2025`...），各指向該年份獨立的實體 DB
-   - 兩種切分維度可疊加（如某分類同時依公司 + 年份切分）
+   `DatabaseItem.CategoryId` is a single string declaring which logical category's tables this physical connection
+   carries. But `DbCategory` and `DatabaseItem` have a **many-to-one** relationship: one category can have several
+   DatabaseItems mapped to it, each pointing to a different physical DB, while the table structure in every one of
+   those DBs is exactly the same (all taken from `DbCategory[cid].Tables`). Common triggering situations:
 
-3. **實體資料庫數量與部署切分完全自由**
+   - **A single physical carrier** (such as `common`): 1 DatabaseItem
+   - **Multi-tenant split** (such as `company`): N companies have N DatabaseItems (`company001`, `company002`...), each
+     pointing to that company's own physical DB
+   - **Split by archive period** (such as `log`): split by year into several DatabaseItems (`log_2024`,
+     `log_2025`...), each pointing to that year's own physical DB
+   - The two split dimensions can be stacked (for example, a category split by both company and year)
 
-   結合上述設計，DatabaseSettings 可表達多種部署形態：
+3. **The number of physical databases and the deployment split are entirely free**
 
-   - **合併部署**：每分類各 1 筆 DatabaseItem，全部 DbName 相同 → 所有分類表共存於一個實體 DB
-   - **分散部署**：每分類各 1 筆 DatabaseItem，各自獨立 DbName → 每分類一個實體 DB
-   - **同一分類多載體**：依切分維度（租戶 / 時間 / 其他）為某分類新增 DatabaseItem，每筆指向獨立實體 DB
+   Combined with the design above, DatabaseSettings can express several deployment shapes:
 
-   業務程式對部署形態無感：永遠透過 `BackendInfo.GetDatabaseItem(databaseId)` 取連線，由業務層依當前情境（租戶、時間、其他維度）決定要傳哪個 `databaseId`。
+   - **Consolidated deployment**: 1 DatabaseItem per category, all with the same DbName → all category tables live
+     together in one physical DB
+   - **Distributed deployment**: 1 DatabaseItem per category, each with its own DbName → one physical DB per category
+   - **Several carriers for one category**: add DatabaseItems to a category along a split dimension (tenant / time /
+     other), each pointing to its own physical DB
 
-4. **執行時取連線只用 `DatabaseItem.Id`，不經過 CategoryId**
+   Business code is unaware of the deployment shape: it always gets connections through
+   `BackendInfo.GetDatabaseItem(databaseId)`, and the business layer decides which `databaseId` to pass according to
+   the current context (tenant, time, other dimensions).
 
-   `BackendInfo.GetDatabaseItem(databaseId)` 直接以 Id 取出 DatabaseItem 並建立連線。CategoryId 與 DbCategorySettings 在執行時完全不參與。
+4. **At runtime, connections are obtained only by `DatabaseItem.Id`, never through CategoryId**
 
-> **附帶說明**：FormSchema 也帶 `CategoryId` 屬性，但 FormSchema 本身仍是純表單結構描述、不與資料庫直接關聯。這個 `CategoryId` 純粹是設計階段需要：在 schema 編輯工具從 FormSchema 推導 TableSchema 時，知道應落於 `TableSchema/{categoryId}/` 哪個分類目錄。它不影響本 ADR 的核心設計（DbCategory ↔ DatabaseItem 的解耦關係）。
+   `BackendInfo.GetDatabaseItem(databaseId)` fetches the DatabaseItem directly by Id and creates the connection.
+   CategoryId and DbCategorySettings play no part at runtime at all.
 
-## 理由
+> **Side note**: FormSchema also carries a `CategoryId` property, but FormSchema itself remains a pure description of
+> the form structure and is not directly tied to a database. This `CategoryId` is needed purely at design time: when
+> the schema editing tool derives a TableSchema from a FormSchema, it tells the tool which category folder under
+> `TableSchema/{categoryId}/` the result belongs in. It does not affect the core design of this ADR (the decoupling
+> between DbCategory and DatabaseItem).
 
-### 為何要邏輯抽象層而非直接用實體 DB
+## Rationale
 
-直接讓業務 /  schema 工具操作實體 DB 概念，會把「用途分類」「實體切分」「部署環境」三件事糾纏在一起：
+### Why a logical abstraction layer instead of using physical DBs directly
 
-- 修改實體 DB 命名（如新環境 `erp_v2`）會牽動 schema 工具與業務程式
-- 「合併或分散」變更需要改動每個對 DB 操作的呼叫點
-- 多公司部署時無法用統一抽象表達「這是某公司的業務 DB」
+Letting business code / schema tools work directly with the concept of a physical DB tangles three things together:
+"purpose category", "physical split" and "deployment environment":
 
-DbCategory 把「分類用途」抽出後，「結構定義 / 分類宣告 / 實體部署」三件事互不干涉，各自獨立演進。邏輯分類的語意（`company` 永遠是公司資料）跨環境穩定；部署現場資訊（`erp_acme_main` 等具體 DatabaseId 命名）只存在於 DatabaseSettings。
+- Changing a physical DB name (for example `erp_v2` for a new environment) affects the schema tools and the business
+  code
+- Changing between "consolidated or distributed" requires changes at every call site that works with a DB
+- In a multi-company deployment there is no uniform abstraction to express "this is some company's business DB"
 
-### 為何用字串對應而非強型別
+Once DbCategory pulls out "category purpose", the three things "structure definition / category declaration /
+physical deployment" no longer interfere with each other and each evolves independently. The meaning of a logical
+category (`company` is always company data) is stable across environments; deployment-site information (concrete
+DatabaseId names such as `erp_acme_main`) exists only in DatabaseSettings.
 
-`DbCategory.Id` 為字串，DatabaseItem 透過字串值對應。考慮過的替代方案：
+### Why a string mapping instead of strong typing
 
-- **enum**：硬編於框架，破壞「分類由 settings 控制」的目標，專案無法擴充
-- **強型別引用**（如 `[XmlReference]`）：System.Xml.Serialization 不支援跨檔案引用解析；自寫 resolver 複雜度高
+`DbCategory.Id` is a string, and a DatabaseItem maps to it by string value. Alternatives considered:
 
-字串對應的優點：
-- **XML 序列化原生支援**：`[XmlAttribute]` 直出，無需自訂解析
-- **跨層解耦**：`Polhem.Definition.Settings.DatabaseItem` 與 `Polhem.Definition.Settings.DbCategory` 不需互相引用，只透過字串值對應
-- **NoCode / LowCode 友善**：定義檔可由非工程師編輯，字串值直觀
+- **enum**: hardcoded in the framework, which defeats the goal of "categories are controlled by settings"; projects
+  could not extend it
+- **Strongly typed reference** (such as `[XmlReference]`): System.Xml.Serialization does not support resolving
+  references across files, and a hand-written resolver is highly complex
 
-## 結果
+The advantages of a string mapping:
+- **Native XML serialization support**: written directly with `[XmlAttribute]`, no custom parsing needed
+- **Cross-layer decoupling**: `Polhem.Definition.Settings.DatabaseItem` and `Polhem.Definition.Settings.DbCategory`
+  do not need to reference each other; they map only through the string value
+- **NoCode / LowCode friendly**: definition files can be edited by non-engineers, and string values are intuitive
 
-### 對應關係定型
+## Outcome
+
+### The mapping, settled
 
 ```text
 DatabaseItem.CategoryId  ──►  DbCategory.Id  (in DbCategorySettings)
-                                 └─ Tables  (該分類包含的表清單)
+                                 └─ Tables  (the list of tables in the category)
 
-DatabaseItem.Id          ──►  業務程式取連線的入口（執行時不經 CategoryId）
+DatabaseItem.Id          ──►  The entry point through which business code gets connections (not through CategoryId at runtime)
 ```
 
-### 三階段角色對照
+### Roles across the three stages
 
-| 階段 | 主體 | 用途 |
-|------|------|------|
-| Schema 設計 | `FormSchema.CategoryId`（附帶用途） | 推導 TableSchema 時，標示應落於 `TableSchema/{cid}/` 哪個分類目錄 |
-| 部署 / 建表 | `DatabaseItem.CategoryId` | 對每筆 DatabaseItem 推導應建立的表清單（從 `DbCategory.Tables` 查 → 從 `TableSchema/{cid}/` 取結構 → 在該 DatabaseItem 連線指向的實體 DB 上 DDL） |
-| **執行時** | **不使用** | 透過 `DatabaseItem.Id` 直接取連線，與 CategoryId、DbCategorySettings 完全無關 |
+| Stage | Subject | Purpose |
+|-------|---------|---------|
+| Schema design | `FormSchema.CategoryId` (secondary use) | When deriving a TableSchema, indicates which category folder under `TableSchema/{cid}/` it belongs in |
+| Deployment / table creation | `DatabaseItem.CategoryId` | For each DatabaseItem, derives the list of tables to create (look up `DbCategory.Tables` → take the structure from `TableSchema/{cid}/` → run DDL on the physical DB that the DatabaseItem's connection points to) |
+| **Runtime** | **Not used** | Connections are obtained directly by `DatabaseItem.Id`, entirely unrelated to CategoryId and DbCategorySettings |
 
-### 部署彈性實例
+### Examples of deployment flexibility
 
-假設邏輯分類為 `common` / `company` / `log`，N 為租戶（公司）數，Y 為 log 封存年份數：
+Suppose the logical categories are `common` / `company` / `log`, N is the number of tenants (companies), and Y is the
+number of archived log years:
 
-| 模式 | DatabaseItem 數量 | 連線配置 | 實體 DB 數量 |
-|------|------------------|---------|-------------|
-| 合併部署 | 3（每分類 1 筆） | 三筆 DbName / Server 相同 | 1 個（含全部表） |
-| 分散部署 | 3（每分類 1 筆） | 三筆各自獨立 DbName | 3 個 |
-| 多租戶部署 | 2 + N（common 1 + company N + log 1） | `company` 分類 N 筆，各對應 `company001`、`company002`... | 2 + N 個 |
-| log 按年封存 | 2 + Y（common 1 + company 1 + log Y） | `log` 分類 Y 筆，各對應 `log_2024`、`log_2025`... | 2 + Y 個 |
-| 多租戶 + log 封存 | 1 + N + Y | 兩個維度疊加 | 1 + N + Y 個 |
+| Mode | Number of DatabaseItems | Connection configuration | Number of physical DBs |
+|------|-------------------------|--------------------------|------------------------|
+| Consolidated deployment | 3 (1 per category) | The three share the same DbName / Server | 1 (containing all tables) |
+| Distributed deployment | 3 (1 per category) | Each of the three has its own DbName | 3 |
+| Multi-tenant deployment | 2 + N (common 1 + company N + log 1) | N items in the `company` category, mapped to `company001`, `company002`... | 2 + N |
+| Log archived by year | 2 + Y (common 1 + company 1 + log Y) | Y items in the `log` category, mapped to `log_2024`, `log_2025`... | 2 + Y |
+| Multi-tenant + log archiving | 1 + N + Y | The two dimensions stacked | 1 + N + Y |
 
-業務程式無感於部署形態，差異只在「業務層怎麼決定要傳哪個 `databaseId`」：
+Business code is unaware of the deployment shape; the only difference is "how the business layer decides which
+`databaseId` to pass":
 
-- **合併 / 分散**：固定對照（分類 → DatabaseId），可寫成常數
-- **多租戶**：依當前租戶 ID 推導（如 `$"company{tenantId:D3}"`）
-- **log 按年封存**：依當前年份（寫入用 `$"log_{DateTime.UtcNow.Year}"`）或查詢年份範圍（跨多筆 DatabaseItem 聚合）推導
+- **Consolidated / distributed**: a fixed mapping (category → DatabaseId) that can be written as constants
+- **Multi-tenant**: derived from the current tenant ID (such as `$"company{tenantId:D3}"`)
+- **Log archived by year**: derived from the current year (for writes, `$"log_{DateTime.UtcNow.Year}"`) or from the
+  queried year range (aggregating across several DatabaseItems)
 
-**上述為典型基本模式，實際可任意組合**。例如多租戶下為避免 log 集中造成效能瓶頸，可讓「每租戶的 company 與 log 共用同一實體 DB」（`company001` + `log_company001` 兩筆 DatabaseItem 的 DbName 都指向 `company001` 實體 DB）。**邏輯分類與實體部署是兩個獨立維度**，框架不限制組合方式，由部署設計者依資料量、查詢模式、維運成本決定切分策略。
+**These are the typical basic patterns; in practice they can be combined freely.** For example, in a multi-tenant
+setup, to keep logs from concentrating into a performance bottleneck, "each tenant's company and log can share the
+same physical DB" (the DbNames of the two DatabaseItems `company001` + `log_company001` both point to the `company001`
+physical DB). **Logical categories and physical deployment are two independent dimensions**; the framework does not
+restrict how they are combined, and the deployment designer decides the split strategy according to data volume,
+query patterns and operating cost.
 
-### TableSchema 目錄分層
+### TableSchema folder layout
 
-落檔結構：
+File layout:
 ```text
 <DefinePath>/TableSchema/
               ├── common/
@@ -139,54 +188,73 @@ DatabaseItem.Id          ──►  業務程式取連線的入口（執行時�
               └── log/
 ```
 
-部署腳本可依目錄分批處理（如僅同步 `company` 分類的 schema）。
+Deployment scripts can process the folders in batches (for example, sync only the schemas of the `company` category).
 
-### 對外 API 變更
+### External API changes
 
-- 新增 `DatabaseItem.CategoryId`（commit [`f4cc1bd7`](https://github.com/jeff377/bee-library/commit/f4cc1bd7)），預設值 `""`
-- 既有 `DatabaseSettings.xml` 不需強制遷移；但若希望未來啟用驗證（見「取捨」），現有 Item 都應補上 CategoryId
+- Added `DatabaseItem.CategoryId` (commit [`f4cc1bd7`](https://github.com/jeff377/bee-library/commit/f4cc1bd7)),
+  default value `""`
+- Existing `DatabaseSettings.xml` files do not have to be migrated; but to enable validation in the future (see
+  "Trade-offs"), every existing Item should get a CategoryId
 
-## 取捨
+## Trade-offs
 
-### 失去編譯期關聯檢查
+### Compile-time relationship checks are lost
 
-字串對應無法在編譯期偵測 typo（如 `commen` 而非 `common`）。目前的補救：
+A string mapping cannot detect typos at compile time (such as `commen` instead of `common`). The current mitigation:
 
-- `CacheDefineAccess.SaveFormSchema` 檢查 `FormSchema.CategoryId` **非空**（透過 `TableSchemaGenerator.GetCategoryId`）
-- **但目前不檢查 CategoryId 是否實際存在於 `DbCategorySettings`**
+- `CacheDefineAccess.SaveFormSchema` checks that `FormSchema.CategoryId` is **not empty** (through
+  `TableSchemaGenerator.GetCategoryId`)
+- **But it does not currently check whether the CategoryId actually exists in `DbCategorySettings`**
 
-存在性驗證為已知 trade-off，未來可加入 `DbCategoryValidator` 在落檔前統一驗證，避免錯誤分類 Id 寫入定義檔，導致部署 / 建表階段找不到對應分類。
+Existence validation is a known trade-off. A `DbCategoryValidator` could be added in the future to validate everything
+before files are written, so that a wrong category Id is not written into a definition file and the deployment /
+table creation stage does not end up unable to find the matching category.
 
-### 執行時連線選定由業務層處理
+### Selecting the connection at runtime is left to the business layer
 
-承「為何允許多對一」的代價：當同一分類有多筆 DatabaseItem 時（多租戶、時間封存等情境），「業務操作該用哪筆 DatabaseItem」必須由業務層依當前情境決定。本 ADR 不規範這個選擇邏輯，但以下幾點是設計時應當意識到的：
+This is the cost of "why many-to-one is allowed": when one category has several DatabaseItems
+(multi-tenant, archive by period and similar situations), "which DatabaseItem a business operation should use" has to
+be decided by the business layer according to the current context. This ADR does not prescribe that selection logic,
+but the following points should be kept in mind in design:
 
-- 業務程式碼在跨分類存取時（如同時讀 common 的使用者與 company 的員工）需要持有當前情境的 context（租戶 ID、操作時間等）
-- 框架不提供 context → databaseId 的對照管理機制，由業務層自行維護
-- 跨多筆 DatabaseItem 聚合（如 log 跨多年查詢）需業務層協調多次連線取資料後合併
-- DbCategorySettings 完全與切分維度無關，新增租戶或新年度封存不需改動分類定義
+- When business code accesses several categories (for example, reading users from common and employees from company
+  at the same time), it needs to hold the context of the current situation (tenant ID, operation time and so on)
+- The framework provides no mechanism to manage the context → databaseId mapping; the business layer maintains it
+  itself
+- Aggregating across several DatabaseItems (such as querying logs across several years) requires the business layer
+  to coordinate several connections, fetch the data and merge it
+- DbCategorySettings is completely independent of the split dimensions; adding a tenant or archiving a new year needs
+  no change to the category definitions
 
-### `DbCategory.Tables` 子節點為文件性索引
+### The `DbCategory.Tables` child nodes are a documentary index
 
-`DbCategorySettings.xml` 中每個 `DbCategory` 帶有 `Tables` 子節點，目前作為「該分類下登錄的表清單」之文件性索引，與 `TableSchema/{cid}/` 下實際檔案、FormSchema 的 FormTable 沒有自動同步機制。若需嚴格一致需另立規範。
+Each `DbCategory` in `DbCategorySettings.xml` has a `Tables` child node, which currently serves as a documentary index
+of "the tables registered under this category". It has no automatic synchronization with the actual files under
+`TableSchema/{cid}/` or with the FormTables of FormSchema. Strict consistency would need a separate rule.
 
-## 影響範圍
+## Scope of impact
 
-| 範圍 | 影響 |
-|------|------|
-| `Polhem.Definition.Settings.DbCategorySettings` | 集中定義所有邏輯分類；`DbCategorySettings.xml` 為單一真相來源 |
-| `Polhem.Definition.Settings.DatabaseItem` | 新增 `CategoryId` 欄位（commit [`f4cc1bd7`](https://github.com/jeff377/bee-library/commit/f4cc1bd7)） |
-| `Polhem.Definition.Forms.FormSchema` | 附帶須宣告 `CategoryId`，否則 SaveFormSchema 拒絕 |
-| `Polhem.Definition.PathOptions.GetTableSchemaFilePath` | 路徑加入 `categoryId` 區段 |
-| `Polhem.ObjectCaching.CacheDefineAccess.SaveFormSchema` | 落檔前檢查 CategoryId 非空 |
+| Scope | Impact |
+|-------|--------|
+| `Polhem.Definition.Settings.DbCategorySettings` | Defines all logical categories centrally; `DbCategorySettings.xml` is the single source of truth |
+| `Polhem.Definition.Settings.DatabaseItem` | New `CategoryId` field (commit [`f4cc1bd7`](https://github.com/jeff377/bee-library/commit/f4cc1bd7)) |
+| `Polhem.Definition.Forms.FormSchema` | As a side effect must declare `CategoryId`, otherwise SaveFormSchema rejects it |
+| `Polhem.Definition.PathOptions.GetTableSchemaFilePath` | The path gains a `categoryId` segment |
+| `Polhem.ObjectCaching.CacheDefineAccess.SaveFormSchema` | Checks that CategoryId is not empty before writing the file |
 
-## 後續延伸：執行時路由（DbScope + IRepositoryDatabaseRouter，2026-05-15）
+## Later extension: runtime routing (DbScope + IRepositoryDatabaseRouter, 2026-05-15)
 
-本 ADR 原本明言「執行時取連線只用 `DatabaseItem.Id`，不經過 CategoryId」——但留下了「業務層怎麼從當前情境決定 `databaseId`」這個未規範的空白。`DbScope` + `IRepositoryDatabaseRouter` 補上這層，配合 [ADR-012](adr-012-session-company-context.md) 的 session 公司情境模型成形：
+This ADR originally stated explicitly that "at runtime, connections are obtained only by `DatabaseItem.Id`, never
+through CategoryId", but it left unprescribed "how the business layer decides the `databaseId` from the current
+context". `DbScope` + `IRepositoryDatabaseRouter` fill in this layer, taking shape together with the session company
+context model of [ADR-012](adr-012-session-company-context.md):
 
-### `DbScope` enum：bo repo 的執行時存取意圖
+### The `DbScope` enum: a bo repo's runtime access intent
 
-`schema.CategoryId` 是 schema 屬性（XML 配置），`DbScope` 是執行時意圖（程式碼決策）——兩者**概念上完全脫勾**，雖然目前值對應一致。`DbScope` 提供型別安全的 enum 取代 magic string：
+`schema.CategoryId` is a schema attribute (XML configuration), while `DbScope` is a runtime intent (a decision in
+code). The two are **conceptually completely decoupled**, even though their values currently correspond one to one.
+`DbScope` provides a type-safe enum in place of magic strings:
 
 ```csharp
 namespace Polhem.Definition;
@@ -194,21 +262,27 @@ namespace Polhem.Definition;
 public enum DbScope { Common, Company, Log }
 ```
 
-### `IRepositoryDatabaseRouter`：解析的單一來源
+### `IRepositoryDatabaseRouter`: the single source of resolution
 
-`DbScope` → `databaseId` 的映射由 `IRepositoryDatabaseRouter.Resolve(scope, accessToken)` 統一執行：
+The mapping from `DbScope` → `databaseId` is performed in one place by
+`IRepositoryDatabaseRouter.Resolve(scope, accessToken)`:
 
-| `DbScope` | 解析路徑 |
-|-----------|---------|
-| `Common` | 固定 `"common"`，不需 accessToken |
-| `Log` | 固定 `"log"`，不需 accessToken（讓 `Login` / `Logout` 等 pre-EnterCompany 方法也能寫 audit log） |
+| `DbScope` | Resolution path |
+|-----------|-----------------|
+| `Common` | Always `"common"`, no accessToken needed |
+| `Log` | Always `"log"`, no accessToken needed (so that pre-EnterCompany methods such as `Login` / `Logout` can also write the audit log) |
 | `Company` | accessToken → `SessionInfo.CompanyId` → `CompanyInfo.CompanyDatabaseId` |
 
-多公司情境下，多家公司可共享同一 `CompanyDatabaseId` 字串（譬如多家中小公司共用 `"biz_shared_01"` 實體 DB），靠表上 `sys_company_rowid` 欄位做列級分區。Router 對「同 databaseId 多公司」與「獨立 databaseId」兩種設定都一視同仁——CompanyInfo 設定彈性決定，路由邏輯本身不變。
+In a multi-company setup, several companies can share the same `CompanyDatabaseId` string (for example, several small
+companies sharing the `"biz_shared_01"` physical DB), with row-level partitioning through the `sys_company_rowid`
+column on the tables. The router treats the "several companies on one databaseId" and "separate databaseId" setups
+exactly the same: the flexibility is decided by the CompanyInfo settings, and the routing logic itself does not
+change.
 
-### 與 FormSchema 的銜接
+### Connecting to FormSchema
 
-`IRepositoryFactory.CreateFormRepository<T>(accessToken, progId)` 建出的 repository 於建構期把 `schema.CategoryId` 轉成 `DbScope`，再呼叫 router 解析出實際 databaseId：
+A repository created by `IRepositoryFactory.CreateFormRepository<T>(accessToken, progId)` converts `schema.CategoryId`
+into a `DbScope` at construction time, then calls the router to resolve the actual databaseId:
 
 ```text
 schema.CategoryId (string)
@@ -218,22 +292,34 @@ DbScope (enum)
 databaseId (string, DatabaseItem.Id)
 ```
 
-BO 端不需要操心這層——`BusinessObject` 加 `ResolveDatabaseId(DbScope)` 與 `CreateDataFormRepository(progId)` 兩個 protected helper，自動帶入當前 `AccessToken`。
+The BO side does not need to worry about this layer: `BusinessObject` adds two protected helpers,
+`ResolveDatabaseId(DbScope)` and `CreateDataFormRepository(progId)`, which pass in the current `AccessToken`
+automatically.
 
-### 多 `DatabaseItem` per category 的執行時選定
+### Runtime selection among several `DatabaseItem`s per category
 
-本 ADR 原本指出「同一分類多載體時，業務操作該用哪筆 DatabaseItem 由業務層決定」。在 session 模型確立後（[ADR-012](adr-012-session-company-context.md)），這個選定邏輯具體化為：
+This ADR originally pointed out that "when one category has several carriers, the business layer decides which
+DatabaseItem a business operation should use". Once the session model was settled
+([ADR-012](adr-012-session-company-context.md)), this selection logic took concrete form:
 
-- **`company` 分類多載體（多公司獨立 DB）**：由 `EnterCompany` 寫入 `SessionInfo.CompanyId`，後續 router 從 `CompanyInfo.CompanyDatabaseId` 取對應 DatabaseItem
-- **`log` 分類多載體（如年份封存 `log_2024` / `log_2025`）**：本 ADR 範圍只 cover 「current active log」（固定 `"log"`）；查詢封存資料屬另一個議題，由自訂 bo repo 顯式傳入封存年份對應的 databaseId
-- **`common` 分類**：永遠單一 databaseId（`"common"`），無多載體場景
+- **Several carriers for the `company` category (a separate DB per company)**: `EnterCompany` writes
+  `SessionInfo.CompanyId`, and the router then takes the matching DatabaseItem from `CompanyInfo.CompanyDatabaseId`
+- **Several carriers for the `log` category (such as archives by year, `log_2024` / `log_2025`)**: this ADR only
+  covers the "current active log" (always `"log"`); querying archived data is a separate topic, handled by a custom
+  bo repo that explicitly passes the databaseId of the archive year
+- **The `common` category**: always a single databaseId (`"common"`); there is no several-carrier scenario
 
-### `CompanyInfo.LogDatabaseId` 移除
+### `CompanyInfo.LogDatabaseId` removed
 
-P1 落地 `CompanyInfo` 時原本含 `LogDatabaseId` 欄位，預期某些公司想用獨立 log DB。但後續決定 `DbScope.Log` 固定 `"log"` 以支援 pre-EnterCompany 寫 log，`LogDatabaseId` 變 dead field 並移除。多公司 log 隔離由列級 `sys_company_rowid` 處理（與 company DB 一致），不需實體 DB 隔離。
+When `CompanyInfo` landed in P1, it originally had a `LogDatabaseId` field, in anticipation of some companies wanting
+a separate log DB. But it was later decided that `DbScope.Log` is always `"log"`, to support writing logs before
+EnterCompany, so `LogDatabaseId` became a dead field and was removed. Log isolation between companies is handled at
+row level by `sys_company_rowid` (the same as the company DB), with no need for physical DB isolation.
 
-## 相關文件
+## Related documents
 
-- [ADR-005：FormSchema 定義驅動架構](adr-005-formschema-driven.md)
-- [ADR-012：Session 公司情境模型](adr-012-session-company-context.md) — `DbScope.Company` 路由依賴的 session 模型
-- [DatabaseSettings 與 DbCategorySettings 指引](../zh-TW/database-settings-guide.md) — 結構與運作細節
+- [ADR-005: FormSchema definition-driven architecture](adr-005-formschema-driven.md)
+- [ADR-012: Session company context model](adr-012-session-company-context.md) — the session model that
+  `DbScope.Company` routing depends on
+- [DatabaseSettings & DbCategorySettings Guide](../en/database-settings-guide.md) — structure and operational
+  details

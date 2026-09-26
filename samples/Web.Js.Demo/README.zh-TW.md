@@ -4,7 +4,7 @@
 
 示範如何用純 JavaScript（瀏覽器原生）呼叫 Polhem 的 JSON-RPC API ——
 不需要 `npm`、不需要 build、不需要任何框架。JS 前端走
-`PayloadFormat.Plain`（見 [ADR-014](../../docs/adr/adr-014-jsonrpc-plain-public-default.md)），
+`PayloadFormat.Plain`（見 [ADR-014](../../docs/adr/adr-014-jsonrpc-plain-public-default.zh-TW.md)），
 所有請求都是純 JSON。
 
 涵蓋降為 `Public` 供 JS 存取的 7 個方法，加上用 JSON-native FormSchema /

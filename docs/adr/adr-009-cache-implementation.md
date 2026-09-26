@@ -1,136 +1,188 @@
-# ADR-009：Polhem.ObjectCaching 採用 Microsoft.Extensions.Caching.Memory + IChangeToken
+# ADR-009: Polhem.ObjectCaching adopts Microsoft.Extensions.Caching.Memory + IChangeToken
 
-## 狀態
+[繁體中文](adr-009-cache-implementation.zh-TW.md)
 
-已採納（2026-04-28）
+## Status
 
-## 背景
+Accepted (2026-04-28)
 
-`Polhem.ObjectCaching` 原本以 `System.Runtime.Caching.MemoryCache`（NuGet 套件 `System.Runtime.Caching`）為底層儲存：
+## Context
 
-1. Microsoft 官方文件已明示 `System.Runtime.Caching` 不建議用於新專案，新專案應改用 `Microsoft.Extensions.Caching.Memory`。
-2. `MemoryCache.Default` 在 Linux 上因效能計數器初始化等因素偶發 `NotImplementedException`，導致本專案 CI 多次出現 `CacheInfo.Provider` static initialization race（下游連鎖：`SystemBusinessObject` 整批 NRE，rerun 即綠的典型 flaky 模式）。
-3. `CacheItemPolicy` 物件偏重，寫入路徑包含效能計數器開銷、過期掃描頻率高。
-4. `ChangeMonitor` 體系老舊，與現代 .NET DI / `IChangeToken` 體系不相容。
+`Polhem.ObjectCaching` originally used `System.Runtime.Caching.MemoryCache` (NuGet package `System.Runtime.Caching`)
+as its underlying storage:
 
-Polhem 為純 .NET 10 新框架、未發佈、無相容包袱，適合一次完整遷移到現代套件，徹底拋掉 `System.Runtime.Caching`。
+1. Microsoft's official documentation states explicitly that `System.Runtime.Caching` is not recommended for new
+   projects, which should use `Microsoft.Extensions.Caching.Memory` instead.
+2. On Linux, `MemoryCache.Default` occasionally throws `NotImplementedException` because of factors such as
+   performance counter initialization. This caused a `CacheInfo.Provider` static initialization race in this
+   project's CI several times (with a downstream chain reaction: `SystemBusinessObject` failing wholesale with NREs,
+   the typical flaky pattern that goes green on a rerun).
+3. The `CacheItemPolicy` object is heavy: the write path carries performance counter overhead, and expiration scans
+   run frequently.
+4. The `ChangeMonitor` system is old and incompatible with modern .NET DI and the `IChangeToken` system.
 
-## 決策
+Polhem is a new, pure .NET 10 framework, unreleased and with no compatibility baggage, so it is well placed to migrate
+fully to modern packages in one go and drop `System.Runtime.Caching` completely.
 
-採「**完全拋棄 `System.Runtime.Caching`，內部全面改用 `Microsoft.Extensions.Caching.Memory` + `IChangeToken`；對外公開 API（`CacheItemPolicy`、`ICacheProvider`）保留為 Polhem 自家抽象，內部實作 mapping 到新底層**」設計原則。
+## Decision
 
-### 三項核心要點
+Adopt the design principle "**drop `System.Runtime.Caching` entirely and switch the internals completely to
+`Microsoft.Extensions.Caching.Memory` + `IChangeToken`; keep the public API (`CacheItemPolicy`, `ICacheProvider`) as
+Polhem's own abstractions, with the internal implementation mapped onto the new underlying layer**".
 
-1. **公開層保留 Polhem 自家抽象**
+### Three key points
 
-   - `CacheItemPolicy`：保留為 Polhem 自家定義，暴露 `AbsoluteExpiration` / `SlidingExpiration` / `ChangeMonitorFilePaths` 三個欄位（ADR-017 的 DB 快取失效後增設 `ChangeNotifyKey`，現為四個）
-   - `ICacheProvider`：保留作為儲存抽象，未來仍可換成 Redis、`IDistributedCache` 等實作
-   - 不直接暴露 `Microsoft.Extensions.Caching.Memory.MemoryCacheEntryOptions` 或 `IMemoryCache` 給呼叫端
+1. **The public layer keeps Polhem's own abstractions**
 
-2. **內部實作改寫為 `Microsoft.Extensions.Caching.Memory`**
+   - `CacheItemPolicy`: kept as Polhem's own definition, exposing three fields, `AbsoluteExpiration` /
+     `SlidingExpiration` / `ChangeMonitorFilePaths` (`ChangeNotifyKey` was added later with ADR-017's DB cache
+     invalidation, so there are now four)
+   - `ICacheProvider`: kept as the storage abstraction, so that it can still be swapped for implementations such as
+     Redis or `IDistributedCache` in the future
+   - `Microsoft.Extensions.Caching.Memory.MemoryCacheEntryOptions` and `IMemoryCache` are not exposed to callers
+     directly
 
-   - `MemoryCacheProvider` 內部持有 `Microsoft.Extensions.Caching.Memory.MemoryCache`（不再使用 `MemoryCache.Default`，亦不依賴 `System.Runtime.Caching`）
-   - `Set` 內部將 `CacheItemPolicy` mapping 到 `MemoryCacheEntryOptions`：
-     - `AbsoluteExpiration` / `SlidingExpiration` 直接映射
-     - `ChangeMonitorFilePaths` 改用 `PhysicalFileProvider.Watch(name)` 取得 `IChangeToken`，加進 `MemoryCacheEntryOptions.AddExpirationToken(...)`
-   - `MemoryCacheProvider` 實作 `IDisposable`，負責釋放 `MemoryCache` 與所有為 `ChangeMonitorFilePaths` 建立的 `PhysicalFileProvider`
+2. **The internal implementation is rewritten on `Microsoft.Extensions.Caching.Memory`**
 
-3. **介面瘦身與 key 正規化現代化**
+   - `MemoryCacheProvider` holds a `Microsoft.Extensions.Caching.Memory.MemoryCache` internally (it no longer uses
+     `MemoryCache.Default` and does not depend on `System.Runtime.Caching`)
+   - `Set` maps `CacheItemPolicy` onto `MemoryCacheEntryOptions` internally:
+     - `AbsoluteExpiration` / `SlidingExpiration` map directly
+     - `ChangeMonitorFilePaths` now uses `PhysicalFileProvider.Watch(name)` to get an `IChangeToken`, which is added
+       through `MemoryCacheEntryOptions.AddExpirationToken(...)`
+   - `MemoryCacheProvider` implements `IDisposable` and releases the `MemoryCache` and every `PhysicalFileProvider`
+     created for `ChangeMonitorFilePaths`
 
-   - `ICacheProvider` 移除無生產 caller 的方法：`Trim(int percent)` 與 `GetAllKeys()`
-   - `Remove` 從 `object Remove(string key)` 改為 `void Remove(string key)`（生產零 caller 使用回傳值；新底層也是 void）
-   - `Get` 標註為 `object? Get(string key)`，明確表達 cache miss 時回傳 null
-   - `MemoryCacheProvider.GetCacheKey` 改用 `key.ToLowerInvariant()`：
-     - 從 culture-dependent 的 `ToUpper` 改為 culture-invariant，避開 Turkish-I、German ß 等 locale-specific 行為
-     - 與現代 .NET / HTTP / REST 慣例（lowercase）對齊
-   - `CacheItemPolicy.ChangeMonitorDbKeys` 屬性移除（搭配的 `DbChangeMonitor` 在 [`8099d03`](https://github.com/jeff377/bee-library/commit/8099d03) 已移除，原本就只有測試用，無實際 monitor 接收）
+3. **Slimmer interface and modernized key normalization**
 
-## 結果
+   - `ICacheProvider` drops the methods with no production caller: `Trim(int percent)` and `GetAllKeys()`
+   - `Remove` changes from `object Remove(string key)` to `void Remove(string key)` (zero production callers use the
+     return value; the new underlying layer is void as well)
+   - `Get` is annotated as `object? Get(string key)`, stating explicitly that a cache miss returns null
+   - `MemoryCacheProvider.GetCacheKey` now uses `key.ToLowerInvariant()`:
+     - From the culture-dependent `ToUpper` to a culture-invariant form, avoiding locale-specific behavior such as the
+       Turkish I and the German ß
+     - Aligned with the modern .NET / HTTP / REST convention (lowercase)
+   - The `CacheItemPolicy.ChangeMonitorDbKeys` property is removed (its companion `DbChangeMonitor` was already
+     removed in [`8099d03`](https://github.com/jeff377/bee-library/commit/8099d03); it was only ever used by tests, and
+     no real monitor received it)
 
-### 採納後的依賴關係
+## Outcome
 
-| 套件 | 動作 |
-|------|------|
-| `System.Runtime.Caching` | **移除** |
-| `Microsoft.Extensions.Caching.Memory` | **新增**（10.x） |
-| `Microsoft.Extensions.FileProviders.Physical` | **新增**（10.x，提供 `PhysicalFileProvider`） |
+### Dependencies after adoption
 
-`Microsoft.Extensions.Primitives`（含 `IChangeToken`）為其他兩者的 transitive dependency，不需顯式加。
+| Package | Action |
+|---------|--------|
+| `System.Runtime.Caching` | **Removed** |
+| `Microsoft.Extensions.Caching.Memory` | **Added** (10.x) |
+| `Microsoft.Extensions.FileProviders.Physical` | **Added** (10.x, provides `PhysicalFileProvider`) |
 
-### 對外 API 變更
+`Microsoft.Extensions.Primitives` (which contains `IChangeToken`) is a transitive dependency of the other two and does
+not need to be added explicitly.
 
-| 對象 | 變更 |
-|------|------|
-| `ICacheProvider.Trim` | 移除 |
-| `ICacheProvider.GetAllKeys` | 移除 |
-| `ICacheProvider.Remove` | 回傳改為 `void` |
-| `ICacheProvider.Get` | 改為 `object? Get(string key)` |
-| `CacheItemPolicy.ChangeMonitorDbKeys` | 移除 |
-| `MemoryCacheProvider` | 維持公開類別；新增 `IDisposable` 實作 |
-| `CacheFunc.CreateCachePolicy` | 移除（internal method） |
-| `CacheItemPolicy.AbsoluteExpiration` / `SlidingExpiration` / `ChangeMonitorFilePaths` | 不變 |
-| `CacheInfo.Provider` 等其他類別 | 不變 |
+### External API changes
 
-不另升版號（沿用 `4.0.x`），release notes 列出對應表即可。
+| Target | Change |
+|--------|--------|
+| `ICacheProvider.Trim` | Removed |
+| `ICacheProvider.GetAllKeys` | Removed |
+| `ICacheProvider.Remove` | Return type changed to `void` |
+| `ICacheProvider.Get` | Changed to `object? Get(string key)` |
+| `CacheItemPolicy.ChangeMonitorDbKeys` | Removed |
+| `MemoryCacheProvider` | Stays a public class; now implements `IDisposable` |
+| `CacheFunc.CreateCachePolicy` | Removed (internal method) |
+| `CacheItemPolicy.AbsoluteExpiration` / `SlidingExpiration` / `ChangeMonitorFilePaths` | Unchanged |
+| `CacheInfo.Provider` and other classes | Unchanged |
 
-### 預設組態
+No separate version bump (stays on `4.0.x`); listing the mapping table in the release notes is enough.
 
-- `new MemoryCache(new MemoryCacheOptions())`：所有選項採預設
-  - `SizeLimit` 不設（無上限）— Polhem 的快取對象（SystemSettings、FormSchemas 等）數量在 dozens 級，不需要 size-based eviction
-  - `ExpirationScanFrequency` 採預設 1 分鐘 — 對非 high-throughput 場景足夠
-- `PhysicalFileProvider` 不預先共用：每個 cache entry 為其每個監控檔案各自 `new PhysicalFileProvider(directory)`
-  - OS file handle 成本低、entry 數量在 dozens 級；共用機制要寫 `static Dictionary<directory, PhysicalFileProvider>` + 生命週期管理 + 引用計數，引入額外複雜度與資源洩漏風險
-  - 真遇到 handle 耗盡或數量爆炸再做（單獨 commit 可後續加）
-- `MemoryCacheProvider` 不加 `Reset()` / `Clear()` API（YAGNI；目前無 caller 需求）
+### Default configuration
 
-## 替代方案（已評估後不採納）
+- `new MemoryCache(new MemoryCacheOptions())`: all options at their defaults
+  - `SizeLimit` is not set (no limit): the number of objects Polhem caches (SystemSettings, FormSchemas and so on) is
+    in the dozens, so size-based eviction is not needed
+  - `ExpirationScanFrequency` keeps the default of 1 minute, which is enough outside high-throughput scenarios
+- `PhysicalFileProvider` is not shared up front: each cache entry creates its own
+  `new PhysicalFileProvider(directory)` for each file it watches
+  - OS file handles are cheap and there are dozens of entries; a sharing mechanism would need a
+    `static Dictionary<directory, PhysicalFileProvider>` + lifetime management + reference counting, adding
+    complexity and a risk of resource leaks
+  - Do it only if handle exhaustion or an explosion in numbers actually happens (it can be added later in a separate
+    commit)
+- `MemoryCacheProvider` gets no `Reset()` / `Clear()` API (YAGNI; no caller currently needs it)
 
-1. **保持 `System.Runtime.Caching` 並 work around CI flakiness**（如 `MemoryCache.Default` 改 `new MemoryCache(name)`）
-   - 拒絕原因：短期可行但長期仍背負過時套件包袱、與現代 .NET 體系脫節；既然新框架就一次到位
+## Alternatives considered (evaluated and rejected)
 
-2. **直接暴露 `Microsoft.Extensions.Caching.Memory.IMemoryCache`，移除 `ICacheProvider` 抽象**
-   - 拒絕原因：失去未來換 Redis、`IDistributedCache` 的擴充空間；保留抽象成本低收益高
+1. **Keep `System.Runtime.Caching` and work around the CI flakiness** (for example, change `MemoryCache.Default` to
+   `new MemoryCache(name)`)
+   - Reason for rejection: workable in the short term, but in the long term it still carries the baggage of an
+     outdated package and stays disconnected from the modern .NET ecosystem; since this is a new framework, do it
+     properly in one go
 
-3. **同時維護 `System.Runtime.Caching` 與 `Microsoft.Extensions.Caching.Memory` 兩種 provider**
-   - 拒絕原因：引入 dual-stack 維護負擔；違反 Polhem 純 .NET 10 的設計取向
+2. **Expose `Microsoft.Extensions.Caching.Memory.IMemoryCache` directly and remove the `ICacheProvider` abstraction**
+   - Reason for rejection: loses room to switch to Redis or `IDistributedCache` in the future; keeping the abstraction
+     costs little and gains a lot
 
-4. **直接導入 DI（`IServiceCollection.AddMemoryCache()`）**
-   - 拒絕原因：與 Polhem 既有 service-locator 模式（`CacheInfo.Provider`）不一致；屬另一個重構議題
+3. **Maintain both a `System.Runtime.Caching` provider and a `Microsoft.Extensions.Caching.Memory` provider**
+   - Reason for rejection: introduces the maintenance burden of a dual stack; goes against Polhem's pure .NET 10
+     design direction
 
-## 後續延伸：負向快取（2026-05-15）
+4. **Bring in DI directly (`IServiceCollection.AddMemoryCache()`)**
+   - Reason for rejection: inconsistent with Polhem's existing service-locator pattern (`CacheInfo.Provider`); it is a
+     separate refactoring topic
 
-`KeyObjectCache<T>.Get` 原本對「`CreateInstance` 回 null」的結果**不寫入**快取——下次同一個 key 再來會穿透到資料源（檔案 IO / DB 查詢）。攻擊者送無效 key、程式 bug 用錯誤 key、上層忘記前置檢查都會放大這個 cache penetration 問題。
+## Later extension: negative caching (2026-05-15)
 
-`KeyObjectCache` 引入負向快取：
+`KeyObjectCache<T>.Get` originally did **not write** a "`CreateInstance` returned null" result to the cache, so the
+next request for the same key went through to the data source (file IO / DB query). An attacker sending invalid
+keys, a program bug using a wrong key, or an upper layer forgetting a precondition check would all amplify this cache
+penetration problem.
 
-### 設計要點
+`KeyObjectCache` introduces negative caching:
 
-- **`MissMarker` 哨兵**：`KeyObjectCacheSentinel.MissMarker` 為單一 process-wide `object` 實例（非泛型 static 避免 [S2743]：每個 closed type 都建立獨立哨兵的浪費）。Cache miss 後若 `CreateInstance` 回 null，寫入此哨兵；`Get` 命中哨兵時直接回 null，不再呼叫 `CreateInstance`
-- **`GetNegativePolicy(key)` virtual 方法**：預設 5 分鐘**絕對**過期（比正向快取 20 分鐘 sliding 短；絕對過期確保攻擊者反覆戳同 key 不會延長 TTL）。子類 override 回 null 即停用負向快取
-- **`Set` / `Remove` 行為不變**：同一個 cacheKey 寫入正向值或 `Remove` 自然覆蓋 / 清除哨兵，不需特別處理
+### Design points
 
-### `SessionInfoCache` 例外停用
+- **The `MissMarker` sentinel**: `KeyObjectCacheSentinel.MissMarker` is a single process-wide `object` instance (a
+  non-generic static, to avoid [S2743]: the waste of every closed type creating its own sentinel). When
+  `CreateInstance` returns null after a cache miss, this sentinel is written; when `Get` hits the sentinel it returns
+  null directly and does not call `CreateInstance` again
+- **The `GetNegativePolicy(key)` virtual method**: defaults to a 5-minute **absolute** expiration (shorter than the
+  positive cache's 20-minute sliding expiration; absolute expiration ensures that an attacker poking the same key
+  repeatedly does not extend the TTL). A subclass overrides it to return null to disable negative caching
+- **`Set` / `Remove` behavior unchanged**: writing a positive value to the same cacheKey, or `Remove`, naturally
+  overwrites / clears the sentinel, with no special handling needed
 
-`SessionInfoCache.CreateInstance` 永遠回 null（session 入 cache 只走 `Login` 的 `Set` 路徑、不從 backing store 重建）。若啟用負向快取，匿名流量會用任意 access token 灌出大量 marker entry 但無實際保護價值——session lookup 對未知 token 本來就 fast-return null。`SessionInfoCache` override `GetNegativePolicy` 回 null 停用。
+### `SessionInfoCache` is the exception and disables it
 
-其他 `KeyObjectCache<T>` 子類（`FormSchemaCache` / `TableSchemaCache` / `FormLayoutCache`）的 `CreateInstance` 會讀檔，反覆讀無效檔名是真實放大風險，**保留預設**負向快取。
+`SessionInfoCache.CreateInstance` always returns null (a session enters the cache only through the `Set` path of
+`Login` and is not rebuilt from a backing store). With negative caching enabled, anonymous traffic could flood the
+cache with marker entries using arbitrary access tokens, with no real protective value: a session lookup for an
+unknown token already returns null quickly. `SessionInfoCache` overrides `GetNegativePolicy` to return null and
+disable it.
 
-### 對外 API 變更
+The other `KeyObjectCache<T>` subclasses (`FormSchemaCache` / `TableSchemaCache` / `FormLayoutCache`) read files in
+`CreateInstance`, and repeatedly reading invalid file names is a real amplification risk, so they **keep the default**
+negative caching.
 
-| 對象 | 變更 |
-|------|------|
-| `KeyObjectCache<T>.GetNegativePolicy(string key)` | **新增** virtual method，預設回 5 分鐘 absolute TTL；回 null 停用負向快取 |
-| `KeyObjectCacheSentinel`（internal） | **新增** static class 持有單一 `MissMarker` 實例 |
-| `KeyObjectCache<T>.Get(string key)` | 行為變更：cache miss + `CreateInstance` 回 null 時，依 `GetNegativePolicy` 決定是否寫入哨兵；命中哨兵直接回 null |
-| `Set` / `Remove` | 行為不變 |
+### External API changes
 
-### 已知影響
+| Target | Change |
+|--------|--------|
+| `KeyObjectCache<T>.GetNegativePolicy(string key)` | **New** virtual method, returns a 5-minute absolute TTL by default; returning null disables negative caching |
+| `KeyObjectCacheSentinel` (internal) | **New** static class holding the single `MissMarker` instance |
+| `KeyObjectCache<T>.Get(string key)` | Behavior change: on a cache miss + `CreateInstance` returning null, `GetNegativePolicy` decides whether the sentinel is written; a sentinel hit returns null directly |
+| `Set` / `Remove` | Behavior unchanged |
 
-- 第二次查詢已知不存在的 key 不再觸發 `CreateInstance`，預設 5 分鐘內穩定回 null
-- 既有測試若依賴「`CreateInstance` 每次都被呼叫」的副作用會 fail；本次落地時順帶修正 `KeyObjectCacheTests` 的相關預期
+### Known effects
 
-## 相關文件
+- A second lookup of a key known not to exist no longer triggers `CreateInstance`, and by default returns null
+  consistently for 5 minutes
+- Existing tests that rely on the side effect of "`CreateInstance` is called every time" will fail; when this landed,
+  the related expectations in `KeyObjectCacheTests` were fixed along the way
 
-- 機制總覽：[快取機制](../zh-TW/caching.md)（讀取路徑、失效信號、快取清單）
-- 套件 README：[`src/Polhem.ObjectCaching/README.md`](../../src/Polhem.ObjectCaching/README.md)
-- 相關 commit：[`8099d03`](https://github.com/jeff377/bee-library/commit/8099d03)（移除 `DbChangeMonitor` placeholder）、[`715c159e`](https://github.com/jeff377/bee-library/commit/715c159e)（負向快取）
+## Related documents
+
+- Mechanism overview: [Caching](../en/caching.md) (read path, invalidation signals, list of caches)
+- Package README: [`src/Polhem.ObjectCaching/README.md`](../../src/Polhem.ObjectCaching/README.md)
+- Related commits: [`8099d03`](https://github.com/jeff377/bee-library/commit/8099d03) (removed the `DbChangeMonitor`
+  placeholder), [`715c159e`](https://github.com/jeff377/bee-library/commit/715c159e) (negative caching)

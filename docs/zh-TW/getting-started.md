@@ -193,7 +193,7 @@ progId 與型別的綁定寫在 `ProgramSettings.xml` —— 它是全框架的�
 Repository，兩個屬性彼此獨立。
 
 框架啟動時會自行補寫缺少的保留字 progId，所以這個檔案不存在時會被自動建立。
-詳見 [ADR-034](../adr/adr-034-progid-type-registry.md)。
+詳見 [ADR-034](../adr/adr-034-progid-type-registry.zh-TW.md)。
 
 → `Args` / `Result` 的命名規則與契約三層分離：[API ↔ BO 契約設計](api-bo-contract-design.md)。哪些方法該放介面：[開發限制與反模式](development-constraints.md)。
 

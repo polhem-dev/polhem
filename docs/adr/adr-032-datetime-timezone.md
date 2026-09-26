@@ -1,552 +1,674 @@
-# ADR-032：DateTime 以 UTC 為單一時區來源，Connector 為唯一轉換點
+# ADR-032: DateTime uses UTC as the single time zone source, and the Connector is the only conversion point
 
-## 狀態
+[繁體中文](adr-032-datetime-timezone.zh-TW.md)
 
-已採納（2026-07-25）
+## Status
 
-> P0–P3 已全數實作（2026-07-26）。消費端使用方式見 [datetime-timezone.md](../en/datetime-timezone.md)。
+Accepted (2026-07-25)
+
+> P0–P3 are fully implemented (2026-07-26). How consumers use it is described in
+> [datetime-timezone.md](../en/datetime-timezone.md).
 >
-> 唯一未執行的驗證：行動端 / WASM 的**實機**時區可用性。各 head 已釘住
-> `InvariantGlobalization=false` 與 `InvariantTimezone=false`，但那是設定護欄而非驗證——
-> 缺 tz 資料的失敗是裝置上的執行期例外，桌面建置與測試都攔不到。
+> The only verification not carried out: time zone availability on **real** mobile / WASM devices. Each head pins
+> `InvariantGlobalization=false` and `InvariantTimezone=false`, but that is a configuration guardrail, not
+> verification: a failure caused by missing tz data is a runtime exception on the device, which neither the desktop
+> build nor the tests can catch.
 >
-> **修訂**：D9 於 2026-09-04 撤回「刻意不 UTC 化」，改為與寫入端同源；D6 於 2026-09-12 補上
-> 「請求方向的 guard 在時區換算之前」，並把 DTO 屬性那條從不變式改標為撰寫紀律；D12 於 2026-09-12
-> 補上「『現在』的基準由 `DataSet` 所在的那一側決定」，更正原殘餘風險的敘述；D4 於 2026-09-12
-> 補上「DST 回撥重疊時段的儲存格由 Connector 記住原本的 UTC 值」。
+> **Revisions**: on 2026-09-04 D9 withdrew "deliberately not converted to UTC" and now shares its source with the
+> write side; on 2026-09-12 D6 added "the request-direction guard runs before the time zone conversion" and relabeled
+> the DTO property rule from an invariant to a writing discipline; on 2026-09-12 D12 added "the basis of 'now' is
+> decided by the side the `DataSet` is on", correcting the original description of the residual risk; on 2026-09-12
+> D4 added "for cells in the DST fall-back overlap, the Connector remembers the original UTC value".
 >
-> **2026-09-12 另一次較大的修訂**：請求方向不再轉換 `DataSet`，伺服端 `Save` 不採用用戶端送來的
-> `DateTime`（選項 5、D14）。D3 與 D4 開頭改為依方向與載體區分，同日稍早補上的重疊時段記憶隨之撤回；
-> D6、D12、D13 與「後果」的相關敘述一併修正。
+> **Another, larger revision on 2026-09-12**: the request direction no longer converts the `DataSet`, and the
+> server-side `Save` does not adopt the `DateTime` values sent by the client (option 5, D14). The openings of D3 and
+> D4 now distinguish by direction and carrier, and the overlap memory added earlier the same day was withdrawn with
+> it; the related text in D6, D12, D13 and "Consequences" was corrected at the same time.
 
-## 背景
+## Context
 
-框架要支援跨時區部署——資料庫時間以 UTC 儲存、使用者檢視時轉換為其時區——
-同時把單一時區部署要承擔的**複雜度**壓到最低（見 D10 對「零成本」的界定）。
+The framework has to support cross-time-zone deployments (database times stored as UTC, converted to the user's
+time zone for viewing), while keeping the **complexity** that a single-time-zone deployment has to bear to a minimum
+(see D10 for what "zero cost" means).
 
-### 現況並非「全鏈路本地時間」
+### The current state is not "local time end to end"
 
-盤點後發現框架同時存在三個時間基準：
+An inventory found three time bases in the framework at the same time:
 
-| 基準 | 位置 |
-|------|------|
-| **UTC** | `SessionRepository`、`AccessTokenValidator`、`AuditEntry.LogTimeUtc`、`LoginAttemptTracker`、`PingResult.ServerTime` |
-| **DB server clock** | cache-notify 的 `sys_update_time`（`getdate()` / `LOCALTIMESTAMP` 為 server local，但 SQLite `CURRENT_TIMESTAMP` 是 UTC）——此列為決策當時的盤點，現已統一為 UTC，見 D9 |
-| **Local** | 業務資料預設值、trace、定義檔 `CreateTime` |
+| Basis | Location |
+|-------|----------|
+| **UTC** | `SessionRepository`, `AccessTokenValidator`, `AuditEntry.LogTimeUtc`, `LoginAttemptTracker`, `PingResult.ServerTime` |
+| **DB server clock** | cache-notify's `sys_update_time` (`getdate()` / `LOCALTIMESTAMP` are server local, but SQLite `CURRENT_TIMESTAMP` is UTC). This row is the inventory at the time of the decision; it has since been unified to UTC, see D9 |
+| **Local** | Business data default values, trace, the `CreateTime` of definition files |
 
-兩個推論：既有資料若要遷移**必須逐欄判斷**（`st_session` 已是 UTC，一律轉會轉錯）；
-而「naive 欄位存 UTC」這個模式**已在五家 DB 上有生產驗證**（`st_session` 就是），不需重新論證。
+Two inferences: migrating existing data **must be judged column by column** (`st_session` is already UTC, and
+converting everything would convert it wrongly); and the pattern "store UTC in a naive column" **is already proven in
+production on five databases** (`st_session` is exactly that), so it does not need to be argued again.
 
-### 序列化實測是本決策的核心約束
+### Measured serialization behavior is the core constraint of this decision
 
-payload 由 `+08:00` 端產生、讀取端 `TZ=America/New_York`：
+The payload is produced on a `+08:00` side and read on a side with `TZ=America/New_York`:
 
-| wire 上的值 | JSON 讀回 | MessagePack 讀回 |
+| Value on the wire | Read back via JSON | Read back via MessagePack |
 |------------|----------|-----------------|
-| `2026-01-01T09:00:00`（Unspecified） | `09:00` Unspecified ✅ | `09:00` Unspecified ✅ |
-| `2026-01-01T09:00:00Z`（Utc） | `09:00Z` Utc ✅ | `09:00` **Unspecified**（Kind 被抹） |
-| `2026-01-01T09:00:00+08:00`（**Local**） | **`2025-12-31T20:00:00-05:00`** ❌ 跨日 | `09:00` Unspecified |
+| `2026-01-01T09:00:00` (Unspecified) | `09:00` Unspecified ✅ | `09:00` Unspecified ✅ |
+| `2026-01-01T09:00:00Z` (Utc) | `09:00Z` Utc ✅ | `09:00` **Unspecified** (Kind erased) |
+| `2026-01-01T09:00:00+08:00` (**Local**) | **`2025-12-31T20:00:00-05:00`** ❌ crosses the day | `09:00` Unspecified |
 
-上表走的是 `DataTable` 路徑。補測 `DataSet` 儲存格與強型別 DTO 兩種載體後，發現行為並不一致：
+The table above goes through the `DataTable` path. Additional measurements of two more carriers, `DataSet` cells and
+strongly typed DTOs, showed that the behavior is not consistent:
 
-| 載體 | `Local` 值的下場 | 說明 |
+| Carrier | What happens to a `Local` value | Explanation |
 |------|-----------------|------|
-| `DataSet` 儲存格 | 不位移 | `DataColumn` 依 `DateTimeMode` 先把 `Kind` 正規化掉，formatter 看不到 `Local` |
-| 強型別 DTO 屬性（MessagePack） | **寫出端位移**（`09:00`+08 → `01:00Z`） | msgpack timestamp 擴充存絕對瞬間，`Local` 被轉為 UTC |
-| 強型別 DTO 屬性（JSON） | **讀取端位移**（可跨日） | 偏移寫進 wire，讀取端依自身時區重算 |
+| `DataSet` cell | Not shifted | `DataColumn` first normalizes `Kind` away according to `DateTimeMode`, so the formatter never sees `Local` |
+| Strongly typed DTO property (MessagePack) | **Shifted on the writing side** (`09:00`+08 → `01:00Z`) | The msgpack timestamp extension stores an absolute instant, so `Local` is converted to UTC |
+| Strongly typed DTO property (JSON) | **Shifted on the reading side** (can cross the day) | The offset is written to the wire, and the reader recomputes it in its own time zone |
 
-另外 **XML 是第三條序列化路徑**（稽核 `WriteXml(DiffGram)` 走它），且是唯一會依
-`DataColumn.DateTimeMode` 決定要不要寫出時區偏移的格式——.NET 預設的 `UnspecifiedLocal`
-正是「會寫出偏移」的那個值，偏移一旦進了 XML，跨區讀回就位移甚至跨日。
+In addition, **XML is a third serialization path** (the audit `WriteXml(DiffGram)` goes through it), and it is the only
+format that decides whether to write a time zone offset based on `DataColumn.DateTimeMode`. The .NET default,
+`UnspecifiedLocal`, is exactly the value that "writes an offset", and once an offset is in the XML, reading it back in
+another zone shifts the value or even crosses the day.
 
-三個結論貫穿以下所有決策：
+Three conclusions run through all the decisions below:
 
-1. **MessagePack 不保留 `Kind` 資訊**（`DataTable` 路徑抹為 `Unspecified`、DTO 路徑一律回 `Utc`），
-   因此「由值自己帶時區資訊（ISO 8601 的 `Z`）」在本框架不成立。
-2. **`Kind=Local` 在兩種格式上都會位移數值**——JSON 於讀取端（可跨日）、MessagePack 於寫出端。
-   `Local` 沒有任何逃生路徑。
-3. **同一個 UTC 值經兩種格式讀回的 `Kind` 不同**（JSON `Utc` / MessagePack `Unspecified`），
-   而 `PayloadFormat` 是部署期可切換的——**任何依 `Kind` 分支的邏輯都會隨部署設定而行為分岔**。
+1. **MessagePack does not keep the `Kind` information** (the `DataTable` path erases it to `Unspecified`, and the DTO
+   path always returns `Utc`), so "the value carries its own time zone information (the ISO 8601 `Z`)" does not hold
+   in this framework.
+2. **`Kind=Local` shifts the value in both formats**: JSON on the reading side (can cross the day), MessagePack on the
+   writing side. `Local` has no escape route at all.
+3. **The same UTC value read back through the two formats has a different `Kind`** (JSON `Utc` / MessagePack
+   `Unspecified`), and `PayloadFormat` can be switched at deployment time, so **any logic that branches on `Kind`
+   behaves differently depending on the deployment settings**.
 
-## 考慮過的選項
+## Options considered
 
-### 1. wire 傳 ISO 8601 帶時區偏移，由值本身表達（否決）
+### 1. Send ISO 8601 with a time zone offset on the wire, letting the value express it (rejected)
 
-MessagePack 不保留 `Kind`（實測結論 1），偏移資訊無法存活。跨格式不一致。
+MessagePack does not keep `Kind` (measured conclusion 1), so the offset information cannot survive. Inconsistent
+across formats.
 
-### 2. 非對稱設計：用戶端送使用者時區，伺服端依 `SessionInfo.TimeZone` 轉回（否決）
+### 2. Asymmetric design: the client sends the user's time zone, and the server converts back by `SessionInfo.TimeZone` (rejected)
 
-會讓「顯示用的時區」（用戶端決定）與「寫回解讀用的時區」（伺服端 session 決定）成為兩個獨立來源。
-一旦不一致（使用者出差、裝置時區與公司設定不同、session 時區未填），失敗模式是
-**使用者看到 09:00、輸入 09:00、存進去卻是別的時刻、重新載入後畫面跳掉**——靜默且資料損毀。
+This makes "the time zone used for display" (decided by the client) and "the time zone used to interpret written-back
+values" (decided by the server session) two independent sources. As soon as they disagree (the user is traveling, the
+device time zone differs from the company setting, the session time zone is not filled in), the failure mode is
+**the user sees 09:00, enters 09:00, a different instant is stored, and the screen jumps after reloading**: silent,
+and the data is corrupted.
 
-### 3. 雙向 UTC（採納，2026-09-12 由選項 5 取代）
+### 3. UTC in both directions (adopted; superseded by option 5 on 2026-09-12)
 
-只有單一時區來源，兩個方向必為反函數，round-trip 恆等。即使時區設錯，
-錯誤也只降級為「顯示偏移」而非資料錯亂。附帶效益：JS client 送 UTC 就是
-`date.toISOString()` 的原生行為。
+There is only a single time zone source, the two directions are necessarily inverse functions, and a round trip is
+always the identity. Even if the time zone is set wrongly, the error only degrades to "display offset" rather than
+corrupted data. A side benefit: for a JS client, sending UTC is the native behavior of `date.toISOString()`.
 
-> **退場理由（2026-09-12）**：請求方向要把使用者時區的值換回 UTC，這個換算在三處都需要逐一補洞。
-> DST 回撥重疊時段一個牆上時間對應兩個 UTC 值，讀進再存回會晚一小時，只能在 Connector 以列實例為鍵
-> 記住原值，而呼叫端自行複製 `DataSet` 時記憶就失效；用戶端運算式以 `UtcNow()` 填進的值會被再轉一次；
-> `DataColumn.DefaultValue` 凍結的時鐘讀數被當成使用者時區值送回。三者的共同根源是伺服端採用了一個
-> 它無從確知基準的值，「反函數、round-trip 恆等」只在這些路徑都被補齊時才成立。
+> **Why it was retired (2026-09-12)**: the request direction has to convert values in the user's time zone back to
+> UTC, and that conversion needed holes patched one by one in three places. In the DST fall-back overlap one wall-clock
+> time corresponds to two UTC values, so reading in and saving back ends up one hour late; the only fix was for the
+> Connector to remember the original value keyed by the row instance, and that memory is lost when the caller copies
+> the `DataSet` itself. Values filled in by a client expression with `UtcNow()` are converted a second time. The clock
+> reading frozen in `DataColumn.DefaultValue` is sent back as if it were a value in the user's time zone. The common
+> root of all three is that the server adopted a value whose basis it had no way of knowing; "inverse functions,
+> round trip is the identity" only holds once all these paths are patched.
 
-### 4. 欄位層 `DateTimeSemantics` 標記，提供第三種語意 `Local`（否決）
+### 4. A column-level `DateTimeSemantics` marker providing a third semantics, `Local` (rejected)
 
-原構想是為「綁定某地當地時間、與觀看者無關」的欄位（如會議排程「當地 09:00」）
-新增 `DbField.DateTimeSemantics` 屬性或新增 `FieldDbType` 列舉值。否決理由有三：
+The original idea was to add a `DbField.DateTimeSemantics` property or a new `FieldDbType` enum value for columns
+"bound to the local time of a particular place, independent of the viewer" (such as a meeting scheduled for
+"09:00 local time"). Three reasons for rejecting it:
 
-1. **層次錯置**。`FieldDbType` 描述「欄位存什麼型別的資料」；「該用 UTC 還是使用者時區」
-   是傳輸與呈現的約定，而該約定已由本 ADR 定死（wire 一律 UTC、轉換點唯一在 Connector）。
-   把時區政策塞進型別描述，等於讓同一件事有兩個決定者。
-2. **per-column 解不了真實需求**。實務上「依特定地點時區呈現」的案例——如 HRM 出勤要看
-   員工工作地時區——是 **per-row** 的：員工分駐各地，每筆的時區不同。標在欄位上只能表達
-   「整欄綁同一地點」，根本解不了。而 per-column `Local` 真能成立的情境舉不出非造作的例子；
-   排班「早班 08:00」、營業時間這類其實是時刻表，本就不該是 `DateTime` 欄位。
-3. **成本不成比例**。為此要動核心持久化 enum 或在每個 `DbField` 加屬性，
-   換到一個解不了真實需求的語意。
+1. **Wrong layer.** `FieldDbType` describes "what type of data the column stores"; "whether to use UTC or the user's
+   time zone" is a convention of transport and presentation, and this ADR has already fixed that convention (the wire
+   is always UTC, and the only conversion point is the Connector). Putting time zone policy into the type description
+   would give the same thing two deciders.
+2. **Per-column cannot solve the real need.** The real cases of "presenting in the time zone of a particular place",
+   such as HRM attendance that must be seen in the time zone of the employee's workplace, are **per-row**: employees
+   are stationed in different places, and each record has a different time zone. A marker on the column can only
+   express "the whole column is bound to the same place", which does not solve it at all. And no non-contrived example
+   can be found of a situation where a per-column `Local` really holds; shift schedules such as "morning shift 08:00"
+   or business hours are really timetables and should not be `DateTime` columns in the first place.
+3. **Disproportionate cost.** It would require touching a core persisted enum or adding a property to every `DbField`,
+   in exchange for a semantics that cannot solve the real need.
 
-### 5. 回應方向轉換、伺服端不採用請求中的 `DateTime`（採納，2026-09-12）
+### 5. Convert in the response direction, and the server does not adopt the `DateTime` in a request (adopted, 2026-09-12)
 
-`DateTime` 只接受伺服端寫入的值。Connector 只把回應轉入使用者時區；存檔送出的 `DataSet` 不換算，
-伺服端在 `Save` 入口以伺服端讀數或資料庫原值覆蓋（D14）。請求方向唯一保留的換算是過濾條件，
-因為它只用於查詢、不落庫。
+`DateTime` accepts only values written by the server. The Connector only converts responses into the user's time zone;
+the `DataSet` sent for saving is not converted, and at the entry of `Save` the server overwrites the values with a
+server-side reading or the original database value (D14). The only conversion kept in the request direction is for
+filter conditions, because they are used only for querying and are never persisted.
 
-與選項 2 的差別在於伺服端**不解讀**用戶端的 `DateTime`。選項 2 讓伺服端依 `SessionInfo.TimeZone`
-把用戶端的值換回 UTC 並採用，顯示時區與解讀時區成為兩個來源；本選項根本不採用那個值，也就沒有
-第二個來源。過濾條件仍由 Connector 換算、不交給伺服端，正是為了避開選項 2 的分岔：用戶端在登入時
-快取 session 時區，伺服端快取重建時會重讀使用者設定，兩者可能不一致。
+The difference from option 2 is that the server **does not interpret** the client's `DateTime`. Option 2 had the server
+convert the client's value back to UTC by `SessionInfo.TimeZone` and adopt it, making the display time zone and the
+interpretation time zone two sources; this option does not adopt that value at all, so there is no second source.
+Filter conditions are still converted by the Connector rather than handed to the server precisely to avoid the split
+of option 2: the client caches the session time zone at login, while the server rereads the user settings when its
+cache is rebuilt, and the two may disagree.
 
-另外兩種讓伺服端不採用的做法不採納：在寫入層排除 `DateTime` 欄，會讓 BO、規則與 plugin 讀到使用者
-時區的值；由 Connector 在送出前清空，伺服端仍要讀回原值，稽核也會失去原值。
+Two other ways of having the server not adopt the value were not adopted: excluding `DateTime` columns in the write
+layer would let BOs, rules and plugins read values in the user's time zone; having the Connector clear them before
+sending would still require the server to read back the original values, and the audit would lose the original value.
 
-代價是使用者無法直接編輯 `DateTime` 欄位，確有需要的 BO 覆寫正規化方法自行轉換（D14）。
-決策當時框架內沒有使用者輸入的 `DateTime` 欄位，業務上的時間欄都是 `Date`。
+The cost is that users cannot edit `DateTime` columns directly; a BO that really needs to overrides the normalization
+method and converts on its own (D14). At the time of the decision the framework had no user-entered `DateTime` columns;
+the business time columns were all `Date`.
 
-## 決策
+## Decision
 
-### D1：DB 一律存 UTC，全 provider 用 naive 欄位
+### D1: The DB always stores UTC, in naive columns for every provider
 
-SQL Server `datetime2`、PostgreSQL `timestamp`（無 tz）、Oracle `TIMESTAMP`、
-MySQL `DATETIME`、SQLite `TEXT`。時區轉換不交給資料庫。
+SQL Server `datetime2`, PostgreSQL `timestamp` (without tz), Oracle `TIMESTAMP`, MySQL `DATETIME`, SQLite `TEXT`.
+Time zone conversion is not left to the database.
 
-不採用 PostgreSQL `timestamptz`：它會依 server tz 隱式轉換，成為不可控變因，
-且造成跨 provider 行為分歧。
+PostgreSQL `timestamptz` is not used: it converts implicitly according to the server tz, becoming an uncontrollable
+variable and causing behavior to diverge across providers.
 
-### D2：兩種序列化格式都不介入時區
+### D2: Neither serialization format touches time zones
 
-MessagePack 與 JSON 都只搬運數值。轉換責任全在伺服端與用戶端。
+MessagePack and JSON only carry values. The responsibility for conversion lies entirely with the server and the
+client.
 
-### D3：伺服端資料路徑為 UTC；請求中的 `DateTime` 依載體而定（2026-09-12 修訂）
+### D3: The server data path is UTC; a `DateTime` in a request depends on the carrier (revised 2026-09-12)
 
-伺服端送 UTC。**伺服端在資料路徑上完全不做時區轉換**，直接讀寫 UTC。
+The server sends UTC. **The server does no time zone conversion at all on the data path**; it reads and writes UTC
+directly.
 
-請求方向依載體而定（D4 的載體對照表）：過濾條件值、強型別 DTO 屬性與 `Parameters` 是 UTC；
-存檔送出的 `DataSet` 保留用戶端畫面上的值，**不保證是 UTC**，伺服端也不採用其中的 `DateTime`（D14）。
+The request direction depends on the carrier (D4's carrier table): filter condition values, strongly typed DTO
+properties and `Parameters` are UTC; a `DataSet` sent for saving keeps the values shown on the client's screen, **is
+not guaranteed to be UTC**, and the server does not adopt the `DateTime` values in it either (D14).
 
-> 原文為「wire 上的 `DateTime` 兩個方向都是 UTC，伺服端送 UTC、用戶端也送 UTC」，隨選項 5 修訂。
+> The original text was "a `DateTime` on the wire is UTC in both directions: the server sends UTC and so does the
+> client". It was revised along with option 5.
 
-### D4：Connector 為唯一轉換點
+### D4: The Connector is the only conversion point
 
-用戶端的時區轉換集中在 `Connector`（API 介接層），不由各 UI 層各自處理。
+Time zone conversion on the client is concentrated in the `Connector` (the API interfacing layer), not handled by each
+UI layer on its own.
 
-#### 轉換方向的原則（2026-09-12 修訂）
+#### Principle of conversion direction (revised 2026-09-12)
 
-> **Connector 預設只轉回應方向，請求方向預設不轉。**
+> **By default the Connector converts only the response direction; the request direction is not converted by
+> default.**
 >
-> - **回應方向**：`DataSet` / `DataTable` 的 `DateTime` 欄由 UTC 轉為使用者時區。
-> - **請求方向**：`DataSet` 的 `DateTime` 不轉換，伺服端也不採用用戶端的值（D14）。
-> - **例外（請求方向轉換）**：過濾條件的 `DateTime` 由使用者時區轉為 UTC。它只用於查詢、不會存進資料庫。
-> - **不在轉換範圍**：強型別 DTO 屬性與 `Parameters` 兩個方向都是 UTC，由呼叫端負責。
+> - **Response direction**: the `DateTime` columns of a `DataSet` / `DataTable` are converted from UTC to the user's
+>   time zone.
+> - **Request direction**: the `DateTime` values of a `DataSet` are not converted, and the server does not adopt the
+>   client's values (D14).
+> - **Exception (converted in the request direction)**: the `DateTime` of filter conditions is converted from the
+>   user's time zone to UTC. It is used only for querying and is never stored in the database.
+> - **Outside the scope of conversion**: strongly typed DTO properties and `Parameters` are UTC in both directions,
+>   and the caller is responsible.
 
-以後出現新的請求方向轉換需求，比照過濾條件逐案加進例外清單，不回到預設雙向。
+If a new need for request-direction conversion appears later, add it to the exception list case by case, following the
+filter condition example; do not go back to converting both directions by default.
 
-**別把它讀成「`DataSet` 單向、其他雙向」。** 目前沒有任何載體是雙向轉換：過濾條件只出現在請求，
-強型別 DTO 兩個方向都不轉。日後接受使用者輸入的 `DateTime`，也是由 BO 在伺服端轉換（D14），
-不是 Connector 雙向。
+**Do not read this as "`DataSet` one way, everything else both ways".** No carrier is currently converted in both
+directions: filter conditions appear only in requests, and strongly typed DTOs are not converted in either direction.
+Accepting user-entered `DateTime` values in the future also means the BO converts them on the server (D14), not the
+Connector converting both ways.
 
-| 載體 | 回應（伺服端 → 用戶端） | 請求（用戶端 → 伺服端） |
+| Carrier | Response (server → client) | Request (client → server) |
 |------|------|------|
-| `DataSet` / `DataTable` 的 `DateTime` 欄 | UTC → 使用者時區 | **不轉換**（伺服端不採用） |
-| `FilterCondition.Value` / `SecondValue` | 不會出現在回應 | 使用者時區 → UTC |
-| 強型別 DTO 屬性（`ExpiredAt`、`FromUtc` / `ToUtc`、`ServerTime` 等） | 不轉換，一律 UTC | 不轉換，一律 UTC（呼叫端負責） |
-| `Parameters` | 不轉換 | 不轉換 |
+| `DateTime` columns of a `DataSet` / `DataTable` | UTC → user's time zone | **Not converted** (the server does not adopt them) |
+| `FilterCondition.Value` / `SecondValue` | Does not appear in responses | User's time zone → UTC |
+| Strongly typed DTO properties (`ExpiredAt`, `FromUtc` / `ToUtc`, `ServerTime`, etc.) | Not converted, always UTC | Not converted, always UTC (the caller is responsible) |
+| `Parameters` | Not converted | Not converted |
 
-`DateOnly` 與 `TimeOnly` 在任何載體、任何方向都不轉換。
+`DateOnly` and `TimeOnly` are not converted in any carrier or in any direction.
 
-> 原文為「收到回應時 UTC → 使用者時區；送出請求前 使用者時區 → UTC」，即選項 3 的雙向轉換。
+> The original text was "on receiving a response, UTC → user's time zone; before sending a request, user's time
+> zone → UTC", that is, the two-way conversion of option 3.
 
-#### 細則
+#### Details
 
-- **判斷依據是隨 payload 同行的 `FieldDbType` 標記**（ADR-031）：`Date` 絕不轉、
-  `DateTime` 一律視為時間點並轉換。**完全不需要 `FormSchema`**，報表 / AnyCode 等
-  schema-less 場景同樣適用。
-- **強型別 DTO 的 `DateTime` 屬性一律維持 UTC，不轉**（`PingResult.ServerTime`、
-  `SessionInfo.ExpiredAt`、`AuditEntry.LogTimeUtc` 等本就是系統時間戳）。
-- **`FilterCondition.Value` / `SecondValue` 由使用者時區轉為 UTC**（請求方向唯一的換算），語意由值的 CLR 型別自我描述：
-  `DateOnly` 絕不轉、`DateTime` 視為時間點。遺漏的症狀是「查今天的單據」跨區少查到資料且不報錯。
-- **轉換掛在 Connector 進出點，不掛序列化入口**，且**請求中的 `DataSet` 一律換成深拷貝**。
-  in-process（`LocalApiProvider` + `PayloadFormat.Plain`）沒有序列化邊界、物件以參考傳遞——
-  掛序列化入口會整個繞過。請求方向不換算 `DataSet` 之後仍要複製：伺服端 `Save` 會就地改寫收到的
-  `DataSet`（D14 的正規化，以及寫入後的 `AcceptChanges`），不複製就會改到呼叫端自己那一份。
-  執行它的是 `ApiConnectorRequestIsolationTests` 與 `PayloadZoneCoverageGuardTests`。
-- **`ApiMessageBase.Parameters` 不轉換**（每個 request / response 都帶的無型別參數袋）。
-  袋內的值是 `object`，**沒有任何型別標記可分辨「時間點 / 日曆日 / 系統時間戳」**——
-  全部轉換等於猜測，還會破壞呼叫端刻意放進去的 UTC 值。AnyCode 自訂方法若要傳時間點，
-  請自行約定基準（建議一律 UTC）或改走帶 `FieldDbType` 標記的 `DataTable` 載體。
-- **一律忽略 `Kind`**，依 D3 視為 UTC（實測結論 3）。
-- **過濾條件值落在不存在的本地時刻（spring-forward 缺口）時，前推一個 DST 差**。日期選擇器無從得知某日
-  某個牆鐘時刻不存在，使用者選 02:30 是正常操作；`ConvertTimeToUtc` 對此擲
-  `ArgumentException` 且會原樣穿透 JSON-RPC。故轉 UTC 前先把落在缺口內的值前推該次
-  轉換的 delta（02:30 → 03:30），與 iOS / Android / Google 日曆等主流選擇器一致。
-- **回撥重疊時段（fall-back）不需要 Connector 處理**（2026-09-12 修訂）。重疊的那一小時裡，兩個 UTC 值
-  對應同一個牆上時間（美東 2026-11-01 的 05:30Z 與 06:30Z 都是 01:30），這份資訊在回應轉入使用者時區的
-  那一刻就消失了。請求方向不換算 `DataSet` 之後，修改列的時間欄由伺服端以資料庫的原值覆蓋（D14），
-  讀進再存回不會晚一小時，也不依賴呼叫端有沒有複製 `DataSet`。過濾條件值落在重疊時段時，
-  `ConvertTimeToUtc` 解析為標準時間，那是牆上時間本身的歧義，與主流日曆一致。
+- **The deciding factor is the `FieldDbType` marker that travels with the payload** (ADR-031): `Date` is never
+  converted, and `DateTime` is always treated as an instant and converted. **`FormSchema` is not needed at all**, so
+  schema-less scenarios such as reports and AnyCode are covered too.
+- **The `DateTime` properties of strongly typed DTOs always stay UTC and are not converted** (`PingResult.ServerTime`,
+  `SessionInfo.ExpiredAt`, `AuditEntry.LogTimeUtc` and so on are system timestamps in the first place).
+- **`FilterCondition.Value` / `SecondValue` are converted from the user's time zone to UTC** (the only conversion in
+  the request direction), and the semantics is self-described by the value's CLR type: `DateOnly` is never converted,
+  and `DateTime` is treated as an instant. The symptom of missing this is that "query today's documents" silently
+  returns less data across zones without any error.
+- **The conversion hooks into the Connector's entry and exit points, not the serialization entry**, and **a `DataSet`
+  in a request is always replaced by a deep copy**. In-process (`LocalApiProvider` + `PayloadFormat.Plain`) there is no
+  serialization boundary and objects are passed by reference, so hooking the serialization entry would bypass it
+  entirely. The copy is still needed now that the request direction no longer converts the `DataSet`: the server-side
+  `Save` rewrites the received `DataSet` in place (D14's normalization, and the `AcceptChanges` after writing), and
+  without the copy it would change the caller's own instance. This is enforced by
+  `ApiConnectorRequestIsolationTests` and `PayloadZoneCoverageGuardTests`.
+- **`ApiMessageBase.Parameters` is not converted** (the untyped parameter bag carried by every request / response).
+  The values in the bag are `object`, and **there is no type marker at all to tell "instant / calendar day / system
+  timestamp" apart**; converting everything would be guessing, and it would also break UTC values the caller put in
+  deliberately. If a custom AnyCode method needs to pass an instant, agree on a basis yourself (UTC throughout is
+  recommended) or use the `DataTable` carrier, which carries the `FieldDbType` marker.
+- **`Kind` is always ignored**, and the value is treated as UTC per D3 (measured conclusion 3).
+- **When a filter condition value falls on a local time that does not exist (the spring-forward gap), it is moved
+  forward by one DST delta.** A date picker has no way of knowing that a particular wall-clock time on a particular day
+  does not exist, and a user picking 02:30 is a normal action; `ConvertTimeToUtc` throws `ArgumentException` for it,
+  and the exception passes straight through JSON-RPC. So before converting to UTC, a value that falls inside the gap is
+  moved forward by the delta of that transition (02:30 → 03:30), consistent with mainstream pickers such as iOS,
+  Android and Google Calendar.
+- **The fall-back overlap needs no handling by the Connector** (revised 2026-09-12). During the overlapping hour, two
+  UTC values correspond to the same wall-clock time (on 2026-11-01 in US Eastern, both 05:30Z and 06:30Z are 01:30),
+  and that information is lost the moment the response is converted into the user's time zone. Now that the request
+  direction does not convert the `DataSet`, the time columns of modified rows are overwritten by the server with the
+  original database value (D14), so reading in and saving back is not one hour late, and it does not depend on whether
+  the caller copied the `DataSet`. When a filter condition value falls in the overlap, `ConvertTimeToUtc` resolves it
+  as standard time; that is an ambiguity of the wall-clock time itself, consistent with mainstream calendars.
 
-  執行它的是 `DateTimeZoneDstSaveRoundTripTests`：讀進、轉入使用者時區、改別的欄位、原樣存回，
-  再以 SQL 讀回資料庫的值。SQLite 讀回的時間欄是字串、回應方向不轉換它，那一家驗不到這條。
+  This is enforced by `DateTimeZoneDstSaveRoundTripTests`: read in, convert into the user's time zone, change another
+  column, save back as is, then read the database value back with SQL. SQLite reads time columns back as strings, which
+  the response direction does not convert, so this rule cannot be verified on that database.
 
-  > 原條目（同日稍早補上）由 Connector 以**交給呼叫端的那一列實例**為鍵記住重疊時段儲存格原本的 UTC 值，
-  > 請求方向在該格仍是當初換算出的牆上時間時送回記下的值；呼叫端自行複製或重建的列沒有記憶。
-  > 隨選項 5 撤回。
-- **時區來源為 `SessionInfo.TimeZone`，不使用裝置 OS 時區。** 權威來源是伺服端使用者設定，
-  換裝置 / 出差不影響資料語意。「跟隨裝置時區」可作為使用者可選設定，但不是預設。
+  > The original item (added earlier the same day) had the Connector remember the original UTC value of overlap cells,
+  > keyed by **the row instance handed to the caller**, and send the remembered value in the request direction when
+  > the cell still held the wall-clock time converted at the time; rows the caller copied or rebuilt had no memory.
+  > It was withdrawn along with option 5.
+- **The time zone source is `SessionInfo.TimeZone`; the device OS time zone is not used.** The authoritative source is
+  the server-side user settings, so changing devices or traveling does not affect the meaning of the data. "Follow the
+  device time zone" can be offered as a user-selectable setting, but it is not the default.
 
-### D5：框架只提供兩種時間語意
+### D5: The framework provides only two time semantics
 
-即 `FieldDbType` 已經在區分的兩種：`Date`（日曆日，絕不轉）與 `DateTime`（時間點，轉換）。
+Namely the two that `FieldDbType` already distinguishes: `Date` (calendar day, never converted) and `DateTime`
+(instant, converted).
 
-**不提供 per-column 時區覆寫**（否決理由見上）。有「依特定地點時區呈現」需求時，
-以**「時間欄（UTC）+ 時區欄」顯式建模**，由應用層決定呈現時區——這是資料模型決策，
-不由框架代勞。
+**No per-column time zone override is provided** (see above for the reasons it was rejected). When there is a need to
+"present in the time zone of a particular place", **model it explicitly as "a time column (UTC) + a time zone
+column"** and let the application layer decide the presentation time zone. That is a data model decision, not
+something the framework does on the application's behalf.
 
-> 此條刻意載明，否則日後會有人「順手補上」`DateTimeSemantics`。
+> This item is stated deliberately; otherwise someone will one day "helpfully add" `DateTimeSemantics`.
 
-### D6：時間表示紀律與 wire guard
+### D6: Time representation discipline and the wire guard
 
-依載體分成三條規則，**守的是不同東西**，而執行機制並不相同：
+Split into three rules by carrier; **they guard different things**, and their enforcement mechanisms are not the same:
 
-| 載體 | 規則 | 執行機制 |
+| Carrier | Rule | Enforcement |
 |------|------|---------|
-| `DataSet` / `DataTable` | 所有 `DateTime` 欄位的 **`DataColumn.DateTimeMode` 必須是 `Unspecified`** | `DateTimeWireGuard` |
-| `FilterCondition.Value` / `SecondValue` | `DateTime` 的 **`Kind` 不得為 `Local`** | `DateTimeWireGuard` |
-| 強型別 DTO 屬性 | `DateTime` 應為 UTC，**`Kind` 不應為 `Local`** | **無**——撰寫紀律，guard 不檢查 DTO 屬性 |
+| `DataSet` / `DataTable` | The **`DataColumn.DateTimeMode` of every `DateTime` column must be `Unspecified`** | `DateTimeWireGuard` |
+| `FilterCondition.Value` / `SecondValue` | The **`Kind` of a `DateTime` must not be `Local`** | `DateTimeWireGuard` |
+| Strongly typed DTO properties | A `DateTime` should be UTC, and its **`Kind` should not be `Local`** | **None**: a writing discipline; the guard does not check DTO properties |
 
-`DataSet` 那條不查 `Kind`：儲存格的 `Kind` 由 `DateTimeMode` 決定，查值恆得 `Unspecified`、
-查了等於沒查；真正決定「XML 寫出會不會帶偏移」的是 `DateTimeMode`。
-`AddColumn` 已設 `Unspecified`，破口在 `DbDataAdapter.Fill` / `DataSet.ReadXml` 等
-會落回 .NET 預設 `UnspecifiedLocal` 的路徑。請求方向不再換算 `DataSet` 之後，這條照樣檢查請求中的
-`DataSet`：它守的是序列化會不會寫出時區偏移，與要不要換算無關（2026-09-12）。
+The `DataSet` rule does not check `Kind`: a cell's `Kind` is determined by `DateTimeMode`, so checking the value always
+yields `Unspecified` and checking it is the same as not checking; what really decides "whether the XML output carries
+an offset" is `DateTimeMode`. `AddColumn` already sets `Unspecified`; the gaps are paths such as
+`DbDataAdapter.Fill` / `DataSet.ReadXml` that fall back to the .NET default `UnspecifiedLocal`. Now that the request
+direction no longer converts the `DataSet`, this rule still checks the `DataSet` in a request: what it guards is
+whether serialization writes a time zone offset, which has nothing to do with whether a conversion happens
+(2026-09-12).
 
-過濾條件值與 DTO 屬性的規則都針對 `Kind`：沒有 `DataColumn` 的正規化緩衝，`Local` 在**兩條 wire 上都會位移數值**
-（MessagePack 於寫出端、JSON 於讀取端）。`Local` 極易誤入——`DateTime.Now`、`DateTime.Today`、
-UI 控件產出的值、`ToLocalTime()` 的結果，`Kind` 全都是 `Local`。
+The rules for filter condition values and DTO properties both target `Kind`: without the normalizing buffer of a
+`DataColumn`, `Local` **shifts the value on both wires** (MessagePack on the writing side, JSON on the reading side).
+`Local` slips in very easily: `DateTime.Now`, `DateTime.Today`, values produced by UI controls and the result of
+`ToLocalTime()` all have `Kind` `Local`.
 
-DTO 屬性不由 guard 檢查：guard 依訊息型別逐一比對載體，不走訪物件圖，新增帶 `DateTime` 的訊息
-不會自動被涵蓋。現行請求端帶 `DateTime` 的 DTO 屬性，都以屬性名（`FromUtc` / `ToUtc`）或參數文件
-（「The UTC expiry」）載明基準，**正確性靠呼叫端遵守，沒有執行期檢查**。
+DTO properties are not checked by the guard: the guard matches carriers one by one per message type and does not walk
+the object graph, so a newly added message carrying a `DateTime` is not covered automatically. The current
+request-side DTO properties that carry a `DateTime` all state their basis through the property name (`FromUtc` /
+`ToUtc`) or the parameter documentation ("The UTC expiry"); **correctness relies on callers complying, and there is no
+runtime check**.
 
-- **guard 為 fail fast：debug 與 release 都擲例外**，不做「修正後放行」。
-  兩種修法都會靜默產生錯資料：`SpecifyKind(Unspecified)` 保留牆上時間、丟掉時區資訊
-  （台北端誤送 `Local` 09:00 會被伺服端當 UTC 09:00 存入，偏移 8 小時）；
-  `ToUniversalTime()` 則依**裝置 OS 時區**換算，而 D4 已否決裝置時區作為權威來源。
-  `Kind=Local` 進 wire 是**框架自身的程式錯誤**，不是外部輸入的資料狀況。
-- **guard 掛在 Connector 進出點**，理由同 D4（in-process 無序列化邊界）。
-- **請求方向的 guard 必須在 D4 的過濾條件換算之前執行**，驗的是呼叫端交來的原值。換算會先把過濾條件值
-  `SpecifyKind(Unspecified)` 再依使用者時區換算——那正是上一條否決的「修正後放行」。排在換算之後，
-  只要有使用者時區（即每一次登入後的呼叫），`Local` 值就一律通過。
-  由 `ApiConnectorDateTimeGuardTests` 驗證這個先後順序。
-- **guard 永遠開啟，不受任何部署設定影響。**
-- DB 讀出的時間點值統一 `SpecifyKind(Utc)`；日曆日欄位維持 `Unspecified`。
-  > 實作後查證，此條在本 repo 幾乎沒有落點：`DataSet` 儲存格的 `Kind` 由 `DataColumn` 抹為
-  > `Unspecified`（標記為 `Utc` 是 no-op），`Query<T>` 的 POCO 對映零呼叫端，而僅有的兩處
-  > 到期判斷都與 `DateTime.UtcNow` 比較——`DateTime` 比較看 ticks、不看 `Kind`，本就正確。
-  > 實際只在 `SessionRepository` 標記到期時間，價值在於讓「該欄存 UTC」由隱含依賴變成宣告。
+- **The guard is fail fast: it throws in both debug and release**, and does not "fix it and let it through". Both ways
+  of fixing silently produce wrong data: `SpecifyKind(Unspecified)` keeps the wall-clock time and discards the time
+  zone information (a `Local` 09:00 mistakenly sent from Taipei would be stored by the server as UTC 09:00, off by
+  8 hours); `ToUniversalTime()` converts by the **device OS time zone**, which D4 has already rejected as an
+  authoritative source. `Kind=Local` entering the wire is **a programming error in the framework itself**, not a data
+  condition of external input.
+- **The guard hooks into the Connector's entry and exit points**, for the same reason as D4 (in-process has no
+  serialization boundary).
+- **The request-direction guard must run before D4's filter condition conversion**, validating the original values
+  handed in by the caller. The conversion first applies `SpecifyKind(Unspecified)` to the filter condition value and
+  then converts it by the user's time zone, which is exactly the "fix it and let it through" rejected in the previous
+  item. Placed after the conversion, a `Local` value always passes as long as there is a user time zone (that is, on
+  every call after login). `ApiConnectorDateTimeGuardTests` verifies this ordering.
+- **The guard is always on and is not affected by any deployment setting.**
+- Instant values read from the DB are uniformly `SpecifyKind(Utc)`; calendar day columns stay `Unspecified`.
+  > Checked after implementation, this item has almost nowhere to land in this repository: the `Kind` of `DataSet`
+  > cells is erased to `Unspecified` by `DataColumn` (marking it `Utc` is a no-op), the POCO mapping of `Query<T>` has
+  > zero callers, and the only two expiry checks both compare against `DateTime.UtcNow`; `DateTime` comparison looks
+  > at ticks, not `Kind`, so they were already correct. In practice it only marks the expiry time in
+  > `SessionRepository`, and its value lies in turning "this column stores UTC" from an implicit dependency into a
+  > declaration.
 
-### D7 / D8：持久化物件與系統時間戳一律 UTC
+### D7 / D8: Persisted objects and system timestamps are always UTC
 
-持久化物件的時間屬性一律為 UTC（`SessionUser.EndTime`、`SessionInfo.ExpiredAt`、
-`AuditEntry.LogTimeUtc`），序列化過程不介入時區。稽核與 trace 一律 `UtcNow`。
+Time properties of persisted objects are always UTC (`SessionUser.EndTime`, `SessionInfo.ExpiredAt`,
+`AuditEntry.LogTimeUtc`), and serialization does not touch time zones. Audit and trace always use `UtcNow`.
 
-定義檔的 `CreateTime`（`FormSchema` / `TableSchema` / 各 `*Settings`）雖標了
-`[XmlIgnore, JsonIgnore, IgnoreMember]`、從未被持久化，仍一併改為 `UtcNow`——
-純粹為了讓「時間屬性一律 UTC」零例外；保留為 Local 例外的話，日後無人敢動這些欄位的語意。
+The `CreateTime` of definition files (`FormSchema` / `TableSchema` / each `*Settings`) is marked
+`[XmlIgnore, JsonIgnore, IgnoreMember]` and has never been persisted, but it is changed to `UtcNow` as well, purely so
+that "time properties are always UTC" has zero exceptions; kept as a Local exception, nobody would dare touch the
+semantics of these properties later.
 
-快取到期時間（`CacheItemPolicy.AbsoluteExpiration`）同樣採 `UtcNow`。
+Cache expiry times (`CacheItemPolicy.AbsoluteExpiration`) likewise use `UtcNow`.
 
-> trace 的 `TraceEvent.Time` / `TraceContext.Start` 與 `CacheItemPolicy.AbsoluteExpiration`
-> 型別都是 `DateTimeOffset`，**本就攜帶偏移、跨區可比**，改 `UtcNow` 不是為了修正可比性，
-> 而是為了讓序列化與 log 呈現不隨部署時區變動，並消除「日後被轉成 `DateTime` 或落入 naive 欄位時
-> 偏移遭丟棄」的陷阱。規則零例外的價值即在此：不必逐處判斷「這個 `DateTimeOffset` 會不會被降型」。
+> The types of trace's `TraceEvent.Time` / `TraceContext.Start` and of `CacheItemPolicy.AbsoluteExpiration` are all
+> `DateTimeOffset`, which **already carries an offset and is comparable across zones**. Changing them to `UtcNow` is
+> not to fix comparability, but to keep serialization and log presentation independent of the deployment time zone,
+> and to remove the trap of "the offset being discarded when it is later converted to `DateTime` or lands in a naive
+> column". That is the value of a rule with zero exceptions: no need to judge case by case "will this
+> `DateTimeOffset` be downgraded".
 >
-> 快取尤其如此：**目前是行程內快取，但日後若改用跨機器的分散式快取**（Redis 等），
-> 到期時間會跨行程傳遞、經第三方序列化落地——而**偏移在序列化時被丟棄正是本 ADR 已實測到的
-> 既有現象**（見背景章節：MessagePack 不保留 `Kind`）。屆時「值本身就是 UTC」是唯一
-> 不依賴序列化器是否保留偏移的基準。
+> This applies to the cache in particular: **it is currently an in-process cache, but if it is later replaced by a
+> cross-machine distributed cache** (Redis and the like), expiry times will travel across processes and land through
+> third-party serialization, and **the offset being discarded during serialization is exactly the existing behavior
+> this ADR has measured** (see the Context section: MessagePack does not keep `Kind`). At that point "the value itself
+> is UTC" is the only basis that does not depend on whether the serializer keeps the offset.
 
-### D12：「今天」以使用者時區為基準，「現在」隨 `DataSet` 所在的那一側
+### D12: "Today" is based on the user's time zone, and "now" follows the side the `DataSet` is on
 
-**「今天」= `SessionInfo.TimeZone` 的今天**，不是裝置 OS 的今天，也不是伺服端機器的今天。
+**"Today" = today in `SessionInfo.TimeZone`**, not today on the device OS, and not today on the server machine.
 
-理由是業務語意：請假單的請假日期預設為「當天」，那個當天必然是使用者所在時區的當天。
-權威來源取 `SessionInfo.TimeZone` 而非裝置時區——否則使用者在紐約出差登打台北公司的假單，
-預設日期會變成前一天。與 D4 的時區權威來源一致。
+The reason is business semantics: the leave date of a leave request defaults to "the current day", and that day is
+necessarily the current day in the user's time zone. The authoritative source is `SessionInfo.TimeZone` rather than
+the device time zone; otherwise a user on a business trip in New York filling in a leave request for the Taipei
+company would get the previous day as the default date. This is consistent with D4's authoritative time zone source.
 
-**伺服端與用戶端必須用同一定義**：`Date` 欄位 Connector 絕不轉換（D4），兩側算出的「今天」
-若不一致，同一張單在兩側會是不同日期。伺服端求值同樣走 session 時區，不用機器時區。
+**The server and the client must use the same definition**: the Connector never converts `Date` columns (D4), so if
+the two sides computed different "todays", the same document would have different dates on the two sides. Evaluation
+on the server likewise uses the session time zone, not the machine time zone.
 
-實作上把散落的 `DateTime.Now` / `DateTime.Today` 收斂為單一接縫（`FormRowDefaults`、
-`FieldDbTypeExtensions`、`DynamicExpressoEvaluator` 的 `Today()` / `Now()`），由該接縫依
-使用者時區推導。
+In the implementation, the scattered `DateTime.Now` / `DateTime.Today` calls are consolidated into a single seam
+(`FormRowDefaults`, `FieldDbTypeExtensions`, and `Today()` / `Now()` of `DynamicExpressoEvaluator`), and that seam
+derives the values from the user's time zone.
 
-**兩條路徑的「今天」都接上使用者時區**，因為 `Today()` 與欄位型別預設值共用同一個接縫
-（`FrameworkClock`），而時區沿呼叫鏈以引數傳遞（D13(b)）：伺服端由 BO 取 session 時區傳入，
-用戶端取 `ClientInfo.UserInfo.TimeZone`。
+**"Today" on both paths is connected to the user's time zone**, because `Today()` and the column type default values
+share the same seam (`FrameworkClock`), and the time zone is passed as an argument along the call chain (D13(b)): on
+the server the BO takes the session time zone and passes it in; on the client it takes `ClientInfo.UserInfo.TimeZone`.
 
-#### 「現在」的基準由 `DataSet` 所在的那一側決定（2026-09-12 補）
+#### The basis of "now" is decided by the side the `DataSet` is on (added 2026-09-12)
 
-「今天」是日曆日，兩側都屬於使用者時區。「現在」是時間點，寫進 `DataSet` 或與儲存格比較時，
-必須與同一個 `DataSet` 裡既有的時間值同一基準，而兩側的基準不同：
+"Today" is a calendar day, and on both sides it belongs to the user's time zone. "Now" is an instant; when it is
+written into a `DataSet` or compared with a cell, it must have the same basis as the existing time values in the same
+`DataSet`, and the two sides have different bases:
 
-| 側 | `DataSet` 內 `DateTime` 的基準 | 原因 |
+| Side | Basis of `DateTime` in the `DataSet` | Reason |
 |----|------|------|
-| 用戶端 | 使用者時區 | Connector 收到回應時已換算（D4） |
-| 伺服端 | UTC | 資料路徑不做轉換（D3） |
+| Client | User's time zone | The Connector already converted it on receiving the response (D4) |
+| Server | UTC | The data path does no conversion (D3) |
 
-因此接縫收兩個引數：時區決定「今天」，`DateTimeBasis` 決定「現在」以哪個基準表示。
-`FrameworkClock`、`FormRowDefaults` 與 `IExpressionEvaluator` 都帶這個引數，預設為 `UserZone`：
+So the seam takes two arguments: the time zone decides "today", and `DateTimeBasis` decides which basis "now" is
+expressed in. `FrameworkClock`, `FormRowDefaults` and `IExpressionEvaluator` all carry this argument, defaulting to
+`UserZone`:
 
-| 呼叫端 | 基準 |
+| Caller | Basis |
 |--------|------|
-| `DataFormRepository.GetNewData`（伺服端的新列預設值） | `Utc` |
-| `FormExpressionCalculator.ApplyFieldExpressions` / `ValidateRules`（伺服端存檔前的 pass） | `Utc`，於方法內固定 |
-| `FormExpressionCalculator.ApplyComputedRow` / `ApplyDefaultRow`（用戶端即時預覽） | `UserZone`，於方法內固定 |
-| 用戶端新增明細列時的 `FormRowDefaults.Apply` | `UserZone`（預設值） |
+| `DataFormRepository.GetNewData` (server-side default values for a new row) | `Utc` |
+| `FormExpressionCalculator.ApplyFieldExpressions` / `ValidateRules` (the server-side pass before saving) | `Utc`, fixed inside the method |
+| `FormExpressionCalculator.ApplyComputedRow` / `ApplyDefaultRow` (client-side live preview) | `UserZone`, fixed inside the method |
+| `FormRowDefaults.Apply` when the client adds a detail row | `UserZone` (the default) |
 
-執行它的是 `DataFormRepositoryTests.GetNewData_TimeDefaults_DateTimeIsUtcAndDateIsUserDay`、
-`FormRowDefaultsCoverageTests.Apply_OnAddColumnTable_SeedsDateOnUserDayAndDateTimeOnBasis`，
-以及 `FormExpressionCalculatorTests` 中伺服端與用戶端的 `Now()` 測試。
+This is enforced by `DataFormRepositoryTests.GetNewData_TimeDefaults_DateTimeIsUtcAndDateIsUserDay`,
+`FormRowDefaultsCoverageTests.Apply_OnAddColumnTable_SeedsDateOnUserDayAndDateTimeOnBasis`, and the server-side and
+client-side `Now()` tests in `FormExpressionCalculatorTests`.
 
-> **原決策在此處有缺陷，而且被另一個缺陷遮住。** 原文寫「兩條路徑最終都接上使用者時區」，把「今天」
-> 與「現在」一併接上，於是伺服端存檔 pass 的 `Now()` 產出使用者時區的牆上時間，放進以 UTC 表示的
-> `DataSet`：寫入的值差一個時差，規則裡與儲存格的比較也差一個時差。**與伺服器主機的時區無關**——
-> 值是以 session 時區從 `DateTime.UtcNow` 換算出來的，主機跑 UTC 照樣發生。
+> **The original decision had a defect here, and it was hidden by another defect.** The original text said "both paths
+> are ultimately connected to the user's time zone", connecting "today" and "now" together, so `Now()` in the
+> server-side save pass produced a wall-clock time in the user's time zone and put it into a `DataSet` expressed in
+> UTC: the written value was off by the time difference, and so were comparisons with cells in rules. **This has
+> nothing to do with the server host's time zone**: the value is converted from `DateTime.UtcNow` by the session time
+> zone, so it happens even when the host runs on UTC.
 >
-> `FormRowDefaults` 的 `DateTime` 預設值有同一個問題，卻從未在 `GetNewData` 顯現：`AddColumn` 把建欄
-> 當下的 UTC 讀數寫進 `DataColumn.DefaultValue`，`NewRow()` 一建立就帶值，而 `FormRowDefaults` 遇到
-> 已有值的欄位會略過。那個 `DefaultValue` 本身另外造成三個錯誤：
+> The `DateTime` default values of `FormRowDefaults` had the same problem, but it never surfaced in `GetNewData`:
+> `AddColumn` wrote the UTC reading at column creation into `DataColumn.DefaultValue`, `NewRow()` carried the value as
+> soon as it was created, and `FormRowDefaults` skips columns that already have a value. That `DefaultValue` itself
+> caused three further errors:
 >
-> 1. 伺服端 `GetNewData` 的 `Date` 預設值是 UTC 的今天，不是 session 時區的今天。
-> 2. `DefaultValue` 隨表格送到用戶端——序列化依 D2 原樣搬運，Connector 只轉儲存格。用戶端在新單上
->    新增明細列時，拿到的是伺服端建骨架那一刻凍結的 UTC 讀數，送出時被當成使用者時區值，以使用者時區落庫。
-> 3. 用戶端 `FormValueBinding.BuildEmptyDataSet` 建的空表同理，只是讀數凍結在用戶端建表那一刻。
+> 1. The `Date` default value of the server-side `GetNewData` was today in UTC, not today in the session time zone.
+> 2. `DefaultValue` travels to the client with the table: serialization carries it as is per D2, and the Connector only
+>    converts cells. When the client added a detail row to a new document, it got the UTC reading frozen at the moment
+>    the server built the skeleton, which was treated as a value in the user's time zone when sent, and stored in the
+>    database as the user's time zone.
+> 3. The empty table built by the client's `FormValueBinding.BuildEmptyDataSet` had the same problem, except that the
+>    reading was frozen at the moment the client built the table.
 >
-> 因此 `AddColumn` 對 `Date` / `DateTime` 不再設預設值，新列的時間預設值只由 `FormRowDefaults` 產生。
+> Therefore `AddColumn` no longer sets default values for `Date` / `DateTime`, and the time default values of new rows
+> are produced only by `FormRowDefaults`.
 
-運算式函式集為 `Today()`（傳入時區的今天，回 `DateOnly`）、`Now()`（與所在 `DataSet` 同一基準的
-當下，`Kind` 恆為 `Unspecified`）、`UtcNow()`（UTC 當下的原始讀數，不隨基準變動）。共用接縫是刻意的：
-日曆日欄位絕不轉換（D4），共用不引入二次轉換問題；而讓同一個名字在兩處是兩種意思，是日後最容易踩的坑。
+The expression function set is `Today()` (today in the passed-in time zone, returning `DateOnly`), `Now()` (the
+current moment on the same basis as the containing `DataSet`, with `Kind` always `Unspecified`), and `UtcNow()` (the
+raw UTC reading of the current moment, not affected by the basis). Sharing the seam is deliberate: calendar day columns
+are never converted (D4), so sharing introduces no double conversion problem, while letting the same name mean two
+different things in two places is the easiest trap to fall into later.
 
-唯一不接時區的是 `FieldDbTypeExtensions.GetDefaultValue`——無使用者情境可傳，見 D13 的例外條款。
+The only one not connected to a time zone is `FieldDbTypeExtensions.GetDefaultValue`: it has no user context to pass
+in; see the exception clause in D13.
 
-> **殘餘風險（刻意接受）**：`UtcNow()` 不隨基準變動。用戶端即時預覽以 `UtcNow()` 填進 `DateTime`
-> 儲存格時，畫面上的值差一個時差。存檔時伺服端不採用用戶端的 `DateTime`（D14），有運算式的欄位由伺服端
-> 重新求值或保留資料庫的值，所以不會寫錯資料；錯的是存檔前畫面上的值。要寫進 `DateTime` 儲存格或
-> 與之比較時，應使用 `Now()`。
+> **Residual risk (accepted deliberately)**: `UtcNow()` is not affected by the basis. When the client-side live preview
+> fills a `DateTime` cell with `UtcNow()`, the value on screen is off by the time difference. On saving, the server
+> does not adopt the client's `DateTime` values (D14), and columns with expressions are re-evaluated by the server or
+> keep the database value, so no wrong data is written; what is wrong is the value on screen before saving. To write
+> into a `DateTime` cell or compare with one, use `Now()`.
 >
-> 此段原寫「送出時會被 Connector 當成使用者時區值再轉一次」，那是請求方向仍換算 `DataSet` 時的敘述，
-> 隨選項 5 修訂。更早的版本另寫「以 `Now()` 填進也會被再轉一次」，`Now()` 那一半是錯的：用戶端的
-> `Now()` 本來就是使用者時區的值；真正錯位的是伺服端的 `Now()`，已由上方的基準修正。
+> This paragraph originally said "when sent, it is treated by the Connector as a value in the user's time zone and
+> converted again", which described the time when the request direction still converted the `DataSet`; it was revised
+> along with option 5. An even earlier version also said "filling with `Now()` is converted again too", and the
+> `Now()` half of that was wrong: the client's `Now()` was already a value in the user's time zone; what was really
+> misaligned was the server's `Now()`, which has been fixed by the basis above.
 
-### D13：日期一律 `DateOnly`，`DataSet` 是唯一例外；時區一律以引數傳遞
+### D13: Dates are always `DateOnly`, with `DataSet` as the only exception; time zones are always passed as arguments
 
-**兩條規則，一起構成日期處理的形狀。**
+**Two rules that together make up the shape of date handling.**
 
-#### (a) 日期的載體
+#### (a) The carrier of dates
 
-日期一律以 `DateOnly` 表達。**唯一例外是 `DataSet`**——`DataColumn` 透過 `IConvertible` 強制
-轉型，而 `DateOnly` 未實作它（實測：`row["d"] = new DateOnly(...)` 對 `DateTime` 欄位擲
-`ArgumentException`），故日曆日欄位維持 `typeof(DateTime)`，「日期時間 vs 日期」的區別由
-`FieldDbType` 標記承載（ADR-031 已建立此機制）。
+Dates are always expressed as `DateOnly`. **The only exception is `DataSet`**: `DataColumn` forces type conversion
+through `IConvertible`, and `DateOnly` does not implement it (measured: `row["d"] = new DateOnly(...)` throws
+`ArgumentException` for a `DateTime` column), so calendar day columns stay `typeof(DateTime)`, and the distinction
+between "date-time vs date" is carried by the `FieldDbType` marker (ADR-031 established this mechanism).
 
-轉換發生在**寫進 `DataSet` 的那一刻**，而不是讓整個框架為了一個消費端改說 `DateTime`。
+The conversion happens **at the moment of writing into the `DataSet`**, rather than making the whole framework speak
+`DateTime` for the sake of one consumer.
 
-#### (b) 時區的傳遞
+#### (b) Passing the time zone
 
-**前後端共用的日期時間函式，時區一律以引數傳遞，不從 ambient 狀態解析。**
+**For date-time functions shared by the front end and back end, the time zone is always passed as an argument, never
+resolved from ambient state.**
 
-理由不只是「乾淨」，是這類程式碼**兩側都會跑**：從看不見的地方讀時區的 helper，在伺服端與
-用戶端會有不同行為，而那正是最難察覺的分歧。具體到本框架：
+The reason is not just "cleanliness": this kind of code **runs on both sides**. A helper that reads the time zone from
+somewhere invisible behaves differently on the server and on the client, and that is exactly the hardest kind of split
+to notice. Specifically in this framework:
 
-- 伺服端**沒有** ambient「當前使用者」——`ISessionInfoService` 以 access token 為鍵，
-  並行服務多位使用者時沒有單一 session 可查。
-- `IExpressionEvaluator` 註冊為 **singleton**，任何「建構時固定時區」的設計都表達不出
-  per-user 時區。
-- 傳 id 而非傳 `IUserInfo`，讓 `FrameworkClock` 得以留在 `Polhem.Base`（在身分模型之下）；
-  持有 `IUserInfo` 的呼叫端傳 `.TimeZone` 即可，介面照樣發揮作用。
+- The server has **no** ambient "current user": `ISessionInfoService` is keyed by access token, and when it serves
+  several users concurrently there is no single session to look up.
+- `IExpressionEvaluator` is registered as a **singleton**, so no design that "fixes the time zone at construction" can
+  express a per-user time zone.
+- Passing an id rather than an `IUserInfo` lets `FrameworkClock` stay in `Polhem.Base` (below the identity model);
+  callers holding an `IUserInfo` just pass `.TimeZone`, and the interface works all the same.
 
-**例外**：`FieldDbTypeExtensions.GetDefaultValue` 無使用者情境可傳，故以 UTC 產生。它是替 NOT NULL
-參數補值的**資料完整性後備**，而非使用者讀到的值。使用者看得到的新列預設值走 `FormRowDefaults`，
-該處收時區引數與 `DateTimeBasis`。
+**Exception**: `FieldDbTypeExtensions.GetDefaultValue` has no user context to pass in, so it produces UTC. It is a
+**data integrity fallback** that fills values for NOT NULL parameters, not a value users read. The new-row default
+values users can see go through `FormRowDefaults`, which takes the time zone argument and `DateTimeBasis`.
 
-`AddColumn` 對 `Date` / `DateTime` **不**取用它（2026-09-12 修正，見 D12）：`DataColumn.DefaultValue`
-是建欄時固定的單一值，放進時鐘讀數，對之後的每一列都是舊值，還會遮住 `FormRowDefaults`。
+`AddColumn` does **not** use it for `Date` / `DateTime` (fixed 2026-09-12, see D12): `DataColumn.DefaultValue` is a
+single value fixed when the column is created; putting a clock reading in it gives every later row a stale value, and
+it also hides `FormRowDefaults`.
 
-> 這個後備只在命令未繫結資料列時生效。表單存檔走 `DbDataAdapter.Update`，adapter 以 `SourceColumn`
-> 的列值覆蓋參數值，所以列裡的 `DBNull` 仍會以 NULL 送進資料庫，由 NOT NULL 約束擋下。
-> `DateTime` 欄例外：表單存檔前 D14 的正規化已替新增列補上伺服端讀數，沒有預設值運算式的
-> NOT NULL `DateTime` 欄不會以 NULL 送出（2026-09-12）。
+> This fallback takes effect only when the command is not bound to a data row. Form saving goes through
+> `DbDataAdapter.Update`, and the adapter overwrites parameter values with the row values of the `SourceColumn`, so a
+> `DBNull` in the row is still sent to the database as NULL and is stopped by the NOT NULL constraint. `DateTime`
+> columns are the exception: before a form is saved, D14's normalization has already filled new rows with the server
+> reading, so a NOT NULL `DateTime` column without a default value expression is not sent as NULL (2026-09-12).
 
-### D14：`DateTime` 只接受伺服端寫入的值（2026-09-12）
+### D14: `DateTime` accepts only values written by the server (2026-09-12)
 
-`FormBusinessObject.Save` 在授權與寫入範圍檢查之後、`DoBeforeSave` 之前呼叫 `protected virtual` 的
-`NormalizeDateTimes`，依 `FormSchema` 處理每張表的 `DateTime` 欄：
+`FormBusinessObject.Save` calls the `protected virtual` `NormalizeDateTimes` after the authorization and write-scope
+checks and before `DoBeforeSave`, handling the `DateTime` columns of each table according to the `FormSchema`:
 
-| 列狀態 | 處理 |
+| Row state | Handling |
 |------|------|
-| 新增 | `sys_insert_time`、`sys_update_time` 與沒有 `DefaultValueExpression` 的欄位填入存檔當下的 UTC 讀數（同一次存檔同一個讀數）；有運算式的欄位清空，交給 `ApplyFieldExpressions` 求值 |
-| 修改、刪除 | 以 `sys_rowid` 從資料庫讀回，兩個列版本都改成資料庫的值；修改列的 `sys_update_time` 再填入 UTC 讀數 |
+| Added | `sys_insert_time`, `sys_update_time` and columns without a `DefaultValueExpression` are filled with the UTC reading at the moment of saving (one reading for one save); columns with an expression are cleared and left to `ApplyFieldExpressions` to evaluate |
+| Modified, deleted | Read back from the database by `sys_rowid`, and both row versions are changed to the database values; the `sys_update_time` of a modified row is then filled with the UTC reading |
 
-- **位置在規則之前**，所以之後的規則、plugin、稽核與寫入看到的都是 UTC，D3「伺服端資料路徑為 UTC」照樣成立。
-- **不分呼叫來源**：伺服端 BO 之間呼叫 `Save` 同樣不採用傳入的 `DateTime`。需要寫入 `DateTime` 的作業
-  覆寫正規化方法，或直接走 repository。
-- **接受使用者輸入的 `DateTime`**：覆寫 `NormalizeDateTimes`，先讀出傳入的值、呼叫基底實作，再依使用者時區
-  轉成 UTC 寫回。純 `FormSchema` 表單不支援；決策當時也沒有能保留時分的編輯器。
-- **讀回時找不到列**（已被同時刪除）擲 `UserMessageException`，在任何寫入之前中止。
-- **改寫 Original 要先擷取整列的兩個版本再 `RejectChanges`**，否則非時間欄的修改會被丟掉——與 D4 回應方向
-  換算修改列時是同一個陷阱。
-- **系統時間戳記欄在 `FormSchema` 一律標 `ReadOnly`**，否則使用者能在畫面上改一個存不進去的值。
-  漏標不會寫錯資料，因此不另設閘門。
+- **It sits before the rules**, so the rules, plugins, audit and writes after it all see UTC, and D3's "the server data
+  path is UTC" still holds.
+- **It does not distinguish the caller**: when one server-side BO calls another's `Save`, the `DateTime` values passed
+  in are not adopted either. Work that needs to write `DateTime` values overrides the normalization method or goes
+  through the repository directly.
+- **Accepting user-entered `DateTime` values**: override `NormalizeDateTimes`, read out the values passed in first, call
+  the base implementation, then convert them to UTC by the user's time zone and write them back. Pure `FormSchema` forms
+  do not support this; at the time of the decision there was also no editor that could keep hours and minutes.
+- **If a row cannot be found when reading back** (it was deleted concurrently), a `UserMessageException` is thrown,
+  aborting before any write.
+- **To rewrite the Original, first capture both versions of the whole row, then `RejectChanges`**; otherwise changes
+  to non-time columns are lost. This is the same trap as when D4 converted modified rows in the response direction.
+- **System timestamp columns are always marked `ReadOnly` in the `FormSchema`**; otherwise users could change on screen
+  a value that cannot be saved. Missing the mark does not write wrong data, so no separate gate is set up.
 
-殘餘限制：`Unchanged` 列不正規化。它們不寫入、不進稽核，但 `ValidateRules` 會走訪所有非刪除列，plugin
-也看得到；存檔時一起送上來的 `Unchanged` 列，其 `DateTime` 欄是使用者時區的值。規則或 plugin 若要比較
-這些列的時間欄，拿到的基準是錯的。
+Residual limitation: `Unchanged` rows are not normalized. They are not written and do not enter the audit, but
+`ValidateRules` walks all non-deleted rows, and plugins can see them too; for `Unchanged` rows sent up together with a
+save, the `DateTime` columns hold values in the user's time zone. Rules or plugins that compare the time columns of
+these rows get the wrong basis.
 
-執行它的是 `FormBusinessObjectDateTimeNormalizationTests`：各家資料庫實跑新增、修改與刪除（含稽核 DiffGram）、
-讀回找不到列，以及覆寫接縫。
+This is enforced by `FormBusinessObjectDateTimeNormalizationTests`: insert, update and delete run for real on each
+database (including the audit DiffGram), plus the row-not-found-on-read-back case and the override seam.
 
-### D9：cache-notify 的時間基準與寫入端同源，一律 UTC（2026-09-04 修訂）
+### D9: The time basis of cache-notify shares its source with the write side, always UTC (revised 2026-09-04)
 
-`sys_update_time` 的 high-water mark 只與自己比較，但「自己」有兩個來源：每一列的值由寫入端戳記，
-空表時的起始游標則由讀取端向資料庫取「現在」。**兩者必須是同一個基準。**
+The high-water mark of `sys_update_time` is only compared with itself, but "itself" has two sources: the value of
+each row is stamped by the write side, while the starting cursor for an empty table is obtained by the read side by
+asking the database for "now". **The two must be on the same basis.**
 
-因此兩端從同一處取值——`IDialectFactory.GetDefaultValueExpression(FieldDbType.DateTime)`，
-也就是 D9b 那張表，全為 UTC：
+So both sides take the value from the same place, `IDialectFactory.GetDefaultValueExpression(FieldDbType.DateTime)`,
+which is the table in D9b, all UTC:
 
-| 端 | 位置 |
+| Side | Location |
 |----|------|
-| 寫入 | 欄位 `DEFAULT`、`CacheNotifyService` 的 UPSERT |
-| 讀取 | `CacheNotifyReader` 的空表 baseline |
+| Write | The column `DEFAULT`, the UPSERT of `CacheNotifyService` |
+| Read | The empty-table baseline of `CacheNotifyReader` |
 
-執行它的是 `CacheNotifyBaselineBasisTests`：驗 baseline 的表達式與寫入端完全相同，並在
-SQL Server / PostgreSQL / MySQL / Oracle 實跑該語句，驗回傳值貼近 UTC。
+This is enforced by `CacheNotifyBaselineBasisTests`: it verifies that the baseline expression is exactly the same as
+the write side's, and runs the statement for real on SQL Server / PostgreSQL / MySQL / Oracle, verifying that the
+returned value is close to UTC.
 
-> **原決策為「刻意不 UTC 化」，已撤回。** 原文認為 high-water mark 只與自己比較、UTC 化無實質效益，
-> 並警告日後統一會踩到各 provider 時間函式基準不同的差異。
+> **The original decision, "deliberately not converted to UTC", has been withdrawn.** The original text held that the
+> high-water mark is only compared with itself, so converting it to UTC had no real benefit, and warned that unifying
+> it later would run into the differing bases of each provider's time functions.
 >
-> 撤回的原因：寫入端從一開始就讀欄位 `DEFAULT` 的方言運算式，D9b 把它改為 UTC 時寫入端跟著變成 UTC；
-> 讀取端的 baseline 卻自帶一份回傳伺服器本地時間的方言表（`getdate()` / `LOCALTIMESTAMP` /
-> `CURRENT_TIMESTAMP(6)`），沒有跟著改。在時區超前 UTC 的伺服器上，全新部署（空表）的第一個游標
-> 落在未來，之後每次增量查詢都撈不到列——**快取失效靜默停擺，直到牆鐘追上**，UTC+8 就是八小時。
-> Oracle 的 `LOCALTIMESTAMP` 取的是用戶端 session 時區，基準甚至隨執行輪詢的機器而變。
-> 本機容器與 CI runner 都跑 UTC，兩式在那裡剛好相等，所以一直沒被發現。
+> Why it was withdrawn: the write side read the dialect expression of the column `DEFAULT` from the start, so when D9b
+> changed it to UTC, the write side became UTC along with it; the read side's baseline, however, carried its own
+> dialect table returning the server's local time (`getdate()` / `LOCALTIMESTAMP` / `CURRENT_TIMESTAMP(6)`), which was
+> not changed. On a server whose time zone is ahead of UTC, the first cursor of a fresh deployment (empty table) lands
+> in the future, and every later incremental query finds no rows: **cache invalidation silently stalls until the wall
+> clock catches up**, eight hours for UTC+8. Oracle's `LOCALTIMESTAMP` takes the client session's time zone, so the
+> basis even varies with the machine running the poll. The local containers and the CI runners all run on UTC, where
+> the two expressions happen to be equal, which is why it was never discovered.
 >
-> 教訓與原警告相反：危險的不是「統一」，是**兩份必須一致的方言對照表**。讀取端因此不再持有自己的一份。
+> The lesson is the opposite of the original warning: the danger is not "unifying", it is **two dialect tables that
+> must stay consistent**. The read side therefore no longer keeps a copy of its own.
 
-### D9b：資料庫端的欄位 `DEFAULT` 也必須是 UTC
+### D9b: Column `DEFAULT`s on the database side must also be UTC
 
-D1 對「`FieldDbType.DateTime` 欄位存 UTC」是**強制條件**，而 SQL 語句不一定會指定該欄位的值——
-`DEFAULT` 正是那些情況下實際寫入資料的路徑。因此各 dialect 的預設值運算式一律採 UTC 形式：
+D1 makes "`FieldDbType.DateTime` columns store UTC" a **mandatory condition**, and SQL statements do not always
+specify the value of such a column; `DEFAULT` is exactly the path through which data is actually written in those
+cases. Therefore every dialect's default value expression uses a UTC form:
 
-| Provider | `DateTime` 的 DEFAULT |
+| Provider | `DEFAULT` for `DateTime` |
 |----------|----------------------|
 | SQL Server | `getutcdate()` |
 | PostgreSQL | `(NOW() AT TIME ZONE 'UTC')` |
 | MySQL | `UTC_TIMESTAMP(6)` |
 | Oracle | `SYS_EXTRACT_UTC(SYSTIMESTAMP)` |
-| SQLite | `CURRENT_TIMESTAMP`（本就是 UTC） |
+| SQLite | `CURRENT_TIMESTAMP` (already UTC) |
 
-**這與 D12 無關，別把兩者混為一談。** D12 講的是「使用者看得到的預設值要用其時區」，那確實不是
-資料庫做得到的——`DEFAULT` 在資料庫內求值，沒有 session、不知道使用者是誰。但 D1 講的是
-**儲存基準**，而 UTC 是絕對時刻、與使用者無關，資料庫完全有能力也必須遵守。
-使用者可見的新列預設值另由 `FormRowDefaults` 依 session 時區產生。
+**This has nothing to do with D12; do not confuse the two.** D12 is about "default values users can see must use their
+time zone", which is indeed something the database cannot do: `DEFAULT` is evaluated inside the database, with no
+session and no knowledge of who the user is. But D1 is about the **storage basis**, and UTC is an absolute instant
+independent of the user, which the database is fully able to, and must, follow. The new-row default values users can
+see are produced separately by `FormRowDefaults` according to the session time zone.
 
-生效路徑有二：呼叫端自寫 INSERT 而省略該欄，以及 `ALTER TABLE ADD COLUMN` 對既有列的回填。
+It takes effect on two paths: a caller's hand-written INSERT that omits the column, and the backfill of existing rows by
+`ALTER TABLE ADD COLUMN`.
 
-> **PostgreSQL 的 round-trip 陷阱**：PG 不會逐字保存函式型預設值，而是改寫為
-> `(now() AT TIME ZONE 'UTC'::text)`。框架的 schema 比對是文字比對，若不處理就會判定恆有差異、
-> **每次檢查都重發同一道 ALTER**。`PgTableSchemaProvider.ParseDBDefaultValue` 因此加了一段
-> 專門的正規化；通用的「截斷第一個 `::`」邏輯在此不適用，因為那個 `::` 位在括號**內**。
+> **PostgreSQL's round-trip trap**: PG does not keep function-style default values verbatim; it rewrites them as
+> `(now() AT TIME ZONE 'UTC'::text)`. The framework's schema comparison is a text comparison, so without handling it
+> would always judge that there is a difference and **reissue the same ALTER on every check**.
+> `PgTableSchemaProvider.ParseDBDefaultValue` therefore has a dedicated normalization for it; the generic "truncate at
+> the first `::`" logic does not apply here, because that `::` sits **inside** the parentheses.
 
-### D10：轉換永遠執行，同時區時為恆等轉換
+### D10: The conversion always runs, and is the identity conversion within the same time zone
 
-**「零成本」指的是複雜度成本，不是執行成本。** 轉換管線一律運作，不因部署設定而繞過；
-使用者時區 == 系統時區時退化為**恆等轉換**（值不變），而非跳過。
+**"Zero cost" means complexity cost, not execution cost.** The conversion pipeline always runs and is not bypassed by
+deployment settings; when the user's time zone == the system time zone it degrades to the **identity conversion** (the
+value does not change), rather than being skipped.
 
-> 原訂的「同時區時 no-op、行為與今天逐位元一致」與 D1 直接衝突：台北單一時區部署下，
-> 若轉換真是 no-op，使用者看到的就是 DB 原值——要讓使用者看到台北時間，DB 就得存台北時間，
-> 這推翻 D1。反之若 DB 真存 UTC，台北使用者一定要轉換，短路永遠不觸發。
+> The original plan, "a no-op within the same time zone, behavior bit-for-bit identical to today", conflicts directly
+> with D1: in a single-time-zone Taipei deployment, if the conversion really were a no-op, users would see the raw DB
+> value; for users to see Taipei time, the DB would have to store Taipei time, which overturns D1. Conversely, if the
+> DB really stores UTC, Taipei users must be converted, and the short circuit never triggers.
 >
-> 若改讓單一時區部署不存 UTC，D1 的「一律」破功，且日後升級為跨區部署時需要資料遷移——
-> 而 D11 已決定不做遷移工具。故選擇讓轉換永遠執行：D1 零例外，恆等轉換的成本微不足道
-> （每欄一次判斷，非每格）。代價是「單一時區部署行為與今天逐位元一致」不再成立，
-> DB 內容會從本地牆上時間變成 UTC；因無外部消費者（D11），僅涉及本機 / CI / demo 資料重建。
+> Letting single-time-zone deployments not store UTC would break the "always" of D1, and a later upgrade to a
+> cross-zone deployment would require data migration, while D11 has already decided not to build a migration tool.
+> So the conversion is made to always run: D1 has zero exceptions, and the cost of the identity conversion is
+> negligible (one check per column, not per cell). The price is that "a single-time-zone deployment behaves bit-for-bit
+> like today" no longer holds, and DB contents change from local wall-clock time to UTC; since there are no external
+> consumers (D11), this only involves rebuilding local / CI / demo data.
 
-**例外**：D6 的 guard 不受任何設定影響。否則 `Local` 混入時完全不會被察覺，
-等到第一個跨區客戶才爆，而那時錯誤已寫進歷史資料。
+**Exception**: D6's guard is not affected by any setting. Otherwise `Local` slipping in would go completely unnoticed
+until the first cross-zone customer, by which time the errors would already be written into historical data.
 
-### D11：目前不做既有資料遷移
+### D11: No migration of existing data for now
 
-框架目前沒有外部實際消費者，切換時沒有需要保全語意的既有生產資料。
-本機 / CI / demo 資料皆可重建。
+The framework currently has no real external consumers, so there is no existing production data whose meaning needs
+preserving at the switch. Local / CI / demo data can all be rebuilt.
 
-> **日後真的需要遷移時的前提條件**：
+> **Preconditions if a migration is really needed later**:
 >
-> 1. **一次切換，不設相容期**。相容期需要 per-row 標記新舊語意、讀寫兩路徑都要分支處理，
->    成本高於停機。
-> 2. **逐欄判斷，不可全表套用**：`st_session` 等已是 UTC 的欄位不可再轉；日曆日欄位不動。
-> 3. **固定 offset 只在「部署期間該時區無 DST 變動」時成立**。`Asia/Taipei` 無 DST，
->    固定 +8 安全且可逆。**若客戶位於有 DST 的時區，遷移必須改為 tz-aware 逐筆轉換。**
+> 1. **Switch once, with no compatibility period.** A compatibility period needs per-row markers of old and new
+>    semantics and branching on both the read and write paths, which costs more than downtime.
+> 2. **Judge column by column; do not apply it to whole tables**: columns that are already UTC, such as those of
+>    `st_session`, must not be converted again; calendar day columns are left alone.
+> 3. **A fixed offset only holds when "the time zone has no DST changes during the deployment period".**
+>    `Asia/Taipei` has no DST, so a fixed +8 is safe and reversible. **If the customer is in a time zone with DST, the
+>    migration must instead be a tz-aware, row-by-row conversion.**
 >
-> 遷移需求出現時通常伴隨時間壓力，屆時不會有餘裕重新推導，故在此載明。
+> A migration need usually comes with time pressure, and there will be no room to re-derive this then, so it is
+> recorded here.
 
-### `FieldDbType.Time` 的未來歸屬
+### The future home of `FieldDbType.Time`
 
-`FieldDbType` 目前無 `Time`（純時刻值）。日後新增時：
+`FieldDbType` currently has no `Time` (a pure time-of-day value). When it is added:
 
-- **`Time` 屬於「絕不轉時區」**，與 `Date` 同列——純時刻值與日曆日同為牆上時間，
-  套用時區位移會得到無意義的結果。此結論在此預先載明，`Time` 動工時不需重新推導。
-- **新值必須加在列舉尾端**：`FieldDbType` 未顯式指定數值且會上 MessagePack wire，
-  中間插值會讓其後所有值位移，打斷既有 payload 與定義檔相容性。
+- **`Time` belongs to "never converted between time zones"**, alongside `Date`: a pure time-of-day value, like a
+  calendar day, is wall-clock time, and applying a time zone shift gives a meaningless result. This conclusion is
+  recorded in advance here, so it does not need to be re-derived when work on `Time` starts.
+- **The new value must be added at the end of the enum**: `FieldDbType` does not specify explicit values and travels
+  on the MessagePack wire, so inserting a value in the middle would shift every value after it, breaking compatibility
+  with existing payloads and definition files.
 
-## 後果
+## Consequences
 
-**正面**
+**Positive**
 
-- 單一時區來源；存檔不採用用戶端的 `DateTime`，讀進再存回時時間值不變，不依賴換算是否可逆，DST 回撥重疊時段也不例外（D14）。時區設錯只降級為顯示偏移。
-- Connector 完全 schema-less，報表 / AnyCode 等無 schema 場景同樣安全。
-- 轉換路徑單一：同時區時退化為恆等轉換，不需為「有沒有跨區」維護兩套行為。
+- A single time zone source; saving does not adopt the client's `DateTime` values, so time values do not change when
+  read in and saved back, regardless of whether the conversion is reversible, and the DST fall-back overlap is no
+  exception (D14). A wrongly set time zone only degrades to a display offset.
+- The Connector is completely schema-less, so schema-less scenarios such as reports and AnyCode are equally safe.
+- A single conversion path: within the same time zone it degrades to the identity conversion, so there is no need to
+  maintain two sets of behavior for "cross-zone or not".
 
-**負面 / 風險**
+**Negative / risks**
 
-- **`Kind=Local` 混入 wire** 是最脆弱的一環。guard 為 fail fast 後失敗模式從「靜默錯資料」
-  變為「當場例外」，但 guard 本身被移除或繞過的風險仍在，測試優先級最高。
-  實例：時區換算接上 Connector 時，guard 被包在換算之後，登入後的過濾條件從此攔不到 `Local`。
-  guard 自己的單元測試全綠——它們只驗 guard，看不到它在呼叫路徑上的位置（2026-09-12 修正）。
-- **日曆日誤轉**：標記方案不能保證欄位一定有標記——BO 自寫 SQL 未以 `SetDateColumns` 宣告的
-  日曆日欄位仍會被當時間點轉換（ADR-031 已載明此殘餘破口與 BO 作者的標記責任）。
-- **`DateTime` 欄位無法由使用者直接編輯**（D14）。新增接受使用者輸入的 `DateTime` 欄位時，
-  BO 必須覆寫正規化方法自行轉換，否則輸入的值會被靜默換成伺服端的值。
-- **`Unchanged` 列的 `DateTime` 欄是使用者時區的值**（D14 的殘餘限制），只影響在伺服端比較這些列
-  時間欄的規則與 plugin。
-- **`TimeZoneInfo.FindSystemTimeZoneById` 在 WASM / iOS / Android 未經驗證**。
-  依賴 ICU 與 tz database，trim + AOT 下失敗形態是 `TimeZoneNotFoundException`，
-  桌面完全不重現。
-- **in-process 路徑無序列化邊界**，實作時極易退回「掛序列化入口」的直覺做法。
+- **`Kind=Local` slipping onto the wire** is the most fragile link. With the guard fail fast, the failure mode changes
+  from "silently wrong data" to "an exception on the spot", but the risk of the guard itself being removed or bypassed
+  remains, and its tests have the highest priority. A real case: when the time zone conversion was hooked into the
+  Connector, the guard was wrapped after the conversion, and from then on filter conditions after login no longer
+  caught `Local`. The guard's own unit tests were all green: they only verify the guard and cannot see its position on
+  the call path (fixed 2026-09-12).
+- **Calendar days converted by mistake**: the marker approach cannot guarantee that a column is always marked; calendar
+  day columns in a BO's hand-written SQL that are not declared with `SetDateColumns` are still converted as instants
+  (ADR-031 records this residual gap and the BO author's responsibility for marking).
+- **`DateTime` columns cannot be edited by users directly** (D14). When adding a `DateTime` column that accepts user
+  input, the BO must override the normalization method and convert on its own; otherwise the entered value is silently
+  replaced by the server's value.
+- **The `DateTime` columns of `Unchanged` rows hold values in the user's time zone** (D14's residual limitation),
+  which only affects rules and plugins that compare the time columns of these rows on the server.
+- **`TimeZoneInfo.FindSystemTimeZoneById` is unverified on WASM / iOS / Android.** It depends on ICU and the tz
+  database; under trim + AOT the failure takes the form of `TimeZoneNotFoundException`, and it does not reproduce on
+  the desktop at all.
+- **The in-process path has no serialization boundary**, so an implementation very easily falls back to the intuitive
+  approach of "hooking the serialization entry".
 
-## 相關
+## Related
 
-- ADR-031（日曆日欄位語意以顯式標記承載）——本 ADR 的 D4 判斷依據
+- ADR-031 (calendar day column semantics carried by an explicit marker): the basis of this ADR's D4 decisions

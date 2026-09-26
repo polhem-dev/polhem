@@ -1,130 +1,152 @@
-# ADR-039：`FormLayout` 收回設計階段，執行階段不再由 `FormSchema` 推導
+# ADR-039: `FormLayout` returns to design time; the runtime no longer derives it from `FormSchema`
 
-## 狀態
+[繁體中文](adr-039-formlayout-design-time-only.zh-TW.md)
 
-**已採納（Accepted，2026-08-20）** —— 決策已執行，隨 4.23.0 發佈。
+## Status
 
-[ADR-016](adr-016-multitenant-customization-overlay.md) 立下客製層的**整檔取代**語意，
-「`FormLayout` 是畫面的權威來源」則是該語意的推論，明文寫在
-[定義檔全景](../zh-TW/definition-files-overview.md)（commit [`53025c34`](https://github.com/jeff377/bee-library/commit/53025c34)）。
-本 ADR 補齊該推論在**缺檔情境**下的行為；ADR-016 的雙層唯讀疊加語意不變。
+**Accepted (2026-08-20)**: the decision has been carried out and shipped with 4.23.0.
 
-## 背景
+[ADR-016](adr-016-multitenant-customization-overlay.md) established the **whole-file replacement** semantics of the
+customization layer, and "`FormLayout` is the authoritative source of the screen" is a corollary of those semantics,
+stated explicitly in the [Definition Files Overview](../en/definition-files-overview.md) (commit
+[`53025c34`](https://github.com/jeff377/bee-library/commit/53025c34)). This ADR fills in how that corollary behaves
+**when the file is missing**; the two-layer read-only overlay semantics of ADR-016 are unchanged.
 
-`FormLayout` 是 `FormSchema` 在 UI 維度的投影，描述表單的視覺配置。框架早已確立
-**「`FormLayout` 是畫面上有什麼的權威來源」**（[定義檔全景](../zh-TW/definition-files-overview.md)）：
-客製層採整檔取代，因此 base schema 新增欄位**不會**自動出現在已客製的租戶畫面上——
-租戶看到什麼，由租戶那份版面檔說了算。
+## Context
 
-但這條規則有一個破口：**版面檔缺席時，執行階段會由 `FormSchema` 臨時推導一份**。
-入口是 `FormSchema.GetFormLayout(string)`，一行呼叫 `FormLayoutGenerator`，被三條執行階段
-路徑使用（`FormDefinitionLoader` 的缺檔分支，以及 Avalonia / Blazor 兩個 UI head 的無 loader 分支）。
+`FormLayout` is the projection of `FormSchema` in the UI dimension and describes the visual arrangement of a form. The
+framework had long established that **"`FormLayout` is the authoritative source of what is on the screen"**
+([Definition Files Overview](../en/definition-files-overview.md)): the customization layer uses whole-file
+replacement, so a field added to the base schema **does not** automatically appear on the screen of a tenant that has
+customized it. What a tenant sees is decided by that tenant's layout file.
 
-這使得「權威來源」在缺檔時退化成 schema 的即時投影，而**那份投影沒有人審過、也沒有存在
-任何地方**——恰恰是「權威來源」這個概念要排除的東西。同一個部署可能今天推導出 A 版面、
-明天因為 schema 加了一個欄位就推導出 B 版面，中間沒有任何一次人為決定。
+But the rule had a hole: **when the layout file is absent, the runtime derives one from `FormSchema` on the fly**. The
+entry point was `FormSchema.GetFormLayout(string)`, a one-line call to `FormLayoutGenerator`, used by three runtime
+paths (the missing-file branch of `FormDefinitionLoader`, and the no-loader branches of the two UI heads, Avalonia and
+Blazor).
 
-`src/Polhem.Analyzers` 的 **POLHEM2005（FormSchema 應有對應的 FormLayout）** 已經是這個定位的先聲，
-只是它警告的東西在執行期會被默默補上，所以那道警告背後沒有任何後果。
+This made the "authoritative source" degrade, when the file was missing, into a live projection of the schema, and
+**that projection had been reviewed by nobody and was stored nowhere**: exactly what the concept of an "authoritative
+source" is meant to exclude. The same deployment could derive layout A today and, because a field was added to the
+schema, derive layout B tomorrow, with no human decision in between.
 
-## 決策
+**POLHEM2005 (a FormSchema should have a corresponding FormLayout)** in `src/Polhem.Analyzers` already anticipated
+this positioning, except that what it warned about was silently filled in at runtime, so the warning had no
+consequences at all.
 
-**`FormLayout` 一律在設計階段產出並存成定義檔；執行階段原樣讀取，缺檔屬設定錯誤。**
+## Decision
 
-### 一、缺檔的錯誤落在 runtime 組裝層，不下推到 storage
+**`FormLayout` is always produced at design time and saved as a definition file; the runtime reads it as is, and a
+missing file is a configuration error.**
 
-`IDefineStorage.GetFormLayout` 維持 `FormLayout?`（可空），不改為「缺檔即擲」。
+### 1. The missing-file error sits in the runtime composition layer, not pushed down to storage
 
-理由是同一個介面成員有兩個語意相反的實作：`CustomizeOnlyStorage.GetFormLayout` **必須**能回
-`null`——租戶沒有客製是常態。一個成員不可能同時對 base 層是「缺檔即錯」、對客製層是
-「缺檔正常」。storage 層只回答「檔案在不在」，**如何判讀 `null` 屬於呼叫端**。
+`IDefineStorage.GetFormLayout` stays `FormLayout?` (nullable); it does not change to "throw when the file is missing".
 
-改的是誰把 `null` 當錯：`FormDefinitionLoader.GetRuntimeLayoutAsync` 由「產生一份」改為擲
-`InvalidOperationException`，訊息指出缺的 `layoutId` 與該檔案應落的相對路徑。
+The reason is that the same interface member has two implementations with opposite semantics:
+`CustomizeOnlyStorage.GetFormLayout` **must** be able to return `null`, since a tenant having no customization is the
+normal case. One member cannot be "missing file is an error" for the base layer and "missing file is normal" for the
+customization layer at the same time. The storage layer only answers "is the file there"; **how to interpret `null`
+belongs to the caller**.
 
-> **實作時的修正**：base 層缺檔時，實際上多半是**伺服端**先擲例外——
-> `ClientDefineAccess.GetFormLayoutAsync` 走 `GetDefine` / `DefineType.FormLayout`，
-> 對應伺服端 `CacheDefineAccess.GetFormLayout(layoutId)`，而該多載本來就對缺檔擲例外
-> （「缺檔即錯」在那一層**早已成立**）。loader 的 guard 涵蓋的是剩下那種情形：伺服端回空 payload。
-> 因此**測試不應斷言例外型別**，只驗「擲例外且訊息含 layoutId」。
+What changes is who treats `null` as an error: `FormDefinitionLoader.GetRuntimeLayoutAsync` changes from "generate
+one" to throwing `InvalidOperationException`, with a message naming the missing `layoutId` and the relative path where
+the file should be.
 
-### 二、產生器留在 `Polhem.Definition` 並轉為 `public`，同時移除 `FormSchema.GetFormLayout`
+> **Correction during implementation**: when the base layer is missing the file, in practice it is usually the
+> **server** that throws first. `ClientDefineAccess.GetFormLayoutAsync` goes through `GetDefine` /
+> `DefineType.FormLayout`, which maps to `CacheDefineAccess.GetFormLayout(layoutId)` on the server, and that overload
+> already threw on a missing file ("missing file is an error" **already held** at that layer). The loader's guard
+> covers the remaining case: the server returns an empty payload. Therefore **tests should not assert the exception
+> type**, only that "an exception is thrown and its message contains the layoutId".
 
-`FormLayoutGenerator` 由 `internal` 改 `public`，`<remarks>` 明寫設計階段定位。
+### 2. The generator stays in `Polhem.Definition` and becomes `public`, and `FormSchema.GetFormLayout` is removed
 
-**移除實例方法才是關鍵動作。** `Schema.GetFormLayout()` 一行就能叫到，正是「執行階段順手會叫到
-的形狀」；改成必須顯式 `using Polhem.Definition.Layouts;` 再寫
-`FormLayoutGenerator.Generate(schema, layoutId)`，意圖就藏不住了。
+`FormLayoutGenerator` changes from `internal` to `public`, and its `<remarks>` state explicitly that it is for design
+time.
 
-不搬到 `tools/` 側的三個理由：
+**Removing the instance method is the key step.** `Schema.GetFormLayout()` could be called in one line, which is
+exactly "the shape the runtime calls in passing"; once it takes an explicit `using Polhem.Definition.Layouts;` followed
+by `FormLayoutGenerator.Generate(schema, layoutId)`, the intent can no longer hide.
 
-1. `tools/DefineEditor` **沒有測試專案**（只有自帶的 `Smoke.cs`），既有的產生器測試會無處安放。
-2. 本 repo 的 scaffolding 流程以「框架公開 API」的形式呼叫它。
-3. 外部框架使用者若自建定義工具，`DefineEditor` 不是唯一可能的產生端。
+Three reasons not to move it to the `tools/` side:
 
-### 三、UI head 的無 loader 分支改為三段解析，並補 `FormView.Layout`
+1. `tools/DefineEditor` **has no test project** (only its own `Smoke.cs`), so the existing generator tests would have
+   nowhere to go.
+2. This repository's scaffolding workflow calls it in the form of "a public framework API".
+3. If external framework users build their own definition tools, `DefineEditor` is not the only possible producer.
 
-`FormView`（Avalonia）新增可覆寫的 `ResolveLayoutAsync`，依序解析：
+### 3. The no-loader branch of the UI heads becomes a three-stage resolution, and `FormView.Layout` is added
 
-1. host 設定的 `FormView.Layout`
-2. `DefinitionLoader` 組裝出的執行階段版面
-3. 經 `ClientInfo.DefineAccess` 取得的 base 定義
-4. 都沒有 → 擲 `InvalidOperationException`
+`FormView` (Avalonia) gains an overridable `ResolveLayoutAsync`, which resolves in order:
 
-第 1 段所需的公開屬性 `FormView.Layout` 是本決策的必要配套：`FormView.Schema` 是公開屬性，
-host **可以**直接塞一份 schema 而背後沒有任何後端（`samples/Avalonia.DemoCenter` 的版面模組
-正是如此）。移除推導後這條路沒有出口，故補一個對稱的 `Layout`。
+1. `FormView.Layout` set by the host
+2. The runtime layout assembled by `DefinitionLoader`
+3. The base definition obtained through `ClientInfo.DefineAccess`
+4. None of these → throw `InvalidOperationException`
 
-Blazor 的 `FormPage` 對稱地改讀 `GetDefineAsync<FormLayout>`。
+The public property `FormView.Layout` needed by step 1 is a required companion of this decision: `FormView.Schema` is a
+public property, and a host **can** put a schema in directly with no backend behind it at all (the layout module of
+`samples/Avalonia.DemoCenter` does exactly that). With derivation removed, that path would have no way out, so a
+symmetric `Layout` is added.
 
-> 第 3 段**必須 `Clone()`**：`ClientDefineAccess` 逐實例快取定義，而
-> `LayoutCapabilityApplier.Apply` 是就地 mutate，直接把快取實例交給它會違反
-> 「cache 內定義 init 後不可異動」。loader 那條路徑本來就 clone。
+Blazor's `FormPage` symmetrically switches to reading `GetDefineAsync<FormLayout>`.
 
-### 四、`GetListLayout()` / `GetLookupLayout()` 不在範圍內
+> Step 3 **must `Clone()`**: `ClientDefineAccess` caches definitions per instance, and `LayoutCapabilityApplier.Apply`
+> mutates in place, so handing it the cached instance directly would violate "definitions in the cache must not change
+> after init". The loader path already clones.
 
-兩者維持原樣。清單欄位集（`FormSchema.ListFields`）與 lookup 欄位集（`LookupFields`）
-**本來就宣告在 `FormSchema` 上**，`DefineType` 沒有對應型別，也沒有任何落檔形式——
-它們是 schema 的投影，不是獨立定義。與「單筆表單版面」是兩件事。
+### 4. `GetListLayout()` / `GetLookupLayout()` are out of scope
 
-### 五、POLHEM2005 升級敘述，嚴重度維持 Warning
+Both stay as they are. The list field set (`FormSchema.ListFields`) and the lookup field set (`LookupFields`) **are
+declared on `FormSchema` to begin with**; `DefineType` has no corresponding type and they have no file form at all.
+They are projections of the schema, not independent definitions. That is a different matter from "the single-record
+form layout".
 
-訊息由「應有」改為「缺檔在執行期會失敗」。**不升為 Error**：那會讓既有 app repo 立刻建置失敗，
-代價與收益不成比例；缺檔的實際後果已由執行期擲例外承擔。
+### 5. POLHEM2005's wording is strengthened; its severity stays Warning
 
-## 理由
+The message changes from "should have" to "a missing file will fail at runtime". **It is not raised to Error**: that
+would make existing app repositories fail to build immediately, a cost out of proportion to the benefit; the actual
+consequence of a missing file is already carried by the runtime exception.
 
-**為什麼不保留推導當作「方便的預設」。** 因為它與「權威來源」不相容，而不是因為它不方便。
-一份沒有人審過、不存在於任何地方的版面，其內容會隨 schema 漂移而無聲改變——使用者看到的畫面
-因此取決於「最後一次有人改 schema 是什麼時候」，而不是「最後一次有人決定畫面長怎樣」。
-這正是「版面是權威來源」這條規則要排除的情形，只是先前沒有把缺檔這條路一併收掉。
+## Rationale
 
-**為什麼是破壞性變更而非漸進廢棄。** `[Obsolete]` 標註無法阻止推導繼續發生，而推導繼續發生
-就等於規則繼續有破口。POLHEM2005 已存在，升版前可先建置取得完整的缺檔清單，遷移路徑明確
-（用 `DefineEditor` 產生一份、審過、存檔），因此直接移除的成本可控。
+**Why not keep derivation as a "convenient default".** Because it is incompatible with "authoritative source", not
+because it is inconvenient. A layout reviewed by nobody and stored nowhere changes silently as the schema drifts, so
+the screen users see depends on "when someone last changed the schema", not on "when someone last decided what the
+screen looks like". That is exactly the situation the rule "the layout is the authoritative source" is meant to
+exclude; the missing-file path simply had not been closed off along with it.
 
-**為什麼產生器要留在框架而非只留在工具。** 「版面在設計階段產生」是規則，「用哪個工具產生」
-不是。把產生器留在框架公開 API，外部使用者才能自建產生端，規則本身不綁定 `DefineEditor`。
+**Why a breaking change rather than gradual deprecation.** An `[Obsolete]` attribute cannot stop derivation from
+happening, and as long as derivation keeps happening the rule keeps its hole. POLHEM2005 already exists, so before
+upgrading you can build to get the complete list of missing files, and the migration path is clear (generate one with
+`DefineEditor`, review it, save it). The cost of removing it outright is therefore under control.
 
-## 後果
+**Why the generator stays in the framework and not only in the tools.** "Layouts are produced at design time" is the
+rule; "which tool produces them" is not. Keeping the generator as a public framework API lets external users build
+their own producers, and the rule itself is not tied to `DefineEditor`.
 
-**正面**：
+## Consequences
 
-- 「`FormLayout` 是畫面權威來源」不再有例外情形；版面內容一律是某次人為決定的結果。
-- 缺檔從靜默補上變成**建置期警告（POLHEM2005）＋執行期明確例外**，兩道都指出該補哪個檔案。
-- 產生器成為公開 API，外部定義工具可用同一份實作。
+**Positive**:
 
-**負面 / 成本**：
+- "`FormLayout` is the authoritative source of the screen" no longer has exceptions; the content of a layout is always
+  the result of some human decision.
+- A missing file goes from being silently filled in to **a build-time warning (POLHEM2005) + an explicit runtime
+  exception**, and both point to the file that needs to be added.
+- The generator becomes a public API, so external definition tools can use the same implementation.
 
-- **二進位破壞性變更**：移除 public `FormSchema.GetFormLayout`，消費端會得到
-  `MissingMethodException`。已於 `PublicAPI.Unshipped.txt` 以 `*REMOVED*` 申報。
-- **任何依賴執行期推導的部署升版後會在開表單時失敗**——這是本決策的意圖，
-  但必須在 CHANGELOG 明列補檔方法。
-- 新增一張表單的定義工作由 4 處變 5 處（多一份 FormLayout 落檔）。
+**Negative / costs**:
 
-**配套**（隨本決策一併落地）：
+- **Binary breaking change**: the public `FormSchema.GetFormLayout` is removed, and consumers will get
+  `MissingMethodException`. It has been declared with `*REMOVED*` in `PublicAPI.Unshipped.txt`.
+- **Any deployment that relies on runtime derivation will fail when opening a form after upgrading**: this is the
+  intent of the decision, but the way to add the missing files must be listed in the CHANGELOG.
+- The definition work for adding a form goes from 4 places to 5 (one more FormLayout file).
 
-- `tools/DefineEditor` 的 FormSchema 節點新增「產生 FormLayout」命令，寫入
-  `{DefinePath}/FormLayout/{ProgId}.FormLayout.xml`。**既有檔案覆寫前先確認**——
-  重新產生會丟掉人工調整過的版面，是該功能唯一的破壞性動作。
-- `samples/Define/` 補上三份先前完全依賴推導的版面檔。
+**Companion changes** (landed together with this decision):
+
+- The FormSchema node of `tools/DefineEditor` gains a "Generate FormLayout" command that writes
+  `{DefinePath}/FormLayout/{ProgId}.FormLayout.xml`. **It asks for confirmation before overwriting an existing file**:
+  regenerating throws away a manually adjusted layout, and it is the only destructive action of the feature.
+- `samples/Define/` gains the three layout files that previously relied entirely on derivation.

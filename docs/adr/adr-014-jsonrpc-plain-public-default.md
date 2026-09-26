@@ -1,195 +1,254 @@
-# ADR-014：JSON-RPC `Plain` 開放策略 — `Public` 為預設保護等級，HTTPS 為信任界線
+# ADR-014: Opening JSON-RPC `Plain` — `Public` as the default protection level, HTTPS as the trust boundary
 
-## 狀態
+[繁體中文](adr-014-jsonrpc-plain-public-default.zh-TW.md)
 
-已採納（2026-05-26）
+## Status
 
-**補充於 [ADR-044](adr-044-payload-codec-negotiation.md)（2026-09-03）** —— 本 ADR 的結論
-（Plain 為 JS 前端路徑、七個方法維持 `Public`）**仍然有效且未被取代**。ADR-044 另外提供了
-一條「JS 前端需要應用層加密時」的路徑，並逐條回應本 ADR〈為何不為 JS 前端做「JS 版加密
-管線」〉的評估。
+Accepted (2026-05-26)
 
-⚠️ **更正於 2026-09-07** —— 本 ADR 通篇的「預設」指的是**開發者的預設選擇**，不是框架的 fallback。
-`ApiProtectionLevel` 是 `[ApiAccessControl]` 的必填參數，框架沒有任何預設值，**也沒有「不設定」
-這個狀態**。〈三項核心要點〉第 3 點原有一句與此相反的敘述，已於同日更正，詳見該處。
+**Supplemented by [ADR-044](adr-044-payload-codec-negotiation.md) (2026-09-03)** — the conclusions of this ADR
+(Plain is the path for JS front ends; the seven methods stay `Public`) **still hold and are not superseded**.
+ADR-044 additionally provides a path for "when a JS front end needs application-layer encryption", and responds point
+by point to this ADR's assessment in "Why not build a 'JS encryption pipeline' for JS front ends".
 
-## 背景
+⚠️ **Corrected on 2026-09-07** — throughout this ADR, "default" means **the developer's default choice**, not a
+framework fallback. `ApiProtectionLevel` is a required parameter of `[ApiAccessControl]`; the framework has no
+default value, **and there is no "not set" state**. Point 3 of "Three key points" originally contained a sentence
+saying the opposite; it was corrected on the same day, see there for details.
 
-Polhem 在 v4.5 階段已為三類前端 host 完成連線抽象（[ADR-013](adr-013-frontend-api-connection-strategy.md)）：桌面端走 `Polhem.UI.Core` static singleton、Blazor Server / WASM 走 `Polhem.Web.*` 與 DI。三者共用 `Polhem.Api.Client` 通訊層，但都假設客戶端是 .NET runtime — RSA key exchange + AES-CBC-HMAC + MessagePack 序列化 + gzip 壓縮的完整 payload pipeline。
+## Context
 
-v4.6 階段出現新的前端類型：**純 JavaScript（React / Vue / Angular / vanilla）**，沒有 .NET runtime 可承載加密管線。技術上 server 端 `PayloadFormat.Plain` 已支援 `fetch + JSON` 直送（`System.Text.Json` 已實作 `DataSet` / `DataTable` 序列化），但 BO 方法的 `ProtectionLevel` 預設值阻擋了這條路徑：
+By the v4.5 stage Polhem had completed the connection abstraction for three kinds of front-end host
+([ADR-013](adr-013-frontend-api-connection-strategy.md)): the desktop uses the `Polhem.UI.Core` static singleton,
+and Blazor Server / WASM use `Polhem.Web.*` with DI. All three share the `Polhem.Api.Client` communication layer, but
+all assume the client is a .NET runtime — the full payload pipeline of RSA key exchange + AES-CBC-HMAC + MessagePack
+serialization + gzip compression.
 
-| 方法 | 原 `ProtectionLevel` | JS 影響 |
+At the v4.6 stage a new kind of front end appeared: **pure JavaScript (React / Vue / Angular / vanilla)**, with no
+.NET runtime to carry the encryption pipeline. Technically, the server's `PayloadFormat.Plain` already supported
+sending `fetch + JSON` directly (`System.Text.Json` already implemented serialization of `DataSet` / `DataTable`),
+but the default `ProtectionLevel` values of BO methods blocked this path:
+
+| Method | Original `ProtectionLevel` | Impact on JS |
 |------|--------------------|--------|
-| `FormBO.GetNewData` / `GetData` / `Save` / `Delete` | `Encrypted, Authenticated` | JS 無法執行任何 CRUD |
-| `SystemBO.EnterCompany` / `LeaveCompany` / `Logout` | `Encrypted, Authenticated` | JS 無法完整走 session lifecycle |
-| `SystemBO.Login` / `Ping` / `GetCommonConfiguration` | `Public, Anonymous` | JS 可呼叫 |
-| `<ProgId>.GetList` | `Public, Authenticated` | JS 可呼叫 |
-| `System.GetDefine` / `SaveDefine` | `Public, Authenticated` | JS 可呼叫（敏感範圍由 `IsLocalCall` 守住） |
+| `FormBO.GetNewData` / `GetData` / `Save` / `Delete` | `Encrypted, Authenticated` | JS cannot perform any CRUD |
+| `SystemBO.EnterCompany` / `LeaveCompany` / `Logout` | `Encrypted, Authenticated` | JS cannot go through the full session lifecycle |
+| `SystemBO.Login` / `Ping` / `GetCommonConfiguration` | `Public, Anonymous` | JS can call it |
+| `<ProgId>.GetList` | `Public, Authenticated` | JS can call it |
+| `System.GetDefine` / `SaveDefine` | `Public, Authenticated` | JS can call it (the sensitive scope is guarded by `IsLocalCall`) |
 
-`Encrypted` 等級**強制要求加密 payload**：client 必須完成 RSA key exchange 拿到 `ApiEncryptionKey`、用 AES-CBC-HMAC 加密 request body。JS 前端若要走這條路徑，等於要在瀏覽器內實作 RSA + AES-CBC-HMAC + gzip + MessagePack — **此時改用 Blazor WASM 更實際**，整條技術路徑也失去開放給 JS 的意義。
+The `Encrypted` level **requires an encrypted payload**: the client must complete the RSA key exchange to obtain the
+`ApiEncryptionKey`, and encrypt the request body with AES-CBC-HMAC. For a JS front end to take this path, it would
+have to implement RSA + AES-CBC-HMAC + gzip + MessagePack inside the browser — **at that point switching to Blazor
+WASM is more practical**, and the whole technical path loses its point of being open to JS.
 
-### 反向問題：把所有 BO 方法預設為 `Encrypted` 對嗎？
+### The reverse question: is it right to default every BO method to `Encrypted`?
 
-回頭檢視 `Encrypted` 預設的歷史脈絡：早期 Polhem 部署在內網或 HTTP-only 環境，需要應用層加密守住 payload。但 v4.x 階段：
+Looking back at the history of the `Encrypted` default: early Polhem was deployed on intranets or in HTTP-only
+environments and needed application-layer encryption to protect the payload. But at the v4.x stage:
 
-- production 部署普遍走 HTTPS（TLS 1.2+）— 傳輸層加密已是行業基線
-- `AccessToken` GUID + `X-Api-Key` 雙重認證已足以阻絕未授權呼叫
-- 應用層加密的真正價值是「**TLS 終止後的中介存取**」（log aggregator、APM proxy、CDN edge），這對**特定**高敏感方法（密碼修改、加密金鑰交換）有意義，**不需要**作為全方法預設
+- Production deployments generally use HTTPS (TLS 1.2+) — transport-layer encryption is already the industry baseline
+- The double authentication of the `AccessToken` GUID + `X-Api-Key` is already enough to block unauthorized calls
+- The real value of application-layer encryption is "**access by intermediaries after TLS termination**" (log
+  aggregators, APM proxies, CDN edges). This matters for **specific** highly sensitive methods (changing a password,
+  exchanging encryption keys) and is **not needed** as a default for every method
 
-換句話說：把 `Encrypted` 當預設是**對所有方法套上「最高安全等級」的逆向預防**，但實際上多數 BO 方法的 payload（DataSet 內容、companyId 切換等）落入 TLS 加密保護圈內就足夠。
+In other words: making `Encrypted` the default is **a reverse precaution that applies "the highest security level" to
+every method**, while in practice the payload of most BO methods (DataSet contents, switching companyId and so on) is
+adequately protected by falling inside TLS encryption.
 
-## 決策
+## Decision
 
-**`Public` 為 BO 方法預設保護等級，HTTPS 為信任界線；只有開發者明確判斷需要應用層加密的特定方法才標 `Encrypted`。**
+**`Public` is the default protection level for BO methods, and HTTPS is the trust boundary; only specific methods
+that the developer explicitly judges to need application-layer encryption are marked `Encrypted`.**
 
-### 三項核心要點
+### Three key points
 
-1. **降級 7 個 BO 方法為 `Public + Authenticated`**
+1. **Downgrade 7 BO methods to `Public + Authenticated`**
 
-   | 方法 | `ProtectionLevel` 變更 |
+   | Method | `ProtectionLevel` change |
    |------|----------------------|
    | `FormBO.GetNewData` / `GetData` / `Save` / `Delete` | `Encrypted` → `Public` |
    | `SystemBO.EnterCompany` / `LeaveCompany` / `Logout` | `Encrypted` → `Public` |
 
-   - `AccessRequirement = Authenticated` 維持不變：身分門檻不放寬
-   - Application-layer 業務權限檢查（who can edit which DataSet / who can enter which company）不在 `ProtectionLevel` 範圍，由 BO 層自行守住
+   - `AccessRequirement = Authenticated` stays unchanged: the identity threshold is not relaxed
+   - Application-layer business permission checks (who can edit which DataSet / who can enter which company) are not
+     within the scope of `ProtectionLevel`; the BO layer guards them itself
 
-2. **`ApiAccessValidator` 容許「高等級格式呼叫低等級方法」（向下相容）**
+2. **`ApiAccessValidator` allows "a higher-level format calling a lower-level method" (backward compatible)**
 
-   既有 `.NET` client 走 `Encrypted` 格式呼叫降級後的方法：仍然允許。`Encrypted ≥ Public` 是合法的「**過度加密**」，不強制呼叫端配合降級。這保證：
-   - 既有 desktop / Blazor 客戶端**不需要任何改動**就能繼續呼叫
-   - 升級至 v4.6 不會破壞現有 deployment
+   An existing `.NET` client calling a downgraded method in `Encrypted` format is still allowed. `Encrypted ≥ Public`
+   is legitimate "**over-encryption**", and callers are not forced to follow the downgrade. This guarantees:
+   - Existing desktop / Blazor clients can keep calling **without any change**
+   - Upgrading to v4.6 does not break existing deployments
 
-3. **`Encrypted` 仍是合法選項，但需要明確標註**
+3. **`Encrypted` is still a valid option, but it has to be marked explicitly**
 
-   未來 BO 方法的設計者必須**主動評估**哪些方法需要 `Encrypted`（如密碼修改、加密金鑰生成），不再 by-default 全標。這把「需要應用層加密」從**全域預設**降為**個案決策**。
+   Designers of future BO methods must **actively assess** which methods need `Encrypted` (such as changing a password
+   or generating encryption keys), instead of marking everything by default. This turns "needs application-layer
+   encryption" from a **global default** into a **case-by-case decision**.
 
-   > ⚠️ **更正（2026-09-07）**：本項原有一句「`ProtectionLevel` 不設定時 server 取既定預設
-   > （`Public`）」，**與實作相反，而且從未成立**。本 ADR 採納當天（[`aa843f71`](https://github.com/jeff377/bee-library/commit/aa843f71)，2026-05-26）
-   > `ApiAccessValidator.ValidateAccess` 就已對找不到宣告的方法擲 `UnauthorizedAccessException`
-   > （其 remarks 自陳 “is denied, not treated as unrestricted”），而 `ApiAccessControlAttribute`
-   > 的 `protectionLevel` 當天也已是必填參數。**現況**：沒有 `[ApiAccessControl]` 蓋到的方法一律
-   > 拒絕，建置期另有 `POLHEM3001` 把這種方法指出來（`TreatWarningsAsErrors` 之下即編譯失敗）。
-   > 原句已移除而非保留為紀錄 —— 它不是決策，是一句夾在決策項裡的機制描述，且與本項的決策
-   > （必須主動評估）方向相反，等於給了一條不必評估的退路。
+   > ⚠️ **Correction (2026-09-07)**: this item originally contained the sentence "when `ProtectionLevel` is not set,
+   > the server takes the established default (`Public`)". **That is the opposite of the implementation, and it never
+   > held.** On the day this ADR was adopted ([`aa843f71`](https://github.com/jeff377/bee-library/commit/aa843f71),
+   > 2026-05-26), `ApiAccessValidator.ValidateAccess` already threw `UnauthorizedAccessException` for a method with no
+   > declaration found (its remarks state that such a method “is denied, not treated as unrestricted”), and the
+   > `protectionLevel` of `ApiAccessControlAttribute` was already a required parameter that day. **Current state**: a
+   > method not covered by `[ApiAccessControl]` is always denied, and at build time `POLHEM3001` also points out such
+   > methods (under `TreatWarningsAsErrors` that is a compile failure). The original sentence was removed rather than
+   > kept as a record — it was not a decision but a description of a mechanism sitting inside a decision item, and it
+   > pointed in the opposite direction from this item's decision (you must actively assess), in effect offering a way
+   > out of assessing at all.
 
-## 理由
+## Rationale
 
-### 為何信任 HTTPS 作為傳輸層基線
+### Why trust HTTPS as the transport-layer baseline
 
-`Encrypted` 是 ProtectionLevel 中最強等級，承擔的是「**TLS 被中間人破解**」這個威脅模型。實務上：
+`Encrypted` is the strongest ProtectionLevel, and it addresses the threat model "**TLS is broken by a
+man-in-the-middle**". In practice:
 
-- production HTTPS 配置（TLS 1.2+、HSTS、HPKP / Certificate Transparency）已是基本部署要求
-- 若 TLS 被破解，加密 payload 的 AES-CBC-HMAC 金鑰也是透過 RSA key exchange 走同一條 TLS 通道交換，**同樣會洩漏**
-- 真正能擋住 TLS-after-decryption 的中介存取（如 cloud APM proxy 抓 unencrypted body）才是 `Encrypted` 的價值場景，這對所有方法都套用是過度設計
+- A production HTTPS configuration (TLS 1.2+, HSTS, HPKP / Certificate Transparency) is already a basic deployment
+  requirement
+- If TLS is broken, the AES-CBC-HMAC keys of the encrypted payload are also exchanged through the same TLS channel via
+  the RSA key exchange, so they **leak just the same**
+- The scenario where `Encrypted` has real value is blocking intermediary access after TLS decryption (such as a cloud
+  APM proxy capturing the unencrypted body); applying that to every method is over-engineering
 
-### 為何不為 JS 前端做「JS 版加密管線」
+### Why not build a "JS encryption pipeline" for JS front ends
 
-評估過讓 JS 自帶 AES-CBC-HMAC + RSA 實作（Web Crypto API 已支援），但拒絕原因：
+Letting JS bring its own AES-CBC-HMAC + RSA implementation (the Web Crypto API already supports it) was evaluated, but
+rejected because:
 
-- JS 端與 .NET 端的加密管線實作要逐 byte 對齊（IV 隨機性、HMAC 對齊位元、gzip 包裝），測試成本高
-- 即使做到，**降級 ProtectionLevel 的整個動機就是讓 JS 不用碰加密管線**；若 JS 仍要實作 RSA + AES-CBC-HMAC，等於白做這個 ADR — 不如改用 Blazor WASM（已有完整實作）
-- JS 版加密管線會在多個前端框架（React / Vue / Angular）各自再實作一份，維護成本指數成長
+- The JS and .NET encryption pipeline implementations would have to match byte for byte (IV randomness, HMAC bit
+  alignment, gzip wrapping), which makes testing expensive
+- Even if achieved, **the whole motivation for downgrading ProtectionLevel is to spare JS from touching the encryption
+  pipeline**; if JS still had to implement RSA + AES-CBC-HMAC, this ADR would be wasted effort — better to switch to
+  Blazor WASM (which already has a complete implementation)
+- A JS encryption pipeline would be reimplemented separately in several front-end frameworks (React / Vue / Angular),
+  and the maintenance cost would grow exponentially
 
-JS 走 `Plain` + HTTPS + Bearer Token 的雙重保護線，與 ADR-013 Family B（`Polhem.Web.*` 走 `RemoteApiProvider`）策略一致。
+JS takes the double line of protection of `Plain` + HTTPS + Bearer Token, consistent with the strategy of ADR-013
+Family B (`Polhem.Web.*` uses `RemoteApiProvider`).
 
-### 為何降級不影響既有部署
+### Why the downgrade does not affect existing deployments
 
-`ApiAccessValidator` 的判斷邏輯是 **「實際 payload 格式」≥「方法宣告等級」**：
+The decision logic of `ApiAccessValidator` is **"actual payload format" ≥ "declared level of the method"**:
 
-| 實際格式 | 方法宣告等級 | 結果 |
+| Actual format | Declared level of the method | Result |
 |---------|------------|------|
-| `Encrypted` | `Public`（降級後） | ✅ 允許（過度加密合法）|
-| `Encoded` | `Public`（降級後） | ✅ 允許 |
-| `Plain` | `Public`（降級後） | ✅ 允許 |
-| `Plain` | `Encrypted`（未降級） | ❌ 拒絕 |
+| `Encrypted` | `Public` (after downgrade) | ✅ Allowed (over-encryption is legitimate) |
+| `Encoded` | `Public` (after downgrade) | ✅ Allowed |
+| `Plain` | `Public` (after downgrade) | ✅ Allowed |
+| `Plain` | `Encrypted` (not downgraded) | ❌ Rejected |
 
-降級後 `Encrypted` 客戶端的請求仍然落在 ✅ 行，不會被 reject。
+After the downgrade, requests from `Encrypted` clients still fall in the ✅ rows and are not rejected.
 
-### 為何 `Login` 早已是 `Public + Anonymous`
+### Why `Login` was already `Public + Anonymous`
 
-歷史上 `Login` 是唯一在「**還沒有 AccessToken**」階段就需呼叫的方法，必須允許 anonymous 呼叫。它也是 RSA key exchange 的入口（`ClientPublicKey` 在此交換），因此自身不能要求 `Encrypted`（否則雞生蛋蛋生雞）。這個既存設計**意外地**為 JS 前端的整體開放鋪好了路：JS 走 Plain 呼叫 `Login`（`ClientPublicKey` 傳空字串），server 端短路加密協商，回傳 `AccessToken`，後續呼叫帶 `Authorization: Bearer <token>`。本 ADR 把這套既有單點機制**擴展為通用模式**。
+Historically `Login` is the only method that has to be called at the stage where "**there is no AccessToken yet**",
+so it must allow anonymous calls. It is also the entry point of the RSA key exchange (`ClientPublicKey` is exchanged
+here), so it cannot itself require `Encrypted` (otherwise it would be a chicken-and-egg problem). This existing design
+**incidentally** paved the way for opening everything to JS front ends: JS calls `Login` in Plain (with
+`ClientPublicKey` as an empty string), the server short-circuits the encryption negotiation and returns the
+`AccessToken`, and subsequent calls carry `Authorization: Bearer <token>`. This ADR **extends that existing
+single-point mechanism into a general pattern**.
 
-## 替代方案（已評估後不採納）
+## Alternatives considered (evaluated and rejected)
 
-1. **保留 `Encrypted` 預設，JS 前端用 WebCrypto 實作加密管線**
-   - 拒絕原因：見〈為何不為 JS 前端做「JS 版加密管線」〉
+1. **Keep the `Encrypted` default and have JS front ends implement the encryption pipeline with WebCrypto**
+   - Reason for rejection: see "Why not build a 'JS encryption pipeline' for JS front ends"
 
-2. **新增 `JsAuthorized` 等級（JS-only 認證模式）**
-   - 拒絕原因：等於 `Public + Authenticated`，多一層命名沒有實質區別；且暗示「JS 客戶端與 .NET 客戶端走不同認證路徑」會誤導讀者
+2. **Add a `JsAuthorized` level (a JS-only authentication mode)**
+   - Reason for rejection: it equals `Public + Authenticated`, so the extra name makes no real difference; and it
+     would mislead readers by implying "JS clients and .NET clients take different authentication paths"
 
-3. **預設保留 `Encrypted`，僅本次 7 個方法降級**
-   - 部分採納：本次確實只降級 7 個方法。但「**未來新加方法的預設值**」是另一個獨立決策。本 ADR 明確規定**新方法預設 `Public`**，避免每加新方法就要走一次降級流程
+3. **Keep `Encrypted` as the default and downgrade only these 7 methods**
+   - Partly adopted: this change does downgrade only 7 methods. But "**the default for methods added in the future**"
+     is a separate decision. This ADR explicitly sets **the default for new methods to `Public`**, so that not every
+     new method has to go through a downgrade
 
-4. **`ProtectionLevel = Encrypted` 退場（全 enum 移除）**
-   - 拒絕原因：應用層加密在特定場景仍有價值（密碼修改、金鑰生成等高敏感方法），不應全面移除
+4. **Retire `ProtectionLevel = Encrypted` (remove it from the enum entirely)**
+   - Reason for rejection: application-layer encryption still has value in specific scenarios (highly sensitive
+     methods such as changing a password or generating keys) and should not be removed entirely
 
-5. **以 `[JsAccessible]` Attribute 表達 JS 可呼叫，不動 `ProtectionLevel`**
-   - 拒絕原因：本質仍是「該方法的 payload 是否要求加密」，再加一個 attribute 表達同一個語意是冗餘；且兩個獨立 attribute 容易長期間不同步
+5. **Express "callable from JS" with a `[JsAccessible]` attribute and leave `ProtectionLevel` alone**
+   - Reason for rejection: in essence it is still "does this method's payload require encryption", so adding another
+     attribute to express the same meaning is redundant; and two independent attributes easily drift out of sync over
+     time
 
-## 後果
+## Consequences
 
-### JS 前端可呼叫的完整 API 表面
+### The full API surface callable from JS front ends
 
-降級後，**Authenticated（需 AccessToken）** 區內 JS 前端透過 `PayloadFormat.Plain` 可呼叫：
+After the downgrade, within the **Authenticated (AccessToken required)** zone, JS front ends can call through
+`PayloadFormat.Plain`:
 
-| 方法 | `ProtectionLevel` | 用途 |
+| Method | `ProtectionLevel` | Purpose |
 |------|------------------|------|
-| `System.EnterCompany`* | Public | 進入公司 |
-| `System.LeaveCompany`* | Public | 離開公司 |
-| `System.Logout`* | Public | 登出 |
-| `System.GetDefine` | Public | 取得 FormSchema / TableSchema 等定義 |
-| `System.SaveDefine` | Public | 寫入定義（`IsLocalCall` 守住） |
-| `System.GetFormSchema`† | Public | JSON-friendly 取得 FormSchema |
-| `System.GetFormLayout`† | Public | JSON-friendly 取得 FormLayout |
-| `<ProgId>.GetList` | Public | 列表查詢 |
-| `<ProgId>.GetNewData`* | Public | 取得空白 DataSet |
-| `<ProgId>.GetData`* | Public | 取得單筆資料 |
-| `<ProgId>.Save`* | Public | CRUD 儲存 |
-| `<ProgId>.Delete`* | Public | 刪除 |
+| `System.EnterCompany`* | Public | Enter a company |
+| `System.LeaveCompany`* | Public | Leave a company |
+| `System.Logout`* | Public | Log out |
+| `System.GetDefine` | Public | Get definitions such as FormSchema / TableSchema |
+| `System.SaveDefine` | Public | Write definitions (guarded by `IsLocalCall`) |
+| `System.GetFormSchema`† | Public | Get a FormSchema in a JSON-friendly way |
+| `System.GetFormLayout`† | Public | Get a FormLayout in a JSON-friendly way |
+| `<ProgId>.GetList` | Public | List query |
+| `<ProgId>.GetNewData`* | Public | Get a blank DataSet |
+| `<ProgId>.GetData`* | Public | Get a single record |
+| `<ProgId>.Save`* | Public | CRUD save |
+| `<ProgId>.Delete`* | Public | Delete |
 
-`*` 為本 ADR 降級而開放、`†` 為配套新增的 JSON-native getter。
+`*` is opened by this ADR's downgrade; `†` is a JSON-native getter added alongside.
 
-**Anonymous（不需 AccessToken）** 區：`System.Ping` / `GetCommonConfiguration` / `Login` / `CreateSession` 既有皆為 Public，不在本 ADR 範圍。
+**Anonymous (no AccessToken required)** zone: `System.Ping` / `GetCommonConfiguration` / `Login` / `CreateSession`
+were all already Public and are outside the scope of this ADR.
 
-### 不變更的方法
+### Methods not changed
 
-`CheckPackageUpdate` / `GetPackage` 維持 `Encoded`，因為這兩個是 `.NET` runtime 端的套件更新機制，JS 前端沒有對應需求。
+`CheckPackageUpdate` / `GetPackage` stay `Encoded`, because these two are the package update mechanism on the `.NET`
+runtime side, and JS front ends have no matching need.
 
-> **註（2026-09-04）**：`CheckPackageUpdate` 與 `GetPackage` **兩者皆已移除**。它們是基底擲
-> `NotSupportedException` 的擴充點，從未有實際消費者 —— 既不給 JS 前端用（如本節所述），
-> `Polhem.Api.Client` 也沒有對應的 connector 方法，而 API 合約的直接消費者就是 connector。
-> 本節保留作為當時的決策紀錄。
+> **Note (2026-09-04)**: `CheckPackageUpdate` and `GetPackage` **have both been removed**. They were extension points
+> whose base threw `NotSupportedException`, and never had an actual consumer — they were not for JS front ends (as
+> this section says), and `Polhem.Api.Client` had no matching connector methods either, while the direct consumer of
+> the API contract is the connector. This section is kept as a record of the decision at the time.
 
-### 安全模型
+### Security model
 
-| 攻擊向量 | 防護線 |
+| Attack vector | Line of defense |
 |---------|-------|
-| 未認證呼叫 | `AccessRequirement.Authenticated` 守 `AccessToken` 有效性 |
-| Token 竊取（網路嗅探） | HTTPS / TLS 1.2+ |
-| Token 竊取（client-side） | client 自負（瀏覽器 localStorage 對 XSS、桌面端 process 內對 memory dump）|
-| 跨來源呼叫 | CORS 設定（QuickStart.Server 已加，production 須限制 origin） |
-| Payload 中介存取（TLS 終止後） | 特定高敏感方法仍標 `Encrypted`（不在本 ADR 降級清單） |
-| 應用層權限失效 | BO 層業務檢查（如 `EnterCompany` 的公司權限驗證、Repository 的資料範圍過濾） |
+| Unauthenticated calls | `AccessRequirement.Authenticated` guards the validity of the `AccessToken` |
+| Token theft (network sniffing) | HTTPS / TLS 1.2+ |
+| Token theft (client side) | The client's own responsibility (browser localStorage against XSS, in-process on the desktop against memory dumps) |
+| Cross-origin calls | CORS configuration (already added in QuickStart.Server; production must restrict origins) |
+| Intermediary access to the payload (after TLS termination) | Specific highly sensitive methods are still marked `Encrypted` (not in this ADR's downgrade list) |
+| Application-layer permission failures | Business checks in the BO layer (such as the company permission check of `EnterCompany`, and data scope filtering in the Repository) |
 
-### 對開發者的義務
+### Obligations for developers
 
-- **新增 BO 方法時預設 `Public + Authenticated`**，不再 by-default 標 `Encrypted`
-- 若該方法 payload 屬於「**TLS 終止後不能洩漏**」的敏感資料（password、金鑰、PII 等高敏感），**主動標 `Encrypted`** 並在 PR 內說明理由
-- 部署 production host 時 **HTTPS 強制**為前置條件（HTTP-only 部署不再被視為合法配置）
+- **When adding a BO method, default to `Public + Authenticated`**; no longer mark `Encrypted` by default
+- If the method's payload is sensitive data that "**must not leak after TLS termination**" (highly sensitive data such
+  as passwords, keys, PII), **mark it `Encrypted` proactively** and explain why in the PR
+- When deploying a production host, **HTTPS is mandatory** as a precondition (HTTP-only deployments are no longer
+  considered a valid configuration)
 
-## 相關連結
+## Related
 
-- [ADR-013：前端 API 連線策略](adr-013-frontend-api-connection-strategy.md) — Family B（`Polhem.Web.*`）的 HTTPS + Bearer Token 安全模型與本 ADR 一致
-- [JSON-RPC 前端整合指引](../en/jsonrpc-frontend-integration.md) — 對外公開的 JS / TS 開發者文件
-- [Polhem.Api.Core README](../../src/Polhem.Api.Core/README.md) — `ApiAccessValidator` 等級判斷邏輯
-- `samples/Web.Js.Demo/` — 純 JS demo，端到端驗證 Plain 路徑完整 CRUD
+- [ADR-013: Front-end API connection strategy](adr-013-frontend-api-connection-strategy.md) — the HTTPS + Bearer Token
+  security model of Family B (`Polhem.Web.*`) is consistent with this ADR
+- [JSON-RPC front-end integration guide](../en/jsonrpc-frontend-integration.md) — the public document for JS / TS
+  developers
+- [Polhem.Api.Core README](../../src/Polhem.Api.Core/README.md) — the level-checking logic of `ApiAccessValidator`
+- `samples/Web.Js.Demo/` — a pure JS demo that verifies full CRUD on the Plain path end to end
 
-## 不在範圍
+## Out of scope
 
-- **`ProtectionLevel = Encrypted` 全 enum 退場** — 應用層加密在特定場景仍有價值，保留為 `Public` 之上的 opt-in 等級
-- **JS 版加密管線實作** — 見〈替代方案 1〉拒絕原因；若未來真有需求，視為獨立 ADR
-- **DTO codegen / TypeScript 自動產生** — 屬工具鏈議題，與 `ProtectionLevel` 決策無關
-- **跨來源呼叫的 CORS 預設值** — host 各自決定，與 BO 方法保護等級獨立
-- **NPM 套件化** — 升級路徑分三階段（純 JS sample → TS + Vite → NPM 套件），觸發條件未到不啟動
+- **Retiring `ProtectionLevel = Encrypted` from the enum entirely** — application-layer encryption still has value in
+  specific scenarios and is kept as an opt-in level above `Public`
+- **Implementing a JS encryption pipeline** — see the reason for rejecting "Alternative 1"; if a real need appears in
+  the future, it is treated as a separate ADR
+- **DTO codegen / automatic TypeScript generation** — a toolchain topic, unrelated to the `ProtectionLevel` decision
+- **The CORS default for cross-origin calls** — each host decides, independently of the protection level of BO
+  methods
+- **Packaging as an NPM package** — the upgrade path has three stages (pure JS sample → TS + Vite → NPM package); it
+  does not start until the trigger conditions are met

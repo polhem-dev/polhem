@@ -1,167 +1,188 @@
-# ADR-041：per-form 稽核規則 —— 異動與檢視改為逐表單設定
+# ADR-041: Per-form audit rules: change and access logging are configured form by form
 
-## 狀態
+[繁體中文](adr-041-per-form-audit-rule.zh-TW.md)
 
-**已採納（Accepted，2026-08-26）**
+## Status
 
-結案 [ADR-027](adr-027-audit-trail.md)〈待辦〉的第一條，並補齊
-[ADR-040](adr-040-audit-trail-taxonomy.md) 決策四中「敏感度驅動」與「限定入口」兩項尚未實作的要求。
-ADR-027 的六軸分類、DiffGram 儲存法與 best-effort 寫入策略均不變。
+**Accepted (2026-08-26)**
 
-## 背景
+This closes the first item under "To do" in [ADR-027](adr-027-audit-trail.md), and fills in the two requirements of
+[ADR-040](adr-040-audit-trail-taxonomy.md) decision 4 that had not been implemented, "driven by sensitivity" and
+"limited entry points". ADR-027's six-axis taxonomy, DiffGram storage and best-effort write strategy are all
+unchanged.
 
-異動與檢視兩軸原本只有部署層的全域開關（`AuditLogOptions.ChangeEnabled` / `AccessEnabled`），
-**開了就對所有表單生效**。想要「只對重要資料留痕」時沒有中間檔位：只能全開（量體與雜訊）
-或全關（沒有軌跡）。同時 `WriteChangeAudit` 的 `IsSensitive` 硬寫 `false`，敏感度無從表達。
+## Context
 
-### 藍本查證：兩套成熟 ERP 都不是全記
+The change and access axes originally had only deployment-level global switches (`AuditLogOptions.ChangeEnabled` /
+`AccessEnabled`), and **once turned on they applied to every form**. When you wanted "a trail only for important data"
+there was no middle setting: either everything on (volume and noise) or everything off (no trail). At the same time,
+`WriteChangeAudit` hard-coded `IsSensitive` to `false`, so sensitivity could not be expressed at all.
 
-決定作法前查證了 SAP 與 Odoo。**兩者皆非全記所有物件，且都是兩層結構。**
+### Checking the blueprints: neither mature ERP logs everything
 
-| 機制 | 記什麼 | 誰決定、在哪決定 |
+SAP and Odoo were checked before deciding on the approach. **Neither logs every object, and both use a two-layer
+structure.**
+
+| Mechanism | What it records | Who decides, and where |
 |------|--------|----------------|
-| SAP **Change Documents**（`CDHDR`/`CDPOS`） | 業務物件欄位級變更 | **開發期三層 opt-in**：欄位的 data element 勾「Change document」→ `SCDO` 建 Change Document Object 列出要記的表 → 程式呼叫產生的 `*_WRITE_DOCUMENT` FM |
-| SAP **Table Logging**（`DBTABLOG`） | 表級異動 | **兩層 AND**：表層 `SE13`「Log Data Changes」× 系統層 profile parameter `rec/client`。SAP 明示這是給 customizing 表的手動變更用 |
-| SAP **Read Access Logging** | 檢視 | **純執行期設定**（`SRALMANAGER`），客戶自訂 log purpose / channel / 欄位 |
-| Odoo core **chatter tracking** | 欄位異動 | 開發期，`tracking=True` 寫在模型欄位定義上 |
-| Odoo OCA **`auditlog`** | CRUD + read | **執行期資料表** `auditlog.rule`，每個 model 一筆；`log_read` 明確預設 `False` |
+| SAP **Change Documents** (`CDHDR`/`CDPOS`) | Field-level changes to business objects | **Three-layer opt-in at development time**: tick "Change document" on the field's data element → create a Change Document Object in `SCDO` listing the tables to record → the program calls the generated `*_WRITE_DOCUMENT` FM |
+| SAP **Table Logging** (`DBTABLOG`) | Table-level changes | **Two layers ANDed**: the table-level "Log Data Changes" in `SE13` × the system-level profile parameter `rec/client`. SAP states explicitly that it is meant for manual changes to customizing tables |
+| SAP **Read Access Logging** | Views | **Purely runtime configuration** (`SRALMANAGER`); customers define their own log purpose / channel / fields |
+| Odoo core **chatter tracking** | Field changes | Development time, `tracking=True` written on the model's field definition |
+| Odoo OCA **`auditlog`** | CRUD + read | **A runtime table** `auditlog.rule`, one row per model; `log_read` explicitly defaults to `False` |
 
-三個對本設計有決定性影響的觀察：
+Three observations had a decisive influence on this design:
 
-1. **沒有一套是全記。** 框架原行為在兩套藍本裡都找不到對應。
-2. **異動與檢視一律分開設定，且檢視預設關**（SAP RAL opt-in、Odoo `log_read=False`）。
-3. **都是兩層結構**：總閘 × per-object 宣告。SAP 的 `rec/client` × `SE13` 正是這個形狀。
+1. **Neither logs everything.** The framework's original behavior has no counterpart in either blueprint.
+2. **Change and access are always configured separately, and access is off by default** (SAP RAL is opt-in, Odoo has
+   `log_read=False`).
+3. **Both are two-layer structures**: a master gate × a per-object declaration. SAP's `rec/client` × `SE13` has
+   exactly this shape.
 
-### Odoo 的 model 單位是機制的結果，不是設計選擇
+### Odoo's per-model unit is a result of its mechanism, not a design choice
 
-OCA `auditlog` 以**執行期 monkey-patch ORM 方法**運作：subscribe 時對
-`self.env.registry[model._name]` 掛上 `create` / `read` / `write` / `unlink` / `export_data`
-五個包裝，取消時要 revert 再 reload registry，重啟後靠 `_register_hook()` 重掛。
+OCA `auditlog` works by **monkey-patching ORM methods at runtime**: on subscribe it hooks five wrappers, `create` /
+`read` / `write` / `unlink` / `export_data`, onto `self.env.registry[model._name]`; on cancel it has to revert them and
+reload the registry, and after a restart it re-hooks them through `_register_hook()`.
 
-**patch 的對象是 model class，顆粒度就只能是 model。** 這不是挑出來的設計，而且有代價：
-Odoo 自陳 read logging 不是所有 model 都有效，繞過 ORM 的路徑同樣記不到。
+**The target of the patch is the model class, so the granularity can only be the model.** This is not a chosen design,
+and it has a cost: Odoo itself says read logging does not work for every model, and paths that bypass the ORM are not
+recorded either.
 
-**本框架的埋點是原生的** —— `FormBusinessObject` 的 `Save` / `Delete` / `GetData` 是
-FormSchema 驅動 CRUD 的必經之路，不需 patch、不需重啟重掛、不會有「某些物件記不到」。
-**這是結構優勢，不為了對齊藍本而放棄。**
+**This framework's instrumentation points are native**: `Save` / `Delete` / `GetData` of `FormBusinessObject` are the
+path every FormSchema-driven CRUD operation must take, so there is no patching, no re-hooking after a restart, and no
+"some objects cannot be recorded". **This is a structural advantage and is not given up just to match the
+blueprints.**
 
-## 決策
+## Decision
 
-### 一、規則存執行期資料表，不放定義檔
+### 1. Rules are stored in a runtime table, not in definition files
 
-新增 `st_audit_rule`，每張表單一列。**稽核政策是客戶的營運決定，不是隨應用交付的定義**——
-定義檔會隨應用升級被覆蓋，而政策不該。對齊 Odoo `auditlog.rule` 與 SAP RAL；
-明確排除 SAP Change Documents 那條「寫進開發期定義」的路線。
+A new `st_audit_rule` holds one row per form. **Audit policy is the customer's operational decision, not a definition
+delivered with the application**: definition files get overwritten when the application is upgraded, and policy should
+not. This matches Odoo `auditlog.rule` and SAP RAL, and explicitly excludes the SAP Change Documents route of "writing
+it into development-time definitions".
 
-### 二、company scope（per-tenant）
+### 2. Company scope (per tenant)
 
-各公司自訂要記哪些表單。`st_role` / `st_department` 已是「框架所有但位於公司資料庫」的先例。
+Each company decides for itself which forms to record. `st_role` / `st_department` are existing precedents of "owned
+by the framework but located in the company database".
 
-快取為 **per-company 整份快照**（`CompanyAuditRules`，快取鍵 = companyId），
-不是逐 ProgId 快取。理由是**「查無規則」才是常態**：三態預設 `Inherit`，
-絕大多數表單不會有規則列；逐 ProgId 會讓每一張都變成 cache miss ＋ 查詢 ＋ 負向項，
-而整份快照讓「這張表單沒規則」成為一次記憶體字典 miss。與
-`CompanyRolePermissions` 選整份快照而非逐權限項是同一個理由。
+The cache is **a whole snapshot per company** (`CompanyAuditRules`, cache key = companyId), not a cache per ProgId.
+The reason is that **"no rule found" is the normal case**: the three-state default is `Inherit`, and the vast majority
+of forms will have no rule row. Caching per ProgId would turn every form into a cache miss + a query + a negative
+entry, while a whole snapshot makes "this form has no rule" a single in-memory dictionary miss. It is the same reason
+`CompanyRolePermissions` chose a whole snapshot over per-permission entries.
 
-跨程序失效沿用既有模式：資料在公司資料庫、notify 列在 common 的 `st_cache_notify`
-（poller 只看一個資料庫），與 `CompanyRolePermissions` 寫進契約的作法相同。
+Cross-process invalidation follows the existing pattern: the data is in the company database and the notify row goes
+into `st_cache_notify` in common (the poller watches only one database), the same approach `CompanyRolePermissions`
+wrote into its contract.
 
-### 三、單位是 ProgId，不是資料表
+### 3. The unit is the ProgId, not the table
 
-**SAP Change Document Object 也不是逐表** —— 一個 object 涵蓋 header + item 多張表，
-是業務物件單位。Odoo 的 model 才是逐表：一張採購單要 `purchase.order` 與
-`purchase.order.line` 各訂一筆。
+**An SAP Change Document Object is not per table either**: one object covers several tables, header + items, as a
+business object unit. Odoo's model is what is per table: a purchase order needs one row each for `purchase.order` and
+`purchase.order.line`.
 
-本框架的 ProgId = 一個 FormSchema = master + detail 的聚合，**同時對齊 SAP 的聚合概念
-與業務單據的實際形狀**，且埋點在 `FormBusinessObject`，單位天然如此。
+In this framework a ProgId = one FormSchema = an aggregate of master + detail, which **matches both SAP's aggregate
+concept and the actual shape of business documents**, and since the instrumentation is in `FormBusinessObject`, the
+unit is naturally this.
 
-> **代價**：per-ProgId 無法「只記主檔、不記明細」—— DiffGram 一次把 master + detail
-> 存成一列（ADR-027 D5）。有此需求要等表／欄層顆粒度。
+> **Cost**: per ProgId, you cannot "record only the master, not the details": a DiffGram stores master + detail as one
+> row (ADR-027 D5). That need has to wait for table / column level granularity.
 
-### 四、三態 `Inherit` / `On` / `Off`，預設 `Inherit`
+### 4. Three states `Inherit` / `On` / `Off`, defaulting to `Inherit`
 
-沒有規則列 = 全部 `Inherit` = 沿用全域開關 = **升級後行為完全不變**。零破壞性。
+No rule row = everything `Inherit` = the global switches apply = **behavior after upgrading is completely unchanged**.
+Zero breakage.
 
-### 五、`Enabled` 是唯一硬性總閘，軸開關不是第二道閘
+### 5. `Enabled` is the only hard master gate; the axis switches are not a second gate
 
-| 開關 | 角色 |
+| Switch | Role |
 |------|------|
-| `AuditLogOptions.Enabled` | **唯一硬性總閘**。關閉時直接短路，連規則快取都不查（等同 SAP `rec/client=OFF`） |
-| `ChangeEnabled` / `AccessEnabled` | 該軸的**預設值**，供 `Inherit` 繼承。**不是閘** |
+| `AuditLogOptions.Enabled` | **The only hard master gate**. When off it short-circuits immediately, without even consulting the rule cache (equivalent to SAP `rec/client=OFF`) |
+| `ChangeEnabled` / `AccessEnabled` | The **default value** of that axis, inherited by `Inherit`. **Not a gate** |
 
 ```
-Enabled = false                          → 不記（短路，零成本）
-Enabled = true, 規則 = On                → 記（即使該軸預設為 false）
-Enabled = true, 規則 = Off               → 不記（即使該軸預設為 true）
-Enabled = true, 規則 = Inherit / 無規則列 → 依 ChangeEnabled / AccessEnabled
+Enabled = false                          → not recorded (short circuit, zero cost)
+Enabled = true, rule = On                → recorded (even if the axis default is false)
+Enabled = true, rule = Off               → not recorded (even if the axis default is true)
+Enabled = true, rule = Inherit / no row  → follows ChangeEnabled / AccessEnabled
 ```
 
-**設計過程中這條曾寫反**，記錄在此以免重蹈：初稿讓軸開關也當閘，
-但 `AccessEnabled` 預設就是 `false`，那樣一來「只記某一張重要表單的檢視」會完全失效——
-而那正是本功能的主要用途。
+**This rule was once written the wrong way round during design**, and is recorded here so the mistake is not
+repeated: the first draft also made the axis switches gates, but `AccessEnabled` defaults to `false`, so "record views
+of just one important form" would not have worked at all, and that is the main use of this feature.
 
-代價是 `Enabled = true` 時每次 Save / GetData 多一次記憶體字典查表。
-`Enabled` 預設為 `false`，未使用稽核的部署仍是零成本。
+The cost is one extra in-memory dictionary lookup per Save / GetData when `Enabled = true`. `Enabled` defaults to
+`false`, so deployments that do not use auditing still pay nothing.
 
-### 六、政策表單自身硬性豁免於規則表
+### 6. The policy form itself is hard-exempted from the rule table
 
-`AuditRule` 這張維護表單**兩軸恆為 `On`、恆標敏感**，且該判定不經過規則表。
+The `AuditRule` maintenance form **always has both axes `On` and is always marked sensitive**, and that decision does
+not go through the rule table.
 
-**這是安全性要求，不是便利設計。** 若政策表單受一般規則管轄，任何能維護規則的人
-只要把 `AuditRule` 那一列設成 `Off`，之後所有政策變更都無痕 ——
-**稽核可以被稽核政策自己靜靜關掉，且沒有任何紀錄顯示發生過。**
+**This is a security requirement, not a convenience.** If the policy form were governed by ordinary rules, anyone who
+can maintain rules could set the `AuditRule` row to `Off`, after which every policy change would leave no trace:
+**auditing could be quietly turned off by the audit policy itself, with no record showing it ever happened.**
 
-刻意與 `SystemBusinessObject` 的部署層稽核同構：那條也只受 `Enabled` 管、不可個別關閉，
-理由相同 —— 開了稽核的部署不能選擇不記錄「誰授予了能力」，而稽核政策正是那種授予。
+This deliberately mirrors the deployment-level auditing of `SystemBusinessObject`: that too is governed only by
+`Enabled` and cannot be turned off individually, for the same reason. A deployment with auditing on cannot choose not
+to record "who granted a capability", and audit policy is exactly that kind of grant.
 
-### 七、維護表單宣告 `PermissionModelId`，是框架預設 form 中唯一的一張
+### 7. The maintenance form declares a `PermissionModelId`, the only one among the framework's default forms
 
-稽核政策是特權操作（SAP 的 `SE13` 要 Basis 權限、Odoo 的 `auditlog.rule` 在
-Technical Features 之後）。enforcement 為 **fail-closed**：模型未授權時 `ForbiddenException`。
+Audit policy is a privileged operation (SAP's `SE13` needs Basis authorization, Odoo's `auditlog.rule` sits behind
+Technical Features). Enforcement is **fail-closed**: without an authorized model, `ForbiddenException`.
 
-決策六是**偵測**（證明有人動過政策），本條是**預防**（擋住事情發生）。兩者互補，
-不能互相取代 —— 具體情境：有人先把某張表單的 `change_mode` 設成 `Off`、改資料、再改回
-`Inherit`，中間那段完全沒有軌跡。
+Decision 6 is **detection** (proving that someone touched the policy); this item is **prevention** (stopping it from
+happening). The two complement each other and cannot replace each other. A concrete scenario: someone sets a form's
+`change_mode` to `Off`, changes data, then sets it back to `Inherit`, and the period in between has no trail at all.
 
-代價：複製定義檔到部署後，要先建模型並授權才能使用，預設是「任何人都開不了」。
-`Defaults/` 本來就是 scaffold 來源而非 runtime 載入路徑，這個「先設定才能用」的成本
-落在它該落的地方。框架因此隨附一份 `PermissionModels.xml` 範例。
+Cost: after copying the definition files into a deployment, a model has to be created and authorized before the form
+can be used; by default "nobody can open it". `Defaults/` was always a scaffolding source rather than a runtime load
+path, so this "configure before use" cost falls where it belongs. The framework therefore ships a sample
+`PermissionModels.xml`.
 
-## 明確不納入
+## Explicitly not included
 
-| 項目 | 理由 |
+| Item | Reason |
 |------|------|
-| **欄位層敏感度** | ADR-040 決策四的完整形態，要動 DiffGram 過濾邏輯，範圍另計 |
-| **動作層開關**（`GetData` / `Save` / `Delete` 分別） | 檢視目前只在 `GetData` 埋一個點，動作層現階段無實際差別 |
-| **使用者過濾**（Odoo `user_ids` / `users_to_exclude_ids`） | 尚無需求 |
-| **不抄 Odoo 的 `state: draft / subscribed`** | 那個狀態存在是**因為 subscribe 要去做 patching**。本框架沒有 patch 要掛，`draft` 沒有機械意義；三態已完整表達「不生效」。**這是最容易被 cargo-cult 進來的東西** |
-| **不抄 Odoo 的 `log_type: full / fast`** | DiffGram 一律含 before/after，沒有「只記傳入值」的省事檔位可省 |
+| **Field-level sensitivity** | The complete form of ADR-040 decision 4; it requires changing the DiffGram filtering logic and is scoped separately |
+| **Action-level switches** (`GetData` / `Save` / `Delete` separately) | Views are currently instrumented at a single point, `GetData`, so the action level makes no practical difference for now |
+| **User filters** (Odoo `user_ids` / `users_to_exclude_ids`) | No need yet |
+| **Not copying Odoo's `state: draft / subscribed`** | That state exists **because subscribing has to do the patching**. This framework has no patch to hook, so `draft` has no mechanical meaning; the three states already fully express "not in effect". **This is the thing most likely to be cargo-culted in** |
+| **Not copying Odoo's `log_type: full / fast`** | A DiffGram always contains before/after, so there is no cheaper "record only the incoming values" level to save on |
 
-## 理由
+## Rationale
 
-**為什麼照抄兩套 ERP 的兩層結構而不自創。** 與 ADR-040 同一個理由：稽核分類的成本不在寫程式，
-而在事後發現切錯了。SAP 與 Odoo 在「總閘 × per-object」這一點上獨立收斂到相同結構，
-這種一致性本身就是證據。
+**Why copy the two-layer structure of two ERPs instead of inventing one.** The same reason as ADR-040: the cost of an
+audit taxonomy is not in writing the code but in discovering afterwards that it was cut wrong. SAP and Odoo converged
+independently on the same structure for "master gate × per-object", and that agreement is itself evidence.
 
-**為什麼是資料表而不是定義檔。** 兩者的差別不在技術，在**誰擁有這個決定**。
-定義檔隨應用交付、隨升級覆蓋，是開發者的東西；稽核政策是客戶對自己營運風險的判斷，
-必須在客戶手上、且不會被下一次升級抹掉。
+**Why a table and not definition files.** The difference between the two is not technical but **who owns the
+decision**. Definition files are delivered with the application and overwritten on upgrade, so they belong to the
+developer; audit policy is the customer's judgement of its own operational risk, and must be in the customer's hands
+and not be wiped out by the next upgrade.
 
-**為什麼保留原生埋點而不模仿 patch。** 本框架的 CRUD 有單一必經之路，這是 ORM 通用框架
-沒有的條件。Odoo 需要 patch 是因為它要攔截任意 model 的任意方法；我們不需要，
-放棄這個優勢去換「看起來像藍本」毫無收益。
+**Why keep native instrumentation instead of imitating patching.** This framework's CRUD has a single path every
+operation must take, a condition general-purpose ORM frameworks do not have. Odoo needs patching because it has to
+intercept any method of any model; we do not, and giving up this advantage to "look like the blueprint" gains nothing.
 
-## 後果 / 影響
+## Consequences
 
-- **正面**：量體從源頭收斂（不必靠保留期清除）；檢視軸終於可用（預設關 + 逐張開）；
-  `is_sensitive` 有了真正的來源；政策變更本身留痕且受權限把關。
-- **取捨**：`Enabled = true` 時每次操作多一次字典查表；per-ProgId 無法區分主檔與明細；
-  維護表單 fail-closed，開箱後需先授權。
-- **相容性**：無規則列即現行行為，升級零破壞。**表不存在時視同無規則**——
-  升級前的既有部署沒有這張表，讀不到就拋例外會讓每一次 Save 都失敗，
-  這是本設計唯一的真實回歸風險，已於五種 provider 分別驗證。
-- **升級路徑**：欄位層敏感度與動作層開關都是 additive 的，日後要加不必迴避本設計。
-- **相關**：表與 progId 登記見 [框架保留命名](../zh-TW/framework-reserved-names.md)；
-  分類軸見 [ADR-040](adr-040-audit-trail-taxonomy.md)；
-  跨節點失效機制見 [ADR-017](adr-017-db-cache-invalidation.md)；
-  權限模型見 [ADR-019](adr-019-permission-authorization-model.md)。
+- **Positive**: volume is reduced at the source (instead of relying on retention-period purges); the access axis is
+  finally usable (off by default + switched on form by form); `is_sensitive` has a real source; policy changes
+  themselves leave a trail and are guarded by permissions.
+- **Trade-offs**: one extra dictionary lookup per operation when `Enabled = true`; per ProgId, master and detail
+  cannot be distinguished; the maintenance form is fail-closed and needs authorization after installation.
+- **Compatibility**: no rule rows means the current behavior, so upgrading breaks nothing. **A missing table is treated
+  as no rules**: existing deployments from before the upgrade do not have this table, and throwing when it cannot be
+  read would make every Save fail. This is the only real regression risk of the design, and it has been verified
+  separately on all five providers.
+- **Upgrade path**: field-level sensitivity and action-level switches are both additive, so adding them later does not
+  require working around this design.
+- **Related**: the table and progId registration are in [Framework-Reserved Names](../en/framework-reserved-names.md);
+  the classification axes are in [ADR-040](adr-040-audit-trail-taxonomy.md); the cross-node invalidation mechanism is
+  in [ADR-017](adr-017-db-cache-invalidation.md); the permission model is in
+  [ADR-019](adr-019-permission-authorization-model.md).

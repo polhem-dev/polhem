@@ -1,6 +1,7 @@
+<!-- source: adr/adr-045-language-policy-and-local-plans.md blob: ee8f1106971294f00935871056ccc4e6d819483c -->
 # ADR-045：共同維護的內容一律英文；計畫不進 repo
 
-[English](adr-045-language-policy-and-local-plans.md) | **繁體中文**
+[English](adr-045-language-policy-and-local-plans.md)
 
 ## 狀態
 
@@ -44,3 +45,10 @@ Polhem 以新名稱延續 Bee.NET 框架（`jeff377/bee-library`），放在預�
   引用其封存計畫時用釘在匯入起點 commit 的網址。
 - 計畫無法透過 repo 分享。git worktree 裡的 session 也看不到 `local/`，所以依賴計畫的工作要交給主工作樹的 session。
 - 個人設定要求其他語言的貢獻者，在這個 repo 裡仍會得到英文，因為 repo 內的 agent 指引明文寫出了這項政策。
+
+## 實作演進
+
+**2026-09-26。** 先前的 ADR 都已補上英文版，公開文件的源語言也改為英文：`docs/en/` 的文件與 `docs/adr/` 的 ADR
+是源文件，繁體中文譯本分別是 `docs/zh-TW/` 與各 ADR 旁的 `<name>.zh-TW.md`。`check-docs-i18n.sh` 已涵蓋這兩種
+配置，ADR 兩種語言版本的同步不再只靠同一個 commit 一起改：譯本落後源文件時會被判定為過期。語言清單與各自的政策
+寫在該腳本的檔頭。

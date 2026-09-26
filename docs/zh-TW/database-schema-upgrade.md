@@ -4,7 +4,7 @@
 [English](../en/database-schema-upgrade.md) · [← 文件索引](README.md)
 
 > 本文件說明 Polhem 應用如何維護資料庫資料表結構：定義變更後如何同步到實際資料庫、底層採用何種升級策略、以及維運上的注意事項。
-> 命名規範請參閱 [資料庫命名規範](../en/database-naming-conventions.md)，定義驅動的整體理念請參閱 [ADR-005 FormSchema-Driven](../adr/adr-005-formschema-driven.md)。
+> 命名規範請參閱 [資料庫命名規範](database-naming-conventions.md)，定義驅動的整體理念請參閱 [ADR-005 FormSchema-Driven](../adr/adr-005-formschema-driven.zh-TW.md)。
 
 ## 1. 核心觀念
 
@@ -334,8 +334,8 @@ ALTER TABLE ft_employee   RENAME TO st_employee;
 - [DbField.OriginalFieldName](../../src/Polhem.Definition/Database/DbField.cs)
 
 ### 相關文件
-- [資料庫命名規範](../en/database-naming-conventions.md)
+- [資料庫命名規範](database-naming-conventions.md)
 - [架構總覽](architecture-overview.md)
-- [開發指引](../en/development-cookbook.md)
-- [開發限制](../en/development-constraints.md)
-- [ADR-005：FormSchema-Driven](../adr/adr-005-formschema-driven.md)
+- [開發指引](development-cookbook.md)
+- [開發限制](development-constraints.md)
+- [ADR-005：FormSchema-Driven](../adr/adr-005-formschema-driven.zh-TW.md)

@@ -1,133 +1,152 @@
-# ADR-033：時刻語意（`FieldDbType.Time`）以定寬字串承載
+# ADR-033: Time-of-day semantics (`FieldDbType.Time`) carried as a fixed-width string
 
-## 狀態
+[繁體中文](adr-033-time-of-day-semantics.zh-TW.md)
 
-**已採納（Accepted，2026-07-27）** —— 決策已執行。
+## Status
 
-## 背景
+**Accepted (2026-07-27)**. The decision has been carried out.
 
-框架原本只提供兩種時間語意：**日曆日**（`FieldDbType.Date`，[ADR-031](adr-031-calendar-day-column-semantics.md)）
-與**時間點**（`FieldDbType.DateTime`，[ADR-032](adr-032-datetime-timezone.md)）。
+## Context
 
-第三種語意缺席：**時刻** —— 一日之內的牆上位置，不繫於特定日期。班別起訖、營業時間、
-提醒時刻都是這一類。缺少型別的後果不只是表達力：UI 端無從得知該給時刻編輯控件，
-報表與 schema-less 消費端也無法判別某個字串欄位其實是時刻。
+The framework originally provided only two time semantics: **calendar day** (`FieldDbType.Date`,
+[ADR-031](adr-031-calendar-day-column-semantics.md)) and **instant** (`FieldDbType.DateTime`,
+[ADR-032](adr-032-datetime-timezone.md)).
 
-用詞在本 ADR 中固定為四個互斥的詞：
+A third semantics was missing: **time of day**, a wall-clock position within a day that is not tied to a particular
+date. Shift start and end times, business hours and reminder times all belong to this kind. The consequence of lacking
+a type is not only expressiveness: the UI has no way of knowing it should provide a time-of-day editor, and reports and
+schema-less consumers cannot tell that a string column is actually a time of day.
 
-| 詞 | 語意 | 承載 |
+The terms in this ADR are fixed as four mutually exclusive words:
+
+| Term | Meaning | Carrier |
 |----|------|------|
-| 日曆日 | 哪一天 | `DateOnly` / `Date` |
-| **時刻** | 幾點（一日之內） | 語意 `TimeOnly`，儲存定寬字串 / `Time` |
-| 時間點 | 哪一天的幾點 | `DateTime` / `DateTime` |
-| 時距 | 多久 | `TimeSpan`（尚無對應 `FieldDbType`） |
+| Calendar day | Which day | `DateOnly` / `Date` |
+| **Time of day** | What time (within a day) | Semantically `TimeOnly`, stored as a fixed-width string / `Time` |
+| Instant | What time on which day | `DateTime` / `DateTime` |
+| Duration | How long | `TimeSpan` (no corresponding `FieldDbType` yet) |
 
-## 決策
+## Decision
 
-**`FieldDbType.Time` 的值以定寬 5 碼字串 `"HH:mm"` 承載，於資料庫與 `DataSet` 皆然；
-程式碼經 `ValueUtilities.CTimeOnly` 取得 `TimeOnly`。**
+**The value of `FieldDbType.Time` is carried as a fixed-width 5-character string `"HH:mm"`, in both the database and
+the `DataSet`; code obtains a `TimeOnly` through `ValueUtilities.CTimeOnly`.**
 
-| 層 | 型別 |
+| Layer | Type |
 |----|------|
-| DB 欄位 | `nchar(5)`（SQL Server）／`char(5)`（PostgreSQL）／`CHAR(5)`（MySQL）／`VARCHAR(5)`（SQLite）／`VARCHAR2(5)`（Oracle） |
+| DB column | `nchar(5)` (SQL Server) / `char(5)` (PostgreSQL) / `CHAR(5)` (MySQL) / `VARCHAR(5)` (SQLite) / `VARCHAR2(5)` (Oracle) |
 | `DataColumn.DataType` | `typeof(string)` |
-| 取值層 | `ValueUtilities.CTimeOnly(object) → TimeOnly?` |
-| 正規化 | `ValueUtilities.CTimeString(object) → "HH:mm"`（未填或格式不合為空字串） |
+| Value access layer | `ValueUtilities.CTimeOnly(object) → TimeOnly?` |
+| Normalization | `ValueUtilities.CTimeString(object) → "HH:mm"` (an empty string when not filled in or malformed) |
 
-**值域 `00:00`–`23:59`，精度到分。** 需要秒的是打卡流水那類**時間點**，應使用 `DateTime`。
+**The value range is `00:00`–`23:59`, with minute precision.** Anything that needs seconds, such as clock-in records,
+is an **instant** and should use `DateTime`.
 
-附帶的五個決定：
+Five accompanying decisions:
 
-1. **`FieldDbType.Time` 必須存在，不可退回「用 `String` 欄位自行約定格式」。**
-   語意標記正是這個型別存在的理由；底層存什麼與標記無關。
-2. **空值即空字串，欄位維持 NOT NULL。** 時刻沒有可用的 sentinel —— `00:00` 是合法的午夜。
-   `GetDefaultValue(Time)` 因此回空字串而非 `"00:00"`。
-3. **範圍與格式由取值層把關，不強制 DB CHECK。** `TimeOnly.TryParseExact` 一條即足；
-   五家 CHECK 語法各異、維護成本高，且擋不住繞過框架的直接 SQL。
-4. **顯示格式 = 儲存格式。** UI 不做語系感知的格式化，只負責輸入遮罩與失焦正規化。
-5. **列舉值 append 至尾端。** `FieldDbType` 以底層整數上 MessagePack wire，插入中間會位移既有值。
+1. **`FieldDbType.Time` must exist; do not fall back to "a `String` column with a format agreed by convention".**
+   The semantic marker is exactly why this type exists; what is stored underneath has nothing to do with the marker.
+2. **An empty value is an empty string, and the column stays NOT NULL.** A time of day has no usable sentinel: `00:00`
+   is a legitimate midnight. `GetDefaultValue(Time)` therefore returns an empty string rather than `"00:00"`.
+3. **Range and format are checked by the value access layer; no DB CHECK is enforced.** A single
+   `TimeOnly.TryParseExact` is enough; the CHECK syntax differs across the five databases, the maintenance cost is high,
+   and it cannot stop direct SQL that bypasses the framework.
+4. **Display format = storage format.** The UI does no locale-aware formatting; it is responsible only for the input
+   mask and normalization on losing focus.
+5. **The enum value is appended at the end.** `FieldDbType` travels on the MessagePack wire as its underlying integer,
+   and inserting in the middle would shift existing values.
 
-## 理由
+## Rationale
 
-### 為何不用資料庫原生時刻型別
+### Why not use the database's native time-of-day type
 
-原案為「DB 用原生 `time`、`DataColumn` 用 `TimeSpan`、取值層用 `TimeOnly`」，實測後否決。
-實測環境：`Microsoft.Data.SqlClient` 7.0.0、`Npgsql` 9.0.4、`MySqlConnector` 2.4.0、
-`Oracle.ManagedDataAccess.Core` 23.26.200、`MessagePack` 3.1.7。
+The original proposal was "native `time` in the DB, `TimeSpan` in `DataColumn`, `TimeOnly` in the value access layer",
+and it was rejected after measurement. Measurement environment: `Microsoft.Data.SqlClient` 7.0.0, `Npgsql` 9.0.4,
+`MySqlConnector` 2.4.0, `Oracle.ManagedDataAccess.Core` 23.26.200, `MessagePack` 3.1.7.
 
-**1. `DataSet` 拒收 `TimeOnly`。** `DataColumn(typeof(TimeOnly))` 可建、可賦值、`WriteXml`
-也寫得出來，但 `ReadXml` 擲 `InvalidOperationException: Type 'System.TimeOnly' is not allowed here`
-（.NET 的 `DataSet` 允許型別白名單）。框架以 `DataSet` XML 持久化，這條路直接斷。
+**1. `DataSet` rejects `TimeOnly`.** `DataColumn(typeof(TimeOnly))` can be created and assigned, and `WriteXml` can
+write it out, but `ReadXml` throws `InvalidOperationException: Type 'System.TimeOnly' is not allowed here` (the
+allowlist of types permitted by .NET's `DataSet`). The framework persists `DataSet` as XML, so this path is simply
+closed.
 
-**2. provider 讀出端一律給 `TimeSpan`。** SQL Server / PostgreSQL / MySQL 三家的參數層
-`TimeOnly` 與 `TimeSpan` 都收，但 `DataTable` 讀回來的欄位型別全部是 `TimeSpan`。
-原案的 `DataColumn` 因此只能是 `TimeSpan` —— 而 `TimeSpan` 在 raw SELECT 與 XML
-（ISO 8601 duration `PT8H30M15S`）下都不可讀。
+**2. Providers always return `TimeSpan` on the read side.** On SQL Server / PostgreSQL / MySQL the parameter layer
+accepts both `TimeOnly` and `TimeSpan`, but the column type read back into a `DataTable` is `TimeSpan` on all three.
+The original proposal's `DataColumn` could therefore only be `TimeSpan`, and `TimeSpan` is unreadable both in a raw
+SELECT and in XML (the ISO 8601 duration `PT8H30M15S`).
 
-**3. Oracle 沒有 `TIME`，且框架綁不出 interval。** `INTERVAL DAY(0) TO SECOND(6)` 以參數寫入時擲
-`ORA-50028: Invalid parameter binding` —— `DbCommandSpec` 走通用 `DbType`，而 Oracle 的 interval
-綁定需要顯式 `OracleDbType.IntervalDS`。可修，但那是原案獨有的成本。
+**3. Oracle has no `TIME`, and the framework cannot bind an interval.** Writing `INTERVAL DAY(0) TO SECOND(6)` through a
+parameter throws `ORA-50028: Invalid parameter binding`: `DbCommandSpec` goes through the generic `DbType`, while
+binding an Oracle interval needs an explicit `OracleDbType.IntervalDS`. It is fixable, but it is a cost unique to the
+original proposal.
 
-**4. 各家原生 `TIME` 的語意本身不一致。** SQL Server `time(7)` 與 PostgreSQL `time` 是時刻，
-**MySQL `TIME` 是時距**（`-838:59:59` – `838:59:59`）。原案必須在抽象層額外釘死範圍並自行收斂。
+**4. The semantics of each database's native `TIME` is itself inconsistent.** SQL Server `time(7)` and PostgreSQL `time`
+are times of day, but **MySQL `TIME` is a duration** (`-838:59:59` – `838:59:59`). The original proposal would have to
+pin down the range in the abstraction layer and converge the behavior itself.
 
-### 定寬字串換來的東西
+### What the fixed-width string buys
 
-| 原案的成本 | 字串承載 |
+| Cost of the original proposal | String carrier |
 |-----------|---------|
-| Oracle 綁定特例 | 消失，五家無特例 |
-| MessagePack / JSON / XML 三份管線各需補分支 | 消失，`string` 全通 |
-| `TimeSpan` / `TimeOnly` 承載型別拉扯 | 消失 |
-| 無空值 sentinel、被迫允許 NULL | 消失，空字串即未填 |
-| raw SELECT 不可讀 | 解決 |
+| Oracle binding special case | Gone; no special case on any of the five databases |
+| Each of the MessagePack / JSON / XML pipelines needs an extra branch | Gone; `string` passes through everything |
+| Tug-of-war between `TimeSpan` / `TimeOnly` as the carrier type | Gone |
+| No empty-value sentinel, forced to allow NULL | Gone; an empty string means not filled in |
+| Unreadable in a raw SELECT | Solved |
 
-且**排序與範圍查詢照常**：定寬零填補的 `"HH:mm"` 字典序即時序，`BETWEEN '08:00' AND '17:00'`
-直接成立；數字字串在任何 collation 下排序一致。正規化（`"8:30"` → `"08:30"`）是這個保證的前提，
-故在 `FieldDbTypeExtensions.ToFieldValue` 統一執行。
+And **sorting and range queries work as usual**: the lexicographic order of zero-padded fixed-width `"HH:mm"` is the
+chronological order, so `BETWEEN '08:00' AND '17:00'` works directly; digit strings sort the same under any collation.
+Normalization (`"8:30"` → `"08:30"`) is the precondition of this guarantee, so it is performed uniformly in
+`FieldDbTypeExtensions.ToFieldValue`.
 
-**先例**：SAP 的 `TIMS` 即 `CHAR(6)`（`HHMMSS`）、`DATS` 即 `CHAR(8)`。以定寬字串承載日期時刻
-在 ERP 是行之有年的做法。
+**Precedent**: SAP's `TIMS` is `CHAR(6)` (`HHMMSS`) and `DATS` is `CHAR(8)`. Carrying dates and times of day as
+fixed-width strings is a long-established practice in ERP.
 
-### 為何取值層回 `TimeOnly?` 而非沿用 `Cxxx` 家族形狀
+### Why the value access layer returns `TimeOnly?` instead of following the shape of the `Cxxx` family
 
-`CDateOnly(object, DateOnly defaultValue = default)` 的空值回 `0001-01-01`，這安全，
-因為它不是合法業務值。但 `default(TimeOnly)` = `00:00` **是**完全合法的時刻，
-照抄會讓未填欄位靜默變成午夜。`CTimeOnly` 因此回 nullable，由型別逼呼叫端處理未填。
+`CDateOnly(object, DateOnly defaultValue = default)` returns `0001-01-01` for an empty value, which is safe because it
+is not a legitimate business value. But `default(TimeOnly)` = `00:00` **is** a perfectly legitimate time of day, and
+copying the shape would silently turn unfilled columns into midnight. `CTimeOnly` therefore returns a nullable, letting
+the type force callers to handle the unfilled case.
 
-## 取捨
+## Trade-offs
 
-- **schema 反推撞牆（唯一的新代價）**：資料庫把欄位報成 5 長度字串，永遠不會報成 `Time`。
-  若不處理，`TableSchemaComparer` 每次比對都判定有差異、無止境重發 ALTER。
-  解法是在 `DbField.Compare` 將兩側**化約為物理形狀**（`Time` → `String(5)`）後再比較。
-  未採「以 DB extended property 存標記」：SQL Server 有現成機制，但 MySQL / SQLite 無等價機制，
-  五家做不齊會變成 provider 特例。
-- **精度止於分**：需要秒的場景改用 `DateTime`。
-- **DB 端無法用時間函數**：對「宣告型」的時刻資料（班別、營業時間）幾乎不需要；
-  真要算術時由呼叫端 `CTimeOnly` 後在 C# 端處理。
-- **舊 client 破口**：新 server 回傳 `Time` 給舊 client，舊 client 的 `DbTypeConverter.ToType`
-  走 `default:` 擲例外。**接受並以 breaking 標記處理**，理由同 [ADR-030](adr-030-messagepack-name-based-keys.md)：
-  client 與 server 同版發佈、無外部消費者。為單一列舉值寫版本協商機制不成比例。
+- **Reverse-engineering the schema hits a wall (the only new cost)**: the database reports the column as a string of
+  length 5 and will never report it as `Time`. Without handling, `TableSchemaComparer` would judge a difference on every
+  comparison and reissue ALTER endlessly. The solution is for `DbField.Compare` to **reduce both sides to the physical
+  shape** (`Time` → `String(5)`) before comparing. "Storing the marker as a DB extended property" was not adopted:
+  SQL Server has a ready-made mechanism, but MySQL / SQLite have no equivalent, and a mechanism not all five databases
+  can support would become a provider special case.
+- **Precision stops at minutes**: scenarios that need seconds use `DateTime` instead.
+- **Time functions cannot be used on the DB side**: this is almost never needed for "declarative" time-of-day data
+  (shifts, business hours); when arithmetic is really needed, the caller does it in C# after `CTimeOnly`.
+- **Old client gap**: when a new server returns `Time` to an old client, the old client's `DbTypeConverter.ToType`
+  goes to `default:` and throws. **Accepted and handled with a breaking marker**, for the same reason as
+  [ADR-030](adr-030-messagepack-name-based-keys.md): client and server are released in the same version, and there are
+  no external consumers. Writing a version negotiation mechanism for a single enum value would be disproportionate.
 
-## 影響
+## Consequences
 
-- `FieldDbType` 新增 `Time`（append 至尾端）；`DbTypeConverter` 映至 `typeof(string)` / `DbType.String`。
-- `FieldDbTypeExtensions`：`GetDefaultValue` 回空字串、`ToFieldValue` 正規化為定寬 `"HH:mm"`。
-- `ValueUtilities`：新增 `CTimeOnly` / `CTimeString` 與 `TimeOnlyFormat` / `TimeOnlyLength`。
-- `DbField.Compare`：兩側化約為物理形狀後比較（見「取捨」）。
-- 五家 provider：型別對應、預設值運算式與字面值、`AlterCompatibilityRules` 的字串家族歸類。
-- `ExpressionPolicy.CoerceValue`：`TimeOnly` → `string` 的邊界轉換（`TimeOnly` 非 `IConvertible`，
-  否則會從 `Convert.ChangeType` 擲出）。
-- **UI 層與公開文件尚未實作**，見後續階段。
+- `FieldDbType` gains `Time` (appended at the end); `DbTypeConverter` maps it to `typeof(string)` / `DbType.String`.
+- `FieldDbTypeExtensions`: `GetDefaultValue` returns an empty string, and `ToFieldValue` normalizes to the fixed-width
+  `"HH:mm"`.
+- `ValueUtilities`: adds `CTimeOnly` / `CTimeString` and `TimeOnlyFormat` / `TimeOnlyLength`.
+- `DbField.Compare`: reduces both sides to the physical shape before comparing (see "Trade-offs").
+- The five providers: type mapping, default value expressions and literals, and the string family classification in
+  `AlterCompatibilityRules`.
+- `ExpressionPolicy.CoerceValue`: the boundary conversion `TimeOnly` → `string` (`TimeOnly` is not `IConvertible`, so
+  otherwise `Convert.ChangeType` would throw).
+- **The UI layer and the public documents are not implemented yet**; see the later phases.
 
-**回歸守衛**：`tests/Polhem.Db.UnitTests/TimeOfDayColumnIntegrationTests.cs` 於五家資料庫建表、
-round-trip，並斷言時刻欄位的 schema 比對收斂 —— 物理形狀化約一旦遺失，該斷言即失敗。
-單元測試抓不到這個回歸。
+**Regression guard**: `tests/Polhem.Db.UnitTests/TimeOfDayColumnIntegrationTests.cs` creates tables on all five
+databases, round-trips values, and asserts that the schema comparison of time-of-day columns converges; as soon as the
+physical shape reduction is lost, that assertion fails. Unit tests cannot catch this regression.
 
-## 相關
+## Related
 
-- [ADR-031：日曆日欄位語意](adr-031-calendar-day-column-semantics.md) —— 第一種時間語意，
-  採「CLR 型別 + `ExtendedProperties` 標記」；`Time` 不需標記以外的手段區分，因為它自有 CLR 表示。
-- [ADR-032：DateTime 時區處理](adr-032-datetime-timezone.md) —— 時刻與日曆日同列「絕不轉時區」。
-  改採字串承載後更安全：字串不可能被誤判為時間點而位移。
-- [ADR-030：MessagePack 合約改採 property-name key](adr-030-messagepack-name-based-keys.md) ——
-  舊 client 破口的處置沿用其理由。
+- [ADR-031: Calendar day column semantics](adr-031-calendar-day-column-semantics.md): the first time semantics, using
+  "CLR type + an `ExtendedProperties` marker"; `Time` needs no means other than the marker to be distinguished,
+  because it has its own CLR representation.
+- [ADR-032: DateTime time zone handling](adr-032-datetime-timezone.md): time of day sits with calendar day under "never
+  converted between time zones". Carrying it as a string makes this even safer: a string can never be mistaken for an
+  instant and shifted.
+- [ADR-030: MessagePack contracts switch to property-name keys](adr-030-messagepack-name-based-keys.md): the handling of
+  the old client gap reuses its reasoning.

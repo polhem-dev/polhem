@@ -1,6 +1,6 @@
 # ADR-045: English for everything maintained together; plans stay out of the repository
 
-**English** | [繁體中文](adr-045-language-policy-and-local-plans.zh-TW.md)
+[繁體中文](adr-045-language-policy-and-local-plans.zh-TW.md)
 
 ## Status
 
@@ -56,3 +56,12 @@ Polhem.OAuth2, which went through the same move first, adopted the same language
   that depends on a plan is handed to a session in the main working tree.
 - A contributor whose personal settings ask for another language gets English in this repository, because
   the repository's agent guidance states the policy explicitly.
+
+## Implementation evolution
+
+**2026-09-26.** Every earlier ADR now has an English version, and English is the source language of the public
+documents: the documents under `docs/en/` and the ADRs under `docs/adr/` are the sources, and their Traditional
+Chinese translations are `docs/zh-TW/` and the `<name>.zh-TW.md` files next to each ADR. `check-docs-i18n.sh` now
+covers both layouts, so the two language versions of an ADR no longer rely on being changed in the same commit: a
+translation that falls behind its source is reported as stale. The languages and their policies are listed in the
+header of that script.

@@ -1,74 +1,135 @@
-# ADR-019：權限授權模型（兩層 enforcement + record scope）
+# ADR-019: Permission authorization model (two-layer enforcement + record scope)
 
-## 狀態
+[繁體中文](adr-019-permission-authorization-model.zh-TW.md)
 
-已採納（2026-06-05）
+## Status
 
-## 背景
+Accepted (2026-06-05)
 
-Polhem 原本只有**身分驗證**（[ADR-012](adr-012-session-company-context.md) 的 `Login` / `EnterCompany`）與 API 層的加密／登入把關（`ApiAccessControlAttribute`）。但 ERP 真正需要的是**授權**——「誰能對哪個業務實體做什麼動作」，以及「能對哪些資料列做」。兩者是不同關注點：
+## Context
 
-- **動作軸（能不能做）**：採購員不能刪採購單。
-- **資料範圍軸（對哪些列做）**：採購員只能看／改自己部門的採購單。
+Polhem originally had only **authentication** (`Login` / `EnterCompany` from
+[ADR-012](adr-012-session-company-context.md)) and the encryption/login gate at the API layer
+(`ApiAccessControlAttribute`). What an ERP really needs is **authorization**: "who may perform which action on which
+business entity", and "on which rows". These are different concerns:
 
-設計時的硬性約束：
+- **The action axis (may it be done)**: a purchasing clerk may not delete purchase orders.
+- **The data scope axis (on which rows)**: a purchasing clerk may only view / change the purchase orders of their own
+  department.
 
-1. **多租戶 per-company**：角色與授權是公司內配置，必然 per-company（與 `st_employee` 同隔離）。
-2. **判權限零 DB**：每個 API 請求都要判權限，不能每次查 DB——必須走記憶體快取 + session 快照。
-3. **與 form 解耦**（對齊 Odoo `ir.model.access` / `ir.rule`）：權限綁「業務實體（model）」不綁表單（progId）也不綁資料表／欄；一個 model 可被多個 progId 消費，授一次三功能生效。
-4. **安全邊界在後端**：前端送來的 payload 不可信，授權判定不能依賴 client 提供的值。
-5. **可宣告、可驗證**：scope 用業務語意選單（具名策略），不手寫 predicate，因此綁定的正確性可用一支純函式全量檢查（`PermissionBindingValidator`，由宿主呼叫）。
+Hard constraints of the design:
 
-## 決策
+1. **Multi-tenant, per-company**: roles and grants are configured within a company, so they are necessarily
+   per-company (isolated the same way as `st_employee`).
+2. **Zero DB for permission checks**: every API request checks permissions, so it cannot query the DB every time; it
+   must go through an in-memory cache plus a session snapshot.
+3. **Decoupled from forms** (aligned with Odoo's `ir.model.access` / `ir.rule`): permissions are bound to the
+   "business entity (model)", not to the form (progId) and not to tables / columns; one model can be consumed by
+   several progIds, so one grant takes effect for all three functions.
+4. **The security boundary is in the backend**: the payload sent by the frontend is not trusted, and the
+   authorization decision cannot depend on values provided by the client.
+5. **Declarable and verifiable**: scope uses a menu of business-semantic choices (named strategies) instead of
+   hand-written predicates, so the correctness of the bindings can be checked in full by a single pure function
+   (`PermissionBindingValidator`, called by the host).
 
-採**雙軸、三段**的權限模型；資料流見下：
+## Decision
+
+Adopt a permission model with **two axes and three stages**; the data flow is:
 
 ```
-線 A（定義層）      宣告「功能需要哪個 model、欄位的 scope 角色」
-線 B 層一（動作）    判 (model, action) —— 能不能做（zero-DB）
-線 B 層二（範圍）    依 (model, action) 的 scope 過濾／把關資料列（zero-DB）
+Line A (definition layer)     declares "which model a function needs, and the scope role of each field"
+Line B layer 1 (action)       checks (model, action): may it be done (zero-DB)
+Line B layer 2 (scope)        filters / guards rows by the scope of (model, action) (zero-DB)
 ```
 
-### 線 A — 定義層（可宣告、可驗證、零 enforcement）
+### Line A: the definition layer (declarable, verifiable, zero enforcement)
 
-- **`PermissionModels`**（單檔 registry，`DefineType.PermissionModels`）：每個 `PermissionModel`（`ModelId` = 業務實體 PascalCase，如 `PurchaseOrder`）宣告其 `PermissionRule` 集合——每個 rule = `(PermissionAction, ScopeStrategy)`。`ModelId` 刻意與表單 progId 區別，**綁 model 不綁 form**。
-- **`FormSchema.PermissionModelId`**：表單宣告它消費哪個主 model（BO 方法層手邊即有 FormSchema → enforce 最直接）。
-- **`FormField.ScopeRole`**（`None` / `Owner` / `Dept`）：標記「哪個欄是擁有者 / 部門」。**scope 策略保持純語意**（`Own`→`Owner` 欄、`Dept`/`DeptAndSub`→`Dept` 欄），欄名留在 FormSchema、model 與表／欄脫鉤。
-- **scope 僅限主表**：`ScopeRole` 只在主表；明細表標 `ScopeRole` 由 `PermissionBindingValidator` 檢出。**該 validator 是宿主自行呼叫的驗證 API，框架不自動執行**（線 A 的定位本就是「可宣告、可驗證、零 enforcement」）。
+- **`PermissionModels`** (a single-file registry, `DefineType.PermissionModels`): each `PermissionModel` (`ModelId` =
+  the business entity in PascalCase, such as `PurchaseOrder`) declares its set of `PermissionRule`s; each rule =
+  `(PermissionAction, ScopeStrategy)`. `ModelId` is deliberately distinct from a form's progId: **bind to the model,
+  not the form**.
+- **`FormSchema.PermissionModelId`**: the form declares which primary model it consumes (the BO method layer already
+  has the FormSchema at hand → enforcement is most direct there).
+- **`FormField.ScopeRole`** (`None` / `Owner` / `Dept`): marks "which column is the owner / department". **Scope
+  strategies stay purely semantic** (`Own`→the `Owner` column, `Dept`/`DeptAndSub`→the `Dept` column); column names
+  stay in the FormSchema, and the model is decoupled from tables / columns.
+- **Scope is master-table only**: `ScopeRole` is only on the master table; a detail table marked with `ScopeRole` is
+  caught by `PermissionBindingValidator`. **That validator is a validation API the host calls itself; the framework
+  does not run it automatically** (Line A is positioned as "declarable, verifiable, zero enforcement" to begin with).
 
-### 線 B 層一 — 動作 gate（zero-DB）
+### Line B layer 1: the action gate (zero-DB)
 
-- 資料模型（各 company DB，`st_` 框架層表）：`st_role` / `st_role_grant` / `st_user_role`。
-- **per-company 權限快取**（`CompanyRolePermissions`，比照 `CompanyInfoCache`，DB 來源 + cache-notify 失效）：整份載入 user→role / role→grant，**判權限完全走記憶體**。
-- `EnterCompany` 從快取取 user 在此公司的 role 清單，**快照進 `SessionInfo.Roles`**；之後 `CompanyAuthorizationService.Can(token, model, action)` 全程零 DB。
-- 接入點 = **`FormBusinessObject` 方法層 gate**：`GetList`/`GetData`→Read、`Save`→逐列 RowState（Added→Create / Modified→Update / Deleted→Delete）、`Delete`→Delete。多角色 mask 取 **OR 聯集**（能力累加）。
+- Data model (in each company DB, `st_` framework-level tables): `st_role` / `st_role_grant` / `st_user_role`.
+- **Per-company permission cache** (`CompanyRolePermissions`, modeled on `CompanyInfoCache`, DB source + cache-notify
+  invalidation): user→role / role→grant are loaded in full, and **permission checks run entirely in memory**.
+- `EnterCompany` takes the user's role list for this company from the cache and **snapshots it into
+  `SessionInfo.Roles`**; after that, `CompanyAuthorizationService.Can(token, model, action)` is zero-DB throughout.
+- Integration point = **the gate at the `FormBusinessObject` method layer**: `GetList`/`GetData`→Read, `Save`→per-row
+  RowState (Added→Create / Modified→Update / Deleted→Delete), `Delete`→Delete. With several roles, the masks are
+  combined as an **OR union** (capabilities accumulate).
 
-### 線 B 層二 — record scope（zero-DB query time）
+### Line B layer 2: record scope (zero-DB at query time)
 
-- **scope per-action**（`st_role_grant` = per-`(role, model, action)` 一列帶 `scope`）：落實「可以看不一定可以改」——Read scope 可為 `Dept`、Update scope 可為 `Own`。`Inherit` → 取 `PermissionModel.Rules[action].Scope`（model 預設）。
-- **具名策略**（`ScopeStrategy`）：`All`（不限）／`Own`／`Dept`／`DeptAndSub`／`Inherit`。
-- **`IScopeResolver`**：依 `(model, action, session, FormSchema)` 解析。多角色合併規則：**任一角色 `All` → 不過濾**；否則各角色 predicate 取 **OR 聯集**。
-  - `Own` = owner 欄 `IN {UserRowId, EmployeeRowId}`（**二身分**：欄可能存 user rowid〔如登打者〕或 employee rowid〔如請假人員〕，Guid 不碰撞、單一策略涵蓋；user 未必對應 employee）。
-  - `Dept` = `dept 欄 = DeptRowId` **OR Own**（隱含 Own）。
-  - `DeptAndSub` = `dept 欄 IN GetSelfAndDescendants(DeptRowId)` **OR Own**，用 per-company `DepartmentTree` 快取展開。
-- **「user → 部門」零 DB**：`st_employee.user_rowid` 連結 common `st_user` ↔ company `st_employee`；`EnterCompany` 一次性解析 `user→employee→dept`，把 `UserRowId`/`EmployeeRowId`/`DeptRowId` **快照進 `SessionInfo`**，查詢時零 DB。
-- **讀取端**：`GetList`/`GetData` 把 scope filter `AND` 進查詢（越範圍列被過濾 / 越範圍單列回 `null`，與「查無」不可區分）。
-- **寫入端（Update / Delete）= 後端權威 re-query**：對 target rowId 下 `sys_rowid = id AND scope` 的存在性查詢（`ExistsInScope`），確認 **DB 那筆**在範圍內——**不評估 client 送來的列值**（偽造 payload relabel 也繞不過）。`Save` 先判主表列為「既存記錄存檔」（非 `Added`）才查；`Delete` 越範圍 → 刪 0、不 cascade。
-- **Create 不套 scope**：新列無「既存範圍」可違反，由動作授權（層一）把關。
-- **scope 僅主表 / 整筆完整性**：只判主表列、只查主表 → 主檔過了明細隨整筆放行，不會「主檔過、某明細被擋」的半套。
+- **Scope is per action** (`st_role_grant` = one row per `(role, model, action)` carrying a `scope`): this implements
+  "being able to view does not mean being able to change". The Read scope can be `Dept` while the Update scope is
+  `Own`. `Inherit` → take `PermissionModel.Rules[action].Scope` (the model default).
+- **Named strategies** (`ScopeStrategy`): `All` (unrestricted) / `Own` / `Dept` / `DeptAndSub` / `Inherit`.
+- **`IScopeResolver`**: resolves by `(model, action, session, FormSchema)`. Rule for combining several roles: **if any
+  role is `All` → no filtering**; otherwise the per-role predicates are combined as an **OR union**.
+  - `Own` = owner column `IN {UserRowId, EmployeeRowId}` (**two identities**: the column may hold a user rowid (such as
+    the person who keyed it in) or an employee rowid (such as the employee taking leave); GUIDs do not collide, so a
+    single strategy covers both; a user does not necessarily map to an employee).
+  - `Dept` = `dept column = DeptRowId` **OR Own** (implies Own).
+  - `DeptAndSub` = `dept column IN GetSelfAndDescendants(DeptRowId)` **OR Own**, expanded with the per-company
+    `DepartmentTree` cache.
+- **"User → department" with zero DB**: `st_employee.user_rowid` links common `st_user` ↔ company `st_employee`;
+  `EnterCompany` resolves `user→employee→dept` once and **snapshots** `UserRowId`/`EmployeeRowId`/`DeptRowId` **into
+  `SessionInfo`**, so queries need zero DB.
+- **Read side**: `GetList`/`GetData` `AND` the scope filter into the query (out-of-scope rows are filtered out / an
+  out-of-scope single record returns `null`, indistinguishable from "not found").
+- **Write side (Update / Delete) = an authoritative backend re-query**: an existence query
+  `sys_rowid = id AND scope` against the target rowId (`ExistsInScope`) confirms that **the row in the DB** is in
+  scope; **the row values sent by the client are not evaluated** (a forged payload that relabels them cannot get
+  around it either). `Save` first determines that the master row is "saving an existing record" (not `Added`) before
+  querying; an out-of-scope `Delete` → deletes 0 rows, no cascade.
+- **Create does not apply scope**: a new row has no "existing scope" to violate; action authorization (layer 1)
+  guards it.
+- **Scope is master-only / whole-record integrity**: only the master row is checked, only the master table is
+  queried → once the master passes, the details go through with the whole record, so there is no half-way "master
+  passes, one detail is blocked".
 
-## 後果與取捨
+## Consequences and trade-offs
 
-- ✅ **判權限零 DB**：身分快照 + per-company 快取（角色／權限／部門樹）；DB 只在登入、進公司、改配置時碰。
-- ✅ **動作與範圍正交**：層一管 (model, action)、層二管資料列；各自獨立、可組合。
-- ✅ **per-action 精度**：看與改的範圍可不同。
-- ✅ **讀寫對稱、安全邊界在後端**：寫入端用權威 re-query，不信任 payload。
-- ✅ **與 form/table 解耦**：一個 model 多個 progId 共用一次授權。
-- ⚠️ **快照語意**：`Roles` / employee / dept 在已進公司的 session 是快照，配置中途變動不即時反映（可接受；需即時可加重進公司刷新或 cache-notify）。
-- ⚠️ **fail-closed 邊界**：scope 需要的欄缺失或身分為空 → 不匹配任何列（安全預設）。`PermissionBindingValidator` 可提前檢出這類定義缺失，但**框架不自動執行**，需宿主自行接（見[使用者指南](../zh-TW/permission-authorization.md#定義驗證由宿主呼叫)）。
-- ✅ **前端 capability（element 細粒度降級）已實作（2026-07-03）**：層一／層二仍在後端方法層權威 enforce、不靠前端。權限可視為**三維度 × 兩把關點**——**動作**維度在後端權威 gate、同時投影到前端決定工具列命令／按鈕狀態；**列**維度僅後端；新增**欄**維度（`FormField.SensitiveCategory` → well-known 分類 model，依 Read/Update 隱藏／唯讀）僅前端。capability 快照搭 `EnterCompany` 回傳（`EnterCompanyResponse.Capabilities`）、快取於 `ClientInfo.Capabilities`、由 `Polhem.UI.Core.Permissions.ElementCapabilityResolver` 解析。前端**純 UX、非資料邊界**（後端未遮罩敏感欄值）。詳見[使用者指南](../zh-TW/permission-authorization.md)第二部分。
+- ✅ **Zero DB for permission checks**: identity snapshot + per-company caches (roles / permissions / department
+  tree); the DB is touched only at login, when entering a company and when the configuration changes.
+- ✅ **Action and scope are orthogonal**: layer 1 handles (model, action), layer 2 handles rows; each is independent
+  and they compose.
+- ✅ **Per-action precision**: the scope for viewing and for changing can differ.
+- ✅ **Symmetric reads and writes, security boundary in the backend**: the write side uses an authoritative re-query
+  and does not trust the payload.
+- ✅ **Decoupled from forms/tables**: several progIds of one model share one authorization.
+- ⚠️ **Snapshot semantics**: `Roles` / employee / dept are a snapshot in a session that has already entered a
+  company, so configuration changes made in the meantime are not reflected immediately (acceptable; if it must be
+  immediate, re-entering the company to refresh or cache-notify can be added).
+- ⚠️ **Fail-closed boundary**: if a column the scope needs is missing or the identity is empty → no rows match (a safe
+  default). `PermissionBindingValidator` can detect such definition gaps in advance, but **the framework does not run
+  it automatically**; the host has to wire it up itself (see the
+  [user guide](../en/permission-authorization.md#definition-validation-host-invoked)).
+- ✅ **Frontend capability (fine-grained element degradation) implemented (2026-07-03)**: layers 1 and 2 are still
+  enforced authoritatively at the backend method layer and do not rely on the frontend. Permissions can be seen as
+  **three dimensions × two checkpoints**: the **action** dimension is gated authoritatively in the backend and is also
+  projected to the frontend to decide the state of toolbar commands / buttons; the **row** dimension is backend only;
+  the new **field** dimension (`FormField.SensitiveCategory` → a well-known category model, hidden / read-only by
+  Read/Update) is frontend only. The capability snapshot rides along with the `EnterCompany` response
+  (`EnterCompanyResponse.Capabilities`), is cached in `ClientInfo.Capabilities`, and is resolved by
+  `Polhem.UI.Core.Permissions.ElementCapabilityResolver`. The frontend is **pure UX, not a data boundary** (the
+  backend does not mask sensitive column values). See Part 2 of the
+  [user guide](../en/permission-authorization.md) for details.
 
-## 參考
+## References
 
-- 相關 ADR：[ADR-005（FormSchema 驅動）](adr-005-formschema-driven.md)、[ADR-010（邏輯 DB 分類）](adr-010-logical-database-category.md)、[ADR-012（Session 公司情境）](adr-012-session-company-context.md)、[ADR-017（DB 快取失效）](adr-017-db-cache-invalidation.md)
-- 使用者指南：[zh-TW/permission-authorization.md](../zh-TW/permission-authorization.md)
+- Related ADRs: [ADR-005 (FormSchema-driven)](adr-005-formschema-driven.md),
+  [ADR-010 (logical DB categories)](adr-010-logical-database-category.md),
+  [ADR-012 (session company context)](adr-012-session-company-context.md),
+  [ADR-017 (DB cache invalidation)](adr-017-db-cache-invalidation.md)
+- User guide: [en/permission-authorization.md](../en/permission-authorization.md)

@@ -1,22 +1,30 @@
-# ADR-031：日曆日欄位語意以顯式標記承載，不改 CLR 型別
+# ADR-031: Calendar-day column semantics are carried by an explicit marker, not by changing the CLR type
 
-## 狀態
+[繁體中文](adr-031-calendar-day-column-semantics.zh-TW.md)
 
-已採納（2026-07-25）
+## Status
 
-> 三階段已全部實作完成（commit [`fddb38f6`](https://github.com/jeff377/bee-library/commit/fddb38f6) / [`c7782308`](https://github.com/jeff377/bee-library/commit/c7782308) / [`c5578a42`](https://github.com/jeff377/bee-library/commit/c5578a42)）。
-> 消費端使用方式見 `docs/en/temporal-types.md`。
+Accepted (2026-07-25)
 
-## 背景
+> All three phases have been implemented (commits
+> [`fddb38f6`](https://github.com/jeff377/bee-library/commit/fddb38f6) /
+> [`c7782308`](https://github.com/jeff377/bee-library/commit/c7782308) /
+> [`c5578a42`](https://github.com/jeff377/bee-library/commit/c5578a42)).
+> For how consumers use it, see `docs/en/temporal-types.md`.
 
-`FieldDbType` 刻意區分 `Date` 與 `DateTime`——定義層早就把「日曆日 vs 時間點」講清楚了。
-.NET 本身也有對應的型別：`DateOnly`（.NET 6+）就是日曆日，`DateTime` 是時間點。
+## Context
 
-問題不在語言缺表達力，而在**跨層 DTO 是 `DataSet`，而 `DataColumn` 沒有可用的日曆日儲存型別**。
-`DataColumn.DataType` 只有少數幾個 BCL 型別走原生 storage，`DateOnly` 不在其中——它落入
-`ObjectStorage`，嚴格型別比對、完全不做轉換，連帶打斷框架的字串進出繫結層，並永久失去
-`RowFilter` / `Compute`（實測數據見〈考慮過的選項〉選項 1）。
-`DataSet` 上的日曆日因此只能以 `DateTime` 承載，定義層區分出的語意在 CLR 層被抹平：
+`FieldDbType` deliberately distinguishes `Date` from `DateTime`: the definition layer made "calendar day vs instant"
+clear long ago. .NET itself has matching types too: `DateOnly` (.NET 6+) is a calendar day, and `DateTime` is an
+instant.
+
+The problem is not that the language lacks expressiveness, but that **the cross-layer DTO is `DataSet`, and
+`DataColumn` has no usable storage type for a calendar day**. Only a handful of BCL types get native storage for
+`DataColumn.DataType`, and `DateOnly` is not among them: it falls into `ObjectStorage`, which compares types strictly
+and does no conversion at all. That in turn breaks the framework's string-in/string-out binding layer and permanently
+loses `RowFilter` / `Compute` (measurements in "Options considered", option 1). A calendar day on a `DataSet` can
+therefore only be carried as a `DateTime`, and the semantics the definition layer distinguishes are flattened at the
+CLR level:
 
 ```csharp
 case FieldDbType.Date:
@@ -24,125 +32,142 @@ case FieldDbType.DateTime:
     return typeof(DateTime);        // DbTypeConverter.ToType
 ```
 
-連帶造成 wire payload 也失去這個資訊。`SerializableDataColumn.DataType`（MessagePack）與
-JSON 的 `"type"` 欄位逐欄攜帶 `FieldDbType`，但兩者的來源都是
-`DbTypeConverter.ToFieldDbType(col.DataType)`——**以 CLR 型別為 key**。
-而日曆日欄位的 CLR 型別是 `DateTime`，因此**日曆日欄位在 wire 上永遠被標成
-`FieldDbType.DateTime`**。
+As a consequence, the wire payload loses this information as well. `SerializableDataColumn.DataType` (MessagePack) and
+JSON's `"type"` field carry a `FieldDbType` for each column, but both come from
+`DbTypeConverter.ToFieldDbType(col.DataType)`, **keyed by the CLR type**. And the CLR type of a calendar-day column is
+`DateTime`, so **a calendar-day column is always marked as `FieldDbType.DateTime` on the wire**.
 
-被抹平的不只 `Date`。同樣共用一個 CLR 型別而無法還原的還有
-`Text`/`String`（皆 `string`）、`Currency`/`Decimal`（皆 `decimal`）、
-`AutoIncrement`/`Integer`（皆 `int`）。
+`Date` is not the only thing flattened. Other pairs that share one CLR type and cannot be recovered are
+`Text`/`String` (both `string`), `Currency`/`Decimal` (both `decimal`) and `AutoIncrement`/`Integer` (both `int`).
 
-值得注意的是 **DB 參數層並未抹平**：`FieldDbType.Date` → `DbType.Date`，
-資料庫端始終知道這是日曆日。被收斂掉的只有 CLR 表示法與 wire 標記。
+Note that **the DB parameter layer is not flattened**: `FieldDbType.Date` → `DbType.Date`, so the database always knows
+it is a calendar day. Only the CLR representation and the wire marker are collapsed.
 
-### 為何需要處理
+### Why it needs to be addressed
 
-1. **schema-less 場景是真正的破口。** Repository 雙軌策略下，報表 / 批次（AnyCode）產出的
-   `DataTable` 背後沒有 `FormSchema`，消費端**查不到欄位語意**。
-   純 JS client 亦然：payload 自我描述後，前端不需另外取 schema。
-2. **跨時區部署需要一個安全預設。** 沒有欄位語意，schema-less 路徑上的日期欄位
-   會被當成時間點做時區轉換，造成跨日偏移（見 [ADR-032](adr-032-datetime-timezone.md)）。
-3. **wire 上早就有這個槽位，只是填錯了。** 只要改變它的**來源**——從 CLR 型別反推改為
-   優先讀顯式標記——就把 payload 的自我描述能力接回來，**不新增任何 wire 欄位**。
+1. **Schema-less scenarios are the real gap.** Under the Repository dual-track strategy, the `DataTable` produced by
+   reports / batch jobs (AnyCode) has no `FormSchema` behind it, so the consumer **cannot look up the column
+   semantics**. The same goes for a pure JS client: once the payload describes itself, the front end does not need to
+   fetch the schema separately.
+2. **Cross-time-zone deployments need a safe default.** Without column semantics, a date column on a schema-less path
+   is treated as an instant and converted between time zones, shifting it across a day boundary (see
+   [ADR-032](adr-032-datetime-timezone.md)).
+3. **The wire already has the slot; it is just filled in wrongly.** Changing only its **source**, from inferring it
+   from the CLR type to reading an explicit marker first, restores the payload's ability to describe itself, **without
+   adding any wire field**.
 
-## 考慮過的選項
+## Options considered
 
-### 1. 讓 CLR 型別自己承載語意：`ToType(Date)` 回傳 `typeof(DateOnly)`（否決）
+### 1. Let the CLR type carry the semantics: `ToType(Date)` returns `typeof(DateOnly)` (rejected)
 
-方向最乾淨——「宣告欄位型別即決定語意」，從根本消除「忘了標」的失敗模式。
-初步評估認為框架內破壞半徑為 0（全 repo 無 `(DateTime)row[...]` 直接 cast）。
+The cleanest direction: "declaring the column type decides the semantics", which removes the "forgot to mark it"
+failure mode at the root. The initial assessment put the blast radius inside the framework at 0 (no direct
+`(DateTime)row[...]` cast anywhere in the repository).
 
-**實測後否決**（2026-07-25，`net10.0`）。`DateOnly` 不是 `DataColumn` 的原生儲存型別，
-走 `ObjectStorage` **嚴格型別比對，完全不做轉換**：
+**Rejected after measurement** (2026-07-25, `net10.0`). `DateOnly` is not a native storage type of `DataColumn`; it
+goes through `ObjectStorage`, which **compares types strictly and does no conversion at all**:
 
-| 操作 | `DateTime` 欄（現況） | `DateOnly` 欄 |
-|------|---------------------|--------------|
-| `row["d"] = "2026-07-25"`（字串） | ✅ 自動 parse | ❌ `ArgumentException` |
+| Operation | `DateTime` column (current) | `DateOnly` column |
+|-----------|-----------------------------|-------------------|
+| `row["d"] = "2026-07-25"` (string) | ✅ Parsed automatically | ❌ `ArgumentException` |
 | `row["d"] = new DateTime(...)` | ✅ | ❌ `ArgumentException` |
-| `row["dt"] = new DateOnly(...)` | — | ❌ `ArgumentException`（`DateOnly` 未實作 `IConvertible`） |
+| `row["dt"] = new DateOnly(...)` | — | ❌ `ArgumentException` (`DateOnly` does not implement `IConvertible`) |
 | `Convert.ChangeType(v, typeof(DateTime))` | ✅ | ❌ `InvalidCastException` |
 | `DataView.RowFilter = "d >= #...#"` | ✅ | ❌ `EvaluateException` |
 | `DataTable.Compute("MAX(d)")` | ✅ | ❌ `DataException` |
-| `DataView.Sort` / `PrimaryKey.Find` / `Expression` 欄 | ✅ | ✅ |
+| `DataView.Sort` / `PrimaryKey.Find` / `Expression` column | ✅ | ✅ |
 | `DataColumn.DefaultValue` | `DateTime.MinValue` | `DBNull` |
 
-三個否決理由：
+Three reasons for rejecting it:
 
-1. **打斷框架自己的繫結層。** UI 繫結層是字串進出（`DateEdit` 寫回
-   `date.ToString("yyyy-MM-dd")`）。它現在能運作**純粹是靠 `DataColumn` 對 `DateTime` 欄
-   自動 parse 字串**。欄位一變 `DateOnly`，每次選日期都擲 `ArgumentException`。
-   初評「破壞半徑為 0」只盤點了讀取方向，**寫入方向才是破口**。
-2. **永久失去 `RowFilter` / `Compute`。** BCL 的 `DataTable` 運算式引擎不認識 `DateOnly`，
-   無繞法。對 ERP 而言 `order_date` 不能下 `RowFilter` 是實質功能倒退。
-3. **反方向亦擋**，導致分階段落地期間沒有可運行的中間態，必須綁同版次一起發布。
+1. **It breaks the framework's own binding layer.** The UI binding layer works with strings in and out (`DateEdit`
+   writes back `date.ToString("yyyy-MM-dd")`). It works today **purely because `DataColumn` automatically parses
+   strings for a `DateTime` column**. Once the column becomes `DateOnly`, every date pick throws
+   `ArgumentException`. The initial "blast radius of 0" only surveyed the read direction; **the write direction is
+   where it breaks**.
+2. **It permanently loses `RowFilter` / `Compute`.** The BCL `DataTable` expression engine does not know `DateOnly`,
+   and there is no workaround. For an ERP, being unable to apply a `RowFilter` to `order_date` is a real functional
+   regression.
+3. **The reverse direction is blocked too**, so there is no runnable intermediate state during a phased rollout; it
+   would have to ship in a single release.
 
-### 2. `ExtendedProperties` 顯式標記（採納）
+### 2. An explicit marker in `ExtendedProperties` (adopted)
 
-`DataColumn.DataType` 完全不變，日曆日語意改由 `DataColumn.ExtendedProperties` 承載。
-上述三項代價全部不存在。代價是保留「忘了標」的靜默失敗模式（見〈後果〉）。
+`DataColumn.DataType` stays exactly as it is, and the calendar-day semantics are carried by
+`DataColumn.ExtendedProperties` instead. None of the three costs above exists. The cost is that the "forgot to mark
+it" silent failure mode remains (see "Consequences").
 
-### 3. wire 新增獨立語意欄位（否決）
+### 3. A separate semantics field on the wire (rejected)
 
-在 `SerializableDataColumn` 加 `IsDateOnly` / `Semantics` 之類欄位與 `DataType` 並存。
-語意更顯式，但 wire 變胖，且與現有 `DataType` 欄位語意重疊——後者本來就是 `FieldDbType`，
-只是填入的值不準確。修正來源比新增欄位更小。
+Add a field such as `IsDateOnly` / `Semantics` to `SerializableDataColumn` alongside `DataType`. The semantics would be
+more explicit, but the wire gets fatter, and it overlaps with the existing `DataType` field, which is already a
+`FieldDbType` and merely holds an inaccurate value. Fixing the source is smaller than adding a field.
 
-## 決策
+## Decision
 
-**日曆日語意以 `DataColumn.ExtendedProperties` 顯式標記承載，`DataColumn.DataType` 維持不變。**
+**Calendar-day semantics are carried by an explicit marker in `DataColumn.ExtendedProperties`;
+`DataColumn.DataType` stays unchanged.**
 
-| 層 | 決定 |
-|---|---|
-| 儲存 | `DataColumn.DataType` 維持 `DateTime`；繫結層 / `RowFilter` / `Sort` / `Compute` / 既有 cast 零影響 |
-| 語意 | `DataColumn.ExtendedProperties` 記錄宣告的 `FieldDbType`，經 `DataColumnExtensions` 的 `ApplyFieldDbType` / `ResolveFieldDbType` 存取 |
-| wire | **不新增欄位**——MessagePack 的 `SerializableDataColumn.DataType` 與 JSON 的 `"type"` 本來就是 `FieldDbType`，只是填入的值變準確 |
-| 取值 | `ValueUtilities.CDateOnly` 回傳 `DateOnly`，讓日曆日在使用端可與時間點區分 |
+| Layer | Decision |
+|-------|----------|
+| Storage | `DataColumn.DataType` stays `DateTime`; zero impact on the binding layer / `RowFilter` / `Sort` / `Compute` / existing casts |
+| Semantics | `DataColumn.ExtendedProperties` records the declared `FieldDbType`, accessed through `ApplyFieldDbType` / `ResolveFieldDbType` in `DataColumnExtensions` |
+| Wire | **No new field**: MessagePack's `SerializableDataColumn.DataType` and JSON's `"type"` are already a `FieldDbType`; only the value filled in becomes accurate |
+| Reading values | `ValueUtilities.CDateOnly` returns `DateOnly`, so the consuming side can tell a calendar day from an instant |
 
-### 標記來源的責任分界（兩路徑）
+### Who is responsible for the marker (two paths)
 
-一句話規則：**框架產生的 SQL，框架負責標記；呼叫端自己寫的 SQL，呼叫端負責標記。**
+The rule in one sentence: **for SQL the framework generates, the framework marks; for SQL the caller writes, the
+caller marks.**
 
-| 路徑 | SQL 來源 | 標記處理 |
-|------|---------|---------|
-| **一** | 由定義產生（`DataFormRepository` 等 schema 驅動查詢） | **框架處理**：取回 `DataTable` 後依 `FormTable.Fields` 重播欄位型別 |
-| **二** | 呼叫端直接下 SQL（AnyCode / 報表 / 批次） | **呼叫端顯式宣告**：`table.SetDateColumns(...)` 或 `DbCommandSpec.DateColumns` |
+| Path | Source of the SQL | Handling of the marker |
+|------|-------------------|------------------------|
+| **One** | Generated from the definitions (schema-driven queries such as `DataFormRepository`) | **Handled by the framework**: after the `DataTable` is fetched, the column types are replayed from `FormTable.Fields` |
+| **Two** | The caller issues SQL directly (AnyCode / reports / batch jobs) | **Declared explicitly by the caller**: `table.SetDateColumns(...)` or `DbCommandSpec.DateColumns` |
 
-**曾評估並否決「以 `DbDataReader.GetDataTypeName` 全域偵測」**：實測顯示 SQLite 的運算式欄位
-一律回 `TEXT`（判不出來），而 SQLite 正是開發 / 測試環境，會造成**開發環境與正式環境行為不同**；
-且為插入型別判斷須放棄 `adapter.Fill` 改手寫 reader 迴圈，是**所有查詢**都要付的代價。
+**"Global detection through `DbDataReader.GetDataTypeName`" was evaluated and rejected**: measurements showed that
+SQLite always returns `TEXT` for expression columns (it cannot tell), and SQLite is exactly the development / test
+environment, so it would make **the development environment behave differently from production**; and to insert the
+type check we would have to give up `adapter.Fill` for a hand-written reader loop, a cost **every query** would pay.
 
-### 語意決策只有一份實作
+### The semantic decision has a single implementation
 
-wire 序列化有 MessagePack 與 JSON 兩份平行實作，且分居不同套件
-（`Polhem.Api.Core` 與 `Polhem.Base`）。「優先讀標記、未標記才反推」的邏輯抽成
-`Polhem.Base.Data.DataColumnExtensions` 的單一 helper，兩份 converter 共用。
-放 `Polhem.Base` 是**必要條件而非偏好**——它是兩者唯一的共同下層。
+Wire serialization has two parallel implementations, MessagePack and JSON, living in different packages
+(`Polhem.Api.Core` and `Polhem.Base`). The logic "read the marker first, infer only when unmarked" is extracted into a
+single helper in `Polhem.Base.Data.DataColumnExtensions`, shared by both converters. Putting it in `Polhem.Base` is
+**a necessity, not a preference**: it is the only lower layer the two have in common.
 
-## 後果
+## Consequences
 
-- **正向**：
-  - schema-less payload 自我描述，報表 / AnyCode / JS client 不需另取 schema 即可判別日曆日欄位。
-  - 跨時區設計（[ADR-032](adr-032-datetime-timezone.md) 的 D4）取得可靠的「不該轉換」判斷依據。
-  - 順帶修好 `Text`/`String`、`Currency`/`Decimal`、`AutoIncrement`/`Integer` 三組同樣被抹平的標記。
-    因 `ToType` 對這些值的結果不變，用戶端重建的 CLR 型別完全不受影響。
-  - 既有 client 不受影響：payload 結構與大小不變，只有 `FieldDbType` 的值變準確。
-- **保留的靜默失敗模式（本決策相對選項 1 的唯一代價）**：路徑二（BO 自寫 SQL）
-  忘了宣告的日曆日欄位，在 wire 上仍標成 `DateTime`。
-  緩解為 helper 只需一行、錯誤欄名與錯誤 `DbCommandKind` 皆擲例外（不靜默略過）、
-  以及文件明確載明此責任分界。
-- **破壞性變更**：`ValueUtilities.CDate` 更名為 `CDateOnly`，回傳型別由 `DateTime` 改為
-  `DateOnly`（`defaultValue` 參數同步）。更名使 `CDateOnly` / `CDateTime` 以自身回傳型別為名，
-  呼叫端不必回查即知拿到什麼。外部呼叫端 `DateTime d = ValueUtilities.CDate(x)` 成為
-  **編譯錯誤**而非 runtime 失敗；遷移方式為改接 `DateOnly` 或改用 `CDateTime`。
-  框架內呼叫端僅一處。
-- **需持續留意**：`ExtendedProperties` 在 `DataTable.Merge()` / `DataView.ToTable()` 等
-  複製路徑的保留行為。漏失處會靜默退回「反推 CLR 型別」，症狀是 wire 上標記變回 `DateTime`。
+- **Positive**:
+  - Schema-less payloads describe themselves; reports / AnyCode / JS clients can identify calendar-day columns without
+    fetching the schema separately.
+  - The cross-time-zone design (D4 of [ADR-032](adr-032-datetime-timezone.md)) gets a reliable basis for deciding "do
+    not convert".
+  - It also fixes the markers of the three other pairs flattened the same way: `Text`/`String`, `Currency`/`Decimal`
+    and `AutoIncrement`/`Integer`. Because `ToType` gives the same result for these values, the CLR types rebuilt on
+    the client are not affected at all.
+  - Existing clients are not affected: the payload's structure and size do not change; only the `FieldDbType` values
+    become accurate.
+- **The silent failure mode that remains (the only cost of this decision compared with option 1)**: on path two (SQL
+  written by the BO itself), a calendar-day column the caller forgot to declare is still marked `DateTime` on the
+  wire. The mitigations: the helper takes a single line, a wrong column name and a wrong `DbCommandKind` both throw
+  (rather than being silently skipped), and the documentation states this division of responsibility explicitly.
+- **Breaking change**: `ValueUtilities.CDate` is renamed to `CDateOnly`, and its return type changes from `DateTime`
+  to `DateOnly` (the `defaultValue` parameter changes to match). The rename makes `CDateOnly` / `CDateTime` named after
+  their own return types, so callers know what they get without looking it up. An external caller's
+  `DateTime d = ValueUtilities.CDate(x)` becomes a **compile error** rather than a runtime failure; to migrate, switch
+  to `DateOnly` or use `CDateTime` instead. There is only one caller inside the framework.
+- **Needs ongoing attention**: whether `ExtendedProperties` survive copy paths such as `DataTable.Merge()` /
+  `DataView.ToTable()`. Where they are lost, the logic silently falls back to "infer from the CLR type", and the
+  symptom is that the marker on the wire turns back into `DateTime`.
 
-## 相關
+## Related
 
-- ADR-026（數值語意與捨入）——同屬「定義層語意需貫通到資料層」的家族。
-- ADR-029（欄位名稱一律小寫）——同樣是「wire 表示法對齊定義層」的決策。
-- ADR-030（MessagePack name-based keys）——wire 表示法的另一項決策。
-- `docs/en/temporal-types.md`——消費端（含 JS/TS）的使用指引，以及三種時間語意的跨層對照。
+- ADR-026 (numeric semantics and rounding): the same family of "definition-layer semantics must reach through to the
+  data layer".
+- ADR-029 (field names are always lowercase): likewise a decision to "align the wire representation with the
+  definition layer".
+- ADR-030 (MessagePack name-based keys): another decision about the wire representation.
+- `docs/en/temporal-types.md`: guidance for consumers (including JS/TS), and the cross-layer comparison of the three
+  time semantics.

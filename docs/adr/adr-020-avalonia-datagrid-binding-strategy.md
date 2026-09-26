@@ -1,14 +1,21 @@
-# ADR-020：Avalonia DataGrid 對 DataTable 列的綁定策略
+# ADR-020: How the Avalonia DataGrid binds to DataTable rows
 
-## 狀態
+[繁體中文](adr-020-avalonia-datagrid-binding-strategy.zh-TW.md)
 
-已採納（2026-06-09）
+## Status
 
-## 背景
+Accepted (2026-06-09)
 
-[ADR-001](adr-001-dataset-as-dto.md) 確立 `DataSet` / `DataTable` 為框架的跨層 DTO，server 端 BO 回傳 `DataTable`，client 端直接 render 而不投影到 typed POCO。`Polhem.UI.Maui.Controls.DynamicGrid` 以「Grid + Label + TapGestureRecognizer 逐 cell 手刻」的方式跑通了這條資料流。
+## Context
 
-`Polhem.UI.Avalonia` 在 Phase 3 加入時，自然想沿用 Avalonia 內建的 `Avalonia.Controls.DataGrid`：理應比 MAUI 端的手刻 Grid 提供更完整的 selection / scroll / column sizing 等基礎能力。WPF 對應的慣用做法是：
+[ADR-001](adr-001-dataset-as-dto.md) established `DataSet` / `DataTable` as the framework's cross-layer DTO: server
+side BOs return a `DataTable`, and the client renders it directly without projecting it onto typed POCOs.
+`Polhem.UI.Maui.Controls.DynamicGrid` got this data flow working by "hand-building every cell with Grid + Label +
+TapGestureRecognizer".
+
+When `Polhem.UI.Avalonia` was added in Phase 3, the natural choice was to use Avalonia's built-in
+`Avalonia.Controls.DataGrid`, which should provide more complete basics such as selection, scrolling and column
+sizing than the hand-built Grid on the MAUI side. The idiomatic WPF equivalent is:
 
 ```csharp
 new DataGridTextColumn
@@ -18,25 +25,37 @@ new DataGridTextColumn
 }
 ```
 
-`DataGrid.ItemsSource = DataTable.DefaultView`，每列為 `DataRowView`，binding path `[FieldName]` 透過 `DataRowView` 的 string-key indexer 拿值。WPF 的 binding engine 會 dispatch 到 `ICustomTypeDescriptor`，從 `DataRowView` 取得每欄的 `PropertyDescriptor` 然後讀值，cell 順利顯示。
+With `DataGrid.ItemsSource = DataTable.DefaultView`, each row is a `DataRowView`, and the binding path `[FieldName]`
+gets the value through the string-key indexer of `DataRowView`. The WPF binding engine dispatches to
+`ICustomTypeDescriptor`, obtains each column's `PropertyDescriptor` from the `DataRowView` and then reads the value,
+so the cells display fine.
 
-在 Avalonia 12 上實測這個做法的結果是：
+Measured on Avalonia 12, this approach gives:
 
-- **DataGrid 正確 iterate 出 row（列數正確）**
-- **每一格 cell 都是空字串**
+- **The DataGrid iterates the rows correctly (the row count is right)**
+- **Every cell is an empty string**
 
-追查發現 Avalonia 12 的 binding engine（透過 `ExpressionObserver` 解析路徑）只認以下兩種資料來源：
+Investigation showed that the Avalonia 12 binding engine (which resolves paths through `ExpressionObserver`)
+recognizes only these two kinds of data source:
 
-1. CLR 屬性（透過 reflection 直接取得 PropertyInfo）
-2. typed indexer — 也就是 `IList<T>` / `IReadOnlyList<T>` 的整數鍵 indexer，或宣告為 `this[T key]` 且 `T` 為 binding 期可推導之型別的 indexer
+1. CLR properties (the PropertyInfo is obtained directly through reflection)
+2. Typed indexers: the integer-key indexer of `IList<T>` / `IReadOnlyList<T>`, or an indexer declared as
+   `this[T key]` where `T` is a type that can be inferred at binding time
 
-`DataRowView.this[string columnName]` 屬於前述兩者之外的第三類：它是 PropertyDescriptor-based 的 string-key indexer，需要走 `ICustomTypeDescriptor` 取得欄位描述後再讀值。**Avalonia 的 binding engine 不會做這個 dispatch**，所以路徑 `[FieldName]` 解析失敗、cell 收到 `BindingNotification`，最終 render 出空字串。
+`DataRowView.this[string columnName]` is a third kind outside both: it is a PropertyDescriptor-based string-key
+indexer, which has to go through `ICustomTypeDescriptor` to get the column descriptor before reading the value.
+**The Avalonia binding engine does not do this dispatch**, so resolving the path `[FieldName]` fails, the cell
+receives a `BindingNotification`, and in the end an empty string is rendered.
 
-WPF / MAUI 走相同的綁定字面語法卻能跑通，是因為 WPF binding engine 對 `ICustomTypeDescriptor` 有內建 awareness；這是兩個 framework binding 引擎實作層面的差異，不是「Avalonia 哪裡設錯」可以救的。
+WPF / MAUI get the same literal binding syntax to work because the WPF binding engine has built-in awareness of
+`ICustomTypeDescriptor`. This is a difference in how the two frameworks implement their binding engines, not
+something that "some wrong setting in Avalonia" can fix.
 
-## 決策
+## Decision
 
-**`Polhem.UI.Avalonia.Controls.DynamicGrid` 不使用 `DataGridTextColumn` + `Binding "[FieldName]"`，改用 `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>`，在 cell template 內以 code 顯式呼叫 `row.Row[fieldName]` 取值。**
+**`Polhem.UI.Avalonia.Controls.DynamicGrid` does not use `DataGridTextColumn` + `Binding "[FieldName]"`. It uses
+`DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` instead, and the cell template explicitly calls
+`row.Row[fieldName]` in code to get the value.**
 
 ```csharp
 private static DataGridTemplateColumn BuildColumn(LayoutColumn column)
@@ -59,57 +78,96 @@ private static DataGridTemplateColumn BuildColumn(LayoutColumn column)
 }
 ```
 
-`row.Row` 取得底層 `DataRow`，再走 `DataRow.this[string]`（這是純 ADO.NET，反射可達）— Avalonia binding engine 不會碰到，因為它的角色被 `FuncDataTemplate` 縮成「給定 item，回傳一個 control」。
+`row.Row` gets the underlying `DataRow`, and then goes through `DataRow.this[string]` (plain ADO.NET, reachable by
+reflection). The Avalonia binding engine never touches it, because `FuncDataTemplate` reduces its role to "given an
+item, return a control".
 
-連帶把欄位格式化（`DisplayFormat` / `NumberFormat` / `DateTime` ISO 8601 / `IFormattable` invariant culture）邏輯統一封裝在 `FormatCell` 靜態方法內，與 `Polhem.UI.Maui.Controls.DynamicGrid.FormatCell` 行為對稱。
+Along with this, the field formatting logic (`DisplayFormat` / `NumberFormat` / `DateTime` ISO 8601 / `IFormattable`
+invariant culture) is encapsulated in one static method, `FormatCell`, which behaves symmetrically with
+`Polhem.UI.Maui.Controls.DynamicGrid.FormatCell`.
 
-## 後果
+## Consequences
 
-### 正面
+### Positive
 
-- **不需投影到 typed POCO**：DataTable 仍是端到端唯一的列資料表達，與 [ADR-001](adr-001-dataset-as-dto.md) 一致
-- **`Polhem.UI.Avalonia.DynamicGrid` 與 `Polhem.UI.Maui.DynamicGrid` 行為對齊**：兩端都是 code-based formatting，差別只在 host control（Avalonia `DataGrid` vs MAUI `Grid` + `Label`）
-- **Avalonia binding engine 的「不會 dispatch 到 ICustomTypeDescriptor」這個事實只需在這一個 adapter 處理**：框架其他地方仍可正常使用 Avalonia binding（綁 CLR 屬性、ViewModel、`IList` 等）
-- **避免之後讀者重蹈覆轍**：本 ADR + `DynamicGrid.cs` 的 `<remarks>` 註解明確標示「不要改回 `Binding "[FieldName]"`」
+- **No projection onto typed POCOs**: the DataTable remains the only end-to-end representation of row data,
+  consistent with [ADR-001](adr-001-dataset-as-dto.md)
+- **`Polhem.UI.Avalonia.DynamicGrid` and `Polhem.UI.Maui.DynamicGrid` behave alike**: both use code-based formatting,
+  and differ only in the host control (Avalonia `DataGrid` vs MAUI `Grid` + `Label`)
+- **The fact that the Avalonia binding engine "does not dispatch to ICustomTypeDescriptor" only has to be handled in
+  this one adapter**: the rest of the framework can still use Avalonia binding normally (binding to CLR properties,
+  ViewModels, `IList` and so on)
+- **Later readers are kept from repeating the mistake**: this ADR plus the `<remarks>` comment in `DynamicGrid.cs`
+  state explicitly "do not change this back to `Binding "[FieldName]"`"
 
-### 負面
+### Negative
 
-- **失去 cell-level binding 的 `OneWayToSource` / `TwoWay` 模式**：`FuncDataTemplate` 內的 `TextBlock` 不會自動寫回 `DataRowView`。對本 `DynamicGrid` 不是問題 — 它本來就 `IsReadOnly = true`，cell-level 編輯由 master 區的 `DynamicForm` 走事件驅動（`TextChanged` / `IsCheckedChanged` / `SelectionChanged`），這個 idiom 在 Avalonia / MAUI / Blazor 三條 family 一致
-- **每個 cell template 自己 format**：`DisplayFormat` / `NumberFormat` 處理邏輯集中在 `FormatCell` 靜態方法（行內 5 行 switch），可控；但不再受惠於 Avalonia column-level `IValueConverter` 的 framework 級重用
-- **`DataGrid.AutoGenerateColumns` 仍維持 `false`**：原本就因為要對應 `LayoutGrid.Columns` 而手動產欄，本 ADR 不改變這個現狀；但意味著若日後 Avalonia 推出更聰明的 schema 自動推導，我們仍是 opt-out
+- **Cell-level binding loses the `OneWayToSource` / `TwoWay` modes**: the `TextBlock` inside the `FuncDataTemplate`
+  does not write back to the `DataRowView` automatically. This is not a problem for this `DynamicGrid`: it is
+  `IsReadOnly = true` anyway, and cell-level editing is event-driven in the `DynamicForm` of the master area
+  (`TextChanged` / `IsCheckedChanged` / `SelectionChanged`); this idiom is the same across the Avalonia / MAUI /
+  Blazor families
+- **Each cell template formats itself**: the `DisplayFormat` / `NumberFormat` handling is concentrated in the static
+  `FormatCell` method (an inline 5-line switch), which is manageable; but it no longer benefits from framework-level
+  reuse through Avalonia column-level `IValueConverter`s
+- **`DataGrid.AutoGenerateColumns` stays `false`**: columns were already generated by hand to match
+  `LayoutGrid.Columns`, and this ADR does not change that; but it means that if Avalonia later offers smarter
+  automatic schema inference, we are still opted out
 
-### 中性
+### Neutral
 
-- **Avalonia `Binding "[X]"` 仍可用於其他資料形狀**：`IList<T>`（整數鍵）、`IReadOnlyDictionary<string,T>`（字串鍵但 typed）、自訂宣告 `this[T] { get; }` 的物件都仍走 binding engine，**不要把本 ADR 推廣為「Avalonia 的 indexer binding 都不能用」**；本 ADR 只限縮在「`DataRowView` 的 PropertyDescriptor-based string indexer」這一個情境
-- **未來 Avalonia upstream 若補 `ICustomTypeDescriptor` 支援**，可重新評估走回 `DataGridTextColumn` + `Binding "[FieldName]"`，但無此需求前不主動回頭
+- **Avalonia `Binding "[X]"` still works for other data shapes**: `IList<T>` (integer key),
+  `IReadOnlyDictionary<string,T>` (string key but typed), and objects that declare their own `this[T] { get; }` all
+  still go through the binding engine. **Do not generalize this ADR into "Avalonia indexer binding never works"**;
+  this ADR is limited to the single case of "the PropertyDescriptor-based string indexer of `DataRowView`"
+- **If Avalonia upstream adds `ICustomTypeDescriptor` support in the future**, going back to `DataGridTextColumn` +
+  `Binding "[FieldName]"` can be reconsidered, but there is no plan to go back until there is a need
 
-## 相關連結
+## Related links
 
-- [ADR-001：使用 DataSet 作為跨層 DTO](adr-001-dataset-as-dto.md) — 為何 DataTable 是 client 端直接 render 的單位
-- [ADR-013：前端 API 連線策略](adr-013-frontend-api-connection-strategy.md) — `Polhem.UI.Avalonia` 為 `Polhem.UI.*` family 的一員
-- `src/Polhem.UI.Avalonia/Controls/GridControl.cs`（其後由 `DynamicGrid` 更名，並依職責拆為
-  `GridControl.Columns` / `.Cells` / `.Rows` / `.Binding` 等分檔）— 實作 + 詳細 `<remarks>` 註解
-- `docs/en/development-cookbook.md` §「Avalonia desktop (Polhem.UI.Avalonia)」 — 從使用者角度說明 binding 策略
+- [ADR-001: DataSet as the cross-layer DTO](adr-001-dataset-as-dto.md): why the DataTable is the unit the client
+  renders directly
+- [ADR-013: Frontend API connection strategy](adr-013-frontend-api-connection-strategy.md): `Polhem.UI.Avalonia` is a
+  member of the `Polhem.UI.*` family
+- `src/Polhem.UI.Avalonia/Controls/GridControl.cs` (later renamed from `DynamicGrid`, and split by responsibility into
+  files such as `GridControl.Columns` / `.Cells` / `.Rows` / `.Binding`): the implementation plus a detailed
+  `<remarks>` comment
+- `docs/en/development-cookbook.md` section "Avalonia desktop (Polhem.UI.Avalonia)": explains the binding strategy
+  from the user's point of view
 
-## 不在範圍
+## Out of scope
 
-- **Cell-level 編輯**：目前 `DynamicGrid` 為 read-only；若日後需要 inline 編輯，可在那時再評估「自己寫 two-way binding 機制」或「投影到 ViewModel POCO」哪個成本較低
-- **Avalonia CompiledBinding 對 `DataRowView` 的支援**：是 Avalonia upstream 議題，不在 Polhem 這層處理
-- **將 `FormatCell` 抽到 `Polhem.UI.Core` 與 `Polhem.UI.Maui.DynamicGrid` 共用**：行為對稱但載體型別不同（Avalonia `DataRowView` 用 `row.Row[name]`、MAUI 直接吃 `DataRow`），抽共用需要先抽 helper signature，與本 ADR 的決策正交；本 ADR 範圍不處理
+- **Cell-level editing**: `DynamicGrid` is currently read-only; if inline editing is needed later, it can be decided
+  then whether "writing our own two-way binding mechanism" or "projecting onto ViewModel POCOs" costs less
+- **Avalonia CompiledBinding support for `DataRowView`**: an Avalonia upstream issue, not handled at the Polhem level
+- **Extracting `FormatCell` into `Polhem.UI.Core` to share it with `Polhem.UI.Maui.DynamicGrid`**: the behavior is
+  symmetric but the carrier types differ (Avalonia's `DataRowView` uses `row.Row[name]`, MAUI takes a `DataRow`
+  directly). Sharing it would first require extracting a helper signature, which is orthogonal to this ADR's
+  decision; this ADR does not cover it
 
-## 後記（2026-06-11）
+## Postscript (2026-06-11)
 
-本 ADR 的實作位置已由 `DynamicGrid`（`UserControl` 包裝，現已移除）遷移為 `GridControl`（`src/Polhem.UI.Avalonia/Controls/GridControl.cs`；最初直接繼承 `DataGrid`，後重構為 `ContentControl` 組合式、內部 `DataGrid` 以 `InnerGrid` 公開）；`DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` + code-fetch 的綁定策略不變。in-cell / EditForm 編輯策略的後續決策見 [ADR-021](adr-021-avalonia-datagrid-editing-strategy.md)。
+The implementation of this ADR has moved from `DynamicGrid` (a `UserControl` wrapper, now removed) to `GridControl`
+(`src/Polhem.UI.Avalonia/Controls/GridControl.cs`; it first inherited `DataGrid` directly, and was later refactored
+into a `ContentControl` composite whose inner `DataGrid` is exposed as `InnerGrid`); the binding strategy of
+`DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` + fetching in code is unchanged. The follow-up decision on
+the in-cell / EditForm editing strategy is in [ADR-021](adr-021-avalonia-datagrid-editing-strategy.md).
 
-## 後記（2026-06-14）：清單 cell 的 `supportsRecycling` 修正
+## Postscript (2026-06-14): fixing `supportsRecycling` for list cells
 
-上方「決策」範例對唯讀清單純文字 cell 用了 `supportsRecycling: true` —— 這與「`Text` 算死、非 binding」相沖：DataGrid 跨列回收 presenter 時不重跑建立委派，導致顯示文字與底層列脫鉤（lookup picker 上表現為「看到某列、帶回別列」）。已改為 `supportsRecycling: false`，詳見 [ADR-022](adr-022-avalonia-datagrid-cell-recycling.md)。
+The "Decision" example above used `supportsRecycling: true` for plain-text cells in read-only lists. That conflicts
+with "`Text` is computed once, not bound": when the DataGrid recycles presenters across rows it does not rerun the
+build delegate, so the displayed text comes apart from the underlying row (in the lookup picker this showed up as
+"you see one row and get another one back"). It has been changed to `supportsRecycling: false`; see
+[ADR-022](adr-022-avalonia-datagrid-cell-recycling.md) for details.
 
-## 後記（2026-08-07）：`Polhem.UI.Maui` 已移除
+## Postscript (2026-08-07): `Polhem.UI.Maui` has been removed
 
-本 ADR 多處以 `Polhem.UI.Maui.Controls.DynamicGrid` 為對照或共用對象（背景、`FormatCell` 行為
-對稱、〈不在範圍〉的抽共用構想）。**`Polhem.UI.Maui` 已於 2026-07-28 移除**，UI 家族收斂為
-Avalonia（涵蓋桌面 / iOS / Android / WASM）與 Blazor.Server 雙軌。
+This ADR uses `Polhem.UI.Maui.Controls.DynamicGrid` in several places as a point of comparison or a sharing target
+(the Context, the symmetric behavior of `FormatCell`, the sharing idea under "Out of scope").
+**`Polhem.UI.Maui` was removed on 2026-07-28**, and the UI family has converged on two tracks: Avalonia (covering
+desktop / iOS / Android / WASM) and Blazor.Server.
 
-因此那些「與 MAUI 對齊 / 抽共用」的項目已無對象，不再是待辦；`FormatCell` 的行為要求本身仍
-成立，只是不再有第二個載體需要對齊。背景段落保留原文字以保存決策脈絡。
+So the items about "aligning with MAUI / sharing code" no longer have a counterpart and are no longer to-dos; the
+behavior requirement of `FormatCell` itself still holds, there is simply no second carrier to align with any more.
+The Context section keeps its original text to preserve the context of the decision.

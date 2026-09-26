@@ -1,233 +1,293 @@
-# ADR-016：多租戶客製化覆蓋層（雙層唯讀疊加）
+# ADR-016: Multi-tenant customization overlay (two read-only layers stacked)
 
-## 狀態
+[繁體中文](adr-016-multitenant-customization-overlay.zh-TW.md)
 
-已採納（2026-05-31）
+## Status
 
-## 背景
+Accepted (2026-05-31)
 
-Polhem 的租戶概念原本只到**資料庫層**（[ADR-012](adr-012-session-company-context.md) 的 `SessionInfo.CompanyId` + `EnterCompany`/`LeaveCompany`，row-level 以 `sys_company_rowid` 隔離），**定義檔則全系統共用**——所有 `GetXxxFilePath()` 都從單一 `PathOptions.DefinePath` 根目錄衍生。
+## Context
 
-多租戶部署下，不同租戶需要不同的客製化：
+Polhem's tenant concept originally reached only the **database layer** (`SessionInfo.CompanyId` + `EnterCompany` /
+`LeaveCompany` of [ADR-012](adr-012-session-company-context.md), with row-level isolation by `sys_company_rowid`),
+while **definition files were shared by the whole system**: every `GetXxxFilePath()` was derived from the single
+`PathOptions.DefinePath` root directory.
 
-- **Language**：同一 key 不同租戶顯示不同文字 / enum。
-- **FormLayout**：不同租戶不同畫面排版（重排 / 隱藏既有欄位）。
-- **Custom BO（ProgramSettings）**：不同租戶綁不同 `FormBusinessObject` 子類。
+In a multi-tenant deployment, different tenants need different customizations:
 
-需要在 base 套裝定義之上疊加一層**租戶專屬的唯讀客製覆蓋**，由一個「客製化代碼」（`CustomizeId`）驅動。
+- **Language**: the same key shows different text / enums for different tenants.
+- **FormLayout**: different tenants have different screen layouts (rearranging / hiding existing fields).
+- **Custom BO (ProgramSettings)**: different tenants bind different `FormBusinessObject` subclasses.
 
-## 核心不變式（凌駕一切實作便利）
+A layer of **tenant-specific, read-only customization overrides** needs to be stacked on top of the base package
+definitions, driven by a "customization code" (`CustomizeId`).
 
-**伺服端的任何快取資料——無論套裝（base）或客製（cust）——初始化後執行階段一律唯讀，絕不異動。**
+## Core invariant (it overrides every implementation convenience)
 
-- 套裝快取為全 session 共用的單一實例：異動它會污染**所有**租戶與 session。
-- 客製快取為「同一 `CustomizeId` 全 session 共用」的實例：異動它會污染**該租戶**的其他 session。
-- 多租戶第一鐵則：**任一客製代碼的資料不得影響其他租戶**。
+**Any cached data on the server — whether base (package) or cust (customization) — is always read-only at runtime
+after initialization and is never mutated.**
 
-此不變式是後續所有選型的根因——正因為不能異動快取，才否決「合併成單一物件」。
+- The base cache is a single instance shared by all sessions: mutating it contaminates **every** tenant and session.
+- A customization cache is an instance "shared by all sessions of the same `CustomizeId`": mutating it contaminates
+  the other sessions of **that tenant**.
+- The first iron rule of multi-tenancy: **the data of any customization code must not affect other tenants**.
 
-## 決策
+This invariant is the root cause of every choice that follows: it is precisely because the cache must not be mutated
+that "merging into a single object" was rejected.
 
-引入 **per-`CustomizeId` 的唯讀客製覆蓋層**，與 base 套裝層**雙層獨立、各自唯讀**，疊加只發生在消費端查找當下。
+## Decision
 
-### 核心要點
+Introduce a **per-`CustomizeId` read-only customization overlay** that forms, together with the base package layer,
+**two independent layers, each read-only**; stacking happens only on the consumer side at lookup time.
 
-1. **雙層唯讀疊加，永不合併物件**
+### Key points
 
-   - Base 層＝現有全部快取，process-wide 單一份、唯讀、零異動。
-   - Override 層＝per-`CustomizeId` 獨立快取，backing 換成 `CustomizeOnlyStorage`：**嚴格只讀** `{CustomizePath}/{customizeId}/...`、無對應檔即回 `null`（不 fallback、不混入 base）。以 `CachePrefix=customizeId` 物理隔離。
-   - 疊加在消費端、以查找粒度進行，**永不產生合併物件、永不 mutate base**。
+1. **Two read-only layers stacked, objects never merged**
 
-2. **三類客製，各自的疊加粒度**
+   - Base layer = all the existing caches: a single process-wide copy, read-only, zero mutation.
+   - Override layer = a separate per-`CustomizeId` cache whose backing is replaced by `CustomizeOnlyStorage`: it
+     **strictly reads only** `{CustomizePath}/{customizeId}/...`, and returns `null` when there is no matching file
+     (no fallback, no mixing in of base). It is physically isolated by `CachePrefix=customizeId`.
+   - Stacking happens on the consumer side at lookup granularity: **a merged object is never produced, and base is
+     never mutated**.
 
-   | 類型 | 疊加粒度 | 查找語意 |
+2. **Three kinds of customization, each with its own stacking granularity**
+
+   | Kind | Stacking granularity | Lookup semantics |
    |------|---------|---------|
-   | **Language** | key 級 | cust resource 含該 key → 用 cust 值；否則 base 值（enum 同理） |
-   | **ProgramSettings** | progId 級 → 屬性級（見下方修訂） | cust settings 命中該 progId → 逐屬性取捨；否則 base |
-   | **FormLayout** | 整檔擇一 | cust 檔存在 → 回 cust 物件；否則 base 物件 |
+   | **Language** | Key level | The cust resource contains the key → use the cust value; otherwise the base value (enums likewise) |
+   | **ProgramSettings** | progId level → property level (see the revision below) | The cust settings hit the progId → choose property by property; otherwise base |
+   | **FormLayout** | Whole file, one or the other | The cust file exists → return the cust object; otherwise the base object |
 
-   `FormSchema` / `TableSchema` / `SystemSettings` / `DatabaseSettings` / `DbCategorySettings` **永遠走 `DefinePath`，不進客製分支**。
+   `FormSchema` / `TableSchema` / `SystemSettings` / `DatabaseSettings` / `DbCategorySettings` **always go through
+   `DefinePath` and never enter the customization branch**.
 
-   > **修訂（2026-08-05）：`ProgramSettings` 的粒度由「progId 級整筆取代」細化為「progId 級 →
-   > 屬性級」。** 本 ADR 定案時 `ProgramItem` 只承載 `BusinessObject` 一個綁定，整筆取代與屬性級
-   > 繼承在行為上沒有差別。`ProgramItem.Repository` 加入後兩者開始分歧：整筆取代會讓「只換 BO」的
-   > 客製連帶把套裝的專屬 Repository 清掉，而**空字串是合法的「用框架預設」而非錯誤**，這個損失
-   > 不會有任何回報。現行語意是客製項目只覆寫它指名的屬性，留空者沿用 base；要刻意退回框架通用
-   > 型別則顯式指名該型別。此修訂**不影響**「不 merge 成單一物件」的核心決策（見下方「為何否決
-   > merge」）——合成結果是查找當下產生的新實例，兩層的快取物件都不被異動。
+   > **Revision (2026-08-05): the granularity of `ProgramSettings` is refined from "progId level, whole-entry
+   > replacement" to "progId level → property level".** When this ADR was decided, `ProgramItem` carried only one
+   > binding, `BusinessObject`, so whole-entry replacement and property-level inheritance behaved the same. Once
+   > `ProgramItem.Repository` was added, the two diverged: whole-entry replacement would make a customization that
+   > "only swaps the BO" also clear the package's dedicated Repository, and since **an empty string is a legitimate
+   > "use the framework default" rather than an error**, that loss would never be reported. The current semantics are
+   > that a customization entry overrides only the properties it names, and properties left empty keep the base
+   > value; to deliberately fall back to the framework's generic type, name that type explicitly. This revision
+   > **does not affect** the core decision "do not merge into a single object" (see "Why merge was rejected" below):
+   > the combined result is a new instance produced at lookup time, and neither layer's cached objects are mutated.
 
-   > **修訂（2026-08-06）：客製範圍由三類擴為五類。** 本 ADR 定案時只有 Language / ProgramSettings /
-   > FormLayout 三類。其後 `ProgramItem` 加入 `Repository` 綁定（[ADR-034](adr-034-progid-type-registry.md)），
-   > 使「客製 BO」與「客製 Repository」成為兩個獨立的軸；`PluginSettings` 則新增為第五類
-   > （[ADR-035](adr-035-business-logic-plugin.md)）。**現行五類與各自粒度**：
+   > **Revision (2026-08-06): the customization scope expands from three kinds to five.** When this ADR was decided
+   > there were only three kinds: Language / ProgramSettings / FormLayout. Later `ProgramItem` gained the
+   > `Repository` binding ([ADR-034](adr-034-progid-type-registry.md)), making "custom BO" and "custom Repository"
+   > two independent axes; and `PluginSettings` was added as a fifth kind
+   > ([ADR-035](adr-035-business-logic-plugin.md)). **The current five kinds and their granularity**:
    >
-   > | 類型 | 疊加粒度 | 備註 |
+   > | Kind | Stacking granularity | Notes |
    > |------|---------|------|
-   > | **Language** | key 級 | enum 為整組取代 |
-   > | **FormLayout** | 整檔擇一 | |
-   > | **客製 BO** | progId 級 → 屬性級 | `ProgramItem.BusinessObject` |
-   > | **客製 Repository** | progId 級 → 屬性級 | `ProgramItem.Repository`，與 BO 獨立 |
-   > | **業務 plugin** | progId 級 **相加** | 唯一的相加粒度；套裝鏈在前、客製鏈在後，且**客製無法停用套裝的 plugin** |
+   > | **Language** | Key level | An enum is replaced as a whole set |
+   > | **FormLayout** | Whole file, one or the other | |
+   > | **Custom BO** | progId level → property level | `ProgramItem.BusinessObject` |
+   > | **Custom Repository** | progId level → property level | `ProgramItem.Repository`, independent of the BO |
+   > | **Business plugin** | progId level, **additive** | The only additive granularity; the package chain comes first and the customization chain after, and **a customization cannot disable a package plugin** |
    >
-   > `PluginSettings` 同時是**第一個可寫的客製定義**（`LocalOnly` 維護 API），客製層其餘維持唯讀
-   > ——這使下方「客製定義只讀不寫」一節的敘述僅對其餘四類成立。
+   > `PluginSettings` is also **the first writable customization definition** (a `LocalOnly` maintenance API), while
+   > the rest of the customization layer stays read-only — which makes the statements in the section "Customization
+   > definitions are read, not written" below hold only for the other four kinds.
    >
-   > **修訂（2026-08-13）：現況為六類，上表漏列 `MenuSettings`。** 上面那則修訂是以「想改什麼」
-   > 分類的，而選單客製自始就在覆蓋層裡、只是從未被列進來：`ICustomizeDefineReader` 有
-   > `GetCustomizeMenuSettings`，`SystemBusinessObject.GetDefineCore` 對 `DefineType.MenuSettings`
-   > 明確傳入 `GetCurrentCustomizeId()`。
+   > **Revision (2026-08-13): the current state is six kinds; the table above leaves out `MenuSettings`.** The
+   > revision above classifies by "what you want to change", and menu customization had been in the overlay from the
+   > start but was never listed: `ICustomizeDefineReader` has `GetCustomizeMenuSettings`, and
+   > `SystemBusinessObject.GetDefineCore` explicitly passes `GetCurrentCustomizeId()` for `DefineType.MenuSettings`.
    >
-   > | 類型 | 疊加粒度 | 備註 |
+   > | Kind | Stacking granularity | Notes |
    > |------|---------|------|
-   > | **MenuSettings** | 整檔擇一 | 與 `FormLayout` 同一個理由：一份選單是一個整體安排，逐節點合併會產出沒有人選過的分組與排序 |
+   > | **MenuSettings** | Whole file, one or the other | For the same reason as `FormLayout`: a menu is one overall arrangement, and merging node by node would produce groupings and orderings nobody chose |
    >
-   > ⚠️ **引用本節時請指明是哪一種數法。** 以**定義檔**計是**五份**（`Language` / `FormLayout` /
-   > `ProgramSettings` / `PluginSettings` / `MenuSettings`），這個數字是穩定的；
-   > 以**「想改什麼」**計則取決於切多細（`ProgramItem` 的兩個綁定各自獨立、`Language` 的文字與
-   > 選項集又是兩種粒度），所以上表的「五類」與本則的「六類」數的都是意圖而非檔案。
-   > 權威來源是 `CustomizeOverlay` 的 XML doc 與 `CustomizeOnlyPathOptions`（後者自陳
-   > 覆蓋層只服務那五種型別）。
+   > ⚠️ **When citing this section, state which way of counting you mean.** Counted by **definition file** there are
+   > **five** (`Language` / `FormLayout` / `ProgramSettings` / `PluginSettings` / `MenuSettings`), and that number is
+   > stable; counted by **"what you want to change"** it depends on how finely you cut (the two bindings of
+   > `ProgramItem` are independent of each other, and the text and the option sets of `Language` are two more
+   > granularities), so the "five kinds" of the table above and the "six kinds" of this revision both count intents,
+   > not files. The authoritative sources are the XML doc of `CustomizeOverlay` and `CustomizeOnlyPathOptions` (the
+   > latter states that the overlay serves only those five types).
    >
-   > 疊加演算法其後集中於 `CustomizeOverlay`（`Polhem.Definition.Customization`），
-   > 為 server 與 client 共用的純決策元件（無 storage / session / DI 相依），
-   > 不再由兩端各自推導。使用面的完整說明見[租戶客製化](../zh-TW/customization.md)。
+   > The stacking algorithm was later centralized in `CustomizeOverlay` (`Polhem.Definition.Customization`), a pure
+   > decision component shared by server and client (no storage / session / DI dependencies), so the two ends no
+   > longer derive it separately. For the full usage description see
+   > [Tenant customization](../en/customization.md).
 
-3. **`CustomizeId` 為獨立代碼，非等同 `CompanyId`**
+3. **`CustomizeId` is an independent code, not the same as `CompanyId`**
 
-   - 多個 Company 可共用同一套客製（集團共用、標準 / 客製版分離）；Company → `CustomizeId` 多對一。
-   - 載體沿用 [ADR-012](adr-012-session-company-context.md) 模式：**`CompanyInfo` 存對照、`SessionInfo` 存當前值**。`CustomizeId` 自 `st_company.customize_id` 欄由 `CompanyRepository` 載入，`EnterCompany` 寫入 `SessionInfo.CustomizeId`、`LeaveCompany` / `Logout` 清空（與 `CompanyId` 同步）。
+   - Several companies can share the same customization (shared across a group, separating standard and customized
+     editions); Company → `CustomizeId` is many-to-one.
+   - The carrier follows the [ADR-012](adr-012-session-company-context.md) pattern: **`CompanyInfo` stores the
+     mapping, `SessionInfo` stores the current value**. `CustomizeId` is loaded by `CompanyRepository` from the
+     `st_company.customize_id` column; `EnterCompany` writes `SessionInfo.CustomizeId`, and `LeaveCompany` /
+     `Logout` clear it (in step with `CompanyId`).
 
-4. **`CustomizeId` 顯式傳參（非 ambient）**
+4. **`CustomizeId` is passed explicitly as a parameter (not ambient)**
 
-   - 消費端（`LanguageService` / `ProgramSettingsBoTypeResolver` / `CacheDefineAccess`）為 stateless 單例，由持有 `AccessToken` 的呼叫端自 `SessionInfo.CustomizeId` 解析後**顯式傳入**。
-   - 新疊加方法以 **default interface method** 加在 `ILanguageService` / `IBoTypeResolver` / `IDefineAccess`，預設委派 base、零漣漪到既有實作。
+   - The consumers (`LanguageService` / `ProgramSettingsBoTypeResolver` / `CacheDefineAccess`) are stateless
+     singletons; the caller that holds the `AccessToken` resolves it from `SessionInfo.CustomizeId` and **passes it
+     in explicitly**.
+   - The new stacking methods are added to `ILanguageService` / `IBoTypeResolver` / `IDefineAccess` as **default
+     interface methods** that delegate to base by default, with zero ripple to existing implementations.
 
-5. **短路即向後相容**
+5. **Short-circuiting is backward compatibility**
 
-   - 每個疊加點第一步是 `string.IsNullOrEmpty(customizeId)`；為空（單租戶、登入前、未 `EnterCompany`、或 `CustomizePath` 未設）即直接走 base、**完全不進客製層**（不呼叫 reader / provider、不探檔）。
-   - `ICustomizeDefineReader` 內部再做一次同樣 guard 作為第二道防線。
-   - 結果：未啟用客製時全鏈路與現狀**逐位元一致**。
+   - The first step at every stacking point is `string.IsNullOrEmpty(customizeId)`; if it is empty (single tenant,
+     before login, no `EnterCompany`, or `CustomizePath` not set), it goes straight to base and **never enters the
+     customization layer at all** (no reader / provider call, no file probing).
+   - `ICustomizeDefineReader` performs the same guard again internally as a second line of defense.
+   - Result: when customization is not enabled, the whole chain is **bit-for-bit identical** to the current state.
 
-## 理由
+## Rationale
 
-### 為何否決 merge（合併成單一物件）
+### Why merge (combining into a single object) was rejected
 
-合併 base + cust 成新物件，會誘發兩種違反核心不變式的路徑：「讀 base→就地改寫」污染全租戶共用快取，或需配置額外的合併快取（又一份要維護的可變狀態）。改採「雙層唯讀、查找時擇一」後，base 快取自始至終零異動。
+Merging base + cust into a new object invites two paths that violate the core invariant: "read base → rewrite it in
+place" contaminates the cache shared by all tenants, or an extra merged cache has to be configured (yet another piece
+of mutable state to maintain). With "two read-only layers, choose one at lookup time", the base cache is never mutated
+from start to finish.
 
-### 為何 `CustomizeId` 顯式傳參而非 ambient（AsyncLocal）
+### Why `CustomizeId` is passed explicitly rather than ambient (AsyncLocal)
 
-| 機制 | 最壞失效模式 | 安全性 |
+| Mechanism | Worst failure mode | Safety |
 |------|------------|--------|
-| **顯式傳參** | 某呼叫端漏傳 → 退化純 base（**客製沒套到**） | ✅ fail-safe |
-| Ambient AsyncLocal | request 結束漏 reset / thread 重用 → **沿用上一 request 的 `CustomizeId`** | ❌ fail-dangerous = 跨租戶外溢 |
+| **Explicit parameter** | A caller forgets to pass it → degrades to pure base (**the customization is not applied**) | ✅ fail-safe |
+| Ambient AsyncLocal | A missed reset at the end of a request / thread reuse → **the previous request's `CustomizeId` is carried over** | ❌ fail-dangerous = cross-tenant spill |
 
-安全關鍵功能應選 fail-safe：顯式傳參失效僅「客製沒生效」（安全降級）；ambient 失效正是計畫最在意的跨租戶污染。且顯式傳參對齊框架既有「caller 顯式傳 lang」的 stateless 設計、不引入隱式全域狀態。
+A security-critical feature should choose fail-safe: when explicit passing fails, only "the customization does not
+take effect" (a safe degradation); when ambient fails, it is exactly the cross-tenant contamination the plan was most
+concerned about. Explicit passing also matches the framework's existing stateless design of "the caller passes lang
+explicitly" and introduces no implicit global state.
 
-### 為何排除 `FormSchema` 客製
+### Why `FormSchema` customization is excluded
 
-`FormSchema` 是定義中樞，同時驅動 UI / DB schema / 驗證規則，逐租戶分歧會讓 DB 結構裂開。`FormLayout` 客製（只能重排 / 隱藏既有欄位，欄位集仍由共用 `FormSchema` 鎖定）已能滿足「不同租戶不同畫面」，約束反而強化「`FormSchema` 為中樞」。
+`FormSchema` is the definition hub that drives the UI / DB schema / validation rules at the same time; diverging it
+per tenant would split the DB structure. `FormLayout` customization (which can only rearrange / hide existing fields,
+while the field set stays locked by the shared `FormSchema`) is already enough for "different screens for different
+tenants", and the constraint actually strengthens "`FormSchema` is the hub".
 
-### 為何 override 快取用 `CachePrefix=customizeId`
+### Why the override cache uses `CachePrefix=customizeId`
 
-沿用既有 `CacheContainerService` 的 `CachePrefix` 機制即可達成 per-租戶物理隔離，無需新增快取基礎設施；且 base 套裝層的 cache 類別與 `FileDefineStorage` **一行不改**。
+Reusing the existing `CachePrefix` mechanism of `CacheContainerService` achieves per-tenant physical isolation with no
+new cache infrastructure; and the cache classes of the base package layer and `FileDefineStorage` **do not change by a
+single line**.
 
-## 替代方案（已評估後不採納）
+## Alternatives considered (evaluated and rejected)
 
-1. **合併 base + cust 成單一物件**
-   - 拒絕原因：誘發改寫 base 快取、污染全租戶（見上）。
+1. **Merge base + cust into a single object**
+   - Reason for rejection: it invites rewriting the base cache and contaminating every tenant (see above).
 
-2. **Ambient AsyncLocal 傳遞 `CustomizeId`**
-   - 拒絕原因：fail-dangerous，跨租戶外溢；引入隱式全域狀態，與框架 stateless 設計相悖。
+2. **Pass `CustomizeId` through ambient AsyncLocal**
+   - Reason for rejection: fail-dangerous, cross-tenant spill; it introduces implicit global state, contrary to the
+     framework's stateless design.
 
-3. **客製化 `FormSchema`**
-   - 拒絕原因：定義中樞逐租戶分歧會裂開 DB schema / 驗證規則。永久排除，非延後。
+3. **Customize `FormSchema`**
+   - Reason for rejection: diverging the definition hub per tenant would split the DB schema / validation rules.
+     Excluded permanently, not postponed.
 
-4. **`CustomizeId` 等同 `CompanyId`**
-   - 拒絕原因：無法表達「多公司共用一套客製」（集團共用、標準 / 客製版分離）。
+4. **`CustomizeId` equals `CompanyId`**
+   - Reason for rejection: it cannot express "several companies share one customization" (shared across a group,
+     separating standard and customized editions).
 
-5. **override container 共用 base 的 storage 並 fallback**
-   - 拒絕原因：override 快取會混入 base 內容，破壞「override 層只放純客製內容」的清晰語意，也讓無檔情境難以乾淨回 null。
+5. **The override container shares the base storage and falls back**
+   - Reason for rejection: the override cache would mix in base content, breaking the clear semantics of "the
+     override layer holds only pure customization content", and making it hard to return null cleanly when there is
+     no file.
 
-## 結果
+## Consequences
 
-### 覆蓋層架構
+### Overlay architecture
 
 ```text
-消費端（持 AccessToken）
-   │ 自 SessionInfo.CustomizeId 解析 customizeId，顯式傳入
+Consumer (holds the AccessToken)
+   │ resolves customizeId from SessionInfo.CustomizeId and passes it in explicitly
    ↓
 LanguageService / ProgramSettingsBoTypeResolver / CacheDefineAccess
-   │ customizeId 空 → 短路純 base
-   │ 非空 ↓
+   │ customizeId empty → short-circuit to pure base
+   │ not empty ↓
 ICustomizeDefineReader.GetCustomizeXxx(customizeId, ...)
    ↓
-ICacheContainerProvider.For(customizeId)   → per-customizeId 唯讀 container（CachePrefix=customizeId）
+ICacheContainerProvider.For(customizeId)   → per-customizeId read-only container (CachePrefix=customizeId)
    ↓
-CustomizeOnlyStorage（嚴格只讀 {CustomizePath}/{customizeId}/...，無檔→null）
+CustomizeOnlyStorage (strictly reads only {CustomizePath}/{customizeId}/..., no file → null)
 ```
 
-### 目錄結構
+### Directory structure
 
 ```text
-{DefinePath}/FormSchema/{progId}.FormSchema.xml          ← 全租戶共用、不客製
-{DefinePath}/Language/{lang}/{ns}.Language.xml           ← 標準版
+{DefinePath}/FormSchema/{progId}.FormSchema.xml          ← shared by all tenants, not customized
+{DefinePath}/Language/{lang}/{ns}.Language.xml           ← standard edition
 {DefinePath}/FormLayout/{layoutId}.FormLayout.xml
 {DefinePath}/ProgramSettings.xml
-{CustomizePath}/{customizeId}/Language/{lang}/{ns}.Language.xml   ← 客製差異（僅 3 類）
+{CustomizePath}/{customizeId}/Language/{lang}/{ns}.Language.xml   ← customization differences (3 kinds only)
 {CustomizePath}/{customizeId}/FormLayout/{layoutId}.FormLayout.xml
 {CustomizePath}/{customizeId}/ProgramSettings.xml
 ```
 
-### 對外 API 變更
+### Public API changes
 
-| 範圍 | 變更 |
+| Scope | Change |
 |------|------|
-| `PathOptions` | 加 `CustomizePath`；`GetProgramSettings/FormLayout/Language FilePath` 改 `virtual` |
-| `CustomizeOnlyPathOptions` / `CustomizeOnlyStorage` | **新增**（`Polhem.Definition`）：只服務三類、無檔回 null、含 path traversal 防護 |
-| `ICustomizeDefineReader` | **新增**（`Polhem.Definition.Storage`）：三個 `GetCustomizeXxx(customizeId, ...)` |
-| `ICacheContainerProvider` / `CacheContainerProvider` / `CustomizeDefineReader` | **新增**（`Polhem.ObjectCaching`） |
-| `ILanguageService` / `IBoTypeResolver` / `IDefineAccess` | 加 `customizeId`-aware default interface method |
-| `CompanyInfo` / `SessionInfo` | 加 `CustomizeId` 欄位 |
-| `ClientDefineAccess` / `ClientInfo` | 加 `ClearCache()` / `ResetDefineCache()`（切換租戶清 client 快取） |
-| `st_company` | 加 `customize_id` 欄 |
+| `PathOptions` | Adds `CustomizePath`; `GetProgramSettings/FormLayout/Language FilePath` become `virtual` |
+| `CustomizeOnlyPathOptions` / `CustomizeOnlyStorage` | **New** (`Polhem.Definition`): serve only the three kinds, return null when there is no file, include path traversal protection |
+| `ICustomizeDefineReader` | **New** (`Polhem.Definition.Storage`): three `GetCustomizeXxx(customizeId, ...)` methods |
+| `ICacheContainerProvider` / `CacheContainerProvider` / `CustomizeDefineReader` | **New** (`Polhem.ObjectCaching`) |
+| `ILanguageService` / `IBoTypeResolver` / `IDefineAccess` | Add `customizeId`-aware default interface methods |
+| `CompanyInfo` / `SessionInfo` | Add the `CustomizeId` field |
+| `ClientDefineAccess` / `ClientInfo` | Add `ClearCache()` / `ResetDefineCache()` (clear the client cache when switching tenants) |
+| `st_company` | Adds the `customize_id` column |
 
-## 取捨
+## Trade-offs
 
-### Client 端快取需在切換租戶時 flush
+### The client cache has to be flushed when switching tenants
 
-客製疊加在 server 端（依 session `CustomizeId`）完成，client 取得的已是疊加後結果。但 `ClientDefineAccess` 本地快取以 progId / layoutId / namespace 為鍵，同一連線經 `EnterCompany` 切換公司（`CustomizeId` 變動）時會回前一租戶的疊加結果。對策：`ClientDefineAccess.ClearCache()` + `ClientInfo.ResetDefineCache()`，切換公司後呼叫。
+Customization stacking is done on the server (according to the session's `CustomizeId`), so what the client gets is
+already the stacked result. But the local cache of `ClientDefineAccess` is keyed by progId / layoutId / namespace, so
+when the same connection switches company through `EnterCompany` (changing the `CustomizeId`), it would return the
+previous tenant's stacked result. The countermeasure: `ClientDefineAccess.ClearCache()` +
+`ClientInfo.ResetDefineCache()`, called after switching company.
 
-### Oracle `''=NULL` 與 `customize_id` 的 nullability
+### Oracle `''=NULL` and the nullability of `customize_id`
 
-`customize_id` 標準版常態為空。Oracle 把 `''` 視為 `NULL`，使「String NOT NULL 且常態為空」在 Oracle fresh CREATE 下無法成立。處理方式：Oracle dialect 對 String 欄一律建 nullable，讀取端 `ValueUtilities.CStr(null)→""` 正規化，上層 C# 永遠看到空字串、不見 null；其餘方言維持 `NOT NULL` + `DEFAULT ''`。
+In the standard edition `customize_id` is normally empty. Oracle treats `''` as `NULL`, so "a String that is NOT NULL
+and normally empty" cannot hold under a fresh Oracle CREATE. How it is handled: the Oracle dialect always creates
+String columns as nullable, and the read side normalizes with `ValueUtilities.CStr(null)→""`, so upper-layer C# always
+sees an empty string and never null; the other dialects keep `NOT NULL` + `DEFAULT ''`.
 
-### 「列舉全部 program」場景不給聯集
+### The "enumerate every program" scenario gets no union
 
-progId 級查找只解「給定 progId 取其一」，不直接給 base ∪ cust 聯集。若選單建構需要聯集，消費端當下建構暫時 view（不快取、不 mutate 任一層）。BO 型別解析不需聯集，故框架內不實作。
+ProgId-level lookup only answers "given a progId, take one of the two"; it does not directly give the union base ∪
+cust. If building the menu needs a union, the consumer builds a temporary view at that moment (not cached, mutating
+neither layer). BO type resolution does not need a union, so the framework does not implement it.
 
-### 客製定義只讀不寫
+### Customization definitions are read, not written
 
-框架只負責**讀**客製檔；客製檔由外部工具 / 部署流程產生。`SaveXxx` 不走客製寫入路徑。寫入留待後續計畫（需考量寫入路徑、cache 失效、與唯讀不變式的互動）。
+The framework is only responsible for **reading** customization files; they are produced by external tools /
+deployment processes. `SaveXxx` does not go through a customization write path. Writing is left to a later plan (it
+needs to consider the write path, cache invalidation, and the interaction with the read-only invariant).
 
-> **修訂（2026-08-06）：本節現僅適用於 Language / FormLayout / 客製 BO / 客製 Repository 四類。**
-> `PluginSettings` 已開放寫入（`ICustomizeDefineWriter` + `LocalOnly` 維護 API，寫入前逐一驗證型別、
-> 寫完即 evict 該租戶 cache slot）。`CustomizeOnlyStorage` 本身仍維持全面唯讀——寫入改由 writer
-> 直接經 `CustomizeOnlyPathOptions` 落檔，兩者共用同一份路徑來源，該類別的唯讀承諾不必為單一例外
-> 破功。詳見 [ADR-035](adr-035-business-logic-plugin.md)。
+> **Revision (2026-08-06): this section now applies only to four kinds: Language / FormLayout / custom BO / custom
+> Repository.** `PluginSettings` is now open for writing (`ICustomizeDefineWriter` + a `LocalOnly` maintenance API,
+> which validates each type before writing and evicts that tenant's cache slot right after writing).
+> `CustomizeOnlyStorage` itself stays fully read-only — writes instead land directly through
+> `CustomizeOnlyPathOptions` from the writer, the two share the same path source, and the class's read-only promise
+> does not have to be broken for a single exception. See [ADR-035](adr-035-business-logic-plugin.md) for details.
 
-## 影響範圍
+## Affected areas
 
-| 範圍 | 影響 |
+| Scope | Impact |
 |------|------|
-| `src/Polhem.Definition` | 新增 `CustomizeOnlyPathOptions` / `CustomizeOnlyStorage` / `ICustomizeDefineReader`；`PathOptions` 加 `CustomizePath`；`ILanguageService` / `IDefineAccess` 加多載；`CompanyInfo` / `SessionInfo` 加 `CustomizeId` |
-| `src/Polhem.ObjectCaching` | 新增 `ICacheContainerProvider` / `CacheContainerProvider` / `CustomizeDefineReader`；`CacheDefineAccess` 加 overlay 多載 |
-| `src/Polhem.Business` | `ProgramSettingsBoTypeResolver` overlay（type cache 改 `(customizeId, progId)` 複合鍵）；`IBoTypeResolver` 加多載；`SystemBusinessObject` EnterCompany / LeaveCompany / Logout 設 / 清 `CustomizeId` |
-| `src/Polhem.Repository` | `CompanyRepository.GetById` 載入 `customize_id` |
-| `src/Polhem.Hosting` | DI 註冊 provider / reader、三消費端注入 reader |
+| `src/Polhem.Definition` | New `CustomizeOnlyPathOptions` / `CustomizeOnlyStorage` / `ICustomizeDefineReader`; `PathOptions` gains `CustomizePath`; `ILanguageService` / `IDefineAccess` gain overloads; `CompanyInfo` / `SessionInfo` gain `CustomizeId` |
+| `src/Polhem.ObjectCaching` | New `ICacheContainerProvider` / `CacheContainerProvider` / `CustomizeDefineReader`; `CacheDefineAccess` gains overlay overloads |
+| `src/Polhem.Business` | `ProgramSettingsBoTypeResolver` overlay (the type cache switches to a `(customizeId, progId)` composite key); `IBoTypeResolver` gains an overload; `SystemBusinessObject` EnterCompany / LeaveCompany / Logout set / clear `CustomizeId` |
+| `src/Polhem.Repository` | `CompanyRepository.GetById` loads `customize_id` |
+| `src/Polhem.Hosting` | DI registration of the provider / reader; the reader is injected into the three consumers |
 | `src/Polhem.Api.Client` / `src/Polhem.UI.Core` | `ClientDefineAccess.ClearCache()` / `ClientInfo.ResetDefineCache()` |
-| 測試 | Override 層、消費端疊加、跨租戶隔離、短路、向後相容、EnterCompany→CustomizeId、client 切換清快取 |
+| Tests | Override layer, consumer-side stacking, cross-tenant isolation, short-circuiting, backward compatibility, EnterCompany→CustomizeId, clearing the cache on client switch |
 
-## 相關文件
+## Related
 
-- [ADR-012：Session 公司情境模型](adr-012-session-company-context.md) — `CustomizeId` 載體沿用其 `CompanyInfo` / `SessionInfo` 模式
-- [ADR-009：快取實作](adr-009-cache-implementation.md) — override 層重用其 `CachePrefix` 隔離機制
+- [ADR-012: Session company context model](adr-012-session-company-context.md) — the `CustomizeId` carrier follows its
+  `CompanyInfo` / `SessionInfo` pattern
+- [ADR-009: Cache implementation](adr-009-cache-implementation.md) — the override layer reuses its `CachePrefix`
+  isolation mechanism

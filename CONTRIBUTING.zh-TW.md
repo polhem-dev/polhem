@@ -8,7 +8,7 @@
 
 - 修 bug 或小幅改善，可以直接開 pull request。
 - 較大的變更（新功能、修改公開 API、新增相依套件），請先開 issue，在投入時間之前先對做法取得共識。
-- 架構請讀[開發者文件](docs/zh-TW/README.md)；設計為什麼是現在這個樣子，請讀[架構決策紀錄](docs/adr/README.md)。
+- 架構請讀[開發者文件](docs/zh-TW/README.md)；設計為什麼是現在這個樣子，請讀[架構決策紀錄](docs/adr/README.zh-TW.md)。
 
 ## 工作流程
 
@@ -43,7 +43,8 @@ dotnet build Polhem.slnx --configuration Release
 - **commit message**：英文、祈使語氣，標題說明改了什麼；在內文說明為什麼。
 - **設計決策**：日後需要讓其他人理解的決策，以 ADR 記錄在 `docs/adr/`。
 - **文件**：修改 Markdown 文件後，執行 `./check-md-links.sh` 與 `./check-public-docs.sh`。
-  `docs/<lang>/` 下的文件以 `./check-docs-i18n.sh` 保持同步。
+  `docs/<lang>/` 下的文件與 ADR 以英文為源；繁體中文譯本落後源文件時，`./check-docs-i18n.sh` 會回報。
+  無法一併更新譯本時，請在 pull request 中說明。
 - **個人工作文件**：計畫、草稿與筆記放在 repo 根目錄的 `local/`，git 會忽略它。不要 commit，也不要從已 commit
   的檔案連過去：其他人都開不到。
 

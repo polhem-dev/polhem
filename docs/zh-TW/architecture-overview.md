@@ -131,7 +131,7 @@ FormSchema 更新
 
 針對多租戶部署，Polhem 在 base 定義之上加一層 **per-租戶唯讀客製化覆蓋**。`CustomizeId`（由 `SessionInfo.CustomizeId` 取得，於 `EnterCompany` 時自公司記錄載入）驅動覆蓋層，**僅服務 Language / FormLayout / ProgramSettings / MenuSettings 四類**——`FormSchema` / `TableSchema` / 設定維持全租戶共用，使資料庫結構不會逐租戶分歧。
 
-此覆蓋為**兩層獨立唯讀、永不合併**：base 套裝快取絕不異動，疊加在消費端以 key / progId / 整檔粒度擇一。`CustomizeId` 為空時短路至純 base，與單租戶部署逐位元一致。見 [ADR-016](../adr/adr-016-multitenant-customization-overlay.md)。
+此覆蓋為**兩層獨立唯讀、永不合併**：base 套裝快取絕不異動，疊加在消費端以 key / progId / 整檔粒度擇一。`CustomizeId` 為空時短路至純 base，與單租戶部署逐位元一致。見 [ADR-016](../adr/adr-016-multitenant-customization-overlay.zh-TW.md)。
 
 ---
 
@@ -248,7 +248,7 @@ public class SalesOrderBO : BusinessObject
 
 ### Session 生命週期與資料庫範疇
 
-BO 方法的執行被兩階段 session lifecycle 框住（見 [ADR-012](../adr/adr-012-session-company-context.md)）：
+BO 方法的執行被兩階段 session lifecycle 框住（見 [ADR-012](../adr/adr-012-session-company-context.zh-TW.md)）：
 
 ```
 Login(account, password)   ──→  已登入（SessionInfo.CompanyId = null）

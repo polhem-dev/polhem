@@ -50,7 +50,9 @@ dotnet build Polhem.slnx --configuration Release
   explain why.
 - **Design decisions**: a decision that others need to understand later is recorded as an ADR in `docs/adr/`.
 - **Documents**: after changing Markdown documents, run `./check-md-links.sh` and `./check-public-docs.sh`.
-  Documents under `docs/<lang>/` are kept in sync with `./check-docs-i18n.sh`.
+  English is the source of the documents under `docs/<lang>/` and of the ADRs; `./check-docs-i18n.sh` reports a
+  Traditional Chinese translation that has fallen behind its source. If you cannot update the translation, say so in
+  the pull request.
 - **Personal working documents**: plans, drafts and notes go in `local/` at the repository root, which git ignores.
   Do not commit them, and do not link to them from committed files: nobody else can open them.
 

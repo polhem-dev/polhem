@@ -75,7 +75,7 @@ Polhem 隨套件提供 Roslyn analyzer，把框架慣例變成建置期診斷。
 POLHEM9001 與 POLHEM9002 位於 `src/Directory.Build.targets`，屬框架內部規則，消費端專案不會觸發；
 POLHEM9003 隨套件發布且為 opt-in，見[確認 glob 實際比對到什麼](#確認-glob-實際比對到什麼)。
 POLHEM9001 的存在理由是：加在相依圖最底層那些組件上的任何東西，都會被框架的每一個消費者繼承
-（[ADR-038](../adr/adr-038-definition-dependency-boundary.md)）。**受鎖組件是哪幾個不寫在這裡**——
+（[ADR-038](../adr/adr-038-definition-dependency-boundary.zh-TW.md)）。**受鎖組件是哪幾個不寫在這裡**——
 由 `src/Directory.Build.targets` 宣告，而這份拷貝漂掉不會有任何機制發現；它已經漂過一次，
 在第三個組件加入之後仍停在「兩個」。POLHEM9002 的存在理由是：
 只 bump `Version` 的發版會送出「組件仍宣稱前一版」的套件，而已發布的套件無法回收。

@@ -1,218 +1,226 @@
-# ADR-036：傳輸序列化外置至 API 層，定義層不再承載 MessagePack
+# ADR-036: Wire serialization moves out to the API layer; the definition layer no longer carries MessagePack
 
-## 狀態
+[繁體中文](adr-036-wire-serialization-externalized.zh-TW.md)
 
-**已採納（Accepted，2026-08-09）** —— 決策已執行。
+## Status
 
-本 ADR 修訂 [ADR-030](adr-030-messagepack-name-based-keys.md) 的兩項結論
-（見下方「對 ADR-030 的修訂」），但不改變 [ADR-004](adr-004-messagepack-payload.md)
-「MessagePack 作為 API payload 格式」的決策本身。
+**Accepted (2026-08-09)**: the decision has been carried out.
 
-> **註（2026-09-04，superseded-in-part）**：本 ADR 的前提「wire 只有 MessagePack 一種格式」
-> 已由 [ADR-044](adr-044-payload-codec-negotiation.md) 解除 —— body codec 改為逐請求協商，
-> JSON codec 與 MessagePack 並列。**本 ADR 的核心決策不受影響**：定義層仍不得承載任何傳輸格式
-> 套件，wire 綁定仍留在 `Polhem.Api.Core`。改變的只是「那一層裡有幾個 codec」。
+This ADR revises two conclusions of [ADR-030](adr-030-messagepack-name-based-keys.md) (see "Revisions to ADR-030"
+below), but does not change the decision of [ADR-004](adr-004-messagepack-payload.md) itself, "MessagePack as the API
+payload format".
 
-## 背景
+> **Note (2026-09-04, superseded in part)**: the premise of this ADR, "the wire has only one format, MessagePack",
+> was lifted by [ADR-044](adr-044-payload-codec-negotiation.md): the body codec is now negotiated per request, and a
+> JSON codec sits alongside MessagePack. **The core decision of this ADR is unaffected**: the definition layer still
+> must not carry any transport format package, and wire binding still stays in `Polhem.Api.Core`. The only thing that
+> changed is "how many codecs that layer has".
 
-`Polhem.Definition` 是定義層：`FormSchema`、`TableSchema`、`FormLayout` 等結構的宿主，
-其消費者包含 `Polhem.Db`（含 5 個 provider 的 `FormCommandBuilder`）、`Polhem.Repository`、
-`Polhem.Business`、`Polhem.UI.Avalonia`、`tools/Polhem.Cli`、`tools/DefineEditor`。
+## Context
 
-在此決策之前，該套件對 `MessagePack` 有 `PackageReference`，37 個原始檔帶有
-`[MessagePackObject]` / `[Key]` / `[Union]` / `[IgnoreMember]` 標註。
-上述消費者沒有一個需要 MessagePack，卻全部經相依鏈被迫拉進來。
+`Polhem.Definition` is the definition layer: the host of structures such as `FormSchema`, `TableSchema` and
+`FormLayout`. Its consumers include `Polhem.Db` (including the `FormCommandBuilder` of 5 providers),
+`Polhem.Repository`, `Polhem.Business`, `Polhem.UI.Avalonia`, `tools/Polhem.Cli` and `tools/DefineEditor`.
 
-更根本的問題是**定義層與傳輸格式的技術選擇綁死**：日後若改用其他傳輸格式，
-必須回頭修改定義型別本身。
+Before this decision, the package had a `PackageReference` to `MessagePack`, and 37 source files carried
+`[MessagePackObject]` / `[Key]` / `[Union]` / `[IgnoreMember]` attributes. Not one of the consumers above needs
+MessagePack, yet all of them were forced to pull it in through the dependency chain.
 
-## 決策
+The more fundamental problem is that **the definition layer was tied to a technology choice of transport format**:
+switching to another transport format later would mean going back and changing the definition types themselves.
 
-**傳輸序列化的一切知識外置至 `Polhem.Api.Core`；定義層對傳輸格式零認知。**
+## Decision
 
-### 分界線：BCL 內建的留下，需要外部套件的外置
+**All knowledge of wire serialization moves out to `Polhem.Api.Core`; the definition layer knows nothing about the
+transport format.**
 
-判準不是「是不是傳輸格式」，而是**「會不會讓定義層長出外部套件相依」**：
+### The dividing line: what the BCL provides stays, what needs an external package moves out
 
-| 格式 | 角色 | 需外部套件 | 處置 |
+The criterion is not "is it a transport format" but **"would it give the definition layer an external package
+dependency"**:
+
+| Format | Role | Needs an external package | Handling |
 |------|------|-----------|------|
-| **XML** | 定義層自己的持久化——定義檔、存檔、快照 | ❌ BCL 內建 | ✅ 留在定義層 |
-| **JSON** | 通用 web API 傳輸，.NET 預設支援 | ❌ BCL 內建 | ✅ 留在定義層 |
-| **MessagePack** | 高效傳輸 | ✅ `PackageReference` | ❌ 外置至 `Polhem.Api.Core` |
+| **XML** | The definition layer's own persistence: definition files, saved files, snapshots | ❌ Built into the BCL | ✅ Stays in the definition layer |
+| **JSON** | General web API transport, supported by .NET out of the box | ❌ Built into the BCL | ✅ Stays in the definition layer |
+| **MessagePack** | Efficient transport | ✅ `PackageReference` | ❌ Moves out to `Polhem.Api.Core` |
 
-`[XmlIgnore]` / `[JsonIgnore]` 屬於**平台詞彙**——用它們不引入任何相依，
-也不構成對特定第三方格式的綁定。MessagePack 不同：它是明確的技術選擇，
-且會沿相依鏈傳染。
+`[XmlIgnore]` / `[JsonIgnore]` are **platform vocabulary**: using them brings in no dependency and does not bind to
+any particular third-party format. MessagePack is different: it is an explicit technology choice, and it spreads along
+the dependency chain.
 
-> **本判準的界線由 [ADR-038](adr-038-definition-dependency-boundary.md) 補明確（2026-08-11）**：
-> 「外部套件」指第三方套件與第一方**實作**套件；Microsoft 第一方的**純抽象**套件不算。
-> 該 ADR 同時處理了本判準當初漏掉的一條相依鏈（`Polhem.Definition → Polhem.Expressions →
-> DynamicExpresso.Core`）——當時是以人眼 grep「傳輸格式」關鍵字落實，掃不到它，
-> 因此判準現已改由建置期鎖與傳遞閉包測試兩道閘門執行。
+> **The boundary of this criterion was made explicit by [ADR-038](adr-038-definition-dependency-boundary.md)
+> (2026-08-11)**: "external package" means third-party packages and first-party **implementation** packages;
+> Microsoft first-party **pure abstraction** packages do not count. That ADR also dealt with a dependency chain this
+> criterion originally missed (`Polhem.Definition → Polhem.Expressions → DynamicExpresso.Core`). At the time, the
+> criterion was applied by a human grepping for "transport format" keywords, which could not find it, so the
+> criterion is now enforced by two gates: a build-time lock and a transitive closure test.
 
-### 機制：每型別手寫 formatter
+### Mechanism: a hand-written formatter per type
 
-wire 綁定改由 `src/Polhem.Api.Core/MessagePack/` 的手寫 formatter 承擔，
-定義型別本身不帶任何傳輸標註：
+Wire binding is now handled by hand-written formatters in `src/Polhem.Api.Core/MessagePack/`; the definition types
+themselves carry no transport attributes:
 
-| Formatter | 對象 |
+| Formatter | Target |
 |-----------|------|
-| `SortFieldFormatter`、`DepartmentNodeFormatter`、`NumberFormatItemFormatter`、`CashRoundingItemFormatter`、`AllowedCurrencyItemFormatter`、`ParameterFormatter` | 需排除框架管理成員的合約型別 |
-| `FilterNodeFormatter` | `FilterNode` 多型階層（以 `Kind` 為判別碼） |
-| `KeyCollectionBaseFormatter` | `KeyedCollection` 子型別 |
-| `CollectionBaseFormatter`、`DataSetFormatter`、`DataTableFormatter` | 既有 |
+| `SortFieldFormatter`, `DepartmentNodeFormatter`, `NumberFormatItemFormatter`, `CashRoundingItemFormatter`, `AllowedCurrencyItemFormatter`, `ParameterFormatter` | Contract types that need to exclude framework-managed members |
+| `FilterNodeFormatter` | The `FilterNode` polymorphic hierarchy (with `Kind` as the discriminator) |
+| `KeyCollectionBaseFormatter` | `KeyedCollection` subtypes |
+| `CollectionBaseFormatter`, `DataSetFormatter`, `DataTableFormatter` | Existing |
 
-未列出的型別由 `ContractlessStandardResolver` 以屬性名為鍵處理——
-與先前 `keyAsPropertyName` 的 wire 格式相同。
+Types not listed are handled by `ContractlessStandardResolver`, keyed by property name: the same wire format as the
+earlier `keyAsPropertyName`.
 
-## 理由
+## Rationale
 
-### 為何手寫而非反射驅動
+### Why hand-written rather than reflection-driven
 
-原設計是一支泛型反射 formatter，讀取自訂標註決定納入哪些成員。
-**該設計在行動端 AOT 下不可行**：對任意屬性型別遞迴只能使用非泛型多載
-`MessagePackSerializer.Serialize(Type, ref MessagePackWriter, object, options)`，
-而 `MessagePackWriter` 是 `ref struct`——該路徑需 `Reflection.Emit` 產生
-能傳遞 ref struct 的委派，`IsDynamicCodeSupported=false` 時擲
-`NotSupportedException`。
+The original design was one generic reflection formatter that read custom attributes to decide which members to
+include. **That design is not workable under mobile AOT**: recursing into arbitrary property types can only use the
+non-generic overload `MessagePackSerializer.Serialize(Type, ref MessagePackWriter, object, options)`, and
+`MessagePackWriter` is a `ref struct`. That path needs `Reflection.Emit` to generate a delegate that can pass a ref
+struct, and throws `NotSupportedException` when `IsDynamicCodeSupported=false`.
 
-> 這與「MessagePack 3.x 有 reflection-based fallback」的既有結論不衝突：該結論針對 MessagePack **自產**的 formatter，
-> 不涵蓋「自訂 formatter 內呼叫非泛型 API」這條路徑。
+> This does not contradict the existing conclusion that "MessagePack 3.x has a reflection-based fallback": that
+> conclusion is about the formatters MessagePack **generates itself**, and does not cover the path "a custom formatter
+> calls the non-generic API".
 >
-> **2026-08-10 補正**：該既有結論本身也需限縮——MessagePack 的 fallback 只涵蓋
-> **帶 `[MessagePackObject]` 標註**的合約型別，`ContractlessStandardResolver`
-> 沒有 fallback。詳見下方「未決事項」的補正。
+> **Correction (2026-08-10)**: the existing conclusion itself also needs narrowing. MessagePack's fallback only covers
+> contract types **carrying `[MessagePackObject]`**; `ContractlessStandardResolver` has no fallback. See the
+> correction under "Open issues" below.
 
-手寫 formatter 的屬性型別編譯期已知，全程可用泛型多載、零反射，
-桌面與裝置走同一條路。
+In a hand-written formatter the property types are known at compile time, so the generic overloads can be used
+throughout with zero reflection, and desktop and device take the same path.
 
-### 手寫的代價與防護
+### The cost of hand-writing and the safeguard
 
-新增屬性而未同步 formatter 會**靜默丟欄位**。每支 formatter 因此公開
-`WireMemberCount` 常數，wire 測試斷言 map header 與之相符——型別與 formatter
-一旦漂移，測試立刻紅。
+Adding a property without updating the formatter **silently drops the field**. Each formatter therefore exposes a
+`WireMemberCount` constant, and the wire tests assert that the map header matches it: as soon as a type and its
+formatter drift apart, the test goes red.
 
-### 附帶收益：消滅四對雙胞胎型別
+### A side benefit: four pairs of twin types disappear
 
-`Polhem.Definition.Collections` 的 `MessagePackCollectionBase` /
-`MessagePackCollectionItem` / `MessagePackKeyCollectionBase` /
-`MessagePackKeyCollectionItem` 是 `Polhem.Base.Collections` 對應型別的**刻意複製**，
-存在的唯一理由就是「`Polhem.Base` 不引外部套件，無法承載 MessagePack 標註」。
+`MessagePackCollectionBase` / `MessagePackCollectionItem` / `MessagePackKeyCollectionBase` /
+`MessagePackKeyCollectionItem` in `Polhem.Definition.Collections` were **deliberate copies** of the corresponding
+types in `Polhem.Base.Collections`. Their only reason to exist was that "`Polhem.Base` takes no external packages and
+cannot carry MessagePack attributes".
 
-標註移除後這個理由消失，四對合併回單一實作。原本靠註解要求
-「Keep the two in step」的維護稅隨之消失——而該要求**已經被違反**：
-`Polhem.Base.KeyCollectionBase.GetOrDefault` 在 MessagePack 版中並不存在。
+Once the attributes are removed, that reason is gone, and the four pairs merge back into single implementations. The
+maintenance tax of a comment demanding "Keep the two in step" goes away with them, and that demand **had already been
+violated**: `Polhem.Base.KeyCollectionBase.GetOrDefault` did not exist in the MessagePack version.
 
-## 對 ADR-030 的修訂
+## Revisions to ADR-030
 
-ADR-030 的兩項結論不再成立：
+Two conclusions of ADR-030 no longer hold:
 
-| ADR-030 的結論 | 現況 |
+| ADR-030's conclusion | Current state |
 |---------------|------|
-| 「`[Union]` 型別**不得**改 `keyAsPropertyName`，新增多型階層沿用整數 `[Key]` + `[Union]`」 | **不再適用**。多型改由 `FilterNodeFormatter` 以 `Kind` 判別碼處理，`[Union]` 已移除，把關的 `POLHEM4003` 退役 |
-| 「集合型別的裸 `[MessagePackObject]` 為 `ApiContractRegistry.ConvertForSerialization` 的判斷依據，**不可移除**」 | **判定有誤**。該類別無 production 呼叫者、映射表恆為空、轉換路徑惰性；attribute 檢查只是短路，移除後行為完全相同 |
+| "`[Union]` types **must not** switch to `keyAsPropertyName`; new polymorphic hierarchies keep using integer `[Key]` + `[Union]`" | **No longer applies**. Polymorphism is now handled by `FilterNodeFormatter` with the `Kind` discriminator; `[Union]` has been removed, and `POLHEM4003`, which guarded it, is retired |
+| "The bare `[MessagePackObject]` on collection types is what `ApiContractRegistry.ConvertForSerialization` decides on, and **must not be removed**" | **The judgement was wrong**. That class has no production callers, its mapping table is always empty and the conversion path is inert; the attribute check is only a short circuit, and the behavior is exactly the same after removing it |
 
-ADR-030 的核心決策（wire 鍵以屬性名為準）**維持不變**——只是實現方式從
-`[MessagePackObject(keyAsPropertyName: true)]` 改為 contractless 加顯式 formatter，
-兩者 wire 格式相同。
+The core decision of ADR-030 (wire keys follow property names) **stays unchanged**; only the implementation changes,
+from `[MessagePackObject(keyAsPropertyName: true)]` to contractless plus explicit formatters, and the two produce the
+same wire format.
 
-## 後果
+## Consequences
 
-### 正面
+### Positive
 
-- 定義層與傳輸格式的技術選擇脫鉤；換格式時 `src/Polhem.Definition/` 零改動
-- 六個不需要 MessagePack 的下游套件不再被迫相依
-- 四對雙胞胎型別合併，維護稅消失
-- wire 合約成為程式碼中**看得見、可 review** 的東西，不再是「contractless 自行決定」
+- The definition layer is decoupled from the technology choice of transport format; switching formats needs zero
+  changes in `src/Polhem.Definition/`
+- Six downstream packages that do not need MessagePack are no longer forced to depend on it
+- The four pairs of twin types are merged and the maintenance tax disappears
+- The wire contract becomes something **visible and reviewable** in the code, instead of "whatever contractless
+  decides"
 
-### 代價
+### Costs
 
-- **放棄 MessagePack source generator 退路**：source-gen 需要 `[MessagePackObject]` 標記。
-  ADR-030 保留標記的理由正是這道「免費保險」，本 ADR 有意識地放棄它。
-  依據是 MessagePack 3.x 的 reflection fallback 在行動端經實測可用。
-  > **2026-08-10 補正：此依據不成立。** 該 fallback 只涵蓋帶標註的型別，
-  > 移除標註等於同時失去 fallback 與 source-gen 兩條路。實際後果見下方「未決事項」。
-- **新增 wire 型別時須手寫 formatter**（若該型別有需排除的框架管理成員）。
-  無此需求者由 contractless 自動處理，不需任何動作。
-- **破壞性變更**：`Polhem.Definition` 移除 `SafeTypelessFormatter`、
-  `Collections.MessagePack*` 四型別及其公開 API 條目。下游改用
-  `Polhem.Base.Collections` 的對應型別。
+- **The MessagePack source generator fallback is given up**: source generation requires the `[MessagePackObject]`
+  marker. ADR-030's reason for keeping the marker was exactly this "free insurance", and this ADR gives it up
+  deliberately. The basis is that MessagePack 3.x's reflection fallback was measured to work on mobile.
+  > **Correction (2026-08-10): this basis does not hold.** That fallback only covers attributed types, so removing the
+  > attributes loses both the fallback and source generation at once. The actual consequences are under "Open issues"
+  > below.
+- **Adding a wire type requires a hand-written formatter** (if the type has framework-managed members to exclude).
+  Types without that need are handled automatically by contractless, with no action required.
+- **Breaking change**: `Polhem.Definition` removes `SafeTypelessFormatter`, the four `Collections.MessagePack*` types
+  and their public API entries. Downstream code switches to the corresponding types in `Polhem.Base.Collections`.
 
-### 退役的 analyzer 規則
+### Retired analyzer rules
 
-`POLHEM4001`（集合須註冊 formatter）、`POLHEM4002`（JSON 改名與 MessagePack 鍵不一致）、
-`POLHEM4003`（union 階層須用整數 `[Key]`）、`POLHEM4004`（ctor 參數順序 vs `[Key]` 順序）
-—— 四者的把關對象皆為已移除的標註機制。
+`POLHEM4001` (collections must register a formatter), `POLHEM4002` (JSON rename inconsistent with the MessagePack
+key), `POLHEM4003` (union hierarchies must use integer `[Key]`), `POLHEM4004` (ctor parameter order vs `[Key]` order):
+all four guarded the attribute mechanism that has been removed.
 
-`POLHEM4005` / `POLHEM4006`（單一 public `Add`、無參數建構子）**保留**：
-它們把關的是行動端 AOT `XmlSerializer` 的型別形貌，與傳輸格式無關。
-`POLHEM4006` 的判定改以框架集合與集合項目的基底型別為準。
+`POLHEM4005` / `POLHEM4006` (a single public `Add`, a parameterless constructor) **are kept**: they guard the type
+shape required by the mobile AOT `XmlSerializer`, which has nothing to do with the transport format. `POLHEM4006` now
+decides based on the base types of framework collections and collection items.
 
-## 未決事項
+## Open issues
 
-> 本節原記為「值得獨立追查」。追查已於 **2026-08-10** 完成，結論如下，
-> 原文的兩點保留有一點成立、一點不成立。
+> This section was originally recorded as "worth investigating separately". The investigation was completed on
+> **2026-08-10** with the conclusions below: of the two reservations in the original text, one holds and one does not.
 
-### 結論：本決策使 iOS 端的 wire 不可用
+### Conclusion: this decision made the wire unusable on iOS
 
-移除全部 `[MessagePackObject]` 標註後，wire 型別改由 `ContractlessStandardResolver`
-承載。而 **contractless 沒有 reflection fallback**：在 `IsDynamicCodeSupported=false`
-的 runtime 上，它無法產生 formatter，幾乎每個 payload 型別都擲
-`FormatterNotRegisteredException`。
+After all `[MessagePackObject]` attributes were removed, wire types are carried by `ContractlessStandardResolver`.
+And **contractless has no reflection fallback**: on a runtime with `IsDynamicCodeSupported=false` it cannot generate
+formatters, and almost every payload type throws `FormatterNotRegisteredException`.
 
-NativeAOT（真無動態碼）下的對照實驗，只用 MessagePack 自己的 resolver：
+A controlled experiment under NativeAOT (truly no dynamic code), using only MessagePack's own resolvers:
 
-| 案例 | 結果 |
+| Case | Result |
 |------|------|
-| `[MessagePackObject(keyAsPropertyName: true)]` 型別 + `StandardResolver` | ✅ round-trip 正常 |
-| 無標註 POCO + `ContractlessStandardResolver` | ❌ `FormatterNotRegisteredException` |
+| `[MessagePackObject(keyAsPropertyName: true)]` type + `StandardResolver` | ✅ Round-trips correctly |
+| Unattributed POCO + `ContractlessStandardResolver` | ❌ `FormatterNotRegisteredException` |
 
-ADR-030 階段 0 的原始實測（整數 key 與 `keyAsPropertyName` 皆可 round-trip）**沒有錯**
-——那兩者都是有標註的型別。錯在被一般化成「MessagePack 在 AOT 可用」，
-而本 ADR 正是踩在該一般化上。
+The original measurement in ADR-030 phase 0 (both integer keys and `keyAsPropertyName` round-trip) **was not wrong**:
+both of those are attributed types. The mistake was generalizing it into "MessagePack works under AOT", and this ADR
+was built on exactly that generalization.
 
-### 兩點保留的結算
+### Settling the two reservations
 
-1. **「JIT runtime 上的模擬，真實裝置未必相同」——不成立。**
-   該開關（`RuntimeFeature.IsDynamicCodeSupported`）正是 .NET for iOS SDK 對
-   iOS / tvOS / MacCatalyst 的**每一種組態**（Debug 與 Release、裝置與模擬器）
-   預設設定的值，除非顯式啟用直譯器。模擬用的就是 iOS 建置的預設值。
-   Android 沒有這一條設定，保有 JIT，**不受影響**。
-2. **「`InvalidProgramException` 是模擬假象」——症狀對，結論錯。**
-   該例外確實只出現在「有 JIT 卻被告知不可用」的桌面重現；真無動態碼的 runtime
-   改擲 `InvalidOperationException` / `NotSupportedException` / `MissingMethodException`。
-   但**同一批案例在 NativeAOT 上照樣失敗**——失真的是例外種類，不是失敗本身。
+1. **"A simulation on a JIT runtime; a real device may differ": does not hold.**
+   That switch (`RuntimeFeature.IsDynamicCodeSupported`) is exactly the value the .NET for iOS SDK sets by default for
+   **every configuration** of iOS / tvOS / MacCatalyst (Debug and Release, device and simulator), unless the
+   interpreter is explicitly enabled. The simulation used the default value of an iOS build. Android has no such
+   setting and keeps the JIT, so it is **not affected**.
+2. **"`InvalidProgramException` is an artifact of the simulation": the symptom is right, the conclusion is wrong.**
+   That exception does appear only in the desktop reproduction, where a JIT exists but is reported as unavailable; a
+   runtime with truly no dynamic code throws `InvalidOperationException` / `NotSupportedException` /
+   `MissingMethodException` instead. But **the same cases still fail on NativeAOT**: what is distorted is the
+   exception type, not the failure itself.
 
-### 量化
+### Quantification
 
-同一測試專案、同一開關，以「失敗訊息含 `MessagePack`」為計數口徑：
+Same test project, same switch, counting "failure message contains `MessagePack`":
 
-| 版本 | MessagePack 相關失敗 |
+| Version | MessagePack-related failures |
 |------|--------------------|
-| 本決策之前（v4.18.0） | 37 |
-| 本決策之後（v4.19.0） | 185 |
+| Before this decision (v4.18.0) | 37 |
+| After this decision (v4.19.0) | 185 |
 
-原文「本決策的手寫 formatter 將其降至更低」與實測相反：**放大約 5 倍**。
-先前記載的 51 / 694 未能重現，口徑不明。
+The original text's "the hand-written formatters of this decision bring it down further" is the opposite of what was
+measured: **it grew about fivefold**. The previously recorded 51 / 694 could not be reproduced, and how they were
+counted is unknown.
 
-剩餘的 37 筆是早於本決策的既有缺陷，集中於 typeless 通道
-（`Parameter.Value` / `FilterCondition.Value` 這類 `object` 成員）對
-`Decimal` / `Guid` / `DateTime` / `DateOnly` / `Byte[]` 不可用，以及
-`DataTable` / `DataSet`。
+The remaining 37 are pre-existing defects older than this decision, concentrated in the typeless channel (`object`
+members such as `Parameter.Value` / `FilterCondition.Value`) not working for `Decimal` / `Guid` / `DateTime` /
+`DateOnly` / `Byte[]`, and in `DataTable` / `DataSet`.
 
-### 修復
+### The fix
 
-已於 [ADR-037](adr-037-wire-explicit-registration.md) 處理：wire 型別一律顯式註冊
-formatter，`object` 成員改用判別式封套。
+Handled in [ADR-037](adr-037-wire-explicit-registration.md): every wire type registers a formatter explicitly, and
+`object` members use a discriminated envelope.
 
-### 本 ADR 的決策不因此撤回
+### The decision of this ADR is not withdrawn because of this
 
-定義層與傳輸格式解耦的判斷（「不讓定義層長出外部套件相依」）不受影響——
-contractless 沒有 fallback 這件事，改變的是**該決策的實作代價**，
-不是決策本身：手寫 formatter 的覆蓋範圍必須從「有需排除成員的型別」
-擴大到「全部 wire 型別」。修復另案處理。
+The judgement to decouple the definition layer from the transport format ("do not let the definition layer grow
+external package dependencies") is unaffected. That contractless has no fallback changes **the implementation cost of
+the decision**, not the decision itself: the coverage of hand-written formatters must widen from "types with members
+to exclude" to "every wire type". The fix is handled separately.
 
-重現方式（不需修改任何 csproj）：
+How to reproduce (no csproj changes needed):
 
 ```bash
 dotnet test tests/Polhem.Api.Core.UnitTests/Polhem.Api.Core.UnitTests.csproj -c Release --settings .runsettings -p:DynamicCodeSupport=false

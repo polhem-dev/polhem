@@ -1,85 +1,97 @@
-# ADR-035：業務邏輯 plugin（在既有流程上掛載，而非取代整個 BO）
+# ADR-035: Business logic plugins (hooking into the existing flow rather than replacing the whole BO)
 
-## 狀態
+[繁體中文](adr-035-business-logic-plugin.zh-TW.md)
 
-**已採納（Accepted，2026-08-06）；決策三於 2026-09-05 修訂** —— 決策已執行。`PluginSettings`
-定義型別、`FormBusinessPlugin` 基底與四個掛載點、兩層相加的疊加語意、以及客製層的第一條寫入路徑
-皆已落地。
+## Status
 
-本 ADR 記錄六個長效決策：**掛載而非取代**、**掛載點的封閉集合與新增判準**、**宣告粒度與
-per-operation 生命週期**、**兩層相加且無移除語意**、**失敗處理的兩種不對稱**、
-**與規則引擎的分界**。
+**Accepted (2026-08-06); Decision 3 revised on 2026-09-05**. The decision has been carried out. The `PluginSettings`
+definition types, the `FormBusinessPlugin` base with its four hook points, the additive semantics of stacking two
+layers, and the first write path of the customization layer are all in place.
 
-決策三原為「設定檔只列型別，時點由類別自己 override」，2026-09-05 改為
-**「設定檔明寫時點，一個 plugin 一個時點」**。修訂的內容、被主動放棄的東西、
-以及改變決策的直接原因，全部寫在該節內。
+This ADR records six long-lived decisions: **hook in rather than replace**, **the closed set of hook points and the
+criteria for adding one**, **declaration granularity and the per-operation lifetime**, **two layers that add up, with
+no removal semantics**, **two asymmetries in failure handling**, and **the boundary with the rule engine**.
 
-## 背景
+Decision 3 was originally "the settings file lists only types, and the class decides its stage by what it overrides";
+on 2026-09-05 it was changed to **"the settings file states the stage explicitly, one stage per plugin"**. What was
+revised, what was deliberately given up, and the direct reason for changing the decision are all written in that
+section.
 
-[ADR-016](adr-016-multitenant-customization-overlay.md) 的客製化覆蓋層提供了四種機制：語系、
-FormLayout、客製 BO、客製 Repository。其中「改變業務行為」只有一種途徑——**繼承整個 BO 類別**
-並在 `ProgramSettings` 換掉綁定（[ADR-034](adr-034-progid-type-registry.md)）。
+## Context
 
-這個粒度對常見需求過重：
+The customization overlay of [ADR-016](adr-016-multitenant-customization-overlay.md) provides four mechanisms:
+language resources, FormLayout, custom BOs and custom Repositories. Of these, there is only one way to "change business
+behavior": **inherit the whole BO class** and replace the binding in `ProgramSettings`
+([ADR-034](adr-034-progid-type-registry.md)).
 
-- 「存檔後發一封通知」要為此接管整張單據的商業物件。
-- 多個客製需求疊加時，只能寫成一個大雜燴子類——它們之間沒有任何隔離。
-- 客製 BO 一旦存在，套裝 BO 日後新增的步驟能否生效，取決於子類有沒有記得呼叫 `base`。
+That granularity is too heavy for common needs:
 
-`FormBusinessObject` 的 Save / Delete 早已各切三段可覆寫子方法：
+- "Send a notification after saving" means taking over the business object of the whole document just for that.
+- When several customization needs stack up, the only option is one grab-bag subclass, with no isolation at all
+  between them.
+- Once a custom BO exists, whether steps the packaged BO adds later take effect depends on whether the subclass
+  remembered to call `base`.
+
+`FormBusinessObject`'s Save / Delete have long been split into three overridable sub-methods each:
 
 ```
-Save:   DoBeforeSave → [擷取變更集] → DoSave → [寫變更稽核] → DoAfterSave
-Delete: DoBeforeDelete → DoDelete → [寫刪除稽核] → DoAfterDelete
+Save:   DoBeforeSave → [capture change set] → DoSave → [write change audit] → DoAfterSave
+Delete: DoBeforeDelete → DoDelete → [write delete audit] → DoAfterDelete
 ```
 
-缺的不是擴充點，而是**一種比繼承更輕、且可逐租戶宣告的掛載方式**。
+What was missing was not an extension point, but **a way of hooking in that is lighter than inheritance and can be
+declared per tenant**.
 
-## 決策一：掛載而非取代，另立 `PluginSettings`
+## Decision 1: Hook in rather than replace, with a separate `PluginSettings`
 
-以新的 `PluginSettings.xml` 承載 plugin 鏈，`ProgramSettings` 維持「progId → 型別綁定」的
-註冊表定位不變。
+A new `PluginSettings.xml` carries the plugin chain, and `ProgramSettings` keeps its role as the "progId → type
+binding" registry unchanged.
 
-plugin 在各 `Do*` 子方法的**最終實作之後**執行——那個最終實作可能是套裝 BO 的 base，也可能是
-客製 BO 的覆寫。因此**繼承與 plugin 兩種擴充手段可以疊著用**：需要接管整個流程時繼承，
-只想加一段時掛 plugin。
+Plugins run **after the final implementation** of each `Do*` sub-method; that final implementation may be the base of
+the packaged BO or an override in a custom BO. **The two extension techniques, inheritance and plugins, can therefore be
+stacked**: inherit when you need to take over the whole flow, hook in a plugin when you only want to add a step.
 
-### 為何不放進 `ProgramSettings`
+### Why not put it in `ProgramSettings`
 
-`ProgramSettings` 的語意是「這個 progId **是**哪個型別」——一個 progId 一個 BO、一個 Repository，
-是**擇一**關係。plugin 是「這個 progId **還要多做**哪些事」——一個 progId 多個 plugin，是**相加**
-關係。兩種語意混在同一份檔案裡，覆寫規則會變成逐屬性的例外清單。
+The meaning of `ProgramSettings` is "which type this progId **is**": one progId, one BO, one Repository, an
+**either-or** relationship. A plugin is "what else this progId **must also do**": one progId, many plugins, an
+**additive** relationship. Mixing the two meanings in the same file would turn the override rules into a list of
+per-attribute exceptions.
 
-## 決策二：四個掛載點，且集合是封閉的
+## Decision 2: Four hook points, and the set is closed
 
-`BeforeSave` / `AfterSave` / `BeforeDelete` / `AfterDelete`。命名用**生命週期階段**而非 BO 方法名
-（`Do*` 前綴屬於 BO 的可覆寫步驟，是另一層概念）。
+`BeforeSave` / `AfterSave` / `BeforeDelete` / `AfterDelete`. The names use **lifecycle stages** rather than BO method
+names (the `Do*` prefix belongs to the BO's overridable steps, which is a different layer of concept).
 
-### 為何不是六個
+### Why not six
 
-草案原為每個 `Do*` 子方法一個。砍掉 `DoSave` / `DoDelete` 兩個後置點的理由**不是「想不到用途」**，
-而是它們與 `After` 行為完全相同：都在交易外、都能改 `RefreshedDataSet`，而稽核讀的是 `DoSave`
-之前擷取的 diffgram、兩者皆不影響。留著只是逼使用者做一個沒有正確答案的選擇題。
+The draft originally had one for each `Do*` sub-method. The two post-points of `DoSave` / `DoDelete` were cut **not
+because "no use could be thought of"**, but because they behave exactly like `After`: both are outside the transaction,
+both can change `RefreshedDataSet`, and the audit reads the diffgram captured before `DoSave`, so neither affects it.
+Keeping them would only force users into a multiple-choice question with no right answer.
 
-讀取類方法（`GetList` / `GetData` 等）沒有三段式結構，且**裁決不拆**。可掛載的範圍因此封閉在
-Save / Delete 兩條管線內。
+Read methods (`GetList` / `GetData` and so on) have no three-part structure, and **the ruling is not to split them**.
+The hookable scope is therefore closed within the two pipelines, Save and Delete.
 
-### 新增掛載點的三關判準
+### Three tests for adding a hook point
 
-1. **與相鄰點可區分** —— 行為與既有點不同，不只是位置不同。
-2. **有具體用途** —— 有真實需求推動，不為對稱而開。
-3. **不會把人引到危險位置** —— 這一關會刷掉「有用途」的候選。例如 `DoSave` 前置落在稽核快照
-   **之後**，在那裡改資料會寫進資料庫卻不進稽核軌跡。
+1. **Distinguishable from its neighbors**: its behavior differs from existing points, not just its position.
+2. **Has a concrete use**: driven by a real need, not opened for symmetry.
+3. **Does not lead people to a dangerous position**: this test eliminates candidates that "have a use". For example, a
+   pre-point of `DoSave` falls **after** the audit snapshot; changing data there would be written to the database but
+   not enter the audit trail.
 
-### 成本不對稱決定了預設值
+### The cost asymmetry decides the default
 
-掛載點是公開契約：**加是非破壞性的、減是破壞性的**。因此預設偏少，由真實需求推著擴充，
-而不是先開好一整排等人來用。
+Hook points are a public contract: **adding is non-breaking, removing is breaking**. So the default leans towards
+fewer, extended as real needs push for it, rather than opening a whole row in advance and waiting for someone to use
+them.
 
-## 決策三：設定檔明寫時點，一個 plugin 一個時點
+## Decision 3: The settings file states the stage explicitly, one stage per plugin
 
-> **本節於 2026-09-05 修訂。** 原決策是「設定檔只列型別，時點由類別自己 override」，
-> 並否決了「設定檔明寫時點」的方案。下面連同**放棄了什麼**與**為什麼改**一起記錄。
+> **This section was revised on 2026-09-05.** The original decision was "the settings file lists only types, and the
+> class decides its stage by what it overrides", and it rejected the option of "stating the stage explicitly in the
+> settings file". Below, **what was given up** and **why it changed** are recorded together.
 
 ```xml
 <PluginSettings>
@@ -94,160 +106,186 @@ Save / Delete 兩條管線內。
 </PluginSettings>
 ```
 
-一筆繫結宣告一個時點，而類別必須**恰好覆寫那一個**時點。`PluginItem` 的 key 仍是**型別名**
-——一個類別只掛一個時點，同一型別在一個 program 內因此永遠只出現一次，不需要複合鍵；
-重複宣告同一型別在載入時就被拒絕。
+One binding declares one stage, and the class must override **exactly that one** stage. The key of `PluginItem` is
+still the **type name**: a class hooks into only one stage, so the same type appears at most once within a program and
+no composite key is needed; declaring the same type twice is rejected at load time.
 
-### 為何是「一個類別一個時點」而非「一個類別多個時點」
+### Why "one class, one stage" rather than "one class, several stages"
 
-**責任單一。** 兩個時點的作用本質不同：`BeforeSave` 是存檔前的檢查／調整，`AfterSave` 是存檔後
-的副作用。把兩件性質不同的事塞進同一個類別，是為了共用一個 instance field 而犧牲類別的單一職責。
+**Single responsibility.** The two stages do fundamentally different things: `BeforeSave` is checking / adjusting before
+saving, and `AfterSave` is a side effect after saving. Putting two things of different nature into the same class
+sacrifices the class's single responsibility for the sake of sharing an instance field.
 
-這是**設計裁示，不是型別簽章的強制**。四個時點的簽章是 `BeforeSave(SaveContext)` /
-`AfterSave(SaveContext)` / `BeforeDelete(DeleteContext)` / `AfterDelete(DeleteContext)`
-——參數型別只在 Save 管線與 Delete 管線之間不同，**管線內部相同**。所以「同一個類別同時做
-`BeforeSave` 與 `AfterSave`」在型別上完全做得到；不這樣做是選擇。
+This is **a design ruling, not something enforced by the type signatures**. The signatures of the four stages are
+`BeforeSave(SaveContext)` / `AfterSave(SaveContext)` / `BeforeDelete(DeleteContext)` / `AfterDelete(DeleteContext)`:
+the parameter types differ only between the Save pipeline and the Delete pipeline, and **are the same within a
+pipeline**. So "the same class doing both `BeforeSave` and `AfterSave`" is entirely possible as far as types go; not
+doing it is a choice.
 
-### 放棄了什麼：per-operation 的跨時點狀態共享
+### What was given up: per-operation state sharing across stages
 
-原決策把 per-operation 生命週期當成「只列型別」的成立條件，並稱跨時點共用同一實例是該方案
-相對於「時點 × 型別」的**唯一實質優勢**。**本次修訂主動放棄它。**
+The original decision treated the per-operation lifetime as the condition that made "list only types" work, and called
+sharing the same instance across stages the **only real advantage** of that option over "stage × type".
+**This revision deliberately gives it up.**
 
-「檢查（`BeforeSave`）＋ 後續動作（`AfterSave`）」現在必須寫成兩個類別，兩者之間**沒有共享狀態
-的地方**，`AfterSave` 需要的資料要重讀或重算。原決策把這件事看成「一個需求被迫拆成兩個類別」
-（損失）；本次修訂把它看成「兩件不同的事本來就該是兩個類別」（正確化）。
-差別不在事實，而在那個 instance field 值不值得用單一職責去換 —— 原本判值得，現在判不值得。
+"A check (`BeforeSave`) + a follow-up action (`AfterSave`)" must now be written as two classes, with **no place to
+share state** between them; the data `AfterSave` needs has to be reread or recomputed. The original decision saw this as
+"one need forced to split into two classes" (a loss); this revision sees it as "two different things should have been
+two classes all along" (a correction). The difference is not in the facts, but in whether that instance field is worth
+trading single responsibility for: originally judged worth it, now judged not.
 
-實例仍是 **per-operation**：Save / Delete 各自建構、不跨呼叫共用，因此不需要考慮鎖。
-但它**不再承載跨時點的保證**，而且改為**按需建構**——一個 plugin 只在它自己那個時點第一次執行時
-才被建出來。舊設計「一建就建整條鏈」的理由（後面的時點要找到同一個物件）已不存在，
-一次 Save 因此不會建構只掛 delete 時點的 plugin。
+Instances are still **per-operation**: each Save / Delete constructs its own, not shared across calls, so locking does
+not need to be considered. But they **no longer carry any cross-stage guarantee**, and they are now **constructed on
+demand**: a plugin is only constructed the first time its own stage runs. The old design's reason for "constructing the
+whole chain at once" (later stages have to find the same object) no longer exists, so a single Save does not construct
+plugins hooked only into delete stages.
 
-### 改變決策的直接原因：可讀性代價的補償措施從未落地
+### The direct reason for changing the decision: the compensation for the readability cost never materialized
 
-原決策承認「從 XML 看不出哪個 plugin 跑在哪個時點」，並回答：解法不是改設定檔結構，而是由
-反射算出各時點的執行清單，**供維護工具顯示執行順序**。
+The original decision acknowledged that "you cannot tell from the XML which plugin runs at which stage", and answered:
+the fix is not to change the structure of the settings file, but to compute the execution list of each stage by
+reflection, **for a maintenance tool to display the execution order**.
 
-那個維護工具從未存在。`FormPluginChain.TypesForStage` 的生產端呼叫者為零，全樹也查無任何
-`PluginSettings` 的消費者。可讀性代價因此一直是淨損失，而補償只停在紙上。
+That maintenance tool never existed. `FormPluginChain.TypesForStage` has zero production callers, and no consumer of
+`PluginSettings` can be found anywhere in the tree. The readability cost was therefore a net loss all along, and the
+compensation stayed on paper.
 
-### 反射沒有退場，降為驗證器
+### Reflection did not retire; it became a validator
 
-時點資訊現在存在兩處：類別覆寫了什麼、XML 宣告了什麼。**兩者必須相等，不符一律拒絕載入**，
-且訊息會指出類別實際覆寫的是哪一個。相等成立時，「照宣告跑」與「照反射跑」是同一件事，
-執行語意零變更；不符時大聲失敗，不存在「覆寫了卻沒宣告 → 靜默不跑」。
+The stage information now lives in two places: what the class overrides, and what the XML declares. **The two must be
+equal; a mismatch always refuses to load**, and the message says which stage the class actually overrides. When they
+are equal, "run as declared" and "run by reflection" are the same thing, with zero change in execution semantics; when
+they do not match it fails loudly, and "overridden but not declared → silently not run" cannot happen.
 
-兩道閘門互補：儲存時由 `SystemBusinessObject` 的維護 API 擋（編輯者當場知道），
-解析時由 `PluginSettingsResolver` 擋（**手寫檔**沒有維護 API，套裝層 `{DefinePath}/PluginSettings.xml`
-與外部使用者永遠不經過它）。chain 以 `(customizeId, progId)` 快取，反射本來就只算一次，
-對帳是零額外成本。
+Two gates complement each other: at save time, the maintenance API of `SystemBusinessObject` blocks it (the editor
+knows on the spot); at resolution time, `PluginSettingsResolver` blocks it (**hand-written files** have no maintenance
+API: the packaged-layer `{DefinePath}/PluginSettings.xml` and external users never go through it). The chain is cached
+by `(customizeId, progId)`, and the reflection was computed only once anyway, so the reconciliation costs nothing
+extra.
 
-### 誠實的代價：改 plugin 類別要連帶改 XML
+### The honest cost: changing a plugin class means changing the XML too
 
-原本替 plugin 換一個覆寫的時點，重新部署組件就自動生效。之後同一件事會在下次解析時**拋例外**，
-直到 XML 跟上。這是新增的耦合，換到的是「設定檔說什麼就跑什麼」。
+Previously, switching the stage a plugin overrides took effect automatically on redeploying the assembly. From now on
+the same change **throws** at the next resolution until the XML catches up. This is a new coupling, and what it buys is
+"the settings file says what runs".
 
-## 決策四：兩層相加，且不提供移除語意
+## Decision 4: Two layers add up, with no removal semantics
 
-套裝鏈先跑、客製鏈後跑，各自依檔案宣告順序執行。**不引入 priority 數字**（數字最後一定變成
-10/20/30 的爛帳）。
+The packaged chain runs first and the custom chain afterwards, each in the declaration order of its file. **No priority
+numbers are introduced** (numbers always end up as a 10/20/30 mess).
 
-這是客製化覆蓋層裡**唯一「相加」粒度的項目**——其餘四種都是擇一（語系 per key、FormLayout
-整檔、BO / Repository per progId）。理由回到決策一的語意差異：binding 指名的是「這個程式就是
-這個型別」，客製要換就得取代；plugin 只是多一個步驟，兩層的 plugin 並不衝突。
+This is **the only item with "additive" granularity** in the customization overlay; the other four are all either-or
+(language resources per key, FormLayout per whole file, BO / Repository per progId). The reason goes back to the
+difference in meaning in Decision 1: a binding names "this program is this type", so a customization that wants to
+change it must replace it; a plugin is just one more step, and plugins of the two layers do not conflict.
 
-客製只寫自己新增的 plugin，套裝日後補的 plugin 會**自動生效**。
+A customization only writes the plugins it adds itself, and plugins the packaged product adds later **take effect
+automatically**.
 
-**代價：客製無法停用套裝宣告的 plugin。** 沒有 tombstone 語法。真要拿掉，就走繼承覆寫該子方法
-——這正好回到「需要接管流程時用繼承」的分工。
+**The cost: a customization cannot disable a plugin declared by the packaged product.** There is no tombstone syntax.
+To really remove one, inherit and override that sub-method, which leads straight back to the division of labor "use
+inheritance when you need to take over the flow".
 
-兩層的 API 表面都開（`DefineType` / `IDefineAccess` / cache / path / reader 一整套），
-框架只是目前**不出套裝檔**，保留日後以 plugin 組裝選配模組的可能。
+The API surface of both layers is open (`DefineType` / `IDefineAccess` / cache / path / reader, the whole set); the
+framework just **does not ship a packaged file** for now, keeping open the possibility of assembling optional modules
+from plugins later.
 
-## 決策五：失敗處理的兩種不對稱
+## Decision 5: Two asymmetries in failure handling
 
-### 執行期例外：一律往上拋
+### Runtime exceptions: always propagate
 
-任一時點的 plugin 拋例外 → 例外往上拋，`Save` / `Delete` 回報失敗。要給使用者看的訊息丟
-`UserMessageException`（框架既有的業務流程中止訊號，規則引擎已在用）——plugin 不需要任何新機制。
+When a plugin at any stage throws → the exception propagates, and `Save` / `Delete` report failure. A message meant for
+the user is thrown as `UserMessageException` (the framework's existing signal for aborting a business flow, already
+used by the rule engine), so plugins need no new mechanism.
 
-**否決**：吞例外 + 記 log（客製的重要後續動作失敗時無人知道）；包進同一 transaction 回滾
-（交易不上提到 BO 層）。
+**Rejected**: swallowing the exception + logging (when an important follow-up action of a customization fails, nobody
+knows); wrapping it in the same transaction and rolling back (transactions are not lifted up to the BO layer).
 
-但「拋出即中斷」對驗證類 plugin 是對的，對**外部系統同步**則會變成「對方系統維護中，使用者就
-存不了單」——實務上必然被整包 `try-catch` 繞過，框架定了規則、大家都繞過，規則就沒了意義。
-因此**不加機制，改在文件明訂責任歸屬**：
+But "throwing aborts" is right for validation plugins, while for **synchronization with external systems** it becomes
+"the other system is under maintenance, so the user cannot save the document". In practice it would inevitably be
+bypassed with a blanket `try-catch`, and a rule the framework sets that everyone bypasses is meaningless. So **no
+mechanism is added; instead, the documentation states where the responsibility lies**:
 
-> 外部同步類的 plugin 應自行處理失敗（記錄後不重拋，或登記重試），不要讓外部系統的可用性決定
-> 使用者能不能完成作業。框架的預設是「拋出即中斷」，因為驗證類 plugin 需要它；哪些失敗該中斷
-> 作業，是 plugin 作者的判斷。
+> Plugins that synchronize with external systems should handle their own failures (log without rethrowing, or register
+> a retry), rather than letting the availability of an external system decide whether users can complete their work.
+> The framework's default is "throwing aborts", because validation plugins need it; which failures should abort the
+> operation is the plugin author's judgement.
 
-並須知道 plugin 在**交易外**：行程若在 plugin 執行前掛掉，就是資料已提交、同步沒發生、
-且不留痕跡。不能漏的同步要在交易內登記 outbox，plugin 只適合盡力而為或有對帳兜底的場景。
+It must also be understood that plugins run **outside the transaction**: if the process dies before the plugin runs,
+the data is committed, the synchronization did not happen, and no trace is left. A synchronization that must not be
+missed should register an outbox entry inside the transaction; plugins are only suitable for best-effort scenarios or
+ones with reconciliation as a safety net.
 
-### 解析失敗：一律拋，與 BO 軸相反
+### Resolution failures: always throw, the opposite of the BO axis
 
-BO 型別載不到時**降級**到 `FormBusinessObject`（不中斷服務，但記錄 error）；
-plugin 型別載不到時**直接拋**。
+When a BO type cannot be loaded, it **degrades** to `FormBusinessObject` (the service is not interrupted, but an error
+is logged); when a plugin type cannot be loaded, it **throws directly**.
 
-不對稱是刻意的：binding 指名的是「這個程式就是這個型別」，退回仍是**能跑的程式**；
-plugin 是作者刻意加上的，略過等於**客製沒生效**——靜默漏掉一段信用額度檢查，比拒絕存檔更糟。
+The asymmetry is deliberate: a binding names "this program is this type", and falling back still gives **a program that
+runs**; a plugin was added deliberately by its author, and skipping it means **the customization did not take effect**.
+Silently skipping a credit limit check is worse than refusing to save.
 
-同理，`PluginSettings` 的寫入 API 在**存檔前逐一驗證**每筆繫結：型別可載入、繼承
-`FormBusinessPlugin`、且**恰好覆寫該筆繫結宣告的那一個時點**，一筆不合格整份拒存。驗證放在
-寫入端的用意是：編輯的人**當場**知道打錯字，而不是幾週後某張單據存不了。什麼時點都沒 override
-的 plugin 掛了等於沒掛，覆寫了兩個時點則違反「一個 plugin 一個時點」，兩者皆屬設定錯誤。
+Likewise, the write API of `PluginSettings` **validates each binding before saving**: the type can be loaded, it
+inherits `FormBusinessPlugin`, and it **overrides exactly the one stage declared by that binding**; if any single
+binding fails, the whole file is refused. Putting validation on the write side means the editor knows about a typo **on
+the spot**, rather than weeks later when some document cannot be saved. A plugin that overrides no stage does nothing
+even when hooked in, and one that overrides two stages violates "one stage per plugin"; both are configuration errors.
 
-## 決策六：與規則引擎（ADR-028）的分界
+## Decision 6: The boundary with the rule engine (ADR-028)
 
-| | 規則（`IFormRuleProcessor`） | plugin |
+| | Rules (`IFormRuleProcessor`) | Plugins |
 |---|---|---|
-| 存放 | FormSchema 內（**不可客製**，ADR-016 永久排除） | `PluginSettings.xml`（**可客製**） |
-| 形式 | 宣告式運算式 | 編譯後的型別 |
-| 適用 | 欄位級預設值、計算、驗證 | 跨表 / 跨系統副作用 |
-| 部署 | 改定義檔 | 交付組件 |
+| Stored in | The FormSchema (**not customizable**, permanently excluded by ADR-016) | `PluginSettings.xml` (**customizable**) |
+| Form | Declarative expressions | Compiled types |
+| Suited to | Field-level default values, computation, validation | Cross-table / cross-system side effects |
+| Deployment | Change the definition file | Deliver an assembly |
 
-**「規則引擎沒接上客製層」不是待補缺口，而是刻意分工**：規則不客製，客製走 plugin。
-規則存在 FormSchema 內，而 FormSchema 同時驅動資料庫結構與驗證，逐租戶分歧會讓實體 schema 裂開
-（[ADR-016](adr-016-multitenant-customization-overlay.md)）。
+**"The rule engine is not connected to the customization layer" is not a gap waiting to be filled but a deliberate
+division of labor**: rules are not customized; customization goes through plugins. Rules live in the FormSchema, and
+the FormSchema drives both the database structure and validation, so diverging per tenant would split the physical
+schema ([ADR-016](adr-016-multitenant-customization-overlay.md)).
 
-### 附帶決策：Repository 不開 plugin
+### Accompanying decision: no plugins for Repositories
 
-資料存取層的攔截會讓 SQL 行為變得不可追蹤。需要改就走「換掉整個 Repository」。
+Interception in the data access layer would make SQL behavior untraceable. To change it, "replace the whole
+Repository".
 
-## 影響
+## Consequences
 
-### 客製層首度可寫
+### The customization layer becomes writable for the first time
 
-`PluginSettings` 是**唯一有維護 API 的客製定義**（`GetCustomizePluginSettings` /
-`SaveCustomizePluginSettings`，皆為 `LocalOnly`）。客製層在此之前全面唯讀、也因此沒有快取失效
-機制，兩者一併補上——檔案模式寫完即 evict 該租戶的 cache slot（維護工具會馬上讀回自己剛存的
-東西，file watcher 的「最終會到」不是這裡該有的契約）。
+`PluginSettings` is **the only customization definition with a maintenance API** (`GetCustomizePluginSettings` /
+`SaveCustomizePluginSettings`, both `LocalOnly`). Before this the customization layer was entirely read-only and
+therefore had no cache invalidation mechanism; both were added together. In file mode, writing immediately evicts that
+tenant's cache slot (the maintenance tool reads back what it just saved right away, and the "eventually arrives" of a
+file watcher is not the contract that belongs here).
 
-`CustomizeOnlyStorage` 維持全面唯讀，寫入改由 `ICustomizeDefineWriter` 直接經
-`CustomizeOnlyPathOptions` 落檔：兩者共用同一份路徑來源，那個類別的唯讀承諾不必為單一例外破功。
+`CustomizeOnlyStorage` stays entirely read-only, and writing instead goes through `ICustomizeDefineWriter`, which writes
+the file directly via `CustomizeOnlyPathOptions`: the two share the same path source, so that class's read-only promise
+does not have to be broken for a single exception.
 
-### 連帶修正：`DeleteContext.Snapshot` 的載入條件
+### Knock-on fix: the load condition of `DeleteContext.Snapshot`
 
-原條件在稽核關閉且無 `BeforeDelete` 規則時不載入快照，而 `AfterDelete` 做外部同步一定需要知道
-刪掉的是什麼。條件加入「該 progId 有沒有 delete 時點的 plugin」——否則 snapshot 的有無會取決於
-**與 plugin 無關的稽核開關**，同一個 plugin 在一個部署正常、在另一個拿到 `null`，是最難查的
-那種差異。
+The original condition did not load the snapshot when auditing was off and there were no `BeforeDelete` rules, yet an
+`AfterDelete` doing external synchronization certainly needs to know what was deleted. The condition now includes
+"whether this progId has a plugin at a delete stage"; otherwise whether there is a snapshot would depend on **an audit
+switch unrelated to plugins**, and the same plugin would work in one deployment and get `null` in another, which is the
+hardest kind of difference to track down.
 
-### 主要型別
+### Main types
 
-- `src/Polhem.Definition/Settings/PluginSettings/` —— `PluginSettings` / `ProgramPluginItem` /
-  `PluginItem` / `PluginStage` / `PluginBinding` 與兩個集合型別
-- `src/Polhem.Business/Form/FormBusinessPlugin.cs` —— 基底與四個虛擬空實作
-- `src/Polhem.Business/Form/FormPluginChain.cs` / `FormPluginRunner.cs` /
-  `PluginSettingsResolver.cs` —— 解析、鏈與執行
-- `src/Polhem.Definition/Customization/CustomizeOverlay.cs` —— `GetPluginBindings`（唯一的相加疊加）
-- `src/Polhem.Definition/Storage/ICustomizeDefineWriter.cs` —— 客製層寫入路徑
+- `src/Polhem.Definition/Settings/PluginSettings/`: `PluginSettings` / `ProgramPluginItem` / `PluginItem` /
+  `PluginStage` / `PluginBinding` and the two collection types
+- `src/Polhem.Business/Form/FormBusinessPlugin.cs`: the base and its four empty virtual implementations
+- `src/Polhem.Business/Form/FormPluginChain.cs` / `FormPluginRunner.cs` / `PluginSettingsResolver.cs`: resolution, the
+  chain and execution
+- `src/Polhem.Definition/Customization/CustomizeOverlay.cs`: `GetPluginBindings` (the only additive overlay)
+- `src/Polhem.Definition/Storage/ICustomizeDefineWriter.cs`: the write path of the customization layer
 
-### 相關文件
+### Related documents
 
-- [租戶客製化](../zh-TW/customization.md) —— 五種機制的決策表與 how-to
-- [端到端開發指引](../zh-TW/development-cookbook.md) —— 「業務 plugin」一節
-- [ADR-016](adr-016-multitenant-customization-overlay.md) —— 客製化覆蓋層
-- [ADR-028](adr-028-expression-rule-engine.md) —— 運算式與規則引擎
-- [ADR-034](adr-034-progid-type-registry.md) —— ProgId 型別註冊表
+- [Tenant Customization](../en/customization.md): the decision table and how-to for the five mechanisms
+- [End-to-End Development Cookbook](../en/development-cookbook.md): the "Business Plugins" section
+- [ADR-016](adr-016-multitenant-customization-overlay.md): the customization overlay
+- [ADR-028](adr-028-expression-rule-engine.md): expressions and the rule engine
+- [ADR-034](adr-034-progid-type-registry.md): the ProgId type registry

@@ -1,65 +1,78 @@
-# ADR-006：雙目標框架策略（netstandard2.0 + net10.0）
+# ADR-006: Dual target framework strategy (netstandard2.0 + net10.0)
 
-## 狀態
+[繁體中文](adr-006-dual-target-framework.zh-TW.md)
 
-**已取代（Superseded）** — 本 ADR 的決策是「核心套件採 `netstandard2.0` + `net10.0` 雙目標」，
-該決策已於 2026-04-14 全面改採 `net10.0` 單一目標框架而不再成立。
+## Status
 
-以下內文保留決策當下的脈絡與理由，供理解「當初為何選雙目標」；**它不描述現行狀態**。
+**Superseded** — this ADR's decision was "the core packages target both `netstandard2.0` and `net10.0`".
+That decision no longer holds: on 2026-04-14 everything moved to the single target framework `net10.0`.
 
-### 原狀態
+The text below keeps the context and reasons at the time of the decision, to explain "why dual targeting was chosen
+back then"; **it does not describe the current state**.
 
-已採納
+### Original status
 
-## 背景
+Accepted
 
-框架需要決定 NuGet 套件的目標框架。選項包括：
+## Context
 
-1. **僅 netstandard2.0**：最大相容性，但無法使用新版 API
-2. **僅 net10.0**：最新功能與效能，但限制使用者環境
-3. **雙目標（netstandard2.0 + net10.0）**：兩者兼顧，但增加維護成本
+The framework needs to decide the target frameworks of its NuGet packages. The options:
 
-## 決策
+1. **netstandard2.0 only**: maximum compatibility, but newer APIs cannot be used
+2. **net10.0 only**: the latest features and performance, but it limits users' environments
+3. **Dual targeting (netstandard2.0 + net10.0)**: both, at a higher maintenance cost
 
-目前核心套件採用 `netstandard2.0` + `net10.0` 雙目標框架。API 託管套件（Polhem.Api.AspNetCore）僅目標 `net10.0`。
+## Decision
 
-## 歷史原因
+For now the core packages target both `netstandard2.0` and `net10.0`. The API hosting package
+(Polhem.Api.AspNetCore) targets `net10.0` only.
 
-- **支援 .NET Framework**：早期版本需要支援 .NET Framework 4.7.2+ 環境下的 WinForms / Console 應用程式，因此採用 netstandard2.0 確保相容性。
-- **新版最佳化**：net10.0 目標允許使用 `Span<T>`、新的加密 API、效能改進等現代 .NET 功能，透過條件編譯（`#if NETSTANDARD2_0`）在不同框架提供最佳實作。
-- **NuGet 自動選擇**：使用者安裝 NuGet 套件時，NuGet 會自動選擇最匹配的目標框架。
+## Historical reasons
 
-## 取捨
+- **Support for .NET Framework**: early versions had to support WinForms / console applications running on .NET
+  Framework 4.7.2+, so netstandard2.0 was used to ensure compatibility.
+- **Optimization on newer versions**: the net10.0 target allows modern .NET features such as `Span<T>`, the new
+  cryptography APIs and performance improvements, with conditional compilation (`#if NETSTANDARD2_0`) providing the
+  best implementation for each framework.
+- **Automatic selection by NuGet**: when users install a NuGet package, NuGet automatically picks the best matching
+  target framework.
 
-- **維護成本增加**：條件編譯區塊（`#if`）增加程式碼複雜度，且需要在兩個框架上分別測試。
-- **API 限制**：netstandard2.0 目標中不能使用僅限 .NET 5+ 的 API（如 `System.Half`、新的 `Span` 重載等）。
-- **建置時間增加**：每次建置需要編譯兩個目標框架。
+## Trade-offs
 
-## 未來方向
+- **Higher maintenance cost**: conditional compilation blocks (`#if`) add code complexity, and testing has to be done
+  separately on both frameworks.
+- **API limits**: APIs available only on .NET 5+ (such as `System.Half` and the new `Span` overloads) cannot be used
+  in the netstandard2.0 target.
+- **Longer build times**: every build compiles two target frameworks.
 
-已確認可全面改採 **net10.0+**，放棄 netstandard2.0 支援。
+## Future direction
 
-### 前端消費者分析
+It has been confirmed that everything can move to **net10.0+**, dropping netstandard2.0 support.
 
-框架有三個前端 repo 會消費 Polhem 的 NuGet 套件，各前端依 FormLayout 動態產生介面：
+### Analysis of the front-end consumers
 
-| 前端 | 目標框架 | 需要 netstandard2.0？ |
-|------|---------|----------------------|
-| **WinForms**（桌面） | net10.0+（新版 .NET WinForms） | 否 |
-| **Web**（ASP.NET Core / Blazor） | net10.0+ | 否 |
-| **APP**（MAUI 行動裝置） | net10.0+ | 否 |
+The framework has three front-end repositories that consume Polhem's NuGet packages, and each front end generates its
+interface dynamically from FormLayout:
 
-**結論：netstandard2.0 沒有消費者**，所有前端均為 net10.0+。
+| Front end | Target framework | Needs netstandard2.0? |
+|-----------|------------------|-----------------------|
+| **WinForms** (desktop) | net10.0+ (the new .NET WinForms) | No |
+| **Web** (ASP.NET Core / Blazor) | net10.0+ | No |
+| **APP** (MAUI mobile devices) | net10.0+ | No |
 
-### 改採 net10.0+ 的好處
+**Conclusion: netstandard2.0 has no consumers**; every front end is net10.0+.
 
-- **移除條件編譯**：消除所有 `#if NETSTANDARD2_0` 區塊，簡化程式碼
-- **使用現代 API**：可自由使用 Span、新的加密 API、Generic Math 等新功能
-- **降低維護成本**：不需在兩個框架上分別測試
-- **為 STJ 遷移鋪路**：System.Text.Json 在 net10.0 上功能完整（見 [ADR-002](adr-002-newtonsoft-json.md)）
+### Benefits of moving to net10.0+
 
-## 影響
+- **Remove conditional compilation**: eliminate every `#if NETSTANDARD2_0` block and simplify the code
+- **Use modern APIs**: freely use new features such as Span, the new cryptography APIs and Generic Math
+- **Lower maintenance cost**: no need to test separately on two frameworks
+- **Pave the way for the STJ migration**: System.Text.Json is fully featured on net10.0 (see
+  [ADR-002](adr-002-newtonsoft-json.md))
 
-- 所有專案 `.csproj` 統一為 `<TargetFramework>net10.0</TargetFramework>`
-- `Polhem.Base/Security/PasswordHasher.cs` 已移除 `#if NETSTANDARD2_0` 條件編譯，統一使用 PBKDF2-SHA256
-- 開發規範中 netstandard2.0 相關的限制條文已一併移除
+## Consequences
+
+- Every project's `.csproj` is unified on `<TargetFramework>net10.0</TargetFramework>`
+- `Polhem.Base/Security/PasswordHasher.cs` has had its `#if NETSTANDARD2_0` conditional compilation removed and uses
+  PBKDF2-SHA256 throughout
+- The netstandard2.0-related restrictions in the development guidelines have been removed as well
