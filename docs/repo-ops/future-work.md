@@ -1,7 +1,7 @@
 # 未來工作構想
 
 尚未啟動、也還沒寫成 plan 的方向。**這裡只記「為什麼要做、要等什麼、啟動時第一步是什麼」**；
-真正啟動時依 `dev-workflow:plan-write` 寫 `docs/plans/plan-<主題>.md` 交使用者 review 後才執行。
+真正啟動時先在 `local/plans/` 寫計畫交使用者 review 後才執行（見 `.claude/CLAUDE.md` 的「Plan before you build」）。
 
 ## `sys_date` 系統欄位：替「單據日期」這個角色命名
 
