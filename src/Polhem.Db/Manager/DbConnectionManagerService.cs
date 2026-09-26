@@ -89,12 +89,7 @@ namespace Polhem.Db.Manager
                     password = server.Password;
             }
 
-            if (StringUtilities.IsNotEmpty(dbName))
-                connectionString = StringUtilities.Replace(connectionString, "{@DbName}", dbName);
-            if (StringUtilities.IsNotEmpty(userId))
-                connectionString = StringUtilities.Replace(connectionString, "{@UserId}", userId);
-            if (StringUtilities.IsNotEmpty(password))
-                connectionString = StringUtilities.Replace(connectionString, "{@Password}", password);
+            connectionString = ConnectionStringTemplate.Resolve(connectionString, dbName, userId, password);
 
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new InvalidOperationException($"Connection string for database '{databaseId}' is null or empty.");

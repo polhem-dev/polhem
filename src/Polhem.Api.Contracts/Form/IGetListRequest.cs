@@ -31,8 +31,8 @@ namespace Polhem.Api.Contracts.Form
         SortFieldCollection? SortFields { get; }
 
         /// <summary>
-        /// Gets the paging options; <c>null</c> means the query is unpaged and
-        /// returns every matching row.
+        /// Gets the paging options; <c>null</c> is served as the first page of
+        /// <see cref="Polhem.Definition.Paging.PagingOptions.MaxPageSize"/> rows.
         /// </summary>
         PagingOptions? Paging { get; }
     }

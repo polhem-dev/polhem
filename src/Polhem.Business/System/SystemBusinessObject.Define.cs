@@ -79,33 +79,45 @@ namespace Polhem.Business.System
         }
 
         /// <summary>
-        /// Gets definition data (public). Server-side definitions — SystemSettings,
-        /// DatabaseSettings and ProgramSettings — are excluded from remote calls.
+        /// Gets definition data. A remote caller may read only the definition types a client needs to
+        /// render forms and menus; a local call may read every type.
         /// </summary>
         /// <remarks>
-        /// ProgramSettings joined that list when it became the pure type registry: it holds
-        /// assembly-qualified type names, no client has any use for them, and the menu that clients
-        /// actually need moved to <see cref="MenuSettings"/>.
+        /// <para>
+        /// The remote allow-list is <see cref="DefineType.FormSchema"/>, <see cref="DefineType.FormLayout"/>,
+        /// <see cref="DefineType.Language"/>, <see cref="DefineType.MenuSettings"/>,
+        /// <see cref="DefineType.CurrencySettings"/> and <see cref="DefineType.UnitSettings"/>: the types
+        /// the shipped clients request. Every other type — the server settings, the type registry,
+        /// table schemas, database categories, permission models, plugin bindings, and any type added
+        /// later — is refused to a remote caller until it is added to the list on purpose.
+        /// </para>
+        /// <para>
+        /// An allow-list rather than a deny-list because a deny-list fails open: each new definition
+        /// type used to become remotely readable the day it was added.
+        /// </para>
         /// </remarks>
         /// <param name="args">The input arguments.</param>
+        /// <exception cref="NotSupportedException">A remote caller asked for a type outside the allow-list.</exception>
         [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated)]
         public virtual GetDefineResult GetDefine(GetDefineArgs args)
         {
-            // Non-local calls are not permitted to access the server-side definition types.
-            if (IsServerOnlyDefine(args.DefineType) && !IsLocalCall)
+            ArgumentNullException.ThrowIfNull(args);
+            if (!IsLocalCall && !IsRemoteReadableDefine(args.DefineType))
                 throw new NotSupportedException("The specified DefineType is not supported.");
             return GetDefineCore(args);
         }
 
         /// <summary>
-        /// Returns whether the definition type is server-side only and therefore unavailable to
-        /// remote callers.
+        /// Returns whether a remote caller may read the definition type.
         /// </summary>
         /// <param name="defineType">The definition type in question.</param>
-        private static bool IsServerOnlyDefine(DefineType defineType)
-            => defineType is DefineType.SystemSettings
-                          or DefineType.DatabaseSettings
-                          or DefineType.ProgramSettings;
+        private static bool IsRemoteReadableDefine(DefineType defineType)
+            => defineType is DefineType.FormSchema
+                          or DefineType.FormLayout
+                          or DefineType.Language
+                          or DefineType.MenuSettings
+                          or DefineType.CurrencySettings
+                          or DefineType.UnitSettings;
 
         /// <summary>
         /// Returns the raw <see cref="FormSchema"/> definition as XML.

@@ -134,6 +134,33 @@ namespace Polhem.Db.UnitTests.Manager
         }
 
         [Fact]
+        [DisplayName("GetConnectionInfo keeps a password containing ; as one value instead of adding connection options")]
+        public void GetConnectionInfo_PasswordWithSemicolon_StaysOneValue()
+        {
+            const string password = "pa;ss;Integrated Security=true";
+            var id = NewId("semicolon");
+            AddItem(id, i =>
+            {
+                i.ConnectionString = "Server=x;Database={@DbName};User Id={@UserId};Password={@Password};";
+                i.DbName = "db_v";
+                i.UserId = "user_v";
+                i.Password = password;
+            });
+            try
+            {
+                var info = _manager.GetConnectionInfo(id);
+
+                var parsed = new System.Data.Common.DbConnectionStringBuilder { ConnectionString = info.ConnectionString };
+                Assert.Equal(password, parsed["Password"]);
+                Assert.False(parsed.ContainsKey("Integrated Security"));
+            }
+            finally
+            {
+                RemoveItem(id);
+            }
+        }
+
+        [Fact]
         [DisplayName("GetConnectionInfo throws KeyNotFoundException for a ServerId that does not exist")]
         public void GetConnectionInfo_ServerIdNotFound_ThrowsKeyNotFoundException()
         {

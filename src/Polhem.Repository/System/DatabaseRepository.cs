@@ -57,12 +57,7 @@ namespace Polhem.Repository.System
                     password = server.Password;
             }
 
-            if (StringUtilities.IsNotEmpty(item.DbName))
-                connectionString = StringUtilities.Replace(connectionString, "{@DbName}", item.DbName);
-            if (StringUtilities.IsNotEmpty(userId))
-                connectionString = StringUtilities.Replace(connectionString, "{@UserId}", userId);
-            if (StringUtilities.IsNotEmpty(password))
-                connectionString = StringUtilities.Replace(connectionString, "{@Password}", password);
+            connectionString = ConnectionStringTemplate.Resolve(connectionString, item.DbName, userId, password);
 
             var provider = DbProviderRegistry.Get(databaseType);
             using (var connection = provider.CreateConnection()!)

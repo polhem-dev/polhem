@@ -90,11 +90,11 @@ namespace Polhem.Db.Providers.PostgreSql
                     // PG `BOOLEAN` only accepts `TRUE`/`FALSE` literals, not the integer `1`/`0`
                     // that other dialects accept. The framework keeps `"1"`/`"0"` as the canonical
                     // user-facing form; PG translates here at the SQL emission boundary.
-                    string raw = StringUtilities.IsEmpty(field.DefaultValue) ? originalDefaultValue : field.DefaultValue;
+                    string raw = StringUtilities.IsEmpty(field.DefaultValue) ? originalDefaultValue : DefaultValueLiteral.Require(field);
                     return StringUtilities.IsEquals(raw, "1") ? "TRUE" : "FALSE";
                 }
                 default:
-                    return StringUtilities.IsEmpty(field.DefaultValue) ? originalDefaultValue : field.DefaultValue;
+                    return StringUtilities.IsEmpty(field.DefaultValue) ? originalDefaultValue : DefaultValueLiteral.Require(field);
             }
         }
 

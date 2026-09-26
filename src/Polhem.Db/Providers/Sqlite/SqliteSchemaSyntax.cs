@@ -79,7 +79,7 @@ namespace Polhem.Db.Providers.Sqlite
                 case FieldDbType.AutoIncrement:
                     return string.Empty;
                 default:
-                    return StringUtilities.IsEmpty(field.DefaultValue) ? originalDefaultValue : field.DefaultValue;
+                    return StringUtilities.IsEmpty(field.DefaultValue) ? originalDefaultValue : DefaultValueLiteral.Require(field);
             }
         }
 

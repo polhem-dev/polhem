@@ -37,7 +37,11 @@ namespace Polhem.Business.UnitTests.Form
 
         private FormBusinessObject Bo(PermissionAction allowed, IDataFormRepository? repo = null, string progId = GatedProgId)
         {
-            var overrides = new List<(Type, object?)> { (typeof(ICompanyAuthorizationService), new FakeAuth(allowed)) };
+            var overrides = new List<(Type, object?)>
+            {
+                (typeof(ICompanyAuthorizationService), new FakeAuth(allowed)),
+                (typeof(IScopeResolver), new StubScopeResolver()),
+            };
             if (repo != null) { overrides.Add((typeof(IRepositoryFactory), new FakeFactory(repo))); }
             var ctx = TestPolhemContext.CreateWithOverrides(_fx, overrides.ToArray());
             return new FormBusinessObject(ctx, TestSessionFactory.CreateAccessToken(_fx), progId);
@@ -350,6 +354,21 @@ namespace Polhem.Business.UnitTests.Form
             private readonly PermissionAction _allowed;
             public FakeAuth(PermissionAction allowed) { _allowed = allowed; }
             public bool Can(Guid accessToken, string modelId, PermissionAction action) => _allowed.HasFlag(action);
+        }
+
+        /// <summary>
+        /// Create is unrestricted; every other action returns a restricted scope, so write checks reach
+        /// <see cref="StubRepo.ExistsInScope"/>, whose verdict each test sets.
+        /// </summary>
+        /// <remarks>
+        /// The restricted scope is an empty AND group: non-null, so the database check runs, and true for every
+        /// in-memory row, so the new-value check never decides these tests. The test session has no roles, and the
+        /// real resolver would deny every scope.
+        /// </remarks>
+        private sealed class StubScopeResolver : IScopeResolver
+        {
+            public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionAction action, Polhem.Definition.Forms.FormSchema formSchema)
+                => action == PermissionAction.Create ? null : new FilterGroup();
         }
 
         private sealed class FakeFactory : IRepositoryFactory

@@ -15,9 +15,6 @@ namespace Polhem.Repository.AuditLog
     /// </summary>
     public class AuditLogRepository : RepositoryBase, IAuditLogRepository
     {
-        /// <summary>The framework-wide upper bound for <see cref="PagingOptions.PageSize"/>.</summary>
-        private const int MaxPageSize = 1000;
-
         // Frequently used filter column names (bound as {n} placeholders, never inlined into SQL).
         private const string ColCompanyId = "company_id";
         private const string ColUserId = "user_id";
@@ -240,7 +237,7 @@ namespace Polhem.Repository.AuditLog
             var dbAccess = CreateDbAccess();
             var (whereSql, values) = where.Build();
 
-            int pageSize = Math.Clamp(paging.PageSize, 1, MaxPageSize);
+            int pageSize = Math.Clamp(paging.PageSize, 1, PagingOptions.MaxPageSize);
             int page = Math.Max(paging.Page, 1);
             int skip = (page - 1) * pageSize;
 

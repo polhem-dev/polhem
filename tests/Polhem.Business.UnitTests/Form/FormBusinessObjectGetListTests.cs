@@ -177,8 +177,8 @@ namespace Polhem.Business.UnitTests.Form
         // -------- Paging --------
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite: GetList with Paging=null behaves like the existing unpaged path, and Result.Paging is null")]
-        public void GetList_Sqlite_PagingNull_NoPagingInfo()
+        [DisplayName("SQLite: GetList with Paging=null returns every row that fits one page of MaxPageSize and reports the cap in Result.Paging")]
+        public void GetList_Sqlite_PagingNull_ServedAsFirstCappedPage()
             => RunPagingNullBehavior(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLite)]
@@ -396,7 +396,12 @@ namespace Polhem.Business.UnitTests.Form
 
                 Assert.NotNull(result.Table);
                 Assert.Equal(5, result.Table!.Rows.Count);
-                Assert.Null(result.Paging);  // The unpaged path leaves Paging null.
+                // A request without paging is served as the first page of the framework cap, so a client
+                // can never read a whole table in one call; the paging metadata says nothing was left out.
+                Assert.NotNull(result.Paging);
+                Assert.Equal(1, result.Paging!.Page);
+                Assert.Equal(PagingOptions.MaxPageSize, result.Paging.PageSize);
+                Assert.False(result.Paging.HasMore);
             }
             finally
             {

@@ -72,6 +72,16 @@ namespace Polhem.Business.UnitTests.Form
             public bool Can(Guid accessToken, string modelId, PermissionAction action) => true;
         }
 
+        /// <summary>
+        /// Grants every record scope, the scope-layer counterpart of <see cref="AllowAllAuthorization"/>. The test
+        /// session has no roles, so the real resolver would deny every scope and a new rule could not be saved.
+        /// </summary>
+        private sealed class UnrestrictedScopeResolver : IScopeResolver
+        {
+            public Polhem.Definition.Filters.FilterNode? ResolveFilter(
+                Guid accessToken, string modelId, PermissionAction action, Polhem.Definition.Forms.FormSchema formSchema) => null;
+        }
+
         private sealed class StubFactory : IRepositoryFactory
         {
             private readonly IDataFormRepository _repository;
@@ -125,7 +135,8 @@ namespace Polhem.Business.UnitTests.Form
                 }),
                 (typeof(IAuditLogWriter), writer),
                 (typeof(IAuditRuleService), ruleService),
-                (typeof(ICompanyAuthorizationService), new AllowAllAuthorization()));
+                (typeof(ICompanyAuthorizationService), new AllowAllAuthorization()),
+                (typeof(IScopeResolver), new UnrestrictedScopeResolver()));
             return new AuditRuleBusinessObject(ctx, accessToken, SysProgIds.AuditRule);
         }
 

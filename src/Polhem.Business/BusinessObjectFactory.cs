@@ -1,6 +1,7 @@
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
+using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
 
 namespace Polhem.Business
@@ -52,10 +53,20 @@ namespace Polhem.Business
         /// <param name="progId">The program identifier.</param>
         /// <param name="isLocalCall">Whether the call originates from a local source.</param>
         /// <remarks>
+        /// <para>
         /// One method for every business object, of every family. The type comes from the registry
         /// and construction is uniform, so the factory needs to know nothing about which family the
         /// resolved type belongs to — the same property that lets COM+ expose a single
         /// <c>CoCreateInstance</c>.
+        /// </para>
+        /// <para>
+        /// The business object receives the progId in its declared casing — the reserved progId's own
+        /// spelling, or the <see cref="ProgramItem.ProgId"/> of the registry entry — whatever casing the
+        /// caller used. Resolution matches a progId case-insensitively, while audit rules and the
+        /// audit-policy form compare it exactly; building every object with one canonical spelling
+        /// keeps a caller from slipping past those comparisons by changing case. A progId the registry
+        /// does not list keeps the caller's casing.
+        /// </para>
         /// </remarks>
         public object CreateBusinessObject(Guid accessToken, string progId, bool isLocalCall)
         {
@@ -63,7 +74,33 @@ namespace Polhem.Business
 
             var type = _resolver.Resolve(GetCustomizeId(accessToken), progId);
             var ctx = BuildContext();
-            return Activator.CreateInstance(type, ctx, accessToken, progId, isLocalCall)!;
+            return Activator.CreateInstance(type, ctx, accessToken, CanonicalProgId(progId), isLocalCall)!;
+        }
+
+        /// <summary>
+        /// Returns the declared spelling of a progId: the reserved binding's, then the base registry
+        /// entry's, else the supplied value.
+        /// </summary>
+        /// <param name="progId">The progId as the caller spelled it.</param>
+        private string CanonicalProgId(string progId)
+        {
+            var reserved = ReservedProgIds.Find(progId);
+            if (reserved != null) { return reserved.ProgId; }
+
+            ProgramSettings registry;
+            try
+            {
+                registry = _defineAccess.GetProgramSettings();
+            }
+            catch (FileNotFoundException)
+            {
+                // No registry file: every progId resolves to the framework default, and there is no
+                // declared spelling to adopt.
+                return progId;
+            }
+
+            var items = registry.Items;
+            return items != null && items.Contains(progId) ? items[progId].ProgId : progId;
         }
 
         /// <summary>

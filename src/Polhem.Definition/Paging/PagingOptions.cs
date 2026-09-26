@@ -9,13 +9,20 @@ namespace Polhem.Definition.Paging
     /// When the framework processes this options object:
     /// <list type="bullet">
     /// <item><c>Page</c> values below 1 are clamped to 1.</item>
-    /// <item><c>PageSize</c> values are clamped to <c>[1, MaxPageSize]</c> (framework cap).</item>
+    /// <item><c>PageSize</c> values are clamped to <c>[1, </c><see cref="MaxPageSize"/><c>]</c> (framework cap).</item>
     /// <item>When <c>IncludeTotalCount</c> is false, the server uses a
     /// <c>PageSize + 1</c> probe to compute <c>HasMore</c> without an extra COUNT query.</item>
     /// </list>
     /// </remarks>
     public sealed class PagingOptions
     {
+        /// <summary>
+        /// The largest number of rows the server returns in one page. A larger
+        /// <see cref="PageSize"/> is clamped to this value, and a form's <c>GetList</c> call that
+        /// supplies no paging at all is served as the first page of this size.
+        /// </summary>
+        public const int MaxPageSize = 1000;
+
         /// <summary>
         /// Gets or sets the 1-based page index. Values below 1 are clamped to 1 on the server.
         /// </summary>

@@ -1,8 +1,8 @@
 namespace Polhem.Definition
 {
     /// <summary>
-    /// Columns the framework refuses to write through the FormSchema-driven data path, whatever a
-    /// deployment's own definitions declare.
+    /// Columns the framework refuses to write, read, filter or sort on through the FormSchema-driven
+    /// data path, whatever a deployment's own definitions declare.
     /// </summary>
     /// <remarks>
     /// WARNING: entries here guard privilege, not data shape. The FormSchema path writes whichever
@@ -11,7 +11,10 @@ namespace Polhem.Definition
     /// privilege. Each protected column has exactly one legitimate write path — a dedicated,
     /// separately gated operation — and this list is what keeps that "exactly one" true.
     /// <para>
-    /// Reads are unaffected: a form may display a protected column, it simply cannot store one.
+    /// Reads are guarded too, because a column that can be filtered or sorted on can be read one
+    /// comparison at a time. A query that names a protected column in its select list, filter or
+    /// sort is refused, and a query that asks for every field leaves protected columns out. That
+    /// includes a relation field whose source is a protected column of the related table.
     /// </para>
     /// </remarks>
     public static class ProtectedFields
@@ -42,7 +45,8 @@ namespace Polhem.Definition
         };
 
         /// <summary>
-        /// Determines whether a column may not be written through the FormSchema-driven data path.
+        /// Determines whether a column may not be written or queried through the FormSchema-driven
+        /// data path.
         /// </summary>
         /// <param name="tableName">The database table name.</param>
         /// <param name="fieldName">The column name.</param>
