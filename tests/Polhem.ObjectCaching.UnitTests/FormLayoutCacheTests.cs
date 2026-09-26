@@ -51,14 +51,14 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("建構子傳入 null storage 應拋出 ArgumentNullException")]
+        [DisplayName("Constructor throws ArgumentNullException for a null storage")]
         public void Constructor_NullStorage_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new FormLayoutCache(null!, s_emptyPaths));
         }
 
         [Fact]
-        [DisplayName("GetPolicy 使用 FileDefineStorage 時應設定 ChangeMonitorFilePaths")]
+        [DisplayName("GetPolicy sets ChangeMonitorFilePaths when using FileDefineStorage")]
         public void GetPolicy_FileDefineStorage_SetsChangeMonitorFilePaths()
         {
             var storage = new FileDefineStorage(new PathOptions());
@@ -71,7 +71,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetPolicy 非 FileDefineStorage 時 ChangeMonitorFilePaths 應為 null")]
+        [DisplayName("GetPolicy leaves ChangeMonitorFilePaths null when not using FileDefineStorage")]
         public void GetPolicy_NonFileDefineStorage_NoChangeMonitorFilePaths()
         {
             var stub = new StubDefineStorage();
@@ -83,7 +83,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Get 應呼叫 storage.GetFormLayout 並回傳結果")]
+        [DisplayName("Get calls storage.GetFormLayout and returns its result")]
         public void Get_StorageReturnsLayout_ReturnsSameLayout()
         {
             string prefix = Guid.NewGuid().ToString("N");
@@ -98,7 +98,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Get 當 storage.GetFormLayout 回傳 null 時應回傳 null")]
+        [DisplayName("Get returns null when storage.GetFormLayout returns null")]
         public void Get_StorageReturnsNull_ReturnsNull()
         {
             string prefix = Guid.NewGuid().ToString("N");

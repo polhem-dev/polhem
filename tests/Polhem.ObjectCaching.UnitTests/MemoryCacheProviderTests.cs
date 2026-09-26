@@ -13,7 +13,7 @@ namespace Polhem.ObjectCaching.UnitTests
             new CacheItemPolicy(CacheTimeKind.SlidingTime, 5);
 
         [Fact]
-        [DisplayName("Set 後 Contains 應回傳 true，未存在的 key 應為 false")]
+        [DisplayName("Contains returns true after Set and false for a key that does not exist")]
         public void Contains_AfterSet_ReturnsTrue_OtherwiseFalse()
         {
             using var provider = CreateProvider();
@@ -24,7 +24,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Get 應回傳先前 Set 的值")]
+        [DisplayName("Get returns the value previously Set")]
         public void Get_AfterSet_ReturnsValue()
         {
             using var provider = CreateProvider();
@@ -34,7 +34,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Get 不存在的 key 應回傳 null")]
+        [DisplayName("Get returns null for a key that does not exist")]
         public void Get_MissingKey_ReturnsNull()
         {
             using var provider = CreateProvider();
@@ -42,7 +42,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Key 比對應為大小寫不敏感")]
+        [DisplayName("Key comparison is case-insensitive")]
         public void Set_KeyIsCaseInsensitive()
         {
             using var provider = CreateProvider();
@@ -54,7 +54,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Remove 應移除指定快取項目")]
+        [DisplayName("Remove removes the specified cache entry")]
         public void Remove_ExistingKey_RemovesEntry()
         {
             using var provider = CreateProvider();
@@ -66,7 +66,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Remove 不存在的 key 不應拋例外")]
+        [DisplayName("Remove does not throw for a key that does not exist")]
         public void Remove_MissingKey_DoesNotThrow()
         {
             using var provider = CreateProvider();
@@ -75,7 +75,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCount 應回應目前快取項目數量")]
+        [DisplayName("GetCount reflects the current number of cache entries")]
         public void GetCount_ReflectsCurrentCache()
         {
             using var provider = CreateProvider();
@@ -89,11 +89,11 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("AbsoluteExpiration 過期後 Get 應回傳 null")]
+        [DisplayName("Get returns null after the AbsoluteExpiration has passed")]
         public void Set_WithAbsoluteExpiration_EvictsAfterDeadline()
         {
-            // 假時鐘取代真實等待：過期與否由 MemoryCache 依 Clock 判定，推進時鐘即可，
-            // 不需 sleep 到牆鐘真的走過期限（真實等待在負載高的 CI 上也未必可靠）。
+            // A fake clock replaces real waiting. `MemoryCache` decides expiry from its clock, so advancing the clock
+            // is enough and there is no need to sleep past the deadline (real waits are unreliable on a loaded CI).
             var clock = new FakeClock(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
             using var provider = new MemoryCacheProvider(
                 new MemoryCache(new MemoryCacheOptions { Clock = clock }));
@@ -110,8 +110,8 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         /// <summary>
-        /// 可推進的假時鐘，供 <see cref="MemoryCacheOptions.Clock"/> 注入，
-        /// 讓過期測試不依賴真實牆鐘。
+        /// A fake clock that can be advanced, injected as <see cref="MemoryCacheOptions.Clock"/>
+        /// so the expiry test does not depend on the real wall clock.
         /// </summary>
         private sealed class FakeClock : ISystemClock
         {
@@ -123,7 +123,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Set 帶 ChangeMonitorFilePaths 應能成功建立快取")]
+        [DisplayName("Set with ChangeMonitorFilePaths creates the cache entry")]
         public void Set_WithFileChangeMonitor_DoesNotThrow()
         {
             using var provider = CreateProvider();
@@ -141,7 +141,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("ChangeMonitorFilePaths 監控的檔案變更後快取項目應被驅逐")]
+        [DisplayName("A cache entry is evicted after a file watched by ChangeMonitorFilePaths changes")]
         public async Task Set_WithFileChangeMonitor_EvictsOnFileChange()
         {
             using var provider = CreateProvider();
@@ -170,13 +170,14 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         /// <summary>
-        /// 每測試獨立的暫存資料夾，包住要被監控的檔案。
+        /// A temporary directory per test that holds the watched file.
         /// </summary>
         /// <remarks>
-        /// <see cref="Microsoft.Extensions.FileProviders.PhysicalFileProvider"/> 對監控的檔案實際上是 watch
-        /// 該檔案所在的父資料夾；若父資料夾被多個平行測試共用（如 <see cref="Path.GetTempPath"/>），
-        /// 別的測試在那層建立或刪除其他檔案會誤觸發 change token，使本測試的快取項目被提前驅逐。
-        /// 用獨立子資料夾隔離 watcher 即可避免此 race。
+        /// <see cref="Microsoft.Extensions.FileProviders.PhysicalFileProvider"/> actually watches the parent directory
+        /// of a watched file. If that directory is shared by tests running at the same time (such as
+        /// <see cref="Path.GetTempPath"/>), another test creating or deleting a file there can trigger the change
+        /// token by mistake and evict this test's entry early. A dedicated subdirectory isolates the watcher and
+        /// avoids that race.
         /// </remarks>
         private sealed class WatchDirectory : IDisposable
         {

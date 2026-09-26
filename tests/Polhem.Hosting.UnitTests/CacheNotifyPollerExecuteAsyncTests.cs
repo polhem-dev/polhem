@@ -8,8 +8,8 @@ using Microsoft.Extensions.Logging;
 namespace Polhem.Hosting.UnitTests
 {
     /// <summary>
-    /// <see cref="CacheNotifyPoller.ExecuteAsync"/> 的單元測試：驗證計時迴圈在
-    /// CancellationToken 取消後能正常結束，以及 IntervalSeconds 為 0 時自動修正為 5 秒。
+    /// Unit tests of <see cref="CacheNotifyPoller.ExecuteAsync"/>: the timer loop ends normally once the
+    /// CancellationToken is cancelled, including when IntervalSeconds is 0 (which falls back to 5 seconds).
     /// </summary>
     public class CacheNotifyPollerExecuteAsyncTests
     {
@@ -50,7 +50,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecuteAsync 收到已取消的 CancellationToken 時應正常完成，不拋例外")]
+        [DisplayName("ExecuteAsync completes normally without throwing when given an already cancelled CancellationToken")]
         public async Task ExecuteAsync_PreCancelledToken_CompletesNormally()
         {
             var poller = MakePoller(new CacheNotifyOptions());
@@ -63,7 +63,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecuteAsync IntervalSeconds 為 0 時應修正為 5 秒間隔並正常完成")]
+        [DisplayName("ExecuteAsync with IntervalSeconds 0 completes normally (the interval falls back to 5 seconds)")]
         public async Task ExecuteAsync_ZeroIntervalSeconds_UsesDefaultFiveSeconds_CompletesNormally()
         {
             var options = new CacheNotifyOptions { IntervalSeconds = 0 };

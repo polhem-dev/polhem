@@ -5,7 +5,7 @@ namespace Polhem.ObjectCaching.UnitTests
 {
     public class KeyObjectCacheTests
     {
-        // 同時測試 IKeyObject 與一般物件兩條 Set 路徑
+        // Implements `IKeyObject` so that both `Set(value)` and `Set(key, value)` can be tested.
         private sealed class KeyedPayload : IKeyObject
         {
             public string Id { get; set; } = string.Empty;
@@ -45,7 +45,7 @@ namespace Polhem.ObjectCaching.UnitTests
                 => _disableNegativeCache ? null : base.GetNegativePolicy(key);
         }
 
-        // 不實作 IKeyObject，測試 Set(value) 的例外路徑
+        // Does not implement `IKeyObject`, to test the exception path of `Set(value)`.
         private sealed class PlainCache : KeyObjectCache<string>
         {
             protected override string GetCacheKey(string key)
@@ -53,7 +53,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Get 第一次呼叫 CreateInstance，第二次應由快取取得")]
+        [DisplayName("Get calls CreateInstance the first time and serves the second call from the cache")]
         public void Get_CachesAfterFirstCall()
         {
             var prefix = Guid.NewGuid().ToString("N");
@@ -70,7 +70,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateInstance 回 null 時，第二次 Get 應命中 negative cache 不再呼叫 CreateInstance")]
+        [DisplayName("When CreateInstance returns null, the second Get hits the negative cache and does not call CreateInstance")]
         public void Get_CreateInstanceReturnsNull_CachesNegativeMarker()
         {
             var prefix = Guid.NewGuid().ToString("N");
@@ -84,7 +84,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetNegativePolicy 回 null 時停用 negative cache，每次 Get 都重呼 CreateInstance")]
+        [DisplayName("When GetNegativePolicy returns null the negative cache is disabled and every Get calls CreateInstance again")]
         public void Get_GetNegativePolicyReturnsNull_DoesNotCacheMiss()
         {
             var prefix = Guid.NewGuid().ToString("N");
@@ -96,7 +96,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Set 應覆寫 negative marker，後續 Get 取得真實物件")]
+        [DisplayName("Set overwrites the negative marker and a later Get returns the real object")]
         public void Set_OverwritesNegativeMarker()
         {
             var prefix = Guid.NewGuid().ToString("N");
@@ -114,7 +114,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Remove 應清除 negative marker，下次 Get 重新呼叫 CreateInstance")]
+        [DisplayName("Remove clears the negative marker and the next Get calls CreateInstance again")]
         public void Remove_ClearsNegativeMarker()
         {
             var prefix = Guid.NewGuid().ToString("N");
@@ -130,7 +130,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Set(value) 透過 IKeyObject.GetKey 取得鍵後寫入")]
+        [DisplayName("Set(value) writes the entry under the key from IKeyObject.GetKey")]
         public void Set_WithIKeyObject_UsesGetKey()
         {
             var prefix = Guid.NewGuid().ToString("N");
@@ -144,7 +144,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Set(string,value) 與 Remove(string) 應正確運作")]
+        [DisplayName("Set(string, value) and Remove(string) work correctly")]
         public void Set_WithExplicitKey_AndRemove_Works()
         {
             var prefix = Guid.NewGuid().ToString("N");
@@ -159,7 +159,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Set(value) 對未實作 IKeyObject 的物件應拋例外")]
+        [DisplayName("Set(value) throws for an object that does not implement IKeyObject")]
         public void Set_WithoutIKeyObject_Throws()
         {
             var cache = new PlainCache();

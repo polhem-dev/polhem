@@ -10,8 +10,8 @@ using Polhem.ObjectCaching.Services;
 namespace Polhem.ObjectCaching.UnitTests.Services
 {
     /// <summary>
-    /// <see cref="AuditRuleService"/> 的單元測試。每個測試使用獨立的
-    /// <see cref="CacheContainerService"/>（唯一 prefix），可與其他 test class 平行執行。
+    /// Unit tests of <see cref="AuditRuleService"/>. Each test uses its own
+    /// <see cref="CacheContainerService"/> with a unique prefix.
     /// </summary>
     public class AuditRuleServiceTests
     {
@@ -47,7 +47,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
             => new(companyId, [new AuditRule("Order", AuditRuleMode.On, AuditRuleMode.Off, true)]);
 
         [Fact]
-        [DisplayName("Get 應於快取未命中時讀穿資料來源並回傳快照")]
+        [DisplayName("Get reads through to the data source on a cache miss and returns the snapshot")]
         public void Get_CacheMiss_ReadsThroughDataSource()
         {
             var stub = new StubCacheDataSourceProvider(RulesFor);
@@ -62,7 +62,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Get 第二次應命中快取，不再讀資料來源")]
+        [DisplayName("The second Get hits the cache and does not read the data source again")]
         public void Get_SecondCall_DoesNotHitDataSource()
         {
             var stub = new StubCacheDataSourceProvider(RulesFor);
@@ -75,7 +75,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Remove 後再取應重新讀穿資料來源")]
+        [DisplayName("Get after Remove reads through to the data source again")]
         public void Remove_ThenGet_ReloadsFromDataSource()
         {
             var stub = new StubCacheDataSourceProvider(RulesFor);
@@ -89,7 +89,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("不同公司應各自快取，不互相污染")]
+        [DisplayName("Different companies are cached separately without contaminating each other")]
         public void Get_DifferentCompanies_CachedSeparately()
         {
             var stub = new StubCacheDataSourceProvider(RulesFor);
@@ -104,7 +104,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("資料來源回 null（公司不存在）時 Get 應回 null")]
+        [DisplayName("Get returns null when the data source returns null (the company does not exist)")]
         public void Get_UnknownCompany_ReturnsNull()
         {
             var stub = new StubCacheDataSourceProvider(_ => null);

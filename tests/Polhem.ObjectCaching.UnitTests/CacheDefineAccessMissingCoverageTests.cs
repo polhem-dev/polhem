@@ -8,10 +8,9 @@ using Polhem.Definition.Storage;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// <see cref="CacheDefineAccess"/> 尚未覆蓋的路徑：
-    /// ProgramSettings / PermissionModels / Language / FormLayout（GetDefine dispatch）
-    /// 與 SavePermissionModels / SaveLanguage 的寫入路徑。
-    /// 各測試透過獨立 TempDir + 唯一 cache prefix 隔離，可平行執行。
+    /// Paths of <see cref="CacheDefineAccess"/> not covered elsewhere: the GetDefine dispatch for ProgramSettings,
+    /// MenuSettings, PermissionModels, Language and FormLayout, and the write paths of SaveMenuSettings,
+    /// SavePermissionModels and SaveLanguage. Each test is isolated by its own TempDir and a unique cache prefix.
     /// </summary>
     public class CacheDefineAccessMissingCoverageTests
     {
@@ -46,7 +45,7 @@ namespace Polhem.ObjectCaching.UnitTests
         // ── ProgramSettings ──────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("GetProgramSettings 先存後取應回傳 ProgramSettings 實例")]
+        [DisplayName("GetProgramSettings after a save returns a ProgramSettings instance")]
         public void GetProgramSettings_AfterSave_ReturnsInstance()
         {
             using var temp = new TempDir();
@@ -59,7 +58,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(ProgramSettings) 應委派至 GetProgramSettings 並回傳 ProgramSettings")]
+        [DisplayName("GetDefine(ProgramSettings) delegates to GetProgramSettings and returns ProgramSettings")]
         public void GetDefine_ProgramSettings_ReturnsProgramSettings()
         {
             using var temp = new TempDir();
@@ -74,7 +73,7 @@ namespace Polhem.ObjectCaching.UnitTests
         // ── MenuSettings ─────────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("SaveMenuSettings 應寫入 MenuSettings.xml，GetDefine 應回傳 MenuSettings 實例")]
+        [DisplayName("SaveMenuSettings writes MenuSettings.xml and GetDefine returns a MenuSettings instance")]
         public void SaveAndGetMenuSettings_RoundTrips()
         {
             using var temp = new TempDir();
@@ -90,7 +89,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("無 MenuSettings.xml 時 GetMenuSettings 應回傳空選單而非 null")]
+        [DisplayName("GetMenuSettings returns an empty menu rather than null when MenuSettings.xml does not exist")]
         public void GetMenuSettings_NoFile_ReturnsEmptyMenu()
         {
             using var temp = new TempDir();
@@ -103,7 +102,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("未帶客製碼時 GetMenuSettings(customizeId) 應回傳 base 選單")]
+        [DisplayName("GetMenuSettings(customizeId) without a customization code returns the base menu")]
         public void GetMenuSettings_EmptyCustomizeId_ReturnsBase()
         {
             using var temp = new TempDir();
@@ -120,7 +119,7 @@ namespace Polhem.ObjectCaching.UnitTests
         // ── PermissionModels ─────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("SavePermissionModels 應寫入 PermissionModels.xml")]
+        [DisplayName("SavePermissionModels writes PermissionModels.xml")]
         public void SavePermissionModels_WritesFile()
         {
             using var temp = new TempDir();
@@ -132,7 +131,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetPermissionModels 先存後取應回傳 PermissionModels 實例")]
+        [DisplayName("GetPermissionModels after a save returns a PermissionModels instance")]
         public void GetPermissionModels_AfterSave_ReturnsInstance()
         {
             using var temp = new TempDir();
@@ -145,7 +144,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(PermissionModels) 應委派至 GetPermissionModels 並回傳 PermissionModels")]
+        [DisplayName("GetDefine(PermissionModels) delegates to GetPermissionModels and returns PermissionModels")]
         public void GetDefine_PermissionModels_ReturnsPermissionModels()
         {
             using var temp = new TempDir();
@@ -158,7 +157,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefine(PermissionModels) 應委派至 SavePermissionModels 並寫入檔案")]
+        [DisplayName("SaveDefine(PermissionModels) delegates to SavePermissionModels and writes the file")]
         public void SaveDefine_PermissionModels_DelegatesToSavePermissionModels()
         {
             using var temp = new TempDir();
@@ -172,7 +171,7 @@ namespace Polhem.ObjectCaching.UnitTests
         // ── Language ─────────────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("SaveLanguage 應寫入對應語系資料夾下的 Language xml")]
+        [DisplayName("SaveLanguage writes the Language xml under the matching language folder")]
         public void SaveLanguage_WritesFile()
         {
             using var temp = new TempDir();
@@ -185,7 +184,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetLanguage 先存後取應回傳 LanguageResource 實例")]
+        [DisplayName("GetLanguage after a save returns a LanguageResource instance")]
         public void GetLanguage_AfterSave_ReturnsLanguageResource()
         {
             using var temp = new TempDir();
@@ -199,7 +198,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(Language) 帶有效 keys 應委派至 GetLanguage 並回傳 LanguageResource")]
+        [DisplayName("GetDefine(Language) with valid keys delegates to GetLanguage and returns a LanguageResource")]
         public void GetDefine_Language_WithValidKeys_ReturnsLanguageResource()
         {
             using var temp = new TempDir();
@@ -213,7 +212,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefine(Language) 應委派至 SaveLanguage 並寫入語系 xml")]
+        [DisplayName("SaveDefine(Language) delegates to SaveLanguage and writes the language xml")]
         public void SaveDefine_Language_DelegatesToSaveLanguage()
         {
             using var temp = new TempDir();
@@ -228,7 +227,7 @@ namespace Polhem.ObjectCaching.UnitTests
         // ── FormLayout dispatch ───────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("GetDefine(FormLayout) 帶有效 key 應委派至 GetFormLayout 並回傳 FormLayout")]
+        [DisplayName("GetDefine(FormLayout) with a valid key delegates to GetFormLayout and returns a FormLayout")]
         public void GetDefine_FormLayout_WithValidKey_ReturnsFormLayout()
         {
             using var temp = new TempDir();

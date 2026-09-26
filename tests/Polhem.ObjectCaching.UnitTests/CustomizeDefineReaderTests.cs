@@ -8,8 +8,9 @@ using Polhem.Definition.Settings;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// <see cref="CustomizeDefineReader"/> 行為測試：客製檔存在→回該檔；不存在→null；
-    /// CustomizePath 未設 / customizeId 空→全回 null（第二道防線）；跨租戶隔離。
+    /// Behavior tests of <see cref="CustomizeDefineReader"/>: an existing customized file is returned; a missing
+    /// one returns null; an unset CustomizePath or an empty customizeId returns null for everything (the second
+    /// line of defense); tenants are isolated from each other.
     /// </summary>
     public sealed class CustomizeDefineReaderTests : IDisposable
     {
@@ -62,7 +63,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCustomizeFormLayout 客製檔存在時應回傳客製物件")]
+        [DisplayName("GetCustomizeFormLayout returns the customized object when the customized file exists")]
         public void GetCustomizeFormLayout_FileExists_ReturnsCustomize()
         {
             WriteCustomizeFormLayout(_customizeId, "EmployeeDefault");
@@ -75,14 +76,14 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCustomizeFormLayout 客製檔不存在時應回傳 null")]
+        [DisplayName("GetCustomizeFormLayout returns null when the customized file does not exist")]
         public void GetCustomizeFormLayout_FileMissing_ReturnsNull()
         {
             Assert.Null(CreateReader().GetCustomizeFormLayout(_customizeId, "NonExistent"));
         }
 
         [Fact]
-        [DisplayName("GetCustomizeLanguage 客製檔存在時應回傳客製物件")]
+        [DisplayName("GetCustomizeLanguage returns the customized object when the customized file exists")]
         public void GetCustomizeLanguage_FileExists_ReturnsCustomize()
         {
             WriteCustomizeLanguage(_customizeId, "zh-TW", "Customer");
@@ -95,14 +96,14 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCustomizeLanguage 客製檔不存在時應回傳 null")]
+        [DisplayName("GetCustomizeLanguage returns null when the customized file does not exist")]
         public void GetCustomizeLanguage_FileMissing_ReturnsNull()
         {
             Assert.Null(CreateReader().GetCustomizeLanguage(_customizeId, "zh-TW", "NonExistent"));
         }
 
         [Fact]
-        [DisplayName("GetCustomizeProgramSettings 客製檔存在時應回傳客製物件")]
+        [DisplayName("GetCustomizeProgramSettings returns the customized object when the customized file exists")]
         public void GetCustomizeProgramSettings_FileExists_ReturnsCustomize()
         {
             WriteCustomizeProgramSettings(_customizeId);
@@ -112,7 +113,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCustomizeProgramSettings 客製檔不存在時應回傳 null（不丟例外）")]
+        [DisplayName("GetCustomizeProgramSettings returns null without throwing when the customized file does not exist")]
         public void GetCustomizeProgramSettings_FileMissing_ReturnsNull()
         {
             Assert.Null(CreateReader().GetCustomizeProgramSettings(_customizeId));
@@ -121,7 +122,7 @@ namespace Polhem.ObjectCaching.UnitTests
         [Theory]
         [InlineData("")]
         [InlineData(null)]
-        [DisplayName("customizeId 為空時三類皆回 null（短路第二道防線）")]
+        [DisplayName("An empty customizeId returns null for FormLayout, Language and ProgramSettings (second line of defense)")]
         public void EmptyCustomizeId_AllReturnNull(string? customizeId)
         {
             WriteCustomizeFormLayout(_customizeId, "EmployeeDefault");
@@ -133,7 +134,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("CustomizePath 未設時三類皆回 null（關閉客製、向後相容）")]
+        [DisplayName("An unset CustomizePath returns null for FormLayout, Language and ProgramSettings (customization off, backward compatible)")]
         public void EmptyCustomizePath_AllReturnNull()
         {
             WriteCustomizeFormLayout(_customizeId, "EmployeeDefault");
@@ -145,7 +146,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("跨租戶隔離：A 的客製不影響 B 的查找結果")]
+        [DisplayName("Tenants are isolated: A's customization does not affect B's lookup")]
         public void CrossTenant_Isolated()
         {
             string custA = "a" + Guid.NewGuid().ToString("N");
@@ -154,12 +155,12 @@ namespace Polhem.ObjectCaching.UnitTests
             var reader = CreateReader();
 
             Assert.NotNull(reader.GetCustomizeFormLayout(custA, "EmployeeDefault"));
-            // B 沒有任何客製檔，必須回 null —— A 的客製不得外溢到 B。
+            // B has no customized files and must get null. A's customization must not leak into B.
             Assert.Null(reader.GetCustomizeFormLayout(custB, "EmployeeDefault"));
         }
 
         [Fact]
-        [DisplayName("GetCustomizePluginSettings 讀的是客製化路徑下的檔案，內容為該租戶的鏈")]
+        [DisplayName("GetCustomizePluginSettings reads the file under the customization path and returns that tenant's chain")]
         public void GetCustomizePluginSettings_FileExists_ReturnsCustomizeChain()
         {
             WriteCustomizePluginSettings(_customizeId, "Order", "Cust.CreditLimit, Cust");
@@ -173,16 +174,17 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCustomizePluginSettings 客製檔不存在時回 null，不會被空實例遮蔽")]
+        [DisplayName("GetCustomizePluginSettings returns null when the customized file does not exist instead of an empty instance")]
         public void GetCustomizePluginSettings_FileMissing_ReturnsNull()
         {
-            // PluginSettingsCache 在缺檔時會給出空實例（base 層要的行為），所以 reader 必須先探
-            // 檔案存在性再進 cache——否則「租戶沒有客製」與「租戶客製成空鏈」就分不出來。
+            // `PluginSettingsCache` returns an empty instance when the file is missing (the base layer wants that),
+            // so the reader must check that the file exists before going to the cache. Otherwise "the tenant has no
+            // customization" and "the tenant customized an empty chain" cannot be told apart.
             Assert.Null(CreateReader().GetCustomizePluginSettings(_customizeId));
         }
 
         [Fact]
-        [DisplayName("跨租戶隔離：A 的 plugin 客製不外溢到 B")]
+        [DisplayName("Tenants are isolated: A's plugin customization does not leak into B")]
         public void CrossTenant_PluginSettings_Isolated()
         {
             string custA = "a" + Guid.NewGuid().ToString("N");
@@ -198,7 +200,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("客製檔落在 {CustomizePath}/{customizeId}/PluginSettings.xml，與套裝路徑分離")]
+        [DisplayName("The customized file lives at {CustomizePath}/{customizeId}/PluginSettings.xml, separate from the base path")]
         public void CustomizePluginSettings_LivesUnderTheCustomizeRoot()
         {
             WriteCustomizePluginSettings(_customizeId, "Order", "Cust.CreditLimit, Cust");
@@ -206,12 +208,12 @@ namespace Polhem.ObjectCaching.UnitTests
             string expected = Path.Combine(_root, _customizeId, "PluginSettings.xml");
             Assert.True(File.Exists(expected));
 
-            // 套裝路徑不因客製而生成任何東西。
+            // Customizing writes nothing to the base path.
             Assert.False(File.Exists(new PathOptions { DefinePath = _root }.GetPluginSettingsFilePath()));
         }
 
         [Fact]
-        [DisplayName("連續查找回傳穩定的快取實例 reference（證明未每次重建）")]
+        [DisplayName("Repeated lookups return the same cached instance reference (it is not rebuilt each time)")]
         public void RepeatedLookup_ReturnsStableCachedInstance()
         {
             WriteCustomizeFormLayout(_customizeId, "EmployeeDefault");
@@ -224,7 +226,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("建構子傳入 null provider 應拋出 ArgumentNullException")]
+        [DisplayName("Constructor throws ArgumentNullException for a null provider")]
         public void Constructor_NullProvider_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new CustomizeDefineReader(null!, new PathOptions()));

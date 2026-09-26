@@ -9,9 +9,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// <see cref="CacheDefineAccess"/> 讀取路徑測試。透過 fixture 的 DI 容器解析共用實例
-    /// （path = <c>tests/Define</c>）。PR 5.7 後 cache 改注入 PathOptions，不再走 process-wide
-    /// static，可與其他 test class 平行執行。
+    /// Tests of the <see cref="CacheDefineAccess"/> read paths. The shared instance is resolved from the fixture's
+    /// DI container (path = <c>tests/Define</c>). The cache takes <see cref="PathOptions"/> by injection instead of
+    /// reading process-wide static state.
     /// </summary>
     public class CacheDefineAccessTests : IClassFixture<PolhemTestFixture>
     {
@@ -26,7 +26,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(SystemSettings) 應回傳 SystemSettings 實例")]
+        [DisplayName("GetDefine(SystemSettings) returns a SystemSettings instance")]
         public void GetDefine_SystemSettings_ReturnsSystemSettings()
         {
             var result = _access.GetDefine(DefineType.SystemSettings);
@@ -34,7 +34,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(DatabaseSettings) 應回傳 DatabaseSettings 實例")]
+        [DisplayName("GetDefine(DatabaseSettings) returns a DatabaseSettings instance")]
         public void GetDefine_DatabaseSettings_ReturnsDatabaseSettings()
         {
             var result = _access.GetDefine(DefineType.DatabaseSettings);
@@ -42,7 +42,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(DbCategorySettings) 應回傳 DbCategorySettings 實例")]
+        [DisplayName("GetDefine(DbCategorySettings) returns a DbCategorySettings instance")]
         public void GetDefine_DbCategorySettings_ReturnsDbCategorySettings()
         {
             var result = _access.GetDefine(DefineType.DbCategorySettings);
@@ -50,7 +50,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(TableSchema) 帶兩個 keys 應回傳對應 TableSchema")]
+        [DisplayName("GetDefine(TableSchema) with two keys returns the matching TableSchema")]
         public void GetDefine_TableSchema_WithCorrectKeys_ReturnsTableSchema()
         {
             var result = _access.GetDefine(DefineType.TableSchema, s_tableSchemaKeys);
@@ -59,7 +59,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(FormSchema) 帶單一 key 應回傳對應 FormSchema")]
+        [DisplayName("GetDefine(FormSchema) with a single key returns the matching FormSchema")]
         public void GetDefine_FormSchema_WithCorrectKey_ReturnsFormSchema()
         {
             var result = _access.GetDefine(DefineType.FormSchema, s_formSchemaKeys);
@@ -73,21 +73,21 @@ namespace Polhem.ObjectCaching.UnitTests
         [InlineData(DefineType.FormSchema, null)]
         [InlineData(DefineType.FormSchema, new string[] { "a", "b" })]
         [InlineData(DefineType.FormLayout, null)]
-        [DisplayName("GetDefine 對 keys 數量不符的型別應拋 ArgumentException")]
+        [DisplayName("GetDefine throws ArgumentException when the number of keys does not match the type")]
         public void GetDefine_InvalidKeys_Throws(DefineType defineType, string[]? keys)
         {
             Assert.Throws<ArgumentException>(() => _access.GetDefine(defineType, keys));
         }
 
         [Fact]
-        [DisplayName("GetDefine 對未支援的 DefineType 應拋 NotSupportedException")]
+        [DisplayName("GetDefine throws NotSupportedException for an unsupported DefineType")]
         public void GetDefine_UnsupportedType_Throws()
         {
             Assert.Throws<NotSupportedException>(() => _access.GetDefine((DefineType)999));
         }
 
         [Fact]
-        [DisplayName("SaveDefine 對未支援的 DefineType 應拋 NotSupportedException")]
+        [DisplayName("SaveDefine throws NotSupportedException for an unsupported DefineType")]
         public void SaveDefine_UnsupportedType_Throws()
         {
             Assert.Throws<NotSupportedException>(() =>
@@ -95,7 +95,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefine(TableSchema) 帶錯誤 keys 應拋 ArgumentException")]
+        [DisplayName("SaveDefine(TableSchema) throws ArgumentException for invalid keys")]
         public void SaveDefine_TableSchema_InvalidKeys_Throws()
         {
             Assert.Throws<ArgumentException>(() =>
@@ -103,19 +103,19 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetSystemSettings 應回傳實例")]
+        [DisplayName("GetSystemSettings returns an instance")]
         public void GetSystemSettings_ReturnsInstance() => Assert.NotNull(_access.GetSystemSettings());
 
         [Fact]
-        [DisplayName("GetDatabaseSettings 應回傳實例")]
+        [DisplayName("GetDatabaseSettings returns an instance")]
         public void GetDatabaseSettings_ReturnsInstance() => Assert.NotNull(_access.GetDatabaseSettings());
 
         [Fact]
-        [DisplayName("GetDbCategorySettings 應回傳實例")]
+        [DisplayName("GetDbCategorySettings returns an instance")]
         public void GetDbCategorySettings_ReturnsInstance() => Assert.NotNull(_access.GetDbCategorySettings());
 
         [Fact]
-        [DisplayName("GetTableSchema 應回傳實例")]
+        [DisplayName("GetTableSchema returns an instance")]
         public void GetTableSchema_ReturnsInstance()
         {
             var schema = _access.GetTableSchema("common", "st_user");
@@ -124,7 +124,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFormSchema 應回傳實例")]
+        [DisplayName("GetFormSchema returns an instance")]
         public void GetFormSchema_ReturnsInstance()
         {
             var schema = _access.GetFormSchema("Employee");

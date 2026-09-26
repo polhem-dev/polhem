@@ -5,7 +5,7 @@ namespace Polhem.ObjectCaching.UnitTests
     public class CacheItemPolicyTests
     {
         [Fact]
-        [DisplayName("預設建構子的屬性應為預設值")]
+        [DisplayName("The default constructor leaves the properties at their default values")]
         public void DefaultConstructor_PropertiesAreDefault()
         {
             var policy = new CacheItemPolicy();
@@ -16,7 +16,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("以 SlidingTime 建構應只設定 SlidingExpiration")]
+        [DisplayName("Constructing with SlidingTime sets only SlidingExpiration")]
         public void Constructor_SlidingTime_SetsSlidingExpirationOnly()
         {
             var policy = new CacheItemPolicy(CacheTimeKind.SlidingTime, 15);
@@ -26,7 +26,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("以 AbsoluteTime 建構應只設定 AbsoluteExpiration")]
+        [DisplayName("Constructing with AbsoluteTime sets only AbsoluteExpiration")]
         public void Constructor_AbsoluteTime_SetsAbsoluteExpirationOnly()
         {
             var before = DateTimeOffset.UtcNow.AddMinutes(10);
@@ -38,7 +38,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("可指定 ChangeMonitorFilePaths")]
+        [DisplayName("ChangeMonitorFilePaths can be assigned")]
         public void ChangeMonitorFilePaths_IsAssignable()
         {
             var policy = new CacheItemPolicy
@@ -52,7 +52,7 @@ namespace Polhem.ObjectCaching.UnitTests
         [Theory]
         [InlineData(CacheTimeKind.SlidingTime)]
         [InlineData(CacheTimeKind.AbsoluteTime)]
-        [DisplayName("CacheTimeKind 列舉值應為定義過的成員")]
+        [DisplayName("CacheTimeKind values are defined members")]
         public void CacheTimeKind_DefinedValues_AreValid(CacheTimeKind kind)
         {
             Assert.True(Enum.IsDefined(kind));

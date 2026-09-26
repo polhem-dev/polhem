@@ -4,12 +4,12 @@ using Polhem.ObjectCaching.Providers;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// <see cref="CacheItemPolicy.ChangeNotifyKey"/> 的失效行為測試。
+    /// Tests of how <see cref="CacheItemPolicy.ChangeNotifyKey"/> invalidates entries.
     /// </summary>
     /// <remarks>
-    /// 每個測試都用 GUID 產生獨一無二的 notify key，因此即使共用 process-wide 的
-    /// <see cref="CacheInfo.NotifyVersions"/>，也不會與其他平行測試互相干擾，
-    /// 無需序列化或替換靜態狀態。
+    /// Every test generates a unique notify key from a GUID, so even though the process-wide
+    /// <see cref="CacheInfo.NotifyVersions"/> is shared, tests do not interfere with each other and no static
+    /// state needs to be serialized or swapped.
     /// </remarks>
     public class CacheNotifyTokenTests
     {
@@ -18,7 +18,7 @@ namespace Polhem.ObjectCaching.UnitTests
         private static string NewCacheKey() => $"notify-{Guid.NewGuid():N}";
 
         [Fact]
-        [DisplayName("notify 版本遞增後，帶 ChangeNotifyKey 的項目應失效")]
+        [DisplayName("An entry with a ChangeNotifyKey is invalidated after its notify version is bumped")]
         public void Get_AfterVersionBump_EntryIsInvalidated()
         {
             using var provider = new MemoryCacheProvider();
@@ -28,14 +28,14 @@ namespace Polhem.ObjectCaching.UnitTests
             provider.Set(cacheKey, "v1", new CacheItemPolicy { ChangeNotifyKey = notifyKey });
             Assert.Equal("v1", provider.Get(cacheKey));
 
-            // 模擬另一個行程寫入定義後，poller 觀察到版本遞增。
+            // Simulates the poller observing a version bump after another process wrote a definition.
             CacheInfo.NotifyVersions.SetVersion(notifyKey, 1);
 
             Assert.Null(provider.Get(cacheKey));
         }
 
         [Fact]
-        [DisplayName("notify 版本未變動時，項目應保留")]
+        [DisplayName("An entry is retained while its notify version is unchanged")]
         public void Get_WithoutVersionBump_EntryIsRetained()
         {
             using var provider = new MemoryCacheProvider();
@@ -47,7 +47,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("其他 notify key 的版本遞增不應影響無關項目")]
+        [DisplayName("Bumping the version of another notify key does not affect an unrelated entry")]
         public void Get_AfterUnrelatedVersionBump_EntryIsRetained()
         {
             using var provider = new MemoryCacheProvider();
@@ -60,7 +60,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("未設定 ChangeNotifyKey 的項目不受任何版本遞增影響")]
+        [DisplayName("An entry without a ChangeNotifyKey is not affected by any version bump")]
         public void Get_WithoutNotifyKey_IgnoresVersionBump()
         {
             using var provider = new MemoryCacheProvider();
@@ -74,7 +74,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("版本存放區未觀察過的 key 應回傳 0")]
+        [DisplayName("The version store returns 0 for a key it has never observed")]
         public void GetVersion_UnobservedKey_ReturnsZero()
         {
             var store = new CacheNotifyVersionStore();
@@ -83,7 +83,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("版本存放區應保留最後寫入的版本")]
+        [DisplayName("The version store keeps the last version written")]
         public void SetVersion_ThenGetVersion_ReturnsLatest()
         {
             var store = new CacheNotifyVersionStore();

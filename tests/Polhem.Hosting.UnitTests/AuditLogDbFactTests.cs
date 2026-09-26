@@ -9,9 +9,10 @@ using Polhem.Tests.Shared;
 namespace Polhem.Hosting.UnitTests
 {
     /// <summary>
-    /// 端到端整合測試：透過 sink 產生的實際 INSERT 把一筆登入記錄寫入 log 資料庫的
-    /// <c>st_log_login</c>，再讀回驗證。跑真實資料庫（每方言各一），對應
-    /// <c>POLHEM_TEST_CONNSTR_*</c> 未設定時自動跳過。
+    /// End-to-end integration tests: the actual INSERT produced by the sink writes one record to a log table
+    /// (<c>st_log_login</c>, <c>st_log_change</c>, <c>st_log_access</c>, <c>st_log_anomaly_api</c>,
+    /// <c>st_log_anomaly_db</c>) of the log database, and the record is read back. They run against a real database,
+    /// one per dialect, and are skipped automatically when the matching <c>POLHEM_TEST_CONNSTR_*</c> is not set.
     /// </summary>
     public class AuditLogDbFactTests : IClassFixture<SharedDbFixture>
     {
@@ -46,11 +47,11 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：登入記錄寫入 st_log_login 後可讀回")]
+        [DisplayName("SQL Server: a login record written to st_log_login can be read back")]
         public void LoginLog_SqlServer_RoundTrip() => RunLoginRoundTrip(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：登入記錄寫入 st_log_login 後可讀回")]
+        [DisplayName("PostgreSQL: a login record written to st_log_login can be read back")]
         public void LoginLog_PostgreSQL_RoundTrip() => RunLoginRoundTrip(DatabaseType.PostgreSQL);
 
         private void RunChangeRoundTrip(DatabaseType databaseType)
@@ -85,11 +86,11 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：異動記錄寫入 st_log_change 後可讀回")]
+        [DisplayName("SQL Server: a change record written to st_log_change can be read back")]
         public void ChangeLog_SqlServer_RoundTrip() => RunChangeRoundTrip(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：異動記錄寫入 st_log_change 後可讀回")]
+        [DisplayName("PostgreSQL: a change record written to st_log_change can be read back")]
         public void ChangeLog_PostgreSQL_RoundTrip() => RunChangeRoundTrip(DatabaseType.PostgreSQL);
 
         private void RunAccessRoundTrip(DatabaseType databaseType)
@@ -120,11 +121,11 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：檢視記錄寫入 st_log_access 後可讀回")]
+        [DisplayName("SQL Server: a view record written to st_log_access can be read back")]
         public void AccessLog_SqlServer_RoundTrip() => RunAccessRoundTrip(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：檢視記錄寫入 st_log_access 後可讀回")]
+        [DisplayName("PostgreSQL: a view record written to st_log_access can be read back")]
         public void AccessLog_PostgreSQL_RoundTrip() => RunAccessRoundTrip(DatabaseType.PostgreSQL);
 
         private void RunApiAnomalyRoundTrip(DatabaseType databaseType)
@@ -174,19 +175,19 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：API 異常寫入 st_log_anomaly_api 後可讀回")]
+        [DisplayName("SQL Server: an API anomaly written to st_log_anomaly_api can be read back")]
         public void ApiAnomaly_SqlServer_RoundTrip() => RunApiAnomalyRoundTrip(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：API 異常寫入 st_log_anomaly_api 後可讀回")]
+        [DisplayName("PostgreSQL: an API anomaly written to st_log_anomaly_api can be read back")]
         public void ApiAnomaly_PostgreSQL_RoundTrip() => RunApiAnomalyRoundTrip(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：DB 異常寫入 st_log_anomaly_db 後可讀回")]
+        [DisplayName("SQL Server: a DB anomaly written to st_log_anomaly_db can be read back")]
         public void DbAnomaly_SqlServer_RoundTrip() => RunDbAnomalyRoundTrip(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：DB 異常寫入 st_log_anomaly_db 後可讀回")]
+        [DisplayName("PostgreSQL: a DB anomaly written to st_log_anomaly_db can be read back")]
         public void DbAnomaly_PostgreSQL_RoundTrip() => RunDbAnomalyRoundTrip(DatabaseType.PostgreSQL);
     }
 }

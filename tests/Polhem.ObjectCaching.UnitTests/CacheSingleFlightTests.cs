@@ -3,12 +3,13 @@ using System.ComponentModel;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// 快取基底在並行 miss 下的單飛（single-flight）行為。
+    /// Single-flight behavior of the cache base classes under concurrent misses.
     /// </summary>
     /// <remarks>
-    /// 斷言刻意用 <b>同一個實例</b> 而非「都不是 null」：這裡真正要防的後果是「兩個呼叫端
-    /// 各拿到一份同 key 的物件」——例如 <c>SessionInfo</c>，此時經其中一份做的
-    /// <c>EnterCompany</c> 對另一份不可見。只斷言非 null 的話，修正前也會通過。
+    /// The assertions deliberately check for <b>the same instance</b> rather than "none is null". The consequence to
+    /// prevent is two callers each getting their own object for the same key; for <c>SessionInfo</c>, an
+    /// <c>EnterCompany</c> done through one copy is then invisible to the other. Asserting only non-null would also
+    /// pass before the fix.
     /// </remarks>
     public class CacheSingleFlightTests
     {
@@ -19,7 +20,7 @@ namespace Polhem.ObjectCaching.UnitTests
             public string Key { get; init; } = string.Empty;
         }
 
-        /// <summary>建立過程刻意變慢，讓並行呼叫確實重疊。</summary>
+        /// <summary>Creation is deliberately slow so that the concurrent calls really overlap.</summary>
         private sealed class SlowObjectCache : ObjectCache<Payload>
         {
             private readonly string _key;
@@ -64,7 +65,9 @@ namespace Polhem.ObjectCaching.UnitTests
             }
         }
 
-        /// <summary>讓所有執行緒在同一瞬間進入 <paramref name="body"/>，確保 miss 真的重疊。</summary>
+        /// <summary>
+        /// Lets every thread enter <paramref name="body"/> at the same moment so the misses really overlap.
+        /// </summary>
         private static TResult[] RunConcurrently<TResult>(int count, Func<int, TResult> body)
         {
             var results = new TResult[count];
@@ -86,7 +89,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("ObjectCache.Get 並行首次讀取應只建立一次，且所有呼叫端拿到同一實例")]
+        [DisplayName("Concurrent first reads of ObjectCache.Get create the instance once and every caller gets the same instance")]
         public void ObjectCache_ConcurrentMiss_CreatesOnce()
         {
             var cache = new SlowObjectCache("CacheSingleFlightTests_single_" + Guid.NewGuid().ToString("N"));
@@ -99,7 +102,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("KeyObjectCache.Get 並行首次讀取同一 key 應只建立一次，且拿到同一實例")]
+        [DisplayName("Concurrent first reads of the same key in KeyObjectCache.Get create the instance once and return the same instance")]
         public void KeyObjectCache_ConcurrentMiss_SameKey_CreatesOnce()
         {
             var cache = new SlowKeyObjectCache(Guid.NewGuid().ToString("N"));
@@ -112,13 +115,13 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("不同 key 不應被單飛機制互相阻斷，各自建立各自的實例")]
+        [DisplayName("Different keys do not block each other in single-flight and each creates its own instance")]
         public void KeyObjectCache_DifferentKeys_EachCreatedIndependently()
         {
             var cache = new SlowKeyObjectCache(Guid.NewGuid().ToString("N"));
 
-            // 同一批執行緒交錯取兩個 key：若單飛以「整個快取」而非「單一 key」為粒度，
-            // 這裡會少建一份、且兩個 key 會拿到同一個物件。
+            // The same threads alternate between two keys. If single-flight worked per cache instead of per key,
+            // one creation would be missing and both keys would get the same object.
             var results = RunConcurrently(Threads, i => cache.Get(i % 2 == 0 ? "key-x" : "key-y"));
 
             Assert.Equal(2, cache.CreateCount);
@@ -129,7 +132,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateInstance 回傳 null 時負向快取仍成立，第二次不再呼叫 CreateInstance")]
+        [DisplayName("The negative cache still holds when CreateInstance returns null, so the second Get does not call CreateInstance")]
         public void KeyObjectCache_NegativeCache_StillShortCircuits()
         {
             var cache = new SlowKeyObjectCache(Guid.NewGuid().ToString("N"), _ => null);
@@ -141,7 +144,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("單飛完成後應清空在途表，後續 miss 仍會重新建立")]
+        [DisplayName("Single-flight clears its in-flight table after completion, so a later miss creates the instance again")]
         public void SingleFlight_DoesNotPinEntriesAfterCompletion()
         {
             var cache = new SlowKeyObjectCache(Guid.NewGuid().ToString("N"));
@@ -151,7 +154,8 @@ namespace Polhem.ObjectCaching.UnitTests
             cache.Remove("evictable");
             var second = cache.Get("evictable");
 
-            // 若在途表沒有在 finally 清掉，第二次會拿到第一次那個 Lazy 的快取結果。
+            // If the in-flight table were not cleared in `finally`, the second call would get the cached result
+            // of the first `Lazy`.
             Assert.Equal(2, cache.CreateCount);
             Assert.NotSame(first, second);
         }

@@ -10,8 +10,8 @@ using Polhem.ObjectCaching.Services;
 namespace Polhem.ObjectCaching.UnitTests.Services
 {
     /// <summary>
-    /// <see cref="ApiKeyValidator"/> 的單元測試。每個測試使用獨立的
-    /// <see cref="CacheContainerService"/>（唯一 prefix），可與其他 test class 平行執行。
+    /// Unit tests of <see cref="ApiKeyValidator"/>. Each test uses its own
+    /// <see cref="CacheContainerService"/> with a unique prefix.
     /// </summary>
     public class ApiKeyValidatorTests
     {
@@ -53,7 +53,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         /// <summary>
-        /// 建立一個 gate 在force、且指定 sys_id 對得上該 secret 的驗證器。
+        /// Creates a validator whose gate is in force and whose given sys_id matches the secret.
         /// </summary>
         private static ApiKeyValidator NewValidatorWithKey(string secret,
             DateTime? expiredAt = null, string sysId = SysId)
@@ -71,14 +71,14 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("建構子 cache 為 null 應拋 ArgumentNullException")]
+        [DisplayName("Constructor throws ArgumentNullException for a null cache")]
         public void Constructor_NullCache_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new ApiKeyValidator(null!));
         }
 
         [Fact]
-        [DisplayName("Validate 於金鑰正確時應回傳 Valid 並帶呼叫端識別")]
+        [DisplayName("Validate returns Valid with the caller identity when the key matches")]
         public void Validate_MatchingKey_ReturnsValidWithCallerIdentity()
         {
             string secret = ApiKeyFormat.CreateSecret();
@@ -93,7 +93,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Validate 於 secret 不符時應回傳 Invalid")]
+        [DisplayName("Validate returns Invalid when the secret does not match")]
         public void Validate_WrongSecret_ReturnsInvalid()
         {
             var validator = NewValidatorWithKey(ApiKeyFormat.CreateSecret());
@@ -105,7 +105,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Validate 於 sys_id 查無(含停用，repository 一併排除)時應回傳 Invalid")]
+        [DisplayName("Validate returns Invalid when the sys_id is not found (the repository also excludes disabled keys)")]
         public void Validate_UnknownSysId_ReturnsInvalid()
         {
             string secret = ApiKeyFormat.CreateSecret();
@@ -117,7 +117,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Validate 於金鑰已過期時應回傳 Invalid(即時判定，不靠快取過期)")]
+        [DisplayName("Validate returns Invalid for an expired key (decided at call time, not by cache expiry)")]
         public void Validate_ExpiredKey_ReturnsInvalid()
         {
             string secret = ApiKeyFormat.CreateSecret();
@@ -129,7 +129,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Validate 於金鑰到期時間未到時應回傳 Valid")]
+        [DisplayName("Validate returns Valid when the key has not expired yet")]
         public void Validate_NotYetExpiredKey_ReturnsValid()
         {
             string secret = ApiKeyFormat.CreateSecret();
@@ -141,7 +141,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Theory]
-        [DisplayName("Validate 於格式不符時應回傳 Invalid 且不查資料來源")]
+        [DisplayName("Validate returns Invalid for a malformed key without querying the data source")]
         [InlineData("no-separator")]
         [InlineData("Bad-SysId.secret")]
         [InlineData(".secret")]
@@ -158,7 +158,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Theory]
-        [DisplayName("Validate 於 gate 在force 但未帶金鑰時應回傳 NotProvided")]
+        [DisplayName("Validate returns NotProvided when the gate is in force but no key is sent")]
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
@@ -173,7 +173,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Validate 於無啟用金鑰時應回傳 NotConfigured(相容態)")]
+        [DisplayName("Validate returns NotConfigured when no key is active (compatibility state)")]
         public void Validate_GateNotInForce_ReturnsNotConfigured()
         {
             var dataSource = new StubCacheDataSourceProvider(
@@ -187,7 +187,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Validate 於快取無資料來源(無金鑰存放處)時應回傳 NotConfigured")]
+        [DisplayName("Validate returns NotConfigured when the cache has no data source (no key store)")]
         public void Validate_NoDataSource_ReturnsNotConfigured()
         {
             var validator = new ApiKeyValidator(NewCache());
@@ -198,7 +198,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Validate 於資料來源擲例外時應向外傳播，由呼叫端 fail closed")]
+        [DisplayName("Validate propagates an exception from the data source so the caller fails closed")]
         public void Validate_DataSourceThrows_PropagatesForFailClosed()
         {
             var dataSource = new StubCacheDataSourceProvider(
@@ -209,7 +209,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Validate 應對已快取的金鑰重複命中，不重複查資料來源")]
+        [DisplayName("Validate serves a cached key on repeated calls without querying the data source again")]
         public void Validate_RepeatedCalls_LoadsKeyOnce()
         {
             string secret = ApiKeyFormat.CreateSecret();

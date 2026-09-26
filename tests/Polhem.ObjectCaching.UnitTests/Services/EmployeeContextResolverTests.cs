@@ -9,8 +9,8 @@ using Polhem.Repository.Abstractions.System;
 namespace Polhem.ObjectCaching.UnitTests.Services
 {
     /// <summary>
-    /// EmployeeContextResolver.Resolve 的解析串接測試（以 fake user / employee repository 隔離）：
-    /// 有對應員工、無對應員工、未知 user、無部門員工四種情境。
+    /// Tests of how <c>EmployeeContextResolver.Resolve</c> chains its lookups, isolated with a fake user and employee
+    /// repository: a matching employee, no matching employee, an unknown user, and an employee without a department.
     /// </summary>
     public class EmployeeContextResolverTests
     {
@@ -24,7 +24,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
             => new(new FakeRepositoryFactory(userRowId, employee));
 
         [Fact]
-        [DisplayName("Resolve 有對應員工回完整 context（user/employee/dept）")]
+        [DisplayName("Resolve returns the full context (user, employee, department) when a matching employee exists")]
         public void Resolve_WithEmployee_ReturnsFullContext()
         {
             var employee = new EmployeeRow(s_employeeRowId, "E001", "Alice", s_deptRowId, s_userRowId);
@@ -38,7 +38,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Resolve user 存在但無對應員工回 user rowid、employee/dept 為空")]
+        [DisplayName("Resolve returns the user rowid with an empty employee and department when the user has no matching employee")]
         public void Resolve_NoEmployee_ReturnsUserOnly()
         {
             var resolver = Create(s_userRowId, employee: null);
@@ -51,10 +51,10 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Resolve 未知 user 回空 context")]
+        [DisplayName("Resolve returns an empty context for an unknown user")]
         public void Resolve_UnknownUser_ReturnsEmpty()
         {
-            // user repository 回 Guid.Empty（查無此帳號）→ 不再查 employee。
+            // The user repository returns `Guid.Empty` (no such account), so the employee is not looked up.
             var resolver = Create(Guid.Empty, new EmployeeRow(s_employeeRowId, "E001", "Alice", s_deptRowId, s_userRowId));
 
             var ctx = resolver.Resolve("nobody", DbId);
@@ -63,7 +63,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Resolve 員工無部門回 dept 為空")]
+        [DisplayName("Resolve returns an empty department when the employee has no department")]
         public void Resolve_EmployeeWithoutDept_ReturnsEmptyDept()
         {
             var employee = new EmployeeRow(s_employeeRowId, "E001", "Alice", Guid.Empty, s_userRowId);
@@ -77,8 +77,8 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         /// <summary>
-        /// 只回應 EmployeeContextResolver 會用到的兩個介面；其餘一律擲例外，
-        /// 讓非預期的 repository 取用在測試中立即現形。
+        /// Answers only the two interfaces <c>EmployeeContextResolver</c> uses and throws for everything else,
+        /// so any unexpected repository access shows up immediately in a test.
         /// </summary>
         private sealed class FakeRepositoryFactory : IRepositoryFactory
         {

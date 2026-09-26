@@ -9,23 +9,25 @@ using Polhem.ObjectCaching.Database;
 namespace Polhem.ObjectCaching.UnitTests.Database
 {
     /// <summary>
-    /// 資料庫相依快取的直接覆蓋：read-through 只打一次、`Set` 覆寫、`Remove` 後重新載入、
-    /// 沒有 data source 時不讀。
+    /// Direct coverage of the database-dependent caches: a read-through happens only once, `Set` overwrites,
+    /// `Remove` causes a reload, and nothing is read when there is no data source.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 這五個快取先前在 `tests/` 的參照數全是 0（`CompanyInfoCache` 只有一處間接提及）。
-    /// 依 <c>rules/definition.md</c>，它們屬於**沒有 `SaveX`、只靠 cache-notify 失效**的高風險類別
-    /// —— 漏一次 notify 就全 process 拿舊值。服務層有測試，快取層本身沒有。
+    /// Before these tests, `tests/` had no references to `CompanyInfoCache`, `CompanyRolePermissionsCache`,
+    /// `DepartmentTreeCache`, `CompanyAuditRulesCache` or `ApiKeyGateCache` (only one indirect mention of
+    /// `CompanyInfoCache`). Under <c>rules/definition.md</c> they are the high-risk kind that has **no `SaveX` and is
+    /// invalidated only through cache-notify**: one missed notify and the whole process gets stale values. The
+    /// service layer had tests; the cache layer itself had none.
     /// </para>
     /// <para>
-    /// 用 stub data source 而非真資料庫：這裡驗的是快取語意（何時讀、何時不讀），
-    /// 資料從哪來與它無關。
+    /// A stub data source is used instead of a real database: what is checked here is the cache semantics (when it
+    /// reads and when it does not), which has nothing to do with where the data comes from.
     /// </para>
     /// </remarks>
     public class DatabaseBackedCacheTests
     {
-        /// <summary>只記錄呼叫次數的 data source，用來看 read-through 發生了幾次。</summary>
+        /// <summary>A data source that only counts calls, to see how many read-throughs happened.</summary>
         private sealed class CountingSource : ICacheDataSourceProvider
         {
             public int CompanyInfoCalls { get; private set; }
@@ -57,7 +59,7 @@ namespace Polhem.ObjectCaching.UnitTests.Database
         private static string NewPrefix() => "t" + Guid.NewGuid().ToString("N");
 
         [Fact]
-        [DisplayName("CompanyInfoCache：miss 讀一次，之後命中不再讀；Remove 後重新讀")]
+        [DisplayName("CompanyInfoCache reads once on a miss, serves later hits without reading, and reads again after Remove")]
         public void CompanyInfoCache_ReadsThroughOnceThenCaches()
         {
             var source = new CountingSource();
@@ -73,7 +75,7 @@ namespace Polhem.ObjectCaching.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("CompanyRolePermissionsCache：miss 讀一次，之後命中不再讀")]
+        [DisplayName("CompanyRolePermissionsCache reads once on a miss and serves later hits without reading")]
         public void CompanyRolePermissionsCache_ReadsThroughOnce()
         {
             var source = new CountingSource();
@@ -85,7 +87,7 @@ namespace Polhem.ObjectCaching.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("DepartmentTreeCache：miss 讀一次，之後命中不再讀")]
+        [DisplayName("DepartmentTreeCache reads once on a miss and serves later hits without reading")]
         public void DepartmentTreeCache_ReadsThroughOnce()
         {
             var source = new CountingSource();
@@ -97,7 +99,7 @@ namespace Polhem.ObjectCaching.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("CompanyAuditRulesCache：miss 讀一次，之後命中不再讀")]
+        [DisplayName("CompanyAuditRulesCache reads once on a miss and serves later hits without reading")]
         public void CompanyAuditRulesCache_ReadsThroughOnce()
         {
             var source = new CountingSource();
@@ -109,7 +111,7 @@ namespace Polhem.ObjectCaching.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("ApiKeyGateCache：GetState 讀一次；RemoveState 後重新讀")]
+        [DisplayName("ApiKeyGateCache reads once on GetState and reads again after RemoveState")]
         public void ApiKeyGateCache_ReadsThroughOnceThenReloadsAfterRemove()
         {
             var source = new CountingSource();
@@ -125,18 +127,20 @@ namespace Polhem.ObjectCaching.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("ApiKeyGateCache 的 cache group 刻意與 ApiKeyInfo 相同（金鑰異動要一併失效閘門）")]
+        [DisplayName("ApiKeyGateCache deliberately shares the ApiKeyInfo cache group (a key change must also invalidate the gate)")]
         public void ApiKeyGateCache_SharesTheApiKeyCacheGroup()
         {
-            // 不是筆誤：金鑰失效時若沒一併失效閘門條目，新簽發的金鑰最長一小時內會被拒。
+            // Not a typo. If the gate entry were not invalidated together with the keys,
+            // a newly issued key could be rejected for up to an hour.
             Assert.Equal(nameof(ApiKeyInfo), new ApiKeyGateCache(NewPrefix()).CacheGroup);
         }
 
         [Fact]
-        [DisplayName("沒有 data source 時不得讀取，Get 回 null")]
+        [DisplayName("Without a data source nothing is read and Get returns null")]
         public void NoDataSource_GetReturnsNullWithoutReadingThrough()
         {
-            // 公開建構子就是這個形狀（Set 是唯一入口），行動端與測試都會走到。
+            // This is the shape of the public constructor (`Set` is the only way in),
+            // and both mobile heads and tests use it.
             Assert.Null(new CompanyInfoCache(NewPrefix()).Get("c1"));
             Assert.Null(new CompanyAuditRulesCache(NewPrefix()).Get("c1"));
             Assert.Null(new DepartmentTreeCache(NewPrefix()).Get("c1"));

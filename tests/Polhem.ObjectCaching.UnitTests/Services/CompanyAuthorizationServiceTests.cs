@@ -6,8 +6,8 @@ using Polhem.ObjectCaching.Services;
 namespace Polhem.ObjectCaching.UnitTests.Services
 {
     /// <summary>
-    /// CompanyAuthorizationService.Can 的層一判定串接測試（以 fake session / role-permission service
-    /// 隔離,驗證空檢查 + 多角色 OR 合併 + HasFlag）。
+    /// Tests of the layer-one decision chain of <c>CompanyAuthorizationService.Can</c>, isolated with a fake session
+    /// and role-permission service: the empty checks, the OR merge across roles, and <c>HasFlag</c>.
     /// </summary>
     public class CompanyAuthorizationServiceTests
     {
@@ -31,7 +31,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
             => new(new FakeSessionInfoService(session), new FakeRolePermissionService(perms));
 
         [Fact]
-        [DisplayName("Can 已授予的 action 回 true")]
+        [DisplayName("Can returns true for a granted action")]
         public void Can_GrantedAction_ReturnsTrue()
         {
             var auth = Create(Session("C001", "Buyer"), BuildPerms());
@@ -40,27 +40,27 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Can 未授予的 action 回 false")]
+        [DisplayName("Can returns false for an action that was not granted")]
         public void Can_UngrantedAction_ReturnsFalse()
         {
             var auth = Create(Session("C001", "Buyer"), BuildPerms());
 
-            // Buyer 沒有 Delete（只有 Manager 有）
+            // Buyer has no Delete; only Manager has it.
             Assert.False(auth.Can(s_token, "PurchaseOrder", PermissionAction.Delete));
         }
 
         [Fact]
-        [DisplayName("Can 多角色對同 model 應 OR 合併後判定")]
+        [DisplayName("Can merges the permissions of several roles on the same model with OR before deciding")]
         public void Can_MultiRole_OrMerges()
         {
             var auth = Create(Session("C001", "Buyer", "Manager"), BuildPerms());
 
-            // Buyer(Read|Update) ∪ Manager(Delete) → Delete 通過
+            // Buyer (Read | Update) OR Manager (Delete) gives Delete.
             Assert.True(auth.Can(s_token, "PurchaseOrder", PermissionAction.Delete));
         }
 
         [Fact]
-        [DisplayName("Can 未進公司（CompanyId 為 null）回 false")]
+        [DisplayName("Can returns false when no company has been entered (CompanyId is null)")]
         public void Can_NoCompany_ReturnsFalse()
         {
             var auth = Create(Session(null, "Buyer"), BuildPerms());
@@ -69,7 +69,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Can 無角色回 false")]
+        [DisplayName("Can returns false when the session has no roles")]
         public void Can_NoRoles_ReturnsFalse()
         {
             var auth = Create(Session("C001"), BuildPerms());
@@ -78,7 +78,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Can session 不存在回 false")]
+        [DisplayName("Can returns false when the session does not exist")]
         public void Can_NoSession_ReturnsFalse()
         {
             var auth = Create(null, BuildPerms());

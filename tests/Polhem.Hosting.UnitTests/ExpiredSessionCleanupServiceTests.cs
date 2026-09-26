@@ -11,16 +11,17 @@ using Microsoft.Extensions.Logging;
 namespace Polhem.Hosting.UnitTests
 {
     /// <summary>
-    /// <see cref="ExpiredSessionCleanupService"/> 的行為測試。
+    /// Behavior tests of <see cref="ExpiredSessionCleanupService"/>.
     /// </summary>
     /// <remarks>
-    /// 這是框架內**唯一會刪資料**的背景服務，先前零覆蓋。三件事值得釘住：啟動時就掃一次
-    /// （不是等第一個 tick）、暫時性 DB 錯誤不得終結迴圈（否則表會長到行程結束）、
-    /// 以及 <c>IntervalSeconds &lt;= 0</c> 要退回 3600 秒而不是變成忙迴圈。
+    /// This is the framework background service that **deletes data**, and it had no coverage before. Three things
+    /// are worth pinning down: it sweeps once at startup (not at the first tick), a transient DB error must not end
+    /// the loop (otherwise the table grows until the process exits), and <c>IntervalSeconds &lt;= 0</c> falls back to
+    /// 3600 seconds instead of becoming a busy loop.
     /// </remarks>
     public class ExpiredSessionCleanupServiceTests
     {
-        /// <summary>記錄呼叫次數，並可依次數決定是否擲例外。</summary>
+        /// <summary>Counts calls, and can decide from the call number whether to throw.</summary>
         private sealed class RecordingSessionRepository : ISessionRepository
         {
             private readonly Func<int, int> _behavior;
@@ -53,7 +54,7 @@ namespace Polhem.Hosting.UnitTests
                 where T : class, IDataFormRepository => throw new NotSupportedException();
         }
 
-        /// <summary><see cref="DbException"/> 是抽象的，測試需要一個具體的可擲型別。</summary>
+        /// <summary><see cref="DbException"/> is abstract, so the tests need a concrete type to throw.</summary>
         private sealed class FakeDbException : DbException
         {
             public FakeDbException() : base("simulated transient database failure") { }
@@ -73,7 +74,7 @@ namespace Polhem.Hosting.UnitTests
                 new SessionCleanupOptions { Enabled = true, IntervalSeconds = intervalSeconds },
                 new StubLogger());
 
-        /// <summary>輪詢等待，避免以固定 sleep 換取穩定度。</summary>
+        /// <summary>Polls instead of trading a fixed sleep for stability.</summary>
         private static async Task<bool> WaitForCallsAsync(
             RecordingSessionRepository repository, int expected, int timeoutMs = 5000)
         {
@@ -87,17 +88,18 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("啟動時應立即掃一次，而非等到第一個 tick")]
+        [DisplayName("StartAsync sweeps immediately instead of waiting for the first tick")]
         public async Task StartAsync_SweepsImmediately()
         {
-            // 間隔刻意設得極長：若啟動掃描不存在，這個測試就只能靠等 1 小時才會過。
+            // The interval is deliberately very long: without the startup sweep this test could
+            // only pass after an hour.
             var repository = new RecordingSessionRepository(_ => 3);
             var service = Create(repository, intervalSeconds: 3600);
 
             await service.StartAsync(CancellationToken.None);
             try
             {
-                Assert.True(await WaitForCallsAsync(repository, 1), "啟動後未觀察到任何一次清理。");
+                Assert.True(await WaitForCallsAsync(repository, 1), "No cleanup was observed after startup.");
             }
             finally
             {
@@ -107,11 +109,12 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("暫時性 DbException 不得終結迴圈，下一個 tick 仍應繼續掃描")]
+        [DisplayName("A transient DbException does not end the loop and the next tick still sweeps")]
         public async Task DbException_DoesNotEndTheLoop()
         {
-            // 前兩次擲 DbException：第一次是啟動掃描、第二次是第一個 tick。
-            // 迴圈若被例外終結，第三次呼叫永遠不會發生。
+            // The first two calls throw `DbException`: the first is the startup sweep
+            // and the second is the first tick.
+            // If the exception ended the loop, the third call would never happen.
             var repository = new RecordingSessionRepository(n =>
                 n <= 2 ? throw new FakeDbException() : 0);
             var service = Create(repository, intervalSeconds: 1);
@@ -120,7 +123,7 @@ namespace Polhem.Hosting.UnitTests
             try
             {
                 Assert.True(await WaitForCallsAsync(repository, 3),
-                    $"迴圈在 DbException 後停止了；只觀察到 {repository.Calls} 次呼叫。");
+                    $"The loop stopped after a DbException; only {repository.Calls} calls were observed.");
             }
             finally
             {
@@ -130,7 +133,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("IntervalSeconds 為 0 應退回預設 3600 秒，不得變成忙迴圈")]
+        [DisplayName("An IntervalSeconds of 0 falls back to the default 3600 seconds instead of becoming a busy loop")]
         public async Task ZeroInterval_FallsBackToDefault_AndDoesNotSpin()
         {
             var repository = new RecordingSessionRepository(_ => 0);
@@ -139,10 +142,11 @@ namespace Polhem.Hosting.UnitTests
             await service.StartAsync(CancellationToken.None);
             try
             {
-                Assert.True(await WaitForCallsAsync(repository, 1), "啟動後未觀察到任何一次清理。");
+                Assert.True(await WaitForCallsAsync(repository, 1), "No cleanup was observed after startup.");
 
-                // 退回值是 3600 秒，故這段觀察窗內不應再有第二次。若 fallback 失效
-                // （PeriodicTimer 對 TimeSpan.Zero 會擲例外，或間隔變成 0），這裡會看到暴增。
+                // The fallback is 3600 seconds, so there must be no second call in this observation window.
+                // If the fallback broke (`PeriodicTimer` throws for `TimeSpan.Zero`, or the interval became 0),
+                // calls would spike here.
                 await Task.Delay(600);
                 Assert.Equal(1, repository.Calls);
             }
@@ -154,7 +158,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("停止服務不應拋出例外（取消是正常關機路徑）")]
+        [DisplayName("StopAsync does not throw (cancellation is the normal shutdown path)")]
         public async Task StopAsync_CompletesWithoutThrowing()
         {
             var repository = new RecordingSessionRepository(_ => 0);
@@ -168,7 +172,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("非 DbException 的例外不應被吞掉（那不是這個 catch 要處理的失敗）")]
+        [DisplayName("An exception other than DbException is not swallowed (it is not the failure this catch handles)")]
         public async Task NonDbException_IsNotSwallowed()
         {
             var repository = new RecordingSessionRepository(_ => throw new InvalidOperationException("bug"));
@@ -176,10 +180,10 @@ namespace Polhem.Hosting.UnitTests
 
             await service.StartAsync(CancellationToken.None);
 
-            // 斷言在 `ExecuteTask` 而非 `StartAsync` 上：`BackgroundService` 是否把已完成的
-            // 執行工作交還給 `StartAsync`，屬於它的內部政策，實測在此並未傳播出來。要證的是
-            // 「這個例外沒有被 SafeCleanup 的 catch (DbException) 吞掉」，`ExecuteTask` 的
-            // 狀態才是該事實的直接證據。
+            // The assertion is on `ExecuteTask`, not `StartAsync`. Whether `BackgroundService` hands a completed
+            // execute task back to `StartAsync` is its internal policy, and measured here it did not propagate. What
+            // must be shown is that this exception was not swallowed by the `catch (DbException)` in `SafeCleanup`,
+            // and the state of `ExecuteTask` is the direct evidence of that.
             var executeTask = service.ExecuteTask;
             Assert.NotNull(executeTask);
             var exception = await Record.ExceptionAsync(() => executeTask!);

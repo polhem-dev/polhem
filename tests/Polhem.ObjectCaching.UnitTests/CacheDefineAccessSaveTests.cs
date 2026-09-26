@@ -9,14 +9,13 @@ using Polhem.Definition.Storage;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// <see cref="CacheDefineAccess"/> 所有 Save 方法的覆蓋測試。
-    /// 各測試以本地 <see cref="TempDir"/> 隔離 <see cref="PathOptions"/>，直接傳給
-    /// <see cref="CacheDefineAccess"/> ctor —— 不操弄 <see cref="DefinePathInfo"/>
-    /// process-wide static，可與其他 test class 平行執行。
+    /// Coverage tests of every Save method of <see cref="CacheDefineAccess"/>.
+    /// Each test isolates its <see cref="PathOptions"/> in a local <see cref="TempDir"/> and passes it straight to
+    /// the <see cref="CacheDefineAccess"/> constructor, so no process-wide path state is touched.
     /// </summary>
     /// <remarks>
-    /// Save 路徑會呼叫 <c>CacheContainer.X.Remove(key)</c> 失效 process-wide 快取，但 keys
-    /// 皆為本測試特有（如 <c>dbX/t_sample</c>、<c>P_Test</c>），不會影響其他測試。
+    /// The Save paths call <c>Remove(key)</c> on the cache container to invalidate cached entries, but every key is
+    /// specific to this test (such as <c>dbX/t_sample</c> and <c>P_Test</c>), so other tests are not affected.
     /// </remarks>
     public class CacheDefineAccessSaveTests
     {
@@ -26,7 +25,7 @@ namespace Polhem.ObjectCaching.UnitTests
             => new CacheDefineAccess(new FileDefineStorage(paths), paths);
 
         [Fact]
-        [DisplayName("SaveSystemSettings 應寫入 SystemSettings.xml 並可再讀回")]
+        [DisplayName("SaveSystemSettings writes SystemSettings.xml containing the saved values")]
         public void SaveSystemSettings_WritesFile()
         {
             using var temp = TempDir.Create();
@@ -42,7 +41,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDatabaseSettings 應寫入 DatabaseSettings.xml")]
+        [DisplayName("SaveDatabaseSettings writes DatabaseSettings.xml")]
         public void SaveDatabaseSettings_WritesFile()
         {
             using var temp = TempDir.Create();
@@ -55,7 +54,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveProgramSettings 應寫入 ProgramSettings.xml")]
+        [DisplayName("SaveProgramSettings writes ProgramSettings.xml")]
         public void SaveProgramSettings_WritesFile()
         {
             using var temp = TempDir.Create();
@@ -68,7 +67,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDbCategorySettings 應透過 DefineStorage 寫入 DbCategorySettings.xml")]
+        [DisplayName("SaveDbCategorySettings writes DbCategorySettings.xml through the DefineStorage")]
         public void SaveDbCategorySettings_WritesFile()
         {
             using var temp = TempDir.Create();
@@ -81,7 +80,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveTableSchema 應寫入對應資料庫資料夾下的 TableSchema xml")]
+        [DisplayName("SaveTableSchema writes the TableSchema xml under the matching database folder")]
         public void SaveTableSchema_WritesFile()
         {
             using var temp = TempDir.Create();
@@ -94,7 +93,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveFormSchema 應寫入以 ProgId 命名的 FormSchema xml")]
+        [DisplayName("SaveFormSchema writes a FormSchema xml named after the ProgId")]
         public void SaveFormSchema_WritesFile()
         {
             using var temp = TempDir.Create();
@@ -107,7 +106,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveFormSchema 缺少 CategoryId 時應丟 InvalidOperationException")]
+        [DisplayName("SaveFormSchema throws InvalidOperationException when CategoryId is missing")]
         public void SaveFormSchema_ThrowsWhenCategoryIdEmpty()
         {
             using var temp = TempDir.Create();
@@ -120,7 +119,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveFormLayout 應寫入以 LayoutId 命名的 FormLayout xml")]
+        [DisplayName("SaveFormLayout writes a FormLayout xml named after the LayoutId")]
         public void SaveFormLayout_WritesFile()
         {
             using var temp = TempDir.Create();
@@ -132,13 +131,11 @@ namespace Polhem.ObjectCaching.UnitTests
             Assert.True(File.Exists(temp.Options.GetFormLayoutFilePath("L_Test")));
         }
 
-        // NOTE: cache-roundtrip 整合測試（Save → cache miss → reload via cache layer）刪除於
-        // PR 5.2。原因：cache 層的 FileDefineStorage 由 CacheContainer.Initialize 構造時鎖定
-        // 在 GlobalFixture 的 PathOptions，與 CacheDefineAccess(temp.Options) 的儲存路徑不一致。
-        // PR 5.3 將 CacheContainer 改為 DI singleton 並讓 cache classes 接 PathOptions 後，重新引入。
+        // NOTE: The Save, cache miss and reload round trip through the cache layer is covered by the `*_AfterSave`
+        // tests in `CacheDefineAccessMissingCoverageTests`, which give each access its own path and cache prefix.
 
         [Fact]
-        [DisplayName("SaveDefine(SystemSettings) 應委派至 SaveSystemSettings")]
+        [DisplayName("SaveDefine(SystemSettings) delegates to SaveSystemSettings")]
         public void SaveDefine_SystemSettings_DelegatesToSaveSystemSettings()
         {
             using var temp = TempDir.Create();
@@ -148,7 +145,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefine(DatabaseSettings) 應委派至 SaveDatabaseSettings")]
+        [DisplayName("SaveDefine(DatabaseSettings) delegates to SaveDatabaseSettings")]
         public void SaveDefine_DatabaseSettings_DelegatesToSaveDatabaseSettings()
         {
             using var temp = TempDir.Create();
@@ -158,7 +155,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefine(ProgramSettings) 應委派至 SaveProgramSettings")]
+        [DisplayName("SaveDefine(ProgramSettings) delegates to SaveProgramSettings")]
         public void SaveDefine_ProgramSettings_DelegatesToSaveProgramSettings()
         {
             using var temp = TempDir.Create();
@@ -168,7 +165,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefine(DbCategorySettings) 應委派至 SaveDbCategorySettings")]
+        [DisplayName("SaveDefine(DbCategorySettings) delegates to SaveDbCategorySettings")]
         public void SaveDefine_DbCategorySettings_DelegatesToSaveDbCategorySettings()
         {
             using var temp = TempDir.Create();
@@ -178,7 +175,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefine(TableSchema) 帶單一 key 應委派至 SaveTableSchema")]
+        [DisplayName("SaveDefine(TableSchema) with a single key delegates to SaveTableSchema")]
         public void SaveDefine_TableSchema_WithKey_DelegatesToSaveTableSchema()
         {
             using var temp = TempDir.Create();
@@ -189,7 +186,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefine(FormLayout) 應委派至 SaveFormLayout")]
+        [DisplayName("SaveDefine(FormLayout) delegates to SaveFormLayout")]
         public void SaveDefine_FormLayout_DelegatesToSaveFormLayout()
         {
             using var temp = TempDir.Create();

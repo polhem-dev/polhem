@@ -10,10 +10,11 @@ using Polhem.Tests.Shared;
 namespace Polhem.Hosting.UnitTests
 {
     /// <summary>
-    /// 讀取側整合測試（每方言各一）：透過寫入側 sink 把數筆 <c>st_log_change</c> 寫入 log 資料庫，
-    /// 再以 <see cref="AuditLogRepository"/> 讀回，驗證 <c>GetChangeLog</c> 的參數化 filter、
-    /// <c>log_time</c> DESC 排序、company 過濾、分頁（TotalCount / HasMore），以及
-    /// <c>GetChangeById</c> 單筆取值與 company scope。對應 <c>POLHEM_TEST_CONNSTR_*</c> 未設定時自動跳過。
+    /// Read-side integration tests, one per dialect: a few <c>st_log_change</c> rows are written to the log database
+    /// through the write-side sink and read back with <see cref="AuditLogRepository"/>, checking the parameterized
+    /// filters of <c>GetChangeLog</c>, the <c>log_time</c> DESC order, the company filter, paging (TotalCount /
+    /// HasMore), and the single-row read and company scope of <c>GetChangeById</c>. Each test is skipped
+    /// automatically when its <c>POLHEM_TEST_CONNSTR_*</c> is not set.
     /// </summary>
     public class AuditLogQueryDbFactTests : IClassFixture<SharedDbFixture>
     {
@@ -37,7 +38,7 @@ namespace Polhem.Hosting.UnitTests
 
             var otherCompanyId = Guid.NewGuid();
 
-            // 兩列同屬 c1（驗排序與分頁），另一列屬 c2（驗租戶隔離）。
+            // Two rows belong to c1 (for ordering and paging) and one to c2 (for tenant isolation).
             dbAccess.Execute(AuditLogWriteRepository.BuildInsert(ChangeEntry(olderId, progId, rowKey, "c1", ChangeKind.Insert, older)));
             dbAccess.Execute(AuditLogWriteRepository.BuildInsert(ChangeEntry(newerId, progId, rowKey, "c1", ChangeKind.Update, newer)));
             dbAccess.Execute(AuditLogWriteRepository.BuildInsert(ChangeEntry(otherCompanyId, progId, rowKey, "c2", ChangeKind.Update, newer)));
@@ -89,11 +90,11 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：GetChangeLog 排序/過濾/分頁 + GetChangeById 應正確")]
+        [DisplayName("SQL Server: GetChangeLog ordering, filtering and paging and GetChangeById are correct")]
         public void ChangeLog_SqlServer() => RunChangeLogQuery(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：GetChangeLog 排序/過濾/分頁 + GetChangeById 應正確")]
+        [DisplayName("PostgreSQL: GetChangeLog ordering, filtering and paging and GetChangeById are correct")]
         public void ChangeLog_PostgreSQL() => RunChangeLogQuery(DatabaseType.PostgreSQL);
 
         private void RunOtherAxisQueries(DatabaseType databaseType)
@@ -104,7 +105,8 @@ namespace Polhem.Hosting.UnitTests
             var repository = new AuditLogRepository(TestRepositoryContext.Create(connectionManager), databaseId);
 
             // Login: write one failed-login for a unique user, read it back by user + event filter.
-            // 每個軸都要帶租戶範圍：讀取端現在要求它（company 是租戶邊界，不是選用篩選）。
+            // Every axis must carry a tenant scope: the read side now requires it (the company is a tenant
+            // boundary, not an optional filter).
             const string CompanyId = "c_axes";
             var loginUser = "u_" + Guid.NewGuid().ToString("N");
             dbAccess.Execute(AuditLogWriteRepository.BuildInsert(new LoginAuditEntry
@@ -176,11 +178,11 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：GetLoginLog / GetAccessLog / GetApiAnomalyLog / GetDbAnomalyLog 過濾應正確")]
+        [DisplayName("SQL Server: GetLoginLog, GetAccessLog, GetApiAnomalyLog and GetDbAnomalyLog filter correctly")]
         public void OtherAxes_SqlServer() => RunOtherAxisQueries(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：GetLoginLog / GetAccessLog / GetApiAnomalyLog / GetDbAnomalyLog 過濾應正確")]
+        [DisplayName("PostgreSQL: GetLoginLog, GetAccessLog, GetApiAnomalyLog and GetDbAnomalyLog filter correctly")]
         public void OtherAxes_PostgreSQL() => RunOtherAxisQueries(DatabaseType.PostgreSQL);
 
         private void RunAggregateQueries(DatabaseType databaseType)
@@ -245,11 +247,11 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：GetApiAnomalySummary / GetTopApiMethods / GetDbAnomalySummary 聚合應正確")]
+        [DisplayName("SQL Server: GetApiAnomalySummary, GetTopApiMethods and GetDbAnomalySummary aggregate correctly")]
         public void Aggregates_SqlServer() => RunAggregateQueries(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：GetApiAnomalySummary / GetTopApiMethods / GetDbAnomalySummary 聚合應正確")]
+        [DisplayName("PostgreSQL: GetApiAnomalySummary, GetTopApiMethods and GetDbAnomalySummary aggregate correctly")]
         public void Aggregates_PostgreSQL() => RunAggregateQueries(DatabaseType.PostgreSQL);
 
         private static ChangeAuditEntry ChangeEntry(Guid sysRowId, string progId, string rowKey, string companyId, ChangeKind kind, DateTime logTimeUtc)

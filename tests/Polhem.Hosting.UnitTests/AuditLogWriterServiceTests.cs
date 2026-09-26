@@ -8,8 +8,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace Polhem.Hosting.UnitTests
 {
     /// <summary>
-    /// <see cref="AuditLogWriterService"/> 的單元測試：驗證佇列滿載時退化為同步寫入（不丟失），
-    /// 以及背景服務啟停能把入列項目批次寫入 sink。
+    /// Unit tests of <see cref="AuditLogWriterService"/>: a full queue falls back to a synchronous write (the entry is
+    /// not dropped), and the background service writes enqueued entries to the sink in batches once started.
     /// </summary>
     public class AuditLogWriterServiceTests
     {
@@ -38,7 +38,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         /// <summary>
-        /// 每次寫入都擲例外的 sink —— 模擬部署自訂的 <see cref="IAuditLogSink"/> 失敗。
+        /// A sink that throws on every write, simulating a failing deployment-specific <see cref="IAuditLogSink"/>.
         /// </summary>
         private sealed class ThrowingAuditLogSink : IAuditLogSink
         {
@@ -47,8 +47,8 @@ namespace Polhem.Hosting.UnitTests
             public void WriteBatch(IReadOnlyList<AuditEntry> entries)
             {
                 Attempts++;
-                // 刻意用一個框架列舉不到的型別：sink 是公開的 DI 接縫，
-                // 窄化的 catch 清單守不住它。
+                // Deliberately a type the framework does not list: the sink is a public DI seam,
+                // so a narrowed catch list cannot guard it.
                 throw new NotImplementedException("sink is broken");
             }
         }
@@ -64,7 +64,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("佇列滿載時 Write 應退化為同步寫入，不丟失項目")]
+        [DisplayName("Write falls back to a synchronous write when the queue is full and does not drop the entry")]
         public void Write_QueueFull_FallsBackToSynchronous()
         {
             var sink = new FakeAuditLogSink();
@@ -85,7 +85,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("背景服務啟動後入列項目應被寫入，停止時清空緩衝")]
+        [DisplayName("The background service writes enqueued entries to the sink after it starts")]
         public async Task BackgroundDrain_WritesEnqueuedEntries()
         {
             var sink = new FakeAuditLogSink();
@@ -117,7 +117,7 @@ namespace Polhem.Hosting.UnitTests
         }
     
         [Fact]
-        [DisplayName("sink 擲例外時背景服務不得 fault（逸出會讓 .NET 預設行為停掉整個 host）")]
+        [DisplayName("The background service does not fault when the sink throws (an escaping exception stops the whole host by .NET default)")]
         public async Task ExecuteAsync_SinkThrows_ServiceKeepsRunning()
         {
             var sink = new ThrowingAuditLogSink();
@@ -127,19 +127,19 @@ namespace Polhem.Hosting.UnitTests
             await service.StartAsync(CancellationToken.None);
             service.Write(new TestAuditEntry());
 
-            // 等到 sink 真的被呼叫過，再確認服務仍然活著。
+            // Wait until the sink has really been called, then confirm the service is still alive.
             var deadline = DateTime.UtcNow.AddSeconds(5);
             while (sink.Attempts == 0 && DateTime.UtcNow < deadline)
             {
                 await Task.Delay(10);
             }
-            Assert.True(sink.Attempts > 0, "sink 從未被呼叫，這個測試沒有驗到東西。");
+            Assert.True(sink.Attempts > 0, "The sink was never called, so this test verified nothing.");
 
-            // ExecuteTask 進入 Faulted 就是 BackgroundService 會讓 host 停掉的訊號。
+            // A faulted `ExecuteTask` is the signal on which `BackgroundService` stops the host.
             Assert.NotNull(service.ExecuteTask);
             Assert.NotEqual(TaskStatus.Faulted, service.ExecuteTask!.Status);
 
-            // 後續項目仍會被嘗試寫入：迴圈沒有死。
+            // Later entries are still attempted, so the loop is not dead.
             int before = sink.Attempts;
             service.Write(new TestAuditEntry());
             deadline = DateTime.UtcNow.AddSeconds(5);
@@ -147,17 +147,17 @@ namespace Polhem.Hosting.UnitTests
             {
                 await Task.Delay(10);
             }
-            Assert.True(sink.Attempts > before, "第一次失敗之後迴圈就停了。");
+            Assert.True(sink.Attempts > before, "The loop stopped after the first failure.");
 
             await service.StopAsync(CancellationToken.None);
         }
 
         [Fact]
-        [DisplayName("多執行緒同時寫入檔案 fallback 不得遺失批次")]
+        [DisplayName("Concurrent writers to the file fallback do not lose any batch")]
         public async Task SpillToFile_ConcurrentWriters_LoseNothing()
         {
-            // 這條路徑只在 log 資料庫已經失敗時才會走到 —— 而那正是佇列塞滿、每條請求執行緒
-            // 都湧進來的時刻。並行度的高峰與唯一會到達這段程式碼的時機是同一個。
+            // This path is reached only after the log database has failed, which is exactly when the queue is full
+            // and every request thread piles in. Peak concurrency and the only time this code runs coincide.
             string path = Path.Combine(Path.GetTempPath(), $"polhem_spill_{Guid.NewGuid():N}.log");
             var sink = new AuditLogDbSink(
                 new AlwaysFailingWriteRepository(),
@@ -185,7 +185,7 @@ namespace Polhem.Hosting.UnitTests
             }
         }
 
-        /// <summary>寫入一律失敗，強迫 <c>AuditLogDbSink</c> 走檔案 fallback。</summary>
+        /// <summary>Every write fails, forcing <c>AuditLogDbSink</c> onto the file fallback.</summary>
         private sealed class AlwaysFailingWriteRepository : IAuditLogWriteRepository
         {
             public void WriteBatch(IReadOnlyList<AuditEntry> entries)

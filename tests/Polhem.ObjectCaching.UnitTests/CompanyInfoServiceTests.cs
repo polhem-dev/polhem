@@ -8,8 +8,8 @@ using Polhem.ObjectCaching.Services;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// <see cref="CompanyInfoService"/> 行為測試。每個測試自建獨立的
-    /// <see cref="CacheContainerService"/>（不共用 process-wide cache），可與其他 test class 平行執行。
+    /// Behavior tests of <see cref="CompanyInfoService"/>. Each test builds its own
+    /// <see cref="CacheContainerService"/> and does not share the process-wide cache.
     /// </summary>
     public class CompanyInfoServiceTests
     {
@@ -45,7 +45,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Set/Get/Remove 流程應正確操作 Company 快取")]
+        [DisplayName("Set, Get and Remove operate on the company cache correctly")]
         public void Set_Get_Remove_Flow_Works()
         {
             var service = NewService(out _);
@@ -69,7 +69,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Get 不存在且資料來源也無資料時應回 null")]
+        [DisplayName("Get returns null when the company is not cached and the data source has no data")]
         public void Get_MissingCompanyId_DataSourceEmpty_ReturnsNull()
         {
             var service = NewService(out _);
@@ -77,7 +77,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Get cache miss 時快取應向資料來源讀取，並把結果寫回 cache")]
+        [DisplayName("Get on a cache miss loads from the data source and writes the result back to the cache")]
         public void Get_CacheMiss_LoadsFromDataSource_AndPopulatesCache()
         {
             var dataSource = new StubCacheDataSourceProvider(id => id == "DB_ONLY"
@@ -90,14 +90,13 @@ namespace Polhem.ObjectCaching.UnitTests
             Assert.Equal("from-db", first.CompanyName);
             Assert.Equal(1, dataSource.GetCompanyInfoCallCount);
 
-            // 第二次應命中 cache，不再打資料來源
             var second = service.Get("DB_ONLY");
             Assert.NotNull(second);
             Assert.Equal(1, dataSource.GetCompanyInfoCallCount);
         }
 
         [Fact]
-        [DisplayName("未提供資料來源時 Get 應回 null（維持既有行為）")]
+        [DisplayName("Get returns null when no data source is provided (existing behavior)")]
         public void Get_NoDataSource_ReturnsNull()
         {
             var paths = new PathOptions { DefinePath = Path.GetTempPath() };
@@ -110,7 +109,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Ctor 傳入 null cache 應拋例外")]
+        [DisplayName("Constructor throws ArgumentNullException for a null cache")]
         public void Ctor_NullCache_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new CompanyInfoService(null!));

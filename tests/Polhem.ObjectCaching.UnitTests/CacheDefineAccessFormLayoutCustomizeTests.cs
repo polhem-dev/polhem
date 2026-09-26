@@ -9,8 +9,9 @@ using Polhem.Definition.Storage;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// <see cref="CacheDefineAccess.GetFormLayout(string, string)"/> 整檔擇一疊加測試：
-    /// cust 檔存在→回 cust；否則回 base；customizeId 空 / 無 reader→短路純 base（reader 零呼叫）。
+    /// Tests of the whole-file override in <see cref="CacheDefineAccess.GetFormLayout(string, string)"/>:
+    /// a customized file wins when it exists, otherwise the base file is returned; an empty customizeId or no
+    /// reader short-circuits to the base file (the reader is never called).
     /// </summary>
     public sealed class CacheDefineAccessFormLayoutCustomizeTests : IDisposable
     {
@@ -40,7 +41,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("cust 檔存在時應回傳 cust layout（整檔擇一）")]
+        [DisplayName("GetFormLayout returns the customized layout when the customized file exists (whole-file override)")]
         public void GetFormLayout_CustExists_ReturnsCust()
         {
             var custLayout = new FormLayout { LayoutId = LayoutId };
@@ -53,7 +54,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("cust 檔不存在時應回傳 base layout")]
+        [DisplayName("GetFormLayout returns the base layout when the customized file does not exist")]
         public void GetFormLayout_CustMissing_ReturnsBase()
         {
             var reader = new SpyCustomizeReader { FormLayout = null };
@@ -66,7 +67,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("customizeId 空時短路純 base，reader 零呼叫")]
+        [DisplayName("GetFormLayout with an empty customizeId short-circuits to the base layout without calling the reader")]
         public void GetFormLayout_EmptyCustomizeId_ShortCircuits_ReaderNotCalled()
         {
             var reader = new SpyCustomizeReader { FormLayout = new FormLayout { LayoutId = LayoutId } };
@@ -79,7 +80,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("無 reader 注入時即使帶 customizeId 也走純 base（向後相容）")]
+        [DisplayName("GetFormLayout without an injected reader returns the base layout even with a customizeId (backward compatible)")]
         public void GetFormLayout_NoReader_BehavesAsBase()
         {
             var access = CreateAccess(reader: null);

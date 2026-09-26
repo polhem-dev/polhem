@@ -9,7 +9,8 @@ using Microsoft.Extensions.Logging;
 namespace Polhem.Hosting.UnitTests
 {
     /// <summary>
-    /// <see cref="CacheNotifyPoller"/> 建構子防衛式斷言與 <c>SafePoll</c> 例外吞除邏輯的單元測試。
+    /// Unit tests of the <see cref="CacheNotifyPoller"/> constructor guards and the exception swallowing in
+    /// <c>SafePoll</c>.
     /// </summary>
     public class CacheNotifyPollerUnitTests
     {
@@ -50,7 +51,7 @@ namespace Polhem.Hosting.UnitTests
         private static readonly ILogger<CacheNotifyPoller> s_logger = new StubLogger();
 
         [Fact]
-        [DisplayName("CacheNotifyPoller 建構子所有參數有效時應成功建立實例，不拋例外")]
+        [DisplayName("CacheNotifyPoller constructor creates an instance without throwing when every argument is valid")]
         public void Constructor_ValidArguments_CreatesInstance()
         {
             var exception = Record.Exception(() =>
@@ -59,7 +60,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("CacheNotifyPoller 建構子 reader 為 null 應拋 ArgumentNullException")]
+        [DisplayName("CacheNotifyPoller constructor throws ArgumentNullException for a null reader")]
         public void Constructor_NullReader_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -67,7 +68,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("CacheNotifyPoller 建構子 options 為 null 應拋 ArgumentNullException")]
+        [DisplayName("CacheNotifyPoller constructor throws ArgumentNullException for null options")]
         public void Constructor_NullOptions_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -75,7 +76,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("CacheNotifyPoller 建構子 logger 為 null 應拋 ArgumentNullException")]
+        [DisplayName("CacheNotifyPoller constructor throws ArgumentNullException for a null logger")]
         public void Constructor_NullLogger_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -83,7 +84,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("SafePoll session.Poll() 拋 InvalidOperationException 時應被吞除，不向外傳播")]
+        [DisplayName("SafePoll swallows an InvalidOperationException from session.Poll() instead of propagating it")]
         public void SafePoll_SessionThrowsInvalidOperationException_DoesNotPropagate()
         {
             var throwingReader = new ThrowingReader(new InvalidOperationException("simulated db error"));
@@ -99,7 +100,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("SafePoll session.Poll() 拋 DbException 時應被吞除，不向外傳播")]
+        [DisplayName("SafePoll swallows a DbException from session.Poll() instead of propagating it")]
         public void SafePoll_SessionThrowsDbException_DoesNotPropagate()
         {
             var throwingReader = new ThrowingReader(new FakeDbException("simulated db provider exception"));

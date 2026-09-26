@@ -13,8 +13,9 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace Polhem.Hosting.UnitTests
 {
     /// <summary>
-    /// 保留字 progId 的啟動自我註冊：全新 DefinePath、既有 ProgramSettings.xml 缺 System 項目、
-    /// 客製層覆寫 System BO 三條路徑，以及唯讀部署下寫檔失敗不影響本次執行。
+    /// Startup self-registration of the reserved progIds: a fresh DefinePath, an existing ProgramSettings.xml without
+    /// the System entry, a customization that overrides the System BO, and a failed write on a read-only deployment
+    /// that does not affect the current run.
     /// </summary>
     public sealed class ReservedProgIdRegistrationServiceTests : IDisposable
     {
@@ -48,7 +49,7 @@ namespace Polhem.Hosting.UnitTests
             => XmlCodec.DeserializeFromFile<ProgramSettings>(_paths.GetProgramSettingsFilePath())!;
 
         [Fact]
-        [DisplayName("全新 DefinePath 啟動應寫出含全部保留字的 ProgramSettings.xml")]
+        [DisplayName("StartAsync on a fresh DefinePath writes a ProgramSettings.xml containing every reserved progId")]
         public async Task StartAsync_EmptyDefinePath_WritesAllReservedEntries()
         {
             var access = CreateAccess();
@@ -65,7 +66,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("既有 ProgramSettings.xml 缺 System 項目時應逐筆補寫並保留原有項目")]
+        [DisplayName("StartAsync adds the missing reserved entries to an existing ProgramSettings.xml without a System entry and keeps the others")]
         public async Task StartAsync_ExistingRegistryMissingSystem_AddsItAndKeepsOthers()
         {
             // Every host shipping today is in exactly this state: a ProgramSettings.xml with
@@ -83,11 +84,12 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("補寫保留字時應保留既有項目的 Repository 綁定")]
+        [DisplayName("Adding the reserved progIds keeps the Repository binding of existing entries")]
         public async Task StartAsync_ExistingRegistryWithRepository_PreservesIt()
         {
-            // 補寫會整份重寫檔案，任何沒被複製到的屬性就此消失——而且只發生在「剛好缺保留字」
-            // 的 host 上，罕見且難歸因。ProgramItem 每加一個屬性都要有這樣一條測試守著。
+            // Adding entries rewrites the whole file, so any property that is not copied over is lost, and only on a
+            // host that happens to lack a reserved progId, which is rare and hard to trace. Every property added to
+            // `ProgramItem` needs a test like this one guarding it.
             var existing = new ProgramSettings();
             var order = existing.Items!.Add("Order", "訂單");
             order.BusinessObject = "MyErp.OrderBO, MyErp";
@@ -98,13 +100,14 @@ namespace Polhem.Hosting.UnitTests
 
             var registry = ReadRegistryFromDisk();
             Assert.Equal("MyErp.OrderRepository, MyErp", registry.Items!["Order"].Repository);
-            // 保留字的 Repository 留空：它們的 BO 不是 schema 驅動 CRUD，走框架 repository 取數。
+            // The reserved progIds leave Repository empty: their BOs are not schema-driven CRUD and read
+            // through the framework repositories.
             Assert.Equal(string.Empty, registry.Items![SysProgIds.System].Repository);
             Assert.Equal(string.Empty, registry.Items![SysProgIds.AuditLog].Repository);
         }
 
         [Fact]
-        [DisplayName("已宣告的保留字不應被覆寫——客製的 System BO 要留著")]
+        [DisplayName("A reserved progId that is already declared is not overwritten, so a customized System BO is kept")]
         public async Task StartAsync_ReservedProgIdAlreadyDeclared_IsNotOverwritten()
         {
             var custom = $"{typeof(CustomSystemBo).FullName}, {typeof(CustomSystemBo).Assembly.GetName().Name}";
@@ -121,7 +124,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("補寫後應使 cache 失效，同一 IDefineAccess 立刻讀得到新項目")]
+        [DisplayName("Adding entries invalidates the cache, so the same IDefineAccess sees the new entries immediately")]
         public async Task StartAsync_InvalidatesCache_SoResolutionSeesNewEntries()
         {
             var access = CreateAccess();
@@ -136,7 +139,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("寫檔失敗（唯讀部署）只記警告，解析仍走框架預設，不阻止啟動")]
+        [DisplayName("A failed write (read-only deployment) does not block startup and resolution falls back to the framework default")]
         public async Task StartAsync_PersistFails_StillStartsAndResolves()
         {
             var access = new ReadOnlyDefineAccess(CreateAccess());
@@ -150,7 +153,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("保留字解析到不符預期基底時應拒絕啟動")]
+        [DisplayName("Startup is refused when a reserved progId resolves to a type without the expected base class")]
         public async Task StartAsync_ReservedProgIdResolvesToWrongBase_Throws()
         {
             var access = CreateAccess();
@@ -164,7 +167,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("重複啟動應為冪等，不重複新增項目")]
+        [DisplayName("Running StartAsync twice is idempotent and adds no duplicate entries")]
         public async Task StartAsync_RunTwice_IsIdempotent()
         {
             await CreateService(CreateAccess()).StartAsync(CancellationToken.None);

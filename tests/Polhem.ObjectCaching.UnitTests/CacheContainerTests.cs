@@ -6,8 +6,8 @@ using Polhem.Tests.Shared;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// <see cref="ICacheContainer"/> 行為測試 —— 透過 fixture 的 DI 容器解析 cache instance，
-    /// 不依賴 process-wide 靜態 facade，可與其他 test class 平行執行。
+    /// Behavior tests of <see cref="ICacheContainer"/>. The cache instance is resolved from the fixture's DI
+    /// container and does not depend on a process-wide static facade.
     /// </summary>
     public class CacheContainerTests : IClassFixture<SharedDbFixture>
     {
@@ -18,7 +18,7 @@ namespace Polhem.ObjectCaching.UnitTests
         private ICacheContainer Cache => _fx.GetRequiredService<ICacheContainer>();
 
         [Fact]
-        [DisplayName("TableSchema.Get(categoryId, tableName) 應回傳對應 schema")]
+        [DisplayName("TableSchema.Get(categoryId, tableName) returns the matching schema")]
         public void TableSchema_GetWithCategoryId_ReturnsSchema()
         {
             var schema = Cache.TableSchema.Get("common", "st_user");
@@ -28,10 +28,10 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("TableSchema.Get 以 DbCategoryIds.Common 作為系統資料庫應回傳 schema")]
+        [DisplayName("TableSchema.Get with DbCategoryIds.Common as the system database returns the schema")]
         public void TableSchema_GetWithCommonDatabase_ReturnsSchema()
         {
-            // framework 慣例：CategoryId="common" 的 DatabaseItem 其 Id 也為 "common"
+            // By framework convention, the `DatabaseItem` whose CategoryId is "common" also has the Id "common".
             var schema = Cache.TableSchema.Get(DbCategoryIds.Common, "st_user");
 
             Assert.NotNull(schema);
@@ -39,7 +39,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("FormSchema.Get 應回傳對應 progId 的 schema")]
+        [DisplayName("FormSchema.Get returns the schema of the given progId")]
         public void FormSchema_ExistingProgId_ReturnsSchema()
         {
             var schema = Cache.FormSchema.Get("Department");
@@ -49,7 +49,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("DbCategorySettings.Get 應回傳定義過的 category 設定")]
+        [DisplayName("DbCategorySettings.Get returns the defined category settings")]
         public void DbCategorySettings_Get_ReturnsSettings()
         {
             var settings = Cache.DbCategorySettings.Get();
@@ -57,7 +57,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SessionInfo Set 後 Get 應回傳同一物件,Remove 後應為 null")]
+        [DisplayName("SessionInfo.Get returns the same object after Set and null after Remove")]
         public void SessionInfo_SetGetRemove_BehavesCorrectly()
         {
             var token = Guid.NewGuid();
@@ -78,20 +78,21 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("ProgramSettings.Get 於 tests/Define 無 ProgramSettings.xml 應拋 FileNotFoundException")]
+        [DisplayName("ProgramSettings.Get throws FileNotFoundException when tests/Define has no ProgramSettings.xml")]
         public void ProgramSettings_NoSettingsFile_ThrowsFileNotFound()
         {
-            // tests/Define 下未放 ProgramSettings.xml,ProgramSettingsCache.CreateInstance 會拋
-            // FileNotFoundException; 目的是讓 ProgramSettingsCache.Get 的 file-load 路徑被覆蓋。
+            // There is no ProgramSettings.xml under tests/Define, so `ProgramSettingsCache.CreateInstance` throws
+            // `FileNotFoundException`. The point is to cover the file-load path of `ProgramSettingsCache.Get`.
             Assert.Throws<FileNotFoundException>(() => Cache.ProgramSettings.Get());
         }
 
         [Fact]
-        [DisplayName("FormLayout.Get 於未定義 layoutId 應回 null（缺檔為正常情境）")]
+        [DisplayName("FormLayout.Get returns null for an undefined layoutId (a missing file is a normal case)")]
         public void FormLayout_UnknownLayoutId_ReturnsNull()
         {
-            // 缺 layout 檔不是錯誤：執行階段路徑改以 FormSchema 生成，所以 storage 回 null、
-            // 快取以負向快取記住這個 miss。目的是覆蓋 FormLayoutCache.Get 的 file-load 路徑。
+            // A missing layout file is not an error: at run time the layout is generated from the FormSchema instead,
+            // so the storage returns null and the cache remembers the miss as a negative entry. The point is to cover
+            // the file-load path of `FormLayoutCache.Get`.
             Assert.Null(Cache.FormLayout.Get("__non_existent_layout_" + Guid.NewGuid().ToString("N")));
         }
     }

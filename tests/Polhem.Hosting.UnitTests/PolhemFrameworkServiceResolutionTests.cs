@@ -22,17 +22,17 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace Polhem.Hosting.UnitTests
 {
     /// <summary>
-    /// 驗證 AddPolhemFramework 所有 DI 服務的 singleton factory lambda 均可正常解析，
-    /// 覆蓋 PolhemFrameworkServiceCollectionExtensions 中 singleton 工廠委派的未覆蓋行。
+    /// Checks that the singleton factory lambdas registered by AddPolhemFramework resolve, covering the singleton
+    /// factory delegates in PolhemFrameworkServiceCollectionExtensions that were not covered before.
     /// </summary>
     public class PolhemFrameworkServiceResolutionTests
     {
         [Fact]
-        [DisplayName("AddPolhemFramework 應預設註冊 ILoginAttemptTracker")]
+        [DisplayName("AddPolhemFramework registers an ILoginAttemptTracker by default")]
         public void AddPolhemFramework_RegistersLoginAttemptTrackerByDefault()
         {
-            // Login 是唯一可匿名觸達的憑證驗證面；先前此服務無預設實作，
-            // 導致開箱即用的部署完全沒有帳號鎖定。
+            // Login is the credential check that anonymous callers can reach. This service used to have no default
+            // implementation, so an out-of-the-box deployment had no account lockout at all.
             using var sp = BuildProvider(out string tempDir);
             try
             {
@@ -48,10 +48,10 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("host 自訂的 ILoginAttemptTracker 應覆蓋框架預設")]
+        [DisplayName("An ILoginAttemptTracker registered by the host overrides the framework default")]
         public void AddPolhemFramework_HostRegisteredTracker_Wins()
         {
-            // 註冊採 TryAdd，故 host 於 AddPolhemFramework 之前註冊自己的實作時應勝出。
+            // Registration uses `TryAdd`, so a host implementation registered before `AddPolhemFramework` wins.
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-tracker-{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
             try
@@ -95,12 +95,13 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("啟用稽核記錄時 IAuditLogWriteRepository 應可解析")]
+        [DisplayName("IAuditLogWriteRepository resolves when audit logging is enabled")]
         public void AddPolhemFramework_AuditLogEnabled_ResolvesWriteRepository()
         {
-            // 這條註冊只在 AuditLogOptions.Enabled 時存在，預設關閉，因此其他測試碰不到它。
-            // Repository 統一為 (IRepositoryContext, Guid, string) 之後，容器無法自行建構
-            // 具體型別（三個參數都拿不到），只有經工廠才建得起來。
+            // This registration exists only when `AuditLogOptions.Enabled` is set, which is off by default, so other
+            // tests never reach it. Since repositories were unified on (`IRepositoryContext`, `Guid`, `string`), the
+            // container cannot construct the concrete type by itself (it can supply none of the three parameters);
+            // only the factory can.
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-audit-{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
             try
@@ -110,7 +111,8 @@ namespace Polhem.Hosting.UnitTests
                 configuration.AuditLogOptions.UseBackgroundWriter = false;
 
                 var services = new ServiceCollection();
-                // 稽核鏈上的 sink 需要 ILogger；正式 host 一定有，裸 ServiceCollection 沒有。
+                // The sink in the audit chain needs an `ILogger`. A real host always has one; a bare
+                // `ServiceCollection` does not.
                 services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
                 services.AddPolhemFramework(
                     configuration,
@@ -131,12 +133,12 @@ namespace Polhem.Hosting.UnitTests
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        [DisplayName("異常記錄的開關只影響 IAnomalyLogWriter，稽核那一側不受牽動")]
+        [DisplayName("The anomaly logging switch affects only IAnomalyLogWriter and leaves the audit side unchanged")]
         public void AddPolhemFramework_AnomalyEnabled_GatesOnlyTheAnomalyWriter(bool anomalyEnabled)
         {
-            // 兩個介面各自解析：稽核開著時 IAuditLogWriter 一律是真的寫入器，而異常那一側
-            // 由 AnomalyEnabled 單獨決定。這一對正是拆成兩個介面換到的東西 —— 拆之前
-            // 「稽核開著但不記異常」這個組態在型別上看不出來。
+            // The two interfaces resolve separately: with auditing on, `IAuditLogWriter` is always the real writer,
+            // while the anomaly side is decided by `AnomalyEnabled` alone. This pair is exactly what splitting into two
+            // interfaces bought; before the split, "auditing on but no anomaly logging" could not be seen in the types.
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-anomaly-{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
             try
@@ -161,7 +163,8 @@ namespace Polhem.Hosting.UnitTests
                 Assert.IsNotType<NullAuditLogWriter>(auditWriter);
                 if (anomalyEnabled)
                 {
-                    // 同一個實例服務兩個介面 —— 佇列與退路行為對兩種記錄完全相同。
+                    // One instance serves both interfaces, so queueing and fallback behave the same for both
+                    // kinds of log.
                     Assert.Same(auditWriter, anomalyWriter);
                 }
                 else
@@ -176,7 +179,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddPolhemFramework 預設組態應能解析完整 DI 服務鏈（IDbConnectionManager 至 JsonRpcExecutor）")]
+        [DisplayName("AddPolhemFramework with the default configuration resolves the full DI service chain (IDbConnectionManager to JsonRpcExecutor)")]
         public void AddPolhemFramework_DefaultConfig_ResolvesFullServiceChain()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-fullchain-{Guid.NewGuid():N}");
@@ -205,7 +208,7 @@ namespace Polhem.Hosting.UnitTests
                 Assert.NotNull(sp.GetRequiredService<IDepartmentTreeService>());
                 Assert.NotNull(sp.GetRequiredService<IBusinessObjectFactory>());
                 Assert.NotNull(sp.GetRequiredService<IRepositoryDatabaseRouter>());
-                // Repository 的唯一入口，兩軸皆由它解析。
+                // The single entry point to repositories; both axes resolve through it.
                 Assert.NotNull(sp.GetRequiredService<IRepositoryFactory>());
                 // Individual repositories are not DI-registered by design — consumers go
                 // through the factory, so resolving one from it is what this asserts.
@@ -220,17 +223,18 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("容器建出的 RepositoryFactory 應經由 resolver 接到客製 overlay 所需的兩個選用相依")]
+        [DisplayName("The container-built RepositoryFactory receives, through its resolver, the two optional dependencies the customization overlay needs")]
         public void AddPolhemFramework_RepositoryFactory_ReceivesCustomizationDependencies()
         {
-            // 這兩個相依是選用參數（預設 null），沒填就是靜默停用租戶客製
-            // ——progId 一律解析基底綁定，而且不會有任何其他症狀。行為上看不出來，只能直接
-            // 檢查欄位；這正是本測試存在的理由。
+            // These two dependencies are optional parameters (default null), and leaving them out silently disables
+            // tenant customization: every progId resolves to its base binding, with no other symptom. The behavior
+            // does not show it, so the only way is to check the fields directly, which is why this test exists.
             //
-            // 它們原本在工廠身上，型別解析抽成 IRepositoryTypeResolver 之後搬到 resolver。
-            // 風險沒有跟著消失：resolver 的建構子一樣是選用參數，Hosting 註冊時少傳一個就重現
-            // 同一個無聲回歸。所以這裡驗兩件事——工廠拿到的就是容器註冊的那個 resolver，
-            // 而那個 resolver 兩個相依都有接上。
+            // They used to live on the factory and moved to the resolver when type resolution was extracted into
+            // `IRepositoryTypeResolver`. The risk did not go away: the resolver's constructor takes them as optional
+            // parameters too, and one missing argument in the Hosting registration brings back the same silent
+            // regression. So this checks two things: the factory gets the resolver the container registered, and
+            // that resolver has both dependencies wired.
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-repocust-{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
             try

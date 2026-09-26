@@ -7,7 +7,7 @@ namespace Polhem.ObjectCaching.UnitTests
     public class CacheInfoTests
     {
         [Fact]
-        [DisplayName("Initialize 設定型別與現有 Provider 相同時應保留現有 Provider 實例（覆蓋型別比對路徑）")]
+        [DisplayName("Initialize keeps the existing Provider instance when the configured type matches it (covers the type comparison)")]
         public void Initialize_SameProviderType_DoesNotReplaceProvider()
         {
             var configuration = new BackendConfiguration();
@@ -17,19 +17,19 @@ namespace Polhem.ObjectCaching.UnitTests
 
             CacheInfo.Initialize(configuration);
 
-            // Provider 應保持同一實例（型別相同 → 提前返回）
+            // The type is the same, so `Initialize` returns early and keeps the instance.
             Assert.Same(originalProvider, CacheInfo.Provider);
         }
 
         [Fact]
-        [DisplayName("Initialize 傳入 null 應拋出 ArgumentNullException")]
+        [DisplayName("Initialize throws ArgumentNullException for null")]
         public void Initialize_NullConfiguration_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => CacheInfo.Initialize(null!));
         }
 
         [Fact]
-        [DisplayName("Initialize CacheProvider 為空字串時應提前返回且不替換 Provider")]
+        [DisplayName("Initialize returns early without replacing the Provider when CacheProvider is an empty string")]
         public void Initialize_EmptyCacheProvider_ReturnsEarlyWithoutChange()
         {
             var config = new BackendConfiguration();
@@ -42,17 +42,17 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Initialize 設定型別與現有 Provider 不同時應建立新 Provider 實例")]
+        [DisplayName("Initialize creates a new Provider instance when the configured type differs from the current one")]
         public void Initialize_DifferentProviderType_ReplacesProvider()
         {
-            // 使用預設 MemoryCacheProvider 設定，但先把靜態 Provider 換成不同型別
+            // Uses the default `MemoryCacheProvider` setting, but first swaps the static provider for a different type.
             var config = new BackendConfiguration();
             var originalProvider = CacheInfo.Provider;
             CacheInfo.Provider = new FakeCacheProvider();
             try
             {
                 CacheInfo.Initialize(config);
-                // 型別不同 → 提前返回條件不成立 → 建立新的 MemoryCacheProvider
+                // The type differs, so there is no early return and a new `MemoryCacheProvider` is created.
                 Assert.IsType<MemoryCacheProvider>(CacheInfo.Provider);
             }
             finally

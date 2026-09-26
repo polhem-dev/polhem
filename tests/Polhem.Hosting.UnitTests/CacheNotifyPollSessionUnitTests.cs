@@ -5,9 +5,9 @@ using Polhem.Hosting.CacheNotify;
 namespace Polhem.Hosting.UnitTests
 {
     /// <summary>
-    /// <see cref="CacheNotifyPollSession"/> 建構子防衛式斷言。
-    /// 五家方言的 SQL 分支已下沉至 <c>Polhem.Db</c> 的 <c>CacheNotifyReader</c>，
-    /// 對應測試見 <c>Polhem.Db.UnitTests.CacheNotifyReaderUnitTests</c>。
+    /// Constructor guards of <see cref="CacheNotifyPollSession"/>.
+    /// The per-dialect SQL branches have moved down to <c>CacheNotifyReader</c> in <c>Polhem.Db</c>;
+    /// their tests are in <c>Polhem.Db.UnitTests.CacheNotifyReaderUnitTests</c>.
     /// </summary>
     public class CacheNotifyPollSessionUnitTests
     {
@@ -22,7 +22,7 @@ namespace Polhem.Hosting.UnitTests
         private static readonly ICacheNotifyReader s_reader = new StubReader();
 
         [Fact]
-        [DisplayName("CacheNotifyPollSession 建構子 databaseId 為 null 應拋 ArgumentNullException")]
+        [DisplayName("CacheNotifyPollSession constructor throws ArgumentNullException for a null databaseId")]
         public void Constructor_NullDatabaseId_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -30,7 +30,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("CacheNotifyPollSession 建構子 databaseId 為空白字串應拋 ArgumentException")]
+        [DisplayName("CacheNotifyPollSession constructor throws ArgumentException for a whitespace databaseId")]
         public void Constructor_WhitespaceDatabaseId_ThrowsArgumentException()
         {
             Assert.Throws<ArgumentException>(() =>
@@ -38,7 +38,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("CacheNotifyPollSession 建構子 reader 為 null 應拋 ArgumentNullException")]
+        [DisplayName("CacheNotifyPollSession constructor throws ArgumentNullException for a null reader")]
         public void Constructor_NullReader_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -46,7 +46,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("CacheNotifyPollSession 建構子 marginSeconds 為負值時應成功建立（正規化為 0）")]
+        [DisplayName("CacheNotifyPollSession constructor accepts a negative marginSeconds (normalized to 0)")]
         public void Constructor_NegativeMarginSeconds_CreatesInstanceWithoutThrowing()
         {
             var exception = Record.Exception(() =>

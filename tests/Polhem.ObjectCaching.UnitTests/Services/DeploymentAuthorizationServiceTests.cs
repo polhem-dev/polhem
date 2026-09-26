@@ -8,8 +8,9 @@ using Polhem.Repository.Abstractions.System;
 namespace Polhem.ObjectCaching.UnitTests.Services
 {
     /// <summary>
-    /// 驗證 <see cref="DeploymentAuthorizationService"/> 的判定：旗標決定一切，
-    /// 且無公司脈絡也成立——這正是它與公司層 <c>CompanyAuthorizationService</c> 的分野。
+    /// Checks the decisions of <see cref="DeploymentAuthorizationService"/>: the flag decides everything, and it holds
+    /// without a company context. That is exactly what separates it from the company-level
+    /// <c>CompanyAuthorizationService</c>.
     /// </summary>
     public class DeploymentAuthorizationServiceTests
     {
@@ -24,7 +25,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
             => new SessionInfo { AccessToken = s_token, UserId = userId, CompanyId = companyId };
 
         [Fact]
-        [DisplayName("旗標為 true 的使用者應被授權")]
+        [DisplayName("A user whose flag is true is authorized")]
         public void Can_DeploymentAdmin_ReturnsTrue()
         {
             var service = Create(NewSession("001"), isAdmin: true);
@@ -33,7 +34,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("旗標為 false 的已登入使用者應被拒")]
+        [DisplayName("A signed-in user whose flag is false is denied")]
         public void Can_AuthenticatedNonAdmin_ReturnsFalse()
         {
             var service = Create(NewSession("001"), isAdmin: false);
@@ -42,7 +43,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("未進入公司不影響判定——部署層權限不繫結公司")]
+        [DisplayName("Not having entered a company does not affect the decision (deployment permissions are not tied to a company)")]
         public void Can_WithoutCompanyContext_StillAuthorizes()
         {
             var service = Create(NewSession("001", companyId: null), isAdmin: true);
@@ -51,7 +52,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("查無 session 應被拒")]
+        [DisplayName("An unknown session is denied")]
         public void Can_UnknownToken_ReturnsFalse()
         {
             var service = Create(session: null, isAdmin: true);
@@ -60,10 +61,11 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("session 無 UserId 應被拒，不查資料庫")]
+        [DisplayName("A session without a UserId is denied without querying the database")]
         public void Can_SessionWithoutUserId_ReturnsFalse()
         {
-            // repositoryThrows 為 true：真的查了就會擲例外，藉此證明這條路徑不查庫。
+            // `repositoryThrows` is true, so a real query would throw.
+            // This proves the path does not query the database.
             var service = Create(NewSession(string.Empty), isAdmin: true, repositoryThrows: true);
 
             Assert.False(service.Can(s_token, DeploymentAction.ManageApiKey));

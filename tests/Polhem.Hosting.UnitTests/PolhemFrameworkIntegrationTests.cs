@@ -11,7 +11,7 @@ namespace Polhem.Hosting.UnitTests
     public class PolhemFrameworkIntegrationTests
     {
         [Fact]
-        [DisplayName("AddPolhemFramework 傳入有效組態且 autoCreateMasterKey=true 應完成服務注冊並回傳 IServiceCollection")]
+        [DisplayName("AddPolhemFramework with a valid configuration and autoCreateMasterKey=true registers the services and returns the IServiceCollection")]
         public void AddPolhemFramework_ValidConfigurationAutoCreateKey_RegistersServices()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-{Guid.NewGuid():N}");
@@ -22,8 +22,8 @@ namespace Polhem.Hosting.UnitTests
                 var configuration = new BackendConfiguration();
                 var pathOptions = new PathOptions { DefinePath = tempDir };
 
-                // autoCreateMasterKey=true → Master.key 自動建立於 tempDir
-                // 同時涵蓋 DecryptSecurityKeys、CacheInfo.Initialize 及所有 AddSingleton 注冊路徑
+                // With `autoCreateMasterKey` set, Master.key is created in tempDir. This also covers
+                // `DecryptSecurityKeys`, `CacheInfo.Initialize` and the `AddSingleton` registration paths.
                 var result = services.AddPolhemFramework(configuration, pathOptions, autoCreateMasterKey: true);
 
                 Assert.Same(services, result);
@@ -36,25 +36,24 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddPolhemFramework 設定 StaticApiEncryptionKeyProvider 解析服務應回傳靜態金鑰提供者")]
+        [DisplayName("AddPolhemFramework configured with StaticApiEncryptionKeyProvider resolves the static key provider")]
         public void AddPolhemFramework_StaticApiEncryptionKeyProvider_ResolvesStaticProvider()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-static-{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
             try
             {
-                // 產生主金鑰並寫入暫存目錄（預設 Master.key 路徑）
                 string masterKeyBase64 = AesCbcHmacKeyGenerator.GenerateBase64CombinedKey();
                 byte[] masterKey = Convert.FromBase64String(masterKeyBase64);
                 File.WriteAllText(Path.Combine(tempDir, "Master.key"), masterKeyBase64);
 
-                // 用主金鑰加密一把 API 金鑰
                 string encryptedApiKey = EncryptionKeyProtector.GenerateEncryptedKey(masterKey);
 
                 var configuration = new BackendConfiguration();
-                // 此測試自己準備 Master.key 檔案,需要明確指定 File 來源覆寫
-                // MasterKeySource 預設值(Environment)——否則框架會讀環境變數 POLHEM_MASTER_KEY,
-                // 與本測試剛產生的 masterKey 對不上而 HMAC 驗證失敗。
+                // This test prepares its own Master.key file, so the File source must be set explicitly to override
+                // the `MasterKeySource` default (Environment). Otherwise the framework reads the `POLHEM_MASTER_KEY`
+                // environment variable, which does not match the master key generated here,
+                // and HMAC verification fails.
                 configuration.SecurityKeySettings.MasterKeySource = new MasterKeySource
                 {
                     Type = MasterKeySourceType.File,
@@ -68,7 +67,8 @@ namespace Polhem.Hosting.UnitTests
                 var pathOptions = new PathOptions { DefinePath = tempDir };
                 services.AddPolhemFramework(configuration, pathOptions);
 
-                // 解析 IApiEncryptionKeyProvider 觸發 CreateApiEncryptionKeyProvider 私有方法的 static 分支
+                // Resolving `IApiEncryptionKeyProvider` exercises the static branch of the private
+                // `CreateApiEncryptionKeyProvider`.
                 using var sp = services.BuildServiceProvider();
                 var provider = sp.GetRequiredService<IApiEncryptionKeyProvider>();
 

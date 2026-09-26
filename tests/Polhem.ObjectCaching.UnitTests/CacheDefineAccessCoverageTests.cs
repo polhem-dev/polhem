@@ -6,9 +6,9 @@ using Polhem.Definition.Storage;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// <see cref="CacheDefineAccess"/> 補漏覆蓋：建構子 null 守衛、CurrencySettings /
-    /// UnitSettings 的 Get / Save / GetDefine / SaveDefine dispatch 路徑。
-    /// 各測試以獨立 TempDir + 唯一 cache prefix 隔離，可平行執行。
+    /// Gap coverage of <see cref="CacheDefineAccess"/>: the constructor null guards and the Get, Save, GetDefine
+    /// and SaveDefine dispatch paths of CurrencySettings and UnitSettings.
+    /// Each test is isolated by its own TempDir and a unique cache prefix.
     /// </summary>
     public sealed class CacheDefineAccessCoverageTests
     {
@@ -37,10 +37,10 @@ namespace Polhem.ObjectCaching.UnitTests
             return new CacheDefineAccess(storage, paths, cache, Array.Empty<byte>());
         }
 
-        // ── 建構子 null 守衛 ──────────────────────────────────────────────────
+        // ── Constructor null guards ───────────────────────────────────────────
 
         [Fact]
-        [DisplayName("建構子 storage 為 null 應拋 ArgumentNullException")]
+        [DisplayName("Constructor throws ArgumentNullException for a null storage")]
         public void Ctor_NullStorage_ThrowsArgumentNullException()
         {
             using var temp = new TempDir();
@@ -52,7 +52,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("建構子 paths 為 null 應拋 ArgumentNullException")]
+        [DisplayName("Constructor throws ArgumentNullException for null paths")]
         public void Ctor_NullPaths_ThrowsArgumentNullException()
         {
             using var temp = new TempDir();
@@ -64,7 +64,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("建構子 cache 為 null 應拋 ArgumentNullException")]
+        [DisplayName("Constructor throws ArgumentNullException for a null cache")]
         public void Ctor_NullCache_ThrowsArgumentNullException()
         {
             using var temp = new TempDir();
@@ -75,7 +75,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("建構子 configEncryptionKey 為 null 應以空陣列容錯不拋例外")]
+        [DisplayName("Constructor tolerates a null configEncryptionKey by using an empty array and does not throw")]
         public void Ctor_NullConfigEncryptionKey_DoesNotThrow()
         {
             using var temp = new TempDir();
@@ -91,7 +91,7 @@ namespace Polhem.ObjectCaching.UnitTests
         // ── CurrencySettings ──────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("SaveCurrencySettings 應透過 DefineStorage 寫入 CurrencySettings.xml")]
+        [DisplayName("SaveCurrencySettings writes CurrencySettings.xml through the DefineStorage")]
         public void SaveCurrencySettings_WritesFile()
         {
             using var temp = new TempDir();
@@ -103,7 +103,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCurrencySettings 先存後取應回傳 CurrencySettings 實例")]
+        [DisplayName("GetCurrencySettings after a save returns a CurrencySettings instance")]
         public void GetCurrencySettings_AfterSave_ReturnsInstance()
         {
             using var temp = new TempDir();
@@ -116,7 +116,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(CurrencySettings) 應委派至 GetCurrencySettings 並回傳 CurrencySettings")]
+        [DisplayName("GetDefine(CurrencySettings) delegates to GetCurrencySettings and returns CurrencySettings")]
         public void GetDefine_CurrencySettings_ReturnsCurrencySettings()
         {
             using var temp = new TempDir();
@@ -129,7 +129,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefine(CurrencySettings) 應委派至 SaveCurrencySettings 並寫入檔案")]
+        [DisplayName("SaveDefine(CurrencySettings) delegates to SaveCurrencySettings and writes the file")]
         public void SaveDefine_CurrencySettings_DelegatesToSaveCurrencySettings()
         {
             using var temp = new TempDir();
@@ -143,7 +143,7 @@ namespace Polhem.ObjectCaching.UnitTests
         // ── UnitSettings ──────────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("SaveUnitSettings 應透過 DefineStorage 寫入 UnitSettings.xml")]
+        [DisplayName("SaveUnitSettings writes UnitSettings.xml through the DefineStorage")]
         public void SaveUnitSettings_WritesFile()
         {
             using var temp = new TempDir();
@@ -155,7 +155,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetUnitSettings 先存後取應回傳 UnitSettings 實例")]
+        [DisplayName("GetUnitSettings after a save returns a UnitSettings instance")]
         public void GetUnitSettings_AfterSave_ReturnsInstance()
         {
             using var temp = new TempDir();
@@ -168,7 +168,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(UnitSettings) 應委派至 GetUnitSettings 並回傳 UnitSettings")]
+        [DisplayName("GetDefine(UnitSettings) delegates to GetUnitSettings and returns UnitSettings")]
         public void GetDefine_UnitSettings_ReturnsUnitSettings()
         {
             using var temp = new TempDir();
@@ -181,7 +181,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefine(UnitSettings) 應委派至 SaveUnitSettings 並寫入檔案")]
+        [DisplayName("SaveDefine(UnitSettings) delegates to SaveUnitSettings and writes the file")]
         public void SaveDefine_UnitSettings_DelegatesToSaveUnitSettings()
         {
             using var temp = new TempDir();

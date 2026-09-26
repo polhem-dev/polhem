@@ -61,11 +61,11 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：跨節點 DbDefineStorage 存定義 → poller evict → 重載新版")]
+        [DisplayName("SQL Server: a definition saved through another node's DbDefineStorage is evicted by the poller and the new version is reloaded")]
         public void CrossNode_SqlServer() => RunCrossNodeInvalidation(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：跨節點 DbDefineStorage 存定義 → poller evict → 重載新版")]
+        [DisplayName("PostgreSQL: a definition saved through another node's DbDefineStorage is evicted by the poller and the new version is reloaded")]
         public void CrossNode_PostgreSQL() => RunCrossNodeInvalidation(DatabaseType.PostgreSQL);
     }
 }

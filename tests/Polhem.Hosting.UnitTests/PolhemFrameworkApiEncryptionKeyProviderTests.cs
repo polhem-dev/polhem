@@ -8,9 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Polhem.Hosting.UnitTests
 {
     /// <summary>
-    /// 驗證 <c>AddPolhemFramework</c> 解析 <see cref="IApiEncryptionKeyProvider"/> 的分支選擇。
-    /// 預設為 <see cref="DerivedApiEncryptionKeyProvider"/>（session 重建所需），
-    /// 未設定 <c>ApiEncryptionKey</c> 時退回以 master key 導出根金鑰。
+    /// Checks which <see cref="IApiEncryptionKeyProvider"/> branch <c>AddPolhemFramework</c> resolves.
+    /// The default is <see cref="DerivedApiEncryptionKeyProvider"/> (session rebuild needs it); when
+    /// <c>ApiEncryptionKey</c> is not set, the root key is derived from the master key instead.
     /// </summary>
     public class PolhemFrameworkApiEncryptionKeyProviderTests
     {
@@ -37,7 +37,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddPolhemFramework 預設組態解析 IApiEncryptionKeyProvider 應回傳 DerivedApiEncryptionKeyProvider")]
+        [DisplayName("AddPolhemFramework with the default configuration resolves IApiEncryptionKeyProvider to DerivedApiEncryptionKeyProvider")]
         public void AddPolhemFramework_DefaultConfig_ResolvesDerivedApiEncryptionKeyProvider()
         {
             WithFramework("derived", sp =>
@@ -45,7 +45,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("未設定 ApiEncryptionKey 時仍可導出可用金鑰（以 master key 為根）")]
+        [DisplayName("A usable key can still be derived when ApiEncryptionKey is not set (rooted in the master key)")]
         public void AddPolhemFramework_NoApiEncryptionKey_DerivesUsableKey()
         {
             WithFramework("derived-fallback", sp =>
@@ -61,7 +61,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("明確指定 Dynamic 應解析 DynamicApiEncryptionKeyProvider")]
+        [DisplayName("Configuring Dynamic explicitly resolves DynamicApiEncryptionKeyProvider")]
         public void AddPolhemFramework_ConfiguredDynamic_ResolvesDynamicApiEncryptionKeyProvider()
         {
             WithFramework("dynamic",
@@ -71,7 +71,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddPolhemFramework 預設組態完整解析服務鏈應不拋例外")]
+        [DisplayName("AddPolhemFramework with the default configuration resolves the whole service chain without throwing")]
         public void AddPolhemFramework_DefaultConfig_ResolvesServiceChainWithoutException()
         {
             WithFramework("chain", sp =>

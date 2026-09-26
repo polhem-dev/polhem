@@ -5,13 +5,13 @@ using Polhem.ObjectCaching.Define;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// <see cref="DatabaseSettingsCache"/> 純邏輯測試 —— 構造 cache instance 時直接傳入指向
-    /// 空目錄的 <see cref="PathOptions"/>，不操弄 process-wide static，可與其他 test class 平行執行。
+    /// Pure logic tests of <see cref="DatabaseSettingsCache"/>. The cache instance is constructed with a
+    /// <see cref="PathOptions"/> pointing to an empty directory, so no process-wide static state is touched.
     /// </summary>
     public class DatabaseSettingsCacheTests
     {
         [Fact]
-        [DisplayName("CreateInstance 在 DatabaseSettings.xml 不存在時應拋出 FileNotFoundException")]
+        [DisplayName("CreateInstance throws FileNotFoundException when DatabaseSettings.xml does not exist")]
         public void CreateInstance_FileMissing_ThrowsFileNotFoundException()
         {
             var tempDir = Path.Combine(Path.GetTempPath(), $"polhem-dbcache-{Guid.NewGuid():N}");
@@ -19,7 +19,7 @@ namespace Polhem.ObjectCaching.UnitTests
             try
             {
                 var paths = new PathOptions { DefinePath = tempDir };
-                // Per-test cache prefix 確保 instance 不會與其他 fixture 的 cache 互相干擾。
+                // A per-test cache prefix keeps this instance from interfering with the caches of other fixtures.
                 var cache = new DatabaseSettingsCache(paths, cachePrefix: $"dbc_{Guid.NewGuid():N}");
 
                 Assert.Throws<FileNotFoundException>(() => cache.Get());

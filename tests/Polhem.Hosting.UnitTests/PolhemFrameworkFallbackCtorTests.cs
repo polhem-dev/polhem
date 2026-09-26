@@ -86,7 +86,7 @@ namespace Polhem.Hosting.UnitTests
     public class PolhemFrameworkFallbackCtorTests
     {
         [Fact]
-        [DisplayName("CreateConfigurableService 遇建構子相依未註冊時，例外訊息應指出缺少的服務型別")]
+        [DisplayName("CreateConfigurableService names the missing service type in the exception when a constructor dependency is not registered")]
         public void CreateConfigurableService_UnregisteredCtorDependency_ExceptionNamesMissingService()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-unresolved-{Guid.NewGuid():N}");
@@ -107,7 +107,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateConfigurableService 應支援僅有無參數建構子的實作")]
+        [DisplayName("CreateConfigurableService supports an implementation that has only a parameterless constructor")]
         public void CreateConfigurableService_ParameterlessCtor_CreatesCorrectType()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-pless-svc-{Guid.NewGuid():N}");
@@ -139,7 +139,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResolveDefineAccess 應支援僅有 (IDefineStorage, PathOptions) 建構子的 IDefineAccess 實作")]
+        [DisplayName("ResolveDefineAccess supports an IDefineAccess implementation that has only an (IDefineStorage, PathOptions) constructor")]
         public void ResolveDefineAccess_TwoArgCtor_CreatesCorrectType()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-2arg-{Guid.NewGuid():N}");
@@ -168,7 +168,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateDefineStorage 應支援僅有無參數建構子的 IDefineStorage 實作")]
+        [DisplayName("CreateDefineStorage supports an IDefineStorage implementation that has only a parameterless constructor")]
         public void CreateDefineStorage_ParameterlessCtorFallback_CreatesCorrectType()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-pless-{Guid.NewGuid():N}");

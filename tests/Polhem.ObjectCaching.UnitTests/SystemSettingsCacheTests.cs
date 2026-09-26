@@ -6,8 +6,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// <see cref="SystemSettingsCache"/> 純邏輯測試 —— 構造 cache instance 時直接傳入指向
-    /// 空目錄或共享 fixture path 的 <see cref="PathOptions"/>，不操弄 process-wide static。
+    /// Pure logic tests of <see cref="SystemSettingsCache"/>. The cache instance is constructed with a
+    /// <see cref="PathOptions"/> pointing to an empty directory or the shared fixture path, so no process-wide
+    /// static state is touched.
     /// </summary>
     public class SystemSettingsCacheTests : IClassFixture<PolhemTestFixture>
     {
@@ -16,7 +17,7 @@ namespace Polhem.ObjectCaching.UnitTests
         public SystemSettingsCacheTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("CreateInstance 在 SystemSettings.xml 不存在時應拋出 FileNotFoundException")]
+        [DisplayName("CreateInstance throws FileNotFoundException when SystemSettings.xml does not exist")]
         public void CreateInstance_FileMissing_ThrowsFileNotFoundException()
         {
             var tempDir = Path.Combine(Path.GetTempPath(), $"polhem-syscache-{Guid.NewGuid():N}");
@@ -35,11 +36,11 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Get 在 SystemSettings.xml 存在時應回傳非空物件並觸發 GetPolicy")]
+        [DisplayName("Get returns a non-null object and runs GetPolicy when SystemSettings.xml exists")]
         public void Get_FileExists_ReturnsSettings()
         {
-            // fixture 預設指向 tests/Define/，該目錄下存有 SystemSettings.xml；
-            // 確保 GetPolicy（含 ChangeMonitorFilePaths 設定）被覆蓋。
+            // The fixture points to tests/Define/ by default, which contains SystemSettings.xml.
+            // This makes sure `GetPolicy`, including its `ChangeMonitorFilePaths` setting, is covered.
             var cache = new SystemSettingsCache(_fx.PathOptions, cachePrefix: $"sc_{Guid.NewGuid():N}");
 
             var result = cache.Get();

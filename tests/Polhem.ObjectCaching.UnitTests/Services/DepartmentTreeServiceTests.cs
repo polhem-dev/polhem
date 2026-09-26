@@ -9,8 +9,8 @@ using Polhem.ObjectCaching.Services;
 namespace Polhem.ObjectCaching.UnitTests.Services
 {
     /// <summary>
-    /// <see cref="DepartmentTreeService"/> 的單元測試。每個測試使用獨立的
-    /// <see cref="CacheContainerService"/>（唯一 prefix），可與其他 test class 平行執行。
+    /// Unit tests of <see cref="DepartmentTreeService"/>. Each test uses its own
+    /// <see cref="CacheContainerService"/> with a unique prefix.
     /// </summary>
     public class DepartmentTreeServiceTests
     {
@@ -44,14 +44,14 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("建構子 cache 為 null 應拋 ArgumentNullException")]
+        [DisplayName("Constructor throws ArgumentNullException for a null cache")]
         public void Constructor_NullCache_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new DepartmentTreeService(null!));
         }
 
         [Fact]
-        [DisplayName("Get 快取命中時應直接回傳快取的 DepartmentTree，不觸發資料來源")]
+        [DisplayName("Get on a cache hit returns the cached DepartmentTree without calling the data source")]
         public void Get_CacheHit_ReturnsCachedTree()
         {
             var dataSource = new StubCacheDataSourceProvider(
@@ -70,7 +70,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Get 快取未命中且公司不存在時應回傳 null")]
+        [DisplayName("Get on a cache miss returns null when the company does not exist")]
         public void Get_CacheMiss_CompanyNotFound_ReturnsNull()
         {
             var dataSource = new StubCacheDataSourceProvider(_ => null);
@@ -83,7 +83,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Get 快取未命中且公司存在時應由資料來源載入並快取，第二次呼叫命中快取")]
+        [DisplayName("Get on a cache miss loads the tree from the data source and caches it, so the second call hits the cache")]
         public void Get_CacheMiss_CompanyFound_LoadsAndCachesTree()
         {
             var companyId = "C002";
@@ -107,7 +107,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("未提供資料來源時 Get 應回 null（維持既有行為）")]
+        [DisplayName("Get returns null when no data source is provided (existing behavior)")]
         public void Get_NoDataSource_ReturnsNull()
         {
             var cache = NewCache();
@@ -117,7 +117,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         }
 
         [Fact]
-        [DisplayName("Remove 應從快取中移除指定公司的 DepartmentTree")]
+        [DisplayName("Remove evicts the company's DepartmentTree from the cache")]
         public void Remove_EvictsFromCache()
         {
             var dataSource = new StubCacheDataSourceProvider(_ => null);

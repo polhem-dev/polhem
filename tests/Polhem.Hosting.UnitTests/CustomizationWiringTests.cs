@@ -13,9 +13,10 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Polhem.Hosting.UnitTests
 {
     /// <summary>
-    /// 驗證 AddPolhemFramework 對租戶客製化覆蓋層的接線（階段 4）：
-    /// provider / reader 可解析；三個消費端注入 reader 後仍可解析（無循環依賴）；
-    /// CustomizePath 未設→純 base；CustomizePath 設定→經 DI 的 overlay 端到端生效。
+    /// Checks how AddPolhemFramework wires the tenant customization overlay: the provider and the reader resolve;
+    /// ILanguageService, IBoTypeResolver and IDefineAccess still resolve with the reader injected (no circular
+    /// dependency); an unset CustomizePath means base only; a set CustomizePath makes the overlay work end to end
+    /// through DI.
     /// </summary>
     public sealed class CustomizationWiringTests : IDisposable
     {
@@ -49,7 +50,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("IDefineStorage 自身實作 ICustomizeDefineReader 時應優先採用它，而非檔案版")]
+        [DisplayName("When the IDefineStorage itself implements ICustomizeDefineReader, it is preferred over the file-based reader")]
         public void AddPolhemFramework_StorageImplementsReader_PrefersStorage()
         {
             var services = new ServiceCollection();
@@ -64,13 +65,13 @@ namespace Polhem.Hosting.UnitTests
 
             var reader = sp.GetRequiredService<ICustomizeDefineReader>();
 
-            // 走 storage 自己的實作，而不是繞回 CustomizePath 底下的檔案
+            // The storage's own implementation is used, not the files under CustomizePath.
             Assert.IsType<CustomizeAwareStorage>(reader);
             Assert.Same(sp.GetRequiredService<IDefineStorage>(), reader);
         }
 
         [Fact]
-        [DisplayName("IDefineStorage 未實作 ICustomizeDefineReader 時應退回檔案版 reader")]
+        [DisplayName("When the IDefineStorage does not implement ICustomizeDefineReader, the file-based reader is used")]
         public void AddPolhemFramework_StorageWithoutReader_FallsBackToFileReader()
         {
             using var sp = BuildProvider(_customizeDir);
@@ -79,7 +80,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddPolhemFramework 應註冊並解析 ICacheContainerProvider 與 ICustomizeDefineReader")]
+        [DisplayName("AddPolhemFramework registers and resolves ICacheContainerProvider and ICustomizeDefineReader")]
         public void AddPolhemFramework_ResolvesProviderAndReader()
         {
             using var sp = BuildProvider(_customizeDir);
@@ -89,7 +90,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("注入 reader 後三個消費端仍可解析（證明注入鏈無循環依賴）")]
+        [DisplayName("ILanguageService, IBoTypeResolver and IDefineAccess still resolve with the reader injected (no circular dependency)")]
         public void AddPolhemFramework_ConsumersWithReader_Resolve()
         {
             using var sp = BuildProvider(_customizeDir);
@@ -100,7 +101,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("CustomizePath 未設時 reader 三類皆回 null（退化純 base）")]
+        [DisplayName("With CustomizePath unset the reader returns null for FormLayout, Language and ProgramSettings (base only)")]
         public void AddPolhemFramework_EmptyCustomizePath_ReaderReturnsNull()
         {
             using var sp = BuildProvider(customizePath: string.Empty);
@@ -112,19 +113,19 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("CustomizePath 設定時 IDefineAccess.GetFormLayout 經 DI 注入的 reader 端到端回傳客製 layout")]
+        [DisplayName("With CustomizePath set, IDefineAccess.GetFormLayout returns the customized layout end to end through the DI-injected reader")]
         public void AddPolhemFramework_CustomizePathSet_FormLayoutOverlayWorksEndToEnd()
         {
             const string customizeId = "acme";
             const string layoutId = "EmployeeDefault";
-            // 寫一份客製 FormLayout 到 {CustomizePath}/{customizeId}/FormLayout/...
             var custPaths = new CustomizeOnlyPathOptions(_customizeDir, customizeId);
             XmlCodec.SerializeToFile(new FormLayout { LayoutId = layoutId }, custPaths.GetFormLayoutFilePath(layoutId));
 
             using var sp = BuildProvider(_customizeDir);
             var access = sp.GetRequiredService<IDefineAccess>();
 
-            // 整檔擇一：custCode 非空且客製檔存在 → 回客製 layout（不碰 base）。
+            // Whole-file override: with a non-empty customizeId and an existing customized file, the customized
+            // layout is returned without touching the base.
             var result = access.GetFormLayout(customizeId, layoutId);
 
             Assert.NotNull(result);
@@ -132,9 +133,9 @@ namespace Polhem.Hosting.UnitTests
         }
 
         /// <summary>
-        /// 模擬 DB 式儲存：base 與客製同住一處，只差一個識別欄，因此 storage 自己就是
-        /// <see cref="ICustomizeDefineReader"/>（比照 <c>DbDefineStorage</c>）。
-        /// 測試只在意 DI 選了誰，各方法不需真的有行為。
+        /// Simulates a database-style storage where the base and the customizations live in one place and differ only
+        /// by an identifying column, so the storage itself is the <see cref="ICustomizeDefineReader"/> (like
+        /// <c>DbDefineStorage</c>). The test only cares which one DI picks, so the methods need no real behavior.
         /// </summary>
         public sealed class CustomizeAwareStorage : IDefineStorage, ICustomizeDefineReader
         {

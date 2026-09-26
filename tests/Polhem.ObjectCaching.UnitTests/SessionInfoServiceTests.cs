@@ -6,8 +6,8 @@ using Polhem.Definition.Identity;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// <see cref="SessionInfoService"/> 行為測試。每個測試自建獨立的
-    /// <see cref="CacheContainerService"/>（不共用 process-wide cache），可與其他 test class 平行執行。
+    /// Behavior tests of <see cref="SessionInfoService"/>. Each test builds its own
+    /// <see cref="CacheContainerService"/> and does not share the process-wide cache.
     /// </summary>
     public class SessionInfoServiceTests
     {
@@ -19,7 +19,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Set/Get/Remove 流程應正確操作 Session 快取")]
+        [DisplayName("Set, Get and Remove operate on the session cache correctly")]
         public void Set_Get_Remove_Flow_Works()
         {
             var service = NewService();
@@ -42,7 +42,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("Get 不存在的 token 應回傳 null")]
+        [DisplayName("Get returns null for a token that does not exist")]
         public void Get_MissingToken_ReturnsNull()
         {
             var service = NewService();

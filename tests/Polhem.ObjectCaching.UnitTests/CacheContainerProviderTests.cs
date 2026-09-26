@@ -4,8 +4,8 @@ using Polhem.Definition;
 namespace Polhem.ObjectCaching.UnitTests
 {
     /// <summary>
-    /// <see cref="CacheContainerProvider"/> per-customizeId override container 行為測試：
-    /// 同 customizeId 回同一 container、不同 customizeId 隔離。
+    /// Tests of the per-customizeId override containers of <see cref="CacheContainerProvider"/>:
+    /// the same customizeId returns the same container, and different customizeIds are isolated.
     /// </summary>
     public class CacheContainerProviderTests
     {
@@ -13,7 +13,7 @@ namespace Polhem.ObjectCaching.UnitTests
             => new(new PathOptions { DefinePath = "/tmp/base", CustomizePath = "/tmp/customize" });
 
         [Fact]
-        [DisplayName("For 同一 customizeId 多次呼叫應回傳同一 container 實例")]
+        [DisplayName("For called repeatedly with the same customizeId returns the same container instance")]
         public void For_SameCustomizeId_ReturnsSameContainer()
         {
             var provider = CreateProvider();
@@ -25,7 +25,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("For 不同 customizeId 應回傳不同 container 實例（租戶隔離）")]
+        [DisplayName("For with different customizeIds returns different container instances (tenant isolation)")]
         public void For_DifferentCustomizeId_ReturnsDifferentContainers()
         {
             var provider = CreateProvider();
@@ -37,7 +37,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("override container 的 CachePrefix 應為 customizeId（物理隔離）")]
+        [DisplayName("The CachePrefix of an override container is the customizeId (physical isolation)")]
         public void For_ContainerUsesCustomizeIdAsCachePrefix()
         {
             var provider = CreateProvider();
@@ -50,14 +50,14 @@ namespace Polhem.ObjectCaching.UnitTests
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("For 傳入空 customizeId 應拋出 ArgumentException")]
+        [DisplayName("For throws ArgumentException for an empty customizeId")]
         public void For_EmptyCustomizeId_ThrowsArgumentException(string customizeId)
         {
             Assert.Throws<ArgumentException>(() => CreateProvider().For(customizeId));
         }
 
         [Fact]
-        [DisplayName("建構子傳入 null paths 應拋出 ArgumentNullException")]
+        [DisplayName("Constructor throws ArgumentNullException for null paths")]
         public void Constructor_NullPaths_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new CacheContainerProvider(null!));

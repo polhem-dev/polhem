@@ -97,35 +97,35 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：poller bump 後經慣例分派 evict CompanyInfo、再輪冪等")]
+        [DisplayName("SQL Server: after a bump the poller evicts CompanyInfo through convention dispatch, and a repeat poll is idempotent")]
         public void Poller_SqlServer_Lifecycle() => RunPollerLifecycle(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：poller bump 後經慣例分派 evict CompanyInfo、再輪冪等")]
+        [DisplayName("PostgreSQL: after a bump the poller evicts CompanyInfo through convention dispatch, and a repeat poll is idempotent")]
         public void Poller_PostgreSQL_Lifecycle() => RunPollerLifecycle(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：poller bump 後經慣例分派 evict CompanyInfo、再輪冪等")]
+        [DisplayName("MySQL: after a bump the poller evicts CompanyInfo through convention dispatch, and a repeat poll is idempotent")]
         public void Poller_MySQL_Lifecycle() => RunPollerLifecycle(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：poller bump 後經慣例分派 evict CompanyInfo、再輪冪等")]
+        [DisplayName("Oracle: after a bump the poller evicts CompanyInfo through convention dispatch, and a repeat poll is idempotent")]
         public void Poller_Oracle_Lifecycle() => RunPollerLifecycle(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：無對應快取的 group 不被 evict")]
+        [DisplayName("SQL Server: a bump of a group with no matching cache evicts nothing")]
         public void Poller_SqlServer_UnroutedIgnored() => RunUnroutedGroupIgnored(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：無對應快取的 group 不被 evict")]
+        [DisplayName("PostgreSQL: a bump of a group with no matching cache evicts nothing")]
         public void Poller_PostgreSQL_UnroutedIgnored() => RunUnroutedGroupIgnored(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：無對應快取的 group 不被 evict")]
+        [DisplayName("MySQL: a bump of a group with no matching cache evicts nothing")]
         public void Poller_MySQL_UnroutedIgnored() => RunUnroutedGroupIgnored(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：無對應快取的 group 不被 evict")]
+        [DisplayName("Oracle: a bump of a group with no matching cache evicts nothing")]
         public void Poller_Oracle_UnroutedIgnored() => RunUnroutedGroupIgnored(DatabaseType.Oracle);
     }
 }

@@ -1,8 +1,9 @@
-// CacheInfoTests.Initialize_DifferentProviderType_ReplacesProvider 必須暫時改寫
-// process-wide static CacheInfo.Provider 才能驗證 Initialize 的型別比對路徑；
-// 與此同時其他 cache 相關測試（KeyObjectCache / ObjectCache / FormLayoutCache /
-// SessionInfoService / *SettingsCache 等）都會讀寫同一個 Provider，平行執行下會
-// race，CI 偶發 KeyObjectCacheTests.Set_WithIKeyObject_UsesGetKey 因 FakeCacheProvider
-// 介入而拿不到剛 Set 的值（Issue: 2026-05-14 build #25838584823）。
-// 此 assembly 測試數量少且皆為輕量，整體關閉平行最簡且不易遺漏。
+// `CacheInfoTests.Initialize_DifferentProviderType_ReplacesProvider` has to swap the process-wide static
+// `CacheInfo.Provider` temporarily to exercise the type comparison in `Initialize`. The other cache tests
+// (`KeyObjectCache`, `ObjectCache`, `FormLayoutCache`, `SessionInfoService`, the settings caches and so on)
+// read and write the same provider, so running in parallel races. In CI,
+// `KeyObjectCacheTests.Set_WithIKeyObject_UsesGetKey` occasionally lost the value it had just set because
+// `FakeCacheProvider` was installed (issue: 2026-05-14 build #25838584823).
+// The tests in this assembly are few and light, so disabling parallelization for the whole assembly is the
+// simplest fix and the hardest to get wrong.
 [assembly: Xunit.CollectionBehavior(DisableTestParallelization = true)]
