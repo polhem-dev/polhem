@@ -5,7 +5,7 @@ argument-hint: "[--mode=fix, the default and only mode]"
 
 # Sonar Fix — quality sweep
 
-Run a quality sweep of the SonarCloud project `jeff377_bee-library` in fix mode (a manual local session with the
+Run a quality sweep of the SonarCloud project `polhem-dev_polhem` in fix mode (a manual local session with the
 complete fix loop). `$1` may be omitted or given as `--mode=fix`.
 
 State files: `docs/.sonar-fix-state/` (created on the first run)
@@ -16,7 +16,7 @@ The SonarCloud API allows anonymous reads for a public project, so the queries b
 
 ```bash
 BASE="https://sonarcloud.io/api"
-KEY="jeff377_bee-library"
+KEY="polhem-dev_polhem"
 
 # 1. Quality gate
 curl -s "$BASE/qualitygates/project_status?projectKey=$KEY"

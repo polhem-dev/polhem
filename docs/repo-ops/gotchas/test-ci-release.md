@@ -147,7 +147,7 @@ transitively built projects); only the reproducible facts are recorded here.
 **Fix**: before claiming a rule is clean, confirm that the file is inside the analysis scope.
 
 ```bash
-curl -s "https://sonarcloud.io/api/components/tree?component=jeff377_bee-library&qualifiers=FIL,UTS&ps=500" \
+curl -s "https://sonarcloud.io/api/components/tree?component=polhem-dev_polhem&qualifiers=FIL,UTS&ps=500" \
   | python3 -c "import sys,json;[print(c['path']) for c in json.load(sys.stdin)['components']]"
 ```
 
