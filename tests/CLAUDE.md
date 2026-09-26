@@ -73,7 +73,10 @@ is it a real bug.
 
 ## Test writing patterns
 
-Use `[Fact]` for a single check and `[Theory]` + `[InlineData]` for parameterized ones. Always add `[DisplayName]`.
+Use `[Fact]` for a single check and `[Theory]` + `[InlineData]` for parameterized ones. Always add `[DisplayName]`:
+one English sentence in sentence case, present tense, no trailing period, describing what the test actually checks
+(`GetLocale with an unknown user returns null instead of throwing`). Identifiers and literal values keep their exact
+spelling.
 
 ### Needs a database: `[DbFact(DatabaseType)]` / `[DbTheory(DatabaseType)]`
 
