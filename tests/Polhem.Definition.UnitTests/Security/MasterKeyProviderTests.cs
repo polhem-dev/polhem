@@ -229,6 +229,32 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
+        [DisplayName("GetMasterKey 環境變數名為空白時讀取 POLHEM_MASTER_KEY 的值")]
+        public void GetMasterKey_EmptyVarName_ReadsPolhemMasterKey()
+        {
+            // Deployments set this variable by name. The test below only checks that a missing
+            // variable throws, which holds for any default name, so it cannot tell a wrong default.
+            string? original = Environment.GetEnvironmentVariable("POLHEM_MASTER_KEY");
+            var expected = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+            Environment.SetEnvironmentVariable("POLHEM_MASTER_KEY", Convert.ToBase64String(expected));
+
+            try
+            {
+                var source = new MasterKeySource
+                {
+                    Type = MasterKeySourceType.Environment,
+                    Value = "   "
+                };
+
+                Assert.Equal(expected, MasterKeyProvider.GetMasterKey(source, definePath: string.Empty));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("POLHEM_MASTER_KEY", original);
+            }
+        }
+
+        [Fact]
         [DisplayName("GetMasterKey 環境變數名為空字串時套用預設 POLHEM_MASTER_KEY")]
         public void GetMasterKey_EmptyVarName_UsesDefaultVarName()
         {

@@ -176,6 +176,24 @@ namespace Polhem.Base.UnitTests.Data
         }
 
         [Fact]
+        [DisplayName("標記以 Polhem.FieldDbType 為 key 寫進 ExtendedProperties 與 XML schema")]
+        public void ApplyFieldDbType_WritesMarkerUnderPublishedKey()
+        {
+            // Writer and reader share one constant, so every other test here passes whatever the key
+            // is. The key is persisted, though: the audit log stores it as an msprop attribute.
+            var table = new DataTable("t");
+            table.Columns.Add("d", typeof(DateTime)).ApplyFieldDbType(FieldDbType.Date);
+
+            Assert.Equal(FieldDbType.Date, table.Columns["d"]!.ExtendedProperties[MarkerKey]);
+
+            using var ds = new DataSet("ds");
+            ds.Tables.Add(table);
+            using var writer = new StringWriter();
+            ds.WriteXmlSchema(writer);
+            Assert.Contains("msprop:" + MarkerKey + "=\"Date\"", writer.ToString(), StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("DataSet XML round-trip 應還原 Date / DateTime / Time 標記")]
         public void XmlRoundTrip_PreservesTemporalMarkers()
         {

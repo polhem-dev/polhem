@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using System.Security.Cryptography;
+using System.Text;
 using Polhem.Business.Providers;
 
 namespace Polhem.Business.UnitTests
@@ -128,6 +130,43 @@ namespace Polhem.Business.UnitTests
         public void Ctor_EmptyRootKey_Throws()
         {
             Assert.Throws<ArgumentException>(() => new DerivedApiEncryptionKeyProvider([]));
+        }
+
+        [Fact]
+        [DisplayName("GetKey 以 HKDF 標籤 polhem-api-session-key 衍生")]
+        public void GetKey_DerivesWithSessionKeyLabel()
+        {
+            // Changing the label changes every session key and so invalidates live sessions. The other
+            // tests here compare the provider with itself and stay green whatever the label is, so this
+            // one recomputes the key independently from the literal label.
+            var rootKey = CreateRootKey(3);
+            var token = new Guid("0f8fad5b-d9cb-469f-a165-70867728950e");
+            var provider = new DerivedApiEncryptionKeyProvider(rootKey);
+
+            var expected = DeriveSessionKey(rootKey, token);
+
+            Assert.Equal(expected, provider.GetKey(token));
+        }
+
+        [Fact]
+        [DisplayName("FromMasterKey 以 HKDF 標籤 polhem-api-encryption-root-key 衍生根金鑰")]
+        public void FromMasterKey_DerivesRootKeyWithRootKeyLabel()
+        {
+            var masterKey = CreateRootKey(9);
+            var token = new Guid("7c9e6679-7425-40de-944b-e07fc1f90ae7");
+            var provider = DerivedApiEncryptionKeyProvider.FromMasterKey(masterKey);
+
+            var rootKey = HKDF.DeriveKey(HashAlgorithmName.SHA256, masterKey, 64, salt: null,
+                info: Encoding.UTF8.GetBytes("polhem-api-encryption-root-key"));
+            var expected = DeriveSessionKey(rootKey, token);
+
+            Assert.Equal(expected, provider.GetKey(token));
+        }
+
+        private static byte[] DeriveSessionKey(byte[] rootKey, Guid token)
+        {
+            byte[] info = [.. Encoding.UTF8.GetBytes("polhem-api-session-key"), .. token.ToByteArray()];
+            return HKDF.DeriveKey(HashAlgorithmName.SHA256, rootKey, 64, salt: null, info: info);
         }
     }
 }

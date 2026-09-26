@@ -15,7 +15,18 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         {
             typeof(CollectionBase<>),
             typeof(CollectionItem),
+            typeof(KeyCollectionBase<>),
+            typeof(KeyCollectionItem),
         };
+
+        private const string KeyItemDeclaration = """
+            using Polhem.Base.Collections;
+
+            public sealed class SampleKeyItem : KeyCollectionItem
+            {
+                public string Name { get; set; } = string.Empty;
+            }
+            """;
 
         private const string ItemDeclaration = """
             using Polhem.Base.Collections;
@@ -46,6 +57,54 @@ namespace Polhem.Analyzers.UnitTests.Serialization
             Assert.Equal("POLHEM4005", diagnostic.Id);
             Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity);
             Assert.Contains("AmbiguousMatchException", diagnostic.GetMessage(CultureInfo.InvariantCulture), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("鍵值集合子類新增 public Add 多載應報 POLHEM4005")]
+        public void KeyCollectionExtraPublicAddOverload_ReportsDiagnostic()
+        {
+            // The analyzer finds KeyCollectionBase<T> by its metadata name. If that name is wrong the
+            // analyzer reports nothing and every other test in this class still passes, so the keyed
+            // base needs a case of its own.
+            var source = KeyItemDeclaration + """
+
+                public sealed class SampleKeyItems : KeyCollectionBase<SampleKeyItem>
+                {
+                    public void Add(string name) => Add(new SampleKeyItem { Name = name });
+                }
+                """;
+
+            // Act
+            var diagnostics = AnalyzerRunner.RunOnSource(new CollectionAddOverloadAnalyzer(), source, s_anchors);
+
+            // Assert
+            var diagnostic = Assert.Single(diagnostics);
+            Assert.Equal("POLHEM4005", diagnostic.Id);
+        }
+
+        [Fact]
+        [DisplayName("鍵值集合項目只有參數化建構子應報 POLHEM4006")]
+        public void KeyCollectionItemWithoutParameterlessCtor_ReportsDiagnostic()
+        {
+            // Same reason as the keyed-collection case above: KeyCollectionItem is looked up by its
+            // metadata name and has no other test that fails when that name is wrong.
+            const string source = """
+                using Polhem.Base.Collections;
+
+                public sealed class SampleKeyItem : KeyCollectionItem
+                {
+                    public SampleKeyItem(string name) => Name = name;
+
+                    public string Name { get; set; }
+                }
+                """;
+
+            // Act
+            var diagnostics = AnalyzerRunner.RunOnSource(new ParameterlessConstructorAnalyzer(), source, s_anchors);
+
+            // Assert
+            var diagnostic = Assert.Single(diagnostics);
+            Assert.Equal("POLHEM4006", diagnostic.Id);
         }
 
         [Fact]
