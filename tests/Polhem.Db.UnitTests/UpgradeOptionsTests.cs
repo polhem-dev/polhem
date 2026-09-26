@@ -1,0 +1,30 @@
+using System.ComponentModel;
+using Polhem.Db.Schema;
+using Polhem.Tests.Shared;
+
+namespace Polhem.Db.UnitTests
+{
+    public class UpgradeOptionsTests : IClassFixture<SharedDbFixture>
+    {
+        public UpgradeOptionsTests(SharedDbFixture _) { }
+
+        [Fact]
+        [DisplayName("預設 AllowColumnNarrowing 應為 false")]
+        public void AllowColumnNarrowing_Default_IsFalse()
+        {
+            var options = new UpgradeOptions();
+
+            Assert.False(options.AllowColumnNarrowing);
+        }
+
+        [Fact]
+        [DisplayName("Default 靜態實例應回傳預設值")]
+        public void Default_ReturnsInstanceWithDefaults()
+        {
+            var options = UpgradeOptions.Default;
+
+            Assert.NotNull(options);
+            Assert.False(options.AllowColumnNarrowing);
+        }
+    }
+}

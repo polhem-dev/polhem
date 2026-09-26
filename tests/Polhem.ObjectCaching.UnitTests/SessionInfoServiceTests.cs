@@ -1,0 +1,52 @@
+using System.ComponentModel;
+using Polhem.Definition;
+using Polhem.ObjectCaching.Services;
+using Polhem.Definition.Identity;
+
+namespace Polhem.ObjectCaching.UnitTests
+{
+    /// <summary>
+    /// <see cref="SessionInfoService"/> 行為測試。每個測試自建獨立的
+    /// <see cref="CacheContainerService"/>（不共用 process-wide cache），可與其他 test class 平行執行。
+    /// </summary>
+    public class SessionInfoServiceTests
+    {
+        private static SessionInfoService NewService()
+        {
+            var paths = new PathOptions { DefinePath = Path.GetTempPath() };
+            var storage = new Polhem.Definition.Storage.FileDefineStorage(paths);
+            return new SessionInfoService(new CacheContainerService(storage, paths));
+        }
+
+        [Fact]
+        [DisplayName("Set/Get/Remove 流程應正確操作 Session 快取")]
+        public void Set_Get_Remove_Flow_Works()
+        {
+            var service = NewService();
+            var token = Guid.NewGuid();
+            var info = new SessionInfo
+            {
+                AccessToken = token,
+                UserId = "svc_user",
+                UserName = "Service User"
+            };
+
+            service.Set(info);
+            var loaded = service.Get(token);
+            Assert.NotNull(loaded);
+            Assert.Equal(token, loaded.AccessToken);
+            Assert.Equal("svc_user", loaded.UserId);
+
+            service.Remove(token);
+            Assert.Null(service.Get(token));
+        }
+
+        [Fact]
+        [DisplayName("Get 不存在的 token 應回傳 null")]
+        public void Get_MissingToken_ReturnsNull()
+        {
+            var service = NewService();
+            Assert.Null(service.Get(Guid.NewGuid()));
+        }
+    }
+}

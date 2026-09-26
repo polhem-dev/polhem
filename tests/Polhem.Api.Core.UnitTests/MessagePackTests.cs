@@ -1,0 +1,529 @@
+using Polhem.Api.Core.MessagePack;
+using Polhem.Definition.Collections;
+using Polhem.Definition.Filters;
+using System.Data;
+using Polhem.Base.Data;
+using Polhem.Api.Core.Messages.System;
+using Polhem.Definition;
+using Polhem.Api.Core.Messages;
+
+namespace Polhem.Api.Core.UnitTests
+{
+    /// <summary>
+    /// MessagePack 序列化測試。
+    /// </summary>
+    public class MessagePackTests
+    {
+        /// <summary>
+        /// 測試 MessagePack 是否能正確序列化與反序列化 DataSet。
+        /// </summary>
+        [Fact(DisplayName = "DataSet 序列化")]
+        public void DataSet_Serialize_RoundTrip()
+        {
+            // 建立範例 DataSet 並加入兩個 DataTable
+            var dataSet = new DataSet("TestDataSet");
+
+            var table1 = new DataTable("Table1");
+            table1.Columns.Add("Name", typeof(string));
+            table1.Columns.Add("Age", typeof(int));
+            table1.Rows.Add("Alice", 30);
+            table1.Rows.Add("Bob", 40);
+
+            var table2 = new DataTable("Table2");
+            table2.Columns.Add("Product", typeof(string));
+            table2.Columns.Add("Price", typeof(decimal));
+            table2.Rows.Add("Pen", 1.5m);
+            table2.Rows.Add("Notebook", 3.2m);
+
+            dataSet.Tables.Add(table1);
+            dataSet.Tables.Add(table2);
+
+            // 使用 MessagePackCodec 進行序列化
+            byte[] serialized = MessagePackCodec.Serialize(dataSet);
+
+            // 反序列化回 DataSet
+            var deserialized = MessagePackCodec.Deserialize<DataSet>(serialized);
+
+            // 驗證資料是否正確
+            Assert.Equal(2, deserialized.Tables.Count);
+
+            var dt1 = deserialized.Tables["Table1"];
+            Assert.NotNull(dt1);
+            Assert.Equal(2, dt1.Rows.Count);
+            Assert.Equal("Alice", dt1.Rows[0]["Name"]);
+            Assert.Equal(30, dt1.Rows[0]["Age"]);
+            Assert.Equal("Bob", dt1.Rows[1]["Name"]);
+            Assert.Equal(40, dt1.Rows[1]["Age"]);
+
+            var dt2 = deserialized.Tables["Table2"];
+            Assert.NotNull(dt2);
+            Assert.Equal(2, dt2.Rows.Count);
+            Assert.Equal("Pen", dt2.Rows[0]["Product"]);
+            Assert.Equal(1.5m, dt2.Rows[0]["Price"]);
+            Assert.Equal("Notebook", dt2.Rows[1]["Product"]);
+            Assert.Equal(3.2m, dt2.Rows[1]["Price"]);
+        }
+
+        /// <summary>
+        /// 測試 MessagePack 是否能正確序列化與反序列化 DataTable。
+        /// </summary>
+        [Fact(DisplayName = "DataTable 序列化")]
+        public void DataTable_Serialize_RoundTrip()
+        {
+            // 建立範例 DataTable 並加入測試資料
+            var table = new DataTable("TestTable");
+            table.Columns.Add("Column1", typeof(string));
+            table.Columns.Add("Column2", typeof(int));
+            table.Rows.Add("Test1", 100);
+            table.Rows.Add("Test2", 200);
+
+            // 使用 MessagePackCodec 進行序列化
+            byte[] serialized = MessagePackCodec.Serialize(table);
+            // 反序列化回 DataTable
+            var deserialized = MessagePackCodec.Deserialize<DataTable>(serialized);
+
+            // 驗證資料是否正確
+            Assert.Equal(2, deserialized.Rows.Count);
+            Assert.Equal("Test1", deserialized.Rows[0]["Column1"]);
+            Assert.Equal(100, deserialized.Rows[0]["Column2"]);
+            Assert.Equal("Test2", deserialized.Rows[1]["Column1"]);
+            Assert.Equal(200, deserialized.Rows[1]["Column2"]);
+        }
+
+        /// <summary>
+        /// 測試 DbNull.Value 是否能正確轉換為 null，並確認轉換後資料能夠正確寫回資料庫。
+        /// </summary>
+        [Fact(DisplayName = "DataTable 序列化包含 DBNull 值")]
+        public void DataTable_SerializeWithDbNull_PreservesValues()
+        {
+            // Arrange：建立含 DBNull 的 DataTable
+            var dt = new DataTable("TestTable");
+            dt.Columns.Add("Id", typeof(int));
+            dt.Columns.Add("Name", typeof(string));
+
+            var row = dt.NewRow();
+            row["Id"] = 1;
+            row["Name"] = DBNull.Value; // 模擬空值
+            dt.Rows.Add(row);
+
+            // Act：轉為序列化格式，再轉回 DataTable
+            var serializable = SerializableDataTable.FromDataTable(dt);
+            var restored = SerializableDataTable.ToDataTable(serializable);
+
+            // Assert：確認還原後的值為 DBNull.Value
+            Assert.Equal(1, restored.Rows[0]["Id"]);
+            Assert.True(restored.Rows[0].IsNull("Name")); // 正確為 DBNull.Value
+        }
+
+        /// <summary>
+        /// 測試 DataTable 在序列化後能否保留 RowState 狀態。
+        /// </summary>
+        [Fact(DisplayName = "DataTable 序列化保留 RowState 狀態")]
+        public void DataTable_SerializeWithRowState_PreservesState()
+        {
+            var table = new DataTable("SampleTable");
+            table.Columns.Add("Id", typeof(int));
+            table.Columns.Add("Name", typeof(string));
+
+            // 新增第一筆
+            var row1 = table.NewRow();
+            row1["Id"] = 1;
+            row1["Name"] = "資料1";
+            table.Rows.Add(row1);
+
+            // 新增第二筆
+            var row2 = table.NewRow();
+            row2["Id"] = 2;
+            row2["Name"] = "資料2";
+            table.Rows.Add(row2);
+
+            // 先 AcceptChanges，兩筆變成 Unchanged
+            table.AcceptChanges();
+
+            // 修改第一筆 (RowState -> Modified)
+            table.Rows[0]["Name"] = "修改後資料1";
+
+            // 刪除第二筆 (RowState -> Deleted)
+            table.Rows[1].Delete();
+
+            // 新增第三筆 (RowState -> Added)
+            var row3 = table.NewRow();
+            row3["Id"] = 3;
+            row3["Name"] = "新增資料3";
+            table.Rows.Add(row3);
+
+            // Serialize & Deserialize
+            var bytes = MessagePackCodec.Serialize(table);
+            var restored = MessagePackCodec.Deserialize<DataTable>(bytes);
+
+            if (!DataTableComparer.IsEqual(table, restored))
+            {
+                Assert.Fail("序列化還原後的 DataTable 與原始 DataTable 不相等");
+            }
+        }
+
+        /// <summary>
+        /// 測試 TListItemCollection 類別的序列化與反序列化。
+        /// </summary>
+        [Fact(DisplayName = "TListItemCollection 序列化")]
+        public void TListItemCollection_Serialize_RoundTrip()
+        {
+            // 建立原始物件
+            var original = new ListItemCollection()
+            {
+                new ListItem("A001", "選項一"),
+                new ListItem("A002", "選項二"),
+                new ListItem("A003", "選項三")
+            };
+
+            // 序列化為位元組陣列
+            var bytes = MessagePackCodec.Serialize(original);
+
+            // 反序列化為物件
+            var restored = MessagePackCodec.Deserialize<ListItemCollection>(bytes);
+
+            // 驗證還原後的值與原值一致
+            Assert.NotNull(restored);
+            Assert.Equal(original.Count, restored.Count);
+
+            for (int i = 0; i < original.Count; i++)
+            {
+                Assert.Equal(original[i].Value, restored[i].Value);
+                Assert.Equal(original[i].Text, restored[i].Text);
+            }
+        }
+
+        /// <summary>
+        /// 測試 TParameterCollection 支援多種型別的序列化與反序列化。
+        /// </summary>
+        [Fact(DisplayName = "TParameterCollection 多型別序列化")]
+        public void TParameterCollection_Serialize_RoundTrip()
+        {
+            // 建立原始物件，包含不同型別的參數
+            var original = new ParameterCollection
+            {
+                { "IntValue", 123 },
+                { "StringValue", "測試字串" },
+                { "BoolValue", true },
+                { "DateTimeValue", new DateTime(2025, 5, 16, 10, 30, 0) },
+                { "DecimalValue", 123.45m },
+                { "DoubleValue", 9876.54321 },
+                { "NullValue", null! }
+            };
+
+            // 序列化為位元組陣列
+            var bytes = MessagePackCodec.Serialize(original);
+
+            // 反序列化為物件
+            var restored = MessagePackCodec.Deserialize<ParameterCollection>(bytes);
+
+            // 驗證還原後的值與原值一致
+            Assert.NotNull(restored);
+            Assert.Equal(original.Count, restored.Count);
+
+            foreach (var param in original)
+            {
+                Assert.True(restored.Contains(param.Name));
+
+                var originalValue = param.Value;
+                var restoredValue = restored[param.Name].Value;
+
+                if (originalValue == null)
+                {
+                    Assert.Null(restoredValue);
+                }
+                else
+                {
+                    Assert.NotNull(restoredValue);
+                    Assert.Equal(originalValue.GetType(), restoredValue!.GetType());
+                    Assert.Equal(originalValue, restoredValue);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 測試 TParameterCollection 加入 DataTable 可正常序列化。
+        /// </summary>
+        [Fact(DisplayName = "TParameterCollection 加入 DataTable 可正常序列化")]
+        public void TParameterCollection_SerializeWithDataTable_RoundTrip()
+        {
+            // 建立測試用的 DataTable
+            var table = new DataTable("TestTable");
+            table.Columns.Add("Id", typeof(int));
+            table.Columns.Add("Name", typeof(string));
+            table.Rows.Add(1, "Alice");
+            table.Rows.Add(2, "Bob");
+
+            // 建立參數集合，加入 DataTable 參數
+            var parameters = new ParameterCollection
+            {
+                { "Data", table }
+            };
+
+            // 序列化
+            var bytes = MessagePackCodec.Serialize(parameters);
+
+            // 反序列化
+            var restored = MessagePackCodec.Deserialize<ParameterCollection>(bytes);
+
+            // 驗證
+            Assert.NotNull(restored);
+            Assert.True(restored.Contains("Data"));
+            Assert.IsType<DataTable>(restored["Data"].Value);
+
+            var restoredTable = (DataTable)restored["Data"].Value!;
+            Assert.Equal("TestTable", restoredTable.TableName);
+            Assert.Equal(2, restoredTable.Rows.Count);
+            Assert.Equal("Alice", restoredTable.Rows[0]["Name"]);
+            Assert.Equal("Bob", restoredTable.Rows[1]["Name"]);
+        }
+
+        /// <summary>
+        /// 測試 TPropertyCollection 可正確序列化與還原屬性集合資料。
+        /// </summary>
+        [Fact(DisplayName = "TPropertyCollection 序列化")]
+        public void TPropertyCollection_Serialize_RoundTrip()
+        {
+            // 建立屬性集合
+            var properties = new Polhem.Definition.Collections.PropertyCollection
+            {
+                { "AppName", "PolhemERP" },
+                { "Enabled", "true" },
+                { "RetryCount", "3" }
+            };
+
+            // 序列化
+            var bytes = MessagePackCodec.Serialize(properties);
+
+            // 反序列化
+            var restored = MessagePackCodec.Deserialize<Polhem.Definition.Collections.PropertyCollection>(bytes);
+
+            // 驗證內容是否正確還原
+            Assert.NotNull(restored);
+            Assert.Equal(3, restored.Count);
+            Assert.Equal("PolhemERP", restored.GetValue("AppName", "DefaultApp"));
+            Assert.True(restored.GetValue("Enabled", false));
+            Assert.Equal(3, restored.GetValue("RetryCount", 0));
+
+            // 測試預設值（不存在的欄位）
+            Assert.Equal("Default", restored.GetValue("NotExist", "Default"));
+            Assert.False(restored.GetValue("NotExistBool", false));
+            Assert.Equal(999, restored.GetValue("NotExistInt", 999));
+        }
+
+        /// <summary>
+        /// 測試 Filters 可正確序列化與還原屬性集合資料。
+        /// </summary>
+        [Fact(DisplayName = "Filters 序列化")]
+        public void Filters_Serialize_RoundTrip()
+        {
+            var root = FilterGroup.All(
+                FilterCondition.Equal("DeptId", 10),
+                FilterGroup.Any(
+                    FilterCondition.Contains("Name", "Lee"),
+                    FilterCondition.Between("HireDate", new DateTime(2024, 1, 1), new DateTime(2024, 12, 31))
+                )
+            );
+
+            // MessagePack 序列化
+            var bytes = MessagePackCodec.Serialize(root);
+
+            // 反序列化
+            var restored = MessagePackCodec.Deserialize<FilterGroup>(bytes);
+
+            // 驗證結構與內容
+            Assert.NotNull(restored);
+            Assert.Equal(2, restored.Nodes.Count);
+
+            var cond1 = restored.Nodes[0] as FilterCondition;
+            Assert.NotNull(cond1);
+            Assert.Equal("DeptId", cond1.FieldName);
+            Assert.Equal(ComparisonOperator.Equal, cond1.Operator);
+            Assert.Equal(10, cond1.Value);
+
+            var group2 = restored.Nodes[1] as FilterGroup;
+            Assert.NotNull(group2);
+            Assert.Equal(2, group2.Nodes.Count);
+
+            var cond2 = group2.Nodes[0] as FilterCondition;
+            Assert.NotNull(cond2);
+            Assert.Equal("Name", cond2.FieldName);
+            Assert.Equal(ComparisonOperator.Contains, cond2.Operator);
+            Assert.Equal("Lee", cond2.Value);
+
+            var cond3 = group2.Nodes[1] as FilterCondition;
+            Assert.NotNull(cond3);
+            Assert.Equal("HireDate", cond3.FieldName);
+            Assert.Equal(ComparisonOperator.Between, cond3.Operator);
+            Assert.Equal(new DateTime(2024, 1, 1), cond3.Value);
+            Assert.Equal(new DateTime(2024, 12, 31), cond3.SecondValue);
+        }
+
+        /// <summary>
+        /// 測試 Ping 方法傳遞參數的序列化。
+        /// </summary>
+        [Fact(DisplayName = "Ping 方法傳遞參數的序列化")]
+        public void Ping_Serialize_RoundTrip()
+        {
+            // 建立 TPingRequest 並指定屬性與參數
+            var args = new PingRequest
+            {
+                ClientName = "TestClient",
+                TraceId = Guid.NewGuid().ToString()
+            };
+            args.Parameters!.Add("Env", "UAT");
+            args.Parameters!.Add("Verbose", true);
+
+            // 測試 MessagePack 序列化
+            TestFunc.TestMessagePackSerialization(args);
+
+            // 建立 TPingResponse 並指定屬性與參數
+            var result = new PingResponse
+            {
+                Status = "pong",
+                ServerTime = new DateTime(2025, 5, 16, 8, 30, 0, DateTimeKind.Utc),
+                Version = "1.2.3",
+                TraceId = Guid.NewGuid().ToString()
+            };
+            result.Parameters!.Add("Region", "TW");
+            result.Parameters!.Add("Elapsed", 42);
+
+            // 測試 MessagePack 序列化
+            TestFunc.TestMessagePackSerialization(result);
+        }
+
+        /// <summary>
+        /// 測試 ExecFunc 方法傳遞參數的序列化。
+        /// </summary>
+        [Fact(DisplayName = "ExecFunc 方法傳遞參數的序列化")]
+        public void ExecFunc_Serialize_RoundTrip()
+        {
+            // 建立 TExecFuncRequest 並指定屬性與參數
+            var args = new ExecFuncRequest
+            {
+                FuncId = "CustomFunction123"
+            };
+            args.Parameters!.Add("Key1", "Value1");
+            args.Parameters!.Add("Key2", 42);
+
+            // 測試 MessagePack 序列化
+            TestFunc.TestMessagePackSerialization(args);
+
+            // 建立 TExecFuncResponse 並指定屬性與參數
+            var result = new ExecFuncResponse();
+            result.Parameters!.Add("ResultKey", "ResultValue");
+            result.Parameters!.Add("ResultCount", 100);
+            result.Parameters!.Add("ResultDate", new DateTime(2025, 5, 16, 12, 0, 0, DateTimeKind.Utc));
+
+            // 測試 MessagePack 序列化
+            TestFunc.TestMessagePackSerialization(result);
+        }
+
+        /// <summary>
+        /// 測試 CreateSession 方法傳遞參數的序列化。
+        /// </summary>
+        [Fact(DisplayName = "CreateSession 方法傳遞參數的序列化")]
+        public void CreateSession_Serialize_RoundTrip()
+        {
+            // Arrange: 建立 TCreateSessionRequest 實例並設定屬性
+            var args = new CreateSessionRequest
+            {
+                UserID = "TestUser",
+                ExpiresIn = 7200,
+                OneTime = true
+            };
+
+            // 測試 MessagePack 序列化
+            TestFunc.TestMessagePackSerialization(args);
+
+            // Arrange: 建立 TCreateSessionResponse 實例並設定屬性
+            var result = new CreateSessionResponse
+            {
+                AccessToken = Guid.NewGuid(),
+                ExpiredAt = new DateTime(2025, 5, 16, 12, 0, 0, DateTimeKind.Utc)
+            };
+
+            // 測試 MessagePack 序列化
+            TestFunc.TestMessagePackSerialization(result);
+        }
+
+        /// <summary>
+        /// 測試 GetDefine 方法傳遞參數的序列化。
+        /// </summary>
+        [Fact(DisplayName = "GetDefine 方法傳遞參數的序列化")]
+        public void GetDefine_Serialize_RoundTrip()
+        {
+            // Arrange: 建立 TGetDefineRequest 實例並設定屬性
+            var args = new GetDefineRequest
+            {
+                DefineType = DefineType.FormSchema,
+                Keys = new[] { "Key1", "Key2", "Key3" }
+            };
+
+            // Act & Assert: 使用 TestMessagePackSerialization 測試
+            TestFunc.TestMessagePackSerialization(args);
+
+            // Arrange: 建立 TGetDefineResponse 實例並設定屬性
+            var result = new GetDefineResponse
+            {
+                Xml = "<Define><Item Key='Key1'>Value1</Item></Define>"
+            };
+
+            // Act & Assert: 使用 TestMessagePackSerialization 測試
+            TestFunc.TestMessagePackSerialization(result);
+        }
+
+        /// <summary>
+        /// 測試 GetCommonConfiguration 方法傳遞參數的序列化。
+        /// </summary>
+        [Fact(DisplayName = "GetCommonConfiguration 方法傳遞參數的序列化")]
+        public void GetCommonConfiguration_Serialize_RoundTrip()
+        {
+            // Arrange: 建立 GetCommonConfigurationRequest（無額外 Key 屬性，僅繼承 Parameters）
+            var args = new GetCommonConfigurationRequest();
+            args.Parameters!.Add("AppId", "PolhemERP");
+            args.Parameters!.Add("Env", "Production");
+
+            // Act & Assert: 使用 TestMessagePackSerialization 測試
+            TestFunc.TestMessagePackSerialization(args);
+
+            // Arrange: 建立 GetCommonConfigurationResponse 實例並設定屬性
+            var result = new GetCommonConfigurationResponse
+            {
+                CommonConfiguration = "<Config><Setting Key='Theme'>Dark</Setting></Config>"
+            };
+            result.Parameters!.Add("CacheHit", true);
+
+            // Act & Assert: 使用 TestMessagePackSerialization 測試
+            TestFunc.TestMessagePackSerialization(result);
+        }
+
+        /// <summary>
+        /// 測試 SaveDefine 方法傳遞參數的序列化。
+        /// </summary>
+        [Fact(DisplayName = "SaveDefine 方法傳遞參數的序列化")]
+        public void SaveDefine_Serialize_RoundTrip()
+        {
+            // Arrange: 建立 SaveDefineRequest 實例並設定屬性
+            var args = new SaveDefineRequest
+            {
+                DefineType = DefineType.FormSchema,
+                Xml = "<Define><Item Key='OrderForm'>FormData</Item></Define>",
+                Keys = new[] { "OrderForm", "CustomerForm" }
+            };
+            args.Parameters!.Add("UserId", "admin");
+
+            // Act & Assert: 使用 TestMessagePackSerialization 測試
+            TestFunc.TestMessagePackSerialization(args);
+
+            // Arrange: 建立 SaveDefineResponse 實例（無額外 Key 屬性，僅繼承 Parameters）
+            var result = new SaveDefineResponse();
+            result.Parameters!.Add("AffectedRows", 2);
+            result.Parameters!.Add("Timestamp", new DateTime(2025, 6, 1, 10, 0, 0, DateTimeKind.Utc));
+
+            // Act & Assert: 使用 TestMessagePackSerialization 測試
+            TestFunc.TestMessagePackSerialization(result);
+        }
+    }
+}
+

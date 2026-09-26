@@ -1,0 +1,462 @@
+using System.Globalization;
+using Polhem.Base.Data;
+using Polhem.Base.Serialization;
+using Polhem.Db.CacheNotify;
+using Polhem.Db.Manager;
+using Polhem.Definition;
+using Polhem.Definition.Database;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
+using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
+using Polhem.Definition.Storage;
+
+namespace Polhem.Db.Storage
+{
+    /// <summary>
+    /// Database-backed <see cref="IDefineStorage"/>: stores each definition as one XML-serialized
+    /// row in the single <c>st_define</c> table (keyed by <c>define_type</c> + <c>customize_id</c>
+    /// + <c>define_key</c>). Each <c>SaveX</c> performs, in one transaction, the UPSERT plus an
+    /// <see cref="ICacheNotifyService.Touch"/> on the matching cache key, so other processes/nodes
+    /// observe the change via the notification table and evict the corresponding cache.
+    /// </summary>
+    /// <remarks>
+    /// Covers the DB-storable definition types (<see cref="DbCategorySettings"/>, <see cref="ProgramSettings"/>,
+    /// <see cref="CurrencySettings"/>, <see cref="TableSchema"/>, <see cref="FormSchema"/>, <see cref="FormLayout"/>,
+    /// <c>Language</c>). <see cref="SystemSettings"/> / <see cref="DatabaseSettings"/> remain file-based (startup
+    /// bootstrap) and never reach this storage.
+    /// <para>
+    /// <c>define_type</c> is the cached type's name (<c>typeof(T).Name</c>), so it equals the cache
+    /// group used by the cache container's convention-based eviction dispatch — the bump key
+    /// <c>"{typeof(T).Name}:{defineKey}"</c> routes straight to the right cache. Base-layer rows use
+    /// <c>customize_id = "*"</c> and singleton types use <c>define_key = "*"</c> (non-empty sentinels,
+    /// because Oracle treats <c>''</c> as <c>NULL</c> and primary-key columns cannot be NULL).
+    /// </para>
+    /// </remarks>
+    public sealed class DbDefineStorage : IDefineStorage, ICustomizeDefineReader, ICustomizeDefineWriter
+    {
+        /// <summary>The database identifier hosting <c>st_define</c> (and <c>st_cache_notify</c>).</summary>
+        public const string DefineDatabaseId = "common";
+
+        private const string BaseCustomizeId = "*";
+        private const string SingletonKey = "*";
+
+        private const string TableName = "st_define";
+        private const string TypeColumn = "define_type";
+        private const string CustomizeColumn = "customize_id";
+        private const string KeyColumn = "define_key";
+        private const string ContentColumn = "content";
+        private const string UpdateTimeColumn = "sys_update_time";
+
+        private readonly IServiceProvider? _serviceProvider;
+        private IDbConnectionManager? _connectionManager;
+        private ICacheNotifyService? _cacheNotify;
+        private readonly string _databaseId;
+
+        /// <summary>
+        /// Initializes a new <see cref="DbDefineStorage"/> with explicit dependencies (used by tests
+        /// and direct construction).
+        /// </summary>
+        /// <param name="connectionManager">Supplies connections and the dialect for the define database.</param>
+        /// <param name="cacheNotify">Bumps the notification row in the same transaction as each save.</param>
+        /// <param name="databaseId">
+        /// The database hosting <c>st_define</c>; defaults to <see cref="DefineDatabaseId"/>
+        /// (<c>common</c>). Tests pass a dialect-specific id (e.g. <c>common_postgresql</c>).
+        /// </param>
+        public DbDefineStorage(IDbConnectionManager connectionManager, ICacheNotifyService cacheNotify, string databaseId = DefineDatabaseId)
+        {
+            _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
+            _cacheNotify = cacheNotify ?? throw new ArgumentNullException(nameof(cacheNotify));
+            ArgumentException.ThrowIfNullOrWhiteSpace(databaseId);
+            _databaseId = databaseId;
+        }
+
+        /// <summary>
+        /// Initializes a new <see cref="DbDefineStorage"/> that resolves its dependencies lazily from
+        /// <paramref name="serviceProvider"/> on first use. This is the constructor used when the
+        /// framework activates DB storage via DI: resolving <see cref="IDbConnectionManager"/> at
+        /// construction would form a cycle (connection manager → database settings → define access →
+        /// define storage), so resolution is deferred until the first read/write, by which time the
+        /// object graph is fully built.
+        /// </summary>
+        /// <param name="serviceProvider">The application service provider.</param>
+        public DbDefineStorage(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _databaseId = DefineDatabaseId;
+        }
+
+        // NOTE: `??=` here is not synchronised, and it is safe only because both services resolve
+        // to singletons — two threads racing produce the same instance, so the loser's write is
+        // harmless. WARNING: that is a property of the registration, not of this code. Re-register
+        // either service as transient and this silently produces a per-race instance with no
+        // symptom to notice.
+        private IDbConnectionManager ConnectionManager => _connectionManager ??= Resolve<IDbConnectionManager>();
+
+        private ICacheNotifyService CacheNotify => _cacheNotify ??= Resolve<ICacheNotifyService>();
+
+        private T Resolve<T>()
+            => (T)(_serviceProvider!.GetService(typeof(T))
+                ?? throw new InvalidOperationException($"Required service is not available: {typeof(T).Name}."));
+
+        #region IDefineStorage
+
+        /// <inheritdoc/>
+        public DbCategorySettings? GetDbCategorySettings()
+            => ReadRequired<DbCategorySettings>(BaseCustomizeId, SingletonKey);
+
+        /// <inheritdoc/>
+        public void SaveDbCategorySettings(DbCategorySettings settings)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+            Write(settings, SingletonKey);
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Like the language resource, a missing currency master returns <c>null</c> (not an error) —
+        /// callers fall back to framework-default decimals.
+        /// </remarks>
+        public CurrencySettings? GetCurrencySettings()
+            => ReadOptional<CurrencySettings>(BaseCustomizeId, SingletonKey);
+
+        /// <inheritdoc/>
+        public void SaveCurrencySettings(CurrencySettings settings)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+            Write(settings, SingletonKey);
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Like the currency master, a missing unit master returns <c>null</c> (not an error) —
+        /// callers fall back to framework-default decimals.
+        /// </remarks>
+        public UnitSettings? GetUnitSettings()
+            => ReadOptional<UnitSettings>(BaseCustomizeId, SingletonKey);
+
+        /// <inheritdoc/>
+        public void SaveUnitSettings(UnitSettings settings)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+            Write(settings, SingletonKey);
+        }
+
+        /// <inheritdoc/>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the stored row still uses the pre-flattening nested layout, which
+        /// XmlSerializer would otherwise read as an empty registry without complaint.
+        /// </exception>
+        public ProgramSettings? GetProgramSettings()
+        {
+            var xml = ReadContent(nameof(ProgramSettings), BaseCustomizeId, SingletonKey)
+                ?? throw new InvalidOperationException($"Definition not found: {nameof(ProgramSettings)} / {BaseCustomizeId} / {SingletonKey}.");
+            ProgramSettingsFormat.EnsureCurrentFormat(xml, $"{nameof(ProgramSettings)} / {BaseCustomizeId}");
+            return XmlCodec.Deserialize<ProgramSettings>(xml)
+                ?? throw new InvalidOperationException($"Failed to deserialize definition: {nameof(ProgramSettings)} / {BaseCustomizeId} / {SingletonKey}.");
+        }
+
+        /// <inheritdoc/>
+        public void SaveProgramSettings(ProgramSettings settings)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+            Write(settings, SingletonKey);
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Optional, unlike <see cref="GetProgramSettings"/>: a host that ships no menu is a
+        /// normal deployment rather than a misconfiguration.
+        /// </remarks>
+        public MenuSettings? GetMenuSettings()
+        {
+            var settings = ReadOptional<MenuSettings>(BaseCustomizeId, SingletonKey);
+            settings?.EnsureValid();
+            return settings;
+        }
+
+        /// <inheritdoc/>
+        public void SaveMenuSettings(MenuSettings settings)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+            Write(settings, SingletonKey);
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Optional like the menu: a deployment that binds no plugins simply has no row.
+        /// </remarks>
+        public PluginSettings? GetPluginSettings()
+            => ReadOptional<PluginSettings>(BaseCustomizeId, SingletonKey);
+
+        /// <inheritdoc/>
+        public void SavePluginSettings(PluginSettings settings)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+            Write(settings, SingletonKey);
+        }
+
+        /// <inheritdoc/>
+        public TableSchema? GetTableSchema(string categoryId, string tableName)
+            => ReadRequired<TableSchema>(BaseCustomizeId, TableSchemaKey(categoryId, tableName));
+
+        /// <inheritdoc/>
+        public void SaveTableSchema(string categoryId, TableSchema tableSchema)
+        {
+            ArgumentNullException.ThrowIfNull(tableSchema);
+            Write(tableSchema, TableSchemaKey(categoryId, tableSchema.TableName));
+        }
+
+        /// <inheritdoc/>
+        public FormSchema? GetFormSchema(string progId)
+            => ReadRequired<FormSchema>(BaseCustomizeId, progId);
+
+        /// <inheritdoc/>
+        public void SaveFormSchema(FormSchema formSchema)
+        {
+            ArgumentNullException.ThrowIfNull(formSchema);
+            Write(formSchema, formSchema.ProgId);
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Optional, unlike the other base reads: a missing layout row is a normal scenario, since
+        /// the framework generates a layout from the <see cref="FormSchema"/> when none is stored.
+        /// <c>ReadOptional</c> distinguishes "no such row" (returns <c>null</c>) from a row that
+        /// fails to deserialize, which still surfaces as an error.
+        /// </remarks>
+        public FormLayout? GetFormLayout(string layoutId)
+            => ReadOptional<FormLayout>(BaseCustomizeId, layoutId);
+
+        /// <inheritdoc/>
+        public void SaveFormLayout(FormLayout formLayout)
+        {
+            ArgumentNullException.ThrowIfNull(formLayout);
+            Write(formLayout, formLayout.LayoutId);
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Like the file storage, a missing language resource returns <c>null</c> (not an error) —
+        /// untranslated namespaces are a normal scenario.
+        /// </remarks>
+        public LanguageResource? GetLanguage(string lang, string ns)
+            => ReadOptional<LanguageResource>(BaseCustomizeId, LanguageKey(lang, ns));
+
+        /// <inheritdoc/>
+        public void SaveLanguage(LanguageResource resource)
+        {
+            ArgumentNullException.ThrowIfNull(resource);
+            Write(resource, LanguageKey(resource.Lang, resource.Namespace));
+        }
+
+        #endregion
+
+        #region ICustomizeDefineReader
+
+        /// <inheritdoc/>
+        public LanguageResource? GetCustomizeLanguage(string customizeId, string lang, string ns)
+            => ReadOptional<LanguageResource>(customizeId, LanguageKey(lang, ns));
+
+        /// <inheritdoc/>
+        public ProgramSettings? GetCustomizeProgramSettings(string customizeId)
+        {
+            var xml = ReadContent(nameof(ProgramSettings), customizeId, SingletonKey);
+            if (xml == null) { return null; }
+            ProgramSettingsFormat.EnsureCurrentFormat(xml, $"{nameof(ProgramSettings)} / {customizeId}");
+            return XmlCodec.Deserialize<ProgramSettings>(xml);
+        }
+
+        /// <inheritdoc/>
+        public MenuSettings? GetCustomizeMenuSettings(string customizeId)
+        {
+            var settings = ReadOptional<MenuSettings>(customizeId, SingletonKey);
+            settings?.EnsureValid();
+            return settings;
+        }
+
+        /// <inheritdoc/>
+        public PluginSettings? GetCustomizePluginSettings(string customizeId)
+            => ReadOptional<PluginSettings>(customizeId, SingletonKey);
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// The tenant's row and the base row differ only by <c>customize_id</c>, so the same upsert
+        /// serves both layers and neither can overwrite the other.
+        /// </remarks>
+        public void SaveCustomizePluginSettings(string customizeId, PluginSettings settings)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(customizeId);
+            ArgumentNullException.ThrowIfNull(settings);
+            Write(settings, SingletonKey, customizeId);
+        }
+
+        /// <inheritdoc/>
+        public FormLayout? GetCustomizeFormLayout(string customizeId, string layoutId)
+            => ReadOptional<FormLayout>(customizeId, layoutId);
+
+        #endregion
+
+        // Composite define_key must equal the cache's Remove key so eviction routing hits the entry:
+        // TableSchemaCache / LanguageResourceCache key on "{a}.{b}" (dot separator).
+        private static string TableSchemaKey(string categoryId, string tableName) => $"{categoryId}.{tableName}";
+
+        private static string LanguageKey(string lang, string ns) => $"{lang}.{ns}";
+
+        /// <summary>
+        /// Reads a definition that must exist; throws when the row is absent (mirrors the file
+        /// storage, where a missing definition file signals a bug).
+        /// </summary>
+        private T ReadRequired<T>(string customizeId, string defineKey) where T : class
+        {
+            var xml = ReadContent(typeof(T).Name, customizeId, defineKey);
+            if (xml == null)
+                throw new InvalidOperationException($"Definition not found: {typeof(T).Name} / {customizeId} / {defineKey}.");
+            return XmlCodec.Deserialize<T>(xml)
+                ?? throw new InvalidOperationException($"Failed to deserialize definition: {typeof(T).Name} / {customizeId} / {defineKey}.");
+        }
+
+        /// <summary>
+        /// Reads a definition that may be absent; returns <c>null</c> when the row does not exist.
+        /// </summary>
+        private T? ReadOptional<T>(string customizeId, string defineKey) where T : class
+        {
+            var xml = ReadContent(typeof(T).Name, customizeId, defineKey);
+            return xml == null ? null : XmlCodec.Deserialize<T>(xml);
+        }
+
+        private string? ReadContent(string defineType, string customizeId, string defineKey)
+        {
+            var dbAccess = new DbAccess(_databaseId, ConnectionManager);
+            var databaseType = dbAccess.DatabaseType;
+
+            string tbl = databaseType.QuoteIdentifier(TableName);
+            string type = databaseType.QuoteIdentifier(TypeColumn);
+            string cust = databaseType.QuoteIdentifier(CustomizeColumn);
+            string key = databaseType.QuoteIdentifier(KeyColumn);
+            string content = databaseType.QuoteIdentifier(ContentColumn);
+
+            var result = dbAccess.ExecuteScalar(
+                $"SELECT {content} FROM {tbl} WHERE {type} = {{0}} AND {cust} = {{1}} AND {key} = {{2}}",
+                defineType, customizeId, defineKey);
+
+            if (result is null || result is DBNull) return null;
+            return Convert.ToString(result, CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// UPSERTs the base-layer row and bumps the matching cache key in one transaction, so the
+        /// notification and the data change commit together.
+        /// </summary>
+        private void Write<T>(T value, string defineKey) where T : class
+            => Write(value, defineKey, BaseCustomizeId);
+
+        /// <summary>
+        /// Upserts one definition row and bumps its cache-notify version in the same transaction.
+        /// </summary>
+        /// <param name="value">The definition object.</param>
+        /// <param name="defineKey">The definition key.</param>
+        /// <param name="customizeId">The owning layer: the base sentinel, or a tenant code.</param>
+        private void Write<T>(T value, string defineKey, string customizeId) where T : class
+        {
+            string defineType = typeof(T).Name;
+            string xml = XmlCodec.Serialize(value);
+
+            var connInfo = ConnectionManager.GetConnectionInfo(_databaseId);
+            var databaseType = connInfo.DatabaseType;
+
+            using var connection = ConnectionManager.CreateConnection(_databaseId);
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+
+            var dbAccess = new DbAccess(connection, databaseType);
+            dbAccess.Execute(BuildUpsertSpec(databaseType, defineType, customizeId, defineKey, xml), transaction);
+
+            CacheNotify.Touch(BuildNotifyKey(defineType, defineKey), transaction, databaseType);
+
+            transaction.Commit();
+        }
+
+        /// <summary>
+        /// Builds the dialect-specific UPSERT for <c>st_define</c>. Params: {0}=define_type,
+        /// {1}=customize_id, {2}=define_key, {3}=content (XML).
+        /// </summary>
+        private static DbCommandSpec BuildUpsertSpec(DatabaseType databaseType, string defineType, string customizeId, string defineKey, string content)
+        {
+            string now = DbDialectRegistry.Get(databaseType).GetDefaultValueExpression(FieldDbType.DateTime);
+
+            string tbl = databaseType.QuoteIdentifier(TableName);
+            string type = databaseType.QuoteIdentifier(TypeColumn);
+            string cust = databaseType.QuoteIdentifier(CustomizeColumn);
+            string key = databaseType.QuoteIdentifier(KeyColumn);
+            string cnt = databaseType.QuoteIdentifier(ContentColumn);
+            string upd = databaseType.QuoteIdentifier(UpdateTimeColumn);
+
+            string commandText = databaseType switch
+            {
+                // PostgreSQL / SQLite: named params allow reusing {3} in the DO UPDATE SET clause.
+                DatabaseType.PostgreSQL or DatabaseType.SQLite =>
+                    $"INSERT INTO {tbl} ({type}, {cust}, {key}, {cnt}, {upd}) VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {now}) " +
+                    $"ON CONFLICT ({type}, {cust}, {key}) DO UPDATE SET {cnt} = {{3}}, {upd} = {now}",
+
+                DatabaseType.MySQL =>
+                    $"INSERT INTO {tbl} ({type}, {cust}, {key}, {cnt}, {upd}) VALUES ({{0}}, {{1}}, {{2}}, {{3}}, {now}) " +
+                    $"ON DUPLICATE KEY UPDATE {cnt} = {{3}}, {upd} = {now}",
+
+                // SQL Server: carry content through the USING source so each param appears once.
+                DatabaseType.SQLServer =>
+                    $"MERGE {tbl} WITH (HOLDLOCK) AS t USING (VALUES ({{0}}, {{1}}, {{2}}, {{3}})) AS s ({type}, {cust}, {key}, {cnt}) " +
+                    $"ON t.{type} = s.{type} AND t.{cust} = s.{cust} AND t.{key} = s.{key} " +
+                    $"WHEN MATCHED THEN UPDATE SET t.{cnt} = s.{cnt}, t.{upd} = {now} " +
+                    $"WHEN NOT MATCHED THEN INSERT ({type}, {cust}, {key}, {cnt}, {upd}) VALUES (s.{type}, s.{cust}, s.{key}, s.{cnt}, {now});",
+
+                // Oracle: same USING shape as SQL Server, so each param is written once. Binding is
+                // by name (`DbCommandSpec.CreateCommand` sets `BindByName`), so this is a matter of
+                // the statement reading the same way on both engines, not a binding requirement.
+                DatabaseType.Oracle =>
+                    $"MERGE INTO {tbl} t USING (SELECT {{0}} AS {type}, {{1}} AS {cust}, {{2}} AS {key}, {{3}} AS {cnt} FROM dual) s " +
+                    $"ON (t.{type} = s.{type} AND t.{cust} = s.{cust} AND t.{key} = s.{key}) " +
+                    $"WHEN MATCHED THEN UPDATE SET t.{cnt} = s.{cnt}, t.{upd} = {now} " +
+                    $"WHEN NOT MATCHED THEN INSERT ({type}, {cust}, {key}, {cnt}, {upd}) VALUES (s.{type}, s.{cust}, s.{key}, s.{cnt}, {now})",
+
+                _ => throw new NotSupportedException($"Define-storage upsert is not defined for {databaseType}.")
+            };
+
+            return new DbCommandSpec(DbCommandKind.NonQuery, commandText, defineType, customizeId, defineKey, content);
+        }
+
+        /// <summary>
+        /// Builds the cache-notify key for a define. Single source of the convention, shared by the
+        /// write path and <see cref="GetChangeSource"/> so the two can never drift apart.
+        /// </summary>
+        private static string BuildNotifyKey(string defineTypeName, string defineKey)
+            => $"{defineTypeName}:{defineKey}";
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Reports the very cache-notify key this storage touches when the define is written, built
+        /// through the same key helpers, so a consumer never reconstructs the convention itself.
+        /// There is no file to watch — invalidation travels through the notify table instead.
+        /// </remarks>
+        public DefineChangeSource GetChangeSource(DefineType defineType, params string[] keys)
+        {
+            string? notifyKey = defineType switch
+            {
+                DefineType.DbCategorySettings => BuildNotifyKey(nameof(DbCategorySettings), SingletonKey),
+                DefineType.CurrencySettings => BuildNotifyKey(nameof(CurrencySettings), SingletonKey),
+                DefineType.UnitSettings => BuildNotifyKey(nameof(UnitSettings), SingletonKey),
+                DefineType.ProgramSettings => BuildNotifyKey(nameof(ProgramSettings), SingletonKey),
+                DefineType.MenuSettings => BuildNotifyKey(nameof(MenuSettings), SingletonKey),
+                DefineType.FormSchema when keys.Length >= 1 => BuildNotifyKey(nameof(FormSchema), keys[0]),
+                DefineType.FormLayout when keys.Length >= 1 => BuildNotifyKey(nameof(FormLayout), keys[0]),
+                DefineType.TableSchema when keys.Length >= 2
+                    => BuildNotifyKey(nameof(TableSchema), TableSchemaKey(keys[0], keys[1])),
+                DefineType.Language when keys.Length >= 2
+                    => BuildNotifyKey(nameof(LanguageResource), LanguageKey(keys[0], keys[1])),
+                _ => null
+            };
+
+            return notifyKey is null ? DefineChangeSource.None : new DefineChangeSource { NotifyKey = notifyKey };
+        }
+    }
+}

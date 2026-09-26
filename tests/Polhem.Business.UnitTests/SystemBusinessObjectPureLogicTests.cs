@@ -1,0 +1,83 @@
+using System.ComponentModel;
+using Polhem.Business.System;
+using Polhem.Definition;
+using Polhem.Tests.Shared;
+
+namespace Polhem.Business.UnitTests
+{
+    /// <summary>
+    /// <see cref="SystemBusinessObject"/> 不依賴 Repository / DefineAccess 的純邏輯分支測試。
+    /// Phase 4 之後 BO ctor 需要 IPolhemContext，透過 <see cref="TestPolhemContext.Create(PolhemTestFixture)"/>
+    /// 從 per-class fixture 取得 DI 服務。
+    /// </summary>
+    public class SystemBusinessObjectPureLogicTests : IClassFixture<SharedDbFixture>
+    {
+        private readonly SharedDbFixture _fx;
+
+        public SystemBusinessObjectPureLogicTests(SharedDbFixture fx) { _fx = fx; }
+        [Fact]
+        [DisplayName("Ping 應回傳 Status=ok、回應 TraceId 與 UTC ServerTime")]
+        public void Ping_ReturnsExpectedValues()
+        {
+            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+            var args = new PingArgs { ClientName = "client01", TraceId = "trace-xyz" };
+            var before = DateTime.UtcNow.AddSeconds(-1);
+
+            var result = bo.Ping(args);
+
+            Assert.Equal("ok", result.Status);
+            Assert.Equal("trace-xyz", result.TraceId);
+            Assert.True(result.ServerTime >= before);
+            Assert.True(result.ServerTime <= DateTime.UtcNow.AddSeconds(1));
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-1)]
+        [InlineData(86401)]
+        [DisplayName("CreateSession 的 ExpiresIn 越界應拋 ArgumentOutOfRangeException")]
+        public void CreateSession_InvalidExpiresIn_ThrowsArgumentOutOfRange(int expiresIn)
+        {
+            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+            var args = new CreateSessionArgs { UserID = "u01", ExpiresIn = expiresIn, OneTime = false };
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => bo.CreateSession(args));
+        }
+
+        [Theory]
+        [InlineData(DefineType.SystemSettings)]
+        [InlineData(DefineType.DatabaseSettings)]
+        // ProgramSettings 於型別註冊表化後收緊為 server 專用：它只剩組件限定型別名，
+        // client 需要的選單已移至 MenuSettings。
+        [InlineData(DefineType.ProgramSettings)]
+        [DisplayName("GetDefine 非本地呼叫且為 server 專用 DefineType 應拋 NotSupportedException")]
+        public void GetDefine_NonLocalCallWithSensitiveType_ThrowsNotSupported(DefineType defineType)
+        {
+            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            var args = new GetDefineArgs { DefineType = defineType };
+
+            Assert.Throws<NotSupportedException>(() => bo.GetDefine(args));
+        }
+
+        [Theory]
+        [InlineData(DefineType.SystemSettings)]
+        [InlineData(DefineType.DatabaseSettings)]
+        [InlineData(DefineType.PermissionModels)]
+        [InlineData(DefineType.DbCategorySettings)]
+        [InlineData(DefineType.FormSchema)]
+        [InlineData(DefineType.FormLayout)]
+        [InlineData(DefineType.ProgramSettings)]
+        [InlineData(DefineType.Language)]
+        [DisplayName("SaveDefine 非本地呼叫應一律拋 NotSupportedException（不限敏感型別）")]
+        public void SaveDefine_NonLocalCall_ThrowsNotSupported(DefineType defineType)
+        {
+            // 先前僅 SystemSettings / DatabaseSettings 受擋，其餘定義型別任何已驗證帳號皆可覆寫
+            // ——包含 PermissionModels（授權模型本身）、DbCategorySettings（各表對應哪個資料庫）
+            // 與 FormSchema（其運算式在伺服端求值）。現改為整個方法限近端。
+            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            var args = new SaveDefineArgs { DefineType = defineType, Xml = "<root/>" };
+
+            Assert.Throws<NotSupportedException>(() => bo.SaveDefine(args));
+        }
+    }
+}

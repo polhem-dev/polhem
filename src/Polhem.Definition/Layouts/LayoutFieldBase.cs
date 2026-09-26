@@ -1,0 +1,206 @@
+using System.ComponentModel;
+using System.Xml.Serialization;
+using Polhem.Base.Collections;
+using Polhem.Base.Serialization;
+using Polhem.Definition.Collections;
+
+namespace Polhem.Definition.Layouts
+{
+    /// <summary>
+    /// Abstract base class for layout fields.
+    /// Holds the rendering attributes shared by <see cref="LayoutField"/> (master section field)
+    /// and <see cref="LayoutColumn"/> (grid column).
+    /// </summary>
+    [Description("Layout field base class.")]
+    public abstract class LayoutFieldBase : CollectionItem
+    {
+        private PropertyCollection? _extendedProperties = null;
+
+        /// <summary>
+        /// Gets or sets the field name.
+        /// </summary>
+        [Category(PropertyCategories.Data)]
+        [XmlAttribute]
+        [NotifyParentProperty(true)]
+        [Description("Field name.")]
+        public string FieldName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the caption text.
+        /// </summary>
+        [Category(PropertyCategories.Layout)]
+        [XmlAttribute]
+        [NotifyParentProperty(true)]
+        [Description("Caption text.")]
+        [DefaultValue("")]
+        public string Caption { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the control type.
+        /// </summary>
+        [Category(PropertyCategories.Layout)]
+        [XmlAttribute]
+        [Description("Control type.")]
+        [DefaultValue(ControlType.TextEdit)]
+        public ControlType ControlType { get; set; } = ControlType.TextEdit;
+
+        /// <summary>
+        /// Gets or sets the local fields whose values are displayed in place of this
+        /// field's bound value, with multiple fields separated by commas. Used by lookup
+        /// editors: the bound field stores a row identifier (Guid), while the editor
+        /// shows the mapped display values joined with " - ".
+        /// </summary>
+        [Category(PropertyCategories.Data)]
+        [XmlAttribute]
+        [Description("Local fields displayed in place of the bound value, comma separated (lookup editors).")]
+        [DefaultValue("")]
+        public string DisplayFields { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the display format string.
+        /// </summary>
+        [Category(PropertyCategories.Data)]
+        [XmlAttribute]
+        [Description("Display format string.")]
+        [DefaultValue("")]
+        public string DisplayFormat { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the number format string.
+        /// </summary>
+        [Category(PropertyCategories.Data)]
+        [XmlAttribute]
+        [Description("Number format string.")]
+        [DefaultValue("")]
+        public string NumberFormat { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the numeric semantic kind, propagated from <see cref="Forms.FormField.NumberKind"/>.
+        /// Drives the field's rounding policy and decimal-places source during delivery-time format baking
+        /// and runtime reference resolution.
+        /// </summary>
+        [Category(PropertyCategories.Data)]
+        [XmlAttribute]
+        [Description("Numeric semantic kind driving rounding and decimal places.")]
+        [DefaultValue(NumberKind.None)]
+        public NumberKind NumberKind { get; set; } = NumberKind.None;
+
+        /// <summary>
+        /// Gets or sets the name of the field that holds this amount field's currency code (a SAP
+        /// CUKY reference), propagated from <see cref="Forms.FormField.CurrencyField"/>. Drives
+        /// per-cell currency-aware decimal resolution at runtime.
+        /// </summary>
+        [Category(PropertyCategories.Data)]
+        [XmlAttribute]
+        [Description("Name of the field holding this amount field's currency code (SAP CUKY reference).")]
+        [DefaultValue("")]
+        public string CurrencyField { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the name of the field that holds this quantity/weight field's unit-of-measure
+        /// code (a SAP UNIT reference), propagated from <see cref="Forms.FormField.UnitField"/>. Drives
+        /// per-cell unit-aware decimal resolution at runtime.
+        /// </summary>
+        [Category(PropertyCategories.Data)]
+        [XmlAttribute]
+        [Description("Name of the field holding this quantity/weight field's unit code (SAP UNIT reference).")]
+        [DefaultValue("")]
+        public string UnitField { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this field is visible.
+        /// Layout-level visibility: false means the field exists in the layout
+        /// (e.g. for grid row binding) but is not rendered.
+        /// </summary>
+        [Category(PropertyCategories.Layout)]
+        [XmlAttribute]
+        [Description("Indicates whether this field is visible.")]
+        [DefaultValue(true)]
+        public bool Visible { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this field is read-only.
+        /// </summary>
+        [Category(PropertyCategories.Appearance)]
+        [XmlAttribute]
+        [Description("Indicates whether this field is read-only.")]
+        [DefaultValue(false)]
+        public bool ReadOnly { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this field is required (mandatory input).
+        /// Drives the caption colour cue in the UI; independent of the database NotNull
+        /// constraint so a field can be required for user input without authoring a schema.
+        /// </summary>
+        [Category(PropertyCategories.Appearance)]
+        [XmlAttribute]
+        [Description("Indicates whether this field is required (mandatory input).")]
+        [DefaultValue(false)]
+        public bool Required { get; set; } = false;
+
+        /// <summary>
+        /// Gets the extended property collection.
+        /// </summary>
+        [Description("Extended property collection.")]
+        [DefaultValue(null)]
+        public PropertyCollection? ExtendedProperties
+        {
+            get
+            {
+                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _extendedProperties!)) { return null; }
+                if (_extendedProperties == null) { _extendedProperties = []; }
+                return _extendedProperties;
+            }
+        }
+
+        /// <summary>
+        /// Sets the serialization state.
+        /// </summary>
+        /// <param name="serializeState">The serialization state.</param>
+        public override void SetSerializeState(SerializeState serializeState)
+        {
+            base.SetSerializeState(serializeState);
+            _extendedProperties?.SetSerializeState(serializeState);
+        }
+
+        /// <summary>
+        /// Copies every member declared on this base class onto <paramref name="target"/>.
+        /// Derived types call this from their own <c>Clone</c> and then copy their own members.
+        /// </summary>
+        /// <param name="target">The clone receiving the values.</param>
+        /// <remarks>
+        /// Reads the backing field for the extended properties rather than the public getter,
+        /// because the getter reports <c>null</c> while a serialization pass is in progress.
+        /// </remarks>
+        protected void CopyBaseTo(LayoutFieldBase target)
+        {
+            ArgumentNullException.ThrowIfNull(target);
+
+            target.FieldName = FieldName;
+            target.Caption = Caption;
+            target.ControlType = ControlType;
+            target.DisplayFields = DisplayFields;
+            target.DisplayFormat = DisplayFormat;
+            target.NumberFormat = NumberFormat;
+            target.NumberKind = NumberKind;
+            target.CurrencyField = CurrencyField;
+            target.UnitField = UnitField;
+            target.Visible = Visible;
+            target.ReadOnly = ReadOnly;
+            target.Required = Required;
+
+            if (_extendedProperties == null)
+                return;
+            foreach (var property in _extendedProperties)
+                target.ExtendedProperties!.Add(property.Name, property.Value);
+        }
+
+        /// <summary>
+        /// Returns a string representation of this object.
+        /// </summary>
+        public override string ToString()
+        {
+            return $"{FieldName} - {Caption}";
+        }
+    }
+}

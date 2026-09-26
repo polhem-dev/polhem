@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>Connector for local or remote invocation of backend logic.</Description>
+    <PackageTags>polhem;connector;polhem;api;remote;local</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Api.Core\Polhem.Api.Core.csproj" />
+  </ItemGroup>
+
+</Project>

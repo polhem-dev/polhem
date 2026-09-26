@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Polhem.Northwind.Server</RootNamespace>
+    <AssemblyName>Polhem.Northwind.Server</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!--
+    Dogfooding the framework convention analyzers against this application's real definition files.
+    Two things have to be done by hand here that a package consumer gets for free: the analyzer has to
+    be referenced explicitly (analyzers do not flow through a ProjectReference), and the definition
+    files have to be listed as AdditionalFiles, because buildTransitive/Polhem.Definition.targets ships
+    inside the NuGet package and is not imported by a project reference. The definitions also live one
+    level up, at the solution root rather than beside this project — which for a package consumer is
+    what PolhemDefinitionFilesGlob is for.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Polhem.Analyzers\Polhem.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
+    <AdditionalFiles Include="..\Define\**\*.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Polhem.Api.AspNetCore\Polhem.Api.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\..\src\Polhem.Business\Polhem.Business.csproj" />
+    <ProjectReference Include="..\..\..\src\Polhem.Db\Polhem.Db.csproj" />
+    <ProjectReference Include="..\..\..\src\Polhem.Hosting\Polhem.Hosting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.4" />
+    <!-- Force SQLitePCLRaw native bundle to 3.x (non-vulnerable SQLite engine); the 2.1.x
+         line carries advisory GHSA-2m69-gcr7-jv3q with no 2.x patch. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Northwind seed subset read by NorthwindSchemaSeeder at first run. The Web SDK
+         already globs these as Content; only override the copy-to-output behaviour. -->
+    <Content Update="SeedData\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

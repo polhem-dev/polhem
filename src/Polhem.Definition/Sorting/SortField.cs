@@ -1,0 +1,40 @@
+using Polhem.Base.Collections;
+
+namespace Polhem.Definition.Sorting
+{
+    /// <summary>
+    /// A sort field definition.
+    /// </summary>
+    public sealed class SortField : CollectionItem
+    {
+        /// <summary>
+        /// Initializes a new instance of <see cref="SortField"/>.
+        /// </summary>
+        public SortField()
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="SortField"/>.
+        /// </summary>
+        /// <param name="fieldName">The field name.</param>
+        /// <param name="direction">The sort direction.</param>
+        public SortField(string fieldName, SortDirection direction)
+        {
+            if (string.IsNullOrWhiteSpace(fieldName))
+                throw new ArgumentException("Field cannot be null or empty.", nameof(fieldName));
+
+            FieldName = fieldName;
+            Direction = direction;
+        }
+
+        /// <summary>
+        /// Gets or sets the field name or SQL expression.
+        /// </summary>
+        public string FieldName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the sort direction.
+        /// </summary>
+        public SortDirection Direction { get; set; }
+    }
+}

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>Manages client-server connection settings and states.</Description>
+    <PackageTags>polhem;client;settings;api;core;ui</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Api.Client\Polhem.Api.Client.csproj" />
+  </ItemGroup>
+
+</Project>

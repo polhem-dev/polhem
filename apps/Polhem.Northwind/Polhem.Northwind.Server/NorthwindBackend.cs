@@ -1,0 +1,148 @@
+using Polhem.Api.Core;
+using Polhem.Base;
+using Polhem.Business;
+using Polhem.Db;
+using Polhem.Db.Manager;
+using Polhem.Db.Providers.Sqlite;
+using Polhem.Definition;
+using Polhem.Definition.Database;
+using Polhem.Definition.Storage;
+using Polhem.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Polhem.Northwind.Server;
+
+/// <summary>
+/// One-line bootstrap for the Polhem.Northwind demo. Resolves the sibling <c>Define</c>
+/// directory, registers SQLite, loads SystemSettings and wires <c>AddPolhemFramework</c>.
+/// </summary>
+/// <remarks>
+/// Nothing on the session axis is overridden or substituted. The seeder writes
+/// <see cref="NorthwindCredentials"/> into <c>st_user</c>, <c>st_company</c> and
+/// <c>st_user_company</c>, and the demo then runs the framework's own sign-in and company entry
+/// against those rows — the same two steps a multi-company deployment takes. A single company
+/// makes the second step look redundant; it is not, and taking a shortcut past it costs more
+/// than it saves — the demo's README records what that shortcut cost when it was tried.
+/// </remarks>
+/// <remarks>
+/// This is the self-contained mirror of the <c>samples/Polhem.Samples.Shared</c> demo backend:
+/// the app depends only on the published <c>Polhem.*</c> packages so it can graduate to its own
+/// repository without dragging the samples shared project along.
+/// </remarks>
+public static class NorthwindBackend
+{
+    /// <summary>
+    /// Registers Polhem backend services into <paramref name="builder"/>.
+    /// </summary>
+    /// <param name="builder">The web application builder.</param>
+    /// <returns>The resolved <see cref="PathOptions"/> so callers can locate Define files later if needed.</returns>
+    public static PathOptions AddNorthwindBackend(this WebApplicationBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        // Demo-only: ensure a master key is available so a fresh clone can run with zero
+        // setup. Production hosts MUST set POLHEM_MASTER_KEY via the real deployment mechanism.
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("POLHEM_MASTER_KEY")))
+        {
+            Environment.SetEnvironmentVariable("POLHEM_MASTER_KEY", NorthwindCredentials.DemoMasterKey);
+        }
+
+        string definePath = ResolveDefinePath();
+        var paths = new PathOptions
+        {
+            DefinePath = definePath,
+            // Turns the tenant customization layer on. A non-empty CustomizePath is one half of the
+            // gate (SessionInfo.CustomizeId is the other), and the demo company names
+            // NorthwindCredentials.CustomizeId, so definition lookups consult
+            // Customize/northwind-demo/ before the packaged Define/ tree. Clearing either half
+            // returns the demo to a pure packaged deployment with no other change.
+            CustomizePath = ResolveCustomizePath(definePath),
+        };
+
+        // Two categories of table exist because the framework reaches for them: the cross-company
+        // tables in common (st_user, st_session, st_cache_notify, ...) and the audit trail in log.
+        // Their TableSchema files under Define/ are the demo's own definitions, committed like the
+        // company ones, and DbCategorySettings registers them so the ordinary category loop builds
+        // them. The embedded defaults in Polhem.Definition are only the starting point those files were
+        // first imported from: once a file exists here it is authoritative, and a later change to
+        // the defaults is not meant to replace it.
+        //
+        // That is why this call keeps skip-if-exists. It fills in a table the demo does not define
+        // yet, such as one a newer framework starts reaching for, and leaves every existing file
+        // alone; a file it writes shows up untracked, to be reviewed and committed. The folders are
+        // taken wholesale rather than by name on purpose: see GetFrameworkCommonTables for why, and
+        // for what the demo pays in return.
+        Defaults.MaterializeTo(paths.DefinePath, new MaterializeOptions
+        {
+            Filter = rel => NorthwindSchemaSeeder.FrameworkTableSchemaPrefixes
+                .Any(prefix => rel.StartsWith(prefix, StringComparison.Ordinal))
+        });
+
+        // SQLite providers — keep dialect registration explicit so the framework does
+        // not force every host to pull every ADO.NET driver.
+        DbProviderRegistry.Register(DatabaseType.SQLite, new SqliteProviderFactory(SqliteFactory.Instance));
+        DbDialectRegistry.Register(DatabaseType.SQLite, new SqliteDialectFactory());
+
+        var settings = SystemSettingsLoader.Load(paths);
+        SysInfo.Initialize(settings.CommonConfiguration);
+        ApiServiceOptions.Initialize(
+            settings.CommonConfiguration.ApiPayloadOptions,
+            settings.CommonConfiguration.IsDebugMode);
+
+        builder.Services.AddPolhemFramework(
+            settings.BackendConfiguration,
+            paths,
+            autoCreateMasterKey: true);
+
+        // Nothing is registered past AddPolhemFramework. Sign-in, company entry and company lookup
+        // all run the framework's own implementations: NorthwindSchemaSeeder writes the st_user,
+        // st_company and st_user_company rows they read, and the client calls EnterCompany after
+        // Login like any other deployment.
+
+        return paths;
+    }
+
+    /// <summary>
+    /// After the host is built: runs the schema seeder once.
+    /// </summary>
+    /// <param name="app">The built web application.</param>
+    public static void UseNorthwindBackend(this WebApplication app)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+
+        var defineAccess = app.Services.GetRequiredService<IDefineAccess>();
+        var connectionManager = app.Services.GetRequiredService<IDbConnectionManager>();
+        var dbAccessFactory = app.Services.GetRequiredService<IDbAccessFactory>();
+        NorthwindSchemaSeeder.EnsureSchemaAndSeed(defineAccess, connectionManager, dbAccessFactory);
+    }
+
+    /// <summary>
+    /// Resolves the tenant customization root as the sibling of the <c>Define</c> directory.
+    /// </summary>
+    /// <param name="definePath">The resolved <c>Define</c> directory.</param>
+    /// <remarks>
+    /// Derived from <paramref name="definePath"/> rather than walked for independently: the two
+    /// roots are siblings by layout, and a second walk could pair a <c>Define</c> from one checkout
+    /// with a <c>Customize</c> from an enclosing one. The directory need not exist — a missing
+    /// override file is the normal answer everywhere in the customization layer.
+    /// </remarks>
+    private static string ResolveCustomizePath(string definePath)
+        => Path.Combine(Path.GetDirectoryName(definePath)!, "Customize");
+
+    private static string ResolveDefinePath()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(dir.FullName, "Define", "SystemSettings.xml");
+            if (File.Exists(candidate))
+                return Path.GetDirectoryName(candidate)!;
+            dir = dir.Parent;
+        }
+        throw new InvalidOperationException(
+            "Could not locate 'Define/SystemSettings.xml' walking up from " +
+            $"'{AppContext.BaseDirectory}'. Run the demo from inside the checkout.");
+    }
+}

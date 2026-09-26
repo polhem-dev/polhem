@@ -1,0 +1,433 @@
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using Polhem.DefineEditor.Models;
+using Polhem.DefineEditor.Services;
+using Polhem.DefineEditor.Views;
+using Polhem.Definition;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+
+namespace Polhem.DefineEditor.ViewModels;
+
+public partial class MainWindowViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private ObservableCollection<DefineNode> _nodes = new();
+
+    /// <summary>
+    /// Open document tabs. New tabs are appended; selecting an already-open
+    /// node activates the existing tab rather than re-loading.
+    /// </summary>
+    public ObservableCollection<DocumentViewModelBase> OpenDocuments { get; } = new();
+
+    [ObservableProperty]
+    private DocumentViewModelBase? _activeDocument;
+
+    [ObservableProperty]
+    private string _statusText = string.Empty;
+
+    /// <summary>
+    /// Root path of the currently open solution. Empty when no solution is
+    /// open — the welcome panel checks this to decide whether to show the
+    /// "Open Folder" call-to-action vs the tree view.
+    /// </summary>
+    [ObservableProperty]
+    private string _solutionPath = string.Empty;
+
+    /// <summary>
+    /// True when a solution is open. Derived from <see cref="SolutionPath"/>;
+    /// bind <c>IsVisible</c> to this for "show tree" branches and to its
+    /// negation for "show welcome" branches.
+    /// </summary>
+    public bool IsSolutionOpened => !string.IsNullOrEmpty(SolutionPath);
+
+    [ObservableProperty]
+    private DefineNode? _selectedNode;
+
+    /// <summary>
+    /// Solution-wide context (currently: the set of available FormSchema ProgIds)
+    /// rebuilt each time a DefinePath is opened.
+    /// </summary>
+    public SolutionContext Solution { get; private set; } = SolutionContext.Empty;
+
+    public bool HasOpenDocuments => OpenDocuments.Count > 0;
+
+    public bool HasActiveDocument => ActiveDocument is not null;
+
+    /// <summary>
+    /// True when at least one open document has unsaved edits and supports
+    /// saving. Drives the File menu's "Save All" availability; refreshed from
+    /// each document's IsDirty change (see <see cref="OnOpenDocumentsChanged"/>).
+    /// </summary>
+    public bool HasDirtyDocuments =>
+        OpenDocuments.Any(d => d.IsDirty && d.FileSaveCommand is not null);
+
+    /// <summary>
+    /// Active document's file path relative to <see cref="SolutionPath"/>, e.g.
+    /// "FormSchema/Employee.xml". Empty when no document is active or the
+    /// solution root is unknown. Bound to the status bar so the user can see
+    /// which file they're editing at a glance — VS Code shows the same.
+    /// </summary>
+    public string ActiveDocumentRelativePath
+    {
+        get
+        {
+            if (ActiveDocument is null || string.IsNullOrEmpty(SolutionPath))
+                return string.Empty;
+            var key = ActiveDocument.DocumentKey;
+            if (string.IsNullOrEmpty(key)) return string.Empty;
+            try { return Path.GetRelativePath(SolutionPath, key); }
+            catch (ArgumentException) { return key; }
+        }
+    }
+
+    /// <summary>
+    /// True when the active document has a backing file path to show in the
+    /// status bar. False for path-less tabs (Welcome) so the "›" separator
+    /// doesn't dangle with nothing after it.
+    /// </summary>
+    public bool HasActiveDocumentPath => ActiveDocumentRelativePath.Length > 0;
+
+    /// <summary>
+    /// Visibility hint for the right-pane "select a node to open a tab" welcome.
+    /// Shown only when a solution is open but no document tab is active —
+    /// otherwise the left-pane "Open Folder" welcome covers the empty state.
+    /// </summary>
+    public bool ShowDocumentWelcome => IsSolutionOpened && !HasOpenDocuments;
+
+    public MainWindowViewModel()
+    {
+        OpenDocuments.CollectionChanged += OnOpenDocumentsChanged;
+    }
+
+    /// <summary>
+    /// Documents whose PropertyChanged we are currently subscribed to for
+    /// IsDirty tracking. Re-synced wholesale on every collection change —
+    /// tab counts are small, and full resync sidesteps the Reset-action
+    /// case where the removed items are not reported.
+    /// </summary>
+    private readonly List<DocumentViewModelBase> _dirtySubscriptions = new();
+
+    private void OnOpenDocumentsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(HasOpenDocuments));
+        OnPropertyChanged(nameof(ShowDocumentWelcome));
+
+        foreach (var doc in _dirtySubscriptions)
+        {
+            doc.PropertyChanged -= OnDocumentPropertyChanged;
+            doc.DefineFileGenerated -= OnDefineFileGenerated;
+        }
+        _dirtySubscriptions.Clear();
+        foreach (var doc in OpenDocuments)
+        {
+            doc.PropertyChanged += OnDocumentPropertyChanged;
+            doc.DefineFileGenerated += OnDefineFileGenerated;
+            _dirtySubscriptions.Add(doc);
+        }
+        OnPropertyChanged(nameof(HasDirtyDocuments));
+    }
+
+    /// <summary>
+    /// Rescans the solution so a newly generated define file appears in the tree, then opens it.
+    /// </summary>
+    private void OnDefineFileGenerated(object? sender, string filePath)
+    {
+        if (string.IsNullOrEmpty(SolutionPath)) return;
+
+        Nodes = new ObservableCollection<DefineNode> { DefinePathScanner.Scan(SolutionPath) };
+        Solution = SolutionContext.FromTree(Nodes[0]);
+
+        var node = FindNodeByFilePath(Nodes[0], filePath);
+        if (node is not null) SelectedNode = node;
+    }
+
+    private static DefineNode? FindNodeByFilePath(DefineNode node, string filePath)
+    {
+        if (node.Kind == DefineNodeKind.DefineFile
+            && string.Equals(node.FilePath, filePath, StringComparison.OrdinalIgnoreCase))
+        {
+            return node;
+        }
+        foreach (var child in node.Children)
+        {
+            var found = FindNodeByFilePath(child, filePath);
+            if (found is not null) return found;
+        }
+        return null;
+    }
+
+    private void OnDocumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DocumentViewModelBase.IsDirty))
+            OnPropertyChanged(nameof(HasDirtyDocuments));
+    }
+
+    partial void OnSolutionPathChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsSolutionOpened));
+        OnPropertyChanged(nameof(ShowDocumentWelcome));
+        OnPropertyChanged(nameof(ActiveDocumentRelativePath));
+        OnPropertyChanged(nameof(HasActiveDocumentPath));
+    }
+
+    partial void OnActiveDocumentChanged(DocumentViewModelBase? value)
+    {
+        OnPropertyChanged(nameof(HasActiveDocument));
+        OnPropertyChanged(nameof(ActiveDocumentRelativePath));
+        OnPropertyChanged(nameof(HasActiveDocumentPath));
+    }
+
+    /// <summary>
+    /// Activates the Welcome tab, creating it (pinned as the first tab, like
+    /// VS Code) when it isn't open. Called at startup when
+    /// <see cref="UserSettings.ShowWelcomeOnStartup"/> is set and from
+    /// View → Welcome.
+    /// </summary>
+    public void ShowWelcome()
+    {
+        var existing = OpenDocuments.OfType<WelcomeDocumentViewModel>().FirstOrDefault();
+        if (existing is not null)
+        {
+            ActiveDocument = existing;
+            return;
+        }
+
+        var doc = new WelcomeDocumentViewModel();
+        OpenDocuments.Insert(0, doc);
+        ActiveDocument = doc;
+    }
+
+    partial void OnSelectedNodeChanged(DefineNode? value)
+    {
+        if (value is null
+            || value.Kind != DefineNodeKind.DefineFile
+            || string.IsNullOrEmpty(value.FilePath))
+        {
+            return;
+        }
+
+        // Already open? Activate that tab instead of creating a duplicate.
+        var existing = OpenDocuments.FirstOrDefault(d =>
+            string.Equals(d.DocumentKey, value.FilePath, StringComparison.OrdinalIgnoreCase));
+        if (existing is not null)
+        {
+            ActiveDocument = existing;
+            return;
+        }
+
+        var doc = DocumentViewModelFactory.Create(value, Solution);
+        if (doc is null) return;
+        OpenDocuments.Add(doc);
+        ActiveDocument = doc;
+    }
+
+    [RelayCommand]
+    private async Task CloseDocument(DocumentViewModelBase? doc)
+    {
+        if (doc is null) return;
+        var idx = OpenDocuments.IndexOf(doc);
+        if (idx < 0) return;
+        if (!await PrepareCloseAsync(new List<DocumentViewModelBase> { doc })) return;
+
+        OpenDocuments.Remove(doc);
+        doc.Dispose();
+
+        if (ActiveDocument == doc)
+        {
+            ActiveDocument = OpenDocuments.Count == 0
+                ? null
+                : OpenDocuments[Math.Min(idx, OpenDocuments.Count - 1)];
+        }
+    }
+
+    [RelayCommand]
+    private async Task CloseOtherDocuments(DocumentViewModelBase? doc)
+    {
+        if (doc is null) return;
+        var targets = OpenDocuments.Where(d => d != doc).ToList();
+        if (!await PrepareCloseAsync(targets)) return;
+        CloseDocuments(targets, activate: doc);
+    }
+
+    [RelayCommand]
+    private async Task CloseDocumentsToTheRight(DocumentViewModelBase? doc)
+    {
+        if (doc is null) return;
+        var idx = OpenDocuments.IndexOf(doc);
+        if (idx < 0) return;
+        var targets = OpenDocuments.Skip(idx + 1).ToList();
+        if (!await PrepareCloseAsync(targets)) return;
+        CloseDocuments(targets, activate: doc);
+    }
+
+    // Only ever closes clean tabs, so no unsaved-changes prompt is needed.
+    [RelayCommand]
+    private void CloseSavedDocuments() =>
+        CloseDocuments(OpenDocuments.Where(d => !d.IsDirty).ToList(), activate: ActiveDocument);
+
+    [RelayCommand]
+    private async Task CloseAllDocuments()
+    {
+        var targets = OpenDocuments.ToList();
+        if (!await PrepareCloseAsync(targets)) return;
+        CloseDocuments(targets, activate: null);
+    }
+
+    /// <summary>
+    /// Gatekeeper run before any tab-close action. When <paramref name="docs"/>
+    /// contains dirty documents, prompts Save / Don't Save / Cancel (VS Code
+    /// style). "Save" runs each dirty editor's own Save flow — if any of them
+    /// is backed out (validation-error prompt cancelled) the document stays
+    /// dirty and the whole close is aborted so no edits are lost. Returns
+    /// <c>true</c> when the caller may proceed with closing. Headless contexts
+    /// (no main window) skip the prompt, consistent with the other dialogs.
+    /// </summary>
+    private static async Task<bool> PrepareCloseAsync(IReadOnlyList<DocumentViewModelBase> docs)
+    {
+        var dirty = docs.Where(d => d.IsDirty).ToList();
+        if (dirty.Count == 0) return true;
+
+        var owner = GetOwnerWindow();
+        if (owner is null) return true;
+
+        var message = dirty.Count == 1
+            ? L("Confirm_CloseUnsavedMessage", dirty[0].Title)
+            : L("Confirm_CloseUnsavedMessageMulti", dirty.Count,
+                string.Join("\n", dirty.Select(d => "• " + d.Title)));
+
+        var choice = await ConfirmationDialog.ShowUnsavedAsync(
+            owner,
+            L("Confirm_CloseUnsavedTitle"),
+            message,
+            saveLabel: L("Action_Save"),
+            discardLabel: L("Action_DontSave"),
+            cancelLabel: L("Action_Cancel"));
+
+        switch (choice)
+        {
+            case ConfirmCloseResult.Discard:
+                return true;
+            case ConfirmCloseResult.Save:
+                foreach (var doc in dirty)
+                {
+                    if (doc.FileSaveCommand is IAsyncRelayCommand asyncSave)
+                        await asyncSave.ExecuteAsync(null);
+                    else
+                        doc.FileSaveCommand?.Execute(null);
+                }
+                return dirty.All(d => !d.IsDirty);
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// Removes and disposes <paramref name="docs"/>, then re-points
+    /// <see cref="ActiveDocument"/>: prefer <paramref name="activate"/> when it
+    /// survived the close, otherwise fall back to the last remaining tab (or
+    /// null when none are left). Shared by the tab context-menu close actions.
+    /// </summary>
+    private void CloseDocuments(IReadOnlyList<DocumentViewModelBase> docs, DocumentViewModelBase? activate)
+    {
+        foreach (var doc in docs)
+        {
+            OpenDocuments.Remove(doc);
+            doc.Dispose();
+        }
+
+        if (activate is not null && OpenDocuments.Contains(activate))
+            ActiveDocument = activate;
+        else if (ActiveDocument is null || !OpenDocuments.Contains(ActiveDocument))
+            ActiveDocument = OpenDocuments.LastOrDefault();
+    }
+
+    /// <summary>
+    /// Saves every dirty document that supports saving, reusing each editor's
+    /// own Save flow (including the save-despite-validation-errors prompt — a
+    /// cancelled prompt leaves that document dirty and the batch moves on).
+    /// </summary>
+    [RelayCommand]
+    private async Task SaveAll()
+    {
+        var targets = OpenDocuments
+            .Where(d => d.IsDirty && d.FileSaveCommand is not null)
+            .ToList();
+        if (targets.Count == 0) return;
+
+        var saved = 0;
+        foreach (var doc in targets)
+        {
+            if (doc.FileSaveCommand is IAsyncRelayCommand asyncSave)
+                await asyncSave.ExecuteAsync(null);
+            else
+                doc.FileSaveCommand!.Execute(null);
+            if (!doc.IsDirty) saved++;
+        }
+        StatusText = L("Status_SavedAll", saved, targets.Count);
+    }
+
+    /// <summary>
+    /// Drops every open document tab and disposes the view-models so their
+    /// <see cref="LocalizationService.CultureChanged"/> subscriptions release.
+    /// Used by <see cref="OpenSolution"/> when switching solutions.
+    /// </summary>
+    private void DisposeAndClearOpenDocuments()
+    {
+        foreach (var doc in OpenDocuments) doc.Dispose();
+        OpenDocuments.Clear();
+    }
+
+    /// <summary>
+    /// Opens a DefinePath folder as the solution and rebuilds the tree. Any open
+    /// document tabs from a previous solution are dropped.
+    /// </summary>
+    public void OpenSolution(string definePath)
+    {
+        try
+        {
+            // Materialise any missing framework-default define files into the
+            // opened folder before scanning. SkipExisting=true (the default)
+            // guarantees consumer customisations are never overwritten — only
+            // files the consumer hasn't created yet get written.
+            var materialiseResult = Defaults.MaterializeTo(definePath, MaterializeOptions.Default);
+
+            var root = DefinePathScanner.Scan(definePath);
+            Nodes = new ObservableCollection<DefineNode> { root };
+            Solution = SolutionContext.FromTree(root);
+            DisposeAndClearOpenDocuments();
+            ActiveDocument = null;
+            SelectedNode = null;
+
+            // Record for File → Open Recent before assigning SolutionPath —
+            // its PropertyChanged fires synchronously and the App-side menu
+            // rebuild reads these settings in that handler.
+            var settings = UserSettings.Load();
+            settings.TouchRecentSolution(definePath);
+            settings.Save();
+
+            SolutionPath = definePath;
+
+            var loadedMsg = L("Status_SolutionLoaded", Solution.AvailableProgIds.Count);
+            StatusText = materialiseResult.WrittenCount > 0
+                ? $"{L("Status_FrameworkDefaultsMaterialised", materialiseResult.WrittenCount)} · {loadedMsg}"
+                : loadedMsg;
+        }
+        catch (Exception ex) when (ex is IOException or ArgumentException or UnauthorizedAccessException)
+        {
+            Nodes = new ObservableCollection<DefineNode>();
+            Solution = SolutionContext.Empty;
+            DisposeAndClearOpenDocuments();
+            ActiveDocument = null;
+            SelectedNode = null;
+            SolutionPath = string.Empty;
+            StatusText = L("Status_OpenSolutionFailed", ex.Message);
+        }
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822",
+        Justification = "RelayCommand handler bound from XAML must remain instance.")]
+    [RelayCommand]
+    private void ToggleTheme() => App.ToggleTheme();
+}

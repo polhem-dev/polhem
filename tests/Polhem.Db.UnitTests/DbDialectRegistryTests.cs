@@ -1,0 +1,147 @@
+using System.ComponentModel;
+using Polhem.Base.Data;
+using Polhem.Db.Ddl;
+using Polhem.Db.Manager;
+using Polhem.Db.Providers.SqlServer;
+using Polhem.Db.Schema;
+using Polhem.Db.Schema.Changes;
+using Polhem.Definition.Database;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Storage;
+using Polhem.Tests.Shared;
+
+namespace Polhem.Db.UnitTests
+{
+    public class DbDialectRegistryTests : IClassFixture<SharedDbFixture>
+    {
+        public DbDialectRegistryTests(SharedDbFixture _) { }
+
+        [Fact]
+        [DisplayName("Register + Get 應成功取回對應的工廠")]
+        public void RegisterAndGet_ReturnsSameFactory()
+        {
+            var factory = new SqlDialectFactory();
+            DbDialectRegistry.Register(DatabaseType.SQLServer, factory);
+
+            Assert.Same(factory, DbDialectRegistry.Get(DatabaseType.SQLServer));
+        }
+
+        [Fact]
+        [DisplayName("IsRegistered 在已註冊時應回傳 true")]
+        public void IsRegistered_Registered_ReturnsTrue()
+        {
+            DbDialectRegistry.Register(DatabaseType.SQLServer, new SqlDialectFactory());
+
+            Assert.True(DbDialectRegistry.IsRegistered(DatabaseType.SQLServer));
+        }
+
+        [Fact]
+        [DisplayName("Register 傳 null 應擲 ArgumentNullException")]
+        public void Register_NullFactory_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() => DbDialectRegistry.Register(DatabaseType.SQLServer, null!));
+        }
+
+        [Fact]
+        [DisplayName("Get 未註冊型別應擲 KeyNotFoundException")]
+        public void Get_Unregistered_Throws()
+        {
+            // GlobalFixture 註冊全部既定 DatabaseType 後，找不到「天然未註冊」的列舉值；
+            // 改用 enum 範圍外的整數作為「永遠不會被註冊」的 placeholder。
+            Assert.Throws<KeyNotFoundException>(() => DbDialectRegistry.Get((DatabaseType)9999));
+        }
+    }
+
+    public class SqlDialectFactoryTests : IClassFixture<SharedDbFixture>
+    {
+        private readonly SharedDbFixture _fx;
+
+        public SqlDialectFactoryTests(SharedDbFixture fx) { _fx = fx; }
+
+        private readonly SqlDialectFactory _factory = new();
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("CreateTableSchemaProvider 應回傳 SqlTableSchemaProvider")]
+        public void CreateTableSchemaProvider_ReturnsSqlImpl()
+        {
+            // ctor 內 new DbAccess("common_sqlserver") 需要 DbConnectionManager 已註冊連線；
+            // 未設 POLHEM_TEST_CONNSTR_SQLSERVER 時 GlobalFixture 不會註冊，故以 [DbFact] 跳過。
+            var provider = _factory.CreateTableSchemaProvider("common_sqlserver", _fx.GetRequiredService<IDbConnectionManager>());
+
+            Assert.IsType<SqlTableSchemaProvider>(provider);
+            Assert.Equal("common_sqlserver", provider.DatabaseId);
+        }
+
+        [Fact]
+        [DisplayName("CreateCreateTableCommandBuilder 應回傳 SqlCreateTableCommandBuilder")]
+        public void CreateCreateTableCommandBuilder_ReturnsSqlImpl()
+        {
+            Assert.IsType<SqlCreateTableCommandBuilder>(_factory.CreateCreateTableCommandBuilder());
+        }
+
+        [Fact]
+        [DisplayName("CreateTableAlterCommandBuilder 應回傳 SqlTableAlterCommandBuilder")]
+        public void CreateTableAlterCommandBuilder_ReturnsSqlImpl()
+        {
+            Assert.IsType<SqlTableAlterCommandBuilder>(_factory.CreateTableAlterCommandBuilder());
+        }
+
+        [Fact]
+        [DisplayName("CreateTableRebuildCommandBuilder 應實作 ITableRebuildCommandBuilder")]
+        public void CreateTableRebuildCommandBuilder_ImplementsInterface()
+        {
+            var rebuildBuilder = _factory.CreateTableRebuildCommandBuilder();
+
+            Assert.IsType<ITableRebuildCommandBuilder>(rebuildBuilder, exactMatch: false);
+        }
+
+[Fact]
+        [DisplayName("GetDefaultValueExpression 應回傳 SQL Server 特有預設值（如 getdate、newid）")]
+        public void GetDefaultValueExpression_SqlServerDefaults()
+        {
+            Assert.Equal("getutcdate()", _factory.GetDefaultValueExpression(FieldDbType.DateTime));
+            Assert.Equal("newid()", _factory.GetDefaultValueExpression(FieldDbType.Guid));
+            Assert.Equal("0", _factory.GetDefaultValueExpression(FieldDbType.Integer));
+            Assert.Equal(string.Empty, _factory.GetDefaultValueExpression(FieldDbType.String));
+        }
+
+        [Fact]
+        [DisplayName("CreateTableRebuildCommandBuilder 回傳實例可處理 diff（煙霧測試）")]
+        public void CreateTableRebuildCommandBuilder_CanProduceSql()
+        {
+            var define = new TableSchema { TableName = "st_sample" };
+            define.Fields!.Add("id", "Id", FieldDbType.Guid);
+            var real = new TableSchema { TableName = "st_sample" };
+            real.Fields!.Add("id", "Id", FieldDbType.Guid);
+            var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
+            // 強制加一筆變化讓 rebuild 產出非空 SQL
+            diff.Changes.Add(new AddFieldChange(new DbFieldForTest()));
+
+            var builder = _factory.CreateTableRebuildCommandBuilder();
+            var sql = builder.GetCommandText(diff);
+
+            Assert.Contains("tmp_st_sample", sql);
+        }
+
+        [Fact]
+        [DisplayName("CreateFormCommandBuilder 應回傳 SqlFormCommandBuilder")]
+        public void CreateFormCommandBuilder_ReturnsSqlImpl()
+        {
+            var schema = new FormSchema("Foo", "Foo");
+            var defineAccess = _fx.GetRequiredService<IDefineAccess>();
+
+            var builder = _factory.CreateFormCommandBuilder(schema, defineAccess);
+
+            Assert.IsType<SqlFormCommandBuilder>(builder);
+        }
+
+        // 測試用 helper（避免為了單一煙霧測試依賴較重的 schema 建構）
+        private sealed class DbFieldForTest : global::Polhem.Definition.Database.DbField
+        {
+            public DbFieldForTest() : base("note", "Note", FieldDbType.String)
+            {
+                Length = 10;
+            }
+        }
+    }
+}

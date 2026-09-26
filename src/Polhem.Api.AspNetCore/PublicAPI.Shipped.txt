@@ -1,0 +1,13 @@
+#nullable enable
+Polhem.Api.AspNetCore.PolhemFrameworkApplicationBuilderExtensions
+Polhem.Api.AspNetCore.Controllers.ApiServiceController
+Polhem.Api.AspNetCore.Controllers.ApiServiceController.ApiKeyValidation.get -> Polhem.Definition.Security.ApiKeyValidationResult!
+Polhem.Api.AspNetCore.Controllers.ApiServiceController.ApiServiceController() -> void
+Polhem.Api.AspNetCore.Controllers.ApiServiceController.IsDevelopment.get -> bool
+Polhem.Api.AspNetCore.Controllers.ApiServiceController.PostAsync(string? apiKey = null, string? authorization = null) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.IActionResult!>!
+static Polhem.Api.AspNetCore.PolhemFrameworkApplicationBuilderExtensions.UsePolhemFramework(this Microsoft.AspNetCore.Builder.IApplicationBuilder! app) -> Microsoft.AspNetCore.Builder.IApplicationBuilder!
+virtual Polhem.Api.AspNetCore.Controllers.ApiServiceController.CreateErrorResponse(int httpStatusCode, Polhem.Api.Core.JsonRpc.JsonRpcErrorCode code, string! message, string? id = null, string? data = null) -> Microsoft.AspNetCore.Mvc.IActionResult!
+virtual Polhem.Api.AspNetCore.Controllers.ApiServiceController.HandleRequestAsync(System.Guid accessToken, Polhem.Api.Core.JsonRpc.JsonRpcRequest! request) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.IActionResult!>!
+virtual Polhem.Api.AspNetCore.Controllers.ApiServiceController.ReadRequestAsync() -> System.Threading.Tasks.Task<Polhem.Api.Core.JsonRpc.JsonRpcRequest!>!
+virtual Polhem.Api.AspNetCore.Controllers.ApiServiceController.ValidateApiKey(string? apiKey) -> Polhem.Definition.Security.ApiKeyValidationResult!
+virtual Polhem.Api.AspNetCore.Controllers.ApiServiceController.ValidateAuthorization(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request, string? apiKey, string? authorization) -> Polhem.Api.Core.Authorization.ApiAuthorizationResult!

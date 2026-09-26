@@ -1,0 +1,74 @@
+using System.ComponentModel;
+using Polhem.Db.Manager;
+using Polhem.Definition.Database;
+using Polhem.Repository.AuditLog;
+using Polhem.Tests.Shared;
+
+namespace Polhem.Repository.UnitTests
+{
+    /// <summary>
+    /// <see cref="AuditRuleRepository"/> 對「<c>st_audit_rule</c> 尚未建立」的處置：回空清單而非拋例外。
+    /// </summary>
+    /// <remarks>
+    /// 這是 per-form 稽核規則唯一的真實回歸風險——**升級前既有的部署沒有這張表**，
+    /// 若讀不到就拋例外，每一次 Save 都會炸。
+    /// <para>
+    /// 探測對象刻意指向 <b>common</b> 資料庫：<c>st_audit_rule</c> 是 company scope 的表，
+    /// 結構上永遠不會出現在 common。早期版本改為指向 company 並依賴「測試定義沒登記這張表」，
+    /// 那種寫法在有人把它補進 <c>tests/Define</c> 時會**靜默失去意義而不是失敗**——
+    /// 而那正好已經發生了。
+    /// </para>
+    /// <para>
+    /// 逐一涵蓋五種 provider：判斷表是否存在走的是各家自己的 <c>TableSchemaProvider</c>，
+    /// 一種 provider 過不代表其餘四種過。
+    /// </para>
+    /// </remarks>
+    public class AuditRuleRepositoryTests : IClassFixture<SharedDbFixture>
+    {
+        private readonly SharedDbFixture _fx;
+        public AuditRuleRepositoryTests(SharedDbFixture fx) { _fx = fx; }
+
+        private AuditRuleRepository CreateRepo()
+            => new AuditRuleRepository(
+                TestRepositoryContext.Create(_fx.GetRequiredService<IDbConnectionManager>()),
+                Guid.Empty, string.Empty);
+
+        private void RunMissingTable(DatabaseType dbType)
+        {
+            var databaseId = TestDbConventions.GetDatabaseId(dbType, "common");
+
+            var rules = CreateRepo().GetRules(databaseId);
+
+            Assert.Empty(rules);
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("st_audit_rule 不存在時回空清單 on SQL Server")]
+        public void MissingTable_SqlServer() => RunMissingTable(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("st_audit_rule 不存在時回空清單 on PostgreSQL")]
+        public void MissingTable_PostgreSql() => RunMissingTable(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("st_audit_rule 不存在時回空清單 on SQLite")]
+        public void MissingTable_Sqlite() => RunMissingTable(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("st_audit_rule 不存在時回空清單 on MySQL")]
+        public void MissingTable_MySql() => RunMissingTable(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("st_audit_rule 不存在時回空清單 on Oracle")]
+        public void MissingTable_Oracle() => RunMissingTable(DatabaseType.Oracle);
+
+        [Fact]
+        [DisplayName("databaseId 為空應擲例外，而非悄悄回空清單")]
+        public void GetRules_EmptyDatabaseId_Throws()
+        {
+            var exception = Record.Exception(() => CreateRepo().GetRules(string.Empty));
+
+            Assert.IsType<ArgumentException>(exception);
+        }
+    }
+}

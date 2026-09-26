@@ -1,0 +1,111 @@
+using System.ComponentModel;
+using System.Reflection;
+using Polhem.Definition;
+using Polhem.Tests.Shared;
+
+namespace Polhem.Business.UnitTests.Contracts
+{
+    /// <summary>
+    /// 守住「每個保留字 progId 都真的能被 <see cref="BusinessObjectFactory"/> 建出來」。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>為什麼既有的閘門擋不到這件事。</b><c>ActionSurfaceTests</c> 守的是 action 常數與方法的
+    /// 對稱、<c>BoApiSurfaceTests</c> 守的是公開表面、<c>ReservedProgIdResolutionTests</c> 守的是
+    /// progId 解析得到哪個<b>型別</b>——三者都在「型別已經被建出來」之後才有意義。而
+    /// <c>BusinessObjectFactory.CreateBusinessObject</c> 是用 <c>Activator.CreateInstance</c> 固定
+    /// 傳四個引數建構的，<b>C# 的建構子不會被繼承</b>：子類少宣告一個參數，前面三道閘門全綠，
+    /// 症狀是 runtime 的 <c>MissingMethodException</c>，而且發生在方法查找<b>之前</b>，
+    /// 對呼叫端呈現為 <c>InternalError</c>。
+    /// </para>
+    /// <para>
+    /// 這正是 4.25.0 的 <c>AuditRule</c> 發生過的事：它只宣告了三參數建構子，於是那張隨框架出貨的
+    /// 稽核規則維護表單遠端完全不可達，而唯一的測試是直接 <c>new</c> 出來的、從不經過工廠，
+    /// 所以出貨時整個套件是綠的。
+    /// </para>
+    /// <para>
+    /// <b>兩層互補，刻意重疊。</b><c>CreateBusinessObject_*</c> 走真實工廠，是最貼近實際失敗的一層；
+    /// <c>DefaultType_DeclaresConstructorMatchingTheBase</c> 是純反射，連工廠都不經過。兩者都
+    /// <b>不硬編工廠傳的引數形狀</b>——前者根本不需要知道，後者從 <see cref="BusinessObject"/>
+    /// 基底的建構子推導。抄一份形狀下來就又多了一個會漂的來源。
+    /// </para>
+    /// <para>
+    /// NOTE: 走工廠那層曾經需要資料庫容器 —— 它以裸 <c>Guid.NewGuid()</c> 當權杖，BO 建構過程
+    /// <c>SessionInfoService.Get</c> 查不到就走 rebuild 路徑讀 <c>st_session</c>。那個相依與本測試的
+    /// 主題（建構子形狀）無關，已改用 <see cref="TestSessionFactory.CreateAccessToken"/> 拆掉，
+    /// fixture 也隨之從 <c>SharedDbFixture</c> 降為 <see cref="PolhemTestFixture"/>。
+    /// </para>
+    /// </remarks>
+    public class ReservedProgIdConstructionTests : IClassFixture<PolhemTestFixture>
+    {
+        private readonly PolhemTestFixture _fx;
+
+        public ReservedProgIdConstructionTests(PolhemTestFixture fx) { _fx = fx; }
+
+        private IBusinessObjectFactory Factory => _fx.GetRequiredService<IBusinessObjectFactory>();
+
+        public static TheoryData<string> ReservedProgIds()
+        {
+            var data = new TheoryData<string>();
+            foreach (var binding in Polhem.Business.ReservedProgIds.All)
+                data.Add(binding.ProgId);
+            return data;
+        }
+
+        [Theory]
+        [MemberData(nameof(ReservedProgIds))]
+        [DisplayName("每個保留字 progId 都應能經 BusinessObjectFactory 建出對應的 BO")]
+        public void CreateBusinessObject_EveryReservedProgId_Succeeds(string progId)
+        {
+            var binding = Polhem.Business.ReservedProgIds.Find(progId);
+            Assert.NotNull(binding);
+
+            var bo = Factory.CreateBusinessObject(TestSessionFactory.CreateAccessToken(_fx), progId, isLocalCall: true);
+
+            // 斷言用 ExpectedBaseType 而非 DefaultType：部署可以在註冊表把保留字綁到自己的子類，
+            // 那是合法的，而不論綁到哪一個，它都必須滿足該 progId 的基底約束。
+            Assert.IsType(binding!.ExpectedBaseType, bo, exactMatch: false);
+        }
+
+        [Theory]
+        [MemberData(nameof(ReservedProgIds))]
+        [DisplayName("每個保留字 progId 建出的 BO 都應保留 isLocalCall=false")]
+        public void CreateBusinessObject_EveryReservedProgId_PreservesRemoteFlag(string progId)
+        {
+            var bo = Factory.CreateBusinessObject(TestSessionFactory.CreateAccessToken(_fx), progId, isLocalCall: false);
+
+            var businessObject = Assert.IsType<BusinessObject>(bo, exactMatch: false);
+            Assert.False(businessObject.IsLocalCall);
+        }
+
+        [Theory]
+        [MemberData(nameof(ReservedProgIds))]
+        [DisplayName("每個保留字 progId 的預設 BO 都應宣告與基底相同參數形狀的建構子（不需容器）")]
+        public void DefaultType_DeclaresConstructorMatchingTheBase(string progId)
+        {
+            var binding = Polhem.Business.ReservedProgIds.Find(progId);
+            Assert.NotNull(binding);
+
+            // 期望形狀從 BusinessObject 基底自己推導，不從工廠抄一份下來——抄下來就又多一個會漂的來源。
+            var expected = typeof(BusinessObject)
+                .GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .Select(c => c.GetParameters().Select(p => p.ParameterType).ToArray())
+                .OrderByDescending(types => types.Length)
+                .First();
+
+            var actual = binding!.DefaultType.GetConstructor(expected);
+
+            Assert.True(
+                actual is not null,
+                $"{binding.DefaultType.Name} 沒有 ({string.Join(", ", expected.Select(t => t.Name))}) 建構子，" +
+                "BusinessObjectFactory 會擲 MissingMethodException，該 progId 遠端不可達。");
+        }
+
+        [Fact]
+        [DisplayName("保留字 progId 清單不得為空（防空轉：清單空掉時上面三個 Theory 會恆綠）")]
+        public void ReservedProgIds_AreNotEmpty()
+        {
+            Assert.NotEmpty(Polhem.Business.ReservedProgIds.All);
+        }
+    }
+}

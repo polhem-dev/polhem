@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>Provides common repository base classes and data access mechanisms.</Description>
+    <PackageTags>polhem;repository;infrastructure;dataaccess;implementation;backend</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ActivatorUtilities only: the abstractions package carries no container, so a custom
+         repository can declare its own DI dependencies without this package pulling one in. -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Db\Polhem.Db.csproj" />
+    <ProjectReference Include="..\Polhem.Repository.Abstractions\Polhem.Repository.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

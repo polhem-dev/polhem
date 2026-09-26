@@ -1,0 +1,207 @@
+using System.ComponentModel;
+using System.Data;
+using Polhem.Api.Contracts.AuditLog;
+using Polhem.Api.Core.MessagePack;
+using Polhem.Api.Core.Messages.AuditLog;
+using Polhem.Definition.Logging;
+using Polhem.Definition.Paging;
+
+namespace Polhem.Api.Core.UnitTests.AuditLog
+{
+    /// <summary>
+    /// AuditLog 軸 wire DTO 經 <see cref="MessagePackCodec"/> 的 round-trip 驗證：清單回應的
+    /// <c>DataTable</c> + <c>PagingInfo</c>、明細回應的巢狀 <c>List&lt;RecordFieldChange&gt;</c>、
+    /// 以及 <c>GetChangeLogRequest</c> 的 typed filter 欄位（含 nullable enum）皆能完整還原。
+    /// </summary>
+    public class AuditLogMessagePackTests
+    {
+        [Fact]
+        [DisplayName("GetChangeLogRequest 應 round-trip 還原 typed filter（含 nullable enum / 分頁）")]
+        public void GetChangeLogRequest_RoundTrip()
+        {
+            var from = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc);
+            var request = new GetChangeLogRequest
+            {
+                FromUtc = from,
+                UserId = "demo",
+                ProgId = "Employee",
+                ChangeKind = ChangeKind.Delete,
+                Paging = new PagingOptions { Page = 2, PageSize = 25, IncludeTotalCount = true },
+            };
+
+            var restored = MessagePackCodec.Deserialize<GetChangeLogRequest>(MessagePackCodec.Serialize(request));
+
+            Assert.NotNull(restored);
+            Assert.Equal(from, restored!.FromUtc);
+            Assert.Null(restored.ToUtc);
+            Assert.Equal("demo", restored.UserId);
+            Assert.Equal("Employee", restored.ProgId);
+            Assert.Equal(ChangeKind.Delete, restored.ChangeKind);
+            Assert.Equal(2, restored.Paging!.Page);
+            Assert.True(restored.Paging.IncludeTotalCount);
+        }
+
+        [Fact]
+        [DisplayName("GetChangeDetailResponse 帶巢狀 Fields 應完整 round-trip")]
+        public void GetChangeDetailResponse_RoundTrip_PreservesFields()
+        {
+            var sysRowId = Guid.NewGuid();
+            var response = new GetChangeDetailResponse
+            {
+                SysRowId = sysRowId,
+                LogTime = new DateTime(2026, 7, 8, 3, 0, 0, DateTimeKind.Utc),
+                UserId = "demo",
+                ProgId = "Employee",
+                RowKey = "R-1",
+                ChangeKind = ChangeKind.Update,
+                IsSensitive = true,
+                Source = "Employee.Save",
+                Fields =
+                [
+                    new RecordFieldChange { TableName = "st_employee", RowKey = "R-1", RowState = ChangeKind.Update, FieldName = "name", OldValue = "Alice", NewValue = "Alice Wang" },
+                    new RecordFieldChange { TableName = "st_employee", RowKey = "R-1", RowState = ChangeKind.Update, FieldName = "note", OldValue = "keep", NewValue = null },
+                ],
+            };
+
+            var restored = MessagePackCodec.Deserialize<GetChangeDetailResponse>(MessagePackCodec.Serialize(response));
+
+            Assert.NotNull(restored);
+            Assert.Equal(sysRowId, restored!.SysRowId);
+            Assert.Equal(ChangeKind.Update, restored.ChangeKind);
+            Assert.True(restored.IsSensitive);
+            Assert.Equal(2, restored.Fields.Count);
+            Assert.Equal("name", restored.Fields[0].FieldName);
+            Assert.Equal("Alice Wang", restored.Fields[0].NewValue);
+            Assert.Null(restored.Fields[1].NewValue);
+        }
+
+        [Fact]
+        [DisplayName("GetLoginLogRequest 應 round-trip 還原 nullable LoginEvent + 分頁")]
+        public void GetLoginLogRequest_RoundTrip()
+        {
+            var request = new GetLoginLogRequest
+            {
+                UserId = "demo",
+                Event = LoginEvent.LockedOut,
+                Paging = new PagingOptions { Page = 3, PageSize = 20 },
+            };
+
+            var restored = MessagePackCodec.Deserialize<GetLoginLogRequest>(MessagePackCodec.Serialize(request));
+
+            Assert.NotNull(restored);
+            Assert.Equal("demo", restored!.UserId);
+            Assert.Equal(LoginEvent.LockedOut, restored.Event);
+            Assert.Null(restored.FromUtc);
+            Assert.Equal(3, restored.Paging!.Page);
+        }
+
+        [Fact]
+        [DisplayName("LogListResponse 帶 DataTable + PagingInfo 應 round-trip（login/access/anomaly 共用）")]
+        public void LogListResponse_RoundTrip()
+        {
+            var table = new DataTable("st_log_login");
+            table.Columns.Add("sys_rowid", typeof(Guid));
+            table.Columns.Add("event", typeof(int));
+            var id = Guid.NewGuid();
+            table.Rows.Add(id, (int)LoginEvent.LoginSucceeded);
+
+            var response = new LogListResponse
+            {
+                Table = table,
+                Paging = new PagingInfo { Page = 1, PageSize = 50, TotalCount = 1, HasMore = false },
+            };
+
+            var restored = MessagePackCodec.Deserialize<LogListResponse>(MessagePackCodec.Serialize(response));
+
+            Assert.NotNull(restored);
+            Assert.Single(restored!.Table!.Rows);
+            Assert.Equal(id, (Guid)restored.Table.Rows[0]["sys_rowid"]);
+            Assert.Equal(1, restored.Paging!.TotalCount);
+        }
+
+        [Fact]
+        [DisplayName("GetTopApiMethodsRequest 應 round-trip 還原時間窗 + TopN")]
+        public void GetTopApiMethodsRequest_RoundTrip()
+        {
+            var from = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc);
+            var request = new GetTopApiMethodsRequest { FromUtc = from, TopN = 25 };
+
+            var restored = MessagePackCodec.Deserialize<GetTopApiMethodsRequest>(MessagePackCodec.Serialize(request));
+
+            Assert.NotNull(restored);
+            Assert.Equal(from, restored!.FromUtc);
+            Assert.Null(restored.ToUtc);
+            Assert.Equal(25, restored.TopN);
+        }
+
+        [Fact]
+        [DisplayName("LogAggregateResponse 帶聚合 DataTable 應 round-trip（summary/topN 共用）")]
+        public void LogAggregateResponse_RoundTrip()
+        {
+            var table = new DataTable("agg");
+            table.Columns.Add("anomaly_kind", typeof(int));
+            table.Columns.Add("event_count", typeof(long));
+            table.Rows.Add((int)ChangeKind.Update, 42L);
+
+            var restored = MessagePackCodec.Deserialize<LogAggregateResponse>(
+                MessagePackCodec.Serialize(new LogAggregateResponse { Table = table }));
+
+            Assert.NotNull(restored);
+            Assert.Single(restored!.Table!.Rows);
+            Assert.Equal(42L, (long)restored.Table.Rows[0]["event_count"]);
+        }
+
+        [Fact]
+        [DisplayName("GetChangeDetailResponse 的 DataSet 應 round-trip 保留列狀態與原值")]
+        public void GetChangeDetailResponse_RoundTrip_PreservesDataSetRowStates()
+        {
+            var response = new GetChangeDetailResponse
+            {
+                SysRowId = Guid.NewGuid(),
+                ChangeKind = ChangeKind.Update,
+                DataSet = NewChangeDataSet(),
+            };
+
+            var restored = MessagePackCodec.Deserialize<GetChangeDetailResponse>(MessagePackCodec.Serialize(response));
+
+            Assert.NotNull(restored?.DataSet);
+            AssertChangeDataSet(restored!.DataSet!);
+        }
+
+        /// <summary>一列 Modified（原值 Alice → Alice Wang）、一列 Unchanged。</summary>
+        internal static DataSet NewChangeDataSet()
+        {
+            var dataSet = new DataSet("Employee");
+            var table = dataSet.Tables.Add("Employee");
+            table.Columns.Add("sys_rowid", typeof(string));
+            table.Columns.Add("name", typeof(string));
+            var modified = table.Rows.Add("R-1", "Alice");
+            table.Rows.Add("R-2", "Bob");
+            dataSet.AcceptChanges();
+            modified["name"] = "Alice Wang";
+            return dataSet;
+        }
+
+        internal static void AssertChangeDataSet(DataSet dataSet)
+        {
+            var rows = dataSet.Tables["Employee"]!.Rows;
+            Assert.Equal(2, rows.Count);
+            Assert.Equal(DataRowState.Modified, rows[0].RowState);
+            Assert.Equal("Alice", rows[0]["name", DataRowVersion.Original]);
+            Assert.Equal("Alice Wang", rows[0]["name", DataRowVersion.Current]);
+            Assert.Equal(DataRowState.Unchanged, rows[1].RowState);
+            Assert.Equal("Bob", rows[1]["name"]);
+        }
+
+        [Fact]
+        [DisplayName("GetChangeDetailResponse 空 Fields 應 round-trip 且不 NRE")]
+        public void GetChangeDetailResponse_EmptyFields_RoundTrip()
+        {
+            var response = new GetChangeDetailResponse { SysRowId = Guid.NewGuid() };
+            var restored = MessagePackCodec.Deserialize<GetChangeDetailResponse>(MessagePackCodec.Serialize(response));
+            Assert.NotNull(restored);
+            Assert.NotNull(restored!.Fields);
+            Assert.Empty(restored.Fields);
+        }
+    }
+}

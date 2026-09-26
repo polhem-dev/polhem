@@ -1,0 +1,350 @@
+using System.ComponentModel;
+using Polhem.Base.Data;
+using Polhem.Db.Providers.Oracle;
+using Polhem.Db.Schema;
+using Polhem.Db.Schema.Changes;
+using Polhem.Definition.Database;
+
+namespace Polhem.Db.UnitTests
+{
+    /// <summary>
+    /// Pure-syntax tests for <see cref="OracleTableAlterCommandBuilder"/>. No live database
+    /// connection — verifies the routing of <see cref="ITableChange"/> kinds to Oracle 19c+
+    /// dialect output (double-quote quoting, parenthesised ADD/MODIFY, RENAME COLUMN,
+    /// DROP INDEX without ON tablename, DROP PRIMARY KEY for PK).
+    /// </summary>
+    public class OracleTableAlterCommandBuilderTests
+    {
+        private readonly OracleTableAlterCommandBuilder _builder = new OracleTableAlterCommandBuilder();
+
+        private static DbTableIndex BuildIndex(string indexName, string field, bool unique)
+        {
+            var schema = new TableSchema { TableName = "st_demo" };
+            return schema.Indexes!.Add(indexName, field, unique);
+        }
+
+        private static DbTableIndex BuildPrimaryKey(string field)
+        {
+            var schema = new TableSchema { TableName = "st_demo" };
+            return schema.Indexes!.AddPrimaryKey(field);
+        }
+
+        // ---------- ExecutionKind ----------
+
+        [Fact]
+        [DisplayName("Oracle GetExecutionKind：AddFieldChange 應為 Alter")]
+        public void GetExecutionKind_AddField_IsAlter()
+        {
+            var change = new AddFieldChange(new DbField("col", "Col", FieldDbType.Integer));
+            Assert.Equal(ChangeExecutionKind.Alter, _builder.GetExecutionKind(change));
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetExecutionKind：RenameFieldChange 應為 Alter")]
+        public void GetExecutionKind_Rename_IsAlter()
+        {
+            var change = new RenameFieldChange("oldname", new DbField("newname", "New", FieldDbType.String));
+            Assert.Equal(ChangeExecutionKind.Alter, _builder.GetExecutionKind(change));
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetExecutionKind：AlterFieldChange 同 family（Integer→Long）應為 Alter")]
+        public void GetExecutionKind_AlterFieldSameFamily_IsAlter()
+        {
+            var oldField = new DbField("col", "Col", FieldDbType.Integer);
+            var newField = new DbField("col", "Col", FieldDbType.Long);
+            var change = new AlterFieldChange(oldField, newField);
+            Assert.Equal(ChangeExecutionKind.Alter, _builder.GetExecutionKind(change));
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetExecutionKind：AlterFieldChange 跨 family（Integer→String）應為 Rebuild")]
+        public void GetExecutionKind_AlterFieldCrossFamily_IsRebuild()
+        {
+            var oldField = new DbField("col", "Col", FieldDbType.Integer);
+            var newField = new DbField("col", "Col", FieldDbType.String) { Length = 50 };
+            var change = new AlterFieldChange(oldField, newField);
+            Assert.Equal(ChangeExecutionKind.Rebuild, _builder.GetExecutionKind(change));
+        }
+
+        // ---------- IsNarrowingChange ----------
+
+        [Fact]
+        [DisplayName("Oracle IsNarrowingChange：String 縮短應回傳 true")]
+        public void IsNarrowingChange_StringShortened_ReturnsTrue()
+        {
+            var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 100 };
+            var newField = new DbField("name", "Name", FieldDbType.String) { Length = 50 };
+            Assert.True(_builder.IsNarrowingChange(new AlterFieldChange(oldField, newField)));
+        }
+
+        [Fact]
+        [DisplayName("Oracle IsNarrowingChange：String 加長應回傳 false")]
+        public void IsNarrowingChange_StringExtended_ReturnsFalse()
+        {
+            var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50 };
+            var newField = new DbField("name", "Name", FieldDbType.String) { Length = 100 };
+            Assert.False(_builder.IsNarrowingChange(new AlterFieldChange(oldField, newField)));
+        }
+
+        [Fact]
+        [DisplayName("Oracle IsNarrowingChange：Decimal precision 縮減應回傳 true")]
+        public void IsNarrowingChange_DecimalPrecisionReduced_ReturnsTrue()
+        {
+            var oldField = new DbField("amount", "Amount", FieldDbType.Decimal) { Precision = 18, Scale = 4 };
+            var newField = new DbField("amount", "Amount", FieldDbType.Decimal) { Precision = 12, Scale = 4 };
+            Assert.True(_builder.IsNarrowingChange(new AlterFieldChange(oldField, newField)));
+        }
+
+        // ---------- GetStatements ----------
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：AddField 產生 ALTER TABLE ADD (...)（雙引號識別符 + 括號）")]
+        public void GetStatements_AddField_EmitsAlterTableAdd()
+        {
+            var field = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = false };
+            var statements = _builder.GetStatements("st_demo", new AddFieldChange(field));
+
+            var sql = Assert.Single(statements);
+            Assert.Contains("ALTER TABLE \"ST_DEMO\" ADD (", sql);
+            Assert.Contains("\"AGE\" NUMBER(10) DEFAULT 0 NOT NULL", sql);
+            Assert.EndsWith(");", sql);
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：AlterField 僅 type 變動時 MODIFY 不重發 nullability（避免 ORA-01442）")]
+        public void GetStatements_AlterField_TypeOnlyChange_OmitsNullability()
+        {
+            var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50, AllowNull = false };
+            var newField = new DbField("name", "Name", FieldDbType.String) { Length = 100, AllowNull = false };
+            var statements = _builder.GetStatements("st_demo", new AlterFieldChange(oldField, newField));
+
+            var sql = Assert.Single(statements);
+            Assert.Contains("ALTER TABLE \"ST_DEMO\" MODIFY (", sql);
+            Assert.Contains("\"NAME\" VARCHAR2(100 CHAR)", sql);
+            // nullability 未改變（String 一律 nullable，old/new 同為 NULL）→ 不重發任何 NULL/NOT NULL hint。
+            Assert.DoesNotContain("NULL", sql);
+            Assert.EndsWith(");", sql);
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：AlterField nullability NULL→NOT NULL 應帶 NOT NULL")]
+        public void GetStatements_AlterField_NullToNotNull_EmitsNotNull()
+        {
+            var oldField = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = true };
+            var newField = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = false };
+            var statements = _builder.GetStatements("st_demo", new AlterFieldChange(oldField, newField));
+
+            var sql = Assert.Single(statements);
+            Assert.Contains("ALTER TABLE \"ST_DEMO\" MODIFY (", sql);
+            Assert.Contains("NOT NULL", sql);
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：AlterField nullability NOT NULL→NULL 應帶 NULL")]
+        public void GetStatements_AlterField_NotNullToNull_EmitsNull()
+        {
+            var oldField = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = false };
+            var newField = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = true };
+            var statements = _builder.GetStatements("st_demo", new AlterFieldChange(oldField, newField));
+
+            var sql = Assert.Single(statements);
+            Assert.Contains("ALTER TABLE \"ST_DEMO\" MODIFY (", sql);
+            Assert.Contains(" NULL", sql);
+            Assert.DoesNotContain("NOT NULL", sql);
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：AlterField nullability 未變（NOT NULL→NOT NULL）不重發 nullability（迴歸 ORA-01442）")]
+        public void GetStatements_AlterField_RedundantNotNull_OmitsNullability()
+        {
+            // 僅 default 變、nullability 不變：MODIFY 不得帶 NOT NULL，否則 Oracle 對已 NOT NULL 欄拋 ORA-01442。
+            var oldField = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = false, DefaultValue = "0" };
+            var newField = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = false, DefaultValue = "1" };
+            var statements = _builder.GetStatements("st_demo", new AlterFieldChange(oldField, newField));
+
+            var sql = Assert.Single(statements);
+            Assert.Contains("ALTER TABLE \"ST_DEMO\" MODIFY (", sql);
+            Assert.DoesNotContain("NOT NULL", sql);
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：AlterField 不應使用 MODIFY COLUMN 關鍵字（Oracle 是 MODIFY 後直接接 column 定義）")]
+        public void GetStatements_AlterField_DoesNotEmitModifyColumn()
+        {
+            var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50 };
+            var newField = new DbField("name", "Name", FieldDbType.String) { Length = 100 };
+            var statements = _builder.GetStatements("st_demo", new AlterFieldChange(oldField, newField));
+
+            var sql = Assert.Single(statements);
+            Assert.DoesNotContain("MODIFY COLUMN", sql);
+        }
+
+        // ---------- LOB（CLOB / BLOB）---------- 迴歸 ORA-22859 / ORA-22858
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：Text→Text 的 MODIFY 不得重述 CLOB 型別（迴歸 ORA-22859）")]
+        public void GetStatements_AlterField_TextToText_NeverRestatesClob()
+        {
+            // Oracle 對 LOB 欄的 MODIFY 只要帶型別就擲 ORA-22859，即使型別根本沒變。
+            var oldField = new DbField("error_message", "Msg", FieldDbType.Text) { AllowNull = false };
+            var newField = new DbField("error_message", "Msg", FieldDbType.Text) { AllowNull = true };
+            var statements = _builder.GetStatements("st_demo", new AlterFieldChange(oldField, newField));
+
+            Assert.DoesNotContain(statements, sql => sql.Contains("CLOB", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：LOB 欄無可改子句時不產生任何語句（MODIFY (\"COL\") 非合法語法）")]
+        public void GetStatements_AlterField_LobWithNothingModifiable_EmitsNoStatement()
+        {
+            // Text 兩側的 nullability 恆為 NULL、default 恆為空 —— MODIFY 沒有任何合法內容可帶。
+            var oldField = new DbField("error_message", "Msg", FieldDbType.Text) { AllowNull = false };
+            var newField = new DbField("error_message", "Msg", FieldDbType.Text) { AllowNull = true };
+            var statements = _builder.GetStatements("st_demo", new AlterFieldChange(oldField, newField));
+
+            Assert.Empty(statements);
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：LOB 欄的 default 變動應只發 DEFAULT，不帶型別")]
+        public void GetStatements_AlterField_LobDefaultChange_EmitsDefaultWithoutType()
+        {
+            // Length > 4000 的 String 映射為 CLOB —— 同樣受 ORA-22859 限制，但 DEFAULT 可改。
+            var oldField = new DbField("blob_text", "Text", FieldDbType.String) { Length = 5000, AllowNull = false };
+            var newField = new DbField("blob_text", "Text", FieldDbType.String) { Length = 5000, AllowNull = false, DefaultValue = "x" };
+            var statements = _builder.GetStatements("st_demo", new AlterFieldChange(oldField, newField));
+
+            var sql = Assert.Single(statements);
+            Assert.Equal("ALTER TABLE \"ST_DEMO\" MODIFY (\"BLOB_TEXT\" DEFAULT 'x');", sql);
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：Binary→Binary 的 MODIFY 不得重述 BLOB 型別（迴歸 ORA-22859）")]
+        public void GetStatements_AlterField_BinaryToBinary_NeverRestatesBlob()
+        {
+            var oldField = new DbField("payload", "Payload", FieldDbType.Binary) { AllowNull = true };
+            var newField = new DbField("payload", "Payload", FieldDbType.Binary) { AllowNull = false };
+            var statements = _builder.GetStatements("st_demo", new AlterFieldChange(oldField, newField));
+
+            var sql = Assert.Single(statements);
+            Assert.DoesNotContain("BLOB", sql, StringComparison.Ordinal);
+            Assert.Equal("ALTER TABLE \"ST_DEMO\" MODIFY (\"PAYLOAD\" NOT NULL);", sql);
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetExecutionKind：String→Text（VARCHAR2→CLOB）應為 Rebuild（迴歸 ORA-22858）")]
+        public void GetExecutionKind_StringToText_IsRebuild()
+        {
+            // 兩者同屬 dialect-neutral 的 String family，預設會挑 in-place ALTER；
+            // 但 Oracle 無法以 MODIFY 跨越 LOB 邊界。
+            var oldField = new DbField("note", "Note", FieldDbType.String) { Length = 100 };
+            var newField = new DbField("note", "Note", FieldDbType.Text);
+            Assert.Equal(ChangeExecutionKind.Rebuild, _builder.GetExecutionKind(new AlterFieldChange(oldField, newField)));
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetExecutionKind：Text→String（CLOB→VARCHAR2）應為 Rebuild（迴歸 ORA-22859）")]
+        public void GetExecutionKind_TextToString_IsRebuild()
+        {
+            var oldField = new DbField("note", "Note", FieldDbType.Text);
+            var newField = new DbField("note", "Note", FieldDbType.String) { Length = 100 };
+            Assert.Equal(ChangeExecutionKind.Rebuild, _builder.GetExecutionKind(new AlterFieldChange(oldField, newField)));
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetExecutionKind：String 長度跨越 VARCHAR2 上限應為 Rebuild")]
+        public void GetExecutionKind_StringCrossingVarcharCeiling_IsRebuild()
+        {
+            // 兩側都是 FieldDbType.String，但 5000 落在 CLOB、100 落在 VARCHAR2。
+            var oldField = new DbField("note", "Note", FieldDbType.String) { Length = 100 };
+            var newField = new DbField("note", "Note", FieldDbType.String) { Length = 5000 };
+            Assert.Equal(ChangeExecutionKind.Rebuild, _builder.GetExecutionKind(new AlterFieldChange(oldField, newField)));
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：RenameField 產生 RENAME COLUMN（雙引號）")]
+        public void GetStatements_RenameField_EmitsRenameColumn()
+        {
+            var change = new RenameFieldChange("oldname", new DbField("newname", "New", FieldDbType.String) { Length = 50 });
+            var statements = _builder.GetStatements("st_demo", change);
+
+            var sql = Assert.Single(statements);
+            Assert.Equal("ALTER TABLE \"ST_DEMO\" RENAME COLUMN \"OLDNAME\" TO \"NEWNAME\";", sql);
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：AddIndex 非 PK 產生 CREATE INDEX 並帶 ASC")]
+        public void GetStatements_AddIndex_NonPk_EmitsCreateIndex()
+        {
+            var index = BuildIndex("ix_{0}_col", "col", unique: false);
+            var statements = _builder.GetStatements("st_demo", new AddIndexChange(index));
+
+            var sql = Assert.Single(statements);
+            Assert.Contains("CREATE INDEX \"IX_ST_DEMO_COL\" ON \"ST_DEMO\"", sql);
+            Assert.Contains("\"COL\" ASC", sql);
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：AddIndex 唯一索引產生 CREATE UNIQUE INDEX")]
+        public void GetStatements_AddIndex_Unique_EmitsCreateUniqueIndex()
+        {
+            var index = BuildIndex("uk_{0}_col", "col", unique: true);
+            var statements = _builder.GetStatements("st_demo", new AddIndexChange(index));
+
+            var sql = Assert.Single(statements);
+            Assert.Contains("CREATE UNIQUE INDEX \"UK_ST_DEMO_COL\" ON \"ST_DEMO\"", sql);
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：AddIndex PK 產生 ADD CONSTRAINT PRIMARY KEY 且不帶 ASC/DESC")]
+        public void GetStatements_AddIndex_Pk_EmitsAddConstraint()
+        {
+            var pk = BuildPrimaryKey("id");
+            var statements = _builder.GetStatements("st_demo", new AddIndexChange(pk));
+
+            var sql = Assert.Single(statements);
+            Assert.Contains("ALTER TABLE \"ST_DEMO\" ADD CONSTRAINT \"PK_ST_DEMO\"", sql);
+            Assert.Contains("PRIMARY KEY (\"ID\")", sql);
+            // Oracle PK constraint 內 column 不接受 ASC/DESC
+            Assert.DoesNotContain("PRIMARY KEY (\"ID\" ASC", sql);
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：DropIndex 非 PK 產生 DROP INDEX（不帶 ON tablename）")]
+        public void GetStatements_DropIndex_NonPk_EmitsDropIndex()
+        {
+            var index = BuildIndex("ix_{0}_col", "col", unique: false);
+            // 模擬：當作既有 index name（已 resolve），略過 {0} 替換
+            index.Name = "ix_st_demo_col";
+            var statements = _builder.GetStatements("st_demo", new DropIndexChange(index));
+
+            var sql = Assert.Single(statements);
+            // Oracle DROP INDEX 與 MySQL 不同：不接 ON tablename
+            Assert.Equal("DROP INDEX \"IX_ST_DEMO_COL\";", sql);
+            Assert.DoesNotContain("ON \"ST_DEMO\"", sql);
+        }
+
+        [Fact]
+        [DisplayName("Oracle GetStatements：DropIndex PK 產生 DROP PRIMARY KEY")]
+        public void GetStatements_DropIndex_Pk_EmitsDropPrimaryKey()
+        {
+            var pk = BuildPrimaryKey("id");
+            var statements = _builder.GetStatements("st_demo", new DropIndexChange(pk));
+
+            var sql = Assert.Single(statements);
+            Assert.Equal("ALTER TABLE \"ST_DEMO\" DROP PRIMARY KEY;", sql);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        [DisplayName("Oracle GetStatements：空白 tableName 應拋例外")]
+        public void GetStatements_EmptyTableName_Throws(string? tableName)
+        {
+            var change = new AddFieldChange(new DbField("col", "Col", FieldDbType.Integer));
+            Assert.ThrowsAny<ArgumentException>(() => _builder.GetStatements(tableName!, change));
+        }
+    }
+}

@@ -1,0 +1,275 @@
+using System.Collections;
+using System.Data;
+using System.Reflection;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Globalization;
+
+namespace Polhem.Api.Core.UnitTests
+{
+    /// <summary>
+    /// 由訊息型別產生 TypeScript 宣告，供另一個語言的 client 消費。
+    /// </summary>
+    /// <remarks>
+    /// 手抄一份型別表在 TS 那端，就是同一份 API 合約的第二個權威來源——伺服端改了欄位名，
+    /// 那份抄本不會知道，而漂掉的症狀是欄位靜默消失。改由這裡產生，型別表就成為衍生物。
+    /// <para>
+    /// 產生的是 <b>wire 形狀</b>而非 CLR 形狀：<c>Guid</c> 與 <c>DateTime</c> 在 JSON 上都是
+    /// 字串，列舉是字串字面值聯集（<c>JsonStringEnumConverter</c>），<c>object</c> 成員則是
+    /// 判別式封套。讀者要的是「這個 JSON 長什麼樣」，不是「C# 怎麼宣告」。
+    /// </para>
+    /// </remarks>
+    internal static class WireContractGenerator
+    {
+        /// <summary>訊息型別所在的命名空間前綴。</summary>
+        private const string MessageNamespace = "Polhem.Api.Core.Messages";
+
+        /// <summary>
+        /// 手寫的前言：這幾個型別的 wire 形狀由自訂 converter 決定，反射看不出來。
+        /// </summary>
+        private const string Preamble = """
+            // Generated from the Polhem message types — do not edit by hand.
+            //
+            // These describe the JSON shape on the wire, not the CLR declarations: a Guid and a
+            // DateTime are both strings here, enums are string literal unions (the server writes
+            // them with JsonStringEnumConverter), and an object-typed member is the discriminated
+            // envelope this package calls a wire value.
+
+            /**
+             * An object-typed member as it appears on the wire: `[code, value]`, or null when the
+             * member is absent.
+             *
+             * Named for the envelope rather than the value on purpose — a client decodes this into
+             * whatever the code says, and that decoded value is a different type with a different
+             * name. Calling both `WireValue` would collide in any package that re-exports the two.
+             */
+            export type WireValueEnvelope = [number, unknown] | null;
+
+            /** A column's shape inside a serialized DataTable. */
+            export interface DataColumnShape {
+              name: string;
+              type: string;
+              allowNull: boolean;
+              readOnly: boolean;
+              maxLength: number;
+              caption: string;
+              defaultValue: unknown;
+            }
+
+            /**
+             * A row, carrying its state and the versions that state implies.
+             *
+             * A cell carries no discriminator: its type comes from the matching `DataColumnShape.type`
+             * in the same document. Two of those types do not arrive as JSON numbers —
+             * **`Decimal` and `Int64` (and `UInt64`) are JSON strings**, for the same reason the
+             * object envelope quotes them: a JSON number is a double to every JavaScript reader,
+             * which holds neither a decimal's precision nor an integer past 2^53, and `JSON.parse`
+             * has already lost it before your code runs. Read those cells by the column's `type`,
+             * not by `typeof`.
+             */
+            export interface DataRowShape {
+              state: 'Unchanged' | 'Added' | 'Modified' | 'Deleted';
+              current?: Record<string, unknown>;
+              original?: Record<string, unknown>;
+            }
+
+            export interface DataTable {
+              tableName: string;
+              columns: DataColumnShape[];
+              primaryKeys: string[];
+              rows: DataRowShape[];
+            }
+
+            export interface DataRelationShape {
+              name: string;
+              parentTable: string;
+              childTable: string;
+              parentColumns: string[];
+              childColumns: string[];
+            }
+
+            export interface DataSet {
+              dataSetName: string;
+              tables: DataTable[];
+              relations: DataRelationShape[];
+            }
+            """;
+
+        /// <summary>
+        /// 產生完整的 <c>.d.ts</c> 內容。
+        /// </summary>
+        public static string Generate()
+        {
+            var roots = typeof(Messages.ApiMessageBase).Assembly.GetTypes()
+                .Where(t => t.IsClass && !t.IsAbstract && t.IsPublic)
+                .Where(t => t.Namespace?.StartsWith(MessageNamespace, StringComparison.Ordinal) == true)
+                .OrderBy(t => t.Name, StringComparer.Ordinal)
+                .ToList();
+
+            var interfaces = new SortedDictionary<string, string>(StringComparer.Ordinal);
+            var enums = new SortedDictionary<string, string>(StringComparer.Ordinal);
+            var pending = new Queue<Type>(roots);
+            var seen = new HashSet<Type>();
+
+            while (pending.Count > 0)
+            {
+                var type = pending.Dequeue();
+                if (!seen.Add(type)) continue;
+
+                if (type.IsEnum)
+                {
+                    enums[type.Name] = RenderEnum(type);
+                    continue;
+                }
+
+                interfaces[type.Name] = RenderInterface(type, pending);
+            }
+
+            var builder = new StringBuilder();
+            builder.AppendLine(Preamble);
+            builder.AppendLine();
+            foreach (var body in enums.Values) builder.AppendLine(body);
+            foreach (var body in interfaces.Values) builder.AppendLine(body);
+            return builder.ToString().TrimEnd() + Environment.NewLine;
+        }
+
+        /// <summary>
+        /// 產生「型別名 → assembly-qualified name」的對映。
+        /// </summary>
+        /// <remarks>
+        /// 編碼過的 payload 必須在信封裡指名型別，伺服端據以解析並過白名單。那串名字含
+        /// 命名空間與組件名，跨 repo 手抄必漂——訊息型別搬一次命名空間，抄本就指向一個
+        /// 解析不到的型別，而症狀是執行期被拒、不是編譯錯誤。
+        /// </remarks>
+        public static string GenerateTypeNames()
+        {
+            var types = typeof(Messages.ApiMessageBase).Assembly.GetTypes()
+                .Where(t => t.IsClass && !t.IsAbstract && t.IsPublic)
+                .Where(t => t.Namespace?.StartsWith(MessageNamespace, StringComparison.Ordinal) == true)
+                .OrderBy(t => t.Name, StringComparer.Ordinal)
+                .ToList();
+
+            var builder = new StringBuilder();
+            builder.AppendLine("// Generated from the Polhem message types — do not edit by hand.");
+            builder.AppendLine("//");
+            builder.AppendLine("// An encoded payload must name its type in the envelope; the server resolves it from this");
+            builder.AppendLine("// string and screens it against an allow-list first.");
+            builder.AppendLine();
+            builder.AppendLine("export const WireTypeNames = {");
+
+            foreach (var type in types)
+            {
+                var qualified = $"{type.FullName}, {type.Assembly.GetName().Name}";
+                builder.AppendLine(CultureInfo.InvariantCulture, $"  {type.Name}: '{qualified}',");
+            }
+
+            builder.AppendLine("} as const;");
+            builder.AppendLine();
+            builder.AppendLine("export type WireTypeName = keyof typeof WireTypeNames;");
+            return builder.ToString();
+        }
+
+        private static string RenderEnum(Type type)
+        {
+            var members = Enum.GetNames(type).Select(n => $"'{n}'");
+            return $"export type {type.Name} = {string.Join(" | ", members)};{Environment.NewLine}";
+        }
+
+        private static string RenderInterface(Type type, Queue<Type> pending)
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine(CultureInfo.InvariantCulture, $"export interface {type.Name} {{");
+
+            foreach (var property in WireProperties(type))
+            {
+                var (tsType, optional) = MapType(property.PropertyType, pending);
+                var name = JsonNamingPolicy.CamelCase.ConvertName(property.Name);
+                builder.AppendLine(CultureInfo.InvariantCulture, $"  {name}{(optional ? "?" : "")}: {tsType};");
+            }
+
+            builder.AppendLine("}");
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// 會上 wire 的屬性：公開、可讀寫，且未被 <c>[JsonIgnore]</c> 排除。
+        /// </summary>
+        private static IEnumerable<PropertyInfo> WireProperties(Type type)
+        {
+            return type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.CanRead && p.CanWrite)
+                .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() == null)
+                .OrderBy(p => p.Name, StringComparer.Ordinal);
+        }
+
+        /// <summary>
+        /// 把 CLR 型別對映到它在 wire 上的形狀。
+        /// </summary>
+        /// <returns>TypeScript 型別，以及該成員是否為選填。</returns>
+        private static (string TsType, bool Optional) MapType(Type type, Queue<Type> pending)
+        {
+            var underlying = Nullable.GetUnderlyingType(type);
+            var optional = underlying != null || !type.IsValueType;
+            var actual = underlying ?? type;
+
+            return (MapNonNullable(actual, pending), optional);
+        }
+
+        private static string MapNonNullable(Type type, Queue<Type> pending)
+        {
+            if (type == typeof(string) || type == typeof(Guid)) return "string";
+            if (type == typeof(bool)) return "boolean";
+            // A DateTime is an ISO 8601 string on the wire; keeping it as `string` says so.
+            if (type == typeof(DateTime) || type == typeof(DateTimeOffset)) return "string";
+            if (type == typeof(TimeSpan) || type == typeof(DateOnly)) return "string";
+            if (type == typeof(byte[])) return "string"; // base64
+            if (type == typeof(object)) return "WireValueEnvelope";
+            if (type == typeof(DataSet)) return "DataSet";
+            if (type == typeof(DataTable)) return "DataTable";
+
+            if (type.IsPrimitive || type == typeof(decimal)) return "number";
+
+            if (type.IsEnum)
+            {
+                pending.Enqueue(type);
+                return type.Name;
+            }
+
+            if (type.IsArray)
+            {
+                var element = type.GetElementType()!;
+                return $"{MapNonNullable(element, pending)}[]";
+            }
+
+            if (typeof(IEnumerable).IsAssignableFrom(type))
+            {
+                var element = ElementTypeOf(type);
+                return element == null ? "unknown[]" : $"{MapNonNullable(element, pending)}[]";
+            }
+
+            if (type.IsClass && type.Namespace?.StartsWith("Polhem.", StringComparison.Ordinal) == true)
+            {
+                pending.Enqueue(type);
+                return type.Name;
+            }
+
+            return "unknown";
+        }
+
+        /// <summary>
+        /// 取集合的元素型別：泛型參數優先，其次是 <c>KeyCollectionBase</c> 這類自訂集合的基底參數。
+        /// </summary>
+        private static Type? ElementTypeOf(Type type)
+        {
+            if (type.IsGenericType) return type.GetGenericArguments().FirstOrDefault();
+
+            for (var baseType = type.BaseType; baseType != null; baseType = baseType.BaseType)
+            {
+                if (baseType.IsGenericType) return baseType.GetGenericArguments().FirstOrDefault();
+            }
+
+            return null;
+        }
+    }
+}

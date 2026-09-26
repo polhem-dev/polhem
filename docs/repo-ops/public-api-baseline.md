@@ -1,0 +1,133 @@
+# 公開 API 基準（PublicAPI.*.txt）維運
+
+`src/` 下每個套件都有一對基準檔，記錄該組件已宣告的公開表面：
+
+| 檔案 | 內容 |
+|------|------|
+| `PublicAPI.Shipped.txt` | **已發布**版本的公開表面。發版時才整批更新 |
+| `PublicAPI.Unshipped.txt` | 上次發版**之後**新增的公開 API |
+
+由 `Microsoft.CodeAnalysis.PublicApiAnalyzers` 在每次 build 比對，兩個方向都擋：
+
+| 情況 | 診斷 | 你要做的事 |
+|------|------|-----------|
+| 新增了 public 型別／成員 | `RS0016` | 把診斷訊息裡的那一行加進 `PublicAPI.Unshipped.txt` |
+| 刪除或改了簽名 | `RS0017` | 從基準檔刪掉舊的那一行（**這正是 review 要看見的 diff**） |
+| Razor 產生碼的 nullable-oblivious 簽名 | `RS0041` | 已於 `Polhem.Web.Blazor.Server.csproj` 以 `NoWarn` 關閉，見該處註解 |
+| 新多載的參數比既有「帶 optional 參數」的多載還多 | `RS0027` | **不能靠加基準檔解決**，要改設計，見下節 |
+
+> **為什麼要有這個機制**：在此之前，「公開表面有刪改」的唯一把關是 commit subject 要帶 `!`，
+> 而這道人工關卡已經連續兩次漏掉真實的 breaking（`IExcelHelper`、`IEvictableCache`，
+> 兩個 commit 的 subject 都沒有 `!`）。基準檔把它變成 build 失敗，以及 review 時看得見的一行 diff。
+>
+> **注意「gate 關閉」不等於「舊帳清完」**（2026-08-07 補）：上面兩個案例的下場不同——
+> `IEvictableCache` 雖然 commit 沒標 `!`，CHANGELOG **有**記到（4.16.0 根檔雙語 + 明細檔雙語）；
+> `IExcelHelper` 則是**連 CHANGELOG 都沒有**，直到 2026-08-07 的框架體檢查出才回溯補記。
+> 導入基準檔擋住的是「以後」，先前已經漏出去的仍需人工回補，不會自己消失。
+
+## `RS0027`：既有多載帶 optional 參數時，加不了參數更多的新多載
+
+**症狀**：想為既有公開方法加一個「參數更多」的新多載來承載新功能，build 直接失敗：
+
+```text
+error RS0027: 'TransformTo' violates the backcompat requirement:
+'API with optional parameter(s) should have the most parameters amongst its public overloads'
+```
+
+**這一則與上表其他診斷不同：它不是「基準檔沒申報」，把新簽章加進
+`PublicAPI.Unshipped.txt` 完全沒用。** 分析器擋的是簽章組合本身。
+
+**根因**：既有多載已經帶預設參數 ——
+`TransformTo(ApiPayload, PayloadFormat, byte[]? encryptionKey = null)`。RS0027 要求
+「帶 optional 參數的 API 必須是所有公開多載中參數最多的那個」，因此任何參數更多的新多載，
+都會讓**既有那個**變成違規。而既有多載已 shipped，拿掉它的預設值是破壞性變更 ——
+兩邊都動不了。
+
+**正解：不加多載，把新資料掛成型別上的屬性讓方法讀取。**
+2026-09-01 的 JSON-RPC 重放防護階段 1（`509b17e7`）就是這樣解的：新的 frame 資料改掛
+`ApiPayload.Frame`（`[JsonIgnore]`，`src/Polhem.Api.Core/JsonRpc/ApiPayload.cs`），
+`ApiPayloadConverter.TransformTo` / `RestoreFrom` 兩個簽章一個字都沒動。
+
+**副作用反而是好的**：簽章不動，呼叫端（`src/Polhem.Api.Client/Connectors/ApiConnector.cs`）
+也跟著不用改。「被迫掛屬性」在這裡不是妥協 —— 新資料本來就屬於 payload 的狀態，
+從一開始就該是屬性而非額外參數。
+
+**次佳選項是新多載改名**（如 `TransformToFramed`）：編得過，但公開 API 表面會多出一組
+語意重疊的名字。只有在新資料真的不屬於任何既有型別時才考慮。
+
+> 判別法：**要新加的東西是「這次呼叫的參數」還是「這個物件的狀態」？**
+> 是狀態就掛屬性，RS0027 只是提早把這個設計問題攤開。
+> 若確定該是參數，第一次設計公開方法時就別急著給預設值 —— optional 參數把該方法
+> **永久釘死**成「參數最多的那個多載」，是比想像中更硬的長期約束。
+
+## 日常：改了公開 API 怎麼辦
+
+build 失敗的訊息本身就含正確格式的那一行，例如：
+
+```text
+error RS0016: Symbol 'Polhem.Base.Foo.Bar() -> void' is not part of the declared public API
+```
+
+把單引號內的字串整行貼進該專案的 `PublicAPI.Unshipped.txt` 即可（維持排序不是硬性要求，但建議）。
+IDE 內也可用分析器提供的 code fix（*Add to public API*）自動加入。
+
+## 發版時
+
+把各專案 `PublicAPI.Unshipped.txt` 的內容併入同專案的 `PublicAPI.Shipped.txt`，
+再把 `Unshipped` 清空（保留 `#nullable enable` 標頭）。併入前的 `Unshipped` 內容就是
+該版新增公開 API 的完整清單，可直接拿來對帳 CHANGELOG。
+
+## 整批重建基準（少用）
+
+只有在基準檔大規模失準時才需要——例如剛導入分析器，或一次搬動大量命名空間。
+
+```bash
+SARIF=$(mktemp -d)
+for i in $(seq 1 10); do
+  rm -f "$SARIF"/*.sarif
+  dotnet build Polhem.Library.slnx --configuration Release -p:PolhemSarifDir="$SARIF" >/dev/null 2>&1
+  for proj in src/*/*.csproj; do
+    name=$(basename "$proj" .csproj)
+    [ -f "$SARIF/$name.sarif" ] && python3 tools/scripts/gen-public-api.py "$SARIF/$name.sarif" "$(dirname "$proj")/PublicAPI.Shipped.txt"
+  done
+done
+```
+
+需要迴圈是因為相依專案要先編譯成功，下一層才會被分析——每跑一輪解開一層，
+本 repo 的相依深度約需 6 輪收斂。
+
+`-p:PolhemSarifDir` 這個開關定義在 `src/Directory.Build.props`，未傳值時完全不生效。
+
+---
+
+## Analyzer 規則的同一套機制（`AnalyzerReleases.*.md`）
+
+`src/Polhem.Analyzers/` 另有一對基準檔，形狀與 `PublicAPI.*` 相同，由
+`Microsoft.CodeAnalysis.Analyzers` 的 release tracking 比對：
+
+| 檔案 | 內容 |
+|------|------|
+| `AnalyzerReleases.Shipped.md` | **已發布**版本的規則，依 `## Release x.y.z` 分節 |
+| `AnalyzerReleases.Unshipped.md` | 上次發版**之後**新增／移除／改嚴重度的規則 |
+
+| 情況 | 診斷 |
+|------|------|
+| 新規則未申報 | `RS2000` |
+| 已出貨規則消失，且未在 Removed Rules 申報 | `RS2003` |
+
+> ⚠️ **`RS2003` 對空的 Shipped 檔完全不會觸發。** 本 repo 的 `Shipped.md` 從建立起到
+> 4.28.0 之前**一行都沒有**，而 analyzer 自 4.16.0 就隨 `Polhem.Definition` 出貨了。
+> 後果正是空基準檔該有的後果：`RS2000` 照樣擋得住「新規則未申報」，但「已出貨的規則被移除」
+> 這一半形同不存在 —— **POLHEM4001–POLHEM4004 在 4.19.0 被退役，沒有任何東西出聲**。
+> 4.28.0 依 tag 快照回填了 4.16.0 / 4.18.0 / 4.19.0 三節。
+
+### 發版時要做的事
+
+`PublicAPI.Unshipped.txt → Shipped.txt` 之外，**還有第三份基準要搬**：
+
+```
+AnalyzerReleases.Unshipped.md  →  AnalyzerReleases.Shipped.md（新增一節 ## Release x.y.z）
+```
+
+漏搬不會有任何訊號 —— 規則會永遠停在 Unshipped，而 `RS2003` 也就永遠保護不到它。
+這正是 4.16.0–4.27.0 之間發生的事。

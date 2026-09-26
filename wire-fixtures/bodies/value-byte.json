@@ -1,0 +1,13 @@
+{
+  "case": "value-byte",
+  "description": "WireValueCode.Byte.",
+  "codec": "json",
+  "type": "Polhem.Definition.Collections.Parameter, Polhem.Definition",
+  "body": {
+    "name": "v",
+    "value": [
+      2,
+      200
+    ]
+  }
+}

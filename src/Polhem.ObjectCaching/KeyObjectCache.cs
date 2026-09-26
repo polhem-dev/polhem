@@ -1,0 +1,208 @@
+using Polhem.Base;
+
+namespace Polhem.ObjectCaching
+{
+    /// <summary>
+    /// Holds the single process-wide sentinel used by <see cref="KeyObjectCache{T}"/>
+    /// to mark negative cache entries. Placed in a non-generic type so every closed
+    /// type of <see cref="KeyObjectCache{T}"/> shares the same reference.
+    /// </summary>
+    internal static class KeyObjectCacheSentinel
+    {
+        /// <summary>
+        /// Sentinel stored in the cache to mark keys whose
+        /// <see cref="KeyObjectCache{T}.CreateInstance"/> returned <c>null</c>.
+        /// Distinguished from cached values by reference equality.
+        /// </summary>
+        public static readonly object MissMarker = new();
+    }
+
+    /// <summary>
+    /// Base class for caching same-type objects accessed by key.
+    /// </summary>
+    public abstract class KeyObjectCache<T> where T : class
+    {
+        private readonly string _cachePrefix;
+
+        #region Constructors
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KeyObjectCache{T}"/> class.
+        /// </summary>
+        /// <param name="cachePrefix">
+        /// Per-owner namespace prepended to <see cref="GetCacheKey"/>. Allows separate
+        /// <see cref="CacheContainerService"/> instances (e.g. per-fixture test containers)
+        /// to share the process-wide <see cref="CacheInfo.Provider"/> without colliding.
+        /// Empty for the legacy non-prefixed path.
+        /// </param>
+        protected KeyObjectCache(string cachePrefix = "")
+        {
+            _cachePrefix = cachePrefix ?? string.Empty;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Gets the cache item expiration policy.
+        /// </summary>
+        /// <param name="key">The member key.</param>
+        protected virtual CacheItemPolicy GetPolicy(string key)
+        {
+            // Default: sliding expiration of 20 minutes
+            var policy = new CacheItemPolicy(CacheTimeKind.SlidingTime, 20);
+            return policy;
+        }
+
+        /// <summary>
+        /// Gets the cache item expiration policy applied when <see cref="CreateInstance"/>
+        /// returns <c>null</c> (negative caching).
+        /// </summary>
+        /// <remarks>
+        /// Returning a non-null policy stores a sentinel marker for the key, so subsequent
+        /// <see cref="Get"/> calls within the policy's lifetime return <c>null</c> without
+        /// invoking <see cref="CreateInstance"/> again. This guards against repeated lookups
+        /// of keys whose underlying data does not exist (cache penetration).
+        /// Return <c>null</c> to disable negative caching for this cache type.
+        /// </remarks>
+        /// <param name="key">The member key.</param>
+        protected virtual CacheItemPolicy? GetNegativePolicy(string key)
+        {
+            // Default: 5-minute absolute expiration, shorter than the positive policy so
+            // real data created externally becomes visible within a bounded delay.
+            return new CacheItemPolicy(CacheTimeKind.AbsoluteTime, 5);
+        }
+
+        /// <summary>
+        /// Gets the cache key, normalized to lowercase to avoid case-sensitivity issues.
+        /// </summary>
+        /// <param name="key">The member key.</param>
+        protected virtual string GetCacheKey(string key)
+        {
+            string suffix = (typeof(T).Name + "_" + key).ToLowerInvariant();
+            return string.IsNullOrEmpty(_cachePrefix) ? suffix : _cachePrefix + "_" + suffix;
+        }
+
+        /// <summary>
+        /// Creates an instance for the specified key.
+        /// </summary>
+        /// <param name="key">The member key.</param>
+        protected virtual T? CreateInstance(string key)
+        {
+            return default;
+        }
+
+        /// <summary>
+        /// Gets the object associated with the specified member key.
+        /// </summary>
+        /// <remarks>
+        /// Concurrent misses on the same key produce one instance, not one per caller. That matters
+        /// beyond the wasted work: <see cref="Polhem.Definition.Identity.SessionInfo"/> is cached here, and two callers holding
+        /// different instances of the same session means a write through one — <c>EnterCompany</c>,
+        /// for example — is invisible to the other.
+        /// </remarks>
+        /// <param name="key">The member key.</param>
+        public virtual T? Get(string key)
+        {
+            string cacheKey = GetCacheKey(key);
+            var cached = CacheInfo.Provider.Get(cacheKey);
+
+            // Negative cache hit: short-circuit without invoking CreateInstance.
+            if (ReferenceEquals(cached, KeyObjectCacheSentinel.MissMarker))
+                return null;
+
+            if (cached is T t)
+                return t;
+
+            return CacheSingleFlight<T>.GetOrCreate(cacheKey, () =>
+            {
+                // Another flight may have completed between the read above and this one.
+                var current = CacheInfo.Provider.Get(cacheKey);
+                if (ReferenceEquals(current, KeyObjectCacheSentinel.MissMarker))
+                    return null;
+                if (current is T fresh)
+                    return fresh;
+
+                var value = CreateInstance(key);
+                if (value != null)
+                {
+                    CacheInfo.Provider.Set(cacheKey, value, BuildPolicy(key));
+                }
+                else if (BuildNegativePolicy(key) is { } negPolicy)
+                {
+                    CacheInfo.Provider.Set(cacheKey, KeyObjectCacheSentinel.MissMarker, negPolicy);
+                }
+                return value;
+            });
+        }
+
+        /// <summary>
+        /// Stores the object in the cache under the specified key.
+        /// </summary>
+        /// <param name="key">The member key.</param>
+        /// <param name="value">The object to store in the cache.</param>
+        public virtual void Set(string key, T value)
+        {
+            string cacheKey = GetCacheKey(key);
+            CacheInfo.Provider.Set(cacheKey, value, BuildPolicy(key));
+        }
+
+        /// <summary>
+        /// Stores the object in the cache. The object must implement <see cref="IKeyObject"/> to provide the member key.
+        /// </summary>
+        /// <param name="value">The object to store in the cache.</param>
+        public virtual void Set(T value)
+        {
+            if (value is IKeyObject c)
+                Set(c.GetKey(), value);
+            else
+                throw new InvalidOperationException("The value does not implement the IKeyObject interface.");
+        }
+
+        /// <summary>
+        /// Removes the entry with the specified key from the cache.
+        /// </summary>
+        /// <param name="key">The member key.</param>
+        public virtual void Remove(string key)
+        {
+            string cacheKey = GetCacheKey(key);
+            CacheInfo.Provider.Remove(cacheKey);
+        }
+
+        /// <summary>
+        /// Gets the cache group forming the prefix of each entry's <c>"group:entity"</c> notify key;
+        /// defaults to the cached type's name (e.g. <c>"CompanyInfo"</c>). Override only when the
+        /// notification group differs.
+        /// </summary>
+        public virtual string CacheGroup => typeof(T).Name;
+
+        /// <summary>
+        /// Returns the policy from <see cref="GetPolicy(string)"/> with a default cache-notify
+        /// dependency applied when the subclass did not set one.
+        /// </summary>
+        /// <remarks>
+        /// The default is the <c>"group:entity"</c> convention writers use with
+        /// <c>Touch</c>. A subclass whose storage reports an authoritative key
+        /// (the define caches) has already set it, and that value is kept.
+        /// </remarks>
+        /// <param name="key">The member key.</param>
+        private CacheItemPolicy BuildPolicy(string key)
+        {
+            var policy = GetPolicy(key);
+            policy.ChangeNotifyKey ??= CacheGroup + ":" + key;
+            return policy;
+        }
+
+        /// <summary>
+        /// Returns the negative (miss-marker) policy with the same default notify dependency, so a
+        /// cached miss also clears once the entry is created elsewhere.
+        /// </summary>
+        /// <param name="key">The member key.</param>
+        private CacheItemPolicy? BuildNegativePolicy(string key)
+        {
+            var policy = GetNegativePolicy(key);
+            if (policy != null)
+                policy.ChangeNotifyKey ??= CacheGroup + ":" + key;
+            return policy;
+        }
+    }
+}

@@ -1,0 +1,470 @@
+using System.ComponentModel;
+using System.Data;
+using Microsoft.Data.SqlClient;
+using Polhem.Definition.Database;
+using Polhem.Tests.Shared;
+
+namespace Polhem.Db.UnitTests
+{
+    public class DbCommandSpecTests : IClassFixture<SharedDbFixture>
+    {
+        public DbCommandSpecTests(SharedDbFixture _) { }
+
+        #region 建構子測試
+
+        [Fact]
+        [DisplayName("預設建構子應建立空的命令規格")]
+        public void DefaultConstructor_CreatesEmptySpec()
+        {
+            var spec = new DbCommandSpec();
+
+            Assert.Equal(DbCommandKind.NonQuery, spec.Kind);
+            Assert.Equal(string.Empty, spec.CommandText);
+            Assert.Equal(CommandType.Text, spec.CommandType);
+            Assert.Equal(30, spec.CommandTimeout);
+            Assert.NotNull(spec.Parameters);
+            Assert.Empty(spec.Parameters);
+        }
+
+        [Fact]
+        [DisplayName("位置參數建構子應依序加入名稱為 p0、p1 的參數")]
+        public void PositionalConstructor_AddsP0P1Parameters()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.Scalar,
+                "SELECT * FROM T WHERE A = {0} AND B = {1}", "x", 123);
+
+            Assert.Equal(DbCommandKind.Scalar, spec.Kind);
+            Assert.Equal("SELECT * FROM T WHERE A = {0} AND B = {1}", spec.CommandText);
+            Assert.Equal(2, spec.Parameters.Count);
+            Assert.Equal("p0", spec.Parameters[0].Name);
+            Assert.Equal("x", spec.Parameters[0].Value);
+            Assert.Equal("p1", spec.Parameters[1].Name);
+            Assert.Equal(123, spec.Parameters[1].Value);
+        }
+
+        [Fact]
+        [DisplayName("位置參數建構子未提供值時不應建立任何參數")]
+        public void PositionalConstructor_NoValues_CreatesNoParameters()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.NonQuery, "SELECT 1");
+
+            Assert.Empty(spec.Parameters);
+        }
+
+        [Fact]
+        [DisplayName("具名參數建構子應將字典內容加入 Parameters")]
+        public void NamedConstructor_AddsParameters()
+        {
+            var dict = new Dictionary<string, object>
+            {
+                { "Id", 1 },
+                { "Name", "Polhem" }
+            };
+
+            var spec = new DbCommandSpec(DbCommandKind.Scalar,
+                "SELECT * FROM T WHERE Id = {Id} AND Name = {Name}", dict);
+
+            Assert.Equal(2, spec.Parameters.Count);
+            Assert.Equal(1, spec.Parameters["Id"].Value);
+            Assert.Equal("Polhem", spec.Parameters["Name"].Value);
+        }
+
+        [Fact]
+        [DisplayName("具名參數建構子傳入 null 字典時應建立空 Parameters")]
+        public void NamedConstructor_NullDictionary_CreatesNoParameters()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.NonQuery, "SELECT 1", parameters: null);
+
+            Assert.Empty(spec.Parameters);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        [DisplayName("位置參數建構子 commandText 為空時應擲出 ArgumentNullException")]
+        public void PositionalConstructor_EmptyCommandText_Throws(string? commandText)
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new DbCommandSpec(DbCommandKind.NonQuery, commandText!));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        [DisplayName("具名參數建構子 commandText 為空時應擲出 ArgumentNullException")]
+        public void NamedConstructor_EmptyCommandText_Throws(string? commandText)
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new DbCommandSpec(DbCommandKind.NonQuery, commandText!, new Dictionary<string, object>()));
+        }
+
+        #endregion
+
+        #region 佔位符解析（透過 CreateCommand 驗證）
+
+        [Fact]
+        [DisplayName("CreateCommand 應將位置佔位符 {0} 解析為帶前綴的參數名稱")]
+        public void CreateCommand_PositionalPlaceholder_ResolvesToPrefixedName()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.Scalar,
+                "SELECT * FROM T WHERE A = {0} AND B = {1}", "x", 1);
+
+            using var conn = new SqlConnection();
+            using var cmd = spec.CreateCommand(DatabaseType.SQLServer, conn);
+
+            Assert.Equal("SELECT * FROM T WHERE A = @p0 AND B = @p1", cmd.CommandText);
+            Assert.Equal(2, cmd.Parameters.Count);
+            Assert.Equal("@p0", cmd.Parameters[0].ParameterName);
+            Assert.Equal("x", cmd.Parameters[0].Value);
+            Assert.Equal("@p1", cmd.Parameters[1].ParameterName);
+            Assert.Equal(1, cmd.Parameters[1].Value);
+        }
+
+        [Fact]
+        [DisplayName("CreateCommand 應將具名佔位符 {Name} 解析為帶前綴的參數名稱")]
+        public void CreateCommand_NamedPlaceholder_ResolvesToPrefixedName()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.Scalar,
+                "SELECT * FROM T WHERE Id = {Id}",
+                new Dictionary<string, object> { { "Id", 99 } });
+
+            using var conn = new SqlConnection();
+            using var cmd = spec.CreateCommand(DatabaseType.SQLServer, conn);
+
+            Assert.Equal("SELECT * FROM T WHERE Id = @Id", cmd.CommandText);
+            Assert.Single(cmd.Parameters);
+            Assert.Equal("@Id", cmd.Parameters[0].ParameterName);
+        }
+
+        [Fact]
+        [DisplayName("具名佔位符應不分大小寫匹配")]
+        public void CreateCommand_NamedPlaceholder_CaseInsensitive()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.Scalar,
+                "SELECT * FROM T WHERE Id = {ID}",
+                new Dictionary<string, object> { { "id", 1 } });
+
+            using var conn = new SqlConnection();
+            using var cmd = spec.CreateCommand(DatabaseType.SQLServer, conn);
+
+            Assert.Equal("SELECT * FROM T WHERE Id = @id", cmd.CommandText);
+        }
+
+        [Fact]
+        [DisplayName("{@Parameters} 應展開為以逗號分隔的所有參數佔位符")]
+        public void CreateCommand_AtParametersToken_ExpandsToCommaList()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.NonQuery,
+                "EXEC sp_test {@Parameters}", "a", "b", "c");
+
+            using var conn = new SqlConnection();
+            using var cmd = spec.CreateCommand(DatabaseType.SQLServer, conn);
+
+            Assert.Equal("EXEC sp_test @p0,@p1,@p2", cmd.CommandText);
+            Assert.Equal(3, cmd.Parameters.Count);
+        }
+
+        [Fact]
+        [DisplayName("CreateCommand StoredProcedure 不應解析 CommandText 中的佔位符")]
+        public void CreateCommand_StoredProcedure_SkipsPlaceholderResolution()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.NonQuery, "sp_GetUser")
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+            spec.Parameters.Add("UserId", 42);
+
+            using var conn = new SqlConnection();
+            using var cmd = spec.CreateCommand(DatabaseType.SQLServer, conn);
+
+            Assert.Equal("sp_GetUser", cmd.CommandText);
+            Assert.Equal(CommandType.StoredProcedure, cmd.CommandType);
+            Assert.Single(cmd.Parameters);
+            Assert.Equal("@UserId", cmd.Parameters[0].ParameterName);
+        }
+
+        [Fact]
+        [DisplayName("CreateCommand 應傳入 CommandTimeout 至 DbCommand")]
+        public void CreateCommand_AppliesCommandTimeout()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.NonQuery, "SELECT 1") { CommandTimeout = 45 };
+
+            using var conn = new SqlConnection();
+            using var cmd = spec.CreateCommand(DatabaseType.SQLServer, conn);
+
+            Assert.Equal(45, cmd.CommandTimeout);
+        }
+
+        [Fact]
+        [DisplayName("CreateCommand 參數值為 null 應綁定為 DBNull")]
+        public void CreateCommand_NullValue_BindsDBNull()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.NonQuery,
+                "UPDATE T SET A = {0}", new object[] { null! });
+
+            using var conn = new SqlConnection();
+            using var cmd = spec.CreateCommand(DatabaseType.SQLServer, conn);
+
+            Assert.Equal(DBNull.Value, cmd.Parameters[0].Value);
+        }
+
+        [Fact]
+        [DisplayName("CreateCommand 參數名稱已含前綴時不應重複加上前綴")]
+        public void CreateCommand_NameWithPrefix_NotDuplicated()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.NonQuery, "SELECT 1");
+            spec.Parameters.Add("@X", 1);
+
+            using var conn = new SqlConnection();
+            using var cmd = spec.CreateCommand(DatabaseType.SQLServer, conn);
+
+            Assert.Equal("@X", cmd.Parameters[0].ParameterName);
+        }
+
+        [Fact]
+        [DisplayName("CreateCommand 應將 DbType、Size、SourceColumn、SourceVersion 傳遞給 DbParameter")]
+        public void CreateCommand_PropagatesParameterMetadata()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.NonQuery, "UPDATE T SET A = {0}", "x");
+            var p = spec.Parameters[0];
+            p.Size = 50;
+            p.SourceColumn = "A";
+            p.SourceVersion = DataRowVersion.Original;
+            p.IsNullable = true;
+
+            using var conn = new SqlConnection();
+            using var cmd = spec.CreateCommand(DatabaseType.SQLServer, conn);
+
+            var dp = cmd.Parameters[0];
+            Assert.Equal(DbType.String, dp.DbType);
+            Assert.Equal(50, dp.Size);
+            Assert.Equal("A", dp.SourceColumn);
+            Assert.Equal(DataRowVersion.Original, dp.SourceVersion);
+            Assert.True(dp.IsNullable);
+        }
+
+        [Fact]
+        [DisplayName("CreateCommand 連線為 null 時應擲出 ArgumentNullException")]
+        public void CreateCommand_NullConnection_Throws()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.NonQuery, "SELECT 1");
+
+            Assert.Throws<ArgumentNullException>(() =>
+                spec.CreateCommand(DatabaseType.SQLServer, null!));
+        }
+
+        [Fact]
+        [DisplayName("CreateCommand 在 CommandText 為空時應擲出 InvalidOperationException")]
+        public void CreateCommand_EmptyCommandText_Throws()
+        {
+            var spec = new DbCommandSpec();
+
+            using var conn = new SqlConnection();
+            Assert.Throws<InvalidOperationException>(() =>
+                spec.CreateCommand(DatabaseType.SQLServer, conn));
+        }
+
+        [Fact]
+        [DisplayName("CreateCommand 位置佔位符索引越界時應擲出 InvalidOperationException")]
+        public void CreateCommand_IndexOutOfRange_Throws()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.Scalar,
+                "SELECT * FROM T WHERE A = {0} AND B = {5}", "x");
+
+            using var conn = new SqlConnection();
+            Assert.Throws<InvalidOperationException>(() =>
+                spec.CreateCommand(DatabaseType.SQLServer, conn));
+        }
+
+        [Fact]
+        [DisplayName("CreateCommand 具名佔位符找不到對應參數時應擲出 InvalidOperationException")]
+        public void CreateCommand_UnknownNamedKey_Throws()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.Scalar,
+                "SELECT * FROM T WHERE Id = {Missing}",
+                new Dictionary<string, object> { { "Id", 1 } });
+
+            using var conn = new SqlConnection();
+            Assert.Throws<InvalidOperationException>(() =>
+                spec.CreateCommand(DatabaseType.SQLServer, conn));
+        }
+
+        [Fact]
+        [DisplayName("CreateCommand Oracle 資料庫應使用冒號參數前綴")]
+        public void CreateCommand_Oracle_UsesColonPrefix()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.Scalar,
+                "SELECT * FROM T WHERE A = {0}", "x");
+
+            using var conn = new SqlConnection();
+            using var cmd = spec.CreateCommand(DatabaseType.Oracle, conn);
+
+            Assert.Equal("SELECT * FROM T WHERE A = :p0", cmd.CommandText);
+            Assert.Equal(":p0", cmd.Parameters[0].ParameterName);
+        }
+
+        #endregion
+
+        #region ToString 測試
+
+        [Fact]
+        [DisplayName("ToString 應回傳 CommandText")]
+        public void ToString_ReturnsCommandText()
+        {
+            var spec = new DbCommandSpec(DbCommandKind.Scalar, "SELECT 1");
+            Assert.Equal("SELECT 1", spec.ToString());
+        }
+
+        #endregion
+
+        #region 特殊邊界分支
+
+        [Fact]
+        [DisplayName("CreateCommand 具名佔位符參數名為空白時應擲出 InvalidOperationException")]
+        public void CreateCommand_NamedKeyWithBlankName_Throws()
+        {
+            // 先以合法名稱加入,再將 Name 改為空白,觸發 ResolveNamedKey 的空名檢查
+            var spec = new DbCommandSpec(DbCommandKind.Scalar, "SELECT * FROM T WHERE X = {X}");
+            spec.Parameters.Add("X", 1);
+            spec.Parameters[0].Name = "   ";
+
+            using var conn = new SqlConnection();
+            Assert.Throws<InvalidOperationException>(() =>
+                spec.CreateCommand(DatabaseType.SQLServer, conn));
+        }
+
+        [Fact]
+        [DisplayName("CreateCommand 位置佔位符對應的參數名為空白時應擲出 InvalidOperationException")]
+        public void CreateCommand_NumericKeyWithBlankName_Throws()
+        {
+            // 先以合法名稱加入,再將 Name 改為空白,觸發 ResolveNumericKey 的空名檢查
+            var spec = new DbCommandSpec(DbCommandKind.Scalar, "SELECT * FROM T WHERE X = {0}");
+            spec.Parameters.Add("p0", 1);
+            spec.Parameters[0].Name = "   ";
+
+            using var conn = new SqlConnection();
+            Assert.Throws<InvalidOperationException>(() =>
+                spec.CreateCommand(DatabaseType.SQLServer, conn));
+        }
+
+        #endregion
+
+        #region NormalizeParameterValue（Oracle Guid → byte[] 轉換）
+
+        [Fact]
+        [DisplayName("NormalizeParameterValue：Oracle 上 Guid 應轉成 16-byte byte[]")]
+        public void NormalizeParameterValue_OracleGuid_ConvertedToByteArray()
+        {
+            var guid = Guid.Parse("12345678-1234-5678-90ab-cdef12345678");
+
+            object? result = DbCommandSpec.NormalizeParameterValue(DatabaseType.Oracle, guid);
+
+            // Oracle.ManagedDataAccess.OracleParameter 不接受 Guid 作為 RAW(16) 綁定值
+            // (拋 ArgumentException : Value does not fall within the expected range);
+            // framework 必須轉成 byte[]。byte[] 內容須等同 guid.ToByteArray()。
+            var bytes = Assert.IsType<byte[]>(result);
+            Assert.Equal(16, bytes.Length);
+            Assert.Equal(guid.ToByteArray(), bytes);
+        }
+
+        [Theory]
+        [InlineData(DatabaseType.SQLServer)]
+        [InlineData(DatabaseType.PostgreSQL)]
+        [InlineData(DatabaseType.MySQL)]
+        [InlineData(DatabaseType.SQLite)]
+        [DisplayName("NormalizeParameterValue：非 Oracle DB 上 Guid 應原值傳回")]
+        public void NormalizeParameterValue_NonOracleGuid_PassThrough(DatabaseType dbType)
+        {
+            var guid = Guid.NewGuid();
+
+            object? result = DbCommandSpec.NormalizeParameterValue(dbType, guid);
+
+            Assert.Equal(guid, result);
+        }
+
+        [Fact]
+        [DisplayName("NormalizeParameterValue：Oracle 上非 Guid 值（string、int、null）應原值傳回")]
+        public void NormalizeParameterValue_OracleNonGuid_PassThrough()
+        {
+            Assert.Equal("hello", DbCommandSpec.NormalizeParameterValue(DatabaseType.Oracle, "hello"));
+            Assert.Equal(42, DbCommandSpec.NormalizeParameterValue(DatabaseType.Oracle, 42));
+            Assert.Null(DbCommandSpec.NormalizeParameterValue(DatabaseType.Oracle, null));
+        }
+
+        [Fact]
+        [DisplayName("NormalizeDbType：Oracle 上 DbType.Guid 應改寫為 DbType.Binary")]
+        public void NormalizeDbType_OracleGuid_RewrittenToBinary()
+        {
+            // OracleParameter.DbType 拒絕 DbType.Guid（Oracle 無原生 UUID type，
+            // framework 映射為 RAW(16) → DbType.Binary）。
+            Assert.Equal(DbType.Binary, DbCommandSpec.NormalizeDbType(DatabaseType.Oracle, DbType.Guid));
+        }
+
+        [Theory]
+        [InlineData(DatabaseType.SQLServer)]
+        [InlineData(DatabaseType.PostgreSQL)]
+        [InlineData(DatabaseType.MySQL)]
+        [InlineData(DatabaseType.SQLite)]
+        [DisplayName("NormalizeDbType：非 Oracle DB 上 DbType.Guid 應原值傳回")]
+        public void NormalizeDbType_NonOracleGuid_PassThrough(DatabaseType dbType)
+        {
+            Assert.Equal(DbType.Guid, DbCommandSpec.NormalizeDbType(dbType, DbType.Guid));
+        }
+
+        [Theory]
+        [InlineData(DbType.String)]
+        [InlineData(DbType.Int32)]
+        [InlineData(DbType.Binary)]
+        [InlineData(DbType.DateTime)]
+        [DisplayName("NormalizeDbType：Oracle 上非 Guid DbType 應原值傳回")]
+        public void NormalizeDbType_OracleNonGuid_PassThrough(DbType dbType)
+        {
+            Assert.Equal(dbType, DbCommandSpec.NormalizeDbType(DatabaseType.Oracle, dbType));
+        }
+
+        [Fact]
+        [DisplayName("NormalizeDbType：SQL Server 上 DbType.DateTime 應改寫為 DbType.DateTime2")]
+        public void NormalizeDbType_SqlServerDateTime_RewrittenToDateTime2()
+        {
+            // datetime2 保留 .NET DateTime 完整範圍與 100 ns 精度；DbType.DateTime 會在參數層
+            // round 成 ms 並對 pre-1753 拋 SqlDateTimeOverflow。
+            Assert.Equal(DbType.DateTime2, DbCommandSpec.NormalizeDbType(DatabaseType.SQLServer, DbType.DateTime));
+        }
+
+        [Theory]
+        [InlineData(DatabaseType.MySQL)]
+        [InlineData(DatabaseType.SQLite)]
+        [InlineData(DatabaseType.Oracle)]
+        [DisplayName("NormalizeDbType：MySQL / SQLite / Oracle 上 DbType.DateTime 應原值傳回（避免跨 provider 回歸）")]
+        public void NormalizeDbType_UnaffectedProvidersDateTime_PassThrough(DatabaseType dbType)
+        {
+            Assert.Equal(DbType.DateTime, DbCommandSpec.NormalizeDbType(dbType, DbType.DateTime));
+        }
+
+        [Theory]
+        [InlineData(DatabaseType.SQLServer)]
+        [InlineData(DatabaseType.PostgreSQL)]
+        [DisplayName("NormalizeDbType：SQL Server 與 PostgreSQL 的 DbType.DateTime 應升為 DateTime2")]
+        public void NormalizeDbType_DateTime_UpgradedToDateTime2(DatabaseType dbType)
+        {
+            // 兩者升級的動機不同但手法相同：SQL Server 是為了精度（datetime → datetime2(7)），
+            // PostgreSQL 是為了避開 timestamptz 的隱式時區換算（ADR-032 D1）。
+            Assert.Equal(DbType.DateTime2, DbCommandSpec.NormalizeDbType(dbType, DbType.DateTime));
+        }
+
+        [Theory]
+        [InlineData(DbType.String)]
+        [InlineData(DbType.Int32)]
+        [InlineData(DbType.Guid)]
+        [InlineData(DbType.Decimal)]
+        [DisplayName("NormalizeDbType：SQL Server 上非 DateTime DbType 應原值傳回")]
+        public void NormalizeDbType_SqlServerNonDateTime_PassThrough(DbType dbType)
+        {
+            Assert.Equal(dbType, DbCommandSpec.NormalizeDbType(DatabaseType.SQLServer, dbType));
+        }
+
+        #endregion
+    }
+}

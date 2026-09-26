@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="DefineEditor/Polhem.DefineEditor.csproj" />
+    <Project Path="Polhem.Cli/Polhem.Cli.csproj" />
+    <Project Path="Polhem.LoadTests/Polhem.LoadTests.csproj" />
+  </Folder>
+  <Folder Name="/ref-src/">
+    <Project Path="../src/Polhem.Definition/Polhem.Definition.csproj" />
+    <Project Path="../src/Polhem.Base/Polhem.Base.csproj" />
+  </Folder>
+</Solution>

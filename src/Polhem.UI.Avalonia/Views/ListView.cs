@@ -1,0 +1,407 @@
+using System.Data;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Templates;
+using Avalonia.Layout;
+using Avalonia.Media;
+using Polhem.Api.Client.Connectors;
+using Polhem.Definition;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
+using Polhem.UI.Avalonia.Controls;
+using Polhem.UI.Core;
+
+namespace Polhem.UI.Avalonia.Views
+{
+    /// <summary>
+    /// Read-only browser for every record of a form (the master list). Pairs with
+    /// <see cref="FormView"/> following the business-application convention of keeping list browsing and
+    /// record viewing/editing on separate surfaces: <see cref="ListView"/> loads the list
+    /// and raises <see cref="ViewRequested"/> / <see cref="EditRequested"/> /
+    /// <see cref="AddRequested"/>, leaving the host to swap in the record surface. Delete is
+    /// handled in place (the list stays the active surface). It carries no field form.
+    /// </summary>
+    /// <remarks>
+    /// Like <see cref="FormView"/>, the host typically supplies only <see cref="ProgId"/>;
+    /// when <see cref="Schema"/> / <see cref="FormConnector"/> / <see cref="AccessToken"/>
+    /// are left unset, <see cref="InitializeAsync"/> resolves them from
+    /// <see cref="ClientInfo"/> through the <c>Resolve*</c> hooks, which a subclass can
+    /// override to bypass the static state (the unit tests rely on this).
+    /// </remarks>
+    public partial class ListView : UserControl
+    {
+        /// <summary>Identifies the <see cref="ProgId"/> styled property.</summary>
+        public static readonly StyledProperty<string> ProgIdProperty =
+            AvaloniaProperty.Register<ListView, string>(nameof(ProgId), defaultValue: string.Empty);
+
+        /// <summary>Identifies the <see cref="AccessToken"/> styled property.</summary>
+        public static readonly StyledProperty<Guid> AccessTokenProperty =
+            AvaloniaProperty.Register<ListView, Guid>(nameof(AccessToken), defaultValue: Guid.Empty);
+
+        /// <summary>Identifies the <see cref="Schema"/> styled property.</summary>
+        public static readonly StyledProperty<FormSchema?> SchemaProperty =
+            AvaloniaProperty.Register<ListView, FormSchema?>(nameof(Schema));
+
+        /// <summary>Identifies the <see cref="FormConnector"/> styled property.</summary>
+        public static readonly StyledProperty<FormApiConnector?> FormConnectorProperty =
+            AvaloniaProperty.Register<ListView, FormApiConnector?>(nameof(FormConnector));
+
+        private readonly Button _viewButton;
+        private readonly Button _newButton;
+        private readonly Button _editButton;
+        private readonly Button _deleteButton;
+        private readonly TextBlock _errorLabel;
+        private readonly TextBlock _loadingLabel;
+        private readonly TextBlock _emptyListLabel;
+        private readonly GridControl _grid;
+        private readonly ListBox _cardList;
+        private Guid _selectedRowId;
+        private bool _isBusy;
+        private bool _initialized;
+        private bool _isInitializing;
+        // On a narrow (phone) viewport the wide column grid is replaced by a stacked card list.
+        // The `_hasData` and `_isCompact` flags gate which surface is shown (see `UpdateContentVisibility`).
+        private bool _hasData;
+        private bool _isCompact;
+
+        static ListView()
+        {
+            SchemaProperty.Changed.AddClassHandler<ListView>((v, _) => v.OnInputsChanged());
+            FormConnectorProperty.Changed.AddClassHandler<ListView>((v, _) => v.OnInputsChanged());
+        }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="ListView"/> with the toolbar + grid
+        /// assembled. The toolbar buttons stay disabled until <see cref="InitializeAsync"/>
+        /// resolves the schema and connector inputs.
+        /// </summary>
+        public ListView()
+        {
+            _errorLabel = new TextBlock { Foreground = Brushes.Red, IsVisible = false };
+            _loadingLabel = new TextBlock { Text = "Loading…", IsVisible = true };
+
+            // Tag each command with the permission action it requires; the capability resolver
+            // hides an un-permitted button. Untagged controls stay visible (opt-in).
+            _viewButton = new Button { Content = "View", IsEnabled = false };
+            PermissionScope.SetAction(_viewButton, PermissionAction.Read);
+            _viewButton.Click += (_, _) => OnViewClicked();
+
+            _newButton = new Button { Content = "New", IsEnabled = false };
+            PermissionScope.SetAction(_newButton, PermissionAction.Create);
+            _newButton.Click += (_, _) => OnNewClicked();
+
+            _editButton = new Button { Content = "Edit", IsEnabled = false };
+            PermissionScope.SetAction(_editButton, PermissionAction.Update);
+            _editButton.Click += (_, _) => OnEditClicked();
+
+            _deleteButton = new Button { Content = "Delete", IsEnabled = false };
+            PermissionScope.SetAction(_deleteButton, PermissionAction.Delete);
+            _deleteButton.Click += async (_, _) => await OnDeleteClickedAsync().ConfigureAwait(true);
+
+            var toolbar = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 8,
+            };
+            toolbar.Children.Add(_viewButton);
+            toolbar.Children.Add(_newButton);
+            toolbar.Children.Add(_editButton);
+            toolbar.Children.Add(_deleteButton);
+
+            _grid = new GridControl();
+            _grid.RowSelected += (_, rowId) => OnRowSelected(rowId);
+            // List mode never binds a FormDataObject, so the grid's own double-tap path
+            // (detail EditForm editing) stays dormant; the bubbling DoubleTapped is ours to
+            // treat as "open this record" — opening read-only (View), so browsing the list
+            // never accidentally enters edit mode. Editing is the explicit Edit action.
+            _grid.DoubleTapped += (_, _) => OnGridDoubleTapped();
+
+            // Compact (phone) surface: one card per row with the columns stacked as caption/value
+            // lines, so narrow viewports stay readable instead of horizontally scrolling a wide
+            // grid. Bound to the same DataTable; only one of grid / card list is visible at a time.
+            _cardList = new ListBox
+            {
+                IsVisible = false,
+                Background = Brushes.Transparent,
+                SelectionMode = SelectionMode.Single,
+            };
+            _cardList.SelectionChanged += (_, _) => OnCardSelectionChanged();
+            _cardList.DoubleTapped += (_, _) => OnGridDoubleTapped();
+
+            _emptyListLabel = new TextBlock { Text = "No data.", IsVisible = false };
+
+            // DockPanel (not StackPanel): the chrome docks to the top and the content area fills the
+            // remaining BOUNDED height as the last child. A StackPanel would give the grid unbounded
+            // height, so the DataGrid grows to fit every row and never shows its own vertical scrollbar.
+            toolbar.Margin = new Thickness(0, 0, 0, 8);
+
+            // Grid and card list overlay the same fill region; visibility selects between them.
+            var contentArea = new Panel();
+            contentArea.Children.Add(_grid);
+            contentArea.Children.Add(_cardList);
+
+            var host = new DockPanel { LastChildFill = true };
+            DockPanel.SetDock(_errorLabel, Dock.Top);
+            DockPanel.SetDock(_loadingLabel, Dock.Top);
+            DockPanel.SetDock(toolbar, Dock.Top);
+            DockPanel.SetDock(_emptyListLabel, Dock.Top);
+            host.Children.Add(_errorLabel);
+            host.Children.Add(_loadingLabel);
+            host.Children.Add(toolbar);
+            host.Children.Add(_emptyListLabel);
+            host.Children.Add(contentArea);
+
+            Content = host;
+        }
+
+        /// <summary>
+        /// Gets or sets the program identifier (e.g. "Category"). Drives both the
+        /// <see cref="ClientInfo"/>-backed FormSchema lookup and the
+        /// <see cref="FormApiConnector"/> creation when the host leaves
+        /// <see cref="Schema"/> / <see cref="FormConnector"/> unset.
+        /// </summary>
+        public string ProgId
+        {
+            get => GetValue(ProgIdProperty);
+            set => SetValue(ProgIdProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets the access token surfaced on the view. Defaults to
+        /// <see cref="Guid.Empty"/>; <see cref="InitializeAsync"/> fills it from
+        /// <see cref="ClientInfo.AccessToken"/> when the host did not supply one.
+        /// </summary>
+        public Guid AccessToken
+        {
+            get => GetValue(AccessTokenProperty);
+            set => SetValue(AccessTokenProperty, value);
+        }
+
+        /// <summary>Gets or sets the resolved <see cref="FormSchema"/>.</summary>
+        public FormSchema? Schema
+        {
+            get => GetValue(SchemaProperty);
+            set => SetValue(SchemaProperty, value);
+        }
+
+        /// <summary>Gets or sets the connector used for the list / delete round-trips.</summary>
+        public FormApiConnector? FormConnector
+        {
+            get => GetValue(FormConnectorProperty);
+            set => SetValue(FormConnectorProperty, value);
+        }
+
+        /// <summary>
+        /// Raised when the user opens a record read-only (View on a selected row). Carries
+        /// the record's <see cref="SysFields.RowId"/>.
+        /// </summary>
+        public event EventHandler<Guid>? ViewRequested;
+
+        /// <summary>
+        /// Raised when the user opens a record for editing (Edit on a selected row, or a
+        /// double-click). Carries the record's <see cref="SysFields.RowId"/>.
+        /// </summary>
+        public event EventHandler<Guid>? EditRequested;
+
+        /// <summary>Raised when the user presses New. The host opens a blank record surface.</summary>
+        public event EventHandler? AddRequested;
+
+        /// <summary>Raised whenever a backend round-trip throws.</summary>
+        public event EventHandler<Exception>? ErrorOccurred;
+
+        /// <summary>Resolves the schema + connector inputs and runs the initial list load.</summary>
+        public async Task InitializeAsync()
+        {
+            if (_initialized || _isInitializing) return;
+
+            var hasProgId = !string.IsNullOrEmpty(ProgId);
+            if (!hasProgId && (Schema is null || FormConnector is null)) return;
+
+            _isInitializing = true;
+            try
+            {
+                ApplyAccessTokenFallback();
+
+                if (!await TryResolveSchemaAsync(hasProgId).ConfigureAwait(true)) return;
+                ResolveFormConnectorFallback(hasProgId);
+
+                if (Schema is null || FormConnector is null) return;
+                AttachGrid();
+
+                _initialized = true;
+                await ReloadAsync().ConfigureAwait(true);
+                UpdateToolbarState();
+            }
+            finally
+            {
+                _isInitializing = false;
+            }
+        }
+
+        /// <summary>Reloads the list from the backend, clearing any prior selection.</summary>
+        public async Task ReloadAsync()
+        {
+            var connector = FormConnector;
+            if (connector is null) return;
+
+            try
+            {
+                var response = await connector.GetListAsync(ComputeSelectFields()).ConfigureAwait(true);
+                _grid.DataTable = response.Table;
+                _cardList.ItemsSource = response.Table?.DefaultView;
+                _hasData = response.Table is not null && response.Table.Rows.Count > 0;
+                _emptyListLabel.IsVisible = !_hasData;
+                UpdateContentVisibility();
+                _selectedRowId = Guid.Empty;
+            }
+            catch (Exception ex)
+            {
+                ReportError(ex);
+            }
+            finally
+            {
+                UpdateToolbarState();
+            }
+        }
+
+        /// <summary>
+        /// Resolves the <see cref="FormSchema"/> for <paramref name="progId"/> when the host did
+        /// not pre-set <see cref="Schema"/>. Defaults to the cached <see cref="ClientInfo.DefineAccess"/>;
+        /// override to supply a schema without touching the static <see cref="ClientInfo"/>.
+        /// </summary>
+        protected virtual async Task<FormSchema?> ResolveSchemaAsync(string progId)
+            => await ClientInfo.DefineAccess.GetFormSchemaAsync(progId).ConfigureAwait(false);
+
+        /// <summary>
+        /// Resolves the <see cref="FormApiConnector"/> for the list / delete round-trips.
+        /// Override to bypass <see cref="ClientInfo"/>.
+        /// </summary>
+        protected virtual FormApiConnector ResolveFormConnector(string progId)
+            => ClientInfo.CreateFormApiConnector(progId);
+
+        /// <summary>Resolves the access token. Override to plug in a different session source.</summary>
+        protected virtual Guid ResolveAccessToken() => ClientInfo.AccessToken;
+
+        /// <inheritdoc/>
+        protected override void OnAttachedToVisualTree(global::Avalonia.VisualTreeAttachmentEventArgs e)
+        {
+            base.OnAttachedToVisualTree(e);
+            if (!_initialized && !_isInitializing)
+                _ = InitializeAsync();
+        }
+
+        /// <inheritdoc/>
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+
+            // Switch between the wide column grid and the stacked card list as the viewport crosses
+            // the compact width threshold. Bounds is a direct property whose changes are not
+            // delivered to static class handlers, so the reaction is wired here.
+            if (change.Property == BoundsProperty)
+            {
+                var compact = Bounds.Width > 0 && Bounds.Width < FormView.DefaultCompactWidthThreshold;
+                if (compact != _isCompact)
+                {
+                    _isCompact = compact;
+                    UpdateContentVisibility();
+                }
+            }
+        }
+
+        private void UpdateContentVisibility()
+        {
+            _grid.IsVisible = _hasData && !_isCompact;
+            _cardList.IsVisible = _hasData && _isCompact;
+        }
+
+        // One card per row: each visible column rendered as a "caption  value" line, read straight
+        // off the DataRowView (no reflection binding, so it works under iOS AOT).
+        private static FuncDataTemplate<DataRowView> BuildCardTemplate(IReadOnlyList<LayoutColumn> columns)
+            => new FuncDataTemplate<DataRowView>((row, _) =>
+            {
+                var stack = new StackPanel { Spacing = 3 };
+                foreach (var column in columns)
+                {
+                    var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+                    line.Children.Add(new TextBlock
+                    {
+                        Text = column.Caption,
+                        FontWeight = FontWeight.SemiBold,
+                        MinWidth = 92,
+                        Opacity = 0.7,
+                    });
+                    var value = row is not null && row.Row.Table.Columns.Contains(column.FieldName)
+                        ? row[column.FieldName]?.ToString()
+                        : string.Empty;
+                    line.Children.Add(new TextBlock { Text = value, TextWrapping = TextWrapping.Wrap });
+                    stack.Children.Add(line);
+                }
+
+                return new Border
+                {
+                    Padding = new Thickness(10),
+                    Margin = new Thickness(0, 0, 0, 6),
+                    BorderThickness = new Thickness(1),
+                    BorderBrush = Brushes.Gray,
+                    CornerRadius = new CornerRadius(6),
+                    Child = stack,
+                };
+            });
+
+        private void OnCardSelectionChanged()
+        {
+            if (_cardList.SelectedItem is not DataRowView drv
+                || !drv.Row.Table.Columns.Contains(SysFields.RowId))
+            {
+                return;
+            }
+
+            var value = drv.Row[SysFields.RowId];
+            if (value is Guid rowId)
+                OnRowSelected(rowId);
+            else if (Guid.TryParse(value?.ToString(), out var parsed))
+                OnRowSelected(parsed);
+        }
+
+        private void OnInputsChanged()
+        {
+            if (_initialized || _isInitializing) return;
+            _ = InitializeAsync();
+        }
+
+        private void ApplyAccessTokenFallback()
+        {
+            if (AccessToken != Guid.Empty) return;
+            var fallbackToken = ResolveAccessToken();
+            if (fallbackToken != Guid.Empty)
+                AccessToken = fallbackToken;
+        }
+
+        private async Task<bool> TryResolveSchemaAsync(bool hasProgId)
+        {
+            if (Schema is not null || !hasProgId) return true;
+
+            ClearError();
+            try
+            {
+                var loaded = await ResolveSchemaAsync(ProgId).ConfigureAwait(true);
+                if (loaded is not null)
+                    Schema = loaded;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ReportError(ex);
+                return false;
+            }
+        }
+
+        private void ResolveFormConnectorFallback(bool hasProgId)
+        {
+            if (FormConnector is not null || !hasProgId) return;
+            FormConnector = ResolveFormConnector(ProgId);
+        }
+    }
+}

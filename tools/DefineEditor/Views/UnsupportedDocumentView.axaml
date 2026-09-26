@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+             xmlns:loc="using:Polhem.DefineEditor.Markup"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="500"
+             x:Class="Polhem.DefineEditor.Views.UnsupportedDocumentView"
+             x:DataType="vm:UnsupportedDocumentViewModel">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="titlebar" Padding="12,8">
+            <TextBlock Classes="h1" Text="{Binding Title}"/>
+        </Border>
+
+        <Border Padding="18,14">
+            <StackPanel Spacing="10">
+                <TextBlock Classes="h2" Text="{loc:Loc Unsupported_SelectedItem}"/>
+                <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" FontFamily="ui-monospace, Menlo, Consolas, monospace"/>
+            </StackPanel>
+        </Border>
+    </DockPanel>
+</UserControl>

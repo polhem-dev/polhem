@@ -1,0 +1,88 @@
+#nullable enable
+Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider
+Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.AccessToken.get -> System.Guid
+Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.PolhemAccessTokenProvider() -> void
+Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment<Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider!>?
+Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.ChildContent.set -> void
+Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.Clear() -> void
+Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.IsAuthenticated.get -> bool
+Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.SetToken(System.Guid accessToken) -> void
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.PolhemLoginPanel() -> void
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.OnLoggedIn.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Api.Core.Messages.System.LoginResponse!>
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.OnLoggedIn.set -> void
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.PasswordLabel.get -> string!
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.PasswordLabel.set -> void
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.SubmitLabel.get -> string!
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.SubmitLabel.set -> void
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.UserIdLabel.get -> string!
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.UserIdLabel.set -> void
+Polhem.Web.Blazor.Server.Components.DynamicForm
+Polhem.Web.Blazor.Server.Components.DynamicForm.DataObject.get -> Polhem.Web.Blazor.Server.DataObjects.FormDataObject?
+Polhem.Web.Blazor.Server.Components.DynamicForm.DataObject.set -> void
+Polhem.Web.Blazor.Server.Components.DynamicForm.DynamicForm() -> void
+Polhem.Web.Blazor.Server.Components.DynamicForm.IdPrefix.get -> string!
+Polhem.Web.Blazor.Server.Components.DynamicForm.IdPrefix.set -> void
+Polhem.Web.Blazor.Server.Components.DynamicForm.Layout.get -> Polhem.Definition.Layouts.FormLayout?
+Polhem.Web.Blazor.Server.Components.DynamicForm.Layout.set -> void
+Polhem.Web.Blazor.Server.Components.DynamicGrid
+Polhem.Web.Blazor.Server.Components.DynamicGrid.DynamicGrid() -> void
+Polhem.Web.Blazor.Server.Components.DynamicGrid.EmptyText.get -> string!
+Polhem.Web.Blazor.Server.Components.DynamicGrid.EmptyText.set -> void
+Polhem.Web.Blazor.Server.Components.DynamicGrid.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
+Polhem.Web.Blazor.Server.Components.DynamicGrid.Layout.set -> void
+Polhem.Web.Blazor.Server.Components.DynamicGrid.OnRowSelected.get -> Microsoft.AspNetCore.Components.EventCallback<System.Guid>
+Polhem.Web.Blazor.Server.Components.DynamicGrid.OnRowSelected.set -> void
+Polhem.Web.Blazor.Server.Components.DynamicGrid.Rows.get -> System.Data.DataTable?
+Polhem.Web.Blazor.Server.Components.DynamicGrid.Rows.set -> void
+Polhem.Web.Blazor.Server.Components.FormPage
+Polhem.Web.Blazor.Server.Components.FormPage.AccessToken.get -> System.Guid
+Polhem.Web.Blazor.Server.Components.FormPage.AccessToken.set -> void
+Polhem.Web.Blazor.Server.Components.FormPage.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
+Polhem.Web.Blazor.Server.Components.FormPage.DefinitionLoader.set -> void
+Polhem.Web.Blazor.Server.Components.FormPage.FormPage() -> void
+Polhem.Web.Blazor.Server.Components.FormPage.ProgId.get -> string!
+Polhem.Web.Blazor.Server.Components.FormPage.ProgId.set -> void
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.DataSet.get -> System.Data.DataSet!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.DeleteAsync() -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.DetailTables.get -> System.Collections.Generic.IEnumerable<System.Data.DataTable!>!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.FormDataObject(Polhem.Definition.Forms.FormSchema! schema, Polhem.Api.Client.Connectors.FormApiConnector? connector = null) -> void
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.GetField(string! fieldName) -> string!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.GetFormField(string! fieldName) -> Polhem.Definition.Forms.FormField?
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.InitializeNewMaster() -> void
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.IsDirty.get -> bool
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.IsLoading.get -> bool
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.LoadAsync(System.Guid rowId) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.MasterRow.get -> System.Data.DataRow?
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.MasterTable.get -> System.Data.DataTable!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.NewAsync() -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.SaveAsync() -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.SetField(string! fieldName, string? value) -> void
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.PolhemApiConnectorFactory(Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions! options) -> void
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.PolhemApiConnectorFactory(Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions! options, Polhem.Api.Client.ApiSessionContext! session) -> void
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.Mode.get -> Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.PolhemBlazorOptions() -> void
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.Endpoint.get -> string!
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.Mode.get -> Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.UseLocalProvider() -> Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions!
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.UseRemoteProvider(string! endpoint) -> Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions!
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode.Local = 0 -> Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode.Remote = 1 -> Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorServiceCollectionExtensions
+Polhem.Web.Blazor.Server._Imports
+Polhem.Web.Blazor.Server._Imports.Execute() -> void
+Polhem.Web.Blazor.Server._Imports._Imports() -> void
+override Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.OnInitialized() -> void
+override Polhem.Web.Blazor.Server.Components.FormPage.OnInitializedAsync() -> System.Threading.Tasks.Task!
+static Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorServiceCollectionExtensions.AddPolhemBlazor(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+virtual Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.CreateFormConnector(System.Guid accessToken, string! progId) -> Polhem.Api.Client.Connectors.FormApiConnector!
+virtual Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.CreateSystemConnector(System.Guid accessToken) -> Polhem.Api.Client.Connectors.SystemApiConnector!
+~override Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Server.Components.DynamicForm.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Server.Components.DynamicGrid.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Polhem.Web.Blazor.Server.Components.FormPage.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

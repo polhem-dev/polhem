@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-browser</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Polhem.Northwind.Browser</RootNamespace>
+    <AssemblyName>Polhem.Northwind.Browser</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- browser-wasm disables System.Text.Json reflection-based (de)serialization by default,
+         so Polhem's JsonCodec throws "JsonSerializerIsReflectionDisabled" when (de)serializing the
+         JSON-RPC envelope. Polhem's message types are not source-generated, so re-enable the
+         reflection path. (The XmlSerializer path used by FormSchema is handled separately via
+         trimming roots in the Release/publish phase.) -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Browser" Version="12.0.4" />
+  </ItemGroup>
+
+  <!-- Release/publish: disable IL trimming. Polhem (de)serializes definition and message types
+       by reflection throughout — System.Text.Json (JSON-RPC envelope), XmlSerializer
+       (FormSchema / TableSchema / CommonConfiguration), MessagePack, TypeDescriptor and
+       Assembly.GetType — none of which is source-generated, so the trimmer both emits IL2026
+       analysis errors (under TreatWarningsAsErrors) and would strip metadata the reflection
+       paths need at runtime. Shipping a trim-safe WASM build requires source-generating those
+       serializers (a framework-wide effort); until then we trade bundle size for correctness.
+       AOT stays off (default); see docs ADR when the source-gen path is taken. -->
+  <PropertyGroup>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Northwind.UI\Polhem.Northwind.UI.csproj" />
+  </ItemGroup>
+
+  <!-- Time zone data must ship: the framework converts every instant between UTC and the user's
+       zone through TimeZoneInfo (ADR-032 D4), so a build without tz data fails at the first
+       conversion — and on this head that is every screen showing a date. Invariant globalization
+       would also strip it. Both are the SDK defaults today; they are pinned because the failure is
+       a runtime exception on device, which no desktop build or test can catch. -->
+  <PropertyGroup>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <InvariantTimezone>false</InvariantTimezone>
+  </PropertyGroup>
+
+</Project>

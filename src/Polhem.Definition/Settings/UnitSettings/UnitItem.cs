@@ -1,0 +1,71 @@
+using Polhem.Base.Collections;
+using System.ComponentModel;
+using System.Xml.Serialization;
+
+namespace Polhem.Definition.Settings
+{
+    /// <summary>
+    /// A single system-level unit-of-measure definition (SAP T006-style), held in
+    /// <see cref="UnitSettings"/>. Unit decimals are system-wide reference data (KG = 3, PCS = 0),
+    /// independent of company; quantities and weights resolve their decimals from the bound unit.
+    /// </summary>
+    [Description("System-level unit-of-measure definition item.")]
+    public sealed class UnitItem : CollectionItem
+    {
+        /// <summary>
+        /// Initializes a new instance of <see cref="UnitItem"/>.
+        /// </summary>
+        public UnitItem()
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="UnitItem"/>.
+        /// </summary>
+        /// <remarks>
+        /// NOTE: parameter order here is free and carries no wire meaning. The definition layer holds
+        /// no serialization attributes at all, and the wire binding names every member explicitly in
+        /// a hand-written formatter, so nothing pairs a constructor parameter with a member by
+        /// position. The ordering rule this note used to disclaim — and the analyzer that enforced
+        /// it — both went away with the attributes.
+        /// </remarks>
+        /// <param name="code">The unit code (the key), for example <c>KG</c> or <c>PCS</c>.</param>
+        /// <param name="decimals">The decimal places for this unit.</param>
+        /// <param name="dimension">The dimension grouping (optional), for example <c>weight</c>.</param>
+        /// <param name="name">The display name.</param>
+        public UnitItem(string code, int decimals, string dimension = "", string name = "")
+        {
+            Code = code;
+            Decimals = decimals;
+            Dimension = dimension;
+            Name = name;
+        }
+
+        /// <summary>
+        /// Gets or sets the unit code (for example <c>KG</c>, <c>G</c>, <c>PCS</c>, <c>L</c>).
+        /// This is the lookup key.
+        /// </summary>
+        [XmlAttribute]
+        public string Code { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the decimal places for this unit, used both to display and to round quantities
+        /// and weights in it (for example <c>KG</c> = 3, <c>PCS</c> = 0). SAP T006 keeps these apart as
+        /// <c>DECAN</c> (display) and <c>ANDEC</c> (rounding); this framework uses one value for both.
+        /// </summary>
+        [XmlAttribute]
+        public int Decimals { get; set; }
+
+        /// <summary>
+        /// Gets or sets the dimension grouping (optional), for example <c>weight</c> / <c>length</c> /
+        /// <c>volume</c> / <c>count</c>. Used for UI grouping only.
+        /// </summary>
+        [XmlAttribute]
+        public string Dimension { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the display name (for example <c>Kilogram</c>).
+        /// </summary>
+        [XmlAttribute]
+        public string Name { get; set; } = string.Empty;
+    }
+}

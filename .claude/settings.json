@@ -1,0 +1,45 @@
+{
+  "extraKnownMarketplaces": {
+    "jeff377-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "jeff377/claude-plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "dev-workflow@jeff377-plugins": true
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-commit-verify.sh",
+            "timeout": 180
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Write(.claude/**)",
+      "Edit(.claude/**)",
+      "Write(src/**)",
+      "Edit(src/**)",
+      "Write(tests/**)",
+      "Edit(tests/**)",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(mkdir:*)",
+      "Bash(date:*)",
+      "Bash(TZ=Asia/Taipei date:*)",
+      "WebFetch(domain:sonarcloud.io)"
+    ]
+  }
+}

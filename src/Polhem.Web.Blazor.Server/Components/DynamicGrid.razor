@@ -1,0 +1,33 @@
+@using System.Data
+@using Polhem.Definition.Layouts
+
+@if (Layout is null || Rows is null || Rows.Rows.Count == 0)
+{
+    <div class="polhem-dynamic-grid polhem-dynamic-grid--empty">@EmptyText</div>
+}
+else
+{
+    <table class="polhem-dynamic-grid">
+        <thead>
+            <tr>
+                @foreach (var column in VisibleColumns)
+                {
+                    <th class="polhem-dynamic-grid__header" style="@BuildColumnStyle(column)">
+                        @column.Caption
+                    </th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (DataRow row in Rows.Rows)
+            {
+                <tr class="polhem-dynamic-grid__row" @onclick="() => OnRowClickAsync(row)">
+                    @foreach (var column in VisibleColumns)
+                    {
+                        <td class="polhem-dynamic-grid__cell">@FormatCell(row, column)</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}

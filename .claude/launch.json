@@ -1,0 +1,44 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "northwind-server",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "apps/Polhem.Northwind/Polhem.Northwind.Server/Polhem.Northwind.Server.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "port": 5100,
+      "autoPort": false
+    },
+    {
+      "name": "northwind-browser",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "apps/Polhem.Northwind/Polhem.Northwind.Browser/Polhem.Northwind.Browser.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "port": 5200,
+      "autoPort": false
+    },
+    {
+      "name": "blazor-server-demo",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "samples/Blazor.Server.Demo/Blazor.Server.Demo.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "port": 5055,
+      "autoPort": false
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+using System.Data;
+using Avalonia;
+using Avalonia.Controls;
+using Polhem.Definition.Layouts;
+using Polhem.UI.Avalonia.DataObjects;
+
+namespace Polhem.UI.Avalonia.Controls.Editors
+{
+    /// <summary>
+    /// Modal presentation of <see cref="RowEditPanel"/> for the
+    /// <see cref="GridEditMode.EditForm"/> mode. A popup keeps the layout stable
+    /// regardless of how many rows the grid holds — the inline-panel alternative
+    /// shifts the layout and sits far from the selected row on long grids.
+    /// </summary>
+    public static class RowEditDialog
+    {
+        /// <summary>
+        /// Opens the edit form for <paramref name="row"/> and returns whether the
+        /// user committed the edit. Closing the window without choosing rolls the
+        /// session back (the panel cancels on detach).
+        /// </summary>
+        /// <param name="host">A visual inside the owning window; used to resolve the dialog owner.</param>
+        /// <param name="dataObject">The data object that owns the row.</param>
+        /// <param name="layout">The grid layout whose columns drive the editors.</param>
+        /// <param name="row">The row to edit.</param>
+        public static async Task<bool> ShowAsync(Visual host, FormDataObject dataObject, LayoutGrid layout, DataRow row)
+        {
+            ArgumentNullException.ThrowIfNull(host);
+            ArgumentNullException.ThrowIfNull(dataObject);
+            ArgumentNullException.ThrowIfNull(layout);
+            ArgumentNullException.ThrowIfNull(row);
+
+            var panel = new RowEditPanel();
+            var committed = false;
+            var title = string.IsNullOrEmpty(layout.Caption) ? layout.TableName : layout.Caption;
+
+            // Lay the edit form out in a single column on phone-sized screens. The decision uses
+            // the hosting top level's width (the app window / single view that owns the grid), not
+            // the dialog's own size: a desktop dialog is a small SizeToContent window whose width
+            // would read as "compact" and wrongly collapse, whereas the owning window is wide.
+            var topLevel = TopLevel.GetTopLevel(host);
+            panel.Compact = RowEditPanel.IsCompactWidth(topLevel?.Bounds.Width ?? 0);
+            panel.Bind(dataObject, layout, row);
+
+            // Only the desktop classic-window lifetime can parent a native modal Window. Single-view
+            // hosts — browser (WASM), iOS and Android — have no native window, so host the panel on
+            // the top level's OverlayLayer instead. RowEditPanel cancels its buffered edit when it
+            // detaches from the tree, so removing the overlay rolls back an uncommitted edit exactly
+            // like closing the window did.
+            if (topLevel is not Window owner)
+            {
+                var completed = new TaskCompletionSource();
+                panel.EditCommitted += (_, _) => { committed = true; completed.TrySetResult(); };
+                panel.EditCancelled += (_, _) => completed.TrySetResult();
+                await OverlayDialogHost.ShowAsync(host, panel, title, completed.Task);
+                return committed;
+            }
+
+            var window = new Window
+            {
+                Title = title,
+                Content = panel,
+                // SizeToContent gives a sensible initial size from the editors; CanResize then lets
+                // the user widen the dialog (the panel's star-width columns expand to fill).
+                SizeToContent = SizeToContent.WidthAndHeight,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                CanResize = true,
+                ShowInTaskbar = false,
+            };
+            // Once the window has taken its initial content-driven size, drop SizeToContent so it
+            // no longer snaps back to content size and the user's manual resize sticks.
+            window.Opened += (_, _) => window.SizeToContent = SizeToContent.Manual;
+            panel.EditCommitted += (_, _) => { committed = true; window.Close(); };
+            panel.EditCancelled += (_, _) => window.Close();
+
+            await window.ShowDialog(owner);
+            return committed;
+        }
+    }
+}

@@ -1,0 +1,130 @@
+using System.Data;
+using Polhem.Definition.Filters;
+using Polhem.Definition.Paging;
+using Polhem.Definition.Sorting;
+
+namespace Polhem.Repository.Abstractions.Form
+{
+    /// <summary>
+    /// Repository interface for data forms.
+    /// </summary>
+    public interface IDataFormRepository
+    {
+        /// <summary>
+        /// Retrieves list-view rows from the master table by executing a
+        /// FormSchema-driven SELECT statement.
+        /// </summary>
+        /// <param name="selectFields">
+        /// The comma-separated field names to retrieve; an empty value falls back to
+        /// <see cref="Polhem.Definition.Forms.FormSchema.ListFields"/>, then to all fields.
+        /// </param>
+        /// <param name="filter">The filter condition tree; <c>null</c> for an unfiltered query.</param>
+        /// <param name="sortFields">The sort field collection; <c>null</c> uses the default ordering.</param>
+        /// <param name="paging">The paging options; <c>null</c> returns every matching row.</param>
+        /// <returns>
+        /// A <see cref="DataFormListResult"/> with the row data and, when paging was
+        /// requested, the corresponding <see cref="PagingInfo"/>.
+        /// </returns>
+        DataFormListResult GetList(
+            string selectFields,
+            FilterNode? filter,
+            SortFieldCollection? sortFields,
+            PagingOptions? paging = null);
+
+        /// <summary>
+        /// Produces a blank <c>DataSet</c> skeleton seeded with FormSchema
+        /// defaults. The master table carries exactly one row in the
+        /// <see cref="DataRowState.Added"/> state with a server-issued
+        /// <c>sys_rowid</c>; detail tables carry their full schema but no rows.
+        /// </summary>
+        /// <param name="timeZoneId">
+        /// The requesting user's IANA time zone id, used to seed <c>Date</c> defaults on the user's own
+        /// day (ADR-032 D12). Blank means UTC. <c>DateTime</c> defaults are the current UTC instant, the
+        /// basis of a server-side data set.
+        /// </param>
+        DataSet GetNewData(string timeZoneId = "");
+
+        /// <summary>
+        /// Loads the master row (and its details) by <paramref name="rowId"/>.
+        /// All returned rows have <c>AcceptChanges</c> applied so their state
+        /// is <see cref="DataRowState.Unchanged"/>.
+        /// </summary>
+        /// <param name="rowId">The master row identifier (<c>sys_rowid</c>).</param>
+        /// <param name="scopeFilter">
+        /// An optional record-scope filter AND-combined with the row-id predicate. When supplied and
+        /// the master row falls outside the scope, the method returns <c>null</c> (indistinguishable
+        /// from a missing row, so callers cannot probe records they may not see).
+        /// </param>
+        /// <returns>
+        /// The loaded <see cref="DataSet"/>; <c>null</c> when no master row
+        /// matches <paramref name="rowId"/> (or it is out of scope).
+        /// </returns>
+        DataSet? GetData(Guid rowId, FilterNode? scopeFilter = null);
+
+        /// <summary>
+        /// Reads the stored rows of one form table by their <c>sys_rowid</c>, master or detail alike.
+        /// </summary>
+        /// <param name="tableName">The form table name, as declared in the FormSchema.</param>
+        /// <param name="selectFields">
+        /// The comma-separated field names to read. <c>sys_rowid</c> is always included, so the caller
+        /// can match each result to its own row; an empty value reads every field.
+        /// </param>
+        /// <param name="rowIds">The row identifiers to read; an empty collection issues no query.</param>
+        /// <returns>
+        /// One row per identifier that still exists, in no particular order. A missing identifier has
+        /// no row, and no record-scope filter is applied.
+        /// </returns>
+        /// <remarks>
+        /// Unlike <see cref="GetData"/>, this reads rows of any table without loading the record they
+        /// belong to, which is what a save needs to recover the stored values of the rows it is about
+        /// to write.
+        /// </remarks>
+        DataTable GetRowsByRowId(string tableName, string selectFields, IReadOnlyCollection<Guid> rowIds);
+
+        /// <summary>
+        /// Persists changes from a <see cref="DataSet"/> by dispatching
+        /// INSERT / UPDATE / DELETE based on each row's <see cref="DataRow.RowState"/>;
+        /// every command runs inside a single transaction.
+        /// </summary>
+        /// <param name="dataSet">The DataSet to persist.</param>
+        /// <returns>
+        /// A tuple containing the freshly re-loaded <c>DataSet</c> and the
+        /// per-table affected-row counts.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when <paramref name="dataSet"/> contains no pending changes
+        /// (callers should not invoke <c>Save</c> in this case).
+        /// </exception>
+        (DataSet? Refreshed, Dictionary<string, int> AffectedRows) Save(DataSet dataSet);
+
+        /// <summary>
+        /// Deletes a single master row directly by <paramref name="rowId"/>.
+        /// Detail rows that reference the master through
+        /// <c>sys_master_rowid</c> are removed first; the entire operation
+        /// runs inside a single transaction.
+        /// </summary>
+        /// <param name="rowId">The master row identifier (<c>sys_rowid</c>).</param>
+        /// <param name="scopeFilter">
+        /// An optional record-scope filter. When supplied and the master row falls outside the scope,
+        /// nothing is deleted (neither master nor details) and the method returns zero — the same
+        /// result as a missing row, so callers cannot probe records they may not see.
+        /// </param>
+        /// <returns>
+        /// The number of master rows actually deleted (zero indicates the row
+        /// no longer exists or is out of scope).
+        /// </returns>
+        int Delete(Guid rowId, FilterNode? scopeFilter = null);
+
+        /// <summary>
+        /// Determines whether the master row identified by <paramref name="rowId"/> exists and
+        /// satisfies <paramref name="scopeFilter"/> — an authoritative, server-side record-scope check
+        /// against the database (not the caller-supplied payload), used to gate write operations.
+        /// </summary>
+        /// <param name="rowId">The master row identifier (<c>sys_rowid</c>).</param>
+        /// <param name="scopeFilter">
+        /// The record-scope filter the row must satisfy; <c>null</c> means no scope (existence only).
+        /// </param>
+        /// <returns><c>true</c> when a matching in-scope master row exists; otherwise <c>false</c>.</returns>
+        bool ExistsInScope(Guid rowId, FilterNode? scopeFilter);
+    }
+}

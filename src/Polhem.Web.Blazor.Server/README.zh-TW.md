@@ -1,0 +1,34 @@
+# Polhem.Web.Blazor.Server
+
+> Polhem 的 Blazor Server 元件庫 —— FormSchema 驅動 UI 元件，於 ASP.NET Core 宿主程序內執行。
+
+[English](README.md)
+
+## 架構定位
+
+- **層級**：Web 前端（Razor Class Library）
+- **Hosting 模式**：Blazor Server —— 元件邏輯在 ASP.NET Core 伺服端執行，瀏覽器透過 SignalR 接收 DOM diff。
+- **Provider 配對**：搭配 `Polhem.Api.Client` 中的 `LocalApiProvider`（進程內呼叫，無 HTTP round-trip）。
+- **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
+- 由 ASP.NET Core 宿主應用程式消費。
+
+## 目標框架
+
+- `net10.0`
+
+## 狀態
+
+CRUD UI 已上線：
+
+- `FormDataObject` 由 `FormSchema` 推導出記憶體中的 `DataSet`（master row + detail tables），並提供 `GetField` / `SetField` 作為雙向 binding 入口。
+- `DynamicForm` 渲染 `FormLayout` 的 master section，依 `ControlType` 將每個欄位分派到對應的 input 元素（text / date / month / checkbox / textarea / dropdown）。
+- 後端 round-trip 方法（`LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`）已完整實作，透過 API connector 呼叫後端 BO。
+- `DynamicGrid`（清單檢視）與 `FormPage`（清單 + 主明細，透過共享的 `FormDataObject` 串接）皆已實作。
+
+## 相依約束
+
+僅相依 `Polhem.Api.Client`。宿主應用程式負責透過 `AddPolhemFramework` 註冊後端服務，並選擇 `IJsonRpcProvider` 實作。
+
+## 授權
+
+MIT

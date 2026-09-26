@@ -1,0 +1,73 @@
+using System.ComponentModel;
+using Polhem.Base.Serialization;
+using System.Text;
+
+namespace Polhem.Base.UnitTests
+{
+    public class GzipTests
+    {
+        /// <summary>
+        /// 測試壓縮功能，檢查資料是否能成功壓縮。
+        /// </summary>
+        [Fact]
+        [DisplayName("壓縮後解壓縮應還原為原始資料")]
+        public void Compress_ValidInput_ReturnsCompressedBytesThatDecompressCorrectly()
+        {
+            // 輸入資料：較大的字串資料
+            string originalText = new string('A', 1024); // 1024 個 'A' 字符
+            byte[] originalBytes = Encoding.UTF8.GetBytes(originalText);
+
+            // 執行壓縮
+            byte[] compressedData = Gzip.Compress(originalBytes);
+
+            // 驗證壓縮後的資料不為空
+            Assert.NotNull(compressedData);
+            Assert.NotEmpty(compressedData);
+
+            // 驗證壓縮後的資料可以成功解壓縮
+            byte[] decompressedData = Gzip.Decompress(compressedData);
+            string decompressedText = Encoding.UTF8.GetString(decompressedData);
+
+            // 驗證解壓縮後的資料與原始資料一致
+            Assert.Equal(originalText, decompressedText);
+        }
+
+        /// <summary>
+        /// 測試解壓縮功能，確保壓縮和解壓縮能正常工作。
+        /// </summary>
+        [Fact]
+        [DisplayName("解壓縮應還原為與原始資料相同的內容")]
+        public void Decompress_CompressedInput_ReturnsOriginalData()
+        {
+            // 輸入資料：原始資料字串
+            string originalText = "這是要進行解壓縮的測試資料！";
+            byte[] originalBytes = Encoding.UTF8.GetBytes(originalText);
+
+            // 執行壓縮
+            byte[] compressedData = Gzip.Compress(originalBytes);
+
+            // 執行解壓縮
+            byte[] uncompressedData = Gzip.Decompress(compressedData);
+
+            // 驗證解壓縮後的資料不為空
+            Assert.NotNull(uncompressedData);
+            Assert.NotEmpty(uncompressedData);
+
+            // 驗證解壓縮後的資料與原始資料相同
+            string uncompressedText = Encoding.UTF8.GetString(uncompressedData);
+            Assert.Equal(originalText, uncompressedText);
+        }
+
+        [Fact]
+        [DisplayName("Decompress 解壓縮後超過 50MB 上限應拋 InvalidDataException（zip bomb 防護）")]
+        public void Decompress_ExceedsMaxSize_ThrowsInvalidDataException()
+        {
+            // 壓縮 51 MB 的 0x00（高度壓縮比），觸發 > 50 MB 上限
+            byte[] payload = new byte[51 * 1024 * 1024];
+            byte[] compressed = Gzip.Compress(payload);
+
+            var ex = Assert.Throws<InvalidDataException>(() => Gzip.Decompress(compressed));
+            Assert.Contains("Decompressed data exceeds", ex.Message);
+        }
+    }
+}

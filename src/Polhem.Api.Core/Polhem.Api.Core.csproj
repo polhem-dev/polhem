@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>Encapsulates API support such as model definitions, encryption, and serialization.</Description>
+    <PackageTags>polhem;api;core;service;dynamicapi</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Declared explicitly even though Polhem.Definition already brings it in transitively.
+         MessagePack is this project's wire ABI, not an incidental dependency: 70 files here
+         use it and the default payload format is MessagePack. Leaving the version pinned
+         solely by Polhem.Definition means a change there would alter this package's on-the-wire
+         behaviour with no local signal, and consumers of the published NuGet package could
+         not see the contract at all. -->
+    <PackageReference Include="MessagePack" Version="3.1.7" />
+  </ItemGroup>
+
+  <!--
+    Framework convention analyzers applied to this project itself. POLHEM4001 (missing
+    CollectionBaseFormatter registration) only activates in the compilation that owns the registration
+    list, which is this one — without this reference that rule would never run anywhere.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Analyzers\Polhem.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Api.Contracts\Polhem.Api.Contracts.csproj" />
+    <ProjectReference Include="..\Polhem.Definition\Polhem.Definition.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.Api.Core.UnitTests" />
+    <!-- The error contract has two halves: JsonRpcExecutor.MapException maps an exception to a
+         code, and ApiConnector.FinalizeResponse maps that code back to an exception. Only a test
+         that sees both can assert they agree, and the client test project is the one that already
+         references both assemblies. -->
+    <InternalsVisibleTo Include="Polhem.Api.Client.UnitTests" />
+  </ItemGroup>
+
+</Project>

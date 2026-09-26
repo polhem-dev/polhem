@@ -1,0 +1,25 @@
+@page "/"
+
+<PolhemAccessTokenProvider Context="auth">
+    @if (!auth.IsAuthenticated)
+    {
+        <section class="polhem-demo-section">
+            <h2>Sign in</h2>
+            <p>
+                Use the seeded demo account:
+                <code>@DemoCredentials.UserId</code> / <code>@DemoCredentials.Password</code>
+            </p>
+            <PolhemLoginPanel OnLoggedIn="response => auth.SetToken(response.AccessToken)" />
+        </section>
+    }
+    else
+    {
+        <section class="polhem-demo-section">
+            <div class="polhem-demo-userbar">
+                <span>Signed in as <strong>@DemoCredentials.DisplayName</strong></span>
+                <button type="button" @onclick="auth.Clear">Sign out</button>
+            </div>
+            <FormPage ProgId="Employee" />
+        </section>
+    }
+</PolhemAccessTokenProvider>

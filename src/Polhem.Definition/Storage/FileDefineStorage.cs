@@ -1,0 +1,323 @@
+using Polhem.Definition.Database;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
+using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
+using Polhem.Base;
+using Polhem.Base.Serialization;
+
+namespace Polhem.Definition.Storage
+{
+    /// <summary>
+    /// A file-based implementation of define data read and write operations.
+    /// Provides file access for database category settings, table schema, form schema, and form layout objects.
+    /// Manages persistence of all define data through XML serialization and deserialization.
+    /// </summary>
+    public class FileDefineStorage : IDefineStorage
+    {
+        private readonly PathOptions _paths;
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="FileDefineStorage"/> bound to the supplied
+        /// <see cref="PathOptions"/>. All file path resolution flows through the injected instance.
+        /// </summary>
+        /// <param name="paths">The path options that determine where definition files live on disk.</param>
+        public FileDefineStorage(PathOptions paths)
+        {
+            _paths = paths ?? throw new ArgumentNullException(nameof(paths));
+        }
+
+        /// <summary>
+        /// Gets the database category settings.
+        /// </summary>
+        public DbCategorySettings? GetDbCategorySettings()
+        {
+            string filePath = _paths.GetDbCategorySettingsFilePath();
+            ValidateFilePath(filePath);
+            return XmlCodec.DeserializeFromFile<DbCategorySettings>(filePath);
+        }
+
+        /// <summary>
+        /// Saves the database category settings.
+        /// </summary>
+        /// <param name="settings">The database category settings.</param>
+        public void SaveDbCategorySettings(DbCategorySettings settings)
+        {
+            string filePath = _paths.GetDbCategorySettingsFilePath();
+            XmlCodec.SerializeToFile(settings, filePath);
+        }
+
+        /// <summary>
+        /// Gets the system-level currency master. Returns <c>null</c> when the file does not exist —
+        /// a missing currency master is a normal scenario (unlike <see cref="GetDbCategorySettings"/>),
+        /// so callers fall back to framework-default decimals.
+        /// </summary>
+        public CurrencySettings? GetCurrencySettings()
+        {
+            string filePath = _paths.GetCurrencySettingsFilePath();
+            if (!File.Exists(filePath))
+                return null;
+            return XmlCodec.DeserializeFromFile<CurrencySettings>(filePath);
+        }
+
+        /// <summary>
+        /// Saves the system-level currency master.
+        /// </summary>
+        /// <param name="settings">The currency master.</param>
+        public void SaveCurrencySettings(CurrencySettings settings)
+        {
+            string filePath = _paths.GetCurrencySettingsFilePath();
+            XmlCodec.SerializeToFile(settings, filePath);
+        }
+
+        /// <summary>
+        /// Gets the system-level unit-of-measure master. Returns <c>null</c> when the file does not
+        /// exist — a missing unit master is a normal scenario, so callers fall back to framework
+        /// defaults.
+        /// </summary>
+        public UnitSettings? GetUnitSettings()
+        {
+            string filePath = _paths.GetUnitSettingsFilePath();
+            if (!File.Exists(filePath))
+                return null;
+            return XmlCodec.DeserializeFromFile<UnitSettings>(filePath);
+        }
+
+        /// <summary>
+        /// Saves the system-level unit-of-measure master.
+        /// </summary>
+        /// <param name="settings">The unit master.</param>
+        public void SaveUnitSettings(UnitSettings settings)
+        {
+            string filePath = _paths.GetUnitSettingsFilePath();
+            XmlCodec.SerializeToFile(settings, filePath);
+        }
+
+        /// <summary>
+        /// Gets the program settings.
+        /// </summary>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the file still uses the pre-flattening nested layout, which XmlSerializer
+        /// would otherwise read as an empty registry without complaint.
+        /// </exception>
+        public ProgramSettings? GetProgramSettings()
+        {
+            string filePath = _paths.GetProgramSettingsFilePath();
+            ValidateFilePath(filePath);
+            // Read the text first so the layout can be checked: an un-migrated file deserializes
+            // cleanly into zero entries, and the resulting "every progId falls back to the default"
+            // is far harder to diagnose than an error naming the migration command.
+            string xml = FileUtilities.FileReadText(filePath);
+            ProgramSettingsFormat.EnsureCurrentFormat(xml, filePath);
+            var settings = XmlCodec.Deserialize<ProgramSettings>(xml);
+            settings?.SetObjectFilePath(filePath);
+            return settings;
+        }
+
+        /// <summary>
+        /// Saves the program settings.
+        /// </summary>
+        /// <param name="settings">The program settings.</param>
+        /// <remarks>
+        /// Written atomically, unlike the other definitions: several instances of a host may start
+        /// at once and each self-register the reserved progIds into this one file. A plain write
+        /// could interleave into a truncated file that then fails to parse on the next start, while
+        /// an atomic replace leaves every reader seeing either the old file or the new one. The
+        /// content is idempotent, so which writer wins does not matter.
+        /// </remarks>
+        public void SaveProgramSettings(ProgramSettings settings)
+        {
+            string filePath = _paths.GetProgramSettingsFilePath();
+            FileUtilities.FileWriteTextAtomic(filePath, XmlCodec.Serialize(settings));
+            settings.SetObjectFilePath(filePath);
+        }
+
+        /// <summary>
+        /// Gets the menu definition. Returns <c>null</c> when the file does not exist — a host that
+        /// ships no menu (a service with no UI, or one whose shell builds navigation its own way)
+        /// is a normal deployment, not a misconfiguration.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when the menu tree is structurally invalid.</exception>
+        public MenuSettings? GetMenuSettings()
+        {
+            string filePath = _paths.GetMenuSettingsFilePath();
+            if (!File.Exists(filePath))
+                return null;
+            var settings = XmlCodec.DeserializeFromFile<MenuSettings>(filePath);
+            // Cross-tree id uniqueness cannot be expressed by the collection, so it is enforced
+            // where the definition is read. The registry is not available here, so ProgId
+            // references are left to the editor and the CLI.
+            settings?.EnsureValid();
+            return settings;
+        }
+
+        /// <summary>
+        /// Saves the menu definition.
+        /// </summary>
+        /// <param name="settings">The menu definition.</param>
+        public void SaveMenuSettings(MenuSettings settings)
+        {
+            string filePath = _paths.GetMenuSettingsFilePath();
+            XmlCodec.SerializeToFile(settings, filePath);
+        }
+
+        /// <summary>
+        /// Gets the business plugin bindings, or <c>null</c> when the file is absent — a deployment
+        /// with no plugins is the normal case, not a misconfiguration.
+        /// </summary>
+        public PluginSettings? GetPluginSettings()
+        {
+            string filePath = _paths.GetPluginSettingsFilePath();
+            if (!File.Exists(filePath))
+                return null;
+            return XmlCodec.DeserializeFromFile<PluginSettings>(filePath);
+        }
+
+        /// <summary>
+        /// Saves the business plugin bindings.
+        /// </summary>
+        /// <param name="settings">The plugin bindings.</param>
+        public void SavePluginSettings(PluginSettings settings)
+        {
+            string filePath = _paths.GetPluginSettingsFilePath();
+            XmlCodec.SerializeToFile(settings, filePath);
+        }
+
+        /// <summary>
+        /// Gets the table schema for the specified category and table.
+        /// </summary>
+        /// <param name="categoryId">The database category id.</param>
+        /// <param name="tableName">The table name.</param>
+        public TableSchema? GetTableSchema(string categoryId, string tableName)
+        {
+            string filePath = _paths.GetTableSchemaFilePath(categoryId, tableName);
+            ValidateFilePath(filePath);
+            return XmlCodec.DeserializeFromFile<TableSchema>(filePath);
+        }
+
+        /// <summary>
+        /// Saves the table schema for the specified category.
+        /// </summary>
+        /// <param name="categoryId">The database category id.</param>
+        /// <param name="tableSchema">The table schema.</param>
+        public void SaveTableSchema(string categoryId, TableSchema tableSchema)
+        {
+            string filePath = _paths.GetTableSchemaFilePath(categoryId, tableSchema.TableName);
+            XmlCodec.SerializeToFile(tableSchema, filePath);
+        }
+
+        /// <summary>
+        /// Gets the form schema for the specified program.
+        /// </summary>
+        /// <param name="progId">The program ID.</param>
+        public FormSchema? GetFormSchema(string progId)
+        {
+            string filePath = _paths.GetFormSchemaFilePath(progId);
+            ValidateFilePath(filePath);
+            return XmlCodec.DeserializeFromFile<FormSchema>(filePath);
+        }
+
+        /// <summary>
+        /// Saves the form schema.
+        /// </summary>
+        /// <param name="formSchema">The form schema.</param>
+        public void SaveFormSchema(FormSchema formSchema)
+        {
+            string filePath = _paths.GetFormSchemaFilePath(formSchema.ProgId);
+            XmlCodec.SerializeToFile(formSchema, filePath);
+        }
+
+        /// <summary>
+        /// Gets the form layout for the specified layout ID.
+        /// </summary>
+        /// <param name="layoutId">The form layout ID.</param>
+        /// <remarks>
+        /// Returns <c>null</c> rather than throwing when the file is absent, honouring the
+        /// nullable return type declared on <see cref="IDefineStorage.GetFormLayout"/>. This layer
+        /// reports whether a file exists and nothing more; how to read "absent" belongs to the
+        /// caller. The runtime layout path treats it as a configuration error — a form renders its
+        /// stored definition — while the customization layer treats it as "this tenant overrides
+        /// nothing", which is the common case.
+        /// </remarks>
+        public FormLayout? GetFormLayout(string layoutId)
+        {
+            string filePath = _paths.GetFormLayoutFilePath(layoutId);
+            if (!File.Exists(filePath))
+                return null;
+            return XmlCodec.DeserializeFromFile<FormLayout>(filePath);
+        }
+
+        /// <summary>
+        /// Saves the form layout.
+        /// </summary>
+        /// <param name="formLayout">The form layout.</param>
+        public void SaveFormLayout(FormLayout formLayout)
+        {
+            string filePath = _paths.GetFormLayoutFilePath(formLayout.LayoutId);
+            XmlCodec.SerializeToFile(formLayout, filePath);
+        }
+
+        /// <summary>
+        /// Gets the language resource for the specified language and namespace.
+        /// Returns <c>null</c> when the file does not exist — missing translation
+        /// files are a normal scenario (unlike <see cref="GetFormSchema"/>, where a
+        /// missing file indicates a bug), so this path is non-throwing and
+        /// negative-cacheable.
+        /// </summary>
+        /// <param name="lang">The BCP-47 language code.</param>
+        /// <param name="ns">The resource namespace.</param>
+        public LanguageResource? GetLanguage(string lang, string ns)
+        {
+            string filePath = _paths.GetLanguageFilePath(lang, ns);
+            if (!File.Exists(filePath))
+                return null;
+            return XmlCodec.DeserializeFromFile<LanguageResource>(filePath);
+        }
+
+        /// <summary>
+        /// Saves the language resource.
+        /// </summary>
+        /// <param name="resource">The language resource.</param>
+        public void SaveLanguage(LanguageResource resource)
+        {
+            string filePath = _paths.GetLanguageFilePath(resource.Lang, resource.Namespace);
+            XmlCodec.SerializeToFile(resource, filePath);
+        }
+
+        /// <summary>
+        /// Validates that the specified file exists.
+        /// </summary>
+        /// <param name="filePath">The file path.</param>
+        private static void ValidateFilePath(string filePath)
+        {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException($"The file {filePath} does not exist.");
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Resolves through the same <see cref="PathOptions"/> instance the getters use, so a consumer
+        /// watches exactly the file this storage would read. A define whose keys are missing reports no
+        /// signal rather than throwing — an unwatched entry still expires on its time-based window.
+        /// </remarks>
+        public DefineChangeSource GetChangeSource(DefineType defineType, params string[] keys)
+        {
+            string[]? filePaths = defineType switch
+            {
+                DefineType.DbCategorySettings => [_paths.GetDbCategorySettingsFilePath()],
+                DefineType.CurrencySettings => [_paths.GetCurrencySettingsFilePath()],
+                DefineType.UnitSettings => [_paths.GetUnitSettingsFilePath()],
+                DefineType.ProgramSettings => [_paths.GetProgramSettingsFilePath()],
+                DefineType.MenuSettings => [_paths.GetMenuSettingsFilePath()],
+                DefineType.PluginSettings => [_paths.GetPluginSettingsFilePath()],
+                DefineType.FormSchema when keys.Length >= 1 => [_paths.GetFormSchemaFilePath(keys[0])],
+                DefineType.FormLayout when keys.Length >= 1 => [_paths.GetFormLayoutFilePath(keys[0])],
+                DefineType.TableSchema when keys.Length >= 2 => [_paths.GetTableSchemaFilePath(keys[0], keys[1])],
+                DefineType.Language when keys.Length >= 2 => [_paths.GetLanguageFilePath(keys[0], keys[1])],
+                _ => null
+            };
+
+            return filePaths is null ? DefineChangeSource.None : new DefineChangeSource { FilePaths = filePaths };
+        }
+    }
+}

@@ -1,0 +1,288 @@
+using System.ComponentModel;
+using Polhem.Business.Security;
+
+namespace Polhem.Business.UnitTests
+{
+    /// <summary>
+    /// LoginAttemptTracker 暴力破解防護測試
+    /// </summary>
+    public class LoginAttemptTrackerTests
+    {
+        [Fact]
+        [DisplayName("新帳號不應被鎖定")]
+        public void IsLockedOut_NewUser_ReturnsFalse()
+        {
+            var tracker = new LoginAttemptTracker();
+            Assert.False(tracker.IsLockedOut("user01"));
+        }
+
+        [Fact]
+        [DisplayName("未達最大失敗次數不應被鎖定")]
+        public void IsLockedOut_BelowMaxAttempts_ReturnsFalse()
+        {
+            var tracker = new LoginAttemptTracker(5, TimeSpan.FromMinutes(15));
+
+            for (int i = 0; i < 4; i++)
+                tracker.RecordFailure("user01");
+
+            Assert.False(tracker.IsLockedOut("user01"));
+        }
+
+        [Fact]
+        [DisplayName("達到最大失敗次數應被鎖定")]
+        public void IsLockedOut_ReachMaxAttempts_ReturnsTrue()
+        {
+            var tracker = new LoginAttemptTracker(5, TimeSpan.FromMinutes(15));
+
+            for (int i = 0; i < 5; i++)
+                tracker.RecordFailure("user01");
+
+            Assert.True(tracker.IsLockedOut("user01"));
+        }
+
+        [Fact]
+        [DisplayName("鎖定期間過後應自動解鎖")]
+        public void IsLockedOut_AfterLockoutExpires_ReturnsFalse()
+        {
+            // 以可推進的假時鐘取代真實牆鐘：原本用 50ms 鎖定視窗 + Task.Delay，在 2-core CI 的
+            // 排程壓力下可能在「應鎖定」斷言前就過期而 flaky。改以邏輯時間推進即無此風險。
+            var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+            var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15), clock);
+
+            for (int i = 0; i < 3; i++)
+                tracker.RecordFailure("user01");
+
+            Assert.True(tracker.IsLockedOut("user01"));
+
+            clock.Advance(TimeSpan.FromMinutes(16));
+
+            Assert.False(tracker.IsLockedOut("user01"));
+        }
+
+        /// <summary>
+        /// 可手動推進的時鐘，用於以邏輯時間驗證鎖定到期。
+        /// </summary>
+        private sealed class AdvanceableTimeProvider : TimeProvider
+        {
+            private DateTimeOffset _utcNow;
+
+            public AdvanceableTimeProvider(DateTimeOffset start) => _utcNow = start;
+
+            public override DateTimeOffset GetUtcNow() => _utcNow;
+
+            public void Advance(TimeSpan delta) => _utcNow = _utcNow.Add(delta);
+        }
+
+        [Fact]
+        [DisplayName("成功登入後應重設失敗計數")]
+        public void Reset_AfterFailures_ClearsLockout()
+        {
+            var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15));
+
+            for (int i = 0; i < 3; i++)
+                tracker.RecordFailure("user01");
+
+            Assert.True(tracker.IsLockedOut("user01"));
+
+            tracker.Reset("user01");
+            Assert.False(tracker.IsLockedOut("user01"));
+        }
+
+        [Fact]
+        [DisplayName("不同帳號的失敗計數應獨立")]
+        public void RecordFailure_DifferentUsers_IndependentTracking()
+        {
+            var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15));
+
+            for (int i = 0; i < 3; i++)
+                tracker.RecordFailure("user01");
+
+            tracker.RecordFailure("user02");
+
+            Assert.True(tracker.IsLockedOut("user01"));
+            Assert.False(tracker.IsLockedOut("user02"));
+        }
+
+        [Fact]
+        [DisplayName("Reset 後重新計數，需重新累積才會鎖定")]
+        public void Reset_ThenFailAgain_RequiresFullCountToLock()
+        {
+            var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15));
+
+            // Fail 2 times, then reset
+            tracker.RecordFailure("user01");
+            tracker.RecordFailure("user01");
+            tracker.Reset("user01");
+
+            // Fail 2 more times — should NOT be locked (count was reset)
+            tracker.RecordFailure("user01");
+            tracker.RecordFailure("user01");
+            Assert.False(tracker.IsLockedOut("user01"));
+
+            // Third failure triggers lockout again
+            tracker.RecordFailure("user01");
+            Assert.True(tracker.IsLockedOut("user01"));
+        }
+
+        [Fact]
+        [DisplayName("帳號名稱不區分大小寫")]
+        public void RecordFailure_CaseInsensitive_TracksAsSameUser()
+        {
+            var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15));
+
+            tracker.RecordFailure("User01");
+            tracker.RecordFailure("USER01");
+            tracker.RecordFailure("user01");
+
+            Assert.True(tracker.IsLockedOut("user01"));
+        }
+
+        [Fact]
+        [DisplayName("空字串或 null 的 userId 不應拋出例外")]
+        public void RecordFailure_NullOrEmpty_DoesNotThrow()
+        {
+            var tracker = new LoginAttemptTracker();
+
+            tracker.RecordFailure(null!);
+            tracker.RecordFailure(string.Empty);
+            Assert.False(tracker.IsLockedOut(null!));
+            Assert.False(tracker.IsLockedOut(string.Empty));
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-1)]
+        [DisplayName("MaxFailedAttempts 不可為零或負數")]
+        public void Constructor_InvalidMaxAttempts_ThrowsArgumentOutOfRangeException(int maxAttempts)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new LoginAttemptTracker(maxAttempts, TimeSpan.FromMinutes(15)));
+        }
+
+        [Fact]
+        [DisplayName("LockoutDuration 不可為零或負數")]
+        public void Constructor_InvalidDuration_ThrowsArgumentOutOfRangeException()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new LoginAttemptTracker(5, TimeSpan.Zero));
+        }
+
+        [Fact]
+        [DisplayName("鎖定期間內再次 RecordFailure 應維持既有鎖定狀態")]
+        public void RecordFailure_DuringLockout_KeepsLockedState()
+        {
+            // 鎖定 10 分鐘，確保持續在鎖定期間
+            var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(10));
+
+            for (int i = 0; i < 3; i++)
+                tracker.RecordFailure("user01");
+            Assert.True(tracker.IsLockedOut("user01"));
+
+            // 觸發 IncrementFailure 中 LockedUntilUtc 仍有效的早退分支
+            tracker.RecordFailure("user01");
+            tracker.RecordFailure("user01");
+
+            Assert.True(tracker.IsLockedOut("user01"));
+        }
+        [Fact]
+        [DisplayName("未重複的失敗帳號不應無限累積 —— 過期後應被清掉")]
+        public void RecordFailure_DistinctUsersNeverRepeated_EntriesExpire()
+        {
+            // 攻擊者形狀：每次都用不同的 user id，因此「下次同一把 key 再進來時順便清理」
+            // 這種 lazy cleanup 永遠不會觸發。舊實作在此無上限成長。
+            var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+            var tracker = new LoginAttemptTracker(5, TimeSpan.FromMinutes(15), clock)
+            {
+                MaxTrackedAccounts = 100
+            };
+
+            for (int i = 0; i < 100; i++)
+                tracker.RecordFailure($"attacker-{i}");
+
+            // 超過視窗後再打一筆，sweep 應把先前 100 筆全部清掉 —— 否則下面這筆會被容量上限擋掉
+            clock.Advance(TimeSpan.FromMinutes(16));
+            tracker.RecordFailure("victim");
+
+            for (int i = 0; i < 5; i++)
+                tracker.RecordFailure("victim");
+
+            Assert.True(tracker.IsLockedOut("victim"));
+        }
+
+        [Fact]
+        [DisplayName("追蹤帳號數應有上限，超過後不再收新帳號")]
+        public void RecordFailure_BeyondCap_StopsTrackingNewAccounts()
+        {
+            var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+            var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15), clock)
+            {
+                MaxTrackedAccounts = 10
+            };
+
+            for (int i = 0; i < 10; i++)
+                tracker.RecordFailure($"filler-{i}");
+
+            // 容量已滿，新帳號不再建立條目（因此也不會被鎖定）
+            for (int i = 0; i < 5; i++)
+                tracker.RecordFailure("late-comer");
+
+            Assert.False(tracker.IsLockedOut("late-comer"));
+        }
+
+        [Fact]
+        [DisplayName("已在追蹤的帳號不受容量上限影響，仍應鎖定")]
+        public void RecordFailure_ExistingAccountAtCap_StillLocksOut()
+        {
+            // 上限只擋新帳號。若連既有帳號都擋，灌爆容量就成了「關掉某個帳號的鎖定」的手段。
+            var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+            var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15), clock)
+            {
+                MaxTrackedAccounts = 10
+            };
+
+            tracker.RecordFailure("victim");
+            for (int i = 0; i < 9; i++)
+                tracker.RecordFailure($"filler-{i}");
+
+            tracker.RecordFailure("victim");
+            tracker.RecordFailure("victim");
+
+            Assert.True(tracker.IsLockedOut("victim"));
+        }
+
+        [Fact]
+        [DisplayName("失敗計數應以視窗計算，跨視窗的零星失敗不應累積成鎖定")]
+        public void RecordFailure_SpreadAcrossWindows_DoesNotAccumulate()
+        {
+            var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+            var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15), clock);
+
+            for (int i = 0; i < 5; i++)
+            {
+                tracker.RecordFailure("typo-user");
+                Assert.False(tracker.IsLockedOut("typo-user"));
+                clock.Advance(TimeSpan.FromMinutes(16));
+            }
+        }
+
+        [Fact]
+        [DisplayName("鎖定期間的持續失敗不應延長鎖定")]
+        public void RecordFailure_WhileLockedOut_DoesNotExtendLockout()
+        {
+            var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+            var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15), clock);
+
+            for (int i = 0; i < 3; i++)
+                tracker.RecordFailure("user01");
+            Assert.True(tracker.IsLockedOut("user01"));
+
+            // 鎖定期間再打，若會延長鎖定，攻擊者就能把帳號永久鎖住
+            clock.Advance(TimeSpan.FromMinutes(14));
+            tracker.RecordFailure("user01");
+
+            clock.Advance(TimeSpan.FromMinutes(2));
+            Assert.False(tracker.IsLockedOut("user01"));
+        }
+
+    }
+}

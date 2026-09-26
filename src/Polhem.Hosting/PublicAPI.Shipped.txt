@@ -1,0 +1,14 @@
+#nullable enable
+Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions
+Polhem.Hosting.CacheNotify.CacheNotifyPollSession
+Polhem.Hosting.CacheNotify.CacheNotifyPollSession.CacheNotifyPollSession(string! databaseId, Polhem.Db.CacheNotify.ICacheNotifyReader! reader, int marginSeconds) -> void
+Polhem.Hosting.CacheNotify.CacheNotifyPollSession.Poll() -> void
+Polhem.Hosting.CacheNotify.CacheNotifyPoller
+Polhem.Hosting.CacheNotify.CacheNotifyPoller.CacheNotifyPoller(Polhem.Db.CacheNotify.ICacheNotifyReader! reader, Polhem.Definition.Settings.CacheNotifyOptions! options, Microsoft.Extensions.Logging.ILogger<Polhem.Hosting.CacheNotify.CacheNotifyPoller!>! logger) -> void
+Polhem.Hosting.Registry.ReservedProgIdRegistrationService
+Polhem.Hosting.Registry.ReservedProgIdRegistrationService.ReservedProgIdRegistrationService(Polhem.Definition.Storage.IDefineAccess! defineAccess, Polhem.Business.IBoTypeResolver! resolver, Microsoft.Extensions.Logging.ILogger<Polhem.Hosting.Registry.ReservedProgIdRegistrationService!>! logger) -> void
+Polhem.Hosting.Registry.ReservedProgIdRegistrationService.StartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Polhem.Hosting.Registry.ReservedProgIdRegistrationService.StopAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Polhem.Hosting.Session.ExpiredSessionCleanupService
+Polhem.Hosting.Session.ExpiredSessionCleanupService.ExpiredSessionCleanupService(Polhem.Repository.Abstractions.Factories.IRepositoryFactory! repositoryFactory, Polhem.Definition.Settings.SessionCleanupOptions! options, Microsoft.Extensions.Logging.ILogger<Polhem.Hosting.Session.ExpiredSessionCleanupService!>! logger) -> void
+static Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Definition.Settings.BackendConfiguration! configuration, Polhem.Definition.PathOptions! pathOptions, bool autoCreateMasterKey = false) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

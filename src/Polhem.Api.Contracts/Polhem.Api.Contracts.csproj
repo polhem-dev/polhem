@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>Defines the interface contracts for the API layer, serving as the boundary between the API layer and the business logic layer.</Description>
+    <PackageTags>polhem;api;contracts;interface;dto;shared</PackageTags>
+  </PropertyGroup>
+
+  <!--
+    Framework convention analyzers applied to this project itself: the shape rules (single public
+    Add, parameterless constructor) apply to the wire DTOs declared here, and without this
+    reference they stay silent for this assembly.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Analyzers\Polhem.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Definition\Polhem.Definition.csproj" />
+  </ItemGroup>
+
+</Project>

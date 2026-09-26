@@ -1,0 +1,42 @@
+using Polhem.Definition;
+
+namespace Polhem.Repository.Abstractions
+{
+    /// <summary>
+    /// Resolves the physical databaseId a bo repo should use, given a logical
+    /// <see cref="DbScope"/> and the current session's access token.
+    /// </summary>
+    /// <remarks>
+    /// Routing rules:
+    /// <list type="bullet">
+    /// <item><see cref="DbScope.Common"/> → fixed databaseId <c>"common"</c>; does not require a session.</item>
+    /// <item><see cref="DbScope.Log"/> → fixed databaseId <c>"log"</c>; does not require a session.</item>
+    /// <item><see cref="Polhem.Definition.DbScope.Company"/> → resolved via <see cref="Polhem.Definition.Identity.SessionInfo.CompanyId"/>
+    /// and <see cref="Polhem.Definition.Identity.CompanyInfo.CompanyDatabaseId"/>.</item>
+    /// </list>
+    /// </remarks>
+    public interface IRepositoryDatabaseRouter
+    {
+        /// <summary>
+        /// Resolves the databaseId for the given scope and access token.
+        /// </summary>
+        /// <param name="scope">The bo repo's access intent.</param>
+        /// <param name="accessToken">The current request's access token. Ignored for
+        /// <see cref="DbScope.Common"/> and <see cref="DbScope.Log"/>; required for
+        /// <see cref="DbScope.Company"/>.</param>
+        /// <exception cref="UnauthorizedAccessException">
+        /// <paramref name="scope"/> is <see cref="DbScope.Company"/> but the session
+        /// cannot be found in the cache or has expired.
+        /// </exception>
+        /// <exception cref="Polhem.Base.Exceptions.CompanyNotEnteredException">
+        /// <paramref name="scope"/> is <see cref="DbScope.Company"/> but the session has not
+        /// entered a company. This is the single choke point for that condition: a company-scoped
+        /// database cannot be resolved without one, so no business method needs its own guard.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// <paramref name="scope"/> is <see cref="DbScope.Company"/> and a company was entered,
+        /// but the corresponding <see cref="Polhem.Definition.Identity.CompanyInfo"/> is not available in the cache.
+        /// </exception>
+        string Resolve(DbScope scope, Guid accessToken);
+    }
+}

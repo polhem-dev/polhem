@@ -1,0 +1,182 @@
+using System.ComponentModel;
+using Polhem.Definition.Identity;
+using Polhem.Definition.Storage;
+using Polhem.ObjectCaching;
+using Polhem.Tests.Shared;
+
+namespace Polhem.Definition.UnitTests
+{
+    /// <summary>
+    /// Smoke tests for <see cref="PolhemTestFixture"/>. Verifies the per-class fixture builds
+    /// its own <see cref="IServiceProvider"/>, resolves framework services, and (for
+    /// <c>UseTempDefinePath</c>) provides a writable per-fixture <see cref="PathOptions"/>.
+    /// </summary>
+    [Collection(ProcessWideStateCollection.Name)]
+    public class PolhemTestFixtureSmokeTests : IClassFixture<PolhemTestFixture>
+    {
+        private readonly PolhemTestFixture _fx;
+
+        public PolhemTestFixtureSmokeTests(PolhemTestFixture fx)
+        {
+            _fx = fx;
+        }
+
+        [Fact]
+        [DisplayName("PolhemTestFixture 預設應指向 TestProcessBootstrap 的 process-wide shared define path")]
+        public void DefaultFixture_PointsToSharedDefine()
+        {
+            Assert.NotNull(_fx.PathOptions);
+            Assert.False(string.IsNullOrEmpty(_fx.DefinePath));
+            // Post-migration（framework defaults 搬到 src/Polhem.Definition/Defaults/ 後）：
+            // 預設 fixture 指向 TestProcessBootstrap.SharedDefinePath（process-wide temp
+            // 目錄，內容為 tests/Define + 從 Polhem.Definition.dll embedded 物化的框架預設）。
+            Assert.Equal(TestProcessBootstrap.SharedDefinePath, _fx.DefinePath);
+            Assert.True(File.Exists(_fx.PathOptions.GetSystemSettingsFilePath()));
+            // 合併後該路徑同時可以解析 framework 自有檔（如 st_user.TableSchema.xml）
+            // 與 tests 自有檔（如 ft_project.TableSchema.xml）。
+            Assert.True(File.Exists(Path.Combine(_fx.DefinePath, "TableSchema", "common", "st_user.TableSchema.xml")));
+            Assert.True(File.Exists(Path.Combine(_fx.DefinePath, "TableSchema", "company", "ft_project.TableSchema.xml")));
+        }
+
+        [Fact]
+        [DisplayName("PolhemTestFixture.GetRequiredService 應可解析 IDefineAccess")]
+        public void GetRequiredService_IDefineAccess_Succeeds()
+        {
+            var access = _fx.GetRequiredService<IDefineAccess>();
+            Assert.NotNull(access);
+            // Smoke: 透過 fixture 的 IDefineAccess 讀 SystemSettings 應有 BackendConfiguration
+            var settings = access.GetSystemSettings();
+            Assert.NotNull(settings.BackendConfiguration);
+        }
+
+        [Fact]
+        [DisplayName("IDefineAccess.GetCurrencySettings 應讀回框架預設幣別主檔（storage→cache→access 全鏈）")]
+        public void GetCurrencySettings_ReturnsFrameworkCurrencyMaster()
+        {
+            var access = _fx.GetRequiredService<IDefineAccess>();
+
+            // SharedDefinePath 物化自 embedded 框架預設，含 CurrencySettings.xml（curated 10 幣別）。
+            var currencies = access.GetCurrencySettings();
+
+            Assert.NotNull(currencies);
+            Assert.NotEmpty(currencies);
+            Assert.Equal(2, currencies.GetDecimals("USD"));
+            Assert.Equal(0, currencies.GetDecimals("JPY"));
+            Assert.Equal(3, currencies.GetDecimals("BHD"));
+        }
+
+        [Fact]
+        [DisplayName("IDefineAccess.GetUnitSettings 應讀回框架預設單位主檔（storage→cache→access 全鏈）")]
+        public void GetUnitSettings_ReturnsFrameworkUnitMaster()
+        {
+            var access = _fx.GetRequiredService<IDefineAccess>();
+
+            // SharedDefinePath 物化自 embedded 框架預設，含 UnitSettings.xml（curated 單位）。
+            var units = access.GetUnitSettings();
+
+            Assert.NotNull(units);
+            Assert.NotEmpty(units);
+            Assert.Equal(3, units.GetDecimals("KG"));
+            Assert.Equal(0, units.GetDecimals("PCS"));
+        }
+
+        [Fact]
+        [DisplayName("PolhemTestFixture.GetRequiredService 應可解析 PathOptions singleton")]
+        public void GetRequiredService_PathOptions_MatchesFixture()
+        {
+            var paths = _fx.GetRequiredService<PathOptions>();
+            Assert.Same(_fx.PathOptions, paths);
+        }
+
+        [Fact]
+        [DisplayName("PolhemTestFixture.GetRequiredService 應可解析 ICacheContainer")]
+        public void GetRequiredService_ICacheContainer_Succeeds()
+        {
+            var cache = _fx.GetRequiredService<ICacheContainer>();
+            Assert.NotNull(cache);
+            Assert.NotNull(cache.SystemSettings);
+            Assert.NotNull(cache.SessionInfo);
+        }
+    }
+
+    /// <summary>
+    /// Verifies <see cref="PolhemTestFixtureBuilder.UseTempDefinePath"/> creates an isolated
+    /// per-fixture <see cref="PathOptions"/> with a seeded copy of <c>tests/Define</c>.
+    /// </summary>
+    public class PolhemTestFixtureTempDefineSmokeTests : IClassFixture<PolhemTestFixtureTempDefineSmokeTests.WritableFixture>
+    {
+        private readonly WritableFixture _fx;
+
+        public PolhemTestFixtureTempDefineSmokeTests(WritableFixture fx)
+        {
+            _fx = fx;
+        }
+
+        public sealed class WritableFixture : PolhemTestFixture
+        {
+            public WritableFixture() : base(b => b.UseTempDefinePath()) { }
+        }
+
+        [Fact]
+        [DisplayName("UseTempDefinePath 應給每個 fixture 獨立 temp 目錄")]
+        public void TempDefine_IsolatedDirectory()
+        {
+            Assert.NotEqual(string.Empty, _fx.DefinePath);
+            Assert.True(Directory.Exists(_fx.DefinePath));
+            Assert.DoesNotContain(Path.Combine("tests", "Define"), _fx.DefinePath);
+            // Seeded copy 應包含 SystemSettings.xml
+            Assert.True(File.Exists(_fx.PathOptions.GetSystemSettingsFilePath()));
+        }
+
+        [Fact]
+        [DisplayName("UseTempDefinePath fixture 的 IDefineAccess 應可從 DI 解析")]
+        public void TempDefine_AccessResolvable()
+        {
+            // 註：CacheContainer 仍為 process-wide static shim（PR 5.4 後續清理），
+            // 所以 IDefineAccess.GetSystemSettings() 走 cache 時仍回傳共享 fixture
+            // 的 instance。本測試只驗證 IDefineAccess 與 PathOptions 可從 DI 解析；
+            // per-fixture 寫入路徑驗證由 PR 5.4 後續 cache 層解耦後重新引入。
+            var access = _fx.GetRequiredService<IDefineAccess>();
+            var paths = _fx.GetRequiredService<PathOptions>();
+            Assert.NotNull(access);
+            Assert.Equal(_fx.DefinePath, paths.DefinePath);
+        }
+    }
+
+    /// <summary>
+    /// PR 5.7 後 PolhemTestFixture 不再為 ICacheContainer 套用 per-fixture prefix
+    /// （cache 改 ctor 注入 PathOptions 後 prefix 會與 SharedDatabaseState 的 bootstrap
+    /// 路徑撞 key 導致 DatabaseSettings.Items 不一致）；session 隔離由 production code
+    /// 的 Guid AccessToken 隨機性自然保證。本測試組驗證每個 fixture 仍持有獨立
+    /// IServiceProvider 與 service instance。
+    /// </summary>
+    public class PolhemTestFixturePerInstanceIsolationTests
+    {
+        [Fact]
+        [DisplayName("兩個 PolhemTestFixture 的 ISessionInfoService 應為獨立 instance")]
+        public void TwoFixtures_HaveIndependentSessionServices()
+        {
+            using var fxA = new PolhemTestFixture();
+            using var fxB = new PolhemTestFixture();
+
+            var svcA = fxA.GetRequiredService<ISessionInfoService>();
+            var svcB = fxB.GetRequiredService<ISessionInfoService>();
+
+            Assert.NotSame(svcA, svcB);
+        }
+
+        [Fact]
+        [DisplayName("兩個 PolhemTestFixture 的 ICacheContainer 應為獨立 instance")]
+        public void TwoFixtures_HaveIndependentCacheContainers()
+        {
+            using var fxA = new PolhemTestFixture();
+            using var fxB = new PolhemTestFixture();
+
+            var cacheA = fxA.GetRequiredService<ICacheContainer>();
+            var cacheB = fxB.GetRequiredService<ICacheContainer>();
+
+            Assert.NotSame(cacheA, cacheB);
+            Assert.NotSame(cacheA.SessionInfo, cacheB.SessionInfo);
+        }
+    }
+}

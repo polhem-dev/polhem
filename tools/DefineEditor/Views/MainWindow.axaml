@@ -1,0 +1,174 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+        xmlns:models="using:Polhem.DefineEditor.Models"
+        xmlns:loc="using:Polhem.DefineEditor.Markup"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="720"
+        x:Class="Polhem.DefineEditor.Views.MainWindow"
+        x:Name="WindowRoot"
+        x:DataType="vm:MainWindowViewModel"
+        x:CompileBindings="True"
+        Icon="/Assets/avalonia-logo.ico"
+        Width="1200" Height="720"
+        WindowState="Maximized"
+        Title="{loc:Loc Window_Title}">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <DockPanel>
+        <!-- 選單放在 macOS 系統頂端的 menu bar（由 App.ConfigureApplicationMenu / ConfigureWindowMenu 設定），
+             不在視窗內。VS Code 風格的 macOS 操作慣例：File / View 等都統一在頂端。 -->
+
+        <!-- 底部狀態列：VS Code 風。
+             左區：[方案路徑] › [當前定義檔的相對路徑]
+             右區：StatusText（操作回饋訊息） -->
+        <Border DockPanel.Dock="Bottom" Classes="statusbar" Padding="10,3">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6"
+                            IsVisible="{Binding IsSolutionOpened}">
+                    <PathIcon Data="{StaticResource IconFolder}" Width="12" Height="12"
+                              Foreground="{DynamicResource SemiColorText2}"/>
+                    <TextBlock Text="{Binding SolutionPath}" Classes="muted"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip.Tip="{Binding SolutionPath}"/>
+
+                    <!-- separator + 當前 active document 的相對路徑（Welcome 等無檔案分頁不顯示） -->
+                    <TextBlock Text="›" Classes="muted" VerticalAlignment="Center"
+                               Margin="4,0,0,0"
+                               IsVisible="{Binding HasActiveDocumentPath}"/>
+                    <TextBlock Text="{Binding ActiveDocumentRelativePath}"
+                               Classes="muted" VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip.Tip="{Binding ActiveDocumentRelativePath}"
+                               IsVisible="{Binding HasActiveDocumentPath}"/>
+                </StackPanel>
+                <TextBlock Grid.Column="0" Text="{loc:Loc Status_NoSolution}"
+                           Classes="muted" VerticalAlignment="Center"
+                           IsVisible="{Binding !IsSolutionOpened}"/>
+
+                <TextBlock Grid.Column="2" Text="{Binding StatusText}"
+                           Classes="muted" VerticalAlignment="Center"
+                           Margin="14,0,0,0" TextTrimming="CharacterEllipsis"/>
+            </Grid>
+        </Border>
+
+        <!-- 主體：左方案樹 + 右文件 tab 區 -->
+        <Grid ColumnDefinitions="320,4,*">
+            <!-- 左側：有方案時顯示 TreeView，否則顯示 VS Code 風 welcome / Open Folder。
+                 sidebar class 讓整欄（含樹下方空白與 welcome 面板）套 VS Code 風底色。 -->
+            <Grid Grid.Column="0" Classes="sidebar">
+                <TreeView IsVisible="{Binding IsSolutionOpened}"
+                          ItemsSource="{Binding Nodes}"
+                          SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
+                          Padding="6,4">
+                    <TreeView.ItemTemplate>
+                        <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="models:DefineNode">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2">
+                                <PathIcon Classes="tree-icon"
+                                          Data="{Binding Icon, Converter={StaticResource IconKeyToGeometry}}"/>
+                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </TreeDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+
+                <!-- VS Code 風 welcome：尚未開啟方案時顯示 -->
+                <Border IsVisible="{Binding !IsSolutionOpened}" Padding="20">
+                    <StackPanel Spacing="14" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock Text="{loc:Loc Welcome_NoSolution}" Classes="muted"
+                                   HorizontalAlignment="Center"/>
+                        <Button Click="OnOpenSolutionClick" Classes="welcome"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                ToolTip.Tip="{loc:Loc Welcome_OpenFolderTip}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <PathIcon Data="{StaticResource IconFolder}" Width="14" Height="14"/>
+                                <TextBlock Text="{loc:Loc Welcome_OpenFolderButton}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Classes="muted" HorizontalAlignment="Center"
+                                   TextWrapping="Wrap" MaxWidth="240"
+                                   TextAlignment="Center"
+                                   Text="{loc:Loc Welcome_MenuAlternative}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <GridSplitter Grid.Column="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Columns"
+                          IsVisible="{Binding IsSolutionOpened}"/>
+
+            <Grid Grid.Column="2">
+                <!-- 多文件 tab 區（IDE 風） -->
+                <TabControl ItemsSource="{Binding OpenDocuments}"
+                            SelectedItem="{Binding ActiveDocument, Mode=TwoWay}"
+                            IsVisible="{Binding HasOpenDocuments}"
+                            Padding="0">
+                    <TabControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:DocumentViewModelBase">
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto" MinWidth="120">
+                                <!-- 仿 VS Code 的 tab 右鍵選單：五個 close 動作。
+                                     命令掛在 MainWindowViewModel（透過 #WindowRoot），
+                                     CommandParameter 是被右鍵的那個 tab 的 doc。 -->
+                                <Grid.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="{loc:Loc MenuItem_CloseTab}"
+                                                  Command="{Binding #WindowRoot.((vm:MainWindowViewModel)DataContext).CloseDocumentCommand}"
+                                                  CommandParameter="{Binding}"/>
+                                        <MenuItem Header="{loc:Loc MenuItem_CloseOtherTabs}"
+                                                  Command="{Binding #WindowRoot.((vm:MainWindowViewModel)DataContext).CloseOtherDocumentsCommand}"
+                                                  CommandParameter="{Binding}"/>
+                                        <MenuItem Header="{loc:Loc MenuItem_CloseTabsToRight}"
+                                                  Command="{Binding #WindowRoot.((vm:MainWindowViewModel)DataContext).CloseDocumentsToTheRightCommand}"
+                                                  CommandParameter="{Binding}"/>
+                                        <MenuItem Header="{loc:Loc MenuItem_CloseSavedTabs}"
+                                                  Command="{Binding #WindowRoot.((vm:MainWindowViewModel)DataContext).CloseSavedDocumentsCommand}"/>
+                                        <MenuItem Header="{loc:Loc MenuItem_CloseAllTabs}"
+                                                  Command="{Binding #WindowRoot.((vm:MainWindowViewModel)DataContext).CloseAllDocumentsCommand}"/>
+                                    </ContextMenu>
+                                </Grid.ContextMenu>
+                                <PathIcon Grid.Column="0" Classes="tab-icon" Margin="0,0,8,0"
+                                          Data="{Binding TabIcon, Converter={StaticResource IconKeyToGeometry}}"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Title}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" MaxWidth="260"
+                                           ToolTip.Tip="{Binding DocumentKey}"/>
+                                <Ellipse Grid.Column="2" Width="6" Height="6"
+                                         Fill="{DynamicResource SemiColorWarning}"
+                                         VerticalAlignment="Center" Margin="6,0,0,0"
+                                         IsVisible="{Binding IsDirty}"
+                                         ToolTip.Tip="{loc:Loc Tab_DirtyTooltip}"/>
+                                <Button Grid.Column="3" Classes="tabclose"
+                                        Command="{Binding #WindowRoot.((vm:MainWindowViewModel)DataContext).CloseDocumentCommand}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip.Tip="{loc:Loc Tab_CloseTooltip}">
+                                    <PathIcon Data="{StaticResource IconClear}" Width="10" Height="10"/>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </TabControl.ItemTemplate>
+                    <TabControl.ContentTemplate>
+                        <DataTemplate x:DataType="vm:DocumentViewModelBase">
+                            <ContentControl Content="{Binding}"/>
+                        </DataTemplate>
+                    </TabControl.ContentTemplate>
+                </TabControl>
+
+                <!-- 歡迎畫面（已開方案但無已開分頁時顯示；無方案時左側 welcome 已包辦） -->
+                <Border Padding="40" IsVisible="{Binding ShowDocumentWelcome}">
+                    <StackPanel Spacing="14" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <PathIcon Data="{StaticResource IconFolder}" Width="48" Height="48"
+                                  Foreground="{DynamicResource SemiColorText2}"/>
+                        <TextBlock Classes="muted" HorizontalAlignment="Center"
+                                   Text="{loc:Loc DocumentWelcome_Tip}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </DockPanel>
+
+</Window>

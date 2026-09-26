@@ -1,0 +1,264 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/Polhem.Library.slnx",
+                "--configuration",
+                "Release",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "rebuild",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/Polhem.Library.slnx",
+                "--configuration",
+                "Release",
+                "--no-incremental",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "clean",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "clean",
+                "${workspaceFolder}/Polhem.Library.slnx",
+                "--configuration",
+                "Release"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "${workspaceFolder}/test.sh",
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "build-defineeditor",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/tools/DefineEditor/Polhem.DefineEditor.csproj",
+                "--configuration",
+                "Debug",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "build-quickstart-console",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/samples/QuickStart.Console/QuickStart.Console.csproj",
+                "--configuration",
+                "Debug",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        },
+        {
+            "label": "build-quickstart-server",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/samples/QuickStart.Server/QuickStart.Server.csproj",
+                "--configuration",
+                "Debug",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        },
+        {
+            "label": "build-blazor-server-demo",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/samples/Blazor.Server.Demo/Blazor.Server.Demo.csproj",
+                "--configuration",
+                "Debug",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        },
+        {
+            "label": "build-avalonia-democenter",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/samples/Avalonia.DemoCenter/Avalonia.DemoCenter.csproj",
+                "--configuration",
+                "Debug",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        },
+        {
+            "label": "build-blazor-wasm-host",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/samples/Blazor.Wasm.Demo.Host/Blazor.Wasm.Demo.Host.csproj",
+                "--configuration",
+                "Debug",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        },
+        {
+            "label": "build-northwind-server",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/apps/Polhem.Northwind/Polhem.Northwind.Server/Polhem.Northwind.Server.csproj",
+                "--configuration",
+                "Debug",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        },
+        {
+            "label": "free-northwind-port",
+            "type": "shell",
+            "command": "pids=$(lsof -ti tcp:5100); if [ -n \"$pids\" ]; then echo \"Killing stale Polhem.Northwind.Server on :5100 ($pids)\"; kill $pids; fi; exit 0",
+            "windows": {
+                "command": "$p=(Get-NetTCPConnection -LocalPort 5100 -State Listen -ErrorAction SilentlyContinue).OwningProcess; if ($p) { Write-Host \"Killing stale Polhem.Northwind.Server on :5100 ($p)\"; Stop-Process -Id $p -Force }; exit 0"
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "prep-northwind-server",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "build-northwind-server",
+                "free-northwind-port"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "build-northwind-desktop",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/apps/Polhem.Northwind/Polhem.Northwind.Desktop/Polhem.Northwind.Desktop.csproj",
+                "--configuration",
+                "Debug",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        },
+        {
+            "label": "wait-for-northwind-server",
+            "type": "shell",
+            "command": "for i in $(seq 1 100); do curl -s -o /dev/null --max-time 1 http://localhost:5100/ && exit 0; sleep 0.3; done; echo 'Timed out waiting for Polhem.Northwind.Server on :5100'; exit 1",
+            "windows": {
+                "command": "for ($i=0; $i -lt 100; $i++) { if ((Test-NetConnection -ComputerName localhost -Port 5100 -InformationLevel Quiet -WarningAction SilentlyContinue)) { exit 0 }; Start-Sleep -Milliseconds 300 }; Write-Host 'Timed out waiting for Polhem.Northwind.Server on :5100'; exit 1"
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "prep-northwind-desktop",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "build-northwind-desktop",
+                "wait-for-northwind-server"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "build-northwind-browser",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/apps/Polhem.Northwind/Polhem.Northwind.Browser/Polhem.Northwind.Browser.csproj",
+                "--configuration",
+                "Debug",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        },
+        {
+            "label": "prep-northwind-browser",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "build-northwind-browser",
+                "wait-for-northwind-server"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

@@ -1,0 +1,84 @@
+using System.ComponentModel;
+using System.Data;
+using Polhem.Api.Core.MessagePack;
+using Polhem.Api.Core.Messages.Form;
+using Polhem.Definition;
+
+namespace Polhem.Api.Core.UnitTests.Form
+{
+    /// <summary>
+    /// <see cref="GetNewDataRequest"/> / <see cref="GetNewDataResponse"/> 的
+    /// MessagePack round-trip 驗證。重點:DataSet skeleton(空 detail
+    /// table、master 1 row Added 狀態)經 wire 還原後結構與 RowState 一致。
+    /// </summary>
+    public class GetNewDataMessagePackTests
+    {
+        [Fact]
+        [DisplayName("GetNewDataRequest 無 wire 成員，仍應真的走完序列化並產生新實例")]
+        public void GetNewDataRequest_Empty_RoundTrips()
+        {
+            var request = new GetNewDataRequest();
+
+            var bytes = MessagePackCodec.Serialize(request);
+            var restored = MessagePackCodec.Deserialize<GetNewDataRequest>(bytes);
+
+            // 這個訊息型別確實沒有任何 wire 成員（`SerializeState` 標了 [JsonIgnore]），
+            // 因此沒有值可以比對。能斷言的是「formatter 有註冊、真的跑過」：產出非空位元組，
+            // 且還原的是一個**新**實例而非同一個參考——只寫 Assert.NotNull 連這兩點都證不到。
+            Assert.NotEmpty(bytes);
+            Assert.IsType<GetNewDataRequest>(restored);
+            Assert.NotSame(request, restored);
+        }
+
+        [Fact]
+        [DisplayName("GetNewDataResponse 帶 master Added row + 空 detail table 應完整還原 RowState 與 schema")]
+        public void GetNewDataResponse_SkeletonDataSet_RoundTripPreservesAddedRowState()
+        {
+            var dataSet = new DataSet("Employee");
+
+            var master = new DataTable("Employee");
+            master.Columns.Add(SysFields.RowId, typeof(Guid));
+            master.Columns.Add(SysFields.Name, typeof(string));
+            var masterRowId = Guid.NewGuid();
+            master.Rows.Add(masterRowId, "預設員工");
+            dataSet.Tables.Add(master);
+
+            var detail = new DataTable("EmployeeDept");
+            detail.Columns.Add(SysFields.RowId, typeof(Guid));
+            detail.Columns.Add(SysFields.MasterRowId, typeof(Guid));
+            dataSet.Tables.Add(detail);
+
+            var response = new GetNewDataResponse { DataSet = dataSet };
+
+            var bytes = MessagePackCodec.Serialize(response);
+            var restored = MessagePackCodec.Deserialize<GetNewDataResponse>(bytes);
+
+            Assert.NotNull(restored);
+            Assert.NotNull(restored!.DataSet);
+            Assert.Equal(2, restored.DataSet!.Tables.Count);
+
+            var restoredMaster = restored.DataSet.Tables["Employee"]!;
+            Assert.Single(restoredMaster.Rows);
+            Assert.Equal(masterRowId, (Guid)restoredMaster.Rows[0][SysFields.RowId]);
+            Assert.Equal("預設員工", restoredMaster.Rows[0][SysFields.Name]);
+            Assert.Equal(DataRowState.Added, restoredMaster.Rows[0].RowState);
+
+            var restoredDetail = restored.DataSet.Tables["EmployeeDept"]!;
+            Assert.Empty(restoredDetail.Rows);
+            Assert.Equal(2, restoredDetail.Columns.Count);
+        }
+
+        [Fact]
+        [DisplayName("GetNewDataResponse.DataSet = null 應 round-trip 為 null")]
+        public void GetNewDataResponse_NullDataSet_RoundTrip()
+        {
+            var response = new GetNewDataResponse { DataSet = null };
+
+            var bytes = MessagePackCodec.Serialize(response);
+            var restored = MessagePackCodec.Deserialize<GetNewDataResponse>(bytes);
+
+            Assert.NotNull(restored);
+            Assert.Null(restored!.DataSet);
+        }
+    }
+}

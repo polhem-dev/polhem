@@ -1,0 +1,118 @@
+using System.ComponentModel;
+using Polhem.Base.Data;
+using Polhem.Definition.Collections;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Layouts;
+using Polhem.UI.Avalonia.Controls.Editors;
+using Polhem.UI.Avalonia.DataObjects;
+
+namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
+{
+    /// <summary>
+    /// Behaviour checks for <see cref="DropDownEdit"/>: option loading from
+    /// <c>FormField.ListItems</c>, value selection and write-back.
+    /// </summary>
+    public class DropDownEditTests
+    {
+        private static FormDataObject BuildDataObject()
+        {
+            var schema = new FormSchema("Employee", "Employee");
+            var master = schema.Tables!.Add("Employee", "Employee");
+            var dept = master.Fields!.Add("dept_id", "Department", FieldDbType.String);
+            dept.ListItems!.Add("HR", "Human Resources");
+            dept.ListItems.Add("IT", "Information Technology");
+            var dataObject = new FormDataObject(schema);
+            dataObject.InitializeNewMaster();
+            return dataObject;
+        }
+
+        [Fact]
+        [DisplayName("Bind 後自動載入 FormField.ListItems 為選項")]
+        public void Bind_FieldWithListItems_LoadsOptions()
+        {
+            var dataObject = BuildDataObject();
+            var editor = new DropDownEdit();
+
+            editor.Bind(dataObject, "dept_id");
+
+            var items = Assert.IsType<IEnumerable<ListItem>>(editor.ItemsSource, exactMatch: false).ToList();
+            Assert.Equal(2, items.Count);
+            Assert.Equal("HR", items[0].Value);
+        }
+
+        [Fact]
+        [DisplayName("Bind 後依欄位值選取對應項目")]
+        public void Bind_ExistingValue_SelectsMatchingItem()
+        {
+            var dataObject = BuildDataObject();
+            dataObject.SetField("dept_id", "IT");
+
+            var editor = new DropDownEdit();
+            editor.Bind(dataObject, "dept_id");
+
+            var selected = Assert.IsType<ListItem>(editor.SelectedItem);
+            Assert.Equal("IT", selected.Value);
+        }
+
+        [Fact]
+        [DisplayName("選取變更以 ListItem.Value 寫回")]
+        public void SelectionChanged_AfterBind_WritesBackValue()
+        {
+            var dataObject = BuildDataObject();
+            var editor = new DropDownEdit();
+            editor.Bind(dataObject, "dept_id");
+
+            editor.SelectedIndex = 0;
+
+            Assert.Equal("HR", dataObject.GetField("dept_id"));
+        }
+
+        [Fact]
+        [DisplayName("他方 SetField 後自動選取新值")]
+        public void FieldValueChanged_OtherWriter_UpdatesSelection()
+        {
+            var dataObject = BuildDataObject();
+            var editor = new DropDownEdit();
+            editor.Bind(dataObject, "dept_id");
+
+            dataObject.SetField("dept_id", "HR");
+
+            var selected = Assert.IsType<ListItem>(editor.SelectedItem);
+            Assert.Equal("HR", selected.Value);
+        }
+
+        [Fact]
+        [DisplayName("AllowEditModes=Add 時僅新增模式啟用")]
+        public void SetControlState_AllowEditModesAdd_OnlyAddEnabled()
+        {
+            var dataObject = BuildDataObject();
+            var field = new LayoutField { FieldName = "dept_id", AllowEditModes = FormEditModes.Add };
+            var editor = new DropDownEdit();
+            editor.Bind(dataObject, field);
+
+            // Read-only swaps to a flat, non-interactive display rather than greying out,
+            // so editability is observed through IsHitTestVisible instead of IsEnabled.
+            editor.SetControlState(SingleFormMode.Add);
+            Assert.True(editor.IsHitTestVisible);
+
+            editor.SetControlState(SingleFormMode.Edit);
+            Assert.False(editor.IsHitTestVisible);
+
+            editor.SetControlState(SingleFormMode.View);
+            Assert.False(editor.IsHitTestVisible);
+        }
+
+        [Fact]
+        [DisplayName("Bind 後 ReadOnlyText 顯示選取項目的文字")]
+        public void ReadOnlyText_AfterBind_ShowsSelectedItemText()
+        {
+            var dataObject = BuildDataObject();
+            dataObject.SetField("dept_id", "IT");
+
+            var editor = new DropDownEdit();
+            editor.Bind(dataObject, "dept_id");
+
+            Assert.Equal("Information Technology", editor.ReadOnlyText);
+        }
+    }
+}

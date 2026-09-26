@@ -1,0 +1,70 @@
+using System.ComponentModel;
+using Polhem.Base;
+using Polhem.Base.Collections;
+
+namespace Polhem.Definition.Collections
+{
+    /// <summary>
+    /// A custom property collection.
+    /// </summary>
+    [Description("Custom property collection.")]
+    public class PropertyCollection : KeyCollectionBase<Property>
+    {
+        /// <summary>
+        /// Gets the string value of a property.
+        /// </summary>
+        /// <param name="name">The property name.</param>
+        /// <param name="defaultValue">The default value to return if the property does not exist.</param>
+        public string GetValue(string name, string defaultValue)
+        {
+            if (this.Contains(name))
+                return this[name].Value;
+            else
+                return defaultValue;
+        }
+
+        /// <summary>
+        /// Gets the boolean value of a property.
+        /// </summary>
+        /// <param name="name">The property name.</param>
+        /// <param name="defaultValue">The default value to return if the property does not exist.</param>
+        public bool GetValue(string name, bool defaultValue)
+        {
+            if (this.Contains(name))
+                return ValueUtilities.CBool(this[name].Value);
+            else
+                return defaultValue;
+        }
+
+        /// <summary>
+        /// Gets the integer value of a property.
+        /// </summary>
+        /// <param name="name">The property name.</param>
+        /// <param name="defaultValue">The default value to return if the property does not exist.</param>
+        public int GetValue(string name, int defaultValue)
+        {
+            if (this.Contains(name))
+                return ValueUtilities.CInt(this[name].Value);
+            else
+                return defaultValue;
+        }
+    }
+
+    /// <summary>
+    /// Extension methods for <see cref="PropertyCollection"/>.
+    /// </summary>
+    public static class PropertyCollectionExtensions
+    {
+        /// <summary>
+        /// Adds a new property to the collection.
+        /// </summary>
+        /// <param name="collection">The collection to add to.</param>
+        /// <param name="name">The property name.</param>
+        /// <param name="value">The property value.</param>
+        public static void Add(this PropertyCollection? collection, string name, string value)
+        {
+            ArgumentNullException.ThrowIfNull(collection);
+            collection.Add(new Property(name, value));
+        }
+    }
+}

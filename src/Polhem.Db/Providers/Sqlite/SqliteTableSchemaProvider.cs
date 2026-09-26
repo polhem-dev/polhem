@@ -1,0 +1,402 @@
+using System.Data;
+using Polhem.Base;
+using Polhem.Base.Data;
+using Polhem.Db.Schema;
+using Polhem.Db.Manager;
+using Polhem.Definition.Database;
+using Polhem.Definition.Sorting;
+
+namespace Polhem.Db.Providers.Sqlite
+{
+    /// <summary>
+    /// Provides methods for reading and parsing SQLite table schemas via the
+    /// <c>sqlite_master</c> table and <c>PRAGMA</c> statements. Counterpart to
+    /// <see cref="PostgreSql.PgTableSchemaProvider"/>; SQLite has no schema concept
+    /// and no native COMMENT facility, so descriptions are always returned as empty.
+    /// </summary>
+    /// <remarks>
+    /// SQLite auto-generates the primary key's backing index as <c>sqlite_autoindex_*</c>,
+    /// which would not match the schema's canonical <c>pk_{table}</c> naming used by
+    /// <see cref="Schema.TableSchemaComparer"/>. To keep the comparer's name-based matching
+    /// working without a Comparer change, the parsed PK index is exposed under the framework
+    /// convention <c>pk_{table}</c>.
+    /// </remarks>
+    public class SqliteTableSchemaProvider : ITableSchemaProvider
+    {
+        private readonly IDbConnectionManager _connectionManager;
+        private readonly DbAccess _dbAccess;
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="SqliteTableSchemaProvider"/>.
+        /// </summary>
+        /// <param name="databaseId">The database identifier.</param>
+        /// <param name="connectionManager">The DI-resolved connection manager.</param>
+        public SqliteTableSchemaProvider(string databaseId, IDbConnectionManager connectionManager)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(databaseId);
+            ArgumentNullException.ThrowIfNull(connectionManager);
+            DatabaseId = databaseId;
+            _connectionManager = connectionManager;
+            _dbAccess = new DbAccess(databaseId, connectionManager);
+        }
+
+        /// <summary>
+        /// Gets the database identifier.
+        /// </summary>
+        public string DatabaseId { get; }
+
+        /// <summary>
+        /// Gets the schema definition for the specified table, or null if the table does not exist.
+        /// </summary>
+        /// <param name="tableName">The table name.</param>
+        public TableSchema? GetTableSchema(string tableName)
+        {
+            if (!TableExists(tableName)) return null;
+
+            var dbTable = new TableSchema { TableName = tableName };
+            // SQLite has no native description metadata; DisplayName is always empty.
+
+            var columns = ReadColumns(tableName);
+            ParsePrimaryKey(dbTable, columns, tableName);
+            ParseIndexes(dbTable, tableName);
+
+            foreach (DataRow row in columns.Rows)
+            {
+                dbTable.Fields!.Add(ParseDbField(row));
+            }
+
+            return dbTable;
+        }
+
+        /// <summary>
+        /// Determines whether the specified table exists in the database.
+        /// </summary>
+        /// <param name="tableName">The table name.</param>
+        private bool TableExists(string tableName)
+        {
+            const string sql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name={0}";
+            var command = new DbCommandSpec(DbCommandKind.Scalar, sql, tableName);
+            var result = _dbAccess.Execute(command);
+            return ValueUtilities.CInt(result.Scalar!) > 0;
+        }
+
+        /// <summary>
+        /// Returns the columns of the specified table via <c>PRAGMA table_info</c>.
+        /// Columns: cid, name, type, notnull, dflt_value, pk.
+        /// </summary>
+        /// <remarks>
+        /// PRAGMA result columns are dynamically typed: <c>dflt_value</c> is null for most
+        /// rows (in which case Microsoft.Data.Sqlite reports the column as BLOB) but a string
+        /// for rows that have a default. <see cref="DataTable.Load(IDataReader)"/>'s schema inference would
+        /// fail when a later row carries a string into a column it inferred as BLOB, so we
+        /// load via a reader and copy each cell as <see cref="object"/> instead.
+        /// </remarks>
+        private DataTable ReadColumns(string tableName)
+        {
+            string sql = $"PRAGMA table_info({SqliteSchemaSyntax.QuoteName(tableName)})";
+            return ReadDynamicPragma(sql, "Columns");
+        }
+
+        /// <summary>
+        /// Executes a PRAGMA-like statement and returns the result as a DataTable whose
+        /// columns are all typed <see cref="object"/>. This avoids the heterogeneous-typing
+        /// failure that <see cref="DataTable.Load(IDataReader)"/> hits on PRAGMA result sets.
+        /// </summary>
+        private DataTable ReadDynamicPragma(string sql, string resultTableName)
+        {
+            var connInfo = _connectionManager.GetConnectionInfo(DatabaseId);
+            using var conn = connInfo.Provider.CreateConnection()
+                ?? throw new InvalidOperationException("Provider returned a null DbConnection.");
+            conn.ConnectionString = connInfo.ConnectionString;
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            using var reader = cmd.ExecuteReader();
+
+            var table = new DataTable(resultTableName);
+            for (int i = 0; i < reader.FieldCount; i++)
+                table.Columns.Add(reader.GetName(i), typeof(object));
+
+            while (reader.Read())
+            {
+                var row = table.NewRow();
+                for (int i = 0; i < reader.FieldCount; i++)
+                    row[i] = reader.IsDBNull(i) ? DBNull.Value : reader.GetValue(i);
+                table.Rows.Add(row);
+            }
+            return table;
+        }
+
+        /// <summary>
+        /// Builds the primary key index from the column data (each column row carries a non-zero
+        /// <c>pk</c> ordinal when it participates in the primary key).
+        /// </summary>
+        private static void ParsePrimaryKey(TableSchema dbTable, DataTable columns, string tableName)
+        {
+            var pkColumns = columns.AsEnumerable()
+                .Where(r => ValueUtilities.CInt(r["pk"]) > 0)
+                .OrderBy(r => ValueUtilities.CInt(r["pk"]))
+                .ToList();
+
+            if (pkColumns.Count == 0) return;
+
+            // Expose under the framework-convention name pk_{table} so name-based comparison matches.
+            var pkIndex = new DbTableIndex
+            {
+                Name = $"pk_{tableName}",
+                PrimaryKey = true,
+                Unique = true
+            };
+            foreach (var row in pkColumns)
+            {
+                pkIndex.IndexFields!.Add(new IndexField
+                {
+                    FieldName = ValueUtilities.CStr(row["name"]),
+                    SortDirection = SortDirection.Asc
+                });
+            }
+            dbTable.Indexes!.Add(pkIndex);
+        }
+
+        /// <summary>
+        /// Reads non-PK indexes via <c>PRAGMA index_list</c> + <c>PRAGMA index_info</c>.
+        /// PK-backed and PK-by-rowid auto-indexes (origin = "pk") are skipped because the PK
+        /// is already populated by <see cref="ParsePrimaryKey"/>.
+        /// </summary>
+        private void ParseIndexes(TableSchema dbTable, string tableName)
+        {
+            string listSql = $"PRAGMA index_list({SqliteSchemaSyntax.QuoteName(tableName)})";
+            var listResult = ReadDynamicPragma(listSql, "IndexList");
+
+            foreach (DataRow row in listResult.Rows)
+            {
+                string origin = ValueUtilities.CStr(row["origin"]);
+                if (StringUtilities.IsEquals(origin, "pk")) continue;
+
+                string indexName = ValueUtilities.CStr(row["name"]);
+                bool unique = ValueUtilities.CBool(row["unique"]);
+
+                var indexFields = ReadIndexFields(indexName);
+                if (indexFields.Count == 0) continue;
+
+                var index = new DbTableIndex
+                {
+                    Name = indexName,
+                    Unique = unique
+                };
+                foreach (var fieldName in indexFields)
+                {
+                    index.IndexFields!.Add(new IndexField
+                    {
+                        FieldName = fieldName,
+                        SortDirection = SortDirection.Asc
+                    });
+                }
+                dbTable.Indexes!.Add(index);
+            }
+        }
+
+        /// <summary>
+        /// Reads the column names of the specified index via <c>PRAGMA index_info</c>.
+        /// </summary>
+        private List<string> ReadIndexFields(string indexName)
+        {
+            string sql = $"PRAGMA index_info({SqliteSchemaSyntax.QuoteName(indexName)})";
+            var result = ReadDynamicPragma(sql, "IndexInfo");
+            var fields = new List<string>();
+            foreach (DataRow row in result.Rows)
+                fields.Add(ValueUtilities.CStr(row["name"]));
+            return fields;
+        }
+
+        /// <summary>
+        /// Creates a field definition from a <c>PRAGMA table_info</c> row.
+        /// </summary>
+        private static DbField ParseDbField(DataRow row)
+        {
+            string columnName = ValueUtilities.CStr(row["name"]);
+            string declaredType = ValueUtilities.CStr(row["type"]);
+            bool notNull = ValueUtilities.CInt(row["notnull"]) != 0;
+            bool isPrimaryKey = ValueUtilities.CInt(row["pk"]) > 0;
+
+            // SQLite reports the declared type verbatim. Extract a length / precision / scale
+            // hint from forms like "VARCHAR(50)" or "NUMERIC(18,2)".
+            ParseTypeFacets(declaredType, out string baseType, out int length, out int precision, out int scale);
+
+            var dbField = new DbField
+            {
+                FieldName = columnName,
+                Caption = string.Empty,
+                AllowNull = !notNull,
+                DbType = MapToFieldDbType(baseType, isPrimaryKey)
+            };
+
+            if (dbField.DbType == FieldDbType.String && length > 0)
+                dbField.Length = length;
+            if (dbField.DbType == FieldDbType.Decimal)
+            {
+                dbField.Precision = precision > 0 ? precision : dbField.Precision;
+                dbField.Scale = scale > 0 ? scale : dbField.Scale;
+            }
+
+            string originalDefault = SqliteSchemaSyntax.GetDefaultValueExpression(dbField.DbType);
+            string raw = ValueUtilities.CStr(row["dflt_value"]);
+            dbField.DefaultValue = ParseDefaultValue(raw, dbField.DbType, originalDefault);
+            return dbField;
+        }
+
+        /// <summary>
+        /// Splits a SQLite declared type like <c>VARCHAR(50)</c> or <c>NUMERIC(18,2)</c> into its
+        /// base type and any optional length/precision/scale facets.
+        /// </summary>
+        private static void ParseTypeFacets(string declaredType, out string baseType, out int length, out int precision, out int scale)
+        {
+            baseType = declaredType ?? string.Empty;
+            length = 0;
+            precision = 0;
+            scale = 0;
+
+            if (string.IsNullOrEmpty(baseType)) return;
+
+            int open = baseType.IndexOf('(');
+            int close = baseType.IndexOf(')');
+            if (open <= 0 || close <= open) return;
+
+            string facets = baseType.Substring(open + 1, close - open - 1);
+            baseType = baseType.Substring(0, open).Trim();
+
+            var parts = facets.Split(',');
+            if (parts.Length == 1)
+            {
+                _ = int.TryParse(parts[0].Trim(), out length);
+                _ = int.TryParse(parts[0].Trim(), out precision);
+            }
+            else if (parts.Length >= 2)
+            {
+                _ = int.TryParse(parts[0].Trim(), out precision);
+                _ = int.TryParse(parts[1].Trim(), out scale);
+            }
+        }
+
+        /// <summary>
+        /// Maps a SQLite declared base type to the framework's <see cref="FieldDbType"/>.
+        /// AutoIncrement is detected by the convention that an INTEGER column which is the
+        /// primary key on SQLite is the rowid alias and behaves as auto-increment.
+        /// </summary>
+        public static FieldDbType MapToFieldDbType(string baseType, bool isPrimaryKey)
+        {
+            string normalized = (baseType ?? string.Empty).ToUpperInvariant();
+            switch (normalized)
+            {
+                case "VARCHAR":
+                case "CHAR":
+                case "CHARACTER":
+                case "NVARCHAR":
+                    return FieldDbType.String;
+                case "TEXT":
+                case "CLOB":
+                    return FieldDbType.Text;
+                case "BOOLEAN":
+                case "BOOL":
+                    return FieldDbType.Boolean;
+                case "SMALLINT":
+                case "INT2":
+                    return FieldDbType.Short;
+                case "INTEGER":
+                case "INT":
+                case "INT4":
+                    return isPrimaryKey ? FieldDbType.AutoIncrement : FieldDbType.Integer;
+                case "BIGINT":
+                case "INT8":
+                    return FieldDbType.Long;
+                case "NUMERIC":
+                case "DECIMAL":
+                    return FieldDbType.Decimal;
+                case "REAL":
+                case "DOUBLE":
+                case "FLOAT":
+                    return FieldDbType.Decimal;
+                case "DATE":
+                    return FieldDbType.Date;
+                case "DATETIME":
+                case "TIMESTAMP":
+                    return FieldDbType.DateTime;
+                case "UUID":
+                    return FieldDbType.Guid;
+                case "BLOB":
+                case "BINARY":
+                    return FieldDbType.Binary;
+                default:
+                    return FieldDbType.Unknown;
+            }
+        }
+
+        /// <summary>
+        /// Normalises the <c>dflt_value</c> raw text returned by <c>PRAGMA table_info</c>:
+        /// strips surrounding parentheses (SQLite often wraps function defaults) and outer
+        /// single quotes; returns an empty string when it equals the framework built-in default.
+        /// </summary>
+        /// <remarks>
+        /// WARNING: both sides must go through <see cref="NormalizeDefaultText"/> before being
+        /// compared. SQLite requires an expression default to be parenthesised in the DDL, so
+        /// the framework built-in for <see cref="FieldDbType.Guid"/> is written as
+        /// <c>(hex(randomblob(16)))</c>, but <c>PRAGMA table_info</c> reports the inner
+        /// expression only. Comparing the raw forms marks every GUID column as different on
+        /// every schema comparison, so the table never converges.
+        /// </remarks>
+        public static string ParseDefaultValue(string rawDefault, FieldDbType dbType, string originalDefault)
+        {
+            if (StringUtilities.IsEmpty(rawDefault)) return string.Empty;
+
+            string actual = NormalizeDefaultText(rawDefault, dbType);
+            string original = NormalizeDefaultText(originalDefault, dbType);
+
+            return StringUtilities.IsEquals(original, actual) ? string.Empty : actual;
+        }
+
+        /// <summary>
+        /// Reduces a default value expression to a canonical form: trims whitespace, unwraps a
+        /// matching outer pair of parentheses, and for string types strips the surrounding
+        /// single quotes and unescapes doubled quotes.
+        /// </summary>
+        private static string NormalizeDefaultText(string defaultText, FieldDbType dbType)
+        {
+            if (StringUtilities.IsEmpty(defaultText)) return string.Empty;
+
+            string trimmed = UnwrapOuterParentheses(defaultText.Trim());
+
+            // For string types, strip the surrounding single quotes and unescape doubled quotes.
+            if ((dbType == FieldDbType.String || dbType == FieldDbType.Text) &&
+                trimmed.Length >= 2 && trimmed.StartsWith('\'') && trimmed.EndsWith('\''))
+                trimmed = trimmed.Substring(1, trimmed.Length - 2).Replace("''", "'");
+
+            return trimmed;
+        }
+
+        /// <summary>
+        /// Removes a single outer pair of parentheses when the leading <c>(</c> is the one closed
+        /// by the trailing <c>)</c>: <c>(hex(randomblob(16)))</c> becomes <c>hex(randomblob(16))</c>.
+        /// An expression such as <c>(a)||(b)</c> is left untouched.
+        /// </summary>
+        private static string UnwrapOuterParentheses(string expression)
+        {
+            while (expression.Length >= 2 && expression.StartsWith('(') && expression.EndsWith(')'))
+            {
+                int depth = 0;
+                for (int i = 0; i < expression.Length; i++)
+                {
+                    if (expression[i] == '(') { depth++; }
+                    else if (expression[i] == ')')
+                    {
+                        depth--;
+                        // The opening parenthesis closes before the end, so it is not an outer pair.
+                        if (depth == 0 && i < expression.Length - 1) return expression;
+                    }
+                }
+                if (depth != 0) return expression;
+                expression = expression.Substring(1, expression.Length - 2).Trim();
+            }
+            return expression;
+        }
+    }
+}

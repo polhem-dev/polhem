@@ -1,0 +1,901 @@
+using System.ComponentModel;
+using System.Data;
+using System.Reflection;
+using Avalonia;
+using Avalonia.Controls;
+using Polhem.Api.Client.Connectors;
+using Polhem.Api.Core.Messages.Form;
+using Polhem.Base.Data;
+using Polhem.Definition;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
+using Polhem.UI.Avalonia.Controls;
+using Polhem.UI.Avalonia.Views;
+using Polhem.UI.Avalonia.Controls.Editors;
+using Polhem.UI.Avalonia.DataObjects;
+
+namespace Polhem.UI.Avalonia.UnitTests.Controls
+{
+    /// <summary>
+    /// Behaviour + structure tests for the unified single-record <see cref="FormView"/>: the
+    /// CRUD / three-mode flow (View / Add / Edit, Save / Cancel / Back), the
+    /// <see cref="FormView.FormMode"/> broadcast through the ambient <see cref="FormScope"/>,
+    /// and the record rendering (master sections + detail grids). A <see cref="TestFormView"/>
+    /// overrides the <c>Resolve*</c> hooks so the static <c>ClientInfo</c> is never touched.
+    /// </summary>
+    public class FormViewTests
+    {
+        private const string TestProgId = "Category";
+        private static readonly Type[] s_buildInputParams = [typeof(LayoutField)];
+
+        // ---- shared builders ----
+
+        private static FormSchema BuildSchema()
+        {
+            var schema = new FormSchema(TestProgId, TestProgId);
+            schema.ListFields = "sys_id,sys_name";
+            var master = schema.Tables!.Add(TestProgId, TestProgId);
+            master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
+            master.Fields.Add("sys_id", "Category Code", FieldDbType.String);
+            master.Fields.Add("sys_name", "Category Name", FieldDbType.String);
+            return schema;
+        }
+
+        private static FormSchema BuildRenderSchema()
+        {
+            var schema = new FormSchema("Employee", "Employee");
+            var master = schema.Tables!.Add("Employee", "Employee");
+            master.Fields!.Add("emp_id", "ID", FieldDbType.String);
+            master.Fields.Add("is_active", "Active", FieldDbType.Boolean);
+            master.Fields.Add("hire_date", "Hire Date", FieldDbType.Date);
+            return schema;
+        }
+
+        private static FormSchema BuildRenderSchemaWithDetail()
+        {
+            var schema = BuildRenderSchema();
+            var detail = schema.Tables!.Add("EmployeePhone", "Phones");
+            detail.Fields!.Add("phone", "Phone", FieldDbType.String);
+            return schema;
+        }
+
+        private static DataSet BuildServerDataSet(Guid rowId, string name)
+        {
+            var dataSet = new DataSet(TestProgId);
+            var master = new DataTable(TestProgId);
+            master.Columns.Add(SysFields.RowId, typeof(Guid));
+            master.Columns.Add("sys_name", typeof(string));
+            master.Rows.Add(rowId, name);
+            dataSet.Tables.Add(master);
+            dataSet.AcceptChanges();
+            return dataSet;
+        }
+
+        // A layout is a design-time artefact, so a backend-less host supplies one rather than
+        // letting the view derive it. These tests are such a host.
+        private static TestFormView BuildView(FakeFormApiConnector connector)
+        {
+            var schema = BuildSchema();
+            return new()
+            {
+                Schema = schema,
+                FormConnector = connector,
+                Layout = FormLayoutGenerator.Generate(schema, TestProgId),
+            };
+        }
+
+        // ---- reflection helpers ----
+
+        private static void InvokePrivate(FormView view, string methodName, params object[] args)
+        {
+            var method = typeof(FormView).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(method);
+            method!.Invoke(view, args);
+        }
+
+        private static async Task InvokePrivateAsync(FormView view, string methodName, params object[] args)
+        {
+            var method = typeof(FormView).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(method);
+            await (Task)method!.Invoke(view, args)!;
+        }
+
+        private static T GetPrivateField<T>(FormView view, string fieldName)
+        {
+            var field = typeof(FormView).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(field);
+            return (T)field!.GetValue(view)!;
+        }
+
+        private static void SetPrivateField(FormView view, string fieldName, object? value)
+        {
+            var field = typeof(FormView).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(field);
+            field!.SetValue(view, value);
+        }
+
+        // Renders the form directly against a layout + data object (bypassing the backend
+        // round-trip) by seeding the private state and invoking the private Rebuild, then
+        // returns the form-body host panel for structural assertions.
+        private static StackPanel RenderForm(FormView view, FormLayout layout, FormDataObject dataObject)
+        {
+            SetPrivateField(view, "_formLayout", layout);
+            SetPrivateField(view, "_dataObject", dataObject);
+            InvokePrivate(view, "Rebuild");
+            return GetPrivateField<StackPanel>(view, "_formHost");
+        }
+
+        private static Control InvokeBuildInputControl(FormView view, FormDataObject dataObject, LayoutField field)
+        {
+            SetPrivateField(view, "_dataObject", dataObject);
+            var method = typeof(FormView).GetMethod(
+                "BuildInputControl", BindingFlags.NonPublic | BindingFlags.Instance, null, s_buildInputParams, null);
+            Assert.NotNull(method);
+            return (Control)method!.Invoke(view, new object[] { field })!;
+        }
+
+        private static StackPanel GetGridToolbar(GridControl grid)
+            => Assert.IsType<StackPanel>(Assert.IsType<DockPanel>(grid.Content).Children[0]);
+
+        // ---- type / property surface ----
+
+        [Fact]
+        [DisplayName("FormView 為 Avalonia UserControl 子類別")]
+        public void Type_IsUserControlSubclass()
+        {
+            Assert.True(typeof(UserControl).IsAssignableFrom(typeof(FormView)));
+        }
+
+        [Theory]
+        [InlineData(nameof(FormView.ProgId), "ProgIdProperty")]
+        [InlineData(nameof(FormView.AccessToken), "AccessTokenProperty")]
+        [InlineData(nameof(FormView.Schema), "SchemaProperty")]
+        [InlineData(nameof(FormView.FormConnector), "FormConnectorProperty")]
+        [InlineData(nameof(FormView.FormMode), "FormModeProperty")]
+        [InlineData(nameof(FormView.DetailEditMode), "DetailEditModeProperty")]
+        [InlineData(nameof(FormView.CompactWidthThreshold), "CompactWidthThresholdProperty")]
+        [DisplayName("公開屬性皆有對應的 StyledProperty 註冊")]
+        public void PublicProperties_HaveMatchingStyledProperty(string propertyName, string styledPropertyFieldName)
+        {
+            var property = typeof(FormView).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
+            Assert.NotNull(property);
+
+            var styled = typeof(FormView).GetField(styledPropertyFieldName, BindingFlags.Public | BindingFlags.Static);
+            Assert.NotNull(styled);
+            Assert.True(typeof(AvaloniaProperty).IsAssignableFrom(styled!.FieldType));
+        }
+
+        // ---- CRUD / mode flow ----
+
+        [Fact]
+        [DisplayName("ViewAsync 載入記錄並進入 View 模式")]
+        public async Task ViewAsync_LoadsRecord_EntersViewMode()
+        {
+            var rowId = Guid.NewGuid();
+            Guid requestedId = Guid.Empty;
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = id =>
+                {
+                    requestedId = id;
+                    return new GetDataResponse { DataSet = BuildServerDataSet(id, "Beverages") };
+                },
+            };
+            var view = BuildView(connector);
+
+            await view.ViewAsync(rowId);
+
+            Assert.Equal(rowId, requestedId);
+            Assert.Equal(SingleFormMode.View, view.FormMode);
+            Assert.NotNull(view.DataObject?.MasterRow);
+        }
+
+        [Fact]
+        [DisplayName("EditAsync 載入記錄並進入 Edit 模式")]
+        public async Task EditAsync_LoadsRecord_EntersEditMode()
+        {
+            var rowId = Guid.NewGuid();
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = id => new GetDataResponse { DataSet = BuildServerDataSet(id, "Beverages") },
+            };
+            var view = BuildView(connector);
+
+            await view.EditAsync(rowId);
+
+            Assert.Equal(SingleFormMode.Edit, view.FormMode);
+        }
+
+        [Fact]
+        [DisplayName("NewAsync 取得空白資料並進入 Add 模式")]
+        public async Task NewAsync_GetsBlank_EntersAddMode()
+        {
+            var called = false;
+            var connector = new FakeFormApiConnector
+            {
+                GetNewDataHandler = () =>
+                {
+                    called = true;
+                    return new GetNewDataResponse { DataSet = BuildServerDataSet(Guid.NewGuid(), "New") };
+                },
+            };
+            var view = BuildView(connector);
+
+            await view.NewAsync();
+
+            Assert.True(called);
+            Assert.Equal(SingleFormMode.Add, view.FormMode);
+        }
+
+        [Fact]
+        [DisplayName("Save 成功呼叫 SaveAsync 並觸發 Saved")]
+        public async Task Save_OnSuccess_CallsSaveAndRaisesSaved()
+        {
+            var rowId = Guid.NewGuid();
+            var saveCalled = false;
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = id => new GetDataResponse { DataSet = BuildServerDataSet(id, "Beverages") },
+                SaveHandler = _ =>
+                {
+                    saveCalled = true;
+                    return new SaveResponse();
+                },
+            };
+            var view = BuildView(connector);
+            await view.EditAsync(rowId);
+
+            var saved = false;
+            view.Saved += (_, _) => saved = true;
+
+            await InvokePrivateAsync(view, "OnSaveClickedAsync");
+
+            Assert.True(saveCalled);
+            Assert.True(saved);
+        }
+
+        [Fact]
+        [DisplayName("Save 失敗觸發 ErrorOccurred 且不觸發 Saved")]
+        public async Task Save_OnFailure_RaisesErrorAndNotSaved()
+        {
+            var rowId = Guid.NewGuid();
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = id => new GetDataResponse { DataSet = BuildServerDataSet(id, "Beverages") },
+                SaveHandler = _ => throw new InvalidOperationException("backend rejected"),
+            };
+            var view = BuildView(connector);
+            await view.EditAsync(rowId);
+
+            var saved = false;
+            Exception? reported = null;
+            view.Saved += (_, _) => saved = true;
+            view.ErrorOccurred += (_, ex) => reported = ex;
+
+            await InvokePrivateAsync(view, "OnSaveClickedAsync");
+
+            Assert.False(saved);
+            Assert.IsType<InvalidOperationException>(reported);
+        }
+
+        [Fact]
+        [DisplayName("Cancel / Back 觸發 Closed")]
+        public async Task Close_RaisesClosed()
+        {
+            var rowId = Guid.NewGuid();
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = id => new GetDataResponse { DataSet = BuildServerDataSet(id, "Beverages") },
+            };
+            var view = BuildView(connector);
+            await view.EditAsync(rowId);
+
+            var closed = false;
+            view.Closed += (_, _) => closed = true;
+
+            InvokePrivate(view, "OnCloseClicked");
+
+            Assert.True(closed);
+        }
+
+        [Fact]
+        [DisplayName("View 模式只顯示返回鈕；Edit 模式顯示儲存/取消")]
+        public async Task Toolbar_ReflectsMode()
+        {
+            var rowId = Guid.NewGuid();
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = id => new GetDataResponse { DataSet = BuildServerDataSet(id, "Beverages") },
+            };
+            var view = BuildView(connector);
+
+            await view.ViewAsync(rowId);
+            Assert.True(GetPrivateField<Button>(view, "_backButton").IsVisible);
+            Assert.False(GetPrivateField<Button>(view, "_saveButton").IsVisible);
+            Assert.False(GetPrivateField<Button>(view, "_cancelButton").IsVisible);
+
+            await view.EditAsync(rowId);
+            Assert.True(GetPrivateField<Button>(view, "_saveButton").IsVisible);
+            Assert.True(GetPrivateField<Button>(view, "_cancelButton").IsVisible);
+            Assert.False(GetPrivateField<Button>(view, "_backButton").IsVisible);
+        }
+
+        // ---- FormMode broadcast (ported from the retired SingleFormBase) ----
+
+        [Fact]
+        [DisplayName("預設 View 並把 ambient scope 釘到 View")]
+        public void Defaults_PinScopeToView()
+        {
+            var view = new TestFormView();
+            Assert.Equal(SingleFormMode.View, view.FormMode);
+            Assert.Equal(SingleFormMode.View, FormScope.GetFormMode(view));
+        }
+
+        [Fact]
+        [DisplayName("OnFormModeChanged hook 於每次模式變更後被呼叫")]
+        public void OnFormModeChanged_InvokedPerChange()
+        {
+            var view = new TestFormView();
+
+            view.FormMode = SingleFormMode.Add;
+            view.FormMode = SingleFormMode.Edit;
+
+            Assert.Equal(2, view.ModeChangedCount);
+            Assert.Equal(SingleFormMode.Edit, view.LastMode);
+        }
+
+        [Fact]
+        [DisplayName("子樹編輯器隨 FormMode 廣播切換唯讀（真實管線）")]
+        public void FormModeBroadcast_TogglesRenderedEditor()
+        {
+            var schema = BuildRenderSchema();
+            var layout = new FormLayout { ColumnCount = 1 };
+            var section = new LayoutSection { Caption = "Main", ShowCaption = false };
+            section.Fields!.Add(new LayoutField { FieldName = "emp_id", Caption = "ID", ControlType = ControlType.TextEdit });
+            layout.Sections!.Add(section);
+
+            var dataObject = new FormDataObject(schema);
+            dataObject.InitializeNewMaster();
+
+            var view = new TestFormView();
+            view.FormMode = SingleFormMode.View;
+            var host = RenderForm(view, layout, dataObject);
+
+            var editor = FindDescendant<TextEdit>(host);
+            Assert.NotNull(editor);
+            Assert.True(editor!.IsReadOnly);
+
+            view.FormMode = SingleFormMode.Edit;
+            Assert.False(editor.IsReadOnly);
+
+            view.FormMode = SingleFormMode.View;
+            Assert.True(editor.IsReadOnly);
+        }
+
+        [Fact]
+        [DisplayName("程式寫入欄位後綁定編輯器即時刷新（lookup 寫回的基礎）")]
+        public void SetField_RefreshesBoundEditor()
+        {
+            var schema = BuildRenderSchema();
+            var layout = new FormLayout { ColumnCount = 1 };
+            var section = new LayoutSection { Caption = "Main", ShowCaption = false };
+            section.Fields!.Add(new LayoutField { FieldName = "emp_id", Caption = "ID", ControlType = ControlType.TextEdit });
+            layout.Sections!.Add(section);
+
+            var dataObject = new FormDataObject(schema);
+            dataObject.InitializeNewMaster();
+
+            var view = new TestFormView { FormMode = SingleFormMode.Edit };
+            var host = RenderForm(view, layout, dataObject);
+            var editor = FindDescendant<TextEdit>(host);
+            Assert.NotNull(editor);
+
+            dataObject.SetField("emp_id", "HELLO");
+
+            Assert.Equal("HELLO", editor!.Text);
+        }
+
+        // ---- rendering (ported from the retired DynamicForm) ----
+
+        [Fact]
+        [DisplayName("渲染後每個 Section 一個 Border")]
+        public void Render_OneBorderPerSection()
+        {
+            var schema = BuildRenderSchema();
+            var layout = FormLayoutGenerator.Generate(schema, "default");
+            Assert.NotEmpty(layout.Sections!);
+
+            var dataObject = new FormDataObject(schema);
+            var host = RenderForm(new TestFormView(), layout, dataObject);
+
+            Assert.Equal(layout.Sections!.Count, host.Children.Count);
+            Assert.All(host.Children, child => Assert.IsType<Border>(child));
+        }
+
+        [Fact]
+        [DisplayName("欄位數超過 ColumnCount 時 Grid 換行配置")]
+        public void Render_FieldGridWrapsWhenFieldsExceedColumnCount()
+        {
+            var layout = new FormLayout { ColumnCount = 2 };
+            var section = new LayoutSection { Caption = "Main", ShowCaption = false };
+            section.Fields!.Add(new LayoutField { FieldName = "emp_id", Caption = "ID" });
+            section.Fields.Add(new LayoutField { FieldName = "is_active", Caption = "Active" });
+            section.Fields.Add(new LayoutField { FieldName = "hire_date", Caption = "Hire Date" });
+            layout.Sections!.Add(section);
+
+            var host = RenderForm(new TestFormView(), layout, new FormDataObject(BuildRenderSchema()));
+
+            var border = Assert.IsType<Border>(host.Children[0]);
+            var sectionStack = Assert.IsType<StackPanel>(border.Child);
+            var grid = Assert.IsType<Grid>(sectionStack.Children[^1]);
+
+            Assert.Equal(2, grid.ColumnDefinitions.Count);
+            Assert.Equal(2, grid.RowDefinitions.Count);
+            Assert.Equal(3, grid.Children.Count);
+        }
+
+        [Fact]
+        [DisplayName("FormLayout.Details 在 master sections 之後渲染為綁定的 GridControl")]
+        public void Render_DetailsRenderDetailGridControl()
+        {
+            var layout = new FormLayout { ColumnCount = 2 };
+            var section = new LayoutSection { Caption = "Main", ShowCaption = false };
+            section.Fields!.Add(new LayoutField { FieldName = "emp_id", Caption = "ID" });
+            layout.Sections!.Add(section);
+            var detail = new LayoutGrid("EmployeePhone", "Phones");
+            detail.Columns!.Add(new LayoutColumn { FieldName = "phone", Caption = "Phone", Visible = true });
+            layout.Details!.Add(detail);
+
+            var dataObject = new FormDataObject(BuildRenderSchemaWithDetail());
+            dataObject.InitializeNewMaster();
+            var host = RenderForm(new TestFormView(), layout, dataObject);
+
+            Assert.Equal(2, host.Children.Count);
+            var detailStack = Assert.IsType<StackPanel>(Assert.IsType<Border>(host.Children[1]).Child);
+            Assert.Equal("Phones", Assert.IsType<TextBlock>(detailStack.Children[0]).Text);
+            var grid = Assert.IsType<GridControl>(detailStack.Children[1]);
+            Assert.Same(dataObject.DataSet.Tables["EmployeePhone"], grid.DataTable);
+        }
+
+        [Fact]
+        [DisplayName("DetailEditMode=EditForm 時明細 grid 唯讀且工具列含 Edit 鈕")]
+        public void Render_DetailEditMode_EditForm()
+        {
+            var layout = new FormLayout { ColumnCount = 2 };
+            var detail = new LayoutGrid("EmployeePhone", "Phones");
+            detail.Columns!.Add(new LayoutColumn { FieldName = "phone", Caption = "Phone", Visible = true });
+            layout.Details!.Add(detail);
+
+            var dataObject = new FormDataObject(BuildRenderSchemaWithDetail());
+            dataObject.InitializeNewMaster();
+            var view = new TestFormView { DetailEditMode = GridEditMode.EditForm };
+            var host = RenderForm(view, layout, dataObject);
+
+            var detailStack = Assert.IsType<StackPanel>(Assert.IsType<Border>(host.Children[0]).Child);
+            var grid = Assert.IsType<GridControl>(detailStack.Children[1]);
+            Assert.Equal(GridEditMode.EditForm, grid.EditMode);
+            Assert.True(grid.InnerGrid.IsReadOnly);
+            Assert.True(Assert.IsType<Button>(GetGridToolbar(grid).Children[1]).IsVisible);
+        }
+
+        // ---- responsive layout (phone = small screen → 1 column + EditForm) ----
+
+        [Theory]
+        [InlineData(400.0, 600.0, true)]    // narrow → compact
+        [InlineData(800.0, 600.0, false)]   // wide → not compact
+        [InlineData(600.0, 600.0, false)]   // exactly threshold → not compact
+        [InlineData(0.0, 600.0, false)]     // unmeasured → not compact
+        [DisplayName("IsCompactWidth 依寬度與門檻判定 compact")]
+        public void IsCompactWidth_ByWidthAndThreshold(double width, double threshold, bool expected)
+        {
+            Assert.Equal(expected, FormView.IsCompactWidth(width, threshold));
+        }
+
+        private static GridControl GetDetailGrid(StackPanel host)
+        {
+            var detailStack = Assert.IsType<StackPanel>(Assert.IsType<Border>(host.Children[^1]).Child);
+            return Assert.IsType<GridControl>(detailStack.Children[1]);
+        }
+
+        private static Grid GetSectionFieldGrid(StackPanel host)
+        {
+            var sectionStack = Assert.IsType<StackPanel>(Assert.IsType<Border>(host.Children[0]).Child);
+            return Assert.IsType<Grid>(sectionStack.Children[^1]);
+        }
+
+        [Fact]
+        [DisplayName("窄視窗下明細 grid 切 EditForm，放寬後重排回 DetailEditMode")]
+        public void DetailEditMode_RespondsToViewportWidth()
+        {
+            var layout = new FormLayout { ColumnCount = 2 };
+            var detail = new LayoutGrid("EmployeePhone", "Phones");
+            detail.Columns!.Add(new LayoutColumn { FieldName = "phone", Caption = "Phone", Visible = true });
+            layout.Details!.Add(detail);
+
+            var dataObject = new FormDataObject(BuildRenderSchemaWithDetail());
+            dataObject.InitializeNewMaster();
+
+            // Narrow viewport (400 < 600 threshold) with an InCell preference renders EditForm.
+            var view = new TestFormView { DetailEditMode = GridEditMode.InCell, CompactWidthThreshold = 600 };
+            view.ViewportWidthOverride = 400;
+            var host = RenderForm(view, layout, dataObject);
+            Assert.Equal(GridEditMode.EditForm, GetDetailGrid(host).EditMode);
+
+            // Widening past the threshold rebuilds the form; the fresh detail grid honours the
+            // preferred mode again.
+            view.ViewportWidthOverride = 900;
+            Assert.Equal(GridEditMode.InCell, GetDetailGrid(host).EditMode);
+        }
+
+        [Fact]
+        [DisplayName("窄視窗下主檔欄位重排為單欄，放寬後恢復多欄")]
+        public void MasterFields_ReflowToSingleColumnWhenCompact()
+        {
+            var layout = new FormLayout { ColumnCount = 2 };
+            var section = new LayoutSection { Caption = "Main", ShowCaption = false };
+            section.Fields!.Add(new LayoutField { FieldName = "emp_id", Caption = "ID" });
+            section.Fields.Add(new LayoutField { FieldName = "is_active", Caption = "Active" });
+            section.Fields.Add(new LayoutField { FieldName = "hire_date", Caption = "Hire Date" });
+            layout.Sections!.Add(section);
+
+            var view = new TestFormView { CompactWidthThreshold = 600 };
+            view.ViewportWidthOverride = 400; // compact → single column
+            var host = RenderForm(view, layout, new FormDataObject(BuildRenderSchema()));
+            Assert.Single(GetSectionFieldGrid(host).ColumnDefinitions);
+
+            view.ViewportWidthOverride = 900; // wide → layout's own column count
+            Assert.Equal(2, GetSectionFieldGrid(host).ColumnDefinitions.Count);
+        }
+
+        [Theory]
+        [InlineData(ControlType.CheckEdit, typeof(CheckEdit))]
+        [InlineData(ControlType.DateEdit, typeof(DateEdit))]
+        [InlineData(ControlType.YearMonthEdit, typeof(YearMonthEdit))]
+        [InlineData(ControlType.MemoEdit, typeof(MemoEdit))]
+        [InlineData(ControlType.DropDownEdit, typeof(DropDownEdit))]
+        [InlineData(ControlType.ButtonEdit, typeof(ButtonEdit))]
+        [InlineData(ControlType.TextEdit, typeof(TextEdit))]
+        [InlineData(ControlType.Auto, typeof(TextEdit))]
+        [DisplayName("BuildInputControl 依 ControlType 分派對應的 field editor")]
+        public void BuildInputControl_DispatchesByControlType(ControlType controlType, Type expectedControlType)
+        {
+            var dataObject = new FormDataObject(BuildRenderSchema());
+            dataObject.InitializeNewMaster();
+            var field = new LayoutField { FieldName = "emp_id", ControlType = controlType };
+
+            var control = InvokeBuildInputControl(new TestFormView(), dataObject, field);
+
+            Assert.IsType(expectedControlType, control);
+        }
+
+        [Fact]
+        [DisplayName("ReadOnly 欄位建立的編輯器為唯讀")]
+        public void BuildInputControl_ReadOnlyField_CreatesReadOnlyTextEdit()
+        {
+            var dataObject = new FormDataObject(BuildRenderSchema());
+            dataObject.InitializeNewMaster();
+            var field = new LayoutField { FieldName = "emp_id", ReadOnly = true };
+
+            var control = Assert.IsType<TextEdit>(InvokeBuildInputControl(new TestFormView(), dataObject, field));
+
+            Assert.True(control.IsReadOnly);
+        }
+
+        [Fact]
+        [DisplayName("CheckEdit 勾選變更會回寫 DataObject 欄位")]
+        public void BuildInputControl_CheckEdit_WritesBackToDataObject()
+        {
+            var dataObject = new FormDataObject(BuildRenderSchema());
+            dataObject.InitializeNewMaster();
+            var field = new LayoutField { FieldName = "is_active", ControlType = ControlType.CheckEdit };
+
+            var checkBox = Assert.IsType<CheckEdit>(InvokeBuildInputControl(new TestFormView(), dataObject, field));
+            checkBox.IsChecked = true;
+
+            Assert.Equal("True", dataObject.GetField("is_active"));
+            Assert.True(dataObject.IsDirty);
+        }
+
+        private static T? FindDescendant<T>(Control root) where T : Control
+        {
+            if (root is T match) return match;
+            if (root is Panel panel)
+            {
+                foreach (var child in panel.Children)
+                    if (child is Control c && FindDescendant<T>(c) is { } found)
+                        return found;
+            }
+            else if (root is Border { Child: Control borderChild })
+            {
+                return FindDescendant<T>(borderChild);
+            }
+            else if (root is ContentControl { Content: Control content })
+            {
+                return FindDescendant<T>(content);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Overrides the <c>Resolve*</c> hooks so tests never read <c>ClientInfo</c>, and
+        /// surfaces the <c>OnFormModeChanged</c> hook for assertions.
+        /// </summary>
+        // ---- live recomputation wiring (Phase 2 PR5b) ----
+
+        private const string OrderProgId = "Order";
+
+        private static FormSchema BuildComputedSchema(bool withDetail = false)
+        {
+            var schema = new FormSchema(OrderProgId, OrderProgId);
+            var master = schema.Tables!.Add(OrderProgId, OrderProgId);
+            master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
+            master.Fields.Add("price", "Price", FieldDbType.Currency);
+            master.Fields.Add("qty", "Qty", FieldDbType.Decimal);
+            master.Fields!.Add(new FormField("amount", "Amount", FieldDbType.Currency)
+            {
+                NumberKind = NumberKind.Amount,
+                ValueExpression = "price * qty",
+                ReadOnly = true,
+            });
+            master.Fields!.Add(new FormField("order_date", "Order Date", FieldDbType.DateTime)
+            {
+                DefaultValueExpression = "Today()",
+            });
+            if (withDetail)
+            {
+                var detail = schema.Tables!.Add("OrderItem", "Items");
+                detail.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
+                detail.Fields.Add(SysFields.MasterRowId, "Master Row Id", FieldDbType.Guid);
+                detail.Fields.Add("price", "Price", FieldDbType.Currency);
+                detail.Fields.Add("qty", "Qty", FieldDbType.Decimal);
+                detail.Fields!.Add(new FormField("amount", "Amount", FieldDbType.Currency)
+                {
+                    NumberKind = NumberKind.Amount,
+                    ValueExpression = "price * qty",
+                    ReadOnly = true,
+                });
+            }
+            return schema;
+        }
+
+        private static DataTable BuildOrderMasterTable(Guid rowId, decimal price, decimal qty, decimal amount)
+        {
+            var master = new DataTable(OrderProgId);
+            master.Columns.Add(SysFields.RowId, typeof(Guid));
+            master.Columns.Add("price", typeof(decimal));
+            master.Columns.Add("qty", typeof(decimal));
+            master.Columns.Add("amount", typeof(decimal));
+            master.Columns.Add("order_date", typeof(DateTime));
+            master.Rows.Add(rowId, price, qty, amount, DBNull.Value);
+            return master;
+        }
+
+        [Fact]
+        [DisplayName("編輯 master 來源欄即時重算計算欄（amount = price * qty）")]
+        public async Task LiveRecompute_MasterSourceEdit_RecomputesComputedField()
+        {
+            var rowId = Guid.NewGuid();
+            var dataSet = new DataSet(OrderProgId);
+            dataSet.Tables.Add(BuildOrderMasterTable(rowId, price: 10m, qty: 2m, amount: 20m));
+            dataSet.AcceptChanges();
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = _ => new GetDataResponse { DataSet = dataSet },
+            };
+            var computedSchema = BuildComputedSchema();
+            var view = new TestFormView
+            {
+                Schema = computedSchema,
+                FormConnector = connector,
+                Layout = FormLayoutGenerator.Generate(computedSchema, TestProgId),
+            };
+
+            await view.EditAsync(rowId);
+            view.DataObject!.SetField("qty", "5");
+
+            Assert.Equal(50m, view.DataObject!.MasterRow!["amount"]);
+        }
+
+        [Fact]
+        [DisplayName("NewAsync 後 master 空欄以 DefaultValueExpression 即時填入（order_date = Today()）")]
+        public async Task LiveRecompute_NewAsync_AppliesDefaultValueExpression()
+        {
+            var connector = new FakeFormApiConnector
+            {
+                GetNewDataHandler = () =>
+                {
+                    var dataSet = new DataSet(OrderProgId);
+                    dataSet.Tables.Add(BuildOrderMasterTable(Guid.NewGuid(), price: 0m, qty: 0m, amount: 0m));
+                    return new GetNewDataResponse { DataSet = dataSet };
+                },
+            };
+            var computedSchema = BuildComputedSchema();
+            var view = new TestFormView
+            {
+                Schema = computedSchema,
+                FormConnector = connector,
+                Layout = FormLayoutGenerator.Generate(computedSchema, TestProgId),
+            };
+
+            await view.NewAsync();
+
+            // UTC，不是 DateTime.Today：框架的日期預設值是 UtcNow.Date（ADR-032 D12）。
+            // 用本地日斷言會讓本機在 UTC+8 的 00:00–08:00 必定失敗，而 CI 跑 UTC 永遠看不到。
+            Assert.Equal(DateTime.UtcNow.Date, view.DataObject!.MasterRow!["order_date"]);
+        }
+
+        [Fact]
+        [DisplayName("編輯 detail 來源欄即時重算 detail 計算欄（回寫至 DataRow）")]
+        public async Task LiveRecompute_DetailSourceEdit_RecomputesDetailComputedField()
+        {
+            var rowId = Guid.NewGuid();
+            var dataSet = new DataSet(OrderProgId);
+            dataSet.Tables.Add(BuildOrderMasterTable(rowId, price: 0m, qty: 0m, amount: 0m));
+            var detail = new DataTable("OrderItem");
+            detail.Columns.Add(SysFields.RowId, typeof(Guid));
+            detail.Columns.Add(SysFields.MasterRowId, typeof(Guid));
+            detail.Columns.Add("price", typeof(decimal));
+            detail.Columns.Add("qty", typeof(decimal));
+            detail.Columns.Add("amount", typeof(decimal));
+            detail.Rows.Add(Guid.NewGuid(), rowId, 7m, 2m, 14m);
+            dataSet.Tables.Add(detail);
+            dataSet.AcceptChanges();
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = _ => new GetDataResponse { DataSet = dataSet },
+            };
+            var computedSchema = BuildComputedSchema(withDetail: true);
+            var view = new TestFormView
+            {
+                Schema = computedSchema,
+                FormConnector = connector,
+                Layout = FormLayoutGenerator.Generate(computedSchema, TestProgId),
+            };
+
+            await view.EditAsync(rowId);
+            var detailRow = view.DataObject!.DataSet.Tables["OrderItem"]!.Rows[0];
+            view.DataObject!.SetField(detailRow, "qty", "4");
+
+            Assert.Equal(28m, detailRow["amount"]);
+        }
+
+        [Fact]
+        [DisplayName("Tier 2：注入 CurrencySettings 後計算欄依幣別位數捨入（BHD 3 位，Tier 1 為 2 位）")]
+        public async Task LiveRecompute_Tier2Currency_RoundsByCurrencyDecimals()
+        {
+            var rowId = Guid.NewGuid();
+            var schema = new FormSchema(OrderProgId, OrderProgId);
+            var master = schema.Tables!.Add(OrderProgId, OrderProgId);
+            master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
+            master.Fields.Add("curr", "Currency", FieldDbType.String);
+            master.Fields.Add("price", "Price", FieldDbType.Currency);
+            master.Fields.Add("qty", "Qty", FieldDbType.Decimal);
+            master.Fields!.Add(new FormField("amount", "Amount", FieldDbType.Currency)
+            {
+                NumberKind = NumberKind.Amount,
+                CurrencyField = "curr",
+                ValueExpression = "price * qty",
+                ReadOnly = true,
+            });
+
+            var table = new DataTable(OrderProgId);
+            table.Columns.Add(SysFields.RowId, typeof(Guid));
+            table.Columns.Add("curr", typeof(string));
+            table.Columns.Add("price", typeof(decimal));
+            table.Columns.Add("qty", typeof(decimal));
+            table.Columns.Add("amount", typeof(decimal));
+            table.Rows.Add(rowId, "BHD", 2.1235m, 2m, 4.247m);
+            var dataSet = new DataSet(OrderProgId);
+            dataSet.Tables.Add(table);
+            dataSet.AcceptChanges();
+
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = _ => new GetDataResponse { DataSet = dataSet },
+            };
+            var currencies = new CurrencySettings { new CurrencyItem("BHD", 0.001m) };
+            var view = new TestFormView
+            {
+                Schema = schema,
+                FormConnector = connector,
+                Layout = FormLayoutGenerator.Generate(schema, TestProgId),
+                RoundingContextOverride = new RoundingContext { CurrencySettings = currencies },
+            };
+
+            await view.EditAsync(rowId);
+            // price 2.1235 * qty 1 = 2.1235 → BHD 3 位、away-from-zero → 2.124（Tier 1 兩位會是 2.12）
+            view.DataObject!.SetField("qty", "1");
+
+            Assert.Equal(2.124m, view.DataObject!.MasterRow!["amount"]);
+        }
+
+        [Fact]
+        [DisplayName("Layout 已由 host 設定時應直接採用，不經定義來源解析")]
+        public async Task ResolveLayout_HostSuppliedLayout_IsUsedAsIs()
+        {
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = _ => new GetDataResponse { DataSet = BuildServerDataSet(Guid.NewGuid(), "n") },
+            };
+            var schema = BuildSchema();
+            var supplied = FormLayoutGenerator.Generate(schema, TestProgId);
+            supplied.Caption = "host-supplied";
+            // No connector-backed define access and no DefinitionLoader: the only layout available is
+            // the one set here, which is exactly the backend-less host case the property exists for.
+            var view = new TestFormView { Schema = schema, FormConnector = connector, Layout = supplied };
+
+            await view.EditAsync(Guid.NewGuid());
+
+            Assert.Equal("host-supplied", GetPrivateField<FormLayout>(view, "_formLayout").Caption);
+        }
+
+        private sealed class TestFormView : FormView
+        {
+            public int ModeChangedCount { get; private set; }
+            public SingleFormMode? LastMode { get; private set; }
+
+            private double? _viewportWidthOverride;
+
+            /// <summary>
+            /// Drives the responsive switch without a real layout pass. Assigning re-applies the
+            /// compact state (mirroring what a real Bounds change would do).
+            /// </summary>
+            public double? ViewportWidthOverride
+            {
+                get => _viewportWidthOverride;
+                set
+                {
+                    _viewportWidthOverride = value;
+                    ApplyResponsiveState();
+                }
+            }
+
+            protected override double GetViewportWidth()
+                => _viewportWidthOverride ?? base.GetViewportWidth();
+
+            protected override Task<FormSchema?> ResolveSchemaAsync(string progId)
+                => Task.FromResult<FormSchema?>(null);
+
+            protected override FormApiConnector ResolveFormConnector(string progId)
+                => throw new InvalidOperationException("ClientInfo fallback must not be reached in unit tests.");
+
+            protected override Guid ResolveAccessToken() => Guid.Empty;
+
+            /// <summary>Injects a rounding context for live preview without touching the static ClientInfo.</summary>
+            public RoundingContext? RoundingContextOverride { get; set; }
+
+            protected override Task<RoundingContext> ResolveRoundingContextAsync()
+                => Task.FromResult(RoundingContextOverride ?? new RoundingContext());
+
+            protected override void OnFormModeChanged(SingleFormMode formMode)
+            {
+                base.OnFormModeChanged(formMode);
+                ModeChangedCount++;
+                LastMode = formMode;
+            }
+        }
+
+        /// <summary>
+        /// Test double overriding every virtual round-trip on <see cref="FormApiConnector"/>
+        /// so the base <c>LocalApiProvider</c> is never reached.
+        /// </summary>
+        private sealed class FakeFormApiConnector : FormApiConnector
+        {
+            public FakeFormApiConnector() : base(Guid.NewGuid(), TestProgId) { }
+
+            public Func<Guid, GetDataResponse>? GetDataHandler { get; set; }
+            public Func<GetNewDataResponse>? GetNewDataHandler { get; set; }
+            public Func<DataSet, SaveResponse>? SaveHandler { get; set; }
+
+            public override Task<GetDataResponse> GetDataAsync(Guid rowId)
+                => Task.FromResult((GetDataHandler ?? (_ => new GetDataResponse()))(rowId));
+
+            public override Task<GetNewDataResponse> GetNewDataAsync()
+                => Task.FromResult((GetNewDataHandler ?? (() => new GetNewDataResponse()))());
+
+            public override Task<SaveResponse> SaveAsync(DataSet dataSet)
+                => Task.FromResult((SaveHandler ?? (_ => new SaveResponse()))(dataSet));
+        }
+    }
+}

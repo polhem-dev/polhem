@@ -1,0 +1,23 @@
+namespace Polhem.Db.Schema
+{
+    /// <summary>
+    /// Indicates how an <see cref="Changes.ITableChange"/> can be executed by a provider.
+    /// </summary>
+    public enum ChangeExecutionKind
+    {
+        /// <summary>
+        /// Executable via an in-place ALTER operation.
+        /// </summary>
+        Alter,
+
+        /// <summary>
+        /// Cannot be applied via ALTER; the whole table must be rebuilt.
+        /// </summary>
+        Rebuild,
+
+        /// <summary>
+        /// Cannot be applied by the current provider.
+        /// </summary>
+        NotSupported,
+    }
+}

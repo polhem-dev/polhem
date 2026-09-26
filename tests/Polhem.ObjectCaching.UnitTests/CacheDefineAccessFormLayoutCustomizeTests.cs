@@ -1,0 +1,109 @@
+using System.ComponentModel;
+using Polhem.Base.Serialization;
+using Polhem.Definition;
+using Polhem.Definition.Language;
+using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
+using Polhem.Definition.Storage;
+
+namespace Polhem.ObjectCaching.UnitTests
+{
+    /// <summary>
+    /// <see cref="CacheDefineAccess.GetFormLayout(string, string)"/> 整檔擇一疊加測試：
+    /// cust 檔存在→回 cust；否則回 base；customizeId 空 / 無 reader→短路純 base（reader 零呼叫）。
+    /// </summary>
+    public sealed class CacheDefineAccessFormLayoutCustomizeTests : IDisposable
+    {
+        private readonly string _baseRoot;
+        private const string LayoutId = "EmployeeDefault";
+
+        public CacheDefineAccessFormLayoutCustomizeTests()
+        {
+            _baseRoot = Path.Combine(Path.GetTempPath(), $"polhem-fl-cust-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(_baseRoot);
+        }
+
+        public void Dispose()
+        {
+            try { Directory.Delete(_baseRoot, recursive: true); } catch (IOException) { /* best effort */ }
+        }
+
+        private CacheDefineAccess CreateAccess(ICustomizeDefineReader? reader)
+        {
+            var paths = new PathOptions { DefinePath = _baseRoot };
+            // Write a base FormLayout so the base lookup returns a known instance.
+            XmlCodec.SerializeToFile(new FormLayout { LayoutId = LayoutId }, paths.GetFormLayoutFilePath(LayoutId));
+            var storage = new FileDefineStorage(paths);
+            // Unique CachePrefix isolates these cache entries from other parallel tests.
+            var cache = new CacheContainerService(storage, paths, Guid.NewGuid().ToString("N"));
+            return new CacheDefineAccess(storage, paths, cache, Array.Empty<byte>(), reader);
+        }
+
+        [Fact]
+        [DisplayName("cust 檔存在時應回傳 cust layout（整檔擇一）")]
+        public void GetFormLayout_CustExists_ReturnsCust()
+        {
+            var custLayout = new FormLayout { LayoutId = LayoutId };
+            var reader = new SpyCustomizeReader { FormLayout = custLayout };
+            var access = CreateAccess(reader);
+
+            var result = access.GetFormLayout("acme", LayoutId);
+
+            Assert.Same(custLayout, result);
+        }
+
+        [Fact]
+        [DisplayName("cust 檔不存在時應回傳 base layout")]
+        public void GetFormLayout_CustMissing_ReturnsBase()
+        {
+            var reader = new SpyCustomizeReader { FormLayout = null };
+            var access = CreateAccess(reader);
+
+            var result = access.GetFormLayout("acme", LayoutId);
+
+            Assert.NotNull(result);
+            Assert.Equal(LayoutId, result.LayoutId);
+        }
+
+        [Fact]
+        [DisplayName("customizeId 空時短路純 base，reader 零呼叫")]
+        public void GetFormLayout_EmptyCustomizeId_ShortCircuits_ReaderNotCalled()
+        {
+            var reader = new SpyCustomizeReader { FormLayout = new FormLayout { LayoutId = LayoutId } };
+            var access = CreateAccess(reader);
+
+            var result = access.GetFormLayout("", LayoutId);
+
+            Assert.Equal(LayoutId, result.LayoutId);
+            Assert.Equal(0, reader.GetCustomizeFormLayoutCallCount);
+        }
+
+        [Fact]
+        [DisplayName("無 reader 注入時即使帶 customizeId 也走純 base（向後相容）")]
+        public void GetFormLayout_NoReader_BehavesAsBase()
+        {
+            var access = CreateAccess(reader: null);
+
+            var result = access.GetFormLayout("acme", LayoutId);
+
+            Assert.Equal(LayoutId, result.LayoutId);
+        }
+
+        private sealed class SpyCustomizeReader : ICustomizeDefineReader
+        {
+            public FormLayout? FormLayout { get; init; }
+            public int GetCustomizeFormLayoutCallCount { get; private set; }
+
+            public FormLayout? GetCustomizeFormLayout(string customizeId, string layoutId)
+            {
+                GetCustomizeFormLayoutCallCount++;
+                return FormLayout;
+            }
+
+            public LanguageResource? GetCustomizeLanguage(string customizeId, string lang, string ns) => null;
+            public ProgramSettings? GetCustomizeProgramSettings(string customizeId) => null;
+            public MenuSettings? GetCustomizeMenuSettings(string customizeId) => null;
+            public PluginSettings? GetCustomizePluginSettings(string customizeId) => null;
+        }
+    }
+}

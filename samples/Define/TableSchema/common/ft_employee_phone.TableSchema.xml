@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TableName="ft_employee_phone" DisplayName="Employee Phones">
+  <Fields>
+    <DbField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" />
+    <DbField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" />
+    <DbField FieldName="sys_master_rowid" Caption="Master Row ID" DbType="Guid" />
+    <DbField FieldName="phone_type" Caption="Phone Type" DbType="String" Length="20" />
+    <DbField FieldName="phone_no" Caption="Phone Number" DbType="String" Length="30" />
+  </Fields>
+  <Indexes>
+    <DbTableIndex Name="pk_{0}" Unique="true" PrimaryKey="true">
+      <IndexFields>
+        <IndexField FieldName="sys_no" />
+      </IndexFields>
+    </DbTableIndex>
+    <DbTableIndex Name="rx_{0}" Unique="true">
+      <IndexFields>
+        <IndexField FieldName="sys_rowid" />
+      </IndexFields>
+    </DbTableIndex>
+    <DbTableIndex Name="fk_{0}_master">
+      <IndexFields>
+        <IndexField FieldName="sys_master_rowid" />
+      </IndexFields>
+    </DbTableIndex>
+  </Indexes>
+</TableSchema>

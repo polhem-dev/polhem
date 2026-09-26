@@ -1,0 +1,174 @@
+using System.ComponentModel;
+using Polhem.Base.Serialization;
+using Polhem.Definition;
+using Polhem.Definition.Database;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
+using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
+using Polhem.Definition.Storage;
+using Polhem.ObjectCaching;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Polhem.Hosting.UnitTests
+{
+    /// <summary>
+    /// 驗證 AddPolhemFramework 對租戶客製化覆蓋層的接線（階段 4）：
+    /// provider / reader 可解析；三個消費端注入 reader 後仍可解析（無循環依賴）；
+    /// CustomizePath 未設→純 base；CustomizePath 設定→經 DI 的 overlay 端到端生效。
+    /// </summary>
+    public sealed class CustomizationWiringTests : IDisposable
+    {
+        private readonly string _defineDir;
+        private readonly string _customizeDir;
+
+        public CustomizationWiringTests()
+        {
+            _defineDir = Path.Combine(Path.GetTempPath(), $"polhem-wire-def-{Guid.NewGuid():N}");
+            _customizeDir = Path.Combine(Path.GetTempPath(), $"polhem-wire-cust-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(_defineDir);
+            Directory.CreateDirectory(_customizeDir);
+        }
+
+        public void Dispose()
+        {
+            foreach (var dir in new[] { _defineDir, _customizeDir })
+            {
+                try { Directory.Delete(dir, recursive: true); } catch (IOException) { /* best effort */ }
+            }
+        }
+
+        private ServiceProvider BuildProvider(string customizePath)
+        {
+            var services = new ServiceCollection();
+            services.AddPolhemFramework(
+                new BackendConfiguration(),
+                new PathOptions { DefinePath = _defineDir, CustomizePath = customizePath },
+                autoCreateMasterKey: true);
+            return services.BuildServiceProvider();
+        }
+
+        [Fact]
+        [DisplayName("IDefineStorage 自身實作 ICustomizeDefineReader 時應優先採用它，而非檔案版")]
+        public void AddPolhemFramework_StorageImplementsReader_PrefersStorage()
+        {
+            var services = new ServiceCollection();
+            var configuration = new BackendConfiguration();
+            configuration.Components.DefineStorage =
+                $"{typeof(CustomizeAwareStorage).FullName}, {typeof(CustomizeAwareStorage).Assembly.GetName().Name}";
+            services.AddPolhemFramework(
+                configuration,
+                new PathOptions { DefinePath = _defineDir, CustomizePath = _customizeDir },
+                autoCreateMasterKey: true);
+            using var sp = services.BuildServiceProvider();
+
+            var reader = sp.GetRequiredService<ICustomizeDefineReader>();
+
+            // 走 storage 自己的實作，而不是繞回 CustomizePath 底下的檔案
+            Assert.IsType<CustomizeAwareStorage>(reader);
+            Assert.Same(sp.GetRequiredService<IDefineStorage>(), reader);
+        }
+
+        [Fact]
+        [DisplayName("IDefineStorage 未實作 ICustomizeDefineReader 時應退回檔案版 reader")]
+        public void AddPolhemFramework_StorageWithoutReader_FallsBackToFileReader()
+        {
+            using var sp = BuildProvider(_customizeDir);
+
+            Assert.IsType<CustomizeDefineReader>(sp.GetRequiredService<ICustomizeDefineReader>());
+        }
+
+        [Fact]
+        [DisplayName("AddPolhemFramework 應註冊並解析 ICacheContainerProvider 與 ICustomizeDefineReader")]
+        public void AddPolhemFramework_ResolvesProviderAndReader()
+        {
+            using var sp = BuildProvider(_customizeDir);
+
+            Assert.NotNull(sp.GetRequiredService<ICacheContainerProvider>());
+            Assert.NotNull(sp.GetRequiredService<ICustomizeDefineReader>());
+        }
+
+        [Fact]
+        [DisplayName("注入 reader 後三個消費端仍可解析（證明注入鏈無循環依賴）")]
+        public void AddPolhemFramework_ConsumersWithReader_Resolve()
+        {
+            using var sp = BuildProvider(_customizeDir);
+
+            Assert.NotNull(sp.GetRequiredService<Polhem.Definition.Language.ILanguageService>());
+            Assert.NotNull(sp.GetRequiredService<Polhem.Business.IBoTypeResolver>());
+            Assert.NotNull(sp.GetRequiredService<IDefineAccess>());
+        }
+
+        [Fact]
+        [DisplayName("CustomizePath 未設時 reader 三類皆回 null（退化純 base）")]
+        public void AddPolhemFramework_EmptyCustomizePath_ReaderReturnsNull()
+        {
+            using var sp = BuildProvider(customizePath: string.Empty);
+            var reader = sp.GetRequiredService<ICustomizeDefineReader>();
+
+            Assert.Null(reader.GetCustomizeFormLayout("acme", "EmployeeDefault"));
+            Assert.Null(reader.GetCustomizeLanguage("acme", "zh-TW", "Common"));
+            Assert.Null(reader.GetCustomizeProgramSettings("acme"));
+        }
+
+        [Fact]
+        [DisplayName("CustomizePath 設定時 IDefineAccess.GetFormLayout 經 DI 注入的 reader 端到端回傳客製 layout")]
+        public void AddPolhemFramework_CustomizePathSet_FormLayoutOverlayWorksEndToEnd()
+        {
+            const string customizeId = "acme";
+            const string layoutId = "EmployeeDefault";
+            // 寫一份客製 FormLayout 到 {CustomizePath}/{customizeId}/FormLayout/...
+            var custPaths = new CustomizeOnlyPathOptions(_customizeDir, customizeId);
+            XmlCodec.SerializeToFile(new FormLayout { LayoutId = layoutId }, custPaths.GetFormLayoutFilePath(layoutId));
+
+            using var sp = BuildProvider(_customizeDir);
+            var access = sp.GetRequiredService<IDefineAccess>();
+
+            // 整檔擇一：custCode 非空且客製檔存在 → 回客製 layout（不碰 base）。
+            var result = access.GetFormLayout(customizeId, layoutId);
+
+            Assert.NotNull(result);
+            Assert.Equal(layoutId, result.LayoutId);
+        }
+
+        /// <summary>
+        /// 模擬 DB 式儲存：base 與客製同住一處，只差一個識別欄，因此 storage 自己就是
+        /// <see cref="ICustomizeDefineReader"/>（比照 <c>DbDefineStorage</c>）。
+        /// 測試只在意 DI 選了誰，各方法不需真的有行為。
+        /// </summary>
+        public sealed class CustomizeAwareStorage : IDefineStorage, ICustomizeDefineReader
+        {
+            public CustomizeAwareStorage(PathOptions paths)
+            {
+                ArgumentNullException.ThrowIfNull(paths);
+            }
+
+            public LanguageResource? GetCustomizeLanguage(string customizeId, string lang, string ns) => null;
+            public ProgramSettings? GetCustomizeProgramSettings(string customizeId) => null;
+            public FormLayout? GetCustomizeFormLayout(string customizeId, string layoutId) => null;
+            public MenuSettings? GetCustomizeMenuSettings(string customizeId) => null;
+            public PluginSettings? GetCustomizePluginSettings(string customizeId) => null;
+
+            public DbCategorySettings? GetDbCategorySettings() => null;
+            public void SaveDbCategorySettings(DbCategorySettings settings) { }
+            public CurrencySettings? GetCurrencySettings() => null;
+            public void SaveCurrencySettings(CurrencySettings settings) { }
+            public UnitSettings? GetUnitSettings() => null;
+            public void SaveUnitSettings(UnitSettings settings) { }
+            public TableSchema? GetTableSchema(string categoryId, string tableName) => null;
+            public void SaveTableSchema(string categoryId, TableSchema tableSchema) { }
+            public FormSchema? GetFormSchema(string progId) => null;
+            public void SaveFormSchema(FormSchema formSchema) { }
+            public ProgramSettings? GetProgramSettings() => null;
+            public void SaveProgramSettings(ProgramSettings settings) { }
+            public MenuSettings? GetMenuSettings() => null;
+            public void SaveMenuSettings(MenuSettings settings) { }
+            public PluginSettings? GetPluginSettings() => null;
+            public void SavePluginSettings(PluginSettings settings) { }
+            public FormLayout? GetFormLayout(string layoutId) => null;
+            public void SaveFormLayout(FormLayout formLayout) { }
+            public LanguageResource? GetLanguage(string lang, string ns) => null;
+            public void SaveLanguage(LanguageResource resource) { }
+        }
+    }
+}

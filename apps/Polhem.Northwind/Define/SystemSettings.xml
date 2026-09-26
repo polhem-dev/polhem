@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SystemSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <CommonConfiguration>
+    <Version>1.0.0</Version>
+    <IsDebugMode>true</IsDebugMode>
+    <AllowedTypeNamespaces></AllowedTypeNamespaces>
+    <ApiPayloadOptions>
+      <Compressor>gzip</Compressor>
+      <Encryptor>aes-cbc-hmac</Encryptor>
+    </ApiPayloadOptions>
+  </CommonConfiguration>
+  <BackendConfiguration>
+    <LogOptions>
+      <DbAccess>
+        <Level>Warning</Level>
+        <AffectedRowThreshold>10000</AffectedRowThreshold>
+        <ResultRowThreshold>10000</ResultRowThreshold>
+        <ExecutionTimeThreshold>300</ExecutionTimeThreshold>
+      </DbAccess>
+    </LogOptions>
+    <SecurityKeySettings>
+      <MasterKeySource>
+        <Type>Environment</Type>
+        <Value>POLHEM_MASTER_KEY</Value>
+      </MasterKeySource>
+    </SecurityKeySettings>
+    <Components>
+      <BusinessObjectProvider></BusinessObjectProvider>
+    </Components>
+    <!-- Audit trail. Login records are the demo's visible slice: every sign-in, failure and lockout
+         lands in st_log_login without a line of application code. UseBackgroundWriter is false so a
+         record is visible the moment the sign-in returns, which is what makes it demonstrable; a
+         production host leaves it true and lets the batch writer absorb the volume. -->
+    <AuditLogOptions>
+      <Enabled>true</Enabled>
+      <UseBackgroundWriter>false</UseBackgroundWriter>
+      <LoginEnabled>true</LoginEnabled>
+      <ChangeEnabled>true</ChangeEnabled>
+      <AccessEnabled>false</AccessEnabled>
+      <AnomalyEnabled>false</AnomalyEnabled>
+    </AuditLogOptions>
+  </BackendConfiguration>
+  <FrontendConfiguration />
+  <WebsiteConfiguration />
+  <BackgroundServiceConfiguration />
+</SystemSettings>

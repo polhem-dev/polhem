@@ -1,0 +1,39 @@
+# 踩雷誌（Gotchas）
+
+維護 polhem 時實際踩過、且**下次很可能再踩**的雷，附症狀、根因與正解。
+
+**這不是規範文件。** 硬性規則寫在 `.claude/rules/`（每個 session 常駐）；本目錄是**按需查閱**的
+脈絡與推導過程——記錄「為什麼那條規則長那樣」「當時症狀看起來像什麼」，避免同一個坑用同樣的
+誤判方式再走一次。
+
+**這也不是公開文件**（見 `.claude/rules/public-docs.md`）：讀者是 polhem 的維護者，
+不是框架使用者。對外的設計決策寫 `docs/adr/`，對外的行為說明寫 `docs/` 根目錄。
+
+| 檔案 | 涵蓋 |
+|------|------|
+| [database.md](database.md) | Oracle `''`=NULL / 位置綁定 / `RAW(16)` 讀成 `byte[]`、MySQL TEXT/UUID、SQLite GUID 大小寫、decimal scale、datetime2 參數層、深分頁 `OFFSET` 成本與決定、壓測與單元測試共用 schema |
+| [serialization-and-expressions.md](serialization-and-expressions.md) | MessagePack ctor 順序與 wire 事實、運算式引擎兩雷、AOT 實測結論 |
+| [avalonia-controls.md](avalonia-controls.md) | Avalonia 控件實證雷（DataGrid、唯讀外觀、事件、並行） |
+| [mobile-trim-aot.md](mobile-trim-aot.md) | 行動端 trim / AOT：決策樹推導、reflection-only 重現法保真度、build 與驗證命令配方、**iOS 建置警告的判讀（永遠不是 0 警告）** |
+| [test-ci-release.md](test-ci-release.md) | 測試 fixture 缺口、CI path filter 的驗證死角、**Sonar 的 0 可能是「沒看」而不是「乾淨」（`tools/**/*.cs` 不在分析範圍）**、本機重現 Sonar 規則的方法、發佈與體檢流程雷 |
+| [northwind-heads.md](northwind-heads.md) | Northwind 四 head 工具鏈（含 iOS 的 Xcode 版本綁定）、獨立 repo 同步流程與該 repo 的 CI |
+| [definition-and-customization.md](definition-and-customization.md) | 客製範圍的兩種數法（同一個漏連踩三次）、覆蓋層粒度、`FormSchema` 中樞圖的兩種衍生 |
+
+## 不在本目錄的鄰居
+
+分頁做法的**外部佐證**（Odoo / SAP RAP / SAP CAP / Microsoft ASP.NET OData 各自怎麼分頁）
+寫在 [../pagination-prior-art.md](../pagination-prior-art.md)——那不是踩雷誌，是設計決策的
+佐證，沒有症狀也沒有正解。本目錄 `database.md` 的深分頁那條只留量測、決定與範圍，
+外部對照一律指過去。
+
+公開 API 基準（`PublicApiAnalyzers`）的雷寫在
+[../public-api-baseline.md](../public-api-baseline.md)——那份已經是該分析器的權威維運文件，
+拆兩處放必漂。**撞到 `RS0027`（既有多載帶 optional 參數，就加不了參數更多的新多載）先看那份**，
+它是「改設計」而非「補基準檔」的一類。
+
+## 寫入原則
+
+- **只記「再踩機率高」的**。一次性的環境問題、已被框架根治且不會復發的，不留。
+- 每則要能回答三件事：**症狀長什麼樣**、**根因**、**正解**。少了症狀就查不到它。
+- 已根治的雷仍值得留，但要明寫「已修（commit）」與**殘留的注意事項**——沒有殘留就刪掉。
+- 對應的硬規則若已寫進 `.claude/rules/`，這裡只放脈絡，不重複條文。

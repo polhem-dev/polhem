@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-ios</TargetFramework>
+    <SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Polhem.Northwind.iOS</RootNamespace>
+    <AssemblyName>Polhem.Northwind.iOS</AssemblyName>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!--
+      Debug-first head. Unlike the other Northwind heads this deliberately does NOT set
+      TreatWarningsAsErrors: the iOS build runs trim analysis and Polhem's reflection-heavy
+      serialization (XmlSerializer for FormSchema, System.Text.Json, MessagePack) emits
+      IL2026 / IL2104 trim warnings that are expected here. Release / trim-safe packaging
+      is a separate follow-up (see .claude/rules/apple-mobile-trim.md Apple trim decision tree).
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.iOS" Version="12.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Northwind.UI\Polhem.Northwind.UI.csproj" />
+  </ItemGroup>
+
+  <!-- Time zone data must ship: the framework converts every instant between UTC and the user's
+       zone through TimeZoneInfo (ADR-032 D4), so a build without tz data fails at the first
+       conversion — and on this head that is every screen showing a date. Invariant globalization
+       would also strip it. Both are the SDK defaults today; they are pinned because the failure is
+       a runtime exception on device, which no desktop build or test can catch. -->
+  <PropertyGroup>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <InvariantTimezone>false</InvariantTimezone>
+  </PropertyGroup>
+
+</Project>

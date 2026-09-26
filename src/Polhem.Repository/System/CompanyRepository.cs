@@ -1,0 +1,86 @@
+using Polhem.Base;
+using Polhem.Base.Data;
+using Polhem.Base.Serialization;
+using Polhem.Db;
+using Polhem.Definition;
+using Polhem.Definition.Identity;
+using Polhem.Repository.Abstractions.System;
+
+namespace Polhem.Repository.System
+{
+    /// <summary>
+    /// Data access object for company master records on the <c>st_company</c> table.
+    /// </summary>
+    /// <remarks>
+    /// Disabled companies (<c>enabled = false</c>) are excluded at the query layer — to
+    /// callers they look exactly like nonexistent companies, which matches the merged
+    /// "Company access denied" error surface of <c>EnterCompany</c>.
+    /// </remarks>
+    public class CompanyRepository : RepositoryBase, ICompanyRepository
+    {
+        /// <summary>
+        /// Initializes a new <see cref="CompanyRepository"/>.
+        /// </summary>
+        /// <param name="ctx">The shared repository context.</param>
+        /// <param name="accessToken">The current request's access token.</param>
+        /// <param name="progId">Unused on the framework axis; accepted for signature uniformity.</param>
+        public CompanyRepository(IRepositoryContext ctx, Guid accessToken, string progId)
+            : base(ctx, accessToken, progId, DbScope.Common)
+        {
+        }
+
+        /// <summary>
+        /// Gets the enabled company by its business id (<c>sys_id</c>); returns <c>null</c>
+        /// when no matching enabled row exists.
+        /// </summary>
+        /// <param name="companyId">The company business id.</param>
+        public CompanyInfo? GetById(string companyId)
+        {
+            var dbType = Context.ConnectionManager.GetConnectionInfo(DatabaseId).DatabaseType;
+            string tbl = dbType.QuoteIdentifier("st_company");
+            string colId = dbType.QuoteIdentifier("sys_id");
+            string colName = dbType.QuoteIdentifier("sys_name");
+            string colDbId = dbType.QuoteIdentifier("company_database_id");
+            string colCustId = dbType.QuoteIdentifier("customize_id");
+            string colNumFmt = dbType.QuoteIdentifier("number_formats_xml");
+            string colDefCur = dbType.QuoteIdentifier("default_currency");
+            string colCashRnd = dbType.QuoteIdentifier("cash_rounding_xml");
+            string colAllowCur = dbType.QuoteIdentifier("allowed_currencies_xml");
+            string colEnabled = dbType.QuoteIdentifier("enabled");
+
+            string sql = $"SELECT {colId}, {colName}, {colDbId}, {colCustId}, {colNumFmt}, {colDefCur}, {colCashRnd}, {colAllowCur} \n" +
+                         $"FROM {tbl} \n" +
+                         $"WHERE {colId} = {{0}} AND {colEnabled} = {{1}}";
+            var command = new DbCommandSpec(DbCommandKind.DataTable, sql, companyId, true);
+            var dbAccess = CreateDbAccess();
+            var result = dbAccess.Execute(command);
+            var table = result.Table!;
+            if (table.IsEmpty()) { return null; }
+
+            var row = table.Rows[0];
+            string numberFormatsXml = ValueUtilities.CStr(row["number_formats_xml"]);
+            var numberFormats = StringUtilities.IsEmpty(numberFormatsXml)
+                ? []
+                : XmlCodec.Deserialize<CompanyNumberFormats>(numberFormatsXml) ?? [];
+            string cashRoundingXml = ValueUtilities.CStr(row["cash_rounding_xml"]);
+            var cashRounding = StringUtilities.IsEmpty(cashRoundingXml)
+                ? []
+                : XmlCodec.Deserialize<CompanyCashRounding>(cashRoundingXml) ?? [];
+            string allowedCurrenciesXml = ValueUtilities.CStr(row["allowed_currencies_xml"]);
+            var allowedCurrencies = StringUtilities.IsEmpty(allowedCurrenciesXml)
+                ? []
+                : XmlCodec.Deserialize<CompanyAllowedCurrencies>(allowedCurrenciesXml) ?? [];
+            return new CompanyInfo
+            {
+                CompanyId = ValueUtilities.CStr(row["sys_id"]),
+                CompanyName = ValueUtilities.CStr(row["sys_name"]),
+                CompanyDatabaseId = ValueUtilities.CStr(row["company_database_id"]),
+                CustomizeId = ValueUtilities.CStr(row["customize_id"]),
+                NumberFormats = numberFormats,
+                DefaultCurrency = ValueUtilities.CStr(row["default_currency"]),
+                CashRounding = cashRounding,
+                AllowedCurrencies = allowedCurrencies
+            };
+        }
+    }
+}

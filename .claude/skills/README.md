@@ -1,0 +1,79 @@
+# Project Skills
+
+本目錄的 skill 是 polhem 的**工程慣例知識**（隨 repo 入版控，同 `.claude/rules/`）。
+每個 skill 一個資料夾，內含 `SKILL.md`；Claude 依 `SKILL.md` frontmatter 的 `description`
+自動判斷何時載入，使用者亦可用 `/<skill-name>` 主動呼叫。
+
+> **權威來源在各 `SKILL.md` 的 frontmatter `description`** —— 那是給模型觸發用的完整描述。
+> 本 README 只是給**人**看的一行索引，不複製完整 description，以免兩處 drift。
+> 要知道某 skill 的精確作用與觸發條件，開該資料夾的 `SKILL.md`。
+
+## Polhem 框架開發
+
+| Skill | 一句話用途 |
+|-------|-----------|
+| **polhem-jsonrpc-backend** | 從零搭 JSON-RPC 後端 server（ASP.NET Core）+ client 呼叫：bootstrap、`Define/` XML、自訂 BO、demo 登入 |
+| **polhem-app-scaffold** | 搭一個獨立 Polhem 後端應用 / demo 的接線慣例（DB scope、auth、seeder） |
+| **polhem-add-form** | 在已接好的 app 上加一張 CRUD 表單（4 處純定義修改，不寫 UI） |
+| **polhem-add-bo-method** | 新增對外公開的 BO 方法（跨 contract / wire / BO / Repository / Client） |
+| **polhem-add-cache-object** | 新增框架快取物件（Define 定義快取 / DB 相依快取） |
+| **polhem-scaffold-from-formschema** | 從 FormSchema 產 TableSchema / 雙語 LanguageResource；FormLayout 僅在要客製版面時 |
+| **polhem-serialization** | 物件三棲序列化（XML 持久化 + JSON/MessagePack wire）設計指引 |
+| **polhem-framework-review** | 框架全面體檢方法論（多面向唯讀審查 + 分級重構計畫） |
+| **polhem-sample-add** | 為 samples/ 加一個新示範專案 |
+| **polhem-load-test** | 用 `tools/Polhem.LoadTests` 跑壓測並判讀結果（前置檢查、Local / Remote、數字什麼時候不能信） |
+
+> **`polhem-jsonrpc-backend` 是 host bootstrap / 空 controller / 登入三件套 / client 呼叫的
+> 單一權威來源**（樣板在其 `references/`）。`polhem-app-scaffold` 建立在它之上，只補
+> **DB scope / company context / seeder**，並指路過去、不複寫。
+>
+> 分界：只要能跑的 **JSON-RPC server + client 往返**選前者；還要 **company 分庫與 seeder**
+> 選後者。BO 軸也不同——前者是最小的 `BusinessObject`，後者是 `FormBusinessObject`。
+
+## 通用工作流（不綁 Polhem 框架）
+
+| Skill | 一句話用途 |
+|-------|-----------|
+| **demo-smoke** | 對 samples/ 的 demo 跑端到端冒煙測試 |
+
+## Plugin 提供（不在本目錄）
+
+以下 skill **不在本目錄**，由 plugin 提供；marketplace 與啟用宣告在 `.claude/settings.json`。
+repo 只保留單一來源，避免本地副本與 plugin 版 drift。
+
+| Skill（呼叫名） | Plugin @ Marketplace | 一句話用途 |
+|----------------|---------------------|-----------|
+| **`/dev-workflow:plan-write`** | `dev-workflow` @ `jeff377-plugins` | 撰寫 / 更新 `docs/plans/` 計畫文件（狀態列、階段表格、連結慣例、封存流程） |
+| **`/dev-workflow:session-handoff`** | `dev-workflow` @ `jeff377-plugins` | 把已定案的工作交接給新 session 接手（先 commit 交接文件，再產出可複製的 prompt）。**不限程式碼實作**，撰寫、遷移、文件改版皆適用 |
+| **`/dev-workflow:plan-execute`** | `dev-workflow` @ `jeff377-plugins` | 依 plan 實作時的驗證閘門（plan 版本確認、範圍對帳、平行路徑檢查） |
+| **`/dev-workflow:config-audit`** | `dev-workflow` @ `jeff377-plugins` | 健檢設定檔語料（常駐成本、失效引用、過期斷言、跨檔衝突、plugin 版本漂移） |
+| **`/dev-workflow:changelog-draft`** | `dev-workflow` @ `jeff377-plugins` | 整理自上一版 tag 至 HEAD 的 CHANGELOG 草稿。**先偵測本 repo 既有慣例再沿用**（雙語兩檔 + `docs/changelogs/` 明細層都讀得出來），故行為與搬移前相同 |
+
+前三支涵蓋 plan 的完整生命週期：撰寫 → 交接 → 執行；`config-audit` 管的是規範本身的健康度；
+`changelog-draft` 是發版流程的第一步。
+
+> **`changelog-draft` 原本在本目錄**（v2.6.0 移出）。搬走的理由是
+> `~/.claude/rules/releasing.md` 這條**跨專案**規則本來就在指名它，卻只有本 repo 有；
+> 內容約八成與專案無關。中性化後改為從既有 CHANGELOG 反推慣例，
+> **本 repo 不需要再留一份「CHANGELOG 慣例」文件** —— 那些事實的權威來源就是
+> `CHANGELOG.md` 與 `docs/changelogs/` 本身。
+
+> **`plan-handoff` 已於 v2.3.0 改名為 `session-handoff`**（定位擴為「交接任何已定案工作」，
+> 不限 plan 實作）；`config-audit` 為 v2.4.0 新增。舊名不再可呼叫。
+
+> **`plan-write` 原本在本目錄**，已移出改由 plugin 提供，故本目錄不再有該資料夾。
+>
+> **plugin 於 2026-07-31 由 `plan-workflow` 改名為 `dev-workflow`**（v2.0.0），
+> 定位擴為「開發流程」以容納後續 CI、源碼掃描、套件發佈等 skill。
+> 呼叫前綴隨之改變；`.claude/settings.json` 的 `enabledPlugins` 已同步。
+
+## 新增 skill
+
+1. **先判斷該不該放這裡** —— 本目錄只收**綁定 polhem 的工程慣例知識**。
+   與本 repo 無關的（寫作、個人流程、其他技術棧）放**使用者層** `~/.claude/skills/`，
+   跨 repo 的開發流程放 **`dev-workflow` plugin**。放這裡再 `.gitignore` 排除是**錯的**：
+   那只會讓它在別的 repo 叫不到。
+2. 建 `.claude/skills/<name>/SKILL.md`，frontmatter 至少含 `name` 與 `description`
+3. `description` 要寫清楚「做什麼 + 使用者說什麼時觸發」（決定模型能否正確自動載入）
+4. 在本 README 對應分類補一行 hook
+5. **一律入版控**，本目錄目前無 `.gitignore` 例外

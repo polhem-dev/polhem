@@ -1,0 +1,117 @@
+root = true
+
+# All files
+[*]
+indent_style = space
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# C# files
+[*.cs]
+indent_size = 4
+
+# 編譯期檢查：移除多餘 using 指令
+dotnet_diagnostic.IDE0005.severity = warning
+
+# 編譯期檢查：使用集合初始化運算式
+dotnet_diagnostic.IDE0028.severity = warning
+
+# 編譯期檢查：namespace 末段不得與其中的類別／介面同名
+dotnet_diagnostic.CA1724.severity = warning
+
+# ───── 從 SonarCloud 遷移至編譯期的規則 ─────
+
+# 未使用 instance 成員的方法應為 static（對應 S2325）
+dotnet_diagnostic.CA1822.severity = warning
+
+# 只含 static 成員的 class 應為 static class（對應 S1118/S3442）
+dotnet_diagnostic.CA1052.severity = warning
+
+# 初始化後不再賦值的欄位應標為 readonly（對應 S2933）
+dotnet_diagnostic.IDE0044.severity = warning
+
+# 未使用的 private 成員（對應 S4487）
+dotnet_diagnostic.IDE0051.severity = warning
+dotnet_diagnostic.IDE0052.severity = warning
+
+# override／介面實作的參數名須與宣告一致（對應 S927）
+dotnet_diagnostic.CA1725.severity = warning
+
+# 文化相依 API 須指定 IFormatProvider（對應 S6580）
+dotnet_diagnostic.CA1305.severity = warning
+
+# ───── 安全相關（對應 scanning.md） ─────
+
+# XXE 防護：安全的 XML 解析設定
+dotnet_diagnostic.CA3075.severity = warning
+
+# 禁用 SHA1 / MD5 作安全雜湊
+dotnet_diagnostic.CA5350.severity = warning
+dotnet_diagnostic.CA5351.severity = warning
+
+# 禁用 System.Random 於安全場景
+dotnet_diagnostic.CA5394.severity = warning
+
+# ───── 欄位命名（對應 code-style.md；先前只存在於 prompt 層） ─────
+#
+# 規則依宣告順序比對，第一個吻合者勝出，故三條的順序不可調換：
+# const → static readonly → 其餘 private/protected 欄位。
+dotnet_diagnostic.IDE1006.severity = warning
+
+dotnet_naming_rule.private_const_fields_pascal.symbols = private_const_fields
+dotnet_naming_rule.private_const_fields_pascal.style = pascal_case_style
+dotnet_naming_rule.private_const_fields_pascal.severity = warning
+dotnet_naming_symbols.private_const_fields.applicable_kinds = field
+dotnet_naming_symbols.private_const_fields.applicable_accessibilities = private, protected, protected_internal, private_protected
+dotnet_naming_symbols.private_const_fields.required_modifiers = const
+
+# required_modifiers 是 static 而非 static readonly：**可變**的 process-wide 狀態正是最需要在
+# 讀者眼前標記出來的那一類。只管不可變靜態時，可變靜態會落到下面的 _camelCase 規則，
+# 與執行個體欄位無法區分 —— 而那兩者的並行風險天差地別。
+dotnet_naming_rule.private_static_fields_s_prefix.symbols = private_static_fields
+dotnet_naming_rule.private_static_fields_s_prefix.style = s_camel_case_style
+dotnet_naming_rule.private_static_fields_s_prefix.severity = warning
+dotnet_naming_symbols.private_static_fields.applicable_kinds = field
+dotnet_naming_symbols.private_static_fields.applicable_accessibilities = private, protected, protected_internal, private_protected
+dotnet_naming_symbols.private_static_fields.required_modifiers = static
+
+dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore.style = underscore_camel_case_style
+dotnet_naming_rule.private_fields_underscore.severity = warning
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, protected, protected_internal, private_protected
+
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+dotnet_naming_style.s_camel_case_style.required_prefix = s_
+dotnet_naming_style.s_camel_case_style.capitalization = camel_case
+dotnet_naming_style.underscore_camel_case_style.required_prefix = _
+dotnet_naming_style.underscore_camel_case_style.capitalization = camel_case
+
+# PermissionAction 刻意維持單數：呼叫端一律傳單一動作（Can(token, modelId, PermissionAction.Read)），
+# [Flags] 只用於 allowed_actions 的 mask 儲存。此決定已在 SonarCloud 標為 False Positive，
+# 此處一併關掉編譯期告警，避免 CI 每次都出現同一則 annotation。
+[src/Polhem.Definition/Settings/Permission/PermissionAction.cs]
+dotnet_diagnostic.S2342.severity = none
+
+# XML project files
+[*.{csproj,props,targets}]
+indent_size = 2
+
+# XML files
+[*.xml]
+indent_size = 2
+
+# JSON files
+[*.json]
+indent_size = 2
+
+# Markdown files
+[*.md]
+indent_size = 2
+trim_trailing_whitespace = false
+
+# Solution files
+[*.{sln,slnx}]
+indent_size = 2

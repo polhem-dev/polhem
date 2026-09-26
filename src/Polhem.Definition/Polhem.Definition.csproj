@@ -1,0 +1,92 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>Defines system-wide structured types for config, schema, and layout.</Description>
+    <PackageTags>polhem;config;schema;layout;formdefine;enterprise</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Base\Polhem.Base.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.Business" />
+    <InternalsVisibleTo Include="Polhem.Definition.UnitTests" />
+  </ItemGroup>
+
+  <!--
+    Framework convention analyzers, shipped inside this package rather than as a separate one.
+    NuGet auto-registers any assembly under analyzers/dotnet/cs, so every consumer of Polhem.Definition
+    gets the diagnostics with no extra install step — which is the whole point, since consumers only
+    have the packages and never the repository the conventions are documented in.
+
+    ReferenceOutputAssembly is false because the analyzer is not part of this assembly's API surface;
+    the ProjectReference exists only to order the build and to feed the analyzer to the compiler.
+    PrivateAssets keeps it out of the package's dependency surface.
+
+    OutputItemType="Analyzer" means this project's own C# is checked by the POLHEM3xxx / POLHEM4xxx rules,
+    which is deliberate: the framework holds itself to the conventions it asks consumers to follow.
+
+    It does NOT mean the definition rules (POLHEM1xxx / POLHEM2xxx) see Defaults/. Those read XML through
+    AdditionalFiles, which buildTransitive/Polhem.Definition.targets populates from a `Define/**` glob —
+    and this project does not import its own buildTransitive targets. Defaults/ is validated by
+    tests/Polhem.Definition.UnitTests/DefaultsTests.cs instead.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.Analyzers\Polhem.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      PrivateAssets="all"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="buildTransitive\Polhem.Definition.targets" Pack="true" PackagePath="buildTransitive\" />
+  </ItemGroup>
+
+  <Target Name="_PolhemPackAnalyzer" BeforeTargets="_GetPackageFiles">
+    <MSBuild Projects="..\Polhem.Analyzers\Polhem.Analyzers.csproj"
+             Targets="GetTargetPath"
+             Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" ItemName="_PolhemAnalyzerAssembly" />
+    </MSBuild>
+    <ItemGroup>
+      <None Include="@(_PolhemAnalyzerAssembly)" Pack="true" PackagePath="analyzers\dotnet\cs" Visible="false" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Trimmer / AOT preservation roots for the definition layer, shipped with the package.
+    The logical name "ILLink.Descriptors.xml" is the convention the .NET trimmer scans for,
+    so this is auto-applied for every downstream trimmed / AOT consumer (e.g. the Avalonia
+    iOS / Android heads). See ILLink.Descriptors.xml for what is preserved and why.
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="ILLink.Descriptors.xml">
+      <LogicalName>ILLink.Descriptors.xml</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <!--
+    Framework default definitions (TableSchema / FormSchema / FormLayout / Language / DbCategorySettings)
+    embedded as manifest resources. Consumed by Polhem.Definition.Defaults.Defaults APIs.
+
+    LogicalName pattern uses '/' as separator (not '.') so the relative path round-trips
+    unambiguously - filenames contain '.' (e.g. st_user.TableSchema.xml) which would
+    otherwise collide with directory separators.
+
+    e.g. Defaults/TableSchema/common/st_user.TableSchema.xml
+         -> Polhem.Definition.Defaults/TableSchema/common/st_user.TableSchema.xml
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="Defaults\**\*.xml">
+      <LogicalName>Polhem.Definition.Defaults/$([System.String]::Copy('%(RecursiveDir)').Replace('\','/'))%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

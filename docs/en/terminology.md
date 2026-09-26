@@ -1,0 +1,363 @@
+<!-- source: zh-TW/terminology.md blob: d64d5b2b73ca905872f2fc8eef9faa0c2905df9a -->
+# Polhem Framework Terminology Reference (English ↔ Chinese)
+
+[繁體中文](../zh-TW/terminology.md) · [← Docs Index](README.md)
+
+This document provides a standard term reference for technical writing, ensuring consistency between English and Chinese names.
+
+---
+
+## Table of Contents
+
+1. [Architecture Patterns and Core Concepts](#1-architecture-patterns-and-core-concepts)
+2. [Form Definition Layer (Polhem.Definition)](#2-form-definition-layer-polhemdefinition)
+3. [Database Layer (Polhem.Db)](#3-database-layer-polhemdb)
+4. [Business Logic Layer (Polhem.Business)](#4-business-logic-layer-polhembusiness)
+5. [Repository Layer (Polhem.Repository)](#5-repository-layer-polhemrepository)
+6. [API Layer (Polhem.Api.Core / Polhem.Api.AspNetCore)](#6-api-layer-polhemapicore--polhemapiaspnetcore)
+7. [Caching Layer (Polhem.ObjectCaching)](#7-caching-layer-polhemobjectcaching)
+8. [Connector Layer (Polhem.Api.Client)](#8-connector-layer-polhemapiclient)
+9. [Infrastructure (Polhem.Base)](#9-infrastructure-polhembase)
+10. [Enumerations](#10-enumerations)
+11. [System Fields](#11-system-fields)
+12. [Configuration Files](#12-configuration-files)
+13. [Frontend Layer (Polhem.UI.* / Polhem.Web.Blazor.*)](#13-frontend-layer-polhemui--polhemwebblazor)
+
+---
+
+## 1. Architecture Patterns and Core Concepts
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| Enterprise Information System | 企業資訊系統 | The kind of system Polhem targets: form-based enterprise information systems such as ERP, CRM, and HRM. Synonym: line-of-business (LOB) application |
+| Definition-Driven Architecture | 定義導向架構 | Polhem's core architectural pattern, using structural definitions to uniformly drive UI, database, and business logic |
+| Single Source of Truth | 唯一定義來源 | `FormSchema` as the system's only structural specification, avoiding duplicate implementations across three layers |
+| `progId` | 程式識別碼 | A functional program's unique identifier string, and the key of the type registry: `ProgramSettings.xml` binds a BO and a repository to it, and the JSON-RPC `method` is `progId.action`. The model follows COM+'s ProgID (a registry key mapping to a component type) — see [ADR-034](../adr/adr-034-progid-type-registry.md). Spelled `ProgId` as a C# property and as an XML attribute. For the ones the framework reserves, see [Framework-Reserved Names](framework-reserved-names.md) |
+| NoCode | 零程式碼 | Definitions fully generated from `FormSchema` at design time; no code required |
+| LowCode | 低程式碼 | Built on `FormSchema` with small overrides extending behavior |
+| AnyCode | 全程式碼 | Fully implemented by the developer, not driven by `FormSchema` |
+| Master-Detail Pattern | 主從資料模式 | A master record (Master) associated with multiple detail records (Detail) |
+| Repository Dual-Track Strategy | Repository 雙軌策略 | CRUD driven by `FormSchema`; reports / batches implemented by BO (AnyCode) |
+| N-Tier Architecture | N 層式架構 | Presentation → API → Business Logic → Data Access layered architecture |
+| Clean Architecture | 整潔架構 | Dependency direction from outside in; the core layer does not depend on external frameworks |
+| MVVM | MVVM 模式 | Model-View-ViewModel, used at the UI layer for data binding and state management |
+
+---
+
+## 2. Form Definition Layer (Polhem.Definition)
+
+### Core Classes
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `FormSchema` | 表單結構定義 | The definition hub, simultaneously driving UI, database structure, and validation rules |
+| `FormTable` | 表單資料表 | Master or detail table definition inside a FormSchema |
+| `FormField` | 表單欄位 | A single field inside a form table, with type, validation, and control information (carries `LangEnumName` for localized dropdown options) |
+| `FormLayout` | 表單版面配置 | The UI projection of a FormSchema, describing field arrangement |
+| `FormTableCollection` | 表單資料表集合 | A collection of all FormTables in a FormSchema |
+| `FormLayoutGenerator` | 表單版面配置產生器 | Generates a FormLayout from a FormSchema **at design time**; the runtime reads the saved definition instead |
+| `TableSchema` | 資料表結構 | The database projection of a FormSchema, mapping to physical table columns and indexes |
+| `DbTableIndex` | 資料表索引 | Table index definition, including uniqueness and primary key information |
+| `DbCategorySettings` | 資料庫類別設定 | A collection managing all logical database categories (common / company / log) |
+| `DbCategory` | 資料庫類別 | A logical database category node, with `Id` ("common" / "company", etc.) and the list of tables it owns |
+| `PathOptions` | 定義檔案路徑選項 | DI-injected options that provide standardized paths for definition files (FormSchema, TableSchema, etc.) |
+| `SessionInfo` | 連線資訊 | Runtime user session state, including AccessToken, UserId, locale, time zone, and `CompanyId` (nullable; set by `EnterCompany`, cleared by `LeaveCompany` / `Logout`) |
+| `CompanyInfo` | 公司資訊 | Metadata describing a company the user may enter for a session: `CompanyId`, `CompanyName`, `CompanyDatabaseId` (the `DatabaseSettings` id used for the `company` category during this session) |
+| `DbScope` | 資料庫範疇 | Type-safe enum representing a bo repo's database access intent: `Common` / `Company` / `Log`. Decoupled from `schema.CategoryId` (the string XML attribute) — same three values but the enum is the runtime intent passed to `IRepositoryDatabaseRouter` |
+| `SortField` | 排序欄位 | A single sort field, with field name and direction |
+| `SortFieldCollection` | 排序欄位集合 | A collection of multiple SortFields |
+
+### Filter Conditions
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `FilterCondition` | 篩選條件 | A single column condition (e.g. `Name LIKE '%Lee%'`, `Age > 18`) |
+| `FilterGroup` | 篩選條件群組 | A condition tree node combining multiple conditions with AND / OR |
+| `FilterNode` | 篩選節點介面 | The common interface of `FilterCondition` and `FilterGroup` |
+
+### Logging
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `LogOptions` | 日誌選項 | Configuration parameters for logging behavior |
+| `DbAccessAnomalyLogOptions` | 資料庫存取異常日誌選項 | Logging configuration for database access anomalies (thresholds consumed by the DB anomaly recorder) |
+| `IAuditLogWriter` | 稽核日誌寫入介面 | Entry point for writing audit-trail entries (login / change / access) to the log database (background/batch or synchronous, best-effort) |
+| `IAnomalyLogWriter` | 異常日誌寫入介面 | Entry point for writing execution-anomaly entries to the log database. Separate from `IAuditLogWriter` because the two answer different questions: the audit trail records who did what to which record, an anomaly records which execution went wrong |
+| `AuditEntry` | 稽核記錄基底 | Abstract base for one log row; carries the common who/when/where columns, subclasses add axis-specific columns |
+| `AnomalyEntry` | 異常記錄基底 | Abstract base for an execution-anomaly row, deriving from `AuditEntry` so both share one write pipeline; carries `Kind`, elapsed time, threshold, error type and message |
+| `AuditColumn` | 稽核欄位 | A name/value pair an `AuditEntry` contributes to its INSERT |
+| `NullAuditLogWriter` | 空寫入器 | No-op writer used when logging is disabled; serves both `IAuditLogWriter` and `IAnomalyLogWriter` |
+| `LoginAuditEntry` | 登入稽核記錄 | Entry for `st_log_login` (login / logout / failure / lockout) |
+| `ChangeAuditEntry` | 異動稽核記錄 | Entry for `st_log_change` (data change, DataSet DiffGram before/after) |
+| `AccessAuditEntry` | 檢視稽核記錄 | Entry for `st_log_access` (record view) |
+| `ApiAnomalyEntry` | API 異常記錄 | Entry for `st_log_anomaly_api` (API error / timeout / slow) |
+| `DbAnomalyEntry` | DB 異常記錄 | Entry for `st_log_anomaly_db` (DB error / timeout / slow / large-row) |
+| `AuditLogOptions` | 稽核日誌選項 | Opt-in audit-log configuration (per-axis enable, background writer, thresholds) on `BackendConfiguration` |
+| `AuditRuleMode` | 稽核規則三態 | Per-form switch for one audit axis: `Inherit` (defer to the deployment default), `On`, `Off`. Persisted as an integer, `Inherit` = 0 |
+| `AuditRule` | 稽核規則 | One form's rule row from `st_audit_rule`: which axes are recorded for that progId, and whether its entries are marked sensitive |
+| `CompanyAuditRules` | 公司稽核規則快照 | One company's whole rule table, indexed by progId. Cached per company rather than per form, because most forms carry no rule at all |
+| `IAuditRuleService` | 稽核規則服務 | Access service fronting the per-company rule cache; consulted before writing a change or access entry |
+
+### Definition Access
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `IDefineAccess` | 定義存取介面 | Abstract interface for reading and storing all kinds of definition data |
+| `IDefineStorage` | 定義儲存介面 | Abstract interface for definition data persistence |
+| `FileDefineStorage` | 檔案定義儲存 | XML-file-based implementation of definition data read / write |
+
+### Localization
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `LanguageResource` | 語系資源 | A single language resource — one namespace × one language; holds localized text `Items` plus enum entries (`Enums`) |
+| `LanguageItem` | 語系項目 | A single localized text entry (`Key` + `Value`) within a `LanguageResource` |
+| `LanguageEnum` | 語系列舉 | An ordered set of code/text entries (for dropdowns, lookups) within a `LanguageResource` |
+| `LanguageEnumEntry` | 語系列舉項目 | A single `Code` + `Text` pair inside a `LanguageEnum` |
+| `ILanguageService` | 語系服務介面 | API for resolving localized text and enum entries by `(lang, namespace, key)`, with default-language fall-back |
+| `LanguageService` | 語系服務 | Default `ILanguageService` implementation backed by `IDefineAccess.GetLanguage` and the framework cache |
+| `PolhemStringLocalizer<T>` | Polhem 字串本地化 | `Microsoft.Extensions.Localization.IStringLocalizer<T>` adapter — lets Blazor / ASP.NET Core consume language resources through the standard .NET surface |
+| `FormSchemaLocalizer` | 表單結構本地化 | Applies a `LanguageResource` to a cloned `FormSchema`, populating Caption / DisplayName and ComboBox options driven by `LangEnumName` |
+
+### Other Interfaces
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `IUIControl` | UI 控制項介面 | Interface that controls UI component state by form mode |
+| `ICacheDataSourceProvider` | 快取資料來源提供者介面 | Provides cached user data for transient sessions |
+
+---
+
+## 3. Database Layer (Polhem.Db)
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `DbField` | 資料庫欄位 | Database column definition, including precision, scale, length, etc. |
+| `SelectCommandBuilder` | 查詢命令建構器 | Builds SELECT SQL commands from a FormSchema (`Polhem.Db.Dml`) |
+| `IFormCommandBuilder` | 表單命令建構器介面 | Contract for building CRUD commands from a FormSchema (`Polhem.Db.Dml`) |
+| `SqlFormCommandBuilder` | SQL Server 表單命令建構器 | SQL Server implementation of `IFormCommandBuilder` (`Polhem.Db.Providers.SqlServer`) |
+| `PgFormCommandBuilder` | PostgreSQL 表單命令建構器 | PostgreSQL implementation of `IFormCommandBuilder` (`Polhem.Db.Providers.PostgreSql`) |
+| `MySqlFormCommandBuilder` | MySQL 表單命令建構器 | MySQL implementation of `IFormCommandBuilder` (`Polhem.Db.Providers.MySql`) |
+| `OracleFormCommandBuilder` | Oracle 表單命令建構器 | Oracle implementation of `IFormCommandBuilder` (`Polhem.Db.Providers.Oracle`) |
+| `SqliteFormCommandBuilder` | SQLite 表單命令建構器 | SQLite implementation of `IFormCommandBuilder` (`Polhem.Db.Providers.Sqlite`) |
+
+---
+
+## 4. Business Logic Layer (Polhem.Business)
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `BusinessObject` | 業務邏輯物件 | Base class for all BOs; handles business logic, does not access the database directly |
+| `DataSet` | 資料集 | Cross-layer DTO carrying Master-Detail data, with no business logic |
+| `UnitOfWork` | 工作單元 | Manages shared transactions across Repositories |
+
+---
+
+## 5. Repository Layer (Polhem.Repository)
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `IDataFormRepository` | 資料表單 Repository 介面 | FormSchema-driven CRUD operations (auto-generated SQL) |
+| `IRepositoryDatabaseRouter` | Repository 資料庫路由介面 | Resolves the physical `databaseId` for a given `DbScope` and access token. `Common` / `Log` map to fixed databaseIds; `Company` resolves via `SessionInfo.CompanyId` → `CompanyInfo.CompanyDatabaseId` |
+| `IRepositoryFactory` | Repository 工廠介面 | The single entry point for every repository, on two axes. `CreateFormRepository<T>(accessToken, progId)` resolves the type bound to a progId; `Create<T>(accessToken)` names a framework repository by its interface. Reporting and batch work follow the AnyCode track — the business object writes its own SQL rather than going through a repository |
+
+---
+
+## 6. API Layer (Polhem.Api.Core / Polhem.Api.AspNetCore)
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `ApiPayload` | API 傳遞資料結構 | Wraps transmission data, supporting compression and encryption |
+| `JsonRpcRequest` | JSON-RPC 請求 | JSON-RPC 2.0 request object |
+| `JsonRpcResponse` | JSON-RPC 回應 | JSON-RPC 2.0 response object |
+| `ExecFuncArgs` | 自訂函式執行參數 | Parameter object passed when invoking custom business functions |
+| `ApiAccessControlAttribute` | API 存取控制屬性 | Declares the protection level and authentication requirement of API endpoints |
+| `TraceContext` | 追蹤情境 | Records tracing information for API requests |
+
+### Security
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `ApiProtectionLevel` | API 保護等級 | API Payload protection level (`Public` / `Encoded` / `Encrypted` / `LocalOnly`), located in `Polhem.Definition.Security` |
+| `ApiAccessRequirement` | API 存取授權需求 | Authentication requirement for API endpoints (`Anonymous` / `Authenticated`), located in `Polhem.Definition.Security` |
+| `IApiPayloadEncryptor` | API Payload 加密介面 | Defines payload encryption / decryption behavior |
+| `AesCbcHmacCryptor` | AES-CBC-HMAC 加密器 | Standard encryption implementation using AES-256-CBC + HMAC-SHA256 |
+| `RsaCryptor` | RSA 加密器 | RSA asymmetric encryption implementation |
+| `NoEncryptionEncryptor` | 無加密器 | No-encryption implementation, for test environments only |
+
+---
+
+## 7. Caching Layer (Polhem.ObjectCaching)
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `ICacheContainer` | 快取容器介面 | DI-registered container that centrally holds all cache singletons (FormSchema, TableSchema, DatabaseSettings, SessionInfo, CompanyInfo, etc.); default implementation `CacheContainerService` |
+| `CacheDefineAccess` | 本機定義存取 | Implementation that accesses definition data via local cache |
+| `FormSchemaCache` | 表單結構定義快取 | Cache container for `FormSchema` objects |
+| `KeyObjectCache<T>` | 鍵值物件快取 | Generic base class for object caches indexed by key. Includes negative caching: `CreateInstance` returning null is recorded as a sentinel for a short TTL (default 5 min absolute), so repeated lookups of unknown keys do not re-invoke the create path |
+| `ISessionInfoService` | Session 資訊服務介面 | Access wrapper around `SessionInfoCache`; populated by `Login`, mutated by `EnterCompany` / `LeaveCompany`, removed by `Logout` |
+| `ICompanyInfoService` | 公司資訊服務介面 | Access wrapper around `CompanyInfoCache`; consumed by `IRepositoryDatabaseRouter` to resolve `DbScope.Company` |
+
+---
+
+## 8. Connector Layer (Polhem.Api.Client)
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `ClientDefineAccess` | 遠端定義存取 | Implementation that accesses definition data via the remote API |
+
+---
+
+## 9. Infrastructure (Polhem.Base)
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `IKeyObject` | 鍵值物件介面 | Abstract interface for objects with a unique identifying key |
+| `XmlCodec` | XML 序列化工具 | Static utility class for XML serialization / deserialization (`Polhem.Base.Serialization`) |
+| `FileHashValidator` | 檔案雜湊驗證器 | Validates file integrity using hash values |
+| `AesCbcHmacKeyGenerator` | AES-CBC-HMAC 金鑰產生器 | Utility class for generating AES and HMAC keys |
+| `TreeNodeAttribute` | 樹狀節點屬性 | Marks the display name of a class within a tree structure |
+
+---
+
+## 10. Enumerations
+
+### Field and Data Types
+
+| English | 中文 | Values |
+|---------|------|--------|
+| `FieldType` | 欄位種類 | `DbField` (database field), `RelationField` (relation field), `VirtualField` (virtual field) |
+| `FieldDbType` | 欄位資料庫型別 | `String`, `Integer`, `Decimal`, `DateTime`, `Date`, `Time`, `Boolean`, ... 15 in total |
+| `ControlType` | 控制項類型 | `TextEdit`, `DropDownEdit`, `DateEdit`, `TimeEdit`, `CheckEdit`, ... |
+| `SingleFormMode` | 表單模式 | `View`, `Add`, `Edit` (exposed as the `FormScope.FormMode` attached property) |
+
+### Time Semantics
+
+The framework distinguishes four time concepts. "Time" is only ever a cover term for all four; it
+never names one of them on its own.
+
+| Term | Meaning | `FieldDbType` | Reading it | Notes |
+|------|---------|---------------|-----------|-------|
+| **Calendar day** | Which day | `Date` | `ValueUtilities.CDateOnly` → `DateOnly?` | Birthday, invoice date. Wall-clock; never time-zone shifted |
+| **Time of day** | What time (within a day) | `Time` | `ValueUtilities.CTimeOnly` → `TimeOnly?` | Shift boundaries, opening hours. Wall-clock; never time-zone shifted |
+| **Instant** | What time on which day | `DateTime` | `ValueUtilities.CDateTime` → `DateTime?` | Created-at, login timestamp. Stored as UTC, shown in the user's zone |
+| **Duration** | How long | (no type yet) | — | Working hours, elapsed time. Carried as a `Decimal` (hours) for now |
+
+The test: ask whether the value needs to know *which day*. If it does, it is an instant. If it does
+not and the question is *what time*, it is a time of day. If the question is *how long*, it is a
+duration.
+
+See [Temporal Types](temporal-types.md) for the cross-layer reference, and
+[Time Zones](datetime-timezone.md) for how instants are stored and converted.
+
+
+### Query and Filter
+
+| English | 中文 | Values |
+|---------|------|--------|
+| `ComparisonOperator` | 比較運算子 | `Equals`, `NotEquals`, `GreaterThan`, `LessThan`, `Like`, `In`, `Between`, ... |
+| `LogicalOperator` | 邏輯運算子 | `And`, `Or` |
+| `SortDirection` | 排序方向 | `Ascending`, `Descending` |
+| `FilterNodeKind` | 篩選節點種類 | `Condition`, `Group` |
+
+### API and Security
+
+| English | 中文 | Values |
+|---------|------|--------|
+| `ApiProtectionLevel` | API 保護等級 | `Public`, `Encoded`, `Encrypted`, `LocalOnly` |
+| `ApiAccessRequirement` | API 存取授權需求 | `Anonymous` (no login), `Authenticated` (login required) |
+| `PayloadFormat` | Payload 格式 | `Plain`, `Encoded` (Base64), `Encrypted` |
+
+### Definition Type
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `DefineType` | 定義資料類別 | `SystemSettings`, `DatabaseSettings`, `DbCategorySettings`, `ProgramSettings`, `MenuSettings`, `TableSchema`, `FormSchema`, `FormLayout`, `Language`, `PermissionModels`, `CurrencySettings`, `UnitSettings`, `PluginSettings` — 13 values total |
+
+### Database
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `DatabaseType` | 資料庫類型 | `SQLServer`, `PostgreSQL`, `MySQL`, `Oracle`, `SQLite` |
+| `LoginEvent` | 登入事件 | `LoginSucceeded`, `LoginFailed`, `LockedOut`, `Logout` (recorded in `st_log_login`) |
+| `ChangeKind` | 異動類型 | `Insert`, `Update`, `Delete` (recorded in `st_log_change`) |
+| `AnomalyKind` | 異常類型 | `Error`, `Timeout`, `Slow`, `LargeAffected`, `LargeResult`, `Unauthorized` (recorded in `st_log_anomaly_*`) |
+
+---
+
+## 11. System Fields
+
+The Polhem framework automatically maintains the following system fields in all managed tables:
+
+| Field Name | 中文 | Description |
+|------------|------|-------------|
+| `sys_no` | 流水號 | Auto-incremented sequential number for the row |
+| `sys_rowid` | 唯一識別碼 | Globally unique identifier for the row (GUID) |
+| `sys_master_rowid` | 主檔外鍵 | The master row's `sys_rowid` (used by detail tables) |
+| `sys_insert_time` | 建立時間 | Row creation timestamp |
+| `sys_update_time` | 更新時間 | Row last update timestamp |
+| `sys_valid_date` | 生效日期 | Effective start date of the row |
+| `sys_invalid_date` | 失效日期 | Expiry date of the row |
+
+---
+
+## 12. Configuration Files
+
+| File Name | 中文 | Description |
+|-----------|------|-------------|
+| `SystemSettings.xml` | 系統設定檔 | Global system parameters |
+| `DatabaseSettings.xml` | 資料庫連線設定檔 | Database connection strings and types |
+| `DbCategorySettings.xml` | 資料庫類別設定檔 | All logical database categories and the tables they contain |
+| `ProgramSettings.xml` | 型別註冊表 | One flat entry per progId, mapping it to the types bound to it. `BusinessObject` binds a `FormBusinessObject` subclass (empty falls back to the framework default); `Repository` binds a `DataFormRepository` subclass (empty falls back likewise, but a name that will not load throws instead of degrading). Holds no per-program parameters, and no menu — see `MenuSettings.xml`. Server-side only |
+| `MenuSettings.xml` | 選單定義檔 | The navigation menu: nested `MenuFolder` / `MenuEntry` nodes carrying caption, order and visibility. Each `MenuEntry` points at a progId registered in `ProgramSettings.xml`; `Id` is the node key and is unique across the whole tree |
+| `ClientSettings.xml` | 用戶端設定檔 | Front-end / client behavior settings |
+| `FormSchema.xml` | 表單結構定義檔 | Serialized FormSchema files for each functional program |
+| `FormLayout.xml` | 表單版面配置檔 | Serialized FormLayout files for each functional program |
+| `TableSchema.xml` | 資料表結構檔 | Serialized TableSchema files for each table |
+| `Language.xml` | 語系資源檔 | Serialized `LanguageResource` files, one per `(lang, namespace)` pair (e.g. `Language/zh-TW/Common.Language.xml`) |
+
+---
+
+## 13. Frontend Layer (Polhem.UI.* / Polhem.Web.Blazor.*)
+
+### Cross-Platform UI Common (`Polhem.UI.Core`)
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `ClientInfo` | 用戶端資訊 | Static singleton that manages connection state (endpoint, AccessToken, UserInfo) and exposes `SystemApiConnector` / `CreateFormApiConnector` / `DefineAccess`. Designed for the "one process = one user" model (Avalonia desktop / MAUI / native UI). **Must not be used in Blazor environments**, where multiple user circuits share a process |
+| `IEndpointStorage` | 端點儲存介面 | Abstraction for persisting the API endpoint (URL / settings) on the client side; default implementation stores in `{ExeName}.Settings.xml` (a `FileEndpointStorage` ships with `Polhem.UI.Avalonia` for the per-user `LocalApplicationData` path) |
+| `IUIViewService` | UI 視圖服務介面 | Host-supplied dialog service called when `ClientInfo.InitializeAsync` needs to ask the user for the endpoint (`ShowApiConnectAsync`); concrete implementation depends on the UI framework (Avalonia Window / MAUI ContentPage / WinForms Form, etc.) |
+| `VersionInfo` | 版本資訊 | Version metadata reported by the client to the backend during handshake |
+| `SupportedConnectTypes` | 支援連線類型 | Flags controlling which connection modes (`Local` / `Remote` / `Both`) the host allows during `ClientInfo.InitializeAsync` |
+
+### Avalonia Control Library (`Polhem.UI.Avalonia`)
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `ListView` | 清單檢視 | Avalonia `UserControl` for the list side of a form screen: loads rows, handles selection and scrolling, renders them through a `GridControl` |
+| `GridControl` | 表格控件 | `ContentControl` composite (toolbar + inner `DataGrid` exposed as `InnerGrid`) driven by a `LayoutGrid`; implements `IBindTableControl`; cell rendering goes through `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` (ADR-020) and editing follows `GridEditMode` (ADR-021) |
+| Field editors（`TextEdit` / `MemoEdit` / `ButtonEdit` / `DateEdit` / `YearMonthEdit` / `DropDownEdit` / `CheckEdit`） | 欄位編輯器 | Native-control subclasses (`StyleKeyOverride` keeps the theme) bound to one `FormDataObject` field; auto-apply `FormField` metadata (MaxLength / ListItems) |
+| `FormScope` | 表單作用域 | Attached inherited properties (`DataObject` / `FormMode`): set once on a container and descendant editors with a `FieldName` bind themselves |
+| `GridEditMode` | 表格編輯模式 | UI-layer editing model for `GridControl`: `InCell` (cell editing) / `EditForm` (popup row editing) |
+| `RowEditPanel` / `RowEditDialog` | 列編輯面板／彈窗 | EditForm-mode editing surface built from the field editors; uses the buffered row-edit protocol (`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit`) |
+| `FormView` | 表單檢視 | Avalonia single-record container: master sections + detail `GridControl`s + toolbar (New / Save / Delete); the list side is `ListView`. Resolves `Schema` / `FormConnector` / `AccessToken` from `ClientInfo` when the host sets only `ProgId` |
+| `FormDataObject` | 表單資料物件 | The view-model object bound by the Avalonia controls: carries the `DataSet`, bridges ADO.NET table events into `FieldValueChanged` / dirty tracking, and exposes the buffered row-edit protocol |
+| `FileEndpointStorage` | 檔案端點儲存 | File-backed `IEndpointStorage` implementation that persists the API endpoint to `LocalApplicationData/<appName>/endpoint.txt` |
+
+### Web Frontend (`Polhem.Web.Blazor.Server`)
+
+`Polhem.Web.Blazor.Server` is a Razor Class Library (RCL) exposing `DynamicForm`, `DynamicGrid` and `FormDataObject`, with DI-scoped connectors so each SignalR circuit carries its own AccessToken. A Blazor WASM package once existed alongside it and was removed in v4.16.0; a WASM app of your own reaches the backend through `Polhem.Api.Client` (`RemoteApiProvider`) directly.
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `DynamicForm` (Razor component) | 動態表單元件 | Blazor component that renders a FormSchema-driven form |
+| `FormDataObject` | 表單資料物件 | Data-binding object bound by the Blazor `DynamicForm`. Deliberately separate from the Avalonia type of the same name — see `rules/avalonia.md` for why the duplication is kept |
+| `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` extension that registers the Blazor Server RCL services (DI-scoped connectors) |
+
+### Api Client Providers (`Polhem.Api.Client`)
+
+| English | 中文 | Description |
+|---------|------|-------------|
+| `IJsonRpcProvider` | API 提供者介面 | Abstracts how a connector reaches the backend; chosen by the host at startup |
+| `LocalApiProvider` | 近端 API 提供者 | In-process implementation; the frontend and backend share the same process, invoking BO methods directly (no HTTP) |
+| `RemoteApiProvider` | 遠端 API 提供者 | HTTP-based implementation; the frontend reaches the backend over JSON-RPC (required for Blazor WASM) |

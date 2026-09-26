@@ -1,0 +1,13 @@
+{
+  "case": "value-single",
+  "description": "WireValueCode.Single.",
+  "codec": "json",
+  "type": "Polhem.Definition.Collections.Parameter, Polhem.Definition",
+  "body": {
+    "name": "v",
+    "value": [
+      10,
+      1.5
+    ]
+  }
+}

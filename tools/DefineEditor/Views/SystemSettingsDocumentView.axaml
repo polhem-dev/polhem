@@ -1,0 +1,192 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+             xmlns:loc="using:Polhem.DefineEditor.Markup"
+             xmlns:behaviors="using:Polhem.DefineEditor.Behaviors"
+             xmlns:models="using:Polhem.DefineEditor.Models"
+             xmlns:settings="using:Polhem.Definition.Settings"
+             xmlns:collections="using:Polhem.Definition.Collections"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="Polhem.DefineEditor.Views.SystemSettingsDocumentView"
+             x:DataType="vm:SystemSettingsDocumentViewModel"
+             x:CompileBindings="True">
+
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="settings:SystemSettings">
+            <StackPanel Spacing="6">
+                <TextBlock Classes="h2" Text="{loc:Loc SystemSettings_RootSubtitle}"/>
+                <TextBlock Classes="muted" TextWrapping="Wrap"
+                           Text="{loc:Loc SystemSettings_RootHint}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="settings:CommonConfiguration">
+            <StackPanel x:DataType="settings:CommonConfiguration" Spacing="2">
+                <TextBlock Classes="h2" Text="{loc:Loc SystemSettings_CommonProps}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Version"/>
+                    <TextBox Text="{Binding Version, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="IsDebugMode"/>
+                    <CheckBox IsChecked="{Binding IsDebugMode, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="DefaultLang"/>
+                    <TextBox Text="{Binding DefaultLang, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="AllowedTypeNamespaces"/>
+                    <TextBox Text="{Binding AllowedTypeNamespaces, Mode=TwoWay}"/>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="settings:SecurityKeySettings">
+            <StackPanel x:DataType="settings:SecurityKeySettings" Spacing="2">
+                <TextBlock Classes="h2" Text="{loc:Loc SystemSettings_SecurityProps}" Margin="0,0,0,4"/>
+                <TextBlock Classes="muted" Foreground="{DynamicResource SemiColorWarning}" Margin="0,0,0,8" TextWrapping="Wrap"
+                           Text="{loc:Loc SystemSettings_SecurityWarning}"/>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="ApiEncryptionKey"/>
+                    <TextBox Text="{Binding ApiEncryptionKey, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="CookieEncryptionKey"/>
+                    <TextBox Text="{Binding CookieEncryptionKey, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="ConfigEncryptionKey"/>
+                    <TextBox Text="{Binding ConfigEncryptionKey, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="DatabaseEncryptionKey"/>
+                    <TextBox Text="{Binding DatabaseEncryptionKey, Mode=TwoWay}"/>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="settings:CacheNotifyOptions">
+            <StackPanel x:DataType="settings:CacheNotifyOptions" Spacing="2">
+                <TextBlock Classes="h2" Text="{loc:Loc SystemSettings_CacheNotifyProps}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Enabled"/>
+                    <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row short">
+                    <TextBlock Classes="label" Text="IntervalSeconds"/>
+                    <TextBox Text="{Binding IntervalSeconds, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row short">
+                    <TextBlock Classes="label" Text="MarginSeconds"/>
+                    <TextBox Text="{Binding MarginSeconds, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="DatabaseId"/>
+                    <TextBox Text="{Binding DatabaseId, Mode=TwoWay}"/>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="settings:BackendComponents">
+            <StackPanel x:DataType="settings:BackendComponents" Spacing="2">
+                <TextBlock Classes="h2" Text="{loc:Loc SystemSettings_BackendComponentsProps}" Margin="0,0,0,4"/>
+                <TextBlock Classes="muted" Margin="0,0,0,8" TextWrapping="Wrap"
+                           Text="{loc:Loc SystemSettings_BackendComponentsHint}"/>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="ApiEncryptionKeyProvider"/><TextBox Text="{Binding ApiEncryptionKeyProvider, Mode=TwoWay}"/></DockPanel>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="AccessTokenValidator"/><TextBox Text="{Binding AccessTokenValidator, Mode=TwoWay}"/></DockPanel>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="CacheProvider"/><TextBox Text="{Binding CacheProvider, Mode=TwoWay}"/></DockPanel>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="CacheDataSourceProvider"/><TextBox Text="{Binding CacheDataSourceProvider, Mode=TwoWay}"/></DockPanel>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="DefineStorage"/><TextBox Text="{Binding DefineStorage, Mode=TwoWay}"/></DockPanel>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="DefineAccess"/><TextBox Text="{Binding DefineAccess, Mode=TwoWay}"/></DockPanel>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="SessionInfoService"/><TextBox Text="{Binding SessionInfoService, Mode=TwoWay}"/></DockPanel>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="CompanyInfoService"/><TextBox Text="{Binding CompanyInfoService, Mode=TwoWay}"/></DockPanel>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="RepositoryFactory"/><TextBox Text="{Binding RepositoryFactory, Mode=TwoWay}"/></DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="collections:Property">
+            <StackPanel x:DataType="collections:Property" Spacing="2">
+                <TextBlock Classes="h2" Text="{loc:Loc SystemSettings_ExtendedPropertyProps}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Name"/>
+                    <TextBox Text="{Binding Name, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Value"/>
+                    <TextBox Text="{Binding Value, Mode=TwoWay}"/>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <DockPanel>
+
+        <Border DockPanel.Dock="Bottom" Classes="statusbar" Padding="12,5">
+            <TextBlock Classes="muted" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"/>
+        </Border>
+
+        <Border DockPanel.Dock="Bottom" Classes="surface-sunken" Padding="12,8" IsVisible="{Binding Issues.Count}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Classes="h2" Text="{loc:Loc Section_ValidationResults}"/>
+                <ListBox ItemsSource="{Binding Issues}" MaxHeight="160" Background="Transparent" BorderThickness="0" Margin="0,6,0,0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:ValidationIssue">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding Icon}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Path}" Classes="muted" Width="240"/>
+                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <Grid ColumnDefinitions="*,4,1.2*">
+            <TreeView Grid.Column="0" ItemsSource="{Binding Roots}" SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" Padding="6,4">
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="models:SettingsTreeNode">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="inner-icon" Data="{Binding Icon, Converter={StaticResource IconKeyToGeometry}}"/>
+                            <TextBlock Text="{Binding Header}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TreeDataTemplate>
+                </TreeView.ItemTemplate>
+                <TreeView.Styles>
+                    <Style Selector="TreeViewItem" x:DataType="models:SettingsTreeNode">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                    </Style>
+                </TreeView.Styles>
+                <TreeView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="{loc:Loc SystemSettings_AddProperty}"
+                                  Command="{Binding AddPropertyCommand}"
+                                  IsVisible="{Binding SelectedKindIsExtendedGroup}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconAdd}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator IsVisible="{Binding ShowDeleteSeparator}"/>
+                        <MenuItem Header="{loc:Loc Action_Delete}"
+                                  Command="{Binding DeleteCommand}"
+                                  IsVisible="{Binding SelectedKindCanDelete}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconDelete}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </TreeView.ContextMenu>
+            </TreeView>
+            <GridSplitter Grid.Column="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Columns"/>
+            <Border Grid.Column="2" Padding="18,14">
+                <ScrollViewer Classes="props-pane" HorizontalScrollBarVisibility="Disabled">
+                    <ContentControl Content="{Binding SelectedEditorContext}"
+                                    behaviors:DirtyTracking.IsEnabled="True"/>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>

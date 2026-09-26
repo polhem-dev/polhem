@@ -1,0 +1,233 @@
+using Polhem.Base;
+using Polhem.Definition;
+using Polhem.Definition.Storage;
+using Polhem.Hosting;
+using Polhem.ObjectCaching;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Polhem.Tests.Shared
+{
+    /// <summary>
+    /// Process-wide test bootstrap: 一次性 wire up <c>DbConnectionManager</c>、<c>SysInfo</c>、
+    /// <see cref="Polhem.Api.Client.ApiClientInfo.LocalServiceProvider"/>，以及
+    /// <see cref="SharedDatabaseState.EnsureRegistered"/>。
+    /// </summary>
+    /// <remarks>
+    /// PR 5.7 後 ICacheContainer / IDefineAccess 全面由 DI 容器接管，bootstrap 流程不再需要
+    /// 預先初始化 <c>CacheContainer</c> 靜態 facade（已移除）。
+    /// </remarks>
+    public static class TestProcessBootstrap
+    {
+        private static readonly object s_initLock = new();
+        private static bool s_initialized;
+        private static string? s_sharedDefinePath;
+        private static string? s_sharedCustomizePath;
+
+        /// <summary>
+        /// Hard-coded Base64 AES-CBC-HMAC combined key (64 bytes) used by the test
+        /// process when <c>POLHEM_MASTER_KEY</c> is not set in the environment. Kept
+        /// independent from <c>DemoCredentials.DemoMasterKey</c> so test runs and
+        /// sample runs cannot leak encrypted state into one another.
+        /// </summary>
+        private const string TestMasterKey =
+            "oQGvs51A0u5Rn8RPJPkQ9xqXevf451mDHpsaJR7nN8WCM0X0zskVqTqDQBtSpSq8MdvmfKUPKAulOJShd9KDXg==";
+
+        /// <summary>
+        /// Process-wide shared define directory: <c>tests/Define</c> (test-specific
+        /// fixtures) merged with <see cref="Polhem.Definition.Defaults"/> (framework
+        /// defaults embedded in <c>Polhem.Definition.dll</c>). Created once on first
+        /// <see cref="EnsureInitialized"/>; cleaned up on process exit.
+        /// </summary>
+        /// <remarks>
+        /// Read-only by convention. Tests that need writable define storage opt in
+        /// via <see cref="PolhemTestFixtureBuilder.UseTempDefinePath"/>, which copies
+        /// this directory into a per-class temp directory.
+        /// </remarks>
+        public static string SharedDefinePath
+        {
+            get
+            {
+                EnsureInitialized();
+                return s_sharedDefinePath!;
+            }
+        }
+
+        /// <summary>
+        /// Process-wide tenant customization root (<c>PathOptions.CustomizePath</c>). Created empty
+        /// on first <see cref="EnsureInitialized"/> and cleaned up on process exit.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The directory exists but holds nothing, so every session still resolves against the base
+        /// layer: the customization reader is reached only for a non-empty
+        /// <c>SessionInfo.CustomizeId</c>, and an id with no folder here yields <c>null</c>. A test
+        /// that wants a tenant to have overrides writes them under
+        /// <c>{SharedCustomizePath}/{its own customization code}/</c> and picks a code no other test
+        /// class uses.
+        /// </para>
+        /// <para>
+        /// Rooted here rather than per fixture because the near-end API path
+        /// (<c>ApiClientInfo.LocalServiceProvider</c>) runs on the bootstrap container: a fixture-only
+        /// customization root would leave every call made through a connector reading a different
+        /// root from the one the test wrote to.
+        /// </para>
+        /// </remarks>
+        public static string SharedCustomizePath
+        {
+            get
+            {
+                EnsureInitialized();
+                return s_sharedCustomizePath!;
+            }
+        }
+
+        /// <summary>
+        /// 首次呼叫時觸發 process-wide 靜態 wire-up；後續呼叫直接 return。
+        /// </summary>
+        public static void EnsureInitialized()
+        {
+            if (s_initialized) return;
+            lock (s_initLock)
+            {
+                if (s_initialized) return;
+                InitializeOnce();
+                s_initialized = true;
+            }
+        }
+
+        private static void InitializeOnce()
+        {
+            // 確保 POLHEM_MASTER_KEY 在任何測試 class 構造前完成設定：bootstrap 一開頭就 set，
+            // 避免 SystemSettings 預設 MasterKeySource.Type=Environment 但 env var 未設時
+            // MasterKeyProvider 拋例外。Production-like 環境會在外部 inject；此 fallback 只
+            // 在 test process 內生效。
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("POLHEM_MASTER_KEY")))
+            {
+                Environment.SetEnvironmentVariable("POLHEM_MASTER_KEY", TestMasterKey);
+            }
+
+            s_sharedDefinePath = CreateSharedDefinePath();
+            s_sharedCustomizePath = CreateSharedCustomizePath();
+            var pathOptions = new PathOptions
+            {
+                DefinePath = s_sharedDefinePath,
+                CustomizePath = s_sharedCustomizePath
+            };
+
+            // Bootstrap 暫時用一個 DefineAccess 讓 SharedDatabaseState.EnsureRegistered
+            // 在 AddPolhemFramework 執行前就能寫入 DatabaseSettings.Items。
+            // 這個 bootstrap access 只活在 InitializeOnce scope 內，不對外公開；DI 容器內由
+            // AddPolhemFramework 重新建立正式的 IDefineAccess 實例（用同一份 PathOptions 即可共用 cache）。
+            var bootstrapStorage = new FileDefineStorage(pathOptions);
+            var bootstrapAccess = new CacheDefineAccess(bootstrapStorage, pathOptions);
+
+            // DB provider / dialect / DatabaseItem 註冊統一交給 SharedDatabaseState。
+            SharedDatabaseState.EnsureRegistered(bootstrapAccess);
+
+            // 系統初始化：boot-time 讀檔走 SystemSettingsLoader（不依賴 IDefineAccess）。
+            // tests/Define/SystemSettings.xml 已將 MasterKeySource.Type 設為 Environment、
+            // Value 設為 POLHEM_MASTER_KEY，配合本方法開頭的 env var 注入即可解密 payload。
+            var settings = SystemSettingsLoader.Load(pathOptions);
+            SysInfo.Initialize(settings.CommonConfiguration);
+
+            // 用 AddPolhemFramework 建 DI 容器。Phase 7 後框架不再有 process-wide 靜態 facade，
+            // 所有服務（含 IDbConnectionManager）皆透過 ctor 注入解析。
+            var services = new ServiceCollection();
+            services.AddPolhemFramework(settings.BackendConfiguration, pathOptions, autoCreateMasterKey: true);
+            var provider = services.BuildServiceProvider();
+
+            // Polhem.Api.Client 近端模式（in-process）透過 ApiClientInfo.LocalServiceProvider 取得後端服務；
+            // 測試 fixture 預設指向同一個 process-wide 容器。Phase 4 transitional —
+            // 主計畫 §「範圍邊界」說明此 holder 是 Polhem.Api.Client 重構前的暫時做法。
+            Polhem.Api.Client.ApiClientInfo.LocalServiceProvider = provider;
+        }
+
+        private static string FindRepoRoot(string startDir)
+        {
+            var dir = new DirectoryInfo(startDir);
+            while (dir != null)
+            {
+                if (dir.GetDirectories(".git").Length > 0)
+                    return dir.FullName;
+                dir = dir.Parent;
+            }
+            throw new InvalidOperationException($"Cannot find repo root from: {startDir}");
+        }
+
+        /// <summary>
+        /// Creates the process-wide shared define directory: a temp dir populated
+        /// first with the contents of <c>tests/Define</c> (test-specific fixtures
+        /// win on conflict), then with the framework defaults from
+        /// <see cref="Defaults.MaterializeTo"/> (skip-existing). Registers a
+        /// process-exit cleanup hook.
+        /// </summary>
+        private static string CreateSharedDefinePath()
+        {
+            var repoRoot = FindRepoRoot(AppContext.BaseDirectory);
+            var testsDefine = Path.Combine(repoRoot, "tests", "Define");
+
+            var sharedDir = Path.Combine(
+                Path.GetTempPath(),
+                $"polhem-tests-define-{Environment.ProcessId}-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(sharedDir);
+
+            // Step 1: copy tests/Define first. Test-specific fixtures (DbCategorySettings
+            // with ft_project, Project FormSchema/Layout/Language, PermGateForm,
+            // SystemSettings, DatabaseSettings) win on conflict so they shadow any
+            // framework default with the same relative path.
+            CopyDirectory(testsDefine, sharedDir);
+
+            // Step 2: materialise framework defaults from Polhem.Definition.dll's embedded
+            // resources. Overwrite=false so step 1's test-specific files (e.g. the
+            // extended DbCategorySettings.xml) are preserved.
+            Defaults.MaterializeTo(sharedDir, MaterializeOptions.Default);
+
+            // Best-effort cleanup on process exit. xunit's parallel runners do not
+            // share processes, so each runner cleans its own dir.
+            AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+            {
+                try { Directory.Delete(sharedDir, recursive: true); }
+                catch (IOException) { /* best effort */ }
+                catch (UnauthorizedAccessException) { /* best effort */ }
+            };
+
+            return sharedDir;
+        }
+
+        /// <summary>
+        /// Creates the process-wide customization root as an empty directory and registers a
+        /// process-exit cleanup hook. See <see cref="SharedCustomizePath"/> for why it is
+        /// process-wide rather than per fixture.
+        /// </summary>
+        private static string CreateSharedCustomizePath()
+        {
+            var customizeDir = Path.Combine(
+                Path.GetTempPath(),
+                $"polhem-tests-customize-{Environment.ProcessId}-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(customizeDir);
+
+            AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+            {
+                try { Directory.Delete(customizeDir, recursive: true); }
+                catch (IOException) { /* best effort */ }
+                catch (UnauthorizedAccessException) { /* best effort */ }
+            };
+
+            return customizeDir;
+        }
+
+        private static void CopyDirectory(string source, string dest)
+        {
+            foreach (var subdir in Directory.GetDirectories(source, "*", SearchOption.AllDirectories))
+            {
+                var rel = Path.GetRelativePath(source, subdir);
+                Directory.CreateDirectory(Path.Combine(dest, rel));
+            }
+            foreach (var file in Directory.GetFiles(source, "*", SearchOption.AllDirectories))
+            {
+                var rel = Path.GetRelativePath(source, file);
+                File.Copy(file, Path.Combine(dest, rel), overwrite: true);
+            }
+        }
+    }
+}

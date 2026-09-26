@@ -1,0 +1,66 @@
+# Polhem.Repository
+
+> Default implementation of repository abstractions, providing session management, database operations, and form data access.
+
+[繁體中文](README.zh-TW.md)
+
+## Architecture Position
+
+- **Layer**: Data Access Layer (implementation)
+- **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
+- Consumed by application code; repositories are resolved through DI-registered factories.
+
+## Target Framework
+
+- `net10.0` -- access to modern runtime APIs and performance improvements
+
+## Key Features
+
+### Session Management
+
+- `SessionRepository` -- persists sessions in the `st_session` table with XML-serialized `SessionUser` data
+- Generates GUID-based access tokens for unpredictable session identifiers
+- Supports one-time sessions that auto-delete after first retrieval
+- Expired sessions are auto-cleaned on access using UTC time comparison
+
+### Database Operations
+
+- `DatabaseRepository` (`internal`) -- connection testing with parameter substitution (`{@DbName}`, `{@UserId}`, `{@Password}`); exposed only through `IDatabaseRepository`, built by `RepositoryFactory`, not a public API
+- Schema upgrades via `TableSchemaBuilder` for FormSchema-driven table management
+
+### Form Data Access
+
+- `DataFormRepository` -- default implementation of `IDataFormRepository` for data form CRUD, resolved by ProgId
+
+### Factory Implementation
+
+- `RepositoryFactory` -- default `IRepositoryFactory`: builds every repository, on both axes, from one
+  shared `IRepositoryContext`. The framework axis is a type table rather than a method apiece, so it
+  does not grow a member per system table.
+
+## Key Public APIs
+
+| Class | Purpose |
+|-------|---------|
+| `SessionRepository` | Session CRUD against `st_session` / `st_user` tables |
+| `DataFormRepository` | Data form data access implementation |
+| `RepositoryFactory` | Default `IRepositoryFactory` implementation |
+
+## Design Conventions
+
+- **XML serialization for sessions** -- `SessionUser` is serialized to XML and stored in `st_session.session_user_xml`; deserialized back on retrieval.
+- **Connection string parameter substitution** -- `DatabaseRepository.TestConnection` replaces `{@DbName}`, `{@UserId}`, and `{@Password}` placeholders before opening a connection.
+- **One-time session auto-delete** -- when `SessionUser.OneTime` is true, the session record is deleted immediately after `GetSession` returns.
+- **Expired session cleanup** -- `GetSession` compares `sys_invalid_time` against `DateTime.UtcNow` and deletes stale records transparently.
+- **Parameterized queries** -- all SQL uses `DbCommandSpec` with positional parameters to prevent SQL injection.
+- **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
+
+## Directory Structure
+
+```
+Polhem.Repository/
+  AuditLog/   # AuditLogRepository (read), AuditLogWriteRepository (write)
+  Form/       # DataFormRepository
+  Factories/   # RepositoryFactory, IRepositoryTypeResolver, ProgramSettingsRepositoryTypeResolver
+  System/     # SessionRepository, DatabaseRepository
+```

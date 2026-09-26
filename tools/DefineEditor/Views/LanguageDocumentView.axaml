@@ -1,0 +1,132 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+             xmlns:loc="using:Polhem.DefineEditor.Markup"
+             xmlns:behaviors="using:Polhem.DefineEditor.Behaviors"
+             xmlns:models="using:Polhem.DefineEditor.Models"
+             xmlns:lang="using:Polhem.Definition.Language"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="Polhem.DefineEditor.Views.LanguageDocumentView"
+             x:DataType="vm:LanguageDocumentViewModel"
+             x:CompileBindings="True">
+
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="lang:LanguageResource">
+            <StackPanel x:DataType="lang:LanguageResource" Spacing="2">
+                <TextBlock Classes="h2" Text="{loc:Loc Language_ResourceProps}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="Namespace"/><TextBox Text="{Binding Namespace, Mode=TwoWay}"/></DockPanel>
+                <DockPanel Classes="row short"><TextBlock Classes="label" Text="Lang (BCP-47)"/><TextBox Text="{Binding Lang, Mode=TwoWay}"/></DockPanel>
+                <TextBlock Classes="muted" Margin="0,8,0,0" TextWrapping="Wrap"
+                           Text="{loc:Loc Language_ItemNote}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="lang:LanguageItem">
+            <StackPanel x:DataType="lang:LanguageItem" Spacing="2">
+                <TextBlock Classes="h2" Text="{loc:Loc Language_ItemProps}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="Key (sub-key)"/><TextBox Text="{Binding Key, Mode=TwoWay}"/></DockPanel>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="Value"/><TextBox Text="{Binding Value, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap"/></DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="lang:LanguageEnum">
+            <StackPanel x:DataType="lang:LanguageEnum" Spacing="2">
+                <TextBlock Classes="h2" Text="{loc:Loc Language_EnumProps}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="Name"/><TextBox Text="{Binding Name, Mode=TwoWay}"/></DockPanel>
+                <TextBlock Classes="muted" Margin="0,8,0,0" TextWrapping="Wrap" Text="{loc:Loc Language_EnumNote}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="lang:LanguageEnumEntry">
+            <StackPanel x:DataType="lang:LanguageEnumEntry" Spacing="2">
+                <TextBlock Classes="h2" Text="{loc:Loc Language_EnumEntryProps}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row short"><TextBlock Classes="label" Text="Code"/><TextBox Text="{Binding Code, Mode=TwoWay}"/></DockPanel>
+                <DockPanel Classes="row"><TextBlock Classes="label" Text="Text"/><TextBox Text="{Binding Text, Mode=TwoWay}"/></DockPanel>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <DockPanel>
+
+        <Border DockPanel.Dock="Bottom" Classes="statusbar" Padding="12,5">
+            <TextBlock Classes="muted" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"/>
+        </Border>
+
+        <Border DockPanel.Dock="Bottom" Classes="surface-sunken" Padding="12,8" IsVisible="{Binding Issues.Count}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Classes="h2" Text="{loc:Loc Section_ValidationResults}"/>
+                <ListBox ItemsSource="{Binding Issues}" MaxHeight="160" Background="Transparent" BorderThickness="0" Margin="0,6,0,0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:ValidationIssue">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding Icon}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Path}" Classes="muted" Width="240"/>
+                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <Grid ColumnDefinitions="*,4,1.2*">
+            <TreeView Grid.Column="0" ItemsSource="{Binding Roots}" SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" Padding="6,4">
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="models:SettingsTreeNode">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="inner-icon" Data="{Binding Icon, Converter={StaticResource IconKeyToGeometry}}"/>
+                            <TextBlock Text="{Binding Header}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TreeDataTemplate>
+                </TreeView.ItemTemplate>
+                <TreeView.Styles>
+                    <Style Selector="TreeViewItem" x:DataType="models:SettingsTreeNode">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                    </Style>
+                </TreeView.Styles>
+                <TreeView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="{loc:Loc Language_AddItem}"
+                                  Command="{Binding AddItemCommand}"
+                                  IsVisible="{Binding SelectedKindIsItemsGroup}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconText}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="{loc:Loc Language_AddEnum}"
+                                  Command="{Binding AddEnumCommand}"
+                                  IsVisible="{Binding SelectedKindIsEnumsGroup}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconList}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="{loc:Loc Language_AddEntry}"
+                                  Command="{Binding AddEntryCommand}"
+                                  IsVisible="{Binding SelectedKindIsEnum}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconAdd}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator IsVisible="{Binding ShowDeleteSeparator}"/>
+                        <MenuItem Header="{loc:Loc Action_Delete}"
+                                  Command="{Binding DeleteCommand}"
+                                  IsVisible="{Binding SelectedKindCanDelete}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconDelete}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </TreeView.ContextMenu>
+            </TreeView>
+            <GridSplitter Grid.Column="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Columns"/>
+            <Border Grid.Column="2" Padding="18,14">
+                <ScrollViewer Classes="props-pane" HorizontalScrollBarVisibility="Disabled">
+                    <ContentControl Content="{Binding SelectedEditorContext}"
+                                    behaviors:DirtyTracking.IsEnabled="True"/>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>

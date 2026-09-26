@@ -1,0 +1,106 @@
+# Polhem.Base
+
+> 跨層共用工具程式庫，提供型別轉換、加密、序列化、集合、追蹤與背景服務等功能。
+
+[English](README.md)
+
+## 架構定位
+
+- **層級**：基礎設施層（Polhem 框架最底層）
+- **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
+
+## 目標框架
+
+- `net10.0` -- 使用現代執行階段 API 與效能改進
+
+## 主要功能
+
+### 型別轉換與字串工具
+
+- `ValueUtilities` -- 安全型別轉換（`CInt`、`CStr`、`CBool` 等）。時間家族（`CDateOnly`、
+  `CDateTime`、`CTimeOnly`）的單參數多載回傳 nullable，雙參數多載才顯式帶預設值——無法解析的
+  輸入回 `null`，而不是一個可能流進報表的 sentinel 日期
+- `FrameworkClock` -- 框架時鐘。時間點用 `UtcNow()`；某時區的牆上時間用 `Now(timeZoneId)`，
+  回傳 `Unspecified`（絕不回 `Local`）。時區 id 為空即代表 UTC
+- `StringExtensions` / `StringUtilities` -- 字串操作輔助方法（編碼、格式化、比較）
+- `DateTimeExtensions` -- 日期工具，包含民國曆支援
+
+### 加密與安全
+
+- `AesCbcHmacCryptor` -- AES-256-CBC 加密搭配 HMAC-SHA256 驗證（每次加密使用隨機 IV）
+- `RsaCryptor` -- RSA 非對稱加密
+- `PasswordHasher` -- PBKDF2-SHA256 密碼雜湊
+- `FileHashValidator` -- 透過 SHA-256 驗證檔案完整性
+- `AesCbcHmacKeyGenerator` -- 加密金鑰產生器
+
+### 序列化與壓縮
+
+- `XmlCodec` / `JsonCodec` -- 統一的 XML / JSON 序列化，採用 `System.Text.Json`
+- `XmlSerializerCache` -- 快取 XML 序列化器實例，避免重複反射
+- `Gzip` -- Gzip 壓縮 / 解壓縮，用於 Payload 處理
+
+### 集合
+
+- `KeyCollectionBase<T>` -- 泛型鍵值集合基底類別
+- `StringHashSet` -- 可控制大小寫的字串 HashSet
+- `CollectionExtensions` -- LINQ 風格的集合擴充方法
+
+### 資料存取輔助
+
+- `DataTable` / `DataSet` / `DataRow` / `DataRowView` 擴充方法，簡化 ADO.NET 操作
+  （`DataRowViewExtensions.GetFieldValue<T>` 是 `DataRowExtensions` 在資料繫結場景的對應版本）
+- `FieldDbType` 與 `DbTypeConverter` -- 資料庫型別對應工具
+- `DataTableComparer.IsEqual` —— 比對兩個 `DataTable` 的結構、資料列狀態與儲存格值，
+  用於斷言序列化 round-trip 完整還原
+
+### 追蹤與診斷
+
+- `Tracer` / `TraceContext` -- 結構化診斷追蹤
+- `TraceDispatcher` / `ITraceWriter` -- 可插拔的追蹤輸出目標
+
+### 運算式抽象
+
+- `IExpressionEvaluator` -- 對一組具名變數求值運算式。以 DynamicExpresso 為底的實作位於
+  `Polhem.Expressions`；抽象放在這裡，讓定義層與商業邏輯層消費引擎時不必相依第三方套件
+  （[ADR-038](../../docs/adr/adr-038-definition-dependency-boundary.md)）
+- `ExpressionPolicy` -- 欄位值餵進引擎前套用的共用型別／null 政策，使計算欄在伺服端與
+  UI 用戶端得到相同結果
+- `ExpressionEvaluationException` -- 運算式無法解析或編譯時擲出
+
+## 主要公開 API
+
+| 類別 / 介面 | 用途 |
+|-------------|------|
+| `ValueUtilities` | 安全型別轉換（含預設值） |
+| `StringExtensions` / `StringUtilities` | 字串編碼、格式化、比較 |
+| `DateTimeExtensions` | 日期工具與民國曆 |
+| `AesCbcHmacCryptor` | 認證式對稱加密 |
+| `PasswordHasher` | 密碼雜湊（PBKDF2-SHA256） |
+| `XmlCodec` / `JsonCodec` | XML / JSON 序列化 |
+| `IObjectSerialize` | 序列化提供者介面 |
+| `IKeyObject` | 跨層鍵值實體介面 |
+| `Tracer` | 診斷追蹤進入點 |
+| `IExpressionEvaluator` | 運算式求值抽象（實作位於 `Polhem.Expressions`） |
+| `ExpressionPolicy` | 運算式變數的共用型別／null 政策 |
+
+## 設計慣例
+
+- **靜態工具類別** -- `ValueUtilities`、`StringUtilities`、`DateTimeExtensions` 以靜態方法公開功能，不持有實例狀態。
+- **常數時間比較** -- `CryptographicOperations.FixedTimeEquals` 用於 HMAC / 雜湊驗證，防止時序攻擊（Timing Attack）。
+- **介面導向擴充** -- 序列化透過 `IObjectSerialize` 抽象化。
+- **啟用 Nullable Reference Types**（`<Nullable>enable</Nullable>`）。
+
+## 目錄結構
+
+```
+Polhem.Base/
+  Attributes/          # TreeNodeAttribute、TreeNodeIgnoreAttribute
+  Collections/         # KeyCollectionBase<T>、StringHashSet、CollectionExtensions
+  Data/                # DataTable/DataSet 擴充、FieldDbType、DbTypeConverter
+  Expressions/         # IExpressionEvaluator、ExpressionPolicy、ExpressionEvaluationException
+  Security/            # AES、RSA、PBKDF2、檔案雜湊工具
+  Serialization/       # JSON/XML 序列化、GZip 壓縮
+  Tracing/             # Tracer、TraceContext、TraceDispatcher、ITraceListener、ITraceWriter
+  *.cs（根目錄）        # ValueUtilities、StringExtensions、StringUtilities、DateTimeExtensions、FileUtilities、
+                       # IPValidator、SysInfo、IKeyObject 等
+```

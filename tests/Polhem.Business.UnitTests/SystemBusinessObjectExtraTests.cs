@@ -1,0 +1,157 @@
+using Polhem.Definition.Collections;
+using System.ComponentModel;
+using Polhem.Business.System;
+using Polhem.Business.UnitTests.Fakes;
+using Polhem.Definition;
+using Polhem.Tests.Shared;
+using Polhem.Definition.Database;
+using Polhem.Definition.Storage;
+
+namespace Polhem.Business.UnitTests
+{
+    /// <summary>
+    /// <see cref="SystemBusinessObject"/> 除 Login 外的補強測試：
+    /// 涵蓋 Ping / GetCommonConfiguration / GetDefine / SaveDefine 分支、
+    /// GetPackage 未實作的 NotSupportedException、
+    /// 以及 ExecFunc（本地呼叫）基本路徑。
+    /// </summary>
+    public class SystemBusinessObjectExtraTests : IClassFixture<SharedDbFixture>
+    {
+        private readonly SharedDbFixture _fx;
+
+        public SystemBusinessObjectExtraTests(SharedDbFixture fx) { _fx = fx; }
+        private static readonly string[] s_departmentKeys = { "Department" };
+
+        [Fact]
+        [DisplayName("Ping 應回傳包含 TraceId 與 OK 狀態的 PingResult")]
+        public void Ping_ReturnsOkResult()
+        {
+            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+            var result = bo.Ping(new PingArgs { TraceId = "T-42", ClientName = "unit" });
+
+            Assert.NotNull(result);
+            Assert.Equal("ok", result.Status);
+            Assert.Equal("T-42", result.TraceId);
+            Assert.True(result.ServerTime <= DateTime.UtcNow);
+        }
+
+        [Fact]
+        [DisplayName("GetCommonConfiguration 應回傳非空 XML")]
+        public void GetCommonConfiguration_ReturnsXml()
+        {
+            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+            var result = bo.GetCommonConfiguration(new GetCommonConfigurationArgs());
+
+            Assert.NotNull(result);
+            Assert.False(string.IsNullOrWhiteSpace(result.CommonConfiguration));
+        }
+
+        [Fact]
+        [DisplayName("GetDefine(SystemSettings) 非本地呼叫應拋 NotSupportedException")]
+        public void GetDefine_SystemSettings_NonLocal_Throws()
+        {
+            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            Assert.Throws<NotSupportedException>(() =>
+                bo.GetDefine(new GetDefineArgs { DefineType = DefineType.SystemSettings }));
+        }
+
+        [Fact]
+        [DisplayName("GetDefine(DatabaseSettings) 非本地呼叫應拋 NotSupportedException")]
+        public void GetDefine_DatabaseSettings_NonLocal_Throws()
+        {
+            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            Assert.Throws<NotSupportedException>(() =>
+                bo.GetDefine(new GetDefineArgs { DefineType = DefineType.DatabaseSettings }));
+        }
+
+        [Fact]
+        [DisplayName("GetDefine(FormSchema) 本地呼叫應回傳含 XML 的結果")]
+        public void GetDefine_FormSchema_ReturnsXml()
+        {
+            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
+            var result = bo.GetDefine(new GetDefineArgs
+            {
+                DefineType = DefineType.FormSchema,
+                Keys = s_departmentKeys
+            });
+
+            Assert.NotNull(result);
+            Assert.False(string.IsNullOrWhiteSpace(result.Xml));
+        }
+
+        [Fact]
+        [DisplayName("SaveDefine(SystemSettings) 非本地呼叫應拋 NotSupportedException")]
+        public void SaveDefine_SystemSettings_NonLocal_Throws()
+        {
+            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            Assert.Throws<NotSupportedException>(() =>
+                bo.SaveDefine(new SaveDefineArgs { DefineType = DefineType.SystemSettings, Xml = "<x/>" }));
+        }
+
+        [Fact]
+        [DisplayName("SaveDefine(DatabaseSettings) 非本地呼叫應拋 NotSupportedException")]
+        public void SaveDefine_DatabaseSettings_NonLocal_Throws()
+        {
+            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            Assert.Throws<NotSupportedException>(() =>
+                bo.SaveDefine(new SaveDefineArgs { DefineType = DefineType.DatabaseSettings, Xml = "<x/>" }));
+        }
+
+        [Fact]
+        [DisplayName("ExecFuncAnonymous(Hello) 應回傳 Hello 問候")]
+        public void ExecFuncAnonymous_Hello_ReturnsGreeting()
+        {
+            // SystemExecFuncHandler.Hello 標註 ApiAccessRequirement.Anonymous，透過 DoExecFuncAnonymous 呼叫
+            var bo = new TestableSystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
+            var args = new ExecFuncArgs("Hello");
+
+            var result = bo.ExecFuncAnonymous(args);
+
+            Assert.True(result.Parameters.Contains("Hello"));
+            Assert.Contains("Hello system-level", result.Parameters.GetValue<string>("Hello"));
+        }
+
+        [Fact]
+        [DisplayName("ExecFunc 已驗證呼叫 Hello 方法應回傳問候語（覆蓋 DoExecFunc 路徑）")]
+        public void ExecFunc_Hello_AuthenticatedCall_ReturnsGreeting()
+        {
+            // Hello 標註 Anonymous，Authenticated 呼叫者可存取（權限足夠），因此覆蓋 DoExecFunc 路徑
+            var bo = new TestableSystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
+            var args = new ExecFuncArgs("Hello");
+
+            var result = bo.ExecFunc(args);
+
+            Assert.True(result.Parameters.Contains("Hello"));
+            Assert.Contains("Hello system-level", result.Parameters.GetValue<string>("Hello"));
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("ExecFunc UpgradeTableSchema 應執行並在結果中包含 Upgraded 狀態")]
+        public void ExecFunc_UpgradeTableSchema_ReturnsUpgradedStatus()
+        {
+            var bo = new TestableSystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
+            var args = new ExecFuncArgs("UpgradeTableSchema");
+            args.Parameters.Add("DatabaseId", "common_sqlserver");
+            args.Parameters.Add("CategoryId", "common");
+            args.Parameters.Add("TableName", "st_user");
+
+            var result = bo.ExecFunc(args);
+
+            Assert.True(result.Parameters.Contains("Upgraded"));
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("ExecFunc TestConnection 以有效資料庫設定應不拋出例外")]
+        public void ExecFunc_TestConnection_ValidDatabaseItem_Succeeds()
+        {
+            var bo = new TestableSystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
+            var args = new ExecFuncArgs("TestConnection");
+            var dbItem = _fx.GetRequiredService<IDefineAccess>().GetDatabaseSettings().Items!["common_sqlserver"];
+            args.Parameters.Add("DatabaseItem", dbItem);
+
+            var exception = Record.Exception(() => bo.ExecFunc(args));
+
+            Assert.Null(exception);
+        }
+    }
+}

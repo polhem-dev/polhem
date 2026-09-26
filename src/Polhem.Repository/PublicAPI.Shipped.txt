@@ -1,0 +1,116 @@
+#nullable enable
+Polhem.Repository.AuditLog.AuditLogRepository
+Polhem.Repository.AuditLog.AuditLogRepository.AuditLogRepository(Polhem.Repository.IRepositoryContext! ctx, System.Guid accessToken, string! progId) -> void
+Polhem.Repository.AuditLog.AuditLogRepository.AuditLogRepository(Polhem.Repository.IRepositoryContext! ctx, string! databaseId) -> void
+Polhem.Repository.AuditLog.AuditLogRepository.GetAccessLog(Polhem.Repository.Abstractions.AuditLog.AccessLogQuery! query, Polhem.Definition.Paging.PagingOptions! paging) -> Polhem.Repository.Abstractions.AuditLog.AuditLogPage!
+Polhem.Repository.AuditLog.AuditLogRepository.GetApiAnomalyLog(Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery! query, Polhem.Definition.Paging.PagingOptions! paging) -> Polhem.Repository.Abstractions.AuditLog.AuditLogPage!
+Polhem.Repository.AuditLog.AuditLogRepository.GetApiAnomalySummary(System.DateTime? fromUtc, System.DateTime? toUtc, string? companyId) -> System.Data.DataTable!
+Polhem.Repository.AuditLog.AuditLogRepository.GetChangeById(System.Guid sysRowId, string? companyId) -> System.Data.DataTable?
+Polhem.Repository.AuditLog.AuditLogRepository.GetChangeLog(Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery! query, Polhem.Definition.Paging.PagingOptions! paging) -> Polhem.Repository.Abstractions.AuditLog.AuditLogPage!
+Polhem.Repository.AuditLog.AuditLogRepository.GetDbAnomalyLog(Polhem.Repository.Abstractions.AuditLog.DbAnomalyLogQuery! query, Polhem.Definition.Paging.PagingOptions! paging) -> Polhem.Repository.Abstractions.AuditLog.AuditLogPage!
+Polhem.Repository.AuditLog.AuditLogRepository.GetDbAnomalySummary(System.DateTime? fromUtc, System.DateTime? toUtc) -> System.Data.DataTable!
+Polhem.Repository.AuditLog.AuditLogRepository.GetLoginLog(Polhem.Repository.Abstractions.AuditLog.LoginLogQuery! query, Polhem.Definition.Paging.PagingOptions! paging) -> Polhem.Repository.Abstractions.AuditLog.AuditLogPage!
+Polhem.Repository.AuditLog.AuditLogRepository.GetTopApiMethods(System.DateTime? fromUtc, System.DateTime? toUtc, int topN, string? companyId) -> System.Data.DataTable!
+Polhem.Repository.AuditLog.AuditLogWriteRepository
+Polhem.Repository.AuditLog.AuditLogWriteRepository.AuditLogWriteRepository(Polhem.Repository.IRepositoryContext! ctx, System.Guid accessToken, string! progId) -> void
+Polhem.Repository.AuditLog.AuditLogWriteRepository.WriteBatch(System.Collections.Generic.IReadOnlyList<Polhem.Definition.Logging.AuditEntry!>! entries) -> void
+Polhem.Repository.AuditLog.AuditRuleRepository
+Polhem.Repository.AuditLog.AuditRuleRepository.AuditRuleRepository(Polhem.Repository.IRepositoryContext! ctx, System.Guid accessToken, string! progId) -> void
+Polhem.Repository.AuditLog.AuditRuleRepository.GetRules(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Logging.AuditRule!>!
+Polhem.Repository.AuditLog.AuditRuleRepository.NotifyRulesChanged(string! companyId) -> void
+Polhem.Repository.Factories.IRepositoryTypeResolver
+Polhem.Repository.Factories.IRepositoryTypeResolver.Resolve(System.Guid accessToken, string! progId) -> System.Type!
+Polhem.Repository.Factories.ProgramSettingsRepositoryTypeResolver
+Polhem.Repository.Factories.ProgramSettingsRepositoryTypeResolver.ProgramSettingsRepositoryTypeResolver(Polhem.Definition.Storage.IDefineAccess! defineAccess, Polhem.Definition.Storage.ICustomizeDefineReader? customizeReader = null, Polhem.Definition.Identity.ISessionInfoService? sessionInfoService = null) -> void
+Polhem.Repository.Factories.ProgramSettingsRepositoryTypeResolver.Resolve(System.Guid accessToken, string! progId) -> System.Type!
+Polhem.Repository.Factories.RepositoryFactory
+Polhem.Repository.Factories.RepositoryFactory.Context.get -> Polhem.Repository.IRepositoryContext!
+Polhem.Repository.Factories.RepositoryFactory.Create<T>(System.Guid accessToken = default(System.Guid)) -> T!
+Polhem.Repository.Factories.RepositoryFactory.CreateFormRepository<T>(System.Guid accessToken, string! progId) -> T!
+Polhem.Repository.Factories.RepositoryFactory.RepositoryFactory(System.IServiceProvider! services, Polhem.Definition.Storage.IDefineAccess! defineAccess, Polhem.Db.IDbAccessFactory! dbAccessFactory, Polhem.Db.Manager.IDbConnectionManager! connectionManager, Polhem.Repository.Abstractions.IRepositoryDatabaseRouter! router, Polhem.Repository.Factories.IRepositoryTypeResolver! typeResolver, Polhem.Db.CacheNotify.ICacheNotifyService? cacheNotify = null) -> void
+Polhem.Repository.Form.DataFormRepository
+Polhem.Repository.Form.DataFormRepository.DataFormRepository(Polhem.Repository.IRepositoryContext! ctx, System.Guid accessToken, string! progId) -> void
+Polhem.Repository.Form.DataFormRepository.DataFormRepository(Polhem.Repository.IRepositoryContext! ctx, string! progId, Polhem.Definition.Forms.FormSchema! schema, string! databaseId) -> void
+Polhem.Repository.Form.DataFormRepository.Delete(System.Guid rowId, Polhem.Definition.Filters.FilterNode? scopeFilter = null) -> int
+Polhem.Repository.Form.DataFormRepository.ExistsInScope(System.Guid rowId, Polhem.Definition.Filters.FilterNode? scopeFilter) -> bool
+Polhem.Repository.Form.DataFormRepository.GetData(System.Guid rowId, Polhem.Definition.Filters.FilterNode? scopeFilter = null) -> System.Data.DataSet?
+Polhem.Repository.Form.DataFormRepository.GetList(string! selectFields, Polhem.Definition.Filters.FilterNode? filter, Polhem.Definition.Sorting.SortFieldCollection? sortFields, Polhem.Definition.Paging.PagingOptions? paging = null) -> Polhem.Repository.Abstractions.Form.DataFormListResult!
+Polhem.Repository.Form.DataFormRepository.GetNewData(string! timeZoneId = "") -> System.Data.DataSet!
+Polhem.Repository.Form.DataFormRepository.GetRowsByRowId(string! tableName, string! selectFields, System.Collections.Generic.IReadOnlyCollection<System.Guid>! rowIds) -> System.Data.DataTable!
+Polhem.Repository.Form.DataFormRepository.Save(System.Data.DataSet! dataSet) -> (System.Data.DataSet? Refreshed, System.Collections.Generic.Dictionary<string!, int>! AffectedRows)
+Polhem.Repository.IRepositoryContext
+Polhem.Repository.IRepositoryContext.CacheNotify.get -> Polhem.Db.CacheNotify.ICacheNotifyService?
+Polhem.Repository.IRepositoryContext.ConnectionManager.get -> Polhem.Db.Manager.IDbConnectionManager!
+Polhem.Repository.IRepositoryContext.DbAccessFactory.get -> Polhem.Db.IDbAccessFactory!
+Polhem.Repository.IRepositoryContext.DefineAccess.get -> Polhem.Definition.Storage.IDefineAccess!
+Polhem.Repository.IRepositoryContext.Router.get -> Polhem.Repository.Abstractions.IRepositoryDatabaseRouter!
+Polhem.Repository.IRepositoryContext.Services.get -> System.IServiceProvider!
+Polhem.Repository.RepositoryBase
+Polhem.Repository.RepositoryBase.AccessToken.get -> System.Guid
+Polhem.Repository.RepositoryBase.Context.get -> Polhem.Repository.IRepositoryContext!
+Polhem.Repository.RepositoryBase.CreateDbAccess() -> Polhem.Db.DbAccess!
+Polhem.Repository.RepositoryBase.CreateDbAccess(string! databaseId) -> Polhem.Db.DbAccess!
+Polhem.Repository.RepositoryBase.DatabaseId.get -> string!
+Polhem.Repository.RepositoryBase.ProgId.get -> string!
+Polhem.Repository.RepositoryBase.RepositoryBase(Polhem.Repository.IRepositoryContext! ctx, System.Guid accessToken, string! progId, Polhem.Definition.DbScope? scope) -> void
+Polhem.Repository.RepositoryBase.RepositoryBase(Polhem.Repository.IRepositoryContext! ctx, string! progId, string! databaseId) -> void
+Polhem.Repository.RepositoryBase.Scope.get -> Polhem.Definition.DbScope?
+Polhem.Repository.RepositoryContext
+Polhem.Repository.RepositoryContext.CacheNotify.get -> Polhem.Db.CacheNotify.ICacheNotifyService?
+Polhem.Repository.RepositoryContext.CacheNotify.init -> void
+Polhem.Repository.RepositoryContext.ConnectionManager.get -> Polhem.Db.Manager.IDbConnectionManager!
+Polhem.Repository.RepositoryContext.ConnectionManager.init -> void
+Polhem.Repository.RepositoryContext.DbAccessFactory.get -> Polhem.Db.IDbAccessFactory!
+Polhem.Repository.RepositoryContext.DbAccessFactory.init -> void
+Polhem.Repository.RepositoryContext.DefineAccess.get -> Polhem.Definition.Storage.IDefineAccess!
+Polhem.Repository.RepositoryContext.DefineAccess.init -> void
+Polhem.Repository.RepositoryContext.RepositoryContext() -> void
+Polhem.Repository.RepositoryContext.Router.get -> Polhem.Repository.Abstractions.IRepositoryDatabaseRouter!
+Polhem.Repository.RepositoryContext.Router.init -> void
+Polhem.Repository.RepositoryContext.Services.get -> System.IServiceProvider!
+Polhem.Repository.RepositoryContext.Services.init -> void
+Polhem.Repository.RepositoryDatabaseRouter
+Polhem.Repository.RepositoryDatabaseRouter.RepositoryDatabaseRouter(Polhem.Definition.Identity.ISessionInfoService! sessionService, Polhem.Definition.Identity.ICompanyInfoService! companyService) -> void
+Polhem.Repository.RepositoryDatabaseRouter.Resolve(Polhem.Definition.DbScope scope, System.Guid accessToken) -> string!
+Polhem.Repository.System.ApiKeyRepository
+Polhem.Repository.System.ApiKeyRepository.ApiKeyRepository(Polhem.Repository.IRepositoryContext! ctx, System.Guid accessToken, string! progId) -> void
+Polhem.Repository.System.ApiKeyRepository.Exists(string! sysId) -> bool
+Polhem.Repository.System.ApiKeyRepository.GetEnabledById(string! sysId) -> Polhem.Definition.Security.ApiKeyInfo?
+Polhem.Repository.System.ApiKeyRepository.GetGateState() -> Polhem.Definition.Security.ApiKeyGateState!
+Polhem.Repository.System.ApiKeyRepository.GetList() -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Security.ApiKeySummary!>!
+Polhem.Repository.System.ApiKeyRepository.Insert(Polhem.Definition.Security.ApiKeyInfo! apiKey) -> void
+Polhem.Repository.System.ApiKeyRepository.SetEnabled(string! sysId, bool enabled) -> bool
+Polhem.Repository.System.ApiKeyRepository.SetExpiry(string! sysId, System.DateTime? expiredAt) -> bool
+Polhem.Repository.System.CompanyRepository
+Polhem.Repository.System.CompanyRepository.CompanyRepository(Polhem.Repository.IRepositoryContext! ctx, System.Guid accessToken, string! progId) -> void
+Polhem.Repository.System.CompanyRepository.GetById(string! companyId) -> Polhem.Definition.Identity.CompanyInfo?
+Polhem.Repository.System.DepartmentRepository
+Polhem.Repository.System.DepartmentRepository.DepartmentRepository(Polhem.Repository.IRepositoryContext! ctx, System.Guid accessToken, string! progId) -> void
+Polhem.Repository.System.DepartmentRepository.GetDepartments(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Organization.DepartmentRow!>!
+Polhem.Repository.System.EmployeeRepository
+Polhem.Repository.System.EmployeeRepository.EmployeeRepository(Polhem.Repository.IRepositoryContext! ctx, System.Guid accessToken, string! progId) -> void
+Polhem.Repository.System.EmployeeRepository.GetByUserRowId(string! databaseId, System.Guid userRowId) -> Polhem.Definition.Organization.EmployeeRow?
+Polhem.Repository.System.RolePermissionRepository
+Polhem.Repository.System.RolePermissionRepository.GetRoleGrants(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Identity.RoleGrantRow!>!
+Polhem.Repository.System.RolePermissionRepository.GetUserRoles(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Identity.UserRoleRow!>!
+Polhem.Repository.System.RolePermissionRepository.RolePermissionRepository(Polhem.Repository.IRepositoryContext! ctx, System.Guid accessToken, string! progId) -> void
+Polhem.Repository.System.SessionRepository
+Polhem.Repository.System.SessionRepository.DeleteExpiredSessions() -> int
+Polhem.Repository.System.SessionRepository.DeleteSession(System.Guid accessToken) -> void
+Polhem.Repository.System.SessionRepository.GetSession(System.Guid accessToken) -> Polhem.Definition.Identity.SessionUser?
+Polhem.Repository.System.SessionRepository.InsertSession(Polhem.Definition.Identity.SessionUser! sessionUser) -> void
+Polhem.Repository.System.SessionRepository.SessionRepository(Polhem.Repository.IRepositoryContext! ctx, System.Guid accessToken, string! progId) -> void
+Polhem.Repository.System.SessionRepository.UpdateSession(Polhem.Definition.Identity.SessionUser! sessionUser) -> void
+Polhem.Repository.System.UserCompanyRepository
+Polhem.Repository.System.UserCompanyRepository.HasAccess(string! userId, string! companyId) -> bool
+Polhem.Repository.System.UserCompanyRepository.UserCompanyRepository(Polhem.Repository.IRepositoryContext! ctx, System.Guid accessToken, string! progId) -> void
+Polhem.Repository.System.UserRepository
+Polhem.Repository.System.UserRepository.GetLocale(string! userId) -> Polhem.Repository.Abstractions.System.UserLocale
+Polhem.Repository.System.UserRepository.GetName(string! userId) -> string?
+Polhem.Repository.System.UserRepository.GetRowIdBySysId(string! userId) -> System.Guid
+Polhem.Repository.System.UserRepository.IsDeploymentAdmin(string! userId) -> bool
+Polhem.Repository.System.UserRepository.SetDeploymentAdmin(string! userId, bool isDeploymentAdmin) -> bool
+Polhem.Repository.System.UserRepository.UserRepository(Polhem.Repository.IRepositoryContext! ctx, System.Guid accessToken, string! progId) -> void
+Polhem.Repository.System.UserRepository.VerifyPassword(string! userId, string! password) -> bool
+static Polhem.Repository.AuditLog.AuditLogWriteRepository.BuildInsert(Polhem.Definition.Logging.AuditEntry! entry) -> Polhem.Db.DbCommandSpec!
+virtual Polhem.Repository.Factories.RepositoryFactory.CreateFormRepositoryCore(System.Guid accessToken, string! progId) -> Polhem.Repository.Abstractions.Form.IDataFormRepository!

@@ -1,0 +1,13 @@
+{
+  "case": "value-uint16",
+  "description": "WireValueCode.UInt16.",
+  "codec": "json",
+  "type": "Polhem.Definition.Collections.Parameter, Polhem.Definition",
+  "body": {
+    "name": "v",
+    "value": [
+      5,
+      60000
+    ]
+  }
+}

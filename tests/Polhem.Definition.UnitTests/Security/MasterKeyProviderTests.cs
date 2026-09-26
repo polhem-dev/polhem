@@ -1,0 +1,295 @@
+using System.ComponentModel;
+using Polhem.Base.Security;
+using Polhem.Definition.Security;
+using Polhem.Definition.Settings;
+
+
+namespace Polhem.Definition.UnitTests.Security
+{
+    /// <summary>
+    /// MasterKeyProvider 來源載入與錯誤路徑測試。
+    /// </summary>
+    [Collection(Polhem.Definition.UnitTests.ProcessWideStateCollection.Name)]
+    public class MasterKeyProviderTests
+    {
+        [Fact]
+        [DisplayName("GetMasterKey 檔案來源存在有效 Base64 應回傳對應位元組")]
+        public void GetMasterKey_FileSource_ReturnsBytes()
+        {
+            // Arrange
+            byte[] expected = AesCbcHmacKeyGenerator.GenerateCombinedKey();
+            string filePath = Path.Combine(Path.GetTempPath(), $"polhem-mk-{Guid.NewGuid()}.key");
+            File.WriteAllText(filePath, Convert.ToBase64String(expected));
+
+            try
+            {
+                // Act
+                byte[] actual = MasterKeyProvider.GetMasterKey(new MasterKeySource
+                {
+                    Type = MasterKeySourceType.File,
+                    Value = filePath
+                }, definePath: string.Empty);
+
+                // Assert
+                Assert.Equal(expected, actual);
+            }
+            finally
+            {
+                File.Delete(filePath);
+            }
+        }
+
+        [Fact]
+        [DisplayName("GetMasterKey 檔案不存在且 autoCreate=false 應拋出 FileNotFoundException")]
+        public void GetMasterKey_FileMissing_NoAutoCreate_ThrowsFileNotFound()
+        {
+            // Arrange
+            string missing = Path.Combine(Path.GetTempPath(), $"polhem-mk-missing-{Guid.NewGuid()}.key");
+
+            // Act & Assert
+            Assert.Throws<FileNotFoundException>(() =>
+                MasterKeyProvider.GetMasterKey(new MasterKeySource
+                {
+                    Type = MasterKeySourceType.File,
+                    Value = missing
+                }, definePath: string.Empty));
+        }
+
+        [Fact]
+        [DisplayName("GetMasterKey 檔案不存在且 autoCreate=true 應建立檔案並回傳內容")]
+        public void GetMasterKey_FileMissing_AutoCreate_CreatesAndReturnsKey()
+        {
+            // Arrange
+            string filePath = Path.Combine(Path.GetTempPath(), $"polhem-mk-auto-{Guid.NewGuid()}.key");
+
+            try
+            {
+                // Act
+                byte[] result = MasterKeyProvider.GetMasterKey(
+                    new MasterKeySource { Type = MasterKeySourceType.File, Value = filePath },
+                    definePath: string.Empty,
+                    autoCreate: true);
+
+                // Assert
+                Assert.NotNull(result);
+                Assert.NotEmpty(result);
+                Assert.True(File.Exists(filePath));
+            }
+            finally
+            {
+                if (File.Exists(filePath)) File.Delete(filePath);
+            }
+        }
+
+        [Fact]
+        [DisplayName("GetMasterKey 檔案內容非 Base64 應拋出 InvalidOperationException")]
+        public void GetMasterKey_InvalidBase64Content_ThrowsInvalidOperation()
+        {
+            // Arrange
+            string filePath = Path.Combine(Path.GetTempPath(), $"polhem-mk-bad-{Guid.NewGuid()}.key");
+            File.WriteAllText(filePath, "@@not-base64@@");
+
+            try
+            {
+                // Act & Assert
+                var ex = Assert.Throws<InvalidOperationException>(() =>
+                    MasterKeyProvider.GetMasterKey(new MasterKeySource
+                    {
+                        Type = MasterKeySourceType.File,
+                        Value = filePath
+                    }, definePath: string.Empty));
+                Assert.IsType<FormatException>(ex.InnerException);
+            }
+            finally
+            {
+                File.Delete(filePath);
+            }
+        }
+
+        [Fact]
+        [DisplayName("GetMasterKey 檔案內容為空應拋出 InvalidOperationException")]
+        public void GetMasterKey_EmptyFileContent_ThrowsInvalidOperation()
+        {
+            // Arrange
+            string filePath = Path.Combine(Path.GetTempPath(), $"polhem-mk-empty-{Guid.NewGuid()}.key");
+            File.WriteAllText(filePath, "   ");
+
+            try
+            {
+                // Act & Assert
+                Assert.Throws<InvalidOperationException>(() =>
+                    MasterKeyProvider.GetMasterKey(new MasterKeySource
+                    {
+                        Type = MasterKeySourceType.File,
+                        Value = filePath
+                    }, definePath: string.Empty));
+            }
+            finally
+            {
+                File.Delete(filePath);
+            }
+        }
+
+        [Fact]
+        [DisplayName("GetMasterKey 環境變數來源存在應回傳對應位元組")]
+        public void GetMasterKey_EnvironmentSource_ReturnsBytes()
+        {
+            // Arrange
+            string varName = $"POLHEM_TEST_MK_{Guid.NewGuid():N}";
+            byte[] expected = AesCbcHmacKeyGenerator.GenerateCombinedKey();
+            Environment.SetEnvironmentVariable(varName, Convert.ToBase64String(expected));
+
+            try
+            {
+                // Act
+                byte[] actual = MasterKeyProvider.GetMasterKey(new MasterKeySource
+                {
+                    Type = MasterKeySourceType.Environment,
+                    Value = varName
+                }, definePath: string.Empty);
+
+                // Assert
+                Assert.Equal(expected, actual);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(varName, null);
+            }
+        }
+
+        [Fact]
+        [DisplayName("GetMasterKey 環境變數不存在且 autoCreate=false 應拋出 InvalidOperationException")]
+        public void GetMasterKey_EnvironmentMissing_NoAutoCreate_Throws()
+        {
+            // Arrange
+            string varName = $"POLHEM_TEST_MK_MISSING_{Guid.NewGuid():N}";
+            Environment.SetEnvironmentVariable(varName, null);
+
+            // Act & Assert
+            Assert.Throws<InvalidOperationException>(() =>
+                MasterKeyProvider.GetMasterKey(new MasterKeySource
+                {
+                    Type = MasterKeySourceType.Environment,
+                    Value = varName
+                }, definePath: string.Empty));
+        }
+
+        [Fact]
+        [DisplayName("GetMasterKey 環境變數不存在且 autoCreate=true 應建立變數並回傳內容")]
+        public void GetMasterKey_EnvironmentMissing_AutoCreate_CreatesAndReturnsKey()
+        {
+            // Arrange
+            string varName = $"POLHEM_TEST_MK_AUTO_{Guid.NewGuid():N}";
+            Environment.SetEnvironmentVariable(varName, null);
+
+            try
+            {
+                // Act
+                byte[] result = MasterKeyProvider.GetMasterKey(
+                    new MasterKeySource { Type = MasterKeySourceType.Environment, Value = varName },
+                    definePath: string.Empty,
+                    autoCreate: true);
+
+                // Assert
+                Assert.NotNull(result);
+                Assert.NotEmpty(result);
+                Assert.False(string.IsNullOrEmpty(Environment.GetEnvironmentVariable(varName)));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(varName, null);
+            }
+        }
+
+        [Fact]
+        [DisplayName("GetMasterKey 檔案路徑為空字串時會套用預設檔名 Master.key")]
+        public void GetMasterKey_EmptyFilePath_UsesDefaultFileName()
+        {
+            // Arrange: 空字串會被替換為 "Master.key"，於 DefinePath 下尋找。
+            // 建立全新空白暫存目錄，確保「預設檔不存在 → 拋 FileNotFoundException」的斷言成立
+            // （避免被 tests/Define/Master.key 等既存 fixture 干擾）。
+            var tempPath = Path.Combine(Path.GetTempPath(), $"polhem-mk-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempPath);
+            try
+            {
+                var source = new MasterKeySource
+                {
+                    Type = MasterKeySourceType.File,
+                    Value = "   "
+                };
+
+                // Act & Assert: definePath 為 temp 空資料夾，預期默認檔名 Master.key 不存在 → 拋例外
+                var ex = Record.Exception(() => MasterKeyProvider.GetMasterKey(source, tempPath));
+                Assert.NotNull(ex);
+            }
+            finally
+            {
+                try { Directory.Delete(tempPath, recursive: true); } catch (IOException) { /* best effort */ }
+            }
+        }
+
+        [Fact]
+        [DisplayName("GetMasterKey 環境變數名為空字串時套用預設 POLHEM_MASTER_KEY")]
+        public void GetMasterKey_EmptyVarName_UsesDefaultVarName()
+        {
+            // Arrange: 先確保預設變數為空，再呼叫
+            string? original = Environment.GetEnvironmentVariable("POLHEM_MASTER_KEY");
+            Environment.SetEnvironmentVariable("POLHEM_MASTER_KEY", null);
+
+            try
+            {
+                var source = new MasterKeySource
+                {
+                    Type = MasterKeySourceType.Environment,
+                    Value = "   "
+                };
+
+                // Act & Assert
+                Assert.Throws<InvalidOperationException>(() => MasterKeyProvider.GetMasterKey(source, definePath: string.Empty));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("POLHEM_MASTER_KEY", original);
+            }
+        }
+
+        [Fact]
+        [DisplayName("GetMasterKey 不支援的 Type 應拋 InvalidOperationException（default 分支）")]
+        public void GetMasterKey_UnsupportedType_ThrowsInvalidOperation()
+        {
+            // enum 實際只有 File=0 / Environment=1，透過 cast 傳入 99 觸發 switch default
+            var source = new MasterKeySource
+            {
+                Type = (MasterKeySourceType)99,
+                Value = "irrelevant"
+            };
+
+            var ex = Assert.Throws<InvalidOperationException>(() => MasterKeyProvider.GetMasterKey(source, definePath: string.Empty));
+            Assert.Contains("Unsupported", ex.Message);
+        }
+
+        [Fact]
+        [DisplayName("GetMasterKey autoCreate=true 但檔案已存在時應讀取既有檔案內容")]
+        public void GetMasterKey_FileExists_AutoCreate_ReturnsExistingKey()
+        {
+            // 檔案已存在 → File.Exists 為 true → 直接跳到 ReadAllTextShared，不執行 CreateNew 路徑
+            byte[] expected = AesCbcHmacKeyGenerator.GenerateCombinedKey();
+            string filePath = Path.Combine(Path.GetTempPath(), $"polhem-mk-existing-{Guid.NewGuid()}.key");
+            File.WriteAllText(filePath, Convert.ToBase64String(expected));
+
+            try
+            {
+                byte[] actual = MasterKeyProvider.GetMasterKey(
+                    new MasterKeySource { Type = MasterKeySourceType.File, Value = filePath },
+                    definePath: string.Empty,
+                    autoCreate: true);
+
+                Assert.Equal(expected, actual);
+            }
+            finally
+            {
+                File.Delete(filePath);
+            }
+        }
+    }
+}

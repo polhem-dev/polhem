@@ -1,0 +1,60 @@
+{
+  // Copy this file, edit the copy, and pass it with --config. The connection string is NOT
+  // here on purpose: it comes from POLHEM_TEST_CONNSTR_{DBTYPE}, the same variable ./test.sh uses.
+  "target": {
+    "mode": "Local",
+    "endpoint": "",
+    "protectionLevel": "Encrypted",
+    "codec": ""
+  },
+  "database": {
+    // SQLite is rejected: it is an embedded engine, not a server-side option.
+    "provider": "SQLServer",
+    "categoryId": "company",
+    // Keeps a run out of the unit tests' own databases: the test harness creates catalogs named
+    // after the bare categories (common, company, log) from this same connection string.
+    // Letters, digits and underscore only — the name reaches a CREATE DATABASE statement.
+    "databaseNamePrefix": "loadtest_"
+  },
+  "load": {
+    "virtualUsers": 10,
+    "warmupSeconds": 30,
+    "durationSeconds": 120,
+    // Closed mirrors how a user of a business application behaves; Open finds the saturation point.
+    "model": "Closed"
+  },
+  "seed": {
+    // Row count changes the answer, so it is configuration rather than a constant: a list query
+    // over 1,000 rows and one over 100,000 are different measurements. Set enabled to false to
+    // measure against a database that is already populated.
+    "enabled": true,
+    "rowCount": 1000,
+    // Rows are planted per table independently: relation columns get generated values rather
+    // than keys resolved against another table. Enough for read scenarios; a scenario needing a
+    // master and its details to line up has to seed them itself.
+    "tables": ["ft_customer"]
+  },
+  // Empty means: walk up from the executable and use apps/Polhem.Northwind/Define — the most
+  // complete definition set in this repository. It is copied to a temporary directory and the
+  // copy is adjusted (provider, debug mode, audit background writer), never the source.
+  "definePath": "",
+  "auth": {
+    "tokenStrategy": "PerUser",
+    "userPoolSize": 10
+  },
+  // Only the scenarios listed here run. An unknown name is rejected rather than skipped: a run
+  // quietly missing a scenario would still produce a report that looks complete.
+  "scenarios": [
+    { "name": "Login", "enabled": true, "weight": 1 },
+    { "name": "GetList", "enabled": true, "weight": 5, "progId": "Customer", "pageSize": 50 },
+    { "name": "GetData", "enabled": true, "weight": 5, "progId": "Customer" },
+    { "name": "Save", "enabled": true, "weight": 1, "progId": "Customer" }
+  ],
+  "report": {
+    "console": true,
+    "markdown": true,
+    "json": true,
+    "outputDirectory": "artifacts/loadtest",
+    "percentiles": [50, 95, 99]
+  }
+}

@@ -1,0 +1,230 @@
+using System.ComponentModel;
+using Polhem.Base.Security;
+using Polhem.Business.System;
+using Polhem.Business.UnitTests.Fakes;
+using Polhem.Definition.Identity;
+using Polhem.Definition.Database;
+using Polhem.Definition.Security;
+using Polhem.Definition.Storage;
+using Polhem.Tests.Shared;
+
+using Polhem.Definition;
+namespace Polhem.Business.UnitTests
+{
+    /// <summary>
+    /// <see cref="SystemBusinessObject.Login"/> 分支測試，使用 <see cref="TestableSystemBusinessObject"/>
+    /// 覆寫 AuthenticateUser 以觸發成功/失敗/鎖定等路徑。
+    /// </summary>
+    public class SystemBusinessObjectLoginTests : IClassFixture<SharedDbFixture>
+    {
+        private readonly SharedDbFixture _fx;
+
+        public SystemBusinessObjectLoginTests(SharedDbFixture fx) { _fx = fx; }
+        private sealed class RecordingTracker : ILoginAttemptTracker
+        {
+            public bool LockedOut { get; set; }
+            public int FailureCount { get; private set; }
+            public int ResetCount { get; private set; }
+
+            public bool IsLockedOut(string userId) => LockedOut;
+            public void RecordFailure(string userId) => FailureCount++;
+            public void Reset(string userId) => ResetCount++;
+        }
+
+        [Fact]
+        [DisplayName("Login 驗證成功應產生 AccessToken 與到期時間並建立 SessionInfo")]
+        public void Login_Authenticated_ReturnsValidSessionToken()
+        {
+            var sessionService = _fx.GetRequiredService<ISessionInfoService>();
+            var bo = new TestableSystemBusinessObject(
+                TestPolhemContext.Create(_fx),
+                Guid.Empty,
+                _ => (true, "User One"));
+            var args = new LoginArgs { UserId = "user01", Password = "pwd" };
+
+            var result = bo.Login(args);
+
+            Assert.NotNull(result);
+            Assert.NotEqual(Guid.Empty, result.AccessToken);
+            Assert.True(result.ExpiredAt > DateTime.UtcNow);
+            Assert.Equal("user01", result.UserId);
+            Assert.Equal("User One", result.UserName);
+            // 未提供 ClientPublicKey → EncryptedApiEncryptionKey 保持空字串
+            Assert.Equal(string.Empty, result.ApiEncryptionKey);
+
+            var session = sessionService.Get(result.AccessToken);
+            try
+            {
+                Assert.NotNull(session);
+                Assert.Equal("user01", session!.UserId);
+                Assert.NotEmpty(session.ApiEncryptionKey);
+            }
+            finally
+            {
+                sessionService.Remove(result.AccessToken);
+            }
+        }
+
+        [Fact]
+        [DisplayName("Login 提供 ClientPublicKey 應以 RSA 加密 ApiEncryptionKey")]
+        public void Login_WithClientPublicKey_EncryptsApiKey()
+        {
+            var sessionService = _fx.GetRequiredService<ISessionInfoService>();
+            RsaCryptor.GenerateRsaKeyPair(out var publicKey, out var privateKey);
+            var bo = new TestableSystemBusinessObject(
+                TestPolhemContext.Create(_fx),
+                Guid.Empty,
+                _ => (true, "RSA User"));
+            var args = new LoginArgs
+            {
+                UserId = "rsa_user",
+                Password = "x",
+                ClientPublicKey = publicKey
+            };
+
+            var result = bo.Login(args);
+
+            try
+            {
+                Assert.False(string.IsNullOrWhiteSpace(result.ApiEncryptionKey));
+                var sessionKeyBase64 = RsaCryptor.DecryptWithPrivateKey(result.ApiEncryptionKey, privateKey);
+                Assert.False(string.IsNullOrWhiteSpace(sessionKeyBase64));
+
+                var session = sessionService.Get(result.AccessToken);
+                Assert.NotNull(session);
+                Assert.Equal(Convert.ToBase64String(session!.ApiEncryptionKey), sessionKeyBase64);
+            }
+            finally
+            {
+                sessionService.Remove(result.AccessToken);
+            }
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("Login 應由 st_user 帶入使用者的時區與語系")]
+        public void Login_SeedUser_AppliesLocaleFromUserRow()
+        {
+            var sessionService = _fx.GetRequiredService<ISessionInfoService>();
+            var bo = new TestableSystemBusinessObject(
+                TestPolhemContext.Create(_fx),
+                Guid.Empty,
+                _ => (true, "測試管理員"));
+
+            var result = bo.Login(new LoginArgs { UserId = "001", Password = "x" });
+
+            try
+            {
+                var session = sessionService.Get(result.AccessToken);
+                Assert.NotNull(session);
+                Assert.Equal("Asia/Taipei", session!.TimeZone);
+                Assert.Equal("zh-TW", session.Culture);
+            }
+            finally
+            {
+                sessionService.Remove(result.AccessToken);
+            }
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("Login 使用者無對應 st_user 列時應退回部署層預設語系與時區")]
+        public void Login_UserWithoutRow_FallsBackToDeploymentDefaults()
+        {
+            var sessionService = _fx.GetRequiredService<ISessionInfoService>();
+            var backend = _fx.GetRequiredService<IDefineAccess>()
+                .GetSystemSettings().BackendConfiguration;
+            var bo = new TestableSystemBusinessObject(
+                TestPolhemContext.Create(_fx),
+                Guid.Empty,
+                _ => (true, "No Row"));
+
+            var result = bo.Login(new LoginArgs { UserId = "no-such-user", Password = "x" });
+
+            try
+            {
+                var session = sessionService.Get(result.AccessToken);
+                Assert.NotNull(session);
+                Assert.Equal(backend.DefaultTimeZone, session!.TimeZone);
+                Assert.Equal(backend.DefaultLanguage, session.Culture);
+            }
+            finally
+            {
+                sessionService.Remove(result.AccessToken);
+            }
+        }
+
+        [Fact]
+        [DisplayName("Login 驗證失敗應拋 UnauthorizedAccessException 並記錄 tracker 失敗")]
+        public void Login_AuthenticateFails_ThrowsAndRecordsFailure()
+        {
+            var tracker = new RecordingTracker();
+            var ctx = TestPolhemContext.CreateWithOverrides(_fx, (typeof(ILoginAttemptTracker), tracker));
+            var bo = new TestableSystemBusinessObject(
+                ctx,
+                Guid.Empty,
+                _ => (false, string.Empty));
+            var args = new LoginArgs { UserId = "bad", Password = "bad" };
+
+            Assert.Throws<UnauthorizedAccessException>(() => bo.Login(args));
+            Assert.Equal(1, tracker.FailureCount);
+            Assert.Equal(0, tracker.ResetCount);
+        }
+
+        [Fact]
+        [DisplayName("Login 已鎖定帳戶應直接拋 UnauthorizedAccessException 不觸發驗證")]
+        public void Login_AccountLockedOut_ThrowsBeforeAuthenticate()
+        {
+            var tracker = new RecordingTracker { LockedOut = true };
+            var authCalls = 0;
+            var ctx = TestPolhemContext.CreateWithOverrides(_fx, (typeof(ILoginAttemptTracker), tracker));
+            var bo = new TestableSystemBusinessObject(
+                ctx,
+                Guid.Empty,
+                _ =>
+                {
+                    authCalls++;
+                    return (true, "anything");
+                });
+            var args = new LoginArgs { UserId = "locked", Password = "x" };
+
+            Assert.Throws<UnauthorizedAccessException>(() => bo.Login(args));
+            Assert.Equal(0, authCalls);
+            Assert.Equal(0, tracker.FailureCount);
+        }
+
+        [Fact]
+        [DisplayName("Login 驗證成功且 tracker 非 null 應呼叫 Reset")]
+        public void Login_SuccessWithTracker_CallsReset()
+        {
+            var sessionService = _fx.GetRequiredService<ISessionInfoService>();
+            var tracker = new RecordingTracker();
+            var ctx = TestPolhemContext.CreateWithOverrides(_fx, (typeof(ILoginAttemptTracker), tracker));
+            var bo = new TestableSystemBusinessObject(
+                ctx,
+                Guid.Empty,
+                _ => (true, "ok"));
+            var args = new LoginArgs { UserId = "u", Password = "p" };
+
+            var result = bo.Login(args);
+            try
+            {
+                Assert.Equal(1, tracker.ResetCount);
+                Assert.Equal(0, tracker.FailureCount);
+            }
+            finally
+            {
+                sessionService.Remove(result.AccessToken);
+            }
+        }
+
+        [Fact]
+        [DisplayName("SystemBusinessObject 基底 AuthenticateUser 應預設回傳 false")]
+        public void BaseAuthenticateUser_DefaultsToFalse()
+        {
+            // 基底類別未覆寫時 AuthenticateUser 永遠回 false，Login 必拋 UnauthorizedAccessException。
+            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+            var args = new LoginArgs { UserId = "u", Password = "p" };
+
+            Assert.Throws<UnauthorizedAccessException>(() => bo.Login(args));
+        }
+    }
+}

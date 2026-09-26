@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="8.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.4" />
+    <!-- Force the SQLitePCLRaw native bundle to 3.x: Microsoft.Data.Sqlite 9.0.4 pulls
+         2.1.10 transitively, and the whole 2.1.x line (<= 2.1.11) carries advisory
+         GHSA-2m69-gcr7-jv3q with no 2.x patch. 3.0.3 ships a non-vulnerable SQLite engine. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+    <PackageReference Include="Npgsql" Version="9.0.4" />
+    <PackageReference Include="MySqlConnector" Version="2.4.0" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.200" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Polhem.Api.Client\Polhem.Api.Client.csproj" />
+    <ProjectReference Include="..\..\src\Polhem.Hosting\Polhem.Hosting.csproj" />
+    <ProjectReference Include="..\..\src\Polhem.UI.Core\Polhem.UI.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Northwind seed rows consumed by NorthwindTestSeed; embedded so referencing
+         test projects need no content-copy step. -->
+    <EmbeddedResource Include="SeedData\*.json" />
+  </ItemGroup>
+
+</Project>

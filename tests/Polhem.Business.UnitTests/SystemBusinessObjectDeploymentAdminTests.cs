@@ -1,0 +1,96 @@
+using System.ComponentModel;
+using Polhem.Base.Exceptions;
+using Polhem.Business.System;
+using Polhem.Db.Manager;
+using Polhem.Definition.Database;
+using Polhem.Repository.Abstractions.Factories;
+using Polhem.Repository.Abstractions.System;
+using Polhem.Tests.Shared;
+
+using Polhem.Definition;
+namespace Polhem.Business.UnitTests
+{
+    /// <summary>
+    /// <see cref="SystemBusinessObject.SetDeploymentAdmin"/> 的整合測試：旗標確實寫進
+    /// <c>st_user</c>，以及查無使用者 / 空白 userId 的拒絕情境。
+    /// </summary>
+    /// <remarks>
+    /// 每個測試建自己的使用者列並在 finally 刪除，不動 seed 使用者 '001'——實體資料庫由多個
+    /// 平行測試行程共用（見 <see cref="TestUsers"/>）。
+    /// 這些 BO 走 <c>DbScope.Common</c>，測試 fixture 把 <c>common</c> 綁在 SQL Server，
+    /// 因此閘門必須是 <c>SQLServer</c>：先前標成 <c>SQLite</c> 時，跳過與否看的是
+    /// <c>POLHEM_TEST_CONNSTR_SQLITE</c>，實際跑的卻是 SQL Server。
+    /// </remarks>
+    public class SystemBusinessObjectDeploymentAdminTests : IClassFixture<SharedDbFixture>
+    {
+        private readonly SharedDbFixture _fx;
+
+        public SystemBusinessObjectDeploymentAdminTests(SharedDbFixture fx) { _fx = fx; }
+
+        private SystemBusinessObject CreateBo()
+            // SetDeploymentAdmin 的守衛只放行本機呼叫，所以這裡必須顯式宣告。
+            => new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
+
+        private IDbConnectionManager ConnectionManager => _fx.GetRequiredService<IDbConnectionManager>();
+
+        private Repository.Abstractions.System.IUserRepository Repo
+            => _fx.GetRequiredService<IRepositoryFactory>().Create<IUserRepository>();
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SetDeploymentAdmin 應把旗標寫進 st_user，且可再撤銷")]
+        public void SetDeploymentAdmin_GrantsThenRevokes()
+        {
+            string userId = TestUsers.Create(ConnectionManager, "bo-admin");
+            try
+            {
+                var granted = CreateBo().SetDeploymentAdmin(new SetDeploymentAdminArgs
+                {
+                    UserId = userId,
+                    IsDeploymentAdmin = true,
+                });
+
+                Assert.Equal(userId, granted.UserId);
+                Assert.True(granted.IsDeploymentAdmin);
+                Assert.True(Repo.IsDeploymentAdmin(userId));
+
+                var revoked = CreateBo().SetDeploymentAdmin(new SetDeploymentAdminArgs
+                {
+                    UserId = userId,
+                    IsDeploymentAdmin = false,
+                });
+
+                Assert.False(revoked.IsDeploymentAdmin);
+                Assert.False(Repo.IsDeploymentAdmin(userId));
+            }
+            finally
+            {
+                TestUsers.Delete(ConnectionManager, userId);
+            }
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SetDeploymentAdmin 於查無使用者時應以可讀訊息拒絕")]
+        public void SetDeploymentAdmin_UnknownUser_ThrowsUserMessage()
+        {
+            var args = new SetDeploymentAdminArgs { UserId = "no-such-user", IsDeploymentAdmin = true };
+
+            Assert.Throws<UserMessageException>(() => CreateBo().SetDeploymentAdmin(args));
+        }
+
+        [Fact]
+        [DisplayName("SetDeploymentAdmin 於未給 userId 時應拒絕")]
+        public void SetDeploymentAdmin_MissingUserId_ThrowsUserMessage()
+        {
+            var args = new SetDeploymentAdminArgs { UserId = string.Empty, IsDeploymentAdmin = true };
+
+            Assert.Throws<UserMessageException>(() => CreateBo().SetDeploymentAdmin(args));
+        }
+
+        [Fact]
+        [DisplayName("SetDeploymentAdmin 於 args 為 null 時應拋 ArgumentNullException")]
+        public void SetDeploymentAdmin_NullArgs_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => CreateBo().SetDeploymentAdmin(null!));
+        }
+    }
+}

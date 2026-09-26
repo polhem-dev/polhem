@@ -1,0 +1,343 @@
+using System.ComponentModel;
+using System.Data.Common;
+using System.Reflection;
+using Polhem.Base;
+using Polhem.Base.Data;
+using Polhem.Db;
+using Polhem.Db.Manager;
+using Polhem.Definition;
+using Polhem.Definition.Database;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
+using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
+using Polhem.Definition.Storage;
+using Polhem.Repository.Form;
+
+using Polhem.Tests.Shared;
+namespace Polhem.Repository.UnitTests
+{
+    /// <summary>
+    /// 針對 <see cref="DataFormRepository"/> 建構子驗證、<see cref="DataFormRepository.GetNewData"/>
+    /// 及私有靜態輔助方法（<c>ConvertDefaultValue</c>、<c>TryCoerceToGuid</c>）的純邏輯測試，
+    /// 不需資料庫連線。
+    /// </summary>
+    public class DataFormRepositoryTests
+    {
+        #region Stubs
+
+        private sealed class StubDefineAccess : IDefineAccess
+        {
+            public object GetDefine(DefineType defineType, string[]? keys = null) => throw new NotImplementedException();
+            public void SaveDefine(DefineType defineType, object defineObject, string[]? keys = null) => throw new NotImplementedException();
+            public SystemSettings GetSystemSettings() => throw new NotImplementedException();
+            public void SaveSystemSettings(SystemSettings settings) => throw new NotImplementedException();
+            public DatabaseSettings GetDatabaseSettings() => throw new NotImplementedException();
+            public void SaveDatabaseSettings(DatabaseSettings settings) => throw new NotImplementedException();
+            public ProgramSettings GetProgramSettings() => throw new NotImplementedException();
+            public void SaveProgramSettings(ProgramSettings settings) => throw new NotImplementedException();
+            public DbCategorySettings GetDbCategorySettings() => throw new NotImplementedException();
+            public void SaveDbCategorySettings(DbCategorySettings settings) => throw new NotImplementedException();
+            public TableSchema GetTableSchema(string categoryId, string tableName) => throw new NotImplementedException();
+            public void SaveTableSchema(string categoryId, TableSchema tableSchema) => throw new NotImplementedException();
+            public FormSchema GetFormSchema(string progId) => throw new NotImplementedException();
+            public void SaveFormSchema(FormSchema formSchema) => throw new NotImplementedException();
+            public FormLayout GetFormLayout(string layoutId) => throw new NotImplementedException();
+            public void SaveFormLayout(FormLayout formLayout) => throw new NotImplementedException();
+            public LanguageResource GetLanguage(string lang, string ns) => throw new NotImplementedException();
+            public void SaveLanguage(LanguageResource resource) => throw new NotImplementedException();
+        }
+
+        private sealed class StubDbAccessFactory : IDbAccessFactory
+        {
+            public DbAccess Create(string databaseId) => throw new NotImplementedException();
+        }
+
+        private sealed class StubConnectionManager : IDbConnectionManager
+        {
+            public DbConnectionInfo GetConnectionInfo(string databaseId) => throw new NotImplementedException();
+            public DbConnection CreateConnection(string databaseId) => throw new NotImplementedException();
+            public bool Remove(string databaseId) => false;
+            public void Clear() { }
+            public bool Contains(string databaseId) => false;
+            public int Count => 0;
+        }
+
+        // CA1861: 所有 typeof() 陣列抽成 static readonly
+        private static readonly Type[] s_convertDefaultValueParams = [typeof(string), typeof(Type)];
+        private static readonly Type[] s_tryCoerceToGuidParams = [typeof(object)];
+
+        private static DataFormRepository CreateRepository(FormSchema? schema = null)
+        {
+            schema ??= BuildSchema();
+            return new DataFormRepository(TestRepositoryContext.Create(new StubConnectionManager(), defineAccess: new StubDefineAccess(), dbAccessFactory: new StubDbAccessFactory()), "Employee", schema, "testdb");
+        }
+
+        private static FormSchema BuildSchema()
+        {
+            var schema = new FormSchema("Employee", "Employee");
+            var master = schema.Tables!.Add("Employee", "Employee");
+            master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
+            master.Fields.Add("emp_name", "Name", FieldDbType.String);
+            return schema;
+        }
+
+        private static MethodInfo GetPrivateStaticMethod(string name, Type[] paramTypes)
+        {
+            var method = typeof(DataFormRepository).GetMethod(
+                name, BindingFlags.NonPublic | BindingFlags.Static, null, paramTypes, null);
+            Assert.NotNull(method);
+            return method!;
+        }
+
+        #endregion
+
+        #region 建構子驗證
+
+        [Fact]
+        [DisplayName("DataFormRepository 建構子傳入 null ctx 應拋 ArgumentNullException")]
+        public void Constructor_NullContext_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new DataFormRepository(null!, "Employee", BuildSchema(), "testdb"));
+        }
+
+        [Fact]
+        [DisplayName("DataFormRepository 建構子傳入 null schema 應拋 ArgumentNullException")]
+        public void Constructor_NullSchema_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new DataFormRepository(TestRepositoryContext.Create(new StubConnectionManager(), defineAccess: new StubDefineAccess(), dbAccessFactory: new StubDbAccessFactory()), "Employee", null!, "testdb"));
+        }
+
+        [Fact]
+        [DisplayName("DataFormRepository 建構子傳入 null databaseId 應拋 ArgumentNullException")]
+        public void Constructor_NullDatabaseId_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new DataFormRepository(TestRepositoryContext.Create(new StubConnectionManager(), defineAccess: new StubDefineAccess(), dbAccessFactory: new StubDbAccessFactory()), "Employee", BuildSchema(), null!));
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        [DisplayName("DataFormRepository 建構子傳入空白 databaseId 應拋 ArgumentException")]
+        public void Constructor_BlankDatabaseId_ThrowsArgumentException(string databaseId)
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new DataFormRepository(TestRepositoryContext.Create(new StubConnectionManager(), defineAccess: new StubDefineAccess(), dbAccessFactory: new StubDbAccessFactory()), "Employee", BuildSchema(), databaseId));
+        }
+
+        [Fact]
+        [DisplayName("統一簽章後 null progId 正規化為空字串，不再拋例外")]
+        public void Constructor_NullProgId_NormalizesToEmpty()
+        {
+            // 註冊表軸的 repository 一定有 progId；框架軸沒有，統一簽章下傳空字串即可。
+            // 兩者共用同一個建構函式，因此 progId 不再是必填。
+            var repo = new DataFormRepository(TestRepositoryContext.Create(new StubConnectionManager(), defineAccess: new StubDefineAccess(), dbAccessFactory: new StubDbAccessFactory()), null!, BuildSchema(), "testdb");
+
+            Assert.Equal(string.Empty, repo.ProgId);
+        }
+
+        [Fact]
+        [DisplayName("DataFormRepository 建構子正確設定 ProgId 屬性")]
+        public void Constructor_ValidArgs_SetsProgId()
+        {
+            var repo = CreateRepository();
+            Assert.Equal("Employee", repo.ProgId);
+        }
+
+        #endregion
+
+        #region GetNewData
+
+        [Fact]
+        [DisplayName("GetNewData Schema 含 MasterTable 應回傳含一列 master 資料的 DataSet")]
+        public void GetNewData_SchemaWithMasterTable_ReturnsDataSetWithOneRow()
+        {
+            var repo = CreateRepository();
+            var dataSet = repo.GetNewData();
+
+            Assert.NotNull(dataSet);
+            Assert.Equal("Employee", dataSet.DataSetName);
+            Assert.True(dataSet.Tables.Contains("Employee"));
+            Assert.Equal(1, dataSet.Tables["Employee"]!.Rows.Count);
+        }
+
+        [Fact]
+        [DisplayName("GetNewData master 列的 sys_rowid 應為非空 Guid")]
+        public void GetNewData_MasterRow_HasNonEmptyRowId()
+        {
+            var repo = CreateRepository();
+            var dataSet = repo.GetNewData();
+            var masterRow = dataSet.Tables["Employee"]!.Rows[0];
+            var rowId = (Guid)masterRow[SysFields.RowId];
+            Assert.NotEqual(Guid.Empty, rowId);
+        }
+
+        [Theory]
+        [InlineData("Pacific/Kiritimati")]
+        [InlineData("Pacific/Pago_Pago")]
+        [DisplayName("GetNewData 新列的 DateTime 預設值為 UTC 當下，Date 預設值為使用者時區的今天")]
+        public void GetNewData_TimeDefaults_DateTimeIsUtcAndDateIsUserDay(string timeZoneId)
+        {
+            // 伺服端的 DataSet 以 UTC 表示（ADR-032 D3），回應經 Connector 時會被當成 UTC 換算。
+            // 骨架表經 AddColumn 建立；欄位若帶建欄當下的時鐘預設值，FormRowDefaults 會被略過。
+            // UTC+14 與 UTC-11：任何時刻至少有一個時區的「今天」與 UTC 不同，Date 斷言不會因為
+            // 剛好同一天而空轉；DateTime 則兩者都與 UTC 相差十小時以上。
+            var schema = new FormSchema("Employee", "Employee");
+            var master = schema.Tables!.Add("Employee", "Employee");
+            master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
+            master.Fields.Add("hire_date", "Hire Date", FieldDbType.Date);
+            master.Fields.Add("created_at", "Created At", FieldDbType.DateTime);
+            var repo = CreateRepository(schema);
+            var utcBefore = DateTime.UtcNow;
+
+            var dataSet = repo.GetNewData(timeZoneId);
+
+            var utcAfter = DateTime.UtcNow;
+            var masterRow = dataSet.Tables["Employee"]!.Rows[0];
+            Assert.InRange((DateTime)masterRow["created_at"], utcBefore, utcAfter);
+            Assert.Equal(FrameworkClock.Today(timeZoneId).ToDateTime(TimeOnly.MinValue), (DateTime)masterRow["hire_date"]);
+        }
+
+        [Fact]
+        [DisplayName("GetNewData Schema 無 MasterTable 應拋 InvalidOperationException")]
+        public void GetNewData_SchemaWithoutMasterTable_ThrowsInvalidOperationException()
+        {
+            var schema = new FormSchema("NoMaster", "NoMaster");
+            var repo = CreateRepository(schema);
+            Assert.Throws<InvalidOperationException>(() => repo.GetNewData());
+        }
+
+        [Fact]
+        [DisplayName("GetNewData master 列應由 schema 補非空值（含無欄位預設的 Short 型別）")]
+        public void GetNewData_MasterRow_SeedsNonNullDefaults()
+        {
+            // The master table name must match CreateRepository's progId ("Employee").
+            var schema = new FormSchema("Employee", "Employee");
+            var master = schema.Tables!.Add("Employee", "Employee");
+            master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
+            master.Fields.Add("title", "Title", FieldDbType.String);
+            master.Fields.Add("seq", "Seq", FieldDbType.Short);   // DBNull column default → seeded
+            var repo = CreateRepository(schema);
+
+            var row = repo.GetNewData().Tables["Employee"]!.Rows[0];
+
+            Assert.NotEqual(Guid.Empty, (Guid)row[SysFields.RowId]);
+            Assert.Equal(string.Empty, row["title"]);
+            Assert.NotEqual(DBNull.Value, row["seq"]);
+            Assert.Equal((short)0, row["seq"]);
+        }
+
+        #endregion
+
+        #region ConvertDefaultValue（私有靜態方法）
+
+        [Theory]
+        [InlineData("hello world")]
+        [InlineData("")]
+        [DisplayName("ConvertDefaultValue string 型別應直接回傳原始字串")]
+        public void ConvertDefaultValue_StringType_ReturnsRawString(string rawValue)
+        {
+            var method = GetPrivateStaticMethod("ConvertDefaultValue", s_convertDefaultValueParams);
+            // rawValue 為變數，避免 CA1861（new object[] { variable, typeof(...) } 不觸發）
+            var result = method.Invoke(null, new object[] { rawValue, typeof(string) });
+            Assert.Equal(rawValue, result);
+        }
+
+        [Fact]
+        [DisplayName("ConvertDefaultValue Guid 型別傳入有效 Guid 字串應解析回傳")]
+        public void ConvertDefaultValue_GuidType_ValidString_ReturnsParsedGuid()
+        {
+            var method = GetPrivateStaticMethod("ConvertDefaultValue", s_convertDefaultValueParams);
+            var expected = Guid.NewGuid();
+            // expected.ToString() 為變數，避免 CA1861
+            var result = method.Invoke(null, new object[] { expected.ToString(), typeof(Guid) });
+            Assert.Equal(expected, (Guid)result!);
+        }
+
+        [Theory]
+        [InlineData("not-a-guid")]
+        [InlineData("12345")]
+        [DisplayName("ConvertDefaultValue Guid 型別傳入無效字串應回傳 Guid.Empty")]
+        public void ConvertDefaultValue_GuidType_InvalidString_ReturnsGuidEmpty(string invalidGuid)
+        {
+            var method = GetPrivateStaticMethod("ConvertDefaultValue", s_convertDefaultValueParams);
+            var result = method.Invoke(null, new object[] { invalidGuid, typeof(Guid) });
+            Assert.Equal(Guid.Empty, (Guid)result!);
+        }
+
+        [Theory]
+        [InlineData("42", 42)]
+        [InlineData("0", 0)]
+        [DisplayName("ConvertDefaultValue int 型別傳入有效數字字串應轉換回傳")]
+        public void ConvertDefaultValue_IntType_ValidString_ReturnsInt(string raw, int expected)
+        {
+            var method = GetPrivateStaticMethod("ConvertDefaultValue", s_convertDefaultValueParams);
+            var result = method.Invoke(null, new object[] { raw, typeof(int) });
+            Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData("not-a-number")]
+        [InlineData("abc")]
+        [DisplayName("ConvertDefaultValue int 型別傳入無效字串應回傳 DBNull.Value")]
+        public void ConvertDefaultValue_IntType_InvalidString_ReturnsDBNull(string invalidInt)
+        {
+            var method = GetPrivateStaticMethod("ConvertDefaultValue", s_convertDefaultValueParams);
+            var result = method.Invoke(null, new object[] { invalidInt, typeof(int) });
+            Assert.Same(DBNull.Value, result);
+        }
+
+        #endregion
+
+        #region TryCoerceToGuid（私有靜態方法）
+
+        [Fact]
+        [DisplayName("TryCoerceToGuid 傳入 Guid 應直接回傳相同 Guid")]
+        public void TryCoerceToGuid_GuidInput_ReturnsSameGuid()
+        {
+            var method = GetPrivateStaticMethod("TryCoerceToGuid", s_tryCoerceToGuidParams);
+            var expected = Guid.NewGuid();
+            // expected 為變數，不觸發 CA1861
+            var result = method.Invoke(null, new object?[] { expected });
+            Assert.Equal(expected, (Guid)result!);
+        }
+
+        [Fact]
+        [DisplayName("TryCoerceToGuid 傳入有效 Guid 字串應解析並回傳 Guid")]
+        public void TryCoerceToGuid_ValidGuidString_ReturnsParsedGuid()
+        {
+            var method = GetPrivateStaticMethod("TryCoerceToGuid", s_tryCoerceToGuidParams);
+            var expected = Guid.NewGuid();
+            // expected.ToString() 為變數，不觸發 CA1861
+            var result = method.Invoke(null, new object?[] { expected.ToString() });
+            Assert.Equal(expected, (Guid)result!);
+        }
+
+        [Theory]
+        [InlineData("not-a-guid")]
+        [InlineData("12345")]
+        [DisplayName("TryCoerceToGuid 傳入無效字串應回傳 null")]
+        public void TryCoerceToGuid_InvalidString_ReturnsNull(string invalidGuid)
+        {
+            var method = GetPrivateStaticMethod("TryCoerceToGuid", s_tryCoerceToGuidParams);
+            var result = method.Invoke(null, new object?[] { invalidGuid });
+            Assert.Null(result);
+        }
+
+        [Fact]
+        [DisplayName("TryCoerceToGuid 傳入 null 應回傳 null")]
+        public void TryCoerceToGuid_NullInput_ReturnsNull()
+        {
+            var method = GetPrivateStaticMethod("TryCoerceToGuid", s_tryCoerceToGuidParams);
+            // 使用本地變數 nullValue 避免 new object?[] { null } 觸發 CA1861
+            object? nullValue = null;
+            var result = method.Invoke(null, new object?[] { nullValue });
+            Assert.Null(result);
+        }
+
+        #endregion
+    }
+}

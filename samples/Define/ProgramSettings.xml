@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ProgramSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Items>
+    <ProgramItem ProgId="System" DisplayName="System" BusinessObject="Polhem.Samples.Shared.DemoAuthenticatingSystemBusinessObject, Polhem.Samples.Shared" />
+    <ProgramItem ProgId="AuditLog" DisplayName="AuditLog" BusinessObject="Polhem.Business.AuditLog.LogBusinessObject, Polhem.Business" />
+    <!-- No BusinessObject attribute: AuditRule is a framework-reserved progId and resolves to
+         AuditRuleBusinessObject on its own. The entry stays declared so startup self-registration
+         has nothing missing to add, since that path rewrites this whole file. -->
+    <ProgramItem ProgId="AuditRule" DisplayName="AuditRule" />
+  </Items>
+</ProgramSettings>

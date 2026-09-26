@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DbCategorySettings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Categories>
+		<DbCategory Id="common" DisplayName="共用資料庫">
+			<Tables>
+				<TableItem TableName="st_user" DisplayName="用戶" />
+				<TableItem TableName="st_session" DisplayName="連線資料" />
+				<TableItem TableName="st_company" DisplayName="公司" />
+				<TableItem TableName="st_user_company" DisplayName="用戶可進入公司" />
+				<TableItem TableName="st_api_key" DisplayName="API 金鑰" />
+				<TableItem TableName="st_cache_notify" DisplayName="快取通知" />
+				<TableItem TableName="st_define" DisplayName="定義儲存" />
+			</Tables>
+		</DbCategory>
+		<DbCategory Id="company" DisplayName="公司資料庫">
+			<Tables>
+				<TableItem TableName="st_department" DisplayName="部門" />
+				<TableItem TableName="st_employee" DisplayName="員工" />
+				<TableItem TableName="ft_project" DisplayName="專案" />
+				<TableItem TableName="st_role" DisplayName="角色" />
+				<TableItem TableName="st_role_grant" DisplayName="角色授權" />
+				<TableItem TableName="st_user_role" DisplayName="使用者角色" />
+				<TableItem TableName="st_audit_rule" DisplayName="稽核規則" />
+				<TableItem TableName="ft_category" DisplayName="產品類別" />
+				<TableItem TableName="ft_supplier" DisplayName="供應商" />
+				<TableItem TableName="ft_customer" DisplayName="客戶" />
+				<TableItem TableName="ft_shipper" DisplayName="貨運商" />
+				<TableItem TableName="ft_product" DisplayName="產品" />
+				<TableItem TableName="ft_order" DisplayName="訂單" />
+				<TableItem TableName="ft_order_detail" DisplayName="訂單明細" />
+			</Tables>
+		</DbCategory>
+		<DbCategory Id="log" DisplayName="日誌資料庫">
+			<Tables>
+				<TableItem TableName="st_log_login" DisplayName="登入記錄" />
+				<TableItem TableName="st_log_change" DisplayName="異動記錄" />
+				<TableItem TableName="st_log_access" DisplayName="檢視記錄" />
+				<TableItem TableName="st_log_anomaly_api" DisplayName="API 異常記錄" />
+				<TableItem TableName="st_log_anomaly_db" DisplayName="DB 異常記錄" />
+			</Tables>
+		</DbCategory>
+	</Categories>
+</DbCategorySettings>

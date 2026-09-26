@@ -1,0 +1,391 @@
+using System.ComponentModel;
+using System.Data;
+using Polhem.Base;
+using Polhem.Base.Data;
+using Polhem.Base.Exceptions;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Settings;
+using Polhem.Expressions;
+
+namespace Polhem.Definition.UnitTests.Forms
+{
+    /// <summary>
+    /// <see cref="FormExpressionCalculator"/> 測試：row-level 計算（含 RoundByKind 捨入、宣告順序鏈）、
+    /// 只填空欄的預設值、只回報實際變動欄、以及「來源欄 → 計算欄」相依圖。使用真實
+    /// <see cref="DynamicExpressoEvaluator"/>，純邏輯、無資料庫。
+    /// </summary>
+    public class FormExpressionCalculatorTests
+    {
+        private readonly FormExpressionCalculator _calculator = new(new DynamicExpressoEvaluator());
+
+        private static FormSchema BuildOrderSchema()
+        {
+            var schema = new FormSchema("Order", "Order") { CategoryId = "company" };
+            var table = schema.Tables!.Add("Order", "Order");
+            table.Fields!.Add(new FormField("sys_rowid", "RowId", FieldDbType.Guid));
+            table.Fields!.Add(new FormField("price", "Price", FieldDbType.Currency) { NumberKind = NumberKind.UnitPrice });
+            table.Fields!.Add(new FormField("qty", "Qty", FieldDbType.Decimal) { NumberKind = NumberKind.Quantity });
+            table.Fields!.Add(new FormField("amount", "Amount", FieldDbType.Currency)
+            {
+                NumberKind = NumberKind.Amount,
+                ValueExpression = "price * qty",
+                ReadOnly = true,
+            });
+            table.Fields!.Add(new FormField("tax", "Tax", FieldDbType.Currency)
+            {
+                NumberKind = NumberKind.Amount,
+                ValueExpression = "amount * 0.05m",
+                ReadOnly = true,
+            });
+            table.Fields!.Add(new FormField("order_date", "OrderDate", FieldDbType.DateTime)
+            {
+                DefaultValueExpression = "Today()",
+            });
+            table.Fields!.Add(new FormField("status", "Status", FieldDbType.String));
+            return schema;
+        }
+
+        private static DataTable BuildOrderTable(decimal price, decimal qty,
+            object? amount = null, object? tax = null, object? orderDate = null)
+        {
+            var table = new DataTable("Order");
+            table.Columns.Add("sys_rowid", typeof(Guid));
+            table.Columns.Add("price", typeof(decimal));
+            table.Columns.Add("qty", typeof(decimal));
+            table.Columns.Add("amount", typeof(decimal));
+            table.Columns.Add("tax", typeof(decimal));
+            table.Columns.Add("order_date", typeof(DateTime));
+            table.Columns.Add("status", typeof(string));
+
+            var row = table.NewRow();
+            row["price"] = price;
+            row["qty"] = qty;
+            if (amount != null) { row["amount"] = amount; }
+            if (tax != null) { row["tax"] = tax; }
+            if (orderDate != null) { row["order_date"] = orderDate; }
+            row["status"] = "Draft";
+            table.Rows.Add(row);
+            return table;
+        }
+
+        // UTC+14：使用者時區的當下與 UTC 當下必定相差 14 小時，斷言兩種基準時不會剛好重疊。
+        private const string Kiritimati = "Pacific/Kiritimati";
+
+        private static FormSchema BuildStampSchema()
+        {
+            var schema = new FormSchema("Stamp", "Stamp") { CategoryId = "company" };
+            var table = schema.Tables!.Add("Stamp", "Stamp");
+            table.Fields!.Add(new FormField("created_at", "CreatedAt", FieldDbType.DateTime)
+            {
+                DefaultValueExpression = "Now()",
+            });
+            table.Fields!.Add(new FormField("touched_at", "TouchedAt", FieldDbType.DateTime)
+            {
+                ValueExpression = "Now()",
+                ReadOnly = true,
+            });
+            table.Fields!.Add(new FormField("stamp_date", "StampDate", FieldDbType.Date)
+            {
+                DefaultValueExpression = "Today()",
+            });
+            return schema;
+        }
+
+        private static DataSet BuildStampDataSet()
+        {
+            var table = new DataTable("Stamp");
+            table.Columns.Add("created_at", typeof(DateTime));
+            table.Columns.Add("touched_at", typeof(DateTime));
+            table.Columns.Add("stamp_date", typeof(DateTime));
+            table.Rows.Add(table.NewRow());   // RowState = Added
+            var dataSet = new DataSet("Stamp");
+            dataSet.Tables.Add(table);
+            return dataSet;
+        }
+
+        [Fact]
+        [DisplayName("ApplyFieldExpressions（伺服端存檔）：Now() 以 UTC 為基準，Today() 仍取使用者時區的今天")]
+        public void ApplyFieldExpressions_NowIsUtcBasis_TodayIsUserDay()
+        {
+            // 伺服端存檔時 DataSet 已是 UTC（ADR-032 D3）。Now() 若取使用者時區的牆上時間，
+            // 寫進 DateTime 欄就會以使用者時區存進約定存 UTC 的欄位。
+            var dataSet = BuildStampDataSet();
+            var utcBefore = DateTime.UtcNow;
+
+            _calculator.ApplyFieldExpressions(BuildStampSchema(), dataSet, new RoundingContext(), Kiritimati);
+
+            var utcAfter = DateTime.UtcNow;
+            var row = dataSet.Tables["Stamp"]!.Rows[0];
+            Assert.InRange((DateTime)row["created_at"], utcBefore, utcAfter);
+            Assert.InRange((DateTime)row["touched_at"], utcBefore, utcAfter);
+            Assert.Equal(FrameworkClock.Today(Kiritimati).ToDateTime(TimeOnly.MinValue), (DateTime)row["stamp_date"]);
+        }
+
+        [Fact]
+        [DisplayName("ValidateRules（伺服端存檔）：規則裡的 Now() 與 UTC 儲存格以同一基準比較")]
+        public void ValidateRules_NowComparesAgainstUtcCells()
+        {
+            // 儲存格是 UTC 的一小時後，以 UTC 比較應判為晚於現在而擋下。
+            // Now() 若取 UTC+14 的牆上時間，這筆會被誤判為早於現在而放行。
+            var schema = BuildStampSchema();
+            schema.Rules!.Add("created_not_future", "created_at <= Now()", "建立時間不得晚於現在");
+            var dataSet = BuildStampDataSet();
+            dataSet.Tables["Stamp"]!.Rows[0]["created_at"] =
+                DateTime.SpecifyKind(DateTime.UtcNow.AddHours(1), DateTimeKind.Unspecified);
+
+            Assert.Throws<UserMessageException>(() =>
+                _calculator.ValidateRules(schema, dataSet, FormRuleTrigger.BeforeSave, Kiritimati));
+        }
+
+        [Fact]
+        [DisplayName("ApplyDefaultRow（用戶端預覽）：Now() 以使用者時區為基準，因為用戶端的 DataSet 以使用者時區呈現")]
+        public void ApplyDefaultRow_NowIsUserZoneBasis()
+        {
+            var schema = BuildStampSchema();
+            var row = BuildStampDataSet().Tables["Stamp"]!.Rows[0];
+            var before = FrameworkClock.Now(Kiritimati);
+
+            _calculator.ApplyDefaultRow(schema.MasterTable!, row, Kiritimati);
+
+            var after = FrameworkClock.Now(Kiritimati);
+            Assert.InRange((DateTime)row["created_at"], before, after);
+        }
+
+        [Fact]
+        [DisplayName("ApplyComputedRow：amount = price * qty 回填並回報變動欄")]
+        public void ApplyComputedRow_ComputesAndReportsChanged()
+        {
+            var schema = BuildOrderSchema();
+            var table = BuildOrderTable(price: 10m, qty: 3m);
+
+            var changed = _calculator.ApplyComputedRow(schema, schema.MasterTable!, table.Rows[0], new RoundingContext());
+
+            Assert.Equal(30m, table.Rows[0]["amount"]);
+            Assert.Contains("amount", changed);
+        }
+
+        [Fact]
+        [DisplayName("ApplyComputedRow：宣告順序鏈 tax 依 amount（同一次求值取得更新後的 amount）")]
+        public void ApplyComputedRow_ChainsInDeclarationOrder()
+        {
+            var schema = BuildOrderSchema();
+            var table = BuildOrderTable(price: 100m, qty: 2m);
+
+            _calculator.ApplyComputedRow(schema, schema.MasterTable!, table.Rows[0], new RoundingContext());
+
+            // amount = 200；tax = 200 * 0.05 = 10（tax 觀察到同一次求出的 amount，而非舊值）
+            Assert.Equal(200m, table.Rows[0]["amount"]);
+            Assert.Equal(10m, table.Rows[0]["tax"]);
+        }
+
+        [Fact]
+        [DisplayName("ApplyComputedRow：Amount kind 依 NumberKind 捨入至 2 位（away-from-zero）")]
+        public void ApplyComputedRow_RoundsByNumberKind()
+        {
+            var schema = BuildOrderSchema();
+            // 2.125 * 1 = 2.125 → Amount 2 位、四捨五入(away) → 2.13
+            var table = BuildOrderTable(price: 2.125m, qty: 1m);
+
+            _calculator.ApplyComputedRow(schema, schema.MasterTable!, table.Rows[0], new RoundingContext());
+
+            Assert.Equal(2.13m, table.Rows[0]["amount"]);
+        }
+
+        [Fact]
+        [DisplayName("ApplyComputedRow：值未變動時不回報（compare-first，避免事件雜訊）")]
+        public void ApplyComputedRow_NoChange_ReturnsEmpty()
+        {
+            var schema = BuildOrderSchema();
+            // 先填好等於計算結果的 amount / tax，再算一次應無變動
+            var table = BuildOrderTable(price: 10m, qty: 3m, amount: 30m, tax: 1.5m);
+
+            var changed = _calculator.ApplyComputedRow(schema, schema.MasterTable!, table.Rows[0], new RoundingContext());
+
+            Assert.Empty(changed);
+        }
+
+        [Fact]
+        [DisplayName("ApplyDefaultRow：空欄以運算式填入並回報；已有值不覆寫")]
+        public void ApplyDefaultRow_FillsOnlyEmpty()
+        {
+            var schema = BuildOrderSchema();
+            var table = BuildOrderTable(price: 1m, qty: 1m);
+
+            var changed = _calculator.ApplyDefaultRow(schema.MasterTable!, table.Rows[0]);
+
+            // UTC，不是 DateTime.Today：框架的日期預設值是 UtcNow.Date（ADR-032 D12）。
+            // 用本地日斷言會讓本機在 UTC+8 的 00:00–08:00 必定失敗，而 CI 跑 UTC 永遠看不到。
+            Assert.Equal(DateTime.UtcNow.Date, table.Rows[0]["order_date"]);
+            Assert.Contains("order_date", changed);
+
+            // 第二次呼叫：order_date 已有值 → 不覆寫、不回報
+            var again = _calculator.ApplyDefaultRow(schema.MasterTable!, table.Rows[0]);
+            Assert.Empty(again);
+        }
+
+        [Fact]
+        [DisplayName("欄名大小寫與宣告不同時運算式仍解析：變數以宣告欄名為 key，非 DataColumn 名")]
+        public void ApplyComputedRow_UppercaseColumnNames_StillResolvesIdentifiers()
+        {
+            // Columns are deliberately cased differently from the declared (lower-case) field names.
+            // DynamicExpresso identifiers are case-sensitive, so this proves the variable map is keyed by
+            // the schema field rather than the column. `AddColumn` lowercases column names since ADR-029,
+            // which makes the two casings agree — testing with lower-case columns would therefore pass
+            // either way and prove nothing.
+            var schema = BuildOrderSchema();
+            var table = new DataTable("Order");
+            table.Columns.Add("PRICE", typeof(decimal));
+            table.Columns.Add("QTY", typeof(decimal));
+            table.Columns.Add("AMOUNT", typeof(decimal));
+            table.Columns.Add("TAX", typeof(decimal));
+            table.Columns.Add("STATUS", typeof(string));
+            var row = table.NewRow();
+            row["PRICE"] = 10m;
+            row["QTY"] = 3m;
+            row["STATUS"] = "Draft";
+            table.Rows.Add(row);
+
+            var ex = Record.Exception(() =>
+                _calculator.ApplyComputedRow(schema, schema.MasterTable!, table.Rows[0], new RoundingContext()));
+
+            Assert.Null(ex);
+            Assert.Equal(30m, table.Rows[0]["amount"]);   // DataRow lookup is case-insensitive
+            Assert.Equal(1.5m, table.Rows[0]["tax"]);
+        }
+
+        [Fact]
+        [DisplayName("欄名大小寫與宣告不同時 ValidateRules 仍解析規則識別字（customer_rowid != Guid.Empty 型）")]
+        public void ValidateRules_UppercaseColumnNames_StillResolvesIdentifiers()
+        {
+            var schema = BuildOrderSchema();
+            schema.Rules!.Add("amount_positive", "amount > 0", "金額必須大於 0");
+            var table = new DataTable("Order");
+            table.Columns.Add("PRICE", typeof(decimal));
+            table.Columns.Add("QTY", typeof(decimal));
+            table.Columns.Add("AMOUNT", typeof(decimal));
+            table.Columns.Add("TAX", typeof(decimal));
+            table.Columns.Add("STATUS", typeof(string));
+            table.Rows.Add(10m, 2m, 20m, 1m, "Draft");
+            var dataSet = new DataSet("Order");
+            dataSet.Tables.Add(table);
+
+            var ex = Record.Exception(() =>
+                _calculator.ValidateRules(schema, dataSet, FormRuleTrigger.BeforeSave));
+
+            Assert.Null(ex);   // amount=20 > 0 → passes; must not throw UnknownIdentifier
+        }
+
+        [Fact]
+        [DisplayName("BuildDependencyMap：price / qty → amount；amount → tax（來源欄對映受影響計算欄）")]
+        public void BuildDependencyMap_MapsSourceToComputed()
+        {
+            var schema = BuildOrderSchema();
+
+            var map = _calculator.BuildDependencyMap(schema.MasterTable!);
+
+            Assert.Contains("amount", map["price"]);
+            Assert.Contains("amount", map["qty"]);
+            Assert.Contains("tax", map["amount"]);
+            // status 不是任何計算欄的來源
+            Assert.False(map.ContainsKey("status"));
+        }
+
+        [Fact]
+        [DisplayName("BuildDependencyMap：來源欄 key 大小寫不敏感（對齊 DataTable 欄名查找）")]
+        public void BuildDependencyMap_KeysAreCaseInsensitive()
+        {
+            var schema = BuildOrderSchema();
+
+            var map = _calculator.BuildDependencyMap(schema.MasterTable!);
+
+            Assert.True(map.ContainsKey("PRICE"));
+            Assert.True(map.ContainsKey("Qty"));
+        }
+
+        private static FormSchema BuildPackingSchema(NumberKind kind, string unitField)
+        {
+            var schema = new FormSchema("Packing", "Packing") { CategoryId = "company" };
+            var table = schema.Tables!.Add("Packing", "Packing");
+            table.Fields!.Add(new FormField("qty", "Qty", FieldDbType.Decimal));
+            table.Fields!.Add(new FormField("uom", "Uom", FieldDbType.String));
+            table.Fields!.Add(new FormField("packed", "Packed", FieldDbType.Decimal)
+            {
+                NumberKind = kind,
+                UnitField = unitField,
+                ValueExpression = "qty * 1.23456m",
+                ReadOnly = true,
+            });
+            return schema;
+        }
+
+        private static DataTable BuildPackingTable(decimal qty, string uom)
+        {
+            var table = new DataTable("Packing");
+            table.Columns.Add("qty", typeof(decimal));
+            table.Columns.Add("uom", typeof(string));
+            table.Columns.Add("packed", typeof(decimal));
+            var row = table.NewRow();
+            row["qty"] = qty;
+            row["uom"] = uom;
+            table.Rows.Add(row);
+            return table;
+        }
+
+        private static UnitSettings KilogramOnly() => [new UnitItem("KG", 3, "weight", "Kilogram")];
+
+        [Theory]
+        [InlineData(NumberKind.Quantity)]
+        [InlineData(NumberKind.Weight)]
+        [DisplayName("ApplyComputedRow：數量／重量計算欄未綁 UnitField → 擲 InvalidOperationException")]
+        public void ApplyComputedRow_UnitKindWithoutUnitField_Throws(NumberKind kind)
+        {
+            var schema = BuildPackingSchema(kind, unitField: string.Empty);
+            var table = BuildPackingTable(qty: 2m, uom: "KG");
+            var ctx = new RoundingContext { UnitSettings = KilogramOnly() };
+
+            Assert.Throws<InvalidOperationException>(() =>
+                _calculator.ApplyComputedRow(schema, schema.MasterTable!, table.Rows[0], ctx));
+        }
+
+        [Fact]
+        [DisplayName("ApplyComputedRow：未綁 UnitField 的數量輸入欄（非計算欄）不擲")]
+        public void ApplyComputedRow_UnboundQuantityInputField_DoesNotThrow()
+        {
+            // qty is a Quantity input field with no UnitField; only computed fields are checked.
+            var schema = BuildOrderSchema();
+            var table = BuildOrderTable(price: 10m, qty: 3m);
+
+            var ex = Record.Exception(() =>
+                _calculator.ApplyComputedRow(schema, schema.MasterTable!, table.Rows[0], new RoundingContext()));
+
+            Assert.Null(ex);
+        }
+
+        [Fact]
+        [DisplayName("ApplyComputedRow：綁了單位但該列單位空 → 計算結果不捨入")]
+        public void ApplyComputedRow_EmptyRowUnit_NotRounded()
+        {
+            var schema = BuildPackingSchema(NumberKind.Weight, unitField: "uom");
+            var table = BuildPackingTable(qty: 2m, uom: string.Empty);
+            var ctx = new RoundingContext { UnitSettings = KilogramOnly() };
+
+            _calculator.ApplyComputedRow(schema, schema.MasterTable!, table.Rows[0], ctx);
+
+            Assert.Equal(2.46912m, table.Rows[0]["packed"]);
+        }
+
+        [Fact]
+        [DisplayName("ApplyComputedRow：綁了單位且該列單位為 KG → 依單位捨入至 3 位")]
+        public void ApplyComputedRow_RowUnit_RoundsByUnit()
+        {
+            var schema = BuildPackingSchema(NumberKind.Weight, unitField: "uom");
+            var table = BuildPackingTable(qty: 2m, uom: "KG");
+            var ctx = new RoundingContext { UnitSettings = KilogramOnly() };
+
+            _calculator.ApplyComputedRow(schema, schema.MasterTable!, table.Rows[0], ctx);
+
+            // 2 * 1.23456 = 2.46912 → KG 3 位 → 2.469
+            Assert.Equal(2.469m, table.Rows[0]["packed"]);
+        }
+    }
+}

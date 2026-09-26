@@ -1,0 +1,13 @@
+{
+  "case": "value-boolean",
+  "description": "WireValueCode.Boolean.",
+  "codec": "json",
+  "type": "Polhem.Definition.Collections.Parameter, Polhem.Definition",
+  "body": {
+    "name": "v",
+    "value": [
+      1,
+      true
+    ]
+  }
+}

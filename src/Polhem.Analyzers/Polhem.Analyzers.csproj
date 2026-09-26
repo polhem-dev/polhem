@@ -1,0 +1,79 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      WARNING: This project must target netstandard2.0. That is deliberate and not an oversight, even
+      though every other project in this repository targets net10.0 and the framework itself supports
+      .NET 10 and later only.
+
+      The reason is that an analyzer is loaded by the Roslyn compiler, not by the consuming
+      application, so the target framework has to satisfy the compiler host rather than the consumer:
+
+        * `dotnet build` runs csc on .NET, which would load a net10.0 analyzer.
+        * Visual Studio runs Roslyn on .NET Framework, which would NOT. It fails silently — no error,
+          the diagnostics simply never appear.
+
+      Retargeting therefore trades away Visual Studio support for no gain: nothing in this project
+      needs an API beyond netstandard2.0. Every mainstream analyzer package ships netstandard2.0 for
+      the same reason.
+    -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <!--
+      The analyzer is not published as a standalone package. It is embedded into the
+      Polhem.Definition package under analyzers/dotnet/cs/ so that every consumer of that package
+      gets the framework convention diagnostics with no extra install step.
+    -->
+    <IsPackable>false</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+
+    <!-- Required for analyzer projects; enables the RS1xxx analyzer-authoring rules. -->
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+    <Description>Roslyn analyzers enforcing Polhem framework conventions. Embedded in the Polhem.Definition package.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!--
+    Analyzer release tracking (RS2008). Every rule must be listed in the unshipped release before it
+    builds, and moved into the shipped release when a version goes out. This is the analyzer
+    equivalent of the PublicAPI baselines used elsewhere in the repository.
+
+    WARNING: the move is the half that gets forgotten, and forgetting it is silent. Shipped.md held
+    nothing at all until 4.28.0 even though the analyzer had shipped since 4.16.0, and the cost was
+    exactly what an empty baseline costs: RS2000 still caught a new rule that was never declared,
+    but RS2003 — "a rule you shipped is gone" — cannot fire against an empty shipped list, so four
+    rules (POLHEM4001-POLHEM4004) were retired in 4.19.0 with nothing to say so.
+
+    Releasing therefore has a third baseline to move, alongside the two PublicAPI ones:
+    AnalyzerReleases.Unshipped.md -> AnalyzerReleases.Shipped.md under a "## Release x.y.z" heading.
+    See docs/repo-ops/public-api-baseline.md.
+  -->
+  <ItemGroup>
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.Analyzers.UnitTests" />
+  </ItemGroup>
+
+  <!--
+    Opt out of the repository-wide public API surface tracking inherited from
+    src/Directory.Build.props. The analyzer types are public only because Roslyn discovers them
+    by reflection; they ship under analyzers/ rather than lib/, so no consumer can reference
+    them as API and there is nothing to keep a baseline for.
+  -->
+  <ItemGroup>
+    <PackageReference Remove="Microsoft.CodeAnalysis.PublicApiAnalyzers" />
+    <AdditionalFiles Remove="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Remove="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+</Project>

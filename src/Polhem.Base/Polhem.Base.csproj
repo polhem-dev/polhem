@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>Base infrastructure for the Polhem framework, including collections, serialization, encryption, tracing, and general-purpose utilities.</Description>
+    <PackageTags>polhem;base;utilities;helpers;cryptography;encryption;hashing;serialization;compression;tracing;json</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.Base.UnitTests" />
+  </ItemGroup>
+
+</Project>

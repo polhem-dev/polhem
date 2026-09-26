@@ -1,0 +1,86 @@
+using System.ComponentModel;
+using Polhem.Base.Data;
+using Polhem.Db.Providers.MySql;
+using Polhem.Definition;
+using Polhem.Definition.Filters;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Storage;
+using Polhem.Tests.Shared;
+
+namespace Polhem.Db.UnitTests
+{
+    /// <summary>
+    /// Pure-syntax tests for <see cref="MySqlFormCommandBuilder"/>. Verifies that the
+    /// MySQL provider routes through the dialect-agnostic cores in <see cref="Polhem.Db.Dml"/>
+    /// with <see cref="Polhem.Definition.Database.DatabaseType.MySQL"/> and emits backtick-quoted
+    /// identifiers (per <see cref="DatabaseTypeExtensions.QuoteIdentifier"/>).
+    /// </summary>
+    public class MySqlFormCommandBuilderTests : IClassFixture<SharedDbFixture>
+    {
+        private readonly SharedDbFixture _fx;
+
+        public MySqlFormCommandBuilderTests(SharedDbFixture fx) { _fx = fx; }
+        private IDefineAccess DefineAccess => _fx.GetRequiredService<IDefineAccess>();
+
+        private static FormSchema BuildFooSchema()
+        {
+            var schema = new FormSchema("X", "X");
+            var table = schema.Tables!.Add("Foo", "Foo");
+            table.DbTableName = "tb_foo";
+            table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
+            table.Fields!.AddStringField("name", "Name", 50);
+            return schema;
+        }
+
+        private MySqlFormCommandBuilder NewBuilder()
+            => new(BuildFooSchema(), DefineAccess);
+
+        [Fact]
+        [DisplayName("FormSchema 建構子 null 應擲 ArgumentNullException")]
+        public void Constructor_NullFormSchema_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() => new MySqlFormCommandBuilder(null!, DefineAccess));
+        }
+
+        [Fact]
+        [DisplayName("FormSchema 建構子 null IDefineAccess 應擲 ArgumentNullException")]
+        public void Constructor_NullDefineAccess_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() => new MySqlFormCommandBuilder(BuildFooSchema(), null!));
+        }
+
+        [Fact]
+        [DisplayName("BuildSelect 應委派至 MySQL 方言並產生 SELECT 語句（backtick 識別符）")]
+        public void BuildSelect_DelegatesToMySqlDialect()
+        {
+            var builder = NewBuilder();
+
+            var spec = builder.BuildSelect("Foo", "name", null, null);
+
+            Assert.Contains("`tb_foo`", spec.CommandText);
+            Assert.Contains("`name`", spec.CommandText);
+        }
+
+
+        [Fact]
+        [DisplayName("BuildDelete 應委派至 MySQL 方言並產生 DELETE 語句")]
+        public void BuildDelete_DelegatesToMySqlDialect()
+        {
+            var builder = NewBuilder();
+            var spec = builder.BuildDelete("Foo", FilterCondition.Equal(SysFields.RowId, Guid.NewGuid()));
+
+            Assert.Contains("DELETE FROM `tb_foo`", spec.CommandText);
+        }
+
+        [Fact]
+        [DisplayName("BuildCount 應委派至 MySQL 方言並產生 SELECT COUNT(*) 語句（backtick 識別符）")]
+        public void BuildCount_DelegatesToMySqlDialect()
+        {
+            var builder = NewBuilder();
+            var spec = builder.BuildCount("Foo");
+
+            Assert.Contains("COUNT(*)", spec.CommandText);
+            Assert.Contains("`tb_foo`", spec.CommandText);
+        }
+    }
+}

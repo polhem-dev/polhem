@@ -1,0 +1,157 @@
+#nullable enable
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery.AccessLogQuery() -> void
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery.CompanyId.get -> string?
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery.CompanyId.init -> void
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery.FromUtc.get -> System.DateTime?
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery.FromUtc.init -> void
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery.ProgId.get -> string?
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery.ProgId.init -> void
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery.RowKey.get -> string?
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery.RowKey.init -> void
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery.ToUtc.get -> System.DateTime?
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery.ToUtc.init -> void
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery.UserId.get -> string?
+Polhem.Repository.Abstractions.AuditLog.AccessLogQuery.UserId.init -> void
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery.ApiAnomalyLogQuery() -> void
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery.CompanyId.get -> string?
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery.CompanyId.init -> void
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery.FromUtc.get -> System.DateTime?
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery.FromUtc.init -> void
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery.Kind.get -> Polhem.Definition.Logging.AnomalyKind?
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery.Kind.init -> void
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery.Method.get -> string?
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery.Method.init -> void
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery.ToUtc.get -> System.DateTime?
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery.ToUtc.init -> void
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery.UserId.get -> string?
+Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery.UserId.init -> void
+Polhem.Repository.Abstractions.AuditLog.AuditLogPage
+Polhem.Repository.Abstractions.AuditLog.AuditLogPage.AuditLogPage() -> void
+Polhem.Repository.Abstractions.AuditLog.AuditLogPage.Paging.get -> Polhem.Definition.Paging.PagingInfo!
+Polhem.Repository.Abstractions.AuditLog.AuditLogPage.Paging.init -> void
+Polhem.Repository.Abstractions.AuditLog.AuditLogPage.Table.get -> System.Data.DataTable!
+Polhem.Repository.Abstractions.AuditLog.AuditLogPage.Table.init -> void
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.ChangeKind.get -> Polhem.Definition.Logging.ChangeKind?
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.ChangeKind.init -> void
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.ChangeLogQuery() -> void
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.CompanyId.get -> string?
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.CompanyId.init -> void
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.FromUtc.get -> System.DateTime?
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.FromUtc.init -> void
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.ProgId.get -> string?
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.ProgId.init -> void
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.RowKey.get -> string?
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.RowKey.init -> void
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.ToUtc.get -> System.DateTime?
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.ToUtc.init -> void
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.UserId.get -> string?
+Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery.UserId.init -> void
+Polhem.Repository.Abstractions.AuditLog.DbAnomalyLogQuery
+Polhem.Repository.Abstractions.AuditLog.DbAnomalyLogQuery.DatabaseId.get -> string?
+Polhem.Repository.Abstractions.AuditLog.DbAnomalyLogQuery.DatabaseId.init -> void
+Polhem.Repository.Abstractions.AuditLog.DbAnomalyLogQuery.DbAnomalyLogQuery() -> void
+Polhem.Repository.Abstractions.AuditLog.DbAnomalyLogQuery.FromUtc.get -> System.DateTime?
+Polhem.Repository.Abstractions.AuditLog.DbAnomalyLogQuery.FromUtc.init -> void
+Polhem.Repository.Abstractions.AuditLog.DbAnomalyLogQuery.Kind.get -> Polhem.Definition.Logging.AnomalyKind?
+Polhem.Repository.Abstractions.AuditLog.DbAnomalyLogQuery.Kind.init -> void
+Polhem.Repository.Abstractions.AuditLog.DbAnomalyLogQuery.ToUtc.get -> System.DateTime?
+Polhem.Repository.Abstractions.AuditLog.DbAnomalyLogQuery.ToUtc.init -> void
+Polhem.Repository.Abstractions.AuditLog.IAuditLogRepository
+Polhem.Repository.Abstractions.AuditLog.IAuditLogRepository.GetAccessLog(Polhem.Repository.Abstractions.AuditLog.AccessLogQuery! query, Polhem.Definition.Paging.PagingOptions! paging) -> Polhem.Repository.Abstractions.AuditLog.AuditLogPage!
+Polhem.Repository.Abstractions.AuditLog.IAuditLogRepository.GetApiAnomalyLog(Polhem.Repository.Abstractions.AuditLog.ApiAnomalyLogQuery! query, Polhem.Definition.Paging.PagingOptions! paging) -> Polhem.Repository.Abstractions.AuditLog.AuditLogPage!
+Polhem.Repository.Abstractions.AuditLog.IAuditLogRepository.GetApiAnomalySummary(System.DateTime? fromUtc, System.DateTime? toUtc, string? companyId) -> System.Data.DataTable!
+Polhem.Repository.Abstractions.AuditLog.IAuditLogRepository.GetChangeById(System.Guid sysRowId, string? companyId) -> System.Data.DataTable?
+Polhem.Repository.Abstractions.AuditLog.IAuditLogRepository.GetChangeLog(Polhem.Repository.Abstractions.AuditLog.ChangeLogQuery! query, Polhem.Definition.Paging.PagingOptions! paging) -> Polhem.Repository.Abstractions.AuditLog.AuditLogPage!
+Polhem.Repository.Abstractions.AuditLog.IAuditLogRepository.GetDbAnomalyLog(Polhem.Repository.Abstractions.AuditLog.DbAnomalyLogQuery! query, Polhem.Definition.Paging.PagingOptions! paging) -> Polhem.Repository.Abstractions.AuditLog.AuditLogPage!
+Polhem.Repository.Abstractions.AuditLog.IAuditLogRepository.GetDbAnomalySummary(System.DateTime? fromUtc, System.DateTime? toUtc) -> System.Data.DataTable!
+Polhem.Repository.Abstractions.AuditLog.IAuditLogRepository.GetLoginLog(Polhem.Repository.Abstractions.AuditLog.LoginLogQuery! query, Polhem.Definition.Paging.PagingOptions! paging) -> Polhem.Repository.Abstractions.AuditLog.AuditLogPage!
+Polhem.Repository.Abstractions.AuditLog.IAuditLogRepository.GetTopApiMethods(System.DateTime? fromUtc, System.DateTime? toUtc, int topN, string? companyId) -> System.Data.DataTable!
+Polhem.Repository.Abstractions.AuditLog.IAuditLogWriteRepository
+Polhem.Repository.Abstractions.AuditLog.IAuditLogWriteRepository.WriteBatch(System.Collections.Generic.IReadOnlyList<Polhem.Definition.Logging.AuditEntry!>! entries) -> void
+Polhem.Repository.Abstractions.AuditLog.IAuditRuleRepository
+Polhem.Repository.Abstractions.AuditLog.IAuditRuleRepository.GetRules(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Logging.AuditRule!>!
+Polhem.Repository.Abstractions.AuditLog.IAuditRuleRepository.NotifyRulesChanged(string! companyId) -> void
+Polhem.Repository.Abstractions.AuditLog.LoginLogQuery
+Polhem.Repository.Abstractions.AuditLog.LoginLogQuery.CompanyId.get -> string?
+Polhem.Repository.Abstractions.AuditLog.LoginLogQuery.CompanyId.init -> void
+Polhem.Repository.Abstractions.AuditLog.LoginLogQuery.Event.get -> Polhem.Definition.Logging.LoginEvent?
+Polhem.Repository.Abstractions.AuditLog.LoginLogQuery.Event.init -> void
+Polhem.Repository.Abstractions.AuditLog.LoginLogQuery.FromUtc.get -> System.DateTime?
+Polhem.Repository.Abstractions.AuditLog.LoginLogQuery.FromUtc.init -> void
+Polhem.Repository.Abstractions.AuditLog.LoginLogQuery.LoginLogQuery() -> void
+Polhem.Repository.Abstractions.AuditLog.LoginLogQuery.ToUtc.get -> System.DateTime?
+Polhem.Repository.Abstractions.AuditLog.LoginLogQuery.ToUtc.init -> void
+Polhem.Repository.Abstractions.AuditLog.LoginLogQuery.UserId.get -> string?
+Polhem.Repository.Abstractions.AuditLog.LoginLogQuery.UserId.init -> void
+Polhem.Repository.Abstractions.Factories.IRepositoryFactory
+Polhem.Repository.Abstractions.Factories.IRepositoryFactory.Create<T>(System.Guid accessToken = default(System.Guid)) -> T!
+Polhem.Repository.Abstractions.Factories.IRepositoryFactory.CreateFormRepository<T>(System.Guid accessToken, string! progId) -> T!
+Polhem.Repository.Abstractions.Form.DataFormListResult
+Polhem.Repository.Abstractions.Form.DataFormListResult.DataFormListResult() -> void
+Polhem.Repository.Abstractions.Form.DataFormListResult.Paging.get -> Polhem.Definition.Paging.PagingInfo?
+Polhem.Repository.Abstractions.Form.DataFormListResult.Paging.init -> void
+Polhem.Repository.Abstractions.Form.DataFormListResult.Table.get -> System.Data.DataTable?
+Polhem.Repository.Abstractions.Form.DataFormListResult.Table.init -> void
+Polhem.Repository.Abstractions.Form.IDataFormRepository
+Polhem.Repository.Abstractions.Form.IDataFormRepository.Delete(System.Guid rowId, Polhem.Definition.Filters.FilterNode? scopeFilter = null) -> int
+Polhem.Repository.Abstractions.Form.IDataFormRepository.ExistsInScope(System.Guid rowId, Polhem.Definition.Filters.FilterNode? scopeFilter) -> bool
+Polhem.Repository.Abstractions.Form.IDataFormRepository.GetData(System.Guid rowId, Polhem.Definition.Filters.FilterNode? scopeFilter = null) -> System.Data.DataSet?
+Polhem.Repository.Abstractions.Form.IDataFormRepository.GetList(string! selectFields, Polhem.Definition.Filters.FilterNode? filter, Polhem.Definition.Sorting.SortFieldCollection? sortFields, Polhem.Definition.Paging.PagingOptions? paging = null) -> Polhem.Repository.Abstractions.Form.DataFormListResult!
+Polhem.Repository.Abstractions.Form.IDataFormRepository.GetNewData(string! timeZoneId = "") -> System.Data.DataSet!
+Polhem.Repository.Abstractions.Form.IDataFormRepository.GetRowsByRowId(string! tableName, string! selectFields, System.Collections.Generic.IReadOnlyCollection<System.Guid>! rowIds) -> System.Data.DataTable!
+Polhem.Repository.Abstractions.Form.IDataFormRepository.Save(System.Data.DataSet! dataSet) -> (System.Data.DataSet? Refreshed, System.Collections.Generic.Dictionary<string!, int>! AffectedRows)
+Polhem.Repository.Abstractions.IRepositoryDatabaseRouter
+Polhem.Repository.Abstractions.IRepositoryDatabaseRouter.Resolve(Polhem.Definition.DbScope scope, System.Guid accessToken) -> string!
+Polhem.Repository.Abstractions.System.IApiKeyRepository
+Polhem.Repository.Abstractions.System.IApiKeyRepository.Exists(string! sysId) -> bool
+Polhem.Repository.Abstractions.System.IApiKeyRepository.GetEnabledById(string! sysId) -> Polhem.Definition.Security.ApiKeyInfo?
+Polhem.Repository.Abstractions.System.IApiKeyRepository.GetGateState() -> Polhem.Definition.Security.ApiKeyGateState!
+Polhem.Repository.Abstractions.System.IApiKeyRepository.GetList() -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Security.ApiKeySummary!>!
+Polhem.Repository.Abstractions.System.IApiKeyRepository.Insert(Polhem.Definition.Security.ApiKeyInfo! apiKey) -> void
+Polhem.Repository.Abstractions.System.IApiKeyRepository.SetEnabled(string! sysId, bool enabled) -> bool
+Polhem.Repository.Abstractions.System.IApiKeyRepository.SetExpiry(string! sysId, System.DateTime? expiredAt) -> bool
+Polhem.Repository.Abstractions.System.ICompanyRepository
+Polhem.Repository.Abstractions.System.ICompanyRepository.GetById(string! companyId) -> Polhem.Definition.Identity.CompanyInfo?
+Polhem.Repository.Abstractions.System.IDatabaseRepository
+Polhem.Repository.Abstractions.System.IDatabaseRepository.TestConnection(Polhem.Definition.Settings.DatabaseItem! item) -> void
+Polhem.Repository.Abstractions.System.IDatabaseRepository.UpgradeTableSchema(string! databaseId, string! categoryId, string! tableName) -> bool
+Polhem.Repository.Abstractions.System.IDepartmentRepository
+Polhem.Repository.Abstractions.System.IDepartmentRepository.GetDepartments(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Organization.DepartmentRow!>!
+Polhem.Repository.Abstractions.System.IEmployeeRepository
+Polhem.Repository.Abstractions.System.IEmployeeRepository.GetByUserRowId(string! databaseId, System.Guid userRowId) -> Polhem.Definition.Organization.EmployeeRow?
+Polhem.Repository.Abstractions.System.IRolePermissionRepository
+Polhem.Repository.Abstractions.System.IRolePermissionRepository.GetRoleGrants(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Identity.RoleGrantRow!>!
+Polhem.Repository.Abstractions.System.IRolePermissionRepository.GetUserRoles(string! databaseId) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Identity.UserRoleRow!>!
+Polhem.Repository.Abstractions.System.ISessionRepository
+Polhem.Repository.Abstractions.System.ISessionRepository.DeleteExpiredSessions() -> int
+Polhem.Repository.Abstractions.System.ISessionRepository.DeleteSession(System.Guid accessToken) -> void
+Polhem.Repository.Abstractions.System.ISessionRepository.GetSession(System.Guid accessToken) -> Polhem.Definition.Identity.SessionUser?
+Polhem.Repository.Abstractions.System.ISessionRepository.InsertSession(Polhem.Definition.Identity.SessionUser! sessionUser) -> void
+Polhem.Repository.Abstractions.System.ISessionRepository.UpdateSession(Polhem.Definition.Identity.SessionUser! sessionUser) -> void
+Polhem.Repository.Abstractions.System.IUserCompanyRepository
+Polhem.Repository.Abstractions.System.IUserCompanyRepository.HasAccess(string! userId, string! companyId) -> bool
+Polhem.Repository.Abstractions.System.IUserRepository
+Polhem.Repository.Abstractions.System.IUserRepository.GetLocale(string! userId) -> Polhem.Repository.Abstractions.System.UserLocale
+Polhem.Repository.Abstractions.System.IUserRepository.GetName(string! userId) -> string?
+Polhem.Repository.Abstractions.System.IUserRepository.GetRowIdBySysId(string! userId) -> System.Guid
+Polhem.Repository.Abstractions.System.IUserRepository.IsDeploymentAdmin(string! userId) -> bool
+Polhem.Repository.Abstractions.System.IUserRepository.SetDeploymentAdmin(string! userId, bool isDeploymentAdmin) -> bool
+Polhem.Repository.Abstractions.System.IUserRepository.VerifyPassword(string! userId, string! password) -> bool
+Polhem.Repository.Abstractions.System.UserLocale
+Polhem.Repository.Abstractions.System.UserLocale.Culture.get -> string!
+Polhem.Repository.Abstractions.System.UserLocale.Culture.init -> void
+Polhem.Repository.Abstractions.System.UserLocale.Deconstruct(out string! TimeZone, out string! Culture) -> void
+Polhem.Repository.Abstractions.System.UserLocale.Equals(Polhem.Repository.Abstractions.System.UserLocale other) -> bool
+Polhem.Repository.Abstractions.System.UserLocale.TimeZone.get -> string!
+Polhem.Repository.Abstractions.System.UserLocale.TimeZone.init -> void
+Polhem.Repository.Abstractions.System.UserLocale.UserLocale() -> void
+Polhem.Repository.Abstractions.System.UserLocale.UserLocale(string! TimeZone, string! Culture) -> void
+override Polhem.Repository.Abstractions.System.UserLocale.GetHashCode() -> int
+static Polhem.Repository.Abstractions.System.UserLocale.Empty.get -> Polhem.Repository.Abstractions.System.UserLocale
+static Polhem.Repository.Abstractions.System.UserLocale.operator !=(Polhem.Repository.Abstractions.System.UserLocale left, Polhem.Repository.Abstractions.System.UserLocale right) -> bool
+static Polhem.Repository.Abstractions.System.UserLocale.operator ==(Polhem.Repository.Abstractions.System.UserLocale left, Polhem.Repository.Abstractions.System.UserLocale right) -> bool
+~override Polhem.Repository.Abstractions.System.UserLocale.Equals(object obj) -> bool
+~override Polhem.Repository.Abstractions.System.UserLocale.ToString() -> string

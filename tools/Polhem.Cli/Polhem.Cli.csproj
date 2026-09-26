@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Polhem.Cli</RootNamespace>
+    <AssemblyName>dotnet-polhem</AssemblyName>
+
+    <!-- dotnet tool packaging. Overrides tools/Directory.Build.props (IsPackable=false). -->
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>dotnet-polhem</ToolCommandName>
+    <PackageId>Polhem.Cli</PackageId>
+    <PackageOutputPath>../../nupkgs</PackageOutputPath>
+
+    <!--
+      Version comes from Version.props at the repository root, by way of
+      tools/Directory.Build.props. It used to be hardcoded here with a comment saying to bump it
+      alongside the framework; that requirement had no way to notice it had been broken, and it
+      stayed at 4.8.0 for twelve minor versions while every published Polhem.Cli carried an assembly
+      stamped 4.8.0.0. Do not reintroduce a local copy.
+    -->
+
+    <!-- Package metadata (lock-stepped with src/Directory.Build.props). -->
+    <Company>Polhem</Company>
+    <Authors>Polhem contributors</Authors>
+    <Product>Polhem</Product>
+    <Copyright>Copyright (c) Polhem contributors</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/polhem-dev/polhem</PackageProjectUrl>
+
+    <Description>Polhem framework CLI. Currently ships the `defines` subcommand group for materialising / listing framework default define files (TableSchema / FormSchema / FormLayout / Language / SystemSettings / DatabaseSettings) shipped as embedded resources by Polhem.Definition.</Description>
+    <PackageTags>polhem;cli;dotnet-tool;defines</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ProjectReference works for dotnet tool packaging: referenced DLLs are included in the tool package. -->
+    <ProjectReference Include="..\..\src\Polhem.Definition\Polhem.Definition.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.Cli.UnitTests" />
+  </ItemGroup>
+
+</Project>

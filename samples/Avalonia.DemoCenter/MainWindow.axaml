@@ -1,0 +1,68 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Avalonia.DemoCenter.MainWindow"
+        Title="Polhem.UI.Avalonia Demo Center — Semi.Avalonia"
+        Width="1100" Height="820">
+
+  <DockPanel>
+
+    <!-- Global toolbar: nav toggle + title + theme (Light/Dark). FormMode switching lives
+         inside the "FormMode 顯示狀態" theme, not globally. -->
+    <Border DockPanel.Dock="Top" Padding="12,8" BorderThickness="0,0,0,1" BorderBrush="#22808080">
+      <DockPanel>
+        <ToggleSwitch x:Name="ThemeToggle"
+                      DockPanel.Dock="Right"
+                      IsChecked="True"
+                      OnContent="Dark" OffContent="Light"
+                      IsCheckedChanged="OnThemeToggled" />
+        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+          <Button x:Name="ToggleNavButton" Content="≡" Padding="10,2"
+                  Click="OnToggleNav" ToolTip.Tip="顯示 / 隱藏導覽樹" />
+          <TextBlock Text="Polhem.UI.Avalonia Demo Center" FontSize="16" FontWeight="Bold"
+                     VerticalAlignment="Center" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- Body: resizable nav tree | splitter | scenario host. -->
+    <Grid x:Name="BodyGrid">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="240" MinWidth="160" MaxWidth="500" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <!-- Navigation tree (theme → case). -->
+      <Border x:Name="NavPanel" Grid.Column="0" BorderThickness="0,0,1,0" BorderBrush="#22808080">
+        <TreeView x:Name="NavTree" SelectionChanged="OnScenarioSelected" Padding="4" />
+      </Border>
+
+      <!-- Drag to resize the nav column. -->
+      <GridSplitter x:Name="NavSplitter" Grid.Column="1" Width="4"
+                    ResizeDirection="Columns" Background="#22808080" />
+
+      <!-- Scenario host: header (title + description) above a Demo / Source tab pair. -->
+      <DockPanel Grid.Column="2">
+        <StackPanel DockPanel.Dock="Top" Spacing="2" Margin="16,12,16,0">
+          <TextBlock x:Name="ScenarioTitleText" FontSize="18" FontWeight="Bold" />
+          <TextBlock x:Name="ScenarioDescText" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+        </StackPanel>
+        <TabControl x:Name="ScenarioHost" Margin="12,8,12,12">
+          <TabItem Header="Demo">
+            <ContentControl x:Name="DemoHost" />
+          </TabItem>
+          <TabItem Header="Source">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+              <SelectableTextBlock x:Name="SourceText"
+                                   FontFamily="Menlo,Consolas,monospace" FontSize="12"
+                                   Margin="8" />
+            </ScrollViewer>
+          </TabItem>
+        </TabControl>
+      </DockPanel>
+
+    </Grid>
+
+  </DockPanel>
+
+</Window>

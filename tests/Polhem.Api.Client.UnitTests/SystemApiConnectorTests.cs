@@ -1,0 +1,99 @@
+using System.ComponentModel;
+using Polhem.Api.Client.Providers;
+using Polhem.Api.Client.Connectors;
+using Polhem.Tests.Shared;
+using Polhem.Definition.Database;
+using Polhem.Api.Core.Messages;
+
+namespace Polhem.Api.Client.UnitTests
+{
+    /// <summary>
+    /// 透過 <see cref="SharedDbFixture"/> 觸發 GlobalFixture 的 <c>ApiClientInfo.LocalServiceProvider</c>
+    /// 與 SharedDatabaseState 初始化；本機模式 [DbFact] 測試會走過 LocalApiProvider 解析後端
+    /// JsonRpcExecutor，並透過 SQL Server 完成 CreateSession 流程。
+    /// </summary>
+    public class SystemApiConnectorTests : IClassFixture<SharedDbFixture>
+    {
+        public SystemApiConnectorTests(SharedDbFixture _)
+        {
+            // fixture 僅用於觸發 GlobalFixture / SharedDatabaseState 初始化；
+            // 測試方法直接使用 process-wide ApiClientInfo.LocalServiceProvider。
+        }
+
+        /// <summary>
+        /// 測試 SystemApiConnector 的 CreateSessionAsync 方法。
+        /// </summary>
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SystemApiConnector CreateSessionAsync 應回傳有效的 AccessToken")]
+        public async Task CreateSessionAsync_ValidArgs_ReturnsValidToken()
+        {
+            // Arrange
+            string userId = "001";
+            int expiresIn = 600;
+            bool oneTime = false;
+
+            // 產生一個隨機 Guid 作為 accessToken（僅用於初始化，CreateSession 會回傳新的 token）
+            Guid accessToken = Guid.NewGuid();
+            var connector = new SystemApiConnector(accessToken);
+
+            // Act
+            Guid newToken = await connector.CreateSessionAsync(userId, expiresIn, oneTime);
+
+            // Assert
+            Assert.NotEqual(Guid.Empty, newToken); // 應取得有效 accessToken
+        }
+
+        [Fact]
+        [DisplayName("SystemApiConnector Local 建構子應建立 LocalApiProvider")]
+        public void Constructor_Local_SetsAccessTokenAndLocalProvider()
+        {
+            var token = Guid.NewGuid();
+            var connector = new SystemApiConnector(token);
+
+            Assert.Equal(token, connector.AccessToken);
+            Assert.IsType<LocalApiProvider>(connector.Provider);
+        }
+
+        [Fact]
+        [DisplayName("SystemApiConnector Remote 建構子應建立 RemoteApiProvider")]
+        public void Constructor_Remote_SetsAccessTokenAndRemoteProvider()
+        {
+            var token = Guid.NewGuid();
+            var connector = new SystemApiConnector("http://example.com/api", token);
+
+            Assert.Equal(token, connector.AccessToken);
+            Assert.IsType<RemoteApiProvider>(connector.Provider);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        [DisplayName("SystemApiConnector Remote 建構子空白 endpoint 應拋 ArgumentException")]
+        public void Constructor_RemoteEmptyEndpoint_ThrowsArgumentException(string? endpoint)
+        {
+            Assert.Throws<ArgumentException>(() => new SystemApiConnector(endpoint!, Guid.NewGuid()));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [DisplayName("SystemApiConnector.ExecuteAsync 空白 action 應拋 ArgumentException")]
+        public async Task ExecuteAsync_EmptyAction_ThrowsArgumentException(string? action)
+        {
+            var connector = new SystemApiConnector(Guid.NewGuid());
+            await Assert.ThrowsAsync<ArgumentException>(async () =>
+                await connector.ExecuteAsync<object>(action!, new object(), PayloadFormat.Plain));
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SystemApiConnector.PingAsync 本機連線應成功回應")]
+        public async Task PingAsync_LocalConnector_Succeeds()
+        {
+            var connector = new SystemApiConnector(Guid.NewGuid());
+            var exception = await Record.ExceptionAsync(() => connector.PingAsync());
+            Assert.Null(exception);
+        }
+
+    }
+}

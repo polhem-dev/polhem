@@ -1,0 +1,360 @@
+# Polhem 框架專有名詞中英文對照表
+
+[English](../en/terminology.md) · [← 文件索引](README.md)
+
+本文件為技術文件撰寫的標準用語參考，確保中英文名稱一致。
+
+---
+
+## 目錄
+
+1. [架構模式與核心概念](#1-架構模式與核心概念)
+2. [表單結構定義層（Polhem.Definition）](#2-表單結構定義層polhemdefinition)
+3. [資料庫層（Polhem.Db）](#3-資料庫層polhemdb)
+4. [業務邏輯層（Polhem.Business）](#4-業務邏輯層polhembusiness)
+5. [Repository 層（Polhem.Repository）](#5-repository-層polhemrepository)
+6. [API 層（Polhem.Api.Core / Polhem.Api.AspNetCore）](#6-api-層polhemapicore--polhemapiaspnetcore)
+7. [快取層（Polhem.ObjectCaching）](#7-快取層polhemobjectcaching)
+8. [連線層（Polhem.Api.Client）](#8-連線層polhemapiclient)
+9. [基礎設施（Polhem.Base）](#9-基礎設施polhembase)
+10. [列舉型別（Enumerations）](#10-列舉型別enumerations)
+11. [系統欄位（System Fields）](#11-系統欄位system-fields)
+12. [設定檔（Configuration Files）](#12-設定檔configuration-files)
+13. [前端層（Polhem.UI.* / Polhem.Web.Blazor.*）](#13-前端層polhemui--polhemwebblazor)
+
+---
+
+## 1. 架構模式與核心概念
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| Enterprise Information System | 企業資訊系統 | Polhem 的目標系統：以表單為基礎的企業資訊系統，例如 ERP、CRM、HRM。英文同義詞為 line-of-business (LOB) application |
+| Definition-Driven Architecture | 定義導向架構 | Polhem 核心架構模式，以結構定義統一驅動 UI、資料庫與業務邏輯 |
+| Single Source of Truth | 唯一定義來源 | `FormSchema` 作為系統唯一結構規格，避免三層重複實作 |
+| `progId` | 程式識別碼 | 一支功能程式的唯一識別字串，也是型別註冊表的鍵：`ProgramSettings.xml` 以它綁定 BO 與 Repository，JSON-RPC 的 `method` 為 `progId.action`。模型沿自 COM+ 的 ProgID（登錄檔以機碼對映元件型別），見 [ADR-034](../adr/adr-034-progid-type-registry.md)。C# 屬性與 XML 屬性上寫作 `ProgId`。框架保留的 progId 見[框架保留命名](framework-reserved-names.md) |
+| NoCode | 零程式碼 | 定義於設計階段完全由 `FormSchema` 產生，無需撰寫程式碼 |
+| LowCode | 低程式碼 | 以 `FormSchema` 為基礎，搭配少量覆寫擴充行為 |
+| AnyCode | 全程式碼 | 完全由開發者自行實作，不受 `FormSchema` 驅動 |
+| Master-Detail Pattern | 主從資料模式 | 一筆主檔（Master）對應多筆明細（Detail）的資料關聯結構 |
+| Repository Dual-Track Strategy | Repository 雙軌策略 | CRUD 由 `FormSchema` 驅動；報表 / 批次由 BO 自行實作（AnyCode） |
+| N-Tier Architecture | N 層式架構 | 呈現層 → API 層 → 業務邏輯層 → 資料存取層 的分層架構 |
+| Clean Architecture | 整潔架構 | 依賴方向由外向內，核心層不依賴外部框架 |
+| MVVM | MVVM 模式 | Model-View-ViewModel，用於 UI 層的資料繫結與狀態管理 |
+
+---
+
+## 2. 表單結構定義層（Polhem.Definition）
+
+### 核心類別
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `FormSchema` | 表單結構定義 | 定義中樞，同時驅動 UI、資料庫結構與驗證規則 |
+| `FormTable` | 表單資料表 | FormSchema 內的主檔或明細資料表定義 |
+| `FormField` | 表單欄位 | 表單資料表內的單一欄位，含型別、驗證、控制項資訊（透過 `LangEnumName` 指向語系化下拉選項） |
+| `FormLayout` | 表單版面配置 | FormSchema 的 UI 投影，描述欄位排列方式 |
+| `FormTableCollection` | 表單資料表集合 | FormSchema 內所有 FormTable 的集合 |
+| `FormLayoutGenerator` | 表單版面配置產生器 | 於**設計階段**依 FormSchema 產生 FormLayout；執行階段改讀已存檔的定義 |
+| `TableSchema` | 資料表結構 | FormSchema 的資料庫投影，對應實體資料表欄位與索引 |
+| `DbTableIndex` | 資料表索引 | 資料表的索引定義，含唯一性與主鍵資訊 |
+| `DbCategorySettings` | 資料庫類別設定 | 管理所有邏輯資料庫類別（common / company / log）的設定集合 |
+| `DbCategory` | 資料庫類別 | 邏輯資料庫類別節點，含 `Id`（"common" / "company" 等）與所屬資料表清單 |
+| `PathOptions` | 定義檔案路徑選項 | DI 注入的 options，提供各類定義檔（FormSchema、TableSchema 等）的標準路徑 |
+| `SessionInfo` | 連線資訊 | 執行期用戶連線狀態，含 AccessToken、UserId、語系、時區，以及 `CompanyId`（nullable；由 `EnterCompany` 寫入、由 `LeaveCompany` / `Logout` 清除） |
+| `CompanyInfo` | 公司資訊 | 描述使用者可進入之公司的中繼資料：`CompanyId`、`CompanyName`、`CompanyDatabaseId`（該公司 session 期間使用的 `company` 類 `DatabaseSettings` id） |
+| `DbScope` | 資料庫範疇 | 型別安全 enum，表達 bo repo 的資料庫存取意圖：`Common` / `Company` / `Log`。與 `schema.CategoryId`（XML 字串屬性）**概念脫勾**——值對應一致，但 enum 是傳給 `IRepositoryDatabaseRouter` 的執行時意圖 |
+| `SortField` | 排序欄位 | 單一排序欄位，含欄位名稱與方向 |
+| `SortFieldCollection` | 排序欄位集合 | 多個 SortField 的集合 |
+
+### 篩選條件
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `FilterCondition` | 篩選條件 | 單一欄位條件（例如 `Name LIKE '%Lee%'`、`Age > 18`） |
+| `FilterGroup` | 篩選條件群組 | 多個條件以 AND / OR 組合的條件樹節點 |
+| `FilterNode` | 篩選節點介面 | `FilterCondition` 與 `FilterGroup` 的共同介面 |
+
+### 日誌
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `LogOptions` | 日誌選項 | 日誌行為的設定參數 |
+| `DbAccessAnomalyLogOptions` | 資料庫存取異常日誌選項 | 資料庫異常存取行為的日誌設定（門檻由 DB 異常記錄器消費） |
+| `IAuditLogWriter` | 稽核日誌寫入介面 | 寫入稽核軌跡記錄（登入 / 異動 / 檢視）到 log 資料庫的入口（背景批次或同步，best-effort） |
+| `IAnomalyLogWriter` | 異常日誌寫入介面 | 寫入執行異常記錄到 log 資料庫的入口。與 `IAuditLogWriter` 分開，因為兩者答的問題不同：稽核答「誰對哪一筆做了什麼」，異常答「哪一次執行不對勁」 |
+| `AuditEntry` | 稽核記錄基底 | 單筆 log 記錄的抽象基底；承載共通 who/when/where 欄位，子類再加各軸專屬欄位 |
+| `AnomalyEntry` | 異常記錄基底 | 執行異常記錄的抽象基底，繼承 `AuditEntry` 以共用同一條寫入管線；承載 `Kind` / 耗時 / 門檻 / 錯誤型別與訊息 |
+| `AuditColumn` | 稽核欄位 | `AuditEntry` 提供給 INSERT 的一組欄名/值 |
+| `NullAuditLogWriter` | 空寫入器 | 停用時使用的 no-op 寫入器，同時服務 `IAuditLogWriter` 與 `IAnomalyLogWriter` |
+| `LoginAuditEntry` | 登入稽核記錄 | `st_log_login` 的記錄（登入 / 登出 / 失敗 / 鎖定） |
+| `ChangeAuditEntry` | 異動稽核記錄 | `st_log_change` 的記錄（資料異動，DataSet DiffGram 新舊值） |
+| `AccessAuditEntry` | 檢視稽核記錄 | `st_log_access` 的記錄（檢視某筆記錄） |
+| `ApiAnomalyEntry` | API 異常記錄 | `st_log_anomaly_api` 的記錄（API 錯誤 / 逾時 / 過久） |
+| `DbAnomalyEntry` | DB 異常記錄 | `st_log_anomaly_db` 的記錄（DB 錯誤 / 逾時 / 過久 / 大量列數） |
+| `AuditLogOptions` | 稽核日誌選項 | opt-in 稽核日誌設定（各軸開關、背景寫入、門檻），掛在 `BackendConfiguration` |
+| `AuditRuleMode` | 稽核規則三態 | 單一稽核軸的逐表單開關：`Inherit`（沿用部署預設）／`On`／`Off`。以整數持久化，`Inherit` = 0 |
+| `AuditRule` | 稽核規則 | `st_audit_rule` 的單筆規則：該 progId 的哪些軸要記錄，以及其紀錄是否標為敏感 |
+| `CompanyAuditRules` | 公司稽核規則快照 | 一家公司的整張規則表，以 progId 索引。以公司為單位快取而非逐表單，因為多數表單根本沒有規則列 |
+| `IAuditRuleService` | 稽核規則服務 | per-company 規則快取的存取服務；寫出異動或檢視紀錄前先問它 |
+
+### 定義存取
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `IDefineAccess` | 定義存取介面 | 讀取與儲存各類定義資料的抽象介面 |
+| `IDefineStorage` | 定義儲存介面 | 定義資料持久化的抽象介面 |
+| `FileDefineStorage` | 檔案定義儲存 | 以 XML 檔案實作定義資料的讀寫 |
+
+### 語系本地化
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `LanguageResource` | 語系資源 | 單一語系資源：一個 namespace × 一個 lang；含本地化文字 `Items` 與下拉列舉 `Enums` |
+| `LanguageItem` | 語系項目 | `LanguageResource` 內的單一本地化文字（`Key` + `Value`） |
+| `LanguageEnum` | 語系列舉 | `LanguageResource` 內的有序 code/text 集合（下拉、查詢用） |
+| `LanguageEnumEntry` | 語系列舉項目 | `LanguageEnum` 內的單一 `Code` + `Text` 配對 |
+| `ILanguageService` | 語系服務介面 | 依 `(lang, namespace, key)` 解析本地化文字與列舉，含預設語系 fallback |
+| `LanguageService` | 語系服務 | 預設 `ILanguageService` 實作，透過 `IDefineAccess.GetLanguage` 與框架 cache 提供查詢 |
+| `PolhemStringLocalizer<T>` | Polhem 字串本地化 | `Microsoft.Extensions.Localization.IStringLocalizer<T>` adapter — 讓 Blazor / ASP.NET Core 元件透過 .NET 標準介面取用語系資源 |
+| `FormSchemaLocalizer` | 表單結構本地化 | 對複製過的 `FormSchema` 套用 `LanguageResource`：Caption / DisplayName 與 `LangEnumName` 對應的 ComboBox 選項 |
+
+### 其他介面
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `IUIControl` | UI 控制項介面 | 依表單模式控制 UI 元件狀態的介面 |
+| `ICacheDataSourceProvider` | 快取資料來源提供者介面 | 取得暫存連線的用戶資料 |
+
+---
+
+## 3. 資料庫層（Polhem.Db）
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `DbField` | 資料庫欄位 | 資料庫欄位定義，含精確度、小數位數、長度等 |
+| `SelectCommandBuilder` | 查詢命令建構器 | 依據 FormSchema 建構 SELECT SQL 命令（`Polhem.Db.Dml`） |
+| `IFormCommandBuilder` | 表單命令建構器介面 | 依 FormSchema 建構 CRUD 命令的契約（`Polhem.Db.Dml`） |
+| `SqlFormCommandBuilder` | SQL Server 表單命令建構器 | `IFormCommandBuilder` 的 SQL Server 實作（`Polhem.Db.Providers.SqlServer`） |
+| `PgFormCommandBuilder` | PostgreSQL 表單命令建構器 | `IFormCommandBuilder` 的 PostgreSQL 實作（`Polhem.Db.Providers.PostgreSql`） |
+| `MySqlFormCommandBuilder` | MySQL 表單命令建構器 | `IFormCommandBuilder` 的 MySQL 實作（`Polhem.Db.Providers.MySql`） |
+| `OracleFormCommandBuilder` | Oracle 表單命令建構器 | `IFormCommandBuilder` 的 Oracle 實作（`Polhem.Db.Providers.Oracle`） |
+| `SqliteFormCommandBuilder` | SQLite 表單命令建構器 | `IFormCommandBuilder` 的 SQLite 實作（`Polhem.Db.Providers.Sqlite`） |
+
+---
+
+## 4. 業務邏輯層（Polhem.Business）
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `BusinessObject` | 業務邏輯物件 | 所有 BO 的基礎類別，負責業務邏輯，不直接存取資料庫 |
+| `DataSet` | 資料集 | 跨層 DTO，承載 Master-Detail 資料，不含業務邏輯 |
+| `UnitOfWork` | 工作單元 | 管理跨 Repository 的共享交易 |
+
+---
+
+## 5. Repository 層（Polhem.Repository）
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `IDataFormRepository` | 資料表單 Repository 介面 | FormSchema 驅動的 CRUD 操作（自動產生 SQL） |
+| `IRepositoryDatabaseRouter` | Repository 資料庫路由介面 | 從 `DbScope` 與 access token 解析出實際 `databaseId`。`Common` / `Log` 對映固定 databaseId；`Company` 透過 `SessionInfo.CompanyId` → `CompanyInfo.CompanyDatabaseId` 解析 |
+| `IRepositoryFactory` | Repository 工廠介面 | 取得 Repository 的唯一入口，涵蓋兩軸。`CreateFormRepository<T>(accessToken, progId)` 解析綁定該 progId 的型別；`Create<T>(accessToken)` 以介面指名框架 Repository。報表與批次走 AnyCode 軌，由 BO 自行寫 SQL，不經 Repository |
+
+---
+
+## 6. API 層（Polhem.Api.Core / Polhem.Api.AspNetCore）
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `ApiPayload` | API 傳遞資料結構 | 包裝傳輸資料，支援壓縮與加密 |
+| `JsonRpcRequest` | JSON-RPC 請求 | JSON-RPC 2.0 協定的請求物件 |
+| `JsonRpcResponse` | JSON-RPC 回應 | JSON-RPC 2.0 協定的回應物件 |
+| `ExecFuncArgs` | 自訂函式執行參數 | 呼叫自訂業務函式時傳遞的參數物件 |
+| `ApiAccessControlAttribute` | API 存取控制屬性 | 宣告 API 端點的保護等級與認證需求 |
+| `TraceContext` | 追蹤情境 | 記錄 API 請求的追蹤資訊 |
+
+### 安全性
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `ApiProtectionLevel` | API 保護等級 | API Payload 的保護層級（`Public` / `Encoded` / `Encrypted` / `LocalOnly`），位於 `Polhem.Definition.Security` |
+| `ApiAccessRequirement` | API 存取授權需求 | API 端點的認證要求（`Anonymous` / `Authenticated`），位於 `Polhem.Definition.Security` |
+| `IApiPayloadEncryptor` | API Payload 加密介面 | 定義 Payload 加解密行為的介面 |
+| `AesCbcHmacCryptor` | AES-CBC-HMAC 加密器 | 使用 AES-256-CBC + HMAC-SHA256 的標準加密實作 |
+| `RsaCryptor` | RSA 加密器 | RSA 非對稱加密實作 |
+| `NoEncryptionEncryptor` | 無加密器 | 僅測試環境使用，不執行任何加密 |
+
+---
+
+## 7. 快取層（Polhem.ObjectCaching）
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `ICacheContainer` | 快取容器介面 | DI 註冊的容器，集中持有所有快取單例（FormSchema、TableSchema、DatabaseSettings、SessionInfo、CompanyInfo 等）；預設實作為 `CacheContainerService` |
+| `CacheDefineAccess` | 本機定義存取 | 透過本機快取存取定義資料的實作 |
+| `FormSchemaCache` | 表單結構定義快取 | `FormSchema` 物件的快取容器 |
+| `KeyObjectCache<T>` | 鍵值物件快取 | 以鍵值為索引的泛型物件快取基礎類別。內含負向快取：`CreateInstance` 回 null 時記入哨兵值並設短 TTL（預設 5 分鐘絕對過期），避免重複查詢同一無效 key 反覆觸發 create 路徑 |
+| `ISessionInfoService` | Session 資訊服務介面 | `SessionInfoCache` 的存取包裝；由 `Login` 寫入、`EnterCompany` / `LeaveCompany` 變動、`Logout` 移除 |
+| `ICompanyInfoService` | 公司資訊服務介面 | `CompanyInfoCache` 的存取包裝；由 `IRepositoryDatabaseRouter` 消費以解析 `DbScope.Company` |
+
+---
+
+## 8. 連線層（Polhem.Api.Client）
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `ClientDefineAccess` | 遠端定義存取 | 透過遠端 API 存取定義資料的實作 |
+
+---
+
+## 9. 基礎設施（Polhem.Base）
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `IKeyObject` | 鍵值物件介面 | 具有唯一識別鍵的物件抽象介面 |
+| `XmlCodec` | XML 序列化工具 | XML 序列化與反序列化的靜態工具類別（位於 `Polhem.Base.Serialization`） |
+| `FileHashValidator` | 檔案雜湊驗證器 | 使用雜湊值驗證檔案完整性 |
+| `AesCbcHmacKeyGenerator` | AES-CBC-HMAC 金鑰產生器 | 產生 AES 與 HMAC 所需金鑰的工具類別 |
+| `TreeNodeAttribute` | 樹狀節點屬性 | 標記類別在樹狀結構中的顯示名稱 |
+
+---
+
+## 10. 列舉型別（Enumerations）
+
+### 欄位與資料類型
+
+| 英文名稱 | 中文名稱 | 值 |
+|----------|----------|----|
+| `FieldType` | 欄位種類 | `DbField`（資料庫欄位）、`RelationField`（關聯欄位）、`VirtualField`（虛擬欄位） |
+| `FieldDbType` | 欄位資料庫型別 | `String`、`Integer`、`Decimal`、`DateTime`、`Date`、`Time`、`Boolean` … 等 15 種 |
+| `ControlType` | 控制項類型 | `TextEdit`、`DropDownEdit`、`DateEdit`、`TimeEdit`、`CheckEdit` … |
+| `SingleFormMode` | 表單模式 | `View`（檢視）、`Add`（新增）、`Edit`（編輯）；以 `FormScope.FormMode` attached property 對外 |
+
+### 時間語意
+
+框架區分四種時間概念。「時間」僅作為泛指這四者的上位詞，不單獨用來指其中任何一個。
+
+| 詞 | 語意 | `FieldDbType` | 取值層 | 說明 |
+|----|------|--------------|--------|------|
+| **日曆日** | 哪一天 | `Date` | `ValueUtilities.CDateOnly` → `DateOnly?` | 生日、發票日期。牆上時間，絕不轉時區 |
+| **時刻** | 幾點（一日之內） | `Time` | `ValueUtilities.CTimeOnly` → `TimeOnly?` | 班別起訖、營業時間。牆上時間，絕不轉時區 |
+| **時間點** | 哪一天的幾點 | `DateTime` | `ValueUtilities.CDateTime` → `DateTime?` | 建立時間、登入時戳。以 UTC 儲存，顯示時轉使用者時區 |
+| **時距** | 多久 | （無對應型別） | — | 工時、時長。目前以 `Decimal`（小時）承載 |
+
+判別法：問「這個值需不需要知道是哪一天？」需要就是時間點；不需要而問的是「幾點」就是時刻；
+問的是「多久」則是時距。
+
+跨層對照見[時間型別總覽](temporal-types.md)；
+時間點如何儲存與換算見[時區處理](datetime-timezone.md)。
+
+
+### 查詢與篩選
+
+| 英文名稱 | 中文名稱 | 值 |
+|----------|----------|----|
+| `ComparisonOperator` | 比較運算子 | `Equals`、`NotEquals`、`GreaterThan`、`LessThan`、`Like`、`In`、`Between` … |
+| `LogicalOperator` | 邏輯運算子 | `And`（且）、`Or`（或） |
+| `SortDirection` | 排序方向 | `Ascending`（遞增）、`Descending`（遞減） |
+| `FilterNodeKind` | 篩選節點種類 | `Condition`（條件）、`Group`（群組） |
+
+### API 與安全
+
+| 英文名稱 | 中文名稱 | 值 |
+|----------|----------|----|
+| `ApiProtectionLevel` | API 保護等級 | `Public`（公開）、`Encoded`（編碼）、`Encrypted`（加密）、`LocalOnly`（本機限定） |
+| `ApiAccessRequirement` | API 存取授權需求 | `Anonymous`（不需登入）、`Authenticated`（需登入） |
+| `PayloadFormat` | Payload 格式 | `Plain`（明文）、`Encoded`（Base64 編碼）、`Encrypted`（加密） |
+
+### 定義類型
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `DefineType` | 定義資料類別 | `SystemSettings`、`DatabaseSettings`、`DbCategorySettings`、`ProgramSettings`、`MenuSettings`、`TableSchema`、`FormSchema`、`FormLayout`、`Language`、`PermissionModels`、`CurrencySettings`、`UnitSettings`、`PluginSettings` 共 13 個值 |
+
+### 資料庫
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `DatabaseType` | 資料庫類型 | `SQLServer`、`PostgreSQL`、`MySQL`、`Oracle`、`SQLite` |
+| `LoginEvent` | 登入事件 | `LoginSucceeded`、`LoginFailed`、`LockedOut`、`Logout`（記於 `st_log_login`） |
+| `ChangeKind` | 異動類型 | `Insert`、`Update`、`Delete`（記於 `st_log_change`） |
+| `AnomalyKind` | 異常類型 | `Error`、`Timeout`、`Slow`、`LargeAffected`、`LargeResult`、`Unauthorized`（記於 `st_log_anomaly_*`） |
+
+---
+
+## 11. 系統欄位（System Fields）
+
+Polhem 框架在所有受管理資料表中自動維護以下系統欄位：
+
+| 欄位名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `sys_no` | 流水號 | 資料列的自動遞增流水號 |
+| `sys_rowid` | 唯一識別碼 | 資料列的全域唯一識別碼（GUID） |
+| `sys_master_rowid` | 主檔外鍵 | 主檔資料列的 `sys_rowid`（明細表使用） |
+| `sys_insert_time` | 建立時間 | 資料列的建立時間戳記 |
+| `sys_update_time` | 更新時間 | 資料列的最後更新時間戳記 |
+| `sys_valid_date` | 生效日期 | 資料列的生效起始日期 |
+| `sys_invalid_date` | 失效日期 | 資料列的生效截止日期 |
+
+---
+
+## 12. 設定檔（Configuration Files）
+
+| 檔案名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `SystemSettings.xml` | 系統設定檔 | 全域系統參數 |
+| `DatabaseSettings.xml` | 資料庫連線設定檔 | 資料庫連線字串與類型 |
+| `DbCategorySettings.xml` | 資料庫類別設定檔 | 所有邏輯資料庫類別與其包含的資料表清單 |
+| `ProgramSettings.xml` | 型別註冊表 | 每個 progId 一筆攤平項目，對映到綁定其上的型別。`BusinessObject` 綁定 `FormBusinessObject` 子類（留空回退框架預設）；`Repository` 綁定 `DataFormRepository` 子類（留空同樣回退，但型別名載不到是直接拋而非降級）。**不含任何 per-program 參數，也不含選單** —— 選單見 `MenuSettings.xml`。僅供 server 端 |
+| `MenuSettings.xml` | 選單定義檔 | 導覽選單：巢狀的 `MenuFolder` / `MenuEntry` 節點，帶標題、排序與可見性。每個 `MenuEntry` 指向一個註冊於 `ProgramSettings.xml` 的 progId；`Id` 是節點的鍵且全樹唯一 |
+| `ClientSettings.xml` | 用戶端設定檔 | 前端 / 用戶端的行為設定 |
+| `FormSchema.xml` | 表單結構定義檔 | 各功能程式的 FormSchema 序列化檔 |
+| `FormLayout.xml` | 表單版面配置檔 | 各功能程式的 FormLayout 序列化檔 |
+| `TableSchema.xml` | 資料表結構檔 | 各資料表的 TableSchema 序列化檔 |
+| `Language.xml` | 語系資源檔 | `LanguageResource` 序列化檔，依 `(lang, namespace)` 分檔（如 `Language/zh-TW/Common.Language.xml`） |
+
+---
+
+## 13. 前端層（Polhem.UI.* / Polhem.Web.Blazor.*）
+
+### 跨平台 UI 共通層（`Polhem.UI.Core`）
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `ClientInfo` | 用戶端資訊 | Static singleton，管理連線狀態（endpoint、AccessToken、UserInfo），提供 `SystemApiConnector` / `CreateFormApiConnector` / `DefineAccess`。設計給「一個 process = 一個使用者」模型（Avalonia 桌面 / MAUI / native UI）。**禁止用於 Blazor 環境**，後者一個 process 服務多個 user circuit |
+| `IEndpointStorage` | 端點儲存介面 | 抽象 API endpoint（URL / 設定）的用戶端持久化機制；預設實作存於 `{ExeName}.Settings.xml`（`Polhem.UI.Avalonia` 內附 `FileEndpointStorage`，存於 per-user `LocalApplicationData` 路徑） |
+| `IUIViewService` | UI 視圖服務介面 | 由宿主提供的 dialog service，當 `ClientInfo.InitializeAsync` 需要詢問使用者 endpoint 時呼叫（`ShowApiConnectAsync`）；具體實作依 UI 框架而定（Avalonia Window / MAUI ContentPage / WinForms Form 等） |
+| `VersionInfo` | 版本資訊 | 用戶端在與後端建立連線時回報的版本 metadata |
+| `SupportedConnectTypes` | 支援連線類型 | 控制 `ClientInfo.InitializeAsync` 允許哪些連線模式（`Local` / `Remote` / `Both`）的 Flags |
+
+### Avalonia 控制項套件（`Polhem.UI.Avalonia`）
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `ListView` | 清單檢視 | Avalonia `UserControl`，表單畫面的清單側：載入列、處理選取與捲動，透過 `GridControl` 渲染列 |
+| `GridControl` | 表格控件 | `ContentControl` 組合式控件（工具列 + 內部 `DataGrid`，以 `InnerGrid` 公開）、由 `LayoutGrid` 驅動；實作 `IBindTableControl`；cell 顯示走 `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>`（ADR-020），編輯依 `GridEditMode`（ADR-021） |
+| Field editors（`TextEdit` / `MemoEdit` / `ButtonEdit` / `DateEdit` / `YearMonthEdit` / `DropDownEdit` / `CheckEdit`） | 欄位編輯器 | 繼承原生控件（`StyleKeyOverride` 沿用主題）、各綁定 `FormDataObject` 一個欄位；自動套用 `FormField` metadata（MaxLength / ListItems） |
+| `FormScope` | 表單作用域 | 可繼承的 attached properties（`DataObject` / `FormMode`）：容器設一次，子孫編輯器憑 `FieldName` 自動綁定 |
+| `GridEditMode` | 表格編輯模式 | `GridControl` 的 UI 層編輯模型：`InCell`（逐格）/ `EditForm`（彈窗整列） |
+| `RowEditPanel` / `RowEditDialog` | 列編輯面板／彈窗 | EditForm 模式的編輯面，由 field editors 組成；走暫存列編輯協定（`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit`） |
+| `FormView` | 表單檢視 | Avalonia 單筆容器：master 區 + 明細 `GridControl` + toolbar（New / Save / Delete）；清單側為 `ListView`。host 只設 `ProgId` 時，自動向 `ClientInfo` 取 `Schema` / `FormConnector` / `AccessToken` |
+| `FormDataObject` | 表單資料物件 | Avalonia 控件綁定的 view-model：承載 `DataSet`、把 ADO.NET 表事件橋接為 `FieldValueChanged` 與 dirty 追蹤，並提供暫存列編輯協定 |
+| `FileEndpointStorage` | 檔案端點儲存 | 檔案後端的 `IEndpointStorage` 實作；endpoint 落在 `LocalApplicationData/<appName>/endpoint.txt` |
+
+### Web 前端（`Polhem.Web.Blazor.Server`）
+
+`Polhem.Web.Blazor.Server` 為 Razor Class Library（RCL），對外暴露 `DynamicForm`、`DynamicGrid` 與 `FormDataObject`，並以 DI scope 連接器讓每個 SignalR circuit 各自持有 AccessToken。曾另有 Blazor WASM 套件，已於 v4.16.0 移除；自行撰寫的 WASM app 直接透過 `Polhem.Api.Client`（`RemoteApiProvider`）連後端。
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `DynamicForm`（Razor 元件） | 動態表單元件 | Blazor 元件，依 FormSchema 動態渲染表單 |
+| `FormDataObject` | 表單資料物件 | Blazor `DynamicForm` 綁定的資料物件。與 Avalonia 端同名型別刻意各自獨立——保留重複的理由見 `rules/avalonia.md` |
+| `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` 擴充方法，註冊 Blazor Server RCL 所需服務（DI scope 連接器） |
+
+### API 連線提供者（`Polhem.Api.Client`）
+
+| 英文名稱 | 中文名稱 | 說明 |
+|----------|----------|------|
+| `IJsonRpcProvider` | API 提供者介面 | 抽象連接器如何抵達後端；由宿主在啟動時選擇實作 |
+| `LocalApiProvider` | 近端 API 提供者 | In-process 實作，前後端共用同一個 process，直接呼叫 BO 方法（無 HTTP 開銷） |
+| `RemoteApiProvider` | 遠端 API 提供者 | 基於 HTTP 的實作，前端透過 JSON-RPC 連到後端（Blazor WASM 必須使用此實作） |

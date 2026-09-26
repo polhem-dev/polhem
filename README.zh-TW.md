@@ -1,0 +1,124 @@
+# Polhem Framework
+
+[English](README.md)
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jeff377_bee-library&metric=alert_status)](https://sonarcloud.io/project/overview?id=jeff377_bee-library)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jeff377_bee-library&metric=bugs)](https://sonarcloud.io/project/overview?id=jeff377_bee-library)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=jeff377_bee-library&metric=vulnerabilities)](https://sonarcloud.io/project/overview?id=jeff377_bee-library)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=jeff377_bee-library&metric=code_smells)](https://sonarcloud.io/project/overview?id=jeff377_bee-library)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=jeff377_bee-library&metric=coverage)](https://sonarcloud.io/project/overview?id=jeff377_bee-library)
+
+Polhem Framework 是一套採用 **N-Tier + Clean Architecture + MVVM** 混合模式的企業資訊系統開發框架，以**定義導向架構（Definition-Driven Architecture）**為核心，以 `FormSchema` 作為系統唯一定義來源（Single Source of Truth），統一驅動 UI 配置、資料表結構與業務驗證規則。
+
+> 📌 *N-Tier* 指超過三層的邏輯分層架構，在 Polhem 中實際拆分為五層（表現層、API 呼叫層、業務邏輯層、資料存取層、資料庫層），各層職責明確分離，更能因應複雜企業需求。
+
+所有套件目標框架為 **`net10.0`**。
+
+## ✨ 特色
+
+- **定義導向架構（Definition-Driven Architecture）**：以 `FormSchema` 作為系統唯一定義來源，自動推導 UI 配置（`FormLayout`）、資料表結構（`TableSchema`）與驗證規則，定義一處即全層同步。
+- **N-Tier + Clean Architecture + MVVM**：支援表現層、API 層、業務邏輯層（BO）與資料存取層的清晰分離，針對企業資訊系統從各模式取用最適合的概念。
+- **跨平台支援**：所有套件採用 `net10.0`，支援現代 .NET 執行環境。
+- **多資料庫支援**：內建 SQL Server、PostgreSQL、SQLite、MySQL、Oracle 五種 dialect，由 host 應用程式按需註冊。
+- **模組化組件**：根據職責切分為多個元件，靈活組合、降低耦合。
+- **開發加速器**：透過可重用基底類別與 FormSchema 驅動的 CRUD，大幅減少重複程式碼。
+- **慣例於建置期把關**：Roslyn analyzer 隨套件自動註冊，把框架慣例——資料庫 scope 選擇、定義檔跨檔一致性、wire 合約形狀——變成同時指出原因與修法的建置期診斷。詳見 [Analyzer 規則](docs/zh-TW/analyzer-rules.md)。
+
+## 📐 架構總覽
+
+關於 Polhem 的分層架構、資料流與設計決策，請參閱[架構總覽文件](docs/zh-TW/architecture-overview.md)。
+
+關於 API 合約與 BO 參數的設計原則（Request/Response 與 Args/Result 的使用方式），請參閱 [API/BO 合約設計原則](docs/zh-TW/api-bo-contract-design.md)。所有對外公開 API 方法的清單（含每方法 `[ApiAccessControl]` 設定）見 [API 方法參考](docs/zh-TW/api-method-reference.md)。
+
+從 JavaScript / TypeScript 前端（React、Vue、Angular、vanilla — 前端無 .NET）呼叫 JSON-RPC API，請參閱 [JSON-RPC 前端整合指引](docs/zh-TW/jsonrpc-frontend-integration.md)。
+
+完整開發者文件索引請見 [docs/zh-TW/README.md](docs/zh-TW/README.md)。
+
+## 📦 組件說明
+
+### 共用（前端 / 後端）
+
+| 組件名稱 | 說明 |
+|---|---|
+| **Polhem.Base.dll** | 提供基礎函式與工具（序列化、加密等），作為共通基礎模組。 |
+| **Polhem.Definition.dll** | 定義系統結構化資料，包含 FormSchema、欄位結構描述與版面配置。 |
+| **Polhem.Expressions.dll** | 可攜、沙箱化的運算式求值引擎（DynamicExpresso 封裝），供計算欄與驗證規則使用；後端存檔與 Avalonia 前端即時預覽共用，兩端算法一致。 |
+| **Polhem.Api.Contracts.dll** | 前後端共用的資料契約（請求 / 回應模型）。 |
+| **Polhem.Api.Core.dll** | 提供 API 核心支援，包含資料模型、Payload 加解密與序列化管線。 |
+
+### 後端
+
+| 組件名稱 | 說明 |
+|---|---|
+| **Polhem.Repository.Abstractions.dll** | 定義業務層存取資料層的介面契約，作為 Business Object 與 Repository 之間的邊界。 |
+| **Polhem.ObjectCaching.dll** | 執行階段快取 FormSchema 定義資料與衍生資料，提升系統效能。 |
+| **Polhem.Db.dll** | 封裝資料庫操作邏輯，支援動態 SQL 命令產生與連線綁定；內建 SQL Server、PostgreSQL、SQLite、MySQL、Oracle 五種 dialect。 |
+| **Polhem.Repository.dll** | 提供共用的 Repository 基底類別與 FormSchema 驅動的資料存取機制。 |
+| **Polhem.Business.dll** | 實作業務邏輯核心（Business Object / BO），負責 Use Case 工作流程。 |
+| **Polhem.Hosting.dll** | Composition root — 提供 `AddPolhemFramework` 擴充方法，將所有後端服務註冊至 `IServiceCollection`（不依賴 ASP.NET Core），可用於 ASP.NET Core、WinForms、Console、Worker Service 等各種宿主。 |
+| **Polhem.Api.AspNetCore.dll** | ASP.NET Core 的 JSON-RPC 2.0 API 整合（`UsePolhemFramework` middleware 與 `ApiServiceController`）。 |
+
+### 前端
+
+| 組件名稱 | 說明 |
+|---|---|
+| **Polhem.Api.Client.dll** | 提供連接器機制，支援近端與遠端呼叫後端 Business Object（`LocalApiProvider` / `RemoteApiProvider`）。 |
+| **Polhem.UI.Core.dll** | 跨平台 UI 共通層（`ClientInfo` / `IEndpointStorage` / `IUIViewService` / `VersionInfo`），供原生 UI 宿主共用 client-side 連線狀態與 endpoint 持久化邏輯。 |
+| **Polhem.UI.Avalonia.dll** | Avalonia 桌面控制項套件（Windows / macOS / Linux），提供 FormSchema 驅動控制項（`FormView` / `ListView` / `GridControl` 加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞）與檔案後端 `FileEndpointStorage`。單一 `net10.0` TFM；下限版本鎖在 Avalonia 12.0.0 + DataGrid 12.0.0。 |
+| **Polhem.Web.Blazor.Server.dll** | Blazor Server 宿主用的 Razor Class Library（RCL），提供 DI scope 連接器與 Blazor 元件（`DynamicForm`、`FormDataObject`）。 |
+
+### Tooling（dotnet tool）
+
+| 套件 | 安裝 | 說明 |
+|---|---|---|
+| **Polhem.Cli** | `dotnet tool install -g Polhem.Cli` <br/>升版：`dotnet tool update -g Polhem.Cli` | 框架 CLI，命令名 `dotnet polhem`。本版 ship 出 `defines` subcommand group，用於 materialize / list 框架預設定義檔（`st_*` TableSchema、框架預設 FormSchema / FormLayout / Language、SystemSettings / DatabaseSettings template）。用於新消費者從 `Polhem.Definition.dll` 內 embedded 資源 bootstrap `DefinePath`。 |
+
+## 🚀 Quick Start
+
+30 秒看到 Polhem 跑起來：
+
+```bash
+# Terminal 1 — 啟動 JSON-RPC API host
+cd samples/QuickStart.Server
+dotnet run
+
+# Terminal 2 — 連線並呼叫 Echo BO
+cd samples/QuickStart.Console
+dotnet run
+```
+
+Console 會列出 `System.Ping` 狀態與自訂 BO 回應的訊息。完整 demo 清單與每個 demo 對應到哪些 library 功能，見 [`samples/README.zh-TW.md`](samples/README.zh-TW.md)。
+
+想建自己的專案？[快速上手](docs/zh-TW/getting-started.md)從一個空資料夾走完同一件事 —— 套件、`DefinePath`、DI 接線、第一個商業物件，再由用戶端呼叫。
+
+## 🐝 完整示範應用 — Polhem.Northwind
+
+[`apps/Polhem.Northwind`](apps/Polhem.Northwind/README.zh-TW.md) 是最完整的示範應用：經典 Northwind 進銷存案例，**幾乎完全由定義組成**（八張表單、含 lookup 的主從訂單、僅一個手寫商業物件，其餘皆 XML）。同一套共用 `Polhem.Northwind.UI` 跑在 **四個 Avalonia head** —— Desktop、Browser（WASM）、iOS、Android —— 連同一個 JSON-RPC 後端。
+
+四個 head 渲染同一張訂單表單 —— 同一份定義、同一套控件，差別只在最外層的平台殼：
+
+| 桌面 | Browser（WASM） |
+|---|---|
+| <img src="https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-desktop-order-detail.png" alt="桌面 — 訂單單筆" width="420"> | <img src="https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-browser-order-detail.png" alt="Browser — 訂單單筆" width="420"> |
+
+| iOS | Android |
+|---|---|
+| <img src="https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-ios-order-detail.png" alt="iOS — 訂單單筆" width="200"> | <img src="https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-android-order-detail.png" alt="Android — 訂單單筆" width="200"> |
+
+更多畫面、表單清單與執行方式：[`apps/Polhem.Northwind/README.zh-TW.md`](apps/Polhem.Northwind/README.zh-TW.md)。
+
+## 💡 範例程式
+
+所有 demo 都集中在 repo 內 [`samples/`](samples/README.zh-TW.md) 目錄底下，最小、聚焦、跟著框架同步演進。以 `dotnet build samples/Polhem.Samples.slnx` 建置（獨立於主 `Polhem.Library.slnx`，不影響主 CI / build 時間）。
+
+| 類別 | Demo | 重點 |
+|------|------|------|
+| QuickStart | [`QuickStart.Server`](samples/QuickStart.Server/README.zh-TW.md) + [`QuickStart.Console`](samples/QuickStart.Console/README.zh-TW.md) | 最小 JSON-RPC 端到端，含一個 anonymous 自訂 BO |
+| Blazor Server | [`Blazor.Server.Demo`](samples/Blazor.Server.Demo/README.zh-TW.md) | `PolhemLoginPanel` + `FormPage` + Employee CRUD,走 `LocalApiProvider` in-process 派遣 |
+| Avalonia | [`Avalonia.DemoCenter`](samples/Avalonia.DemoCenter/README.md) | 主題導向控件 demo center（DevExpress 風格）：導覽樹（主題 → 案例）+ Demo/Source 分頁 + 主題/FormMode 工具列；涵蓋資料繫結、唯讀必填、FormMode、Layout、Grid、原生 vs 繼承比對（Semi.Avalonia，無後端） |
+| 純 JS | [`Web.Js.Demo`](samples/Web.Js.Demo/README.zh-TW.md) | 用瀏覽器原生 JavaScript 呼叫 JSON-RPC API — 前端無 .NET、無 npm |
+
+## 📬 聯絡與關注
+歡迎追蹤我的技術筆記與實戰經驗分享
+
+[Facebook](https://www.facebook.com/profile.php?id=61574839666569) ｜ [HackMD](https://hackmd.io/@jeff377) ｜ [GitHub](https://github.com/jeff377) ｜ [NuGet](https://www.nuget.org/profiles/jeff377)

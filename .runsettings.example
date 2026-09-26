@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copy this file to .runsettings and fill in your local connection string(s). -->
+<!-- .runsettings is gitignored and should never be committed. -->
+<!-- Usage: dotnet test --configuration Release --settings .runsettings -->
+<!--
+  Naming convention: POLHEM_TEST_CONNSTR_{DBTYPE}, where {DBTYPE} is the
+  uppercase DatabaseType enum value (SQLSERVER, POSTGRESQL, MYSQL, ORACLE, ...).
+  Each variable is independent — set only the ones whose containers/servers
+  are available locally; tests targeting unconfigured databases are skipped.
+-->
+<RunSettings>
+  <RunConfiguration>
+    <EnvironmentVariables>
+      <!-- SQL Server connection string (used by [DbFact(DatabaseType.SQLServer)] tests) -->
+      <POLHEM_TEST_CONNSTR_SQLSERVER>Data Source=localhost;Initial Catalog=common;User ID=sa;Password=YOUR_PASSWORD;Encrypt=True;Trust Server Certificate=True;</POLHEM_TEST_CONNSTR_SQLSERVER>
+      <!-- PostgreSQL connection string (used by [DbFact(DatabaseType.PostgreSQL)] tests) -->
+      <POLHEM_TEST_CONNSTR_POSTGRESQL>Host=localhost;Port=5432;Database=common;Username=postgres;Password=YOUR_PASSWORD</POLHEM_TEST_CONNSTR_POSTGRESQL>
+      <!-- SQLite connection string (used by [DbFact(DatabaseType.SQLite)] tests). -->
+      <!-- In-memory shared cache: zero IO, zero cleanup, identical between local and CI. -->
+      <POLHEM_TEST_CONNSTR_SQLITE>Data Source=file:polhem_test_sqlite?mode=memory&amp;cache=shared</POLHEM_TEST_CONNSTR_SQLITE>
+    </EnvironmentVariables>
+  </RunConfiguration>
+</RunSettings>

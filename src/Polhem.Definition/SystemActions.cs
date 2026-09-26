@@ -1,0 +1,115 @@
+namespace Polhem.Definition
+{
+    /// <summary>
+    /// Action name constants for the SystemObject.
+    /// </summary>
+    public static class SystemActions
+    {
+        /// <summary>
+        /// Ping method — tests whether the API service is available. Data encoding is not enabled for this method.
+        /// </summary>
+        public const string Ping = "Ping";
+        /// <summary>
+        /// Gets common configuration parameters and environment settings. Data encoding is not enabled for this method.
+        /// </summary>
+        public const string GetCommonConfiguration = "GetCommonConfiguration";
+        /// <summary>
+        /// Performs the login operation. Encryption is not enabled for this method.
+        /// </summary>
+        public const string Login = "Login";
+        /// <summary>
+        /// Destroys the current session, clearing any company context first.
+        /// </summary>
+        public const string Logout = "Logout";
+        /// <summary>
+        /// Enters the specified company for the current session. Also used to switch
+        /// between companies (the previous CompanyId is overwritten).
+        /// </summary>
+        public const string EnterCompany = "EnterCompany";
+        /// <summary>
+        /// Clears the company context from the current session while keeping the session alive.
+        /// </summary>
+        public const string LeaveCompany = "LeaveCompany";
+        /// <summary>
+        /// Creates a session. Data encoding is not enabled for this method.
+        /// </summary>
+        public const string CreateSession = "CreateSession";
+        /// <summary>
+        /// Gets definition data.
+        /// </summary>
+        public const string GetDefine = "GetDefine";
+        /// <summary>
+        /// Gets a form schema as a typed JSON-friendly object (sibling to
+        /// <see cref="GetDefine"/>; intended for JS / TypeScript frontends that
+        /// prefer JSON over the XML envelope <see cref="GetDefine"/> returns).
+        /// </summary>
+        public const string GetFormSchema = "GetFormSchema";
+        /// <summary>
+        /// Gets a form layout as a typed JSON-friendly object (intended for
+        /// JS / TypeScript frontends that need to render schema-driven UI).
+        /// </summary>
+        public const string GetFormLayout = "GetFormLayout";
+
+        /// <summary>
+        /// Gets the tenant customization layer of a form layout definition. Which tenant is
+        /// decided by the session, never by the caller.
+        /// </summary>
+        public const string GetCustomizeFormLayout = "GetCustomizeFormLayout";
+
+        /// <summary>
+        /// Gets the current company's department tree (per-company organisation hierarchy,
+        /// JSON-friendly for frontends).
+        /// </summary>
+        public const string GetDepartmentTree = "GetDepartmentTree";
+        /// <summary>
+        /// Gets a language resource (localized text and enum entries for one
+        /// namespace × one language) as a typed JSON-friendly object; intended
+        /// for JS / TypeScript frontends consuming localized UI text.
+        /// </summary>
+        public const string GetLanguage = "GetLanguage";
+
+        /// <summary>
+        /// Gets the tenant customization layer of a language resource. Which tenant is decided
+        /// by the session, never by the caller.
+        /// </summary>
+        public const string GetCustomizeLanguage = "GetCustomizeLanguage";
+        /// <summary>
+        /// Saves definition data.
+        /// </summary>
+        public const string SaveDefine = "SaveDefine";
+        /// <summary>
+        /// Issues a new API key and returns the plaintext key once.
+        /// </summary>
+        public const string CreateApiKey = "CreateApiKey";
+        /// <summary>
+        /// Lists the issued API keys, without any credential material.
+        /// </summary>
+        public const string ListApiKeys = "ListApiKeys";
+        /// <summary>
+        /// Enables or disables an issued API key.
+        /// </summary>
+        public const string SetApiKeyEnabled = "SetApiKeyEnabled";
+        /// <summary>
+        /// Sets or clears an issued API key's expiry.
+        /// </summary>
+        public const string SetApiKeyExpiry = "SetApiKeyExpiry";
+        /// <summary>
+        /// Grants or revokes a user's deployment administrator flag.
+        /// </summary>
+        public const string SetDeploymentAdmin = "SetDeploymentAdmin";
+
+        /// <summary>Reads one tenant's business plugin bindings.</summary>
+        public const string GetCustomizePluginSettings = "GetCustomizePluginSettings";
+
+        /// <summary>Stores one tenant's business plugin bindings.</summary>
+        public const string SaveCustomizePluginSettings = "SaveCustomizePluginSettings";
+        /// <summary>
+        /// Executes a custom function.
+        /// </summary>
+        public const string ExecFunc = "ExecFunc";
+        /// <summary>
+        /// Executes a custom function with anonymous access.
+        /// </summary>
+        public const string ExecFuncAnonymous = "ExecFuncAnonymous";
+    }
+}

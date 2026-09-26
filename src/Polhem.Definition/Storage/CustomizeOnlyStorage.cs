@@ -1,0 +1,197 @@
+using Polhem.Base;
+using Polhem.Base.Serialization;
+using Polhem.Definition.Database;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
+using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
+
+namespace Polhem.Definition.Storage
+{
+    /// <summary>
+    /// Read-only define storage for the tenant customization-override layer. Resolves files
+    /// strictly under <c>{CustomizePath}/{customizeId}/</c> (via <see cref="CustomizeOnlyPathOptions"/>)
+    /// and serves only the five customizable types: Language, FormLayout, ProgramSettings,
+    /// MenuSettings, PluginSettings.
+    /// </summary>
+    /// <remarks>
+    /// A missing customization file is a normal scenario, so the five supported getters return
+    /// <c>null</c> rather than throwing or falling back to the base layer. Every other member
+    /// throws <see cref="NotSupportedException"/> — the override layer never owns FormSchema,
+    /// TableSchema, DbCategorySettings, nor any write operation.
+    /// </remarks>
+    public sealed class CustomizeOnlyStorage : IDefineStorage
+    {
+        private const string ReadOnlyMessage = "The customization-override layer is read-only.";
+        private readonly CustomizeOnlyPathOptions _paths;
+
+        /// <summary>
+        /// Initializes a new <see cref="CustomizeOnlyStorage"/> bound to the supplied
+        /// customization path options.
+        /// </summary>
+        /// <param name="paths">The customization-rooted path options.</param>
+        public CustomizeOnlyStorage(CustomizeOnlyPathOptions paths)
+        {
+            _paths = paths ?? throw new ArgumentNullException(nameof(paths));
+        }
+
+        /// <summary>
+        /// Gets the customization override of the form layout, or <c>null</c> when the tenant
+        /// provides no override for the given layout.
+        /// </summary>
+        /// <param name="layoutId">The form layout ID.</param>
+        public FormLayout? GetFormLayout(string layoutId)
+        {
+            string filePath = _paths.GetFormLayoutFilePath(layoutId);
+            if (!File.Exists(filePath))
+                return null;
+            return XmlCodec.DeserializeFromFile<FormLayout>(filePath);
+        }
+
+        /// <summary>
+        /// Gets the customization override of the language resource, or <c>null</c> when the
+        /// tenant provides no override for the given language and namespace.
+        /// </summary>
+        /// <param name="lang">The BCP-47 language code.</param>
+        /// <param name="ns">The resource namespace.</param>
+        public LanguageResource? GetLanguage(string lang, string ns)
+        {
+            string filePath = _paths.GetLanguageFilePath(lang, ns);
+            if (!File.Exists(filePath))
+                return null;
+            return XmlCodec.DeserializeFromFile<LanguageResource>(filePath);
+        }
+
+        /// <summary>Not supported — the override layer never owns database category settings.</summary>
+        public DbCategorySettings? GetDbCategorySettings()
+            => throw new NotSupportedException("The customization-override layer does not serve DbCategorySettings.");
+
+        /// <summary>Not supported — the override layer never owns the currency master.</summary>
+        public CurrencySettings? GetCurrencySettings()
+            => throw new NotSupportedException("The customization-override layer does not serve CurrencySettings.");
+
+        /// <summary>Not supported — the override layer is strictly read-only.</summary>
+        public void SaveCurrencySettings(CurrencySettings settings)
+            => throw new NotSupportedException(ReadOnlyMessage);
+
+        /// <summary>Not supported — the override layer never owns the unit master.</summary>
+        public UnitSettings? GetUnitSettings()
+            => throw new NotSupportedException("The customization-override layer does not serve UnitSettings.");
+
+        /// <summary>Not supported — the override layer is strictly read-only.</summary>
+        public void SaveUnitSettings(UnitSettings settings)
+            => throw new NotSupportedException(ReadOnlyMessage);
+
+        /// <summary>Not supported — the override layer never owns table schema.</summary>
+        public TableSchema? GetTableSchema(string categoryId, string tableName)
+            => throw new NotSupportedException("The customization-override layer does not serve TableSchema.");
+
+        /// <summary>Not supported — the override layer never owns form schema.</summary>
+        public FormSchema? GetFormSchema(string progId)
+            => throw new NotSupportedException("The customization-override layer does not serve FormSchema.");
+
+        /// <summary>
+        /// Gets the customization override of the program settings, or <c>null</c> when the tenant
+        /// provides no override.
+        /// </summary>
+        public ProgramSettings? GetProgramSettings()
+        {
+            string filePath = _paths.GetProgramSettingsFilePath();
+            if (!File.Exists(filePath))
+                return null;
+            string xml = FileUtilities.FileReadText(filePath);
+            ProgramSettingsFormat.EnsureCurrentFormat(xml, filePath);
+            var settings = XmlCodec.Deserialize<ProgramSettings>(xml);
+            settings?.SetObjectFilePath(filePath);
+            return settings;
+        }
+
+        /// <summary>Not supported — the override layer is strictly read-only.</summary>
+        public void SaveProgramSettings(ProgramSettings settings)
+            => throw new NotSupportedException(ReadOnlyMessage);
+
+        /// <summary>
+        /// Gets the customization override of the menu definition, or <c>null</c> when the tenant
+        /// provides no override.
+        /// </summary>
+        public MenuSettings? GetMenuSettings()
+        {
+            string filePath = _paths.GetMenuSettingsFilePath();
+            if (!File.Exists(filePath))
+                return null;
+            var settings = XmlCodec.DeserializeFromFile<MenuSettings>(filePath);
+            settings?.EnsureValid();
+            return settings;
+        }
+
+        /// <summary>Not supported — the override layer is strictly read-only.</summary>
+        public void SaveMenuSettings(MenuSettings settings)
+            => throw new NotSupportedException(ReadOnlyMessage);
+
+        /// <summary>
+        /// Gets the customization override of the business plugin bindings, or <c>null</c> when the
+        /// tenant provides none.
+        /// </summary>
+        public PluginSettings? GetPluginSettings()
+        {
+            string filePath = _paths.GetPluginSettingsFilePath();
+            if (!File.Exists(filePath))
+                return null;
+            return XmlCodec.DeserializeFromFile<PluginSettings>(filePath);
+        }
+
+        /// <summary>Not supported — the override layer is strictly read-only.</summary>
+        public void SavePluginSettings(PluginSettings settings)
+            => throw new NotSupportedException(ReadOnlyMessage);
+
+        /// <summary>Not supported — the override layer is strictly read-only.</summary>
+        public void SaveDbCategorySettings(DbCategorySettings settings)
+            => throw new NotSupportedException(ReadOnlyMessage);
+
+        /// <summary>Not supported — the override layer is strictly read-only.</summary>
+        public void SaveTableSchema(string categoryId, TableSchema tableSchema)
+            => throw new NotSupportedException(ReadOnlyMessage);
+
+        /// <summary>Not supported — the override layer is strictly read-only.</summary>
+        public void SaveFormSchema(FormSchema formSchema)
+            => throw new NotSupportedException(ReadOnlyMessage);
+
+        /// <summary>Not supported — the override layer is strictly read-only.</summary>
+        public void SaveFormLayout(FormLayout formLayout)
+            => throw new NotSupportedException(ReadOnlyMessage);
+
+        /// <summary>Not supported — the override layer is strictly read-only.</summary>
+        public void SaveLanguage(LanguageResource resource)
+            => throw new NotSupportedException(ReadOnlyMessage);
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// <para>
+        /// Only the five customizable types report a signal, and each resolves through the same
+        /// <see cref="CustomizeOnlyPathOptions"/> the getters use, so a consumer watches exactly the
+        /// file this storage would read. Every other type reports no signal rather than throwing —
+        /// unlike the getters, a consumer may ask about any define type here without first knowing
+        /// what the override layer serves.
+        /// </para>
+        /// <para>
+        /// The path is reported whether or not the file exists today. A tenant adding an override
+        /// that was previously absent is itself a change worth reacting to, and the file no longer
+        /// having a modification time is exactly how a watcher notices it appearing.
+        /// </para>
+        /// </remarks>
+        public DefineChangeSource GetChangeSource(DefineType defineType, params string[] keys)
+        {
+            string[]? filePaths = defineType switch
+            {
+                DefineType.ProgramSettings => [_paths.GetProgramSettingsFilePath()],
+                DefineType.MenuSettings => [_paths.GetMenuSettingsFilePath()],
+                DefineType.PluginSettings => [_paths.GetPluginSettingsFilePath()],
+                DefineType.FormLayout when keys.Length >= 1 => [_paths.GetFormLayoutFilePath(keys[0])],
+                DefineType.Language when keys.Length >= 2 => [_paths.GetLanguageFilePath(keys[0], keys[1])],
+                _ => null
+            };
+
+            return filePaths is null ? DefineChangeSource.None : new DefineChangeSource { FilePaths = filePaths };
+        }
+    }
+}

@@ -1,0 +1,65 @@
+﻿<Project>
+
+  <!-- 版本資訊的唯一來源；tools/ 也 import 同一份。三者一致由 POLHEM9002 於建置期把關。 -->
+  <Import Project="$(MSBuildThisFileDirectory)../Version.props" />
+
+  <PropertyGroup>
+<!---->
+    <!-- 套件 Metadata -->
+    <Company>Polhem</Company>
+    <Authors>Polhem contributors</Authors>
+    <Product>Polhem</Product>
+    <Copyright>Copyright (c) Polhem contributors</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/polhem-dev/polhem</PackageProjectUrl>
+    <PackageIcon>polhem.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- 打包 -->
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <!-- 文件 -->
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+
+    <!-- 語言特性 -->
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- 健康檢查 -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <RepositoryUrl>https://github.com/polhem-dev/polhem</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- Opt-in per-project SARIF diagnostics, used to regenerate the PublicAPI baselines in bulk.
+         Off unless PolhemSarifDir is passed, so normal builds are unaffected. Procedure:
+         docs/repo-ops/public-api-baseline.md -->
+    <ErrorLog Condition="'$(PolhemSarifDir)' != ''">$(PolhemSarifDir)/$(MSBuildProjectName).sarif,version=2.1</ErrorLog>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\polhem.png" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)..\LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.303" PrivateAssets="All"/>
+    <!-- Public API surface tracking. RS0016/RS0017 turn "a published type or member was added,
+         removed or changed" into a build failure unless the baseline below is updated in the same
+         commit, so a breaking change can no longer reach a release without someone noticing.
+         Adopted because the commit-subject `!` convention was previously the only gate and it
+         missed real breaks twice. Baseline maintenance: docs/repo-ops/public-api-baseline.md. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="4.14.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+</Project>

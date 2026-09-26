@@ -1,0 +1,89 @@
+using System.ComponentModel;
+using System.Reflection;
+using Polhem.Api.Core.Messages.System;
+using Polhem.Web.Blazor.Server.Components;
+using Polhem.Web.Blazor.Server.DependencyInjection;
+using Microsoft.AspNetCore.Components;
+
+namespace Polhem.Web.Blazor.Server.UnitTests.Components
+{
+    /// <summary>
+    /// Structural smoke tests for <see cref="PolhemLoginPanel"/>: confirms the
+    /// public parameter surface, the <see cref="PolhemApiConnectorFactory"/>
+    /// injection, and the labels' defaults. Submitting against a real backend
+    /// is exercised by the Phase 2 sample (BlazorHostApp), not by an in-memory
+    /// unit test.
+    /// </summary>
+    public class PolhemLoginPanelTests
+    {
+        private static PropertyInfo GetProperty(string name)
+        {
+            var property = typeof(PolhemLoginPanel).GetProperty(
+                name, BindingFlags.Public | BindingFlags.Instance);
+            Assert.NotNull(property);
+            return property!;
+        }
+
+        private static PropertyInfo GetNonPublicProperty(string name)
+        {
+            var property = typeof(PolhemLoginPanel).GetProperty(
+                name, BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(property);
+            return property!;
+        }
+
+        [Fact]
+        [DisplayName("PolhemLoginPanel 為 Blazor ComponentBase 子類別")]
+        public void Type_IsComponentBaseSubclass()
+        {
+            Assert.True(typeof(ComponentBase).IsAssignableFrom(typeof(PolhemLoginPanel)));
+        }
+
+        [Theory]
+        [InlineData(nameof(PolhemLoginPanel.UserIdLabel))]
+        [InlineData(nameof(PolhemLoginPanel.PasswordLabel))]
+        [InlineData(nameof(PolhemLoginPanel.SubmitLabel))]
+        [InlineData(nameof(PolhemLoginPanel.OnLoggedIn))]
+        [DisplayName("公開屬性皆標註 [Parameter]")]
+        public void PublicProperties_AreMarkedAsParameters(string name)
+        {
+            var property = GetProperty(name);
+            Assert.NotNull(property.GetCustomAttribute<ParameterAttribute>());
+        }
+
+        [Fact]
+        [DisplayName("OnLoggedIn 屬性型別為 EventCallback<LoginResponse>")]
+        public void OnLoggedIn_IsEventCallbackOfLoginResponse()
+        {
+            var property = GetProperty(nameof(PolhemLoginPanel.OnLoggedIn));
+            Assert.Equal(typeof(EventCallback<LoginResponse>), property.PropertyType);
+        }
+
+        [Fact]
+        [DisplayName("Factory 屬性透過 [Inject] 注入 PolhemApiConnectorFactory")]
+        public void Factory_IsInjected()
+        {
+            var property = GetNonPublicProperty("Factory");
+            Assert.NotNull(property.GetCustomAttribute<InjectAttribute>());
+            Assert.Equal(typeof(PolhemApiConnectorFactory), property.PropertyType);
+        }
+
+        [Fact]
+        [DisplayName("Label 屬性具有預設值 User ID / Password / Sign in")]
+        public void LabelProperties_HaveSensibleDefaults()
+        {
+            var panel = new PolhemLoginPanel();
+            Assert.Equal("User ID", panel.UserIdLabel);
+            Assert.Equal("Password", panel.PasswordLabel);
+            Assert.Equal("Sign in", panel.SubmitLabel);
+        }
+
+        [Fact]
+        [DisplayName("OnLoggedIn 預設狀態應無委派（HasDelegate 為 false）")]
+        public void OnLoggedIn_Default_HasNoDelegate()
+        {
+            var panel = new PolhemLoginPanel();
+            Assert.False(panel.OnLoggedIn.HasDelegate);
+        }
+    }
+}

@@ -1,0 +1,92 @@
+using System.ComponentModel;
+using Polhem.Api.Core.JsonRpc;
+using Polhem.Api.Core.Messages.System;
+using Polhem.Business;
+using Polhem.Definition;
+using Polhem.Definition.Identity;
+using Polhem.Definition.Language;
+using Polhem.Definition.Security;
+using Polhem.Definition.Storage;
+using Polhem.Tests.Shared;
+
+namespace Polhem.Api.Core.UnitTests.System
+{
+    /// <summary>
+    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip：將 <c>System.LeaveCompany</c>
+    /// 透過 executor 派發到 <see cref="Polhem.Business.System.SystemBusinessObject.LeaveCompany"/>，
+    /// 驗證 SessionInfo.CompanyId 被清空且回傳成功。
+    /// <para>
+    /// 需要 <see cref="SharedDbFixture"/>（而非 <c>PolhemTestFixture</c>）：session 持久化落地後，
+    /// LeaveCompany 會更新 `st_session` 的種子，因此本測試對 <c>st_session</c> 有真實相依。單靠 <c>PolhemTestFixture</c> 不會建 schema，
+    /// 只有在別的測試行程剛好先建好表時才會通過——那是 CI 上偶發紅的來源。
+    /// </para>
+    /// </summary>
+    public class LeaveCompanyJsonRpcRoundTripTests : IClassFixture<SharedDbFixture>
+    {
+        private readonly SharedDbFixture _fx;
+
+        public LeaveCompanyJsonRpcRoundTripTests(SharedDbFixture fx) { _fx = fx; }
+
+        private JsonRpcExecutor BuildExecutor(Guid accessToken)
+        {
+            var boFactory = new BusinessObjectFactory(
+                _fx.Provider,
+                _fx.GetRequiredService<IDefineAccess>(),
+                _fx.GetRequiredService<ISessionInfoService>(),
+                _fx.GetRequiredService<ILanguageService>(),
+                _fx.GetRequiredService<IBoTypeResolver>());
+
+            return new JsonRpcExecutor(
+                boFactory,
+                _fx.GetRequiredService<IAccessTokenValidator>(),
+                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            {
+                AccessToken = accessToken,
+                IsLocalCall = true,
+            };
+        }
+
+        private static JsonRpcRequest BuildRequest()
+            => new()
+            {
+                Method = $"{SysProgIds.System}.{SystemActions.LeaveCompany}",
+                Params = new JsonRpcParams { Value = new LeaveCompanyRequest() },
+                Id = Guid.NewGuid().ToString(),
+            };
+
+        [Fact]
+        [DisplayName("System.LeaveCompany 應清空 SessionInfo.CompanyId 並回傳成功")]
+        public void LeaveCompany_AfterEntered_ClearsCompanyId()
+        {
+            // Arrange：建立 session 並設 CompanyId
+            var sessionService = _fx.GetRequiredService<ISessionInfoService>();
+            var accessToken = TestSessionFactory.CreateAccessToken(_fx);
+            var session = sessionService.Get(accessToken)!;
+            session.CompanyId = "C001";
+            sessionService.Set(session);
+
+            // Act
+            var response = BuildExecutor(accessToken).Execute(BuildRequest());
+
+            // Assert
+            Assert.Null(response.Error);
+            Assert.IsType<LeaveCompanyResponse>(response.Result!.Value);
+            Assert.Null(sessionService.Get(accessToken)!.CompanyId);
+        }
+
+        [Fact]
+        [DisplayName("System.LeaveCompany 對未進公司狀態應 idempotent 回傳成功")]
+        public void LeaveCompany_WhenNotEntered_Idempotent()
+        {
+            var sessionService = _fx.GetRequiredService<ISessionInfoService>();
+            var accessToken = TestSessionFactory.CreateAccessToken(_fx);
+            Assert.Null(sessionService.Get(accessToken)!.CompanyId);
+
+            var response = BuildExecutor(accessToken).Execute(BuildRequest());
+
+            Assert.Null(response.Error);
+            Assert.IsType<LeaveCompanyResponse>(response.Result!.Value);
+            Assert.Null(sessionService.Get(accessToken)!.CompanyId);
+        }
+    }
+}

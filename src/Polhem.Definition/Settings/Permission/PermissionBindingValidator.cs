@@ -1,0 +1,88 @@
+using Polhem.Definition.Forms;
+
+namespace Polhem.Definition.Settings
+{
+    /// <summary>
+    /// Validates the line-A binding between forms and the permission registry.
+    /// </summary>
+    /// <remarks>
+    /// The framework never invokes this itself — there is no automatic load-time scan. Call it from
+    /// the host where a failure is cheap to act on: at startup, in a deployment smoke test, or in a
+    /// CI step over the definitions in the configured define path. An invalid binding does not fail
+    /// loudly on its own: an empty or unresolvable <see cref="FormSchema.PermissionModelId"/> means
+    /// the form is unscoped, so a typo degrades to "no enforcement" rather than to an error.
+    /// </remarks>
+    public static class PermissionBindingValidator
+    {
+        /// <summary>
+        /// Validates a set of form schemas against the permission registry. Returns one
+        /// message per violation (empty when valid). Checks that each form's
+        /// <see cref="FormSchema.PermissionModelId"/> references an existing model, that record-scope
+        /// roles are marked on the master table only, and that sensitive-category fields reference an
+        /// existing well-known model. A master table may mark any number of
+        /// <see cref="ScopeRole.Owner"/> / <see cref="ScopeRole.Dept"/> columns — the scope predicate
+        /// OR-unions them (e.g. a transfer form's from/to department).
+        /// </summary>
+        /// <param name="schemas">The form schemas to validate.</param>
+        /// <param name="models">The permission model registry.</param>
+        /// <returns>The list of validation errors; empty when valid.</returns>
+        public static IReadOnlyList<string> Validate(IEnumerable<FormSchema> schemas, PermissionModels models)
+        {
+            ArgumentNullException.ThrowIfNull(schemas);
+            ArgumentNullException.ThrowIfNull(models);
+
+            var errors = new List<string>();
+            foreach (var schema in schemas)
+            {
+                errors.AddRange(ValidateModelIdReference(schema, models));
+                errors.AddRange(ValidateDetailScopeRoles(schema));
+                errors.AddRange(ValidateSensitiveCategories(schema, models));
+            }
+            return errors;
+        }
+
+        // A field marked with a non-None SensitiveCategory binds to a well-known permission model
+        // (the category name). That model must exist in the registry, otherwise the field would be
+        // silently un-gated (absent model resolves to no permission on the client). Applies to every
+        // table — sensitivity is data classification, not a master-only scope role.
+        private static IEnumerable<string> ValidateSensitiveCategories(FormSchema schema, PermissionModels models)
+        {
+            if (schema.Tables == null) { yield break; }
+            foreach (FormTable table in schema.Tables)
+            {
+                if (table.Fields == null) { continue; }
+                foreach (FormField field in table.Fields)
+                {
+                    if (field.SensitiveCategory == SensitiveCategory.None) { continue; }
+                    string modelId = field.SensitiveCategory.ToPermissionModelId();
+                    if (models.Models == null || !models.Models.Contains(modelId))
+                        yield return $"Form '{schema.ProgId}': field '{table.TableName}.{field.FieldName}' has SensitiveCategory '{field.SensitiveCategory}' but its well-known model '{modelId}' does not exist in the permission registry.";
+                }
+            }
+        }
+
+        // PermissionModelId must reference an existing model (when declared).
+        private static IEnumerable<string> ValidateModelIdReference(FormSchema schema, PermissionModels models)
+        {
+            if (!string.IsNullOrEmpty(schema.PermissionModelId)
+                && (models.Models == null || !models.Models.Contains(schema.PermissionModelId)))
+            {
+                yield return $"Form '{schema.ProgId}': PermissionModelId '{schema.PermissionModelId}' does not exist in the permission registry.";
+            }
+        }
+
+        // Record scope is master-only: a detail (non-master) table must not mark any scope role.
+        // Such a column would be silently ignored by the resolver, so flag it as a configuration
+        // error at load time rather than letting it mislead.
+        private static IEnumerable<string> ValidateDetailScopeRoles(FormSchema schema)
+        {
+            if (schema.Tables == null) { yield break; }
+            foreach (FormTable table in schema.Tables)
+            {
+                if (string.Equals(table.TableName, schema.ProgId, StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (table.Fields != null && table.Fields.Any(field => field.ScopeRole != ScopeRole.None))
+                    yield return $"Form '{schema.ProgId}': detail table '{table.TableName}' marks a ScopeRole column; record scope is master-only.";
+            }
+        }
+    }
+}

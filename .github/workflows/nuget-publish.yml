@@ -1,0 +1,164 @@
+name: Publish NuGet Packages
+
+on:
+  push:
+    tags:
+      - 'v*'  # 只有推送 tag（例如 v1.2.3）時才會觸發
+
+jobs:
+  publish:
+    runs-on: windows-latest
+
+    outputs:
+      # The package list for the release body. Derived from what was actually pushed rather
+      # than hand-written, so it cannot drift from the pack step the way a third copy would.
+      packages: ${{ steps.pkgs.outputs.PACKAGES }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Extract version from tag
+      id: version
+      run: |
+        $tag = "${{ github.ref_name }}"
+        $version = $tag.TrimStart('v')
+        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+        Write-Host "Publishing version: $version"
+
+    - name: Restore dependencies
+      run: |
+        dotnet restore Polhem.Library.slnx
+        # tools/Polhem.Cli is not part of Polhem.Library.slnx (tools live in Polhem.Tools.slnx);
+        # restore it explicitly so the subsequent build --no-restore step works.
+        dotnet restore tools/Polhem.Cli/Polhem.Cli.csproj
+
+    # build 與 pack 在同一個 step、共用同一份清單。
+    #
+    # WARNING: 這裡曾經是兩份手工維護的清單，而 pack 帶 --no-build —— 於是
+    # src/Polhem.Expressions 在 pack 清單、不在 build 清單，只靠 Polhem.UI.Avalonia /
+    # Polhem.Hosting 的 ProjectReference 傳遞建到它才沒炸。那兩條參考一旦消失，
+    # 發版當下才會失敗，而發版是最不該有意外的時刻。
+    #
+    # 合併成一個 step 是為了讓清單只存在一份：拆成兩步就得把清單傳過去，
+    # 而任何傳遞手段（檔案、env）都會再引入自己的失敗模式。
+    # 順序有意義：相依在前，且必須全部 build 完才開始 pack（pack 帶 --no-build）。
+    - name: Build and pack all projects
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $ver = "${{ steps.version.outputs.VERSION }}"
+        $projects = @(
+          'src/Polhem.Base/Polhem.Base.csproj'
+          'src/Polhem.Expressions/Polhem.Expressions.csproj'
+          'src/Polhem.Definition/Polhem.Definition.csproj'
+          'src/Polhem.ObjectCaching/Polhem.ObjectCaching.csproj'
+          'src/Polhem.Db/Polhem.Db.csproj'
+          'src/Polhem.Api.Contracts/Polhem.Api.Contracts.csproj'
+          'src/Polhem.Business/Polhem.Business.csproj'
+          'src/Polhem.Api.Core/Polhem.Api.Core.csproj'
+          'src/Polhem.Api.Client/Polhem.Api.Client.csproj'
+          'src/Polhem.UI.Core/Polhem.UI.Core.csproj'
+          'src/Polhem.UI.Avalonia/Polhem.UI.Avalonia.csproj'
+          'src/Polhem.Repository.Abstractions/Polhem.Repository.Abstractions.csproj'
+          'src/Polhem.Repository/Polhem.Repository.csproj'
+          'src/Polhem.Hosting/Polhem.Hosting.csproj'
+          'src/Polhem.Api.AspNetCore/Polhem.Api.AspNetCore.csproj'
+          'src/Polhem.Web.Blazor.Server/Polhem.Web.Blazor.Server.csproj'
+          # Framework CLI (dotnet tool) — lock-stepped to framework version.
+          'tools/Polhem.Cli/Polhem.Cli.csproj'
+        )
+
+        Write-Host "== build =="
+        foreach ($proj in $projects) {
+          dotnet build $proj --configuration Release --no-restore /p:Version=$ver
+          if ($LASTEXITCODE -ne 0) { throw "build failed: $proj" }
+        }
+
+        Write-Host "== pack =="
+        foreach ($proj in $projects) {
+          dotnet pack $proj --configuration Release --output ./nupkgs --no-build /p:Version=$ver
+          if ($LASTEXITCODE -ne 0) { throw "pack failed: $proj" }
+        }
+
+    - name: Push to NuGet
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        Get-ChildItem -Path ./nupkgs -Filter *.nupkg | ForEach-Object {
+          dotnet nuget push $_.FullName --api-key "$env:NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          if ($LASTEXITCODE -ne 0) { throw "Failed to push $($_.Name)" }
+        }
+
+    - name: Collect published packages
+      id: pkgs
+      env:
+        VER: ${{ steps.version.outputs.VERSION }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        # Extension is compared explicitly rather than passed to -Filter, because the Windows
+        # filter matches on the 8.3 short name as well and would also return the .snupkg files.
+        $lines = Get-ChildItem -Path ./nupkgs |
+          Where-Object { $_.Extension -eq '.nupkg' } |
+          ForEach-Object { $_.Name -replace "\.$([regex]::Escape($env:VER))\.nupkg$", '' } |
+          Sort-Object -Unique |
+          ForEach-Object { "- [$_](https://www.nuget.org/packages/$_/$env:VER)" }
+        if (-not $lines) { throw "No packages found in ./nupkgs" }
+        "PACKAGES<<PKGEOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        $lines | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        "PKGEOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        Write-Host "Published $($lines.Count) packages."
+
+  release:
+    needs: publish  # 確保 NuGet 全數發佈成功後才建立 GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      with:
+        fetch-depth: 0  # the previous tag is needed for the compare link
+
+    - name: Extract version from tag
+      id: version
+      run: |
+        TAG="${{ github.ref_name }}"
+        echo "VERSION=${TAG#v}" >> $GITHUB_OUTPUT
+
+    - name: Resolve compare link
+      id: compare
+      run: |
+        TAG="${{ github.ref_name }}"
+        PREV=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)
+        if [ -n "$PREV" ]; then
+          echo "URL=https://github.com/${{ github.repository }}/compare/${PREV}...${TAG}" >> $GITHUB_OUTPUT
+        else
+          # First tag in the repository: there is nothing to compare against.
+          echo "URL=https://github.com/${{ github.repository }}/commits/${TAG}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228  # v3.0.2
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        body: |
+          NuGet packages for version ${{ steps.version.outputs.VERSION }} have been published.
+
+          Release notes:
+          - [English](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/docs/changelogs/${{ steps.version.outputs.VERSION }}.md)
+          - [繁體中文](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/docs/changelogs/${{ steps.version.outputs.VERSION }}.zh-TW.md)
+
+          ### Packages in this release
+
+          ${{ needs.publish.outputs.packages }}
+
+          > `Polhem.Cli` is a .NET tool and installs differently from the libraries above:
+          > `dotnet tool install -g Polhem.Cli --version ${{ steps.version.outputs.VERSION }}`
+
+          **Full Changelog**: ${{ steps.compare.outputs.URL }}

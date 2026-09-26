@@ -1,0 +1,155 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+             xmlns:loc="using:Polhem.DefineEditor.Markup"
+             xmlns:behaviors="using:Polhem.DefineEditor.Behaviors"
+             xmlns:models="using:Polhem.DefineEditor.Models"
+             xmlns:settings="using:Polhem.Definition.Settings"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="Polhem.DefineEditor.Views.MenuSettingsDocumentView"
+             x:DataType="vm:MenuSettingsDocumentViewModel"
+             x:CompileBindings="True">
+
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="settings:MenuFolder">
+            <StackPanel x:DataType="settings:MenuFolder" Spacing="2">
+                <TextBlock Classes="h2" Text="{loc:Loc Menu_FolderProps}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Id"/>
+                    <TextBox Text="{Binding Id, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Caption"/>
+                    <TextBox Text="{Binding Caption, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Order"/>
+                    <NumericUpDown Value="{Binding Order, Mode=TwoWay}" FormatString="0" Increment="10"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Icon"/>
+                    <TextBox Text="{Binding Icon, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Visible"/>
+                    <CheckBox IsChecked="{Binding Visible, Mode=TwoWay}"/>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="settings:MenuEntry">
+            <StackPanel x:DataType="settings:MenuEntry" Spacing="2">
+                <TextBlock Classes="h2" Text="{loc:Loc Menu_EntryProps}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Id"/>
+                    <TextBox Text="{Binding Id, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="ProgId"/>
+                    <TextBox Text="{Binding ProgId, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Caption"/>
+                    <TextBox Text="{Binding Caption, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Order"/>
+                    <NumericUpDown Value="{Binding Order, Mode=TwoWay}" FormatString="0" Increment="10"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Icon"/>
+                    <TextBox Text="{Binding Icon, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Visible"/>
+                    <CheckBox IsChecked="{Binding Visible, Mode=TwoWay}"/>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="settings:MenuSettings">
+            <StackPanel Spacing="6">
+                <TextBlock Classes="h2" Text="{loc:Loc Menu_RootSubtitle}"/>
+                <TextBlock Classes="muted" TextWrapping="Wrap"
+                           Text="{loc:Loc Menu_RootHint}"/>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <DockPanel>
+
+        <Border DockPanel.Dock="Bottom" Classes="statusbar" Padding="12,5">
+            <TextBlock Classes="muted" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"/>
+        </Border>
+
+        <Border DockPanel.Dock="Bottom" Classes="surface-sunken" Padding="12,8" IsVisible="{Binding Issues.Count}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Classes="h2" Text="{loc:Loc Section_ValidationResults}"/>
+                <ListBox ItemsSource="{Binding Issues}" MaxHeight="160" Background="Transparent" BorderThickness="0" Margin="0,6,0,0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:ValidationIssue">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding Icon}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Path}" Classes="muted" Width="240"/>
+                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <Grid ColumnDefinitions="*,4,1.2*">
+            <TreeView Grid.Column="0" ItemsSource="{Binding Roots}" SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" Padding="6,4">
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="models:SettingsTreeNode">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="inner-icon" Data="{Binding Icon, Converter={StaticResource IconKeyToGeometry}}"/>
+                            <TextBlock Text="{Binding Header}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TreeDataTemplate>
+                </TreeView.ItemTemplate>
+                <TreeView.Styles>
+                    <Style Selector="TreeViewItem" x:DataType="models:SettingsTreeNode">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                    </Style>
+                </TreeView.Styles>
+                <TreeView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="{loc:Loc Menu_AddFolder}"
+                                  Command="{Binding AddFolderCommand}"
+                                  IsVisible="{Binding SelectedKindCanOwnChildren}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconAdd}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="{loc:Loc Menu_AddEntry}"
+                                  Command="{Binding AddEntryCommand}"
+                                  IsVisible="{Binding SelectedKindCanOwnChildren}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconBox}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator IsVisible="{Binding ShowDeleteSeparator}"/>
+                        <MenuItem Header="{loc:Loc Action_Delete}"
+                                  Command="{Binding DeleteCommand}"
+                                  IsVisible="{Binding SelectedKindCanDelete}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconDelete}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </TreeView.ContextMenu>
+            </TreeView>
+            <GridSplitter Grid.Column="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Columns"/>
+            <Border Grid.Column="2" Padding="18,14">
+                <ScrollViewer Classes="props-pane" HorizontalScrollBarVisibility="Disabled">
+                    <ContentControl Content="{Binding SelectedEditorContext}"
+                                    behaviors:DirtyTracking.IsEnabled="True"/>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>Avalonia desktop control library for Polhem (FormSchema-driven UI for Windows / macOS / Linux).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Bound to 12.0.0 (the latest stable Avalonia.Controls.DataGrid release).
+      The main Avalonia package itself ships 12.0.x patch releases; consumers
+      (sample / host) are free to bring a newer 12.0.x transitively — NuGet
+      treats this version as the lower bound for the library.
+    -->
+    <PackageReference Include="Avalonia" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Polhem.UI.Core\Polhem.UI.Core.csproj" />
+    <ProjectReference Include="..\Polhem.Api.Client\Polhem.Api.Client.csproj" />
+    <ProjectReference Include="..\Polhem.Definition\Polhem.Definition.csproj" />
+    <ProjectReference Include="..\Polhem.Expressions\Polhem.Expressions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.UI.Avalonia.UnitTests" />
+  </ItemGroup>
+
+</Project>

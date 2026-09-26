@@ -1,0 +1,182 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Templates;
+using Avalonia.Layout;
+using Avalonia.LogicalTree;
+using Polhem.Definition.Collections;
+using Polhem.Definition.Layouts;
+using Polhem.UI.Avalonia.DataObjects;
+
+namespace Polhem.UI.Avalonia.Controls.Editors
+{
+    /// <summary>
+    /// Field editor for <see cref="ControlType.DropDownEdit"/>: a <see cref="ComboBox"/>
+    /// that loads its options from <see cref="Polhem.Definition.Forms.FormField.ListItems"/> and binds the selected
+    /// <see cref="ListItem.Value"/> to a <see cref="FormDataObject"/> field.
+    /// </summary>
+    public class DropDownEdit : ComboBox, IFieldEditor
+    {
+        /// <summary>
+        /// Identifies the <see cref="FieldName"/> styled property.
+        /// </summary>
+        public static readonly StyledProperty<string> FieldNameProperty =
+            AvaloniaProperty.Register<DropDownEdit, string>(nameof(FieldName), string.Empty);
+
+        /// <summary>
+        /// Identifies the <see cref="ReadOnlyText"/> styled property.
+        /// </summary>
+        public static readonly StyledProperty<string?> ReadOnlyTextProperty =
+            AvaloniaProperty.Register<DropDownEdit, string?>(nameof(ReadOnlyText));
+
+        // The read-only view swaps the whole ComboBox template for a flat underlined
+        // label showing the selected item's text: the combo has no read-only mode that
+        // hides the chevron without greying out, and restyling theme-specific template
+        // parts is not portable across Fluent / Semi. `includePopupPart` keeps a hidden
+        // PART_Popup so ComboBox.OnApplyTemplate (NameScope.Get) does not throw.
+        private static readonly FuncControlTemplate<DropDownEdit> s_readOnlyTemplate =
+            new((control, scope) => ReadOnlyFieldVisual.Build(
+                control.GetObservable(ReadOnlyTextProperty), scope, ReadOnlyFieldVisual.HostKind.ComboBox));
+
+        private readonly FieldEditorBinder _binder;
+
+        static DropDownEdit()
+        {
+            FieldNameProperty.Changed.AddClassHandler<DropDownEdit>((o, _) => o._binder.OnBindingContextChanged());
+            FormScope.DataObjectProperty.Changed.AddClassHandler<DropDownEdit>((o, _) => o._binder.OnBindingContextChanged());
+            FormScope.FormModeProperty.Changed.AddClassHandler<DropDownEdit>((o, e) => o._binder.OnFormModeChanged((SingleFormMode)e.NewValue!));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="DropDownEdit"/>.
+        /// </summary>
+        public DropDownEdit()
+        {
+            // Fill the cell width like the TextBox-based editors (whose base already
+            // stretches), so the field keeps a fixed width independent of the selected
+            // item's text and the read-only underline spans the whole field.
+            HorizontalAlignment = HorizontalAlignment.Stretch;
+            _binder = new FieldEditorBinder(this, RefreshFromSource, ApplyMetadata);
+            // NOTE: A recycling FuncDataTemplate hands the same TextBlock instance to
+            // both the dropdown item and the selection box, and a control cannot live
+            // in two places — the collapsed combo then fails to show the picked value.
+            // DisplayMemberBinding materialises per-container content instead.
+            DisplayMemberBinding = new global::Avalonia.Data.Binding(nameof(ListItem.Text));
+            SelectionChanged += (_, _) =>
+            {
+                // Keep the read-only display text current for both source-driven and
+                // user selection changes, so a later switch to View mode shows the value.
+                ReadOnlyText = (SelectedItem as ListItem)?.Text ?? string.Empty;
+                _binder.WriteBack((SelectedItem as ListItem)?.Value);
+            };
+        }
+
+        /// <inheritdoc />
+        // WARNING: Without this override the subclass looks up a ControlTheme keyed by
+        // its own type, which the application theme does not provide, and the control
+        // renders with no visual at all.
+        protected override Type StyleKeyOverride => typeof(ComboBox);
+
+        /// <summary>
+        /// Gets or sets the bound field (column) name.
+        /// </summary>
+        public string FieldName
+        {
+            get => GetValue(FieldNameProperty);
+            set => SetValue(FieldNameProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets the text shown by the read-only display template.
+        /// </summary>
+        public string? ReadOnlyText
+        {
+            get => GetValue(ReadOnlyTextProperty);
+            set => SetValue(ReadOnlyTextProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets the selected <see cref="ListItem.Value"/> as the bound field value.
+        /// </summary>
+        public object? FieldValue
+        {
+            get => (SelectedItem as ListItem)?.Value;
+            set => SelectFromValue(value?.ToString());
+        }
+
+        /// <inheritdoc />
+        public void Bind(FormDataObject dataObject, LayoutField field)
+        {
+            ArgumentNullException.ThrowIfNull(field);
+            _binder.BindExplicit(dataObject, field.FieldName, field);
+        }
+
+        /// <inheritdoc />
+        public void Bind(FormDataObject dataObject, string fieldName)
+        {
+            _binder.BindExplicit(dataObject, fieldName, layoutField: null);
+        }
+
+        /// <inheritdoc />
+        public void Bind(FormDataObject dataObject, LayoutFieldBase field, System.Data.DataRow row)
+        {
+            _binder.BindRow(dataObject, field, row);
+        }
+
+        /// <inheritdoc />
+        public void Unbind()
+        {
+            _binder.Unbind();
+        }
+
+        /// <inheritdoc />
+        public void SetControlState(SingleFormMode formMode)
+        {
+            if (_binder.AllowsEdit(formMode))
+            {
+                ClearValue(TemplateProperty);
+                ClearValue(FocusableProperty);
+                ClearValue(IsHitTestVisibleProperty);
+            }
+            else
+            {
+                // Swap to the flat underlined display: no chevron, no grey-out.
+                Template = s_readOnlyTemplate;
+                Focusable = false;
+                IsHitTestVisible = false;
+            }
+        }
+
+        /// <inheritdoc />
+        protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
+        {
+            base.OnAttachedToLogicalTree(e);
+            _binder.NotifyAttached();
+        }
+
+        /// <inheritdoc />
+        protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+        {
+            base.OnDetachedFromLogicalTree(e);
+            _binder.NotifyDetached();
+        }
+
+        private void RefreshFromSource()
+        {
+            SelectFromValue(_binder.GetValue());
+        }
+
+        private void ApplyMetadata()
+        {
+            // The read-only view state is applied by SetControlState, which the binder
+            // runs immediately after this on bind and on every form-mode change.
+            if (_binder.FormField?.ListItems is { } items)
+                ItemsSource = items.ToList();
+        }
+
+        private void SelectFromValue(string? value)
+        {
+            SelectedItem = ItemsSource?.OfType<ListItem>()
+                .FirstOrDefault(i => string.Equals(i.Value, value, StringComparison.Ordinal));
+        }
+    }
+}

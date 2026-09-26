@@ -1,0 +1,217 @@
+# Polhem.Db
+
+> 資料庫抽象層，提供動態 SQL 生成、參數化查詢、多資料庫支援，以及基於 IL 的物件映射。
+
+[English](README.md)
+
+## 架構定位
+
+- **層級**：資料存取層（基礎設施）
+- **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
+
+## 目標框架
+
+- `net10.0` -- 使用現代執行階段 API 與效能改進
+
+## 主要功能
+
+### 資料庫存取
+
+- `DbAccess` -- 主要進入點，執行查詢、批次命令與 DataTable 更新
+- `DbConnectionScope` -- 限定範圍的連線生命週期管理
+- `DbCommandSpec` -- 參數化命令規格，支援位置型（`{0}`）與具名（`{Name}`）佔位符自動轉換
+- `DbBatchSpec` -- 批次執行，可選擇性包裹交易並設定隔離等級
+
+### 連線與提供者管理
+
+- `IDbConnectionManager` -- 集中式連線資訊註冊
+- `DbProviderRegistry` -- 資料庫提供者工廠解析
+- `DbConnectionInfo` -- 連線中繼資料（連線字串、資料庫類型、提供者）
+
+### 查詢組合
+
+> Polhem.Db 由 **`FormSchema` 驅動**：以 `FormSchema` 為單位描述業務實體，由查詢上下文沿 `FormSchema` 鏈遞迴展開 JOIN，產生與 ORM 不同的「表單級關聯」資料存取體驗。詳見 [FormSchema 驅動的資料庫存取](../../docs/zh-TW/formschema-data-access.md)。
+
+- `SelectCommandBuilder` -- 根據 `FormSchema` 定義建構 SELECT 命令
+- `SelectBuilder` / `FromBuilder` / `WhereBuilder` / `SortBuilder` / `LimitBuilder` -- 可組合的建構器，分別負責 SELECT、FROM、WHERE、ORDER BY 與筆數限制子句
+- `SelectContext` -- 查詢上下文，追蹤欄位映射與資料表聯結
+- `WhereBuilder` -- 篩選條件轉 SQL，產出參數化結果
+
+### 多資料庫支援
+
+框架透過 dialect factory 層依 `DatabaseType` 路由 SQL 生成與結構描述讀取：
+
+- `IDialectFactory` -- 每個 provider 的工廠，提供 `IFormCommandBuilder`、`ICreateTableCommandBuilder`、`ITableAlterCommandBuilder`、`ITableRebuildCommandBuilder`、`ITableSchemaProvider` 與 `GetDefaultValueExpression(FieldDbType)`
+- `DbDialectRegistry` -- 將 `DatabaseType` 映射到對應的 `IDialectFactory`（與 `DbProviderRegistry` 映射 ADO.NET `DbProviderFactory` 對稱）；註冊由 host 應用程式明示完成
+- 內建 dialect 實作：
+  - **SQL Server**（`Providers/SqlServer/`）-- 完整支援：表單 SELECT / INSERT / UPDATE / DELETE、CREATE/ALTER/REBUILD DDL、結構描述探查
+  - **PostgreSQL**（`Providers/PostgreSql/`）-- 完整支援：表單 SELECT / INSERT / UPDATE / DELETE、CREATE/ALTER/REBUILD DDL、透過 `information_schema` + `pg_catalog` 進行結構描述探查
+  - **SQLite**（`Providers/Sqlite/`）-- 完整支援：表單 SELECT / INSERT / UPDATE / DELETE、CREATE DDL、ALTER（限 ADD / RENAME COLUMN / Index）、其餘欄位修改一律走 REBUILD、透過 `sqlite_master` + `PRAGMA` 進行結構描述探查；定位於檔案式單機與嵌入式情境，請見下方限制清單
+  - **MySQL**（`Providers/MySql/`）-- 完整支援：表單 SELECT / INSERT / UPDATE / DELETE、CREATE/ALTER/REBUILD DDL、透過 `information_schema` 進行結構描述探查
+  - **Oracle**（`Providers/Oracle/`）-- 完整支援：表單 SELECT / INSERT / UPDATE / DELETE、CREATE/ALTER/REBUILD DDL、透過 `USER_*` data dictionary view 進行結構描述探查。識別符一律以 quoted-UPPERCASE（`"ST_USER"`）形式 emit —— 與 Oracle 原生 unquoted-fold-to-UPPER 慣例對齊，同時保留 reserved word 欄位與特殊字元命名的可用性。Provider 在 read-back 邊界將識別符 lowercase 化，使 framework 上層（FormSchema、Repository、Business）對 5 個支援的資料庫維持一致的 lowercase 抽象。完整識別符策略見 [docs/en/database-naming-conventions.md §5.3](../../docs/en/database-naming-conventions.md)
+
+#### SQLite 已知限制
+
+下列為 SQLite 引擎本身或 `Microsoft.Data.Sqlite` driver 的能力差異，框架已沿著對應路徑做出有意決策：
+
+- **ALTER TABLE 嚴重受限**：SQLite 僅支援 `ADD COLUMN` / `RENAME COLUMN`（3.25+）/ `DROP COLUMN`（3.35+）/ `RENAME TO`，無法變更欄位型別、nullability、default 或 PK。所有 `AlterFieldChange` 一律走 rebuild 路徑（drop / create temp / copy / drop old / rename）。
+- **AutoIncrement 必須內聯為 PK**：`INTEGER PRIMARY KEY AUTOINCREMENT` 必須直接寫在欄位定義裡，不能透過外部 `CONSTRAINT pk_xxx PRIMARY KEY (...)` 達成。`SqliteCreateTableCommandBuilder` 自動內聯，並偵測「AutoIncrement 欄位 + PK 指向其他欄位」這種衝突的 schema 並 throw `InvalidOperationException`。
+- **無 `COMMENT ON`**：SQLite 不持久化 `DisplayName` / `Caption`；`SqliteCreateTableCommandBuilder` silent no-op，`SqliteTableSchemaProvider` 讀回時這兩個欄位永遠為空字串。應用層應從 FormSchema XML 讀取 captions。
+- **TYPE AFFINITY 而非嚴格型別**：宣告型別字串如 `VARCHAR(50)` / `NUMERIC(18,2)` 仍照寫，SQLite 依 affinity 規則對應。`SqliteTableSchemaProvider` 從 `PRAGMA table_info` 反向解析。
+- **沒有 schema 概念**：所有表在 `main` 資料庫，identifier 直接 unqualified（仍會用 `"..."` quote）。
+- **`DbDataAdapter` 由框架補上**：`Microsoft.Data.Sqlite.SqliteFactory` 不提供 `DbDataAdapter` 實作。框架的 `SqliteProviderFactory` 包裝器補上自製的 `SqliteDataAdapter`，因此**註冊該包裝器後（見上方註冊範例），`DbAccess.UpdateDataTable` 與其他 provider 一樣可用**——SQLite 走的是同一條 adapter-based 讀寫路徑，不需要任何特製的 fallback。直接註冊原生 `SqliteFactory.Instance` 才會失去這個能力。
+- **PK 索引名稱**：SQLite 自動建的 PK 索引是 `sqlite_autoindex_*`；`SqliteTableSchemaProvider` 將其正規化為框架慣例 `pk_{table}` 以利 `TableSchemaComparer` 比對。
+- **驅動套件**：使用 [`Microsoft.Data.Sqlite`](https://learn.microsoft.com/dotnet/standard/data/sqlite/)；連線字串建議採 in-memory shared cache `Data Source=file:polhem_test_sqlite?mode=memory&cache=shared` 用於測試，或 `Data Source={path}.db` 用於檔案式部署。
+
+`Polhem.Db` 本身**不引用任何 ADO.NET driver**，driver 由 host 應用程式自行引用。
+
+### 提供者註冊
+
+Host 應用程式在啟動時註冊兩件事：ADO.NET 的 `DbProviderFactory`（用於建立連線）與 `IDialectFactory`（用於 SQL 生成）。要啟用哪些 DB 完全由 host 決定。
+
+```csharp
+using Polhem.Db.Manager;
+using Polhem.Db.Providers.PostgreSql;
+using Polhem.Db.Providers.Sqlite;
+using Polhem.Db.Providers.SqlServer;
+using Polhem.Definition;
+using Microsoft.Data.SqlClient;
+using Microsoft.Data.Sqlite;
+using Npgsql;
+
+// SQL Server
+DbProviderRegistry.Register(DatabaseType.SQLServer, SqlClientFactory.Instance);
+DbDialectRegistry.Register(DatabaseType.SQLServer, new SqlDialectFactory());
+
+// PostgreSQL
+DbProviderRegistry.Register(DatabaseType.PostgreSQL, NpgsqlFactory.Instance);
+DbDialectRegistry.Register(DatabaseType.PostgreSQL, new PgDialectFactory());
+
+// SQLite
+DbProviderRegistry.Register(DatabaseType.SQLite, SqliteFactory.Instance);
+DbDialectRegistry.Register(DatabaseType.SQLite, new SqliteDialectFactory());
+
+// 在 DatabaseSettings 中設定每筆 DatabaseItem（通常從 XML 載入）；
+// 每筆指定其 DatabaseType 與對應 ConnectionString。
+```
+
+`DatabaseItem` 帶有 `Id`、`DatabaseType`、`ConnectionString`。框架在建立 `DbAccess` / `TableSchemaBuilder` / `TableUpgradeOrchestrator` 時，會依該 `Id` 對應到的 `DatabaseType` 解析註冊好的 provider 與 dialect。PostgreSQL 連線字串範本：
+
+```
+Host=localhost;Port=5432;Database={@DbName};Username={@UserId};Password={@Password}
+```
+
+### 結構描述探查與升級
+
+- `ITableSchemaProvider` -- 各 provider 的結構描述讀取器（SQL Server 使用 `sys.*`，PostgreSQL 使用 `information_schema` + `pg_catalog`）
+- `TableSchemaBuilder` -- 比對定義結構與即時資料庫，產生或執行升級命令
+- `TableSchemaComparer` -- 結構化差異（`TableSchemaDiff`），列出 add/alter/drop 變更
+- `TableUpgradeOrchestrator` -- 預設走 ALTER 升級，必要時 fallback 到 rebuild；透過 dialect factory 路由
+- `ITableAlterCommandBuilder` / `ITableRebuildCommandBuilder` -- 各 provider 的 DDL 產生（in-place ALTER 與整表重建）
+- `TableSchemaCommandBuilder` -- 根據 `TableSchema` 產生 IUD 命令
+
+### IL 物件映射
+
+- `ILMapper<T>` -- 透過 IL emit 實現高效能 `DbDataReader` 至物件映射
+- 自動欄位對屬性比對（不區分大小寫）
+- 以 `ConcurrentDictionary` 依查詢結構快取委派
+- 支援 `List<T>` 與 `IEnumerable<T>`（延遲）具體化
+
+
+### 各 provider 的時間型別對映
+
+`FieldDbType` 有三個時間型別成員，對映方式差異很大：
+
+| `FieldDbType` | SQL Server | PostgreSQL | MySQL | Oracle | SQLite |
+|---|---|---|---|---|---|
+| `Date` | `date` | `date` | `DATE` | `DATE` | `DATE` |
+| `DateTime` | `datetime2` | `timestamp` | `DATETIME(6)` | `TIMESTAMP(6)` | `DATETIME` |
+| `Time` | `nchar(5)` | `char(5)` | `CHAR(5)` | `VARCHAR2(5)` | `VARCHAR(5)` |
+
+`Time` 以固定寬度的 `"HH:mm"` 字串承載，而非各家原生時間型別。原生時間型別在範圍、精度、
+以及「代表間隔還是時鐘讀數」上差異太大，無法可靠地 round-trip 一個牆上時間；且時刻永遠不做
+時區轉換——見 [ADR-033](../../docs/adr/adr-033-time-of-day-semantics.md)。
+
+> 要自訂 dialect？`GetDefaultValueExpression(FieldDbType)` 與型別對映**都**必須處理 `Time`。
+> 它是附加在列舉末端的，所以既有的 `switch` 編譯照樣通過，只會靜默落入 default 分支。
+
+## 主要公開 API
+
+| 類別 / 介面 | 用途 |
+|-------------|------|
+| `DbAccess` | 執行查詢、批次命令與 DataTable 更新 |
+| `DbCommandSpec` | 參數化命令規格，佔位符自動轉換 |
+| `DbBatchSpec` | 批次命令執行與交易支援 |
+| `SelectCommandBuilder` | 以 FormSchema 驅動的 SELECT 命令建構 |
+| `IDialectFactory` | 各 provider 的 SQL／結構描述建構器工廠（SQL Server、PostgreSQL） |
+| `IFormCommandBuilder` | 提供者專屬 CRUD 產生介面 |
+| `ITableSchemaProvider` | 各 provider 的即時資料庫結構描述讀取器 |
+| `DbDialectRegistry` | `DatabaseType` → `IDialectFactory` 註冊中心 |
+| `IDbConnectionManager` | 連線資訊註冊中心 |
+| `DbProviderRegistry` | ADO.NET `DbProviderFactory` 解析 |
+| `ILMapper<T>` | 基於 IL emit 的 DataReader 至物件映射 |
+| `TableSchemaCommandBuilder` | 依結構描述產生 IUD 命令 |
+
+## 設計慣例
+
+- **Builder Pattern** -- 透過 `SelectBuilder`、`FromBuilder`、`WhereBuilder`、`SortBuilder` 組合查詢，各自負責單一 SQL 子句。它們是具象類別：對應的單一實作介面已移除，因為沒有任何呼叫端以介面型別持有它們。
+- **Specification Pattern** -- `DbCommandSpec`、`DbBatchSpec`、`DataTableUpdateSpec` 將執行意圖封裝為資料，解耦命令定義與執行。
+- **IL Emit 映射** -- `ILMapper<T>` 於執行階段產生 `DynamicMethod` 委派，實現零反射 DataReader 映射；委派依查詢結構快取。
+- **佔位符自動轉換** -- `DbCommandSpec` 接受位置型（`{0}`、`{1}`）與具名（`{Name}`）佔位符，自動轉換為提供者專屬參數語法（`@p0`、`:p0`）。
+- **Provider Pattern** -- 資料庫專屬行為（引號、參數前綴、DDL、結構描述探查）隔離於提供者介面之後，路由集中於 `DbDialectRegistry`。Host 應用程式只註冊實際會用到的 dialect；`Polhem.Db` 不會自動註冊任何 dialect。
+- 啟用 **Nullable Reference Types**（`<Nullable>enable</Nullable>`）。
+
+## 目錄結構
+
+```
+Polhem.Db/
+  Ddl/             # DDL 字串產生契約：
+                   # ICreateTableCommandBuilder、ITableAlterCommandBuilder、
+                   # ITableRebuildCommandBuilder
+  Dml/             # DML 字串產生契約與構件：
+                   # IFormCommandBuilder，
+                   # SelectCommandBuilder / DeleteCommandBuilder，
+                   # （insert / update 改走 DataAdapter，見 ADR-024）
+                   # SelectBuilder、FromBuilder、LimitBuilder、
+                   # WhereBuilder/InternalWhereBuilder/WhereBuildResult、
+                   # SortBuilder、
+                   # SelectContext、SelectContextBuilder、
+                   # QueryFieldMapping、QueryFieldMappingCollection、
+                   # TableJoin、TableJoinCollection、
+                   # IParameterCollector、DefaultParameterCollector、
+                   # TableSchemaCommandBuilder、JoinType
+  Schema/          # TableSchema 模型 + 比對 + 升級流程（不產 SQL）：
+                   # TableSchemaBuilder、TableSchemaComparer、TableSchemaDiff、
+                   # TableUpgradeOrchestrator、UpgradePlan、UpgradeStage、
+                   # UpgradeStageKind、UpgradeOptions、UpgradeExecutionMode、
+                   # ChangeExecutionKind、DescriptionLevel、DescriptionChange、
+                   # ITableSchemaProvider（live-DB schema 讀取契約）、
+                   # AlterCompatibilityRules、RebuildSchemaFactory
+                   #（五家 provider 共用的方言無關規則）
+    Changes/       # AddFieldChange、AlterFieldChange、RenameFieldChange、
+                   # AddIndexChange、DropIndexChange、ITableChange
+  CacheNotify/     # st_cache_notify 讀寫兩端：
+                   # ICacheNotifyService/CacheNotifyService（版本遞增）、
+                   # ICacheNotifyReader/CacheNotifyReader（輪詢讀取）、
+                   # CacheNotifyChange
+  Storage/         # DbDefineStorage（定義存放於資料庫）
+  Providers/       # IDialectFactory（provider 工廠契約）
+    SqlServer/     # SQL Server 實作（DDL + DML + SchemaProvider + Helper）
+    PostgreSql/    # PostgreSQL 實作
+    MySql/         # MySQL 實作
+    Oracle/        # Oracle 實作
+    Sqlite/        # SQLite 實作
+  Manager/         # IDbConnectionManager、DbProviderRegistry、DbConnectionInfo、
+                   # DbDialectRegistry
+  *.cs (root)      # 跨切面基礎設施：
+                   # DbAccess、DbCommandSpec、DbCommandSpecCollection、
+                   # DbBatchSpec、DbBatchResult、DbCommandResult、
+                   # DbCommandResultCollection、DbCommandKind、
+                   # DbConnectionScope、DbParameterSpec、DbParameterSpecCollection、
+```
+
+命名空間佈局遵循三項原則（見 [ADR-008](../../docs/adr/adr-008-polhem-db-namespace-layout.md)）：
+
+1. **語法層（`Polhem.Db.Ddl` / `Polhem.Db.Dml`）vs 模型層（`Polhem.Db.Schema`）** — 產 SQL 字串者歸 `Ddl` / `Dml`；操作 `TableSchema` 模型者歸 `Schema`。
+2. **契約依職能歸類，實作依 provider 歸類** — 抽象契約進對應職能命名空間；具體 per-provider 實作不論是 DDL、DML、或 schema 讀取都統一歸 `Polhem.Db.Providers.{X}`。
+3. **`Polhem.Db.Providers` 僅留 `IDialectFactory`** — 它是工廠綁定契約，不再作為 per-provider 介面的雜物袋。

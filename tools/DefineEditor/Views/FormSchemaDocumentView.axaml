@@ -1,0 +1,321 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Polhem.DefineEditor.ViewModels"
+             xmlns:loc="using:Polhem.DefineEditor.Markup"
+             xmlns:behaviors="using:Polhem.DefineEditor.Behaviors"
+             xmlns:models="using:Polhem.DefineEditor.Models"
+             xmlns:forms="using:Polhem.Definition.Forms"
+             xmlns:collections="using:Polhem.Definition.Collections"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="Polhem.DefineEditor.Views.FormSchemaDocumentView"
+             x:DataType="vm:FormSchemaDocumentViewModel"
+             x:CompileBindings="True">
+
+    <UserControl.DataTemplates>
+        <!-- FormSchema 屬性面板 -->
+        <DataTemplate DataType="forms:FormSchema">
+            <StackPanel Spacing="2" x:DataType="forms:FormSchema">
+                <TextBlock Classes="h2" Text="{loc:Loc FormSchema_Props}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="ProgId"/>
+                    <TextBox Text="{Binding ProgId, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="DisplayName"/>
+                    <TextBox Text="{Binding DisplayName, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="CategoryId"/>
+                    <TextBox Text="{Binding CategoryId, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="ListFields"/>
+                    <TextBox Text="{Binding ListFields, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="PermissionModelId"/>
+                    <TextBox Text="{Binding PermissionModelId, Mode=TwoWay}"/>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- FormTable 屬性面板 -->
+        <DataTemplate DataType="forms:FormTable">
+            <StackPanel Spacing="2" x:DataType="forms:FormTable">
+                <TextBlock Classes="h2" Text="{loc:Loc FormSchema_TableProps}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="TableName"/>
+                    <TextBox Text="{Binding TableName, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="DbTableName"/>
+                    <TextBox Text="{Binding DbTableName, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="DisplayName"/>
+                    <TextBox Text="{Binding DisplayName, Mode=TwoWay}"/>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- FormField 屬性面板 -->
+        <DataTemplate DataType="forms:FormField">
+            <StackPanel Spacing="2" x:DataType="forms:FormField">
+                <TextBlock Classes="h2" Text="{loc:Loc FormSchema_FieldProps}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="FieldName"/>
+                    <TextBox Text="{Binding FieldName, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Caption"/>
+                    <TextBox Text="{Binding Caption, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="DbType"/>
+                    <ComboBox ItemsSource="{x:Static vm:EditorOptions.FieldDbTypes}"
+                              SelectedItem="{Binding DbType, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Type"/>
+                    <ComboBox ItemsSource="{x:Static vm:EditorOptions.FieldTypes}"
+                              SelectedItem="{Binding Type, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="ControlType"/>
+                    <ComboBox ItemsSource="{x:Static vm:EditorOptions.ControlTypes}"
+                              SelectedItem="{Binding ControlType, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row short">
+                    <TextBlock Classes="label" Text="MaxLength"/>
+                    <TextBox Text="{Binding MaxLength, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row short">
+                    <TextBlock Classes="label" Text="Width"/>
+                    <TextBox Text="{Binding Width, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="DefaultValue"/>
+                    <TextBox Text="{Binding DefaultValue, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="DisplayFormat"/>
+                    <TextBox Text="{Binding DisplayFormat, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="NumberFormat"/>
+                    <TextBox Text="{Binding NumberFormat, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Visible"/>
+                    <CheckBox IsChecked="{Binding Visible, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="ScopeRole"/>
+                    <ComboBox ItemsSource="{x:Static vm:EditorOptions.ScopeRoles}"
+                              SelectedItem="{Binding ScopeRole, Mode=TwoWay}"/>
+                </DockPanel>
+                <Separator Margin="0,10,0,4"/>
+                <TextBlock Text="{loc:Loc FormSchema_MappingRelation}" Classes="muted" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="RelationProgId"/>
+                    <TextBox Text="{Binding RelationProgId, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="LookupProgId"/>
+                    <TextBox Text="{Binding LookupProgId, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="LangEnumName"/>
+                    <TextBox Text="{Binding LangEnumName, Mode=TwoWay}"/>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- FieldMapping 屬性面板 -->
+        <DataTemplate DataType="forms:FieldMapping">
+            <StackPanel Spacing="2" x:DataType="forms:FieldMapping">
+                <TextBlock Classes="h2" Text="{loc:Loc FormSchema_FieldMappingProps}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="SourceField"/>
+                    <TextBox Text="{Binding SourceField, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="DestinationField"/>
+                    <TextBox Text="{Binding DestinationField, Mode=TwoWay}"/>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- MappingGroupEditor（RelationGroup / LookupGroup 專屬編輯區） -->
+        <DataTemplate DataType="vm:MappingGroupEditor">
+            <StackPanel Spacing="2" x:DataType="vm:MappingGroupEditor" Name="MappingEditorRoot">
+                <TextBlock Classes="h2" Text="{Binding PanelTitle}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="{Binding ProgIdLabel}"/>
+                    <ComboBox ItemsSource="{Binding AvailableProgIds}"
+                              SelectedItem="{Binding ProgIdValue, Mode=TwoWay}"
+                              IsEditable="True"
+                              Text="{Binding ProgIdValue, Mode=TwoWay}"/>
+                </DockPanel>
+                <Separator Margin="0,10,0,4"/>
+                <TextBlock Text="{loc:Loc FormSchema_MappingHeader}" Classes="muted" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <ItemsControl ItemsSource="{Binding Mappings}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="forms:FieldMapping">
+                            <Grid ColumnDefinitions="*,Auto,*" Margin="0,2">
+                                <TextBox Grid.Column="0" Text="{Binding SourceField, Mode=TwoWay}"
+                                         PlaceholderText="{loc:Loc FormSchema_MappingSource}"/>
+                                <TextBlock Grid.Column="1" Text=" → " VerticalAlignment="Center" Margin="6,0"/>
+                                <ComboBox Grid.Column="2"
+                                          ItemsSource="{Binding #MappingEditorRoot.((vm:MappingGroupEditor)DataContext).DestinationFieldCandidates}"
+                                          SelectedItem="{Binding DestinationField, Mode=TwoWay}"
+                                          IsEditable="True"
+                                          Text="{Binding DestinationField, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Classes="muted" Margin="0,8,0,0" TextWrapping="Wrap"
+                           Text="{loc:Loc FormSchema_MappingNote}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- ListItem 屬性面板 -->
+        <DataTemplate DataType="collections:ListItem">
+            <StackPanel Spacing="2" x:DataType="collections:ListItem">
+                <TextBlock Classes="h2" Text="{loc:Loc FormSchema_ListItemProps}" Margin="0,0,0,8"/>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Value"/>
+                    <TextBox Text="{Binding Value, Mode=TwoWay}"/>
+                </DockPanel>
+                <DockPanel Classes="row">
+                    <TextBlock Classes="label" Text="Text"/>
+                    <TextBox Text="{Binding Text, Mode=TwoWay}"/>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <DockPanel>
+        <!-- 標題列 + 工具列 -->
+
+        <!-- 狀態列 -->
+        <Border DockPanel.Dock="Bottom" Classes="statusbar" Padding="12,5">
+            <TextBlock Classes="muted" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"/>
+        </Border>
+
+        <!-- 驗證結果面板 -->
+        <Border DockPanel.Dock="Bottom" Classes="surface-sunken" Padding="12,8"
+                IsVisible="{Binding Issues.Count}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Classes="h2" Text="{loc:Loc Section_ValidationResults}"/>
+                <ListBox ItemsSource="{Binding Issues}" MaxHeight="160" Background="Transparent" BorderThickness="0"
+                         Margin="0,6,0,0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:ValidationIssue">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding Icon}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Path}" Classes="muted" Width="240"/>
+                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- 內層樹 + 屬性面板 -->
+        <Grid ColumnDefinitions="*,4,1.2*">
+            <TreeView Grid.Column="0"
+                      ItemsSource="{Binding Roots}"
+                      SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}"
+                      Padding="6,4">
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="models:SettingsTreeNode">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="inner-icon" Data="{Binding Icon, Converter={StaticResource IconKeyToGeometry}}"/>
+                            <TextBlock Text="{Binding Header}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TreeDataTemplate>
+                </TreeView.ItemTemplate>
+                <TreeView.Styles>
+                    <Style Selector="TreeViewItem" x:DataType="models:SettingsTreeNode">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                    </Style>
+                </TreeView.Styles>
+                <!-- Right-click menu. The TreeView's DataContext is the VM, so
+                     Command bindings resolve there; IsVisible filters items by
+                     the currently selected node's kind (right-click on an item
+                     auto-selects it in Avalonia's TreeView). -->
+                <TreeView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="{loc:Loc FormSchema_AddTable}"
+                                  Command="{Binding AddTableCommand}"
+                                  IsVisible="{Binding SelectedKindIsSchema}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconTable}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="{loc:Loc FormSchema_AddField}"
+                                  Command="{Binding AddFieldCommand}"
+                                  IsVisible="{Binding SelectedKindIsTable}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconAdd}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="{loc:Loc FormSchema_AddRelationMapping}"
+                                  Command="{Binding AddRelationMappingCommand}"
+                                  IsVisible="{Binding SelectedKindIsRelationGroup}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconLink}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="{loc:Loc FormSchema_AddLookupMapping}"
+                                  Command="{Binding AddLookupMappingCommand}"
+                                  IsVisible="{Binding SelectedKindIsLookupGroup}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconLink}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="{loc:Loc FormSchema_AddListItem}"
+                                  Command="{Binding AddListItemCommand}"
+                                  IsVisible="{Binding SelectedKindIsListItemsGroup}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconList}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator IsVisible="{Binding SelectedKindIsSchema}"/>
+                        <MenuItem Header="{loc:Loc FormSchema_GenerateFormLayout}"
+                                  Command="{Binding GenerateFormLayoutCommand}"
+                                  IsVisible="{Binding SelectedKindIsSchema}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource DefFormLayout}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator IsVisible="{Binding ShowDeleteSeparator}"/>
+                        <MenuItem Header="{loc:Loc Action_Delete}"
+                                  Command="{Binding DeleteCommand}"
+                                  IsVisible="{Binding SelectedKindCanDelete}">
+                            <MenuItem.Icon>
+                                <PathIcon Data="{StaticResource IconDelete}" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </TreeView.ContextMenu>
+            </TreeView>
+
+            <GridSplitter Grid.Column="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Columns"/>
+
+            <Border Grid.Column="2" Padding="18,14">
+                <ScrollViewer Classes="props-pane" HorizontalScrollBarVisibility="Disabled">
+                    <ContentControl Content="{Binding SelectedEditorContext}"
+                                    behaviors:DirtyTracking.IsEnabled="True"/>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </DockPanel>
+
+</UserControl>

@@ -1,0 +1,364 @@
+using Polhem.Base;
+using Polhem.Definition;
+using Polhem.Definition.Attributes;
+using Polhem.Definition.Identity;
+using Polhem.Definition.Language;
+using Polhem.Definition.Security;
+using Polhem.Definition.Storage;
+using Polhem.Repository.Abstractions;
+using Polhem.Repository.Abstractions.Factories;
+using Polhem.Repository.Abstractions.Form;
+using Microsoft.Extensions.Logging;
+
+namespace Polhem.Business
+{
+    /// <summary>
+    /// Base class for business logic objects.
+    /// </summary>
+    public abstract class BusinessObject : IBusinessObject, IApiKeyContextAware
+    {
+        private readonly IPolhemContext _ctx;
+
+        #region Constructors
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BusinessObject"/> class.
+        /// </summary>
+        /// <param name="ctx">The per-call context aggregating cross-cutting services.</param>
+        /// <param name="accessToken">The access token.</param>
+        /// <param name="progId">The program identifier this instance was addressed by.</param>
+        /// <param name="isLocalCall">Whether the call originates from a local source.</param>
+        /// <remarks>
+        /// Every business object is reached by progId and is created from the progId to type
+        /// registry, so the identifier belongs on the base rather than on one derived family. The
+        /// uniform signature is what lets the factory construct any registered type without knowing
+        /// which family it belongs to — the same reason COM+ has a single <c>CoCreateInstance</c>
+        /// rather than one entry point per component kind.
+        /// <para>
+        /// WARNING: <paramref name="isLocalCall"/> defaults to <c>false</c>, and the default is the
+        /// security-relevant part. It used to default to <c>true</c>, which meant a caller that
+        /// constructed a business object directly — the only way to reach one without passing
+        /// through <c>ApiAccessValidator</c> — was treated as a trusted in-process caller by
+        /// default. Several methods keep a second line of defence keyed on
+        /// <see cref="IsLocalCall"/> (minting an API key without deployment-admin rights, granting
+        /// deployment admin, writing server-only definitions), and every one of those guards let
+        /// the default path straight through. Only a caller that had bothered to write
+        /// <c>isLocalCall: false</c> was stopped, which is the caller least in need of stopping.
+        /// </para>
+        /// <para>
+        /// The framework itself never relies on the default: <see cref="BusinessObjectFactory"/> always
+        /// passes the value it resolved from the transport. The default only governs code that
+        /// constructs a business object by hand, and for that code "not local until you say so" is
+        /// the answer that fails safe.
+        /// </para>
+        /// </remarks>
+        protected BusinessObject(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
+        {
+            _ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
+            AccessToken = accessToken;
+            ProgId = progId ?? string.Empty;
+            IsLocalCall = isLocalCall;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Gets the access token.
+        /// </summary>
+        public Guid AccessToken { get; }
+
+        /// <summary>
+        /// Gets the program identifier this instance was addressed by.
+        /// </summary>
+        /// <remarks>
+        /// Meaningful to the form family, which resolves its schema and repository from it. The
+        /// system and audit-log objects accept it for signature uniformity and do not read it: they
+        /// each serve a single reserved progId, so it tells them nothing they did not already know.
+        /// </remarks>
+        public string ProgId { get; }
+
+        /// <summary>
+        /// Gets the session information.
+        /// </summary>
+        public SessionInfo? SessionInfo { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the call originates from a local source (e.g., same process or host as the server).
+        /// </summary>
+        public bool IsLocalCall { get; } = false;
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Assigned by the transport layer right after construction; business code only reads it.
+        /// In-process calls leave the default, since they carry no <c>X-Api-Key</c> header.
+        /// </remarks>
+        public ApiKeyValidationResult ApiKeyValidation { get; set; } = ApiKeyValidationResult.NotChecked;
+
+        /// <summary>
+        /// Gets the calling application's key identifier for audit rows, or <c>null</c> when the call
+        /// did not come through the key gate.
+        /// </summary>
+        /// <remarks>
+        /// Empty is normalised to <c>null</c> so the log column reads as "not applicable" rather than
+        /// an empty string — and so the value survives Oracle, which stores <c>''</c> as NULL anyway.
+        /// </remarks>
+        protected string? ApiKeyId => StringUtilities.IsEmpty(ApiKeyValidation.SysId) ? null : ApiKeyValidation.SysId;
+
+        /// <summary>
+        /// Gets the calling application's display name for audit rows, or <c>null</c> when unknown.
+        /// </summary>
+        protected string? ApiKeyName => StringUtilities.IsEmpty(ApiKeyValidation.SysName) ? null : ApiKeyValidation.SysName;
+
+        /// <summary>
+        /// Gets the per-call context itself, for handing on to collaborators constructed with the
+        /// same shape — a business plugin, for instance.
+        /// </summary>
+        /// <remarks>
+        /// Prefer the typed members below for the business object's own use; this exists to pass
+        /// the context along, not as a second route to the same services.
+        /// </remarks>
+        protected IPolhemContext Context => _ctx;
+
+        /// <summary>Gets the definition data access service from the per-call context.</summary>
+        protected IDefineAccess DefineAccess => _ctx.DefineAccess;
+
+        /// <summary>Gets the session-info access service from the per-call context.</summary>
+        protected ISessionInfoService SessionInfoService => _ctx.SessionInfoService;
+
+        /// <summary>Gets the language resource service from the per-call context.</summary>
+        protected ILanguageService LanguageService => _ctx.LanguageService;
+
+        /// <summary>Gets the business-object factory for BO-to-BO calls.</summary>
+        protected IBusinessObjectFactory BoFactory => _ctx.BoFactory;
+
+        /// <summary>
+        /// Escape hatch for resolving services not in the typed core members
+        /// (e.g. login-only helpers). Use sparingly; greppable for audit.
+        /// </summary>
+        protected IServiceProvider Services => _ctx.Services;
+
+        /// <summary>
+        /// Resolves the physical databaseId for the supplied <see cref="DbScope"/>,
+        /// using the current <see cref="AccessToken"/> for the per-session lookup
+        /// path (<see cref="DbScope.Company"/>).
+        /// </summary>
+        /// <param name="scope">The bo repo's access intent.</param>
+        protected string ResolveDatabaseId(DbScope scope)
+            => Services.GetRequiredService<IRepositoryDatabaseRouter>()
+                       .Resolve(scope, AccessToken);
+
+        /// <summary>
+        /// Convenience wrapper around <see cref="IRepositoryFactory.CreateFormRepository{T}"/> that
+        /// auto-passes the current <see cref="AccessToken"/>.
+        /// </summary>
+        /// <param name="progId">The program identifier.</param>
+        protected IDataFormRepository CreateDataFormRepository(string progId)
+            => CreateFormRepository<IDataFormRepository>(progId);
+
+        /// <summary>
+        /// Obtains this program's repository through its own interface, auto-passing the current
+        /// <see cref="AccessToken"/> and <see cref="ProgId"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The repository interface the registry binds this progId to, e.g. <c>IOrderRepository</c>.
+        /// </typeparam>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the bound repository does not implement <typeparamref name="T"/> — the
+        /// registry names a type that is not the one this business object was written against.
+        /// </exception>
+        /// <remarks>
+        /// The typed form is why <c>CreateFormRepository</c> is generic: a business object with its
+        /// own repository asks for it by interface and calls its members directly, with no cast and
+        /// no downstream check for one.
+        /// </remarks>
+        protected T CreateFormRepository<T>() where T : class, IDataFormRepository
+            => CreateFormRepository<T>(ProgId);
+
+        /// <summary>
+        /// Obtains another program's repository through its own interface, auto-passing the current
+        /// <see cref="AccessToken"/>.
+        /// </summary>
+        /// <typeparam name="T">The repository interface the registry binds <paramref name="progId"/> to.</typeparam>
+        /// <param name="progId">The program identifier.</param>
+        protected T CreateFormRepository<T>(string progId) where T : class, IDataFormRepository
+            => Services.GetRequiredService<IRepositoryFactory>()
+                       .CreateFormRepository<T>(AccessToken, progId);
+
+        /// <summary>
+        /// Resolves localized text for the given full key using the current session's
+        /// language (<see cref="SessionInfo.Culture"/>) and tenant customization
+        /// (<see cref="SessionInfo.CustomizeId"/>), falling back to the system
+        /// default language and then to the key itself if both miss.
+        /// </summary>
+        /// <param name="fullKey">The full key (<c>"{namespace}.{subKey}"</c>); split on the first <c>.</c>.</param>
+        protected string GetLangText(string fullKey)
+        {
+            ArgumentNullException.ThrowIfNull(fullKey);
+            // The customization-aware overloads take an explicit (namespace, subKey) pair — a
+            // full-key form would be indistinguishable from the base overload (all-string arity
+            // collision), so the split happens here. Same rule as ILanguageService: first dot wins,
+            // and a key with no dot is namespace-only with an empty sub-key.
+            int dot = fullKey.IndexOf('.');
+            return dot < 0
+                ? GetLangText(fullKey, string.Empty)
+                : GetLangText(fullKey.Substring(0, dot), fullKey.Substring(dot + 1));
+        }
+
+        /// <summary>
+        /// Resolves localized text using an explicit namespace and sub-key, applying the
+        /// same fall-back chain as <see cref="GetLangText(string)"/>.
+        /// </summary>
+        /// <param name="namespace">The resource namespace.</param>
+        /// <param name="subKey">The sub-key within that namespace.</param>
+        protected string GetLangText(string @namespace, string subKey)
+            => LanguageService.GetLangText(GetCurrentCustomizeId(), GetCurrentLang(), @namespace, subKey);
+
+        /// <summary>
+        /// Reads the current session's BCP-47 language code from
+        /// <see cref="SessionInfo.Culture"/>. Returns an empty string when no
+        /// session is established yet (anonymous calls); <see cref="ILanguageService"/>
+        /// then falls back through to the system default language.
+        /// </summary>
+        protected string GetCurrentLang()
+        {
+            if (AccessToken == Guid.Empty)
+                return string.Empty;
+            return SessionInfoService.Get(AccessToken)?.Culture ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Reads the current session's tenant customization code from
+        /// <see cref="SessionInfo.CustomizeId"/>. Returns an empty string when no session is established
+        /// or no company has been entered — the customization overlay then short-circuits and every
+        /// lookup resolves against the base layer.
+        /// </summary>
+        /// <remarks>
+        /// The session is the only accepted source. A customization code arriving as a call
+        /// argument must never be used for lookups: it selects which tenant's customization files
+        /// are read, so trusting the caller would be a cross-tenant read.
+        /// </remarks>
+        protected string GetCurrentCustomizeId()
+        {
+            if (AccessToken == Guid.Empty)
+                return string.Empty;
+            return SessionInfoService.Get(AccessToken)?.CustomizeId ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Resolves the denormalised audit identity (who / which company, by id and display name)
+        /// from the current session.
+        /// </summary>
+        /// <returns>The acting user and company, each id paired with its display name.</returns>
+        /// <remarks>
+        /// Log rows are self-sufficient: the log database is physically separate from the common and
+        /// company databases, so a row that stored only ids could not be resolved to names by any
+        /// join. Every audit-writing path therefore denormalises here rather than at read time.
+        /// <para>
+        /// Values are null when there is no session (an in-process call) or no company has been
+        /// entered — both are ordinary states, not failures.
+        /// </para>
+        /// </remarks>
+        protected (string? UserId, string? UserName, string? CompanyId, string? CompanyName) ResolveAuditIdentity()
+        {
+            var session = SessionInfoService.Get(AccessToken);
+            var companyId = session?.CompanyId;
+            string? companyName = null;
+            if (!string.IsNullOrEmpty(companyId))
+                companyName = Services.GetService<ICompanyInfoService>()?.Get(companyId)?.CompanyName;
+            return (session?.UserId, session?.UserName, companyId, companyName);
+        }
+
+        /// <summary>
+        /// Runs the audit step that follows an already persisted write, so that its failure is
+        /// logged instead of becoming a failure of the write.
+        /// </summary>
+        /// <param name="operation">The audited operation, logged after the program id.</param>
+        /// <param name="subject">
+        /// The key of the record the entry describes, logged so the missing entry can be traced. Never
+        /// a field value: those may be sensitive, and the log is not the audit database.
+        /// </param>
+        /// <param name="writeAudit">Builds the payload and hands the entry to the audit writer.</param>
+        /// <remarks>
+        /// <para>
+        /// Callers run this after their write has committed. An exception escaping it would report a
+        /// failure for data that is already persisted, and skip the after-save or after-delete
+        /// extension points and plugins that should run. Recording the entry is best-effort, as
+        /// ADR-040 decides for the audit trail, and a gap is reported at error level.
+        /// </para>
+        /// <para>
+        /// The catch is deliberately unfiltered. The entry goes to
+        /// <see cref="Polhem.Definition.Logging.IAuditLogWriter"/>, a public DI seam whose implementation
+        /// may throw anything, and building it reads session, company and definition data. Failing a
+        /// committed write over its audit entry is never the better outcome — the same reasoning that
+        /// leaves the background writer's drain unfiltered. <see cref="OperationCanceledException"/>
+        /// is left to the caller.
+        /// </para>
+        /// <para>
+        /// With no <see cref="ILoggerFactory"/> registered the failure has nowhere to be reported. The
+        /// framework's background writer (<c>AuditLogWriterService</c>) requires a logger in its
+        /// constructor, so that only arises with a custom <see cref="Polhem.Definition.Logging.IAuditLogWriter"/>.
+        /// </para>
+        /// </remarks>
+        private protected void WriteAuditBestEffort(string operation, string? subject, Action writeAudit)
+        {
+            try
+            {
+                writeAudit();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Services.GetService<ILoggerFactory>()?
+                    .CreateLogger(GetType())
+                    .LogError(ex,
+                        "The audit entry for '{ProgId}.{Operation}' on '{Subject}' could not be written. " +
+                        "The operation itself has already been committed and is not rolled back.",
+                        ProgId, operation, subject);
+            }
+        }
+
+        /// <summary>
+        /// Executes a custom method; requires authentication.
+        /// </summary>
+        /// <param name="args">The input arguments.</param>
+        [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated,
+            ReplayProtection = ApiReplayProtection.UniqueSequence)]
+        public ExecFuncResult ExecFunc(ExecFuncArgs args)
+        {
+            var result = new ExecFuncResult();
+            DoExecFunc(args, result);
+            return result;
+        }
+
+        /// <summary>
+        /// Override to provide the implementation for <see cref="ExecFunc"/>.
+        /// </summary>
+        /// <param name="args">The input arguments.</param>
+        /// <param name="result">The output result.</param>
+        protected virtual void DoExecFunc(ExecFuncArgs args, ExecFuncResult result)
+        { }
+
+        /// <summary>
+        /// Executes a custom method; allows anonymous access.
+        /// </summary>
+        /// <param name="args">The input arguments.</param>
+        [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Anonymous)]
+        public ExecFuncResult ExecFuncAnonymous(ExecFuncArgs args)
+        {
+            var result = new ExecFuncResult();
+            DoExecFuncAnonymous(args, result);
+            return result;
+        }
+
+        /// <summary>
+        /// Override to provide the implementation for <see cref="ExecFuncAnonymous"/>.
+        /// </summary>
+        /// <param name="args">The input arguments.</param>
+        /// <param name="result">The output result.</param>
+        protected virtual void DoExecFuncAnonymous(ExecFuncArgs args, ExecFuncResult result)
+        { }
+    }
+}

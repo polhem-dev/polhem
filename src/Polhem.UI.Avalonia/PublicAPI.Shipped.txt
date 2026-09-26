@@ -1,0 +1,322 @@
+#nullable enable
+Polhem.UI.Avalonia.Controls.AmountColumnSummary
+Polhem.UI.Avalonia.Controls.Editors.ButtonEdit
+Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.ButtonClick -> System.EventHandler?
+Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.ButtonEdit() -> void
+Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.HasLookup.get -> bool
+Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.LookupFailed -> System.EventHandler<System.Exception!>?
+Polhem.UI.Avalonia.Controls.Editors.CheckEdit
+Polhem.UI.Avalonia.Controls.Editors.CheckEdit.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
+Polhem.UI.Avalonia.Controls.Editors.CheckEdit.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
+Polhem.UI.Avalonia.Controls.Editors.CheckEdit.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
+Polhem.UI.Avalonia.Controls.Editors.CheckEdit.CheckEdit() -> void
+Polhem.UI.Avalonia.Controls.Editors.CheckEdit.FieldName.get -> string!
+Polhem.UI.Avalonia.Controls.Editors.CheckEdit.FieldName.set -> void
+Polhem.UI.Avalonia.Controls.Editors.CheckEdit.FieldValue.get -> object?
+Polhem.UI.Avalonia.Controls.Editors.CheckEdit.FieldValue.set -> void
+Polhem.UI.Avalonia.Controls.Editors.CheckEdit.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+Polhem.UI.Avalonia.Controls.Editors.CheckEdit.Unbind() -> void
+Polhem.UI.Avalonia.Controls.Editors.DateEdit
+Polhem.UI.Avalonia.Controls.Editors.DateEdit.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
+Polhem.UI.Avalonia.Controls.Editors.DateEdit.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
+Polhem.UI.Avalonia.Controls.Editors.DateEdit.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
+Polhem.UI.Avalonia.Controls.Editors.DateEdit.DateEdit() -> void
+Polhem.UI.Avalonia.Controls.Editors.DateEdit.FieldName.get -> string!
+Polhem.UI.Avalonia.Controls.Editors.DateEdit.FieldName.set -> void
+Polhem.UI.Avalonia.Controls.Editors.DateEdit.FieldValue.get -> object?
+Polhem.UI.Avalonia.Controls.Editors.DateEdit.FieldValue.set -> void
+Polhem.UI.Avalonia.Controls.Editors.DateEdit.ReadOnlyText.get -> string?
+Polhem.UI.Avalonia.Controls.Editors.DateEdit.ReadOnlyText.set -> void
+Polhem.UI.Avalonia.Controls.Editors.DateEdit.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+Polhem.UI.Avalonia.Controls.Editors.DateEdit.Unbind() -> void
+Polhem.UI.Avalonia.Controls.Editors.DropDownEdit
+Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
+Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
+Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
+Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.DropDownEdit() -> void
+Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.FieldName.get -> string!
+Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.FieldName.set -> void
+Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.FieldValue.get -> object?
+Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.FieldValue.set -> void
+Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.ReadOnlyText.get -> string?
+Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.ReadOnlyText.set -> void
+Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.Unbind() -> void
+Polhem.UI.Avalonia.Controls.Editors.FieldEditorFactory
+Polhem.UI.Avalonia.Controls.Editors.FormScope
+Polhem.UI.Avalonia.Controls.Editors.IFieldEditor
+Polhem.UI.Avalonia.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
+Polhem.UI.Avalonia.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
+Polhem.UI.Avalonia.Controls.Editors.IFieldEditor.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
+Polhem.UI.Avalonia.Controls.Editors.IFieldEditor.Unbind() -> void
+Polhem.UI.Avalonia.Controls.Editors.LookupDialog
+Polhem.UI.Avalonia.Controls.Editors.LookupPanel
+Polhem.UI.Avalonia.Controls.Editors.LookupPanel.Bind(Polhem.Definition.Forms.FormSchema! schema, Polhem.Api.Client.Connectors.FormApiConnector! connector) -> void
+Polhem.UI.Avalonia.Controls.Editors.LookupPanel.Cancel() -> void
+Polhem.UI.Avalonia.Controls.Editors.LookupPanel.Cancelled -> System.EventHandler?
+Polhem.UI.Avalonia.Controls.Editors.LookupPanel.Commit() -> void
+Polhem.UI.Avalonia.Controls.Editors.LookupPanel.Committed -> System.EventHandler<System.Data.DataRow!>?
+Polhem.UI.Avalonia.Controls.Editors.LookupPanel.Grid.get -> Polhem.UI.Avalonia.Controls.GridControl!
+Polhem.UI.Avalonia.Controls.Editors.LookupPanel.LookupPanel() -> void
+Polhem.UI.Avalonia.Controls.Editors.LookupPanel.ReloadAsync() -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.Controls.Editors.LookupPanel.SearchText.get -> string!
+Polhem.UI.Avalonia.Controls.Editors.LookupPanel.SearchText.set -> void
+Polhem.UI.Avalonia.Controls.Editors.LookupPanel.SelectedRow.get -> System.Data.DataRow?
+Polhem.UI.Avalonia.Controls.Editors.MemoEdit
+Polhem.UI.Avalonia.Controls.Editors.MemoEdit.MemoEdit() -> void
+Polhem.UI.Avalonia.Controls.Editors.NumericEdit
+Polhem.UI.Avalonia.Controls.Editors.NumericEdit.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
+Polhem.UI.Avalonia.Controls.Editors.NumericEdit.CurrencySettings.set -> void
+Polhem.UI.Avalonia.Controls.Editors.NumericEdit.DefaultCurrencyCode.get -> string!
+Polhem.UI.Avalonia.Controls.Editors.NumericEdit.DefaultCurrencyCode.set -> void
+Polhem.UI.Avalonia.Controls.Editors.NumericEdit.DefaultUnitCode.get -> string!
+Polhem.UI.Avalonia.Controls.Editors.NumericEdit.DefaultUnitCode.set -> void
+Polhem.UI.Avalonia.Controls.Editors.NumericEdit.NumericEdit() -> void
+Polhem.UI.Avalonia.Controls.Editors.NumericEdit.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
+Polhem.UI.Avalonia.Controls.Editors.NumericEdit.UnitSettings.set -> void
+Polhem.UI.Avalonia.Controls.Editors.RowEditDialog
+Polhem.UI.Avalonia.Controls.Editors.RowEditPanel
+Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutGrid! layout, System.Data.DataRow! row) -> void
+Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.Cancel() -> void
+Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.Commit() -> void
+Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.Compact.get -> bool
+Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.Compact.set -> void
+Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.EditCancelled -> System.EventHandler?
+Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.EditCommitted -> System.EventHandler?
+Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.Row.get -> System.Data.DataRow?
+Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.RowEditPanel() -> void
+Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.Unbind() -> void
+Polhem.UI.Avalonia.Controls.Editors.TextEdit
+Polhem.UI.Avalonia.Controls.Editors.TextEdit.ApplyReadOnlyAppearance(bool readOnly) -> void
+Polhem.UI.Avalonia.Controls.Editors.TextEdit.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutField! field) -> void
+Polhem.UI.Avalonia.Controls.Editors.TextEdit.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutFieldBase! field, System.Data.DataRow! row) -> void
+Polhem.UI.Avalonia.Controls.Editors.TextEdit.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, string! fieldName) -> void
+Polhem.UI.Avalonia.Controls.Editors.TextEdit.FieldName.get -> string!
+Polhem.UI.Avalonia.Controls.Editors.TextEdit.FieldName.set -> void
+Polhem.UI.Avalonia.Controls.Editors.TextEdit.FieldValue.get -> object?
+Polhem.UI.Avalonia.Controls.Editors.TextEdit.FieldValue.set -> void
+Polhem.UI.Avalonia.Controls.Editors.TextEdit.TextEdit() -> void
+Polhem.UI.Avalonia.Controls.Editors.TextEdit.Unbind() -> void
+Polhem.UI.Avalonia.Controls.Editors.TimeEdit
+Polhem.UI.Avalonia.Controls.Editors.TimeEdit.TimeEdit() -> void
+Polhem.UI.Avalonia.Controls.Editors.YearMonthEdit
+Polhem.UI.Avalonia.Controls.Editors.YearMonthEdit.YearMonthEdit() -> void
+Polhem.UI.Avalonia.Controls.GridControl
+Polhem.UI.Avalonia.Controls.GridControl.AddRow() -> void
+Polhem.UI.Avalonia.Controls.GridControl.AllowEdit.get -> bool
+Polhem.UI.Avalonia.Controls.GridControl.AllowEdit.set -> void
+Polhem.UI.Avalonia.Controls.GridControl.Bind(Polhem.Definition.Layouts.LayoutGrid! layout, System.Data.DataTable? rows) -> void
+Polhem.UI.Avalonia.Controls.GridControl.Bind(Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutGrid! layout) -> void
+Polhem.UI.Avalonia.Controls.GridControl.CurrencySettings.get -> Polhem.Definition.Settings.CurrencySettings?
+Polhem.UI.Avalonia.Controls.GridControl.CurrencySettings.set -> void
+Polhem.UI.Avalonia.Controls.GridControl.DataTable.get -> System.Data.DataTable?
+Polhem.UI.Avalonia.Controls.GridControl.DataTable.set -> void
+Polhem.UI.Avalonia.Controls.GridControl.DefaultCurrencyCode.get -> string!
+Polhem.UI.Avalonia.Controls.GridControl.DefaultCurrencyCode.set -> void
+Polhem.UI.Avalonia.Controls.GridControl.DeleteSelectedRow() -> void
+Polhem.UI.Avalonia.Controls.GridControl.EditMode.get -> Polhem.UI.Avalonia.Controls.GridEditMode
+Polhem.UI.Avalonia.Controls.GridControl.EditMode.set -> void
+Polhem.UI.Avalonia.Controls.GridControl.EndEdit() -> void
+Polhem.UI.Avalonia.Controls.GridControl.GridControl() -> void
+Polhem.UI.Avalonia.Controls.GridControl.InnerGrid.get -> Avalonia.Controls.DataGrid!
+Polhem.UI.Avalonia.Controls.GridControl.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
+Polhem.UI.Avalonia.Controls.GridControl.RefreshRows() -> void
+Polhem.UI.Avalonia.Controls.GridControl.RowSelected -> System.EventHandler<System.Guid>?
+Polhem.UI.Avalonia.Controls.GridControl.SelectedItem.get -> object?
+Polhem.UI.Avalonia.Controls.GridControl.SelectedItem.set -> void
+Polhem.UI.Avalonia.Controls.GridControl.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+Polhem.UI.Avalonia.Controls.GridControl.TableName.get -> string!
+Polhem.UI.Avalonia.Controls.GridControl.TableName.set -> void
+Polhem.UI.Avalonia.Controls.GridControl.Unbind() -> void
+Polhem.UI.Avalonia.Controls.GridControl.UnitSettings.get -> Polhem.Definition.Settings.UnitSettings?
+Polhem.UI.Avalonia.Controls.GridControl.UnitSettings.set -> void
+Polhem.UI.Avalonia.Controls.GridEditMode
+Polhem.UI.Avalonia.Controls.GridEditMode.EditForm = 1 -> Polhem.UI.Avalonia.Controls.GridEditMode
+Polhem.UI.Avalonia.Controls.GridEditMode.InCell = 0 -> Polhem.UI.Avalonia.Controls.GridEditMode
+Polhem.UI.Avalonia.Controls.PermissionScope
+Polhem.UI.Avalonia.DataObjects.FieldValueChangedEventArgs
+Polhem.UI.Avalonia.DataObjects.FieldValueChangedEventArgs.FieldName.get -> string!
+Polhem.UI.Avalonia.DataObjects.FieldValueChangedEventArgs.FieldValueChangedEventArgs(string! tableName, string! fieldName, string! value, System.Data.DataRow! row) -> void
+Polhem.UI.Avalonia.DataObjects.FieldValueChangedEventArgs.Row.get -> System.Data.DataRow!
+Polhem.UI.Avalonia.DataObjects.FieldValueChangedEventArgs.TableName.get -> string!
+Polhem.UI.Avalonia.DataObjects.FieldValueChangedEventArgs.Value.get -> string!
+Polhem.UI.Avalonia.DataObjects.FormDataObject
+Polhem.UI.Avalonia.DataObjects.FormDataObject.ApplyLookupSelection(Polhem.Definition.Forms.FormField! field, System.Data.DataRow! selectedRow, System.Data.DataRow? targetRow = null) -> void
+Polhem.UI.Avalonia.DataObjects.FormDataObject.BeginRowEdit(System.Data.DataRow! row) -> void
+Polhem.UI.Avalonia.DataObjects.FormDataObject.CancelRowEdit(System.Data.DataRow! row) -> void
+Polhem.UI.Avalonia.DataObjects.FormDataObject.ClearLookupSelection(Polhem.Definition.Forms.FormField! field, System.Data.DataRow? targetRow = null) -> void
+Polhem.UI.Avalonia.DataObjects.FormDataObject.CommitRowEdit(System.Data.DataRow! row) -> void
+Polhem.UI.Avalonia.DataObjects.FormDataObject.DataSet.get -> System.Data.DataSet!
+Polhem.UI.Avalonia.DataObjects.FormDataObject.DataSetReplaced -> System.EventHandler?
+Polhem.UI.Avalonia.DataObjects.FormDataObject.DeleteAsync() -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.DataObjects.FormDataObject.DetailTables.get -> System.Collections.Generic.IEnumerable<System.Data.DataTable!>!
+Polhem.UI.Avalonia.DataObjects.FormDataObject.FieldValueChanged -> System.EventHandler<Polhem.UI.Avalonia.DataObjects.FieldValueChangedEventArgs!>?
+Polhem.UI.Avalonia.DataObjects.FormDataObject.FormDataObject(Polhem.Definition.Forms.FormSchema! schema, Polhem.Api.Client.Connectors.FormApiConnector? connector = null) -> void
+Polhem.UI.Avalonia.DataObjects.FormDataObject.GetField(System.Data.DataRow! row, string! fieldName) -> string!
+Polhem.UI.Avalonia.DataObjects.FormDataObject.GetField(string! fieldName) -> string!
+Polhem.UI.Avalonia.DataObjects.FormDataObject.GetFormField(string! fieldName) -> Polhem.Definition.Forms.FormField?
+Polhem.UI.Avalonia.DataObjects.FormDataObject.GetFormField(string! tableName, string! fieldName) -> Polhem.Definition.Forms.FormField?
+Polhem.UI.Avalonia.DataObjects.FormDataObject.InitializeNewMaster() -> void
+Polhem.UI.Avalonia.DataObjects.FormDataObject.IsDirty.get -> bool
+Polhem.UI.Avalonia.DataObjects.FormDataObject.IsDirtyChanged -> System.EventHandler?
+Polhem.UI.Avalonia.DataObjects.FormDataObject.IsLoading.get -> bool
+Polhem.UI.Avalonia.DataObjects.FormDataObject.LoadAsync(System.Guid rowId) -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.DataObjects.FormDataObject.MasterRow.get -> System.Data.DataRow?
+Polhem.UI.Avalonia.DataObjects.FormDataObject.MasterTable.get -> System.Data.DataTable!
+Polhem.UI.Avalonia.DataObjects.FormDataObject.NewAsync() -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.DataObjects.FormDataObject.RowAdded -> System.EventHandler<Polhem.UI.Avalonia.DataObjects.RowChangedEventArgs!>?
+Polhem.UI.Avalonia.DataObjects.FormDataObject.RowDeleted -> System.EventHandler<Polhem.UI.Avalonia.DataObjects.RowChangedEventArgs!>?
+Polhem.UI.Avalonia.DataObjects.FormDataObject.SaveAsync() -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.DataObjects.FormDataObject.SetField(System.Data.DataRow! row, string! fieldName, string? value) -> void
+Polhem.UI.Avalonia.DataObjects.FormDataObject.SetField(string! fieldName, string? value) -> void
+Polhem.UI.Avalonia.DataObjects.FormLiveComputation
+Polhem.UI.Avalonia.DataObjects.FormLiveComputation.ApplyDefaults(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.UI.Avalonia.DataObjects.FormLiveComputation.FormLiveComputation(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.RoundingContext? roundingContext = null, Polhem.Base.Expressions.IExpressionEvaluator? evaluator = null) -> void
+Polhem.UI.Avalonia.DataObjects.FormLiveComputation.InitializeNewRow(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.UI.Avalonia.DataObjects.FormLiveComputation.IsDegraded.get -> bool
+Polhem.UI.Avalonia.DataObjects.FormLiveComputation.IsRecomputing.get -> bool
+Polhem.UI.Avalonia.DataObjects.FormLiveComputation.Recompute(string! tableName, string! changedField, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.UI.Avalonia.DataObjects.RowChangedEventArgs
+Polhem.UI.Avalonia.DataObjects.RowChangedEventArgs.Row.get -> System.Data.DataRow!
+Polhem.UI.Avalonia.DataObjects.RowChangedEventArgs.RowChangedEventArgs(string! tableName, System.Data.DataRow! row) -> void
+Polhem.UI.Avalonia.DataObjects.RowChangedEventArgs.TableName.get -> string!
+Polhem.UI.Avalonia.Storage.FileEndpointStorage
+Polhem.UI.Avalonia.Storage.FileEndpointStorage.ApiKeyFilePath.get -> string!
+Polhem.UI.Avalonia.Storage.FileEndpointStorage.FileEndpointStorage(string! appName) -> void
+Polhem.UI.Avalonia.Storage.FileEndpointStorage.FilePath.get -> string!
+Polhem.UI.Avalonia.Storage.FileEndpointStorage.LoadApiKey() -> string!
+Polhem.UI.Avalonia.Storage.FileEndpointStorage.LoadEndpoint() -> string!
+Polhem.UI.Avalonia.Storage.FileEndpointStorage.SaveApiKey(string! apiKey) -> void
+Polhem.UI.Avalonia.Storage.FileEndpointStorage.SaveEndpoint(string! endpoint) -> void
+Polhem.UI.Avalonia.Storage.FileEndpointStorage.SetApiKey(string! apiKey) -> void
+Polhem.UI.Avalonia.Storage.FileEndpointStorage.SetEndpoint(string! endpoint) -> void
+Polhem.UI.Avalonia.Views.FormView
+Polhem.UI.Avalonia.Views.FormView.AccessToken.get -> System.Guid
+Polhem.UI.Avalonia.Views.FormView.AccessToken.set -> void
+Polhem.UI.Avalonia.Views.FormView.ApplyResponsiveState() -> void
+Polhem.UI.Avalonia.Views.FormView.Closed -> System.EventHandler?
+Polhem.UI.Avalonia.Views.FormView.CompactWidthThreshold.get -> double
+Polhem.UI.Avalonia.Views.FormView.CompactWidthThreshold.set -> void
+Polhem.UI.Avalonia.Views.FormView.DataObject.get -> Polhem.UI.Avalonia.DataObjects.FormDataObject?
+Polhem.UI.Avalonia.Views.FormView.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
+Polhem.UI.Avalonia.Views.FormView.DefinitionLoader.set -> void
+Polhem.UI.Avalonia.Views.FormView.DetailEditMode.get -> Polhem.UI.Avalonia.Controls.GridEditMode
+Polhem.UI.Avalonia.Views.FormView.DetailEditMode.set -> void
+Polhem.UI.Avalonia.Views.FormView.EditAsync(System.Guid rowId) -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.Views.FormView.ErrorOccurred -> System.EventHandler<System.Exception!>?
+Polhem.UI.Avalonia.Views.FormView.FormConnector.get -> Polhem.Api.Client.Connectors.FormApiConnector?
+Polhem.UI.Avalonia.Views.FormView.FormConnector.set -> void
+Polhem.UI.Avalonia.Views.FormView.FormMode.get -> Polhem.Definition.Layouts.SingleFormMode
+Polhem.UI.Avalonia.Views.FormView.FormMode.set -> void
+Polhem.UI.Avalonia.Views.FormView.FormView() -> void
+Polhem.UI.Avalonia.Views.FormView.Layout.get -> Polhem.Definition.Layouts.FormLayout?
+Polhem.UI.Avalonia.Views.FormView.Layout.set -> void
+Polhem.UI.Avalonia.Views.FormView.NewAsync() -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.Views.FormView.ProgId.get -> string!
+Polhem.UI.Avalonia.Views.FormView.ProgId.set -> void
+Polhem.UI.Avalonia.Views.FormView.Saved -> System.EventHandler?
+Polhem.UI.Avalonia.Views.FormView.Schema.get -> Polhem.Definition.Forms.FormSchema?
+Polhem.UI.Avalonia.Views.FormView.Schema.set -> void
+Polhem.UI.Avalonia.Views.FormView.ViewAsync(System.Guid rowId) -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.Views.ListView
+Polhem.UI.Avalonia.Views.ListView.AccessToken.get -> System.Guid
+Polhem.UI.Avalonia.Views.ListView.AccessToken.set -> void
+Polhem.UI.Avalonia.Views.ListView.AddRequested -> System.EventHandler?
+Polhem.UI.Avalonia.Views.ListView.EditRequested -> System.EventHandler<System.Guid>?
+Polhem.UI.Avalonia.Views.ListView.ErrorOccurred -> System.EventHandler<System.Exception!>?
+Polhem.UI.Avalonia.Views.ListView.FormConnector.get -> Polhem.Api.Client.Connectors.FormApiConnector?
+Polhem.UI.Avalonia.Views.ListView.FormConnector.set -> void
+Polhem.UI.Avalonia.Views.ListView.InitializeAsync() -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.Views.ListView.ListView() -> void
+Polhem.UI.Avalonia.Views.ListView.ProgId.get -> string!
+Polhem.UI.Avalonia.Views.ListView.ProgId.set -> void
+Polhem.UI.Avalonia.Views.ListView.ReloadAsync() -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.Views.ListView.Schema.get -> Polhem.Definition.Forms.FormSchema?
+Polhem.UI.Avalonia.Views.ListView.Schema.set -> void
+Polhem.UI.Avalonia.Views.ListView.ViewRequested -> System.EventHandler<System.Guid>?
+const Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.CompactWidthThreshold = 600 -> double
+const Polhem.UI.Avalonia.Views.FormView.DefaultCompactWidthThreshold = 600 -> double
+override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.ApplyMetadata() -> void
+override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.OnKeyDown(Avalonia.Input.KeyEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
+override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.RefreshFromSource() -> void
+override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.ShouldWriteBackText.get -> bool
+override Polhem.UI.Avalonia.Controls.Editors.CheckEdit.OnApplyTemplate(Avalonia.Controls.Primitives.TemplateAppliedEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.Editors.CheckEdit.OnAttachedToLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.Editors.CheckEdit.OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.Editors.CheckEdit.StyleKeyOverride.get -> System.Type!
+override Polhem.UI.Avalonia.Controls.Editors.DateEdit.OnAttachedToLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.Editors.DateEdit.OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.Editors.DateEdit.StyleKeyOverride.get -> System.Type!
+override Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.OnAttachedToLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.StyleKeyOverride.get -> System.Type!
+override Polhem.UI.Avalonia.Controls.Editors.NumericEdit.GetWriteBackValue() -> string?
+override Polhem.UI.Avalonia.Controls.Editors.NumericEdit.RefreshFromSource() -> void
+override Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.Editors.TextEdit.OnAttachedToLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.Editors.TextEdit.OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.Editors.TextEdit.StyleKeyOverride.get -> System.Type!
+override Polhem.UI.Avalonia.Controls.Editors.TimeEdit.GetWriteBackValue() -> string?
+override Polhem.UI.Avalonia.Controls.Editors.TimeEdit.RefreshFromSource() -> void
+override Polhem.UI.Avalonia.Controls.Editors.YearMonthEdit.ValueFormat.get -> string!
+override Polhem.UI.Avalonia.Controls.GridControl.OnAttachedToLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.GridControl.OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.GridControl.OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Controls.GridControl.StyleKeyOverride.get -> System.Type!
+override Polhem.UI.Avalonia.Views.FormView.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
+override Polhem.UI.Avalonia.Views.ListView.OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
+override Polhem.UI.Avalonia.Views.ListView.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
+static Polhem.UI.Avalonia.Controls.AmountColumnSummary.TryComputeTotal(System.Collections.Generic.IEnumerable<(decimal Value, string! CurrencyCode)>! cells) -> decimal?
+static Polhem.UI.Avalonia.Controls.Editors.FieldEditorFactory.Create(Polhem.Definition.Layouts.ControlType controlType) -> Avalonia.Controls.Control!
+static Polhem.UI.Avalonia.Controls.Editors.FormScope.GetDataObject(Avalonia.Controls.Control! element) -> Polhem.UI.Avalonia.DataObjects.FormDataObject?
+static Polhem.UI.Avalonia.Controls.Editors.FormScope.GetFormMode(Avalonia.Controls.Control! element) -> Polhem.Definition.Layouts.SingleFormMode
+static Polhem.UI.Avalonia.Controls.Editors.FormScope.SetDataObject(Avalonia.Controls.Control! element, Polhem.UI.Avalonia.DataObjects.FormDataObject? value) -> void
+static Polhem.UI.Avalonia.Controls.Editors.FormScope.SetFormMode(Avalonia.Controls.Control! element, Polhem.Definition.Layouts.SingleFormMode value) -> void
+static Polhem.UI.Avalonia.Controls.Editors.LookupDialog.ShowAsync(Avalonia.Visual! host, string! progId, Polhem.Definition.Forms.FormSchema? schema = null, Polhem.Api.Client.Connectors.FormApiConnector? connector = null) -> System.Threading.Tasks.Task<System.Data.DataRow?>!
+static Polhem.UI.Avalonia.Controls.Editors.RowEditDialog.ShowAsync(Avalonia.Visual! host, Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutGrid! layout, System.Data.DataRow! row) -> System.Threading.Tasks.Task<bool>!
+static Polhem.UI.Avalonia.Controls.PermissionScope.GetAction(Avalonia.Controls.Control! control) -> Polhem.Definition.Settings.PermissionAction
+static Polhem.UI.Avalonia.Controls.PermissionScope.SetAction(Avalonia.Controls.Control! control, Polhem.Definition.Settings.PermissionAction value) -> void
+static readonly Polhem.UI.Avalonia.Controls.Editors.CheckEdit.FieldNameProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.UI.Avalonia.Controls.Editors.DateEdit.FieldNameProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.UI.Avalonia.Controls.Editors.DateEdit.ReadOnlyTextProperty -> Avalonia.StyledProperty<string?>!
+static readonly Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.FieldNameProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.ReadOnlyTextProperty -> Avalonia.StyledProperty<string?>!
+static readonly Polhem.UI.Avalonia.Controls.Editors.FormScope.DataObjectProperty -> Avalonia.AttachedProperty<Polhem.UI.Avalonia.DataObjects.FormDataObject?>!
+static readonly Polhem.UI.Avalonia.Controls.Editors.FormScope.FormModeProperty -> Avalonia.AttachedProperty<Polhem.Definition.Layouts.SingleFormMode>!
+static readonly Polhem.UI.Avalonia.Controls.Editors.TextEdit.FieldNameProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.UI.Avalonia.Controls.GridControl.AllowEditProperty -> Avalonia.StyledProperty<bool>!
+static readonly Polhem.UI.Avalonia.Controls.GridControl.EditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Avalonia.Controls.GridEditMode>!
+static readonly Polhem.UI.Avalonia.Controls.GridControl.TableNameProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.UI.Avalonia.Controls.PermissionScope.ActionProperty -> Avalonia.AttachedProperty<Polhem.Definition.Settings.PermissionAction>!
+static readonly Polhem.UI.Avalonia.Views.FormView.AccessTokenProperty -> Avalonia.StyledProperty<System.Guid>!
+static readonly Polhem.UI.Avalonia.Views.FormView.CompactWidthThresholdProperty -> Avalonia.StyledProperty<double>!
+static readonly Polhem.UI.Avalonia.Views.FormView.DetailEditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Avalonia.Controls.GridEditMode>!
+static readonly Polhem.UI.Avalonia.Views.FormView.FormConnectorProperty -> Avalonia.StyledProperty<Polhem.Api.Client.Connectors.FormApiConnector?>!
+static readonly Polhem.UI.Avalonia.Views.FormView.FormModeProperty -> Avalonia.StyledProperty<Polhem.Definition.Layouts.SingleFormMode>!
+static readonly Polhem.UI.Avalonia.Views.FormView.LayoutProperty -> Avalonia.StyledProperty<Polhem.Definition.Layouts.FormLayout?>!
+static readonly Polhem.UI.Avalonia.Views.FormView.ProgIdProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.UI.Avalonia.Views.FormView.SchemaProperty -> Avalonia.StyledProperty<Polhem.Definition.Forms.FormSchema?>!
+static readonly Polhem.UI.Avalonia.Views.ListView.AccessTokenProperty -> Avalonia.StyledProperty<System.Guid>!
+static readonly Polhem.UI.Avalonia.Views.ListView.FormConnectorProperty -> Avalonia.StyledProperty<Polhem.Api.Client.Connectors.FormApiConnector?>!
+static readonly Polhem.UI.Avalonia.Views.ListView.ProgIdProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.UI.Avalonia.Views.ListView.SchemaProperty -> Avalonia.StyledProperty<Polhem.Definition.Forms.FormSchema?>!
+virtual Polhem.UI.Avalonia.Controls.Editors.DateEdit.ValueFormat.get -> string!
+virtual Polhem.UI.Avalonia.Controls.Editors.TextEdit.ApplyMetadata() -> void
+virtual Polhem.UI.Avalonia.Controls.Editors.TextEdit.GetWriteBackValue() -> string?
+virtual Polhem.UI.Avalonia.Controls.Editors.TextEdit.RefreshFromSource() -> void
+virtual Polhem.UI.Avalonia.Controls.Editors.TextEdit.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+virtual Polhem.UI.Avalonia.Controls.Editors.TextEdit.ShouldWriteBackText.get -> bool
+virtual Polhem.UI.Avalonia.Views.FormView.GetViewportWidth() -> double
+virtual Polhem.UI.Avalonia.Views.FormView.OnFormModeChanged(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
+virtual Polhem.UI.Avalonia.Views.FormView.ResolveAccessToken() -> System.Guid
+virtual Polhem.UI.Avalonia.Views.FormView.ResolveFormConnector(string! progId) -> Polhem.Api.Client.Connectors.FormApiConnector!
+virtual Polhem.UI.Avalonia.Views.FormView.ResolveLang() -> string!
+virtual Polhem.UI.Avalonia.Views.FormView.ResolveLayoutAsync(string! progId) -> System.Threading.Tasks.Task<Polhem.Definition.Layouts.FormLayout!>!
+virtual Polhem.UI.Avalonia.Views.FormView.ResolveRoundingContextAsync() -> System.Threading.Tasks.Task<Polhem.Definition.RoundingContext!>!
+virtual Polhem.UI.Avalonia.Views.FormView.ResolveSchemaAsync(string! progId) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema?>!
+virtual Polhem.UI.Avalonia.Views.ListView.ResolveAccessToken() -> System.Guid
+virtual Polhem.UI.Avalonia.Views.ListView.ResolveFormConnector(string! progId) -> Polhem.Api.Client.Connectors.FormApiConnector!
+virtual Polhem.UI.Avalonia.Views.ListView.ResolveSchemaAsync(string! progId) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema?>!

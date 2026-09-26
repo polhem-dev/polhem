@@ -1,0 +1,53 @@
+using Polhem.Definition;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Storage;
+
+namespace Polhem.ObjectCaching.Define
+{
+    /// <summary>
+    /// Form schema definition cache.
+    /// </summary>
+    public class FormSchemaCache : KeyObjectCache<FormSchema>
+    {
+        private readonly IDefineStorage _storage;
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="FormSchemaCache"/>.
+        /// </summary>
+        /// <param name="storage">The define storage backing this cache.</param>
+        /// <param name="paths">Retained for constructor compatibility; the monitored file paths now come from <paramref name="storage"/>. Still validated as non-null.</param>
+        /// <param name="cachePrefix">Per-owner cache namespace (see <see cref="KeyObjectCache{T}"/>).</param>
+        public FormSchemaCache(IDefineStorage storage, PathOptions paths, string cachePrefix = "") : base(cachePrefix)
+        {
+            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+            ArgumentNullException.ThrowIfNull(paths);
+        }
+
+        /// <summary>
+        /// Gets the cache item expiration policy.
+        /// </summary>
+        /// <param name="key">The member key.</param>
+        protected override CacheItemPolicy GetPolicy(string key)
+        {
+            // Program identifier
+            string progId = key;
+            // Default: sliding expiration of 20 minutes
+            var policy = new CacheItemPolicy(CacheTimeKind.SlidingTime, 20);
+            var changeSource = _storage.GetChangeSource(DefineType.FormSchema, progId);
+            policy.ChangeMonitorFilePaths = changeSource.FilePaths;
+            policy.ChangeNotifyKey = changeSource.NotifyKey;
+            return policy;
+        }
+
+        /// <summary>
+        /// Creates an instance of the form schema.
+        /// </summary>
+        /// <param name="key">The member key, which is the program identifier.</param>
+        protected override FormSchema? CreateInstance(string key)
+        {
+            // Program identifier
+            string progId = key;
+            return _storage.GetFormSchema(progId);
+        }
+    }
+}

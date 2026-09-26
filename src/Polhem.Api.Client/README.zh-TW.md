@@ -1,0 +1,87 @@
+# Polhem.Api.Client
+
+> API 用戶端連接器，提供統一介面以進行本機（行程內）與遠端（網路）商業邏輯呼叫。
+
+[English](README.md)
+
+## 架構定位
+
+- **層級**：前端 / 用戶端
+- **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
+- 由應用程式消費（WinForms、Blazor 及其他 head）。
+
+## 目標框架
+
+- `net10.0` -- 存取現代執行階段 API 與效能改進
+
+## 主要功能
+
+### 本機 / 遠端策略
+
+- `IJsonRpcProvider` 抽象化傳輸層；`LocalApiProvider` 透過 `JsonRpcExecutor` 在行程內呼叫商業邏輯，`RemoteApiProvider` 則向遠端端點發送 HTTP POST 請求。
+- 建構時透過連接器的雙建構函式模式選擇啟用的策略。
+
+### 系統層級連接器
+
+- `SystemApiConnector` 公開系統操作：`LoginAsync`（RSA 金鑰交換驗證）、`PingAsync`（健康檢查）、`CreateSessionAsync`（限時權杖）、`InitializeAsync`（環境初始化）、`GetDefineAsync` / `SaveDefineAsync`（定義 CRUD）以及 `ExecFuncAsync`（自訂函式執行）。所有操作皆為非同步，一律帶 `Async` 後綴。
+
+### 表單層級連接器
+
+- `FormApiConnector` 綁定至特定 `ProgId`，公開表單層級的商業物件呼叫（`ExecFuncAsync`、`ExecFuncAnonymousAsync`）。
+- 繼承 `ApiConnector` 的完整酬載管線（編碼、壓縮、加密）。
+
+### 連線驗證
+
+- `ApiConnectValidator` 從端點字串判斷 `ConnectType`（本機或遠端），驗證目標，並可選擇性地為本機連線自動產生缺少的設定檔。
+- 遠端驗證會執行 `Ping` 以確認連線後才回傳。
+
+### 快取定義存取
+
+- `ClientDefineAccess` 透過 API 實作 `IDefineAccess`，快取已擷取的定義（SystemSettings、DatabaseSettings、FormSchema、FormLayout 等），避免重複的網路呼叫。
+
+### 應用程式上下文
+
+- `ApiClientInfo` 持有靜態執行階段組態：`ConnectType`、`Endpoint`、`ApiKey`、`ApiEncryptionKey` 與 `SupportedConnectTypes`。
+
+## 主要公開 API
+
+| 類別 / 介面 | 用途 |
+|-------------|------|
+| `ApiClientInfo` | 靜態執行階段組態（連線類型、端點、金鑰） |
+| `ApiConnector` | 抽象基底連接器，含酬載管線與追蹤 |
+| `SystemApiConnector` | 系統層級操作（LoginAsync、PingAsync、CreateSessionAsync、InitializeAsync、Define CRUD、ExecFuncAsync） |
+| `FormApiConnector` | 表單層級商業物件呼叫，綁定至特定 ProgId |
+| `IJsonRpcProvider` | JSON-RPC 傳輸策略介面 |
+| `LocalApiProvider` | 行程內提供者，透過 `JsonRpcExecutor` |
+| `RemoteApiProvider` | HTTP 提供者，附帶 API 金鑰與 Bearer 權杖標頭 |
+| `ClientDefineAccess` | 透過 API 實作 `IDefineAccess`，含快取機制 |
+| `ApiConnectValidator` | 驗證端點並判斷連線類型 |
+| `ConnectType` | 列舉：`Local`、`Remote` |
+| `SupportedConnectTypes` | 旗標列舉：`Local`、`Remote`、`Both` |
+
+## 設計慣例
+
+- **策略模式** -- `IJsonRpcProvider` 搭配 `LocalApiProvider` 與 `RemoteApiProvider` 實作；連接器在建構時選擇策略。
+- **樣板方法** -- `ApiConnector` 定義 `ExecuteAsync<T>` 的固定步驟（建立請求、轉換酬載、呼叫提供者、還原回應）；子類別提供領域專屬方法。
+- **雙建構函式模式** -- 每個連接器提供本機與遠端兩種建構函式，對應兩種提供者類型：`SystemApiConnector(Guid accessToken)` / `(string endpoint, Guid accessToken)`。`FormApiConnector` 另需綁定的 `progId`：`(Guid accessToken, string progId)` / `(string endpoint, Guid accessToken, string progId)`。
+- **酬載格式協商** -- 請求預設為 `PayloadFormat.Encrypted`；管線在未設定加密金鑰時自動降級為 `Encoded`，本機提供者於非偵錯模式下降級為 `Plain`。
+
+## 目錄結構
+
+```
+Polhem.Api.Client/
+  ApiClientInfo.cs              # 靜態執行階段組態
+  ApiConnectValidator.cs           # 端點驗證與 ConnectType 偵測
+  ConnectType.cs                   # Local / Remote 列舉
+  SupportedConnectTypes.cs         # 支援的連線類型旗標列舉
+  Connectors/
+    ApiConnector.cs                # 抽象基底連接器
+    SystemApiConnector.cs          # 系統層級操作
+    FormApiConnector.cs            # 表單層級商業物件呼叫
+  Providers/
+    IJsonRpcProvider.cs            # 傳輸策略介面
+    LocalApiProvider.cs     # 行程內提供者
+    RemoteApiProvider.cs    # HTTP 提供者
+  DefineAccess/
+    ClientDefineAccess.cs          # 透過 API 實作快取式 IDefineAccess
+```

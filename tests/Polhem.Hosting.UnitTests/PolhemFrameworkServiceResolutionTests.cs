@@ -1,0 +1,263 @@
+using System.ComponentModel;
+using System.Reflection;
+using Polhem.Api.Core.JsonRpc;
+using Polhem.Db;
+using Polhem.Db.Manager;
+using Polhem.Definition;
+using Polhem.Definition.Identity;
+using Polhem.Definition.Logging;
+using Polhem.Definition.Organization;
+using Polhem.Definition.Security;
+using Polhem.Definition.Settings;
+using Polhem.ObjectCaching;
+using Polhem.Repository.Abstractions;
+using Polhem.Repository.Abstractions.AuditLog;
+using Polhem.Repository.Abstractions.Factories;
+using Polhem.Repository.Abstractions.System;
+using Polhem.Repository.Factories;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+
+namespace Polhem.Hosting.UnitTests
+{
+    /// <summary>
+    /// 驗證 AddPolhemFramework 所有 DI 服務的 singleton factory lambda 均可正常解析，
+    /// 覆蓋 PolhemFrameworkServiceCollectionExtensions 中 singleton 工廠委派的未覆蓋行。
+    /// </summary>
+    public class PolhemFrameworkServiceResolutionTests
+    {
+        [Fact]
+        [DisplayName("AddPolhemFramework 應預設註冊 ILoginAttemptTracker")]
+        public void AddPolhemFramework_RegistersLoginAttemptTrackerByDefault()
+        {
+            // Login 是唯一可匿名觸達的憑證驗證面；先前此服務無預設實作，
+            // 導致開箱即用的部署完全沒有帳號鎖定。
+            using var sp = BuildProvider(out string tempDir);
+            try
+            {
+                var tracker = sp.GetService<ILoginAttemptTracker>();
+
+                Assert.NotNull(tracker);
+                Assert.IsType<Polhem.Business.Security.LoginAttemptTracker>(tracker);
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* best effort */ }
+            }
+        }
+
+        [Fact]
+        [DisplayName("host 自訂的 ILoginAttemptTracker 應覆蓋框架預設")]
+        public void AddPolhemFramework_HostRegisteredTracker_Wins()
+        {
+            // 註冊採 TryAdd，故 host 於 AddPolhemFramework 之前註冊自己的實作時應勝出。
+            string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-tracker-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                var services = new ServiceCollection();
+                services.AddSingleton<ILoginAttemptTracker, FakeLoginAttemptTracker>();
+                services.AddPolhemFramework(
+                    new BackendConfiguration(),
+                    new PathOptions { DefinePath = tempDir },
+                    autoCreateMasterKey: true);
+
+                using var sp = services.BuildServiceProvider();
+
+                Assert.IsType<FakeLoginAttemptTracker>(sp.GetRequiredService<ILoginAttemptTracker>());
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* best effort */ }
+            }
+        }
+
+        private static ServiceProvider BuildProvider(out string tempDir)
+        {
+            tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-tracker-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            var services = new ServiceCollection();
+            services.AddPolhemFramework(
+                new BackendConfiguration(),
+                new PathOptions { DefinePath = tempDir },
+                autoCreateMasterKey: true);
+            return services.BuildServiceProvider();
+        }
+
+        private sealed class FakeLoginAttemptTracker : ILoginAttemptTracker
+        {
+            public bool IsLockedOut(string userId) => false;
+
+            public void RecordFailure(string userId) { }
+
+            public void Reset(string userId) { }
+        }
+
+        [Fact]
+        [DisplayName("啟用稽核記錄時 IAuditLogWriteRepository 應可解析")]
+        public void AddPolhemFramework_AuditLogEnabled_ResolvesWriteRepository()
+        {
+            // 這條註冊只在 AuditLogOptions.Enabled 時存在，預設關閉，因此其他測試碰不到它。
+            // Repository 統一為 (IRepositoryContext, Guid, string) 之後，容器無法自行建構
+            // 具體型別（三個參數都拿不到），只有經工廠才建得起來。
+            string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-audit-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                var configuration = new BackendConfiguration();
+                configuration.AuditLogOptions.Enabled = true;
+                configuration.AuditLogOptions.UseBackgroundWriter = false;
+
+                var services = new ServiceCollection();
+                // 稽核鏈上的 sink 需要 ILogger；正式 host 一定有，裸 ServiceCollection 沒有。
+                services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
+                services.AddPolhemFramework(
+                    configuration,
+                    new PathOptions { DefinePath = tempDir },
+                    autoCreateMasterKey: true);
+
+                using var sp = services.BuildServiceProvider();
+
+                Assert.NotNull(sp.GetRequiredService<IAuditLogWriteRepository>());
+                Assert.NotNull(sp.GetRequiredService<IAuditLogWriter>());
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* best effort */ }
+            }
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        [DisplayName("異常記錄的開關只影響 IAnomalyLogWriter，稽核那一側不受牽動")]
+        public void AddPolhemFramework_AnomalyEnabled_GatesOnlyTheAnomalyWriter(bool anomalyEnabled)
+        {
+            // 兩個介面各自解析：稽核開著時 IAuditLogWriter 一律是真的寫入器，而異常那一側
+            // 由 AnomalyEnabled 單獨決定。這一對正是拆成兩個介面換到的東西 —— 拆之前
+            // 「稽核開著但不記異常」這個組態在型別上看不出來。
+            string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-anomaly-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                var configuration = new BackendConfiguration();
+                configuration.AuditLogOptions.Enabled = true;
+                configuration.AuditLogOptions.UseBackgroundWriter = false;
+                configuration.AuditLogOptions.AnomalyEnabled = anomalyEnabled;
+
+                var services = new ServiceCollection();
+                services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
+                services.AddPolhemFramework(
+                    configuration,
+                    new PathOptions { DefinePath = tempDir },
+                    autoCreateMasterKey: true);
+
+                using var sp = services.BuildServiceProvider();
+
+                var auditWriter = sp.GetRequiredService<IAuditLogWriter>();
+                var anomalyWriter = sp.GetRequiredService<IAnomalyLogWriter>();
+
+                Assert.IsNotType<NullAuditLogWriter>(auditWriter);
+                if (anomalyEnabled)
+                {
+                    // 同一個實例服務兩個介面 —— 佇列與退路行為對兩種記錄完全相同。
+                    Assert.Same(auditWriter, anomalyWriter);
+                }
+                else
+                {
+                    Assert.Same(NullAuditLogWriter.Instance, anomalyWriter);
+                }
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* best effort */ }
+            }
+        }
+
+        [Fact]
+        [DisplayName("AddPolhemFramework 預設組態應能解析完整 DI 服務鏈（IDbConnectionManager 至 JsonRpcExecutor）")]
+        public void AddPolhemFramework_DefaultConfig_ResolvesFullServiceChain()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-fullchain-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                var services = new ServiceCollection();
+                services.AddPolhemFramework(
+                    new BackendConfiguration(),
+                    new PathOptions { DefinePath = tempDir },
+                    autoCreateMasterKey: true);
+
+                using var sp = services.BuildServiceProvider();
+
+                Assert.NotNull(sp.GetRequiredService<IDbConnectionManager>());
+                Assert.NotNull(sp.GetRequiredService<IDbAccessFactory>());
+                Assert.NotNull(sp.GetRequiredService<IAccessTokenValidator>());
+                Assert.NotNull(sp.GetRequiredService<ISessionInfoService>());
+                Assert.NotNull(sp.GetRequiredService<ICompanyInfoService>());
+                // Resolving both of these proves the cache container takes its data source as a
+                // deferred factory: resolving it eagerly would close the cycle ICacheContainer →
+                // ICacheDataSourceProvider → repositories → IDefineAccess → ICacheContainer.
+                Assert.NotNull(sp.GetRequiredService<ICacheContainer>());
+                Assert.NotNull(sp.GetRequiredService<ICacheDataSourceProvider>());
+                Assert.NotNull(sp.GetRequiredService<IRolePermissionService>());
+                Assert.NotNull(sp.GetRequiredService<IDepartmentTreeService>());
+                Assert.NotNull(sp.GetRequiredService<IBusinessObjectFactory>());
+                Assert.NotNull(sp.GetRequiredService<IRepositoryDatabaseRouter>());
+                // Repository 的唯一入口，兩軸皆由它解析。
+                Assert.NotNull(sp.GetRequiredService<IRepositoryFactory>());
+                // Individual repositories are not DI-registered by design — consumers go
+                // through the factory, so resolving one from it is what this asserts.
+                Assert.NotNull(sp.GetRequiredService<IRepositoryFactory>().Create<ICompanyRepository>());
+                Assert.NotNull(sp.GetRequiredService<IRepositoryFactory>().Create<IUserCompanyRepository>());
+                Assert.NotNull(sp.GetRequiredService<JsonRpcExecutor>());
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* best effort */ }
+            }
+        }
+
+        [Fact]
+        [DisplayName("容器建出的 RepositoryFactory 應經由 resolver 接到客製 overlay 所需的兩個選用相依")]
+        public void AddPolhemFramework_RepositoryFactory_ReceivesCustomizationDependencies()
+        {
+            // 這兩個相依是選用參數（預設 null），沒填就是靜默停用租戶客製
+            // ——progId 一律解析基底綁定，而且不會有任何其他症狀。行為上看不出來，只能直接
+            // 檢查欄位；這正是本測試存在的理由。
+            //
+            // 它們原本在工廠身上，型別解析抽成 IRepositoryTypeResolver 之後搬到 resolver。
+            // 風險沒有跟著消失：resolver 的建構子一樣是選用參數，Hosting 註冊時少傳一個就重現
+            // 同一個無聲回歸。所以這裡驗兩件事——工廠拿到的就是容器註冊的那個 resolver，
+            // 而那個 resolver 兩個相依都有接上。
+            string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-repocust-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                var services = new ServiceCollection();
+                services.AddPolhemFramework(
+                    new BackendConfiguration(),
+                    new PathOptions { DefinePath = tempDir },
+                    autoCreateMasterKey: true);
+
+                using var sp = services.BuildServiceProvider();
+                var factory = sp.GetRequiredService<IRepositoryFactory>();
+                var resolver = PrivateField(factory, "_typeResolver");
+
+                Assert.Same(sp.GetRequiredService<IRepositoryTypeResolver>(), resolver);
+                Assert.NotNull(PrivateField(resolver!, "_customizeReader"));
+                Assert.NotNull(PrivateField(resolver!, "_sessionInfoService"));
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* best effort */ }
+            }
+        }
+
+        private static object? PrivateField(object instance, string name)
+            => instance.GetType()
+                .GetField(name, BindingFlags.NonPublic | BindingFlags.Instance)!
+                .GetValue(instance);
+    }
+}

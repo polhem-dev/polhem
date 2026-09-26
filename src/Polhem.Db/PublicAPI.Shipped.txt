@@ -1,0 +1,605 @@
+#nullable enable
+Polhem.Db.CacheNotify.CacheNotifyChange
+Polhem.Db.CacheNotify.CacheNotifyChange.CacheKey.get -> string!
+Polhem.Db.CacheNotify.CacheNotifyChange.CacheKey.init -> void
+Polhem.Db.CacheNotify.CacheNotifyChange.CacheNotifyChange() -> void
+Polhem.Db.CacheNotify.CacheNotifyChange.CacheNotifyChange(string! CacheKey, long Version, System.DateTime UpdateTime) -> void
+Polhem.Db.CacheNotify.CacheNotifyChange.Deconstruct(out string! CacheKey, out long Version, out System.DateTime UpdateTime) -> void
+Polhem.Db.CacheNotify.CacheNotifyChange.Equals(Polhem.Db.CacheNotify.CacheNotifyChange other) -> bool
+Polhem.Db.CacheNotify.CacheNotifyChange.UpdateTime.get -> System.DateTime
+Polhem.Db.CacheNotify.CacheNotifyChange.UpdateTime.init -> void
+Polhem.Db.CacheNotify.CacheNotifyChange.Version.get -> long
+Polhem.Db.CacheNotify.CacheNotifyChange.Version.init -> void
+Polhem.Db.CacheNotify.CacheNotifyReader
+Polhem.Db.CacheNotify.CacheNotifyReader.CacheNotifyReader(Polhem.Db.IDbAccessFactory! dbAccessFactory) -> void
+Polhem.Db.CacheNotify.CacheNotifyReader.ReadBaseline(string! databaseId) -> System.DateTime
+Polhem.Db.CacheNotify.CacheNotifyReader.ReadChangesSince(string! databaseId, System.DateTime threshold) -> System.Collections.Generic.IReadOnlyList<Polhem.Db.CacheNotify.CacheNotifyChange>!
+Polhem.Db.CacheNotify.CacheNotifyService
+Polhem.Db.CacheNotify.CacheNotifyService.CacheNotifyService() -> void
+Polhem.Db.CacheNotify.CacheNotifyService.Touch(string! cacheKey, System.Data.Common.DbTransaction! transaction, Polhem.Definition.Database.DatabaseType databaseType) -> void
+Polhem.Db.CacheNotify.CacheNotifyService.TouchAsync(string! cacheKey, System.Data.Common.DbTransaction! transaction, Polhem.Definition.Database.DatabaseType databaseType, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Db.CacheNotify.ICacheNotifyReader
+Polhem.Db.CacheNotify.ICacheNotifyReader.ReadBaseline(string! databaseId) -> System.DateTime
+Polhem.Db.CacheNotify.ICacheNotifyReader.ReadChangesSince(string! databaseId, System.DateTime threshold) -> System.Collections.Generic.IReadOnlyList<Polhem.Db.CacheNotify.CacheNotifyChange>!
+Polhem.Db.CacheNotify.ICacheNotifyService
+Polhem.Db.CacheNotify.ICacheNotifyService.Touch(string! cacheKey, System.Data.Common.DbTransaction! transaction, Polhem.Definition.Database.DatabaseType databaseType) -> void
+Polhem.Db.CacheNotify.ICacheNotifyService.TouchAsync(string! cacheKey, System.Data.Common.DbTransaction! transaction, Polhem.Definition.Database.DatabaseType databaseType, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Db.CommandTextVariable
+Polhem.Db.DataTableUpdateSpec
+Polhem.Db.DataTableUpdateSpec.DataTable.get -> System.Data.DataTable!
+Polhem.Db.DataTableUpdateSpec.DataTable.set -> void
+Polhem.Db.DataTableUpdateSpec.DataTableUpdateSpec() -> void
+Polhem.Db.DataTableUpdateSpec.DeleteCommand.get -> Polhem.Db.DbCommandSpec?
+Polhem.Db.DataTableUpdateSpec.DeleteCommand.set -> void
+Polhem.Db.DataTableUpdateSpec.InsertCommand.get -> Polhem.Db.DbCommandSpec?
+Polhem.Db.DataTableUpdateSpec.InsertCommand.set -> void
+Polhem.Db.DataTableUpdateSpec.IsolationLevel.get -> System.Data.IsolationLevel?
+Polhem.Db.DataTableUpdateSpec.IsolationLevel.set -> void
+Polhem.Db.DataTableUpdateSpec.UpdateCommand.get -> Polhem.Db.DbCommandSpec?
+Polhem.Db.DataTableUpdateSpec.UpdateCommand.set -> void
+Polhem.Db.DataTableUpdateSpec.UseTransaction.get -> bool
+Polhem.Db.DataTableUpdateSpec.UseTransaction.set -> void
+Polhem.Db.DatabaseTypeExtensions
+Polhem.Db.DbAccess
+Polhem.Db.DbAccess.DatabaseType.get -> Polhem.Definition.Database.DatabaseType
+Polhem.Db.DbAccess.DbAccess(System.Data.Common.DbConnection! externalConnection, Polhem.Definition.Database.DatabaseType databaseType, int maxCommandTimeout = 0) -> void
+Polhem.Db.DbAccess.DbAccess(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager, int maxCommandTimeout = 0, Polhem.Definition.Logging.IAnomalyLogWriter? anomalyWriter = null, Polhem.Definition.Logging.DbAccessAnomalyLogOptions? anomalyOptions = null) -> void
+Polhem.Db.DbAccess.Execute(Polhem.Db.DbCommandSpec! command) -> Polhem.Db.DbCommandResult!
+Polhem.Db.DbAccess.Execute(Polhem.Db.DbCommandSpec! command, System.Data.Common.DbTransaction! transaction) -> Polhem.Db.DbCommandResult!
+Polhem.Db.DbAccess.ExecuteAsync(Polhem.Db.DbCommandSpec! command, System.Data.Common.DbTransaction! transaction, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Db.DbCommandResult!>!
+Polhem.Db.DbAccess.ExecuteAsync(Polhem.Db.DbCommandSpec! command, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Db.DbCommandResult!>!
+Polhem.Db.DbAccess.ExecuteBatch(Polhem.Db.DbBatchSpec! batch) -> Polhem.Db.DbBatchResult!
+Polhem.Db.DbAccess.ExecuteBatchAsync(Polhem.Db.DbBatchSpec! batch, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Db.DbBatchResult!>!
+Polhem.Db.DbAccess.ExecuteDataTable(string! commandText, params object![]! values) -> System.Data.DataTable?
+Polhem.Db.DbAccess.ExecuteDataTableAsync(string! commandText, params object![]! values) -> System.Threading.Tasks.Task<System.Data.DataTable?>!
+Polhem.Db.DbAccess.ExecuteNonQuery(string! commandText, params object![]! values) -> int
+Polhem.Db.DbAccess.ExecuteNonQueryAsync(string! commandText, params object![]! values) -> System.Threading.Tasks.Task<int>!
+Polhem.Db.DbAccess.ExecuteScalar(string! commandText, params object![]! values) -> object?
+Polhem.Db.DbAccess.ExecuteScalarAsync(string! commandText, params object![]! values) -> System.Threading.Tasks.Task<object?>!
+Polhem.Db.DbAccess.Provider.get -> System.Data.Common.DbProviderFactory!
+Polhem.Db.DbAccess.Query<T>(Polhem.Db.DbCommandSpec! command) -> System.Collections.Generic.List<T>!
+Polhem.Db.DbAccess.QueryAsync<T>(Polhem.Db.DbCommandSpec! command, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.List<T>!>!
+Polhem.Db.DbAccess.UpdateDataTable(Polhem.Db.DataTableUpdateSpec! spec) -> int
+Polhem.Db.DbAccess.UpdateDataTables(System.Collections.Generic.IReadOnlyList<Polhem.Db.DataTableUpdateSpec!>! specs) -> System.Collections.Generic.IReadOnlyList<int>!
+Polhem.Db.DbAccessFactory
+Polhem.Db.DbAccessFactory.Create(string! databaseId) -> Polhem.Db.DbAccess!
+Polhem.Db.DbAccessFactory.DbAccessFactory(Polhem.Db.Manager.IDbConnectionManager! connectionManager, int maxCommandTimeout = 0, System.Func<Polhem.Definition.Logging.IAnomalyLogWriter?>? anomalyWriterFactory = null, Polhem.Definition.Logging.DbAccessAnomalyLogOptions? anomalyOptions = null) -> void
+Polhem.Db.DbBatchResult
+Polhem.Db.DbBatchResult.DbBatchResult() -> void
+Polhem.Db.DbBatchResult.Results.get -> Polhem.Db.DbCommandResultCollection!
+Polhem.Db.DbBatchResult.Results.set -> void
+Polhem.Db.DbBatchResult.RowsAffectedSum.get -> int
+Polhem.Db.DbBatchResult.RowsAffectedSum.set -> void
+Polhem.Db.DbBatchSpec
+Polhem.Db.DbBatchSpec.Commands.get -> Polhem.Db.DbCommandSpecCollection!
+Polhem.Db.DbBatchSpec.Commands.set -> void
+Polhem.Db.DbBatchSpec.DbBatchSpec() -> void
+Polhem.Db.DbBatchSpec.IsolationLevel.get -> System.Data.IsolationLevel?
+Polhem.Db.DbBatchSpec.IsolationLevel.set -> void
+Polhem.Db.DbBatchSpec.UseTransaction.get -> bool
+Polhem.Db.DbBatchSpec.UseTransaction.set -> void
+Polhem.Db.DbCommandKind
+Polhem.Db.DbCommandKind.DataTable = 2 -> Polhem.Db.DbCommandKind
+Polhem.Db.DbCommandKind.NonQuery = 0 -> Polhem.Db.DbCommandKind
+Polhem.Db.DbCommandKind.Scalar = 1 -> Polhem.Db.DbCommandKind
+Polhem.Db.DbCommandResult
+Polhem.Db.DbCommandResult.DbCommandResult() -> void
+Polhem.Db.DbCommandResult.Kind.get -> Polhem.Db.DbCommandKind
+Polhem.Db.DbCommandResult.RowsAffected.get -> int
+Polhem.Db.DbCommandResult.Scalar.get -> object?
+Polhem.Db.DbCommandResult.Table.get -> System.Data.DataTable?
+Polhem.Db.DbCommandResultCollection
+Polhem.Db.DbCommandResultCollection.DbCommandResultCollection() -> void
+Polhem.Db.DbCommandSpec
+Polhem.Db.DbCommandSpec.CommandText.get -> string!
+Polhem.Db.DbCommandSpec.CommandText.set -> void
+Polhem.Db.DbCommandSpec.CommandTimeout.get -> int
+Polhem.Db.DbCommandSpec.CommandTimeout.set -> void
+Polhem.Db.DbCommandSpec.CommandType.get -> System.Data.CommandType
+Polhem.Db.DbCommandSpec.CommandType.set -> void
+Polhem.Db.DbCommandSpec.CreateCommand(Polhem.Definition.Database.DatabaseType databaseType, System.Data.Common.DbConnection! connection) -> System.Data.Common.DbCommand!
+Polhem.Db.DbCommandSpec.DateColumns.get -> System.Collections.Generic.List<string!>!
+Polhem.Db.DbCommandSpec.DbCommandSpec() -> void
+Polhem.Db.DbCommandSpec.DbCommandSpec(Polhem.Db.DbCommandKind kind, string! commandText, System.Collections.Generic.IDictionary<string!, object!>? parameters) -> void
+Polhem.Db.DbCommandSpec.DbCommandSpec(Polhem.Db.DbCommandKind kind, string! commandText, params object![]! values) -> void
+Polhem.Db.DbCommandSpec.Kind.get -> Polhem.Db.DbCommandKind
+Polhem.Db.DbCommandSpec.Kind.set -> void
+Polhem.Db.DbCommandSpec.Parameters.get -> Polhem.Db.DbParameterSpecCollection!
+Polhem.Db.DbCommandSpecCollection
+Polhem.Db.DbCommandSpecCollection.DbCommandSpecCollection() -> void
+Polhem.Db.DbConnectionScope
+Polhem.Db.DbConnectionScope.Connection.get -> System.Data.Common.DbConnection?
+Polhem.Db.DbConnectionScope.Dispose() -> void
+Polhem.Db.DbParameterSpec
+Polhem.Db.DbParameterSpec.DbParameterSpec() -> void
+Polhem.Db.DbParameterSpec.DbParameterSpec(string! name, object! value) -> void
+Polhem.Db.DbParameterSpec.DbType.get -> System.Data.DbType?
+Polhem.Db.DbParameterSpec.DbType.set -> void
+Polhem.Db.DbParameterSpec.IsNullable.get -> bool
+Polhem.Db.DbParameterSpec.IsNullable.set -> void
+Polhem.Db.DbParameterSpec.Name.get -> string!
+Polhem.Db.DbParameterSpec.Name.set -> void
+Polhem.Db.DbParameterSpec.Size.get -> int?
+Polhem.Db.DbParameterSpec.Size.set -> void
+Polhem.Db.DbParameterSpec.SourceColumn.get -> string!
+Polhem.Db.DbParameterSpec.SourceColumn.set -> void
+Polhem.Db.DbParameterSpec.SourceVersion.get -> System.Data.DataRowVersion
+Polhem.Db.DbParameterSpec.SourceVersion.set -> void
+Polhem.Db.DbParameterSpec.Value.get -> object?
+Polhem.Db.DbParameterSpec.Value.set -> void
+Polhem.Db.DbParameterSpecCollection
+Polhem.Db.DbParameterSpecCollection.DbParameterSpecCollection() -> void
+Polhem.Db.DbParameterSpecCollectionExtensions
+Polhem.Db.DbTypeMapper
+Polhem.Db.Ddl.ICreateTableCommandBuilder
+Polhem.Db.Ddl.ICreateTableCommandBuilder.GetCommandText(Polhem.Definition.Database.TableSchema! tableSchema) -> string!
+Polhem.Db.Ddl.IDescriptionSyncCommandBuilder
+Polhem.Db.Ddl.IDescriptionSyncCommandBuilder.GetStatements(Polhem.Db.Schema.TableSchemaDiff! diff) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Db.Ddl.ITableAlterCommandBuilder
+Polhem.Db.Ddl.ITableAlterCommandBuilder.GetExecutionKind(Polhem.Db.Schema.Changes.ITableChange! change) -> Polhem.Db.Schema.ChangeExecutionKind
+Polhem.Db.Ddl.ITableAlterCommandBuilder.GetStatements(string! tableName, Polhem.Db.Schema.Changes.ITableChange! change) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Db.Ddl.ITableAlterCommandBuilder.IsNarrowingChange(Polhem.Db.Schema.Changes.ITableChange! change) -> bool
+Polhem.Db.Ddl.ITableRebuildCommandBuilder
+Polhem.Db.Ddl.ITableRebuildCommandBuilder.GetCommandText(Polhem.Db.Schema.TableSchemaDiff! diff) -> string!
+Polhem.Db.Dml.DefaultParameterCollector
+Polhem.Db.Dml.DefaultParameterCollector.Add(object! value) -> string!
+Polhem.Db.Dml.DefaultParameterCollector.DefaultParameterCollector(string! prefix) -> void
+Polhem.Db.Dml.DefaultParameterCollector.GetAll() -> System.Collections.Generic.IDictionary<string!, object!>!
+Polhem.Db.Dml.DefaultParameterCollector.Prefix.get -> string!
+Polhem.Db.Dml.DeleteCommandBuilder
+Polhem.Db.Dml.DeleteCommandBuilder.Build(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Dml.DeleteCommandBuilder.DeleteCommandBuilder(Polhem.Definition.Forms.FormSchema! formSchema, Polhem.Definition.Database.DatabaseType databaseType) -> void
+Polhem.Db.Dml.FromBuilder
+Polhem.Db.Dml.FromBuilder.Build(string! mainTableName, Polhem.Db.Dml.TableJoinCollection! joins) -> string!
+Polhem.Db.Dml.FromBuilder.FromBuilder(Polhem.Definition.Database.DatabaseType databaseType) -> void
+Polhem.Db.Dml.IFormCommandBuilder
+Polhem.Db.Dml.IFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Dml.IFormCommandBuilder.BuildDelete(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Dml.IFormCommandBuilder.BuildSelect(string! tableName, string! selectFields, Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, int? skip = null, int? take = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Dml.IParameterCollector
+Polhem.Db.Dml.IParameterCollector.Add(object! value) -> string!
+Polhem.Db.Dml.IParameterCollector.GetAll() -> System.Collections.Generic.IDictionary<string!, object!>!
+Polhem.Db.Dml.JoinType
+Polhem.Db.Dml.JoinType.Full = 3 -> Polhem.Db.Dml.JoinType
+Polhem.Db.Dml.JoinType.Inner = 0 -> Polhem.Db.Dml.JoinType
+Polhem.Db.Dml.JoinType.Left = 1 -> Polhem.Db.Dml.JoinType
+Polhem.Db.Dml.JoinType.Right = 2 -> Polhem.Db.Dml.JoinType
+Polhem.Db.Dml.LimitBuilder
+Polhem.Db.Dml.LimitBuilder.Build(int? skip, int? take) -> string!
+Polhem.Db.Dml.LimitBuilder.LimitBuilder(Polhem.Definition.Database.DatabaseType databaseType) -> void
+Polhem.Db.Dml.QueryFieldMapping
+Polhem.Db.Dml.QueryFieldMapping.FieldName.get -> string!
+Polhem.Db.Dml.QueryFieldMapping.FieldName.set -> void
+Polhem.Db.Dml.QueryFieldMapping.QueryFieldMapping() -> void
+Polhem.Db.Dml.QueryFieldMapping.SourceAlias.get -> string!
+Polhem.Db.Dml.QueryFieldMapping.SourceAlias.set -> void
+Polhem.Db.Dml.QueryFieldMapping.SourceField.get -> string!
+Polhem.Db.Dml.QueryFieldMapping.SourceField.set -> void
+Polhem.Db.Dml.QueryFieldMapping.TableJoin.get -> Polhem.Db.Dml.TableJoin?
+Polhem.Db.Dml.QueryFieldMapping.TableJoin.set -> void
+Polhem.Db.Dml.QueryFieldMappingCollection
+Polhem.Db.Dml.QueryFieldMappingCollection.QueryFieldMappingCollection() -> void
+Polhem.Db.Dml.SelectBuilder
+Polhem.Db.Dml.SelectBuilder.Build(Polhem.Definition.Forms.FormTable! formTable, string! selectFields, Polhem.Db.Dml.SelectContext! selectContext) -> string!
+Polhem.Db.Dml.SelectBuilder.SelectBuilder(Polhem.Definition.Database.DatabaseType databaseType) -> void
+Polhem.Db.Dml.SelectCommandBuilder
+Polhem.Db.Dml.SelectCommandBuilder.Build(string! tableName, string! selectFields, Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, int? skip = null, int? take = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Dml.SelectCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Dml.SelectCommandBuilder.SelectCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Database.DatabaseType databaseType, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
+Polhem.Db.Dml.SelectContext
+Polhem.Db.Dml.SelectContext.FieldMappings.get -> Polhem.Db.Dml.QueryFieldMappingCollection!
+Polhem.Db.Dml.SelectContext.FieldMappings.set -> void
+Polhem.Db.Dml.SelectContext.Joins.get -> Polhem.Db.Dml.TableJoinCollection!
+Polhem.Db.Dml.SelectContext.Joins.set -> void
+Polhem.Db.Dml.SelectContext.SelectContext() -> void
+Polhem.Db.Dml.SelectContextBuilder
+Polhem.Db.Dml.SelectContextBuilder.Build() -> Polhem.Db.Dml.SelectContext!
+Polhem.Db.Dml.SelectContextBuilder.SelectContextBuilder(Polhem.Definition.Forms.FormTable! formTable, System.Collections.Generic.HashSet<string!>! usedFieldNames, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
+Polhem.Db.Dml.SortBuilder
+Polhem.Db.Dml.SortBuilder.Build(Polhem.Definition.Sorting.SortFieldCollection? sortFields, Polhem.Db.Dml.SelectContext? selectContext = null) -> string!
+Polhem.Db.Dml.SortBuilder.SortBuilder(Polhem.Definition.Database.DatabaseType databaseType) -> void
+Polhem.Db.Dml.TableJoin
+Polhem.Db.Dml.TableJoin.JoinType.get -> Polhem.Db.Dml.JoinType
+Polhem.Db.Dml.TableJoin.JoinType.set -> void
+Polhem.Db.Dml.TableJoin.LeftAlias.get -> string!
+Polhem.Db.Dml.TableJoin.LeftAlias.set -> void
+Polhem.Db.Dml.TableJoin.LeftField.get -> string!
+Polhem.Db.Dml.TableJoin.LeftField.set -> void
+Polhem.Db.Dml.TableJoin.LeftTable.get -> string!
+Polhem.Db.Dml.TableJoin.LeftTable.set -> void
+Polhem.Db.Dml.TableJoin.RightAlias.get -> string!
+Polhem.Db.Dml.TableJoin.RightAlias.set -> void
+Polhem.Db.Dml.TableJoin.RightField.get -> string!
+Polhem.Db.Dml.TableJoin.RightField.set -> void
+Polhem.Db.Dml.TableJoin.RightTable.get -> string!
+Polhem.Db.Dml.TableJoin.RightTable.set -> void
+Polhem.Db.Dml.TableJoin.TableJoin() -> void
+Polhem.Db.Dml.TableJoinCollection
+Polhem.Db.Dml.TableJoinCollection.FindRightAlias(string! rightAlias) -> Polhem.Db.Dml.TableJoin?
+Polhem.Db.Dml.TableJoinCollection.TableJoinCollection() -> void
+Polhem.Db.Dml.TableSchemaCommandBuilder
+Polhem.Db.Dml.TableSchemaCommandBuilder.BuildDeleteCommand() -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Dml.TableSchemaCommandBuilder.BuildInsertCommand() -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Dml.TableSchemaCommandBuilder.BuildUpdateCommand() -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Dml.TableSchemaCommandBuilder.BuildUpdateSpec(System.Data.DataTable! dataTable) -> Polhem.Db.DataTableUpdateSpec!
+Polhem.Db.Dml.TableSchemaCommandBuilder.DatabaseType.get -> Polhem.Definition.Database.DatabaseType
+Polhem.Db.Dml.TableSchemaCommandBuilder.TableSchema.get -> Polhem.Definition.Database.TableSchema!
+Polhem.Db.Dml.TableSchemaCommandBuilder.TableSchemaCommandBuilder(Polhem.Definition.Database.DatabaseType databaseType, Polhem.Definition.Database.TableSchema! tableSchema) -> void
+Polhem.Db.Dml.WhereBuildResult
+Polhem.Db.Dml.WhereBuildResult.Parameters.get -> System.Collections.Generic.IDictionary<string!, object!>?
+Polhem.Db.Dml.WhereBuildResult.Parameters.set -> void
+Polhem.Db.Dml.WhereBuildResult.WhereBuildResult() -> void
+Polhem.Db.Dml.WhereBuildResult.WhereClause.get -> string!
+Polhem.Db.Dml.WhereBuildResult.WhereClause.set -> void
+Polhem.Db.Dml.WhereBuilder
+Polhem.Db.Dml.WhereBuilder.Build(Polhem.Definition.Filters.FilterNode? root, Polhem.Db.Dml.SelectContext? selectContext = null, bool includeWhereKeyword = true) -> Polhem.Db.Dml.WhereBuildResult!
+Polhem.Db.Dml.WhereBuilder.WhereBuilder(Polhem.Definition.Database.DatabaseType databaseType) -> void
+Polhem.Db.IDbAccessFactory
+Polhem.Db.IDbAccessFactory.Create(string! databaseId) -> Polhem.Db.DbAccess!
+Polhem.Db.ILMapper<T>
+Polhem.Db.Manager.DbConnectionInfo
+Polhem.Db.Manager.DbConnectionInfo.ConnectionString.get -> string!
+Polhem.Db.Manager.DbConnectionInfo.DatabaseType.get -> Polhem.Definition.Database.DatabaseType
+Polhem.Db.Manager.DbConnectionInfo.Provider.get -> System.Data.Common.DbProviderFactory!
+Polhem.Db.Manager.DbConnectionManagerService
+Polhem.Db.Manager.DbConnectionManagerService.Clear() -> void
+Polhem.Db.Manager.DbConnectionManagerService.Contains(string! databaseId) -> bool
+Polhem.Db.Manager.DbConnectionManagerService.Count.get -> int
+Polhem.Db.Manager.DbConnectionManagerService.CreateConnection(string! databaseId) -> System.Data.Common.DbConnection!
+Polhem.Db.Manager.DbConnectionManagerService.DbConnectionManagerService(Polhem.Definition.IDatabaseSettingsProvider! provider) -> void
+Polhem.Db.Manager.DbConnectionManagerService.Dispose() -> void
+Polhem.Db.Manager.DbConnectionManagerService.GetConnectionInfo(string! databaseId) -> Polhem.Db.Manager.DbConnectionInfo!
+Polhem.Db.Manager.DbConnectionManagerService.Remove(string! databaseId) -> bool
+Polhem.Db.Manager.DbDialectRegistry
+Polhem.Db.Manager.DbProviderRegistry
+Polhem.Db.Manager.IDbConnectionManager
+Polhem.Db.Manager.IDbConnectionManager.Clear() -> void
+Polhem.Db.Manager.IDbConnectionManager.Contains(string! databaseId) -> bool
+Polhem.Db.Manager.IDbConnectionManager.Count.get -> int
+Polhem.Db.Manager.IDbConnectionManager.CreateConnection(string! databaseId) -> System.Data.Common.DbConnection!
+Polhem.Db.Manager.IDbConnectionManager.GetConnectionInfo(string! databaseId) -> Polhem.Db.Manager.DbConnectionInfo!
+Polhem.Db.Manager.IDbConnectionManager.Remove(string! databaseId) -> bool
+Polhem.Db.Providers.IDialectFactory
+Polhem.Db.Providers.IDialectFactory.CreateCreateTableCommandBuilder() -> Polhem.Db.Ddl.ICreateTableCommandBuilder!
+Polhem.Db.Providers.IDialectFactory.CreateDescriptionSyncCommandBuilder() -> Polhem.Db.Ddl.IDescriptionSyncCommandBuilder?
+Polhem.Db.Providers.IDialectFactory.CreateFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> Polhem.Db.Dml.IFormCommandBuilder!
+Polhem.Db.Providers.IDialectFactory.CreateTableAlterCommandBuilder() -> Polhem.Db.Ddl.ITableAlterCommandBuilder!
+Polhem.Db.Providers.IDialectFactory.CreateTableRebuildCommandBuilder() -> Polhem.Db.Ddl.ITableRebuildCommandBuilder!
+Polhem.Db.Providers.IDialectFactory.CreateTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> Polhem.Db.Schema.ITableSchemaProvider!
+Polhem.Db.Providers.IDialectFactory.GetDefaultValueExpression(Polhem.Base.Data.FieldDbType dbType) -> string!
+Polhem.Db.Providers.MySql.MySqlCreateTableCommandBuilder
+Polhem.Db.Providers.MySql.MySqlCreateTableCommandBuilder.GetCommandText(Polhem.Definition.Database.TableSchema! tableSchema) -> string!
+Polhem.Db.Providers.MySql.MySqlCreateTableCommandBuilder.MySqlCreateTableCommandBuilder() -> void
+Polhem.Db.Providers.MySql.MySqlDescriptionSyncCommandBuilder
+Polhem.Db.Providers.MySql.MySqlDescriptionSyncCommandBuilder.GetStatements(Polhem.Db.Schema.TableSchemaDiff! diff) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Db.Providers.MySql.MySqlDescriptionSyncCommandBuilder.MySqlDescriptionSyncCommandBuilder() -> void
+Polhem.Db.Providers.MySql.MySqlDialectFactory
+Polhem.Db.Providers.MySql.MySqlDialectFactory.CreateCreateTableCommandBuilder() -> Polhem.Db.Ddl.ICreateTableCommandBuilder!
+Polhem.Db.Providers.MySql.MySqlDialectFactory.CreateDescriptionSyncCommandBuilder() -> Polhem.Db.Ddl.IDescriptionSyncCommandBuilder?
+Polhem.Db.Providers.MySql.MySqlDialectFactory.CreateFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> Polhem.Db.Dml.IFormCommandBuilder!
+Polhem.Db.Providers.MySql.MySqlDialectFactory.CreateTableAlterCommandBuilder() -> Polhem.Db.Ddl.ITableAlterCommandBuilder!
+Polhem.Db.Providers.MySql.MySqlDialectFactory.CreateTableRebuildCommandBuilder() -> Polhem.Db.Ddl.ITableRebuildCommandBuilder!
+Polhem.Db.Providers.MySql.MySqlDialectFactory.CreateTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> Polhem.Db.Schema.ITableSchemaProvider!
+Polhem.Db.Providers.MySql.MySqlDialectFactory.GetDefaultValueExpression(Polhem.Base.Data.FieldDbType dbType) -> string!
+Polhem.Db.Providers.MySql.MySqlDialectFactory.MySqlDialectFactory() -> void
+Polhem.Db.Providers.MySql.MySqlFormCommandBuilder
+Polhem.Db.Providers.MySql.MySqlFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.MySql.MySqlFormCommandBuilder.BuildDelete(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.MySql.MySqlFormCommandBuilder.BuildSelect(string! tableName, string! selectFields, Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, int? skip = null, int? take = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.MySql.MySqlFormCommandBuilder.MySqlFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
+Polhem.Db.Providers.MySql.MySqlTableAlterCommandBuilder
+Polhem.Db.Providers.MySql.MySqlTableAlterCommandBuilder.GetExecutionKind(Polhem.Db.Schema.Changes.ITableChange! change) -> Polhem.Db.Schema.ChangeExecutionKind
+Polhem.Db.Providers.MySql.MySqlTableAlterCommandBuilder.GetStatements(string! tableName, Polhem.Db.Schema.Changes.ITableChange! change) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Db.Providers.MySql.MySqlTableAlterCommandBuilder.IsNarrowingChange(Polhem.Db.Schema.Changes.ITableChange! change) -> bool
+Polhem.Db.Providers.MySql.MySqlTableAlterCommandBuilder.MySqlTableAlterCommandBuilder() -> void
+Polhem.Db.Providers.MySql.MySqlTableSchemaProvider
+Polhem.Db.Providers.MySql.MySqlTableSchemaProvider.DatabaseId.get -> string!
+Polhem.Db.Providers.MySql.MySqlTableSchemaProvider.GetTableSchema(string! tableName) -> Polhem.Definition.Database.TableSchema?
+Polhem.Db.Providers.MySql.MySqlTableSchemaProvider.MySqlTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
+Polhem.Db.Providers.Oracle.OracleCreateTableCommandBuilder
+Polhem.Db.Providers.Oracle.OracleCreateTableCommandBuilder.GetCommandText(Polhem.Definition.Database.TableSchema! tableSchema) -> string!
+Polhem.Db.Providers.Oracle.OracleCreateTableCommandBuilder.OracleCreateTableCommandBuilder() -> void
+Polhem.Db.Providers.Oracle.OracleDescriptionSyncCommandBuilder
+Polhem.Db.Providers.Oracle.OracleDescriptionSyncCommandBuilder.GetStatements(Polhem.Db.Schema.TableSchemaDiff! diff) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Db.Providers.Oracle.OracleDescriptionSyncCommandBuilder.OracleDescriptionSyncCommandBuilder() -> void
+Polhem.Db.Providers.Oracle.OracleDialectFactory
+Polhem.Db.Providers.Oracle.OracleDialectFactory.CreateCreateTableCommandBuilder() -> Polhem.Db.Ddl.ICreateTableCommandBuilder!
+Polhem.Db.Providers.Oracle.OracleDialectFactory.CreateDescriptionSyncCommandBuilder() -> Polhem.Db.Ddl.IDescriptionSyncCommandBuilder?
+Polhem.Db.Providers.Oracle.OracleDialectFactory.CreateFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> Polhem.Db.Dml.IFormCommandBuilder!
+Polhem.Db.Providers.Oracle.OracleDialectFactory.CreateTableAlterCommandBuilder() -> Polhem.Db.Ddl.ITableAlterCommandBuilder!
+Polhem.Db.Providers.Oracle.OracleDialectFactory.CreateTableRebuildCommandBuilder() -> Polhem.Db.Ddl.ITableRebuildCommandBuilder!
+Polhem.Db.Providers.Oracle.OracleDialectFactory.CreateTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> Polhem.Db.Schema.ITableSchemaProvider!
+Polhem.Db.Providers.Oracle.OracleDialectFactory.GetDefaultValueExpression(Polhem.Base.Data.FieldDbType dbType) -> string!
+Polhem.Db.Providers.Oracle.OracleDialectFactory.OracleDialectFactory() -> void
+Polhem.Db.Providers.Oracle.OracleFormCommandBuilder
+Polhem.Db.Providers.Oracle.OracleFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.Oracle.OracleFormCommandBuilder.BuildDelete(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.Oracle.OracleFormCommandBuilder.BuildSelect(string! tableName, string! selectFields, Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, int? skip = null, int? take = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.Oracle.OracleFormCommandBuilder.OracleFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
+Polhem.Db.Providers.Oracle.OracleTableAlterCommandBuilder
+Polhem.Db.Providers.Oracle.OracleTableAlterCommandBuilder.GetExecutionKind(Polhem.Db.Schema.Changes.ITableChange! change) -> Polhem.Db.Schema.ChangeExecutionKind
+Polhem.Db.Providers.Oracle.OracleTableAlterCommandBuilder.GetStatements(string! tableName, Polhem.Db.Schema.Changes.ITableChange! change) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Db.Providers.Oracle.OracleTableAlterCommandBuilder.IsNarrowingChange(Polhem.Db.Schema.Changes.ITableChange! change) -> bool
+Polhem.Db.Providers.Oracle.OracleTableAlterCommandBuilder.OracleTableAlterCommandBuilder() -> void
+Polhem.Db.Providers.Oracle.OracleTableSchemaProvider
+Polhem.Db.Providers.Oracle.OracleTableSchemaProvider.DatabaseId.get -> string!
+Polhem.Db.Providers.Oracle.OracleTableSchemaProvider.GetTableSchema(string! tableName) -> Polhem.Definition.Database.TableSchema?
+Polhem.Db.Providers.Oracle.OracleTableSchemaProvider.OracleTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
+Polhem.Db.Providers.PostgreSql.PgCreateTableCommandBuilder
+Polhem.Db.Providers.PostgreSql.PgCreateTableCommandBuilder.GetCommandText(Polhem.Definition.Database.TableSchema! tableSchema) -> string!
+Polhem.Db.Providers.PostgreSql.PgCreateTableCommandBuilder.PgCreateTableCommandBuilder() -> void
+Polhem.Db.Providers.PostgreSql.PgDescriptionSyncCommandBuilder
+Polhem.Db.Providers.PostgreSql.PgDescriptionSyncCommandBuilder.GetStatements(Polhem.Db.Schema.TableSchemaDiff! diff) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Db.Providers.PostgreSql.PgDescriptionSyncCommandBuilder.PgDescriptionSyncCommandBuilder() -> void
+Polhem.Db.Providers.PostgreSql.PgDialectFactory
+Polhem.Db.Providers.PostgreSql.PgDialectFactory.CreateCreateTableCommandBuilder() -> Polhem.Db.Ddl.ICreateTableCommandBuilder!
+Polhem.Db.Providers.PostgreSql.PgDialectFactory.CreateDescriptionSyncCommandBuilder() -> Polhem.Db.Ddl.IDescriptionSyncCommandBuilder?
+Polhem.Db.Providers.PostgreSql.PgDialectFactory.CreateFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> Polhem.Db.Dml.IFormCommandBuilder!
+Polhem.Db.Providers.PostgreSql.PgDialectFactory.CreateTableAlterCommandBuilder() -> Polhem.Db.Ddl.ITableAlterCommandBuilder!
+Polhem.Db.Providers.PostgreSql.PgDialectFactory.CreateTableRebuildCommandBuilder() -> Polhem.Db.Ddl.ITableRebuildCommandBuilder!
+Polhem.Db.Providers.PostgreSql.PgDialectFactory.CreateTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> Polhem.Db.Schema.ITableSchemaProvider!
+Polhem.Db.Providers.PostgreSql.PgDialectFactory.GetDefaultValueExpression(Polhem.Base.Data.FieldDbType dbType) -> string!
+Polhem.Db.Providers.PostgreSql.PgDialectFactory.PgDialectFactory() -> void
+Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder
+Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder.BuildDelete(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder.BuildSelect(string! tableName, string! selectFields, Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, int? skip = null, int? take = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder.PgFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
+Polhem.Db.Providers.PostgreSql.PgTableAlterCommandBuilder
+Polhem.Db.Providers.PostgreSql.PgTableAlterCommandBuilder.GetExecutionKind(Polhem.Db.Schema.Changes.ITableChange! change) -> Polhem.Db.Schema.ChangeExecutionKind
+Polhem.Db.Providers.PostgreSql.PgTableAlterCommandBuilder.GetStatements(string! tableName, Polhem.Db.Schema.Changes.ITableChange! change) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Db.Providers.PostgreSql.PgTableAlterCommandBuilder.IsNarrowingChange(Polhem.Db.Schema.Changes.ITableChange! change) -> bool
+Polhem.Db.Providers.PostgreSql.PgTableAlterCommandBuilder.PgTableAlterCommandBuilder() -> void
+Polhem.Db.Providers.PostgreSql.PgTableSchemaProvider
+Polhem.Db.Providers.PostgreSql.PgTableSchemaProvider.DatabaseId.get -> string!
+Polhem.Db.Providers.PostgreSql.PgTableSchemaProvider.GetTableSchema(string! tableName) -> Polhem.Definition.Database.TableSchema?
+Polhem.Db.Providers.PostgreSql.PgTableSchemaProvider.PgTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
+Polhem.Db.Providers.SqlServer.SqlCreateTableCommandBuilder
+Polhem.Db.Providers.SqlServer.SqlCreateTableCommandBuilder.GetCommandText(Polhem.Definition.Database.TableSchema! tableSchema) -> string!
+Polhem.Db.Providers.SqlServer.SqlCreateTableCommandBuilder.SqlCreateTableCommandBuilder() -> void
+Polhem.Db.Providers.SqlServer.SqlDescriptionSyncCommandBuilder
+Polhem.Db.Providers.SqlServer.SqlDescriptionSyncCommandBuilder.GetStatements(Polhem.Db.Schema.TableSchemaDiff! diff) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Db.Providers.SqlServer.SqlDescriptionSyncCommandBuilder.SqlDescriptionSyncCommandBuilder() -> void
+Polhem.Db.Providers.SqlServer.SqlDialectFactory
+Polhem.Db.Providers.SqlServer.SqlDialectFactory.CreateCreateTableCommandBuilder() -> Polhem.Db.Ddl.ICreateTableCommandBuilder!
+Polhem.Db.Providers.SqlServer.SqlDialectFactory.CreateDescriptionSyncCommandBuilder() -> Polhem.Db.Ddl.IDescriptionSyncCommandBuilder?
+Polhem.Db.Providers.SqlServer.SqlDialectFactory.CreateFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> Polhem.Db.Dml.IFormCommandBuilder!
+Polhem.Db.Providers.SqlServer.SqlDialectFactory.CreateTableAlterCommandBuilder() -> Polhem.Db.Ddl.ITableAlterCommandBuilder!
+Polhem.Db.Providers.SqlServer.SqlDialectFactory.CreateTableRebuildCommandBuilder() -> Polhem.Db.Ddl.ITableRebuildCommandBuilder!
+Polhem.Db.Providers.SqlServer.SqlDialectFactory.CreateTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> Polhem.Db.Schema.ITableSchemaProvider!
+Polhem.Db.Providers.SqlServer.SqlDialectFactory.GetDefaultValueExpression(Polhem.Base.Data.FieldDbType dbType) -> string!
+Polhem.Db.Providers.SqlServer.SqlDialectFactory.SqlDialectFactory() -> void
+Polhem.Db.Providers.SqlServer.SqlExtendedPropertyCommandBuilder
+Polhem.Db.Providers.SqlServer.SqlFormCommandBuilder
+Polhem.Db.Providers.SqlServer.SqlFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.SqlServer.SqlFormCommandBuilder.BuildDelete(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.SqlServer.SqlFormCommandBuilder.BuildSelect(string! tableName, string! selectFields, Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, int? skip = null, int? take = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.SqlServer.SqlFormCommandBuilder.SqlFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
+Polhem.Db.Providers.SqlServer.SqlTableAlterCommandBuilder
+Polhem.Db.Providers.SqlServer.SqlTableAlterCommandBuilder.GetExecutionKind(Polhem.Db.Schema.Changes.ITableChange! change) -> Polhem.Db.Schema.ChangeExecutionKind
+Polhem.Db.Providers.SqlServer.SqlTableAlterCommandBuilder.GetStatements(string! tableName, Polhem.Db.Schema.Changes.ITableChange! change) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Db.Providers.SqlServer.SqlTableAlterCommandBuilder.IsNarrowingChange(Polhem.Db.Schema.Changes.ITableChange! change) -> bool
+Polhem.Db.Providers.SqlServer.SqlTableAlterCommandBuilder.SqlTableAlterCommandBuilder() -> void
+Polhem.Db.Providers.SqlServer.SqlTableSchemaProvider
+Polhem.Db.Providers.SqlServer.SqlTableSchemaProvider.DatabaseId.get -> string!
+Polhem.Db.Providers.SqlServer.SqlTableSchemaProvider.GetTableSchema(string! tableName) -> Polhem.Definition.Database.TableSchema?
+Polhem.Db.Providers.SqlServer.SqlTableSchemaProvider.SqlTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
+Polhem.Db.Providers.Sqlite.SqliteCreateTableCommandBuilder
+Polhem.Db.Providers.Sqlite.SqliteCreateTableCommandBuilder.GetCommandText(Polhem.Definition.Database.TableSchema! tableSchema) -> string!
+Polhem.Db.Providers.Sqlite.SqliteCreateTableCommandBuilder.SqliteCreateTableCommandBuilder() -> void
+Polhem.Db.Providers.Sqlite.SqliteDataAdapter
+Polhem.Db.Providers.Sqlite.SqliteDataAdapter.RowUpdated -> System.EventHandler<System.Data.Common.RowUpdatedEventArgs!>?
+Polhem.Db.Providers.Sqlite.SqliteDataAdapter.RowUpdating -> System.EventHandler<System.Data.Common.RowUpdatingEventArgs!>?
+Polhem.Db.Providers.Sqlite.SqliteDataAdapter.SqliteDataAdapter() -> void
+Polhem.Db.Providers.Sqlite.SqliteDialectFactory
+Polhem.Db.Providers.Sqlite.SqliteDialectFactory.CreateCreateTableCommandBuilder() -> Polhem.Db.Ddl.ICreateTableCommandBuilder!
+Polhem.Db.Providers.Sqlite.SqliteDialectFactory.CreateFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> Polhem.Db.Dml.IFormCommandBuilder!
+Polhem.Db.Providers.Sqlite.SqliteDialectFactory.CreateTableAlterCommandBuilder() -> Polhem.Db.Ddl.ITableAlterCommandBuilder!
+Polhem.Db.Providers.Sqlite.SqliteDialectFactory.CreateTableRebuildCommandBuilder() -> Polhem.Db.Ddl.ITableRebuildCommandBuilder!
+Polhem.Db.Providers.Sqlite.SqliteDialectFactory.CreateTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> Polhem.Db.Schema.ITableSchemaProvider!
+Polhem.Db.Providers.Sqlite.SqliteDialectFactory.GetDefaultValueExpression(Polhem.Base.Data.FieldDbType dbType) -> string!
+Polhem.Db.Providers.Sqlite.SqliteDialectFactory.SqliteDialectFactory() -> void
+Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder
+Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder.BuildDelete(string! tableName, Polhem.Definition.Filters.FilterNode! filter) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder.BuildSelect(string! tableName, string! selectFields, Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, int? skip = null, int? take = null) -> Polhem.Db.DbCommandSpec!
+Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder.SqliteFormCommandBuilder(Polhem.Definition.Forms.FormSchema! formDefine, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
+Polhem.Db.Providers.Sqlite.SqliteProviderFactory
+Polhem.Db.Providers.Sqlite.SqliteProviderFactory.SqliteProviderFactory(System.Data.Common.DbProviderFactory! inner) -> void
+Polhem.Db.Providers.Sqlite.SqliteTableAlterCommandBuilder
+Polhem.Db.Providers.Sqlite.SqliteTableAlterCommandBuilder.GetExecutionKind(Polhem.Db.Schema.Changes.ITableChange! change) -> Polhem.Db.Schema.ChangeExecutionKind
+Polhem.Db.Providers.Sqlite.SqliteTableAlterCommandBuilder.GetStatements(string! tableName, Polhem.Db.Schema.Changes.ITableChange! change) -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Db.Providers.Sqlite.SqliteTableAlterCommandBuilder.IsNarrowingChange(Polhem.Db.Schema.Changes.ITableChange! change) -> bool
+Polhem.Db.Providers.Sqlite.SqliteTableAlterCommandBuilder.SqliteTableAlterCommandBuilder() -> void
+Polhem.Db.Providers.Sqlite.SqliteTableSchemaProvider
+Polhem.Db.Providers.Sqlite.SqliteTableSchemaProvider.DatabaseId.get -> string!
+Polhem.Db.Providers.Sqlite.SqliteTableSchemaProvider.GetTableSchema(string! tableName) -> Polhem.Definition.Database.TableSchema?
+Polhem.Db.Providers.Sqlite.SqliteTableSchemaProvider.SqliteTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
+Polhem.Db.Schema.ChangeExecutionKind
+Polhem.Db.Schema.ChangeExecutionKind.Alter = 0 -> Polhem.Db.Schema.ChangeExecutionKind
+Polhem.Db.Schema.ChangeExecutionKind.NotSupported = 2 -> Polhem.Db.Schema.ChangeExecutionKind
+Polhem.Db.Schema.ChangeExecutionKind.Rebuild = 1 -> Polhem.Db.Schema.ChangeExecutionKind
+Polhem.Db.Schema.Changes.AddFieldChange
+Polhem.Db.Schema.Changes.AddFieldChange.AddFieldChange(Polhem.Definition.Database.DbField! field) -> void
+Polhem.Db.Schema.Changes.AddFieldChange.Describe() -> string!
+Polhem.Db.Schema.Changes.AddFieldChange.Field.get -> Polhem.Definition.Database.DbField!
+Polhem.Db.Schema.Changes.AddIndexChange
+Polhem.Db.Schema.Changes.AddIndexChange.AddIndexChange(Polhem.Definition.Database.DbTableIndex! index) -> void
+Polhem.Db.Schema.Changes.AddIndexChange.Describe() -> string!
+Polhem.Db.Schema.Changes.AddIndexChange.Index.get -> Polhem.Definition.Database.DbTableIndex!
+Polhem.Db.Schema.Changes.AlterFieldChange
+Polhem.Db.Schema.Changes.AlterFieldChange.AlterFieldChange(Polhem.Definition.Database.DbField! oldField, Polhem.Definition.Database.DbField! newField) -> void
+Polhem.Db.Schema.Changes.AlterFieldChange.Describe() -> string!
+Polhem.Db.Schema.Changes.AlterFieldChange.NewField.get -> Polhem.Definition.Database.DbField!
+Polhem.Db.Schema.Changes.AlterFieldChange.OldField.get -> Polhem.Definition.Database.DbField!
+Polhem.Db.Schema.Changes.DropIndexChange
+Polhem.Db.Schema.Changes.DropIndexChange.Describe() -> string!
+Polhem.Db.Schema.Changes.DropIndexChange.DropIndexChange(Polhem.Definition.Database.DbTableIndex! index) -> void
+Polhem.Db.Schema.Changes.DropIndexChange.Index.get -> Polhem.Definition.Database.DbTableIndex!
+Polhem.Db.Schema.Changes.ITableChange
+Polhem.Db.Schema.Changes.ITableChange.Describe() -> string!
+Polhem.Db.Schema.Changes.RenameFieldChange
+Polhem.Db.Schema.Changes.RenameFieldChange.Describe() -> string!
+Polhem.Db.Schema.Changes.RenameFieldChange.NewField.get -> Polhem.Definition.Database.DbField!
+Polhem.Db.Schema.Changes.RenameFieldChange.OldFieldName.get -> string!
+Polhem.Db.Schema.Changes.RenameFieldChange.RenameFieldChange(string! oldFieldName, Polhem.Definition.Database.DbField! newField) -> void
+Polhem.Db.Schema.DescriptionChange
+Polhem.Db.Schema.DescriptionChange.DescriptionChange() -> void
+Polhem.Db.Schema.DescriptionChange.FieldName.get -> string!
+Polhem.Db.Schema.DescriptionChange.FieldName.set -> void
+Polhem.Db.Schema.DescriptionChange.IsNew.get -> bool
+Polhem.Db.Schema.DescriptionChange.IsNew.set -> void
+Polhem.Db.Schema.DescriptionChange.Level.get -> Polhem.Db.Schema.DescriptionLevel
+Polhem.Db.Schema.DescriptionChange.Level.set -> void
+Polhem.Db.Schema.DescriptionChange.NewValue.get -> string!
+Polhem.Db.Schema.DescriptionChange.NewValue.set -> void
+Polhem.Db.Schema.DescriptionLevel
+Polhem.Db.Schema.DescriptionLevel.Column = 1 -> Polhem.Db.Schema.DescriptionLevel
+Polhem.Db.Schema.DescriptionLevel.Table = 0 -> Polhem.Db.Schema.DescriptionLevel
+Polhem.Db.Schema.ITableSchemaProvider
+Polhem.Db.Schema.ITableSchemaProvider.DatabaseId.get -> string!
+Polhem.Db.Schema.ITableSchemaProvider.GetTableSchema(string! tableName) -> Polhem.Definition.Database.TableSchema?
+Polhem.Db.Schema.TableSchemaBuilder
+Polhem.Db.Schema.TableSchemaBuilder.Compare(string! categoryId, string! tableName) -> Polhem.Definition.Database.TableSchema!
+Polhem.Db.Schema.TableSchemaBuilder.CompareToDiff(string! categoryId, string! tableName) -> Polhem.Db.Schema.TableSchemaDiff!
+Polhem.Db.Schema.TableSchemaBuilder.DatabaseId.get -> string!
+Polhem.Db.Schema.TableSchemaBuilder.Execute(string! categoryId, string! tableName, Polhem.Db.Schema.UpgradeOptions? options = null) -> bool
+Polhem.Db.Schema.TableSchemaBuilder.GetCommandText(string! categoryId, string! tableName, Polhem.Db.Schema.UpgradeOptions? options = null) -> string!
+Polhem.Db.Schema.TableSchemaBuilder.TableSchemaBuilder(string! databaseId, Polhem.Definition.Storage.IDefineAccess! defineAccess, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
+Polhem.Db.Schema.TableSchemaComparer
+Polhem.Db.Schema.TableSchemaComparer.Compare() -> Polhem.Definition.Database.TableSchema!
+Polhem.Db.Schema.TableSchemaComparer.CompareToDiff() -> Polhem.Db.Schema.TableSchemaDiff!
+Polhem.Db.Schema.TableSchemaComparer.DatabaseType.get -> Polhem.Definition.Database.DatabaseType
+Polhem.Db.Schema.TableSchemaComparer.DefineTable.get -> Polhem.Definition.Database.TableSchema!
+Polhem.Db.Schema.TableSchemaComparer.DescriptionChanges.get -> System.Collections.Generic.List<Polhem.Db.Schema.DescriptionChange!>!
+Polhem.Db.Schema.TableSchemaComparer.RealTable.get -> Polhem.Definition.Database.TableSchema?
+Polhem.Db.Schema.TableSchemaComparer.TableSchemaComparer(Polhem.Definition.Database.TableSchema! defineTable, Polhem.Definition.Database.TableSchema? realTable, Polhem.Definition.Database.DatabaseType databaseType) -> void
+Polhem.Db.Schema.TableSchemaDiff
+Polhem.Db.Schema.TableSchemaDiff.Changes.get -> System.Collections.Generic.List<Polhem.Db.Schema.Changes.ITableChange!>!
+Polhem.Db.Schema.TableSchemaDiff.DefineTable.get -> Polhem.Definition.Database.TableSchema!
+Polhem.Db.Schema.TableSchemaDiff.DescriptionChanges.get -> System.Collections.Generic.List<Polhem.Db.Schema.DescriptionChange!>!
+Polhem.Db.Schema.TableSchemaDiff.IsEmpty.get -> bool
+Polhem.Db.Schema.TableSchemaDiff.IsNewTable.get -> bool
+Polhem.Db.Schema.TableSchemaDiff.RealTable.get -> Polhem.Definition.Database.TableSchema?
+Polhem.Db.Schema.TableSchemaDiff.TableSchemaDiff(Polhem.Definition.Database.TableSchema! defineTable, Polhem.Definition.Database.TableSchema? realTable) -> void
+Polhem.Db.Schema.TableUpgradeOrchestrator
+Polhem.Db.Schema.TableUpgradeOrchestrator.Execute(Polhem.Db.Schema.UpgradePlan! plan, string! databaseId) -> bool
+Polhem.Db.Schema.TableUpgradeOrchestrator.Plan(Polhem.Db.Schema.TableSchemaDiff! diff, Polhem.Db.Schema.UpgradeOptions? options = null) -> Polhem.Db.Schema.UpgradePlan!
+Polhem.Db.Schema.TableUpgradeOrchestrator.TableUpgradeOrchestrator(Polhem.Db.Providers.IDialectFactory! dialect, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
+Polhem.Db.Schema.TableUpgradeOrchestrator.TableUpgradeOrchestrator(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
+Polhem.Db.Schema.UpgradeExecutionMode
+Polhem.Db.Schema.UpgradeExecutionMode.Alter = 2 -> Polhem.Db.Schema.UpgradeExecutionMode
+Polhem.Db.Schema.UpgradeExecutionMode.Create = 1 -> Polhem.Db.Schema.UpgradeExecutionMode
+Polhem.Db.Schema.UpgradeExecutionMode.NoChange = 0 -> Polhem.Db.Schema.UpgradeExecutionMode
+Polhem.Db.Schema.UpgradeExecutionMode.Rebuild = 3 -> Polhem.Db.Schema.UpgradeExecutionMode
+Polhem.Db.Schema.UpgradeOptions
+Polhem.Db.Schema.UpgradeOptions.AllowColumnNarrowing.get -> bool
+Polhem.Db.Schema.UpgradeOptions.AllowColumnNarrowing.init -> void
+Polhem.Db.Schema.UpgradeOptions.UpgradeOptions() -> void
+Polhem.Db.Schema.UpgradePlan
+Polhem.Db.Schema.UpgradePlan.AllStatements.get -> System.Collections.Generic.IEnumerable<string!>!
+Polhem.Db.Schema.UpgradePlan.IsEmpty.get -> bool
+Polhem.Db.Schema.UpgradePlan.Mode.get -> Polhem.Db.Schema.UpgradeExecutionMode
+Polhem.Db.Schema.UpgradePlan.Stages.get -> System.Collections.Generic.List<Polhem.Db.Schema.UpgradeStage!>!
+Polhem.Db.Schema.UpgradePlan.UpgradePlan(Polhem.Db.Schema.UpgradeExecutionMode mode, System.Collections.Generic.IEnumerable<Polhem.Db.Schema.UpgradeStage!>? stages = null, System.Collections.Generic.IEnumerable<string!>? warnings = null) -> void
+Polhem.Db.Schema.UpgradePlan.Warnings.get -> System.Collections.Generic.List<string!>!
+Polhem.Db.Schema.UpgradeStage
+Polhem.Db.Schema.UpgradeStage.Kind.get -> Polhem.Db.Schema.UpgradeStageKind
+Polhem.Db.Schema.UpgradeStage.Statements.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Db.Schema.UpgradeStage.UpgradeStage(Polhem.Db.Schema.UpgradeStageKind kind, System.Collections.Generic.IEnumerable<string!>! statements) -> void
+Polhem.Db.Schema.UpgradeStageKind
+Polhem.Db.Schema.UpgradeStageKind.AddColumns = 2 -> Polhem.Db.Schema.UpgradeStageKind
+Polhem.Db.Schema.UpgradeStageKind.AlterColumns = 1 -> Polhem.Db.Schema.UpgradeStageKind
+Polhem.Db.Schema.UpgradeStageKind.CreateIndexes = 3 -> Polhem.Db.Schema.UpgradeStageKind
+Polhem.Db.Schema.UpgradeStageKind.CreateTable = 5 -> Polhem.Db.Schema.UpgradeStageKind
+Polhem.Db.Schema.UpgradeStageKind.DropIndexes = 0 -> Polhem.Db.Schema.UpgradeStageKind
+Polhem.Db.Schema.UpgradeStageKind.Rebuild = 6 -> Polhem.Db.Schema.UpgradeStageKind
+Polhem.Db.Schema.UpgradeStageKind.SyncDescriptions = 4 -> Polhem.Db.Schema.UpgradeStageKind
+Polhem.Db.Storage.DbDefineStorage
+Polhem.Db.Storage.DbDefineStorage.DbDefineStorage(Polhem.Db.Manager.IDbConnectionManager! connectionManager, Polhem.Db.CacheNotify.ICacheNotifyService! cacheNotify, string! databaseId = "common") -> void
+Polhem.Db.Storage.DbDefineStorage.DbDefineStorage(System.IServiceProvider! serviceProvider) -> void
+Polhem.Db.Storage.DbDefineStorage.GetChangeSource(Polhem.Definition.DefineType defineType, params string![]! keys) -> Polhem.Definition.Storage.DefineChangeSource
+Polhem.Db.Storage.DbDefineStorage.GetCurrencySettings() -> Polhem.Definition.Settings.CurrencySettings?
+Polhem.Db.Storage.DbDefineStorage.GetCustomizeFormLayout(string! customizeId, string! layoutId) -> Polhem.Definition.Layouts.FormLayout?
+Polhem.Db.Storage.DbDefineStorage.GetCustomizeLanguage(string! customizeId, string! lang, string! ns) -> Polhem.Definition.Language.LanguageResource?
+Polhem.Db.Storage.DbDefineStorage.GetCustomizeMenuSettings(string! customizeId) -> Polhem.Definition.Settings.MenuSettings?
+Polhem.Db.Storage.DbDefineStorage.GetCustomizePluginSettings(string! customizeId) -> Polhem.Definition.Settings.PluginSettings?
+Polhem.Db.Storage.DbDefineStorage.GetCustomizeProgramSettings(string! customizeId) -> Polhem.Definition.Settings.ProgramSettings?
+Polhem.Db.Storage.DbDefineStorage.GetDbCategorySettings() -> Polhem.Definition.Settings.DbCategorySettings?
+Polhem.Db.Storage.DbDefineStorage.GetFormLayout(string! layoutId) -> Polhem.Definition.Layouts.FormLayout?
+Polhem.Db.Storage.DbDefineStorage.GetFormSchema(string! progId) -> Polhem.Definition.Forms.FormSchema?
+Polhem.Db.Storage.DbDefineStorage.GetLanguage(string! lang, string! ns) -> Polhem.Definition.Language.LanguageResource?
+Polhem.Db.Storage.DbDefineStorage.GetMenuSettings() -> Polhem.Definition.Settings.MenuSettings?
+Polhem.Db.Storage.DbDefineStorage.GetPluginSettings() -> Polhem.Definition.Settings.PluginSettings?
+Polhem.Db.Storage.DbDefineStorage.GetProgramSettings() -> Polhem.Definition.Settings.ProgramSettings?
+Polhem.Db.Storage.DbDefineStorage.GetTableSchema(string! categoryId, string! tableName) -> Polhem.Definition.Database.TableSchema?
+Polhem.Db.Storage.DbDefineStorage.GetUnitSettings() -> Polhem.Definition.Settings.UnitSettings?
+Polhem.Db.Storage.DbDefineStorage.SaveCurrencySettings(Polhem.Definition.Settings.CurrencySettings! settings) -> void
+Polhem.Db.Storage.DbDefineStorage.SaveCustomizePluginSettings(string! customizeId, Polhem.Definition.Settings.PluginSettings! settings) -> void
+Polhem.Db.Storage.DbDefineStorage.SaveDbCategorySettings(Polhem.Definition.Settings.DbCategorySettings! settings) -> void
+Polhem.Db.Storage.DbDefineStorage.SaveFormLayout(Polhem.Definition.Layouts.FormLayout! formLayout) -> void
+Polhem.Db.Storage.DbDefineStorage.SaveFormSchema(Polhem.Definition.Forms.FormSchema! formSchema) -> void
+Polhem.Db.Storage.DbDefineStorage.SaveLanguage(Polhem.Definition.Language.LanguageResource! resource) -> void
+Polhem.Db.Storage.DbDefineStorage.SaveMenuSettings(Polhem.Definition.Settings.MenuSettings! settings) -> void
+Polhem.Db.Storage.DbDefineStorage.SavePluginSettings(Polhem.Definition.Settings.PluginSettings! settings) -> void
+Polhem.Db.Storage.DbDefineStorage.SaveProgramSettings(Polhem.Definition.Settings.ProgramSettings! settings) -> void
+Polhem.Db.Storage.DbDefineStorage.SaveTableSchema(string! categoryId, Polhem.Definition.Database.TableSchema! tableSchema) -> void
+Polhem.Db.Storage.DbDefineStorage.SaveUnitSettings(Polhem.Definition.Settings.UnitSettings! settings) -> void
+const Polhem.Db.CommandTextVariable.Parameters = "{@Parameters}" -> string!
+const Polhem.Db.Storage.DbDefineStorage.DefineDatabaseId = "common" -> string!
+override Polhem.Db.CacheNotify.CacheNotifyChange.GetHashCode() -> int
+override Polhem.Db.DbAccess.ToString() -> string!
+override Polhem.Db.DbCommandSpec.ToString() -> string!
+override Polhem.Db.DbParameterSpec.ToString() -> string!
+override Polhem.Db.Dml.QueryFieldMapping.ToString() -> string!
+override Polhem.Db.Dml.TableJoin.Key.get -> string!
+override Polhem.Db.Dml.TableJoin.Key.set -> void
+override Polhem.Db.Dml.TableJoin.ToString() -> string!
+override Polhem.Db.Providers.Sqlite.SqliteProviderFactory.CanCreateDataAdapter.get -> bool
+override Polhem.Db.Providers.Sqlite.SqliteProviderFactory.CreateCommand() -> System.Data.Common.DbCommand?
+override Polhem.Db.Providers.Sqlite.SqliteProviderFactory.CreateCommandBuilder() -> System.Data.Common.DbCommandBuilder?
+override Polhem.Db.Providers.Sqlite.SqliteProviderFactory.CreateConnection() -> System.Data.Common.DbConnection?
+override Polhem.Db.Providers.Sqlite.SqliteProviderFactory.CreateConnectionStringBuilder() -> System.Data.Common.DbConnectionStringBuilder?
+override Polhem.Db.Providers.Sqlite.SqliteProviderFactory.CreateDataAdapter() -> System.Data.Common.DbDataAdapter!
+override Polhem.Db.Providers.Sqlite.SqliteProviderFactory.CreateParameter() -> System.Data.Common.DbParameter?
+static Polhem.Db.CacheNotify.CacheNotifyChange.operator !=(Polhem.Db.CacheNotify.CacheNotifyChange left, Polhem.Db.CacheNotify.CacheNotifyChange right) -> bool
+static Polhem.Db.CacheNotify.CacheNotifyChange.operator ==(Polhem.Db.CacheNotify.CacheNotifyChange left, Polhem.Db.CacheNotify.CacheNotifyChange right) -> bool
+static Polhem.Db.DatabaseTypeExtensions.GetParameterName(this Polhem.Definition.Database.DatabaseType databaseType, string! name) -> string!
+static Polhem.Db.DatabaseTypeExtensions.GetParameterPrefix(this Polhem.Definition.Database.DatabaseType databaseType) -> string!
+static Polhem.Db.DatabaseTypeExtensions.QuoteIdentifier(this Polhem.Definition.Database.DatabaseType databaseType, string! identifier) -> string!
+static Polhem.Db.DbCommandResult.ForRowsAffected(int rows) -> Polhem.Db.DbCommandResult!
+static Polhem.Db.DbCommandResult.ForScalar(object? value) -> Polhem.Db.DbCommandResult!
+static Polhem.Db.DbCommandResult.ForTable(System.Data.DataTable! table) -> Polhem.Db.DbCommandResult!
+static Polhem.Db.DbConnectionScope.Create(System.Data.Common.DbConnection? externalConnection, System.Data.Common.DbProviderFactory! factory, string! connectionString, System.Action<System.Data.Common.DbConnection!>? onConnectionOpened = null) -> Polhem.Db.DbConnectionScope!
+static Polhem.Db.DbConnectionScope.CreateAsync(System.Data.Common.DbConnection? externalConnection, System.Data.Common.DbProviderFactory! factory, string! connectionString, System.Action<System.Data.Common.DbConnection!>? onConnectionOpened = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Db.DbConnectionScope!>!
+static Polhem.Db.DbParameterSpecCollectionExtensions.Add(this Polhem.Db.DbParameterSpecCollection? collection, Polhem.Definition.Database.DbField! field) -> Polhem.Db.DbParameterSpec!
+static Polhem.Db.DbParameterSpecCollectionExtensions.Add(this Polhem.Db.DbParameterSpecCollection? collection, Polhem.Definition.Database.DbField! field, System.Data.DataRowVersion sourceVersion) -> Polhem.Db.DbParameterSpec!
+static Polhem.Db.DbParameterSpecCollectionExtensions.Add(this Polhem.Db.DbParameterSpecCollection? collection, string! name, object! value) -> Polhem.Db.DbParameterSpec!
+static Polhem.Db.DbTypeMapper.Infer(object! value) -> System.Data.DbType?
+static Polhem.Db.ILMapper<T>.CacheCount.get -> int
+static Polhem.Db.ILMapper<T>.ClearCache() -> void
+static Polhem.Db.ILMapper<T>.CreateMapFunc(System.Data.Common.DbDataReader! reader) -> System.Func<System.Data.Common.DbDataReader!, T>!
+static Polhem.Db.ILMapper<T>.MapToEnumerable(System.Data.Common.DbDataReader! reader, System.Func<System.Data.Common.DbDataReader!, T>! mapper) -> System.Collections.Generic.IEnumerable<T>!
+static Polhem.Db.ILMapper<T>.MapToList(System.Data.Common.DbDataReader! reader, System.Func<System.Data.Common.DbDataReader!, T>! mapper) -> System.Collections.Generic.List<T>!
+static Polhem.Db.Manager.DbDialectRegistry.Get(Polhem.Definition.Database.DatabaseType type) -> Polhem.Db.Providers.IDialectFactory!
+static Polhem.Db.Manager.DbDialectRegistry.IsRegistered(Polhem.Definition.Database.DatabaseType type) -> bool
+static Polhem.Db.Manager.DbDialectRegistry.Register(Polhem.Definition.Database.DatabaseType type, Polhem.Db.Providers.IDialectFactory! factory) -> void
+static Polhem.Db.Manager.DbProviderRegistry.Get(Polhem.Definition.Database.DatabaseType type) -> System.Data.Common.DbProviderFactory!
+static Polhem.Db.Manager.DbProviderRegistry.GetConnectionInitializer(Polhem.Definition.Database.DatabaseType type) -> System.Action<System.Data.Common.DbConnection!>?
+static Polhem.Db.Manager.DbProviderRegistry.IsRegistered(Polhem.Definition.Database.DatabaseType type) -> bool
+static Polhem.Db.Manager.DbProviderRegistry.Register(Polhem.Definition.Database.DatabaseType type, System.Data.Common.DbProviderFactory! factory) -> void
+static Polhem.Db.Manager.DbProviderRegistry.Register(Polhem.Definition.Database.DatabaseType type, System.Data.Common.DbProviderFactory! factory, System.Action<System.Data.Common.DbConnection!>? connectionInitializer) -> void
+static Polhem.Db.Providers.MySql.MySqlTableSchemaProvider.GetFieldDbType(string! dataType, int dataPrecision, int dataScale, int length) -> Polhem.Base.Data.FieldDbType
+static Polhem.Db.Providers.MySql.MySqlTableSchemaProvider.ParseDBDefaultValue(string! dataType, string! defaultValue, string! originalDefaultValue) -> string!
+static Polhem.Db.Providers.Oracle.OracleTableSchemaProvider.GetFieldDbType(string! dataType, int dataPrecision, int dataScale, int length) -> Polhem.Base.Data.FieldDbType
+static Polhem.Db.Providers.Oracle.OracleTableSchemaProvider.ParseDBDefaultValue(string! dataType, string! defaultValue, string! originalDefaultValue) -> string!
+static Polhem.Db.Providers.PostgreSql.PgTableSchemaProvider.GetFieldDbType(string! dataType, int dataPrecision, int dataScale, int length) -> Polhem.Base.Data.FieldDbType
+static Polhem.Db.Providers.PostgreSql.PgTableSchemaProvider.ParseDBDefaultValue(string! dataType, string! defaultValue, string! originalDefaultValue) -> string!
+static Polhem.Db.Providers.SqlServer.SqlExtendedPropertyCommandBuilder.GetCommandText(string! tableName, System.Collections.Generic.IReadOnlyList<Polhem.Db.Schema.DescriptionChange!>? changes) -> string!
+static Polhem.Db.Providers.SqlServer.SqlTableSchemaProvider.GetFieldDbType(string! dataType, int dataPrecision, int dataScale, int length) -> Polhem.Base.Data.FieldDbType
+static Polhem.Db.Providers.SqlServer.SqlTableSchemaProvider.ParseDBDefaultValue(string! dataType, string! defaultValue, string! originalDefaultValue) -> string!
+static Polhem.Db.Providers.Sqlite.SqliteTableSchemaProvider.MapToFieldDbType(string! baseType, bool isPrimaryKey) -> Polhem.Base.Data.FieldDbType
+static Polhem.Db.Providers.Sqlite.SqliteTableSchemaProvider.ParseDefaultValue(string! rawDefault, Polhem.Base.Data.FieldDbType dbType, string! originalDefault) -> string!
+static Polhem.Db.Schema.UpgradeOptions.Default.get -> Polhem.Db.Schema.UpgradeOptions!
+~override Polhem.Db.CacheNotify.CacheNotifyChange.Equals(object obj) -> bool
+~override Polhem.Db.CacheNotify.CacheNotifyChange.ToString() -> string

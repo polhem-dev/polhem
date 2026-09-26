@@ -1,0 +1,216 @@
+#nullable enable
+Polhem.Api.Contracts.AuditLog.IGetAccessLogRequest
+Polhem.Api.Contracts.AuditLog.IGetAccessLogRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetAccessLogRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Contracts.AuditLog.IGetAccessLogRequest.ProgId.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetAccessLogRequest.RowKey.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetAccessLogRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetAccessLogRequest.UserId.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetApiAnomalyLogRequest
+Polhem.Api.Contracts.AuditLog.IGetApiAnomalyLogRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetApiAnomalyLogRequest.Kind.get -> Polhem.Definition.Logging.AnomalyKind?
+Polhem.Api.Contracts.AuditLog.IGetApiAnomalyLogRequest.Method.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetApiAnomalyLogRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Contracts.AuditLog.IGetApiAnomalyLogRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetApiAnomalyLogRequest.UserId.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetApiAnomalySummaryRequest
+Polhem.Api.Contracts.AuditLog.IGetApiAnomalySummaryRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetApiAnomalySummaryRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailRequest
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailRequest.SysRowId.get -> System.Guid
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailResponse
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailResponse.ChangeKind.get -> Polhem.Definition.Logging.ChangeKind
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailResponse.DataSet.get -> System.Data.DataSet?
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailResponse.Fields.get -> System.Collections.Generic.IReadOnlyList<Polhem.Api.Contracts.AuditLog.RecordFieldChange!>!
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailResponse.IsSensitive.get -> bool
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailResponse.LogTime.get -> System.DateTime
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailResponse.ProgId.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailResponse.RowKey.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailResponse.Source.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailResponse.SysRowId.get -> System.Guid
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailResponse.UserId.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetChangeDetailResponse.UserName.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetChangeLogRequest
+Polhem.Api.Contracts.AuditLog.IGetChangeLogRequest.ChangeKind.get -> Polhem.Definition.Logging.ChangeKind?
+Polhem.Api.Contracts.AuditLog.IGetChangeLogRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetChangeLogRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Contracts.AuditLog.IGetChangeLogRequest.ProgId.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetChangeLogRequest.RowKey.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetChangeLogRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetChangeLogRequest.UserId.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetDbAnomalyLogRequest
+Polhem.Api.Contracts.AuditLog.IGetDbAnomalyLogRequest.DatabaseId.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetDbAnomalyLogRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetDbAnomalyLogRequest.Kind.get -> Polhem.Definition.Logging.AnomalyKind?
+Polhem.Api.Contracts.AuditLog.IGetDbAnomalyLogRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Contracts.AuditLog.IGetDbAnomalyLogRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetDbAnomalySummaryRequest
+Polhem.Api.Contracts.AuditLog.IGetDbAnomalySummaryRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetDbAnomalySummaryRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetLoginLogRequest
+Polhem.Api.Contracts.AuditLog.IGetLoginLogRequest.Event.get -> Polhem.Definition.Logging.LoginEvent?
+Polhem.Api.Contracts.AuditLog.IGetLoginLogRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetLoginLogRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Contracts.AuditLog.IGetLoginLogRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetLoginLogRequest.UserId.get -> string?
+Polhem.Api.Contracts.AuditLog.IGetTopApiMethodsRequest
+Polhem.Api.Contracts.AuditLog.IGetTopApiMethodsRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetTopApiMethodsRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Contracts.AuditLog.IGetTopApiMethodsRequest.TopN.get -> int
+Polhem.Api.Contracts.AuditLog.ILogAggregateResponse
+Polhem.Api.Contracts.AuditLog.ILogAggregateResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Contracts.AuditLog.ILogListResponse
+Polhem.Api.Contracts.AuditLog.ILogListResponse.Paging.get -> Polhem.Definition.Paging.PagingInfo?
+Polhem.Api.Contracts.AuditLog.ILogListResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Contracts.AuditLog.RecordFieldChange
+Polhem.Api.Contracts.AuditLog.RecordFieldChange.FieldName.get -> string!
+Polhem.Api.Contracts.AuditLog.RecordFieldChange.FieldName.set -> void
+Polhem.Api.Contracts.AuditLog.RecordFieldChange.NewValue.get -> string?
+Polhem.Api.Contracts.AuditLog.RecordFieldChange.NewValue.set -> void
+Polhem.Api.Contracts.AuditLog.RecordFieldChange.OldValue.get -> string?
+Polhem.Api.Contracts.AuditLog.RecordFieldChange.OldValue.set -> void
+Polhem.Api.Contracts.AuditLog.RecordFieldChange.RecordFieldChange() -> void
+Polhem.Api.Contracts.AuditLog.RecordFieldChange.RowKey.get -> string?
+Polhem.Api.Contracts.AuditLog.RecordFieldChange.RowKey.set -> void
+Polhem.Api.Contracts.AuditLog.RecordFieldChange.RowState.get -> Polhem.Definition.Logging.ChangeKind
+Polhem.Api.Contracts.AuditLog.RecordFieldChange.RowState.set -> void
+Polhem.Api.Contracts.AuditLog.RecordFieldChange.TableName.get -> string!
+Polhem.Api.Contracts.AuditLog.RecordFieldChange.TableName.set -> void
+Polhem.Api.Contracts.Form.IDeleteRequest
+Polhem.Api.Contracts.Form.IDeleteRequest.RowId.get -> System.Guid
+Polhem.Api.Contracts.Form.IDeleteResponse
+Polhem.Api.Contracts.Form.IDeleteResponse.RowsAffected.get -> int
+Polhem.Api.Contracts.Form.IGetDataRequest
+Polhem.Api.Contracts.Form.IGetDataRequest.RowId.get -> System.Guid
+Polhem.Api.Contracts.Form.IGetDataResponse
+Polhem.Api.Contracts.Form.IGetDataResponse.DataSet.get -> System.Data.DataSet?
+Polhem.Api.Contracts.Form.IGetListRequest
+Polhem.Api.Contracts.Form.IGetListRequest.Filter.get -> Polhem.Definition.Filters.FilterNode?
+Polhem.Api.Contracts.Form.IGetListRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Contracts.Form.IGetListRequest.SelectFields.get -> string!
+Polhem.Api.Contracts.Form.IGetListRequest.SortFields.get -> Polhem.Definition.Sorting.SortFieldCollection?
+Polhem.Api.Contracts.Form.IGetListResponse
+Polhem.Api.Contracts.Form.IGetListResponse.Paging.get -> Polhem.Definition.Paging.PagingInfo?
+Polhem.Api.Contracts.Form.IGetListResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Contracts.Form.IGetLookupRequest
+Polhem.Api.Contracts.Form.IGetLookupRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Contracts.Form.IGetLookupRequest.SearchText.get -> string!
+Polhem.Api.Contracts.Form.IGetLookupResponse
+Polhem.Api.Contracts.Form.IGetLookupResponse.Paging.get -> Polhem.Definition.Paging.PagingInfo?
+Polhem.Api.Contracts.Form.IGetLookupResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Contracts.Form.IGetNewDataRequest
+Polhem.Api.Contracts.Form.IGetNewDataResponse
+Polhem.Api.Contracts.Form.IGetNewDataResponse.DataSet.get -> System.Data.DataSet?
+Polhem.Api.Contracts.Form.ISaveRequest
+Polhem.Api.Contracts.Form.ISaveRequest.DataSet.get -> System.Data.DataSet?
+Polhem.Api.Contracts.Form.ISaveResponse
+Polhem.Api.Contracts.Form.ISaveResponse.AffectedRows.get -> System.Collections.Generic.IReadOnlyDictionary<string!, int>!
+Polhem.Api.Contracts.Form.ISaveResponse.DataSet.get -> System.Data.DataSet?
+Polhem.Api.Contracts.IExecFuncRequest
+Polhem.Api.Contracts.IExecFuncRequest.FuncId.get -> string!
+Polhem.Api.Contracts.IExecFuncResponse
+Polhem.Api.Contracts.System.ICreateApiKeyRequest
+Polhem.Api.Contracts.System.ICreateApiKeyRequest.Contact.get -> string?
+Polhem.Api.Contracts.System.ICreateApiKeyRequest.ExpiredAt.get -> System.DateTime?
+Polhem.Api.Contracts.System.ICreateApiKeyRequest.KeyType.get -> Polhem.Definition.Security.ApiKeyType
+Polhem.Api.Contracts.System.ICreateApiKeyRequest.SysId.get -> string!
+Polhem.Api.Contracts.System.ICreateApiKeyRequest.SysName.get -> string!
+Polhem.Api.Contracts.System.ICreateApiKeyResponse
+Polhem.Api.Contracts.System.ICreateApiKeyResponse.ApiKey.get -> string!
+Polhem.Api.Contracts.System.ICreateApiKeyResponse.SysId.get -> string!
+Polhem.Api.Contracts.System.ICreateSessionRequest
+Polhem.Api.Contracts.System.ICreateSessionRequest.ExpiresIn.get -> int
+Polhem.Api.Contracts.System.ICreateSessionRequest.OneTime.get -> bool
+Polhem.Api.Contracts.System.ICreateSessionRequest.UserID.get -> string!
+Polhem.Api.Contracts.System.ICreateSessionResponse
+Polhem.Api.Contracts.System.ICreateSessionResponse.AccessToken.get -> System.Guid
+Polhem.Api.Contracts.System.ICreateSessionResponse.ExpiredAt.get -> System.DateTime
+Polhem.Api.Contracts.System.IEnterCompanyRequest
+Polhem.Api.Contracts.System.IEnterCompanyRequest.CompanyId.get -> string!
+Polhem.Api.Contracts.System.IEnterCompanyResponse
+Polhem.Api.Contracts.System.IEnterCompanyResponse.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionAction>!
+Polhem.Api.Contracts.System.IEnterCompanyResponse.Company.get -> Polhem.Definition.Identity.CompanyInfo!
+Polhem.Api.Contracts.System.IGetCommonConfigurationRequest
+Polhem.Api.Contracts.System.IGetCommonConfigurationResponse
+Polhem.Api.Contracts.System.IGetCommonConfigurationResponse.CommonConfiguration.get -> string!
+Polhem.Api.Contracts.System.IGetCustomizePluginSettingsRequest
+Polhem.Api.Contracts.System.IGetCustomizePluginSettingsRequest.CustomizeId.get -> string!
+Polhem.Api.Contracts.System.IGetCustomizePluginSettingsResponse
+Polhem.Api.Contracts.System.IGetCustomizePluginSettingsResponse.Xml.get -> string!
+Polhem.Api.Contracts.System.IGetDefineRequest
+Polhem.Api.Contracts.System.IGetDefineRequest.DefineType.get -> Polhem.Definition.DefineType
+Polhem.Api.Contracts.System.IGetDefineRequest.Keys.get -> string![]?
+Polhem.Api.Contracts.System.IGetDefineResponse
+Polhem.Api.Contracts.System.IGetDefineResponse.Xml.get -> string!
+Polhem.Api.Contracts.System.IGetDepartmentTreeRequest
+Polhem.Api.Contracts.System.IGetDepartmentTreeResponse
+Polhem.Api.Contracts.System.IGetDepartmentTreeResponse.Tree.get -> Polhem.Definition.Organization.DepartmentTree?
+Polhem.Api.Contracts.System.IGetFormLayoutRequest
+Polhem.Api.Contracts.System.IGetFormLayoutRequest.LayoutId.get -> string!
+Polhem.Api.Contracts.System.IGetFormLayoutRequest.ProgId.get -> string!
+Polhem.Api.Contracts.System.IGetFormLayoutResponse
+Polhem.Api.Contracts.System.IGetFormLayoutResponse.Xml.get -> string?
+Polhem.Api.Contracts.System.IGetFormSchemaRequest
+Polhem.Api.Contracts.System.IGetFormSchemaRequest.ProgId.get -> string!
+Polhem.Api.Contracts.System.IGetFormSchemaResponse
+Polhem.Api.Contracts.System.IGetFormSchemaResponse.Xml.get -> string?
+Polhem.Api.Contracts.System.IGetLanguageRequest
+Polhem.Api.Contracts.System.IGetLanguageRequest.Lang.get -> string!
+Polhem.Api.Contracts.System.IGetLanguageRequest.Namespace.get -> string!
+Polhem.Api.Contracts.System.IGetLanguageResponse
+Polhem.Api.Contracts.System.IGetLanguageResponse.Xml.get -> string?
+Polhem.Api.Contracts.System.ILeaveCompanyRequest
+Polhem.Api.Contracts.System.ILeaveCompanyResponse
+Polhem.Api.Contracts.System.IListApiKeysRequest
+Polhem.Api.Contracts.System.IListApiKeysResponse
+Polhem.Api.Contracts.System.IListApiKeysResponse.ApiKeys.get -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Security.ApiKeySummary!>!
+Polhem.Api.Contracts.System.ILoginRequest
+Polhem.Api.Contracts.System.ILoginRequest.ClientPublicKey.get -> string!
+Polhem.Api.Contracts.System.ILoginRequest.Password.get -> string!
+Polhem.Api.Contracts.System.ILoginRequest.UserId.get -> string!
+Polhem.Api.Contracts.System.ILoginResponse
+Polhem.Api.Contracts.System.ILoginResponse.AccessToken.get -> System.Guid
+Polhem.Api.Contracts.System.ILoginResponse.ApiEncryptionKey.get -> string!
+Polhem.Api.Contracts.System.ILoginResponse.ExpiredAt.get -> System.DateTime
+Polhem.Api.Contracts.System.ILoginResponse.TimeZone.get -> string!
+Polhem.Api.Contracts.System.ILoginResponse.UserId.get -> string!
+Polhem.Api.Contracts.System.ILoginResponse.UserName.get -> string!
+Polhem.Api.Contracts.System.ILogoutRequest
+Polhem.Api.Contracts.System.ILogoutResponse
+Polhem.Api.Contracts.System.IPingRequest
+Polhem.Api.Contracts.System.IPingRequest.ClientName.get -> string?
+Polhem.Api.Contracts.System.IPingRequest.TraceId.get -> string?
+Polhem.Api.Contracts.System.IPingResponse
+Polhem.Api.Contracts.System.IPingResponse.ApiKeyStatus.get -> Polhem.Definition.Security.ApiKeyStatus
+Polhem.Api.Contracts.System.IPingResponse.ServerTime.get -> System.DateTime
+Polhem.Api.Contracts.System.IPingResponse.Status.get -> string!
+Polhem.Api.Contracts.System.IPingResponse.TraceId.get -> string?
+Polhem.Api.Contracts.System.IPingResponse.Version.get -> string?
+Polhem.Api.Contracts.System.ISaveCustomizePluginSettingsRequest
+Polhem.Api.Contracts.System.ISaveCustomizePluginSettingsRequest.CustomizeId.get -> string!
+Polhem.Api.Contracts.System.ISaveCustomizePluginSettingsRequest.Xml.get -> string!
+Polhem.Api.Contracts.System.ISaveCustomizePluginSettingsResponse
+Polhem.Api.Contracts.System.ISaveCustomizePluginSettingsResponse.PluginCount.get -> int
+Polhem.Api.Contracts.System.ISaveDefineRequest
+Polhem.Api.Contracts.System.ISaveDefineRequest.DefineType.get -> Polhem.Definition.DefineType
+Polhem.Api.Contracts.System.ISaveDefineRequest.Keys.get -> string![]?
+Polhem.Api.Contracts.System.ISaveDefineRequest.Xml.get -> string!
+Polhem.Api.Contracts.System.ISaveDefineResponse
+Polhem.Api.Contracts.System.ISetApiKeyEnabledRequest
+Polhem.Api.Contracts.System.ISetApiKeyEnabledRequest.Enabled.get -> bool
+Polhem.Api.Contracts.System.ISetApiKeyEnabledRequest.SysId.get -> string!
+Polhem.Api.Contracts.System.ISetApiKeyEnabledResponse
+Polhem.Api.Contracts.System.ISetApiKeyEnabledResponse.Enabled.get -> bool
+Polhem.Api.Contracts.System.ISetApiKeyEnabledResponse.SysId.get -> string!
+Polhem.Api.Contracts.System.ISetApiKeyExpiryRequest
+Polhem.Api.Contracts.System.ISetApiKeyExpiryRequest.ExpiredAt.get -> System.DateTime?
+Polhem.Api.Contracts.System.ISetApiKeyExpiryRequest.SysId.get -> string!
+Polhem.Api.Contracts.System.ISetApiKeyExpiryResponse
+Polhem.Api.Contracts.System.ISetApiKeyExpiryResponse.ExpiredAt.get -> System.DateTime?
+Polhem.Api.Contracts.System.ISetApiKeyExpiryResponse.SysId.get -> string!
+Polhem.Api.Contracts.System.ISetDeploymentAdminRequest
+Polhem.Api.Contracts.System.ISetDeploymentAdminRequest.IsDeploymentAdmin.get -> bool
+Polhem.Api.Contracts.System.ISetDeploymentAdminRequest.UserId.get -> string!
+Polhem.Api.Contracts.System.ISetDeploymentAdminResponse
+Polhem.Api.Contracts.System.ISetDeploymentAdminResponse.IsDeploymentAdmin.get -> bool
+Polhem.Api.Contracts.System.ISetDeploymentAdminResponse.UserId.get -> string!

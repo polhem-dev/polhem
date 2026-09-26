@@ -1,0 +1,687 @@
+#nullable enable
+Polhem.Api.Core.ApiServiceOptions
+Polhem.Api.Core.Authorization.ApiAuthorizationContext
+Polhem.Api.Core.Authorization.ApiAuthorizationContext.ApiAuthorizationContext() -> void
+Polhem.Api.Core.Authorization.ApiAuthorizationContext.ApiKey.get -> string!
+Polhem.Api.Core.Authorization.ApiAuthorizationContext.ApiKey.set -> void
+Polhem.Api.Core.Authorization.ApiAuthorizationContext.ApiKeyValidation.get -> Polhem.Definition.Security.ApiKeyValidationResult!
+Polhem.Api.Core.Authorization.ApiAuthorizationContext.ApiKeyValidation.set -> void
+Polhem.Api.Core.Authorization.ApiAuthorizationContext.Authorization.get -> string!
+Polhem.Api.Core.Authorization.ApiAuthorizationContext.Authorization.set -> void
+Polhem.Api.Core.Authorization.ApiAuthorizationContext.Method.get -> string!
+Polhem.Api.Core.Authorization.ApiAuthorizationContext.Method.set -> void
+Polhem.Api.Core.Authorization.ApiAuthorizationResult
+Polhem.Api.Core.Authorization.ApiAuthorizationResult.AccessToken.get -> System.Guid
+Polhem.Api.Core.Authorization.ApiAuthorizationResult.AccessToken.set -> void
+Polhem.Api.Core.Authorization.ApiAuthorizationResult.ApiAuthorizationResult() -> void
+Polhem.Api.Core.Authorization.ApiAuthorizationResult.Code.get -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.Authorization.ApiAuthorizationResult.Code.set -> void
+Polhem.Api.Core.Authorization.ApiAuthorizationResult.ErrorMessage.get -> string!
+Polhem.Api.Core.Authorization.ApiAuthorizationResult.ErrorMessage.set -> void
+Polhem.Api.Core.Authorization.ApiAuthorizationResult.IsValid.get -> bool
+Polhem.Api.Core.Authorization.ApiAuthorizationResult.IsValid.set -> void
+Polhem.Api.Core.Authorization.ApiAuthorizationValidator
+Polhem.Api.Core.Authorization.ApiAuthorizationValidator.ApiAuthorizationValidator() -> void
+Polhem.Api.Core.Authorization.ApiAuthorizationValidator.Validate(Polhem.Api.Core.Authorization.ApiAuthorizationContext! context) -> Polhem.Api.Core.Authorization.ApiAuthorizationResult!
+Polhem.Api.Core.Authorization.IApiAuthorizationValidator
+Polhem.Api.Core.Authorization.IApiAuthorizationValidator.Validate(Polhem.Api.Core.Authorization.ApiAuthorizationContext! context) -> Polhem.Api.Core.Authorization.ApiAuthorizationResult!
+Polhem.Api.Core.Conversion.ApiInputConverter
+Polhem.Api.Core.Conversion.ApiOutputConverter
+Polhem.Api.Core.JsonRpc.ApiPayload
+Polhem.Api.Core.JsonRpc.ApiPayload.ApiPayload() -> void
+Polhem.Api.Core.JsonRpc.ApiPayload.Codec.get -> string!
+Polhem.Api.Core.JsonRpc.ApiPayload.Codec.set -> void
+Polhem.Api.Core.JsonRpc.ApiPayload.Format.get -> Polhem.Api.Core.Messages.PayloadFormat
+Polhem.Api.Core.JsonRpc.ApiPayload.Frame.get -> Polhem.Api.Core.JsonRpc.ApiPayloadFrame?
+Polhem.Api.Core.JsonRpc.ApiPayload.Frame.set -> void
+Polhem.Api.Core.JsonRpc.ApiPayload.SerializeState.get -> Polhem.Base.Serialization.SerializeState
+Polhem.Api.Core.JsonRpc.ApiPayload.TypeName.get -> string!
+Polhem.Api.Core.JsonRpc.ApiPayload.TypeName.set -> void
+Polhem.Api.Core.JsonRpc.ApiPayload.Value.get -> object?
+Polhem.Api.Core.JsonRpc.ApiPayload.Value.set -> void
+Polhem.Api.Core.JsonRpc.ApiPayloadConverter
+Polhem.Api.Core.JsonRpc.ApiPayloadFrame
+Polhem.Api.Core.JsonRpc.ApiPayloadFrame.ApiPayloadFrame(long timestampMs, long sequence) -> void
+Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Prepend(byte[]! body) -> byte[]!
+Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Sequence.get -> long
+Polhem.Api.Core.JsonRpc.ApiPayloadFrame.TimestampMs.get -> long
+Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Version.get -> byte
+Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverter<T>
+Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverter<T>.ApiPayloadJsonConverter() -> void
+Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverterFactory
+Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverterFactory.ApiPayloadJsonConverterFactory() -> void
+Polhem.Api.Core.JsonRpc.DateTimeWireGuard
+Polhem.Api.Core.JsonRpc.DateTimeZoneConverter
+Polhem.Api.Core.JsonRpc.IReplayWindowStore
+Polhem.Api.Core.JsonRpc.IReplayWindowStore.GetOrAdd(System.Guid accessToken) -> Polhem.Api.Core.JsonRpc.ReplayWindow!
+Polhem.Api.Core.JsonRpc.JsonRpcError
+Polhem.Api.Core.JsonRpc.JsonRpcError.Code.get -> int
+Polhem.Api.Core.JsonRpc.JsonRpcError.Code.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcError.Data.get -> object?
+Polhem.Api.Core.JsonRpc.JsonRpcError.Data.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcError.JsonRpcError() -> void
+Polhem.Api.Core.JsonRpc.JsonRpcError.JsonRpcError(int code, string! message, object? data = null) -> void
+Polhem.Api.Core.JsonRpc.JsonRpcError.Message.get -> string!
+Polhem.Api.Core.JsonRpc.JsonRpcError.Message.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.CompanyAccessDenied = -32003 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.CompanyNotEntered = -32002 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.InternalError = -32000 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.InvalidParams = -32602 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.InvalidRequest = -32600 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.MethodNotFound = -32601 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.ParseError = -32700 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.PermissionDenied = -32004 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.ReplayRejected = -32005 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.Unauthorized = -32001 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcErrorCode.UserMessage = -32099 -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcErrorContract
+Polhem.Api.Core.JsonRpc.JsonRpcException
+Polhem.Api.Core.JsonRpc.JsonRpcException.ErrorCode.get -> Polhem.Api.Core.JsonRpc.JsonRpcErrorCode
+Polhem.Api.Core.JsonRpc.JsonRpcException.HttpStatusCode.get -> int
+Polhem.Api.Core.JsonRpc.JsonRpcException.JsonRpcException(int httpStatusCode, Polhem.Api.Core.JsonRpc.JsonRpcErrorCode errorCode, string! rpcMessage) -> void
+Polhem.Api.Core.JsonRpc.JsonRpcException.RpcMessage.get -> string!
+Polhem.Api.Core.JsonRpc.JsonRpcExecutor
+Polhem.Api.Core.JsonRpc.JsonRpcExecutor.AccessToken.get -> System.Guid
+Polhem.Api.Core.JsonRpc.JsonRpcExecutor.AccessToken.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcExecutor.ApiKeyValidation.get -> Polhem.Definition.Security.ApiKeyValidationResult!
+Polhem.Api.Core.JsonRpc.JsonRpcExecutor.ApiKeyValidation.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcExecutor.Execute(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request) -> Polhem.Api.Core.JsonRpc.JsonRpcResponse!
+Polhem.Api.Core.JsonRpc.JsonRpcExecutor.ExecuteAsync(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.JsonRpc.JsonRpcResponse!>!
+Polhem.Api.Core.JsonRpc.JsonRpcExecutor.IsLocalCall.get -> bool
+Polhem.Api.Core.JsonRpc.JsonRpcExecutor.IsLocalCall.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcExecutor.JsonRpcExecutor(Polhem.Definition.IBusinessObjectFactory! boFactory, Polhem.Definition.Security.IAccessTokenValidator! tokenValidator, Polhem.Definition.Security.IApiEncryptionKeyProvider! keyProvider, Polhem.Definition.Logging.IAnomalyLogWriter? anomalyWriter = null, Polhem.Definition.Settings.AuditLogOptions? auditOptions = null, Polhem.Definition.Identity.ISessionInfoService? sessionService = null) -> void
+Polhem.Api.Core.JsonRpc.JsonRpcParams
+Polhem.Api.Core.JsonRpc.JsonRpcParams.JsonRpcParams() -> void
+Polhem.Api.Core.JsonRpc.JsonRpcRequest
+Polhem.Api.Core.JsonRpc.JsonRpcRequest.Id.get -> string?
+Polhem.Api.Core.JsonRpc.JsonRpcRequest.Id.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcRequest.JsonRpcRequest() -> void
+Polhem.Api.Core.JsonRpc.JsonRpcRequest.Jsonrpc.get -> string!
+Polhem.Api.Core.JsonRpc.JsonRpcRequest.Jsonrpc.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcRequest.Method.get -> string!
+Polhem.Api.Core.JsonRpc.JsonRpcRequest.Method.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcRequest.Params.get -> Polhem.Api.Core.JsonRpc.JsonRpcParams!
+Polhem.Api.Core.JsonRpc.JsonRpcRequest.Params.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcRequest.SerializeState.get -> Polhem.Base.Serialization.SerializeState
+Polhem.Api.Core.JsonRpc.JsonRpcResponse
+Polhem.Api.Core.JsonRpc.JsonRpcResponse.Error.get -> Polhem.Api.Core.JsonRpc.JsonRpcError?
+Polhem.Api.Core.JsonRpc.JsonRpcResponse.Error.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcResponse.Id.get -> string?
+Polhem.Api.Core.JsonRpc.JsonRpcResponse.Id.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcResponse.JsonRpcResponse() -> void
+Polhem.Api.Core.JsonRpc.JsonRpcResponse.JsonRpcResponse(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request) -> void
+Polhem.Api.Core.JsonRpc.JsonRpcResponse.Jsonrpc.get -> string!
+Polhem.Api.Core.JsonRpc.JsonRpcResponse.Jsonrpc.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcResponse.Method.get -> string?
+Polhem.Api.Core.JsonRpc.JsonRpcResponse.Method.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcResponse.Result.get -> Polhem.Api.Core.JsonRpc.JsonRpcResult?
+Polhem.Api.Core.JsonRpc.JsonRpcResponse.Result.set -> void
+Polhem.Api.Core.JsonRpc.JsonRpcResponse.SerializeState.get -> Polhem.Base.Serialization.SerializeState
+Polhem.Api.Core.JsonRpc.JsonRpcResult
+Polhem.Api.Core.JsonRpc.JsonRpcResult.JsonRpcResult() -> void
+Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore
+Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.Count.get -> int
+Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.GetOrAdd(System.Guid accessToken) -> Polhem.Api.Core.JsonRpc.ReplayWindow!
+Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.MemoryReplayWindowStore() -> void
+Polhem.Api.Core.JsonRpc.PayloadSwap
+Polhem.Api.Core.JsonRpc.PayloadSwap.Dispose() -> void
+Polhem.Api.Core.JsonRpc.PayloadSwap.Equals(Polhem.Api.Core.JsonRpc.PayloadSwap other) -> bool
+Polhem.Api.Core.JsonRpc.PayloadSwap.PayloadSwap() -> void
+Polhem.Api.Core.JsonRpc.PayloadSwap.PayloadSwap(System.Action! restore) -> void
+Polhem.Api.Core.JsonRpc.PayloadZoneConverter
+Polhem.Api.Core.JsonRpc.ReplayRejectedException
+Polhem.Api.Core.JsonRpc.ReplayRejectedException.ReplayRejectedException(string! message) -> void
+Polhem.Api.Core.JsonRpc.ReplayRejectedException.ReplayRejectedException(string! message, System.Exception! innerException) -> void
+Polhem.Api.Core.JsonRpc.ReplayWindow
+Polhem.Api.Core.JsonRpc.ReplayWindow.ReplayWindow() -> void
+Polhem.Api.Core.JsonRpc.ReplayWindow.TryAccept(long sequence) -> bool
+Polhem.Api.Core.Messages.ApiHeaders
+Polhem.Api.Core.Messages.ApiMessageBase
+Polhem.Api.Core.Messages.ApiMessageBase.ApiMessageBase() -> void
+Polhem.Api.Core.Messages.ApiMessageBase.Parameters.get -> Polhem.Definition.Collections.ParameterCollection?
+Polhem.Api.Core.Messages.ApiMessageBase.Parameters.set -> void
+Polhem.Api.Core.Messages.ApiMessageBase.SerializeState.get -> Polhem.Base.Serialization.SerializeState
+Polhem.Api.Core.Messages.ApiRequest
+Polhem.Api.Core.Messages.ApiRequest.ApiRequest() -> void
+Polhem.Api.Core.Messages.ApiResponse
+Polhem.Api.Core.Messages.ApiResponse.ApiResponse() -> void
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest.FromUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest.GetAccessLogRequest() -> void
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest.Paging.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest.ProgId.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest.ProgId.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest.RowKey.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest.RowKey.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest.ToUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest.UserId.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest.UserId.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest.FromUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest.GetApiAnomalyLogRequest() -> void
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest.Kind.get -> Polhem.Definition.Logging.AnomalyKind?
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest.Kind.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest.Method.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest.Method.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest.Paging.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest.ToUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest.UserId.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest.UserId.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalySummaryRequest
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalySummaryRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalySummaryRequest.FromUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalySummaryRequest.GetApiAnomalySummaryRequest() -> void
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalySummaryRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetApiAnomalySummaryRequest.ToUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailRequest
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailRequest.GetChangeDetailRequest() -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailRequest.SysRowId.get -> System.Guid
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailRequest.SysRowId.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.ChangeKind.get -> Polhem.Definition.Logging.ChangeKind
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.ChangeKind.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.DataSet.get -> System.Data.DataSet?
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.DataSet.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.Fields.get -> System.Collections.Generic.List<Polhem.Api.Contracts.AuditLog.RecordFieldChange!>!
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.Fields.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.GetChangeDetailResponse() -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.IsSensitive.get -> bool
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.IsSensitive.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.LogTime.get -> System.DateTime
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.LogTime.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.ProgId.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.ProgId.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.RowKey.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.RowKey.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.Source.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.Source.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.SysRowId.get -> System.Guid
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.SysRowId.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.UserId.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.UserId.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.UserName.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse.UserName.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.ChangeKind.get -> Polhem.Definition.Logging.ChangeKind?
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.ChangeKind.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.FromUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.GetChangeLogRequest() -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.Paging.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.ProgId.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.ProgId.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.RowKey.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.RowKey.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.ToUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.UserId.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest.UserId.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest.DatabaseId.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest.DatabaseId.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest.FromUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest.GetDbAnomalyLogRequest() -> void
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest.Kind.get -> Polhem.Definition.Logging.AnomalyKind?
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest.Kind.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest.Paging.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest.ToUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalySummaryRequest
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalySummaryRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalySummaryRequest.FromUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalySummaryRequest.GetDbAnomalySummaryRequest() -> void
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalySummaryRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetDbAnomalySummaryRequest.ToUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest
+Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest.Event.get -> Polhem.Definition.Logging.LoginEvent?
+Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest.Event.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest.FromUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest.GetLoginLogRequest() -> void
+Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest.Paging.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest.ToUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest.UserId.get -> string?
+Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest.UserId.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest
+Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest.FromUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest.FromUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest.GetTopApiMethodsRequest() -> void
+Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest.ToUtc.get -> System.DateTime?
+Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest.ToUtc.set -> void
+Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest.TopN.get -> int
+Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest.TopN.set -> void
+Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse
+Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse.LogAggregateResponse() -> void
+Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse.Table.set -> void
+Polhem.Api.Core.Messages.AuditLog.LogListResponse
+Polhem.Api.Core.Messages.AuditLog.LogListResponse.LogListResponse() -> void
+Polhem.Api.Core.Messages.AuditLog.LogListResponse.Paging.get -> Polhem.Definition.Paging.PagingInfo?
+Polhem.Api.Core.Messages.AuditLog.LogListResponse.Paging.set -> void
+Polhem.Api.Core.Messages.AuditLog.LogListResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Core.Messages.AuditLog.LogListResponse.Table.set -> void
+Polhem.Api.Core.Messages.ExecFuncRequest
+Polhem.Api.Core.Messages.ExecFuncRequest.ExecFuncRequest() -> void
+Polhem.Api.Core.Messages.ExecFuncRequest.ExecFuncRequest(string! funcID) -> void
+Polhem.Api.Core.Messages.ExecFuncRequest.FuncId.get -> string!
+Polhem.Api.Core.Messages.ExecFuncRequest.FuncId.set -> void
+Polhem.Api.Core.Messages.ExecFuncResponse
+Polhem.Api.Core.Messages.ExecFuncResponse.ExecFuncResponse() -> void
+Polhem.Api.Core.Messages.Form.DeleteRequest
+Polhem.Api.Core.Messages.Form.DeleteRequest.DeleteRequest() -> void
+Polhem.Api.Core.Messages.Form.DeleteRequest.RowId.get -> System.Guid
+Polhem.Api.Core.Messages.Form.DeleteRequest.RowId.set -> void
+Polhem.Api.Core.Messages.Form.DeleteResponse
+Polhem.Api.Core.Messages.Form.DeleteResponse.DeleteResponse() -> void
+Polhem.Api.Core.Messages.Form.DeleteResponse.RowsAffected.get -> int
+Polhem.Api.Core.Messages.Form.DeleteResponse.RowsAffected.set -> void
+Polhem.Api.Core.Messages.Form.GetDataRequest
+Polhem.Api.Core.Messages.Form.GetDataRequest.GetDataRequest() -> void
+Polhem.Api.Core.Messages.Form.GetDataRequest.RowId.get -> System.Guid
+Polhem.Api.Core.Messages.Form.GetDataRequest.RowId.set -> void
+Polhem.Api.Core.Messages.Form.GetDataResponse
+Polhem.Api.Core.Messages.Form.GetDataResponse.DataSet.get -> System.Data.DataSet?
+Polhem.Api.Core.Messages.Form.GetDataResponse.DataSet.set -> void
+Polhem.Api.Core.Messages.Form.GetDataResponse.GetDataResponse() -> void
+Polhem.Api.Core.Messages.Form.GetListRequest
+Polhem.Api.Core.Messages.Form.GetListRequest.Filter.get -> Polhem.Definition.Filters.FilterNode?
+Polhem.Api.Core.Messages.Form.GetListRequest.Filter.set -> void
+Polhem.Api.Core.Messages.Form.GetListRequest.GetListRequest() -> void
+Polhem.Api.Core.Messages.Form.GetListRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Core.Messages.Form.GetListRequest.Paging.set -> void
+Polhem.Api.Core.Messages.Form.GetListRequest.SelectFields.get -> string!
+Polhem.Api.Core.Messages.Form.GetListRequest.SelectFields.set -> void
+Polhem.Api.Core.Messages.Form.GetListRequest.SortFields.get -> Polhem.Definition.Sorting.SortFieldCollection?
+Polhem.Api.Core.Messages.Form.GetListRequest.SortFields.set -> void
+Polhem.Api.Core.Messages.Form.GetListResponse
+Polhem.Api.Core.Messages.Form.GetListResponse.GetListResponse() -> void
+Polhem.Api.Core.Messages.Form.GetListResponse.Paging.get -> Polhem.Definition.Paging.PagingInfo?
+Polhem.Api.Core.Messages.Form.GetListResponse.Paging.set -> void
+Polhem.Api.Core.Messages.Form.GetListResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Core.Messages.Form.GetListResponse.Table.set -> void
+Polhem.Api.Core.Messages.Form.GetLookupRequest
+Polhem.Api.Core.Messages.Form.GetLookupRequest.GetLookupRequest() -> void
+Polhem.Api.Core.Messages.Form.GetLookupRequest.Paging.get -> Polhem.Definition.Paging.PagingOptions?
+Polhem.Api.Core.Messages.Form.GetLookupRequest.Paging.set -> void
+Polhem.Api.Core.Messages.Form.GetLookupRequest.SearchText.get -> string!
+Polhem.Api.Core.Messages.Form.GetLookupRequest.SearchText.set -> void
+Polhem.Api.Core.Messages.Form.GetLookupResponse
+Polhem.Api.Core.Messages.Form.GetLookupResponse.GetLookupResponse() -> void
+Polhem.Api.Core.Messages.Form.GetLookupResponse.Paging.get -> Polhem.Definition.Paging.PagingInfo?
+Polhem.Api.Core.Messages.Form.GetLookupResponse.Paging.set -> void
+Polhem.Api.Core.Messages.Form.GetLookupResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Core.Messages.Form.GetLookupResponse.Table.set -> void
+Polhem.Api.Core.Messages.Form.GetNewDataRequest
+Polhem.Api.Core.Messages.Form.GetNewDataRequest.GetNewDataRequest() -> void
+Polhem.Api.Core.Messages.Form.GetNewDataResponse
+Polhem.Api.Core.Messages.Form.GetNewDataResponse.DataSet.get -> System.Data.DataSet?
+Polhem.Api.Core.Messages.Form.GetNewDataResponse.DataSet.set -> void
+Polhem.Api.Core.Messages.Form.GetNewDataResponse.GetNewDataResponse() -> void
+Polhem.Api.Core.Messages.Form.SaveRequest
+Polhem.Api.Core.Messages.Form.SaveRequest.DataSet.get -> System.Data.DataSet?
+Polhem.Api.Core.Messages.Form.SaveRequest.DataSet.set -> void
+Polhem.Api.Core.Messages.Form.SaveRequest.SaveRequest() -> void
+Polhem.Api.Core.Messages.Form.SaveResponse
+Polhem.Api.Core.Messages.Form.SaveResponse.AffectedRows.get -> System.Collections.Generic.Dictionary<string!, int>!
+Polhem.Api.Core.Messages.Form.SaveResponse.AffectedRows.set -> void
+Polhem.Api.Core.Messages.Form.SaveResponse.DataSet.get -> System.Data.DataSet?
+Polhem.Api.Core.Messages.Form.SaveResponse.DataSet.set -> void
+Polhem.Api.Core.Messages.Form.SaveResponse.SaveResponse() -> void
+Polhem.Api.Core.Messages.PayloadFormat
+Polhem.Api.Core.Messages.PayloadFormat.Encoded = 1 -> Polhem.Api.Core.Messages.PayloadFormat
+Polhem.Api.Core.Messages.PayloadFormat.Encrypted = 2 -> Polhem.Api.Core.Messages.PayloadFormat
+Polhem.Api.Core.Messages.PayloadFormat.Plain = 0 -> Polhem.Api.Core.Messages.PayloadFormat
+Polhem.Api.Core.Messages.System.CreateApiKeyRequest
+Polhem.Api.Core.Messages.System.CreateApiKeyRequest.Contact.get -> string?
+Polhem.Api.Core.Messages.System.CreateApiKeyRequest.Contact.set -> void
+Polhem.Api.Core.Messages.System.CreateApiKeyRequest.CreateApiKeyRequest() -> void
+Polhem.Api.Core.Messages.System.CreateApiKeyRequest.ExpiredAt.get -> System.DateTime?
+Polhem.Api.Core.Messages.System.CreateApiKeyRequest.ExpiredAt.set -> void
+Polhem.Api.Core.Messages.System.CreateApiKeyRequest.KeyType.get -> Polhem.Definition.Security.ApiKeyType
+Polhem.Api.Core.Messages.System.CreateApiKeyRequest.KeyType.set -> void
+Polhem.Api.Core.Messages.System.CreateApiKeyRequest.SysId.get -> string!
+Polhem.Api.Core.Messages.System.CreateApiKeyRequest.SysId.set -> void
+Polhem.Api.Core.Messages.System.CreateApiKeyRequest.SysName.get -> string!
+Polhem.Api.Core.Messages.System.CreateApiKeyRequest.SysName.set -> void
+Polhem.Api.Core.Messages.System.CreateApiKeyResponse
+Polhem.Api.Core.Messages.System.CreateApiKeyResponse.ApiKey.get -> string!
+Polhem.Api.Core.Messages.System.CreateApiKeyResponse.ApiKey.set -> void
+Polhem.Api.Core.Messages.System.CreateApiKeyResponse.CreateApiKeyResponse() -> void
+Polhem.Api.Core.Messages.System.CreateApiKeyResponse.SysId.get -> string!
+Polhem.Api.Core.Messages.System.CreateApiKeyResponse.SysId.set -> void
+Polhem.Api.Core.Messages.System.CreateSessionRequest
+Polhem.Api.Core.Messages.System.CreateSessionRequest.CreateSessionRequest() -> void
+Polhem.Api.Core.Messages.System.CreateSessionRequest.ExpiresIn.get -> int
+Polhem.Api.Core.Messages.System.CreateSessionRequest.ExpiresIn.set -> void
+Polhem.Api.Core.Messages.System.CreateSessionRequest.OneTime.get -> bool
+Polhem.Api.Core.Messages.System.CreateSessionRequest.OneTime.set -> void
+Polhem.Api.Core.Messages.System.CreateSessionRequest.UserID.get -> string!
+Polhem.Api.Core.Messages.System.CreateSessionRequest.UserID.set -> void
+Polhem.Api.Core.Messages.System.CreateSessionResponse
+Polhem.Api.Core.Messages.System.CreateSessionResponse.AccessToken.get -> System.Guid
+Polhem.Api.Core.Messages.System.CreateSessionResponse.AccessToken.set -> void
+Polhem.Api.Core.Messages.System.CreateSessionResponse.CreateSessionResponse() -> void
+Polhem.Api.Core.Messages.System.CreateSessionResponse.ExpiredAt.get -> System.DateTime
+Polhem.Api.Core.Messages.System.CreateSessionResponse.ExpiredAt.set -> void
+Polhem.Api.Core.Messages.System.EnterCompanyRequest
+Polhem.Api.Core.Messages.System.EnterCompanyRequest.CompanyId.get -> string!
+Polhem.Api.Core.Messages.System.EnterCompanyRequest.CompanyId.set -> void
+Polhem.Api.Core.Messages.System.EnterCompanyRequest.EnterCompanyRequest() -> void
+Polhem.Api.Core.Messages.System.EnterCompanyResponse
+Polhem.Api.Core.Messages.System.EnterCompanyResponse.Capabilities.get -> System.Collections.Generic.Dictionary<string!, Polhem.Definition.Settings.PermissionAction>!
+Polhem.Api.Core.Messages.System.EnterCompanyResponse.Capabilities.set -> void
+Polhem.Api.Core.Messages.System.EnterCompanyResponse.Company.get -> Polhem.Definition.Identity.CompanyInfo!
+Polhem.Api.Core.Messages.System.EnterCompanyResponse.Company.set -> void
+Polhem.Api.Core.Messages.System.EnterCompanyResponse.EnterCompanyResponse() -> void
+Polhem.Api.Core.Messages.System.GetCommonConfigurationRequest
+Polhem.Api.Core.Messages.System.GetCommonConfigurationRequest.GetCommonConfigurationRequest() -> void
+Polhem.Api.Core.Messages.System.GetCommonConfigurationResponse
+Polhem.Api.Core.Messages.System.GetCommonConfigurationResponse.CommonConfiguration.get -> string!
+Polhem.Api.Core.Messages.System.GetCommonConfigurationResponse.CommonConfiguration.set -> void
+Polhem.Api.Core.Messages.System.GetCommonConfigurationResponse.GetCommonConfigurationResponse() -> void
+Polhem.Api.Core.Messages.System.GetCustomizePluginSettingsRequest
+Polhem.Api.Core.Messages.System.GetCustomizePluginSettingsRequest.CustomizeId.get -> string!
+Polhem.Api.Core.Messages.System.GetCustomizePluginSettingsRequest.CustomizeId.set -> void
+Polhem.Api.Core.Messages.System.GetCustomizePluginSettingsRequest.GetCustomizePluginSettingsRequest() -> void
+Polhem.Api.Core.Messages.System.GetCustomizePluginSettingsResponse
+Polhem.Api.Core.Messages.System.GetCustomizePluginSettingsResponse.GetCustomizePluginSettingsResponse() -> void
+Polhem.Api.Core.Messages.System.GetCustomizePluginSettingsResponse.Xml.get -> string!
+Polhem.Api.Core.Messages.System.GetCustomizePluginSettingsResponse.Xml.set -> void
+Polhem.Api.Core.Messages.System.GetDefineRequest
+Polhem.Api.Core.Messages.System.GetDefineRequest.DefineType.get -> Polhem.Definition.DefineType
+Polhem.Api.Core.Messages.System.GetDefineRequest.DefineType.set -> void
+Polhem.Api.Core.Messages.System.GetDefineRequest.GetDefineRequest() -> void
+Polhem.Api.Core.Messages.System.GetDefineRequest.Keys.get -> string![]?
+Polhem.Api.Core.Messages.System.GetDefineRequest.Keys.set -> void
+Polhem.Api.Core.Messages.System.GetDefineResponse
+Polhem.Api.Core.Messages.System.GetDefineResponse.GetDefineResponse() -> void
+Polhem.Api.Core.Messages.System.GetDefineResponse.Xml.get -> string!
+Polhem.Api.Core.Messages.System.GetDefineResponse.Xml.set -> void
+Polhem.Api.Core.Messages.System.GetDepartmentTreeRequest
+Polhem.Api.Core.Messages.System.GetDepartmentTreeRequest.GetDepartmentTreeRequest() -> void
+Polhem.Api.Core.Messages.System.GetDepartmentTreeResponse
+Polhem.Api.Core.Messages.System.GetDepartmentTreeResponse.GetDepartmentTreeResponse() -> void
+Polhem.Api.Core.Messages.System.GetDepartmentTreeResponse.Tree.get -> Polhem.Definition.Organization.DepartmentTree?
+Polhem.Api.Core.Messages.System.GetDepartmentTreeResponse.Tree.set -> void
+Polhem.Api.Core.Messages.System.GetFormLayoutRequest
+Polhem.Api.Core.Messages.System.GetFormLayoutRequest.GetFormLayoutRequest() -> void
+Polhem.Api.Core.Messages.System.GetFormLayoutRequest.LayoutId.get -> string!
+Polhem.Api.Core.Messages.System.GetFormLayoutRequest.LayoutId.set -> void
+Polhem.Api.Core.Messages.System.GetFormLayoutRequest.ProgId.get -> string!
+Polhem.Api.Core.Messages.System.GetFormLayoutRequest.ProgId.set -> void
+Polhem.Api.Core.Messages.System.GetFormLayoutResponse
+Polhem.Api.Core.Messages.System.GetFormLayoutResponse.GetFormLayoutResponse() -> void
+Polhem.Api.Core.Messages.System.GetFormLayoutResponse.Xml.get -> string?
+Polhem.Api.Core.Messages.System.GetFormLayoutResponse.Xml.set -> void
+Polhem.Api.Core.Messages.System.GetFormSchemaRequest
+Polhem.Api.Core.Messages.System.GetFormSchemaRequest.GetFormSchemaRequest() -> void
+Polhem.Api.Core.Messages.System.GetFormSchemaRequest.ProgId.get -> string!
+Polhem.Api.Core.Messages.System.GetFormSchemaRequest.ProgId.set -> void
+Polhem.Api.Core.Messages.System.GetFormSchemaResponse
+Polhem.Api.Core.Messages.System.GetFormSchemaResponse.GetFormSchemaResponse() -> void
+Polhem.Api.Core.Messages.System.GetFormSchemaResponse.Xml.get -> string?
+Polhem.Api.Core.Messages.System.GetFormSchemaResponse.Xml.set -> void
+Polhem.Api.Core.Messages.System.GetLanguageRequest
+Polhem.Api.Core.Messages.System.GetLanguageRequest.GetLanguageRequest() -> void
+Polhem.Api.Core.Messages.System.GetLanguageRequest.Lang.get -> string!
+Polhem.Api.Core.Messages.System.GetLanguageRequest.Lang.set -> void
+Polhem.Api.Core.Messages.System.GetLanguageRequest.Namespace.get -> string!
+Polhem.Api.Core.Messages.System.GetLanguageRequest.Namespace.set -> void
+Polhem.Api.Core.Messages.System.GetLanguageResponse
+Polhem.Api.Core.Messages.System.GetLanguageResponse.GetLanguageResponse() -> void
+Polhem.Api.Core.Messages.System.GetLanguageResponse.Xml.get -> string?
+Polhem.Api.Core.Messages.System.GetLanguageResponse.Xml.set -> void
+Polhem.Api.Core.Messages.System.LeaveCompanyRequest
+Polhem.Api.Core.Messages.System.LeaveCompanyRequest.LeaveCompanyRequest() -> void
+Polhem.Api.Core.Messages.System.LeaveCompanyResponse
+Polhem.Api.Core.Messages.System.LeaveCompanyResponse.LeaveCompanyResponse() -> void
+Polhem.Api.Core.Messages.System.ListApiKeysRequest
+Polhem.Api.Core.Messages.System.ListApiKeysRequest.ListApiKeysRequest() -> void
+Polhem.Api.Core.Messages.System.ListApiKeysResponse
+Polhem.Api.Core.Messages.System.ListApiKeysResponse.ApiKeys.get -> System.Collections.Generic.List<Polhem.Definition.Security.ApiKeySummary!>!
+Polhem.Api.Core.Messages.System.ListApiKeysResponse.ApiKeys.set -> void
+Polhem.Api.Core.Messages.System.ListApiKeysResponse.ListApiKeysResponse() -> void
+Polhem.Api.Core.Messages.System.LoginRequest
+Polhem.Api.Core.Messages.System.LoginRequest.ClientPublicKey.get -> string!
+Polhem.Api.Core.Messages.System.LoginRequest.ClientPublicKey.set -> void
+Polhem.Api.Core.Messages.System.LoginRequest.LoginRequest() -> void
+Polhem.Api.Core.Messages.System.LoginRequest.Password.get -> string!
+Polhem.Api.Core.Messages.System.LoginRequest.Password.set -> void
+Polhem.Api.Core.Messages.System.LoginRequest.UserId.get -> string!
+Polhem.Api.Core.Messages.System.LoginRequest.UserId.set -> void
+Polhem.Api.Core.Messages.System.LoginResponse
+Polhem.Api.Core.Messages.System.LoginResponse.AccessToken.get -> System.Guid
+Polhem.Api.Core.Messages.System.LoginResponse.AccessToken.set -> void
+Polhem.Api.Core.Messages.System.LoginResponse.ApiEncryptionKey.get -> string!
+Polhem.Api.Core.Messages.System.LoginResponse.ApiEncryptionKey.set -> void
+Polhem.Api.Core.Messages.System.LoginResponse.ExpiredAt.get -> System.DateTime
+Polhem.Api.Core.Messages.System.LoginResponse.ExpiredAt.set -> void
+Polhem.Api.Core.Messages.System.LoginResponse.LoginResponse() -> void
+Polhem.Api.Core.Messages.System.LoginResponse.TimeZone.get -> string!
+Polhem.Api.Core.Messages.System.LoginResponse.TimeZone.set -> void
+Polhem.Api.Core.Messages.System.LoginResponse.UserId.get -> string!
+Polhem.Api.Core.Messages.System.LoginResponse.UserId.set -> void
+Polhem.Api.Core.Messages.System.LoginResponse.UserName.get -> string!
+Polhem.Api.Core.Messages.System.LoginResponse.UserName.set -> void
+Polhem.Api.Core.Messages.System.LogoutRequest
+Polhem.Api.Core.Messages.System.LogoutRequest.LogoutRequest() -> void
+Polhem.Api.Core.Messages.System.LogoutResponse
+Polhem.Api.Core.Messages.System.LogoutResponse.LogoutResponse() -> void
+Polhem.Api.Core.Messages.System.PingRequest
+Polhem.Api.Core.Messages.System.PingRequest.ClientName.get -> string?
+Polhem.Api.Core.Messages.System.PingRequest.ClientName.set -> void
+Polhem.Api.Core.Messages.System.PingRequest.PingRequest() -> void
+Polhem.Api.Core.Messages.System.PingRequest.TraceId.get -> string?
+Polhem.Api.Core.Messages.System.PingRequest.TraceId.set -> void
+Polhem.Api.Core.Messages.System.PingResponse
+Polhem.Api.Core.Messages.System.PingResponse.ApiKeyStatus.get -> Polhem.Definition.Security.ApiKeyStatus
+Polhem.Api.Core.Messages.System.PingResponse.ApiKeyStatus.set -> void
+Polhem.Api.Core.Messages.System.PingResponse.PingResponse() -> void
+Polhem.Api.Core.Messages.System.PingResponse.ServerTime.get -> System.DateTime
+Polhem.Api.Core.Messages.System.PingResponse.ServerTime.set -> void
+Polhem.Api.Core.Messages.System.PingResponse.Status.get -> string!
+Polhem.Api.Core.Messages.System.PingResponse.Status.set -> void
+Polhem.Api.Core.Messages.System.PingResponse.TraceId.get -> string?
+Polhem.Api.Core.Messages.System.PingResponse.TraceId.set -> void
+Polhem.Api.Core.Messages.System.PingResponse.Version.get -> string?
+Polhem.Api.Core.Messages.System.PingResponse.Version.set -> void
+Polhem.Api.Core.Messages.System.SaveCustomizePluginSettingsRequest
+Polhem.Api.Core.Messages.System.SaveCustomizePluginSettingsRequest.CustomizeId.get -> string!
+Polhem.Api.Core.Messages.System.SaveCustomizePluginSettingsRequest.CustomizeId.set -> void
+Polhem.Api.Core.Messages.System.SaveCustomizePluginSettingsRequest.SaveCustomizePluginSettingsRequest() -> void
+Polhem.Api.Core.Messages.System.SaveCustomizePluginSettingsRequest.Xml.get -> string!
+Polhem.Api.Core.Messages.System.SaveCustomizePluginSettingsRequest.Xml.set -> void
+Polhem.Api.Core.Messages.System.SaveCustomizePluginSettingsResponse
+Polhem.Api.Core.Messages.System.SaveCustomizePluginSettingsResponse.PluginCount.get -> int
+Polhem.Api.Core.Messages.System.SaveCustomizePluginSettingsResponse.PluginCount.set -> void
+Polhem.Api.Core.Messages.System.SaveCustomizePluginSettingsResponse.SaveCustomizePluginSettingsResponse() -> void
+Polhem.Api.Core.Messages.System.SaveDefineRequest
+Polhem.Api.Core.Messages.System.SaveDefineRequest.DefineType.get -> Polhem.Definition.DefineType
+Polhem.Api.Core.Messages.System.SaveDefineRequest.DefineType.set -> void
+Polhem.Api.Core.Messages.System.SaveDefineRequest.Keys.get -> string![]?
+Polhem.Api.Core.Messages.System.SaveDefineRequest.Keys.set -> void
+Polhem.Api.Core.Messages.System.SaveDefineRequest.SaveDefineRequest() -> void
+Polhem.Api.Core.Messages.System.SaveDefineRequest.Xml.get -> string!
+Polhem.Api.Core.Messages.System.SaveDefineRequest.Xml.set -> void
+Polhem.Api.Core.Messages.System.SaveDefineResponse
+Polhem.Api.Core.Messages.System.SaveDefineResponse.SaveDefineResponse() -> void
+Polhem.Api.Core.Messages.System.SetApiKeyEnabledRequest
+Polhem.Api.Core.Messages.System.SetApiKeyEnabledRequest.Enabled.get -> bool
+Polhem.Api.Core.Messages.System.SetApiKeyEnabledRequest.Enabled.set -> void
+Polhem.Api.Core.Messages.System.SetApiKeyEnabledRequest.SetApiKeyEnabledRequest() -> void
+Polhem.Api.Core.Messages.System.SetApiKeyEnabledRequest.SysId.get -> string!
+Polhem.Api.Core.Messages.System.SetApiKeyEnabledRequest.SysId.set -> void
+Polhem.Api.Core.Messages.System.SetApiKeyEnabledResponse
+Polhem.Api.Core.Messages.System.SetApiKeyEnabledResponse.Enabled.get -> bool
+Polhem.Api.Core.Messages.System.SetApiKeyEnabledResponse.Enabled.set -> void
+Polhem.Api.Core.Messages.System.SetApiKeyEnabledResponse.SetApiKeyEnabledResponse() -> void
+Polhem.Api.Core.Messages.System.SetApiKeyEnabledResponse.SysId.get -> string!
+Polhem.Api.Core.Messages.System.SetApiKeyEnabledResponse.SysId.set -> void
+Polhem.Api.Core.Messages.System.SetApiKeyExpiryRequest
+Polhem.Api.Core.Messages.System.SetApiKeyExpiryRequest.ExpiredAt.get -> System.DateTime?
+Polhem.Api.Core.Messages.System.SetApiKeyExpiryRequest.ExpiredAt.set -> void
+Polhem.Api.Core.Messages.System.SetApiKeyExpiryRequest.SetApiKeyExpiryRequest() -> void
+Polhem.Api.Core.Messages.System.SetApiKeyExpiryRequest.SysId.get -> string!
+Polhem.Api.Core.Messages.System.SetApiKeyExpiryRequest.SysId.set -> void
+Polhem.Api.Core.Messages.System.SetApiKeyExpiryResponse
+Polhem.Api.Core.Messages.System.SetApiKeyExpiryResponse.ExpiredAt.get -> System.DateTime?
+Polhem.Api.Core.Messages.System.SetApiKeyExpiryResponse.ExpiredAt.set -> void
+Polhem.Api.Core.Messages.System.SetApiKeyExpiryResponse.SetApiKeyExpiryResponse() -> void
+Polhem.Api.Core.Messages.System.SetApiKeyExpiryResponse.SysId.get -> string!
+Polhem.Api.Core.Messages.System.SetApiKeyExpiryResponse.SysId.set -> void
+Polhem.Api.Core.Messages.System.SetDeploymentAdminRequest
+Polhem.Api.Core.Messages.System.SetDeploymentAdminRequest.IsDeploymentAdmin.get -> bool
+Polhem.Api.Core.Messages.System.SetDeploymentAdminRequest.IsDeploymentAdmin.set -> void
+Polhem.Api.Core.Messages.System.SetDeploymentAdminRequest.SetDeploymentAdminRequest() -> void
+Polhem.Api.Core.Messages.System.SetDeploymentAdminRequest.UserId.get -> string!
+Polhem.Api.Core.Messages.System.SetDeploymentAdminRequest.UserId.set -> void
+Polhem.Api.Core.Messages.System.SetDeploymentAdminResponse
+Polhem.Api.Core.Messages.System.SetDeploymentAdminResponse.IsDeploymentAdmin.get -> bool
+Polhem.Api.Core.Messages.System.SetDeploymentAdminResponse.IsDeploymentAdmin.set -> void
+Polhem.Api.Core.Messages.System.SetDeploymentAdminResponse.SetDeploymentAdminResponse() -> void
+Polhem.Api.Core.Messages.System.SetDeploymentAdminResponse.UserId.get -> string!
+Polhem.Api.Core.Messages.System.SetDeploymentAdminResponse.UserId.set -> void
+Polhem.Api.Core.Transformers.AesPayloadEncryptor
+Polhem.Api.Core.Transformers.AesPayloadEncryptor.AesPayloadEncryptor() -> void
+Polhem.Api.Core.Transformers.AesPayloadEncryptor.Decrypt(byte[]! bytes, byte[]! encryptionKey) -> byte[]!
+Polhem.Api.Core.Transformers.AesPayloadEncryptor.Encrypt(byte[]! bytes, byte[]! encryptionKey) -> byte[]!
+Polhem.Api.Core.Transformers.AesPayloadEncryptor.EncryptionMethod.get -> string!
+Polhem.Api.Core.Transformers.ApiPayloadOptionsFactory
+Polhem.Api.Core.Transformers.ApiPayloadTransformer
+Polhem.Api.Core.Transformers.ApiPayloadTransformer.ApiPayloadTransformer() -> void
+Polhem.Api.Core.Transformers.ApiPayloadTransformer.Decode(object! payload, System.Type! type) -> object?
+Polhem.Api.Core.Transformers.ApiPayloadTransformer.Decode(object! payload, System.Type! type, Polhem.Api.Core.Transformers.IApiPayloadSerializer! serializer) -> object?
+Polhem.Api.Core.Transformers.ApiPayloadTransformer.Decrypt(byte[]! encryptedBytes, byte[]! encryptionKey) -> byte[]!
+Polhem.Api.Core.Transformers.ApiPayloadTransformer.Encode(object! payload, System.Type! type) -> byte[]!
+Polhem.Api.Core.Transformers.ApiPayloadTransformer.Encode(object! payload, System.Type! type, Polhem.Api.Core.Transformers.IApiPayloadSerializer! serializer) -> byte[]!
+Polhem.Api.Core.Transformers.ApiPayloadTransformer.Encrypt(byte[]! rawBytes, byte[]! encryptionKey) -> byte[]!
+Polhem.Api.Core.Transformers.GzipPayloadCompressor
+Polhem.Api.Core.Transformers.GzipPayloadCompressor.Compress(byte[]! bytes) -> byte[]!
+Polhem.Api.Core.Transformers.GzipPayloadCompressor.CompressionMethod.get -> string!
+Polhem.Api.Core.Transformers.GzipPayloadCompressor.Decompress(byte[]! bytes) -> byte[]!
+Polhem.Api.Core.Transformers.GzipPayloadCompressor.GzipPayloadCompressor() -> void
+Polhem.Api.Core.Transformers.IApiPayloadCompressor
+Polhem.Api.Core.Transformers.IApiPayloadCompressor.Compress(byte[]! bytes) -> byte[]!
+Polhem.Api.Core.Transformers.IApiPayloadCompressor.CompressionMethod.get -> string!
+Polhem.Api.Core.Transformers.IApiPayloadCompressor.Decompress(byte[]! bytes) -> byte[]!
+Polhem.Api.Core.Transformers.IApiPayloadEncryptor
+Polhem.Api.Core.Transformers.IApiPayloadEncryptor.Decrypt(byte[]! bytes, byte[]! encryptionKey) -> byte[]!
+Polhem.Api.Core.Transformers.IApiPayloadEncryptor.Encrypt(byte[]! bytes, byte[]! encryptionKey) -> byte[]!
+Polhem.Api.Core.Transformers.IApiPayloadEncryptor.EncryptionMethod.get -> string!
+Polhem.Api.Core.Transformers.IApiPayloadSerializer
+Polhem.Api.Core.Transformers.IApiPayloadSerializer.Deserialize(byte[]! bytes, System.Type! type) -> object?
+Polhem.Api.Core.Transformers.IApiPayloadSerializer.SerializationMethod.get -> string!
+Polhem.Api.Core.Transformers.IApiPayloadSerializer.Serialize(object! value, System.Type! type) -> byte[]!
+Polhem.Api.Core.Transformers.IApiPayloadTransformer
+Polhem.Api.Core.Transformers.IApiPayloadTransformer.Decode(object! payload, System.Type! type) -> object?
+Polhem.Api.Core.Transformers.IApiPayloadTransformer.Decode(object! payload, System.Type! type, Polhem.Api.Core.Transformers.IApiPayloadSerializer! serializer) -> object?
+Polhem.Api.Core.Transformers.IApiPayloadTransformer.Decrypt(byte[]! encryptedBytes, byte[]! encryptionKey) -> byte[]!
+Polhem.Api.Core.Transformers.IApiPayloadTransformer.Encode(object! payload, System.Type! type) -> byte[]!
+Polhem.Api.Core.Transformers.IApiPayloadTransformer.Encode(object! payload, System.Type! type, Polhem.Api.Core.Transformers.IApiPayloadSerializer! serializer) -> byte[]!
+Polhem.Api.Core.Transformers.IApiPayloadTransformer.Encrypt(byte[]! rawBytes, byte[]! encryptionKey) -> byte[]!
+Polhem.Api.Core.Transformers.JsonPayloadSerializer
+Polhem.Api.Core.Transformers.JsonPayloadSerializer.Deserialize(byte[]! bytes, System.Type! type) -> object?
+Polhem.Api.Core.Transformers.JsonPayloadSerializer.JsonPayloadSerializer() -> void
+Polhem.Api.Core.Transformers.JsonPayloadSerializer.SerializationMethod.get -> string!
+Polhem.Api.Core.Transformers.JsonPayloadSerializer.Serialize(object! value, System.Type! type) -> byte[]!
+Polhem.Api.Core.Transformers.MessagePackPayloadSerializer
+Polhem.Api.Core.Transformers.MessagePackPayloadSerializer.Deserialize(byte[]! bytes, System.Type! type) -> object?
+Polhem.Api.Core.Transformers.MessagePackPayloadSerializer.MessagePackPayloadSerializer() -> void
+Polhem.Api.Core.Transformers.MessagePackPayloadSerializer.SerializationMethod.get -> string!
+Polhem.Api.Core.Transformers.MessagePackPayloadSerializer.Serialize(object! value, System.Type! type) -> byte[]!
+Polhem.Api.Core.Transformers.NoCompressionCompressor
+Polhem.Api.Core.Transformers.NoCompressionCompressor.Compress(byte[]! bytes) -> byte[]!
+Polhem.Api.Core.Transformers.NoCompressionCompressor.CompressionMethod.get -> string!
+Polhem.Api.Core.Transformers.NoCompressionCompressor.Decompress(byte[]! bytes) -> byte[]!
+Polhem.Api.Core.Transformers.NoCompressionCompressor.NoCompressionCompressor() -> void
+Polhem.Api.Core.Transformers.NoEncryptionEncryptor
+Polhem.Api.Core.Transformers.NoEncryptionEncryptor.Decrypt(byte[]! bytes, byte[]! encryptionKey) -> byte[]!
+Polhem.Api.Core.Transformers.NoEncryptionEncryptor.Encrypt(byte[]! bytes, byte[]! encryptionKey) -> byte[]!
+Polhem.Api.Core.Transformers.NoEncryptionEncryptor.EncryptionMethod.get -> string!
+Polhem.Api.Core.Transformers.NoEncryptionEncryptor.NoEncryptionEncryptor() -> void
+Polhem.Api.Core.Transformers.PayloadCodecNames
+Polhem.Api.Core.Validator.ApiAccessValidator
+Polhem.Api.Core.Validator.ApiCallContext
+Polhem.Api.Core.Validator.ApiCallContext.AccessToken.get -> System.Guid
+Polhem.Api.Core.Validator.ApiCallContext.AccessToken.set -> void
+Polhem.Api.Core.Validator.ApiCallContext.ApiCallContext() -> void
+Polhem.Api.Core.Validator.ApiCallContext.ApiCallContext(System.Guid accessToken, bool isLocalCall, Polhem.Api.Core.Messages.PayloadFormat format) -> void
+Polhem.Api.Core.Validator.ApiCallContext.Format.get -> Polhem.Api.Core.Messages.PayloadFormat
+Polhem.Api.Core.Validator.ApiCallContext.Format.set -> void
+Polhem.Api.Core.Validator.ApiCallContext.IsLocalCall.get -> bool
+Polhem.Api.Core.Validator.ApiCallContext.IsLocalCall.set -> void
+const Polhem.Api.Core.JsonRpc.ApiPayloadFrame.CurrentVersion = 1 -> byte
+const Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Version1Size = 17 -> int
+const Polhem.Api.Core.JsonRpc.ReplayWindow.MaxForwardJump = 1000000 -> long
+const Polhem.Api.Core.JsonRpc.ReplayWindow.WindowSize = 64 -> int
+const Polhem.Api.Core.Messages.ApiHeaders.ApiKey = "X-Api-Key" -> string!
+const Polhem.Api.Core.Messages.ApiHeaders.Authorization = "Authorization" -> string!
+const Polhem.Api.Core.Messages.ApiHeaders.ContentType = "Content-Type" -> string!
+const Polhem.Api.Core.Transformers.PayloadCodecNames.Json = "json" -> string!
+const Polhem.Api.Core.Transformers.PayloadCodecNames.MessagePack = "messagepack" -> string!
+override Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverter<T>.Read(ref System.Text.Json.Utf8JsonReader reader, System.Type! typeToConvert, System.Text.Json.JsonSerializerOptions! options) -> T?
+override Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverter<T>.Write(System.Text.Json.Utf8JsonWriter! writer, T! value, System.Text.Json.JsonSerializerOptions! options) -> void
+override Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverterFactory.CanConvert(System.Type! typeToConvert) -> bool
+override Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverterFactory.CreateConverter(System.Type! typeToConvert, System.Text.Json.JsonSerializerOptions! options) -> System.Text.Json.Serialization.JsonConverter!
+override Polhem.Api.Core.JsonRpc.PayloadSwap.Equals(object? obj) -> bool
+override Polhem.Api.Core.JsonRpc.PayloadSwap.GetHashCode() -> int
+static Polhem.Api.Core.ApiServiceOptions.AcceptedPayloadCodecs.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+static Polhem.Api.Core.ApiServiceOptions.AuthorizationValidator.get -> Polhem.Api.Core.Authorization.IApiAuthorizationValidator!
+static Polhem.Api.Core.ApiServiceOptions.AuthorizationValidator.set -> void
+static Polhem.Api.Core.ApiServiceOptions.CurrentSettingsSummary.get -> string!
+static Polhem.Api.Core.ApiServiceOptions.Initialize(Polhem.Api.Core.Transformers.IApiPayloadSerializer! serializer, Polhem.Api.Core.Transformers.IApiPayloadCompressor! compressor, Polhem.Api.Core.Transformers.IApiPayloadEncryptor! encryptor) -> void
+static Polhem.Api.Core.ApiServiceOptions.Initialize(Polhem.Definition.Settings.ApiPayloadOptions! payloadOptions, bool isDebugMode) -> void
+static Polhem.Api.Core.ApiServiceOptions.PayloadCompressor.get -> Polhem.Api.Core.Transformers.IApiPayloadCompressor!
+static Polhem.Api.Core.ApiServiceOptions.PayloadCompressor.set -> void
+static Polhem.Api.Core.ApiServiceOptions.PayloadEncryptor.get -> Polhem.Api.Core.Transformers.IApiPayloadEncryptor!
+static Polhem.Api.Core.ApiServiceOptions.PayloadEncryptor.set -> void
+static Polhem.Api.Core.ApiServiceOptions.PayloadSerializer.get -> Polhem.Api.Core.Transformers.IApiPayloadSerializer!
+static Polhem.Api.Core.ApiServiceOptions.PayloadSerializer.set -> void
+static Polhem.Api.Core.ApiServiceOptions.PayloadTransformer.get -> Polhem.Api.Core.Transformers.IApiPayloadTransformer!
+static Polhem.Api.Core.ApiServiceOptions.PayloadTransformer.set -> void
+static Polhem.Api.Core.ApiServiceOptions.ReplayWindowStore.get -> Polhem.Api.Core.JsonRpc.IReplayWindowStore!
+static Polhem.Api.Core.ApiServiceOptions.ReplayWindowStore.set -> void
+static Polhem.Api.Core.ApiServiceOptions.RequireWireFrame.get -> bool
+static Polhem.Api.Core.ApiServiceOptions.RequireWireFrame.set -> void
+static Polhem.Api.Core.ApiServiceOptions.ResolvePayloadSerializer(string? codec) -> Polhem.Api.Core.Transformers.IApiPayloadSerializer!
+static Polhem.Api.Core.ApiServiceOptions.WireFrameTimestampTolerance.get -> System.TimeSpan
+static Polhem.Api.Core.ApiServiceOptions.WireFrameTimestampTolerance.set -> void
+static Polhem.Api.Core.Authorization.ApiAuthorizationResult.Fail(Polhem.Api.Core.JsonRpc.JsonRpcErrorCode code, string! errorMessage) -> Polhem.Api.Core.Authorization.ApiAuthorizationResult!
+static Polhem.Api.Core.Authorization.ApiAuthorizationResult.Success(System.Guid accessToken) -> Polhem.Api.Core.Authorization.ApiAuthorizationResult!
+static Polhem.Api.Core.Conversion.ApiInputConverter.Convert(object! source, System.Type! targetType) -> object?
+static Polhem.Api.Core.Conversion.ApiOutputConverter.Convert(object! boResult) -> object?
+static Polhem.Api.Core.Conversion.ApiOutputConverter.ConvertResultValue<T>(object! value) -> T?
+static Polhem.Api.Core.JsonRpc.ApiPayloadConverter.RestoreFrom(Polhem.Api.Core.JsonRpc.ApiPayload! payload, Polhem.Api.Core.Messages.PayloadFormat sourceFormat, byte[]? encryptionKey = null) -> void
+static Polhem.Api.Core.JsonRpc.ApiPayloadConverter.TransformTo(Polhem.Api.Core.JsonRpc.ApiPayload! payload, Polhem.Api.Core.Messages.PayloadFormat targetFormat, byte[]? encryptionKey = null) -> void
+static Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Extract(byte[]! framed, out byte[]! body) -> Polhem.Api.Core.JsonRpc.ApiPayloadFrame!
+static Polhem.Api.Core.JsonRpc.DateTimeWireGuard.Validate(object? value) -> void
+static Polhem.Api.Core.JsonRpc.DateTimeZoneConverter.ConvertFilterValue(object? value, string! timeZoneId, bool toUtc) -> object?
+static Polhem.Api.Core.JsonRpc.DateTimeZoneConverter.UtcToUser(System.Data.DataSet? dataSet, string! timeZoneId) -> System.Data.DataSet?
+static Polhem.Api.Core.JsonRpc.DateTimeZoneConverter.UtcToUser(System.Data.DataTable? table, string! timeZoneId) -> System.Data.DataTable?
+static Polhem.Api.Core.JsonRpc.JsonRpcErrorContract.TryRebuild(int code, string! message, out System.Exception? exception) -> bool
+static Polhem.Api.Core.JsonRpc.PayloadSwap.operator !=(Polhem.Api.Core.JsonRpc.PayloadSwap left, Polhem.Api.Core.JsonRpc.PayloadSwap right) -> bool
+static Polhem.Api.Core.JsonRpc.PayloadSwap.operator ==(Polhem.Api.Core.JsonRpc.PayloadSwap left, Polhem.Api.Core.JsonRpc.PayloadSwap right) -> bool
+static Polhem.Api.Core.JsonRpc.PayloadZoneConverter.IsolateRequest(object? payload, string! timeZoneId) -> Polhem.Api.Core.JsonRpc.PayloadSwap
+static Polhem.Api.Core.JsonRpc.PayloadZoneConverter.ToUserZone(object? payload, string! timeZoneId) -> void
+static Polhem.Api.Core.Transformers.ApiPayloadOptionsFactory.CreateCompressor(string! name) -> Polhem.Api.Core.Transformers.IApiPayloadCompressor!
+static Polhem.Api.Core.Transformers.ApiPayloadOptionsFactory.CreateEncryptor(string! name, bool isDebugMode) -> Polhem.Api.Core.Transformers.IApiPayloadEncryptor!
+static Polhem.Api.Core.Validator.ApiAccessValidator.FindAccessControl(System.Reflection.MethodInfo! method) -> Polhem.Definition.Attributes.ApiAccessControlAttribute?
+static Polhem.Api.Core.Validator.ApiAccessValidator.ValidateAccess(System.Reflection.MethodInfo! method, Polhem.Api.Core.Validator.ApiCallContext! context, Polhem.Definition.Security.IAccessTokenValidator! tokenValidator) -> void
+virtual Polhem.Api.Core.Authorization.ApiAuthorizationValidator.IsApiKeyRequired(string! method) -> bool
+virtual Polhem.Api.Core.Authorization.ApiAuthorizationValidator.IsAuthorizationRequired(string! method) -> bool
+virtual Polhem.Api.Core.JsonRpc.ApiPayload.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
+virtual Polhem.Api.Core.JsonRpc.JsonRpcRequest.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
+virtual Polhem.Api.Core.JsonRpc.JsonRpcResponse.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
+virtual Polhem.Api.Core.Messages.ApiMessageBase.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void

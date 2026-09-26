@@ -1,0 +1,77 @@
+# 安全規範
+
+## 加密實作
+
+### AES-CBC-HMAC（標準加密）
+- AES 金鑰長度：**256-bit**
+- HMAC：**SHA-256**，使用獨立 256-bit 金鑰
+- 每次加密使用**隨機 IV**，不重複使用
+- 驗證 HMAC 時使用 `CompareBytes`（常數時間比較），防止 Timing Attack
+
+```csharp
+// 正確：常數時間比較
+private static bool CompareBytes(byte[] a, byte[] b) { ... }
+
+// 禁止：直接比較可能洩漏時序資訊
+if (hmac == expected) { ... }
+```
+
+### RSA
+- 使用 `RsaCryptor` 類別，不直接操作底層 API
+- 金鑰由 `AesCbcHmacKeyGenerator` 產生，不手動建構
+
+## 安全型別分層（原語 vs 政策）
+
+安全相關型別依「密碼學原語 vs 安全政策」分居兩層，找型別時先判斷屬於哪一類：
+
+| 層 | 位置 | 內容 | 範例 |
+|----|------|------|------|
+| **原語** | `Polhem.Base/Security/` | 無狀態的密碼學運算 | `AesCbcHmacCryptor`、`RsaCryptor`、`PasswordHasher`、`FileHashValidator`、`AesCbcHmacKeyGenerator` |
+| **政策 / 金鑰協定** | `Polhem.Definition/Security/` | 金鑰來源、存取政策、驗證協定 | `MasterKeyProvider`、`EncryptionKeyProtector`、`IAccessTokenValidator`、`ILoginAttemptTracker` |
+
+分界原則：純運算（給定輸入算出輸出、無業務語意）放 `Polhem.Base`；牽涉「金鑰從哪來、誰能存取、如何驗證」的政策放 `Polhem.Definition`。
+
+## API 存取控制
+
+以 `[ApiAccessControl]` 宣告，**優先宣告在類別上讓方法繼承**，方法層只在需要覆寫時標。
+
+```csharp
+[ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
+public class OrderBO : FormBusinessObject { }
+```
+
+**兩個列舉的完整值與語意見 XML doc**（`src/Polhem.Definition/Security/ApiProtectionLevel.cs`、
+`ApiAccessRequirement.cs`）—— 本檔不複寫列舉成員，那會漂。
+
+> **本節的列舉表曾經漂掉且是實質錯誤**（2026-08-12 修正）：原本寫
+> `ProtectionLevel` 只有三級（漏了 `LocalOnly`）、`AccessRequirement` 的值叫 `None`
+> （實際是 `Anonymous`），型別名少了 `Api` 前綴，範例的兩個參數還寫反了
+> —— 照抄會編不過。**這就是為什麼列舉成員不該在規則裡複寫一份。**
+
+## Session 管理
+
+- AccessToken 為 **GUID** 格式，不使用可預測值
+- Token 具**到期時間**，過期後需重新驗證
+- 支援一次性 Token（One-time Token）
+- Session 資料存於資料庫（`st_session`, `st_user`），不存於用戶端
+
+## Payload 安全管線
+
+處理順序必須維持：
+```
+序列化（Serialize） → 壓縮（Compress） → 加密（Encrypt）
+解密（Decrypt） → 解壓縮（Decompress） → 反序列化（Deserialize）
+```
+不可跳過或調換順序。
+
+## 禁止事項
+
+- 禁止在日誌或例外訊息中輸出**明文金鑰、Token 或密碼**
+- 禁止使用 `MD5` 或 `SHA1` 做安全雜湊（僅 SHA-256 以上）
+- 禁止硬編碼（hardcode）任何金鑰或憑證至原始碼
+- 禁止在測試之外的環境使用 `NoEncryptionEncryptor`
+- 禁止使用 `==` 直接比較 HMAC / 雜湊結果
+
+## 檔案完整性
+
+使用 `FileHashValidator` 驗證檔案完整性，不自行實作雜湊比對邏輯。

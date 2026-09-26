@@ -1,0 +1,91 @@
+using System.ComponentModel;
+using Polhem.Business.Validator;
+using Polhem.Definition.Identity;
+using Polhem.Tests.Shared;
+
+namespace Polhem.Business.UnitTests
+{
+    /// <summary>
+    /// <see cref="AccessTokenValidator"/> 行為測試。
+    /// </summary>
+    public class AccessTokenValidatorTests : IClassFixture<SharedDbFixture>
+    {
+        private readonly SharedDbFixture _fx;
+
+        public AccessTokenValidatorTests(SharedDbFixture fx) { _fx = fx; }
+        private AccessTokenValidator CreateValidator()
+            => new(_fx.GetRequiredService<ISessionInfoService>());
+
+        [Fact]
+        [DisplayName("Validate(Guid.Empty) 應拋 UnauthorizedAccessException")]
+        public void Validate_Empty_ThrowsUnauthorized()
+        {
+            var provider = CreateValidator();
+            Assert.Throws<UnauthorizedAccessException>(() => provider.Validate(Guid.Empty));
+        }
+
+        [Fact]
+        [DisplayName("Validate 未知 AccessToken 應拋 UnauthorizedAccessException")]
+        public void Validate_UnknownToken_ThrowsUnauthorized()
+        {
+            var provider = CreateValidator();
+            var token = Guid.NewGuid();
+
+            Assert.Throws<UnauthorizedAccessException>(() => provider.Validate(token));
+        }
+
+        [Fact]
+        [DisplayName("Validate 過期 Session 應拋 UnauthorizedAccessException")]
+        public void Validate_ExpiredSession_ThrowsUnauthorized()
+        {
+            var sessionService = _fx.GetRequiredService<ISessionInfoService>();
+            var provider = new AccessTokenValidator(sessionService);
+            var token = Guid.NewGuid();
+            var expired = new SessionInfo
+            {
+                AccessToken = token,
+                UserId = "u01",
+                UserName = "U01",
+                ExpiredAt = DateTime.UtcNow.AddMinutes(-5),
+                ApiEncryptionKey = new byte[64]
+            };
+            sessionService.Set(expired);
+
+            try
+            {
+                Assert.Throws<UnauthorizedAccessException>(() => provider.Validate(token));
+            }
+            finally
+            {
+                sessionService.Remove(token);
+            }
+        }
+
+        [Fact]
+        [DisplayName("Validate 有效 Session 應回傳 true")]
+        public void Validate_ValidSession_ReturnsTrue()
+        {
+            var sessionService = _fx.GetRequiredService<ISessionInfoService>();
+            var provider = new AccessTokenValidator(sessionService);
+            var token = Guid.NewGuid();
+            var session = new SessionInfo
+            {
+                AccessToken = token,
+                UserId = "u01",
+                UserName = "U01",
+                ExpiredAt = DateTime.UtcNow.AddHours(1),
+                ApiEncryptionKey = new byte[64]
+            };
+            sessionService.Set(session);
+
+            try
+            {
+                Assert.True(provider.Validate(token));
+            }
+            finally
+            {
+                sessionService.Remove(token);
+            }
+        }
+    }
+}

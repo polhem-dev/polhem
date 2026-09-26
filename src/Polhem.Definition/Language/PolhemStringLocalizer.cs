@@ -1,0 +1,119 @@
+using System.Globalization;
+using Microsoft.Extensions.Localization;
+
+namespace Polhem.Definition.Language
+{
+    /// <summary>
+    /// <see cref="IStringLocalizer{T}"/> adapter over <see cref="ILanguageService"/>.
+    /// Lets Blazor / ASP.NET Core components (<c>@inject IStringLocalizer&lt;MyPage&gt;</c>)
+    /// consume Polhem language resources through the standard .NET localisation
+    /// surface without adopting <c>.resx</c> or the BCL <c>ResourceManager</c>.
+    /// </summary>
+    /// <remarks>
+    /// The resource namespace is derived from <c>typeof(T).Name</c>. For example,
+    /// <c>PolhemStringLocalizer&lt;CustomerPage&gt;</c> resolves keys against
+    /// <c>{LanguagePath}/{lang}/CustomerPage.Language.xml</c>. Place <c>typeof(T)</c>
+    /// in a class whose name matches a namespace (e.g. <c>Common</c>, <c>Sys</c>).
+    ///
+    /// The current language defaults to <see cref="CultureInfo.CurrentUICulture"/>
+    /// — callers wanting an explicit source (HTTP request, session lookup) should use the
+    /// <see cref="PolhemStringLocalizer{T}(ILanguageService, Func{string})"/> overload.
+    /// </remarks>
+    /// <typeparam name="T">A marker type whose simple name matches the resource namespace.</typeparam>
+    public sealed class PolhemStringLocalizer<T> : IStringLocalizer<T>
+    {
+        private readonly ILanguageService _service;
+        private readonly Func<string> _langProvider;
+        private readonly Func<string> _customizeIdProvider;
+        private readonly string _namespace;
+
+        /// <summary>
+        /// Initializes a new <see cref="PolhemStringLocalizer{T}"/> using
+        /// <see cref="CultureInfo.CurrentUICulture"/> as the language source. Suitable
+        /// for ASP.NET Core's standard request-localization middleware.
+        /// </summary>
+        /// <param name="service">The underlying language resource service.</param>
+        public PolhemStringLocalizer(ILanguageService service)
+            : this(service, static () => CultureInfo.CurrentUICulture.Name)
+        { }
+
+        /// <summary>
+        /// Initializes a new <see cref="PolhemStringLocalizer{T}"/> with an explicit
+        /// language provider — typically wired to <see cref="Polhem.Definition.Identity.SessionInfo.Culture"/> or another
+        /// per-request value.
+        /// </summary>
+        /// <param name="service">The underlying language resource service.</param>
+        /// <param name="langProvider">A delegate returning the BCP-47 language code for the current call.</param>
+        public PolhemStringLocalizer(ILanguageService service, Func<string> langProvider)
+            : this(service, langProvider, static () => string.Empty)
+        { }
+
+        /// <summary>
+        /// Initializes a new <see cref="PolhemStringLocalizer{T}"/> with an explicit language
+        /// provider and an explicit tenant-customization provider — the customization delegate
+        /// mirrors <paramref name="langProvider"/>, so a host wires both from the same per-request
+        /// state (typically <c>ClientInfo.Company?.CustomizeId</c> on the UI side).
+        /// </summary>
+        /// <param name="service">The underlying language resource service.</param>
+        /// <param name="langProvider">A delegate returning the BCP-47 language code for the current call.</param>
+        /// <param name="customizeIdProvider">
+        /// A delegate returning the tenant customization code for the current call; returning an
+        /// empty string resolves against the base layer only.
+        /// </param>
+        /// <remarks>
+        /// This adapter is a client-side / UI-side surface with no session of its own, which is
+        /// why the customization code arrives as a delegate rather than a parameter. The value it
+        /// yields localizes that client's own UI; server-side lookups always read
+        /// <see cref="Polhem.Definition.Identity.SessionInfo.CustomizeId"/> instead and never a client-supplied code.
+        /// </remarks>
+        public PolhemStringLocalizer(ILanguageService service, Func<string> langProvider, Func<string> customizeIdProvider)
+        {
+            _service = service ?? throw new ArgumentNullException(nameof(service));
+            _langProvider = langProvider ?? throw new ArgumentNullException(nameof(langProvider));
+            _customizeIdProvider = customizeIdProvider ?? throw new ArgumentNullException(nameof(customizeIdProvider));
+            _namespace = typeof(T).Name;
+        }
+
+        /// <inheritdoc/>
+        public LocalizedString this[string name]
+        {
+            get
+            {
+                ArgumentNullException.ThrowIfNull(name);
+                string lang = _langProvider() ?? string.Empty;
+                string customizeId = _customizeIdProvider() ?? string.Empty;
+                bool hit = _service.TryGetLangText(customizeId, lang, _namespace, name, out string text);
+                if (!hit)
+                {
+                    // Fall through to the service-level default-lang fall-back, then return
+                    // the full key as the LocalizedString value with ResourceNotFound=true
+                    // so consumers can detect missing translations via the standard surface.
+                    string fallback = _service.GetLangText(customizeId, lang, _namespace, name);
+                    bool resourceNotFound = string.Equals(fallback, $"{_namespace}.{name}", StringComparison.Ordinal);
+                    return new LocalizedString(name, fallback, resourceNotFound);
+                }
+                return new LocalizedString(name, text, resourceNotFound: false);
+            }
+        }
+
+        /// <inheritdoc/>
+        public LocalizedString this[string name, params object[] arguments]
+        {
+            get
+            {
+                var localised = this[name];
+                string formatted = string.Format(CultureInfo.CurrentCulture, localised.Value, arguments);
+                return new LocalizedString(name, formatted, localised.ResourceNotFound, localised.SearchedLocation);
+            }
+        }
+
+        /// <summary>
+        /// Returns an empty enumeration. Polhem language resources are loaded on demand
+        /// per key — there is no efficient "list all" surface and enumerating an entire
+        /// namespace is not a supported use case.
+        /// </summary>
+        /// <param name="includeParentCultures">Unused.</param>
+        public IEnumerable<LocalizedString> GetAllStrings(bool includeParentCultures) =>
+            Array.Empty<LocalizedString>();
+    }
+}

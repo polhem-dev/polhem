@@ -1,0 +1,318 @@
+using Polhem.Definition.Layouts;
+using System.ComponentModel;
+using System.Xml.Serialization;
+using Polhem.Base;
+using Polhem.Base.Attributes;
+using Polhem.Base.Serialization;
+using System.Text.Json.Serialization;
+
+namespace Polhem.Definition.Forms
+{
+    /// <summary>
+    /// Form schema definition.
+    /// </summary>
+    [Description("Form schema definition.")]
+    [TreeNode("Form Schema")]
+    public class FormSchema : IObjectSerializeFile
+    {
+        private FormTableCollection? _tables = null;
+        private FormRuleCollection? _rules = null;
+
+        #region Constructors
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="FormSchema"/>.
+        /// </summary>
+        public FormSchema()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="FormSchema"/>.
+        /// </summary>
+        /// <param name="progId">The program ID.</param>
+        /// <param name="displayName">The display name.</param>
+        public FormSchema(string progId, string displayName)
+        {
+            ProgId= progId;
+            DisplayName = displayName;
+        }
+
+        #endregion
+
+        #region IObjectSerializeFile Interface
+
+        /// <summary>
+        /// Gets the serialization state.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        public SerializeState SerializeState { get; private set; } = SerializeState.None;
+
+        /// <summary>
+        /// Sets the serialization state.
+        /// </summary>
+        /// <param name="serializeState">The serialization state.</param>
+        public void SetSerializeState(SerializeState serializeState)
+        {
+            SerializeState = serializeState;
+            _tables?.SetSerializeState(serializeState);
+            _rules?.SetSerializeState(serializeState);
+        }
+
+        /// <summary>
+        /// Gets the file path bound to serialization.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        public string ObjectFilePath { get; private set; } = string.Empty;
+
+        /// <summary>
+        /// Sets the file path bound to serialization.
+        /// </summary>
+        /// <param name="filePath">The file path.</param>
+        public void SetObjectFilePath(string filePath)
+        {
+            ObjectFilePath = filePath;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Gets the time at which this object was created.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        public DateTime CreateTime { get; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// Gets or sets the program ID.
+        /// </summary>
+        [XmlAttribute()]
+        [Description("Program ID.")]
+        public string ProgId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the display name.
+        /// </summary>
+        [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Display name.")]
+        public string DisplayName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the database category id (required).
+        /// Determines which <see cref="Settings.DbCategory"/> the tables in this schema
+        /// belong to, and thus where their generated <see cref="Database.TableSchema"/>
+        /// files are persisted.
+        /// </summary>
+        [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Database category id (required).")]
+        public string CategoryId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the name of the master field that holds the document currency code (by
+        /// convention <c>sys_currency</c>). Amount fields with no explicit
+        /// <see cref="FormField.CurrencyField"/> resolve their currency from this field; detail amount
+        /// fields read the master row's value. Empty falls back to the company default currency.
+        /// </summary>
+        [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Name of the master field holding the document currency code (SAP CUKY, convention sys_currency).")]
+        [DefaultValue("")]
+        public string CurrencyField { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the list field collection string, with multiple fields separated by commas.
+        /// </summary>
+        [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("List field collection string, with multiple fields separated by commas.")]
+        public string ListFields { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the field collection string exposed to lookup queries, with
+        /// multiple fields separated by commas. Declares which fields this form returns
+        /// when other forms open it as a lookup source; the server enforces this set.
+        /// </summary>
+        /// <remarks>
+        /// When empty, lookup queries fall back to <c>sys_id</c> and <c>sys_name</c>
+        /// (skipping any that the master table does not define). The response always
+        /// includes <c>sys_rowid</c> regardless of this declaration.
+        /// </remarks>
+        [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Field collection string exposed to lookup queries, with multiple fields separated by commas.")]
+        [DefaultValue("")]
+        public string LookupFields { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the permission model id that this form's main aggregate maps to.
+        /// References a <see cref="Polhem.Definition.Settings.PermissionModel.ModelId"/> in the permission registry; the
+        /// backend method-level enforcement uses it to resolve the (model, action) to check.
+        /// Empty means the form declares no permission model (enforcement is skipped).
+        /// </summary>
+        [XmlAttribute]
+        [Category(PropertyCategories.Data)]
+        [Description("Permission model id mapped to this form's main aggregate.")]
+        public string PermissionModelId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets the table collection.
+        /// </summary>
+        [Description("Table collection.")]
+        [DefaultValue(null)]
+        public FormTableCollection? Tables
+        {
+            get
+            {
+                // Return null if the collection is empty during serialization
+                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _tables!)) { return null; }
+                if (_tables == null) { _tables = new FormTableCollection(this); }
+                return _tables;
+            }
+        }
+
+        /// <summary>
+        /// Gets the master table.
+        /// </summary>
+        /// <remarks>
+        /// Excluded from JSON serialization because the value is always equal to
+        /// <c>Tables[ProgId]</c>; emitting it would duplicate the master table
+        /// payload for JSON consumers (notably the JS Plain wire format).
+        /// </remarks>
+        [Browsable(false)]
+        [TreeNodeIgnore]
+        [JsonIgnore]
+        public FormTable? MasterTable
+        {
+            get
+            {
+                if (StringUtilities.IsEmpty(this.ProgId) || !this.Tables!.Contains(this.ProgId))
+                    return null;
+                else
+                    return this.Tables[this.ProgId];
+            }
+        }
+
+        /// <summary>
+        /// Gets the business rule collection evaluated by the rule engine at save/delete
+        /// lifecycle points (field validation and lifecycle guards). Field computation and
+        /// default-value expressions are declared on the fields themselves
+        /// (<see cref="FormField.ValueExpression"/> / <see cref="FormField.DefaultValueExpression"/>).
+        /// </summary>
+        [Description("Business rule collection.")]
+        [DefaultValue(null)]
+        public FormRuleCollection? Rules
+        {
+            get
+            {
+                // Return null if the collection is empty during serialization
+                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _rules!)) { return null; }
+                if (_rules == null) { _rules = new FormRuleCollection(this); }
+                return _rules;
+            }
+        }
+
+        /// <summary>
+        /// Finds a field definition by name, treating this schema as the single source of truth
+        /// for field metadata (such as <see cref="FormField.SensitiveCategory"/>) that is not
+        /// copied onto the generated layout. Searches the master table when <paramref name="tableName"/>
+        /// is empty, otherwise the named table. Returns <c>null</c> when the table or field is absent.
+        /// </summary>
+        /// <param name="fieldName">The field name to find.</param>
+        /// <param name="tableName">The owning table name; empty resolves to the master table.</param>
+        public FormField? FindField(string fieldName, string tableName = "")
+        {
+            FormTable? table;
+            if (StringUtilities.IsEmpty(tableName))
+                table = MasterTable;
+            else
+                table = Tables != null && Tables.Contains(tableName) ? Tables[tableName] : null;
+            if (table?.Fields == null || !table.Fields.Contains(fieldName)) { return null; }
+            return table.Fields[fieldName];
+        }
+
+        /// <summary>
+        /// Gets the list layout for this form schema.
+        /// </summary>
+        public LayoutGrid GetListLayout()
+            => ListLayoutGenerator.Generate(this);
+
+        /// <summary>
+        /// Gets the lookup layout for this form schema: one column per resolved
+        /// lookup field plus a hidden <c>sys_rowid</c> column, for lookup picker windows.
+        /// </summary>
+        public LayoutGrid GetLookupLayout()
+            => LookupLayoutGenerator.Generate(this);
+
+        /// <summary>
+        /// Resolves the lookup field set this form exposes to lookup queries.
+        /// Fields declared in <see cref="LookupFields"/> win; an empty declaration
+        /// falls back to <c>sys_id</c> and <c>sys_name</c>. Only fields defined on
+        /// the master table are returned (others are skipped); <c>sys_rowid</c> is
+        /// excluded because callers always prepend it to the projection.
+        /// </summary>
+        public IReadOnlyList<FormField> GetLookupFields()
+        {
+            var fields = new List<FormField>();
+            var master = MasterTable;
+            if (master?.Fields == null) { return fields; }
+
+            var names = StringUtilities.IsNotEmpty(LookupFields)
+                ? LookupFields.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                : [SysFields.Id, SysFields.Name];
+
+            foreach (var name in names)
+            {
+                if (StringUtilities.IsEquals(name, SysFields.RowId)) { continue; }
+                if (master.Fields.Contains(name) &&
+                    !fields.Any(f => StringUtilities.IsEquals(f.FieldName, name)))
+                {
+                    fields.Add(master.Fields[name]);
+                }
+            }
+            return fields;
+        }
+
+        /// <summary>
+        /// Creates a deep copy of this instance. Use this whenever a per-session
+        /// view of a cached <see cref="FormSchema"/> must be mutated (e.g. before
+        /// applying language-specific localization).
+        /// </summary>
+        /// <remarks>
+        /// Cached <see cref="FormSchema"/> instances returned by
+        /// <see cref="Storage.IDefineAccess.GetFormSchema"/> are shared across
+        /// every session in the process — see <c>docs/en/development-constraints.md</c>
+        /// § <i>Cached Data Immutability After Init</i>. Mutating without
+        /// cloning first leaks state across sessions and races under concurrency.
+        /// </remarks>
+        public FormSchema Clone()
+        {
+            var copy = new FormSchema(ProgId, DisplayName)
+            {
+                CategoryId = CategoryId,
+                CurrencyField = CurrencyField,
+                ListFields = ListFields,
+                LookupFields = LookupFields,
+                PermissionModelId = PermissionModelId,
+            };
+            if (_tables != null)
+                foreach (var table in _tables)
+                    copy.Tables!.Add(table.Clone());
+            if (_rules != null)
+                foreach (var rule in _rules)
+                    copy.Rules!.Add(rule.Clone());
+            return copy;
+        }
+
+        /// <summary>
+        /// Returns a string representation of this object.
+        /// </summary>
+        public override string ToString()
+        {
+            return $"{this.ProgId} - {this.DisplayName}";
+        }
+    }
+}

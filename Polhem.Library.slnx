@@ -1,0 +1,48 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <File Path="src/Directory.Build.props" />
+    <Project Path="src/Polhem.Analyzers/Polhem.Analyzers.csproj" />
+    <Project Path="src/Polhem.Api.AspNetCore/Polhem.Api.AspNetCore.csproj" />
+    <Project Path="src/Polhem.Api.Client/Polhem.Api.Client.csproj" />
+    <Project Path="src/Polhem.Api.Contracts/Polhem.Api.Contracts.csproj" />
+    <Project Path="src/Polhem.Api.Core/Polhem.Api.Core.csproj" />
+    <Project Path="src/Polhem.Base/Polhem.Base.csproj" />
+    <Project Path="src/Polhem.Business/Polhem.Business.csproj" />
+    <Project Path="src/Polhem.Db/Polhem.Db.csproj" />
+    <Project Path="src/Polhem.Definition/Polhem.Definition.csproj" />
+    <Project Path="src/Polhem.Expressions/Polhem.Expressions.csproj" />
+    <Project Path="src/Polhem.Hosting/Polhem.Hosting.csproj" />
+    <Project Path="src/Polhem.ObjectCaching/Polhem.ObjectCaching.csproj" />
+    <Project Path="src/Polhem.Repository.Abstractions/Polhem.Repository.Abstractions.csproj" Id="30b306b6-0aab-475e-8df0-e1a0801e56a6" />
+    <Project Path="src/Polhem.Repository/Polhem.Repository.csproj" Id="f78f3849-45b9-426e-a7b0-6edbd7fe256d" />
+    <Project Path="src/Polhem.UI.Avalonia/Polhem.UI.Avalonia.csproj" />
+    <Project Path="src/Polhem.UI.Core/Polhem.UI.Core.csproj" />
+    <Project Path="src/Polhem.Web.Blazor.Server/Polhem.Web.Blazor.Server.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Polhem.Analyzers.UnitTests/Polhem.Analyzers.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Api.AspNetCore.UnitTests/Polhem.Api.AspNetCore.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Api.Client.UnitTests/Polhem.Api.Client.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Api.Core.UnitTests/Polhem.Api.Core.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Base.UnitTests/Polhem.Base.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Cli.UnitTests/Polhem.Cli.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Business.UnitTests/Polhem.Business.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Db.UnitTests/Polhem.Db.UnitTests.csproj" />
+    <Project Path="tests/Polhem.DefineEditor.UnitTests/Polhem.DefineEditor.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Definition.UnitTests/Polhem.Definition.UnitTests.csproj" />
+    <Project Path="tests/Polhem.LoadTests.UnitTests/Polhem.LoadTests.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Expressions.UnitTests/Polhem.Expressions.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Hosting.UnitTests/Polhem.Hosting.UnitTests.csproj" />
+    <Project Path="tests/Polhem.ObjectCaching.UnitTests/Polhem.ObjectCaching.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Repository.UnitTests/Polhem.Repository.UnitTests.csproj" Id="37be88f7-d67a-40a7-91a3-23583c6b85f1" />
+    <Project Path="tests/Polhem.Tests.Shared/Polhem.Tests.Shared.csproj" />
+    <Project Path="tests/Polhem.UI.Avalonia.UnitTests/Polhem.UI.Avalonia.UnitTests.csproj" />
+    <Project Path="tests/Polhem.UI.Core.UnitTests/Polhem.UI.Core.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Web.Blazor.Server.UnitTests/Polhem.Web.Blazor.Server.UnitTests.csproj" />
+  </Folder>
+</Solution>

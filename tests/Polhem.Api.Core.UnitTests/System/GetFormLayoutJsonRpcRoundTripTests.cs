@@ -1,0 +1,107 @@
+using System.ComponentModel;
+using Polhem.Base.Serialization;
+using Polhem.Definition.Layouts;
+using Polhem.Api.Core.JsonRpc;
+using Polhem.Api.Core.Messages.System;
+using Polhem.Business;
+using Polhem.Definition;
+using Polhem.Definition.Identity;
+using Polhem.Definition.Language;
+using Polhem.Definition.Security;
+using Polhem.Definition.Storage;
+using Polhem.Tests.Shared;
+
+namespace Polhem.Api.Core.UnitTests.System
+{
+    /// <summary>
+    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip：將
+    /// <c>System.GetFormLayout</c> 透過 executor 派發到
+    /// <see cref="Polhem.Business.System.SystemBusinessObject.GetFormLayout"/>，驗證：
+    /// <list type="bullet">
+    /// <item>action 路由（progId.action 反射查表）正確找到方法</item>
+    /// <item>ApiInputConverter（GetFormLayoutRequest → GetFormLayoutArgs）保留 ProgId / LayoutId</item>
+    /// <item>ApiOutputConverter（GetFormLayoutResult → GetFormLayoutResponse）命名慣例反射有作用，
+    ///   FormLayout 物件 deep-copy 正確</item>
+    /// <item>LayoutId 空字串時 server 以 ProgId 當 layoutId（layout 定義檔命名為 {ProgId}.FormLayout.xml）</item>
+    /// </list>
+    /// </summary>
+    public class GetFormLayoutJsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
+    {
+        private readonly PolhemTestFixture _fx;
+
+        public GetFormLayoutJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
+
+        private JsonRpcExecutor NewExecutor(Guid accessToken)
+        {
+            var boFactory = new BusinessObjectFactory(
+                _fx.Provider,
+                _fx.GetRequiredService<IDefineAccess>(),
+                _fx.GetRequiredService<ISessionInfoService>(),
+                _fx.GetRequiredService<ILanguageService>(),
+                _fx.GetRequiredService<IBoTypeResolver>());
+
+            return new JsonRpcExecutor(
+                boFactory,
+                _fx.GetRequiredService<IAccessTokenValidator>(),
+                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            {
+                AccessToken = accessToken,
+                IsLocalCall = true,
+            };
+        }
+
+        [Fact]
+        [DisplayName("System.GetFormLayout 經 JsonRpcExecutor 應派發成功並回傳預設 layout")]
+        public void GetFormLayout_ThroughJsonRpc_DispatchesAndReturnsLayout()
+        {
+            var accessToken = TestSessionFactory.CreateAccessToken(_fx);
+            var executor = NewExecutor(accessToken);
+
+            var request = new JsonRpcRequest
+            {
+                Method = $"{SysProgIds.System}.{SystemActions.GetFormLayout}",
+                Params = new JsonRpcParams
+                {
+                    Value = new GetFormLayoutRequest { ProgId = "Employee", LayoutId = "" },
+                },
+                Id = Guid.NewGuid().ToString(),
+            };
+
+            var response = executor.Execute(request);
+
+            Assert.Null(response.Error);
+            var result = Assert.IsType<GetFormLayoutResponse>(response.Result!.Value);
+            // 空 LayoutId 解析為 ProgId；tests/Define 有 Employee.FormLayout.xml
+            Assert.False(string.IsNullOrEmpty(result.Xml));
+            var layout = XmlCodec.Deserialize<FormLayout>(result.Xml!);
+            Assert.NotNull(layout);
+            Assert.Equal("Employee", layout!.ProgId);
+            Assert.Equal("Employee", layout.LayoutId);
+            Assert.NotNull(layout.Sections);
+            Assert.True(layout.Sections!.Count > 0, "Layout 應至少有一個 section");
+        }
+
+        [Fact]
+        [DisplayName("System.GetFormLayout 對空 ProgId 應回 RpcError")]
+        public void GetFormLayout_EmptyProgId_ReturnsRpcError()
+        {
+            var accessToken = TestSessionFactory.CreateAccessToken(_fx);
+            var executor = NewExecutor(accessToken);
+
+            var request = new JsonRpcRequest
+            {
+                Method = $"{SysProgIds.System}.{SystemActions.GetFormLayout}",
+                Params = new JsonRpcParams
+                {
+                    Value = new GetFormLayoutRequest { ProgId = "", LayoutId = "default" },
+                },
+                Id = Guid.NewGuid().ToString(),
+            };
+
+            var response = executor.Execute(request);
+
+            Assert.NotNull(response.Error);
+            Assert.Contains("ProgId is required", response.Error!.Message);
+        }
+    }
+}

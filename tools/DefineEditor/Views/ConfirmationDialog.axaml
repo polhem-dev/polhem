@@ -1,0 +1,41 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="using:Polhem.DefineEditor.Markup"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="220"
+        x:Class="Polhem.DefineEditor.Views.ConfirmationDialog"
+        Width="460" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Title="{loc:Loc ConfirmDialog_DefaultTitle}">
+
+    <Border Padding="22,20">
+        <DockPanel>
+            <!-- 標題列 -->
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="12" Margin="0,0,0,14">
+                <Border Width="36" Height="36" CornerRadius="18"
+                        Background="{DynamicResource SemiColorWarning}" VerticalAlignment="Top">
+                    <TextBlock Text="!" FontSize="22" FontWeight="Bold" Foreground="White"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock x:Name="TitleText" Classes="h1" VerticalAlignment="Center"
+                           TextWrapping="Wrap" MaxWidth="360"/>
+            </StackPanel>
+
+            <!-- 按鈕列（DiscardButton 僅三鍵的「未儲存」模式顯示，置左，仿 macOS Don't Save 慣例） -->
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                        HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
+                <Button x:Name="DiscardButton" Classes="tool" Click="OnDiscard" MinWidth="90"
+                        IsVisible="False" Margin="0,0,16,0"/>
+                <Button x:Name="CancelButton" Classes="tool" Content="{loc:Loc Action_Cancel}" Click="OnCancel" MinWidth="90"/>
+                <Button x:Name="ConfirmButton" Classes="tool Primary" Content="{loc:Loc Action_OK}" Click="OnConfirm" MinWidth="100"/>
+            </StackPanel>
+
+            <!-- 訊息本文 -->
+            <TextBlock x:Name="MessageText" TextWrapping="Wrap"
+                      />
+        </DockPanel>
+    </Border>
+</Window>
