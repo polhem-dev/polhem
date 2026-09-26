@@ -28,18 +28,9 @@
   <Property Name="sonar.coverage.exclusions">tests/**,samples/**</Property>
 
   <!--
-    Duplication detection is excluded for code that is symmetric by design.
-
-    1. **/Providers/**
-       Each database in Polhem.Db.Providers (SqlServer/PostgreSql/Sqlite/MySql/Oracle) must implement its own
-       SQL dialect, metadata queries and schema operations. The duplication is inherent and cannot be removed
-       with a shared base class.
-
-    2. src/Polhem.Web.Blazor.*/Components/**, src/Polhem.Web.Blazor.*/DataObjects/**
-       The original reason was that the Blazor Server, Blazor Wasm and MAUI UI component libraries mirrored each
-       other on purpose (different runtimes, no shared components). **Wasm and MAUI were removed when the UI heads
-       were consolidated**, so only Blazor.Server is left and there is nothing to mirror. This exclusion no longer
-       has a reason; remove it once a full-mode scan confirms that no existing duplication shows up without it.
+    Duplication detection is excluded for code that is symmetric by design: each database in
+    Polhem.Db.Providers (SqlServer/PostgreSql/Sqlite/MySql/Oracle) must implement its own SQL dialect, metadata
+    queries and schema operations. The duplication is inherent and cannot be removed with a shared base class.
   -->
-  <Property Name="sonar.cpd.exclusions">**/Providers/**,src/Polhem.Web.Blazor.*/Components/**,src/Polhem.Web.Blazor.*/DataObjects/**</Property>
+  <Property Name="sonar.cpd.exclusions">**/Providers/**</Property>
 </SonarQubeAnalysisProperties>
