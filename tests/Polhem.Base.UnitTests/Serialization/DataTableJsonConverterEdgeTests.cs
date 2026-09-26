@@ -6,9 +6,9 @@ using Polhem.Base.Serialization;
 namespace Polhem.Base.UnitTests.Serialization
 {
     /// <summary>
-    /// DataTableJsonConverter 邊界與錯誤路徑測試：
-    /// 涵蓋非預期 JSON token、各種 primitive/非 primitive 值、
-    /// ConvertValue 的型別轉換分支，以及 Read/Write 的 null 處理。
+    /// Edge and error path tests for DataTableJsonConverter:
+    /// unexpected JSON tokens, primitive and non-primitive values,
+    /// the type conversion branches of ConvertValue, and null handling in Read and Write.
     /// </summary>
     public class DataTableJsonConverterEdgeTests
     {
@@ -20,16 +20,15 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read 於非 StartObject token 應拋 JsonException")]
+        [DisplayName("Read throws JsonException for a token other than StartObject")]
         public void Read_NonStartObjectToken_Throws()
         {
-            // JSON 陣列不應該被當成 DataTable 讀
             const string json = "[1,2,3]";
             Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<DataTable>(json, Options()));
         }
 
         [Fact]
-        [DisplayName("Read 於 null token 應回傳 null")]
+        [DisplayName("Read returns null for a null token")]
         public void Read_NullToken_ReturnsNull()
         {
             var restored = JsonSerializer.Deserialize<DataTable?>("null", Options());
@@ -37,7 +36,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Write 於 null DataTable 應寫出 null")]
+        [DisplayName("Write writes null for a null DataTable")]
         public void Write_NullValue_WritesNull()
         {
             var json = JsonSerializer.Serialize<DataTable?>(null, Options());
@@ -45,10 +44,10 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read 應略過未知的頂層屬性")]
+        [DisplayName("Read skips unknown top-level properties")]
         public void Read_UnknownTopLevelProperty_IsIgnored()
         {
-            // 包含 unknown 屬性，應透過 default: reader.Skip() 略過
+            // The unknown property is skipped by `reader.Skip()` in the default case.
             const string json = """
             {
                 "tableName":"T",
@@ -63,7 +62,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read 於 columns 為非陣列時應得到空欄位")]
+        [DisplayName("Read yields no columns when columns is not an array")]
         public void Read_ColumnsNotArray_YieldsNoColumns()
         {
             const string json = """
@@ -79,7 +78,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read 於 primaryKeys 為非陣列時應不拋且無主鍵")]
+        [DisplayName("Read does not throw and sets no primary key when primaryKeys is not an array")]
         public void Read_PrimaryKeysNotArray_IsSafe()
         {
             const string json = """
@@ -95,7 +94,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read 於 rows 為非陣列時應得到空列")]
+        [DisplayName("Read yields no rows when rows is not an array")]
         public void Read_RowsNotArray_YieldsNoRows()
         {
             const string json = """
@@ -111,7 +110,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read 應略過資料列中未知的屬性")]
+        [DisplayName("Read skips unknown properties in a row")]
         public void Read_UnknownRowProperty_IsSkipped()
         {
             const string json = """
@@ -128,10 +127,9 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read defaultValue 為 primitive 時應設定欄位預設值")]
+        [DisplayName("Read sets the column default value when defaultValue is a primitive")]
         public void Read_ColumnWithPrimitiveDefault_UsesDefault()
         {
-            // String 預設值
             const string json = """
             {
                 "tableName":"T",
@@ -145,7 +143,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read 數值型 column 於 current 值為 null 時應回傳 DBNull")]
+        [DisplayName("Read returns DBNull for a null current value in a numeric column")]
         public void Read_NullValueInCurrent_IsDbNull()
         {
             const string json = """
@@ -161,7 +159,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("ConvertValue 於 byte[] 目標型別 + Base64 字串應回傳原始 bytes")]
+        [DisplayName("ConvertValue returns the original bytes for a byte[] target and a Base64 string")]
         public void ConvertValue_ByteArrayFromBase64_ReturnsBytes()
         {
             var bytes = new byte[] { 0x01, 0x02, 0xAB, 0xFF };
@@ -174,7 +172,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("ConvertValue 於 byte[] 目標型別 + 非字串輸入應原樣回傳")]
+        [DisplayName("ConvertValue returns a non-string input unchanged for a byte[] target")]
         public void ConvertValue_ByteArrayNonString_ReturnsSame()
         {
             var input = 123L;
@@ -183,7 +181,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("ConvertValue 於 Guid 目標型別 + 字串應 Parse 為 Guid")]
+        [DisplayName("ConvertValue parses a string into a Guid for a Guid target")]
         public void ConvertValue_GuidFromString_ReturnsGuid()
         {
             var guid = Guid.NewGuid();
@@ -192,7 +190,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("ConvertValue 於 Guid 目標型別 + 非字串應原樣回傳")]
+        [DisplayName("ConvertValue returns a non-string input unchanged for a Guid target")]
         public void ConvertValue_GuidNonString_ReturnsSame()
         {
             var result = DataTableJsonConverter.ConvertValue(42L, typeof(Guid));
@@ -200,7 +198,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("ConvertValue 於 DateTime 目標型別 + DateTime 值應直接回傳")]
+        [DisplayName("ConvertValue returns a DateTime value as is for a DateTime target")]
         public void ConvertValue_DateTimeFromDateTime_ReturnsSame()
         {
             var dt = new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
@@ -209,7 +207,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("ConvertValue 於 DateTime 目標型別 + 字串應 Parse")]
+        [DisplayName("ConvertValue parses a string for a DateTime target")]
         public void ConvertValue_DateTimeFromString_ReturnsParsed()
         {
             var result = DataTableJsonConverter.ConvertValue("2026-04-17T08:30:00", typeof(DateTime));
@@ -218,16 +216,17 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("ConvertValue 於 DateTime 目標型別 + long 輸入無法轉換應原樣回傳")]
+        [DisplayName("ConvertValue returns a long input unchanged for a DateTime target because it cannot convert it")]
         public void ConvertValue_DateTimeFromLong_ReturnsSameAsFallback()
         {
-            // long 無法轉 DateTime：先進到 DateTime 分支，兩個 if 都不 match 後原樣回傳
+            // A long cannot become a `DateTime`. It enters the `DateTime` branch, matches neither `if`, and is
+            // returned unchanged.
             var result = DataTableJsonConverter.ConvertValue(12345L, typeof(DateTime));
             Assert.Equal(12345L, result);
         }
 
         [Fact]
-        [DisplayName("ConvertValue 於數值型別應使用 Convert.ChangeType 轉換")]
+        [DisplayName("ConvertValue converts numeric types with Convert.ChangeType")]
         public void ConvertValue_LongToInt_Converts()
         {
             var result = DataTableJsonConverter.ConvertValue(42L, typeof(int));
@@ -236,20 +235,20 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("ConvertValue 於無法轉換的組合應走 catch 原樣回傳")]
+        [DisplayName("ConvertValue returns the input unchanged through the catch for an incompatible combination")]
         public void ConvertValue_IncompatibleType_ReturnsSameOnCatch()
         {
-            // 將物件陣列轉為 int：Convert.ChangeType 會 throw → catch → 原樣回傳
+            // Converting a plain object to int makes `Convert.ChangeType` throw, and the catch returns the input.
             var input = new object();
             var result = DataTableJsonConverter.ConvertValue(input, typeof(int));
             Assert.Same(input, result);
         }
 
         [Fact]
-        [DisplayName("ReadPrimitiveValue 經由 true/false/null/複雜 token 應正確回傳")]
+        [DisplayName("ReadPrimitiveValue reads true and false tokens and turns a complex token into DBNull")]
         public void Read_BooleanAndComplexTokens_HandledCorrectly()
         {
-            // 故意用 String 欄位（typeLookup 會走 ConvertValue 分支）
+            // Column C is a String column on purpose, so the type lookup takes the `ConvertValue` branch.
             const string json = """
             {
                 "tableName":"T",
@@ -265,15 +264,15 @@ namespace Polhem.Base.UnitTests.Serialization
             var dt = JsonSerializer.Deserialize<DataTable>(json, Options())!;
             Assert.True((bool)dt.Rows[0]["A"]);
             Assert.False((bool)dt.Rows[0]["B"]);
-            // 複雜 token 會被 Skip 回傳 null → DBNull
+            // A complex token is skipped and read as null, which becomes DBNull.
             Assert.True(dt.Rows[0].IsNull("C"));
         }
 
         [Fact]
-        [DisplayName("Read 數值超出 long 範圍應 fallback 至 double")]
+        [DisplayName("Read falls back to double for a number beyond the long range")]
         public void Read_NumberBeyondLong_FallsBackToDouble()
         {
-            // String 欄位 + 數字值：TryGetInt64 失敗 → GetDouble
+            // A number in a String column: `TryGetInt64` fails, so `GetDouble` is used.
             const string json = """
             {
                 "tableName":"T",
@@ -283,7 +282,7 @@ namespace Polhem.Base.UnitTests.Serialization
             }
             """;
             var dt = JsonSerializer.Deserialize<DataTable>(json, Options())!;
-            // 值會被轉為 String（透過 Convert.ChangeType）
+            // The value is converted to a string through `Convert.ChangeType`.
             Assert.NotNull(dt.Rows[0]["Big"]);
         }
 
@@ -296,7 +295,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Write 應輸出 Modified 列的 current 與 original 區段並可來回還原")]
+        [DisplayName("Write outputs the current and original sections of a Modified row, and the row round-trips")]
         public void WriteRead_ModifiedRow_RoundTrip()
         {
             var dt = BuildSampleTable();
@@ -318,7 +317,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Write 應輸出 Deleted 列僅 original 區段並可來回還原")]
+        [DisplayName("Write outputs only the original section of a Deleted row, and the row round-trips")]
         public void WriteRead_DeletedRow_RoundTrip()
         {
             var dt = BuildSampleTable();
@@ -339,33 +338,32 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Write 應略過 Detached 列")]
+        [DisplayName("Write skips Detached rows")]
         public void Write_DetachedRow_IsSkipped()
         {
             var dt = BuildSampleTable();
             dt.Rows.Add(1, "Alice");
             dt.AcceptChanges();
-            // 建立 Detached 列（尚未加進 Rows 集合）
             var detached = dt.NewRow();
             detached["Id"] = 2;
             detached["Name"] = "Ghost";
             Assert.Equal(DataRowState.Detached, detached.RowState);
 
-            // Detached row 本來就不在 dt.Rows,無法被 Write 看到 — 因此 json 只會包含 Alice
+            // A detached row is not in `dt.Rows`, so `Write` never sees it and the JSON contains only Alice.
             var json = JsonSerializer.Serialize(dt, Options());
             Assert.Contains("Alice", json);
             Assert.DoesNotContain("Ghost", json);
         }
 
         [Fact]
-        [DisplayName("Write 應為 Unchanged 列只輸出 current，不重複輸出 original")]
+        [DisplayName("Write outputs only current for an Unchanged row, without repeating original")]
         public void Write_UnchangedRow_WritesCurrentOnly()
         {
-            // 這條先前斷言的是「兩份都要輸出」。那不是需求，是把缺陷寫成規格：Unchanged 列的
-            // 兩個版本依定義相等，而還原端的 Unchanged 分支只讀 current 並呼叫 AcceptChanges
-            // （由 ReadWrite_UnchangedRow_RoundTrip 涵蓋）。多送的那一份沒有任何讀取端。
-            // 且 DataFormRepository.GetData 回傳前呼叫 AcceptChanges()，所以每一筆從資料庫
-            // 讀出的列都走這條 —— payload 與序列化成本原本都是兩倍。
+            // This test used to assert that both versions are written. That was a defect written down as a spec:
+            // the two versions of an Unchanged row are equal by definition, and the Unchanged branch on the reading
+            // side reads only current and calls `AcceptChanges` (covered by `ReadWrite_UnchangedRow_RoundTrip`).
+            // Nothing read the extra copy. `DataFormRepository.GetData` calls `AcceptChanges()` before returning,
+            // so every row read from the database takes this path, and the payload and serialization cost were doubled.
             var dt = BuildSampleTable();
             dt.Rows.Add(1, "Alice");
             dt.AcceptChanges();
@@ -378,7 +376,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Write 含主鍵與欄位預設值應序列化完整 schema")]
+        [DisplayName("Write serializes the full schema, including the primary key and column default values")]
         public void Write_ColumnsAndPrimaryKey_AreSerialized()
         {
             var dt = new DataTable("T");
@@ -397,16 +395,16 @@ namespace Polhem.Base.UnitTests.Serialization
             Assert.Contains("\"primaryKeys\":[\"Id\"]", json);
             Assert.Contains("\"caption\":\"DisplayName\"", json);
             Assert.Contains("\"maxLength\":32", json);
-            // Id 欄位 defaultValue 為 0（非 null）應走非 null 分支
+            // The default value of the `Id` column is 0, not null, so the non-null branch is taken.
             Assert.Contains("\"defaultValue\":0", json);
         }
 
         [Fact]
-        [DisplayName("Read 應還原 Unchanged 列並呼叫 AcceptChanges")]
+        [DisplayName("Read restores an Unchanged row and calls AcceptChanges")]
         public void ReadWrite_UnchangedRow_RoundTrip()
         {
-            // Write_UnchangedRow_WritesCurrentOnly 只驗寫;這裡走完整 round-trip,
-            // 讓還原邏輯進入 DataRowState.Unchanged case (line 418-422) 並執行 AcceptChanges。
+            // `Write_UnchangedRow_WritesCurrentOnly` checks only the write side. This test runs a full round-trip so
+            // the restore logic enters the `DataRowState.Unchanged` case (line 418-422) and calls `AcceptChanges`.
             var dt = BuildSampleTable();
             dt.Rows.Add(1, "Alice");
             dt.AcceptChanges();

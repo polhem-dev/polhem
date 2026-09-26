@@ -18,14 +18,14 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEqual 相同結構與資料應回傳 true")]
+        [DisplayName("IsEqual returns true for tables with the same schema and data")]
         public void IsEqual_IdenticalTables_ReturnsTrue()
         {
             Assert.True(DataTableComparer.IsEqual(BuildTable(), BuildTable()));
         }
 
         [Fact]
-        [DisplayName("IsEqual 任一方為 null 應回傳 false")]
+        [DisplayName("IsEqual returns false when either table is null")]
         public void IsEqual_NullTable_ReturnsFalse()
         {
             Assert.False(DataTableComparer.IsEqual(null!, BuildTable()));
@@ -33,14 +33,14 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEqual 表名不同應回傳 false")]
+        [DisplayName("IsEqual returns false when the table names differ")]
         public void IsEqual_DifferentTableName_ReturnsFalse()
         {
             Assert.False(DataTableComparer.IsEqual(BuildTable("A"), BuildTable("B")));
         }
 
         [Fact]
-        [DisplayName("IsEqual 欄位數或欄位型別不同應回傳 false")]
+        [DisplayName("IsEqual returns false when the column count or a column name differs")]
         public void IsEqual_DifferentSchema_ReturnsFalse()
         {
             var a = BuildTable();
@@ -54,7 +54,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEqual 列數不同應回傳 false")]
+        [DisplayName("IsEqual returns false when the row counts differ")]
         public void IsEqual_DifferentRowCount_ReturnsFalse()
         {
             var a = BuildTable();
@@ -65,7 +65,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEqual Modified 狀態應同時比對 Current 與 Original 值")]
+        [DisplayName("IsEqual compares both Current and Original values of Modified rows")]
         public void IsEqual_ModifiedState_ComparesCurrentAndOriginal()
         {
             var a = BuildTable();
@@ -82,7 +82,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEqual Deleted 狀態應比對 Original 值")]
+        [DisplayName("IsEqual compares the Original values of Deleted rows")]
         public void IsEqual_DeletedState_ComparesOriginalValues()
         {
             var a = BuildTable();

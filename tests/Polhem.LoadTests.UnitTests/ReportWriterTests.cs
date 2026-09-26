@@ -63,7 +63,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("Markdown 帶齊解讀數字所需的中繼資料")]
+        [DisplayName("WriteMarkdown includes the metadata needed to interpret the numbers")]
         public void WriteMarkdown_IncludesMetadata()
         {
             var text = Write(CreateReport(), ".md");
@@ -77,7 +77,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("Markdown 列出被清掉的綁定，讀者才知道量的是框架實作")]
+        [DisplayName("WriteMarkdown lists dropped bindings, so readers know the framework implementation was measured")]
         public void WriteMarkdown_ListsDroppedBindings()
         {
             Assert.Contains("Order.BusinessObject", Write(CreateReport(), ".md"),
@@ -85,7 +85,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("沒有錯誤時不輸出錯誤區塊")]
+        [DisplayName("WriteMarkdown omits the errors section when there are no errors")]
         public void WriteMarkdown_NoErrors_OmitsErrorSection()
         {
             Assert.DoesNotContain("## Errors", Write(CreateReport(), ".md"),
@@ -93,7 +93,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("有錯誤時列出型別、次數與範例訊息")]
+        [DisplayName("WriteMarkdown lists the type, count and sample message of each error")]
         public void WriteMarkdown_WithErrors_ListsTypeCountAndSample()
         {
             var report = CreateReport(
@@ -108,7 +108,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("錯誤訊息中的表格分隔字元被跳脫，不破壞版面")]
+        [DisplayName("WriteMarkdown escapes table pipes in error messages so the layout stays intact")]
         public void WriteMarkdown_EscapesPipesInMessages()
         {
             var report = CreateReport(
@@ -119,7 +119,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("JSON 可被解析，且帶中繼資料與百分位")]
+        [DisplayName("WriteJson output parses and includes the metadata and percentiles")]
         public void WriteJson_IsParseableAndComplete()
         {
             using var document = JsonDocument.Parse(Write(CreateReport(), ".json"));
@@ -138,7 +138,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("JSON 帶快取命中率，供跨次比較")]
+        [DisplayName("WriteJson includes the cache hit rate for comparison across runs")]
         public void WriteJson_IncludesCacheCounters()
         {
             using var document = JsonDocument.Parse(Write(CreateReport(), ".json"));
@@ -149,7 +149,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("Remote 模式標示快取未被觀測，而非回報 0% 命中率")]
+        [DisplayName("WriteMarkdown in Remote mode marks the cache as not observed instead of reporting a 0% hit rate")]
         public void WriteMarkdown_RemoteMode_MarksCacheNotObserved()
         {
             var text = Write(CreateReport(mode: "Remote"), ".md");
@@ -161,7 +161,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("Local 模式照常輸出快取數字")]
+        [DisplayName("WriteMarkdown in Local mode includes the cache numbers")]
         public void WriteMarkdown_LocalMode_IncludesCacheTable()
         {
             var text = Write(CreateReport(), ".md");
@@ -171,7 +171,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("JSON 帶 CacheObserved 旗標，供程式判讀")]
+        [DisplayName("WriteJson carries the CacheObserved flag for programmatic use")]
         public void WriteJson_CarriesCacheObservedFlag()
         {
             using var local = JsonDocument.Parse(Write(CreateReport(), ".json"));
@@ -182,7 +182,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("輸出目錄不存在時自動建立")]
+        [DisplayName("WriteMarkdown creates the output directory when it does not exist")]
         public void Write_CreatesMissingDirectory()
         {
             var nested = Path.Combine(_directory, "a", "b", "report.md");

@@ -5,7 +5,7 @@ using Polhem.Analyzers.Definitions;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// POLHEM2002（TableSchema 須位於符合 scope 的資料夾）與 POLHEM2005（應有對應 FormLayout）測試。
+    /// Tests for POLHEM2002 (a TableSchema must be in the folder of its scope) and POLHEM2005 (a matching FormLayout should exist).
     /// </summary>
     public class SidecarDefinitionAnalyzerTests
     {
@@ -36,7 +36,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
             """;
 
         [Fact]
-        [DisplayName("TableSchema 位於錯誤 scope 資料夾應報 POLHEM2002 並指出實際資料夾")]
+        [DisplayName("A TableSchema in the wrong scope folder reports POLHEM2002 and names the actual folder")]
         public void TableSchemaInWrongScopeFolder_ReportsDiagnostic()
         {
             // Act
@@ -56,7 +56,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("TableSchema 完全不存在應報 POLHEM2002 並建議新增")]
+        [DisplayName("A missing TableSchema reports POLHEM2002 and suggests adding one")]
         public void TableSchemaMissingEntirely_SuggestsAdding()
         {
             // Act
@@ -72,7 +72,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("TableSchema 位於正確 scope 資料夾不應報診斷")]
+        [DisplayName("A TableSchema in the matching scope folder reports nothing")]
         public void TableSchemaInMatchingFolder_ReportsNothing()
         {
             // Act
@@ -87,7 +87,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("缺少對應 FormLayout 應報 POLHEM2005")]
+        [DisplayName("A missing matching FormLayout reports POLHEM2005")]
         public void MissingFormLayout_ReportsDiagnostic()
         {
             // Act
@@ -104,7 +104,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("完全未提供 TableSchema 檔時應整組靜默（定義可能存於資料庫）")]
+        [DisplayName("With no TableSchema files at all the rule stays silent (definitions may live in the database)")]
         public void NoTableSchemaFilesAtAll_StaysSilent()
         {
             // Act
@@ -118,7 +118,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("完全未提供 FormLayout 檔時應整組靜默")]
+        [DisplayName("With no FormLayout files at all the rule stays silent")]
         public void NoFormLayoutFilesAtAll_StaysSilent()
         {
             // Act
@@ -132,7 +132,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("CategoryId 非法時 POLHEM2002 應交由 POLHEM1001 處理")]
+        [DisplayName("With an invalid CategoryId, POLHEM2002 defers to POLHEM1001")]
         public void InvalidCategoryId_DefersToPolhem1001()
         {
             const string invalidSchema = """

@@ -7,9 +7,9 @@ using Polhem.Base.Serialization;
 namespace Polhem.Base.UnitTests.Serialization
 {
     /// <summary>
-    /// DataTableJsonConverter 覆蓋率補強測試：直接呼叫 Write/Read 的 null 分支、
-    /// 涵蓋所有 FieldDbType 欄位型別的完整 round-trip（Added/Modified/Deleted/Unchanged 各列狀態、
-    /// null 值、original 值），以及 ReadColumnField / ReadValueMap / SetRowValues 的邊界分支。
+    /// Coverage tests for DataTableJsonConverter: the null branches of calling Write/Read directly,
+    /// a full round-trip over columns of each basic CLR type (Added/Modified/Deleted/Unchanged row states,
+    /// null values, original values), and the edge branches of ReadColumnField / ReadValueMap / SetRowValues.
     /// </summary>
     public class DataTableJsonConverterCoverageTests
     {
@@ -25,10 +25,10 @@ namespace Polhem.Base.UnitTests.Serialization
         private static readonly DateTime s_sampleDate =
             new(2026, 4, 17, 8, 30, 0, DateTimeKind.Unspecified);
 
-        // ---- 直接呼叫 Write / Read 的 null 分支（STJ 頂層 null 不會經過 converter）----
+        // ---- Null branches of calling Write / Read directly (STJ never passes a top-level null to the converter) ----
 
         [Fact]
-        [DisplayName("Write 直接以 null DataTable 呼叫應寫出 null 字面值")]
+        [DisplayName("Write called directly with a null DataTable writes the null literal")]
         public void Write_NullValueDirectInvoke_WritesNull()
         {
             using var stream = new MemoryStream();
@@ -42,12 +42,12 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read 直接以 null token 呼叫應回傳 null")]
+        [DisplayName("Read called directly on a null token returns null")]
         public void Read_NullTokenDirectInvoke_ReturnsNull()
         {
             var bytes = Encoding.UTF8.GetBytes("null");
             var reader = new Utf8JsonReader(bytes);
-            reader.Read(); // 移到 Null token
+            reader.Read();
 
             var converter = new DataTableJsonConverter();
             var result = converter.Read(ref reader, typeof(DataTable), Options());
@@ -55,7 +55,7 @@ namespace Polhem.Base.UnitTests.Serialization
             Assert.Null(result);
         }
 
-        // ---- 涵蓋所有 FieldDbType 欄位型別 + 全列狀態的完整 round-trip ----
+        // ---- Full round-trip over each basic column type and every row state ----
 
         private static DataTable BuildAllTypesTable()
         {
@@ -97,7 +97,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("所有 FieldDbType 欄位 + 各列狀態的完整 round-trip 應保留型別與值")]
+        [DisplayName("A full round-trip over each basic column type and every row state preserves types and values")]
         public void WriteRead_AllTypesAndRowStates_RoundTrips()
         {
             var dt = BuildAllTypesTable();
@@ -112,7 +112,7 @@ namespace Polhem.Base.UnitTests.Serialization
 
             var r3 = dt.NewRow();
             FillRow(r3, "Fresh", 4, false);
-            r3["Lng"] = DBNull.Value; // 帶 null 值 → WriteRowValues null 分支
+            r3["Lng"] = DBNull.Value; // A null value exercises the null branch of `WriteRowValues`.
             dt.Rows.Add(r3);          // r3 → Added
 
             var json = JsonSerializer.Serialize(dt, Options());
@@ -135,25 +135,25 @@ namespace Polhem.Base.UnitTests.Serialization
             Assert.Equal(s_sampleBytes, (byte[])restored.Rows[0]["Bin"]);
             Assert.True((bool)restored.Rows[0]["Flag"]);
 
-            // r1 Modified：current/original 皆還原
+            // r1 Modified: both current and original are restored.
             Assert.Equal(DataRowState.Modified, restored.Rows[1].RowState);
             Assert.Equal("After", restored.Rows[1]["Str", DataRowVersion.Current]);
             Assert.Equal("Before", restored.Rows[1]["Str", DataRowVersion.Original]);
 
-            // r2 Deleted：僅 original
+            // r2 Deleted: only the original version.
             Assert.Equal(DataRowState.Deleted, restored.Rows[2].RowState);
             Assert.Equal("Doomed", restored.Rows[2]["Str", DataRowVersion.Original]);
 
-            // r3 Added，且帶 null 值
+            // r3 Added, with a null value.
             Assert.Equal(DataRowState.Added, restored.Rows[3].RowState);
             Assert.Equal("Fresh", restored.Rows[3]["Str"]);
             Assert.True(restored.Rows[3].IsNull("Lng"));
         }
 
-        // ---- ReadColumnField 的 null-coalescing fallback 分支 ----
+        // ---- Null-coalescing fallback branches of ReadColumnField ----
 
         [Fact]
-        [DisplayName("Read 欄位 name/type/caption 為 null 時應套用 fallback 預設值")]
+        [DisplayName("Read applies fallback defaults when a column's name, type and caption are null")]
         public void ReadColumns_NullNameTypeCaption_UsesFallbacks()
         {
             const string json = """
@@ -166,15 +166,15 @@ namespace Polhem.Base.UnitTests.Serialization
             """;
             var dt = JsonSerializer.Deserialize<DataTable>(json, Options())!;
 
-            // type null → fallback "String"；欄位仍建立成功
+            // A null type falls back to "String", and the column is still created.
             Assert.Single(dt.Columns);
             Assert.Equal(typeof(string), dt.Columns[0].DataType);
         }
 
-        // ---- ReadValueMap 於 value 非 StartObject 的防護分支（279/280）----
+        // ---- Guard branch of ReadValueMap when the value is not StartObject (279/280) ----
 
         [Fact]
-        [DisplayName("Read 於 current 非物件時應得到無值的列且不拋例外")]
+        [DisplayName("Read yields a row without values when current is not an object, without throwing")]
         public void ReadRows_CurrentNotObject_YieldsRowWithoutValues()
         {
             const string json = """
@@ -191,10 +191,10 @@ namespace Polhem.Base.UnitTests.Serialization
             Assert.True(dt.Rows[0].IsNull("Id"));
         }
 
-        // ---- SetRowValues 於 values 為 null 的提前返回（449）----
+        // ---- Early return of SetRowValues when values is null (449) ----
 
         [Fact]
-        [DisplayName("Read Added 列缺少 current 區段時應建立無值列（SetRowValues null 分支）")]
+        [DisplayName("Read builds a row without values for an Added row with no current section (SetRowValues null branch)")]
         public void ReadRows_AddedRowWithoutCurrent_BuildsEmptyRow()
         {
             const string json = """
@@ -211,10 +211,10 @@ namespace Polhem.Base.UnitTests.Serialization
             Assert.Equal(DataRowState.Added, dt.Rows[0].RowState);
         }
 
-        // ---- ReadPrimitiveValue：字串為日期時走 TryGetDateTime 分支（309/313-314）----
+        // ---- ReadPrimitiveValue: a date string takes the TryGetDateTime branch (309/313-314) ----
 
         [Fact]
-        [DisplayName("Read String 欄位存放日期字串時應經 TryGetDateTime 解析")]
+        [DisplayName("Read parses a date string in a DateTime column through TryGetDateTime")]
         public void ReadRows_DateLikeStringInStringColumn_ParsedViaDateTimeBranch()
         {
             const string json = """

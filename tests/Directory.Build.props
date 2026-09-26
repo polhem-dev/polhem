@@ -1,18 +1,18 @@
 <Project>
   <PropertyGroup>
-    <!-- 語言特性 -->
+    <!-- Language features -->
     <ImplicitUsings>enable</ImplicitUsings>
 
-    <!-- 健康檢查 -->
+    <!-- Health checks -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
-    <!-- 二層保險：build-ci.yml 的 Sonar-wrapped build 會削弱 TreatWarningsAsErrors 對
-         某些 analyzer 規則的效果；WarningsAsErrors 點名硬化，Sonar ruleset 蓋不掉 -->
+    <!-- Second safeguard: the Sonar-wrapped build in build-ci.yml weakens the effect of TreatWarningsAsErrors on
+         some analyzer rules. WarningsAsErrors hardens them by name, and the Sonar ruleset cannot override it. -->
     <WarningsAsErrors>$(WarningsAsErrors);IDE0005;CA1861;S2699</WarningsAsErrors>
 
-    <!-- IDE0005 需要同時啟用 GenerateDocumentationFile 才會在編譯期偵測；
-         測試專案無 public API 需要文件，關閉所有 XML 註解相關警告 -->
+    <!-- IDE0005 is only detected at compile time when GenerateDocumentationFile is also enabled.
+         Test projects have no public API to document, so every XML comment warning is turned off. -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1570;CS1572;CS1573;CS1574;CS1580;CS1581;CS1584;CS1587;CS1589;CS1591;CS1592</NoWarn>
   </PropertyGroup>

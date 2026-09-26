@@ -6,7 +6,7 @@ namespace Polhem.Base.UnitTests
     public class SerializationExtensionsTests : SerializationTestBase
     {
         [Fact]
-        [DisplayName("SerializationExtensions.ToXml / ToJson 應對應 XmlCodec / JsonCodec 等同結果")]
+        [DisplayName("SerializationExtensions.ToXml / ToJson produce the same results as XmlCodec / JsonCodec")]
         public void SerializationExtensions_ToXmlAndToJson_WorkAsFacade()
         {
             var source = new SerializationTestPayload { Name = "Frank", Age = 18 };
@@ -19,7 +19,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("SerializationExtensions.ToXmlFile / ToJsonFile 應寫入檔案")]
+        [DisplayName("SerializationExtensions.ToXmlFile / ToJsonFile write the file")]
         public void SerializationExtensions_FileMethods_WriteFile()
         {
             var source = new SerializationTestPayload { Name = "Grace", Age = 22 };
@@ -34,7 +34,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("SerializationExtensions.Save 應依副檔名寫入對應格式")]
+        [DisplayName("SerializationExtensions.Save writes the format matching the file extension")]
         public void SerializationExtensions_Save_DispatchesByExtension()
         {
             var xmlSource = new SerializationTestPayload { Name = "Henry", Age = 1 };
@@ -51,7 +51,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("SerializationExtensions.Save 於空 ObjectFilePath 應拋出 ArgumentException")]
+        [DisplayName("SerializationExtensions.Save throws ArgumentException for an empty ObjectFilePath")]
         public void SerializationExtensions_Save_EmptyPath_Throws()
         {
             var source = new SerializationTestPayload { Name = "John", Age = 5 };
@@ -59,7 +59,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("SerializationExtensions.Save 於不支援副檔名應拋出 NotSupportedException")]
+        [DisplayName("SerializationExtensions.Save throws NotSupportedException for an unsupported file extension")]
         public void SerializationExtensions_Save_UnknownExtension_Throws()
         {
             var source = new SerializationTestPayload { Name = "Kate", Age = 6 };

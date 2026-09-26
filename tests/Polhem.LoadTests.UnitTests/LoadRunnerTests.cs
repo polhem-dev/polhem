@@ -38,7 +38,7 @@ namespace Polhem.LoadTests.UnitTests
             => new() { VirtualUsers = users, WarmupSeconds = warmup, DurationSeconds = duration };
 
         [Fact]
-        [DisplayName("依權重展開排程，權重 3 出現三次")]
+        [DisplayName("BuildSchedule repeats each scenario by its weight, so weight 3 appears three times")]
         public void BuildSchedule_RepeatsByWeight()
         {
             var a = new CountingScenario("A");
@@ -54,7 +54,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("未指定權重的場景視為 1")]
+        [DisplayName("BuildSchedule treats a scenario without a weight as weight 1")]
         public void BuildSchedule_MissingWeight_DefaultsToOne()
         {
             var schedule = LoadRunner.BuildSchedule(
@@ -65,7 +65,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("權重為 0 或負值仍至少排一次，不會讓排程落空")]
+        [DisplayName("BuildSchedule still schedules a scenario with a non-positive weight once, so the schedule is never empty")]
         public void BuildSchedule_NonPositiveWeight_StillScheduledOnce()
         {
             var schedule = LoadRunner.BuildSchedule(
@@ -76,7 +76,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("量測窗收集樣本並算出每秒請求數")]
+        [DisplayName("RunAsync collects samples in the measured window and computes requests per second")]
         public async Task RunAsync_CollectsSamples()
         {
             var scenario = new CountingScenario("A");
@@ -93,7 +93,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("warm-up 的樣本被丟棄，只有量測窗計入")]
+        [DisplayName("RunAsync discards warm-up samples and counts only the measured window")]
         public async Task RunAsync_DiscardsWarmupSamples()
         {
             var scenario = new CountingScenario("A");
@@ -111,7 +111,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("warm-up 結束時回呼一次，供重設計數器")]
+        [DisplayName("RunAsync invokes the warm-up callback once so counters can be reset")]
         public async Task RunAsync_InvokesWarmupCallbackOnce()
         {
             var invocations = 0;
@@ -125,7 +125,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("場景擲例外時依型別計數，且不中斷整個 run")]
+        [DisplayName("RunAsync counts scenario exceptions by type without stopping the run")]
         public async Task RunAsync_RecordsErrorsWithoutStopping()
         {
             var results = await LoadRunner.RunAsync(
@@ -142,7 +142,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("失敗的呼叫不計入延遲統計，避免延遲看起來很漂亮")]
+        [DisplayName("RunAsync leaves failed calls out of the latency statistics so latency does not look better than it is")]
         public async Task RunAsync_FailedCallsAreNotTimed()
         {
             var results = await LoadRunner.RunAsync(
@@ -155,7 +155,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("每個 VU 拿到自己的索引，迭代各自從 0 連續遞增")]
+        [DisplayName("RunAsync gives each virtual user its own index, with iterations counting up from 0 without gaps")]
         public async Task RunAsync_GivesEachVirtualUserItsOwnIndex()
         {
             const int users = 4;
@@ -192,7 +192,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("多個場景依權重取得不同的呼叫比例")]
+        [DisplayName("RunAsync gives scenarios call shares according to their weights")]
         public async Task RunAsync_HonoursWeightsAcrossScenarios()
         {
             var heavy = new CountingScenario("Heavy");
@@ -207,7 +207,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("沒有任何場景時拒絕執行")]
+        [DisplayName("RunAsync throws ArgumentException when there are no scenarios")]
         public async Task RunAsync_NoScenarios_Throws()
         {
             await Assert.ThrowsAsync<ArgumentException>(() => LoadRunner.RunAsync(
@@ -215,7 +215,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("外部取消時提前結束而不擲例外")]
+        [DisplayName("RunAsync stops early without throwing on external cancellation")]
         public async Task RunAsync_ExternalCancellation_StopsEarly()
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));

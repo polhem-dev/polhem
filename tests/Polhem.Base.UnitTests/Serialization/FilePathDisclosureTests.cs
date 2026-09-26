@@ -4,24 +4,25 @@ using Polhem.Base.Serialization;
 namespace Polhem.Base.UnitTests.Serialization
 {
     /// <summary>
-    /// 定義檔反序列化失敗時，例外訊息不得洩漏伺服器的目錄配置。
+    /// When a definition file fails to deserialize, the exception message must not reveal the server's directory layout.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 這不是理論上的風險：<see cref="InvalidOperationException"/> 在 JSON-RPC 的錯誤契約裡映射為
-    /// <c>UserMessage</c>，而該分支把 <c>ex.Message</c> **原樣**回傳給呼叫端。於是一個已認證的
-    /// 遠端呼叫者只要打到一個損毀的定義檔，就會拿到伺服器的絕對路徑。
-    /// 違反 <c>scanning.md</c>「例外訊息禁止包含內部路徑」。
+    /// The risk is not theoretical: the JSON-RPC error contract maps <see cref="InvalidOperationException"/> to
+    /// <c>UserMessage</c>, and that branch returns <c>ex.Message</c> to the caller **as is**. An authenticated remote
+    /// caller who hits a corrupt definition file would get the server's absolute path.
+    /// That breaks the rule in <c>scanning.md</c> (Leaking sensitive information) that exception messages must not
+    /// contain internal paths.
     /// </para>
     /// <para>
-    /// 完整路徑改放 <see cref="Exception.Data"/>，只有伺服端的記錄看得到。
+    /// The full path goes into <see cref="Exception.Data"/> instead, where only the server-side log sees it.
     /// </para>
     /// </remarks>
     public class FilePathDisclosureTests
     {
         private static string WriteCorruptFile(string extension)
         {
-            // 目錄名刻意帶可辨識字樣：訊息若洩漏路徑，斷言就抓得到是哪一段。
+            // The directory name carries a recognizable marker, so a leaked path shows up in the assertion.
             string dir = Path.Combine(Path.GetTempPath(), "polhem-secret-layout-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             string file = Path.Combine(dir, "broken" + extension);
@@ -32,7 +33,7 @@ namespace Polhem.Base.UnitTests.Serialization
         [Theory]
         [InlineData(".xml")]
         [InlineData(".json")]
-        [DisplayName("反序列化失敗的訊息只能有檔名，不得含路徑；完整路徑放在 Exception.Data")]
+        [DisplayName("A failed deserialization names only the file in the message, not the path; the full path is in Exception.Data")]
         public void DeserializeFromFile_Corrupt_MessageNamesFileNotPath(string extension)
         {
             string file = WriteCorruptFile(extension);
@@ -43,13 +44,13 @@ namespace Polhem.Base.UnitTests.Serialization
                     ? XmlCodec.DeserializeFromFile<SampleValue>(file)
                     : JsonCodec.DeserializeFromFile<SampleValue>(file));
 
-                // 對照組：訊息確實提到了這個檔，斷言才不是因為訊息空白而恆真。
+                // Control: the message does name the file, so the assertions below are not vacuous on an empty message.
                 Assert.Contains(Path.GetFileName(file), ex.Message, StringComparison.Ordinal);
 
                 Assert.DoesNotContain(dir, ex.Message, StringComparison.Ordinal);
                 Assert.DoesNotContain("polhem-secret-layout-", ex.Message, StringComparison.Ordinal);
 
-                // 完整路徑仍拿得到 —— 給伺服端記錄用，不給呼叫端。
+                // The full path is still available, for the server-side log and not for the caller.
                 Assert.Equal(file, ex.Data[SerializationErrorData.FilePath]);
             }
             finally
@@ -58,10 +59,10 @@ namespace Polhem.Base.UnitTests.Serialization
             }
         }
 
-        /// <summary>反序列化目標；內容刻意壞掉，所以型別本身不重要。</summary>
+        /// <summary>The deserialization target. The content is deliberately broken, so the type itself does not matter.</summary>
         public class SampleValue
         {
-            /// <summary>任意屬性。</summary>
+            /// <summary>An arbitrary property.</summary>
             public string Name { get; set; } = string.Empty;
         }
     }

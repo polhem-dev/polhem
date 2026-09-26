@@ -5,8 +5,8 @@ using Polhem.Base.Data;
 namespace Polhem.Base.UnitTests
 {
     /// <summary>
-    /// DbTypeConverter 補強測試：涵蓋 ToTypeCode 的 Nullable/ByRef 路徑與
-    /// ToDbType 的完整 FieldDbType→DbType 對應。
+    /// Additional DbTypeConverter tests: the Nullable/ByRef paths of ToTypeCode and
+    /// the full FieldDbType→DbType mapping of ToDbType.
     /// </summary>
     public class DbTypeConverterExtraTests
     {
@@ -14,7 +14,7 @@ namespace Polhem.Base.UnitTests
         [InlineData(typeof(int), TypeCode.Int32)]
         [InlineData(typeof(string), TypeCode.String)]
         [InlineData(typeof(DateTime), TypeCode.DateTime)]
-        [DisplayName("ToTypeCode 應回傳非 Nullable 型別的 TypeCode")]
+        [DisplayName("ToTypeCode returns the TypeCode of a non-nullable type")]
         public void ToTypeCode_NonNullable_ReturnsCorrectTypeCode(Type type, TypeCode expected)
         {
             Assert.Equal(expected, DbTypeConverter.ToTypeCode(type));
@@ -24,14 +24,14 @@ namespace Polhem.Base.UnitTests
         [InlineData(typeof(int?), TypeCode.Int32)]
         [InlineData(typeof(DateTime?), TypeCode.DateTime)]
         [InlineData(typeof(decimal?), TypeCode.Decimal)]
-        [DisplayName("ToTypeCode 於 Nullable<T> 應回傳底層型別的 TypeCode")]
+        [DisplayName("ToTypeCode returns the TypeCode of the underlying type for Nullable<T>")]
         public void ToTypeCode_Nullable_UnwrapsAndReturnsInnerTypeCode(Type type, TypeCode expected)
         {
             Assert.Equal(expected, DbTypeConverter.ToTypeCode(type));
         }
 
         [Fact]
-        [DisplayName("ToTypeCode 於 ByRef 型別應解包並回傳元素 TypeCode")]
+        [DisplayName("ToTypeCode unwraps a ByRef type and returns the element TypeCode")]
         public void ToTypeCode_ByRef_UnwrapsAndReturnsElementTypeCode()
         {
             var byRefType = typeof(int).MakeByRefType();
@@ -52,14 +52,14 @@ namespace Polhem.Base.UnitTests
         [InlineData(FieldDbType.DateTime, DbType.DateTime)]
         [InlineData(FieldDbType.Guid, DbType.Guid)]
         [InlineData(FieldDbType.Binary, DbType.Binary)]
-        [DisplayName("ToDbType 應回傳正確的 DbType")]
+        [DisplayName("ToDbType returns the correct DbType")]
         public void ToDbType_AllFieldDbTypes_ReturnsCorrectDbType(FieldDbType fieldDbType, DbType expected)
         {
             Assert.Equal(expected, DbTypeConverter.ToDbType(fieldDbType));
         }
 
         [Fact]
-        [DisplayName("ToDbType 於 Unknown 應拋出 ArgumentOutOfRangeException")]
+        [DisplayName("ToDbType throws ArgumentOutOfRangeException for Unknown")]
         public void ToDbType_Unknown_ThrowsArgumentOutOfRangeException()
         {
             Assert.Throws<ArgumentOutOfRangeException>(

@@ -5,7 +5,7 @@ using Polhem.Analyzers.Definitions;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// POLHEM1003（欄位 DbType 必須為框架列舉成員）測試。
+    /// Tests for POLHEM1003 (a field DbType must be a member of the framework enum).
     /// </summary>
     public class FieldDbTypeAnalyzerTests
     {
@@ -13,7 +13,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         private const string TablePath = "Define/TableSchema/company/ft_product.TableSchema.xml";
 
         [Fact]
-        [DisplayName("FormField 的 DbType 為未知值應報 POLHEM1003")]
+        [DisplayName("An unknown FormField DbType reports POLHEM1003")]
         public void UnknownFormFieldDbType_ReportsDiagnostic()
         {
             const string xml = """
@@ -43,7 +43,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("TableSchema 的 DbField 也應被檢查")]
+        [DisplayName("A TableSchema DbField is checked too")]
         public void UnknownTableSchemaDbType_ReportsDiagnostic()
         {
             const string xml = """
@@ -69,7 +69,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         [InlineData("Currency")]
         [InlineData("AutoIncrement")]
         [InlineData("Time")]
-        [DisplayName("合法 DbType 不應報診斷")]
+        [DisplayName("A valid DbType reports nothing")]
         public void ValidDbType_ReportsNothing(string dbType)
         {
             var xml = $"""
@@ -93,7 +93,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("僅大小寫不符應指名正確拼法")]
+        [DisplayName("A casing-only mismatch names the correct spelling")]
         public void WrongCasing_NamesCorrectCasing()
         {
             const string xml = """
@@ -119,7 +119,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("未宣告 DbType 屬性不應報診斷")]
+        [DisplayName("A field without a DbType attribute reports nothing")]
         public void MissingDbType_ReportsNothing()
         {
             const string xml = """

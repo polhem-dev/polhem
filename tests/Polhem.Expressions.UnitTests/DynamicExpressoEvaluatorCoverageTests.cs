@@ -3,8 +3,8 @@ using System.ComponentModel;
 namespace Polhem.Expressions.UnitTests
 {
     /// <summary>
-    /// <see cref="DynamicExpressoEvaluator"/> 覆蓋率補強測試：null 變數值分支、null 回傳值、
-    /// GetReferencedVariables 的解析失敗與零 / 多重識別字邊界。
+    /// Coverage tests for <see cref="DynamicExpressoEvaluator"/>: the null variable value branch, a null return value,
+    /// and the zero and multiple identifier edges of GetReferencedVariables.
     /// </summary>
     public class DynamicExpressoEvaluatorCoverageTests
     {
@@ -18,7 +18,7 @@ namespace Polhem.Expressions.UnitTests
         }
 
         [Fact]
-        [DisplayName("null 變數值：型別退回 object、參數值退回空字串，運算式仍可求值")]
+        [DisplayName("A null variable value falls back to the object type and an empty string argument, and the expression still evaluates")]
         public void Evaluate_NullVariableValue_UsesObjectTypeAndEmptyStringArgument()
         {
             // A null variable value drives the `?? typeof(object)` type fallback (GetOrCompile /
@@ -30,7 +30,7 @@ namespace Polhem.Expressions.UnitTests
         }
 
         [Fact]
-        [DisplayName("Evaluate<T>：運算式回傳 null 時應回傳 default")]
+        [DisplayName("Evaluate<T> returns default when the expression returns null")]
         public void EvaluateGeneric_NullResult_ReturnsDefault()
         {
             var result = _evaluator.Evaluate<string?>(
@@ -40,7 +40,7 @@ namespace Polhem.Expressions.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetReferencedVariables：多個未知識別字皆被偵測")]
+        [DisplayName("GetReferencedVariables detects every unknown identifier")]
         public void GetReferencedVariables_MultipleIdentifiers_ReturnsAll()
         {
             var referenced = _evaluator.GetReferencedVariables("a + b + c");
@@ -51,7 +51,7 @@ namespace Polhem.Expressions.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetReferencedVariables：無變數的常數運算式回傳空集合")]
+        [DisplayName("GetReferencedVariables returns an empty set for a constant expression")]
         public void GetReferencedVariables_NoIdentifiers_ReturnsEmpty()
         {
             var referenced = _evaluator.GetReferencedVariables("1 + 2");

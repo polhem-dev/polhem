@@ -19,7 +19,7 @@ namespace Polhem.Base.UnitTests
         [InlineData(FieldDbType.DateTime, typeof(DateTime))]
         [InlineData(FieldDbType.Guid, typeof(Guid))]
         [InlineData(FieldDbType.Binary, typeof(byte[]))]
-        [DisplayName("ToType 應回傳正確的 CLR 型別")]
+        [DisplayName("ToType returns the correct CLR type")]
         public void ToType_AllFieldDbTypes_ReturnsCorrectClrType(FieldDbType fieldDbType, Type expectedType)
         {
             var result = DbTypeConverter.ToType(fieldDbType);
@@ -36,7 +36,7 @@ namespace Polhem.Base.UnitTests
         [InlineData(typeof(DateTime), FieldDbType.DateTime)]
         [InlineData(typeof(Guid), FieldDbType.Guid)]
         [InlineData(typeof(byte[]), FieldDbType.Binary)]
-        [DisplayName("ToFieldDbType 應回傳正確的 FieldDbType")]
+        [DisplayName("ToFieldDbType returns the correct FieldDbType")]
         public void ToFieldDbType_SupportedTypes_ReturnsCorrectFieldDbType(Type clrType, FieldDbType expectedFieldDbType)
         {
             var result = DbTypeConverter.ToFieldDbType(clrType);
@@ -50,7 +50,7 @@ namespace Polhem.Base.UnitTests
         [InlineData(typeof(ushort), FieldDbType.Short)]
         [InlineData(typeof(uint), FieldDbType.Integer)]
         [InlineData(typeof(ulong), FieldDbType.Long)]
-        [DisplayName("ToFieldDbType 應正確處理相容的 CLR 型別")]
+        [DisplayName("ToFieldDbType maps compatible CLR types correctly")]
         public void ToFieldDbType_CompatibleTypes_ReturnsExpectedFieldDbType(Type clrType, FieldDbType expectedFieldDbType)
         {
             var result = DbTypeConverter.ToFieldDbType(clrType);
@@ -58,14 +58,14 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("ToFieldDbType 不支援的型別應拋出 InvalidOperationException")]
+        [DisplayName("ToFieldDbType throws InvalidOperationException for an unsupported type")]
         public void ToFieldDbType_UnsupportedType_ThrowsInvalidOperationException()
         {
             Assert.Throws<InvalidOperationException>(() => DbTypeConverter.ToFieldDbType(typeof(object)));
         }
 
         [Fact]
-        [DisplayName("ToType Unknown 應拋出 InvalidOperationException")]
+        [DisplayName("ToType throws InvalidOperationException for Unknown")]
         public void ToType_Unknown_ThrowsInvalidOperationException()
         {
             Assert.Throws<InvalidOperationException>(() => DbTypeConverter.ToType(FieldDbType.Unknown));

@@ -6,7 +6,7 @@ namespace Polhem.Base.UnitTests.Exceptions
     public class ForbiddenExceptionTests
     {
         [Fact]
-        [DisplayName("單參數 ctor 應設定 Message，InnerException 為 null")]
+        [DisplayName("The single-parameter constructor sets Message and leaves InnerException null")]
         public void Ctor_WithMessage_SetsMessage()
         {
             var ex = new ForbiddenException("permission denied");
@@ -15,7 +15,7 @@ namespace Polhem.Base.UnitTests.Exceptions
         }
 
         [Fact]
-        [DisplayName("雙參數 ctor 應同時設定 Message 與 InnerException")]
+        [DisplayName("The two-parameter constructor sets both Message and InnerException")]
         public void Ctor_WithMessageAndInner_SetsBoth()
         {
             var inner = new InvalidOperationException("root cause");
@@ -25,7 +25,7 @@ namespace Polhem.Base.UnitTests.Exceptions
         }
 
         [Fact]
-        [DisplayName("ForbiddenException 應可由 catch (Exception) 接住")]
+        [DisplayName("ForbiddenException can be caught by catch (Exception)")]
         public void Throw_CanBeCaughtAsException()
         {
             Exception? caught = null;

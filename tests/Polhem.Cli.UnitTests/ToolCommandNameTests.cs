@@ -16,14 +16,14 @@ namespace Polhem.Cli.UnitTests
         private const string CommandName = "dotnet-polhem";
 
         [Fact]
-        [DisplayName("ToolCommandName 為 dotnet-polhem")]
+        [DisplayName("ToolCommandName is dotnet-polhem")]
         public void ToolCommandName_IsDotnetPolhem()
         {
             Assert.Equal(CommandName, ReadToolCommandName());
         }
 
         [Fact]
-        [DisplayName("說明文字的 Usage 使用與 ToolCommandName 相同的指令名")]
+        [DisplayName("The Usage line of the help text uses the same command name as ToolCommandName")]
         public void HelpText_UsesInstalledCommandName()
         {
             // `dotnet-<name>` is invoked as `dotnet <name>`.

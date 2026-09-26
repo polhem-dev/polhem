@@ -9,7 +9,7 @@ namespace Polhem.Base.UnitTests
             { SerializeState.Serialize, SerializeState.None };
 
         [Fact]
-        [DisplayName("Serialize 與 Deserialize 應可完整 round-trip")]
+        [DisplayName("Serialize and Deserialize round-trip the values")]
         public void Xml_Roundtrip_PreservesValues()
         {
             var source = new SerializationTestPayload { Name = "Alice", Age = 30 };
@@ -23,14 +23,14 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Serialize 於 null 輸入時應回傳空字串")]
+        [DisplayName("Serialize returns an empty string for null input")]
         public void Serialize_Null_ReturnsEmpty()
         {
             Assert.Equal(string.Empty, XmlCodec.Serialize(null!));
         }
 
         [Fact]
-        [DisplayName("Deserialize 於空字串輸入時應回傳型別預設值")]
+        [DisplayName("Deserialize returns the default of the type for an empty string")]
         public void Deserialize_EmptyString_ReturnsDefault()
         {
             var result = XmlCodec.Deserialize<SerializationTestPayload>(string.Empty);
@@ -38,7 +38,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("XML 序列化期間應翻起 SerializeState,結束後歸零")]
+        [DisplayName("XML serialization raises SerializeState while running and clears it afterwards")]
         public void Xml_Serialize_RaisesAndClearsSerializeState()
         {
             var source = new SerializationTestPayload { Name = "Bob", Age = 20 };
@@ -55,7 +55,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("SerializeToFile / DeserializeFromFile 應可 round-trip 並設定 ObjectFilePath")]
+        [DisplayName("SerializeToFile and DeserializeFromFile round-trip and set ObjectFilePath")]
         public void XmlFile_Roundtrip_SetsObjectFilePath()
         {
             var source = new SerializationTestPayload { Name = "Dan", Age = 50 };
@@ -72,7 +72,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("DeserializeFromFile 於檔案不存在時應回傳 null")]
+        [DisplayName("DeserializeFromFile returns null for a missing file")]
         public void DeserializeFromFile_MissingFile_ReturnsNull()
         {
             // FileReadText returns empty for missing files, and Deserialize(string.Empty) returns default.
@@ -81,7 +81,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("DeserializeFromFile 於內容損毀時應包成 InvalidOperationException")]
+        [DisplayName("DeserializeFromFile wraps malformed content in an InvalidOperationException")]
         public void DeserializeFromFile_MalformedXml_Throws()
         {
             string path = TempPath("broken.xml");
@@ -93,7 +93,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("XmlSerializerCache.Get 應對相同型別回傳相同實例")]
+        [DisplayName("XmlSerializerCache.Get returns the same instance for the same type")]
         public void XmlSerializerCache_Get_ReturnsCachedInstance()
         {
             var a = XmlSerializerCache.Get(typeof(SerializationTestPayload));
@@ -103,7 +103,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Utf8StringWriter.Encoding 應為不帶 BOM 的 UTF-8")]
+        [DisplayName("Utf8StringWriter.Encoding is UTF-8 without a BOM")]
         public void Utf8StringWriter_Encoding_IsUtf8NoBom()
         {
             using var writer = new Utf8StringWriter();

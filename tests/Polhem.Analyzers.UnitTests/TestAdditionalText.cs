@@ -4,17 +4,17 @@ using Microsoft.CodeAnalysis.Text;
 namespace Polhem.Analyzers.UnitTests
 {
     /// <summary>
-    /// 供測試使用的 <see cref="AdditionalText"/> 實作，以記憶體字串模擬定義檔。
+    /// An <see cref="AdditionalText"/> for tests that simulates a definition file with an in-memory string.
     /// </summary>
     internal sealed class TestAdditionalText : AdditionalText
     {
         private readonly SourceText _text;
 
         /// <summary>
-        /// 建構函式。
+        /// Initializes a new instance.
         /// </summary>
-        /// <param name="path">模擬的檔案路徑。</param>
-        /// <param name="content">檔案內容。</param>
+        /// <param name="path">The simulated file path.</param>
+        /// <param name="content">The file content.</param>
         public TestAdditionalText(string path, string content)
         {
             Path = path;

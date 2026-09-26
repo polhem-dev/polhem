@@ -9,7 +9,7 @@ namespace Polhem.LoadTests.UnitTests
     public class LatencyStatisticsTests
     {
         [Fact]
-        [DisplayName("百分位採 nearest-rank：p50 取第 5 個樣本")]
+        [DisplayName("Percentile uses nearest-rank, so the p50 of ten samples is the 5th sample")]
         public void Percentile_TenSamples_UsesNearestRank()
         {
             var stats = LatencyStatistics.FromMilliseconds(
@@ -20,7 +20,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("百分位回傳實際觀測值，不做內插")]
+        [DisplayName("Percentile returns an observed value without interpolation")]
         public void Percentile_P99OfHundred_ReturnsObservedValue()
         {
             var samples = Enumerable.Range(1, 100).Select(i => (double)i).ToArray();
@@ -31,7 +31,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("輸入未排序時仍算出正確百分位")]
+        [DisplayName("FromMilliseconds computes correct percentiles from unsorted input")]
         public void FromMilliseconds_UnsortedInput_SortsBeforeComputing()
         {
             var stats = LatencyStatistics.FromMilliseconds([9, 1, 7, 3, 5]);
@@ -42,7 +42,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("不更動呼叫端傳入的集合")]
+        [DisplayName("FromMilliseconds does not modify the caller's array")]
         public void FromMilliseconds_DoesNotMutateCallerArray()
         {
             double[] source = [3, 1, 2];
@@ -53,7 +53,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("空樣本回傳零而不擲例外")]
+        [DisplayName("LatencyStatistics with no samples returns zero instead of throwing")]
         public void Percentile_NoSamples_ReturnsZero()
         {
             var stats = LatencyStatistics.FromMilliseconds([]);
@@ -69,7 +69,7 @@ namespace Polhem.LoadTests.UnitTests
         [InlineData(0)]
         [InlineData(-1)]
         [InlineData(101)]
-        [DisplayName("百分位超出 0~100 範圍時擲例外")]
+        [DisplayName("Percentile throws ArgumentOutOfRangeException for 0 or less and for more than 100")]
         public void Percentile_OutOfRange_Throws(double percentile)
         {
             var stats = LatencyStatistics.FromMilliseconds([1, 2, 3]);
@@ -78,7 +78,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("平均值取所有樣本的算術平均")]
+        [DisplayName("Mean returns the arithmetic mean of all samples")]
         public void Mean_ReturnsArithmeticMean()
         {
             var stats = LatencyStatistics.FromMilliseconds([2, 4, 6, 8]);

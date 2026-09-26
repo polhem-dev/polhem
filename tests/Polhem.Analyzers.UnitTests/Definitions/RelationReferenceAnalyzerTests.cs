@@ -5,7 +5,7 @@ using Polhem.Analyzers.Definitions;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// POLHEM2003（RelationProgId 必須存在）與 POLHEM2004（SourceField 必須為被引用 schema 的欄位）測試。
+    /// Tests for POLHEM2003 (a RelationProgId must exist) and POLHEM2004 (a SourceField must be a field of the referenced schema).
     /// </summary>
     public class RelationReferenceAnalyzerTests
     {
@@ -45,7 +45,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
             """;
 
         [Fact]
-        [DisplayName("RelationProgId 指向不存在的 schema 應報 POLHEM2003")]
+        [DisplayName("A RelationProgId pointing to a missing schema reports POLHEM2003")]
         public void UnknownRelationProgId_ReportsDiagnostic()
         {
             // Act
@@ -64,7 +64,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("SourceField 不存在於被引用 schema 應報 POLHEM2004")]
+        [DisplayName("A SourceField missing from the referenced schema reports POLHEM2004")]
         public void UnknownSourceField_ReportsDiagnostic()
         {
             // Act
@@ -83,7 +83,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("關聯與來源欄位皆正確時不應報診斷")]
+        [DisplayName("A valid relation and source field report nothing")]
         public void ValidRelation_ReportsNothing()
         {
             // Act
@@ -99,7 +99,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         [Theory]
         [InlineData("Employee")]
         [InlineData("Department")]
-        [DisplayName("引用框架內建 schema 不應誤報（內建為內嵌資源、非消費端檔案）")]
+        [DisplayName("Referring to a built-in framework schema is not falsely reported (built-ins are embedded resources, not consumer files)")]
         public void FrameworkSuppliedProgId_ReportsNothing(string progId)
         {
             // Act
@@ -113,7 +113,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("ProgId 不存在時不應同時報 POLHEM2004（來源欄位無從判定）")]
+        [DisplayName("A missing ProgId does not also report POLHEM2004 (the source field cannot be judged)")]
         public void UnknownProgId_DoesNotAlsoReportSourceField()
         {
             // Act
@@ -128,7 +128,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("無 RelationProgId 的欄位不受檢查")]
+        [DisplayName("A field without a RelationProgId is not checked")]
         public void FieldWithoutRelation_ReportsNothing()
         {
             const string xml = """

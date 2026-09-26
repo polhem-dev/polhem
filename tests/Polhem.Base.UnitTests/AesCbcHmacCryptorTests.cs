@@ -6,7 +6,7 @@ using System.Text;
 namespace Polhem.Base.UnitTests
 {
     /// <summary>
-    /// AesCbcHmacCryptor 加解密邏輯測試
+    /// Tests for the AesCbcHmacCryptor encryption and decryption logic.
     /// </summary>
     public class AesCbcHmacCryptorTests
     {
@@ -14,7 +14,7 @@ namespace Polhem.Base.UnitTests
         private readonly byte[] _hmacKey = Encoding.UTF8.GetBytes("abcdef0123456789abcdef0123456789"); // 32 bytes
 
         [Fact]
-        [DisplayName("加密後解密應還原為原始明文")]
+        [DisplayName("Decrypting the ciphertext restores the original plaintext")]
         public void EncryptAndDecrypt_ValidPlaintext_ReturnsOriginalText()
         {
             // Arrange
@@ -31,7 +31,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("相同明文加密兩次應產生不同密文")]
+        [DisplayName("Encrypting the same plaintext twice produces different ciphertexts")]
         public void Encrypt_SamePlaintext_ProducesDifferentCiphertext()
         {
             // Arrange
@@ -46,14 +46,13 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("解密被竄改的密文應擲出 CryptographicException")]
+        [DisplayName("Decrypting tampered ciphertext throws CryptographicException")]
         public void Decrypt_TamperedCiphertext_ThrowsCryptographicException()
         {
             // Arrange
             byte[] plainBytes = Encoding.UTF8.GetBytes("敏感資料");
             byte[] encrypted = AesCbcHmacCryptor.Encrypt(plainBytes, _aesKey, _hmacKey);
 
-            // 模擬篡改內容
             encrypted[encrypted.Length - 10] ^= 0xFF;
 
             // Act & Assert
@@ -64,7 +63,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("解密 null 資料應擲出 CryptographicException")]
+        [DisplayName("Decrypting null data throws CryptographicException")]
         public void Decrypt_NullData_ThrowsCryptographicException()
         {
             Assert.Throws<CryptographicException>(() =>
@@ -74,10 +73,10 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("解密過短的資料應擲出 CryptographicException")]
+        [DisplayName("Decrypting data that is too short throws CryptographicException")]
         public void Decrypt_TooShortData_ThrowsCryptographicException()
         {
-            // 最小有效長度為 72 bytes
+            // The minimum valid length is 72 bytes.
             byte[] tooShort = new byte[50];
 
             Assert.Throws<CryptographicException>(() =>
@@ -87,10 +86,10 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("解密含無效 IV 長度的資料應擲出 CryptographicException")]
+        [DisplayName("Decrypting data with an invalid IV length throws CryptographicException")]
         public void Decrypt_InvalidIvLength_ThrowsCryptographicException()
         {
-            // 構造一個 ivLength 為負數的資料
+            // Build data whose `ivLength` is negative.
             byte[] malicious = new byte[80];
             BitConverter.GetBytes(-1).CopyTo(malicious, 0); // ivLength = -1
 
@@ -101,10 +100,10 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("解密含過大 cipher 長度的資料應擲出 CryptographicException")]
+        [DisplayName("Decrypting data with an oversized cipher length throws CryptographicException")]
         public void Decrypt_OversizedCipherLength_ThrowsCryptographicException()
         {
-            // 構造一個 ivLength 合法但 cipherLength 遠超實際資料的資料
+            // Build data whose `ivLength` is valid but whose `cipherLength` far exceeds the actual data.
             byte[] malicious = new byte[80];
             BitConverter.GetBytes(16).CopyTo(malicious, 0);            // ivLength = 16 (valid)
             BitConverter.GetBytes(int.MaxValue).CopyTo(malicious, 20); // cipherLength = MaxValue at offset 4 + 16

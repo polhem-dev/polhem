@@ -6,19 +6,20 @@ using Microsoft.CodeAnalysis;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// POLHEM1008（FormSchema 未宣告 PermissionModelId → 對所有已認證呼叫者全開）測試。
+    /// Tests for POLHEM1008 (a FormSchema without a PermissionModelId is open to every authenticated caller).
     /// </summary>
     /// <remarks>
-    /// 這條**報告而不強制**：未標記的表單保持開放是框架刻意的漸進採用策略（見
-    /// <c>FormBusinessObject.Authorize</c> 的 XML doc）。改成強制會讓每個採用到一半的部署當場壞掉。
-    /// 缺的從來不是規則，是「這張表單是開放的」這件事沒有任何地方說得出來。
+    /// This rule **reports and does not enforce**: leaving unmarked forms open is the framework's deliberate gradual
+    /// adoption strategy (see the XML doc of <c>FormBusinessObject.Authorize</c>). Enforcing it would break every
+    /// deployment that is halfway through adoption. What was missing was never a rule, but any place that says
+    /// "this form is open".
     /// </remarks>
     public class PermissionModelAnalyzerTests
     {
         private const string SchemaPath = "Define/FormSchema/Order.FormSchema.xml";
 
         [Fact]
-        [DisplayName("未宣告 PermissionModelId 應報 POLHEM1008，且嚴重度為 Info")]
+        [DisplayName("A missing PermissionModelId reports POLHEM1008 with Info severity")]
         public void MissingPermissionModelId_ReportsInfoDiagnostic()
         {
             const string xml = """
@@ -33,8 +34,8 @@ namespace Polhem.Analyzers.UnitTests.Definitions
             var diagnostic = Assert.Single(diagnostics);
             Assert.Equal("POLHEM1008", diagnostic.Id);
 
-            // Info 而非 Warning 是刻意的：Warning 會讓每個尚未採用完的部署 build 失敗，
-            // 包含本框架自己的 Defaults/（Department 與 Employee 都沒有 model）。
+            // Info rather than Warning is deliberate. Warning would fail the build of every deployment that has not
+            // finished adopting, including this framework's own `Defaults/` (Department and Employee have no model).
             Assert.Equal(DiagnosticSeverity.Info, diagnostic.Severity);
 
             var message = diagnostic.GetMessage(CultureInfo.InvariantCulture);
@@ -43,11 +44,11 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("PermissionModelId 存在但為空白，同樣應報 POLHEM1008")]
+        [DisplayName("A blank PermissionModelId reports POLHEM1008 as well")]
         public void BlankPermissionModelId_ReportsDiagnostic()
         {
-            // 執行期的判定是 string.IsNullOrEmpty，所以空字串與屬性缺席是同一回事。
-            // 只檢查「屬性在不在」會漏掉這個形狀。
+            // At runtime the check is `string.IsNullOrEmpty`, so an empty string is the same as a missing attribute.
+            // Checking only whether the attribute is present would miss this shape.
             const string xml = """
                 <?xml version="1.0" encoding="utf-8"?>
                 <FormSchema ProgId="Order" CategoryId="company" PermissionModelId="   ">
@@ -61,7 +62,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("已宣告 PermissionModelId 不應報 POLHEM1008")]
+        [DisplayName("A declared PermissionModelId does not report POLHEM1008")]
         public void DeclaredPermissionModelId_ReportsNothing()
         {
             const string xml = """
@@ -75,7 +76,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("多張表單各報一次，不會彼此吞掉")]
+        [DisplayName("Several forms each report once without swallowing one another")]
         public void MultipleSchemas_EachReportsOnce()
         {
             const string open1 = """

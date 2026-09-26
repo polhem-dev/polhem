@@ -12,7 +12,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TraceStart 應建立含正確屬性的 TraceContext")]
+        [DisplayName("TraceStart creates a TraceContext with the correct properties")]
         public void TraceStart_WithFullParameters_ReturnsContextWithCorrectProperties()
         {
             var listener = new TraceDispatcher(new CapturingWriter());
@@ -26,7 +26,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TraceStart 省略所有選用參數應建立含預設值的 Context")]
+        [DisplayName("TraceStart without optional parameters creates a context with default values")]
         public void TraceStart_WithOnlyRequiredLayer_CreatesContextWithDefaults()
         {
             var listener = new TraceDispatcher(new CapturingWriter());
@@ -40,7 +40,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TraceEnd 應停止計時器並發送 End 事件")]
+        [DisplayName("TraceEnd stops the stopwatch and emits an End event")]
         public void TraceEnd_AfterStart_StopsStopwatchAndEmitsEndEvent()
         {
             var writer = new CapturingWriter();
@@ -55,7 +55,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TraceEnd 傳入 detail 應覆蓋 Context 原有的 Detail")]
+        [DisplayName("TraceEnd with a detail overrides the Detail of the context")]
         public void TraceEnd_WithExplicitDetail_OverridesContextDetail()
         {
             var writer = new CapturingWriter();
@@ -69,7 +69,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TraceWrite 應發送 Point 事件")]
+        [DisplayName("TraceWrite emits a Point event")]
         public void TraceWrite_WithDetailAndStatus_EmitsPointEvent()
         {
             var writer = new CapturingWriter();
@@ -86,7 +86,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TraceWrite 省略所有選用參數應發送預設狀態的 Point 事件")]
+        [DisplayName("TraceWrite without optional parameters emits a Point event with the default status")]
         public void TraceWrite_WithOnlyRequiredLayer_EmitsDefaultStatusEvent()
         {
             var writer = new CapturingWriter();

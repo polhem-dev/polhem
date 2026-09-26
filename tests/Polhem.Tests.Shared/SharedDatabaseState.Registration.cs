@@ -47,8 +47,8 @@ namespace Polhem.Tests.Shared
             return settings.Categories.Select(c => c.Id).ToList();
         }
 
-        // Oracle 不走實體 DB 區隔（保持單一 testuser schema 容納所有 category 的表），
-        // 其他 DB 由 {@DbName} 把 CategoryId 代換為實體 DB 名。
+        // Oracle does not separate categories into physical databases: a single `testuser` schema holds the tables
+        // of every category. Other databases replace `{@DbName}` with the category id as the physical database name.
         private static string ResolveDbName(DatabaseType dbType, string categoryId)
             => dbType == DatabaseType.Oracle ? string.Empty : categoryId;
 

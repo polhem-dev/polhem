@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// POLHEM2007（各語系應覆蓋相同翻譯 key）測試。
+    /// Tests for POLHEM2007 (every language should cover the same translation keys).
     /// </summary>
     public class LanguageCoverageAnalyzerTests
     {
@@ -30,7 +30,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("某語系缺少其他語系有的 key 應報 POLHEM2007")]
+        [DisplayName("A language missing a key that another language has reports POLHEM2007")]
         public void MissingKeys_ReportsDiagnostic()
         {
             // Act
@@ -51,7 +51,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("各語系 key 一致時不應報診斷")]
+        [DisplayName("Languages with the same keys report nothing")]
         public void ConsistentCoverage_ReportsNothing()
         {
             // Act
@@ -65,7 +65,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("只有單一語系時無可比對對象，不應報診斷")]
+        [DisplayName("A single language has nothing to compare with and reports nothing")]
         public void SingleCulture_ReportsNothing()
         {
             // Act
@@ -78,7 +78,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("不同 Namespace 的語系檔應各自比對")]
+        [DisplayName("Language files of different namespaces are compared separately")]
         public void DifferentNamespaces_AreComparedSeparately()
         {
             const string orderResource = """
@@ -90,7 +90,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
                 </LanguageResource>
                 """;
 
-            // Act — Product 兩語系一致；Order 只有單一語系，不應因 Product 的 key 而被判缺漏。
+            // Act: Product has the same keys in both languages, and Order has only one language, so Order must not be reported as missing Product's keys.
             var diagnostics = AnalyzerRunner.Run(
                 new LanguageCoverageAnalyzer(),
                 (ChinesePath, Resource("zh-TW", "Schema.DisplayName")),
@@ -102,7 +102,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("缺漏過多時應摘要而非列出全部 key")]
+        [DisplayName("Many missing keys are summarized instead of listing every key")]
         public void ManyMissingKeys_AreSummarised()
         {
             var manyKeys = Enumerable.Range(1, 10).Select(index => $"Field.f{index}.Caption").ToArray();

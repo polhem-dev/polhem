@@ -83,21 +83,19 @@ namespace Polhem.Tests.Shared
         {
             var settings = SystemSettingsLoader.Load(paths);
 
-            // tests/Define/SystemSettings.xml 預設 MasterKeySource.Type=Environment、
-            // Value=POLHEM_MASTER_KEY。TestProcessBootstrap 已於 process 啟動時為缺值的
-            // POLHEM_MASTER_KEY 注入 hardcoded TestMasterKey,所以 fixture 不需要再額外
-            // 覆寫 MasterKeySource。
+            // `tests/Define/SystemSettings.xml` points `MasterKeySource` at the `POLHEM_MASTER_KEY` environment
+            // variable, and `TestProcessBootstrap` sets it to a hard-coded test key when it is missing.
+            // The fixture therefore does not need to override `MasterKeySource`.
 
             _configureBackend?.Invoke(settings.BackendConfiguration);
 
             var services = new ServiceCollection();
             services.AddPolhemFramework(settings.BackendConfiguration, paths, autoCreateMasterKey: true);
 
-            // Cache key prefix 設計（PR 5.4d 引入）已於 PR 5.7 撤除：cache 改為 ctor 注入
-            // PathOptions 後，bootstrap 與 fixture 的 ICacheContainer instance 不同，但底層
-            // CacheInfo.Provider 仍共享；保留 prefix 會讓 SharedDatabaseState 對 bootstrap
-            // 的 DatabaseSettings.Items mutation 在 fixture-prefixed cache 看不到。
-            // session-isolation 需求由 production code 的 Guid AccessToken 隨機性自然保證。
+            // NOTE: there is deliberately no per-fixture cache key prefix. The bootstrap and the fixture have
+            // different `ICacheContainer` instances but share the underlying `CacheInfo.Provider`, and a prefix
+            // would hide the bootstrap's changes to `DatabaseSettings.Items` from the fixture's cache.
+            // Sessions stay isolated because access tokens are random `Guid` values.
 
             var provider = services.BuildServiceProvider();
 

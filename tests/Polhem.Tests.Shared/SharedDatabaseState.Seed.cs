@@ -42,9 +42,9 @@ namespace Polhem.Tests.Shared
             }
         }
 
-        // 表名與欄位名一律 dialect-quote：Oracle 對 unquoted 識別符自動轉 UPPERCASE，
-        // 而 framework CREATE TABLE 是 quoted lowercase 形式，unquoted SELECT/INSERT
-        // 會找不到 ST_USER。對其他 DB（quoted 後仍為原大小寫）行為一致。
+        // Table and column names are always dialect-quoted. Oracle folds unquoted identifiers to uppercase, while the
+        // framework creates tables with quoted lowercase names, so an unquoted statement would look for `ST_USER`.
+        // Quoting behaves the same on the other databases.
         private static Guid EnsureSeedUser(DatabaseType dbType, string databaseId, DbAccess dbAccess)
         {
             string tbl = dbType.QuoteIdentifier("st_user");
@@ -83,8 +83,8 @@ namespace Polhem.Tests.Shared
 
             var (_, now) = GetSeedExpressions(dbType);
             var newRowId = Guid.NewGuid();
-            // password/email/note 使用單空白字元而非空字串：Oracle 將 empty string 視為
-            // NULL，會違反 NOT NULL constraint；其他 DB 仍視為一字元字串。如此 5 DB 行為一致。
+            // The password, email and note columns get a single space rather than an empty string. Oracle treats an
+            // empty string as NULL, which violates the NOT NULL constraint; elsewhere it stays a one-character string.
             var insert = new DbCommandSpec(DbCommandKind.NonQuery,
                 $"INSERT INTO {tbl} ({colRowId}, {colId}, {colName}, {colPwd}, {colEmail}, {colNote}, {colTimeZone}, {colCulture}, {colInsTime}) " +
                 $"VALUES ({{0}}, {{1}}, {{2}}, ' ', ' ', ' ', 'Asia/Taipei', 'zh-TW', {now})",
@@ -130,11 +130,11 @@ namespace Polhem.Tests.Shared
 
             var (_, now) = GetSeedExpressions(dbType);
             var newRowId = Guid.NewGuid();
-            // company_database_id 指向該 company 的資料庫（company-category DatabaseItem.Id），
-            // 也就是 permission 表（st_role_grant / st_user_role）實際所在的庫 —— EnterCompany 會用
-            // 此值載入角色權限快照。測試環境下即 company_sqlserver / company_postgresql / ...。
+            // `company_database_id` points to the company's database (the company-category `DatabaseItem.Id`), where
+            // the permission tables `st_role_grant` and `st_user_role` live. `EnterCompany` loads the role permission
+            // snapshot from it. In tests that is `company_sqlserver`, `company_postgresql` and so on.
             var companyDbId = TestDbConventions.GetDatabaseId(dbType, "company");
-            // 各方言 boolean literal：SQL Server/SQLite/MySQL/Oracle 用 1，PG 用 TRUE。
+            // PostgreSQL needs `TRUE` as the boolean literal; the other dialects accept `1`.
             string enabledLiteral = dbType == DatabaseType.PostgreSQL ? "TRUE" : "1";
             // number_formats_xml / cash_rounding_xml / allowed_currencies_xml are NOT NULL Text columns
             // with no overrides here. MySQL TEXT columns cannot carry a DEFAULT, so every hand-written

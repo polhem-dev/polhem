@@ -7,16 +7,16 @@ using Polhem.Base.Serialization;
 namespace Polhem.Base.UnitTests.Serialization
 {
     /// <summary>
-    /// <see cref="DataTable"/> 經 JSON wire round-trip 的保真度測試。
+    /// Fidelity tests for a <see cref="DataTable"/> round-trip over the JSON wire.
     /// </summary>
     /// <remarks>
-    /// 這裡驗的是「值不變」而非「不擲例外」——兩個失真都是靜默的：
-    /// 字串欄被當成日期改寫、decimal 超過 double 精度被截斷。
+    /// These tests check that values stay the same, not merely that nothing throws, because both distortions are
+    /// silent: a string column rewritten as a date, and a decimal beyond double precision being truncated.
     /// </remarks>
     public class DataTableJsonFidelityTests
     {
-        // 共用一個實例：JsonSerializerOptions 建構成本高，且首次序列化後即凍結，
-        // 這五個測試要的組態完全相同。
+        // One shared instance: `JsonSerializerOptions` is expensive to build and is frozen after its first use,
+        // and every test here needs the same configuration.
         private static readonly JsonSerializerOptions s_options = CreateOptions();
 
         private static JsonSerializerOptions CreateOptions()
@@ -37,7 +37,7 @@ namespace Polhem.Base.UnitTests.Serialization
         [InlineData("2026-07-28")]
         [InlineData("2026-07-28T10:30:00")]
         [InlineData("10:30")]
-        [DisplayName("字串欄位存日期樣式文字，round-trip 後應原樣保留")]
+        [DisplayName("Date-shaped text in a string column survives a round-trip unchanged")]
         public void StringColumn_DateShapedText_SurvivesRoundTrip(string text)
         {
             var table = new DataTable("T");
@@ -46,16 +46,16 @@ namespace Polhem.Base.UnitTests.Serialization
 
             var restored = RoundTrip(table);
 
-            // 先前會先 TryGetDateTime 成功、再 Convert.ChangeType 回字串，
-            // 於是 "2026-07-28" 變成 "07/28/2026 00:00:00"。
+            // Previously `TryGetDateTime` succeeded first and `Convert.ChangeType` turned the value back into a
+            // string, so "2026-07-28" became "07/28/2026 00:00:00".
             Assert.Equal(text, restored.Rows[0]["note"]);
         }
 
         [Fact]
-        [DisplayName("decimal 欄位超過 double 精度時 round-trip 不應失精")]
+        [DisplayName("A decimal column beyond double precision round-trips without losing precision")]
         public void DecimalColumn_HighPrecision_SurvivesRoundTrip()
         {
-            // 17 位有效數字：double 只有約 15~16 位，走 double 會被截。
+            // 17 significant digits. A double holds only about 15 to 16, so going through double would truncate it.
             const decimal amount = 12345678901234.567m;
 
             var table = new DataTable("T");
@@ -68,7 +68,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("DateTime 欄位仍應正確還原為 DateTime")]
+        [DisplayName("A DateTime column is still restored as DateTime")]
         public void DateTimeColumn_StillParsesAsDateTime()
         {
             var value = new DateTime(2026, 7, 28, 10, 30, 0, DateTimeKind.Unspecified);
@@ -85,9 +85,9 @@ namespace Polhem.Base.UnitTests.Serialization
         [Theory]
         [InlineData("79228162514264337593543950335")]   // decimal.MaxValue
         [InlineData("-79228162514264337593543950335")]
-        [InlineData("0.0000000000000000000000000001")]   // 最小刻度
+        [InlineData("0.0000000000000000000000000001")]   // Smallest step.
         [InlineData("1234.56")]
-        [DisplayName("decimal 欄位在 JSON 上以字串攜帶，超過 double 精度也應原值還原")]
+        [DisplayName("A decimal column is carried as a JSON string and restored exactly, even beyond double precision")]
         public void DecimalColumn_BeyondDoublePrecision_SurvivesRoundTrip(string literal)
         {
             var expected = decimal.Parse(literal, CultureInfo.InvariantCulture);
@@ -97,8 +97,8 @@ namespace Polhem.Base.UnitTests.Serialization
 
             var json = JsonSerializer.Serialize(table, s_options);
 
-            // 形狀本身就是契約的一部分：裸數字對 JavaScript 讀取端是 double，
-            // 在客戶端程式碼看到值之前就已經失真。
+            // The shape is part of the contract. A bare number is a double to a JavaScript reader, so the value
+            // would already be distorted before client code sees it.
             Assert.Contains($"\"amount\": \"{literal}\"".Replace(" ", string.Empty),
                 json.Replace(" ", string.Empty), StringComparison.Ordinal);
 
@@ -107,10 +107,10 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Theory]
-        [InlineData(9007199254740993L)]      // 2^53 + 1：double 存不住
+        [InlineData(9007199254740993L)]      // 2^53 + 1, which a double cannot hold.
         [InlineData(long.MaxValue)]
         [InlineData(long.MinValue)]
-        [DisplayName("long 欄位超過 2^53 應以字串攜帶並原值還原")]
+        [DisplayName("A long column beyond 2^53 is carried as a string and restored exactly")]
         public void Int64Column_BeyondSafeInteger_SurvivesRoundTrip(long expected)
         {
             var table = new DataTable("T");
@@ -127,10 +127,11 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("舊格式的裸數字仍應讀得回（寫入端改了，讀取端保持相容）")]
+        [DisplayName("A bare number in the earlier format still reads back (the writer changed, the reader stays compatible)")]
         public void UnquotedNumericCell_FromEarlierRelease_StillReads()
         {
-            // 4.27.0 以前（以及照當時 wire-fixtures 寫成的跨語言 client）送的就是這個形狀。
+            // Releases before 4.27.0, and cross-language clients written against the wire-fixtures of that time,
+            // send this shape.
             const string json = """
                 {
                   "tableName": "T",
@@ -149,7 +150,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("decimal 欄位收到非數值字串時不得靜默吞成預設值")]
+        [DisplayName("A non-numeric string in a decimal column does not silently become the default value")]
         public void DecimalColumn_NonNumericText_DoesNotSilentlyBecomeDefault()
         {
             const string json = """
@@ -165,8 +166,8 @@ namespace Polhem.Base.UnitTests.Serialization
                 """;
 
 
-            // 解析不出來就把字串原樣往下傳，由 DataRow 對真正的欄位型別報錯 ——
-            // 在這裡吞掉會把壞掉的 payload 變成一個看起來正常的 0。
+            // An unparseable string is passed on as is, so `DataRow` reports the error against the real column type.
+            // Swallowing it here would turn a broken payload into a normal-looking 0.
             var ex = Record.Exception(() => JsonSerializer.Deserialize<DataTable>(json, s_options));
             Assert.NotNull(ex);
         }

@@ -8,13 +8,14 @@ using Polhem.Base.Serialization;
 namespace Polhem.Base.UnitTests.Data
 {
     /// <summary>
-    /// 驗證欄位語意標記（<see cref="DataColumnExtensions"/>）與 JSON wire 路徑的承接。
-    /// 多個 FieldDbType 共用同一個 CLR 型別（Date/DateTime → DateTime、Text/String → string、
-    /// Currency/Decimal → decimal），標記存在的目的就是補回這段被抹平的資訊。
+    /// Verifies the column semantic marker (<see cref="DataColumnExtensions"/>) and how the JSON wire path carries it.
+    /// Several FieldDbType values share one CLR type (Date/DateTime → DateTime, Text/String → string,
+    /// Currency/Decimal → decimal); the marker exists to restore the information that this mapping flattens.
     /// </summary>
     public class DataColumnExtensionsTests
     {
-        // 刻意寫死字面值：這個 key 會以 msprop 名稱落進持久化的 XML，改名就讀不回既有檔案。
+        // The literal is hard-coded on purpose. The key lands in persisted XML as an msprop name, so renaming it
+        // would make existing files unreadable.
         private const string MarkerKey = "Polhem.FieldDbType";
 
         private static JsonSerializerOptions Options()
@@ -40,7 +41,7 @@ namespace Polhem.Base.UnitTests.Data
         }
 
         [Fact]
-        [DisplayName("未標記的欄位 ResolveFieldDbType 應回退為由 CLR 型別反推")]
+        [DisplayName("ResolveFieldDbType on an unmarked column falls back to inferring from the CLR type")]
         public void ResolveFieldDbType_NoMarker_FallsBackToClrType()
         {
             var column = new DataColumn("d", typeof(DateTime));
@@ -50,7 +51,7 @@ namespace Polhem.Base.UnitTests.Data
         }
 
         [Fact]
-        [DisplayName("已標記的欄位 ResolveFieldDbType 應回傳標記值而非反推值")]
+        [DisplayName("ResolveFieldDbType on a marked column returns the marker instead of the inferred type")]
         public void ResolveFieldDbType_WithMarker_PrefersMarker()
         {
             var column = new DataColumn("d", typeof(DateTime));
@@ -65,7 +66,7 @@ namespace Polhem.Base.UnitTests.Data
         [InlineData(FieldDbType.Text, typeof(string))]
         [InlineData(FieldDbType.Currency, typeof(decimal))]
         [InlineData(FieldDbType.AutoIncrement, typeof(int))]
-        [DisplayName("AddColumn 應在共用 CLR 型別的 FieldDbType 上留下標記")]
+        [DisplayName("AddColumn records the marker for FieldDbType values that share a CLR type")]
         public void AddColumn_SharedClrType_RecordsDeclaredType(FieldDbType dbType, Type expectedClrType)
         {
             var table = new DataTable("t");
@@ -76,7 +77,7 @@ namespace Polhem.Base.UnitTests.Data
         }
 
         [Fact]
-        [DisplayName("AddColumn 的三個 FieldDbType 多載都應留下標記")]
+        [DisplayName("Every FieldDbType overload of AddColumn records the marker")]
         public void AddColumn_AllFieldDbTypeOverloads_RecordDeclaredType()
         {
             var table = new DataTable("t");
@@ -91,7 +92,7 @@ namespace Polhem.Base.UnitTests.Data
         }
 
         [Fact]
-        [DisplayName("SetDateColumns 應把指定欄位標記為 Date，其餘欄位不受影響")]
+        [DisplayName("SetDateColumns marks the named columns as Date and leaves the other columns unchanged")]
         public void SetDateColumns_MarksOnlyNamedColumns()
         {
             var table = new DataTable("t");
@@ -105,7 +106,7 @@ namespace Polhem.Base.UnitTests.Data
         }
 
         [Fact]
-        [DisplayName("SetDateColumns 的欄名比對應不區分大小寫")]
+        [DisplayName("SetDateColumns matches column names case-insensitively")]
         public void SetDateColumns_ColumnNameMatchIsCaseInsensitive()
         {
             var table = new DataTable("t");
@@ -117,19 +118,19 @@ namespace Polhem.Base.UnitTests.Data
         }
 
         [Fact]
-        [DisplayName("SetDateColumns 指定不存在的欄名應擲例外，不可靜默略過")]
+        [DisplayName("SetDateColumns throws for an unknown column name instead of silently ignoring it")]
         public void SetDateColumns_UnknownColumn_Throws()
         {
             var table = new DataTable("t");
             table.Columns.Add("order_date", typeof(DateTime));
 
-            // 打錯字時「看起來宣告了、實際沒作用」正是標記機制要消除的靜默失敗模式。
+            // A typo that looks declared but has no effect is exactly the silent failure the marker exists to remove.
             var ex = Assert.Throws<ArgumentException>(() => table.SetDateColumns("oder_date"));
             Assert.Contains("oder_date", ex.Message, StringComparison.Ordinal);
         }
 
         [Fact]
-        [DisplayName("JSON round-trip 應保留 Date 標記而非退回 DateTime")]
+        [DisplayName("JSON round-trip preserves the Date marker instead of falling back to DateTime")]
         public void JsonRoundTrip_PreservesDateMarker()
         {
             var table = new DataTable("t");
@@ -145,7 +146,7 @@ namespace Polhem.Base.UnitTests.Data
         }
 
         [Fact]
-        [DisplayName("JSON payload 的 type 欄位應寫出 Date 而非 DateTime")]
+        [DisplayName("The type field of the JSON payload is written as Date, not DateTime")]
         public void JsonPayload_TypeFieldCarriesDate()
         {
             var table = new DataTable("t");
@@ -157,7 +158,7 @@ namespace Polhem.Base.UnitTests.Data
         }
 
         [Fact]
-        [DisplayName("JSON round-trip 後日曆日欄位的 CLR 型別仍為 DateTime")]
+        [DisplayName("A calendar-date column keeps DateTime as its CLR type after a JSON round-trip")]
         public void JsonRoundTrip_DateColumnStaysDateTimeClrType()
         {
             var table = new DataTable("t");
@@ -169,14 +170,14 @@ namespace Polhem.Base.UnitTests.Data
             var json = JsonSerializer.Serialize(table, Options());
             var restored = JsonSerializer.Deserialize<DataTable>(json, Options());
 
-            // 標記方案刻意不改 CLR 型別：DataColumn 的字串寫回、RowFilter、Compute
-            // 全部依賴 DataType 為 DateTime，改成 DateOnly 會打斷這些既有路徑。
+            // The marker approach deliberately keeps the CLR type. String write-back, `RowFilter` and `Compute`
+            // on a `DataColumn` all depend on `DataType` being `DateTime`, and `DateOnly` would break those paths.
             Assert.Equal(typeof(DateTime), restored!.Columns["order_date"]!.DataType);
             Assert.Equal(new DateTime(2026, 7, 25, 0, 0, 0, DateTimeKind.Unspecified), restored.Rows[0]["order_date"]);
         }
 
         [Fact]
-        [DisplayName("標記以 Polhem.FieldDbType 為 key 寫進 ExtendedProperties 與 XML schema")]
+        [DisplayName("The marker is written to ExtendedProperties and the XML schema under the Polhem.FieldDbType key")]
         public void ApplyFieldDbType_WritesMarkerUnderPublishedKey()
         {
             // Writer and reader share one constant, so every other test here passes whatever the key
@@ -194,7 +195,7 @@ namespace Polhem.Base.UnitTests.Data
         }
 
         [Fact]
-        [DisplayName("DataSet XML round-trip 應還原 Date / DateTime / Time 標記")]
+        [DisplayName("DataSet XML round-trip restores the Date, DateTime and Time markers")]
         public void XmlRoundTrip_PreservesTemporalMarkers()
         {
             var table = new DataTable("t");
@@ -205,7 +206,8 @@ namespace Polhem.Base.UnitTests.Data
             using var restored = XmlRoundTrip(table);
             var columns = restored.Tables["t"]!.Columns;
 
-            // ReadXml 讀回的標記是字串而非列舉值，Date 欄若沒被解析就會退回反推成 DateTime。
+            // `ReadXml` reads the marker back as a string, not an enum value. An unparsed marker would make the
+            // Date column fall back to being inferred as `DateTime`.
             Assert.Equal(FieldDbType.Date, columns["hire_date"]!.ResolveFieldDbType());
             Assert.Equal(FieldDbType.DateTime, columns["created_at"]!.ResolveFieldDbType());
             Assert.Equal(FieldDbType.Time, columns["work_start"]!.ResolveFieldDbType());
@@ -218,7 +220,7 @@ namespace Polhem.Base.UnitTests.Data
         [InlineData("3")]
         [InlineData("Date, String")]
         [InlineData("NotAType")]
-        [DisplayName("標記字串不是精確的成員名稱時應視為未標記，退回由 CLR 型別反推")]
+        [DisplayName("A marker string that is not an exact member name is treated as no marker and falls back to the CLR type")]
         public void GetDeclaredFieldDbType_StringNotExactMemberName_TreatedAsNoMarker(string marker)
         {
             var column = new DataColumn("d", typeof(DateTime));
@@ -229,7 +231,7 @@ namespace Polhem.Base.UnitTests.Data
         }
 
         [Fact]
-        [DisplayName("未標記的 DataTable 經 JSON round-trip 行為不變")]
+        [DisplayName("An unmarked DataTable behaves the same after a JSON round-trip")]
         public void JsonRoundTrip_UnmarkedTable_BehaviourUnchanged()
         {
             var table = new DataTable("t");

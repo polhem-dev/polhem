@@ -4,7 +4,7 @@ using Polhem.Base.Tracing;
 namespace Polhem.Base.UnitTests
 {
     /// <summary>
-    /// SysInfo 非安全性相關屬性與初始化測試。
+    /// Tests for the SysInfo properties and initialization that are not security related.
     /// </summary>
     [Collection("SysInfoStatic")]
     public class SysInfoTests : IDisposable
@@ -65,7 +65,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Version 應可讀寫")]
+        [DisplayName("Version is read-write")]
         public void Version_IsReadWrite()
         {
             SysInfo.Version = "99.9.9";
@@ -73,7 +73,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TraceListener 預設為 null，TraceEnabled 應對應其存在")]
+        [DisplayName("TraceEnabled reflects whether a TraceListener is set")]
         public void TraceListener_AffectsTraceEnabled()
         {
             SysInfo.TraceListener = null;
@@ -84,7 +84,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsDebugMode / IsToolMode / IsSingleFile 旗標應可讀寫")]
+        [DisplayName("The IsDebugMode / IsToolMode / IsSingleFile flags are read-write")]
         public void ModeFlags_AreReadWrite()
         {
             SysInfo.IsDebugMode = true;
@@ -105,7 +105,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Initialize 應套用 Version、IsDebugMode 並保留預設命名空間")]
+        [DisplayName("Initialize applies Version and IsDebugMode and keeps the default namespaces")]
         public void Initialize_AppliesVersionDebugAndDefaultNamespaces()
         {
             SysInfo.Initialize(new FakeConfig
@@ -130,7 +130,7 @@ namespace Polhem.Base.UnitTests
         [InlineData("  MyApp.Dto  |  MyApp.Models  ")]
         [InlineData("MyApp.Dto.|MyApp.Models.")]
         [InlineData("||MyApp.Dto|MyApp.Models||")]
-        [DisplayName("Initialize 應解析自訂命名空間並忽略空白、尾端點號與空項目")]
+        [DisplayName("Initialize parses custom namespaces, ignoring whitespace, trailing dots and empty entries")]
         public void Initialize_ParsesCustomNamespaces(string raw)
         {
             SysInfo.Initialize(new FakeConfig
@@ -146,7 +146,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Initialize 重複指定命名空間時不應產生重複項目")]
+        [DisplayName("Initialize does not create duplicate entries for repeated namespaces")]
         public void Initialize_DuplicateNamespaces_AreDeduplicated()
         {
             SysInfo.Initialize(new FakeConfig

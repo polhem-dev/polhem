@@ -6,45 +6,48 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace Polhem.Analyzers.UnitTests
 {
     /// <summary>
-    /// 以最小 compilation 驅動 analyzer 並取回診斷結果的測試 harness。
+    /// Test harness that drives an analyzer over a minimal compilation and returns its diagnostics.
     /// </summary>
     /// <remarks>
-    /// 定義檔規則（POLHEM1xxx / POLHEM2xxx）不依賴任何 C# 型別，故 compilation 僅需一個 placeholder
-    /// 語法樹與 runtime 的 <c>System.Private.CoreLib</c>；不從 NuGet 解析參考組件，測試因此可離線執行。
+    /// Definition file rules (POLHEM1xxx / POLHEM2xxx) do not depend on any C# type, so the compilation needs only
+    /// a placeholder syntax tree and the runtime's <c>System.Private.CoreLib</c>. No reference assemblies are
+    /// resolved from NuGet, so the tests run offline.
     /// </remarks>
     internal static class AnalyzerRunner
     {
         private const string PlaceholderSource = "internal sealed class Placeholder { }";
 
         /// <summary>
-        /// 預設的模擬組件名稱。
+        /// The default simulated assembly name.
         /// </summary>
         private const string DefaultAssemblyName = "Polhem.Analyzers.TestAssembly";
 
         /// <summary>
-        /// 以指定的定義檔執行 analyzer，回傳其產生的診斷。
+        /// Runs the analyzer over the given definition files and returns the diagnostics it produces.
         /// </summary>
-        /// <param name="analyzer">要執行的 analyzer。</param>
-        /// <param name="additionalFiles">模擬的定義檔（路徑與內容）。</param>
-        /// <returns>analyzer 產生的診斷，依 ID 與位置排序。</returns>
+        /// <param name="analyzer">The analyzer to run.</param>
+        /// <param name="additionalFiles">The simulated definition files (path and content).</param>
+        /// <returns>The diagnostics the analyzer produces.</returns>
         public static ImmutableArray<Diagnostic> Run(
             DiagnosticAnalyzer analyzer,
             params (string Path, string Content)[] additionalFiles)
             => Run(analyzer, PlaceholderSource, additionalFiles);
 
         /// <summary>
-        /// 以指定的原始碼執行 analyzer，回傳其產生的診斷。
+        /// Runs the analyzer over the given source code and returns the diagnostics it produces.
         /// </summary>
-        /// <param name="analyzer">要執行的 analyzer。</param>
-        /// <param name="source">要分析的 C# 原始碼。</param>
+        /// <param name="analyzer">The analyzer to run.</param>
+        /// <param name="source">The C# source code to analyze.</param>
         /// <param name="anchorTypes">
-        /// 原始碼所引用之外部型別的代表（如 <c>MessagePack.KeyAttribute</c>），用於確保其組件進入參考集。
+        /// Representatives of the external types the source refers to (such as <c>MessagePack.KeyAttribute</c>),
+        /// which make sure their assemblies are in the reference set.
         /// </param>
-        /// <returns>analyzer 產生的診斷。</returns>
+        /// <returns>The diagnostics the analyzer produces.</returns>
         /// <remarks>
-        /// IMPORTANT: 需要外部 attribute 的規則必須傳入對應 anchor。僅靠 <c>AppDomain</c> 已載入組件
-        /// 並不可靠——組件載入是惰性的，單獨執行某個測試時該組件可能尚未載入，導致原始碼編譯出
-        /// error type、規則靜默不觸發，徵狀與「規則有 bug」完全相同。
+        /// IMPORTANT: a rule that needs an external attribute must be given the matching anchor. Relying on the
+        /// assemblies already loaded in the <c>AppDomain</c> is not reliable: assembly loading is lazy, so when a
+        /// single test runs alone the assembly may not be loaded yet. The source then compiles to an error type and
+        /// the rule silently does not fire, which looks exactly like a bug in the rule.
         /// </remarks>
         public static ImmutableArray<Diagnostic> RunOnSource(
             DiagnosticAnalyzer analyzer,
@@ -53,16 +56,17 @@ namespace Polhem.Analyzers.UnitTests
             => Run(analyzer, source, BuildReferences(anchorTypes), [], DefaultAssemblyName);
 
         /// <summary>
-        /// 以指定的組件名稱執行 analyzer，供只在特定組件內生效的規則使用。
+        /// Runs the analyzer under the given assembly name, for rules that apply only inside a specific assembly.
         /// </summary>
-        /// <param name="analyzer">要執行的 analyzer。</param>
-        /// <param name="assemblyName">模擬的組件名稱，例如 <c>Polhem.Definition</c>。</param>
-        /// <param name="source">要分析的 C# 原始碼。</param>
-        /// <param name="anchorTypes">原始碼所引用之外部型別的代表。</param>
-        /// <returns>analyzer 產生的診斷。</returns>
+        /// <param name="analyzer">The analyzer to run.</param>
+        /// <param name="assemblyName">The simulated assembly name, for example <c>Polhem.Definition</c>.</param>
+        /// <param name="source">The C# source code to analyze.</param>
+        /// <param name="anchorTypes">Representatives of the external types the source refers to.</param>
+        /// <returns>The diagnostics the analyzer produces.</returns>
         /// <remarks>
-        /// POLHEM3002 僅在 <c>Polhem.Definition</c> 組件內生效（見該規則的 remarks），若沿用預設組件名稱，
-        /// 規則會靜默而測試將永遠通過——與「規則沒實作」無法區分。
+        /// POLHEM3002 applies only inside the <c>Polhem.Definition</c> assembly (see the rule's remarks). With the
+        /// default assembly name the rule stays silent and the test always passes, which cannot be told apart from
+        /// a rule that is not implemented.
         /// </remarks>
         public static ImmutableArray<Diagnostic> RunOnSourceAs(
             DiagnosticAnalyzer analyzer,
@@ -72,12 +76,12 @@ namespace Polhem.Analyzers.UnitTests
             => Run(analyzer, source, BuildReferences(anchorTypes), [], assemblyName);
 
         /// <summary>
-        /// 以指定的原始碼與定義檔執行 analyzer，回傳其產生的診斷。
+        /// Runs the analyzer over the given source code and definition files and returns the diagnostics it produces.
         /// </summary>
-        /// <param name="analyzer">要執行的 analyzer。</param>
-        /// <param name="source">要分析的 C# 原始碼。</param>
-        /// <param name="additionalFiles">模擬的定義檔（路徑與內容）。</param>
-        /// <returns>analyzer 產生的診斷。</returns>
+        /// <param name="analyzer">The analyzer to run.</param>
+        /// <param name="source">The C# source code to analyze.</param>
+        /// <param name="additionalFiles">The simulated definition files (path and content).</param>
+        /// <returns>The diagnostics the analyzer produces.</returns>
         public static ImmutableArray<Diagnostic> Run(
             DiagnosticAnalyzer analyzer,
             string source,
@@ -85,14 +89,16 @@ namespace Polhem.Analyzers.UnitTests
             => Run(analyzer, source, [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)], additionalFiles, DefaultAssemblyName);
 
         /// <summary>
-        /// 取得指定原始碼的編譯期診斷，用於排查測試素材本身是否有編譯錯誤。
+        /// Gets the compilation diagnostics of the given source code, to check whether the test input itself has
+        /// compile errors.
         /// </summary>
-        /// <param name="source">要編譯的 C# 原始碼。</param>
-        /// <param name="anchorTypes">原始碼所引用之外部型別的代表。</param>
-        /// <returns>編譯期的錯誤與警告。</returns>
+        /// <param name="source">The C# source code to compile.</param>
+        /// <param name="anchorTypes">Representatives of the external types the source refers to.</param>
+        /// <returns>The compile-time errors and warnings.</returns>
         /// <remarks>
-        /// 語意分析規則遇到 error type 會靜默失效（找不到 attribute 符號），徵狀與「規則未觸發」
-        /// 完全相同。測試素材有編譯錯誤時，此方法可直接區分兩者。
+        /// A semantic rule silently stops working on an error type (it cannot find the attribute symbol), which
+        /// looks exactly like a rule that did not fire. When the test input has compile errors, this method tells
+        /// the two apart.
         /// </remarks>
         public static ImmutableArray<Diagnostic> GetCompilationDiagnostics(string source, params Type[] anchorTypes)
         {
@@ -105,15 +111,16 @@ namespace Polhem.Analyzers.UnitTests
         }
 
         /// <summary>
-        /// 組出參考集：anchor 型別所屬組件，加上目前已載入的非動態組件。
+        /// Builds the reference set: the assemblies of the anchor types plus the currently loaded non-dynamic
+        /// assemblies.
         /// </summary>
-        /// <param name="anchorTypes">要確保納入的型別。</param>
-        /// <returns>去重後的組件參考。</returns>
+        /// <param name="anchorTypes">The types whose assemblies must be included.</param>
+        /// <returns>The de-duplicated assembly references.</returns>
         private static MetadataReference[] BuildReferences(Type[] anchorTypes)
         {
             var locations = new HashSet<string>(StringComparer.Ordinal);
 
-            // 存取 Assembly 會強制載入該組件，故 anchor 必須先加入。
+            // Accessing `Assembly` forces the assembly to load, so the anchors must be added first.
             foreach (var type in anchorTypes)
             {
                 if (!string.IsNullOrEmpty(type.Assembly.Location))

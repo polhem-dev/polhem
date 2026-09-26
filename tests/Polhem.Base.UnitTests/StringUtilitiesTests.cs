@@ -18,14 +18,14 @@ namespace Polhem.Base.UnitTests
         [InlineData("  ", true, true)]
         [InlineData("  ", false, false)]
         [InlineData("abc", true, false)]
-        [DisplayName("IsEmpty(string) 應依 null/空字串/空白/isTrim 參數回傳正確結果")]
+        [DisplayName("IsEmpty(string) returns the correct result for null, empty, whitespace and the isTrim argument")]
         public void IsEmpty_String_ReturnsExpected(string? input, bool isTrim, bool expected)
         {
             Assert.Equal(expected, StringUtilities.IsEmpty(input, isTrim));
         }
 
         [Fact]
-        [DisplayName("IsEmptyText(object) 應處理 null/DBNull/字串")]
+        [DisplayName("IsEmptyText(object) handles null, DBNull and strings")]
         public void IsEmptyText_Object_HandlesNullAndDbNull()
         {
             Assert.True(StringUtilities.IsEmptyText((object?)null));
@@ -35,11 +35,11 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEmptyText 與 ValueUtilities.IsEmpty 對 Guid.Empty / DateTime.MinValue 結論相反")]
+        [DisplayName("IsEmptyText and ValueUtilities.IsEmpty disagree on Guid.Empty and DateTime.MinValue")]
         public void IsEmptyText_DivergesFromValueUtilities_OnGuidAndDateTime()
         {
-            // 這正是兩者同名時最容易誤用的一格：改名為 IsEmptyText 之後，呼叫端從名字就
-            // 看得出自己問的是「文字形式是不是空的」，而不是「這個值是不是空值」。
+            // This is the case most easily misused while both methods shared a name. With the name `IsEmptyText`,
+            // a caller can tell from the name that it asks whether the text form is empty, not whether the value is empty.
             Assert.False(StringUtilities.IsEmptyText(Guid.Empty));
             Assert.True(ValueUtilities.IsEmpty(Guid.Empty));
 
@@ -48,7 +48,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNotEmpty 應為 IsEmpty 的反向")]
+        [DisplayName("IsNotEmpty is the inverse of IsEmpty")]
         public void IsNotEmpty_IsInverseOfIsEmpty()
         {
             Assert.False(StringUtilities.IsNotEmpty((string?)null));
@@ -61,7 +61,7 @@ namespace Polhem.Base.UnitTests
         // ---- Format ----
 
         [Fact]
-        [DisplayName("Format 應以 InvariantCulture 展開,無需 caller 傳 culture")]
+        [DisplayName("Format expands with InvariantCulture without the caller passing a culture")]
         public void Format_WithArgs_Expands()
         {
             Assert.Equal("a=1,b=2", StringUtilities.Format("a={0},b={1}", 1, 2));
@@ -73,7 +73,7 @@ namespace Polhem.Base.UnitTests
         [InlineData(null, null, true)]
         [InlineData(null, "x", false)]
         [InlineData("x", null, false)]
-        [DisplayName("IsEquals 應處理 null 情境")]
+        [DisplayName("IsEquals handles null values")]
         public void IsEquals_NullHandling(string? s1, string? s2, bool expected)
         {
             Assert.Equal(expected, StringUtilities.IsEquals(s1, s2));
@@ -83,14 +83,14 @@ namespace Polhem.Base.UnitTests
         [InlineData("AB", "ab", true, true)]
         [InlineData("AB", "ab", false, false)]
         [InlineData("ab", "ab", false, true)]
-        [DisplayName("IsEquals 預設 IgnoreCase,可用 ignoreCase=false 切換")]
+        [DisplayName("IsEquals ignores case by default and can be switched with ignoreCase=false")]
         public void IsEquals_IgnoreCase(string a, string b, bool ignoreCase, bool expected)
         {
             Assert.Equal(expected, StringUtilities.IsEquals(a, b, ignoreCase));
         }
 
         [Fact]
-        [DisplayName("IsEqualsOr 應在任一項相等時回傳 true(預設 IgnoreCase)")]
+        [DisplayName("IsEqualsOr returns true when any value matches (ignoring case by default)")]
         public void IsEqualsOr_MatchesAny()
         {
             Assert.True(StringUtilities.IsEqualsOr("hello", "world", "Hello", "foo"));
@@ -100,7 +100,7 @@ namespace Polhem.Base.UnitTests
         // ---- Contains / StartsWith / EndsWith / IndexOf / LastIndexOf (default IgnoreCase) ----
 
         [Fact]
-        [DisplayName("Contains 預設 IgnoreCase 比對")]
+        [DisplayName("Contains ignores case by default")]
         public void Contains_DefaultIgnoreCase()
         {
             Assert.True(StringUtilities.Contains("abcdef", "CD"));
@@ -109,7 +109,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("StartsWith / EndsWith 預設 IgnoreCase")]
+        [DisplayName("StartsWith and EndsWith ignore case by default")]
         public void StartsWithEndsWith_DefaultIgnoreCase()
         {
             Assert.True(StringUtilities.StartsWith("Hello", "he"));
@@ -121,7 +121,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IndexOf / LastIndexOf 預設 IgnoreCase;找不到或 null 回 -1")]
+        [DisplayName("IndexOf and LastIndexOf ignore case by default and return -1 when not found or null")]
         public void IndexOfLastIndexOf_DefaultIgnoreCase()
         {
             Assert.Equal(0, StringUtilities.IndexOf("hello", "HE"));
@@ -135,7 +135,7 @@ namespace Polhem.Base.UnitTests
         // ---- Replace ----
 
         [Fact]
-        [DisplayName("Replace 預設 IgnoreCase,可用 ignoreCase=false 切換")]
+        [DisplayName("Replace ignores case by default and can be switched with ignoreCase=false")]
         public void Replace_DefaultIgnoreCase()
         {
             Assert.Equal("XYZXYZ", StringUtilities.Replace("abcABC", "abc", "XYZ"));
@@ -143,7 +143,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Replace 於空字串應回傳空字串")]
+        [DisplayName("Replace returns an empty string for an empty input")]
         public void Replace_EmptyInput_ReturnsEmpty()
         {
             Assert.Equal(string.Empty, StringUtilities.Replace(string.Empty, "x", "y"));
@@ -152,14 +152,14 @@ namespace Polhem.Base.UnitTests
         // ---- Split ----
 
         [Fact]
-        [DisplayName("Split 應依分隔字串切分")]
+        [DisplayName("Split splits on the separator string")]
         public void Split_Splits()
         {
             Assert.Equal(s_expectedAbc, StringUtilities.Split("a||b||c", "||"));
         }
 
         [Fact]
-        [DisplayName("Split 於空字串應回傳空陣列(框架語意)")]
+        [DisplayName("Split returns an empty array for an empty input (framework semantics)")]
         public void Split_Empty_ReturnsEmptyArray()
         {
             Assert.Empty(StringUtilities.Split(string.Empty, ","));
@@ -169,7 +169,7 @@ namespace Polhem.Base.UnitTests
         // ---- Trim ----
 
         [Fact]
-        [DisplayName("Trim 於 null 應回傳空字串,並移除 ZWSP/ZWNBSP")]
+        [DisplayName("Trim returns an empty string for null and removes ZWSP and ZWNBSP")]
         public void Trim_NullAndZeroWidth()
         {
             Assert.Equal(string.Empty, StringUtilities.Trim(null));
@@ -186,14 +186,14 @@ namespace Polhem.Base.UnitTests
         [InlineData("ZZ", 36, "100")]
         [InlineData("ABZ", 36, "AC0")]
         [InlineData("ZZZ", 36, "1000")]
-        [DisplayName("GetNextId 應回傳正確的下一個編號")]
+        [DisplayName("GetNextId returns the correct next ID")]
         public void GetNextId_VariousBaseAndId_ReturnsExpectedNextId(string currentId, int numberBase, string expected)
         {
             Assert.Equal(expected, StringUtilities.GetNextId(currentId, numberBase));
         }
 
         [Fact]
-        [DisplayName("GetNextId(value, baseValues) 應依字元序產生下一個 id")]
+        [DisplayName("GetNextId(value, baseValues) produces the next ID in character order")]
         public void GetNextId_CustomBaseValues()
         {
             Assert.Equal("AB", StringUtilities.GetNextId("AA", "ABC"));
@@ -203,7 +203,7 @@ namespace Polhem.Base.UnitTests
         [Theory]
         [InlineData(1)]
         [InlineData(37)]
-        [DisplayName("GetNextId(value, numberBase) 進位基數超出 2-36 應拋 ArgumentOutOfRangeException")]
+        [DisplayName("GetNextId(value, numberBase) throws ArgumentOutOfRangeException for a base outside 2-36")]
         public void GetNextId_NumberBaseOutOfRange_Throws(int numberBase)
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => StringUtilities.GetNextId("A", numberBase));
@@ -212,14 +212,14 @@ namespace Polhem.Base.UnitTests
         [Theory]
         [InlineData(null)]
         [InlineData("")]
-        [DisplayName("GetNextId(value, baseValues) baseValues 為 null 或空字串應拋 ArgumentException")]
+        [DisplayName("GetNextId(value, baseValues) throws ArgumentException when baseValues is null or empty")]
         public void GetNextId_EmptyBaseValues_Throws(string? baseValues)
         {
             Assert.Throws<ArgumentException>(() => StringUtilities.GetNextId("A", baseValues!));
         }
 
         [Fact]
-        [DisplayName("GetNextId(value, baseValues) value 含 baseValues 外字元應拋 ArgumentException")]
+        [DisplayName("GetNextId(value, baseValues) throws ArgumentException when value contains a character outside baseValues")]
         public void GetNextId_InvalidCharacterInValue_Throws()
         {
             Assert.Throws<ArgumentException>(() => StringUtilities.GetNextId("AZ", "AB"));

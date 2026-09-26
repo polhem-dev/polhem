@@ -23,7 +23,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("IsSerializeEmpty state 為 None 時永遠回傳 false")]
+        [DisplayName("IsSerializeEmpty returns false when the state is None")]
         public void IsSerializeEmpty_StateNone_ReturnsFalse()
         {
             Assert.False(SerializationUtilities.IsSerializeEmpty(SerializeState.None, null!));
@@ -31,14 +31,14 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("IsSerializeEmpty 於 Serialize 狀態且 value 為 null 應回傳 true")]
+        [DisplayName("IsSerializeEmpty returns true for a null value in the Serialize state")]
         public void IsSerializeEmpty_SerializeAndNull_ReturnsTrue()
         {
             Assert.True(SerializationUtilities.IsSerializeEmpty(SerializeState.Serialize, null!));
         }
 
         [Fact]
-        [DisplayName("IsSerializeEmpty 應尊重 IObjectSerializeEmpty 回報的狀態")]
+        [DisplayName("IsSerializeEmpty honors the state reported by IObjectSerializeEmpty")]
         public void IsSerializeEmpty_ObjectSerializeEmpty_ReflectsProperty()
         {
             var emptyObj = new EmptySerializeObject { IsSerializeEmpty = true };
@@ -49,7 +49,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("IsSerializeEmpty 於空 IList 應回傳 true,非空應回傳 false")]
+        [DisplayName("IsSerializeEmpty returns true for an empty IList and false for a non-empty one")]
         public void IsSerializeEmpty_IList_ReflectsEmptiness()
         {
             Assert.True(SerializationUtilities.IsSerializeEmpty(SerializeState.Serialize, new List<int>()));
@@ -57,7 +57,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("IsSerializeEmpty 於 IEnumerable 應依可列舉性判斷 empty")]
+        [DisplayName("IsSerializeEmpty treats an IEnumerable as empty when it yields no items")]
         public void IsSerializeEmpty_IEnumerable_ReflectsEmptiness()
         {
             Assert.True(SerializationUtilities.IsSerializeEmpty(SerializeState.Serialize, new PureEnumerable()));
@@ -65,10 +65,10 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("IsSerializeEmpty 其他型別應走 default 回傳 false")]
+        [DisplayName("IsSerializeEmpty returns false for other types through the default branch")]
         public void IsSerializeEmpty_DefaultBranch_ReturnsFalse()
         {
-            // int / string 等 primitive 不符合任何 case → default → false
+            // Primitives such as int and string match no case, so the default branch returns false.
             Assert.False(SerializationUtilities.IsSerializeEmpty(SerializeState.Serialize, 123));
             Assert.False(SerializationUtilities.IsSerializeEmpty(SerializeState.Serialize, "abc"));
         }

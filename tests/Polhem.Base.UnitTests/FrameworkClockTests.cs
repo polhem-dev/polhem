@@ -3,18 +3,18 @@ using System.ComponentModel;
 namespace Polhem.Base.UnitTests
 {
     /// <summary>
-    /// <see cref="FrameworkClock"/> 測試：時區換算、空白時區的 UTC 預設、無法解析時的失敗行為。
+    /// Tests for <see cref="FrameworkClock"/>: time zone conversion, the UTC default for a blank zone, and the failure behavior for an unresolvable zone.
     /// </summary>
     /// <remarks>
-    /// 期望值一律由 <see cref="TimeZoneInfo"/> 動態推導，不寫死偏移量——測試在開發機
-    /// （Asia/Taipei）與 CI（UTC）下都必須成立。
+    /// Expected values are always derived from <see cref="TimeZoneInfo"/> rather than hard-coded offsets, because the
+    /// tests must hold both on a developer machine (Asia/Taipei) and in CI (UTC).
     /// </remarks>
     public class FrameworkClockTests
     {
         private const string Taipei = "Asia/Taipei";
 
         [Fact]
-        [DisplayName("Today 依指定時區回傳當地日曆日")]
+        [DisplayName("Today returns the local calendar date of the given zone")]
         public void Today_UsesGivenZone()
         {
             var expected = DateOnly.FromDateTime(
@@ -26,30 +26,30 @@ namespace Polhem.Base.UnitTests
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("空白時區代表 UTC，而非機器時區")]
+        [DisplayName("A blank zone means UTC, not the machine zone")]
         public void Today_BlankZone_MeansUtc(string timeZoneId)
         {
             Assert.Equal(DateOnly.FromDateTime(DateTime.UtcNow), FrameworkClock.Today(timeZoneId));
         }
 
         [Fact]
-        [DisplayName("Now 的 Kind 一律為 Unspecified，絕不為 Local")]
+        [DisplayName("Now always has Kind Unspecified, never Local")]
         public void Now_KindIsAlwaysUnspecified()
         {
-            // Local 會標錯「非本機時區的牆上時間」，且在兩條 wire 上都會位移讀數（ADR-032 D6）。
+            // `Local` would mislabel a wall-clock time from a zone other than the machine's, and it shifts the reading on both wires (ADR-032 D6).
             Assert.Equal(DateTimeKind.Unspecified, FrameworkClock.Now(Taipei).Kind);
             Assert.Equal(DateTimeKind.Unspecified, FrameworkClock.Now(string.Empty).Kind);
         }
 
         [Fact]
-        [DisplayName("Now 與 Today 對同一時區一致")]
+        [DisplayName("Now and Today agree for the same zone")]
         public void Now_AndToday_AgreeOnTheSameZone()
         {
             Assert.Equal(DateOnly.FromDateTime(FrameworkClock.Now(Taipei)), FrameworkClock.Today(Taipei));
         }
 
         [Fact]
-        [DisplayName("時區換算的偏移量與 TimeZoneInfo 一致")]
+        [DisplayName("The zone offset applied by Now matches TimeZoneInfo")]
         public void Now_AppliesTheZoneOffset()
         {
             var offset = TimeZoneInfo.FindSystemTimeZoneById(Taipei).GetUtcOffset(DateTime.UtcNow);
@@ -57,14 +57,14 @@ namespace Polhem.Base.UnitTests
             var delta = FrameworkClock.Now(Taipei) - FrameworkClock.Now(string.Empty);
 
             Assert.True(Math.Abs((delta - offset).TotalSeconds) < 5,
-                $"預期偏移 {offset}，實得 {delta}。");
+                $"Expected offset {offset}, got {delta}.");
         }
 
         [Fact]
-        [DisplayName("無法解析的時區應擲例外，不得靜默退回 UTC")]
+        [DisplayName("An unresolvable zone throws instead of silently falling back to UTC")]
         public void Today_UnresolvableZone_Throws()
         {
-            // 靜默退回 UTC 會讓每個日期都錯得無聲無息；行動端 / WASM 缺 tz 資料正是這種形態。
+            // A silent fallback to UTC would make every date wrong without a trace, which is exactly how missing tz data on mobile or WASM shows up.
             var exception = Assert.Throws<InvalidOperationException>(
                 () => FrameworkClock.Today("Not/AZone"));
 

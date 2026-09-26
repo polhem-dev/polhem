@@ -6,14 +6,14 @@ using Microsoft.CodeAnalysis;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// POLHEM1001（FormSchema CategoryId 必須為合法資料庫 scope）測試。
+    /// Tests for POLHEM1001 (a FormSchema CategoryId must be a valid database scope).
     /// </summary>
     public class FormSchemaCategoryIdAnalyzerTests
     {
         private const string SchemaPath = "Define/FormSchema/Product.FormSchema.xml";
 
         [Fact]
-        [DisplayName("CategoryId 為未知值應報 POLHEM1001 並列出合法值")]
+        [DisplayName("An unknown CategoryId reports POLHEM1001 and lists the valid values")]
         public void UnknownCategoryId_ReportsDiagnostic()
         {
             const string xml = """
@@ -38,7 +38,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("CategoryId 僅大小寫不符應報 POLHEM1001 並指名正確拼法")]
+        [DisplayName("A CategoryId that differs only in casing reports POLHEM1001 and names the correct spelling")]
         public void WrongCasingCategoryId_ReportsDiagnosticNamingCorrectCasing()
         {
             const string xml = """
@@ -64,7 +64,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         [InlineData("common")]
         [InlineData("company")]
         [InlineData("log")]
-        [DisplayName("CategoryId 為合法 scope 不應報診斷")]
+        [DisplayName("A CategoryId that is a valid scope reports nothing")]
         public void ValidCategoryId_ReportsNothing(string categoryId)
         {
             var xml = $"""
@@ -82,7 +82,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("診斷位置應指向 CategoryId 屬性本身")]
+        [DisplayName("The diagnostic location points at the CategoryId attribute itself")]
         public void Diagnostic_LocatesCategoryIdAttribute()
         {
             const string xml = """
@@ -99,10 +99,10 @@ namespace Polhem.Analyzers.UnitTests.Definitions
             var lineSpan = Assert.Single(diagnostics).Location.GetLineSpan();
             Assert.Equal(SchemaPath, lineSpan.Path);
 
-            // 第 2 行（0-based index 1）為 FormSchema 根節點。
+            // Line 2 (0-based index 1) is the FormSchema root element.
             Assert.Equal(1, lineSpan.StartLinePosition.Line);
 
-            // 位置應涵蓋 CategoryId="business" 整段，而非僅屬性名稱。
+            // The location covers the whole `CategoryId="business"`, not only the attribute name.
             var line = xml.Split('\n')[1];
             var expectedStart = line.IndexOf("CategoryId", StringComparison.Ordinal);
             Assert.Equal(expectedStart, lineSpan.StartLinePosition.Character);
@@ -110,7 +110,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("未宣告 CategoryId 屬性不應報診斷")]
+        [DisplayName("A schema without a CategoryId attribute reports nothing")]
         public void MissingCategoryId_ReportsNothing()
         {
             const string xml = """
@@ -128,7 +128,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("非 FormSchema 定義檔不應被檢查")]
+        [DisplayName("A definition file that is not a FormSchema is not checked")]
         public void NonFormSchemaFile_ReportsNothing()
         {
             const string xml = """
@@ -146,7 +146,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("XML 格式錯誤應靜默跳過而非讓 analyzer 崩潰")]
+        [DisplayName("Malformed XML is skipped silently instead of crashing the analyzer")]
         public void MalformedXml_ReportsNothingWithoutThrowing()
         {
             const string xml = """
@@ -163,7 +163,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("缺少 ProgId 屬性時應以檔名推導 ProgId")]
+        [DisplayName("A missing ProgId attribute falls back to a ProgId derived from the file name")]
         public void MissingProgId_FallsBackToFileName()
         {
             const string xml = """

@@ -5,16 +5,17 @@ using Polhem.Definition;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// analyzer 內建 ProgId 白名單與框架實際內嵌的預設 FormSchema 的同步斷言。
+    /// Keeps the analyzer's built-in ProgId allowlist in sync with the default FormSchemas the framework actually embeds.
     /// </summary>
     /// <remarks>
-    /// POLHEM2003 需要區分「ProgId 真的不存在」與「ProgId 由框架以內嵌資源提供、消費端沒有對應檔案」。
-    /// 後者若誤報會是 error 級誤判並擋下建置，因此白名單必須與框架實際內嵌內容一致。
+    /// POLHEM2003 must tell "the ProgId really does not exist" apart from "the framework supplies the ProgId as an
+    /// embedded resource and the consumer has no file for it". A false report of the latter is an error-level
+    /// misdiagnosis that blocks the build, so the allowlist must match what the framework actually embeds.
     /// </remarks>
     public class FrameworkProgIdsSyncTests
     {
         [Fact]
-        [DisplayName("analyzer 的內建 ProgId 白名單必須與框架內嵌的 FormSchema 一致")]
+        [DisplayName("The analyzer's built-in ProgId allowlist matches the FormSchemas embedded in the framework")]
         public void All_MatchesEmbeddedFormSchemas()
         {
             // Arrange
@@ -37,7 +38,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("非內建 ProgId 不應被視為框架提供")]
+        [DisplayName("A ProgId that is not built in is not treated as framework-supplied")]
         public void IsFrameworkSupplied_RejectsConsumerProgIds()
         {
             // Assert

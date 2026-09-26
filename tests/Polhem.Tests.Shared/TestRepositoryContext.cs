@@ -10,18 +10,18 @@ using Polhem.Repository.Abstractions;
 namespace Polhem.Tests.Shared
 {
     /// <summary>
-    /// 建立測試用的 <see cref="IRepositoryContext"/>。
+    /// Creates an <see cref="IRepositoryContext"/> for tests.
     /// </summary>
     /// <remarks>
-    /// Repository 的建構函式統一為 <c>(ctx, accessToken, progId)</c> 後，測試不再逐一注入
-    /// 個別服務。多數測試只在意其中一兩個成員，其餘給不會被碰到的 stub 即可。
+    /// Repository constructors take <c>(ctx, accessToken, progId)</c>, so tests no longer inject services one by
+    /// one. Most tests care about one or two members; the rest can be placeholders that are never touched.
     /// </remarks>
     public static class TestRepositoryContext
     {
         /// <summary>
-        /// 由 fixture 的 DI 容器組出完整 context。
+        /// Builds a complete context from the fixture's DI container.
         /// </summary>
-        /// <param name="fixture">提供框架服務的 fixture。</param>
+        /// <param name="fixture">The fixture that provides the framework services.</param>
         public static IRepositoryContext Create(PolhemTestFixture fixture)
         {
             ArgumentNullException.ThrowIfNull(fixture);
@@ -37,14 +37,15 @@ namespace Polhem.Tests.Shared
         }
 
         /// <summary>
-        /// 由呼叫端指定的零件組出 context，未指定者以不會被使用的 stub 補齊。
+        /// Builds a context from the parts the caller supplies; parts left out are filled with placeholders that
+        /// are not expected to be used.
         /// </summary>
-        /// <param name="connectionManager">連線管理員。</param>
-        /// <param name="defineAccess">定義存取服務。</param>
-        /// <param name="dbAccessFactory">資料庫存取工廠。</param>
-        /// <param name="router">資料庫路由。</param>
-        /// <param name="cacheNotify">跨行程快取失效通道。</param>
-        /// <param name="services">服務提供者。</param>
+        /// <param name="connectionManager">The connection manager.</param>
+        /// <param name="defineAccess">The definition access service.</param>
+        /// <param name="dbAccessFactory">The database access factory.</param>
+        /// <param name="router">The database router.</param>
+        /// <param name="cacheNotify">The cross-process cache invalidation channel.</param>
+        /// <param name="services">The service provider.</param>
         public static IRepositoryContext Create(
             IDbConnectionManager? connectionManager = null,
             IDefineAccess? defineAccess = null,
@@ -63,17 +64,18 @@ namespace Polhem.Tests.Shared
             };
 
         /// <summary>
-        /// 取得不解析任何服務的 <see cref="IServiceProvider"/>，供只需要滿足簽章的測試使用。
+        /// Gets an <see cref="IServiceProvider"/> that resolves nothing, for tests that only need to satisfy a signature.
         /// </summary>
         public static IServiceProvider CreateServices() => EmptyServiceProvider.Instance;
 
         /// <summary>
-        /// 預設路由：Common / Log 比照正式 <c>RepositoryDatabaseRouter</c> 回固定 databaseId，
-        /// Company 因無 session 可查而回測試用代號。
+        /// Default router: Common and Log return fixed database ids like the production
+        /// <c>RepositoryDatabaseRouter</c>; Company returns a test id because there is no session to look up.
         /// </summary>
         /// <remarks>
-        /// Common / Log 必須與正式路由一致，否則 <c>SessionRepository</c> 之類宣告 Common scope 的
-        /// repository 會被導到不存在的資料庫，而測試看到的會是 KeyNotFound 而非它想驗的行為。
+        /// Common and Log must match the production router. Otherwise a repository that declares Common scope, such
+        /// as <c>SessionRepository</c>, is routed to a database that does not exist, and the test sees a KeyNotFound
+        /// error instead of the behavior it means to check.
         /// </remarks>
         private sealed class FixedRouter : IRepositoryDatabaseRouter
         {

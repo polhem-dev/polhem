@@ -21,7 +21,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Add 會設定 Item.Collection，Remove 會清空")]
+        [DisplayName("Add sets Item.Collection and Remove clears it")]
         public void AddAndRemove_UpdatesOwningCollectionReference()
         {
             var items = new Items();
@@ -35,7 +35,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Item.Remove 應將自身從集合中移除")]
+        [DisplayName("Item.Remove removes the item from its collection")]
         public void Item_Remove_RemovesFromOwningCollection()
         {
             var items = new Items();
@@ -49,7 +49,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Insert 應將項目插入指定索引並設定 Collection")]
+        [DisplayName("Insert places the item at the given index and sets Collection")]
         public void Insert_AtIndex_InsertsAndSetsCollection()
         {
             var items = new Items
@@ -66,7 +66,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("以 ICollectionBase 介面操作應與強型別方法一致")]
+        [DisplayName("Operations through the ICollectionBase interface behave like the typed methods")]
         public void InterfaceMethods_BehaveLikeTypedMethods()
         {
             var items = new Items();
@@ -85,7 +85,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Owner 於建構子指定應可讀取，Tag 可讀寫")]
+        [DisplayName("Owner set in the constructor is readable and Tag is read-write")]
         public void Owner_AndTag_AreSettable()
         {
             var owner = new object();
@@ -96,7 +96,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("SetSerializeState 應同步到所有子項目")]
+        [DisplayName("SetSerializeState propagates to every item")]
         public void SetSerializeState_PropagatesToItems()
         {
             var items = new Items();
@@ -127,7 +127,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Add 後應可依 Key（忽略大小寫）查找項目")]
+        [DisplayName("An added item can be looked up by Key case-insensitively")]
         public void Add_AllowsCaseInsensitiveLookup()
         {
             var items = new KeyedItems
@@ -141,7 +141,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetOrDefault 於不存在應回傳 null")]
+        [DisplayName("GetOrDefault returns null for a missing key")]
         public void GetOrDefault_MissingKey_ReturnsNull()
         {
             var items = new KeyedItems
@@ -154,7 +154,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("變更 Item.Key 應同步更新集合索引")]
+        [DisplayName("Changing Item.Key updates the collection index")]
         public void ChangingItemKey_UpdatesCollectionIndex()
         {
             var items = new KeyedItems();
@@ -168,7 +168,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("ChangeItemKey 介面方法應重新註冊 Key")]
+        [DisplayName("The ChangeItemKey interface method re-registers the key")]
         public void ChangeItemKey_UpdatesIndex()
         {
             var items = new KeyedItems();
@@ -181,7 +181,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("KeyCollectionItem.Remove 應從集合中移除自身")]
+        [DisplayName("KeyCollectionItem.Remove removes the item from its collection")]
         public void KeyedItem_Remove_RemovesFromCollection()
         {
             var items = new KeyedItems();
@@ -195,7 +195,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("以 IKeyCollectionBase 介面的 Add/Insert/Remove 應與強型別一致")]
+        [DisplayName("Add, Insert and Remove through the IKeyCollectionBase interface behave like the typed methods")]
         public void InterfaceMethods_BehaveLikeTypedMethods()
         {
             var items = new KeyedItems();
@@ -214,7 +214,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("SetSerializeState 應同步到所有子項目")]
+        [DisplayName("SetSerializeState propagates to every item")]
         public void SetSerializeState_PropagatesToItems()
         {
             var items = new KeyedItems();
@@ -228,7 +228,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Owner 於建構子指定應可讀取")]
+        [DisplayName("Owner set in the constructor is readable")]
         public void Owner_IsSet()
         {
             var owner = new object();
@@ -240,7 +240,7 @@ namespace Polhem.Base.UnitTests
     public class StringHashSetTests
     {
         [Fact]
-        [DisplayName("字串大小寫視為同值，不會重複加入")]
+        [DisplayName("Strings differing only in case are treated as equal and not added twice")]
         public void Add_IsCaseInsensitive()
         {
             var set = new StringHashSet { "Apple" };
@@ -249,7 +249,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Add(string, delimiter) 應分割字串並加入所有 token")]
+        [DisplayName("Add(string, delimiter) splits the string and adds every token")]
         public void AddWithDelimiter_SplitsAndAddsTokens()
         {
             var set = new StringHashSet
@@ -263,7 +263,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Add(string, delimiter) 空字串應直接忽略")]
+        [DisplayName("Add(string, delimiter) ignores an empty string")]
         public void AddWithDelimiter_EmptyInput_NoOp()
         {
             var set = new StringHashSet
@@ -278,7 +278,7 @@ namespace Polhem.Base.UnitTests
     public class DictionaryTests
     {
         [Fact]
-        [DisplayName("Dictionary<T> 應使用不區分大小寫的 Key")]
+        [DisplayName("Dictionary<T> uses case-insensitive keys")]
         public void Lookup_IsCaseInsensitive()
         {
             var dict = new Dictionary<int> { ["Alpha"] = 1 };
@@ -291,7 +291,7 @@ namespace Polhem.Base.UnitTests
     public class CollectionExtensionsTests
     {
         [Fact]
-        [DisplayName("GetValue 命中時應回傳對應值")]
+        [DisplayName("GetValue returns the stored value when the key exists")]
         public void GetValue_Hit_ReturnsValue()
         {
             var table = new DataTable();
@@ -302,7 +302,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetValue 未命中時應回傳預設值")]
+        [DisplayName("GetValue returns the default value when the key is missing")]
         public void GetValue_Miss_ReturnsDefault()
         {
             var table = new DataTable();

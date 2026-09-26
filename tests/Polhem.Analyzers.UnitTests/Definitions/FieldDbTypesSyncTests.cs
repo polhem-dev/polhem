@@ -5,17 +5,17 @@ using Polhem.Base.Data;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// analyzer 內硬編碼的欄位型別清單與框架列舉的同步斷言。
+    /// Keeps the field type list hard-coded in the analyzer in sync with the framework enum.
     /// </summary>
     /// <remarks>
-    /// analyzer 專案為 netstandard2.0，無法引用 net10.0 的框架組件，因此
-    /// <see cref="FieldDbTypes"/> 只能複製 <see cref="FieldDbType"/> 的成員名稱。本測試作為漂移閘門：
-    /// 列舉新增成員而 analyzer 未同步時立即失敗。
+    /// The analyzer project targets netstandard2.0 and cannot reference the net10.0 framework assemblies, so
+    /// <see cref="FieldDbTypes"/> can only copy the member names of <see cref="FieldDbType"/>. This test is a drift
+    /// gate: it fails as soon as the enum gains a member the analyzer lacks.
     /// </remarks>
     public class FieldDbTypesSyncTests
     {
         [Fact]
-        [DisplayName("analyzer 的欄位型別清單必須與框架 FieldDbType 列舉完全一致")]
+        [DisplayName("The analyzer's field type list matches the framework's FieldDbType enum exactly")]
         public void All_MatchesFrameworkEnum()
         {
             // Arrange
@@ -37,7 +37,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         [InlineData(FieldDbType.Currency)]
         [InlineData(FieldDbType.AutoIncrement)]
         [InlineData(FieldDbType.Guid)]
-        [DisplayName("框架列舉成員應被 IsValid 接受")]
+        [DisplayName("IsValid accepts the framework enum members")]
         public void IsValid_AcceptsFrameworkMembers(FieldDbType dbType)
         {
             // Assert
@@ -45,7 +45,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("僅大小寫不符時應可找出正確拼法")]
+        [DisplayName("FindCaseInsensitiveMatch returns the correct spelling for a casing-only mismatch")]
         public void FindCaseInsensitiveMatch_ReturnsCorrectCasing()
         {
             // Assert

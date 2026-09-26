@@ -12,18 +12,18 @@ namespace Polhem.Base.UnitTests
         [InlineData(FieldDbType.Integer, 0)]
         [InlineData(FieldDbType.Decimal, 0)]
         [InlineData(FieldDbType.Currency, 0)]
-        [DisplayName("GetDefaultValue 應為基本型別回傳對應預設值")]
+        [DisplayName("GetDefaultValue returns the matching default value for primitive types")]
         public void GetDefaultValue_ReturnsExpectedForPrimitiveTypes(FieldDbType type, object expected)
         {
             Assert.Equal(expected, type.GetDefaultValue());
         }
 
         [Fact]
-        [DisplayName("GetDefaultValue 對 Date/DateTime/Guid 應回傳合理預設")]
+        [DisplayName("GetDefaultValue returns sensible defaults for Date, DateTime and Guid")]
         public void GetDefaultValue_ReturnsExpectedForDateAndGuidTypes()
         {
-            // UTC，不是 DateTime.Today：框架的日期預設值是 UtcNow.Date（ADR-032 D12）。
-            // 用本地日斷言會讓本機在 UTC+8 的 00:00–08:00 必定失敗，而 CI 跑 UTC 永遠看不到。
+            // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
+            // Asserting the local date always fails locally between 00:00 and 08:00 at UTC+8, and CI runs in UTC so it never sees it.
             Assert.Equal(DateTime.UtcNow.Date, FieldDbType.Date.GetDefaultValue());
 
             var now = FieldDbType.DateTime.GetDefaultValue();
@@ -33,7 +33,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefaultValue 於未對映型別應回傳 DBNull.Value")]
+        [DisplayName("GetDefaultValue returns DBNull.Value for unmapped types")]
         public void GetDefaultValue_UnmappedType_ReturnsDbNull()
         {
             Assert.Equal(DBNull.Value, FieldDbType.Binary.GetDefaultValue());
@@ -44,7 +44,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("ToFieldValue 依據 FieldDbType 走對應轉換分支")]
+        [DisplayName("ToFieldValue takes the conversion branch that matches the FieldDbType")]
         public void ToFieldValue_VariousDbTypes_ReturnsExpectedResult()
         {
             Assert.Equal("abc", FieldDbType.String.ToFieldValue("abc"));
@@ -57,26 +57,26 @@ namespace Polhem.Base.UnitTests
             var date = new DateTime(2026, 4, 18, 0, 0, 0, DateTimeKind.Unspecified);
             Assert.Equal(date, FieldDbType.Date.ToFieldValue("2026-04-18"));
             Assert.Equal(date, FieldDbType.DateTime.ToFieldValue("2026-04-18"));
-            // 回歸：Date 分支不可改用 ValueUtilities.CDateOnly（回傳 DateOnly）。日曆日欄位在
-            // DataColumn 上仍是 DateTime 欄位，而 DateOnly 未實作 IConvertible，塞回去會擲例外。
+            // Regression: the Date branch must not switch to `ValueUtilities.CDateOnly`, which returns `DateOnly`.
+            // A calendar-date field is still a DateTime column on the `DataColumn`, and `DateOnly` does not
+            // implement `IConvertible`, so storing it back throws.
             Assert.IsType<DateTime>(FieldDbType.Date.ToFieldValue("2026-04-18"));
 
             var guid = Guid.NewGuid();
             Assert.Equal(guid, FieldDbType.Guid.ToFieldValue(guid.ToString()));
 
-            // 未涵蓋的 FieldDbType 應原樣回傳
+            // A FieldDbType without a conversion branch returns the value unchanged.
             var raw = new byte[] { 0x01, 0x02 };
             Assert.Same(raw, FieldDbType.Binary.ToFieldValue(raw));
         }
 
         [Fact]
-        [DisplayName("ToDbFieldValue 對 DateTime.MinValue 回傳 DBNull.Value,其餘走 ToFieldValue")]
+        [DisplayName("ToDbFieldValue returns DBNull.Value for DateTime.MinValue and otherwise delegates to ToFieldValue")]
         public void ToDbFieldValue_DateTimeMinValue_ReturnsDbNull()
         {
             Assert.Equal(DBNull.Value, FieldDbType.DateTime.ToDbFieldValue(DateTime.MinValue));
             Assert.Equal(DBNull.Value, FieldDbType.Date.ToDbFieldValue(DateTime.MinValue));
 
-            // 一般日期走 ToFieldValue
             var date = new DateTime(2026, 4, 18, 0, 0, 0, DateTimeKind.Unspecified);
             Assert.Equal(date, FieldDbType.DateTime.ToDbFieldValue(date));
             Assert.Equal("abc", FieldDbType.String.ToDbFieldValue("abc"));

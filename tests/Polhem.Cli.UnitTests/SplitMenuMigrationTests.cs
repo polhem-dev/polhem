@@ -4,8 +4,8 @@ using Polhem.Definition.Settings;
 namespace Polhem.Cli.UnitTests
 {
     /// <summary>
-    /// <c>dotnet polhem defines split-menu</c> 的遷移轉換測試：舊版巢狀 ProgramSettings.xml
-    /// 拆為攤平註冊表 + MenuSettings。
+    /// Tests for the <c>dotnet polhem defines split-menu</c> migration, which splits a legacy nested ProgramSettings.xml
+    /// into a flat registry plus MenuSettings.
     /// </summary>
     public class SplitMenuMigrationTests
     {
@@ -29,7 +29,7 @@ namespace Polhem.Cli.UnitTests
             """;
 
         [Fact]
-        [DisplayName("Split 應把所有分類下的項目攤平為單層註冊表")]
+        [DisplayName("Split flattens the items of every category into a single registry")]
         public void Split_FlattensAllCategoriesIntoOneRegistry()
         {
             var result = SplitMenuMigration.Split(LegacyXml);
@@ -41,7 +41,7 @@ namespace Polhem.Cli.UnitTests
         }
 
         [Fact]
-        [DisplayName("Split 應保留 BusinessObject 型別名")]
+        [DisplayName("Split preserves the BusinessObject type name")]
         public void Split_PreservesBusinessObject()
         {
             var result = SplitMenuMigration.Split(LegacyXml);
@@ -51,7 +51,7 @@ namespace Polhem.Cli.UnitTests
         }
 
         [Fact]
-        [DisplayName("Split 應把每個分類轉為 MenuFolder、每個項目轉為其下的 MenuEntry")]
+        [DisplayName("Split turns each category into a MenuFolder and each item into a MenuEntry under it")]
         public void Split_ProducesFolderPerCategoryWithEntries()
         {
             var result = SplitMenuMigration.Split(LegacyXml);
@@ -68,7 +68,7 @@ namespace Polhem.Cli.UnitTests
         }
 
         [Fact]
-        [DisplayName("Split 產生的 Order 應依原文件順序遞增")]
+        [DisplayName("Split assigns Order values that increase in document order")]
         public void Split_AssignsIncrementingOrder()
         {
             var result = SplitMenuMigration.Split(LegacyXml);
@@ -80,7 +80,7 @@ namespace Polhem.Cli.UnitTests
         }
 
         [Fact]
-        [DisplayName("Split 產生的選單應通過全樹 Id 唯一性與 ProgId 參照完整性驗證")]
+        [DisplayName("The menu produced by Split passes the tree-wide Id uniqueness and ProgId reference checks")]
         public void Split_ProducesValidMenu()
         {
             var result = SplitMenuMigration.Split(LegacyXml);
@@ -89,7 +89,7 @@ namespace Polhem.Cli.UnitTests
         }
 
         [Fact]
-        [DisplayName("分類 Id 與某個 ProgId 同名時應加序號避開全樹 Id 衝突")]
+        [DisplayName("When a category Id equals a ProgId, the entry Id gets a numeric suffix to avoid a tree-wide Id collision")]
         public void Split_CategoryIdCollidingWithProgId_Disambiguates()
         {
             // The category is literally named "Order" and also holds a program called "Order";
@@ -117,7 +117,7 @@ namespace Polhem.Cli.UnitTests
         }
 
         [Fact]
-        [DisplayName("同一 progId 跨分類重複時應中止並列出重複項，不自行挑一筆")]
+        [DisplayName("A progId repeated across categories aborts with the duplicates listed instead of picking one")]
         public void Split_DuplicateProgIdAcrossCategories_Throws()
         {
             const string xml = """
@@ -140,7 +140,7 @@ namespace Polhem.Cli.UnitTests
         }
 
         [Fact]
-        [DisplayName("空的 Categories 應產生空註冊表與空選單而非拋出")]
+        [DisplayName("Empty Categories produce an empty registry and an empty menu instead of throwing")]
         public void Split_EmptyCategories_ProducesEmptyResult()
         {
             var result = SplitMenuMigration.Split("<ProgramSettings><Categories /></ProgramSettings>");

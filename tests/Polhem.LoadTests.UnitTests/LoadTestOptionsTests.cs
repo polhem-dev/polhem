@@ -17,7 +17,7 @@ namespace Polhem.LoadTests.UnitTests
         };
 
         [Fact]
-        [DisplayName("解析 JSON：列舉以字串表示、屬性大小寫不敏感")]
+        [DisplayName("Parse reads enums as strings and matches property names case-insensitively")]
         public void Parse_ReadsStringEnumsCaseInsensitively()
         {
             const string json = """
@@ -41,7 +41,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("解析 JSON：允許註解與尾端逗號")]
+        [DisplayName("Parse allows comments and trailing commas")]
         public void Parse_AllowsCommentsAndTrailingCommas()
         {
             const string json = """
@@ -57,7 +57,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("未指定的區段採預設值")]
+        [DisplayName("Parse uses default values for missing sections")]
         public void Parse_MissingSections_UseDefaults()
         {
             var options = LoadTestOptions.Parse("{}");
@@ -69,7 +69,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("驗證：SQLite 一律拒絕，且訊息說明原因")]
+        [DisplayName("Validate always rejects SQLite, with a message that names it")]
         public void Validate_SqliteProvider_Throws()
         {
             var options = CreateValid();
@@ -80,7 +80,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("驗證：Remote 模式未給 endpoint 時拒絕")]
+        [DisplayName("Validate rejects Remote mode without an endpoint")]
         public void Validate_RemoteWithoutEndpoint_Throws()
         {
             var options = CreateValid();
@@ -90,7 +90,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("驗證：Local 模式不需要 endpoint")]
+        [DisplayName("Validate accepts Local mode without an endpoint")]
         public void Validate_LocalWithoutEndpoint_Passes()
         {
             var options = CreateValid();
@@ -100,7 +100,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("驗證：沒有任何啟用的場景時拒絕")]
+        [DisplayName("Validate rejects a configuration with no enabled scenario")]
         public void Validate_NoEnabledScenario_Throws()
         {
             var options = CreateValid();
@@ -110,7 +110,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("驗證：啟用的場景權重必須為正")]
+        [DisplayName("Validate requires a positive weight for an enabled scenario")]
         public void Validate_EnabledScenarioWithZeroWeight_Throws()
         {
             var options = CreateValid();
@@ -121,7 +121,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("驗證：停用的場景不檢查權重")]
+        [DisplayName("Validate does not check the weight of a disabled scenario")]
         public void Validate_DisabledScenarioWithZeroWeight_Ignored()
         {
             var options = CreateValid();
@@ -133,7 +133,7 @@ namespace Polhem.LoadTests.UnitTests
         [Theory]
         [InlineData(0)]
         [InlineData(-1)]
-        [DisplayName("驗證：VU 數必須為正")]
+        [DisplayName("Validate requires a positive number of virtual users")]
         public void Validate_NonPositiveVirtualUsers_Throws(int virtualUsers)
         {
             var options = CreateValid();
@@ -143,7 +143,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("驗證：warm-up 可為 0 但不可為負")]
+        [DisplayName("Validate allows a warm-up of 0 but rejects a negative one")]
         public void Validate_WarmupSeconds_ZeroAllowedNegativeRejected()
         {
             var options = CreateValid();
@@ -156,7 +156,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("驗證：資料庫名稱前綴不可為空")]
+        [DisplayName("Validate rejects an empty database name prefix")]
         public void Validate_EmptyDatabaseNamePrefix_Throws()
         {
             var options = CreateValid();
@@ -170,7 +170,7 @@ namespace Polhem.LoadTests.UnitTests
         [InlineData("load test_")]
         [InlineData("load-test_")]
         [InlineData("load];DROP DATABASE x--")]
-        [DisplayName("驗證：前綴只接受字母數字底線（名稱會進入 DDL）")]
+        [DisplayName("Validate accepts only letters, digits and underscores in the prefix (the name goes into DDL)")]
         public void Validate_UnsafeDatabaseNamePrefix_Throws(string prefix)
         {
             var options = CreateValid();
@@ -180,7 +180,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("資料庫名稱由前綴加上 CategoryId 組成")]
+        [DisplayName("ResolveDatabaseName prepends the prefix to the CategoryId")]
         public void ResolveDatabaseName_PrependsPrefix()
         {
             var database = new DatabaseOptions { DatabaseNamePrefix = "loadtest_" };
@@ -190,7 +190,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("serve 監聽位址未設定時採用 loopback 預設埠")]
+        [DisplayName("ResolveServeUrl uses the loopback default port when the serve URL is not set")]
         public void ResolveServeUrl_NotConfigured_UsesLoopbackDefaultPort()
         {
             var target = new TargetOptions();
@@ -200,7 +200,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("serve 監聽位址已設定時原樣採用")]
+        [DisplayName("ResolveServeUrl uses the configured serve URL as is")]
         public void ResolveServeUrl_Configured_UsesConfiguredValue()
         {
             var target = new TargetOptions { ServeUrl = "http://0.0.0.0:8080" };
@@ -209,7 +209,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("範例設定檔可被解析且通過驗證")]
+        [DisplayName("The sample configuration file parses and passes validation")]
         public void SampleConfiguration_ParsesAndValidates()
         {
             var path = Path.Combine(AppContext.BaseDirectory, "loadtest.sample.json");

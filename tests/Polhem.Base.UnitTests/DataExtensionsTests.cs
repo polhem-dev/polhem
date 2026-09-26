@@ -25,7 +25,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFieldValue<T> 應取得欄位值並進行型別轉換")]
+        [DisplayName("GetFieldValue<T> returns the field value converted to the requested type")]
         public void GetFieldValue_ReturnsTypedValue()
         {
             var row = BuildRow();
@@ -36,7 +36,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFieldValue 於 DBNull 應回傳型別預設值")]
+        [DisplayName("GetFieldValue returns the type's default value for DBNull")]
         public void GetFieldValue_DbNull_ReturnsDefault()
         {
             var row = BuildRow();
@@ -44,7 +44,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFieldValue 於空欄位名稱應拋出 ArgumentNullException")]
+        [DisplayName("GetFieldValue throws ArgumentNullException for an empty column name")]
         public void GetFieldValue_EmptyColumnName_Throws()
         {
             var row = BuildRow();
@@ -52,7 +52,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFieldValue 於欄位不存在應拋出 InvalidOperationException")]
+        [DisplayName("GetFieldValue throws InvalidOperationException when the column does not exist")]
         public void GetFieldValue_MissingColumn_Throws()
         {
             var row = BuildRow();
@@ -60,7 +60,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFieldValue 於型別無法轉換應拋出 InvalidOperationException")]
+        [DisplayName("GetFieldValue throws InvalidOperationException when the value cannot be converted")]
         public void GetFieldValue_InvalidConversion_Throws()
         {
             var row = BuildRow();
@@ -68,7 +68,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFieldValue(defaultValue) 於欄位不存在應回傳預設值")]
+        [DisplayName("GetFieldValue(defaultValue) returns the default value when the column does not exist")]
         public void GetFieldValue_WithDefault_MissingColumn_ReturnsDefault()
         {
             var row = BuildRow();
@@ -76,7 +76,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFieldValue(defaultValue) 於空欄位名稱應拋出 ArgumentNullException")]
+        [DisplayName("GetFieldValue(defaultValue) throws ArgumentNullException for an empty column name")]
         public void GetFieldValue_WithDefault_EmptyColumnName_Throws()
         {
             var row = BuildRow();
@@ -84,7 +84,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFieldValue(defaultValue) 於欄位存在且值有效時應回傳轉型後的值")]
+        [DisplayName("GetFieldValue(defaultValue) returns the converted value when the column exists and the value is valid")]
         public void GetFieldValue_WithDefault_ExistingColumn_ReturnsTypedValue()
         {
             var row = BuildRow();
@@ -93,7 +93,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFieldValue(defaultValue) 於欄位為 DBNull 時應回傳型別預設值")]
+        [DisplayName("GetFieldValue(defaultValue) returns the type's default value when the field is DBNull")]
         public void GetFieldValue_WithDefault_DbNull_ReturnsTypeDefault()
         {
             var row = BuildRow();
@@ -101,7 +101,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFieldValue(defaultValue) 於型別無法轉換應拋出 InvalidOperationException")]
+        [DisplayName("GetFieldValue(defaultValue) throws InvalidOperationException when the value cannot be converted")]
         public void GetFieldValue_WithDefault_InvalidConversion_Throws()
         {
             var row = BuildRow();
@@ -112,7 +112,7 @@ namespace Polhem.Base.UnitTests
     public class DataTableExtensionsTests
     {
         [Fact]
-        [DisplayName("AddColumn 以 FieldDbType 加入欄位，欄名轉小寫並套用預設值")]
+        [DisplayName("AddColumn with a FieldDbType lowercases the column name and applies the type defaults")]
         public void AddColumn_FieldDbType_AppliesDefaultsAndLowercase()
         {
             var table = new DataTable();
@@ -127,10 +127,10 @@ namespace Polhem.Base.UnitTests
         [Theory]
         [InlineData(FieldDbType.Date)]
         [InlineData(FieldDbType.DateTime)]
-        [DisplayName("AddColumn 對日期欄不設預設值：時鐘讀數放進欄位預設值，對之後每一列都是舊值")]
+        [DisplayName("AddColumn sets no default value on date columns, because a clock reading in a column default is stale for every later row")]
         public void AddColumn_DateTypes_HaveNoDefaultValue(FieldDbType dbType)
         {
-            // 欄位預設值是建欄時固定的單一值，而且會遮住 FormRowDefaults（ADR-032 D12）。
+            // A column default is a single value fixed when the column is created, and it would mask `FormRowDefaults` (ADR-032 D12).
             var table = new DataTable();
             var col = table.AddColumn("stamp", dbType);
 
@@ -139,7 +139,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddColumn 指定預設值應影響 AllowDBNull")]
+        [DisplayName("AddColumn with an explicit default value leaves AllowDBNull false")]
         public void AddColumn_WithExplicitDefault_SetsAllowDbNull()
         {
             var table = new DataTable();
@@ -151,7 +151,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddColumn 以 caption 參數應套用欄位標題")]
+        [DisplayName("AddColumn with a caption argument applies the column caption")]
         public void AddColumn_WithCaption_AppliesCaption()
         {
             var table = new DataTable();
@@ -160,7 +160,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("HasField 應依欄位存在與否回傳結果")]
+        [DisplayName("HasField reports whether the column exists")]
         public void HasField_ReflectsSchema()
         {
             var table = new DataTable();
@@ -171,7 +171,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("SetPrimaryKey 應解析逗號分隔欄位名並設定主鍵")]
+        [DisplayName("SetPrimaryKey parses comma-separated column names and sets the primary key")]
         public void SetPrimaryKey_ParsesCommaSeparatedColumns()
         {
             var table = new DataTable();
@@ -186,7 +186,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEmpty 應依列數回傳 true/false")]
+        [DisplayName("IsEmpty returns true or false according to the row count")]
         public void IsEmpty_ReflectsRowCount()
         {
             var table = new DataTable();
@@ -199,7 +199,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("LowercaseColumnNames 應將所有欄位名轉為小寫")]
+        [DisplayName("LowercaseColumnNames converts every column name to lowercase")]
         public void LowercaseColumnNames_ConvertsAllColumnsToLowerCase()
         {
             var table = new DataTable();
@@ -216,7 +216,7 @@ namespace Polhem.Base.UnitTests
     public class DataSetExtensionsTests
     {
         [Fact]
-        [DisplayName("GetMasterTable 應回傳與 DataSetName 同名的資料表")]
+        [DisplayName("GetMasterTable returns the table named like the DataSetName")]
         public void GetMasterTable_ReturnsTableNamedLikeDataSet()
         {
             var ds = new DataSet("Orders");
@@ -229,7 +229,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetMasterTable 無對應表時應回傳 null")]
+        [DisplayName("GetMasterTable returns null when no matching table exists")]
         public void GetMasterTable_MissingTable_ReturnsNull()
         {
             var ds = new DataSet("Orders");
@@ -237,7 +237,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetMasterRow 應回傳 master 的第一列")]
+        [DisplayName("GetMasterRow returns the first row of the master table")]
         public void GetMasterRow_ReturnsFirstRow()
         {
             var ds = new DataSet("Orders");
@@ -253,7 +253,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetMasterRow 當 master 為空時應回傳 null")]
+        [DisplayName("GetMasterRow returns null when the master table is empty")]
         public void GetMasterRow_EmptyTable_ReturnsNull()
         {
             var ds = new DataSet("Orders");
@@ -262,7 +262,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEmpty 應綜合判斷 Tables 與 master rows")]
+        [DisplayName("IsEmpty considers both Tables and the master rows")]
         public void IsEmpty_ConsidersTablesAndMasterRows()
         {
             Assert.True(new DataSet().IsEmpty());
@@ -291,7 +291,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("DeleteRows 應刪除 View 中所有列，依參數決定是否 AcceptChanges")]
+        [DisplayName("DeleteRows with acceptChanges removes every row in the view from the table")]
         public void DeleteRows_RemovesAllRowsAndOptionallyAccepts()
         {
             var table = BuildTable();
@@ -303,7 +303,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("HasField 應轉呼叫底層 DataTable.HasField")]
+        [DisplayName("HasField delegates to the underlying DataTable.HasField")]
         public void HasField_DelegatesToTable()
         {
             var view = new DataView(BuildTable());
@@ -312,7 +312,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEmpty 應反映 DataView.Count")]
+        [DisplayName("IsEmpty reflects DataView.Count")]
         public void IsEmpty_ReflectsRowCount()
         {
             var emptyTable = new DataTable();
@@ -326,7 +326,7 @@ namespace Polhem.Base.UnitTests
     public class DataRowViewExtensionsTests
     {
         [Fact]
-        [DisplayName("DataRowView.GetFieldValue 應轉呼叫底層 DataRow.GetFieldValue")]
+        [DisplayName("DataRowView.GetFieldValue delegates to the underlying DataRow.GetFieldValue")]
         public void GetFieldValue_DelegatesToRow()
         {
             var table = new DataTable();

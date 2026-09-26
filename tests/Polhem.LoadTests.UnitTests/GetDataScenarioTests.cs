@@ -12,14 +12,14 @@ namespace Polhem.LoadTests.UnitTests
         private static VirtualUserPool Pool() => new(new AuthOptions());
 
         [Fact]
-        [DisplayName("場景名稱與設定檔中的名稱一致")]
+        [DisplayName("GetDataScenario name matches the key in the configuration file")]
         public void Name_MatchesConfigurationKey()
         {
             Assert.Equal("GetData", new GetDataScenario(Pool(), "Customer", [Guid.NewGuid()]).Name);
         }
 
         [Fact]
-        [DisplayName("沒有可用的鍵時拒絕建構，訊息指出補救方式")]
+        [DisplayName("GetDataScenario constructor throws when there are no keys, with a message pointing to the remedy")]
         public void Constructor_NoRowIds_Throws()
         {
             var ex = Assert.Throws<ArgumentException>(
@@ -29,7 +29,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("未指定 progId 時採預設")]
+        [DisplayName("GetDataScenario constructor accepts an empty progId (falls back to the default)")]
         public void Constructor_EmptyProgId_FallsBackToDefault()
         {
             var scenario = new GetDataScenario(Pool(), string.Empty, [Guid.NewGuid()]);

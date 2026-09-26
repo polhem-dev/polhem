@@ -78,7 +78,7 @@ namespace Polhem.LoadTests.UnitTests
                 Path.Combine(workspace.DefinePath, "DatabaseSettings.xml"))!;
 
         [Fact]
-        [DisplayName("複製整棵定義樹，含子資料夾")]
+        [DisplayName("CreateFrom copies the whole definition tree, including subfolders")]
         public void CreateFrom_CopiesNestedFiles()
         {
             using var workspace = DefineWorkspace.CreateFrom(_source, CreateOptions(), ConnectionString);
@@ -88,7 +88,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("每個 DatabaseItem 改寫為設定的 provider")]
+        [DisplayName("CreateFrom rewrites every DatabaseItem to the configured provider")]
         public void CreateFrom_RewritesProvider()
         {
             using var workspace = DefineWorkspace.CreateFrom(
@@ -100,7 +100,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("連線字串的 {@DbName} 置換為帶前綴的資料庫名")]
+        [DisplayName("CreateFrom replaces {@DbName} in the connection string with the prefixed database name")]
         public void CreateFrom_SubstitutesDbNamePlaceholder()
         {
             using var workspace = DefineWorkspace.CreateFrom(_source, CreateOptions(), ConnectionString);
@@ -113,7 +113,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("置換結果不得等於裸 CategoryId —— 那是單元測試自己的資料庫")]
+        [DisplayName("CreateFrom never resolves to the bare CategoryId, which is the unit tests' own database")]
         public void CreateFrom_NeverTargetsTheBareCategoryDatabase()
         {
             using var workspace = DefineWorkspace.CreateFrom(_source, CreateOptions(), ConnectionString);
@@ -129,7 +129,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("自訂前綴會被沿用")]
+        [DisplayName("CreateFrom uses a custom prefix")]
         public void CreateFrom_HonoursCustomPrefix()
         {
             var options = CreateOptions();
@@ -143,7 +143,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("連線字串無 placeholder 時原樣沿用")]
+        [DisplayName("CreateFrom uses a connection string without a placeholder as is")]
         public void CreateFrom_WithoutPlaceholder_UsesStringAsIs()
         {
             const string plain = "Server=localhost;Database=polhem;";
@@ -155,7 +155,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("關閉 debug 模式並開回 audit 背景寫入")]
+        [DisplayName("CreateFrom turns off debug mode and turns the background audit writer back on")]
         public void CreateFrom_OverridesDemoOnlySystemSettings()
         {
             using var workspace = DefineWorkspace.CreateFrom(_source, CreateOptions(), ConnectionString);
@@ -168,7 +168,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("來源定義檔不被修改")]
+        [DisplayName("CreateFrom leaves the source definition files unchanged")]
         public void CreateFrom_LeavesSourceUntouched()
         {
             using (DefineWorkspace.CreateFrom(_source, CreateOptions(), ConnectionString))
@@ -187,7 +187,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("Dispose 後刪除暫存副本")]
+        [DisplayName("Dispose deletes the temporary copy")]
         public void Dispose_RemovesTemporaryCopy()
         {
             string path;
@@ -201,7 +201,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("來源目錄不存在時擲出可辨識的例外")]
+        [DisplayName("CreateFrom throws DirectoryNotFoundException when the source directory does not exist")]
         public void CreateFrom_MissingSource_Throws()
         {
             var missing = Path.Combine(Path.GetTempPath(), "polhem-loadtest-absent-" + Guid.NewGuid());
@@ -211,7 +211,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("載不到組件的 BO/Repository 綁定被清掉，退回框架實作")]
+        [DisplayName("CreateFrom clears BO and Repository bindings whose assembly cannot be loaded, falling back to the framework implementation")]
         public void CreateFrom_DropsUnresolvableBindings()
         {
             using var workspace = DefineWorkspace.CreateFrom(_source, CreateOptions(), ConnectionString);
@@ -224,7 +224,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("可解析的綁定保留，不會被一併清掉")]
+        [DisplayName("CreateFrom keeps bindings that can be resolved")]
         public void CreateFrom_KeepsResolvableBindings()
         {
             using var workspace = DefineWorkspace.CreateFrom(_source, CreateOptions(), ConnectionString);
@@ -237,7 +237,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("被清掉的綁定會被列出，不是靜默發生")]
+        [DisplayName("CreateFrom lists the bindings it clears instead of dropping them silently")]
         public void CreateFrom_ReportsDroppedBindings()
         {
             using var workspace = DefineWorkspace.CreateFrom(_source, CreateOptions(), ConnectionString);
@@ -249,7 +249,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("沒有 ProgramSettings.xml 時不擲例外")]
+        [DisplayName("CreateFrom does not throw when ProgramSettings.xml is missing")]
         public void CreateFrom_WithoutProgramSettings_DoesNotThrow()
         {
             File.Delete(Path.Combine(_source, "ProgramSettings.xml"));
@@ -260,7 +260,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("實際的 Northwind 定義檔可被複製並改寫為非 SQLite")]
+        [DisplayName("CreateFrom copies the real Northwind definitions and rewrites them away from SQLite")]
         public void CreateFrom_RealNorthwindDefinitions_RewritesEveryCategory()
         {
             var source = LocateNorthwindDefine();
@@ -311,7 +311,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("連線字串帶 {@DbName} 時通過隔離檢查")]
+        [DisplayName("GuardIsolation passes when the connection string contains {@DbName}")]
         public void GuardIsolation_WithPlaceholder_Passes()
         {
             // S2699: verifying "does not throw" needs the exception captured and asserted on —
@@ -325,7 +325,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("連線字串無 {@DbName} 時拒絕，因為前綴無從施力")]
+        [DisplayName("GuardIsolation rejects a connection string without {@DbName}, since the prefix has nothing to apply to")]
         public void GuardIsolation_WithoutPlaceholder_Throws()
         {
             // Oracle's connection string names a service, not a database, so the loadtest_ prefix
@@ -343,7 +343,7 @@ namespace Polhem.LoadTests.UnitTests
         [Theory]
         [InlineData(DatabaseType.SQLServer, "POLHEM_LOADTEST_CONNSTR_SQLSERVER")]
         [InlineData(DatabaseType.Oracle, "POLHEM_LOADTEST_CONNSTR_ORACLE")]
-        [DisplayName("專用連線字串變數的命名與測試套件的分開")]
+        [DisplayName("GetDedicatedConnectionStringVariable returns a name distinct from the test suite's variable")]
         public void GetDedicatedConnectionStringVariable_IsDistinctFromTestSuite(
             DatabaseType provider, string expected)
         {
@@ -358,7 +358,7 @@ namespace Polhem.LoadTests.UnitTests
         [InlineData(DatabaseType.PostgreSQL, "POLHEM_TEST_CONNSTR_POSTGRESQL")]
         [InlineData(DatabaseType.MySQL, "POLHEM_TEST_CONNSTR_MYSQL")]
         [InlineData(DatabaseType.Oracle, "POLHEM_TEST_CONNSTR_ORACLE")]
-        [DisplayName("連線字串環境變數命名與 test.sh 慣例一致")]
+        [DisplayName("GetConnectionStringVariable follows the test.sh naming convention")]
         public void GetConnectionStringVariable_MatchesTestHarnessConvention(
             DatabaseType provider, string expected)
         {

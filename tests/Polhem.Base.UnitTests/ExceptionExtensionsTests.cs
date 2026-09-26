@@ -12,7 +12,7 @@ namespace Polhem.Base.UnitTests
     public class ExceptionExtensionsTests
     {
         [Fact]
-        [DisplayName("Unwrap 於單層 Exception 應回傳原例外")]
+        [DisplayName("Unwrap returns the exception itself for a plain exception")]
         public void Unwrap_PlainException_ReturnsSelf()
         {
             var ex = new InvalidOperationException("plain");
@@ -20,7 +20,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Unwrap 於 AggregateException 應回傳第一個 inner exception")]
+        [DisplayName("Unwrap returns the first inner exception of an AggregateException")]
         public void Unwrap_AggregateException_ReturnsFirstInner()
         {
             var inner1 = new InvalidOperationException("inner1");
@@ -33,7 +33,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Unwrap 於 TargetInvocationException 應回傳 inner exception")]
+        [DisplayName("Unwrap returns the inner exception of a TargetInvocationException")]
         public void Unwrap_TargetInvocation_ReturnsInner()
         {
             var inner = new InvalidOperationException("inner");
@@ -45,7 +45,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Unwrap 應遞迴展開多層包裝")]
+        [DisplayName("Unwrap recursively unwraps nested wrappers")]
         public void Unwrap_NestedWrappers_UnwrapsFully()
         {
             var core = new InvalidOperationException("core");
@@ -58,7 +58,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Unwrap 於 null 應拋出 ArgumentNullException")]
+        [DisplayName("Unwrap throws ArgumentNullException for null")]
         public void Unwrap_NullException_Throws()
         {
             Exception? nullEx = null;

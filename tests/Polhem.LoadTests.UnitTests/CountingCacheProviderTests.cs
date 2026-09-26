@@ -12,7 +12,7 @@ namespace Polhem.LoadTests.UnitTests
         private static CountingCacheProvider CreateProvider() => new(new InMemoryCacheProvider());
 
         [Fact]
-        [DisplayName("讀到值計為命中，讀不到計為未命中")]
+        [DisplayName("Get counts a found value as a hit and a missing one as a miss")]
         public void Get_CountsHitsAndMisses()
         {
             var provider = CreateProvider();
@@ -29,7 +29,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("寫入次數即實際建立次數，可證 single-flight 收斂")]
+        [DisplayName("Set counts every write, so Writes equals the number of actual builds (evidence of single-flight convergence)")]
         public void Set_CountsWrites()
         {
             var provider = CreateProvider();
@@ -41,7 +41,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("完全沒有讀取時命中率為零，需先看 Reads 再解讀")]
+        [DisplayName("HitRate is zero when there are no reads, so Reads must be checked before interpreting it")]
         public void HitRate_NoReads_ReturnsZero()
         {
             var counters = CreateProvider().Snapshot();
@@ -51,7 +51,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("Reset 歸零所有計數，供 warm-up 後重新計算")]
+        [DisplayName("Reset zeroes every counter so counting can restart after warm-up")]
         public void Reset_ClearsAllCounters()
         {
             var provider = CreateProvider();
@@ -70,7 +70,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("Reset 不影響底層快取的內容")]
+        [DisplayName("Reset does not affect the contents of the underlying cache")]
         public void Reset_DoesNotClearUnderlyingCache()
         {
             var provider = CreateProvider();
@@ -83,7 +83,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("Contains 與 GetCount 直接委派給底層且不計數")]
+        [DisplayName("Contains and GetCount delegate to the underlying cache without counting")]
         public void PassThroughMembers_DoNotCount()
         {
             var provider = CreateProvider();
@@ -98,7 +98,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("併發讀取下計數不遺漏")]
+        [DisplayName("Get counts every read under concurrency")]
         public void Get_UnderConcurrency_CountsEveryRead()
         {
             var provider = CreateProvider();
@@ -116,7 +116,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("建構子拒絕 null 的內層 provider")]
+        [DisplayName("CountingCacheProvider constructor throws ArgumentNullException for a null inner provider")]
         public void Constructor_NullInner_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new CountingCacheProvider(null!));

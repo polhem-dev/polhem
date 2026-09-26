@@ -31,14 +31,14 @@ namespace Polhem.Base.UnitTests
         private sealed class CollectionFolderClass { }
 
         [Fact]
-        [DisplayName("GetDisplayText 於 Attribute 為字面字串時應直接回傳")]
+        [DisplayName("GetDisplayText returns the literal string of the attribute directly")]
         public void GetDisplayText_Literal_ReturnsDisplayFormat()
         {
             Assert.Equal("Literal Label", TreeNodeAttribute.GetDisplayText(new LiteralClass()));
         }
 
         [Fact]
-        [DisplayName("GetDisplayText 於 Attribute 含 PropertyName 應格式化屬性值")]
+        [DisplayName("GetDisplayText formats the property values when the attribute has a PropertyName")]
         public void GetDisplayText_WithPropertyName_FormatsValues()
         {
             var obj = new FormattedClass { Name = "Alice", Age = 30 };
@@ -46,14 +46,14 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDisplayText 無 Attribute 時應回傳 ToString")]
+        [DisplayName("GetDisplayText returns ToString when there is no attribute")]
         public void GetDisplayText_NoAttribute_ReturnsToString()
         {
             Assert.Equal("no-attr-tostring", TreeNodeAttribute.GetDisplayText(new NoAttrClass()));
         }
 
         [Fact]
-        [DisplayName("GetDisplayText 格式化結果為空且實作 IDisplayName 時應回傳 DisplayName")]
+        [DisplayName("GetDisplayText falls back to DisplayName when the formatted result is empty and the type implements IDisplayName")]
         public void GetDisplayText_EmptyFormattedValue_FallsBackToIDisplayName()
         {
             var obj = new EmptyFormattedClass { Name = string.Empty, DisplayName = "fallback" };
@@ -61,7 +61,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TreeNodeAttribute 建構子應保存 CollectionFolder 與 DisplayFormat")]
+        [DisplayName("The TreeNodeAttribute constructor stores CollectionFolder and DisplayFormat")]
         public void Ctor_CollectionFolder_StoresFlag()
         {
             var attr = new TreeNodeAttribute("label", collectionFolder: true);
@@ -70,7 +70,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TreeNodeAttribute 預設建構子應初始化空字串與 false 預設值")]
+        [DisplayName("The parameterless TreeNodeAttribute constructor initializes empty strings and false")]
         public void Ctor_Parameterless_Defaults()
         {
             var attr = new TreeNodeAttribute();
@@ -80,7 +80,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TreeNodeIgnoreAttribute 應可被建立")]
+        [DisplayName("TreeNodeIgnoreAttribute can be instantiated")]
         public void TreeNodeIgnoreAttribute_CanBeInstantiated()
         {
             Assert.NotNull(new TreeNodeIgnoreAttribute());
@@ -90,7 +90,7 @@ namespace Polhem.Base.UnitTests
     public class EnumDefaultsTests
     {
         [Fact]
-        [DisplayName("DateInterval 預設值為 Year")]
+        [DisplayName("The default value of DateInterval is Year")]
         public void DateInterval_DefaultValue_IsYear()
         {
             DateInterval value = default;

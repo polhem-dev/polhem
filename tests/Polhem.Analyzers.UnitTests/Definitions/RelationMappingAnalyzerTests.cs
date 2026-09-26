@@ -6,14 +6,14 @@ using Microsoft.CodeAnalysis;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// POLHEM1005（關聯對應必須指向已宣告欄位）與 POLHEM1006（關聯欄位應有對應寫入）測試。
+    /// Tests for POLHEM1005 (a relation mapping must point to a declared field) and POLHEM1006 (a relation field should be written by a mapping).
     /// </summary>
     public class RelationMappingAnalyzerTests
     {
         private const string SchemaPath = "Define/FormSchema/Product.FormSchema.xml";
 
         /// <summary>
-        /// 正確接線的關聯欄位：mapping 寫入 ref_supplier_id，且該欄位以 RelationField 宣告。
+        /// A correctly wired relation field: a mapping writes ref_supplier_id, and that field is declared as a RelationField.
         /// </summary>
         private const string WellFormed = """
             <?xml version="1.0" encoding="utf-8"?>
@@ -34,7 +34,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
             """;
 
         [Fact]
-        [DisplayName("DestinationField 指向未宣告欄位應報 POLHEM1005")]
+        [DisplayName("A DestinationField pointing to an undeclared field reports POLHEM1005")]
         public void UnknownDestinationField_ReportsDiagnostic()
         {
             const string xml = """
@@ -65,7 +65,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("RelationField 無任何 mapping 寫入應報 POLHEM1006")]
+        [DisplayName("A RelationField that no mapping writes to reports POLHEM1006")]
         public void UnmappedRelationField_ReportsDiagnostic()
         {
             const string xml = """
@@ -92,7 +92,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("正確接線的關聯欄位不應報任何診斷")]
+        [DisplayName("A correctly wired relation field reports nothing")]
         public void WellFormedRelation_ReportsNothing()
         {
             // Act
@@ -103,7 +103,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("非 RelationField 的欄位不受 POLHEM1006 約束")]
+        [DisplayName("A field that is not a RelationField is not subject to POLHEM1006")]
         public void NonRelationField_IsNotRequiredToBeMapped()
         {
             const string xml = """
@@ -128,10 +128,10 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("一個 mapping 目標不存在時，不應同時對同一欄位報 POLHEM1006")]
+        [DisplayName("A missing mapping target does not also report POLHEM1006 for the same field")]
         public void MissingDestination_DoesNotAlsoReportUnmapped()
         {
-            // ref_supplier_id 未宣告 → 僅 POLHEM1005；不應因「宣告的 RelationField 沒被寫入」再報一次。
+            // `ref_supplier_id` is not declared, so only POLHEM1005 is reported, not a second report that the declared RelationField is never written.
             const string xml = """
                 <?xml version="1.0" encoding="utf-8"?>
                 <FormSchema ProgId="Product" CategoryId="company">

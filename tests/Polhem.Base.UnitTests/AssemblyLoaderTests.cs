@@ -10,7 +10,7 @@ namespace Polhem.Base.UnitTests
         private const string BaseAssembly = "Polhem.Base.dll";
 
         [Fact]
-        [DisplayName("FindAssembly 應能從 AppDomain 找到已載入組件")]
+        [DisplayName("FindAssembly finds an assembly already loaded in the AppDomain")]
         public void FindAssembly_AlreadyLoaded_ReturnsAssembly()
         {
             var assembly = AssemblyLoader.FindAssembly(BaseAssembly);
@@ -19,7 +19,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("FindAssembly 重複呼叫應命中快取")]
+        [DisplayName("Repeated FindAssembly calls hit the cache")]
         public void FindAssembly_RepeatedCalls_ReturnSameInstance()
         {
             var first = AssemblyLoader.FindAssembly(BaseAssembly);
@@ -30,14 +30,14 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("FindAssembly 於未知名稱應回傳 null")]
+        [DisplayName("FindAssembly returns null for an unknown name")]
         public void FindAssembly_UnknownName_ReturnsNull()
         {
             Assert.Null(AssemblyLoader.FindAssembly("Does.Not.Exist.dll"));
         }
 
         [Fact]
-        [DisplayName("IsAssemblyLoaded 應正確回報載入狀態")]
+        [DisplayName("IsAssemblyLoaded reports the load state")]
         public void IsAssemblyLoaded_ReflectsLoadState()
         {
             Assert.True(AssemblyLoader.IsAssemblyLoaded(BaseAssembly));
@@ -45,7 +45,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("LoadAssembly 對已載入組件應回傳快取實例")]
+        [DisplayName("LoadAssembly returns the cached instance for an already loaded assembly")]
         public void LoadAssembly_AlreadyLoaded_ReturnsCached()
         {
             var first = AssemblyLoader.LoadAssembly(BaseAssembly);
@@ -56,7 +56,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetType 應支援「類型, 組件」格式")]
+        [DisplayName("GetType supports the 'type, assembly' format")]
         public void GetType_WithAssemblyQualifiedName_ReturnsType()
         {
             var type = AssemblyLoader.GetType("Polhem.Base.Attributes.TreeNodeAttribute, Polhem.Base");
@@ -64,17 +64,17 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetType 應支援純型別名稱（由命名空間推斷組件）")]
+        [DisplayName("GetType supports a bare full type name (the assembly is inferred from the namespace)")]
         public void GetType_WithFullTypeName_ReturnsType()
         {
-            // 樣本型別必須位於根命名空間 Polhem.Base：推斷法是「去掉最後一段當組件名」，
-            // 用 Polhem.Base.Attributes.X 會去找不存在的 Polhem.Base.Attributes.dll。
+            // The sample type must be in the root namespace `Polhem.Base`. The assembly name is inferred by dropping
+            // the last segment, so `Polhem.Base.Attributes.X` would look for a nonexistent `Polhem.Base.Attributes.dll`.
             var type = AssemblyLoader.GetType("Polhem.Base.SysInfo");
             Assert.Equal(typeof(SysInfo), type);
         }
 
         [Fact]
-        [DisplayName("CreateInstance 應建立指定型別的新物件")]
+        [DisplayName("CreateInstance creates a new object of the given type")]
         public void CreateInstance_ReturnsInstance()
         {
             var instance = AssemblyLoader.CreateInstance("Polhem.Base.Attributes.TreeNodeAttribute, Polhem.Base");
@@ -82,13 +82,14 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateInstance 應支援建構子參數")]
+        [DisplayName("CreateInstance supports constructor arguments")]
         public void CreateInstance_WithConstructorArgs_UsesMatchingConstructor()
         {
-            // WARNING: 引數必須包成 object[] 顯式傳入。寫成 CreateInstance(aqn, "ok", true) 時，
-            // 第二個引數是 string，C# 會綁到 CreateInstance(assemblyName, typeName, params args)
-            // 這個多載——AQN 被當成組件名，擲 FileLoadException。原測試沒踩到，只因它的第一個
-            // ctor 引數剛好是 bool。
+            // WARNING: The arguments must be passed explicitly as an `object[]`. Written as
+            // `CreateInstance(aqn, "ok", true)`, the second argument is a string, so C# binds to the
+            // `CreateInstance(assemblyName, typeName, params args)` overload, treats the AQN as an assembly name and
+            // throws `FileLoadException`. The original test only avoided this because its first constructor argument
+            // happened to be a bool.
             var instance = AssemblyLoader.CreateInstance(
                 "Polhem.Base.Attributes.TreeNodeAttribute, Polhem.Base", s_treeNodeCtorArgs);
             var result = Assert.IsType<TreeNodeAttribute>(instance);

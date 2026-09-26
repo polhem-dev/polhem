@@ -8,13 +8,13 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Polhem.Tests.Shared
 {
     /// <summary>
-    /// Process-wide test bootstrap: 一次性 wire up <c>DbConnectionManager</c>、<c>SysInfo</c>、
-    /// <see cref="Polhem.Api.Client.ApiClientInfo.LocalServiceProvider"/>，以及
-    /// <see cref="SharedDatabaseState.EnsureRegistered"/>。
+    /// Process-wide test bootstrap: wires up <c>DbConnectionManager</c>, <c>SysInfo</c>,
+    /// <see cref="Polhem.Api.Client.ApiClientInfo.LocalServiceProvider"/> and
+    /// <see cref="SharedDatabaseState.EnsureRegistered"/> once.
     /// </summary>
     /// <remarks>
-    /// PR 5.7 後 ICacheContainer / IDefineAccess 全面由 DI 容器接管，bootstrap 流程不再需要
-    /// 預先初始化 <c>CacheContainer</c> 靜態 facade（已移除）。
+    /// <c>ICacheContainer</c> and <c>IDefineAccess</c> are provided by the DI container, so the bootstrap no longer
+    /// initializes the <c>CacheContainer</c> static facade (which has been removed).
     /// </remarks>
     public static class TestProcessBootstrap
     {
@@ -82,7 +82,7 @@ namespace Polhem.Tests.Shared
         }
 
         /// <summary>
-        /// 首次呼叫時觸發 process-wide 靜態 wire-up；後續呼叫直接 return。
+        /// Runs the process-wide static wire-up on the first call; later calls return immediately.
         /// </summary>
         public static void EnsureInitialized()
         {
@@ -97,10 +97,9 @@ namespace Polhem.Tests.Shared
 
         private static void InitializeOnce()
         {
-            // 確保 POLHEM_MASTER_KEY 在任何測試 class 構造前完成設定：bootstrap 一開頭就 set，
-            // 避免 SystemSettings 預設 MasterKeySource.Type=Environment 但 env var 未設時
-            // MasterKeyProvider 拋例外。Production-like 環境會在外部 inject；此 fallback 只
-            // 在 test process 內生效。
+            // Set `POLHEM_MASTER_KEY` before any test class is constructed. `SystemSettings` defaults to
+            // `MasterKeySource.Type=Environment`, and `MasterKeyProvider` throws when the variable is unset.
+            // Production-like environments inject it from outside; this fallback applies only in the test process.
             if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("POLHEM_MASTER_KEY")))
             {
                 Environment.SetEnvironmentVariable("POLHEM_MASTER_KEY", TestMasterKey);
@@ -114,31 +113,30 @@ namespace Polhem.Tests.Shared
                 CustomizePath = s_sharedCustomizePath
             };
 
-            // Bootstrap 暫時用一個 DefineAccess 讓 SharedDatabaseState.EnsureRegistered
-            // 在 AddPolhemFramework 執行前就能寫入 DatabaseSettings.Items。
-            // 這個 bootstrap access 只活在 InitializeOnce scope 內，不對外公開；DI 容器內由
-            // AddPolhemFramework 重新建立正式的 IDefineAccess 實例（用同一份 PathOptions 即可共用 cache）。
+            // A temporary define access lets `SharedDatabaseState.EnsureRegistered` write `DatabaseSettings.Items`
+            // before `AddPolhemFramework` runs. It lives only inside `InitializeOnce` and is not exposed; the DI
+            // container gets its own `IDefineAccess` from `AddPolhemFramework`, sharing the cache through the same
+            // `PathOptions`.
             var bootstrapStorage = new FileDefineStorage(pathOptions);
             var bootstrapAccess = new CacheDefineAccess(bootstrapStorage, pathOptions);
 
-            // DB provider / dialect / DatabaseItem 註冊統一交給 SharedDatabaseState。
             SharedDatabaseState.EnsureRegistered(bootstrapAccess);
 
-            // 系統初始化：boot-time 讀檔走 SystemSettingsLoader（不依賴 IDefineAccess）。
-            // tests/Define/SystemSettings.xml 已將 MasterKeySource.Type 設為 Environment、
-            // Value 設為 POLHEM_MASTER_KEY，配合本方法開頭的 env var 注入即可解密 payload。
+            // Boot-time settings are read through `SystemSettingsLoader`, which does not depend on `IDefineAccess`.
+            // `tests/Define/SystemSettings.xml` points `MasterKeySource` at the `POLHEM_MASTER_KEY` environment
+            // variable, which the start of this method sets, so payloads can be decrypted.
             var settings = SystemSettingsLoader.Load(pathOptions);
             SysInfo.Initialize(settings.CommonConfiguration);
 
-            // 用 AddPolhemFramework 建 DI 容器。Phase 7 後框架不再有 process-wide 靜態 facade，
-            // 所有服務（含 IDbConnectionManager）皆透過 ctor 注入解析。
+            // The framework has no process-wide static facades; every service, including `IDbConnectionManager`,
+            // is resolved through constructor injection from this container.
             var services = new ServiceCollection();
             services.AddPolhemFramework(settings.BackendConfiguration, pathOptions, autoCreateMasterKey: true);
             var provider = services.BuildServiceProvider();
 
-            // Polhem.Api.Client 近端模式（in-process）透過 ApiClientInfo.LocalServiceProvider 取得後端服務；
-            // 測試 fixture 預設指向同一個 process-wide 容器。Phase 4 transitional —
-            // 主計畫 §「範圍邊界」說明此 holder 是 Polhem.Api.Client 重構前的暫時做法。
+            // The in-process (near-end) mode of `Polhem.Api.Client` gets backend services through
+            // `ApiClientInfo.LocalServiceProvider`, and test fixtures point it at this process-wide container.
+            // NOTE: this holder is a transitional measure until `Polhem.Api.Client` is refactored.
             Polhem.Api.Client.ApiClientInfo.LocalServiceProvider = provider;
         }
 

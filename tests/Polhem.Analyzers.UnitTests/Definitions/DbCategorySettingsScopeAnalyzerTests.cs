@@ -6,14 +6,14 @@ using Microsoft.CodeAnalysis;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// POLHEM1002（DbCategory Id 必須為合法資料庫 scope）測試。
+    /// Tests for POLHEM1002 (a DbCategory Id must be a valid database scope).
     /// </summary>
     public class DbCategorySettingsScopeAnalyzerTests
     {
         private const string SettingsPath = "Define/DbCategorySettings.xml";
 
         [Fact]
-        [DisplayName("DbCategory Id 為未知值應報 POLHEM1002")]
+        [DisplayName("An unknown DbCategory Id reports POLHEM1002")]
         public void UnknownCategoryId_ReportsDiagnostic()
         {
             const string xml = """
@@ -41,7 +41,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("三個合法 scope 皆不應報診斷")]
+        [DisplayName("None of the valid scopes reports a diagnostic")]
         public void AllValidScopes_ReportNothing()
         {
             const string xml = """
@@ -63,7 +63,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("僅大小寫不符應指名正確拼法")]
+        [DisplayName("A casing-only mismatch names the correct spelling")]
         public void WrongCasing_NamesCorrectCasing()
         {
             const string xml = """

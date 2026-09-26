@@ -5,14 +5,14 @@ using Polhem.Analyzers.Definitions;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// POLHEM1004（欄位清單只能引用已宣告欄位）測試。
+    /// Tests for POLHEM1004 (a field list may refer only to declared fields).
     /// </summary>
     public class FieldListReferenceAnalyzerTests
     {
         private const string SchemaPath = "Define/FormSchema/Product.FormSchema.xml";
 
         [Fact]
-        [DisplayName("ListFields 引用未宣告欄位應報 POLHEM1004")]
+        [DisplayName("ListFields referring to an undeclared field reports POLHEM1004")]
         public void UnknownListField_ReportsDiagnostic()
         {
             const string xml = """
@@ -40,12 +40,12 @@ namespace Polhem.Analyzers.UnitTests.Definitions
             Assert.Contains("'unit_prise'", message, StringComparison.Ordinal);
             Assert.Contains("ListFields", message, StringComparison.Ordinal);
 
-            // ListFields 的未知欄位不是靜默跳過：版面少一欄，但 SelectBuilder 仍會拿到它並擲例外。
+            // An unknown field in `ListFields` is not skipped silently. The layout loses a column, but `SelectBuilder` still receives it and throws.
             Assert.Contains("InvalidOperationException", message, StringComparison.Ordinal);
         }
 
         [Fact]
-        [DisplayName("LookupFields 也應被檢查")]
+        [DisplayName("LookupFields is checked too")]
         public void UnknownLookupField_ReportsDiagnostic()
         {
             const string xml = """
@@ -68,13 +68,13 @@ namespace Polhem.Analyzers.UnitTests.Definitions
             var message = Assert.Single(diagnostics).GetMessage(CultureInfo.InvariantCulture);
             Assert.Contains("LookupFields", message, StringComparison.Ordinal);
 
-            // LookupFields 才是真的靜默跳過（GetLookupFields 以 master.Fields.Contains 過濾）。
+            // `LookupFields` really is skipped silently, because `GetLookupFields` filters with `master.Fields.Contains`.
             Assert.Contains("skipped silently", message, StringComparison.Ordinal);
             Assert.DoesNotContain("InvalidOperationException", message, StringComparison.Ordinal);
         }
 
         [Fact]
-        [DisplayName("master-detail 清單可混用不同表的欄位，不應誤報")]
+        [DisplayName("A master-detail list may mix fields from different tables without a false report")]
         public void FieldsFromMultipleTables_ReportNothing()
         {
             const string xml = """
@@ -103,7 +103,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("清單含空白與空項目應可容忍")]
+        [DisplayName("Whitespace and empty entries in the list are tolerated")]
         public void WhitespaceAndEmptyEntries_AreTolerated()
         {
             const string xml = """
@@ -128,7 +128,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("未宣告 ListFields 屬性不應報診斷")]
+        [DisplayName("A schema without a ListFields attribute reports nothing")]
         public void MissingListFields_ReportsNothing()
         {
             const string xml = """

@@ -5,8 +5,8 @@ using Polhem.Base.Expressions;
 namespace Polhem.Base.UnitTests.Expressions
 {
     /// <summary>
-    /// <see cref="ExpressionPolicy"/> 測試：FieldDbType → CLR 型別對映，以及
-    /// DBNull/null → 型別預設值的一致 coercion。
+    /// Tests for <see cref="ExpressionPolicy"/>: the FieldDbType → CLR type mapping, and the consistent
+    /// coercion of DBNull/null to the type's default value.
     /// </summary>
     public class ExpressionPolicyTests
     {
@@ -19,14 +19,14 @@ namespace Polhem.Base.UnitTests.Expressions
         [InlineData(FieldDbType.Boolean, typeof(bool))]
         [InlineData(FieldDbType.DateTime, typeof(DateTime))]
         [InlineData(FieldDbType.Guid, typeof(Guid))]
-        [DisplayName("ToClrType 對映各 FieldDbType 至對應 CLR 型別")]
+        [DisplayName("ToClrType maps each FieldDbType to its CLR type")]
         public void ToClrType_MapsFieldDbTypeToClrType(FieldDbType dbType, Type expected)
         {
             Assert.Equal(expected, ExpressionPolicy.ToClrType(dbType));
         }
 
         [Fact]
-        [DisplayName("CoerceValue：DBNull 數值欄回傳 0（decimal）")]
+        [DisplayName("CoerceValue returns 0 (decimal) for DBNull in a numeric column")]
         public void CoerceValue_DbNullCurrency_ReturnsZero()
         {
             var result = ExpressionPolicy.CoerceValue(DBNull.Value, FieldDbType.Currency);
@@ -35,7 +35,7 @@ namespace Polhem.Base.UnitTests.Expressions
         }
 
         [Fact]
-        [DisplayName("CoerceValue：DBNull 字串欄回傳空字串")]
+        [DisplayName("CoerceValue returns an empty string for DBNull in a string column")]
         public void CoerceValue_DbNullString_ReturnsEmpty()
         {
             var result = ExpressionPolicy.CoerceValue(DBNull.Value, FieldDbType.String);
@@ -44,7 +44,7 @@ namespace Polhem.Base.UnitTests.Expressions
         }
 
         [Fact]
-        [DisplayName("CoerceValue：null 布林欄回傳 false")]
+        [DisplayName("CoerceValue returns false for null in a boolean column")]
         public void CoerceValue_NullBoolean_ReturnsFalse()
         {
             var result = ExpressionPolicy.CoerceValue(null, FieldDbType.Boolean);
@@ -53,7 +53,7 @@ namespace Polhem.Base.UnitTests.Expressions
         }
 
         [Fact]
-        [DisplayName("CoerceValue：DBNull Guid 欄回傳 Guid.Empty")]
+        [DisplayName("CoerceValue returns Guid.Empty for DBNull in a Guid column")]
         public void CoerceValue_DbNullGuid_ReturnsEmptyGuid()
         {
             var result = ExpressionPolicy.CoerceValue(DBNull.Value, FieldDbType.Guid);
@@ -62,7 +62,7 @@ namespace Polhem.Base.UnitTests.Expressions
         }
 
         [Fact]
-        [DisplayName("CoerceValue：型別相符時原值返回")]
+        [DisplayName("CoerceValue returns the value unchanged when the type already matches")]
         public void CoerceValue_MatchingType_ReturnsSameValue()
         {
             var result = ExpressionPolicy.CoerceValue(12.5m, FieldDbType.Currency);
@@ -71,7 +71,7 @@ namespace Polhem.Base.UnitTests.Expressions
         }
 
         [Fact]
-        [DisplayName("CoerceValue：int 值餵入 decimal 欄應轉為 decimal")]
+        [DisplayName("CoerceValue converts an int value for a decimal column to decimal")]
         public void CoerceValue_IntToDecimal_Converts()
         {
             var result = ExpressionPolicy.CoerceValue(5, FieldDbType.Decimal);
@@ -81,7 +81,7 @@ namespace Polhem.Base.UnitTests.Expressions
         }
 
         [Fact]
-        [DisplayName("CoerceValue：string 值餵入 Guid 欄應解析為 Guid（wire/SQLite 把 GUID 存為 TEXT）")]
+        [DisplayName("CoerceValue parses a string value for a Guid column into a Guid (the wire and SQLite carry GUIDs as TEXT)")]
         public void CoerceValue_StringToGuid_Parses()
         {
             var id = Guid.NewGuid();
@@ -93,7 +93,7 @@ namespace Polhem.Base.UnitTests.Expressions
         }
 
         [Fact]
-        [DisplayName("CoerceValue：Guid 值餵入 Guid 欄原值返回")]
+        [DisplayName("CoerceValue returns a Guid value for a Guid column unchanged")]
         public void CoerceValue_GuidToGuid_ReturnsSameValue()
         {
             var id = Guid.NewGuid();
@@ -104,7 +104,7 @@ namespace Polhem.Base.UnitTests.Expressions
         }
 
         [Fact]
-        [DisplayName("CoerceValue：base64 string 值餵入 Binary 欄應解為 byte[]")]
+        [DisplayName("CoerceValue decodes a base64 string for a Binary column into byte[]")]
         public void CoerceValue_Base64ToBinary_Decodes()
         {
             var bytes = new byte[] { 1, 2, 3, 4 };
@@ -117,7 +117,7 @@ namespace Polhem.Base.UnitTests.Expressions
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("CoerceValue：空/空白 string 餵入 Guid 欄回 Guid.Empty（未選的鍵、TEXT 型別空 GUID 欄，不 Parse 拋錯）")]
+        [DisplayName("CoerceValue returns Guid.Empty for an empty or whitespace string in a Guid column (an unselected key or an empty TEXT GUID column) instead of throwing from Parse")]
         public void CoerceValue_EmptyStringToGuid_ReturnsEmptyGuid(string value)
         {
             var result = ExpressionPolicy.CoerceValue(value, FieldDbType.Guid);
@@ -126,7 +126,7 @@ namespace Polhem.Base.UnitTests.Expressions
         }
 
         [Fact]
-        [DisplayName("CoerceValue：空 string 餵入 Binary 欄回空陣列（不 FromBase64String 拋錯）")]
+        [DisplayName("CoerceValue returns an empty array for an empty string in a Binary column instead of throwing from FromBase64String")]
         public void CoerceValue_EmptyStringToBinary_ReturnsEmptyArray()
         {
             var result = ExpressionPolicy.CoerceValue(string.Empty, FieldDbType.Binary);

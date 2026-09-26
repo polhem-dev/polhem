@@ -5,14 +5,14 @@ using Polhem.Analyzers.Definitions;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// POLHEM1007（同一表內不得重複宣告欄位）測試。
+    /// Tests for POLHEM1007 (a field must not be declared twice in one table).
     /// </summary>
     public class DuplicateFieldNameAnalyzerTests
     {
         private const string SchemaPath = "Define/FormSchema/Order.FormSchema.xml";
 
         [Fact]
-        [DisplayName("同一 FormTable 內重複欄位應報 POLHEM1007")]
+        [DisplayName("A duplicate field within one FormTable reports POLHEM1007")]
         public void DuplicateWithinTable_ReportsDiagnostic()
         {
             const string xml = """
@@ -41,12 +41,12 @@ namespace Polhem.Analyzers.UnitTests.Definitions
             Assert.Contains("'Order'", message, StringComparison.Ordinal);
             Assert.Contains("'sys_id'", message, StringComparison.Ordinal);
 
-            // 應報在後出現的那一筆（第 8 行，0-based 7），前一筆保留作為讀者的參照點。
+            // The later occurrence is reported (line 8, 0-based 7); the earlier one stays as the reader's reference point.
             Assert.Equal(7, diagnostic.Location.GetLineSpan().StartLinePosition.Line);
         }
 
         [Fact]
-        [DisplayName("master-detail 跨表同名欄位不應誤報")]
+        [DisplayName("Fields with the same name in different master-detail tables are not falsely reported")]
         public void SameNameAcrossTables_ReportsNothing()
         {
             const string xml = """
@@ -77,7 +77,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("僅大小寫不同仍視為重複")]
+        [DisplayName("Names that differ only in casing still count as duplicates")]
         public void CasingOnlyDifference_IsTreatedAsDuplicate()
         {
             const string xml = """
@@ -102,7 +102,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("TableSchema 內重複欄位也應被檢查")]
+        [DisplayName("Duplicate fields in a TableSchema are checked too")]
         public void DuplicateWithinTableSchema_ReportsDiagnostic()
         {
             const string xml = """
@@ -127,7 +127,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("無重複欄位不應報診斷")]
+        [DisplayName("No duplicate fields reports nothing")]
         public void NoDuplicates_ReportsNothing()
         {
             const string xml = """

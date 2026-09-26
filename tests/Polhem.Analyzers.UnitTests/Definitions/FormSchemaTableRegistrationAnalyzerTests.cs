@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// POLHEM2001（FormSchema 的表必須登記於所宣告 scope）測試。
+    /// Tests for POLHEM2001 (a FormSchema table must be registered under the declared scope).
     /// </summary>
     public class FormSchemaTableRegistrationAnalyzerTests
     {
@@ -34,7 +34,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
             """;
 
         [Fact]
-        [DisplayName("表登記於其他 scope 時應報 POLHEM2001 並指出實際 scope")]
+        [DisplayName("A table registered under another scope reports POLHEM2001 and names the actual scope")]
         public void TableRegisteredUnderAnotherScope_ReportsDiagnosticNamingActualScope()
         {
             const string xml = """
@@ -63,7 +63,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("表完全未登記時應報 POLHEM2001 並建議新增 TableItem")]
+        [DisplayName("A table registered nowhere reports POLHEM2001 and suggests adding a TableItem")]
         public void TableNotRegisteredAnywhere_ReportsDiagnosticSuggestingRegistration()
         {
             const string xml = """
@@ -88,7 +88,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("表正確登記於所宣告 scope 時不應報診斷")]
+        [DisplayName("A table registered under the declared scope reports nothing")]
         public void TableRegisteredUnderDeclaredScope_ReportsNothing()
         {
             const string xml = """
@@ -111,7 +111,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("master-detail 多個 FormTable 應逐一檢查")]
+        [DisplayName("Each FormTable of a master-detail schema is checked")]
         public void MultipleFormTables_ChecksEach()
         {
             const string xml = """
@@ -137,7 +137,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("無 DbCategorySettings.xml 時應整組靜默（定義可能存於資料庫）")]
+        [DisplayName("Without DbCategorySettings.xml the whole rule stays silent (definitions may live in the database)")]
         public void MissingDbCategorySettings_ReportsNothing()
         {
             const string xml = """
@@ -159,7 +159,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("CategoryId 非法時應交由 POLHEM1001 處理，不重複報告")]
+        [DisplayName("An invalid CategoryId is left to POLHEM1001 and not reported twice")]
         public void InvalidCategoryId_DefersToPolhem1001()
         {
             const string xml = """
@@ -182,7 +182,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("診斷位置應指向 DbTableName 屬性")]
+        [DisplayName("The diagnostic location points at the DbTableName attribute")]
         public void Diagnostic_LocatesDbTableNameAttribute()
         {
             const string xml = """
@@ -204,7 +204,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
             var lineSpan = Assert.Single(diagnostics).Location.GetLineSpan();
             Assert.Equal(SchemaPath, lineSpan.Path);
 
-            // 第 4 行（0-based index 3）為 FormTable 節點。
+            // Line 4 (0-based index 3) is the FormTable element.
             Assert.Equal(3, lineSpan.StartLinePosition.Line);
 
             var line = xml.Split('\n')[3];
@@ -213,7 +213,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("表名大小寫不符時不報，避免誤判掩蓋真正原因")]
+        [DisplayName("A table name casing mismatch reports nothing, so a misdiagnosis does not hide the real cause")]
         public void TableNameCasingMismatch_ReportsNothing()
         {
             const string xml = """

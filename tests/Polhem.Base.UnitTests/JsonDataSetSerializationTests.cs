@@ -6,17 +6,17 @@ using Polhem.Base.Serialization;
 namespace Polhem.Base.UnitTests
 {
     /// <summary>
-    /// JSON DataSet/DataTable 序列化測試。
-    /// 驗證自訂 DataTableJsonConverter / DataSetJsonConverter 透過 JsonCodec 的往返正確性，
-    /// 涵蓋所有 FieldDbType 欄位型別、RowState 保留、DBNull 處理、DataRelation、PrimaryKey 及邊界條件。
-    /// 已遷移至 System.Text.Json，作為自訂 Converter 的回歸驗收標準。
+    /// JSON serialization tests for DataSet and DataTable.
+    /// Verifies round-trips of the custom DataTableJsonConverter / DataSetJsonConverter through JsonCodec,
+    /// covering every FieldDbType column type, RowState preservation, DBNull handling, DataRelation, PrimaryKey
+    /// and edge cases. They serve as the regression acceptance criteria for the System.Text.Json converters.
     /// </summary>
     public class JsonDataSetSerializationTests
     {
         #region Helper
 
         /// <summary>
-        /// 透過 JsonCodec 執行 DataTable JSON 序列化往返。
+        /// Round-trips a DataTable through JSON with JsonCodec.
         /// </summary>
         private static DataTable JsonRoundTripTable(DataTable table)
         {
@@ -25,7 +25,7 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 透過 JsonCodec 執行 DataSet JSON 序列化往返。
+        /// Round-trips a DataSet through JSON with JsonCodec.
         /// </summary>
         private static DataSet JsonRoundTripDataSet(DataSet dataSet)
         {
@@ -35,13 +35,13 @@ namespace Polhem.Base.UnitTests
 
         #endregion
 
-        #region 一、DataTable 基本序列化
+        #region 1. DataTable basic serialization
 
         /// <summary>
-        /// 測試 DataTable 基本序列化往返，驗證 TableName、欄位數、列數、值正確還原。
+        /// Tests a basic DataTable round-trip: TableName, column count, row count and values are restored.
         /// </summary>
         [Fact]
-        [DisplayName("DataTable JSON 序列化往返")]
+        [DisplayName("DataTable round-trips through JSON serialization")]
         public void DataTable_JsonSerialize_RoundTrip()
         {
             var table = new DataTable("TestTable");
@@ -62,10 +62,10 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 測試 DataTable 含 DBNull 值的序列化，還原後 IsNull 為 true。
+        /// Tests serializing a DataTable with a DBNull value; IsNull is true after restoring.
         /// </summary>
         [Fact]
-        [DisplayName("DataTable JSON 序列化處理 DBNull 值")]
+        [DisplayName("DataTable JSON serialization preserves DBNull values")]
         public void DataTable_JsonSerializeWithDbNull_PreservesValues()
         {
             var table = new DataTable("TestTable");
@@ -84,17 +84,17 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 測試 DataTable 序列化保留四種 RowState（Added / Modified / Deleted / Unchanged）。
+        /// Tests that DataTable serialization preserves the Added, Modified, Deleted and Unchanged row states.
         /// </summary>
         [Fact]
-        [DisplayName("DataTable JSON 序列化保留 RowState")]
+        [DisplayName("DataTable JSON serialization preserves RowState")]
         public void DataTable_JsonSerializeWithRowState_PreservesState()
         {
             var table = new DataTable("SampleTable");
             table.Columns.Add("Id", typeof(int));
             table.Columns.Add("Name", typeof(string));
 
-            // 新增兩筆後 AcceptChanges -> Unchanged
+            // Unchanged
             table.Rows.Add(1, "資料1");
             table.Rows.Add(2, "資料2");
             table.AcceptChanges();
@@ -111,18 +111,18 @@ namespace Polhem.Base.UnitTests
             var restored = JsonRoundTripTable(table);
 
             Assert.True(DataTableComparer.IsEqual(table, restored),
-                "序列化還原後的 DataTable 與原始 DataTable 不相等");
+                "The restored DataTable is not equal to the original DataTable");
         }
 
         #endregion
 
-        #region 二、FieldDbType 全型別覆蓋
+        #region 2. Coverage of every FieldDbType
 
-        // 測試資料需混合多種 .NET 型別（string/int/DateTime/Guid/byte[] 等），
-        // 故 TheoryData 僅能以 object 作為值的型別參數；xUnit1045 警告不適用於此刻意設計。
+        // The test data mixes several .NET types (string, int, DateTime, Guid, byte[] and others), so the value
+        // type argument of `TheoryData` can only be `object`. The xUnit1045 warning does not apply to this deliberate design.
 #pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
         /// <summary>
-        /// 提供所有 FieldDbType 對應的測試資料。
+        /// Provides test data for every FieldDbType.
         /// </summary>
         public static TheoryData<string, Type, object> AllFieldDbTypeTestData()
         {
@@ -145,11 +145,11 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 測試所有 FieldDbType 對應的 .NET 型別皆能正確序列化往返。
+        /// Tests that the .NET type of every FieldDbType round-trips correctly.
         /// </summary>
         [Theory]
         [MemberData(nameof(AllFieldDbTypeTestData))]
-        [DisplayName("DataTable JSON 序列化支援所有 FieldDbType 欄位型別")]
+        [DisplayName("DataTable JSON serialization supports every FieldDbType column type")]
         public void DataTable_JsonSerialize_AllFieldDbTypes(string columnName, Type columnType, object testValue)
         {
             var table = new DataTable("TypeTestTable");
@@ -180,13 +180,13 @@ namespace Polhem.Base.UnitTests
 
         #endregion
 
-        #region 三、DataSet 多表與關聯
+        #region 3. DataSet with multiple tables and relations
 
         /// <summary>
-        /// 測試 DataSet 含多個 DataTable 的序列化往返。
+        /// Tests a round-trip of a DataSet that contains several DataTables.
         /// </summary>
         [Fact]
-        [DisplayName("DataSet JSON 序列化往返")]
+        [DisplayName("DataSet round-trips through JSON serialization")]
         public void DataSet_JsonSerialize_RoundTrip()
         {
             var dataSet = new DataSet("TestDataSet");
@@ -225,10 +225,10 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 測試 DataSet 含 Master-Detail DataRelation 的序列化保留。
+        /// Tests that serialization preserves a master-detail DataRelation in a DataSet.
         /// </summary>
         [Fact]
-        [DisplayName("DataSet JSON 序列化保留 DataRelation")]
+        [DisplayName("DataSet JSON serialization preserves DataRelation")]
         public void DataSet_JsonSerializeWithRelation_PreservesRelation()
         {
             var dataSet = new DataSet("OrderSystem");
@@ -265,13 +265,13 @@ namespace Polhem.Base.UnitTests
 
         #endregion
 
-        #region 四、欄位中繼資料保留
+        #region 4. Column metadata preservation
 
         /// <summary>
-        /// 測試 DataTable 序列化保留欄位中繼資料（AllowDBNull、ReadOnly、MaxLength、Caption）。
+        /// Tests that DataTable serialization preserves column metadata (AllowDBNull, ReadOnly, MaxLength, Caption).
         /// </summary>
         [Fact]
-        [DisplayName("DataTable JSON 序列化保留欄位中繼資料")]
+        [DisplayName("DataTable JSON serialization preserves column metadata")]
         public void DataTable_JsonSerialize_PreservesColumnMetadata()
         {
             var table = new DataTable("MetaTable");
@@ -306,10 +306,10 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 測試 DataTable 序列化保留 PrimaryKey 設定。
+        /// Tests that DataTable serialization preserves the PrimaryKey.
         /// </summary>
         [Fact]
-        [DisplayName("DataTable JSON 序列化保留 PrimaryKey")]
+        [DisplayName("DataTable JSON serialization preserves PrimaryKey")]
         public void DataTable_JsonSerialize_PreservesPrimaryKey()
         {
             var table = new DataTable("PkTable");
@@ -332,13 +332,13 @@ namespace Polhem.Base.UnitTests
 
         #endregion
 
-        #region 五、RowState 細節驗證
+        #region 5. RowState details
 
         /// <summary>
-        /// 測試 Modified 資料列序列化後保留 Original 與 Current 值。
+        /// Tests that a Modified row keeps its Original and Current values after serialization.
         /// </summary>
         [Fact]
-        [DisplayName("DataTable JSON 序列化 Modified 資料列保留原始值")]
+        [DisplayName("DataTable JSON serialization keeps the original values of a Modified row")]
         public void DataTable_JsonSerialize_ModifiedRow_PreservesOriginalValues()
         {
             var table = new DataTable("ModifiedTest");
@@ -359,10 +359,10 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 測試 Deleted 資料列序列化後保留 Original 值。
+        /// Tests that a Deleted row keeps its Original values after serialization.
         /// </summary>
         [Fact]
-        [DisplayName("DataTable JSON 序列化 Deleted 資料列保留原始值")]
+        [DisplayName("DataTable JSON serialization keeps the original values of a Deleted row")]
         public void DataTable_JsonSerialize_DeletedRow_PreservesOriginalValues()
         {
             var table = new DataTable("DeletedTest");
@@ -383,13 +383,13 @@ namespace Polhem.Base.UnitTests
 
         #endregion
 
-        #region 六、邊界條件
+        #region 6. Edge cases
 
         /// <summary>
-        /// 測試有欄位定義但無資料列的空 DataTable 序列化。
+        /// Tests serializing an empty DataTable that has columns but no rows.
         /// </summary>
         [Fact]
-        [DisplayName("DataTable JSON 序列化空資料表")]
+        [DisplayName("DataTable JSON serialization round-trips an empty table")]
         public void DataTable_JsonSerializeEmptyTable_RoundTrip()
         {
             var table = new DataTable("EmptyTable");
@@ -404,10 +404,10 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 測試所有欄位皆為 DBNull 的資料列序列化。
+        /// Tests serializing a row whose fields are all DBNull.
         /// </summary>
         [Fact]
-        [DisplayName("DataTable JSON 序列化全 null 資料列")]
+        [DisplayName("DataTable JSON serialization round-trips a row of all nulls")]
         public void DataTable_JsonSerializeAllNullRow_RoundTrip()
         {
             var table = new DataTable("NullTable");
@@ -416,7 +416,7 @@ namespace Polhem.Base.UnitTests
             table.Columns.Add("Amount", typeof(decimal));
 
             var row = table.NewRow();
-            // 所有欄位皆保持 DBNull
+            // Every field is left as DBNull.
             table.Rows.Add(row);
 
             var restored = JsonRoundTripTable(table);
@@ -428,10 +428,10 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 測試無任何 DataTable 的空 DataSet 序列化。
+        /// Tests serializing an empty DataSet with no DataTable.
         /// </summary>
         [Fact]
-        [DisplayName("DataSet JSON 序列化空 DataSet")]
+        [DisplayName("DataSet JSON serialization round-trips an empty DataSet")]
         public void DataSet_JsonSerializeEmptyDataSet_RoundTrip()
         {
             var dataSet = new DataSet("EmptySet");
@@ -443,10 +443,10 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 測試 null DataTable 序列化後還原為 null。
+        /// Tests that a null DataTable is restored as null after serialization.
         /// </summary>
         [Fact]
-        [DisplayName("DataTable JSON 序列化 null 值")]
+        [DisplayName("DataTable JSON serialization restores a null DataTable as null")]
         public void DataTable_JsonSerialize_Null_ReturnsNull()
         {
             string json = JsonCodec.Serialize((DataTable?)null!, includeTypeName: false);

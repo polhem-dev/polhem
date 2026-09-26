@@ -34,7 +34,7 @@ namespace Polhem.Base.UnitTests
         private string TempPath(string relative) => Path.Combine(_tempDir, relative);
 
         [Fact]
-        [DisplayName("FileWriteTextAtomic 應以 UTF-8 no BOM 寫入並可讀回")]
+        [DisplayName("FileWriteTextAtomic writes UTF-8 without a BOM and reads back")]
         public void FileWriteTextAtomic_DefaultEncoding_NoBom()
         {
             string path = TempPath("atomic.txt");
@@ -42,12 +42,12 @@ namespace Polhem.Base.UnitTests
 
             byte[] raw = File.ReadAllBytes(path);
             Assert.False(raw.Length >= 3 && raw[0] == 0xEF && raw[1] == 0xBB && raw[2] == 0xBF,
-                "FileWriteTextAtomic 不應寫入 UTF-8 BOM");
+                "FileWriteTextAtomic must not write a UTF-8 BOM");
             Assert.Equal("哈囉 World", FileUtilities.FileReadText(path));
         }
 
         [Fact]
-        [DisplayName("FileWriteTextAtomic 應取代既有檔案（三參數 File.Move 的 overwrite 語意）")]
+        [DisplayName("FileWriteTextAtomic replaces an existing file (the overwrite semantics of the three-argument File.Move)")]
         public void FileWriteTextAtomic_ExistingFile_IsReplaced()
         {
             string path = TempPath("atomic-replace.txt");
@@ -59,7 +59,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("FileWriteTextAtomic 不應留下暫存檔")]
+        [DisplayName("FileWriteTextAtomic leaves no temporary file behind")]
         public void FileWriteTextAtomic_LeavesNoTempFile()
         {
             string dir = TempPath("atomic-dir");
@@ -71,7 +71,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("FileWriteTextAtomic 應自動建立目標目錄")]
+        [DisplayName("FileWriteTextAtomic creates the target directory")]
         public void FileWriteTextAtomic_CreatesDirectory()
         {
             string path = TempPath(Path.Combine("nested", "deeper", "file.txt"));
@@ -82,7 +82,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("FileWriteText 預設應以 UTF-8 no BOM 寫入並可讀回")]
+        [DisplayName("FileWriteText writes UTF-8 without a BOM by default and reads back")]
         public void FileWriteText_DefaultEncoding_NoBom()
         {
             string path = TempPath("write.txt");
@@ -91,13 +91,13 @@ namespace Polhem.Base.UnitTests
             byte[] raw = File.ReadAllBytes(path);
             // 0xEF 0xBB 0xBF is the UTF-8 BOM
             Assert.False(raw.Length >= 3 && raw[0] == 0xEF && raw[1] == 0xBB && raw[2] == 0xBF,
-                "FileWriteText 預設不應寫入 UTF-8 BOM");
+                "FileWriteText must not write a UTF-8 BOM by default");
 
             Assert.Equal("哈囉 World", FileUtilities.FileReadText(path));
         }
 
         [Fact]
-        [DisplayName("FileWriteText 應依指定編碼寫入(UTF-16)")]
+        [DisplayName("FileWriteText writes with the specified encoding (UTF-16)")]
         public void FileWriteText_ExplicitEncoding_WritesAccordingly()
         {
             string path = TempPath("utf16.txt");
@@ -110,14 +110,14 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("FileReadText 於檔案不存在時應回傳空字串")]
+        [DisplayName("FileReadText returns an empty string when the file does not exist")]
         public void FileReadText_MissingFile_ReturnsEmpty()
         {
             Assert.Equal(string.Empty, FileUtilities.FileReadText(TempPath("no-file.txt")));
         }
 
         [Fact]
-        [DisplayName("FileWriteText 應自動建立目標子目錄")]
+        [DisplayName("FileWriteText creates the parent directories")]
         public void FileWriteText_AutoCreatesParentDirectory()
         {
             string nestedDir = TempPath("auto/nested");
@@ -137,14 +137,14 @@ namespace Polhem.Base.UnitTests
         [InlineData("http://example.com", false)]
         [InlineData("relative/path", false)]
         [InlineData("", false)]
-        [DisplayName("IsLocalPath 應辨識 Windows drive 與 UNC 路徑")]
+        [DisplayName("IsLocalPath recognizes Windows drive and UNC paths")]
         public void IsLocalPath_RecognizesLocalPaths(string input, bool expected)
         {
             Assert.Equal(expected, FileUtilities.IsLocalPath(input));
         }
 
         [Fact]
-        [DisplayName("GetAssemblyPath 應回傳非空目錄字串")]
+        [DisplayName("GetAssemblyPath returns a non-empty directory string")]
         public void GetAssemblyPath_ReturnsNonEmpty()
         {
             string path = FileUtilities.GetAssemblyPath();

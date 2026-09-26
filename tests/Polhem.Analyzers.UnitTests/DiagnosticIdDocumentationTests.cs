@@ -19,7 +19,7 @@ namespace Polhem.Analyzers.UnitTests
         [Theory]
         [InlineData("en")]
         [InlineData("zh-TW")]
-        [DisplayName("analyzer-rules.md 列出的分析器代號與 DiagnosticIds 完全一致")]
+        [DisplayName("The analyzer IDs listed in analyzer-rules.md match DiagnosticIds exactly")]
         public void AnalyzerRules_ListExactlyTheAnalyzerIds(string language)
         {
             var root = FindRepositoryRoot();
@@ -39,7 +39,7 @@ namespace Polhem.Analyzers.UnitTests
         [Theory]
         [InlineData("en")]
         [InlineData("zh-TW")]
-        [DisplayName("analyzer-rules.md 列出的建置閘門代號都由某個 targets 檔報出")]
+        [DisplayName("Every build gate ID listed in analyzer-rules.md is raised by some targets file")]
         public void AnalyzerRules_BuildGateIdsAreRaisedByTargets(string language)
         {
             var root = FindRepositoryRoot();

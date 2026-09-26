@@ -5,7 +5,7 @@ namespace Polhem.Base.UnitTests
     public class AssemblyLoaderFallbackTests
     {
         [Fact]
-        [DisplayName("LoadAssembly 不存在的組件名稱（無目錄）應進入 FileNotFoundException fallback 並拋出例外")]
+        [DisplayName("LoadAssembly with an unknown assembly name (no directory) takes the FileNotFoundException fallback and throws")]
         public void LoadAssembly_UnknownNameNoDirectory_FallbackThrowsException()
         {
             var exception = Record.Exception(() => AssemblyLoader.LoadAssembly("PolhemXyzNotExistFallback.dll"));
@@ -13,7 +13,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("LoadAssembly 含目錄路徑的不存在組件應使用路徑直接作為 assemblyFile 並拋出例外")]
+        [DisplayName("LoadAssembly with a nonexistent path including a directory uses the path as assemblyFile and throws")]
         public void LoadAssembly_PathWithDirectoryNotFound_FallbackThrowsException()
         {
             string fakeAssemblyPath = Path.Combine(

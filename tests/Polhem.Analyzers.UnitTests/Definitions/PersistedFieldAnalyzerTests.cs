@@ -5,7 +5,7 @@ using Polhem.Analyzers.Definitions;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// POLHEM2006（持久化欄位必須存在於對應 TableSchema）測試。
+    /// Tests for POLHEM2006 (a persisted field must exist in the matching TableSchema).
     /// </summary>
     public class PersistedFieldAnalyzerTests
     {
@@ -24,7 +24,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
             """;
 
         [Fact]
-        [DisplayName("持久化欄位不存在於 TableSchema 應報 POLHEM2006")]
+        [DisplayName("A persisted field missing from the TableSchema reports POLHEM2006")]
         public void PersistedFieldMissingColumn_ReportsDiagnostic()
         {
             const string xml = """
@@ -59,7 +59,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         [Theory]
         [InlineData("RelationField")]
         [InlineData("VirtualField")]
-        [DisplayName("非持久化欄位不需存在於 TableSchema")]
+        [DisplayName("A non-persisted field need not exist in the TableSchema")]
         public void NonPersistedField_ReportsNothing(string fieldType)
         {
             var xml = $"""
@@ -87,7 +87,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("未指定 Type 的欄位視為持久化，仍須有對應欄位")]
+        [DisplayName("A field without a Type is treated as persisted and still needs a matching column")]
         public void MissingTypeAttribute_IsTreatedAsPersisted()
         {
             const string xml = """
@@ -114,7 +114,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("欄位齊備時不應報診斷")]
+        [DisplayName("All fields present reports nothing")]
         public void AllFieldsPresent_ReportsNothing()
         {
             const string xml = """
@@ -142,7 +142,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("TableSchema 不存在時應交由 POLHEM2002 處理，不逐欄誤報")]
+        [DisplayName("A missing TableSchema is left to POLHEM2002 instead of reporting each field")]
         public void MissingTableSchema_DefersToPolhem2002()
         {
             const string xml = """

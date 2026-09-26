@@ -6,17 +6,17 @@ using Polhem.Definition.Database;
 namespace Polhem.Analyzers.UnitTests.Definitions
 {
     /// <summary>
-    /// analyzer 內硬編碼的 scope 清單與框架常數的同步斷言。
+    /// Keeps the scope list hard-coded in the analyzer in sync with the framework constants.
     /// </summary>
     /// <remarks>
-    /// analyzer 專案為 netstandard2.0，無法引用 net10.0 的 <c>Polhem.Definition</c>，因此
-    /// <see cref="DbCategoryScopes"/> 只能複製 <see cref="DbCategoryIds"/> 的值。本測試專案同時引用
-    /// 兩者，作為漂移閘門：框架新增 scope 而 analyzer 未同步時，此測試立即失敗。
+    /// The analyzer project targets netstandard2.0 and cannot reference the net10.0 <c>Polhem.Definition</c>, so
+    /// <see cref="DbCategoryScopes"/> can only copy the values of <see cref="DbCategoryIds"/>. This test project
+    /// references both and acts as a drift gate: when the framework adds a scope the analyzer lacks, this test fails.
     /// </remarks>
     public class DbCategoryScopesSyncTests
     {
         [Fact]
-        [DisplayName("analyzer 的 scope 清單必須與框架 DbCategoryIds 完全一致")]
+        [DisplayName("The analyzer's scope list matches the framework's DbCategoryIds exactly")]
         public void All_MatchesFrameworkConstants()
         {
             // Arrange
@@ -37,7 +37,7 @@ namespace Polhem.Analyzers.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("框架常數應被 IsValid 全數接受")]
+        [DisplayName("IsValid accepts every framework constant")]
         public void IsValid_AcceptsEveryFrameworkConstant()
         {
             // Assert

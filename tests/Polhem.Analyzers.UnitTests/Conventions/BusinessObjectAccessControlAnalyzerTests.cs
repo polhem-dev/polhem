@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis;
 namespace Polhem.Analyzers.UnitTests.Conventions
 {
     /// <summary>
-    /// POLHEM3001（BO 的 public 方法必須宣告存取控制）測試。
+    /// Tests for POLHEM3001 (public BO methods must declare access control).
     /// </summary>
     public class BusinessObjectAccessControlAnalyzerTests
     {
@@ -26,7 +26,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
             """;
 
         [Fact]
-        [DisplayName("BO 的 public 方法未宣告存取控制應報 POLHEM3001")]
+        [DisplayName("A public BO method without access control reports POLHEM3001")]
         public void UnmarkedPublicMethod_ReportsDiagnostic()
         {
             var source = Preamble + """
@@ -55,7 +55,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("方法自身標記時不應報診斷")]
+        [DisplayName("A method marked itself reports nothing")]
         public void MethodLevelAttribute_ReportsNothing()
         {
             var source = Preamble + """
@@ -79,7 +79,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("型別層級標記應涵蓋其所有方法")]
+        [DisplayName("A type-level attribute covers all of its methods")]
         public void TypeLevelAttribute_CoversAllMethods()
         {
             var source = Preamble + """
@@ -105,7 +105,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("建構子與屬性不屬 API surface，不應報診斷")]
+        [DisplayName("Constructors and properties are not API surface and report nothing")]
         public void ConstructorsAndProperties_AreNotReported()
         {
             var source = Preamble + """
@@ -128,7 +128,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("非 public 方法不屬 API surface，不應報診斷")]
+        [DisplayName("Non-public methods are not API surface and report nothing")]
         public void NonPublicMethods_AreNotReported()
         {
             var source = Preamble + """
@@ -153,7 +153,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("非 BusinessObject 的型別不受此規則約束")]
+        [DisplayName("A type that is not a BusinessObject is not subject to this rule")]
         public void NonBusinessObjectType_IsUnaffected()
         {
             var source = Preamble + """
@@ -173,7 +173,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("override 的方法若 base 已標記則不應報診斷")]
+        [DisplayName("An override of a marked base method reports nothing")]
         public void OverrideOfMarkedBaseMethod_ReportsNothing()
         {
             var source = Preamble + """

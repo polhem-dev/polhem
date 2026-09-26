@@ -4,15 +4,15 @@ using Polhem.Base.Security;
 namespace Polhem.Base.UnitTests
 {
     /// <summary>
-    /// 測試 PasswordHasher 密碼雜湊與驗證功能。
+    /// Tests password hashing and verification in PasswordHasher.
     /// </summary>
     public class PasswordHasherTests
     {
         /// <summary>
-        /// 驗證相同密碼能正確通過雜湊驗證。
+        /// Verifies that the same password passes hash verification.
         /// </summary>
         [Fact]
-        [DisplayName("正確密碼應通過雜湊驗證")]
+        [DisplayName("The correct password passes hash verification")]
         public void VerifyPassword_CorrectPassword_ReturnsTrue()
         {
             // Arrange
@@ -27,10 +27,10 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 驗證錯誤密碼無法通過雜湊驗證。
+        /// Verifies that a wrong password fails hash verification.
         /// </summary>
         [Fact]
-        [DisplayName("錯誤密碼應無法通過雜湊驗證")]
+        [DisplayName("A wrong password fails hash verification")]
         public void VerifyPassword_IncorrectPassword_ReturnsFalse()
         {
             // Arrange
@@ -46,10 +46,10 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 驗證格式錯誤的雜湊字串會返回驗證失敗。
+        /// Verifies that a malformed hash string fails verification.
         /// </summary>
         [Fact]
-        [DisplayName("無效格式的雜湊字串應回傳驗證失敗")]
+        [DisplayName("A hash string with an invalid format fails verification")]
         public void VerifyPassword_InvalidHashFormat_ReturnsFalse()
         {
             // Arrange
@@ -64,13 +64,13 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 驗證 legacy SHA1 格式的雜湊字串可正確驗證（向下相容）。
+        /// Verifies that a hash string in the legacy SHA1 format still verifies (backward compatibility).
         /// </summary>
         [Fact]
-        [DisplayName("Legacy SHA1 格式雜湊應可通過驗證")]
+        [DisplayName("A hash in the legacy SHA1 format passes verification")]
         public void VerifyPassword_LegacySha1Format_ReturnsTrue()
         {
-            // Arrange: 建立 legacy 格式 {iterations}.{saltBase64}.{hashBase64}（無 v2. 前綴）
+            // Arrange: the legacy format is `{iterations}.{saltBase64}.{hashBase64}`, without the `v2.` prefix.
             const string password = "LegacyPassword!";
             const int iterations = 10000;
             byte[] salt = new byte[16];
@@ -94,26 +94,26 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// v2 前綴但內部格式錯誤應回傳驗證失敗。
+        /// A v2 prefix with a malformed body fails verification.
         /// </summary>
         [Fact]
-        [DisplayName("v2 前綴但內部格式錯誤應回傳驗證失敗")]
+        [DisplayName("A v2 prefix with a malformed body fails verification")]
         public void VerifyPassword_V2PrefixWithInvalidInner_ReturnsFalse()
         {
-            // parts.Length != 3 → 直接 return false
+            // A part count other than three returns false directly.
             Assert.False(PasswordHasher.VerifyPassword("any", "v2.only.two"));
-            // Base64 解析失敗 → catch 區段回傳 false
+            // A Base64 parse failure is caught and returns false.
             Assert.False(PasswordHasher.VerifyPassword("any", "v2.100000.!!!bad-base64!!!.xx"));
         }
 
         /// <summary>
-        /// 雜湊段為空的儲存值不得驗證通過任何密碼。
+        /// A stored value with an empty hash segment must not verify any password.
         /// </summary>
         /// <remarks>
-        /// 這條守的是一個實測過的繞過：PBKDF2 要 0 個輸出位元組會回空陣列，而
-        /// <c>CryptographicOperations.FixedTimeEquals</c> 判定兩個空 span 相等，於是
-        /// <c>v2.100000..</c> 這種儲存值會對<b>任何</b>密碼回傳 true。v2 與 legacy 兩個分支
-        /// 各自解析、各自比對，所以兩邊都要測；鹽為空同理。
+        /// This guards against a bypass that was reproduced: asking PBKDF2 for 0 output bytes returns an empty array,
+        /// and <c>CryptographicOperations.FixedTimeEquals</c> treats two empty spans as equal, so a stored value such as
+        /// <c>v2.100000..</c> returned true for <b>any</b> password. The v2 and legacy branches parse and compare
+        /// separately, so both are tested. The same applies to an empty salt.
         /// </remarks>
         [Theory]
         [InlineData("v2.100000..")]
@@ -121,7 +121,7 @@ namespace Polhem.Base.UnitTests
         [InlineData("1..")]
         [InlineData("v2.100000.AAAAAAAAAAAAAAAAAAAAAA==.")]
         [InlineData("v2.100000..AAAAAAAAAAAAAAAAAAAAAA==")]
-        [DisplayName("雜湊段或鹽為空的儲存值應驗證失敗（不得對任意密碼回傳 true）")]
+        [DisplayName("A stored value with an empty hash or salt segment fails verification (never true for an arbitrary password)")]
         public void VerifyPassword_EmptyHashOrSaltSegment_ReturnsFalse(string storedHash)
         {
             Assert.False(PasswordHasher.VerifyPassword("any password at all", storedHash));
@@ -129,13 +129,13 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 對照組：雜湊段非空時仍照常區分正確與錯誤密碼。
+        /// Control case: with non-empty segments, verification still tells the correct and wrong passwords apart.
         /// </summary>
         /// <remarks>
-        /// 沒有這一條，上面那個 Theory 也可以用「一律回 false」來滿足 —— 那會鎖死所有人。
+        /// Without this test, the theory above could be satisfied by always returning false, which would lock everyone out.
         /// </remarks>
         [Fact]
-        [DisplayName("對照組：雜湊段非空時驗證行為不變")]
+        [DisplayName("Control case: verification is unchanged when the segments are non-empty")]
         public void VerifyPassword_NonEmptySegments_StillDiscriminates()
         {
             string stored = PasswordHasher.HashPassword("correct horse");

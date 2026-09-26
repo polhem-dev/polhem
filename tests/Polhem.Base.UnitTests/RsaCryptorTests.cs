@@ -4,12 +4,12 @@ using Polhem.Base.Security;
 namespace Polhem.Base.UnitTests
 {
     /// <summary>
-    /// RSA 加解密測試
+    /// Tests for RSA encryption and decryption.
     /// </summary>
     public class RsaCryptorTests
     {
         [Fact]
-        [DisplayName("RSA 公鑰加密後以私鑰解密應還原為原始明文")]
+        [DisplayName("Decrypting with the private key what the public key encrypted restores the original plaintext")]
         public void EncryptAndDecrypt_ValidKeyPair_ReturnsOriginalText()
         {
             // Arrange
@@ -26,7 +26,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("使用錯誤私鑰解密應擲出例外")]
+        [DisplayName("Decrypting with the wrong private key throws")]
         public void Decrypt_WrongPrivateKey_ThrowsException()
         {
             // Arrange
@@ -44,7 +44,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GenerateRsaKeyPair 應產出 PEM 格式字串(SPKI public、PKCS#1 private)")]
+        [DisplayName("GenerateRsaKeyPair produces PEM strings (SPKI public key, PKCS#1 private key)")]
         public void GenerateRsaKeyPair_ReturnsPemFormattedStrings()
         {
             RsaCryptor.GenerateRsaKeyPair(out var publicKey, out var privateKey);

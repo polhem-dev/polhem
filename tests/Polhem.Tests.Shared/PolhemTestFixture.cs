@@ -70,9 +70,8 @@ namespace Polhem.Tests.Shared
         {
             ArgumentNullException.ThrowIfNull(configure);
 
-            // Process-wide statics 一次性初始化（DefinePathInfo / CacheContainer /
-            // DbConnectionManager / SysInfo / DB provider registry /
-            // ApiClientInfo.LocalServiceProvider）。
+            // One-time initialization of the process-wide statics (`SysInfo`, the DB provider registry,
+            // `ApiClientInfo.LocalServiceProvider`).
             TestProcessBootstrap.EnsureInitialized();
 
             var builder = new PolhemTestFixtureBuilder();
@@ -118,7 +117,7 @@ namespace Polhem.Tests.Shared
                 }
                 catch (IOException)
                 {
-                    // 測試完整性優先於暫存清理；偶發鎖定不應讓測試失敗。
+                    // Test results matter more than temp cleanup; an occasional file lock must not fail a test.
                 }
             }
             GC.SuppressFinalize(this);

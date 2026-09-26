@@ -9,7 +9,7 @@ namespace Polhem.Base.UnitTests
             { SerializeState.Serialize, SerializeState.None };
 
         [Fact]
-        [DisplayName("JSON 序列化期間應翻起 SerializeState,結束後歸零")]
+        [DisplayName("JSON serialization raises SerializeState while it runs and clears it afterwards")]
         public void Json_Serialize_RaisesAndClearsSerializeState()
         {
             var source = new SerializationTestPayload { Name = "Carol", Age = 40 };
@@ -27,7 +27,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("SerializeToFile / DeserializeFromFile 應可 round-trip 並設定 ObjectFilePath")]
+        [DisplayName("SerializeToFile / DeserializeFromFile round-trip and set ObjectFilePath")]
         public void JsonFile_Roundtrip_SetsObjectFilePath()
         {
             var source = new SerializationTestPayload { Name = "Eve", Age = 33 };
@@ -44,7 +44,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("DeserializeFromFile 於檔案不存在時應拋出 InvalidOperationException")]
+        [DisplayName("DeserializeFromFile throws InvalidOperationException when the file does not exist")]
         public void DeserializeFromFile_MissingFile_Throws()
         {
             var ex = Assert.Throws<InvalidOperationException>(

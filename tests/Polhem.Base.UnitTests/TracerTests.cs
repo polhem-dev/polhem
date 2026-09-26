@@ -27,14 +27,14 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TraceDispatcher 建構子傳入 null writer 應拋出 ArgumentNullException")]
+        [DisplayName("TraceDispatcher constructor throws ArgumentNullException for a null writer")]
         public void TraceListener_Ctor_NullWriter_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new TraceDispatcher(null!));
         }
 
         [Fact]
-        [DisplayName("Tracer.Enabled 預設為 false，設定 TraceDispatcher 後為 true")]
+        [DisplayName("Tracer.Enabled is false without a listener and true after a TraceDispatcher is set")]
         public void Enabled_ReflectsTraceListenerPresence()
         {
             Assert.False(Tracer.Enabled);
@@ -45,7 +45,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Tracer.Start 在未啟用時應回傳 null 且 Writer 不被呼叫")]
+        [DisplayName("Tracer.Start returns null and does not call the writer when tracing is disabled")]
         public void Start_WhenDisabled_ReturnsNull()
         {
             var writer = new CapturingWriter();
@@ -59,7 +59,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Tracer.Start 啟用時應建立 TraceContext 並發送 Start 事件")]
+        [DisplayName("Tracer.Start creates a TraceContext and emits a Start event when tracing is enabled")]
         public void Start_WhenEnabled_CreatesContextAndEmitsStartEvent()
         {
             var writer = new CapturingWriter();
@@ -86,7 +86,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Tracer.End 啟用時應發送 End 事件並帶入 DurationMs 與狀態")]
+        [DisplayName("Tracer.End emits an End event with DurationMs and the status when tracing is enabled")]
         public void End_WhenEnabled_EmitsEndEventWithDurationAndStatus()
         {
             var writer = new CapturingWriter();
@@ -105,7 +105,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Tracer.End 當 ctx 為 null 或未啟用時應為 no-op")]
+        [DisplayName("Tracer.End is a no-op when ctx is null or tracing is disabled")]
         public void End_WhenDisabledOrNullContext_DoesNothing()
         {
             var writer = new CapturingWriter();
@@ -125,7 +125,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Tracer.Write 啟用時應發送 Point 事件")]
+        [DisplayName("Tracer.Write emits a Point event when tracing is enabled")]
         public void Write_WhenEnabled_EmitsPointEvent()
         {
             var writer = new CapturingWriter();
@@ -146,7 +146,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Tracer.Write 未啟用時 Writer 不應被呼叫")]
+        [DisplayName("Tracer.Write does not call the writer when tracing is disabled")]
         public void Write_WhenDisabled_DoesNothing()
         {
             var writer = new CapturingWriter();
@@ -159,7 +159,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TraceDispatcher.TraceStart 應填入預設 Category 與空名稱保護")]
+        [DisplayName("TraceDispatcher.TraceStart applies an empty default Category and accepts an empty name")]
         public void TraceListener_TraceStart_AppliesDefaults()
         {
             var writer = new CapturingWriter();
@@ -173,7 +173,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TraceDispatcher.TraceEnd 當 ctx 為 null 應忽略")]
+        [DisplayName("TraceDispatcher.TraceEnd ignores a null ctx")]
         public void TraceListener_TraceEnd_NullContext_Ignored()
         {
             var writer = new CapturingWriter();
@@ -185,7 +185,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TraceDispatcher.TraceEnd 若未指定 detail 應沿用 ctx.Detail")]
+        [DisplayName("TraceDispatcher.TraceEnd falls back to ctx.Detail when no detail is given")]
         public void TraceListener_TraceEnd_NullDetail_FallsBackToContextDetail()
         {
             var writer = new CapturingWriter();

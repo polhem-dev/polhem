@@ -10,7 +10,7 @@ namespace Polhem.Base.UnitTests.Exceptions
     public class UserMessageExceptionTests
     {
         [Fact]
-        [DisplayName("單參數 ctor 應設定 Message,InnerException 為 null")]
+        [DisplayName("The single-parameter constructor sets Message and leaves InnerException null")]
         public void Ctor_WithMessage_SetsMessage()
         {
             var ex = new UserMessageException("test message");
@@ -20,7 +20,7 @@ namespace Polhem.Base.UnitTests.Exceptions
         }
 
         [Fact]
-        [DisplayName("雙參數 ctor 應同時設定 Message 與 InnerException")]
+        [DisplayName("The two-parameter constructor sets both Message and InnerException")]
         public void Ctor_WithMessageAndInner_SetsBoth()
         {
             var inner = new InvalidOperationException("inner cause");
@@ -31,7 +31,7 @@ namespace Polhem.Base.UnitTests.Exceptions
         }
 
         [Fact]
-        [DisplayName("UserMessageException 應可由 catch (Exception) 接住")]
+        [DisplayName("UserMessageException can be caught by catch (Exception)")]
         public void Throw_CanBeCaughtAsException()
         {
             Exception? caught = null;
@@ -49,7 +49,7 @@ namespace Polhem.Base.UnitTests.Exceptions
         }
 
         [Fact]
-        [DisplayName("UserMessageException 不應被 catch (InvalidOperationException) 接住(驗證型別獨立)")]
+        [DisplayName("UserMessageException is not caught by catch (InvalidOperationException) (the types are independent)")]
         public void Throw_NotCaughtAsInvalidOperationException()
         {
             UserMessageException? rethrown = null;
@@ -74,7 +74,7 @@ namespace Polhem.Base.UnitTests.Exceptions
         }
 
         [Fact]
-        [DisplayName("UserMessageException 不應被 catch (ArgumentException) 接住(驗證型別獨立)")]
+        [DisplayName("UserMessageException is not caught by catch (ArgumentException) (the types are independent)")]
         public void Throw_NotCaughtAsArgumentException()
         {
             UserMessageException? rethrown = null;

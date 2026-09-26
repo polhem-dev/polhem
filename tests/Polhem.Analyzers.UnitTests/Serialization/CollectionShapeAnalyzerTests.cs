@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis;
 namespace Polhem.Analyzers.UnitTests.Serialization
 {
     /// <summary>
-    /// POLHEM4005（框架集合應只有一個 public Add）與 POLHEM4006（序列化型別須有無參數建構子）測試。
+    /// Tests for POLHEM4005 (a framework collection has only one public Add) and POLHEM4006 (a serialized type needs a parameterless constructor).
     /// </summary>
     public class CollectionShapeAnalyzerTests
     {
@@ -38,7 +38,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
             """;
 
         [Fact]
-        [DisplayName("集合子類新增 public Add 多載應報 POLHEM4005")]
+        [DisplayName("A collection subclass that adds a public Add overload reports POLHEM4005")]
         public void ExtraPublicAddOverload_ReportsDiagnostic()
         {
             var source = ItemDeclaration + """
@@ -60,7 +60,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("鍵值集合子類新增 public Add 多載應報 POLHEM4005")]
+        [DisplayName("A keyed collection subclass that adds a public Add overload reports POLHEM4005")]
         public void KeyCollectionExtraPublicAddOverload_ReportsDiagnostic()
         {
             // The analyzer finds KeyCollectionBase<T> by its metadata name. If that name is wrong the
@@ -83,7 +83,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("鍵值集合項目只有參數化建構子應報 POLHEM4006")]
+        [DisplayName("A keyed collection item with only a parameterized constructor reports POLHEM4006")]
         public void KeyCollectionItemWithoutParameterlessCtor_ReportsDiagnostic()
         {
             // Same reason as the keyed-collection case above: KeyCollectionItem is looked up by its
@@ -108,7 +108,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("集合子類未新增 Add 不應報 POLHEM4005")]
+        [DisplayName("A collection subclass that adds no Add does not report POLHEM4005")]
         public void NoExtraAdd_ReportsNothing()
         {
             var source = ItemDeclaration + """
@@ -126,7 +126,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("非框架集合的型別有 Add 方法不應報 POLHEM4005")]
+        [DisplayName("A type that is not a framework collection may have an Add method without POLHEM4005")]
         public void NonCollectionTypeWithAdd_ReportsNothing()
         {
             const string source = """
@@ -146,7 +146,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("集合子類只有參數化建構子應報 POLHEM4006")]
+        [DisplayName("A collection subclass with only a parameterized constructor reports POLHEM4006")]
         public void CollectionWithoutParameterlessCtor_ReportsDiagnostic()
         {
             var source = ItemDeclaration + """
@@ -169,7 +169,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("集合項目只有參數化建構子應報 POLHEM4006")]
+        [DisplayName("A collection item with only a parameterized constructor reports POLHEM4006")]
         public void ContractTypeWithoutParameterlessCtor_ReportsDiagnostic()
         {
             const string source = """
@@ -191,7 +191,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("同時有無參數與參數化建構子不應報 POLHEM4006")]
+        [DisplayName("A type with both a parameterless and a parameterized constructor does not report POLHEM4006")]
         public void BothConstructors_ReportNothing()
         {
             const string source = """
@@ -215,7 +215,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("未宣告任何建構子時有隱含無參數建構子，不應報 POLHEM4006")]
+        [DisplayName("A type with no declared constructor has an implicit parameterless one and does not report POLHEM4006")]
         public void ImplicitConstructor_ReportsNothing()
         {
             const string source = """
@@ -235,7 +235,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("abstract 型別不會被反序列化器建構，不應報 POLHEM4006")]
+        [DisplayName("An abstract type is never constructed by the deserializer and does not report POLHEM4006")]
         public void AbstractType_ReportsNothing()
         {
             const string source = """

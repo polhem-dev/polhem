@@ -22,7 +22,7 @@ namespace Polhem.LoadTests.UnitTests
         };
 
         [Fact]
-        [DisplayName("登入失敗時擲出的訊息點名虛擬使用者與帳號，而不是讓失敗落到場景上")]
+        [DisplayName("SignInAllAsync throws a message naming the virtual user and account when sign-in fails, instead of letting the failure land on a scenario")]
         public async Task SignInAllAsync_SignInFails_MessageNamesTheVirtualUserAndAccount()
         {
             var pool = new VirtualUserPool(Auth());
@@ -37,7 +37,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("登入失敗的例外保留原始例外，診斷線索不被訊息取代")]
+        [DisplayName("SignInAllAsync keeps the original exception as the inner exception when sign-in fails")]
         public async Task SignInAllAsync_SignInFails_PreservesTheUnderlyingException()
         {
             var pool = new VirtualUserPool(Auth());
@@ -49,7 +49,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("虛擬使用者索引超過帳號池大小時繞回，訊息指向繞回後的帳號")]
+        [DisplayName("SignInAllAsync with more virtual users than accounts names a pooled account in the failure message")]
         public async Task SignInAllAsync_MoreVirtualUsersThanAccounts_WrapsOntoThePool()
         {
             // The pool holds four accounts, so the fifth virtual user reuses the first. The
@@ -65,7 +65,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("共用權杖策略下所有虛擬使用者都登入同一個帳號")]
+        [DisplayName("SignInAllAsync under the Shared token strategy names the first account in the failure message")]
         public async Task SignInAllAsync_SharedTokenStrategy_UsesTheFirstAccount()
         {
             var auth = Auth();
@@ -79,7 +79,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("沒有虛擬使用者時不嘗試登入")]
+        [DisplayName("SignInAllAsync does not attempt to sign in when there are no virtual users")]
         public async Task SignInAllAsync_ZeroVirtualUsers_DoesNotAttemptSignIn()
         {
             // Guards the loop bound: a zero-user run has nothing to prepare, and reporting a

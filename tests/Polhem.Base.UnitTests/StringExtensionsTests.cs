@@ -12,7 +12,7 @@ namespace Polhem.Base.UnitTests
         // ---- SplitLeft / SplitRight ----
 
         [Fact]
-        [DisplayName("SplitLeft 應於找到 delimiter 時回傳左右兩段")]
+        [DisplayName("SplitLeft returns the left and right parts when the delimiter is found")]
         public void SplitLeft_SplitsIntoLeftAndRight()
         {
             "alpha-beta-gamma".SplitLeft("-", out var left, out var right);
@@ -21,7 +21,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("SplitLeft 於找不到 delimiter 時應回傳兩個空字串")]
+        [DisplayName("SplitLeft returns two empty strings when the delimiter is not found")]
         public void SplitLeft_NotFound_ReturnsEmpty()
         {
             "alpha".SplitLeft("-", out var left, out var right);
@@ -30,7 +30,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("SplitRight 應於從右起找 delimiter 時回傳左右兩段")]
+        [DisplayName("SplitRight splits at the last delimiter into left and right parts")]
         public void SplitRight_SplitsAtLastDelimiter()
         {
             "alpha-beta-gamma".SplitRight("-", out var left, out var right);
@@ -38,10 +38,10 @@ namespace Polhem.Base.UnitTests
             Assert.Equal("gamma", right);
         }
 
-        // ---- LeftCut / RightCut / LeftRightCut(case-insensitive) ----
+        // ---- LeftCut / RightCut / LeftRightCut (case-insensitive) ----
 
         [Fact]
-        [DisplayName("LeftCut 於有前綴時應移除,大小寫不敏感;否則原樣回傳")]
+        [DisplayName("LeftCut removes a matching prefix case-insensitively and otherwise returns the input unchanged")]
         public void LeftCut_ByPrefix_CaseInsensitive()
         {
             Assert.Equal("cde", "abcde".LeftCut("AB"));
@@ -50,7 +50,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("RightCut 於有後綴時應移除,大小寫不敏感;否則原樣回傳")]
+        [DisplayName("RightCut removes a matching suffix case-insensitively and otherwise returns the input unchanged")]
         public void RightCut_BySuffix_CaseInsensitive()
         {
             Assert.Equal("abc", "abcDE".RightCut("de"));
@@ -59,7 +59,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("LeftRightCut 應同時移除前綴與後綴")]
+        [DisplayName("LeftRightCut removes both the prefix and the suffix")]
         public void LeftRightCut_RemovesBoth()
         {
             Assert.Equal("abc", "[abc]".LeftRightCut("[", "]"));

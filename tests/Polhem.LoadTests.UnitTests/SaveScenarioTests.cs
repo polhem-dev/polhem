@@ -37,7 +37,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("改值後列狀態轉為 Modified，存檔才會真的寫入")]
+        [DisplayName("Touch changes a value and marks the row Modified, so the save actually writes")]
         public void Touch_MarksRowModified()
         {
             var dataSet = CreateDataSet();
@@ -50,7 +50,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("沒有 sys_name 欄位時不擲例外")]
+        [DisplayName("Touch does not throw when there is no sys_name column")]
         public void Touch_WithoutNameColumn_DoesNotThrow()
         {
             var dataSet = CreateDataSet(withNameColumn: false);
@@ -61,7 +61,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("資料表沒有列時不擲例外")]
+        [DisplayName("Touch does not throw when the table has no rows")]
         public void Touch_WithoutRows_DoesNotThrow()
         {
             var exception = Record.Exception(() => SaveScenario.Touch(CreateDataSet(withRow: false), 1));
@@ -70,7 +70,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("空 DataSet 不擲例外")]
+        [DisplayName("Touch does not throw for an empty DataSet")]
         public void Touch_EmptyDataSet_DoesNotThrow()
         {
             var exception = Record.Exception(() => SaveScenario.Touch(new DataSet(), 1));
@@ -79,7 +79,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("沒有可用的鍵時拒絕建構，而不是跑出空結果")]
+        [DisplayName("SaveScenario constructor throws when there are no keys instead of producing empty results")]
         public void Constructor_NoRowIds_Throws()
         {
             var ex = Assert.Throws<ArgumentException>(() => new SaveScenario(Pool(), "Customer", []));
@@ -88,7 +88,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("場景名稱與設定檔中的名稱一致")]
+        [DisplayName("SaveScenario name matches the key in the configuration file")]
         public void Name_MatchesConfigurationKey()
         {
             Assert.Equal("Save", new SaveScenario(Pool(), "Customer", [Guid.NewGuid()]).Name);

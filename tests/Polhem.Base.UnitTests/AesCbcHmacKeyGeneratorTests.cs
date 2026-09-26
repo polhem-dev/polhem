@@ -4,26 +4,26 @@ using Polhem.Base.Security;
 namespace Polhem.Base.UnitTests
 {
     /// <summary>
-    /// 測試 AesCbcHmacKeyGenerator 的金鑰產生與還原邏輯。
+    /// Tests the key generation and parsing logic of <see cref="AesCbcHmacKeyGenerator"/>.
     /// </summary>
     public class AesCbcHmacKeyGeneratorTests
     {
         /// <summary>
-        /// 驗證金鑰產生、Base64 編碼與還原後的 AES 與 HMAC 金鑰一致。
+        /// Verifies that the AES and HMAC keys stay the same after generation, Base64 encoding and parsing.
         /// </summary>
         [Fact]
-        [DisplayName("產生組合金鑰後透過 Base64 還原應取得一致的 AES 與 HMAC 金鑰")]
+        [DisplayName("A generated combined key parsed back through Base64 yields the same AES and HMAC keys")]
         public void GenerateAndParseKey_FromCombinedAndBase64_ReturnsConsistentKeys()
         {
-            // Arrange: 建立一組隨機 AES + HMAC 金鑰，並合併為 CombinedKey
+            // Arrange
             byte[] combinedKey = AesCbcHmacKeyGenerator.GenerateCombinedKey();
 
-            // Act: 拆解成 AES 與 HMAC 金鑰，再以 Base64 編碼並還原
+            // Act
             AesCbcHmacKeyGenerator.FromCombinedKey(combinedKey, out var aesKey1, out var hmacKey1);
             string base64 = Convert.ToBase64String(combinedKey);
             AesCbcHmacKeyGenerator.FromBase64CombinedKey(base64, out var aesKey2, out var hmacKey2);
 
-            // Assert: 驗證 AES 與 HMAC 金鑰皆為 32 bytes，且還原後一致
+            // Assert
             Assert.Equal(32, aesKey1.Length);
             Assert.Equal(32, hmacKey1.Length);
             Assert.Equal(aesKey1, aesKey2);
@@ -31,31 +31,31 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// 驗證兩次產生的組合金鑰應不同，以確保亂數安全性。
+        /// Verifies that two generated combined keys differ, as secure randomness requires.
         /// </summary>
         [Fact]
-        [DisplayName("每次產生的組合金鑰應為不同的隨機值")]
+        [DisplayName("Each generated combined key is a different random value")]
         public void GenerateCombinedKey_CalledTwice_ReturnsDifferentKeys()
         {
-            // Arrange & Act: 產生兩組不同的組合金鑰
+            // Arrange & Act
             var key1 = AesCbcHmacKeyGenerator.GenerateCombinedKey();
             var key2 = AesCbcHmacKeyGenerator.GenerateCombinedKey();
 
-            // Assert: Base64 表示的結果應不同
+            // Assert
             Assert.NotEqual(Convert.ToBase64String(key1), Convert.ToBase64String(key2));
         }
 
         /// <summary>
-        /// 驗證錯誤長度的組合金鑰應丟出 ArgumentException。
+        /// Verifies that a combined key of the wrong length throws <see cref="ArgumentException"/>.
         /// </summary>
         [Fact]
-        [DisplayName("使用無效長度的組合金鑰應擲出 ArgumentException")]
+        [DisplayName("FromCombinedKey throws ArgumentException for a combined key of invalid length")]
         public void FromCombinedKey_InvalidLength_ThrowsArgumentException()
         {
-            // Arrange: 構造不合法長度的金鑰資料
+            // Arrange
             var invalid = new byte[48];
 
-            // Act & Assert: 呼叫還原方法應拋出例外
+            // Act & Assert
             Assert.Throws<ArgumentException>(() =>
                 AesCbcHmacKeyGenerator.FromCombinedKey(invalid, out _, out _));
         }

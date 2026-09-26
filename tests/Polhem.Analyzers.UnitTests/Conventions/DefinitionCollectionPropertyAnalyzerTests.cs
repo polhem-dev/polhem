@@ -7,11 +7,11 @@ using Microsoft.CodeAnalysis;
 namespace Polhem.Analyzers.UnitTests.Conventions
 {
     /// <summary>
-    /// POLHEM3002（定義層集合屬性須使用框架集合型別）測試。
+    /// Tests for POLHEM3002 (definition-layer collection properties must use framework collection types).
     /// </summary>
     /// <remarks>
-    /// 此規則僅在 <c>Polhem.Definition</c> 組件內生效，故測試須以 <c>RunOnSourceAs</c> 指定組件名稱；
-    /// 沿用預設名稱會讓規則靜默、測試永遠通過。
+    /// The rule applies only inside the <c>Polhem.Definition</c> assembly, so the tests name the assembly with
+    /// <c>RunOnSourceAs</c>. With the default name the rule stays silent and the tests always pass.
     /// </remarks>
     public class DefinitionCollectionPropertyAnalyzerTests
     {
@@ -26,7 +26,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         [Theory]
         [InlineData("List<string>")]
         [InlineData("Collection<string>")]
-        [DisplayName("定義層以裸集合宣告屬性應報 POLHEM3002")]
+        [DisplayName("A definition-layer property declared as a plain collection reports POLHEM3002")]
         public void PlainCollectionProperty_ReportsDiagnostic(string propertyType)
         {
             const string template = """
@@ -56,7 +56,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("使用框架集合型別不應報診斷")]
+        [DisplayName("A property using a framework collection type reports nothing")]
         public void FrameworkCollectionProperty_ReportsNothing()
         {
             const string source = """
@@ -88,7 +88,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("非 Polhem.Definition 組件不受此規則約束（跨層 DTO 用裸 List 為正確寫法）")]
+        [DisplayName("Assemblies other than Polhem.Definition are not subject to this rule (a plain List is correct for cross-layer DTOs)")]
         public void OutsideDefinitionAssembly_StaysSilent()
         {
             const string source = """
@@ -100,7 +100,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
                 }
                 """;
 
-            // Act — 以商業邏輯層的組件名稱執行。
+            // Act
             var diagnostics = AnalyzerRunner.RunOnSourceAs(
                 new DefinitionCollectionPropertyAnalyzer(), "Polhem.Business", source, s_anchors);
 
@@ -109,7 +109,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("非 public 屬性不受約束")]
+        [DisplayName("Non-public properties are not subject to the rule")]
         public void NonPublicProperty_ReportsNothing()
         {
             const string source = """
@@ -130,7 +130,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("非集合的泛型屬性不應誤報")]
+        [DisplayName("A generic property that is not a collection is not falsely reported")]
         public void OtherGenericProperty_ReportsNothing()
         {
             const string source = """

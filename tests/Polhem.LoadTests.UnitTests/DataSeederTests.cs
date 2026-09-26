@@ -14,7 +14,7 @@ namespace Polhem.LoadTests.UnitTests
             => new() { FieldName = name, DbType = type, Length = length, Scale = scale };
 
         [Fact]
-        [DisplayName("同一欄位與列號永遠產生同一個值，兩次 seed 資料一致")]
+        [DisplayName("CreateValue returns the same value for the same field and row, so two seeds produce the same data")]
         public void CreateValue_IsDeterministic()
         {
             var field = Field(FieldDbType.Guid, "sys_rowid");
@@ -23,7 +23,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("不同列號產生不同的 GUID")]
+        [DisplayName("CreateValue produces a different GUID for a different row")]
         public void CreateValue_Guid_DiffersByRow()
         {
             var field = Field(FieldDbType.Guid, "sys_rowid");
@@ -32,7 +32,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("同列不同欄的 GUID 不相同")]
+        [DisplayName("CreateValue produces different GUIDs for different columns in the same row")]
         public void CreateValue_Guid_DiffersByColumn()
         {
             Assert.NotEqual(
@@ -41,7 +41,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("字串截到欄位宣告長度，避免寫入被拒")]
+        [DisplayName("CreateValue truncates a string to the declared field length so the write is not rejected")]
         public void CreateValue_String_TruncatesToDeclaredLength()
         {
             var value = Assert.IsType<string>(
@@ -51,7 +51,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("字串未超長時保留完整內容")]
+        [DisplayName("CreateValue keeps the full string when it fits the declared length")]
         public void CreateValue_String_KeepsShortValue()
         {
             var value = Assert.IsType<string>(
@@ -61,7 +61,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("Length 為 0 時不截斷")]
+        [DisplayName("CreateValue does not truncate when Length is 0")]
         public void CreateValue_String_ZeroLengthMeansNoLimit()
         {
             var value = Assert.IsType<string>(
@@ -73,7 +73,7 @@ namespace Polhem.LoadTests.UnitTests
         [Theory]
         [InlineData(0, 2)]   // 1.5 rounds away from zero at scale 0.
         [InlineData(2, 1.5)]
-        [DisplayName("小數捨入至欄位 Scale，值寫入後不被引擎改動")]
+        [DisplayName("CreateValue rounds a decimal to the field Scale so the engine does not alter it on write")]
         public void CreateValue_Decimal_RoundsToScale(int scale, double expected)
         {
             var value = Assert.IsType<decimal>(
@@ -83,7 +83,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("布林值逐列交替")]
+        [DisplayName("CreateValue alternates Boolean values row by row")]
         public void CreateValue_Boolean_Alternates()
         {
             var field = Field(FieldDbType.Boolean, "is_active");
@@ -93,7 +93,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("日期型別帶 UTC Kind，不受本機時區影響")]
+        [DisplayName("CreateValue returns a DateTime with UTC Kind, independent of the local time zone")]
         public void CreateValue_DateTime_IsUtc()
         {
             var value = Assert.IsType<DateTime>(
@@ -106,7 +106,7 @@ namespace Polhem.LoadTests.UnitTests
         [InlineData(FieldDbType.Short)]
         [InlineData(FieldDbType.Integer)]
         [InlineData(FieldDbType.Long)]
-        [DisplayName("整數型別回傳對應的 CLR 型別")]
+        [DisplayName("CreateValue returns the matching CLR type for each integer type")]
         public void CreateValue_IntegerFamily_ReturnsMatchingClrType(FieldDbType type)
         {
             var value = DataSeeder.CreateValue(Field(type, "n"), 5);
@@ -120,7 +120,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("Short 不會因列號超過上限而溢位")]
+        [DisplayName("CreateValue does not overflow a Short when the row number exceeds its maximum")]
         public void CreateValue_Short_DoesNotOverflow()
         {
             var value = Assert.IsType<short>(
@@ -130,7 +130,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("Unknown 型別回傳空字串而非擲例外")]
+        [DisplayName("CreateValue returns an empty string for the Unknown type instead of throwing")]
         public void CreateValue_Unknown_ReturnsEmptyString()
         {
             Assert.Equal(string.Empty, DataSeeder.CreateValue(Field(FieldDbType.Unknown, "x"), 1));

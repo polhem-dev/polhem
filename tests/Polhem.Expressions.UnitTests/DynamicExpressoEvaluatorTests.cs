@@ -5,8 +5,8 @@ using Polhem.Base.Expressions;
 namespace Polhem.Expressions.UnitTests
 {
     /// <summary>
-    /// <see cref="DynamicExpressoEvaluator"/> 測試：算術 / 布林條件 / 型別轉換 / 輔助函式 /
-    /// 相依變數偵測 / 編譯快取一致性 / 沙箱阻擋。
+    /// Tests for <see cref="DynamicExpressoEvaluator"/>: arithmetic, boolean conditions, type conversion, helper functions,
+    /// referenced variable detection, compilation cache consistency and sandbox blocking.
     /// </summary>
     public class DynamicExpressoEvaluatorTests
     {
@@ -20,10 +20,10 @@ namespace Polhem.Expressions.UnitTests
         }
 
         [Fact]
-        [DisplayName("Now()：Utc 基準忽略時區取 UTC 當下，UserZone 基準取該時區的當下")]
+        [DisplayName("Now() returns the current UTC time under the Utc basis and the current time in the user zone under the UserZone basis")]
         public void Evaluate_NowFunction_FollowsBasis()
         {
-            const string kiritimati = "Pacific/Kiritimati";   // UTC+14：兩種基準必定相差 14 小時
+            const string kiritimati = "Pacific/Kiritimati";   // UTC+14, so the two bases always differ by 14 hours.
             var variables = Vars();
             var utcBefore = DateTime.UtcNow;
             var zoneBefore = FrameworkClock.Now(kiritimati);
@@ -38,17 +38,18 @@ namespace Polhem.Expressions.UnitTests
         [Theory]
         [InlineData("Pacific/Kiritimati")]
         [InlineData("Pacific/Pago_Pago")]
-        [DisplayName("Today()：Utc 基準下仍取使用者時區的今天，基準只影響 Now()")]
+        [DisplayName("Today() still returns today in the user time zone under the Utc basis; the basis only affects Now()")]
         public void Evaluate_TodayFunction_IgnoresBasis(string timeZoneId)
         {
-            // 兩個時區任何時刻至少有一個的「今天」與 UTC 不同，斷言不會空轉。
+            // At any moment at least one of the two zones has a today that differs from UTC,
+            // so the assertion is never vacuous.
             var result = _evaluator.Evaluate<DateOnly>("Today()", Vars(), timeZoneId, DateTimeBasis.Utc);
 
             Assert.Equal(FrameworkClock.Today(timeZoneId), result);
         }
 
         [Fact]
-        [DisplayName("欄位算術：unit_price * qty 應回傳乘積（decimal）")]
+        [DisplayName("Field arithmetic unit_price * qty returns the product as decimal")]
         public void Evaluate_Arithmetic_ReturnsProduct()
         {
             var result = _evaluator.Evaluate<decimal>(
@@ -60,7 +61,7 @@ namespace Polhem.Expressions.UnitTests
         [Theory]
         [InlineData(5, true)]
         [InlineData(-1, false)]
-        [DisplayName("布林條件：amount > 0 依值回傳 true/false")]
+        [DisplayName("Boolean condition amount > 0 returns true or false by value")]
         public void Evaluate_BoolCondition_ReturnsExpected(int amount, bool expected)
         {
             var result = _evaluator.Evaluate<bool>("amount > 0", Vars(("amount", (decimal)amount)));
@@ -69,7 +70,7 @@ namespace Polhem.Expressions.UnitTests
         }
 
         [Fact]
-        [DisplayName("回傳型別轉換：int 運算結果轉為 decimal 回傳型別")]
+        [DisplayName("An int expression result is converted to the decimal return type")]
         public void Evaluate_IntExpressionToDecimalReturn_Converts()
         {
             var result = _evaluator.Evaluate<decimal>("qty * 2", Vars(("qty", 3)));
@@ -81,7 +82,7 @@ namespace Polhem.Expressions.UnitTests
         [Theory]
         [InlineData("", true)]
         [InlineData("x", false)]
-        [DisplayName("字串輔助函式：IsNullOrEmpty(name) 依值回傳")]
+        [DisplayName("String helper IsNullOrEmpty(name) returns the result for the value")]
         public void Evaluate_StringHelperFunction_ReturnsExpected(string name, bool expected)
         {
             var result = _evaluator.Evaluate<bool>("IsNullOrEmpty(name)", Vars(("name", name)));
@@ -90,23 +91,23 @@ namespace Polhem.Expressions.UnitTests
         }
 
         [Fact]
-        [DisplayName("Today() 回傳 DateOnly——日期在 DataSet 之外一律以 DateOnly 表達")]
+        [DisplayName("Today() returns DateOnly, the type used for dates outside a DataSet")]
         public void Evaluate_TodayFunction_ReturnsDateOnly()
         {
             var result = _evaluator.Evaluate<DateOnly>(
                 "Today()", new Dictionary<string, object?>(StringComparer.Ordinal));
 
-            // 未指定時區的 evaluator 以 UTC 為基準（見 FrameworkClock）。
+            // Without a time zone, the evaluator uses UTC as its basis (see `FrameworkClock`).
             Assert.Equal(DateOnly.FromDateTime(DateTime.UtcNow), result);
         }
 
         [Fact]
-        [DisplayName("Today() 依呼叫時傳入的時區求值，而非機器時區")]
+        [DisplayName("Today() evaluates in the time zone passed by the caller, not the machine time zone")]
         public void Evaluate_TodayFunction_UsesSuppliedTimeZone()
         {
-            // 選一個與 UTC 差距夠大的時區，使「當地今天」在一天中的大部分時間都與 UTC 今天不同；
-            // 兩者相同的時段仍成立（斷言的是與該時區的今天一致，不是與 UTC 不同）。
-            // 同一個 evaluator 服務不同時區——時區走引數，不是 evaluator 狀態（ADR-032 D13）。
+            // The zone is far enough from UTC that its local today differs from the UTC today for most of the day.
+            // The assertion still holds when they coincide, because it compares with that zone's today, not with UTC.
+            // One evaluator serves every time zone: the zone is an argument, not evaluator state (ADR-032 D13).
             var expected = DateOnly.FromDateTime(
                 TimeZoneInfo.ConvertTimeFromUtc(
                     DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Pacific/Kiritimati")));
@@ -118,31 +119,31 @@ namespace Polhem.Expressions.UnitTests
         }
 
         [Fact]
-        [DisplayName("UtcNow() 供運算式作者明示 UTC 意圖")]
+        [DisplayName("UtcNow() returns the current UTC time with DateTimeKind.Unspecified")]
         public void Evaluate_UtcNowFunction_ReturnsUnspecifiedKind()
         {
             var result = _evaluator.Evaluate<DateTime>(
                 "UtcNow()", new Dictionary<string, object?>(StringComparer.Ordinal));
 
-            // Kind 一律 Unspecified：Local 在兩條 wire 上都會位移讀數（ADR-032 D6）。
+            // The kind is `Unspecified` because `Local` shifts the reading on both wires (ADR-032 D6).
             Assert.Equal(DateTimeKind.Unspecified, result.Kind);
             Assert.True(Math.Abs((DateTime.UtcNow - result).TotalMinutes) < 1);
         }
 
         [Fact]
-        [DisplayName("相依偵測：GetReferencedVariables 回傳欄位變數、排除已註冊函式")]
+        [DisplayName("GetReferencedVariables returns field variables and excludes registered functions")]
         public void GetReferencedVariables_ReturnsFieldNamesOnly()
         {
             var referenced = _evaluator.GetReferencedVariables("qty > 0 && Today() > order_date");
 
             Assert.Contains("qty", referenced);
             Assert.Contains("order_date", referenced);
-            // Today 是已註冊函式，不應被視為未知變數
+            // `Today` is a registered function, so it is not reported as a variable.
             Assert.DoesNotContain("Today", referenced);
         }
 
         [Fact]
-        [DisplayName("編譯快取：同一運算式重複求值，不同輸入皆得正確結果")]
+        [DisplayName("Evaluating the same cached expression repeatedly gives correct results for different inputs")]
         public void Evaluate_SameExpressionReused_ProducesCorrectResultsAcrossInputs()
         {
             var first = _evaluator.Evaluate<decimal>(
@@ -157,7 +158,7 @@ namespace Polhem.Expressions.UnitTests
         [Theory]
         [InlineData("11111111-1111-1111-1111-111111111111", true)]
         [InlineData("00000000-0000-0000-0000-000000000000", false)]
-        [DisplayName("Guid 支援：customer_rowid != Guid.Empty 依值回傳")]
+        [DisplayName("Guid comparison customer_rowid != Guid.Empty returns the result for the value")]
         public void Evaluate_GuidComparison_ReturnsExpected(string guid, bool expected)
         {
             var result = _evaluator.Evaluate<bool>(
@@ -167,7 +168,7 @@ namespace Polhem.Expressions.UnitTests
         }
 
         [Fact]
-        [DisplayName("沙箱：存取未註冊型別（System.IO.File）應拋 ExpressionEvaluationException")]
+        [DisplayName("The sandbox throws ExpressionEvaluationException for access to an unregistered type (System.IO.File)")]
         public void Evaluate_UnregisteredType_ThrowsExpressionEvaluationException()
         {
             var ex = Assert.Throws<ExpressionEvaluationException>(() =>
@@ -179,7 +180,7 @@ namespace Polhem.Expressions.UnitTests
         }
 
         [Fact]
-        [DisplayName("語法錯誤運算式應拋 ExpressionEvaluationException")]
+        [DisplayName("A malformed expression throws ExpressionEvaluationException")]
         public void Evaluate_MalformedExpression_ThrowsExpressionEvaluationException()
         {
             Assert.Throws<ExpressionEvaluationException>(() =>

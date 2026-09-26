@@ -17,7 +17,7 @@ namespace Polhem.Base.UnitTests
         // ---- IsNullOrDBNull / IsEmpty ----
 
         [Fact]
-        [DisplayName("IsNullOrDBNull 對 null 與 DBNull 回傳 true,對有效值回傳 false")]
+        [DisplayName("IsNullOrDBNull returns true for null and DBNull and false for a real value")]
         public void IsNullOrDBNull_VariousValues_ReturnsExpectedResult()
         {
             Assert.True(ValueUtilities.IsNullOrDBNull(null));
@@ -28,7 +28,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEmpty(object) 對各種型別應走對應分支")]
+        [DisplayName("IsEmpty(object) dispatches to the overload that matches each type")]
         public void IsEmpty_Object_DispatchesToCorrectOverload()
         {
             Assert.True(ValueUtilities.IsEmpty((object)null!));
@@ -51,14 +51,14 @@ namespace Polhem.Base.UnitTests
         [InlineData("", true)]
         [InlineData("   ", true)]
         [InlineData("abc", false)]
-        [DisplayName("IsEmpty(string) 對 null/空字串/空白回傳 true")]
+        [DisplayName("IsEmpty(string) returns true for null, empty and whitespace")]
         public void IsEmpty_String_ReturnsExpectedResult(string? value, bool expected)
         {
             Assert.Equal(expected, ValueUtilities.IsEmpty(value!));
         }
 
         [Fact]
-        [DisplayName("IsEmpty(Guid) 對 Guid.Empty 回傳 true,對其他值回傳 false")]
+        [DisplayName("IsEmpty(Guid) returns true for Guid.Empty and false for other values")]
         public void IsEmpty_Guid_ReturnsExpectedResult()
         {
             Assert.True(ValueUtilities.IsEmpty(Guid.Empty));
@@ -66,7 +66,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEmpty(DateTime) 對 MinValue/1753 之前回傳 true,對正常日期回傳 false")]
+        [DisplayName("IsEmpty(DateTime) returns true for MinValue and dates before 1753 and false for ordinary dates")]
         public void IsEmpty_DateTime_ReturnsExpectedResult()
         {
             Assert.True(ValueUtilities.IsEmpty(DateTime.MinValue));
@@ -76,7 +76,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEmpty(IList) 對 null 與空集合回傳 true,對有元素集合回傳 false")]
+        [DisplayName("IsEmpty(IList) returns true for null and an empty list and false for a list with elements")]
         public void IsEmpty_IList_ReturnsExpectedResult()
         {
             Assert.True(ValueUtilities.IsEmpty((IList)null!));
@@ -85,7 +85,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEmpty(IEnumerable) 對 null 與無元素回傳 true,對有元素回傳 false")]
+        [DisplayName("IsEmpty(IEnumerable) returns true for null and no elements and false when there are elements")]
         public void IsEmpty_IEnumerable_ReturnsExpectedResult()
         {
             Assert.True(ValueUtilities.IsEmpty((IEnumerable)null!));
@@ -94,7 +94,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEmpty(byte[]) 對 null 與空陣列回傳 true,對有內容陣列回傳 false")]
+        [DisplayName("IsEmpty(byte[]) returns true for null and an empty array and false for an array with content")]
         public void IsEmpty_ByteArray_ReturnsExpectedResult()
         {
             Assert.True(ValueUtilities.IsEmpty((byte[])null!));
@@ -105,7 +105,7 @@ namespace Polhem.Base.UnitTests
         // ---- CStr ----
 
         [Fact]
-        [DisplayName("CStr(object) 對各種輸入回傳對應字串表示")]
+        [DisplayName("CStr(object) returns the matching string representation for various inputs")]
         public void CStr_Object_ReturnsExpectedString()
         {
             Assert.Equal(string.Empty, ValueUtilities.CStr(null!));
@@ -116,7 +116,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("CStr(object, defaultValue) 對 null/DBNull 回傳 defaultValue,對非 null 回傳字串")]
+        [DisplayName("CStr(object, defaultValue) returns defaultValue for null and DBNull and a string otherwise")]
         public void CStr_ObjectWithDefault_ReturnsExpectedString()
         {
             Assert.Equal("N/A", ValueUtilities.CStr(null!, "N/A"));
@@ -140,14 +140,14 @@ namespace Polhem.Base.UnitTests
         [InlineData("N", false)]
         [InlineData("false", false)]
         [InlineData("other", false)]
-        [DisplayName("CBool(string) 對常見真假值字串回傳對應布林值")]
+        [DisplayName("CBool(string) returns the matching boolean for common true and false strings")]
         public void CBool_String_ReturnsExpectedResult(string value, bool expected)
         {
             Assert.Equal(expected, ValueUtilities.CBool(value));
         }
 
         [Fact]
-        [DisplayName("CBool(string) 對空字串回傳 defaultValue")]
+        [DisplayName("CBool(string) returns defaultValue for an empty string")]
         public void CBool_String_Empty_ReturnsDefault()
         {
             Assert.False(ValueUtilities.CBool(""));
@@ -156,7 +156,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("CBool(object) 對 bool 型別直接轉型,對其他型別透過字串轉換")]
+        [DisplayName("CBool(object) casts a bool directly and converts other types through their string form")]
         public void CBool_Object_ReturnsExpectedResult()
         {
             Assert.True(ValueUtilities.CBool((object)true));
@@ -171,12 +171,12 @@ namespace Polhem.Base.UnitTests
 
         [Theory]
         [InlineData("Day", DateInterval.Day)]
-        [InlineData("day", DateInterval.Day)] // 框架預設不區分大小寫
+        [InlineData("day", DateInterval.Day)] // case-insensitive by framework default
         [InlineData("Hour", DateInterval.Hour)]
-        [DisplayName("CEnum(string, Type) 對合法字串回傳對應 enum 值(不區分大小寫)")]
+        [DisplayName("CEnum(string, Type) returns the matching enum value for a valid string (case-insensitive)")]
         public void CEnum_ValidString_ReturnsEnumValue(string input, DateInterval expected)
         {
-            // 本測試刻意呼叫 non-generic overload,驗證其行為
+            // This test deliberately calls the non-generic overload to verify its behavior.
 #pragma warning disable CA2263 // Prefer generic overload when type is known
             var result = ValueUtilities.CEnum(input, typeof(DateInterval));
 #pragma warning restore CA2263
@@ -184,7 +184,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("CEnum<T>(string) 對合法字串回傳 enum 值,對非法字串拋出 ArgumentException")]
+        [DisplayName("CEnum<T>(string) returns the enum value for a valid string and throws ArgumentException for an invalid one")]
         public void CEnum_Generic_ValidAndInvalid_BehavesAsExpected()
         {
             Assert.Equal(DateInterval.Day, ValueUtilities.CEnum<DateInterval>("Day"));
@@ -194,10 +194,10 @@ namespace Polhem.Base.UnitTests
         // ---- IsNumeric / ConvertToNumber ----
 
         [Fact]
-        [DisplayName("IsNumeric 應正確判斷各種型別的數值性")]
+        [DisplayName("IsNumeric correctly decides whether values of various types are numeric")]
         public void IsNumeric_VariousTypes_ReturnsExpectedResult()
         {
-            // 布林值
+            // Booleans
             Assert.True(ValueUtilities.IsNumeric(true));
             Assert.True(ValueUtilities.IsNumeric(false));
 
@@ -205,17 +205,17 @@ namespace Polhem.Base.UnitTests
             Assert.True(ValueUtilities.IsNumeric(DateInterval.Day));
             Assert.True(ValueUtilities.IsNumeric(DateInterval.Hour));
 
-            // 數值型別
+            // Numeric types
             Assert.True(ValueUtilities.IsNumeric(123));
             Assert.True(ValueUtilities.IsNumeric(123.45));
             Assert.True(ValueUtilities.IsNumeric(123.45m));
 
-            // 字串
+            // Strings
             Assert.True(ValueUtilities.IsNumeric("123"));
             Assert.True(ValueUtilities.IsNumeric("123.45"));
             Assert.False(ValueUtilities.IsNumeric("abc"));
 
-            // 特殊值
+            // Special values
             Assert.False(ValueUtilities.IsNumeric(null!));
             Assert.False(ValueUtilities.IsNumeric(new object()));
             Assert.False(ValueUtilities.IsNumeric(DateTime.Now));
@@ -226,14 +226,14 @@ namespace Polhem.Base.UnitTests
         [InlineData("12345", 4, false)]
         [InlineData("abc", 3, false)]
         [InlineData("", 0, false)]
-        [DisplayName("IsNumeric(string, length) 應同時檢查數值性與長度")]
+        [DisplayName("IsNumeric(string, length) checks both that the value is numeric and its length")]
         public void IsNumeric_WithLength_ChecksBothConditions(string value, int length, bool expected)
         {
             Assert.Equal(expected, ValueUtilities.IsNumeric(value, length));
         }
 
         [Fact]
-        [DisplayName("ConvertToNumber 對各種輸入回傳對應數值")]
+        [DisplayName("ConvertToNumber returns the matching number for various inputs")]
         public void ConvertToNumber_VariousInputs_ReturnsExpectedResult()
         {
             Assert.Equal(0, ValueUtilities.ConvertToNumber(null!));
@@ -249,7 +249,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("ConvertToNumber 對無法轉換的值拋出 InvalidCastException")]
+        [DisplayName("ConvertToNumber throws InvalidCastException for a value it cannot convert")]
         public void ConvertToNumber_InvalidInput_Throws()
         {
             Assert.Throws<InvalidCastException>(() => ValueUtilities.ConvertToNumber(new object()));
@@ -261,10 +261,10 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("ConvertToNumber 對非支援型別但 ToString 為數值應回傳 double")]
+        [DisplayName("ConvertToNumber returns a double for an unsupported type whose ToString is numeric")]
         public void ConvertToNumber_NonStandardType_FallsBackToToString()
         {
-            // 進入最後 double.TryParse(value.ToString(), ...) 分支
+            // This reaches the final `double.TryParse(value.ToString(), ...)` branch.
             var value = new NumericToString();
             var result = ValueUtilities.ConvertToNumber(value);
             Assert.Equal(3.14d, result);
@@ -280,22 +280,22 @@ namespace Polhem.Base.UnitTests
         [InlineData(123, 123)]
         [InlineData(true, 1)]
         [InlineData(false, 0)]
-        [InlineData("abc", 0)] // 無法轉換回傳 defaultValue
-        [DisplayName("CInt 對各種輸入回傳對應整數,無法轉換時回傳 defaultValue")]
+        [InlineData("abc", 0)] // unconvertible, returns defaultValue
+        [DisplayName("CInt returns the matching integer for various inputs and defaultValue when it cannot convert")]
         public void CInt_VariousInputs_ReturnsExpectedResult(object? value, int expected)
         {
             Assert.Equal(expected, ValueUtilities.CInt(value!));
         }
 
         [Fact]
-        [DisplayName("CInt 對 Enum 回傳對應整數")]
+        [DisplayName("CInt returns the underlying integer of an enum")]
         public void CInt_Enum_ReturnsIntegerValue()
         {
             Assert.Equal((int)DateInterval.Day, ValueUtilities.CInt(DateInterval.Day));
         }
 
         [Fact]
-        [DisplayName("CDouble 對各種輸入回傳對應 double,無法轉換時回傳 defaultValue")]
+        [DisplayName("CDouble returns the matching double for various inputs and defaultValue when it cannot convert")]
         public void CDouble_VariousInputs_ReturnsExpectedResult()
         {
             Assert.Equal(0d, ValueUtilities.CDouble(null!));
@@ -306,7 +306,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("CDecimal 對各種輸入回傳對應 decimal,無法轉換時回傳 defaultValue")]
+        [DisplayName("CDecimal returns the matching decimal for various inputs and defaultValue when it cannot convert")]
         public void CDecimal_VariousInputs_ReturnsExpectedResult()
         {
             Assert.Equal(0m, ValueUtilities.CDecimal(null!));
@@ -319,7 +319,7 @@ namespace Polhem.Base.UnitTests
         // ---- CDateTime / CDateOnly ----
 
         [Fact]
-        [DisplayName("CDateTime 對各種輸入回傳對應 DateTime")]
+        [DisplayName("CDateTime returns the matching DateTime for various inputs")]
         public void CDateTime_VariousInputs_ReturnsExpectedResult()
         {
             // Unset input yields null, not a sentinel the caller has to remember to compare against.
@@ -332,21 +332,21 @@ namespace Polhem.Base.UnitTests
             Assert.Equal(expected, ValueUtilities.CDateTime("2015-03-12"));
             Assert.Equal(expected, ValueUtilities.CDateTime("20150312"));
 
-            // ROC date(民國年)
+            // ROC (Minguo) calendar date.
             Assert.Equal(expected, ValueUtilities.CDateTime("1040312"));
 
-            // 非數值字串 → 無法辨識為日期 → null(不丟例外)
+            // A non-numeric string is not recognized as a date and yields null without throwing.
             Assert.Null(ValueUtilities.CDateTime("not-a-date"));
         }
 
         [Theory]
-        [InlineData("20150312", 2015, 3, 12)] // 8-digit 西元
-        [InlineData("1040312", 2015, 3, 12)]  // 7-digit 民國
-        [InlineData("201503", 2015, 3, 1)]    // 6-digit 西元年月
-        [InlineData("10403", 2015, 3, 1)]     // 5-digit 民國年月
-        [InlineData("2015", 2015, 1, 1)]      // 4-digit 西元年
-        [InlineData("104", 2015, 1, 1)]       // 3-digit 民國年
-        [DisplayName("CDateTime 應依字串長度解析各種日期格式")]
+        [InlineData("20150312", 2015, 3, 12)] // 8-digit Gregorian
+        [InlineData("1040312", 2015, 3, 12)]  // 7-digit ROC
+        [InlineData("201503", 2015, 3, 1)]    // 6-digit Gregorian year and month
+        [InlineData("10403", 2015, 3, 1)]     // 5-digit ROC year and month
+        [InlineData("2015", 2015, 1, 1)]      // 4-digit Gregorian year
+        [InlineData("104", 2015, 1, 1)]       // 3-digit ROC year
+        [DisplayName("CDateTime parses the date format that matches the string length")]
         public void CDateTime_VariousLengths_ParsesCorrectly(string input, int y, int m, int d)
         {
             var result = ValueUtilities.CDateTime(input);
@@ -354,33 +354,33 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("CDateTime 對未支援長度的數字字串應回傳 null")]
+        [DisplayName("CDateTime returns null for a numeric string of an unsupported length")]
         public void CDateTime_UnsupportedLength_ReturnsNull()
         {
-            // 長度 2 不在 switch 的 3/4/5/6/7/8 範圍內 → 無法辨識為日期
+            // Length 2 is outside the lengths 3 to 8 handled by the switch, so it is not recognized as a date.
             Assert.Null(ValueUtilities.CDateTime("12"));
         }
 
         [Fact]
-        [DisplayName("CDateTime 對非數字字串應回傳 null")]
+        [DisplayName("CDateTime returns null for a non-numeric string")]
         public void CDateTime_NonNumericString_ReturnsNull()
         {
-            // "abcdefgh" 移除分隔字元後非數字 → 無法辨識為日期
+            // "abcdefgh" is not numeric after the separators are removed, so it is not recognized as a date.
             Assert.Null(ValueUtilities.CDateTime("abcdefgh"));
         }
 
         [Fact]
-        [DisplayName("無法辨識的輸入在傳入預設值時應回傳該預設值")]
+        [DisplayName("CDateTime returns the given default for unrecognizable input")]
         public void CDateTime_Unrecognizable_WithExplicitDefault_ReturnsDefault()
         {
-            // 舊版此路徑固定回 MinValue 而忽略呼叫端給的預設值；顯式多載讓預設值真正生效。
+            // Earlier versions always returned `MinValue` on this path and ignored the caller's default. The explicit overload makes the default take effect.
             var fallback = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
             Assert.Equal(fallback, ValueUtilities.CDateTime("abcdefgh", fallback));
             Assert.Equal(fallback, ValueUtilities.CDateTime(DBNull.Value, fallback));
         }
 
         [Fact]
-        [DisplayName("時間家族的單參數多載一律回傳 nullable")]
+        [DisplayName("The single-argument overloads of the temporal family return nullable values")]
         public void TemporalFamily_SingleArgumentOverloads_AreNullable()
         {
             Assert.Null(ValueUtilities.CDateTime(DBNull.Value));
@@ -389,7 +389,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("時間家族的預設值多載應回傳所給的預設值")]
+        [DisplayName("The default-value overloads of the temporal family return the given default")]
         public void TemporalFamily_DefaultOverloads_ReturnTheGivenDefault()
         {
             var date = new DateOnly(2000, 1, 1);
@@ -399,17 +399,17 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("CDateTime 對無法轉成日期的數字字串應回傳 defaultValue")]
+        [DisplayName("CDateTime returns defaultValue for a numeric string that is not a valid calendar date")]
         public void CDateTime_InvalidCalendarDate_FallsBackToDefault()
         {
-            // 20150230 → "2015-02-30" → Convert.ToDateTime 拋例外 → catch → defaultValue
+            // `20150230` becomes "2015-02-30", which `Convert.ToDateTime` rejects. The exception is caught and defaultValue is returned.
             var fallback = new DateTime(2000, 1, 1);
             var result = ValueUtilities.CDateTime("20150230", fallback);
             Assert.Equal(fallback, result);
         }
 
         [Fact]
-        [DisplayName("CDateOnly 應捨去時刻並回傳 DateOnly")]
+        [DisplayName("CDateOnly drops the time of day and returns a DateOnly")]
         public void CDate_ReturnsDatePortionOnly()
         {
             var input = new DateTime(2026, 4, 18, 15, 30, 45, DateTimeKind.Unspecified);
@@ -418,7 +418,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("CDateOnly 應可解析日期字串為 DateOnly")]
+        [DisplayName("CDateOnly parses a date string into a DateOnly")]
         public void CDate_ParsesDateString()
         {
             var result = ValueUtilities.CDateOnly("20150312");
@@ -426,7 +426,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("CDateOnly 於無法轉換的值應回傳指定的 DateOnly 預設值")]
+        [DisplayName("CDateOnly returns the given DateOnly default for an unconvertible value")]
         public void CDate_UnparsableValue_ReturnsDefault()
         {
             var fallback = new DateOnly(2026, 1, 1);
@@ -435,11 +435,11 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("CDateTime 應直接接受 DateOnly，不經由文化相依的字串路徑")]
+        [DisplayName("CDateTime accepts a DateOnly directly instead of taking the culture-dependent string path")]
         public void CDateTime_AcceptsDateOnly()
         {
-            // DateOnly.ToString() 依 CurrentCulture 產生格式，以 InvariantCulture 回頭 parse
-            // 只在兩者恰好一致時才成立，故必須在字串路徑之前處理。
+            // `DateOnly.ToString()` formats with the current culture, and parsing that back with the invariant
+            // culture only works when the two happen to agree. So it must be handled before the string path.
             var result = ValueUtilities.CDateTime(new DateOnly(2026, 7, 25));
             Assert.Equal(new DateTime(2026, 7, 25, 0, 0, 0, DateTimeKind.Unspecified), result);
         }
@@ -447,7 +447,7 @@ namespace Polhem.Base.UnitTests
         // ---- CGuid ----
 
         [Fact]
-        [DisplayName("CGuid(string) 對合法 Guid 字串回傳對應值,對空字串回傳 Guid.Empty,對非法字串拋出例外")]
+        [DisplayName("CGuid(string) returns the Guid for a valid string, Guid.Empty for an empty string, and throws for an invalid string")]
         public void CGuid_String_BehavesAsExpected()
         {
             var guid = Guid.NewGuid();
@@ -458,7 +458,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("CGuid(object) 對 null/DBNull/非字串回傳 Guid.Empty,對 Guid/合法字串回傳對應值")]
+        [DisplayName("CGuid(object) returns Guid.Empty for null, DBNull and non-string values, and the Guid for a Guid or a valid string")]
         public void CGuid_Object_BehavesAsExpected()
         {
             var guid = Guid.NewGuid();

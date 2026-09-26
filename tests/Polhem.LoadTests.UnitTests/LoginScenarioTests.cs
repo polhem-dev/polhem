@@ -17,7 +17,7 @@ namespace Polhem.LoadTests.UnitTests
         };
 
         [Fact]
-        [DisplayName("PerUser 策略下每個 VU 用自己的帳號")]
+        [DisplayName("ResolveUserId gives each virtual user its own account under the PerUser strategy")]
         public void ResolveUserId_PerUser_GivesEachVirtualUserItsOwn()
         {
             var scenario = new LoginScenario(Auth(TokenStrategy.PerUser, 10));
@@ -27,7 +27,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("VU 數超過帳號池時繞回，run 仍可執行")]
+        [DisplayName("ResolveUserId wraps around when there are more virtual users than accounts, so the run still works")]
         public void ResolveUserId_MoreUsersThanAccounts_WrapsAround()
         {
             var scenario = new LoginScenario(Auth(TokenStrategy.PerUser, 3));
@@ -37,7 +37,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("Shared 策略下所有 VU 共用第一個帳號")]
+        [DisplayName("ResolveUserId gives every virtual user the first account under the Shared strategy")]
         public void ResolveUserId_Shared_AlwaysFirstAccount()
         {
             var scenario = new LoginScenario(Auth(TokenStrategy.Shared, 10));
@@ -47,7 +47,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("帳號池為 0 時不擲除零例外")]
+        [DisplayName("ResolveUserId does not divide by zero when the account pool size is 0")]
         public void ResolveUserId_ZeroPoolSize_DoesNotDivideByZero()
         {
             var scenario = new LoginScenario(Auth(TokenStrategy.PerUser, 0));
@@ -56,7 +56,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         [Fact]
-        [DisplayName("場景名稱與設定檔中的名稱一致")]
+        [DisplayName("LoginScenario name matches the key in the configuration file")]
         public void Name_MatchesConfigurationKey()
         {
             Assert.Equal("Login", new LoginScenario(Auth(TokenStrategy.PerUser, 1)).Name);

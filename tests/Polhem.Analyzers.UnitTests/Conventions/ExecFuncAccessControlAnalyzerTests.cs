@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis;
 namespace Polhem.Analyzers.UnitTests.Conventions
 {
     /// <summary>
-    /// POLHEM3003（ExecFunc handler 的 public 方法必須宣告存取控制）測試。
+    /// Tests for POLHEM3003 (public ExecFunc handler methods must declare access control).
     /// </summary>
     public class ExecFuncAccessControlAnalyzerTests
     {
@@ -26,7 +26,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
             """;
 
         [Fact]
-        [DisplayName("ExecFunc handler 的 public 方法未宣告存取控制應報 POLHEM3003")]
+        [DisplayName("A public ExecFunc handler method without access control reports POLHEM3003")]
         public void UnmarkedHandlerMethod_ReportsDiagnostic()
         {
             var source = Preamble + """
@@ -52,7 +52,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("已標記 ExecFuncAccessControl 的方法不應報診斷")]
+        [DisplayName("A method marked with ExecFuncAccessControl reports nothing")]
         public void MarkedHandlerMethod_ReportsNothing()
         {
             var source = Preamble + """
@@ -73,7 +73,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("static 的 ExecFunc 方法同樣受規則約束")]
+        [DisplayName("A static ExecFunc method is subject to the rule as well")]
         public void StaticHandlerMethod_IsReported()
         {
             var source = Preamble + """
@@ -95,7 +95,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("簽章不符 ExecFunc 形狀的 public 方法不應報診斷")]
+        [DisplayName("A public method whose signature does not match the ExecFunc shape reports nothing")]
         public void NonMatchingSignature_ReportsNothing()
         {
             var source = Preamble + """
@@ -119,7 +119,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("非 public 的 ExecFunc 形狀方法不可被派發，不應報診斷")]
+        [DisplayName("A non-public method of the ExecFunc shape cannot be dispatched and reports nothing")]
         public void NonPublicMethods_AreNotReported()
         {
             var source = Preamble + """
@@ -141,7 +141,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
         }
 
         [Fact]
-        [DisplayName("未實作 IExecFuncHandler 的型別不受此規則約束")]
+        [DisplayName("A type that does not implement IExecFuncHandler is not subject to this rule")]
         public void NonHandlerType_IsUnaffected()
         {
             var source = Preamble + """

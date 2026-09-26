@@ -3,20 +3,21 @@ using Polhem.Definition.Identity;
 namespace Polhem.Tests.Shared
 {
     /// <summary>
-    /// 測試專用的 Session 輔助工具。
-    /// 在指定 <see cref="PolhemTestFixture"/> 的 <see cref="ISessionInfoService"/> 內植入一個有效
-    /// SessionInfo，讓需要 AccessToken 的測試不必走 Login 流程（預設 <c>AuthenticateUser</c>
-    /// 回傳 false）。
+    /// Session helpers for tests.
+    /// Plants a valid <c>SessionInfo</c> in the <see cref="ISessionInfoService"/> of a given
+    /// <see cref="PolhemTestFixture"/>, so tests that need an access token do not have to go through login
+    /// (<c>AuthenticateUser</c> returns false by default).
     /// </summary>
     public static class TestSessionFactory
     {
         /// <summary>
-        /// 建立一個有效的測試 AccessToken，並將對應的 SessionInfo 寫入指定 fixture 的 SessionInfoService。
+        /// Creates a valid test access token and writes the matching <c>SessionInfo</c> into the fixture's
+        /// session service.
         /// </summary>
-        /// <param name="fixture">承載目標 SessionInfoService 的 fixture。</param>
-        /// <param name="userId">使用者帳號，預設為 "test"。</param>
-        /// <param name="expiresIn">有效時間，預設 1 小時。</param>
-        /// <returns>有效的 AccessToken。</returns>
+        /// <param name="fixture">The fixture that holds the target session service.</param>
+        /// <param name="userId">The user account; defaults to "test".</param>
+        /// <param name="expiresIn">How long the session is valid; defaults to one hour.</param>
+        /// <returns>A valid access token.</returns>
         public static Guid CreateAccessToken(PolhemTestFixture fixture, string userId = "test", TimeSpan? expiresIn = null)
         {
             ArgumentNullException.ThrowIfNull(fixture);

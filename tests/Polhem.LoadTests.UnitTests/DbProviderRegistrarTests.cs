@@ -17,7 +17,7 @@ namespace Polhem.LoadTests.UnitTests
     public class DbProviderRegistrarTests
     {
         [Fact]
-        [DisplayName("SQLite 被拒，且訊息說明補救步驟")]
+        [DisplayName("Register rejects SQLite with a message that explains the remedy")]
         public void Register_Sqlite_ThrowsWithRemediation()
         {
             // With all four server-side engines now carrying a driver, SQLite is the only value

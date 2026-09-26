@@ -4,12 +4,12 @@ using Polhem.Base.Security;
 namespace Polhem.Base.UnitTests
 {
     /// <summary>
-    /// ApiKeyHasher 單元測試：salt + SHA-256 的 round-trip 與拒絕情境。
+    /// Unit tests for ApiKeyHasher: the salt + SHA-256 round trip and the rejection cases.
     /// </summary>
     public class ApiKeyHasherTests
     {
         [Fact]
-        [DisplayName("HashSecret 產生的雜湊應能被 VerifySecret 驗證通過")]
+        [DisplayName("A hash produced by HashSecret passes VerifySecret")]
         public void HashSecret_RoundTrip_Verifies()
         {
             string secret = ApiKeyFormat.CreateSecret();
@@ -20,7 +20,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("HashSecret 對同一 secret 兩次應產生不同雜湊(隨機 salt)")]
+        [DisplayName("HashSecret produces different hashes for the same secret twice (random salt)")]
         public void HashSecret_SameSecretTwice_ProducesDifferentHashes()
         {
             string secret = ApiKeyFormat.CreateSecret();
@@ -34,7 +34,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("HashSecret 應以 v1. 版本前綴與三段格式儲存")]
+        [DisplayName("HashSecret stores the hash with the v1. version prefix in a three-part format")]
         public void HashSecret_UsesVersionedThreePartFormat()
         {
             string hashed = ApiKeyHasher.HashSecret("secret-value");
@@ -44,7 +44,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("VerifySecret 於 secret 不符時應回傳 false")]
+        [DisplayName("VerifySecret returns false when the secret does not match")]
         public void VerifySecret_WrongSecret_ReturnsFalse()
         {
             string hashed = ApiKeyHasher.HashSecret(ApiKeyFormat.CreateSecret());
@@ -53,7 +53,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Theory]
-        [DisplayName("VerifySecret 於儲存格式不合法時應 fail closed")]
+        [DisplayName("VerifySecret fails closed on a malformed stored hash")]
         [InlineData("")]
         [InlineData("not-versioned")]
         [InlineData("v1.only-two-parts")]
@@ -65,7 +65,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Theory]
-        [DisplayName("VerifySecret 於 secret 為 null 或空字串時應回傳 false")]
+        [DisplayName("VerifySecret returns false when the secret is null or empty")]
         [InlineData(null)]
         [InlineData("")]
         public void VerifySecret_EmptySecret_ReturnsFalse(string? secret)

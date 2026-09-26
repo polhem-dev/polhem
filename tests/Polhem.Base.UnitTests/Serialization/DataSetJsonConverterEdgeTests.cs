@@ -7,9 +7,9 @@ using Polhem.Base.Serialization;
 namespace Polhem.Base.UnitTests.Serialization
 {
     /// <summary>
-    /// DataSetJsonConverter 邊界與錯誤路徑測試：
-    /// 涵蓋 null 輸出/輸入、非 StartObject token、未知屬性略過、
-    /// tables/relations 為非陣列、relations 內參照不存在的表或欄位等分支。
+    /// Edge and error path tests for DataSetJsonConverter:
+    /// null output and input, a token other than StartObject, skipping unknown properties,
+    /// tables or relations that are not arrays, and relations that reference a missing table or column.
     /// </summary>
     public class DataSetJsonConverterEdgeTests
     {
@@ -22,7 +22,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Write 於 null DataSet 應寫出 null")]
+        [DisplayName("Write writes null for a null DataSet")]
         public void Write_NullValue_WritesNull()
         {
             var json = JsonSerializer.Serialize<DataSet?>(null, Options());
@@ -30,7 +30,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read 於 null token 應回傳 null")]
+        [DisplayName("Read returns null for a null token")]
         public void Read_NullToken_ReturnsNull()
         {
             var restored = JsonSerializer.Deserialize<DataSet?>("null", Options());
@@ -38,14 +38,14 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read 於非 StartObject token 應拋 JsonException")]
+        [DisplayName("Read throws JsonException for a token other than StartObject")]
         public void Read_NonStartObjectToken_Throws()
         {
             Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<DataSet>("[1,2,3]", Options()));
         }
 
         [Fact]
-        [DisplayName("Read 應略過未知的頂層屬性")]
+        [DisplayName("Read skips unknown top-level properties")]
         public void Read_UnknownTopLevelProperty_IsIgnored()
         {
             const string json = """
@@ -63,7 +63,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read 於 tables 為非陣列時應得到空表列")]
+        [DisplayName("Read yields no tables when tables is not an array")]
         public void Read_TablesNotArray_YieldsNoTables()
         {
             const string json = """
@@ -78,7 +78,7 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read 於 relations 為非陣列時應得到空關聯")]
+        [DisplayName("Read yields no relations when relations is not an array")]
         public void Read_RelationsNotArray_YieldsNoRelations()
         {
             const string json = """
@@ -93,10 +93,10 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read relation 所參照的表不存在時應跳過該關聯")]
+        [DisplayName("Read skips a relation that references a missing table")]
         public void Read_RelationReferencesMissingTable_IsSkipped()
         {
-            // parentTable / childTable 指向不存在的表，BuildDataSet 中 continue
+            // `parentTable` names a table that does not exist, so `BuildDataSet` skips the relation.
             const string json = """
             {
                 "dataSetName":"X",
@@ -114,10 +114,10 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read relation 欄位參照不存在時應跳過該關聯")]
+        [DisplayName("Read skips a relation that references missing columns")]
         public void Read_RelationReferencesMissingColumns_IsSkipped()
         {
-            // parentColumns / childColumns 對應至不存在的欄位 → 過濾後為空 → 不建立 relation
+            // The column names match no column, so the filtered lists are empty and no relation is created.
             const string json = """
             {
                 "dataSetName":"X",
@@ -136,10 +136,10 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read relations 元素為非 StartObject 時應略過")]
+        [DisplayName("Read skips relations elements that are not objects")]
         public void Read_RelationArrayContainsNonObjects_AreSkipped()
         {
-            // 陣列中包含 number 元素，應被跳過；後續正常 relation 仍能讀取
+            // The number element is skipped, and the valid relation after it is still read.
             const string json = """
             {
                 "dataSetName":"X",
@@ -159,10 +159,10 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read relation parentColumns 為非陣列時應略過該欄位清單")]
+        [DisplayName("Read ignores a parentColumns value that is not an array")]
         public void Read_RelationColumnsNotArray_YieldsEmptyColumnList()
         {
-            // parentColumns 為字串 → ReadStringArray 回傳空 list → 建立 relation 失敗
+            // A string `parentColumns` makes `ReadStringArray` return an empty list, so the relation is not created.
             const string json = """
             {
                 "dataSetName":"X",
@@ -180,11 +180,11 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Write 直接呼叫 converter 於 null DataSet 應寫入 JSON null")]
+        [DisplayName("Write called directly on the converter with a null DataSet writes JSON null")]
         public void Write_DirectConverter_NullValue_WritesNull()
         {
-            // JsonSerializer.Serialize<DataSet?>(null, ...) 會由框架短路寫入 null,
-            // 不會進入 converter.Write;直接呼叫才能覆蓋 value == null 分支。
+            // `JsonSerializer.Serialize` short-circuits a null value and never calls `converter.Write`.
+            // Only a direct call reaches the `value == null` branch.
             var converter = new DataSetJsonConverter();
             using var stream = new MemoryStream();
             using (var writer = new Utf8JsonWriter(stream))
@@ -197,11 +197,11 @@ namespace Polhem.Base.UnitTests.Serialization
         }
 
         [Fact]
-        [DisplayName("Read 直接呼叫 converter 於 Null token 應回傳 null")]
+        [DisplayName("Read called directly on the converter with a Null token returns null")]
         public void Read_DirectConverter_NullToken_ReturnsNull()
         {
-            // JsonSerializer.Deserialize<DataSet?>("null", ...) 會由框架短路回傳 null,
-            // 不會進入 converter.Read;直接呼叫才能覆蓋 TokenType.Null 分支。
+            // `JsonSerializer.Deserialize` short-circuits a null token and never calls `converter.Read`.
+            // Only a direct call reaches the `TokenType.Null` branch.
             var converter = new DataSetJsonConverter();
             var bytes = Encoding.UTF8.GetBytes("null");
             var reader = new Utf8JsonReader(bytes);

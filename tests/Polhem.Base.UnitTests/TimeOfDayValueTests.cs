@@ -15,7 +15,7 @@ namespace Polhem.Base.UnitTests
         private static readonly string[] s_sortedTimes = ["00:00", "08:30", "09:05", "23:59"];
 
         [Fact]
-        [DisplayName("Time 的 CLR 型別為 string，DbType 為 String")]
+        [DisplayName("Time maps to the CLR type string and DbType String")]
         public void Time_MapsToStringTypes()
         {
             Assert.Equal(typeof(string), DbTypeConverter.ToType(FieldDbType.Time));
@@ -23,7 +23,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Time 必須位於列舉尾端，避免既有 wire payload 位移")]
+        [DisplayName("Time is the last enum member so existing wire payloads do not shift")]
         public void Time_IsAppendedAtEndOfEnum()
         {
             var values = Enum.GetValues<FieldDbType>();
@@ -31,7 +31,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Time 的預設值為空字串，不是 00:00")]
+        [DisplayName("The default value of Time is the empty string, not 00:00")]
         public void GetDefaultValue_Time_ReturnsEmptyString()
         {
             // Midnight is a legal time of day, so it cannot double as "unset".
@@ -47,14 +47,14 @@ namespace Polhem.Base.UnitTests
         [InlineData("", "")]
         [InlineData("25:99", "")]
         [InlineData("abc", "")]
-        [DisplayName("ToFieldValue 應將時刻正規化為定寬 HH:mm")]
+        [DisplayName("ToFieldValue normalizes a time of day to fixed-width HH:mm")]
         public void ToFieldValue_Time_NormalizesToFixedWidth(string input, string expected)
         {
             Assert.Equal(expected, FieldDbType.Time.ToFieldValue(input));
         }
 
         [Fact]
-        [DisplayName("正規化後的定寬字串，字典序即時序")]
+        [DisplayName("Normalized fixed-width strings sort chronologically in ordinal order")]
         public void NormalizedValues_SortChronologically()
         {
             var raw = s_unsortedTimes;
@@ -68,7 +68,7 @@ namespace Polhem.Base.UnitTests
         [InlineData("8:30", 8, 30)]
         [InlineData("00:00", 0, 0)]
         [InlineData("23:59", 23, 59)]
-        [DisplayName("CTimeOnly 應解析合法時刻字串")]
+        [DisplayName("CTimeOnly parses a valid time-of-day string")]
         public void CTimeOnly_ValidText_ReturnsTimeOnly(string input, int hour, int minute)
         {
             Assert.Equal(new TimeOnly(hour, minute), ValueUtilities.CTimeOnly(input));
@@ -82,14 +82,14 @@ namespace Polhem.Base.UnitTests
         [InlineData("8")]
         [InlineData("08:30:15")]
         [InlineData("abc")]
-        [DisplayName("CTimeOnly 於未填或格式不合時應回傳 null")]
+        [DisplayName("CTimeOnly returns null for an unset or malformed value")]
         public void CTimeOnly_UnsetOrMalformed_ReturnsNull(string input)
         {
             Assert.Null(ValueUtilities.CTimeOnly(input));
         }
 
         [Fact]
-        [DisplayName("CTimeOnly 對 null 與 DBNull 應回傳 null")]
+        [DisplayName("CTimeOnly returns null for null and DBNull")]
         public void CTimeOnly_NullLike_ReturnsNull()
         {
             Assert.Null(ValueUtilities.CTimeOnly(null));
@@ -97,7 +97,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("CTimeOnly 應接受 TimeOnly / DateTime / 合法範圍的 TimeSpan")]
+        [DisplayName("CTimeOnly accepts TimeOnly, DateTime and a TimeSpan within one day")]
         public void CTimeOnly_TemporalSources_Accepted()
         {
             Assert.Equal(new TimeOnly(8, 30), ValueUtilities.CTimeOnly(new TimeOnly(8, 30)));
@@ -110,7 +110,7 @@ namespace Polhem.Base.UnitTests
         [InlineData(-1)]
         [InlineData(24)]
         [InlineData(30)]
-        [DisplayName("CTimeOnly 應拒絕超出一日範圍的 TimeSpan")]
+        [DisplayName("CTimeOnly rejects a TimeSpan outside one day")]
         public void CTimeOnly_OutOfRangeTimeSpan_ReturnsNull(int hours)
         {
             // A TimeSpan is a duration and can hold values a time of day cannot; this method is the
@@ -119,7 +119,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("CTimeString 應輸出定寬 HH:mm，未填則為空字串")]
+        [DisplayName("CTimeString outputs fixed-width HH:mm, or the empty string when unset")]
         public void CTimeString_NormalizesOrReturnsEmpty()
         {
             Assert.Equal("08:30", ValueUtilities.CTimeString("8:30"));
@@ -129,7 +129,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TimeOnlyLength 應與 TimeOnlyFormat 一致")]
+        [DisplayName("TimeOnlyLength matches TimeOnlyFormat")]
         public void TimeOnlyLength_MatchesFormat()
         {
             Assert.Equal(5, ValueUtilities.TimeOnlyLength);
@@ -137,7 +137,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddColumn(Time) 應建立 string 欄並保留 Time 標記")]
+        [DisplayName("AddColumn(Time) creates a string column that keeps the Time marker")]
         public void AddColumn_Time_IsStringColumnCarryingTheMarker()
         {
             var table = new DataTable("probe");
