@@ -1,104 +1,138 @@
 # Avalonia.DemoCenter
 
-`Polhem.UI.Avalonia` 控件展示中心（DevExpress Demo Center 模式，**主題/功能導向**）：左側導覽樹（主題 → 案例）、右側 `Demo` / `Source` 分頁、頂部全域工具列（主題 Light/Dark）。**預設深色**。FormMode 切換不在全域工具列，收在「FormMode 顯示狀態」主題內，避免驅動不相關的範例。
+[繁體中文](README.zh-TW.md)
 
-每個案例只示範**單一主題**（資料繫結、唯讀、FormMode…），對應 DevExpress「每個 demo 只講一件事」的清爽。
+A showcase of the `Polhem.UI.Avalonia` controls, organized by **topic** in the style of the DevExpress Demo Center: a
+navigation tree on the left (topic → case), `Demo` / `Source` tabs on the right, and a global toolbar at the top
+(Light / Dark theme). **Dark by default.** Switching the FormMode is not on the global toolbar; it lives inside the
+"FormMode States" topic, so it does not drive unrelated cases.
 
-## 定位
+Each case shows **a single topic** (data binding, read-only, FormMode…), keeping to the DevExpress idea that each demo
+says one thing.
 
-| 角色 | 說明 |
-|------|------|
-| 展示廳 | 外部框架使用者瀏覽控件能力的門面 |
-| 活文件 / 對齊基準 | 每個控件 / 概念的標準行為與外觀契約；日後移植其他 UI head 的對齊範本 |
-| 開發驗證面 | 修改控件外觀（如唯讀去框）時的目視回饋場 |
+## Role
 
-與 `Avalonia.Demo` 區隔：後者示範端到端**應用**（登入 → 連線 → JSON-RPC → 渲染表單）；本 Demo Center 只聚焦**控件層**，不連後端、不涉入 Login / CRUD 流程。
+| Role | Description |
+|------|-------------|
+| Showroom | The front door where framework users browse what the controls can do |
+| Living documentation / alignment baseline | The reference behavior and appearance of each control and concept; the template to align with when porting to other UI heads |
+| Development check | Visual feedback when changing the appearance of a control (such as removing the border of a read-only field) |
 
-## 前置條件
+The Demo Center covers **the control layer only**. It has no back end and no login or CRUD flow. For an end-to-end
+application (sign-in, connection, JSON-RPC, rendering forms) see [`apps/Polhem.Northwind`](../../apps/Polhem.Northwind/README.md).
+
+## Prerequisites
 
 - .NET 10 SDK
-- 無需後端、無需資料庫——資料來源是 in-memory `FormSchema` + `FormDataObject`
+- No back end and no database: the data comes from an in-memory `FormSchema` + `FormDataObject`
 
-## 跑起來
+## Run it
 
 ```bash
 dotnet run --project samples/Avalonia.DemoCenter/Avalonia.DemoCenter.csproj
 ```
 
-## 全域工具列
+## Global toolbar
 
-- **主題切換**：右上角 ToggleSwitch 切 Light / Dark（沿用 `Semi.Avalonia`；預設 Dark）。
+- **Theme switch**: the ToggleSwitch at the top right switches between Light and Dark (using `Semi.Avalonia`; Dark by
+  default).
 
-> FormMode（View/Add/Edit）切換**不**在全域工具列——它只屬於「FormMode 顯示狀態」主題（互動切換案例 + 三欄釘住比對），不該驅動其他不相關範例。其餘案例預設 Edit 模式（可編輯）。
+> Switching the FormMode (View / Add / Edit) is **not** on the global toolbar. It belongs only to the "FormMode States"
+> topic (an interactive switching case and three pinned columns to compare) and should not drive unrelated cases. The
+> other cases use Edit mode (editable).
 
-## 主題與案例
+## Topics and cases
 
-導覽樹為兩層：**主題（Category）→ 案例（Title）**。
+The navigation tree has two levels: **topic (`Category`) → case (`Title`)**. The table follows the order in
+[`DemoModuleRegistry`](Modules/DemoModuleRegistry.cs).
 
-| 主題 | 案例 | 重點 |
-|------|------|------|
-| **控件類型** | 控件一覽 | 每個 ControlType 的繼承控件各一，可編輯、即時值 |
-| | 原生 vs 繼承（BindFieldControl） | 欄位級控件（`IBindFieldControl` / `IFieldEditor`）並排原生，含一般 / 唯讀 |
-| | 原生 vs 繼承（BindTableControl） | 表格級控件（`IBindTableControl`：`GridControl`）並排原生 `DataGrid` |
-| **資料繫結** | Ambient 繫結 | 容器設一次 `FormScope.SetDataObject`，子編輯器只給 `FieldName` 自動綁定 |
-| | 明確繫結 | `editor.Bind(dataObject, layoutField)` 不靠 ambient |
-| | 雙向同步 | 兩控件綁同欄位，輸入離開（或 Enter）提交後同步（FormDataObject 為單一來源） |
-| | DataObject 事件 | `FieldValueChanged` / `RowAdded` / `RowDeleted` / `IsDirtyChanged` / `DataSetReplaced` 即時記錄 |
-| **唯讀與必填** | LayoutField.ReadOnly | 永久唯讀去框留底線；CheckEdit 灰框留字 |
-| | 必填 / 唯讀標示 | `GridControl` 表頭色：唯讀棕、必填藍（library 內建上色） |
-| **FormMode 顯示狀態** | 互動切換 | FormMode 下拉即時驅動一組控件 + 明細 grid 的唯讀/編輯（FormMode 切換唯一的所在） |
-| | 控件 × FormMode 三態（含 AllowEditModes） | 三欄釘 View/Add/Edit；欄位帶不同 `AllowEditModes`（All / Add / Edit / None），看控件呈現 + 逐欄可編輯閘控 |
-| | Grid × FormMode | GridControl 三態下編輯能力 / 工具列可見性差異 |
-| **開窗選資料** | ButtonEdit 開窗選資料 | 點圖示開本機 picker 寫回值（生產 `RelationProgId`→`LookupDialog` 後端流程見 `Avalonia.Demo`） |
-| **Layout 排版** | FormLayout 自動產生 | `GetFormLayout()` 由 schema 自動產生區段 + 欄位擺放 |
-| | 多欄排版 | `ColumnCount=2` + 欄位 `ColumnSpan` 跨欄擺放 |
-| **Grid** | In-cell 編輯 | 雙擊 cell / popup 編輯器置換（策略見 [ADR-021](../../docs/adr/adr-021-avalonia-datagrid-editing-strategy.md)） |
-| | EditForm 彈窗 | grid 唯讀、彈窗編輯整列 |
-| | Ambient 綁定 | 只設 `TableName` 自動綁定、欄位自動產生 |
-| | List mode | 綁獨立 `DataTable`，唯讀清單、工具列隱藏 |
-| **Master-Detail** | 主檔 + 明細 | `FormLayoutRenderer` 渲染 master 區段 + 明細 grid |
+| Topic | Case | Focus |
+|-------|------|-------|
+| **Control Types** | Control gallery | One derived control per `ControlType`, editable, with live values |
+| | Native vs derived (BindFieldControl) | Field-level controls (`IBindFieldControl` / `IFieldEditor`) side by side with native ones, normal and read-only |
+| | Native vs derived (BindTableControl) | The table-level control (`IBindTableControl`: `GridControl`) side by side with the native `DataGrid` |
+| **Data Binding** | Ambient binding | The container sets `FormScope.SetDataObject` once; child editors only set `FieldName` and bind automatically |
+| | Explicit binding | `editor.Bind(dataObject, layoutField)` without the ambient scope |
+| | Two-way sync | Two controls bound to the same field sync once an edit is committed by leaving the control or pressing Enter (`FormDataObject` is the single source) |
+| | DataObject events | A live log of `FieldValueChanged` / `RowAdded` / `RowDeleted` / `IsDirtyChanged` / `DataSetReplaced` |
+| **Read-only & Required** | LayoutField.ReadOnly | Permanently read-only: the border is removed and an underline remains; `CheckEdit` gets a grey box and keeps its text |
+| | Required / read-only markers | `GridControl` header colors: read-only brown, required blue (colored by the library) |
+| **FormMode States** | Interactive switching | A FormMode drop-down drives the read-only / editable state of a set of controls and a detail grid live (the only place the FormMode is switched) |
+| | Controls × the three FormModes (with AllowEditModes) | Three columns pinned to View / Add / Edit; fields carry different `AllowEditModes` (All / Add / Edit / None) to show how each control renders and how editing is gated per field |
+| | Grid × FormMode | How editing and toolbar visibility of `GridControl` differ across the three modes |
+| **Lookup** | ButtonEdit lookup picker | The icon opens a local picker that writes the value back (the production flow, `RelationProgId` → `LookupDialog` against a back end, runs in `apps/Polhem.Northwind`) |
+| **Layout** | FormLayout generated at design time | `FormLayoutGenerator.Generate` produces sections and field placement from the schema as a design-time starting point |
+| | Multi-column layout (ColumnCount / ColumnSpan) | `ColumnCount=2`, with fields spanning columns through `ColumnSpan` |
+| **Grid** | In-cell editing | Double-click a cell, or swap in a popup editor (the strategy is in [ADR-021](../../docs/adr/adr-021-avalonia-datagrid-editing-strategy.md)) |
+| | EditForm dialog | The grid is read-only; a dialog edits the whole row |
+| | Ambient binding | Only `TableName` is set; the grid binds automatically and generates its columns |
+| | List mode (read-only list) | Bound to a standalone `DataTable`: a read-only list with the toolbar hidden |
+| | Number formatting | Display decimals resolved from each column's `NumberKind`, from the row's unit, and from the company's overrides |
+| | Multi-currency amounts | Amount decimals follow the row's currency; totals per currency and in the home currency |
+| | Multi-unit quantities | Quantity decimals follow the row's unit; the total is shown only when every row has the same unit |
+| **Master-Detail** | Master + detail | `FormLayoutRenderer` renders a master section and a detail grid |
+| **Permission Capability** | Interactive permission simulator (master/detail) | Ticking simulated role grants degrades a master and its detail live, as the capability snapshot from `EnterCompany` would |
 
-> **Views（FormView/ListView）路線**：兩者為後端耦合控件，本中心無後端，故以「`FormDataObject` 當 VM + 假資料 → 前端繫結」示範——用與生產 `FormView` 同一套公開 primitive（`FieldEditorFactory` + `GridControl`）渲染（見 Master-Detail / Layout / Grid 主題）。後端載入/存檔/列事件見 `Avalonia.Demo`。
+> **The Views (`FormView` / `ListView`)**: both are coupled to a back end, and the Demo Center has none. So it uses
+> "`FormDataObject` as the view model + sample data → bound UI", rendered with the same public primitives as the
+> production `FormView` (`FieldEditorFactory` + `GridControl`); see the Master-Detail, Layout and Grid topics. Loading,
+> saving and row events against a back end are shown in `apps/Polhem.Northwind`.
 
-## 模組架構（IDemoModule）
+## Module architecture (IDemoModule)
 
-每個案例是一個 [`IDemoModule`](Modules/IDemoModule.cs)（`Category` / `Title` / `Description` / `BuildView()` / `GetSourceText()`），集中註冊於 [`DemoModuleRegistry`](Modules/DemoModuleRegistry.cs)；導覽樹由註冊表自動生成（依 `Category` 分組成兩層）。
+Each case is an [`IDemoModule`](Modules/IDemoModule.cs) (`Category` / `Title` / `Description` / `BuildView()` /
+`GetSourceText()`), registered in one place, [`DemoModuleRegistry`](Modules/DemoModuleRegistry.cs). The navigation tree
+is generated from the registry, grouped into two levels by `Category`.
 
-**View Source**：右側 `Demo` / `Source` 分頁。`Source` 顯示模組自身的真實 `.cs`——[`DemoModuleBase`](Modules/DemoModuleBase.cs) `GetSourceText()` 從 EmbeddedResource 讀出（csproj 把 `Modules/**/*.cs` 一併嵌入），故顯示內容永不與實際執行的程式碼脫鉤。
+**View Source**: the `Demo` / `Source` tabs on the right. `Source` shows the module's own `.cs` file:
+[`DemoModuleBase`](Modules/DemoModuleBase.cs) reads it in `GetSourceText()` from an embedded resource (the csproj embeds
+`Modules/**/*.cs`), so what it shows is the code that actually runs.
 
-## 新增一個案例
+## Adding a case
 
-1. 在 `Modules/<主題資料夾>/` 實作 `DemoModuleBase`，覆寫 `Category` / `Title` / `Description` / `BuildView()`。
-2. 在 [`DemoModuleRegistry`](Modules/DemoModuleRegistry.cs) 的 `Modules` 清單加一行。
+1. Implement `DemoModuleBase` in `Modules/<topic folder>/`, overriding `Category` / `Title` / `Description` /
+   `BuildView()`.
+2. Add a line to the `Modules` list in [`DemoModuleRegistry`](Modules/DemoModuleRegistry.cs).
 
-導覽樹與 View Source 會自動帶出——`Modules/**/*.cs` 已設為 EmbeddedResource，`GetSourceText()` 依型別全名解析資源（**資料夾須對映命名空間**）。常用 helper：`DataEditorParts`（單欄物件 / 區塊卡 / 即時值 / Compose）、`SampleFormData`（Employee + Phones 假資料）、`FormLayoutRenderer`（公開 primitive 渲染 layout）。
+The navigation tree and View Source pick it up automatically: `Modules/**/*.cs` is already an EmbeddedResource, and
+`GetSourceText()` resolves the resource by the type's full name (**the folder must match the namespace**). Useful
+helpers: `DataEditorParts` (single-field object / section card / live values / Compose), `SampleFormData` (Employee +
+Phones sample data), `FormLayoutRenderer` (renders a layout with the public primitives).
 
-## 對應 library 元件
+## Matching library components
 
-| Demo 行為 | library 元件 |
-|-----------|--------------|
-| 繼承控件沿用 Semi 樣式 | [src/Polhem.UI.Avalonia/Controls/Editors/](../../src/Polhem.UI.Avalonia/Controls/Editors/)（各控件 `StyleKeyOverride`） |
-| ambient 綁定（容器設一次） | [FormScope.cs](../../src/Polhem.UI.Avalonia/Controls/Editors/FormScope.cs) |
-| FormMode / AllowEditModes 驅動唯讀 | [FieldEditorBinder.cs](../../src/Polhem.UI.Avalonia/Controls/Editors/FieldEditorBinder.cs) 的 `AllowsEdit` / `OnFormModeChanged` |
-| 欄位值即時刷新 | [FormDataObject.cs](../../src/Polhem.UI.Avalonia/DataObjects/FormDataObject.cs) 的 `FieldValueChanged` 事件 |
+| Demo behavior | Library component |
+|---------------|-------------------|
+| Derived controls keep the Semi styles | [src/Polhem.UI.Avalonia/Controls/Editors/](../../src/Polhem.UI.Avalonia/Controls/Editors/) (`StyleKeyOverride` on each control) |
+| Ambient binding (set once on the container) | [FormScope.cs](../../src/Polhem.UI.Avalonia/Controls/Editors/FormScope.cs) |
+| FormMode / AllowEditModes drive read-only | `AllowsEdit` / `OnFormModeChanged` in [FieldEditorBinder.cs](../../src/Polhem.UI.Avalonia/Controls/Editors/FieldEditorBinder.cs) |
+| Field values refresh live | The `FieldValueChanged` event of [FormDataObject.cs](../../src/Polhem.UI.Avalonia/DataObjects/FormDataObject.cs) |
 
-## 主題 / FormMode 自測矩陣
+## Theme / FormMode self-test matrix
 
-逐案例目視掃過（程式已驗證可建置、可啟動；外觀一致性需人眼確認）：
+Go through the cases one by one visually (the code is verified to build and start; visual consistency needs human
+eyes):
 
-| 維度 | 切換點 | 看什麼 |
-|------|--------|--------|
-| Light / Dark | 右上 ToggleSwitch | 每個案例在兩個 variant 下，繼承控件背景/邊框/字色與原生對齊，無突兀色塊 |
-| FormMode 三態 | FormMode 顯示狀態 → 互動切換 | 切 View → 去框唯讀、ButtonEdit 圖示隱藏、grid 唯讀；Add / Edit → 可編輯 |
-| AllowEditModes | FormMode 顯示狀態 → 控件 × 三態 | 三欄釘 View/Add/Edit，逐欄依 `AllowEditModes` 啟用/停用 |
-| View Source | Demo / Source 分頁 | 每案例 Source 顯示該模組真實 `.cs`，與 Demo 行為一致 |
+| Dimension | Where to switch | What to look for |
+|-----------|-----------------|------------------|
+| Light / Dark | ToggleSwitch at the top right | In both variants, the background, border and text color of derived controls match the native ones, with no out-of-place color blocks |
+| The three FormModes | FormMode States → Interactive switching | View → borders removed and read-only, ButtonEdit icon hidden, grid read-only; Add / Edit → editable |
+| AllowEditModes | FormMode States → Controls × the three FormModes | Three columns pinned to View / Add / Edit; each field enabled or disabled according to its `AllowEditModes` |
+| View Source | `Demo` / `Source` tabs | The Source of each case shows the module's real `.cs`, consistent with the Demo |
 
-> 主題範圍：僅 `Semi.Avalonia` × Light/Dark。不納 Fluent 等其他主題的 runtime 切換 —— 本 Demo Center 的目的是「控件行為與外觀契約的對齊基準」，多主題引擎切換屬另一個題目，納入只會稀釋對齊訊號。
+> Theme scope: only `Semi.Avalonia` × Light / Dark. Switching to other themes such as Fluent at run time is left out.
+> The purpose of the Demo Center is to be the alignment baseline for the behavior and appearance of the controls;
+> switching theme engines is a different subject, and including it would only dilute that signal.
 
-## 作為其他 UI head 移植的對齊基準
+## The alignment baseline for other UI heads
 
-`Polhem.UI.Avalonia` 是 UI 架構試點：繼承式控件 + View 層先在此定稿，再移植其他 UI head（`Polhem.Web.Blazor.Server`，以及未來的 WinForms / WPF）。本 Demo Center 即「對齊範本」——
+`Polhem.UI.Avalonia` is the pilot of the UI architecture: derived controls and the View layer are settled here first,
+then ported to the other UI heads (`Polhem.Web.Blazor.Server`, and WinForms / WPF in the future). The Demo Center is the
+template to align with:
 
-- 每個控件 / 概念的**標準行為與外觀契約**（綁定、唯讀、必填、FormMode、AllowEditModes、Layout、Grid）在此一處可見、可比對。
-- 日後在其他 UI head 實作對應控件時，以本中心每個案例的行為為驗收基準：相同 schema / 假資料 / FormMode 下，跨平台應呈現一致的綁定與狀態切換。
-- 控件外觀變更（如唯讀去框）先在此目視驗證，再回推其他平台。
+- The **reference behavior and appearance** of each control and concept (binding, read-only, required, FormMode,
+  AllowEditModes, Layout, Grid) can be seen and compared in one place.
+- When a matching control is implemented in another UI head, the behavior of each case here is the acceptance baseline:
+  with the same schema, sample data and FormMode, binding and state changes should look the same on every platform.
+- Changes to the appearance of a control (such as removing the border of a read-only field) are checked visually here
+  first, then carried over to the other platforms.

@@ -1,0 +1,125 @@
+# Avalonia.DemoCenter
+
+[English](README.md)
+
+`Polhem.UI.Avalonia` 控件展示中心（DevExpress Demo Center 模式，**主題/功能導向**）：左側導覽樹（主題 → 案例）、
+右側 `Demo` / `Source` 分頁、頂部全域工具列（主題 Light/Dark）。**預設深色**。FormMode 切換不在全域工具列，收在
+「FormMode States」主題內，避免驅動不相關的範例。
+
+每個案例只示範**單一主題**（資料繫結、唯讀、FormMode…），對應 DevExpress「每個 demo 只講一件事」的清爽。
+
+## 定位
+
+| 角色 | 說明 |
+|------|------|
+| 展示廳 | 外部框架使用者瀏覽控件能力的門面 |
+| 活文件 / 對齊基準 | 每個控件 / 概念的標準行為與外觀契約；日後移植其他 UI head 的對齊範本 |
+| 開發驗證面 | 修改控件外觀（如唯讀去框）時的目視回饋場 |
+
+本 Demo Center 只聚焦**控件層**，不連後端、不涉入 Login / CRUD 流程。端到端的**應用**（登入 → 連線 → JSON-RPC →
+渲染表單）見 [`apps/Polhem.Northwind`](../../apps/Polhem.Northwind/README.zh-TW.md)。
+
+## 前置條件
+
+- .NET 10 SDK
+- 無需後端、無需資料庫——資料來源是 in-memory `FormSchema` + `FormDataObject`
+
+## 跑起來
+
+```bash
+dotnet run --project samples/Avalonia.DemoCenter/Avalonia.DemoCenter.csproj
+```
+
+## 全域工具列
+
+- **主題切換**：右上角 ToggleSwitch 切 Light / Dark（沿用 `Semi.Avalonia`；預設 Dark）。
+
+> FormMode（View/Add/Edit）切換**不**在全域工具列——它只屬於「FormMode States」主題（互動切換案例 + 三欄釘住比對），
+> 不該驅動其他不相關範例。其餘案例預設 Edit 模式（可編輯）。
+
+## 主題與案例
+
+導覽樹為兩層：**主題（`Category`）→ 案例（`Title`）**。App 的介面文字是英文，下表照 App 顯示的名稱列出，順序與
+[`DemoModuleRegistry`](Modules/DemoModuleRegistry.cs) 相同。
+
+| 主題 | 案例 | 重點 |
+|------|------|------|
+| **Control Types** | Control gallery | 每個 `ControlType` 的繼承控件各一，可編輯、即時值 |
+| | Native vs derived (BindFieldControl) | 欄位級控件（`IBindFieldControl` / `IFieldEditor`）並排原生，含一般 / 唯讀 |
+| | Native vs derived (BindTableControl) | 表格級控件（`IBindTableControl`：`GridControl`）並排原生 `DataGrid` |
+| **Data Binding** | Ambient binding | 容器設一次 `FormScope.SetDataObject`，子編輯器只給 `FieldName` 自動綁定 |
+| | Explicit binding | `editor.Bind(dataObject, layoutField)` 不靠 ambient |
+| | Two-way sync | 兩控件綁同欄位，輸入離開（或 Enter）提交後同步（`FormDataObject` 為單一來源） |
+| | DataObject events | `FieldValueChanged` / `RowAdded` / `RowDeleted` / `IsDirtyChanged` / `DataSetReplaced` 即時記錄 |
+| **Read-only & Required** | LayoutField.ReadOnly | 永久唯讀去框留底線；`CheckEdit` 灰框留字 |
+| | Required / read-only markers | `GridControl` 表頭色：唯讀棕、必填藍（library 內建上色） |
+| **FormMode States** | Interactive switching | FormMode 下拉即時驅動一組控件 + 明細 grid 的唯讀/編輯（FormMode 切換唯一的所在） |
+| | Controls × the three FormModes (with AllowEditModes) | 三欄釘 View/Add/Edit；欄位帶不同 `AllowEditModes`（All / Add / Edit / None），看控件呈現 + 逐欄可編輯閘控 |
+| | Grid × FormMode | `GridControl` 三態下編輯能力 / 工具列可見性差異 |
+| **Lookup** | ButtonEdit lookup picker | 點圖示開本機 picker 寫回值（生產環境 `RelationProgId` → `LookupDialog` 的後端流程在 `apps/Polhem.Northwind`） |
+| **Layout** | FormLayout generated at design time | `FormLayoutGenerator.Generate` 由 schema 產生區段 + 欄位擺放，作為設計階段的起點 |
+| | Multi-column layout (ColumnCount / ColumnSpan) | `ColumnCount=2` + 欄位 `ColumnSpan` 跨欄擺放 |
+| **Grid** | In-cell editing | 雙擊 cell / popup 編輯器置換（策略見 [ADR-021](../../docs/adr/adr-021-avalonia-datagrid-editing-strategy.zh-TW.md)） |
+| | EditForm dialog | grid 唯讀、彈窗編輯整列 |
+| | Ambient binding | 只設 `TableName` 自動綁定、欄位自動產生 |
+| | List mode (read-only list) | 綁獨立 `DataTable`，唯讀清單、工具列隱藏 |
+| | Number formatting | 顯示位數依各欄的 `NumberKind`、該列的單位與公司的覆寫值決定 |
+| | Multi-currency amounts | 金額位數隨該列幣別；分幣別與本國幣的合計 |
+| | Multi-unit quantities | 數量位數隨該列單位；全部同單位時才顯示合計 |
+| **Master-Detail** | Master + detail | `FormLayoutRenderer` 渲染 master 區段 + 明細 grid |
+| **Permission Capability** | Interactive permission simulator (master/detail) | 勾選模擬的角色授權，主檔與明細即時降級，與 `EnterCompany` 回傳的能力快照相同 |
+
+> **Views（FormView/ListView）路線**：兩者為後端耦合控件，本中心無後端，故以「`FormDataObject` 當 VM + 假資料 →
+> 前端繫結」示範——用與生產 `FormView` 同一套公開 primitive（`FieldEditorFactory` + `GridControl`）渲染（見
+> Master-Detail / Layout / Grid 主題）。後端載入/存檔/列事件見 `apps/Polhem.Northwind`。
+
+## 模組架構（IDemoModule）
+
+每個案例是一個 [`IDemoModule`](Modules/IDemoModule.cs)（`Category` / `Title` / `Description` / `BuildView()` /
+`GetSourceText()`），集中註冊於 [`DemoModuleRegistry`](Modules/DemoModuleRegistry.cs)；導覽樹由註冊表自動生成（依
+`Category` 分組成兩層）。
+
+**View Source**：右側 `Demo` / `Source` 分頁。`Source` 顯示模組自身的真實 `.cs`——
+[`DemoModuleBase`](Modules/DemoModuleBase.cs) `GetSourceText()` 從 EmbeddedResource 讀出（csproj 把
+`Modules/**/*.cs` 一併嵌入），所以顯示的就是實際執行的程式碼。
+
+## 新增一個案例
+
+1. 在 `Modules/<主題資料夾>/` 實作 `DemoModuleBase`，覆寫 `Category` / `Title` / `Description` / `BuildView()`。
+2. 在 [`DemoModuleRegistry`](Modules/DemoModuleRegistry.cs) 的 `Modules` 清單加一行。
+
+導覽樹與 View Source 會自動帶出——`Modules/**/*.cs` 已設為 EmbeddedResource，`GetSourceText()` 依型別全名解析資源
+（**資料夾須對映命名空間**）。常用 helper：`DataEditorParts`（單欄物件 / 區塊卡 / 即時值 / Compose）、
+`SampleFormData`（Employee + Phones 假資料）、`FormLayoutRenderer`（公開 primitive 渲染 layout）。
+
+## 對應 library 元件
+
+| Demo 行為 | library 元件 |
+|-----------|--------------|
+| 繼承控件沿用 Semi 樣式 | [src/Polhem.UI.Avalonia/Controls/Editors/](../../src/Polhem.UI.Avalonia/Controls/Editors/)（各控件 `StyleKeyOverride`） |
+| ambient 綁定（容器設一次） | [FormScope.cs](../../src/Polhem.UI.Avalonia/Controls/Editors/FormScope.cs) |
+| FormMode / AllowEditModes 驅動唯讀 | [FieldEditorBinder.cs](../../src/Polhem.UI.Avalonia/Controls/Editors/FieldEditorBinder.cs) 的 `AllowsEdit` / `OnFormModeChanged` |
+| 欄位值即時刷新 | [FormDataObject.cs](../../src/Polhem.UI.Avalonia/DataObjects/FormDataObject.cs) 的 `FieldValueChanged` 事件 |
+
+## 主題 / FormMode 自測矩陣
+
+逐案例目視掃過（程式已驗證可建置、可啟動；外觀一致性需人眼確認）：
+
+| 維度 | 切換點 | 看什麼 |
+|------|--------|--------|
+| Light / Dark | 右上 ToggleSwitch | 每個案例在兩個 variant 下，繼承控件背景/邊框/字色與原生對齊，無突兀色塊 |
+| FormMode 三態 | FormMode States → Interactive switching | 切 View → 去框唯讀、ButtonEdit 圖示隱藏、grid 唯讀；Add / Edit → 可編輯 |
+| AllowEditModes | FormMode States → Controls × the three FormModes | 三欄釘 View/Add/Edit，逐欄依 `AllowEditModes` 啟用/停用 |
+| View Source | Demo / Source 分頁 | 每案例 Source 顯示該模組真實 `.cs`，與 Demo 行為一致 |
+
+> 主題範圍：僅 `Semi.Avalonia` × Light/Dark。不納 Fluent 等其他主題的 runtime 切換 —— 本 Demo Center 的目的是
+> 「控件行為與外觀契約的對齊基準」，多主題引擎切換屬另一個題目，納入只會稀釋對齊訊號。
+
+## 作為其他 UI head 移植的對齊基準
+
+`Polhem.UI.Avalonia` 是 UI 架構試點：繼承式控件 + View 層先在此定稿，再移植其他 UI head（`Polhem.Web.Blazor.Server`，
+以及未來的 WinForms / WPF）。本 Demo Center 即「對齊範本」——
+
+- 每個控件 / 概念的**標準行為與外觀契約**（綁定、唯讀、必填、FormMode、AllowEditModes、Layout、Grid）在此一處可見、可比對。
+- 日後在其他 UI head 實作對應控件時，以本中心每個案例的行為為驗收基準：相同 schema / 假資料 / FormMode 下，跨平台應呈現一致的綁定與狀態切換。
+- 控件外觀變更（如唯讀去框）先在此目視驗證，再回推其他平台。

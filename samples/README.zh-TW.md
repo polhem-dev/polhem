@@ -38,7 +38,7 @@ dotnet run                          # → http://localhost:5055
 | 如何用 `Polhem.Api.Client` 從第三方端連 Polhem(Remote 模式) | [`QuickStart.Console`](QuickStart.Console/README.zh-TW.md) |
 | 如何在 Blazor 內用 `Polhem.Web.Blazor.Server` 元件(Local 派遣,效能最佳) | [`Blazor.Server.Demo`](Blazor.Server.Demo/README.zh-TW.md) |
 | 同一份 `FormSchema` 在桌面／瀏覽器／行動端 Avalonia 上如何渲染 | [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.zh-TW.md) |
-| 主題導向控件 demo center（導覽樹 主題→案例、Demo/Source 分頁、主題/FormMode 工具列）：資料繫結、唯讀必填、FormMode、Layout、Grid、原生 vs 繼承比對 | [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.md) |
+| 主題導向控件 demo center（導覽樹 主題→案例、Demo/Source 分頁、主題/FormMode 工具列）：資料繫結、唯讀必填、FormMode、Layout、Grid、原生 vs 繼承比對 | [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.zh-TW.md) |
 | 如何用純 JavaScript 從瀏覽器呼叫 Polhem（前端無 .NET，走 Plain wire format） | [`Web.Js.Demo`](Web.Js.Demo/README.zh-TW.md) |
 
 ## Demo 清單
@@ -48,7 +48,7 @@ dotnet run                          # → http://localhost:5055
 | [`QuickStart.Server`](QuickStart.Server/README.zh-TW.md) | API host | `5050` | `dotnet run` | Polhem.Api.AspNetCore + Polhem.Hosting + Polhem.Business + Polhem.Db |
 | [`QuickStart.Console`](QuickStart.Console/README.zh-TW.md) | API client | — | `dotnet run` | Polhem.Api.Client |
 | [`Blazor.Server.Demo`](Blazor.Server.Demo/README.zh-TW.md) | 全端 Blazor Server | `5055` | `dotnet run` | Polhem.Web.Blazor.Server + Polhem.Samples.Shared |
-| [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.md) | 桌面 Avalonia 控件 demo center | —(無後端) | `dotnet run -c Debug` | Polhem.UI.Avalonia |
+| [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.zh-TW.md) | 桌面 Avalonia 控件 demo center | —(無後端) | `dotnet run -c Debug` | Polhem.UI.Avalonia |
 | [`Web.Js.Demo`](Web.Js.Demo/README.zh-TW.md) | 純 JS 瀏覽器客戶端 | —(連 5050) | `open index.html` | (無 .NET — vanilla HTML/JS) |
 | [`Polhem.Samples.Shared`](Polhem.Samples.Shared/) | 共用後端 wiring | — | (被引用) | Polhem.Business + Polhem.Db + Polhem.Hosting + Polhem.Api.Client |
 

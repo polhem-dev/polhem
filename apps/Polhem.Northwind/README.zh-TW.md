@@ -52,7 +52,7 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Browser
 
 開啟 <http://localhost:5200/>，以相同方式連線 / 登入。WASM 專屬接線（localStorage endpoint、
 async 連線、overlay 對話框、publish 注意事項）見
-[`Polhem.Northwind.Browser/README.md`](Polhem.Northwind.Browser/README.md)。
+[`Polhem.Northwind.Browser/README.md`](Polhem.Northwind.Browser/README.zh-TW.md)。
 
 ### 行動前端（Avalonia iOS / Android）
 

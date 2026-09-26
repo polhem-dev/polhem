@@ -1,52 +1,54 @@
 # Polhem.DefineEditor
 
-Polhem 定義檔（DefinePath 下的 9 種 XML）的桌面維護工具。Avalonia 12 + .NET 10 + CommunityToolkit.Mvvm，跨平台（Windows / macOS / Linux）。
+[繁體中文](README.zh-TW.md)
 
-## 定位
+A desktop tool for maintaining Polhem definition files (the 9 kinds of XML under DefinePath). Avalonia 12 + .NET 10 + CommunityToolkit.Mvvm, cross-platform (Windows / macOS / Linux).
 
-- **開發期工具**：非框架發布套件、非 sample；放在 `tools/`，獨立 `Polhem.Tools.slnx`，不上 NuGet、不跑 CI。
-- **純 offline**：直接讀寫 DefinePath 下的 XML，不連遠端 server、不連資料庫。
-- **與框架同步**：以 ProjectReference 連 `Polhem.Definition` 與 `Polhem.Base`，所有讀寫走 `XmlCodec.SerializeToFile` / `DeserializeFromFile`，零序列化轉換。
+## Positioning
 
-## 支援的定義型別
+- **A development-time tool**: not a published framework package and not a sample; it lives in `tools/`, has its own `Polhem.Tools.slnx`, is not published to NuGet and is not run in CI.
+- **Purely offline**: reads and writes the XML under DefinePath directly; it connects to no remote server and no database.
+- **In sync with the framework**: references `Polhem.Definition` and `Polhem.Base` through ProjectReference, and every read and write goes through `XmlCodec.SerializeToFile` / `DeserializeFromFile`, with zero serialization conversion.
 
-開啟方案後，左側方案樹按型別分組列出 DefinePath 下所有檔案；點選右側載對應編輯器：
+## Supported definition types
 
-| 型別 | 編輯器 | 主要功能 |
-|------|--------|---------|
-| **SystemSettings**（單例） | [SystemSettingsDocumentView](Views/SystemSettingsDocumentView.axaml) | 5 個 Configuration 子節點 + BackendConfiguration 4 個內嵌 options + ExtendedProperties 自由 KV |
-| **DbCategorySettings**（單例） | [DbCategorySettingsDocumentView](Views/DbCategorySettingsDocumentView.axaml) | Categories → Tables 兩層；驗證重複 Id / TableName |
-| **ProgramSettings**（單例） | [ProgramSettingsDocumentView](Views/ProgramSettingsDocumentView.axaml) | Categories → Programs 兩層；ProgramItem 含 ProgId / DisplayName / BusinessObject |
-| **PermissionModels**（單例） | [PermissionModelsDocumentView](Views/PermissionModelsDocumentView.axaml) | Models → Rules 兩層；Action / Scope 為下拉；含 `PermissionModels.Validate()` 整合 |
-| **MenuSettings**（單例） | [MenuSettingsDocumentView](Views/MenuSettingsDocumentView.axaml) | MenuFolder → MenuEntry 樹狀結構；資料夾與項目各自的屬性面板 |
-| **DatabaseSettings**（單例） | [DatabaseSettingsDocumentView](Views/DatabaseSettingsDocumentView.axaml) | Servers + Items 兩個 group；含 **連線字串貼上拆解**（SQL Server / PostgreSQL / MySQL / Oracle） + 4 類靜態驗證 |
-| **FormSchema**（多份） | [FormSchemaDocumentView](Views/FormSchemaDocumentView.axaml) | Tables → Fields → Relation / Lookup 對應；RelationProgId 來自方案內其他 FormSchema 候選。schema 節點右鍵可**產生 FormLayout** |
-| **TableSchema**（多份） | [TableSchemaDocumentView](Views/TableSchemaDocumentView.axaml) | Fields + Indexes 兩個 group；IndexField 含 SortDirection；驗證 PrimaryKey 唯一性 |
-| **FormLayout**（多份） | [FormLayoutDocumentView](Views/FormLayoutDocumentView.axaml) | Sections（→ LayoutField）+ Details（LayoutGrid → LayoutColumn）。版面於設計階段產出並存檔——執行階段只讀它，缺檔開表單即失敗 |
-| **Language**（多份） | [LanguageDocumentView](Views/LanguageDocumentView.axaml) | Items（Key/Value）+ Enums（→ Entry code/text） |
+After a solution is opened, the solution tree on the left lists every file under DefinePath, grouped by type; select one to load the matching editor on the right:
 
-每個編輯器都有共用的工具列（儲存 / 新增 / 驗證 / 刪除）、底部狀態列、驗證結果面板與 `IsDirty` 指示。
+| Type | Editor | Main features |
+|------|--------|---------------|
+| **SystemSettings** (singleton) | [SystemSettingsDocumentView](Views/SystemSettingsDocumentView.axaml) | 5 Configuration child nodes + 4 embedded options of BackendConfiguration + free key/value ExtendedProperties |
+| **DbCategorySettings** (singleton) | [DbCategorySettingsDocumentView](Views/DbCategorySettingsDocumentView.axaml) | Two levels, Categories → Tables; validates duplicate Id / TableName |
+| **ProgramSettings** (singleton) | [ProgramSettingsDocumentView](Views/ProgramSettingsDocumentView.axaml) | Two levels, Categories → Programs; a ProgramItem holds ProgId / DisplayName / BusinessObject |
+| **PermissionModels** (singleton) | [PermissionModelsDocumentView](Views/PermissionModelsDocumentView.axaml) | Two levels, Models → Rules; Action / Scope are drop-downs; integrates `PermissionModels.Validate()` |
+| **MenuSettings** (singleton) | [MenuSettingsDocumentView](Views/MenuSettingsDocumentView.axaml) | MenuFolder → MenuEntry tree; separate property panels for folders and entries |
+| **DatabaseSettings** (singleton) | [DatabaseSettingsDocumentView](Views/DatabaseSettingsDocumentView.axaml) | Two groups, Servers + Items; includes **parsing a pasted connection string** (SQL Server / PostgreSQL / MySQL / Oracle) + 4 kinds of static validation |
+| **FormSchema** (multiple) | [FormSchemaDocumentView](Views/FormSchemaDocumentView.axaml) | Tables → Fields → Relation / Lookup mappings; RelationProgId candidates come from the other FormSchemas in the solution. Right-click a schema node to **Generate FormLayout** |
+| **TableSchema** (multiple) | [TableSchemaDocumentView](Views/TableSchemaDocumentView.axaml) | Two groups, Fields + Indexes; IndexField includes SortDirection; validates that the PrimaryKey is unique |
+| **FormLayout** (multiple) | [FormLayoutDocumentView](Views/FormLayoutDocumentView.axaml) | Sections (→ LayoutField) + Details (LayoutGrid → LayoutColumn). The layout is produced and saved at design time — the runtime only reads it, and opening a form fails when the file is missing |
+| **Language** (multiple) | [LanguageDocumentView](Views/LanguageDocumentView.axaml) | Items (Key/Value) + Enums (→ Entry code/text) |
 
-## 開發期跑法
+Every editor has the shared toolbar (Save / Add / Validate / Delete), a status bar at the bottom, a validation results panel and an `IsDirty` indicator.
 
-直接從原始碼啟動：
+## Running during development
+
+Start it directly from source:
 
 ```bash
 dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configuration Debug
 ```
 
-啟動後左上「開啟方案…」選一個 DefinePath 資料夾即可。`tests/Define/` 內含可直接開啟的測試 fixture。
+After it starts, choose "Open Folder..." at the top left and pick a DefinePath folder. `tests/Define/` contains test fixtures that can be opened directly.
 
 ### Headless smoke
 
-`--smoke <FormSchema-fixture-path>` 模式跑全部 round-trip，不啟動視窗。**實際跑哪幾個不列在這裡**（那會漂）—— 權威來源是 `Smoke.Run`，它逐一呼叫各個 `Run*Smoke`：
+The `--smoke <FormSchema-fixture-path>` mode runs every round-trip without opening a window. **Which ones actually run is not listed here** (that would drift) — the authoritative source is `Smoke.Run`, which calls each `Run*Smoke` in turn:
 
 ```bash
 dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configuration Debug \
     -- --smoke tests/Define/FormSchema/Employee.FormSchema.xml
 ```
 
-預期輸出：
+Expected output:
 
 ```
 [smoke:formschema] OK
@@ -62,9 +64,9 @@ dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configurati
 [smoke] OK — FormSchema + 8 multi-instance editors + ConnectionStringParser all green.
 ```
 
-## Publish（framework-dependent）
+## Publish (framework-dependent)
 
-預設打包 framework-dependent — 不含 .NET runtime，目標機要先裝 .NET 10。每個 RID 約 31 MB（含 Avalonia 該平台原生依賴）。
+By default it is packaged framework-dependent — without the .NET runtime, so the target machine needs .NET 10 installed first. Each RID is about 31 MB (including Avalonia's native dependencies for that platform).
 
 ```bash
 # macOS Apple Silicon
@@ -84,78 +86,78 @@ dotnet publish tools/DefineEditor/Polhem.DefineEditor.csproj -c Release \
     -r linux-x64 --self-contained false -p:PublishTrimmed=false
 ```
 
-輸出在 `tools/DefineEditor/bin/Release/net10.0/<rid>/publish/`。或執行 [publish.sh](publish.sh) 一次打包 4 個平台。
+The output is in `tools/DefineEditor/bin/Release/net10.0/<rid>/publish/`. Or run [publish.sh](publish.sh) to package all 4 platforms at once.
 
-### 也可以 self-contained
+### Self-contained is also possible
 
-若目標機不便裝 .NET runtime，可內含 runtime 一起打包（約 100–210 MB／平台）：
+If installing the .NET runtime on the target machine is inconvenient, the runtime can be packaged in (about 100–210 MB per platform):
 
 ```bash
 ./publish.sh --self-contained
-# 或單一 RID
+# or a single RID
 dotnet publish tools/DefineEditor/Polhem.DefineEditor.csproj -c Release \
     -r osx-arm64 --self-contained true -p:PublishTrimmed=false
 ```
 
-### 也可以 single-file
+### Single-file is also possible
 
-把所有 managed dll 嵌進主執行檔，輸出剩主 exe + 3 個 Avalonia 原生 `.dylib` / `.so` / `.dll`（native 受 .NET single-file 規格限制不可 bundle）：
+Embeds every managed dll in the main executable, so the output is just the main exe + 3 Avalonia native `.dylib` / `.so` / `.dll` files (the .NET single-file specification does not allow native libraries to be bundled):
 
 ```bash
 ./publish.sh --single-file
-# 或單一 RID
+# or a single RID
 dotnet publish tools/DefineEditor/Polhem.DefineEditor.csproj -c Release \
     -r osx-arm64 --self-contained false -p:PublishTrimmed=false -p:PublishSingleFile=true
 ```
 
-osx-arm64 實測：12 MB 主執行檔 + 約 18 MB 三個 native dylib（HarfBuzz、Skia、Avalonia.Native）。可與 `--self-contained` 組合（產一個含 runtime 的單一 exe，但 native 仍分離）。
+Measured on osx-arm64: a 12 MB main executable + about 18 MB for the three native dylibs (HarfBuzz, Skia, Avalonia.Native). It can be combined with `--self-contained` (producing a single exe that includes the runtime, but the native libraries stay separate).
 
-### macOS `.app` bundle（推薦對外發佈）
+### macOS `.app` bundle (recommended for external distribution)
 
-對 macOS 使用者，加 `--app-bundle` 會把 osx-* RID 的 publish 內容包成 `Polhem.DefineEditor.app` 目錄，雙擊就開、可拖進 `/Applications`、Dock 顯示正確名稱：
+For macOS users, adding `--app-bundle` wraps the publish output of the osx-* RIDs into a `Polhem.DefineEditor.app` directory: it opens on double-click, can be dragged into `/Applications`, and the Dock shows the correct name:
 
 ```bash
-./publish.sh --single-file --app-bundle           # 4 個 RID（osx-* 包 .app，win/linux 維持原樣）
-./publish.sh --single-file --app-bundle osx-arm64 # 只 osx-arm64
+./publish.sh --single-file --app-bundle           # 4 RIDs (osx-* are wrapped as .app, win/linux stay as they are)
+./publish.sh --single-file --app-bundle osx-arm64 # osx-arm64 only
 ```
 
-產出位置 `bin/Release/net10.0/<osx-rid>/publish/Polhem.DefineEditor.app`，內部結構：
+Output location `bin/Release/net10.0/<osx-rid>/publish/Polhem.DefineEditor.app`, with this internal structure:
 
 ```
 Polhem.DefineEditor.app/
 └── Contents/
-    ├── Info.plist          ← bundle 描述（版號從 repo 根的 Version.props 抓）
+    ├── Info.plist          ← bundle description (the version is taken from Version.props at the repo root)
     └── MacOS/
-        ├── Polhem.DefineEditor   ← 主執行檔
-        └── lib*.dylib × 3     ← Avalonia 原生
+        ├── Polhem.DefineEditor   ← main executable
+        └── lib*.dylib × 3     ← Avalonia native
 ```
 
-### 第一次跑：解 Gatekeeper 隔離旗標
+### First run: clearing the Gatekeeper quarantine flag
 
-未做 Apple Developer ID 簽章與公證的 `.app`，從網路下載或 AirDrop 傳給其他人後，macOS Gatekeeper 會擋第一次執行（提示「無法打開，因為它來自身分不明的開發者」）。解法二擇一：
+An `.app` without Apple Developer ID signing and notarization is blocked by macOS Gatekeeper on its first run after being downloaded from the internet or sent to someone else over AirDrop (the prompt says it cannot be opened because it is from an unidentified developer). Pick one of two fixes:
 
-1. **Finder 右鍵 → 打開**（GUI 操作）：右鍵點 `.app` → 選「打開」→ 對話框點「打開」→ 之後雙擊就行
-2. **Terminal 解隔離旗標**（一行指令）：
+1. **Finder right-click → Open** (GUI): right-click the `.app` → choose "Open" → click "Open" in the dialog → after that, double-clicking works
+2. **Clear the quarantine flag in Terminal** (one command):
 
    ```bash
    xattr -d com.apple.quarantine /path/to/Polhem.DefineEditor.app
    ```
 
-從本機自己 build 的 `.app` 沒有 quarantine 旗標，不會遇到這問題；只有「跨機器傳輸」（下載、AirDrop、USB 拷貝後解壓）才會被加旗標。
+An `.app` you build yourself on the local machine has no quarantine flag and does not run into this; only "cross-machine transfer" (download, AirDrop, copying over USB and extracting) adds the flag.
 
-### RID 為何不可省略
+### Why the RID cannot be omitted
 
-省略 `-r` 改打 portable 雖然也是 framework-dependent，但 Avalonia 的原生依賴（Skia / Avalonia.Native 等）會把所有平台的 `runtimes/<rid>/native/*` 全帶上，結果反而比 self-contained 還大（實測 564 MB）。所以即使是 framework-dependent，仍指定 RID。
+Omitting `-r` to build a portable app is also framework-dependent, but Avalonia's native dependencies (Skia / Avalonia.Native and so on) then bring along `runtimes/<rid>/native/*` for every platform, and the result is actually larger than self-contained (measured at 564 MB). So even for framework-dependent builds, specify the RID.
 
-### 已知不打開的選項
+### Options known to stay off
 
-| 選項 | 不開的原因 |
-|------|-----------|
-| `PublishTrimmed=true` | 框架重度依賴 XmlSerializer 的反射展開；trim 容易把 nested define type 的 metadata 砍掉導致 runtime 解序列化失敗 |
+| Option | Why it stays off |
+|--------|------------------|
+| `PublishTrimmed=true` | The framework relies heavily on reflection expansion in XmlSerializer; trimming easily strips the metadata of nested define types, which makes deserialization fail at runtime |
 
-## 不在工具範圍
+## Out of the tool's scope
 
-- 連遠端 Polhem server / JSON-RPC API（純本機檔）
-- DatabaseSettings 實連測試（交 server 端健康檢查）
-- 多人協作 / 鎖定機制
-- Customize 層覆蓋編輯（Phase 6 後若需要另議；目前在方案樹上不標示覆蓋）
+- Connecting to a remote Polhem server / JSON-RPC API (local files only)
+- Live connection tests for DatabaseSettings (left to server-side health checks)
+- Multi-user collaboration / locking
+- Editing Customize-layer overrides (to be discussed after Phase 6 if needed; the solution tree currently does not mark overrides)

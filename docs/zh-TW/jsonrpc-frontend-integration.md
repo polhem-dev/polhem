@@ -409,5 +409,5 @@ export const formApi = (progId: string) => ({
 - [`samples/Web.Js.Demo/README.zh-TW.md`](../../samples/Web.Js.Demo/README.zh-TW.md) — 上述所有方法的可跑 demo
 - [`docs/zh-TW/api-method-reference.md`](api-method-reference.md) — 完整方法清單含每方法 `[ApiAccessControl]` 設定
 - [`docs/adr/adr-013-frontend-api-connection-strategy.md`](../adr/adr-013-frontend-api-connection-strategy.zh-TW.md) — 前端連線策略全景
-- [`src/Polhem.Api.Core/README.md`](../../src/Polhem.Api.Core/README.md) — server 端派遣內部細節
-- [`src/Polhem.Api.Client/README.md`](../../src/Polhem.Api.Client/README.md) — 本指引對應的 .NET client
+- [`src/Polhem.Api.Core/README.md`](../../src/Polhem.Api.Core/README.zh-TW.md) — server 端派遣內部細節
+- [`src/Polhem.Api.Client/README.md`](../../src/Polhem.Api.Client/README.zh-TW.md) — 本指引對應的 .NET client
