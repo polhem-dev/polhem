@@ -20,8 +20,8 @@ they follow.
 3. Build and test locally (see below).
 4. Open a pull request against `main`.
 
-`main` only accepts changes through pull requests. The `build` check must pass before a pull request can merge, and
-review is requested from the code owners listed in [`.github/CODEOWNERS`](.github/CODEOWNERS).
+`main` only accepts changes through pull requests. The `build` and `docs` checks must pass before a pull request can
+merge, and review is requested from the code owners listed in [`.github/CODEOWNERS`](.github/CODEOWNERS).
 
 ## Build and test
 

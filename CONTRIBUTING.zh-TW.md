@@ -17,7 +17,7 @@
 3. 在本機建置與測試（見下節）。
 4. 對 `main` 開 pull request。
 
-`main` 只透過 pull request 接受變更。pull request 必須通過 `build` 檢查才能合併，並會請
+`main` 只透過 pull request 接受變更。pull request 必須通過 `build` 與 `docs` 檢查才能合併，並會請
 [`.github/CODEOWNERS`](.github/CODEOWNERS) 列出的 code owner 審查。
 
 ## 建置與測試

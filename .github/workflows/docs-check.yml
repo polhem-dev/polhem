@@ -33,3 +33,8 @@ jobs:
     # language switch line is wrong. The list of languages and their policies is in the script header.
     - name: Check translation sync
       run: ./check-docs-i18n.sh
+
+    # Fails when a committed file names a plan file or points into local/, or a public document points to a file
+    # under .claude/. Its fourth check is advisory and does not affect the exit code.
+    - name: Check public document references
+      run: ./check-public-docs.sh
