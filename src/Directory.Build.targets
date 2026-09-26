@@ -51,7 +51,7 @@
     <PolhemAllowedDependency Include="Polhem.Base" />
   </ItemGroup>
 
-  <!-- POLHEM9002：版號三屬性一致。與 tools/ 共用同一份定義。 -->
+  <!-- POLHEM9002: the three version properties must agree. The definition is shared with tools/. -->
   <Import Project="$(MSBuildThisFileDirectory)../Version.targets" />
 
   <Target Name="PolhemVerifyDependencyBoundary"

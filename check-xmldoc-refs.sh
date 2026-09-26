@@ -1,40 +1,43 @@
 #!/usr/bin/env bash
-# XML doc 散文中的 <c>識別字</c> 不得指向已不存在的型別 —— 落地檢查
-# （規範見 .claude/rules/code-style.md 的 XML 文件註解一節）
+# Checks that no <c>identifier</c> in XML doc prose points to a type that no longer exists.
+# (The rule is in the XML documentation comments section of .claude/rules/code-style.md.)
 #
-# 為什麼需要這支：`<see cref>` 由編譯器把關（CS1574 + TreatWarningsAsErrors → 建置失敗），
-# 但**散文裡的反引號 `<c>Foo</c>` 完全不受保護**。型別改名或刪除後，`<c>` 就成了指空，
-# 而 XML doc 隨 NuGet 的 .xml 發佈、直接出現在消費端 IntelliSense。
-# 實際漏網：`CacheInfo.Initialize` 的 doc 指向 `CacheBootstrapper`，該型別在靜態 facade
-# 拆除時就沒了，卻活到 2026-08-15 的全 repo 盤點才被抓到。
+# Why this script exists: `<see cref>` is guarded by the compiler (CS1574 + TreatWarningsAsErrors fails the
+# build), but **`<c>Foo</c>` in prose has no protection at all**. After a type is renamed or deleted, the `<c>`
+# points to nothing, and the XML doc ships in the NuGet package's .xml file straight into the consumer's
+# IntelliSense. A real miss: the doc of `CacheInfo.Initialize` pointed to `CacheBootstrapper`, a type that
+# disappeared when the static facade was removed, and it survived until the repository-wide inventory on 2026-08-15.
 #
-# 正解優先序：能改用 `<see cref>` 的就改用（讓編譯器接手），這支只守「確實只能用 `<c>`」
-# 的場合 —— 外部套件型別、SQL 關鍵字、刻意指涉的已移除型別，以及**跨組件向上指涉**
-# （如 Polhem.ObjectCaching 提及 Polhem.Hosting 的 AddPolhemFramework，相依方向反了，cref 解析不到）。
+# Preferred fix: use `<see cref>` wherever possible so the compiler takes over. This script only guards the places
+# that really must use `<c>`: types from external packages, SQL keywords, deliberate mentions of removed types, and
+# **upward cross-assembly references** (for example Polhem.ObjectCaching mentioning AddPolhemFramework in
+# Polhem.Hosting: the dependency points the other way, so cref cannot resolve it).
 #
-# 預期輸出：完全無輸出。有輸出時逐筆判斷是「真的指空」還是「該進 allowlist 的新例外」。
+# Expected output: the OK line only. For each other line, decide whether it really points to nothing or is a
+# new exception that belongs in the allowlist.
 set -uo pipefail
 cd "$(dirname "$0")"
 
-# find 的排除樣式，四處共用。
+# Exclusion patterns for find, shared by every search below.
 readonly BIN_PATH_GLOB='*/bin/*'
 readonly OBJ_PATH_GLOB='*/obj/*'
 
-# 刻意不受檢的識別字。新增時**必須註明歸類**，否則這份清單會退化成消音器。
+# Identifiers deliberately not checked. Every addition **must name its category**, otherwise this list turns
+# into a mute button.
 ALLOWLIST=(
-  # --- 外部套件 / BCL 型別（不在本 solution 內宣告）---
+  # --- External package / BCL types (not declared in this solution) ---
   AsyncLocal CoCreateInstance InternalsVisibleTo ToolStripMenuItem
   FileBufferingReadStream
   FormatterNotRegisteredException TypelessFormatter
-  # --- 刻意指涉的已移除型別（原文即寫 used to / which is gone / the former）---
+  # --- Deliberate mentions of removed types (the prose says used to / which is gone / the former) ---
   SafeTypelessFormatter ItemsForSerialization NumberFormatPresets
   GetIndexsCommandText
   CreateSerializer
-  # --- 前瞻建議中的假想型別（尚未實作，原文為 "abstract this via …"）---
+  # --- Hypothetical types in a forward-looking suggestion (not implemented; the prose says "abstract this via ...") ---
   IDescriptionSyncCommandBuilder
-  # --- 文件用佔位符，非真實型別名 ---
+  # --- Placeholders in documentation, not real type names ---
   Cxxx SaveX IXxxRepository G
-  # --- SQL 關鍵字 / 資料字典物件 / 欄位名 ---
+  # --- SQL keywords / data dictionary objects / column names ---
   ALL_TABLES ALL_TAB_COMMENTS ALL_COL_COMMENTS ANDEC ANSI_QUOTES
   DO_SUM QUANTITY SIZE SQL_MODE USERNAME
   LOCALTIMESTAMP NO_BACKSLASH_ESCAPES
@@ -48,15 +51,17 @@ is_allowed() {
   return 1
 }
 
-# 先擋掉會讓下面整套 grep 靜默失明的東西：原始碼裡的 NUL 位元組。
+# First, block what would silently blind every grep below: NUL bytes in source files.
 #
-# grep 把含 NUL 的檔案當 binary，於是它對每一道 grep 都變成空的 —— 不是報錯，是**無聲跳過**。
-# 實際踩過：SnapshotLanguageService.cs 的 `$"{lang}\x00{ns}"` 把 NUL 寫成了原始位元組而非 `\0`
-# 逸出序列，該檔 5,432 bytes 的原始碼對下面的比對母體貢獻 0 bytes，它自己的 <c> 也永遠不被檢查。
-# 2026-09-04 的框架體檢才發現，中間沒有任何機制會出聲。
+# grep treats a file containing NUL as binary, so every grep over it comes back empty. It does not report an
+# error; it **skips silently**. This really happened: `$"{lang}\x00{ns}"` in SnapshotLanguageService.cs had the
+# NUL written as a raw byte instead of the `\0` escape sequence, so the file's 5,432 bytes of source contributed
+# 0 bytes to the corpus below, and its own <c> tags were never checked. Only the framework health check on
+# 2026-09-04 found it; no mechanism said anything in between.
 #
-# 行為完全等價的寫法是 `\0`（C# 逸出序列，編譯後位元組相同），所以這條沒有正當例外。
-# 判定法用 `tr -d '\000'` 後與原檔比對：shell 變數存不住 NUL，所以不能靠 grep 樣式去找它。
+# `\0` behaves identically (a C# escape sequence that compiles to the same bytes), so there is no legitimate
+# exception. The test compares the file with its `tr -d '\000'` output: a shell variable cannot hold NUL, so a
+# grep pattern cannot find it.
 NUL_HITS=$(
   find src tests tools apps samples -name '*.cs' \
        -not -path "$BIN_PATH_GLOB" -not -path "$OBJ_PATH_GLOB" 2>/dev/null \
@@ -65,13 +70,13 @@ NUL_HITS=$(
     done
 )
 if [[ -n "$NUL_HITS" ]]; then
-  echo "原始碼含 NUL 位元組（grep 會把整個檔案當 binary 而無聲跳過，請改用 \\0 逸出序列）："
+  echo "Source files contain NUL bytes (grep treats the whole file as binary and skips it silently; use the \\0 escape sequence instead):"
   echo "$NUL_HITS" | sed 's/^/    /'
   exit 1
 fi
 
-# 比對母體：全 solution 的**非 XML doc** 行。含 tests/ 等非發佈目錄是刻意的 ——
-# 這支只問「這個名字還存在嗎」，不問「它在哪一層」。
+# The corpus: every **non-XML-doc** line in the solution. Including tests/ and other unpublished folders is
+# deliberate: this script only asks "does this name still exist", not "which layer is it in".
 CODE=$(mktemp)
 trap 'rm -f "$CODE"' EXIT
 find src tests tools apps samples -name '*.cs' \
@@ -83,7 +88,7 @@ while IFS= read -r id; do
   is_allowed "$id" && continue
   grep -qw -- "$id" "$CODE" && continue
   status=1
-  echo "指向不存在的型別：<c>${id}</c>"
+  echo "Points to a type that does not exist: <c>${id}</c>"
   grep -rn --include='*.cs' --exclude-dir=bin --exclude-dir=obj "<c>${id}</c>" src \
     | sed 's/^/    /'
 done < <(
@@ -93,20 +98,22 @@ done < <(
 )
 
 # ---------------------------------------------------------------------------
-# 反向檢查：該用 <see cref> 卻用了 <c>
+# Reverse check: <c> used where <see cref> should be.
 #
-# 上面那道守「<c> 指向的東西還在嗎」，但檔頭寫的優先序是「**能改用 cref 的就改用**」——
-# 而那句話先前沒有任何機制在執行。結果是 2026-09-04 盤點時，光 src/ 就有 239 處
-# <c> 指著同 solution 內、cref 解析得到的型別，且趨勢在增加（上輪基準 245 → 該次 259）。
+# The check above guards "does what <c> points to still exist", but the header says "**use cref wherever
+# possible**", and nothing used to enforce that sentence. In the inventory on 2026-09-04, src/ alone had 239
+# <c> tags pointing to types in this solution that cref could resolve, and the number was rising (245 in the
+# previous baseline, 259 that time).
 #
-# 判準取「同專案內宣告的型別」——跨組件向下相依也能 cref，但要完全限定名，
-# 這裡不追那一層以免誤報。檔名型（Foo.xml / Bar.razor）本來就該用 <c>，先排除。
+# The criterion is "a type declared in the same project". Downward cross-assembly references can use cref too,
+# but need the fully qualified name; this script does not follow that layer, to avoid false positives.
+# File-name forms (Foo.xml / Bar.razor) should use <c> anyway and are excluded first.
 #
-# 有輸出時的正解：改成 <see cref="…"/>（同 namespace 直接寫名字；不同 namespace 用
-# 完全限定名，**不要為了 cref 加 using** —— 那會觸發 IDE0005）。真的解析不到才進下面的
-# allowlist，並註明原因。
+# The fix for a hit: change it to <see cref="..."/> (the plain name in the same namespace; the fully qualified
+# name in a different namespace, and **do not add a using just for a cref**, which triggers IDE0005). Only if it
+# really cannot resolve does it go into the allowlist below, with the reason.
 CREF_ALLOWLIST=(
-  # --- 重名型別：完全限定名有多個候選，指定任何一個都可能誤導 ---
+  # --- Ambiguous names: several fully qualified candidates, and picking one could mislead ---
   WhereBuilder
 )
 
@@ -121,7 +128,7 @@ while IFS= read -r line; do
   file="${line%%:*}"; id="${line##*:}"
   is_cref_allowed "$id" && continue
   cref_status=1
-  echo "該用 <see cref> 卻用了 <c>：${id}  (${file})"
+  echo "Uses <c> where <see cref> should be used: ${id}  (${file})"
 done < <(
   for f in $(find src -name '*.cs' -not -path "$BIN_PATH_GLOB" -not -path "$OBJ_PATH_GLOB"); do
     proj=$(echo "$f" | cut -d/ -f2)
@@ -139,7 +146,7 @@ done < <(
 )
 
 if [[ $status -eq 0 && $cref_status -eq 0 ]]; then
-  echo "OK：src/ 的 XML doc 散文無指空的 <c>，也沒有該用 cref 卻用 <c> 的。"
+  echo "OK: no <c> in the XML doc prose of src/ points to nothing, and none should be a cref."
 fi
 [[ $status -ne 0 || $cref_status -ne 0 ]] && exit 1
 exit 0

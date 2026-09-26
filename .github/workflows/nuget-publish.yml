@@ -3,7 +3,7 @@ name: Publish NuGet Packages
 on:
   push:
     tags:
-      - 'v*'  # 只有推送 tag（例如 v1.2.3）時才會觸發
+      - 'v*'  # Runs only when a tag such as v1.2.3 is pushed
 
 jobs:
   publish:
@@ -38,16 +38,17 @@ jobs:
         # restore it explicitly so the subsequent build --no-restore step works.
         dotnet restore tools/Polhem.Cli/Polhem.Cli.csproj
 
-    # build 與 pack 在同一個 step、共用同一份清單。
+    # Build and pack run in one step and share one list.
     #
-    # WARNING: 這裡曾經是兩份手工維護的清單，而 pack 帶 --no-build —— 於是
-    # src/Polhem.Expressions 在 pack 清單、不在 build 清單，只靠 Polhem.UI.Avalonia /
-    # Polhem.Hosting 的 ProjectReference 傳遞建到它才沒炸。那兩條參考一旦消失，
-    # 發版當下才會失敗，而發版是最不該有意外的時刻。
+    # WARNING: this used to be two hand-maintained lists, and pack runs with --no-build. So
+    # src/Polhem.Expressions was in the pack list but not in the build list, and it only worked because the
+    # ProjectReferences of Polhem.UI.Avalonia / Polhem.Hosting happened to build it. Had those references gone
+    # away, the failure would have appeared during a release, the moment that least needs surprises.
     #
-    # 合併成一個 step 是為了讓清單只存在一份：拆成兩步就得把清單傳過去，
-    # 而任何傳遞手段（檔案、env）都會再引入自己的失敗模式。
-    # 順序有意義：相依在前，且必須全部 build 完才開始 pack（pack 帶 --no-build）。
+    # One step keeps a single copy of the list: two steps would have to pass the list along, and every way of
+    # passing it (a file, env) brings its own failure modes.
+    # The order matters: dependencies come first, and everything must be built before packing starts
+    # (pack runs with --no-build).
     - name: Build and pack all projects
       run: |
         $ErrorActionPreference = 'Stop'
@@ -115,7 +116,7 @@ jobs:
         Write-Host "Published $($lines.Count) packages."
 
   release:
-    needs: publish  # 確保 NuGet 全數發佈成功後才建立 GitHub Release
+    needs: publish  # The GitHub Release is created only after every NuGet package was published
     runs-on: ubuntu-latest
 
     steps:

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# 本機測試 wrapper：偵測本機是否有對應 Docker container，有的話啟動再跑 dotnet test。
-# 沒 Docker 或沒對應 container 時自動跳過啟動步驟，[DbFact(DatabaseType.X)] 測試會依
-# .runsettings 中各 POLHEM_TEST_CONNSTR_{DBTYPE} 是否可連線自動 skip。
+# Local test wrapper: detects the matching local Docker containers, starts them if present, then runs dotnet test.
+# Without Docker or without a matching container the start step is skipped, and [DbFact(DatabaseType.X)] tests
+# skip themselves depending on whether each POLHEM_TEST_CONNSTR_{DBTYPE} in .runsettings is set.
 #
-# 容器名稱可用環境變數 override（未設則使用預設值）：
-#   POLHEM_TEST_SQL_CONTAINER=my-mssql    ./test.sh   # 預設 sql2025
-#   POLHEM_TEST_PG_CONTAINER=my-pg        ./test.sh   # 預設 pgvector-db
-#   POLHEM_TEST_MYSQL_CONTAINER=my-mysql  ./test.sh   # 預設 mysql8
-#   POLHEM_TEST_ORACLE_CONTAINER=my-ora   ./test.sh   # 預設 oracle23ai
+# Container names can be overridden with environment variables (defaults apply when unset):
+#   POLHEM_TEST_SQL_CONTAINER=my-mssql    ./test.sh   # default sql2025
+#   POLHEM_TEST_PG_CONTAINER=my-pg        ./test.sh   # default pgvector-db
+#   POLHEM_TEST_MYSQL_CONTAINER=my-mysql  ./test.sh   # default mysql8
+#   POLHEM_TEST_ORACLE_CONTAINER=my-ora   ./test.sh   # default oracle23ai
 set -euo pipefail
 
 SQL_CONTAINER="${POLHEM_TEST_SQL_CONTAINER:-sql2025}"
@@ -44,31 +44,30 @@ start_container() {
   echo " timeout (DbFact tests for this DB may be skipped)."
 }
 
-# 確保 Docker daemon 就緒。daemon 已在時零開銷直接 return；macOS 上 daemon 未啟動時
-# 自動拉起 Docker Desktop 並等待就緒。無 docker CLI 或非 macOS 時不介入，維持「無 docker
-# 環境自動 skip」相容性；任何失敗只警告、不中止（讓 DbFact 照常 skip/fail）。
+# Makes sure the Docker daemon is ready. When it is already running this returns at no cost; on macOS a stopped
+# daemon is started through Docker Desktop and awaited. Without the docker CLI, or off macOS, it does nothing, so
+# environments without Docker keep skipping automatically. Any failure only warns and never aborts, so DbFact
+# tests skip or fail as usual.
 ensure_docker_daemon() {
-  # 無 docker CLI：維持「無 docker 環境自動 skip」行為，不做任何事。
   if ! command -v docker >/dev/null 2>&1; then
     return
   fi
-  # daemon 已就緒：no-op、零開銷，平常測試不受影響。
   if docker info >/dev/null 2>&1; then
     return
   fi
-  # daemon 未啟動：僅在 macOS 自動拉起 Docker Desktop（GUI app）。Linux daemon 為 systemd
-  # 服務、CI Linux 不走本腳本，故不自動拉起。
+  # Only macOS starts Docker Desktop (a GUI app) automatically. On Linux the daemon is a systemd service,
+  # and CI on Linux does not use this script.
   if [[ "$(uname)" != "Darwin" ]]; then
-    echo "Docker daemon 未啟動（非 macOS，不自動拉起）；DbFact 測試可能失敗或 skip。"
+    echo "Docker daemon is not running (not macOS, not started automatically); DbFact tests may fail or be skipped."
     return
   fi
-  echo "Docker daemon 未啟動，啟動 Docker Desktop..."
+  echo "Docker daemon is not running; starting Docker Desktop..."
   if ! open -a Docker 2>/dev/null; then
-    echo "無法啟動 Docker Desktop（可能未安裝）；DbFact 測試可能失敗或 skip。"
+    echo "Could not start Docker Desktop (it may not be installed); DbFact tests may fail or be skipped."
     return
   fi
   echo -n "Waiting for Docker daemon"
-  # Docker Desktop 冷啟動可能需 1-2 分鐘。
+  # A cold start of Docker Desktop can take 1-2 minutes.
   for _ in $(seq 1 120); do
     if docker info >/dev/null 2>&1; then
       echo " ready."
@@ -77,7 +76,7 @@ ensure_docker_daemon() {
     echo -n "."
     sleep 1
   done
-  echo " timeout（Docker daemon 仍未就緒）；DbFact 測試可能失敗或 skip。"
+  echo " timeout (the Docker daemon is still not ready); DbFact tests may fail or be skipped."
 }
 
 ensure_docker_daemon
@@ -85,7 +84,7 @@ ensure_docker_daemon
 start_container "$SQL_CONTAINER"    1433
 start_container "$PG_CONTAINER"     5432
 start_container "$MYSQL_CONTAINER"  3306
-# Oracle 23ai 冷啟動可能需要 1-2 分鐘，給較長的 timeout。
+# A cold start of Oracle 23ai can take 1-2 minutes, so it gets a longer timeout.
 start_container "$ORACLE_CONTAINER" 1521 180
 
 dotnet test --configuration Release --settings .runsettings "$@"

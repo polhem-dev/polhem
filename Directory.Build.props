@@ -1,36 +1,35 @@
 <Project>
 
-  <!-- 只在 GitHub Actions 上生效 -->
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
-    <!-- 一般建置與還原的穩定/加速（保持你原本流程） -->
+    <!-- Stable, faster restore and build on CI. -->
     <RestoreUseStaticGraphEvaluation>true</RestoreUseStaticGraphEvaluation>
     <MSBuildEnableWorkloadResolver>false</MSBuildEnableWorkloadResolver>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 
-    <!-- 避免 Build 階段就打包，減少重工 -->
+    <!-- Packing is a separate step, so the Build step does not pack as well. -->
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 
-    <!-- 統一 nupkg 輸出，讓原本的 yml 能直接找到 -->
+    <!-- One output folder for every nupkg; the workflows collect the packages from here. -->
     <PackageOutputPath>$(MSBuildThisFileDirectory)nupkgs</PackageOutputPath>
 
-    <!-- 避免還原/建置因 NU1605（降版）中止 -->
+    <!-- Do not fail restore or build on NU1605 (package downgrade). -->
     <NoWarn>$(NoWarn);NU1605</NoWarn>
     <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1605</WarningsNotAsErrors>
 
-    <!-- 可選：略過套件驗證與分析，Pack 更快 -->
+    <!-- Optional: skip package validation and analysis to pack faster. -->
     <EnablePackageValidation>false</EnablePackageValidation>
     <NoPackageAnalysis>true</NoPackageAnalysis>
   </PropertyGroup>
 
-  <!-- 🚀 只在「pack」目標執行時套用（最重要的提速開關） -->
+  <!-- Applies only while packing. This group gives the largest speed-up. -->
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true' and '$(Pack)' == 'true'">
-    <!-- 不要在 pack 再建置；前面 build 已完成 -->
+    <!-- The build step has already run, so packing does not build again. -->
     <NoBuild>true</NoBuild>
 
-    <!-- 不要把參考的專案也一併打包，避免乘法爆炸 -->
+    <!-- Referenced projects are not packed into each package, which would multiply the work. -->
     <IncludeReferencedProjects>false</IncludeReferencedProjects>
 
-    <!-- 若有啟用 SourceLink/符號包，會拖慢；看你是否需要 -->
+    <!-- Symbol packages slow packing down. Enable them only when needed. -->
     <!-- <IncludeSymbols>false</IncludeSymbols> -->
     <!-- <SymbolPackageFormat>snupkg</SymbolPackageFormat> -->
   </PropertyGroup>

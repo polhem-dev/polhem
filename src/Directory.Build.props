@@ -1,11 +1,10 @@
 ﻿<Project>
 
-  <!-- 版本資訊的唯一來源；tools/ 也 import 同一份。三者一致由 POLHEM9002 於建置期把關。 -->
+  <!-- The single source of version information; tools/ imports the same file. POLHEM9002 checks at build time that the three version properties agree. -->
   <Import Project="$(MSBuildThisFileDirectory)../Version.props" />
 
   <PropertyGroup>
 <!---->
-    <!-- 套件 Metadata -->
     <Company>Polhem</Company>
     <Authors>Polhem contributors</Authors>
     <Product>Polhem</Product>
@@ -15,18 +14,14 @@
     <PackageIcon>polhem.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <!-- 打包 -->
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
-    <!-- 文件 -->
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
 
-    <!-- 語言特性 -->
     <ImplicitUsings>enable</ImplicitUsings>
 
-    <!-- 健康檢查 -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <Deterministic>true</Deterministic>

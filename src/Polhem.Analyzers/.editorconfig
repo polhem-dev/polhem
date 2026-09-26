@@ -1,11 +1,11 @@
-# Roslyn analyzer 慣例：`DiagnosticDescriptor` 一律以 PascalCase 的 `private static readonly`
-# 宣告（`Rule`、`UnknownProgId` 等），Roslyn 自己的原始碼與所有官方樣板皆如此。
-# 這些宣告與框架其餘部分的 `s_` 慣例衝突，但改成 `s_rule` 反而背離該領域的共同認知，
-# 故在此資料夾關掉該條規則，而非在每個檔案加 pragma。
+# Roslyn analyzer convention: a `DiagnosticDescriptor` is declared as a PascalCase `private static readonly`
+# field (`Rule`, `UnknownProgId` and so on), as in Roslyn's own source and every official template.
+# That conflicts with the `s_` convention of the rest of the framework, but `s_rule` would go against what
+# everyone in this domain expects. So the rule is turned off for this folder instead of a pragma in every file.
 #
-# WARNING: 這裡以**規則名稱**覆寫，所以根 `.editorconfig` 一改名，這道豁免就靜默失效
-# （2026-09-04 踩過一次：`private_static_readonly_fields_s_prefix` 改名為
-# `private_static_fields_s_prefix`，此處沒跟，整個組件炸出 38 個 IDE1006）。
-# 改根檔的規則名時，這一行必須一起改。
+# WARNING: this overrides the rule by **name**, so renaming the rule in the root `.editorconfig` silently
+# disables this exemption. It happened once on 2026-09-04: `private_static_readonly_fields_s_prefix` was
+# renamed to `private_static_fields_s_prefix`, this file did not follow, and the assembly produced
+# 38 IDE1006 errors. When you rename the rule in the root file, change this line too.
 [*.cs]
 dotnet_naming_rule.private_static_fields_s_prefix.severity = none

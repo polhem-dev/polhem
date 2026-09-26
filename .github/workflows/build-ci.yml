@@ -24,7 +24,7 @@ on:
   workflow_dispatch:
     inputs:
       db_scope:
-        description: '資料庫測試範圍（all = 四種資料庫 + SonarCloud；lite = SQL Server + SQLite）'
+        description: 'Database test scope (all = every database + SonarCloud; lite = SQL Server + SQLite)'
         type: choice
         options:
           - all
@@ -35,11 +35,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # 只有 SQL Server 常駐 service container —— 精簡與完整兩種模式都需要它。
-    # PostgreSQL / MySQL / Oracle 改由「Start extra database containers」step 以
-    # docker run 啟動，因為 GitHub Actions 的 `services:` 區塊不支援 `if:`，
-    # 無法依模式條件化。runner 直接跑在 host 上（非 container job），
-    # -p 對映後 localhost:{port} 可達，與 services 行為一致。
+    # Only SQL Server is a permanent service container, because both lite and full mode need it.
+    # PostgreSQL / MySQL / Oracle are started with `docker run` by the "Start extra database containers" step,
+    # because the `services:` block of GitHub Actions does not support `if:` and cannot depend on the mode.
+    # The runner runs on the host (not a container job), so after `-p` mapping `localhost:{port}` is reachable,
+    # the same as with services.
     services:
       sqlserver:
         image: mcr.microsoft.com/mssql/server:2022-latest
@@ -55,15 +55,15 @@ jobs:
       with:
         fetch-depth: 0
 
-    # 決定本次要跑哪些資料庫測試。預設「精簡」（SQL Server + SQLite）；
-    # 完整模式需明確指定：手動 dispatch 選 db_scope=all，或 commit message 帶 [all-db]。
-    # commit message 一律經 env 注入 —— 它是使用者可控字串，直接在 run: 內展開
-    # ${{ }} 會構成 script injection（同 sonarcloud.md 的 S7636 理由）。
+    # Decides which database tests run. The default is lite (SQL Server + SQLite).
+    # Full mode must be requested explicitly: a manual dispatch with db_scope=all, or [all-db] in the commit message.
+    # The commit message is always passed through env. It is a user-controlled string, and expanding it with
+    # ${{ }} directly inside run: would allow script injection (the S7636 reason in .claude/rules/sonarcloud.md).
     - name: Resolve database scope
       id: scope
       env:
         DISPATCH_SCOPE: ${{ github.event.inputs.db_scope }}
-        # head_commit 只存在於 push 事件；PR 事件改看 PR 標題，否則 [all-db] 在 PR 上會失效。
+        # head_commit only exists on push events. Pull request events look at the PR title instead; otherwise [all-db] would not work on a PR.
         COMMIT_MSG: ${{ github.event.head_commit.message }}
         PR_TITLE: ${{ github.event.pull_request.title }}
       run: |
@@ -78,11 +78,11 @@ jobs:
           echo "Database scope: all (SQL Server + SQLite + PostgreSQL + MySQL + Oracle), SonarCloud enabled"
         else
           echo "Database scope: lite (SQL Server + SQLite), SonarCloud skipped"
-          echo "  → 需要完整模式時：commit message 帶 [all-db]，或手動 workflow_dispatch 選 db_scope=all"
+          echo "  → For full mode: put [all-db] in the commit message, or run workflow_dispatch manually with db_scope=all"
         fi
 
-    # 越早啟動越好：容器在後續 setup / strict build 期間於背景就緒，
-    # 「Wait for extra database containers」才不必從零等（Oracle 冷啟動 45~90 秒）。
+    # Start as early as possible: the containers get ready in the background during the setup and strict build
+    # steps, so "Wait for extra database containers" does not wait from zero (an Oracle cold start takes 45-90 seconds).
     - name: Start extra database containers
       if: steps.scope.outputs.full == 'true'
       run: |
@@ -152,24 +152,23 @@ jobs:
       env:
         SA_PASSWORD: PolhemTest_Password123!
       run: |
-        # sa 可建任何 DB
         /opt/mssql-tools18/bin/sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -Q \
           "IF DB_ID('common') IS NULL CREATE DATABASE common; IF DB_ID('company') IS NULL CREATE DATABASE company; IF DB_ID('log') IS NULL CREATE DATABASE log;"
 
-    # Strict build（analyzer gate）：未經 SonarScanner 包覆，TreatWarningsAsErrors
-    # 與 .editorconfig 的 analyzer 規則會真正擋 build。Sonar-wrapped build 會削弱
-    # 這層保護，故獨立跑一次把關。
+    # Strict build (analyzer gate): without the SonarScanner wrapper, TreatWarningsAsErrors and the analyzer rules
+    # in .editorconfig really fail the build. The Sonar-wrapped build weakens that protection, so this separate
+    # build is the gate.
     - name: Strict build (analyzer gate)
       run: dotnet build Polhem.slnx --configuration Release
 
-    # 放在 Strict build 之後：容器自「Start extra database containers」起已在背景啟動約
-    # 一分鐘，這裡多半已就緒，等待本身幾乎不佔時間。
+    # Placed after the strict build: the containers have been starting in the background for about a minute since
+    # "Start extra database containers", so they are usually ready and the wait costs almost nothing.
     - name: Wait for extra database containers
       if: steps.scope.outputs.full == 'true'
       env:
         MYSQL_ROOT_PASSWORD: PolhemTest_Password123!
       run: |
-        # 沿用各 image 內建的健康檢查指令（等同原先 services 的 --health-cmd）。
+        # Uses each image's built-in health check command (the same as the --health-cmd of services).
         wait_for() {
           local name="$1"; shift
           for _ in $(seq 1 90); do
@@ -187,9 +186,9 @@ jobs:
         wait_for polhem-mysql  mysqladmin ping -h localhost -uroot -p"$MYSQL_ROOT_PASSWORD"
         wait_for polhem-oracle healthcheck.sh
 
-    # 三條連線字串只在完整模式存在；精簡模式下 [DbFact] 依 env var 未設值自動 skip
-    # （tests/Polhem.Tests.Shared/DbFactAttribute.cs），SharedDatabaseState 也整條跳過
-    # 註冊與建 schema，因此不需要任何測試碼改動。
+    # These three connection strings exist only in full mode. In lite mode [DbFact] skips because the env var is
+    # not set (tests/Polhem.Tests.Shared/DbFactAttribute.cs), and SharedDatabaseState skips registration and schema
+    # creation for them, so no test code has to change.
     - name: Enable extra database connection strings
       if: steps.scope.outputs.full == 'true'
       run: |
@@ -205,14 +204,14 @@ jobs:
         MYSQL_ROOT_PASSWORD: PolhemTest_Password123!
         PGPASSWORD: testpass
       run: |
-        # PostgreSQL：容器已建 common；補建 company + log（testuser 為 superuser）
+        # PostgreSQL: the container already created common; create company and log (testuser is a superuser).
         psql -h 127.0.0.1 -U testuser -d postgres -c \
           "SELECT 1 FROM pg_database WHERE datname='company'" | grep -q '1 row' || \
           psql -h 127.0.0.1 -U testuser -d postgres -c 'CREATE DATABASE company OWNER testuser'
         psql -h 127.0.0.1 -U testuser -d postgres -c \
           "SELECT 1 FROM pg_database WHERE datname='log'" | grep -q '1 row' || \
           psql -h 127.0.0.1 -U testuser -d postgres -c 'CREATE DATABASE log OWNER testuser'
-        # MySQL：容器已建 common；補建 company + log + grant testuser（需 root）
+        # MySQL: the container already created common; create company and log and grant them to testuser (needs root).
         mysql -h 127.0.0.1 -u root -p"$MYSQL_ROOT_PASSWORD" -e \
           "CREATE DATABASE IF NOT EXISTS company; \
            CREATE DATABASE IF NOT EXISTS log; \
@@ -232,21 +231,21 @@ jobs:
           /d:sonar.host.url="https://sonarcloud.io" \
           /s:"$GITHUB_WORKSPACE/SonarQube.Analysis.xml"
 
-    # 只在完整模式跑。精簡模式跳過它不影響後續 --no-build 的步驟 ——
-    # 「Strict build (analyzer gate)」已用同一 Release configuration 建過，產物在；
-    # 這裡的 --no-incremental 是為了讓 SonarScanner 攔得到完整編譯，不是產物需求。
+    # Runs only in full mode. Skipping it in lite mode does not affect the later --no-build steps: "Strict build
+    # (analyzer gate)" already built the same Release configuration, so the outputs exist. The --no-incremental
+    # here lets SonarScanner observe a complete compilation; the outputs do not need it.
     - name: Build (for Sonar coverage)
       if: steps.scope.outputs.full == 'true'
       run: dotnet build Polhem.slnx --configuration Release --no-incremental
 
-    # PostgreSQL / MySQL / Oracle 的連線字串由「Enable extra database connection strings」
-    # 經 $GITHUB_ENV 供應，只在完整模式存在；此處只列兩種模式都需要的兩條。
-    # 覆蓋率報告只在完整模式收集 —— 精簡模式不跑 SonarScanner，產了也沒人收，
-    # 且缺三個 provider 的報告上報只會把 SonarCloud 的數字壓低。
+    # The PostgreSQL / MySQL / Oracle connection strings come from "Enable extra database connection strings"
+    # through $GITHUB_ENV and exist only in full mode; only the two that both modes need are listed here.
+    # Coverage is collected only in full mode: lite mode does not run SonarScanner, so nobody would collect it,
+    # and a report without three providers would only push the SonarCloud numbers down.
     - name: Test with coverage
       env:
-        # {@DbName} 由 SharedDatabaseState 為每個 DatabaseItem 代換成 common / company，
-        # 對應上一步預建的兩個實體資料庫；Oracle 例外（不走 DbName 區隔）。
+        # SharedDatabaseState replaces {@DbName} with common / company for each DatabaseItem, matching the two
+        # physical databases created in the previous step. Oracle is the exception (it is not separated by DbName).
         POLHEM_TEST_CONNSTR_SQLSERVER: "Server=localhost,1433;Database={@DbName};User Id=sa;Password=PolhemTest_Password123!;Encrypt=True;TrustServerCertificate=True;"
         # SQLite is a pure driver with no service container — in-memory shared cache so
         # multiple connections see the same database (cache=shared) and there is no IO
@@ -263,7 +262,7 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
-    - name: Pack NuGet packages (驗證用，不推送)
+    - name: Pack NuGet packages (verification only, not pushed)
       run: |
         dotnet pack src/Polhem.Base/Polhem.Base.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Expressions/Polhem.Expressions.csproj --configuration Release --output ./nupkgs --no-build
@@ -282,23 +281,25 @@ jobs:
         dotnet pack src/Polhem.UI.Avalonia/Polhem.UI.Avalonia.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Web.Blazor.Server/Polhem.Web.Blazor.Server.csproj --configuration Release --output ./nupkgs --no-build
 
-    # Mobile AOT gate：`DynamicCodeSupport=false` 正是 .NET for iOS SDK 對每個
-    # iOS / tvOS / MacCatalyst 建置設定的值，映射為
-    # `RuntimeFeature.IsDynamicCodeSupported` 的 RuntimeHostConfigurationOption。
-    # 少了這一關，「wire 型別忘了註冊 formatter」在桌面上完全無感（contractless 會接手），
-    # 到行動端才會以 FormatterNotRegisteredException 現形。
-    # 需重新建置（runtimeconfig 不同），故不加 --no-build，並放在 job 最後一步，
-    # 避免污染前面 --no-build 步驟的輸出。
-    # 涵蓋兩半：MessagePack wire（Polhem.Api.Core）與 XmlSerializer 的 reflection-only 路徑
-    # （Polhem.Definition / Polhem.Base）。後者先前不在閘門內，而它正是已實際踩過的那一類 ——
-    # LanguageEnum.Entries 的 get-only setter 缺陷（https://github.com/jeff377/bee-library/commit/5e748b08）就是靠人工掃描發現，不是靠 CI。
+    # Mobile AOT gate: `DynamicCodeSupport=false` is exactly what the .NET for iOS SDK sets for every
+    # iOS / tvOS / MacCatalyst build, mapped to the RuntimeHostConfigurationOption of
+    # `RuntimeFeature.IsDynamicCodeSupported`.
+    # Without this gate, "a wire type whose formatter was never registered" goes unnoticed on desktop (the
+    # contractless resolver takes over) and only shows up on mobile as FormatterNotRegisteredException.
+    # It needs a rebuild (a different runtimeconfig), so it has no --no-build and is the last step of the job,
+    # so that it does not disturb the outputs used by the earlier --no-build steps.
+    # It covers both halves: the MessagePack wire (Polhem.Api.Core) and the reflection-only XmlSerializer path
+    # (Polhem.Definition / Polhem.Base). The latter was not gated before, and it is the kind that has actually
+    # broken: the get-only setter defect of LanguageEnum.Entries (https://github.com/jeff377/bee-library/commit/5e748b08)
+    # was found by a manual scan, not by CI.
     #
-    # 已知盲區：本關卡跑在 CoreCLR，而 MakeGenericType / MakeGenericMethod 不受該開關影響。
-    # ADR-037 要求註冊封閉泛型具現的理由正是 MakeGenericType，所以那一類失敗由
-    # WireContractDriftTests 的靜態閉包負責，兩道各管一半、缺一不可。
+    # Known blind spot: this gate runs on CoreCLR, where MakeGenericType / MakeGenericMethod are not affected by
+    # the switch. MakeGenericType is exactly why ADR-037 requires closed generic instantiations to be registered,
+    # so that kind of failure is covered by the static closure in WireContractDriftTests. Each gate covers one
+    # half, and both are needed.
     - name: Mobile AOT gate (wire + XmlSerializer reflection-only path)
       env:
-        # 同 Test step：其餘三條由 $GITHUB_ENV 供應，只在完整模式存在。
+        # As in the Test step, the other three come from $GITHUB_ENV and exist only in full mode.
         POLHEM_TEST_CONNSTR_SQLSERVER: "Server=localhost,1433;Database={@DbName};User Id=sa;Password=PolhemTest_Password123!;Encrypt=True;TrustServerCertificate=True;"
         POLHEM_TEST_CONNSTR_SQLITE: "Data Source=file:polhem_test_{@DbName}?mode=memory&cache=shared"
       run: |
