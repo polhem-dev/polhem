@@ -1,32 +1,38 @@
-# Polhem.Business：BO 介面的開設判準
+# Polhem.Business: when to put a method on a BO interface
 
-本檔在 agent 觸及 `src/Polhem.Business/` 下任何檔案時自動載入（巢狀 `CLAUDE.md` 為 lazy loading）。
+This file loads automatically when an agent touches any file under `src/Polhem.Business/` (nested `CLAUDE.md` files
+are lazily loaded).
 
-> 這一節原本記在 `.claude/rules/definition.md`，但 `IBusinessObject` /
-> `ISystemBusinessObject` / `IFormBusinessObject` 都在**本專案**，2026-08-12 歸位。
+> This section used to live in `.claude/rules/definition.md`, but `IBusinessObject` /
+> `ISystemBusinessObject` / `IFormBusinessObject` are all in **this project**, so it moved here on 2026-08-12.
 
-## BO 介面是 BO-to-BO 解耦層，與 API 開放面各自獨立
+## BO interfaces are a BO-to-BO decoupling layer, independent of the API surface
 
-axis 介面的定位是 **BO-to-BO 解耦層**：caller 透過 `IBusinessObjectFactory` 以 progId 解析、
-cast 到介面後呼叫，不繫結具體 BO 類別。這樣 host 端 BO 客製化（多租戶換 SystemBO 子類、
-業務替換 FormBO 子類）才不破壞 caller。
+The axis interfaces are a **BO-to-BO decoupling layer**: a caller resolves by progId through
+`IBusinessObjectFactory`, casts to the interface and calls it, without binding to a concrete BO class. That way,
+customizing BOs on the host side (a multi-tenant host swapping a SystemBO subclass, a business replacing a FormBO
+subclass) does not break callers.
 
-**兩個表面各自獨立，彼此不蘊含**：`[ApiAccessControl]` 是給**外部**（client 經
-`JsonRpcExecutor` 呼叫）的表面，axis 介面是給**內部**呼叫的表面。**沒有硬性規定**
-——開放給 API 的方法不必然要上介面，介面上的方法也不必然要開放給 API。
+**The two surfaces are independent; neither implies the other**: `[ApiAccessControl]` is the surface for the
+**outside** (a client calling through `JsonRpcExecutor`), and the axis interfaces are the surface for **internal**
+calls. **There is no hard rule**: a method open to the API does not have to be on an interface, and a method on an
+interface does not have to be open to the API.
 
-判準只有一條。新增 BO method 時問：「會不會有另一個 BO、背景作業或排程透過
-`_ctx.BoFactory.CreateXxxBO(...)` 拿到後呼叫它？」是 → 放介面；否 → 不放。
-介面爆成「所有 public 方法集合」就失去意義，也增加 host 端客製化負擔。
+There is only one criterion. When adding a BO method, ask: "Will another BO, a background job or a schedule get it
+through `_ctx.BoFactory.CreateXxxBO(...)` and call it?" Yes → put it on the interface; no → leave it off.
+An interface that grows into "the set of all public methods" loses its meaning and adds to the host's customization
+burden.
 
-> **`CreateFormBO` / `CreateSystemBO` 在 `src/` 內零 caller 是預期的、不是死碼。**
-> 框架內部沒有 BO-to-BO 場景（`JsonRpcExecutor` 依 progId 派送、不知道是哪條軸），
-> 呼叫端是 **host 的業務 BO**。2026-08-12 的未使用型別盤點一度列為清理候選，查證後保留。
+> **`CreateFormBO` / `CreateSystemBO` having zero callers in `src/` is expected, not dead code.**
+> Inside the framework there is no BO-to-BO scenario (`JsonRpcExecutor` dispatches by progId and does not know which
+> axis it is); the callers are **the host's business BOs**. The unused-type inventory on 2026-08-12 listed them as
+> cleanup candidates; after checking, they were kept.
 >
-> **不是每條軸都要有介面 —— 只有「會被別的 BO 呼叫」的軸才要。** 因此 `ILogBusinessObject`
-> 與 `CreateLogBO` 已於 2026-08-12 移除（其 XML doc 自承是「reserved for future」——那是預留、
-> 不是需求）；`LogBusinessObject` 的方法照樣經 `JsonRpcExecutor` 對外開放，不受影響。
+> **Not every axis needs an interface; only axes that "are called by another BO" do.** So `ILogBusinessObject`
+> and `CreateLogBO` were removed on 2026-08-12 (their XML doc admitted they were "reserved for future", which is a
+> reservation, not a need). The methods of `LogBusinessObject` are still exposed through `JsonRpcExecutor` as before.
 >
-> **判斷時要把 server 端的背景呼叫端算進去，不能只看 client。** `Login` 曾被本規則誤列為
-> 「只給 client、不放介面」（2026-08-12 更正）—— 它有真實內部呼叫端：**背景作業會以某身份
-> 登入建立連線**，再模擬該使用者操作。判準沒錯，錯在漏算背景作業這類呼叫端。
+> **Count the server-side background callers too, not just the client.** This rule once wrongly listed `Login` as
+> "client-only, not on the interface" (corrected 2026-08-12). It has real internal callers: **a background job logs
+> in as some identity to establish a connection**, then acts as that user. The criterion was right; the mistake was
+> missing background jobs as callers.

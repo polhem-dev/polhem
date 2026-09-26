@@ -5,7 +5,7 @@
 # can open them: not a contributor's clone, not CI, not a reader on GitHub. So:
 #   (1) no committed file may name a plan file,
 #   (2) no committed file may point to a specific file under local/,
-#   (3) public documents may not point into .claude/ (agent guidance, not product documentation),
+#   (3) public documents may not point to a file under .claude/ (agent guidance, not product documentation),
 #   (4) public documents should not refer readers to "the plan" in prose.
 # (1)-(3) are expected to print nothing and make the script exit 1 when they do.
 # (4) has known false positives and is advisory; read each hit.
@@ -15,9 +15,11 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 
-MD_ROOTS=(docs/ README.md README.zh-TW.md CHANGELOG.md CHANGELOG.zh-TW.md CONTRIBUTING.md CONTRIBUTING.zh-TW.md src/ samples/ apps/ tools/)
+# CONTRIBUTING is written for contributors, not for package users, so it may point into .claude/.
+MD_ROOTS=(docs/ README.md README.zh-TW.md CHANGELOG.md CHANGELOG.zh-TW.md src/ samples/ apps/ tools/)
 
 PLAN_FILE_RE='plan-[a-z0-9]+(-[a-z0-9.]+)+\.md'
+CLAUDE_FILE_RE='\.claude/[A-Za-z0-9_./-]*[A-Za-z0-9_-]\.[A-Za-z]{1,5}([^A-Za-z0-9]|$)'
 LOCAL_FILE_RE='(^|[^A-Za-z0-9_.-])local/[A-Za-z0-9_./-]*[A-Za-z0-9_-]\.[A-Za-z]{1,5}([^A-Za-z0-9]|$)'
 
 failed=0
@@ -50,7 +52,8 @@ public_md_filter() {
 }
 
 # A full URL to the old repository is a pointer readers can follow: its plans stay readable
-# in the archived jeff377/bee-library. Links to a URL, and bare URLs, are removed before matching.
+# in jeff377/bee-library, which is frozen and will be archived. Links to a URL, and bare URLs,
+# are removed before matching.
 section 1 "all files — names a plan file (expected empty)"
 report "$(repo_files | xargs -0 grep -InE "$PLAN_FILE_RE" 2>/dev/null \
   | sed -E -e 's#\[[^]]*\]\(https?://[^)]*\)##g' -e 's#https?://[^ )>"]*##g' \
@@ -61,9 +64,10 @@ report "$(repo_files | xargs -0 grep -InE "$PLAN_FILE_RE" 2>/dev/null \
 section 2 "all files — points to a file under local/ (expected empty)"
 report "$(repo_files | xargs -0 grep -InE "$LOCAL_FILE_RE" 2>/dev/null)"
 
+# Naming the directory to describe the convention is fine; pointing at a file inside it is not.
 # CLAUDE.md files are agent guidance themselves, so they may point into .claude/.
-section 3 "public markdown — points into .claude/ (expected empty)"
-report "$(grep -rn --include="*.md" -e "\.claude/" "${MD_ROOTS[@]}" 2>/dev/null \
+section 3 "public markdown — points to a file under .claude/ (expected empty)"
+report "$(grep -rnE --include="*.md" "$CLAUDE_FILE_RE" "${MD_ROOTS[@]}" 2>/dev/null \
   | grep -v "/CLAUDE\.md:" | public_md_filter)"
 
 section 4 "public markdown — refers to a plan in prose (known false positives; read each hit)"

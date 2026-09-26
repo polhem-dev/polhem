@@ -1,67 +1,78 @@
-# 資料庫規範
+# Database rules
 
-> 各 provider 的踩雷細節與推導過程見 `docs/repo-ops/gotchas/database.md`（按需讀，不常駐）。
+> Per-provider pitfall details and the reasoning behind them are in `docs/repo-ops/gotchas/database.md`
+> (read on demand, not always loaded).
 
-## 兩個正交維度：表前綴 vs CategoryId
+## Two orthogonal dimensions: table prefix vs CategoryId
 
-| 軸 | 值 | 意義 |
+| Axis | Values | Meaning |
 |----|----|------|
-| **表前綴** | `st_` / `ft_` | 框架機制 vs 業務資料（**誰用**） |
-| **CategoryId** | `common` / `company` / `log` | 資料落在哪個 DB scope（**哪裡**） |
+| **Table prefix** | `st_` / `ft_` | Framework mechanism vs business data (**who uses it**) |
+| **CategoryId** | `common` / `company` / `log` | Which DB scope the data lives in (**where**) |
 
-**前綴不綁定 DB 位置。** 決定性例證：`st_department` / `st_employee` 是框架所有
-（record-scope 與組織樹功能所需）卻位於**公司資料庫**；權限的 `st_role` / `st_role_grant` /
-`st_user_role` 同理，`user_rowid` 跨 DB 邏輯指向 common 的 `st_user.sys_rowid`。
-「st_ 在 common、ft_ 在 company」只是常見組合，不是規則。權威清單見
-`docs/zh-TW/framework-reserved-names.md`。
+**The prefix is not tied to a DB location.** The decisive example: `st_department` / `st_employee` are owned by the
+framework (needed by the record-scope and organization tree features) yet live in the **company database**; the
+permission tables `st_role` / `st_role_grant` / `st_user_role` are the same, and `user_rowid` logically points across
+databases to `st_user.sys_rowid` in common. "st_ in common, ft_ in company" is only a common combination, not a rule.
+The authoritative list is `docs/zh-TW/framework-reserved-names.md`.
 
-`FormSchema.CategoryId`（與 `DbCategory.Id`、`DatabaseItem.CategoryId`）**不是自由字串**：
-`FormRepositoryFactory.ParseCategoryId` 只認三值，其餘丟 `Unknown schema.CategoryId`。
+`FormSchema.CategoryId` (and `DbCategory.Id`, `DatabaseItem.CategoryId`) **is not a free-form string**:
+`FormRepositoryFactory.ParseCategoryId` accepts only the three values and throws `Unknown schema.CategoryId` for
+anything else.
 
-- **`company`** = 各公司獨立資料。**業務表（`ft_*`）與應用組織表（`st_department`/`st_employee`）
-  都必須是 company**。router 走 `session.CompanyId → ICompanyInfoService.Get → CompanyInfo.CompanyDatabaseId`。
-- **`common`** = 跨公司共享框架表（`st_session`、`st_cache_notify`）。框架強制
-  `DatabaseItem.Id == CategoryId == "common"`。**把業務表掛 common 是錯的。**
-- `TableSchema/{categoryId}/` 資料夾名 = CategoryId（seeder 用；form runtime 的 DML 只讀 FormSchema）。
+- **`company`** = data that is separate per company. **Business tables (`ft_*`) and the application organization
+  tables (`st_department`/`st_employee`) must all be company.** The router goes
+  `session.CompanyId → ICompanyInfoService.Get → CompanyInfo.CompanyDatabaseId`.
+- **`common`** = framework tables shared across companies (`st_session`, `st_cache_notify`). The framework enforces
+  `DatabaseItem.Id == CategoryId == "common"`. **Putting a business table in common is wrong.**
+- The `TableSchema/{categoryId}/` folder name = CategoryId (used by the seeder; the form runtime's DML reads only
+  FormSchema).
 
-## 欄位可空性：文字與數值欄一律 NOT NULL
+## Column nullability: text and numeric columns are always NOT NULL
 
-沒指定預設值就是空字串或 `0`，**不用 nullable**。理由：DB 內有 NULL，未來手寫 SQL 要處處防 null
-（`WHERE col=''` 不匹配 NULL row）。框架在 SQL Server / MySQL / PostgreSQL / SQLite 已內建此機制
-（各 `SchemaSyntax.GetDefaultValue`）。**加欄時預設標 `AllowNull=false`，別反射性加 `AllowNull="true"`。**
+Without a specified default, the value is an empty string or `0`; **do not use nullable**. Reason: once the DB holds
+NULLs, every future hand-written SQL has to guard against null everywhere (`WHERE col=''` does not match NULL rows).
+The framework already has this built in for SQL Server / MySQL / PostgreSQL / SQLite (each
+`SchemaSyntax.GetDefaultValue`). **When adding a column, mark it `AllowNull=false` by default; do not reflexively add
+`AllowNull="true"`.**
 
-**加欄 checklist**：
+**Add-column checklist**:
 
-1. 標 `AllowNull=false`。
-2. 確認**所有** INSERT（含 `SharedDatabaseState` seed 與測試 helper）都給值。
-3. `DbType="Text"` 的欄：MySQL 的 TEXT/BLOB **不能有 DEFAULT**，框架因此不輸出 DEFAULT
-   → 每個 hand-written INSERT 必須顯式帶值（`''`）。**不要因為 MySQL 就改成 nullable。**
-4. 「常態值為空」的 String 欄若要支援 Oracle：Oracle `''` == `NULL`，
-   `VARCHAR2(n) DEFAULT '' NOT NULL` 是自相矛盾的，fresh CREATE 下省略該欄的 INSERT 會 `ORA-01400`。
-   在 dialect 修正落地前暫用 `AllowNull="true"` 過渡。
-5. **別只靠本機判定**：本機持久容器走 ALTER ADD（會讓欄變 nullable），重現不出 CI fresh CREATE 的行為。
+1. Mark it `AllowNull=false`.
+2. Confirm that **every** INSERT (including the `SharedDatabaseState` seed and test helpers) supplies a value.
+3. For a `DbType="Text"` column: MySQL TEXT/BLOB **cannot have a DEFAULT**, so the framework emits no DEFAULT
+   → every hand-written INSERT must supply the value explicitly (`''`). **Do not make it nullable because of MySQL.**
+4. A String column whose "normal value is empty" and that must support Oracle: in Oracle `''` == `NULL`, so
+   `VARCHAR2(n) DEFAULT '' NOT NULL` contradicts itself, and under a fresh CREATE an INSERT that omits the column
+   raises `ORA-01400`. Until the dialect fix lands, use `AllowNull="true"` as a stopgap.
+5. **Do not rely on local results alone**: the persistent local container goes through ALTER ADD (which makes the
+   column nullable) and cannot reproduce the fresh CREATE behaviour of CI.
 
-## 數值精度：round-then-sum，且必須由框架顯式 round
+## Numeric precision: round-then-sum, and the framework must round explicitly
 
-**ERP 鐵則：明細加總 = 總合，無前後誤差。** 每筆明細**先**四捨五入到該欄位位數**再**相加；
-**禁止**全精度加總後才捨入總合。
+**ERP iron rule: the sum of the detail lines = the total, with no discrepancy.** Each detail line is rounded to the
+column's scale **first** and **then** summed; summing at full precision and rounding the total afterwards is
+**forbidden**.
 
-- **不捨入類（單價／成本／匯率）**：以輸入精度原樣保存、框架不套捨入（對來源值捨入會把誤差
-  注入下游），位數僅供顯示。
-- **四捨五入類（數量／重量／金額／百分比）**：寫入時 `AwayFromZero` 捨到該欄位位數；可加總者
-  round-then-sum。算金額用單價的完整精度相乘、金額算出再捨。位數由**公司層級**自訂。
+- **Not rounded (unit price / cost / exchange rate)**: stored as-is at input precision; the framework applies no
+  rounding (rounding a source value injects error downstream). The scale is for display only.
+- **Rounded (quantity / weight / amount / percentage)**: rounded `AwayFromZero` to the column's scale on write;
+  summable ones use round-then-sum. Compute an amount by multiplying with the unit price's full precision, and round
+  once the amount is computed. The scale is customized at the **company level**.
 
-**框架不設參數的 Precision/Scale，也不在寫入前 round** —— `DbCommandSpec.CreateCommand` 只設
-`Value`/`DbType`/`Size`/`IsNullable`，`DbField.Scale` 只用於 DDL。DB 隱式轉換行為不一致
-（4 大 DB 會四捨五入，**SQLite 完全不強制、原樣保留全精度**）。
-→ 任何「寫入前要捨到固定 scale」的語意，**必須由 Repository 寫入層顯式
-`decimal.Round(value, dbField.Scale, MidpointRounding.AwayFromZero)`**，不可依賴 DB。
+**The framework does not set Precision/Scale on parameters and does not round before writing.**
+`DbCommandSpec.CreateCommand` sets only `Value`/`DbType`/`Size`/`IsNullable`; `DbField.Scale` is used only for DDL.
+Implicit DB conversion is inconsistent (the 4 major DBs round; **SQLite enforces nothing and keeps full precision
+as-is**).
+→ Any "round to a fixed scale before writing" semantics **must be done explicitly in the Repository write layer with
+`decimal.Round(value, dbField.Scale, MidpointRounding.AwayFromZero)`**. Do not rely on the DB.
 
-## 跨 provider 型別調整走 `NormalizeDbType`
+## Cross-provider type adjustments go through `NormalizeDbType`
 
-參數層才是跨 provider 精度／型別的實際決定點，且各 driver 行為差異大（Npgsql 對 `DateTimeKind`、
-Oracle 對型別各有規則）。**凡 provider-specific 的參數型別改寫，一律在
-`DbCommandSpec.NormalizeDbType`（provider-gated）做，不要動全域 `DbTypeMapper.Infer`。**
+The parameter layer is where cross-provider precision / type is actually decided, and drivers differ widely (Npgsql
+has its own rules for `DateTimeKind`, Oracle for types). **Every provider-specific rewrite of a parameter type goes
+in `DbCommandSpec.NormalizeDbType` (provider-gated). Do not touch the global `DbTypeMapper.Infer`.**
 
-既有實例：SQL Server-only `DateTime → DateTime2`（拿到 datetime2(7) 的亞毫秒精度與 pre-1753 範圍）、
-Oracle `Guid → Binary`。曾嘗試全域改 `Infer`，結果炸掉 PostgreSQL/Oracle 的 seed。
+Existing examples: SQL Server-only `DateTime → DateTime2` (to get datetime2(7)'s sub-millisecond precision and the
+pre-1753 range), and Oracle `Guid → Binary`. Changing `Infer` globally was tried once, and it broke the
+PostgreSQL/Oracle seed.

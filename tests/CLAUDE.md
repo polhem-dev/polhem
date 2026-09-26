@@ -1,100 +1,109 @@
-# 測試規範（完整）
+# Testing rules (full)
 
-本檔在 agent 讀取 `tests/` 下任何檔案時自動載入（巢狀 `CLAUDE.md` 為 lazy loading，
-2026-08-12 由頂層 session 實測確認；**「只 Write 新檔不 Read」是否觸發尚未驗證**，
-故常駐區保留「動筆前先 Read 本檔」那句保險）。骨幹與「動筆前必須知道」的五條硬約束在
-`.claude/rules/testing.md`（常駐）；可貼用的程式碼樣板在 `docs/repo-ops/testing-patterns.md`。
+This file loads automatically when the agent reads any file under `tests/` (a nested `CLAUDE.md` loads lazily;
+confirmed by a top-level session on 2026-08-12. **Whether "only Write a new file, never Read" triggers it has not been
+verified**, so the always-loaded file keeps the safeguard "Read this file before you start writing"). The skeleton and
+the five hard constraints you "must know before you start writing" are in `.claude/rules/testing.md` (always loaded);
+paste-ready code templates are in `docs/repo-ops/testing-patterns.md`.
 
-兩邊有衝突時以本檔為準 —— 常駐那份是摘要。
+When the two conflict, this file wins. The always-loaded one is a summary.
 
 ---
 
-## 本機跑測試前的環境檢查（僅本機 + docker 可用時）
+## Environment checks before running tests locally (only locally, and only when docker is available)
 
-> **適用範圍判定，一行搞定**：`command -v docker` —— 沒輸出就跳過整套規則直接跑測試
-> （`[DbFact]` 會依 env var 未設值自動 skip）。**CI 不適用**：`build-ci.yml` 的容器與
-> env vars 由 workflow 自行處理，本節任何內容都不要帶進 yml。
+> **Deciding whether this applies takes one line**: `command -v docker`. No output means skip this whole section and
+> run the tests directly (`[DbFact]` skips automatically when its env var is not set). **Not for CI**: `build-ci.yml`
+> handles its own containers and env vars in the workflow. Do not carry anything from this section into the yml.
 >
-> CI 有**兩種模式**：預設精簡（SQL Server 走 service container + SQLite，其餘三種 DB 的
-> `[DbFact]` 全數 skip）；帶 `[all-db]` 標記或手動 dispatch 時為完整（PostgreSQL / MySQL /
-> Oracle 另由 step 以 `docker run` 啟動）。判準與「push 前要先問使用者」見
-> `.claude/rules/testing.md` § CI 的資料庫範圍。
+> CI has **two modes**. The default is lean (SQL Server through a service container, plus SQLite; `[DbFact]` for the
+> other three databases is all skipped). With the `[all-db]` marker or a manual dispatch it is full (PostgreSQL /
+> MySQL / Oracle are started by a step with `docker run`). For the criteria and "ask the user before pushing", see
+> `.claude/rules/testing.md` § CI database scope: ask the user before pushing.
 
-### 為何要先檢查
+### Why check first
 
-`./test.sh` 對「容器不存在 → env var 不設值 → `[DbFact]` 自動 skip」**不會給明顯訊號**，
-於是「按計劃 skip」與「該跑卻沒跑」看起來一樣。先檢查才能明確回報「X 個 DB 已 skip 因為
-容器 Y 不在」，也才不會把 DB 連線失敗誤判成程式 bug。
+`./test.sh` **gives no obvious signal** for "container missing → env var not set → `[DbFact]` skips automatically".
+So "skipped as planned" and "should have run but didn't" look the same. Checking first is what lets you report clearly
+"X databases skipped because container Y is not present", and it keeps you from mistaking a DB connection failure for
+a code bug.
 
-### 啟動前檢查
+### Checks before starting
 
-1. **Docker daemon**：`docker ps`。失敗時**告知使用者啟動 Docker Desktop，不要自行
-   `open -a Docker`**（agent 拉 GUI 工具耗時且結果不確定）。
-   **例外：走 `./test.sh` 不需做這步** —— 它內建 `ensure_docker_daemon`，macOS 上會自動拉起並輪詢等待。
-2. **容器存在性**：`docker ps -a --format '{{.Names}}\t{{.Status}}'` 比對
-   **`test.sh` 檔頭列出的四個容器**（預設名與 `POLHEM_TEST_*_CONTAINER` override 都寫在那，
-   本檔不複寫以免漂移）。缺任一個就告知使用者「該 DB 的測試會自動 skip」，
-   **不要自行 `docker run` 創新容器**（image 版本 / port / volume / 初始 schema 都有約束，
-   亂建會撞既有設定）。容器在但 stopped 不需動作，`./test.sh` 會 `docker start`。
+1. **Docker daemon**: `docker ps`. If it fails, **tell the user to start Docker Desktop. Do not run
+   `open -a Docker` yourself** (an agent launching a GUI tool is slow and the result is uncertain).
+   **Exception: this step is not needed when you go through `./test.sh`**. It has a built-in `ensure_docker_daemon`
+   that starts Docker automatically on macOS and polls until it is ready.
+2. **Containers exist**: compare `docker ps -a --format '{{.Names}}\t{{.Status}}'` against
+   **the four containers listed in the `test.sh` header** (the default names and the `POLHEM_TEST_*_CONTAINER`
+   overrides are written there; this file does not copy them, to avoid drift). If any is missing, tell the user
+   "tests for that database will be skipped automatically".
+   **Do not `docker run` a new container yourself** (image version / port / volume / initial schema all have
+   constraints, and an ad hoc container will collide with the existing setup). A container that exists but is stopped
+   needs no action; `./test.sh` runs `docker start`.
 
-### 測試失敗的判別順序（本機情境）
+### Order for diagnosing test failures (local)
 
-跑完 `./test.sh` 後，若看到下列例外類型，**優先懷疑容器狀態，不要直接動測試代碼**：
+After running `./test.sh`, if you see the exception types below, **suspect container state first. Do not touch the
+test code directly**:
 
-| 例外類型片段 | 指向 |
+| Exception fragment | Points to |
 |-------------|------|
-| `SqlException` 含 "TCP" / "network-related" / "server was not found" | SQL Server 容器 |
-| `NpgsqlException` 含 "connection refused" / "Failed to connect" | PostgreSQL 容器 |
-| `MySqlException` 含 "Unable to connect" / "Can't connect to server" | MySQL 容器 |
-| `OracleException` 含 "ORA-12541" / "ORA-50201" / "TCP transport" | Oracle 容器 |
+| `SqlException` containing "TCP" / "network-related" / "server was not found" | SQL Server container |
+| `NpgsqlException` containing "connection refused" / "Failed to connect" | PostgreSQL container |
+| `MySqlException` containing "Unable to connect" / "Can't connect to server" | MySQL container |
+| `OracleException` containing "ORA-12541" / "ORA-50201" / "TCP transport" | Oracle container |
 
-流程：`docker ps --filter "name=<container>" --format '{{.Status}}'` 確認容器在跑 →
-在跑才考慮 schema / seed / 連線字串問題 → 不在跑就提示使用者啟動，
-**禁止**為了「讓測試過」而修改測試代碼或 src code。
+Procedure: `docker ps --filter "name=<container>" --format '{{.Status}}'` to confirm the container is running →
+only if it is running, consider schema / seed / connection string problems → if it is not running, prompt the user to
+start it. **Never** modify test code or src code to "make the tests pass".
 
-> CI 出現同樣例外走 `pull-request.md` 的「CI 失敗處理」，**不**套用本節（CI 不走 docker CLI）。
+> When the same exceptions appear in CI, follow "When CI fails" in `.claude/rules/pull-request.md`. Do **not**
+> apply this section (CI does not go through the docker CLI).
 
-### 並行 flaky 的容錯空間（本機 + CI 都適用）
+### Tolerance for parallel flakiness (applies locally and in CI)
 
-`./test.sh` 與 CI 在同一個 dotnet test 呼叫內並行跑多個 test 專案。
-「同一個 DB 測試在 isolated 通過、在 full suite 失敗」通常是並行壓力下的連線池／容器資源爭用，
-**不應直接視為 production bug**：對失敗的單一專案再跑一次，通過就是 flaky、記下不修；
-連跑 2–3 次仍穩定失敗才視為真 bug。
+`./test.sh` and CI run several test projects in parallel inside one `dotnet test` invocation.
+"The same DB test passes in isolation and fails in the full suite" is usually connection pool / container resource
+contention under parallel load, and **should not be treated as a production bug straight away**. Run the failing
+project once more on its own. If it passes, it is flaky: note it, do not fix it. Only if it keeps failing over 2–3 runs
+is it a real bug.
 
 ---
 
-## 測試撰寫模式
+## Test writing patterns
 
-單一驗證用 `[Fact]`、參數化用 `[Theory]` + `[InlineData]`，一律加 `[DisplayName]`。
+Use `[Fact]` for a single check and `[Theory]` + `[InlineData]` for parameterized ones. Always add `[DisplayName]`.
 
-### 需要資料庫：`[DbFact(DatabaseType)]` / `[DbTheory(DatabaseType)]`
+### Needs a database: `[DbFact(DatabaseType)]` / `[DbTheory(DatabaseType)]`
 
-取代 `[Fact]` / `[Theory]`，**並指定該測試針對的資料庫類型**。兩個 attribute 定義在
-`tests/Polhem.Tests.Shared/`，依規則 `POLHEM_TEST_CONNSTR_{DBTYPE}`（uppercase 列舉值）
-檢查環境變數（如 `SQLServer` → `POLHEM_TEST_CONNSTR_SQLSERVER`）；**未設定則自動跳過**。
-新增 `MySQL` / `Oracle` 等不需新類別，規則自動推導。
+These replace `[Fact]` / `[Theory]`, **and name the database type the test targets**. Both attributes are defined in
+`tests/Polhem.Tests.Shared/`. They check an environment variable by the rule `POLHEM_TEST_CONNSTR_{DBTYPE}` (the
+enum value in uppercase), for example `SQLServer` → `POLHEM_TEST_CONNSTR_SQLSERVER`. **If it is not set, the test
+is skipped automatically.** Adding `MySQL` / `Oracle` and so on needs no new class; the rule derives the name.
 
-連線 ID 命名規則 `common_{dbtype_lower}`（由 `TestDbConventions.GetDatabaseId` 產生）：
-`common_sqlserver`、`common_postgresql`、…
+Connection ID naming rule `common_{dbtype_lower}` (produced by `TestDbConventions.GetDatabaseId`):
+`common_sqlserver`, `common_postgresql`, …
 
-- **本機**（`.runsettings` 設好 `POLHEM_TEST_CONNSTR_*`）與 **CI**（workflow 注入）皆正常執行。
-- **任一 DB 未設環境變數**：該 DB 的測試自動 Skipped，不影響其他 DB。
+- **Locally** (`.runsettings` sets `POLHEM_TEST_CONNSTR_*`) and **in CI** (injected by the workflow), they run normally.
+- **Any DB without its environment variable**: that DB's tests are Skipped automatically; other DBs are unaffected.
 
-`DbGlobalFixture` 多 DB 並存且容錯：逐一偵測 env var、驗證連線、建 schema、寫 seed；
-單一 DB 失敗只跳過該 DB。
+`DbGlobalFixture` supports several DBs side by side and is fault tolerant: for each one it detects the env var,
+verifies the connection, builds the schema and writes the seed. A failure in one DB only skips that DB.
 
-**適用**：純資料庫相依（查詢、schema、Repository/BO）。
-**不適用**：純邏輯／序列化測試 —— 有 bug 應直接修復，不應跳過。
+**Use for**: pure database dependencies (queries, schema, Repository/BO).
+**Do not use for**: pure logic / serialization tests. A bug there should be fixed directly, not skipped.
 
-### Common / Log scope 的 repository：`[DbFact]` 之外還要換 router
+### Common / Log scope repositories: besides `[DbFact]`, you must also swap the router
 
-`RepositoryDatabaseRouter` 把 `DbScope.Common` / `DbScope.Log` 解析成固定的 `common` / `log`，
-而 fixture 把 `common` 綁在 **SQL Server**。因此
-`SessionRepository`、`UserRepository`、`CompanyRepository`、`UserCompanyRepository`、
-`ApiKeyRepository`、`DatabaseRepository` 這類宣告 Common scope 的 repository，
-**光加 `[DbFact(DatabaseType.Oracle)]` 跑的還是 SQL Server** —— attribute 只剩 env var 閘門的作用。
+`RepositoryDatabaseRouter` resolves `DbScope.Common` / `DbScope.Log` to the fixed `common` / `log`,
+and the fixture binds `common` to **SQL Server**. So for repositories that declare Common scope, such as
+`SessionRepository`, `UserRepository`, `CompanyRepository`, `UserCompanyRepository`,
+`ApiKeyRepository` and `DatabaseRepository`,
+**just adding `[DbFact(DatabaseType.Oracle)]` still runs against SQL Server**. The attribute is left acting only as the
+env var gate.
 
-正解：建 repository 時把 router 換成 `ProviderScopedRouter`（`tests/Polhem.Tests.Shared/`）。
+The fix: when creating the repository, swap the router for `ProviderScopedRouter` (`tests/Polhem.Tests.Shared/`).
 
 ```csharp
 private UserRepository CreateRepo(DatabaseType databaseType)
@@ -105,277 +114,308 @@ private UserRepository CreateRepo(DatabaseType databaseType)
         Guid.Empty, string.Empty);
 ```
 
-**兩個辨識訊號**（看到就是這個問題）：
+**Two telltale signs** (if you see one, this is the problem):
 
-- `private void RunXxx(DatabaseType _)` —— 參數收下就丟棄，等於宣告「本測試不看 provider」。
-- arrange 用 `TestDbConventions.GetDatabaseId(dbType, ...)` 寫進該 provider 的 DB，
-  act 卻用不帶 dbType 的 `CreateRepo()`。這種**空轉通過**比沒測還糟：斷言恆成立，
-  把被驗的邏輯整條拿掉也照樣綠。
+- `private void RunXxx(DatabaseType _)`: the parameter is accepted and thrown away, which amounts to declaring
+  "this test ignores the provider".
+- The arrange step uses `TestDbConventions.GetDatabaseId(dbType, ...)` to write into that provider's DB,
+  but the act step uses a `CreateRepo()` without dbType. **Passing vacuously** like this is worse than no test: the
+  assertion always holds, and it stays green even if the logic under test is removed entirely.
 
-BO 層（`SystemBusinessObject*`）繞不過 router —— 它由 DI 提供。那些測試主體是 common scope，
-一家 provider 足夠，**閘門就標 `SQLServer`**，不要標 `SQLite` 讓跳過條件與實跑對象分家。
+The BO layer (`SystemBusinessObject*`) cannot bypass the router; it is provided by DI. Those tests are about common
+scope, one provider is enough, and **the gate is marked `SQLServer`**. Do not mark it `SQLite`, which would split the
+skip condition from the database that actually runs.
 
-> 2026-09-08 的執行期盤點：73 個宣告 `[DbFact]` 的 test class 有 20 個打錯資料庫，
-> 其中 50 支完全沒碰到宣告的那家、8 支是空轉通過。改對之後當場浮出兩個框架缺陷
-> （Common scope repository 依 `DbCategoryIds.Common` 而非自身 `DatabaseId` 決定 SQL 方言、
-> SQLite 日期欄被 `is DateTime` 判掉），詳見 `docs/repo-ops/gotchas/database.md`。
+> Runtime inventory on 2026-09-08: of 73 test classes declaring `[DbFact]`, 20 targeted the wrong database.
+> Of those, 50 tests never touched the declared database at all, and 8 passed vacuously. Correcting them surfaced two
+> framework defects on the spot (Common scope repositories picked the SQL dialect from `DbCategoryIds.Common` instead
+> of their own `DatabaseId`; SQLite date columns were rejected by an `is DateTime` check). Details in
+> `docs/repo-ops/gotchas/database.md`.
 
-### 需要本機服務：`[LocalOnlyFact]` / `[LocalOnlyTheory]`
+### Needs a local service: `[LocalOnlyFact]` / `[LocalOnlyTheory]`
 
-檢查環境變數 `CI`；**`CI=true`（GitHub Actions 預設）時自動跳過**。
-**適用**：真正需要本機運行中服務的整合測試（如 API server ping）。
-**不適用**：只需要 DB 的測試 —— 用 `[DbFact]`。
+These check the environment variable `CI`; **when `CI=true` (the GitHub Actions default) the test is skipped
+automatically.**
+**Use for**: integration tests that genuinely need a locally running service (for example an API server ping).
+**Do not use for**: tests that only need a DB. Use `[DbFact]`.
 
-> **兩者目前無使用者**（2026-08-11 實測），`[DbTheory]` 同樣罕用。留著是因為
-> 「需要本機服務的整合測試」這個情境仍成立。樣板檔裡的範例是**示意、不是現存程式碼**
-> ——別去 grep 它。
+> **Neither currently has any users** (verified 2026-08-11), and `[DbTheory]` is also rare. They are kept because the
+> scenario "integration test that needs a local service" still exists. The examples in the template file are
+> **illustrations, not existing code**. Do not grep for them.
 
-### Per-class fixture（預設模式）
+### Per-class fixture (default pattern)
 
-需要 DI-resolved 後端服務（`IDefineAccess` / `ISessionInfoService` /
-`IBusinessObjectFactory` 等）時，透過 `IClassFixture<PolhemTestFixture>` 取得 per-class
-`IServiceProvider`。兩種特殊情境：
+When you need DI-resolved backend services (`IDefineAccess` / `ISessionInfoService` /
+`IBusinessObjectFactory` and so on), get a per-class `IServiceProvider` through `IClassFixture<PolhemTestFixture>`.
+Two special cases:
 
-| 情境 | Fixture | 備註 |
+| Case | Fixture | Notes |
 |------|---------|------|
-| 需要 per-fixture 寫檔（`SaveDefine` 系列） | `new PolhemTestFixture(b => b.UseTempDefinePath())` 或自定 subclass | 把 `PathOptions.DefinePath` 切到隔離 temp 目錄 |
-| 需要 `[DbFact]` 整合測試 | `IClassFixture<SharedDbFixture>` | 內建 `UseSharedDatabases()`，process-wide 一次性建 schema + seed user |
+| Needs per-fixture file writes (the `SaveDefine` family) | `new PolhemTestFixture(b => b.UseTempDefinePath())` or a custom subclass | Switches `PathOptions.DefinePath` to an isolated temp directory |
+| Needs `[DbFact]` integration tests | `IClassFixture<SharedDbFixture>` | Has `UseSharedDatabases()` built in; builds the schema and seeds the user once per process |
 
-`[Collection("Initialize")]` / `GlobalFixture` / `BaseTests` / `PolhemTestServices` /
-`TempDefinePath` / `DefinePathInfo` / `CacheContainer` 靜態 facade **已全部移除**；
-fixture 自帶 `IServiceProvider`，xUnit 預設 collection-per-class 平行恢復。
+The `[Collection("Initialize")]` / `GlobalFixture` / `BaseTests` / `PolhemTestServices` /
+`TempDefinePath` / `DefinePathInfo` / `CacheContainer` static facades **have all been removed**.
+Each fixture carries its own `IServiceProvider`, and xUnit's default collection-per-class parallelism is restored.
 
 ---
 
-## 全域狀態與平行安全
+## Global state and parallel safety
 
-xUnit 預設 collection-level parallel：**不同 test class 平行執行**，同一 collection 內串行。
-任何「跨 class 共享的 static / global state」在平行下必然 race。
+xUnit defaults to collection-level parallelism: **different test classes run in parallel**, and tests within one
+collection run serially. Any "static / global state shared across classes" is bound to race under parallelism.
 
-- **測試方法除 fixture 初始化外，禁止修改 production 的 `static`**（含靜態屬性／欄位、`AppDomain`）。
-- production 必須以 static 暴露全域狀態時（如 `SysInfo.IsDebugMode`），優先**重構為可注入**
-  （加接參數的重載，或抽介面走 DI）。
-- 重構成本太高時，**所有碰同一個 static 的 test class 掛同一 `[Collection("...")]`**。
+- **Test methods must not modify production `static` state, except during fixture initialization** (including static
+  properties / fields and `AppDomain`).
+- When production must expose global state as a static (such as `SysInfo.IsDebugMode`), prefer **refactoring it to be
+  injectable** (add an overload that takes a parameter, or extract an interface and use DI).
+- When refactoring costs too much, **put every test class that touches the same static in the same
+  `[Collection("...")]`**.
 
-### 為什麼這條容易踩
+### Why this pitfall is easy to hit
 
-本機 CPU 多、排程鬆，race 不一定觸發；CI runner 通常 2 core，平行更密集就浮現。
-失敗訊息（如 `NoEncryptionEncryptor is only permitted in debug/development mode`）
-看起來像 production bug，根因卻是測試互相污染。`try/finally` 還原「看起來」安全，
-實際只在串行下成立。
+A local machine has many CPUs and loose scheduling, so the race does not always trigger. CI runners usually have
+2 cores, parallelism is denser, and it surfaces there. The failure message (such as
+`NoEncryptionEncryptor is only permitted in debug/development mode`) looks like a production bug, but the root cause
+is tests contaminating each other. Restoring in `try/finally` "looks" safe but only holds when tests run serially.
 
-### 串行化做法（過渡方案）
+### Serialization approach (interim)
 
-在 test 專案根目錄宣告純 marker `[CollectionDefinition("<名稱>")]`（無 fixture），
-所有會修改該 static 的 test class 掛同一 `[Collection("<名稱>")]`。樣板見
-`docs/repo-ops/testing-patterns.md`。
+Declare a pure marker `[CollectionDefinition("<name>")]` (no fixture) at the root of the test project, and put every
+test class that modifies that static in the same `[Collection("<name>")]`. Template in
+`docs/repo-ops/testing-patterns.md`.
 
-### 目前仍存在的窄序列化
+### Narrow serializations that still exist
 
-多數測試已改用 fixture-scoped DI instance，race 風險自然消除。現存的 `[Collection]`
-全部用於保護尚未 DI 化的 process-wide static：
+Most tests now use fixture-scoped DI instances, which removes the race risk naturally. Every existing `[Collection]`
+protects a process-wide static that has not been moved to DI yet:
 
-| Collection | 保護對象 |
+| Collection | Protects |
 |---|---|
 | `ClientInfoState` | `ClientInfo.*` |
-| `SysInfoStatic` | `SysInfo.*`（`Polhem.Base` 與 `Polhem.Api.Core` 各自定義，跨組件必須如此） |
+| `SysInfoStatic` | `SysInfo.*` (`Polhem.Base` and `Polhem.Api.Core` each define their own; across assemblies it has to be this way) |
 | `ApiClientInfoState` | `ApiClientInfo.*` |
-| `ProcessWideStateCollection.Name` | `POLHEM_MASTER_KEY` 環境變數、`GlobalEvents`、測試 body 內建立的 DI 容器 |
+| `ProcessWideStateCollection.Name` | the `POLHEM_MASTER_KEY` environment variable, `GlobalEvents`, DI containers built inside a test body |
 | `ApiServiceOptionsState` | `ApiServiceOptions.*` |
 
-**每個名稱都有對應的 `CollectionDefinition`，零孤兒。**
+**Every name has a matching `CollectionDefinition`; there are no orphans.**
 
-另有數個組件改以 `DisableTestParallelization` **整組**序列化，那比逐類別掛 `[Collection]`
-可靠 —— 讀取端會隨新測試增加，而「新增測試時記得補 `[Collection]`」這種要求必然遺漏，
-且漏掉時**看起來有序列化、實際沒有**，不會有任何編譯或測試訊號。
+Several assemblies instead serialize **as a whole** with `DisableTestParallelization`, which is more reliable than
+adding `[Collection]` class by class. Readers grow as new tests are added, and a requirement like "remember to add
+`[Collection]` when you add a test" will inevitably be missed. When it is missed, it **looks serialized but is not**,
+and there is no compile or test signal.
 
-**是哪幾個組件不寫在這裡**（那會漂），要知道就跑：
+**Which assemblies these are is not written here** (it would drift). To find out, run:
 
 ```bash
 grep -rn 'DisableTestParallelization *= *true' tests/ --include='*.cs'
 ```
 
-> **這一段本身漂過一次**（2026-09-04 修正）：原文列了五個組件名，其中 `Polhem.Definition`
-> 當時**沒有**該屬性，走的是只涵蓋三個類別的 `ProcessWideStateCollection`。危害在下半句
-> ——文件宣稱它有**較強**的保護，實際只有它自己承認會漏的那道。修法是兩件事：
-> 給 `Polhem.Definition.UnitTests` 補上該屬性讓宣稱成真（實測成本 +0.2–0.4 秒 / 1,086 筆），
-> 以及**把那份清單換成上面那道指令** —— 清單沒有任何機制會發現它漂了。
+> **This paragraph itself drifted once** (fixed 2026-09-04). The original listed five assembly names, and
+> `Polhem.Definition` at the time did **not** have the attribute; it relied on `ProcessWideStateCollection`, which
+> only covers three classes. The harm was in the second half: the document claimed **stronger** protection, and in
+> reality it had only the one that admits it can miss things. The fix was two things: add the attribute to
+> `Polhem.Definition.UnitTests` so the claim became true (measured cost +0.2–0.4 seconds / 1,086 tests), and
+> **replace that list with the command above**. No mechanism would ever notice the list had drifted.
 
-> **新增 collection 時用 `const` 而非字串字面值**（如 `ProcessWideStateCollection.Name`）：
-> 打錯字的字面值會讓 xUnit 建一個沒人共用的隱式分組，**看起來有序列化、實際沒有**，
-> 且不會有編譯錯。
-
----
-
-## 共享 fixture 檔案隔離
-
-`tests/Define/` 內的 XML（`SystemSettings.xml`、`DbCategorySettings.xml` 等）是
-**多個測試專案共用的固定資料**，由 `TestProcessBootstrap` 啟動時讀入。任何測試
-**不得寫入或修改**這些檔案 —— 一旦被改寫（含 round-trip 序列化造成的 xmlns 順序、縮排、
-子節點變動），下次讀入會行為異常或 deserialize 失敗，造成連鎖錯誤。
-
-任何 `SaveDefine` 系列呼叫（`SaveDbCategorySettings`、`SaveSystemSettings`、
-`SaveTableSchema`、`SaveFormSchema`、`SaveDefine`）**或會間接觸發者**，必須切到隔離 temp：
-
-1. **fixture-level**（推薦）：`new PolhemTestFixture(b => b.UseTempDefinePath())` 或自定 subclass
-   —— `PathOptions.DefinePath` 指向 `%TEMP%/polhem-fixture-<guid>`，dispose 時清理。
-2. **method-level**：純測試 `CacheDefineAccess` / `FileDefineStorage` 等 ctor 接
-   `PathOptions` 的類別時，建 inline temp dir + `PathOptions { DefinePath = tempDir }` 傳入
-   （`CacheDefineAccess(IDefineStorage, PathOptions)` 這個雙參數多載就是為此提供的）。
-
-若需先 `GetDefine` 讀既有 fixture 再 `SaveDefine`：**先用 fixture 預設路徑 Get（從
-`tests/Define`）→ 構造 temp `IDefineAccess` → Save**，避免 Get 在空 temp 讀不到資料。
-
-完整樣板見 `docs/repo-ops/testing-patterns.md`。
+> **When adding a collection, use a `const`, not a string literal** (for example `ProcessWideStateCollection.Name`).
+> A mistyped literal makes xUnit create an implicit group that nobody shares. It **looks serialized but is not**, and
+> there is no compile error.
 
 ---
 
-## 常見 analyzer 退件規則
+## Isolating shared fixture files
 
-`build-ci.yml` 的 strict build 階段會直接擋 PR。三條特別容易踩：
+The XML files in `tests/Define/` (`SystemSettings.xml`, `DbCategorySettings.xml` and so on) are
+**fixed data shared by several test projects**, read by `TestProcessBootstrap` at startup. No test
+**may write to or modify** these files. Once they are rewritten (including xmlns order, indentation or child node
+changes caused by round-trip serialization), the next read behaves abnormally or fails to deserialize, causing
+cascading failures.
 
-- **S2699** —— 每個 `[Fact]`／`[Theory]` 至少一個 `Assert.*`。驗證「無例外」不可裸呼叫，
-  用 `Record.Exception` / `Record.ExceptionAsync` 取回再 `Assert.Null(exception)`。
-- **CA1861** —— 常數 array 不要 inline `new[] { ... }` 當引數（每次呼叫都配置），
-  抽成檔案頂部的 `private static readonly string[] s_xxx = { ... }`。
-- **IDE0005** —— 從別的測試檔 copy header 容易帶進不相關的 `using`，補完後逐一移除。
+Any call in the `SaveDefine` family (`SaveDbCategorySettings`, `SaveSystemSettings`,
+`SaveTableSchema`, `SaveFormSchema`, `SaveDefine`), **or anything that triggers one indirectly**, must switch to an
+isolated temp directory:
+
+1. **fixture-level** (recommended): `new PolhemTestFixture(b => b.UseTempDefinePath())` or a custom subclass.
+   `PathOptions.DefinePath` points to `%TEMP%/polhem-fixture-<guid>` and is cleaned up on dispose.
+2. **method-level**: when testing a class whose ctor takes `PathOptions` directly, such as `CacheDefineAccess` /
+   `FileDefineStorage`, build an inline temp dir and pass `PathOptions { DefinePath = tempDir }`
+   (the two-parameter overload `CacheDefineAccess(IDefineStorage, PathOptions)` exists for exactly this).
+
+If you need to `GetDefine` an existing fixture first and then `SaveDefine`: **Get through the fixture's default path
+first (from `tests/Define`) → construct a temp `IDefineAccess` → Save**, so that Get does not find nothing in an empty
+temp directory.
+
+Full template in `docs/repo-ops/testing-patterns.md`.
 
 ---
 
-## 「本機綠、CI 紅」的反覆根因
+## Common analyzer rejections
 
-本機環境比 CI「更完整」（有 `tests/Define` 的 DatabaseSettings、有持久 DB 容器、
-可能殘留舊 seed），以下缺口**本機必定測不出來**。踩雷實例與排查過程見
-`../docs/repo-ops/gotchas/test-ci-release.md`。
+The strict build stage of `build-ci.yml` blocks the PR outright. Three are especially easy to hit:
 
-### 1. 會碰 DB 的測試必須用 `SharedDbFixture`
+- **S2699**: every `[Fact]` / `[Theory]` needs at least one `Assert.*`. To verify "no exception", do not make a bare
+  call; capture it with `Record.Exception` / `Record.ExceptionAsync` and then `Assert.Null(exception)`.
+- **CA1861**: do not pass a constant array inline as `new[] { ... }` as an argument (it allocates on every call).
+  Extract it to a `private static readonly string[] s_xxx = { ... }` at the top of the file.
+- **IDE0005**: copying the header from another test file easily brings in unrelated `using` directives. Remove them
+  one by one once you are done.
 
-**`PolhemTestFixture` 不建 schema**（只有 `SharedDbFixture` 會）。測試若會讓 BO 碰 DB
-（session / 稽核 / 任何 repository 讀寫），fixture 必須是 `SharedDbFixture`，否則只有在
-「別的測試類別或行程剛好先把表建好」時才會通過。**看到 `PolhemTestFixture` + DB 存取就是嫌疑。**
+---
 
-判別捷徑：測試環境 `AuditLogOptions.Enabled` 預設 `false` 且 `tests/Define/SystemSettings.xml`
-未覆寫 → 只動稽核寫入的改動在測試中不會求值，可先排除嫌疑。
+## Recurring root causes of "green locally, red in CI"
 
-**「寫入」不是唯一觸發條件 —— 讀取一樣會炸。** 測試只要拿**未植入 cache 的 token**
-呼叫需驗身分的 API，server 就會 session cache miss → 走 rebuild 路徑讀 `st_session`。
-辨識法：測試直接拿 `Guid.NewGuid()` 當 access token（而非
-`TestSessionFactory.CreateAccessToken(fx)`，後者會把 SessionInfo 寫進 cache 因而永不觸及 DB）。
+The local environment is "more complete" than CI (it has the DatabaseSettings in `tests/Define`, persistent DB
+containers, and possibly leftover old seed data), so the gaps below **can never be detected locally**. Pitfall
+instances and the investigation are in `../docs/repo-ops/gotchas/test-ci-release.md`.
 
-**第三條路徑：走 controller 的請求一律會碰 `st_api_key`。**
+### 1. Tests that touch the DB must use `SharedDbFixture`
+
+**`PolhemTestFixture` does not build the schema** (only `SharedDbFixture` does). If a test makes a BO touch the DB
+(session / audit / any repository read or write), the fixture must be `SharedDbFixture`. Otherwise it only passes when
+"some other test class or process happened to build the tables first". **`PolhemTestFixture` plus DB access is a
+suspect on sight.**
+
+Shortcut: in the test environment `AuditLogOptions.Enabled` defaults to `false` and `tests/Define/SystemSettings.xml`
+does not override it → a change that only touches audit writes is never evaluated in tests, so it can be ruled out
+first.
+
+**"Writing" is not the only trigger; reading fails just the same.** As soon as a test calls an API that requires
+authentication with **a token not planted in the cache**, the server gets a session cache miss → takes the rebuild path
+and reads `st_session`. How to recognize it: the test uses `Guid.NewGuid()` directly as the access token (instead of
+`TestSessionFactory.CreateAccessToken(fx)`, which writes the SessionInfo into the cache and therefore never reaches the
+DB).
+
+**The third path: every request that goes through the controller touches `st_api_key`.**
 `ApiServiceController.ValidateApiKey` → `ApiKeyValidator.Validate` → `ApiKeyGate.GetState()`
-是一條 read-through，miss 時開 common 連線讀 `st_api_key`。`AddPolhemFramework` **一律**註冊真的
-`ApiKeyValidator`，所以這條與 access token 無關 —— 只要測試是打 controller，它就會走。
+is a read-through that opens a common connection and reads `st_api_key` on a miss. `AddPolhemFramework` **always**
+registers the real `ApiKeyValidator`, so this path has nothing to do with the access token. Any test that hits the
+controller takes it.
 
-**而且 `SharedDbFixture` 只解一半。** 表建好之後，閘門是否 in force 取決於**該表當下有沒有
-啟用金鑰**，那不是任何測試的保證：`ApiKeyRepositoryTests` 會往同一個 common 資料庫寫金鑰，
-本機持久容器還會讓殘留列跨回合留著。閘門 in force 時，任何不符金鑰格式的標頭都成為
-`ApiKeyStatus.Invalid` → 401。**主題不是金鑰閘門的測試，要把 `IApiKeyValidator` 覆寫成測試
-自己給的實例**（`TestOverrideServiceProvider` 接受 `null` 實例並短路內層 provider，那是抵達
-「未註冊 validator」分支的唯一方法），別倚賴那張表剛好是空的。
+**And `SharedDbFixture` only solves half of it.** Once the table exists, whether the gate is in force depends on
+**whether the table currently holds an enabled key**, which no test guarantees: `ApiKeyRepositoryTests` writes keys
+into the same common database, and a persistent local container keeps leftover rows across runs. When the gate is in
+force, any header that does not match the key format becomes `ApiKeyStatus.Invalid` → 401. **If the test is not about
+the key gate, override `IApiKeyValidator` with an instance the test supplies itself**
+(`TestOverrideServiceProvider` accepts a `null` instance and short-circuits the inner provider; that is the only way to
+reach the "no validator registered" branch). Do not rely on the table happening to be empty.
 
-> 這條的症狀完全不指向真因，且方向與本節其餘各條**相反**：CI 每次都是全新容器、`st_api_key`
-> 恆為空，所以是**本機紅、CI 綠**。2026-09-08 `Polhem.Api.AspNetCore.UnitTests` 兩支即此
-> —— 表徵是 `Assert.IsType<ContentResult>` 實得 `ObjectResult`，看起來像 MVC 版本差異。
-> 其中 `Post_NoValidatorRegistered_UsesPresenceCheck` 更是**從未走過它命名的那條路徑**：
-> 它只在 validator 非 null 時才加 override，於是永遠落到真的 `ApiKeyValidator`。
-> 驗收標準是**在啟用金鑰仍留在表裡的情況下**測試依然全綠 —— 先清資料庫再跑證明不了解耦。
+> The symptom of this one does not point to the real cause at all, and its direction is the **opposite** of every
+> other item in this section: CI always starts with fresh containers and `st_api_key` is always empty, so it is
+> **red locally, green in CI**. That was two tests in `Polhem.Api.AspNetCore.UnitTests` on 2026-09-08.
+> The symptom was `Assert.IsType<ContentResult>` getting an `ObjectResult`, which looked like an MVC version
+> difference. One of them, `Post_NoValidatorRegistered_UsesPresenceCheck`, **had never taken the path it is named
+> after**: it only added the override when the validator was non-null, so it always fell through to the real
+> `ApiKeyValidator`. The acceptance criterion is that the tests are still all green **with enabled keys still left in
+> the table**. Clearing the database first and then running proves nothing about decoupling.
 
-**別靠靜態 grep 判定範圍。** 觸發面比想像廣：不只 `IAccessTokenValidator`，任何
-`SessionInfoService.Get(未快取 token)` 都算 —— 含 BO 內部的 `GetLangText` /
-`GetCurrentCustomizeId` / 查目前公司。**用窮盡掃描，不要用推理代替執行**：drop 掉
-`st_session`，再逐專案跑「`--filter` 排除所有 `SharedDbFixture` 類別」的子集 —— 建表的類別
-不參與，依賴該表的測試就必定現形。完整命令與 2026-08-04 的實測結果見上述 gotchas
-—— **當時此法一次掃出 4 個違規類別，先前純 grep 推理只找到 1 個。**
+**Do not decide the scope by static grep.** The trigger surface is wider than you think: not just
+`IAccessTokenValidator`, but any `SessionInfoService.Get(uncached token)`, including `GetLangText` /
+`GetCurrentCustomizeId` / looking up the current company inside a BO. **Use an exhaustive scan; do not substitute
+reasoning for execution**: drop `st_session`, then run, project by project, the subset that "`--filter` excludes every
+`SharedDbFixture` class". The classes that build tables do not take part, so tests that depend on the table are bound
+to show up. The full command and the measured results from 2026-08-04 are in the gotchas above.
+**That time this method found 4 offending classes in one pass; pure grep reasoning beforehand had found only 1.**
 
-### 5. 本機持久容器的殘留列會污染**別的**測試專案，而 `git stash` 不還原它
+### 5. Leftover rows in a persistent local container contaminate **other** test projects, and `git stash` does not restore them
 
-改到一半的測試**執行過就會留下痕跡**。2026-09-08 改寫 `ApiKeyRepositoryTests` 時，
-insert 與 delete 一度指向不同資料庫，`finally` 的清理清在別的引擎上，於是
-**7 列啟用中的 `rt-*` 金鑰**留在 `sql2025` 的 `common.st_api_key`。那 7 列讓
-`ApiKeyGate` 在本機**永久** in force，連帶讓上一節那兩支 controller 測試紅了好幾小時
-—— 而症狀（`ContentResult` 實得 `ObjectResult`）完全不指向金鑰。
+A half-edited test **leaves traces once it has run**. On 2026-09-08, while rewriting `ApiKeyRepositoryTests`,
+insert and delete pointed at different databases for a while, the `finally` cleanup cleaned up on another engine, and
+**7 enabled `rt-*` keys** were left in `common.st_api_key` on `sql2025`. Those 7 rows kept `ApiKeyGate` **permanently**
+in force locally, and as a knock-on effect the two controller tests from the previous section were red for hours.
+The symptom (`ContentResult` getting an `ObjectResult`) did not point to keys at all.
 
-**兩個要記住的判斷紀律：**
+**Two judgment disciplines to remember:**
 
-1. **`git stash` 判定不了「這在改動前就是紅的」。** stash 只還原受版控的檔案；資料庫殘留列、
-   容器狀態、環境變數都不會跟著回到那個時間點。當時就是靠 stash 誤判成「既有的紅、與本次
-   無關」，往程式碼查了一輪。**下結論前先查資料庫實際狀態**（`SELECT` 一次的成本遠低於
-   一輪誤導）。
-2. **「本機紅、CI 綠」時，先問容器生命週期，不要先問核心數。** CI 用 `services:` +
-   `docker run`，每次全新、表恆為空；本機是持久容器，殘留跨回合累積。
-   一開始誤判成「本機核心多、平行窗口重疊」，被一項證據推翻：**單一測試專案跑就能重現**
-   —— 真的平行競爭需要對方同時在跑。
+1. **`git stash` cannot establish "this was red before the change".** stash only restores version-controlled files;
+   leftover database rows, container state and environment variables do not go back to that point in time. That time,
+   stash led to the misjudgment "pre-existing red, unrelated to this change", and a round was spent searching the code.
+   **Check the actual database state before concluding** (one `SELECT` costs far less than one misleading round).
+2. **When it is "red locally, green in CI", ask about container lifecycle first, not core count.** CI uses
+   `services:` + `docker run`, fresh every time, with tables always empty; locally the containers are persistent and
+   leftovers accumulate across runs. The initial misjudgment was "more local cores, overlapping parallel windows", and
+   one piece of evidence overturned it: **running a single test project alone reproduces it**. Real parallel contention
+   needs the other side to be running at the same time.
 
-**排查手法**：懷疑殘留時直接查那張表的列與 `sys_insert_time`。時間戳比 session 開始還早，
-就不是這次跑出來的。確認 HEAD 本身不洩漏的方法是**跑完再數一次**：列數沒變就是清理正確。
+**Investigation technique**: when you suspect leftovers, query that table's rows and `sys_insert_time` directly. If the
+timestamp is earlier than the start of the session, it was not produced by this run. The way to confirm HEAD itself
+does not leak is to **count again after the run**: if the row count is unchanged, the cleanup is correct.
 
-### 2. 一次重跑轉綠**不足以**判定 flaky
+### 2. One rerun turning green is **not enough** to call it flaky
 
-`gh run rerun --failed` 剛好轉綠是競賽條件的正常表現，不是結案依據。重跑只用來**收集證據**：
-至少要看「不同 commit 的**首次**執行是否都紅」—— 都紅就當真 bug 查。
+`gh run rerun --failed` happening to turn green is the normal behaviour of a race condition, not grounds to close the
+case. A rerun is only for **collecting evidence**: at minimum, check whether the **first** run of different commits is
+red every time. If they are all red, investigate it as a real bug.
 
-> 這條與上方「並行 flaky 的容錯空間」不衝突：那條講**同一 commit 內 isolated 通過 /
-> full suite 失敗**（連跑 2–3 次判定）；這條講**跨 commit 首次執行都紅**。
+> This does not conflict with "Tolerance for parallel flakiness" above: that item is about **passing in isolation /
+> failing in the full suite within one commit** (decided by running 2–3 times); this item is about **first runs being
+> red across commits**.
 
-### 4. 枚舉 `GetTypes()` 的閘門必須在覆蓋率插樁下驗過
+### 4. Gates that enumerate `GetTypes()` must be verified under coverage instrumentation
 
-**覆蓋率插樁會往組件裡注入型別。** coverlet 注入的是
-`Coverlet.Core.Instrumentation.Tracker.<組件名>_<guid>`，帶著 `RecordHit` / `RegisterUnloadEvents`
-等方法。任何「枚舉某組件的型別、對形狀下斷言」的閘門都會把它算進去。
+**Coverage instrumentation injects types into the assembly.** coverlet injects
+`Coverlet.Core.Instrumentation.Tracker.<assembly name>_<guid>`, carrying methods such as `RecordHit` /
+`RegisterUnloadEvents`. Any gate that "enumerates an assembly's types and asserts on their shape" counts it.
 
-**而且這條在精簡模式的 CI 上驗不到** —— 覆蓋率只在**完整模式**收
-（`build-ci.yml` 的 `--collect:"XPlat Code Coverage"`）。所以這種閘門可以在本機綠、
-在精簡模式的 CI 綠好幾週，直到某次帶 `[all-db]` 才紅。
+**And this cannot be verified on lean-mode CI**: coverage is only collected in **full mode**
+(`--collect:"XPlat Code Coverage"` in `build-ci.yml`). So such a gate can be green locally and green on lean-mode CI
+for weeks, until some run with `[all-db]` turns it red.
 
-本機重現要帶同一個旗標：
+To reproduce locally, pass the same flag:
 
 ```bash
-dotnet test <測試專案> -c Release --settings .runsettings --collect:"XPlat Code Coverage;Format=opencover"
+dotnet test <test project> -c Release --settings .runsettings --collect:"XPlat Code Coverage;Format=opencover"
 ```
 
-**正解是以命名空間限縮到「原始碼宣告的型別」**，不要列舉工具名（每種插樁工具注在自己的
-命名空間下，列舉必漏）。並把**防空轉斷言放在過濾之後** —— 過濾條件若寫錯，迴圈會一圈都不跑
-而恆綠，那比誤判更糟。
+**The fix is to narrow by namespace to "types declared in source"**, not to list tool names (each instrumentation tool
+injects under its own namespace, and a list will always miss one). And put the **anti-vacuous assertion after the
+filter**: if the filter condition is wrong, the loop never runs a single iteration and stays green forever, which is
+worse than a false positive.
 
-> 實例：`ArchitectureBoundaryGateTests.ApiContracts_ContainNoImplementation`
-> 把注入的 Tracker 報成「合約軸混進了實作」（2026-09-04 修）。
+> Instance: `ArchitectureBoundaryGateTests.ApiContracts_ContainNoImplementation`
+> reported the injected Tracker as "implementation mixed into the contracts axis" (fixed 2026-09-04).
 
-### 3. 建表與 seed 的冪等都必須跨行程原子
+### 3. Table creation and seed idempotency must both be atomic across processes
 
-`SharedDatabaseState` 的 setup 會被多個平行 test 行程對**同一實體 DB**同時執行。
-**建表與 seed 是同一個結構問題的兩半**，兩半都要處理。
+The `SharedDatabaseState` setup is executed concurrently by several parallel test processes against **the same
+physical DB**. **Table creation and seeding are two halves of the same structural problem**, and both halves must be
+handled.
 
-#### 3a. 建表（fixture setup）
+#### 3a. Table creation (fixture setup)
 
-`TableSchemaBuilder.Execute` 內部是 read-then-create：讀不到表就規劃 `CREATE TABLE`。
-兩行程同時進來就各規劃一次，輸家撞到
-`There is already an object named 'st_user'`（SQL Server 2714；其餘 provider 各有自己的措辭）。
+Internally `TableSchemaBuilder.Execute` is read-then-create: if it cannot read the table, it plans a `CREATE TABLE`.
+When two processes come in at the same time, each plans one, and the loser hits
+`There is already an object named 'st_user'` (SQL Server 2714; each other provider has its own wording).
 
-**正解有三層，缺一不可：**
+**The fix has three layers, and none can be skipped:**
 
-1. **跨行程序列化整段 setup** —— `CrossProcessLock`（`FileShare.None` 開檔取得 advisory
-   lock，行程結束由 OS 釋放，不像 named mutex 會留下 abandoned 狀態）。取不到就等，
-   逾時後**放行不掛起**（fail open），因為每一步本身仍具容錯。
-2. **衝突判定看資料庫、不看錯誤碼** —— 「動作前表不存在、動作後表存在」即為別的行程建好了，
-   視為 benign。**不要比對各 provider 的錯誤碼／訊息**，那要維護 5 份對照表且會漂。
-   seed 列的競賽同理：重跑一次 probe，看得到贏家的列就採用它。
-3. **單一步驟失敗不得中止整段 setup** —— 每張表 / 每個 seed 步驟各自記錄失敗後**繼續往下走**。
-   曾經一個 `CREATE TABLE` 衝突就讓 seed 整段跳過，症狀是幾十個測試之後才炸出
-   `User not found.` / `Cannot resolve user rowid`，看起來完全不像 setup 的問題。
+1. **Serialize the whole setup across processes**: `CrossProcessLock` (opening a file with `FileShare.None` to take an
+   advisory lock, which the OS releases when the process ends; unlike a named mutex it cannot be left abandoned). If it
+   cannot get the lock it waits, and after a timeout it **lets the setup through instead of hanging** (fail open),
+   because each step is still fault tolerant on its own.
+2. **Decide conflicts by looking at the database, not the error code**: "table did not exist before the action, table
+   exists after the action" means another process built it, and it counts as benign. **Do not match each provider's
+   error codes / messages**; that means maintaining 5 lookup tables, and they drift.
+   The same goes for seed row races: rerun the probe once, and if the winner's rows are visible, adopt them.
+3. **A single failed step must not abort the whole setup**: each table / each seed step records its own failure and
+   **carries on**. Once, a single `CREATE TABLE` conflict made the entire seed skip, and the symptom only blew up dozens
+   of tests later as `User not found.` / `Cannot resolve user rowid`, which looked nothing like a setup problem.
 
-**能連上但沒有 seed user 的資料庫則直接擲例外** —— 那是「setup 沒完成」的唯一硬指標，
-必須在原因還在手上時就喊出來。個別步驟失敗（例如某張 log 表升不上去）只賠上它自己的測試，
-不擲例外，但會以 `!!!` 前綴印出完整例外。
+**A database that can be connected to but has no seed user throws immediately.** That is the one hard indicator that
+"setup did not complete", and it must be raised while the cause is still at hand. An individual step failing (for
+example a log table that cannot be upgraded) only costs its own tests. It does not throw, but it prints the full
+exception with a `!!!` prefix.
 
-> **`catch (Exception)` 是這一切的根源**：它讓「setup 失敗」在 log 裡長得像
-> 「setup 完成」。可容忍的只有 `DbException`，且只在「容器沒開 → 整個 DB 跳過」這一種情境。
+> **`catch (Exception)` was the root of all this**: it made "setup failed" look like "setup completed" in the log.
+> The only tolerable exception is `DbException`, and only in the single case "container not running → skip the whole
+> DB".
 
-#### 3b. seed 列
+#### 3b. Seed rows
 
-以 per-table `SELECT COUNT(*)>0 then skip` 做冪等**不具跨行程原子性** —— 兩行程同時見 0
-就各插一次。有 unique 業務鍵（`sys_id`）的表靠 unique 衝突讓輸家丟例外自保；
-**無唯一業務鍵的表會被重複 seed**。
+Idempotency by per-table `SELECT COUNT(*)>0 then skip` **is not atomic across processes**: two processes both see 0
+and each inserts once. Tables with a unique business key (`sys_id`) protect themselves because the unique conflict
+makes the loser throw; **tables without a unique business key get seeded twice**.
 
-**正解**：整個 seed 包**單一 transaction**，gate 改判**第一張具 unique `sys_id` 的表**是否
-已有列。贏家原子提交全套、輸家 rollback，其他行程因交易隔離只會看到「空」或「完整」兩態。
+**The fix**: wrap the entire seed in **a single transaction**, and change the gate to check whether **the first table
+with a unique `sys_id`** already has rows. The winner commits the whole set atomically and the loser rolls back;
+because of transaction isolation, other processes only ever see one of two states, "empty" or "complete".

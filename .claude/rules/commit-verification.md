@@ -1,32 +1,35 @@
-# Commit 前驗證 hook
+# Pre-commit verification hook
 
-本 repo 以 Claude Code `PreToolUse` hook 在 agent 執行 `git commit` **之前**強制驗證。
-宣告於 `.claude/settings.json`，實作於 `.claude/hooks/pre-commit-verify.sh`。
+This repository uses a Claude Code `PreToolUse` hook to enforce verification **before** the agent runs `git commit`.
+It is declared in `.claude/settings.json` and implemented in `.claude/hooks/pre-commit-verify.sh`.
 
-> **各項檢查為何不對稱、為何 `--no-incremental`、為何必須 fail open、
-> 「其他 repo」的 cwd 如何判定 —— 全部寫在腳本檔頭。** 要細節就讀那支，本檔不複寫。
+> **Why the checks are asymmetric, why `--no-incremental`, why it must fail open, and how the cwd for "another
+> repository" is determined are all written in the script's file header.** Read that script for the details; this
+> file does not copy them.
 
-## agent 要知道的事
+## What the agent needs to know
 
-1. **clean Release build 失敗會擋下 commit**（exit 2）。搭配 `TreatWarningsAsErrors=true`，
-   任何警告即失敗。實測約 5 秒。
-2. **`PublicAPI.Unshipped.txt` 有異動時只提示、不擋**，但**必須在 commit message 或回覆中
-   說明相容性判定** —— analyzer 擋得住「未申報」，擋不住「已申報但二進位不相容」
-   （例如對既有 public 建構子加 optional 參數）。這個提示的作用就是把該判定從靜默轉為必須正視。
-3. **`check-docs-i18n.sh` 有輸出時只提示、不擋** —— 源文件與譯本分開 commit 是合理的，
-   真正的把關是 CI 的 Docs Check。看到提示就在 push 前把譯本對照更新並 `--stamp`，
-   別讓 main 上的 CI 紅了才處理。
-4. **不要為了讓 hook 通過而修改測試或原始碼** —— 那正是本 hook 要防的事情本身。
-5. **`git --no-verify` 對它無效**（那是 git 自身 hook 的旗標）。它掛在 Claude Code 的工具呼叫上，
-   不是 `.git/hooks/`，所以**使用者在自己終端機直接 commit 不受影響**。
+1. **A failing clean Release build blocks the commit** (exit 2). Combined with `TreatWarningsAsErrors=true`,
+   any warning is a failure. Measured at about 5 seconds.
+2. **A change to `PublicAPI.Unshipped.txt` only produces a notice and does not block**, but **you must state your
+   compatibility judgement in the commit message or in your reply**. The analyzer catches "not declared"; it cannot
+   catch "declared but binary incompatible" (for example, adding an optional parameter to an existing public
+   constructor). The purpose of the notice is to turn that judgement from silent into something you must face.
+3. **Output from `check-docs-i18n.sh` only produces a notice and does not block.** Committing a source document and
+   its translations separately is reasonable; the real gate is the Docs Check in CI. When you see the notice, update
+   the translations against the source and `--stamp` them before you push. Do not wait for CI on main to go red.
+4. **Do not modify tests or source code to make the hook pass.** That is exactly what this hook exists to prevent.
+5. **`git --no-verify` has no effect on it** (that is a flag for git's own hooks). It hooks into Claude Code's tool
+   calls, not `.git/hooks/`, so **a commit the user makes directly in their own terminal is not affected**.
 
-## 為什麼是 hook 而不是規則條文
+## Why a hook and not a written rule
 
-條文要求 agent **自願遵守**，hook 由外殼**強制執行**。以下兩種失誤都源於「agent 沒有自覺去
-檢查」，寫成條文無效：以 incremental build 宣稱「build is clean」；public API 變更靠補
-`PublicAPI.Unshipped.txt` 讓 build 轉綠而未判二進位相容性。
+A written rule asks the agent to **comply voluntarily**; a hook is **enforced** by the harness. Both of the following
+mistakes came from "the agent did not think to check", so writing them as rules does not work: claiming "build is
+clean" based on an incremental build; and turning a public API change green by adding it to
+`PublicAPI.Unshipped.txt` without judging binary compatibility.
 
-## 暫時停用
+## Temporarily disabling it
 
-需要繞過時（WIP commit、或建置因環境問題失敗）：註解 `.claude/settings.json` 的 `hooks`
-區塊並重開 session，或改由使用者在自己的終端機執行該次 commit。
+When you need to bypass it (a WIP commit, or the build fails for environmental reasons): comment out the `hooks`
+block in `.claude/settings.json` and restart the session, or have the user make that commit in their own terminal.

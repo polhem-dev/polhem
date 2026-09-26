@@ -1,118 +1,119 @@
 ---
 name: polhem-add-bo-method
-description: polhem 新增對外公開的 BO 方法（FormBusinessObject / SystemBusinessObject）跨 contract / wire / BO / Repository / Client 共 7~8 個檔案的完整流程，含 3 條硬性規則、層別樣板、兩層 round-trip 測試與最終 checklist。當使用者要「新增 BO 方法」、「為 progId.action 加 API」、「FormBO/SystemBO 加方法」、「實作 GetList / Insert / Update / Delete」之類需求時使用。
+description: The full procedure for adding a publicly exposed BO method (FormBusinessObject / SystemBusinessObject) to polhem, spanning 7-8 files across contract / wire / BO / Repository / Client. Includes 3 hard rules, per-layer templates, two-layer round-trip tests and a final checklist. Use when the user wants to "add a BO method", "add an API for progId.action", "add a method to FormBO/SystemBO", "implement GetList / Insert / Update / Delete", or similar requests.
 ---
 
-# polhem 新增 BO 方法
+# polhem: add a BO method
 
-polhem 為 JSON-RPC 2.0 + BO 雙軌架構，新增一個對外公開的 BO 方法
-（如 `FormBusinessObject.GetList`、`SystemBusinessObject.GetDefine`）會跨越
-4 層共 **7~8 個檔案**，命名、檔位置、`[Key]` 編號、DI 註冊方式都有固定慣例。
-本 skill 把這條路徑寫死，避免每次摸索。
+polhem uses a JSON-RPC 2.0 + BO two-track architecture. Adding one publicly exposed BO method
+(such as `FormBusinessObject.GetList` or `SystemBusinessObject.GetDefine`) crosses
+4 layers and **7-8 files**. Naming, file locations, `[Key]` numbering and DI registration all follow fixed conventions.
+This skill fixes that path in writing so it does not have to be rediscovered every time.
 
-> 樣板對照（讀程式碼時對著看）：
-> - System 軸：`SystemBusinessObject.GetDefine`
-> - Form 軸：`FormBusinessObject.GetList`
+> Templates to compare against (keep them open while reading code):
+> - System axis: `SystemBusinessObject.GetDefine`
+> - Form axis: `FormBusinessObject.GetList`
 
-## 硬性規則（不可違反）
+## Hard rules (must not be violated)
 
-這 3 條是專案架構底線，違反就是設計錯誤、不是「另一種寫法」。
+These 3 rules are the project's architectural baseline. Violating one is a design error, not "another way to write it".
 
-### 規則 1：BO 嚴禁直接存取 `Polhem.Db`
+### Rule 1: a BO must never access `Polhem.Db` directly
 
-- `Polhem.Business.csproj` **不**依賴 `Polhem.Db`（dependency-map.md 顯示
-  `Business --> Contracts / Definition / RepoAbs`，沒有 Db）
-- FormSchema-driven 的 SELECT / INSERT / UPDATE / DELETE **必須**透過
-  `IDataFormRepository`（Repository 抽象）執行
-- BO 是「薄殼」：拆解 args、呼叫 Repository、組裝 Result；
-  `FormSchema.MasterTable` / `ListFields` fallback 等邏輯放在 Repository，**不**在 BO 重複
-- 看到 PR 把 `Polhem.Db` ProjectReference 加進 `Polhem.Business.csproj` → 設計錯誤
+- `Polhem.Business.csproj` does **not** depend on `Polhem.Db` (dependency-map.md shows
+  `Business --> Contracts / Definition / RepoAbs`, with no Db)
+- FormSchema-driven SELECT / INSERT / UPDATE / DELETE **must** run through
+  `IDataFormRepository` (the Repository abstraction)
+- A BO is a "thin shell": unpack args, call the Repository, assemble the Result.
+  Logic such as the `FormSchema.MasterTable` / `ListFields` fallback lives in the Repository and is **not** repeated in the BO
+- A PR that adds a `Polhem.Db` ProjectReference to `Polhem.Business.csproj` → design error
 
-理由：解耦業務邏輯與資料存取，未來換 ORM / 加 sharding / 加快取 / 單元測試替換
-都需要這層抽象。development-cookbook.md 寫的「FormBusinessObject →
-IFormCommandBuilder → DbAccess」是**邏輯層次**的描述（BO 觸發、Repository 執行），
-不是 ProjectReference 路徑。
+Reason: it decouples business logic from data access. Swapping the ORM, adding sharding, adding caching or substituting
+in unit tests all need this abstraction. The "FormBusinessObject →
+IFormCommandBuilder → DbAccess" chain in development-cookbook.md describes **logical layering** (the BO triggers, the
+Repository executes). It is not a ProjectReference path.
 
-### 規則 2：ProgId 即 master table 名稱，不傳 `TableName`
+### Rule 2: the ProgId is the master table name; do not pass `TableName`
 
-- 框架不變式：`FormSchema.MasterTable.TableName == ProgId`
-  （見 `FormSchema.MasterTable` 取 `Tables[ProgId]`）
-- BO 方法的 args / wire DTO / Repository 簽名**不**帶 `TableName` 屬性
-- Repository 內以 `_schema.ProgId` 直接當 tableName 傳給 `SelectCommandBuilder.Build(...)`；
-  不需 `MasterTable?.TableName` fallback
-- 詳列子表查詢（detail / aux table）屬另一條方法（如 `GetDetailList`），
-  不要為它而在 master 方法上多攜一個 `TableName` 欄位
+- Framework invariant: `FormSchema.MasterTable.TableName == ProgId`
+  (see `FormSchema.MasterTable`, which takes `Tables[ProgId]`)
+- BO method args, wire DTOs and Repository signatures do **not** carry a `TableName` property
+- Inside the Repository, pass `_schema.ProgId` directly as the tableName to `SelectCommandBuilder.Build(...)`;
+  no `MasterTable?.TableName` fallback is needed
+- Listing queries on child tables (detail / aux table) belong to a separate method (such as `GetDetailList`).
+  Do not add a `TableName` field to the master method for them
 
-理由：簡化合約面積，避免為支援罕見子表查詢而讓常見 master 查詢多攜一個欄位。
+Reason: it keeps the contract surface small, and avoids making the common master query carry an extra field just to
+support a rare child-table query.
 
-### 規則 3：Action 常數類別依 BO 軸分割
+### Rule 3: split action constant classes by BO axis
 
-| BO 軸 | 常數類別 | 範例 |
+| BO axis | Constant class | Examples |
 |-------|---------|------|
 | `SystemBusinessObject` | `Polhem.Definition.SystemActions` | `Ping` / `Login` / `GetDefine` |
 | `FormBusinessObject` | `Polhem.Definition.FormActions` | `GetList` |
-| 未來新軸 | `Polhem.Definition.<Axis>Actions` | — |
+| Future axis | `Polhem.Definition.<Axis>Actions` | — |
 
-- `SystemActions` 名稱已綁定 `SystemBusinessObject`；把 FormBO 的 action 塞進去
-  會混淆「哪類 BO 處理這個 action」、IntelliSense 也會雜
-- 為了「省一個檔案」把單一 action 塞進其他軸的類別 → 設計錯誤
-- Client connector 引用對應軸的常數類別（`FormApiConnector` 用 `FormActions`，
-  不用 `SystemActions`）
-- **唯一例外**：`ExecFunc` / `ExecFuncAnonymous` 是 base `BusinessObject` 的方法、不分軸，
-  引用 `SystemActions.ExecFunc` 是歷史合理寫法。（原本還有 `ExecFuncLocal`，BO 端方法已於
-  2025-10-03 改為 `[ExecFuncAccessControl(LocalOnly = true)]` 機制，常數與 connector
-  方法於 2026-08-07 移除）
+- The name `SystemActions` is bound to `SystemBusinessObject`. Putting FormBO actions in it
+  blurs "which kind of BO handles this action", and clutters IntelliSense
+- Putting a single action into another axis's class to "save a file" → design error
+- A client connector references the constant class of its own axis (`FormApiConnector` uses `FormActions`,
+  not `SystemActions`)
+- **The only exception**: `ExecFunc` / `ExecFuncAnonymous` are methods on the base `BusinessObject` and belong to no axis,
+  so referencing `SystemActions.ExecFunc` is a historically reasonable choice. (There used to be `ExecFuncLocal` as well.
+  The BO-side method switched to the `[ExecFuncAccessControl(LocalOnly = true)]` mechanism on
+  2025-10-03, and the constant and connector method were removed on 2026-08-07)
 
-## 整體流程（4 層、7~8 檔）
+## Overall flow (4 layers, 7-8 files)
 
-| # | 層 | 檔案 | 慣例 |
+| # | Layer | File | Convention |
 |---|----|------|------|
-| 1 | Contract | `src/Polhem.Api.Contracts/<Axis>/I<Action>Request.cs` | 純介面，無 attribute；namespace 為 `Polhem.Api.Contracts.<Axis>` |
-| 2 | Contract | `src/Polhem.Api.Contracts/<Axis>/I<Action>Response.cs` | 純介面，無 attribute |
-| 3 | Wire DTO | `src/Polhem.Api.Core/Messages/<Axis>/<Action>Request.cs` | `[MessagePackObject]` + `[Key(n)]`，繼承 `ApiRequest` |
-| 4 | Wire DTO | `src/Polhem.Api.Core/Messages/<Axis>/<Action>Response.cs` | `[MessagePackObject]` + `[Key(n)]`，繼承 `ApiResponse` |
-| 5 | Action 常數 | `src/Polhem.Definition/<Axis>Actions.cs` | `public const string <Action> = "<Action>"` |
-| 6 | BO Args | `src/Polhem.Business/<Axis>/<Action>Args.cs` | POCO，繼承 `BusinessArgs`，實作 `I<Action>Request` |
-| 7 | BO Result | `src/Polhem.Business/<Axis>/<Action>Result.cs` | POCO，繼承 `BusinessResult`，實作 `I<Action>Response` |
-| 8 | BO method | `src/Polhem.Business/<Axis>/<Axis>BusinessObject.cs` 新增方法 | `[ApiAccessControl(...)]`，回傳 `<Action>Result` |
-| 8b | BO 介面宣告 | `src/Polhem.Business/<Axis>/I<Axis>BusinessObject.cs` 加方法簽名 | 給其他 BO 經 `IBusinessObjectFactory` 取用 |
-| (9) | Repository（FormSchema-driven CRUD 才需要） | `IDataFormRepository.cs` + `DataFormRepository.cs` + `RepositoryFactory.cs` | 走規則 1 |
-| (10) | Client | `src/Polhem.Api.Client/Connectors/<Axis>ApiConnector.cs` | `<Action>Async` + 同步 wrapper |
+| 1 | Contract | `src/Polhem.Api.Contracts/<Axis>/I<Action>Request.cs` | Pure interface, no attribute; namespace is `Polhem.Api.Contracts.<Axis>` |
+| 2 | Contract | `src/Polhem.Api.Contracts/<Axis>/I<Action>Response.cs` | Pure interface, no attribute |
+| 3 | Wire DTO | `src/Polhem.Api.Core/Messages/<Axis>/<Action>Request.cs` | `[MessagePackObject]` + `[Key(n)]`, inherits `ApiRequest` |
+| 4 | Wire DTO | `src/Polhem.Api.Core/Messages/<Axis>/<Action>Response.cs` | `[MessagePackObject]` + `[Key(n)]`, inherits `ApiResponse` |
+| 5 | Action constant | `src/Polhem.Definition/<Axis>Actions.cs` | `public const string <Action> = "<Action>"` |
+| 6 | BO Args | `src/Polhem.Business/<Axis>/<Action>Args.cs` | POCO, inherits `BusinessArgs`, implements `I<Action>Request` |
+| 7 | BO Result | `src/Polhem.Business/<Axis>/<Action>Result.cs` | POCO, inherits `BusinessResult`, implements `I<Action>Response` |
+| 8 | BO method | New method in `src/Polhem.Business/<Axis>/<Axis>BusinessObject.cs` | `[ApiAccessControl(...)]`, returns `<Action>Result` |
+| 8b | BO interface declaration | Add the method signature to `src/Polhem.Business/<Axis>/I<Axis>BusinessObject.cs` | Lets other BOs use it through `IBusinessObjectFactory` |
+| (9) | Repository (only for FormSchema-driven CRUD) | `IDataFormRepository.cs` + `DataFormRepository.cs` + `RepositoryFactory.cs` | Follows rule 1 |
+| (10) | Client | `src/Polhem.Api.Client/Connectors/<Axis>ApiConnector.cs` | `<Action>Async` + synchronous wrapper |
 
-`<Axis>` = `System` 或 `Form`（也可未來新軸）。
+`<Axis>` = `System` or `Form` (or a future axis).
 
-## P0 探勘清單（read-only，不改碼）
+## P0 exploration list (read-only, no code changes)
 
-新增方法前先回答這 3 題：
+Answer these 3 questions before adding the method:
 
-1. **BO 需要哪些服務**（DefineAccess / Repository / 其他）
-   - `BusinessObject._ctx` 已暴露：`DefineAccess`、`SessionInfoService`、
-     `BoFactory`、`Services`（IServiceProvider escape hatch）
-   - 其他服務（如 `IRepositoryFactory`）走 `Services.GetRequiredService<T>()`；
-     不要為單一方法擴 `IPolhemContext` 公開簽章
-   - 違反規則 1 的「直接呼 `IFormCommandBuilder` / `DbAccess`」**不要**做
+1. **Which services the BO needs** (DefineAccess / Repository / other)
+   - `BusinessObject._ctx` already exposes `DefineAccess`, `SessionInfoService`,
+     `BoFactory` and `Services` (the IServiceProvider escape hatch)
+   - Other services (such as `IRepositoryFactory`) go through `Services.GetRequiredService<T>()`.
+     Do not widen the public `IPolhemContext` signature for a single method
+   - Do **not** "call `IFormCommandBuilder` / `DbAccess` directly", which violates rule 1
 
-2. **參數型別跨 wire 序列化能力**
-   - 基本型別、`string`、`DataTable` 都有 MessagePack 支援
-   - 多型 union（如 `FilterNode` → `FilterCondition` / `FilterGroup`）必須在
-     抽象基類加 `[MessagePackObject]` + `[Union(n, typeof(T))]`
-   - Collection 透過 `Polhem.Api.Core/MessagePack/MessagePackCodec.cs:26` 的
-     `CollectionBaseFormatter<,>` 處理 —— **必須**走 `MessagePackCodec` /
-     `MessagePackPayloadSerializer` 公開 API，不可直接用
-     `MessagePackSerializer.Serialize(obj, ContractlessStandardResolver.Options)`
-     （會吃掉 collection 元素且無錯誤）
+2. **Whether the parameter types can be serialized across the wire**
+   - Primitive types, `string` and `DataTable` all have MessagePack support
+   - A polymorphic union (such as `FilterNode` → `FilterCondition` / `FilterGroup`) must have
+     `[MessagePackObject]` + `[Union(n, typeof(T))]` on the abstract base class
+   - Collections are handled by `CollectionBaseFormatter<,>` in
+     `Polhem.Api.Core/MessagePack/MessagePackCodec.cs:26`. You **must** go through the public
+     `MessagePackCodec` / `MessagePackPayloadSerializer` API. Do not call
+     `MessagePackSerializer.Serialize(obj, ContractlessStandardResolver.Options)` directly
+     (it drops collection elements without any error)
 
-3. **是否需要 `ApiContractRegistry.Register<>()`**
-   - **預設不需要**。`Polhem.Api.Core/Conversion/ApiOutputConverter.cs:74-86`
-     的命名慣例反射 `XxxResult` → `XxxResponse`（限 `Polhem.Api.Core` assembly）
-     自動完成 BO Result → Wire Response 的 deep copy
-   - `SysInfo.AllowedTypeNamespaces`（`Polhem.Base/SysInfo.cs:49`）預設已含
-     `Polhem.Api.Core` / `Polhem.Business` / `Polhem.Definition`
-   - 例外：BO Result 命名違反 `XxxResult` 慣例（少見）才需要顯式註冊
+3. **Whether `ApiContractRegistry.Register<>()` is needed**
+   - **Not needed by default.** The naming-convention reflection `XxxResult` → `XxxResponse` in
+     `Polhem.Api.Core/Conversion/ApiOutputConverter.cs:74-86` (limited to the `Polhem.Api.Core` assembly)
+     performs the deep copy from BO Result to wire Response automatically
+   - `SysInfo.AllowedTypeNamespaces` (`Polhem.Base/SysInfo.cs:49`) already includes
+     `Polhem.Api.Core` / `Polhem.Business` / `Polhem.Definition` by default
+   - Exception: explicit registration is needed only when the BO Result name breaks the `XxxResult` convention (rare)
 
-## 各層撰寫指引
+## Writing guide per layer
 
-### Layer 1: Contract 介面（`Polhem.Api.Contracts`）
+### Layer 1: contract interface (`Polhem.Api.Contracts`)
 
 ```csharp
 namespace Polhem.Api.Contracts
@@ -120,18 +121,18 @@ namespace Polhem.Api.Contracts
     /// <summary>Contract interface for the <Action> request.</summary>
     public interface I<Action>Request
     {
-        // 只讀屬性 + 完整 XML doc
+        // Read-only properties + complete XML doc
         SomeProperty { get; }
     }
 }
 ```
 
-- 介面**不**標 `[MessagePackObject]`、**不**寫實作
-- `Polhem.Api.Contracts.csproj` 已 reference `Polhem.Definition`；可直接用
-  `FilterNode` / `SortFieldCollection` / `DefineType` 等定義型別
-- XML doc 用**英文**（公開 NuGet repo 慣例）
+- The interface is **not** marked `[MessagePackObject]` and contains **no** implementation
+- `Polhem.Api.Contracts.csproj` already references `Polhem.Definition`, so definition types such as
+  `FilterNode` / `SortFieldCollection` / `DefineType` can be used directly
+- XML doc is in **English** (public NuGet repository convention)
 
-### Layer 2: Wire DTO（`Polhem.Api.Core/Messages/<Axis>/`）
+### Layer 2: wire DTO (`Polhem.Api.Core/Messages/<Axis>/`)
 
 ```csharp
 [MessagePackObject(keyAsPropertyName: true)]
@@ -142,34 +143,35 @@ public class <Action>Request : ApiRequest, I<Action>Request
 }
 ```
 
-- **不編 `[Key(n)]`**：adr-030 起一般型別一律 `keyAsPropertyName: true`，鍵就是屬性名，
-  新增 / 移除欄位不必維護編號。**唯一例外是 `[Union]` 多型階層**（如 `FilterNode`），
-  它與 `keyAsPropertyName` 不相容、永久維持整數 `[Key]`（見 `rules/serialization.md`）
-- 命名與 contract 介面對齊：`<Action>Request` ↔ `<Action>Response`
-- 屬性必須是 `{ get; set; }`（MessagePack 需要 setter）；介面是 read-only
-- 資料夾與命名空間必須一致：`Messages/Form/` ↔ `namespace Polhem.Api.Core.Messages.Form`
-  （IDE0130，違反 strict build 失敗）
+- **Do not number `[Key(n)]`**: since adr-030, ordinary types always use `keyAsPropertyName: true`, so the key is the
+  property name and adding / removing fields needs no numbering upkeep. **The only exception is a `[Union]` polymorphic
+  hierarchy** (such as `FilterNode`), which is incompatible with `keyAsPropertyName` and keeps integer `[Key]`
+  permanently (see `rules/serialization.md`)
+- Align names with the contract interface: `<Action>Request` ↔ `<Action>Response`
+- Properties must be `{ get; set; }` (MessagePack needs the setter); the interface is read-only
+- Folder and namespace must match: `Messages/Form/` ↔ `namespace Polhem.Api.Core.Messages.Form`
+  (IDE0130; a violation fails the strict build)
 
-### Layer 3: Action 常數（`Polhem.Definition/<Axis>Actions.cs`）
+### Layer 3: action constant (`Polhem.Definition/<Axis>Actions.cs`)
 
 ```csharp
 public static class <Axis>Actions
 {
-    /// <summary><動作說明></summary>
+    /// <summary><Description of the action></summary>
     public const string <Action> = "<Action>";
 }
 ```
 
-- 一個 axis 一個檔案（規則 3）
-- 與 JSON-RPC `method` field 對齊：`"<progId>.<Action>"`
+- One file per axis (rule 3)
+- Aligns with the JSON-RPC `method` field: `"<progId>.<Action>"`
 
-### Layer 4: BO Args / Result（`Polhem.Business/<Axis>/`）
+### Layer 4: BO Args / Result (`Polhem.Business/<Axis>/`)
 
 ```csharp
 public class <Action>Args : BusinessArgs, I<Action>Request
 {
     public string Foo { get; set; } = string.Empty;
-    // 與 Wire DTO 同欄位，但不標 [Key]
+    // Same fields as the wire DTO, but without [Key]
 }
 
 public class <Action>Result : BusinessResult, I<Action>Response
@@ -178,69 +180,69 @@ public class <Action>Result : BusinessResult, I<Action>Response
 }
 ```
 
-- BO POCO 不標 MessagePack attribute（命名慣例 `XxxResult` → `XxxResponse`
-  在 `ApiOutputConverter` 反射時就由 wire 端的 `[MessagePackObject]` 接手）
-- 欄位名要與 Wire DTO 對齊（`ApiInputConverter.Convert` 用反射 copy 屬性，
-  名稱不對等於該欄位送丟）
+- BO POCOs carry no MessagePack attribute (through the `XxxResult` → `XxxResponse` naming convention,
+  the wire side's `[MessagePackObject]` takes over when `ApiOutputConverter` reflects)
+- Field names must match the wire DTO (`ApiInputConverter.Convert` copies properties by reflection;
+  a mismatched name means that field is silently lost)
 
-### Layer 5: BO method（走 Repository，遵守規則 1）
+### Layer 5: BO method (goes through the Repository, obeys rule 1)
 
 ```csharp
-/// <summary><英文方法說明></summary>
+/// <summary><English description of the method></summary>
 /// <remarks>
-/// （視需要說明硬性使用前提，如 GetList 要求呼叫端提供 Filter 限縮結果）
+/// (Where needed, state hard preconditions of use, e.g. GetList requires the caller to supply a Filter that narrows the result)
 /// </remarks>
 [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated)]
 public virtual <Action>Result <Action>(<Action>Args args)
 {
     ArgumentNullException.ThrowIfNull(args);
 
-    // BusinessObject 已有便利方法，會自動帶入當前 AccessToken 與 ProgId：
-    //   CreateDataFormRepository(ProgId)        → 通用 IDataFormRepository
-    //   CreateFormRepository<IOrderRepository>() → 註冊表綁定的專屬介面
+    // BusinessObject already has convenience methods that pass in the current AccessToken and ProgId:
+    //   CreateDataFormRepository(ProgId)        → the generic IDataFormRepository
+    //   CreateFormRepository<IOrderRepository>() → the dedicated interface bound in the registry
     var repository = CreateDataFormRepository(ProgId);
     var result = repository.<DoWork>(args.X, args.Y, ...);
 
-    return new <Action>Result { /* 從 repository 結果組裝 */ };
+    return new <Action>Result { /* assemble from the repository result */ };
 }
 ```
 
-- `virtual` 開放 host 端 override（多租戶、特化邏輯）
-- `[ApiAccessControl]` 三選一：`Public/Encoded/Encrypted` × `Anonymous/Authenticated`
-- BO 不重複實作 fallback 邏輯（fallback 屬於 Repository）
+- `virtual` lets the host override it (multi-tenancy, specialised logic)
+- `[ApiAccessControl]` choices: `Public/Encoded/Encrypted` × `Anonymous/Authenticated`
+- The BO does not reimplement fallback logic (fallback belongs to the Repository)
 
-### Layer 8b: BO 介面宣告（`I<Axis>BusinessObject.cs`）
+### Layer 8b: BO interface declaration (`I<Axis>BusinessObject.cs`)
 
-BO 公開方法有兩種使用情境：
+A public BO method has two usage scenarios:
 
-1. **API 呼叫**：透過 `JsonRpcExecutor` 反射 `progId.action` 派發，**只需 BO 實體有 `public` method + `[ApiAccessControl]`**，不需在介面宣告
-2. **跨 BO 呼叫**：另一個 BO 透過 `IBusinessObjectFactory.CreateXxxBusinessObject(...)` 取得實體後直接呼叫 method，這時呼叫端拿到的是 `I<Axis>BusinessObject` 型別 → **method 必須在介面上**才能呼叫
+1. **API call**: dispatched by `JsonRpcExecutor` reflecting on `progId.action`. **This only needs a `public` method + `[ApiAccessControl]` on the BO class**; no interface declaration is required
+2. **Cross-BO call**: another BO obtains an instance through `IBusinessObjectFactory.CreateXxxBusinessObject(...)` and calls the method directly. The caller then holds an `I<Axis>BusinessObject` → **the method must be on the interface** to be callable
 
-**慣例：給 API 用的方法，預設一併開放給其他 BO 用** —— 在 `I<Axis>BusinessObject` 加上對應簽名。
+**Convention: a method meant for the API is, by default, also opened to other BOs.** Add the matching signature to `I<Axis>BusinessObject`.
 
 ```csharp
 // src/Polhem.Business/Form/IFormBusinessObject.cs
 public interface IFormBusinessObject : IBusinessObject
 {
-    /// <summary><英文方法說明></summary>
+    /// <summary><English description of the method></summary>
     /// <param name="args">The input arguments.</param>
     <Action>Result <Action>(<Action>Args args);
 }
 ```
 
-- 介面方法**不**標 `[ApiAccessControl]`（attribute 由 BO 實體承擔）
-- 簽名與 BO 實作完全一致（C# 用 signature 自動 match）
-- 既存 `ISystemBusinessObject` 的 `CreateSession` / `GetDefine` / `SaveDefine` 是樣板
-- 例外：純 API 用、不適合給其他 BO 直接呼叫的（如 `Ping` 健康檢查、`Login`）可不放介面 —— 屬人工判斷
+- Interface methods are **not** marked `[ApiAccessControl]` (the BO class carries the attribute)
+- The signature is identical to the BO implementation (C# matches by signature automatically)
+- The existing `CreateSession` / `GetDefine` / `SaveDefine` on `ISystemBusinessObject` are the templates
+- Exception: methods that are API-only and not suitable for other BOs to call directly (such as the `Ping` health check, `Login`) may stay off the interface; this is a human judgement call
 
-#### 跨 BO 呼叫的實際寫法
+#### How to write a cross-BO call
 
-`IBusinessObjectFactory` 在 `Polhem.Definition`（下層），`I<Axis>BusinessObject` 在 `Polhem.Business`（上層）。為避免 `Polhem.Definition → Polhem.Business` 反向相依，factory method 一律宣告回傳 `object`。
+`IBusinessObjectFactory` lives in `Polhem.Definition` (lower layer) and `I<Axis>BusinessObject` in `Polhem.Business` (upper layer). To avoid a reverse `Polhem.Definition → Polhem.Business` dependency, every factory method is declared to return `object`.
 
-**呼叫端在 `Polhem.Business` 或更高層時**，用 `BusinessObjectFactoryExtensions`（位於 `Polhem.Business`）提供的 typed wrapper 直接拿介面、不必自己 cast：
+**When the caller is in `Polhem.Business` or a higher layer**, use the typed wrappers provided by `BusinessObjectFactoryExtensions` (in `Polhem.Business`) to get the interface directly, without casting yourself:
 
 ```csharp
-// 在另一個 BO method 內 — 推薦寫法
+// Inside another BO method (recommended)
 var formBo = _ctx.BoFactory.CreateFormBO(AccessToken, "Employee");
 var listResult = formBo.GetList(new GetListArgs { /* ... */ });
 
@@ -248,77 +250,77 @@ var systemBo = _ctx.BoFactory.CreateSystemBO(AccessToken);
 var defineResult = systemBo.GetDefine(new GetDefineArgs { /* ... */ });
 ```
 
-每個 axis 對應一個固定介面（`IFormBusinessObject` / `ISystemBusinessObject`），實體之間以 `progId` 在 runtime 區分；沒有「特化 BO 介面」的設計，因此不需要泛型多載。
+Each axis maps to one fixed interface (`IFormBusinessObject` / `ISystemBusinessObject`), and instances are told apart at runtime by `progId`. There is no "specialised BO interface" design, so no generic overloads are needed.
 
-**呼叫端在不能引用 `Polhem.Business` 的專案時**（例如 `Polhem.Api.Core` 內部派發路徑），仍直接用 `IBusinessObjectFactory.CreateXxxBusinessObject(...)` 拿 `object` 後 cast：
+**When the caller is in a project that cannot reference `Polhem.Business`** (for example the internal dispatch path in `Polhem.Api.Core`), still call `IBusinessObjectFactory.CreateXxxBusinessObject(...)` directly, get an `object`, and cast:
 
 ```csharp
 var rawBo = factory.CreateBusinessObject(token, progId);
-// 此情境下通常不會 cast 到 IFormBusinessObject（會引入 Polhem.Business 依賴），
-// 而是經由 reflection / dynamic dispatch 操作。
+// In this situation it is usually not cast to IFormBusinessObject (that would pull in a Polhem.Business dependency);
+// it is operated on through reflection / dynamic dispatch instead.
 ```
 
-- 設計理由詳見 `Polhem.Definition/IBusinessObjectFactory.cs` 的 XML doc
-- cast 失敗會丟 `InvalidCastException` —— 確保 host 端註冊正確的 BO 型別
-- 不要為了「免 cast」把 `IBusinessObjectFactory` 搬到 `Polhem.Business`，會把整個依賴拓撲翻轉
-- 不要用 default interface method 在 `IBusinessObjectFactory` 上加泛型 method（如 `T CreateForm<T>()`）—— constraint 無法引用 `IFormBusinessObject`，型別安全僅靠 `where T : class`；呼叫端要明寫 `<IFormBusinessObject>` 反而易錯（`FormBO` 一定實作 `IFormBusinessObject`，這個對應該由 helper 寫死、不是讓 caller 重新指定）
+- The design rationale is in the XML doc of `Polhem.Definition/IBusinessObjectFactory.cs`
+- A failed cast throws `InvalidCastException`; make sure the host registers the correct BO type
+- Do not move `IBusinessObjectFactory` into `Polhem.Business` to "avoid the cast"; that would invert the whole dependency topology
+- Do not add a generic method to `IBusinessObjectFactory` through a default interface method (such as `T CreateForm<T>()`). The constraint cannot reference `IFormBusinessObject`, so type safety rests only on `where T : class`, and making callers write `<IFormBusinessObject>` explicitly is actually more error-prone (`FormBO` always implements `IFormBusinessObject`; that mapping should be fixed in the helper, not re-specified by the caller)
 
-### Layer 9（FormSchema-driven CRUD 才需）: Repository 抽象擴充
+### Layer 9 (only for FormSchema-driven CRUD): extending the Repository abstraction
 
-1. **`Polhem.Repository.Abstractions/Form/IDataFormRepository.cs`** 加方法簽名
-   - 參數型別限 `Polhem.Definition.*`（RepoAbs 只依賴 Definition）
-   - **不**接受 `Polhem.Business.*` 型別（會反向依賴）
-2. **`Polhem.Repository/Form/DataFormRepository.cs`** 實作（這層可用 `Polhem.Db`）
-   - ctor 接 `FormSchema schema`, `IDefineAccess defineAccess`,
+1. **`Polhem.Repository.Abstractions/Form/IDataFormRepository.cs`**: add the method signature
+   - Parameter types are limited to `Polhem.Definition.*` (RepoAbs depends only on Definition)
+   - It does **not** accept `Polhem.Business.*` types (that would be a reverse dependency)
+2. **`Polhem.Repository/Form/DataFormRepository.cs`**: the implementation (this layer may use `Polhem.Db`)
+   - The ctor takes `FormSchema schema`, `IDefineAccess defineAccess`,
      `IDbAccessFactory dbAccessFactory`, `IDbConnectionManager connectionManager`,
      `string databaseId`
-   - 取 dialect：`DbDialectRegistry.Get(connInfo.DatabaseType)
+   - Get the dialect: `DbDialectRegistry.Get(connInfo.DatabaseType)
      .CreateFormCommandBuilder(_schema, _defineAccess)`
-   - tableName 直接傳 `_schema.ProgId`（規則 2）
-   - 執行：`_dbAccessFactory.Create(_databaseId).Execute(spec)`
-3. **`Polhem.Repository/Factories/RepositoryFactory.cs`** 已注入所需服務
-   - `CreateFormRepository<T>(accessToken, progId)` 依註冊表的 `ProgramItem.Repository`
-     解析型別（未指定則用 `DataFormRepository`），schema 的 `CategoryId` 決定 databaseId
-   - **型別載不到一律 throw**，與 BO 軸的靜默降級相反：資料存取沒有無害的降級模式
-4. **`Polhem.Hosting/PolhemFrameworkServiceCollectionExtensions.cs`** 的
-   `IRepositoryFactory` 註冊**必須**用 `CreateConfigurableService`
-   （DI-aware），不是 `CreateOrDefault`（parameterless）。Factory ctor 改簽
-   名時若忘記同步換 → runtime InvalidOperationException
+   - Pass `_schema.ProgId` directly as the tableName (rule 2)
+   - Execute: `_dbAccessFactory.Create(_databaseId).Execute(spec)`
+3. **`Polhem.Repository/Factories/RepositoryFactory.cs`** already has the needed services injected
+   - `CreateFormRepository<T>(accessToken, progId)` resolves the type from the registry's `ProgramItem.Repository`
+     (`DataFormRepository` when unspecified); the schema's `CategoryId` determines the databaseId
+   - **If the type cannot be loaded, it always throws**, the opposite of the BO axis's silent degradation: data access has no harmless degraded mode
+4. The `IRepositoryFactory` registration in **`Polhem.Hosting/PolhemFrameworkServiceCollectionExtensions.cs`**
+   **must** use `CreateConfigurableService`
+   (DI-aware), not `CreateOrDefault` (parameterless). If you change the Factory ctor signature
+   and forget to switch it → runtime InvalidOperationException
 
-### Layer 10: Client connector（`Polhem.Api.Client/Connectors/<Axis>ApiConnector.cs`）
+### Layer 10: client connector (`Polhem.Api.Client/Connectors/<Axis>ApiConnector.cs`)
 
 ```csharp
 public async Task<<Action>Response> <Action>Async(
     <param1> p1 = default!, ..., <paramN>? pN = null)
 {
-    var request = new <Action>Request { /* 屬性 = parameter */ };
+    var request = new <Action>Request { /* property = parameter */ };
     return await ExecuteAsync<<Action>Response>(<Axis>Actions.<Action>, request)
         .ConfigureAwait(false);
 }
 ```
 
-- **只有 async，沒有同步多載**。connector 全部是 `Task`-returning；需要同步呼叫的
-  呼叫端自行處理。（2026-08-06 覆核：`SystemApiConnector` / `FormApiConnector`
-  兩個檔案裡的同步多載數量皆為 0）
-- `ExecuteAsync<TResponse>` 預設 `PayloadFormat.Encrypted`；除非 BO method 標
-  `ApiProtectionLevel.Encoded` 才在這層 override
-- 例外傳遞：JsonRpcExecutor 把 BO 拋的 `ArgumentException /
+- **Async only; there are no synchronous overloads.** Every connector method returns `Task`; callers that need a
+  synchronous call handle it themselves. (Rechecked 2026-08-06: the number of synchronous overloads in
+  `SystemApiConnector` / `FormApiConnector` is 0 in both files)
+- `ExecuteAsync<TResponse>` defaults to `PayloadFormat.Encrypted`; override it at this layer only when the BO method is
+  marked `ApiProtectionLevel.Encoded`
+- Exception propagation: JsonRpcExecutor treats `ArgumentException /
   InvalidOperationException / NotSupportedException / FormatException /
-  JsonRpcException` 視為 user-facing 轉成 RpcError 帶原訊息；其他系統例外
-  （含 NRE、IO）統一收斂為 `"Internal server error"`
+  JsonRpcException` thrown by a BO as user-facing and turns them into an RpcError carrying the original message. Other
+  system exceptions (including NRE and IO) are all collapsed into `"Internal server error"`
 
-## 測試（三層覆蓋）
+## Tests (three layers of coverage)
 
-| 層 | 路徑 / 樣板 | 驗證重點 | 不驗證 |
+| Layer | Path / template | What it verifies | What it does not verify |
 |----|------------|---------|--------|
-| Wire-level | `tests/Polhem.Api.Core.UnitTests/<Axis>/<Action>MessagePackTests.cs` | `[Key]` 編號 / union / collection / DataTable 序列化 | BO 行為、SQL |
-| Executor dispatch | `tests/Polhem.Api.Core.UnitTests/<Axis>/<Action>JsonRpcRoundTripTests.cs` | `progId.action` 反射派發、Input/Output Converter | 實際 SQL 結果 |
-| BO+DB integration | `tests/Polhem.Business.UnitTests/<Axis>/<Axis>BusinessObject<Action>Tests.cs` | BO → Repository → SQL → 真實資料正確性 | wire format |
+| Wire-level | `tests/Polhem.Api.Core.UnitTests/<Axis>/<Action>MessagePackTests.cs` | `[Key]` numbering / union / collection / DataTable serialization | BO behaviour, SQL |
+| Executor dispatch | `tests/Polhem.Api.Core.UnitTests/<Axis>/<Action>JsonRpcRoundTripTests.cs` | `progId.action` reflection dispatch, Input/Output Converter | Actual SQL results |
+| BO+DB integration | `tests/Polhem.Business.UnitTests/<Axis>/<Axis>BusinessObject<Action>Tests.cs` | BO → Repository → SQL → correctness against real data | Wire format |
 
-三層加起來才是「end-to-end 工作」。**不要**寫單支「executor + 真實 DB」的整合測試
-—— 過度耦合、重複覆蓋既有層的職責。
+Only the three layers together amount to "works end to end". Do **not** write a single "executor + real DB" integration
+test: it is over-coupled and duplicates the responsibilities of the existing layers.
 
-### Wire-level 測試樣板
+### Wire-level test template
 
 ```csharp
 public class <Action>MessagePackTests
@@ -333,11 +335,11 @@ public class <Action>MessagePackTests
     }
 
     [Fact]
-    public void <Action>Request_DefaultValues_RoundTrip() { /* 確認 null collection 不 NRE */ }
+    public void <Action>Request_DefaultValues_RoundTrip() { /* confirm a null collection does not NRE */ }
 }
 ```
 
-### Executor dispatch 測試樣板（stub Repository）
+### Executor dispatch test template (stub Repository)
 
 ```csharp
 public class <Action>JsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
@@ -382,130 +384,129 @@ public class <Action>JsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
 }
 ```
 
-### BO + DB integration 測試樣板
+### BO + DB integration test template
 
 ```csharp
 public class <Axis>BusinessObject<Action>Tests : IClassFixture<SharedDbFixture>
 {
     [DbFact(DatabaseType.SQLite)]
-    public void <Action>_Sqlite_<情境>()
+    public void <Action>_Sqlite_<Scenario>()
     {
-        // 用 TestDbConventions.GetDatabaseId(dbType, categoryId) 取測試 databaseId
-        // 構造 DataFormRepository 並用 TestOverrideServiceProvider 注入到 BO Context
-        // 種子 InsertCommandBuilder 種測試資料，try/finally 清理
-        // 呼叫 bo.<Action>(args)，斷言回傳 DataTable
+        // Get the test databaseId with TestDbConventions.GetDatabaseId(dbType, categoryId)
+        // Construct a DataFormRepository and inject it into the BO Context with TestOverrideServiceProvider
+        // Seed test data with InsertCommandBuilder; clean up in try/finally
+        // Call bo.<Action>(args) and assert on the returned DataTable
     }
 }
 ```
 
-- 測試環境的 databaseId 是 `{categoryId}_{dbtype}`（如 `company_sqlite`），
-  與 prod 的 `CategoryId` 直接當 databaseId 不一致 —— 必須在測試中明確傳
-  測試 databaseId（不依賴 production Factory 的解析）
-- 種子/清理沿用 `EmployeeBuildSelectIntegrationTests` 的 try/finally + GUID
-  RowId pattern；用 `InsertCommandBuilder` / `DeleteCommandBuilder` 跨 dialect
-  種資料
+- In the test environment the databaseId is `{categoryId}_{dbtype}` (such as `company_sqlite`),
+  which differs from production, where the `CategoryId` is used directly as the databaseId. Tests must pass the
+  test databaseId explicitly (do not rely on the production Factory's resolution)
+- Seeding and cleanup follow the try/finally + GUID RowId pattern of `EmployeeBuildSelectIntegrationTests`;
+  use `InsertCommandBuilder` / `DeleteCommandBuilder` to seed data across dialects
 
-## 容易踩的坑
+## Common pitfalls
 
-撰寫過程中容易遇到、CI 必擋：
+Easy to hit while writing, and always blocked by CI:
 
-1. **`Polhem.Business` 加 `Polhem.Db` ProjectReference = 違反規則 1**：表示在 BO 裡
-   直接呼叫 Db；改走 Repository 抽象
-2. **資料夾與命名空間不一致（IDE0130）**：`Messages/Form/` 必須對應
+1. **Adding a `Polhem.Db` ProjectReference to `Polhem.Business` = violates rule 1**: it means the BO calls Db
+   directly; go through the Repository abstraction instead
+2. **Folder and namespace mismatch (IDE0130)**: `Messages/Form/` must map to
    `namespace Polhem.Api.Core.Messages.Form`
-3. **Key 編號重複**：同一 DTO 內 `[Key(n)]` 不可重複，含 base class；100 起算
-4. **BO Result 名稱違反 `XxxResult` 慣例**：`ApiOutputConverter` 反射 miss，
-   要嘛改名要嘛在 `Polhem.Hosting.AddPolhemFramework` 補
-   `ApiContractRegistry.Register<I, T>()`
-5. **多型 union 沒標 `[Union]`**：MessagePack 反序列化時 collection 元素全變
-   null；必須在抽象基類加 `[Union(0, typeof(ConcreteA))]` 等
-6. **直接用 `MessagePackSerializer.Serialize(..., ContractlessStandardResolver.Options)`
-   繞過框架**：collection 元素掉光、無錯誤拋出。一律走 `MessagePackCodec` /
-   `MessagePackPayloadSerializer`
-7. **`ApiInputConverter` 用屬性名比對**：BO Args 屬性名與 Wire DTO 不對齊 →
-   該欄位送丟，無編譯錯誤
-8. **`SysInfo.AllowedTypeNamespaces` 白名單外的型別**：跨 wire 反序列化會被
-   `SafeTypelessFormatter` 擋下；用 `Polhem.Api.Core` / `Polhem.Business` /
-   `Polhem.Definition` 內的型別最安全
-9. **`RepositoryFactory` ctor 簽名改 → DI 註冊要同步換**：
+3. **Duplicate Key numbers**: `[Key(n)]` must not repeat within one DTO, including the base class; start at 100
+4. **BO Result name breaks the `XxxResult` convention**: `ApiOutputConverter` reflection misses it.
+   Either rename it or add `ApiContractRegistry.Register<I, T>()` in
+   `Polhem.Hosting.AddPolhemFramework`
+5. **Polymorphic union without `[Union]`**: on MessagePack deserialization every collection element becomes
+   null; you must add `[Union(0, typeof(ConcreteA))]` and so on to the abstract base class
+6. **Calling `MessagePackSerializer.Serialize(..., ContractlessStandardResolver.Options)` directly and
+   bypassing the framework**: collection elements are all lost and no error is thrown. Always go through
+   `MessagePackCodec` / `MessagePackPayloadSerializer`
+7. **`ApiInputConverter` matches by property name**: if BO Args property names do not match the wire DTO →
+   that field is silently lost, with no compile error
+8. **Types outside the `SysInfo.AllowedTypeNamespaces` allowlist**: cross-wire deserialization is blocked by
+   `SafeTypelessFormatter`; types in `Polhem.Api.Core` / `Polhem.Business` /
+   `Polhem.Definition` are the safest
+9. **`RepositoryFactory` ctor signature changes → the DI registration must change with it**:
    `CreateOrDefault` (parameterless) → `CreateConfigurableService` (DI-aware)
-10. **既有 trivial POCO 屬性測試在 ctor 簽名變寬時直接刪**：當測試只是
-    `new T(progId).ProgId == progId` 這種 setter 檢查，重構後改維護成本高、
-    無實質覆蓋；整合測試承接覆蓋率
-11. **`[DbFact]` 只看環境變數，不檢查 DB 可達性**：`.runsettings` 設了
-    `POLHEM_TEST_CONNSTR_SQLSERVER` 但 SQL Server container 沒跑 → 測試會失敗
-    而非 skip。SQLite in-memory 沒這問題（無外部依賴）
-12. **process-wide static 在測試類別間 race**：`SysInfo.TraceListener` 一旦被
-    某測試類別指向 capture writer，所有並行測試類別的 Tracer 事件都會寫進
-    那個 writer；其後設用 `ConcurrentQueue<T>` 等執行緒安全容器，不要用
+10. **Delete existing trivial POCO property tests outright when a ctor signature widens**: when a test is only a
+    setter check like `new T(progId).ProgId == progId`, keeping it after a refactor costs upkeep and
+    adds no real coverage; the integration tests carry the coverage
+11. **`[DbFact]` only looks at environment variables and does not check that the DB is reachable**: if `.runsettings`
+    sets `POLHEM_TEST_CONNSTR_SQLSERVER` but the SQL Server container is not running → the test fails
+    instead of skipping. SQLite in-memory does not have this problem (no external dependency)
+12. **Process-wide statics race between test classes**: once `SysInfo.TraceListener` is pointed at a capture writer by
+    one test class, Tracer events from every test class running in parallel are written to
+    that writer. From then on use a thread-safe container such as `ConcurrentQueue<T>`, not
     `List<T>`
-13. **`CollectionBaseFormatter` 對 null collection 行為**：曾有 bug 導致
-    `SortFieldCollection? = null` 序列化 NRE，2026-05-14 已修正為 nil 進 nil
-    出。新增 nullable collection 欄位前確認此修正仍在
-14. **`FormApiConnector` ExecFunc 系列引用 `SystemActions`** — 歷史合理寫法
-    （`ExecFunc` 是 base BO 方法、不分軸），這是規則 3 的**唯一**例外。
-    新增 FormBO 專屬 method 一律用 `FormActions.<Action>`
+13. **`CollectionBaseFormatter` behaviour on a null collection**: a bug once made
+    `SortFieldCollection? = null` NRE on serialization; fixed on 2026-05-14 so that nil in gives nil
+    out. Before adding a nullable collection field, confirm the fix is still in place
+14. **The `FormApiConnector` ExecFunc family references `SystemActions`**: a historically reasonable choice
+    (`ExecFunc` is a base BO method and belongs to no axis). This is the **only** exception to rule 3.
+    New FormBO-specific methods always use `FormActions.<Action>`
 
-## 完整 checklist（合併所有層）
+## Full checklist (all layers combined)
 
-新增一個 `<Action>` 方法時，依序完成下面所有步驟。
+When adding an `<Action>` method, complete every step below in order.
 
-**P0 探勘（read-only）**：
-- [ ] 確認 BO 取所需服務的路徑（Repository 抽象 / `Services.GetRequiredService<T>()`）
-- [ ] 序列化能力：基本型別 / collection / union 全部走過
-- [ ] `ApiContractRegistry` 不需顯式註冊（除非 BO Result 命名違反 `XxxResult` 慣例）
+**P0 exploration (read-only)**:
+- [ ] Confirm how the BO obtains the services it needs (Repository abstraction / `Services.GetRequiredService<T>()`)
+- [ ] Serialization capability: primitive types / collection / union all walked through
+- [ ] `ApiContractRegistry` needs no explicit registration (unless the BO Result name breaks the `XxxResult` convention)
 
-**P1 合約層**（單 PR / 單 commit）：
+**P1 contract layer** (single PR / single commit):
 - [ ] `src/Polhem.Api.Contracts/<Axis>/I<Action>Request.cs`
 - [ ] `src/Polhem.Api.Contracts/<Axis>/I<Action>Response.cs`
 - [ ] `src/Polhem.Api.Core/Messages/<Axis>/<Action>Request.cs`
 - [ ] `src/Polhem.Api.Core/Messages/<Axis>/<Action>Response.cs`
-- [ ] `src/Polhem.Definition/<Axis>Actions.cs` 加 `public const string <Action>`
+- [ ] Add `public const string <Action>` to `src/Polhem.Definition/<Axis>Actions.cs`
 - [ ] Release build 0w/0e
 
-**P2 BO + Repository**（單 PR / 單 commit）：
+**P2 BO + Repository** (single PR / single commit):
 - [ ] `src/Polhem.Business/<Axis>/<Action>Args.cs`
 - [ ] `src/Polhem.Business/<Axis>/<Action>Result.cs`
-- [ ] `src/Polhem.Business/<Axis>/<Axis>BusinessObject.cs` 加 method（走 Repository）
-- [ ] `src/Polhem.Business/<Axis>/I<Axis>BusinessObject.cs` 加方法簽名（除非該 method 是純 API 用、不適合給其他 BO 直接呼叫）
-- [ ] `src/Polhem.Repository.Abstractions/Form/IDataFormRepository.cs` 加抽象方法
-- [ ] `src/Polhem.Repository/Form/DataFormRepository.cs` 實作
-- [ ] `src/Polhem.Repository/Factories/RepositoryFactory.cs` 注入新依賴（如有）
-- [ ] `src/Polhem.Hosting/...` DI 註冊若 ctor 簽名變更 → 改為 `CreateConfigurableService`
-- [ ] BO 整合測試：`tests/Polhem.Business.UnitTests/<Axis>/<Axis>BusinessObject<Action>Tests.cs`
-- [ ] Release build 0w/0e + SQLite 測試通過
+- [ ] Add the method to `src/Polhem.Business/<Axis>/<Axis>BusinessObject.cs` (through the Repository)
+- [ ] Add the method signature to `src/Polhem.Business/<Axis>/I<Axis>BusinessObject.cs` (unless the method is API-only and not suitable for other BOs to call directly)
+- [ ] Add the abstract method to `src/Polhem.Repository.Abstractions/Form/IDataFormRepository.cs`
+- [ ] Implement it in `src/Polhem.Repository/Form/DataFormRepository.cs`
+- [ ] Inject new dependencies into `src/Polhem.Repository/Factories/RepositoryFactory.cs` (if any)
+- [ ] If the ctor signature changes, switch the DI registration in `src/Polhem.Hosting/...` to `CreateConfigurableService`
+- [ ] BO integration test: `tests/Polhem.Business.UnitTests/<Axis>/<Axis>BusinessObject<Action>Tests.cs`
+- [ ] Release build 0w/0e + SQLite tests pass
 
-**P3 Client + wire 測試**（單 PR / 單 commit）：
-- [ ] `src/Polhem.Api.Client/Connectors/<Axis>ApiConnector.cs` 加 `<Action>Async`（只有 async）
-- [ ] Wire-level round-trip 測試
-- [ ] Executor dispatch round-trip 測試
-- [ ] Release build 0w/0e + 測試通過
+**P3 Client + wire tests** (single PR / single commit):
+- [ ] Add `<Action>Async` to `src/Polhem.Api.Client/Connectors/<Axis>ApiConnector.cs` (async only)
+- [ ] Wire-level round-trip test
+- [ ] Executor dispatch round-trip test
+- [ ] Release build 0w/0e + tests pass
 
-**P4 Surface 同步**（與 P2 / P3 任一同 commit）：
-- [ ] 更新 `docs/en/api-method-reference.md` + `docs/zh-TW/api-method-reference.md` 對應軸的表格新增 / 修改該方法
-- [ ] 更新 `tests/Polhem.Business.UnitTests/BoApiSurfaceTests.cs` 的 `ExpectedSurface` baseline（新增、移除、或 `[ApiAccessControl]` 改動都要動）
-- [ ] BoApiSurfaceTests 通過（驗證 baseline 與實際反射結果同步）
+**P4 surface sync** (in the same commit as either P2 or P3):
+- [ ] Update `docs/en/api-method-reference.md` + `docs/zh-TW/api-method-reference.md`: add / change the method in the table for its axis
+- [ ] Update the `ExpectedSurface` baseline in `tests/Polhem.Business.UnitTests/BoApiSurfaceTests.cs` (additions, removals and `[ApiAccessControl]` changes all require it)
+- [ ] BoApiSurfaceTests pass (verifies that the baseline matches the actual reflection result)
 
-**Commit + push**：
-- [ ] 桌面環境直接 commit 到 main，push 後等 CI 跑完並回報
-- [ ] 失敗時依 `~/.claude/rules/pull-request.md` 流程處理（明確可修則直接修復、commit、push）
+**Commit + push**:
+- [ ] Commit and push following `.claude/rules/pull-request.md` (branch + pull request workflow), then wait for CI to finish and report
+- [ ] On failure, handle it by the process in `.claude/rules/pull-request.md` (if clearly fixable, fix it directly, commit, push)
 
-## 參考檔案（讀程式碼對著看）
+## Reference files (keep them open while reading code)
 
-| 用途 | 檔案 |
+| Purpose | File |
 |------|------|
-| Contract 介面樣板 | `src/Polhem.Api.Contracts/System/IGetDefineRequest.cs` / `IGetDefineResponse.cs`（依 axis 分資料夾：`System/` `Form/` `AuditLog/`）|
-| Wire DTO 樣板 | `src/Polhem.Api.Core/Messages/System/GetDefineRequest.cs` / `GetDefineResponse.cs` |
-| Action 常數樣板 | `src/Polhem.Definition/SystemActions.cs` / `FormActions.cs` |
-| BO Args/Result 樣板 | `src/Polhem.Business/System/GetDefineArgs.cs` / `GetDefineResult.cs` |
-| BO 方法樣板 | `src/Polhem.Business/System/SystemBusinessObject.cs`（`GetDefine`） / `src/Polhem.Business/Form/FormBusinessObject.cs`（`GetList`） |
-| Repository 抽象 / 實作 | `src/Polhem.Repository.Abstractions/Form/IDataFormRepository.cs` / `src/Polhem.Repository/Form/DataFormRepository.cs` |
+| Contract interface template | `src/Polhem.Api.Contracts/System/IGetDefineRequest.cs` / `IGetDefineResponse.cs` (folders by axis: `System/` `Form/` `AuditLog/`) |
+| Wire DTO template | `src/Polhem.Api.Core/Messages/System/GetDefineRequest.cs` / `GetDefineResponse.cs` |
+| Action constant template | `src/Polhem.Definition/SystemActions.cs` / `FormActions.cs` |
+| BO Args/Result template | `src/Polhem.Business/System/GetDefineArgs.cs` / `GetDefineResult.cs` |
+| BO method template | `src/Polhem.Business/System/SystemBusinessObject.cs` (`GetDefine`) / `src/Polhem.Business/Form/FormBusinessObject.cs` (`GetList`) |
+| Repository abstraction / implementation | `src/Polhem.Repository.Abstractions/Form/IDataFormRepository.cs` / `src/Polhem.Repository/Form/DataFormRepository.cs` |
 | Repository Factory | `src/Polhem.Repository/Factories/RepositoryFactory.cs` |
 | Client connector | `src/Polhem.Api.Client/Connectors/SystemApiConnector.cs` / `FormApiConnector.cs` |
 | JSON-RPC dispatch | `src/Polhem.Api.Core/JsonRpc/JsonRpcExecutor.cs` |
-| 命名慣例反射 | `src/Polhem.Api.Core/Conversion/ApiOutputConverter.cs` |
-| BO 整合測試樣板 | `tests/Polhem.Business.UnitTests/Form/FormBusinessObjectGetListTests.cs` |
-| Wire round-trip 樣板 | `tests/Polhem.Api.Core.UnitTests/Form/GetListMessagePackTests.cs` |
-| Executor dispatch 樣板 | `tests/Polhem.Api.Core.UnitTests/Form/GetListJsonRpcRoundTripTests.cs` |
-| API method 單頁總覽 | `docs/en/api-method-reference.md`（每加新方法須同步） |
-| Surface audit 測試 | `tests/Polhem.Business.UnitTests/BoApiSurfaceTests.cs` |
+| Naming-convention reflection | `src/Polhem.Api.Core/Conversion/ApiOutputConverter.cs` |
+| BO integration test template | `tests/Polhem.Business.UnitTests/Form/FormBusinessObjectGetListTests.cs` |
+| Wire round-trip template | `tests/Polhem.Api.Core.UnitTests/Form/GetListMessagePackTests.cs` |
+| Executor dispatch template | `tests/Polhem.Api.Core.UnitTests/Form/GetListJsonRpcRoundTripTests.cs` |
+| Single-page API method overview | `docs/en/api-method-reference.md` (must be updated for every new method) |
+| Surface audit test | `tests/Polhem.Business.UnitTests/BoApiSurfaceTests.cs` |

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # XML doc 散文中的 <c>識別字</c> 不得指向已不存在的型別 —— 落地檢查
-# （規範見 ~/.claude/rules/code-style.md 的「XML 文件註解」段落）
+# （規範見 .claude/rules/code-style.md 的 XML 文件註解一節）
 #
 # 為什麼需要這支：`<see cref>` 由編譯器把關（CS1574 + TreatWarningsAsErrors → 建置失敗），
 # 但**散文裡的反引號 `<c>Foo</c>` 完全不受保護**。型別改名或刪除後，`<c>` 就成了指空，

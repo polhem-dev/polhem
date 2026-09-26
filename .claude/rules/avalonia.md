@@ -1,38 +1,41 @@
-# Avalonia 規範（骨幹）
+# Avalonia rules (core)
 
-> 預設主題（Semi.Avalonia）、UI 架構定位、控件驗收基準、控件踩雷指路
-> → `src/Polhem.UI.Avalonia/CLAUDE.md`（觸及該專案時自動載入）。
-> 行動 head（`net10.0-ios` / `net10.0-android`）的 trim / AOT 雷 → `rules/apple-mobile-trim.md`。
+> Default theme (Semi.Avalonia), UI architecture positioning, control acceptance criteria, pointers to control pitfalls
+> → `src/Polhem.UI.Avalonia/CLAUDE.md` (loaded automatically when you touch that project).
+> Trim / AOT pitfalls for mobile heads (`net10.0-ios` / `net10.0-android`) → `rules/apple-mobile-trim.md`.
 
-本檔只留**跨四個 Avalonia 頭**都適用的那條：`src/Polhem.UI.Avalonia`、`tools/DefineEditor`、
-`samples/Avalonia.*`、`apps/Polhem.Northwind`。
+This file keeps only the one rule that applies **across all four Avalonia heads**: `src/Polhem.UI.Avalonia`,
+`tools/DefineEditor`, `samples/Avalonia.*`, `apps/Polhem.Northwind`.
 
-## 升級 Avalonia / UI 套件前，必先評估相關套件相容性
+## Before upgrading Avalonia / UI packages, assess compatibility of the related packages first
 
-**相容性凌駕「升到最新」**。升級任一 Avalonia / UI 套件（Avalonia 核心族、
-`Avalonia.Controls.DataGrid`、`Semi.Avalonia`、`Semi.Avalonia.DataGrid`、任何第三方主題 /
-控件庫）前，先評估**所有相關 UI 套件**的相容性：
+**Compatibility beats "upgrade to latest".** Before upgrading any Avalonia / UI package (the Avalonia core family,
+`Avalonia.Controls.DataGrid`, `Semi.Avalonia`, `Semi.Avalonia.DataGrid`, any third-party theme / control library),
+assess the compatibility of **all related UI packages**:
 
-1. **版本可用性** —— 每個相關套件是否都有對應目標版。第三方主題（如 Semi）常慢半拍，
-   Avalonia 核心與周邊套件**本來就非同步釋出**，不強求同版號。
-2. **runtime 相容** —— 主題 / 控件在新核心上是否跑版、樣式錯位。
-   **build 過 ≠ 相容**：全專案 0 error 也證明不了 Semi 主題套在新核心上不出問題，
-   此層只有執行期看得出來。
+1. **Version availability**: does every related package have a matching target version? Third-party themes
+   (such as Semi) often lag behind, and the Avalonia core and its companion packages **are released
+   asynchronously by nature**, so identical version numbers are not required.
+2. **Runtime compatibility**: does the theme / control render incorrectly or misalign on the new core?
+   **Builds ≠ compatible**: 0 errors across the whole solution still does not prove the Semi theme works on the new
+   core. This layer is only visible at runtime.
 
-### 升級原則
+### Upgrade principles
 
-- **不立「同版號」硬規則** —— 非同步釋出下做不到；依賴為 NuGet min-version 語意，
-  混版可 restore，但 restore 過不代表主題相容。
-- **不無腦升核心到最新** —— Semi 慢半拍時，寧可整組停在 **`Semi.Avalonia` 能支援的版本線**
-  求穩，不讓 Avalonia 核心超前 Semi。
-- **整組一起升的時機** —— 等所有相關套件都出對應版、且能實際 runtime 驗證主題不跑版後，
-  再整組一起升。
-- 升級前先掃出全 repo 引用點，確保無遺漏（跨 `src/`、`tools/`、`samples/`、`apps/`）：
+- **No hard "same version number" rule.** It is impossible under asynchronous releases; dependencies use NuGet
+  min-version semantics, so mixed versions restore, but a successful restore does not mean the theme is compatible.
+- **Do not blindly upgrade the core to latest.** When Semi lags behind, prefer keeping the whole set on **the version
+  line `Semi.Avalonia` supports** for stability. Do not let the Avalonia core get ahead of Semi.
+- **When to upgrade the whole set together**: once every related package has a matching release and you can
+  actually verify at runtime that the theme renders correctly, upgrade the whole set together.
+- Before upgrading, scan the whole repository for references so nothing is missed (across `src/`, `tools/`,
+  `samples/`, `apps/`):
 
 ```bash
 grep -rn "Include=\"\(Avalonia\|Semi\)" --include="*.csproj" .
 ```
 
-> 2026-07-09 曾把核心全升 12.1.0（8 個 csproj build 0 error），仍在收尾時**喊停退回** ——
-> 理由是 Semi.Avalonia 停在 12.0.3，主題樣式針對舊核心建置，視覺風險不願冒。
-> 這是「相容性凌駕升最新」的實際案例。
+> On 2026-07-09 the core was fully upgraded to 12.1.0 (8 csproj files built with 0 errors), and it was still
+> **stopped and rolled back** while wrapping up. The reason: Semi.Avalonia was at 12.0.3, its theme styles were built
+> against the old core, and the visual risk was not worth taking.
+> This is a real case of "compatibility beats upgrading to latest".

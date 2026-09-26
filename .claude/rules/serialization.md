@@ -1,90 +1,104 @@
-# 序列化與運算式引擎規範（骨幹）
+# Serialization and expression engine rules (core)
 
-> wire formatter 的註冊程序、三個誤判點、`object` 封套、AOT 實測與回歸閘門
-> → `src/Polhem.Api.Core/CLAUDE.md`（觸及該專案時自動載入）。
-> 行動端 trim / AOT 的型別形狀要件 → `rules/apple-mobile-trim.md`。
-> 踩雷脈絡 → `docs/repo-ops/gotchas/serialization-and-expressions.md`。
+> The wire formatter registration procedure, the three easy misjudgements, the `object` envelope, AOT measurements
+> and the regression gates → `src/Polhem.Api.Core/CLAUDE.md` (loaded automatically when you touch that project).
+> Type shape requirements for mobile trim / AOT → `rules/apple-mobile-trim.md`.
+> Pitfall background → `docs/repo-ops/gotchas/serialization-and-expressions.md`.
 
-## wire body codec 逐請求協商（adr-044）
+## The wire body codec is negotiated per request (adr-044)
 
-body codec **不是部署設定**，由每個請求在 payload 信封的 `codec` 欄位宣告，伺服端**以同一個
-codec 回應**；**未宣告即 MessagePack** —— 那是相容性常數而非挑出來的預設值（所有早於協商機制的
-客戶端都不宣告且都送 MessagePack）。可用名稱與對應實作見 `PayloadCodecNames` 與
-`ApiPayloadOptionsFactory.CreateSerializer`，**本檔不複寫那份清單**。
+The body codec **is not a deployment setting**. Each request declares it in the `codec` field of the payload
+envelope, and the server **responds with the same codec**. **Undeclared means MessagePack**: that is a compatibility
+constant, not a chosen default (every client that predates negotiation declares nothing and sends MessagePack).
+The available names and their implementations are in `PayloadCodecNames` and
+`ApiPayloadOptionsFactory.CreateSerializer`; **this file does not copy that list**.
 
-`PayloadFormat`（Plain/Encoded/Encrypted）是**加密/壓縮維度**，與 codec 正交：`Plain` 的 body
-一律是信封那一份 System.Text.Json，只有 `Encoded` / `Encrypted` 的 body 才由 codec 決定怎麼拼寫。
+`PayloadFormat` (Plain/Encoded/Encrypted) is **the encryption/compression dimension**, orthogonal to the codec: a
+`Plain` body is always the envelope's own System.Text.Json; only `Encoded` / `Encrypted` bodies are spelled by the
+codec.
 
-因此 **.NET client（含 iOS / Android / WASM head）不宣告時兩端仍都跑 MessagePack**，
-`ApiConnector.PayloadCodec` 是那一端唯一的改法。「行動端走 JSON、MessagePack 只在桌面/伺服器間」
-的假設仍然不成立。
+Therefore, **when a .NET client (including the iOS / Android / WASM heads) declares nothing, both ends still run
+MessagePack**, and `ApiConnector.PayloadCodec` is the only way to change it on that end. The assumption "mobile uses
+JSON, MessagePack is only between desktop/server" still does not hold.
 
-> ⚠️ **`ApiPayloadOptions.Serializer` 已於 4.27.0 移除**（破壞性變更）；殘留在既有
-> `SystemSettings.xml` 的 `<Serializer>` 元素會被**忽略**而不是被採用。
-> 「框架沒有 JSON body serializer」「`CreateSerializer` 只有一個 case」是 **4.26.0 以前**的結論，
-> **別再照它推導**。
+> ⚠️ **`ApiPayloadOptions.Serializer` was removed in 4.27.0** (breaking change); a `<Serializer>` element left over
+> in an existing `SystemSettings.xml` is **ignored**, not honoured.
+> "The framework has no JSON body serializer" and "`CreateSerializer` has only one case" are conclusions from
+> **4.26.0 and earlier**. **Do not reason from them any more.**
 
-## wire 形狀變更有另一個 repo 的下游
+## Wire shape changes have a downstream in another repository
 
-`wire-contracts/messages.d.ts` 與 `wire-fixtures/` 是**跨語言合約的權威來源**，
-TypeScript 客戶端 [`bee-connector-js`](https://github.com/jeff377/bee-connector-js)
-同步它們（刻意不簽入副本 —— 複製一份就是第二個權威），其 CI 會比對抓到的內容。
+`wire-contracts/messages.d.ts` and `wire-fixtures/` are **the authoritative source of the cross-language contract**.
+The TypeScript client [`bee-connector-js`](https://github.com/jeff377/bee-connector-js) syncs them (it deliberately
+does not check in a copy: a copy would be a second authority), and its CI compares what it fetches.
 
-因此**改動這兩處會讓那個 repo 的 CI 變紅，那是預期行為、不是意外** —— 紅燈就是通知機制。
-只在這邊落地而沒有跟進另一邊，等於讓同一份合約的兩半互相矛盾，而 TS 端仍照舊形狀解析。
+So **changing these two places turns that repository's CI red, and that is expected, not an accident**: the red light
+is the notification mechanism. Landing the change here without following up there leaves the two halves of the same
+contract contradicting each other, while the TS side still parses the old shape.
 
-> 這條規則刻意記在 polhem 而不是 bee-connector-js：**需要它的是在這裡改 wire 的人**，
-> 而那個人不會打開另一個 repo。記在那邊等於保證被忽略。
+> This rule is deliberately recorded in polhem and not in bee-connector-js: **the person who needs it is the one
+> changing the wire here**, and that person will not open the other repository. Recording it there would guarantee
+> it is ignored.
 
-判別法：**這次改動會讓 `wire-contracts/` 或 `wire-fixtures/` 出現 diff 嗎？** 會，就要一起安排
-另一邊。相關的重生成指令寫在那兩個資料夾各自的 README，本檔不複寫。
+Test: **will this change produce a diff in `wire-contracts/` or `wire-fixtures/`?** If yes, arrange the other side
+at the same time. The regeneration commands are in the README of each of those two folders; this file does not
+copy them.
 
-## 定義層不得引入傳輸格式套件（adr-036）
+## The definition layer must not bring in a transport format package (adr-036)
 
-`src/Polhem.Definition` **不得**有 `MessagePack`（或任何傳輸格式套件）的 `PackageReference`。
-判準是「會不會讓定義層長出外部套件相依」：`[XmlIgnore]` / `[JsonIgnore]` 是 BCL 詞彙、
-可用；MessagePack 標註不可。全 repo 的 MessagePack 相依只在 **`Polhem.Api.Core`**。
+`src/Polhem.Definition` **must not** have a `PackageReference` to `MessagePack` (or any transport format package).
+The criterion is "would it give the definition layer an external package dependency": `[XmlIgnore]` /
+`[JsonIgnore]` are BCL vocabulary and are allowed; MessagePack attributes are not. The only MessagePack dependency
+in the whole repository is in **`Polhem.Api.Core`**.
 
-wire 綁定由 `src/Polhem.Api.Core/MessagePack/` 的**手寫 formatter** 承擔，定義型別不帶標註。
+Wire binding is handled by the **hand-written formatters** in `src/Polhem.Api.Core/MessagePack/`; definition types
+carry no attributes.
 
-## 新增 wire 型別必須顯式註冊 formatter
+## New wire types must have an explicitly registered formatter
 
-`ContractlessStandardResolver` **沒有 reflection fallback**，只是桌面端的便利退路 ——
-它靠 `Reflection.Emit`，而 .NET for iOS 對每個建置設 `DynamicCodeSupport=false`，
-那裡未註冊的型別會擲 `FormatterNotRegisteredException`（不是變慢）。
+`ContractlessStandardResolver` **has no reflection fallback**; it is only a convenience on desktop. It relies on
+`Reflection.Emit`, and .NET for iOS sets `DynamicCodeSupport=false` for every build, so an unregistered type there
+throws `FormatterNotRegisteredException` (it does not just get slower).
 
-新增 `Polhem.Api.Core.Messages.*`、其遞移可達的定義層型別或集合時，**必須**到
-`src/Polhem.Api.Core/MessagePack/WireContracts.*.cs` 註冊。完整程序與三個容易誤判的點見
-`src/Polhem.Api.Core/CLAUDE.md`；漏補會被 `WireContractDriftTests` 擋下。
+When you add `Polhem.Api.Core.Messages.*`, a definition-layer type or collection transitively reachable from it, you
+**must** register it in `src/Polhem.Api.Core/MessagePack/WireContracts.*.cs`. The full procedure and the three easy
+misjudgements are in `src/Polhem.Api.Core/CLAUDE.md`; a missed registration is caught by `WireContractDriftTests`.
 
-> 「MessagePack 在 AOT 可用」是被 2026-08-10 實測推翻的舊結論，**別照它推導** ——
-> 推翻的過程與那次讓 iOS wire 整條壞掉的紀錄留在 `src/Polhem.Api.Core/CLAUDE.md`。
+> "MessagePack works under AOT" is an old conclusion disproved by measurement on 2026-08-10. **Do not reason from
+> it.** How it was disproved, and the record of the time it broke the entire iOS wire, are kept in
+> `src/Polhem.Api.Core/CLAUDE.md`.
 
-## AOT：DynamicExpresso 無需特殊處理（此條不變）
+## AOT: DynamicExpresso needs no special handling (this rule is unchanged)
 
-DynamicExpresso 的 `Expression.Compile()` 在 `IsDynamicCodeSupported=false` 時自動退回**直譯器**。
+DynamicExpresso's `Expression.Compile()` automatically falls back to the **interpreter** when
+`IsDynamicCodeSupported=false`.
 
-**行動端不需為 AOT 停用即時運算。** `FormLiveComputation.IsDegraded` 的 degrade 機制是為
-「客戶撰寫的運算式語法/識別字錯誤」防護，**與 AOT 無關**。
+**Mobile does not need to disable live computation for AOT.** The degrade mechanism of
+`FormLiveComputation.IsDegraded` protects against "syntax/identifier errors in customer-written expressions" and is
+**unrelated to AOT**.
 
-## 運算式變數表兩條硬性要求
+## Two hard requirements for the expression variable table
 
-跨 `Polhem.Base`（`ExpressionPolicy`）與各 UI head（`FormLiveComputation`）兩處，故留常駐。
+This spans two places, `Polhem.Base` (`ExpressionPolicy`) and each UI head (`FormLiveComputation`), so it stays
+always loaded.
 
-1. **變數 key 一律用 `FormField.FieldName`（schema 宣告的大小寫）**，不要用
-   `DataColumn.ColumnName` —— **DynamicExpresso 識別字區分大小寫**，而運算式寫的是宣告欄名；
-   拿 `DataColumn.ColumnName` 當 key 等於把運算式綁死在「記憶體 DataSet 當下用哪種大小寫存欄名」上。
-   `DataRow` 索引與 `Fields.Contains` 本就大小寫無關，寫回不受影響。
+1. **Variable keys always use `FormField.FieldName` (the casing declared in the schema)**, not
+   `DataColumn.ColumnName`. **DynamicExpresso identifiers are case-sensitive**, and expressions are written with the
+   declared field names; using `DataColumn.ColumnName` as the key ties the expression to "whichever casing the
+   in-memory DataSet currently stores column names in". `DataRow` indexing and `Fields.Contains` are
+   case-insensitive anyway, so writing back is unaffected.
 
-   > **`AddColumn` 現在存小寫，不是大寫**（`fieldName.ToLowerInvariant()`，
-   > `src/Polhem.Base/Data/DataTableExtensions.cs`）。歷史上它存大寫，用大寫當 key 會直接
-   > `UnknownIdentifierException`；ADR-029 已把儲存大小寫遷移為小寫，**與宣告欄名恰好一致**。
-   > 這**不代表本條失效**——結論本來就是「與儲存大小寫解耦」，不是「避開大寫」；
-   > 恰好一致只是讓違反此條的寫法暫時看不出症狀。
+   > **`AddColumn` now stores lowercase, not uppercase** (`fieldName.ToLowerInvariant()`,
+   > `src/Polhem.Base/Data/DataTableExtensions.cs`). Historically it stored uppercase, and using uppercase as the
+   > key threw `UnknownIdentifierException` outright; ADR-029 migrated the stored casing to lowercase, which
+   > **happens to match the declared field names**. This **does not make this rule obsolete**: the conclusion was
+   > always "decouple from the stored casing", not "avoid uppercase"; the coincidental match only hides the symptom
+   > of code that violates this rule for now.
 
-   **回歸測試務必用「與宣告欄名大小寫不同」的欄名建 DataTable**（現行實作下即大寫）。
-   用跟宣告欄名一模一樣的小寫測，兩種寫法都會過，等於沒測到解耦。
-2. **`ExpressionPolicy.CoerceValue` 不能只靠 `Convert.ChangeType`** —— `Guid` / `byte[]` 非
-   `IConvertible`。client 端從 SQLite 讀回的 GUID 欄是 **String 型**，且可能是**空字串**。
-   規則：`Guid` → 空/空白回 `Guid.Empty`、否則 `Guid.Parse`；`byte[]` → 空字串回空陣列、
-   否則 `FromBase64String`。對齊「null/DBNull → 型別預設值」政策。
+   **Regression tests must build the DataTable with column names whose casing differs from the declared field
+   names** (under the current implementation, uppercase). Testing with exactly the same lowercase as the declared
+   names passes with both approaches, so it does not test the decoupling at all.
+2. **`ExpressionPolicy.CoerceValue` cannot rely on `Convert.ChangeType` alone.** `Guid` / `byte[]` are not
+   `IConvertible`. A GUID column read back from SQLite on the client is a **String**, and may be an **empty string**.
+   Rule: `Guid` → empty/whitespace returns `Guid.Empty`, otherwise `Guid.Parse`; `byte[]` → empty string returns an
+   empty array, otherwise `FromBase64String`. This aligns with the "null/DBNull → the type's default value" policy.

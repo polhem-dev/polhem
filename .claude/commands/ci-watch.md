@@ -1,55 +1,57 @@
 ---
-description: 監測 main 最新 CI 狀態與 SonarCloud 掃描結果，失敗時自動分析 log 並修正
-argument-hint: "[分支名稱，預設 main]"
+description: Watch the latest CI status and SonarCloud scan results for main; on failure, analyze the log and fix automatically
+argument-hint: "[branch name, default main]"
 ---
 
 # CI Watch
 
-針對分支 `$1`（未指定則用 `main`）啟動監測流程。
+Start the watch procedure for branch `$1` (`main` if not given).
 
-## 執行步驟
+## Steps
 
-使用 `/loop` 機制持續檢查，直到 CI 通過或使用者介入：
+Use the `/loop` mechanism to keep checking until CI passes or the user steps in:
 
 ```
-/loop 監測分支 $1 (未指定時用 main) 的 CI 狀態，規則如下：
+/loop Watch the CI status of branch $1 (main if not given), with these rules:
 
-1. 檢查 GitHub Actions 最新 run：
+1. Check the latest GitHub Actions run:
    - `gh run list -b <branch> -L 3 --json databaseId,status,conclusion,workflowName,headSha`
-   - 若最新 run 狀態為 `in_progress` 或 `queued`，等待下一輪再檢查（選擇較長 delay，例如 240s，配合 build 時間）
-   - 若最新 run `conclusion` 為 `success`，進入步驟 2
-   - 若最新 run `conclusion` 為 `failure`：
-     a. `gh run view <id> --log-failed` 取得失敗 log
-     b. 分析失敗原因：分類為「編譯錯誤／測試失敗／lint／格式／環境問題」
-     c. 明確可修者：直接修改程式碼、commit、push，commit message 遵循專案慣例（繁中、type(scope)）
-     d. 架構性或語意不明者：先停止 loop 並向使用者說明
-     e. 修復後進入下一輪，等待新的 CI run 結果
+   - If the latest run is `in_progress` or `queued`, wait for the next round (choose a longer delay, such as 240s, to match the build time)
+   - If the latest run's `conclusion` is `success`, go to step 2
+   - If the latest run's `conclusion` is `failure`:
+     a. Get the failure log with `gh run view <id> --log-failed`
+     b. Analyze the cause: classify it as "compile error / test failure / lint / formatting / environment problem"
+     c. Clearly fixable: change the code and commit (commit message follows the project convention: English, type(scope)), then get the fix to `main` as `.claude/rules/pull-request.md` describes
+     d. Architectural or ambiguous: stop the loop first and explain to the user
+     e. After the fix, go to the next round and wait for the new CI run result
 
-2. 檢查 SonarCloud 掃描結果（若 build-ci.yml 整合了 SonarCloud）：
-   - 透過 sonarcloud API 或 gh checks 取最新 quality gate 狀態
-   - 若有新增 BLOCKER / HIGH / MEDIUM 等級 issue：
-     a. 取得 issue 清單與對應程式碼位置
-     b. 依 `.claude/rules/sonarcloud.md` 規範修正
-     c. commit 並 push，等待下一輪驗證
-   - 若僅為 LOW 或 INFO，記錄並報告，不自動修（由使用者決定是否處理）
+2. Check the SonarCloud scan result (if build-ci.yml integrates SonarCloud):
+   - Get the latest quality gate status through the sonarcloud API or gh checks
+   - If there are new BLOCKER / HIGH / MEDIUM issues:
+     a. Get the issue list and the corresponding code locations
+     b. Fix them according to `.claude/rules/sonarcloud.md`
+     c. Commit, get the change to `main` as `.claude/rules/pull-request.md` describes, and wait for the next round to verify
+   - If they are only LOW or INFO, record and report them; do not fix automatically (the user decides whether to handle them)
 
-3. 通過條件（結束 loop）：
-   - GitHub Actions 最新 run 為 success
-   - SonarCloud quality gate 為 passed（或無新增 HIGH 以上 issue）
-   - 回報摘要：修了哪些問題、剩餘觀察項目
-
-## 規則與限制
-
-- **不修復已知環境性失敗**（如 NuGet 還原暫時失敗、runner 超時）；建議使用者手動 re-run
-- **不關閉、不忽略任何 check**
-- push 時**禁止**使用 `--no-verify` 或 `--force`
-- 每次修復後的 commit 須遵循 `.claude/CLAUDE.md` 的規範
-- 連續 3 次同一類問題修不好時，停止並向使用者求助（避免無限迴圈）
-- 若使用者當前在其他工作，回報後由使用者決定是否繼續
-
-## 參考規則
-
-- `~/.claude/rules/pull-request.md`：CI 失敗處理流程（使用者層）
-- `.claude/rules/sonarcloud.md`：SonarCloud 規則對照
-- `~/.claude/rules/scanning.md`：SAST 基本安全要求（使用者層）
+3. Pass conditions (end the loop):
+   - The latest GitHub Actions run is success
+   - The SonarCloud quality gate is passed (or there are no new HIGH-or-above issues)
+   - Report a summary: which problems were fixed, and what remains to watch
 ```
+
+## Rules and limits
+
+- **Do not fix known environmental failures** (such as a transient NuGet restore failure or a runner timeout);
+  suggest the user re-run manually
+- **Do not close or ignore any check**
+- When pushing, `--no-verify` and `--force` are **forbidden**
+- Every commit made after a fix must follow the conventions in `.claude/CLAUDE.md`
+- If the same kind of problem fails to be fixed 3 times in a row, stop and ask the user for help (to avoid an infinite
+  loop)
+- If the user is currently working on something else, report and let the user decide whether to continue
+
+## Reference rules
+
+- `.claude/rules/pull-request.md`: how changes reach `main`, and the CI failure handling procedure
+- `.claude/rules/sonarcloud.md`: SonarCloud rule reference
+- `.claude/rules/scanning.md`: baseline SAST security requirements

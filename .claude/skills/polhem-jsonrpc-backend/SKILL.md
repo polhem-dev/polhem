@@ -1,147 +1,160 @@
 ---
 name: polhem-jsonrpc-backend
 description: >
-  用 Polhem 框架套件從零建立一個 JSON-RPC 後端 server(ASP.NET Core, POST /api)+ 前端 client 呼叫,
-  含 bootstrap、Define/ XML 設定、自訂 Business Object、demo 登入、session/API key、以及避雷。
-  當使用者要「用 Polhem 框架建後端」「Polhem JSON-RPC server」「AddPolhemFramework 怎麼設」「Polhem 的
-  BusinessObject / ProgramSettings / Define 設定」「Polhem.Api.Client 怎麼呼叫 server」「Polhem server 登入 /
-  session / X-Api-Key」「把現有專案的後端接上 Polhem」之類需求時使用,即使沒明確講出全部關鍵字也要主動
-  觸發。**只負責 server 建置 + client 呼叫的通用骨架與設定;不負責特定 app 的業務邏輯設計。**
+  Build a JSON-RPC backend server from scratch with the Polhem framework packages (ASP.NET Core, POST /api), plus
+  frontend client calls. Covers bootstrap, Define/ XML settings, custom Business Objects, demo login, session/API key,
+  and pitfalls. Use when the user wants to "build a backend with the Polhem framework", "Polhem JSON-RPC server",
+  "how to set up AddPolhemFramework", "Polhem BusinessObject / ProgramSettings / Define settings", "how
+  Polhem.Api.Client calls the server", "Polhem server login / session / X-Api-Key", "connect an existing project's
+  backend to Polhem", or similar. Trigger proactively even when not all of these keywords are stated.
+  **Only covers the generic skeleton and settings for building the server and calling it from a client; does not
+  cover business-logic design for a specific app.**
 ---
 
-# 用 Polhem 建 JSON-RPC 後端
+# Building a JSON-RPC backend with Polhem
 
-Polhem 是一套**定義驅動(XML)+ 反射分派**的 JSON-RPC 後端框架。整個 server 幾乎沒有 C#:框架的 API
-executor、action 字串解析、MessagePack 序列化、`[ApiAccessControl]` 驗證、CRUD 基底方法全在 `Polhem.*`
-NuGet 套件裡。host 專案只是薄殼:一個 csproj、`Program.cs`、bootstrap 類、一個空 controller、幾個
-自訂 BO,加上 `Define/` 設定樹。
+Polhem is a **definition-driven (XML) + reflection-dispatch** JSON-RPC backend framework. The server has almost no C#:
+the framework's API executor, action string parsing, MessagePack serialization, `[ApiAccessControl]` checks and CRUD
+base methods all live in the `Polhem.*` NuGet packages. The host project is a thin shell: one csproj, `Program.cs`, a
+bootstrap class, an empty controller, a few custom BOs, and the `Define/` settings tree.
 
-**理解這點能省下大量摸索**:大多數行為由 `Define/*.xml` 觸發,不是由你寫的程式。
+**Understanding this saves a lot of trial and error**: most behavior is triggered by `Define/*.xml`, not by code you
+write.
 
-## 權威參考(照抄的來源)
+## Authoritative references (the sources to copy from)
 
-`polhem/samples`(與框架同版,**最佳藍本**):
-- `samples/QuickStart.Server/` — 最小 server(Program.cs、空 controller、`EchoBusinessObject`、`QuickStartFormBoTypeResolver`)
-- `samples/QuickStart.Console/` — 最小 client(`Polhem.Api.Client` 直接呼叫)
-- `samples/Polhem.Samples.Shared/` — `DemoBackend`(`AddPolhemBackend`/`UsePolhemBackend`)、`DemoBusinessObjectFactory`、`DemoAuthenticatingSystemBusinessObject`、`DemoCredentials`
+`polhem/samples` (same version as the framework, **the best blueprint**):
+- `samples/QuickStart.Server/` — minimal server (Program.cs, empty controller, `EchoBusinessObject`, `QuickStartFormBoTypeResolver`)
+- `samples/QuickStart.Console/` — minimal client (calls `Polhem.Api.Client` directly)
+- `samples/Polhem.Samples.Shared/` — `DemoBackend` (`AddPolhemBackend`/`UsePolhemBackend`), `DemoBusinessObjectFactory`, `DemoAuthenticatingSystemBusinessObject`, `DemoCredentials`
 
-完整 app（含 seeder、company scope、`ProgramSettings` 宣告式綁定）：`apps/Polhem.Northwind/`。
+Full app (with seeder, company scope, declarative `ProgramSettings` binding): `apps/Polhem.Northwind/`.
 
-> 動工前務必打開 `QuickStart.Server` + `DemoBackend.cs` 對照,版本細節(介面成員、tag 名)會隨版本變。
+> Before you start, always open `QuickStart.Server` + `DemoBackend.cs` side by side. Version details (interface
+> members, tag names) change between versions.
 
-## 不適用（改走別支）
+## Not applicable (use another skill)
 
-- 要 **DB scope（common/company/log）、company context、seeder** →
-  **`polhem-app-scaffold`**（它建立在本 skill 的樣板之上，只補這三塊）
-- 要 **ERP 定義驅動的表單 CRUD**（`FormBusinessObject` 的 `GetList`/`Save`/`Delete`）→
-  同上；本 skill 的 BO 軸是最小的 `BusinessObject`
-- 在已接好的 app 上**加一張表單** → **`polhem-add-form`**
+- Need **DB scope (common/company/log), company context, seeder** →
+  **`polhem-app-scaffold`** (it builds on this skill's template and only adds those three parts)
+- Need **ERP definition-driven form CRUD** (`GetList`/`Save`/`Delete` on `FormBusinessObject`) →
+  same as above; this skill's BO axis is the minimal `BusinessObject`
+- **Adding a form** to an app that is already wired up → **`polhem-add-form`**
 
-## 請求流程(先建立心智模型)
+## Request flow (build the mental model first)
 
 ```
 client ──POST /api──▶ ApiServiceController
    body: {jsonrpc:"2.0", method:"Game.GetLevels", params:{format,value,type}, id}
-   headers: X-Api-Key(必填), Authorization: Bearer <token>(非匿名方法才需要)
+   headers: X-Api-Key (required), Authorization: Bearer <token> (only for non-anonymous methods)
         │
         ▼
-  驗 X-Api-Key + token → 以第一個「.」切 method = (ProgId, Action)
+  check X-Api-Key + token → split method at the first "." = (ProgId, Action)
         │  ProgId=="System" → CreateSystemBusinessObject
-        │  其餘            → CreateFormBusinessObject → IFormBoTypeResolver.Resolve(progId)
+        │  otherwise        → CreateFormBusinessObject → IFormBoTypeResolver.Resolve(progId)
         ▼
   Activator.CreateInstance(boType, ctx, token, progId, isLocalCall)
-  GetMethod(Action) → 檢查 [ApiAccessControl] → 反射叫用:單一 args 進、單一 result 出
+  GetMethod(Action) → check [ApiAccessControl] → invoke by reflection: single args in, single result out
         │
         ▼
-  result 經 ApiPayload(MessagePack→gzip→aes,或 Plain=JSON)包回,client 反序列化為 TResult
+  result is wrapped back in ApiPayload (MessagePack→gzip→aes, or Plain=JSON); the client deserializes it to TResult
 ```
 
-**單一 args / 單一 result** 是每個 action 的鐵則:`TResult Action(TArgs args)`(或 `async Task<TResult>`)。
+**Single args / single result** is the hard rule for every action: `TResult Action(TArgs args)` (or
+`async Task<TResult>`).
 
-## 建置步驟
+## Build steps
 
-依序做;每步的完整程式碼在 `references/`。
+Do these in order; the full code for each step is in `references/`.
 
-### 1. 專案骨架
+### 1. Project skeleton
 
-Web 專案(`Microsoft.NET.Sdk.Web`, `net10.0`),加套件(集中式版本管理放 `Directory.Packages.props`):
+Web project (`Microsoft.NET.Sdk.Web`, `net10.0`). Add the packages (with central package management, versions go in
+`Directory.Packages.props`):
 
 ```xml
 <PackageReference Include="Polhem.Api.AspNetCore" />  <!-- controller + API pipeline -->
-<PackageReference Include="Polhem.Business" />         <!-- BO 基底 -->
-<PackageReference Include="Polhem.Db" />               <!-- 資料存取 / dialect -->
+<PackageReference Include="Polhem.Business" />         <!-- BO base classes -->
+<PackageReference Include="Polhem.Db" />               <!-- data access / dialect -->
 <PackageReference Include="Polhem.Hosting" />          <!-- AddPolhemFramework -->
 <PackageReference Include="Microsoft.Data.Sqlite" />
-<!-- 釘 3.x 非漏洞版;Microsoft.Data.Sqlite 會拉進漏洞的 2.1.x -->
+<!-- Pin a non-vulnerable 3.x; Microsoft.Data.Sqlite pulls in the vulnerable 2.1.x -->
 <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
 ```
 
 ### 2. `Program.cs` + backend bootstrap
 
-`Program.cs` 極簡;真正的 wiring 封裝在一個 `XxxBackend` 靜態類(照抄 `DemoBackend.cs`)。**兩段初始化都要**:
+`Program.cs` is minimal; the real wiring is wrapped in an `XxxBackend` static class (copy `DemoBackend.cs`).
+**Both initialization stages are required**:
 
 ```csharp
 // Program.cs
 var builder = WebApplication.CreateBuilder(args);
-builder.AddXxxBackend();          // 見下
+builder.AddXxxBackend();          // see below
 builder.Services.AddControllers();
 var app = builder.Build();
-app.UseXxxBackend();              // seeder + ApiClientInfo.LocalServiceProvider(如需)
+app.UseXxxBackend();              // seeder + ApiClientInfo.LocalServiceProvider (if needed)
 app.MapControllers();
 app.Run();
 ```
 
-`AddXxxBackend` 的核心順序(缺一不可):
+The core order in `AddXxxBackend` (none of these can be skipped):
 ```csharp
-var paths = new PathOptions { DefinePath = ResolveDefinePath() };   // walk-up 找 Define/SystemSettings.xml
+var paths = new PathOptions { DefinePath = ResolveDefinePath() };   // walk up to find Define/SystemSettings.xml
 DbProviderRegistry.Register(DatabaseType.SQLite, new SqliteProviderFactory(SqliteFactory.Instance));
 DbDialectRegistry.Register(DatabaseType.SQLite, new SqliteDialectFactory());
 var settings = SystemSettingsLoader.Load(paths);
 SysInfo.Initialize(settings.CommonConfiguration);
-ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions,   // ← 易漏!設 codec
+ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions,   // ← easy to miss! sets the codec
                              settings.CommonConfiguration.IsDebugMode);
 builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths, autoCreateMasterKey: true);
-// 在 AddPolhemFramework 之後註冊(last-wins),換掉工廠 / resolver:
+// Register after AddPolhemFramework (last-wins) to replace the factory / resolver:
 builder.Services.AddSingleton<IFormBoTypeResolver, XxxFormBoTypeResolver>();
 builder.Services.AddSingleton<IBusinessObjectFactory, XxxBusinessObjectFactory>();
 ```
 
-完整樣板(含 `ResolveDefinePath`、st_cache_notify materialize、master key fallback)見 `references/backend-bootstrap.md`。
+For the full template (with `ResolveDefinePath`, st_cache_notify materialize, master key fallback) see
+`references/backend-bootstrap.md`.
 
-### 3. 空 controller
+### 3. Empty controller
 
 ```csharp
 public class ApiController : Polhem.Api.AspNetCore.Controllers.ApiServiceController { }
 ```
-基底已宣告 `[Route("api")]` + POST handler,發布 `POST /api`,不需自己寫。
+The base class already declares `[Route("api")]` + a POST handler and publishes `POST /api`; you do not write it
+yourself.
 
-### 4. `Define/` 設定樹
+### 4. The `Define/` settings tree
 
-五個 XML(`Program.cs` 靠 walk-up 從 `AppContext.BaseDirectory` 往上找到含 `SystemSettings.xml` 的資料夾)。
-每個檔的角色與**最小內容**見 `references/define-config.md`。重點:
-- `SystemSettings.xml` — payload codec(messagepack/gzip/aes-cbc-hmac)、master key 來源、**`<AllowedTypeNamespaces>`**(你的 args/result 命名空間要列進去)。
-- `DatabaseSettings.xml` — `common`(框架強制)+ `company`,指向 SQLite 檔。
-- `DbCategorySettings.xml`、`ProgramSettings.xml`、`TableSchema/`(含框架 `st_cache_notify`)。
+Five XML files (`Program.cs` walks up from `AppContext.BaseDirectory` to find the folder containing
+`SystemSettings.xml`). The role and **minimal content** of each file are in `references/define-config.md`. Key points:
+- `SystemSettings.xml` — payload codec (messagepack/gzip/aes-cbc-hmac), master key source,
+  **`<AllowedTypeNamespaces>`** (your args/result namespaces must be listed).
+- `DatabaseSettings.xml` — `common` (required by the framework) + `company`, pointing at a SQLite file.
+- `DbCategorySettings.xml`, `ProgramSettings.xml`, `TableSchema/` (including the framework's `st_cache_notify`).
 
-### 5. demo 登入(免 seed st_user 快速起步)
+### 5. Demo login (start fast without seeding st_user)
 
-框架 `SystemBusinessObject.AuthenticateUser` 預設回 false,所以 `System.Login` 一定要 override 才會過。三件套(照抄 Demo):
-- `XxxCredentials`(硬編 demo user)
-- `XxxAuthenticatingSystemBusinessObject : SystemBusinessObject`(override `AuthenticateUser(LoginArgs, out userName)`)
-- `XxxBusinessObjectFactory : IBusinessObjectFactory`(`CreateSystemBusinessObject` 回上面那個)+ `XxxFormBoTypeResolver`
+The framework's `SystemBusinessObject.AuthenticateUser` returns false by default, so `System.Login` only succeeds if
+you override it. The three-piece set (copy from Demo):
+- `XxxCredentials` (hard-coded demo user)
+- `XxxAuthenticatingSystemBusinessObject : SystemBusinessObject` (override `AuthenticateUser(LoginArgs, out userName)`)
+- `XxxBusinessObjectFactory : IBusinessObjectFactory` (`CreateSystemBusinessObject` returns the class above) +
+  `XxxFormBoTypeResolver`
 
-完整程式碼見 `references/business-object.md`。
+Full code in `references/business-object.md`.
 
-### 6. 自訂 Business Object
+### 6. Custom Business Object
 
-自訂 RPC BO 繼承**最小的 `BusinessObject`**(`Polhem.Business`),**不是** `FormBusinessObject`(那是 ERP
-定義驅動表單 BO,帶 GetList/Save/Delete;一般 app 不需要)。詳見 `references/business-object.md`。
+A custom RPC BO inherits the **minimal `BusinessObject`** (`Polhem.Business`), **not** `FormBusinessObject` (that is
+the ERP definition-driven form BO with GetList/Save/Delete; a typical app does not need it). Details in
+`references/business-object.md`.
 
 ```csharp
 public sealed class GameBO : BusinessObject
 {
-    // 4-arg ctor(factory 用 Activator.CreateInstance(type, ctx, token, progId, isLocalCall));
-    // BusinessObject 基底只收 3-arg → progId 丟掉。
+    // 4-arg ctor (the factory uses Activator.CreateInstance(type, ctx, token, progId, isLocalCall));
+    // the BusinessObject base only takes 3 args → drop progId.
     public GameBO(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
         : base(ctx, accessToken, isLocalCall) { }
 
@@ -149,14 +162,18 @@ public sealed class GameBO : BusinessObject
     public GetLevelsResult GetLevels(GetLevelsArgs args) => new() { /* ... */ };
 }
 ```
-- args/result 是**純 POCO**,繼承 `BusinessArgs`/`BusinessResult`(免 MessagePack 標記),放進 `AllowedTypeNamespaces`。
-- **每個 action 必須標 `[ApiAccessControl]`**——無 attr 的方法會被框架直接拒絕(見避雷)。
-- progId→BO 綁定二選一:resolver 的 `switch`(程式,AOT 友善;回傳任何有對應 ctor 的 `Type` 皆可),或 `ProgramSettings.xml` 的 `BusinessObject="Ns.GameBO, Asm"`(宣告式)。
+- args/result are **plain POCOs** that inherit `BusinessArgs`/`BusinessResult` (no MessagePack attributes needed);
+  put them in `AllowedTypeNamespaces`.
+- **Every action must be marked `[ApiAccessControl]`** — methods without the attribute are rejected outright by the
+  framework (see pitfalls).
+- Bind progId→BO in one of two ways: the resolver's `switch` (code, AOT-friendly; it can return any `Type` with a
+  matching ctor), or `BusinessObject="Ns.GameBO, Asm"` in `ProgramSettings.xml` (declarative).
 
-### 7. client 呼叫
+### 7. Client calls
 
-前端只需引 `Polhem.Api.Client`。**別直接用 `FormApiConnector`**(ERP 表單專用)——仿它,繼承 `ApiConnector`
-做一個**專屬 connector**,把每個領域 action 包成 typed 方法。詳見 `references/client.md`:
+The frontend only needs a reference to `Polhem.Api.Client`. **Do not use `FormApiConnector` directly** (it is for ERP
+forms) — follow its pattern: inherit `ApiConnector` and build a **dedicated connector** that wraps each domain action
+as a typed method. Details in `references/client.md`:
 
 ```csharp
 public sealed class XxxApiConnector : ApiConnector
@@ -165,34 +182,52 @@ public sealed class XxxApiConnector : ApiConnector
     public Task<GetLevelsResponse> GetLevelsAsync() =>
         ExecuteAsync<GetLevelsResponse>("Game", "GetLevels", new GetLevelsRequest(), PayloadFormat.Plain);
 }
-// 呼叫端:
-ApiClientInfo.ApiKey = "xxx-dev";                       // 任意非空即過預設驗證
+// Caller:
+ApiClientInfo.ApiKey = "xxx-dev";                       // any non-empty value passes the default check
 var r = await new XxxApiConnector(endpoint, Guid.Empty).GetLevelsAsync();
 ```
-- endpoint:桌面 `http://localhost:<port>/api`;**Android 模擬器 `10.0.2.2`**、iOS 模擬器 `localhost`;開發期需放行 cleartext。
-- **wire DTO 依屬性名比對**,不必引用 server 的 BO 型別(enum 欄用 `string`,見避雷)。
+- endpoint: desktop `http://localhost:<port>/api`; **Android emulator `10.0.2.2`**, iOS simulator `localhost`;
+  cleartext must be allowed during development.
+- **wire DTOs are matched by property name**, so you do not need to reference the server's BO types (use `string` for
+  enum fields, see pitfalls).
 
-## 避雷(這些會讓你卡很久)
+## Pitfalls (these will stall you for a long time)
 
-- **`ApiServiceOptions.Initialize` 易漏**:它設 codec(序列化/壓縮/加密),`AddPolhemFramework` **不**做這件事。漏了 → payload 行為錯誤。
-- **每個 action 必標 `[ApiAccessControl]`**:框架對「無 attr(且 base/宣告類也無)」的方法一律拒絕(`UnauthorizedAccessException`)。這不是可選的。
-- **`X-Api-Key` 永遠必填**,連 auth-exempt 方法(`System.Ping`/`System.Login`/`System.GetApiPayloadOptions`)也要;只是這三個免 `Authorization: Bearer`。
-- **`AllowedTypeNamespaces` 漏列**:Encoded/Encrypted 走 typeless MessagePack,型別命名空間沒列進 `SystemSettings.xml` 會反序列化失敗。
-- **factory / resolver 要在 `AddPolhemFramework` 之後**用 `AddSingleton` 註冊(last-wins);之前註冊會被框架預設覆蓋。
-- **Define 靠 walk-up 定位**:預設不 copy-to-output,要從 checkout 內跑(`dotnet run`),或自行把 Define 設 `CopyToOutputDirectory`。
-- **master key**:dev 可 `autoCreateMasterKey: true` + 環境變數 `POLHEM_MASTER_KEY`(固定值讓加密列跨執行可解);正式環境必須由部署機制注入真 key。
-- **介面成員隨版本增加**:如 4.14.0 的 `IBusinessObjectFactory` 多了 `CreateLogBusinessObject`——自訂 factory 要補上(委派框架 `LogBusinessObject`)。編譯錯誤會直接告訴你缺哪個。
-- **wire DTO 反序列化**:client 對 Plain 回應用反射 STJ,且**沒註冊 `JsonStringEnumConverter`**——DTO 的 enum 欄位要宣告成 `string` 自己 parse,否則丟 `JsonException`(桌面/行動端都會中,見 `references/client.md`)。Release full-trim 另需 `TrimmerRootAssembly`。
+- **`ApiServiceOptions.Initialize` is easy to miss**: it sets the codec (serialization/compression/encryption), and
+  `AddPolhemFramework` does **not** do this. Miss it → payload behavior is wrong.
+- **Every action must be marked `[ApiAccessControl]`**: the framework rejects any method with no attribute (and none
+  on the base/declaring class either) with `UnauthorizedAccessException`. This is not optional.
+- **`X-Api-Key` is always required**, even for the auth-exempt methods
+  (`System.Ping`/`System.Login`/`System.GetApiPayloadOptions`); those three only skip `Authorization: Bearer`.
+- **Missing entry in `AllowedTypeNamespaces`**: Encoded/Encrypted uses typeless MessagePack; if a type's namespace is
+  not listed in `SystemSettings.xml`, deserialization fails.
+- **The factory / resolver must be registered with `AddSingleton` after `AddPolhemFramework`** (last-wins); registered
+  before, they are overwritten by the framework defaults.
+- **Define is located by walking up**: it is not copied to output by default, so run from inside the checkout
+  (`dotnet run`), or set `CopyToOutputDirectory` on Define yourself.
+- **master key**: in dev you can use `autoCreateMasterKey: true` + the environment variable `POLHEM_MASTER_KEY` (a
+  fixed value keeps encrypted rows decryptable across runs); in production a real key must be injected by the
+  deployment mechanism.
+- **Interface members grow between versions**: for example, in 4.14.0 `IBusinessObjectFactory` gained
+  `CreateLogBusinessObject` — a custom factory must add it (delegating to the framework's `LogBusinessObject`). The
+  compile error tells you exactly which member is missing.
+- **wire DTO deserialization**: the client deserializes Plain responses with reflection-based STJ and **does not
+  register `JsonStringEnumConverter`** — declare the DTO's enum fields as `string` and parse them yourself, otherwise
+  it throws `JsonException` (hits both desktop and mobile, see `references/client.md`). A Release full trim also needs
+  `TrimmerRootAssembly`.
 
-## 驗證
+## Verification
 
-1. `dotnet run --project <server>`(記住 dev port)。
-2. 寫一個小 console(`Polhem.Api.Client`,見 `references/client.md` 末的探針)呼 `System.Ping` + 你的第一個 action,確認真 JSON-RPC 往返成功——**這是最快、最可靠的驗證**,勝過 curl(curl 難組 ApiPayload 信封)。
-3. 再接真前端 / 行動端。
+1. `dotnet run --project <server>` (note the dev port).
+2. Write a small console app (`Polhem.Api.Client`, see the probe at the end of `references/client.md`) that calls
+   `System.Ping` + your first action to confirm a real JSON-RPC round trip — **this is the fastest and most reliable
+   check**, better than curl (curl makes it hard to build the ApiPayload envelope).
+3. Then connect the real frontend / mobile head.
 
 ## references/
 
-- `backend-bootstrap.md` — `Program.cs` + `XxxBackend` 完整樣板(walk-up、materialize、master key、factory 註冊)。
-- `define-config.md` — 五個 Define XML 的角色 + 可貼用最小內容。
-- `business-object.md` — BO / args / result / demo 登入三件套 / resolver 完整程式碼。
-- `client.md` — `Polhem.Api.Client` 呼叫式、endpoint、探針、行動端反序列化注意事項。
+- `backend-bootstrap.md` — full template for `Program.cs` + `XxxBackend` (walk-up, materialize, master key, factory
+  registration).
+- `define-config.md` — the role of the five Define XML files + minimal content you can paste.
+- `business-object.md` — full code for the BO / args / result / the demo login three-piece set / resolver.
+- `client.md` — how to call `Polhem.Api.Client`, endpoints, the probe, and deserialization notes for mobile.

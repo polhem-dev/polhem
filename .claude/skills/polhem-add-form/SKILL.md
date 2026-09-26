@@ -1,55 +1,69 @@
 ---
 name: polhem-add-form
-description: 在一個已接好的 Polhem app 上「加一張表單」的多檔流程與避雷 —— 一張可用的 CRUD 表單 = 5 處純定義修改（FormSchema + FormLayout + TableSchema + DbCategorySettings 註冊 + ProgramSettings 上選單），不寫 UI / CRUD 程式碼。涵蓋 5 檔 checklist（漏哪個會有什麼徵兆）、business 表用 company scope、TableSchema 資料夾必須 = CategoryId、FormSchema 慣例（lookup 的 RelationProgId+RelationFieldMappings+ref_* RelationField、master-detail 的 sys_master_rowid、DropDownEdit+ListItems、計算欄 FormField.ReadOnly、sys_name 可省）、何時才需要自訂 BO。當使用者要「加一張表單 / 主檔 / 單據」、「新增一個 ProgId / 畫面」、「為某張表做 CRUD」、「Polhem 表單要怎麼定義 lookup / 明細 / 下拉 / 唯讀欄」之類需求時使用，即使沒明講「加表單」也要主動觸發。
+description: The multi-file procedure and pitfalls for "adding a form" to a Polhem app that is already wired up. A working CRUD form = 5 pure definition changes (FormSchema + FormLayout + TableSchema + DbCategorySettings registration + ProgramSettings menu entry), with no UI / CRUD code. Covers the 5-file checklist (the symptom when each one is missing), company scope for business tables, the rule that the TableSchema folder must equal the CategoryId, FormSchema conventions (lookup via RelationProgId+RelationFieldMappings+ref_* RelationField, master-detail via sys_master_rowid, DropDownEdit+ListItems, computed fields via FormField.ReadOnly, sys_name optional), and when a custom BO is actually needed. Use it when the user wants to "add a form / master file / document", "add a new ProgId / screen", "build CRUD for a table", "how do I define a lookup / detail / dropdown / read-only field in a Polhem form" and similar; trigger it proactively even if the user does not literally say "add a form".
 ---
 
-# Polhem app 加一張表單
+# Adding a form to a Polhem app
 
-在已接好的 Polhem 後端（見 `polhem-app-scaffold`）上加一張**可用的 CRUD 表單**，是 **5 處純定義修改**，不寫 UI 也不寫 CRUD code。
+On a Polhem backend that is already wired up (see `polhem-app-scaffold`), adding a **working CRUD form** is
+**5 pure definition changes**: no UI code and no CRUD code.
 
-> **FormLayout 一定要落檔。** 它在設計階段產出（`FormLayoutGenerator.Generate`），執行階段
-> 一律讀定義檔——**缺檔不會自動產生，開表單直接失敗**。不要手刻：走
-> `polhem-scaffold-from-formschema` 產出原貌再改。
-> （這是 2026-08-20 的變更；在那之前框架會在執行期臨時生一份，舊筆記若說「不必寫」已失效。）
+> **The FormLayout must exist as a file.** It is produced at design time (`FormLayoutGenerator.Generate`); at run time
+> it is always read from the definition file. **A missing file is not generated automatically, and opening the form
+> fails outright.** Do not hand-write it: use `polhem-scaffold-from-formschema` to produce the original and then edit it.
+> (This changed on 2026-08-20; before that the framework generated one on the fly at run time, so old notes saying
+> "no need to write it" are obsolete.)
 
-> **參考實作**：`apps/Polhem.Northwind/Define/`（純主檔、雙 lookup 的 Product、master-detail 的 Order）。對著抄最快。
+> **Reference implementation**: `apps/Polhem.Northwind/Define/` (a plain master file, Product with two lookups, and the
+> master-detail Order). Copying from it is the fastest way.
 
-## 適用場景
+## When to use
 
-- 加一張新表單到既有 Polhem app（主檔、含 lookup 的主檔、master-detail 單據）
-- 想知道 FormSchema 怎麼表達 lookup / 明細 / 下拉 / 唯讀欄
+- Adding a new form to an existing Polhem app (master file, master file with lookups, master-detail document)
+- Wanting to know how FormSchema expresses lookups / details / dropdowns / read-only fields
 
-## 不適用
+## When not to use
 
-- 還沒接好後端 host → 先做 **`polhem-app-scaffold`**
-- 表單需要框架無法以定義表達的業務邏輯（單號、狀態機、驗證、金額）→ 表單照本 skill 加，**業務碼**走 **`polhem-add-bo-method`** 或直接 override `Save`/`GetNewData`（見「何時需要自訂 BO」）
-- 從現成 FormSchema 反推 layout/language/tableschema sidecar → **`polhem-scaffold-from-formschema`**
+- The backend host is not wired up yet → do **`polhem-app-scaffold`** first
+- The form needs business logic the framework cannot express as definitions (document numbers, state machines,
+  validation, amounts) → add the form with this skill, and put the **business code** through **`polhem-add-bo-method`**
+  or override `Save`/`GetNewData` directly (see "When a custom BO is needed")
+- Deriving layout/language/tableschema sidecars from an existing FormSchema → **`polhem-scaffold-from-formschema`**
 
-## 5 處修改（漏一個的徵兆）
+## The 5 changes (symptom when one is missing)
 
-| # | 檔案 | 作用 | 漏掉的徵兆 |
+| # | File | Purpose | Symptom when missing |
 |---|------|------|-----------|
-| 1 | `Define/FormSchema/<ProgId>.FormSchema.xml` | 表單欄位 + 清單欄 + lookup | 表單開不出來 |
-| 2 | `Define/FormLayout/<ProgId>.FormLayout.xml` | 畫面版面（區段 + 欄位擺放 + 明細 grid） | **開表單即失敗**；建置期另有 POLHEM2005 警告 |
-| 3 | `Define/TableSchema/<categoryId>/<table>.TableSchema.xml` | DB 表結構 + 索引 | seeder 建不出表 / CRUD 失敗 |
-| 4 | `Define/DbCategorySettings.xml` 對應 category 加 `<TableItem>` | 註冊表 → seeder 才會建、router 才知 table→db | 表沒建出來 |
-| 5 | `Define/ProgramSettings.xml` 加 `<ProgramItem>` | 上資料驅動選單（+ 選配 BO 綁定） | 表單不出現在選單 |
+| 1 | `Define/FormSchema/<ProgId>.FormSchema.xml` | Form fields + list columns + lookups | The form does not open |
+| 2 | `Define/FormLayout/<ProgId>.FormLayout.xml` | Screen layout (sections + field placement + detail grid) | **Opening the form fails**; there is also a POLHEM2005 warning at build time |
+| 3 | `Define/TableSchema/<categoryId>/<table>.TableSchema.xml` | DB table structure + indexes | The seeder cannot create the table / CRUD fails |
+| 4 | `Define/DbCategorySettings.xml`: add a `<TableItem>` to the matching category | Registers the table → only then does the seeder create it and the router know table→db | The table is not created |
+| 5 | `Define/ProgramSettings.xml`: add a `<ProgramItem>` | Puts it on the data-driven menu (+ optional BO binding) | The form does not appear in the menu |
 
-> **業務表全用 `company` scope**：FormSchema `CategoryId="company"`、TableSchema 放 `TableSchema/company/`、DbCategorySettings 掛 company 分類。CategoryId 是 DB scope 選擇器（common/company/log），不是自由標籤——business 資料掛 common 是錯的（見 `polhem-app-scaffold` Part 1 / memory `categoryid-is-db-scope-selector`）。**TableSchema 資料夾名必須 = CategoryId**。
+> **Business tables all use `company` scope**: FormSchema `CategoryId="company"`, TableSchema under
+> `TableSchema/company/`, registered under the company category in DbCategorySettings. CategoryId is a DB scope selector
+> (common/company/log), not a free-form label; putting business data in common is wrong (see `polhem-app-scaffold`
+> Part 1 and `.claude/rules/database.md`). **The TableSchema folder name must equal the CategoryId.**
 
-加完 **重啟 server（建表）+ 重啟前端**，即得完整 list / new / edit / delete + `uk_` 唯一檢查。
+After adding, **restart the server (to create the table) + restart the front end**, and you get full
+list / new / edit / delete + the `uk_` uniqueness check.
 
-## FormSchema 慣例
+## FormSchema conventions
 
-### 鍵與系統欄（每張表）
-`sys_no`(AutoIncrement, Visible=false) / `sys_rowid`(Guid, Visible=false) / `sys_id`(String 業務代碼) / `sys_name`(名稱)。
-**`sys_name` 可省**：只有「被 lookup 引用的來源表」需要它（lookup 顯示回退用）；單據類（如 Order）無自然名稱可不放。
+### Keys and system fields (every table)
+`sys_no` (AutoIncrement, Visible=false) / `sys_rowid` (Guid, Visible=false) / `sys_id` (String business code) /
+`sys_name` (name).
+**`sys_name` is optional**: only "source tables referenced by a lookup" need it (as the lookup display fallback);
+document types (such as Order) have no natural name and can leave it out.
 
-### TableSchema 索引慣例
-`pk_{0}`(sys_no, PrimaryKey) / `rx_{0}`(sys_rowid, Unique) / `uk_{0}`(sys_id, Unique) / 每個關連欄 `fk_{0}_<col>`。
+### TableSchema index conventions
+`pk_{0}` (sys_no, PrimaryKey) / `rx_{0}` (sys_rowid, Unique) / `uk_{0}` (sys_id, Unique) / one `fk_{0}_<col>` per
+relation column.
 
-### Lookup（跨表關連，零程式碼）
-關連欄（Guid）放 `RelationProgId` + `RelationFieldMappings`，把目標的欄位寫回本表的 `ref_*` 顯示欄；`ref_*` 欄標 `Type="RelationField"`。框架自動渲染成 ButtonEdit 開窗、寫回顯示值、重載時由 server JOIN 重算。
+### Lookup (cross-table relation, zero code)
+The relation column (Guid) carries `RelationProgId` + `RelationFieldMappings`, writing the target's fields back into
+this table's `ref_*` display columns; the `ref_*` columns are marked `Type="RelationField"`. The framework automatically
+renders a ButtonEdit popup, writes back the display values, and recomputes them with a server-side JOIN on reload.
 
 ```xml
 <FormField FieldName="customer_rowid" Caption="Customer" DbType="Guid" RelationProgId="Customer">
@@ -61,37 +75,51 @@ description: 在一個已接好的 Polhem app 上「加一張表單」的多檔�
 <FormField FieldName="ref_customer_id" Caption="Customer Code" DbType="String" Type="RelationField" />
 <FormField FieldName="ref_customer_name" Caption="Customer Name" DbType="String" Type="RelationField" />
 ```
-- 來源表 FormSchema 要有 `LookupFields="sys_id,sys_name"`（複合顯示「編號 - 名稱」）。
-- 業務表可指向框架表（如 Order.employee → `st_employee`），反之亦然。
+- The source table's FormSchema needs `LookupFields="sys_id,sys_name"` (composite display "code - name").
+- Business tables can point to framework tables (such as Order.employee → `st_employee`), and vice versa.
 
-### Master-detail（單據）
-主表 `FormTable.TableName == ProgId`（框架不變式）。明細是第二個 `FormTable`，欄位含 `sys_master_rowid`(Guid, Visible=false) 指主表。明細的 lookup（每列選一個目標）寫法同上 —— 框架在 InCell grid 渲染開窗。整筆一次儲存/重載。
+### Master-detail (documents)
+The master table has `FormTable.TableName == ProgId` (a framework invariant). The detail is a second `FormTable` whose
+fields include `sys_master_rowid` (Guid, Visible=false) pointing to the master. A lookup in the detail (one target chosen
+per row) is written the same way as above; the framework renders the popup in the InCell grid. The whole record is saved
+and reloaded at once.
 
-### 固定選項下拉
-`ControlType="DropDownEdit"` + `<ListItems><ListItem Value=".." Text=".."/></ListItems>`；預設值用 `DefaultValue="..."`。
+### Fixed-option dropdown
+`ControlType="DropDownEdit"` + `<ListItems><ListItem Value=".." Text=".."/></ListItems>`; the default value uses
+`DefaultValue="..."`.
 
-### 計算 / 唯讀欄
-`FormField.ReadOnly="true"` —— 計算欄或伺服器衍生欄（如 BO 算出的金額）標唯讀，主檔欄與明細 InCell 格皆呈現唯讀；產生 FormLayout 時會一併帶到 `LayoutField.ReadOnly`，不必在版面另外標一次。
+### Computed / read-only fields
+`FormField.ReadOnly="true"`: mark computed fields or server-derived fields (such as an amount calculated by the BO) as
+read-only; they render as read-only both as master fields and as detail InCell cells. When the FormLayout is generated
+this is carried over to `LayoutField.ReadOnly`, so you do not need to mark it again in the layout.
 
-**系統時間戳記欄 `sys_insert_time` / `sys_update_time` 一律標 `ReadOnly="true"`。** 它們由框架在存檔時戳記，
-`FormBusinessObject.NormalizeDateTimes` 會蓋掉畫面送來的值，漏標只會讓使用者改一個存不進去的值。
-`ReadOnly` 只在**產生** FormLayout 的那一刻抄過去，執行期不會回頭合併 —— 已經產生的 FormLayout 要在對應的
-`LayoutField` 手動補上 `ReadOnly="true"`。
+**The system timestamp fields `sys_insert_time` / `sys_update_time` are always marked `ReadOnly="true"`.** The framework
+stamps them on save, and `FormBusinessObject.NormalizeDateTimes` overwrites whatever value the screen sends; leaving
+the mark off only lets the user edit a value that can never be saved.
+`ReadOnly` is only copied over at the moment the FormLayout is **generated**; it is not merged back at run time. In a
+FormLayout that has already been generated, add `ReadOnly="true"` to the matching `LayoutField` by hand.
 
-### 清單欄
-`ListFields="sys_id,sys_name,ref_xxx_name,..."` 控制清單檢視欄（顯示 `ref_*` 比 `*_rowid` 友善）。
+### List columns
+`ListFields="sys_id,sys_name,ref_xxx_name,..."` controls the columns of the list view (showing `ref_*` is friendlier than
+`*_rowid`).
 
-## 何時需要自訂 BO
+## When a custom BO is needed
 
-預設 `FormBusinessObject` 管 CRUD（純定義）。**只有**框架無法以定義表達的才寫業務碼：單號生成、狀態機 / 合法轉移、必填驗證、金額計算（不信任前端值）。做法：`ProgramSettings` 的 `ProgramItem.BusinessObject="Ns.OrderBO, Asm"` → override `Save` / `GetNewData`，純規則抽到 DB-free helper（可讀可測）。詳見參考實作 `OrderBO` / `polhem-add-bo-method`。
+The default `FormBusinessObject` handles CRUD (pure definitions). Write business code **only** for what the framework
+cannot express as definitions: document number generation, state machines / valid transitions, required-field
+validation, amount calculation (do not trust front-end values). How: `ProgramItem.BusinessObject="Ns.OrderBO, Asm"` in
+`ProgramSettings` → override `Save` / `GetNewData`, and extract pure rules into a DB-free helper (readable and testable).
+See the reference implementation `OrderBO` / `polhem-add-bo-method`.
 
-## 種子（選配）
+## Seed data (optional)
 
-要預載資料：`Polhem.Northwind.Server/SeedData/<Table>.json`，關連欄填目標 `sys_id`（seeder 解析成 `sys_rowid`）。新表只是要 CRUD、不必種子（使用者自己在 UI 建）。
+To preload data: `Polhem.Northwind.Server/SeedData/<Table>.json`, with relation columns filled with the target `sys_id`
+(the seeder resolves it to `sys_rowid`). A new table that only needs CRUD does not need seed data (the user creates
+records in the UI).
 
-## 完成檢查
+## Completion check
 
-- [ ] 4 檔都改了（FormSchema / TableSchema / DbCategorySettings / ProgramSettings）
-- [ ] 業務表 `CategoryId="company"`、TableSchema 在 `company/` 資料夾
-- [ ] lookup 來源表有 `LookupFields`；`ref_*` 欄標 `Type="RelationField"`
-- [ ] 重啟 server + 前端，表單出現在選單、CRUD 可用、lookup 開窗正常
+- [ ] All 4 files changed (FormSchema / TableSchema / DbCategorySettings / ProgramSettings)
+- [ ] Business table has `CategoryId="company"`, TableSchema is in the `company/` folder
+- [ ] Lookup source table has `LookupFields`; `ref_*` columns are marked `Type="RelationField"`
+- [ ] Restart server + front end: the form appears in the menu, CRUD works, the lookup popup works

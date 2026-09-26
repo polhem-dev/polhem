@@ -1,19 +1,18 @@
 ---
-description: 巡檢 SonarCloud issues 與 test 覆蓋率，自動修正並補測試（手動模式）或產生差異報告（daily 模式）
-argument-hint: "[--mode=daily|fix，預設 fix]"
+description: Sweep SonarCloud issues and test coverage, fix them automatically and add tests (manual fix mode)
+argument-hint: "[--mode=fix, the default and only mode]"
 ---
 
-# Sonar Fix — 品質巡檢
+# Sonar Fix — quality sweep
 
-對 SonarCloud 專案 `jeff377_bee-library` 執行品質巡檢，依 `$1` 決定模式：
-- **未指定 / `--mode=fix`**：手動模式（本機 session，完整修正閉環）
-- **`--mode=daily`**：每日自動模式（只查詢 + 比對快照 + 輸出差異報告，不改碼）
+Run a quality sweep of the SonarCloud project `jeff377_bee-library` in fix mode (a manual local session with the
+complete fix loop). `$1` may be omitted or given as `--mode=fix`.
 
-狀態檔：`docs/.sonar-fix-state/`（首次執行時建立）
+State files: `docs/.sonar-fix-state/` (created on the first run)
 
-## 共用：FETCH 階段
+## FETCH phase
 
-SonarCloud API 對 public project 可匿名讀取，以下查詢無需 token：
+The SonarCloud API allows anonymous reads for a public project, so the queries below need no token:
 
 ```bash
 BASE="https://sonarcloud.io/api"
@@ -25,157 +24,134 @@ curl -s "$BASE/qualitygates/project_status?projectKey=$KEY"
 # 2. Leak period open/confirmed issues
 curl -s "$BASE/issues/search?componentKeys=$KEY&issueStatuses=OPEN,CONFIRMED&sinceLeakPeriod=true&ps=500"
 
-# 3. 全專案 open/confirmed issues（供比對「新增」）
+# 3. Project-wide open/confirmed issues
 curl -s "$BASE/issues/search?componentKeys=$KEY&issueStatuses=OPEN,CONFIRMED&ps=500"
 
-# 4. 整體 coverage
+# 4. Overall coverage
 curl -s "$BASE/measures/component?component=$KEY&metricKeys=coverage,ncloc,bugs,vulnerabilities,code_smells"
 
-# 5. 各檔案 coverage（由低到高排序）
+# 5. Per-file coverage (sorted from low to high)
 curl -s "$BASE/measures/component_tree?component=$KEY&metricKeys=coverage&qualifier=FIL&ps=500&s=metric&metricSort=coverage&asc=true"
 ```
 
-> 若 API 未來加上匿名存取限制，可於 `~/.zshrc` 設 `SONAR_TOKEN`，呼叫時加 `-u "$SONAR_TOKEN:"` 即可。
+> If the API adds restrictions on anonymous access in the future, set `SONAR_TOKEN` in `~/.zshrc` and add
+> `-u "$SONAR_TOKEN:"` to the calls.
 
 ---
 
-## 模式 A：daily（每日自動，由 `/schedule` 觸發）
+## Fix mode (manual, local session)
 
-### 流程
+Fix mode uses `/loop` to repeat until an end condition holds.
 
-1. 執行 FETCH 取得當前狀態
-2. 讀取 `docs/.sonar-fix-state/snapshot.json` 前次快照
-3. 比對差異：
-   - **新增的 leak BLOCKER / HIGH issue**（以 issue key 比對）
-   - **整體 coverage 下降超過 0.5%**（前次 vs 當前）
-   - **quality gate 由 PASSED/OK 轉 FAILED/ERROR**
-4. 輸出差異報告（純日誌；**不發 PushNotification/email**）：
-   - 當前 quality gate、coverage、issue 總數
-   - 若有觸發條件：逐項列出新增 issue key、檔案位置、嚴重度
-   - 若無變化：輸出一行 `no changes since <capturedAt>`
-5. 更新 `docs/.sonar-fix-state/snapshot.json` 為當前狀態；commit 到 main（訊息：`chore(sonar-fix): 更新每日快照 YYYY-MM-DD`）
-6. **不改任何程式碼**。若偵測到問題，建議訊息：「請本機執行 `/sonar-fix` 進行修正」
+### Initialization
 
-### 執行規則
+1. FETCH the current issue list and coverage
+2. Read `docs/.sonar-fix-state/skip.json` and filter out issue keys and file paths that have been given up on
+3. Record the starting point: issue set, overall coverage, quality gate
 
-- Daily 模式只做唯讀分析 + snapshot.json commit，不跑 `dotnet build` / `dotnet test`
-- 若快照 commit 失敗（例如衝突），停止並回報，不重試
-- 此模式適合在 remote agent 環境執行，不依賴 .NET SDK
-
----
-
-## 模式 B：fix（手動，本機 session）
-
-手動模式用 `/loop` 反覆執行直到結束條件成立。
-
-### 初始化
-
-1. FETCH 取得當前 issue list 與 coverage
-2. 讀取 `docs/.sonar-fix-state/skip.json`，過濾掉已放棄的 issue key 與檔案路徑
-3. 紀錄起點：issue set、整體 coverage、quality gate
-
-### 主迴圈（每輪）
+### Main loop (each round)
 
 ```
-/loop 依下列規則反覆執行：
+/loop Repeat according to the following rules:
 
-1. 重新 FETCH（第一輪用初始化結果）
+1. FETCH again (the first round uses the initialization result)
 
-2. 檢查結束條件（任一成立即停）：
-   a. quality gate = OK/PASSED 且整體 coverage >= 90% 且無未處理的 BLOCKER/HIGH issue
-   b. 所有剩餘待處理項目都已在 skip.json 內
-   c. 連續 2 輪無任何進展（issue 數、coverage 皆未變化）
+2. Check the end conditions (stop as soon as any holds):
+   a. quality gate = OK/PASSED and overall coverage >= 90% and no unhandled BLOCKER/HIGH issue
+   b. every remaining item to handle is already in skip.json
+   c. 2 consecutive rounds with no progress at all (issue count and coverage both unchanged)
 
-3. 決定本輪處理對象（依優先序，每輪最多 5 項避免 diff 過大）：
-   a. BLOCKER / CRITICAL / MAJOR issue（以 severity 排序）
-   b. MINOR / INFO issue
-   c. 檔案 coverage < 70%（按絕對缺口排序）
-   d. 檔案 coverage 介於 70-90%（按絕對缺口排序，僅整體 < 90% 時才處理）
+3. Decide what to handle this round (by priority, at most 5 items per round to keep the diff small):
+   a. BLOCKER / CRITICAL / MAJOR issues (sorted by severity)
+   b. MINOR / INFO issues
+   c. Files with coverage < 70% (sorted by absolute gap)
+   d. Files with coverage between 70-90% (sorted by absolute gap; only when overall < 90%)
 
-4. 修正 issue（對映使用者流程步驟 2）：
-   a. **規則前置篩選（rule-level blocklist）**：以下規則不自動修正，直接寫入
-      docs/.sonar-fix-state/skip.json 的 `humanReview` 區塊，附 component path
-      與 textRange，等待人工分辨後在 SonarCloud UI 處理：
-      - `csharpsquid:S125`（commented-out code）— 對英文 WHY 註解誤判率高，
-        LLM 無可靠方法分辨「合法 WHY 說明」與「真的被註解掉的程式碼」，
-        交由人工 review，合法則於 SonarCloud UI 標 False Positive，
-        真為 dead code 則手動刪除
-   b. 對照 .claude/rules/sonarcloud.md 與 .claude/rules/scanning.md 的規則表
-      - 找不到對應規則的 issue：直接加入 skip list（原因：unknown rule）
-   c. 對每個 issue 維護 attempts 計數（in-memory，本次 session 內）
-   d. 套用修改後執行：
+4. Fix issues (maps to step 2 of the user's workflow):
+   a. **Rule pre-filter (rule-level blocklist)**: the rules below are not fixed automatically. Write them directly
+      into the `humanReview` block of docs/.sonar-fix-state/skip.json, with the component path
+      and textRange, and wait for a human to tell them apart and handle them in the SonarCloud UI:
+      - `csharpsquid:S125` (commented-out code): high false-positive rate on English WHY comments.
+        An LLM has no reliable way to tell a "legitimate WHY explanation" from "code that really was commented out",
+        so it goes to human review. If legitimate, mark it False Positive in the SonarCloud UI;
+        if it really is dead code, delete it by hand
+   b. Check against the rule tables in .claude/rules/sonarcloud.md and .claude/rules/scanning.md
+      - An issue with no matching rule: add it straight to the skip list (reason: unknown rule)
+   c. Keep an attempts counter for each issue (in memory, within this session)
+   d. After applying the change, run:
       dotnet build --configuration Release --no-restore
-      dotnet test <受影響專案>.csproj --configuration Release --settings .runsettings
-   e. 驗證通過 → 保留 staged change；失敗 → git restore，attempts+1
-   f. attempts >= 3 → 寫入 docs/.sonar-fix-state/skip.json（issues 區塊），附原因
+      dotnet test <affected project>.csproj --configuration Release --settings .runsettings
+   e. Verification passes → keep the staged change; fails → git restore, attempts+1
+   f. attempts >= 3 → write to docs/.sonar-fix-state/skip.json (issues block), with the reason
 
-5. 補覆蓋率（對映使用者流程步驟 3）：
-   a. 依 .claude/rules/testing.md 命名規則新增 [Fact] / [Theory]
-      - 命名：<方法名>_<情境>_<預期結果>
-      - 加 [DisplayName] 中文說明
-      - 需 DB 用 [DbFact]；需本機服務用 [LocalOnlyFact]
-   b. **嚴禁**修改既有測試 assertion、public API 簽章、csproj 相依版本
-   c. 執行相同 build + test 驗證
-   d. 檔案覆蓋率達目標（>= 90% 或相對提升 >= 20pp） → 成功
-   e. attempts >= 3 → 寫入 skip.json（files 區塊），附原因
+5. Add coverage (maps to step 3 of the user's workflow):
+   a. Add [Fact] / [Theory] following the naming rules in .claude/rules/testing.md
+      - Naming: <MethodName>_<Scenario>_<ExpectedResult>
+      - Add a [DisplayName] description (in the language .claude/rules/testing.md specifies)
+      - Use [DbFact] when a DB is needed; [LocalOnlyFact] when a local service is needed
+   b. **Never** modify existing test assertions, public API signatures, or csproj dependency versions
+   c. Run the same build + test verification
+   d. File coverage reaches the target (>= 90%, or a relative gain >= 20pp) → success
+   e. attempts >= 3 → write to skip.json (files block), with the reason
 
-6. 本輪若有 staged change：
-   a. commit（訊息格式：
-      chore(sonar-fix): 處理 X 項 issue、補 Y 個檔案覆蓋率
+6. If this round has staged changes:
+   a. commit (message format:
+      chore(sonar-fix): handle X issues, add coverage for Y files
 
       by /sonar-fix
       Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
-   b. push origin main
-   c. 呼叫 /ci-watch 盯 CI + quality gate 通過（不自行實作此邏輯）
+   b. Get the commit to main as .claude/rules/pull-request.md describes
+   c. Call /ci-watch to watch CI + the quality gate until they pass (do not implement this logic yourself)
 
-7. 進入下一輪，回到步驟 1
+7. Go to the next round, back to step 1
 
-8. 結束後輸出摘要：
-   - 修了哪些 issue（key + rule + component）
-   - 補了哪些檔案測試
-   - 本次新增的 skip list 項目與原因
-   - 整體 coverage：起始 X% → 結束 Y%
-   - quality gate：起始 → 結束
+8. When finished, output a summary:
+   - Which issues were fixed (key + rule + component)
+   - Which files got tests
+   - Skip list items added this time, with reasons
+   - Overall coverage: starting X% → ending Y%
+   - quality gate: start → end
 ```
 
-### 安全與限制（強制）
+### Safety and limits (mandatory)
 
-- 自動修復只碰 `src/`，不改 `samples/`
-- 補測試只在 `tests/<Module>.UnitTests/` 新增檔案或 `[Fact]`；不改既有 assertion
-- **禁止**觸碰：
-  - public API 簽章（method signature、class visibility）
-  - 加密／session 管線（`Polhem.Base/Cryptor/*`、`Polhem.Api.Core/Session/*`）
-  - csproj / Directory.Build.props 的相依版本
-- 每次 commit 前強制 `dotnet build --configuration Release`
-- 每次 commit 前強制 `dotnet test` 受影響專案（全專案測試太慢，僅跑改動檔案對映的 `tests/<Module>.UnitTests`）
-- commit 訊息用繁中、`type(scope): ...`，body 標註「by /sonar-fix」
-- push **禁止** `--no-verify` / `--force`
+- Automatic fixes only touch `src/`, never `samples/`
+- Adding tests only adds files or `[Fact]`s under `tests/<Module>.UnitTests/`; existing assertions are not changed
+- **Never** touch:
+  - public API signatures (method signature, class visibility)
+  - the encryption / session pipeline (`Polhem.Base/Cryptor/*`, `Polhem.Api.Core/Session/*`)
+  - dependency versions in csproj / Directory.Build.props
+- Before every commit, `dotnet build --configuration Release` is mandatory
+- Before every commit, `dotnet test` on the affected projects is mandatory (the full test suite is too slow; only run
+  the `tests/<Module>.UnitTests` that map to the changed files)
+- Commit messages are in English, `type(scope): ...`, with "by /sonar-fix" in the body
+- When pushing, `--no-verify` / `--force` are **forbidden**
 
-### 連續無進展處理
+### Handling no progress
 
-若 2 輪結束後 issue 總數、coverage、skip list 都無變化 → 立即停止，輸出：
+If after 2 rounds the total issue count, coverage and skip list are all unchanged → stop immediately and output:
 ```
-/sonar-fix 連續 2 輪無進展，已停止。請檢查剩餘項目是否需人工介入。
+/sonar-fix made no progress for 2 consecutive rounds and has stopped. Check whether the remaining items need manual intervention.
 ```
 
-### skip list 管理
+### Managing the skip list
 
-- 每次寫入 skip.json 都包含：attempts、reason、lastAttempt（ISO 日期）
-- skip.json 區塊：
-  - `issues`：自動修正嘗試失敗、放棄處理的 issue（永久 skip，除非使用者手動移除）
-  - `files`：覆蓋率補測試失敗、放棄處理的檔案（同上）
-  - `humanReview`：rule-level blocklist 命中的 issue（如 S125），等待人工 review。
-    使用者在 SonarCloud UI 標 False Positive 或手動修復後，可從 skip.json 移除；
-    daily 模式的差異報告應將此區塊內的 issue 標為「pending human review」而非「resolved」
-- 若使用者後續修復了某項目，可手動從 `docs/.sonar-fix-state/skip.json` 移除
-- skip.json 的 commit 合併於同一次 `chore(sonar-fix): ...` 提交
+- Every write to skip.json includes: attempts, reason, lastAttempt (ISO date)
+- skip.json blocks:
+  - `issues`: issues whose automatic fix attempts failed and were given up (skipped permanently unless the user
+    removes them by hand)
+  - `files`: files whose coverage test additions failed and were given up (same as above)
+  - `humanReview`: issues hit by the rule-level blocklist (such as S125), waiting for human review.
+    After the user marks one False Positive in the SonarCloud UI or fixes it by hand, it can be removed from skip.json
+- If the user later fixes an item, it can be removed by hand from `docs/.sonar-fix-state/skip.json`
+- skip.json changes go into the same `chore(sonar-fix): ...` commit
 
 ---
 
-## 參考規則
+## Reference rules
 
-- `.claude/rules/sonarcloud.md`：SonarCloud 規則對照表
-- `~/.claude/rules/scanning.md`：SAST 基本安全要求（使用者層）
-- `.claude/rules/testing.md`：測試撰寫模式
-- `~/.claude/rules/pull-request.md`：push/CI 失敗處理（使用者層）
-- `.claude/commands/ci-watch.md`：push 後盯 CI 的下游 skill
+- `.claude/rules/sonarcloud.md`: SonarCloud rule reference table
+- `.claude/rules/scanning.md`: baseline SAST security requirements
+- `.claude/rules/testing.md`: test writing patterns
+- `.claude/rules/pull-request.md`: how changes reach `main`, and CI failure handling
+- `.claude/commands/ci-watch.md`: the downstream skill that watches CI after the change is pushed

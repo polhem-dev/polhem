@@ -12,8 +12,8 @@
 #      Unshipped.txt — that turns the build green while the break is still real.
 #   3. `check-docs-i18n.sh` output -> WARNS only. A source edit and its translation may
 #      legitimately land in separate commits, so blocking here would be wrong; the Docs
-#      Check workflow is the gate. The value is hearing about it before a push to main
-#      turns CI red, rather than after.
+#      Check workflow is the gate. The value is hearing about it before a push turns CI
+#      red, rather than after.
 #
 # WARNING: this hook must fail open. Anything it cannot parse, locate, or run exits 0
 # and lets the commit through. A verification hook that wedges the repo is worse than
@@ -69,13 +69,13 @@ trap 'rm -f "$build_log"' EXIT
 if ! dotnet build "$SOLUTION" --configuration Release --no-incremental -v q -nologo \
         >"$build_log" 2>&1; then
     {
-        echo "COMMIT 已阻擋：clean Release build 失敗。"
+        echo "COMMIT BLOCKED: the clean Release build failed."
         echo
         grep -Ei "error|warning" "$build_log" | head -30
         echo
-        echo "注意：本 repo 設定 TreatWarningsAsErrors=true，警告即為失敗。"
-        echo "此為 --no-incremental 完整建置，結果不受既有 obj/ 快取影響。"
-        echo "修正後重新 commit。"
+        echo "Note: this repository sets TreatWarningsAsErrors=true, so a warning is a failure."
+        echo "This was a full --no-incremental build; existing obj/ output did not affect it."
+        echo "Fix the build, then commit again."
     } >&2
     exit 2
 fi
@@ -91,13 +91,14 @@ if [[ -n "$api_files" ]]; then
                | grep -E '^[+-][^+-]' | head -40)
 
     notice=$(printf '%s\n' \
-        "PublicAPI.Unshipped.txt 有異動（未阻擋，需明確判定相容性）：" \
+        "PublicAPI.Unshipped.txt changed (not blocked; the compatibility needs an explicit judgement):" \
         "" \
         "$api_diff" \
         "" \
-        "分析器只保證變更『已申報』，不保證變更『相容』。對既有 public 成員增加" \
-        "optional 參數、更動簽章或型別，即使申報後 build 轉綠，仍是二進位不相容。" \
-        "請於 commit message 或回覆中說明相容性判定。")
+        "The analyzer only guarantees that a change is declared, not that it is compatible. Adding an" \
+        "optional parameter to an existing public member, or changing a signature or a type, is still" \
+        "binary-incompatible even when the declaration turns the build green." \
+        "State the compatibility judgement in the commit message or in your reply.")
 fi
 
 # ---------------------------------------------------------------------------
@@ -107,11 +108,13 @@ if [[ -x ./check-docs-i18n.sh ]]; then
     i18n_out=$(./check-docs-i18n.sh 2>&1 | head -30)
     if [[ -n "$i18n_out" ]]; then
         i18n_notice=$(printf '%s\n' \
-            "譯本同步檢查有輸出（未阻擋；push 後 CI 的 Docs Check 會擋其中的「錯誤」項）：" \
+            "The translation sync check reported something (not blocked; after a push, the Docs Check" \
+            "workflow fails on the items marked as errors):" \
             "" \
             "$i18n_out" \
             "" \
-            "源文件與譯本可以分開 commit，但要一起 push。修法寫在各行訊息裡。")
+            "A source and its translation may be committed separately but must be pushed together." \
+            "Each message says how to fix it.")
         notice="${notice:+$notice$'\n\n'}$i18n_notice"
     fi
 fi

@@ -8,7 +8,7 @@ The first is a public document.
 
 | Scope | Content |
 |-------|---------|
-| Repository root | `README.md` / `README.zh-TW.md`, `CHANGELOG.md` / `CHANGELOG.zh-TW.md`, `CONTRIBUTING.md` / `CONTRIBUTING.zh-TW.md` |
+| Repository root | `README.md` / `README.zh-TW.md`, `CHANGELOG.md` / `CHANGELOG.zh-TW.md` |
 | `docs/README.md` and `docs/<lang>/` | The language entry page and every `.md` under each language folder (architecture overview, API reference, database guides, glossary, development guidelines and constraints, and each language's `README.md` index) |
 | `docs/adr/` | Every ADR: the long-lived decision records, and the main source for outside readers to understand why the design is the way it is |
 | **Every** `README.md` / `README.zh-TW.md` | Wherever it is: `src/*/`, `samples/*/`, `apps/*/`, `tools/*/` |
@@ -20,6 +20,7 @@ The first is a public document.
 |-------|--------|
 | `local/` | Ignored by git. Each maintainer's own working documents: plans, drafts, notes, reviews that list unfixed security issues. **Nobody else can open them.** |
 | `docs/repo-ops/` | Operational documents for this repository (CI, branch protection, gotchas). Not relevant to framework users |
+| `CONTRIBUTING.md` / `CONTRIBUTING.zh-TW.md` | Written for contributors. Bilingual like a public document, and may point into `.claude/` |
 | `.claude/` (`CLAUDE.md`, `rules/`, `skills/`, `commands/`) and the `CLAUDE.md` files elsewhere | Engineering guidance for agents, not product documentation |
 
 ## Hard rules
@@ -48,8 +49,8 @@ The scope and the exceptions are described under "Outcome and final scope" below
 Describing the convention itself (for example "plans go in `local/plans/`") names a directory, not a document,
 and is fine.
 
-The plans of the Bee.NET period stay readable in the archived `jeff377/bee-library` repository. A full URL to a
-file there, pinned to a commit, is a pointer readers can follow and is allowed.
+The plans of the Bee.NET period stay readable in `jeff377/bee-library`, which is frozen and will be archived.
+A full URL to a file there, pinned to a commit, is a pointer readers can follow and is allowed.
 
 ### 2. Where background belongs instead
 
@@ -63,10 +64,11 @@ Wanting to cite a plan means the content has not reached its proper place yet:
 
 If the history only exists in a plan and is not worth promoting, **do not cite it**.
 
-### 3. Public documents do not point into `.claude/`
+### 3. Public documents do not point to files under `.claude/`
 
 Agent guidance is not product documentation, and a path under `~/.claude/` (a user's home directory) cannot be opened
-by anyone else at all. Maintainer documents in `docs/repo-ops/` and the agent guidance itself may point into `.claude/`.
+by anyone else at all. Naming the directory to describe a convention is fine. Maintainer documents in `docs/repo-ops/`,
+`CONTRIBUTING` and the agent guidance itself may point to files under `.claude/`.
 
 ### 4. Keeping languages in sync
 
@@ -95,7 +97,7 @@ After changing documents, or when something may have been missed, run:
 ```
 
 `check-public-docs.sh` exits 1 when any of (1) to (3) prints a hit: (1) a committed file names a plan file,
-(2) a committed file points to a file under `local/`, (3) a public document points into `.claude/`.
+(2) a committed file points to a file under `local/`, (3) a public document points to a file under `.claude/`.
 The reasons for each check are in the script header. **Do not narrow the scope or the file types.**
 
 **(4) is advisory and has known false positives; read each hit**:
@@ -104,6 +106,7 @@ The reasons for each check are in the script header. **Do not narrow the scope o
 |----------------|---------|---------------------------|
 | `plan` is an API or type name | `Orchestrator.Plan(diff)`, `UpgradePlan`, `plan.Warnings` in `docs/*/database-schema-upgrade.md` | It names code, not a working document |
 | Future work that has no document yet | "a separate plan" in adr-023 | It means "handled separately" and points to nothing readable |
+| Describing the plan convention itself | adr-045 on why plans are kept out of the repository | It explains the rule, not a document to open |
 
 To decide: **does the sentence send the reader to open a document they cannot open?** Only that is a violation.
 

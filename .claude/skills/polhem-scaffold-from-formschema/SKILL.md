@@ -1,55 +1,61 @@
 ---
 name: polhem-scaffold-from-formschema
-description: polhem 從一個 FormSchema XML 反推 / 產出對應的 FormLayout、TableSchema、雙語 LanguageResource 三類「sidecar」定義檔。涵蓋 throw-away xUnit fact idiom（直接呼叫 framework public generator 序列化原貌）、FormSchemaLocalizer sub-key 規範（Schema.DisplayName / Table.X.DisplayName / Field.X.Caption）、中→英欄位翻譯指引（sys_/ref_/audit_ 系統前綴 + ERP 慣用詞）、target 衝突偵測與處理。當使用者要「依 X.FormSchema 產 layout / language / tableschema」、「為 X 補 i18n」、「scaffold 一個 form 的 sidecar 定義」、「FormSchema 轉 layout / 翻 language / 反推 tableschema」之類需求時使用。
+description: "Derive / generate the three kinds of \"sidecar\" definition files for a polhem FormSchema XML: FormLayout, TableSchema and bilingual LanguageResource. Covers the throw-away xUnit fact idiom (call the framework's public generators directly and serialize their output as is), the FormSchemaLocalizer sub-key convention (Schema.DisplayName / Table.X.DisplayName / Field.X.Caption), Chinese-to-English field translation guidance (sys_/ref_/audit_ system prefixes + common ERP terms), and target conflict detection and handling. Use when the user asks to \"generate the layout / language / tableschema from X.FormSchema\", \"add i18n for X\", \"scaffold the sidecar definitions for a form\", \"convert a FormSchema to a layout / translate the language / derive the tableschema\", or similar."
 ---
 
-# polhem FormSchema → Sidecar 定義 scaffold
+# polhem FormSchema → sidecar definition scaffold
 
-polhem 採 **FormSchema-driven** 設計：一個 FormSchema 同時驅動 UI（FormLayout）、
-資料庫（TableSchema）與多語介面（LanguageResource）。本 skill 把三類 sidecar 的產出流程
-寫死，避免 sub-key 命名 / CategoryId / namespace 等慣例踩雷。
+polhem uses a **FormSchema-driven** design: one FormSchema drives the UI (FormLayout),
+the database (TableSchema) and the multilingual interface (LanguageResource) at the same time. This skill fixes the
+procedure for producing the three sidecar kinds, so conventions such as sub-key naming / CategoryId / namespace do not
+become pitfalls.
 
-> 樣板對照（讀程式碼時對著看）：
-> - `tests/Define/FormSchema/Employee.FormSchema.xml`（input）
+> Reference samples (read them alongside the code):
+> - `tests/Define/FormSchema/Employee.FormSchema.xml` (input)
 > - `tests/Define/FormLayout/Employee.FormLayout.xml`
 > - `tests/Define/TableSchema/company/st_employee.TableSchema.xml`
 > - `tests/Define/Language/{zh-TW,en-US}/Employee.Language.xml`
 
-> `st_employee` 不是筆誤 —— `st_` 前綴代表**框架所有**，不代表落在 common 庫；
-> 它與 `st_department` 同屬 company scope（見 `rules/database.md`）。
+> `st_employee` is not a typo. The `st_` prefix means **owned by the framework**; it does not mean the table lives in
+> the common database. Like `st_department`, it is in company scope (see `rules/database.md`).
 
-## 三類產出與 framework 入口
+## The three outputs and their framework entry points
 
-**不是每次加 form 都要產三類。** 先確認哪幾類真的需要落檔：
+**Not every new form needs all three.** First confirm which kinds actually need to be written to disk:
 
-| 產出 | 何時需要落檔 | Framework 入口 |
+| Output | When it must be written | Framework entry point |
 |------|-------------|---------------|
-| **FormLayout** | **一律需要** —— 版面在設計階段產出並存檔，執行階段一律讀它，**缺檔開表單即失敗**（不再有 runtime 自動產生）。 | `FormLayoutGenerator.Generate(schema, layoutId)`（`Polhem.Definition.Layouts`），`layoutId` 預設用 `ProgId` |
-| **TableSchema** | **一律需要** —— seeder 靠它建表，且資料夾名必須 = CategoryId | `TableSchemaGenerator.Generate(formTable)` 或 `formTable.GenerateDbTable()`；對 schema 的**每個** FormTable 各產一份 |
-| **LanguageResource** | 要多語介面就需要 | 無 generator — 手構造 + `FormSchemaLocalizer` sub-key 常數。雙語：zh-TW 抄 schema 中文 caption、en-US 由翻譯字典推 |
+| **FormLayout** | **Always.** The layout is produced and saved at design time, and the runtime always reads it; **if the file is missing, opening the form fails** (there is no longer any runtime auto-generation). | `FormLayoutGenerator.Generate(schema, layoutId)` (`Polhem.Definition.Layouts`); `layoutId` defaults to `ProgId` |
+| **TableSchema** | **Always.** The seeder uses it to create tables, and the folder name must equal the CategoryId | `TableSchemaGenerator.Generate(formTable)` or `formTable.GenerateDbTable()`; produce one file for **each** FormTable in the schema |
+| **LanguageResource** | When a multilingual interface is needed | No generator: build it by hand + the `FormSchemaLocalizer` sub-key constants. Bilingual: zh-TW copies the Chinese captions from the schema, en-US is derived from the translation glossary |
 
-> **與 `polhem-add-form` 的分工**：在既有 app 上加一張表單走 `polhem-add-form`（5 處純定義修改，
-> **含 FormLayout**）。本 skill 是產出那份 FormLayout（以及 TableSchema / i18n）的手法——
-> 產出原貌後再手調版面，不要手刻。
+> **Division of labor with `polhem-add-form`**: adding a form to an existing app goes through `polhem-add-form`
+> (5 pure definition changes, **including the FormLayout**). This skill is the technique for producing that FormLayout
+> (and the TableSchema / i18n). Generate the raw output, then hand-tune the layout; do not hand-write it.
 >
-> 落檔後也可改由 `tools/DefineEditor` 產生／編輯版面。
+> Once the files are on disk, the layout can also be generated / edited with `tools/DefineEditor`.
 
-**預設只產真正需要的類別**；使用者明說要三類全產（或只產某一類）時照辦。
+**By default produce only the kinds that are actually needed**; if the user explicitly asks for all three (or only one
+kind), do that.
 
-## 流程：throw-away xUnit fact
+## Procedure: throw-away xUnit fact
 
-不寫 CLI、不新建 console project。延用驗證過的 idiom：
+No CLI, no new console project. Reuse the proven idiom:
 
-1. 在 `tests/Polhem.Definition.UnitTests/Scaffolding/_Scaffold{ProgId}FixtureFiles.cs` 寫一個 `[Fact]`
-2. test 內反序列化 FormSchema → 呼叫 framework generator + 手構造 LanguageResource → `XmlCodec.SerializeToFile`
-3. 跑 `dotnet test --filter "FullyQualifiedName~Scaffold{ProgId}"`
-4. **跑完立刻刪除 test 檔**（commit 時不留 — 否則它每跑一次都會 overwrite fixture）
+1. Write a `[Fact]` in `tests/Polhem.Definition.UnitTests/Scaffolding/_Scaffold{ProgId}FixtureFiles.cs`
+2. In the test, deserialize the FormSchema → call the framework generators + build the LanguageResource by hand →
+   `XmlCodec.SerializeToFile`
+3. Run `dotnet test --filter "FullyQualifiedName~Scaffold{ProgId}"`
+4. **Delete the test file immediately after the run** (it must not be committed; otherwise every run overwrites the
+   fixtures)
 
-理由：framework 序列化格式 = 真實 round-trip 格式，無漂移；驗證 schema 結構合法（generator 拋例外即代表 schema 寫錯）；零新增 csproj / publish 成本。
+Why: the framework's serialization format = the real round-trip format, so there is no drift; it validates that the
+schema structure is legal (a generator exception means the schema is wrong); zero new csproj / publish cost.
 
-### 完整可 copy-paste 樣板
+### Complete copy-paste template
 
-把 `{ProgId}` 全部換成實際 ProgId（如 `Employee`、`Department`），把 `{Schema/Table/Field translations}` 填進去：
+Replace every `{ProgId}` with the actual ProgId (e.g. `Employee`, `Department`), and fill in
+`{Schema/Table/Field translations}`:
 
 ```csharp
 using System.ComponentModel;
@@ -68,25 +74,25 @@ namespace Polhem.Definition.UnitTests.Scaffolding
     public class Scaffold{ProgId}FixtureFiles
     {
         [Fact]
-        [DisplayName("OneShot: 由 {ProgId}.FormSchema 產出 FormLayout / TableSchema / Language fixture（手動執行）")]
+        [DisplayName("OneShot: generate FormLayout / TableSchema / Language fixtures from {ProgId}.FormSchema (run manually)")]
         public void Generate_{ProgId}SidecarFiles()
         {
-            // bin/<config>/net10.0 → repo root（5 層 ..）
+            // bin/<config>/net10.0 → repo root (5 levels of ..)
             string baseDir = AppContext.BaseDirectory;
             string repoRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", ".."));
             string definePath = Path.Combine(repoRoot, "tests", "Define");
             Assert.True(Directory.Exists(definePath), $"tests/Define not found: {definePath}");
 
-            // 1. 反序列化 FormSchema（唯一 input）
+            // 1. Deserialize the FormSchema (the only input)
             string schemaPath = Path.Combine(definePath, "FormSchema", "{ProgId}.FormSchema.xml");
             var schema = XmlCodec.DeserializeFromFile<FormSchema>(schemaPath)!;
 
-            // 2. FormLayout（設計階段產生器；執行階段只讀存好的檔）
+            // 2. FormLayout (design-time generator; the runtime only reads the saved file)
             var layout = FormLayoutGenerator.Generate(schema, "{ProgId}");
             XmlCodec.SerializeToFile(layout,
                 Path.Combine(definePath, "FormLayout", "{ProgId}.FormLayout.xml"));
 
-            // 3. TableSchema（每個 FormTable 一份）
+            // 3. TableSchema (one per FormTable)
             foreach (var table in schema.Tables!)
             {
                 var tableSchema = table.GenerateDbTable();
@@ -95,23 +101,23 @@ namespace Polhem.Definition.UnitTests.Scaffolding
                         $"{table.DbTableName}.TableSchema.xml"));
             }
 
-            // 4. Language zh-TW（抄 schema 中的中文 caption）
+            // 4. Language zh-TW (copy the Chinese captions from the schema)
             var zh = BuildResource("zh-TW",
-                schemaDisplayName: "{中文 schema 名}",
+                schemaDisplayName: "{Chinese schema name}",
                 tableDisplayNames: new (string, string)[]
                 {
-                    ("{TableName}", "{中文 table 名}"),
-                    // 多 table 就多 entry
+                    ("{TableName}", "{Chinese table name}"),
+                    // one entry per table
                 },
                 fieldCaptions: new (string, string)[]
                 {
                     ("sys_no", "流水號"),
-                    // … 對齊 FormSchema 內每個 FormField.Caption
+                    // … one per FormField.Caption in the FormSchema
                 });
             XmlCodec.SerializeToFile(zh,
                 Path.Combine(definePath, "Language", "zh-TW", "{ProgId}.Language.xml"));
 
-            // 5. Language en-US（依翻譯字典推）
+            // 5. Language en-US (derived from the translation glossary)
             var en = BuildResource("en-US",
                 schemaDisplayName: "{English schema name}",
                 tableDisplayNames: new (string, string)[]
@@ -121,7 +127,7 @@ namespace Polhem.Definition.UnitTests.Scaffolding
                 fieldCaptions: new (string, string)[]
                 {
                     ("sys_no", "Sequence No."),
-                    // … 對應 zh-TW 每個 entry
+                    // … one per zh-TW entry
                 });
             XmlCodec.SerializeToFile(en,
                 Path.Combine(definePath, "Language", "en-US", "{ProgId}.Language.xml"));
@@ -161,7 +167,9 @@ namespace Polhem.Definition.UnitTests.Scaffolding
 }
 ```
 
-### 跑法
+(`流水號` is the zh-TW caption for `sys_no`.)
+
+### How to run
 
 ```bash
 dotnet test tests/Polhem.Definition.UnitTests/Polhem.Definition.UnitTests.csproj \
@@ -170,50 +178,55 @@ dotnet test tests/Polhem.Definition.UnitTests/Polhem.Definition.UnitTests.csproj
     --nologo --verbosity minimal
 ```
 
-跑通後**立刻 `rm` 該 test 檔**，再 `git status` 確認三類產出 + test 檔刪除狀態正確。
+Once it passes, **`rm` the test file immediately**, then run `git status` to confirm the three outputs and the deleted
+test file are in the right state.
 
-## 路徑慣例
+## Path conventions
 
-| 情境 | DefinePath |
+| Situation | DefinePath |
 |------|-----------|
-| 在 polhem 內示範用（`tests/Define/`） | `{repoRoot}/tests/Define`（樣板用的就是這個） |
-| 真實 ERP 專案 | 該專案的 `Define/` 或 `app/Define/` 等，依該 repo 自有約定 |
+| Demonstration inside polhem (`tests/Define/`) | `{repoRoot}/tests/Define` (this is what the template uses) |
+| A real ERP project | That project's `Define/`, `app/Define/` or similar, per that repository's own convention |
 
-樣板裡 `repoRoot = baseDir + "../" * 5` 適用 `tests/<Project>.UnitTests/bin/<config>/net10.0/`。其他 repo 若 test 專案層級不同需調整 `..` 數量。
+The template's `repoRoot = baseDir + "../" * 5` fits `tests/<Project>.UnitTests/bin/<config>/net10.0/`. In other
+repositories whose test projects sit at a different depth, adjust the number of `..`.
 
-## i18n key 規範（對齊 FormSchemaLocalizer）
+## i18n key convention (aligned with FormSchemaLocalizer)
 
-| 範圍 | Key 樣式 | 常數 |
+| Scope | Key pattern | Constant |
 |------|---------|------|
-| Schema 整體顯示名 | `Schema.DisplayName` | `FormSchemaLocalizer.SchemaDisplayNameKey` |
-| 各 Table 顯示名 | `Table.{TableName}.DisplayName` | `FormSchemaLocalizer.TableDisplayNameKeyFormat` |
-| 各 Field caption | `Field.{FieldName}.Caption` | `FormSchemaLocalizer.FieldCaptionKeyFormat` |
+| Display name of the whole schema | `Schema.DisplayName` | `FormSchemaLocalizer.SchemaDisplayNameKey` |
+| Display name of each table | `Table.{TableName}.DisplayName` | `FormSchemaLocalizer.TableDisplayNameKeyFormat` |
+| Caption of each field | `Field.{FieldName}.Caption` | `FormSchemaLocalizer.FieldCaptionKeyFormat` |
 
-**namespace = ProgId**（永遠這樣 — `FormSchemaLocalizer.Localize` 直接用 `schema.ProgId` 當 lookup namespace）。
+**namespace = ProgId** (always: `FormSchemaLocalizer.Localize` uses `schema.ProgId` directly as the lookup namespace).
 
-**不要為了「補齊」加額外 sub-key** — `FormSchemaLocalizer` 只查上述三類；多寫的 key 框架不會用，徒增維護。如需加 enum / list 翻譯，那是另一個議題（看 `LanguageEnum`），不在預設 scaffold 範圍。
+**Do not add extra sub-keys "for completeness".** `FormSchemaLocalizer` only looks up the three kinds above; extra keys
+are never used by the framework and only add maintenance. Translating enums / lists is a separate topic (see
+`LanguageEnum`) and outside the default scaffold scope.
 
-## 中→英翻譯字典
+## Chinese → English glossary
 
-**規則：不逐字直譯，遵守 ERP 慣用詞。** 業務 caption 簡潔（不寫「The ...」），系統前綴有固定譯法。
+**Rule: do not translate word for word; follow common ERP terminology.** Business captions are concise (no "The ..."),
+and system prefixes have fixed translations.
 
-### 系統前綴（固定譯法）
+### System prefixes (fixed translations)
 
-| 中文 / FieldName | English | 備註 |
+| Chinese / FieldName | English | Notes |
 |-----------------|---------|------|
-| `sys_no` 流水號 | `Sequence No.` | DB 自增 PK，**不**譯 `System Number` |
-| `sys_rowid` 唯一識別 | `Row Id` | Guid 全局唯一 |
-| `sys_id` 編號 | `{Entity} No.` | 業務鍵；依 entity 譯成 `Employee No.` / `Department No.` |
-| `sys_name` 名稱 | `{Entity} Name` 或 `Name` | 同上 |
-| `sys_insert_time` 寫入時間 | `Insert Time` 或 `Created At` |  |
-| `sys_update_time` 更新時間 | `Update Time` 或 `Updated At` |  |
+| `sys_no` 流水號 | `Sequence No.` | DB auto-increment PK; **not** `System Number` |
+| `sys_rowid` 唯一識別 | `Row Id` | Globally unique Guid |
+| `sys_id` 編號 | `{Entity} No.` | Business key; per entity, e.g. `Employee No.` / `Department No.` |
+| `sys_name` 名稱 | `{Entity} Name` or `Name` | Same as above |
+| `sys_insert_time` 寫入時間 | `Insert Time` or `Created At` |  |
+| `sys_update_time` 更新時間 | `Update Time` or `Updated At` |  |
 | `sys_insert_user` 寫入者 | `Created By` |  |
 | `sys_update_user` 更新者 | `Updated By` |  |
-| `ref_xxx_id` / `ref_xxx_name` | `{Xxx} No.` / `{Xxx} Name` | RelationField 帶過來的展示欄；前綴 `Ref.` 不必，業務上看不到關聯 |
+| `ref_xxx_id` / `ref_xxx_name` | `{Xxx} No.` / `{Xxx} Name` | Display fields brought in by a RelationField; no `Ref.` prefix needed, since the business user never sees the relation |
 
-### ERP 慣用詞（業務常見）
+### Common ERP terms (frequent in business forms)
 
-| 中文 | English |
+| Chinese | English |
 |------|---------|
 | 員工 | Employee |
 | 部門 | Department |
@@ -247,67 +260,71 @@ dotnet test tests/Polhem.Definition.UnitTests/Polhem.Definition.UnitTests.csproj
 | 專案 | Project |
 | 任務 | Task |
 
-### Caption 寫法
+### Caption style
 
-- 不加冠詞（不寫 `The Employee Name`）
-- 編號用 `No.`（含句點），不寫 `Number` / `Id`（除非確實是 GUID/UUID rowid）
-- 不要 sentence case（不寫 `Employee no.`），ERP UI 慣例 Title Case
-- 長詞優先 abbrev：`Department No.` 不寫 `Department Number`
+- No articles (not `The Employee Name`)
+- Use `No.` (with the period) for numbers; not `Number` / `Id` (unless it really is a GUID/UUID rowid)
+- No sentence case (not `Employee no.`); ERP UI convention is Title Case
+- Prefer abbreviations for long words: `Department No.`, not `Department Number`
 
-## 衝突處理（預設略過既有檔）
+## Conflict handling (skip existing files by default)
 
-執行前**先 dry-run 列出所有 target 路徑**並檢查存在性：
+Before running, **dry-run: list every target path** and check whether it exists:
 
 ```bash
-# 範例：scaffold Customer 前先檢查
+# Example: check before scaffolding Customer
 ls tests/Define/FormLayout/Customer.FormLayout.xml \
    tests/Define/TableSchema/company/ft_customer.TableSchema.xml \
    tests/Define/Language/zh-TW/Customer.Language.xml \
    tests/Define/Language/en-US/Customer.Language.xml 2>/dev/null
 ```
 
-**預設規則：已存在的 target 一律略過，不覆蓋。**
+**Default rule: an existing target is always skipped, never overwritten.**
 
-理由：skill 推導出的三類 sidecar 都是 framework generator + 翻譯字典產出的「合理預設值」，
-**不是權威來源**。使用者後續可能已手調：
+Why: the three sidecar kinds this skill derives are "reasonable defaults" produced by the framework generators + the
+translation glossary. **They are not an authoritative source.** The user may have hand-tuned them since:
 
-- FormLayout — 調 LayoutColumn 寬度、改 ControlType、把欄位拆 Section
-- TableSchema — 補 index、改 String 欄位 Length、加額外 DbField（如 audit 欄位）
-- Language — 修詞、補 LanguageEnum 翻譯
+- FormLayout: adjusted LayoutColumn widths, changed a ControlType, split fields into Sections
+- TableSchema: added indexes, changed a String field's Length, added extra DbFields (e.g. audit fields)
+- Language: reworded, added LanguageEnum translations
 
-預設略過 = re-run scaffold 對既有 entity 安全（只補新欄位 / 新 entity，不踩手調過的檔）。
+Skipping by default = re-running the scaffold on an existing entity is safe (it only fills in new fields / new
+entities and does not touch hand-tuned files).
 
-### 覆寫預設行為
+### Overriding the default
 
-使用者明確要求「重生 / 覆蓋」時才覆寫：
+Overwrite only when the user explicitly asks to "regenerate / overwrite":
 
-| 使用者意圖 | 處理方式 |
+| User intent | Handling |
 |-----------|---------|
-| 「重生 layout」/「覆蓋 X.Language.xml」 | 對該檔覆蓋寫入（仍**只動明說的那檔**，其他既有檔維持略過） |
-| 「重新 scaffold 全部」 | 全部覆蓋（要再確認一次，因 blast radius 大） |
-| 「想看 framework 原生產出是什麼樣」 | 產 `{file}.new.xml` 供 diff，使用者手動 merge 或 rm `.new`，原檔不動 |
+| "Regenerate the layout" / "overwrite X.Language.xml" | Overwrite that file (still **only the file named**; other existing files stay skipped) |
+| "Re-scaffold everything" | Overwrite all (confirm once more, because the blast radius is large) |
+| "Show me what the framework's raw output looks like" | Produce `{file}.new.xml` for diffing; the user merges by hand or `rm`s the `.new`; the original is untouched |
 
-對話中使用者**沒明說**時，skill 跑完直接報告「N 個 target 略過（既存）、M 個 target 新增」，不主動詢問 — 略過是預期行為，不必每次都打斷。
+When the user **has not said so** in the conversation, report "N targets skipped (already exist), M targets added"
+after the run, without asking. Skipping is the expected behavior; there is no need to interrupt every time.
 
-## 最終 checklist
+## Final checklist
 
-跑完後逐項確認：
+After the run, confirm each item:
 
-- [ ] FormLayout 檔產出於 `{DefinePath}/FormLayout/{ProgId}.FormLayout.xml`
-- [ ] TableSchema 對 schema 內每個 FormTable 都產出（依 CategoryId 分目錄）
-- [ ] zh-TW + en-US Language 檔各產一份
-- [ ] Language XML 中 `Namespace="{ProgId}"`、`Lang="{lang}"`
-- [ ] Language Items 含 `Schema.DisplayName` + 每個 Table 的 `Table.X.DisplayName` + 每個 Field 的 `Field.X.Caption`
-- [ ] zh-TW 與 en-US **Items.Count 相同**且 key 一一對應
-- [ ] FormSchema `CategoryId` 非空（否則 `TableSchemaGenerator` 會拋 `InvalidOperationException`）
-- [ ] throw-away test 檔已刪除（`git status` 內不應出現 `Scaffold{ProgId}FixtureFiles.cs`）
-- [ ] 三類產出檔在 `git status` 內顯示為新增 / 修改（依衝突策略）
+- [ ] The FormLayout file is produced at `{DefinePath}/FormLayout/{ProgId}.FormLayout.xml`
+- [ ] A TableSchema is produced for every FormTable in the schema (in per-CategoryId folders)
+- [ ] One zh-TW and one en-US Language file each
+- [ ] The Language XML has `Namespace="{ProgId}"`, `Lang="{lang}"`
+- [ ] The Language Items contain `Schema.DisplayName` + `Table.X.DisplayName` for each table + `Field.X.Caption` for
+      each field
+- [ ] zh-TW and en-US have **the same Items.Count** and keys match one to one
+- [ ] The FormSchema `CategoryId` is not empty (otherwise `TableSchemaGenerator` throws `InvalidOperationException`)
+- [ ] The throw-away test file is deleted (`Scaffold{ProgId}FixtureFiles.cs` must not appear in `git status`)
+- [ ] The three output kinds show as added / modified in `git status` (per the conflict policy)
 
-## 不在範圍
+## Out of scope
 
-- PermissionModels 條目（form ↔ permission model 對應；另開 plan）
-- DataSet / DataTable C# 程式碼產出
-- Repository / BO 程式碼（屬 `polhem-add-bo-method` skill 範疇）
-- BlazorPage / FormPage UI 程式碼
-- LanguageEnum / ListItems 翻譯（屬獨立議題，schema 內 `LangEnumName` 觸發時再處理）
-- 跨 repo 安裝（本 skill 為 polhem 專案 skill，預設只在本 repo 開啟時可用）
+- PermissionModels entries (form ↔ permission model mapping; a separate plan)
+- Generating DataSet / DataTable C# code
+- Repository / BO code (belongs to the `polhem-add-bo-method` skill)
+- BlazorPage / FormPage UI code
+- LanguageEnum / ListItems translation (a separate topic; handle it when `LangEnumName` in the schema triggers it)
+- Cross-repository installation (this skill is a polhem project skill and is by default only available when this
+  repository is open)

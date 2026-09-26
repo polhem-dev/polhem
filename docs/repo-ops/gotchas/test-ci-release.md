@@ -208,8 +208,8 @@ commit 觸發 publish，`--skip-duplicate` 讓已發佈的跳過、只補推新�
 
 ## 框架體檢（`polhem-framework-review`）的方法論
 
-各次結果與分級計畫每輪一份，落在 `docs/plans/`，完成後封存為
-`docs/plans/archive/plan-framework-review-<YYYY-MM-DD>.md`（入版控）。以下是**跨體檢沿用**的方法：
+各次結果與分級計畫每輪一份，落在維護者本機的 `local/plans/`（不入版控；列有未修安全問題的放 `local/internal/`）。
+bee-library 時期的各輪封存在舊 repo 的 `docs/plans/archive/`。以下是**跨體檢沿用**的方法：
 
 1. **「分數下降」多半是掃描深度提升，不是回歸——但必須逐項用 git 驗證才能這樣說。**
    2026-07-28 那輪多數降幅來自把 `PackageReference`、`git show` 歷史比對、**實際執行驗證**納入掃描；

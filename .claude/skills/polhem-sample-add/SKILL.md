@@ -1,125 +1,137 @@
 ---
 name: polhem-sample-add
-description: 為 polhem 加一個新的 samples/ 專案，內含前端類型選擇（Console / Blazor Server / Avalonia / WinForms）、後端配對決策樹（QuickStart.Server / in-process Local）、auth 需求判斷、`Polhem.Samples.slnx` 整合、README 樣板與 ProjectReference 預設值。當使用者要「新增一個 sample」、「加一個 demo」、「為某個 src 套件做 demo」之類需求時使用。
+description: Add a new samples/ project to polhem, covering the choice of front-end type (Console / Blazor Server / Avalonia / WinForms), the backend pairing decision tree (QuickStart.Server / in-process Local), deciding whether auth is needed, `Polhem.Samples.slnx` integration, a README template and default ProjectReference values. Use when the user wants to "add a new sample", "add a demo", "build a demo for some src package", and similar requests.
 ---
 
-# polhem 新增 sample
+# polhem: add a sample
 
-新增一個 `samples/<Sample.Name>/` demo 涉及 5 個關聯決定：前端類型、後端、auth 模式、共用 Define 引用、slnx folder。每個 decision 都有「正確答案表」可查；本 skill 把這張表寫死，避免每次重新探勘。
+Adding a `samples/<Sample.Name>/` demo involves 5 related decisions: front-end type, backend, auth mode, shared Define
+references, and slnx folder. Each decision has a "right-answer table" to look up; this skill pins that table down so it
+does not have to be re-explored every time.
 
-## 適用場景
+## When to use
 
-- 為某個 src 套件做新的 demo（例：`Polhem.WinForms` 出來時做 `WinForms.Demo`）
-- 為某個情境做 demo（例：「Avalonia 桌面端走 OAuth」、「Console 跑批次匯入」）
-- 既有 sample 太單薄，想新拆出獨立 demo（例：把 `Blazor.Server.Demo` 的進階功能拆 `Blazor.Server.Advanced.Demo`）
+- Building a new demo for some src package (e.g. a `WinForms.Demo` once `Polhem.WinForms` exists)
+- Building a demo for a scenario (e.g. "Avalonia desktop using OAuth", "Console running a batch import")
+- An existing sample is too thin and you want to split out a separate demo (e.g. splitting the advanced features of
+  `Blazor.Server.Demo` into `Blazor.Server.Advanced.Demo`)
 
-## 不適用
+## When not to use
 
-- 改既有 sample 的小功能 — 直接編輯，不需 scaffold
-- 純 library code 沒 UI / 沒入口的展示 — 寫文件 / ADR 比較合適
-- 不在 samples 目錄、要正式 ship 的應用 — 走 `src/` 與 NuGet 流程，不在本 skill 範圍
+- Small feature changes to an existing sample — edit it directly, no scaffolding needed
+- Showcasing pure library code with no UI / no entry point — docs / an ADR fit better
+- An app outside the samples directory that is meant to ship — goes through `src/` and the NuGet flow, outside this
+  skill's scope
 
-## 與相關 skill 的分工
+## Division of labour with related skills
 
-| Skill | 處理什麼 |
+| Skill | Handles |
 |-------|---------|
-| **`polhem-sample-add`**（本 skill） | sample 的 Polhem 整合：選哪個後端、auth、slnx、README、相依設定 |
-| **`demo-smoke`**（global） | scaffold 完之後驗證 demo 跑得通 |
-| **`/dev-workflow:changelog-draft`** | 發版時把 sample 改動列進 CHANGELOG |
+| **`polhem-sample-add`** (this skill) | The sample's Polhem integration: which backend, auth, slnx, README, dependency settings |
+| **`demo-smoke`** (this repository) | Verifying the demo runs after scaffolding |
 
-Avalonia sample 的流程：先建 UI 專案與所需的平台 head → 再呼叫本 skill 把 Polhem 後端配進去。行動 head 的 trim / AOT 雷見 `rules/apple-mobile-trim.md`。
+For an Avalonia sample: first create the UI project and the platform heads you need → then invoke this skill to wire in
+the Polhem backend. For the trim / AOT pitfalls of mobile heads, see `rules/apple-mobile-trim.md`.
 
-## 5 個必問決定
+## The 5 decisions you must ask about
 
-### Decision 1：前端類型
-
-```
-1. Console        → 一個 Polhem.Api.Client 消費端示範（Ping / Login / 呼叫 BO）
-2. Blazor Server  → in-process Local provider，server-rendered，最快上手
-3. Avalonia       → 走 remote API；桌面 / iOS / Android / WASM 共用同一 UI 專案，平台 head 另建
-4. WinForms       → Local 或 Remote 都可（Polhem.UI.WinForms 還沒落地時略過）
-```
-
-用 `AskUserQuestion` 選一個。
-
-### Decision 2：後端配對
-
-依前端決定 + auth 需求：
-
-| 前端 | auth=否（純 Public BO） | auth=是（FormBO 等需登入） |
-|------|------------------------|-----------------------------|
-| Console | 連 `QuickStart.Server` (5050)，呼叫 Echo BO | 連 `QuickStart.Server` (5050)，用 `demo/demo` 登入 |
-| Blazor Server | in-process（`builder.AddPolhemBackend()`） | in-process + `DemoAuthenticatingSystemBusinessObject`（已含於 `DemoBackend`） |
-| Avalonia | 連 `QuickStart.Server` (5050) | 連 `QuickStart.Server` (5050)，`demo/demo` |
-| WinForms | Local 或 Remote 都可 | 同上 |
-
-**關鍵知識**：
-- `QuickStart.Server` 目前已掛 `Polhem.Samples.Shared.DemoBackend`，**有** `demo/demo` 登入 + Employee schema 種子。Console 之外的 sample 想用 auth 都連這台
-- in-process 模式只給 Blazor Server 用；Avalonia 等非 web host 不能 in-process（沒有 `WebApplicationBuilder`），改把 `IServiceProvider` 交給 `ApiClientInfo.LocalServiceProvider` 走近端模式
-
-### Decision 3：要登入嗎？
-
-問使用者 sample 要展示什麼 BO 動作：
-
-| 動作類別 | 範例 BO method | auth? |
-|---------|---------------|-------|
-| `system.ping`（測連線） | `SystemApiConnector.PingAsync` | 否（Plain） |
-| `Echo` 自訂 BO | `EchoBusinessObject.Echo` | 否（Public / Anonymous） |
-| `GetDefine` 讀 schema | `SystemApiConnector.GetDefineAsync` | **是**（Encrypted / Authenticated） |
-| FormBO CRUD（`GetList` / `GetData` / `Save` / `Delete`） | `FormApiConnector.*` | **是**（Encrypted / Authenticated） |
-| 自訂 ExecFunc | `Polhem.Business` 的客製 method | 看 attribute 標示 |
-
-任一動作含 `Authenticated` → 後端必須掛 `DemoBackend`（給 demo/demo），demo 程式碼必須含 Login 步驟。
-
-### Decision 4：共用 Define 引用
-
-| 需要的 Define | 引用方式 |
-|-------------|---------|
-| Employee FormSchema（既有） | 後端讀 `samples/Define/FormSchema/Employee.FormSchema.xml`（已被 `DemoBackend.ResolveDefinePath()` 處理） |
-| 自訂 FormSchema | 加 XML 到 `samples/Define/FormSchema/<ProgId>.FormSchema.xml`、TableSchema 加 `samples/Define/TableSchema/common/`、`DemoSchemaSeeder` 補對應種子（編輯 `Polhem.Samples.Shared`） |
-| 完全不需 schema | 純 Echo / Ping demo，無 Define 相依 |
-
-加新 FormSchema 時，順手把 `Polhem.Samples.slnx` 的 `/Define/` folder 內檔案列表更新（不是必要，但 IDE 樹乾淨些）。
-
-### Decision 5：放 slnx 哪個 folder
-
-`samples/Polhem.Samples.slnx` 既有 folder：
+### Decision 1: front-end type
 
 ```
-/QuickStart/        → 入門級 demo（純 API client / 純 server）
-/Blazor/            → Blazor 家族 + Polhem.Samples.Shared
-/Avalonia/          → Avalonia 家族（桌面 / 行動 / WASM）
+1. Console        → a Polhem.Api.Client consumer demo (Ping / Login / calling a BO)
+2. Blazor Server  → in-process Local provider, server-rendered, fastest to get started
+3. Avalonia       → uses the remote API; desktop / iOS / Android / WASM share one UI project, platform heads built separately
+4. WinForms       → either Local or Remote (skip while Polhem.UI.WinForms has not landed yet)
 ```
 
-新 sample 對應放：
-- Console / API host 類 → `/QuickStart/`
-- Blazor 任一家 → `/Blazor/`
-- Avalonia 任一家 → `/Avalonia/`
-- 其他（WinForms / WPF 等）→ 開新 folder `/<Family>/`
+Use `AskUserQuestion` to pick one.
 
-## 執行流程
+### Decision 2: backend pairing
 
-### Step 1：跑 5 問
+Depends on the front-end decision + whether auth is needed:
 
-用 `AskUserQuestion` 連續問 5 個 decision（或合併為 2-3 個多選題）。
+| Front end | auth=no (Public BO only) | auth=yes (FormBO etc., login required) |
+|-----------|--------------------------|----------------------------------------|
+| Console | Connect to `QuickStart.Server` (5050), call the Echo BO | Connect to `QuickStart.Server` (5050), log in with `demo/demo` |
+| Blazor Server | in-process (`builder.AddPolhemBackend()`) | in-process + `DemoAuthenticatingSystemBusinessObject` (already included in `DemoBackend`) |
+| Avalonia | Connect to `QuickStart.Server` (5050) | Connect to `QuickStart.Server` (5050), `demo/demo` |
+| WinForms | Either Local or Remote | Same as above |
 
-### Step 2：sanity check 既有 sample 是否已涵蓋
+**Key facts**:
+- `QuickStart.Server` currently hosts `Polhem.Samples.Shared.DemoBackend`, so it **has** `demo/demo` login + Employee
+  schema seed data. Samples other than Console that want auth all connect to this server
+- in-process mode is for Blazor Server only; Avalonia and other non-web hosts cannot run in-process (there is no
+  `WebApplicationBuilder`); instead hand the `IServiceProvider` to `ApiClientInfo.LocalServiceProvider` and use local
+  mode
+
+### Decision 3: is login needed?
+
+Ask the user which BO actions the sample should show:
+
+| Action category | Example BO method | auth? |
+|-----------------|-------------------|-------|
+| `system.ping` (connectivity test) | `SystemApiConnector.PingAsync` | No (Plain) |
+| `Echo` custom BO | `EchoBusinessObject.Echo` | No (Public / Anonymous) |
+| `GetDefine` to read a schema | `SystemApiConnector.GetDefineAsync` | **Yes** (Encrypted / Authenticated) |
+| FormBO CRUD (`GetList` / `GetData` / `Save` / `Delete`) | `FormApiConnector.*` | **Yes** (Encrypted / Authenticated) |
+| Custom ExecFunc | A custom method in `Polhem.Business` | Depends on its attribute |
+
+If any action is `Authenticated` → the backend must host `DemoBackend` (for demo/demo), and the demo code must include a
+Login step.
+
+### Decision 4: shared Define references
+
+| Define needed | How to reference it |
+|---------------|---------------------|
+| Employee FormSchema (existing) | The backend reads `samples/Define/FormSchema/Employee.FormSchema.xml` (already handled by `DemoBackend.ResolveDefinePath()`) |
+| Custom FormSchema | Add the XML to `samples/Define/FormSchema/<ProgId>.FormSchema.xml`, add the TableSchema to `samples/Define/TableSchema/common/`, and add matching seed data to `DemoSchemaSeeder` (edit `Polhem.Samples.Shared`) |
+| No schema at all | A pure Echo / Ping demo, no Define dependency |
+
+When adding a new FormSchema, also update the file list in the `/Define/` folder of `Polhem.Samples.slnx` (not required,
+but it keeps the IDE tree tidier).
+
+### Decision 5: which slnx folder
+
+Existing folders in `samples/Polhem.Samples.slnx`:
+
+```
+/QuickStart/        → entry-level demos (pure API client / pure server)
+/Blazor/            → the Blazor family + Polhem.Samples.Shared
+/Avalonia/          → the Avalonia family (desktop / mobile / WASM)
+```
+
+Where a new sample goes:
+- Console / API host kinds → `/QuickStart/`
+- Any Blazor variant → `/Blazor/`
+- Any Avalonia variant → `/Avalonia/`
+- Others (WinForms / WPF etc.) → open a new folder `/<Family>/`
+
+## Procedure
+
+### Step 1: ask the 5 questions
+
+Use `AskUserQuestion` to ask the 5 decisions in a row (or merge them into 2-3 multiple-choice questions).
+
+### Step 2: sanity-check whether an existing sample already covers it
 
 ```bash
 ls samples/
 grep -r "ProgId.*=.*\"<NewSample>\"" samples/ 2>/dev/null
 ```
 
-若同類已存在（例 sample 想做「Avalonia 控件展示」但已有 `Avalonia.DemoCenter`；或想做「Avalonia 連遠端 server 的完整應用」但已有 `apps/Polhem.Northwind`） → 停下來，問使用者是要新增還是擴充既有。
+If something of the same kind already exists (e.g. the sample wants to be an "Avalonia controls showcase" but
+`Avalonia.DemoCenter` already exists; or a "complete Avalonia app connecting to a remote server" but
+`apps/Polhem.Northwind` already exists) → stop and ask the user whether to add a new one or extend the existing one.
 
-### Step 3：起骨架
+### Step 3: build the skeleton
 
-**Avalonia sample**：先建 UI 專案與所需的平台 head，再回到本流程加 Polhem 整合。
-**其他**：直接寫 csproj + 程式碼，照下面樣板：
+**Avalonia sample**: first create the UI project and the platform heads you need, then come back to this procedure to
+add the Polhem integration.
+**Others**: write the csproj + code directly, following the templates below:
 
-#### `samples/<Sample.Name>/<Sample.Name>.csproj` 樣板
+#### `samples/<Sample.Name>/<Sample.Name>.csproj` template
 
-**Console**：
+**Console**:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -138,7 +150,7 @@ grep -r "ProgId.*=.*\"<NewSample>\"" samples/ 2>/dev/null
 </Project>
 ```
 
-**Blazor Server**：
+**Blazor Server**:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
@@ -157,15 +169,18 @@ grep -r "ProgId.*=.*\"<NewSample>\"" samples/ 2>/dev/null
 </Project>
 ```
 
-### Step 4：Program.cs 樣板
+### Step 4: Program.cs templates
 
-#### Console 樣板（auth=否）
+#### Console template (auth=no)
 
-參考 `samples/QuickStart.Console/Program.cs`：先設 `ApiClientInfo.ApiKey`，再 `new SystemApiConnector(endpoint, Guid.Empty)` + `PingAsync()`，並以 `new FormApiConnector(endpoint, Guid.Empty, "Echo")` 的 `ExecuteAsync<T>("Echo", request, PayloadFormat.Plain)` 呼叫 Echo BO。
+See `samples/QuickStart.Console/Program.cs`: first set `ApiClientInfo.ApiKey`, then
+`new SystemApiConnector(endpoint, Guid.Empty)` + `PingAsync()`, and call the Echo BO with
+`ExecuteAsync<T>("Echo", request, PayloadFormat.Plain)` on `new FormApiConnector(endpoint, Guid.Empty, "Echo")`.
 
-#### Console 樣板（auth=是）
+#### Console template (auth=yes)
 
-`ClientInfo` 在 `Polhem.UI.Core`，csproj 除了上面 Console 樣板的 `Polhem.Api.Client`，還要加 `<ProjectReference Include="..\..\src\Polhem.UI.Core\Polhem.UI.Core.csproj" />`。
+`ClientInfo` lives in `Polhem.UI.Core`, so in addition to `Polhem.Api.Client` from the Console template above, the csproj
+also needs `<ProjectReference Include="..\..\src\Polhem.UI.Core\Polhem.UI.Core.csproj" />`.
 
 ```csharp
 using Polhem.Api.Client;
@@ -189,9 +204,9 @@ internal static class Program
 }
 ```
 
-#### Blazor Server 樣板
+#### Blazor Server template
 
-參考 `samples/Blazor.Server.Demo/Program.cs`：
+See `samples/Blazor.Server.Demo/Program.cs`:
 
 ```csharp
 using Polhem.Samples.Shared;
@@ -220,9 +235,9 @@ internal static class Program
 }
 ```
 
-### Step 5：slnx 整合
+### Step 5: slnx integration
 
-編輯 `samples/Polhem.Samples.slnx`，在對應 folder 加：
+Edit `samples/Polhem.Samples.slnx` and add to the matching folder:
 
 ```xml
 <Folder Name="/{Family}/">
@@ -231,74 +246,81 @@ internal static class Program
 </Folder>
 ```
 
-### Step 6：README
+### Step 6: README
 
-依下面樣板寫 `samples/<Sample.Name>/README.md`：
+Write `samples/<Sample.Name>/README.md` following the template below:
 
 ```markdown
 # {Sample.DisplayName}
 
-{一句話說 sample 想證明什麼，例：「Console 透過 JSON-RPC 呼叫遠端 BO」}
+{One sentence on what the sample sets out to prove, e.g. "A console app calls a remote BO over JSON-RPC"}
 
-## 前置條件
+## Prerequisites
 
-{Console / Blazor / Avalonia 各自的環境需求，例 Android SDK、Xcode、SQL container 等}
+{Environment requirements for Console / Blazor / Avalonia respectively, e.g. Android SDK, Xcode, SQL container}
 
-## 跑起來
+## Running it
 
-{逐步指令；後端需另起時，先列「另一個 terminal 跑 X」}
+{Step-by-step commands; when a backend must be started separately, first list "run X in another terminal"}
 
-## 預期畫面 / 輸出
+## Expected screens / output
 
-{對應每步看到什麼；包含 demo/demo 帳密提示（若需要）}
+{What you see at each step; include the demo/demo credentials hint (if needed)}
 
-## 對應 library 元件
+## Corresponding library components
 
-| Demo 行為 | library 元件 |
-|-----------|--------------|
+| Demo behaviour | Library component |
+|----------------|-------------------|
 | {step 1} | [src/Polhem.X/Y.cs](../../src/Polhem.X/Y.cs) |
 | ... | ... |
 
-## 與其他 sample 的關係
+## Relationship to other samples
 
-{若與既有 sample 重疊或共用 host，這裡明確標出}
+{If it overlaps with or shares a host with an existing sample, state that explicitly here}
 
-## 不做的事
+## Out of scope
 
-{刻意排除的範圍，避免被誤解為 missing feature}
+{Deliberately excluded scope, so it is not mistaken for a missing feature}
 ```
 
-### Step 7：build + 跑一次
+### Step 7: build + one run
 
 ```bash
 dotnet build samples/{Sample.Name}/{Sample.Name}.csproj --configuration Debug
 ```
 
-Avalonia 行動 head 加對應 `-f net10.0-ios` / `net10.0-android`。Build 失敗就停下修；成功就**不**自動 `dotnet run`，讓使用者自己跑（避免綁定 background process 在 session 內）。
+For Avalonia mobile heads add the matching `-f net10.0-ios` / `net10.0-android`. If the build fails, stop and fix it; if
+it succeeds, **do not** `dotnet run` automatically — let the user run it (to avoid tying a background process to the
+session).
 
-### Step 8：commit 建議
+### Step 8: commit suggestion
 
-skill 完成後輸出建議的 commit message，**不** 自動 commit：
+When the skill is done, output a suggested commit message; **do not** commit automatically:
 
 ```
-feat(samples): 新增 {Sample.Name} —— {一句話描述}
+feat(samples): add {Sample.Name} — {one-line description}
 
-- 引用 Polhem.X / Polhem.Y
-- 後端：{QuickStart.Server / in-process}
-- auth：{demo/demo / 匿名}
+- References Polhem.X / Polhem.Y
+- Backend: {QuickStart.Server / in-process}
+- Auth: {demo/demo / anonymous}
 ```
 
-## 知道的雷
+## Known pitfalls
 
-- **非 web sample 不能 reference Polhem.Samples.Shared**（後者有 AspNetCore framework reference）— 共用常數要另想辦法
-- **DemoBackend 共享**：`QuickStart.Server` 與 `Blazor.Server.Demo` 共享 `DemoBackend`，改它會同時影響兩台
-- **`Polhem.Samples.slnx` 與 `Polhem.slnx` 是分開的 solution**：sample 不掛主 solution，CI 不跑 sample build，本機要驗證 sample 改動須手動跑
-- **`samples/Define/Master.key` 與 `samples/**/quickstart.db` 都 gitignored**：第一次跑會自動產生，不要 commit 進來
-- **Echo BO 是 anonymous Public** — 想加新 anonymous BO 仿 `EchoBusinessObject` + 註冊 `QuickStartBoTypeResolver`；想加 authenticated BO 走 `samples/Polhem.Samples.Shared` 的 DemoBackend 路徑
+- **Non-web samples cannot reference Polhem.Samples.Shared** (it has an AspNetCore framework reference) — shared
+  constants need another approach
+- **DemoBackend is shared**: `QuickStart.Server` and `Blazor.Server.Demo` share `DemoBackend`; changing it affects both
+- **`Polhem.Samples.slnx` and `Polhem.slnx` are separate solutions**: samples are not in the main solution and CI does
+  not build samples; to verify sample changes locally you must run the build by hand
+- **`samples/Define/Master.key` and `samples/**/quickstart.db` are both gitignored**: they are generated automatically
+  on the first run; do not commit them
+- **The Echo BO is anonymous Public** — to add a new anonymous BO, copy `EchoBusinessObject` + register it in
+  `QuickStartBoTypeResolver`; to add an authenticated BO, go through the DemoBackend path in
+  `samples/Polhem.Samples.Shared`
 
-## 不在本 skill 範圍
+## Outside this skill's scope
 
-- 真實 BO 實作（用 `polhem-add-bo-method`）
-- 跑 demo 的 UI 驗證（用 `demo-smoke`）
-- 改主 README 加 Quick Start 連結（人工編輯，需 review）
-- 把 sample 改動列進 CHANGELOG（用 `/dev-workflow:changelog-draft`）
+- Real BO implementations (use `polhem-add-bo-method`)
+- UI verification of running the demo (use `demo-smoke`)
+- Editing the main README to add a Quick Start link (manual edit, needs review)
+- Listing sample changes in the CHANGELOG (done when the CHANGELOG is drafted for a release)

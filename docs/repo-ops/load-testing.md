@@ -105,7 +105,7 @@ dotnet run --project tools/Polhem.LoadTests -c Release -- run --mode Remote --en
 機器與負載形狀，複製過來時**連同中繼資料一起**，不要只摘延遲數字。
 
 **不要寫成「本框架吞吐為 X」**——那是複寫，必漂，且沒有任何機制會發現它過期
-（見 `~/.claude/rules/single-source.md`）。需要對外交代效能特性時另行升格成 ADR 或公開文件。
+（見 `.claude/rules/single-source.md`）。需要對外交代效能特性時另行升格成 ADR 或公開文件。
 
 ## 已知限制
 

@@ -1,338 +1,440 @@
 ---
 name: polhem-framework-review
-description: 對 polhem 框架做「全面體檢」的可重複方法論 —— 十一面向(架構分層、相依分層與循環相依、安全性、維護性、散落/不必要類別、序列化一致性、公開 API 表面、測試品質與覆蓋、文件漂移、效能/熱路徑、並行與全域狀態)唯讀審查,以平行子代理分面向掃描(非抽樣),交叉去重後彙整成分級(P0~P4)重構計畫 + 每項 10 分制評分。內建各面向的具體檢查清單、已知雷區、與「應為乾淨」的基準項(供回歸偵測)。當使用者要「框架全面體檢」、「架構體檢」、「架構健檢」、「框架健康度」、「framework review」、「全面 review」、「架構審查」、「幫框架打分/評分」、「有沒有散落或不必要的類別」、「提重構計畫」之類需求時使用,即使沒明講「體檢」也要在這類全框架審查請求時主動觸發。**對象是 `src/` 的框架程式碼**;若使用者要健檢的是 CLAUDE.md / rules / skills 這類設定檔語料,那是 `/dev-workflow:config-audit`,不是本 skill。**只負責唯讀審查、評分與產出重構計畫,不直接改 code**(修正另循一般流程)。
+description: A repeatable methodology for a "full health check" of the polhem framework. Read-only review across eleven dimensions (architecture layering, dependency layering and cycles, security, maintainability, scattered/unnecessary classes, serialization consistency, public API surface, test quality and coverage, documentation drift, performance/hot paths, concurrency and global state), scanned per dimension by parallel subagents (exhaustive, not sampled), cross-deduplicated and consolidated into a graded (P0~P4) refactoring plan plus a 10-point score per dimension. Includes a concrete checklist per dimension, known pitfalls, and "should stay clean" baseline items (for regression detection). Use it when the user asks for a "full framework health check", "architecture review", "architecture health check", "framework health", "framework review", "full review", "architecture audit", "score/rate the framework", "are there scattered or unnecessary classes", "propose a refactoring plan" and similar; trigger it proactively for such whole-framework review requests even if the user does not say "health check". **The target is the framework code under `src/`**; if the user wants to check the configuration corpus (CLAUDE.md / rules / skills), that is a separate configuration audit, not this skill. **This skill only does read-only review, scoring and producing the refactoring plan; it does not change code** (fixes follow the normal workflow).
 ---
 
-# polhem 框架全面體檢
+# Full health check of the polhem framework
 
-對整個框架(17 個 `src/` 專案)做結構化健康檢查,產出**分級重構計畫**與**每項 10 分制評分**。核心方法是**平行子代理分面向唯讀掃描**,再交叉去重彙整。
+Run a structured health check over the whole framework (17 `src/` projects) and produce a **graded refactoring plan**
+and a **10-point score per dimension**. The core method is **read-only scanning per dimension by parallel subagents**,
+followed by cross-deduplication and consolidation.
 
-## 何時用 / 產出什麼
+## When to use / what it produces
 
-- **觸發**:使用者要求全面 review / 體檢 / 架構審查 / 打分 / 找散落類別 / 提重構計畫。
-- **產出**:`docs/plans/plan-framework-review.md`(分級發現 + 執行順序)+ 對話內評分總表。若使用者只要口頭結論可略過落檔,但預設落檔(符合 CLAUDE.md「執行前先擬計畫」)。
-- **紀律**:**全程唯讀,不改任何 code**。修正是後續獨立步驟,由使用者 review 計畫後決定。
+- **Trigger**: the user asks for a full review / health check / architecture audit / scoring / finding scattered classes /
+  a refactoring plan.
+- **Output**: a graded refactoring plan (graded findings + execution order) written to `local/plans/`, for example
+  `local/plans/<review-date>-framework-review.md`, plus a score table in the conversation. `local/` is ignored by git:
+  **never commit the report** (never `git add -f` it), because it can list unfixed security issues. If it lists unfixed
+  vulnerabilities, keep those details in `local/internal/` instead. If the user only wants a verbal conclusion you can
+  skip writing the file, but writing it is the default (in line with the "Plan before you build" section of
+  `.claude/CLAUDE.md`).
+- **Discipline**: **read-only throughout; change no code.** Fixes are a separate later step, decided by the user after
+  reviewing the plan.
 
-## 執行前先問(用 AskUserQuestion)
+## Ask first (use AskUserQuestion)
 
-依 `~/.claude/CLAUDE.md` 提問風格,每題附選項 + 標建議:
+Ask each question with explicit options and mark the recommended one:
 
-1. **追加面向**(multi-select):預設十一面向已涵蓋;問是否要再加(如跨平台 trim/AOT、i18n 覆蓋)。
-2. **範圍**(single):全部 17 專案(建議) / 只核心後端(排除 UI heads Avalonia/Blazor.Server,重構訊號密度最高) / 含 apps+samples+tools。
-3. **執行方式**(single):唯讀 review + 計畫文件(建議) / 只口頭回報 / 多代理 workflow 深掃(需使用者明確同意大規模編排)。
+1. **Extra dimensions** (multi-select): the default eleven dimensions are covered; ask whether to add more (for example
+   cross-platform trim/AOT, i18n coverage).
+2. **Scope** (single): all 17 projects (recommended) / core backend only (excludes the UI heads Avalonia/Blazor.Server;
+   highest density of refactoring signals) / including apps+samples+tools.
+3. **Mode** (single): read-only review + plan document (recommended) / verbal report only / multi-agent workflow deep scan
+   (requires the user's explicit consent to large-scale orchestration).
 
-## 十一個檢查面向
+## The eleven dimensions
 
-| # | 面向 | 核心問題 |
+| # | Dimension | Core question |
 |---|------|---------|
-| 1 | 架構分層合理性 | N-Tier + Clean Architecture + MVVM 是否貫徹;Domain Core 是否純淨 |
-| 2 | 相依分層與循環相依 | 有無循環、反向依賴、跨層繞道、Server 依賴 Client |
-| 3 | 安全性 | 加密管線、Session/Token、SQL 注入、XXE、亂數、資源釋放、存取控制 |
-| 4 | 維護性 | 命名一致性、註解、一型別一檔、識別碼比對文化、大檔 |
-| 5 | 散落/不必要類別 | grab-bag、純 facade、`*Func` 遺留、一檔多型別、死碼 |
-| 6 | 序列化一致性 | XML/JSON/MessagePack 三棲標籤、`[Union]` 多型、typeless 白名單、trim/AOT |
-| 7 | 公開 API 表面 | 契約軸命名空間一致性、BO 介面純度、breaking-change 面、四層對齊 |
-| 8 | 測試品質與覆蓋 | 無效斷言(S2699)、覆蓋缺口、fixture 污染、flaky、`[Collection]` 序列化 |
-| 9 | 文件漂移 | 公開文件宣稱 vs 程式碼實際、死連結、雙語落差、CHANGELOG 未記 breaking |
-| 10 | 效能/熱路徑 | 每請求反射未快取、序列化 options 重建、wire 形狀成本、集合查找複雜度 |
-| 11 | 並行與全域狀態 | 共用 cache 實例被 mutate、process-wide static、裸集合、DI 生命週期 |
+| 1 | Architecture layering | Is N-Tier + Clean Architecture + MVVM applied consistently; is the Domain Core pure |
+| 2 | Dependency layering and cycles | Any cycles, reverse dependencies, cross-layer detours, Server depending on Client |
+| 3 | Security | Encryption pipeline, Session/Token, SQL injection, XXE, randomness, resource disposal, access control |
+| 4 | Maintainability | Naming consistency, comments, one type per file, culture in identifier comparison, large files |
+| 5 | Scattered/unnecessary classes | Grab-bags, pure facades, `*Func` leftovers, multiple types per file, dead code |
+| 6 | Serialization consistency | XML/JSON/MessagePack triple attributes, `[Union]` polymorphism, typeless allowlist, trim/AOT |
+| 7 | Public API surface | Contract-axis namespace consistency, BO interface purity, breaking-change surface, four-layer alignment |
+| 8 | Test quality and coverage | Ineffective assertions (S2699), coverage gaps, fixture pollution, flaky tests, `[Collection]` serialization |
+| 9 | Documentation drift | Public doc claims vs actual code, dead links, bilingual gaps, breaking changes missing from CHANGELOG |
+| 10 | Performance/hot paths | Uncached per-request reflection, serializer options rebuilt, wire shape cost, collection lookup complexity |
+| 11 | Concurrency and global state | Shared cache instances mutated, process-wide static, bare collections, DI lifetimes |
 
-> 面向 1 與 2 高度重疊,可合派一個代理但分開評分。
+> Dimensions 1 and 2 overlap heavily; one agent can cover both, but score them separately.
 >
-> **面向 10、11 為 2026-08-07 起的常設項**。首次測量即為十一面向最低兩名(效能 6.0、並行 7.0),
-> 但那是**首次有基準,不是退步** —— 下一輪才有回歸意義。兩者的共同性質是「build 綠、測試綠、
-> 掃描器不報,只有 profiler 或壓力下才現形」,與文件漂移同屬「無自動化機制會發現」那一類。
+> **Dimensions 10 and 11 are standing items since 2026-08-07.** On their first measurement they were the two lowest of
+> the eleven (performance 6.0, concurrency 7.0), but that is **the first baseline, not a regression**; regression only
+> means something from the next round on. What the two share is "build green, tests green, scanners silent; it only
+> shows up under a profiler or under load", the same class as documentation drift: "no automated mechanism will find it".
 >
-> **面向 9 為 2026-07-28 起的常設項**,原本散在各面向的 P3。首次獨立評分即為九面向最低(4.5/10)
-> —— 被結構面的高分稀釋掉正是它該獨立計分的理由:文件漂移不會讓 build 紅、不會讓測試失敗,
-> 只會讓外部開發者照著寫出不能編譯的程式碼,沒有任何自動化機制會發現。
+> **Dimension 9 is a standing item since 2026-07-28**; before that it was scattered as P3 items across the other
+> dimensions. Its first independent score was the lowest of nine (4.5/10). Being diluted by high structural scores is
+> exactly why it needs its own score: documentation drift does not turn the build red and does not fail tests; it only
+> makes external developers write code that does not compile, and no automated mechanism will find it.
 
-## 方法:平行子代理分面向掃描
+## Method: parallel subagents per dimension
 
-派 **10 個 `general-purpose` 子代理**(背景平行),各掃一面向(架構+相依合派、其餘各一)。每個代理:
-- **嚴格唯讀**,prompt 明示「絕對不可修改/寫入任何檔案,只回報發現」。
-- 收到**該面向的完整檢查清單 + 已知雷區**(見下)+ 相關規範摘要(從 `~/.claude/rules/` 與 `.claude/rules/` 提煉,別叫代理自己去讀整包)。
-- 回報格式統一:分三級 + 每項附 `專案/檔案:行號`、問題(WHY)、建議。
-- 用 grep/glob **全量掃描,非抽樣**;要求列**完整清單**(不接受「有一些」)。
+Dispatch **10 `general-purpose` subagents** (in the background, in parallel), one per dimension (architecture and
+dependencies together, one each for the rest). Each agent:
+- Is **strictly read-only**; the prompt states explicitly "you must not modify or write any file; only report findings".
+- Receives **the full checklist for its dimension + known pitfalls** (see below) + a summary of the relevant rules
+  (distilled from `.claude/rules/`; do not tell the agent to go read the whole set itself).
+- Reports in a uniform format: three levels, each item with `project/file:line`, the problem (WHY) and a recommendation.
+- Uses grep/glob for **exhaustive scanning, not sampling**; must list the **complete set** ("there are some" is not
+  accepted).
 
-全部回報後,主代理**交叉去重**:同一發現被兩個代理獨立指出 → 提高信心、優先處理(這次 `MessagePackKeyCollectionBase` comparer 即由維護性與序列化兩代理確認)。
+After all reports are in, the main agent **cross-deduplicates**: a finding reported independently by two agents gets
+higher confidence and higher priority (this time the `MessagePackKeyCollectionBase` comparer was confirmed by both the
+maintainability and the serialization agents).
 
-> 這用一般子代理委派(非計費的大規模 workflow 編排)。若使用者選 workflow 深掃,才改用 Workflow 工具。
+> This uses ordinary subagent delegation (not billed large-scale workflow orchestration). Only if the user chooses the
+> workflow deep scan do you switch to the Workflow tool.
 
-## 與 CI build gate 的分工(尤其 code style,別重掃)
+## Division of labour with the CI build gate (especially code style: do not rescan)
 
-體檢是**語意/結構審查**,不是格式檢查器。凡 `build-ci.yml` strict build 已擋的,體檢**不重掃**——build 綠燈本身即證明,重跑無新訊號:
+The health check is a **semantic/structural review**, not a format checker. Whatever the `build-ci.yml` strict build
+already blocks, the health check **does not rescan**; a green build is itself the proof, and rerunning adds no signal:
 
-- 純格式(縮排 / LF / UTF-8 無 BOM / `using` 排序,`.editorconfig` 管)。
-- 已 `.editorconfig` 硬性化的 analyzer 規則(CA1052/CA1822/IDE0044/IDE0051/CA1725/CA1305/CA1861… 見 `sonarcloud.md` 開頭「已硬性化,不再列入」清單)。
-- `TreatWarningsAsErrors=true` 下的 nullable/CS 警告(編不過就進不了 PR)。
-- SonarCloud 已自動掃的 issue。
+- Pure formatting (indentation / LF / UTF-8 without BOM / `using` ordering; managed by `.editorconfig`).
+- Analyzer rules already enforced by `.editorconfig` (CA1052/CA1822/IDE0044/IDE0051/CA1725/CA1305/CA1861… see the
+  "already enforced, no longer listed" list at the top of `sonarcloud.md`).
+- Nullable/CS warnings under `TreatWarningsAsErrors=true` (if it does not compile, it cannot get into a PR).
+- Issues SonarCloud already scans automatically.
 
-體檢**只驗機器管不到的 code style 語意規則**(已內含於面向 4 維護性):識別碼比對 `Ordinal` vs `CurrentCulture` 的**語意選擇**(CA1305 只管 `IFormatProvider`,管不到 `StringComparison`)、一型別一檔、資料夾↔命名空間的**個別資料夾例外**(IDE0130 全域規則無法對個別資料夾開例外,故 prompt 層把關)、靜態工具歸屬(path A/B/C/D)、grab-bag / 純 facade、`*Func`/`*Helper` 命名棄用、註解 WHY-not-WHAT 與 S125 人工判定。
+The health check **only verifies semantic code-style rules that machines cannot enforce** (already part of dimension 4,
+maintainability): the **semantic choice** of `Ordinal` vs `CurrentCulture` for identifier comparison (CA1305 only covers
+`IFormatProvider`, not `StringComparison`), one type per file, **per-folder exceptions** to folder↔namespace (IDE0130 is
+a global rule and cannot be relaxed per folder, so the prompt layer guards it), where static utilities belong
+(path A/B/C/D), grab-bags / pure facades, the deprecated `*Func`/`*Helper` naming, WHY-not-WHAT comments and manual S125
+judgement.
 
-> 一句話:**格式與 analyzer 硬規則歸 build gate,語意與結構歸體檢。不設獨立「code style 面向」——那半機器管、這半在維護性裡。**
+> In one sentence: **formatting and hard analyzer rules belong to the build gate; semantics and structure belong to the
+> health check. There is no separate "code style dimension": the machine handles one half, and the other half is in
+> maintainability.**
 
-## 各面向檢查清單(派給代理時貼這些)
+## Checklist per dimension (paste these when dispatching agents)
 
-### 1+2. 架構分層與相依
-- 讀 `docs/en/dependency-map.md`、`docs/en/architecture-overview.md`、`docs/en/development-constraints.md` 建基準。
-- 逐一擷取各 `.csproj` 的 `<ProjectReference>`,畫實際相依圖,拓樸排序驗**無循環**。
-- 硬約束驗證:BO(`Polhem.Business`)**無** `Polhem.Db` 參照;後端(AspNetCore/Hosting/Business/Repository/Db)**無** `Polhem.Api.Client` 參照(注意 `Polhem.Web.Blazor.Server` 是前端 RCL,參照 Api.Client 屬正確);Repository 抽象(`Polhem.Repository.Abstractions`)未被繞過;`Polhem.Api.Contracts` 未被實作污染。
-- 找:上帝專案(職責過載 vs 職責廣度 —— 行數大不等於該拆,看內聚)、Domain Core 夾帶基礎設施職責、文件相依圖 vs 實際 csproj 的落差。
+### 1+2. Architecture layering and dependencies
+- Read `docs/en/dependency-map.md`, `docs/en/architecture-overview.md`, `docs/en/development-constraints.md` to build the
+  baseline.
+- Extract `<ProjectReference>` from every `.csproj`, draw the actual dependency graph, and verify **no cycles** with a
+  topological sort.
+- Verify hard constraints: the BO (`Polhem.Business`) has **no** `Polhem.Db` reference; the backend
+  (AspNetCore/Hosting/Business/Repository/Db) has **no** `Polhem.Api.Client` reference (note that
+  `Polhem.Web.Blazor.Server` is a front-end RCL, so its Api.Client reference is correct); the Repository abstraction
+  (`Polhem.Repository.Abstractions`) is not bypassed; `Polhem.Api.Contracts` is not polluted by implementations.
+- Look for: god projects (overloaded responsibilities vs breadth of responsibilities; a large line count does not mean
+  it should be split, look at cohesion), a Domain Core carrying infrastructure responsibilities, gaps between the
+  documented dependency graph and the actual csproj files.
 
-### 3. 安全性(規範源:`.claude/rules/security.md` + `~/.claude/rules/scanning.md`)
-- SQL:一律 `DbCommandSpec` 的 `{0}` 佔位符;grep `$"...SELECT/INSERT/UPDATE`、`string.Format` 組 SQL;識別符須經 `QuoteIdentifier` 逃逸。
-- 加密:AES-CBC-HMAC(256-bit + SHA-256 + 隨機 IV),HMAC 用常數時間 `CompareBytes`(非 `==`);payload 管線序列化→壓縮→加密不可調換;存取驗證須在**解密前**。
-- 亂數:安全用途一律 `RandomNumberGenerator`,禁 `System.Random`。
-- XXE:解析不受信任 XML 須 `DtdProcessing.Prohibit` + `XmlResolver=null`。
-- 例外:禁 `catch(Exception)` 基底、空 catch、`throw ex;`;例外/log 禁洩漏金鑰/token/密碼/堆疊/內部路徑。
-- 資源:`IDisposable` 用 `using`,禁散落手動 `.Dispose()`。
-- 存取控制:對外 method 是否都有適當 `[ApiAccessControl]`;未標註是否 fail-closed(拒絕而非放行);預設驗證器是否真正驗金鑰值(非只檢查非空)。
-- 硬編碼:金鑰/憑證/連線字串密碼;MD5/SHA1 用於安全雜湊;`NoEncryptionEncryptor` 在非 debug 是否可被啟用。
+### 3. Security (rule sources: `.claude/rules/security.md` + `.claude/rules/scanning.md`)
+- SQL: always the `{0}` placeholders of `DbCommandSpec`; grep `$"...SELECT/INSERT/UPDATE` and SQL built with
+  `string.Format`; identifiers must be escaped via `QuoteIdentifier`.
+- Encryption: AES-CBC-HMAC (256-bit + SHA-256 + random IV); HMAC uses the constant-time `CompareBytes` (not `==`); the
+  payload pipeline serialize→compress→encrypt must not be reordered; access validation must happen **before decryption**.
+- Randomness: security uses always `RandomNumberGenerator`; `System.Random` is forbidden.
+- XXE: parsing untrusted XML requires `DtdProcessing.Prohibit` + `XmlResolver=null`.
+- Exceptions: no `catch(Exception)` on base types, no empty catch, no `throw ex;`; exceptions/logs must not leak
+  keys/tokens/passwords/stack traces/internal paths.
+- Resources: `IDisposable` uses `using`; no scattered manual `.Dispose()`.
+- Access control: do all externally exposed methods have an appropriate `[ApiAccessControl]`; is the unannotated case
+  fail-closed (deny rather than allow); does the default validator actually verify the key value (not only that it is
+  non-empty).
+- Hardcoding: keys/certificates/passwords in connection strings; MD5/SHA1 used for security hashing; whether
+  `NoEncryptionEncryptor` can be enabled outside debug.
 
-### 4. 維護性(規範源:`~/.claude/rules/code-style.md` + `.claude/rules/sonarcloud.md`)
-- **識別碼型字串比對誤用文化相依**(高價值檢查):grep `CurrentCultureIgnoreCase`、`CurrentCulture`、`.ToLower()`/`.ToUpper()`(無 Invariant)。集合 key、欄位名、ProgId、型別名、delimiter 切割一律 `Ordinal`/`OrdinalIgnoreCase`/invariant —— Turkish-I 正確性風險。
-- `*Func` 靜態類別殘留(規範說 2026-05-01 已全移除,驗證回歸)。
-- 一型別一檔:grep 一檔多個 `public class/interface/enum`(尤其介面 + 實作同檔)。
-- 資料夾↔命名空間一致(IDE0130);大檔(> 500 行)拆分候選。
-- 命名違規:Hungarian 前綴、`*Helper` 後綴、參數非 camelCase。
-- 註解掉的舊 code(S125)、空 class(S2094)、未 sealed 的 private nested(S3260)。
+### 4. Maintainability (rule sources: `.claude/rules/code-style.md` + `.claude/rules/sonarcloud.md`)
+- **Culture-sensitive comparison misused on identifier strings** (high-value check): grep `CurrentCultureIgnoreCase`,
+  `CurrentCulture`, `.ToLower()`/`.ToUpper()` (without Invariant). Collection keys, field names, ProgIds, type names and
+  delimiter splitting always use `Ordinal`/`OrdinalIgnoreCase`/invariant; Turkish-I is a correctness risk.
+- Leftover `*Func` static classes (the rules say they were all removed on 2026-05-01; verify there is no regression).
+- One type per file: grep for files with several `public class/interface/enum` (especially an interface and its
+  implementation in the same file).
+- Folder↔namespace consistency (IDE0130); large files (> 500 lines) as split candidates.
+- Naming violations: Hungarian prefixes, `*Helper` suffix, parameters not in camelCase.
+- Commented-out old code (S125), empty classes (S2094), private nested classes not sealed (S3260).
 
-### 5. 散落/不必要類別
-- grab-bag / 上帝類(名稱含 Helper/Utils/Common/Misc/Manager 而內容發散)。
-- 純 facade / 1-line delegation wrapper(無附加價值,但 DI 抽象縫例外)。
-- 死碼:0-caller 的**非公開** API、`[Obsolete]` 且無呼叫者(框架公開 API surface 即使 0-caller 仍保留,純 BCL wrapper 才刪)。
-- 重複實作(S4144):多處相同邏輯應合併。
-- **澄清陷阱**:`ExecFunc*` 家族是 domain 型別(JSON-RPC「執行函式」模式),非被棄用的 `*Func` 靜態類,勿誤報。
+### 5. Scattered/unnecessary classes
+- Grab-bags / god classes (names containing Helper/Utils/Common/Misc/Manager with divergent content).
+- Pure facades / 1-line delegation wrappers (no added value; DI abstraction seams are an exception).
+- Dead code: **non-public** APIs with 0 callers, `[Obsolete]` with no callers (the framework's public API surface is kept
+  even with 0 callers; only pure BCL wrappers are deleted).
+- Duplicate implementations (S4144): identical logic in several places should be merged.
+- **Clarification trap**: the `ExecFunc*` family is a domain type (the JSON-RPC "execute function" pattern), not a
+  deprecated `*Func` static class; do not report it.
 
-### 6. 序列化一致性(規範源:`polhem-serialization` skill)
-- **預設 wire 是 MessagePack**(`Polhem.Api.Core/ApiServiceOptions.cs`),放大「JSON/XML 沒事、MessagePack 出事」問題。
-- **typeless 白名單**(最實在的雷):`object` 型欄位走 `SafeTypelessFormatter`,值型別須在 `AllowedPrimitiveTypes` + `SysInfo.IsTypeNameAllowed` 白名單內。特別查 `FilterCondition.In()` 這類把 `object` 設成 `List<object>`/`object[]` 的路徑 —— 不在白名單會反序列化擲例外。
-- MessagePack item 參數化 ctor 參數順序須對齊 `[Key]` 順序(有無參數 ctor 走 setter 則不觸發)。
-- `[Union]` 多型 ⊥ keyAsPropertyName:多型型別維持整數 `[Key]`;非多型型別用 name-based(adr-030)。
-- 三棲標籤完整:衍生/計算/暫態欄位須三套都 ignore(`[XmlIgnore, JsonIgnore, IgnoreMember]`);別靠私有 setter 隱性避免上 wire(contractless 下改 public setter 就靜默洩漏)。
-- 集合:`MessagePackCollectionBase<>` 子型別須在 `MessagePackCodec` 顯式註冊 formatter,否則**反序列化**擲 `MessagePackSerializationException`(序列化端正確,故只在讀回時現形);已由 POLHEM4001 於建置期把關。Definition 集合禁裸 `List<T>`/`Collection<T>`。
-- Newtonsoft.Json 殘留(應為 0)。
+### 6. Serialization consistency (rule source: the `polhem-serialization` skill)
+- **The default wire is MessagePack** (`Polhem.Api.Core/ApiServiceOptions.cs`), which amplifies the "fine in JSON/XML,
+  broken in MessagePack" class of problems.
+- **Typeless allowlist** (the most concrete pitfall): `object`-typed fields go through `SafeTypelessFormatter`, and the
+  value type must be on the `AllowedPrimitiveTypes` + `SysInfo.IsTypeNameAllowed` allowlist. Check in particular paths
+  such as `FilterCondition.In()` that set an `object` to `List<object>`/`object[]`; if it is not on the allowlist,
+  deserialization throws.
+- For MessagePack items with a parameterised ctor, the ctor parameter order must match the `[Key]` order (types that have
+  a parameterless ctor and go through setters are not affected).
+- `[Union]` polymorphism ⊥ keyAsPropertyName: polymorphic types keep integer `[Key]`; non-polymorphic types use
+  name-based keys (adr-030).
+- Complete triple attributes: derived/computed/transient fields must be ignored by all three
+  (`[XmlIgnore, JsonIgnore, IgnoreMember]`); do not rely on a private setter to keep something off the wire implicitly
+  (under contractless, changing it to a public setter leaks it silently).
+- Collections: `MessagePackCollectionBase<>` subtypes must have a formatter explicitly registered in `MessagePackCodec`,
+  otherwise **deserialization** throws `MessagePackSerializationException` (the serializing side is correct, so it only
+  shows up on read-back); POLHEM4001 already guards this at build time. Definition collections must not be bare
+  `List<T>`/`Collection<T>`.
+- Newtonsoft.Json leftovers (should be 0).
 
-### 7. 公開 API 表面
-- 契約軸命名空間↔資料夾一致(`Polhem.Api.Contracts.{System,Form,AuditLog}` ↔ `Polhem.Api.Core.Messages.{...}`)。
-- **BO 介面純度**:`I<Axis>BusinessObject` 只放跨 BO 會呼叫的方法;純 API 方法(Ping/GetFormSchema/GetFormLayout/GetLanguage)只在具象類別 public + `[ApiAccessControl]`,不放介面。
-- 四層對齊抽查:wire DTO(`XxxRequest/Response`)↔ 契約介面(`IXxxRequest/Response`)↔ BO 實作 ↔ Client connector,命名與簽章一致,無孤兒。
-- breaking-change 面:public 可變欄位、public 暴露具體集合型別(對外契約應以 `IReadOnlyList` 收斂)、應 internal 卻 public 的實作型別。
-- 死路徑基礎設施:production 零註冊/零呼叫但掛在熱路徑的機制(標註「預留」而非誤判已生效)。
-- `///` XML 文件註解:公開 API 缺漏或用中文(應英文)。
+### 7. Public API surface
+- Contract-axis namespace↔folder consistency (`Polhem.Api.Contracts.{System,Form,AuditLog}` ↔
+  `Polhem.Api.Core.Messages.{...}`).
+- **BO interface purity**: `I<Axis>BusinessObject` only holds methods that other BOs call; pure API methods
+  (Ping/GetFormSchema/GetFormLayout/GetLanguage) are public on the concrete class only, with `[ApiAccessControl]`, and
+  are not on the interface.
+- Spot-check four-layer alignment: wire DTO (`XxxRequest/Response`) ↔ contract interface (`IXxxRequest/Response`) ↔ BO
+  implementation ↔ Client connector; names and signatures consistent, no orphans.
+- Breaking-change surface: public mutable fields, publicly exposed concrete collection types (external contracts should
+  narrow to `IReadOnlyList`), implementation types that are public but should be internal.
+- Dead-path infrastructure: mechanisms with zero registrations/zero calls in production that still sit on a hot path
+  (mark them as "reserved" rather than wrongly assuming they are in effect).
+- `///` XML doc comments: missing on public APIs, or written in Chinese (should be English).
 
-### 8. 測試品質與覆蓋(規範源:`.claude/rules/testing.md`)
-- 無效斷言(S2699):`[Fact]/[Theory]` 無 `Assert.*`;驗「無例外」須 `Record.Exception` + `Assert.Null`。**注意**:委派到 asserting helper(如 `AssertXxx`、`TestFunc`)是合法的,別誤報 —— 讀可疑檔案確認。
-- **空洞 round-trip**:序列化測試 helper 是否只 `Assert.NotNull` 不比對還原值(名實不符的假綠燈)。正確範本 `tests/Polhem.Api.Core.UnitTests/TestFunc.cs`。
-- 覆蓋缺口:src vs tests 檔數對照;安全邏輯(加密/雜湊)、序列化三棲 round-trip、公開 BO 方法必測;找 `In` MessagePack 這類零覆蓋的關鍵路徑。
-- fixture 污染:`SaveDefine` 系列測試須切 temp 目錄,禁寫 `tests/Define/`。
-- `[Collection]` 序列化(規範宣稱 Phase 7 後清零,驗回歸)、測試改 production static、真實牆鐘 flaky(建議 `TimeProvider` + `FakeTimeProvider`)。
+### 8. Test quality and coverage (rule source: `.claude/rules/testing.md`)
+- Ineffective assertions (S2699): `[Fact]/[Theory]` without `Assert.*`; verifying "no exception" requires
+  `Record.Exception` + `Assert.Null`. **Note**: delegating to an asserting helper (such as `AssertXxx`, `TestFunc`) is
+  legitimate; do not report it. Read suspicious files to confirm.
+- **Hollow round-trips**: does a serialization test helper only `Assert.NotNull` without comparing the restored values
+  (a false green that does not match its name)? The correct template is `tests/Polhem.Api.Core.UnitTests/TestFunc.cs`.
+- Coverage gaps: compare file counts in src vs tests; security logic (encryption/hashing), triple-format serialization
+  round-trips and public BO methods must be tested; look for critical paths with zero coverage, such as `In` over
+  MessagePack.
+- Fixture pollution: `SaveDefine`-family tests must switch to a temp directory; writing to `tests/Define/` is forbidden.
+- `[Collection]` serialization (the rules claim it was cleared after Phase 7; verify no regression), tests modifying
+  production statics, real wall-clock flakiness (recommend `TimeProvider` + `FakeTimeProvider`).
 
-### 9. 文件漂移(規範源:`.claude/rules/public-docs.md`)
+### 9. Documentation drift (rule source: `.claude/rules/public-docs.md`)
 
-範圍是**公開文件**(寫給 NuGet 套件使用者看的):repo 根 `README*` / `CHANGELOG*`、`docs/README.md` 與 `docs/<lang>/` 下全部 `.md`、
-`docs/adr/`、`docs/changelogs/`、以及**所有位置**的 `README.md` / `README.zh-TW.md`(`src/` `samples/` `apps/` `tools/`)。
-`docs/plans/`、`docs/repo-ops/`、`docs/internal/`、`.claude/` 不是公開文件。
+The scope is **public documentation** (written for NuGet package consumers): the repository-root `README*` /
+`CHANGELOG*`, `docs/README.md` and every `.md` under `docs/<lang>/`, `docs/adr/`, `docs/changelogs/`, and `README.md` /
+`README.zh-TW.md` **in every location** (`src/` `samples/` `apps/` `tools/`).
+`local/` (plans and internal notes), `docs/repo-ops/` and `.claude/` are not public documentation.
 
-- **可編譯性(最高價值)**:文件中的型別名、方法名、DI 擴充方法、列舉成員逐一比對原始碼是否存在且大小寫相符。
-  外部開發者第一天就會複製的段落(cookbook、快速上手、README 範例)優先。**這類錯誤沒有任何自動化機制會抓到。**
-- **設計之錄失真**:ADR 描述的機制是否仍存在(型別已更名 / 已移除卻仍被當作現行機制描述);
-  `development-constraints` 的硬約束是否仍成立;被推翻的 ADR 是否已標 `已取代(Superseded)`。
-- **改名 / 刪型別的反向索引**:每次移除或更名公開型別,`grep -rn "<舊名>" --include="*.md"` 是否已清乾淨
-  —— 這是本面向約六成問題的來源。
-- **死連結**:全量檢查相對連結與 anchor。特別注意 `docs/changelogs/*.md` 這類**子目錄**中誤用 repo-root
-  相對路徑的整批錯誤(從子目錄解析會多一層,GitHub 上全 404)。
-- **雙語同步**:比對雙語配對的章節結構與內容量,找單邊更新;找應有雙語卻只有單語者。
-- **CHANGELOG**:`Directory.Build.props` 版本 vs tag 之後的 commit,標 `!` 的是否都已記載;
-  是否有 Unreleased 區段;既有敘述是否已被後續 commit 推翻。
-- **量化基準**:文件宣稱的專案數 / 相依邊 / 套件清單 vs 實際 csproj。
+- **Compilability (highest value)**: check every type name, method name, DI extension method and enum member in the
+  docs against the source code: does it exist, with matching case? Prioritise the passages external developers copy on
+  day one (cookbook, quick start, README samples). **No automated mechanism catches this class of error.**
+- **Distorted design records**: does the mechanism an ADR describes still exist (a type renamed / removed but still
+  described as the current mechanism); do the hard constraints in `development-constraints` still hold; are overturned
+  ADRs marked `已取代(Superseded)`.
+- **Reverse index for renamed / deleted types**: each time a public type is removed or renamed, has
+  `grep -rn "<old name>" --include="*.md"` been cleaned up? This is the source of about sixty percent of the problems
+  in this dimension.
+- **Dead links**: check all relative links and anchors exhaustively. Watch in particular for batch errors in
+  **subdirectories** such as `docs/changelogs/*.md` that wrongly use repository-root relative paths (resolved from a
+  subdirectory they gain one extra level, and all 404 on GitHub).
+- **Bilingual sync**: compare section structure and amount of content in bilingual pairs; find one-sided updates; find
+  documents that should be bilingual but exist in only one language.
+- **CHANGELOG**: the `Directory.Build.props` version vs the commits after the tag; are all commits marked `!` recorded;
+  is there an Unreleased section; have existing statements been overturned by later commits.
+- **Quantitative baselines**: project counts / dependency edges / package lists claimed by docs vs the actual csproj
+  files.
 
-### 10. 效能/熱路徑
+### 10. Performance/hot paths
 
-**先識別熱路徑再開始找問題**,並要求每個發現說明「這段在什麼頻率下被執行」且追到呼叫端證明。
-證不出在熱路徑上的降為 P4 —— 一個 O(n²) 在啟動時跑一次無所謂,每請求跑就是問題。
-**不報無實測支撐的臆測性微優化**(「這裡可以用 span」)。
+**Identify the hot paths before looking for problems**, and require each finding to state "how often this code runs"
+and to trace the callers to prove it. Anything not proven to be on a hot path drops to P4: an O(n²) that runs once at
+startup does not matter; running per request is a problem.
+**Do not report speculative micro-optimisations without measurements** ("could use span here").
 
-主要熱路徑:API 請求管線(解密→反序列化→驗證→派發→回應序列化)、session/token 驗證(**每請求 2–5 次**)、
-定義查找(**每請求 6–10 次**)、權限 layer-1/layer-2、FormSchema 驅動 CRUD、MessagePack wire(**每列×每欄**)、
-運算式求值(**每列×每計算欄**)、Grid 儲存格實體化(每可見儲存格)。
+Main hot paths: the API request pipeline (decrypt→deserialize→validate→dispatch→serialize response), session/token
+validation (**2–5 times per request**), definition lookup (**6–10 times per request**), permission layer-1/layer-2,
+FormSchema-driven CRUD, the MessagePack wire (**per row × per column**), expression evaluation
+(**per row × per computed column**), Grid cell materialisation (per visible cell).
 
-- **每請求反射未快取**:`GetType().GetMethod` / `GetProperties` / `GetCustomAttributes` /
-  `Activator.CreateInstance` 在請求路徑上且無 `ConcurrentDictionary` 快取。JSON-RPC 反射派發框架的典型病灶。
-- **序列化 options 每次重建**(2026-08-07 的 P0):`JsonSerializerOptions` 是 STJ 的型別 contract
-  快取容器,per-call `new` 讓快取 100% miss。**對照組**:同 repo 的 `MessagePackCodec.Options` 是
-  `static readonly` —— 一邊做對一邊沒有,通常是遷移時的機械式轉譯遺留。
-- **wire 形狀成本**:DTO 形狀是所有傳輸成本的乘數。查「同一份資料送兩次」(如 Unchanged 列同時送
-  Current + Original)、「欄名逐列重複」(`Dictionary<string,object?>` 而非與 columns 同序的陣列)、
-  「逐格 typeless 派發」(`Guid`/`decimal` 會寫完整型別名 ext header)。
-- **集合查找複雜度**:`FirstOrDefault(f => f.FieldName == x)` 在 per-row 迴圈內即 O(n·m)。
-  **務必實際讀框架最核心集合基底的實作**(`KeyCollectionBase<T>` 是否真 O(1)、有無
-  `dictionaryCreationThreshold` 陷阱),它錯了全框架都受影響。
-- **每請求物件配置**:`new XmlSerializer(type)` 未快取(經典嚴重洩漏)、`HttpClient` 每次 new、
-  `Regex` 非 static/compiled、加密器每次新建。
-- **快取設計**:查找是否 O(1)、鎖範圍、**無界成長**(`MemoryCache` 未設 `SizeLimit` + 負向快取
-  = 未認證請求可推高記憶體)。
-- 同步阻塞非同步(`.Result` / `.Wait()` / `GetAwaiter().GetResult()`)、N+1 查詢、
-  小 payload 無條件壓縮(gzip 固定開銷 18 bytes,可能比原文大)。
+- **Uncached per-request reflection**: `GetType().GetMethod` / `GetProperties` / `GetCustomAttributes` /
+  `Activator.CreateInstance` on the request path with no `ConcurrentDictionary` cache. The classic ailment of a JSON-RPC
+  reflection-dispatch framework.
+- **Serializer options rebuilt on every call** (the P0 of 2026-08-07): `JsonSerializerOptions` is STJ's type-contract
+  cache container, and a per-call `new` makes the cache miss 100% of the time. **Control group**: in the same repository
+  `MessagePackCodec.Options` is `static readonly`; one side done right and the other not is usually a leftover of a
+  mechanical translation during a migration.
+- **Wire shape cost**: the DTO shape multiplies every transport cost. Look for "the same data sent twice" (such as
+  Unchanged rows sending both Current + Original), "column names repeated per row" (`Dictionary<string,object?>` instead
+  of an array in the same order as columns), "per-cell typeless dispatch" (`Guid`/`decimal` write an ext header with the
+  full type name).
+- **Collection lookup complexity**: `FirstOrDefault(f => f.FieldName == x)` inside a per-row loop is O(n·m).
+  **Always actually read the implementation of the framework's most central collection base** (is `KeyCollectionBase<T>`
+  really O(1), is there a `dictionaryCreationThreshold` trap); if it is wrong, the whole framework is affected.
+- **Per-request object allocation**: uncached `new XmlSerializer(type)` (a classic severe leak), `HttpClient` created
+  every time, `Regex` not static/compiled, encryptors created every time.
+- **Cache design**: is lookup O(1), lock scope, **unbounded growth** (`MemoryCache` without `SizeLimit` + negative
+  caching = unauthenticated requests can drive memory up).
+- Synchronous blocking on async (`.Result` / `.Wait()` / `GetAwaiter().GetResult()`), N+1 queries, unconditional
+  compression of small payloads (gzip has a fixed overhead of 18 bytes and can be larger than the original).
 
-### 11. 並行與全域狀態(規範源:`.claude/rules/definition.md` 的 cache 不可異動章節)
+### 11. Concurrency and global state (rule source: the cache immutability section of `.claude/rules/definition.md`)
 
-**每個發現都要證明並行可達性** —— 啟動時設定一次、之後唯讀的 static 是安全的,必須追到所有寫入點。
+**Every finding must prove it is reachable concurrently**: a static set once at startup and read-only afterwards is
+safe; trace every write site.
 
-- **共用 cache 實例被 mutate**(最高價值,框架明文硬約束):全量追 `IDefineAccess.GetX(...)` 的
-  呼叫點,逐一確認取得的物件後續是否被寫入(屬性賦值、集合 Add/Remove、對子物件 mutation)。
-  有 `Clone()` 才安全。**注意 `XmlCodec.Serialize(cached)` 也算 mutate** —— 它在來源上翻
-  `SetSerializeState` 並遞迴傳播。查「守門機制只覆蓋部分型別」的情況:2026-08-07 查出
-  `SerializeDefine` 的 `ISerializableClone` 守門唯一實作者恰好是唯一**不需要**它的型別
-  (server-only),所有實際上 wire 的定義型別全部繞過 —— 而 XML doc 宣稱已防住,
-  **比沒有防護更危險**。(該介面已於同日移除;此處保留是為了記住這個**查法**,
-  不是要下輪去找那個型別。)
-- **process-wide 可變 static**:全量 grep 非 `readonly` 非 `const` 的 static 欄位與有 setter 的
-  靜態屬性,逐一判定是否在請求路徑被寫入。特別查「client 端函式庫的 per-user 狀態放 static」——
-  桌面 head 成立,但同一組程式碼被 Blazor Server 這種**多使用者 process** 消費時假設就破了,
-  且**沒有任何東西會標記出這個邊界**。
-- **非執行緒安全集合作為共享狀態**:裸 `Dictionary`/`List`/`HashSet` 當 static 或 singleton 成員。
-  **測試層也算** —— production 啟動後唯讀不代表測試不會並行讀寫(registry 型別最常見),
-  這是「本機綠、CI 紅」的典型根因。
-- **鎖設計**:鎖內做 IO/DB、巢狀 lock 順序、`lock(this)`/`lock(typeof(X))`、
-  double-checked locking 缺 `volatile`。
-- **async 正確性**:`async void`、sync-over-async、函式庫缺 `ConfigureAwait(false)`(判定消費端
-  有無 SynchronizationContext)、fire-and-forget 吞例外。
-- **DI 生命週期不匹配**(captive dependency):Singleton 注入 Scoped/Transient。
-- `[ThreadStatic]` 在 async 流程下失效、`event` 訂閱洩漏(static event + 不解訂閱 = 跨容器污染)、
-  static ctor throw(S3877)、ADO.NET 物件被存在 singleton 上。
+- **Shared cache instance mutated** (highest value; an explicit hard constraint of the framework): trace every call site
+  of `IDefineAccess.GetX(...)` exhaustively, and confirm for each whether the object obtained is written to afterwards
+  (property assignment, collection Add/Remove, mutation of child objects). Only safe with `Clone()`.
+  **Note that `XmlCodec.Serialize(cached)` also counts as mutation**: it flips `SetSerializeState` on the source and
+  propagates it recursively. Look for "the guard only covers some types": on 2026-08-07 the review found that the only
+  implementer of the `ISerializableClone` guard in `SerializeDefine` was exactly the one type that **did not need** it
+  (server-only), while every definition type that actually goes over the wire bypassed it, and the XML doc claimed it
+  was protected, **which is more dangerous than no protection at all**. (That interface was removed the same day; it is
+  kept here to remember **the way to look**, not so the next round goes looking for that type.)
+- **Process-wide mutable statics**: grep exhaustively for static fields that are neither `readonly` nor `const` and for
+  static properties with setters, and judge for each whether it is written on the request path. Look in particular for
+  "per-user state of a client-side library kept in a static": it holds for desktop heads, but the assumption breaks
+  when the same code is consumed by a **multi-user process** such as Blazor Server, and **nothing marks this boundary**.
+- **Non-thread-safe collections as shared state**: bare `Dictionary`/`List`/`HashSet` as static or singleton members.
+  **The test layer counts too**: production being read-only after startup does not mean tests will not read and write
+  concurrently (registry types are the most common case); this is the typical root cause of "green locally, red in CI".
+- **Lock design**: IO/DB inside a lock, nested lock ordering, `lock(this)`/`lock(typeof(X))`, double-checked locking
+  missing `volatile`.
+- **Async correctness**: `async void`, sync-over-async, libraries missing `ConfigureAwait(false)` (judge whether the
+  consumer has a SynchronizationContext), fire-and-forget swallowing exceptions.
+- **DI lifetime mismatch** (captive dependency): a Singleton injected with Scoped/Transient.
+- `[ThreadStatic]` failing under async flow, `event` subscription leaks (static event + never unsubscribing =
+  cross-container pollution), static ctor throwing (S3877), ADO.NET objects stored on a singleton.
 
-## 彙整與產出
+## Consolidation and output
 
-### 分級(P0~P4)
-| 級 | 含義 |
+### Grades (P0~P4)
+| Grade | Meaning |
 |----|------|
-| **P0** | 正確性/功能風險(wire 反序列化失敗、識別碼比對文化 bug、假綠燈測試) |
-| **P1** | 安全與序列化標籤一致性(多為低風險批次修) |
-| **P2** | 結構重構(職責拆分、大檔、一檔多型別、死路徑標註) |
-| **P3** | 文件漂移(相依圖、契約文件、規範敘述失真) —— 低成本高價值 |
-| **P4** | 觀察/待使用者裁決(慣例豁免、次要補測) |
+| **P0** | Correctness/functional risk (wire deserialization failure, culture bug in identifier comparison, false-green tests) |
+| **P1** | Security and serialization-attribute consistency (mostly low-risk batch fixes) |
+| **P2** | Structural refactoring (splitting responsibilities, large files, multiple types per file, marking dead paths) |
+| **P3** | Documentation drift (dependency graph, contract docs, distorted rule statements); low cost, high value |
+| **P4** | Observations / awaiting the user's decision (convention exemptions, minor extra tests) |
 
-每項附 `檔案:行號`、問題(WHY)、建議、嚴重度。文件末附「掃描為乾淨的項目」清單(供未來回歸偵測)+「建議執行順序」。
+Each item has `file:line`, the problem (WHY), a recommendation and a severity. At the end of the document add a
+"items scanned as clean" list (for future regression detection) + a "recommended execution order".
 
-### 評分(每項 10 分制)
-彙整後給評分總表:每面向一分數 + 主要扣分點(對應發現編號)+ 加權平均綜合分。評分邏輯:
-- **9+**:該面向零技術債累積、規範全守,僅文件層或極少數瑕疵。
-- **7~8.5**:底子好但有明確可修的一致性缺口。
-- **6~7**:有具體功能/正確性 bug 拉低(非機制設計問題)。
-- 標明「修掉哪幾項 P0/P1 後可回升到幾分」,給使用者提分路徑。
+### Scores (10-point scale per dimension)
+After consolidation, give a score table: one score per dimension + the main deductions (mapped to finding numbers) +
+a weighted overall average. Scoring logic:
+- **9+**: zero accumulated technical debt in that dimension, all rules followed, only doc-level or very few flaws.
+- **7~8.5**: solid foundation but clear, fixable consistency gaps.
+- **6~7**: pulled down by concrete functional/correctness bugs (not mechanism design problems).
+- State "after fixing which P0/P1 items it can climb back to what score", giving the user a path to a higher score.
 
-## 計畫文件格式
-遵循 CLAUDE.md 的 plan 規範:頂部單行狀態列 `**狀態:📝 擬定中(YYYY-MM-DD)**` + 多階段(P0~P4)階段表格。回覆中附 `[plan-framework-review.md](docs/plans/plan-framework-review.md)` 連結。
+## Plan document format
+Follow the plan convention in the "Plan before you build" section of `.claude/CLAUDE.md`: a single status line at the
+top, `**狀態:📝 擬定中(YYYY-MM-DD)**` (Status: 📝 drafting), + a multi-phase (P0~P4) phase table. Link the written file
+in the reply.
 
-## 方法論教訓(累積,下次直接沿用)
+## Methodology lessons (cumulative; reuse them next time)
 
-### 2026-08-07 該輪學到
+### Learned in the 2026-08-07 round
 
-**A. 「標記完成」需要獨立回驗環節。**
-上輪把 `dependency-map` 外部套件表標 ✅,但該 commit 的 diff 只動了 mermaid 圖與散文,**該表一行未改**。
-同理 `IExcelHelper` 的 CHANGELOG 缺口被三份 repo 文件寫成「已關閉」而實際未補。
-**下輪固定第一步:把上輪宣稱已修的項目逐條回驗**,不要相信狀態標記。
+**A. "Marked done" needs an independent re-verification step.**
+The previous round marked the external package table in `dependency-map` ✅, but the diff of that commit only touched
+the mermaid diagram and the prose; **not one line of the table changed**. Likewise the CHANGELOG gap for `IExcelHelper`
+was written up as "closed" in three repository docs while it had not actually been filled.
+**Fixed first step of the next round: re-verify, one by one, every item the previous round claimed as fixed**; do not
+trust status markers.
 
-**B. 掃描目標的形狀決定盲區。** 本輪散落類別代理找到 `TreeNodeAttribute` 那 71 處標註,卻漏掉
-規模大 7 倍的 `[Category]`/`[Description]`/`[Browsable]` 共 579 處 —— 因為它掃的是「**型別**有無
-caller」,而那些是 BCL attribute,不在掃描目標內。**每輪問一次:這個面向的掃描單位是什麼?
-什麼形狀的問題會因此看不見?**
+**B. The shape of the scan target determines the blind spot.** This round the scattered-classes agent found the 71
+`TreeNodeAttribute` annotations but missed the 579 `[Category]`/`[Description]`/`[Browsable]` annotations, 7 times larger,
+because it scanned "does the **type** have callers", and those are BCL attributes outside the scan target.
+**Ask every round: what is the scan unit of this dimension? What shape of problem becomes invisible because of it?**
 
-**C. 分數上升不等於問題變少,要求代理拆分歸因。** 本輪序列化 +1.5 的主因是失敗模式從沉默轉為
-編譯期擋下(新增 analyzer),文件 +1.5 中約 1.0 是真實改善、0.5 是「掃描更深仍上升」所反映的
-結構性進步。不拆分就無法區分「修好了」與「這次沒看到」。
+**C. A higher score does not mean fewer problems; require agents to break down the attribution.** This round
+serialization's +1.5 came mainly from the failure mode moving from silent to blocked at compile time (a new analyzer);
+of documentation's +1.5, about 1.0 was real improvement and 0.5 was structural progress reflected in "the scan went
+deeper and it still rose". Without the breakdown you cannot tell "fixed" from "not seen this time".
 
-**D. 守門機制有固有盲區,建立不等於覆蓋。** public API 快照(上輪的最高槓桿建議)已建立並運作,
-但它在建立當下把一個破了 10 個月的壞 API(`ExecFuncLocal`)原樣追認為「已發布」。
-**快照守得住「不要變」,守不到「本來就是錯的」** —— 建立基準時要另做一次正確性檢查。
+**D. Guard mechanisms have inherent blind spots; building one does not mean coverage.** The public API snapshot (the
+highest-leverage recommendation of the previous round) was built and works, but at the moment it was built it ratified
+as "shipped", unchanged, a broken API (`ExecFuncLocal`) that had been broken for 10 months.
+**A snapshot guards "do not change"; it cannot guard "was wrong to begin with"**: when establishing a baseline, do a
+separate correctness check.
 
-**E. 同一問題被兩個代理指出時,嚴重度判斷可能差兩級。** 本輪 `SerializeDefine` 被並行代理評 P1、
-序列化代理評 P3。**交叉命中提高的是「存在」的信心,不是「多嚴重」的信心** —— 嚴重度必須自己讀原始碼定案。
+**E. When two agents report the same problem, their severity judgements can differ by two grades.** This round
+`SerializeDefine` was rated P1 by the concurrency agent and P3 by the serialization agent. **A cross-hit raises
+confidence that it "exists", not confidence in "how severe"**: severity must be settled by reading the source yourself.
 
-### 2026-07-28 該輪學到
+### Learned in the 2026-07-28 round
 
-**1. 基準要寫具體清單,不要寫「死碼 0」這種無從驗證的斷言。**
-上輪基準宣稱「空 class 0、死碼 0」,本輪查出至少 15 個零使用型別且**全部早於上次體檢**
-—— 上輪判定過於樂觀(很可能只掃了完全無引用的檔案,沒追到「宣告 + DI 註冊」或
-「宣告 + 佔位測試」這類假陽性存活的型別)。**佔位測試會讓死碼在覆蓋率報告上呈現為已測試。**
+**1. Write baselines as concrete lists, not unverifiable assertions such as "dead code 0".**
+The previous baseline claimed "empty classes 0, dead code 0"; this round found at least 15 zero-use types, **all older
+than the previous health check**. The previous judgement was too optimistic (it probably only scanned files with no
+references at all, and did not follow false-positive survivors of the "declaration + DI registration" or
+"declaration + placeholder test" kind). **Placeholder tests make dead code appear as tested in coverage reports.**
 
-**2. 分數下降多半是掃描變深,不是程式碼退步 —— 但必須逐項用 git 驗證才能這樣說。**
-要求每個代理對「本輪新發現」用 `git log`/`git show` 查出問題引入時間,分清「回歸」與「既有問題首次被掃出」。
-兩者的處理優先序不同,混為一談會誤導使用者。
+**2. A falling score usually means a deeper scan, not a regression in the code, but you may only say so after verifying
+each item with git.**
+Require each agent to use `git log`/`git show` to find when each "new finding this round" was introduced, separating
+"regression" from "existing problem scanned for the first time". The two have different priorities, and mixing them
+misleads the user.
 
-**3. P0 級發現值得付出實測成本。**
-本輪「定義類 response 在 wire 上內容全滅」原本只是理論推斷,在 scratchpad 建獨立 console 專案
-(ProjectReference 到目標套件、走**公開**的序列化入口)實測後,才釘死失敗模式是
-**沉默空殼而非擲例外**,而修法選擇正好取決於這個答案。注意 `MessagePackCodec` 是 internal,
-外部探測要走 `MessagePackPayloadSerializer`。
+**3. P0 findings are worth the cost of measurement.**
+This round "the content of definition-type responses is completely wiped out on the wire" was at first only a
+theoretical inference. Only after building a standalone console project in the scratchpad (ProjectReference to the
+target package, going through the **public** serialization entry point) and measuring it was the failure mode pinned
+down as **a silent empty shell rather than a thrown exception**, and the choice of fix depended on exactly that answer.
+Note that `MessagePackCodec` is internal; external probing must go through `MessagePackPayloadSerializer`.
 
-**4. 代理的結論要交叉驗證,尤其牽涉「這段是死碼」的判斷。**
-本輪有代理把 `ApiAccessValidator` 的 `LocalOnly` 判斷標為死碼,實際上只有條件後半段冗餘,
-機制本身有效 —— 若照單全收會誤判防護無效。同理,建議的修法可能建立在錯誤前提上
-(把定義型別當 wire DTO),**送出建議前先確認該型別的序列化契約**。
+**4. Cross-check agents' conclusions, especially any judgement that "this is dead code".**
+This round an agent marked the `LocalOnly` check in `ApiAccessValidator` as dead code, when actually only the second
+half of the condition was redundant and the mechanism itself is effective; accepting it wholesale would have wrongly
+concluded that the protection does not work. Likewise a recommended fix can rest on a wrong premise (treating a
+definition type as a wire DTO); **before sending a recommendation, confirm the serialization contract of that type**.
 
-## 已知基準(上次體檢結果,供對照回歸)
+## Known baseline (results of the last health check, for regression comparison)
 
-上次 **2026-08-07**(v4.17.0,17 個 `src/` 專案):
-九面向平均 **7.96**、八面向(不含文件)**8.20**、十一面向 **7.69**。
+Last run **2026-08-07** (v4.17.0, 17 `src/` projects):
+nine-dimension average **7.96**, eight dimensions (excluding docs) **8.20**, eleven dimensions **7.69**.
 
-| 面向 | 2026-07-28 | 2026-08-07 |
+| Dimension | 2026-07-28 | 2026-08-07 |
 |------|-----------|-----------|
-| 架構分層 | 8.8 | 8.6 |
-| 相依分層 | 9.2 | 9.0 |
-| 安全性 | 7.8 | 7.0 |
-| 維護性 | 8.5 | 8.5 |
-| 散落/不必要類別 | 7.5 | 7.0 |
-| 序列化一致性 | 7.0 | 8.5 |
-| 公開 API 表面 | 8.5 | 8.5 |
-| 測試品質與覆蓋 | 8.2 | 8.5 |
-| 文件漂移 | 4.5 | 6.0 |
-| 效能/熱路徑 | — | 6.0(新) |
-| 並行與全域狀態 | — | 7.0(新) |
+| Architecture layering | 8.8 | 8.6 |
+| Dependency layering | 9.2 | 9.0 |
+| Security | 7.8 | 7.0 |
+| Maintainability | 8.5 | 8.5 |
+| Scattered/unnecessary classes | 7.5 | 7.0 |
+| Serialization consistency | 7.0 | 8.5 |
+| Public API surface | 8.5 | 8.5 |
+| Test quality and coverage | 8.2 | 8.5 |
+| Documentation drift | 4.5 | 6.0 |
+| Performance/hot paths | — | 6.0 (new) |
+| Concurrency and global state | — | 7.0 (new) |
 
-**應維持為乾淨**(由乾淨變不乾淨即為回歸,標紅優先):
-30 條相依邊無循環、BO 無 Db 參照、後端無 Client 參照、Repository 抽象未被繞過、Contracts 零實作污染、
-mermaid 相依圖與 csproj 逐條吻合、`*Func` 殘留 0、`*Helper` 型別 0、Newtonsoft 0、`[Obsolete]` 0、
-空 class 0、`CurrentCultureIgnoreCase` 0、`new DateTime(` 未指定 Kind 0、`Regex` 未傳 timeout 0、
-public 可變欄位 0、契約軸 100% 對齊、`[Union]`⊥keyAsPropertyName、`MessagePackCollectionBase<>`
-formatter 註冊 8/8、SQL 注入 0(值全參數化 + 識別符全逃逸)、XXE 0、`new Random(` 0、硬編碼機密 0、
-MD5 0、裸手動 `Dispose` 0、`throw ex;` 0、S2699 0、fixture 污染 0、牆鐘 flaky 0、
-`[DisplayName]` 100%、死連結 0(1291 連結 + 108 anchor)、XML doc 零中文與零 `<param>` 不符、
-公開文件零 `docs/plans/` 引用、DI captive dependency 0、`async void` 0、`Task.Run` 包同步碼 0、
-**per-row LINQ 線性欄位查找 0**、N+1 查詢 0。
+**Should stay clean** (going from clean to not clean is a regression; flag it red and prioritise it):
+30 dependency edges with no cycles, BO has no Db reference, backend has no Client reference, Repository abstraction not
+bypassed, Contracts with zero implementation pollution, mermaid dependency graph matching the csproj files edge for
+edge, `*Func` leftovers 0, `*Helper` types 0, Newtonsoft 0, `[Obsolete]` 0, empty classes 0,
+`CurrentCultureIgnoreCase` 0, `new DateTime(` without Kind 0, `Regex` without timeout 0, public mutable fields 0,
+contract axes 100% aligned, `[Union]`⊥keyAsPropertyName, `MessagePackCollectionBase<>` formatter registration 8/8,
+SQL injection 0 (all values parameterised + all identifiers escaped), XXE 0, `new Random(` 0, hardcoded secrets 0,
+MD5 0, bare manual `Dispose` 0, `throw ex;` 0, S2699 0, fixture pollution 0, wall-clock flakiness 0,
+`[DisplayName]` 100%, dead links 0 (1291 links + 108 anchors), XML docs with zero Chinese and zero `<param>` mismatches,
+`./check-public-docs.sh` checks (1) to (3) empty (no pointers into `local/`, no plan file names), DI captive dependencies 0, `async void` 0, `Task.Run` wrapping synchronous
+code 0, **per-row LINQ linear field lookups 0**, N+1 queries 0.
 
-**⚠️ 讀這份清單前先讀這段。** 2026-08-07 的體檢在這裡踩了一次:它看到上一輪 plan 裡
-被刪除線劃掉的死碼清單,就把「不在已刪清單裡的項目」當成「漏清」重新列為待辦(D-1),
-但那些項目在上一輪其實是**經裁決刻意保留**的 —— 裁決寫在刪除線清單**下方**的另一張表,
-掃描沒讀到。**「未被刪除」不等於「還沒處理」。** 下輪務必把下面兩類分開看待。
+**⚠️ Read this paragraph before reading the list.** The 2026-08-07 health check tripped here once: it saw the
+struck-through dead-code list in the previous round's plan and re-listed "items not on the deleted list" as "missed
+cleanups" to do (D-1), but in the previous round those items had actually been **deliberately kept after a decision**;
+the decision was written in another table **below** the struck-through list, and the scan did not read it.
+**"Not deleted" does not mean "not yet handled".** Next round, keep the two categories below separate.
 
-**(a) 刻意保留 —— 已裁決,不是死碼,不要再列為待辦**:
+**(a) Deliberately kept: decided, not dead code, do not list as to-do again**:
 
-| 項目 | 保留理由 |
+| Item | Reason kept |
 |------|---------|
-| `TreeNodeIgnoreAttribute`(連同 `TreeNodeAttribute`/`IDisplayName`,71 處標註) | 改判為「未接線的設計」,移交 `plan-tree-view-builder.md` |
-| `IDefineField` | `DbField` 實作它;屬未被消費的抽象而非死碼 |
-| `IElementCapabilityResolver` | 實作 `ElementCapabilityResolver.Default` 有 5 處生產呼叫(`LayoutCapabilityApplier` / `ListView.Commands` / `FormView` / DemoCenter ×3) |
-| `CheckPackageUpdate` / `GetPackage` 全棧(12 檔) | base 擲 `NotSupportedException` 的刻意擴充點,已列入 `docs/<lang>/api-method-reference` 與 `jsonrpc-frontend-integration` |
-| `IUIViewService` 縫 | 2026-08-07 裁決保留:雖然四個 head 全走 `InitializeAsync(string)`、production 零實作,但它是有文件的宿主擴充點(cookbook 教學步驟 / terminology 詞條 / adr-013 論據 / dependency-map 的 family 判別準則) |
-| `PermissionBindingValidator` | 2026-08-07 裁決:程式碼保留,改為修正文件 —— 三處公開文件原本宣稱它在載入期生效,已改為「宿主自行呼叫的驗證 API」 |
-| `DateTimeExtensions.GetYearMonth` | 零生產呼叫端,但 BCL 無「當月一日」等價方法、非純 wrapper,依 code-style「0-caller 框架公開 API 保留」 |
+| `TreeNodeIgnoreAttribute` (together with `TreeNodeAttribute`/`IDisplayName`, 71 annotations) | Re-judged as "a design not yet wired up"; handed over to a separate plan (the tree view builder) |
+| `IDefineField` | Implemented by `DbField`; an abstraction not yet consumed, not dead code |
+| `IElementCapabilityResolver` | Its implementation `ElementCapabilityResolver.Default` has 5 production call sites (`LayoutCapabilityApplier` / `ListView.Commands` / `FormView` / DemoCenter ×3) |
+| The full `CheckPackageUpdate` / `GetPackage` stack (12 files) | A deliberate extension point whose base throws `NotSupportedException`; already listed in `docs/<lang>/api-method-reference` and `jsonrpc-frontend-integration` |
+| The `IUIViewService` seam | Kept by decision on 2026-08-07: although all four heads go through `InitializeAsync(string)` and there are zero production implementations, it is a documented host extension point (cookbook tutorial step / terminology entry / adr-013 argument / the family criterion in dependency-map) |
+| `PermissionBindingValidator` | Decided 2026-08-07: keep the code and fix the docs instead; three public docs claimed it takes effect at load time, now changed to "a validation API the host calls itself" |
+| `DateTimeExtensions.GetYearMonth` | Zero production callers, but the BCL has no equivalent of "first day of the month" and it is not a pure wrapper; kept under code-style's "keep 0-caller framework public APIs" |
 
-**(b) 已清除**:`ExecFuncLocal` 公開表面(2026-08-07,3 筆 Shipped API);
-更早一輪清掉 `IEnterpriseObjectService`、`EnterpriseObjectService`、`InitializeOptions`、
-`ApplicationType`、`SysFuncIDs`、`VersionFiles`、`DefaultBoolean`、`NotSetBoolean`、
-`SystemActions.GetLocalDefine`/`SaveLocalDefine`、`DateTimeExtensions.IsEmpty`。
+**(b) Removed**: the `ExecFuncLocal` public surface (2026-08-07, 3 Shipped API entries);
+an earlier round removed `IEnterpriseObjectService`, `EnterpriseObjectService`, `InitializeOptions`,
+`ApplicationType`, `SysFuncIDs`, `VersionFiles`, `DefaultBoolean`, `NotSetBoolean`,
+`SystemActions.GetLocalDefine`/`SaveLocalDefine`, `DateTimeExtensions.IsEmpty`.
 
-**(c) 尚未複驗,下輪可查**:`ApiErrorInfo`、`GetFormSchemaRequest`/`Response`。
+**(c) Not yet re-verified; check next round**: `ApiErrorInfo`, `GetFormSchemaRequest`/`Response`.
 
-**已建立的守門機制**(下次體檢應確認仍存在且有效):
-`BoApiSurfaceTests`、`ApiContractPairingTests`(含 `WireMessageTypes_IsNotEmpty` 防假綠燈)、
-`TestFunc` 的 `comparedCount > 0`、**public API 快照**(`PublicApiAnalyzers` + 16 對基準檔 +
-`docs/repo-ops/public-api-baseline.md` + `tools/scripts/gen-public-api.py`,上輪的最高槓桿缺口已關閉)、
-`Polhem.Analyzers` 的 POLHEM4001–4006 序列化規則、**POLHEM3003**(ExecFunc 存取控制,2026-08-07 新增)。
+**Established guard mechanisms** (the next health check should confirm they still exist and work):
+`BoApiSurfaceTests`, `ApiContractPairingTests` (including `WireMessageTypes_IsNotEmpty` against false greens),
+`comparedCount > 0` in `TestFunc`, the **public API snapshot** (`PublicApiAnalyzers` + 16 pairs of baseline files +
+`docs/repo-ops/public-api-baseline.md` + `tools/scripts/gen-public-api.py`; the highest-leverage gap of the previous round
+is closed), the POLHEM4001–4006 serialization rules of `Polhem.Analyzers`, **POLHEM3003** (ExecFunc access control,
+added 2026-08-07).
 
-**下輪最高槓桿的單一改善**:`BoApiSurfaceTests` 擴成「baseline 每項都能在
-`docs/en/api-method-reference.md` 找到,且每個 action 常數都解析得到 BO 方法」——
-一個測試同時關閉「壞掉的公開 API」「文件漏列」「四層半成品」三類問題。
+**The single highest-leverage improvement for next round**: extend `BoApiSurfaceTests` to "every baseline item can be
+found in `docs/en/api-method-reference.md`, and every action constant resolves to a BO method"; one test closes three
+classes of problems at once: "broken public API", "missing from the docs" and "half-finished across the four layers".

@@ -1,34 +1,37 @@
-# Business Object + demo 登入
+# Business Object + demo login
 
-改 `Xxx` 為專案名。基於 `QuickStart.Server` / `Polhem.Samples.Shared`,並已在實際專案的 server 上驗證過。
+Replace `Xxx` with your project name. Based on `QuickStart.Server` / `Polhem.Samples.Shared` and verified on a real
+project's server.
 
-## args / result（純 POCO）
+## args / result (plain POCOs)
 
-放 `Xxx.Server.Contracts`（列入 `AllowedTypeNamespaces`）。繼承 `BusinessArgs` / `BusinessResult`，**免** MessagePack 標記。
+Put them in `Xxx.Server.Contracts` (listed in `AllowedTypeNamespaces`). Inherit `BusinessArgs` / `BusinessResult`;
+**no** MessagePack attributes needed.
 
 ```csharp
 using Polhem.Business;
 
 namespace Xxx.Server.Contracts;
 
-public sealed class GetLevelsArgs : BusinessArgs { }          // 空 args 也要有型別
+public sealed class GetLevelsArgs : BusinessArgs { }          // empty args still need a type
 
 public sealed class GetLevelsResult : BusinessResult
 {
-    public List<Level> Levels { get; set; } = [];            // 用可 set 的屬性
+    public List<Level> Levels { get; set; } = [];            // use settable properties
 }
 ```
 
-## 自訂 BO —— 選對基底
+## Custom BO — pick the right base class
 
-**兩種基底,依用途選**：
+**Two base classes; choose by purpose**:
 
-| 基底 | 何時用 | 帶來什麼 |
+| Base class | When to use | What it brings |
 |---|---|---|
-| **`BusinessObject`**(`Polhem.Business`) | **自訂 RPC BO**——你只想暴露自己的 action | 最小基底,無 CRUD;乾淨 |
-| `FormBusinessObject`(`Polhem.Business.Form`) | **ERP 定義驅動表單**——要框架內建的 `GetList`/`GetData`/`Save`/`Delete` 對某張表 CRUD | 一整套 FormSchema 驅動的 CRUD action |
+| **`BusinessObject`** (`Polhem.Business`) | **Custom RPC BO** — you only want to expose your own actions | Minimal base, no CRUD; clean |
+| `FormBusinessObject` (`Polhem.Business.Form`) | **ERP definition-driven form** — you want the framework's built-in `GetList`/`GetData`/`Save`/`Delete` for CRUD on a table | A full set of FormSchema-driven CRUD actions |
 
-大多數「app 自己的業務端點」該用 **`BusinessObject`**;`FormBusinessObject` 是給制式資料表單的。
+Most "the app's own business endpoints" should use **`BusinessObject`**; `FormBusinessObject` is for standard data
+forms.
 
 ```csharp
 using Polhem.Business;                 // BusinessObject
@@ -41,31 +44,34 @@ namespace Xxx.Server.BusinessObjects;
 
 public sealed class GameBO : BusinessObject
 {
-    // 4-arg ctor 必須對齊 factory 的 Activator.CreateInstance(type, ctx, token, progId, isLocalCall)。
-    // BusinessObject 基底只收 (ctx, token, isLocalCall) → progId 丟掉即可(基底用不到)。
+    // The 4-arg ctor must match the factory's Activator.CreateInstance(type, ctx, token, progId, isLocalCall).
+    // The BusinessObject base only takes (ctx, token, isLocalCall) → just drop progId (the base does not use it).
     public GameBO(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
         : base(ctx, accessToken, isLocalCall) { }
 
-    // 每個 action 必標 [ApiAccessControl],否則被拒。單一 args 進、單一 result 出。
+    // Every action must be marked [ApiAccessControl] or it is rejected. Single args in, single result out.
     [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Anonymous)]
     public GetLevelsResult GetLevels(GetLevelsArgs args)
     {
         ArgumentNullException.ThrowIfNull(args);
-        return new GetLevelsResult { Levels = /* seed 或 DB */ };
+        return new GetLevelsResult { Levels = /* seed or DB */ };
     }
 }
 ```
 
-> **注意 ctor 差異**:`BusinessObject` 基底是 3-arg `(ctx, token, isLocalCall)`,但 factory 的 `CreateFormBusinessObject`
-> 路徑(所有非 System/AuditLog 的 progId 都走這)用 **4-arg** `Activator.CreateInstance`。所以你的 BO 仍要宣告 4-arg
-> ctor(收下 progId 再丟給 3-arg base)。`FormBusinessObject` 則本身就是 4-arg。`IFormBoTypeResolver` 回傳任何有對應
-> ctor 的 `Type` 都行,不限 `FormBusinessObject`。
+> **Note the ctor difference**: the `BusinessObject` base is 3-arg `(ctx, token, isLocalCall)`, but the factory's
+> `CreateFormBusinessObject` path (every progId other than System/AuditLog goes through it) uses a **4-arg**
+> `Activator.CreateInstance`. So your BO still declares a 4-arg ctor (take progId, then pass the rest to the 3-arg
+> base). `FormBusinessObject` is 4-arg itself. `IFormBoTypeResolver` can return any `Type` with a matching ctor; it is
+> not limited to `FormBusinessObject`.
 
-**`ApiProtectionLevel`**：`Public`(明文可) / `Encoded`(序列化+壓縮) / `Encrypted`(再加密) / `LocalOnly`(僅本機)。
-**`ApiAccessRequirement`**：`Anonymous`(免 token) / `Authenticated`(需登入)。
-protection 對 client 送的 `PayloadFormat`：Plain 需 Public；Encrypted 允許非 LocalOnly。
+**`ApiProtectionLevel`**: `Public` (plaintext allowed) / `Encoded` (serialized + compressed) / `Encrypted` (also
+encrypted) / `LocalOnly` (local calls only).
+**`ApiAccessRequirement`**: `Anonymous` (no token) / `Authenticated` (login required).
+Protection versus the `PayloadFormat` the client sends: Plain requires Public; Encrypted is allowed for anything that is
+not LocalOnly.
 
-## progId → BO：resolver（程式，AOT 友善）
+## progId → BO: resolver (code, AOT-friendly)
 
 ```csharp
 using Polhem.Business;
@@ -78,16 +84,16 @@ public sealed class XxxFormBoTypeResolver : IFormBoTypeResolver
     public Type Resolve(string progId) => progId switch
     {
         "Game" => typeof(GameBO),
-        _ => typeof(FormBusinessObject),   // 未知 progId → 框架預設定義驅動 CRUD
+        _ => typeof(FormBusinessObject),   // unknown progId → the framework's default definition-driven CRUD
     };
 }
 ```
-（或走宣告式 `ProgramSettings.xml` 的 `BusinessObject=`，見 define-config.md。）
+(Or use the declarative `BusinessObject=` in `ProgramSettings.xml`, see define-config.md.)
 
-## demo 登入三件套
+## The demo login three-piece set
 
-框架 `SystemBusinessObject.AuthenticateUser` 預設回 false → `System.Login` 一定要 override 才會過。
-demo 硬編一組帳密、免 seed `st_user`。
+The framework's `SystemBusinessObject.AuthenticateUser` returns false by default → `System.Login` only succeeds if you
+override it. The demo hard-codes one username/password pair and needs no `st_user` seed.
 
 ### Credentials
 
@@ -102,7 +108,7 @@ public static class XxxCredentials
 }
 ```
 
-### 認證 System BO
+### Authenticating System BO
 
 ```csharp
 using Polhem.Business.System;
@@ -128,7 +134,7 @@ public sealed class XxxAuthenticatingSystemBusinessObject : SystemBusinessObject
 }
 ```
 
-### 工廠
+### Factory
 
 ```csharp
 using Polhem.Business;
@@ -165,7 +171,8 @@ public sealed class XxxBusinessObjectFactory : IBusinessObjectFactory
     public object CreateFormBusinessObject(Guid accessToken, string progId, bool isLocalCall = true)
         => Activator.CreateInstance(_resolver.Resolve(progId), BuildContext(), accessToken, progId, isLocalCall)!;
 
-    // 4.14.0 起 IBusinessObjectFactory 有此成員；委派框架預設。編譯錯誤會提示你缺哪個成員。
+    // IBusinessObjectFactory has had this member since 4.14.0; delegate to the framework default.
+    // The compile error tells you which member is missing.
     public object CreateLogBusinessObject(Guid accessToken, bool isLocalCall = true)
         => new LogBusinessObject(BuildContext(), accessToken, isLocalCall);
 
@@ -180,10 +187,11 @@ public sealed class XxxBusinessObjectFactory : IBusinessObjectFactory
 }
 ```
 
-在 `AddPolhemFramework` **之後** `AddSingleton<IFormBoTypeResolver, ...>()` + `AddSingleton<IBusinessObjectFactory, ...>()`（見 backend-bootstrap.md）。
+Register `AddSingleton<IFormBoTypeResolver, ...>()` + `AddSingleton<IBusinessObjectFactory, ...>()` **after**
+`AddPolhemFramework` (see backend-bootstrap.md).
 
-## System 方法（框架內建，client 直接可用）
+## System methods (built into the framework, available to the client directly)
 
-- `System.Ping`（匿名）→ 健康檢查
-- `System.Login`（匿名）→ 帳密換 `AccessToken`(Guid) + 每 session 加密金鑰
-- 之後呼叫帶 `Authorization: Bearer <token>`；auth-exempt：Ping / Login / GetApiPayloadOptions
+- `System.Ping` (anonymous) → health check
+- `System.Login` (anonymous) → exchanges username/password for an `AccessToken` (Guid) + a per-session encryption key
+- Later calls carry `Authorization: Bearer <token>`; auth-exempt: Ping / Login / GetApiPayloadOptions

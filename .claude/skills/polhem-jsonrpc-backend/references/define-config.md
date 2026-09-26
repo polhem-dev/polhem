@@ -1,9 +1,9 @@
-# Define/ 設定樹
+# The Define/ settings tree
 
-五個 XML（+ TableSchema 資料夾）。放在 host 專案的 `Define/` 下，`Program.cs` 靠 walk-up 定位。
-以下為可貼用最小內容（SQLite 單檔 dev 設定）。
+Five XML files (+ the TableSchema folder). They live under the host project's `Define/`, and `Program.cs` locates them
+by walking up. Below is minimal content you can paste (a single-file SQLite dev setup).
 
-## SystemSettings.xml — 根設定
+## SystemSettings.xml — root settings
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -11,9 +11,9 @@
   <CommonConfiguration>
     <Version>1.0.0</Version>
     <IsDebugMode>true</IsDebugMode>
-    <!-- 你的 args/result 命名空間；Encoded/Encrypted 的 typeless 序列化靠這個白名單 -->
+    <!-- Your args/result namespaces; typeless serialization for Encoded/Encrypted relies on this allowlist -->
     <AllowedTypeNamespaces>Xxx.Server.Contracts</AllowedTypeNamespaces>
-    <!-- body codec 不在這裡設：由每個請求在信封宣告，未宣告即 MessagePack（adr-044）。 -->
+    <!-- The body codec is not set here: each request declares it in the envelope; undeclared means MessagePack (adr-044). -->
     <ApiPayloadOptions>
       <Compressor>gzip</Compressor>
       <Encryptor>aes-cbc-hmac</Encryptor>
@@ -35,7 +35,7 @@
       </MasterKeySource>
     </SecurityKeySettings>
     <Components>
-      <!-- 用程式 DI 覆寫 factory 時這裡留空即可 -->
+      <!-- Leave empty when the factory is overridden in code through DI -->
       <BusinessObjectProvider></BusinessObjectProvider>
     </Components>
   </BackendConfiguration>
@@ -45,9 +45,10 @@
 </SystemSettings>
 ```
 
-## DatabaseSettings.xml — 邏輯 DB id → 連線字串
+## DatabaseSettings.xml — logical DB id → connection string
 
-`common` 是**框架強制**（st_session、st_cache_notify）。`company` 放業務資料。dev 單檔可共用同一個 .db。
+`common` is **required by the framework** (st_session, st_cache_notify). `company` holds business data. A single-file
+dev setup can share one .db file.
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -61,9 +62,9 @@
 </DatabaseSettings>
 ```
 
-## DbCategorySettings.xml — 哪些表屬於哪個 category/DB
+## DbCategorySettings.xml — which tables belong to which category/DB
 
-seeder 迭代這裡建表。加一張表 = 新增一個 `TableSchema` 檔 + 這裡一個 `TableItem`。
+The seeder iterates over this file to create tables. Adding a table = a new `TableSchema` file + one `TableItem` here.
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -76,9 +77,10 @@ seeder 迭代這裡建表。加一張表 = 新增一個 `TableSchema` 檔 + 這�
 </DbCategorySettings>
 ```
 
-## ProgramSettings.xml — 程式清單 + （可選）宣告式 BO 綁定
+## ProgramSettings.xml — program list + (optional) declarative BO binding
 
-用**程式 resolver** 綁 progId→BO 時，這裡可留空（或只放選單項）。用**宣告式**綁定時：
+When progId→BO is bound by a **code resolver**, this file can stay empty (or hold only menu items). For
+**declarative** binding:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -88,30 +90,32 @@ seeder 迭代這裡建表。加一張表 = 新增一個 `TableSchema` 檔 + 這�
       <Items>
         <ProgramItem ProgId="Game" DisplayName="Game"
             BusinessObject="Xxx.Server.BusinessObjects.GameBO, Xxx.Server" />
-        <!-- BusinessObject 留空 → 走框架預設 FormBusinessObject（定義驅動 CRUD） -->
+        <!-- BusinessObject left empty → the framework default FormBusinessObject (definition-driven CRUD) -->
       </Items>
     </ProgramCategory>
   </Categories>
 </ProgramSettings>
 ```
-`BusinessObject` 是 **assembly-qualified 型別名**：`"Namespace.Type, AssemblyName"`。
+`BusinessObject` is an **assembly-qualified type name**: `"Namespace.Type, AssemblyName"`.
 
 ## TableSchema/
 
-實體 DB schema，依 category 分資料夾：
-- `TableSchema/common/st_cache_notify.TableSchema.xml`（不用手寫：首次啟動由 `Defaults.MaterializeTo` 從框架內嵌預設攤出，
-  **攤出後入版控**，之後以應用這份為準；skip-if-exists 不會再覆蓋它）
-- `TableSchema/company/ft_xxx.TableSchema.xml`（你的業務表）
+The physical DB schema, in one folder per category:
+- `TableSchema/common/st_cache_notify.TableSchema.xml` (do not hand-write it: on first startup
+  `Defaults.MaterializeTo` writes it out from the framework's embedded default. **Commit it once written**; from then
+  on the app's copy is authoritative, and skip-if-exists will not overwrite it again)
+- `TableSchema/company/ft_xxx.TableSchema.xml` (your business tables)
 
-每個檔定義 `<Fields>`（`<DbField FieldName DbType Length>`）與 `<Indexes>`。Polhem 慣例欄位：`sys_no`
-（AutoIncrement PK）、`sys_rowid`（Guid 關聯鍵，unique `rx_`）、`sys_id`（字串業務碼，unique `uk_`）、
-`sys_name`。外鍵是 `*_rowid` Guid 欄 + `fk_` 索引。`{0}` 佔位符 = 表名。
+Each file defines `<Fields>` (`<DbField FieldName DbType Length>`) and `<Indexes>`. Polhem convention columns: `sys_no`
+(AutoIncrement PK), `sys_rowid` (Guid relation key, unique `rx_`), `sys_id` (string business code, unique `uk_`),
+`sys_name`. A foreign key is a `*_rowid` Guid column + an `fk_` index. The `{0}` placeholder = the table name.
 
-> **dev 免業務表也能跑**：只要 `common` DB + st_cache_notify 存在，`System.Ping`/`Login` 與回記憶體/seed
-> 資料的 BO 就能運作。業務表可之後逐步加。
+> **dev runs without business tables**: as long as the `common` DB + st_cache_notify exist, `System.Ping`/`Login` and
+> BOs that return in-memory/seed data work. Business tables can be added gradually later.
 
 ## appsettings.json / launchSettings.json
 
-- `appsettings.json`：只放 logging；**Polhem 設定不在這**（在 Define + 環境變數）。連線字串在 DatabaseSettings.xml。
-- `launchSettings.json`：`applicationUrl` 決定 dev port。
-- **API key 是 client 端常數**，不是 server 設定（預設驗證只檢查非空）。
+- `appsettings.json`: logging only; **Polhem settings do not go here** (they are in Define + environment variables).
+  Connection strings are in DatabaseSettings.xml.
+- `launchSettings.json`: `applicationUrl` determines the dev port.
+- **The API key is a client-side constant**, not a server setting (the default check only verifies it is non-empty).

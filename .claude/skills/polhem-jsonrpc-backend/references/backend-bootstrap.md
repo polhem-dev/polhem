@@ -1,6 +1,7 @@
-# Backend bootstrap 樣板
+# Backend bootstrap template
 
-`Program.cs` + `XxxBackend`。改 `Xxx` 為你的專案名。基於 `samples/Polhem.Samples.Shared/DemoBackend.cs`(與框架同版),並已在實際專案的 server 上驗證過。
+`Program.cs` + `XxxBackend`. Replace `Xxx` with your project name. Based on
+`samples/Polhem.Samples.Shared/DemoBackend.cs` (same version as the framework) and verified on a real project's server.
 
 ## Program.cs
 
@@ -52,9 +53,11 @@ public static class XxxBackend
 
         var paths = new PathOptions { DefinePath = ResolveDefinePath() };
 
-        // AddPolhemFramework 註冊的 cache-notify poller 會讀 st_cache_notify,所以 Define/ 下要有它的 TableSchema。
-        // 框架內嵌預設只是初次匯入的起點:skip-if-exists 只在缺檔時攤出,攤出的檔要入版控,之後以應用
-        // 這份為準(預設日後變更不會覆蓋它,兩者不同也不算漂移)。別改成 Overwrite,也別加進 .gitignore。
+        // The cache-notify poller registered by AddPolhemFramework reads st_cache_notify, so its TableSchema must
+        // exist under Define/. The framework's embedded default is only a starting point for the first import:
+        // skip-if-exists writes it out only when the file is missing. Commit the written file; from then on the
+        // app's copy is authoritative (later changes to the default do not overwrite it, and a difference between
+        // the two is not drift). Do not switch to Overwrite, and do not add it to .gitignore.
         Defaults.MaterializeTo(paths.DefinePath, new MaterializeOptions
         {
             Filter = rel => rel == "TableSchema/common/st_cache_notify.TableSchema.xml",
@@ -71,14 +74,15 @@ public static class XxxBackend
 
         builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths, autoCreateMasterKey: true);
 
-        // AddPolhemFramework 之後註冊,last-wins:factory 把 System.Login 導到 demo 認證;resolver 綁 progId→BO。
+        // Register after AddPolhemFramework, last-wins: the factory routes System.Login to demo authentication;
+        // the resolver binds progId→BO.
         builder.Services.AddSingleton<IFormBoTypeResolver, BusinessObjects.XxxFormBoTypeResolver>();
         builder.Services.AddSingleton<IBusinessObjectFactory, BusinessObjects.XxxBusinessObjectFactory>();
 
         return paths;
     }
 
-    /// <summary>Host built 之後:建框架表一次(有真 seeder 時在這裡跑)。</summary>
+    /// <summary>After the host is built: create the framework tables once (run a real seeder here if you have one).</summary>
     public static void UseXxxBackend(this WebApplication app)
     {
         ArgumentNullException.ThrowIfNull(app);
@@ -88,7 +92,7 @@ public static class XxxBackend
 
         var builder = new TableSchemaBuilder(CommonDatabaseId, defineAccess, connectionManager);
         builder.Execute(CommonDatabaseId, "st_cache_notify");
-        // 之後在此為每張業務表 builder.Execute(categoryId, table) + seed。
+        // Later, call builder.Execute(categoryId, table) + seed here for each business table.
     }
 
     private static string ResolveDefinePath()
@@ -109,12 +113,13 @@ public static class XxxBackend
 }
 ```
 
-## 產生 dev master key
+## Generating a dev master key
 
-64-byte AES-CBC-HMAC combined key(base64)。可從框架的 sample credentials 借一組 dev 值,或用
-`RandomNumberGenerator.GetBytes(64)` 產生後 base64。**只用於 dev**;正式走部署機制注入。
+A 64-byte AES-CBC-HMAC combined key (base64). You can borrow a dev value from the framework's sample credentials, or
+generate one with `RandomNumberGenerator.GetBytes(64)` and base64-encode it. **Dev only**; production injects the key
+through the deployment mechanism.
 
-## CORS(僅當有 WASM/瀏覽器頭跨源呼叫)
+## CORS (only when a WASM/browser head calls cross-origin)
 
-`app.UseCors(...)` 要放在 `UseXxxBackend()` **之前**,讓 OPTIONS preflight 先被答覆,不被 access-control 擋。
-純桌面 / 行動端不需要。
+`app.UseCors(...)` must come **before** `UseXxxBackend()` so the OPTIONS preflight is answered first instead of being
+blocked by access control. Pure desktop / mobile heads do not need it.

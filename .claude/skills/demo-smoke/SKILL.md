@@ -1,70 +1,72 @@
 ---
 name: demo-smoke
-description: 對 demo 專案（`samples/<Name>/` 或 `apps/<Name>/`）跑一輪端到端冒煙測試（透過 computer-use 點擊 UI 元素、驗證關鍵畫面），以宣告 demo 在本機跑得通。讀取該專案根目錄的 `.smoke.yaml` 設定檔。當使用者要「跑 demo」、「驗證 sample」、「demo 跑得通嗎」、「smoke test sample」之類需求時使用。
+description: Run one round of end-to-end smoke testing against a demo project (`samples/<Name>/` or `apps/<Name>/`) (clicking UI elements through computer-use and verifying key screens) to declare that the demo runs locally. Reads the `.smoke.yaml` configuration file at the project root. Use it when the user asks to "run the demo", "verify the sample", "does the demo run", "smoke test sample" and similar.
 ---
 
-# Sample Demo 端到端冒煙
+# Sample demo end-to-end smoke test
 
-對 demo 專案（`samples/<Name>/` 或 `apps/<Name>/`）跑一輪可重現的 UI 流程驗證。整個流程**從外部觀察**：先起依賴（後端 server 等）、開 app、模擬點擊、截圖核對、清乾淨。各 demo 的「成功畫面長什麼樣」寫成 `.smoke.yaml`，本 skill 是 runner。
+Run a reproducible UI flow check against a demo project (`samples/<Name>/` or `apps/<Name>/`). The whole flow
+**observes from the outside**: start the dependencies (backend server etc.), open the app, simulate clicks, check
+screenshots, clean up. What each demo's "success screen" looks like is written in `.smoke.yaml`; this skill is the runner.
 
-## 適用場景
+## When to use
 
-- 改完 Polhem.UI.Avalonia / Polhem.Web.Blazor.Server 後想確認 sample 還能跑
-- 加新 sample 後做最後 sanity check
-- Release 前對所有 sample 一次冒煙
+- After changing Polhem.UI.Avalonia / Polhem.Web.Blazor.Server, to confirm the samples still run
+- A final sanity check after adding a new sample
+- Smoke-testing all samples at once before a release
 
-## 不適用
+## When not to use
 
-- 單元測試（用 `dotnet test`）
-- 完整 UI E2E 測試（用真正的 Playwright / Selenium / Appium 工具鏈，本 skill 是「快速看一眼」級別）
-- 沒有 GUI 的 sample（Console 用 stdout grep 即可，不需 computer-use）
+- Unit tests (use `dotnet test`)
+- Full UI E2E testing (use a real Playwright / Selenium / Appium toolchain; this skill is "quick look" level)
+- Samples without a GUI (for Console, grepping stdout is enough; no computer-use needed)
 
-## 前置
+## Prerequisites
 
-- macOS 主開發機（Mac Catalyst sample / Blazor in Safari 都靠它）
-- `claude` desktop 有 computer-use MCP 權限
-- 對應 sample 已 build 過（本 skill 不負責 build）
+- The main macOS development machine (Mac Catalyst samples / Blazor in Safari both depend on it)
+- The `claude` desktop app has computer-use MCP permission
+- The sample has already been built (this skill does not build)
 
-## 設定檔：`<專案根>/.smoke.yaml`
+## Configuration file: `<project-root>/.smoke.yaml`
 
-每個有 GUI 的 demo 自帶一份 `.smoke.yaml`。範例（實際檔案：`apps/Polhem.Northwind/.smoke.yaml`）：
+Every demo with a GUI carries its own `.smoke.yaml`. Example (actual file: `apps/Polhem.Northwind/.smoke.yaml`):
 
 ```yaml
 # apps/Polhem.Northwind/.smoke.yaml
 name: Polhem.Northwind
 display_name: Polhem.Northwind
 
-# 起 demo 之前要跑的依賴 process
+# Dependency processes to run before starting the demo
 prerequisites:
   - id: server
     cwd: apps/Polhem.Northwind/Polhem.Northwind.Server
     cmd: dotnet run --configuration Debug --no-build
-    ready_when: "Now listening on"   # 等 stdout 出現這串才算 ready
+    ready_when: "Now listening on"   # ready only once stdout shows this string
     timeout_seconds: 30
 
-# demo app 自身啟動方式
+# How the demo app itself is launched
 launch:
   app_name: Polhem.Northwind
-  # Avalonia 桌面端產出的是一般 .NET 可執行檔（macOS 無 .app bundle、Windows 無 MSIX），
-  # 因此以 dotnet 直接啟動已建置的 host DLL；跑 smoke 時不依賴 dotnet run 的 file-watch 迴圈。
+  # The Avalonia desktop head produces an ordinary .NET executable (no .app bundle on macOS, no MSIX on Windows),
+  # so the built host DLL is launched directly with dotnet; the smoke run does not depend on the dotnet run file-watch loop.
   launch_cmd: dotnet apps/Polhem.Northwind/Polhem.Northwind.Desktop/bin/Debug/net10.0/Polhem.Northwind.Desktop.dll
-  # 若專案產出的是 .app bundle，改用：
-  # bundle_path: <專案>/bin/.../<App>.app   # 預設以 macOS `open` 啟動
+  # If the project produces an .app bundle, use instead:
+  # bundle_path: <project>/bin/.../<App>.app   # launched with macOS `open` by default
 
-# 點擊與驗證流程
+# Click and verification flow
 flow:
   - step: take initial screenshot
     action: screenshot
-    expect_text:                          # 至少要看到的字串（用 OCR / 截圖比對）
+    expect_text:                          # strings that must at least be visible (via OCR / screenshot comparison)
       - "Polhem.Northwind"
       - "Endpoint"
       - "Connect"
 
   - step: click Connect
     action: click
-    # target 描述按鈕；runner 可用截圖座標、accessibility tree、或 label fallback
+    # target describes the button; the runner can use screenshot coordinates, the accessibility tree, or a label fallback
     target: { label: "Connect" }
-    wait_after_seconds: 4                 # 等 reachability check + ping
+    wait_after_seconds: 4                 # wait for the reachability check + ping
     expect_text:
       - "Sign in"
       - "User ID"
@@ -72,69 +74,70 @@ flow:
   - step: click Sign in
     action: click
     target: { label: "Sign in" }
-    wait_after_seconds: 6                 # 等 RSA 握手 + Login
+    wait_after_seconds: 6                 # wait for the RSA handshake + Login
     expect_text:
-      - "Master Data"                     # 選單群組
+      - "Master Data"                     # menu group
       - "Transactions"
-      - "Beverages"                       # 種子分類第一筆
+      - "Beverages"                       # first seeded category
 
   - step: final screenshot
     action: screenshot
-    save_as: northwind-category-list.png  # 給人工確認用
+    save_as: northwind-category-list.png  # for manual confirmation
 
-# 清乾淨
+# Cleanup
 teardown:
-  kill_app: true                          # 結束時 kill app process
-  kill_prerequisites: true                # 結束時 kill server
+  kill_app: true                          # kill the app process at the end
+  kill_prerequisites: true                # kill the server at the end
 ```
 
-## 執行流程
+## Execution flow
 
-### Step 1：讀 `.smoke.yaml`
+### Step 1: read `.smoke.yaml`
 
 ```bash
-test -f <專案根>/.smoke.yaml || {
-  echo "此 demo 沒有 .smoke.yaml，請先為它寫一份"
+test -f <project-root>/.smoke.yaml || {
+  echo "This demo has no .smoke.yaml; write one for it first"
   exit 1
 }
 ```
 
-`<專案根>` 是 `samples/<Name>` 或 `apps/<Name>`；不確定時先 `ls samples apps` 對名稱。
-不存在 → 停下，問使用者要不要從樣板生成一份（不自動生）。
+`<project-root>` is `samples/<Name>` or `apps/<Name>`; if unsure, run `ls samples apps` first to match the name.
+If it does not exist → stop and ask the user whether to generate one from the template (do not generate it
+automatically).
 
-### Step 2：起 prerequisites
+### Step 2: start the prerequisites
 
-對每個 prerequisite：
-- 在 background 跑 `cmd`（用 Bash tool 的 `run_in_background`）
-- poll log 直到 `ready_when` 字串出現，或超過 `timeout_seconds` 失敗
-- 紀錄 pid 給 teardown 用
+For each prerequisite:
+- Run `cmd` in the background (use the Bash tool's `run_in_background`)
+- Poll the log until the `ready_when` string appears, or fail after `timeout_seconds`
+- Record the pid for teardown
 
-若任一 prerequisite 失敗 → stop，輸出 log tail，**不**啟動 app。
+If any prerequisite fails → stop, print the log tail, and do **not** launch the app.
 
-### Step 3：呼叫 `request_access`，啟動 app
+### Step 3: call `request_access`, launch the app
 
 ```
 mcp__computer-use__request_access(
   apps=[launch.app_name],
-  reason="Run smoke test for <專案根>"
+  reason="Run smoke test for <project-root>"
 )
 ```
 
-接著 `open <bundle_path>`（or 跑 `launch.launch_cmd`），等 5-8 秒讓 app 起 UI。
+Then `open <bundle_path>` (or run `launch.launch_cmd`) and wait 5-8 seconds for the app to bring up its UI.
 
-### Step 4：跑 flow 每一步
+### Step 4: run each flow step
 
-依序執行：
+Run in order:
 
 ```python
 for step in flow:
   if step.action == "screenshot":
-    screenshot()  # 截圖；若有 expect_text，做 OCR / 圖比對
+    screenshot()  # take a screenshot; if expect_text is set, do OCR / image comparison
     verify_expected_text(step.expect_text)
     if step.save_as: persist_screenshot_to(step.save_as)
 
   elif step.action == "click":
-    target = locate(step.target)  # 用 accessibility / label / coordinate
+    target = locate(step.target)  # via accessibility / label / coordinate
     left_click(target.x, target.y)
     if step.wait_after_seconds: wait(step.wait_after_seconds)
     if step.expect_text: screenshot_and_verify(step.expect_text)
@@ -147,9 +150,10 @@ for step in flow:
     press_key(step.text)
 ```
 
-任一 step 失敗（看不到 expect_text、target 找不到、wait 超時）→ 截最後一張圖、停止 flow、進入 teardown。
+If any step fails (expect_text not visible, target not found, wait timed out) → take a last screenshot, stop the flow,
+and go to teardown.
 
-### Step 5：Teardown
+### Step 5: Teardown
 
 ```bash
 # kill app
@@ -160,46 +164,52 @@ for pid in "${prerequisite_pids[@]}"; do
   kill "$pid" 2>/dev/null
 done
 
-# 確認 port 釋放
-lsof -i :5050 -sTCP:LISTEN 2>/dev/null  # 應為空
+# confirm the port is released
+lsof -i :5050 -sTCP:LISTEN 2>/dev/null  # should be empty
 ```
 
-### Step 6：輸出結論
+### Step 6: report the conclusion
 
 ```
-✅ <專案根> smoke passed.
+✅ <project-root> smoke passed.
    - prerequisites: 1/1 ready
    - flow steps:    4/4 passed
    - last screenshot: maui-demo-employee-page.png
 
 ------ or ------
 
-❌ <專案根> smoke failed at step "click Sign in".
+❌ <project-root> smoke failed at step "click Sign in".
    - prerequisites: 1/1 ready
    - flow steps:    1/3 passed (step #2 timed out waiting for "Employee")
    - failure screenshot: smoke-failure-2026-05-23.png
 ```
 
-## 與其他 skill 的分工
+## Division of labour with other skills
 
-| Skill | 處理什麼 |
+| Skill | Handles |
 |-------|---------|
-| `verify`（global） | 通用「跑一下確認」— 沒 sample 概念，不讀 `.smoke.yaml` |
-| `run`（global） | 啟動專案的 app — 沒驗證 step、不 teardown |
-| **`demo-smoke`**（本 skill） | 讀 `.smoke.yaml`、起依賴 + app + 點擊 + 驗證 + 清乾淨 |
+| `verify` (global) | General "run it and check"; no concept of a sample, does not read `.smoke.yaml` |
+| `run` (global) | Launches the project's app; no verification steps, no teardown |
+| **`demo-smoke`** (this skill) | Reads `.smoke.yaml`, starts dependencies + app + clicks + verifies + cleans up |
 
-`demo-smoke` 是 `run` + `verify` 的 sample 級組合版。
+`demo-smoke` is the sample-level combination of `run` + `verify`.
 
-## 知道的雷
+## Known pitfalls
 
-- **pgrep 名稱**：以 .app bundle 發布時，進程名來自 `.app/Contents/MacOS/<AssemblyName>`，不是 csproj 顯示名；以 `dotnet <dll>` 啟動時進程名是 `dotnet`。teardown 要依實際啟動方式取名。
-- **Sandboxed app 第一次跑**：macOS 要使用者批准「網路存取」、「鍵盤監聽」（computer-use 點擊）。若 dialog 出現會卡住 flow；建議在 `.smoke.yaml` 加 `first_run_setup: |` 步驟提示。
-- **expect_text 是 OCR 還是 accessibility？**：MVP 用截圖比對 + OCR；高精度需求改用 macOS Accessibility API（不在本 skill 範圍）。
-- **prerequisites 多依賴**：若 sample 需要 SQLite container 之類，把指令寫進 prerequisites；本 skill 不識別 container 工具。
+- **pgrep name**: when shipped as an .app bundle, the process name comes from `.app/Contents/MacOS/<AssemblyName>`, not
+  the csproj display name; when launched with `dotnet <dll>`, the process name is `dotnet`. Teardown must pick the name
+  according to how the app was actually launched.
+- **Sandboxed app on first run**: macOS asks the user to approve "network access" and "keyboard monitoring"
+  (computer-use clicks). If the dialog appears it blocks the flow; consider adding a `first_run_setup: |` step with a
+  prompt in `.smoke.yaml`.
+- **Is expect_text OCR or accessibility?**: the MVP uses screenshot comparison + OCR; high-precision needs would use the
+  macOS Accessibility API instead (outside the scope of this skill).
+- **prerequisites with several dependencies**: if the sample needs something like an SQLite container, write the command
+  into prerequisites; this skill does not recognise container tooling.
 
-## 不在本 skill 範圍
+## Out of scope for this skill
 
-- 寫 `.smoke.yaml` 本身（沒有自動生成器；模板複製貼上）
-- 自動生成失敗截圖的 diff（純截圖比對人工 review）
-- 跑全部 sample 的 batch mode（要的話用 `/loop` 或 `/schedule` 包一層）
-- 把結果 push 到 dashboard / SonarCloud / 任何外部 reporting
+- Writing `.smoke.yaml` itself (there is no generator; copy and paste the template)
+- Automatically diffing failure screenshots (pure screenshot comparison is reviewed by a human)
+- Batch mode running all samples (if needed, wrap it with `/loop` or `/schedule`)
+- Pushing results to a dashboard / SonarCloud / any external reporting

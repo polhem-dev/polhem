@@ -1,94 +1,127 @@
-# Polhem Library — 專案指引
+# Polhem — guidance for coding agents
 
-## 專案概述
+## Language
 
-Polhem 是一套模組化的 .NET 企業應用程式框架，以 NuGet 套件形式發布。採用 JSON-RPC 2.0 API 模式，強調安全性、可插拔序列化與跨平台相容性。
+- Everything maintained together is written in **English**: source code, XML documentation, comments, test method
+  names and `[DisplayName]` text, commit messages, the maintainer documents under `docs/repo-ops/`, and the files
+  under `.claude/` and every `CLAUDE.md`.
+- This overrides any personal or user-level setting that asks for another language for prose, including an
+  instruction to write in Traditional Chinese. Replies in a conversation may still follow the user's language.
+- Public Markdown documents and ADRs are bilingual. How each kind is kept in sync is in `rules/public-docs.md`.
+- Parts of the repository still contain Chinese from before this policy; they are being translated. Write new
+  content in English regardless of the language of the surrounding text.
 
-- **版本**：見 repo 根的 `Version.props`（`src/` 與 `tools/` 共用）
-- **授權**：MIT
-- **主要目標框架**：`net10.0`（全部專案）
+The reasons are recorded in `docs/adr/adr-045-language-policy-and-local-plans.md`.
 
-## 目錄結構
+## Project overview
+
+Polhem is a modular .NET enterprise application framework, published as NuGet packages. It uses a JSON-RPC 2.0 API
+model, with an emphasis on security, pluggable serialization and cross-platform support.
+
+- **Version**: see `Version.props` at the repository root (shared by `src/` and `tools/`)
+- **License**: MIT
+- **Target framework**: `net10.0` (every project)
 
 ```
-src/         # 核心套件（Polhem.Base, Polhem.Definition, Polhem.Api.Core 等）
-tests/       # 對應的單元測試專案
-samples/     # 示範專案
+src/         # the packages (Polhem.Base, Polhem.Definition, Polhem.Api.Core, ...)
+tests/       # a unit test project for each package
+samples/     # sample projects
+apps/        # demo applications (Polhem.Northwind)
+tools/       # CLI, definition editor, load tests
 ```
 
-## 常用命令
+## Common commands
 
 ```bash
 dotnet restore
 dotnet build <project>.csproj --configuration Release --no-restore
-./test.sh                                    # 全部測試（自動啟動本機 DB 容器）
+./test.sh                                    # all tests (starts the local database containers)
 ./test.sh tests/<Project>.UnitTests/<Project>.UnitTests.csproj
-./check-public-docs.sh                       # 公開文件不得引用 docs/plans/
-./check-md-links.sh                          # markdown 相對連結必須指得到檔案
-./check-docs-i18n.sh                         # 譯本檔頭、過期、缺譯與語言切換列（--stamp / --fix-switch）
+./check-public-docs.sh                       # no committed file points to local/ or names a plan
+./check-md-links.sh                          # relative markdown links must resolve
+./check-docs-i18n.sh                         # translation headers, staleness, missing translations, switch lines (--stamp / --fix-switch)
 dotnet pack src/<Project>/<Project>.csproj --configuration Release --output ./nupkgs
 ```
 
-`./test.sh` 的容器偵測 / 自動 skip / env var override 細節見 `tests/CLAUDE.md`
-（動 `tests/` 時自動載入）。
+Container detection, automatic skipping and environment variable overrides for `./test.sh` are described in
+`tests/CLAUDE.md`, which loads when you work under `tests/`.
 
-## 架構分層
+## Architecture layers
 
-| 層級 | 專案 |
-|------|------|
-| API 層 | Polhem.Api.AspNetCore, Polhem.Api.Core, Polhem.Api.Client |
-| 商業邏輯層 | Polhem.Business |
-| 資料存取層 | Polhem.Repository, Polhem.Repository.Abstractions, Polhem.Db |
-| 基礎設施 | Polhem.Base, Polhem.Definition, Polhem.ObjectCaching |
+| Layer | Projects |
+|-------|----------|
+| API | Polhem.Api.AspNetCore, Polhem.Api.Core, Polhem.Api.Client |
+| Business logic | Polhem.Business |
+| Data access | Polhem.Repository, Polhem.Repository.Abstractions, Polhem.Db |
+| Infrastructure | Polhem.Base, Polhem.Definition, Polhem.ObjectCaching |
 
-> ⚠️ **`Polhem.Base` 與 `Polhem.Definition` 是最底層的兩個組件**：`Polhem.Base` 是所有專案的相依、
-> `Polhem.Definition` 的直接下游遍及各層。**除非必要，不得再為這兩個專案加入套件參考**——
-> 加在這裡的任何相依會沿相依鏈傳染給每一個消費者。判準、正解與閘門見
-> `rules/dependency-boundary.md`。
+> ⚠️ **`Polhem.Base` and `Polhem.Definition` are the two lowest assemblies.** Every project depends on
+> `Polhem.Base`, and the direct consumers of `Polhem.Definition` span every layer. **Do not add package references
+> to these two projects unless it is necessary**: any dependency added here spreads along the dependency chain to
+> every consumer. The criteria, the correct approach and the gates are in `rules/dependency-boundary.md`.
 
-## 工作流程
+## Workflow
 
-### 執行前先擬計畫
+### Plan before you build
 
-任何需要事先規劃的任務（重構、新功能、架構調整等），必須：
+Any task that needs planning first (a refactoring, a new feature, an architectural change):
 
-1. 將計畫寫成 md 文件，存至 `docs/plans/` 目錄，檔名格式：`plan-<主題>.md`
-2. **每次建立或修改 plan 文件後，回覆中必須附上該 plan 的連結**（markdown 相對連結），讓使用者可在對話中直接點開、不需自行翻找
-3. 等待使用者確認後，才開始執行
-4. **Plan 執行完畢時，立刻在文件頂部標記完成狀態**
-5. 由使用者要求時才將計畫文件移至 `docs/plans/archive/` 封存（此目錄**入版控**，作為維護者的團隊記憶）
-   - 例外：含未修安全弱點清單的 review 類 plan 改放 `docs/internal/`（gitignored），避免公開 repo 附上現成攻擊面盤點
-   - **公開文件一律不得連結或引用 plan**（含封存 plan）—— plan 是階段性文件、舊版未必正確，詳見 `rules/public-docs.md`
+1. Write the plan as a Markdown file in `local/plans/`, named `<topic>.md` or `plan-<topic>.md`.
+2. **Every time you create or change a plan, link it in your reply** with a relative Markdown link, so the user can
+   open it from the conversation.
+3. Wait for the user to confirm before carrying it out.
+4. **When the plan is done, mark it completed at the top of the file straight away.**
 
-> 狀態列格式、多階段 plan 的階段表格、**plan 內的連結慣例**（封存後仍有效的相對路徑寫法）、
-> 封存細節 → 見 `/dev-workflow:plan-write` skill（由 `jeff377-plugins` marketplace 的
-> `dev-workflow` plugin 提供，已於 `.claude/settings.json` 宣告啟用）。
-> 該 plugin 早期名為 `plan-workflow`，**已改名**；cache 裡殘留的舊目錄不再生效，別照舊名指路。
+A plan records what someone intended at the time; it is not a specification. Decisions of lasting value are promoted
+to an ADR in `docs/adr/`; work that other maintainers need to see belongs in a GitHub issue or pull request.
 
-## 架構參考
+### Local working documents
 
-實作任何功能或模組前，先讀 `docs/zh-TW/README.md` —— 公開文件的入口索引（架構總覽、開發指引與限制、
-資料庫、設計概念，皆雙語、分類列表），再依索引開對應文件。設計決策的背景見 `docs/adr/`；
-進行中 / 已完成的規劃見 `docs/plans/`（階段性文件，舊 plan 未必符合現行行為，勿當規格）；
-各套件細節見各 `src/` 專案的 `README.md`。
+- `local/` at the repository root is ignored by git. Keep documents there that are not meant for every maintainer or
+  for publication: plans, drafts, personal notes, and review findings that list unfixed security issues
+  (`local/internal/`).
+- Never commit anything under `local/`, never add it with `git add -f`, and never link to it or name a file in it
+  from a committed file. `./check-public-docs.sh` reports such references.
+- The language rule above does not apply to `local/`, because its documents are not maintained together.
+- A session in a git worktree cannot see `local/`. Hand off work that depends on it to a session in the main
+  working tree.
 
-**踩雷誌 `docs/repo-ops/gotchas/`**（維護者視角，非公開文件）記錄實際踩過、下次很可能再踩的雷，
-含症狀、根因與正解。硬規則已收進 `rules/`（常駐），gotchas 是**按需查閱**的脈絡。
-動到下列範圍前先讀對應那份：**資料庫 / provider dialect**、**序列化與運算式引擎**、
-**Avalonia 控件**、**測試 / CI / 發佈**、**Northwind 各 head**。索引見
-`docs/repo-ops/gotchas/README.md`。
+### Changes reach `main` through pull requests
 
-核心心智模型（實作時的定錨，細節見上述文件）：
-- **FormSchema** 為定義中樞，同時驅動 UI（FormLayout）、資料庫（DbTable）與驗證規則
-- **DataSet** 為跨層 DTO，承載 Master-Detail 資料，不含邏輯
-- **Business Object（BO）** 負責業務邏輯，不直接存取資料庫
-- **Repository** 採雙軌策略：CRUD 由 FormSchema 驅動，報表/批次由 BO 自行實作（AnyCode）
-- 架構模式：N-Tier + Clean Architecture + MVVM 混合
+How branches, pull requests and CI failures are handled is in `rules/pull-request.md`. Releases have two guardrails
+that apply even when nobody asked for a release: `rules/releasing.md`.
 
-## 規則導入
+## Architecture reference
 
-跨專案共用規則（`code-style`、`scanning`、`pull-request`、`releasing`）由使用者層 `~/.claude/CLAUDE.md` 統一載入，本檔僅引用本專案特化規則：
+Before implementing a feature or a module, read `docs/en/README.md` (or `docs/zh-TW/README.md`, currently the
+translation source): the index of the public documents, covering the architecture overview, development guidelines
+and constraints, databases and design concepts. Then open the documents it points to. The background of design
+decisions is in `docs/adr/`; the details of each package are in the `README.md` of each `src/` project.
 
+**The pitfall log `docs/repo-ops/gotchas/`** (maintainer documents, not public) records pitfalls that have been hit
+and are likely to be hit again, with the symptom, the root cause and the fix. Hard rules are already in `rules/`
+(always loaded); the gotchas are context to read on demand. Before touching one of these areas, read the matching
+file: **databases and provider dialects**, **serialization and the expression engine**, **Avalonia controls**,
+**tests, CI and publishing**, **the Northwind heads**. The index is `docs/repo-ops/gotchas/README.md`.
+
+The core mental model (anchors for implementation; the details are in the documents above):
+- **FormSchema** is the definition hub. It drives the UI (FormLayout), the database (DbTable) and validation rules.
+- **DataSet** is the DTO across layers. It carries master-detail data and no logic.
+- A **Business Object (BO)** holds business logic and does not access the database directly.
+- **Repository** has two tracks: CRUD is driven by FormSchema; reports and batch jobs are implemented by the BO
+  itself (AnyCode).
+- Architecture: a mix of N-tier, Clean Architecture and MVVM.
+
+## Rules
+
+These rules are part of the repository. Where a personal or user-level rule covers the same subject, the rule here
+takes precedence in this repository.
+
+@rules/code-style.md
+@rules/scanning.md
+@rules/single-source.md
+@rules/pull-request.md
+@rules/releasing.md
 @rules/public-docs.md
 @rules/dependency-boundary.md
 @rules/database.md

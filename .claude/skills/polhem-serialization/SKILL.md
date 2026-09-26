@@ -1,209 +1,230 @@
 ---
 name: polhem-serialization
-description: polhem 物件「三棲序列化」(XML / JSON / MessagePack)的設計指引。核心兩軸用途——XML 用於持久化(存檔 / 定義檔 / 快照 / 落 DB)、JSON + MessagePack 用於 API 傳遞(JSON-RPC 信封恆為 JSON；Encoded/Encrypted 的 body 由請求逐次宣告 codec，未宣告即 MessagePack)。涵蓋物件 recipe(無參數 ctor + XML/JSON 標籤，定義層不帶任何序列化套件標註)、集合(繼承 Polhem.Base.Collections 基底 + 必到 WireContracts 顯式註冊 formatter)、wire 傳遞模式(物件本身 vs XML string)、行動端 AOT 型別形狀要件、踩雷與三棲 round-trip 測試樣板。當使用者要「物件要支援 XML/JSON/MessagePack」、「序列化」、「傳前端又要存檔」、「跨 wire 傳物件」、「KeyCollectionBase 集合序列化」、「新增 wire 型別」、「可序列化物件設計」之類需求時使用。
+description: "Design guidance for \"triple serialization\" (XML / JSON / MessagePack) of polhem objects. Two core axes of use: XML for persistence (saved files / definition files / snapshots / written to the DB); JSON + MessagePack for API transport (the JSON-RPC envelope is always JSON; the body of Encoded/Encrypted payloads uses the codec each request declares, and MessagePack when none is declared). Covers the object recipe (parameterless ctor + XML/JSON attributes; the definition layer carries no serialization-package attributes), collections (inherit a Polhem.Base.Collections base + must register a formatter explicitly in WireContracts), wire transport patterns (the object itself vs an XML string), mobile AOT type-shape requirements, pitfalls, and a triple round-trip test template. Use when the user wants \"an object that supports XML/JSON/MessagePack\", \"serialization\", \"send to the front end and also save to disk\", \"send an object across the wire\", \"KeyCollectionBase collection serialization\", \"add a wire type\", \"serializable object design\", or similar."
 ---
 
-# polhem 三棲序列化（XML / JSON / MessagePack）
+# polhem triple serialization (XML / JSON / MessagePack)
 
-> **2026-08-11 全面改寫。** 本檔先前教的是 `[MessagePackObject]` / `[Key(n)]` /
-> `MessagePackCollectionBase<T>` 那一套，**那些型別與標註已於 ADR-036 全數移除**（`src/` 內
-> 宣告數為 0），照舊版寫出來的程式碼會編譯不過、或在行動端擲例外。
+> **Fully rewritten on 2026-08-11.** This file used to teach the `[MessagePackObject]` / `[Key(n)]` /
+> `MessagePackCollectionBase<T>` approach. **Those types and attributes were all removed by ADR-036** (0 declarations in
+> `src/`); code written the old way will not compile, or will throw on mobile.
 
-## 核心：兩軸用途（先記這個，其餘都從這推導）
+## Core: two axes of use (remember this first; everything else follows from it)
 
-| 序列化 | 用途軸 | 載體 | 何時用 |
+| Serialization | Axis | Carrier | When |
 |--------|--------|------|--------|
-| **XML** | **持久化** | `XmlCodec` | 存檔、定義檔（FormSchema / TableSchema…）、快照、任何落磁碟 / DB 的物件 |
-| **JSON** | **API 傳遞** | `System.Text.Json` | JSON-RPC 信封恆為 JSON；`PayloadFormat.Plain` 時 payload 值也內嵌為 JSON |
-| **MessagePack** | **API 傳遞** | `MessagePackCodec` | `PayloadFormat.Encoded` / `Encrypted` 的 payload body，未宣告 codec 時的預設（base64 的 MessagePack bytes） |
+| **XML** | **Persistence** | `XmlCodec` | Saved files, definition files (FormSchema / TableSchema…), snapshots, any object written to disk / DB |
+| **JSON** | **API transport** | `System.Text.Json` | The JSON-RPC envelope is always JSON; with `PayloadFormat.Plain` the payload value is also embedded as JSON |
+| **MessagePack** | **API transport** | `MessagePackCodec` | The payload body of `PayloadFormat.Encoded` / `Encrypted`; the default when no codec is declared (base64 MessagePack bytes) |
 
-- **XML = 持久化軸**；**JSON + MessagePack = 傳輸軸**。
-- **`PayloadFormat` 是「加密／壓縮」維度，不是「JSON vs MessagePack」的選擇器**：
-  `Plain` 走 JSON 內嵌，`Encoded`/`Encrypted` 的 body **由請求在信封的 `codec` 欄位逐次宣告**
-  （adr-044），未宣告即 MessagePack。判準與名稱見 `rules/serialization.md` 與 `PayloadCodecNames`。
-  ⚠️ 「框架沒有 JSON body serializer」是 **4.26.0 以前**的結論，別再照它推導。
-- 一個「既要傳前端、又要存快照」的物件 → **三棲都要**（如 `DepartmentTree`）。
-- 一個只跨 wire 的 API DTO → 需 JSON + MessagePack，不需 XML。
+- **XML = the persistence axis**; **JSON + MessagePack = the transport axis**.
+- **`PayloadFormat` is the "encryption / compression" dimension, not a "JSON vs MessagePack" selector**:
+  `Plain` embeds JSON; the body of `Encoded`/`Encrypted` **is declared per request in the envelope's `codec` field**
+  (adr-044), and is MessagePack when none is declared. For the criteria and names see `rules/serialization.md` and
+  `PayloadCodecNames`.
+  ⚠️ "The framework has no JSON body serializer" is a conclusion from **before 4.26.0**; do not reason from it any more.
+- An object that must "go to the front end and also be saved as a snapshot" → **needs all three** (e.g.
+  `DepartmentTree`).
+- An API DTO that only crosses the wire → needs JSON + MessagePack, not XML.
 
-> **不要把持久化格式當 wire**：`GetDefine` 回 `XmlCodec.Serialize` 的 XML string 是 define 物件的
-> **歷史用法**。新物件的 API 傳遞走物件本身（見下「wire 傳遞模式」）。
-> 附帶效果：FormSchema 以 XML 字串夾在 wire 上，所以**它不在 wire 型別閉包內**。
+> **Do not use the persistence format as the wire format**: `GetDefine` returning the XML string from
+> `XmlCodec.Serialize` is the **historical usage** for define objects. API transport of new objects sends the object
+> itself (see "Wire transport patterns" below).
+> Side effect: FormSchema travels on the wire as an XML string, so **it is not in the wire type closure**.
 
-## 物件 recipe（純物件，無集合）
+## Object recipe (plain object, no collections)
 
 ```csharp
-public class Foo : IKeyObject          // IKeyObject 僅在要進 KeyObjectCache 時
+public class Foo : IKeyObject          // IKeyObject only if it goes into a KeyObjectCache
 {
-    public Foo() { }                    // 無參數 ctor — 三種序列化器都要求
+    public Foo() { }                    // Parameterless ctor: required by all three serializers
 
-    // XML 要標；JSON 自動（不標即包含）；MessagePack 不在型別上標，見下
+    // XML needs attributes; JSON is automatic (included unless marked); MessagePack is not marked on the type, see below
     [XmlAttribute] public Guid RowId { get; set; }
     [XmlAttribute] public string Name { get; set; } = string.Empty;
 
     public string GetKey() => RowId.ToString();
 
-    // 衍生 / 索引 / owner：兩個軸都要跳過
+    // Derived / index / owner: skip on both axes
     [XmlIgnore, JsonIgnore] private Dictionary<string, Foo>? _index;
     [XmlIgnore, JsonIgnore] public SomethingDerived Derived => ...;
 }
 ```
 
-- **定義層不帶任何序列化套件標註**（ADR-036）。`[XmlIgnore]` / `[JsonIgnore]` 是 BCL 詞彙、可用；
-  MessagePack 的 `[MessagePackObject]` / `[Key]` / `[IgnoreMember]` **不可用**，`src/Polhem.Definition`
-  也不得有 `MessagePack` 的 `PackageReference`。
-- **`[JsonIgnore]` 同時是 wire 的排除機制**：wire 成員的定義＝**public 可讀可寫、未標
-  `[JsonIgnore]`** 的屬性。想讓某成員不上 MessagePack，標 `[JsonIgnore]`。
-- **無參數 ctor 必備**：`XmlSerializer` / `System.Text.Json` 都要它；`POLHEM4006` 於建置期把關。
+- **The definition layer carries no serialization-package attributes** (ADR-036). `[XmlIgnore]` / `[JsonIgnore]` are
+  BCL vocabulary and allowed; MessagePack's `[MessagePackObject]` / `[Key]` / `[IgnoreMember]` **are not allowed**, and
+  `src/Polhem.Definition` must not have a `PackageReference` to `MessagePack`.
+- **`[JsonIgnore]` is also the wire exclusion mechanism**: a wire member is defined as a **public readable and
+  writable** property **not marked `[JsonIgnore]`**. To keep a member off MessagePack, mark it `[JsonIgnore]`.
+- **A parameterless ctor is mandatory**: `XmlSerializer` / `System.Text.Json` both require it; `POLHEM4006` enforces it
+  at build time.
 
-## wire 型別必須顯式註冊（ADR-037，最容易漏）
+## Wire types must be registered explicitly (ADR-037, the easiest to miss)
 
-**新增 wire 型別**（`Polhem.Api.Core.Messages.*`、其遞移可達的定義層型別、集合）
-**一定要到 `src/Polhem.Api.Core/MessagePack/WireContracts.*.cs` 註冊**，否則行動端擲
-`FormatterNotRegisteredException`（不是變慢）。漏補會被 `WireContractDriftTests` 擋下。
+**New wire types** (`Polhem.Api.Core.Messages.*`, definition-layer types transitively reachable from them, collections)
+**must be registered in `src/Polhem.Api.Core/MessagePack/WireContracts.*.cs`**, otherwise mobile throws
+`FormatterNotRegisteredException` (it does not merely get slower). A missed registration is caught by
+`WireContractDriftTests`.
 
-> **完整註冊程序、三個容易誤判的點、`object` 封套機制 →
-> [`src/Polhem.Api.Core/CLAUDE.md`](../../../src/Polhem.Api.Core/CLAUDE.md)**（觸及該專案時自動載入）。
-> 那是唯一權威，本檔不複寫。
+> **The full registration procedure, the three easy misjudgments, and the `object` envelope mechanism →
+> [`src/Polhem.Api.Core/CLAUDE.md`](../../../src/Polhem.Api.Core/CLAUDE.md)** (loaded automatically when that project
+> is touched). That is the only authoritative source; this file does not copy it.
 
-## 集合
+## Collections
 
-元素與集合各自有基底，且 MessagePack **必須顯式註冊 formatter**：
+Elements and collections each have a base, and MessagePack **requires an explicitly registered formatter**:
 
 ```csharp
-// 元素 — KeyCollectionItem（有 key）或 CollectionItem（無 key）
+// Element: KeyCollectionItem (with key) or CollectionItem (without key)
 public sealed class FooNode : CollectionItem
 {
     [XmlAttribute] public Guid RowId { get; set; }
 }
 
-// 集合 — Polhem.Base.Collections 的基底
+// Collection: a base from Polhem.Base.Collections
 public class FooNodeCollection : CollectionBase<FooNode> { }
 ```
 
 ```csharp
-// MessagePackCodec.BuildFormatters()：沒有這行，行動端讀不回來
+// MessagePackCodec.BuildFormatters(): without this line, mobile cannot read it back
 new CollectionBaseFormatter<FooNodeCollection, FooNode>(),
 ```
 
-### 集合基底選型
+### Choosing a collection base
 
-| Base | 用途 |
+| Base | Use |
 |------|------|
-| `Polhem.Base.Collections.CollectionBase<T>` | item 無 key 的集合 |
-| `Polhem.Base.Collections.KeyCollectionBase<T>` | item 有 key、需 keyed 索引（如 `ParameterCollection`） |
+| `Polhem.Base.Collections.CollectionBase<T>` | Collections whose items have no key |
+| `Polhem.Base.Collections.KeyCollectionBase<T>` | Items have a key and need keyed indexing (e.g. `ParameterCollection`) |
 
-- **定義層的公開集合屬性禁用裸 `List<T>` / `Collection<T>` / `IList<T>`**（`rules/definition.md`）；
-  `POLHEM3002` 於建置期把關。
-- `KeyCollectionBase<T>` 以 `StringComparer.OrdinalIgnoreCase` 建構，是**真 O(1)**
-  （`dictionaryCreationThreshold = 0`，第一次 `Add` 即建字典）。
+- **Public collection properties in the definition layer must not use bare `List<T>` / `Collection<T>` / `IList<T>`**
+  (`rules/definition.md`); `POLHEM3002` enforces this at build time.
+- `KeyCollectionBase<T>` is constructed with `StringComparer.OrdinalIgnoreCase` and is **truly O(1)**
+  (`dictionaryCreationThreshold = 0`: the dictionary is built on the first `Add`).
 
-### 行動端 AOT 的型別形狀要件（桌面完全看不出來）
+### Mobile AOT type-shape requirements (completely invisible on desktop)
 
-reflection-only 的 `XmlSerializer`（iOS 路徑）對型別形狀比桌面嚴格：**只能有一個 public
-instance `Add`**、**必須有無參數建構子**、**重複 `[XmlElement]` 的集合屬性必須有 public
-setter**。前兩者由 `POLHEM4005` / `POLHEM4006` 把關，第三者只有 CI 的 AOT 閘門會抓。
+Reflection-only `XmlSerializer` (the iOS path) is stricter about type shape than desktop: **only one public instance
+`Add`**, **a parameterless constructor is required**, and **a collection property mapped to repeated `[XmlElement]`
+must have a public setter**. The first two are enforced by `POLHEM4005` / `POLHEM4006`; the third is only caught by the
+AOT gate in CI.
 
-> **三者的完整條文、例外訊息對照與 setter 的正確寫法（清空後逐一 `Add`，不換欄位）→
-> [`rules/apple-mobile-trim.md`](../../rules/apple-mobile-trim.md) § 序列化型別的行動端相容要件
-> 與 [`src/Polhem.Definition/CLAUDE.md`](../../../src/Polhem.Definition/CLAUDE.md)。**
+> **The full rules for all three, the exception-message mapping, and the correct way to write the setter (clear, then
+> `Add` one by one; do not swap the field) →
+> [`rules/apple-mobile-trim.md`](../../rules/apple-mobile-trim.md) § Mobile compatibility requirements for serialized
+> types, and [`src/Polhem.Definition/CLAUDE.md`](../../../src/Polhem.Definition/CLAUDE.md).**
 
-## `object` 成員走判別式封套
+## `object` members use the discriminated envelope
 
-`Parameter.Value` / `FilterCondition.Value` 這類 `object` 成員由 `WireValueFormatter` 處理，
-**不走 `TypelessFormatter`**。要在行動端傳新的值型別 → 加進 `WireValueCode` 封閉集，
-不要指望白名單逃生門（該分支只在有動態碼的 runtime 上可用）。
+`object` members such as `Parameter.Value` / `FilterCondition.Value` are handled by `WireValueFormatter`,
+**not `TypelessFormatter`**. To send a new value type on mobile → add it to the closed `WireValueCode` set;
+do not count on the whitelist escape hatch (that branch only works on runtimes with dynamic code).
 
-**`WireValueCode` 的數值是 wire 格式的一部分，不可重新編號** —— 跨版本不相容，
-且 drift 測試抓不到。機制細節見 `src/Polhem.Api.Core/CLAUDE.md`。
+**The numeric values of `WireValueCode` are part of the wire format and must not be renumbered**: that breaks
+cross-version compatibility, and the drift test cannot catch it. Mechanism details are in
+`src/Polhem.Api.Core/CLAUDE.md`.
 
-## wire 傳遞模式（API 端）
+## Wire transport patterns (API side)
 
-| 模式 | 作法 | 何時 |
+| Pattern | How | When |
 |------|------|------|
-| **物件本身**（建議） | `Response.Tree = DepartmentTree`；到 `WireContracts` 註冊 | **新的 API 傳遞**；樣板 `GetDepartmentTreeResponse` |
-| **XML string**（歷史） | `Response.Xml = XmlCodec.Serialize(obj)`；client 端 `XmlCodec.Deserialize<T>` | **僅 define 物件**（`GetDefine` / `GetFormSchema`）——持久化格式借作 wire；新物件不走 |
+| **The object itself** (recommended) | `Response.Tree = DepartmentTree`; register in `WireContracts` | **New API transport**; sample `GetDepartmentTreeResponse` |
+| **XML string** (historical) | `Response.Xml = XmlCodec.Serialize(obj)`; `XmlCodec.Deserialize<T>` on the client | **Define objects only** (`GetDefine` / `GetFormSchema`): the persistence format borrowed as wire format; new objects do not use it |
 
-## 踩雷清單
+## Pitfalls
 
-1. **註冊面的四個雷**（忘了註冊、`Collection<T>` 與 `KeyedCollection<,>` 都要註冊、
-   base 型別註冊不涵蓋子型別、自訂 formatter 不得用非泛型 `Serialize(Type, ref writer, …)`）
-   → 全部見 `src/Polhem.Api.Core/CLAUDE.md` § 三個容易誤判的點。**共通症狀：桌面完全無感、
-   行動端才炸**，所以「桌面測起來沒事」不構成任何證據。
-2. **衍生 / index / owner 欄位少標一個軸 → 外洩或循環**：`[XmlIgnore, JsonIgnore]` 兩個一組。
-3. **型別白名單只用於 `object` 逃生門與 `ApiPayload.TypeName`**，且它表列的是**命名空間**
-   （`SysInfo.AllowedTypeNamespaces`）。**驗證 assembly-qualified name 一律用
-   `WireTypeWhitelist.IsAssemblyQualifiedNameAllowed`**，不要自己切字串——泛型參數的逗號排在
-   組件分隔之前，切第一個逗號會讓參數完全不受檢查（2026-08-11 修過一次未認證可達的繞過）。
-4. **序列化 process-wide 快取實例會污染來源**：`XmlCodec.Serialize(obj)` 透過
-   `IObjectSerialize.SetSerializeState` 在**來源物件**上翻旗標並遞迴到子集合（讓空集合 getter 在
-   序列化期間回 `null`，磁碟上的定義檔才不會有 `<Tables />` 這種多餘元素）。因此
-   **它不能當免費 deep clone**，要 mutate 快取取出的物件一律先 `Clone()`（見 `rules/definition.md`）。
-5. **lazy index 反序列化後要能重建**：序列化只帶扁平狀態，查詢 index 在還原後第一次查詢時
-   lazy 建（thread-safe）；index 本身不序列化。
-6. **Oracle Guid 讀回是 `byte[]`（RAW 16）**：`ValueUtilities.CGuid` 已支援 `byte[]` coerce；
-   自寫 raw DataTable 讀 Guid 欄時別用會落空的轉換。
-7. **JSON 自訂 converter 僅多型才需**：單一型別集合 `System.Text.Json` 直接列舉即可；
-   多型（如 `FilterNode`）才需 `JsonConverter`（見 `FilterNodeCollectionJsonConverter`）。
+1. **The four registration pitfalls** (forgetting to register; `Collection<T>` and `KeyedCollection<,>` both need
+   registering; registering a base type does not cover subtypes; custom formatters must not use the non-generic
+   `Serialize(Type, ref writer, …)`)
+   → all in `src/Polhem.Api.Core/CLAUDE.md` § Three easy misjudgments. **Common symptom: nothing at all on
+   desktop, it only blows up on mobile**, so "it tested fine on desktop" is no evidence of anything.
+2. **Derived / index / owner fields missing one axis → leakage or cycles**: `[XmlIgnore, JsonIgnore]` always go as a
+   pair.
+3. **The type whitelist is only for the `object` escape hatch and `ApiPayload.TypeName`**, and what it lists are
+   **namespaces** (`SysInfo.AllowedTypeNamespaces`). **Always validate an assembly-qualified name with
+   `WireTypeWhitelist.IsAssemblyQualifiedNameAllowed`**; do not split the string yourself. The commas of generic
+   arguments come before the assembly separator, so splitting on the first comma leaves the arguments completely
+   unchecked (an unauthenticated-reachable bypass was fixed on 2026-08-11).
+4. **Serializing a process-wide cached instance pollutes the source**: `XmlCodec.Serialize(obj)` flips flags **on the
+   source object** through `IObjectSerialize.SetSerializeState` and recurses into child collections (so that empty
+   collection getters return `null` during serialization, and definition files on disk do not carry redundant elements
+   such as `<Tables />`). Therefore **it cannot be used as a free deep clone**; to mutate an object taken from the
+   cache, always `Clone()` first (see `rules/definition.md`).
+5. **A lazy index must be rebuildable after deserialization**: serialization only carries the flat state; the lookup
+   index is built lazily (thread-safe) on the first lookup after restore; the index itself is not serialized.
+6. **An Oracle Guid reads back as `byte[]` (RAW 16)**: `ValueUtilities.CGuid` already supports coercing `byte[]`;
+   when reading a Guid column from a hand-written raw DataTable, do not use a conversion that would miss it.
+7. **A custom JSON converter is only needed for polymorphism**: `System.Text.Json` enumerates single-type collections
+   directly; only polymorphic ones (e.g. `FilterNode`) need a `JsonConverter` (see
+   `FilterNodeCollectionJsonConverter`).
 
-## 三棲 round-trip 測試樣板
+## Triple round-trip test template
 
 ```csharp
-// XML（持久化軸）— 放定義物件所在的 *.UnitTests
+// XML (persistence axis): put it in the *.UnitTests of the project that owns the definition object
 var xml = XmlCodec.Serialize(obj);
 var fromXml = XmlCodec.Deserialize<Foo>(xml)!;
 
-// JSON（傳輸軸）— 同上
+// JSON (transport axis): same place
 var json = JsonSerializer.Serialize(obj);
 var fromJson = JsonSerializer.Deserialize<Foo>(json)!;
 
-// MessagePack（傳輸軸）— 放 Polhem.Api.Core.UnitTests（codec 在那）
+// MessagePack (transport axis): put it in Polhem.Api.Core.UnitTests (the codec lives there)
 var bytes = MessagePackCodec.Serialize(obj);
 var fromMp = MessagePackCodec.Deserialize<Foo>(bytes)!;
 ```
 
-- **要比對還原後的值，不要只 `Assert.NotNull`**。用零資料物件 round-trip 再斷言非 null 是
-  名實不符的假綠燈——沒有東西可掉。正確範本 `tests/Polhem.Api.Core.UnitTests/TestFunc.cs`
-  （含 `comparedCount > 0` 防 helper 靜默退化）。
-- **集合成員要帶值測**。廣度測試（`ApiContractSerializationTests`）對 `IEnumerable` 一律填 `null`，
-  所以集合成員只有「空實例能 round-trip」的保證。
-- 空集合 / 單節點邊界各測一次。
-- **行動端閘門**：`dotnet test <專案> -c Release --settings .runsettings -p:DynamicCodeSupport=false`
-  ——預期零失敗。CI 對 `Polhem.Api.Core` / `Polhem.Definition` / `Polhem.Base` 三個專案跑同一關。
+- **Compare the restored values; do not just `Assert.NotNull`.** Round-tripping an object with no data and asserting
+  non-null is a false green that does not do what its name says: there is nothing to lose. Correct example:
+  `tests/Polhem.Api.Core.UnitTests/TestFunc.cs` (including `comparedCount > 0` to guard against the helper silently
+  degrading).
+- **Test collection members with values.** The breadth test (`ApiContractSerializationTests`) fills every
+  `IEnumerable` with `null`, so for collection members it only guarantees that "an empty instance can round-trip".
+- Test the empty-collection / single-node boundaries once each.
+- **Mobile gate**: `dotnet test <project> -c Release --settings .runsettings -p:DynamicCodeSupport=false`
+  (zero failures expected). CI runs the same gate on the `Polhem.Api.Core` / `Polhem.Definition` / `Polhem.Base`
+  projects.
 
-## 完整 checklist
+## Complete checklist
 
-- [ ] 定位用途：要持久化（XML）？要 API 傳遞（JSON/MessagePack）？還是三棲？
-- [ ] 物件：無參數 ctor + `[XmlAttribute]`/`[XmlElement]` + 衍生欄位 `[XmlIgnore, JsonIgnore]`
-- [ ] **定義層不帶 MessagePack 標註，也不加 `MessagePack` 的 `PackageReference`**
-- [ ] 集合：元素 `: CollectionItem` / `KeyCollectionItem`，集合 `: CollectionBase<T>` / `KeyCollectionBase<T>`
-- [ ] 集合只有一個 public `Add`、有無參數 ctor；`[XmlElement]` 對映的集合屬性有 public setter
-- [ ] **到 `WireContracts.<Axis>.cs` 註冊 contract**；集合註冊 `CollectionBaseFormatter<,>`；
-      新的封閉泛型具現補進 `WireContracts.Generics.cs`
-- [ ] `object` 成員的新值型別加進 `WireValueCode` 封閉集，不倚賴逃生門
-- [ ] 不對 `IDefineAccess.GetX(...)` 取得的快取實例做 mutate 或 `XmlCodec.Serialize`（要動先 `Clone()`）
-- [ ] round-trip 測試**比對值**（非只 `Assert.NotNull`），集合成員帶值，含空集合邊界
+- [ ] Identify the use: persistence (XML)? API transport (JSON/MessagePack)? Or all three?
+- [ ] Object: parameterless ctor + `[XmlAttribute]`/`[XmlElement]` + derived fields `[XmlIgnore, JsonIgnore]`
+- [ ] **The definition layer carries no MessagePack attributes and adds no `PackageReference` to `MessagePack`**
+- [ ] Collections: elements `: CollectionItem` / `KeyCollectionItem`, collections `: CollectionBase<T>` /
+      `KeyCollectionBase<T>`
+- [ ] The collection has only one public `Add` and a parameterless ctor; collection properties mapped by
+      `[XmlElement]` have a public setter
+- [ ] **Register the contract in `WireContracts.<Axis>.cs`**; register `CollectionBaseFormatter<,>` for collections;
+      add new closed generic instantiations to `WireContracts.Generics.cs`
+- [ ] New value types for `object` members are added to the closed `WireValueCode` set, without relying on the escape
+      hatch
+- [ ] No mutation or `XmlCodec.Serialize` on cached instances obtained from `IDefineAccess.GetX(...)` (`Clone()` first
+      if you need to change one)
+- [ ] Round-trip tests **compare values** (not just `Assert.NotNull`), collection members carry values, empty-collection
+      boundary included
 - [ ] `dotnet build Polhem.slnx -c Release --no-incremental` 0w/0e
-- [ ] `-p:DynamicCodeSupport=false` 閘門零失敗
+- [ ] The `-p:DynamicCodeSupport=false` gate has zero failures
 
-## 參考檔案（讀程式碼對著看）
+## Reference files (read them alongside the code)
 
-| 用途 | 檔案 |
+| Purpose | File |
 |------|------|
-| 三棲物件 + 集合樣板 | `src/Polhem.Definition/Organization/DepartmentTree.cs` / `DepartmentNode.cs` / `DepartmentNodeCollection.cs` |
-| 多型集合（含 JsonConverter） | `src/Polhem.Definition/Filters/FilterNodeCollection.cs` / `FilterGroup.cs` |
-| 集合基底 | `src/Polhem.Base/Collections/CollectionBase.cs` / `KeyCollectionBase.cs` / `CollectionItem.cs` / `KeyCollectionItem.cs` |
-| **wire 側全部**（註冊清單、formatter、resolver 鏈、`object` 封套、白名單、漂移閘門） | `src/Polhem.Api.Core/MessagePack/` —— **檔案清單見 `src/Polhem.Api.Core/CLAUDE.md`**，本檔不列 |
-| XML 持久化 codec | `src/Polhem.Base/Serialization/XmlCodec.cs` |
-| 序列化生命週期（SerializeState 傳播） | `src/Polhem.Base/Serialization/IObjectSerialize.cs` |
-| round-trip 測試樣板 | `tests/Polhem.Api.Core.UnitTests/TestFunc.cs`、`tests/Polhem.Api.Core.UnitTests/WireFormatterTests.cs` |
+| Triple-serializable object + collection sample | `src/Polhem.Definition/Organization/DepartmentTree.cs` / `DepartmentNode.cs` / `DepartmentNodeCollection.cs` |
+| Polymorphic collection (with JsonConverter) | `src/Polhem.Definition/Filters/FilterNodeCollection.cs` / `FilterGroup.cs` |
+| Collection bases | `src/Polhem.Base/Collections/CollectionBase.cs` / `KeyCollectionBase.cs` / `CollectionItem.cs` / `KeyCollectionItem.cs` |
+| **Everything on the wire side** (registration list, formatters, resolver chain, `object` envelope, whitelist, drift gate) | `src/Polhem.Api.Core/MessagePack/` (**for the file list see `src/Polhem.Api.Core/CLAUDE.md`**; not listed here) |
+| XML persistence codec | `src/Polhem.Base/Serialization/XmlCodec.cs` |
+| Serialization lifecycle (SerializeState propagation) | `src/Polhem.Base/Serialization/IObjectSerialize.cs` |
+| Round-trip test samples | `tests/Polhem.Api.Core.UnitTests/TestFunc.cs`, `tests/Polhem.Api.Core.UnitTests/WireFormatterTests.cs` |
 
-## 相關規範
+## Related rules
 
-本 skill 是「設計一個三棲物件」的操作面；三個權威來源各管一段，**細節一律回去讀，不在此複寫**：
+This skill is the operational side of "designing a triple-serializable object". Three authoritative sources each own
+one part; **always go back and read them for details; they are not copied here**:
 
-| 來源 | 管什麼 | 載入方式 |
+| Source | Owns | How it is loaded |
 |------|--------|---------|
-| `rules/serialization.md` | wire 綁定的硬性規則（body codec 逐請求協商、定義層不得引入傳輸套件） | 常駐 |
-| `src/Polhem.Api.Core/CLAUDE.md` | **wire 註冊程序、誤判點、`object` 封套、AOT 實測與回歸閘門** | 觸及該專案時 |
-| `rules/apple-mobile-trim.md` | 行動端 trim / AOT 的完整脈絡與型別形狀要件 | 常駐 |
-| `rules/definition.md` + `src/Polhem.Definition/CLAUDE.md` | 定義層集合基底、cache 不可異動、setter 寫法 | 常駐 / 觸及時 |
+| `rules/serialization.md` | Hard rules for wire binding (per-request body codec negotiation, the definition layer must not bring in transport packages) | Always loaded |
+| `src/Polhem.Api.Core/CLAUDE.md` | **Wire registration procedure, misjudgment points, `object` envelope, AOT measurements and regression gates** | When that project is touched |
+| `rules/apple-mobile-trim.md` | Full context for mobile trim / AOT and the type-shape requirements | Always loaded |
+| `rules/definition.md` + `src/Polhem.Definition/CLAUDE.md` | Definition-layer collection bases, cache immutability, how to write setters | Always loaded / when touched |

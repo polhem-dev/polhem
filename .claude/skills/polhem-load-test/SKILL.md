@@ -1,17 +1,18 @@
 ---
 name: polhem-load-test
-description: 用 tools/Polhem.LoadTests 對 polhem 框架跑壓測並判讀結果——前置檢查（容器、連線字串、prepare）、Local / Remote 兩種模式、以及「數字什麼時候不能信」的判讀紀律（參數過小、錯誤數被忽略、封閉模型的尾延遲盲點、Remote 量不到快取）。當使用者要「跑壓測」、「壓力測試」、「load test」、「量效能」、「效能測試」、「這樣改會不會變慢」、「量一下吞吐 / 延遲」之類需求時使用。**只負責執行與判讀，不負責調優**；也不為了讓數字好看而改參數或原始碼。
+description: Run load tests against the polhem framework with tools/Polhem.LoadTests and interpret the results — pre-flight checks (containers, connection strings, prepare), the Local / Remote modes, and the discipline of "when the numbers cannot be trusted" (parameters too small, error counts ignored, the closed model's blind spot for tail latency, Remote cannot measure the cache). Use when the user wants to "run a load test", "stress test", "load test", "measure performance", "performance test", "will this change make it slower", "measure throughput / latency", and similar requests. **Only runs and interprets; does not tune.** It also does not change parameters or source code to make the numbers look good.
 ---
 
-# polhem 壓測執行
+# polhem load test execution
 
-**操作與規範的權威來源是 `docs/repo-ops/load-testing.md`**，設定項清單是
-`tools/Polhem.LoadTests/loadtest.sample.json`（每項都有註解），旗標是 `--help`。
-本檔不複寫那些，只放**執行時的判斷與紀律**——也就是 agent 最容易做錯的部分。
+**The authoritative source for operation and policy is `docs/repo-ops/load-testing.md`**, the list of settings is
+`tools/Polhem.LoadTests/loadtest.sample.json` (every item is commented), and the flags are `--help`.
+This file does not duplicate those; it holds only **the judgement and discipline needed while running** — that is,
+the part an agent most easily gets wrong.
 
 ---
 
-## 1. 前置檢查（照順序，不可跳）
+## 1. Pre-flight checks (in order, do not skip)
 
 ### Docker daemon
 
@@ -19,100 +20,111 @@ description: 用 tools/Polhem.LoadTests 對 polhem 框架跑壓測並判讀結�
 docker ps
 ```
 
-失敗時**告知使用者啟動 Docker Desktop，不要自行 `open -a Docker`**。
-容器存在但 stopped 也不要自行 `docker run` 創新的——image 版本 / port / volume 都有約束。
+On failure, **tell the user to start Docker Desktop; do not run `open -a Docker` yourself**.
+If the container exists but is stopped, do not `docker run` a new one yourself either — image version / port / volume
+all have constraints.
 
-### 連線字串
+### Connection string
 
-console app **不讀 `.runsettings`**，必須用環境變數：
+The console app **does not read `.runsettings`**; you must use environment variables:
 
 ```bash
 export POLHEM_TEST_CONNSTR_SQLSERVER='...'
 ```
 
-值可從 `.runsettings` 取。缺少時工具的錯誤訊息會寫明變數名與補救方式，照它做即可。
+The value can be taken from `.runsettings`. When it is missing, the tool's error message names the variable and how to
+fix it; just follow it.
 
 ### prepare
 
-第一次、或改了 `seed.rowCount` / `auth.userPoolSize` 後要跑：
+Run it the first time, or after changing `seed.rowCount` / `auth.userPoolSize`:
 
 ```bash
 dotnet run --project tools/Polhem.LoadTests -c Release -- prepare
 ```
 
-它是冪等的，重跑安全。
+It is idempotent; re-running is safe.
 
-## 2. 執行
+## 2. Running
 
-Local（量 BO + Repository + DB）：
+Local (measures BO + Repository + DB):
 
 ```bash
 dotnet run --project tools/Polhem.LoadTests -c Release -- run --vu 20 --duration 120
 ```
 
-Remote 需要兩個終端機，先 `serve` 再 `run --mode Remote --endpoint ...`；
-完整命令見 `docs/repo-ops/load-testing.md`。
+Remote needs two terminals: first `serve`, then `run --mode Remote --endpoint ...`;
+the full commands are in `docs/repo-ops/load-testing.md`.
 
-## 3. 判讀紀律
+## 3. Interpretation discipline
 
-**這一節是本 skill 存在的理由。** 前面兩節照文件做就好，這一節是拿到數字之後的事。
+**This section is the reason this skill exists.** For the previous two sections, just follow the docs; this section is
+about what comes after you have the numbers.
 
-### 先看錯誤欄，再看延遲
+### Look at the error column first, then latency
 
-一份半數呼叫快速失敗的報告，延遲會非常漂亮。**回報結果時錯誤數與延遲必須並列**，
-不可只摘延遲。實際發生過：Login 全數失敗那一輪的延遲欄全是 0。
+A report in which half the calls fail fast will have very pretty latency. **When reporting results, error counts and
+latency must be shown side by side**; never summarise latency alone. This has happened: in the run where every Login
+failed, the latency columns were all 0.
 
-錯誤型別名不足以診斷時，報告的 `ErrorSamples` 每型別留了一則訊息，先讀那個。
+When the error type name is not enough to diagnose, the report's `ErrorSamples` keeps one message per type; read that
+first.
 
-### 參數過小的數字不能下結論
+### Numbers from parameters that are too small support no conclusion
 
-`--vu 4 --duration 5` 是驗證「跑得動」用的，不是拿來下結論的。
-要回答「這樣改會不會變慢」，VU 與時長都要足以讓數字穩定，並且**同一組參數跑對照組**。
+`--vu 4 --duration 5` is for checking "it runs", not for drawing conclusions.
+To answer "will this change make it slower", VU count and duration must both be large enough for the numbers to
+stabilise, and **run the control group with the same parameters**.
 
-**單獨一次 run 的絕對數字幾乎沒有意義**——有意義的是同機器、同參數、改動前後的對照。
+**The absolute numbers from a single run mean almost nothing** — what means something is a before/after comparison on
+the same machine with the same parameters.
 
-### 封閉模型看不到尾延遲崩潰
+### The closed model cannot see tail-latency collapse
 
-預設每個 VU 等前一次回來才發下一次，送出速率會隨系統變慢而下降。
-因此**它不會顯示開放模型找得到的飽和點**。要找飽和點得換模型，不要拿封閉模型的
-p99 宣稱「系統在這個負載下沒問題」。
+By default each VU waits for its previous call to return before sending the next, so the send rate drops as the system
+slows. Therefore **it will not show the saturation point that an open model can find**. To find the saturation point
+you must switch models; do not use the closed model's p99 to claim "the system is fine at this load".
 
-### Remote 量不到快取
+### Remote cannot measure the cache
 
-計數 provider 在驅動程式的 process，被操作的快取在伺服端。報告會標 `Not observed`，
-**那是「沒量到」不是「命中率 0%」**。要量快取行為改用 Local 模式。
+The counting provider lives in the driver's process, while the cache being exercised is on the server. The report marks
+it `Not observed`; **that means "not measured", not "0% hit rate"**. To measure cache behaviour, use Local mode.
 
-### 報告要連中繼資料一起保存
+### Save reports together with their metadata
 
-報告寫到已 gitignore 的 `artifacts/loadtest/`。值得留的複製到 `docs/repo-ops/`，
-**連中繼資料區一起複製**——只摘延遲數字的話，之後沒人知道那是什麼條件下量的。
+Reports are written to the gitignored `artifacts/loadtest/`. Copy the ones worth keeping to `docs/repo-ops/`,
+**together with the metadata section** — if only the latency numbers are excerpted, nobody will later know under what
+conditions they were measured.
 
-寫法一律是「當時量到什麼」，**不得寫成「本框架吞吐為 X」**（複寫必漂，見
-`~/.claude/rules/single-source.md`）。
+Always write it as "what was measured at the time"; **never write "the framework's throughput is X"** (a copy always
+drifts; see `.claude/rules/single-source.md`).
 
-## 4. 常見失敗與處理
+## 4. Common failures and how to handle them
 
-| 症狀 | 原因與處理 |
-|------|-----------|
-| `Environment variable 'POLHEM_TEST_CONNSTR_*' is not set` | 沒 export；照訊息設定 |
-| 大量 `HttpRequestException` 401 | Remote 模式缺 `X-Api-Key`；設定的 `target.apiKey` 沒帶到 |
-| 場景全數失敗且訊息指向 DI 解析 | backend 起不來，先跑 `verify` 隔離問題 |
-| `Unknown scenario 'X'` | 設定檔場景名打錯。**這是刻意不跳過的**——靜默略過會產出看起來完整的報告 |
-| 容器沒起來 | 見前置檢查；**不要改測試或原始碼讓它「過」** |
-| `has no {@DbName} placeholder` | 該 provider 的連線字串無法用資料庫名隔離，壓測會寫進單元測試的 schema，故直接拒絕。**不要繞過**——照訊息設 `POLHEM_LOADTEST_CONNSTR_*` 指向專用 schema |
+| Symptom | Cause and handling |
+|---------|--------------------|
+| `Environment variable 'POLHEM_TEST_CONNSTR_*' is not set` | Not exported; set it as the message says |
+| Many `HttpRequestException` 401 | Remote mode is missing `X-Api-Key`; the configured `target.apiKey` was not sent |
+| Every scenario fails and the message points at DI resolution | The backend cannot start; run `verify` first to isolate the problem |
+| `Unknown scenario 'X'` | Scenario name misspelled in the settings file. **This is deliberately not skipped** — silently skipping would produce a report that looks complete |
+| Container not up | See the pre-flight checks; **do not change tests or source code to make it "pass"** |
+| `has no {@DbName} placeholder` | That provider's connection string cannot be isolated by database name, so the load test would write into the unit tests' schema; it is therefore rejected outright. **Do not work around it** — as the message says, set `POLHEM_LOADTEST_CONNSTR_*` to point at a dedicated schema |
 
-`verify` 指令會起 backend、解析服務、讀一份 FormSchema 再拆掉，用來把
-「backend 有問題」與「場景有問題」分開。
+The `verify` command starts the backend, resolves services, reads one FormSchema and tears it down, to separate
+"the backend has a problem" from "the scenario has a problem".
 
-## 5. 不做什麼
+## 5. What this skill does not do
 
-- **不為了讓數字好看而調參數或改原始碼。** 數字難看是訊號，不是要消除的東西。
-- **不把壓測放進 CI。** runner 噪音太大，當閘門只會製造 flaky。
-- **不跑 SQLite。** 設定驗證會直接拒絕，理由見文件；不要為了「能跑」而繞過。
-- **不負責調優。** 量出瓶頸後要不要調、怎麼調，是後續決策，回報給使用者判斷。
+- **Does not tune parameters or change source code to make the numbers look good.** Ugly numbers are a signal, not
+  something to eliminate.
+- **Does not put load tests in CI.** Runner noise is too high; as a gate it would only create flakiness.
+- **Does not run SQLite.** Settings validation rejects it outright; the reason is in the docs. Do not work around it just
+  to "make it run".
+- **Does not tune.** Once a bottleneck is measured, whether and how to tune it is a later decision; report back to the
+  user to decide.
 
-## 相關
+## Related
 
-- `docs/repo-ops/load-testing.md` —— 操作與規範的權威來源，含已知限制
-- `tools/Polhem.LoadTests/loadtest.sample.json` —— 設定項的權威來源
-- `.claude/rules/testing.md` —— 單元測試規範（與壓測無關，勿混用）
+- `docs/repo-ops/load-testing.md` — the authoritative source for operation and policy, including known limitations
+- `tools/Polhem.LoadTests/loadtest.sample.json` — the authoritative source for settings
+- `.claude/rules/testing.md` — unit test policy (unrelated to load testing; do not mix them up)

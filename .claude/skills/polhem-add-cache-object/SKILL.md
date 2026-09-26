@@ -1,101 +1,102 @@
 ---
 name: polhem-add-cache-object
-description: polhem 新增框架快取物件的完整跨檔流程，分兩類——Define 定義快取（來源是定義檔，經 IDefineAccess）與 Database 資料庫相依快取（來源是 DB，經 ICacheDataSourceProvider 自載 + cache-notify 失效）。含 ObjectCache vs KeyObjectCache 決策樹、ICacheContainer + CacheContainerService 兩處同步（漏補必 CS0535）、DI 相依環的延遲解析與 cache-notify 失效鏈。當使用者要「新增快取物件」、「加一個 cache」、「快取某定義 / 資料庫資料」、「KeyObjectCache / ObjectCache」、「cache-notify 失效」、「判權限/查設定要零 DB」之類需求時使用。
+description: The full cross-file procedure for adding a framework cache object to polhem, in two kinds — the Define cache (source is a definition file, through IDefineAccess) and the Database-dependent cache (source is the DB, self-loaded through ICacheDataSourceProvider + invalidated by cache-notify). Includes the ObjectCache vs KeyObjectCache decision tree, keeping ICacheContainer + CacheContainerService in sync (missing one always gives CS0535), deferred resolution for the DI dependency cycle, and the cache-notify invalidation chain. Use when the user wants to "add a cache object", "add a cache", "cache some definition / database data", "KeyObjectCache / ObjectCache", "cache-notify invalidation", "permission checks / settings lookups with zero DB hits", or similar requests.
 ---
 
-# polhem 新增快取物件
+# polhem: add a cache object
 
-polhem 的快取分**兩類**，來源與失效機制不同，檔案鏈也不同。先用決策樹定位，再照對應路徑走。每條路徑都會動到 `ICacheContainer` + `CacheContainerService` + 兩個 `CacheNotify` 測試 stub——這三點漏一個就 `CS0535` build 失敗（個別專案 build 抓不到，**只有 `dotnet build Polhem.slnx` 複現 CI strict build 才會現**）。
+polhem has **two kinds** of cache. They differ in source and invalidation mechanism, and their file chains differ too. Locate yours with the decision tree first, then follow the matching path. Every path touches `ICacheContainer` + `CacheContainerService` + two `CacheNotify` test stubs; miss any one of these three and the build fails with `CS0535` (building an individual project does not catch it; **it only shows up when `dotnet build Polhem.slnx` reproduces the CI strict build**).
 
-> 樣板對照（讀程式碼時對著看）：
-> - Define 快取（single）：`PermissionModelsCache`（`ObjectCache<PermissionModels>`）
-> - Define 快取（keyed）：`FormSchemaCache`（`KeyObjectCache<FormSchema>`，by progId）
-> - Database 快取（keyed）：`CompanyRolePermissionsCache` / `CompanyInfoCache`（`KeyObjectCache<T>`，by id，`CreateInstance` 經 `ICacheDataSourceProvider` 自載）
+> Templates to compare against (keep them open while reading code):
+> - Define cache (single): `PermissionModelsCache` (`ObjectCache<PermissionModels>`)
+> - Define cache (keyed): `FormSchemaCache` (`KeyObjectCache<FormSchema>`, by progId)
+> - Database cache (keyed): `CompanyRolePermissionsCache` / `CompanyInfoCache` (`KeyObjectCache<T>`, by id, `CreateInstance` self-loads through `ICacheDataSourceProvider`)
 
-## 決策樹
+## Decision tree
 
-### 第一刀：資料來源是什麼？
+### First cut: what is the data source?
 
-| 來源 | 類別 | 資料夾 | 失效機制 | 樣板 |
+| Source | Kind | Folder | Invalidation mechanism | Template |
 |------|------|--------|---------|------|
-| **定義檔**（XML，經 `IDefineAccess`） | **Define 快取** | `Polhem.ObjectCaching/Define/` | `CreateInstance` 自載；`SaveDefine` 時清 | `PermissionModelsCache` / `FormSchemaCache` |
-| **資料庫**（runtime 資料） | **Database 快取** | `Polhem.ObjectCaching/Database/` | `CreateInstance` 經 `ICacheDataSourceProvider` 自載；cache-notify 輪詢清 | `CompanyRolePermissionsCache` / `CompanyInfoCache` |
+| **Definition file** (XML, through `IDefineAccess`) | **Define cache** | `Polhem.ObjectCaching/Define/` | `CreateInstance` self-loads; cleared on `SaveDefine` | `PermissionModelsCache` / `FormSchemaCache` |
+| **Database** (runtime data) | **Database cache** | `Polhem.ObjectCaching/Database/` | `CreateInstance` self-loads through `ICacheDataSourceProvider`; cleared by cache-notify polling | `CompanyRolePermissionsCache` / `CompanyInfoCache` |
 
-### 第二刀：single 還是 keyed？（兩類都適用）
+### Second cut: single or keyed? (applies to both kinds)
 
-| 基類 | 語意 | 範例 |
+| Base class | Meaning | Examples |
 |------|------|------|
-| `ObjectCache<T>` | **整份只有一個物件**（無 key） | `SystemSettings` / `DatabaseSettings` / `ProgramSettings` / `PermissionModels` |
-| `KeyObjectCache<T>` | **多個實例，by key**（progId / company id / token） | `FormSchema` / `TableSchema`（by progId）、`CompanyInfo` / `SessionInfo` / `CompanyRolePermissions`（by id） |
+| `ObjectCache<T>` | **Exactly one object for the whole thing** (no key) | `SystemSettings` / `DatabaseSettings` / `ProgramSettings` / `PermissionModels` |
+| `KeyObjectCache<T>` | **Many instances, by key** (progId / company id / token) | `FormSchema` / `TableSchema` (by progId), `CompanyInfo` / `SessionInfo` / `CompanyRolePermissions` (by id) |
 
-- `KeyObjectCache<T>` 要求 `T` 實作 `IKeyObject`（`string GetKey()`）。
-- **兩類的 `CreateInstance(key)` 都自載**：Define 快取從 `IDefineAccess` 取，Database 快取經
-  `ICacheDataSourceProvider` 取。差別只在資料來源與失效機制，不在載入位置。
+- `KeyObjectCache<T>` requires `T` to implement `IKeyObject` (`string GetKey()`).
+- **In both kinds `CreateInstance(key)` self-loads**: the Define cache takes from `IDefineAccess`, the Database cache
+  goes through `ICacheDataSourceProvider`. The difference is only the data source and the invalidation mechanism,
+  not where loading happens.
 
-> **2026-07-29 起的慣例變更**：Database 快取原本一律 `CreateInstance => null`、由 service 做
-> 「`Get` 落空 → repository → `Set` 回填」。該寫法等於在每個 service 手刻一份 read-through，
-> 且繞過 base class 已內建的負向快取。現已全數改為自載——`CompanyInfoCache` /
-> `CompanyRolePermissionsCache` / `DepartmentTreeCache` 皆是。
-> **新增快取請勿再沿用 `=> null` 的舊樣板**（`SessionInfoCache` 仍回 `null`，那是尚未接上
-> 持久化的待辦，不是樣板）。
-
----
-
-## 路徑 A：Define 定義快取
-
-來源是定義檔、經 `IDefineAccess` 取用。新增一個（如線 A 的 `PermissionModels`）跨 **Definition + ObjectCaching** 兩專案。
-
-### 檔案鏈
-
-| # | 檔案 | 慣例 |
-|---|------|------|
-| 1 | `src/Polhem.Definition/<Area>/<Name>.cs` | POCO 定義類；keyed 版實作 `IKeyObject` |
-| 2 | `src/Polhem.Definition/DefineType.cs` | 加 enum 值 `<Name>` |
-| 3 | `src/Polhem.Definition/DefineTypeExtensions.cs` | 映射 `{ DefineType.<Name>, "<full type name>" }` |
-| 4 | `src/Polhem.Definition/PathOptions.cs` | 加 `Get<Name>FilePath()` |
-| 5 | `src/Polhem.Definition/Storage/IDefineAccess.cs` | 加 DIM `<Name> Get<Name>() => (<Name>)GetDefine(DefineType.<Name>);` |
-| 6 | `src/Polhem.ObjectCaching/Define/<Name>Cache.cs` | `: ObjectCache<T>`（single）或 `: KeyObjectCache<T>`（keyed），`CreateInstance` 從 `DefineAccess` 載 |
-| 7 | `src/Polhem.ObjectCaching/CacheDefineAccess.cs`（伺服端）、`src/Polhem.Api.Client/ClientDefineAccess.cs`（用戶端） | 如該定義兩端都要取用。（2026-08-06 覆核：舊的 `LocalDefineAccess` / `RemoteDefineAccess` 已不存在）|
-| 8 | `src/Polhem.ObjectCaching/ICacheContainer.cs` | 加 `<Name>Cache <Name> { get; }` |
-| 9 | `src/Polhem.ObjectCaching/CacheContainerService.cs` | **兩處**（見下方共用段） |
-| 10 | 兩個測試 stub | **必補**（見下方共用段） |
-
-- DIM（default interface method）讓既有 `IDefineAccess` 實作者免改。
-- `DefineTypeExtensions` 映射的 type name 要與 POCO 全名一致（反序列化用）。
+> **Convention change since 2026-07-29**: Database caches used to be `CreateInstance => null` across the board, with the
+> service doing "`Get` misses → repository → `Set` to backfill". That amounted to hand-writing a read-through in every
+> service, and it bypassed the negative caching already built into the base class. All of them now self-load:
+> `CompanyInfoCache` / `CompanyRolePermissionsCache` / `DepartmentTreeCache` all do.
+> **Do not reuse the old `=> null` template for a new cache** (`SessionInfoCache` still returns `null`; that is a
+> pending item waiting for persistence to be wired up, not a template).
 
 ---
 
-## 路徑 B：Database 資料庫相依快取
+## Path A: Define cache
 
-來源是資料庫、runtime 載入、靠 cache-notify 失效。目的通常是「**判定/查詢零 DB**」（如線 B 判權限完全走快取）。新增一個（如 `CompanyRolePermissions`）跨 **Definition + ObjectCaching + Repository + Hosting**。
+The source is a definition file, accessed through `IDefineAccess`. Adding one (such as line A's `PermissionModels`) spans the **Definition + ObjectCaching** projects.
 
-### 檔案鏈
+### File chain
 
-| # | 檔案 | 慣例 |
+| # | File | Convention |
 |---|------|------|
-| 1 | `src/Polhem.Definition/<Area>/<Name>.cs` | POCO 實作 `IKeyObject`（`GetKey() => <CacheKey>`）；純資料 + 查詢方法，無 DB |
-| 2 | `src/Polhem.Definition/ICacheDataSourceProvider.cs` | 加取數方法 `<T>? Get<Name>(string key)`——**必須回傳 `Polhem.Definition` 的型別**（見下方相依限制） |
-| 3 | `src/Polhem.Business/Providers/CacheDataSourceProvider.cs` | 實作該方法：由 `IRepositoryFactory` 取 repository、組裝 POCO |
-| 4 | `src/Polhem.ObjectCaching/Database/<Name>Cache.cs` | `: KeyObjectCache<T>`，`CreateInstance` 呼叫 provider（見樣板） |
-| 5 | `src/Polhem.Definition/<Area>/I<Name>Service.cs` | `Get(string key)` / `Remove(string key)`——上層不必相依 `Polhem.ObjectCaching` 的分層邊界 |
-| 6 | `src/Polhem.ObjectCaching/Services/<Name>Service.cs` | **單行委派**到 cache；載入邏輯不在這裡 |
-| 7 | `src/Polhem.Repository.Abstractions/.../I<X>Repository.cs` + `src/Polhem.Repository/.../<X>Repository.cs` | 資料來源（DB 讀取）；**同時在 `IRepositoryFactory` 加對應的 `Create<T>()` 解析** |
-| 8 | `src/Polhem.ObjectCaching/ICacheContainer.cs` | 加 `<Name>Cache <Name> { get; }` |
-| 9 | `src/Polhem.ObjectCaching/CacheContainerService.cs` | **兩處**（見下方共用段）；ctor 把 `dataSource` 傳給新 cache |
-| 10 | `src/Polhem.Hosting/PolhemFrameworkServiceCollectionExtensions.cs` | 只註冊 service；**不要**逐一註冊 repository（見下方） |
-| 11 | 兩個測試 stub | **必補**（見下方共用段） |
-| (12) | cache-notify bump 點 | 寫配置的 BO/Repository 在**同 transaction** `ICacheNotifyService.Touch(cacheKey, tx, dbType)`（見下方） |
+| 1 | `src/Polhem.Definition/<Area>/<Name>.cs` | POCO definition class; the keyed variant implements `IKeyObject` |
+| 2 | `src/Polhem.Definition/DefineType.cs` | Add the enum value `<Name>` |
+| 3 | `src/Polhem.Definition/DefineTypeExtensions.cs` | Map `{ DefineType.<Name>, "<full type name>" }` |
+| 4 | `src/Polhem.Definition/PathOptions.cs` | Add `Get<Name>FilePath()` |
+| 5 | `src/Polhem.Definition/Storage/IDefineAccess.cs` | Add the DIM `<Name> Get<Name>() => (<Name>)GetDefine(DefineType.<Name>);` |
+| 6 | `src/Polhem.ObjectCaching/Define/<Name>Cache.cs` | `: ObjectCache<T>` (single) or `: KeyObjectCache<T>` (keyed); `CreateInstance` loads from `DefineAccess` |
+| 7 | `src/Polhem.ObjectCaching/CacheDefineAccess.cs` (server side), `src/Polhem.Api.Client/ClientDefineAccess.cs` (client side) | If both sides need to read the definition. (Rechecked 2026-08-06: the old `LocalDefineAccess` / `RemoteDefineAccess` no longer exist) |
+| 8 | `src/Polhem.ObjectCaching/ICacheContainer.cs` | Add `<Name>Cache <Name> { get; }` |
+| 9 | `src/Polhem.ObjectCaching/CacheContainerService.cs` | **Two places** (see the shared section below) |
+| 10 | Two test stubs | **Must be added** (see the shared section below) |
 
-### 相依限制：為何取數方法要回傳 domain 型別
+- The DIM (default interface method) means existing `IDefineAccess` implementers need no changes.
+- The type name mapped in `DefineTypeExtensions` must match the POCO's full name (used for deserialization).
 
-`ICacheDataSourceProvider` 位於 `Polhem.Definition`，而 `Polhem.Repository.Abstractions`
-**反向相依** `Polhem.Definition`（`ICompanyRepository.GetById` 回傳 `CompanyInfo`）。
-若取數方法回傳 repository 型別，`Polhem.Definition` 就得引用 `Polhem.Repository.Abstractions`
-→ **專案循環參考，編譯不過**。
+---
 
-所以：POCO 放 `Polhem.Definition`，provider 回傳該 POCO，`Polhem.ObjectCaching` 只看得到介面。
+## Path B: Database-dependent cache
 
-### Cache 樣板（path B）
+The source is the database; it is loaded at runtime and invalidated by cache-notify. The goal is usually "**checks / lookups with zero DB hits**" (for example line B, where permission checks run entirely from the cache). Adding one (such as `CompanyRolePermissions`) spans **Definition + ObjectCaching + Repository + Hosting**.
+
+### File chain
+
+| # | File | Convention |
+|---|------|------|
+| 1 | `src/Polhem.Definition/<Area>/<Name>.cs` | POCO implementing `IKeyObject` (`GetKey() => <CacheKey>`); pure data + query methods, no DB |
+| 2 | `src/Polhem.Definition/ICacheDataSourceProvider.cs` | Add a data-fetch method `<T>? Get<Name>(string key)`; it **must return a `Polhem.Definition` type** (see the dependency constraint below) |
+| 3 | `src/Polhem.Business/Providers/CacheDataSourceProvider.cs` | Implement the method: get the repository from `IRepositoryFactory` and assemble the POCO |
+| 4 | `src/Polhem.ObjectCaching/Database/<Name>Cache.cs` | `: KeyObjectCache<T>`; `CreateInstance` calls the provider (see the template) |
+| 5 | `src/Polhem.Definition/<Area>/I<Name>Service.cs` | `Get(string key)` / `Remove(string key)`; the layer boundary that keeps upper layers from depending on `Polhem.ObjectCaching` |
+| 6 | `src/Polhem.ObjectCaching/Services/<Name>Service.cs` | **Single-line delegation** to the cache; loading logic is not here |
+| 7 | `src/Polhem.Repository.Abstractions/.../I<X>Repository.cs` + `src/Polhem.Repository/.../<X>Repository.cs` | The data source (DB reads); **also add the matching `Create<T>()` resolution to `IRepositoryFactory`** |
+| 8 | `src/Polhem.ObjectCaching/ICacheContainer.cs` | Add `<Name>Cache <Name> { get; }` |
+| 9 | `src/Polhem.ObjectCaching/CacheContainerService.cs` | **Two places** (see the shared section below); the ctor passes `dataSource` to the new cache |
+| 10 | `src/Polhem.Hosting/PolhemFrameworkServiceCollectionExtensions.cs` | Register only the service; do **not** register repositories one by one (see below) |
+| 11 | Two test stubs | **Must be added** (see the shared section below) |
+| (12) | cache-notify bump point | The BO/Repository that writes the configuration calls `ICacheNotifyService.Touch(cacheKey, tx, dbType)` in the **same transaction** (see below) |
+
+### Dependency constraint: why the data-fetch method returns a domain type
+
+`ICacheDataSourceProvider` lives in `Polhem.Definition`, while `Polhem.Repository.Abstractions`
+**depends back on** `Polhem.Definition` (`ICompanyRepository.GetById` returns `CompanyInfo`).
+If the data-fetch method returned a repository type, `Polhem.Definition` would have to reference
+`Polhem.Repository.Abstractions` → **a circular project reference that does not compile**.
+
+So: the POCO goes in `Polhem.Definition`, the provider returns that POCO, and `Polhem.ObjectCaching` only sees the interface.
+
+### Cache template (path B)
 
 ```csharp
 namespace Polhem.ObjectCaching.Database
@@ -122,16 +123,17 @@ namespace Polhem.ObjectCaching.Database
 }
 ```
 
-**兩個容易踩的形狀約束**：
+**Two shape constraints that are easy to trip over**:
 
-- **帶 `dataSource` 的建構式必須 `internal`**。若做成 public，`RS0026` / `RS0027` 會擋下——
-  不允許兩個 public 多載都帶選擇性參數，且帶選擇性參數者必須是參數最多的多載。
-  `CacheContainerService` 同組件，`internal` 即足夠，且公開表面不變動。
-- **`dataSource` 必須是 `Func<T>` 而非實例**（見下方 DI 段的相依環）。
+- **The constructor that takes `dataSource` must be `internal`.** If it is public, `RS0026` / `RS0027` block it:
+  two public overloads may not both have optional parameters, and the one with optional parameters must be the overload
+  with the most parameters. `CacheContainerService` is in the same assembly, so `internal` is enough, and the public
+  surface does not change.
+- **`dataSource` must be a `Func<T>`, not an instance** (see the dependency cycle in the DI section below).
 
-### Service 樣板（path B）
+### Service template (path B)
 
-載入邏輯已在 cache，service 收斂為分層邊界上的單行委派：
+The loading logic is already in the cache, so the service reduces to a single-line delegation on the layer boundary:
 
 ```csharp
 public class <Name>Service : I<Name>Service
@@ -146,29 +148,31 @@ public class <Name>Service : I<Name>Service
 }
 ```
 
-> service 看似純 facade，但介面定義在 `Polhem.Definition`，讓 `Polhem.Business` / `Polhem.Repository`
-> 等上層不必相依 `Polhem.ObjectCaching`——是分層邊界，不是 code-style 要消除的 1-line wrapper。
+> The service looks like a pure facade, but its interface is defined in `Polhem.Definition`, so upper layers such as
+> `Polhem.Business` / `Polhem.Repository` need not depend on `Polhem.ObjectCaching`. It is a layer boundary, not the
+> 1-line wrapper that code-style wants removed.
 
-### DI 註冊（path B，`PolhemFrameworkServiceCollectionExtensions.cs`）
+### DI registration (path B, `PolhemFrameworkServiceCollectionExtensions.cs`)
 
 ```csharp
-// service：只吃 ICacheContainer
+// service: takes only ICacheContainer
 services.AddSingleton<I<Name>Service>(sp =>
     new <Name>Service(sp.GetRequiredService<ICacheContainer>()));
 ```
 
-**不要**為新 repository 加 `services.AddSingleton<I<X>Repository>(...)`——消費端一律經
-`IRepositoryFactory` 按需取得（與 `IRepositoryFactory.CreateFormRepository<T>` 用 progId 產生表單 repository
-同一慣例）。逐一註冊會讓每個新系統表變成「工廠方法 + DI 註冊 + 消費端 ctor 參數」三處編輯。
+Do **not** add `services.AddSingleton<I<X>Repository>(...)` for a new repository. Consumers always obtain it on demand
+through `IRepositoryFactory` (the same convention as `IRepositoryFactory.CreateFormRepository<T>` producing a form
+repository by progId). Registering each one would turn every new system table into three edits: "factory method + DI
+registration + consumer ctor parameter".
 
-**相依環（務必理解，否則 `AddPolhemFramework` 解析即死結）**：
+**The dependency cycle (you must understand this, or resolving `AddPolhemFramework` deadlocks)**:
 
 ```
 ICacheContainer → ICacheDataSourceProvider → IRepositoryFactory → IDefineAccess → ICacheContainer
 ```
 
-`CacheDefineAccess` 吃 `ICacheContainer`，環因此閉合。解法是容器**以 method group 傳入延遲工廠**，
-第一次 cache miss 才解析：
+`CacheDefineAccess` takes `ICacheContainer`, which closes the cycle. The fix is for the container to **receive a deferred
+factory as a method group**, resolved only on the first cache miss:
 
 ```csharp
 services.AddSingleton<ICacheContainer>(sp =>
@@ -176,125 +180,128 @@ services.AddSingleton<ICacheContainer>(sp =>
         sp.GetRequiredService<IDefineStorage>(),
         sp.GetRequiredService<PathOptions>(),
         string.Empty,
-        sp.GetRequiredService<ICacheDataSourceProvider>));   // 注意：無括號，不即時解析
+        sp.GetRequiredService<ICacheDataSourceProvider>));   // NOTE: no parentheses, not resolved immediately
 ```
 
-### cache-notify 失效鏈（path B）
+### cache-notify invalidation chain (path B)
 
-失效**基礎設施已備好**，新增 cache 自動掛上——**不需要把 cache 註冊進任何地方**：
+The invalidation **infrastructure is already in place**, and a new cache hooks into it automatically. **You do not need
+to register the cache anywhere**:
 
-1. `KeyObjectCache<T>` 的 `GetCacheKey(key)` = `cachePrefix + CacheGroup + ":" + key`；`CacheGroup` 預設 `typeof(T).Name`。
-2. poller 輪詢 common 的 cache-notify 表，把觀察到的版本號寫進 `CacheInfo.NotifyVersions`
-   （`CacheNotifyPollSession` → `SetVersion(cacheKey, version)`）。**poller 不持有任何 cache 參考。**
-3. 每個 cache entry 在建立時記下自己 `ChangeNotifyKey` 當下的版本號
-   （`MemoryCacheProvider`），之後每次讀取比對——版本變了就視為已失效、重新載入。
+1. `KeyObjectCache<T>`'s `GetCacheKey(key)` = `cachePrefix + CacheGroup + ":" + key`; `CacheGroup` defaults to `typeof(T).Name`.
+2. The poller polls the cache-notify table in common and writes the version numbers it observes into `CacheInfo.NotifyVersions`
+   (`CacheNotifyPollSession` → `SetVersion(cacheKey, version)`). **The poller holds no cache references.**
+3. Each cache entry records the current version number of its `ChangeNotifyKey` when it is created
+   (`MemoryCacheProvider`) and compares on every later read; if the version changed, it is treated as invalidated and
+   reloaded.
 
-換句話說，失效是 **entry 自己拉**（pull），不是容器被推（push）。這是為什麼新增 cache
-不必登錄進任何陣列。
+In other words, invalidation is **pulled by the entry itself** (pull), not pushed to the container (push). That is why a
+new cache does not need to be registered in any array.
 
-**你要補的只有 bump 點**：寫該資料庫資料的 BO/Repository，在**同一個 transaction** 內呼叫 `ICacheNotifyService.Touch("<CacheGroup>:<key>", transaction, dbType)`，下一輪 poller 才會清。沒有寫配置的管理介面時，bump 點留待該管理 BO 建立時補（線 B 的 `CompanyRolePermissions` 即此狀態）。
+**The only thing you add is the bump point**: the BO/Repository that writes the database data calls `ICacheNotifyService.Touch("<CacheGroup>:<key>", transaction, dbType)` **within the same transaction**, so the next poller round clears it. If there is no management interface that writes the configuration, the bump point waits until that management BO is built (line B's `CompanyRolePermissions` is in this state).
 
 ---
 
-## 共用段：兩處（兩條路徑都要）
+## Shared section: two places (both paths need it)
 
 ### `ICacheContainer.cs` + `CacheContainerService.cs`
 
 ```csharp
-// (1) ICacheContainer 加屬性宣告
+// (1) Add the property declaration to ICacheContainer
 <Name>Cache <Name> { get; }
 
-// (2) CacheContainerService ctor 內初始化
-//     Define 快取：new <Name>Cache(storage, paths, CachePrefix)
-//     Database 快取：把 dataSource 傳進去 —— new <Name>Cache(dataSource, CachePrefix)
+// (2) Initialise it in the CacheContainerService ctor
+//     Define cache: new <Name>Cache(storage, paths, CachePrefix)
+//     Database cache: pass dataSource in — new <Name>Cache(dataSource, CachePrefix)
 <Name> = new <Name>Cache(CachePrefix);
 
-// (3) CacheContainerService 加對應的 public 屬性（`/// <inheritdoc/>`）
+// (3) Add the matching public property to CacheContainerService (`/// <inheritdoc/>`)
 public <Name>Cache <Name> { get; }
 ```
 
-漏掉介面屬性或實作屬性 → `CS0535`（介面未完整實作）；漏掉 ctor 初始化 → NRE。
+Missing the interface property or the implementing property → `CS0535` (interface not fully implemented); missing the ctor initialisation → NRE.
 
-> **2026-08-06 覆核：先前寫的「第三處：eviction 陣列」已不存在。** `CacheContainerService`
-> 曾維護一個 `IEvictableCache[]` 供 cache-notify 路由（`TryEvict` / `_evictableByGroup`），
-> 現行機制改為 **poller 只發布觀察到的版本號到 `CacheInfo.NotifyVersions`，由帶有相符
-> `ChangeNotifyKey` 的 cache entry 自行失效**——新增 cache 不需要註冊進任何陣列。
+> **Rechecked 2026-08-06: the "third place: eviction array" described earlier no longer exists.** `CacheContainerService`
+> once maintained an `IEvictableCache[]` for cache-notify routing (`TryEvict` / `_evictableByGroup`). The current
+> mechanism is that **the poller only publishes the observed version numbers to `CacheInfo.NotifyVersions`, and cache
+> entries with a matching `ChangeNotifyKey` invalidate themselves**; a new cache does not need to be registered in any array.
 >
-> 同一次覆核也確認：**`tests/Polhem.Hosting.UnitTests` 的 CacheNotify 測試已不再實作
-> `ICacheContainer`**（poller 不再持有 cache 參考），因此不存在「兩個必補的 stub」。
-> 全 repo 實作 `ICacheContainer` 的只有 `CacheContainerService` 一個。
+> The same recheck also confirmed: **the CacheNotify tests in `tests/Polhem.Hosting.UnitTests` no longer implement
+> `ICacheContainer`** (the poller no longer holds cache references), so the "two stubs that must be added" do not exist.
+> The only implementation of `ICacheContainer` in the whole repository is `CacheContainerService`.
 
 ---
 
-## 測試
+## Tests
 
-| 類別 | 測什麼 | 怎麼測 |
+| Kind | What to test | How to test |
 |------|--------|--------|
-| Define 快取 | 取用回正確物件、`SaveDefine` 後失效 | 經 `PolhemTestFixture` 取 `IDefineAccess.Get<Name>()` |
-| Database 快取 POCO | 純查詢邏輯（如多角色 OR 合併） | 純單元，合成資料建 POCO 直接斷言（**不需 DB**） |
-| Database service | cache miss 載入 + cache hit 短路 | fake repository + fake 來源 service，驗證 `Get` 兩次只載一次 |
-| Repository | DB round-trip | `[DbFact]` 5 DB，`IClassFixture<SharedDbFixture>` |
+| Define cache | Access returns the correct object; invalidated after `SaveDefine` | Get `IDefineAccess.Get<Name>()` through `PolhemTestFixture` |
+| Database cache POCO | Pure query logic (such as OR-merging multiple roles) | Pure unit test: build the POCO from synthetic data and assert directly (**no DB needed**) |
+| Database service | Load on cache miss + short-circuit on cache hit | Fake repository + fake source service; verify that two `Get` calls load only once |
+| Repository | DB round-trip | `[DbFact]` 5 DBs, `IClassFixture<SharedDbFixture>` |
 
-判定/查詢邏輯儘量放在 **POCO 的方法**（如 `CompanyRolePermissions.GetAllowed`），這樣核心邏輯能用合成資料純單元測試、不綁 DB。
+Put check / lookup logic in **the POCO's methods** where possible (such as `CompanyRolePermissions.GetAllowed`), so the core logic can be unit tested with synthetic data and is not tied to a DB.
 
-## 容易踩的坑
+## Common pitfalls
 
-1. **漏補 `CacheContainerService` 的屬性宣告 → CS0535**：`ICacheContainer` 加了屬性就要有實作。
-2. **只 build 個別專案、沒跑 slnx**：stub 的 CS0535 在 `dotnet build tests/Polhem.Hosting.UnitTests` 才現；**一律 `dotnet build Polhem.slnx -c Release` 複現 CI strict build**。
-3. **`CacheContainerService` 兩處只改一處**：ctor 初始化漏 → NRE；屬性宣告漏 → CS0535。
-4. **沿用舊的 `CreateInstance => null` 樣板**（2026-07-29 前的慣例）：Database 快取現在**應自載**，
-   經 `ICacheDataSourceProvider`。回 `null` 等於把 read-through 手刻進 service，並繞過 base class
-   已內建的負向快取。順帶澄清：「判定零 DB」講的是**快取命中**零 DB，而 miss 無論由 service 或
-   `CreateInstance` 去撈都要碰 DB——自載不破壞該設計。
-5. **`dataSource` 寫成實例而非 `Func<T>`**：`AddPolhemFramework` 解析 `ICacheContainer` 時即死結
-   （相依環見 path B 的 DI 段）。DI 註冊處傳 method group、不要加括號。
-6. **為新 repository 加個別 DI 註冊**：一律經 `IRepositoryFactory` 取得，不逐一註冊。
-7. **single vs keyed 選錯**：整份一個物件用 `ObjectCache<T>`；多實例用 `KeyObjectCache<T>` 且 `T : IKeyObject`。
-8. **`IDE0028` 集合初始化**：`new List<string>()` 當欄位/區域初始化會被要求改 collection expression `[]`（net10 + strict build）。
-9. **POCO 放進 cache 後被 mutate**：cache 內容共享、不可變動（見 memory `definition-immutability`）；per-session 變動先 `Clone()`。
-10. **cache-notify bump 點忘了同 transaction**：`Touch` 必須與寫配置同一 transaction，否則寫成功但 notify 沒進、或 notify 進了但寫 rollback。
+1. **Missing the property declaration on `CacheContainerService` → CS0535**: once `ICacheContainer` gains a property, it needs an implementation.
+2. **Building individual projects only, without the slnx**: the stubs' CS0535 only appears in `dotnet build tests/Polhem.Hosting.UnitTests`; **always run `dotnet build Polhem.slnx -c Release` to reproduce the CI strict build**.
+3. **Changing only one of the two places in `CacheContainerService`**: ctor initialisation missing → NRE; property declaration missing → CS0535.
+4. **Reusing the old `CreateInstance => null` template** (the convention before 2026-07-29): Database caches now
+   **should self-load** through `ICacheDataSourceProvider`. Returning `null` means hand-writing the read-through into the
+   service and bypassing the negative caching already built into the base class. To clarify along the way: "checks with
+   zero DB hits" refers to **cache hits** costing zero DB, while a miss has to touch the DB whether the service or
+   `CreateInstance` fetches it; self-loading does not break that design.
+5. **Writing `dataSource` as an instance instead of a `Func<T>`**: `AddPolhemFramework` deadlocks when resolving `ICacheContainer`
+   (see the dependency cycle in path B's DI section). Pass a method group at the DI registration, without parentheses.
+6. **Adding an individual DI registration for a new repository**: always obtain it through `IRepositoryFactory`; do not register them one by one.
+7. **Choosing single vs keyed wrongly**: one object for the whole thing uses `ObjectCache<T>`; many instances use `KeyObjectCache<T>` with `T : IKeyObject`.
+8. **`IDE0028` collection initialisation**: `new List<string>()` as a field / local initialiser must be changed to the collection expression `[]` (net10 + strict build).
+9. **A POCO mutated after it is put in the cache**: cache contents are shared and must not be mutated (see `.claude/rules/definition.md`); for per-session changes, `Clone()` first.
+10. **cache-notify bump point not in the same transaction**: `Touch` must be in the same transaction as the configuration write; otherwise the write succeeds but the notify is missing, or the notify lands but the write rolls back.
 
-## 完整 checklist
+## Full checklist
 
-**定位**：
-- [ ] 來源：定義檔（path A）還是資料庫（path B）
-- [ ] 形態：single（`ObjectCache<T>`）還是 keyed（`KeyObjectCache<T>` + `IKeyObject`）
+**Locate**:
+- [ ] Source: definition file (path A) or database (path B)
+- [ ] Shape: single (`ObjectCache<T>`) or keyed (`KeyObjectCache<T>` + `IKeyObject`)
 
-**Path A（Define 快取）**：
-- [ ] POCO 定義類 + `DefineType` enum 值 + `DefineTypeExtensions` 映射 + `PathOptions.Get<Name>FilePath`
+**Path A (Define cache)**:
+- [ ] POCO definition class + `DefineType` enum value + `DefineTypeExtensions` mapping + `PathOptions.Get<Name>FilePath`
 - [ ] `IDefineAccess` DIM `Get<Name>()`
-- [ ] `Define/<Name>Cache.cs`（`CreateInstance` 自載）
+- [ ] `Define/<Name>Cache.cs` (`CreateInstance` self-loads)
 
-**Path B（Database 快取）**：
-- [ ] POCO 實作 `IKeyObject`（放 `Polhem.Definition`），判定/查詢邏輯放 POCO 方法
-- [ ] `ICacheDataSourceProvider` 加取數方法（**回傳 `Polhem.Definition` 型別**）
-- [ ] `CacheDataSourceProvider` 實作（經 `IRepositoryFactory` 取 repository、組裝 POCO）
-- [ ] `Database/<Name>Cache.cs`（`CreateInstance` 呼叫 provider；帶 `dataSource` 的建構式 `internal`）
-- [ ] `I<Name>Service` + `<Name>Service`（**單行委派**，不含載入邏輯）
-- [ ] repository 抽象 + 實作 + `IRepositoryFactory` 加對應的 `Create<T>()` 解析
-- [ ] DI 只註冊 service（**不**逐一註冊 repository）
-- [ ] `CacheContainerService` ctor 把 `dataSource` 傳進新 cache
-- [ ] cache-notify bump 點（寫配置時 `Touch` 同 transaction；無管理介面則留待）
+**Path B (Database cache)**:
+- [ ] POCO implementing `IKeyObject` (in `Polhem.Definition`); check / lookup logic in POCO methods
+- [ ] Add the data-fetch method to `ICacheDataSourceProvider` (**returns a `Polhem.Definition` type**)
+- [ ] Implement it in `CacheDataSourceProvider` (get the repository through `IRepositoryFactory`, assemble the POCO)
+- [ ] `Database/<Name>Cache.cs` (`CreateInstance` calls the provider; the constructor that takes `dataSource` is `internal`)
+- [ ] `I<Name>Service` + `<Name>Service` (**single-line delegation**, no loading logic)
+- [ ] Repository abstraction + implementation + the matching `Create<T>()` resolution on `IRepositoryFactory`
+- [ ] DI registers only the service (does **not** register repositories one by one)
+- [ ] The `CacheContainerService` ctor passes `dataSource` to the new cache
+- [ ] cache-notify bump point (`Touch` in the same transaction as the configuration write; deferred if there is no management interface)
 
-**共用（兩條都要）**：
-- [ ] `ICacheContainer` 加屬性
-- [ ] `CacheContainerService` 兩處（ctor 初始化 + 屬性宣告）
-- [ ] 對應測試（POCO 純單元 / service fake / repository `[DbFact]`）
-- [ ] **`dotnet build Polhem.slnx -c Release` 0w/0e**，再跑測試
+**Shared (both paths)**:
+- [ ] Add the property to `ICacheContainer`
+- [ ] The two places in `CacheContainerService` (ctor initialisation + property declaration)
+- [ ] Matching tests (pure POCO unit / service fake / repository `[DbFact]`)
+- [ ] **`dotnet build Polhem.slnx -c Release` 0w/0e**, then run the tests
 
-## 參考檔案（讀程式碼對著看）
+## Reference files (keep them open while reading code)
 
-| 用途 | 檔案 |
+| Purpose | File |
 |------|------|
-| Define 快取（single）樣板 | `src/Polhem.ObjectCaching/Define/PermissionModelsCache.cs` |
-| Define 快取（keyed）樣板 | `src/Polhem.ObjectCaching/Define/FormSchemaCache.cs` |
-| Database 快取樣板 | `src/Polhem.ObjectCaching/Database/CompanyInfoCache.cs`（含 `Func<T>` 相依環的 WARNING 註解） |
-| Database 快取（需解析來源 DB） | `src/Polhem.ObjectCaching/Database/DepartmentTreeCache.cs` / `CompanyRolePermissionsCache.cs` |
-| 取數接縫 | `src/Polhem.Definition/ICacheDataSourceProvider.cs` + `src/Polhem.Business/Providers/CacheDataSourceProvider.cs` |
-| Cache 基類 | `src/Polhem.ObjectCaching/ObjectCache.cs` / `KeyObjectCache.cs` |
-| Service 樣板 | `src/Polhem.ObjectCaching/Services/DepartmentTreeService.cs`（單行委派） |
-| POCO + 判定邏輯樣板 | `src/Polhem.Definition/Identity/CompanyRolePermissions.cs`（`GetAllowed` / `GetKey`） |
-| 兩處同步點 | `src/Polhem.ObjectCaching/CacheContainerService.cs`（ctor 初始化 / 屬性宣告） |
+| Define cache (single) template | `src/Polhem.ObjectCaching/Define/PermissionModelsCache.cs` |
+| Define cache (keyed) template | `src/Polhem.ObjectCaching/Define/FormSchemaCache.cs` |
+| Database cache template | `src/Polhem.ObjectCaching/Database/CompanyInfoCache.cs` (includes the WARNING comment on the `Func<T>` dependency cycle) |
+| Database cache (needs to resolve the source DB) | `src/Polhem.ObjectCaching/Database/DepartmentTreeCache.cs` / `CompanyRolePermissionsCache.cs` |
+| Data-fetch seam | `src/Polhem.Definition/ICacheDataSourceProvider.cs` + `src/Polhem.Business/Providers/CacheDataSourceProvider.cs` |
+| Cache base classes | `src/Polhem.ObjectCaching/ObjectCache.cs` / `KeyObjectCache.cs` |
+| Service template | `src/Polhem.ObjectCaching/Services/DepartmentTreeService.cs` (single-line delegation) |
+| POCO + check logic template | `src/Polhem.Definition/Identity/CompanyRolePermissions.cs` (`GetAllowed` / `GetKey`) |
+| The two sync points | `src/Polhem.ObjectCaching/CacheContainerService.cs` (ctor initialisation / property declaration) |
 | ICacheContainer | `src/Polhem.ObjectCaching/ICacheContainer.cs` |
-| DI 註冊 | `src/Polhem.Hosting/PolhemFrameworkServiceCollectionExtensions.cs`（service；`ICacheContainer` 傳延遲工廠） |
-| POCO 純單元測試樣板 | `tests/Polhem.Definition.UnitTests/Identity/CompanyRolePermissionsTests.cs` |
+| DI registration | `src/Polhem.Hosting/PolhemFrameworkServiceCollectionExtensions.cs` (service; `ICacheContainer` receives a deferred factory) |
+| POCO pure unit test template | `tests/Polhem.Definition.UnitTests/Identity/CompanyRolePermissionsTests.cs` |
