@@ -11,16 +11,11 @@ on:
       - 'Directory.Build.props'
       - '.github/workflows/build-ci.yml'
       - 'SonarQube.Analysis.xml'
+  # No paths filter on pull requests: `build` is a required check of the branch protection on `main`, and a
+  # required check that never starts leaves a documentation-only pull request waiting forever.
   pull_request:
     branches:
       - main
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - '*.slnx'
-      - 'Directory.Build.props'
-      - 'SonarQube.Analysis.xml'
-      - '.github/workflows/build-ci.yml'
   workflow_dispatch:
     inputs:
       db_scope:
@@ -74,6 +69,14 @@ jobs:
           full=true
         fi
         echo "full=$full" >> "$GITHUB_OUTPUT"
+        # RequiredTestDatabaseGateTests (tests/Polhem.Db.UnitTests) fails when a database listed here has no
+        # connection string under the name the tests read. Without it, a renamed variable skips every test for that
+        # database and the run stays green.
+        if [ "$full" = true ]; then
+          echo "POLHEM_TEST_REQUIRED_DATABASES=SQLServer,SQLite,PostgreSQL,MySQL,Oracle" >> "$GITHUB_ENV"
+        else
+          echo "POLHEM_TEST_REQUIRED_DATABASES=SQLServer,SQLite" >> "$GITHUB_ENV"
+        fi
         if [ "$full" = true ]; then
           echo "Database scope: all (SQL Server + SQLite + PostgreSQL + MySQL + Oracle), SonarCloud enabled"
         else
@@ -225,8 +228,8 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
         dotnet sonarscanner begin \
-          /k:"jeff377_bee-library" \
-          /o:"jeff377" \
+          /k:"polhem-dev_polhem" \
+          /o:"polhem-dev" \
           /d:sonar.token="$SONAR_TOKEN" \
           /d:sonar.host.url="https://sonarcloud.io" \
           /s:"$GITHUB_WORKSPACE/SonarQube.Analysis.xml"

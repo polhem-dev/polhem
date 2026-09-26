@@ -10,6 +10,13 @@ namespace Polhem.Tests.Shared
     public static class TestDbConventions
     {
         /// <summary>
+        /// The environment variable that lists, comma separated, the <see cref="DatabaseType"/> names whose
+        /// database tests must run rather than skip. CI sets it for the databases of the selected mode; it is
+        /// checked by <c>RequiredTestDatabaseGateTests</c> in <c>Polhem.Db.UnitTests</c>.
+        /// </summary>
+        public const string RequiredDatabasesEnvVar = "POLHEM_TEST_REQUIRED_DATABASES";
+
+        /// <summary>
         /// Returns the environment variable name carrying the connection string for
         /// the given database type. Convention: <c>POLHEM_TEST_CONNSTR_{DBTYPE}</c>
         /// where <c>{DBTYPE}</c> is the uppercase enum value name.

@@ -90,6 +90,9 @@ Connection ID naming rule `common_{dbtype_lower}` (produced by `TestDbConvention
 
 - **Locally** (`.runsettings` sets `POLHEM_TEST_CONNSTR_*`) and **in CI** (injected by the workflow), they run normally.
 - **Any DB without its environment variable**: that DB's tests are Skipped automatically; other DBs are unaffected.
+- **In CI a skip is not allowed for the databases of the selected mode**: the workflow lists them in
+  `POLHEM_TEST_REQUIRED_DATABASES`, and `RequiredTestDatabaseGateTests` (`tests/Polhem.Db.UnitTests`) fails when one
+  of them has no connection string under the name `TestDbConventions` derives.
 
 `DbGlobalFixture` supports several DBs side by side and is fault tolerant: for each one it detects the env var,
 verifies the connection, builds the schema and writes the seed. A failure in one DB only skips that DB.
