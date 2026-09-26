@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <Description>Defines system-wide structured types for config, schema, and layout.</Description>
+    <Description>The definition types of the Polhem framework (settings, form and table schemas, layouts, language resources) with their XML persistence, the embedded default definition files, and the framework analyzers.</Description>
     <PackageTags>polhem;config;schema;layout;formdefine;enterprise</PackageTags>
   </PropertyGroup>
 

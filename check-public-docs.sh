@@ -32,8 +32,9 @@ section() {
 # Prints the hits and records a failure when there are any. Called with the hits as an argument,
 # not at the end of a pipeline: a pipeline runs it in a subshell, where setting `failed` is lost.
 report() {
-  if [[ -n "$1" ]]; then
-    printf '%s\n' "$1"
+  local hits="$1"
+  if [[ -n "$hits" ]]; then
+    printf '%s\n' "$hits"
     failed=1
   fi
   return 0
@@ -43,6 +44,7 @@ report() {
 # never scanned itself.
 repo_files() {
   git ls-files -z --cached --others --exclude-standard
+  return 0
 }
 
 # docs/repo-ops/ holds maintainer documents, not public ones. It is still scanned by (1) and (2).

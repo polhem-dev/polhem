@@ -233,7 +233,7 @@ namespace Polhem.Business.Form
             return instant.HasValue ? CellValue(instant.Value) : DBNull.Value;
         }
 
-        private static object CellValue(DateTime instant)
+        private static DateTime CellValue(DateTime instant)
             => DateTime.SpecifyKind(instant, DateTimeKind.Unspecified);
 
         private static bool IsTimestamp(FormField field)

@@ -160,19 +160,20 @@ END {
 }
 AWK
 
-error() { printf 'error: %s\n' "$1"; fail=1; }
-report() { printf 'report: %s\n' "$1"; }
+error() { local message="$1"; printf 'error: %s\n' "$message"; fail=1; return 0; }
+report() { local message="$1"; printf 'report: %s\n' "$message"; return 0; }
 
 langs_in_order() {
   local t
   echo "$SOURCE_LANG"
   for t in $TRANSLATIONS; do echo "${t%%:*}"; done
+  return 0
 }
 
 policy_of() {
-  local t
+  local lang="$1" t
   for t in $TRANSLATIONS; do
-    if [ "${t%%:*}" = "$1" ]; then
+    if [[ "${t%%:*}" == "$lang" ]]; then
       echo "${t#*:}"
       return 0
     fi
@@ -181,71 +182,85 @@ policy_of() {
 }
 
 required_for() {
-  local var
-  var="REQUIRED_$(printf '%s' "$1" | tr '-' '_')"
+  local lang="$1" var
+  var="REQUIRED_$(printf '%s' "$lang" | tr '-' '_')"
   eval "printf '%s' \"\${$var:-}\""
+  return 0
 }
 
 listed() {
   git -c core.quotePath=false ls-files --cached --others --exclude-standard -- "$@"
+  return 0
 }
 # Paths relative to docs/<lang>/ of the markdown files in one language folder.
 docs_of() {
-  listed "docs/$1/*.md" | sed "s|^docs/$1/||" | sort -u
+  local lang="$1"
+  listed "docs/$lang/*.md" | sed "s|^docs/$lang/||" | sort -u
+  return 0
 }
 
 in_suffix_dirs() {
+  local dir="$1"
   case " $SUFFIX_DIRS " in
-    *" $1 "*) return 0 ;;
+    *" $dir "*) return 0 ;;
+    *) return 1 ;;
   esac
-  return 1
 }
 
 # The language suffix of a file name in a SUFFIX_DIRS folder (adr-001-x.zh-TW.md gives zh-TW); empty for a source.
 lang_suffix_of() {
-  printf '%s' "$1" | sed -nE 's/^.+\.([a-z]{2}(-[A-Za-z]+)?)\.md$/\1/p'
+  local name="$1"
+  printf '%s' "$name" | sed -nE 's/^.+\.([a-z]{2}(-[A-Za-z]+)?)\.md$/\1/p'
+  return 0
 }
 
 # The markdown file names directly in docs/<dir>/.
 suffix_files() {
-  listed "docs/$1/*.md" | sed "s|^docs/$1/||" | grep -v / | sort -u
+  local dir="$1"
+  listed "docs/$dir/*.md" | sed "s|^docs/$dir/||" | grep -v / | sort -u
+  return 0
 }
 
 # The base names (without .md) of the source documents in docs/<dir>/.
 suffix_sources() {
-  local f
-  for f in $(suffix_files "$1"); do
-    if [ -z "$(lang_suffix_of "$f")" ]; then printf '%s\n' "${f%.md}"; fi
+  local dir="$1" f
+  for f in $(suffix_files "$dir"); do
+    if [[ -z "$(lang_suffix_of "$f")" ]]; then printf '%s\n' "${f%.md}"; fi
   done
+  return 0
 }
 
 suffix_name() {
-  if [ "$2" = "$SOURCE_LANG" ]; then printf '%s.md' "$1"; else printf '%s.%s.md' "$1" "$2"; fi
+  local base="$1" lang="$2"
+  if [[ "$lang" == "$SOURCE_LANG" ]]; then printf '%s.md' "$base"; else printf '%s.%s.md' "$base" "$lang"; fi
+  return 0
 }
 
 expected_switch() {
   local self="$1" rel="$2" prefix="../" rest="$2" out="" l
-  while [ "${rest#*/}" != "$rest" ]; do
+  while [[ "${rest#*/}" != "$rest" ]]; do
     prefix="../$prefix"
     rest="${rest#*/}"
   done
   for l in $(langs_in_order); do
-    [ "$l" = "$self" ] && continue
-    [ -f "docs/$l/$rel" ] || continue
+    [[ "$l" == "$self" ]] && continue
+    [[ -f "docs/$l/$rel" ]] || continue
     out="${out:+$out$SEP}[$(autonym "$l")](${prefix}${l}/${rel})"
   done
   printf '%s' "$out"
+  return 0
 }
 
 expected_switch_suffix() {
   local self="$1" dir="$2" base="$3" out="" l name
   for l in $(langs_in_order); do
-    [ "$l" = "$self" ] && continue
+    [[ "$l" == "$self" ]] && continue
     name=$(suffix_name "$base" "$l")
-    [ -f "docs/$dir/$name" ] || continue
+    [[ -f "docs/$dir/$name" ]] || continue
     out="${out:+$out$SEP}[$(autonym "$l")](${name})"
   done
   printf '%s' "$out"
+  return 0
 }
 
 validate_config() {
@@ -265,6 +280,7 @@ validate_config() {
       exit 2
     fi
   done
+  return 0
 }
 
 # $1 language, $2 translation file, $3 expected source (relative to docs/), $4 the file's first line.
@@ -286,48 +302,53 @@ check_translation() {
     error "$file: the blob in the header is not 40 hex digits."
     return
   fi
-  if [ "$src" != "$expected_src" ]; then
+  if [[ "$src" != "$expected_src" ]]; then
     error "$file: the header points to $src; it should be $expected_src."
     return
   fi
-  if [ ! -f "docs/$src" ]; then
+  if [[ ! -f "docs/$src" ]]; then
     error "$file: the source docs/$src does not exist (orphan translation)."
     return
   fi
   current=$(git hash-object "docs/$src")
-  if [ "$blob" != "$current" ]; then
+  if [[ "$blob" != "$current" ]]; then
     msg="$file: stale, docs/$src changed after the stamp. Update it against the source and restamp with --stamp; find the stamped version with git log --all --find-object=$blob."
-    if [ "$policy" = strict ]; then error "$msg"; else report "$msg"; fi
+    if [[ "$policy" == strict ]]; then error "$msg"; else report "$msg"; fi
   fi
+  return 0
 }
 
 # $1 language, $2 file, $3 expected switch line, $4 actual switch line, $5 expected source for a translation.
 check_document() {
   local lang="$1" file="$2" want="$3" got="$4" expected_src="$5" first
-  if [ "$want" != "$got" ]; then
+  if [[ "$want" != "$got" ]]; then
     error "$file: the language switch line should be \"${want:-(none)}\" but is \"${got:-(none)}\". Fix: ./check-docs-i18n.sh --fix-switch"
   fi
   first=$(head -n 1 "$file")
-  if [ "$lang" = "$SOURCE_LANG" ]; then
+  if [[ "$lang" == "$SOURCE_LANG" ]]; then
     case "$first" in
       "<!-- source:"*) error "$file: a source document must not carry a translation header (is the direction reversed?)." ;;
+      *) ;;
     esac
   else
     check_translation "$lang" "$file" "$expected_src" "$first"
   fi
+  return 0
 }
 
 # $1 language, $2 policy, $3 required list, $4 missing file, $5 its source, $6 the source as named in the required list.
 missing_translation() {
-  local msg="$4: missing translation (source $5)."
-  if [ "$2" = strict ]; then
+  local policy="$2" required="$3" missing="$4" source="$5" listed_as="$6"
+  local msg="$missing: missing translation (source $source)."
+  if [[ "$policy" == strict ]]; then
     error "$msg"
   else
-    case "$3" in
-      *" $6 "*) error "$msg It is on the required list." ;;
+    case "$required" in
+      *" $listed_as "*) error "$msg It is on the required list." ;;
       *) report "$msg" ;;
     esac
   fi
+  return 0
 }
 
 check() {
@@ -352,7 +373,7 @@ check() {
   for dir in $SUFFIX_DIRS; do
     for f in $(suffix_files "$dir"); do
       sl=$(lang_suffix_of "$f")
-      if [ -z "$sl" ]; then
+      if [[ -z "$sl" ]]; then
         l=$SOURCE_LANG
         base=${f%.md}
       elif policy_of "$sl" > /dev/null; then
@@ -373,21 +394,22 @@ check() {
     policy=${t#*:}
     required=" $(required_for "$lang") "
     for rel in $(docs_of "$SOURCE_LANG"); do
-      [ -f "docs/$lang/$rel" ] && continue
+      [[ -f "docs/$lang/$rel" ]] && continue
       missing_translation "$lang" "$policy" "$required" "docs/$lang/$rel" "docs/$SOURCE_LANG/$rel" "$rel"
     done
     for dir in $SUFFIX_DIRS; do
       for base in $(suffix_sources "$dir"); do
-        [ -f "docs/$dir/$base.$lang.md" ] && continue
+        [[ -f "docs/$dir/$base.$lang.md" ]] && continue
         missing_translation "$lang" "$policy" "$required" "docs/$dir/$base.$lang.md" "docs/$dir/$base.md" "$dir/$base.md"
       done
     done
   done
+  return 0
 }
 
 stamp() {
   local path dir f lang rel src blob tmp
-  if [ "$#" -eq 0 ]; then
+  if [[ "$#" -eq 0 ]]; then
     echo "Usage: ./check-docs-i18n.sh --stamp <translation path>..." >&2
     exit 2
   fi
@@ -403,9 +425,10 @@ stamp() {
       f=${path#docs/"$dir"/}
       case "$f" in
         */*) echo "$path: only the files directly in docs/$dir/ are paired." >&2; exit 2 ;;
+        *) ;;
       esac
       lang=$(lang_suffix_of "$f")
-      if [ -z "$lang" ] || ! policy_of "$lang" > /dev/null; then
+      if [[ -z "$lang" ]] || ! policy_of "$lang" > /dev/null; then
         echo "$path: not a translation (<name>.<language>.md with a declared translation language); source documents are not stamped." >&2
         exit 2
       fi
@@ -418,9 +441,9 @@ stamp() {
       fi
       rel="$SOURCE_LANG/${path#docs/"$lang"/}"
     fi
-    [ -f "$path" ] || { echo "$path does not exist." >&2; exit 2; }
+    [[ -f "$path" ]] || { echo "$path does not exist." >&2; exit 2; }
     src="docs/$rel"
-    [ -f "$src" ] || { echo "$path: source $src not found." >&2; exit 2; }
+    [[ -f "$src" ]] || { echo "$path: source $src not found." >&2; exit 2; }
     blob=$(git hash-object "$src")
     tmp=$(mktemp)
     awk -v header="<!-- source: $rel blob: $blob -->" \
@@ -429,6 +452,7 @@ stamp() {
     rm -f "$tmp"
     echo "Stamped: $path <- $src"
   done
+  return 0
 }
 
 # $1 file, $2 expected switch line, then extra awk arguments.
@@ -442,6 +466,7 @@ fix_file_switch() {
     echo "Updated language switch line: $file"
   fi
   rm -f "$tmp"
+  return 0
 }
 
 fix_switch() {
@@ -454,7 +479,7 @@ fix_switch() {
   for dir in $SUFFIX_DIRS; do
     for f in $(suffix_files "$dir"); do
       sl=$(lang_suffix_of "$f")
-      if [ -z "$sl" ]; then
+      if [[ -z "$sl" ]]; then
         l=$SOURCE_LANG
         base=${f%.md}
       elif policy_of "$sl" > /dev/null; then
@@ -466,6 +491,7 @@ fix_switch() {
       fix_file_switch "docs/$dir/$f" "$(expected_switch_suffix "$l" "$dir" "$base")" -v suffix=1 -v srcname="$base.md"
     done
   done
+  return 0
 }
 
 validate_config

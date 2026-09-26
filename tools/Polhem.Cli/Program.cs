@@ -6,7 +6,7 @@ namespace Polhem.Cli;
 /// Entry point for the <c>dotnet polhem</c> CLI. Routes to subcommand groups
 /// (<c>defines</c>) plus a few top-level helpers (<c>--version</c>, <c>--help</c>).
 /// </summary>
-public static class Program
+internal static class Program
 {
     public static int Main(string[] args)
     {

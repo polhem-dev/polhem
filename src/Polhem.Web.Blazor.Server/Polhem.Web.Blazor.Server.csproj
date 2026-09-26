@@ -1,9 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <Description>Blazor Server component library for Polhem (FormSchema-driven UI on top of LocalApiProvider).</Description>
+    <Description>Blazor Server component library for Polhem: FormSchema-driven UI that calls the backend in-process (Local mode) or over JSON-RPC (Remote mode).</Description>
     <PackageTags>polhem;blazor;blazor-server;rcl;ui</PackageTags>
     <!-- RS0041 (oblivious reference types in public API) fires only on the Razor-generated
          BuildRenderTree overrides in obj/**/*_razor.g.cs. That signature is emitted by the Razor

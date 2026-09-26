@@ -28,7 +28,7 @@ ALLOWLIST=(
   # --- External package / BCL types (not declared in this solution) ---
   AsyncLocal CoCreateInstance InternalsVisibleTo ToolStripMenuItem
   FileBufferingReadStream
-  FormatterNotRegisteredException TypelessFormatter
+  FormatterNotRegisteredException TypelessFormatter IXmlSerializable ReadXmlDiffgram
   # --- Deliberate mentions of removed types (the prose says used to / which is gone / the former) ---
   SafeTypelessFormatter ItemsForSerialization NumberFormatPresets
   GetIndexsCommandText
@@ -38,7 +38,7 @@ ALLOWLIST=(
   # --- Placeholders in documentation, not real type names ---
   Cxxx SaveX IXxxRepository G
   # --- SQL keywords / data dictionary objects / column names ---
-  ALL_TABLES ALL_TAB_COMMENTS ALL_COL_COMMENTS ANDEC ANSI_QUOTES
+  ALL_TABLES ALL_TAB_COMMENTS ALL_COL_COMMENTS ANDEC DECAN ANSI_QUOTES
   DO_SUM QUANTITY SIZE SQL_MODE USERNAME
   LOCALTIMESTAMP NO_BACKSLASH_ESCAPES
 )

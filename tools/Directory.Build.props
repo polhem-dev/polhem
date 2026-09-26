@@ -2,8 +2,9 @@
 
   <!--
     tools/ holds development-time tools and is independent of the build baseline of the core packages.
-    This file deliberately does NOT import the Directory.Build.props at the repository root,
-    so tools/ is fully self-contained: not published to NuGet, and without the strict analysis settings of src/.
+    It does not import src/Directory.Build.props, so tools/ is self-contained: its projects are not packed and
+    do not get the strict analysis settings of src/. Polhem.Cli is the exception: it is published to NuGet, so its
+    project file turns packing and the strict settings back on and imports Package.props.
 
     The version is the one exception, and it is deliberate: Polhem.Cli lives under tools/ but IS published to
     NuGet (see .github/workflows/nuget-publish.yml). It used to carry its own version, which fell twelve minor

@@ -5,7 +5,7 @@ The matching hard rules are in `.claude/rules/testing.md` and `.claude/rules/com
 ## The verification blind spot created by the CI path filter
 
 The `push` / `pull_request` triggers of `.github/workflows/build-ci.yml` only recognize:
-`src/**`, `tests/**`, `*.slnx`, `Directory.Build.props`, `SonarQube.Analysis.xml`,
+`src/**`, `tests/**`, `*.slnx`, `*.props`, `SonarQube.Analysis.xml`,
 `.github/workflows/build-ci.yml`.
 
 **Why**: samples/ are demos and docs/ are documents; changes to either do not affect the correctness of the NuGet

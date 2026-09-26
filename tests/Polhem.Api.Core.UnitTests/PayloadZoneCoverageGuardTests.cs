@@ -133,7 +133,7 @@ namespace Polhem.Api.Core.UnitTests
 
         private static void AssertIsolatedUnconverted(object payload, object? sent, string typeName)
         {
-            Assert.True(!ReferenceEquals(payload, sent),
+            Assert.False(ReferenceEquals(payload, sent),
                 $"The request data of '{typeName}' was not replaced with a copy by PayloadZoneConverter.IsolateRequest. " +
                 "In an in-process call the server rewrites it in place. When you add a message type that carries data, wire it into that class's switch too.");
 
