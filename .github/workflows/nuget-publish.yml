@@ -8,6 +8,9 @@ on:
 jobs:
   publish:
     runs-on: windows-latest
+    permissions:
+      contents: read
+      id-token: write  # Trusted Publishing exchanges the GitHub OIDC token for a temporary NuGet API key.
 
     outputs:
       # The package list for the release body. Derived from what was actually pushed rather
@@ -86,9 +89,18 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "pack failed: $proj" }
         }
 
+    # Trusted Publishing: the nuget.org policy for this repository and workflow lists the package IDs it may push.
+    # A package added to the pack list above must be added to that policy too, or its push is rejected.
+    # The temporary key expires after one hour, so it is requested after the packages are built.
+    - name: Log in to NuGet
+      id: login
+      uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841  # v1.2.0
+      with:
+        user: ${{ secrets.NUGET_USER }}
+
     - name: Push to NuGet
       env:
-        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
       run: |
         $ErrorActionPreference = 'Stop'
         Get-ChildItem -Path ./nupkgs -Filter *.nupkg | ForEach-Object {
@@ -118,6 +130,8 @@ jobs:
   release:
     needs: publish  # The GitHub Release is created only after every NuGet package was published
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout code
