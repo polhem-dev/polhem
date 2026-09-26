@@ -4,32 +4,32 @@ using System.Reflection;
 namespace Polhem.Business.UnitTests.Contracts
 {
     /// <summary>
-    /// 每個 BO 建構子的 <c>isLocalCall</c> 預設值必須是 <c>false</c>。
+    /// The <c>isLocalCall</c> default of every BO constructor must be <c>false</c>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 預設 <c>true</c> 的意思是：直接建構 BO —— 唯一繞過 <c>ApiAccessValidator</c> 的路徑 ——
-    /// 預設被當成可信的行程內呼叫。而數個方法的第二道防線正是以 <c>IsLocalCall</c> 為條件
-    /// （免 deployment admin 鑄造 API key、授予 deployment admin、寫入 server-only 定義），
-    /// 於是那幾道守衛對預設路徑全數放行；**只有刻意寫 `isLocalCall: false` 的呼叫端會被擋，
-    /// 而那是最不需要擋的一種**。
+    /// A default of <c>true</c> means that constructing a BO directly, the only path that bypasses <c>ApiAccessValidator</c>,
+    /// is treated as a trusted in-process call by default. The second line of defense of several methods is conditioned on <c>IsLocalCall</c>
+    /// (minting an API key without being a deployment admin, granting deployment admin, writing server-only definitions),
+    /// so those guards would all pass on the default path. **Only callers that deliberately write `isLocalCall: false` would be blocked,
+    /// and they are the ones that least need blocking.**
     /// </para>
     /// <para>
-    /// 用反射掃全部子類而非逐一列名：新增一個 BO 家族時，這道閘門自動涵蓋它。
-    /// 這正是原本缺的東西 —— 五個建構子各自宣告預設值，沒有任何機制要求它們一致。
+    /// It scans every subclass by reflection rather than listing them by name, so a new BO family is covered automatically.
+    /// That is exactly what was missing: each constructor declared its own default, and no mechanism required them to agree.
     /// </para>
     /// </remarks>
     public class LocalCallDefaultGateTests
     {
         [Fact]
-        [DisplayName("所有 BusinessObject 建構子的 isLocalCall 預設值必須為 false")]
+        [DisplayName("Every BusinessObject constructor defaults isLocalCall to false")]
         public void EveryBusinessObjectConstructor_DefaultsIsLocalCallToFalse()
         {
             var boTypes = typeof(BusinessObject).Assembly.GetTypes()
                 .Where(t => typeof(BusinessObject).IsAssignableFrom(t))
                 .ToArray();
 
-            // 防空轉：型別載不到時下面的迴圈一圈都不跑。
+            // Guards against a vacuous pass: if the types cannot be loaded, the loop below never runs.
             Assert.Contains(typeof(BusinessObject), boTypes);
 
             var offenders = new List<string>();
@@ -45,18 +45,18 @@ namespace Polhem.Business.UnitTests.Contracts
                     checkedCount++;
                     if (!Equals(parameter.DefaultValue, false))
                     {
-                        offenders.Add($"{type.Name} (預設 {parameter.DefaultValue})");
+                        offenders.Add($"{type.Name} (default {parameter.DefaultValue})");
                     }
                 }
             }
 
-            // 第二道防空轉：真的有帶預設值的建構子被檢查到，而不是條件寫錯導致全被 continue 掉。
-            Assert.True(checkedCount > 0, "沒有任何帶 isLocalCall 預設值的建構子被檢查到，這道閘門形同虛設。");
+            // A second guard against a vacuous pass: constructors with a default really were checked, rather than all skipped by a wrong condition.
+            Assert.True(checkedCount > 0, "No constructor with an isLocalCall default was checked, so this gate checks nothing.");
 
             Assert.True(
                 offenders.Count == 0,
-                "以下 BO 建構子把 isLocalCall 預設為 true，等於讓直接建構的呼叫端預設被當成可信的" +
-                $"行程內呼叫，繞過以 IsLocalCall 為條件的第二道防線：{string.Join(", ", offenders)}。");
+                "These BO constructors default isLocalCall to true, so a caller that constructs them directly is treated by default as a trusted " +
+                $"in-process call, bypassing the second line of defense conditioned on IsLocalCall: {string.Join(", ", offenders)}.");
         }
     }
 }

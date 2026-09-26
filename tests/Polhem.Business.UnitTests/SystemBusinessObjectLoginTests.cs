@@ -12,8 +12,8 @@ using Polhem.Definition;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="SystemBusinessObject.Login"/> 分支測試，使用 <see cref="TestableSystemBusinessObject"/>
-    /// 覆寫 AuthenticateUser 以觸發成功/失敗/鎖定等路徑。
+    /// Branch tests for <see cref="SystemBusinessObject.Login"/>, using <see cref="TestableSystemBusinessObject"/>
+    /// to override AuthenticateUser and trigger the success, failure and lockout paths.
     /// </summary>
     public class SystemBusinessObjectLoginTests : IClassFixture<SharedDbFixture>
     {
@@ -32,7 +32,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Login 驗證成功應產生 AccessToken 與到期時間並建立 SessionInfo")]
+        [DisplayName("Login with successful authentication produces an AccessToken and expiry and creates a SessionInfo")]
         public void Login_Authenticated_ReturnsValidSessionToken()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -49,7 +49,7 @@ namespace Polhem.Business.UnitTests
             Assert.True(result.ExpiredAt > DateTime.UtcNow);
             Assert.Equal("user01", result.UserId);
             Assert.Equal("User One", result.UserName);
-            // 未提供 ClientPublicKey → EncryptedApiEncryptionKey 保持空字串
+            // Without a `ClientPublicKey`, the encrypted API encryption key stays an empty string.
             Assert.Equal(string.Empty, result.ApiEncryptionKey);
 
             var session = sessionService.Get(result.AccessToken);
@@ -66,7 +66,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Login 提供 ClientPublicKey 應以 RSA 加密 ApiEncryptionKey")]
+        [DisplayName("Login with a ClientPublicKey encrypts ApiEncryptionKey with RSA")]
         public void Login_WithClientPublicKey_EncryptsApiKey()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -101,7 +101,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("Login 應由 st_user 帶入使用者的時區與語系")]
+        [DisplayName("Login takes the user's time zone and locale from st_user")]
         public void Login_SeedUser_AppliesLocaleFromUserRow()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -126,7 +126,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("Login 使用者無對應 st_user 列時應退回部署層預設語系與時區")]
+        [DisplayName("Login falls back to the deployment's default locale and time zone when the user has no st_user row")]
         public void Login_UserWithoutRow_FallsBackToDeploymentDefaults()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -153,7 +153,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Login 驗證失敗應拋 UnauthorizedAccessException 並記錄 tracker 失敗")]
+        [DisplayName("Login with failed authentication throws UnauthorizedAccessException and records the failure in the tracker")]
         public void Login_AuthenticateFails_ThrowsAndRecordsFailure()
         {
             var tracker = new RecordingTracker();
@@ -170,7 +170,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Login 已鎖定帳戶應直接拋 UnauthorizedAccessException 不觸發驗證")]
+        [DisplayName("Login for a locked-out account throws UnauthorizedAccessException without authenticating")]
         public void Login_AccountLockedOut_ThrowsBeforeAuthenticate()
         {
             var tracker = new RecordingTracker { LockedOut = true };
@@ -192,7 +192,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Login 驗證成功且 tracker 非 null 應呼叫 Reset")]
+        [DisplayName("Login with successful authentication and a non-null tracker calls Reset")]
         public void Login_SuccessWithTracker_CallsReset()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -217,10 +217,10 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("SystemBusinessObject 基底 AuthenticateUser 應預設回傳 false")]
+        [DisplayName("The base AuthenticateUser of SystemBusinessObject returns false by default")]
         public void BaseAuthenticateUser_DefaultsToFalse()
         {
-            // 基底類別未覆寫時 AuthenticateUser 永遠回 false，Login 必拋 UnauthorizedAccessException。
+            // Without an override, `AuthenticateUser` returns false, so `Login` throws `UnauthorizedAccessException`.
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
             var args = new LoginArgs { UserId = "u", Password = "p" };
 

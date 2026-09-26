@@ -12,8 +12,8 @@ using Microsoft.Extensions.Logging;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="ProgramSettingsBoTypeResolver"/> 租戶客製化疊加測試：cust 有 progId→客製 BO；
-    /// cust 無→base BO；type cache 以 (customizeId, progId) 隔離；customizeId 空 / 無 reader→短路純 base。
+    /// Tenant customization overlay tests for <see cref="ProgramSettingsBoTypeResolver"/>: cust has the progId → customized BO,
+    /// cust lacks it → base BO; the type cache is isolated by (customizeId, progId); an empty customizeId or no reader → short-circuit to base only.
     /// </summary>
     public class ProgramSettingsBoTypeResolverCustomizeTests
     {
@@ -42,7 +42,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("cust 有該 progId 時應解析為客製 BO（覆寫 base）")]
+        [DisplayName("Resolve returns the customized BO when cust has the progId (overriding base)")]
         public void Resolve_CustHasProgId_ReturnsCustomizeBo()
         {
             var defineAccess = new ProgramSettingsDefineAccess(BuildSettings(("P001", BaseFormBoFqn)));
@@ -56,12 +56,12 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("cust 無該 progId 時應回退 base BO")]
+        [DisplayName("Resolve falls back to the base BO when cust lacks the progId")]
         public void Resolve_CustMissesProgId_FallsBackToBase()
         {
             var defineAccess = new ProgramSettingsDefineAccess(BuildSettings(("P001", BaseFormBoFqn)));
             var reader = new SpyCustomizeReader();
-            // cust settings 只覆寫 P999，沒有 P001
+            // The cust settings override only P999, not P001.
             reader.SetProgramSettings("acme", BuildSettings(("P999", TenantFormBoFqn)));
             var resolver = new ProgramSettingsBoTypeResolver(defineAccess, reader);
 
@@ -71,13 +71,13 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("type cache 以 (customizeId, progId) 隔離：不同租戶同一 progId 解析互不干擾")]
+        [DisplayName("The type cache is isolated by (customizeId, progId), so the same progId resolves independently for different tenants")]
         public void Resolve_DifferentCustomizeIds_IsolatedCache()
         {
             var defineAccess = new ProgramSettingsDefineAccess(BuildSettings(("P001", BaseFormBoFqn)));
             var reader = new SpyCustomizeReader();
             reader.SetProgramSettings("acme", BuildSettings(("P001", TenantFormBoFqn)));
-            // globex 沒有客製
+            // globex has no customization.
             var resolver = new ProgramSettingsBoTypeResolver(defineAccess, reader);
 
             var acme = resolver.Resolve("acme", "P001");
@@ -90,7 +90,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("customizeId 空時短路純 base，reader 零呼叫")]
+        [DisplayName("An empty customizeId short-circuits to base only and never calls the reader")]
         public void Resolve_EmptyCustomizeId_ShortCircuits_ReaderNotCalled()
         {
             var defineAccess = new ProgramSettingsDefineAccess(BuildSettings(("P001", BaseFormBoFqn)));
@@ -105,11 +105,11 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("無 reader 注入時即使帶 customizeId 也走純 base（向後相容）")]
+        [DisplayName("Without an injected reader, Resolve uses base only even with a customizeId (backward compatible)")]
         public void Resolve_NoReader_BehavesAsBase()
         {
             var defineAccess = new ProgramSettingsDefineAccess(BuildSettings(("P001", BaseFormBoFqn)));
-            var resolver = new ProgramSettingsBoTypeResolver(defineAccess); // 無 reader
+            var resolver = new ProgramSettingsBoTypeResolver(defineAccess); // No reader.
 
             var result = resolver.Resolve("acme", "P001");
 
@@ -117,7 +117,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("base ProgramSettings 缺檔但 cust 有該 progId 時仍解析為客製 BO")]
+        [DisplayName("Resolve still returns the customized BO when the base ProgramSettings is missing but cust has the progId")]
         public void Resolve_BaseMissingButCustHasProgId_ReturnsCustomizeBo()
         {
             var defineAccess = new ThrowingProgramSettingsDefineAccess();
@@ -130,10 +130,10 @@ namespace Polhem.Business.UnitTests
             Assert.Equal(typeof(TenantFormBo), result);
         }
 
-        // ---- 解析失敗的可觀測性 ----
+        // ---- Observability of resolution failures ----
 
         [Fact]
-        [DisplayName("客製 BO 型別載不到時應拋出，訊息標示客製來源")]
+        [DisplayName("Resolve throws when the customized BO type cannot be loaded, and the message names the customization as the origin")]
         public void Resolve_CustomizeTypeUnloadable_ThrowsWithCustomizeOrigin()
         {
             var reader = new SpyCustomizeReader();
@@ -149,7 +149,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("型別不繼承 BusinessObject 時應拋出，訊息標示套裝來源")]
+        [DisplayName("Resolve throws when the type does not inherit BusinessObject, and the message names the packaged layer as the origin")]
         public void Resolve_TypeNotBusinessObject_ThrowsWithBaseOrigin()
         {
             var defineAccess = new ProgramSettingsDefineAccess(BuildSettings(("Order", NotABusinessObjectFqn)));
@@ -161,7 +161,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("失敗不進 type cache：重複呼叫每次都應拋出，不會第二次起靜默通過")]
+        [DisplayName("Failures are not cached, so every repeated call throws instead of passing silently from the second call on")]
         public void Resolve_RepeatedFailure_ThrowsEveryTime()
         {
             var defineAccess = new ProgramSettingsDefineAccess(BuildSettings(("Order", "Nope.OrderBo, Nope")));
@@ -173,7 +173,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("帶 logger 的建構子多載保留可用（logger 已不再使用，不應收到任何訊息）")]
+        [DisplayName("The constructor overload that takes a logger still works (the logger is no longer used and receives nothing)")]
         public void Ctor_LoggerOverload_StillResolvesAndLogsNothing()
         {
             var defineAccess = new ProgramSettingsDefineAccess(BuildSettings(("Order", BaseFormBoFqn)));
@@ -188,7 +188,7 @@ namespace Polhem.Business.UnitTests
 
         // ---- Test doubles ----
 
-        /// <summary>不繼承 <see cref="BusinessObject"/> 的型別，用於驗證「型別不相容」的失敗路徑。</summary>
+        /// <summary>A type that does not inherit <see cref="BusinessObject"/>; used to verify the incompatible type failure path.</summary>
         public sealed class NotABusinessObject { }
 
         private static string NotABusinessObjectFqn =>

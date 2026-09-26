@@ -11,8 +11,8 @@ using Polhem.Definition.Storage;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="PluginSettingsResolver"/>：套裝／客製兩層相加、失敗一律拋、
-    /// 定義重載後 chain cache 重建。
+    /// <see cref="PluginSettingsResolver"/>: the packaged and customized layers are added together, every failure throws,
+    /// and the chain cache is rebuilt after the definition reloads.
     /// </summary>
     public class PluginSettingsResolverTests
     {
@@ -34,14 +34,14 @@ namespace Polhem.Business.UnitTests
             return settings;
         }
 
-        /// <summary><see cref="SamplePlugin"/> 覆寫 BeforeSave，宣告與覆寫相符。</summary>
+        /// <summary><see cref="SamplePlugin"/> overrides BeforeSave, so the declaration matches the override.</summary>
         private static (string, PluginStage) Sample => (SamplePluginFqn, PluginStage.BeforeSave);
 
-        /// <summary><see cref="OtherPlugin"/> 覆寫 AfterSave，宣告與覆寫相符。</summary>
+        /// <summary><see cref="OtherPlugin"/> overrides AfterSave, so the declaration matches the override.</summary>
         private static (string, PluginStage) Other => (OtherPluginFqn, PluginStage.AfterSave);
 
         [Fact]
-        [DisplayName("套裝層的鏈解析為對應型別")]
+        [DisplayName("The packaged layer's chain resolves to the matching type")]
         public void Resolve_BaseOnly_ReturnsBaseChain()
         {
             var access = new StubDefineAccess(Build("Order", Sample));
@@ -51,7 +51,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("兩層相加：套裝在前、客製在後")]
+        [DisplayName("Both layers are added together, packaged first and customized after")]
         public void Resolve_BothLayers_ConcatenatesBaseThenCustomize()
         {
             var access = new StubDefineAccess(Build("Order", Sample));
@@ -63,7 +63,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("未綁定任何 plugin 的 progId 回空 chain")]
+        [DisplayName("A progId with no plugin bound returns an empty chain")]
         public void Resolve_NoBinding_ReturnsEmptyChain()
         {
             var resolver = new PluginSettingsResolver(new StubDefineAccess(new PluginSettings()));
@@ -72,10 +72,10 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("兩層都沒有定義檔時回空 chain，不是 null——這是絕大多數部署的狀態")]
+        [DisplayName("With no definition file in either layer the chain is empty, not null (the state of most deployments)")]
         public void Resolve_NeitherLayerHasSettings_ReturnsEmptyChainNotNull()
         {
-            // base 缺檔（storage 丟 FileNotFoundException）+ 客製缺檔（reader 回 null）。
+            // The base file is missing (storage throws `FileNotFoundException`) and the customization is missing (the reader returns null).
             var access = new StubDefineAccess(null);
             var reader = new StubCustomizeReader { Settings = null };
             var resolver = new PluginSettingsResolver(access, reader);
@@ -89,14 +89,14 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("兩層都沒有定義檔時 runner 仍可建立，四個時點皆為 no-op")]
+        [DisplayName("With no definition file in either layer the runner can still be created and every stage is a no-op")]
         public void Resolve_NeitherLayerHasSettings_RunnerIsUsableNoOp()
         {
             var resolver = new PluginSettingsResolver(new StubDefineAccess(null), new StubCustomizeReader());
 
             var runner = resolver.Resolve("acme", "Order").CreateRunner(new StubPolhemContext(), Guid.NewGuid(), "Order");
 
-            // 不丟例外、不建構任何東西——FormBusinessObject 因此可以無條件呼叫。
+            // Nothing throws and nothing is constructed, so `FormBusinessObject` can call it unconditionally.
             var exception = Record.Exception(() =>
             {
                 runner.RunBeforeSave(null!);
@@ -108,7 +108,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("套裝定義缺檔時不算錯誤，客製仍解析得到")]
+        [DisplayName("A missing packaged definition is not an error, and the customization still resolves")]
         public void Resolve_BaseMissing_StillResolvesCustomize()
         {
             var access = new StubDefineAccess(null);
@@ -119,7 +119,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("型別載不到時拋例外——plugin 是刻意加上的，靜默略過等於客製沒生效")]
+        [DisplayName("A type that cannot be loaded throws (a plugin is added on purpose, and skipping it silently means the customization has no effect)")]
         public void Resolve_UnloadableType_Throws()
         {
             var access = new StubDefineAccess(Build("Order", ("Nope.Missing, Nope", PluginStage.BeforeSave)));
@@ -130,7 +130,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("型別不繼承 FormBusinessPlugin 時拋例外")]
+        [DisplayName("A type that does not inherit FormBusinessPlugin throws")]
         public void Resolve_TypeNotAPlugin_Throws()
         {
             var access = new StubDefineAccess(Build("Order", (NotAPluginFqn, PluginStage.BeforeSave)));
@@ -141,7 +141,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("★宣告的時點與類別覆寫的不符時拋例外——手寫檔沒有維護 API 把關，這道是唯一的閘門")]
+        [DisplayName("A declared stage that does not match the class's override throws (hand-written files have no maintenance API guarding them, so this is the only gate)")]
         public void Resolve_DeclaredStageDisagreesWithOverride_Throws()
         {
             var access = new StubDefineAccess(Build("Order", (SamplePluginFqn, PluginStage.AfterDelete)));
@@ -152,7 +152,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("★手寫檔漏了 Stage 屬性時拋例外，訊息說得出「你沒宣告」")]
+        [DisplayName("A hand-written file missing the Stage attribute throws, with a message saying the stage was not declared")]
         public void Resolve_NoStageDeclared_Throws()
         {
             var access = new StubDefineAccess(Build("Order", (SamplePluginFqn, PluginStage.None)));
@@ -163,7 +163,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("cache 以 (customizeId, progId) 隔離：不同租戶互不干擾")]
+        [DisplayName("The cache is isolated by (customizeId, progId), so tenants do not affect each other")]
         public void Resolve_DifferentCustomizeIds_Isolated()
         {
             var access = new StubDefineAccess(Build("Order", Sample));
@@ -171,7 +171,7 @@ namespace Polhem.Business.UnitTests
             var resolver = new PluginSettingsResolver(access, reader);
 
             var acme = resolver.Resolve("acme", "Order");
-            reader.Settings = null;   // globex 沒有客製檔
+            reader.Settings = null;   // globex has no customization file.
             var globex = resolver.Resolve("globex", "Order");
 
             Assert.Equal([typeof(SamplePlugin), typeof(OtherPlugin)], acme.Types);
@@ -179,7 +179,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("定義實例更換（file-watcher 重載）後 chain cache 重建")]
+        [DisplayName("The chain cache is rebuilt after the definition instance changes (a file-watcher reload)")]
         public void Resolve_SettingsInstanceChanged_RebuildsChain()
         {
             var access = new StubDefineAccess(Build("Order", Sample));
@@ -209,10 +209,10 @@ namespace Polhem.Business.UnitTests
             public override void AfterSave(SaveContext context) { }
         }
 
-        /// <summary>不繼承 <see cref="FormBusinessPlugin"/>，用於驗證型別檢查。</summary>
+        /// <summary>Does not inherit <see cref="FormBusinessPlugin"/>; used to verify the type check.</summary>
         public sealed class NotAPlugin { }
 
-        /// <summary>空 chain 的 runner 不會碰到 context，所以每個成員都不需要實作。</summary>
+        /// <summary>A runner with an empty chain never touches the context, so no member needs an implementation.</summary>
         private sealed class StubPolhemContext : IPolhemContext
         {
             public IDefineAccess DefineAccess => throw new NotImplementedException();

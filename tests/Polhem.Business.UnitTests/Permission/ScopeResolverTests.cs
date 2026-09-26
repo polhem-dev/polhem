@@ -11,9 +11,9 @@ using Polhem.Definition.Settings;
 namespace Polhem.Business.UnitTests.Permission
 {
     /// <summary>
-    /// ScopeResolver 的層二解析測試（以 fake session / role-permission / department-tree /
-    /// define-access 隔離）：各 scope 策略 → FilterNode、多角色合併（任一 All 不過濾 / 否則 OR）、
-    /// Inherit 解 model 預設、Owner 二身分、隱含 Own、fail-closed 邊界、逐列 IsRowInScope。
+    /// Layer-two resolution tests for ScopeResolver (isolated with fake session / role-permission / department-tree /
+    /// define-access): each scope strategy → FilterNode, merging several roles (any All means no filter, otherwise OR),
+    /// Inherit resolving to the model default, the two Owner identities, the implied Own, fail-closed edges, and per-row IsRowInScope.
     /// </summary>
     public class ScopeResolverTests
     {
@@ -75,7 +75,7 @@ namespace Polhem.Business.UnitTests.Permission
         // ---- read-side: per-strategy predicates ----
 
         [Fact]
-        [DisplayName("Own → owner 欄 IN {UserRowId, EmployeeRowId}（二身分）")]
+        [DisplayName("Own → owner column IN {UserRowId, EmployeeRowId} (both identities)")]
         public void ResolveFilter_Own_OwnerInBothIdentities()
         {
             var session = Session(s_user, s_employee, Guid.Empty, "Buyer");
@@ -87,7 +87,7 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("Own user 無對應 employee 時 owner 欄只比 UserRowId")]
+        [DisplayName("Own for a user with no matching employee compares the owner column with UserRowId only")]
         public void ResolveFilter_Own_NoEmployee_UserOnly()
         {
             var session = Session(s_user, Guid.Empty, Guid.Empty, "Buyer");
@@ -99,7 +99,7 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("Dept → (dept 欄 = DeptRowId) OR Own（隱含 Own）")]
+        [DisplayName("Dept → (dept column = DeptRowId) OR Own (the implied Own)")]
         public void ResolveFilter_Dept_DeptOrOwn()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
@@ -115,7 +115,7 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("DeptAndSub → dept 欄 IN 自身+子部門 OR Own")]
+        [DisplayName("DeptAndSub → dept column IN own department and subdepartments OR Own")]
         public void ResolveFilter_DeptAndSub_SubtreeOrOwn()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
@@ -130,7 +130,7 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("多個 Dept 欄 → 各 dept 欄 IN 子樹 以 OR 聯集，再 OR Own（調職單調出/調入部門）")]
+        [DisplayName("Several Dept columns → each dept column IN its subtree joined by OR, then OR Own (the from/to departments of a transfer form)")]
         public void ResolveFilter_MultipleDeptFields_OrUnion()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
@@ -138,7 +138,7 @@ namespace Polhem.Business.UnitTests.Permission
 
             var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, TransferSchema());
 
-            // Flat OR: from_dept IN 子樹, to_dept IN 子樹, buyer_rowid IN 身分 —— 兩部門主管都看得到。
+            // Flat OR: from_dept IN subtree, to_dept IN subtree, buyer_rowid IN identities, so both departments' managers can see it.
             var group = Assert.IsType<FilterGroup>(node);
             Assert.Equal(LogicalOperator.Or, group.Operator);
             Assert.Equal(3, group.Nodes.Count);
@@ -163,7 +163,7 @@ namespace Polhem.Business.UnitTests.Permission
         // ---- read-side: multi-role merge ----
 
         [Fact]
-        [DisplayName("多角色任一 All → 不過濾（null）")]
+        [DisplayName("Several roles with any All → no filter (null)")]
         public void ResolveFilter_AnyAll_ReturnsNull()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer", "Manager");
@@ -179,7 +179,7 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("多角色不同 scope（無 All）→ 各 predicate OR 聯集")]
+        [DisplayName("Several roles with different scopes (no All) → the predicates are joined by OR")]
         public void ResolveFilter_MultiRole_OrUnion()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer", "Clerk");
@@ -191,7 +191,7 @@ namespace Polhem.Business.UnitTests.Permission
 
             var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema());
 
-            // 頂層 OR：Own 分支 + Dept 分支（Dept 自身又是 (dept=..) OR Own 的群組）
+            // Top-level OR: the Own branch plus the Dept branch (Dept itself is a group of (dept=..) OR Own).
             var group = Assert.IsType<FilterGroup>(node);
             Assert.Equal(LogicalOperator.Or, group.Operator);
             Assert.Equal(2, group.Nodes.Count);
@@ -200,7 +200,7 @@ namespace Polhem.Business.UnitTests.Permission
         // ---- read-side: Inherit → model default ----
 
         [Fact]
-        [DisplayName("Inherit → 解 model 預設 scope（Dept）")]
+        [DisplayName("Inherit → resolves to the model's default scope (Dept)")]
         public void ResolveFilter_Inherit_ResolvesModelDefault()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
@@ -215,7 +215,7 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("Inherit → model 預設 All → 不過濾（null）")]
+        [DisplayName("Inherit → model default All → no filter (null)")]
         public void ResolveFilter_Inherit_ModelDefaultAll_ReturnsNull()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
@@ -231,7 +231,7 @@ namespace Polhem.Business.UnitTests.Permission
         // ---- read-side: fail-closed edges ----
 
         [Fact]
-        [DisplayName("Own 但無 owner 欄 → fail-closed（恆假 1=0）")]
+        [DisplayName("Own without an owner column → fail-closed (always false, 1=0)")]
         public void ResolveFilter_Own_NoOwnerField_DeniesAll()
         {
             var session = Session(s_user, s_employee, Guid.Empty, "Buyer");
@@ -243,7 +243,7 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("Dept 但無 dept 欄且無 owner 欄 → fail-closed")]
+        [DisplayName("Dept without a dept column or an owner column → fail-closed")]
         public void ResolveFilter_Dept_NoFields_DeniesAll()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");

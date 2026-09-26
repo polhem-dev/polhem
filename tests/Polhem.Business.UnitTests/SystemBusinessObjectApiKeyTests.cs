@@ -15,15 +15,15 @@ using Polhem.Definition;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="SystemBusinessObject.CreateApiKey"/> 的整合測試：發放的金鑰能被驗證、
-    /// 明文只出現一次（伺服端只存雜湊）、輸入驗證的拒絕情境，以及遠端呼叫的部署層授權把關。
+    /// Integration tests for <see cref="SystemBusinessObject.CreateApiKey"/>: an issued key can be verified,
+    /// the plaintext appears only once (the server stores only the hash), invalid input is rejected, and remote calls pass the deployment-level authorization gate.
     /// </summary>
     /// <remarks>
-    /// 每個測試用唯一 <c>sys_id</c> 並在 finally 清理——實體資料庫由多個平行測試行程共用。
-    /// 需要使用者列的測試一律自建（見 <see cref="TestUsers"/>），不動 seed 使用者 '001'。
-    /// 這些 BO 走 <c>DbScope.Common</c>，測試 fixture 把 <c>common</c> 綁在 SQL Server，
-    /// 因此閘門必須是 <c>SQLServer</c>：先前標成 <c>SQLite</c> 時，跳過與否看的是
-    /// <c>POLHEM_TEST_CONNSTR_SQLITE</c>，實際跑的卻是 SQL Server。
+    /// Each test uses a unique <c>sys_id</c> and cleans up in finally, because the physical database is shared by several parallel test processes.
+    /// Tests that need a user row create their own (see <see cref="TestUsers"/>) and leave seed user '001' untouched.
+    /// These BOs use <c>DbScope.Common</c>, and the test fixture binds <c>common</c> to SQL Server,
+    /// so the gate must be <c>SQLServer</c>. When it was marked <c>SQLite</c>, skipping depended on
+    /// <c>POLHEM_TEST_CONNSTR_SQLITE</c> while the test actually ran against SQL Server.
     /// </remarks>
     public class SystemBusinessObjectApiKeyTests : IClassFixture<SharedDbFixture>
     {
@@ -32,11 +32,11 @@ namespace Polhem.Business.UnitTests
         public SystemBusinessObjectApiKeyTests(SharedDbFixture fx) { _fx = fx; }
 
         /// <summary>
-        /// 本機呼叫端（<c>isLocalCall</c> 預設 true），即部署期在主機上的呼叫路徑。
+        /// A local caller (<c>isLocalCall: true</c>), the call path used on the host at deployment time.
         /// </summary>
         private SystemBusinessObject CreateBo()
-            // isLocalCall: true 是這裡的重點，不是省略 —— 這些測試驗的正是「本機呼叫不必是
-            // deployment admin 也能鑄造金鑰」那條路徑。預設值改為 false 之後必須寫出來。
+            // `isLocalCall: true` is the point here, not boilerplate: these tests verify exactly the path where a local call can mint a key
+            // without being a deployment admin. Since the default changed to false it must be written out.
             => new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
 
         private static string NewSysId() => "bo-" + Guid.NewGuid().ToString("N");
@@ -55,7 +55,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("CreateApiKey 應回傳兩段式明文金鑰，且其 secret 對得上儲存的雜湊")]
+        [DisplayName("CreateApiKey returns a two-part plaintext key whose secret matches the stored hash")]
         public void CreateApiKey_ReturnsPlaintextKeyMatchingStoredHash()
         {
             string sysId = NewSysId();
@@ -89,7 +89,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("CreateApiKey 對同一 sys_id 第二次應以可讀訊息拒絕，而非 unique index 錯誤")]
+        [DisplayName("CreateApiKey rejects a second key with the same sys_id with a readable message instead of a unique index error")]
         public void CreateApiKey_DuplicateSysId_ThrowsUserMessage()
         {
             string sysId = NewSysId();
@@ -110,7 +110,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Theory]
-        [DisplayName("CreateApiKey 於 sys_id 不合法時應拒絕（不得含分隔字元、不得大寫）")]
+        [DisplayName("CreateApiKey rejects an invalid sys_id (no separator characters, no uppercase)")]
         [InlineData("")]
         [InlineData("ab")]
         [InlineData("Has-Upper")]
@@ -124,7 +124,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateApiKey 於未給應用程式名稱時應拒絕")]
+        [DisplayName("CreateApiKey rejects a missing application name")]
         public void CreateApiKey_MissingSysName_ThrowsUserMessage()
         {
             var args = new CreateApiKeyArgs { SysId = NewSysId(), SysName = string.Empty };
@@ -133,7 +133,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateApiKey 於到期時間已過時應拒絕")]
+        [DisplayName("CreateApiKey rejects an expiry that has already passed")]
         public void CreateApiKey_PastExpiry_ThrowsUserMessage()
         {
             var args = new CreateApiKeyArgs
@@ -147,29 +147,29 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateApiKey 於 args 為 null 時應拋 ArgumentNullException")]
+        [DisplayName("CreateApiKey throws ArgumentNullException for null args")]
         public void CreateApiKey_NullArgs_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => CreateBo().CreateApiKey(null!));
         }
 
-        #region 遠端呼叫的部署層授權把關
+        #region Deployment-level authorization of remote calls
 
         [Fact]
-        [DisplayName("CreateApiKey 遠端呼叫且非部署層管理員時應拒絕")]
+        [DisplayName("CreateApiKey rejects a remote call from a caller who is not a deployment-level administrator")]
         public void CreateApiKey_RemoteNonAdmin_ThrowsUnauthorized()
         {
             var ctx = TestPolhemContext.CreateWithOverrides(_fx,
                 (typeof(IDeploymentAuthorizationService), new FakeDeploymentAuthorization(allowed: false)));
             var bo = new SystemBusinessObject(ctx, Guid.NewGuid(), SysProgIds.System, isLocalCall: false);
 
-            // 授權在輸入驗證之前：合法的 args 也照樣被擋，拒絕的理由不會被輸入錯誤蓋掉。
+            // Authorization comes before input validation: even valid args are blocked, so an input error cannot mask the reason for the rejection.
             Assert.Throws<UnauthorizedAccessException>(() =>
                 bo.CreateApiKey(new CreateApiKeyArgs { SysId = NewSysId(), SysName = "App" }));
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("CreateApiKey 遠端呼叫且為部署層管理員時應發放金鑰")]
+        [DisplayName("CreateApiKey issues a key for a remote call from a deployment-level administrator")]
         public void CreateApiKey_RemoteDeploymentAdmin_IssuesKey()
         {
             string userId = TestUsers.Create(ConnectionManager, "apikey-adm");
@@ -200,7 +200,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("CreateApiKey 遠端呼叫時，僅『已登入』的一般使用者仍應被拒")]
+        [DisplayName("CreateApiKey rejects a remote call from an ordinary user who is merely logged in")]
         public void CreateApiKey_RemoteAuthenticatedUserWithoutFlag_ThrowsUnauthorized()
         {
             string userId = TestUsers.Create(ConnectionManager, "apikey-usr");
@@ -208,7 +208,7 @@ namespace Polhem.Business.UnitTests
             Guid token = Guid.Empty;
             try
             {
-                // 有效 session、旗標為預設值 false——這正是升級後仍必須擋住的情境。
+                // A valid session with the flag at its default of false: exactly the case that must still be blocked after the upgrade.
                 token = NewSession(userId);
 
                 Assert.Throws<UnauthorizedAccessException>(() =>
@@ -221,7 +221,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("CreateApiKey 本機呼叫免管理員，維持首把金鑰的 bootstrap 路徑")]
+        [DisplayName("CreateApiKey needs no administrator for a local call, keeping the bootstrap path for the first key")]
         public void CreateApiKey_LocalCallWithoutAdmin_IssuesKey()
         {
             string userId = TestUsers.Create(ConnectionManager, "apikey-loc");
@@ -231,7 +231,7 @@ namespace Polhem.Business.UnitTests
             {
                 token = NewSession(userId);
 
-                // 尚無管理員的部署必須鑄得出第一把金鑰，否則階段 1 保留的 bootstrap 路徑就斷了。
+                // A deployment without an administrator must be able to mint its first key, otherwise the bootstrap path is broken.
                 var result = new SystemBusinessObject(TestPolhemContext.Create(_fx), token, SysProgIds.System, isLocalCall: true)
                     .CreateApiKey(new CreateApiKeyArgs { SysId = sysId, SysName = "Bootstrap" });
 
@@ -244,7 +244,7 @@ namespace Polhem.Business.UnitTests
         }
 
         /// <summary>
-        /// 遠端呼叫端（<c>isLocalCall: false</c>），走真實的 <see cref="IDeploymentAuthorizationService"/>。
+        /// A remote caller (<c>isLocalCall: false</c>) that goes through the real <see cref="IDeploymentAuthorizationService"/>.
         /// </summary>
         private SystemBusinessObject RemoteBo(Guid accessToken)
             => new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System, isLocalCall: false);

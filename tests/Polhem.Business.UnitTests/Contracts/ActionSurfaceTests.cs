@@ -9,25 +9,25 @@ using Polhem.Definition.Attributes;
 namespace Polhem.Business.UnitTests.Contracts
 {
     /// <summary>
-    /// 守住契約軸的<b>動作</b>對稱性：每個 <c>*Actions</c> 常數與對應 BO 上的 public 方法必須
-    /// 兩兩對應，且該方法確實是一個合法的 API 進入點（單一 <c>BusinessArgs</c> 參數、回傳
-    /// <c>BusinessResult</c>、被 <c>[ApiAccessControl]</c> 覆蓋）。
+    /// Guards the <b>action</b> symmetry of the contract axis: every <c>*Actions</c> constant and the public methods of the matching BO must
+    /// correspond one to one, and each method must be a valid API entry point (a single <c>BusinessArgs</c> parameter, a return type of
+    /// <c>BusinessResult</c>, covered by <c>[ApiAccessControl]</c>).
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>為什麼型別對稱性的閘門擋不到這件事。</b><c>ApiContractPairingTests</c> 與
-    /// <c>BusinessContractPairingTests</c> 守的是「型別有沒有配對的契約介面」，前提是那個型別
-    /// 存在。但 JSON-RPC 的 method 是<b>字串</b>：<c>JsonRpcExecutor.GetMethod</c> 拿
-    /// <c>action</c> 直接 <c>GetType().GetMethod(action)</c>。常數打錯一個字母，兩個 pairing
-    /// 測試全綠，症狀是 runtime 的 <c>MissingMethodException</c>。
+    /// <b>Why the type symmetry gates cannot catch this.</b> <c>ApiContractPairingTests</c> and
+    /// <c>BusinessContractPairingTests</c> guard whether a type has a paired contract interface, which assumes the type
+    /// exists. But a JSON-RPC method is a <b>string</b>: <c>JsonRpcExecutor.GetMethod</c> takes the
+    /// <c>action</c> and calls <c>GetType().GetMethod(action)</c> directly. With one letter wrong in a constant, both pairing
+    /// tests stay green, and the symptom is a runtime <c>MissingMethodException</c>.
     /// </para>
     /// <para>
-    /// 反向同理：BO 上多了一個帶 <c>[ApiAccessControl]</c> 的方法卻沒登記常數，它已經是可被
-    /// 呼叫的 API 表面，但呼叫端只能用魔術字串——編譯器與現有測試都不會出聲。
+    /// The reverse is the same: a BO method with <c>[ApiAccessControl]</c> but no registered constant is already a callable
+    /// API surface, yet callers can only use a magic string, and neither the compiler nor the existing tests say anything.
     /// </para>
     /// <para>
-    /// <c>ExecFunc</c> / <c>ExecFuncAnonymous</c> 宣告在 <see cref="BusinessObject"/> 基底、由
-    /// 所有軸繼承，其常數登記在 <see cref="SystemActions"/>，故各軸的反向檢查都接受這兩個名字。
+    /// <c>ExecFunc</c> / <c>ExecFuncAnonymous</c> are declared on the <see cref="BusinessObject"/> base and
+    /// inherited by every axis, and their constants are registered in <see cref="SystemActions"/>, so the reverse check of every axis accepts these two names.
     /// </para>
     /// </remarks>
     public class ActionSurfaceTests
@@ -39,7 +39,7 @@ namespace Polhem.Business.UnitTests.Contracts
         ];
 
         /// <summary>
-        /// 各軸的「常數類 → BO 型別」對應。新增軸時補一列。
+        /// The constants class → BO type mapping for each axis. Add a row when adding an axis.
         /// </summary>
         private static readonly (Type Actions, Type BusinessObject)[] s_axes =
         [
@@ -49,7 +49,7 @@ namespace Polhem.Business.UnitTests.Contracts
         ];
 
         /// <summary>
-        /// 展開為 (BO 型別, action 名稱) 逐筆案例，讓失敗訊息直接指出是哪一個 action。
+        /// Expands into one (BO type, action name) case each, so a failure message names the action directly.
         /// </summary>
         public static TheoryData<Type, string> DeclaredActions()
         {
@@ -65,8 +65,8 @@ namespace Polhem.Business.UnitTests.Contracts
         }
 
         /// <summary>
-        /// 展開為 (BO 型別, 方法名稱) 逐筆案例，涵蓋該 BO 上所有被 <c>[ApiAccessControl]</c>
-        /// 覆蓋的 public 方法。
+        /// Expands into one (BO type, method name) case each, covering every public method on that BO covered by
+        /// <c>[ApiAccessControl]</c>.
         /// </summary>
         public static TheoryData<Type, string> ExposedMethods()
         {
@@ -83,57 +83,57 @@ namespace Polhem.Business.UnitTests.Contracts
 
         [Theory]
         [MemberData(nameof(DeclaredActions))]
-        [DisplayName("每個 action 常數都應對應 BO 上一個合法的 API 方法")]
+        [DisplayName("Every action constant maps to a valid API method on the BO")]
         public void DeclaredAction_HasMatchingApiMethod(Type businessObjectType, string action)
         {
-            // 與 JsonRpcExecutor.GetMethod 同一條解析路徑：以 action 字串取 public 方法。
+            // The same resolution path as `JsonRpcExecutor.GetMethod`: the public method is looked up by the action string.
             var method = businessObjectType.GetMethod(action);
             Assert.True(method != null,
-                $"{businessObjectType.Name} 上找不到名為 '{action}' 的 public 方法。" +
-                "JsonRpcExecutor 以 action 字串直接反射取方法，對不上是 runtime 的 MissingMethodException。");
+                $"{businessObjectType.Name} has no public method named '{action}'. " +
+                "JsonRpcExecutor reflects the method directly from the action string, so a mismatch is a runtime MissingMethodException.");
 
             var parameters = method!.GetParameters();
             Assert.True(parameters.Length == 1,
-                $"{businessObjectType.Name}.{action} 應恰有一個參數，實際 {parameters.Length} 個。" +
-                "Executor 只會傳入單一 args 物件。");
+                $"{businessObjectType.Name}.{action} should have exactly one parameter, but has {parameters.Length}. " +
+                "The executor passes only a single args object.");
 
             Assert.True(typeof(BusinessArgs).IsAssignableFrom(parameters[0].ParameterType),
-                $"{businessObjectType.Name}.{action} 的參數型別應繼承 BusinessArgs，實際為 " +
-                $"{parameters[0].ParameterType.Name}。");
+                $"The parameter type of {businessObjectType.Name}.{action} should inherit BusinessArgs, but is " +
+                $"{parameters[0].ParameterType.Name}.");
 
             Assert.True(typeof(BusinessResult).IsAssignableFrom(UnwrapTask(method.ReturnType)),
-                $"{businessObjectType.Name}.{action} 的回傳型別應繼承 BusinessResult，實際為 " +
-                $"{method.ReturnType.Name}。ApiOutputConverter 以 XxxResult → XxxResponse 的名稱慣例轉換出站結果。");
+                $"The return type of {businessObjectType.Name}.{action} should inherit BusinessResult, but is " +
+                $"{method.ReturnType.Name}. ApiOutputConverter converts outbound results by the XxxResult → XxxResponse naming convention.");
 
             Assert.True(FindAccessAttribute(method) != null,
-                $"{businessObjectType.Name}.{action} 未被 [ApiAccessControl] 覆蓋。" +
-                "ApiAccessValidator 對未宣告者一律拒絕，此 action 會在 runtime 擲 UnauthorizedAccessException。");
+                $"{businessObjectType.Name}.{action} is not covered by [ApiAccessControl]. " +
+                "ApiAccessValidator rejects anything undeclared, so this action throws UnauthorizedAccessException at runtime.");
         }
 
         [Theory]
         [MemberData(nameof(ExposedMethods))]
-        [DisplayName("BO 上每個對外開放的方法都應登記為 action 常數")]
+        [DisplayName("Every method the BO exposes is registered as an action constant")]
         public void ExposedMethod_IsDeclaredAsAction(Type businessObjectType, string methodName)
         {
             var actions = s_axes.Single(x => x.BusinessObject == businessObjectType).Actions;
             var declared = ActionNames(actions).Concat(s_inheritedActions);
 
             Assert.True(declared.Contains(methodName, StringComparer.Ordinal),
-                $"{businessObjectType.Name}.{methodName} 帶 [ApiAccessControl]（已是可呼叫的 API 表面），" +
-                $"但 {actions.Name} 沒有對應常數。呼叫端只能靠魔術字串呼叫它。");
+                $"{businessObjectType.Name}.{methodName} carries [ApiAccessControl] (so it is already a callable API surface), " +
+                $"but {actions.Name} has no matching constant. Callers can only call it with a magic string.");
         }
 
         [Fact]
-        [DisplayName("兩個方向的案例列舉都不應為空")]
+        [DisplayName("Neither direction's case enumeration is empty")]
         public void Enumerations_AreNotEmpty()
         {
-            // 防止上面兩個 Theory 因反射條件寫錯而變成零案例的假綠燈。
+            // Prevents the two theories above from passing with zero cases because a reflection condition is wrong.
             Assert.NotEmpty(DeclaredActions());
             Assert.NotEmpty(ExposedMethods());
         }
 
         /// <summary>
-        /// 取出常數類中所有 <c>public const string</c> 的值。
+        /// Returns the values of every <c>public const string</c> in a constants class.
         /// </summary>
         private static IEnumerable<string> ActionNames(Type actionsType)
         {
@@ -145,7 +145,7 @@ namespace Polhem.Business.UnitTests.Contracts
         }
 
         /// <summary>
-        /// 取出 BO 上所有被 <c>[ApiAccessControl]</c> 覆蓋的 public instance 方法。
+        /// Returns every public instance method on the BO covered by <c>[ApiAccessControl]</c>.
         /// </summary>
         private static IEnumerable<MethodInfo> ApiMethods(Type businessObjectType)
         {
@@ -158,9 +158,9 @@ namespace Polhem.Business.UnitTests.Contracts
         }
 
         /// <summary>
-        /// 與 <c>ApiAccessValidator.FindAccessAttribute</c> 同一套三段查找：方法本身 → 被覆寫的
-        /// 基底方法 → 宣告型別。這裡必須複製而非引用，因為那支是 private——複製的代價由本測試
-        /// 自己承擔，總比測試用一套不同的判定規則來得好。
+        /// The same three-step lookup as <c>ApiAccessValidator.FindAccessAttribute</c>: the method itself → the overridden
+        /// base method → the declaring type. It has to be copied rather than referenced because that one is private. The test
+        /// bears the cost of the copy, which is better than the test using a different rule.
         /// </summary>
         private static ApiAccessControlAttribute? FindAccessAttribute(MethodInfo method)
         {
@@ -178,7 +178,7 @@ namespace Polhem.Business.UnitTests.Contracts
         }
 
         /// <summary>
-        /// 取出實際的結果型別：非同步方法回傳 <c>Task&lt;T&gt;</c>，Executor 會 await 後取 Result。
+        /// Returns the actual result type: an async method returns <c>Task&lt;T&gt;</c>, and the executor awaits it and takes Result.
         /// </summary>
         private static Type UnwrapTask(Type returnType)
         {

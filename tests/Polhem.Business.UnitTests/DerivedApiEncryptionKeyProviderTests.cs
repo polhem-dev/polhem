@@ -6,9 +6,9 @@ using Polhem.Business.Providers;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="DerivedApiEncryptionKeyProvider"/> 行為測試。
-    /// 重點在「同一 token + 同一根金鑰必得同一把」——session 由 st_session 重建後
-    /// 能取回可用金鑰，正是靠這個決定性。
+    /// Behavior tests for <see cref="DerivedApiEncryptionKeyProvider"/>.
+    /// The key point is that the same token and root key always yield the same key. A session rebuilt from
+    /// `st_session` gets a usable key back precisely because of this determinism.
     /// </summary>
     public class DerivedApiEncryptionKeyProviderTests
     {
@@ -20,7 +20,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetKey 應回傳 64 bytes")]
+        [DisplayName("GetKey returns 64 bytes")]
         public void GetKey_Returns64Bytes()
         {
             var provider = new DerivedApiEncryptionKeyProvider(CreateRootKey(0));
@@ -31,7 +31,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("同一 token 與同一根金鑰導出結果應一致")]
+        [DisplayName("The same token and root key derive the same key")]
         public void GetKey_SameTokenAndRootKey_ReturnsSameKey()
         {
             var token = Guid.NewGuid();
@@ -42,7 +42,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GenerateKeyForLogin 應與 GetKey 對同一 token 導出相同金鑰")]
+        [DisplayName("GenerateKeyForLogin derives the same key as GetKey for the same token")]
         public void GenerateKeyForLogin_MatchesGetKey()
         {
             var provider = new DerivedApiEncryptionKeyProvider(CreateRootKey(0));
@@ -55,7 +55,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("不同 token 應導出不同金鑰")]
+        [DisplayName("Different tokens derive different keys")]
         public void GetKey_DifferentTokens_ReturnDifferentKeys()
         {
             var provider = new DerivedApiEncryptionKeyProvider(CreateRootKey(0));
@@ -67,7 +67,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("根金鑰不同應導出不同金鑰（根金鑰輪替使既有 session 失效）")]
+        [DisplayName("Different root keys derive different keys (rotating the root key invalidates existing sessions)")]
         public void GetKey_DifferentRootKeys_ReturnDifferentKeys()
         {
             var token = Guid.NewGuid();
@@ -79,7 +79,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetKey 傳入 Guid.Empty 應拋 UnauthorizedAccessException")]
+        [DisplayName("GetKey throws UnauthorizedAccessException for Guid.Empty")]
         public void GetKey_EmptyToken_Throws()
         {
             var provider = new DerivedApiEncryptionKeyProvider(CreateRootKey(0));
@@ -88,7 +88,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GenerateKeyForLogin 傳入 Guid.Empty 應拋 ArgumentException")]
+        [DisplayName("GenerateKeyForLogin throws ArgumentException for Guid.Empty")]
         public void GenerateKeyForLogin_EmptyToken_Throws()
         {
             var provider = new DerivedApiEncryptionKeyProvider(CreateRootKey(0));
@@ -97,7 +97,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("FromMasterKey 應導出穩定且不等於 master key 本身的根金鑰")]
+        [DisplayName("FromMasterKey derives a stable root key that differs from the master key itself")]
         public void FromMasterKey_DerivesStableRootKey()
         {
             var masterKey = CreateRootKey(3);
@@ -107,33 +107,33 @@ namespace Polhem.Business.UnitTests
             var b = DerivedApiEncryptionKeyProvider.FromMasterKey(masterKey).GetKey(token);
 
             Assert.Equal(a, b);
-            // 未設定 ApiEncryptionKey 時的退路，不得等同「直接拿 master key 當根金鑰」
+            // This is the fallback when `ApiEncryptionKey` is not set, and it must not amount to using the master key as the root key.
             Assert.NotEqual(new DerivedApiEncryptionKeyProvider(masterKey).GetKey(token), a);
         }
 
         [Fact]
-        [DisplayName("FromMasterKey 傳入空 master key 應拋 ArgumentException")]
+        [DisplayName("FromMasterKey throws ArgumentException for an empty master key")]
         public void FromMasterKey_EmptyMasterKey_Throws()
         {
             Assert.Throws<ArgumentException>(() => DerivedApiEncryptionKeyProvider.FromMasterKey([]));
         }
 
         [Fact]
-        [DisplayName("ctor 傳入 null 根金鑰應拋 ArgumentNullException")]
+        [DisplayName("The constructor throws ArgumentNullException for a null root key")]
         public void Ctor_NullRootKey_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new DerivedApiEncryptionKeyProvider(null!));
         }
 
         [Fact]
-        [DisplayName("ctor 傳入空根金鑰應拋 ArgumentException")]
+        [DisplayName("The constructor throws ArgumentException for an empty root key")]
         public void Ctor_EmptyRootKey_Throws()
         {
             Assert.Throws<ArgumentException>(() => new DerivedApiEncryptionKeyProvider([]));
         }
 
         [Fact]
-        [DisplayName("GetKey 以 HKDF 標籤 polhem-api-session-key 衍生")]
+        [DisplayName("GetKey derives with the HKDF label polhem-api-session-key")]
         public void GetKey_DerivesWithSessionKeyLabel()
         {
             // Changing the label changes every session key and so invalidates live sessions. The other
@@ -149,7 +149,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("FromMasterKey 以 HKDF 標籤 polhem-api-encryption-root-key 衍生根金鑰")]
+        [DisplayName("FromMasterKey derives the root key with the HKDF label polhem-api-encryption-root-key")]
         public void FromMasterKey_DerivesRootKeyWithRootKeyLabel()
         {
             var masterKey = CreateRootKey(9);

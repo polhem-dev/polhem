@@ -6,7 +6,7 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="DynamicApiEncryptionKeyProvider"/> 行為測試。
+    /// Behavior tests for <see cref="DynamicApiEncryptionKeyProvider"/>.
     /// </summary>
     public class DynamicApiEncryptionKeyProviderTests : IClassFixture<SharedDbFixture>
     {
@@ -17,7 +17,7 @@ namespace Polhem.Business.UnitTests
             => new(_fx.GetRequiredService<ISessionInfoService>());
 
         [Fact]
-        [DisplayName("GetKey(Guid.Empty) 應拋 UnauthorizedAccessException")]
+        [DisplayName("GetKey(Guid.Empty) throws UnauthorizedAccessException")]
         public void GetKey_Empty_ThrowsUnauthorized()
         {
             var provider = CreateProvider();
@@ -25,7 +25,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetKey 未知 AccessToken 應拋 UnauthorizedAccessException")]
+        [DisplayName("GetKey with an unknown AccessToken throws UnauthorizedAccessException")]
         public void GetKey_UnknownToken_ThrowsUnauthorized()
         {
             var provider = CreateProvider();
@@ -35,7 +35,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetKey 有效 Session 應回傳對應的 ApiEncryptionKey")]
+        [DisplayName("GetKey with a valid session returns the matching ApiEncryptionKey")]
         public void GetKey_ValidSession_ReturnsKey()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -66,7 +66,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GenerateKeyForLogin 應回傳 64 bytes")]
+        [DisplayName("GenerateKeyForLogin returns 64 bytes")]
         public void GenerateKeyForLogin_Returns64Bytes()
         {
             var provider = CreateProvider();

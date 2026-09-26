@@ -15,21 +15,21 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests.Form
 {
     /// <summary>
-    /// FormBusinessObject 層一權限 gate 測試：以 fake ICompanyAuthorizationService 控制 Can 結果,
-    /// 驗證越權 action 被擋（ForbiddenException）、有權放行、Save 逐列 RowState、空
-    /// PermissionModelId 跳過。攔截路徑在進 repository 前即擋,故不需真實 DB。
+    /// Tests of the layer-one permission gate in FormBusinessObject. A fake ICompanyAuthorizationService controls the result of Can,
+    /// verifying that an unauthorized action is blocked (ForbiddenException), an authorized one passes, Save checks each row's RowState, and an empty
+    /// PermissionModelId skips the gate. The interception happens before the repository, so no real DB is needed.
     /// </summary>
     /// <remarks>
-    /// NOTE: 「不需真實 DB」曾經只是意圖 —— BO 以裸 <c>Guid.NewGuid()</c> 建構,方法內
-    /// <c>SessionInfoService.Get</c>(查目前公司、取語系) 查不到就走 rebuild 路徑讀
-    /// <c>st_session</c>,於是整個類別實際上需要容器。改用
-    /// <see cref="TestSessionFactory.CreateAccessToken"/> 後才真的成立。
+    /// NOTE: "no real DB is needed" used to be only an intention. The BO was constructed with a bare <c>Guid.NewGuid()</c>, and inside the methods
+    /// <c>SessionInfoService.Get</c> (for the current company and the locale) found nothing and took the rebuild path that reads
+    /// <c>st_session</c>, so the whole class actually needed the container. It only became true after switching to
+    /// <see cref="TestSessionFactory.CreateAccessToken"/>.
     /// </summary>
     public class FormBusinessObjectPermissionGateTests : IClassFixture<PolhemTestFixture>
     {
-        // FormSchema 'PermGateForm' 宣告 PermissionModelId='PermGateModel' → gate 啟用。
+        // FormSchema 'PermGateForm' declares PermissionModelId='PermGateModel', so the gate is enabled.
         private const string GatedProgId = "PermGateForm";
-        // 'Employee' 未宣告 PermissionModelId → gate 跳過。
+        // 'Employee' declares no PermissionModelId, so the gate is skipped.
         private const string UngatedProgId = "Employee";
 
         private readonly PolhemTestFixture _fx;
@@ -65,11 +65,11 @@ namespace Polhem.Business.UnitTests.Form
             row["sys_id"] = "x";
             table.Rows.Add(row);
             table.AcceptChanges();   // → Unchanged
-            row["sys_id"] = "y";     // → Modified（觸發 Update 層二檢查）
+            row["sys_id"] = "y";     // → Modified (triggers the layer-two Update check)
             return ds;
         }
 
-        // 主表 Unchanged、只有表身（明細）被改 → 仍是對既存記錄的修改存檔（視為 Update）。
+        // The master is Unchanged and only the detail rows are edited. This is still an edit-and-save of an existing record, so it counts as Update.
         private static DataSet DetailOnlyEditDataSet()
         {
             var ds = new DataSet();
@@ -89,14 +89,14 @@ namespace Polhem.Business.UnitTests.Form
             drow["qty"] = "1";
             detail.Rows.Add(drow);
 
-            ds.AcceptChanges();   // 全部 Unchanged
-            drow["qty"] = "2";    // 明細 → Modified；主表維持 Unchanged
+            ds.AcceptChanges();   // Everything Unchanged.
+            drow["qty"] = "2";    // Detail → Modified, master stays Unchanged.
             return ds;
         }
 
         /// <summary>
-        /// 主檔表被整個省略、只送明細列——層二檢查在修正前會直接 early-return，
-        /// 而 repository 照樣把明細寫進去。
+        /// The master table is omitted entirely and only detail rows are sent. Before the fix, the layer-two check returned early,
+        /// and the repository wrote the detail rows anyway.
         /// </summary>
         private static DataSet DetailRowsWithoutMasterTableDataSet()
         {
@@ -107,7 +107,7 @@ namespace Polhem.Business.UnitTests.Form
             detail.Columns.Add("qty");
             var drow = detail.NewRow();
             drow["sys_rowid"] = Guid.NewGuid();
-            drow[SysFields.MasterRowId] = Guid.NewGuid();   // 別人的主檔
+            drow[SysFields.MasterRowId] = Guid.NewGuid();   // Someone else's master.
             drow["qty"] = "1";
             detail.Rows.Add(drow);
             ds.AcceptChanges();
@@ -116,40 +116,40 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         /// <summary>
-        /// 帶一個主檔，明細以 <paramref name="state"/> 的狀態指向另一筆<b>不在 payload 內</b>的主檔。
+        /// Carries one master, with a detail row in state <paramref name="state"/> pointing to another master that is <b>not in the payload</b>.
         /// </summary>
-        /// <param name="state">明細列要呈現的狀態。</param>
+        /// <param name="state">The state the detail row should be in.</param>
         private static DataSet MasterWithDetailOwnedByAbsentMaster(DataRowState state)
         {
             var (ds, _, drow) = BuildMasterDetail();
-            drow[SysFields.MasterRowId] = Guid.NewGuid();   // 別人的主檔
+            drow[SysFields.MasterRowId] = Guid.NewGuid();   // Someone else's master.
 
             if (state == DataRowState.Added) { return ds; }
 
             ds.AcceptChanges();
-            drow["qty"] = "2";                             // → Modified，MasterRowId 兩版皆為別人的
+            drow["qty"] = "2";                             // → Modified, and both versions of MasterRowId belong to someone else.
             return ds;
         }
 
         /// <summary>
-        /// 明細原本掛在別人的主檔下，被改嫁到本次 payload 帶著的主檔。
+        /// A detail row that belonged to someone else's master is reparented to the master carried in this payload.
         /// </summary>
         /// <remarks>
-        /// Current 指向在場的主檔，只有 Original 指向不在場的那一筆——<b>只驗 Current 的實作
-        /// 抓不到這一種</b>，而它同樣是把別人記錄裡的資料搬走。這個案例存在的唯一理由就是
-        /// 釘住 <c>WrittenVersions</c> 對 Modified 回傳兩個版本。
+        /// Current points to the master that is present; only Original points to the absent one. <b>An implementation that checks only Current
+        /// misses this case</b>, yet it also moves data out of someone else's record. The only reason this case exists is to
+        /// pin down that <c>WrittenVersions</c> returns both versions for Modified.
         /// </remarks>
         private static DataSet MasterWithDetailReparentedFromAbsentMaster()
         {
             var (ds, masterRowId, drow) = BuildMasterDetail();
-            drow[SysFields.MasterRowId] = Guid.NewGuid();   // 別人的主檔
+            drow[SysFields.MasterRowId] = Guid.NewGuid();   // Someone else's master.
             ds.AcceptChanges();
-            drow[SysFields.MasterRowId] = masterRowId;      // → Modified，改嫁到在場的主檔
+            drow[SysFields.MasterRowId] = masterRowId;      // → Modified, reparented to the master that is present.
             return ds;
         }
 
         /// <summary>
-        /// 建一組「主檔一列 + 明細一列」，回傳 DataSet、主檔 rowid 與明細列（皆為 Added 狀態）。
+        /// Builds one master row plus one detail row, and returns the DataSet, the master rowid and the detail row (all in the Added state).
         /// </summary>
         private static (DataSet DataSet, Guid MasterRowId, DataRow DetailRow) BuildMasterDetail()
         {
@@ -177,7 +177,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         /// <summary>
-        /// 正規的明細-only 編輯：主檔在場（Unchanged），明細指向的就是它。
+        /// A well-formed detail-only edit: the master is present (Unchanged) and the detail row points to it.
         /// </summary>
         private static DataSet WellFormedDetailEditDataSet()
         {
@@ -208,42 +208,42 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("GetList 無 Read 授權應擋 ForbiddenException")]
+        [DisplayName("GetList without the Read grant throws ForbiddenException")]
         public void GetList_NoReadGrant_ThrowsForbidden()
             => Assert.Throws<ForbiddenException>(() => Bo(PermissionAction.None).GetList(new GetListArgs()));
 
         [Fact]
-        [DisplayName("GetData 無 Read 授權應擋 ForbiddenException")]
+        [DisplayName("GetData without the Read grant throws ForbiddenException")]
         public void GetData_NoReadGrant_ThrowsForbidden()
             => Assert.Throws<ForbiddenException>(() => Bo(PermissionAction.None).GetData(new GetDataArgs { RowId = Guid.NewGuid() }));
 
         [Fact]
-        [DisplayName("Delete 無 Delete 授權應擋 ForbiddenException")]
+        [DisplayName("Delete without the Delete grant throws ForbiddenException")]
         public void Delete_NoDeleteGrant_ThrowsForbidden()
             => Assert.Throws<ForbiddenException>(() => Bo(PermissionAction.None).Delete(new DeleteArgs { RowId = Guid.NewGuid() }));
 
         [Fact]
-        [DisplayName("Save 含 Added 列但無 Create 授權應擋（逐列 RowState→Create）")]
+        [DisplayName("Save with an Added row is blocked without the Create grant (each row's RowState maps to Create)")]
         public void Save_AddedRow_NoCreateGrant_ThrowsForbidden()
         {
-            // 持有 Update|Delete 但缺 Create → Added 列觸發的 Create 被擋
+            // Holding Update|Delete but not Create, so the Create required by the Added row is blocked.
             var bo = Bo(PermissionAction.Update | PermissionAction.Delete);
             Assert.Throws<ForbiddenException>(() => bo.Save(new SaveArgs { DataSet = AddedRowDataSet() }));
         }
 
         [Fact]
-        [DisplayName("GetList 有 Read 授權應放行進 repository")]
+        [DisplayName("GetList with the Read grant passes through to the repository")]
         public void GetList_WithReadGrant_PassesGate()
         {
             var bo = Bo(PermissionAction.Read, new StubRepo());
 
             var ex = Record.Exception(() => bo.GetList(new GetListArgs()));
 
-            Assert.Null(ex); // gate 放行,repo 回 stub
+            Assert.Null(ex); // The gate passes and the repository returns the stub.
         }
 
         [Fact]
-        [DisplayName("Save 含 Added 列且有 Create 授權應放行")]
+        [DisplayName("Save with an Added row passes with the Create grant")]
         public void Save_AddedRow_WithCreateGrant_PassesGate()
         {
             var bo = Bo(PermissionAction.Create, new StubRepo());
@@ -254,17 +254,17 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("Save 含 Modified 列但記錄越範圍（ExistsInScope=false）應擋 ForbiddenException（層二寫入）")]
+        [DisplayName("Save with a Modified row whose record is out of scope (ExistsInScope=false) throws ForbiddenException (layer-two write)")]
         public void Save_ModifiedRow_OutOfScope_ThrowsForbidden()
         {
-            // 有 Update 授權（層一過）但目標記錄不在範圍（權威 re-query=false）→ 層二擋
+            // The Update grant passes layer one, but the target record is out of scope (the authoritative re-query returns false), so layer two blocks it.
             var repo = new StubRepo { InScope = false };
             var bo = Bo(PermissionAction.Update, repo);
             Assert.Throws<ForbiddenException>(() => bo.Save(new SaveArgs { DataSet = ModifiedRowDataSet() }));
         }
 
         [Fact]
-        [DisplayName("Save 含 Modified 列且記錄在範圍（ExistsInScope=true）應放行")]
+        [DisplayName("Save with a Modified row whose record is in scope (ExistsInScope=true) passes")]
         public void Save_ModifiedRow_InScope_PassesGate()
         {
             var repo = new StubRepo { InScope = true };
@@ -274,21 +274,21 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("Save 只改表身（主表 Unchanged）視為 Update，越範圍應擋 ForbiddenException")]
+        [DisplayName("Save that edits only the detail rows (master Unchanged) counts as Update and throws ForbiddenException out of scope")]
         public void Save_DetailOnlyEdit_OutOfScope_ThrowsForbidden()
         {
-            // 主表 Unchanged、明細 Modified → 仍是修改該既存記錄 → 走 Update 層二檢查
+            // Master Unchanged and detail Modified is still an edit of that existing record, so it goes through the layer-two Update check.
             var repo = new StubRepo { InScope = false };
             var bo = Bo(PermissionAction.Update, repo);
             Assert.Throws<ForbiddenException>(() => bo.Save(new SaveArgs { DataSet = DetailOnlyEditDataSet() }));
         }
 
         [Fact]
-        [DisplayName("Save 省略主檔表、只送明細列應擋 ForbiddenException（層二繞過）")]
+        [DisplayName("Save that omits the master table and sends only detail rows throws ForbiddenException (layer-two bypass)")]
         public void Save_DetailRowsWithoutMasterTable_ThrowsForbidden()
         {
-            // InScope=true：即使記錄範圍檢查會放行，這個 payload 形狀本身就沒有可檢查的主檔，
-            // 所以擋下的理由是結構而非範圍——用 true 才證明得了這一點。
+            // `InScope=true`: even though the record scope check would pass, this payload shape has no master to check,
+            // so the block is structural rather than about scope. Only true proves that.
             var repo = new StubRepo { InScope = true };
             var bo = Bo(PermissionAction.Update, repo);
 
@@ -299,7 +299,7 @@ namespace Polhem.Business.UnitTests.Form
         [Theory]
         [InlineData(DataRowState.Added)]
         [InlineData(DataRowState.Modified)]
-        [DisplayName("Save 的明細指向 payload 未攜帶的主檔應擋 ForbiddenException")]
+        [DisplayName("Save with a detail row pointing to a master the payload does not carry throws ForbiddenException")]
         public void Save_DetailOwnedByAbsentMaster_ThrowsForbidden(DataRowState state)
         {
             var repo = new StubRepo { InScope = true };
@@ -310,7 +310,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("Save 把別人主檔下的明細改嫁到自己的主檔應擋 ForbiddenException（Original 版本）")]
+        [DisplayName("Save that reparents a detail row from someone else's master to its own throws ForbiddenException (the Original version)")]
         public void Save_DetailReparentedFromAbsentMaster_ThrowsForbidden()
         {
             var repo = new StubRepo { InScope = true };
@@ -321,10 +321,10 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("對照組：主檔在場且明細指向它的正規明細編輯應放行")]
+        [DisplayName("Control case: a well-formed detail edit, with the master present and the detail pointing to it, passes")]
         public void Save_WellFormedDetailEdit_PassesGate()
         {
-            // 沒有這一條，上面三個測試用「一律拒絕」也能滿足。
+            // Without this one, the tests above could all be satisfied by rejecting everything.
             var repo = new StubRepo { InScope = true };
             var bo = Bo(PermissionAction.Update, repo);
 
@@ -334,10 +334,10 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("FormSchema 未宣告 PermissionModelId 時 gate 應跳過（向後相容）")]
+        [DisplayName("The gate is skipped when FormSchema declares no PermissionModelId (backward compatible)")]
         public void EmptyPermissionModelId_SkipsGate()
         {
-            // Employee 無 PermissionModelId → 即使 Can 全否,gate 也不查、直接放行
+            // Employee has no PermissionModelId, so even with Can denying everything the gate does not check and passes.
             var bo = Bo(PermissionAction.None, new StubRepo(), UngatedProgId);
 
             var ex = Record.Exception(() => bo.GetList(new GetListArgs()));

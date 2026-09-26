@@ -11,8 +11,8 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="SystemBusinessObject"/> 的 plugin 維護 API：LocalOnly 防禦、儲存時驗證、
-    /// 空字串等同清空、寫入委派給 <see cref="ICustomizeDefineWriter"/>。
+    /// The plugin maintenance API of <see cref="SystemBusinessObject"/>: the LocalOnly defense, validation on save,
+    /// an empty string meaning clear, and writes delegated to <see cref="ICustomizeDefineWriter"/>.
     /// </summary>
     public class SystemBusinessObjectPluginTests : IClassFixture<SharedDbFixture>
     {
@@ -46,11 +46,11 @@ namespace Polhem.Business.UnitTests
             return XmlCodec.Serialize(settings);
         }
 
-        /// <summary><see cref="SamplePlugin"/> 覆寫 BeforeSave，宣告與覆寫相符。</summary>
+        /// <summary><see cref="SamplePlugin"/> overrides BeforeSave, so the declaration matches the override.</summary>
         private static (string, PluginStage) Sample => (SamplePluginFqn, PluginStage.BeforeSave);
 
         [Fact]
-        [DisplayName("遠端呼叫被拒——attribute 之外的第二道防線")]
+        [DisplayName("A remote call is rejected (the second line of defense beyond the attribute)")]
         public void SaveCustomizePluginSettings_RemoteCall_Throws()
         {
             var bo = CreateBo(new SpyWriter(), isLocalCall: false);
@@ -64,7 +64,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("讀取的遠端呼叫同樣被拒")]
+        [DisplayName("A remote read call is rejected as well")]
         public void GetCustomizePluginSettings_RemoteCall_Throws()
         {
             var bo = CreateBo(new SpyWriter(), isLocalCall: false);
@@ -74,7 +74,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("未帶客製代碼時拒絕——空代碼指的是套裝層，不是租戶客製")]
+        [DisplayName("A missing customize ID is rejected (an empty ID means the packaged layer, not a tenant customization)")]
         public void SaveCustomizePluginSettings_EmptyCustomizeId_Throws()
         {
             var bo = CreateBo(new SpyWriter());
@@ -84,7 +84,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("儲存成功時寫入委派給 writer，並回報綁定筆數")]
+        [DisplayName("A successful save delegates the write to the writer and reports the binding count")]
         public void SaveCustomizePluginSettings_Valid_WritesAndReportsCount()
         {
             var writer = new SpyWriter();
@@ -103,7 +103,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("空 XML 等同清空該租戶的綁定，不需另一支 API")]
+        [DisplayName("Empty XML clears the tenant's bindings without a separate API")]
         public void SaveCustomizePluginSettings_EmptyXml_ClearsBindings()
         {
             var writer = new SpyWriter();
@@ -121,7 +121,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("型別載不到時拒存，且什麼都沒寫進去")]
+        [DisplayName("A type that cannot be loaded is rejected and nothing is written")]
         public void SaveCustomizePluginSettings_UnloadableType_RejectsWithoutWriting()
         {
             var writer = new SpyWriter();
@@ -139,7 +139,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("什麼時點都沒 override 的 plugin 拒存——掛了等於沒掛")]
+        [DisplayName("A plugin that overrides no stage is rejected (binding it would do nothing)")]
         public void SaveCustomizePluginSettings_PluginWithNoStage_Rejects()
         {
             var writer = new SpyWriter();
@@ -157,7 +157,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("一筆不合格就整份拒存，通過的那筆也不寫")]
+        [DisplayName("One invalid entry rejects the whole definition, and the valid entry is not written either")]
         public void SaveCustomizePluginSettings_OneBadEntry_RejectsWholeDefinition()
         {
             var writer = new SpyWriter();
@@ -174,7 +174,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("XML 壞掉時給出可讀訊息，而不是原始序列化例外")]
+        [DisplayName("Malformed XML produces a readable message instead of the raw serialization exception")]
         public void SaveCustomizePluginSettings_MalformedXml_ThrowsUserMessage()
         {
             var bo = CreateBo(new SpyWriter());
@@ -188,7 +188,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("租戶沒有客製時讀回空字串，呼叫端從空白定義開始編輯")]
+        [DisplayName("A tenant without a customization reads back an empty string, so the caller starts from a blank definition")]
         public void GetCustomizePluginSettings_NoOverride_ReturnsEmptyString()
         {
             var bo = CreateBo(new SpyWriter(), new SpyReader { Settings = null });
@@ -199,7 +199,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("讀回的 XML 可還原成同一份綁定")]
+        [DisplayName("The XML read back restores the same bindings")]
         public void GetCustomizePluginSettings_WithOverride_RoundTrips()
         {
             var stored = new PluginSettings();
@@ -223,7 +223,7 @@ namespace Polhem.Business.UnitTests
             public override void BeforeSave(SaveContext context) { }
         }
 
-        /// <summary>繼承對了但一個時點都沒 override——綁上去也永遠不會跑。</summary>
+        /// <summary>Inherits correctly but overrides no stage, so it would never run even when bound.</summary>
         public sealed class NoStagePlugin : FormBusinessPlugin
         {
             public NoStagePlugin(IPolhemContext ctx, Guid accessToken, string progId)

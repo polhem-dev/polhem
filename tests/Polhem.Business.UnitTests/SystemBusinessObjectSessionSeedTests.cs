@@ -11,12 +11,12 @@ using Polhem.Definition;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// 驗證 session 生命週期的四個寫入點確實落到 <c>st_session</c> 種子：
-    /// Login 寫入、EnterCompany / 切換公司更新、LeaveCompany 清空、Logout 刪除。
+    /// Verifies that the session lifecycle's write points really reach the <c>st_session</c> seed:
+    /// Login writes it, EnterCompany and a company switch update it, LeaveCompany clears it, and Logout deletes it.
     /// </summary>
     /// <remarks>
-    /// 這四點缺一不可：Login 不寫，token 一交付即在部署或多節點下失效；Logout 不刪，
-    /// 登出後 token 會由種子重建復活，登出形同虛設。
+    /// Every one of these is required: if Login did not write, a token would stop working as soon as it was issued under a redeployment or multiple nodes; if Logout did not delete,
+    /// the token would be revived from the seed after logout, making logout meaningless.
     /// </remarks>
     public class SystemBusinessObjectSessionSeedTests : IClassFixture<SharedDbFixture>
     {
@@ -39,7 +39,7 @@ namespace Polhem.Business.UnitTests
             => new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("Login 應寫入未帶公司的種子")]
+        [DisplayName("Login writes a seed without a company")]
         public void Login_WritesSeedWithoutCompany()
         {
             var accessToken = LoginAsSeedUser();
@@ -59,7 +59,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("EnterCompany 與 LeaveCompany 應同步更新種子的 CompanyId")]
+        [DisplayName("EnterCompany and LeaveCompany keep the seed's CompanyId in sync")]
         public void EnterAndLeaveCompany_UpdateSeedCompanyId()
         {
             var accessToken = LoginAsSeedUser();
@@ -79,7 +79,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("Logout 應刪除種子，token 不得由資料庫復活")]
+        [DisplayName("Logout deletes the seed so the token cannot be revived from the database")]
         public void Logout_DeletesSeed_TokenCannotBeRevived()
         {
             var accessToken = LoginAsSeedUser();
@@ -88,7 +88,7 @@ namespace Polhem.Business.UnitTests
 
             bo.Logout(new LogoutArgs());
 
-            // 快取與種子都必須消失——只清快取的話，下一個請求就會把 token 重建回來。
+            // Both the cache and the seed must be gone. Clearing only the cache would let the next request rebuild the token.
             Assert.Null(_fx.GetRequiredService<ISessionInfoService>().Get(accessToken));
             Assert.Null(SessionRepository.GetSession(accessToken));
         }

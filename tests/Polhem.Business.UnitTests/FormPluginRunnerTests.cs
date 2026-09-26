@@ -8,8 +8,8 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="FormPluginChain"/> 與 <see cref="FormPluginRunner"/>：宣告時點與類別覆寫必須
-    /// 精確對帳、依宣告順序執行、實例按需建構，以及每次操作各自的實例。
+    /// <see cref="FormPluginChain"/> and <see cref="FormPluginRunner"/>: the declared stage must match the class's override
+    /// exactly, plugins run in declaration order, instances are constructed on demand, and each operation gets its own instances.
     /// </summary>
     public class FormPluginRunnerTests : IClassFixture<PolhemTestFixture>
     {
@@ -30,7 +30,7 @@ namespace Polhem.Business.UnitTests
             => new(typeof(T), stage);
 
         [Fact]
-        [DisplayName("chain 依宣告記錄各型別的時點")]
+        [DisplayName("The chain records each type's stage as declared")]
         public void Chain_RecordsDeclaredStage()
         {
             var chain = Chain(Bind<BeforeSaveOnlyPlugin>(PluginStage.BeforeSave));
@@ -42,7 +42,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("chain 對每個時點回傳該時點會跑的型別（維護工具的可讀性來源）")]
+        [DisplayName("The chain returns, for each stage, the types that will run at that stage (what maintenance tools read)")]
         public void Chain_TypesForStage_ListsOnlyThatStage()
         {
             var chain = Chain(
@@ -54,7 +54,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("★宣告的時點與類別覆寫的不同時拒絕建鏈，訊息指出類別實際覆寫的是哪一個")]
+        [DisplayName("Building the chain is rejected when the declared stage differs from the class's override, and the message names the stage the class actually overrides")]
         public void Create_DeclaredStageDisagreesWithOverride_Throws()
         {
             var ex = Assert.Throws<InvalidOperationException>(
@@ -65,7 +65,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("★沒宣告 Stage（手寫檔漏打）時拒絕建鏈，訊息把正確答案寫出來")]
+        [DisplayName("Building the chain is rejected when no Stage is declared (missing from a hand-written file), and the message spells out the correct value")]
         public void Create_NoStageDeclared_Throws()
         {
             var ex = Assert.Throws<InvalidOperationException>(
@@ -76,7 +76,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("★一個類別覆寫兩個時點時拒絕建鏈——一個 plugin 只掛一個時點")]
+        [DisplayName("Building the chain is rejected when a class overrides two stages (a plugin binds to exactly one stage)")]
         public void Create_TypeOverridesTwoStages_Throws()
         {
             var ex = Assert.Throws<InvalidOperationException>(
@@ -87,7 +87,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("一個時點都沒覆寫的 plugin 拒絕建鏈——掛了等於沒掛")]
+        [DisplayName("Building the chain is rejected for a plugin that overrides no stage (binding it would do nothing)")]
         public void Create_TypeOverridesNothing_Throws()
         {
             var ex = Assert.Throws<InvalidOperationException>(
@@ -97,7 +97,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("空 chain 不建構任何實例，也不影響管線")]
+        [DisplayName("An empty chain constructs no instance and does not affect the pipeline")]
         public void EmptyChain_RunsNothing()
         {
             RecordingPlugin.Reset();
@@ -111,7 +111,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("多個 plugin 依宣告順序執行")]
+        [DisplayName("Several plugins run in declaration order")]
         public void Run_ExecutesInDeclarationOrder()
         {
             RecordingPlugin.Reset();
@@ -125,7 +125,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("不是該時點的 plugin 不會被叫到")]
+        [DisplayName("A plugin bound to another stage is not called")]
         public void Run_SkipsPluginsBoundToAnotherStage()
         {
             RecordingPlugin.Reset();
@@ -139,7 +139,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("★實例按需建構：跑 save 時不建構只掛 delete 時點的 plugin")]
+        [DisplayName("Instances are constructed on demand: running save does not construct a plugin bound only to a delete stage")]
         public void Run_ConstructsOnlyThePluginsOfTheStageBeingRun()
         {
             RecordingPlugin.Reset();
@@ -149,14 +149,14 @@ namespace Polhem.Business.UnitTests
 
             runner.RunBeforeSave(null!);
 
-            // 舊設計為了讓後面的時點找到同一個物件，一建就建整條鏈；一個 plugin 只掛一個時點後，
-            // 那個理由不存在了，delete-only 的 plugin 在 save 操作中不該被建出來。
+            // The old design built the whole chain at once so that later stages would find the same object. Now that a plugin binds to one stage,
+            // that reason is gone, and a delete-only plugin should not be constructed during a save.
             Assert.Equal(1, RecordingPlugin.ConstructedCount);
             Assert.Equal(["BeforeSaveOnly.BeforeSave"], RecordingPlugin.Calls);
         }
 
         [Fact]
-        [DisplayName("完全沒用到的 chain 一個實例都不建構")]
+        [DisplayName("A chain that is never used constructs no instance")]
         public void Run_UnusedStage_ConstructsNothing()
         {
             RecordingPlugin.Reset();
@@ -168,7 +168,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("同一次操作的同一個 plugin 只建構一次")]
+        [DisplayName("The same plugin is constructed only once within one operation")]
         public void Run_SameOperation_ConstructsEachPluginOnce()
         {
             RecordingPlugin.Reset();
@@ -181,7 +181,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("不同次操作是不同實例，狀態不外洩到下一次呼叫")]
+        [DisplayName("Different operations get different instances, so state does not leak into the next call")]
         public void Run_DifferentOperations_DoNotShareInstances()
         {
             RecordingPlugin.Reset();
@@ -191,12 +191,12 @@ namespace Polhem.Business.UnitTests
             chain.CreateRunner(_ctx, Guid.NewGuid(), "Order").RunBeforeSave(null!);
 
             Assert.Equal(2, RecordingPlugin.ConstructedCount);
-            // 兩次都是 seen=1：第二個實例沒有繼承第一個的欄位值。
+            // Both calls report seen=1: the second instance did not inherit the first one's field values.
             Assert.Equal(["Counting.BeforeSave(seen=1)", "Counting.BeforeSave(seen=1)"], RecordingPlugin.Calls);
         }
 
         [Fact]
-        [DisplayName("plugin 可在三個定位參數之外宣告自己的注入相依（ActivatorUtilities）")]
+        [DisplayName("A plugin can declare its own injected dependencies beyond the three positional parameters (ActivatorUtilities)")]
         public void Run_ConstructsWithInjectedDependencies()
         {
             RecordingPlugin.Reset();
@@ -204,13 +204,13 @@ namespace Polhem.Business.UnitTests
 
             runner.RunBeforeSave(null!);
 
-            // 前三個仍是位置參數，第四個由容器解析——按需建構沒有改變這個行為。
+            // The first three are still positional and the fourth is resolved from the container; on-demand construction did not change this.
             Assert.Equal(["Injected.BeforeSave(progId=Order, injected=yes)"], RecordingPlugin.Calls);
         }
 
         // ---- Test plugins ----
 
-        /// <summary>共用的呼叫記錄，測試間以 <see cref="Reset"/> 隔離。</summary>
+        /// <summary>A shared call log, isolated between tests with <see cref="Reset"/>.</summary>
         public abstract class RecordingPlugin : FormBusinessPlugin
         {
             protected RecordingPlugin(IPolhemContext ctx, Guid accessToken, string progId)
@@ -256,7 +256,7 @@ namespace Polhem.Business.UnitTests
             public override void BeforeDelete(DeleteContext context) => Record("BeforeDeleteOnly.BeforeDelete");
         }
 
-        /// <summary>覆寫兩個時點，用於驗證「一個 plugin 一個時點」的拒絕。</summary>
+        /// <summary>Overrides two stages; used to verify that a plugin with more than one stage is rejected.</summary>
         public sealed class BothSaveStagesPlugin : RecordingPlugin
         {
             public BothSaveStagesPlugin(IPolhemContext ctx, Guid accessToken, string progId)
@@ -267,14 +267,14 @@ namespace Polhem.Business.UnitTests
             public override void AfterSave(SaveContext context) => Record("Both.AfterSave");
         }
 
-        /// <summary>什麼都沒覆寫，掛了等於沒掛。</summary>
+        /// <summary>Overrides nothing, so binding it would do nothing.</summary>
         public sealed class NoStagePlugin : RecordingPlugin
         {
             public NoStagePlugin(IPolhemContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
         }
 
-        /// <summary>以 instance field 計數，用於驗證實例不跨操作共用。</summary>
+        /// <summary>Counts with an instance field; used to verify that instances are not shared across operations.</summary>
         public sealed class CountingPlugin : RecordingPlugin
         {
             private int _seen;
@@ -289,7 +289,7 @@ namespace Polhem.Business.UnitTests
             }
         }
 
-        /// <summary>三個定位參數之外還要一個由容器解析的相依。</summary>
+        /// <summary>Needs a dependency resolved from the container in addition to the three positional parameters.</summary>
         public sealed class InjectedPlugin : RecordingPlugin
         {
             private readonly IDefineAccess _defineAccess;

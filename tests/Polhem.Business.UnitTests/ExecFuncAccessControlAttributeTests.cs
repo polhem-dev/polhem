@@ -5,12 +5,12 @@ using Polhem.Definition.Security;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="ExecFuncAccessControlAttribute"/> 建構子與屬性測試。
+    /// Constructor and property tests for <see cref="ExecFuncAccessControlAttribute"/>.
     /// </summary>
     public class ExecFuncAccessControlAttributeTests
     {
         [Fact]
-        [DisplayName("預設建構子的 AccessRequirement 應為 Authenticated")]
+        [DisplayName("The default constructor sets AccessRequirement to Authenticated")]
         public void DefaultConstructor_ReturnsAuthenticated()
         {
             var attr = new ExecFuncAccessControlAttribute();
@@ -20,7 +20,7 @@ namespace Polhem.Business.UnitTests
         [Theory]
         [InlineData(ApiAccessRequirement.Anonymous)]
         [InlineData(ApiAccessRequirement.Authenticated)]
-        [DisplayName("建構子傳入的 AccessRequirement 應保留")]
+        [DisplayName("The constructor keeps the AccessRequirement passed in")]
         public void Constructor_PreservesAccessRequirement(ApiAccessRequirement requirement)
         {
             var attr = new ExecFuncAccessControlAttribute(requirement);

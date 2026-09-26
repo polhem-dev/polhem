@@ -9,12 +9,12 @@ using Polhem.Definition.Logging;
 namespace Polhem.Business.UnitTests.AuditLog
 {
     /// <summary>
-    /// 刪除原單 payload（<c>AuditDeletedRecord</c>）：原單原樣寫出、不改動傳入的 DataSet，
-    /// 且讀出的欄位清單與舊寫法（先把每一列標成 Deleted 再寫成變更集）逐筆相同。
+    /// The deleted record payload (<c>AuditDeletedRecord</c>): the original record is written as is without modifying the DataSet passed in,
+    /// and the column list read back is identical, entry by entry, to the old approach (mark every row Deleted, then write a change set).
     /// </summary>
     /// <remarks>
-    /// 舊寫法在 production 已不再產生，但資料庫裡的舊刪除記錄仍是那個形狀。一致性測試因此在本檔
-    /// 自行保留舊寫法——若改成呼叫 production 的寫入端，這組測試會靜默改測新形狀，舊資料就失去回歸保護。
+    /// Production no longer produces the old approach, but old delete records in databases still have that shape. So the consistency tests
+    /// keep their own copy of the old approach in this file. Calling the production writer instead would silently switch these tests to the new shape, and old data would lose its regression guard.
     /// </remarks>
     public class DeletedRecordPayloadTests
     {
@@ -25,9 +25,9 @@ namespace Polhem.Business.UnitTests.AuditLog
         private static readonly string s_textWithControls = "含" + (char)1 + "控制字元\r\n換行";
 
         /// <summary>
-        /// 照 <c>DataFormRepository.GetData</c> 的形狀建原單：DataSet 名稱與主檔表名相同、欄位經
-        /// <c>AddColumn</c> 依 <see cref="FieldDbType"/> 建立（每種型別一欄，另有一欄 DBNull）、
-        /// 一張明細表與一張空明細表，最後 <c>AcceptChanges</c>。
+        /// Builds an original record shaped like <c>DataFormRepository.GetData</c>: the DataSet name matches the master table name, columns are
+        /// created through <c>AddColumn</c> by <see cref="FieldDbType"/> (one column per type, plus one DBNull column),
+        /// with one detail table and one empty detail table, and finally <c>AcceptChanges</c>.
         /// </summary>
         private static DataSet NewRecord(bool withDetailRows)
         {
@@ -72,8 +72,8 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         /// <summary>
-        /// 依欄位的 CLR 型別給樣本值。遇到沒列到的型別直接擲例外——新增的 <see cref="FieldDbType"/>
-        /// 若對應到新的 CLR 型別，這組測試應該紅，而不是略過那一欄。
+        /// Gives a sample value by the column's CLR type, and throws for any type not listed. If a new <see cref="FieldDbType"/>
+        /// maps to a new CLR type, these tests should go red rather than skip that column.
         /// </summary>
         private static object SampleValue(DataColumn column)
         {
@@ -92,7 +92,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         /// <summary>
-        /// 舊寫法：複製原單、把每一列標成 Deleted，再以 <c>GetChanges</c> 寫成變更集。
+        /// The old approach: copy the original record, mark every row Deleted, then write a change set with <c>GetChanges</c>.
         /// </summary>
         private static string SerializeLegacyDeletedRecord(DataSet record)
         {
@@ -114,7 +114,7 @@ namespace Polhem.Business.UnitTests.AuditLog
                       .ToList();
 
         [Fact]
-        [DisplayName("刪除原單以 AuditDeletedRecord 為根、沒有 before 區塊，且不改動傳入的 DataSet")]
+        [DisplayName("The deleted record has AuditDeletedRecord as its root, has no before section, and does not modify the DataSet passed in")]
         public void SerializeDeletedRecord_WritesRecordAsLoaded_WithoutModifyingIt()
         {
             using var record = NewRecord(withDetailRows: true);
@@ -128,7 +128,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("刪除原單的每一個非鍵欄位都以 Delete 讀出，含控制字元與 CR 的值逐字還原")]
+        [DisplayName("Every non-key column of the deleted record reads back as Delete, and values with control characters and CR are restored verbatim")]
         public void Read_DeletedRecord_EmitsEveryColumnAsDelete()
         {
             using var record = NewRecord(withDetailRows: true);
@@ -148,7 +148,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        [DisplayName("同一張原單以新寫法與舊寫法產生的刪除 payload，讀出的欄位清單逐筆相同")]
+        [DisplayName("The delete payloads produced for the same record by the new and old approaches read back identical column lists")]
         public void Read_DeletedRecord_MatchesLegacyDeletedRowsPayload(bool withDetailRows)
         {
             using var record = NewRecord(withDetailRows);

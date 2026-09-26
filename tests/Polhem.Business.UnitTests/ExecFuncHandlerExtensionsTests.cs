@@ -5,12 +5,12 @@ using Polhem.Definition.Security;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="ExecFuncHandlerExtensions"/> 的 InvokeExecFunc 多載測試。
+    /// Tests for the InvokeExecFunc overloads of <see cref="ExecFuncHandlerExtensions"/>.
     /// </summary>
     public class ExecFuncHandlerExtensionsTests
     {
         [Fact]
-        [DisplayName("InvokeExecFunc 呼叫不存在的方法應拋 MissingMethodException")]
+        [DisplayName("InvokeExecFunc calling a method that does not exist throws MissingMethodException")]
         public void InvokeExecFunc_MethodNotFound_ThrowsMissingMethodException()
         {
             var handler = new FakeExecFuncHandler();
@@ -22,7 +22,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("InvokeExecFunc 匿名呼叫需驗證的方法應拋 UnauthorizedAccessException")]
+        [DisplayName("InvokeExecFunc calling an authenticated method anonymously throws UnauthorizedAccessException")]
         public void InvokeExecFunc_AnonymousCallsAuthenticated_ThrowsUnauthorized()
         {
             var handler = new FakeExecFuncHandler();
@@ -34,7 +34,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("InvokeExecFunc 匿名呼叫匿名方法應成功並填入結果")]
+        [DisplayName("InvokeExecFunc calling an anonymous method anonymously succeeds and fills the result")]
         public void InvokeExecFunc_AnonymousCallsAnonymous_Succeeds()
         {
             var handler = new FakeExecFuncHandler();
@@ -48,7 +48,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("InvokeExecFunc 已驗證呼叫已驗證方法應成功")]
+        [DisplayName("InvokeExecFunc calling an authenticated method as an authenticated caller succeeds")]
         public void InvokeExecFunc_AuthenticatedCallsAuthenticated_Succeeds()
         {
             var handler = new FakeExecFuncHandler();
@@ -61,7 +61,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("InvokeExecFunc 已驗證呼叫匿名方法應成功（權限足夠）")]
+        [DisplayName("InvokeExecFunc calling an anonymous method as an authenticated caller succeeds (sufficient permission)")]
         public void InvokeExecFunc_AuthenticatedCallsAnonymous_Succeeds()
         {
             var handler = new FakeExecFuncHandler();
@@ -74,7 +74,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("InvokeExecFunc 未標記 attribute 的方法匿名呼叫應拒絕")]
+        [DisplayName("InvokeExecFunc rejects an anonymous call to a method without the attribute")]
         public void InvokeExecFunc_NoAttributeAnonymous_ThrowsUnauthorized()
         {
             var handler = new FakeExecFuncHandler();
@@ -86,7 +86,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("InvokeExecFunc 未標記 attribute 的方法即使已驗證也應拒絕（fail-closed）")]
+        [DisplayName("InvokeExecFunc rejects a method without the attribute even for an authenticated caller (fail-closed)")]
         public void InvokeExecFunc_NoAttributeAuthenticated_ThrowsUnauthorized()
         {
             var handler = new FakeExecFuncHandler();
@@ -99,7 +99,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("InvokeExecFunc LocalOnly 方法遠端呼叫應拒絕")]
+        [DisplayName("InvokeExecFunc rejects a remote call to a LocalOnly method")]
         public void InvokeExecFunc_LocalOnlyRemoteCall_ThrowsUnauthorized()
         {
             var handler = new FakeExecFuncHandler();
@@ -112,7 +112,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("InvokeExecFunc LocalOnly 方法本機呼叫應成功")]
+        [DisplayName("InvokeExecFunc allows a local call to a LocalOnly method")]
         public void InvokeExecFunc_LocalOnlyLocalCall_Succeeds()
         {
             var handler = new FakeExecFuncHandler();
@@ -125,7 +125,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("InvokeExecFunc 舊多載視同遠端呼叫，LocalOnly 方法應拒絕")]
+        [DisplayName("The legacy InvokeExecFunc overload treats the call as remote and rejects a LocalOnly method")]
         public void InvokeExecFunc_LegacyOverload_TreatsCallAsRemote()
         {
             var handler = new FakeExecFuncHandler();
@@ -137,7 +137,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("InvokeExecFunc 被叫方法拋例外應 unwrap 並保留原始型別")]
+        [DisplayName("InvokeExecFunc unwraps an exception thrown by the target method and keeps the original type")]
         public void InvokeExecFunc_TargetThrows_UnwrapsToOriginalException()
         {
             var handler = new FakeExecFuncHandler();

@@ -10,10 +10,10 @@ using Polhem.Definition.Storage;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="SystemBusinessObject"/> 除 Login 外的補強測試：
-    /// 涵蓋 Ping / GetCommonConfiguration / GetDefine / SaveDefine 分支、
-    /// GetPackage 未實作的 NotSupportedException、
-    /// 以及 ExecFunc（本地呼叫）基本路徑。
+    /// Additional tests for <see cref="SystemBusinessObject"/> beyond Login:
+    /// the Ping / GetCommonConfiguration / GetDefine / SaveDefine branches,
+    /// the NotSupportedException of the unimplemented GetPackage,
+    /// and the basic ExecFunc path (local call).
     /// </summary>
     public class SystemBusinessObjectExtraTests : IClassFixture<SharedDbFixture>
     {
@@ -23,7 +23,7 @@ namespace Polhem.Business.UnitTests
         private static readonly string[] s_departmentKeys = { "Department" };
 
         [Fact]
-        [DisplayName("Ping 應回傳包含 TraceId 與 OK 狀態的 PingResult")]
+        [DisplayName("Ping returns a PingResult with a TraceId and an OK status")]
         public void Ping_ReturnsOkResult()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
@@ -36,7 +36,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCommonConfiguration 應回傳非空 XML")]
+        [DisplayName("GetCommonConfiguration returns non-empty XML")]
         public void GetCommonConfiguration_ReturnsXml()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
@@ -47,7 +47,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(SystemSettings) 非本地呼叫應拋 NotSupportedException")]
+        [DisplayName("GetDefine(SystemSettings) throws NotSupportedException for a non-local call")]
         public void GetDefine_SystemSettings_NonLocal_Throws()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
@@ -56,7 +56,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(DatabaseSettings) 非本地呼叫應拋 NotSupportedException")]
+        [DisplayName("GetDefine(DatabaseSettings) throws NotSupportedException for a non-local call")]
         public void GetDefine_DatabaseSettings_NonLocal_Throws()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
@@ -65,7 +65,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(FormSchema) 本地呼叫應回傳含 XML 的結果")]
+        [DisplayName("GetDefine(FormSchema) returns a result with XML for a local call")]
         public void GetDefine_FormSchema_ReturnsXml()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
@@ -80,7 +80,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefine(SystemSettings) 非本地呼叫應拋 NotSupportedException")]
+        [DisplayName("SaveDefine(SystemSettings) throws NotSupportedException for a non-local call")]
         public void SaveDefine_SystemSettings_NonLocal_Throws()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
@@ -89,7 +89,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefine(DatabaseSettings) 非本地呼叫應拋 NotSupportedException")]
+        [DisplayName("SaveDefine(DatabaseSettings) throws NotSupportedException for a non-local call")]
         public void SaveDefine_DatabaseSettings_NonLocal_Throws()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
@@ -98,10 +98,10 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecFuncAnonymous(Hello) 應回傳 Hello 問候")]
+        [DisplayName("ExecFuncAnonymous(Hello) returns the Hello greeting")]
         public void ExecFuncAnonymous_Hello_ReturnsGreeting()
         {
-            // SystemExecFuncHandler.Hello 標註 ApiAccessRequirement.Anonymous，透過 DoExecFuncAnonymous 呼叫
+            // `SystemExecFuncHandler.Hello` is marked `ApiAccessRequirement.Anonymous` and is called through `DoExecFuncAnonymous`.
             var bo = new TestableSystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
             var args = new ExecFuncArgs("Hello");
 
@@ -112,10 +112,10 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecFunc 已驗證呼叫 Hello 方法應回傳問候語（覆蓋 DoExecFunc 路徑）")]
+        [DisplayName("ExecFunc calling Hello as an authenticated caller returns the greeting (covers the DoExecFunc path)")]
         public void ExecFunc_Hello_AuthenticatedCall_ReturnsGreeting()
         {
-            // Hello 標註 Anonymous，Authenticated 呼叫者可存取（權限足夠），因此覆蓋 DoExecFunc 路徑
+            // Hello is marked Anonymous, which an authenticated caller may access, so this covers the `DoExecFunc` path.
             var bo = new TestableSystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
             var args = new ExecFuncArgs("Hello");
 
@@ -126,7 +126,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecFunc UpgradeTableSchema 應執行並在結果中包含 Upgraded 狀態")]
+        [DisplayName("ExecFunc UpgradeTableSchema runs and includes the Upgraded status in the result")]
         public void ExecFunc_UpgradeTableSchema_ReturnsUpgradedStatus()
         {
             var bo = new TestableSystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
@@ -141,7 +141,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecFunc TestConnection 以有效資料庫設定應不拋出例外")]
+        [DisplayName("ExecFunc TestConnection with valid database settings does not throw")]
         public void ExecFunc_TestConnection_ValidDatabaseItem_Succeeds()
         {
             var bo = new TestableSystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));

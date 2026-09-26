@@ -10,7 +10,7 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="SystemBusinessObject"/> 與 <c>IDefineAccess</c>（透過 DI 解析）整合的純邏輯測試（記憶體存取，不走 DB）。
+    /// Pure logic tests of <see cref="SystemBusinessObject"/> integrated with <c>IDefineAccess</c> (resolved through DI), using in-memory access without a DB.
     /// </summary>
     public class SystemBusinessObjectDefineTests : IClassFixture<SharedDbFixture>
     {
@@ -18,7 +18,7 @@ namespace Polhem.Business.UnitTests
 
         public SystemBusinessObjectDefineTests(SharedDbFixture fx) { _fx = fx; }
         [Fact]
-        [DisplayName("GetCommonConfiguration 應回傳非空 XML")]
+        [DisplayName("GetCommonConfiguration returns non-empty XML")]
         public void GetCommonConfiguration_ReturnsNonEmptyXml()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
@@ -29,7 +29,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine 本地呼叫 DatabaseSettings 應回傳 XML")]
+        [DisplayName("GetDefine for DatabaseSettings returns XML for a local call")]
         public void GetDefine_LocalCallDatabaseSettings_ReturnsXml()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
@@ -42,14 +42,14 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(DatabaseSettings) 應回傳原始檔，不得回傳快取的解密實例")]
+        [DisplayName("GetDefine(DatabaseSettings) returns the stored file, never the decrypted cached instance")]
         public void GetDefine_DatabaseSettings_ServesAsStoredNotTheDecryptedCache()
         {
-            // 快取實例在 GetDatabaseSettings() 的 DecryptInPlace 之後持有明文密碼；
-            // GetDefine 的契約是「定義如其所存」，故必須讀原始檔而非取快取，
-            // 否則回應會夾帶明文憑證。
+            // After `DecryptInPlace` in `GetDatabaseSettings()`, the cached instance holds plaintext passwords.
+            // The contract of `GetDefine` is the definition as stored, so it must read the stored file rather than the cache,
+            // otherwise the response would carry plaintext credentials.
             var access = _fx.GetRequiredService<IDefineAccess>();
-            var cached = access.GetDatabaseSettings();          // 觸發解密，快取轉為明文
+            var cached = access.GetDatabaseSettings();          // Triggers decryption, so the cache now holds plaintext.
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
 
             var xml = bo.GetDefine(new GetDefineArgs { DefineType = DefineType.DatabaseSettings }).Xml;
@@ -57,17 +57,17 @@ namespace Polhem.Business.UnitTests
 
             Assert.NotNull(served);
             Assert.NotSame(cached, served);
-            // 回傳的每個密碼要嘛為空、要嘛維持 enc: 密文，絕不可是解密後的明文。
+            // Every returned password must be empty or keep its enc: ciphertext, never the decrypted plaintext.
             foreach (var password in (served.Servers ?? []).Select(s => s.Password)
                          .Concat((served.Items ?? []).Select(i => i.Password)))
             {
                 Assert.True(string.IsNullOrEmpty(password) || password.StartsWith("enc:", StringComparison.Ordinal),
-                    $"密碼未維持 enc: 形式：{password}");
+                    $"Password did not keep the enc: form: {password}");
             }
         }
 
         [Fact]
-        [DisplayName("GetDefine 本地呼叫 SystemSettings 應回傳 XML")]
+        [DisplayName("GetDefine for SystemSettings returns XML for a local call")]
         public void GetDefine_LocalCallSystemSettings_ReturnsXml()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
@@ -79,15 +79,14 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefine 本地呼叫 DbCategorySettings 應成功執行 SaveDefineCore 路徑")]
+        [DisplayName("SaveDefine for DbCategorySettings succeeds through the SaveDefineCore path for a local call")]
         public void SaveDefine_LocalCallDbCategorySettings_Succeeds()
         {
-            // 先用共享 fixture 取得 XML（讀路徑）
             var getBo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
             var getResult = getBo.GetDefine(new GetDefineArgs { DefineType = DefineType.DbCategorySettings });
             Assert.False(string.IsNullOrWhiteSpace(getResult.Xml));
 
-            // SaveDefine 會寫檔；改用獨立 IDefineAccess（指向暫存資料夾）避免污染 tests/Define/。
+            // `SaveDefine` writes files, so it uses a separate `IDefineAccess` pointing at a temp folder to avoid polluting tests/Define/.
             var tempDir = Path.Combine(Path.GetTempPath(), $"polhem-define-{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
             try

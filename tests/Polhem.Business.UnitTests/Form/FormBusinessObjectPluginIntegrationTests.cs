@@ -11,13 +11,13 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests.Form
 {
     /// <summary>
-    /// plugin 走完真實 <see cref="FormBusinessObject.Save"/> / <see cref="FormBusinessObject.Delete"/>
-    /// 的端到端行為：掛載點確實在管線的那個位置、改的資料真的落地、例外中止整個操作、
-    /// 刪除時點拿得到 <c>Snapshot</c>。
+    /// End-to-end behavior of plugins through the real <see cref="FormBusinessObject.Save"/> / <see cref="FormBusinessObject.Delete"/>:
+    /// each hook sits at its place in the pipeline, the data it changes is really stored, an exception aborts the whole operation,
+    /// and the delete stages get the <c>Snapshot</c>.
     /// </summary>
     /// <remarks>
-    /// 單元層（<c>FormPluginRunnerTests</c>）已釘住 runner 自身的順序與生命週期；這裡驗的是
-    /// <see cref="FormBusinessObject"/> 把 runner 接在對的地方——那是單元測試看不到的部分。
+    /// The unit level (<c>FormPluginRunnerTests</c>) already pins down the runner's own order and lifecycle. This verifies that
+    /// <see cref="FormBusinessObject"/> connects the runner in the right places, which unit tests cannot see.
     /// </remarks>
     public class FormBusinessObjectPluginIntegrationTests : IClassFixture<SharedDbFixture>
     {
@@ -26,7 +26,7 @@ namespace Polhem.Business.UnitTests.Form
         public FormBusinessObjectPluginIntegrationTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：BeforeSave plugin 改的欄位真的寫進資料庫")]
+        [DisplayName("SQLite: a column changed by a BeforeSave plugin is really written to the database")]
         public void Save_BeforeSavePlugin_MutationIsPersisted()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -43,7 +43,7 @@ namespace Polhem.Business.UnitTests.Form
 
                 ctx.CreateBo(Resolver<RenamingPlugin>(PluginStage.BeforeSave)).Save(new SaveArgs { DataSet = dataSet });
 
-                // BeforeSave 在持久化之前，所以改動要看得見。
+                // BeforeSave runs before persistence, so the change must be visible.
                 var reloaded = ctx.CreateBo().GetData(new GetDataArgs { RowId = rowId });
                 Assert.Equal("BeforeSave 改過",
                     reloaded.DataSet!.Tables[CrudTestContext.ProgId]!.Rows[0][SysFields.Name]);
@@ -55,7 +55,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：BeforeSave plugin 拋例外時整筆存檔中止，資料未寫入")]
+        [DisplayName("SQLite: when a BeforeSave plugin throws, the whole save aborts and nothing is written")]
         public void Save_BeforeSavePluginThrows_AbortsWithoutWriting()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -72,12 +72,12 @@ namespace Polhem.Business.UnitTests.Form
                 ctx.CreateBo(Resolver<RejectingPlugin>(PluginStage.BeforeSave)).Save(new SaveArgs { DataSet = dataSet }));
             Assert.Equal("擋下這筆。", ex.Message);
 
-            // BeforeSave 在持久化之前中止，所以什麼都不該落地。
+            // BeforeSave aborts before persistence, so nothing should be stored.
             Assert.Null(ctx.CreateBo().GetData(new GetDataArgs { RowId = rowId }).DataSet);
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：一次 Save 內兩個時點依管線順序執行，各自是獨立的實例")]
+        [DisplayName("SQLite: both stages within one Save run in pipeline order as separate instances")]
         public void Save_TwoStages_RunInPipelineOrderAsSeparateInstances()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -98,8 +98,8 @@ namespace Polhem.Business.UnitTests.Form
                         new FormPluginBinding(typeof(AfterSaveTracingPlugin), PluginStage.AfterSave)))
                     .Save(new SaveArgs { DataSet = dataSet });
 
-                // 兩個時點都跑了，且順序由管線決定。一個 plugin 一個時點，所以這是兩個類別、
-                // 兩個實例——跨時點沒有共用的 instance field 可傳遞狀態。
+                // Both stages ran, in the order the pipeline decides. A plugin binds to one stage, so these are two classes and
+                // two instances, and no instance field can carry state across stages.
                 Assert.Equal(["BeforeSave", "AfterSave"], TracingProbe.Calls);
                 Assert.Equal(2, TracingProbe.ConstructedCount);
             }
@@ -110,7 +110,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：AfterSave plugin 看得到 RefreshedDataSet")]
+        [DisplayName("SQLite: an AfterSave plugin sees the RefreshedDataSet")]
         public void Save_AfterSavePlugin_SeesRefreshedDataSet()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -137,16 +137,16 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：★稽核關閉時 AfterDelete 仍拿得到 Snapshot")]
+        [DisplayName("SQLite: AfterDelete still gets the Snapshot when auditing is off")]
         public void Delete_AfterDeletePlugin_GetsSnapshotWithAuditDisabled()
         {
-            // 這是 G2 修正 Snapshot 載入條件的回歸測試，必須在稽核關閉下跑：舊條件是
-            // `auditChange || HasBeforeDeleteRules(schema)`，兩者皆不成立時 Snapshot 為 null，
-            // 而同步類的 AfterDelete plugin 正需要知道刪掉的是什麼。
+            // This is the regression test for the fix to the Snapshot loading condition, and it must run with auditing off. The old condition was
+            // `auditChange || HasBeforeDeleteRules(schema)`; when neither held, the Snapshot was null,
+            // and a synchronizing AfterDelete plugin needs exactly that information about what was deleted.
             var auditOptions = _fx.Provider.GetService(typeof(Definition.Settings.AuditLogOptions))
                 as Definition.Settings.AuditLogOptions;
             Assert.True(auditOptions is not { Enabled: true, ChangeEnabled: true },
-                "本測試的前提是變更稽核關閉；若測試環境改為預設開啟，這個回歸就測不到了。");
+                "This test assumes change auditing is off. If the test environment turns it on by default, this regression is no longer tested.");
 
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
             var rowId = Guid.NewGuid();
@@ -172,12 +172,12 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：★稽核開啟時 AfterDelete 拿到的 Snapshot 仍是未經修改的原單，讀得到欄位值")]
+        [DisplayName("SQLite: with auditing on, the Snapshot AfterDelete gets is still the unmodified original record with readable column values")]
         public void Delete_AfterDeletePlugin_ReadsSnapshotWithAuditEnabled()
         {
-            // 與上一支互補：刪除稽核會拿同一份 Snapshot 產生 payload。它若改動列狀態，
-            // AfterDelete 以預設版本讀欄位就會擲 DeletedRowInaccessibleException，
-            // 而同一個外掛在稽核關閉的部署上卻正常——外掛看到的內容不得取決於稽核開關。
+            // Complements the previous test: delete auditing builds its payload from the same Snapshot. If it changed the row state,
+            // AfterDelete reading columns with the default version would throw `DeletedRowInaccessibleException`,
+            // while the same plugin works on a deployment with auditing off. What a plugin sees must not depend on the audit switch.
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
             var writer = new CapturingAuditLogWriter();
             var rowId = Guid.NewGuid();
@@ -199,7 +199,7 @@ namespace Polhem.Business.UnitTests.Form
                         (typeof(IFormPluginResolver), Resolver<AfterDeleteProbePlugin>(PluginStage.AfterDelete)))
                     .Delete(new DeleteArgs { RowId = rowId });
 
-                // 先確認稽核確實寫了，否則這支會在稽核沒開的情況下空轉通過。
+                // First confirm that the audit really was written, otherwise this test could pass vacuously with auditing off.
                 Assert.IsType<ChangeAuditEntry>(Assert.Single(writer.Entries));
                 Assert.Equal(DataRowState.Unchanged, DeleteProbe.AfterDeleteRowState);
                 Assert.Equal("稽核開啟待刪除", DeleteProbe.DeletedName);
@@ -257,7 +257,7 @@ namespace Polhem.Business.UnitTests.Form
                 => throw new UserMessageException("擋下這筆。");
         }
 
-        /// <summary>兩個 save 時點探針共用的記錄。</summary>
+        /// <summary>The log shared by the two save stage probes.</summary>
         public static class TracingProbe
         {
             public static List<string> Calls { get; } = [];
@@ -299,8 +299,8 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         /// <summary>
-        /// 兩個 delete 時點探針共用的記錄。一個 plugin 只掛一個時點，所以兩個時點是兩個類別，
-        /// 而它們之間沒有可共用的 instance field。
+        /// The log shared by the two delete stage probes. A plugin binds to one stage, so the two stages are two classes,
+        /// and they have no instance field to share.
         /// </summary>
         public static class DeleteProbe
         {

@@ -18,8 +18,8 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests.Form
 {
     /// <summary>
-    /// 稽核規則維護表單本身（<c>AuditRule</c> / <c>st_audit_rule</c>）：政策變更一律留痕且標敏感，
-    /// 且存檔後會清掉該公司的規則快取。
+    /// The audit rule maintenance form itself (<c>AuditRule</c> / <c>st_audit_rule</c>): policy changes always leave a trail marked sensitive,
+    /// and saving clears that company's rule cache.
     /// </summary>
     public class AuditRuleFormTests : IClassFixture<SharedDbFixture>
     {
@@ -50,7 +50,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         /// <summary>
-        /// 回報 Remove 有沒有被呼叫，並依測試指定的規則回答查詢。
+        /// Reports whether Remove was called, and answers queries with the rules the test specifies.
         /// </summary>
         private sealed class RecordingAuditRuleService : IAuditRuleService
         {
@@ -63,9 +63,9 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         /// <summary>
-        /// 放行所有動作。維護表單宣告了 PermissionModelId，enforcement 是 fail-closed——
-        /// 少了這個 fake，兩個測試都會停在 ForbiddenException 而測不到後面的事。
-        /// 這個必要性本身就是「政策表單確實受權限把關」的旁證。
+        /// Allows every action. The maintenance form declares a PermissionModelId and enforcement is fail-closed,
+        /// so without this fake both tests would stop at ForbiddenException and never reach what they check.
+        /// That necessity is itself indirect evidence that the policy form really is permission-gated.
         /// </summary>
         private sealed class AllowAllAuthorization : ICompanyAuthorizationService
         {
@@ -87,7 +87,7 @@ namespace Polhem.Business.UnitTests.Form
                 => _auditRules as T ?? throw new NotSupportedException();
         }
 
-        /// <summary>不做事的通知端：本測試驗的是留痕與快取清除，不是跨節點公告。</summary>
+        /// <summary>A notifier that does nothing: this test verifies the trail and the cache clearing, not the cross-node announcement.</summary>
         private sealed class NoOpAuditRuleRepository : IAuditRuleRepository
         {
             public List<string> Notified { get; } = [];
@@ -119,7 +119,7 @@ namespace Polhem.Business.UnitTests.Form
                 (typeof(AuditLogOptions), new AuditLogOptions
                 {
                     Enabled = true,
-                    // 兩軸的部署預設都關掉：接下來寫出的任何紀錄都只能來自豁免。
+                    // Both axes' deployment defaults are off, so any record written from here on can only come from the exemption.
                     ChangeEnabled = false,
                     AccessEnabled = false,
                 }),
@@ -130,12 +130,12 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("★政策表單不受規則表擺布：規則說 Off、部署預設也關，仍留痕且標敏感")]
+        [DisplayName("The policy form is not governed by the rule table: with the rule Off and the deployment default off, it still leaves a trail marked sensitive")]
         public void Save_PolicyFormIsExemptFromItsOwnRule()
         {
-            // 「稽核不可被稽核政策關掉」的回歸測試。若沒有這道豁免，任何能維護規則的人
-            // 只要把 AuditRule 這一列設成 Off，之後所有政策變更都無痕——整套稽核可以
-            // 被自己靜靜關掉，且沒有任何紀錄顯示發生過。
+            // Regression test for the rule that auditing cannot be turned off by the audit policy. Without this exemption, anyone who can maintain rules
+            // could set the `AuditRule` row to Off, and every later policy change would leave no trace. The whole audit could
+            // be quietly switched off by itself, with no record that it ever happened.
             var writer = new CapturingAuditLogWriter();
             var ruleService = new RecordingAuditRuleService(
                 new AuditRule(SysProgIds.AuditRule, AuditRuleMode.Off, AuditRuleMode.Off, false));
@@ -159,7 +159,7 @@ namespace Polhem.Business.UnitTests.Form
                 var entry = Assert.IsType<ChangeAuditEntry>(Assert.Single(writer.Entries));
                 Assert.Equal(ChangeKind.Insert, entry.ChangeKind);
                 Assert.Equal(SysProgIds.AuditRule, entry.ProgId);
-                // 政策變更一律屬敏感，等同 SystemBusinessObject 對「授予能力」那類操作的處置。
+                // Policy changes are always sensitive, matching how `SystemBusinessObject` treats operations that grant capabilities.
                 Assert.True(entry.IsSensitive);
             }
             finally
@@ -169,7 +169,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("存檔後應清掉該公司的規則快取並發出跨節點公告")]
+        [DisplayName("Saving clears that company's rule cache and sends a cross-node announcement")]
         public void Save_InvalidatesCompanyRuleCache()
         {
             var writer = new CapturingAuditLogWriter();
@@ -190,7 +190,7 @@ namespace Polhem.Business.UnitTests.Form
                 CreateBo(CreateSessionToken(), writer, ruleService, auditRules)
                     .Save(new SaveArgs { DataSet = dataSet });
 
-                // 少了本機清除，操作者會看到自己剛改的規則毫無作用——快照沒有到期時間。
+                // Without the local clearing, the operator would see the rule they just changed have no effect, because the snapshot has no expiry.
                 Assert.Equal([CompanyId], ruleService.Removed);
                 Assert.Equal([CompanyId], auditRules.Notified);
             }

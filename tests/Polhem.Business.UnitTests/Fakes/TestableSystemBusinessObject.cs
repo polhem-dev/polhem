@@ -4,8 +4,8 @@ using Polhem.Definition;
 namespace Polhem.Business.UnitTests.Fakes
 {
     /// <summary>
-    /// 測試用 <see cref="SystemBusinessObject"/> 子類，允許自訂 <c>AuthenticateUser</c> 的回傳行為，
-    /// 讓 Login 流程可在單元測試中走完成功或失敗分支。
+    /// A test subclass of <see cref="SystemBusinessObject"/> that lets the test set what <c>AuthenticateUser</c> returns,
+    /// so unit tests can run the Login flow through its success or failure branch.
     /// </summary>
     public class TestableSystemBusinessObject : SystemBusinessObject
     {

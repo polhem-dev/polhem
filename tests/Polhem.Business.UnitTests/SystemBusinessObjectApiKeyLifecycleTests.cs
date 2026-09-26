@@ -17,16 +17,16 @@ using Polhem.Definition;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// 金鑰生命週期（<see cref="SystemBusinessObject.ListApiKeys"/> /
+    /// Integration tests for the key lifecycle (<see cref="SystemBusinessObject.ListApiKeys"/> /
     /// <see cref="SystemBusinessObject.SetApiKeyEnabled"/> /
-    /// <see cref="SystemBusinessObject.SetApiKeyExpiry"/>）的整合測試：列出不帶憑證素材、
-    /// 停用即刻生效、遠端須為部署層管理員。
+    /// <see cref="SystemBusinessObject.SetApiKeyExpiry"/>): listing carries no credential material,
+    /// disabling takes effect immediately, and a remote caller must be a deployment-level administrator.
     /// </summary>
     /// <remarks>
-    /// 每個測試用唯一 <c>sys_id</c> 並在 finally 清理——實體資料庫由多個平行測試行程共用。
-    /// 這些 BO 走 <c>DbScope.Common</c>，測試 fixture 把 <c>common</c> 綁在 SQL Server，
-    /// 因此閘門必須是 <c>SQLServer</c>：先前標成 <c>SQLite</c> 時，跳過與否看的是
-    /// <c>POLHEM_TEST_CONNSTR_SQLITE</c>，實際跑的卻是 SQL Server。
+    /// Each test uses a unique <c>sys_id</c> and cleans up in finally, because the physical database is shared by several parallel test processes.
+    /// These BOs use <c>DbScope.Common</c>, and the test fixture binds <c>common</c> to SQL Server,
+    /// so the gate must be <c>SQLServer</c>. When it was marked <c>SQLite</c>, skipping depended on
+    /// <c>POLHEM_TEST_CONNSTR_SQLITE</c> while the test actually ran against SQL Server.
     /// </remarks>
     public class SystemBusinessObjectApiKeyLifecycleTests : IClassFixture<SharedDbFixture>
     {
@@ -37,7 +37,7 @@ namespace Polhem.Business.UnitTests
         private IDbConnectionManager ConnectionManager => _fx.GetRequiredService<IDbConnectionManager>();
 
         private SystemBusinessObject CreateBo()
-            // 本機呼叫路徑，見 SystemBusinessObjectApiKeyTests 的同一個 helper。
+            // The local call path; see the helper of the same name in `SystemBusinessObjectApiKeyTests`.
             => new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
 
         private static string NewSysId() => "life-" + Guid.NewGuid().ToString("N");
@@ -68,7 +68,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ListApiKeys 應列出已發放的金鑰，且不帶任何憑證素材")]
+        [DisplayName("ListApiKeys lists the issued keys without any credential material")]
         public void ListApiKeys_ReturnsSummaryWithoutCredentialMaterial()
         {
             string sysId = IssueKey(NewSysId());
@@ -81,7 +81,7 @@ namespace Polhem.Business.UnitTests
                 Assert.Equal("ops@example.com", summary.Contact);
                 Assert.True(summary.Enabled);
                 Assert.NotNull(summary.IssuedAt);
-                // 型別上就沒有雜湊欄位——這裡釘住的是「別為了省事把 ApiKeyInfo 直接上 wire」。
+                // The type has no hash property at all. This pins down the rule not to put `ApiKeyInfo` on the wire just for convenience.
                 Assert.DoesNotContain("Hashed", typeof(ApiKeySummary).GetProperties().Select(p => p.Name));
             }
             finally
@@ -91,7 +91,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ListApiKeys 應包含已停用的金鑰")]
+        [DisplayName("ListApiKeys includes disabled keys")]
         public void ListApiKeys_IncludesDisabledKeys()
         {
             string sysId = IssueKey(NewSysId());
@@ -99,8 +99,8 @@ namespace Polhem.Business.UnitTests
             {
                 CreateBo().SetApiKeyEnabled(new SetApiKeyEnabledArgs { SysId = sysId, Enabled = false });
 
-                // 停用的金鑰若從清單消失，該識別碼看起來就像沒被用過——而重發同一個識別碼
-                // 正是不該悄悄發生的事。
+                // If a disabled key vanished from the list, its identifier would look unused, and reissuing the same identifier
+                // is exactly what must not happen quietly.
                 var summary = Find(sysId);
                 Assert.NotNull(summary);
                 Assert.False(summary!.Enabled);
@@ -112,7 +112,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SetApiKeyEnabled 停用後金鑰應立即失效，不等快取過期")]
+        [DisplayName("SetApiKeyEnabled revokes the key immediately on disable instead of waiting for the cache to expire")]
         public void SetApiKeyEnabled_Disable_RevokesImmediately()
         {
             string sysId = IssueKey(NewSysId());
@@ -123,7 +123,7 @@ namespace Polhem.Business.UnitTests
 
                 CreateBo().SetApiKeyEnabled(new SetApiKeyEnabledArgs { SysId = sysId, Enabled = false });
 
-                // 撤銷若要等 ApiKeyCache 的 60 分鐘絕對過期才生效，那就不叫撤銷。
+                // A revocation that waits for the 60-minute absolute expiry of `ApiKeyCache` is not a revocation.
                 Assert.Null(repository.GetEnabledById(sysId));
             }
             finally
@@ -133,7 +133,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SetApiKeyEnabled 重新啟用後金鑰應再度可用")]
+        [DisplayName("SetApiKeyEnabled makes the key usable again after re-enabling it")]
         public void SetApiKeyEnabled_Reenable_RestoresKey()
         {
             string sysId = IssueKey(NewSysId());
@@ -153,7 +153,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SetApiKeyExpiry 應寫入到期時間，並可再清除")]
+        [DisplayName("SetApiKeyExpiry writes the expiry and can clear it again")]
         public void SetApiKeyExpiry_SetsThenClears()
         {
             string sysId = IssueKey(NewSysId());
@@ -175,7 +175,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SetApiKeyExpiry 接受已過去的時間——那是退役既有金鑰的正當手段")]
+        [DisplayName("SetApiKeyExpiry accepts a time in the past (a legitimate way to retire an existing key)")]
         public void SetApiKeyExpiry_PastExpiry_Accepted()
         {
             string sysId = IssueKey(NewSysId());
@@ -183,8 +183,8 @@ namespace Polhem.Business.UnitTests
             {
                 var past = DateTime.UtcNow.AddMinutes(-1);
 
-                // CreateApiKey 拒絕過去的到期（發一把出生即死的金鑰是失誤），
-                // 但把既有金鑰設為此刻起失效是正當操作，兩者不該共用同一條規則。
+                // `CreateApiKey` rejects a past expiry, because issuing a key that is dead on arrival is a mistake.
+                // Making an existing key expire from now on is a legitimate operation, so the two should not share one rule.
                 var result = CreateBo().SetApiKeyExpiry(new SetApiKeyExpiryArgs { SysId = sysId, ExpiredAt = past });
 
                 Assert.Equal(sysId, result.SysId);
@@ -197,7 +197,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SetApiKeyEnabled 於查無金鑰時應以可讀訊息拒絕")]
+        [DisplayName("SetApiKeyEnabled rejects an unknown key with a readable message")]
         public void SetApiKeyEnabled_UnknownKey_ThrowsUserMessage()
         {
             var args = new SetApiKeyEnabledArgs { SysId = "no-such-key", Enabled = false };
@@ -207,7 +207,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SetApiKeyExpiry 於查無金鑰時應以可讀訊息拒絕")]
+        [DisplayName("SetApiKeyExpiry rejects an unknown key with a readable message")]
         public void SetApiKeyExpiry_UnknownKey_ThrowsUserMessage()
         {
             var args = new SetApiKeyExpiryArgs { SysId = "no-such-key", ExpiredAt = null };
@@ -216,7 +216,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Theory]
-        [DisplayName("三個管理動作於遠端且非部署層管理員時皆應拒絕")]
+        [DisplayName("The list, enable and expiry management actions all reject a remote caller who is not a deployment-level administrator")]
         [InlineData("list")]
         [InlineData("enable")]
         [InlineData("expiry")]
@@ -246,7 +246,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("停用與設到期都應留下部署層稽核，且帶得出前後值")]
+        [DisplayName("Disabling and setting the expiry both leave a deployment-level audit entry with before and after values")]
         public void LifecycleActions_WriteDeploymentAudit()
         {
             string sysId = IssueKey(NewSysId());

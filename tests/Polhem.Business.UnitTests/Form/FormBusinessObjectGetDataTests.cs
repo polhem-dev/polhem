@@ -10,10 +10,10 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests.Form
 {
     /// <summary>
-    /// <see cref="FormBusinessObject.GetData"/> 的 <c>[DbFact]</c> 整合測試:
-    /// 種子一筆 Employee → GetData(rowId) → 比對欄位值;並確認回傳的
-    /// DataSet 維持 <c>DataSetName == ProgId</c> 與 <c>Tables[ProgId]</c> 即
-    /// Master 的框架不變式,所有 row state 為 <see cref="DataRowState.Unchanged"/>。
+    /// <c>[DbFact]</c> integration tests for <see cref="FormBusinessObject.GetData"/>:
+    /// seed one Employee → GetData(rowId) → compare the field values, and confirm that the returned
+    /// DataSet keeps the framework invariants <c>DataSetName == ProgId</c> and <c>Tables[ProgId]</c> is the
+    /// master, with every row state <see cref="DataRowState.Unchanged"/>.
     /// </summary>
     public class FormBusinessObjectGetDataTests : IClassFixture<SharedDbFixture>
     {
@@ -22,7 +22,7 @@ namespace Polhem.Business.UnitTests.Form
         public FormBusinessObjectGetDataTests(SharedDbFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("GetData 傳入 null 應拋 ArgumentNullException")]
+        [DisplayName("GetData throws ArgumentNullException for null")]
         public void GetData_NullArgs_Throws()
         {
             var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(),
@@ -31,27 +31,27 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite:GetData 應回傳已存在 Employee 並維持 DataSetName / Master TableName 慣例")]
+        [DisplayName("SQLite: GetData returns an existing Employee and keeps the DataSetName / master TableName convention")]
         public void GetData_Sqlite_ReturnsExistingRow()
             => RunReturnsExistingRow(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server:GetData 應回傳已存在 Employee 並維持 DataSetName / Master TableName 慣例")]
+        [DisplayName("SQL Server: GetData returns an existing Employee and keeps the DataSetName / master TableName convention")]
         public void GetData_SqlServer_ReturnsExistingRow()
             => RunReturnsExistingRow(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite:GetData 對不存在的 RowId 應回傳 null")]
+        [DisplayName("SQLite: GetData returns null for a RowId that does not exist")]
         public void GetData_Sqlite_NonExistentRowId_ReturnsNull()
             => RunNonExistentRowReturnsNull(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle:GetData 應回傳已存在 Employee 並維持 DataSetName / Master TableName 慣例")]
+        [DisplayName("Oracle: GetData returns an existing Employee and keeps the DataSetName / master TableName convention")]
         public void GetData_Oracle_ReturnsExistingRow()
             => RunReturnsExistingRow(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle:GetData 對不存在的 RowId 應回傳 null")]
+        [DisplayName("Oracle: GetData returns null for a RowId that does not exist")]
         public void GetData_Oracle_NonExistentRowId_ReturnsNull()
             => RunNonExistentRowReturnsNull(DatabaseType.Oracle);
 
@@ -60,7 +60,7 @@ namespace Polhem.Business.UnitTests.Form
         // declares a column Guid while holding byte arrays reads correctly right here and fails
         // in every consumer that branches on the runtime type.
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle:GetData 回傳的 sys_rowid 欄位應為 Guid 型別，而非 RAW(16) 的 byte[]")]
+        [DisplayName("Oracle: the sys_rowid column returned by GetData is a Guid, not the byte[] of RAW(16)")]
         public void GetData_Oracle_RowIdColumnIsGuid()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.Oracle);
@@ -98,7 +98,6 @@ namespace Polhem.Business.UnitTests.Form
                 var result = bo.GetData(new GetDataArgs { RowId = employeeRowId });
 
                 Assert.NotNull(result.DataSet);
-                // 框架不變式
                 Assert.Equal(CrudTestContext.ProgId, result.DataSet!.DataSetName);
                 Assert.True(result.DataSet.Tables.Contains(CrudTestContext.ProgId));
 

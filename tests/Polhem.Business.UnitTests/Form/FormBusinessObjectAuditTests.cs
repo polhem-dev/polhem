@@ -15,13 +15,13 @@ using Microsoft.Extensions.Logging;
 namespace Polhem.Business.UnitTests.Form
 {
     /// <summary>
-    /// <c>FormBusinessObject</c> 的稽核留痕（<c>FormBusinessObject.Audit.cs</c>）：Save 依 row state
-    /// 分出 Insert / Update、Delete 帶得出前影像、以及開關關閉時完全不寫。
+    /// The audit trail of <c>FormBusinessObject</c> (<c>FormBusinessObject.Audit.cs</c>): Save splits Insert / Update by row state,
+    /// Delete carries the before image, and nothing at all is written when the switch is off.
     /// </summary>
     /// <remarks>
-    /// 走真實 CRUD 路徑而非直呼稽核方法：<c>ChangeKind</c> 是從 <c>DataRow.RowState</c> 推導的，
-    /// 而 RowState 會被 <c>Save</c> 重設——「在對的時機取值」正是這段程式碼要保證的事，
-    /// 繞過 CRUD 就測不到。
+    /// It goes through the real CRUD path instead of calling the audit methods directly: <c>ChangeKind</c> is derived from <c>DataRow.RowState</c>,
+    /// and <c>Save</c> resets the RowState. Reading the value at the right moment is exactly what this code must guarantee,
+    /// and bypassing CRUD would not test it.
     /// </remarks>
     public class FormBusinessObjectAuditTests : IClassFixture<SharedDbFixture>
     {
@@ -36,13 +36,13 @@ namespace Polhem.Business.UnitTests.Form
             public void Write(AuditEntry entry) => Entries.Add(entry);
         }
 
-        /// <summary>模擬 log 資料庫或自訂寫入端故障。</summary>
+        /// <summary>Simulates a failure of the log database or a custom writer.</summary>
         private sealed class ThrowingAuditLogWriter : IAuditLogWriter
         {
             public void Write(AuditEntry entry) => throw new InvalidOperationException("Audit sink unavailable.");
         }
 
-        /// <summary>記下 commit 之後的擴充點有沒有跑到。</summary>
+        /// <summary>Records whether the extension points after commit ran.</summary>
         private sealed class AfterStepProbeBo : FormBusinessObject
         {
             public AfterStepProbeBo(IPolhemContext ctx) : base(ctx, Guid.NewGuid(), CrudTestContext.ProgId) { }
@@ -82,7 +82,7 @@ namespace Polhem.Business.UnitTests.Form
             => Assert.IsType<ChangeAuditEntry>(Assert.Single(writer.Entries));
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("Save 新增列應寫出 Insert 稽核，並帶回主表名與 sys_rowid")]
+        [DisplayName("Save of an added row writes an Insert audit entry carrying the master table name and sys_rowid")]
         public void Save_AddedRow_WritesInsertAudit()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -116,7 +116,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("Save 修改列應寫出 Update 稽核，且變更內容帶得出新值")]
+        [DisplayName("Save of a modified row writes an Update audit entry whose changes carry the new value")]
         public void Save_ModifiedRow_WritesUpdateAudit()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -136,8 +136,8 @@ namespace Polhem.Business.UnitTests.Form
 
                 var entry = SingleChange(writer);
                 Assert.Equal(ChangeKind.Update, entry.ChangeKind);
-                // 大小寫不比對：更新路徑的 RowKey 取自 DataRow 內由 DB 讀回的值，SQLite 以字串
-                // 存 GUID 且回傳大寫，新增路徑則來自 Guid.ToString()（小寫）。
+                // Case-insensitive: the update path takes `RowKey` from the value the DataRow read back from the DB, and SQLite stores
+                // GUIDs as strings and returns them in uppercase, while the insert path gets it from `Guid.ToString()` (lowercase).
                 Assert.Equal(rowId.ToString(), entry.RowKey, StringComparer.OrdinalIgnoreCase);
 
                 var changed = ChangeDiffGramReader.Read(entry.ChangesXml);
@@ -151,7 +151,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("Delete 應寫出 Delete 稽核，前影像含被刪資料而非僅有鍵值")]
+        [DisplayName("Delete writes a Delete audit entry whose before image contains the deleted data, not only the key")]
         public void Delete_WritesDeleteAuditWithBeforeImage()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -170,9 +170,9 @@ namespace Polhem.Business.UnitTests.Form
                 Assert.Equal(ChangeKind.Delete, entry.ChangeKind);
                 Assert.Equal(rowId.ToString(), entry.RowKey);
                 Assert.Equal($"{CrudTestContext.ProgId}.Delete", entry.Source);
-                // 前影像取得到才有「刪掉了什麼」；只剩鍵值的 minimal XML 不含欄位值。
+                // Only the before image shows what was deleted. A minimal XML with only the key has no column values.
                 Assert.Contains("稽核待刪", entry.ChangesXml, StringComparison.Ordinal);
-                // 刪除存的是原單本身，不是把列標成 Deleted 的變更集。
+                // A delete stores the original record itself, not a change set with the row marked Deleted.
                 Assert.StartsWith("<" + AuditDiffGram.DeletedRecordRootElementName + ">", entry.ChangesXml, StringComparison.Ordinal);
             }
             finally
@@ -182,7 +182,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("刪除不存在的列不寫稽核——留痕的是實際變更，不是嘗試")]
+        [DisplayName("Deleting a row that does not exist writes no audit entry (the trail records actual changes, not attempts)")]
         public void Delete_MissingRow_WritesNothing()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -196,7 +196,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("GetData 於 AccessEnabled 時應寫出讀取軌跡")]
+        [DisplayName("GetData writes an access trail when AccessEnabled is on")]
         public void GetData_WritesAccessAudit()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -223,7 +223,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("讀不到資料時不寫讀取軌跡")]
+        [DisplayName("No access trail is written when no data is read")]
         public void GetData_MissingRow_WritesNothing()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -237,7 +237,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("ChangeEnabled 關閉時 Save 不寫變更軌跡")]
+        [DisplayName("Save writes no change trail when ChangeEnabled is off")]
         public void Save_ChangeAuditDisabled_WritesNothing()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -265,7 +265,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("全域開關關閉時 Delete 不寫變更軌跡")]
+        [DisplayName("Delete writes no change trail when the global switch is off")]
         public void Delete_AuditDisabled_WritesNothing()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -289,7 +289,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("欄位值含 XML 不允許的控制字元時 Save 仍成功，且稽核讀得回原值")]
+        [DisplayName("Save succeeds when a column value contains a control character XML forbids, and the audit reads back the original value")]
         public void Save_ValueWithControlCharacter_WritesReadableAudit()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -319,7 +319,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("被刪資料含 XML 不允許的控制字元時 Delete 仍成功，且前影像讀得回原值")]
+        [DisplayName("Delete succeeds when the deleted data contains a control character XML forbids, and the before image reads back the original value")]
         public void Delete_ValueWithControlCharacter_WritesReadableAudit()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -347,7 +347,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("★稽核寫入失敗時，已 commit 的 Save 不得回傳失敗，AfterSave 照跑並記下錯誤 log")]
+        [DisplayName("When the audit write fails, a committed Save does not report failure, AfterSave still runs, and an error is logged")]
         public void Save_AuditWriteFails_CompletesAndLogsError()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -380,7 +380,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("★稽核寫入失敗時，已 commit 的 Delete 不得回傳失敗，AfterDelete 照跑並記下錯誤 log")]
+        [DisplayName("When the audit write fails, a committed Delete does not report failure, AfterDelete still runs, and an error is logged")]
         public void Delete_AuditWriteFails_CompletesAndLogsError()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);

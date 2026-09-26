@@ -4,13 +4,13 @@ using Polhem.Business.Providers;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="StaticApiEncryptionKeyProvider"/> 行為測試。
-    /// Provider 透過 ctor 注入 byte[] 金鑰；測試直接構造，不依賴任何 process-wide static。
+    /// Behavior tests for <see cref="StaticApiEncryptionKeyProvider"/>.
+    /// The provider receives a byte[] key through its constructor, so the tests construct it directly without any process-wide static.
     /// </summary>
     public class StaticApiEncryptionKeyProviderTests
     {
         [Fact]
-        [DisplayName("GetKey 應回傳建構時注入的金鑰")]
+        [DisplayName("GetKey returns the key injected at construction")]
         public void GetKey_ReturnsInjectedKey()
         {
             var key = new byte[64];
@@ -23,7 +23,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GenerateKeyForLogin 應回傳與 GetKey 相同的共用金鑰")]
+        [DisplayName("GenerateKeyForLogin returns the same shared key as GetKey")]
         public void GenerateKeyForLogin_ReturnsSameSharedKey()
         {
             var key = new byte[64];
@@ -36,14 +36,14 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ctor 傳入 null 金鑰應拋 ArgumentNullException")]
+        [DisplayName("The constructor throws ArgumentNullException for a null key")]
         public void Ctor_NullKey_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new StaticApiEncryptionKeyProvider(null!));
         }
 
         [Fact]
-        [DisplayName("ctor 傳入空 byte[] 應拋 ArgumentException")]
+        [DisplayName("The constructor throws ArgumentException for an empty byte[]")]
         public void Ctor_EmptyKey_Throws()
         {
             Assert.Throws<ArgumentException>(() => new StaticApiEncryptionKeyProvider(Array.Empty<byte>()));

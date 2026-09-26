@@ -5,7 +5,7 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="BusinessObject"/> 基底行為測試。
+    /// Tests for the base behavior of <see cref="BusinessObject"/>.
     /// </summary>
     public class BusinessObjectTests : IClassFixture<SharedDbFixture>
     {
@@ -14,7 +14,7 @@ namespace Polhem.Business.UnitTests
         public BusinessObjectTests(SharedDbFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("建構子應正確設定 AccessToken 與 IsLocalCall")]
+        [DisplayName("The constructor sets AccessToken and IsLocalCall")]
         public void Constructor_SetsProperties()
         {
             var token = Guid.NewGuid();
@@ -25,7 +25,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsLocalCall 預設為 true")]
+        [DisplayName("The TestableBusinessObject fake defaults IsLocalCall to true")]
         public void Constructor_DefaultIsLocalCall_IsTrue()
         {
             var bo = new TestableBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());
@@ -33,7 +33,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecFunc 應委派至 DoExecFunc 覆寫")]
+        [DisplayName("ExecFunc delegates to the DoExecFunc override")]
         public void ExecFunc_DelegatesToDoExecFunc()
         {
             var bo = new TestableBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());
@@ -48,7 +48,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecFuncAnonymous 應委派至 DoExecFuncAnonymous 覆寫")]
+        [DisplayName("ExecFuncAnonymous delegates to the DoExecFuncAnonymous override")]
         public void ExecFuncAnonymous_DelegatesToDoExecFuncAnonymous()
         {
             var bo = new TestableBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());
@@ -63,7 +63,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("未覆寫 DoExecFunc 時 ExecFunc 應回傳空結果不拋例外")]
+        [DisplayName("ExecFunc returns an empty result without throwing when DoExecFunc is not overridden")]
         public void ExecFunc_WithoutOverride_ReturnsEmptyResult()
         {
             var bo = new BareBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());
@@ -75,7 +75,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("未覆寫 DoExecFuncAnonymous 時 ExecFuncAnonymous 應回傳空結果不拋例外")]
+        [DisplayName("ExecFuncAnonymous returns an empty result without throwing when DoExecFuncAnonymous is not overridden")]
         public void ExecFuncAnonymous_WithoutOverride_ReturnsEmptyResult()
         {
             var bo = new BareBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());

@@ -10,14 +10,14 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests.Form
 {
     /// <summary>
-    /// per-form 稽核規則（<c>st_audit_rule</c>）如何改變 <c>FormBusinessObject</c> 的留痕決定：
-    /// 規則 <c>Off</c> 擋掉部署預設開啟的軸、規則 <c>On</c> 打開部署預設關閉的軸、
-    /// 敏感旗標流進實際寫出的紀錄，以及規則關掉異動記錄時 delete snapshot 仍須載入。
+    /// How per-form audit rules (<c>st_audit_rule</c>) change the trail decisions of <c>FormBusinessObject</c>:
+    /// rule <c>Off</c> silences an axis the deployment enables by default, rule <c>On</c> enables an axis the deployment disables by default,
+    /// the sensitive flag flows into the records actually written, and the delete snapshot is still loaded when a rule turns off change records.
     /// </summary>
     /// <remarks>
-    /// 規則以 stub <see cref="IAuditRuleService"/> 注入而非寫進 <c>st_audit_rule</c>：
-    /// 這裡要驗的是 BO 的決策邏輯，不是規則怎麼讀出來的（那由
-    /// <c>AuditRuleRepositoryTests</c> 與 <c>AuditRuleServiceTests</c> 負責）。
+    /// Rules are injected through a stub <see cref="IAuditRuleService"/> rather than written to <c>st_audit_rule</c>:
+    /// this verifies the BO's decision logic, not how rules are read (that is covered by
+    /// <c>AuditRuleRepositoryTests</c> and <c>AuditRuleServiceTests</c>).
     /// </remarks>
     public class FormBusinessObjectAuditRuleTests : IClassFixture<SharedDbFixture>
     {
@@ -43,8 +43,8 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         /// <summary>
-        /// 植入一個帶公司別的 session —— 規則查表以 session 的 CompanyId 為 key，
-        /// 沒有公司就等同「查無規則」，那樣就測不到規則本身。
+        /// Seeds a session with a company. The rule lookup is keyed by the session's CompanyId,
+        /// and without a company it amounts to no rule found, so the rule itself would not be tested.
         /// </summary>
         private Guid CreateSessionToken()
         {
@@ -80,7 +80,7 @@ namespace Polhem.Business.UnitTests.Form
             => new(CrudTestContext.ProgId, change, access, sensitive);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("規則 Off 應擋下 Save 的異動記錄，即使部署預設為開啟")]
+        [DisplayName("Rule Off suppresses Save's change records even when the deployment default is on")]
         public void Save_RuleOff_WritesNothingDespiteEnabledDefault()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -110,7 +110,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("規則 On 應打開部署預設關閉的異動記錄，且敏感旗標寫進紀錄")]
+        [DisplayName("Rule On enables change records the deployment disables by default, and the sensitive flag is written into the record")]
         public void Save_RuleOn_OverridesDisabledDefaultAndCarriesSensitiveFlag()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -126,8 +126,8 @@ namespace Polhem.Business.UnitTests.Form
                 master.Rows[0]["sys_id"] = $"S{runId}";
                 master.Rows[0][SysFields.Name] = "規則開啟";
 
-                // changeEnabled: false 是本測試的重點——規則 On 必須壓過部署預設的關閉，
-                // 否則「只記這一張重要表單」這個主要用途就不成立。
+                // `changeEnabled: false` is the point of this test: rule On must override the deployment's default of off,
+                // otherwise the main use case, recording only this one important form, does not hold.
                 ctx.CreateBoWithSession(CreateSessionToken(), null,
                         Overrides(writer, Rule(AuditRuleMode.On, AuditRuleMode.Off, sensitive: true),
                             changeEnabled: false, accessEnabled: false))
@@ -144,7 +144,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("規則 On 應打開部署預設關閉的檢視記錄")]
+        [DisplayName("Rule On enables view records the deployment disables by default")]
         public void GetData_RuleOn_OverridesDisabledDefault()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -171,12 +171,12 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("★規則關掉異動記錄時，delete-stage plugin 仍應拿得到 Snapshot")]
+        [DisplayName("A delete-stage plugin still gets the Snapshot when a rule turns off change records")]
         public void Delete_RuleOff_PluginStillGetsSnapshot()
         {
-            // 回歸測試：Snapshot 的載入條件是 `auditChange || pluginNeedsSnapshot || 規則`，
-            // 而 per-form 規則現在也能讓 auditChange 變 false。若哪天有人把條件簡化成只看
-            // auditChange，同一個 plugin 就會在「有設規則」的部署看到 null、在沒設的看到資料。
+            // Regression test: the Snapshot loads when `auditChange || pluginNeedsSnapshot || rule`,
+            // and per-form rules can now make `auditChange` false. If someone ever simplified the condition to look only at
+            // `auditChange`, the same plugin would see null on a deployment with a rule and data on one without.
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
             var writer = new CapturingAuditLogWriter();
             var rowId = Guid.NewGuid();
@@ -201,14 +201,14 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         /// <summary>
-        /// 兩個 delete 時點探針共用的記錄。
+        /// The log shared by the two delete stage probes.
         /// </summary>
         /// <remarks>
-        /// 一個 plugin 只掛一個時點，兩個時點因此是兩個類別；記錄放在共用的靜態容器，
-        /// 而不是 instance field ——後者跨時點已不再成立。
+        /// A plugin binds to one stage, so the two stages are two classes. The log lives in a shared static container
+        /// rather than an instance field, which no longer works across stages.
         /// <para>
-        /// 刻意不共用 <c>FormBusinessObjectPluginIntegrationTests</c> 那組同型探針：
-        /// 狀態是 <c>static</c>，而 xUnit 不同 test class 平行執行，共用就會互相覆寫。
+        /// This deliberately does not share the equivalent probes of <c>FormBusinessObjectPluginIntegrationTests</c>:
+        /// the state is <c>static</c>, and xUnit runs different test classes in parallel, so sharing would make them overwrite each other.
         /// </para>
         /// </remarks>
         public static class RuleOffDeleteProbe

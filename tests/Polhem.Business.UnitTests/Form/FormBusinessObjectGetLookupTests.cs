@@ -17,10 +17,10 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests.Form
 {
     /// <summary>
-    /// Round-trip 整合測試：呼叫 <see cref="FormBusinessObject.GetLookup"/> 驗證
-    /// server 端 lookup 欄位集解析（Employee 未宣告 LookupFields → 預設
-    /// <c>sys_rowid,sys_id,sys_name</c>）、SearchText 過濾、預設分頁與
-    /// <c>GetLookupFilter</c> 業務過濾覆寫點對實體 DB 的串接。
+    /// Round-trip integration tests that call <see cref="FormBusinessObject.GetLookup"/> to verify, against a real DB,
+    /// the server-side resolution of the lookup field set (Employee declares no LookupFields → the default
+    /// <c>sys_rowid,sys_id,sys_name</c>), SearchText filtering, default paging, and the
+    /// <c>GetLookupFilter</c> business filter override point.
     /// </summary>
     public class FormBusinessObjectGetLookupTests : IClassFixture<SharedDbFixture>
     {
@@ -31,7 +31,7 @@ namespace Polhem.Business.UnitTests.Form
         public FormBusinessObjectGetLookupTests(SharedDbFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("GetLookup 傳入 null 應拋 ArgumentNullException")]
+        [DisplayName("GetLookup throws ArgumentNullException for null")]
         public void GetLookup_NullArgs_Throws()
         {
             var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), ProgId);
@@ -39,7 +39,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetLookup 預設投影應只含 sys_rowid/sys_id/sys_name 並套預設分頁")]
+        [DisplayName("SQLite: the default GetLookup projection contains only sys_rowid/sys_id/sys_name and applies default paging")]
         public void GetLookup_Sqlite_DefaultProjectionAndPaging()
         {
             var ctx = new TestContext(_fx, DatabaseType.SQLite);
@@ -72,7 +72,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetLookup SearchText 應同時比對 sys_id 與 sys_name")]
+        [DisplayName("SQLite: GetLookup SearchText matches both sys_id and sys_name")]
         public void GetLookup_Sqlite_SearchTextMatchesIdOrName()
         {
             var ctx = new TestContext(_fx, DatabaseType.SQLite);
@@ -99,7 +99,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetLookupFilter 覆寫應 AND 縮小搜尋結果")]
+        [DisplayName("SQLite: a GetLookupFilter override narrows the search result with AND")]
         public void GetLookup_Sqlite_BusinessFilterNarrowsResult()
         {
             var ctx = new TestContext(_fx, DatabaseType.SQLite);
@@ -126,8 +126,8 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         /// <summary>
-        /// 測試用 BO：以建構子注入的 FilterNode 作為 <see cref="FormBusinessObject.GetLookupFilter"/>
-        /// 業務過濾，驗證 hook 與搜尋過濾的 AND 結合。
+        /// A test BO that uses a FilterNode injected through the constructor as the <see cref="FormBusinessObject.GetLookupFilter"/>
+        /// business filter, to verify that the hook is combined with the search filter by AND.
         /// </summary>
         private sealed class FilteredLookupBo : FormBusinessObject
         {
@@ -168,14 +168,14 @@ namespace Polhem.Business.UnitTests.Form
             }
             catch (Exception ex)
             {
-                // 清理為 best-effort：種子 INSERT 失敗時可能對應列不存在；不要遮蔽斷言失敗訊息。
+                // Cleanup is best-effort: the row may not exist if the seed INSERT failed, and this must not mask the assertion failure message.
                 Console.WriteLine($"FormBusinessObjectGetLookupTests: cleanup of Employee#{rowId} failed — {ex.GetType().Name}: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Per-test wiring：將 <see cref="FormBusinessObject"/> 綁定到以測試專用
-        /// <c>{categoryId}_{dbtype}</c> databaseId 建構的 <see cref="DataFormRepository"/>。
+        /// Per-test wiring: binds <see cref="FormBusinessObject"/> to a <see cref="DataFormRepository"/> built with the
+        /// test-specific <c>{categoryId}_{dbtype}</c> databaseId.
         /// </summary>
         private sealed class TestContext
         {

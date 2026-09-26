@@ -65,11 +65,11 @@ namespace Polhem.Business.UnitTests
             new ApiSurfaceEntry("LogBusinessObject", "GetTopApiMethods",    ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
 
             // System axis — SystemBusinessObject (system-level operations).
-            // Encrypted（原為 LocalOnly）：把關移交 IDeploymentAuthorizationService —— 遠端須是
-            // 部署層管理員，僅「已驗證」仍不足。本機呼叫免管理員，維持首把金鑰的 bootstrap 路徑。
+            // Encrypted (formerly LocalOnly): the gate is handed to `IDeploymentAuthorizationService`. A remote caller must be a
+            // deployment-level administrator; being authenticated is not enough. Local calls need no administrator, which keeps the bootstrap path for the first key.
             new ApiSurfaceEntry("SystemBusinessObject", "CreateApiKey",           ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
-            // LocalOnly：從 UserID 直接發 token、不驗憑證，屬受信任呼叫端操作。
-            // 先前為 Public + Anonymous，未被利用只是因為 SessionInfoCache.CreateInstance 尚未實作。
+            // LocalOnly: it issues a token directly from a UserID without checking credentials, so it is a trusted-caller operation.
+            // It used to be Public + Anonymous, and was only unexploited because `SessionInfoCache.CreateInstance` was not yet implemented.
             new ApiSurfaceEntry("SystemBusinessObject", "CreateSession",          ApiProtectionLevel.LocalOnly, ApiAccessRequirement.Anonymous),
             new ApiSurfaceEntry("SystemBusinessObject", "EnterCompany",           ApiProtectionLevel.Public,  ApiAccessRequirement.Authenticated, ApiReplayProtection.UniqueSequence),
             new ApiSurfaceEntry("SystemBusinessObject", "GetCommonConfiguration", ApiProtectionLevel.Public,  ApiAccessRequirement.Anonymous),
@@ -82,25 +82,25 @@ namespace Polhem.Business.UnitTests
             new ApiSurfaceEntry("SystemBusinessObject", "GetFormSchema",          ApiProtectionLevel.Public,  ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("SystemBusinessObject", "GetLanguage",            ApiProtectionLevel.Public,  ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("SystemBusinessObject", "LeaveCompany",           ApiProtectionLevel.Public,  ApiAccessRequirement.Authenticated, ApiReplayProtection.UniqueSequence),
-            // 以下三個與 CreateApiKey 同一把關：金鑰屬整個部署，遠端須是部署層管理員，
-            // 本機直通以保住 bootstrap。ListApiKeys 不回傳雜湊。
+            // `ListApiKeys`, `SetApiKeyEnabled` and `SetApiKeyExpiry` share the gate of `CreateApiKey`: keys belong to the whole deployment, a remote caller
+            // must be a deployment-level administrator, and local calls pass through to keep the bootstrap. `ListApiKeys` returns no hashes.
             new ApiSurfaceEntry("SystemBusinessObject", "ListApiKeys",           ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("SystemBusinessObject", "Login",                  ApiProtectionLevel.Public,  ApiAccessRequirement.Anonymous),
             new ApiSurfaceEntry("SystemBusinessObject", "Logout",                 ApiProtectionLevel.Public,  ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("SystemBusinessObject", "Ping",                   ApiProtectionLevel.Public,  ApiAccessRequirement.Anonymous),
-            // LocalOnly：寫入定義是部署期作業。先前僅擋 SystemSettings / DatabaseSettings，
-            // 其餘定義型別（含 PermissionModels、DbCategorySettings、FormSchema）任何已驗證帳號皆可覆寫。
+            // LocalOnly for `SaveCustomizePluginSettings` and `SaveDefine`: writing definitions is a deployment-time operation. `SaveDefine` used to block only SystemSettings / DatabaseSettings,
+            // so any authenticated account could overwrite the other definition types (including PermissionModels, DbCategorySettings and FormSchema).
             new ApiSurfaceEntry("SystemBusinessObject", "SaveCustomizePluginSettings", ApiProtectionLevel.LocalOnly, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("SystemBusinessObject", "SaveDefine",             ApiProtectionLevel.LocalOnly, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("SystemBusinessObject", "SetApiKeyEnabled",      ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("SystemBusinessObject", "SetApiKeyExpiry",       ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
-            // LocalOnly：指派部署層管理員是提權動作，屬部署期作業。理由同 SaveDefine / CreateApiKey
-            // —— 僅「已驗證」的遠端帳號不該能把自己或他人升為管理員。
+            // LocalOnly: appointing a deployment-level administrator is a privilege change and a deployment-time operation. For the same reason as SaveDefine / CreateApiKey,
+            // a remote account that is merely authenticated must not be able to promote itself or others to administrator.
             new ApiSurfaceEntry("SystemBusinessObject", "SetDeploymentAdmin",     ApiProtectionLevel.LocalOnly, ApiAccessRequirement.Authenticated),
         };
 
         [Fact]
-        [DisplayName("BO API 公開介面應與 baseline + docs/en/api-method-reference.md 同步")]
+        [DisplayName("The BO API public surface matches the baseline, which is checked against docs/{lang}/api-method-reference.md")]
         public void PublicApiSurface_MatchesBaseline()
         {
             var actual = ScanBusinessAssembly();
@@ -114,34 +114,34 @@ namespace Polhem.Business.UnitTests
         }
 
         /// <summary>
-        /// baseline 的每一列都必須出現在雙語的 <c>docs/{lang}/api-method-reference.md</c>，反之亦然。
+        /// Every baseline row must appear in the bilingual <c>docs/{lang}/api-method-reference.md</c>, and vice versa.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// 這個測試的 DisplayName 與那兩份文件開頭都寫著「由本測試保持同步、否則 build 會失敗」，
-        /// 但在 2026-09-04 之前<b>本檔完全沒有讀過任何檔案</b>——同步靠的是紀律，不是機制。
-        /// 那句話是對外文件裡的一個保證，所以要嘛補上機制、要嘛改掉那句話；這裡選前者。
+        /// The DisplayName of this test and the opening of those two documents both said they were kept in sync by this test or the build would fail,
+        /// yet before 2026-09-04 <b>this file did not read any file at all</b>: the sync relied on discipline, not a mechanism.
+        /// That sentence was a guarantee in a public document, so either the mechanism had to be added or the sentence changed; this adds the mechanism.
         /// </para>
         /// <para>
-        /// 比對的是 <c>(方法, Protection, Auth)</c> 三元組而不是逐行字串：文件按軸分節、
-        /// 帶 Purpose 欄與散文，逐行比對會被無關的排版變動打斷。方法名在 baseline 與文件中
-        /// 都不重複（本測試若因為出現同名方法而失真，那件事本身也該被看見）。
+        /// It compares <c>(method, Protection, Auth)</c> triples rather than whole lines: the document is split into sections by axis
+        /// and carries a Purpose column and prose, so a line-by-line comparison would break on unrelated layout changes. Method names are
+        /// unique in both the baseline and the documents (if a duplicate name ever distorts this test, that itself should be visible).
         /// </para>
         /// </remarks>
         [Theory]
         [InlineData("en")]
         [InlineData("zh-TW")]
-        [DisplayName("BO API baseline 應與 docs/{lang}/api-method-reference.md 雙語逐項一致")]
+        [DisplayName("The BO API baseline matches docs/{lang}/api-method-reference.md entry by entry")]
         public void Baseline_MatchesPublicMethodReference(string lang)
         {
             string path = Path.Combine(FindRepoRoot(), "docs", lang, "api-method-reference.md");
-            Assert.True(File.Exists(path), $"找不到 {path}。");
+            Assert.True(File.Exists(path), $"Cannot find {path}.");
 
             var documented = new HashSet<string>(StringComparer.Ordinal);
             foreach (Match m in DocRowPattern().Matches(File.ReadAllText(path)))
                 documented.Add($"{m.Groups[1].Value} | {m.Groups[2].Value} | {m.Groups[3].Value}");
 
-            // 防空轉：正則對不上文件格式時，下面的集合相等會變成「兩邊都空」而恆綠。
+            // Guards against a vacuous pass: if the regex does not match the document format, the set equality below compares two empty sets and is always green.
             Assert.NotEmpty(documented);
 
             var expected = new HashSet<string>(
@@ -153,22 +153,22 @@ namespace Polhem.Business.UnitTests
 
             Assert.True(
                 missing.Count == 0 && extra.Count == 0,
-                $"docs/{lang}/api-method-reference.md 與 baseline 不同步。\n文件缺少：\n  {string.Join("\n  ", missing)}\n" +
-                $"文件多出（或欄位值不符）：\n  {string.Join("\n  ", extra)}");
+                $"docs/{lang}/api-method-reference.md is out of sync with the baseline.\nMissing from the document:\n  {string.Join("\n  ", missing)}\n" +
+                $"Extra in the document (or column values differ):\n  {string.Join("\n  ", extra)}");
         }
 
         /// <summary>
-        /// 宣告了重放防護的方法，必須與雙語文件的〈Replay protection〉清單一致。
+        /// The methods that declare replay protection must match the Replay protection list in the bilingual documents.
         /// </summary>
         /// <remarks>
-        /// 這一欄是 4.26.0 新增的第三個存取維度，對客戶端作者是行為契約（不送遞增序號就收
-        /// <c>-32005 ReplayRejected</c>）。上面的三元組比對刻意不含它——文件那份是條列而非表格欄，
-        /// 而把它硬塞進表格會讓四十列各多寫一次 <c>None</c>。
+        /// This column is the third access dimension, added in 4.26.0, and it is a behavioral contract for client authors (without an increasing sequence number the call gets
+        /// <c>-32005 ReplayRejected</c>). The triple comparison above deliberately leaves it out: the document has it as a list rather than a table column,
+        /// and forcing it into the table would add a <c>None</c> to every row.
         /// </remarks>
         [Theory]
         [InlineData("en")]
         [InlineData("zh-TW")]
-        [DisplayName("宣告重放防護的方法應與 docs/{lang}/api-method-reference.md 的清單一致")]
+        [DisplayName("The methods that declare replay protection match the list in docs/{lang}/api-method-reference.md")]
         public void ReplayProtectedMethods_MatchPublicMethodReference(string lang)
         {
             string text = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs", lang, "api-method-reference.md"));
@@ -179,7 +179,7 @@ namespace Polhem.Business.UnitTests
                 .OrderBy(m => m, StringComparer.Ordinal)
                 .ToList();
 
-            // 防空轉：baseline 一個都沒標時，下面的「每個都找得到」會恆真。
+            // Guards against a vacuous pass: if the baseline marks nothing, the every-method-is-found check below is always true.
             Assert.NotEmpty(expected);
 
             var documented = ReplayListPattern().Matches(text)
@@ -191,24 +191,24 @@ namespace Polhem.Business.UnitTests
         }
 
         /// <summary>
-        /// 〈Replay protection〉/〈重放防護〉一節內的方法名。
+        /// The method names in the Replay protection section.
         /// </summary>
         [GeneratedRegex(@"^- `(\w+)`\s*$", RegexOptions.Multiline)]
         private static partial Regex ReplayListPattern();
 
         /// <summary>
-        /// 文件表格的一列：<c>| `Method` | Protection | Auth | Purpose |</c>。
+        /// One row of the document table: <c>| `Method` | Protection | Auth | Purpose |</c>.
         /// </summary>
         [GeneratedRegex(@"^\|\s*`(\w+)`\s*\|\s*(\w+)\s*\|\s*(\w+)\s*\|", RegexOptions.Multiline)]
         private static partial Regex DocRowPattern();
 
         /// <summary>
-        /// 由測試組件位置往上找出 repo 根目錄。
+        /// Walks up from the test assembly location to find the repository root.
         /// </summary>
         /// <remarks>
-        /// 與 <c>TestProcessBootstrap</c> 的同名私有方法重複約八行。刻意不把那個改成 public：
-        /// 那支是 fixture 的啟動路徑，公開它會讓「測試要不要碰 repo 檔案」變成一個開放邀請，
-        /// 而這裡只需要唯讀地找一份文件。
+        /// This duplicates about eight lines of the private method of the same name in <c>TestProcessBootstrap</c>. That one is deliberately not made public:
+        /// it is the fixture's startup path, and exposing it would make touching repository files from tests an open invitation,
+        /// while this only needs to find one document read-only.
         /// </remarks>
         private static string FindRepoRoot()
         {
@@ -218,7 +218,7 @@ namespace Polhem.Business.UnitTests
                 if (dir.GetDirectories(".git").Length > 0) { return dir.FullName; }
                 dir = dir.Parent;
             }
-            throw new InvalidOperationException($"找不到 repo 根目錄：{AppContext.BaseDirectory}");
+            throw new InvalidOperationException($"Cannot find the repository root from {AppContext.BaseDirectory}.");
         }
 
         /// <summary>
@@ -265,9 +265,9 @@ namespace Polhem.Business.UnitTests
         }
 
         /// <summary>
-        /// baseline 的一列。<paramref name="ReplayProtection"/> 帶預設值只是為了讓 baseline 不必
-        /// 為四十列各寫一次 <c>None</c>——它擋不住任何變更：實際值一律來自反射掃描，
-        /// 原始碼把 <c>UniqueSequence</c> 拿掉時掃描結果就與這裡明寫的值對不上。
+        /// One baseline row. <paramref name="ReplayProtection"/> has a default only so the baseline does not have to
+        /// write <c>None</c> on every row. It does not hide any change: the actual value always comes from the reflection scan,
+        /// so when the source removes <c>UniqueSequence</c>, the scan result no longer matches the value written here.
         /// </summary>
         private readonly record struct ApiSurfaceEntry(
             string Type,

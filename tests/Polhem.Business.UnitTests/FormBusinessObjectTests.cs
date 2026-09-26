@@ -5,7 +5,7 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="FormBusinessObject"/> 行為測試，透過內部 <c>FormExecFuncHandler.Hello</c> 驗證反射派發。
+    /// Behavior tests for <see cref="FormBusinessObject"/>, verifying reflection dispatch through the internal <c>FormExecFuncHandler.Hello</c>.
     /// </summary>
     public class FormBusinessObjectTests : IClassFixture<SharedDbFixture>
     {
@@ -13,7 +13,7 @@ namespace Polhem.Business.UnitTests
 
         public FormBusinessObjectTests(SharedDbFixture fx) { _fx = fx; }
         [Fact]
-        [DisplayName("建構子應設定 AccessToken、ProgId、IsLocalCall")]
+        [DisplayName("The constructor sets AccessToken, ProgId and IsLocalCall")]
         public void Constructor_SetsProperties()
         {
             var token = Guid.NewGuid();
@@ -26,7 +26,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecFunc Hello 應填入預設訊息")]
+        [DisplayName("ExecFunc Hello fills in the default message")]
         public void ExecFunc_Hello_FillsExpectedMessage()
         {
             var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), "prog01");
@@ -37,10 +37,10 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecFuncAnonymous 呼叫需驗證的方法應拋 UnauthorizedAccessException")]
+        [DisplayName("ExecFuncAnonymous calling a method that requires authentication throws UnauthorizedAccessException")]
         public void ExecFuncAnonymous_HelloRequiresAuthentication_ThrowsUnauthorized()
         {
-            // FormExecFuncHandler.Hello 標記為 Authenticated，因此匿名呼叫時應被 InvokeExecFunc 阻擋。
+            // `FormExecFuncHandler.Hello` is marked Authenticated, so `InvokeExecFunc` must block an anonymous call.
             var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), "prog01");
 
             Assert.Throws<UnauthorizedAccessException>(() =>
@@ -48,7 +48,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecFunc 呼叫不存在的方法應拋 MissingMethodException")]
+        [DisplayName("ExecFunc calling a method that does not exist throws MissingMethodException")]
         public void ExecFunc_UnknownMethod_ThrowsMissingMethod()
         {
             var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), "prog01");

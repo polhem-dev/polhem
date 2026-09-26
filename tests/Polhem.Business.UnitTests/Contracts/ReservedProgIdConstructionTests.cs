@@ -6,34 +6,34 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests.Contracts
 {
     /// <summary>
-    /// 守住「每個保留字 progId 都真的能被 <see cref="BusinessObjectFactory"/> 建出來」。
+    /// Guards that every reserved progId really can be constructed by <see cref="BusinessObjectFactory"/>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>為什麼既有的閘門擋不到這件事。</b><c>ActionSurfaceTests</c> 守的是 action 常數與方法的
-    /// 對稱、<c>BoApiSurfaceTests</c> 守的是公開表面、<c>ReservedProgIdResolutionTests</c> 守的是
-    /// progId 解析得到哪個<b>型別</b>——三者都在「型別已經被建出來」之後才有意義。而
-    /// <c>BusinessObjectFactory.CreateBusinessObject</c> 是用 <c>Activator.CreateInstance</c> 固定
-    /// 傳四個引數建構的，<b>C# 的建構子不會被繼承</b>：子類少宣告一個參數，前面三道閘門全綠，
-    /// 症狀是 runtime 的 <c>MissingMethodException</c>，而且發生在方法查找<b>之前</b>，
-    /// 對呼叫端呈現為 <c>InternalError</c>。
+    /// <b>Why the existing gates cannot catch this.</b> <c>ActionSurfaceTests</c> guards the symmetry of action constants and
+    /// methods, <c>BoApiSurfaceTests</c> guards the public surface, and <c>ReservedProgIdResolutionTests</c> guards which
+    /// <b>type</b> a progId resolves to. All of them only mean something after the type has been constructed. Yet
+    /// <c>BusinessObjectFactory.CreateBusinessObject</c> constructs it with <c>Activator.CreateInstance</c> and a fixed argument list,
+    /// and <b>C# constructors are not inherited</b>: a subclass that declares one parameter too few leaves those gates green,
+    /// and the symptom is a runtime <c>MissingMethodException</c> that happens <b>before</b> the method lookup
+    /// and reaches the caller as <c>InternalError</c>.
     /// </para>
     /// <para>
-    /// 這正是 4.25.0 的 <c>AuditRule</c> 發生過的事：它只宣告了三參數建構子，於是那張隨框架出貨的
-    /// 稽核規則維護表單遠端完全不可達，而唯一的測試是直接 <c>new</c> 出來的、從不經過工廠，
-    /// 所以出貨時整個套件是綠的。
+    /// This is exactly what happened to <c>AuditRule</c> in 4.25.0: it declared only a three-parameter constructor, so the audit rule
+    /// maintenance form shipped with the framework was completely unreachable remotely, and the only test constructed it directly with <c>new</c>, never through the factory,
+    /// so the whole suite was green when it shipped.
     /// </para>
     /// <para>
-    /// <b>兩層互補，刻意重疊。</b><c>CreateBusinessObject_*</c> 走真實工廠，是最貼近實際失敗的一層；
-    /// <c>DefaultType_DeclaresConstructorMatchingTheBase</c> 是純反射，連工廠都不經過。兩者都
-    /// <b>不硬編工廠傳的引數形狀</b>——前者根本不需要知道，後者從 <see cref="BusinessObject"/>
-    /// 基底的建構子推導。抄一份形狀下來就又多了一個會漂的來源。
+    /// <b>Two complementary layers, overlapping on purpose.</b> <c>CreateBusinessObject_*</c> goes through the real factory and is the layer closest to the actual failure, while
+    /// <c>DefaultType_DeclaresConstructorMatchingTheBase</c> is pure reflection and does not even go through the factory. Neither
+    /// <b>hard-codes the argument shape the factory passes</b>: the first does not need to know it, and the second derives it from the constructor of the
+    /// <see cref="BusinessObject"/> base. Copying the shape would add another source that drifts.
     /// </para>
     /// <para>
-    /// NOTE: 走工廠那層曾經需要資料庫容器 —— 它以裸 <c>Guid.NewGuid()</c> 當權杖，BO 建構過程
-    /// <c>SessionInfoService.Get</c> 查不到就走 rebuild 路徑讀 <c>st_session</c>。那個相依與本測試的
-    /// 主題（建構子形狀）無關，已改用 <see cref="TestSessionFactory.CreateAccessToken"/> 拆掉，
-    /// fixture 也隨之從 <c>SharedDbFixture</c> 降為 <see cref="PolhemTestFixture"/>。
+    /// NOTE: the factory layer used to need the database container. It used a bare <c>Guid.NewGuid()</c> as the token, and during BO construction
+    /// <c>SessionInfoService.Get</c> found nothing and took the rebuild path that reads <c>st_session</c>. That dependency has nothing to do with this test's
+    /// subject (the constructor shape), so it was removed by switching to <see cref="TestSessionFactory.CreateAccessToken"/>,
+    /// and the fixture was downgraded from <c>SharedDbFixture</c> to <see cref="PolhemTestFixture"/>.
     /// </para>
     /// </remarks>
     public class ReservedProgIdConstructionTests : IClassFixture<PolhemTestFixture>
@@ -54,7 +54,7 @@ namespace Polhem.Business.UnitTests.Contracts
 
         [Theory]
         [MemberData(nameof(ReservedProgIds))]
-        [DisplayName("每個保留字 progId 都應能經 BusinessObjectFactory 建出對應的 BO")]
+        [DisplayName("Every reserved progId can be constructed into its BO through BusinessObjectFactory")]
         public void CreateBusinessObject_EveryReservedProgId_Succeeds(string progId)
         {
             var binding = Polhem.Business.ReservedProgIds.Find(progId);
@@ -62,14 +62,14 @@ namespace Polhem.Business.UnitTests.Contracts
 
             var bo = Factory.CreateBusinessObject(TestSessionFactory.CreateAccessToken(_fx), progId, isLocalCall: true);
 
-            // 斷言用 ExpectedBaseType 而非 DefaultType：部署可以在註冊表把保留字綁到自己的子類，
-            // 那是合法的，而不論綁到哪一個，它都必須滿足該 progId 的基底約束。
+            // The assertion uses `ExpectedBaseType` rather than `DefaultType`: a deployment may bind a reserved progId to its own subclass in the registry,
+            // which is legitimate, and whichever type it binds must satisfy that progId's base constraint.
             Assert.IsType(binding!.ExpectedBaseType, bo, exactMatch: false);
         }
 
         [Theory]
         [MemberData(nameof(ReservedProgIds))]
-        [DisplayName("每個保留字 progId 建出的 BO 都應保留 isLocalCall=false")]
+        [DisplayName("The BO constructed for every reserved progId keeps isLocalCall=false")]
         public void CreateBusinessObject_EveryReservedProgId_PreservesRemoteFlag(string progId)
         {
             var bo = Factory.CreateBusinessObject(TestSessionFactory.CreateAccessToken(_fx), progId, isLocalCall: false);
@@ -80,13 +80,13 @@ namespace Polhem.Business.UnitTests.Contracts
 
         [Theory]
         [MemberData(nameof(ReservedProgIds))]
-        [DisplayName("每個保留字 progId 的預設 BO 都應宣告與基底相同參數形狀的建構子（不需容器）")]
+        [DisplayName("The default BO of every reserved progId declares a constructor with the same parameter shape as the base (no container needed)")]
         public void DefaultType_DeclaresConstructorMatchingTheBase(string progId)
         {
             var binding = Polhem.Business.ReservedProgIds.Find(progId);
             Assert.NotNull(binding);
 
-            // 期望形狀從 BusinessObject 基底自己推導，不從工廠抄一份下來——抄下來就又多一個會漂的來源。
+            // The expected shape is derived from the `BusinessObject` base itself, not copied from the factory, because a copy would be another source that drifts.
             var expected = typeof(BusinessObject)
                 .GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 .Select(c => c.GetParameters().Select(p => p.ParameterType).ToArray())
@@ -97,12 +97,12 @@ namespace Polhem.Business.UnitTests.Contracts
 
             Assert.True(
                 actual is not null,
-                $"{binding.DefaultType.Name} 沒有 ({string.Join(", ", expected.Select(t => t.Name))}) 建構子，" +
-                "BusinessObjectFactory 會擲 MissingMethodException，該 progId 遠端不可達。");
+                $"{binding.DefaultType.Name} has no ({string.Join(", ", expected.Select(t => t.Name))}) constructor, " +
+                "so BusinessObjectFactory throws MissingMethodException and the progId is unreachable remotely.");
         }
 
         [Fact]
-        [DisplayName("保留字 progId 清單不得為空（防空轉：清單空掉時上面三個 Theory 會恆綠）")]
+        [DisplayName("The reserved progId list is not empty (guards against a vacuous pass: with an empty list the theories above would always be green)")]
         public void ReservedProgIds_AreNotEmpty()
         {
             Assert.NotEmpty(Polhem.Business.ReservedProgIds.All);

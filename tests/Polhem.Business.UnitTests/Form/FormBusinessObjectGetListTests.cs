@@ -18,9 +18,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests.Form
 {
     /// <summary>
-    /// Round-trip 整合測試：呼叫 <see cref="FormBusinessObject.GetList"/> 驗證
-    /// BO → <see cref="DataFormRepository"/> → <c>IFormCommandBuilder</c> → 實體 DB 的串接。
-    /// 種子資料 + 清理沿用 <c>EmployeeBuildSelectIntegrationTests</c> 模式。
+    /// Round-trip integration tests that call <see cref="FormBusinessObject.GetList"/> to verify the chain
+    /// BO → <see cref="DataFormRepository"/> → <c>IFormCommandBuilder</c> → real DB.
+    /// Seed data and cleanup follow the <c>EmployeeBuildSelectIntegrationTests</c> pattern.
     /// </summary>
     public class FormBusinessObjectGetListTests : IClassFixture<SharedDbFixture>
     {
@@ -31,7 +31,7 @@ namespace Polhem.Business.UnitTests.Form
         public FormBusinessObjectGetListTests(SharedDbFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("GetList 傳入 null 應拋 ArgumentNullException")]
+        [DisplayName("GetList throws ArgumentNullException for null")]
         public void GetList_NullArgs_Throws()
         {
             var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), ProgId);
@@ -39,45 +39,45 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetList 指定明確 SelectFields 應只回傳該欄位且含關聯欄位")]
+        [DisplayName("SQLite: GetList with explicit SelectFields returns only those fields, including relation fields")]
         public void GetList_Sqlite_ExplicitSelectFields()
             => RunExplicitSelectFields(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetList 同時套用 Filter 與 Sort 應回傳對應列數與順序")]
+        [DisplayName("SQLite: GetList with both Filter and Sort returns the expected row count and order")]
         public void GetList_Sqlite_FilterAndSort()
             => RunFilterAndSort(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：GetList 指定明確 SelectFields 應只回傳該欄位且含關聯欄位")]
+        [DisplayName("SQL Server: GetList with explicit SelectFields returns only those fields, including relation fields")]
         public void GetList_SqlServer_ExplicitSelectFields()
             => RunExplicitSelectFields(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：GetList 同時套用 Filter 與 Sort 應回傳對應列數與順序")]
+        [DisplayName("SQL Server: GetList with both Filter and Sort returns the expected row count and order")]
         public void GetList_SqlServer_FilterAndSort()
             => RunFilterAndSort(DatabaseType.SQLServer);
 
         // -------- Record-scope shaped filters (Phase 3) --------
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetList 套用 dept_rowid IN（scope 形狀）應只回該部門列且不報 remap 錯")]
+        [DisplayName("SQLite: GetList with dept_rowid IN (the scope shape) returns only that department's rows without a remap error")]
         public void GetList_Sqlite_InFilterOnDeptField() => RunInFilterOnDeptField(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：GetList 套用 dept_rowid IN（scope 形狀）應只回該部門列且不報 remap 錯")]
+        [DisplayName("SQL Server: GetList with dept_rowid IN (the scope shape) returns only that department's rows without a remap error")]
         public void GetList_SqlServer_InFilterOnDeptField() => RunInFilterOnDeptField(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetData 帶 scope filter — 範圍內回資料、越範圍回 null")]
+        [DisplayName("SQLite: GetData with a scope filter returns the data in scope and null out of scope")]
         public void GetData_Sqlite_ScopeFilter() => RunGetDataScope(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：Delete/ExistsInScope 權威 re-query — 越範圍刪 0 不刪、範圍內刪 1")]
+        [DisplayName("SQLite: Delete/ExistsInScope re-query authoritatively, deleting 0 out of scope and 1 in scope")]
         public void Delete_Sqlite_ScopeFilter() => RunDeleteScope(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：Delete/ExistsInScope 權威 re-query — 越範圍刪 0 不刪、範圍內刪 1")]
+        [DisplayName("SQL Server: Delete/ExistsInScope re-query authoritatively, deleting 0 out of scope and 1 in scope")]
         public void Delete_SqlServer_ScopeFilter() => RunDeleteScope(DatabaseType.SQLServer);
 
         private void RunInFilterOnDeptField(DatabaseType dbType)
@@ -95,7 +95,7 @@ namespace Polhem.Business.UnitTests.Form
                 InsertEmployee(ctx, empA, $"EA{runId}", "員工A", deptA);
                 InsertEmployee(ctx, empB, $"EB{runId}", "員工B", deptB);
 
-                // scope 形狀：dept_rowid IN (deptA)。WhereBuilder 須把主表欄 dept_rowid 正確 remap。
+                // The scope shape is `dept_rowid IN (deptA)`. `WhereBuilder` must remap the master table column `dept_rowid` correctly.
                 var result = ctx.CreateBo().GetList(new GetListArgs
                 {
                     SelectFields = "sys_id,dept_rowid",
@@ -108,7 +108,7 @@ namespace Polhem.Business.UnitTests.Form
                 });
 
                 Assert.NotNull(result.Table);
-                Assert.Single(result.Table!.Rows);  // 只有 A 部的 empA
+                Assert.Single(result.Table!.Rows);  // Only empA, in department A.
                 Assert.Equal($"EA{runId}", result.Table.Rows[0]["sys_id"]);
             }
             finally
@@ -134,9 +134,9 @@ namespace Polhem.Business.UnitTests.Form
                 var inScope = new FilterCondition { FieldName = "dept_rowid", Operator = ComparisonOperator.In, Value = new List<object> { deptA } };
                 var outScope = new FilterCondition { FieldName = "dept_rowid", Operator = ComparisonOperator.In, Value = new List<object> { Guid.NewGuid() } };
 
-                Assert.NotNull(ctx.Repository.GetData(empA, inScope));   // 範圍內
-                Assert.Null(ctx.Repository.GetData(empA, outScope));     // 越範圍 → null
-                Assert.NotNull(ctx.Repository.GetData(empA));            // 無 scope → 正常回
+                Assert.NotNull(ctx.Repository.GetData(empA, inScope));   // In scope.
+                Assert.Null(ctx.Repository.GetData(empA, outScope));     // Out of scope → null.
+                Assert.NotNull(ctx.Repository.GetData(empA));            // No scope → returned as usual.
             }
             finally
             {
@@ -159,13 +159,13 @@ namespace Polhem.Business.UnitTests.Form
                 var inScope = new FilterCondition { FieldName = "dept_rowid", Operator = ComparisonOperator.In, Value = new List<object> { deptA } };
                 var outScope = new FilterCondition { FieldName = "dept_rowid", Operator = ComparisonOperator.In, Value = new List<object> { Guid.NewGuid() } };
 
-                Assert.True(ctx.Repository.ExistsInScope(empA, inScope));   // 範圍內存在
-                Assert.False(ctx.Repository.ExistsInScope(empA, outScope)); // 越範圍視為不存在
+                Assert.True(ctx.Repository.ExistsInScope(empA, inScope));   // Exists in scope.
+                Assert.False(ctx.Repository.ExistsInScope(empA, outScope)); // Out of scope counts as not existing.
 
-                Assert.Equal(0, ctx.Repository.Delete(empA, outScope));     // 越範圍 → 刪 0、不刪
-                Assert.NotNull(ctx.Repository.GetData(empA));               // 仍在
-                Assert.Equal(1, ctx.Repository.Delete(empA, inScope));      // 範圍內 → 刪 1
-                Assert.Null(ctx.Repository.GetData(empA));                  // 已刪
+                Assert.Equal(0, ctx.Repository.Delete(empA, outScope));     // Out of scope → 0 deleted, nothing removed.
+                Assert.NotNull(ctx.Repository.GetData(empA));               // Still there.
+                Assert.Equal(1, ctx.Repository.Delete(empA, inScope));      // In scope → 1 deleted.
+                Assert.Null(ctx.Repository.GetData(empA));                  // Deleted.
             }
             finally
             {
@@ -177,42 +177,42 @@ namespace Polhem.Business.UnitTests.Form
         // -------- Paging --------
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetList Paging=null 行為與既有不分頁路徑一致；Result.Paging=null")]
+        [DisplayName("SQLite: GetList with Paging=null behaves like the existing unpaged path, and Result.Paging is null")]
         public void GetList_Sqlite_PagingNull_NoPagingInfo()
             => RunPagingNullBehavior(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetList 分頁含 IncludeTotalCount 應回傳正確 TotalCount/HasMore")]
+        [DisplayName("SQLite: paged GetList with IncludeTotalCount returns the correct TotalCount/HasMore")]
         public void GetList_Sqlite_PagedWithTotalCount()
             => RunPagedWithTotalCount(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetList 分頁不含 IncludeTotalCount 應 probe 推算 HasMore 且 TotalCount=null")]
+        [DisplayName("SQLite: paged GetList without IncludeTotalCount infers HasMore with a probe row and leaves TotalCount null")]
         public void GetList_Sqlite_PagedWithoutTotalCount()
             => RunPagedWithoutTotalCount(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetList 分頁 Page 超過總頁數應回空 Table 且 HasMore=false")]
+        [DisplayName("SQLite: paged GetList with a Page beyond the last page returns an empty Table and HasMore=false")]
         public void GetList_Sqlite_PagedBeyondLastPage()
             => RunPagedBeyondLastPage(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetList PageSize 超過 MaxPageSize 應 clamp 至上限不丟例外")]
+        [DisplayName("SQLite: GetList with a PageSize above MaxPageSize clamps it to the cap without throwing")]
         public void GetList_Sqlite_PageSizeClampedToCap()
             => RunPageSizeClampedToCap(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetList 分頁 SortFields=null 應 fallback sys_no ASC")]
+        [DisplayName("SQLite: paged GetList with SortFields=null falls back to sys_no ASC")]
         public void GetList_Sqlite_SortFallbackToSysNo()
             => RunSortFallbackToSysNo(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：GetList 分頁含 IncludeTotalCount 應回傳正確 TotalCount/HasMore")]
+        [DisplayName("SQL Server: paged GetList with IncludeTotalCount returns the correct TotalCount/HasMore")]
         public void GetList_SqlServer_PagedWithTotalCount()
             => RunPagedWithTotalCount(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：GetList 分頁不含 IncludeTotalCount 應 probe 推算 HasMore 且 TotalCount=null")]
+        [DisplayName("SQL Server: paged GetList without IncludeTotalCount infers HasMore with a probe row and leaves TotalCount null")]
         public void GetList_SqlServer_PagedWithoutTotalCount()
             => RunPagedWithoutTotalCount(DatabaseType.SQLServer);
 
@@ -222,42 +222,42 @@ namespace Polhem.Business.UnitTests.Form
         // broken on Oracle the whole time. These mirror the SQL Server cases above.
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：GetList 指定明確 SelectFields 應只回傳該欄位且含關聯欄位")]
+        [DisplayName("Oracle: GetList with explicit SelectFields returns only those fields, including relation fields")]
         public void GetList_Oracle_ExplicitSelectFields()
             => RunExplicitSelectFields(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：GetList 同時套用 Filter 與 Sort 應回傳對應列數與順序")]
+        [DisplayName("Oracle: GetList with both Filter and Sort returns the expected row count and order")]
         public void GetList_Oracle_FilterAndSort()
             => RunFilterAndSort(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：GetList 套用 dept_rowid IN（scope 形狀）應只回該部門列且不報 remap 錯")]
+        [DisplayName("Oracle: GetList with dept_rowid IN (the scope shape) returns only that department's rows without a remap error")]
         public void GetList_Oracle_InFilterOnDeptField()
             => RunInFilterOnDeptField(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：GetList 分頁含 IncludeTotalCount 應回傳正確 TotalCount/HasMore")]
+        [DisplayName("Oracle: paged GetList with IncludeTotalCount returns the correct TotalCount/HasMore")]
         public void GetList_Oracle_PagedWithTotalCount()
             => RunPagedWithTotalCount(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：GetList 分頁不含 IncludeTotalCount 應 probe 推算 HasMore 且 TotalCount=null")]
+        [DisplayName("Oracle: paged GetList without IncludeTotalCount infers HasMore with a probe row and leaves TotalCount null")]
         public void GetList_Oracle_PagedWithoutTotalCount()
             => RunPagedWithoutTotalCount(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：GetList 分頁 SortFields=null 應 fallback sys_no ASC")]
+        [DisplayName("Oracle: paged GetList with SortFields=null falls back to sys_no ASC")]
         public void GetList_Oracle_SortFallbackToSysNo()
             => RunSortFallbackToSysNo(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：GetList 無 Filter 無 Sort 的分頁查詢（壓測場景形狀）應成功")]
+        [DisplayName("Oracle: a paged GetList without Filter or Sort (the load test query shape) succeeds")]
         public void GetList_Oracle_PagedWithoutFilter()
             => RunPagedWithoutFilter(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：GetList 回傳的 sys_rowid 欄位應為 Guid 型別，而非 RAW(16) 的 byte[]")]
+        [DisplayName("Oracle: the sys_rowid column returned by GetList is a Guid, not the byte[] of RAW(16)")]
         public void GetList_Oracle_RowIdColumnIsGuid()
         {
             var ctx = new TestContext(_fx, DatabaseType.Oracle);
@@ -284,7 +284,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：GetList 無 Filter 無 Sort 的分頁查詢（壓測場景形狀）應成功")]
+        [DisplayName("SQL Server: a paged GetList without Filter or Sort (the load test query shape) succeeds")]
         public void GetList_SqlServer_PagedWithoutFilter()
             => RunPagedWithoutFilter(DatabaseType.SQLServer);
 
@@ -314,7 +314,7 @@ namespace Polhem.Business.UnitTests.Form
                 Assert.Equal($"E{runId}", row["sys_id"]);
                 Assert.Equal("員工乙", row["sys_name"]);
                 Assert.Equal("工程部", row["ref_dept_name"]);
-                // 未要求的欄位不應存在
+                // Fields that were not requested must not be present.
                 Assert.False(result.Table.Columns.Contains("ref_supervisor_name"));
             }
             finally
@@ -396,7 +396,7 @@ namespace Polhem.Business.UnitTests.Form
 
                 Assert.NotNull(result.Table);
                 Assert.Equal(5, result.Table!.Rows.Count);
-                Assert.Null(result.Paging);  // 不分頁路徑：Paging 必為 null
+                Assert.Null(result.Paging);  // The unpaged path leaves Paging null.
             }
             finally
             {
@@ -427,7 +427,7 @@ namespace Polhem.Business.UnitTests.Form
                 Assert.Equal(2, result.Paging!.Page);
                 Assert.Equal(2, result.Paging.PageSize);
                 Assert.Equal(5, result.Paging.TotalCount);
-                Assert.True(result.Paging.HasMore);  // 5 列，第 2 頁取 2 列、後面還有 1 列
+                Assert.True(result.Paging.HasMore);  // 5 rows: page 2 takes 2 rows and 1 row remains.
             }
             finally
             {
@@ -450,13 +450,13 @@ namespace Polhem.Business.UnitTests.Form
                 });
 
                 Assert.NotNull(result.Table);
-                // probe row 已 trim：頁面只留 2 列
+                // The probe row has been trimmed, so the page keeps only 2 rows.
                 Assert.Equal(2, result.Table!.Rows.Count);
                 Assert.Equal($"P{runId}-0", result.Table.Rows[0]["sys_id"]);
                 Assert.Equal($"P{runId}-1", result.Table.Rows[1]["sys_id"]);
 
                 Assert.NotNull(result.Paging);
-                Assert.Null(result.Paging!.TotalCount);  // 未要求
+                Assert.Null(result.Paging!.TotalCount);  // Not requested.
                 Assert.True(result.Paging.HasMore);
             }
             finally
@@ -508,9 +508,9 @@ namespace Polhem.Business.UnitTests.Form
                 });
 
                 Assert.NotNull(result.Table);
-                Assert.Equal(5, result.Table!.Rows.Count);  // 5 列、cap 後 PageSize 仍夠裝下
+                Assert.Equal(5, result.Table!.Rows.Count);  // 5 rows still fit in the clamped PageSize.
                 Assert.NotNull(result.Paging);
-                Assert.Equal(1000, result.Paging!.PageSize);  // clamp 結果
+                Assert.Equal(1000, result.Paging!.PageSize);  // The clamped value.
                 Assert.False(result.Paging.HasMore);
             }
             finally
@@ -525,9 +525,9 @@ namespace Polhem.Business.UnitTests.Form
             var (rowIds, filter, runId) = SeedFivePagingRows(ctx);
             try
             {
-                // SortFields = null → Repository fallback 套用 sys_no ASC。
-                // sys_no 為 AutoIncrement，種子順序遞增；分頁第 1 頁取 2 列、第 2 頁再取 2 列，
-                // sys_id 也跟著保持 0..4 順序（因為兩個欄位插入順序一致）。
+                // With `SortFields` null, the repository falls back to `sys_no ASC`.
+                // `sys_no` is AutoIncrement and increases in seed order. Page 1 takes 2 rows and page 2 takes the next 2,
+                // and `sys_id` keeps its 0..4 order too, because both columns were inserted in the same order.
                 var page1 = ctx.CreateBo().GetList(new GetListArgs
                 {
                     SelectFields = "sys_id",
@@ -627,7 +627,7 @@ namespace Polhem.Business.UnitTests.Form
             }
             catch (Exception ex)
             {
-                // 清理為 best-effort：種子 INSERT 失敗時可能對應列不存在；不要遮蔽斷言失敗訊息。
+                // Cleanup is best-effort: the row may not exist if the seed INSERT failed, and this must not mask the assertion failure message.
                 Console.WriteLine($"FormBusinessObjectGetListTests: cleanup of {tableName}#{rowId} failed — {ex.GetType().Name}: {ex.Message}");
             }
         }

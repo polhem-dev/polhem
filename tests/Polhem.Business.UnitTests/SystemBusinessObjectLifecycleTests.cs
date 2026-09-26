@@ -10,14 +10,14 @@ using Polhem.Definition;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// SystemBO session lifecycle 全流程整合測試。串接 Login → EnterCompany(A) →
-    /// EnterCompany(B) → LeaveCompany → EnterCompany(A) → Logout，驗證跨四個方法的
-    /// session state transition 一致性，合法與非法路徑各自成案。
+    /// Integration test of the whole SystemBO session lifecycle. It chains Login → EnterCompany(A) →
+    /// EnterCompany(B) → LeaveCompany → EnterCompany(A) → Logout and verifies that the session state transitions
+    /// stay consistent across the four methods, with valid and invalid paths as separate cases.
     /// </summary>
     public class SystemBusinessObjectLifecycleTests : IClassFixture<SharedDbFixture>
     {
-        // company 的 permission 表位於 company-category DB；company_database_id 須指向該庫，
-        // EnterCompany 才載得到角色快照。BO 測試綁 SQL Server。
+        // The company permission tables live in the company-category DB. `company_database_id` must point there
+        // for `EnterCompany` to load the role snapshot. BO tests are bound to SQL Server.
         private static readonly string s_companyDbId = TestDbConventions.GetDatabaseId(DatabaseType.SQLServer, "company");
         private readonly SharedDbFixture _fx;
 
@@ -26,20 +26,20 @@ namespace Polhem.Business.UnitTests
         private static string UniqueCompanyId() => "C_" + Guid.NewGuid().ToString("N")[..12];
 
         [Fact]
-        [DisplayName("Login → EnterCompany(A) → EnterCompany(B) → LeaveCompany → EnterCompany(A) → Logout 整條 session lifecycle 應一致")]
+        [DisplayName("The whole session lifecycle Login → EnterCompany(A) → EnterCompany(B) → LeaveCompany → EnterCompany(A) → Logout stays consistent")]
         public void FullLifecycle_LoginThroughLogout_TransitionsCorrectly()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
-            // companyA 用 seed C001（已有 user '001' 對照）；companyB 動態建立 + grant，
-            // 走真實 st_company / st_user_company 路徑符合新加入的 HasAccess 驗證。
+            // companyA uses seed C001, which already maps to user '001'. companyB is created and granted here,
+            // going through the real `st_company` / `st_user_company` path that the `HasAccess` check requires.
             const string companyA = "C001";
             var companyB = UniqueCompanyId();
             var (companyBRowId, grantBRowId) = InsertCompanyAndGrantForSeedUser(companyB);
 
             try
             {
-                // 1. Login — 用 TestableSystemBusinessObject 繞過預設的 AuthenticateUser=false；
-                // user id 必須對應 seed user '001'，否則 HasAccess JOIN 找不到對照。
+                // 1. Login uses `TestableSystemBusinessObject` to bypass the default `AuthenticateUser=false`.
+                // The user ID must match seed user '001', otherwise the `HasAccess` join finds no mapping.
                 var loginBo = new TestableSystemBusinessObject(
                     TestPolhemContext.Create(_fx),
                     Guid.Empty,
@@ -49,29 +49,28 @@ namespace Polhem.Business.UnitTests
                 var accessToken = loginResult.AccessToken;
                 Assert.Null(sessionService.Get(accessToken)!.CompanyId);
 
-                // 後續方法用一般 SystemBusinessObject + Login 取得的 AccessToken
                 var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
 
-                // 2. EnterCompany(A) — 首次進公司
+                // 2. EnterCompany(A): the first company entry.
                 var enterA = bo.EnterCompany(new EnterCompanyArgs { CompanyId = companyA });
                 Assert.Equal(companyA, enterA.Company.CompanyId);
                 Assert.Equal(companyA, sessionService.Get(accessToken)!.CompanyId);
 
-                // 3. EnterCompany(B) — 切換（直接覆寫）
+                // 3. EnterCompany(B): a switch that overwrites directly.
                 var enterB = bo.EnterCompany(new EnterCompanyArgs { CompanyId = companyB });
                 Assert.Equal(companyB, enterB.Company.CompanyId);
                 Assert.Equal(companyB, sessionService.Get(accessToken)!.CompanyId);
 
-                // 4. LeaveCompany — 清回未進公司狀態
+                // 4. LeaveCompany: back to the state of no company entered.
                 bo.LeaveCompany(new LeaveCompanyArgs());
                 Assert.Null(sessionService.Get(accessToken)!.CompanyId);
 
-                // 5. EnterCompany(A) again — Leave 後重新進，狀態無痕殘留
+                // 5. EnterCompany(A) again: re-entering after leaving leaves no residual state.
                 var enterAAgain = bo.EnterCompany(new EnterCompanyArgs { CompanyId = companyA });
                 Assert.Equal(companyA, enterAAgain.Company.CompanyId);
                 Assert.Equal(companyA, sessionService.Get(accessToken)!.CompanyId);
 
-                // 6. Logout — 隱含 LeaveCompany 清理，整個 session 從快取消失
+                // 6. Logout implies the LeaveCompany cleanup, and the whole session disappears from the cache.
                 bo.Logout(new LogoutArgs());
                 Assert.Null(sessionService.Get(accessToken));
             }
@@ -81,7 +80,7 @@ namespace Polhem.Business.UnitTests
             }
         }
 
-        // BO 整合測試僅綁定 `common` databaseId（SQL Server）；helper 寫 SQL Server 方言即可。
+        // BO integration tests bind only the `common` database ID (SQL Server), so the helper writes the SQL Server dialect.
         private (Guid companyRowId, Guid grantRowId) InsertCompanyAndGrantForSeedUser(string companyId)
         {
             var dbAccess = _fx.NewDbAccess("common");
@@ -115,7 +114,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Logout 後再呼叫 EnterCompany 應拋 UnauthorizedAccessException")]
+        [DisplayName("EnterCompany after Logout throws UnauthorizedAccessException")]
         public void AfterLogout_EnterCompany_ThrowsUnauthorized()
         {
             var companyService = _fx.GetRequiredService<ICompanyInfoService>();
@@ -141,7 +140,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Login 後直接 Logout（未進公司）應 idempotent 通過")]
+        [DisplayName("Logout directly after Login (without entering a company) succeeds idempotently")]
         public void Login_DirectLogout_WithoutEnteringCompany_Succeeds()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -157,7 +156,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Login 後 LeaveCompany（未進公司）應 idempotent；SessionInfo.CompanyId 維持 null")]
+        [DisplayName("LeaveCompany after Login (without entering a company) is idempotent and SessionInfo.CompanyId stays null")]
         public void Login_LeaveCompanyWithoutEntering_Idempotent()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();

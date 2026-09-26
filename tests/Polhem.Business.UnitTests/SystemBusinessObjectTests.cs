@@ -13,11 +13,8 @@ namespace Polhem.Business.UnitTests
         private readonly SharedDbFixture _fx;
 
         public SystemBusinessObjectTests(SharedDbFixture fx) { _fx = fx; }
-        /// <summary>
-        /// 建立連線。
-        /// </summary>
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("CreateSession 傳入有效參數應回傳含 AccessToken 與到期時間的結果")]
+        [DisplayName("CreateSession with valid arguments returns a result with an AccessToken and an expiry")]
         public void CreateSession_ValidArgs_ReturnsTokenWithExpiry()
         {
             // Arrange
@@ -37,8 +34,8 @@ namespace Polhem.Business.UnitTests
             Assert.NotEqual(Guid.Empty, result.AccessToken);
             Assert.True(result.ExpiredAt > DateTime.UtcNow);
 
-            // 走的是與 Login 相同的建構路徑：解析使用者名稱、套語系、產生金鑰、寫種子、寫快取。
-            // 先前只做一次 raw INSERT，取得的 token 在快取中找不到 session，等同不可用。
+            // It follows the same construction path as Login: resolve the user name, apply the locale, generate the key, write the seed and write the cache.
+            // It used to do a single raw INSERT, so the token had no session in the cache and was unusable.
             var session = _fx.GetRequiredService<ISessionInfoService>().Get(result.AccessToken);
             try
             {
@@ -55,7 +52,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("CreateSession 傳入不存在的使用者編號應擲 InvalidOperationException")]
+        [DisplayName("CreateSession with a user ID that does not exist throws InvalidOperationException")]
         public void CreateSession_NonExistentUserId_ThrowsInvalidOperation()
         {
             var business = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
@@ -65,30 +62,29 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateSession 要求一次性 token 應擲 NotSupportedException 而非靜默降級")]
+        [DisplayName("CreateSession asking for a one-time token throws NotSupportedException instead of silently degrading")]
         public void CreateSession_OneTime_ThrowsNotSupported()
         {
             var business = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
             var args = new CreateSessionArgs { UserID = "001", ExpiresIn = 600, OneTime = true };
 
-            // 建立時即寫入快取後，第一次使用是 cache hit，delete-on-read 永遠不會觸發，
-            // 一次性語意無處消費。讓帶安全意味的保證無聲失效是最差的選項，故明確拒絕。
+            // Because the session is written to the cache on creation, the first use is a cache hit and delete-on-read never fires,
+            // so the one-time semantics have nowhere to take effect. Letting a security guarantee fail silently is the worst option, so it is rejected explicitly.
             Assert.Throws<NotSupportedException>(() => business.CreateSession(args));
         }
 
         /// <summary>
-        /// 登入系統並驗證 RSA 加密金鑰的交換。
+        /// Logs in and verifies the exchange of the RSA-encrypted key.
         /// </summary>
-        // 需要覆寫 SystemBusinessObject.AuthenticateUser（base 實作永遠回傳 false）
-        // 才能驗證登入流程；待後續建立測試用子類別再啟用。
+        // The login flow can only be verified by overriding `SystemBusinessObject.AuthenticateUser` (the base implementation always returns false).
+        // Enable this test once a test subclass exists.
 #pragma warning disable xUnit1004 // Test methods should not be skipped — placeholder retained as TODO marker; see comment above.
         [Fact(Skip = "Requires a test subclass that overrides AuthenticateUser; not yet in place.")]
 #pragma warning restore xUnit1004
-        [DisplayName("Login 使用 RSA 金鑰對登入應回傳可解密的加密 Session 金鑰")]
+        [DisplayName("Login with an RSA key pair returns an encrypted session key that can be decrypted")]
         public void Login_WithRsaKeyPair_ReturnsDecryptableSessionKey()
         {
             // Arrange
-            // 產生 RSA 金鑰對
             RsaCryptor.GenerateRsaKeyPair(out var publicKey, out var privateKey);
 
             var sbo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
@@ -106,7 +102,6 @@ namespace Polhem.Business.UnitTests
             Assert.NotNull(result);
             Assert.NotEmpty(result.ApiEncryptionKey);
 
-            // 用私鑰解密 EncryptedSessionKey
             string sessionKey = RsaCryptor.DecryptWithPrivateKey(result.ApiEncryptionKey, privateKey);
             Assert.False(string.IsNullOrWhiteSpace(sessionKey));
         }

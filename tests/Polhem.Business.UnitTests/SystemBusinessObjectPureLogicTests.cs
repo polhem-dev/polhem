@@ -6,9 +6,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="SystemBusinessObject"/> 不依賴 Repository / DefineAccess 的純邏輯分支測試。
-    /// Phase 4 之後 BO ctor 需要 IPolhemContext，透過 <see cref="TestPolhemContext.Create(PolhemTestFixture)"/>
-    /// 從 per-class fixture 取得 DI 服務。
+    /// Pure logic branch tests of <see cref="SystemBusinessObject"/> that do not depend on the Repository or DefineAccess.
+    /// The BO constructor needs an IPolhemContext, which <see cref="TestPolhemContext.Create(PolhemTestFixture)"/>
+    /// builds from the DI services of the per-class fixture.
     /// </summary>
     public class SystemBusinessObjectPureLogicTests : IClassFixture<SharedDbFixture>
     {
@@ -16,7 +16,7 @@ namespace Polhem.Business.UnitTests
 
         public SystemBusinessObjectPureLogicTests(SharedDbFixture fx) { _fx = fx; }
         [Fact]
-        [DisplayName("Ping 應回傳 Status=ok、回應 TraceId 與 UTC ServerTime")]
+        [DisplayName("Ping returns Status=ok, echoes the TraceId and returns a UTC ServerTime")]
         public void Ping_ReturnsExpectedValues()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
@@ -35,7 +35,7 @@ namespace Polhem.Business.UnitTests
         [InlineData(0)]
         [InlineData(-1)]
         [InlineData(86401)]
-        [DisplayName("CreateSession 的 ExpiresIn 越界應拋 ArgumentOutOfRangeException")]
+        [DisplayName("CreateSession throws ArgumentOutOfRangeException for an out-of-range ExpiresIn")]
         public void CreateSession_InvalidExpiresIn_ThrowsArgumentOutOfRange(int expiresIn)
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
@@ -47,10 +47,10 @@ namespace Polhem.Business.UnitTests
         [Theory]
         [InlineData(DefineType.SystemSettings)]
         [InlineData(DefineType.DatabaseSettings)]
-        // ProgramSettings 於型別註冊表化後收緊為 server 專用：它只剩組件限定型別名，
-        // client 需要的選單已移至 MenuSettings。
+        // ProgramSettings became server-only when it turned into a type registry: it now holds only assembly-qualified type names,
+        // and the menu the client needs moved to MenuSettings.
         [InlineData(DefineType.ProgramSettings)]
-        [DisplayName("GetDefine 非本地呼叫且為 server 專用 DefineType 應拋 NotSupportedException")]
+        [DisplayName("GetDefine throws NotSupportedException for a non-local call with a server-only DefineType")]
         public void GetDefine_NonLocalCallWithSensitiveType_ThrowsNotSupported(DefineType defineType)
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
@@ -68,12 +68,12 @@ namespace Polhem.Business.UnitTests
         [InlineData(DefineType.FormLayout)]
         [InlineData(DefineType.ProgramSettings)]
         [InlineData(DefineType.Language)]
-        [DisplayName("SaveDefine 非本地呼叫應一律拋 NotSupportedException（不限敏感型別）")]
+        [DisplayName("SaveDefine throws NotSupportedException for every non-local call (not only sensitive types)")]
         public void SaveDefine_NonLocalCall_ThrowsNotSupported(DefineType defineType)
         {
-            // 先前僅 SystemSettings / DatabaseSettings 受擋，其餘定義型別任何已驗證帳號皆可覆寫
-            // ——包含 PermissionModels（授權模型本身）、DbCategorySettings（各表對應哪個資料庫）
-            // 與 FormSchema（其運算式在伺服端求值）。現改為整個方法限近端。
+            // Previously only SystemSettings / DatabaseSettings were blocked, and any authenticated account could overwrite the other definition types,
+            // including PermissionModels (the authorization model itself), DbCategorySettings (which database each table maps to)
+            // and FormSchema (whose expressions are evaluated on the server). The whole method is now local-only.
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
             var args = new SaveDefineArgs { DefineType = defineType, Xml = "<root/>" };
 

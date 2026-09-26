@@ -10,9 +10,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests.Form
 {
     /// <summary>
-    /// <see cref="FormBusinessObject.Delete"/> 的 <c>[DbFact]</c> 整合測試:
-    /// 種子一筆 → Delete(rowId) → 確認回傳 RowsAffected,並以 SELECT 驗證
-    /// 已不存在;對不存在 RowId 呼叫應回 0。
+    /// <c>[DbFact]</c> integration tests for <see cref="FormBusinessObject.Delete"/>:
+    /// seed one row → Delete(rowId) → check the returned RowsAffected and confirm with a SELECT that it
+    /// is gone; a call with a RowId that does not exist returns 0.
     /// </summary>
     public class FormBusinessObjectDeleteTests : IClassFixture<SharedDbFixture>
     {
@@ -21,7 +21,7 @@ namespace Polhem.Business.UnitTests.Form
         public FormBusinessObjectDeleteTests(SharedDbFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Delete 傳入 null 應拋 ArgumentNullException")]
+        [DisplayName("Delete throws ArgumentNullException for null")]
         public void Delete_NullArgs_Throws()
         {
             var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(),
@@ -30,22 +30,22 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite:Delete 已存在的 Employee 應回傳 RowsAffected=1 並從 DB 移除")]
+        [DisplayName("SQLite: Delete of an existing Employee returns RowsAffected=1 and removes it from the DB")]
         public void Delete_Sqlite_ExistingRow_Removes()
             => RunDeleteExistingRow(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server:Delete 已存在的 Employee 應回傳 RowsAffected=1 並從 DB 移除")]
+        [DisplayName("SQL Server: Delete of an existing Employee returns RowsAffected=1 and removes it from the DB")]
         public void Delete_SqlServer_ExistingRow_Removes()
             => RunDeleteExistingRow(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite:Delete 不存在的 RowId 應回傳 RowsAffected=0")]
+        [DisplayName("SQLite: Delete of a RowId that does not exist returns RowsAffected=0")]
         public void Delete_Sqlite_NonExistentRow_ReturnsZero()
             => RunDeleteNonExistentRow(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle:Delete 已存在的 Employee 應回傳 RowsAffected=1 並從 DB 移除")]
+        [DisplayName("Oracle: Delete of an existing Employee returns RowsAffected=1 and removes it from the DB")]
         public void Delete_Oracle_ExistingRow_Removes()
             => RunDeleteExistingRow(DatabaseType.Oracle);
 

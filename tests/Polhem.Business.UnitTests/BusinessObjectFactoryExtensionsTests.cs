@@ -7,8 +7,8 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="BusinessObjectFactoryExtensions"/> 擴充方法測試。
-    /// 驗證 typed wrapper 直接回傳介面、避免呼叫端重複 cast。
+    /// Tests for the <see cref="BusinessObjectFactoryExtensions"/> extension methods,
+    /// verifying that the typed wrappers return the interface directly so callers do not repeat the cast.
     /// </summary>
     public class BusinessObjectFactoryExtensionsTests : IClassFixture<PolhemTestFixture>
     {
@@ -19,7 +19,7 @@ namespace Polhem.Business.UnitTests
         private IBusinessObjectFactory Factory => _fx.GetRequiredService<IBusinessObjectFactory>();
 
         [Fact]
-        [DisplayName("CreateFormBO 應回傳 IFormBusinessObject 介面實例")]
+        [DisplayName("CreateFormBO returns an IFormBusinessObject instance")]
         public void CreateFormBO_ReturnsFormBusinessObjectInterface()
         {
             var token = TestSessionFactory.CreateAccessToken(_fx);
@@ -31,7 +31,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateFormBO 傳入 isLocalCall=false 應保留設定")]
+        [DisplayName("CreateFormBO keeps isLocalCall=false")]
         public void CreateFormBO_WithIsLocalCallFalse_PreservesFlag()
         {
             var bo = (FormBusinessObject)Factory.CreateFormBO(TestSessionFactory.CreateAccessToken(_fx), "prog01", isLocalCall: false);
@@ -40,7 +40,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateSystemBO 應回傳 ISystemBusinessObject 介面實例")]
+        [DisplayName("CreateSystemBO returns an ISystemBusinessObject instance")]
         public void CreateSystemBO_ReturnsSystemBusinessObjectInterface()
         {
             var token = TestSessionFactory.CreateAccessToken(_fx);
@@ -52,7 +52,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateSystemBO 傳入 isLocalCall=false 應保留設定")]
+        [DisplayName("CreateSystemBO keeps isLocalCall=false")]
         public void CreateSystemBO_WithIsLocalCallFalse_PreservesFlag()
         {
             var bo = (SystemBusinessObject)Factory.CreateSystemBO(TestSessionFactory.CreateAccessToken(_fx), isLocalCall: false);
@@ -61,7 +61,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateFormBO factory 為 null 應拋 ArgumentNullException")]
+        [DisplayName("CreateFormBO throws ArgumentNullException for a null factory")]
         public void CreateFormBO_NullFactory_Throws()
         {
             IBusinessObjectFactory? factory = null;
@@ -69,7 +69,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateSystemBO factory 為 null 應拋 ArgumentNullException")]
+        [DisplayName("CreateSystemBO throws ArgumentNullException for a null factory")]
         public void CreateSystemBO_NullFactory_Throws()
         {
             IBusinessObjectFactory? factory = null;

@@ -7,8 +7,8 @@ using Polhem.Definition.Logging;
 namespace Polhem.Business.UnitTests.AuditLog
 {
     /// <summary>
-    /// <c>ChangeDiffGramReader.ReadDetail</c> 對各種 payload 還原出的 DataSet：新增、修改、刪除原單、
-    /// 舊的刪除記錄各自帶對的列狀態；無 schema 的舊格式、刪除標記、空白與損毀一律為 null。
+    /// The DataSet <c>ChangeDiffGramReader.ReadDetail</c> restores from each kind of payload: an insert, an update, a deleted record
+    /// and an old delete record each carry the right row state; the old schemaless format, a delete marker, blank input and corrupt input all give null.
     /// </summary>
     public class ChangeDetailDataSetTests
     {
@@ -38,7 +38,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("新增的變更集應還原為 Added 列")]
+        [DisplayName("An insert change set is restored as an Added row")]
         public void ReadDetail_Insert_ReturnsAddedRow()
         {
             using var source = NewDataSet();
@@ -55,7 +55,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("修改的變更集應還原為 Modified 列，並帶原值")]
+        [DisplayName("An update change set is restored as a Modified row with the original value")]
         public void ReadDetail_Update_ReturnsModifiedRowWithOriginal()
         {
             using var source = NewDataSet();
@@ -74,7 +74,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("刪除原單應還原為 Unchanged 列，即刪除前的完整原單")]
+        [DisplayName("A deleted record is restored as an Unchanged row, the complete record before deletion")]
         public void ReadDetail_DeletedRecord_ReturnsUnchangedRecord()
         {
             using var source = NewDataSet();
@@ -93,7 +93,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("舊的刪除記錄（列標成 Deleted 的變更集）應原樣還原為 Deleted 列")]
+        [DisplayName("An old delete record (a change set with rows marked Deleted) is restored as is, as a Deleted row")]
         public void ReadDetail_LegacyDeletedRows_ReturnsDeletedRow()
         {
             using var source = NewDataSet();
@@ -111,7 +111,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("無 schema 的舊 DiffGram 讀得出欄位清單，但沒有 DataSet")]
+        [DisplayName("An old schemaless DiffGram yields the field list but no DataSet")]
         public void ReadDetail_SchemalessDiffGram_ReturnsFieldsWithoutDataSet()
         {
             using var source = NewDataSet();
@@ -133,7 +133,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         [InlineData("<DeletedRow table=\"ft_order\" sys_rowid=\"abc\" />")]
         [InlineData("<AuditChanges />")]
         [InlineData("<AuditChanges><broken>")]
-        [DisplayName("刪除標記、空白、空外層與損毀的 payload 沒有 DataSet，欄位清單為空")]
+        [DisplayName("A delete marker, blank input, an empty wrapper and a corrupt payload have no DataSet and an empty field list")]
         public void ReadDetail_NoRestorablePayload_ReturnsNothing(string payload)
         {
             var (fields, dataSet) = ChangeDiffGramReader.ReadDetail(payload);

@@ -10,16 +10,16 @@ using Polhem.Definition;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="SystemBusinessObject.EnterCompany"/> 行為測試。透過 seed user '001' 與
-    /// seed company 'C001' 走真實 DB 對照路徑；其他情境用 SQL helper 動態建 company / 對照
-    /// 並於 finally 清理。
+    /// Behavior tests for <see cref="SystemBusinessObject.EnterCompany"/>. They use seed user '001' and
+    /// seed company 'C001' for the real DB mapping path; other scenarios create companies and mappings with SQL helpers
+    /// and clean them up in finally.
     /// </summary>
     public class SystemBusinessObjectEnterCompanyTests : IClassFixture<SharedDbFixture>
     {
         private const string SeedUserId = "001";
         private const string SeedCompanyId = "C001";
-        // BO 測試綁 SQL Server；company 的 permission 表（st_role_grant / st_user_role）位於
-        // company-category DB，故 company_database_id 須指向該庫，EnterCompany 才載得到角色快照。
+        // BO tests are bound to SQL Server. The company permission tables (`st_role_grant` / `st_user_role`) live in the
+        // company-category DB, so `company_database_id` must point there for `EnterCompany` to load the role snapshot.
         private static readonly string s_companyDbId = TestDbConventions.GetDatabaseId(DatabaseType.SQLServer, "company");
         private readonly SharedDbFixture _fx;
 
@@ -111,7 +111,7 @@ namespace Polhem.Business.UnitTests
         #endregion
 
         [Fact]
-        [DisplayName("EnterCompany seed 對照存在時應回傳 CompanyInfo 並設定 SessionInfo.CompanyId")]
+        [DisplayName("EnterCompany returns the CompanyInfo and sets SessionInfo.CompanyId when the seed mapping exists")]
         public void EnterCompany_ValidCompany_BindsAndReturns()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -138,7 +138,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("EnterCompany 公司有 customize_id 時應寫入 SessionInfo.CustomizeId；LeaveCompany 應清空")]
+        [DisplayName("EnterCompany writes SessionInfo.CustomizeId when the company has a customize_id, and LeaveCompany clears it")]
         public void EnterCompany_CustomizedCompany_SetsThenClearsSessionCustomizeId()
         {
             const string customizeId = "ACME";
@@ -174,7 +174,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("EnterCompany 應解析並快照 user/employee/dept rowid；LeaveCompany 應清空")]
+        [DisplayName("EnterCompany resolves and snapshots the user/employee/dept rowids, and LeaveCompany clears them")]
         public void EnterCompany_SnapshotsEmployeeContext_ThenClears()
         {
             var userRowId = LookupUserRowId(SeedUserId);
@@ -215,7 +215,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("EnterCompany 無對應員工時 user rowid 仍快照、employee/dept 為空")]
+        [DisplayName("EnterCompany without a matching employee still snapshots the user rowid and leaves employee/dept empty")]
         public void EnterCompany_NoEmployee_SnapshotsUserRowIdOnly()
         {
             var userRowId = LookupUserRowId(SeedUserId);
@@ -240,7 +240,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("EnterCompany 不存在的 CompanyId 應拋 Company access denied")]
+        [DisplayName("EnterCompany with a CompanyId that does not exist throws Company access denied")]
         public void EnterCompany_UnknownCompany_ThrowsAccessDenied()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -265,7 +265,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("EnterCompany 公司存在但 user 沒被 grant 應拋 Company access denied")]
+        [DisplayName("EnterCompany throws Company access denied when the company exists but the user has no grant")]
         public void EnterCompany_NoAccess_ThrowsAccessDenied()
         {
             var companyId = "NOGRANT_" + Guid.NewGuid().ToString("N")[..6];
@@ -294,7 +294,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("EnterCompany 公司停用但 user 已 grant 應拋 Company access denied")]
+        [DisplayName("EnterCompany throws Company access denied when the company is disabled even though the user has a grant")]
         public void EnterCompany_DisabledCompany_ThrowsAccessDenied()
         {
             var companyId = "DIS_" + Guid.NewGuid().ToString("N")[..6];
@@ -326,7 +326,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("EnterCompany 切換到另一已 grant 的 company 應覆寫 SessionInfo.CompanyId")]
+        [DisplayName("EnterCompany switching to another granted company overwrites SessionInfo.CompanyId")]
         public void EnterCompany_SwitchToAnotherCompany_Overwrites()
         {
             var companyB = "ALT_" + Guid.NewGuid().ToString("N")[..6];
@@ -360,7 +360,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("EnterCompany 對同一 CompanyId 重複呼叫應 idempotent")]
+        [DisplayName("EnterCompany called repeatedly with the same CompanyId is idempotent")]
         public void EnterCompany_SameCompany_Idempotent()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -380,7 +380,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("EnterCompany 對空 CompanyId 應拋 ArgumentException")]
+        [DisplayName("EnterCompany throws ArgumentException for an empty CompanyId")]
         public void EnterCompany_EmptyCompanyId_ThrowsArgumentException()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx, userId: SeedUserId);
@@ -399,7 +399,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("EnterCompany 對 null args 應拋 ArgumentNullException")]
+        [DisplayName("EnterCompany throws ArgumentNullException for null args")]
         public void EnterCompany_NullArgs_ThrowsArgumentNullException()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx, userId: SeedUserId);

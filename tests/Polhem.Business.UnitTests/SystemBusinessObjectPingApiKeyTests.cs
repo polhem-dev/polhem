@@ -7,8 +7,8 @@ using Polhem.Definition;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="SystemBusinessObject.Ping"/> 對 API 金鑰狀態的回報，以及「金鑰有效才回版本號」
-    /// 的收斂（免金鑰的 ping 不應對全網公開框架版本）。
+    /// How <see cref="SystemBusinessObject.Ping"/> reports the API key status, and the restriction that the version is returned only
+    /// with a valid key (a ping without a key should not expose the framework version to everyone).
     /// </summary>
     public class SystemBusinessObjectPingApiKeyTests : IClassFixture<SharedDbFixture>
     {
@@ -26,7 +26,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Ping 未經金鑰閘門(行程內呼叫)應回 NotChecked 並帶版本號")]
+        [DisplayName("Ping without the key gate (an in-process call) returns NotChecked with the version")]
         public void Ping_NotChecked_ReportsStatusAndVersion()
         {
             var result = PingWith(ApiKeyValidationResult.NotChecked);
@@ -37,7 +37,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Ping 於尚未發放金鑰的部署應回 NotConfigured 並仍帶版本號")]
+        [DisplayName("Ping in a deployment that has issued no keys returns NotConfigured and still includes the version")]
         public void Ping_NotConfigured_ReportsStatusAndVersion()
         {
             var result = PingWith(new ApiKeyValidationResult(ApiKeyStatus.NotConfigured));
@@ -48,7 +48,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Ping 於金鑰有效時應回 Valid 並帶版本號")]
+        [DisplayName("Ping with a valid key returns Valid with the version")]
         public void Ping_ValidKey_ReportsStatusAndVersion()
         {
             var result = PingWith(new ApiKeyValidationResult(ApiKeyStatus.Valid, "app", "App"));
@@ -58,7 +58,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Ping 未帶金鑰(嚴格態)仍回 ok，但不含版本號")]
+        [DisplayName("Ping without a key (strict mode) still returns ok but without the version")]
         public void Ping_NotProvided_ReturnsOkWithoutVersion()
         {
             var result = PingWith(new ApiKeyValidationResult(ApiKeyStatus.NotProvided));
@@ -69,7 +69,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Ping 帶無效金鑰應回報 Invalid，且不含版本號")]
+        [DisplayName("Ping with an invalid key reports Invalid without the version")]
         public void Ping_InvalidKey_ReportsInvalidWithoutVersion()
         {
             var result = PingWith(new ApiKeyValidationResult(ApiKeyStatus.Invalid, "app", string.Empty));

@@ -11,7 +11,7 @@ using Polhem.Definition.Storage;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="ProgramSettingsBoTypeResolver"/> 的單元測試。
+    /// Unit tests for <see cref="ProgramSettingsBoTypeResolver"/>.
     /// </summary>
     public class ProgramSettingsBoTypeResolverTests
     {
@@ -38,7 +38,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ProgramSettings.xml 不存在(FileNotFoundException)時應 fallback 回 FormBusinessObject")]
+        [DisplayName("Resolve falls back to FormBusinessObject when ProgramSettings.xml does not exist (FileNotFoundException)")]
         public void Resolve_ProgramSettingsFileMissing_FallsBackToFormBusinessObject()
         {
             var defineAccess = new ThrowingDefineAccess();
@@ -50,7 +50,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ProgId 不在 ProgramSettings 時應回傳 FormBusinessObject")]
+        [DisplayName("Resolve returns FormBusinessObject when the ProgId is not in ProgramSettings")]
         public void Resolve_ProgIdNotRegistered_ReturnsFormBusinessObject()
         {
             var defineAccess = new ProgramSettingsDefineAccess(new ProgramSettings());
@@ -62,7 +62,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ProgId 存在但 BusinessObject 為空字串時應回傳 FormBusinessObject")]
+        [DisplayName("Resolve returns FormBusinessObject when the ProgId exists but BusinessObject is an empty string")]
         public void Resolve_BusinessObjectEmpty_ReturnsFormBusinessObject()
         {
             var defineAccess = new ProgramSettingsDefineAccess(BuildSettings(("P001", null)));
@@ -74,7 +74,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("BusinessObject 指向不存在的型別時應拋出並指名 progId 與型別名")]
+        [DisplayName("Resolve throws and names the progId and the type name when BusinessObject points to a type that does not exist")]
         public void Resolve_BusinessObjectUnresolvable_Throws()
         {
             var settings = BuildSettings(("P001", "NonExistent.Bo, NonExistent.Assembly"));
@@ -88,7 +88,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("BusinessObject 指向非 BusinessObject 子類時應拋出並指名預期基底")]
+        [DisplayName("Resolve throws and names the expected base when BusinessObject points to a type that is not a BusinessObject subclass")]
         public void Resolve_BusinessObjectNotAssignable_Throws()
         {
             // System.Object is a real type but not assignable to BusinessObject.
@@ -103,7 +103,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("BusinessObject 指向合法 FormBusinessObject 子類時應回傳該型別")]
+        [DisplayName("Resolve returns the type when BusinessObject points to a valid FormBusinessObject subclass")]
         public void Resolve_BusinessObjectValid_ReturnsCustomType()
         {
             var settings = BuildSettings(("P001", TestableCustomFormBoFqn));
@@ -116,7 +116,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Resolve 同一 ProgId 多次應走 cache,不重複查 ProgramSettings 內容")]
+        [DisplayName("Resolving the same ProgId twice uses the cache instead of reading ProgramSettings again")]
         public void Resolve_SameProgIdTwice_UsesCache()
         {
             var settings = BuildSettings(("P001", TestableCustomFormBoFqn));
@@ -136,7 +136,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ProgramSettings 實例切換時應 reset cache 並重新解析")]
+        [DisplayName("Replacing the ProgramSettings instance resets the cache and resolves again")]
         public void Resolve_SettingsInstanceReplaced_ResetsCache()
         {
             var first = BuildSettings(("P001", TestableCustomFormBoFqn));
@@ -156,8 +156,8 @@ namespace Polhem.Business.UnitTests
         }
 
         /// <summary>
-        /// 測試用 <see cref="IDefineAccess"/>,模擬 ProgramSettings.xml 不存在的情境,
-        /// 對 <see cref="GetProgramSettings"/> 拋出 <see cref="FileNotFoundException"/>。
+        /// A test <see cref="IDefineAccess"/> that simulates a missing ProgramSettings.xml
+        /// by throwing <see cref="FileNotFoundException"/> from <see cref="GetProgramSettings"/>.
         /// </summary>
         private sealed class ThrowingDefineAccess : IDefineAccess
         {
@@ -183,8 +183,8 @@ namespace Polhem.Business.UnitTests
         }
 
         /// <summary>
-        /// 測試用 <see cref="IDefineAccess"/>,允許外部替換 <see cref="ProgramSettings"/> 實例
-        /// 以驗證 reference-equality 觸發的 cache reset 行為。
+        /// A test <see cref="IDefineAccess"/> that lets the caller replace the <see cref="ProgramSettings"/> instance,
+        /// to verify the cache reset triggered by reference equality.
         /// </summary>
         private sealed class ProgramSettingsDefineAccess : IDefineAccess
         {

@@ -10,9 +10,9 @@ using Polhem.Definition.Settings;
 namespace Polhem.Business.UnitTests.Permission
 {
     /// <summary>
-    /// <see cref="ScopeResolver"/> 補洞覆蓋測試：建構子 null 防護、fail-closed 各入口（session null /
-    /// snapshot null / 無 grant）、Inherit 解析（model 預設 Inherit → 回退 Read 預設 / model 未註冊 →
-    /// All）、Dept/DeptAndSub 的空部門與空子樹提早返回、DenyAll 的 AnyMasterFieldName 各分支。
+    /// Gap-filling coverage for <see cref="ScopeResolver"/>: the constructor null guards, every fail-closed entry (null session /
+    /// null snapshot / no grant), Inherit resolution (model default Inherit → falls back to the Read default / model not registered →
+    /// All), the early returns of Dept/DeptAndSub for an empty department and an empty subtree, and each branch of DenyAll's AnyMasterFieldName.
     /// </summary>
     public class ScopeResolverCoverageTests
     {
@@ -75,7 +75,7 @@ namespace Polhem.Business.UnitTests.Permission
         // ---- constructor null guards ----
 
         [Fact]
-        [DisplayName("建構子任一相依為 null 應丟 ArgumentNullException")]
+        [DisplayName("The constructor throws ArgumentNullException when any dependency is null")]
         public void Ctor_NullDependencies_Throws()
         {
             var session = new CovSessionService(null);
@@ -92,7 +92,7 @@ namespace Polhem.Business.UnitTests.Permission
         // ---- fail-closed entry points ----
 
         [Fact]
-        [DisplayName("session 不存在（null）→ DenyAll（owner 欄）")]
+        [DisplayName("No session (null) → DenyAll (on the owner column)")]
         public void ResolveFilter_NoSession_DeniesAll()
         {
             var resolver = Build(session: null, grants: []);
@@ -103,7 +103,7 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("company 權限快照為 null → DenyAll")]
+        [DisplayName("A null company permission snapshot → DenyAll")]
         public void ResolveFilter_NullSnapshot_DeniesAll()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
@@ -115,7 +115,7 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("角色對該 model/action 無任何 grant → DenyAll")]
+        [DisplayName("The roles have no grant for that model/action → DenyAll")]
         public void ResolveFilter_NoGrant_DeniesAll()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
@@ -127,7 +127,7 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("DenyAll：無 owner 欄但有 dept 欄 → 恆假掛在 dept 欄")]
+        [DisplayName("DenyAll: no owner column but a dept column → the always-false condition goes on the dept column")]
         public void ResolveFilter_NoGrant_DeptFieldOnly_DeniesOnDept()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
@@ -139,7 +139,7 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("DenyAll：master 無任何欄位 → 恆假掛在 sys_rowid（保底）")]
+        [DisplayName("DenyAll: the master has no columns → the always-false condition goes on sys_rowid (the fallback)")]
         public void ResolveFilter_NoGrant_EmptyMaster_DeniesOnSysRowId()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
@@ -153,7 +153,7 @@ namespace Polhem.Business.UnitTests.Permission
         // ---- Inherit resolution ----
 
         [Fact]
-        [DisplayName("Inherit（Print）→ action 無預設 → 回退 model 的 Read 預設（Dept）")]
+        [DisplayName("Inherit (Print) → the action has no default → falls back to the model's Read default (Dept)")]
         public void ResolveFilter_InheritFallsBackToReadDefault()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
@@ -173,12 +173,12 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("Inherit（Print）→ model 有註冊但無任何 rule → 兩層皆 Inherit → All（不過濾）")]
+        [DisplayName("Inherit (Print) → the model is registered but has no rules → both levels Inherit → All (no filter)")]
         public void ResolveFilter_InheritNoRules_ResolvesAll()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
             var models = new PermissionModels();
-            models.Models!.Add(Model, "採購單"); // 無 rules
+            models.Models!.Add(Model, "採購單"); // No rules.
 
             var resolver = Build(session,
                 [new("Buyer", Model, PermissionAction.Print, ScopeStrategy.Inherit)],
@@ -190,12 +190,12 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("Inherit（Print）→ model 未註冊 → ModelDefault 回 Inherit → All（不過濾）")]
+        [DisplayName("Inherit (Print) → the model is not registered → ModelDefault returns Inherit → All (no filter)")]
         public void ResolveFilter_InheritModelNotRegistered_ResolvesAll()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
             var models = new PermissionModels();
-            models.Models!.Add("OtherModel", "他"); // 不含目標 model
+            models.Models!.Add("OtherModel", "他"); // Does not contain the target model.
 
             var resolver = Build(session,
                 [new("Buyer", Model, PermissionAction.Print, ScopeStrategy.Inherit)],
@@ -209,7 +209,7 @@ namespace Polhem.Business.UnitTests.Permission
         // ---- Dept / DeptAndSub early-return guards ----
 
         [Fact]
-        [DisplayName("Dept scope 但 session 無部門（Empty）→ 只剩 Own 分支")]
+        [DisplayName("Dept scope but the session has no department (Empty) → only the Own branch remains")]
         public void ResolveFilter_DeptScope_NoDept_OwnOnly()
         {
             var session = Session(s_user, s_employee, Guid.Empty, "Buyer");
@@ -223,7 +223,7 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("DeptAndSub 但 schema 無 dept 欄 → 子樹展開略過，只剩 Own")]
+        [DisplayName("DeptAndSub but the schema has no dept column → subtree expansion is skipped and only Own remains")]
         public void ResolveFilter_DeptAndSub_NoDeptField_OwnOnly()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
@@ -237,7 +237,7 @@ namespace Polhem.Business.UnitTests.Permission
         }
 
         [Fact]
-        [DisplayName("DeptAndSub 但部門樹服務回 null（子樹空）→ 子樹展開略過，只剩 Own")]
+        [DisplayName("DeptAndSub but the department tree service returns null (empty subtree) → subtree expansion is skipped and only Own remains")]
         public void ResolveFilter_DeptAndSub_NullTree_OwnOnly()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");

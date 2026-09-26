@@ -15,14 +15,14 @@ using Microsoft.Extensions.Logging;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// 部署層作業（<see cref="SystemBusinessObject.SetDeploymentAdmin"/> /
-    /// <see cref="SystemBusinessObject.CreateApiKey"/>）的稽核留痕：寫進變更軸、標為敏感、
-    /// 帶得出前後值，且金鑰的祕密段與雜湊絕不進日誌。
+    /// Audit trail of deployment-level operations (<see cref="SystemBusinessObject.SetDeploymentAdmin"/> /
+    /// <see cref="SystemBusinessObject.CreateApiKey"/>): written to the change axis, marked sensitive,
+    /// carrying before and after values, and never logging the key's secret segment or hash.
     /// </summary>
     /// <remarks>
-    /// 這些 BO 走 <c>DbScope.Common</c>，測試 fixture 把 <c>common</c> 綁在 SQL Server，
-    /// 因此閘門必須是 <c>SQLServer</c>：先前標成 <c>SQLite</c> 時，跳過與否看的是
-    /// <c>POLHEM_TEST_CONNSTR_SQLITE</c>，實際跑的卻是 SQL Server。
+    /// These BOs use <c>DbScope.Common</c>, and the test fixture binds <c>common</c> to SQL Server,
+    /// so the gate must be <c>SQLServer</c>. When it was marked <c>SQLite</c>, skipping depended on
+    /// <c>POLHEM_TEST_CONNSTR_SQLITE</c> while the test actually ran against SQL Server.
     /// </remarks>
     public class SystemBusinessObjectDeploymentAuditTests : IClassFixture<SharedDbFixture>
     {
@@ -33,11 +33,11 @@ namespace Polhem.Business.UnitTests
         private IDbConnectionManager ConnectionManager => _fx.GetRequiredService<IDbConnectionManager>();
 
         /// <summary>
-        /// 建立一個 BO，稽核寫入端換成捕捉用的假實作。
+        /// Creates a BO whose audit writer is replaced by a capturing fake.
         /// </summary>
-        /// <param name="writer">捕捉到的稽核項目。</param>
-        /// <param name="enabled">全域稽核開關。</param>
-        /// <param name="changeEnabled">資料變更類別開關——部署層作業刻意不受它影響。</param>
+        /// <param name="writer">The captured audit entries.</param>
+        /// <param name="enabled">The global audit switch.</param>
+        /// <param name="changeEnabled">The data change category switch. Deployment-level operations deliberately ignore it.</param>
         private SystemBusinessObject CreateBo(out CapturingAuditLogWriter writer,
             bool enabled = true, bool changeEnabled = true)
         {
@@ -46,7 +46,7 @@ namespace Polhem.Business.UnitTests
         }
 
         /// <summary>
-        /// 建立一個 BO，稽核寫入端與 logger 由呼叫端指定。
+        /// Creates a BO with the audit writer and logger supplied by the caller.
         /// </summary>
         private SystemBusinessObject CreateBo(IAuditLogWriter writer, ILoggerFactory? loggers,
             bool enabled = true, bool changeEnabled = true)
@@ -65,7 +65,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SetDeploymentAdmin 應留下標為敏感的稽核，且帶得出 false → true 的方向")]
+        [DisplayName("SetDeploymentAdmin leaves an audit entry marked sensitive that shows the false to true direction")]
         public void SetDeploymentAdmin_Grant_WritesSensitiveAuditWithDirection()
         {
             string userId = TestUsers.Create(ConnectionManager, "audit-grant");
@@ -79,11 +79,11 @@ namespace Polhem.Business.UnitTests
                 Assert.Equal(SysProgIds.System, entry.ProgId);
                 Assert.Equal("st_user", entry.ChangeTableName);
                 Assert.Equal(ChangeKind.Update, entry.ChangeKind);
-                // 提權動作一律標敏感：篩掉雜訊時不該連它一起篩掉。
+                // Privilege changes are always sensitive, so filtering out noise must not filter them out too.
                 Assert.True(entry.IsSensitive);
                 Assert.Equal("System.SetDeploymentAdmin", entry.Source);
 
-                // 授予與撤銷同為 Update，沒有前後值就分不出方向。
+                // Granting and revoking are both Update, so without before and after values the direction is lost.
                 var field = Assert.Single(ChangeDiffGramReader.Read(entry.ChangesXml));
                 Assert.Equal(ProtectedFields.DeploymentAdmin, field.FieldName);
                 Assert.Equal("False", field.OldValue);
@@ -96,7 +96,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SetDeploymentAdmin 撤銷時稽核應帶得出 true → false 的方向")]
+        [DisplayName("SetDeploymentAdmin on revoke leaves an audit entry that shows the true to false direction")]
         public void SetDeploymentAdmin_Revoke_WritesOppositeDirection()
         {
             string userId = TestUsers.Create(ConnectionManager, "audit-revoke");
@@ -119,7 +119,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("CreateApiKey 應留下稽核，且明文祕密與雜湊都不進日誌")]
+        [DisplayName("CreateApiKey leaves an audit entry, and neither the plaintext secret nor the hash is logged")]
         public void CreateApiKey_WritesAuditWithoutSecretOrHash()
         {
             string sysId = "audit-" + Guid.NewGuid().ToString("N");
@@ -140,7 +140,7 @@ namespace Polhem.Business.UnitTests
                 Assert.Contains(fields, f => f.FieldName == SysFields.Id && f.NewValue == sysId);
                 Assert.Contains(fields, f => f.FieldName == SysFields.Name && f.NewValue == "Audited app");
 
-                // 稽核列的讀者與 st_api_key 的讀者不是同一群；祕密段連雜湊都不該落到這裡。
+                // Readers of the audit rows are not the readers of `st_api_key`, so neither the secret segment nor its hash belongs here.
                 Assert.True(ApiKeyFormat.TryParse(result.ApiKey, out _, out string secret));
                 Assert.DoesNotContain(secret, entry.ChangesXml, StringComparison.Ordinal);
                 Assert.DoesNotContain("hashed_key", entry.ChangesXml, StringComparison.Ordinal);
@@ -152,13 +152,13 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("關閉資料變更稽核不影響部署層作業的留痕")]
+        [DisplayName("Disabling data change auditing does not silence deployment-level operations")]
         public void SetDeploymentAdmin_ChangeAuditDisabled_StillWrites()
         {
             string userId = TestUsers.Create(ConnectionManager, "audit-chgoff");
             try
             {
-                // ChangeEnabled 是給「業務資料歷程量太大」用的開關，關掉它不該連提權也一起靜音。
+                // `ChangeEnabled` exists for business data history that grows too large. Turning it off must not silence privilege changes.
                 var bo = CreateBo(out var writer, enabled: true, changeEnabled: false);
 
                 bo.SetDeploymentAdmin(new SetDeploymentAdminArgs { UserId = userId, IsDeploymentAdmin = true });
@@ -172,7 +172,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("關閉全域稽核時部署層作業不留痕")]
+        [DisplayName("Deployment-level operations leave no trail when global auditing is disabled")]
         public void SetDeploymentAdmin_AuditDisabled_WritesNothing()
         {
             string userId = TestUsers.Create(ConnectionManager, "audit-off");
@@ -191,7 +191,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("應用程式名稱含 XML 不允許的控制字元時 CreateApiKey 仍成功，且稽核讀得回原值")]
+        [DisplayName("CreateApiKey succeeds when the application name contains a control character XML forbids, and the audit reads back the original value")]
         public void CreateApiKey_NameWithControlCharacter_WritesReadableAudit()
         {
             string sysId = "audit-" + Guid.NewGuid().ToString("N");
@@ -213,7 +213,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("★稽核寫入失敗時 CreateApiKey 仍須交回金鑰——金鑰已寫入，拿不到祕密段就等於作廢——並記下錯誤 log")]
+        [DisplayName("CreateApiKey still returns the key when the audit write fails (the key is already stored, and without the secret it is useless) and logs an error")]
         public void CreateApiKey_AuditWriteFails_StillReturnsKeyAndLogsError()
         {
             string sysId = "audit-" + Guid.NewGuid().ToString("N");
@@ -237,7 +237,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("稽核寫入失敗時 SetDeploymentAdmin 的變更仍生效，並記下錯誤 log")]
+        [DisplayName("SetDeploymentAdmin still applies the change when the audit write fails and logs an error")]
         public void SetDeploymentAdmin_AuditWriteFails_StillAppliesAndLogsError()
         {
             string userId = TestUsers.Create(ConnectionManager, "audit-sinkdown");

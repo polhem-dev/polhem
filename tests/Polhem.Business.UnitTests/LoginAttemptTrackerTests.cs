@@ -4,12 +4,12 @@ using Polhem.Business.Security;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// LoginAttemptTracker 暴力破解防護測試
+    /// Brute-force protection tests for LoginAttemptTracker.
     /// </summary>
     public class LoginAttemptTrackerTests
     {
         [Fact]
-        [DisplayName("新帳號不應被鎖定")]
+        [DisplayName("A new account is not locked out")]
         public void IsLockedOut_NewUser_ReturnsFalse()
         {
             var tracker = new LoginAttemptTracker();
@@ -17,7 +17,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("未達最大失敗次數不應被鎖定")]
+        [DisplayName("An account below the maximum failed attempts is not locked out")]
         public void IsLockedOut_BelowMaxAttempts_ReturnsFalse()
         {
             var tracker = new LoginAttemptTracker(5, TimeSpan.FromMinutes(15));
@@ -29,7 +29,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("達到最大失敗次數應被鎖定")]
+        [DisplayName("An account that reaches the maximum failed attempts is locked out")]
         public void IsLockedOut_ReachMaxAttempts_ReturnsTrue()
         {
             var tracker = new LoginAttemptTracker(5, TimeSpan.FromMinutes(15));
@@ -41,11 +41,11 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("鎖定期間過後應自動解鎖")]
+        [DisplayName("The account unlocks automatically after the lockout period")]
         public void IsLockedOut_AfterLockoutExpires_ReturnsFalse()
         {
-            // 以可推進的假時鐘取代真實牆鐘：原本用 50ms 鎖定視窗 + Task.Delay，在 2-core CI 的
-            // 排程壓力下可能在「應鎖定」斷言前就過期而 flaky。改以邏輯時間推進即無此風險。
+            // A fake clock that can be advanced replaces the real wall clock. The old version used a 50ms lockout window and `Task.Delay`, which under
+            // scheduling pressure on 2-core CI could expire before the should-be-locked assertion and go flaky. Advancing logical time removes that risk.
             var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
             var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15), clock);
 
@@ -60,7 +60,7 @@ namespace Polhem.Business.UnitTests
         }
 
         /// <summary>
-        /// 可手動推進的時鐘，用於以邏輯時間驗證鎖定到期。
+        /// A clock advanced by hand, for verifying lockout expiry in logical time.
         /// </summary>
         private sealed class AdvanceableTimeProvider : TimeProvider
         {
@@ -74,7 +74,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("成功登入後應重設失敗計數")]
+        [DisplayName("A successful login resets the failure count")]
         public void Reset_AfterFailures_ClearsLockout()
         {
             var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15));
@@ -89,7 +89,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("不同帳號的失敗計數應獨立")]
+        [DisplayName("Failure counts of different accounts are independent")]
         public void RecordFailure_DifferentUsers_IndependentTracking()
         {
             var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15));
@@ -104,7 +104,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Reset 後重新計數，需重新累積才會鎖定")]
+        [DisplayName("After Reset the count starts over, and failures must accumulate again before a lockout")]
         public void Reset_ThenFailAgain_RequiresFullCountToLock()
         {
             var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15));
@@ -125,7 +125,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("帳號名稱不區分大小寫")]
+        [DisplayName("Account names are case-insensitive")]
         public void RecordFailure_CaseInsensitive_TracksAsSameUser()
         {
             var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15));
@@ -138,7 +138,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("空字串或 null 的 userId 不應拋出例外")]
+        [DisplayName("An empty or null userId does not throw")]
         public void RecordFailure_NullOrEmpty_DoesNotThrow()
         {
             var tracker = new LoginAttemptTracker();
@@ -152,7 +152,7 @@ namespace Polhem.Business.UnitTests
         [Theory]
         [InlineData(0)]
         [InlineData(-1)]
-        [DisplayName("MaxFailedAttempts 不可為零或負數")]
+        [DisplayName("MaxFailedAttempts cannot be zero or negative")]
         public void Constructor_InvalidMaxAttempts_ThrowsArgumentOutOfRangeException(int maxAttempts)
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -160,7 +160,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("LockoutDuration 不可為零或負數")]
+        [DisplayName("LockoutDuration cannot be zero or negative")]
         public void Constructor_InvalidDuration_ThrowsArgumentOutOfRangeException()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -168,28 +168,28 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("鎖定期間內再次 RecordFailure 應維持既有鎖定狀態")]
+        [DisplayName("Another RecordFailure during the lockout keeps the existing locked state")]
         public void RecordFailure_DuringLockout_KeepsLockedState()
         {
-            // 鎖定 10 分鐘，確保持續在鎖定期間
+            // A 10-minute lockout keeps the test inside the lockout period.
             var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(10));
 
             for (int i = 0; i < 3; i++)
                 tracker.RecordFailure("user01");
             Assert.True(tracker.IsLockedOut("user01"));
 
-            // 觸發 IncrementFailure 中 LockedUntilUtc 仍有效的早退分支
+            // Triggers the early-return branch in `IncrementFailure` where `LockedUntilUtc` is still valid.
             tracker.RecordFailure("user01");
             tracker.RecordFailure("user01");
 
             Assert.True(tracker.IsLockedOut("user01"));
         }
         [Fact]
-        [DisplayName("未重複的失敗帳號不應無限累積 —— 過期後應被清掉")]
+        [DisplayName("Failed accounts that never repeat do not accumulate without bound, and are cleared after they expire")]
         public void RecordFailure_DistinctUsersNeverRepeated_EntriesExpire()
         {
-            // 攻擊者形狀：每次都用不同的 user id，因此「下次同一把 key 再進來時順便清理」
-            // 這種 lazy cleanup 永遠不會觸發。舊實作在此無上限成長。
+            // The attacker's shape: a different user ID every time, so lazy cleanup that runs when the same key comes back
+            // never triggers. The old implementation grew without bound here.
             var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
             var tracker = new LoginAttemptTracker(5, TimeSpan.FromMinutes(15), clock)
             {
@@ -199,7 +199,7 @@ namespace Polhem.Business.UnitTests
             for (int i = 0; i < 100; i++)
                 tracker.RecordFailure($"attacker-{i}");
 
-            // 超過視窗後再打一筆，sweep 應把先前 100 筆全部清掉 —— 否則下面這筆會被容量上限擋掉
+            // One more attempt after the window: the sweep must clear all 100 earlier entries, otherwise the capacity cap would block the entry below.
             clock.Advance(TimeSpan.FromMinutes(16));
             tracker.RecordFailure("victim");
 
@@ -210,7 +210,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("追蹤帳號數應有上限，超過後不再收新帳號")]
+        [DisplayName("The number of tracked accounts is capped, and new accounts are not tracked beyond the cap")]
         public void RecordFailure_BeyondCap_StopsTrackingNewAccounts()
         {
             var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
@@ -222,7 +222,7 @@ namespace Polhem.Business.UnitTests
             for (int i = 0; i < 10; i++)
                 tracker.RecordFailure($"filler-{i}");
 
-            // 容量已滿，新帳號不再建立條目（因此也不會被鎖定）
+            // The capacity is full, so a new account gets no entry (and therefore is not locked out either).
             for (int i = 0; i < 5; i++)
                 tracker.RecordFailure("late-comer");
 
@@ -230,10 +230,10 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("已在追蹤的帳號不受容量上限影響，仍應鎖定")]
+        [DisplayName("An account already being tracked is not affected by the capacity cap and still locks out")]
         public void RecordFailure_ExistingAccountAtCap_StillLocksOut()
         {
-            // 上限只擋新帳號。若連既有帳號都擋，灌爆容量就成了「關掉某個帳號的鎖定」的手段。
+            // The cap only blocks new accounts. If it blocked existing ones too, flooding the capacity would become a way to switch off one account's lockout.
             var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
             var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15), clock)
             {
@@ -251,7 +251,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("失敗計數應以視窗計算，跨視窗的零星失敗不應累積成鎖定")]
+        [DisplayName("Failures are counted within a window, so sporadic failures across windows do not accumulate into a lockout")]
         public void RecordFailure_SpreadAcrossWindows_DoesNotAccumulate()
         {
             var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
@@ -266,7 +266,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("鎖定期間的持續失敗不應延長鎖定")]
+        [DisplayName("Continued failures during the lockout do not extend it")]
         public void RecordFailure_WhileLockedOut_DoesNotExtendLockout()
         {
             var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
@@ -276,7 +276,7 @@ namespace Polhem.Business.UnitTests
                 tracker.RecordFailure("user01");
             Assert.True(tracker.IsLockedOut("user01"));
 
-            // 鎖定期間再打，若會延長鎖定，攻擊者就能把帳號永久鎖住
+            // If failures during the lockout extended it, an attacker could keep an account locked forever.
             clock.Advance(TimeSpan.FromMinutes(14));
             tracker.RecordFailure("user01");
 

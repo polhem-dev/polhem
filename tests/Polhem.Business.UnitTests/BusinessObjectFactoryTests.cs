@@ -7,8 +7,8 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="BusinessObjectFactory"/> 工廠方法測試。
-    /// 透過 per-class <see cref="SharedDbFixture"/> 解析 DI-注入後的 factory 實例。
+    /// Tests for the factory methods of <see cref="BusinessObjectFactory"/>.
+    /// The DI-injected factory instance is resolved through the per-class <see cref="SharedDbFixture"/>.
     /// </summary>
     public class BusinessObjectFactoryTests : IClassFixture<PolhemTestFixture>
     {
@@ -18,7 +18,7 @@ namespace Polhem.Business.UnitTests
         private IBusinessObjectFactory Factory => _fx.GetRequiredService<IBusinessObjectFactory>();
 
         [Fact]
-        [DisplayName("CreateBusinessObject 應回傳 SystemBusinessObject 並保留 AccessToken")]
+        [DisplayName("CreateBusinessObject returns a SystemBusinessObject and keeps the AccessToken")]
         public void CreateBusinessObject_System_ReturnsSystemBusinessObject()
         {
             var token = TestSessionFactory.CreateAccessToken(_fx);
@@ -31,7 +31,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateBusinessObject 傳入 isLocalCall=false 應保留設定")]
+        [DisplayName("CreateBusinessObject keeps isLocalCall=false for the system BO")]
         public void CreateBusinessObject_System_WithIsLocalCallFalse_PreservesFlag()
         {
             var obj = Factory.CreateBusinessObject(TestSessionFactory.CreateAccessToken(_fx), SysProgIds.System, isLocalCall: false);
@@ -41,7 +41,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateBusinessObject 應回傳 FormBusinessObject 並保留 ProgId")]
+        [DisplayName("CreateBusinessObject returns a FormBusinessObject and keeps the ProgId")]
         public void CreateBusinessObject_Form_ReturnsFormBusinessObject()
         {
             var token = TestSessionFactory.CreateAccessToken(_fx);
@@ -55,7 +55,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateBusinessObject 傳入 isLocalCall=false 應保留設定")]
+        [DisplayName("CreateBusinessObject keeps isLocalCall=false for a form BO")]
         public void CreateBusinessObject_Form_WithIsLocalCallFalse_PreservesFlag()
         {
             var obj = Factory.CreateBusinessObject(TestSessionFactory.CreateAccessToken(_fx), "prog01", isLocalCall: false);

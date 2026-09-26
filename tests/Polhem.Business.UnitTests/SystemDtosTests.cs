@@ -5,7 +5,7 @@ using Polhem.Definition;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// Polhem.Business.System 的 Args/Result DTO 預設值與屬性 round-trip 測試。
+    /// Default value and property round-trip tests for the Args/Result DTOs of Polhem.Business.System.
     /// </summary>
     public class SystemDtosTests
     {
@@ -13,7 +13,7 @@ namespace Polhem.Business.UnitTests
         private static readonly string[] s_keysX = { "x" };
 
         [Fact]
-        [DisplayName("PingArgs 預設值與屬性 round-trip")]
+        [DisplayName("PingArgs defaults and property round-trip")]
         public void PingArgs_Defaults_And_RoundTrip()
         {
             var args = new PingArgs();
@@ -27,7 +27,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("PingResult Status 預設為 ok 並可 round-trip")]
+        [DisplayName("PingResult Status defaults to ok and round-trips")]
         public void PingResult_Defaults_And_RoundTrip()
         {
             var result = new PingResult();
@@ -49,7 +49,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("LoginArgs 預設值與屬性 round-trip")]
+        [DisplayName("LoginArgs defaults and property round-trip")]
         public void LoginArgs_Defaults_And_RoundTrip()
         {
             var args = new LoginArgs();
@@ -66,7 +66,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("LoginResult 預設值與屬性 round-trip")]
+        [DisplayName("LoginResult defaults and property round-trip")]
         public void LoginResult_Defaults_And_RoundTrip()
         {
             var result = new LoginResult();
@@ -91,7 +91,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateSessionArgs 預設 ExpiresIn=3600、OneTime=false")]
+        [DisplayName("CreateSessionArgs defaults to ExpiresIn=3600 and OneTime=false")]
         public void CreateSessionArgs_Defaults()
         {
             var args = new CreateSessionArgs();
@@ -101,7 +101,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateSessionResult 預設 AccessToken 為 Empty")]
+        [DisplayName("CreateSessionResult defaults AccessToken to Empty")]
         public void CreateSessionResult_Defaults()
         {
             var result = new CreateSessionResult();
@@ -109,7 +109,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefineArgs / GetDefineResult 預設值與 round-trip")]
+        [DisplayName("GetDefineArgs / GetDefineResult defaults and round-trip")]
         public void GetDefineArgsResult_RoundTrip()
         {
             var args = new GetDefineArgs
@@ -125,7 +125,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDefineArgs 預設值與 round-trip")]
+        [DisplayName("SaveDefineArgs defaults and round-trip")]
         public void SaveDefineArgs_Defaults_And_RoundTrip()
         {
             var args = new SaveDefineArgs();
@@ -142,7 +142,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCommonConfigurationResult 預設為空字串並可 round-trip")]
+        [DisplayName("GetCommonConfigurationResult defaults to an empty string and round-trips")]
         public void GetCommonConfigurationResult_Defaults_And_RoundTrip()
         {
             var result = new GetCommonConfigurationResult();

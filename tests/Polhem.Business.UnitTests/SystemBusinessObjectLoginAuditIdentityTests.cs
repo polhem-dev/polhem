@@ -9,8 +9,8 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// 登入軌跡的呼叫端識別：`st_log_login` 要能分辨「哪個應用在嘗試登入」——同一批失敗來自
-    /// 單一應用，與散在數個應用，是完全不同的訊號。
+    /// Caller identification in the login trail: `st_log_login` must tell which application is trying to log in. A batch
+    /// of failures from one application and the same failures spread across several are entirely different signals.
     /// </summary>
     public class SystemBusinessObjectLoginAuditIdentityTests : IClassFixture<SharedDbFixture>
     {
@@ -32,7 +32,7 @@ namespace Polhem.Business.UnitTests
         };
 
         /// <summary>
-        /// 以「驗證失敗」觸發登入軌跡：不需真實憑證，且失敗正是最需要辨識呼叫端的情境。
+        /// Triggers the login trail with a failed authentication. It needs no real credentials, and a failure is exactly where identifying the caller matters most.
         /// </summary>
         private LoginAuditEntry RunFailedLogin(ApiKeyValidationResult validation, CapturingAuditLogWriter writer)
         {
@@ -51,7 +51,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("登入軌跡應記下呼叫端應用的金鑰識別碼與名稱")]
+        [DisplayName("The login trail records the calling application's key ID and name")]
         public void Login_WithApiKey_RecordsCallingApplication()
         {
             var writer = new CapturingAuditLogWriter();
@@ -66,7 +66,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("未經金鑰閘門的登入，軌跡的應用識別應為 null 而非空字串")]
+        [DisplayName("A login that did not pass the key gate leaves the application identity null rather than an empty string")]
         public void Login_WithoutApiKey_LeavesIdentityNull()
         {
             var writer = new CapturingAuditLogWriter();

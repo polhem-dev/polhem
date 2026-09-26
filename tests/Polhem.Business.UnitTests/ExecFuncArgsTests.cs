@@ -3,12 +3,12 @@ using System.ComponentModel;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="ExecFuncArgs"/> 建構子、屬性與 <see cref="BusinessArgs.Parameters"/> lazy 初始化測試。
+    /// Tests for the constructors and properties of <see cref="ExecFuncArgs"/> and the lazy initialization of <see cref="BusinessArgs.Parameters"/>.
     /// </summary>
     public class ExecFuncArgsTests
     {
         [Fact]
-        [DisplayName("預設建構子 FuncId 應為空字串")]
+        [DisplayName("The default constructor sets FuncId to an empty string")]
         public void DefaultConstructor_FuncIdIsEmpty()
         {
             var args = new ExecFuncArgs();
@@ -16,7 +16,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("傳入 funcID 的建構子應設定 FuncId")]
+        [DisplayName("The constructor that takes funcID sets FuncId")]
         public void Constructor_WithFuncId_SetsFuncId()
         {
             var args = new ExecFuncArgs("SayHello");
@@ -24,7 +24,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("FuncId 可重新設定")]
+        [DisplayName("FuncId can be set again")]
         public void FuncId_IsSettable()
         {
             var args = new ExecFuncArgs("First");
@@ -33,7 +33,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Parameters 應為 lazy 初始化且可重複存取")]
+        [DisplayName("Parameters is lazily initialized and returns the same instance on repeated access")]
         public void Parameters_LazyInitialized_ReturnsSameInstance()
         {
             var args = new ExecFuncArgs();

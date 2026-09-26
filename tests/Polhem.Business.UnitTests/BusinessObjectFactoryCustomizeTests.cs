@@ -7,14 +7,14 @@ using Polhem.Definition.Language;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="BusinessObjectFactory"/> 的 BO 型別解析客製化接線測試：
-    /// 應以 <c>SessionInfo.CustomizeId</c> 呼叫 <see cref="IBoTypeResolver.Resolve(string, string)"/>；
-    /// 無 session / CustomizeId 為空時傳空字串（解析結果逐位元同現況）。
+    /// Tests for how <see cref="BusinessObjectFactory"/> wires customization into BO type resolution:
+    /// it calls <see cref="IBoTypeResolver.Resolve(string, string)"/> with <c>SessionInfo.CustomizeId</c>, and passes an empty
+    /// string when there is no session or CustomizeId is empty (the resolution result is identical to the previous behavior).
     /// </summary>
     public class BusinessObjectFactoryCustomizeTests
     {
         [Fact]
-        [DisplayName("CreateBusinessObject 應以 session 的 CustomizeId 解析 BO 型別")]
+        [DisplayName("CreateBusinessObject resolves the BO type with the session's CustomizeId")]
         public void CreateBusinessObject_Form_PassesSessionCustomizeIdToResolver()
         {
             var resolver = new SpyResolver();
@@ -30,7 +30,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("解析出的客製 BO 型別應被實際建立")]
+        [DisplayName("The resolved customized BO type is actually instantiated")]
         public void CreateBusinessObject_Form_InstantiatesResolvedType()
         {
             var resolver = new SpyResolver { ResolvedType = typeof(TenantFormBo) };
@@ -44,10 +44,10 @@ namespace Polhem.Business.UnitTests
             Assert.IsType<TenantFormBo>(bo);
         }
 
-        // ---- 回歸防護：未設 CustomizeId 的部署行為必須與現況逐位元一致 ----
+        // ---- Regression guards: a deployment without CustomizeId must behave exactly as before ----
 
         [Fact]
-        [DisplayName("回歸防護：session 未設 CustomizeId 時應以空字串解析（純 base）")]
+        [DisplayName("Regression guard: a session without CustomizeId resolves with an empty string (base only)")]
         public void CreateBusinessObject_Form_SessionWithoutCustomizeId_PassesEmpty()
         {
             var resolver = new SpyResolver();
@@ -62,7 +62,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("回歸防護：AccessToken 為空時不查 session，以空字串解析")]
+        [DisplayName("Regression guard: an empty AccessToken skips the session lookup and resolves with an empty string")]
         public void CreateBusinessObject_Form_EmptyAccessToken_SkipsSessionLookup()
         {
             var resolver = new SpyResolver();
@@ -76,11 +76,11 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("回歸防護：session 不存在時以空字串解析，不拋例外")]
+        [DisplayName("Regression guard: a missing session resolves with an empty string without throwing")]
         public void CreateBusinessObject_Form_NoSession_PassesEmpty()
         {
             var resolver = new SpyResolver();
-            var sessions = new StubSessionInfoService(); // 未註冊任何 session
+            var sessions = new StubSessionInfoService(); // No session registered.
             var factory = CreateFactory(resolver, sessions);
 
             var exception = Record.Exception(() => factory.CreateBusinessObject(Guid.NewGuid(), "P001", isLocalCall: true));

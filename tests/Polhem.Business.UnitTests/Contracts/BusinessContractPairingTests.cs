@@ -3,31 +3,31 @@ using System.ComponentModel;
 namespace Polhem.Business.UnitTests.Contracts
 {
     /// <summary>
-    /// 守住契約軸的 <b>BO 側</b>對稱性：<c>Polhem.Business</c> 下每個 <c>BusinessArgs</c> /
-    /// <c>BusinessResult</c> 子型別，都必須實作 <c>Polhem.Api.Contracts</c> 中對應的 <c>I*</c> 契約介面
-    /// （<c>XxxArgs</c> → <c>IXxxRequest</c>、<c>XxxResult</c> → <c>IXxxResponse</c>）。
+    /// Guards the symmetry of the contract axis on the <b>BO side</b>: every <c>BusinessArgs</c> /
+    /// <c>BusinessResult</c> subtype under <c>Polhem.Business</c> must implement the matching <c>I*</c> contract interface in <c>Polhem.Api.Contracts</c>
+    /// (<c>XxxArgs</c> → <c>IXxxRequest</c>, <c>XxxResult</c> → <c>IXxxResponse</c>).
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>為什麼這件事需要閘門守著。</b>API 型別與 BO 型別之間的雙向轉換由
-    /// <c>ApiInputConverter.Convert</c> 承擔（入站由 <c>JsonRpcExecutor</c> 呼叫、出站由
-    /// <c>ApiOutputConverter</c> 呼叫），而它是<b>以反射逐一比對屬性名稱來複製</b>的。
-    /// 名稱對不上就靜默跳過——不擲例外、不警告，呼叫看起來成功但該欄位是空的。
+    /// <b>Why this needs a gate.</b> Conversion in both directions between API types and BO types is done by
+    /// <c>ApiInputConverter.Convert</c> (called by <c>JsonRpcExecutor</c> inbound and by
+    /// <c>ApiOutputConverter</c> outbound), and it <b>copies by matching property names through reflection</b>.
+    /// A name that does not match is skipped silently: no exception and no warning, so the call looks successful but the field is empty.
     /// </para>
     /// <para>
-    /// 契約介面正是讓這個複製「保證完整」的唯一機制：<c>LoginRequest</c> 與 <c>LoginArgs</c>
-    /// 都實作 <c>ILoginRequest</c>，編譯器就逼兩邊帶同一組成員。少掉介面，那條路徑的
-    /// 屬性複製就沒有任何東西看守。
+    /// The contract interface is the only mechanism that makes this copy complete: <c>LoginRequest</c> and <c>LoginArgs</c>
+    /// both implement <c>ILoginRequest</c>, so the compiler forces both sides to carry the same members. Without the interface, nothing
+    /// guards the property copy on that path.
     /// </para>
     /// <para>
-    /// wire 側早有對應的 <c>ApiContractPairingTests</c>；BO 側先前沒有，於是
-    /// <c>GetDepartmentTreeArgs</c> 漏了契約介面而無人察覺——本測試即為該缺口的補強。
+    /// The wire side has long had the matching <c>ApiContractPairingTests</c>; the BO side did not, so
+    /// <c>GetDepartmentTreeArgs</c> missed its contract interface without anyone noticing. This test closes that gap.
     /// </para>
     /// </remarks>
     public class BusinessContractPairingTests
     {
         /// <summary>
-        /// 取得所有需要配對契約介面的 BO 參數 / 結果型別。
+        /// Returns every BO args / result type that needs a paired contract interface.
         /// </summary>
         public static TheoryData<Type> BusinessDtoTypes()
         {
@@ -43,8 +43,8 @@ namespace Polhem.Business.UnitTests.Contracts
         }
 
         /// <summary>
-        /// 由 BO 型別名推導其契約介面名。<c>Args</c> 對 <c>Request</c>、<c>Result</c> 對
-        /// <c>Response</c>——因為契約描述的是 wire 訊息，而 BO 用的是自己的詞彙。
+        /// Derives the contract interface name from the BO type name. <c>Args</c> maps to <c>Request</c> and <c>Result</c> to
+        /// <c>Response</c>, because the contract describes wire messages while the BO uses its own vocabulary.
         /// </summary>
         private static string? ExpectedContractName(Type boType)
         {
@@ -57,25 +57,25 @@ namespace Polhem.Business.UnitTests.Contracts
 
         [Theory]
         [MemberData(nameof(BusinessDtoTypes))]
-        [DisplayName("每個 BusinessArgs / BusinessResult 都應實作對應的 I* 契約介面")]
+        [DisplayName("Every BusinessArgs / BusinessResult implements the matching I* contract interface")]
         public void BusinessDto_ImplementsMatchingContractInterface(Type boType)
         {
             var expected = ExpectedContractName(boType);
             Assert.True(expected != null,
-                $"{boType.Name} 未循 XxxArgs / XxxResult 命名慣例，無法推導契約介面名。");
+                $"{boType.Name} does not follow the XxxArgs / XxxResult naming convention, so the contract interface name cannot be derived.");
 
             var implemented = boType.GetInterfaces().Any(i => i.Name == expected);
             Assert.True(implemented,
-                $"{boType.FullName} 應實作 {expected}。API 與 BO 之間的屬性複製是靠名稱比對、" +
-                "對不上會靜默丟欄位，契約介面是唯一在編譯期擋下這件事的機制。");
+                $"{boType.FullName} should implement {expected}. Property copying between API and BO matches by name, " +
+                "so a mismatch silently drops fields, and the contract interface is the only mechanism that stops this at compile time.");
         }
 
         [Fact]
-        [DisplayName("BO 參數 / 結果型別清單不得為空（防空轉）")]
+        [DisplayName("The list of BO args / result types is not empty (guards against a vacuous pass)")]
         public void BusinessDtoTypes_IsNotEmpty()
         {
-            // 上面的 Theory 是反射列舉驅動的：`BusinessArgs` 換組件、或 IsPublic 這類條件寫失準，
-            // 回傳零筆時 xUnit 的 Theory 零案例即通過，整個閘門會變成恆綠而沒有任何徵兆。
+            // The theory above is driven by a reflection enumeration. If `BusinessArgs` moves to another assembly or a condition such as IsPublic is wrong,
+            // it returns zero items, an xUnit theory with zero cases passes, and the whole gate turns permanently green without any sign.
             Assert.NotEmpty(BusinessDtoTypes());
         }
     }

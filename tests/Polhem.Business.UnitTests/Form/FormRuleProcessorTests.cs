@@ -10,9 +10,9 @@ using Polhem.Expressions;
 namespace Polhem.Business.UnitTests.Form
 {
     /// <summary>
-    /// <see cref="FormRuleProcessor"/> 測試：計算欄（含 RoundByKind 捨入）、預設值運算式、
-    /// BeforeSave 驗證（含 When 適用性）、BeforeDelete 驗證。使用真實 DynamicExpressoEvaluator，
-    /// 純邏輯、無資料庫。
+    /// Tests for <see cref="FormRuleProcessor"/>: computed fields (including RoundByKind rounding), default value expressions,
+    /// BeforeSave validation (including When applicability) and BeforeDelete validation. Uses the real DynamicExpressoEvaluator,
+    /// pure logic with no database.
     /// </summary>
     public class FormRuleProcessorTests
     {
@@ -64,7 +64,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("計算欄：amount = price * qty，Added 列於存檔前回填")]
+        [DisplayName("Computed field: amount = price * qty is filled in on an Added row before saving")]
         public void ApplyBeforeSave_ComputesAmount_OnAddedRow()
         {
             var schema = BuildOrderSchema();
@@ -76,11 +76,11 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("計算欄：Amount kind 依 NumberKind 捨入至 2 位（away-from-zero）")]
+        [DisplayName("Computed field: the Amount kind rounds to 2 decimals by NumberKind (away from zero)")]
         public void ApplyBeforeSave_RoundsAmountByNumberKind()
         {
             var schema = BuildOrderSchema();
-            // 2.125 * 1 = 2.125 → Amount 2 位、四捨五入(away) → 2.13
+            // 2.125 * 1 = 2.125 → Amount rounds to 2 decimals away from zero → 2.13
             var dataSet = BuildOrderDataSet(price: 2.125m, qty: 1m, status: "Draft");
 
             _processor.ApplyBeforeSave(schema, dataSet, new RoundingContext());
@@ -89,7 +89,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("預設值運算式：Added 列空欄以 Today() 填入")]
+        [DisplayName("Default value expression: an empty column on an Added row is filled with Today()")]
         public void ApplyBeforeSave_FillsDefaultValueExpression_WhenEmpty()
         {
             var schema = BuildOrderSchema();
@@ -97,13 +97,13 @@ namespace Polhem.Business.UnitTests.Form
 
             _processor.ApplyBeforeSave(schema, dataSet, new RoundingContext());
 
-            // UTC，不是 DateTime.Today：框架的日期預設值是 UtcNow.Date（ADR-032 D12）。
-            // 用本地日斷言會讓本機在 UTC+8 的 00:00–08:00 必定失敗，而 CI 跑 UTC 永遠看不到。
+            // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
+            // Asserting the local date would always fail locally at 00:00–08:00 in UTC+8, and CI running in UTC would never see it.
             Assert.Equal(DateTime.UtcNow.Date, dataSet.Tables["Order"]!.Rows[0]["order_date"]);
         }
 
         [Fact]
-        [DisplayName("預設值運算式：欄位已有值時不覆寫")]
+        [DisplayName("Default value expression: a column that already has a value is not overwritten")]
         public void ApplyBeforeSave_DoesNotOverwriteExistingDefault()
         {
             var schema = BuildOrderSchema();
@@ -116,7 +116,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("存檔前驗證：Condition 不通過拋 UserMessageException 並帶訊息")]
+        [DisplayName("Validation before save: a failing Condition throws UserMessageException with the message")]
         public void ApplyBeforeSave_FailingRule_ThrowsUserMessage()
         {
             var schema = BuildOrderSchema();
@@ -130,7 +130,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("存檔前驗證：Condition 通過不拋例外")]
+        [DisplayName("Validation before save: a passing Condition does not throw")]
         public void ApplyBeforeSave_PassingRule_DoesNotThrow()
         {
             var schema = BuildOrderSchema();
@@ -144,7 +144,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("存檔前驗證：When 不成立時整條規則略過（不檢查 Condition）")]
+        [DisplayName("Validation before save: the whole rule is skipped when When is false (Condition is not checked)")]
         public void ApplyBeforeSave_WhenFalse_SkipsRule()
         {
             var schema = BuildOrderSchema();
@@ -152,7 +152,7 @@ namespace Polhem.Business.UnitTests.Form
             {
                 When = "status == \"Approved\"",
             });
-            // status=Draft、amount=0：When 不成立 → 略過 → 不拋
+            // status=Draft and amount=0: When is false → skipped → no exception.
             var dataSet = BuildOrderDataSet(price: 0m, qty: 1m, status: "Draft");
 
             var ex = Record.Exception(() =>
@@ -162,7 +162,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("存檔前驗證：When 成立且 Condition 不通過時中斷")]
+        [DisplayName("Validation before save: stops when When is true and Condition fails")]
         public void ApplyBeforeSave_WhenTrueAndConditionFails_Throws()
         {
             var schema = BuildOrderSchema();
@@ -179,7 +179,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("刪除前檢查：BeforeDelete 規則不通過拋 UserMessageException")]
+        [DisplayName("Check before delete: a failing BeforeDelete rule throws UserMessageException")]
         public void ApplyBeforeDelete_FailingRule_Throws()
         {
             var schema = BuildOrderSchema();
@@ -188,7 +188,7 @@ namespace Polhem.Business.UnitTests.Form
                 Trigger = FormRuleTrigger.BeforeDelete,
             });
             var snapshot = BuildOrderDataSet(price: 1m, qty: 1m, status: "Closed");
-            snapshot.AcceptChanges();   // 快照列為 Unchanged
+            snapshot.AcceptChanges();   // The snapshot rows are Unchanged.
 
             var ex = Assert.Throws<UserMessageException>(() =>
                 _processor.ApplyBeforeDelete(schema, snapshot));
@@ -197,7 +197,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("刪除前檢查：BeforeDelete 規則於存檔前不觸發（trigger 隔離）")]
+        [DisplayName("Check before delete: BeforeDelete rules do not run before save (trigger isolation)")]
         public void ApplyBeforeSave_DoesNotRunBeforeDeleteRules()
         {
             var schema = BuildOrderSchema();

@@ -13,8 +13,8 @@ using Polhem.Definition.Storage;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// 保留字 progId（System / AuditLog）的解析防護：缺項回框架預設、型別載不到或基底不符 fail fast。
-    /// 一般 progId 的失敗策略相同，差別只在預期基底較寬（BusinessObject 而非該軸的框架物件）。
+    /// Resolution guards for reserved progIds (System / AuditLog): a missing entry returns the framework default, and an unloadable type or wrong base fails fast.
+    /// Ordinary progIds use the same failure policy; the only difference is a wider expected base (BusinessObject rather than that axis's framework object).
     /// </summary>
     public class ReservedProgIdResolutionTests
     {
@@ -28,12 +28,12 @@ namespace Polhem.Business.UnitTests
             return settings;
         }
 
-        // ---- 缺項：自我註冊結果參與解析 ----
+        // ---- Missing entry: the self-registration result takes part in resolution ----
 
         [Theory]
         [InlineData(SysProgIds.System, typeof(SystemBusinessObject))]
         [InlineData(SysProgIds.AuditLog, typeof(LogBusinessObject))]
-        [DisplayName("註冊表未宣告保留字時應解析為框架預設 BO（唯讀部署下自我註冊寫不進檔也能啟動）")]
+        [DisplayName("Resolve returns the framework default BO when the registry does not declare the reserved progId (so a read-only deployment starts even when self-registration cannot write the file)")]
         public void Resolve_ReservedProgIdAbsent_ReturnsFrameworkDefault(string progId, Type expected)
         {
             var resolver = new ProgramSettingsBoTypeResolver(new StubDefineAccess(new ProgramSettings()));
@@ -42,7 +42,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ProgramSettings.xml 不存在時保留字仍應解析為框架預設")]
+        [DisplayName("A reserved progId still resolves to the framework default when ProgramSettings.xml does not exist")]
         public void Resolve_ReservedProgIdWithNoRegistryFile_ReturnsFrameworkDefault()
         {
             var resolver = new ProgramSettingsBoTypeResolver(new ThrowingDefineAccess());
@@ -51,7 +51,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("保留字宣告但 BusinessObject 留空時應解析為框架預設")]
+        [DisplayName("A reserved progId declared with an empty BusinessObject resolves to the framework default")]
         public void Resolve_ReservedProgIdWithEmptyBusinessObject_ReturnsFrameworkDefault()
         {
             var resolver = new ProgramSettingsBoTypeResolver(
@@ -60,10 +60,10 @@ namespace Polhem.Business.UnitTests
             Assert.Equal(typeof(SystemBusinessObject), resolver.Resolve(SysProgIds.System));
         }
 
-        // ---- 已宣告：客製成功 ----
+        // ---- Declared: customization succeeds ----
 
         [Fact]
-        [DisplayName("保留字綁定 SystemBusinessObject 子類應解析為該子類")]
+        [DisplayName("A reserved progId bound to a SystemBusinessObject subclass resolves to that subclass")]
         public void Resolve_ReservedProgIdBoundToSubclass_ReturnsSubclass()
         {
             var resolver = new ProgramSettingsBoTypeResolver(
@@ -72,10 +72,10 @@ namespace Polhem.Business.UnitTests
             Assert.Equal(typeof(CustomSystemBo), resolver.Resolve(SysProgIds.System));
         }
 
-        // ---- 已宣告但壞掉：fail fast ----
+        // ---- Declared but broken: fail fast ----
 
         [Fact]
-        [DisplayName("保留字綁定的型別載不到時應拋出並指名 progId 與型別名，不得靜默退回")]
+        [DisplayName("A reserved progId bound to a type that cannot be loaded throws and names the progId and type name instead of falling back silently")]
         public void Resolve_ReservedProgIdWithUnloadableType_Throws()
         {
             var resolver = new ProgramSettingsBoTypeResolver(
@@ -88,7 +88,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("組件找不到時保留字同樣應拋出")]
+        [DisplayName("A reserved progId throws as well when the assembly cannot be found")]
         public void Resolve_ReservedProgIdWithMissingAssembly_Throws()
         {
             var resolver = new ProgramSettingsBoTypeResolver(
@@ -98,7 +98,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("System 綁到 FormBusinessObject 子類應拋出——放寬為 BusinessObject 後正是這個缺口")]
+        [DisplayName("System bound to a FormBusinessObject subclass throws (exactly the gap opened by widening to BusinessObject)")]
         public void Resolve_SystemBoundToFormBusinessObject_Throws()
         {
             var resolver = new ProgramSettingsBoTypeResolver(
@@ -110,7 +110,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("AuditLog 綁到 SystemBusinessObject 應拋出（per-progId 預期基底各自獨立）")]
+        [DisplayName("AuditLog bound to SystemBusinessObject throws (each progId has its own expected base)")]
         public void Resolve_AuditLogBoundToSystemBo_Throws()
         {
             var resolver = new ProgramSettingsBoTypeResolver(
@@ -119,10 +119,10 @@ namespace Polhem.Business.UnitTests
             Assert.Throws<InvalidOperationException>(() => resolver.Resolve(SysProgIds.AuditLog));
         }
 
-        // ---- 一般 progId：與保留字同樣 fail fast，只有預期基底較寬 ----
+        // ---- Ordinary progIds fail fast like reserved ones; only the expected base is wider ----
 
         [Fact]
-        [DisplayName("一般 progId 型別載不到時同樣應拋出——兩軸不再有相反的失敗策略")]
+        [DisplayName("An ordinary progId with an unloadable type throws as well (the two axes no longer have opposite failure policies)")]
         public void Resolve_OrdinaryProgIdWithUnloadableType_Throws()
         {
             var resolver = new ProgramSettingsBoTypeResolver(
@@ -135,7 +135,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("一般 progId 未宣告 BusinessObject 時仍應回傳 FormBusinessObject（「沒宣告」不是失敗）")]
+        [DisplayName("An ordinary progId without a declared BusinessObject still returns FormBusinessObject (not declaring one is not a failure)")]
         public void Resolve_OrdinaryProgIdWithEmptyBusinessObject_ReturnsFormBusinessObject()
         {
             var resolver = new ProgramSettingsBoTypeResolver(
@@ -145,7 +145,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("解析目標放寬為 BusinessObject：一般 progId 綁 LogBusinessObject 子類應被接受")]
+        [DisplayName("The resolution target is widened to BusinessObject, so an ordinary progId bound to a LogBusinessObject subclass is accepted")]
         public void Resolve_OrdinaryProgIdBoundToNonFormBusinessObject_IsAccepted()
         {
             var resolver = new ProgramSettingsBoTypeResolver(
@@ -157,7 +157,7 @@ namespace Polhem.Business.UnitTests
         // ---- DefaultBoTypeResolver ----
 
         [Fact]
-        [DisplayName("DefaultBoTypeResolver 亦應回傳保留字的框架預設，而非一律 FormBusinessObject")]
+        [DisplayName("DefaultBoTypeResolver also returns the framework default for reserved progIds instead of always FormBusinessObject")]
         public void DefaultResolver_HonoursReservedProgIds()
         {
             var resolver = new DefaultBoTypeResolver();
@@ -170,7 +170,7 @@ namespace Polhem.Business.UnitTests
         // ---- ReservedProgIds ----
 
         [Fact]
-        [DisplayName("ReservedProgIds.Find 應大小寫無關，未列名者回 null")]
+        [DisplayName("ReservedProgIds.Find is case-insensitive and returns null for an unlisted name")]
         public void ReservedProgIds_Find_IsCaseInsensitive()
         {
             Assert.NotNull(ReservedProgIds.Find("system"));
@@ -179,7 +179,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ReservedProgIdBinding.DefaultTypeName 應為可載回的組件限定名")]
+        [DisplayName("ReservedProgIdBinding.DefaultTypeName is an assembly-qualified name that loads back")]
         public void ReservedProgIds_DefaultTypeName_RoundTripsThroughAssemblyLoader()
         {
             foreach (var binding in ReservedProgIds.All)

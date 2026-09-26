@@ -15,16 +15,16 @@ using Polhem.Definition;
 namespace Polhem.Business.UnitTests.AuditLog
 {
     /// <summary>
-    /// <see cref="LogBusinessObject"/> 的 BO 層行為測試（stub repository，不接實體 DB）：
-    /// 清單方法（<c>GetChangeLog</c> 等）回標頭 + 分頁、filter 透傳；
-    /// 明細方法（<c>GetChangeDetail</c>）把 changes_xml DiffGram 還原為結構化 before/after、
-    /// 查無資料丟例外；三方法皆有權限 gate 與參數驗證。
+    /// BO-level behavior tests for <see cref="LogBusinessObject"/> (a stub repository, no real DB):
+    /// the list methods (<c>GetChangeLog</c> and others) return headers + paging and pass the filter through,
+    /// the detail method (<c>GetChangeDetail</c>) restores the changes_xml DiffGram into structured before/after values
+    /// and throws when nothing is found; every method has the permission gate and argument validation.
     /// </summary>
     /// <remarks>
-    /// NOTE: 開頭那句「不接實體 DB」曾經只是意圖 —— BO 以裸 <c>Guid.NewGuid()</c> 權杖建構，
-    /// 而它的方法會 <c>SessionInfoService.Get(AccessToken)</c>（查目前公司、取語系），該權杖
-    /// 不在 cache 內因而走 rebuild 路徑讀 <c>st_session</c>，於是整個類別實際上需要容器。
-    /// 改用 <see cref="TestSessionFactory.CreateAccessToken"/> 後才真的成立。
+    /// NOTE: the opening claim of no real DB used to be only an intention. The BO was constructed with a bare <c>Guid.NewGuid()</c> token,
+    /// and its methods call <c>SessionInfoService.Get(AccessToken)</c> (for the current company and the locale). That token
+    /// was not in the cache, so it took the rebuild path that reads <c>st_session</c>, and the whole class actually needed the container.
+    /// It only became true after switching to <see cref="TestSessionFactory.CreateAccessToken"/>.
     /// </remarks>
     public class LogBusinessObjectTests : IClassFixture<PolhemTestFixture>
     {
@@ -44,7 +44,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         // ---- GetChangeLog (filtered list) ----
 
         [Fact]
-        [DisplayName("GetChangeLog 應回標頭清單 + 分頁，並把 typed filter 透傳給 repository")]
+        [DisplayName("GetChangeLog returns the header list + paging and passes the typed filter through to the repository")]
         public void GetChangeLog_Authorized_PassesFilter()
         {
             var repo = new StubAuditLogRepository(HeaderPage(2));
@@ -68,7 +68,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetChangeLog 未授權應丟 UnauthorizedAccessException")]
+        [DisplayName("GetChangeLog throws UnauthorizedAccessException when not authorized")]
         public void GetChangeLog_NotAuthorized_Throws()
         {
             var bo = Bo(new StubAuditLogRepository(HeaderPage(0)), authorized: false);
@@ -78,7 +78,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         // ---- GetChangeDetail (restore one event) ----
 
         [Fact]
-        [DisplayName("GetChangeDetail 應把單筆 changes_xml DiffGram 還原為欄位級 before/after")]
+        [DisplayName("GetChangeDetail restores a single changes_xml DiffGram into field-level before/after values")]
         public void GetChangeDetail_Authorized_RestoresFields()
         {
             var sysRowId = Guid.NewGuid();
@@ -98,12 +98,12 @@ namespace Polhem.Business.UnitTests.AuditLog
             Assert.Equal("Alice", field.OldValue);
             Assert.Equal("Alice Wang", field.NewValue);
             Assert.Equal(sysRowId, repo.LastDetailId);
-            // 這份 payload 是無 schema 的舊格式，重建不出 DataSet。
+            // This payload is the old schemaless format, so no DataSet can be rebuilt.
             Assert.Null(result.DataSet);
         }
 
         [Fact]
-        [DisplayName("GetChangeDetail 對刪除事件應回傳刪除前的完整原單 DataSet，Fields 照舊")]
+        [DisplayName("GetChangeDetail returns the complete record DataSet before deletion for a delete event, with Fields as before")]
         public void GetChangeDetail_DeletedRecord_ReturnsRecordDataSet()
         {
             var sysRowId = Guid.NewGuid();
@@ -130,7 +130,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetChangeDetail 查無資料應丟 InvalidOperationException")]
+        [DisplayName("GetChangeDetail throws InvalidOperationException when nothing is found")]
         public void GetChangeDetail_NotFound_Throws()
         {
             var repo = new StubAuditLogRepository(HeaderPage(0), detail: null);
@@ -140,7 +140,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetChangeDetail 缺 SysRowId 應丟 ArgumentException")]
+        [DisplayName("GetChangeDetail throws ArgumentException for a missing SysRowId")]
         public void GetChangeDetail_EmptySysRowId_Throws()
         {
             var bo = Bo(new StubAuditLogRepository(HeaderPage(0)));
@@ -149,7 +149,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetChangeDetail 未授權應丟 UnauthorizedAccessException")]
+        [DisplayName("GetChangeDetail throws UnauthorizedAccessException when not authorized")]
         public void GetChangeDetail_NotAuthorized_Throws()
         {
             var bo = Bo(new StubAuditLogRepository(HeaderPage(0)), authorized: false);
@@ -160,7 +160,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         // ---- login / access / anomaly lists ----
 
         [Fact]
-        [DisplayName("GetLoginLog 應回清單 + 分頁，並透傳 event / user filter")]
+        [DisplayName("GetLoginLog returns the list + paging and passes the event / user filter through")]
         public void GetLoginLog_Authorized_PassesFilter()
         {
             var repo = new StubAuditLogRepository(HeaderPage(2));
@@ -173,7 +173,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetAccessLog 應回清單 + 分頁，並透傳 progId / rowKey filter")]
+        [DisplayName("GetAccessLog returns the list + paging and passes the progId / rowKey filter through")]
         public void GetAccessLog_Authorized_PassesFilter()
         {
             var repo = new StubAuditLogRepository(HeaderPage(1));
@@ -186,7 +186,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetApiAnomalyLog 應回清單，並透傳 method / kind filter")]
+        [DisplayName("GetApiAnomalyLog returns the list and passes the method / kind filter through")]
         public void GetApiAnomalyLog_Authorized_PassesFilter()
         {
             var repo = new StubAuditLogRepository(HeaderPage(3));
@@ -199,7 +199,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetDbAnomalyLog 應回清單，並透傳 databaseId / kind filter")]
+        [DisplayName("GetDbAnomalyLog returns the list and passes the databaseId / kind filter through")]
         public void GetDbAnomalyLog_Authorized_PassesFilter()
         {
             var repo = new StubAuditLogRepository(HeaderPage(1));
@@ -212,7 +212,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("清單方法未授權應丟 UnauthorizedAccessException")]
+        [DisplayName("The list methods throw UnauthorizedAccessException when not authorized")]
         public void ListMethods_NotAuthorized_Throw()
         {
             var bo = Bo(new StubAuditLogRepository(HeaderPage(0)), authorized: false);
@@ -225,7 +225,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         // ---- anomaly aggregates (Phase 3a) ----
 
         [Fact]
-        [DisplayName("GetApiAnomalySummary 應回聚合 Table")]
+        [DisplayName("GetApiAnomalySummary returns the aggregated Table")]
         public void GetApiAnomalySummary_Authorized_ReturnsTable()
         {
             var repo = new StubAuditLogRepository(HeaderPage(0));
@@ -234,7 +234,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetDbAnomalySummary 應走 DB 聚合（無 company scope）")]
+        [DisplayName("GetDbAnomalySummary uses the DB aggregation (no company scope)")]
         public void GetDbAnomalySummary_Authorized_UsesDbSummary()
         {
             var repo = new StubAuditLogRepository(HeaderPage(0));
@@ -244,7 +244,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetTopApiMethods 應把 TopN 透傳給 repository")]
+        [DisplayName("GetTopApiMethods passes TopN through to the repository")]
         public void GetTopApiMethods_Authorized_PassesTopN()
         {
             var repo = new StubAuditLogRepository(HeaderPage(0));
@@ -254,7 +254,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("聚合方法未授權應丟 UnauthorizedAccessException")]
+        [DisplayName("The aggregate methods throw UnauthorizedAccessException when not authorized")]
         public void AggregateMethods_NotAuthorized_Throw()
         {
             var bo = Bo(new StubAuditLogRepository(HeaderPage(0)), authorized: false);

@@ -6,7 +6,7 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="AccessTokenValidator"/> 行為測試。
+    /// Behavior tests for <see cref="AccessTokenValidator"/>.
     /// </summary>
     public class AccessTokenValidatorTests : IClassFixture<SharedDbFixture>
     {
@@ -17,7 +17,7 @@ namespace Polhem.Business.UnitTests
             => new(_fx.GetRequiredService<ISessionInfoService>());
 
         [Fact]
-        [DisplayName("Validate(Guid.Empty) 應拋 UnauthorizedAccessException")]
+        [DisplayName("Validate(Guid.Empty) throws UnauthorizedAccessException")]
         public void Validate_Empty_ThrowsUnauthorized()
         {
             var provider = CreateValidator();
@@ -25,7 +25,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Validate 未知 AccessToken 應拋 UnauthorizedAccessException")]
+        [DisplayName("Validate with an unknown AccessToken throws UnauthorizedAccessException")]
         public void Validate_UnknownToken_ThrowsUnauthorized()
         {
             var provider = CreateValidator();
@@ -35,7 +35,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Validate 過期 Session 應拋 UnauthorizedAccessException")]
+        [DisplayName("Validate with an expired session throws UnauthorizedAccessException")]
         public void Validate_ExpiredSession_ThrowsUnauthorized()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -62,7 +62,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Validate 有效 Session 應回傳 true")]
+        [DisplayName("Validate with a valid session returns true")]
         public void Validate_ValidSession_ReturnsTrue()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();

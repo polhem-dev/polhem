@@ -7,13 +7,13 @@ namespace Polhem.Business.UnitTests
 {
     /// <summary>
     /// <see cref="BusinessObject.GetLangText(string)"/> / <see cref="BusinessObject.GetLangText(string, string)"/>
-    /// 的租戶客製化接線測試：語系查找應帶上 <c>SessionInfo.CustomizeId</c>；
-    /// 無 session / CustomizeId 為空時逐位元同現況（不帶客製）。
+    /// wiring for tenant customization: the language lookup carries <c>SessionInfo.CustomizeId</c>, and
+    /// with no session or an empty CustomizeId it behaves exactly as before (no customization).
     /// </summary>
     public class BusinessObjectLangCustomizeTests
     {
         [Fact]
-        [DisplayName("GetLangText(ns, subKey) 應帶上 SessionInfo.CustomizeId")]
+        [DisplayName("GetLangText(ns, subKey) passes SessionInfo.CustomizeId")]
         public void GetLangText_WithSessionCustomizeId_PassesItToLanguageService()
         {
             var lang = new SpyLanguageService();
@@ -29,7 +29,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetLangText(fullKey) 應在第一個點切開並帶上 CustomizeId")]
+        [DisplayName("GetLangText(fullKey) splits on the first dot and passes CustomizeId")]
         public void GetLangText_FullKey_SplitsOnFirstDotAndPassesCustomizeId()
         {
             var lang = new SpyLanguageService();
@@ -43,7 +43,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetLangText(fullKey) 無點時視為 namespace-only、subKey 為空（同現況）")]
+        [DisplayName("GetLangText(fullKey) without a dot is treated as namespace-only with an empty subKey (unchanged behavior)")]
         public void GetLangText_FullKeyWithoutDot_TreatedAsNamespaceOnly()
         {
             var lang = new SpyLanguageService();
@@ -56,7 +56,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetLangText(fullKey) 傳 null 應拋 ArgumentNullException（同現況）")]
+        [DisplayName("GetLangText(fullKey) throws ArgumentNullException for null (unchanged behavior)")]
         public void GetLangText_NullFullKey_Throws()
         {
             var bo = CreateBo(new SpyLanguageService(), Guid.NewGuid(), culture: "zh-TW", customizeId: string.Empty);
@@ -64,10 +64,10 @@ namespace Polhem.Business.UnitTests
             Assert.Throws<ArgumentNullException>(() => bo.CallGetLangText(null!));
         }
 
-        // ---- 回歸防護：未設 CustomizeId 的部署行為必須與現況逐位元一致 ----
+        // ---- Regression guards: a deployment without CustomizeId must behave exactly as before ----
 
         [Fact]
-        [DisplayName("回歸防護：session 未設 CustomizeId 時傳空字串（純 base 查找）")]
+        [DisplayName("Regression guard: a session without CustomizeId passes an empty string (base-only lookup)")]
         public void GetLangText_SessionWithoutCustomizeId_PassesEmpty()
         {
             var lang = new SpyLanguageService();
@@ -79,7 +79,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("回歸防護：AccessToken 為空時不查 session，customizeId 與 lang 皆為空")]
+        [DisplayName("Regression guard: an empty AccessToken skips the session lookup, and both customizeId and lang are empty")]
         public void GetLangText_EmptyAccessToken_SkipsSessionLookup()
         {
             var lang = new SpyLanguageService();
@@ -94,11 +94,11 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("回歸防護：session 不存在時 customizeId 退為空字串，不拋例外")]
+        [DisplayName("Regression guard: a missing session falls back to an empty customizeId without throwing")]
         public void GetLangText_NoSession_FallsBackToEmptyCustomizeId()
         {
             var lang = new SpyLanguageService();
-            var sessions = new StubSessionInfoService(); // 未註冊任何 session
+            var sessions = new StubSessionInfoService(); // No session registered.
             var bo = new LangProbeBusinessObject(BuildContext(lang, sessions), Guid.NewGuid());
 
             var exception = Record.Exception(() => bo.CallGetLangText("Common", "OK"));

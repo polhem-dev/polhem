@@ -9,8 +9,8 @@ using Polhem.Definition.Storage;
 namespace Polhem.Business.UnitTests.Fakes
 {
     /// <summary>
-    /// 測試用 <see cref="IDefineAccess"/>；除 <see cref="GetDatabaseSettings"/> 會回傳預設的
-    /// <see cref="DatabaseSettings"/> 實例外,其他方法皆拋出 <see cref="NotImplementedException"/>。
+    /// A test <see cref="IDefineAccess"/>. <see cref="GetDatabaseSettings"/> returns a default
+    /// <see cref="DatabaseSettings"/> instance, and every other method throws <see cref="NotImplementedException"/>.
     /// </summary>
     internal sealed class FakeDefineAccess : IDefineAccess
     {

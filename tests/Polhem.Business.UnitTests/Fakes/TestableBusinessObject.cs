@@ -4,8 +4,8 @@ using Polhem.Definition;
 namespace Polhem.Business.UnitTests.Fakes
 {
     /// <summary>
-    /// 測試用的 <see cref="BusinessObject"/> 子類，可驗證 <see cref="BusinessObject.ExecFunc"/>
-    /// 與 <see cref="BusinessObject.ExecFuncAnonymous"/> 的派發是否正確呼叫 DoExecFunc* 覆寫方法。
+    /// A test subclass of <see cref="BusinessObject"/> that verifies <see cref="BusinessObject.ExecFunc"/>
+    /// and <see cref="BusinessObject.ExecFuncAnonymous"/> dispatch to the DoExecFunc* overrides correctly.
     /// </summary>
     public class TestableBusinessObject : BusinessObject
     {
@@ -34,7 +34,7 @@ namespace Polhem.Business.UnitTests.Fakes
     }
 
     /// <summary>
-    /// 不覆寫任何 DoExecFunc* 的測試類別，驗證基底空實作不拋例外。
+    /// A test class that overrides no DoExecFunc* method, to verify that the empty base implementation does not throw.
     /// </summary>
     public class BareBusinessObject : BusinessObject
     {

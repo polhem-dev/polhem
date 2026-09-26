@@ -9,12 +9,12 @@ using Polhem.Definition;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// 驗證快取失效後由 <c>st_session</c> 種子重建 SessionInfo 的行為。
+    /// Verifies how SessionInfo is rebuilt from the <c>st_session</c> seed after the cache entry is gone.
     /// </summary>
     /// <remarks>
-    /// 重建是「重跑推導」而非「還原快照」：種子只帶 token / 使用者 / 到期 / 公司，
-    /// 角色、客製代碼、record scope 一律重算，金鑰則由 provider 重新導出。
-    /// 這正是「權限撤銷後不會殘留在舊快照」的來源。
+    /// Rebuilding reruns the derivation instead of restoring a snapshot: the seed carries only the token, user, expiry and company,
+    /// while roles, the customize ID and the record scope are always recomputed, and the key is derived again by the provider.
+    /// This is why a revoked permission does not linger in an old snapshot.
     /// </remarks>
     public class SessionRebuildTests : IClassFixture<SharedDbFixture>
     {
@@ -33,7 +33,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("快取被清空後應由種子重建出等價的 SessionInfo")]
+        [DisplayName("After the cache is cleared, an equivalent SessionInfo is rebuilt from the seed")]
         public void Get_AfterCacheEviction_RebuildsFromSeed()
         {
             var accessToken = LoginAsSeedUser();
@@ -43,7 +43,7 @@ namespace Polhem.Business.UnitTests
                 bo.EnterCompany(new EnterCompanyArgs { CompanyId = SeedCompanyId });
                 var original = SessionService.Get(accessToken);
 
-                // 模擬 20 分鐘 sliding 逐出 / 行程重啟：只清快取，種子仍在
+                // Simulates the 20-minute sliding eviction or a process restart: only the cache is cleared, and the seed remains.
                 SessionService.Remove(accessToken);
 
                 var rebuilt = SessionService.Get(accessToken);
@@ -52,9 +52,9 @@ namespace Polhem.Business.UnitTests
                 Assert.Equal(accessToken, rebuilt!.AccessToken);
                 Assert.Equal("001", rebuilt.UserId);
                 Assert.Equal(SeedCompanyId, rebuilt.CompanyId);
-                // 金鑰由 accessToken 重新導出，與登入時同一把——Encrypted API 因此仍可用
+                // The key is derived again from the access token and matches the one from login, so the Encrypted API still works.
                 Assert.Equal(original!.ApiEncryptionKey, rebuilt.ApiEncryptionKey);
-                // EnterCompany 快照的 record scope 是重算而非還原
+                // The record scope snapshotted by `EnterCompany` is recomputed, not restored.
                 Assert.Equal(original.UserRowId, rebuilt.UserRowId);
                 Assert.Equal(original.Culture, rebuilt.Culture);
                 Assert.Equal(original.TimeZone, rebuilt.TimeZone);
@@ -66,7 +66,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("未進公司的 session 清快取後應重建為未進公司狀態")]
+        [DisplayName("A session that has not entered a company is rebuilt without a company after the cache is cleared")]
         public void Get_AfterCacheEviction_WithoutCompany_RebuildsCompanyLess()
         {
             var accessToken = LoginAsSeedUser();
@@ -86,7 +86,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("登出後 token 不得由種子重建復活")]
+        [DisplayName("A token is not revived from the seed after logout")]
         public void Get_AfterLogout_DoesNotRebuild()
         {
             var accessToken = LoginAsSeedUser();
@@ -96,7 +96,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("不存在的 token 不得重建出 session")]
+        [DisplayName("A token that does not exist does not rebuild a session")]
         public void Get_UnknownToken_ReturnsNull()
         {
             Assert.Null(SessionService.Get(Guid.NewGuid()));

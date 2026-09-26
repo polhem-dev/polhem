@@ -7,7 +7,7 @@ using Polhem.Definition;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="SystemBusinessObject.LeaveCompany"/> 行為測試。
+    /// Behavior tests for <see cref="SystemBusinessObject.LeaveCompany"/>.
     /// </summary>
     public class SystemBusinessObjectLeaveCompanyTests : IClassFixture<SharedDbFixture>
     {
@@ -16,7 +16,7 @@ namespace Polhem.Business.UnitTests
         public SystemBusinessObjectLeaveCompanyTests(SharedDbFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("LeaveCompany 對已進公司的 session 應清空 CompanyId")]
+        [DisplayName("LeaveCompany clears CompanyId for a session that has entered a company")]
         public void LeaveCompany_WhenEntered_ClearsCompanyId()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -40,7 +40,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("LeaveCompany 對未進公司的 session 應 idempotent 回傳成功")]
+        [DisplayName("LeaveCompany is idempotent and succeeds for a session that has not entered a company")]
         public void LeaveCompany_WhenNotEntered_Idempotent()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -61,7 +61,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("LeaveCompany 對 null args 應拋 ArgumentNullException")]
+        [DisplayName("LeaveCompany throws ArgumentNullException for null args")]
         public void LeaveCompany_NullArgs_ThrowsArgumentNullException()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
@@ -79,10 +79,9 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("LeaveCompany 對無效 session 應拋 UnauthorizedAccessException")]
+        [DisplayName("LeaveCompany throws UnauthorizedAccessException for an invalid session")]
         public void LeaveCompany_NoSession_ThrowsUnauthorizedAccessException()
         {
-            // 直接用一個未植入的 AccessToken
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), SysProgIds.System);
 
             Assert.Throws<UnauthorizedAccessException>(() => bo.LeaveCompany(new LeaveCompanyArgs()));

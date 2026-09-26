@@ -4,12 +4,12 @@ using System.ComponentModel;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="ExecFuncResult"/> 繼承自 <see cref="BusinessResult"/> 的行為測試。
+    /// Tests for the behavior <see cref="ExecFuncResult"/> inherits from <see cref="BusinessResult"/>.
     /// </summary>
     public class ExecFuncResultTests
     {
         [Fact]
-        [DisplayName("ExecFuncResult 建構後 Parameters 為 lazy 初始化")]
+        [DisplayName("ExecFuncResult initializes Parameters lazily after construction")]
         public void DefaultConstructor_ParametersLazyInitialized()
         {
             var result = new ExecFuncResult();
@@ -20,7 +20,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecFuncResult 應為 BusinessResult 的子類")]
+        [DisplayName("ExecFuncResult is a subclass of BusinessResult")]
         public void ExecFuncResult_IsBusinessResult()
         {
             var result = new ExecFuncResult();

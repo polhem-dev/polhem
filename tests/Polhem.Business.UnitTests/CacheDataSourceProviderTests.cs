@@ -7,7 +7,7 @@ using Polhem.Definition.Database;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="CacheDataSourceProvider"/> 測試。
+    /// Tests for <see cref="CacheDataSourceProvider"/>.
     /// </summary>
     public class CacheDataSourceProviderTests : IClassFixture<SharedDbFixture>
     {
@@ -22,7 +22,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("GetSessionInfo 傳入不存在的 Token 應回傳 null")]
+        [DisplayName("GetSessionInfo returns null for a token that does not exist")]
         public void GetSessionInfo_UnknownToken_ReturnsNull()
         {
             var provider = CreateProvider();
@@ -33,7 +33,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("GetCompanyInfo 傳入不存在的公司代碼應回傳 null")]
+        [DisplayName("GetCompanyInfo returns null for a company ID that does not exist")]
         public void GetCompanyInfo_UnknownCompany_ReturnsNull()
         {
             var provider = CreateProvider();
@@ -44,7 +44,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("GetCompanyRolePermissions 傳入不存在的公司代碼應回傳 null")]
+        [DisplayName("GetCompanyRolePermissions returns null for a company ID that does not exist")]
         public void GetCompanyRolePermissions_UnknownCompany_ReturnsNull()
         {
             var provider = CreateProvider();
@@ -55,7 +55,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("GetDepartmentTree 傳入不存在的公司代碼應回傳 null")]
+        [DisplayName("GetDepartmentTree returns null for a company ID that does not exist")]
         public void GetDepartmentTree_UnknownCompany_ReturnsNull()
         {
             var provider = CreateProvider();
@@ -66,7 +66,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CacheDataSourceProvider 建構子傳 null 應拋 ArgumentNullException")]
+        [DisplayName("The CacheDataSourceProvider constructor throws ArgumentNullException for null")]
         public void Constructor_NullFactory_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new CacheDataSourceProvider(null!, _fx.Provider));

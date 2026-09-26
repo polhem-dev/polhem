@@ -3,13 +3,13 @@ using Microsoft.Extensions.Logging;
 namespace Polhem.Business.UnitTests.Fakes
 {
     /// <summary>
-    /// 記下所有 logger 寫出的項目，供驗證「失敗被吞下時確實留下可觀測的記錄」。
+    /// Records every entry written by its loggers, to verify that a swallowed failure still leaves an observable record.
     /// </summary>
     internal sealed class RecordingLoggerFactory : ILoggerFactory
     {
         private readonly List<LogRecord> _entries = [];
 
-        /// <summary>目前為止記下的項目快照。</summary>
+        /// <summary>A snapshot of the entries recorded so far.</summary>
         public IReadOnlyList<LogRecord> Entries
         {
             get { lock (_entries) { return [.. _entries]; } }
@@ -32,7 +32,7 @@ namespace Polhem.Business.UnitTests.Fakes
             lock (_entries) { _entries.Add(record); }
         }
 
-        /// <summary>一筆記錄。</summary>
+        /// <summary>One recorded entry.</summary>
         public sealed record LogRecord(string Category, LogLevel Level, string Message, Exception? Exception);
 
         private sealed class RecordingLogger(RecordingLoggerFactory owner, string category) : ILogger

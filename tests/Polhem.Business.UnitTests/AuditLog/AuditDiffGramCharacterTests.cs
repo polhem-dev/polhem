@@ -8,14 +8,14 @@ using Polhem.Definition.Logging;
 namespace Polhem.Business.UnitTests.AuditLog
 {
     /// <summary>
-    /// 字串值含 XML 1.0 不允許的字元或 CR 時，<c>AuditDiffGram</c> 寫出的 payload：寫入不得擲例外，
-    /// 經 <c>ChangeDiffGramReader</c> 讀回的新舊值必須與原值逐字相同。唯一的例外是落單 surrogate——
-    /// 任何 XML 形式都表達不了它，換成 U+FFFD。
+    /// The payload <c>AuditDiffGram</c> writes when a string value contains characters XML 1.0 forbids or a CR: writing must not throw,
+    /// and the old and new values read back through <c>ChangeDiffGramReader</c> must match the originals exactly. The only exception is a lone surrogate:
+    /// no XML form can express it, so it becomes U+FFFD.
     /// </summary>
     /// <remarks>
-    /// 表單與部署層的稽核都在資料庫交易 commit 之後才序列化。寫入端在這裡擲例外，已經存檔的呼叫
-    /// 就會回傳失敗，而且稽核也沒寫到。字元以碼位傳入再組字串，是為了不讓 NUL 與落單 surrogate
-    /// 經過 xUnit 的 theory 資料序列化。
+    /// Both form and deployment-level audits serialize after the database transaction commits. If the writer threw here, a call that had already saved
+    /// would report failure, and the audit would not be written either. Characters are passed as code points and built into strings so that NUL and lone surrogates
+    /// do not go through xUnit's theory data serialization.
     /// </remarks>
     public class AuditDiffGramCharacterTests
     {
@@ -54,7 +54,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         [InlineData(0x001F)]
         [InlineData(0xFFFE)]
         [InlineData(0xFFFF)]
-        [DisplayName("XML 不允許的字元應寫得出 payload，且新舊值逐字讀回")]
+        [DisplayName("Characters XML forbids can still be written into the payload, and the old and new values read back exactly")]
         public void Serialize_InvalidXmlCharacter_RoundTripsExactly(int codePoint)
         {
             char character = (char)codePoint;
@@ -71,7 +71,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         [InlineData("a\r\nb")]
         [InlineData("a\rb")]
         [InlineData("行尾\r")]
-        [DisplayName("CR 與 CRLF 讀回不得被正規化為 LF")]
+        [DisplayName("CR and CRLF are not normalized to LF when read back")]
         public void Serialize_CarriageReturn_IsPreserved(string after)
         {
             var change = ModifiedMemo("原值", after);
@@ -82,7 +82,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         [Theory]
         [InlineData(0xD842)]
         [InlineData(0xDC00)]
-        [DisplayName("落單 surrogate 無法以 XML 表達，新舊值都應換成 U+FFFD 而非擲例外")]
+        [DisplayName("A lone surrogate cannot be expressed in XML, so both old and new values get U+FFFD instead of throwing")]
         public void Serialize_LoneSurrogate_ReplacedWithReplacementCharacter(int codePoint)
         {
             char surrogate = (char)codePoint;
@@ -94,7 +94,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("成對的 surrogate（emoji）不受替換影響")]
+        [DisplayName("A surrogate pair (emoji) is not affected by the replacement")]
         public void Serialize_SurrogatePair_IsPreserved()
         {
             string after = "讚😀，孤\uD842";
@@ -105,7 +105,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("被刪列的 before-image 含不合法字元時也應寫得出且讀得回")]
+        [DisplayName("The before image of a deleted row with invalid characters can still be written and read back")]
         public void Serialize_DeletedRowWithInvalidCharacters_RestoresBeforeImage()
         {
             var dataSet = NewDataSet();
@@ -120,7 +120,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("部署層的 ForInsert 走同一支序列化，含控制字元的值也應讀得回")]
+        [DisplayName("The deployment-level ForInsert uses the same serialization, and a value with a control character reads back as well")]
         public void ForInsert_ValueWithControlCharacter_RoundTrips()
         {
             string payload = AuditDiffGram.ForInsert("st_api_key", [("sys_name", "App\u0001Name")]);

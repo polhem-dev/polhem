@@ -10,9 +10,9 @@ using Polhem.Definition.Storage;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="ProgramSettingsBoTypeResolver"/> 補洞覆蓋測試：建構子 null 防護、
-    /// 型別載入成功但型別不存在（GetType→null）回退、客製 ProgramSettings reference 變更觸發 cache reset、
-    /// FindItem 跨多個 category 尋找。
+    /// Gap-filling coverage for <see cref="ProgramSettingsBoTypeResolver"/>: the constructor null guard,
+    /// the fallback when the assembly loads but the type does not exist (GetType returns null), a cache reset when the customized ProgramSettings reference changes,
+    /// and FindItem searching across several categories.
     /// </summary>
     public class ProgramSettingsBoTypeResolverCoverageTests
     {
@@ -37,14 +37,14 @@ namespace Polhem.Business.UnitTests
 
 
         [Fact]
-        [DisplayName("建構子 defineAccess 為 null 應丟 ArgumentNullException")]
+        [DisplayName("The constructor throws ArgumentNullException for a null defineAccess")]
         public void Ctor_NullDefineAccess_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new ProgramSettingsBoTypeResolver(null!));
         }
 
         [Fact]
-        [DisplayName("BusinessObject 型別名組件可載入但型別不存在（GetType→null）時應拋出")]
+        [DisplayName("Resolve throws when the BusinessObject type name's assembly loads but the type does not exist (GetType returns null)")]
         public void Resolve_TypeNameLoadableAssemblyButMissingType_Throws()
         {
             var settings = BuildSettings(("P001", "Polhem.Business.NoSuchTypeXyz, Polhem.Business"));
@@ -57,7 +57,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("客製 ProgramSettings 實例變更（reference 不同）應 reset cache 並重新解析")]
+        [DisplayName("Replacing the customized ProgramSettings instance (a different reference) resets the cache and resolves again")]
         public void Resolve_CustSettingsInstanceReplaced_ResetsCache()
         {
             var defineAccess = new MutableDefineAccess(BuildSettings(("P001", BaseFormBoFqn)));
@@ -78,7 +78,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("註冊表有多筆時應以 progId 為 key 取到正確的一筆")]
+        [DisplayName("With several registry entries, Resolve uses progId as the key to find the right one")]
         public void Resolve_ProgIdAmongSeveral_Resolves()
         {
             var defineAccess = new MutableDefineAccess(

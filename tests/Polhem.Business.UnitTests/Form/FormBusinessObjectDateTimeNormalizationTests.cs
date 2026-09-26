@@ -15,13 +15,13 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests.Form
 {
     /// <summary>
-    /// <see cref="FormBusinessObject.Save"/> 不採用呼叫端傳入的 <c>DateTime</c>：新增列由伺服端補值、
-    /// 修改與刪除列以資料庫讀回的值覆蓋兩個版本，系統時間戳記由框架戳記。
+    /// <see cref="FormBusinessObject.Save"/> does not accept a <c>DateTime</c> sent by the caller: added rows get server values,
+    /// modified and deleted rows have both versions overwritten with the values read back from the database, and system timestamps are stamped by the framework.
     /// </summary>
     /// <remarks>
-    /// 每個測試都直接呼叫 <see cref="FormBusinessObject.Save"/>，不經 Connector，
-    /// 所以同時驗證「伺服端 BO 之間的呼叫同樣不採用」。
-    /// 傳入的值一律是 <see cref="s_clientValue"/>，任何一個欄位落庫成它就代表正規化漏了。
+    /// Every test calls <see cref="FormBusinessObject.Save"/> directly, without the Connector,
+    /// so it also verifies that calls between server-side BOs do not accept the value either.
+    /// The value passed in is always <see cref="s_clientValue"/>; any column stored with it means normalization missed something.
     /// </remarks>
     public class FormBusinessObjectDateTimeNormalizationTests : IClassFixture<SharedDbFixture>
     {
@@ -44,26 +44,26 @@ namespace Polhem.Business.UnitTests.Form
 
         public FormBusinessObjectDateTimeNormalizationTests(SharedDbFixture fx) { _fx = fx; }
 
-        #region 新增列
+        #region Added rows
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：新增列傳入的 DateTime 不落庫，系統戳記、NOT NULL 欄與運算式欄都由伺服端寫入")]
+        [DisplayName("SQLite: a DateTime passed in for an added row is not stored; system timestamps, NOT NULL columns and expression columns are written by the server")]
         public void Save_Sqlite_AddedRow_UsesServerValues() => RunAddedRowUsesServerValues(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：新增列傳入的 DateTime 不落庫，系統戳記、NOT NULL 欄與運算式欄都由伺服端寫入")]
+        [DisplayName("SQL Server: a DateTime passed in for an added row is not stored; system timestamps, NOT NULL columns and expression columns are written by the server")]
         public void Save_SqlServer_AddedRow_UsesServerValues() => RunAddedRowUsesServerValues(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：新增列傳入的 DateTime 不落庫，系統戳記、NOT NULL 欄與運算式欄都由伺服端寫入")]
+        [DisplayName("PostgreSQL: a DateTime passed in for an added row is not stored; system timestamps, NOT NULL columns and expression columns are written by the server")]
         public void Save_PostgreSql_AddedRow_UsesServerValues() => RunAddedRowUsesServerValues(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：新增列傳入的 DateTime 不落庫，系統戳記、NOT NULL 欄與運算式欄都由伺服端寫入")]
+        [DisplayName("MySQL: a DateTime passed in for an added row is not stored; system timestamps, NOT NULL columns and expression columns are written by the server")]
         public void Save_MySql_AddedRow_UsesServerValues() => RunAddedRowUsesServerValues(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：新增列傳入的 DateTime 不落庫，系統戳記、NOT NULL 欄與運算式欄都由伺服端寫入")]
+        [DisplayName("Oracle: a DateTime passed in for an added row is not stored; system timestamps, NOT NULL columns and expression columns are written by the server")]
         public void Save_Oracle_AddedRow_UsesServerValues() => RunAddedRowUsesServerValues(DatabaseType.Oracle);
 
         private void RunAddedRowUsesServerValues(DatabaseType databaseType)
@@ -95,26 +95,26 @@ namespace Polhem.Business.UnitTests.Form
 
         #endregion
 
-        #region 修改與刪除列
+        #region Modified and deleted rows
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：修改列保留資料庫的 DateTime、sys_update_time 前進、非時間欄修改完整保留，稽核記的是資料庫值")]
+        [DisplayName("SQLite: a modified row keeps the stored DateTime, sys_update_time advances, non-time edits are kept in full, and the audit records the stored values")]
         public void Save_Sqlite_StoredRows_KeepStoredValues() => RunStoredRowsKeepStoredValues(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：修改列保留資料庫的 DateTime、sys_update_time 前進、非時間欄修改完整保留，稽核記的是資料庫值")]
+        [DisplayName("SQL Server: a modified row keeps the stored DateTime, sys_update_time advances, non-time edits are kept in full, and the audit records the stored values")]
         public void Save_SqlServer_StoredRows_KeepStoredValues() => RunStoredRowsKeepStoredValues(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：修改列保留資料庫的 DateTime、sys_update_time 前進、非時間欄修改完整保留，稽核記的是資料庫值")]
+        [DisplayName("PostgreSQL: a modified row keeps the stored DateTime, sys_update_time advances, non-time edits are kept in full, and the audit records the stored values")]
         public void Save_PostgreSql_StoredRows_KeepStoredValues() => RunStoredRowsKeepStoredValues(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：修改列保留資料庫的 DateTime、sys_update_time 前進、非時間欄修改完整保留，稽核記的是資料庫值")]
+        [DisplayName("MySQL: a modified row keeps the stored DateTime, sys_update_time advances, non-time edits are kept in full, and the audit records the stored values")]
         public void Save_MySql_StoredRows_KeepStoredValues() => RunStoredRowsKeepStoredValues(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：修改列保留資料庫的 DateTime、sys_update_time 前進、非時間欄修改完整保留，稽核記的是資料庫值")]
+        [DisplayName("Oracle: a modified row keeps the stored DateTime, sys_update_time advances, non-time edits are kept in full, and the audit records the stored values")]
         public void Save_Oracle_StoredRows_KeepStoredValues() => RunStoredRowsKeepStoredValues(DatabaseType.Oracle);
 
         private void RunStoredRowsKeepStoredValues(DatabaseType databaseType)
@@ -141,7 +141,7 @@ namespace Polhem.Business.UnitTests.Form
                 line[Note] = "changed line";
                 line[LineTime] = s_clientValue;
 
-                // 讓 Original 也變成用戶端的值再刪除，模擬 Connector 把回應轉進使用者時區之後的那一列。
+                // Makes Original the client value too before deleting, simulating a row after the Connector converted the response into the user's time zone.
                 var deletedLine = FindRow(lines, deletedLineId);
                 deletedLine[LineTime] = s_clientValue;
                 deletedLine.AcceptChanges();
@@ -178,26 +178,26 @@ namespace Polhem.Business.UnitTests.Form
 
         #endregion
 
-        #region 讀回找不到列
+        #region Row missing on read-back
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：修改列在讀回前已被刪除時擲 UserMessageException，資料庫沒有任何寫入")]
+        [DisplayName("SQLite: a modified row deleted before the read-back throws UserMessageException and nothing is written to the database")]
         public void Save_Sqlite_RowGoneBeforeReadBack_Throws() => RunRowGoneBeforeReadBackThrows(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：修改列在讀回前已被刪除時擲 UserMessageException，資料庫沒有任何寫入")]
+        [DisplayName("SQL Server: a modified row deleted before the read-back throws UserMessageException and nothing is written to the database")]
         public void Save_SqlServer_RowGoneBeforeReadBack_Throws() => RunRowGoneBeforeReadBackThrows(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：修改列在讀回前已被刪除時擲 UserMessageException，資料庫沒有任何寫入")]
+        [DisplayName("PostgreSQL: a modified row deleted before the read-back throws UserMessageException and nothing is written to the database")]
         public void Save_PostgreSql_RowGoneBeforeReadBack_Throws() => RunRowGoneBeforeReadBackThrows(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：修改列在讀回前已被刪除時擲 UserMessageException，資料庫沒有任何寫入")]
+        [DisplayName("MySQL: a modified row deleted before the read-back throws UserMessageException and nothing is written to the database")]
         public void Save_MySql_RowGoneBeforeReadBack_Throws() => RunRowGoneBeforeReadBackThrows(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：修改列在讀回前已被刪除時擲 UserMessageException，資料庫沒有任何寫入")]
+        [DisplayName("Oracle: a modified row deleted before the read-back throws UserMessageException and nothing is written to the database")]
         public void Save_Oracle_RowGoneBeforeReadBack_Throws() => RunRowGoneBeforeReadBackThrows(DatabaseType.Oracle);
 
         private void RunRowGoneBeforeReadBackThrows(DatabaseType databaseType)
@@ -221,7 +221,7 @@ namespace Polhem.Business.UnitTests.Form
                 var bo = new FormBusinessObject(form.CreateContext(), Guid.NewGuid(), form.Schema.ProgId);
                 Assert.Throws<UserMessageException>(() => bo.Save(new SaveArgs { DataSet = dataSet }));
 
-                // 主檔排在明細之前處理，讀回也成功；它沒被寫入才證明整批在寫入前就中止。
+                // The master is processed before the detail and its read-back succeeds. That it was not written proves the whole batch stopped before any write.
                 Assert.Equal("stored", ReadText(form, form.Schema.ProgId, Note, rowId));
             }
             finally
@@ -232,10 +232,10 @@ namespace Polhem.Business.UnitTests.Form
 
         #endregion
 
-        #region 覆寫接縫
+        #region Override seam
 
         /// <summary>
-        /// 原則 4 的接縫：接受用戶端 <c>event_time</c> 的 BO，只覆寫正規化方法。
+        /// The override seam: a BO that accepts the client's <c>event_time</c> overrides only the normalization method.
         /// </summary>
         private sealed class AcceptsEventTimeBo : FormBusinessObject
         {
@@ -251,13 +251,13 @@ namespace Polhem.Business.UnitTests.Form
 
                 base.NormalizeDateTimes(context);
 
-                // 實際的 BO 會在這裡把使用者時區的值轉成 UTC；測試只需要證明寫回的值會落庫。
+                // A real BO would convert the user's time zone value to UTC here. The test only needs to show that the value written back is stored.
                 foreach (var (row, value) in supplied) { row[EventTime] = value; }
             }
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("覆寫 NormalizeDateTimes 的 BO 可以採用自己轉換過的值，其餘欄位仍由基底正規化")]
+        [DisplayName("A BO that overrides NormalizeDateTimes can keep its own converted value, while the base still normalizes the other columns")]
         public void Save_OverriddenNormalization_KeepsValueTheBusinessObjectWrote()
         {
             var form = NewForm(DatabaseType.SQLite);
@@ -283,7 +283,7 @@ namespace Polhem.Business.UnitTests.Form
 
         #endregion
 
-        #region 共用
+        #region Shared
 
         private sealed class CapturingAuditLogWriter : IAuditLogWriter
         {
@@ -324,7 +324,7 @@ namespace Polhem.Business.UnitTests.Form
         private static string DetailName(TransientForm form) => form.Schema.ProgId + "_d";
 
         /// <summary>
-        /// 一筆新單：每個時間欄都填用戶端的值，只有 <c>event_time</c> 送空值，驗 NOT NULL 欄由伺服端補值。
+        /// A new document where every time column carries the client value and only <c>event_time</c> is sent empty, to verify that the server fills the NOT NULL column.
         /// </summary>
         private static DataSet NewRecord(TransientForm form, Guid rowId, Guid lineId)
         {
@@ -344,7 +344,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         /// <summary>
-        /// 以 SQL 直接寫入一筆已存在的單據，時間欄都是與「現在」明顯不同的已知值。
+        /// Writes an existing document directly with SQL, with every time column set to a known value clearly different from now.
         /// </summary>
         private static void SeedStoredRecord(TransientForm form, Guid rowId, Guid lineId, Guid deletedLineId)
         {
@@ -380,7 +380,7 @@ namespace Polhem.Business.UnitTests.Form
             => form.DbAccess.ExecuteScalar(SelectSql(form, table, column), rowId)?.ToString();
 
         /// <summary>
-        /// 值必須是這次存檔期間的 UTC 讀數。前後各放寬一秒，涵蓋只存到秒的欄位型別。
+        /// The value must be a UTC reading taken during this save. One second of slack on each side covers column types that store only seconds.
         /// </summary>
         private static void AssertServerReading(DateTime? value, DateTime before, DateTime after, string column)
         {

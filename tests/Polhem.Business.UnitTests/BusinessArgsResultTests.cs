@@ -4,13 +4,13 @@ using Polhem.Definition.Collections;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="BusinessArgs"/> 與 <see cref="BusinessResult"/> 的 <c>Parameters</c>
-    /// lazy 初始化與 setter 行為測試（透過 <see cref="ExecFuncArgs"/>、<see cref="ExecFuncResult"/> 子類驗證）。
+    /// Tests for the lazy initialization and setter of <c>Parameters</c> on <see cref="BusinessArgs"/> and <see cref="BusinessResult"/>
+    /// (verified through the <see cref="ExecFuncArgs"/> and <see cref="ExecFuncResult"/> subclasses).
     /// </summary>
     public class BusinessArgsResultTests
     {
         [Fact]
-        [DisplayName("BusinessArgs.Parameters 首次存取應 lazy 建立非 null 集合")]
+        [DisplayName("BusinessArgs.Parameters lazily creates a non-null collection on first access")]
         public void BusinessArgs_Parameters_LazyInitialized()
         {
             var args = new ExecFuncArgs();
@@ -21,7 +21,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("BusinessArgs.Parameters setter 應覆寫既有集合")]
+        [DisplayName("The BusinessArgs.Parameters setter replaces the existing collection")]
         public void BusinessArgs_Parameters_Setter_Overrides()
         {
             var args = new ExecFuncArgs();
@@ -39,7 +39,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("BusinessResult.Parameters 行為與 BusinessArgs 相同")]
+        [DisplayName("BusinessResult.Parameters behaves the same as BusinessArgs")]
         public void BusinessResult_Parameters_LazyAndSettable()
         {
             var result = new ExecFuncResult();

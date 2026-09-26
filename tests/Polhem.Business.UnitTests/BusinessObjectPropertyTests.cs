@@ -7,7 +7,7 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// <see cref="BusinessObject"/> 受保護屬性與 <see cref="BusinessObject.SessionInfo"/> 覆蓋測試。
+    /// Coverage tests for the protected properties of <see cref="BusinessObject"/> and <see cref="BusinessObject.SessionInfo"/>.
     /// </summary>
     public class BusinessObjectPropertyTests : IClassFixture<PolhemTestFixture>
     {
@@ -16,7 +16,7 @@ namespace Polhem.Business.UnitTests
         public BusinessObjectPropertyTests(PolhemTestFixture fx) { _fx = fx; }
 
         /// <summary>
-        /// 將受保護的屬性與方法暴露為 public，供測試驗證。
+        /// Exposes the protected properties and methods as public so the tests can verify them.
         /// </summary>
         private sealed class ExposedBusinessObject : BusinessObject
         {
@@ -31,7 +31,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("SessionInfo 屬性預設應回傳 null（基底類別不設定）")]
+        [DisplayName("The SessionInfo property returns null by default (the base class does not set it)")]
         public void SessionInfo_DefaultValue_ReturnsNull()
         {
             var bo = new ExposedBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());
@@ -39,7 +39,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("DefineAccess 屬性應轉發 Context 中的 IDefineAccess 實例")]
+        [DisplayName("The DefineAccess property forwards the IDefineAccess instance from the context")]
         public void DefineAccess_Property_ForwardsContextDefineAccess()
         {
             var ctx = TestPolhemContext.Create(_fx);
@@ -48,7 +48,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("SessionInfoService 屬性應轉發 Context 中的 ISessionInfoService 實例")]
+        [DisplayName("The SessionInfoService property forwards the ISessionInfoService instance from the context")]
         public void SessionInfoService_Property_ForwardsContextSessionInfoService()
         {
             var ctx = TestPolhemContext.Create(_fx);
@@ -57,7 +57,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("BoFactory 屬性應轉發 Context 中的 IBusinessObjectFactory 實例")]
+        [DisplayName("The BoFactory property forwards the IBusinessObjectFactory instance from the context")]
         public void BoFactory_Property_ForwardsContextBoFactory()
         {
             var ctx = TestPolhemContext.Create(_fx);
@@ -66,7 +66,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Services 屬性應轉發 Context 中的 IServiceProvider 實例")]
+        [DisplayName("The Services property forwards the IServiceProvider instance from the context")]
         public void Services_Property_ForwardsContextServices()
         {
             var ctx = TestPolhemContext.Create(_fx);
@@ -75,7 +75,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResolveDatabaseId(Common) 應回傳非空的 databaseId 字串")]
+        [DisplayName("ResolveDatabaseId(Common) returns a non-empty databaseId string")]
         public void ResolveDatabaseId_CommonScope_ReturnsNonEmptyDatabaseId()
         {
             var bo = new ExposedBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());

@@ -6,10 +6,10 @@ using Polhem.Definition.Logging;
 namespace Polhem.Business.UnitTests.AuditLog
 {
     /// <summary>
-    /// 針對組件內部 <c>ChangeDiffGramReader.Read</c> 的純解析覆蓋測試（透過 InternalsVisibleTo 直接叫用，
-    /// 餵入 DataSet DiffGram 字串）：null / 空白、malformed（XmlException 吞掉回空）、inserted row、
-    /// modified 配對 before 只出差異欄、unmatched before（delete）、無 sys_rowid（rowKey=null）、
-    /// 無 diffgr:id 的 before row 不成 delete。
+    /// Pure parsing coverage for the assembly-internal <c>ChangeDiffGramReader.Read</c> (called directly through InternalsVisibleTo
+    /// with DataSet DiffGram strings): null / blank, malformed (XmlException swallowed, returns empty), an inserted row,
+    /// a modified row paired with its before image emitting only the differences, an unmatched before row (delete), no sys_rowid (rowKey=null),
+    /// and a before row without diffgr:id not becoming a delete.
     /// </summary>
     public class ChangeDiffGramReaderCoverageTests
     {
@@ -21,7 +21,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         // ---- blank / malformed inputs ----
 
         [Fact]
-        [DisplayName("null 輸入應回傳空清單")]
+        [DisplayName("A null input returns an empty list")]
         public void Read_Null_ReturnsEmpty()
         {
             var result = Read(null);
@@ -33,7 +33,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         [InlineData("")]
         [InlineData("   ")]
         [InlineData("\t\n")]
-        [DisplayName("空字串 / 純空白應回傳空清單")]
+        [DisplayName("An empty or whitespace-only string returns an empty list")]
         public void Read_BlankOrWhitespace_ReturnsEmpty(string input)
         {
             var result = Read(input);
@@ -45,7 +45,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         [InlineData("<broken><unclosed>")]
         [InlineData("<diffgr:diffgram></diffgr:diffgram>")] // undeclared prefix → XmlException
         [InlineData("<?xml version=\"1.0\"?>")]             // no root element
-        [DisplayName("malformed / 非 DiffGram XML 應被 XmlException 吞掉回傳空清單")]
+        [DisplayName("Malformed or non-DiffGram XML is swallowed as XmlException and returns an empty list")]
         public void Read_MalformedXml_ReturnsEmpty(string input)
         {
             var result = Read(input);
@@ -56,7 +56,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         // ---- inserted rows ----
 
         [Fact]
-        [DisplayName("inserted row 應對每個非 row-key 欄產出 Insert 變更（sys_rowid 略過、rowKey 帶入）")]
+        [DisplayName("An inserted row emits an Insert change for every non-row-key column (sys_rowid skipped, rowKey carried)")]
         public void Read_InsertedRow_EmitsInsertPerColumn()
         {
             var rowId = Guid.NewGuid().ToString();
@@ -84,7 +84,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("inserted row 無 sys_rowid 時 rowKey 應為 null")]
+        [DisplayName("An inserted row without sys_rowid has a null rowKey")]
         public void Read_InsertedRowWithoutRowKey_RowKeyNull()
         {
             var xml =
@@ -107,7 +107,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         // ---- modified rows paired with before image ----
 
         [Fact]
-        [DisplayName("modified row 配對 before image 應只針對有變動的欄產出 Update")]
+        [DisplayName("A modified row paired with its before image emits Update only for the changed columns")]
         public void Read_ModifiedRow_EmitsOnlyChangedColumns()
         {
             var rowId = Guid.NewGuid().ToString();
@@ -140,7 +140,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("modified row 配對到的 before 不應再被視為 delete")]
+        [DisplayName("A before row matched by a modified row is not treated as a delete as well")]
         public void Read_ModifiedRow_MatchedBeforeNotTreatedAsDelete()
         {
             var rowId = Guid.NewGuid().ToString();
@@ -168,7 +168,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         // ---- unmatched before rows = deletes ----
 
         [Fact]
-        [DisplayName("before 中沒有對應 current 的 row 應被視為 delete（sys_rowid 略過、new 為 null）")]
+        [DisplayName("A before row without a matching current row is treated as a delete (sys_rowid skipped, new value null)")]
         public void Read_UnmatchedBeforeRow_EmitsDelete()
         {
             var rowId = Guid.NewGuid().ToString();
@@ -194,7 +194,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("before row 無 diffgr:id 不會被索引，也不會產生 delete")]
+        [DisplayName("A before row without diffgr:id is not indexed and produces no delete")]
         public void Read_BeforeRowWithoutId_ProducesNoDelete()
         {
             var xml =

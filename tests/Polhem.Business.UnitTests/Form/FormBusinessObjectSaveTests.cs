@@ -10,9 +10,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests.Form
 {
     /// <summary>
-    /// <see cref="FormBusinessObject.Save"/> 的 <c>[DbFact]</c> 整合測試:
-    /// 涵蓋 Added → INSERT、Modified → UPDATE、Deleted → DELETE 三種 row state
-    /// 派發,以及無變更時拋出 <see cref="InvalidOperationException"/>。
+    /// <c>[DbFact]</c> integration tests for <see cref="FormBusinessObject.Save"/>:
+    /// dispatch by row state (Added → INSERT, Modified → UPDATE, Deleted → DELETE),
+    /// and a save with no changes being a no-op.
     /// </summary>
     public class FormBusinessObjectSaveTests : IClassFixture<SharedDbFixture>
     {
@@ -21,7 +21,7 @@ namespace Polhem.Business.UnitTests.Form
         public FormBusinessObjectSaveTests(SharedDbFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Save 傳入 null args 應拋 ArgumentNullException")]
+        [DisplayName("Save throws ArgumentNullException for null args")]
         public void Save_NullArgs_Throws()
         {
             var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(),
@@ -30,7 +30,7 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("Save args.DataSet = null 應拋 ArgumentException")]
+        [DisplayName("Save throws ArgumentException when args.DataSet is null")]
         public void Save_NullDataSet_Throws()
         {
             var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(),
@@ -39,42 +39,42 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite:Save 帶 Added row 應 INSERT 並回傳 refreshed DataSet")]
+        [DisplayName("SQLite: Save with an Added row INSERTs and returns the refreshed DataSet")]
         public void Save_Sqlite_AddedRow_Inserts()
             => RunSaveAddedRow(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server:Save 帶 Added row 應 INSERT 並回傳 refreshed DataSet")]
+        [DisplayName("SQL Server: Save with an Added row INSERTs and returns the refreshed DataSet")]
         public void Save_SqlServer_AddedRow_Inserts()
             => RunSaveAddedRow(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite:Save 帶 Modified row 應 UPDATE 並回傳 refreshed DataSet")]
+        [DisplayName("SQLite: Save with a Modified row UPDATEs and returns the refreshed DataSet")]
         public void Save_Sqlite_ModifiedRow_Updates()
             => RunSaveModifiedRow(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite:Save 帶 Deleted row 應 DELETE")]
+        [DisplayName("SQLite: Save with a Deleted row DELETEs")]
         public void Save_Sqlite_DeletedRow_Deletes()
             => RunSaveDeletedRow(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite:Save DataSet 無任何變更為 no-op（回傳 0 筆，不拋例外）")]
+        [DisplayName("SQLite: Save of a DataSet with no changes is a no-op (returns 0 rows without throwing)")]
         public void Save_Sqlite_NoChanges_IsNoOp()
             => RunSaveNoChangesIsNoOp(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle:Save 帶 Added row 應 INSERT 並回傳 refreshed DataSet")]
+        [DisplayName("Oracle: Save with an Added row INSERTs and returns the refreshed DataSet")]
         public void Save_Oracle_AddedRow_Inserts()
             => RunSaveAddedRow(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle:Save 帶 Modified row 應 UPDATE 並回傳 refreshed DataSet")]
+        [DisplayName("Oracle: Save with a Modified row UPDATEs and returns the refreshed DataSet")]
         public void Save_Oracle_ModifiedRow_Updates()
             => RunSaveModifiedRow(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle:Save 帶 Deleted row 應 DELETE")]
+        [DisplayName("Oracle: Save with a Deleted row DELETEs")]
         public void Save_Oracle_DeletedRow_Deletes()
             => RunSaveDeletedRow(DatabaseType.Oracle);
 
@@ -88,7 +88,7 @@ namespace Polhem.Business.UnitTests.Form
             {
                 var dataSet = ctx.Repository.GetNewData();
                 var master = dataSet.Tables[CrudTestContext.ProgId]!;
-                // GetNewData 已預填 sys_rowid + Added,我們覆寫 rowId 與其他欄位。
+                // `GetNewData` already prefilled `sys_rowid` and the Added state. The test overwrites the rowId and the other columns.
                 master.Rows[0][SysFields.RowId] = rowId;
                 master.Rows[0]["sys_id"] = $"S{runId}";
                 master.Rows[0][SysFields.Name] = "新增員工";
@@ -99,7 +99,6 @@ namespace Polhem.Business.UnitTests.Form
                 Assert.Equal(CrudTestContext.ProgId, result.DataSet!.DataSetName);
                 Assert.Equal(1, result.AffectedRows[CrudTestContext.ProgId]);
 
-                // 直接 GetData 重新讀回,確認資料已寫入
                 var reloaded = ctx.CreateBo().GetData(new GetDataArgs { RowId = rowId });
                 Assert.NotNull(reloaded.DataSet);
                 Assert.Equal("新增員工",
@@ -158,7 +157,6 @@ namespace Polhem.Business.UnitTests.Form
                 var result = ctx.CreateBo().Save(new SaveArgs { DataSet = loaded.DataSet });
                 Assert.Equal(1, result.AffectedRows[CrudTestContext.ProgId]);
 
-                // 重新讀:已不存在
                 var reloaded = ctx.CreateBo().GetData(new GetDataArgs { RowId = rowId });
                 Assert.Null(reloaded.DataSet);
             }
