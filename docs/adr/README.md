@@ -53,3 +53,4 @@ ADR 記錄**決策當下的脈絡與理由**，是理解「為何這樣設計」
 | [042](adr-042-api-replay-protection.md) | API 重放防護 —— 加密封套內的 wire frame | ✅ 已採納 |
 | [043](adr-043-error-contract-single-registry.md) | 錯誤契約以單一登錄表達，兩端從同一份宣告消費 | ✅ 已採納 |
 | [044](adr-044-payload-codec-negotiation.md) | body codec 由每個請求宣告，JSON 與 MessagePack 並存 | ✅ 已採納 |
+| [045](adr-045-language-policy-and-local-plans.zh-TW.md) | 共同維護的內容一律英文；計畫不進 repo（[English](adr-045-language-policy-and-local-plans.md)） | ✅ 已採納 |
