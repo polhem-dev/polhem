@@ -29,14 +29,14 @@ JSON, MessagePack is only between desktop/server" still does not hold.
 ## Wire shape changes have a downstream in another repository
 
 `wire-contracts/messages.d.ts` and `wire-fixtures/` are **the authoritative source of the cross-language contract**.
-The TypeScript client [`bee-connector-js`](https://github.com/jeff377/bee-connector-js) syncs them (it deliberately
+The TypeScript client [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js) syncs them (it deliberately
 does not check in a copy: a copy would be a second authority), and its CI compares what it fetches.
 
 So **changing these two places turns that repository's CI red, and that is expected, not an accident**: the red light
 is the notification mechanism. Landing the change here without following up there leaves the two halves of the same
 contract contradicting each other, while the TS side still parses the old shape.
 
-> This rule is deliberately recorded in polhem and not in bee-connector-js: **the person who needs it is the one
+> This rule is deliberately recorded in polhem and not in polhem-connector-js: **the person who needs it is the one
 > changing the wire here**, and that person will not open the other repository. Recording it there would guarantee
 > it is ignored.
 

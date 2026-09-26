@@ -41,7 +41,7 @@ Read the resulting diff before committing it.
 
 ## Who consumes this
 
-[`bee-connector-js`](https://github.com/jeff377/bee-connector-js) — the TypeScript client — syncs
+[`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js) — the TypeScript client — syncs
 this file rather than keeping a copy, and its CI compares what it fetched against what is here.
 
 That has a consequence worth expecting rather than discovering: **a wire change made here turns that
