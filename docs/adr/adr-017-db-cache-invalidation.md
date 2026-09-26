@@ -92,7 +92,7 @@
 
 ADR 記錄的是決策當下的設計，以下為後續實作的偏離，供讀者對照現行程式碼：
 
-**`IEvictableCache` 與 `ICacheContainer.TryEvict` 已退役**（`c45ff350`）。原設計以「群組 → 快取」
+**`IEvictableCache` 與 `ICacheContainer.TryEvict` 已退役**（[`c45ff350`](https://github.com/jeff377/bee-library/commit/c45ff350)）。原設計以「群組 → 快取」
 註冊表把 poller 的通知分派到對應快取執行 `Remove`；現行做法改為 poller 發布 notify-key 版本，
 由 `MemoryCacheProvider` 的 `CacheNotifyToken` 在下次讀取時使條目過期。
 

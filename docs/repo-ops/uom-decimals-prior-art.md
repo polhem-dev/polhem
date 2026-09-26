@@ -70,7 +70,7 @@ Polhem 這一側的現況以原始碼為準，本檔提到的型別與成員名�
 
 - 業界沒有「單位必須存捨入單位」的慣例：SAP 存位數，Odoo 19 連逐單位都放棄。
   「捨到 0.5 箱」這類需求在 SAP 是物料層的業務規則（`BSTRF`／`RDPRF`），不是單位的位數。
-- ADR-026 與引入時的 commit `eb10bc0c` 只寫「位數直存」，沒寫為什麼跟幣別不同。
+- ADR-026 與引入時的 commit [`eb10bc0c`](https://github.com/jeff377/bee-library/commit/eb10bc0c) 只寫「位數直存」，沒寫為什麼跟幣別不同。
   算有意識但沒留理由；要補的話一句話進 ADR-026 即可。
 
 ### 4. `ANDEC`／`DECAN` 合成一欄 —— 簡化可接受，但 XML doc 寫錯
@@ -93,7 +93,7 @@ ADR-026「未做」清單列了 TCURF、KPEIN、DIFF，沒列單位換算。
 
 ### 7. 只有列層單位、沒有表單層 —— 刻意，已記錄
 
-commit `eb10bc0c` 與 cookbook 都寫明 per-row。SAP 的 `UNIT` 參照、Odoo 的單位欄也都在列上，不衝突。
+commit [`eb10bc0c`](https://github.com/jeff377/bee-library/commit/eb10bc0c) 與 cookbook 都寫明 per-row。SAP 的 `UNIT` 參照、Odoo 的單位欄也都在列上，不衝突。
 
 ## 單位設定的層級：三者比較
 

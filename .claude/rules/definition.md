@@ -28,7 +28,7 @@
   它們是拿來讀的快照，需要變體就自己複製值，別補 `Clone()` 開後門。
 - **`XmlCodec.Serialize(cachedInstance)` 不能當免費 deep-clone** —— 它透過
   `IObjectSerialize.SetSerializeState` 在**來源**上 mutate state，並行下 `IsSerializeEmpty` 等
-  以 state 為條件的邏輯會錯亂（已踩過，fix commit `aa843f71`）。
+  以 state 為條件的邏輯會錯亂（已踩過，fix commit [`aa843f71`](https://github.com/jeff377/bee-library/commit/aa843f71)）。
 - code review 看到「對 cache 取出的 instance 直接 mutate」或拿 `XmlCodec.Serialize(cached)`
   當克隆，必須擋下。
 

@@ -143,7 +143,7 @@ DatabaseItem.Id          ──►  業務程式取連線的入口（執行時�
 
 ### 對外 API 變更
 
-- 新增 `DatabaseItem.CategoryId`（commit `f4cc1bd7`），預設值 `""`
+- 新增 `DatabaseItem.CategoryId`（commit [`f4cc1bd7`](https://github.com/jeff377/bee-library/commit/f4cc1bd7)），預設值 `""`
 - 既有 `DatabaseSettings.xml` 不需強制遷移；但若希望未來啟用驗證（見「取捨」），現有 Item 都應補上 CategoryId
 
 ## 取捨
@@ -175,7 +175,7 @@ DatabaseItem.Id          ──►  業務程式取連線的入口（執行時�
 | 範圍 | 影響 |
 |------|------|
 | `Polhem.Definition.Settings.DbCategorySettings` | 集中定義所有邏輯分類；`DbCategorySettings.xml` 為單一真相來源 |
-| `Polhem.Definition.Settings.DatabaseItem` | 新增 `CategoryId` 欄位（commit `f4cc1bd7`） |
+| `Polhem.Definition.Settings.DatabaseItem` | 新增 `CategoryId` 欄位（commit [`f4cc1bd7`](https://github.com/jeff377/bee-library/commit/f4cc1bd7)） |
 | `Polhem.Definition.Forms.FormSchema` | 附帶須宣告 `CategoryId`，否則 SaveFormSchema 拒絕 |
 | `Polhem.Definition.PathOptions.GetTableSchemaFilePath` | 路徑加入 `categoryId` 區段 |
 | `Polhem.ObjectCaching.CacheDefineAccess.SaveFormSchema` | 落檔前檢查 CategoryId 非空 |

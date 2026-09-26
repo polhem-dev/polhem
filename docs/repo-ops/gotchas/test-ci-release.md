@@ -91,7 +91,7 @@ dotnet test tests/<Proj>/<Proj>.csproj -c Release --settings .runsettings \
 
 **正解**：自載前先確認該 DB 已設定
 （`IDatabaseSettingsProvider.Get().Items.GetOrDefault(id)`），未設定即視為「沒有這個資料來源」
-回 null，**不要吞例外**。2026-07-30 於 SessionInfoCache 重建踩到並修正（`caf45975`）。
+回 null，**不要吞例外**。2026-07-30 於 SessionInfoCache 重建踩到並修正（[`caf45975`](https://github.com/jeff377/bee-library/commit/caf45975)）。
 
 ## `.gitignore` 的 `[Ll]og/` 吃掉原始碼資料夾
 
@@ -170,7 +170,7 @@ dotnet build <專案>.csproj -c Release --no-incremental -p:TreatWarningsAsError
 在任何引擎都是語法錯誤。**識別碼只能白名單化後拼接，值才該參數化**，而兩者常在同一個方法裡
 並存。同一次 A/B 量到的效果（`SchemaPreparer.cs`，SonarAnalyzer 10.34.0）：
 
-| 位置 | commit `2e80fafb` 之前 | 之後 |
+| 位置 | commit [`2e80fafb`](https://github.com/jeff377/bee-library/commit/2e80fafb) 之前 | 之後 |
 |------|------|------|
 | PostgreSQL 存在性 probe（**值** → 改參數化） | S2077 | **消失** |
 | PostgreSQL `CREATE DATABASE`（**識別碼** → 只能白名單化） | S2077 | **仍在**（`SchemaPreparer.cs:169`） |

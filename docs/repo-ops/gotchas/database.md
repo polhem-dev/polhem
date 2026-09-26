@@ -78,7 +78,7 @@ CREATE 與 ALTER ADD 都涵蓋，既有列一樣會被填 0。省略它得到的
 replication-unsafe（system function 每列值不同）。**fresh CREATE TABLE 帶 `DEFAULT (UUID())` 是安全的**
 → CI（每次全新容器）不受影響，只有本機持久容器會中。
 
-**已修（commit `eeea3aad`）**：`MySqlTableAlterCommandBuilder` 對「預設為非確定性函式的 NOT NULL 欄」
+**已修（commit [`eeea3aad`](https://github.com/jeff377/bee-library/commit/eeea3aad)）**：`MySqlTableAlterCommandBuilder` 對「預設為非確定性函式的 NOT NULL 欄」
 ADD 時拆兩段：① 先以常數空 Guid 預設 `ADD COLUMN ... NOT NULL DEFAULT '00000000-...'`（safe，
 既有列得 `Guid.Empty`），② 再 `ALTER COLUMN ... SET DEFAULT (UUID())`（metadata-only、不觸碰既有列，
 且與 fresh CREATE schema 一致 → comparer 不漂移）。偵測條件＝解析後預設含 `UUID()`。

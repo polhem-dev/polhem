@@ -4,7 +4,7 @@
 
 已採納（2026-07-25）
 
-> 三階段已全部實作完成（commit `fddb38f6` / `c7782308` / `c5578a42`）。
+> 三階段已全部實作完成（commit [`fddb38f6`](https://github.com/jeff377/bee-library/commit/fddb38f6) / [`c7782308`](https://github.com/jeff377/bee-library/commit/c7782308) / [`c5578a42`](https://github.com/jeff377/bee-library/commit/c5578a42)）。
 > 消費端使用方式見 `docs/en/temporal-types.md`。
 
 ## 背景

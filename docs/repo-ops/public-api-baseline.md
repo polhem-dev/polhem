@@ -44,7 +44,7 @@ error RS0027: 'TransformTo' violates the backcompat requirement:
 兩邊都動不了。
 
 **正解：不加多載，把新資料掛成型別上的屬性讓方法讀取。**
-2026-09-01 的 JSON-RPC 重放防護階段 1（`509b17e7`）就是這樣解的：新的 frame 資料改掛
+2026-09-01 的 JSON-RPC 重放防護階段 1（[`509b17e7`](https://github.com/jeff377/bee-library/commit/509b17e7)）就是這樣解的：新的 frame 資料改掛
 `ApiPayload.Frame`（`[JsonIgnore]`，`src/Polhem.Api.Core/JsonRpc/ApiPayload.cs`），
 `ApiPayloadConverter.TransformTo` / `RestoreFrom` 兩個簽章一個字都沒動。
 

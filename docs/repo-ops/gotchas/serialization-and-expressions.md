@@ -28,7 +28,7 @@
 
 **實例**：`UnitItem` 的 Key 序是 Code(100)/Decimals(101)/Dimension(102)/Name(103)，
 ctor 原為 `(code, decimals, name, dimension)` → round-trip 把 Dimension / Name 對調
-（commit `eb10bc0c` 修正為 `(code, decimals, dimension, name)`）。
+（commit [`eb10bc0c`](https://github.com/jeff377/bee-library/commit/eb10bc0c) 修正為 `(code, decimals, dimension, name)`）。
 
 **正解**：ctor 參數順序＝Key 順序，且**為每個此類 item 加 MessagePack wire round-trip 測試**
 （範本 `UnitSettingsMessagePackTests`）。
@@ -133,7 +133,7 @@ server 存檔無 guard → 未處理例外 → -32000。
 
 **CI 為何沒抓到**：Phase 1 測試全用**小寫**欄名手建 DataTable，從沒測到真實 wire/DataSet 的大寫欄名。
 
-**正解（commit `96821c04`）**：以 `FormField.FieldName`（schema 宣告大小寫）為變數 key。
+**正解（commit [`96821c04`](https://github.com/jeff377/bee-library/commit/96821c04)）**：以 `FormField.FieldName`（schema 宣告大小寫）為變數 key。
 `DataRow` 索引與 `Fields.Contains` 本就大小寫無關，寫回不受影響。
 **回歸測試務必用大寫欄名建 DataTable。**
 
@@ -150,7 +150,7 @@ GUID 欄是 **String 型**（見 [database.md](database.md) 的 SQLite 那則）
 `BuildVariables` 對**該列每一欄**（含運算式根本沒引用的 Guid 鍵欄如 `product_rowid`）都 coerce。
 第二次炸是因為**空字串** Guid 欄（未選產品的明細列）→ `Guid.Parse("")`。
 
-**正解（commit `e2623195`）**：`Guid` → 空/空白字串回 `Guid.Empty`、否則 `Guid.Parse`；
+**正解（commit [`e2623195`](https://github.com/jeff377/bee-library/commit/e2623195)）**：`Guid` → 空/空白字串回 `Guid.Empty`、否則 `Guid.Parse`；
 `byte[]` → 空字串回空陣列、否則 `FromBase64String`。對齊「null/DBNull → 型別預設值」政策。
 
 ## 排查心法

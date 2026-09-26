@@ -66,7 +66,7 @@ v4.6 階段出現新的前端類型：**純 JavaScript（React / Vue / Angular /
    未來 BO 方法的設計者必須**主動評估**哪些方法需要 `Encrypted`（如密碼修改、加密金鑰生成），不再 by-default 全標。這把「需要應用層加密」從**全域預設**降為**個案決策**。
 
    > ⚠️ **更正（2026-09-07）**：本項原有一句「`ProtectionLevel` 不設定時 server 取既定預設
-   > （`Public`）」，**與實作相反，而且從未成立**。本 ADR 採納當天（`aa843f71`，2026-05-26）
+   > （`Public`）」，**與實作相反，而且從未成立**。本 ADR 採納當天（[`aa843f71`](https://github.com/jeff377/bee-library/commit/aa843f71)，2026-05-26）
    > `ApiAccessValidator.ValidateAccess` 就已對找不到宣告的方法擲 `UnauthorizedAccessException`
    > （其 remarks 自陳 “is denied, not treated as unrestricted”），而 `ApiAccessControlAttribute`
    > 的 `protectionLevel` 當天也已是必填參數。**現況**：沒有 `[ApiAccessControl]` 蓋到的方法一律

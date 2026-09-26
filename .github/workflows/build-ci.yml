@@ -291,7 +291,7 @@ jobs:
     # 避免污染前面 --no-build 步驟的輸出。
     # 涵蓋兩半：MessagePack wire（Polhem.Api.Core）與 XmlSerializer 的 reflection-only 路徑
     # （Polhem.Definition / Polhem.Base）。後者先前不在閘門內，而它正是已實際踩過的那一類 ——
-    # LanguageEnum.Entries 的 get-only setter 缺陷（5e748b08）就是靠人工掃描發現，不是靠 CI。
+    # LanguageEnum.Entries 的 get-only setter 缺陷（https://github.com/jeff377/bee-library/commit/5e748b08）就是靠人工掃描發現，不是靠 CI。
     #
     # 已知盲區：本關卡跑在 CoreCLR，而 MakeGenericType / MakeGenericMethod 不受該開關影響。
     # ADR-037 要求註冊封閉泛型具現的理由正是 MakeGenericType，所以那一類失敗由

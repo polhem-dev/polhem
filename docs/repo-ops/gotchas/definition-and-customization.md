@@ -38,7 +38,7 @@
 3. **往覆蓋層加第六種定義時，要同步的是三個地方**（ADR-016 的現況表、`customization` 雙語的
    「該用哪一種」表、`definition-files-overview` 雙語的 §7 表），而不是只改離你最近的那一份。
 
-**已修**：`7160afd2`（補 `PluginSettings`）、`c4014ee5`（補 `MenuSettings`）。
+**已修**：[`7160afd2`](https://github.com/jeff377/bee-library/commit/7160afd2)（補 `PluginSettings`）、[`c4014ee5`](https://github.com/jeff377/bee-library/commit/c4014ee5)（補 `MenuSettings`）。
 **殘留的注意事項**：三處表格仍然各用各的數法，只是現在都標明了是哪一種；
 **沒有任何機制保證它們與 `ICustomizeDefineReader` 同步**，加第六種時仍然只能靠人記得。
 
@@ -75,7 +75,7 @@
 
 把兩者塞進同一格而只寫前者，會讓框架最有特色的那一半（執行期組 SQL）從圖上消失。
 
-**已修**：`7160afd2`，該格改為 `TableSchema ＋ 執行期 SQL`，說明列改為「存在哪裡 · 怎麼進出」。
+**已修**：[`7160afd2`](https://github.com/jeff377/bee-library/commit/7160afd2)，該格改為 `TableSchema ＋ 執行期 SQL`，說明列改為「存在哪裡 · 怎麼進出」。
 
 ⚠️ **已複驗過而不必動的一處**：`docs/architecture-overview.*` §11 的整體架構圖也是
 `FormSchema → FormLayout / TableSchema` 兩節點，乍看是同一個問題，**實際上不是**——

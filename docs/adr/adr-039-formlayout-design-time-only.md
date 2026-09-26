@@ -6,7 +6,7 @@
 
 [ADR-016](adr-016-multitenant-customization-overlay.md) 立下客製層的**整檔取代**語意，
 「`FormLayout` 是畫面的權威來源」則是該語意的推論，明文寫在
-[定義檔全景](../zh-TW/definition-files-overview.md)（commit `53025c34`）。
+[定義檔全景](../zh-TW/definition-files-overview.md)（commit [`53025c34`](https://github.com/jeff377/bee-library/commit/53025c34)）。
 本 ADR 補齊該推論在**缺檔情境**下的行為；ADR-016 的雙層唯讀疊加語意不變。
 
 ## 背景
