@@ -98,7 +98,7 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("Initialize 傳入 null serializer 應拋出 ArgumentNullException")]
         public void Initialize_NullSerializer_Throws()
         {
-            Assert.Throws<ArgumentNullException>(() =>
+            AssertThrowsAndRestore(() =>
                 ApiServiceOptions.Initialize(null!, new NoCompressionCompressor(), new NoEncryptionEncryptor()));
         }
 
@@ -106,7 +106,7 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("Initialize 傳入 null compressor 應拋出 ArgumentNullException")]
         public void Initialize_NullCompressor_Throws()
         {
-            Assert.Throws<ArgumentNullException>(() =>
+            AssertThrowsAndRestore(() =>
                 ApiServiceOptions.Initialize(new MessagePackPayloadSerializer(), null!, new NoEncryptionEncryptor()));
         }
 
@@ -114,8 +114,35 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("Initialize 傳入 null encryptor 應拋出 ArgumentNullException")]
         public void Initialize_NullEncryptor_Throws()
         {
-            Assert.Throws<ArgumentNullException>(() =>
+            AssertThrowsAndRestore(() =>
                 ApiServiceOptions.Initialize(new MessagePackPayloadSerializer(), new NoCompressionCompressor(), null!));
+        }
+
+        /// <summary>
+        /// Asserts that <paramref name="initialize"/> throws <see cref="ArgumentNullException"/> and
+        /// restores the static implementations afterwards.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="ApiServiceOptions.Initialize(Polhem.Api.Core.Transformers.IApiPayloadSerializer, Polhem.Api.Core.Transformers.IApiPayloadCompressor, Polhem.Api.Core.Transformers.IApiPayloadEncryptor)"/>
+        /// assigns its arguments one at a time, so a null in a later position throws after the earlier
+        /// ones are already in place. Without the restore, whichever test in this class runs next sees
+        /// the no-compression implementation, and the test order changes whenever the namespace does.
+        /// </remarks>
+        private static void AssertThrowsAndRestore(Action initialize)
+        {
+            var originalSerializer = ApiServiceOptions.PayloadSerializer;
+            var originalCompressor = ApiServiceOptions.PayloadCompressor;
+            var originalEncryptor = ApiServiceOptions.PayloadEncryptor;
+            try
+            {
+                Assert.Throws<ArgumentNullException>(initialize);
+            }
+            finally
+            {
+                ApiServiceOptions.PayloadSerializer = originalSerializer;
+                ApiServiceOptions.PayloadCompressor = originalCompressor;
+                ApiServiceOptions.PayloadEncryptor = originalEncryptor;
+            }
         }
 
         [Fact]
