@@ -109,7 +109,7 @@ Console 會列出 `System.Ping` 狀態與自訂 BO 回應的訊息。完整 demo
 
 ## 💡 範例程式
 
-所有 demo 都集中在 repo 內 [`samples/`](samples/README.zh-TW.md) 目錄底下，最小、聚焦、跟著框架同步演進。以 `dotnet build samples/Polhem.Samples.slnx` 建置（獨立於主 `Polhem.Library.slnx`，不影響主 CI / build 時間）。
+所有 demo 都集中在 repo 內 [`samples/`](samples/README.zh-TW.md) 目錄底下，最小、聚焦、跟著框架同步演進。以 `dotnet build samples/Polhem.Samples.slnx` 建置（獨立於主 `Polhem.slnx`，不影響主 CI / build 時間）。
 
 | 類別 | Demo | 重點 |
 |------|------|------|

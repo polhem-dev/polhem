@@ -7,7 +7,7 @@
             "command": "dotnet",
             "args": [
                 "build",
-                "${workspaceFolder}/Polhem.Library.slnx",
+                "${workspaceFolder}/Polhem.slnx",
                 "--configuration",
                 "Release",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
@@ -29,7 +29,7 @@
             "command": "dotnet",
             "args": [
                 "build",
-                "${workspaceFolder}/Polhem.Library.slnx",
+                "${workspaceFolder}/Polhem.slnx",
                 "--configuration",
                 "Release",
                 "--no-incremental",
@@ -49,7 +49,7 @@
             "command": "dotnet",
             "args": [
                 "clean",
-                "${workspaceFolder}/Polhem.Library.slnx",
+                "${workspaceFolder}/Polhem.slnx",
                 "--configuration",
                 "Release"
             ],

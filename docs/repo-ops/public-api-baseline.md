@@ -85,7 +85,7 @@ IDE 內也可用分析器提供的 code fix（*Add to public API*）自動加入
 SARIF=$(mktemp -d)
 for i in $(seq 1 10); do
   rm -f "$SARIF"/*.sarif
-  dotnet build Polhem.Library.slnx --configuration Release -p:PolhemSarifDir="$SARIF" >/dev/null 2>&1
+  dotnet build Polhem.slnx --configuration Release -p:PolhemSarifDir="$SARIF" >/dev/null 2>&1
   for proj in src/*/*.csproj; do
     name=$(basename "$proj" .csproj)
     [ -f "$SARIF/$name.sarif" ] && python3 tools/scripts/gen-public-api.py "$SARIF/$name.sarif" "$(dirname "$proj")/PublicAPI.Shipped.txt"

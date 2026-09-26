@@ -4,7 +4,7 @@
 
 最小可運行的 Polhem demo 集合。每個 demo 聚焦單一目的,採 `ProjectReference` 直接引用 `src/` 下的 library(不走 NuGet),改 library 即時反映。
 
-> Solution:[`samples/Polhem.Samples.slnx`](Polhem.Samples.slnx)(獨立於主 `Polhem.Library.slnx`,不會拖累主 CI / build 時間)。
+> Solution:[`samples/Polhem.Samples.slnx`](Polhem.Samples.slnx)(獨立於主 `Polhem.slnx`,不會拖累主 CI / build 時間)。
 
 ## 30 秒看到 Polhem 跑起來
 
@@ -135,7 +135,7 @@ builder.Services.AddPolhemBlazor(o => o.UseRemoteProvider("http://host:5070/api"
 dotnet build samples/Polhem.Samples.slnx
 ```
 
-> `./test.sh` 與主 `Polhem.Library.slnx` 都**不會**跑到 samples;samples 永遠是「想試時手動跑」。
+> `./test.sh` 與主 `Polhem.slnx` 都**不會**跑到 samples;samples 永遠是「想試時手動跑」。
 
 ## 常見問題
 

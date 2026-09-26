@@ -4,7 +4,7 @@
 
 A collection of minimal, runnable Polhem demos. Each demo has a single focus and consumes the libraries via `ProjectReference` directly from `src/` (no NuGet round-trip) — changes to library code are immediately reflected.
 
-> Solution: [`samples/Polhem.Samples.slnx`](Polhem.Samples.slnx) (kept separate from the main `Polhem.Library.slnx` so it never weighs down CI or main-solution build time).
+> Solution: [`samples/Polhem.Samples.slnx`](Polhem.Samples.slnx) (kept separate from the main `Polhem.slnx` so it never weighs down CI or main-solution build time).
 
 ## See Polhem running in 30 seconds
 
@@ -135,7 +135,7 @@ builder.Services.AddPolhemBlazor(o => o.UseRemoteProvider("http://host:5070/api"
 dotnet build samples/Polhem.Samples.slnx
 ```
 
-> Neither `./test.sh` nor the main `Polhem.Library.slnx` touch the samples directory; the samples are always "try-when-you-want" rather than CI-validated.
+> Neither `./test.sh` nor the main `Polhem.slnx` touch the samples directory; the samples are always "try-when-you-want" rather than CI-validated.
 
 ## FAQ
 

@@ -1,5 +1,5 @@
 {
-  "dotnet.defaultSolution": "Polhem.Library.slnx",
+  "dotnet.defaultSolution": "Polhem.slnx",
   "dotnet.unitTests.runSettingsPath": ".runsettings",
   "files.encoding": "utf8",
   "files.autoGuessEncoding": true

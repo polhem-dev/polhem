@@ -21,7 +21,7 @@
 #
 set -uo pipefail
 
-SOLUTION="Polhem.Library.slnx"
+SOLUTION="Polhem.slnx"
 
 payload=$(cat 2>/dev/null) || exit 0
 

@@ -179,7 +179,7 @@ namespace Polhem.Api.Core.UnitTests
         private static string FixtureDirectory()
         {
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "Polhem.Library.slnx")))
+            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "Polhem.slnx")))
                 dir = dir.Parent;
 
             Assert.NotNull(dir);   // 找不到 repo 根就不能默默通過

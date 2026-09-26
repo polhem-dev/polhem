@@ -292,7 +292,7 @@ feat(samples): 新增 {Sample.Name} —— {一句話描述}
 
 - **非 web sample 不能 reference Polhem.Samples.Shared**（後者有 AspNetCore framework reference）— 共用常數要另想辦法
 - **DemoBackend 共享**：`QuickStart.Server` 與 `Blazor.Server.Demo` 共享 `DemoBackend`，改它會同時影響兩台
-- **`Polhem.Samples.slnx` 與 `Polhem.Library.slnx` 是分開的 solution**：sample 不掛主 solution，CI 不跑 sample build，本機要驗證 sample 改動須手動跑
+- **`Polhem.Samples.slnx` 與 `Polhem.slnx` 是分開的 solution**：sample 不掛主 solution，CI 不跑 sample build，本機要驗證 sample 改動須手動跑
 - **`samples/Define/Master.key` 與 `samples/**/quickstart.db` 都 gitignored**：第一次跑會自動產生，不要 commit 進來
 - **Echo BO 是 anonymous Public** — 想加新 anonymous BO 仿 `EchoBusinessObject` + 註冊 `QuickStartBoTypeResolver`；想加 authenticated BO 走 `samples/Polhem.Samples.Shared` 的 DemoBackend 路徑
 

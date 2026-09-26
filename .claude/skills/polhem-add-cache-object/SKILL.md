@@ -5,7 +5,7 @@ description: polhem 新增框架快取物件的完整跨檔流程，分兩類—
 
 # polhem 新增快取物件
 
-polhem 的快取分**兩類**，來源與失效機制不同，檔案鏈也不同。先用決策樹定位，再照對應路徑走。每條路徑都會動到 `ICacheContainer` + `CacheContainerService` + 兩個 `CacheNotify` 測試 stub——這三點漏一個就 `CS0535` build 失敗（個別專案 build 抓不到，**只有 `dotnet build Polhem.Library.slnx` 複現 CI strict build 才會現**）。
+polhem 的快取分**兩類**，來源與失效機制不同，檔案鏈也不同。先用決策樹定位，再照對應路徑走。每條路徑都會動到 `ICacheContainer` + `CacheContainerService` + 兩個 `CacheNotify` 測試 stub——這三點漏一個就 `CS0535` build 失敗（個別專案 build 抓不到，**只有 `dotnet build Polhem.slnx` 複現 CI strict build 才會現**）。
 
 > 樣板對照（讀程式碼時對著看）：
 > - Define 快取（single）：`PermissionModelsCache`（`ObjectCache<PermissionModels>`）
@@ -240,7 +240,7 @@ public <Name>Cache <Name> { get; }
 ## 容易踩的坑
 
 1. **漏補 `CacheContainerService` 的屬性宣告 → CS0535**：`ICacheContainer` 加了屬性就要有實作。
-2. **只 build 個別專案、沒跑 slnx**：stub 的 CS0535 在 `dotnet build tests/Polhem.Hosting.UnitTests` 才現；**一律 `dotnet build Polhem.Library.slnx -c Release` 複現 CI strict build**。
+2. **只 build 個別專案、沒跑 slnx**：stub 的 CS0535 在 `dotnet build tests/Polhem.Hosting.UnitTests` 才現；**一律 `dotnet build Polhem.slnx -c Release` 複現 CI strict build**。
 3. **`CacheContainerService` 兩處只改一處**：ctor 初始化漏 → NRE；屬性宣告漏 → CS0535。
 4. **沿用舊的 `CreateInstance => null` 樣板**（2026-07-29 前的慣例）：Database 快取現在**應自載**，
    經 `ICacheDataSourceProvider`。回 `null` 等於把 read-through 手刻進 service，並繞過 base class
@@ -280,7 +280,7 @@ public <Name>Cache <Name> { get; }
 - [ ] `ICacheContainer` 加屬性
 - [ ] `CacheContainerService` 兩處（ctor 初始化 + 屬性宣告）
 - [ ] 對應測試（POCO 純單元 / service fake / repository `[DbFact]`）
-- [ ] **`dotnet build Polhem.Library.slnx -c Release` 0w/0e**，再跑測試
+- [ ] **`dotnet build Polhem.slnx -c Release` 0w/0e**，再跑測試
 
 ## 參考檔案（讀程式碼對著看）
 

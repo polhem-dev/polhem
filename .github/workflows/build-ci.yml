@@ -160,7 +160,7 @@ jobs:
     # 與 .editorconfig 的 analyzer 規則會真正擋 build。Sonar-wrapped build 會削弱
     # 這層保護，故獨立跑一次把關。
     - name: Strict build (analyzer gate)
-      run: dotnet build Polhem.Library.slnx --configuration Release
+      run: dotnet build Polhem.slnx --configuration Release
 
     # 放在 Strict build 之後：容器自「Start extra database containers」起已在背景啟動約
     # 一分鐘，這裡多半已就緒，等待本身幾乎不佔時間。
@@ -237,7 +237,7 @@ jobs:
     # 這裡的 --no-incremental 是為了讓 SonarScanner 攔得到完整編譯，不是產物需求。
     - name: Build (for Sonar coverage)
       if: steps.scope.outputs.full == 'true'
-      run: dotnet build Polhem.Library.slnx --configuration Release --no-incremental
+      run: dotnet build Polhem.slnx --configuration Release --no-incremental
 
     # PostgreSQL / MySQL / Oracle 的連線字串由「Enable extra database connection strings」
     # 經 $GITHUB_ENV 供應，只在完整模式存在；此處只列兩種模式都需要的兩條。
@@ -254,7 +254,7 @@ jobs:
         # in-memory DB (polhem_test_common / polhem_test_company / …).
         POLHEM_TEST_CONNSTR_SQLITE: "Data Source=file:polhem_test_{@DbName}?mode=memory&cache=shared"
       run: >-
-        dotnet test Polhem.Library.slnx --configuration Release --no-build --verbosity normal
+        dotnet test Polhem.slnx --configuration Release --no-build --verbosity normal
         ${{ steps.scope.outputs.full == 'true' && '--collect:"XPlat Code Coverage;Format=opencover"' || '' }}
 
     - name: SonarScanner End

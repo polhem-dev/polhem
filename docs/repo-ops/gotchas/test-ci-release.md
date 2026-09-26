@@ -16,8 +16,8 @@
 
 ### ⚠️ 連帶缺口：三個方案根本沒被建過
 
-`tools/` / `samples/` / `apps/` **既不在 `Polhem.Library.slnx` 內，也不在 path filter 內**，
-所以「本機 `dotnet build Polhem.Library.slnx` + `./test.sh` 全綠」**不代表它們還能編譯**，CI 也不會
+`tools/` / `samples/` / `apps/` **既不在 `Polhem.slnx` 內，也不在 path filter 內**，
+所以「本機 `dotnet build Polhem.slnx` + `./test.sh` 全綠」**不代表它們還能編譯**，CI 也不會
 替你發現。
 
 **`tools/Polhem.LoadTests` 是「編譯」這一項的例外**：它的單元測試專案在 slnx 內並以

@@ -23,7 +23,7 @@ namespace Polhem.Api.Core.UnitTests
         private static string ContractPath()
         {
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "Polhem.Library.slnx")))
+            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "Polhem.slnx")))
                 dir = dir.Parent;
 
             Assert.NotNull(dir);

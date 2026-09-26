@@ -33,8 +33,8 @@ jobs:
 
     - name: Restore dependencies
       run: |
-        dotnet restore Polhem.Library.slnx
-        # tools/Polhem.Cli is not part of Polhem.Library.slnx (tools live in Polhem.Tools.slnx);
+        dotnet restore Polhem.slnx
+        # tools/Polhem.Cli is not part of Polhem.slnx (tools live in Polhem.Tools.slnx);
         # restore it explicitly so the subsequent build --no-restore step works.
         dotnet restore tools/Polhem.Cli/Polhem.Cli.csproj
 

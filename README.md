@@ -110,7 +110,7 @@ More screens, the form catalog, and how to run it: [`apps/Polhem.Northwind/READM
 
 ## 💡 Sample Projects
 
-All demos live in-repo under [`samples/`](samples/README.md). They're minimal, focused, and evolve alongside the framework. Build them with `dotnet build samples/Polhem.Samples.slnx` (kept separate from the main `Polhem.Library.slnx`, so the main CI/build stays unaffected).
+All demos live in-repo under [`samples/`](samples/README.md). They're minimal, focused, and evolve alongside the framework. Build them with `dotnet build samples/Polhem.Samples.slnx` (kept separate from the main `Polhem.slnx`, so the main CI/build stays unaffected).
 
 | Category | Demo | Shows |
 |----------|------|-------|

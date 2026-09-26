@@ -182,7 +182,7 @@ var fromMp = MessagePackCodec.Deserialize<Foo>(bytes)!;
 - [ ] `object` 成員的新值型別加進 `WireValueCode` 封閉集，不倚賴逃生門
 - [ ] 不對 `IDefineAccess.GetX(...)` 取得的快取實例做 mutate 或 `XmlCodec.Serialize`（要動先 `Clone()`）
 - [ ] round-trip 測試**比對值**（非只 `Assert.NotNull`），集合成員帶值，含空集合邊界
-- [ ] `dotnet build Polhem.Library.slnx -c Release --no-incremental` 0w/0e
+- [ ] `dotnet build Polhem.slnx -c Release --no-incremental` 0w/0e
 - [ ] `-p:DynamicCodeSupport=false` 閘門零失敗
 
 ## 參考檔案（讀程式碼對著看）
