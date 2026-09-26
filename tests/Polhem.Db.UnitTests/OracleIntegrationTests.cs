@@ -33,7 +33,7 @@ namespace Polhem.Db.UnitTests
 
         public OracleIntegrationTests(SharedDbFixture fx) { _fx = fx; }
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle SchemaProvider 應讀回 fixture 建好的 st_user 表")]
+        [DisplayName("Oracle SchemaProvider reads back the st_user table created by the fixture")]
         public void SchemaProvider_ReadsFixtureTable()
         {
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.Oracle);
@@ -50,7 +50,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle SchemaProvider 應對不存在的表回傳 null")]
+        [DisplayName("Oracle SchemaProvider returns null for a table that does not exist")]
         public void SchemaProvider_UnknownTable_ReturnsNull()
         {
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.Oracle);
@@ -62,15 +62,15 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle 文字欄位字串比對應為 case-insensitive（session NLS_COMP=LINGUISTIC + NLS_SORT=BINARY_CI）")]
+        [DisplayName("Oracle compares text columns case-insensitively (session NLS_COMP=LINGUISTIC + NLS_SORT=BINARY_CI)")]
         public void StringComparison_IsCaseInsensitive()
         {
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.Oracle);
             var dbAccess = _fx.NewDbAccess(databaseId);
 
-            // 手寫 minimal DDL 以聚焦於驗證 Oracle 對 session-level NLS 的執行行為，
-            // 與 OracleCreateTableCommandBuilder 純語法測試獨立。Oracle 無 DROP TABLE
-            // IF EXISTS，改用 PL/SQL block + 吞 ORA-00942。
+            // Minimal hand-written DDL, to focus on how Oracle executes with the session-level NLS settings,
+            // independently of the pure syntax tests of `OracleCreateTableCommandBuilder`. Oracle has no
+            // DROP TABLE IF EXISTS, so a PL/SQL block swallows ORA-00942 instead.
             string dropDdl =
                 "BEGIN " +
                 "  EXECUTE IMMEDIATE 'DROP TABLE \"CI_TEST\" CASCADE CONSTRAINTS'; " +
@@ -101,7 +101,7 @@ namespace Polhem.Db.UnitTests
         // ---------- quoted-lowercase end-to-end coverage ----------
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("FormSchema 驅動的 INSERT/SELECT/UPDATE/DELETE 應在 quoted-lowercase 表上正確運作")]
+        [DisplayName("FormSchema-driven INSERT/SELECT/UPDATE/DELETE work on a quoted-lowercase table")]
         public void FormCrud_QuotedLowercaseTable_InsertSelectUpdateDelete_Succeeds()
         {
             const string tableName = "tb_it_crud";
@@ -121,7 +121,7 @@ namespace Polhem.Db.UnitTests
                 int inserted = dbAccess.Execute(new InsertCommandBuilder(formSchema, DatabaseType.Oracle).Build("Foo", insertRow)).RowsAffected;
                 Assert.Equal(1, inserted);
 
-                // SELECT 驗證 INSERT 落地（含 WHERE rowId 等值）
+                // SELECT confirms that the INSERT landed (including the equality WHERE on rowId).
                 var selectByRowId = formBuilder.BuildSelect("Foo", "name,qty",
                     FilterCondition.Equal(SysFields.RowId, rowId), null);
                 var selectResult = dbAccess.Execute(selectByRowId);
@@ -156,7 +156,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("FromBuilder 產生的 JOIN 子句應在 quoted-lowercase 兩表 + ON 兩端欄位上可執行")]
+        [DisplayName("The JOIN clause produced by FromBuilder runs on two quoted-lowercase tables with fields on both sides of ON")]
         public void Join_QuotedLowercaseTables_FromBuilderEmitsExecutableSql()
         {
             const string masterTable = "tb_it_master";
@@ -178,9 +178,9 @@ namespace Polhem.Db.UnitTests
                     "INSERT INTO \"TB_IT_DETAIL\" (\"SYS_ROWID\", \"MASTER_ID\", \"AMOUNT\") VALUES ({0}, {1}, {2})",
                     Guid.NewGuid(), masterId, 250));
 
-                // 直接驅動 FromBuilder（FormSchema RelationField 路徑需 cross-form
-                // DefinePath 設定，超出 quoting 驗證範圍；此處聚焦在 FromBuilder 對
-                // join 兩端 table + ON 兩端 field 是否正確 quote）。
+                // Drives `FromBuilder` directly: the FormSchema RelationField path needs a cross-form DefinePath setup,
+                // which is beyond the quoting check. This focuses on whether `FromBuilder` quotes the tables on both
+                // sides of the join and the fields on both sides of ON.
                 var joins = new TableJoinCollection
                 {
                     new TableJoin
@@ -197,8 +197,8 @@ namespace Polhem.Db.UnitTests
 
                 string fromClause = new FromBuilder(DatabaseType.Oracle).Build(masterTable, joins);
 
-                // FromBuilder 產出片段必含完整雙引號識別符（撞到 ORA-00942 / ORA-00904
-                // 的常見漏洞點）。
+                // The fragment produced by `FromBuilder` must contain fully double-quoted identifiers (the common
+                // weak spot that hits ORA-00942 / ORA-00904).
                 Assert.Contains("FROM \"TB_IT_MASTER\" A", fromClause);
                 Assert.Contains("INNER JOIN \"TB_IT_DETAIL\" B", fromClause);
                 Assert.Contains("A.\"SYS_ROWID\" = B.\"MASTER_ID\"", fromClause);
@@ -221,7 +221,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle reserved word 命名的欄位（comment / order）quoted 後應可 CRUD")]
+        [DisplayName("Fields named with Oracle reserved words (comment / order) support CRUD once quoted")]
         public void ReservedWordFieldName_QuotedLowercase_CrudSucceeds()
         {
             const string tableName = "tb_it_reserved";
@@ -230,8 +230,8 @@ namespace Polhem.Db.UnitTests
 
             try
             {
-                // "comment" 與 "order" 皆為 Oracle reserved word；少一邊雙引號就會
-                // 直接 syntax error，是 quoting 機制的剛性需求驗證。
+                // "comment" and "order" are both Oracle reserved words. Missing the double quotes on either side is a
+                // syntax error, so this checks a hard requirement of the quoting mechanism.
                 var schema = new TableSchema { TableName = tableName };
                 schema.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
                 schema.Fields!.Add("comment", "Comment", FieldDbType.String, 100);
@@ -267,13 +267,14 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("OracleTableAlterCommandBuilder.ADD column 應能在 quoted-lowercase 表上執行並保留資料")]
+        [DisplayName("OracleTableAlterCommandBuilder ADD column runs on a quoted-lowercase table and keeps the data")]
         public void AlterAddColumn_QuotedLowercaseTable_Succeeds()
         {
-            // Rebuild 路徑（OracleTableRebuildCommandBuilder.GetCommandText）目前回傳混合
-            // PL/SQL block + 純 SQL 的多語句腳本，Oracle.ManagedDataAccess 一次只能執行一條，
-            // 整個腳本需在呼叫端拆分後逐條送出，或由 builder API 改為 GetStatements()。此測試
-            // 因此只覆蓋 Alter（已採 GetStatements 模式），Rebuild 端到端驗證留待後續另案。
+            // The Rebuild path (`OracleTableRebuildCommandBuilder.GetCommandText`) currently returns a
+            // multi-statement script mixing PL/SQL blocks and plain SQL, and Oracle.ManagedDataAccess runs one
+            // statement at a time. The caller would have to split the script and send it statement by statement, or
+            // the builder API would have to become `GetStatements()`. So this test only covers Alter (which already
+            // uses `GetStatements`); end-to-end verification of Rebuild is left for separate follow-up work.
             const string tableName = "tb_it_alter";
             var dbAccess = _fx.NewDbAccess(TestDbConventions.GetDatabaseId(DatabaseType.Oracle));
             DropQuotedTable(dbAccess, tableName);
@@ -316,7 +317,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("OracleTableAlterCommandBuilder.MODIFY 對既有 NOT NULL 欄（nullability 未變）不應拋 ORA-01442")]
+        [DisplayName("OracleTableAlterCommandBuilder MODIFY of an existing NOT NULL field (nullability unchanged) does not raise ORA-01442")]
         public void AlterModify_RedundantNotNull_QuotedLowercaseTable_DoesNotRaiseOra01442()
         {
             const string tableName = "tb_it_modnull";
@@ -325,16 +326,17 @@ namespace Polhem.Db.UnitTests
 
             try
             {
-                // 建一張帶非字串 NOT NULL 欄的表（qty 預設 AllowNull=false → NUMBER(10) DEFAULT 0 NOT NULL）。
+                // A table with a non-string NOT NULL field (qty defaults
+                // to AllowNull=false, so NUMBER(10) DEFAULT 0 NOT NULL).
                 var initial = new TableSchema { TableName = tableName };
                 initial.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
                 initial.Fields!.Add("qty", "Qty", FieldDbType.Integer);
                 initial.Indexes!.AddPrimaryKey(SysFields.RowId);
                 CreateTable(dbAccess, initial);
 
-                // 對既有 NOT NULL 的 qty 做 ALTER：nullability 不變、僅 default 0 → 1。
-                // 修正前 builder 會重發 MODIFY (... NOT NULL) → 對已 NOT NULL 欄拋 ORA-01442；
-                // 修正後省略冗餘 nullability hint，MODIFY 應成功執行。
+                // ALTER the existing NOT NULL qty: nullability stays, only the default changes from 0 to 1.
+                // Before the fix the builder re-emitted MODIFY (... NOT NULL), which raises ORA-01442 on a column that
+                // is already NOT NULL. After the fix the redundant nullability hint is omitted and MODIFY succeeds.
                 var oldField = new DbField("qty", "Qty", FieldDbType.Integer) { AllowNull = false, DefaultValue = "0" };
                 var newField = new DbField("qty", "Qty", FieldDbType.Integer) { AllowNull = false, DefaultValue = "1" };
                 var statements = new OracleTableAlterCommandBuilder()
@@ -355,7 +357,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("AllowNull=false 的 String 欄在 Oracle 建為 nullable：省略該欄 INSERT 成功、讀回空字串、且二次 diff 為空")]
+        [DisplayName("An AllowNull=false String field is created nullable on Oracle: an INSERT omitting it succeeds, reads back an empty string, and a second diff is empty")]
         public void NonNullString_OracleNullable_OmittedInsertSucceedsAndDiffIsEmpty()
         {
             const string tableName = "tb_it_strnull";
@@ -364,26 +366,28 @@ namespace Polhem.Db.UnitTests
 
             try
             {
-                // definition 仍標 AllowNull=false（語意上「不該是 null」）；customize_id 場景的縮影。
+                // The definition still marks AllowNull=false (semantically "must
+                // not be null"), a miniature of the customize_id case.
                 var define = new TableSchema { TableName = tableName };
                 define.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
                 define.Fields!.Add("customize_id", "Customize", FieldDbType.String, 50);
                 define.Indexes!.AddPrimaryKey(SysFields.RowId);
                 CreateTable(dbAccess, define);
 
-                // 省略 customize_id 的 INSERT 不應拋 ORA-01400（欄位已建為 nullable）。
+                // An INSERT omitting customize_id must not raise ORA-01400 (the column was created nullable).
                 var rowId = Guid.NewGuid();
                 var insert = Record.Exception(() => dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
                     "INSERT INTO \"TB_IT_STRNULL\" (\"SYS_ROWID\") VALUES ({0})", rowId)));
                 Assert.Null(insert);
 
-                // 讀回的 customize_id 是 Oracle NULL，經 ValueUtilities.CStr 正規化為空字串。
+                // The customize_id read back is an Oracle NULL, normalized to an empty string by `ValueUtilities.CStr`.
                 var read = dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar,
                     "SELECT \"CUSTOMIZE_ID\" FROM \"TB_IT_STRNULL\" WHERE \"SYS_ROWID\" = {0}", rowId));
                 Assert.Equal(string.Empty, ValueUtilities.CStr(read.Scalar!));
 
-                // 升級冪等性：讀回 schema 與 definition 比對，customize_id 欄不應產生差異
-                // （provider 對 String/Text 一律回報 AllowNull=false 以對齊 definition）。
+                // Upgrade idempotency: comparing the schema read back with the definition must produce no difference
+                // for customize_id (the provider always reports AllowNull=false for String/Text to match the
+                // definition).
                 var provider = new OracleTableSchemaProvider(
                     TestDbConventions.GetDatabaseId(DatabaseType.Oracle), _fx.GetRequiredService<IDbConnectionManager>());
                 var real = provider.GetTableSchema(tableName);
@@ -400,7 +404,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle 升級：含 nullable Text 欄的表加欄應成功且冪等（迴歸 ORA-22859）")]
+        [DisplayName("Oracle upgrade adds a field to a table with a nullable Text field and is idempotent (regression for ORA-22859)")]
         public void Upgrade_TableWithNullableTextColumn_AddsColumnAndIsIdempotent()
         {
             const string tableName = "tb_it_lobupg";
@@ -411,18 +415,20 @@ namespace Polhem.Db.UnitTests
 
             try
             {
-                // 建表：定義層對 Text 標 AllowNull=true，Oracle 實體一律建成 nullable CLOB。
+                // Create the table: the definition marks Text as AllowNull=true,
+                // and Oracle always creates a nullable CLOB.
                 var initial = BuildLobUpgradeSchema(tableName, includeAddedColumn: false);
                 CreateTable(dbAccess, initial);
 
-                // 升級：多一個 String 欄。CLOB 欄本身沒變，不該被一起發 MODIFY。
+                // Upgrade: one more String field. The CLOB field itself did not change and must not get a MODIFY.
                 var define = BuildLobUpgradeSchema(tableName, includeAddedColumn: true);
                 var provider = new OracleTableSchemaProvider(databaseId, connectionManager);
                 var orchestrator = new TableUpgradeOrchestrator(new OracleDialectFactory(), connectionManager);
 
                 var diff = new TableSchemaComparer(define, provider.GetTableSchema(tableName), DatabaseType.Oracle).CompareToDiff();
                 var plan = orchestrator.Plan(diff);
-                // CLOB 欄若被誤判為有差異，這裡會多出一筆 AlterColumns stage 並在 Execute 擲 ORA-22859。
+                // If the CLOB field were misjudged as changed, an extra AlterColumns stage would appear here and
+                // Execute would throw ORA-22859.
                 Assert.Equal(UpgradeExecutionMode.Alter, plan.Mode);
                 var addChange = Assert.Single(diff.Changes);
                 Assert.Equal("api_key_id", Assert.IsType<AddFieldChange>(addChange).Field.FieldName);
@@ -433,12 +439,13 @@ namespace Polhem.Db.UnitTests
                 Assert.NotNull(upgraded);
                 Assert.True(upgraded!.Fields!.Contains("api_key_id"));
 
-                // 冪等性：第二輪比對不應再產生任何差異（否則每次啟動都重跑一次失敗的升級）。
+                // Idempotency: a second comparison must produce no difference
+                // (otherwise every startup reruns a failing upgrade).
                 var secondDiff = new TableSchemaComparer(define, upgraded, DatabaseType.Oracle).CompareToDiff();
                 Assert.Empty(secondDiff.Changes);
-                // ALTER 加欄位的同一份 plan 也要把該欄的 caption 寫進 USER_COL_COMMENTS，
-                // 否則 api_key_id 的 caption 永遠算一筆 DescriptionChange，diff 不會空，
-                // 「這張表是不是最新的」永遠答否。
+                // The plan that ALTERs in a field must also write its caption into USER_COL_COMMENTS. Otherwise the
+                // caption of api_key_id always counts as a DescriptionChange, the diff is never empty, and
+                // "is this table up to date" is always answered no.
                 Assert.Empty(secondDiff.DescriptionChanges);
                 Assert.True(secondDiff.IsEmpty);
                 Assert.Equal(UpgradeExecutionMode.NoChange, orchestrator.Plan(secondDiff).Mode);
@@ -516,8 +523,8 @@ namespace Polhem.Db.UnitTests
 
         private static DataRow ExistingRow(FormSchema formSchema, string tableName, Guid rowId, string name, int qty)
         {
-            // Update path 需要 row.RowState != Added；先 Add+AcceptChanges，後續欄位修改才會被
-            // BuildUpdate 偵測為 modified。
+            // The update path needs `row.RowState != Added`: Add and then AcceptChanges, so that later field changes
+            // are detected as modified by `BuildUpdate`.
             var dt = BuildDataTable(formSchema, tableName);
             var row = dt.NewRow();
             row[SysFields.RowId] = rowId;
@@ -560,9 +567,9 @@ namespace Polhem.Db.UnitTests
 
         private static void DropQuotedTable(DbAccess dbAccess, string tableName)
         {
-            // Oracle 無 DROP TABLE IF EXISTS；包 PL/SQL block 並吞 ORA-00942。
-            // Framework 統一以 UPPERCASE 形式儲存於 Oracle（per OracleSchemaSyntax.QuoteName），
-            // 此 helper 跨過 framework 直接拼 DDL，必須自行 UPPER 化以對齊。
+            // Oracle has no DROP TABLE IF EXISTS, so it is wrapped in a PL/SQL block that swallows ORA-00942.
+            // The framework stores names in UPPERCASE on Oracle (per `OracleSchemaSyntax.QuoteName`); this helper
+            // builds the DDL directly, bypassing the framework, so it must uppercase the names itself to match.
             string storageName = tableName.ToUpperInvariant();
             string ddl =
                 "BEGIN " +

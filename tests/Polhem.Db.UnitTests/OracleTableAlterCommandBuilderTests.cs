@@ -32,7 +32,7 @@ namespace Polhem.Db.UnitTests
         // ---------- ExecutionKind ----------
 
         [Fact]
-        [DisplayName("Oracle GetExecutionKind：AddFieldChange 應為 Alter")]
+        [DisplayName("Oracle GetExecutionKind returns Alter for AddFieldChange")]
         public void GetExecutionKind_AddField_IsAlter()
         {
             var change = new AddFieldChange(new DbField("col", "Col", FieldDbType.Integer));
@@ -40,7 +40,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetExecutionKind：RenameFieldChange 應為 Alter")]
+        [DisplayName("Oracle GetExecutionKind returns Alter for RenameFieldChange")]
         public void GetExecutionKind_Rename_IsAlter()
         {
             var change = new RenameFieldChange("oldname", new DbField("newname", "New", FieldDbType.String));
@@ -48,7 +48,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetExecutionKind：AlterFieldChange 同 family（Integer→Long）應為 Alter")]
+        [DisplayName("Oracle GetExecutionKind returns Alter for an AlterFieldChange within the family (Integer→Long)")]
         public void GetExecutionKind_AlterFieldSameFamily_IsAlter()
         {
             var oldField = new DbField("col", "Col", FieldDbType.Integer);
@@ -58,7 +58,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetExecutionKind：AlterFieldChange 跨 family（Integer→String）應為 Rebuild")]
+        [DisplayName("Oracle GetExecutionKind returns Rebuild for an AlterFieldChange across families (Integer→String)")]
         public void GetExecutionKind_AlterFieldCrossFamily_IsRebuild()
         {
             var oldField = new DbField("col", "Col", FieldDbType.Integer);
@@ -70,7 +70,7 @@ namespace Polhem.Db.UnitTests
         // ---------- IsNarrowingChange ----------
 
         [Fact]
-        [DisplayName("Oracle IsNarrowingChange：String 縮短應回傳 true")]
+        [DisplayName("Oracle IsNarrowingChange returns true for a shorter String")]
         public void IsNarrowingChange_StringShortened_ReturnsTrue()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 100 };
@@ -79,7 +79,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle IsNarrowingChange：String 加長應回傳 false")]
+        [DisplayName("Oracle IsNarrowingChange returns false for a longer String")]
         public void IsNarrowingChange_StringExtended_ReturnsFalse()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50 };
@@ -88,7 +88,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle IsNarrowingChange：Decimal precision 縮減應回傳 true")]
+        [DisplayName("Oracle IsNarrowingChange returns true for a smaller Decimal precision")]
         public void IsNarrowingChange_DecimalPrecisionReduced_ReturnsTrue()
         {
             var oldField = new DbField("amount", "Amount", FieldDbType.Decimal) { Precision = 18, Scale = 4 };
@@ -99,7 +99,7 @@ namespace Polhem.Db.UnitTests
         // ---------- GetStatements ----------
 
         [Fact]
-        [DisplayName("Oracle GetStatements：AddField 產生 ALTER TABLE ADD (...)（雙引號識別符 + 括號）")]
+        [DisplayName("Oracle GetStatements for AddField produces ALTER TABLE ADD (...) (double-quoted identifiers and parentheses)")]
         public void GetStatements_AddField_EmitsAlterTableAdd()
         {
             var field = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = false };
@@ -112,7 +112,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：AlterField 僅 type 變動時 MODIFY 不重發 nullability（避免 ORA-01442）")]
+        [DisplayName("Oracle GetStatements for an AlterField that only changes the type does not restate nullability in MODIFY (avoids ORA-01442)")]
         public void GetStatements_AlterField_TypeOnlyChange_OmitsNullability()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50, AllowNull = false };
@@ -122,13 +122,14 @@ namespace Polhem.Db.UnitTests
             var sql = Assert.Single(statements);
             Assert.Contains("ALTER TABLE \"ST_DEMO\" MODIFY (", sql);
             Assert.Contains("\"NAME\" VARCHAR2(100 CHAR)", sql);
-            // nullability 未改變（String 一律 nullable，old/new 同為 NULL）→ 不重發任何 NULL/NOT NULL hint。
+            // Nullability is unchanged (String is always nullable, NULL
+            // on both sides), so no NULL/NOT NULL hint is emitted.
             Assert.DoesNotContain("NULL", sql);
             Assert.EndsWith(");", sql);
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：AlterField nullability NULL→NOT NULL 應帶 NOT NULL")]
+        [DisplayName("Oracle GetStatements for an AlterField from NULL to NOT NULL carries NOT NULL")]
         public void GetStatements_AlterField_NullToNotNull_EmitsNotNull()
         {
             var oldField = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = true };
@@ -141,7 +142,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：AlterField nullability NOT NULL→NULL 應帶 NULL")]
+        [DisplayName("Oracle GetStatements for an AlterField from NOT NULL to NULL carries NULL")]
         public void GetStatements_AlterField_NotNullToNull_EmitsNull()
         {
             var oldField = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = false };
@@ -155,10 +156,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：AlterField nullability 未變（NOT NULL→NOT NULL）不重發 nullability（迴歸 ORA-01442）")]
+        [DisplayName("Oracle GetStatements for an AlterField with unchanged nullability (NOT NULL→NOT NULL) does not restate it (regression for ORA-01442)")]
         public void GetStatements_AlterField_RedundantNotNull_OmitsNullability()
         {
-            // 僅 default 變、nullability 不變：MODIFY 不得帶 NOT NULL，否則 Oracle 對已 NOT NULL 欄拋 ORA-01442。
+            // Only the default changes, not the nullability: MODIFY must not carry NOT NULL, or Oracle raises ORA-01442
+            // on a column that is already NOT NULL.
             var oldField = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = false, DefaultValue = "0" };
             var newField = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = false, DefaultValue = "1" };
             var statements = _builder.GetStatements("st_demo", new AlterFieldChange(oldField, newField));
@@ -169,7 +171,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：AlterField 不應使用 MODIFY COLUMN 關鍵字（Oracle 是 MODIFY 後直接接 column 定義）")]
+        [DisplayName("Oracle GetStatements for AlterField does not use the MODIFY COLUMN keyword (Oracle puts the column definition right after MODIFY)")]
         public void GetStatements_AlterField_DoesNotEmitModifyColumn()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50 };
@@ -180,13 +182,13 @@ namespace Polhem.Db.UnitTests
             Assert.DoesNotContain("MODIFY COLUMN", sql);
         }
 
-        // ---------- LOB（CLOB / BLOB）---------- 迴歸 ORA-22859 / ORA-22858
+        // ---------- LOB (CLOB / BLOB) ---------- regression for ORA-22859 / ORA-22858
 
         [Fact]
-        [DisplayName("Oracle GetStatements：Text→Text 的 MODIFY 不得重述 CLOB 型別（迴歸 ORA-22859）")]
+        [DisplayName("Oracle GetStatements MODIFY from Text to Text does not restate the CLOB type (regression for ORA-22859)")]
         public void GetStatements_AlterField_TextToText_NeverRestatesClob()
         {
-            // Oracle 對 LOB 欄的 MODIFY 只要帶型別就擲 ORA-22859，即使型別根本沒變。
+            // Oracle raises ORA-22859 on a MODIFY of a LOB column as soon as it carries a type, even an unchanged one.
             var oldField = new DbField("error_message", "Msg", FieldDbType.Text) { AllowNull = false };
             var newField = new DbField("error_message", "Msg", FieldDbType.Text) { AllowNull = true };
             var statements = _builder.GetStatements("st_demo", new AlterFieldChange(oldField, newField));
@@ -195,10 +197,10 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：LOB 欄無可改子句時不產生任何語句（MODIFY (\"COL\") 非合法語法）")]
+        [DisplayName("Oracle GetStatements produces no statement for a LOB column with nothing to change (MODIFY (\"COL\") is not valid syntax)")]
         public void GetStatements_AlterField_LobWithNothingModifiable_EmitsNoStatement()
         {
-            // Text 兩側的 nullability 恆為 NULL、default 恆為空 —— MODIFY 沒有任何合法內容可帶。
+            // On both sides Text is always NULL and its default always empty, so MODIFY has nothing valid to carry.
             var oldField = new DbField("error_message", "Msg", FieldDbType.Text) { AllowNull = false };
             var newField = new DbField("error_message", "Msg", FieldDbType.Text) { AllowNull = true };
             var statements = _builder.GetStatements("st_demo", new AlterFieldChange(oldField, newField));
@@ -207,10 +209,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：LOB 欄的 default 變動應只發 DEFAULT，不帶型別")]
+        [DisplayName("Oracle GetStatements emits only DEFAULT, without the type, for a default change on a LOB column")]
         public void GetStatements_AlterField_LobDefaultChange_EmitsDefaultWithoutType()
         {
-            // Length > 4000 的 String 映射為 CLOB —— 同樣受 ORA-22859 限制，但 DEFAULT 可改。
+            // A String with Length > 4000 maps to CLOB, so it is subject
+            // to ORA-22859 as well, but its DEFAULT can change.
             var oldField = new DbField("blob_text", "Text", FieldDbType.String) { Length = 5000, AllowNull = false };
             var newField = new DbField("blob_text", "Text", FieldDbType.String) { Length = 5000, AllowNull = false, DefaultValue = "x" };
             var statements = _builder.GetStatements("st_demo", new AlterFieldChange(oldField, newField));
@@ -220,7 +223,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：Binary→Binary 的 MODIFY 不得重述 BLOB 型別（迴歸 ORA-22859）")]
+        [DisplayName("Oracle GetStatements MODIFY from Binary to Binary does not restate the BLOB type (regression for ORA-22859)")]
         public void GetStatements_AlterField_BinaryToBinary_NeverRestatesBlob()
         {
             var oldField = new DbField("payload", "Payload", FieldDbType.Binary) { AllowNull = true };
@@ -233,18 +236,18 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetExecutionKind：String→Text（VARCHAR2→CLOB）應為 Rebuild（迴歸 ORA-22858）")]
+        [DisplayName("Oracle GetExecutionKind returns Rebuild for String→Text (VARCHAR2→CLOB) (regression for ORA-22858)")]
         public void GetExecutionKind_StringToText_IsRebuild()
         {
-            // 兩者同屬 dialect-neutral 的 String family，預設會挑 in-place ALTER；
-            // 但 Oracle 無法以 MODIFY 跨越 LOB 邊界。
+            // Both belong to the dialect-neutral String family, so an in-place ALTER would be chosen by default,
+            // but Oracle cannot cross the LOB boundary with MODIFY.
             var oldField = new DbField("note", "Note", FieldDbType.String) { Length = 100 };
             var newField = new DbField("note", "Note", FieldDbType.Text);
             Assert.Equal(ChangeExecutionKind.Rebuild, _builder.GetExecutionKind(new AlterFieldChange(oldField, newField)));
         }
 
         [Fact]
-        [DisplayName("Oracle GetExecutionKind：Text→String（CLOB→VARCHAR2）應為 Rebuild（迴歸 ORA-22859）")]
+        [DisplayName("Oracle GetExecutionKind returns Rebuild for Text→String (CLOB→VARCHAR2) (regression for ORA-22859)")]
         public void GetExecutionKind_TextToString_IsRebuild()
         {
             var oldField = new DbField("note", "Note", FieldDbType.Text);
@@ -253,17 +256,17 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetExecutionKind：String 長度跨越 VARCHAR2 上限應為 Rebuild")]
+        [DisplayName("Oracle GetExecutionKind returns Rebuild when a String length crosses the VARCHAR2 limit")]
         public void GetExecutionKind_StringCrossingVarcharCeiling_IsRebuild()
         {
-            // 兩側都是 FieldDbType.String，但 5000 落在 CLOB、100 落在 VARCHAR2。
+            // Both sides are `FieldDbType.String`, but 5000 falls into CLOB and 100 into VARCHAR2.
             var oldField = new DbField("note", "Note", FieldDbType.String) { Length = 100 };
             var newField = new DbField("note", "Note", FieldDbType.String) { Length = 5000 };
             Assert.Equal(ChangeExecutionKind.Rebuild, _builder.GetExecutionKind(new AlterFieldChange(oldField, newField)));
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：RenameField 產生 RENAME COLUMN（雙引號）")]
+        [DisplayName("Oracle GetStatements for RenameField produces RENAME COLUMN (double quotes)")]
         public void GetStatements_RenameField_EmitsRenameColumn()
         {
             var change = new RenameFieldChange("oldname", new DbField("newname", "New", FieldDbType.String) { Length = 50 });
@@ -274,7 +277,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：AddIndex 非 PK 產生 CREATE INDEX 並帶 ASC")]
+        [DisplayName("Oracle GetStatements for AddIndex of a non-PK index produces CREATE INDEX with ASC")]
         public void GetStatements_AddIndex_NonPk_EmitsCreateIndex()
         {
             var index = BuildIndex("ix_{0}_col", "col", unique: false);
@@ -286,7 +289,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：AddIndex 唯一索引產生 CREATE UNIQUE INDEX")]
+        [DisplayName("Oracle GetStatements for AddIndex of a unique index produces CREATE UNIQUE INDEX")]
         public void GetStatements_AddIndex_Unique_EmitsCreateUniqueIndex()
         {
             var index = BuildIndex("uk_{0}_col", "col", unique: true);
@@ -297,7 +300,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：AddIndex PK 產生 ADD CONSTRAINT PRIMARY KEY 且不帶 ASC/DESC")]
+        [DisplayName("Oracle GetStatements for AddIndex of a PK produces ADD CONSTRAINT PRIMARY KEY without ASC/DESC")]
         public void GetStatements_AddIndex_Pk_EmitsAddConstraint()
         {
             var pk = BuildPrimaryKey("id");
@@ -306,27 +309,27 @@ namespace Polhem.Db.UnitTests
             var sql = Assert.Single(statements);
             Assert.Contains("ALTER TABLE \"ST_DEMO\" ADD CONSTRAINT \"PK_ST_DEMO\"", sql);
             Assert.Contains("PRIMARY KEY (\"ID\")", sql);
-            // Oracle PK constraint 內 column 不接受 ASC/DESC
+            // Columns inside an Oracle PK constraint do not accept ASC/DESC.
             Assert.DoesNotContain("PRIMARY KEY (\"ID\" ASC", sql);
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：DropIndex 非 PK 產生 DROP INDEX（不帶 ON tablename）")]
+        [DisplayName("Oracle GetStatements for DropIndex of a non-PK index produces DROP INDEX (without ON tablename)")]
         public void GetStatements_DropIndex_NonPk_EmitsDropIndex()
         {
             var index = BuildIndex("ix_{0}_col", "col", unique: false);
-            // 模擬：當作既有 index name（已 resolve），略過 {0} 替換
+            // Simulates an existing, already resolved index name, so the {0} replacement is skipped.
             index.Name = "ix_st_demo_col";
             var statements = _builder.GetStatements("st_demo", new DropIndexChange(index));
 
             var sql = Assert.Single(statements);
-            // Oracle DROP INDEX 與 MySQL 不同：不接 ON tablename
+            // Unlike MySQL, Oracle's DROP INDEX takes no ON tablename.
             Assert.Equal("DROP INDEX \"IX_ST_DEMO_COL\";", sql);
             Assert.DoesNotContain("ON \"ST_DEMO\"", sql);
         }
 
         [Fact]
-        [DisplayName("Oracle GetStatements：DropIndex PK 產生 DROP PRIMARY KEY")]
+        [DisplayName("Oracle GetStatements for DropIndex of a PK produces DROP PRIMARY KEY")]
         public void GetStatements_DropIndex_Pk_EmitsDropPrimaryKey()
         {
             var pk = BuildPrimaryKey("id");
@@ -340,7 +343,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("Oracle GetStatements：空白 tableName 應拋例外")]
+        [DisplayName("Oracle GetStatements throws for a blank tableName")]
         public void GetStatements_EmptyTableName_Throws(string? tableName)
         {
             var change = new AddFieldChange(new DbField("col", "Col", FieldDbType.Integer));

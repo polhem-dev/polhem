@@ -36,7 +36,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetCommandText：rebuild 腳本應含 tmp 表建立、INSERT 與 RENAME")]
+        [DisplayName("SQLite GetCommandText rebuild script creates the tmp table, INSERTs and RENAMEs")]
         public void GetCommandText_BasicRebuild_IncludesTmpCreateInsertAndRename()
         {
             var define = BuildDefineSchema();
@@ -51,7 +51,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetCommandText：DROP TABLE 應使用 IF EXISTS")]
+        [DisplayName("SQLite GetCommandText uses IF EXISTS for DROP TABLE")]
         public void GetCommandText_DropTable_UsesIfExists()
         {
             var define = BuildDefineSchema();
@@ -65,7 +65,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetCommandText：新增欄位不應出現在 INSERT ... SELECT 清單")]
+        [DisplayName("SQLite GetCommandText leaves a new field out of the INSERT ... SELECT list")]
         public void GetCommandText_AddedField_ExcludedFromDataCopy()
         {
             var define = BuildDefineSchema();
@@ -74,9 +74,9 @@ namespace Polhem.Db.UnitTests
 
             var sql = new SqliteTableRebuildCommandBuilder().GetCommandText(diff);
 
-            // age 欄位應出現在 tmp 表定義
+            // The age field appears in the tmp table definition,
             Assert.Contains("\"age\"", sql);
-            // 但 INSERT 欄位清單不應含 age
+            // but not in the INSERT column list.
             int insertIdx = sql.IndexOf("INSERT INTO \"tmp_st_demo\"", StringComparison.Ordinal);
             int selectIdx = sql.IndexOf("FROM \"st_demo\"", insertIdx, StringComparison.Ordinal);
             string insertSelectSection = sql.Substring(insertIdx, selectIdx - insertIdx);
@@ -84,7 +84,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetCommandText：real-only 欄位（extension field）應保留於 rebuild 結果")]
+        [DisplayName("SQLite GetCommandText keeps a real-only field (extension field) in the rebuild result")]
         public void GetCommandText_ExtensionField_Preserved()
         {
             var define = BuildDefineSchema();
@@ -97,7 +97,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetCommandText：tmp 表不應預建非 PK 索引（沒有 ALTER INDEX RENAME）")]
+        [DisplayName("SQLite GetCommandText does not create non-PK indexes on the tmp table in advance (there is no ALTER INDEX RENAME)")]
         public void GetCommandText_TmpTable_OmitsSecondaryIndexes()
         {
             var define = BuildDefineSchema();
@@ -106,12 +106,12 @@ namespace Polhem.Db.UnitTests
 
             var sql = new SqliteTableRebuildCommandBuilder().GetCommandText(diff);
 
-            // 不應出現 ix_tmp_st_demo_name；非 PK 索引在 RENAME 後才以真實名建立
+            // No ix_tmp_st_demo_name: non-PK indexes are created with their real names after the RENAME.
             Assert.DoesNotContain("ix_tmp_st_demo_name", sql);
         }
 
         [Fact]
-        [DisplayName("SQLite GetCommandText：RENAME 後應以真實名重建非 PK 索引")]
+        [DisplayName("SQLite GetCommandText recreates non-PK indexes with their real names after the RENAME")]
         public void GetCommandText_NonPkIndexes_RecreatedWithRealNames()
         {
             var define = BuildDefineSchema();
@@ -123,13 +123,13 @@ namespace Polhem.Db.UnitTests
             int renameIdx = sql.IndexOf("RENAME TO \"st_demo\"", StringComparison.Ordinal);
             int recreateIdx = sql.IndexOf("CREATE INDEX \"ix_st_demo_name\"", StringComparison.Ordinal);
 
-            Assert.True(renameIdx > 0, "RENAME 步驟必須出現");
-            Assert.True(recreateIdx > renameIdx, "非 PK 索引必須在 RENAME 之後重建");
+            Assert.True(renameIdx > 0, "The RENAME step must be present");
+            Assert.True(recreateIdx > renameIdx, "Non-PK indexes must be recreated after the RENAME");
             Assert.Contains("ON \"st_demo\" (\"name\" ASC)", sql);
         }
 
         [Fact]
-        [DisplayName("SQLite GetCommandText：腳本中不應出現 ALTER INDEX RENAME（SQLite 不支援）")]
+        [DisplayName("SQLite GetCommandText script contains no ALTER INDEX RENAME (SQLite does not support it)")]
         public void GetCommandText_NeverEmitsAlterIndexRename()
         {
             var define = BuildDefineSchema();
@@ -142,7 +142,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetCommandText：new-table diff 應 throw（應改走 CREATE 路徑）")]
+        [DisplayName("SQLite GetCommandText throws for a new-table diff (which must take the CREATE path)")]
         public void GetCommandText_NewTableDiff_Throws()
         {
             var define = BuildDefineSchema();

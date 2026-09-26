@@ -22,10 +22,10 @@ namespace Polhem.Db.UnitTests
             return schema;
         }
 
-        #region 建構子測試
+        #region Constructors
 
         [Fact]
-        [DisplayName("建構子 TableSchema 為 null 應擲出 ArgumentNullException")]
+        [DisplayName("The constructor throws ArgumentNullException for a null TableSchema")]
         public void Constructor_NullTableSchema_Throws()
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -33,7 +33,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("建構子應使用顯式指定的 DatabaseType")]
+        [DisplayName("The constructor uses the explicitly given DatabaseType")]
         public void Constructor_UsesSpecifiedDatabaseType()
         {
             var schema = BuildSampleSchema();
@@ -44,10 +44,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region BuildInsertCommand 測試
+        #region BuildInsertCommand
 
         [Fact]
-        [DisplayName("BuildInsertCommand 應產生 INSERT 語句並含全部非自增欄位")]
+        [DisplayName("BuildInsertCommand produces an INSERT statement with every non-auto-increment field")]
         public void BuildInsertCommand_ContainsAllNonAutoIncrementFields()
         {
             var schema = BuildSampleSchema();
@@ -66,7 +66,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("BuildInsertCommand 應略過 AutoIncrement 欄位")]
+        [DisplayName("BuildInsertCommand skips AutoIncrement fields")]
         public void BuildInsertCommand_SkipsAutoIncrementField()
         {
             var schema = new TableSchema { TableName = "st_demo" };
@@ -85,10 +85,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region BuildUpdateCommand 測試
+        #region BuildUpdateCommand
 
         [Fact]
-        [DisplayName("BuildUpdateCommand 應產生 UPDATE 語句並以主鍵為 WHERE 條件")]
+        [DisplayName("BuildUpdateCommand produces an UPDATE statement with the primary key as the WHERE condition")]
         public void BuildUpdateCommand_HasSetClauseAndPrimaryKeyWhere()
         {
             var schema = BuildSampleSchema();
@@ -100,12 +100,12 @@ namespace Polhem.Db.UnitTests
             Assert.Contains("[name]=@name", cmd.CommandText);
             Assert.Contains("[age]=@age", cmd.CommandText);
             Assert.Contains("Where [sys_rowid]=@sys_rowid", cmd.CommandText);
-            // 非 PK 欄位 + 1 PK 欄位
+            // Non-PK fields plus one PK field.
             Assert.Equal(3, cmd.Parameters.Count);
         }
 
         [Fact]
-        [DisplayName("BuildUpdateCommand 主鍵參數應使用 Original 版本")]
+        [DisplayName("BuildUpdateCommand uses the Original version for the primary key parameter")]
         public void BuildUpdateCommand_KeyParameterUsesOriginalVersion()
         {
             var schema = BuildSampleSchema();
@@ -119,10 +119,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region BuildDeleteCommand 測試
+        #region BuildDeleteCommand
 
         [Fact]
-        [DisplayName("BuildDeleteCommand 應產生 DELETE 語句並以主鍵為 WHERE 條件")]
+        [DisplayName("BuildDeleteCommand produces a DELETE statement with the primary key as the WHERE condition")]
         public void BuildDeleteCommand_HasPrimaryKeyWhere()
         {
             var schema = BuildSampleSchema();
@@ -138,10 +138,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region BuildUpdateSpec 測試
+        #region BuildUpdateSpec
 
         [Fact]
-        [DisplayName("BuildUpdateSpec 應同時包裝 Insert/Update/Delete 命令與 DataTable")]
+        [DisplayName("BuildUpdateSpec wraps the Insert/Update/Delete commands and the DataTable together")]
         public void BuildUpdateSpec_PackagesAllThreeCommands()
         {
             var schema = BuildSampleSchema();
@@ -160,7 +160,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("BuildUpdateSpec DataTable 為 null 應擲出 ArgumentNullException")]
+        [DisplayName("BuildUpdateSpec throws ArgumentNullException for a null DataTable")]
         public void BuildUpdateSpec_NullDataTable_Throws()
         {
             var schema = BuildSampleSchema();

@@ -12,7 +12,7 @@ namespace Polhem.Db.UnitTests
         public SqlTableSchemaProviderTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SqlTableSchemaProvider 取得資料表結構應成功")]
+        [DisplayName("SqlTableSchemaProvider gets the table schema")]
         public void GetTableSchema_ValidTableName_ReturnsSchema()
         {
             var helper = new SqlTableSchemaProvider("common_sqlserver", _fx.GetRequiredService<IDbConnectionManager>());
@@ -21,7 +21,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SqlTableSchemaProvider 取得不存在資料表應回傳 null")]
+        [DisplayName("SqlTableSchemaProvider returns null for a table that does not exist")]
         public void GetTableSchema_NonExistentTable_ReturnsNull()
         {
             var helper = new SqlTableSchemaProvider("common_sqlserver", _fx.GetRequiredService<IDbConnectionManager>());
@@ -30,7 +30,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SqlTableSchemaProvider DatabaseId 應等於建構子傳入的值")]
+        [DisplayName("SqlTableSchemaProvider DatabaseId equals the value passed to the constructor")]
         public void Constructor_DatabaseId_IsSet()
         {
             var helper = new SqlTableSchemaProvider("common_sqlserver", _fx.GetRequiredService<IDbConnectionManager>());
@@ -38,17 +38,15 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("GetTableSchema 應從 extended property 讀回表層 DisplayName")]
+        [DisplayName("GetTableSchema reads the table-level DisplayName back from the extended property")]
         public void GetTableSchema_WithExtendedProperty_ReturnsDisplayName()
         {
             string tableName = $"polhem_test_desc_{Guid.NewGuid():N}";
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             try
             {
-                // 建立只有一個欄位的測試表
                 dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
                     $"CREATE TABLE [{tableName}] ([id] [int] NOT NULL);"));
-                // 寫入表層 extended property
                 dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
                     "EXEC sp_addextendedproperty @name=N'MS_Description', @value=N'測試表說明'," +
                     $" @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'{tableName}';"));
@@ -67,7 +65,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("GetTableSchema 無 extended property 時 DisplayName 應為空字串")]
+        [DisplayName("GetTableSchema sets DisplayName to an empty string when there is no extended property")]
         public void GetTableSchema_WithoutExtendedProperty_ReturnsEmptyDisplayName()
         {
             string tableName = $"polhem_test_desc_{Guid.NewGuid():N}";

@@ -5,8 +5,8 @@ namespace Polhem.Db.UnitTests
 {
     public class DbTypeMapperTests
     {
-        // 此測試資料需涵蓋多種 CLR 型別（string/int/DateTime/Guid/byte[] 等），
-        // 故 TheoryData 僅能以 object 作為第一型別參數；xUnit1045 警告不適用於此刻意設計。
+        // The test data covers many CLR types (string/int/DateTime/Guid/byte[] and more), so the TheoryData can only
+        // use object as its first type argument. Warning xUnit1045 does not apply to this deliberate design.
 #pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
         public static TheoryData<object, DbType> Infer_Inputs() => new()
         {
@@ -27,7 +27,7 @@ namespace Polhem.Db.UnitTests
 
         [Theory]
         [MemberData(nameof(Infer_Inputs))]
-        [DisplayName("Infer 應依值的型別回傳對應 DbType")]
+        [DisplayName("Infer returns the DbType matching the type of the value")]
         public void Infer_KnownTypes_ReturnsExpected(object value, DbType expected)
         {
             var result = DbTypeMapper.Infer(value);
@@ -36,21 +36,21 @@ namespace Polhem.Db.UnitTests
 #pragma warning restore xUnit1045
 
         [Fact]
-        [DisplayName("Infer 對 null 值應回傳 null")]
+        [DisplayName("Infer returns null for a null value")]
         public void Infer_Null_ReturnsNull()
         {
             Assert.Null(DbTypeMapper.Infer(null!));
         }
 
         [Fact]
-        [DisplayName("Infer 對 DBNull 應回傳 null")]
+        [DisplayName("Infer returns null for DBNull")]
         public void Infer_DBNull_ReturnsNull()
         {
             Assert.Null(DbTypeMapper.Infer(DBNull.Value));
         }
 
         [Fact]
-        [DisplayName("Infer 對不支援型別應回傳 null")]
+        [DisplayName("Infer returns null for an unsupported type")]
         public void Infer_UnsupportedType_ReturnsNull()
         {
             Assert.Null(DbTypeMapper.Infer(new object()));

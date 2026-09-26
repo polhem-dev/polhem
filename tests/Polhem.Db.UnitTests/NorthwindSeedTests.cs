@@ -19,23 +19,23 @@ namespace Polhem.Db.UnitTests
         public NorthwindSeedTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server 上 Northwind seed 應建立完整業務資料與 master-detail 連結")]
+        [DisplayName("Northwind seed on SQL Server creates the full business data and the master-detail links")]
         public void Seed_SqlServer() => AssertSeed(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL 上 Northwind seed 應建立完整業務資料與 master-detail 連結")]
+        [DisplayName("Northwind seed on PostgreSQL creates the full business data and the master-detail links")]
         public void Seed_PostgreSql() => AssertSeed(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite 上 Northwind seed 應建立完整業務資料與 master-detail 連結")]
+        [DisplayName("Northwind seed on SQLite creates the full business data and the master-detail links")]
         public void Seed_Sqlite() => AssertSeed(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL 上 Northwind seed 應建立完整業務資料與 master-detail 連結")]
+        [DisplayName("Northwind seed on MySQL creates the full business data and the master-detail links")]
         public void Seed_MySql() => AssertSeed(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle 上 Northwind seed 應建立完整業務資料與 master-detail 連結")]
+        [DisplayName("Northwind seed on Oracle creates the full business data and the master-detail links")]
         public void Seed_Oracle() => AssertSeed(DatabaseType.Oracle);
 
         private void AssertSeed(DatabaseType dbType)

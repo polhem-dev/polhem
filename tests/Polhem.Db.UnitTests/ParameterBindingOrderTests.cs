@@ -5,8 +5,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// <see cref="DbCommandSpec"/> 佔位符綁定的跨 provider 合約測試：
-    /// 佔位符的**書寫順序**與參數集合的順序無關，同一個佔位符也可以在一句 SQL 內出現多次。
+    /// A cross-provider contract test of placeholder binding in <see cref="DbCommandSpec"/>: the **written order** of
+    /// the placeholders is independent of the order of the parameter collection, and the same placeholder may appear
+    /// several times in one SQL statement.
     /// </summary>
     /// <remarks>
     /// Oracle.ManagedDataAccess binds by position unless <c>BindByName</c> is set, so before
@@ -23,43 +24,43 @@ namespace Polhem.Db.UnitTests
         public ParameterBindingOrderTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：佔位符非遞增順序時仍應綁到對應的欄位")]
+        [DisplayName("SQL Server binds out-of-order placeholders to the matching columns")]
         public void OutOfOrderPlaceholders_SqlServer() => RunOutOfOrderPlaceholders(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：佔位符非遞增順序時仍應綁到對應的欄位")]
+        [DisplayName("PostgreSQL binds out-of-order placeholders to the matching columns")]
         public void OutOfOrderPlaceholders_PostgreSql() => RunOutOfOrderPlaceholders(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：佔位符非遞增順序時仍應綁到對應的欄位")]
+        [DisplayName("MySQL binds out-of-order placeholders to the matching columns")]
         public void OutOfOrderPlaceholders_MySql() => RunOutOfOrderPlaceholders(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：佔位符非遞增順序時仍應綁到對應的欄位")]
+        [DisplayName("SQLite binds out-of-order placeholders to the matching columns")]
         public void OutOfOrderPlaceholders_Sqlite() => RunOutOfOrderPlaceholders(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：佔位符非遞增順序時仍應綁到對應的欄位")]
+        [DisplayName("Oracle binds out-of-order placeholders to the matching columns")]
         public void OutOfOrderPlaceholders_Oracle() => RunOutOfOrderPlaceholders(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：同一佔位符出現兩次應綁到同一個參數")]
+        [DisplayName("SQL Server binds a placeholder that appears twice to the same parameter")]
         public void RepeatedPlaceholder_SqlServer() => RunRepeatedPlaceholder(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：同一佔位符出現兩次應綁到同一個參數")]
+        [DisplayName("PostgreSQL binds a placeholder that appears twice to the same parameter")]
         public void RepeatedPlaceholder_PostgreSql() => RunRepeatedPlaceholder(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：同一佔位符出現兩次應綁到同一個參數")]
+        [DisplayName("MySQL binds a placeholder that appears twice to the same parameter")]
         public void RepeatedPlaceholder_MySql() => RunRepeatedPlaceholder(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：同一佔位符出現兩次應綁到同一個參數")]
+        [DisplayName("SQLite binds a placeholder that appears twice to the same parameter")]
         public void RepeatedPlaceholder_Sqlite() => RunRepeatedPlaceholder(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：同一佔位符出現兩次應綁到同一個參數")]
+        [DisplayName("Oracle binds a placeholder that appears twice to the same parameter")]
         public void RepeatedPlaceholder_Oracle() => RunRepeatedPlaceholder(DatabaseType.Oracle);
 
         // The production shape this reproduces is SessionRepository.UpdateSession: two columns

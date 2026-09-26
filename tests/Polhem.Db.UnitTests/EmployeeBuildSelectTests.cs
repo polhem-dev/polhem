@@ -8,9 +8,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 以 tests/Define/FormSchema/Employee.FormSchema.xml 為對象，
-    /// 驗證 <see cref="SqlFormCommandBuilder"/> 由 FormSchema 驅動產生 SELECT 語句的行為。
-    /// 不需資料庫連線；純粹比對產出 SQL 字串。
+    /// Verifies how <see cref="SqlFormCommandBuilder"/> produces SELECT statements driven by the FormSchema, using
+    /// <c>tests/Define/FormSchema/Employee.FormSchema.xml</c>. No database connection is needed; only the produced SQL
+    /// strings are compared.
     /// </summary>
     public class EmployeeBuildSelectTests : IClassFixture<PolhemTestFixture>
     {
@@ -36,7 +36,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Employee BuildSelect 不指定欄位應產生含 st_employee 的 SELECT/FROM")]
+        [DisplayName("Employee BuildSelect without fields produces a SELECT/FROM on st_employee")]
         public void BuildSelect_AllFields_ContainsTableNameAndKeywords()
         {
             var builder = NewBuilder();
@@ -51,7 +51,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Employee BuildSelect 僅取主檔欄位時不應產生 JOIN")]
+        [DisplayName("Employee BuildSelect produces no JOIN when only master fields are selected")]
         public void BuildSelect_MasterFieldsOnly_NoJoin()
         {
             var builder = NewBuilder();
@@ -65,12 +65,12 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Employee BuildSelect 取部門參考欄位應 JOIN 至 st_department")]
+        [DisplayName("Employee BuildSelect with the department reference field JOINs st_department")]
         public void BuildSelect_WithDeptRelationField_JoinsDepartment()
         {
             var builder = NewBuilder();
 
-            // ref_dept_name 由 dept_rowid → Department.sys_name 對映取得
+            // `ref_dept_name` comes from the mapping dept_rowid → Department.sys_name.
             var spec = builder.BuildSelect("Employee", "sys_id,sys_name,ref_dept_name", null, null);
 
             Assert.NotNull(spec);
@@ -80,23 +80,23 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Employee BuildSelect 取主管參考欄位應產生多層 JOIN（部門再連回員工）")]
+        [DisplayName("Employee BuildSelect with the supervisor reference field produces nested JOINs (department, then back to employee)")]
         public void BuildSelect_WithSupervisorRelationField_GeneratesChainedJoins()
         {
             var builder = NewBuilder();
 
-            // ref_supervisor_name 經由 dept_rowid → Department → manager_rowid → Employee 取得
+            // `ref_supervisor_name` comes through dept_rowid → Department → manager_rowid → Employee.
             var spec = builder.BuildSelect("Employee", "sys_id,sys_name,ref_supervisor_name", null, null);
 
             Assert.NotNull(spec);
             int joins = CountJoins(spec.CommandText);
-            Assert.True(joins >= 2, $"預期至少 2 個 JOIN（Department + Employee），實際 {joins}");
+            Assert.True(joins >= 2, $"Expected at least 2 JOINs (Department + Employee), actual {joins}");
             Assert.Contains("st_department", spec.CommandText);
             Assert.Contains("st_employee", spec.CommandText);
         }
 
         [Fact]
-        [DisplayName("Employee BuildSelect 篩選主檔欄位時不應產生 JOIN")]
+        [DisplayName("Employee BuildSelect produces no JOIN when filtering on a master field")]
         public void BuildSelect_FilterOnMasterField_NoJoinAndOneParameter()
         {
             var builder = NewBuilder();
@@ -111,7 +111,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Employee BuildSelect 以參考欄位作為篩選條件時應產生 JOIN")]
+        [DisplayName("Employee BuildSelect produces a JOIN when filtering on a reference field")]
         public void BuildSelect_FilterOnRelationField_GeneratesJoin()
         {
             var builder = NewBuilder();
@@ -126,7 +126,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Employee BuildSelect 以參考欄位排序時應產生 JOIN 與 ORDER BY")]
+        [DisplayName("Employee BuildSelect produces a JOIN and ORDER BY when sorting on a reference field")]
         public void BuildSelect_SortByRelationField_GeneratesJoinAndOrderBy()
         {
             var builder = NewBuilder();
@@ -144,7 +144,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Employee BuildSelect FilterGroup 多條件應產生對應參數量")]
+        [DisplayName("Employee BuildSelect with a multi-condition FilterGroup produces the matching number of parameters")]
         public void BuildSelect_FilterGroupWithMultipleConditions_ProducesParameters()
         {
             var builder = NewBuilder();
@@ -162,7 +162,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Employee BuildSelect 篩選主管參考欄位應產生多層 JOIN")]
+        [DisplayName("Employee BuildSelect filtering on the supervisor reference field produces nested JOINs")]
         public void BuildSelect_FilterOnSupervisorRelationField_GeneratesChainedJoins()
         {
             var builder = NewBuilder();
@@ -172,12 +172,12 @@ namespace Polhem.Db.UnitTests
 
             Assert.NotNull(spec);
             int joins = CountJoins(spec.CommandText);
-            Assert.True(joins >= 2, $"預期至少 2 個 JOIN（Department + Employee），實際 {joins}");
+            Assert.True(joins >= 2, $"Expected at least 2 JOINs (Department + Employee), actual {joins}");
             Assert.Single(spec.Parameters);
         }
 
         [Fact]
-        [DisplayName("Employee BuildSelect 指定不存在的表名應擲 InvalidOperationException")]
+        [DisplayName("Employee BuildSelect throws InvalidOperationException for a table name that does not exist")]
         public void BuildSelect_UnknownTableName_Throws()
         {
             var builder = NewBuilder();

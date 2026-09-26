@@ -9,7 +9,7 @@ namespace Polhem.Db.UnitTests
         public UpgradeOptionsTests(SharedDbFixture _) { }
 
         [Fact]
-        [DisplayName("預設 AllowColumnNarrowing 應為 false")]
+        [DisplayName("AllowColumnNarrowing defaults to false")]
         public void AllowColumnNarrowing_Default_IsFalse()
         {
             var options = new UpgradeOptions();
@@ -18,7 +18,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Default 靜態實例應回傳預設值")]
+        [DisplayName("The static Default instance returns the default values")]
         public void Default_ReturnsInstanceWithDefaults()
         {
             var options = UpgradeOptions.Default;

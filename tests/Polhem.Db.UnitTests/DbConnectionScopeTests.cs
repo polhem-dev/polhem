@@ -7,7 +7,7 @@ namespace Polhem.Db.UnitTests
     public class DbConnectionScopeTests
     {
         [Fact]
-        [DisplayName("Create externalConnection=null 且 factory=null 應擲 ArgumentNullException")]
+        [DisplayName("Create throws ArgumentNullException when externalConnection and factory are both null")]
         public void Create_NullFactoryAndNullExternal_Throws()
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -15,7 +15,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateAsync externalConnection=null 且 factory=null 應擲 ArgumentNullException")]
+        [DisplayName("CreateAsync throws ArgumentNullException when externalConnection and factory are both null")]
         public async Task CreateAsync_NullFactoryAndNullExternal_Throws()
         {
             await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -23,7 +23,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("外部連線為 Open 狀態時 Create 不會重新開啟，且 Dispose 不關閉連線")]
+        [DisplayName("Create does not reopen an open external connection, and Dispose does not close it")]
         public void Create_ExternalOpenConnection_NotReopenedNotClosed()
         {
             var fake = new FakeDbConnection { CurrentState = ConnectionState.Open };
@@ -39,7 +39,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("外部連線為 Closed 狀態時 Create 會開啟，但 Dispose 不關閉")]
+        [DisplayName("Create opens a closed external connection, but Dispose does not close it")]
         public void Create_ExternalClosedConnection_OpenedButNotDisposed()
         {
             var fake = new FakeDbConnection { CurrentState = ConnectionState.Closed };
@@ -54,7 +54,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateAsync 外部連線為 Closed 狀態時應呼叫 OpenAsync")]
+        [DisplayName("CreateAsync calls OpenAsync on a closed external connection")]
         public async Task CreateAsync_ExternalClosedConnection_OpensAsync()
         {
             var fake = new FakeDbConnection { CurrentState = ConnectionState.Closed };
@@ -69,7 +69,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Create 無外部連線時應透過 factory 建立並開啟新連線,Dispose 時應關閉")]
+        [DisplayName("Create without an external connection creates and opens a new connection through the factory and closes it on Dispose")]
         public void Create_NoExternal_CreatesAndOwnsConnection()
         {
             var fake = new FakeDbConnection { CurrentState = ConnectionState.Closed };
@@ -86,7 +86,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateAsync 無外部連線時應透過 factory 建立並以 OpenAsync 開啟新連線,Dispose 時應關閉")]
+        [DisplayName("CreateAsync without an external connection creates a new connection through the factory, opens it with OpenAsync and closes it on Dispose")]
         public async Task CreateAsync_NoExternal_CreatesAndOwnsConnection()
         {
             var fake = new FakeDbConnection { CurrentState = ConnectionState.Closed };
@@ -103,7 +103,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Create factory.CreateConnection 回傳 null 應擲 InvalidOperationException")]
+        [DisplayName("Create throws InvalidOperationException when factory.CreateConnection returns null")]
         public void Create_FactoryReturnsNull_ThrowsInvalidOperation()
         {
             var factory = new FakeDbProviderFactory(null);
@@ -113,7 +113,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Create 新連線 Open 失敗應 Dispose 並重拋例外")]
+        [DisplayName("Create disposes the new connection and rethrows when Open fails")]
         public void Create_OpenThrows_DisposesAndRethrows()
         {
             var fake = new FakeDbConnection
@@ -130,7 +130,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateAsync 新連線 OpenAsync 失敗應 Dispose 並重拋例外")]
+        [DisplayName("CreateAsync disposes the new connection and rethrows when OpenAsync fails")]
         public async Task CreateAsync_OpenAsyncThrows_DisposesAndRethrows()
         {
             var fake = new FakeDbConnection
@@ -153,7 +153,7 @@ namespace Polhem.Db.UnitTests
             public override DbConnection? CreateConnection() => _connection;
         }
 
-        // 最小可用的 DbConnection 實作，用來模擬 State 與 Open/Dispose 行為
+        // A minimal `DbConnection` implementation that simulates State and the Open/Dispose behavior.
         private sealed class FakeDbConnection : DbConnection
         {
             public ConnectionState CurrentState { get; set; } = ConnectionState.Closed;

@@ -25,7 +25,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("建構子傳入 null formSchema 應擲 ArgumentNullException")]
+        [DisplayName("The constructor throws ArgumentNullException for a null formSchema")]
         public void Constructor_NullFormSchema_Throws()
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -33,7 +33,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 空 FilterGroup 產生空 WHERE 應擲 InvalidOperationException")]
+        [DisplayName("Build throws InvalidOperationException when an empty FilterGroup produces an empty WHERE")]
         public void Build_EmptyFilterGroup_ThrowsOnEmptyWhere()
         {
             var builder = new DeleteCommandBuilder(BuildSchema("st_employee"), DatabaseType.SQLServer);
@@ -42,7 +42,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 資料表 DbTableName 為空時應以 TableName 作為實體表名")]
+        [DisplayName("Build uses TableName as the physical table name when DbTableName is empty")]
         public void Build_TableWithoutDbTableName_UsesTableName()
         {
             var builder = new DeleteCommandBuilder(BuildSchema(string.Empty), DatabaseType.SQLServer);
@@ -52,7 +52,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 條件 FieldName 為空時應擲 InvalidOperationException")]
+        [DisplayName("Build throws InvalidOperationException when a condition's FieldName is empty")]
         public void Build_ConditionWithEmptyFieldName_Throws()
         {
             var builder = new DeleteCommandBuilder(BuildSchema("st_employee"), DatabaseType.SQLServer);
@@ -61,7 +61,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 未知 FilterNodeKind 應走 fall-through 分支原樣傳回節點")]
+        [DisplayName("Build returns a node of unknown FilterNodeKind unchanged through the fall-through branch")]
         public void Build_UnknownFilterNodeKind_HitsFallThroughBranch()
         {
             // A synthetic node whose Kind is neither Condition nor Group drives

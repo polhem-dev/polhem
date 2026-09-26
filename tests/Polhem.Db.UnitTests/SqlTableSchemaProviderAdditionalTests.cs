@@ -4,20 +4,19 @@ using Polhem.Db.Providers.SqlServer;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 補充 <see cref="SqlTableSchemaProvider"/> 靜態方法的覆蓋率：
-    /// 测試 <see cref="SqlTableSchemaProviderStaticTests"/> 尚未涉及的
-    /// MONEY、FLOAT 和預設分支路徑。
+    /// Additional coverage for the static methods of <see cref="SqlTableSchemaProvider"/>: the MONEY, FLOAT and
+    /// default branch paths that <see cref="SqlTableSchemaProviderStaticTests"/> does not reach yet.
     /// </summary>
     public class SqlTableSchemaProviderAdditionalTests
     {
-        #region ParseDBDefaultValue 補充型別
+        #region ParseDBDefaultValue additional types
 
         [Theory]
         [InlineData("MONEY", "((0))", "0", "")]
         [InlineData("MONEY", "((500))", "0", "500")]
         [InlineData("FLOAT", "((0))", "0", "")]
         [InlineData("FLOAT", "((3.14))", "0", "3.14")]
-        [DisplayName("SQL Server ParseDBDefaultValue MONEY/FLOAT 應剝除 ((...)) 包裹")]
+        [DisplayName("SQL Server ParseDBDefaultValue strips the ((...)) wrapper for MONEY/FLOAT")]
         public void ParseDBDefaultValue_MoneyAndFloat_StripsDoubleParens(
             string dataType, string defaultValue, string originalDefault, string expected)
         {
@@ -30,7 +29,7 @@ namespace Polhem.Db.UnitTests
         [InlineData("DECIMAL", "((10.5))", "")]
         [InlineData("BIGINT", "((1000))", "")]
         [InlineData("VARBINARY", "0x", "")]
-        [DisplayName("SQL Server ParseDBDefaultValue 不支援的型別應回傳空字串")]
+        [DisplayName("SQL Server ParseDBDefaultValue returns an empty string for an unsupported type")]
         public void ParseDBDefaultValue_UnsupportedTypes_ReturnsEmpty(
             string dataType, string defaultValue, string expected)
         {
@@ -40,20 +39,20 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQL Server ParseDBDefaultValue NVARCHAR 表達式副本應正確解析")]
+        [DisplayName("SQL Server ParseDBDefaultValue parses an NVARCHAR default expression")]
         public void ParseDBDefaultValue_NvarcharWithSingleQuotePrefix_StripsNPrefix()
         {
-            // SQL Server 儲存的 NVARCHAR default 格式為 (N'value')
+            // SQL Server stores an NVARCHAR default in the form (N'value').
             var result = SqlTableSchemaProvider.ParseDBDefaultValue("NVARCHAR", "(N'active')", "");
 
             Assert.Equal("active", result);
         }
 
         [Fact]
-        [DisplayName("SQL Server ParseDBDefaultValue NVARCHAR 表達式副本不含 N 前缀也應正確解析")]
+        [DisplayName("SQL Server ParseDBDefaultValue parses an NVARCHAR default expression without the N prefix")]
         public void ParseDBDefaultValue_NvarcharWithoutNPrefix_StripsParens()
         {
-            // 部分 SQL Server 表達式不含 N 前缀
+            // Some SQL Server expressions have no N prefix.
             var result = SqlTableSchemaProvider.ParseDBDefaultValue("NVARCHAR", "('world')", "");
 
             Assert.Equal("world", result);

@@ -11,7 +11,7 @@ namespace Polhem.Db.UnitTests
         public TableChangeTests(SharedDbFixture _) { }
 
         [Fact]
-        [DisplayName("AddFieldChange 應保留 Field 參考且為 TableChange 子類")]
+        [DisplayName("AddFieldChange keeps the Field reference and is a TableChange subclass")]
         public void AddFieldChange_PreservesField()
         {
             var field = new DbField("age", "Age", FieldDbType.Integer);
@@ -22,7 +22,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("AlterFieldChange 應保留 OldField 與 NewField 參考")]
+        [DisplayName("AlterFieldChange keeps the OldField and NewField references")]
         public void AlterFieldChange_PreservesOldAndNewFields()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 30 };
@@ -35,7 +35,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddIndexChange 應保留 Index 參考")]
+        [DisplayName("AddIndexChange keeps the Index reference")]
         public void AddIndexChange_PreservesIndex()
         {
             var index = new DbTableIndex { Name = "ix_demo_name" };
@@ -47,7 +47,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("DropIndexChange 應保留 Index 參考")]
+        [DisplayName("DropIndexChange keeps the Index reference")]
         public void DropIndexChange_PreservesIndex()
         {
             var index = new DbTableIndex { Name = "ix_demo_name" };
@@ -59,7 +59,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("DropIndexChange.Describe 應回傳含索引名的描述字串")]
+        [DisplayName("DropIndexChange.Describe returns a description containing the index name")]
         public void DropIndexChange_Describe_ReturnsIndexName()
         {
             var index = new DbTableIndex { Name = "ix_user_email" };
@@ -69,7 +69,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("RenameFieldChange 應保留 OldFieldName 與 NewField")]
+        [DisplayName("RenameFieldChange keeps OldFieldName and NewField")]
         public void RenameFieldChange_PreservesOldNameAndNewField()
         {
             var newField = new DbField("employee_name", "Employee Name", FieldDbType.String) { Length = 50 };
@@ -81,7 +81,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddFieldChange.Describe 應回傳包含欄位名稱的描述字串")]
+        [DisplayName("AddFieldChange.Describe returns a description containing the field name")]
         public void AddFieldChange_Describe_ReturnsCorrectString()
         {
             var field = new DbField("email", "Email", FieldDbType.String);
@@ -91,7 +91,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddIndexChange.Describe 應回傳包含索引名稱的描述字串")]
+        [DisplayName("AddIndexChange.Describe returns a description containing the index name")]
         public void AddIndexChange_Describe_ReturnsCorrectString()
         {
             var index = new DbTableIndex { Name = "ix_test_email" };
@@ -101,7 +101,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("RenameFieldChange.Describe 應回傳含舊欄位名稱與新欄位名稱的描述字串")]
+        [DisplayName("RenameFieldChange.Describe returns a description containing the old and the new field names")]
         public void RenameFieldChange_Describe_ReturnsCorrectString()
         {
             var newField = new DbField("employee_name", "Employee Name", FieldDbType.String);

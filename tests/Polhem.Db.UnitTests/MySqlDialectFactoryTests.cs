@@ -26,7 +26,7 @@ namespace Polhem.Db.UnitTests
 
         public MySqlDialectFactoryTests(SharedDbFixture fx) { _fx = fx; }
         [Fact]
-        [DisplayName("MySQL DialectFactory 應透過 DbDialectRegistry 註冊成功")]
+        [DisplayName("MySQL DialectFactory is registered through DbDialectRegistry")]
         public void DialectFactory_IsRegistered()
         {
             var factory = DbDialectRegistry.Get(DatabaseType.MySQL);
@@ -36,7 +36,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL ADO.NET provider 應透過 DbProviderRegistry 註冊成功")]
+        [DisplayName("MySQL ADO.NET provider is registered through DbProviderRegistry")]
         public void Provider_IsRegistered()
         {
             var factory = DbProviderRegistry.Get(DatabaseType.MySQL);
@@ -45,7 +45,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL DialectFactory 的 GetDefaultValueExpression 應回傳對應運算式")]
+        [DisplayName("MySQL DialectFactory GetDefaultValueExpression returns the matching expressions")]
         public void DialectFactory_DefaultValueExpression_ReturnsExpected()
         {
             var factory = new MySqlDialectFactory();
@@ -57,23 +57,23 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL DialectFactory 應能建立各純 SQL 產生器實例")]
+        [DisplayName("MySQL DialectFactory creates each pure SQL generator")]
         public void DialectFactory_CreatesAllBuilders()
         {
             var factory = new MySqlDialectFactory();
 
-            // 只驗證「無外部相依」的 builder：CREATE / ALTER / Rebuild 純字串輸出，
-            // 不需開連線或查 FormSchema。
+            // Only builders without external dependencies are checked: CREATE / ALTER / Rebuild produce plain strings
+            // and need no connection or FormSchema lookup.
             Assert.NotNull(factory.CreateCreateTableCommandBuilder());
             Assert.NotNull(factory.CreateTableAlterCommandBuilder());
             Assert.NotNull(factory.CreateTableRebuildCommandBuilder());
-            // CreateTableSchemaProvider 在實作後會 ctor 內 new DbAccess(databaseId)，
-            // CI 未設 POLHEM_TEST_CONNSTR_MYSQL 時 'common_mysql' 沒註冊到 DbConnectionManager
-            // → KeyNotFoundException；改由 MySqlIntegrationTests 覆蓋。
+            // `CreateTableSchemaProvider` constructs `new DbAccess(databaseId)` in its constructor. When CI has no
+            // POLHEM_TEST_CONNSTR_MYSQL, 'common_mysql' is not registered in `DbConnectionManager` and it throws
+            // `KeyNotFoundException`, so `MySqlIntegrationTests` covers it instead.
         }
 
         [Fact]
-        [DisplayName("MySqlDialectFactory：CreateFormCommandBuilder 應回傳 MySqlFormCommandBuilder")]
+        [DisplayName("MySqlDialectFactory CreateFormCommandBuilder returns a MySqlFormCommandBuilder")]
         public void CreateFormCommandBuilder_ReturnsMySqlImpl()
         {
             var factory = new MySqlDialectFactory();

@@ -34,7 +34,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("FindRightAlias rightAlias 為 null 應回傳 null")]
+        [DisplayName("FindRightAlias returns null for a null rightAlias")]
         public void FindRightAlias_NullAlias_ReturnsNull()
         {
             var collection = BuildSampleCollection();
@@ -43,7 +43,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("FindRightAlias rightAlias 為空字串應回傳 null")]
+        [DisplayName("FindRightAlias returns null for an empty rightAlias")]
         public void FindRightAlias_EmptyAlias_ReturnsNull()
         {
             var collection = BuildSampleCollection();
@@ -52,7 +52,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("FindRightAlias 找到對應 alias 應回傳該 TableJoin")]
+        [DisplayName("FindRightAlias returns the TableJoin with the matching alias")]
         public void FindRightAlias_Found_ReturnsMatchingJoin()
         {
             var collection = BuildSampleCollection();
@@ -64,11 +64,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("FindRightAlias 採大小寫不敏感比對(框架預設 IgnoreCase)")]
+        [DisplayName("FindRightAlias matches case-insensitively (the framework default IgnoreCase)")]
         public void FindRightAlias_CaseInsensitive_DifferentCaseFound()
         {
-            // FindRightAlias 使用 StringUtilities.IsEquals(case-insensitive 預設),
-            // 即使輸入小寫 "d" 也能找到大寫的 "D" alias。
+            // `FindRightAlias` uses `StringUtilities.IsEquals` (case-insensitive by default), so the lower-case input
+            // "d" still finds the upper-case alias "D".
             var collection = BuildSampleCollection();
 
             var join = collection.FindRightAlias("d");
@@ -77,7 +77,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("FindRightAlias 找不到對應 alias 應回傳 null")]
+        [DisplayName("FindRightAlias returns null when no alias matches")]
         public void FindRightAlias_NotFound_ReturnsNull()
         {
             var collection = BuildSampleCollection();
@@ -86,7 +86,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("空集合 FindRightAlias 應回傳 null")]
+        [DisplayName("FindRightAlias returns null on an empty collection")]
         public void FindRightAlias_EmptyCollection_ReturnsNull()
         {
             var collection = new TableJoinCollection();

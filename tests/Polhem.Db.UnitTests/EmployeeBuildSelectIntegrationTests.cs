@@ -12,9 +12,10 @@ using Polhem.Tests.Shared;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// Round-trip 整合測試：將 Employee/Department FormSchema 產生的 SELECT 語句送進實體資料庫執行，
-    /// 驗證 SQL 語法在 dialect 下確實可被資料庫接受，且 JOIN/Filter/Sort 行為符合 FormSchema 對映。
-    /// 每個測試自行種子（Supervisor → Department → Employee）並於 finally 清理。
+    /// Round-trip integration tests: run the SELECT statements produced from the Employee/Department FormSchemas
+    /// against a real database, to verify that each dialect's SQL is accepted and that JOIN/Filter/Sort behave as the
+    /// FormSchema mapping says. Each test seeds its own data (Supervisor → Department → Employee) and cleans up in
+    /// finally.
     /// </summary>
     public class EmployeeBuildSelectIntegrationTests : IClassFixture<SharedDbFixture>
     {
@@ -53,10 +54,10 @@ namespace Polhem.Db.UnitTests
                 var row = table.Rows[0];
                 Assert.Equal($"E{runId}", row["sys_id"]);
                 Assert.Equal("員工乙", row["sys_name"]);
-                // 單階關聯：dept_rowid → Department
+                // Single-level relation: dept_rowid → Department.
                 Assert.Equal($"D{runId}", row["ref_dept_id"]);
                 Assert.Equal("工程部", row["ref_dept_name"]);
-                // 多階關聯：dept_rowid → Department → manager_rowid → Employee
+                // Multi-level relation: dept_rowid → Department → manager_rowid → Employee.
                 Assert.Equal($"S{runId}", row["ref_supervisor_id"]);
                 Assert.Equal("主管甲", row["ref_supervisor_name"]);
             }
@@ -87,7 +88,7 @@ namespace Polhem.Db.UnitTests
                 InsertEmployee(db, employeeSchema, dbType, empARowId, $"EA{runId}", "員工A", deptARowId);
                 InsertEmployee(db, employeeSchema, dbType, empBRowId, $"EB{runId}", "員工B", deptBRowId);
 
-                // 用 ref_dept_id 篩選（必須透過 JOIN 到 st_department）
+                // Filter by `ref_dept_id`, which requires the JOIN to `st_department`.
                 var spec = new SelectCommandBuilder(employeeSchema, dbType, Access)
                     .Build("Employee",
                         "sys_id,sys_name,ref_dept_id",
@@ -122,14 +123,14 @@ namespace Polhem.Db.UnitTests
 
             try
             {
-                // 部門名稱刻意取 ASCII 比較好排序：Z 在後，A 在前
+                // Department names are ASCII on purpose so the sort order is predictable: Z last, A first.
                 InsertDepartment(db, departmentSchema, dbType, deptZRowId, $"DZ{runId}", "ZZZ", Guid.Empty);
                 InsertDepartment(db, departmentSchema, dbType, deptARowId, $"DA{runId}", "AAA", Guid.Empty);
                 InsertEmployee(db, employeeSchema, dbType, empInZRowId, $"EZ{runId}", "員工Z", deptZRowId);
                 InsertEmployee(db, employeeSchema, dbType, empInARowId, $"EA{runId}", "員工A", deptARowId);
 
-                // 以 ref_dept_name 升冪排序（需 JOIN 到 st_department）
-                // 加 filter 限制範圍以避免被其他測試殘餘資料干擾
+                // Sort by `ref_dept_name` ascending (requires the JOIN to `st_department`). The filter narrows the
+                // rows so leftovers from other tests cannot interfere.
                 var filter = FilterGroup.Any(
                     FilterCondition.Equal("sys_rowid", empInZRowId),
                     FilterCondition.Equal("sys_rowid", empInARowId)
@@ -142,10 +143,8 @@ namespace Polhem.Db.UnitTests
                 var table = db.Execute(spec).Table!;
 
                 Assert.Equal(2, table.Rows.Count);
-                // 第一筆應為 AAA 部門對應的員工A
                 Assert.Equal("AAA", table.Rows[0]["ref_dept_name"]);
                 Assert.Equal($"EA{runId}", table.Rows[0]["sys_id"]);
-                // 第二筆為 ZZZ 部門對應的員工Z
                 Assert.Equal("ZZZ", table.Rows[1]["ref_dept_name"]);
                 Assert.Equal($"EZ{runId}", table.Rows[1]["sys_id"]);
             }
@@ -291,134 +290,135 @@ namespace Polhem.Db.UnitTests
             }
             catch (Exception ex)
             {
-                // 清理為 best-effort：種子 INSERT 失敗時可能對應列不存在；不要遮蔽斷言失敗訊息。
+                // Cleanup is best-effort: a failed seed INSERT may leave no row to delete.
+                // Do not mask the assertion failure message.
                 Console.WriteLine($"EmployeeBuildSelectIntegrationTests: cleanup of {tableName}#{rowId} failed — {ex.GetType().Name}: {ex.Message}");
             }
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：以 Employee FormSchema 產生的 SELECT 經實際執行，單階與多階關聯欄位皆能取回正確值")]
+        [DisplayName("SQL Server SELECT built from the Employee FormSchema runs and returns correct single-level and multi-level relation fields")]
         public void ChainedSupervisorSelect_SqlServer()
             => RunChainedSupervisorSelect(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：以 ref_dept_id 為篩選條件之 SELECT 經實際執行，僅回傳對應部門的員工")]
+        [DisplayName("SQL Server SELECT filtered by ref_dept_id runs and returns only the employees of that department")]
         public void FilterByRefDeptIdSelect_SqlServer()
             => RunFilterByRefDeptIdSelect(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：以 ref_dept_name 排序之 SELECT 經實際執行，回傳列依關聯欄位升冪排列")]
+        [DisplayName("SQL Server SELECT sorted by ref_dept_name runs and returns rows in ascending order of the relation field")]
         public void SortByRefDeptNameSelect_SqlServer()
             => RunSortByRefDeptNameSelect(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：以 Employee FormSchema 產生的 SELECT 經實際執行，單階與多階關聯欄位皆能取回正確值")]
+        [DisplayName("PostgreSQL SELECT built from the Employee FormSchema runs and returns correct single-level and multi-level relation fields")]
         public void ChainedSupervisorSelect_PostgreSql()
             => RunChainedSupervisorSelect(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：以 ref_dept_id 為篩選條件之 SELECT 經實際執行，僅回傳對應部門的員工")]
+        [DisplayName("PostgreSQL SELECT filtered by ref_dept_id runs and returns only the employees of that department")]
         public void FilterByRefDeptIdSelect_PostgreSql()
             => RunFilterByRefDeptIdSelect(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：以 ref_dept_name 排序之 SELECT 經實際執行，回傳列依關聯欄位升冪排列")]
+        [DisplayName("PostgreSQL SELECT sorted by ref_dept_name runs and returns rows in ascending order of the relation field")]
         public void SortByRefDeptNameSelect_PostgreSql()
             => RunSortByRefDeptNameSelect(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：以 Employee FormSchema 產生的 SELECT 經實際執行，單階與多階關聯欄位皆能取回正確值")]
+        [DisplayName("SQLite SELECT built from the Employee FormSchema runs and returns correct single-level and multi-level relation fields")]
         public void ChainedSupervisorSelect_Sqlite()
             => RunChainedSupervisorSelect(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：以 ref_dept_id 為篩選條件之 SELECT 經實際執行，僅回傳對應部門的員工")]
+        [DisplayName("SQLite SELECT filtered by ref_dept_id runs and returns only the employees of that department")]
         public void FilterByRefDeptIdSelect_Sqlite()
             => RunFilterByRefDeptIdSelect(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：以 ref_dept_name 排序之 SELECT 經實際執行，回傳列依關聯欄位升冪排列")]
+        [DisplayName("SQLite SELECT sorted by ref_dept_name runs and returns rows in ascending order of the relation field")]
         public void SortByRefDeptNameSelect_Sqlite()
             => RunSortByRefDeptNameSelect(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：以 Employee FormSchema 產生的 SELECT 經實際執行，單階與多階關聯欄位皆能取回正確值")]
+        [DisplayName("MySQL SELECT built from the Employee FormSchema runs and returns correct single-level and multi-level relation fields")]
         public void ChainedSupervisorSelect_MySql()
             => RunChainedSupervisorSelect(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：以 ref_dept_id 為篩選條件之 SELECT 經實際執行，僅回傳對應部門的員工")]
+        [DisplayName("MySQL SELECT filtered by ref_dept_id runs and returns only the employees of that department")]
         public void FilterByRefDeptIdSelect_MySql()
             => RunFilterByRefDeptIdSelect(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：以 ref_dept_name 排序之 SELECT 經實際執行，回傳列依關聯欄位升冪排列")]
+        [DisplayName("MySQL SELECT sorted by ref_dept_name runs and returns rows in ascending order of the relation field")]
         public void SortByRefDeptNameSelect_MySql()
             => RunSortByRefDeptNameSelect(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：以 Employee FormSchema 產生的 SELECT 經實際執行，單階與多階關聯欄位皆能取回正確值")]
+        [DisplayName("Oracle SELECT built from the Employee FormSchema runs and returns correct single-level and multi-level relation fields")]
         public void ChainedSupervisorSelect_Oracle()
             => RunChainedSupervisorSelect(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：以 ref_dept_id 為篩選條件之 SELECT 經實際執行，僅回傳對應部門的員工")]
+        [DisplayName("Oracle SELECT filtered by ref_dept_id runs and returns only the employees of that department")]
         public void FilterByRefDeptIdSelect_Oracle()
             => RunFilterByRefDeptIdSelect(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：以 ref_dept_name 排序之 SELECT 經實際執行，回傳列依關聯欄位升冪排列")]
+        [DisplayName("Oracle SELECT sorted by ref_dept_name runs and returns rows in ascending order of the relation field")]
         public void SortByRefDeptNameSelect_Oracle()
             => RunSortByRefDeptNameSelect(DatabaseType.Oracle);
 
         // -------- Paged SELECT (skip / take) per dialect --------
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：分頁 SELECT skip/take 三頁切片皆能取回正確列")]
+        [DisplayName("SQL Server paged SELECT returns the correct rows for three skip/take pages")]
         public void PagingSelect_SqlServer() => RunPagingSelect(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：分頁 SELECT skip/take 三頁切片皆能取回正確列")]
+        [DisplayName("PostgreSQL paged SELECT returns the correct rows for three skip/take pages")]
         public void PagingSelect_PostgreSql() => RunPagingSelect(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：分頁 SELECT skip/take 三頁切片皆能取回正確列")]
+        [DisplayName("SQLite paged SELECT returns the correct rows for three skip/take pages")]
         public void PagingSelect_Sqlite() => RunPagingSelect(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：分頁 SELECT skip/take 三頁切片皆能取回正確列")]
+        [DisplayName("MySQL paged SELECT returns the correct rows for three skip/take pages")]
         public void PagingSelect_MySql() => RunPagingSelect(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：分頁 SELECT skip/take 三頁切片皆能取回正確列")]
+        [DisplayName("Oracle paged SELECT returns the correct rows for three skip/take pages")]
         public void PagingSelect_Oracle() => RunPagingSelect(DatabaseType.Oracle);
 
         // -------- BuildCount per dialect --------
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：BuildCount 以 filter 計數，全集與子集分別回傳 5 / 3")]
+        [DisplayName("SQL Server BuildCount with a filter returns 5 for the full set and 3 for the subset")]
         public void BuildCount_SqlServer() => RunBuildCount(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：BuildCount 以 filter 計數，全集與子集分別回傳 5 / 3")]
+        [DisplayName("PostgreSQL BuildCount with a filter returns 5 for the full set and 3 for the subset")]
         public void BuildCount_PostgreSql() => RunBuildCount(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：BuildCount 以 filter 計數，全集與子集分別回傳 5 / 3")]
+        [DisplayName("SQLite BuildCount with a filter returns 5 for the full set and 3 for the subset")]
         public void BuildCount_Sqlite() => RunBuildCount(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：BuildCount 以 filter 計數，全集與子集分別回傳 5 / 3")]
+        [DisplayName("MySQL BuildCount with a filter returns 5 for the full set and 3 for the subset")]
         public void BuildCount_MySql() => RunBuildCount(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：BuildCount 以 filter 計數，全集與子集分別回傳 5 / 3")]
+        [DisplayName("Oracle BuildCount with a filter returns 5 for the full set and 3 for the subset")]
         public void BuildCount_Oracle() => RunBuildCount(DatabaseType.Oracle);
 
         // -------- MySQL UINT64_MAX sentinel: skip without take --------
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：skip 不帶 take 應使用 UINT64_MAX sentinel literal，取回 OFFSET 之後所有列")]
+        [DisplayName("MySQL skip without take uses the UINT64_MAX sentinel literal and returns every row after the OFFSET")]
         public void PagingSelect_MySql_SkipWithoutTake()
         {
             var employeeSchema = Access.GetFormSchema("Employee");

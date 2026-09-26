@@ -19,7 +19,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(10, 10, "OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY")]
         [InlineData(5, null, "OFFSET 5 ROWS")]
         [InlineData(null, 3, "OFFSET 0 ROWS FETCH NEXT 3 ROWS ONLY")]
-        [DisplayName("SQL Server：分頁子句 OFFSET/FETCH 5 邊界 case")]
+        [DisplayName("SQL Server OFFSET/FETCH paging clause for 5 edge cases")]
         public void Build_SqlServer(int? skip, int? take, string expected)
         {
             var builder = new LimitBuilder(DatabaseType.SQLServer);
@@ -34,7 +34,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(10, 10, "OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY")]
         [InlineData(5, null, "OFFSET 5 ROWS")]
         [InlineData(null, 3, "OFFSET 0 ROWS FETCH NEXT 3 ROWS ONLY")]
-        [DisplayName("Oracle：分頁子句 OFFSET/FETCH 5 邊界 case")]
+        [DisplayName("Oracle OFFSET/FETCH paging clause for 5 edge cases")]
         public void Build_Oracle(int? skip, int? take, string expected)
         {
             var builder = new LimitBuilder(DatabaseType.Oracle);
@@ -49,7 +49,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(10, 10, "LIMIT 10 OFFSET 10")]
         [InlineData(5, null, "OFFSET 5")]
         [InlineData(null, 3, "LIMIT 3")]
-        [DisplayName("PostgreSQL：分頁子句 LIMIT/OFFSET 5 邊界 case")]
+        [DisplayName("PostgreSQL LIMIT/OFFSET paging clause for 5 edge cases")]
         public void Build_PostgreSql(int? skip, int? take, string expected)
         {
             var builder = new LimitBuilder(DatabaseType.PostgreSQL);
@@ -64,7 +64,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(10, 10, "LIMIT 10 OFFSET 10")]
         [InlineData(5, null, "OFFSET 5")]
         [InlineData(null, 3, "LIMIT 3")]
-        [DisplayName("SQLite：分頁子句 LIMIT/OFFSET 5 邊界 case")]
+        [DisplayName("SQLite LIMIT/OFFSET paging clause for 5 edge cases")]
         public void Build_Sqlite(int? skip, int? take, string expected)
         {
             var builder = new LimitBuilder(DatabaseType.SQLite);
@@ -79,7 +79,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(10, 10, "LIMIT 10 OFFSET 10")]
         [InlineData(5, null, "LIMIT 18446744073709551615 OFFSET 5")]
         [InlineData(null, 3, "LIMIT 3")]
-        [DisplayName("MySQL：分頁子句 LIMIT/OFFSET 5 邊界 case（含 UINT64_MAX sentinel）")]
+        [DisplayName("MySQL LIMIT/OFFSET paging clause for 5 edge cases (including the UINT64_MAX sentinel)")]
         public void Build_MySql(int? skip, int? take, string expected)
         {
             var builder = new LimitBuilder(DatabaseType.MySQL);
@@ -89,7 +89,7 @@ namespace Polhem.Db.UnitTests
         // -------- Boundary cases --------
 
         [Fact]
-        [DisplayName("Build 傳入負數 skip 應丟出 ArgumentOutOfRangeException")]
+        [DisplayName("Build throws ArgumentOutOfRangeException for a negative skip")]
         public void Build_NegativeSkip_Throws()
         {
             var builder = new LimitBuilder(DatabaseType.SQLServer);
@@ -97,7 +97,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build 傳入負數 take 應丟出 ArgumentOutOfRangeException")]
+        [DisplayName("Build throws ArgumentOutOfRangeException for a negative take")]
         public void Build_NegativeTake_Throws()
         {
             var builder = new LimitBuilder(DatabaseType.SQLServer);

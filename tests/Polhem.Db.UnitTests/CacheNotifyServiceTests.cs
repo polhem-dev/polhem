@@ -108,35 +108,35 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：Touch 版本號自增且逐 key 隔離")]
+        [DisplayName("SQL Server Touch increments the version and isolates each key")]
         public void Touch_SqlServer_VersionSemantics() => RunVersionSemantics(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：Touch 版本號自增且逐 key 隔離")]
+        [DisplayName("PostgreSQL Touch increments the version and isolates each key")]
         public void Touch_PostgreSQL_VersionSemantics() => RunVersionSemantics(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：Touch 版本號自增且逐 key 隔離")]
+        [DisplayName("MySQL Touch increments the version and isolates each key")]
         public void Touch_MySQL_VersionSemantics() => RunVersionSemantics(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：Touch 版本號自增且逐 key 隔離")]
+        [DisplayName("Oracle Touch increments the version and isolates each key")]
         public void Touch_Oracle_VersionSemantics() => RunVersionSemantics(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：Touch 刷新 sys_update_time")]
+        [DisplayName("SQL Server Touch refreshes sys_update_time")]
         public void Touch_SqlServer_RefreshesUpdateTime() => RunUpdateTimeRefresh(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：Touch 刷新 sys_update_time")]
+        [DisplayName("PostgreSQL Touch refreshes sys_update_time")]
         public void Touch_PostgreSQL_RefreshesUpdateTime() => RunUpdateTimeRefresh(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：Touch 刷新 sys_update_time")]
+        [DisplayName("MySQL Touch refreshes sys_update_time")]
         public void Touch_MySQL_RefreshesUpdateTime() => RunUpdateTimeRefresh(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：Touch 刷新 sys_update_time")]
+        [DisplayName("Oracle Touch refreshes sys_update_time")]
         public void Touch_Oracle_RefreshesUpdateTime() => RunUpdateTimeRefresh(DatabaseType.Oracle);
     }
 }

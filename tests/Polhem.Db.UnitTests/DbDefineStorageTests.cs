@@ -110,23 +110,23 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：DbDefineStorage 各型別 round-trip + 同 tx bump")]
+        [DisplayName("SQL Server DbDefineStorage round-trips each type and bumps the version in the same transaction")]
         public void RoundTrip_SqlServer() => RunRoundTrip(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：DbDefineStorage 各型別 round-trip + 同 tx bump")]
+        [DisplayName("PostgreSQL DbDefineStorage round-trips each type and bumps the version in the same transaction")]
         public void RoundTrip_PostgreSQL() => RunRoundTrip(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：DbDefineStorage 各型別 round-trip + 同 tx bump")]
+        [DisplayName("MySQL DbDefineStorage round-trips each type and bumps the version in the same transaction")]
         public void RoundTrip_MySQL() => RunRoundTrip(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：DbDefineStorage 各型別 round-trip + 同 tx bump")]
+        [DisplayName("Oracle DbDefineStorage round-trips each type and bumps the version in the same transaction")]
         public void RoundTrip_Oracle() => RunRoundTrip(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：缺漏的必要定義 Get 應拋例外")]
+        [DisplayName("SQL Server Get of a missing required definition throws")]
         public void GetRequired_Missing_Throws()
         {
             var storage = NewStorage(DatabaseType.SQLServer);
@@ -143,7 +143,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("以 IServiceProvider 建構不應於建構時解析相依(打破 DI 建構循環)")]
+        [DisplayName("Constructing with an IServiceProvider does not resolve dependencies at construction (breaks the DI construction cycle)")]
         public void Constructor_ServiceProvider_DefersDependencyResolution()
         {
             var exception = Record.Exception(() => new DbDefineStorage(new ThrowingServiceProvider()));
@@ -224,11 +224,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：客製化 overlay 讀取 + base/租戶隔離")]
+        [DisplayName("SQL Server reads customization overlays and isolates base from tenants")]
         public void CustomizeOverlay_SqlServer() => RunCustomizeOverlay(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：客製化 overlay 讀取 + base/租戶隔離")]
+        [DisplayName("PostgreSQL reads customization overlays and isolates base from tenants")]
         public void CustomizeOverlay_PostgreSQL() => RunCustomizeOverlay(DatabaseType.PostgreSQL);
     }
 }

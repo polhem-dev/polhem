@@ -40,7 +40,7 @@ namespace Polhem.Db.UnitTests
         [InlineData("BLOB", 0, 0, 0, FieldDbType.Binary)]
         [InlineData("LONG RAW", 0, 0, 0, FieldDbType.Binary)]
         [InlineData("XMLTYPE", 0, 0, 0, FieldDbType.Unknown)]
-        [DisplayName("Oracle GetFieldDbType 應正確映射各 Oracle 型別")]
+        [DisplayName("Oracle GetFieldDbType maps each Oracle type")]
         public void GetFieldDbType_VariousOracleTypes_MapsCorrectly(
             string dataType, int precision, int scale, int length, FieldDbType expected)
         {
@@ -50,7 +50,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetFieldDbType 應對輸入字串大小寫不敏感")]
+        [DisplayName("Oracle GetFieldDbType ignores the case of the input string")]
         public void GetFieldDbType_CaseInsensitive()
         {
             Assert.Equal(FieldDbType.String, OracleTableSchemaProvider.GetFieldDbType("varchar2", 0, 0, 50));
@@ -59,7 +59,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetFieldDbType TIMESTAMP 帶括號精度（如 TIMESTAMP(6) WITH TIME ZONE）也應辨識為 DateTime")]
+        [DisplayName("Oracle GetFieldDbType recognizes TIMESTAMP with a parenthesized precision (such as TIMESTAMP(6) WITH TIME ZONE) as DateTime")]
         public void GetFieldDbType_TimestampWithQualifier_StillMapsToDateTime()
         {
             Assert.Equal(FieldDbType.DateTime, OracleTableSchemaProvider.GetFieldDbType("TIMESTAMP(6)", 0, 0, 0));
@@ -71,14 +71,14 @@ namespace Polhem.Db.UnitTests
 
         [Theory]
         [InlineData("VARCHAR2", "'hello'", "", "hello")]
-        [InlineData("VARCHAR2", "'world' ", "", "world")] // 帶 trailing space（Oracle LONG 慣例）
+        [InlineData("VARCHAR2", "'world' ", "", "world")] // With a trailing space (an Oracle LONG convention).
         [InlineData("CLOB", "'foo'", "", "foo")]
         [InlineData("NUMBER", "0", "", "0")]
         [InlineData("NUMBER", "42", "", "42")]
         [InlineData("DATE", "SYS_EXTRACT_UTC(SYSTIMESTAMP)", "", "SYS_EXTRACT_UTC(SYSTIMESTAMP)")]
         [InlineData("TIMESTAMP(6)", "SYS_EXTRACT_UTC(SYSTIMESTAMP)", "", "SYS_EXTRACT_UTC(SYSTIMESTAMP)")]
         [InlineData("RAW", "SYS_GUID()", "", "SYS_GUID()")]
-        [DisplayName("Oracle ParseDBDefaultValue 應依型別剝除字串引號並 trim 空白")]
+        [DisplayName("Oracle ParseDBDefaultValue strips the string quotes by type and trims whitespace")]
         public void ParseDBDefaultValue_StripsQuotesAndTrims(
             string dataType, string defaultValue, string originalDefault, string expected)
         {
@@ -88,27 +88,28 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle ParseDBDefaultValue 與內建預設值相同時應回傳空字串")]
+        [DisplayName("Oracle ParseDBDefaultValue returns an empty string when the value equals the built-in default")]
         public void ParseDBDefaultValue_MatchesBuiltinDefault_ReturnsEmpty()
         {
-            // NUMBER 預設值通常為 "0"；trim 後與 builtin 相同 → 空字串
+            // A NUMBER default is usually "0"; after trimming it equals
+            // the built-in one, so the result is an empty string.
             var result = OracleTableSchemaProvider.ParseDBDefaultValue("NUMBER", "0", "0");
 
             Assert.Equal(string.Empty, result);
         }
 
         [Fact]
-        [DisplayName("Oracle ParseDBDefaultValue 與內建預設值大小寫不同也應視為相同（SYS_GUID 等函式名）")]
+        [DisplayName("Oracle ParseDBDefaultValue treats a built-in default that differs only in case as equal (function names such as SYS_GUID)")]
         public void ParseDBDefaultValue_MatchesBuiltinDefaultCaseInsensitive_ReturnsEmpty()
         {
-            // Oracle data dictionary 可能回傳 lower-case 函式名稱
+            // The Oracle data dictionary may return function names in lower case.
             var result = OracleTableSchemaProvider.ParseDBDefaultValue("RAW", "sys_guid()", "SYS_GUID()");
 
             Assert.Equal(string.Empty, result);
         }
 
         [Fact]
-        [DisplayName("Oracle ParseDBDefaultValue 字串型別 escape 之雙引號應還原（'O''Brien' → O'Brien）")]
+        [DisplayName("Oracle ParseDBDefaultValue restores escaped doubled quotes of a string type ('O''Brien' → O'Brien)")]
         public void ParseDBDefaultValue_EscapedQuoteInString_Unescaped()
         {
             var result = OracleTableSchemaProvider.ParseDBDefaultValue("VARCHAR2", "'O''Brien'", "");
@@ -117,7 +118,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle ParseDBDefaultValue 空字串輸入應回傳空字串")]
+        [DisplayName("Oracle ParseDBDefaultValue returns an empty string for empty input")]
         public void ParseDBDefaultValue_EmptyInput_ReturnsEmpty()
         {
             var result = OracleTableSchemaProvider.ParseDBDefaultValue("NUMBER", string.Empty, "0");
@@ -126,11 +127,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle ParseDBDefaultValue 字串空字面 '' 應還原為空字串（與 builtin 不同時保留）")]
+        [DisplayName("Oracle ParseDBDefaultValue restores the empty string literal '' to an empty string")]
         public void ParseDBDefaultValue_EmptyStringLiteral_ParsesToEmpty()
         {
-            // 字串 column 的內建預設為 string.Empty；DB 實際儲存 '' → 解析也是 ""，
-            // 與 originalDefaultValue (string.Empty) 比對為 equal → 回傳 string.Empty
+            // The built-in default of a string column is `string.Empty`. The database stores '', which also parses to
+            // "", equal to `originalDefaultValue` (`string.Empty`), so the result is `string.Empty`.
             var result = OracleTableSchemaProvider.ParseDBDefaultValue("VARCHAR2", "''", "");
 
             Assert.Equal(string.Empty, result);

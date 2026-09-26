@@ -8,20 +8,19 @@ using Polhem.Db.Manager;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 補充 <see cref="SqlTableSchemaProvider"/> NormalizeDataTypeName 邊界路徑：
-    /// null/empty 輸入。
+    /// Additional edge paths of <c>NormalizeDataTypeName</c> in <see cref="SqlTableSchemaProvider"/>: null/empty input.
     /// </summary>
     public class SqlTableSchemaProviderNullTests
     {
         [Fact]
-        [DisplayName("SQL Server GetFieldDbType null 輸入應回傳 Unknown")]
+        [DisplayName("SQL Server GetFieldDbType returns Unknown for null input")]
         public void GetFieldDbType_NullDataType_ReturnsUnknown()
         {
             Assert.Equal(FieldDbType.Unknown, SqlTableSchemaProvider.GetFieldDbType(null!, 0, 0, 0));
         }
 
         [Fact]
-        [DisplayName("SQL Server GetFieldDbType 空字串輸入應回傳 Unknown")]
+        [DisplayName("SQL Server GetFieldDbType returns Unknown for an empty string")]
         public void GetFieldDbType_EmptyDataType_ReturnsUnknown()
         {
             Assert.Equal(FieldDbType.Unknown, SqlTableSchemaProvider.GetFieldDbType(string.Empty, 0, 0, 0));
@@ -29,10 +28,9 @@ namespace Polhem.Db.UnitTests
     }
 
     /// <summary>
-    /// <see cref="SqlTableSchemaProvider"/> 整合測試：
-    /// 驗證 <c>ParseDbField</c> Decimal 分支（Precision/Scale 賦值）與
-    /// <c>ParsePrimaryKey</c> 在無主鍵時的提前返回路徑。
-    /// 依賴 SQL Server 連線；環境變數未設時自動跳過。
+    /// Integration tests for <see cref="SqlTableSchemaProvider"/>: the Decimal branch of <c>ParseDbField</c>
+    /// (assigning Precision/Scale) and the early return of <c>ParsePrimaryKey</c> when there is no primary key.
+    /// Requires a SQL Server connection; skipped automatically when the environment variable is not set.
     /// </summary>
     public class SqlTableSchemaProviderDecimalAndNoPkTests : IClassFixture<SharedDbFixture>
     {
@@ -41,7 +39,7 @@ namespace Polhem.Db.UnitTests
 
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server SchemaProvider 讀回 DECIMAL(15,3) 欄位時應正確設定 Precision 與 Scale（ParseDbField Decimal 分支）")]
+        [DisplayName("SQL Server SchemaProvider sets Precision and Scale when reading back a DECIMAL(15,3) field (ParseDbField Decimal branch)")]
         public void GetTableSchema_DecimalField_ReturnsPrecisionAndScale()
         {
             const string tableName = "tb_ex_decimal";
@@ -72,7 +70,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server SchemaProvider 讀取只有唯一索引（無 PK）的資料表時 ParsePrimaryKey 應提前返回且唯一索引仍正確解析")]
+        [DisplayName("SQL Server SchemaProvider reading a table with only a unique index (no PK) returns early from ParsePrimaryKey and still parses the unique index")]
         public void GetTableSchema_TableWithUniqueIndexNoPk_ParsePrimaryKeyReturnsEarlyAndIndexPresent()
         {
             const string tableName = "tb_ex_nopk";

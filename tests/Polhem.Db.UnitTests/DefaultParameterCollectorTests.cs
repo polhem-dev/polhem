@@ -8,14 +8,14 @@ namespace Polhem.Db.UnitTests
         [Theory]
         [InlineData(null)]
         [InlineData("")]
-        [DisplayName("建構子 prefix 為 null 或空字串應擲 ArgumentException")]
+        [DisplayName("The constructor throws ArgumentException for a null or empty prefix")]
         public void Constructor_NullOrEmptyPrefix_Throws(string? prefix)
         {
             Assert.Throws<ArgumentException>(() => new DefaultParameterCollector(prefix!));
         }
 
         [Fact]
-        [DisplayName("建構子應正確記錄 Prefix")]
+        [DisplayName("The constructor records the Prefix")]
         public void Constructor_ValidPrefix_StoresPrefix()
         {
             var collector = new DefaultParameterCollector("@");
@@ -24,7 +24,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Add 連續呼叫應產生 @p0、@p1、@p2 並回傳對應名稱")]
+        [DisplayName("Consecutive Add calls produce @p0, @p1 and @p2 and return the matching names")]
         public void Add_SequentialCalls_GeneratesIncrementingNames()
         {
             var collector = new DefaultParameterCollector("@");
@@ -39,7 +39,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetAll 應回傳所有已加入的參數鍵值對")]
+        [DisplayName("GetAll returns every added parameter key/value pair")]
         public void GetAll_ReturnsAllAddedParameters()
         {
             var collector = new DefaultParameterCollector("@");
@@ -54,7 +54,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Add 應接受不同型別的 prefix（例如 Oracle 的 ':'）")]
+        [DisplayName("Add accepts other prefixes (such as Oracle's ':')")]
         public void Add_OraclePrefix_GeneratesColonNames()
         {
             var collector = new DefaultParameterCollector(":");

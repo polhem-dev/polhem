@@ -41,7 +41,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build tableName 為空白應擲 ArgumentException")]
+        [DisplayName("Build throws ArgumentException for a blank tableName")]
         public void Build_EmptyTableName_Throws()
         {
             var schema = BuildEmployeeSchema();
@@ -53,7 +53,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build row 為 null 應擲 ArgumentNullException")]
+        [DisplayName("Build throws ArgumentNullException for a null row")]
         public void Build_NullRow_Throws()
         {
             var schema = BuildEmployeeSchema();
@@ -63,7 +63,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 不存在的 tableName 應擲 InvalidOperationException")]
+        [DisplayName("Build throws InvalidOperationException for a tableName that does not exist")]
         public void Build_UnknownTableName_Throws()
         {
             var schema = BuildEmployeeSchema();
@@ -74,7 +74,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 應產生 SQL Server 方言並排除 RelationField 與 AutoIncrement")]
+        [DisplayName("Build produces the SQL Server dialect and excludes RelationField and AutoIncrement fields")]
         public void Build_SqlServer_GeneratesExpectedSqlAndParams()
         {
             var schema = BuildEmployeeSchema();
@@ -101,7 +101,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 應產生 PostgreSQL 方言並排除 RelationField 與 AutoIncrement")]
+        [DisplayName("Build produces the PostgreSQL dialect and excludes RelationField and AutoIncrement fields")]
         public void Build_PostgreSql_GeneratesExpectedSql()
         {
             var schema = BuildEmployeeSchema();
@@ -120,7 +120,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 應略過 DBNull 欄位以保留資料庫預設值")]
+        [DisplayName("Build skips DBNull fields so the database defaults apply")]
         public void Build_DbNullFields_Skipped()
         {
             var schema = BuildEmployeeSchema();
@@ -138,7 +138,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 無任何可寫入欄位時應擲 InvalidOperationException")]
+        [DisplayName("Build throws InvalidOperationException when no field can be written")]
         public void Build_NoWritableFields_Throws()
         {
             var schema = BuildEmployeeSchema();
@@ -151,7 +151,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 未設 DbTableName 時 fallback 至 TableName")]
+        [DisplayName("Build falls back to TableName when DbTableName is not set")]
         public void Build_FallbackToTableNameWhenDbTableNameMissing()
         {
             var schema = new FormSchema("X", "X");

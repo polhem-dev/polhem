@@ -24,7 +24,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build tableName 為空白應擲 ArgumentException")]
+        [DisplayName("Build throws ArgumentException for a blank tableName")]
         public void Build_EmptyTableName_Throws()
         {
             var builder = new DeleteCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);
@@ -33,7 +33,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build filter 為 null 應擲 ArgumentNullException")]
+        [DisplayName("Build throws ArgumentNullException for a null filter")]
         public void Build_NullFilter_Throws()
         {
             var builder = new DeleteCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);
@@ -41,7 +41,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 不存在的 tableName 應擲 InvalidOperationException")]
+        [DisplayName("Build throws InvalidOperationException for a tableName that does not exist")]
         public void Build_UnknownTableName_Throws()
         {
             var builder = new DeleteCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);
@@ -50,7 +50,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 應產生 SQL Server 方言並 quote 識別子與欄位")]
+        [DisplayName("Build produces the SQL Server dialect and quotes identifiers and fields")]
         public void Build_SqlServer_GeneratesExpectedSqlAndParam()
         {
             var rowId = Guid.NewGuid();
@@ -64,7 +64,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 應產生 PostgreSQL 方言並 quote 識別子與欄位")]
+        [DisplayName("Build produces the PostgreSQL dialect and quotes identifiers and fields")]
         public void Build_PostgreSql_GeneratesExpectedSql()
         {
             var builder = new DeleteCommandBuilder(BuildEmployeeSchema(), DatabaseType.PostgreSQL);
@@ -74,7 +74,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 以 sys_master_rowid 為條件可刪除明細")]
+        [DisplayName("Build can delete details with sys_master_rowid as the condition")]
         public void Build_MasterRowId_DeletesDetailRows()
         {
             var masterId = Guid.NewGuid();
@@ -86,7 +86,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 引用 RelationField 應擲 NotSupportedException")]
+        [DisplayName("Build throws NotSupportedException when referencing a RelationField")]
         public void Build_RelationFieldInFilter_Throws()
         {
             var builder = new DeleteCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);
@@ -95,7 +95,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 引用未知欄位應擲 NotSupportedException")]
+        [DisplayName("Build throws NotSupportedException when referencing an unknown field")]
         public void Build_UnknownFieldInFilter_Throws()
         {
             var builder = new DeleteCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);
@@ -104,7 +104,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build FilterGroup 應正確展開為 WHERE 子句")]
+        [DisplayName("Build expands a FilterGroup into the WHERE clause")]
         public void Build_FilterGroup_ProducesCompositeWhere()
         {
             var builder = new DeleteCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);

@@ -21,7 +21,8 @@ namespace Polhem.Db.UnitTests
             return schema;
         }
 
-        // 模擬從資料庫讀回的真實資料表結構，索引名稱已經是格式化後的字串（非樣板）
+        // Simulates a real table structure read back from the database:
+        // index names are already formatted strings, not templates.
         private static TableSchema BuildRealSchema(string tableName = "st_demo")
         {
             var schema = new TableSchema { TableName = tableName };
@@ -39,7 +40,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("RealTable 為 null 時整張表應標記為 New")]
+        [DisplayName("A null RealTable marks the whole table as New")]
         public void Compare_NullRealTable_MarksTableAsNew()
         {
             var define = BuildBaseSchema();
@@ -50,11 +51,11 @@ namespace Polhem.Db.UnitTests
             Assert.Equal(DbUpgradeAction.New, result.UpgradeAction);
         }
 
-        // ---------- Oracle：定義層 AllowNull 對 String / Text 不可比 ----------
-        // 迴歸：Oracle 一律把 String/Text 建成 nullable，OracleTableSchemaProvider 因此固定回報
-        // AllowNull=false 以對齊「定義寫 false」的情形。定義寫 AllowNull="true" 時兩側永遠對不上，
-        // 每次升級都重發一次 AlterFieldChange —— 對 Text 是致命的（MODIFY 重述 CLOB → ORA-22859），
-        // 整份 plan 中斷，同批真正該做的 AddFieldChange 也永遠落不了地。
+        // ---------- Oracle: the definition's AllowNull is not comparable for String / Text ----------
+        // Regression: Oracle always creates String/Text as nullable, so `OracleTableSchemaProvider` always reports
+        // AllowNull=false to match definitions that say false. A definition that says AllowNull="true" never matched,
+        // so every upgrade re-emitted an AlterFieldChange. For Text that is fatal (MODIFY restating CLOB raises
+        // ORA-22859): the whole plan stops, and the real AddFieldChange in the same batch never lands.
 
         private static TableSchema BuildNullableTextSchema(bool defineAllowNull)
         {
@@ -66,11 +67,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle：定義 Text AllowNull=true 對上讀回的 AllowNull=false 不應產生差異")]
+        [DisplayName("Oracle produces no difference for a Text defined AllowNull=true against AllowNull=false read back")]
         public void CompareToDiff_OracleNullableText_ProducesNoChange()
         {
             var define = BuildNullableTextSchema(defineAllowNull: true);
-            // OracleTableSchemaProvider 對 String/Text 固定回報 AllowNull=false。
+            // `OracleTableSchemaProvider` always reports AllowNull=false for String/Text.
             var real = BuildNullableTextSchema(defineAllowNull: false);
 
             var diff = new TableSchemaComparer(define, real, DatabaseType.Oracle).CompareToDiff();
@@ -79,7 +80,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle：定義 String AllowNull=true 對上讀回的 AllowNull=false 不應產生差異")]
+        [DisplayName("Oracle produces no difference for a String defined AllowNull=true against AllowNull=false read back")]
         public void CompareToDiff_OracleNullableString_ProducesNoChange()
         {
             var define = new TableSchema { TableName = "st_demo" };
@@ -93,7 +94,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle：nullable Text 不可比不應吃掉同一份 diff 裡真正的新欄位")]
+        [DisplayName("Oracle ignoring nullable Text does not swallow a real new field in the same diff")]
         public void CompareToDiff_OracleNullableTextWithNewField_StillReportsAddField()
         {
             var define = BuildNullableTextSchema(defineAllowNull: true);
@@ -107,10 +108,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("非 Oracle：Text 的 AllowNull 差異仍應被視為差異")]
+        [DisplayName("Outside Oracle, an AllowNull difference on Text still counts as a difference")]
         public void CompareToDiff_NonOracleNullableText_ReportsAlterField()
         {
-            // 其餘 provider 忠實回報實際 nullability，AllowNull 因此是可比的真實差異。
+            // The other providers report the actual nullability faithfully,
+            // so AllowNull is a real, comparable difference.
             var define = BuildNullableTextSchema(defineAllowNull: true);
             var real = BuildNullableTextSchema(defineAllowNull: false);
 
@@ -121,7 +123,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("結構完全相同時 UpgradeAction 應為 None")]
+        [DisplayName("UpgradeAction is None when the structures are identical")]
         public void Compare_IdenticalSchemas_ReturnsNone()
         {
             var define = BuildBaseSchema();
@@ -134,7 +136,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("實際表缺少欄位時應將欄位標記為 New 並升級表")]
+        [DisplayName("A field missing from the real table is marked New and the table is upgraded")]
         public void Compare_MissingField_MarksFieldAsNewAndUpgradesTable()
         {
             var define = BuildBaseSchema();
@@ -150,12 +152,12 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("欄位定義不同時應將欄位標記為 Upgrade 並升級表")]
+        [DisplayName("A field with a different definition is marked Upgrade and the table is upgraded")]
         public void Compare_DifferentField_MarksFieldAsUpgrade()
         {
             var define = BuildBaseSchema();
             var real = BuildRealSchema();
-            real.Fields!["name"].Length = 30;  // 與 define 的 50 不同
+            real.Fields!["name"].Length = 30;  // Differs from the 50 in the definition.
 
             var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
             var result = comparer.Compare();
@@ -165,7 +167,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("實際表缺少索引時應將索引標記為 New 並升級表")]
+        [DisplayName("An index missing from the real table is marked New and the table is upgraded")]
         public void Compare_MissingIndex_MarksIndexAsNew()
         {
             var define = BuildBaseSchema();
@@ -181,14 +183,14 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("索引定義不同時應將索引標記為 Upgrade")]
+        [DisplayName("An index with a different definition is marked Upgrade")]
         public void Compare_DifferentIndex_MarksIndexAsUpgrade()
         {
             var define = BuildBaseSchema();
             define.Indexes!.Add("ix_{0}_name", "name", true);
 
             var real = BuildRealSchema();
-            // 真實表的索引名稱已格式化為 "ix_st_demo_name"，且 unique 標記不同
+            // The real table's index name is already formatted as "ix_st_demo_name", and its unique flag differs.
             real.Indexes!.Add("ix_st_demo_name", "name", false);
 
             var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
@@ -199,11 +201,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("實際表多出的欄位應追加到比較結果中")]
+        [DisplayName("Extra fields in the real table are appended to the comparison result")]
         public void Compare_ExtraFieldInRealTable_AppendsExtensionField()
         {
             var define = BuildBaseSchema();
-            // 觸發 Upgrade 才會走 AddExtensionFields
+            // Only an Upgrade reaches `AddExtensionFields`.
             define.Fields!.Add("age", "Age", FieldDbType.Integer);
 
             var real = BuildRealSchema();
@@ -217,7 +219,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("DefineTable 與 RealTable 屬性應正確暴露於 Comparer")]
+        [DisplayName("The Comparer exposes the DefineTable and RealTable properties")]
         public void Properties_ExposeInputs()
         {
             var define = BuildBaseSchema();
@@ -229,13 +231,13 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("只有 DisplayName 差異時 UpgradeAction=None 且 DescriptionChanges 含表層異動")]
+        [DisplayName("A DisplayName-only difference gives UpgradeAction=None and a table-level entry in DescriptionChanges")]
         public void Compare_OnlyTableDisplayNameDiffers_NoUpgradeButDescriptionChanged()
         {
             var define = BuildBaseSchema();
             define.DisplayName = "示範資料表";
             var real = BuildRealSchema();
-            real.DisplayName = string.Empty; // DB 尚未寫入
+            real.DisplayName = string.Empty; // Not written to the database yet.
 
             var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
             var result = comparer.Compare();
@@ -248,13 +250,13 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("只有欄位 Caption 差異時應產生 Column 層 DescriptionChange（更新模式）")]
+        [DisplayName("A field Caption-only difference produces a column-level DescriptionChange (update mode)")]
         public void Compare_OnlyFieldCaptionDiffers_DescriptionChangeIsUpdate()
         {
             var define = BuildBaseSchema();
             define.Fields!["name"].Caption = "新名稱";
             var real = BuildRealSchema();
-            real.Fields!["name"].Caption = "舊名稱"; // DB 已存在不同值
+            real.Fields!["name"].Caption = "舊名稱"; // The database already has a different value.
 
             var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
             var result = comparer.Compare();
@@ -268,7 +270,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Define 註解為空時採保守策略不產生 DescriptionChange")]
+        [DisplayName("An empty description in the definition produces no DescriptionChange (conservative policy)")]
         public void Compare_EmptyDefineDescription_NoChangeGenerated()
         {
             var define = BuildBaseSchema();
@@ -286,24 +288,24 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("結構與註解皆有差異時 UpgradeAction=Upgrade 且 DescriptionChanges 仍會填充（供上層判斷）")]
+        [DisplayName("Differences in both structure and descriptions give UpgradeAction=Upgrade and still fill DescriptionChanges (for the caller to decide)")]
         public void Compare_SchemaAndDescriptionDiffer_UpgradePopulatesBoth()
         {
             var define = BuildBaseSchema();
             define.DisplayName = "新表說明";
             var real = BuildRealSchema();
-            real.Fields!["name"].Length = 30; // 觸發 schema Upgrade
+            real.Fields!["name"].Length = 30; // Triggers a schema Upgrade.
 
             var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
             var result = comparer.Compare();
 
             Assert.Equal(DbUpgradeAction.Upgrade, result.UpgradeAction);
-            // DescriptionChanges 仍會產生，由上層決定是否消費
+            // DescriptionChanges are still produced; the caller decides whether to consume them.
             Assert.Contains(comparer.DescriptionChanges, c => c.Level == DescriptionLevel.Table);
         }
 
         [Fact]
-        [DisplayName("RealTable 為 null 時 DescriptionChanges 應為空（由 schema CREATE 路徑處理）")]
+        [DisplayName("DescriptionChanges is empty when RealTable is null (the schema CREATE path handles it)")]
         public void Compare_NullRealTable_DescriptionChangesEmpty()
         {
             var define = BuildBaseSchema();
@@ -316,7 +318,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("僅存在於 Real 的欄位不產生 DescriptionChange")]
+        [DisplayName("A field that exists only in the real table produces no DescriptionChange")]
         public void Compare_ExtraFieldInRealTable_NoColumnDescriptionChange()
         {
             var define = BuildBaseSchema();
@@ -326,14 +328,13 @@ namespace Polhem.Db.UnitTests
             var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
             comparer.Compare();
 
-            // legacy_col 不在 define 中，不應產生對應的 Column DescriptionChange
             Assert.DoesNotContain(comparer.DescriptionChanges, c => c.FieldName == "legacy_col");
         }
 
         // ---- CompareToDiff ----
 
         [Fact]
-        [DisplayName("CompareToDiff：RealTable 為 null 時 IsNewTable=true 且無 Changes")]
+        [DisplayName("CompareToDiff gives IsNewTable=true and no Changes when RealTable is null")]
         public void CompareToDiff_NullRealTable_ReturnsNewTableDiffWithNoChanges()
         {
             var define = BuildBaseSchema();
@@ -346,7 +347,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompareToDiff：結構完全相同時 Changes 應為空")]
+        [DisplayName("CompareToDiff returns empty Changes when the structures are identical")]
         public void CompareToDiff_IdenticalSchemas_ReturnsNoChanges()
         {
             var define = BuildBaseSchema();
@@ -360,7 +361,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompareToDiff：實際表缺少欄位時應產生 AddFieldChange")]
+        [DisplayName("CompareToDiff produces an AddFieldChange for a field missing from the real table")]
         public void CompareToDiff_MissingField_EmitsAddFieldChange()
         {
             var define = BuildBaseSchema();
@@ -375,7 +376,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompareToDiff：欄位定義不同時應產生 AlterFieldChange（含 Old/New）")]
+        [DisplayName("CompareToDiff produces an AlterFieldChange (with Old/New) for a field with a different definition")]
         public void CompareToDiff_DifferentField_EmitsAlterFieldChange()
         {
             var define = BuildBaseSchema();
@@ -391,7 +392,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompareToDiff：實際表缺少索引時應產生 AddIndexChange")]
+        [DisplayName("CompareToDiff produces an AddIndexChange for an index missing from the real table")]
         public void CompareToDiff_MissingIndex_EmitsAddIndexChange()
         {
             var define = BuildBaseSchema();
@@ -406,7 +407,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompareToDiff：索引定義不同時應同時產生 Drop + Add")]
+        [DisplayName("CompareToDiff produces both a Drop and an Add for an index with a different definition")]
         public void CompareToDiff_DifferentIndex_EmitsDropThenAdd()
         {
             var define = BuildBaseSchema();
@@ -423,7 +424,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompareToDiff：僅存在於 Real 的欄位不產生 Change（保留政策）")]
+        [DisplayName("CompareToDiff produces no Change for a field that exists only in the real table (keep policy)")]
         public void CompareToDiff_ExtraFieldInRealTable_EmitsNoChangeForExtensionField()
         {
             var define = BuildBaseSchema();
@@ -436,7 +437,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompareToDiff：僅存在於 Real 的索引不產生 Change（保留政策）")]
+        [DisplayName("CompareToDiff produces no Change for an index that exists only in the real table (keep policy)")]
         public void CompareToDiff_ExtraIndexInRealTable_EmitsNoChangeForExtensionIndex()
         {
             var define = BuildBaseSchema();
@@ -449,7 +450,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompareToDiff：描述差異應填入 diff.DescriptionChanges")]
+        [DisplayName("CompareToDiff puts description differences into diff.DescriptionChanges")]
         public void CompareToDiff_DescriptionDiff_PopulatesDiffDescriptionChanges()
         {
             var define = BuildBaseSchema();
@@ -465,7 +466,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompareToDiff：Define 註解為空採保守策略（不產生 DescriptionChange）")]
+        [DisplayName("CompareToDiff produces no DescriptionChange for an empty description in the definition (conservative policy)")]
         public void CompareToDiff_EmptyDefineDescription_NoDescriptionChange()
         {
             var define = BuildBaseSchema();
@@ -479,7 +480,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompareToDiff：不應影響 define 或 real 的 UpgradeAction（不 mutate）")]
+        [DisplayName("CompareToDiff does not change the UpgradeAction of define or real (no mutation)")]
         public void CompareToDiff_DoesNotMutateUpgradeAction()
         {
             var define = BuildBaseSchema();
@@ -489,14 +490,13 @@ namespace Polhem.Db.UnitTests
 
             new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
 
-            // define 上未被設定 UpgradeAction
             Assert.Equal(DbUpgradeAction.None, define.UpgradeAction);
             Assert.Equal(DbUpgradeAction.None, define.Fields!["age"].UpgradeAction);
             Assert.Equal(DbUpgradeAction.None, define.Fields!["name"].UpgradeAction);
         }
 
         [Fact]
-        [DisplayName("CompareToDiff 不影響舊 Compare() 行為（獨立 DescriptionChanges 來源）")]
+        [DisplayName("CompareToDiff does not affect the behavior of the old Compare() (separate DescriptionChanges source)")]
         public void CompareToDiff_DoesNotPopulateLegacyDescriptionChanges()
         {
             var define = BuildBaseSchema();
@@ -506,14 +506,14 @@ namespace Polhem.Db.UnitTests
 
             comparer.CompareToDiff();
 
-            // 舊 API 的 DescriptionChanges 不應被 CompareToDiff 動到
+            // CompareToDiff must not touch the DescriptionChanges of the old API.
             Assert.Empty(comparer.DescriptionChanges);
         }
 
         // ---- Rename detection via OriginalFieldName ----
 
         [Fact]
-        [DisplayName("CompareToDiff：舊名存在、新名不存在時應產生 RenameFieldChange")]
+        [DisplayName("CompareToDiff produces a RenameFieldChange when the old name exists and the new name does not")]
         public void CompareToDiff_RenameHint_OldNameExists_EmitsRenameFieldChange()
         {
             var define = BuildBaseSchema();
@@ -526,39 +526,39 @@ namespace Polhem.Db.UnitTests
             var rename = Assert.Single(diff.Changes.OfType<RenameFieldChange>());
             Assert.Equal("name", rename.OldFieldName);
             Assert.Equal("display_name", rename.NewField.FieldName);
-            // 型別相同 (String 50 ↔ String 50)，不應額外產生 AlterFieldChange
+            // Same type (String 50 ↔ String 50), so no extra AlterFieldChange.
             Assert.Empty(diff.Changes.OfType<AlterFieldChange>());
         }
 
         [Fact]
-        [DisplayName("CompareToDiff：rename 合併型別變更時應同時產生 Rename + Alter")]
+        [DisplayName("CompareToDiff produces both a Rename and an Alter for a rename combined with a type change")]
         public void CompareToDiff_RenameWithTypeChange_EmitsRenameAndAlter()
         {
             var define = BuildBaseSchema();
             define.Fields!["name"].FieldName = "display_name";
             define.Fields!["display_name"].OriginalFieldName = "name";
-            define.Fields!["display_name"].Length = 100; // 與 real 的 50 不同
+            define.Fields!["display_name"].Length = 100; // Differs from the 50 in the real table.
             var real = BuildRealSchema();
 
             var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
 
             Assert.Single(diff.Changes.OfType<RenameFieldChange>());
             var alter = Assert.Single(diff.Changes.OfType<AlterFieldChange>());
-            // Alter 的 old 是 post-rename 投影（新名，但舊定義）
+            // The old side of the Alter is the post-rename projection (new name, old definition).
             Assert.Equal("display_name", alter.OldField.FieldName);
             Assert.Equal(50, alter.OldField.Length);
             Assert.Equal(100, alter.NewField.Length);
         }
 
         [Fact]
-        [DisplayName("CompareToDiff：stale rename hint（新名已存在於 DB）應視為已完成，不再產生 Rename")]
+        [DisplayName("CompareToDiff treats a stale rename hint (the new name already exists in the database) as done and produces no Rename")]
         public void CompareToDiff_RenameHint_StaleHint_NoRenameEmitted()
         {
             var define = BuildBaseSchema();
             define.Fields!["name"].FieldName = "display_name";
             define.Fields!["display_name"].OriginalFieldName = "name";
             var real = BuildRealSchema();
-            // DB 已完成 rename：存在 display_name，不存在 name
+            // The database has already completed the rename: display_name exists and name does not.
             real.Fields!.Remove("name");
             real.Fields!.Add("display_name", "Display Name", FieldDbType.String, 50);
 
@@ -569,12 +569,12 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompareToDiff：舊名與新名皆不存在時應降級為 AddFieldChange（警告情境）")]
+        [DisplayName("CompareToDiff falls back to an AddFieldChange when neither the old nor the new name exists (warning case)")]
         public void CompareToDiff_RenameHint_NeitherNameInRealTable_FallsBackToAddField()
         {
             var define = BuildBaseSchema();
             define.Fields!.Add("new_col", "New", FieldDbType.String, 20);
-            define.Fields!["new_col"].OriginalFieldName = "ghost_col"; // ghost 舊名不存在於 DB
+            define.Fields!["new_col"].OriginalFieldName = "ghost_col"; // The old name does not exist in the database.
             var real = BuildRealSchema();
 
             var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();

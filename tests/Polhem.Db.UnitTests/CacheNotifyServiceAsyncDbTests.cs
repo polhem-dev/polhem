@@ -8,9 +8,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 針對 <see cref="CacheNotifyService.TouchAsync"/> 的 DB 整合測試。
-    /// 既有 <c>CacheNotifyServiceTests</c> 只測試同步版本 <c>Touch</c>；
-    /// 本類別補強非同步執行路徑，確保 UPSERT 在各方言下均能正常非同步執行。
+    /// Database integration tests for <see cref="CacheNotifyService.TouchAsync"/>.
+    /// The existing <c>CacheNotifyServiceTests</c> only test the synchronous <c>Touch</c>; this class covers the
+    /// asynchronous path, so that the UPSERT runs asynchronously on every dialect.
     /// </summary>
     public class CacheNotifyServiceAsyncDbTests : IClassFixture<SharedDbFixture>
     {
@@ -51,7 +51,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：TouchAsync 版本號自增且第二次 Touch 累加至 2")]
+        [DisplayName("SQL Server TouchAsync increments the version and a second Touch reaches 2")]
         public async Task TouchAsync_SqlServer_VersionIncrements()
         {
             var key = NewKey();
@@ -62,7 +62,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：TouchAsync 版本號自增且第二次 Touch 累加至 2")]
+        [DisplayName("PostgreSQL TouchAsync increments the version and a second Touch reaches 2")]
         public async Task TouchAsync_PostgreSQL_VersionIncrements()
         {
             var key = NewKey();
@@ -73,7 +73,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：TouchAsync 版本號自增且第二次 Touch 累加至 2")]
+        [DisplayName("MySQL TouchAsync increments the version and a second Touch reaches 2")]
         public async Task TouchAsync_MySQL_VersionIncrements()
         {
             var key = NewKey();
@@ -84,7 +84,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：TouchAsync 版本號自增且第二次 Touch 累加至 2")]
+        [DisplayName("Oracle TouchAsync increments the version and a second Touch reaches 2")]
         public async Task TouchAsync_Oracle_VersionIncrements()
         {
             var key = NewKey();

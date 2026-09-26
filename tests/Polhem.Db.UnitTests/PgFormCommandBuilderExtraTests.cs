@@ -26,7 +26,7 @@ namespace Polhem.Db.UnitTests
             => new(BuildFooSchema(), DefineAccess);
 
         [Fact]
-        [DisplayName("BuildCount 應委派至 PostgreSQL 方言並產生 SELECT COUNT(*) 語句（雙引號識別符）")]
+        [DisplayName("BuildCount delegates to the PostgreSQL dialect and produces a SELECT COUNT(*) statement (double-quoted identifiers)")]
         public void BuildCount_DelegatesToPostgreSqlDialect()
         {
             var builder = NewBuilder();

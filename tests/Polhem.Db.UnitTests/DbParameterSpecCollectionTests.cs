@@ -8,7 +8,7 @@ namespace Polhem.Db.UnitTests
     public class DbParameterSpecCollectionTests
     {
         [Fact]
-        [DisplayName("Add(name, value) 應推斷 DbType 並加入集合")]
+        [DisplayName("Add(name, value) infers the DbType and adds the parameter")]
         public void Add_NameValue_AddsAndInfersDbType()
         {
             var collection = new DbParameterSpecCollection();
@@ -25,7 +25,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("Add(name, value) 名稱為空白應擲 ArgumentException")]
+        [DisplayName("Add(name, value) throws ArgumentException for a blank name")]
         public void Add_NameValue_EmptyName_Throws(string? name)
         {
             var collection = new DbParameterSpecCollection();
@@ -34,7 +34,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Add(DbField) 應依欄位定義建立參數並設定 SourceColumn")]
+        [DisplayName("Add(DbField) builds the parameter from the field definition and sets SourceColumn")]
         public void Add_DbField_BuildsFromField()
         {
             var field = new DbField
@@ -57,7 +57,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Add(DbField) AllowNull 為 true 時 Value 應為 null")]
+        [DisplayName("Add(DbField) sets Value to null when AllowNull is true")]
         public void Add_DbField_AllowNull_NullValue()
         {
             var field = new DbField
@@ -75,7 +75,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Add(DbField) 非 String 型別 Size 應為 0")]
+        [DisplayName("Add(DbField) sets Size to 0 for a non-String type")]
         public void Add_DbField_NonString_SizeIsZero()
         {
             var field = new DbField
@@ -92,7 +92,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Add(DbField) 可指定 SourceVersion")]
+        [DisplayName("Add(DbField) accepts a SourceVersion")]
         public void Add_DbField_RespectsSourceVersion()
         {
             var field = new DbField

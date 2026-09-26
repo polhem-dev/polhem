@@ -26,7 +26,7 @@ namespace Polhem.Db.UnitTests
 
         public OracleDialectFactoryTests(SharedDbFixture fx) { _fx = fx; }
         [Fact]
-        [DisplayName("Oracle DialectFactory 應透過 DbDialectRegistry 註冊成功")]
+        [DisplayName("Oracle DialectFactory is registered through DbDialectRegistry")]
         public void DialectFactory_IsRegistered()
         {
             var factory = DbDialectRegistry.Get(DatabaseType.Oracle);
@@ -36,7 +36,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle ADO.NET provider 應透過 DbProviderRegistry 註冊成功")]
+        [DisplayName("Oracle ADO.NET provider is registered through DbProviderRegistry")]
         public void Provider_IsRegistered()
         {
             var factory = DbProviderRegistry.Get(DatabaseType.Oracle);
@@ -45,18 +45,18 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle DbProviderRegistry 應註冊 connection-open initializer")]
+        [DisplayName("Oracle DbProviderRegistry registers a connection-open initializer")]
         public void Provider_ConnectionInitializer_IsRegistered()
         {
             var initializer = DbProviderRegistry.GetConnectionInitializer(DatabaseType.Oracle);
 
-            // GlobalFixture.RegisterOracle 掛上 ALTER SESSION 動作；只驗證 hook 存在，
-            // 真正執行的測試在 POLHEM_TEST_CONNSTR_ORACLE 啟用後由整合測試涵蓋。
+            // `GlobalFixture.RegisterOracle` attaches the ALTER SESSION action. Only the hook's presence is checked.
+            // The integration tests cover the actual execution when POLHEM_TEST_CONNSTR_ORACLE is enabled.
             Assert.NotNull(initializer);
         }
 
         [Fact]
-        [DisplayName("Oracle DialectFactory 的 GetDefaultValueExpression 應回傳對應運算式")]
+        [DisplayName("Oracle DialectFactory GetDefaultValueExpression returns the matching expressions")]
         public void DialectFactory_DefaultValueExpression_ReturnsExpected()
         {
             var factory = new OracleDialectFactory();
@@ -68,21 +68,21 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle DialectFactory 應能建立各純 SQL 產生器實例")]
+        [DisplayName("Oracle DialectFactory creates each pure SQL generator")]
         public void DialectFactory_CreatesAllBuilders()
         {
             var factory = new OracleDialectFactory();
 
-            // 只驗證「無外部相依」的 builder：CREATE / ALTER / Rebuild 純字串輸出，
-            // 不需開連線或查 FormSchema。
+            // Only builders without external dependencies are checked: CREATE / ALTER / Rebuild produce plain strings
+            // and need no connection or FormSchema lookup.
             Assert.NotNull(factory.CreateCreateTableCommandBuilder());
             Assert.NotNull(factory.CreateTableAlterCommandBuilder());
             Assert.NotNull(factory.CreateTableRebuildCommandBuilder());
-            // CreateTableSchemaProvider 與 MySQL 同樣依賴 databaseId，由整合測試覆蓋。
+            // `CreateTableSchemaProvider` depends on a databaseId as in MySQL, so the integration tests cover it.
         }
 
         [Fact]
-        [DisplayName("OracleDialectFactory：CreateFormCommandBuilder 應回傳 OracleFormCommandBuilder")]
+        [DisplayName("OracleDialectFactory CreateFormCommandBuilder returns an OracleFormCommandBuilder")]
         public void CreateFormCommandBuilder_ReturnsOracleImpl()
         {
             var factory = new OracleDialectFactory();

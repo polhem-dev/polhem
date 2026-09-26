@@ -25,7 +25,7 @@ namespace Polhem.Db.UnitTests
         [InlineData("UNIQUEIDENTIFIER", 0, 0, 0, FieldDbType.Guid)]
         [InlineData("VARBINARY", 0, 0, 0, FieldDbType.Binary)]
         [InlineData("XML", 0, 0, 0, FieldDbType.Unknown)]
-        [DisplayName("GetFieldDbType 應正確映射各 SQL Server 型別")]
+        [DisplayName("GetFieldDbType maps each SQL Server type")]
         public void GetFieldDbType_VariousSqlTypes_MapsCorrectly(
             string dataType, int precision, int scale, int length, FieldDbType expected)
         {
@@ -35,7 +35,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFieldDbType 應對輸入字串大小寫不敏感")]
+        [DisplayName("GetFieldDbType ignores the case of the input string")]
         public void GetFieldDbType_CaseInsensitive()
         {
             Assert.Equal(FieldDbType.Integer, SqlTableSchemaProvider.GetFieldDbType("int", 0, 0, 0));
@@ -57,7 +57,7 @@ namespace Polhem.Db.UnitTests
         [InlineData("DATETIME", "(getutcdate())", "", "getutcdate()")]
         [InlineData("DATETIME2", "(getutcdate())", "", "getutcdate()")]
         [InlineData("UNIQUEIDENTIFIER", "(newid())", "", "newid()")]
-        [DisplayName("ParseDBDefaultValue 應依型別剝除外層括號或前綴")]
+        [DisplayName("ParseDBDefaultValue strips the outer parentheses or the prefix by type")]
         public void ParseDBDefaultValue_StripsWrappers(
             string dataType, string defaultValue, string originalDefault, string expected)
         {
@@ -67,17 +67,17 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ParseDBDefaultValue 與內建預設值相同時應回傳空字串")]
+        [DisplayName("ParseDBDefaultValue returns an empty string when the value equals the built-in default")]
         public void ParseDBDefaultValue_MatchesBuiltinDefault_ReturnsEmpty()
         {
-            // INT 預設值通常為 "0"；((0)) 剝層後變成 "0"，與內建預設值相同
+            // An INT default is usually "0": ((0)) becomes "0" once unwrapped, equal to the built-in default.
             var result = SqlTableSchemaProvider.ParseDBDefaultValue("INT", "((0))", "0");
 
             Assert.Equal(string.Empty, result);
         }
 
         [Fact]
-        [DisplayName("ParseDBDefaultValue 不支援的型別應回傳空字串")]
+        [DisplayName("ParseDBDefaultValue returns an empty string for an unsupported type")]
         public void ParseDBDefaultValue_UnknownType_ReturnsEmpty()
         {
             var result = SqlTableSchemaProvider.ParseDBDefaultValue("XML", "<root/>", "");

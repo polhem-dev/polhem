@@ -8,10 +8,9 @@ using Polhem.Db.Manager;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 補充 <see cref="MySqlTableSchemaProvider"/> 整合路徑：
-    /// 驗證 <c>ParseDbField</c> Decimal 分支（Precision/Scale 賦值）與
-    /// <c>ParsePrimaryKey</c> 在無主鍵時的提前返回路徑。
-    /// 依賴 MySQL 連線；環境變數未設時自動跳過。
+    /// Additional integration paths of <see cref="MySqlTableSchemaProvider"/>: the Decimal branch of
+    /// <c>ParseDbField</c> (assigning Precision/Scale) and the early return of <c>ParsePrimaryKey</c> when there is no
+    /// primary key. Requires a MySQL connection; skipped automatically when the environment variable is not set.
     /// </summary>
     public class MySqlTableSchemaProviderExtraTests : IClassFixture<SharedDbFixture>
     {
@@ -19,7 +18,7 @@ namespace Polhem.Db.UnitTests
         public MySqlTableSchemaProviderExtraTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL SchemaProvider 讀回 DECIMAL(15,3) 欄位時應正確設定 Precision 與 Scale（ParseDbField Decimal 分支）")]
+        [DisplayName("MySQL SchemaProvider sets Precision and Scale when reading back a DECIMAL(15,3) field (ParseDbField Decimal branch)")]
         public void GetTableSchema_DecimalField_ReturnsPrecisionAndScale()
         {
             const string tableName = "tb_ex_decimal";
@@ -52,7 +51,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL SchemaProvider 讀取只有唯一索引（無 PK）的資料表時 ParsePrimaryKey 應提前返回且唯一索引仍正確解析")]
+        [DisplayName("MySQL SchemaProvider reading a table with only a unique index (no PK) returns early from ParsePrimaryKey and still parses the unique index")]
         public void GetTableSchema_TableWithUniqueIndexNoPk_ParsePrimaryKeyReturnsEarlyAndIndexPresent()
         {
             const string tableName = "tb_ex_nopk";

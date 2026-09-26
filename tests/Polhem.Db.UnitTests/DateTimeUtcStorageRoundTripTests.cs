@@ -6,23 +6,29 @@ using Polhem.Tests.Shared;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 驗證 ADR-032 D1：五種 provider 都以**無時區欄位**原樣存放 UTC 值，讀回逐 tick 相同。
+    /// Verifies ADR-032 D1: every provider stores UTC values as they are in a **column without a time zone**, and
+    /// reads them back identical to the tick.
     /// </summary>
     /// <remarks>
-    /// 這條測試守的是「資料庫不介入時區」這個前提。若某個 provider 或其 ADO.NET 驅動在寫入或
-    /// 讀取時依 server / client 時區隱式換算，整條轉換鏈的算式就會多一次偏移——而症狀只會是
-    /// 「時間差了幾小時」，沒有任何錯誤訊息。PostgreSQL 的 <c>timestamptz</c> 正是因為會做這種
-    /// 隱式換算而被 D1 排除，此處確認選用的 <c>timestamp</c> 不會。
+    /// This test guards the premise that the database does not take part in time zones. If a provider or its ADO.NET
+    /// driver converts implicitly by the server or client time zone on write or read, the conversion chain gains one
+    /// extra offset, and the only symptom is times that are a few hours off, with no error message at all.
+    /// PostgreSQL's <c>timestamptz</c> was excluded by D1 precisely because it converts like that; this confirms that
+    /// the chosen <c>timestamp</c> does not.
     ///
-    /// 測試值刻意選在 UTC 與常見開發／CI 時區都不同日的時刻，使任何一次時區換算都會改變日期，
-    /// 而非只改變時分——後者在偏移恰為 0 的環境下驗不出來。
+    /// The test value is deliberately a moment that falls on a different date in UTC than in common development and
+    /// CI time zones, so any time zone conversion changes the date and not only the time of day; the latter cannot
+    /// be detected where the offset happens to be 0.
     /// </remarks>
     public class DateTimeUtcStorageRoundTripTests : IClassFixture<SharedDbFixture>
     {
         private readonly SharedDbFixture _fx;
         public DateTimeUtcStorageRoundTripTests(SharedDbFixture fx) { _fx = fx; }
 
-        /// <summary>UTC 的 23:30；台北為隔日 07:30、紐約為同日 18:30——任一換算都會跨日或跨時。</summary>
+        /// <summary>
+        /// 23:30 UTC: 07:30 the next day in Taipei and 18:30 the same day in New York, so any conversion shifts the
+        /// date or the hour.
+        /// </summary>
         private static readonly DateTime s_utcValue =
             new DateTime(2026, 3, 15, 23, 30, 45, DateTimeKind.Unspecified);
 
@@ -55,7 +61,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：datetime2 原樣存放 UTC 值，讀回逐 tick 相同")]
+        [DisplayName("SQL Server datetime2 stores a UTC value as is and reads it back identical to the tick")]
         public void RoundTrip_SqlServer_StoresUtcVerbatim()
         {
             RunRoundTrip("common_sqlserver",
@@ -64,7 +70,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：timestamp（無 tz）原樣存放 UTC 值，不做隱式換算")]
+        [DisplayName("PostgreSQL timestamp (without time zone) stores a UTC value as is with no implicit conversion")]
         public void RoundTrip_PostgreSQL_StoresUtcVerbatim()
         {
             RunRoundTrip("common_postgresql",
@@ -73,7 +79,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：DATETIME(6) 原樣存放 UTC 值，讀回逐 tick 相同")]
+        [DisplayName("MySQL DATETIME(6) stores a UTC value as is and reads it back identical to the tick")]
         public void RoundTrip_MySQL_StoresUtcVerbatim()
         {
             RunRoundTrip("common_mysql",
@@ -82,7 +88,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：TIMESTAMP 原樣存放 UTC 值，讀回逐 tick 相同")]
+        [DisplayName("Oracle TIMESTAMP stores a UTC value as is and reads it back identical to the tick")]
         public void RoundTrip_Oracle_StoresUtcVerbatim()
         {
             RunRoundTrip("common_oracle",
@@ -91,7 +97,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：TEXT 欄位原樣存放 UTC 值，讀回逐 tick 相同")]
+        [DisplayName("SQLite TEXT column stores a UTC value as is and reads it back identical to the tick")]
         public void RoundTrip_SQLite_StoresUtcVerbatim()
         {
             RunRoundTrip("common_sqlite",

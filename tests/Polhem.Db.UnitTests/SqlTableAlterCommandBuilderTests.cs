@@ -17,7 +17,7 @@ namespace Polhem.Db.UnitTests
         // ---------- GetExecutionKind ----------
 
         [Fact]
-        [DisplayName("GetExecutionKind：AddFieldChange 應為 Alter")]
+        [DisplayName("GetExecutionKind returns Alter for AddFieldChange")]
         public void GetExecutionKind_AddField_ReturnsAlter()
         {
             var change = new AddFieldChange(new DbField("age", "Age", FieldDbType.Integer));
@@ -26,7 +26,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetExecutionKind：AlterFieldChange 同 family 應為 Alter")]
+        [DisplayName("GetExecutionKind returns Alter for an AlterFieldChange within the family")]
         public void GetExecutionKind_AlterFieldSameFamily_ReturnsAlter()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50 };
@@ -37,7 +37,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetExecutionKind：AlterFieldChange 跨 family 應為 Rebuild")]
+        [DisplayName("GetExecutionKind returns Rebuild for an AlterFieldChange across families")]
         public void GetExecutionKind_AlterFieldCrossFamily_ReturnsRebuild()
         {
             var oldField = new DbField("v", "V", FieldDbType.String) { Length = 50 };
@@ -48,7 +48,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetExecutionKind：AlterFieldChange AutoIncrement 切換應為 Rebuild")]
+        [DisplayName("GetExecutionKind returns Rebuild for an AlterFieldChange that toggles AutoIncrement")]
         public void GetExecutionKind_AlterFieldAutoIncrementToggle_ReturnsRebuild()
         {
             var oldField = new DbField("id", "Id", FieldDbType.Integer);
@@ -59,7 +59,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetExecutionKind：AddIndexChange 應為 Alter")]
+        [DisplayName("GetExecutionKind returns Alter for AddIndexChange")]
         public void GetExecutionKind_AddIndex_ReturnsAlter()
         {
             var index = new DbTableIndex { Name = "ix_demo_name" };
@@ -69,7 +69,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetExecutionKind：DropIndexChange 應為 Alter")]
+        [DisplayName("GetExecutionKind returns Alter for DropIndexChange")]
         public void GetExecutionKind_DropIndex_ReturnsAlter()
         {
             var index = new DbTableIndex { Name = "ix_demo_name" };
@@ -81,7 +81,7 @@ namespace Polhem.Db.UnitTests
         // ---------- IsNarrowingChange ----------
 
         [Fact]
-        [DisplayName("IsNarrowingChange：非 AlterField 應回傳 false")]
+        [DisplayName("IsNarrowingChange returns false for a change other than AlterField")]
         public void IsNarrowingChange_NonAlterChange_ReturnsFalse()
         {
             var change = new AddFieldChange(new DbField("age", "Age", FieldDbType.Integer));
@@ -90,7 +90,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNarrowingChange：String 縮短應回傳 true")]
+        [DisplayName("IsNarrowingChange returns true for a shorter String")]
         public void IsNarrowingChange_StringShortened_ReturnsTrue()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 100 };
@@ -102,7 +102,7 @@ namespace Polhem.Db.UnitTests
         // ---------- AddField statements ----------
 
         [Fact]
-        [DisplayName("GetStatements：AddField 產生 ALTER TABLE ADD 並含 DEFAULT")]
+        [DisplayName("GetStatements for AddField produces ALTER TABLE ADD with DEFAULT")]
         public void GetStatements_AddField_EmitsAlterTableAdd()
         {
             var field = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = false };
@@ -115,7 +115,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetStatements：AddField nullable 欄位不產生 DEFAULT")]
+        [DisplayName("GetStatements for AddField of a nullable field produces no DEFAULT")]
         public void GetStatements_AddFieldNullable_NoDefault()
         {
             var field = new DbField("note", "Note", FieldDbType.String) { Length = 100, AllowNull = true };
@@ -129,7 +129,7 @@ namespace Polhem.Db.UnitTests
         // ---------- AlterField statements ----------
 
         [Fact]
-        [DisplayName("GetStatements：AlterField 僅長度變更應產生 drop-default + ALTER COLUMN + add-default 三段")]
+        [DisplayName("GetStatements for an AlterField that only changes the length produces drop-default, ALTER COLUMN and add-default")]
         public void GetStatements_AlterFieldLengthChanged_EmitsThreeStatements()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50, AllowNull = false };
@@ -143,7 +143,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetStatements：AlterField NOT NULL → NULL 應執行 ALTER COLUMN 且不新增 default")]
+        [DisplayName("GetStatements for an AlterField from NOT NULL to NULL runs ALTER COLUMN and adds no default")]
         public void GetStatements_AlterFieldToNullable_NoAddDefault()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50, AllowNull = false };
@@ -157,7 +157,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetStatements：AlterField 僅 default 變更應不含 ALTER COLUMN")]
+        [DisplayName("GetStatements for an AlterField that only changes the default contains no ALTER COLUMN")]
         public void GetStatements_AlterFieldDefaultOnly_NoAlterColumn()
         {
             var oldField = new DbField("code", "Code", FieldDbType.String) { Length = 10, AllowNull = false, DefaultValue = "A" };
@@ -173,7 +173,7 @@ namespace Polhem.Db.UnitTests
         // ---------- AddIndex statements ----------
 
         [Fact]
-        [DisplayName("GetStatements：AddIndex 非唯一索引應產生 CREATE INDEX")]
+        [DisplayName("GetStatements for AddIndex of a non-unique index produces CREATE INDEX")]
         public void GetStatements_AddRegularIndex_EmitsCreateIndex()
         {
             var index = new DbTableIndex { Name = "ix_{0}_name" };
@@ -185,7 +185,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetStatements：AddIndex 唯一索引應含 UNIQUE")]
+        [DisplayName("GetStatements for AddIndex of a unique index includes UNIQUE")]
         public void GetStatements_AddUniqueIndex_EmitsUniqueClause()
         {
             var index = new DbTableIndex { Name = "ix_{0}_name", Unique = true };
@@ -197,7 +197,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetStatements：AddIndex 主鍵應產生 ALTER TABLE ADD CONSTRAINT PRIMARY KEY")]
+        [DisplayName("GetStatements for AddIndex of a primary key produces ALTER TABLE ADD CONSTRAINT PRIMARY KEY")]
         public void GetStatements_AddPrimaryKey_EmitsAddConstraintPrimaryKey()
         {
             var index = new DbTableIndex { Name = "pk_{0}", PrimaryKey = true, Unique = true };
@@ -211,7 +211,7 @@ namespace Polhem.Db.UnitTests
         // ---------- DropIndex statements ----------
 
         [Fact]
-        [DisplayName("GetStatements：DropIndex 非主鍵應產生 DROP INDEX")]
+        [DisplayName("GetStatements for DropIndex of a non-primary key produces DROP INDEX")]
         public void GetStatements_DropRegularIndex_EmitsDropIndex()
         {
             var index = new DbTableIndex { Name = "ix_st_demo_name" };
@@ -223,7 +223,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetStatements：DropIndex 主鍵應產生 ALTER TABLE DROP CONSTRAINT")]
+        [DisplayName("GetStatements for DropIndex of a primary key produces ALTER TABLE DROP CONSTRAINT")]
         public void GetStatements_DropPrimaryKey_EmitsDropConstraint()
         {
             var index = new DbTableIndex { Name = "pk_st_demo", PrimaryKey = true };
@@ -237,7 +237,7 @@ namespace Polhem.Db.UnitTests
         // ---------- Edge cases ----------
 
         [Fact]
-        [DisplayName("GetStatements：tableName 為 null 應 throw")]
+        [DisplayName("GetStatements throws for a null tableName")]
         public void GetStatements_NullTableName_Throws()
         {
             var change = new AddFieldChange(new DbField("a", "A", FieldDbType.Integer));
@@ -248,7 +248,7 @@ namespace Polhem.Db.UnitTests
         // ---------- RenameFieldChange ----------
 
         [Fact]
-        [DisplayName("GetExecutionKind：RenameFieldChange 應為 Alter")]
+        [DisplayName("GetExecutionKind returns Alter for RenameFieldChange")]
         public void GetExecutionKind_RenameField_ReturnsAlter()
         {
             var change = new RenameFieldChange("emp_name", new DbField("employee_name", "Name", FieldDbType.String) { Length = 50 });
@@ -257,7 +257,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNarrowingChange：RenameFieldChange 應回傳 false")]
+        [DisplayName("IsNarrowingChange returns false for RenameFieldChange")]
         public void IsNarrowingChange_RenameField_ReturnsFalse()
         {
             var change = new RenameFieldChange("emp_name", new DbField("employee_name", "Name", FieldDbType.String) { Length = 50 });
@@ -266,7 +266,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetStatements：RenameFieldChange 應產生 sp_rename 語句")]
+        [DisplayName("GetStatements for RenameFieldChange produces an sp_rename statement")]
         public void GetStatements_RenameField_EmitsSpRename()
         {
             var change = new RenameFieldChange("emp_name", new DbField("employee_name", "Name", FieldDbType.String) { Length = 50 });

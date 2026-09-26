@@ -6,8 +6,8 @@ using Polhem.Definition.Database;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 純語法測試：覆蓋 <see cref="SqliteSchemaSyntax"/> 的識別符 quote、字串 escape、
-    /// 預設值表達式與 column / AutoIncrement column 定義組裝。
+    /// Pure syntax tests covering <see cref="SqliteSchemaSyntax"/>: identifier quoting, string escaping, default value
+    /// expressions, and column / AutoIncrement column definition assembly.
     /// </summary>
     public class SqliteSchemaSyntaxTests
     {
@@ -17,7 +17,7 @@ namespace Polhem.Db.UnitTests
         [InlineData("st_user", "\"st_user\"")]
         [InlineData("name", "\"name\"")]
         [InlineData("col\"with quote", "\"col\"\"with quote\"")]
-        [DisplayName("SQLite QuoteName：應以雙引號包覆並 escape 內部雙引號")]
+        [DisplayName("SQLite QuoteName wraps in double quotes and escapes inner double quotes")]
         public void QuoteName_VariousIdentifiers_QuotesProperly(string identifier, string expected)
         {
             Assert.Equal(expected, SqliteSchemaSyntax.QuoteName(identifier));
@@ -31,7 +31,7 @@ namespace Polhem.Db.UnitTests
         [InlineData("hello", "hello")]
         [InlineData("O'Brien", "O''Brien")]
         [InlineData("''", "''''")]
-        [DisplayName("SQLite EscapeSqlString：單引號應加倍以避免破壞字面量")]
+        [DisplayName("SQLite EscapeSqlString doubles single quotes so the literal stays intact")]
         public void EscapeSqlString_DoublesSingleQuotes(string input, string expected)
         {
             Assert.Equal(expected, SqliteSchemaSyntax.EscapeSqlString(input));
@@ -56,7 +56,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Guid, "(hex(randomblob(16)))")]
         [InlineData(FieldDbType.Binary, "")]
         [InlineData(FieldDbType.AutoIncrement, "")]
-        [DisplayName("SQLite GetDefaultValueExpression：各型別應對應正確 SQLite 預設表達式")]
+        [DisplayName("SQLite GetDefaultValueExpression returns the SQLite default expression of each type")]
         public void GetDefaultValueExpression_VariousTypes_ReturnsExpected(FieldDbType dbType, string expected)
         {
             Assert.Equal(expected, SqliteSchemaSyntax.GetDefaultValueExpression(dbType));
@@ -67,7 +67,7 @@ namespace Polhem.Db.UnitTests
         #region GetDefaultExpression
 
         [Fact]
-        [DisplayName("SQLite GetDefaultExpression：AllowNull 欄位應回傳空字串（無 DEFAULT 子句）")]
+        [DisplayName("SQLite GetDefaultExpression returns an empty string for an AllowNull field (no DEFAULT clause)")]
         public void GetDefaultExpression_AllowNull_ReturnsEmpty()
         {
             var field = new DbField("v", "V", FieldDbType.Integer) { AllowNull = true };
@@ -75,7 +75,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetDefaultExpression：AutoIncrement 欄位應回傳空字串（PK 內聯不需要 DEFAULT）")]
+        [DisplayName("SQLite GetDefaultExpression returns an empty string for an AutoIncrement field (the inline PK needs no DEFAULT)")]
         public void GetDefaultExpression_AutoIncrement_ReturnsEmpty()
         {
             var field = new DbField("v", "V", FieldDbType.AutoIncrement);
@@ -83,7 +83,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetDefaultExpression：String 無自訂 default 應回傳 ''")]
+        [DisplayName("SQLite GetDefaultExpression returns '' for a String without a custom default")]
         public void GetDefaultExpression_StringNoCustom_ReturnsEmptyLiteral()
         {
             var field = new DbField("v", "V", FieldDbType.String) { Length = 50 };
@@ -91,7 +91,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetDefaultExpression：String 自訂 default 應正確包單引號並 escape 內部引號")]
+        [DisplayName("SQLite GetDefaultExpression wraps a custom String default in single quotes and escapes inner quotes")]
         public void GetDefaultExpression_StringCustomWithQuote_EscapesAndWraps()
         {
             var field = new DbField("v", "V", FieldDbType.String)
@@ -103,7 +103,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetDefaultExpression：Integer 自訂 default 應原樣輸出")]
+        [DisplayName("SQLite GetDefaultExpression outputs a custom Integer default as is")]
         public void GetDefaultExpression_IntegerCustom_ReturnsRaw()
         {
             var field = new DbField("v", "V", FieldDbType.Integer) { DefaultValue = "42" };
@@ -111,7 +111,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetDefaultExpression：Integer 無自訂 default 應回傳內建 0")]
+        [DisplayName("SQLite GetDefaultExpression returns the built-in 0 for an Integer without a custom default")]
         public void GetDefaultExpression_IntegerNoCustom_ReturnsBuiltinZero()
         {
             var field = new DbField("v", "V", FieldDbType.Integer);
@@ -123,7 +123,7 @@ namespace Polhem.Db.UnitTests
         #region GetColumnDefinition
 
         [Fact]
-        [DisplayName("SQLite GetColumnDefinition：String 欄位帶 COLLATE NOCASE 與 DEFAULT")]
+        [DisplayName("SQLite GetColumnDefinition for a String field carries COLLATE NOCASE and DEFAULT")]
         public void GetColumnDefinition_String_IncludesCollateAndDefault()
         {
             var field = new DbField("name", "Name", FieldDbType.String) { Length = 50 };
@@ -132,7 +132,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetColumnDefinition：Guid 欄位應帶 COLLATE NOCASE（GUID 比對大小寫無關）")]
+        [DisplayName("SQLite GetColumnDefinition for a Guid field carries COLLATE NOCASE (GUID comparison ignores case)")]
         public void GetColumnDefinition_Guid_IncludesCollateNoCase()
         {
             var field = new DbField("sys_rowid", "RowId", FieldDbType.Guid);
@@ -141,7 +141,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetColumnDefinition：Integer NOT NULL 應帶 DEFAULT 0")]
+        [DisplayName("SQLite GetColumnDefinition for a NOT NULL Integer carries DEFAULT 0")]
         public void GetColumnDefinition_IntegerNotNull_IncludesDefaultZero()
         {
             var field = new DbField("count", "Count", FieldDbType.Integer);
@@ -150,7 +150,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetColumnDefinition：AllowNull 不應出現 DEFAULT 子句")]
+        [DisplayName("SQLite GetColumnDefinition for AllowNull has no DEFAULT clause")]
         public void GetColumnDefinition_AllowNull_OmitsDefault()
         {
             var field = new DbField("count", "Count", FieldDbType.Integer) { AllowNull = true };
@@ -163,7 +163,7 @@ namespace Polhem.Db.UnitTests
         #region GetAutoIncrementColumnDefinition
 
         [Fact]
-        [DisplayName("SQLite GetAutoIncrementColumnDefinition：應內聯 INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL")]
+        [DisplayName("SQLite GetAutoIncrementColumnDefinition inlines INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL")]
         public void GetAutoIncrementColumnDefinition_InlinesPrimaryKey()
         {
             var field = new DbField("sys_no", "Seq", FieldDbType.AutoIncrement);

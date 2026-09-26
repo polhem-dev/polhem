@@ -36,21 +36,21 @@ namespace Polhem.Db.UnitTests
             => new(BuildFooSchema(), DefineAccess);
 
         [Fact]
-        [DisplayName("FormSchema 建構子 null 應擲 ArgumentNullException")]
+        [DisplayName("The FormSchema constructor throws ArgumentNullException for null")]
         public void Constructor_NullFormSchema_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new MySqlFormCommandBuilder(null!, DefineAccess));
         }
 
         [Fact]
-        [DisplayName("FormSchema 建構子 null IDefineAccess 應擲 ArgumentNullException")]
+        [DisplayName("The FormSchema constructor throws ArgumentNullException for a null IDefineAccess")]
         public void Constructor_NullDefineAccess_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new MySqlFormCommandBuilder(BuildFooSchema(), null!));
         }
 
         [Fact]
-        [DisplayName("BuildSelect 應委派至 MySQL 方言並產生 SELECT 語句（backtick 識別符）")]
+        [DisplayName("BuildSelect delegates to the MySQL dialect and produces a SELECT statement (backtick identifiers)")]
         public void BuildSelect_DelegatesToMySqlDialect()
         {
             var builder = NewBuilder();
@@ -63,7 +63,7 @@ namespace Polhem.Db.UnitTests
 
 
         [Fact]
-        [DisplayName("BuildDelete 應委派至 MySQL 方言並產生 DELETE 語句")]
+        [DisplayName("BuildDelete delegates to the MySQL dialect and produces a DELETE statement")]
         public void BuildDelete_DelegatesToMySqlDialect()
         {
             var builder = NewBuilder();
@@ -73,7 +73,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("BuildCount 應委派至 MySQL 方言並產生 SELECT COUNT(*) 語句（backtick 識別符）")]
+        [DisplayName("BuildCount delegates to the MySQL dialect and produces a SELECT COUNT(*) statement (backtick identifiers)")]
         public void BuildCount_DelegatesToMySqlDialect()
         {
             var builder = NewBuilder();

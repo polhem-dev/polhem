@@ -30,7 +30,7 @@ namespace Polhem.Db.UnitTests
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("Build tableName 為空白應擲 ArgumentException")]
+        [DisplayName("Build throws ArgumentException for a blank tableName")]
         public void Build_EmptyTableName_Throws(string tableName)
         {
             var schema = BuildSimpleSchema();
@@ -40,7 +40,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build tableName 為 null 應擲 ArgumentException")]
+        [DisplayName("Build throws ArgumentException for a null tableName")]
         public void Build_NullTableName_Throws()
         {
             var schema = BuildSimpleSchema();
@@ -50,7 +50,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build 簡易 schema 應產生含 SELECT 與 FROM 的命令")]
+        [DisplayName("Build produces a command with SELECT and FROM for a simple schema")]
         public void Build_SimpleSchema_ProducesSelectAndFromClauses()
         {
             var schema = BuildSimpleSchema();
@@ -66,7 +66,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build 指定 selectFields 應只包含指定欄位")]
+        [DisplayName("Build with selectFields includes only the given fields")]
         public void Build_WithSelectFields_RestrictsColumns()
         {
             var schema = BuildSimpleSchema();
@@ -79,7 +79,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build Between 篩選應產生 BETWEEN 子句與兩個參數")]
+        [DisplayName("Build with a Between filter produces a BETWEEN clause and two parameters")]
         public void Build_BetweenFilter_ProducesBetweenClauseWithTwoParameters()
         {
             var schema = BuildSimpleSchema();
@@ -93,7 +93,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("BuildCount Between 篩選應產生 BETWEEN 子句與兩個參數")]
+        [DisplayName("BuildCount with a Between filter produces a BETWEEN clause and two parameters")]
         public void BuildCount_BetweenFilter_ProducesBetweenClauseWithTwoParameters()
         {
             var schema = BuildSimpleSchema();
@@ -107,7 +107,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build IgnoreIfNull 篩選在值為 null 時應自 WHERE 子句移除")]
+        [DisplayName("Build removes an IgnoreIfNull filter from the WHERE clause when its value is null")]
         public void Build_IgnoreIfNullFilter_OmitsConditionFromWhere()
         {
             var schema = BuildSimpleSchema();
@@ -125,7 +125,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build IgnoreIfNull 的 Equal 篩選在值為 null 時不應退化成 IS NULL")]
+        [DisplayName("Build does not turn an IgnoreIfNull Equal filter into IS NULL when its value is null")]
         public void Build_IgnoreIfNullEqualFilter_DoesNotBecomeIsNull()
         {
             var schema = BuildSimpleSchema();

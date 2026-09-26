@@ -19,7 +19,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("新建 Diff 時 Changes 與 DescriptionChanges 皆為空")]
+        [DisplayName("A new Diff has empty Changes and DescriptionChanges")]
         public void Constructor_InitializesEmptyCollections()
         {
             var define = BuildSchema();
@@ -30,7 +30,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("DefineTable 與 RealTable 應正確暴露")]
+        [DisplayName("DefineTable and RealTable are exposed")]
         public void Properties_ExposeInputs()
         {
             var define = BuildSchema();
@@ -42,7 +42,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("RealTable 為 null 時 IsNewTable 應為 true")]
+        [DisplayName("IsNewTable is true when RealTable is null")]
         public void IsNewTable_NullRealTable_ReturnsTrue()
         {
             var diff = new TableSchemaDiff(BuildSchema(), realTable: null);
@@ -51,7 +51,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("RealTable 非 null 時 IsNewTable 應為 false")]
+        [DisplayName("IsNewTable is false when RealTable is not null")]
         public void IsNewTable_NonNullRealTable_ReturnsFalse()
         {
             var diff = new TableSchemaDiff(BuildSchema(), BuildSchema());
@@ -60,7 +60,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNewTable 為 true 時 IsEmpty 應為 false")]
+        [DisplayName("IsEmpty is false when IsNewTable is true")]
         public void IsEmpty_NewTable_ReturnsFalse()
         {
             var diff = new TableSchemaDiff(BuildSchema(), realTable: null);
@@ -69,7 +69,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("無任何變化時 IsEmpty 應為 true")]
+        [DisplayName("IsEmpty is true when nothing changed")]
         public void IsEmpty_NoChanges_ReturnsTrue()
         {
             var diff = new TableSchemaDiff(BuildSchema(), BuildSchema());
@@ -78,7 +78,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("含 Structural Change 時 IsEmpty 應為 false")]
+        [DisplayName("IsEmpty is false with a structural change")]
         public void IsEmpty_WithStructuralChange_ReturnsFalse()
         {
             var diff = new TableSchemaDiff(BuildSchema(), BuildSchema());
@@ -88,7 +88,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("含 Description Change 時 IsEmpty 應為 false")]
+        [DisplayName("IsEmpty is false with a description change")]
         public void IsEmpty_WithDescriptionChange_ReturnsFalse()
         {
             var diff = new TableSchemaDiff(BuildSchema(), BuildSchema());

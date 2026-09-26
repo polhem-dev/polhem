@@ -4,12 +4,12 @@ using Polhem.Db.Dml;
 namespace Polhem.Db.UnitTests.Dml
 {
     /// <summary>
-    /// QueryFieldMapping 單元測試。
+    /// Unit tests for <c>QueryFieldMapping</c>.
     /// </summary>
     public class QueryFieldMappingTests
     {
         [Fact]
-        [DisplayName("預設建構子應初始化為空字串與 null TableJoin")]
+        [DisplayName("The default constructor initializes empty strings and a null TableJoin")]
         public void DefaultConstructor_InitializesDefaults()
         {
             var mapping = new QueryFieldMapping();
@@ -22,7 +22,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("FieldName 與 Key 應互相對映")]
+        [DisplayName("FieldName and Key map to each other")]
         public void FieldName_MapsToKey()
         {
             var mapping = new QueryFieldMapping { FieldName = "Alpha" };
@@ -33,7 +33,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("屬性應可被設定並讀回")]
+        [DisplayName("Properties can be set and read back")]
         public void Properties_AreSettable()
         {
             var join = new TableJoin { Key = "join1" };
@@ -52,7 +52,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("ToString 應回傳 \"{SourceAlias}.{SourceField} AS {FieldName}\"")]
+        [DisplayName("ToString returns \"{SourceAlias}.{SourceField} AS {FieldName}\"")]
         public void ToString_ReturnsFormatted()
         {
             var mapping = new QueryFieldMapping
@@ -66,7 +66,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("ToString 於預設空值應回傳 \". AS \"")]
+        [DisplayName("ToString returns \". AS \" for the default empty values")]
         public void ToString_DefaultValues_ReturnsEmptyFormatted()
         {
             var mapping = new QueryFieldMapping();

@@ -5,9 +5,9 @@ using Polhem.Db.Providers.Sqlite;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 純語法測試：覆蓋 <see cref="SqliteTableSchemaProvider"/> 的靜態解析方法
-    /// （<c>MapToFieldDbType</c> 與 <c>ParseDefaultValue</c>），與 <see cref="PgTableSchemaProviderStaticTests"/>
-    /// 對稱。
+    /// Pure syntax tests covering the static parsing methods of <see cref="SqliteTableSchemaProvider"/>
+    /// (<c>MapToFieldDbType</c> and <c>ParseDefaultValue</c>), symmetric with
+    /// <see cref="PgTableSchemaProviderStaticTests"/>.
     /// </summary>
     public class SqliteTableSchemaProviderStaticTests
     {
@@ -41,14 +41,14 @@ namespace Polhem.Db.UnitTests
         [InlineData("BLOB", false, FieldDbType.Binary)]
         [InlineData("BINARY", false, FieldDbType.Binary)]
         [InlineData("JSON", false, FieldDbType.Unknown)]
-        [DisplayName("SQLite MapToFieldDbType 應正確映射各 SQLite 型別")]
+        [DisplayName("SQLite MapToFieldDbType maps each SQLite type")]
         public void MapToFieldDbType_VariousTypes_MapsCorrectly(string baseType, bool isPrimaryKey, FieldDbType expected)
         {
             Assert.Equal(expected, SqliteTableSchemaProvider.MapToFieldDbType(baseType, isPrimaryKey));
         }
 
         [Fact]
-        [DisplayName("SQLite MapToFieldDbType：INTEGER 且為 PK 應映射為 AutoIncrement（rowid alias）")]
+        [DisplayName("SQLite MapToFieldDbType maps an INTEGER PK to AutoIncrement (rowid alias)")]
         public void MapToFieldDbType_IntegerPrimaryKey_MapsToAutoIncrement()
         {
             Assert.Equal(FieldDbType.AutoIncrement,
@@ -56,7 +56,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite MapToFieldDbType：INTEGER 非 PK 應映射為 Integer")]
+        [DisplayName("SQLite MapToFieldDbType maps a non-PK INTEGER to Integer")]
         public void MapToFieldDbType_IntegerNonPrimaryKey_MapsToInteger()
         {
             Assert.Equal(FieldDbType.Integer,
@@ -64,7 +64,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite MapToFieldDbType：對輸入字串大小寫不敏感")]
+        [DisplayName("SQLite MapToFieldDbType ignores the case of the input string")]
         public void MapToFieldDbType_CaseInsensitive()
         {
             Assert.Equal(FieldDbType.Boolean, SqliteTableSchemaProvider.MapToFieldDbType("boolean", false));
@@ -73,7 +73,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite MapToFieldDbType：null/空字串應映射為 Unknown")]
+        [DisplayName("SQLite MapToFieldDbType maps null or an empty string to Unknown")]
         public void MapToFieldDbType_NullOrEmpty_ReturnsUnknown()
         {
             Assert.Equal(FieldDbType.Unknown, SqliteTableSchemaProvider.MapToFieldDbType(null!, false));
@@ -90,7 +90,7 @@ namespace Polhem.Db.UnitTests
         [InlineData("'world'", FieldDbType.Text, "", "world")]
         [InlineData("CURRENT_TIMESTAMP", FieldDbType.DateTime, "CURRENT_TIMESTAMP", "")]
         [InlineData("42", FieldDbType.Integer, "0", "42")]
-        [DisplayName("SQLite ParseDefaultValue 應依型別剝除引號與外層括號")]
+        [DisplayName("SQLite ParseDefaultValue strips the quotes and outer parentheses by type")]
         public void ParseDefaultValue_StripsQuotesAndParens(
             string raw, FieldDbType dbType, string original, string expected)
         {
@@ -98,23 +98,25 @@ namespace Polhem.Db.UnitTests
         }
 
         [Theory]
-        // PRAGMA table_info 實際回報的形式：外層括號已被 SQLite 剝掉，內建預設值仍帶括號。
+        // The form PRAGMA table_info actually reports: SQLite has stripped the outer parentheses, while the built-in
+        // default still has them.
         [InlineData("hex(randomblob(16))")]
-        // 保險起見，帶括號的原樣輸入也應正規化為相同結果。
+        // To be safe, the parenthesized input as is must normalize to the same result.
         [InlineData("(hex(randomblob(16)))")]
-        [DisplayName("SQLite ParseDefaultValue：Guid 內建預設值應正規化為空字串（不論是否帶外層括號）")]
+        [DisplayName("SQLite ParseDefaultValue normalizes the built-in Guid default to an empty string (with or without outer parentheses)")]
         public void ParseDefaultValue_GuidBuiltinDefault_ReturnsEmpty(string raw)
         {
-            // 內建預設值 (hex(randomblob(16))) 在 DDL 內必須加括號才是合法的 SQLite 運算式預設，
-            // 但 PRAGMA table_info 只回報括號內的運算式。兩邊都正規化後才比得出「與內建預設相同」，
-            // 否則每次 schema 比對都會把 Guid 欄位標為 Upgrade 而永遠收斂不了。
+            // The built-in default (hex(randomblob(16))) needs the parentheses in DDL to be a valid SQLite expression
+            // default, but PRAGMA table_info reports only the expression inside them. Only after normalizing both sides
+            // can they be found equal to the built-in default; otherwise every schema comparison would mark the Guid
+            // field for Upgrade and never converge.
             var result = SqliteTableSchemaProvider.ParseDefaultValue(
                 raw, FieldDbType.Guid, "(hex(randomblob(16)))");
             Assert.Equal(string.Empty, result);
         }
 
         [Fact]
-        [DisplayName("SQLite ParseDefaultValue：非內建的函式預設應保留剝除外層括號後的表達式")]
+        [DisplayName("SQLite ParseDefaultValue keeps a non-built-in function default as the expression without its outer parentheses")]
         public void ParseDefaultValue_NonBuiltinFunctionDefault_ReturnsUnwrappedExpression()
         {
             var result = SqliteTableSchemaProvider.ParseDefaultValue(
@@ -123,7 +125,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite ParseDefaultValue：非成對的頭尾括號不應被誤剝")]
+        [DisplayName("SQLite ParseDefaultValue does not strip leading and trailing parentheses that are not a pair")]
         public void ParseDefaultValue_UnpairedOuterParens_NotStripped()
         {
             var result = SqliteTableSchemaProvider.ParseDefaultValue(
@@ -132,7 +134,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite ParseDefaultValue：字串型別應 unescape 雙引號")]
+        [DisplayName("SQLite ParseDefaultValue unescapes doubled quotes for string types")]
         public void ParseDefaultValue_EscapedQuoteInString_Unescaped()
         {
             var result = SqliteTableSchemaProvider.ParseDefaultValue("'O''Brien'", FieldDbType.String, string.Empty);
@@ -140,7 +142,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite ParseDefaultValue：與內建預設值相同應回傳空字串")]
+        [DisplayName("SQLite ParseDefaultValue returns an empty string when the value equals the built-in default")]
         public void ParseDefaultValue_MatchesBuiltinDefault_ReturnsEmpty()
         {
             var result = SqliteTableSchemaProvider.ParseDefaultValue("0", FieldDbType.Integer, "0");
@@ -148,17 +150,18 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite ParseDefaultValue：空輸入應回傳空字串")]
+        [DisplayName("SQLite ParseDefaultValue returns an empty string for empty input")]
         public void ParseDefaultValue_EmptyInput_ReturnsEmpty()
         {
             Assert.Equal(string.Empty, SqliteTableSchemaProvider.ParseDefaultValue(string.Empty, FieldDbType.Integer, "0"));
         }
 
         [Fact]
-        [DisplayName("SQLite ParseDefaultValue：外層括號被剝除（hex(randomblob) 一般 wrap 形式）")]
+        [DisplayName("SQLite ParseDefaultValue strips the outer parentheses (the usual wrapped form of hex(randomblob))")]
         public void ParseDefaultValue_OuterParens_AreStripped()
         {
-            // SQLite 對函式呼叫式的 default 通常會以 (...) 包覆儲存，需剝除外層才能還原原始表達式。
+            // SQLite usually stores a function-call default wrapped in (...), so the outer layer must be stripped to
+            // restore the original expression.
             var result = SqliteTableSchemaProvider.ParseDefaultValue("(CURRENT_TIMESTAMP)", FieldDbType.DateTime, "CURRENT_TIMESTAMP");
             Assert.Equal(string.Empty, result);
         }

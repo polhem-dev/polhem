@@ -6,12 +6,12 @@ using Polhem.Definition.Settings;
 namespace Polhem.Db.UnitTests.Manager
 {
     /// <summary>
-    /// DbAccessFactory 的建構與型別解析測試。
+    /// Tests for constructing <c>DbAccessFactory</c> and resolving the database type.
     /// </summary>
     /// <remarks>
-    /// 自帶隔離的 <see cref="DatabaseSettings"/>，不碰 process-wide 的定義快取 ——
-    /// 理由見 <see cref="IsolatedDatabaseSettingsProvider"/>。這裡不開連線，
-    /// 只驗工廠回傳的 <c>DbAccess</c> 帶對 <c>DatabaseType</c>。
+    /// Uses its own isolated <see cref="DatabaseSettings"/> and does not touch the process-wide definition cache.
+    /// The reason is in <see cref="IsolatedDatabaseSettingsProvider"/>. No connection is opened here; the tests only
+    /// check that the <c>DbAccess</c> returned by the factory carries the right <c>DatabaseType</c>.
     /// </remarks>
     public sealed class DbAccessFactoryTests : IDisposable
     {
@@ -27,7 +27,7 @@ namespace Polhem.Db.UnitTests.Manager
         public void Dispose() => _manager.Dispose();
 
         [Fact]
-        [DisplayName("DbAccessFactory 構造子需要 IDbConnectionManager")]
+        [DisplayName("DbAccessFactory constructor requires an IDbConnectionManager")]
         public void DbAccessFactory_NullManager_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new DbAccessFactory(null!));
@@ -37,7 +37,7 @@ namespace Polhem.Db.UnitTests.Manager
         [InlineData(0)]
         [InlineData(30)]
         [InlineData(120)]
-        [DisplayName("DbAccessFactory 指定 maxCommandTimeout 應建立實例")]
+        [DisplayName("DbAccessFactory creates an instance with a maxCommandTimeout")]
         public void DbAccessFactory_WithTimeout_CreatesInstance(int timeout)
         {
             var factory = new DbAccessFactory(_manager, timeout);
@@ -45,7 +45,7 @@ namespace Polhem.Db.UnitTests.Manager
         }
 
         [Fact]
-        [DisplayName("DbAccessFactory.Create 應回傳對應 DatabaseType 的 DbAccess 實例")]
+        [DisplayName("DbAccessFactory.Create returns a DbAccess for the matching DatabaseType")]
         public void Create_ValidDatabaseId_ReturnsDbAccessWithCorrectType()
         {
             string id = $"polhem_factory_{Guid.NewGuid():N}";

@@ -7,12 +7,13 @@ using Polhem.Tests.Shared;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 驗證 <c>DbAccess</c> 的異常偵測（<c>DbAccess.Anomaly.cs</c>）：門檻判定、Kind 分類、
-    /// 以及「異常寫入為 best-effort，不得改變命令結果」這條約束。
+    /// Verifies the anomaly detection of <c>DbAccess</c> (<c>DbAccess.Anomaly.cs</c>): the threshold checks, the Kind
+    /// classification, and the constraint that writing anomalies is best-effort and must not change the result of a
+    /// command.
     /// </summary>
     /// <remarks>
-    /// 以 SQLite 執行真實命令而非 mock <c>DbAccess</c>：門檻判定吃的是實際的 RowsAffected /
-    /// Rows.Count / 例外型別，換成假的執行結果就繞過了被測邏輯本身。
+    /// Real commands run on SQLite instead of a mocked <c>DbAccess</c>: the threshold checks consume the actual
+    /// RowsAffected / Rows.Count / exception type, and a fake execution result would bypass the logic under test.
     /// </remarks>
     public class DbAccessAnomalyTests : IClassFixture<SharedDbFixture>
     {
@@ -21,7 +22,7 @@ namespace Polhem.Db.UnitTests
         public DbAccessAnomalyTests(SharedDbFixture fx) { _fx = fx; }
 
         /// <summary>
-        /// 收集 <see cref="DbAnomalyEntry"/> 的測試用 writer。
+        /// A test writer that collects <see cref="DbAnomalyEntry"/> records.
         /// </summary>
         private sealed class CapturingAnomalyLogWriter : IAnomalyLogWriter
         {
@@ -42,7 +43,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("未設定 writer 時命令照常執行且不寫任何異常記錄")]
+        [DisplayName("Without a writer the command runs as usual and no anomaly is written")]
         public void NoWriter_ExecutesWithoutAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -55,7 +56,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("Level 為 None 時即使門檻全開也不寫異常記錄")]
+        [DisplayName("Level None writes no anomaly even with every threshold enabled")]
         public void LevelNone_WritesNothing()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -73,7 +74,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("Level 為 Error 時成功命令不記錄 Slow / LargeResult")]
+        [DisplayName("Level Error does not record Slow or LargeResult for a successful command")]
         public void LevelError_SkipsSuccessAnomalies()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -90,7 +91,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("結果列數超過門檻應記錄 LargeResult 並帶回實際列數")]
+        [DisplayName("A result row count over the threshold records LargeResult with the actual row count")]
         public void ResultRowThresholdExceeded_LogsLargeResult()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -112,7 +113,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("影響列數超過門檻應記錄 LargeAffected")]
+        [DisplayName("An affected row count over the threshold records LargeAffected")]
         public void AffectedRowThresholdExceeded_LogsLargeAffected()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -137,7 +138,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("執行時間門檻為 0 時不記錄 Slow")]
+        [DisplayName("A duration threshold of 0 records no Slow")]
         public void ExecutionTimeThresholdDisabled_SkipsSlow()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -156,7 +157,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("命令失敗應記錄 Error 並保留原例外，命令文字不含參數值")]
+        [DisplayName("A failed command records Error, keeps the original exception and logs no parameter values in the command text")]
         public void CommandFails_LogsErrorAndRethrows()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -174,21 +175,22 @@ namespace Polhem.Db.UnitTests
             Assert.DoesNotContain("123", entry.Command, StringComparison.Ordinal);
             Assert.False(string.IsNullOrEmpty(entry.ErrorType));
             Assert.False(string.IsNullOrEmpty(entry.ErrorMessage));
-            // 訊息被攤平成單行後才落地，避免 log 欄位夾帶換行。
+            // The message is flattened to a single line before it is stored, so a log field never carries a line break.
             Assert.DoesNotContain('\n', entry.ErrorMessage!);
             Assert.DoesNotContain('\r', entry.ErrorMessage!);
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("例外訊息含 timeout 字樣應分類為 Timeout")]
+        [DisplayName("An exception message containing timeout is classified as Timeout")]
         public void TimeoutWorded_ClassifiesAsTimeout()
         {
             var writer = new CapturingAnomalyLogWriter();
             var options = new DbAccessAnomalyLogOptions { Level = DbAccessAnomalyLogLevel.Error };
             var dbAccess = NewSqliteDbAccess(writer, options);
 
-            // SQLite 對未知函式的錯誤訊息會帶回函式名，藉此讓 `IsTimeout` 的訊息比對命中，
-            // 而不必真的讓命令逾時（逾時測試在 CI 上必然是不穩定來源）。
+            // SQLite's error message for an unknown function includes the function name, which makes the message
+            // match in `IsTimeout` without really letting the command time out (a timeout test is a sure source of
+            // flakiness on CI).
             var exception = Record.Exception(() =>
                 dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar, "SELECT timeout(1)")));
 

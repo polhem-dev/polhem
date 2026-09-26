@@ -6,14 +6,15 @@ using Polhem.Definition.Database;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// <see cref="CacheNotifyReader"/> 建構子防衛式斷言，以及
-    /// <see cref="CacheNotifyReader.BaselineNowCommandText"/> / <c>ThresholdBinding</c>
-    /// 各資料庫分支與 default 拋例外路徑的單元測試。
+    /// Unit tests for the constructor guard of <see cref="CacheNotifyReader"/>, and for the per-database branches
+    /// and the throwing default path of
+    /// <see cref="CacheNotifyReader.BaselineNowCommandText"/> / <c>ThresholdBinding</c>.
     /// </summary>
     /// <remarks>
-    /// NOTE: baseline 那半改為**直接呼叫** internal 方法（`InternalsVisibleTo` 已開），不再走反射。
-    /// 反射版把改名變成執行期的 <c>Assert.NotNull() Failure: Value is null</c> —— 訊息完全不指向
-    /// 真因，而編譯器本來可以當場擋下。<c>ThresholdBinding</c> 仍是 private，維持反射。
+    /// NOTE: the baseline half now **calls the internal method directly** (`InternalsVisibleTo` is enabled) instead
+    /// of using reflection. The reflection version turned a rename into a runtime
+    /// <c>Assert.NotNull() Failure: Value is null</c>, a message that points nowhere near the real cause, while the
+    /// compiler could have caught it on the spot. <c>ThresholdBinding</c> is still private and still uses reflection.
     /// </summary>
     public class CacheNotifyReaderUnitTests
     {
@@ -25,7 +26,7 @@ namespace Polhem.Db.UnitTests
         private static readonly object[] s_unknownDbTypeArg = [(DatabaseType)999];
 
         [Fact]
-        [DisplayName("CacheNotifyReader 建構子 dbAccessFactory 為 null 應拋 ArgumentNullException")]
+        [DisplayName("CacheNotifyReader constructor throws ArgumentNullException for a null dbAccessFactory")]
         public void Constructor_NullDbAccessFactory_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new CacheNotifyReader(null!));
@@ -35,7 +36,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("ReadBaseline databaseId 為空應拋 ArgumentException")]
+        [DisplayName("ReadBaseline throws ArgumentException for an empty databaseId")]
         public void ReadBaseline_EmptyDatabaseId_ThrowsArgumentException(string? databaseId)
         {
             var reader = new CacheNotifyReader(new StubDbFactory());
@@ -46,7 +47,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("ReadChangesSince databaseId 為空應拋 ArgumentException")]
+        [DisplayName("ReadChangesSince throws ArgumentException for an empty databaseId")]
         public void ReadChangesSince_EmptyDatabaseId_ThrowsArgumentException(string? databaseId)
         {
             var reader = new CacheNotifyReader(new StubDbFactory());
@@ -54,22 +55,22 @@ namespace Polhem.Db.UnitTests
                 reader.ReadChangesSince(databaseId!, DateTime.UnixEpoch));
         }
 
-        // --- BaselineNowCommandText 各 DB 類型分支 ---
+        // --- BaselineNowCommandText branches per database type ---
 
-        // NOTE: 「已知方言回傳非空字串」不放這裡 —— 它現在會查 DbDialectRegistry，而 registry 由
-        // SharedDatabaseState 註冊，本類別沒有 fixture，先跑就會拿到空的 registry（順序相依，
-        // 表現為間歇性紅）。改由 CacheNotifyBaselineBasisTests 涵蓋，那裡有 fixture，
-        // 而且驗的是更強的條件：表達式必須與寫入端完全相同。
+        // NOTE: "a known dialect returns a non-empty string" is not tested here. It now looks up `DbDialectRegistry`,
+        // which `SharedDatabaseState` populates. This class has no fixture, so running first gets an empty registry
+        // (order dependent, showing up as intermittent failures). `CacheNotifyBaselineBasisTests` covers it instead:
+        // it has the fixture and checks a stronger condition, that the expression is identical to the writer's.
 
         [Fact]
-        [DisplayName("BaselineNowCommandText 未知資料庫類型應拋 NotSupportedException")]
+        [DisplayName("BaselineNowCommandText throws NotSupportedException for an unknown database type")]
         public void BaselineNowCommandText_UnknownDatabaseType_ThrowsNotSupportedException()
         {
             Assert.Throws<NotSupportedException>(
                 () => CacheNotifyReader.BaselineNowCommandText((DatabaseType)999));
         }
 
-        // --- ThresholdBinding 各 DB 類型分支 ---
+        // --- ThresholdBinding branches per database type ---
 
         private static MethodInfo GetThresholdBindingMethod()
         {
@@ -85,7 +86,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(DatabaseType.MySQL)]
         [InlineData(DatabaseType.Oracle)]
         [InlineData(DatabaseType.SQLite)]
-        [DisplayName("ThresholdBinding 已知資料庫類型應回傳非空白 Format 與 CastTemplate")]
+        [DisplayName("ThresholdBinding returns a non-blank Format and CastTemplate for known database types")]
         public void ThresholdBinding_KnownDatabaseType_ReturnsBothFieldsNonEmpty(DatabaseType databaseType)
         {
             var method = GetThresholdBindingMethod();
@@ -98,7 +99,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ThresholdBinding 未知資料庫類型應拋 NotSupportedException")]
+        [DisplayName("ThresholdBinding throws NotSupportedException for an unknown database type")]
         public void ThresholdBinding_UnknownDatabaseType_ThrowsNotSupportedException()
         {
             var method = GetThresholdBindingMethod();

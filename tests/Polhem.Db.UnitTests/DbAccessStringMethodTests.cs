@@ -11,7 +11,7 @@ namespace Polhem.Db.UnitTests
         public DbAccessStringMethodTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteNonQuery 字串多載應回傳影響列數")]
+        [DisplayName("ExecuteNonQuery string overload returns the affected row count")]
         public void ExecuteNonQuery_ValidSql_ReturnsRowsAffected()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
@@ -21,7 +21,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteScalar 字串多載應回傳純量值")]
+        [DisplayName("ExecuteScalar string overload returns the scalar value")]
         public void ExecuteScalar_ValidSql_ReturnsScalarValue()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
@@ -31,7 +31,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteDataTable 字串多載應回傳 DataTable")]
+        [DisplayName("ExecuteDataTable string overload returns a DataTable")]
         public void ExecuteDataTable_ValidSql_ReturnsDataTable()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
@@ -41,7 +41,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteNonQueryAsync 非同步字串多載應回傳影響列數")]
+        [DisplayName("ExecuteNonQueryAsync string overload returns the affected row count")]
         public async Task ExecuteNonQueryAsync_ValidSql_ReturnsRowsAffected()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
@@ -51,7 +51,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteScalarAsync 非同步字串多載應回傳純量值")]
+        [DisplayName("ExecuteScalarAsync string overload returns the scalar value")]
         public async Task ExecuteScalarAsync_ValidSql_ReturnsScalarValue()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
@@ -61,7 +61,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteDataTableAsync 非同步字串多載應回傳 DataTable")]
+        [DisplayName("ExecuteDataTableAsync string overload returns a DataTable")]
         public async Task ExecuteDataTableAsync_ValidSql_ReturnsDataTable()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
@@ -71,7 +71,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteBatch 未啟用交易應成功執行批次命令")]
+        [DisplayName("ExecuteBatch runs the batch commands without a transaction")]
         public void ExecuteBatch_WithoutTransaction_Succeeds()
         {
             var batch = new DbBatchSpec { UseTransaction = false };
@@ -86,7 +86,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteBatchAsync 未啟用交易應成功執行非同步批次命令")]
+        [DisplayName("ExecuteBatchAsync runs the batch commands asynchronously without a transaction")]
         public async Task ExecuteBatchAsync_WithoutTransaction_Succeeds()
         {
             var batch = new DbBatchSpec { UseTransaction = false };
@@ -101,7 +101,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("Execute 含 DbTransaction 多載應成功執行命令")]
+        [DisplayName("Execute overload with a DbTransaction runs the command")]
         public void Execute_WithTransaction_NonQuery_Succeeds()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
@@ -118,7 +118,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteAsync 含 DbTransaction 多載應成功執行非同步命令")]
+        [DisplayName("ExecuteAsync overload with a DbTransaction runs the command asynchronously")]
         public async Task ExecuteAsync_WithTransaction_NonQuery_Succeeds()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");

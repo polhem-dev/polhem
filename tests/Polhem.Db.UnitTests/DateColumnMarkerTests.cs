@@ -6,9 +6,10 @@ using Polhem.Tests.Shared;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 驗證 <see cref="DbCommandSpec.DateColumns"/>（路徑二：呼叫端自寫 SQL）在 DbAccess 讀取路徑上
-    /// 正確標記日曆日欄位。ADO.NET 一律把 date 欄位回報為 System.DateTime，定義層的
-    /// Date / DateTime 之分因而在 SQL 讀取路徑上消失；此宣告是呼叫端把它補回來的方式。
+    /// Verifies that <see cref="DbCommandSpec.DateColumns"/> (path two: SQL written by the caller) marks calendar
+    /// date columns on the <c>DbAccess</c> read path. ADO.NET always reports a date column as <c>System.DateTime</c>,
+    /// so the definition layer's Date / DateTime distinction disappears on the SQL read path; this declaration is how
+    /// the caller restores it.
     /// </summary>
     public class DateColumnMarkerTests : IClassFixture<SharedDbFixture>
     {
@@ -33,7 +34,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("未宣告 DateColumns 時日期欄位不帶標記（現況行為不變）")]
+        [DisplayName("Date columns carry no marker when DateColumns is not declared (existing behavior unchanged)")]
         public void ExecuteDataTable_WithoutDeclaration_LeavesColumnsUnmarked()
         {
             var dbAccess = PrepareTable();
@@ -53,7 +54,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("宣告 DateColumns 後只有指定欄位被標記為 Date")]
+        [DisplayName("Declaring DateColumns marks only the listed columns as Date")]
         public void ExecuteDataTable_WithDeclaration_MarksOnlyDeclaredColumns()
         {
             var dbAccess = PrepareTable();
@@ -74,7 +75,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("DateColumns 宣告不存在的欄名應擲例外，不可靜默略過")]
+        [DisplayName("DateColumns naming a column that does not exist throws instead of being silently ignored")]
         public void ExecuteDataTable_UnknownDeclaredColumn_Throws()
         {
             var dbAccess = PrepareTable();
@@ -93,7 +94,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("DateColumns 用於非 DataTable 的 DbCommandKind 應擲例外")]
+        [DisplayName("DateColumns on a DbCommandKind other than DataTable throws")]
         public void Execute_DateColumnsOnNonTableKind_Throws()
         {
             var dbAccess = PrepareTable();
@@ -103,7 +104,8 @@ namespace Polhem.Db.UnitTests
                     "SELECT COUNT(*) FROM date_marker_test");
                 spec.DateColumns.Add("order_date");
 
-                // 宣告了卻無聲無效，正是此機制要消除的失敗模式，故擲例外而非忽略。
+                // A declaration that silently has no effect is exactly the failure mode this mechanism removes,
+                // so it throws instead of being ignored.
                 Assert.Throws<InvalidOperationException>(() => dbAccess.Execute(spec));
             }
             finally
@@ -113,7 +115,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("非同步讀取路徑同樣套用 DateColumns 宣告")]
+        [DisplayName("The asynchronous read path applies the DateColumns declaration too")]
         public async Task ExecuteAsync_WithDeclaration_MarksDeclaredColumns()
         {
             var dbAccess = PrepareTable();

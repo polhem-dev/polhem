@@ -48,7 +48,7 @@ namespace Polhem.Db.UnitTests
         [InlineData("mediumblob", 0, 0, 0, FieldDbType.Binary)]
         [InlineData("longblob", 0, 0, 0, FieldDbType.Binary)]
         [InlineData("json", 0, 0, 0, FieldDbType.Unknown)]
-        [DisplayName("MySQL GetFieldDbType 應正確映射各 MySQL 型別")]
+        [DisplayName("MySQL GetFieldDbType maps each MySQL type")]
         public void GetFieldDbType_VariousMySqlTypes_MapsCorrectly(
             string dataType, int precision, int scale, int length, FieldDbType expected)
         {
@@ -58,7 +58,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetFieldDbType 應對輸入字串大小寫不敏感")]
+        [DisplayName("MySQL GetFieldDbType ignores the case of the input string")]
         public void GetFieldDbType_CaseInsensitive()
         {
             Assert.Equal(FieldDbType.Integer, MySqlTableSchemaProvider.GetFieldDbType("INT", 0, 0, 0));
@@ -67,7 +67,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetFieldDbType CHAR(36) 應映射為 Guid，其他長度映射為 String")]
+        [DisplayName("MySQL GetFieldDbType maps CHAR(36) to Guid and other lengths to String")]
         public void GetFieldDbType_CharLength36_IsGuid_OtherLengthIsString()
         {
             Assert.Equal(FieldDbType.Guid, MySqlTableSchemaProvider.GetFieldDbType("char", 0, 0, 36));
@@ -76,7 +76,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetFieldDbType NULL 或空字串應回傳 Unknown")]
+        [DisplayName("MySQL GetFieldDbType returns Unknown for NULL or an empty string")]
         public void GetFieldDbType_NullOrEmpty_ReturnsUnknown()
         {
             Assert.Equal(FieldDbType.Unknown, MySqlTableSchemaProvider.GetFieldDbType(null!, 0, 0, 0));
@@ -84,7 +84,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetFieldDbType DECIMAL(19,4) 應映射為 Currency")]
+        [DisplayName("MySQL GetFieldDbType maps DECIMAL(19,4) to Currency")]
         public void GetFieldDbType_Decimal19_4_IsCurrency()
         {
             Assert.Equal(FieldDbType.Currency, MySqlTableSchemaProvider.GetFieldDbType("decimal", 19, 4, 0));
@@ -99,15 +99,15 @@ namespace Polhem.Db.UnitTests
         [InlineData("int", "42", "0", "42")]
         [InlineData("varchar", "hello", "", "hello")]
         [InlineData("varchar", "  world  ", "", "world")]
-        // 第二欄是 INFORMATION_SCHEMA 實際回報的形式：MySQL 剝掉外層括號並轉小寫，
-        // 第三欄則是框架發出的字面。兩者不同正是這個 parser 存在的理由。
+        // The second column is what INFORMATION_SCHEMA actually reports (MySQL strips the outer parentheses and
+        // lowercases), and the third is the literal the framework emits. That difference is why this parser exists.
         [InlineData("datetime", "utc_timestamp(6)", "(UTC_TIMESTAMP(6))", "")]
         [InlineData("date", "utc_date()", "(UTC_DATE())", "")]
         [InlineData("char", "uuid()", "(UUID())", "")]
         [InlineData("char", "UUID()", "(UUID())", "")]
         [InlineData("bigint", "100", "0", "100")]
         [InlineData("tinyint", "1", "0", "1")]
-        [DisplayName("MySQL ParseDBDefaultValue 應 trim 空白並與內建預設比對")]
+        [DisplayName("MySQL ParseDBDefaultValue trims whitespace and compares with the built-in default")]
         public void ParseDBDefaultValue_VariousCases_ReturnsExpected(
             string dataType, string defaultValue, string originalDefault, string expected)
         {
@@ -117,7 +117,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL ParseDBDefaultValue 空字串輸入應回傳空字串")]
+        [DisplayName("MySQL ParseDBDefaultValue returns an empty string for empty input")]
         public void ParseDBDefaultValue_EmptyInput_ReturnsEmpty()
         {
             var result = MySqlTableSchemaProvider.ParseDBDefaultValue("int", string.Empty, "0");
@@ -126,28 +126,29 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL ParseDBDefaultValue 與內建預設值大小寫不同也視為相同（uuid）")]
+        [DisplayName("MySQL ParseDBDefaultValue treats a built-in default that differs only in case as equal (uuid)")]
         public void ParseDBDefaultValue_MatchesBuiltinDefaultCaseInsensitive_ReturnsEmpty()
         {
-            // MySQL 將 (UUID()) 正規化為 uuid()（小寫、無外層括號）
+            // MySQL normalizes (UUID()) to uuid() (lower case, no outer parentheses).
             var result = MySqlTableSchemaProvider.ParseDBDefaultValue("char", "uuid()", "(UUID())");
 
             Assert.Equal(string.Empty, result);
         }
 
         [Fact]
-        [DisplayName("MySQL ParseDBDefaultValue 有外層括號的內建預設值應剝除括號後比較")]
+        [DisplayName("MySQL ParseDBDefaultValue strips the outer parentheses of a built-in default before comparing")]
         public void ParseDBDefaultValue_OuterParensInOriginal_StrippedBeforeCompare()
         {
-            // 框架原始為 (UUID())，MySQL INFORMATION_SCHEMA 回傳 uuid()（已剝括號）
-            // StripOuterParens((UUID())) → UUID() → 與 uuid() case-insensitive 相等 → 空字串
+            // The framework emits (UUID()), while MySQL's INFORMATION_SCHEMA returns uuid() with the parentheses
+            // stripped. StripOuterParens((UUID())) gives UUID(), which equals uuid() case-insensitively, so the
+            // result is an empty string.
             var result = MySqlTableSchemaProvider.ParseDBDefaultValue("char", "uuid()", "(UUID())");
 
             Assert.Equal(string.Empty, result);
         }
 
         [Fact]
-        [DisplayName("MySQL ParseDBDefaultValue 與內建預設值不同時應回傳 trimmed 值")]
+        [DisplayName("MySQL ParseDBDefaultValue returns the trimmed value when it differs from the built-in default")]
         public void ParseDBDefaultValue_DifferentFromBuiltin_ReturnsTrimmedValue()
         {
             var result = MySqlTableSchemaProvider.ParseDBDefaultValue("varchar", "  active  ", string.Empty);
@@ -156,7 +157,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL ParseDBDefaultValue 數值型預設為 0 不同時應回傳自訂值")]
+        [DisplayName("MySQL ParseDBDefaultValue returns a custom numeric default that differs from 0")]
         public void ParseDBDefaultValue_NumericCustomDefault_ReturnsValue()
         {
             var result = MySqlTableSchemaProvider.ParseDBDefaultValue("int", "99", "0");

@@ -54,7 +54,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetCommandText：rebuild 腳本應含 tmp 表建立、INSERT 與 RENAME（backtick 識別符）")]
+        [DisplayName("MySQL GetCommandText rebuild script creates the tmp table, INSERTs and RENAMEs (backtick identifiers)")]
         public void GetCommandText_BasicRebuild_IncludesTmpCreateInsertAndRename()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
@@ -65,19 +65,20 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetCommandText：tmp 表 CREATE 應帶 ENGINE=InnoDB 與 utf8mb4_0900_ai_ci collation")]
+        [DisplayName("MySQL GetCommandText tmp table CREATE carries ENGINE=InnoDB and the utf8mb4_0900_ai_ci collation")]
         public void GetCommandText_TmpTableCreate_IncludesMySqlTableSuffix()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
 
-            // tmp 表透過 MySqlCreateTableCommandBuilder 建立，必然帶 MySQL 的 table suffix；
-            // CI collation day-1 內建確保 rebuild 後表行為與原表一致。
+            // The tmp table is created through `MySqlCreateTableCommandBuilder`, so it always carries the MySQL table
+            // suffix. The case-insensitive collation built in from day one keeps the rebuilt table behaving like the
+            // original.
             Assert.Contains("ENGINE=InnoDB", sql);
             Assert.Contains("COLLATE=utf8mb4_0900_ai_ci", sql);
         }
 
         [Fact]
-        [DisplayName("MySQL GetCommandText：DROP TABLE 應使用 IF EXISTS")]
+        [DisplayName("MySQL GetCommandText uses IF EXISTS for DROP TABLE")]
         public void GetCommandText_DropTable_UsesIfExists()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
@@ -87,14 +88,14 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetCommandText：新增欄位不應出現在 INSERT ... SELECT 清單")]
+        [DisplayName("MySQL GetCommandText leaves a new field out of the INSERT ... SELECT list")]
         public void GetCommandText_AddedField_ExcludedFromDataCopy()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
 
-            // age 欄位應出現在 tmp 表定義
+            // The age field appears in the tmp table definition,
             Assert.Contains("`age`", sql);
-            // 但 INSERT ... SELECT 子句不應含 age
+            // but not in the INSERT ... SELECT clause.
             int insertIdx = sql.IndexOf("INSERT INTO `tmp_st_demo`", StringComparison.Ordinal);
             int selectIdx = sql.IndexOf("FROM `st_demo`", insertIdx, StringComparison.Ordinal);
             string insertSelectSection = sql.Substring(insertIdx, selectIdx - insertIdx);
@@ -102,7 +103,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetCommandText：real-only 欄位（extension field）應保留於 rebuild 結果")]
+        [DisplayName("MySQL GetCommandText keeps a real-only field (extension field) in the rebuild result")]
         public void GetCommandText_ExtensionField_Preserved()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema(withExtraLegacyField: true));
@@ -111,17 +112,17 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetCommandText：tmp 表不應預建非 PK 索引")]
+        [DisplayName("MySQL GetCommandText does not create non-PK indexes on the tmp table in advance")]
         public void GetCommandText_TmpTable_OmitsSecondaryIndexes()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
 
-            // 不應出現 ix_tmp_st_demo_name；非 PK 索引在 RENAME 後才以真實名建立
+            // No ix_tmp_st_demo_name: non-PK indexes are created with their real names after the RENAME.
             Assert.DoesNotContain("ix_tmp_st_demo_name", sql);
         }
 
         [Fact]
-        [DisplayName("MySQL GetCommandText：RENAME 後應以真實名重建非 PK 索引")]
+        [DisplayName("MySQL GetCommandText recreates non-PK indexes with their real names after the RENAME")]
         public void GetCommandText_NonPkIndexes_RecreatedWithRealNames()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
@@ -129,13 +130,13 @@ namespace Polhem.Db.UnitTests
             int renameIdx = sql.IndexOf("RENAME TO `st_demo`", StringComparison.Ordinal);
             int recreateIdx = sql.IndexOf("CREATE INDEX `ix_st_demo_name`", StringComparison.Ordinal);
 
-            Assert.True(renameIdx > 0, "RENAME 步驟必須出現");
-            Assert.True(recreateIdx > renameIdx, "非 PK 索引必須在 RENAME 之後重建");
+            Assert.True(renameIdx > 0, "The RENAME step must be present");
+            Assert.True(recreateIdx > renameIdx, "Non-PK indexes must be recreated after the RENAME");
             Assert.Contains("ON `st_demo` (`name` ASC)", sql);
         }
 
         [Fact]
-        [DisplayName("MySQL GetCommandText：腳本中不應出現 ALTER INDEX RENAME（與 SQLite/PG pattern 一致，避免方言差異）")]
+        [DisplayName("MySQL GetCommandText script contains no ALTER INDEX RENAME (same pattern as SQLite and PostgreSQL, avoiding dialect differences)")]
         public void GetCommandText_NeverEmitsAlterIndexRename()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
@@ -145,7 +146,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetCommandText：new-table diff 應 throw（應改走 CREATE 路徑）")]
+        [DisplayName("MySQL GetCommandText throws for a new-table diff (which must take the CREATE path)")]
         public void GetCommandText_NewTableDiff_Throws()
         {
             var define = BuildDefineSchema();

@@ -48,7 +48,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Plan：新表應為 Create 模式，單一 CreateTable stage")]
+        [DisplayName("Plan for a new table uses Create mode with a single CreateTable stage")]
         public void Plan_NewTable_ReturnsCreateMode()
         {
             var plan = PlanFor(BuildDefineSchema(), real: null);
@@ -60,7 +60,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Plan：結構完全相同應為 NoChange 模式")]
+        [DisplayName("Plan for identical structures uses NoChange mode")]
         public void Plan_IdenticalSchemas_ReturnsNoChange()
         {
             var plan = PlanFor(BuildDefineSchema(), BuildRealSchema());
@@ -71,7 +71,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Plan：全部 ALTER 可處理時應為 Alter 模式")]
+        [DisplayName("Plan uses Alter mode when ALTER can handle every change")]
         public void Plan_AlterCapableChanges_ReturnsAlterMode()
         {
             var define = BuildDefineSchema();
@@ -83,10 +83,10 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Plan：含 Rebuild 變化時整表應 fallback 為 Rebuild 模式")]
+        [DisplayName("Plan falls back to Rebuild mode for the whole table when a change needs Rebuild")]
         public void Plan_AnyRebuildChange_FallsBackToRebuildMode()
         {
-            // 將 name 從 String 改為 Integer（跨 family）→ Rebuild
+            // Changing name from String to Integer (across families) requires a Rebuild.
             var define = BuildDefineSchema();
             define.Fields!["name"].DbType = FieldDbType.Integer;
             define.Fields!["name"].Length = 0;
@@ -99,13 +99,13 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Plan：Rebuild 同時帶 rename 應擲例外")]
+        [DisplayName("Plan throws for a Rebuild combined with a rename")]
         public void Plan_RebuildWithRename_Throws()
         {
             var define = BuildDefineSchema();
             define.Fields!["name"].FieldName = "display_name";
             define.Fields!["display_name"].OriginalFieldName = "name";
-            // 同時把新欄位類型改為跨 family（觸發 rebuild）
+            // Also change the new field's type across families (which triggers a rebuild).
             define.Fields!["display_name"].DbType = FieldDbType.Integer;
             define.Fields!["display_name"].Length = 0;
 
@@ -116,27 +116,27 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Plan：ALTER stages 順序應為 DropIndexes → AlterColumns → AddColumns → CreateIndexes → SyncDescriptions")]
+        [DisplayName("Plan orders the ALTER stages DropIndexes → AlterColumns → AddColumns → CreateIndexes → SyncDescriptions")]
         public void Plan_AlterMode_StagesAreOrdered()
         {
             var define = BuildDefineSchema();
-            // 現有 pk 索引定義不同（Unique 假） → 會產生 drop + add index
-            define.Indexes!["pk_{0}"].Name = "pk_{0}"; // 保持 PK
-            define.Fields!["name"].Length = 100;       // 觸發 alter column
-            define.Fields!.Add("age", "Age", FieldDbType.Integer); // 觸發 add column
-            define.Indexes!.Add("ix_{0}_name", "name", false); // 觸發 create index
-            define.DisplayName = "示範";                // 觸發 description sync
+            // The existing PK index definition differs (Unique is false), which produces a drop + add index.
+            define.Indexes!["pk_{0}"].Name = "pk_{0}"; // Keeps the PK.
+            define.Fields!["name"].Length = 100;       // Triggers an alter column.
+            define.Fields!.Add("age", "Age", FieldDbType.Integer); // Triggers an add column.
+            define.Indexes!.Add("ix_{0}_name", "name", false); // Triggers a create index.
+            define.DisplayName = "示範";                // Triggers a description sync.
             define.Fields!["name"].Caption = "新名稱";
 
             var real = BuildRealSchema();
-            // 改動 real pk 的 Unique 以觸發 DropIndex + AddIndex 對 PK
+            // Changing Unique on the real PK triggers DropIndex + AddIndex for the PK.
             real.Indexes!["pk_st_demo"].Unique = false;
 
             var plan = PlanFor(define, real);
 
             Assert.Equal(UpgradeExecutionMode.Alter, plan.Mode);
             var kinds = plan.Stages.Select(s => s.Kind).ToList();
-            // 必含以下 stages；檢查相對順序
+            // All these stages must be present; check their relative order.
             int dropIdx = kinds.IndexOf(UpgradeStageKind.DropIndexes);
             int alterIdx = kinds.IndexOf(UpgradeStageKind.AlterColumns);
             int addIdx = kinds.IndexOf(UpgradeStageKind.AddColumns);
@@ -150,7 +150,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Plan：純描述差異應僅產生 SyncDescriptions stage")]
+        [DisplayName("Plan for a description-only difference produces only the SyncDescriptions stage")]
         public void Plan_DescriptionOnly_EmitsOnlySyncDescriptionsStage()
         {
             var define = BuildDefineSchema();
@@ -163,11 +163,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Plan：narrowing 變化在預設 options 下應擲例外")]
+        [DisplayName("Plan throws for a narrowing change under the default options")]
         public void Plan_NarrowingDisallowed_Throws()
         {
             var define = BuildDefineSchema();
-            define.Fields!["name"].Length = 30; // 由 real 50 縮為 30
+            define.Fields!["name"].Length = 30; // Narrowed from 50 in the real table to 30.
 
             var diff = new TableSchemaComparer(define, BuildRealSchema(), DatabaseType.SQLServer).CompareToDiff();
             var orchestrator = new TableUpgradeOrchestrator(s_dialect, s_stubMgr);
@@ -176,7 +176,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Plan：narrowing 變化在 AllowColumnNarrowing=true 下應允許並產生 warning")]
+        [DisplayName("Plan allows a narrowing change with AllowColumnNarrowing=true and produces a warning")]
         public void Plan_NarrowingAllowed_ReturnsPlanWithWarning()
         {
             var define = BuildDefineSchema();
@@ -192,7 +192,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Plan：NotSupported 變化應擲例外")]
+        [DisplayName("Plan throws for a NotSupported change")]
         public void Plan_NotSupportedChange_Throws()
         {
             var orchestrator = new TableUpgradeOrchestrator(new NotSupportedDialect(), new StubConnectionManager());
@@ -203,7 +203,8 @@ namespace Polhem.Db.UnitTests
             Assert.Throws<InvalidOperationException>(() => orchestrator.Plan(diff));
         }
 
-        // 測試用 dialect：alter builder 一律回傳 NotSupported，其餘委派給 SqlDialectFactory。
+        // A test dialect: the alter builder always returns NotSupported,
+        // and everything else delegates to `SqlDialectFactory`.
         private sealed class NotSupportedDialect : IDialectFactory
         {
             private readonly SqlDialectFactory _inner = new();
@@ -228,7 +229,8 @@ namespace Polhem.Db.UnitTests
             public int Count => 0;
         }
 
-        // 自訂 alter builder 讓 GetExecutionKind 永遠回傳 NotSupported，用於驗證 orchestrator 的拒絕行為
+        // A custom alter builder whose `GetExecutionKind` always returns NotSupported,
+        // to verify that the orchestrator rejects the change.
         private sealed class NotSupportedBuilder : ITableAlterCommandBuilder
         {
             public ChangeExecutionKind GetExecutionKind(ITableChange change) => ChangeExecutionKind.NotSupported;

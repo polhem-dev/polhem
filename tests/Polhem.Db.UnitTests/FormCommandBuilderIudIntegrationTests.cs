@@ -125,21 +125,21 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("FormSchema 驅動 IUD on SQL Server: INSERT → SELECT → UPDATE → SELECT → DELETE 完整 round-trip")]
+        [DisplayName("FormSchema-driven IUD on SQL Server round-trips INSERT → SELECT → UPDATE → SELECT → DELETE")]
         public void RoundTrip_SqlServer()
         {
             RunRoundTrip(DatabaseType.SQLServer);
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("FormSchema 驅動 IUD on PostgreSQL: INSERT → SELECT → UPDATE → SELECT → DELETE 完整 round-trip")]
+        [DisplayName("FormSchema-driven IUD on PostgreSQL round-trips INSERT → SELECT → UPDATE → SELECT → DELETE")]
         public void RoundTrip_PostgreSql()
         {
             RunRoundTrip(DatabaseType.PostgreSQL);
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("FormSchema 驅動 IUD on SQLite: INSERT → SELECT → UPDATE → SELECT → DELETE 完整 round-trip")]
+        [DisplayName("FormSchema-driven IUD on SQLite round-trips INSERT → SELECT → UPDATE → SELECT → DELETE")]
         public void RoundTrip_Sqlite()
         {
             RunRoundTrip(DatabaseType.SQLite);

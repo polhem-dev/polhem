@@ -6,7 +6,7 @@ namespace Polhem.Db.UnitTests
     public class DbCommandResultTests
     {
         [Fact]
-        [DisplayName("ForRowsAffected 應回傳 NonQuery Kind 並設定 RowsAffected")]
+        [DisplayName("ForRowsAffected returns Kind NonQuery and sets RowsAffected")]
         public void ForRowsAffected_SetsKindAndRows()
         {
             var result = DbCommandResult.ForRowsAffected(7);
@@ -18,7 +18,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ForScalar 應回傳 Scalar Kind 並保留 value")]
+        [DisplayName("ForScalar returns Kind Scalar and keeps the value")]
         public void ForScalar_SetsKindAndScalar()
         {
             var result = DbCommandResult.ForScalar(123);
@@ -30,7 +30,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ForScalar value 為 null 仍回傳 Scalar Kind")]
+        [DisplayName("ForScalar with a null value still returns Kind Scalar")]
         public void ForScalar_NullValue_ReturnsScalarKind()
         {
             var result = DbCommandResult.ForScalar(null);
@@ -40,7 +40,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ForTable 應回傳 DataTable Kind 並保留 table 參考")]
+        [DisplayName("ForTable returns Kind DataTable and keeps the table reference")]
         public void ForTable_SetsKindAndTable()
         {
             var table = new DataTable("demo");

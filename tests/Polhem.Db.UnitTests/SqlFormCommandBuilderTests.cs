@@ -20,14 +20,14 @@ namespace Polhem.Db.UnitTests
             => new(schema, DefineAccess);
 
         [Fact]
-        [DisplayName("FormSchema 建構子 null 應擲 ArgumentNullException")]
+        [DisplayName("The FormSchema constructor throws ArgumentNullException for null")]
         public void Constructor_NullFormSchema_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new SqlFormCommandBuilder(null!, DefineAccess));
         }
 
         [Fact]
-        [DisplayName("FormSchema 建構子 null IDefineAccess 應擲 ArgumentNullException")]
+        [DisplayName("The FormSchema constructor throws ArgumentNullException for a null IDefineAccess")]
         public void Constructor_NullDefineAccess_Throws()
         {
             var schema = new FormSchema("X", "X");
@@ -36,7 +36,7 @@ namespace Polhem.Db.UnitTests
 
 
         [Fact]
-        [DisplayName("BuildDelete 應委派至 SQL Server 方言並產生 DELETE 語句")]
+        [DisplayName("BuildDelete delegates to the SQL Server dialect and produces a DELETE statement")]
         public void BuildDelete_DelegatesToSqlServerDialect()
         {
             var schema = new FormSchema("X", "X");

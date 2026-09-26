@@ -100,7 +100,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("整合：空 plan 應回傳 false")]
+        [DisplayName("Integration: an empty plan returns false")]
         public void Execute_EmptyPlan_ReturnsFalse()
         {
             var plan = new UpgradePlan(UpgradeExecutionMode.NoChange);
@@ -109,7 +109,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("整合：新表應透過 Create 模式建立於 DB")]
+        [DisplayName("Integration: a new table is created in the database in Create mode")]
         public void Execute_NewTable_CreatesTable()
         {
             const string tableName = "st_orch_create_test";
@@ -131,21 +131,19 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("整合：新增欄位走 ALTER 路徑，既有資料保留")]
+        [DisplayName("Integration: adding a field takes the ALTER path and keeps the existing data")]
         public void Execute_AddColumn_PreservesExistingData()
         {
             const string tableName = "st_orch_addcol_test";
             DropIfExists(tableName);
             try
             {
-                // 先建表並塞資料
                 var initial = BuildSchema(tableName);
                 CreateOrchestrator().Execute(PlanFor(tableName, initial), DatabaseId);
                 var dbAccess = _fx.NewDbAccess(DatabaseId);
                 dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
                     $"INSERT INTO [{tableName}] (sys_rowid, name) VALUES (NEWID(), {{0}})", "Alice"));
 
-                // define 新增欄位 age
                 var updated = BuildSchema(tableName);
                 updated.Fields!.Add("age", "Age", FieldDbType.Integer);
                 var plan = PlanFor(tableName, updated);
@@ -163,7 +161,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("整合：放大欄位長度走 ALTER 路徑")]
+        [DisplayName("Integration: widening a field length takes the ALTER path")]
         public void Execute_WidenColumnLength_UsesAlterPath()
         {
             const string tableName = "st_orch_widen_test";
@@ -188,7 +186,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("整合：跨 family 型別變更應走 Rebuild 路徑（資料可丟失視資料而定）")]
+        [DisplayName("Integration: a cross-family type change takes the Rebuild path (whether data is lost depends on the data)")]
         public void Execute_CrossFamilyTypeChange_UsesRebuildPath()
         {
             const string tableName = "st_orch_rebuild_test";
@@ -198,12 +196,11 @@ namespace Polhem.Db.UnitTests
                 var initial = BuildSchema(tableName);
                 CreateOrchestrator().Execute(PlanFor(tableName, initial), DatabaseId);
 
-                // 插入數值格式字串，rebuild 時 CAST 仍能成功
+                // Insert a numeric-looking string so the CAST during the rebuild still succeeds.
                 var dbAccess = _fx.NewDbAccess(DatabaseId);
                 dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
                     $"INSERT INTO [{tableName}] (sys_rowid, name) VALUES (NEWID(), '42')"));
 
-                // 將 name 改為 Integer（跨 family）
                 var updated = BuildSchema(tableName);
                 updated.Fields!["name"].DbType = FieldDbType.Integer;
                 updated.Fields!["name"].Length = 0;
@@ -213,7 +210,7 @@ namespace Polhem.Db.UnitTests
 
                 CreateOrchestrator().Execute(plan, DatabaseId);
 
-                // 驗證資料列仍存在（值轉型成功）
+                // The row still exists (the value was converted).
                 Assert.Equal(1, CountRows(tableName));
             }
             finally
@@ -223,7 +220,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("整合：同一定義重跑應為 NoChange（冪等）")]
+        [DisplayName("Integration: rerunning the same definition gives NoChange (idempotent)")]
         public void Execute_SameSchemaTwice_IsIdempotent()
         {
             const string tableName = "st_orch_idempotent_test";
@@ -245,7 +242,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("整合：既有 datetime 欄位應走 ALTER 升級為 datetime2(7)，資料保留")]
+        [DisplayName("Integration: an existing datetime field is upgraded to datetime2(7) through ALTER and the data is kept")]
         public void Execute_LegacyDatetimeColumn_UpgradesToDatetime2()
         {
             const string tableName = "st_orch_dt2_test";
@@ -289,21 +286,21 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("整合：real-only 欄位（extension）在 rebuild 後仍保留")]
+        [DisplayName("Integration: a real-only field (extension) is kept after a rebuild")]
         public void Execute_RebuildPath_PreservesExtensionField()
         {
             const string tableName = "st_orch_extfield_test";
             DropIfExists(tableName);
             try
             {
-                // 建表後手動加入「第三方」欄位 legacy_col
+                // After creating the table, add a "third-party" field legacy_col by hand.
                 var initial = BuildSchema(tableName);
                 CreateOrchestrator().Execute(PlanFor(tableName, initial), DatabaseId);
                 var dbAccess = _fx.NewDbAccess(DatabaseId);
                 dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
                     $"ALTER TABLE [{tableName}] ADD [legacy_col] [nvarchar](10) NULL;"));
 
-                // 觸發 rebuild（跨 family 變更）
+                // Trigger a rebuild (a cross-family change).
                 var updated = BuildSchema(tableName);
                 updated.Fields!["name"].DbType = FieldDbType.Integer;
                 updated.Fields!["name"].Length = 0;
@@ -313,7 +310,6 @@ namespace Polhem.Db.UnitTests
 
                 CreateOrchestrator().Execute(plan, DatabaseId);
 
-                // rebuild 後 legacy_col 應仍存在
                 Assert.True(ColumnExists(tableName, "legacy_col"));
             }
             finally

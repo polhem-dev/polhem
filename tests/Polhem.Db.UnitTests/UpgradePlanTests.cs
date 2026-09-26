@@ -10,7 +10,7 @@ namespace Polhem.Db.UnitTests
         private static readonly string[] s_narrowingWarning = { "Narrowing change" };
 
         [Fact]
-        [DisplayName("AllStatements 多個 stage 時應依序產出所有 SQL 語句")]
+        [DisplayName("AllStatements with several stages yields every SQL statement in order")]
         public void AllStatements_MultipleStages_YieldsAllInOrder()
         {
             var stage1 = new UpgradeStage(UpgradeStageKind.CreateTable, s_createTableSql);
@@ -25,7 +25,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("AllStatements stage 無語句時應回傳空集合")]
+        [DisplayName("AllStatements returns an empty collection when a stage has no statements")]
         public void AllStatements_NoStages_ReturnsEmpty()
         {
             var plan = new UpgradePlan(UpgradeExecutionMode.NoChange);
@@ -34,7 +34,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("建構子傳入 warnings 應正確儲存警告清單")]
+        [DisplayName("The constructor stores the warnings passed to it")]
         public void Constructor_WithWarnings_StoresWarnings()
         {
             var plan = new UpgradePlan(UpgradeExecutionMode.Alter, null, s_narrowingWarning);

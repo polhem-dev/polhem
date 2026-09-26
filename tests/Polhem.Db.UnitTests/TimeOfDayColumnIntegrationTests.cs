@@ -90,7 +90,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：Time 欄位建表、round-trip 與 schema 比對應收斂")]
+        [DisplayName("SQL Server Time field creates the table, round-trips, and the schema comparison converges")]
         public void TimeColumn_SqlServer_RoundTripsAndConverges()
         {
             RunColumnLifecycle(DatabaseType.SQLServer,
@@ -98,28 +98,28 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：Time 欄位建表、round-trip 與 schema 比對應收斂")]
+        [DisplayName("PostgreSQL Time field creates the table, round-trips, and the schema comparison converges")]
         public void TimeColumn_PostgreSql_RoundTripsAndConverges()
         {
             RunColumnLifecycle(DatabaseType.PostgreSQL, $"DROP TABLE IF EXISTS {TableName};");
         }
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：Time 欄位建表、round-trip 與 schema 比對應收斂")]
+        [DisplayName("MySQL Time field creates the table, round-trips, and the schema comparison converges")]
         public void TimeColumn_MySql_RoundTripsAndConverges()
         {
             RunColumnLifecycle(DatabaseType.MySQL, $"DROP TABLE IF EXISTS {TableName};");
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：Time 欄位建表、round-trip 與 schema 比對應收斂")]
+        [DisplayName("SQLite Time field creates the table, round-trips, and the schema comparison converges")]
         public void TimeColumn_Sqlite_RoundTripsAndConverges()
         {
             RunColumnLifecycle(DatabaseType.SQLite, $"DROP TABLE IF EXISTS {TableName};");
         }
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：Time 欄位建表、round-trip 與 schema 比對應收斂")]
+        [DisplayName("Oracle Time field creates the table, round-trips, and the schema comparison converges")]
         public void TimeColumn_Oracle_RoundTripsAndConverges()
         {
             RunColumnLifecycle(DatabaseType.Oracle,

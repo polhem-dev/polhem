@@ -7,7 +7,7 @@ namespace Polhem.Db.UnitTests
     public class SqlExtendedPropertyCommandBuilderTests
     {
         [Fact]
-        [DisplayName("GetCommandText changes 為 null 時應回傳空字串")]
+        [DisplayName("GetCommandText returns an empty string for null changes")]
         public void GetCommandText_NullChanges_ReturnsEmpty()
         {
             string sql = SqlExtendedPropertyCommandBuilder.GetCommandText("st_demo", null);
@@ -15,7 +15,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCommandText 空清單應回傳空字串")]
+        [DisplayName("GetCommandText returns an empty string for an empty list")]
         public void GetCommandText_EmptyList_ReturnsEmpty()
         {
             string sql = SqlExtendedPropertyCommandBuilder.GetCommandText("st_demo", Array.Empty<DescriptionChange>());
@@ -23,7 +23,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNew=true 應使用 sp_addextendedproperty")]
+        [DisplayName("IsNew=true uses sp_addextendedproperty")]
         public void GetCommandText_IsNew_GeneratesAdd()
         {
             var changes = new List<DescriptionChange>
@@ -40,7 +40,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNew=false 應使用 sp_updateextendedproperty")]
+        [DisplayName("IsNew=false uses sp_updateextendedproperty")]
         public void GetCommandText_NotNew_GeneratesUpdate()
         {
             var changes = new List<DescriptionChange>
@@ -54,7 +54,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Column 層 DescriptionChange 應附加 level2 子句")]
+        [DisplayName("A column-level DescriptionChange appends the level2 clause")]
         public void GetCommandText_ColumnLevel_IncludesLevel2Clause()
         {
             var changes = new List<DescriptionChange>
@@ -69,7 +69,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Table 層 DescriptionChange 不應包含 level2 子句")]
+        [DisplayName("A table-level DescriptionChange has no level2 clause")]
         public void GetCommandText_TableLevel_OmitsLevel2Clause()
         {
             var changes = new List<DescriptionChange>
@@ -83,7 +83,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("含單引號的值應 escape 為雙單引號")]
+        [DisplayName("A value containing a single quote is escaped as two single quotes")]
         public void GetCommandText_SingleQuote_Escaped()
         {
             var changes = new List<DescriptionChange>
@@ -98,7 +98,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("多筆 changes 應依序產生對應語句")]
+        [DisplayName("Several changes produce their statements in order")]
         public void GetCommandText_MultipleChanges_GeneratesAllStatements()
         {
             var changes = new List<DescriptionChange>
@@ -113,7 +113,7 @@ namespace Polhem.Db.UnitTests
             Assert.Contains("@value=N'表'", sql);
             Assert.Contains("@level2name=N'a'", sql);
             Assert.Contains("@level2name=N'b'", sql);
-            // 第三筆為 update
+            // The third one is an update.
             int updateIdx = sql.IndexOf("sp_updateextendedproperty", StringComparison.Ordinal);
             int bColumnIdx = sql.IndexOf("@level2name=N'b'", StringComparison.Ordinal);
             Assert.True(updateIdx >= 0 && updateIdx < bColumnIdx);

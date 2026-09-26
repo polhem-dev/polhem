@@ -5,23 +5,23 @@ using Polhem.Db.Providers.Sqlite;
 namespace Polhem.Db.UnitTests.Manager
 {
     /// <summary>
-    /// 刻畫各 provider 的 <see cref="DbDataAdapter.UpdateBatchSize"/> 支援度。
+    /// Pins down the <see cref="DbDataAdapter.UpdateBatchSize"/> support of each provider.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <c>DbAccess.ApplySpec</c> 會嘗試開啟批次寫入，並在 provider 不支援時退回逐列。
-    /// 它用的是<b>能力偵測</b>而不是一份寫死的 provider 清單 —— 清單會漂，也管不到宿主
-    /// 自己替某個 <c>DatabaseType</c> 註冊了什麼 factory。
+    /// <c>DbAccess.ApplySpec</c> tries to enable batched writes and falls back to row by row when the provider does
+    /// not support them. It uses <b>capability detection</b> rather than a hard-coded list of providers: a list
+    /// drifts, and it cannot cover whatever factory a host registered for a <c>DatabaseType</c> itself.
     /// </para>
     /// <para>
-    /// 但實作的註解裡寫了「今天量到的是：SQL Server / MySQL / Oracle 接受，Npgsql 與框架自己的
-    /// SQLite adapter 擲例外」。那句話沒有東西守著就會變成下一個過期的宣稱，所以這裡把它釘成測試。
-    /// <b>某個 provider 哪天改了行為，這裡會紅</b> —— 那時要做的是重新量一次、更新註解，
-    /// 而不是把測試改掉。
+    /// But the implementation's comment says "measured today: SQL Server / MySQL / Oracle accept it, Npgsql and the
+    /// framework's own SQLite adapter throw". With nothing guarding it, that sentence becomes the next outdated claim,
+    /// so this test pins it down. <b>If a provider changes its behavior one day, this goes red</b>; the thing to do
+    /// then is to measure again and update the comment, not to change the test.
     /// </para>
     /// <para>
-    /// 刻意直接建 factory 而不經 <c>DbProviderRegistry</c>：這裡驗的是套件本身的能力，
-    /// 與部署註冊了誰無關，也就不需要容器。
+    /// The factories are created directly on purpose instead of through <c>DbProviderRegistry</c>: this checks the
+    /// capability of the packages themselves, unrelated to what a deployment registered, so no container is needed.
     /// </para>
     /// </remarks>
     public class ProviderBatchingSupportTests
@@ -42,12 +42,12 @@ namespace Polhem.Db.UnitTests.Manager
             "Oracle" => Oracle.ManagedDataAccess.Client.OracleClientFactory.Instance,
             "PostgreSQL" => Npgsql.NpgsqlFactory.Instance,
             "SQLite" => new SqliteProviderFactory(Microsoft.Data.Sqlite.SqliteFactory.Instance),
-            _ => throw new ArgumentOutOfRangeException(nameof(name), name, "未知的 provider。"),
+            _ => throw new ArgumentOutOfRangeException(nameof(name), name, "Unknown provider."),
         };
 
         [Theory]
         [MemberData(nameof(Providers))]
-        [DisplayName("各 provider 的 adapter 對 UpdateBatchSize 的支援度應與實測基準相符")]
+        [DisplayName("The UpdateBatchSize support of each provider's adapter matches the measured baseline")]
         public void Adapter_UpdateBatchSizeSupport_MatchesMeasuredBaseline(string provider, bool expectedSupport)
         {
             using var adapter = CreateFactory(provider).CreateDataAdapter();
@@ -62,14 +62,14 @@ namespace Polhem.Db.UnitTests.Manager
             }
             else
             {
-                // 基底的 setter 擲 NotSupportedException —— 這正是 ApplySpec 用來偵測的訊號。
+                // The base setter throws `NotSupportedException`, which is exactly the signal `ApplySpec` detects.
                 Assert.IsType<NotSupportedException>(exception);
                 Assert.Equal(1, adapter!.UpdateBatchSize);
             }
         }
 
         [Fact]
-        [DisplayName("provider 清單不得為空（防空轉）")]
+        [DisplayName("The provider list is not empty (guards against a vacuous pass)")]
         public void Providers_AreNotEmpty()
         {
             Assert.NotEmpty(Providers());

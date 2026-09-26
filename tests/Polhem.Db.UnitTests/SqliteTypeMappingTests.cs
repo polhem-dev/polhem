@@ -6,14 +6,14 @@ using Polhem.Definition.Database;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 純語法測試：覆蓋 <see cref="SqliteTypeMapping"/> 對各 <see cref="FieldDbType"/> 的型別字串映射。
-    /// AutoIncrement → "INTEGER" 是 SQLite 特殊規則，由 CREATE TABLE 端再內聯
-    /// PRIMARY KEY AUTOINCREMENT。
+    /// Pure syntax tests covering how <see cref="SqliteTypeMapping"/> maps each <see cref="FieldDbType"/> to a type
+    /// string. AutoIncrement → "INTEGER" is a SQLite special rule; the CREATE TABLE side then inlines
+    /// PRIMARY KEY AUTOINCREMENT.
     /// </summary>
     public class SqliteTypeMappingTests
     {
         [Fact]
-        [DisplayName("SQLite GetSqliteType：String 應為 VARCHAR(N)")]
+        [DisplayName("SQLite GetSqliteType returns VARCHAR(N) for String")]
         public void GetSqliteType_String_UsesVarchar()
         {
             var field = new DbField("v", "V", FieldDbType.String) { Length = 50 };
@@ -32,7 +32,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.DateTime, "DATETIME")]
         [InlineData(FieldDbType.Guid, "UUID")]
         [InlineData(FieldDbType.Binary, "BLOB")]
-        [DisplayName("SQLite GetSqliteType：各型別應映射為對應 SQLite 型別字串")]
+        [DisplayName("SQLite GetSqliteType maps each type to its SQLite type string")]
         public void GetSqliteType_VariousTypes_MapsCorrectly(FieldDbType dbType, string expected)
         {
             var field = new DbField("v", "V", dbType);
@@ -40,7 +40,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetSqliteType：Decimal 預設精度 18,0")]
+        [DisplayName("SQLite GetSqliteType uses the default precision 18,0 for Decimal")]
         public void GetSqliteType_DecimalDefaults_Returns18_0()
         {
             var field = new DbField("v", "V", FieldDbType.Decimal) { Precision = 0, Scale = 0 };
@@ -48,7 +48,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetSqliteType：Decimal 自訂 precision / scale 應反映於型別字串")]
+        [DisplayName("SQLite GetSqliteType reflects a custom Decimal precision and scale in the type string")]
         public void GetSqliteType_DecimalCustom_AppliesPrecisionScale()
         {
             var field = new DbField("v", "V", FieldDbType.Decimal) { Precision = 12, Scale = 3 };
@@ -56,7 +56,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetSqliteType：Unknown 應擲 InvalidOperationException")]
+        [DisplayName("SQLite GetSqliteType throws InvalidOperationException for Unknown")]
         public void GetSqliteType_Unknown_Throws()
         {
             var field = new DbField("v", "V", FieldDbType.Unknown);

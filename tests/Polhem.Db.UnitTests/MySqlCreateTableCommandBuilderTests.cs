@@ -29,7 +29,7 @@ namespace Polhem.Db.UnitTests
             return schema;
         }
 
-        #region GetMySqlType 各 FieldDbType 分支
+        #region GetMySqlType branches per FieldDbType
 
         [Theory]
         [InlineData(FieldDbType.Boolean, "TINYINT(1)")]
@@ -43,7 +43,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Guid, "CHAR(36)")]
         [InlineData(FieldDbType.Binary, "LONGBLOB")]
         [InlineData(FieldDbType.Text, "LONGTEXT")]
-        [DisplayName("GetCommandText 應為各 FieldDbType 產生對應的 MySQL 型別字串")]
+        [DisplayName("GetCommandText produces the matching MySQL type string for each FieldDbType")]
         public void GetCommandText_FieldDbType_GeneratesCorrectColumnType(FieldDbType dbType, string expectedFragment)
         {
             var schema = BuildSchema(dbType);
@@ -55,7 +55,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCommandText String 型別應使用 VARCHAR 並指定長度")]
+        [DisplayName("GetCommandText uses VARCHAR with the length for the String type")]
         public void GetCommandText_String_UsesVarcharLength()
         {
             var schema = BuildSchema(FieldDbType.String, length: 50);
@@ -67,7 +67,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCommandText Decimal 應使用 DECIMAL(precision,scale)")]
+        [DisplayName("GetCommandText uses DECIMAL(precision,scale) for Decimal")]
         public void GetCommandText_Decimal_UsesDecimal()
         {
             var schema = BuildSchema(FieldDbType.Decimal, precision: 12, scale: 3);
@@ -79,7 +79,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCommandText 不支援的 FieldDbType 應擲出 InvalidOperationException")]
+        [DisplayName("GetCommandText throws InvalidOperationException for an unsupported FieldDbType")]
         public void GetCommandText_UnknownDbType_Throws()
         {
             var schema = new TableSchema { TableName = "st_bad" };
@@ -91,10 +91,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region 表後綴與識別符引用
+        #region Table suffix and identifier quoting
 
         [Fact]
-        [DisplayName("CREATE TABLE 後綴應帶 ENGINE=InnoDB 與 utf8mb4_0900_ai_ci collation（CI 比對 day-1 內建）")]
+        [DisplayName("The CREATE TABLE suffix carries ENGINE=InnoDB and the utf8mb4_0900_ai_ci collation (case-insensitive comparison built in from day one)")]
         public void GetCommandText_TableSuffix_IncludesInnoDbAndCiCollation()
         {
             var schema = BuildSchema(FieldDbType.String, length: 50);
@@ -102,15 +102,15 @@ namespace Polhem.Db.UnitTests
 
             string sql = builder.GetCommandText(schema);
 
-            // ERP CI 比對需求：WHERE name = 'jeff' 應命中 'Jeff'，
-            // 由 table-level COLLATE=utf8mb4_0900_ai_ci 統一套用。
+            // ERP needs case-insensitive comparison: WHERE name = 'jeff' must match 'Jeff'. The table-level
+            // COLLATE=utf8mb4_0900_ai_ci applies it uniformly.
             Assert.Contains("ENGINE=InnoDB", sql);
             Assert.Contains("DEFAULT CHARSET=utf8mb4", sql);
             Assert.Contains("COLLATE=utf8mb4_0900_ai_ci", sql);
         }
 
         [Fact]
-        [DisplayName("識別符應以 backtick 引用")]
+        [DisplayName("Identifiers are quoted with backticks")]
         public void GetCommandText_Identifiers_UseBackticks()
         {
             var schema = BuildSchema(FieldDbType.Integer);
@@ -127,7 +127,7 @@ namespace Polhem.Db.UnitTests
         #region Default Expressions
 
         [Fact]
-        [DisplayName("非 AllowNull Integer 欄位應產生 NOT NULL DEFAULT 0")]
+        [DisplayName("A non-AllowNull Integer field produces NOT NULL DEFAULT 0")]
         public void GetCommandText_NonNullInteger_GeneratesNotNullDefault0()
         {
             var schema = BuildSchema(FieldDbType.Integer, allowNull: false);
@@ -139,7 +139,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("非 AllowNull String 欄位應產生空字串 DEFAULT")]
+        [DisplayName("A non-AllowNull String field produces an empty string DEFAULT")]
         public void GetCommandText_NonNullString_GeneratesEmptyStringDefault()
         {
             var schema = BuildSchema(FieldDbType.String, length: 50, allowNull: false);
@@ -151,7 +151,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("AllowNull 欄位不應有 DEFAULT 子句")]
+        [DisplayName("An AllowNull field has no DEFAULT clause")]
         public void GetCommandText_AllowNullField_OmitsDefault()
         {
             var schema = BuildSchema(FieldDbType.Integer, allowNull: true);
@@ -164,7 +164,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Guid 欄位 DEFAULT 應為 (UUID()) 表達式")]
+        [DisplayName("A Guid field DEFAULT is the (UUID()) expression")]
         public void GetCommandText_NonNullGuid_GeneratesUuidDefault()
         {
             var schema = BuildSchema(FieldDbType.Guid, allowNull: false);
@@ -176,7 +176,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("DateTime 欄位 DEFAULT 應為 (UTC_TIMESTAMP(6))")]
+        [DisplayName("A DateTime field DEFAULT is (UTC_TIMESTAMP(6))")]
         public void GetCommandText_NonNullDateTime_GeneratesCurrentTimestamp()
         {
             var schema = BuildSchema(FieldDbType.DateTime, allowNull: false);
@@ -192,7 +192,7 @@ namespace Polhem.Db.UnitTests
         #region AutoIncrement
 
         [Fact]
-        [DisplayName("AutoIncrement 欄位應 inline 為 BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY")]
+        [DisplayName("An AutoIncrement field is inlined as BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY")]
         public void GetCommandText_AutoIncrement_InlinedOnColumnLine()
         {
             var schema = new TableSchema { TableName = "st_demo" };
@@ -203,12 +203,12 @@ namespace Polhem.Db.UnitTests
             string sql = builder.GetCommandText(schema);
 
             Assert.Contains("`sys_no` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY", sql);
-            // AutoIncrement 採 inline 形式 → 不應再產生外部 CONSTRAINT PRIMARY KEY
+            // AutoIncrement uses the inline form, so no separate CONSTRAINT PRIMARY KEY is emitted.
             Assert.DoesNotContain("CONSTRAINT", sql);
         }
 
         [Fact]
-        [DisplayName("AutoIncrement 欄位若非單欄 PK 應拋 InvalidOperationException")]
+        [DisplayName("An AutoIncrement field that is not a single-column PK throws InvalidOperationException")]
         public void GetCommandText_AutoIncrementNotSinglePk_Throws()
         {
             var schema = new TableSchema { TableName = "st_bad" };
@@ -222,12 +222,12 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("無宣告 PK 但有 AutoIncrement 欄位仍應 inline 產生 PRIMARY KEY")]
+        [DisplayName("An AutoIncrement field without a declared PK still produces an inline PRIMARY KEY")]
         public void GetCommandText_AutoIncrementWithoutDeclaredPk_InlinesPrimaryKey()
         {
             var schema = new TableSchema { TableName = "st_demo" };
             schema.Fields!.Add("sys_no", "No", FieldDbType.AutoIncrement);
-            // 不在 Indexes 加 PK；由 AutoIncrement 行 inline 提供 PK
+            // No PK in Indexes; the AutoIncrement line provides the PK inline.
             var builder = new MySqlCreateTableCommandBuilder();
 
             string sql = builder.GetCommandText(schema);
@@ -237,7 +237,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("多個 AutoIncrement 欄位應拋 InvalidOperationException")]
+        [DisplayName("Several AutoIncrement fields throw InvalidOperationException")]
         public void GetCommandText_MultipleAutoIncrement_Throws()
         {
             var schema = new TableSchema { TableName = "st_bad" };
@@ -252,10 +252,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region PRIMARY KEY 與索引
+        #region PRIMARY KEY and indexes
 
         [Fact]
-        [DisplayName("無 AutoIncrement 的 schema 應產生獨立 PRIMARY KEY constraint")]
+        [DisplayName("A schema without AutoIncrement produces a separate PRIMARY KEY constraint")]
         public void GetCommandText_NonAutoIncrementSchema_EmitsPrimaryKeyConstraint()
         {
             var schema = BuildSchema(FieldDbType.Integer);
@@ -269,7 +269,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("非 PK 索引應產生 CREATE INDEX 語句")]
+        [DisplayName("A non-PK index produces a CREATE INDEX statement")]
         public void GetCommandText_NonPkIndexes_EmitCreateIndexStatements()
         {
             var schema = BuildSchema(FieldDbType.Integer);

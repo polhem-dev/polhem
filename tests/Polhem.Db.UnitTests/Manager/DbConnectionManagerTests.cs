@@ -7,17 +7,18 @@ using Polhem.Db.Manager;
 namespace Polhem.Db.UnitTests.Manager
 {
     /// <summary>
-    /// DbConnectionManager 的快取與連線資訊組裝測試。
+    /// Tests for the cache and the connection info assembly of <c>DbConnectionManager</c>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 這個類別自帶一份隔離的 <see cref="DatabaseSettings"/>（見
-    /// <see cref="IsolatedDatabaseSettingsProvider"/>），<b>不碰 process-wide 的定義快取</b>。
-    /// 先前它與 <c>DbAccessFactoryTests</c> 都對快取實例做 <c>Items.Add/Remove</c>，
-    /// 平行執行下實測會擲 <c>ArgumentOutOfRangeException</c>。
+    /// This class carries its own isolated <see cref="DatabaseSettings"/> (see
+    /// <see cref="IsolatedDatabaseSettingsProvider"/>) and <b>does not touch the process-wide definition cache</b>.
+    /// It and <c>DbAccessFactoryTests</c> used to call <c>Items.Add/Remove</c> on the cached instance, which was
+    /// measured to throw <c>ArgumentOutOfRangeException</c> under parallel execution.
     /// </para>
     /// <para>
-    /// 這裡測的是連線字串組裝，本來就不需要資料庫，所以連 <c>SharedDbFixture</c> 也一併去掉。
+    /// What is tested here is connection string assembly, which never needed a database, so
+    /// <c>SharedDbFixture</c> was removed as well.
     /// </para>
     /// </remarks>
     public sealed class DbConnectionManagerTests : IDisposable
@@ -32,8 +33,8 @@ namespace Polhem.Db.UnitTests.Manager
         }
 
         /// <summary>
-        /// 退訂 <c>GlobalEvents.DatabaseSettingsChanged</c>：static event 會抓著訂閱者不放，
-        /// 每個測試類別留一個活的訂閱者，下一個測試的事件就會清到它。
+        /// Unsubscribes from <c>GlobalEvents.DatabaseSettingsChanged</c>. A static event holds on to its subscribers,
+        /// so if each test class left a live subscriber, the next test's event would clear it.
         /// </summary>
         public void Dispose() => _manager.Dispose();
 
@@ -72,24 +73,24 @@ namespace Polhem.Db.UnitTests.Manager
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("GetConnectionInfo 空白 databaseId 應拋 ArgumentNullException")]
+        [DisplayName("GetConnectionInfo throws ArgumentNullException for a blank databaseId")]
         public void GetConnectionInfo_EmptyId_ThrowsArgumentNullException(string? id)
         {
             Assert.Throws<ArgumentNullException>(() => _manager.GetConnectionInfo(id!));
         }
 
         [Fact]
-        [DisplayName("GetConnectionInfo 未定義的 databaseId 應拋 KeyNotFoundException")]
+        [DisplayName("GetConnectionInfo throws KeyNotFoundException for an undefined databaseId")]
         public void GetConnectionInfo_UnknownId_ThrowsKeyNotFoundException()
         {
-            // KeyedCollection 的 indexer 在找不到時直接拋出 KeyNotFoundException；
-            // 原始碼的 null 檢查實際上不會被命中。
+            // The `KeyedCollection` indexer throws `KeyNotFoundException` itself when the key is missing, so the
+            // null check in the source is never actually reached.
             var id = NewId("unknown");
             Assert.Throws<KeyNotFoundException>(() => _manager.GetConnectionInfo(id));
         }
 
         [Fact]
-        [DisplayName("GetConnectionInfo 連線字串為空時應拋 InvalidOperationException")]
+        [DisplayName("GetConnectionInfo throws InvalidOperationException for an empty connection string")]
         public void GetConnectionInfo_EmptyConnectionString_ThrowsInvalidOperationException()
         {
             var id = NewId("emptyconn");
@@ -105,7 +106,7 @@ namespace Polhem.Db.UnitTests.Manager
         }
 
         [Fact]
-        [DisplayName("GetConnectionInfo 替換 {@DbName}/{@UserId}/{@Password} 佔位符")]
+        [DisplayName("GetConnectionInfo replaces the {@DbName}/{@UserId}/{@Password} placeholders")]
         public void GetConnectionInfo_ReplacesAllPlaceholders()
         {
             var id = NewId("placeholder");
@@ -133,10 +134,11 @@ namespace Polhem.Db.UnitTests.Manager
         }
 
         [Fact]
-        [DisplayName("GetConnectionInfo 指定不存在的 ServerId 應拋 KeyNotFoundException")]
+        [DisplayName("GetConnectionInfo throws KeyNotFoundException for a ServerId that does not exist")]
         public void GetConnectionInfo_ServerIdNotFound_ThrowsKeyNotFoundException()
         {
-            // Servers 集合 indexer 也是 KeyedCollection 行為；若傳入未登記的 ServerId 會直接拋 KeyNotFoundException。
+            // The `Servers` indexer behaves like a `KeyedCollection` too: an unregistered ServerId throws
+            // `KeyNotFoundException` directly.
             var id = NewId("missingserver");
             AddItem(id, i =>
             {
@@ -154,7 +156,7 @@ namespace Polhem.Db.UnitTests.Manager
         }
 
         [Fact]
-        [DisplayName("GetConnectionInfo 透過 ServerId 應使用 Server 連線字串與 DatabaseType")]
+        [DisplayName("GetConnectionInfo through a ServerId uses the server's connection string and DatabaseType")]
         public void GetConnectionInfo_ServerId_UsesServerSettings()
         {
             var serverId = NewId("svr");
@@ -169,7 +171,7 @@ namespace Polhem.Db.UnitTests.Manager
             AddItem(itemId, i =>
             {
                 i.ServerId = serverId;
-                // ConnectionString 無關緊要（會被 Server 覆蓋）
+                // The ConnectionString does not matter, because the server overrides it.
                 i.ConnectionString = "ignored";
             });
             try
@@ -187,7 +189,7 @@ namespace Polhem.Db.UnitTests.Manager
         }
 
         [Fact]
-        [DisplayName("GetConnectionInfo ServerId 模式下 DatabaseItem 的 UserId/Password 應覆寫 Server 值")]
+        [DisplayName("GetConnectionInfo in ServerId mode lets the DatabaseItem's UserId and Password override the server's")]
         public void GetConnectionInfo_ServerId_ItemOverridesServerUserPassword()
         {
             var serverId = NewId("svr2");
@@ -220,7 +222,7 @@ namespace Polhem.Db.UnitTests.Manager
         }
 
         [Fact]
-        [DisplayName("GetConnectionInfo 同 databaseId 重複呼叫應回傳同一快取實例")]
+        [DisplayName("GetConnectionInfo returns the same cached instance for repeated calls with the same databaseId")]
         public void GetConnectionInfo_RepeatedCall_ReturnsCachedInstance()
         {
             var id = NewId("cache");
@@ -239,7 +241,7 @@ namespace Polhem.Db.UnitTests.Manager
         }
 
         [Fact]
-        [DisplayName("Remove 已快取者應回傳 true 且不再被 Contains")]
+        [DisplayName("Remove of a cached entry returns true and Contains no longer finds it")]
         public void Remove_CachedItem_RemovesFromCache()
         {
             var id = NewId("remove");
@@ -261,7 +263,7 @@ namespace Polhem.Db.UnitTests.Manager
         }
 
         [Fact]
-        [DisplayName("Remove 未快取者應回傳 false")]
+        [DisplayName("Remove of an uncached entry returns false")]
         public void Remove_NotCachedItem_ReturnsFalse()
         {
             var id = NewId("notcached");
@@ -269,7 +271,7 @@ namespace Polhem.Db.UnitTests.Manager
         }
 
         [Fact]
-        [DisplayName("Clear 應清空所有快取條目")]
+        [DisplayName("Clear removes every cached entry")]
         public void Clear_EmptiesAllCachedEntries()
         {
             var id1 = NewId("clr1");
@@ -295,7 +297,7 @@ namespace Polhem.Db.UnitTests.Manager
         }
 
         [Fact]
-        [DisplayName("DatabaseSettingsChanged 事件應清空快取")]
+        [DisplayName("The DatabaseSettingsChanged event clears the cache")]
         public void RaiseDatabaseSettingsChanged_ClearsCache()
         {
             var id = NewId("event");

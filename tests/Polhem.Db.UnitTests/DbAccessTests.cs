@@ -29,20 +29,20 @@ namespace Polhem.Db.UnitTests
         }
 
         /// <summary>
-        /// 執行 SQL 查詢，並取得 DataTable。
+        /// Runs SQL queries and gets a DataTable.
         /// </summary>
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteDataTable 執行多種參數化查詢應回傳有效 DataTable")]
+        [DisplayName("ExecuteDataTable returns a valid DataTable for several parameterized queries")]
         public void ExecuteDataTable_VariousParameterFormats_ReturnsDataTable()
         {
-            // 由 DbAccess 管理連線
+            // The connection is managed by `DbAccess`.
             string sql = "SELECT * FROM st_user";
             var command = new DbCommandSpec(DbCommandKind.DataTable, sql);
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             var result = dbAccess.Execute(command);
             Assert.NotNull(result.Table);
 
-            // 由外部管理連線
+            // The connection is managed by the caller.
             using (var conn = _fx.GetRequiredService<IDbConnectionManager>().CreateConnection("common_sqlserver"))
             {
                 dbAccess = new DbAccess(conn, DatabaseType.SQLServer);
@@ -75,10 +75,10 @@ namespace Polhem.Db.UnitTests
         }
 
         /// <summary>
-        /// 非同步執行 SQL 查詢，並取得 DataTable。
+        /// Runs a SQL query asynchronously and gets a DataTable.
         /// </summary>
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteDataTableAsync 非同步查詢應回傳含資料列的 DataTable")]
+        [DisplayName("ExecuteDataTableAsync returns a DataTable with rows")]
         public async Task ExecuteDataTableAsync_ValidQuery_ReturnsNonEmptyDataTable()
         {
             string sql = "SELECT * FROM st_user";
@@ -91,7 +91,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteNonQuery 更新資料應成功執行")]
+        [DisplayName("ExecuteNonQuery updates data")]
         public void ExecuteNonQuery_UpdateRow_Executes()
         {
             int i = RandomNumberGenerator.GetInt32(0, 100);
@@ -104,7 +104,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteNonQueryAsync 非同步更新資料應成功執行")]
+        [DisplayName("ExecuteNonQueryAsync updates data asynchronously")]
         public async Task ExecuteNonQueryAsync_UpdateRow_Executes()
         {
             int i = RandomNumberGenerator.GetInt32(0, 100);
@@ -117,7 +117,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteScalar 查詢單一值應成功執行")]
+        [DisplayName("ExecuteScalar returns a single value")]
         public void ExecuteScalar_SelectSingleValue_ReturnsScalar()
         {
             string sql = "Select note From st_user Where sys_id = {0}";
@@ -128,7 +128,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("Query 查詢應回傳強型別物件清單")]
+        [DisplayName("Query returns a list of strongly typed objects")]
         public void Query_ValidSql_ReturnsMappedObjects()
         {
             string sql = "SELECT sys_id AS userID, sys_name AS UserName, sys_insert_time AS InsertTime FROM st_user";
@@ -141,7 +141,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("QueryAsync 非同步查詢應回傳強型別物件清單")]
+        [DisplayName("QueryAsync returns a list of strongly typed objects")]
         public async Task QueryAsync_ValidSql_ReturnsMappedObjects()
         {
             string sql = "SELECT sys_id AS userID, sys_name AS UserName, sys_insert_time AS InsertTime FROM st_user";
@@ -154,37 +154,33 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("UpdateDataTable 修改資料列後更新應影響至少一筆資料")]
+        [DisplayName("UpdateDataTable affects at least one row after a row is modified")]
         public void UpdateDataTable_ModifiedRow_AffectsRows()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
 
-            // 1.查詢 st_user 所有資料
             string sql = "SELECT * FROM st_user";
             var command = new DbCommandSpec(DbCommandKind.DataTable, sql);
             var result = dbAccess.Execute(command);
             var table = result.Table;
             Assert.NotNull(table);
-            Assert.True(table.Rows.Count > 0, "st_user 無任何資料");
+            Assert.True(table.Rows.Count > 0, "st_user has no rows");
 
-            // 2. 修改第一筆資料
             int i = RandomNumberGenerator.GetInt32(0, 100);
             var row = table.Rows[0];
             row["note"] = i.ToString(CultureInfo.InvariantCulture);
 
-            // 3. 用 DbTableCommandBuilder 建立 DataTableUpdateSpec
             var tableSchema = _fx.GetRequiredService<IDefineAccess>().GetTableSchema("common", "st_user");
             var builder = new TableSchemaCommandBuilder(dbAccess.DatabaseType, tableSchema);
             var updateSpec = builder.BuildUpdateSpec(table);
 
-            // 4. 執行 UpdateDataTable
             int affected = dbAccess.UpdateDataTable(updateSpec);
 
-            Assert.True(affected > 0, "沒有資料被更新");
+            Assert.True(affected > 0, "No row was updated");
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteBatch 批次執行含交易的多個命令應成功")]
+        [DisplayName("ExecuteBatch runs several commands in a transaction")]
         public void ExecuteBatch_WithTransaction_Succeeds()
         {
             var batch = new DbBatchSpec();
@@ -201,7 +197,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteBatchAsync 非同步批次執行含交易的多個命令應成功")]
+        [DisplayName("ExecuteBatchAsync runs several commands in a transaction asynchronously")]
         public async Task ExecuteBatchAsync_WithTransaction_Succeeds()
         {
             var batch = new DbBatchSpec();

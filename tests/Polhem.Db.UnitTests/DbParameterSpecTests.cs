@@ -6,7 +6,7 @@ namespace Polhem.Db.UnitTests
     public class DbParameterSpecTests
     {
         [Fact]
-        [DisplayName("無參數建構子預設值正確")]
+        [DisplayName("The parameterless constructor sets the defaults")]
         public void DefaultConstructor_DefaultValues()
         {
             var spec = new DbParameterSpec();
@@ -20,7 +20,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("帶值建構子應推斷 DbType")]
+        [DisplayName("The value constructor infers the DbType")]
         public void ValueConstructor_InfersDbType()
         {
             var spec = new DbParameterSpec("p1", "hello");
@@ -31,7 +31,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Name 與 Key 應同步")]
+        [DisplayName("Name and Key stay in sync")]
         public void Name_SyncsWithKey()
         {
             var spec = new DbParameterSpec();
@@ -43,7 +43,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ToString 應回傳 'Name = Value'")]
+        [DisplayName("ToString returns 'Name = Value'")]
         public void ToString_FormatsNameAndValue()
         {
             var spec = new DbParameterSpec("age", 30);

@@ -35,7 +35,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG GetCommandText：rebuild 腳本應含 tmp 表建立、INSERT 與 RENAME")]
+        [DisplayName("PG GetCommandText rebuild script creates the tmp table, INSERTs and RENAMEs")]
         public void GetCommandText_BasicRebuild_IncludesTmpCreateInsertAndRename()
         {
             var define = BuildDefineSchema();
@@ -50,7 +50,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG GetCommandText：DROP TABLE 應使用 IF EXISTS（PG 慣用法）")]
+        [DisplayName("PG GetCommandText uses IF EXISTS for DROP TABLE (the PostgreSQL idiom)")]
         public void GetCommandText_DropTable_UsesIfExists()
         {
             var define = BuildDefineSchema();
@@ -64,7 +64,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG GetCommandText：新增欄位不應出現在 INSERT ... SELECT 清單")]
+        [DisplayName("PG GetCommandText leaves a new field out of the INSERT ... SELECT list")]
         public void GetCommandText_AddedField_ExcludedFromDataCopy()
         {
             var define = BuildDefineSchema();
@@ -73,9 +73,9 @@ namespace Polhem.Db.UnitTests
 
             var sql = new PgTableRebuildCommandBuilder().GetCommandText(diff);
 
-            // 新欄位 age 應在 tmp 定義中出現
+            // The new age field appears in the tmp definition,
             Assert.Contains("\"age\"", sql);
-            // 但 INSERT 欄位清單不應含 age
+            // but not in the INSERT column list.
             int insertIdx = sql.IndexOf("INSERT INTO \"tmp_st_demo\"", StringComparison.Ordinal);
             int selectIdx = sql.IndexOf("FROM \"st_demo\"", insertIdx, StringComparison.Ordinal);
             string insertSelectSection = sql.Substring(insertIdx, selectIdx - insertIdx);
@@ -83,7 +83,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG GetCommandText：real-only 欄位（extension field）應保留於 rebuild 結果")]
+        [DisplayName("PG GetCommandText keeps a real-only field (extension field) in the rebuild result")]
         public void GetCommandText_ExtensionField_Preserved()
         {
             var define = BuildDefineSchema();
@@ -96,7 +96,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG GetCommandText：應使用 ALTER INDEX RENAME TO 重新命名索引")]
+        [DisplayName("PG GetCommandText renames indexes with ALTER INDEX RENAME TO")]
         public void GetCommandText_RenameIndex_UsesAlterIndex()
         {
             var define = BuildDefineSchema();
@@ -110,7 +110,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG GetCommandText：new-table diff 應 throw（應改走 CREATE 路徑）")]
+        [DisplayName("PG GetCommandText throws for a new-table diff (which must take the CREATE path)")]
         public void GetCommandText_NewTableDiff_Throws()
         {
             var define = BuildDefineSchema();

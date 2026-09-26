@@ -15,7 +15,7 @@ namespace Polhem.Db.UnitTests
         private const string DatabaseId = "common_postgresql";
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PgTableSchemaProvider 取得資料表結構應成功")]
+        [DisplayName("PgTableSchemaProvider gets the table schema")]
         public void GetTableSchema_ValidTableName_ReturnsSchema()
         {
             var helper = new PgTableSchemaProvider(DatabaseId, _fx.GetRequiredService<IDbConnectionManager>());
@@ -24,7 +24,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PgTableSchemaProvider 取得不存在資料表應回傳 null")]
+        [DisplayName("PgTableSchemaProvider returns null for a table that does not exist")]
         public void GetTableSchema_NonExistentTable_ReturnsNull()
         {
             var helper = new PgTableSchemaProvider(DatabaseId, _fx.GetRequiredService<IDbConnectionManager>());
@@ -33,7 +33,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PgTableSchemaProvider DatabaseId 應等於建構子傳入的值")]
+        [DisplayName("PgTableSchemaProvider DatabaseId equals the value passed to the constructor")]
         public void Constructor_DatabaseId_IsSet()
         {
             var helper = new PgTableSchemaProvider(DatabaseId, _fx.GetRequiredService<IDbConnectionManager>());
@@ -41,7 +41,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("GetTableSchema 應從 COMMENT ON TABLE 讀回表層 DisplayName")]
+        [DisplayName("GetTableSchema reads the table-level DisplayName back from COMMENT ON TABLE")]
         public void GetTableSchema_WithComment_ReturnsDisplayName()
         {
             string tableName = $"polhem_test_desc_{Guid.NewGuid():N}";
@@ -67,7 +67,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("GetTableSchema 無 COMMENT 時 DisplayName 應為空字串")]
+        [DisplayName("GetTableSchema sets DisplayName to an empty string when there is no COMMENT")]
         public void GetTableSchema_WithoutComment_ReturnsEmptyDisplayName()
         {
             string tableName = $"polhem_test_desc_{Guid.NewGuid():N}";
@@ -91,7 +91,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("GetTableSchema 應正確解析 Decimal 欄位的 Precision 與 Scale")]
+        [DisplayName("GetTableSchema parses the Precision and Scale of a Decimal field")]
         public void GetTableSchema_DecimalColumn_ParsesPrecisionAndScale()
         {
             string tableName = $"polhem_test_decimal_{Guid.NewGuid():N}";
@@ -118,7 +118,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("GetTableSchema 應同時解析主鍵與非主鍵索引")]
+        [DisplayName("GetTableSchema parses both the primary key and the non-primary-key indexes")]
         public void GetTableSchema_PrimaryKeyAndSecondaryIndex_BothParsed()
         {
             string tableName = $"polhem_test_idx_{Guid.NewGuid():N}";
@@ -158,7 +158,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("GetTableSchema 無主鍵的資料表應回傳空 PK，欄位仍可解析")]
+        [DisplayName("GetTableSchema returns an empty PK for a table without a primary key and still parses the fields")]
         public void GetTableSchema_NoPrimaryKey_ReturnsSchemaWithoutPk()
         {
             string tableName = $"polhem_test_nopk_{Guid.NewGuid():N}";
@@ -184,7 +184,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("GetTableSchema AutoIncrement 欄位應解析為 FieldDbType.AutoIncrement")]
+        [DisplayName("GetTableSchema parses an AutoIncrement field as FieldDbType.AutoIncrement")]
         public void GetTableSchema_AutoIncrementColumn_MapsToAutoIncrement()
         {
             string tableName = $"polhem_test_identity_{Guid.NewGuid():N}";

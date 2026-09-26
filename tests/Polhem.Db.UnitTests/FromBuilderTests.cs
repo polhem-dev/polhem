@@ -7,7 +7,7 @@ namespace Polhem.Db.UnitTests
     public class FromBuilderTests
     {
         [Fact]
-        [DisplayName("Build joins=null 應僅產生主表 FROM 子句")]
+        [DisplayName("Build with joins=null produces only the FROM clause of the main table")]
         public void Build_NullJoins_ReturnsMainTableOnly()
         {
             var builder = new FromBuilder(DatabaseType.SQLServer);
@@ -18,7 +18,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build 空 joins 應僅產生主表 FROM 子句")]
+        [DisplayName("Build with empty joins produces only the FROM clause of the main table")]
         public void Build_EmptyJoins_ReturnsMainTableOnly()
         {
             var builder = new FromBuilder(DatabaseType.SQLServer);
@@ -29,7 +29,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build 單一 join 應產生 LEFT JOIN 子句")]
+        [DisplayName("Build with a single join produces a LEFT JOIN clause")]
         public void Build_SingleJoin_ProducesLeftJoinClause()
         {
             var joins = new TableJoinCollection
@@ -55,7 +55,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build 多個 join 應依 RightAlias 排序")]
+        [DisplayName("Build with several joins orders them by RightAlias")]
         public void Build_MultipleJoins_OrderedByRightAlias()
         {
             var joins = new TableJoinCollection

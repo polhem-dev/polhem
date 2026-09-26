@@ -49,7 +49,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build tableName 為空白應擲 ArgumentException")]
+        [DisplayName("Build throws ArgumentException for a blank tableName")]
         public void Build_EmptyTableName_Throws()
         {
             var builder = new UpdateCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);
@@ -60,7 +60,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build row 為 null 應擲 ArgumentNullException")]
+        [DisplayName("Build throws ArgumentNullException for a null row")]
         public void Build_NullRow_Throws()
         {
             var builder = new UpdateCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);
@@ -68,7 +68,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 不存在的 tableName 應擲 InvalidOperationException")]
+        [DisplayName("Build throws InvalidOperationException for a tableName that does not exist")]
         public void Build_UnknownTableName_Throws()
         {
             var builder = new UpdateCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);
@@ -83,7 +83,7 @@ namespace Polhem.Db.UnitTests.Dml
         [InlineData(DataRowState.Added)]
         [InlineData(DataRowState.Deleted)]
         [InlineData(DataRowState.Detached)]
-        [DisplayName("Build 非 Modified 狀態應擲 InvalidOperationException")]
+        [DisplayName("Build throws InvalidOperationException for a row not in the Modified state")]
         public void Build_NonModifiedRowState_Throws(DataRowState targetState)
         {
             var builder = new UpdateCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);
@@ -119,7 +119,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 缺少 sys_rowid 欄位應擲 InvalidOperationException")]
+        [DisplayName("Build throws InvalidOperationException when the sys_rowid field is missing")]
         public void Build_MissingPrimaryKeyColumn_Throws()
         {
             var builder = new UpdateCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);
@@ -135,7 +135,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 無欄位變更應擲 InvalidOperationException")]
+        [DisplayName("Build throws InvalidOperationException when no field has changed")]
         public void Build_NoColumnChanges_Throws()
         {
             var builder = new UpdateCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);
@@ -148,7 +148,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 應只包含實際變更的欄位 (SQL Server)")]
+        [DisplayName("Build includes only the fields that actually changed (SQL Server)")]
         public void Build_SqlServer_OnlyChangedColumnsInSet()
         {
             var builder = new UpdateCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);
@@ -167,7 +167,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 多欄位變更應全部包含並排除 RelationField")]
+        [DisplayName("Build includes every changed field and excludes RelationField")]
         public void Build_MultipleColumnsChanged_ExcludesRelationField()
         {
             var builder = new UpdateCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);
@@ -187,7 +187,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 應產生 PostgreSQL 方言")]
+        [DisplayName("Build produces the PostgreSQL dialect")]
         public void Build_PostgreSql_QuotesWithDoubleQuotes()
         {
             var builder = new UpdateCommandBuilder(BuildEmployeeSchema(), DatabaseType.PostgreSQL);
@@ -202,7 +202,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build WHERE 應使用 sys_rowid 的 Original 版本")]
+        [DisplayName("Build uses the Original version of sys_rowid in the WHERE clause")]
         public void Build_WhereUsesOriginalRowId()
         {
             var builder = new UpdateCommandBuilder(BuildEmployeeSchema(), DatabaseType.SQLServer);

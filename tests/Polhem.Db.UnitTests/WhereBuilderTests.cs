@@ -8,7 +8,7 @@ namespace Polhem.Db.UnitTests
     public class WhereBuilderTests
     {
         [Fact]
-        [DisplayName("Build 等於條件應產生正確的 SQL Server WHERE 子句")]
+        [DisplayName("Build produces the SQL Server WHERE clause for an equality condition")]
         public void Build_EqualCondition_BuildsSqlServerWhere()
         {
             var root = FilterCondition.Equal("DeptId", 10);
@@ -21,7 +21,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build Contains 條件應加入萬用字元")]
+        [DisplayName("Build adds wildcards for a Contains condition")]
         public void Build_LikeContains_AddsWildcards()
         {
             var root = FilterCondition.Contains("Name", "Lee");
@@ -33,7 +33,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build 巢狀 AND/OR 群組應產生括號")]
+        [DisplayName("Build parenthesizes nested AND/OR groups")]
         public void Build_GroupAndOr_BuildsParentheses()
         {
             var root = FilterGroup.All(
@@ -54,7 +54,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build 值為 null 的等於條件應產生 IS NULL")]
+        [DisplayName("Build produces IS NULL for an equality condition with a null value")]
         public void Build_NullEquals_BecomesIsNull()
         {
             var root = new FilterCondition { FieldName = "Memo", Operator = ComparisonOperator.Equal, Value = null };
@@ -65,7 +65,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build IgnoreIfNull 為 true 且值為 null 時應忽略該條件")]
+        [DisplayName("Build ignores the condition when IgnoreIfNull is true and the value is null")]
         public void Build_IgnoreIfNull_DropsNullCondition()
         {
             var root = FilterGroup.All(
@@ -80,7 +80,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build IN 條件傳入空集合應產生恆假常數")]
+        [DisplayName("Build produces an always-false constant for an IN condition with an empty collection")]
         public void Build_InWithEmptyList_ReturnsFalseConstant()
         {
             var root = FilterCondition.In("Id", []);
@@ -91,7 +91,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build IN 條件傳入多個值應正確建立")]
+        [DisplayName("Build produces an IN condition with several values")]
         public void Build_InWithMultipleValues_BuildsCorrectly()
         {
             var root = FilterCondition.In("Id", [1, 2, 3, 4]);
@@ -103,17 +103,17 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build 空的 FilterGroup 應回傳空的 WHERE 子句")]
+        [DisplayName("Build returns an empty WHERE clause for an empty FilterGroup")]
         public void Build_EmptyFilterGroup_ReturnsEmptyWhereClause()
         {
-            var root = new FilterGroup(); // 預設 Nodes 為空
+            var root = new FilterGroup(); // Nodes is empty by default.
             var builder = new WhereBuilder(DatabaseType.SQLServer);
             var result = builder.Build(root, null);
             Assert.Equal(string.Empty, result.WhereClause);
         }
 
         [Fact]
-        [DisplayName("Build root 為 null 應回傳空 WhereBuildResult")]
+        [DisplayName("Build returns an empty WhereBuildResult for a null root")]
         public void Build_NullRoot_ReturnsEmptyResult()
         {
             var builder = new WhereBuilder(DatabaseType.SQLServer);
@@ -127,7 +127,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(ComparisonOperator.LessThan, "<")]
         [InlineData(ComparisonOperator.LessThanOrEqual, "<=")]
         [InlineData(ComparisonOperator.NotEqual, "<>")]
-        [DisplayName("Build 各比較運算符應產生對應 SQL 運算子")]
+        [DisplayName("Build produces the matching SQL operator for each comparison operator")]
         public void Build_ComparisonOperators_BuildExpectedSql(ComparisonOperator op, string sqlOp)
         {
             var root = new FilterCondition { FieldName = "Age", Operator = op, Value = 18 };
@@ -138,7 +138,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build Like 條件應使用原始值")]
+        [DisplayName("Build uses the raw value for a Like condition")]
         public void Build_Like_UsesRawValue()
         {
             var root = new FilterCondition { FieldName = "Name", Operator = ComparisonOperator.Like, Value = "Lee%" };
@@ -149,7 +149,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build StartsWith 應在尾端加上萬用字元")]
+        [DisplayName("Build appends a wildcard for StartsWith")]
         public void Build_StartsWith_AddsTrailingWildcard()
         {
             var root = FilterCondition.StartsWith("Name", "Lee");
@@ -160,7 +160,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build EndsWith 應在開頭加上萬用字元")]
+        [DisplayName("Build prepends a wildcard for EndsWith")]
         public void Build_EndsWith_AddsLeadingWildcard()
         {
             var root = FilterCondition.EndsWith("Name", "Lee");
@@ -171,7 +171,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build NotEqual 配合 null 值應產生 IS NOT NULL")]
+        [DisplayName("Build produces IS NOT NULL for NotEqual with a null value")]
         public void Build_NotEqualNull_BecomesIsNotNull()
         {
             var root = new FilterCondition { FieldName = "Memo", Operator = ComparisonOperator.NotEqual, Value = null };
@@ -181,7 +181,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build 不支援的 null 比較運算符應擲出 InvalidOperationException")]
+        [DisplayName("Build throws InvalidOperationException for a comparison operator that does not support null")]
         public void Build_UnsupportedNullOperator_Throws()
         {
             var root = new FilterCondition { FieldName = "Age", Operator = ComparisonOperator.GreaterThan, Value = null };
@@ -190,7 +190,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build Between 缺第二值且 IgnoreIfNull=true 時應忽略條件")]
+        [DisplayName("Build ignores a Between condition missing its second value when IgnoreIfNull=true")]
         public void Build_BetweenMissingSecondValue_IgnoreIfNull_DropsCondition()
         {
             var root = new FilterCondition
@@ -207,7 +207,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build Between 缺第二值且未設 IgnoreIfNull 應擲例外")]
+        [DisplayName("Build throws for a Between condition missing its second value without IgnoreIfNull")]
         public void Build_BetweenMissingSecondValue_Throws()
         {
             var root = new FilterCondition
@@ -222,7 +222,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build Between 完整值應產生 BETWEEN 子句")]
+        [DisplayName("Build produces a BETWEEN clause for a complete Between condition")]
         public void Build_Between_BuildsBetweenClause()
         {
             var root = FilterCondition.Between("Age", 18, 60);
@@ -234,7 +234,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build IN 條件傳入非 enumerable 值應擲例外")]
+        [DisplayName("Build throws for an IN condition with a non-enumerable value")]
         public void Build_InWithNonEnumerable_Throws()
         {
             var root = new FilterCondition { FieldName = "Id", Operator = ComparisonOperator.In, Value = 1 };
@@ -243,7 +243,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build 空 FieldName 應擲出 InvalidOperationException")]
+        [DisplayName("Build throws InvalidOperationException for an empty FieldName")]
         public void Build_EmptyFieldName_Throws()
         {
             var root = new FilterCondition { FieldName = "", Operator = ComparisonOperator.Equal, Value = 1 };
@@ -268,7 +268,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build Between 條件經由 selectContext 重寫欄名後仍應保留第二值")]
+        [DisplayName("Build keeps the second value of a Between condition after selectContext rewrites the field name")]
         public void Build_BetweenWithSelectContext_PreservesSecondValue()
         {
             var root = FilterCondition.Between("HireDate", new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
@@ -284,7 +284,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build Between 條件套用關聯欄位對應後仍應保留第二值")]
+        [DisplayName("Build keeps the second value of a Between condition after the relation field mapping is applied")]
         public void Build_BetweenOnMappedField_PreservesSecondValue()
         {
             var root = FilterCondition.Between("RefDeptName", "A", "M");
@@ -297,7 +297,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build IgnoreIfNull 條件經由 selectContext 重寫欄名後仍應被忽略")]
+        [DisplayName("Build still ignores an IgnoreIfNull condition after selectContext rewrites the field name")]
         public void Build_IgnoreIfNullWithSelectContext_DropsNullCondition()
         {
             var root = FilterGroup.All(
@@ -313,7 +313,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build IgnoreIfNull 的 Equal 條件經由 selectContext 重寫後不應變成 IS NULL")]
+        [DisplayName("Build does not turn an IgnoreIfNull Equal condition into IS NULL after selectContext rewrites it")]
         public void Build_IgnoreIfNullEqualWithSelectContext_DoesNotBecomeIsNull()
         {
             var root = new FilterCondition { FieldName = "Memo", Operator = ComparisonOperator.Equal, Value = null, IgnoreIfNull = true };
@@ -325,7 +325,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Build Between 缺第二值且 IgnoreIfNull=true 經由 selectContext 重寫後應忽略而非擲例外")]
+        [DisplayName("Build ignores a Between condition missing its second value with IgnoreIfNull=true after selectContext rewrites it, instead of throwing")]
         public void Build_BetweenMissingSecondValueWithSelectContext_DropsCondition()
         {
             var root = new FilterCondition

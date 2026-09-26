@@ -11,7 +11,7 @@ namespace Polhem.Db.UnitTests
     public class DbCommandSpecCoverageTests
     {
         [Fact]
-        [DisplayName("具名佔位符匹配到空白名稱參數時應在空名保護處擲 InvalidOperationException")]
+        [DisplayName("A named placeholder matching a parameter with a blank name throws InvalidOperationException at the blank-name guard")]
         public void CreateCommand_NamedKeyMatchesBlankParamName_ThrowsAtBlankGuard()
         {
             // The placeholder key is whitespace and a parameter whose Name is whitespace exists,
@@ -27,7 +27,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("具名佔位符匹配到有效參數名稱時應成功解析（空名保護的另一分支）")]
+        [DisplayName("A named placeholder matching a valid parameter name resolves (the other branch of the blank-name guard)")]
         public void CreateCommand_NamedKeyMatchesValidParamName_Resolves()
         {
             var spec = new DbCommandSpec(DbCommandKind.Scalar, "SELECT * FROM T WHERE X = {X}");

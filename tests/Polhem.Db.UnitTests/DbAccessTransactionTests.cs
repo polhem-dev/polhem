@@ -27,7 +27,7 @@ namespace Polhem.Db.UnitTests
         // ── null-connection guard (no DB required) ──────────────────────────
 
         [Fact]
-        [DisplayName("Execute(spec, transaction) 交易連線為 null 應擲 InvalidOperationException")]
+        [DisplayName("Execute(spec, transaction) throws InvalidOperationException when the transaction's connection is null")]
         public void Execute_WithTransaction_NullConnection_ThrowsInvalidOperation()
         {
             using var conn = new SqlConnection();
@@ -39,7 +39,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecuteAsync(spec, transaction) 交易連線為 null 應擲 InvalidOperationException")]
+        [DisplayName("ExecuteAsync(spec, transaction) throws InvalidOperationException when the transaction's connection is null")]
         public async Task ExecuteAsync_WithTransaction_NullConnection_ThrowsInvalidOperation()
         {
             using var conn = new SqlConnection();
@@ -54,7 +54,7 @@ namespace Polhem.Db.UnitTests
         // ── ExecuteAsync(spec) - Scalar branch (no transaction overload) ────
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteAsync(DbCommandSpec) Scalar 類型應回傳純量值")]
+        [DisplayName("ExecuteAsync(DbCommandSpec) of kind Scalar returns the scalar value")]
         public async Task ExecuteAsync_ScalarKind_ReturnsScalar()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
@@ -70,7 +70,7 @@ namespace Polhem.Db.UnitTests
         // ── Execute(spec, transaction) - Scalar + DataTable branches ────────
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("Execute(spec, transaction) Scalar 類型應回傳純量值")]
+        [DisplayName("Execute(spec, transaction) of kind Scalar returns the scalar value")]
         public void Execute_WithTransaction_ScalarKind_ReturnsScalar()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
@@ -88,7 +88,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("Execute(spec, transaction) DataTable 類型應回傳資料表")]
+        [DisplayName("Execute(spec, transaction) of kind DataTable returns the table")]
         public void Execute_WithTransaction_DataTableKind_ReturnsTable()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
@@ -108,7 +108,7 @@ namespace Polhem.Db.UnitTests
         // ── ExecuteAsync(spec, transaction) - Scalar + DataTable branches ───
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteAsync(spec, transaction) Scalar 類型應回傳純量值")]
+        [DisplayName("ExecuteAsync(spec, transaction) of kind Scalar returns the scalar value")]
         public async Task ExecuteAsync_WithTransaction_ScalarKind_ReturnsScalar()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
@@ -126,7 +126,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteAsync(spec, transaction) DataTable 類型應回傳資料表")]
+        [DisplayName("ExecuteAsync(spec, transaction) of kind DataTable returns the table")]
         public async Task ExecuteAsync_WithTransaction_DataTableKind_ReturnsTable()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");

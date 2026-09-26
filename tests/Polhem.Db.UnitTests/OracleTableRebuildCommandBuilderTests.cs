@@ -54,7 +54,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetCommandText：rebuild 腳本應含 tmp 表建立、INSERT 與 RENAME（雙引號識別符）")]
+        [DisplayName("Oracle GetCommandText rebuild script creates the tmp table, INSERTs and RENAMEs (double-quoted identifiers)")]
         public void GetCommandText_BasicRebuild_IncludesTmpCreateInsertAndRename()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
@@ -65,24 +65,25 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetCommandText：tmp 表 CREATE 應走 OracleCreateTableCommandBuilder（雙引號識別符 + 無 ENGINE/CHARSET 後綴）")]
+        [DisplayName("Oracle GetCommandText creates the tmp table through OracleCreateTableCommandBuilder (double-quoted identifiers, no ENGINE/CHARSET suffix)")]
         public void GetCommandText_TmpTableCreate_UsesOracleCreateTableShape()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
 
-            // tmp 表透過 OracleCreateTableCommandBuilder 建立；不應出現 MySQL/SQLite 風格後綴
+            // The tmp table is created through `OracleCreateTableCommandBuilder`,
+            // so no MySQL/SQLite style suffix appears.
             Assert.Contains("CREATE TABLE \"TMP_ST_DEMO\"", sql);
             Assert.DoesNotContain("ENGINE=InnoDB", sql);
             Assert.DoesNotContain("COLLATE=", sql);
         }
 
         [Fact]
-        [DisplayName("Oracle GetCommandText：DROP TABLE 應包在 PL/SQL block 內並 swallow ORA-00942（取代 IF EXISTS）")]
+        [DisplayName("Oracle GetCommandText wraps DROP TABLE in a PL/SQL block that swallows ORA-00942 (instead of IF EXISTS)")]
         public void GetCommandText_DropTable_UsesPlSqlExceptionSuppression()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
 
-            // Oracle 無 DROP TABLE IF EXISTS；DDL 包在 anonymous block 中，當 ORA-00942 才忽略
+            // Oracle has no DROP TABLE IF EXISTS; the DDL is wrapped in an anonymous block that ignores only ORA-00942.
             Assert.Contains("EXECUTE IMMEDIATE 'DROP TABLE \"TMP_ST_DEMO\" CASCADE CONSTRAINTS'", sql);
             Assert.Contains("EXECUTE IMMEDIATE 'DROP TABLE \"ST_DEMO\" CASCADE CONSTRAINTS'", sql);
             Assert.Contains("WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE", sql);
@@ -90,14 +91,14 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetCommandText：新增欄位不應出現在 INSERT ... SELECT 清單")]
+        [DisplayName("Oracle GetCommandText leaves a new field out of the INSERT ... SELECT list")]
         public void GetCommandText_AddedField_ExcludedFromDataCopy()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
 
-            // age 欄位應出現在 tmp 表定義
+            // The age field appears in the tmp table definition,
             Assert.Contains("\"AGE\"", sql);
-            // 但 INSERT ... SELECT 子句不應含 age
+            // but not in the INSERT ... SELECT clause.
             int insertIdx = sql.IndexOf("INSERT INTO \"TMP_ST_DEMO\"", StringComparison.Ordinal);
             int selectIdx = sql.IndexOf("FROM \"ST_DEMO\"", insertIdx, StringComparison.Ordinal);
             string insertSelectSection = sql.Substring(insertIdx, selectIdx - insertIdx);
@@ -105,7 +106,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetCommandText：real-only 欄位（extension field）應保留於 rebuild 結果")]
+        [DisplayName("Oracle GetCommandText keeps a real-only field (extension field) in the rebuild result")]
         public void GetCommandText_ExtensionField_Preserved()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema(withExtraLegacyField: true));
@@ -114,17 +115,17 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetCommandText：tmp 表不應預建非 PK 索引")]
+        [DisplayName("Oracle GetCommandText does not create non-PK indexes on the tmp table in advance")]
         public void GetCommandText_TmpTable_OmitsSecondaryIndexes()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
 
-            // 不應出現 ix_tmp_st_demo_name；非 PK 索引在 RENAME 後才以真實名建立
+            // No ix_tmp_st_demo_name: non-PK indexes are created with their real names after the RENAME.
             Assert.DoesNotContain("ix_tmp_st_demo_name", sql);
         }
 
         [Fact]
-        [DisplayName("Oracle GetCommandText：RENAME 後應以真實名重建非 PK 索引")]
+        [DisplayName("Oracle GetCommandText recreates non-PK indexes with their real names after the RENAME")]
         public void GetCommandText_NonPkIndexes_RecreatedWithRealNames()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
@@ -132,13 +133,13 @@ namespace Polhem.Db.UnitTests
             int renameIdx = sql.IndexOf("RENAME TO \"ST_DEMO\"", StringComparison.Ordinal);
             int recreateIdx = sql.IndexOf("CREATE INDEX \"IX_ST_DEMO_NAME\"", StringComparison.Ordinal);
 
-            Assert.True(renameIdx > 0, "RENAME 步驟必須出現");
-            Assert.True(recreateIdx > renameIdx, "非 PK 索引必須在 RENAME 之後重建");
+            Assert.True(renameIdx > 0, "The RENAME step must be present");
+            Assert.True(recreateIdx > renameIdx, "Non-PK indexes must be recreated after the RENAME");
             Assert.Contains("ON \"ST_DEMO\" (\"NAME\" ASC)", sql);
         }
 
         [Fact]
-        [DisplayName("Oracle GetCommandText：腳本中不應出現 ALTER INDEX RENAME（與其他 dialect 一致）")]
+        [DisplayName("Oracle GetCommandText script contains no ALTER INDEX RENAME (consistent with the other dialects)")]
         public void GetCommandText_NeverEmitsAlterIndexRename()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
@@ -148,7 +149,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetCommandText：new-table diff 應 throw（應改走 CREATE 路徑）")]
+        [DisplayName("Oracle GetCommandText throws for a new-table diff (which must take the CREATE path)")]
         public void GetCommandText_NewTableDiff_Throws()
         {
             var define = BuildDefineSchema();
@@ -159,7 +160,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetCommandText：DROP TABLE 應加 CASCADE CONSTRAINTS（移除 referencing FK）")]
+        [DisplayName("Oracle GetCommandText adds CASCADE CONSTRAINTS to DROP TABLE (removes referencing FKs)")]
         public void GetCommandText_DropTable_IncludesCascadeConstraints()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());
@@ -168,7 +169,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Oracle GetCommandText：腳本應依序為 drop tmp / create tmp / insert / drop old / rename / recreate index")]
+        [DisplayName("Oracle GetCommandText script runs drop tmp, create tmp, insert, drop old, rename and recreate index in order")]
         public void GetCommandText_StepsInExpectedOrder()
         {
             string sql = BuildSql(BuildDefineSchema(), BuildRealSchema());

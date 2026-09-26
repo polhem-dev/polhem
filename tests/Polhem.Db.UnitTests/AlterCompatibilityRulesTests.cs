@@ -7,9 +7,10 @@ using Polhem.Definition.Database;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 純規則測試：覆蓋 <see cref="AlterCompatibilityRules"/> 的型別家族分類與 narrowing 判斷。
-    /// 這些規則不碰任何 SQL 語法，五個 provider 共用同一份實作，故只測一次。
-    /// SQLite 覆寫的 <c>GetKindForTypeChange</c> 另見 <c>SqliteAlterCompatibilityRulesTests</c>。
+    /// Pure rule tests covering the type family classification and the narrowing checks of
+    /// <see cref="AlterCompatibilityRules"/>. These rules touch no SQL syntax and every provider shares one
+    /// implementation, so they are tested once. The SQLite override of <c>GetKindForTypeChange</c> is covered by
+    /// <c>SqliteAlterCompatibilityRulesTests</c>.
     /// </summary>
     public class AlterCompatibilityRulesTests
     {
@@ -22,7 +23,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Decimal, FieldDbType.Decimal)]
         [InlineData(FieldDbType.Time, FieldDbType.Time)]
         [InlineData(FieldDbType.AutoIncrement, FieldDbType.AutoIncrement)]
-        [DisplayName("GetKindForTypeChange：同型別應為 Alter")]
+        [DisplayName("GetKindForTypeChange returns Alter for the same type")]
         public void GetKindForTypeChange_SameType_ReturnsAlter(FieldDbType from, FieldDbType to)
         {
             Assert.Equal(ChangeExecutionKind.Alter, AlterCompatibilityRules.GetKindForTypeChange(from, to));
@@ -39,7 +40,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Decimal, FieldDbType.Currency)]
         [InlineData(FieldDbType.Date, FieldDbType.DateTime)]
         [InlineData(FieldDbType.DateTime, FieldDbType.Date)]
-        [DisplayName("GetKindForTypeChange：同 family 應為 Alter")]
+        [DisplayName("GetKindForTypeChange returns Alter within the same family")]
         public void GetKindForTypeChange_SameFamily_ReturnsAlter(FieldDbType from, FieldDbType to)
         {
             Assert.Equal(ChangeExecutionKind.Alter, AlterCompatibilityRules.GetKindForTypeChange(from, to));
@@ -53,7 +54,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Binary, FieldDbType.String)]
         [InlineData(FieldDbType.Guid, FieldDbType.String)]
         [InlineData(FieldDbType.Time, FieldDbType.DateTime)]
-        [DisplayName("GetKindForTypeChange：跨 family 應為 Rebuild")]
+        [DisplayName("GetKindForTypeChange returns Rebuild across families")]
         public void GetKindForTypeChange_CrossFamily_ReturnsRebuild(FieldDbType from, FieldDbType to)
         {
             Assert.Equal(ChangeExecutionKind.Rebuild, AlterCompatibilityRules.GetKindForTypeChange(from, to));
@@ -63,7 +64,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Integer, FieldDbType.AutoIncrement)]
         [InlineData(FieldDbType.AutoIncrement, FieldDbType.Integer)]
         [InlineData(FieldDbType.AutoIncrement, FieldDbType.Long)]
-        [DisplayName("GetKindForTypeChange：AutoIncrement 狀態變更應為 Rebuild")]
+        [DisplayName("GetKindForTypeChange returns Rebuild when the AutoIncrement state changes")]
         public void GetKindForTypeChange_AutoIncrementToggle_ReturnsRebuild(FieldDbType from, FieldDbType to)
         {
             Assert.Equal(ChangeExecutionKind.Rebuild, AlterCompatibilityRules.GetKindForTypeChange(from, to));
@@ -73,7 +74,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Unknown, FieldDbType.String)]
         [InlineData(FieldDbType.String, FieldDbType.Unknown)]
         [InlineData(FieldDbType.Unknown, FieldDbType.Unknown)]
-        [DisplayName("GetKindForTypeChange：Unknown 應為 NotSupported")]
+        [DisplayName("GetKindForTypeChange returns NotSupported for Unknown")]
         public void GetKindForTypeChange_UnknownType_ReturnsNotSupported(FieldDbType from, FieldDbType to)
         {
             Assert.Equal(ChangeExecutionKind.NotSupported, AlterCompatibilityRules.GetKindForTypeChange(from, to));
@@ -81,10 +82,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region IsNarrowing — 字串容量
+        #region IsNarrowing — string capacity
 
         [Fact]
-        [DisplayName("IsNarrowing：String 長度縮小應判定為 narrowing")]
+        [DisplayName("IsNarrowing treats a shorter String length as narrowing")]
         public void IsNarrowing_StringLengthReduced_ReturnsTrue()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 100 };
@@ -94,7 +95,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNarrowing：String 長度放大不是 narrowing")]
+        [DisplayName("IsNarrowing does not treat a longer String length as narrowing")]
         public void IsNarrowing_StringLengthIncreased_ReturnsFalse()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50 };
@@ -104,7 +105,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNarrowing：Text 轉 String（有長度上限）應判定為 narrowing")]
+        [DisplayName("IsNarrowing treats Text to String (bounded length) as narrowing")]
         public void IsNarrowing_TextToString_ReturnsTrue()
         {
             var oldField = new DbField("note", "Note", FieldDbType.Text);
@@ -114,7 +115,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNarrowing：String 轉 Text 不是 narrowing")]
+        [DisplayName("IsNarrowing does not treat String to Text as narrowing")]
         public void IsNarrowing_StringToText_ReturnsFalse()
         {
             var oldField = new DbField("note", "Note", FieldDbType.String) { Length = 200 };
@@ -124,7 +125,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNarrowing：長度大於時刻字面長度的 String 轉 Time 應判定為 narrowing")]
+        [DisplayName("IsNarrowing treats String to Time as narrowing when the length exceeds the time literal length")]
         public void IsNarrowing_WiderStringToTime_ReturnsTrue()
         {
             var oldField = new DbField("t", "T", FieldDbType.String) { Length = ValueUtilities.TimeOnlyLength + 10 };
@@ -134,7 +135,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNarrowing：Time 轉 Text 不是 narrowing")]
+        [DisplayName("IsNarrowing does not treat Time to Text as narrowing")]
         public void IsNarrowing_TimeToText_ReturnsFalse()
         {
             var oldField = new DbField("t", "T", FieldDbType.Time);
@@ -145,7 +146,7 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region IsNarrowing — 數值
+        #region IsNarrowing — numeric
 
         [Theory]
         [InlineData(FieldDbType.Long, FieldDbType.Integer)]
@@ -153,7 +154,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Long, FieldDbType.Short)]
         [InlineData(FieldDbType.Decimal, FieldDbType.Integer)]
         [InlineData(FieldDbType.Currency, FieldDbType.Long)]
-        [DisplayName("IsNarrowing：數值型縮小應判定為 narrowing")]
+        [DisplayName("IsNarrowing treats a smaller numeric type as narrowing")]
         public void IsNarrowing_NumericRankReduced_ReturnsTrue(FieldDbType from, FieldDbType to)
         {
             var oldField = new DbField("v", "V", from);
@@ -166,7 +167,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Short, FieldDbType.Integer)]
         [InlineData(FieldDbType.Integer, FieldDbType.Long)]
         [InlineData(FieldDbType.Integer, FieldDbType.Decimal)]
-        [DisplayName("IsNarrowing：數值型放大不是 narrowing")]
+        [DisplayName("IsNarrowing does not treat a larger numeric type as narrowing")]
         public void IsNarrowing_NumericRankIncreased_ReturnsFalse(FieldDbType from, FieldDbType to)
         {
             var oldField = new DbField("v", "V", from);
@@ -176,7 +177,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNarrowing：Decimal precision 縮小應判定為 narrowing")]
+        [DisplayName("IsNarrowing treats a smaller Decimal precision as narrowing")]
         public void IsNarrowing_DecimalPrecisionReduced_ReturnsTrue()
         {
             var oldField = new DbField("v", "V", FieldDbType.Decimal) { Precision = 18, Scale = 2 };
@@ -186,7 +187,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNarrowing：Decimal scale 縮小應判定為 narrowing")]
+        [DisplayName("IsNarrowing treats a smaller Decimal scale as narrowing")]
         public void IsNarrowing_DecimalScaleReduced_ReturnsTrue()
         {
             var oldField = new DbField("v", "V", FieldDbType.Decimal) { Precision = 18, Scale = 4 };
@@ -196,7 +197,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNarrowing：Decimal precision/scale 維持不是 narrowing")]
+        [DisplayName("IsNarrowing does not treat an unchanged Decimal precision and scale as narrowing")]
         public void IsNarrowing_DecimalSamePrecisionScale_ReturnsFalse()
         {
             var oldField = new DbField("v", "V", FieldDbType.Decimal) { Precision = 18, Scale = 4 };
@@ -207,10 +208,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region IsNarrowing — 日期時間
+        #region IsNarrowing — date and time
 
         [Fact]
-        [DisplayName("IsNarrowing：DateTime 轉 Date 應判定為 narrowing（時間精度遺失）")]
+        [DisplayName("IsNarrowing treats DateTime to Date as narrowing (the time part is lost)")]
         public void IsNarrowing_DateTimeToDate_ReturnsTrue()
         {
             var oldField = new DbField("dt", "Dt", FieldDbType.DateTime);
@@ -220,7 +221,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNarrowing：Date 轉 DateTime 不是 narrowing")]
+        [DisplayName("IsNarrowing does not treat Date to DateTime as narrowing")]
         public void IsNarrowing_DateToDateTime_ReturnsFalse()
         {
             var oldField = new DbField("dt", "Dt", FieldDbType.Date);
@@ -231,10 +232,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region IsNarrowing — 跨家族
+        #region IsNarrowing — across families
 
         [Fact]
-        [DisplayName("IsNarrowing：跨家族變更（String → Integer）不觸發 narrowing 判斷，回傳 false")]
+        [DisplayName("IsNarrowing returns false for a cross-family change (String → Integer) without checking narrowing")]
         public void IsNarrowing_CrossFamily_ReturnsFalse()
         {
             var oldField = new DbField("v", "V", FieldDbType.String) { Length = 50 };
@@ -244,7 +245,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsNarrowing：Boolean 與 Boolean 不在 narrowing 判斷範圍，回傳 false")]
+        [DisplayName("IsNarrowing returns false for Boolean to Boolean, which is outside the narrowing checks")]
         public void IsNarrowing_BooleanToBoolean_ReturnsFalse()
         {
             var oldField = new DbField("v", "V", FieldDbType.Boolean);

@@ -31,7 +31,7 @@ namespace Polhem.Db.UnitTests
         // ---------- ExecutionKind ----------
 
         [Fact]
-        [DisplayName("MySQL GetExecutionKind：AddFieldChange 應為 Alter")]
+        [DisplayName("MySQL GetExecutionKind returns Alter for AddFieldChange")]
         public void GetExecutionKind_AddField_IsAlter()
         {
             var change = new AddFieldChange(new DbField("col", "Col", FieldDbType.Integer));
@@ -39,7 +39,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetExecutionKind：RenameFieldChange 應為 Alter")]
+        [DisplayName("MySQL GetExecutionKind returns Alter for RenameFieldChange")]
         public void GetExecutionKind_Rename_IsAlter()
         {
             var change = new RenameFieldChange("oldname", new DbField("newname", "New", FieldDbType.String));
@@ -47,7 +47,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetExecutionKind：AlterFieldChange 同 family（Integer→Long）應為 Alter")]
+        [DisplayName("MySQL GetExecutionKind returns Alter for an AlterFieldChange within the family (Integer→Long)")]
         public void GetExecutionKind_AlterFieldSameFamily_IsAlter()
         {
             var oldField = new DbField("col", "Col", FieldDbType.Integer);
@@ -57,7 +57,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetExecutionKind：AlterFieldChange 跨 family（Integer→String）應為 Rebuild")]
+        [DisplayName("MySQL GetExecutionKind returns Rebuild for an AlterFieldChange across families (Integer→String)")]
         public void GetExecutionKind_AlterFieldCrossFamily_IsRebuild()
         {
             var oldField = new DbField("col", "Col", FieldDbType.Integer);
@@ -69,7 +69,7 @@ namespace Polhem.Db.UnitTests
         // ---------- IsNarrowingChange ----------
 
         [Fact]
-        [DisplayName("MySQL IsNarrowingChange：String 縮短應回傳 true")]
+        [DisplayName("MySQL IsNarrowingChange returns true for a shorter String")]
         public void IsNarrowingChange_StringShortened_ReturnsTrue()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 100 };
@@ -78,7 +78,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL IsNarrowingChange：String 加長應回傳 false")]
+        [DisplayName("MySQL IsNarrowingChange returns false for a longer String")]
         public void IsNarrowingChange_StringExtended_ReturnsFalse()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50 };
@@ -89,7 +89,7 @@ namespace Polhem.Db.UnitTests
         // ---------- GetStatements ----------
 
         [Fact]
-        [DisplayName("MySQL GetStatements：AddField 產生 ALTER TABLE ADD COLUMN（backtick 識別符）")]
+        [DisplayName("MySQL GetStatements for AddField produces ALTER TABLE ADD COLUMN (backtick identifiers)")]
         public void GetStatements_AddField_EmitsAlterTableAddColumn()
         {
             var field = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = false };
@@ -101,23 +101,24 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetStatements：AddField Guid NOT NULL 拆兩段（常數預設 + SET DEFAULT (UUID())）避免 replication-unsafe")]
+        [DisplayName("MySQL GetStatements splits AddField of a NOT NULL Guid in two (constant default, then SET DEFAULT (UUID())) to stay replication-safe")]
         public void GetStatements_AddGuidNotNull_SplitsIntoSafeTwoStep()
         {
             var field = new DbField("user_rowid", "User", FieldDbType.Guid) { AllowNull = false };
             var statements = _builder.GetStatements("st_employee", new AddFieldChange(field));
 
             Assert.Equal(2, statements.Count);
-            // 第 1 段：常數空 Guid 預設 ADD —— replication-safe，不得含 (UUID())
+            // Statement 1: ADD with a constant empty Guid default, which
+            // is replication-safe and must not contain (UUID()).
             Assert.Contains("ALTER TABLE `st_employee` ADD COLUMN `user_rowid`", statements[0]);
             Assert.Contains("NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'", statements[0]);
             Assert.DoesNotContain("UUID()", statements[0]);
-            // 第 2 段：metadata-only 還原真正預設（新列才拿 UUID()）
+            // Statement 2: a metadata-only restore of the real default (only new rows get UUID()).
             Assert.Contains("ALTER TABLE `st_employee` ALTER COLUMN `user_rowid` SET DEFAULT (UUID())", statements[1]);
         }
 
         [Fact]
-        [DisplayName("MySQL GetStatements：AddField 可為 NULL 的 Guid 仍單條（無 UUID() 預設、不拆）")]
+        [DisplayName("MySQL GetStatements keeps AddField of a nullable Guid as one statement (no UUID() default, no split)")]
         public void GetStatements_AddGuidNullable_SingleStatement()
         {
             var field = new DbField("ref_rowid", "Ref", FieldDbType.Guid) { AllowNull = true };
@@ -129,7 +130,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetStatements：AlterField 產生 MODIFY COLUMN 並包含完整 column 定義")]
+        [DisplayName("MySQL GetStatements for AlterField produces MODIFY COLUMN with the full column definition")]
         public void GetStatements_AlterField_EmitsModifyColumn()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50, AllowNull = false };
@@ -142,7 +143,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetStatements：RenameField 產生 RENAME COLUMN（backtick）")]
+        [DisplayName("MySQL GetStatements for RenameField produces RENAME COLUMN (backticks)")]
         public void GetStatements_RenameField_EmitsRenameColumn()
         {
             var change = new RenameFieldChange("oldname", new DbField("newname", "New", FieldDbType.String) { Length = 50 });
@@ -153,7 +154,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetStatements：AddIndex 非 PK 產生 CREATE INDEX")]
+        [DisplayName("MySQL GetStatements for AddIndex of a non-PK index produces CREATE INDEX")]
         public void GetStatements_AddIndex_NonPk_EmitsCreateIndex()
         {
             var index = BuildIndex("ix_{0}_col", "col", unique: false);
@@ -164,7 +165,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetStatements：AddIndex 唯一索引產生 CREATE UNIQUE INDEX")]
+        [DisplayName("MySQL GetStatements for AddIndex of a unique index produces CREATE UNIQUE INDEX")]
         public void GetStatements_AddIndex_Unique_EmitsCreateUniqueIndex()
         {
             var index = BuildIndex("uk_{0}_col", "col", unique: true);
@@ -175,7 +176,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetStatements：AddIndex PK 產生 ADD CONSTRAINT PRIMARY KEY")]
+        [DisplayName("MySQL GetStatements for AddIndex of a PK produces ADD CONSTRAINT PRIMARY KEY")]
         public void GetStatements_AddIndex_Pk_EmitsAddConstraint()
         {
             var pk = BuildPrimaryKey("id");
@@ -187,11 +188,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetStatements：DropIndex 非 PK 產生 DROP INDEX ON")]
+        [DisplayName("MySQL GetStatements for DropIndex of a non-PK index produces DROP INDEX ON")]
         public void GetStatements_DropIndex_NonPk_EmitsDropIndexOn()
         {
             var index = BuildIndex("ix_{0}_col", "col", unique: false);
-            // 模擬：當作既有 index name（已 resolve），略過 {0} 替換
+            // Simulates an existing, already resolved index name, so the {0} replacement is skipped.
             index.Name = "ix_st_demo_col";
             var statements = _builder.GetStatements("st_demo", new DropIndexChange(index));
 
@@ -200,7 +201,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL GetStatements：DropIndex PK 產生 DROP PRIMARY KEY")]
+        [DisplayName("MySQL GetStatements for DropIndex of a PK produces DROP PRIMARY KEY")]
         public void GetStatements_DropIndex_Pk_EmitsDropPrimaryKey()
         {
             var pk = BuildPrimaryKey("id");
@@ -214,7 +215,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("MySQL GetStatements：空白 tableName 應拋例外")]
+        [DisplayName("MySQL GetStatements throws for a blank tableName")]
         public void GetStatements_EmptyTableName_Throws(string? tableName)
         {
             var change = new AddFieldChange(new DbField("col", "Col", FieldDbType.Integer));

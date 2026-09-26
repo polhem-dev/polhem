@@ -27,7 +27,7 @@ namespace Polhem.Db.UnitTests
         // ---------- GetExecutionKind ----------
 
         [Fact]
-        [DisplayName("SQLite GetExecutionKind：AddFieldChange 應為 Alter")]
+        [DisplayName("SQLite GetExecutionKind returns Alter for AddFieldChange")]
         public void GetExecutionKind_AddField_ReturnsAlter()
         {
             var change = new AddFieldChange(new DbField("age", "Age", FieldDbType.Integer));
@@ -35,7 +35,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetExecutionKind：RenameFieldChange 應為 Alter")]
+        [DisplayName("SQLite GetExecutionKind returns Alter for RenameFieldChange")]
         public void GetExecutionKind_RenameField_ReturnsAlter()
         {
             var change = new RenameFieldChange("oldname", new DbField("newname", "New", FieldDbType.String));
@@ -43,7 +43,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetExecutionKind：AddIndexChange 應為 Alter")]
+        [DisplayName("SQLite GetExecutionKind returns Alter for AddIndexChange")]
         public void GetExecutionKind_AddIndex_ReturnsAlter()
         {
             var index = new DbTableIndex { Name = "ix_demo_name" };
@@ -52,7 +52,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetExecutionKind：DropIndexChange 應為 Alter")]
+        [DisplayName("SQLite GetExecutionKind returns Alter for DropIndexChange")]
         public void GetExecutionKind_DropIndex_ReturnsAlter()
         {
             var index = new DbTableIndex { Name = "ix_demo_name" };
@@ -61,7 +61,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetExecutionKind：AlterFieldChange 同 family 應為 Rebuild")]
+        [DisplayName("SQLite GetExecutionKind returns Rebuild for an AlterFieldChange within the family")]
         public void GetExecutionKind_AlterFieldSameFamily_ReturnsRebuild()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50 };
@@ -71,7 +71,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetExecutionKind：AlterFieldChange 跨 family 應為 Rebuild")]
+        [DisplayName("SQLite GetExecutionKind returns Rebuild for an AlterFieldChange across families")]
         public void GetExecutionKind_AlterFieldCrossFamily_ReturnsRebuild()
         {
             var oldField = new DbField("v", "V", FieldDbType.String) { Length = 50 };
@@ -81,7 +81,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetExecutionKind：AlterFieldChange 牽涉 Unknown 應為 NotSupported")]
+        [DisplayName("SQLite GetExecutionKind returns NotSupported for an AlterFieldChange involving Unknown")]
         public void GetExecutionKind_AlterFieldUnknown_ReturnsNotSupported()
         {
             var oldField = new DbField("v", "V", FieldDbType.Unknown);
@@ -93,7 +93,7 @@ namespace Polhem.Db.UnitTests
         // ---------- IsNarrowingChange ----------
 
         [Fact]
-        [DisplayName("SQLite IsNarrowingChange：String 縮短應回傳 true")]
+        [DisplayName("SQLite IsNarrowingChange returns true for a shorter String")]
         public void IsNarrowingChange_StringShortened_ReturnsTrue()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 100 };
@@ -102,7 +102,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite IsNarrowingChange：非 AlterField 應回傳 false")]
+        [DisplayName("SQLite IsNarrowingChange returns false for a change other than AlterField")]
         public void IsNarrowingChange_NonAlterChange_ReturnsFalse()
         {
             var change = new AddFieldChange(new DbField("age", "Age", FieldDbType.Integer));
@@ -112,7 +112,7 @@ namespace Polhem.Db.UnitTests
         // ---------- Statements ----------
 
         [Fact]
-        [DisplayName("SQLite GetStatements：AddField 產生 ALTER TABLE ADD COLUMN")]
+        [DisplayName("SQLite GetStatements for AddField produces ALTER TABLE ADD COLUMN")]
         public void GetStatements_AddField_EmitsAlterTableAddColumn()
         {
             var field = new DbField("age", "Age", FieldDbType.Integer) { AllowNull = false };
@@ -125,11 +125,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetStatements：AddField 文字欄位應帶 COLLATE NOCASE（與 CREATE TABLE 一致）")]
+        [DisplayName("SQLite GetStatements for AddField of a text field carries COLLATE NOCASE (consistent with CREATE TABLE)")]
         public void GetStatements_AddStringField_IncludesCollateNocase()
         {
-            // 由於 CREATE 與 ALTER 共用 SqliteSchemaSyntax.GetColumnDefinition，
-            // ALTER TABLE ADD COLUMN 新增文字欄位也會自動帶 COLLATE NOCASE，與 CREATE 行為一致。
+            // CREATE and ALTER share `SqliteSchemaSyntax.GetColumnDefinition`, so a text field added by
+            // ALTER TABLE ADD COLUMN gets COLLATE NOCASE automatically, consistent with CREATE.
             var field = new DbField("name", "Name", FieldDbType.String) { Length = 50, AllowNull = false };
             var statements = _builder.GetStatements("st_demo", new AddFieldChange(field));
 
@@ -139,7 +139,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetStatements：RenameField 產生 RENAME COLUMN")]
+        [DisplayName("SQLite GetStatements for RenameField produces RENAME COLUMN")]
         public void GetStatements_RenameField_EmitsRenameColumn()
         {
             var change = new RenameFieldChange("oldname", new DbField("newname", "New", FieldDbType.String) { Length = 50 });
@@ -150,7 +150,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetStatements：AddIndex 產生 CREATE INDEX")]
+        [DisplayName("SQLite GetStatements for AddIndex produces CREATE INDEX")]
         public void GetStatements_AddIndex_EmitsCreateIndex()
         {
             var index = new DbTableIndex { Name = "ix_{0}_col" };
@@ -163,7 +163,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetStatements：AddIndex Unique 應產生 CREATE UNIQUE INDEX")]
+        [DisplayName("SQLite GetStatements for AddIndex of a unique index produces CREATE UNIQUE INDEX")]
         public void GetStatements_AddIndexUnique_EmitsCreateUniqueIndex()
         {
             var index = new DbTableIndex { Name = "uk_{0}_col", Unique = true };
@@ -175,7 +175,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetStatements：AddIndex 帶 PrimaryKey 應擲 NotSupportedException")]
+        [DisplayName("SQLite GetStatements throws NotSupportedException for AddIndex of a PrimaryKey")]
         public void GetStatements_AddPrimaryKeyIndex_Throws()
         {
             var index = new DbTableIndex { Name = "pk_st_demo", PrimaryKey = true };
@@ -186,7 +186,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetStatements：DropIndex 產生 DROP INDEX")]
+        [DisplayName("SQLite GetStatements for DropIndex produces DROP INDEX")]
         public void GetStatements_DropIndex_EmitsDropIndex()
         {
             var index = new DbTableIndex { Name = "ix_st_demo_col" };
@@ -199,7 +199,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetStatements：DropIndex 帶 PrimaryKey 應擲 NotSupportedException")]
+        [DisplayName("SQLite GetStatements throws NotSupportedException for DropIndex of a PrimaryKey")]
         public void GetStatements_DropPrimaryKeyIndex_Throws()
         {
             var index = new DbTableIndex { Name = "pk_st_demo", PrimaryKey = true };
@@ -210,7 +210,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetStatements：AlterField 應擲 InvalidOperationException（必須走 rebuild 路徑）")]
+        [DisplayName("SQLite GetStatements throws InvalidOperationException for AlterField (it must take the rebuild path)")]
         public void GetStatements_AlterField_Throws()
         {
             var oldField = new DbField("name", "Name", FieldDbType.String) { Length = 50 };
@@ -221,14 +221,14 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite GetExecutionKind：未知 ITableChange 子類應回傳 NotSupported")]
+        [DisplayName("SQLite GetExecutionKind returns NotSupported for an unknown ITableChange subclass")]
         public void GetExecutionKind_UnknownChange_ReturnsNotSupported()
         {
             Assert.Equal(ChangeExecutionKind.NotSupported, _builder.GetExecutionKind(new UnknownChange()));
         }
 
         [Fact]
-        [DisplayName("SQLite GetStatements：未知 ITableChange 子類應擲 InvalidOperationException")]
+        [DisplayName("SQLite GetStatements throws InvalidOperationException for an unknown ITableChange subclass")]
         public void GetStatements_UnknownChange_Throws()
         {
             var ex = Assert.Throws<InvalidOperationException>(() =>

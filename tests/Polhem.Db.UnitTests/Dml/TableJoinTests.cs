@@ -4,12 +4,12 @@ using Polhem.Db.Dml;
 namespace Polhem.Db.UnitTests.Dml
 {
     /// <summary>
-    /// TableJoin 屬性預設值、Key 讀寫與 ToString 輸出格式測試。
+    /// Tests for the <c>TableJoin</c> property defaults, reading and writing Key, and the ToString output format.
     /// </summary>
     public class TableJoinTests
     {
         [Fact]
-        [DisplayName("TableJoin 預設值：JoinType=Left，其餘字串屬性為空字串")]
+        [DisplayName("TableJoin defaults to JoinType Left and empty strings for the other string properties")]
         public void Defaults_AreLeftJoinAndEmptyStrings()
         {
             var join = new TableJoin();
@@ -24,7 +24,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Key 屬性應可讀寫並與底層 base.Key 同步")]
+        [DisplayName("The Key property can be read and written and stays in sync with base.Key")]
         public void Key_IsReadWrite()
         {
             var join = new TableJoin { Key = "join1" };
@@ -40,7 +40,7 @@ namespace Polhem.Db.UnitTests.Dml
         [InlineData(JoinType.Inner, "INNER JOIN tb_detail D ON M.id = D.main_id")]
         [InlineData(JoinType.Right, "RIGHT JOIN tb_detail D ON M.id = D.main_id")]
         [InlineData(JoinType.Full, "FULL JOIN tb_detail D ON M.id = D.main_id")]
-        [DisplayName("ToString 應依 JoinType 產生對應關鍵字的 JOIN 語法")]
+        [DisplayName("ToString produces the JOIN syntax with the keyword of the JoinType")]
         public void ToString_FormatsAccordingToJoinType(JoinType joinType, string expected)
         {
             var join = new TableJoin

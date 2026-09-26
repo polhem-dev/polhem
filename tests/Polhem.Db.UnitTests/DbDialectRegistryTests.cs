@@ -17,7 +17,7 @@ namespace Polhem.Db.UnitTests
         public DbDialectRegistryTests(SharedDbFixture _) { }
 
         [Fact]
-        [DisplayName("Register + Get 應成功取回對應的工廠")]
+        [DisplayName("Register and Get return the matching factory")]
         public void RegisterAndGet_ReturnsSameFactory()
         {
             var factory = new SqlDialectFactory();
@@ -27,7 +27,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsRegistered 在已註冊時應回傳 true")]
+        [DisplayName("IsRegistered returns true once registered")]
         public void IsRegistered_Registered_ReturnsTrue()
         {
             DbDialectRegistry.Register(DatabaseType.SQLServer, new SqlDialectFactory());
@@ -36,18 +36,18 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Register 傳 null 應擲 ArgumentNullException")]
+        [DisplayName("Register throws ArgumentNullException for null")]
         public void Register_NullFactory_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => DbDialectRegistry.Register(DatabaseType.SQLServer, null!));
         }
 
         [Fact]
-        [DisplayName("Get 未註冊型別應擲 KeyNotFoundException")]
+        [DisplayName("Get throws KeyNotFoundException for an unregistered type")]
         public void Get_Unregistered_Throws()
         {
-            // GlobalFixture 註冊全部既定 DatabaseType 後，找不到「天然未註冊」的列舉值；
-            // 改用 enum 範圍外的整數作為「永遠不會被註冊」的 placeholder。
+            // `GlobalFixture` registers every defined `DatabaseType`, so no enum value is naturally unregistered.
+            // An integer outside the enum range serves as a placeholder that is never registered.
             Assert.Throws<KeyNotFoundException>(() => DbDialectRegistry.Get((DatabaseType)9999));
         }
     }
@@ -61,11 +61,12 @@ namespace Polhem.Db.UnitTests
         private readonly SqlDialectFactory _factory = new();
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("CreateTableSchemaProvider 應回傳 SqlTableSchemaProvider")]
+        [DisplayName("CreateTableSchemaProvider returns a SqlTableSchemaProvider")]
         public void CreateTableSchemaProvider_ReturnsSqlImpl()
         {
-            // ctor 內 new DbAccess("common_sqlserver") 需要 DbConnectionManager 已註冊連線；
-            // 未設 POLHEM_TEST_CONNSTR_SQLSERVER 時 GlobalFixture 不會註冊，故以 [DbFact] 跳過。
+            // The constructor's `new DbAccess("common_sqlserver")` needs a connection registered in
+            // `DbConnectionManager`. Without POLHEM_TEST_CONNSTR_SQLSERVER, `GlobalFixture` registers none, so
+            // `[DbFact]` skips the test.
             var provider = _factory.CreateTableSchemaProvider("common_sqlserver", _fx.GetRequiredService<IDbConnectionManager>());
 
             Assert.IsType<SqlTableSchemaProvider>(provider);
@@ -73,21 +74,21 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCreateTableCommandBuilder 應回傳 SqlCreateTableCommandBuilder")]
+        [DisplayName("CreateCreateTableCommandBuilder returns a SqlCreateTableCommandBuilder")]
         public void CreateCreateTableCommandBuilder_ReturnsSqlImpl()
         {
             Assert.IsType<SqlCreateTableCommandBuilder>(_factory.CreateCreateTableCommandBuilder());
         }
 
         [Fact]
-        [DisplayName("CreateTableAlterCommandBuilder 應回傳 SqlTableAlterCommandBuilder")]
+        [DisplayName("CreateTableAlterCommandBuilder returns a SqlTableAlterCommandBuilder")]
         public void CreateTableAlterCommandBuilder_ReturnsSqlImpl()
         {
             Assert.IsType<SqlTableAlterCommandBuilder>(_factory.CreateTableAlterCommandBuilder());
         }
 
         [Fact]
-        [DisplayName("CreateTableRebuildCommandBuilder 應實作 ITableRebuildCommandBuilder")]
+        [DisplayName("CreateTableRebuildCommandBuilder returns an ITableRebuildCommandBuilder")]
         public void CreateTableRebuildCommandBuilder_ImplementsInterface()
         {
             var rebuildBuilder = _factory.CreateTableRebuildCommandBuilder();
@@ -96,7 +97,7 @@ namespace Polhem.Db.UnitTests
         }
 
 [Fact]
-        [DisplayName("GetDefaultValueExpression 應回傳 SQL Server 特有預設值（如 getdate、newid）")]
+        [DisplayName("GetDefaultValueExpression returns SQL Server specific defaults (such as getdate and newid)")]
         public void GetDefaultValueExpression_SqlServerDefaults()
         {
             Assert.Equal("getutcdate()", _factory.GetDefaultValueExpression(FieldDbType.DateTime));
@@ -106,7 +107,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateTableRebuildCommandBuilder 回傳實例可處理 diff（煙霧測試）")]
+        [DisplayName("The instance returned by CreateTableRebuildCommandBuilder handles a diff (smoke test)")]
         public void CreateTableRebuildCommandBuilder_CanProduceSql()
         {
             var define = new TableSchema { TableName = "st_sample" };
@@ -114,7 +115,7 @@ namespace Polhem.Db.UnitTests
             var real = new TableSchema { TableName = "st_sample" };
             real.Fields!.Add("id", "Id", FieldDbType.Guid);
             var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
-            // 強制加一筆變化讓 rebuild 產出非空 SQL
+            // Force one change so that the rebuild produces non-empty SQL.
             diff.Changes.Add(new AddFieldChange(new DbFieldForTest()));
 
             var builder = _factory.CreateTableRebuildCommandBuilder();
@@ -124,7 +125,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateFormCommandBuilder 應回傳 SqlFormCommandBuilder")]
+        [DisplayName("CreateFormCommandBuilder returns a SqlFormCommandBuilder")]
         public void CreateFormCommandBuilder_ReturnsSqlImpl()
         {
             var schema = new FormSchema("Foo", "Foo");
@@ -135,7 +136,7 @@ namespace Polhem.Db.UnitTests
             Assert.IsType<SqlFormCommandBuilder>(builder);
         }
 
-        // 測試用 helper（避免為了單一煙霧測試依賴較重的 schema 建構）
+        // A test helper, so a single smoke test does not depend on heavier schema construction.
         private sealed class DbFieldForTest : global::Polhem.Definition.Database.DbField
         {
             public DbFieldForTest() : base("note", "Note", FieldDbType.String)

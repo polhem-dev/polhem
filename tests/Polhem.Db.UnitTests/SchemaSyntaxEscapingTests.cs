@@ -11,18 +11,19 @@ using Polhem.Db.Providers.SqlServer;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 各方言 <c>EscapeSqlString</c> 的字面值逸出規則。
+    /// The literal escaping rules of <c>EscapeSqlString</c> in each dialect.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 這些值（欄位 Caption、資料表 DisplayName、DefaultValue）是定義檔裡的自由文字，會被拼進
-    /// DDL 的 <c>'...'</c> 字面值。逸出不足不只是注入面 —— <b>以反斜線結尾的正常說明文字</b>
-    /// 在 MySQL 上就足以讓產生的 DDL 語法錯誤。
+    /// These values (field Caption, table DisplayName, DefaultValue) are free text in the definition files, and they
+    /// are spliced into <c>'...'</c> literals in the DDL. Insufficient escaping is not only an injection surface:
+    /// <b>ordinary descriptive text that ends with a backslash</b> is enough to make the generated DDL a syntax error
+    /// on MySQL.
     /// </para>
     /// <para>
-    /// MySQL 是唯一需要處理反斜線的方言：SQL Server、Oracle、SQLite，以及預設開著
-    /// <c>standard_conforming_strings</c> 的 PostgreSQL，反斜線都是普通字元。這裡把「哪些方言要
-    /// 逸出反斜線」釘成測試，免得日後有人「順手統一」而弄壞其中一邊。
+    /// MySQL is the only dialect that has to handle backslashes: in SQL Server, Oracle, SQLite, and PostgreSQL with
+    /// <c>standard_conforming_strings</c> on by default, a backslash is an ordinary character. This pins down which
+    /// dialects escape backslashes, so that nobody later "unifies" them in passing and breaks one side.
     /// </para>
     /// </remarks>
     public class SchemaSyntaxEscapingTests : IClassFixture<SharedDbFixture>
@@ -35,7 +36,7 @@ namespace Polhem.Db.UnitTests
         [InlineData("plain", "plain")]
         [InlineData("O'Brien", "O''Brien")]
         [InlineData("''", "''''")]
-        [DisplayName("所有方言都應把單引號加倍")]
+        [DisplayName("Every dialect doubles single quotes")]
         public void AllDialects_DoubleSingleQuotes(string input, string expected)
         {
             Assert.Equal(expected, SqlSchemaSyntax.EscapeSqlString(input));
@@ -49,7 +50,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(@"ends with backslash \", @"ends with backslash \\")]
         [InlineData(@"a\' , (SELECT 1) , '", @"a\\'' , (SELECT 1) , ''")]
         [InlineData(@"C:\temp\file", @"C:\\temp\\file")]
-        [DisplayName("MySQL 必須額外逸出反斜線（它預設把 \\ 當逸出字元）")]
+        [DisplayName("MySQL also escapes backslashes (it treats \\ as an escape character by default)")]
         public void MySql_EscapesBackslash(string input, string expected)
         {
             Assert.Equal(expected, MySqlSchemaSyntax.EscapeSqlString(input));
@@ -58,10 +59,11 @@ namespace Polhem.Db.UnitTests
         [Theory]
         [InlineData(@"ends with backslash \")]
         [InlineData(@"C:\temp\file")]
-        [DisplayName("其餘方言不得逸出反斜線（那裡它是普通字元，動它會改變值）")]
+        [DisplayName("The other dialects do not escape backslashes (an ordinary character there, so touching it changes the value)")]
         public void OtherDialects_LeaveBackslashAlone(string input)
         {
-            // 反向的錯誤同樣有害：在這些方言上多加一個反斜線會讓存進去的說明文字與原文不符。
+            // The opposite mistake is just as harmful: an extra backslash on these dialects would make the stored
+            // description differ from the original text.
             Assert.Equal(input, SqlSchemaSyntax.EscapeSqlString(input));
             Assert.Equal(input, PgSchemaSyntax.EscapeSqlString(input));
             Assert.Equal(input, OracleSchemaSyntax.EscapeSqlString(input));
@@ -72,10 +74,11 @@ namespace Polhem.Db.UnitTests
         [InlineData(@"ends with backslash \")]
         [InlineData(@"a\' , (SELECT 1) , '")]
         [InlineData("O'Brien")]
-        [DisplayName("MySQL：帶反斜線／引號的欄位說明應能真的建出表並原值讀回")]
+        [DisplayName("MySQL creates a table whose field descriptions contain backslashes and quotes and reads them back unchanged")]
         public void MySql_ColumnComment_WithBackslashOrQuote_SurvivesRealDdl(string caption)
         {
-            // 單元測試只驗字串規則，證不了 MySQL 接不接受 —— 這條把它送進真的 DDL。
+            // The unit tests only check the string rules and cannot prove that
+            // MySQL accepts the result; this sends it through real DDL.
             var dbAccess = _fx.NewDbAccess(TestDbConventions.GetDatabaseId(DatabaseType.MySQL));
             string table = "tb_esc_" + Guid.NewGuid().ToString("N")[..8];
             string quoted = DatabaseType.MySQL.QuoteIdentifier(table);

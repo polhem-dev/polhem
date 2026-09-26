@@ -22,7 +22,7 @@ namespace Polhem.Db.UnitTests
             => new(databaseId, _fx.GetRequiredService<IDefineAccess>(), _fx.GetRequiredService<IDbConnectionManager>());
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("TableSchemaBuilder 比對結構一致的資料表應回傳 None")]
+        [DisplayName("TableSchemaBuilder returns None for a table whose structure matches")]
         public void Compare_UpToDateTable_ReturnsNoneAction()
         {
             var builder = NewBuilder("common_sqlserver");
@@ -33,7 +33,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("TableSchemaBuilder 取得命令文字應回傳空字串（結構已同步）")]
+        [DisplayName("TableSchemaBuilder returns an empty command text when the structure is in sync")]
         public void GetCommandText_UpToDateTable_ReturnsEmpty()
         {
             var builder = NewBuilder("common_sqlserver");
@@ -43,7 +43,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("TableSchemaBuilder Execute 結構已同步時應回傳 false")]
+        [DisplayName("TableSchemaBuilder Execute returns false when the structure is in sync")]
         public void Execute_UpToDateTable_ReturnsFalse()
         {
             var builder = NewBuilder("common_sqlserver");
@@ -53,18 +53,18 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("TableSchemaBuilder GetCommandText 對 company 類別已建立的 ft_project 應回傳空字串")]
+        [DisplayName("TableSchemaBuilder GetCommandText returns an empty string for the ft_project already created in the company category")]
         public void GetCommandText_CompanyCategoryUpToDate_SqlServer_ReturnsEmpty()
         {
-            // SharedDbFixture 已透過 SharedDatabaseState 在 SQL Server 上建立 company 類別的
-            // ft_project；故 diff 結果應為空。
+            // `SharedDbFixture` has already created ft_project of the company category on SQL Server through
+            // `SharedDatabaseState`, so the diff is empty.
             var builder = NewBuilder(TestDbConventions.GetDatabaseId(DatabaseType.SQLServer, "company"));
             string sql = builder.GetCommandText("company", "ft_project");
             Assert.Equal(string.Empty, sql);
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("TableSchemaBuilder GetCommandText PostgreSQL 對 company 類別已建立的 ft_project 應回傳空字串")]
+        [DisplayName("TableSchemaBuilder GetCommandText on PostgreSQL returns an empty string for the ft_project already created in the company category")]
         public void GetCommandText_CompanyCategoryUpToDate_PostgreSql_ReturnsEmpty()
         {
             var builder = NewBuilder(TestDbConventions.GetDatabaseId(DatabaseType.PostgreSQL, "company"));
@@ -73,7 +73,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("TableSchemaBuilder GetCommandText 有欄位差異時應回傳非空 ALTER SQL（SQL Server）")]
+        [DisplayName("TableSchemaBuilder GetCommandText returns non-empty ALTER SQL when a field differs (SQL Server)")]
         public void GetCommandText_OutOfSyncTable_SqlServer_ReturnsNonEmptyAlterSql()
         {
             var cm = _fx.GetRequiredService<IDbConnectionManager>();
@@ -86,7 +86,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("TableSchemaBuilder GetCommandText 有欄位差異時應回傳非空 ALTER SQL（PostgreSQL）")]
+        [DisplayName("TableSchemaBuilder GetCommandText returns non-empty ALTER SQL when a field differs (PostgreSQL)")]
         public void GetCommandText_OutOfSyncTable_PostgreSql_ReturnsNonEmptyAlterSql()
         {
             var cm = _fx.GetRequiredService<IDbConnectionManager>();

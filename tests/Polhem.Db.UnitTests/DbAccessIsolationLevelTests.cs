@@ -15,7 +15,7 @@ namespace Polhem.Db.UnitTests
 
         public DbAccessIsolationLevelTests(SharedDbFixture fx) { _fx = fx; }
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteBatch 以指定 IsolationLevel 執行批次交易應成功")]
+        [DisplayName("ExecuteBatch runs a batch transaction with the given IsolationLevel")]
         public void ExecuteBatch_WithIsolationLevel_Succeeds()
         {
             var batch = new DbBatchSpec
@@ -34,7 +34,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteBatchAsync 以指定 IsolationLevel 非同步執行批次交易應成功")]
+        [DisplayName("ExecuteBatchAsync runs a batch transaction asynchronously with the given IsolationLevel")]
         public async Task ExecuteBatchAsync_WithIsolationLevel_Succeeds()
         {
             var batch = new DbBatchSpec
@@ -53,7 +53,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteBatch 批次中含 DataTable 命令應成功回傳資料表")]
+        [DisplayName("ExecuteBatch returns the table of a DataTable command in the batch")]
         public void ExecuteBatch_DataTableCommand_Succeeds()
         {
             var batch = new DbBatchSpec { UseTransaction = false };
@@ -69,7 +69,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("ExecuteBatchAsync 批次中含 DataTable 命令非同步應成功回傳資料表")]
+        [DisplayName("ExecuteBatchAsync returns the table of a DataTable command in the batch")]
         public async Task ExecuteBatchAsync_DataTableCommand_Succeeds()
         {
             var batch = new DbBatchSpec { UseTransaction = false };
@@ -85,7 +85,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("UpdateDataTable 以指定 IsolationLevel 執行更新應成功")]
+        [DisplayName("UpdateDataTable updates with the given IsolationLevel")]
         public void UpdateDataTable_WithIsolationLevel_Succeeds()
         {
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
@@ -94,7 +94,7 @@ namespace Polhem.Db.UnitTests
                 "SELECT * FROM st_user WHERE sys_id = {0}", "001");
             var table = dbAccess.Execute(cmd).Table;
             Assert.NotNull(table);
-            Assert.True(table.Rows.Count > 0, "st_user 中無 sys_id='001' 的資料");
+            Assert.True(table.Rows.Count > 0, "st_user has no row with sys_id='001'");
 
             int rnd = RandomNumberGenerator.GetInt32(0, 100);
             table.Rows[0]["note"] = rnd.ToString(CultureInfo.InvariantCulture);

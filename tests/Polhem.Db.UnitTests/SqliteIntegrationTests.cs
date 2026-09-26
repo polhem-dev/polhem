@@ -20,7 +20,7 @@ namespace Polhem.Db.UnitTests
         public SqliteIntegrationTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite SchemaProvider 應讀回 fixture 建好的 st_user 表")]
+        [DisplayName("SQLite SchemaProvider reads back the st_user table created by the fixture")]
         public void SchemaProvider_ReadsFixtureTable()
         {
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.SQLite);
@@ -37,7 +37,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite SchemaProvider 應對不存在的表回傳 null")]
+        [DisplayName("SQLite SchemaProvider returns null for a table that does not exist")]
         public void SchemaProvider_UnknownTable_ReturnsNull()
         {
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.SQLite);
@@ -49,14 +49,14 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite text 欄位字串比對應為 case-insensitive（COLLATE NOCASE）")]
+        [DisplayName("SQLite compares text columns case-insensitively (COLLATE NOCASE)")]
         public void StringComparison_IsCaseInsensitive()
         {
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.SQLite);
             var dbAccess = _fx.NewDbAccess(databaseId);
 
-            // 手寫 minimal DDL 以聚焦於驗證 SQLite 對 COLLATE NOCASE 欄位的執行行為，
-            // 與 SqliteCreateTableCommandBuilder 純語法測試獨立。
+            // Minimal hand-written DDL, to focus on how SQLite executes with COLLATE NOCASE columns,
+            // independently of the pure syntax tests of `SqliteCreateTableCommandBuilder`.
             dbAccess.Execute(new Polhem.Db.DbCommandSpec(Polhem.Db.DbCommandKind.NonQuery,
                 "DROP TABLE IF EXISTS ci_test"));
             dbAccess.Execute(new Polhem.Db.DbCommandSpec(Polhem.Db.DbCommandKind.NonQuery,
@@ -81,15 +81,15 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite GUID 欄位比對應為 case-insensitive（COLLATE NOCASE，跨大小寫命中）")]
+        [DisplayName("SQLite compares GUID columns case-insensitively (COLLATE NOCASE, matching across casing)")]
         public void GuidComparison_IsCaseInsensitive()
         {
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.SQLite);
             var dbAccess = _fx.NewDbAccess(databaseId);
 
-            // 直接以 GUID 欄的實際宣告（UUID COLLATE NOCASE）建表，驗證 SQLite runtime
-            // 對 GUID 字串以大小寫無關方式比對 —— 這正是 master-detail reload 用 sys_master_rowid
-            // 當 key 比對時，避免明細因大小寫脫鉤而成孤兒所依賴的行為。
+            // Creates the table with the actual declaration of a GUID column (UUID COLLATE NOCASE) to verify that the
+            // SQLite runtime compares GUID strings case-insensitively. Master-detail reload relies on this when it
+            // compares sys_master_rowid keys, so that details do not become orphans because of casing.
             dbAccess.Execute(new Polhem.Db.DbCommandSpec(Polhem.Db.DbCommandKind.NonQuery,
                 "DROP TABLE IF EXISTS guid_ci_test"));
             dbAccess.Execute(new Polhem.Db.DbCommandSpec(Polhem.Db.DbCommandKind.NonQuery,
@@ -97,7 +97,7 @@ namespace Polhem.Db.UnitTests
 
             try
             {
-                // 以大寫存入（對齊 seed / provider TEXT 慣例），以小寫查回。
+                // Stored in upper case (matching the seed and the provider's TEXT convention), queried in lower case.
                 dbAccess.Execute(new Polhem.Db.DbCommandSpec(Polhem.Db.DbCommandKind.NonQuery,
                     "INSERT INTO guid_ci_test (sys_rowid) VALUES ({0})", "6689B38C-39D5-43B0-9682-27F9ADEEEDC5"));
 
@@ -115,13 +115,14 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite SchemaProvider 應讀回非主鍵的二級索引（含 unique 旗標）")]
+        [DisplayName("SQLite SchemaProvider reads back non-primary-key secondary indexes (including the unique flag)")]
         public void SchemaProvider_ReadsSecondaryIndexes()
         {
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.SQLite);
             var dbAccess = _fx.NewDbAccess(databaseId);
 
-            // 直接以最小 DDL 建立帶二級索引的表，驗證 ParseIndexes / ReadIndexFields 路徑。
+            // A table with secondary indexes created with minimal DDL, to exercise the `ParseIndexes` /
+            // `ReadIndexFields` path.
             dbAccess.Execute(new Polhem.Db.DbCommandSpec(Polhem.Db.DbCommandKind.NonQuery,
                 "DROP TABLE IF EXISTS idx_test"));
             dbAccess.Execute(new Polhem.Db.DbCommandSpec(Polhem.Db.DbCommandKind.NonQuery,
@@ -137,7 +138,7 @@ namespace Polhem.Db.UnitTests
                 var schema = provider.GetTableSchema("idx_test");
 
                 Assert.NotNull(schema);
-                // 預期：pk_idx_test（內部 rename 之 PK） + ix_idx_test_name + uk_idx_test_code
+                // Expected: pk_idx_test (the internally renamed PK) + ix_idx_test_name + uk_idx_test_code.
                 var nonPk = schema!.Indexes!.Where(i => !i.PrimaryKey).ToList();
                 Assert.Equal(2, nonPk.Count);
 
@@ -157,13 +158,14 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite SchemaProvider 應解析 NUMERIC(precision,scale) 並還原 Decimal 欄位的精度")]
+        [DisplayName("SQLite SchemaProvider parses NUMERIC(precision,scale) and restores the precision of a Decimal field")]
         public void SchemaProvider_ReadsDecimalPrecisionAndScale()
         {
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.SQLite);
             var dbAccess = _fx.NewDbAccess(databaseId);
 
-            // NUMERIC(12,3) 觸發 ParseTypeFacets 的多參數分支與 Decimal precision/scale 還原。
+            // NUMERIC(12,3) reaches the multi-argument branch of `ParseTypeFacets`
+            // and the Decimal precision/scale restore.
             dbAccess.Execute(new Polhem.Db.DbCommandSpec(Polhem.Db.DbCommandKind.NonQuery,
                 "DROP TABLE IF EXISTS dec_test"));
             dbAccess.Execute(new Polhem.Db.DbCommandSpec(Polhem.Db.DbCommandKind.NonQuery,
@@ -188,7 +190,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite 含 Guid 欄位的表建立後再比對應為 None（DB 端內建預設值不得造成永久 diff）")]
+        [DisplayName("SQLite comparison right after creating a table with a Guid field returns None (a database-side built-in default must not cause a permanent diff)")]
         public void SchemaComparer_AfterCreatingGuidColumn_ReportsNoUpgrade()
         {
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.SQLite);
@@ -196,8 +198,9 @@ namespace Polhem.Db.UnitTests
             var dbAccess = _fx.NewDbAccess(databaseId);
             const string tableName = "guid_default_test";
 
-            // Guid 欄位在 SQLite 帶 DB 端預設值 (hex(randomblob(16)))，但定義端 DefaultValue 為空字串。
-            // 若讀回後未正規化成同一形式，比對會永遠把該欄標為 Upgrade、整表無法收斂。
+            // On SQLite a Guid field carries a database-side default (hex(randomblob(16))), while the definition's
+            // DefaultValue is an empty string. Unless both are normalized to the same form when read back, the
+            // comparison would always mark the field for Upgrade and the table would never converge.
             var define = new TableSchema { TableName = tableName };
             define.Fields!.Add("sys_rowid", "Row ID", FieldDbType.Guid);
             define.Fields!.Add("name", "Name", FieldDbType.String, 50);

@@ -24,7 +24,7 @@ namespace Polhem.Db.UnitTests
         public UpdateDataTablesManualApplyTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite（SqliteDataAdapter）：UpdateDataTables 於同一交易處理 Added / Modified(no-op) / Deleted 不應拋錯")]
+        [DisplayName("SQLite (SqliteDataAdapter) UpdateDataTables handles Added / Modified (no-op) / Deleted in one transaction without throwing")]
         public void Sqlite_ManualApply_HandlesAllRowStatesInOneTransaction()
         {
             var dbAccess = _fx.NewDbAccess(TestDbConventions.GetDatabaseId(DatabaseType.SQLite));

@@ -11,7 +11,7 @@ namespace Polhem.Db.UnitTests
         public DbConnectionTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("OpenConnection 使用環境變數連線字串應成功連線")]
+        [DisplayName("OpenConnection connects with the connection string from the environment variable")]
         public void OpenConnection_WithEnvConnStr_Succeeds()
         {
             using var conn = _fx.GetRequiredService<IDbConnectionManager>().CreateConnection("common_sqlserver");

@@ -13,28 +13,28 @@ namespace Polhem.Db.UnitTests
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("DbAccess(string) databaseId 為空白應擲 ArgumentException")]
+        [DisplayName("DbAccess(string) throws ArgumentException for a blank databaseId")]
         public void Constructor_EmptyDatabaseId_Throws(string databaseId)
         {
             Assert.Throws<ArgumentException>(() => _fx.NewDbAccess(databaseId));
         }
 
         [Fact]
-        [DisplayName("DbAccess(string) databaseId 為 null 應擲 ArgumentNullException")]
+        [DisplayName("DbAccess(string) throws ArgumentNullException for a null databaseId")]
         public void Constructor_NullDatabaseId_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => _fx.NewDbAccess((string)null!));
         }
 
         [Fact]
-        [DisplayName("DbAccess(DbConnection) 連線為 null 應擲 ArgumentNullException")]
+        [DisplayName("DbAccess(DbConnection) throws ArgumentNullException for a null connection")]
         public void Constructor_NullExternalConnection_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new DbAccess((System.Data.Common.DbConnection)null!, DatabaseType.SQLServer));
         }
 
         [Fact]
-        [DisplayName("Execute(null) 應擲 ArgumentNullException")]
+        [DisplayName("Execute(null) throws ArgumentNullException")]
         public void Execute_NullCommand_Throws()
         {
             using var conn = new SqlConnection();
@@ -44,7 +44,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Execute(spec, null transaction) 應擲 ArgumentNullException")]
+        [DisplayName("Execute(spec, null transaction) throws ArgumentNullException")]
         public void Execute_NullTransaction_Throws()
         {
             using var conn = new SqlConnection();
@@ -55,7 +55,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecuteAsync(null) 應擲 ArgumentNullException")]
+        [DisplayName("ExecuteAsync(null) throws ArgumentNullException")]
         public async Task ExecuteAsync_NullCommand_Throws()
         {
             using var conn = new SqlConnection();
@@ -65,7 +65,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecuteAsync(spec, null transaction) 應擲 ArgumentNullException")]
+        [DisplayName("ExecuteAsync(spec, null transaction) throws ArgumentNullException")]
         public async Task ExecuteAsync_NullTransaction_Throws()
         {
             using var conn = new SqlConnection();
@@ -77,7 +77,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecuteBatch(null) 應擲 ArgumentNullException")]
+        [DisplayName("ExecuteBatch(null) throws ArgumentNullException")]
         public void ExecuteBatch_NullBatch_Throws()
         {
             using var conn = new SqlConnection();
@@ -87,19 +87,18 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecuteBatch 空 Commands 應擲 ArgumentException")]
+        [DisplayName("ExecuteBatch throws ArgumentException for empty Commands")]
         public void ExecuteBatch_EmptyCommands_Throws()
         {
             using var conn = new SqlConnection();
             var dbAccess = new DbAccess(conn, DatabaseType.SQLServer);
             var batch = new DbBatchSpec();
-            // Commands 預設為新的空集合
 
             Assert.Throws<ArgumentException>(() => dbAccess.ExecuteBatch(batch));
         }
 
         [Fact]
-        [DisplayName("ExecuteBatchAsync(null) 應擲 ArgumentNullException")]
+        [DisplayName("ExecuteBatchAsync(null) throws ArgumentNullException")]
         public async Task ExecuteBatchAsync_NullBatch_Throws()
         {
             using var conn = new SqlConnection();
@@ -110,7 +109,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecuteBatchAsync 空 Commands 應擲 ArgumentException")]
+        [DisplayName("ExecuteBatchAsync throws ArgumentException for empty Commands")]
         public async Task ExecuteBatchAsync_EmptyCommands_Throws()
         {
             using var conn = new SqlConnection();
@@ -122,7 +121,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("UpdateDataTable(null) 應擲 ArgumentNullException")]
+        [DisplayName("UpdateDataTable(null) throws ArgumentNullException")]
         public void UpdateDataTable_NullSpec_Throws()
         {
             using var conn = new SqlConnection();
@@ -132,7 +131,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("UpdateDataTable spec 全為 null command 應擲 ArgumentException")]
+        [DisplayName("UpdateDataTable throws ArgumentException when every command of the spec is null")]
         public void UpdateDataTable_AllNullCommands_Throws()
         {
             using var conn = new SqlConnection();
@@ -149,7 +148,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Query(null) 應擲 ArgumentNullException")]
+        [DisplayName("Query(null) throws ArgumentNullException")]
         public void Query_NullCommand_Throws()
         {
             using var conn = new SqlConnection();
@@ -159,7 +158,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("QueryAsync(null) 應擲 ArgumentNullException")]
+        [DisplayName("QueryAsync(null) throws ArgumentNullException")]
         public async Task QueryAsync_NullCommand_Throws()
         {
             using var conn = new SqlConnection();
@@ -170,7 +169,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ToString 應包含 DatabaseType 與 Provider 名稱")]
+        [DisplayName("ToString includes the DatabaseType and the provider name")]
         public void ToString_ContainsTypeAndProvider()
         {
             using var conn = new SqlConnection();
@@ -184,7 +183,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("UpdateDataTable DataTable 為 null 應擲 ArgumentException")]
+        [DisplayName("UpdateDataTable throws ArgumentException for a null DataTable")]
         public void UpdateDataTable_NullDataTable_ThrowsArgumentException()
         {
             using var conn = new SqlConnection();

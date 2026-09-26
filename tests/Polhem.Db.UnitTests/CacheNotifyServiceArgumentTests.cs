@@ -5,18 +5,18 @@ using Polhem.Definition.Database;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 針對 <see cref="CacheNotifyService"/> 的引數驗證純單元測試（不需資料庫連線）。
-    /// 補強 <c>TouchAsync</c> 的引數守衛覆蓋率：既有 DB 整合測試只呼叫
-    /// <c>Touch</c>，<c>TouchAsync</c> 的守衛行從未被執行。
+    /// Pure unit tests for the argument validation of <see cref="CacheNotifyService"/> (no database connection).
+    /// They cover the argument guards of <c>TouchAsync</c>: the existing database integration tests only call
+    /// <c>Touch</c>, so the guard lines of <c>TouchAsync</c> never ran.
     /// </summary>
     public class CacheNotifyServiceArgumentTests
     {
         private static readonly CacheNotifyService s_service = new();
 
-        #region TouchAsync 引數守衛
+        #region TouchAsync argument guards
 
         [Fact]
-        [DisplayName("TouchAsync: null cacheKey 應丟 ArgumentNullException")]
+        [DisplayName("TouchAsync throws ArgumentNullException for a null cacheKey")]
         public async Task TouchAsync_NullCacheKey_ThrowsArgumentNullException()
         {
             await Assert.ThrowsAsync<ArgumentNullException>(
@@ -26,7 +26,7 @@ namespace Polhem.Db.UnitTests
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("TouchAsync: 空白 cacheKey 應丟 ArgumentException")]
+        [DisplayName("TouchAsync throws ArgumentException for a blank cacheKey")]
         public async Task TouchAsync_WhitespaceCacheKey_ThrowsArgumentException(string cacheKey)
         {
             await Assert.ThrowsAsync<ArgumentException>(
@@ -34,7 +34,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("TouchAsync: null transaction 應丟 ArgumentNullException")]
+        [DisplayName("TouchAsync throws ArgumentNullException for a null transaction")]
         public async Task TouchAsync_NullTransaction_ThrowsArgumentNullException()
         {
             await Assert.ThrowsAsync<ArgumentNullException>(
@@ -43,10 +43,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region Touch 引數守衛
+        #region Touch argument guards
 
         [Fact]
-        [DisplayName("Touch: null cacheKey 應丟 ArgumentNullException")]
+        [DisplayName("Touch throws ArgumentNullException for a null cacheKey")]
         public void Touch_NullCacheKey_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => s_service.Touch(null!, null!, DatabaseType.SQLServer));
@@ -55,14 +55,14 @@ namespace Polhem.Db.UnitTests
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("Touch: 空白 cacheKey 應丟 ArgumentException")]
+        [DisplayName("Touch throws ArgumentException for a blank cacheKey")]
         public void Touch_WhitespaceCacheKey_ThrowsArgumentException(string cacheKey)
         {
             Assert.Throws<ArgumentException>(() => s_service.Touch(cacheKey, null!, DatabaseType.SQLServer));
         }
 
         [Fact]
-        [DisplayName("Touch: null transaction 應丟 ArgumentNullException")]
+        [DisplayName("Touch throws ArgumentNullException for a null transaction")]
         public void Touch_NullTransaction_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => s_service.Touch("key", null!, DatabaseType.SQLServer));

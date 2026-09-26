@@ -9,7 +9,7 @@ namespace Polhem.Db.UnitTests
     public class DbProviderRegistryTests
     {
         [Fact]
-        [DisplayName("Register factory 為 null 應擲 ArgumentNullException")]
+        [DisplayName("Register throws ArgumentNullException for a null factory")]
         public void Register_NullFactory_Throws()
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -17,11 +17,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Get 未註冊型別應擲 KeyNotFoundException")]
+        [DisplayName("Get throws KeyNotFoundException for an unregistered type")]
         public void Get_UnregisteredType_Throws()
         {
-            // GlobalFixture 註冊全部既定 DatabaseType；改用 enum 範圍外的整數
-            // 作為「永遠不會被註冊」的 placeholder。
+            // `GlobalFixture` registers every defined `DatabaseType`, so an integer outside the enum range serves as
+            // a placeholder that is never registered.
             Assert.Throws<KeyNotFoundException>(() =>
                 DbProviderRegistry.Get((DatabaseType)9999));
         }
@@ -31,7 +31,7 @@ namespace Polhem.Db.UnitTests
             public WithInitializedFixture(Polhem.Tests.Shared.SharedDbFixture _) { }
 
             [Fact]
-            [DisplayName("Get 已註冊型別應回傳對應 factory（透過 fixture 註冊）")]
+            [DisplayName("Get returns the matching factory for a registered type (registered by the fixture)")]
             public void Get_RegisteredType_ReturnsFactory()
             {
                 var factory = DbProviderRegistry.Get(DatabaseType.SQLServer);
@@ -41,10 +41,10 @@ namespace Polhem.Db.UnitTests
             }
 
             [Fact]
-            [DisplayName("Register 重複呼叫應以新值取代舊值")]
+            [DisplayName("Calling Register again replaces the old value with the new one")]
             public void Register_ReplacesExistingFactory()
             {
-                // 紀錄目前 factory，測試結束後還原
+                // Remember the current factory so it can be restored after the test.
                 var original = DbProviderRegistry.Get(DatabaseType.SQLServer);
                 try
                 {

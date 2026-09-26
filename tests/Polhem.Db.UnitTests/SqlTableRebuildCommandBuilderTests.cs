@@ -35,7 +35,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCommandText：rebuild 腳本應含 tmp 表建立、INSERT 與 rename")]
+        [DisplayName("GetCommandText rebuild script creates the tmp table, INSERTs and renames")]
         public void GetCommandText_BasicRebuild_IncludesTmpCreateInsertAndRename()
         {
             var define = BuildDefineSchema();
@@ -50,7 +50,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCommandText：新增欄位不應出現在 INSERT ... SELECT 清單")]
+        [DisplayName("GetCommandText leaves a new field out of the INSERT ... SELECT list")]
         public void GetCommandText_AddedField_ExcludedFromDataCopy()
         {
             var define = BuildDefineSchema();
@@ -59,9 +59,9 @@ namespace Polhem.Db.UnitTests
 
             var sql = new SqlTableRebuildCommandBuilder().GetCommandText(diff);
 
-            // 新欄位 age 應在 tmp 定義中出現
+            // The new age field appears in the tmp definition,
             Assert.Contains("[age]", sql);
-            // 但 INSERT 欄位清單不應含 age（只複製既有欄位 id, name）
+            // but not in the INSERT column list (only the existing id and name are copied).
             int insertIdx = sql.IndexOf("INSERT INTO [tmp_st_demo]", StringComparison.Ordinal);
             int selectIdx = sql.IndexOf("FROM [st_demo]", insertIdx, StringComparison.Ordinal);
             string insertSelectSection = sql.Substring(insertIdx, selectIdx - insertIdx);
@@ -69,7 +69,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCommandText：real-only 欄位（extension field）應保留於 rebuild 結果")]
+        [DisplayName("GetCommandText keeps a real-only field (extension field) in the rebuild result")]
         public void GetCommandText_ExtensionField_Preserved()
         {
             var define = BuildDefineSchema();
@@ -82,7 +82,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCommandText：new-table diff 應 throw（應改走 CREATE 路徑）")]
+        [DisplayName("GetCommandText throws for a new-table diff (which must take the CREATE path)")]
         public void GetCommandText_NewTableDiff_Throws()
         {
             var define = BuildDefineSchema();

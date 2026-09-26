@@ -19,7 +19,7 @@ namespace Polhem.Db.UnitTests
         public MySqlIntegrationTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL SchemaProvider 應讀回 fixture 建好的 st_user 表")]
+        [DisplayName("MySQL SchemaProvider reads back the st_user table created by the fixture")]
         public void SchemaProvider_ReadsFixtureTable()
         {
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.MySQL);
@@ -36,7 +36,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL SchemaProvider 應對不存在的表回傳 null")]
+        [DisplayName("MySQL SchemaProvider returns null for a table that does not exist")]
         public void SchemaProvider_UnknownTable_ReturnsNull()
         {
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.MySQL);
@@ -48,14 +48,14 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL 文字欄位字串比對應為 case-insensitive（utf8mb4_0900_ai_ci）")]
+        [DisplayName("MySQL compares text columns case-insensitively (utf8mb4_0900_ai_ci)")]
         public void StringComparison_IsCaseInsensitive()
         {
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.MySQL);
             var dbAccess = _fx.NewDbAccess(databaseId);
 
-            // 手寫 minimal DDL 以聚焦於驗證 MySQL 對 utf8mb4_0900_ai_ci collation 的執行行為，
-            // 與 MySqlCreateTableCommandBuilder 純語法測試獨立。
+            // Minimal hand-written DDL, to focus on how MySQL executes with the utf8mb4_0900_ai_ci collation,
+            // independently of the pure syntax tests of `MySqlCreateTableCommandBuilder`.
             dbAccess.Execute(new Polhem.Db.DbCommandSpec(Polhem.Db.DbCommandKind.NonQuery,
                 "DROP TABLE IF EXISTS ci_test"));
             dbAccess.Execute(new Polhem.Db.DbCommandSpec(Polhem.Db.DbCommandKind.NonQuery,

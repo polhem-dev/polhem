@@ -11,9 +11,9 @@ using Polhem.Db.Manager;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 純語法測試：覆蓋 <see cref="SqliteDialectFactory"/> 的 factory 方法。
-    /// 只驗證回傳的具體型別與委派至 SqliteSchemaSyntax.GetDefaultValueExpression 的一致性，
-    /// 不觸及任何資料庫連線。
+    /// Pure syntax tests covering the factory methods of <see cref="SqliteDialectFactory"/>. They only check the
+    /// concrete types returned and the consistency of the delegation to
+    /// <c>SqliteSchemaSyntax.GetDefaultValueExpression</c>, without touching any database connection.
     /// </summary>
     public class SqliteDialectFactoryTests : IClassFixture<SharedDbFixture>
     {
@@ -23,17 +23,18 @@ namespace Polhem.Db.UnitTests
         private readonly SqliteDialectFactory _factory = new();
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SqliteDialectFactory：CreateTableSchemaProvider 應回傳 SqliteTableSchemaProvider")]
+        [DisplayName("SqliteDialectFactory CreateTableSchemaProvider returns a SqliteTableSchemaProvider")]
         public void CreateTableSchemaProvider_ReturnsSqliteImpl()
         {
-            // 需要實際 databaseId（DbAccess 建構需查 connection registry），改以 DbFact 限制執行條件。
+            // A real databaseId is needed (constructing `DbAccess` looks up the connection registry), so `DbFact`
+            // restricts when it runs.
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.SQLite);
             ITableSchemaProvider provider = _factory.CreateTableSchemaProvider(databaseId, _fx.GetRequiredService<IDbConnectionManager>());
             Assert.IsType<SqliteTableSchemaProvider>(provider);
         }
 
         [Fact]
-        [DisplayName("SqliteDialectFactory：CreateCreateTableCommandBuilder 應回傳 SqliteCreateTableCommandBuilder")]
+        [DisplayName("SqliteDialectFactory CreateCreateTableCommandBuilder returns a SqliteCreateTableCommandBuilder")]
         public void CreateCreateTableCommandBuilder_ReturnsSqliteImpl()
         {
             ICreateTableCommandBuilder builder = _factory.CreateCreateTableCommandBuilder();
@@ -41,7 +42,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SqliteDialectFactory：CreateTableAlterCommandBuilder 應回傳 SqliteTableAlterCommandBuilder")]
+        [DisplayName("SqliteDialectFactory CreateTableAlterCommandBuilder returns a SqliteTableAlterCommandBuilder")]
         public void CreateTableAlterCommandBuilder_ReturnsSqliteImpl()
         {
             ITableAlterCommandBuilder builder = _factory.CreateTableAlterCommandBuilder();
@@ -49,7 +50,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SqliteDialectFactory：CreateTableRebuildCommandBuilder 應回傳 SqliteTableRebuildCommandBuilder")]
+        [DisplayName("SqliteDialectFactory CreateTableRebuildCommandBuilder returns a SqliteTableRebuildCommandBuilder")]
         public void CreateTableRebuildCommandBuilder_ReturnsSqliteImpl()
         {
             ITableRebuildCommandBuilder builder = _factory.CreateTableRebuildCommandBuilder();
@@ -57,7 +58,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SqliteDialectFactory：CreateFormCommandBuilder 應回傳 SqliteFormCommandBuilder")]
+        [DisplayName("SqliteDialectFactory CreateFormCommandBuilder returns a SqliteFormCommandBuilder")]
         public void CreateFormCommandBuilder_ReturnsSqliteImpl()
         {
             var defineAccess = _fx.GetRequiredService<IDefineAccess>();
@@ -73,7 +74,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Integer, "0")]
         [InlineData(FieldDbType.DateTime, "CURRENT_TIMESTAMP")]
         [InlineData(FieldDbType.Guid, "(hex(randomblob(16)))")]
-        [DisplayName("SqliteDialectFactory：GetDefaultValueExpression 應委派至 SqliteSchemaSyntax")]
+        [DisplayName("SqliteDialectFactory GetDefaultValueExpression delegates to SqliteSchemaSyntax")]
         public void GetDefaultValueExpression_DelegatesToHelper(FieldDbType dbType, string expected)
         {
             Assert.Equal(expected, _factory.GetDefaultValueExpression(dbType));

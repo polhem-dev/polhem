@@ -49,7 +49,7 @@ namespace Polhem.Db.UnitTests.Dml
         // ---- tests ---------------------------------------------------------
 
         [Fact]
-        [DisplayName("建構子 defineAccess 為 null 應擲 ArgumentNullException")]
+        [DisplayName("The constructor throws ArgumentNullException for a null defineAccess")]
         public void Constructor_NullDefineAccess_Throws()
         {
             var table = NewMainTable();
@@ -58,7 +58,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 外鍵欄位可解析時應建立 JOIN 與 QueryFieldMapping")]
+        [DisplayName("Build creates a JOIN and a QueryFieldMapping when the foreign key field resolves")]
         public void Build_ResolvableForeignKey_ProducesJoinAndMapping()
         {
             var table = NewMainTable();
@@ -76,7 +76,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 關係 FormSchema 不存在應擲 InvalidOperationException")]
+        [DisplayName("Build throws InvalidOperationException when the relation FormSchema does not exist")]
         public void Build_RelationSchemaNotFound_Throws()
         {
             var table = NewMainTable();
@@ -91,7 +91,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 來源欄位不存在於關係資料表應擲 InvalidOperationException")]
+        [DisplayName("Build throws InvalidOperationException when the source field is not in the relation table")]
         public void Build_SourceFieldNotFound_Throws()
         {
             var table = NewMainTable();
@@ -107,7 +107,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 外鍵欄位 RelationFieldMappings 為 null 時應略過該欄位")]
+        [DisplayName("Build skips a foreign key field whose RelationFieldMappings is null")]
         public void Build_ForeignKeyWithNullMappings_SkipsField()
         {
             var table = NewMainTable();
@@ -124,7 +124,7 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build 產生足夠多的 JOIN 時應跳過 SQL 保留字別名（BY）")]
+        [DisplayName("Build skips the SQL reserved word alias (BY) when it produces enough JOINs")]
         public void Build_ManyJoins_SkipsReservedKeywordAlias()
         {
             // Alias progression is A, B..Z, BA..BZ. The 50th generated alias would be "BY",

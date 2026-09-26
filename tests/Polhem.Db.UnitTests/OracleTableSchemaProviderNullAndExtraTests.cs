@@ -8,39 +8,39 @@ using Polhem.Db.Manager;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 補充 <see cref="OracleTableSchemaProvider"/> NormalizeDataTypeName 邊界路徑：
-    /// null/empty 輸入、括號後有後綴文字、只有左括號無右括號。
+    /// Additional edge paths of <c>NormalizeDataTypeName</c> in <see cref="OracleTableSchemaProvider"/>: null/empty
+    /// input, trailing text after the parentheses, and an opening parenthesis without a closing one.
     /// </summary>
     public class OracleTableSchemaProviderNullTests
     {
         [Fact]
-        [DisplayName("Oracle GetFieldDbType null 輸入應回傳 Unknown")]
+        [DisplayName("Oracle GetFieldDbType returns Unknown for null input")]
         public void GetFieldDbType_NullDataType_ReturnsUnknown()
         {
             Assert.Equal(FieldDbType.Unknown, OracleTableSchemaProvider.GetFieldDbType(null!, 0, 0, 0));
         }
 
         [Fact]
-        [DisplayName("Oracle GetFieldDbType 空字串輸入應回傳 Unknown")]
+        [DisplayName("Oracle GetFieldDbType returns Unknown for an empty string")]
         public void GetFieldDbType_EmptyDataType_ReturnsUnknown()
         {
             Assert.Equal(FieldDbType.Unknown, OracleTableSchemaProvider.GetFieldDbType(string.Empty, 0, 0, 0));
         }
 
         [Fact]
-        [DisplayName("Oracle GetFieldDbType TIMESTAMP(6) WITH TIME ZONE 應回傳 Unknown（NormalizeDataTypeName 括號後有後綴文字的 after 分支）")]
+        [DisplayName("Oracle GetFieldDbType returns Unknown for TIMESTAMP(6) WITH TIME ZONE (the after branch of NormalizeDataTypeName with text after the parentheses)")]
         public void GetFieldDbType_TimestampWithTimeZoneQualifier_ReturnsUnknown()
         {
             // NormalizeDataTypeName("TIMESTAMP(6) WITH TIME ZONE"):
             // lower="timestamp(6) with time zone", parenStart=9, parenEnd=11
             // before="timestamp", after=" with time zone" → result="timestamp with time zone"
-            // → 不在 switch → Unknown
+            // → not in the switch → Unknown
             Assert.Equal(FieldDbType.Unknown,
                 OracleTableSchemaProvider.GetFieldDbType("TIMESTAMP(6) WITH TIME ZONE", 0, 0, 0));
         }
 
         [Fact]
-        [DisplayName("Oracle GetFieldDbType 只有左括號無右括號時應回傳 Unknown（NormalizeDataTypeName parenEnd<0 分支）")]
+        [DisplayName("Oracle GetFieldDbType returns Unknown for an opening parenthesis without a closing one (the parenEnd<0 branch of NormalizeDataTypeName)")]
         public void GetFieldDbType_TypeWithOpenParenNoCloseParen_ReturnsUnknown()
         {
             // NormalizeDataTypeName("FLOAT("):
@@ -52,10 +52,9 @@ namespace Polhem.Db.UnitTests
     }
 
     /// <summary>
-    /// <see cref="OracleTableSchemaProvider"/> 整合測試：
-    /// 驗證 <c>ParseDbField</c> Decimal 分支（Precision/Scale 賦值）與
-    /// <c>ParsePrimaryKey</c> 在無主鍵時的提前返回路徑。
-    /// 依賴 Oracle 連線；環境變數未設時自動跳過。
+    /// Integration tests for <see cref="OracleTableSchemaProvider"/>: the Decimal branch of <c>ParseDbField</c>
+    /// (assigning Precision/Scale) and the early return of <c>ParsePrimaryKey</c> when there is no primary key.
+    /// Requires an Oracle connection; skipped automatically when the environment variable is not set.
     /// </summary>
     public class OracleTableSchemaProviderDecimalAndNoPkTests : IClassFixture<SharedDbFixture>
     {
@@ -64,7 +63,7 @@ namespace Polhem.Db.UnitTests
 
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle SchemaProvider 讀回 NUMBER(15,3) 欄位時應正確設定 Precision 與 Scale（ParseDbField Decimal 分支）")]
+        [DisplayName("Oracle SchemaProvider sets Precision and Scale when reading back a NUMBER(15,3) field (ParseDbField Decimal branch)")]
         public void GetTableSchema_DecimalField_ReturnsPrecisionAndScale()
         {
             const string tableName = "tb_ex_decimal";
@@ -96,7 +95,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle SchemaProvider 讀取只有唯一索引（無 PK）的資料表時 ParsePrimaryKey 應提前返回且唯一索引仍正確解析")]
+        [DisplayName("Oracle SchemaProvider reading a table with only a unique index (no PK) returns early from ParsePrimaryKey and still parses the unique index")]
         public void GetTableSchema_TableWithUniqueIndexNoPk_ParsePrimaryKeyReturnsEarlyAndIndexPresent()
         {
             const string tableName = "tb_ex_nopk";

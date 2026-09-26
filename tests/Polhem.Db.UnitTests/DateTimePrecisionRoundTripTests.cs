@@ -35,7 +35,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：亞毫秒 DateTime 經參數寫入 datetime2(7) 應無精度遺失")]
+        [DisplayName("SQL Server writes a sub-millisecond DateTime parameter into datetime2(7) without losing precision")]
         public void RoundTrip_SqlServer_SubMillisecondPrecisionPreserved()
         {
             const string drop = "IF OBJECT_ID(N'dt_precision_test', N'U') IS NOT NULL DROP TABLE [dt_precision_test];";
@@ -54,7 +54,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：pre-1753 的 DateTime 經參數寫入 datetime2 不應拋溢位")]
+        [DisplayName("SQL Server writes a pre-1753 DateTime parameter into datetime2 without an overflow")]
         public void RoundTrip_SqlServer_Pre1753RangeAccepted()
         {
             const string drop = "IF OBJECT_ID(N'dt_precision_test', N'U') IS NOT NULL DROP TABLE [dt_precision_test];";

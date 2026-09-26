@@ -30,7 +30,7 @@ namespace Polhem.Db.UnitTests
         [InlineData("uuid", 0, 0, 0, FieldDbType.Guid)]
         [InlineData("bytea", 0, 0, 0, FieldDbType.Binary)]
         [InlineData("json", 0, 0, 0, FieldDbType.Unknown)]
-        [DisplayName("PG GetFieldDbType 應正確映射各 PostgreSQL 型別")]
+        [DisplayName("PG GetFieldDbType maps each PostgreSQL type")]
         public void GetFieldDbType_VariousPgTypes_MapsCorrectly(
             string dataType, int precision, int scale, int length, FieldDbType expected)
         {
@@ -40,7 +40,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG GetFieldDbType 應對輸入字串大小寫不敏感")]
+        [DisplayName("PG GetFieldDbType ignores the case of the input string")]
         public void GetFieldDbType_CaseInsensitive()
         {
             Assert.Equal(FieldDbType.Integer, PgTableSchemaProvider.GetFieldDbType("INTEGER", 0, 0, 0));
@@ -65,7 +65,7 @@ namespace Polhem.Db.UnitTests
         [InlineData("date", "(NOW() AT TIME ZONE 'UTC')", "", "(NOW() AT TIME ZONE 'UTC')")]
         [InlineData("timestamp", "(NOW() AT TIME ZONE 'UTC')", "", "(NOW() AT TIME ZONE 'UTC')")]
         [InlineData("uuid", "gen_random_uuid()", "", "gen_random_uuid()")]
-        [DisplayName("PG ParseDBDefaultValue 應依型別剝除 ::cast 與字串引號")]
+        [DisplayName("PG ParseDBDefaultValue strips the ::cast and the string quotes by type")]
         public void ParseDBDefaultValue_StripsCastAndQuotes(
             string dataType, string defaultValue, string originalDefault, string expected)
         {
@@ -75,27 +75,29 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG ParseDBDefaultValue 與內建預設值相同時應回傳空字串")]
+        [DisplayName("PG ParseDBDefaultValue returns an empty string when the value equals the built-in default")]
         public void ParseDBDefaultValue_MatchesBuiltinDefault_ReturnsEmpty()
         {
-            // integer 預設值通常為 "0"；剝除可能的 cast 後為 "0"，與內建相同 → 空字串
+            // An integer default is usually "0"; after stripping any cast it is "0", equal to the built-in one, so the
+            // result is an empty string.
             var result = PgTableSchemaProvider.ParseDBDefaultValue("integer", "0", "0");
 
             Assert.Equal(string.Empty, result);
         }
 
         [Fact]
-        [DisplayName("PG ParseDBDefaultValue boolean false 規範化為 0 並與內建相同時回空字串")]
+        [DisplayName("PG ParseDBDefaultValue normalizes boolean false to 0 and returns an empty string when it equals the built-in default")]
         public void ParseDBDefaultValue_BooleanFalseMatchesBuiltin_ReturnsEmpty()
         {
-            // PG 內建 boolean 預設為 "0"（canonical form）；DB 回 "false" 被規範化為 "0" → 空字串
+            // The built-in PostgreSQL boolean default is "0" (the canonical form). The database returns "false", which
+            // normalizes to "0", so the result is an empty string.
             var result = PgTableSchemaProvider.ParseDBDefaultValue("boolean", "false", "0");
 
             Assert.Equal(string.Empty, result);
         }
 
         [Fact]
-        [DisplayName("PG ParseDBDefaultValue 字串型別 escape 之雙引號應還原")]
+        [DisplayName("PG ParseDBDefaultValue restores escaped doubled quotes of a string type")]
         public void ParseDBDefaultValue_EscapedQuoteInString_Unescaped()
         {
             var result = PgTableSchemaProvider.ParseDBDefaultValue(
@@ -105,7 +107,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG ParseDBDefaultValue 空字串輸入應回傳空字串")]
+        [DisplayName("PG ParseDBDefaultValue returns an empty string for empty input")]
         public void ParseDBDefaultValue_EmptyInput_ReturnsEmpty()
         {
             var result = PgTableSchemaProvider.ParseDBDefaultValue("integer", string.Empty, "0");

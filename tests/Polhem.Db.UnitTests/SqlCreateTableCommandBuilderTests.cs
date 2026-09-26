@@ -22,7 +22,7 @@ namespace Polhem.Db.UnitTests
             return schema;
         }
 
-        #region ConverDbType 各 FieldDbType 分支
+        #region ConverDbType branches per FieldDbType
 
         [Theory]
         [InlineData(FieldDbType.Boolean, "[bit]")]
@@ -37,7 +37,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(FieldDbType.Guid, "[uniqueidentifier]")]
         [InlineData(FieldDbType.Binary, "[varbinary](max)")]
         [InlineData(FieldDbType.Text, "[nvarchar](max)")]
-        [DisplayName("GetCommandText 應為各 FieldDbType 產生對應的 SQL Server 型別字串")]
+        [DisplayName("GetCommandText produces the matching SQL Server type string for each FieldDbType")]
         public void GetCommandText_FieldDbType_GeneratesCorrectColumnType(FieldDbType dbType, string expectedFragment)
         {
             var schema = BuildSchema(dbType);
@@ -49,7 +49,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCommandText String 型別應使用指定的長度")]
+        [DisplayName("GetCommandText uses the given length for the String type")]
         public void GetCommandText_String_UsesLength()
         {
             var schema = BuildSchema(FieldDbType.String, length: 50);
@@ -61,7 +61,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCommandText Decimal 應使用指定的 Precision/Scale")]
+        [DisplayName("GetCommandText uses the given Precision/Scale for Decimal")]
         public void GetCommandText_Decimal_UsesPrecisionAndScale()
         {
             var schema = BuildSchema(FieldDbType.Decimal, precision: 12, scale: 3);
@@ -73,7 +73,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetCommandText 不支援的 FieldDbType 應擲出 InvalidOperationException")]
+        [DisplayName("GetCommandText throws InvalidOperationException for an unsupported FieldDbType")]
         public void GetCommandText_UnknownDbType_Throws()
         {
             var schema = BuildSchema(FieldDbType.Unknown);
@@ -84,10 +84,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region 結構與分支
+        #region Structure and branches
 
         [Fact]
-        [DisplayName("GetCommandText UpgradeAction.New 應產生 CREATE TABLE 語句")]
+        [DisplayName("GetCommandText produces a CREATE TABLE statement for UpgradeAction.New")]
         public void GetCommandText_New_GeneratesCreateTable()
         {
             var schema = BuildSchema(FieldDbType.Integer);
@@ -101,7 +101,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("含 PrimaryKey 索引時應產生 CONSTRAINT ... PRIMARY KEY 語句")]
+        [DisplayName("A PrimaryKey index produces a CONSTRAINT ... PRIMARY KEY statement")]
         public void GetCommandText_PrimaryKey_GeneratesConstraint()
         {
             var schema = BuildSchema(FieldDbType.Integer);
@@ -114,7 +114,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("含獨立索引時應產生 CREATE INDEX 與 CREATE UNIQUE INDEX")]
+        [DisplayName("Separate indexes produce CREATE INDEX and CREATE UNIQUE INDEX")]
         public void GetCommandText_Indexes_GeneratesCreateIndex()
         {
             var schema = BuildSchema(FieldDbType.Integer);
@@ -130,7 +130,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("AllowNull 欄位應產生 NULL 標記且無 DEFAULT 子句")]
+        [DisplayName("An AllowNull field produces the NULL marker and no DEFAULT clause")]
         public void GetCommandText_AllowNull_GeneratesNullWithoutDefault()
         {
             var schema = BuildSchema(FieldDbType.Integer, allowNull: true);
@@ -143,7 +143,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("非 AllowNull Integer 欄位應產生 NOT NULL DEFAULT (0)")]
+        [DisplayName("A non-AllowNull Integer field produces NOT NULL DEFAULT (0)")]
         public void GetCommandText_NotNullInteger_GeneratesDefaultZero()
         {
             var schema = BuildSchema(FieldDbType.Integer);
@@ -155,7 +155,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("String 欄位應產生 N'...' 預設值")]
+        [DisplayName("A String field produces an N'...' default")]
         public void GetCommandText_String_GeneratesNStringDefault()
         {
             var schema = BuildSchema(FieldDbType.String, length: 20);
@@ -167,7 +167,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("自訂 DefaultValue 應寫入 DEFAULT 子句")]
+        [DisplayName("A custom DefaultValue is written into the DEFAULT clause")]
         public void GetCommandText_CustomDefault_AppliedToColumn()
         {
             var schema = BuildSchema(FieldDbType.Integer, defaultValue: "42");
@@ -179,7 +179,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("DateTime 欄位應使用 getutcdate() 作為預設值")]
+        [DisplayName("A DateTime field uses getutcdate() as the default")]
         public void GetCommandText_DateTime_DefaultGetdate()
         {
             var schema = BuildSchema(FieldDbType.DateTime);
@@ -191,7 +191,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("Guid 欄位應使用 newid() 作為預設值")]
+        [DisplayName("A Guid field uses newid() as the default")]
         public void GetCommandText_Guid_DefaultNewid()
         {
             var schema = BuildSchema(FieldDbType.Guid);
@@ -203,7 +203,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("AutoIncrement 欄位不應產生 DEFAULT 子句")]
+        [DisplayName("An AutoIncrement field produces no DEFAULT clause")]
         public void GetCommandText_AutoIncrement_NoDefault()
         {
             var schema = BuildSchema(FieldDbType.AutoIncrement);
@@ -217,10 +217,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region Extended property (description) 產出
+        #region Extended property (description) output
 
         [Fact]
-        [DisplayName("GetCommandText 有 DisplayName 與 Caption 時應產生 sp_addextendedproperty")]
+        [DisplayName("GetCommandText produces sp_addextendedproperty when DisplayName and Caption are set")]
         public void GetCommandText_WithDisplayNameAndCaption_IncludesExtendedProperty()
         {
             var schema = BuildSchema(FieldDbType.Integer);
@@ -230,53 +230,52 @@ namespace Polhem.Db.UnitTests
             var builder = new SqlCreateTableCommandBuilder();
             string sql = builder.GetCommandText(schema);
 
-            // 表層
+            // Table level.
             Assert.Contains("EXEC sp_addextendedproperty", sql);
             Assert.Contains("@value=N'示範資料表'", sql);
             Assert.Contains("@level1type=N'TABLE', @level1name=N'st_demo'", sql);
-            // 欄位層
+            // Field level.
             Assert.Contains("@value=N'數值欄位'", sql);
             Assert.Contains("@level2type=N'COLUMN', @level2name=N'col'", sql);
         }
 
         [Fact]
-        [DisplayName("GetCommandText DisplayName 為空時不產生表層 sp_addextendedproperty")]
+        [DisplayName("GetCommandText produces no table-level sp_addextendedproperty when DisplayName is empty")]
         public void GetCommandText_WithEmptyDisplayName_OmitsTableExtendedProperty()
         {
             var schema = BuildSchema(FieldDbType.Integer);
-            // DisplayName 預設即為空，只設欄位 Caption
+            // DisplayName is empty by default; only the field Caption is set.
             schema.Fields!["col"].Caption = "數值欄位";
 
             var builder = new SqlCreateTableCommandBuilder();
             string sql = builder.GetCommandText(schema);
 
-            // 不應有表層 extended property（無 level2 的那條）
+            // No table-level extended property (the one without level2),
             Assert.DoesNotContain("@level1type=N'TABLE', @level1name=N'st_demo';", sql);
-            // 但欄位層仍應產出
+            // but the field level is still produced.
             Assert.Contains("@level2type=N'COLUMN', @level2name=N'col'", sql);
         }
 
         [Fact]
-        [DisplayName("GetCommandText Caption 為空的欄位不產生欄位層 sp_addextendedproperty")]
+        [DisplayName("GetCommandText produces no field-level sp_addextendedproperty for a field with an empty Caption")]
         public void GetCommandText_WithEmptyCaption_OmitsColumnExtendedProperty()
         {
             var schema = BuildSchema(FieldDbType.Integer);
             schema.DisplayName = "示範資料表";
-            // 把欄位 Caption 清空
             schema.Fields!["col"].Caption = string.Empty;
             schema.Fields![SysFields.RowId].Caption = string.Empty;
 
             var builder = new SqlCreateTableCommandBuilder();
             string sql = builder.GetCommandText(schema);
 
-            // 表層有
+            // Table level present.
             Assert.Contains("@value=N'示範資料表'", sql);
-            // 欄位層無
+            // Field level absent.
             Assert.DoesNotContain("@level2type=N'COLUMN'", sql);
         }
 
         [Fact]
-        [DisplayName("GetCommandText 含單引號時應正確 escape 為雙單引號")]
+        [DisplayName("GetCommandText escapes a single quote as two single quotes")]
         public void GetCommandText_WithSingleQuote_EscapesCorrectly()
         {
             var schema = BuildSchema(FieldDbType.Integer);

@@ -6,13 +6,13 @@ using Polhem.Definition.Database;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 純語法測試：覆蓋 <see cref="PgSchemaSyntax"/> 對 Boolean default 的跨方言翻譯。
-    /// 規範形式統一為 "1"/"0"，PG 拼接層翻譯為 TRUE/FALSE。
+    /// Pure syntax tests covering how <see cref="PgSchemaSyntax"/> translates a Boolean default across dialects.
+    /// The canonical form is "1"/"0", which the PostgreSQL concatenation layer translates to TRUE/FALSE.
     /// </summary>
     public class PgSchemaSyntaxTests
     {
         [Fact]
-        [DisplayName("PG GetDefaultExpression Boolean DefaultValue=1 應回傳 TRUE")]
+        [DisplayName("PG GetDefaultExpression returns TRUE for a Boolean with DefaultValue=1")]
         public void GetDefaultExpression_BooleanTrue_ReturnsTrue()
         {
             var field = new DbField("enabled", "Enabled", FieldDbType.Boolean) { DefaultValue = "1" };
@@ -20,7 +20,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG GetDefaultExpression Boolean DefaultValue=0 應回傳 FALSE")]
+        [DisplayName("PG GetDefaultExpression returns FALSE for a Boolean with DefaultValue=0")]
         public void GetDefaultExpression_BooleanFalse_ReturnsFalse()
         {
             var field = new DbField("enabled", "Enabled", FieldDbType.Boolean) { DefaultValue = "0" };
@@ -28,7 +28,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG GetDefaultExpression Boolean 無自訂預設應回傳 FALSE（內建 0 → FALSE）")]
+        [DisplayName("PG GetDefaultExpression returns FALSE for a Boolean without a custom default (built-in 0 → FALSE)")]
         public void GetDefaultExpression_BooleanNoCustom_ReturnsFalse()
         {
             var field = new DbField("enabled", "Enabled", FieldDbType.Boolean);
@@ -36,7 +36,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG GetDefaultExpression Boolean AllowNull 應回傳空字串（無 DEFAULT 子句）")]
+        [DisplayName("PG GetDefaultExpression returns an empty string for an AllowNull Boolean (no DEFAULT clause)")]
         public void GetDefaultExpression_BooleanAllowNull_ReturnsEmpty()
         {
             var field = new DbField("enabled", "Enabled", FieldDbType.Boolean) { AllowNull = true };
@@ -44,7 +44,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG GetColumnDefinition Boolean DefaultValue=1 應產出 boolean NOT NULL DEFAULT TRUE")]
+        [DisplayName("PG GetColumnDefinition produces boolean NOT NULL DEFAULT TRUE for a Boolean with DefaultValue=1")]
         public void GetColumnDefinition_BooleanTrue_IncludesDefaultTrue()
         {
             var field = new DbField("enabled", "Enabled", FieldDbType.Boolean) { DefaultValue = "1" };
@@ -53,7 +53,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PG GetColumnDefinition Integer DefaultValue 既有行為不受影響（regression guard）")]
+        [DisplayName("PG GetColumnDefinition keeps the existing behavior for an Integer DefaultValue (regression guard)")]
         public void GetColumnDefinition_IntegerCustomDefault_RawNumber()
         {
             var field = new DbField("age", "Age", FieldDbType.Integer) { DefaultValue = "42" };

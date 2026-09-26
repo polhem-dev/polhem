@@ -28,7 +28,7 @@ namespace Polhem.Db.UnitTests
             => new(schema, _fx.GetRequiredService<IDefineAccess>());
 
         [Fact]
-        [DisplayName("FormSchema 建構子 null 應擲 ArgumentNullException")]
+        [DisplayName("The FormSchema constructor throws ArgumentNullException for null")]
         public void Constructor_NullFormSchema_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new SqliteFormCommandBuilder(
@@ -36,14 +36,14 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("FormSchema 建構子 null IDefineAccess 應擲 ArgumentNullException")]
+        [DisplayName("The FormSchema constructor throws ArgumentNullException for a null IDefineAccess")]
         public void Constructor_NullDefineAccess_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new SqliteFormCommandBuilder(BuildFooSchema(), null!));
         }
 
         [Fact]
-        [DisplayName("BuildSelect 應委派至 SQLite 方言並產生 SELECT 語句")]
+        [DisplayName("BuildSelect delegates to the SQLite dialect and produces a SELECT statement")]
         public void BuildSelect_DelegatesToSqliteDialect()
         {
             var builder = NewBuilder(BuildFooSchema());
@@ -56,7 +56,7 @@ namespace Polhem.Db.UnitTests
 
 
         [Fact]
-        [DisplayName("BuildDelete 應委派至 SQLite 方言並產生 DELETE 語句")]
+        [DisplayName("BuildDelete delegates to the SQLite dialect and produces a DELETE statement")]
         public void BuildDelete_DelegatesToSqliteDialect()
         {
             var builder = NewBuilder(BuildFooSchema());

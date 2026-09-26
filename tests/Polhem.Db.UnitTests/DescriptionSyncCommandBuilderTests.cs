@@ -14,10 +14,10 @@ using Polhem.Tests.Shared;
 namespace Polhem.Db.UnitTests
 {
     /// <summary>
-    /// 迴歸：ALTER 路徑一直只替 SQL Server 同步描述，其餘 dialect 直接跳過。ALTER 加進去的
-    /// 欄位因此永遠拿不到 caption，而 <see cref="TableSchemaDiff.IsEmpty"/> 把描述差異算進去，
-    /// 之後每次比對都回報「有差異」、每次 Plan 都得到零 stage 的 Alter —— 不出錯，但
-    /// 「這張表是不是最新的」永遠答否。
+    /// Regression: the ALTER path only ever synchronized descriptions for SQL Server and skipped every other dialect.
+    /// Fields added by ALTER therefore never got a caption, and because <see cref="TableSchemaDiff.IsEmpty"/> counts
+    /// description differences, every later comparison reported a difference and every Plan produced an Alter with
+    /// zero stages. Nothing failed, but "is this table up to date" was always answered no.
     /// </summary>
     public class DescriptionSyncCommandBuilderTests : IClassFixture<SharedDbFixture>
     {
@@ -31,7 +31,9 @@ namespace Polhem.Db.UnitTests
             return schema;
         }
 
-        /// <summary>建立一份「只加了一個欄位」的 diff，模擬 in-place 升級當下的狀態。</summary>
+        /// <summary>
+        /// Builds a diff that only adds one field, simulating the state at the moment of an in-place upgrade.
+        /// </summary>
         private static TableSchemaDiff BuildAddColumnDiff()
         {
             var define = BuildDefine();
@@ -56,10 +58,10 @@ namespace Polhem.Db.UnitTests
             return diff;
         }
 
-        // ---------- 加欄位的同一份 plan 就要把 caption 寫進去 ----------
+        // ---------- The plan that adds a field also writes its caption ----------
 
         [Fact]
-        [DisplayName("Oracle：ALTER 加欄位時應一併發出該欄的 COMMENT ON COLUMN")]
+        [DisplayName("Oracle ALTER that adds a field also emits COMMENT ON COLUMN for it")]
         public void Oracle_AddedColumn_EmitsColumnComment()
         {
             var statements = new OracleDescriptionSyncCommandBuilder().GetStatements(BuildAddColumnDiff());
@@ -69,7 +71,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("PostgreSQL：ALTER 加欄位時應一併發出該欄的 COMMENT ON COLUMN")]
+        [DisplayName("PostgreSQL ALTER that adds a field also emits COMMENT ON COLUMN for it")]
         public void Pg_AddedColumn_EmitsColumnComment()
         {
             var statements = new PgDescriptionSyncCommandBuilder().GetStatements(BuildAddColumnDiff());
@@ -79,7 +81,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQL Server：ALTER 加欄位時應以 sp_addextendedproperty 補上該欄描述")]
+        [DisplayName("SQL Server ALTER that adds a field adds its description with sp_addextendedproperty")]
         public void SqlServer_AddedColumn_EmitsAddExtendedProperty()
         {
             var statements = new SqlDescriptionSyncCommandBuilder().GetStatements(BuildAddColumnDiff());
@@ -90,7 +92,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL：ADD COLUMN 已內含 COMMENT，不應再補一次")]
+        [DisplayName("MySQL ADD COLUMN already includes COMMENT and does not add it again")]
         public void MySql_AddedColumn_EmitsNothing()
         {
             var statements = new MySqlDescriptionSyncCommandBuilder().GetStatements(BuildAddColumnDiff());
@@ -98,10 +100,10 @@ namespace Polhem.Db.UnitTests
             Assert.Empty(statements);
         }
 
-        // ---------- 純 caption 漂移（沒有結構異動陪同） ----------
+        // ---------- Caption drift alone (no structural change with it) ----------
 
         [Fact]
-        [DisplayName("Oracle：欄位 caption 漂移應發出 COMMENT ON COLUMN")]
+        [DisplayName("Oracle field caption drift emits COMMENT ON COLUMN")]
         public void Oracle_CaptionDrift_EmitsColumnComment()
         {
             var statements = new OracleDescriptionSyncCommandBuilder().GetStatements(BuildCaptionDriftDiff());
@@ -110,7 +112,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL：欄位 caption 漂移應以 MODIFY COLUMN 重下完整定義（含 COMMENT）")]
+        [DisplayName("MySQL field caption drift restates the full definition (including COMMENT) with MODIFY COLUMN")]
         public void MySql_CaptionDrift_EmitsModifyColumn()
         {
             var statements = new MySqlDescriptionSyncCommandBuilder().GetStatements(BuildCaptionDriftDiff());
@@ -121,7 +123,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL：同批已有 AlterFieldChange 的欄位不應再多發一次 MODIFY COLUMN")]
+        [DisplayName("MySQL does not emit another MODIFY COLUMN for a field that already has an AlterFieldChange in the same batch")]
         public void MySql_ColumnAlreadyAltered_SkipsRedundantModify()
         {
             var diff = BuildCaptionDriftDiff();
@@ -135,11 +137,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL：AutoIncrement 欄位的 MODIFY COLUMN 必須保留 AUTO_INCREMENT")]
+        [DisplayName("MySQL MODIFY COLUMN of an AutoIncrement field keeps AUTO_INCREMENT")]
         public void MySql_AutoIncrementCaptionDrift_KeepsAutoIncrement()
         {
-            // 迴歸：MODIFY 會整段換掉欄位定義，漏掉 AUTO_INCREMENT 就等於把自增拔掉，
-            // 之後每次 INSERT 都是 "Field 'sys_no' doesn't have a default value"。
+            // Regression: MODIFY replaces the whole field definition, so leaving out AUTO_INCREMENT removes the
+            // auto-increment, and every later INSERT fails with "Field 'sys_no' doesn't have a default value".
             var define = new TableSchema { TableName = "st_demo" };
             define.Fields!.Add("sys_no", "Sequence", FieldDbType.AutoIncrement);
             var diff = new TableSchemaDiff(define, define.Clone());
@@ -157,7 +159,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MySQL：表層 DisplayName 漂移應發出 ALTER TABLE ... COMMENT")]
+        [DisplayName("MySQL table-level DisplayName drift emits ALTER TABLE ... COMMENT")]
         public void MySql_TableDescriptionDrift_EmitsTableComment()
         {
             var diff = new TableSchemaDiff(BuildDefine(), BuildDefine());
@@ -174,7 +176,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("無描述可寫時各 dialect 皆不產生語句")]
+        [DisplayName("No dialect produces a statement when there is no description to write")]
         public void AllDialects_NothingToApply_EmitNoStatements()
         {
             var define = new TableSchema { TableName = "st_demo" };
@@ -187,10 +189,10 @@ namespace Polhem.Db.UnitTests
             Assert.Empty(new SqlDescriptionSyncCommandBuilder().GetStatements(diff));
         }
 
-        // ---------- dialect factory 接線 ----------
+        // ---------- Dialect factory wiring ----------
 
         [Theory]
-        [DisplayName("能持久化描述的 dialect factory 都要提供 description sync builder")]
+        [DisplayName("Every dialect factory that can persist descriptions provides a description sync builder")]
         [InlineData(typeof(SqlDialectFactory))]
         [InlineData(typeof(PgDialectFactory))]
         [InlineData(typeof(MySqlDialectFactory))]
@@ -203,21 +205,22 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("SQLite 無 COMMENT 機制，不提供 description sync builder")]
+        [DisplayName("SQLite has no COMMENT mechanism and provides no description sync builder")]
         public void DialectFactory_Sqlite_ReturnsNull()
         {
-            // 只透過介面呼叫：這是 default interface member，SqliteDialectFactory 未覆寫。
+            // Called only through the interface: this is a default interface member that
+            // `SqliteDialectFactory` does not override.
             IDialectFactory factory = new SqliteDialectFactory();
 
             Assert.Null(factory.CreateDescriptionSyncCommandBuilder());
         }
 
         [Fact]
-        [DisplayName("SQLite：caption 差異不應算成 diff（否則永遠不會是 NoChange）")]
+        [DisplayName("SQLite does not count a caption difference as a diff (otherwise it would never be NoChange)")]
         public void CompareToDiff_Sqlite_DoesNotReportDescriptionDrift()
         {
             var define = BuildDefine();
-            // SqliteTableSchemaProvider 一律把 caption 讀回空字串。
+            // `SqliteTableSchemaProvider` always reads captions back as an empty string.
             var real = new TableSchema { TableName = "st_demo" };
             real.Fields!.Add("id", string.Empty, FieldDbType.Guid);
             real.Fields!.Add("name", string.Empty, FieldDbType.String, 50);

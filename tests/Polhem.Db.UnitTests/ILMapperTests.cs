@@ -34,7 +34,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateMapFunc 應依 reader 欄位產生對應 mapper")]
+        [DisplayName("CreateMapFunc builds a mapper from the reader's columns")]
         public void CreateMapFunc_MapsAllMatchingFields()
         {
             ILMapper<SamplePoco>.ClearCache();
@@ -50,12 +50,12 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("欄位名稱應採大小寫不敏感比對")]
+        [DisplayName("Column names are matched case-insensitively")]
         public void CreateMapFunc_CaseInsensitiveFieldMatching()
         {
             ILMapper<SamplePoco>.ClearCache();
             var table = new DataTable();
-            table.Columns.Add("ID", typeof(int));   // 大小寫不同
+            table.Columns.Add("ID", typeof(int));   // Different casing.
             table.Columns.Add("name", typeof(string));
             table.Rows.Add(99, "Carol");
 
@@ -70,7 +70,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("DBNull 欄位應保留屬性預設值")]
+        [DisplayName("A DBNull column keeps the property's default value")]
         public void CreateMapFunc_DBNullField_KeepsDefaultValue()
         {
             ILMapper<SamplePoco>.ClearCache();
@@ -86,17 +86,17 @@ namespace Polhem.Db.UnitTests
             var result = mapper(reader);
 
             Assert.Equal(1, result.Id);
-            Assert.Equal(string.Empty, result.Name);  // 屬性初始值
+            Assert.Equal(string.Empty, result.Name);  // The property's initial value.
         }
 
         [Fact]
-        [DisplayName("MapToList 應將所有 row 對映到 List<T>")]
+        [DisplayName("MapToList maps every row to a List<T>")]
         public void MapToList_MapsAllRows()
         {
             ILMapper<SamplePoco>.ClearCache();
             using var reader = BuildTable().CreateDataReader();
-            // 取得 mapper 前需要 Read() 才能取 schema；改用先建構 mapper 再丟進 MapToList
-            // 由於 BuildTable 後又重建 reader 不切實際，使用獨立的 reader 取 mapper
+            // Getting the schema requires `Read()`, and rebuilding the reader after `BuildTable` is impractical,
+            // so a separate reader provides the mapper that is then passed to `MapToList`.
             using var schemaReader = BuildTable().CreateDataReader();
             schemaReader.Read();
             var mapper = ILMapper<SamplePoco>.CreateMapFunc(schemaReader);
@@ -109,7 +109,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MapToEnumerable 應與 MapToList 結果一致")]
+        [DisplayName("MapToEnumerable gives the same result as MapToList")]
         public void MapToEnumerable_MatchesMapToList()
         {
             ILMapper<SamplePoco>.ClearCache();
@@ -126,7 +126,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClearCache 應清空指定型別的 cache")]
+        [DisplayName("ClearCache clears the cache of the given type")]
         public void ClearCache_RemovesEntriesForType()
         {
             ILMapper<SamplePoco>.ClearCache();
@@ -142,7 +142,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("不具無參數建構子的型別應擲 InvalidOperationException")]
+        [DisplayName("A type without a parameterless constructor throws InvalidOperationException")]
         public void CreateMapFunc_NoParameterlessCtor_Throws()
         {
             ILMapper<NoCtorPoco>.ClearCache();
@@ -156,7 +156,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("相同欄位結構第二次呼叫應回傳 cache 中的 mapper")]
+        [DisplayName("A second call with the same column layout returns the cached mapper")]
         public void CreateMapFunc_SameShape_ReusesCachedDelegate()
         {
             ILMapper<SamplePoco>.ClearCache();
@@ -182,11 +182,11 @@ namespace Polhem.Db.UnitTests
             public double D { get; set; }
             public float F { get; set; }
             public DateTime Dt { get; set; }
-            public int ReadOnlyProp { get; } = 999; // 無 setter,應被略過
+            public int ReadOnlyProp { get; } = 999; // No setter, so it is skipped.
         }
 
         [Fact]
-        [DisplayName("各型別欄位應對應至 DbDataReader 對應的 GetXXX 方法")]
+        [DisplayName("Each column type maps to the matching GetXXX method of DbDataReader")]
         public void CreateMapFunc_AllSupportedTypes_MapsCorrectly()
         {
             ILMapper<AllTypePoco>.ClearCache();
@@ -199,7 +199,7 @@ namespace Polhem.Db.UnitTests
             table.Columns.Add("D", typeof(double));
             table.Columns.Add("F", typeof(float));
             table.Columns.Add("Dt", typeof(DateTime));
-            // ReadOnlyProp 欄位存在,但因屬性無 setter 應被跳過
+            // The ReadOnlyProp column exists, but the property has no setter, so it is skipped.
             table.Columns.Add("ReadOnlyProp", typeof(int));
 
             var dt = new DateTime(2026, 4, 19, 0, 0, 0, DateTimeKind.Utc);
@@ -218,7 +218,8 @@ namespace Polhem.Db.UnitTests
             Assert.Equal(1.23d, result.D);
             Assert.Equal(4.56f, result.F);
             Assert.Equal(dt, result.Dt);
-            // ReadOnlyProp 沒 setter,mapper 不會寫入,屬性應保持建構式中設定的預設值
+            // ReadOnlyProp has no setter, so the mapper does not write
+            // it and it keeps the value set in the constructor.
             Assert.Equal(999, result.ReadOnlyProp);
         }
 
@@ -229,7 +230,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("bool 與 double 欄位也應能正確對應到 GetBoolean / GetDouble")]
+        [DisplayName("bool and double columns map to GetBoolean and GetDouble")]
         public void CreateMapFunc_BoolAndDouble_MapCorrectly()
         {
             ILMapper<BoolDoublePoco>.ClearCache();
@@ -256,7 +257,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("T 有但 reader 沒有的欄位應被略過,保留屬性預設值")]
+        [DisplayName("A property of T that the reader lacks is skipped and keeps its default value")]
         public void CreateMapFunc_PropertyNotInReader_KeepsDefault()
         {
             ILMapper<ExtraPropertyPoco>.ClearCache();

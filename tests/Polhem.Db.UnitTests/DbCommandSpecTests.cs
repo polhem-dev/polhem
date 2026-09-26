@@ -10,10 +10,10 @@ namespace Polhem.Db.UnitTests
     {
         public DbCommandSpecTests(SharedDbFixture _) { }
 
-        #region 建構子測試
+        #region Constructors
 
         [Fact]
-        [DisplayName("預設建構子應建立空的命令規格")]
+        [DisplayName("The default constructor creates an empty command spec")]
         public void DefaultConstructor_CreatesEmptySpec()
         {
             var spec = new DbCommandSpec();
@@ -27,7 +27,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("位置參數建構子應依序加入名稱為 p0、p1 的參數")]
+        [DisplayName("The positional constructor adds parameters named p0 and p1 in order")]
         public void PositionalConstructor_AddsP0P1Parameters()
         {
             var spec = new DbCommandSpec(DbCommandKind.Scalar,
@@ -43,7 +43,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("位置參數建構子未提供值時不應建立任何參數")]
+        [DisplayName("The positional constructor creates no parameters when no values are given")]
         public void PositionalConstructor_NoValues_CreatesNoParameters()
         {
             var spec = new DbCommandSpec(DbCommandKind.NonQuery, "SELECT 1");
@@ -52,7 +52,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("具名參數建構子應將字典內容加入 Parameters")]
+        [DisplayName("The named constructor adds the dictionary entries to Parameters")]
         public void NamedConstructor_AddsParameters()
         {
             var dict = new Dictionary<string, object>
@@ -70,7 +70,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("具名參數建構子傳入 null 字典時應建立空 Parameters")]
+        [DisplayName("The named constructor creates empty Parameters for a null dictionary")]
         public void NamedConstructor_NullDictionary_CreatesNoParameters()
         {
             var spec = new DbCommandSpec(DbCommandKind.NonQuery, "SELECT 1", parameters: null);
@@ -82,7 +82,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("位置參數建構子 commandText 為空時應擲出 ArgumentNullException")]
+        [DisplayName("The positional constructor throws ArgumentNullException for an empty commandText")]
         public void PositionalConstructor_EmptyCommandText_Throws(string? commandText)
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -93,7 +93,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("具名參數建構子 commandText 為空時應擲出 ArgumentNullException")]
+        [DisplayName("The named constructor throws ArgumentNullException for an empty commandText")]
         public void NamedConstructor_EmptyCommandText_Throws(string? commandText)
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -102,10 +102,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region 佔位符解析（透過 CreateCommand 驗證）
+        #region Placeholder resolution (verified through CreateCommand)
 
         [Fact]
-        [DisplayName("CreateCommand 應將位置佔位符 {0} 解析為帶前綴的參數名稱")]
+        [DisplayName("CreateCommand resolves the positional placeholder {0} to a prefixed parameter name")]
         public void CreateCommand_PositionalPlaceholder_ResolvesToPrefixedName()
         {
             var spec = new DbCommandSpec(DbCommandKind.Scalar,
@@ -123,7 +123,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCommand 應將具名佔位符 {Name} 解析為帶前綴的參數名稱")]
+        [DisplayName("CreateCommand resolves the named placeholder {Name} to a prefixed parameter name")]
         public void CreateCommand_NamedPlaceholder_ResolvesToPrefixedName()
         {
             var spec = new DbCommandSpec(DbCommandKind.Scalar,
@@ -139,7 +139,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("具名佔位符應不分大小寫匹配")]
+        [DisplayName("Named placeholders match case-insensitively")]
         public void CreateCommand_NamedPlaceholder_CaseInsensitive()
         {
             var spec = new DbCommandSpec(DbCommandKind.Scalar,
@@ -153,7 +153,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("{@Parameters} 應展開為以逗號分隔的所有參數佔位符")]
+        [DisplayName("{@Parameters} expands to all parameter placeholders separated by commas")]
         public void CreateCommand_AtParametersToken_ExpandsToCommaList()
         {
             var spec = new DbCommandSpec(DbCommandKind.NonQuery,
@@ -167,7 +167,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCommand StoredProcedure 不應解析 CommandText 中的佔位符")]
+        [DisplayName("CreateCommand does not resolve placeholders in the CommandText of a StoredProcedure")]
         public void CreateCommand_StoredProcedure_SkipsPlaceholderResolution()
         {
             var spec = new DbCommandSpec(DbCommandKind.NonQuery, "sp_GetUser")
@@ -186,7 +186,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCommand 應傳入 CommandTimeout 至 DbCommand")]
+        [DisplayName("CreateCommand passes CommandTimeout to the DbCommand")]
         public void CreateCommand_AppliesCommandTimeout()
         {
             var spec = new DbCommandSpec(DbCommandKind.NonQuery, "SELECT 1") { CommandTimeout = 45 };
@@ -198,7 +198,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCommand 參數值為 null 應綁定為 DBNull")]
+        [DisplayName("CreateCommand binds a null parameter value as DBNull")]
         public void CreateCommand_NullValue_BindsDBNull()
         {
             var spec = new DbCommandSpec(DbCommandKind.NonQuery,
@@ -211,7 +211,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCommand 參數名稱已含前綴時不應重複加上前綴")]
+        [DisplayName("CreateCommand does not add the prefix again when the parameter name already has it")]
         public void CreateCommand_NameWithPrefix_NotDuplicated()
         {
             var spec = new DbCommandSpec(DbCommandKind.NonQuery, "SELECT 1");
@@ -224,7 +224,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCommand 應將 DbType、Size、SourceColumn、SourceVersion 傳遞給 DbParameter")]
+        [DisplayName("CreateCommand passes DbType, Size, SourceColumn and SourceVersion to the DbParameter")]
         public void CreateCommand_PropagatesParameterMetadata()
         {
             var spec = new DbCommandSpec(DbCommandKind.NonQuery, "UPDATE T SET A = {0}", "x");
@@ -246,7 +246,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCommand 連線為 null 時應擲出 ArgumentNullException")]
+        [DisplayName("CreateCommand throws ArgumentNullException for a null connection")]
         public void CreateCommand_NullConnection_Throws()
         {
             var spec = new DbCommandSpec(DbCommandKind.NonQuery, "SELECT 1");
@@ -256,7 +256,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCommand 在 CommandText 為空時應擲出 InvalidOperationException")]
+        [DisplayName("CreateCommand throws InvalidOperationException for an empty CommandText")]
         public void CreateCommand_EmptyCommandText_Throws()
         {
             var spec = new DbCommandSpec();
@@ -267,7 +267,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCommand 位置佔位符索引越界時應擲出 InvalidOperationException")]
+        [DisplayName("CreateCommand throws InvalidOperationException for a positional placeholder index out of range")]
         public void CreateCommand_IndexOutOfRange_Throws()
         {
             var spec = new DbCommandSpec(DbCommandKind.Scalar,
@@ -279,7 +279,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCommand 具名佔位符找不到對應參數時應擲出 InvalidOperationException")]
+        [DisplayName("CreateCommand throws InvalidOperationException when a named placeholder has no matching parameter")]
         public void CreateCommand_UnknownNamedKey_Throws()
         {
             var spec = new DbCommandSpec(DbCommandKind.Scalar,
@@ -292,7 +292,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCommand Oracle 資料庫應使用冒號參數前綴")]
+        [DisplayName("CreateCommand uses the colon parameter prefix for Oracle")]
         public void CreateCommand_Oracle_UsesColonPrefix()
         {
             var spec = new DbCommandSpec(DbCommandKind.Scalar,
@@ -307,10 +307,10 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region ToString 測試
+        #region ToString
 
         [Fact]
-        [DisplayName("ToString 應回傳 CommandText")]
+        [DisplayName("ToString returns the CommandText")]
         public void ToString_ReturnsCommandText()
         {
             var spec = new DbCommandSpec(DbCommandKind.Scalar, "SELECT 1");
@@ -319,13 +319,13 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region 特殊邊界分支
+        #region Edge-case branches
 
         [Fact]
-        [DisplayName("CreateCommand 具名佔位符參數名為空白時應擲出 InvalidOperationException")]
+        [DisplayName("CreateCommand throws InvalidOperationException when a named placeholder's parameter name is blank")]
         public void CreateCommand_NamedKeyWithBlankName_Throws()
         {
-            // 先以合法名稱加入,再將 Name 改為空白,觸發 ResolveNamedKey 的空名檢查
+            // Add with a valid name, then blank the Name, to reach the blank-name check of `ResolveNamedKey`.
             var spec = new DbCommandSpec(DbCommandKind.Scalar, "SELECT * FROM T WHERE X = {X}");
             spec.Parameters.Add("X", 1);
             spec.Parameters[0].Name = "   ";
@@ -336,10 +336,10 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCommand 位置佔位符對應的參數名為空白時應擲出 InvalidOperationException")]
+        [DisplayName("CreateCommand throws InvalidOperationException when the parameter name behind a positional placeholder is blank")]
         public void CreateCommand_NumericKeyWithBlankName_Throws()
         {
-            // 先以合法名稱加入,再將 Name 改為空白,觸發 ResolveNumericKey 的空名檢查
+            // Add with a valid name, then blank the Name, to reach the blank-name check of `ResolveNumericKey`.
             var spec = new DbCommandSpec(DbCommandKind.Scalar, "SELECT * FROM T WHERE X = {0}");
             spec.Parameters.Add("p0", 1);
             spec.Parameters[0].Name = "   ";
@@ -351,19 +351,19 @@ namespace Polhem.Db.UnitTests
 
         #endregion
 
-        #region NormalizeParameterValue（Oracle Guid → byte[] 轉換）
+        #region NormalizeParameterValue (Oracle Guid → byte[] conversion)
 
         [Fact]
-        [DisplayName("NormalizeParameterValue：Oracle 上 Guid 應轉成 16-byte byte[]")]
+        [DisplayName("NormalizeParameterValue converts a Guid to a 16-byte byte[] on Oracle")]
         public void NormalizeParameterValue_OracleGuid_ConvertedToByteArray()
         {
             var guid = Guid.Parse("12345678-1234-5678-90ab-cdef12345678");
 
             object? result = DbCommandSpec.NormalizeParameterValue(DatabaseType.Oracle, guid);
 
-            // Oracle.ManagedDataAccess.OracleParameter 不接受 Guid 作為 RAW(16) 綁定值
-            // (拋 ArgumentException : Value does not fall within the expected range);
-            // framework 必須轉成 byte[]。byte[] 內容須等同 guid.ToByteArray()。
+            // `Oracle.ManagedDataAccess.OracleParameter` does not accept a Guid as a RAW(16) binding value (it throws
+            // "ArgumentException: Value does not fall within the expected range"), so the framework must convert it to
+            // a byte[]. The bytes must equal `guid.ToByteArray()`.
             var bytes = Assert.IsType<byte[]>(result);
             Assert.Equal(16, bytes.Length);
             Assert.Equal(guid.ToByteArray(), bytes);
@@ -374,7 +374,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(DatabaseType.PostgreSQL)]
         [InlineData(DatabaseType.MySQL)]
         [InlineData(DatabaseType.SQLite)]
-        [DisplayName("NormalizeParameterValue：非 Oracle DB 上 Guid 應原值傳回")]
+        [DisplayName("NormalizeParameterValue returns a Guid unchanged on databases other than Oracle")]
         public void NormalizeParameterValue_NonOracleGuid_PassThrough(DatabaseType dbType)
         {
             var guid = Guid.NewGuid();
@@ -385,7 +385,7 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("NormalizeParameterValue：Oracle 上非 Guid 值（string、int、null）應原值傳回")]
+        [DisplayName("NormalizeParameterValue returns non-Guid values (string, int, null) unchanged on Oracle")]
         public void NormalizeParameterValue_OracleNonGuid_PassThrough()
         {
             Assert.Equal("hello", DbCommandSpec.NormalizeParameterValue(DatabaseType.Oracle, "hello"));
@@ -394,11 +394,11 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("NormalizeDbType：Oracle 上 DbType.Guid 應改寫為 DbType.Binary")]
+        [DisplayName("NormalizeDbType rewrites DbType.Guid to DbType.Binary on Oracle")]
         public void NormalizeDbType_OracleGuid_RewrittenToBinary()
         {
-            // OracleParameter.DbType 拒絕 DbType.Guid（Oracle 無原生 UUID type，
-            // framework 映射為 RAW(16) → DbType.Binary）。
+            // `OracleParameter.DbType` rejects `DbType.Guid`: Oracle has no native UUID type, and the framework maps it
+            // to RAW(16), which is `DbType.Binary`.
             Assert.Equal(DbType.Binary, DbCommandSpec.NormalizeDbType(DatabaseType.Oracle, DbType.Guid));
         }
 
@@ -407,7 +407,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(DatabaseType.PostgreSQL)]
         [InlineData(DatabaseType.MySQL)]
         [InlineData(DatabaseType.SQLite)]
-        [DisplayName("NormalizeDbType：非 Oracle DB 上 DbType.Guid 應原值傳回")]
+        [DisplayName("NormalizeDbType returns DbType.Guid unchanged on databases other than Oracle")]
         public void NormalizeDbType_NonOracleGuid_PassThrough(DatabaseType dbType)
         {
             Assert.Equal(DbType.Guid, DbCommandSpec.NormalizeDbType(dbType, DbType.Guid));
@@ -418,18 +418,18 @@ namespace Polhem.Db.UnitTests
         [InlineData(DbType.Int32)]
         [InlineData(DbType.Binary)]
         [InlineData(DbType.DateTime)]
-        [DisplayName("NormalizeDbType：Oracle 上非 Guid DbType 應原值傳回")]
+        [DisplayName("NormalizeDbType returns non-Guid DbTypes unchanged on Oracle")]
         public void NormalizeDbType_OracleNonGuid_PassThrough(DbType dbType)
         {
             Assert.Equal(dbType, DbCommandSpec.NormalizeDbType(DatabaseType.Oracle, dbType));
         }
 
         [Fact]
-        [DisplayName("NormalizeDbType：SQL Server 上 DbType.DateTime 應改寫為 DbType.DateTime2")]
+        [DisplayName("NormalizeDbType rewrites DbType.DateTime to DbType.DateTime2 on SQL Server")]
         public void NormalizeDbType_SqlServerDateTime_RewrittenToDateTime2()
         {
-            // datetime2 保留 .NET DateTime 完整範圍與 100 ns 精度；DbType.DateTime 會在參數層
-            // round 成 ms 並對 pre-1753 拋 SqlDateTimeOverflow。
+            // datetime2 keeps the full range and the 100 ns precision of a .NET DateTime. `DbType.DateTime` rounds to
+            // milliseconds at the parameter layer and throws `SqlDateTimeOverflow` before 1753.
             Assert.Equal(DbType.DateTime2, DbCommandSpec.NormalizeDbType(DatabaseType.SQLServer, DbType.DateTime));
         }
 
@@ -437,7 +437,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(DatabaseType.MySQL)]
         [InlineData(DatabaseType.SQLite)]
         [InlineData(DatabaseType.Oracle)]
-        [DisplayName("NormalizeDbType：MySQL / SQLite / Oracle 上 DbType.DateTime 應原值傳回（避免跨 provider 回歸）")]
+        [DisplayName("NormalizeDbType returns DbType.DateTime unchanged on MySQL, SQLite and Oracle (guards against cross-provider regressions)")]
         public void NormalizeDbType_UnaffectedProvidersDateTime_PassThrough(DatabaseType dbType)
         {
             Assert.Equal(DbType.DateTime, DbCommandSpec.NormalizeDbType(dbType, DbType.DateTime));
@@ -446,11 +446,12 @@ namespace Polhem.Db.UnitTests
         [Theory]
         [InlineData(DatabaseType.SQLServer)]
         [InlineData(DatabaseType.PostgreSQL)]
-        [DisplayName("NormalizeDbType：SQL Server 與 PostgreSQL 的 DbType.DateTime 應升為 DateTime2")]
+        [DisplayName("NormalizeDbType promotes DbType.DateTime to DateTime2 on SQL Server and PostgreSQL")]
         public void NormalizeDbType_DateTime_UpgradedToDateTime2(DatabaseType dbType)
         {
-            // 兩者升級的動機不同但手法相同：SQL Server 是為了精度（datetime → datetime2(7)），
-            // PostgreSQL 是為了避開 timestamptz 的隱式時區換算（ADR-032 D1）。
+            // The two promote for different reasons with the same technique: SQL Server for precision
+            // (datetime → datetime2(7)), PostgreSQL to avoid the implicit time zone conversion of timestamptz
+            // (ADR-032 D1).
             Assert.Equal(DbType.DateTime2, DbCommandSpec.NormalizeDbType(dbType, DbType.DateTime));
         }
 
@@ -459,7 +460,7 @@ namespace Polhem.Db.UnitTests
         [InlineData(DbType.Int32)]
         [InlineData(DbType.Guid)]
         [InlineData(DbType.Decimal)]
-        [DisplayName("NormalizeDbType：SQL Server 上非 DateTime DbType 應原值傳回")]
+        [DisplayName("NormalizeDbType returns non-DateTime DbTypes unchanged on SQL Server")]
         public void NormalizeDbType_SqlServerNonDateTime_PassThrough(DbType dbType)
         {
             Assert.Equal(dbType, DbCommandSpec.NormalizeDbType(DatabaseType.SQLServer, dbType));
