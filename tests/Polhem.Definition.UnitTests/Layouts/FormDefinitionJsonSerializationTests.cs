@@ -35,7 +35,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormSchema JSON 應包含關鍵屬性與巢狀結構")]
+        [DisplayName("FormSchema JSON contains the key properties and nested structure")]
         public void FormSchema_JsonCodec_ContainsKeyStructure()
         {
             var schema = BuildSampleSchema();
@@ -54,13 +54,13 @@ namespace Polhem.Definition.UnitTests.Layouts
             Assert.Equal("Employee", masterTable.GetProperty("tableName").GetString());
             Assert.True(masterTable.GetProperty("fields").GetArrayLength() >= 4);
 
-            // Enum 序列化為字串
+            // Enums are serialized as strings.
             var firstField = masterTable.GetProperty("fields")[0];
             Assert.Equal("String", firstField.GetProperty("dbType").GetString());
         }
 
         [Fact]
-        [DisplayName("FormSchema JSON 不應包含 masterTable（由 tables[0] 取代以避免重複）")]
+        [DisplayName("FormSchema JSON does not contain masterTable (tables[0] replaces it to avoid duplication)")]
         public void FormSchema_JsonCodec_DoesNotIncludeMasterTable()
         {
             var schema = BuildSampleSchema();
@@ -69,7 +69,7 @@ namespace Polhem.Definition.UnitTests.Layouts
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            // [JsonIgnore] 上線後此欄位必須消失。任一大小寫變體都不應出現。
+            // With `[JsonIgnore]` in place this property must be gone, in any casing.
             Assert.False(root.TryGetProperty("masterTable", out _),
                 "masterTable should be JsonIgnored to avoid duplicating tables[0] payload.");
             Assert.False(root.TryGetProperty("MasterTable", out _),
@@ -77,7 +77,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayout JSON 應包含關鍵屬性與巢狀結構")]
+        [DisplayName("FormLayout JSON contains the key properties and nested structure")]
         public void FormLayout_JsonCodec_ContainsKeyStructure()
         {
             var layout = FormLayoutGenerator.Generate(BuildSampleSchema(), "default");
@@ -86,21 +86,18 @@ namespace Polhem.Definition.UnitTests.Layouts
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            // 頂層屬性
             Assert.Equal("default", root.GetProperty("layoutId").GetString());
             Assert.Equal("Employee", root.GetProperty("progId").GetString());
             Assert.Equal("員工", root.GetProperty("caption").GetString());
             Assert.Equal(2, root.GetProperty("columnCount").GetInt32());
 
-            // 主檔 sections
             var sections = root.GetProperty("sections");
-            Assert.True(sections.GetArrayLength() > 0, "sections 應至少 1 個");
+            Assert.True(sections.GetArrayLength() > 0, "sections should have at least 1 item");
 
             var section = sections[0];
             Assert.True(section.TryGetProperty("fields", out var fields));
-            Assert.True(fields.GetArrayLength() > 0, "section.fields 應至少 1 個");
+            Assert.True(fields.GetArrayLength() > 0, "section.fields should have at least 1 item");
 
-            // 第一個 field 應有 fieldName / caption / controlType / rowSpan / columnSpan
             var field = fields[0];
             Assert.True(field.TryGetProperty("fieldName", out _));
             Assert.True(field.TryGetProperty("caption", out _));
@@ -108,13 +105,12 @@ namespace Polhem.Definition.UnitTests.Layouts
             Assert.True(field.TryGetProperty("rowSpan", out _));
             Assert.True(field.TryGetProperty("columnSpan", out _));
 
-            // 明細 grids
             var details = root.GetProperty("details");
             Assert.Equal(1, details.GetArrayLength());
             var grid = details[0];
             Assert.Equal("EmployeePhone", grid.GetProperty("tableName").GetString());
             Assert.True(grid.TryGetProperty("columns", out var cols));
-            Assert.True(cols.GetArrayLength() > 0, "grid.columns 應至少 1 個");
+            Assert.True(cols.GetArrayLength() > 0, "grid.columns should have at least 1 item");
         }
     }
 }

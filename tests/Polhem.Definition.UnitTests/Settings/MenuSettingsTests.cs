@@ -5,12 +5,12 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// MenuSettings、MenuFolder、MenuEntry 等選單定義類別的測試。
+    /// Tests for the menu definition classes such as MenuSettings, MenuFolder and MenuEntry.
     /// </summary>
     public class MenuSettingsTests
     {
         /// <summary>
-        /// 建立三層巢狀選單：root → transactions →（customer、sales →（sales-order、sales-return））、dashboard。
+        /// Builds a three-level nested menu: root -> transactions -> (customer, sales -> (sales-order, sales-return)), dashboard.
         /// </summary>
         private static MenuSettings BuildNestedMenu()
         {
@@ -29,7 +29,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("MenuSettings 預設應有非空 Items 與初始序列化狀態")]
+        [DisplayName("MenuSettings has a non-null Items and the initial serialize state by default")]
         public void MenuSettings_Default_HasItems()
         {
             var settings = new MenuSettings();
@@ -40,7 +40,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("MenuSettings.SetObjectFilePath 應更新檔案路徑")]
+        [DisplayName("MenuSettings.SetObjectFilePath updates the file path")]
         public void MenuSettings_SetObjectFilePath_UpdatesPath()
         {
             var settings = new MenuSettings();
@@ -51,7 +51,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("MenuSettings.SetSerializeState 應傳遞至 Items")]
+        [DisplayName("MenuSettings.SetSerializeState propagates to Items")]
         public void MenuSettings_SetSerializeState_PropagatesToItems()
         {
             var settings = BuildNestedMenu();
@@ -63,7 +63,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("MenuSettings.Items 於序列化且集合為空時應回傳 null")]
+        [DisplayName("MenuSettings.Items returns null when serializing an empty collection")]
         public void MenuSettings_Items_EmptyDuringSerialize_ReturnsNull()
         {
             var settings = new MenuSettings();
@@ -73,7 +73,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("三層巢狀選單經 XML 往返應完整還原結構與型別")]
+        [DisplayName("A three-level nested menu round-trips its full structure and types through XML")]
         public void MenuSettings_DeepNested_XmlRoundtrip_PreservesStructure()
         {
             var xml = XmlCodec.Serialize(BuildNestedMenu());
@@ -97,7 +97,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("多型節點應輸出各自的元素名而非 xsi:type 判別碼")]
+        [DisplayName("Polymorphic nodes are written with their own element names, not an xsi:type discriminator")]
         public void MenuSettings_Xml_UsesPerSubtypeElementNames()
         {
             var xml = XmlCodec.Serialize(BuildNestedMenu());
@@ -108,7 +108,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("空的 MenuFolder 於序列化時不應輸出 Items 元素")]
+        [DisplayName("An empty MenuFolder does not write an Items element when serialized")]
         public void MenuFolder_EmptyItems_OmittedFromXml()
         {
             var settings = new MenuSettings();
@@ -121,7 +121,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("EnumerateNodes 應以深度優先、文件順序走訪整棵樹")]
+        [DisplayName("EnumerateNodes walks the whole tree depth-first in document order")]
         public void EnumerateNodes_WalksWholeTreeDepthFirst()
         {
             var ids = BuildNestedMenu().EnumerateNodes().Select(n => n.Id).ToArray();
@@ -132,7 +132,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("FindNode 應可跨層級以 Id 找到節點")]
+        [DisplayName("FindNode finds a node by Id across levels")]
         public void FindNode_FindsNestedNode()
         {
             var settings = BuildNestedMenu();
@@ -144,14 +144,14 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("FindNode 找不到時應回傳 null")]
+        [DisplayName("FindNode returns null when nothing matches")]
         public void FindNode_Missing_ReturnsNull()
         {
             Assert.Null(BuildNestedMenu().FindNode("nope"));
         }
 
         [Fact]
-        [DisplayName("同一 progId 可對應多個選單節點（1:N）")]
+        [DisplayName("One progId can map to several menu nodes (1:N)")]
         public void MenuEntry_SameProgId_MayAppearInSeveralNodes()
         {
             var settings = BuildNestedMenu();
@@ -163,7 +163,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("GetDisplayNodes 應濾掉不可見節點並依 Order 排序")]
+        [DisplayName("GetDisplayNodes filters out invisible nodes and sorts by Order")]
         public void GetDisplayNodes_FiltersInvisibleAndSortsByOrder()
         {
             var settings = new MenuSettings();
@@ -179,7 +179,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Order 相同時 GetDisplayNodes 應維持文件順序")]
+        [DisplayName("GetDisplayNodes keeps document order for equal Order values")]
         public void GetDisplayNodes_EqualOrder_KeepsDocumentOrder()
         {
             var settings = new MenuSettings();
@@ -192,14 +192,14 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("結構完整的選單 Validate 應無任何問題")]
+        [DisplayName("Validate finds no problems in a well-formed menu")]
         public void Validate_ValidMenu_ReturnsEmpty()
         {
             Assert.Empty(BuildNestedMenu().Validate());
         }
 
         [Fact]
-        [DisplayName("Id 跨層級重複應被 Validate 抓出（同層由集合本身擋下）")]
+        [DisplayName("Validate catches an Id duplicated across levels (the collection itself rejects duplicates within a level)")]
         public void Validate_DuplicateIdAcrossLevels_IsReported()
         {
             var settings = new MenuSettings();
@@ -214,7 +214,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("節點 Id 為空應被 Validate 抓出")]
+        [DisplayName("Validate catches an empty node Id")]
         public void Validate_EmptyId_IsReported()
         {
             var settings = new MenuSettings();
@@ -226,7 +226,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("MenuEntry.ProgId 為空應被 Validate 抓出")]
+        [DisplayName("Validate catches an empty MenuEntry.ProgId")]
         public void Validate_EmptyProgId_IsReported()
         {
             var settings = new MenuSettings();
@@ -238,7 +238,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("選單引用註冊表中不存在的 progId 應被 Validate 抓出")]
+        [DisplayName("Validate catches a menu reference to a progId that does not exist in the registry")]
         public void Validate_UnregisteredProgId_IsReported()
         {
             var registry = new ProgramSettings();
@@ -252,7 +252,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("未提供註冊表時 Validate 應跳過參照完整性檢查")]
+        [DisplayName("Validate skips the referential integrity check when no registry is given")]
         public void Validate_NoRegistry_SkipsReferentialCheck()
         {
             var settings = new MenuSettings();
@@ -262,7 +262,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("EnsureValid 於選單有問題時應拋出並列出全部問題")]
+        [DisplayName("EnsureValid throws for an invalid menu and lists every problem")]
         public void EnsureValid_Invalid_ThrowsListingAllProblems()
         {
             var settings = new MenuSettings();
@@ -276,7 +276,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("EnsureValid 於選單正確時不應拋出")]
+        [DisplayName("EnsureValid does not throw for a valid menu")]
         public void EnsureValid_Valid_DoesNotThrow()
         {
             var exception = Record.Exception(() => BuildNestedMenu().EnsureValid());
@@ -285,7 +285,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("MenuFolder.ToString / MenuEntry.ToString 應回傳可辨識字串")]
+        [DisplayName("MenuFolder.ToString and MenuEntry.ToString return recognizable strings")]
         public void ToString_ReturnsIdentifiableText()
         {
             Assert.Equal("sales - 銷售", new MenuFolder("sales", "銷售").ToString());
@@ -293,7 +293,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("MenuNodeBase.Visible 預設應為 true")]
+        [DisplayName("MenuNodeBase.Visible defaults to true")]
         public void MenuNode_Visible_DefaultsToTrue()
         {
             Assert.True(new MenuFolder().Visible);

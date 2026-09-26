@@ -5,8 +5,9 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// NumberFormatResolver 計量單位：數量/重量依 UNIT 欄單位解析位數、同單位 round-then-sum；
-    /// 無單位碼不捨入、單位碼不在主檔或無主檔時退框架預設，公司位數一律不參與。
+    /// NumberFormatResolver with units of measure: quantity and weight resolve their decimals from the unit in the UNIT column,
+    /// with round-then-sum within one unit. Without a unit code nothing is rounded; a unit code missing from the master, or no
+    /// master at all, falls back to the framework default. Company decimals never take part.
     /// </summary>
     public class NumberFormatResolverUnitTests
     {
@@ -32,7 +33,7 @@ namespace Polhem.Definition.UnitTests
         [InlineData(NumberKind.Quantity, "KG", 3)]
         [InlineData(NumberKind.Weight, "KG", 3)]
         [InlineData(NumberKind.Weight, "M", 2)]
-        [DisplayName("ResolveDecimals 數量/重量依 UNIT 欄單位給不同位數")]
+        [DisplayName("ResolveDecimals gives quantity and weight different decimals by the unit in the UNIT column")]
         public void ResolveDecimals_ByUnit(NumberKind kind, string code, int expected)
         {
             Assert.Equal(expected, NumberFormatResolver.ResolveDecimals(kind, Ctx(), code));
@@ -41,7 +42,7 @@ namespace Polhem.Definition.UnitTests
         [Theory]
         [InlineData("PCS", "N0")]
         [InlineData("KG", "N3")]
-        [DisplayName("ResolveFormat 數量依單位給不同格式字串")]
+        [DisplayName("ResolveFormat gives quantity a different format string by unit")]
         public void ResolveFormat_ByUnit(string code, string expected)
         {
             Assert.Equal(expected, NumberFormatResolver.ResolveFormat(NumberKind.Quantity, Ctx(), code));
@@ -50,7 +51,7 @@ namespace Polhem.Definition.UnitTests
         [Theory]
         [InlineData(NumberKind.Quantity, 0)]
         [InlineData(NumberKind.Weight, 3)]
-        [DisplayName("ResolveDecimals 無單位碼時回框架預設，公司覆寫不參與")]
+        [DisplayName("ResolveDecimals without a unit code returns the framework default and ignores the company override")]
         public void ResolveDecimals_NoUnit_IgnoresCompanyOverride(NumberKind kind, int expected)
         {
             var ctx = Ctx(CompanyWithOverride(kind, 5));
@@ -63,7 +64,7 @@ namespace Polhem.Definition.UnitTests
         [InlineData(NumberKind.Quantity, "")]
         [InlineData(NumberKind.Weight, null)]
         [InlineData(NumberKind.Weight, "")]
-        [DisplayName("RoundByKind 列單位碼空時原值返回（不捨入），即使公司設了覆寫")]
+        [DisplayName("RoundByKind returns the value unchanged (no rounding) when the row's unit code is empty, even with a company override")]
         public void RoundByKind_NoUnit_ReturnsValueUnchanged(NumberKind kind, string? unitCode)
         {
             var ctx = Ctx(CompanyWithOverride(kind, 0));
@@ -72,7 +73,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResolveDecimals 無單位主檔時退框架預設（Quantity 0、Weight 3）")]
+        [DisplayName("ResolveDecimals falls back to the framework default without a unit master (Quantity 0, Weight 3)")]
         public void ResolveDecimals_NoUnitMaster_FrameworkDefault()
         {
             var ctx = new RoundingContext { Company = null, UnitSettings = null };
@@ -82,7 +83,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResolveDecimals 無單位主檔時公司覆寫不參與（Quantity 公司設 2 → 框架 0）")]
+        [DisplayName("ResolveDecimals ignores the company override without a unit master (company sets Quantity to 2, framework gives 0)")]
         public void ResolveDecimals_NoUnitMaster_IgnoresCompanyOverride()
         {
             var ctx = new RoundingContext { Company = CompanyWithOverride(NumberKind.Quantity, 2), UnitSettings = null };
@@ -93,14 +94,14 @@ namespace Polhem.Definition.UnitTests
         [Theory]
         [InlineData(NumberKind.Quantity, 0)]
         [InlineData(NumberKind.Weight, 3)]
-        [DisplayName("ResolveDecimals 單位碼不在主檔時退框架預設（Quantity 0、Weight 3）")]
+        [DisplayName("ResolveDecimals falls back to the framework default for a unit code not in the master (Quantity 0, Weight 3)")]
         public void ResolveDecimals_UnknownUnit_FrameworkDefault(NumberKind kind, int expected)
         {
             Assert.Equal(expected, NumberFormatResolver.ResolveDecimals(kind, Ctx(), "XXX"));
         }
 
         [Fact]
-        [DisplayName("RoundByKind 單位碼不在主檔時依框架預設捨入（Weight 3 位、Quantity 0 位）")]
+        [DisplayName("RoundByKind rounds to the framework default for a unit code not in the master (Weight 3, Quantity 0)")]
         public void RoundByKind_UnknownUnit_RoundsToFrameworkDefault()
         {
             Assert.Equal(1.235m, NumberFormatResolver.RoundByKind(1.2345m, NumberKind.Weight, Ctx(), "XXX"));
@@ -108,7 +109,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResolveDecimals 公司多載：數量回框架預設，公司覆寫不參與")]
+        [DisplayName("ResolveDecimals company overload returns the framework default for quantity and ignores the company override")]
         public void ResolveDecimals_CompanyOverload_Quantity_FrameworkDefault()
         {
             var company = CompanyWithOverride(NumberKind.Quantity, 2);
@@ -117,7 +118,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("RoundByKind 公司多載：數量沒有單位碼 → 原值返回")]
+        [DisplayName("RoundByKind company overload returns a quantity unchanged because there is no unit code")]
         public void RoundByKind_CompanyOverload_Quantity_ReturnsValueUnchanged()
         {
             var company = CompanyWithOverride(NumberKind.Quantity, 0);
@@ -126,7 +127,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("RoundByKind 數量依單位捨入（PCS 0 位 / KG 3 位）")]
+        [DisplayName("RoundByKind rounds by unit (PCS to 0 decimals, KG to 3)")]
         public void RoundByKind_ByUnit()
         {
             Assert.Equal(12m, NumberFormatResolver.RoundByKind(12.345m, NumberKind.Quantity, Ctx(), "PCS"));
@@ -134,7 +135,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("round-then-sum：同欄 KG（3 位）明細各捨入後加總 == 表頭合計")]
+        [DisplayName("Round-then-sum with KG (3 decimals) in one column: the sum of the rounded lines equals the header total")]
         public void RoundThenSum_SameUnit_InvariantHolds()
         {
             decimal[] details = [1.2345m, 1.2345m, 1.2345m];
@@ -144,17 +145,17 @@ namespace Polhem.Definition.UnitTests
             foreach (var d in details)
                 total += NumberFormatResolver.RoundByKind(d, NumberKind.Weight, ctx, "KG");
 
-            // 每筆 1.2345 → KG 3 位 AwayFromZero → 1.235；×3 = 3.705。
+            // Each 1.2345 rounds AwayFromZero to 1.235 at the KG scale of 3, and three of them make 3.705.
             Assert.Equal(3.705m, total);
 
-            // 對照：全精度加總後才捨（禁止做法）= round(3.7035, KG) = 3.704 ≠ 3.705。
+            // For contrast, summing at full precision and rounding afterwards (forbidden) gives round(3.7035, KG) = 3.704, not 3.705.
             decimal sumThenRound = NumberFormatResolver.RoundByKind(
                 details[0] + details[1] + details[2], NumberKind.Weight, ctx, "KG");
             Assert.NotEqual(total, sumThenRound);
         }
 
         [Fact]
-        [DisplayName("同欄不同列不同單位 → 各依自己單位位數解析（PCS 0 vs KG 3）")]
+        [DisplayName("Rows with different units in the same column each resolve their own unit's decimals (PCS 0, KG 3)")]
         public void SameColumn_DifferentUnits_DifferentDecimals()
         {
             var ctx = Ctx();

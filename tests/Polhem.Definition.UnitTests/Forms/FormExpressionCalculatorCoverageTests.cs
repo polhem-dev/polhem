@@ -9,10 +9,10 @@ using Polhem.Expressions;
 namespace Polhem.Definition.UnitTests.Forms
 {
     /// <summary>
-    /// <see cref="FormExpressionCalculator"/> 補測：涵蓋整表 <c>ApplyFieldExpressions</c> 對不同 RowState
-    /// 的分支、<c>ValidateRules</c> 的規則過濾／When 守衛／違規丟出 <see cref="UserMessageException"/>／
-    /// 目標表解析、參考碼（幣別 / 單位）捨入解析，以及 null Fields 的早退分支。使用真實
-    /// <see cref="DynamicExpressoEvaluator"/>，純記憶體、無資料庫。
+    /// Additional tests for <see cref="FormExpressionCalculator"/>: the per-RowState branches of the whole-table <c>ApplyFieldExpressions</c>,
+    /// the rule filtering, When guard and <see cref="UserMessageException"/> on violation in <c>ValidateRules</c>,
+    /// target table resolution, rounding reference code (currency / unit) resolution, and the early exits for null Fields. Uses the real
+    /// <see cref="DynamicExpressoEvaluator"/>, entirely in memory with no database.
     /// </summary>
     public class FormExpressionCalculatorCoverageTests
     {
@@ -45,16 +45,16 @@ namespace Polhem.Definition.UnitTests.Forms
             table.Columns.Add("qty", typeof(decimal));
             table.Columns.Add("amount", typeof(decimal));
             table.Columns.Add("status", typeof(string));
-            table.Columns.Add("extra_col", typeof(string));   // 無對映 schema 欄 → BuildVariables fallback
+            table.Columns.Add("extra_col", typeof(string));   // No matching schema field, so `BuildVariables` falls back.
             return table;
         }
 
         [Fact]
-        [DisplayName("ApplyFieldExpressions：schema.Tables 為 null（序列化空集合）時早退、不丟例外")]
+        [DisplayName("ApplyFieldExpressions returns early without throwing when schema.Tables is null (an empty collection being serialized)")]
         public void ApplyFieldExpressions_NullTables_ReturnsEarly()
         {
             var schema = new FormSchema("Order", "Order") { CategoryId = "company" };
-            schema.SetSerializeState(SerializeState.Serialize);   // 空 Tables → getter 回 null
+            schema.SetSerializeState(SerializeState.Serialize);   // With empty Tables the getter returns null.
 
             var ex = Record.Exception(() =>
                 _calculator.ApplyFieldExpressions(schema, new DataSet(), new RoundingContext()));
@@ -64,7 +64,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyFieldExpressions：資料集缺對應表時略過、不丟例外")]
+        [DisplayName("ApplyFieldExpressions skips a table missing from the data set without throwing")]
         public void ApplyFieldExpressions_MissingDataTable_Skips()
         {
             var schema = BuildComputeSchema();
@@ -76,7 +76,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyFieldExpressions：僅對 Added / Modified 列重算；Unchanged 略過、Deleted 不觸碰")]
+        [DisplayName("ApplyFieldExpressions recomputes only Added / Modified rows, skips Unchanged and does not touch Deleted")]
         public void ApplyFieldExpressions_RowStates_AppliesToAddedAndModifiedOnly()
         {
             var schema = BuildComputeSchema();
@@ -85,8 +85,8 @@ namespace Polhem.Definition.UnitTests.Forms
             var unchanged = table.Rows.Add(Guid.NewGuid(), 1m, 1m, 99m, "Keep", "x");
             var modified = table.Rows.Add(Guid.NewGuid(), 5m, 2m, 0m, "Keep", "y");
             var deleted = table.Rows.Add(Guid.NewGuid(), 9m, 9m, 7m, "Keep", "z");
-            table.AcceptChanges();                       // 全部轉 Unchanged
-            modified["price"] = 5m; modified["qty"] = 4m; // → Modified，amount 陳舊
+            table.AcceptChanges();                       // Everything becomes Unchanged.
+            modified["price"] = 5m; modified["qty"] = 4m; // Now Modified, with a stale amount.
             deleted.Delete();                            // → Deleted
             var added = table.Rows.Add(Guid.NewGuid(), 3m, 3m, 0m, DBNull.Value, "w"); // → Added
 
@@ -95,18 +95,18 @@ namespace Polhem.Definition.UnitTests.Forms
 
             _calculator.ApplyFieldExpressions(schema, dataSet, new RoundingContext());
 
-            Assert.Equal(20m, modified["amount"]);   // 5 * 4 重算
-            Assert.Equal(9m, added["amount"]);       // 3 * 3 重算
-            Assert.Equal("Draft", added["status"]);  // Added 套用預設值
-            Assert.Equal(99m, unchanged["amount"]);  // Unchanged 未被重算（分支 false）
+            Assert.Equal(20m, modified["amount"]);   // Recomputed as 5 * 4.
+            Assert.Equal(9m, added["amount"]);       // Recomputed as 3 * 3.
+            Assert.Equal("Draft", added["status"]);  // Added rows get default values.
+            Assert.Equal(99m, unchanged["amount"]);  // Unchanged rows are not recomputed (the false branch).
         }
 
         [Fact]
-        [DisplayName("ValidateRules：schema.Rules 為 null（序列化空集合）時早退、不丟例外")]
+        [DisplayName("ValidateRules returns early without throwing when schema.Rules is null (an empty collection being serialized)")]
         public void ValidateRules_NullRules_ReturnsEarly()
         {
             var schema = BuildComputeSchema();
-            schema.SetSerializeState(SerializeState.Serialize);   // 空 Rules → getter 回 null
+            schema.SetSerializeState(SerializeState.Serialize);   // With empty Rules the getter returns null.
 
             var ex = Record.Exception(() =>
                 _calculator.ValidateRules(schema, new DataSet(), FormRuleTrigger.BeforeSave));
@@ -116,7 +116,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ValidateRules：只評估啟用且觸發點相符的規則、依 Order 排序，且略過 Deleted 列")]
+        [DisplayName("ValidateRules evaluates only enabled rules with a matching trigger and skips Deleted rows")]
         public void ValidateRules_FiltersEnabledMatchingTrigger_AndSkipsDeletedRow()
         {
             var schema = BuildComputeSchema();
@@ -125,15 +125,15 @@ namespace Polhem.Definition.UnitTests.Forms
             var r1b = schema.Rules!.Add("r_qty", "qty >= 0", "qty");
             r1b.Order = 1;
             var disabled = schema.Rules!.Add("r_dis", "price > 1000000", "disabled");
-            disabled.Enabled = false;                        // 停用 → 不評估
+            disabled.Enabled = false;                        // Disabled, so not evaluated.
             var delTrigger = schema.Rules!.Add("r_del", "false", "wrong-trigger");
-            delTrigger.Trigger = FormRuleTrigger.BeforeDelete; // 觸發點不符 → 不評估
+            delTrigger.Trigger = FormRuleTrigger.BeforeDelete; // Trigger does not match, so not evaluated.
 
             var table = BuildComputeTable();
             table.Rows.Add(Guid.NewGuid(), 10m, 2m, 20m, "Draft", "a");
             var deleted = table.Rows.Add(Guid.NewGuid(), 1m, 1m, 1m, "Draft", "b");
             table.AcceptChanges();
-            deleted.Delete();                                // Deleted → ValidateRuleRows 略過
+            deleted.Delete();                                // Deleted, so `ValidateRuleRows` skips it.
             var dataSet = new DataSet();
             dataSet.Tables.Add(table);
 
@@ -144,7 +144,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ValidateRules：條件不成立時以規則訊息丟出 UserMessageException")]
+        [DisplayName("ValidateRules throws UserMessageException with the rule message when the condition fails")]
         public void ValidateRules_FailingCondition_ThrowsUserMessageException()
         {
             var schema = BuildComputeSchema();
@@ -161,12 +161,12 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ValidateRules：When 守衛不成立時整條規則略過（Condition 不評估）")]
+        [DisplayName("ValidateRules skips the whole rule when its When guard is false (Condition is not evaluated)")]
         public void ValidateRules_WhenGuardFalse_SkipsRule()
         {
             var schema = BuildComputeSchema();
             var rule = schema.Rules!.Add("r_when", "false", "should-not-throw");
-            rule.When = "status == \"Confirmed\"";   // 列 status = Draft → When false → 略過
+            rule.When = "status == \"Confirmed\"";   // The row status is Draft, so When is false and the rule is skipped.
             var table = BuildComputeTable();
             table.Rows.Add(Guid.NewGuid(), 1m, 1m, 10m, "Draft", "a");
             var dataSet = new DataSet();
@@ -179,18 +179,18 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ValidateRules：目標表解析——空 TargetTable→主檔、具名存在→該表、具名不存在→略過")]
+        [DisplayName("ValidateRules resolves the target table: empty TargetTable means the master, an existing name means that table, a missing name is skipped")]
         public void ValidateRules_TargetTableResolution_HandlesAllCases()
         {
             var schema = BuildComputeSchema();
             var detail = schema.Tables!.Add("OrderLine", "Lines");
             detail.Fields!.Add(new FormField("line_qty", "LineQty", FieldDbType.Integer));
 
-            schema.Rules!.Add("r_master", "price >= 0", "master");           // 空 TargetTable → 主檔
+            schema.Rules!.Add("r_master", "price >= 0", "master");           // Empty TargetTable means the master.
             var rDetail = schema.Rules!.Add("r_detail", "line_qty >= 0", "detail");
-            rDetail.TargetTable = "OrderLine";                               // 具名存在
+            rDetail.TargetTable = "OrderLine";                               // An existing name.
             var rAbsent = schema.Rules!.Add("r_absent", "false", "absent");
-            rAbsent.TargetTable = "NoSuchTable";                            // 具名不存在 → 略過
+            rAbsent.TargetTable = "NoSuchTable";                            // A missing name, so skipped.
 
             var master = BuildComputeTable();
             master.Rows.Add(Guid.NewGuid(), 10m, 2m, 20m, "Draft", "a");
@@ -208,7 +208,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyComputedRow：捨入參考碼解析——欄位幣別 / schema 幣別 / 遺漏幣別 / 單位 / 無參考碼")]
+        [DisplayName("ApplyComputedRow resolves the rounding reference code: field currency, schema currency, missing currency, unit, no reference code")]
         public void ApplyComputedRow_ResolvesRefCodeAcrossNumberKinds()
         {
             var schema = new FormSchema("Order", "Order") { CategoryId = "company", CurrencyField = "currency" };
@@ -218,34 +218,34 @@ namespace Polhem.Definition.UnitTests.Forms
             table.Fields!.Add(new FormField("unit", "Unit", FieldDbType.String));
             table.Fields!.Add(new FormField("price", "Price", FieldDbType.Currency));
             table.Fields!.Add(new FormField("qty", "Qty", FieldDbType.Decimal));
-            // Amount，欄位自帶 CurrencyField（變數含該欄）
+            // Amount whose field has its own `CurrencyField`, which is among the variables.
             table.Fields!.Add(new FormField("amt_field_ccy", "AmtFieldCcy", FieldDbType.Currency)
             {
                 NumberKind = NumberKind.Amount,
                 CurrencyField = "currency",
                 ValueExpression = "price * qty",
             });
-            // Amount，欄位無 CurrencyField → 退回 schema.CurrencyField
+            // Amount without a `CurrencyField`, so it falls back to `schema.CurrencyField`.
             table.Fields!.Add(new FormField("amt_schema_ccy", "AmtSchemaCcy", FieldDbType.Currency)
             {
                 NumberKind = NumberKind.Amount,
                 ValueExpression = "price * qty",
             });
-            // Amount，CurrencyField 指向不存在的欄 → 變數查無 → refCode 為 null
+            // Amount whose `CurrencyField` points to a missing column, so the variable lookup fails and `refCode` is null.
             table.Fields!.Add(new FormField("amt_missing_ccy", "AmtMissingCcy", FieldDbType.Currency)
             {
                 NumberKind = NumberKind.Amount,
                 CurrencyField = "ghost",
                 ValueExpression = "price * qty",
             });
-            // Weight，UnitField 提供單位參考碼
+            // Weight, where `UnitField` supplies the unit reference code.
             table.Fields!.Add(new FormField("wt_field", "Weight", FieldDbType.Decimal)
             {
                 NumberKind = NumberKind.Weight,
                 UnitField = "unit",
                 ValueExpression = "qty * 2",
             });
-            // UnitPrice：非 Amount/Quantity/Weight → refCode 為 null（default 分支）
+            // UnitPrice is not Amount/Quantity/Weight, so `refCode` is null (the default branch).
             table.Fields!.Add(new FormField("up_field", "UnitPrice", FieldDbType.Currency)
             {
                 NumberKind = NumberKind.UnitPrice,
@@ -282,7 +282,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyComputedRow：formTable.Fields 為 null 時回傳空清單")]
+        [DisplayName("ApplyComputedRow returns an empty list when formTable.Fields is null")]
         public void ApplyComputedRow_NullFields_ReturnsEmpty()
         {
             var schema = new FormSchema("Order", "Order");
@@ -299,7 +299,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyDefaultRow：空欄以字串常數運算式填入並回報；DBNull 目標保持空")]
+        [DisplayName("ApplyDefaultRow fills an empty column from a string constant expression and reports it")]
         public void ApplyDefaultRow_FillsEmptyStringColumn()
         {
             var schema = new FormSchema("Order", "Order");
@@ -312,7 +312,7 @@ namespace Polhem.Definition.UnitTests.Forms
             var dataTable = new DataTable("Order");
             dataTable.Columns.Add("code", typeof(string));
             var row = dataTable.NewRow();
-            row["code"] = string.Empty;   // 空字串 → IsEmptyValue 為真
+            row["code"] = string.Empty;   // An empty string counts as empty for `IsEmptyValue`.
             dataTable.Rows.Add(row);
 
             var changed = _calculator.ApplyDefaultRow(schema.MasterTable!, row);
@@ -322,7 +322,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyDefaultRow：formTable.Fields 為 null 時回傳空清單")]
+        [DisplayName("ApplyDefaultRow returns an empty list when formTable.Fields is null")]
         public void ApplyDefaultRow_NullFields_ReturnsEmpty()
         {
             var schema = new FormSchema("Order", "Order");
@@ -339,7 +339,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("BuildDependencyMap：formTable.Fields 為 null 時回傳空對映")]
+        [DisplayName("BuildDependencyMap returns an empty map when formTable.Fields is null")]
         public void BuildDependencyMap_NullFields_ReturnsEmpty()
         {
             var schema = new FormSchema("Order", "Order");

@@ -5,12 +5,12 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// PermissionModels / PermissionModel / PermissionRule 權限定義類別的測試。
+    /// Tests for the permission definition classes PermissionModels, PermissionModel and PermissionRule.
     /// </summary>
     public class PermissionModelsDataTests
     {
         /// <summary>
-        /// 建立一份示範權限定義（PurchaseOrder / Vendor / Requisition），對應 plan 的測試標的。
+        /// Builds a sample permission definition (PurchaseOrder / Vendor / Requisition) used by the tests.
         /// </summary>
         private static PermissionModels BuildSample()
         {
@@ -36,7 +36,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("PermissionModel 帶參數建構子應設定 ModelId 與 DisplayName")]
+        [DisplayName("PermissionModel parameterized constructor sets ModelId and DisplayName")]
         public void PermissionModel_ParameterizedConstructor_SetsProperties()
         {
             var model = new PermissionModel("PurchaseOrder", "採購單");
@@ -47,7 +47,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("PermissionModel.ToString 應回傳 \"ModelId - DisplayName\"")]
+        [DisplayName("PermissionModel.ToString returns 'ModelId - DisplayName'")]
         public void PermissionModel_ToString_ReturnsFormatted()
         {
             var model = new PermissionModel("PurchaseOrder", "採購單");
@@ -56,7 +56,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("PermissionRule Action 應同時設定為集合 Key")]
+        [DisplayName("PermissionRule Action is also set as the collection Key")]
         public void PermissionRule_Action_SetsAsKey()
         {
             var rule = new PermissionRule(PermissionAction.Update, ScopeStrategy.Own);
@@ -67,7 +67,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("PermissionRule 預設 Scope 應為 Inherit")]
+        [DisplayName("PermissionRule Scope defaults to Inherit")]
         public void PermissionRule_DefaultScope_IsInherit()
         {
             var rule = new PermissionRule(PermissionAction.Print);
@@ -76,7 +76,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("PermissionRuleCollection 以 Action 為鍵可索引")]
+        [DisplayName("PermissionRuleCollection is indexable by Action")]
         public void PermissionRuleCollection_IndexedByAction()
         {
             var model = new PermissionModel("PurchaseOrder", "採購單");
@@ -86,7 +86,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("egress(Print) 未設 scope 時 XML 不應輸出 Scope 屬性")]
+        [DisplayName("An egress action (Print) without a scope does not write the Scope attribute to XML")]
         public void PermissionRule_EgressInheritScope_OmittedFromXml()
         {
             var models = new PermissionModels();
@@ -100,7 +100,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("有設 scope 的 action XML 應輸出 Scope 屬性")]
+        [DisplayName("An action with a scope writes the Scope attribute to XML")]
         public void PermissionRule_ExplicitScope_WrittenToXml()
         {
             var models = new PermissionModels();
@@ -113,7 +113,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("PermissionModels 序列化往返應保留 model / rule / scope")]
+        [DisplayName("A PermissionModels round-trip keeps the models, rules and scopes")]
         public void PermissionModels_RoundTripsThroughXml()
         {
             var models = BuildSample();
@@ -136,7 +136,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Validate 合法 registry 應回傳空清單")]
+        [DisplayName("Validate returns an empty list for a valid registry")]
         public void Validate_ValidRegistry_ReturnsEmpty()
         {
             var models = BuildSample();
@@ -147,7 +147,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Validate egress 設明確 scope 應回報錯誤")]
+        [DisplayName("Validate reports an error for an egress action with an explicit scope")]
         public void Validate_EgressWithScope_ReturnsError()
         {
             var models = new PermissionModels();

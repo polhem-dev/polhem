@@ -6,13 +6,13 @@ using Polhem.Definition.Collections;
 namespace Polhem.Definition.UnitTests.Collections
 {
     /// <summary>
-    /// KeyCollectionBase / KeyCollectionItem 行為測試。
-    /// 使用既有 <see cref="Parameter"/> / <see cref="ParameterCollection"/> 作為受測樣本。
+    /// Tests for the behavior of KeyCollectionBase / KeyCollectionItem.
+    /// Uses the existing <see cref="Parameter"/> / <see cref="ParameterCollection"/> as the subjects under test.
     /// </summary>
     public class MessagePackKeyCollectionTests
     {
         /// <summary>
-        /// 用於測試 protected 成員（owner 建構子）的子類別。
+        /// A subclass for testing the protected members (the owner constructor).
         /// </summary>
         private sealed class OwnerAwareKeyCollection : KeyCollectionBase<Parameter>
         {
@@ -21,7 +21,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Add 項目後可依索引位置與 Key 取得項目")]
+        [DisplayName("After Add, items can be retrieved by index and by Key")]
         public void Add_Item_CanBeRetrievedByKeyAndIndex()
         {
             // Arrange
@@ -42,7 +42,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Contains 應回傳 Key 是否存在")]
+        [DisplayName("Contains returns whether the Key exists")]
         public void Contains_ReturnsWhetherKeyExists()
         {
             // Arrange
@@ -57,7 +57,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Key 比對應忽略大小寫")]
+        [DisplayName("Key comparison ignores case")]
         public void Contains_IsCaseInsensitive()
         {
             // Arrange
@@ -72,7 +72,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Remove 應移除指定 Key 的項目")]
+        [DisplayName("Remove removes the item with the given Key")]
         public void Remove_RemovesItemByKey()
         {
             // Arrange
@@ -92,7 +92,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Insert 應將項目插入指定位置")]
+        [DisplayName("Insert inserts the item at the given position")]
         public void Insert_AddsItemAtSpecifiedIndex()
         {
             // Arrange
@@ -111,7 +111,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Clear 應移除所有項目")]
+        [DisplayName("Clear removes all items")]
         public void Clear_RemovesAllItems()
         {
             // Arrange
@@ -129,7 +129,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("以 owner 為參數的建構子應設定 Owner")]
+        [DisplayName("Constructor taking an owner sets Owner")]
         public void Constructor_WithOwner_SetsOwner()
         {
             var owner = new object();
@@ -138,7 +138,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Add(IKeyCollectionItem) 應加入項目並可由索引取得")]
+        [DisplayName("Add(IKeyCollectionItem) adds the item and it can be retrieved by index")]
         public void Add_ViaInterface_AddsItem()
         {
             var col = new ParameterCollection();
@@ -151,7 +151,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Insert(IKeyCollectionItem) 應插入於指定 index")]
+        [DisplayName("Insert(IKeyCollectionItem) inserts at the given index")]
         public void Insert_ViaInterface_InsertsAtIndex()
         {
             var col = new ParameterCollection
@@ -168,7 +168,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Remove(IKeyCollectionItem) 應依 Key 移除項目")]
+        [DisplayName("Remove(IKeyCollectionItem) removes the item by Key")]
         public void Remove_ViaInterface_RemovesByKey()
         {
             var col = new ParameterCollection
@@ -185,7 +185,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("ChangeItemKey 應更新項目的 Key 索引")]
+        [DisplayName("ChangeItemKey updates the Key index of the item")]
         public void ChangeItemKey_UpdatesKeyIndex()
         {
             var col = new ParameterCollection
@@ -203,7 +203,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("SetSerializeState 應更新集合與所有項目的 SerializeState")]
+        [DisplayName("SetSerializeState updates the SerializeState of the collection and every item")]
         public void SetSerializeState_PropagatesToItems()
         {
             var col = new ParameterCollection
@@ -222,7 +222,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Tag 預設為 null,可設為任意物件")]
+        [DisplayName("Tag defaults to null and accepts any object")]
         public void Tag_DefaultAndAssignment()
         {
             var col = new ParameterCollection();

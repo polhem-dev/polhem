@@ -5,12 +5,12 @@ using Polhem.Definition.Filters;
 namespace Polhem.Definition.UnitTests.Filters
 {
     /// <summary>
-    /// FilterCondition / FilterGroup / FilterNode 邏輯與序列化測試。
+    /// Logic and serialization tests for FilterCondition / FilterGroup / FilterNode.
     /// </summary>
     public class FilterGroupTests
     {
         [Fact]
-        [DisplayName("FilterCondition 建構子應正確設定欄位、運算子與值")]
+        [DisplayName("FilterCondition constructor sets the field, operator and value")]
         public void FilterCondition_Constructor_SetsProperties()
         {
             // Act
@@ -25,7 +25,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterCondition Between 工廠方法應設定兩個值")]
+        [DisplayName("FilterCondition Between factory method sets both values")]
         public void FilterCondition_Between_SetsBothValues()
         {
             // Arrange
@@ -47,7 +47,7 @@ namespace Polhem.Definition.UnitTests.Filters
         [InlineData("Contains")]
         [InlineData("StartsWith")]
         [InlineData("EndsWith")]
-        [DisplayName("FilterCondition 工廠方法應產生對應運算子")]
+        [DisplayName("FilterCondition factory methods produce the matching operator")]
         public void FilterCondition_FactoryMethods_ProduceExpectedOperator(string factory)
         {
             // Act
@@ -75,7 +75,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterCondition In 工廠方法應儲存值集合")]
+        [DisplayName("FilterCondition In factory method stores the value collection")]
         public void FilterCondition_In_StoresEnumerable()
         {
             // Arrange
@@ -93,7 +93,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterGroup.All 應建立 AND 群組並包含子節點")]
+        [DisplayName("FilterGroup.All creates an AND group containing the child nodes")]
         public void FilterGroup_All_CreatesAndGroupWithNodes()
         {
             // Arrange
@@ -110,7 +110,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterGroup.Any 應建立 OR 群組並包含子節點")]
+        [DisplayName("FilterGroup.Any creates an OR group containing the child nodes")]
         public void FilterGroup_Any_CreatesOrGroupWithNodes()
         {
             // Act
@@ -122,7 +122,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterGroup 建構子帶 LogicalOperator 應設定運算子")]
+        [DisplayName("FilterGroup constructor with a LogicalOperator sets the operator")]
         public void FilterGroup_Constructor_WithOperator_SetsOperator()
         {
             // Act
@@ -135,7 +135,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterGroup ShouldSerializeNodes 空集合應回傳 false")]
+        [DisplayName("FilterGroup ShouldSerializeNodes returns false for an empty collection")]
         public void FilterGroup_ShouldSerializeNodes_EmptyCollection_ReturnsFalse()
         {
             // Arrange
@@ -146,7 +146,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterGroup ShouldSerializeNodes 非空集合應回傳 true")]
+        [DisplayName("FilterGroup ShouldSerializeNodes returns true for a non-empty collection")]
         public void FilterGroup_ShouldSerializeNodes_NonEmpty_ReturnsTrue()
         {
             // Arrange
@@ -157,7 +157,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterGroup 三層巢狀 XML 序列化應正確還原結構")]
+        [DisplayName("FilterGroup XML serialization of three nested levels restores the structure")]
         public void FilterGroup_DeepNested_XmlRoundtrip_PreservesStructure()
         {
             // Arrange
@@ -188,7 +188,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterCondition ToString Between 應包含 BETWEEN ... AND ...")]
+        [DisplayName("FilterCondition ToString for Between contains BETWEEN ... AND ...")]
         public void FilterCondition_ToString_Between_FormatsBothValues()
         {
             // Arrange
@@ -213,7 +213,7 @@ namespace Polhem.Definition.UnitTests.Filters
         [InlineData(ComparisonOperator.LessThanOrEqual, "<=")]
         [InlineData(ComparisonOperator.Like, "LIKE")]
         [InlineData(ComparisonOperator.In, "IN")]
-        [DisplayName("FilterCondition ToString 應依運算子輸出對應符號")]
+        [DisplayName("FilterCondition ToString outputs the symbol matching the operator")]
         public void FilterCondition_ToString_ReturnsExpectedOperatorSymbol(ComparisonOperator op, string expectedSymbol)
         {
             // Arrange
@@ -228,7 +228,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterCondition ToString Contains 應包含 %value%")]
+        [DisplayName("FilterCondition ToString for Contains includes %value%")]
         public void FilterCondition_ToString_Contains_WrapsValueInPercent()
         {
             // Arrange
@@ -242,7 +242,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterCondition ToString StartsWith 應以 'value%' 結尾")]
+        [DisplayName("FilterCondition ToString for StartsWith includes 'value%'")]
         public void FilterCondition_ToString_StartsWith_EndsWithPercent()
         {
             // Arrange
@@ -256,7 +256,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterCondition ToString EndsWith 應以 '%value' 開頭")]
+        [DisplayName("FilterCondition ToString for EndsWith includes '%value'")]
         public void FilterCondition_ToString_EndsWith_StartsWithPercent()
         {
             // Arrange

@@ -8,7 +8,7 @@ namespace Polhem.Definition.UnitTests.Security
     public class MasterKeyProviderRelativePathTests
     {
         [Fact]
-        [DisplayName("GetMasterKey 相對路徑應套用 definePath 組合成絕對路徑")]
+        [DisplayName("GetMasterKey resolves a relative path against definePath")]
         public void GetMasterKey_RelativeFilePath_ResolvesAgainstDefinePath()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-mk-rel-{Guid.NewGuid():N}");
@@ -34,7 +34,7 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey 相對路徑不存在且 autoCreate=true 應在 definePath 下建立檔案")]
+        [DisplayName("GetMasterKey with a missing relative path and autoCreate=true creates the file under definePath")]
         public void GetMasterKey_RelativeFilePath_Missing_AutoCreate_CreatesInDefinePath()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-mk-relcreate-{Guid.NewGuid():N}");

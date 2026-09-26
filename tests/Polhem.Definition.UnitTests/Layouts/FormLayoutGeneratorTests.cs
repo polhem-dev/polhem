@@ -6,12 +6,12 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Definition.UnitTests.Layouts
 {
     /// <summary>
-    /// FormLayoutGenerator.Generate 將 FormSchema 轉換為 FormLayout 的測試。
+    /// Tests for FormLayoutGenerator.Generate converting a FormSchema into a FormLayout.
     /// </summary>
     public class FormLayoutGeneratorTests
     {
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate 應產出帶 LayoutId / ProgId / Caption 的 FormLayout")]
+        [DisplayName("FormLayoutGenerator.Generate produces a FormLayout with LayoutId / ProgId / Caption")]
         public void Generate_RequiresLayoutId_ProducesLayoutWithProgIdAndCaption()
         {
             var schema = BuildSchema();
@@ -25,7 +25,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate 主檔 Section 應命名為 Main、Caption 用主檔 DisplayName 但不顯示")]
+        [DisplayName("FormLayoutGenerator.Generate names the master Section Main, with the master DisplayName as a caption that is not shown")]
         public void Generate_CreatesMainSection()
         {
             var schema = BuildSchema();
@@ -42,7 +42,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate 應忽略 Visible=false 的欄位")]
+        [DisplayName("FormLayoutGenerator.Generate ignores fields with Visible=false")]
         public void Generate_SkipsInvisibleFields()
         {
             var schema = BuildSchema();
@@ -59,7 +59,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         [InlineData(FieldDbType.DateTime, ControlType.DateEdit)]
         [InlineData(FieldDbType.Text, ControlType.MemoEdit)]
         [InlineData(FieldDbType.String, ControlType.TextEdit)]
-        [DisplayName("FormLayoutGenerator.Generate ControlType=Auto 應依 DbType 推導對應控制型態")]
+        [DisplayName("FormLayoutGenerator.Generate infers the control type from the DbType for ControlType=Auto")]
         public void Generate_AutoControlType_MapsDbTypeToControlType(FieldDbType dbType, ControlType expected)
         {
             var schema = new FormSchema("Demo", "示範");
@@ -73,7 +73,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate 多個 Table 應為主檔以外的每張表建立 Detail Grid")]
+        [DisplayName("FormLayoutGenerator.Generate creates a detail grid for every table other than the master")]
         public void Generate_MultipleTables_CreatesDetailGrid()
         {
             var schema = BuildSchema();
@@ -89,7 +89,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate 主檔所有欄位皆不可見時不應新增 Section")]
+        [DisplayName("FormLayoutGenerator.Generate adds no Section when every master field is invisible")]
         public void Generate_MasterAllInvisible_DoesNotAddSection()
         {
             var schema = new FormSchema("Demo", "示範");
@@ -102,7 +102,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator 透過 FormSchema 入口傳入 null layoutId 應接受並原樣寫入")]
+        [DisplayName("FormLayoutGenerator.Generate accepts a custom layoutId and writes it as is")]
         public void Generate_AcceptsCustomLayoutId()
         {
             var schema = BuildSchema();

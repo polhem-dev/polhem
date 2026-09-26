@@ -9,15 +9,15 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition.UnitTests.Language
 {
     /// <summary>
-    /// 補強 <see cref="LanguageService"/> 邊界路徑的測試覆蓋率：
-    /// 建構子 null 防護、GetLangEnum 最終 return null 路徑（lang == defaultLang 或 defaultLang 為空）、
-    /// GetLangEnumText 當 langEnum 為 null 的空值傳播路徑、
-    /// TryGetLangText 當 resource 存在但 subKey 不存在的分支。
+    /// Adds coverage for edge paths of <see cref="LanguageService"/>:
+    /// the constructor null guard, the final return-null path of GetLangEnum (lang == defaultLang, or an empty defaultLang),
+    /// the null propagation path of GetLangEnumText when langEnum is null,
+    /// and the TryGetLangText branch where the resource exists but the subKey does not.
     /// </summary>
     public class LanguageServiceAdditionalTests
     {
         [Fact]
-        [DisplayName("LanguageService 建構子傳入 null 應拋 ArgumentNullException")]
+        [DisplayName("LanguageService constructor throws ArgumentNullException for null")]
         public void Constructor_NullDefineAccess_ThrowsArgumentNullException()
         {
             var exception = Record.Exception(() => new LanguageService(null!));
@@ -26,7 +26,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("GetLangEnum 當 lang == defaultLang 且 Enum 不存在時應回傳 null，不嘗試 fallback")]
+        [DisplayName("GetLangEnum returns null without trying a fallback when lang == defaultLang and the Enum does not exist")]
         public void GetLangEnum_LangEqualsDefaultLang_EnumMiss_ReturnsNull()
         {
             var defineAccess = new MinimalLangDefineAccess("zh-TW");
@@ -36,7 +36,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("GetLangEnum 當 defaultLang 為空字串且 Enum 不存在時應回傳 null")]
+        [DisplayName("GetLangEnum returns null when defaultLang is an empty string and the Enum does not exist")]
         public void GetLangEnum_EmptyDefaultLang_EnumMiss_ReturnsNull()
         {
             var defineAccess = new MinimalLangDefineAccess("");
@@ -46,7 +46,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("GetLangEnumText 當 GetLangEnum 回傳 null 時應回傳 null（空值傳播）")]
+        [DisplayName("GetLangEnumText returns null when GetLangEnum returns null (null propagation)")]
         public void GetLangEnumText_NullLangEnum_ReturnsNull()
         {
             var defineAccess = new MinimalLangDefineAccess("en-US");
@@ -56,7 +56,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("TryGetLangText 當 resource 存在但 subKey 不在 Items 時應回傳 false 與空字串")]
+        [DisplayName("TryGetLangText returns false and an empty string when the resource exists but the subKey is not in Items")]
         public void TryGetLangText_ResourceExistsButKeyMissing_ReturnsFalseAndEmpty()
         {
             var defineAccess = new MinimalLangDefineAccess("en-US");
@@ -70,7 +70,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("GetLangText 當 defaultLang 為空且主語系未命中時應回傳 namespace.subKey 格式")]
+        [DisplayName("GetLangText returns the namespace.subKey format when defaultLang is empty and the primary language misses")]
         public void GetLangText_EmptyDefaultLang_PrimaryMiss_ReturnsFallbackKey()
         {
             var defineAccess = new MinimalLangDefineAccess("");

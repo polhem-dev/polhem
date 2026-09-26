@@ -6,14 +6,14 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Definition.UnitTests.Layouts
 {
     /// <summary>
-    /// <see cref="FormLayout.Clone"/> 家族測試：全欄位複製、巢狀結構獨立、改動副本不影響來源。
-    /// 存在理由是定義資料 init 後不可異動——執行階段拿到的 layout 是 process-wide 快取實例，
-    /// 任何加工前都必須先 clone。
+    /// Tests for the <see cref="FormLayout.Clone"/> family: every field copied, nested structures independent, and changing the copy leaves the source untouched.
+    /// They exist because definition data is immutable after init: the layout obtained at runtime is the process-wide cached instance,
+    /// so it must be cloned before any processing.
     /// </summary>
     public class FormLayoutCloneTests
     {
         [Fact]
-        [DisplayName("Clone 應複製 FormLayout 的所有純量屬性")]
+        [DisplayName("Clone copies every scalar property of FormLayout")]
         public void Clone_CopiesScalarProperties()
         {
             var source = BuildLayout();
@@ -27,7 +27,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("Clone 應深層複製 Sections / Fields，且不共用實例")]
+        [DisplayName("Clone deep-copies Sections / Fields without sharing instances")]
         public void Clone_DeepCopiesSectionsAndFields()
         {
             var source = BuildLayout();
@@ -41,7 +41,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("Clone 應深層複製 Details / Columns，且不共用實例")]
+        [DisplayName("Clone deep-copies Details / Columns without sharing instances")]
         public void Clone_DeepCopiesDetailsAndColumns()
         {
             var source = BuildLayout();
@@ -55,7 +55,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("改動副本不得影響來源（快取實例保護）")]
+        [DisplayName("Changing the copy does not affect the source (protects the cached instance)")]
         public void Clone_MutatingCopy_LeavesSourceUntouched()
         {
             var source = BuildLayout();
@@ -77,7 +77,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("LayoutField.Clone 應複製基底與自身成員（含 ExtendedProperties）")]
+        [DisplayName("LayoutField.Clone copies base and own members (including ExtendedProperties)")]
         public void LayoutFieldClone_CopiesAllMembers()
         {
             var source = new LayoutField
@@ -118,7 +118,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("LayoutColumn.Clone 應複製 Width 與基底成員")]
+        [DisplayName("LayoutColumn.Clone copies Width and the base members")]
         public void LayoutColumnClone_CopiesWidthAndBase()
         {
             var source = new LayoutColumn("qty", "數量", ControlType.NumericEdit) { Width = 120, ReadOnly = true };
@@ -133,7 +133,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("LayoutGrid.Clone 應複製 AllowActions / AllowEditModes")]
+        [DisplayName("LayoutGrid.Clone copies AllowActions / AllowEditModes")]
         public void LayoutGridClone_CopiesGridMembers()
         {
             var source = new LayoutGrid("Detail", "明細")
@@ -151,7 +151,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("LayoutSection.Clone 應複製 ShowCaption")]
+        [DisplayName("LayoutSection.Clone copies ShowCaption")]
         public void LayoutSectionClone_CopiesShowCaption()
         {
             var source = new LayoutSection { Name = "Main", Caption = "主要", ShowCaption = false };
@@ -164,7 +164,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("空 Sections / Details 的 Clone 不應丟例外")]
+        [DisplayName("Clone with empty Sections / Details does not throw")]
         public void Clone_EmptyCollections_DoesNotThrow()
         {
             var source = new FormLayout { LayoutId = "L", ProgId = "P" };

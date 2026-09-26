@@ -6,9 +6,9 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition.UnitTests.Storage
 {
     /// <summary>
-    /// 補強 <see cref="CustomizeOnlyStorage"/> 中尚未覆蓋的兩個只讀保護方法：
-    /// <see cref="CustomizeOnlyStorage.SaveDbCategorySettings"/> 與
-    /// <see cref="CustomizeOnlyStorage.SaveTableSchema"/>，均應拋 <see cref="NotSupportedException"/>。
+    /// Covers the read-only guards of <see cref="CustomizeOnlyStorage"/> not covered elsewhere:
+    /// <see cref="CustomizeOnlyStorage.SaveDbCategorySettings"/> and
+    /// <see cref="CustomizeOnlyStorage.SaveTableSchema"/>, which both throw <see cref="NotSupportedException"/>.
     /// </summary>
     public sealed class CustomizeOnlyStorageSaveTests
     {
@@ -16,14 +16,14 @@ namespace Polhem.Definition.UnitTests.Storage
             => new(new CustomizeOnlyPathOptions(Path.GetTempPath(), "test-cust"));
 
         [Fact]
-        [DisplayName("SaveDbCategorySettings 應拋出 NotSupportedException（override 層嚴格只讀）")]
+        [DisplayName("SaveDbCategorySettings throws NotSupportedException (the override layer is strictly read-only)")]
         public void SaveDbCategorySettings_ThrowsNotSupportedException()
         {
             Assert.Throws<NotSupportedException>(() => CreateStorage().SaveDbCategorySettings(new DbCategorySettings()));
         }
 
         [Fact]
-        [DisplayName("SaveTableSchema 應拋出 NotSupportedException（override 層嚴格只讀）")]
+        [DisplayName("SaveTableSchema throws NotSupportedException (the override layer is strictly read-only)")]
         public void SaveTableSchema_ThrowsNotSupportedException()
         {
             Assert.Throws<NotSupportedException>(() => CreateStorage().SaveTableSchema("common", new TableSchema()));

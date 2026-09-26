@@ -6,7 +6,7 @@ namespace Polhem.Definition.UnitTests.Settings
     public class CacheNotifyOptionsTests
     {
         [Fact]
-        [DisplayName("CacheNotifyOptions 預設值應符合規格（Enabled=true、IntervalSeconds=5、MarginSeconds=5、DatabaseId=common）")]
+        [DisplayName("CacheNotifyOptions defaults match the specification (Enabled=true, IntervalSeconds=5, MarginSeconds=5, DatabaseId=common)")]
         public void DefaultValues_MatchExpectedDefaults()
         {
             var options = new CacheNotifyOptions();
@@ -17,7 +17,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ToString 應回傳型別名稱 CacheNotifyOptions")]
+        [DisplayName("ToString returns the type name CacheNotifyOptions")]
         public void ToString_ReturnsTypeName()
         {
             var options = new CacheNotifyOptions();

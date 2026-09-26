@@ -3,13 +3,13 @@ using System.ComponentModel;
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// GlobalEvents 測試。
+    /// Tests for GlobalEvents.
     /// </summary>
     [Collection(ProcessWideStateCollection.Name)]
     public class GlobalEventsTests
     {
         [Fact]
-        [DisplayName("RaiseDatabaseSettingsChanged 應觸發已訂閱的 handler")]
+        [DisplayName("RaiseDatabaseSettingsChanged invokes a subscribed handler")]
         public void RaiseDatabaseSettingsChanged_InvokesSubscribedHandler()
         {
             var invoked = 0;
@@ -28,7 +28,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("RaiseDatabaseSettingsChanged 應以 sender=null、args=Empty 呼叫 handler")]
+        [DisplayName("RaiseDatabaseSettingsChanged invokes the handler with sender null and EventArgs.Empty")]
         public void RaiseDatabaseSettingsChanged_PassesNullSenderAndEmptyArgs()
         {
             object? capturedSender = new object();
@@ -53,7 +53,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("取消訂閱後 handler 不應被呼叫")]
+        [DisplayName("An unsubscribed handler is not invoked")]
         public void Unsubscribe_HandlerNotInvoked()
         {
             var invoked = 0;

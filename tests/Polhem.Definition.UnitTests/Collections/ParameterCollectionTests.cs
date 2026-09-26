@@ -4,12 +4,12 @@ using Polhem.Definition.Collections;
 namespace Polhem.Definition.UnitTests.Collections
 {
     /// <summary>
-    /// Parameter 與 ParameterCollection 測試。
+    /// Tests for Parameter and ParameterCollection.
     /// </summary>
     public class ParameterCollectionTests
     {
         [Fact]
-        [DisplayName("Parameter 建構子應正確設定 Name 與 Value")]
+        [DisplayName("Parameter constructor sets Name and Value")]
         public void Parameter_Constructor_SetsNameAndValue()
         {
             // Act
@@ -21,7 +21,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Parameter ToString 應回傳 Name=Value 格式")]
+        [DisplayName("Parameter ToString returns the Name=Value format")]
         public void Parameter_ToString_ReturnsFormattedString()
         {
             // Arrange
@@ -36,7 +36,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("ParameterCollection Add(name,value) 新增項目應可依名稱查詢")]
+        [DisplayName("ParameterCollection Add(name, value) adds an item that can be looked up by name")]
         public void Add_NameValue_AddsItem()
         {
             // Arrange
@@ -52,7 +52,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("ParameterCollection Add 同名應覆寫原值")]
+        [DisplayName("ParameterCollection Add with an existing name overwrites the value")]
         public void Add_DuplicateName_ReplacesValue()
         {
             // Arrange
@@ -70,7 +70,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("GetValue<T> 存在應回傳轉型後的值")]
+        [DisplayName("GetValue<T> returns the converted value when the key exists")]
         public void GetValueT_Existing_ReturnsTypedValue()
         {
             // Arrange
@@ -87,7 +87,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("GetValue<T> 不存在應拋出 KeyNotFoundException")]
+        [DisplayName("GetValue<T> throws KeyNotFoundException when the key does not exist")]
         public void GetValueT_Missing_ThrowsKeyNotFoundException()
         {
             // Arrange
@@ -98,7 +98,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("GetValue<T> 帶預設值 不存在應回傳預設值")]
+        [DisplayName("GetValue<T> with a default value returns the default when the key does not exist")]
         public void GetValueT_WithDefault_ReturnsDefaultWhenMissing()
         {
             // Arrange

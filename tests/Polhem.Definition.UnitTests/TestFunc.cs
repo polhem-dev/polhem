@@ -1,7 +1,7 @@
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// 測試用的自訂方法。
+    /// Custom methods for tests.
     /// </summary>
     internal static class TestFunc
     {

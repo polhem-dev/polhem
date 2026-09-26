@@ -3,7 +3,7 @@ using System.ComponentModel;
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// <see cref="CustomizeOnlyPathOptions"/> 路徑組合與 path traversal 防護測試。
+    /// Tests for path composition and path traversal protection in <see cref="CustomizeOnlyPathOptions"/>.
     /// </summary>
     public class CustomizeOnlyPathOptionsTests
     {
@@ -11,7 +11,7 @@ namespace Polhem.Definition.UnitTests
         private const string CustomizeId = "acme";
 
         [Fact]
-        [DisplayName("GetProgramSettingsFilePath 應落在 {CustomizePath}/{customizeId}/ProgramSettings.xml")]
+        [DisplayName("GetProgramSettingsFilePath resolves to {CustomizePath}/{customizeId}/ProgramSettings.xml")]
         public void GetProgramSettingsFilePath_ReturnsCustomizeRootedPath()
         {
             var paths = new CustomizeOnlyPathOptions(CustomizeRoot, CustomizeId);
@@ -20,7 +20,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFormLayoutFilePath 應落在 {CustomizePath}/{customizeId}/FormLayout/<layoutId>.FormLayout.xml")]
+        [DisplayName("GetFormLayoutFilePath resolves to {CustomizePath}/{customizeId}/FormLayout/<layoutId>.FormLayout.xml")]
         public void GetFormLayoutFilePath_ReturnsCustomizeRootedPath()
         {
             var paths = new CustomizeOnlyPathOptions(CustomizeRoot, CustomizeId);
@@ -30,7 +30,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetLanguageFilePath 應落在 {CustomizePath}/{customizeId}/Language/<lang>/<ns>.Language.xml")]
+        [DisplayName("GetLanguageFilePath resolves to {CustomizePath}/{customizeId}/Language/<lang>/<ns>.Language.xml")]
         public void GetLanguageFilePath_ReturnsCustomizeRootedPath()
         {
             var paths = new CustomizeOnlyPathOptions(CustomizeRoot, CustomizeId);
@@ -44,7 +44,7 @@ namespace Polhem.Definition.UnitTests
         [InlineData("../escape")]
         [InlineData("foo/bar")]
         [InlineData("foo\\bar")]
-        [DisplayName("customizeId 含路徑跳脫字元應拋出 ArgumentException")]
+        [DisplayName("A customizeId containing path traversal characters throws ArgumentException")]
         public void Constructor_CustomizeIdWithPathTraversal_ThrowsArgumentException(string customizeId)
         {
             Assert.Throws<ArgumentException>(() => new CustomizeOnlyPathOptions(CustomizeRoot, customizeId));
@@ -53,14 +53,14 @@ namespace Polhem.Definition.UnitTests
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("customizeId 為空或空白應拋出 ArgumentException")]
+        [DisplayName("An empty or whitespace customizeId throws ArgumentException")]
         public void Constructor_EmptyCustomizeId_ThrowsArgumentException(string customizeId)
         {
             Assert.Throws<ArgumentException>(() => new CustomizeOnlyPathOptions(CustomizeRoot, customizeId));
         }
 
         [Fact]
-        [DisplayName("customizePath 為空應拋出 ArgumentException")]
+        [DisplayName("An empty customizePath throws ArgumentException")]
         public void Constructor_EmptyCustomizePath_ThrowsArgumentException()
         {
             Assert.Throws<ArgumentException>(() => new CustomizeOnlyPathOptions("", CustomizeId));

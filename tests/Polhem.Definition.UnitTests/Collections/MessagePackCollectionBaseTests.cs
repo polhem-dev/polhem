@@ -6,13 +6,13 @@ using Polhem.Definition.Sorting;
 namespace Polhem.Definition.UnitTests.Collections
 {
     /// <summary>
-    /// CollectionBase 基底行為測試。
-    /// 以 SortFieldCollection/SortField 為具體子類型驗證。
+    /// Tests for the base behavior of CollectionBase.
+    /// Uses SortFieldCollection/SortField as the concrete subtypes.
     /// </summary>
     public class MessagePackCollectionBaseTests
     {
         /// <summary>
-        /// 用於測試 protected 成員（owner 建構子、SetOwner）的子類別。
+        /// A subclass for testing the protected members (the owner constructor and SetOwner).
         /// </summary>
         private sealed class OwnerAwareCollection : CollectionBase<SortField>
         {
@@ -25,7 +25,7 @@ namespace Polhem.Definition.UnitTests.Collections
             new SortField(name, SortDirection.Asc);
 
         [Fact]
-        [DisplayName("預設建構 Owner 應為 null")]
+        [DisplayName("Default constructor leaves Owner null")]
         public void DefaultConstructor_OwnerIsNull()
         {
             var col = new SortFieldCollection();
@@ -33,7 +33,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Add 應呼叫 InsertItem 並設定 item.Collection")]
+        [DisplayName("Add calls InsertItem and sets item.Collection")]
         public void Add_SetsItemCollection()
         {
             var col = new SortFieldCollection();
@@ -46,7 +46,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("ICollectionItem 版 Add 應可加入相容型別")]
+        [DisplayName("ICollectionItem overload of Add accepts a compatible type")]
         public void Add_ViaInterface_Works()
         {
             var col = new SortFieldCollection();
@@ -59,7 +59,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("ICollectionItem 版 Insert 應插入於指定 index")]
+        [DisplayName("ICollectionItem overload of Insert inserts at the given index")]
         public void Insert_ViaInterface_InsertsAtIndex()
         {
             var col = new SortFieldCollection
@@ -76,7 +76,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("ICollectionItem 版 Remove 應從集合移除並清除 item.Collection")]
+        [DisplayName("ICollectionItem overload of Remove removes the item and clears item.Collection")]
         public void Remove_ViaInterface_ClearsItemCollection()
         {
             var col = new SortFieldCollection();
@@ -90,7 +90,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Clear 應移除所有項目")]
+        [DisplayName("Clear removes all items")]
         public void Clear_RemovesAllItems()
         {
             var col = new SortFieldCollection
@@ -105,7 +105,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("SerializeState 預設為 None")]
+        [DisplayName("SerializeState defaults to None")]
         public void SerializeState_DefaultIsNone()
         {
             var col = new SortFieldCollection();
@@ -113,7 +113,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("SetSerializeState 應更新集合與所有項目的 SerializeState")]
+        [DisplayName("SetSerializeState updates the SerializeState of the collection and every item")]
         public void SetSerializeState_PropagatesToItems()
         {
             var col = new SortFieldCollection();
@@ -127,7 +127,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Tag 預設為 null，可設為任意物件")]
+        [DisplayName("Tag defaults to null and accepts any object")]
         public void Tag_DefaultAndAssignment()
         {
             var col = new SortFieldCollection();
@@ -138,7 +138,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("以 owner 為參數的建構子應設定 Owner")]
+        [DisplayName("Constructor taking an owner sets Owner")]
         public void Constructor_WithOwner_SetsOwner()
         {
             var owner = new object();
@@ -148,7 +148,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("SetOwner 應更新 Owner 屬性")]
+        [DisplayName("SetOwner updates the Owner property")]
         public void SetOwner_UpdatesOwner()
         {
             var col = new OwnerAwareCollection();

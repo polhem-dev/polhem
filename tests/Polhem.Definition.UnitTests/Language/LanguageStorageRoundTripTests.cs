@@ -5,13 +5,13 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition.UnitTests.Language
 {
     /// <summary>
-    /// <see cref="FileDefineStorage"/> 對 <see cref="LanguageResource"/> 的讀寫整合測試。
-    /// 使用獨立 temp 目錄,不污染共享 fixture 資料。
+    /// Read/write integration tests of <see cref="FileDefineStorage"/> for <see cref="LanguageResource"/>.
+    /// Uses an isolated temp directory so the shared fixture data is not polluted.
     /// </summary>
     public class LanguageStorageRoundTripTests
     {
         [Fact]
-        [DisplayName("FileDefineStorage SaveLanguage 應寫檔至 Language/{lang}/{ns}.Language.xml")]
+        [DisplayName("FileDefineStorage SaveLanguage writes the file to Language/{lang}/{ns}.Language.xml")]
         public void SaveLanguage_WritesFileAtExpectedPath()
         {
             var tempDir = Path.Combine(Path.GetTempPath(), $"polhem-lang-{Guid.NewGuid():N}");
@@ -39,7 +39,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("FileDefineStorage GetLanguage 應反序列化 Save 寫入的內容")]
+        [DisplayName("FileDefineStorage GetLanguage deserializes the content written by Save")]
         public void GetLanguage_ReadsBackSavedContent()
         {
             var tempDir = Path.Combine(Path.GetTempPath(), $"polhem-lang-{Guid.NewGuid():N}");
@@ -81,7 +81,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("FileDefineStorage GetLanguage 對不存在檔案應回傳 null（缺譯為正常情境，可 negative-cache）")]
+        [DisplayName("FileDefineStorage GetLanguage returns null for a missing file (a missing translation is normal and can be negatively cached)")]
         public void GetLanguage_MissingFile_ReturnsNull()
         {
             var tempDir = Path.Combine(Path.GetTempPath(), $"polhem-lang-{Guid.NewGuid():N}");

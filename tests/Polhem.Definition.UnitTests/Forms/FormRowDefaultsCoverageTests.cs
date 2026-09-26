@@ -8,9 +8,9 @@ using Polhem.Definition.Forms;
 namespace Polhem.Definition.UnitTests.Forms
 {
     /// <summary>
-    /// <see cref="FormRowDefaults"/> 補測：guard 分支（null formTable / null Fields / 欄位無對應資料欄）
-    /// 與 <see cref="FormRowDefaults.DefaultForDbType"/> 對每一個 <see cref="FieldDbType"/> 的型別預設值。
-    /// 純記憶體、無資料庫。
+    /// Additional tests for <see cref="FormRowDefaults"/>: the guard branches (null formTable, null Fields, a field with no matching data column)
+    /// and the default value <see cref="FormRowDefaults.DefaultForDbType"/> returns for each <see cref="FieldDbType"/>.
+    /// Entirely in memory, with no database.
     /// </summary>
     public class FormRowDefaultsCoverageTests
     {
@@ -22,7 +22,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Apply：formTable 為 null 時直接返回、不丟例外")]
+        [DisplayName("Apply returns immediately without throwing when formTable is null")]
         public void Apply_NullFormTable_NoThrow()
         {
             var row = NewSingleColumnRow();
@@ -33,12 +33,12 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Apply：formTable.Fields 為 null（序列化空集合）時直接返回、不丟例外")]
+        [DisplayName("Apply returns immediately without throwing when formTable.Fields is null (an empty collection being serialized)")]
         public void Apply_NullFields_NoThrow()
         {
             var schema = new FormSchema("Order", "Order");
             var formTable = schema.Tables!.Add("Order", "Order");
-            formTable.SetSerializeState(SerializeState.Serialize);   // 空 Fields → getter 回 null
+            formTable.SetSerializeState(SerializeState.Serialize);   // With empty Fields the getter returns null.
             var row = NewSingleColumnRow();
 
             var ex = Record.Exception(() => FormRowDefaults.Apply(formTable, row));
@@ -48,18 +48,18 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Apply：欄位在資料表無對應資料欄時略過該欄，其餘欄位仍套用預設")]
+        [DisplayName("Apply skips a field with no matching data column and still applies defaults to the other fields")]
         public void Apply_FieldColumnAbsent_SkipsMissingColumn()
         {
             var schema = new FormSchema("Order", "Order");
             var formTable = schema.Tables!.Add("Order", "Order");
             formTable.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
-            formTable.Fields.Add("ghost", "Ghost", FieldDbType.String);   // 無對應資料欄
+            formTable.Fields.Add("ghost", "Ghost", FieldDbType.String);   // No matching data column.
             formTable.Fields.Add("qty", "Qty", FieldDbType.Integer);
 
             var table = new DataTable("Order");
             table.Columns.Add(SysFields.RowId, typeof(Guid));
-            table.Columns.Add("qty", typeof(int));   // 故意不含 ghost 欄
+            table.Columns.Add("qty", typeof(int));   // Deliberately has no `ghost` column.
             var row = table.NewRow();
 
             var ex = Record.Exception(() => FormRowDefaults.Apply(formTable, row));
@@ -72,21 +72,21 @@ namespace Polhem.Definition.UnitTests.Forms
         [Theory]
         [InlineData(FieldDbType.String)]
         [InlineData(FieldDbType.Text)]
-        [DisplayName("DefaultForDbType：文字型別回傳空字串")]
+        [DisplayName("DefaultForDbType returns an empty string for text types")]
         public void DefaultForDbType_TextTypes_ReturnEmptyString(FieldDbType dbType)
         {
             Assert.Equal(string.Empty, FormRowDefaults.DefaultForDbType(dbType));
         }
 
         [Fact]
-        [DisplayName("DefaultForDbType：布林回傳 false")]
+        [DisplayName("DefaultForDbType returns false for Boolean")]
         public void DefaultForDbType_Boolean_ReturnsFalse()
         {
             Assert.False(Assert.IsType<bool>(FormRowDefaults.DefaultForDbType(FieldDbType.Boolean)));
         }
 
         [Fact]
-        [DisplayName("DefaultForDbType：整數家族回傳對應零值（short / int / long）")]
+        [DisplayName("DefaultForDbType returns the matching zero for the integer family (short / int / long)")]
         public void DefaultForDbType_IntegerFamily_ReturnsZero()
         {
             Assert.Equal((short)0, FormRowDefaults.DefaultForDbType(FieldDbType.Short));
@@ -95,7 +95,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("DefaultForDbType：Decimal / Currency 回傳 0m")]
+        [DisplayName("DefaultForDbType returns 0m for Decimal / Currency")]
         public void DefaultForDbType_DecimalTypes_ReturnZeroDecimal()
         {
             Assert.Equal(0m, FormRowDefaults.DefaultForDbType(FieldDbType.Decimal));
@@ -103,17 +103,17 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("DefaultForDbType：Date 回傳今天、DateTime 回傳 DateTime 值")]
+        [DisplayName("DefaultForDbType returns the UTC date for Date and a DateTime value for DateTime")]
         public void DefaultForDbType_DateTypes_ReturnTodayAndNow()
         {
-            // UTC，不是 DateTime.Today：框架的日期預設值是 UtcNow.Date（ADR-032 D12）。
-            // 用本地日斷言會讓本機在 UTC+8 的 00:00–08:00 必定失敗，而 CI 跑 UTC 永遠看不到。
+            // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
+            // Asserting the local date would always fail locally between 00:00 and 08:00 in UTC+8, and CI running in UTC would never see it.
             Assert.Equal(DateTime.UtcNow.Date, FormRowDefaults.DefaultForDbType(FieldDbType.Date));
             Assert.IsType<DateTime>(FormRowDefaults.DefaultForDbType(FieldDbType.DateTime));
         }
 
         [Fact]
-        [DisplayName("DefaultForDbType：Guid 回傳 Guid.Empty、Binary 回傳空位元組陣列")]
+        [DisplayName("DefaultForDbType returns Guid.Empty for Guid and an empty byte array for Binary")]
         public void DefaultForDbType_GuidAndBinary_ReturnEmptyValues()
         {
             Assert.Equal(Guid.Empty, FormRowDefaults.DefaultForDbType(FieldDbType.Guid));
@@ -124,17 +124,17 @@ namespace Polhem.Definition.UnitTests.Forms
         [Theory]
         [InlineData(FieldDbType.AutoIncrement)]
         [InlineData(FieldDbType.Unknown)]
-        [DisplayName("DefaultForDbType：無自然空值的型別回傳 DBNull.Value")]
+        [DisplayName("DefaultForDbType returns DBNull.Value for types with no natural empty value")]
         public void DefaultForDbType_NoNaturalDefault_ReturnsDBNull(FieldDbType dbType)
         {
             Assert.Equal(DBNull.Value, FormRowDefaults.DefaultForDbType(dbType));
         }
 
         [Fact]
-        [DisplayName("DefaultForDbType：DateTime 依基準取當下，Utc 忽略時區、UserZone 取使用者時區")]
+        [DisplayName("DefaultForDbType takes the current DateTime by basis: Utc ignores the time zone, UserZone uses the user's time zone")]
         public void DefaultForDbType_DateTime_FollowsBasis()
         {
-            const string kiritimati = "Pacific/Kiritimati";   // UTC+14：兩種基準必定相差 14 小時
+            const string kiritimati = "Pacific/Kiritimati";   // UTC+14, so the two bases always differ by 14 hours.
             var utcBefore = DateTime.UtcNow;
             var zoneBefore = FrameworkClock.Now(kiritimati);
 
@@ -148,12 +148,12 @@ namespace Polhem.Definition.UnitTests.Forms
         [Theory]
         [InlineData("Pacific/Kiritimati")]
         [InlineData("Pacific/Pago_Pago")]
-        [DisplayName("Apply：以 AddColumn 建立的表，Date 取使用者時區的今天、DateTime 依基準取當下")]
+        [DisplayName("Apply on a table built with AddColumn sets Date to today in the user's time zone and DateTime to now by basis")]
         public void Apply_OnAddColumnTable_SeedsDateOnUserDayAndDateTimeOnBasis(string timeZoneId)
         {
-            // 伺服端 GetNewData 與用戶端 BuildEmptyDataSet 都以 AddColumn 建表。欄位若帶建欄當下的時鐘
-            // 預設值，NewRow() 一建立就有值，Apply 會略過而留下 UTC 讀數（ADR-032 D12）。
-            // 兩個時區任何時刻至少有一個的「今天」與 UTC 不同，Date 斷言不會空轉。
+            // The server's `GetNewData` and the client's `BuildEmptyDataSet` both build tables with `AddColumn`. If a column carried a clock
+            // default from when it was created, `NewRow()` would already have a value, and `Apply` would skip it and leave a UTC reading (ADR-032 D12).
+            // At any moment at least one of the two time zones has a "today" different from UTC, so the Date assertion is never vacuous.
             var schema = new FormSchema("Order", "Order");
             var formTable = schema.Tables!.Add("Order", "Order");
             formTable.Fields!.Add("order_date", "Order Date", FieldDbType.Date);

@@ -9,7 +9,7 @@ namespace Polhem.Definition.UnitTests
     public class FormSchemaTests
     {
         [Fact]
-        [DisplayName("FormSchema 新建物件 CategoryId 應為空字串（必填、無預設值）")]
+        [DisplayName("A new FormSchema has an empty CategoryId (required, no default)")]
         public void CategoryId_NewInstance_DefaultsToEmpty()
         {
             var schema = new FormSchema();
@@ -18,7 +18,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("FormSchema CategoryId 應透過 XmlAttribute 序列化往返")]
+        [DisplayName("FormSchema CategoryId round-trips through XML as an XmlAttribute")]
         public void CategoryId_RoundTripsThroughXml()
         {
             var schema = new FormSchema("Demo", "示範") { CategoryId = "sales" };
@@ -32,7 +32,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("FormSchema CurrencyField 應透過 XmlAttribute 序列化往返")]
+        [DisplayName("FormSchema CurrencyField round-trips through XML as an XmlAttribute")]
         public void CurrencyField_RoundTripsThroughXml()
         {
             var schema = new FormSchema("Order", "訂單") { CategoryId = "company", CurrencyField = "sys_currency" };
@@ -46,7 +46,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("FormSchema CurrencyField 為空預設值時序列化應省略屬性")]
+        [DisplayName("FormSchema omits the CurrencyField attribute when it has its empty default")]
         public void CurrencyField_Empty_OmitsXmlAttribute()
         {
             var schema = new FormSchema("Demo", "示範") { CategoryId = "sales" };
@@ -58,7 +58,7 @@ namespace Polhem.Definition.UnitTests
 
 
         [Fact]
-        [DisplayName("FormSchema 建立部門表單定義應包含有效的主檔表")]
+        [DisplayName("A department FormSchema has a valid master table")]
         public void CreateFormSchema_DepartmentWithRelations_HasMasterTable()
         {
             var formSchema = new FormSchema("Department", "部門");
@@ -82,7 +82,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("FormSchema 建立員工表單定義應包含關聯欄位參考")]
+        [DisplayName("An employee FormSchema contains relation field references")]
         public void CreateFormSchema_EmployeeWithRelations_HasRelationFieldReferences()
         {
             var formSchema = new FormSchema("Employee", "員工");
@@ -112,7 +112,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetListLayout 應依 ListFields 順序加入 Columns 並補入隱藏 sys_rowid")]
+        [DisplayName("GetListLayout adds Columns in ListFields order and appends a hidden sys_rowid")]
         public void GetListLayout_ValidSchema_ContainsListFieldsAndHiddenRowId()
         {
             var schema = new FormSchema("Demo", "示範") { ListFields = "sys_id,sys_name" };
@@ -126,7 +126,7 @@ namespace Polhem.Definition.UnitTests
             Assert.Equal("Demo", grid.TableName);
             Assert.Equal(3, grid.Columns!.Count);
 
-            // ListFields 指定的順序在前，sys_rowid 補在最後
+            // The ListFields order comes first, and sys_rowid is appended last.
             Assert.Equal("sys_id", grid.Columns![0].FieldName);
             Assert.Equal(150, grid.Columns![0].Width);
             Assert.Equal("sys_name", grid.Columns![1].FieldName);

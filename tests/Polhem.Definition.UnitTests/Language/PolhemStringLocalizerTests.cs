@@ -10,8 +10,8 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition.UnitTests.Language
 {
     /// <summary>
-    /// <see cref="PolhemStringLocalizer{T}"/> 行為測試：透過 typeof(T).Name 解析 namespace、
-    /// 經 ILanguageService 命中 / 缺譯、format 多載、ResourceNotFound 旗標。
+    /// Behavior tests for <see cref="PolhemStringLocalizer{T}"/>: resolving the namespace through typeof(T).Name,
+    /// hits and missing translations through ILanguageService, the format overload, and the ResourceNotFound flag.
     /// </summary>
     public class PolhemStringLocalizerTests
     {
@@ -20,7 +20,7 @@ namespace Polhem.Definition.UnitTests.Language
         public sealed class CommonResources { }
 
         [Fact]
-        [DisplayName("Indexer 命中時 LocalizedString.Value 為譯文、ResourceNotFound=false")]
+        [DisplayName("Indexer hit gives the translation as LocalizedString.Value and ResourceNotFound=false")]
         public void Indexer_Hit_ReturnsLocalizedString()
         {
             var defineAccess = new StubDefineAccess("en-US");
@@ -36,10 +36,10 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("Indexer miss 時 LocalizedString.Value 為 fullKey、ResourceNotFound=true")]
+        [DisplayName("Indexer miss gives the fullKey as LocalizedString.Value and ResourceNotFound=true")]
         public void Indexer_Miss_ReturnsResourceNotFound()
         {
-            var defineAccess = new StubDefineAccess("en-US"); // 兩邊都沒
+            var defineAccess = new StubDefineAccess("en-US"); // Neither language has it.
             var svc = new LanguageService(defineAccess);
             var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW");
 
@@ -51,11 +51,11 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("Indexer 走預設語系 fallback 命中時 ResourceNotFound=false")]
+        [DisplayName("Indexer hit through the default language fallback gives ResourceNotFound=false")]
         public void Indexer_FallbackHit_ReturnsLocalizedString()
         {
             var defineAccess = new StubDefineAccess("en-US");
-            // zh-TW 缺、en-US 有
+            // Missing in zh-TW, present in en-US.
             defineAccess.AddResource("en-US", "CommonResources", ("OK", "OK"));
             var svc = new LanguageService(defineAccess);
             var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW");
@@ -67,7 +67,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("Indexer 帶 arguments 應 string.Format 套用參數")]
+        [DisplayName("Indexer with arguments applies them with string.Format")]
         public void Indexer_WithArguments_FormatsValue()
         {
             var defineAccess = new StubDefineAccess("en-US");
@@ -81,7 +81,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("預設 ctor 走 CultureInfo.CurrentUICulture 取 lang")]
+        [DisplayName("Default ctor takes lang from CultureInfo.CurrentUICulture")]
         public void DefaultCtor_UsesCurrentUICulture()
         {
             var defineAccess = new StubDefineAccess("en-US");
@@ -103,7 +103,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("GetAllStrings 回傳空集合（語系資源不支援列舉所有 key）")]
+        [DisplayName("GetAllStrings returns an empty collection (language resources do not support enumerating every key)")]
         public void GetAllStrings_ReturnsEmpty()
         {
             var defineAccess = new StubDefineAccess("en-US");

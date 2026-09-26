@@ -5,11 +5,11 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Identity
 {
     /// <summary>
-    /// <see cref="CompanyRolePermissions"/> 改為建構時預建索引後的行為回歸。
+    /// Behavior regression for <see cref="CompanyRolePermissions"/> after it moved to building its indexes at construction.
     /// </summary>
     /// <remarks>
-    /// 這是純效能重構，**行為必須完全不變**，因此測的是語意而非速度：多角色 OR 合併、
-    /// 未持有的角色不得計入、精確 action 比對、以及重複 grant 的合併。
+    /// This is a pure performance refactoring and **the behavior must not change at all**, so these tests check semantics, not speed: OR-merging
+    /// across roles, not counting roles the user does not hold, exact action matching, and merging duplicate grants.
     /// </remarks>
     public class CompanyRolePermissionsIndexTests
     {
@@ -33,7 +33,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetAllowed 應 OR 合併多個角色在同一模型上的權限")]
+        [DisplayName("GetAllowed OR-merges the permissions of several roles on the same model")]
         public void GetAllowed_MergesAcrossRoles()
         {
             var allowed = Build().GetAllowed(["admin", "clerk"], "order");
@@ -42,10 +42,10 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetAllowed 不應計入使用者未持有的角色")]
+        [DisplayName("GetAllowed does not count roles the user does not hold")]
         public void GetAllowed_IgnoresRolesNotHeld()
         {
-            // "other" 在 order 上有 Delete，但使用者只持有 clerk —— 不得洩漏進來。
+            // "other" has Delete on order, but the user holds only clerk, so it must not leak in.
             var allowed = Build().GetAllowed(["clerk"], "order");
 
             Assert.Equal(PermissionAction.Read, allowed);
@@ -53,14 +53,14 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetAllowed 對無任何授權的模型應回傳 None")]
+        [DisplayName("GetAllowed returns None for a model with no grants")]
         public void GetAllowed_UnknownModel_ReturnsNone()
         {
             Assert.Equal(PermissionAction.None, Build().GetAllowed(["admin"], "nowhere"));
         }
 
         [Fact]
-        [DisplayName("GetAllowedByModel 應回傳所持角色的逐模型合併結果")]
+        [DisplayName("GetAllowedByModel returns the per-model merge for the roles held")]
         public void GetAllowedByModel_MergesPerModel()
         {
             var byModel = Build().GetAllowedByModel(["admin", "clerk"]);
@@ -71,12 +71,12 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetEffectiveScopes 應以精確 action 比對，且涵蓋所有持有角色")]
+        [DisplayName("GetEffectiveScopes matches the action exactly and covers every role held")]
         public void GetEffectiveScopes_MatchesActionExactly()
         {
             var scopes = Build().GetEffectiveScopes(["admin", "clerk"], "order", PermissionAction.Read);
 
-            // admin 的 Read 是 All、clerk 的 Read 是 Dept；admin 的 Update(Own) 不得混入。
+            // The admin Read scope is All and the clerk Read scope is Dept. The admin Update (Own) scope must not mix in.
             Assert.Equal(2, scopes.Count);
             Assert.Contains(ScopeStrategy.All, scopes);
             Assert.Contains(ScopeStrategy.Dept, scopes);
@@ -84,7 +84,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetUserRoleIds 應回傳該使用者的全部角色，其他使用者的不得混入")]
+        [DisplayName("GetUserRoleIds returns all of the user's roles without mixing in other users' roles")]
         public void GetUserRoleIds_ReturnsOnlyThatUsersRoles()
         {
             var roles = Build().GetUserRoleIds("u1");
@@ -96,14 +96,14 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetUserRoleIds 對未知使用者應回傳空集合而非擲例外")]
+        [DisplayName("GetUserRoleIds returns an empty collection instead of throwing for an unknown user")]
         public void GetUserRoleIds_UnknownUser_ReturnsEmpty()
         {
             Assert.Empty(Build().GetUserRoleIds("nobody"));
         }
 
         [Fact]
-        [DisplayName("同一 (角色, 模型) 的重複 grant 應合併為單一遮罩")]
+        [DisplayName("Duplicate grants for the same (role, model) merge into a single mask")]
         public void DuplicateGrants_AreMerged()
         {
             var grants = new List<RoleGrantRow>

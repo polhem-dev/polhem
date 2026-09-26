@@ -6,13 +6,13 @@ using Polhem.Definition.Forms;
 namespace Polhem.Definition.UnitTests.Forms
 {
     /// <summary>
-    /// <see cref="FormSchema.Clone"/> 系列測試：scalar / 子集合 / 巢狀
-    /// FieldMappings、ListItems / mutation 隔離 / 不污染來源 cache 實例。
+    /// Tests for <see cref="FormSchema.Clone"/>: scalars, child collections, nested
+    /// FieldMappings and ListItems, mutation isolation, and not polluting the source cache instance.
     /// </summary>
     public class FormSchemaCloneTests
     {
         [Fact]
-        [DisplayName("Clone 應產生獨立 FormSchema 實例（reference 不等）")]
+        [DisplayName("Clone produces an independent FormSchema instance (reference not equal)")]
         public void Clone_ReturnsNewInstance()
         {
             var source = BuildSchema();
@@ -26,7 +26,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Clone 應 deep-copy scalar properties（ProgId / DisplayName / CategoryId / ListFields）")]
+        [DisplayName("Clone deep-copies scalar properties (ProgId / DisplayName / CategoryId / ListFields)")]
         public void Clone_CopiesScalarProperties()
         {
             var source = BuildSchema();
@@ -40,7 +40,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Clone 應 deep-copy Tables / Fields，每個 entry 都是獨立實例")]
+        [DisplayName("Clone deep-copies Tables / Fields, and every entry is an independent instance")]
         public void Clone_CopiesTablesAndFields()
         {
             var source = BuildSchema();
@@ -50,7 +50,6 @@ namespace Polhem.Definition.UnitTests.Forms
             Assert.Equal(source.Tables!.Count, clone.Tables!.Count);
             Assert.Equal(source.Tables![0].Fields!.Count, clone.Tables![0].Fields!.Count);
 
-            // 對應位置欄位內容相等但實例獨立
             var srcField = source.Tables![0].Fields!["sys_name"];
             var cloneField = clone.Tables![0].Fields!["sys_name"];
             Assert.NotSame(srcField, cloneField);
@@ -59,7 +58,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Clone 後 mutate clone 不應污染來源 schema")]
+        [DisplayName("Mutating the clone does not pollute the source schema")]
         public void Clone_MutatingCloneDoesNotAffectSource()
         {
             var source = BuildSchema();
@@ -75,7 +74,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Clone 應 deep-copy FormField.RelationFieldMappings")]
+        [DisplayName("Clone deep-copies FormField.RelationFieldMappings")]
         public void Clone_CopiesRelationFieldMappings()
         {
             var source = new FormSchema("Order", "Order") { CategoryId = "sales" };
@@ -97,13 +96,12 @@ namespace Polhem.Definition.UnitTests.Forms
             Assert.Equal("sys_id", cloneField.RelationFieldMappings![0].SourceField);
             Assert.Equal("ref_customer_id", cloneField.RelationFieldMappings![0].DestinationField);
 
-            // mutate clone 不影響來源
             cloneField.RelationFieldMappings![0].DestinationField = "ref_x";
             Assert.Equal("ref_customer_id", customerField.RelationFieldMappings![0].DestinationField);
         }
 
         [Fact]
-        [DisplayName("Clone 應 deep-copy FormField.ListItems")]
+        [DisplayName("Clone deep-copies FormField.ListItems")]
         public void Clone_CopiesListItems()
         {
             var source = new FormSchema("Customer", "Customer") { CategoryId = "common" };
@@ -125,7 +123,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Clone 後來源不應有 SerializeState mutation（不像 XmlCodec.Serialize）")]
+        [DisplayName("Clone does not mutate the source's SerializeState (unlike XmlCodec.Serialize)")]
         public void Clone_DoesNotMutateSerializeState()
         {
             var source = BuildSchema();
@@ -133,12 +131,12 @@ namespace Polhem.Definition.UnitTests.Forms
 
             _ = source.Clone();
 
-            // Clone 是純讀取，不應動到來源的 SerializeState（XmlCodec.Serialize 會！）
+            // Clone is a pure read and must not touch the source's `SerializeState`, which `XmlCodec.Serialize` does.
             Assert.Equal(Polhem.Base.Serialization.SerializeState.None, source.SerializeState);
         }
 
         [Fact]
-        [DisplayName("並行多 thread Clone 同一來源不互相干擾、各得獨立副本")]
+        [DisplayName("Concurrent Clone calls on the same source do not interfere and each gets an independent copy")]
         public void Clone_ParallelInvocations_ProduceIndependentCopies()
         {
             var source = BuildSchema();
@@ -159,7 +157,6 @@ namespace Polhem.Definition.UnitTests.Forms
                 Assert.Equal($"clone-{i}", clones[i].DisplayName);
                 Assert.Equal($"name-{i}", clones[i].Tables![0].Fields!["sys_name"].Caption);
             }
-            // 源始 schema 應保持原狀
             Assert.Equal("Customer (raw)", source.DisplayName);
             Assert.Equal("Customer Name (raw)", source.Tables![0].Fields!["sys_name"].Caption);
         }

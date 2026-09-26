@@ -5,12 +5,12 @@ using Polhem.Definition.Sorting;
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// SortField 與 SortFieldCollection 測試。
+    /// Tests for SortField and SortFieldCollection.
     /// </summary>
     public class SortFieldTests
     {
         [Fact]
-        [DisplayName("SortField 使用欄位名稱與方向建構應正確設定屬性")]
+        [DisplayName("SortField constructed with a field name and direction sets its properties")]
         public void Constructor_ValidArguments_SetsProperties()
         {
             // Act
@@ -22,7 +22,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("SortField 預設建構式應使用預設屬性值")]
+        [DisplayName("SortField default constructor uses the default property values")]
         public void DefaultConstructor_UsesDefaultValues()
         {
             // Act
@@ -37,7 +37,7 @@ namespace Polhem.Definition.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("SortField 欄位名稱為空白應拋出 ArgumentException")]
+        [DisplayName("SortField throws ArgumentException for a null, empty or whitespace field name")]
         public void Constructor_EmptyFieldName_ThrowsArgumentException(string? fieldName)
         {
             // Act & Assert
@@ -45,7 +45,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("SortFieldCollection 新增項目後 Count 應正確反映")]
+        [DisplayName("SortFieldCollection Count reflects added items")]
         public void SortFieldCollection_Add_IncrementsCount()
         {
             // Arrange
@@ -63,7 +63,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("SortFieldCollection 移除項目後 Count 應正確減少")]
+        [DisplayName("SortFieldCollection Count decreases after an item is removed")]
         public void SortFieldCollection_Remove_DecrementsCount()
         {
             // Arrange
@@ -81,7 +81,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("SortField XML 序列化與反序列化應正確還原")]
+        [DisplayName("SortField round-trips through XML serialization")]
         public void SortField_XmlRoundtrip_Succeeds()
         {
             // Arrange
@@ -98,7 +98,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("SortField JSON 序列化與反序列化應正確還原")]
+        [DisplayName("SortField round-trips through JSON serialization")]
         public void SortField_JsonRoundtrip_Succeeds()
         {
             // Arrange
@@ -115,7 +115,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("SortFieldCollection XML 序列化與反序列化應正確還原")]
+        [DisplayName("SortFieldCollection round-trips through XML serialization")]
         public void SortFieldCollection_XmlRoundtrip_Succeeds()
         {
             // Arrange

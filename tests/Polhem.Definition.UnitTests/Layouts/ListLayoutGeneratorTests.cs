@@ -6,12 +6,12 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Definition.UnitTests.Layouts
 {
     /// <summary>
-    /// FormSchema.GetListLayout (透過 ListLayoutGenerator) 的單元測試。
+    /// Unit tests for FormSchema.GetListLayout (through ListLayoutGenerator).
     /// </summary>
     public class ListLayoutGeneratorTests
     {
         [Fact]
-        [DisplayName("GetListLayout 應產出 TableName=ProgId、Caption=主檔 DisplayName 的 LayoutGrid")]
+        [DisplayName("GetListLayout produces a LayoutGrid with TableName=ProgId and Caption=the master DisplayName")]
         public void GetListLayout_ProducesGridWithProgIdAndCaption()
         {
             var schema = new FormSchema("Demo", "示範") { ListFields = "sys_id,sys_name" };
@@ -27,7 +27,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("GetListLayout 應依 ListFields 順序加入 Columns")]
+        [DisplayName("GetListLayout adds Columns in ListFields order")]
         public void GetListLayout_PreservesListFieldsOrder()
         {
             var schema = new FormSchema("Demo", "示範") { ListFields = "sys_name,sys_id" };
@@ -42,7 +42,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("GetListLayout 主檔含 sys_rowid 應補入隱藏欄並設為 Visible=false")]
+        [DisplayName("GetListLayout adds a hidden sys_rowid column with Visible=false when the master has sys_rowid")]
         public void GetListLayout_AddsHiddenRowIdColumn()
         {
             var schema = new FormSchema("Demo", "示範") { ListFields = "sys_id" };
@@ -58,7 +58,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("GetListLayout 主檔不含 sys_rowid 時不會強行補入")]
+        [DisplayName("GetListLayout does not force in sys_rowid when the master does not have it")]
         public void GetListLayout_NoRowIdField_DoesNotAddIt()
         {
             var schema = new FormSchema("Demo", "示範") { ListFields = "sys_id" };
@@ -71,7 +71,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("GetListLayout 不會自動補入 sys_master_rowid（只有 FormLayout 會）")]
+        [DisplayName("GetListLayout does not add sys_master_rowid automatically (only FormLayout does)")]
         public void GetListLayout_DoesNotAddMasterRowId()
         {
             var schema = new FormSchema("Demo", "示範") { ListFields = "sys_id" };
@@ -92,7 +92,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         [InlineData(ControlType.DropDownEdit)]
         [InlineData(ControlType.CheckEdit)]
         [InlineData(ControlType.MemoEdit)]
-        [DisplayName("GetListLayout 非 Auto ControlType 應原樣保留")]
+        [DisplayName("GetListLayout keeps a non-Auto ControlType as is")]
         public void GetListLayout_NonAutoControlType_PreservesValue(ControlType controlType)
         {
             var schema = new FormSchema("Demo", "示範") { ListFields = "col" };
@@ -110,7 +110,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         [InlineData(FieldDbType.DateTime, ControlType.DateEdit)]
         [InlineData(FieldDbType.Text, ControlType.MemoEdit)]
         [InlineData(FieldDbType.String, ControlType.TextEdit)]
-        [DisplayName("GetListLayout ControlType=Auto 應依 DbType 推導對應控制型態")]
+        [DisplayName("GetListLayout infers the control type from the DbType for ControlType=Auto")]
         public void GetListLayout_AutoControlType_MapsDbType(FieldDbType dbType, ControlType expected)
         {
             var schema = new FormSchema("Demo", "示範") { ListFields = "col" };
@@ -124,7 +124,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("GetListLayout Width 應原樣傳遞至 LayoutColumn")]
+        [DisplayName("GetListLayout passes Width through to LayoutColumn")]
         public void GetListLayout_PassesWidth()
         {
             var schema = new FormSchema("Demo", "示範") { ListFields = "col" };
@@ -137,7 +137,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("GetListLayout 應傳遞 DisplayFormat 與 NumberFormat")]
+        [DisplayName("GetListLayout passes DisplayFormat and NumberFormat through")]
         public void GetListLayout_PropagatesDisplayAndNumberFormats()
         {
             var schema = new FormSchema("Demo", "示範") { ListFields = "amount" };
@@ -156,7 +156,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("GetListLayout ListFields 含不存在欄位時應靜默略過（白名單模式）")]
+        [DisplayName("GetListLayout silently skips fields in ListFields that do not exist (allowlist mode)")]
         public void GetListLayout_UnknownFieldInListFields_Skipped()
         {
             var schema = new FormSchema("Demo", "示範") { ListFields = "known,missing" };
@@ -170,10 +170,10 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("GetListLayout 無 MasterTable 時應回傳空欄位的 LayoutGrid")]
+        [DisplayName("GetListLayout returns a LayoutGrid with no columns when there is no MasterTable")]
         public void GetListLayout_NoMasterTable_ReturnsEmptyGrid()
         {
-            // ProgId 與 Tables 不匹配 → MasterTable 為 null
+            // The ProgId does not match any table, so `MasterTable` is null.
             var schema = new FormSchema("NotExist", "不存在") { ListFields = "sys_id" };
 
             var grid = schema.GetListLayout();

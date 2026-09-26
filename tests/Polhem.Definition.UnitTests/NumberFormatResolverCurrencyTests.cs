@@ -5,8 +5,8 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// NumberFormatResolver 多幣別：依 CUKY 欄幣別解析位數/捨入、兩層捨入（明細 round-then-sum +
-    /// 最終現金捨入）、本幣金額、preserve。
+    /// NumberFormatResolver with multiple currencies: decimals and rounding resolved from the currency in the CUKY column,
+    /// two-stage rounding (round-then-sum on the lines plus final cash rounding), home currency amounts, and preserve.
     /// </summary>
     public class NumberFormatResolverCurrencyTests
     {
@@ -25,7 +25,7 @@ namespace Polhem.Definition.UnitTests
         [InlineData("USD", 2)]
         [InlineData("JPY", 0)]
         [InlineData("BHD", 3)]
-        [DisplayName("ResolveDecimals 金額欄依 CUKY 欄幣別給不同位數")]
+        [DisplayName("ResolveDecimals gives an amount column different decimals by the currency in the CUKY column")]
         public void ResolveDecimals_Amount_ByCurrency(string code, int expected)
         {
             Assert.Equal(expected, NumberFormatResolver.ResolveDecimals(NumberKind.Amount, Ctx(), code));
@@ -35,27 +35,27 @@ namespace Polhem.Definition.UnitTests
         [InlineData("USD", "N2")]
         [InlineData("JPY", "N0")]
         [InlineData("BHD", "N3")]
-        [DisplayName("ResolveFormat 金額欄依幣別給不同格式字串")]
+        [DisplayName("ResolveFormat gives an amount column a different format string by currency")]
         public void ResolveFormat_Amount_ByCurrency(string code, string expected)
         {
             Assert.Equal(expected, NumberFormatResolver.ResolveFormat(NumberKind.Amount, Ctx(), code));
         }
 
         [Fact]
-        [DisplayName("ResolveDecimals refCode 空時退公司本幣，再退框架 2 位")]
+        [DisplayName("ResolveDecimals with an empty refCode falls back to the company's default currency, then to the framework's 2")]
         public void ResolveDecimals_EmptyRefCode_FallsBackToDefaultCurrencyThenFramework()
         {
             var company = new CompanyInfo { CompanyId = "C001", DefaultCurrency = "JPY" };
 
-            // 空 refCode → 退公司本幣 JPY（0 位）
+            // An empty refCode falls back to the company's default currency, JPY (0 decimals).
             Assert.Equal(0, NumberFormatResolver.ResolveDecimals(NumberKind.Amount, Ctx(company), null));
 
-            // 無公司本幣、無 refCode → 框架 2 位
+            // Without a company default currency or a refCode, the framework's 2 applies.
             Assert.Equal(2, NumberFormatResolver.ResolveDecimals(NumberKind.Amount, Ctx(), null));
         }
 
         [Fact]
-        [DisplayName("ResolveDecimals 無幣別主檔時金額退框架 2 位")]
+        [DisplayName("ResolveDecimals falls back to the framework's 2 for amounts without a currency master")]
         public void ResolveDecimals_NoCurrencyMaster_FrameworkDefault()
         {
             var ctx = new RoundingContext { Company = null, CurrencySettings = null };
@@ -66,7 +66,7 @@ namespace Polhem.Definition.UnitTests
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("ResolveDecimals 有公司但本幣空白、refCode 空時擲 InvalidOperationException")]
+        [DisplayName("ResolveDecimals throws InvalidOperationException for a company with a blank default currency and an empty refCode")]
         public void ResolveDecimals_CompanyDefaultCurrencyBlank_Throws(string defaultCurrency)
         {
             var ctx = Ctx(new CompanyInfo { CompanyId = "C001", DefaultCurrency = defaultCurrency });
@@ -76,7 +76,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResolveDecimals 公司本幣空白時，即使未部署幣別主檔也擲例外")]
+        [DisplayName("ResolveDecimals throws for a company with a blank default currency even without a currency master")]
         public void ResolveDecimals_CompanyDefaultCurrencyBlank_NoCurrencyMaster_Throws()
         {
             var ctx = new RoundingContext { Company = new CompanyInfo { CompanyId = "C001" }, CurrencySettings = null };
@@ -86,7 +86,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResolveDecimals 公司本幣空白但有 refCode 時依 refCode 解析，不擲例外")]
+        [DisplayName("ResolveDecimals resolves by refCode without throwing when the company's default currency is blank but a refCode is given")]
         public void ResolveDecimals_CompanyDefaultCurrencyBlank_WithRefCode_ResolvesByRefCode()
         {
             var ctx = Ctx(new CompanyInfo { CompanyId = "C001" });
@@ -95,7 +95,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResolveDecimals 公司本幣空白時解析非金額種類不受影響")]
+        [DisplayName("ResolveDecimals for non-amount kinds is unaffected by a blank company default currency")]
         public void ResolveDecimals_CompanyDefaultCurrencyBlank_NonAmountKind_UsesCompanyDecimals()
         {
             var ctx = Ctx(new CompanyInfo { CompanyId = "C001" });
@@ -104,7 +104,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("RoundByKind 公司多載：金額遇本幣空白的公司擲 InvalidOperationException")]
+        [DisplayName("RoundByKind company overload throws InvalidOperationException for an amount when the company's default currency is blank")]
         public void RoundByKind_CompanyOverload_CompanyDefaultCurrencyBlank_Throws()
         {
             var company = new CompanyInfo { CompanyId = "C001" };
@@ -114,7 +114,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("RoundByKind 金額依幣別捨入（USD 2 位 / JPY 0 位）")]
+        [DisplayName("RoundByKind rounds amounts by currency (USD 2 decimals, JPY 0)")]
         public void RoundByKind_Amount_ByCurrency()
         {
             Assert.Equal(12.35m, NumberFormatResolver.RoundByKind(12.345m, NumberKind.Amount, Ctx(), "USD"));
@@ -123,7 +123,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("round-then-sum 不變式：明細各捨幣別位數後加總 == 表頭合計，且 ≠ 全精度後捨（USD）")]
+        [DisplayName("Round-then-sum invariant: the rounded lines sum to the header total, which differs from rounding at full precision (USD)")]
         public void RoundThenSum_Usd_InvariantHolds()
         {
             decimal[] details = [10.333m, 10.333m, 10.333m];
@@ -142,7 +142,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("round-then-sum：JPY 0 位明細加總，位數與 USD 不同")]
+        [DisplayName("Round-then-sum with JPY lines at 0 decimals, a different scale from USD")]
         public void RoundThenSum_Jpy_ZeroDecimals()
         {
             decimal[] details = [100.4m, 100.4m, 100.4m];
@@ -152,11 +152,11 @@ namespace Polhem.Definition.UnitTests
             foreach (var d in details)
                 total += NumberFormatResolver.RoundByKind(d, NumberKind.Amount, ctx, "JPY");
 
-            Assert.Equal(300m, total); // 各捨為 100 → 300
+            Assert.Equal(300m, total); // Each line rounds to 100, so the total is 300.
         }
 
         [Fact]
-        [DisplayName("RoundCash 公司對 CHF 設 0.05 → 捨到 5 分倍數，diff = payable − total")]
+        [DisplayName("RoundCash with a company setting of 0.05 for CHF rounds to multiples of 5 cents, and diff = payable - total")]
         public void RoundCash_CompanyOverride_RoundsToUnit_WithDiff()
         {
             var company = new CompanyInfo
@@ -178,43 +178,43 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("RoundCash 無公司覆寫 → 退幣別自然單位（USD 0.01，等同不額外捨入）")]
+        [DisplayName("RoundCash without a company override falls back to the currency's natural unit (USD 0.01, no extra rounding)")]
         public void RoundCash_NoOverride_NoExtraRounding()
         {
             var ctx = Ctx(new CompanyInfo { CompanyId = "C001" });
 
-            // USD 自然單位 0.01；total 已在 2 位 → payable == total、diff = 0
+            // The natural unit of USD is 0.01 and the total already has 2 decimals, so payable equals total and the diff is 0.
             Assert.Equal(12.34m, NumberFormatResolver.RoundCash(12.34m, "USD", ctx));
         }
 
         [Fact]
-        [DisplayName("本幣金額：home_amount = round(amount × rate, Amount, 本幣)；本幣 JPY 0 位")]
+        [DisplayName("Home currency amount: home_amount = round(amount x rate, Amount, home currency), with home currency JPY at 0 decimals")]
         public void HomeAmount_ConvertedAndRoundedToHomeCurrency()
         {
             var company = new CompanyInfo { CompanyId = "C001", DefaultCurrency = "JPY" };
             var ctx = Ctx(company);
 
-            // 原幣 USD 金額 100.00，匯率 150.5（preserve 全精度）→ 本幣 JPY 0 位
+            // A USD amount of 100.00 at a rate of 150.5 (preserved at full precision) converts to JPY at 0 decimals.
             decimal amount = 100.00m;
             decimal rate = 150.5m;
             decimal home = NumberFormatResolver.RoundByKind(amount * rate, NumberKind.Amount, ctx, "JPY");
 
-            Assert.Equal(15050m, home); // 100 × 150.5 = 15050 → JPY 0 位
+            Assert.Equal(15050m, home); // 100 x 150.5 = 15050, and JPY has 0 decimals.
         }
 
         [Fact]
-        [DisplayName("同列原幣/本幣不同幣：各依自己 CUKY 欄位數解析")]
+        [DisplayName("Original and home amounts in different currencies on one row each resolve from their own CUKY column")]
         public void SameRow_OriginalAndHome_DifferentCurrencies()
         {
             var ctx = Ctx();
 
-            // 原幣 USD 2 位、本幣 JPY 0 位
+            // The original currency USD has 2 decimals and the home currency JPY has 0.
             Assert.Equal(2, NumberFormatResolver.ResolveDecimals(NumberKind.Amount, ctx, "USD"));
             Assert.Equal(0, NumberFormatResolver.ResolveDecimals(NumberKind.Amount, ctx, "JPY"));
         }
 
         [Fact]
-        [DisplayName("Preserve：單價/匯率不因幣別捨入，用完整精度")]
+        [DisplayName("Preserve: unit prices and exchange rates are not rounded by currency and keep full precision")]
         public void Preserve_UnitPriceAndRate_NotRounded()
         {
             var ctx = Ctx();

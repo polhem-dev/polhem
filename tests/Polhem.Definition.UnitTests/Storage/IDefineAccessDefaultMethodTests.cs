@@ -9,11 +9,11 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition.UnitTests.Storage
 {
     /// <summary>
-    /// 驗證 <see cref="IDefineAccess"/> 三個預設介面實作（DIM）的委派行為：
-    /// <c>GetPermissionModels</c>、<c>SavePermissionModels</c>、
-    /// <c>GetFormLayout(customizeId, layoutId)</c>。
-    /// 透過 <see cref="MinimalDefineAccess"/> stub（不覆寫三個 DIM）呼叫，
-    /// 確認預設路徑確實執行。
+    /// Verifies the delegation of the default interface methods (DIM) of <see cref="IDefineAccess"/>:
+    /// <c>GetPermissionModels</c>, <c>SavePermissionModels</c> and
+    /// <c>GetFormLayout(customizeId, layoutId)</c>.
+    /// They are called through the <see cref="MinimalDefineAccess"/> stub (which does not override them)
+    /// to confirm that the default path actually runs.
     /// </summary>
     public class IDefineAccessDefaultMethodTests
     {
@@ -53,7 +53,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetPermissionModels 預設實作應委派至 GetDefine(DefineType.PermissionModels) 並回傳 PermissionModels")]
+        [DisplayName("GetPermissionModels default implementation delegates to GetDefine(DefineType.PermissionModels) and returns PermissionModels")]
         public void GetPermissionModels_DefaultImpl_DelegatesToGetDefine()
         {
             IDefineAccess access = new MinimalDefineAccess();
@@ -63,7 +63,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("SavePermissionModels 預設實作應委派至 SaveDefine(DefineType.PermissionModels, ...)")]
+        [DisplayName("SavePermissionModels default implementation delegates to SaveDefine(DefineType.PermissionModels, ...)")]
         public void SavePermissionModels_DefaultImpl_DelegatesToSaveDefine()
         {
             var stub = new MinimalDefineAccess();
@@ -73,7 +73,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetFormLayout(customizeId, layoutId) 預設實作應忽略 customizeId 並委派至 GetFormLayout(layoutId)")]
+        [DisplayName("GetFormLayout(customizeId, layoutId) default implementation ignores customizeId and delegates to GetFormLayout(layoutId)")]
         public void GetFormLayout_WithCustomizeId_DefaultImpl_DelegatesToSingleParam()
         {
             var stub = new MinimalDefineAccess();

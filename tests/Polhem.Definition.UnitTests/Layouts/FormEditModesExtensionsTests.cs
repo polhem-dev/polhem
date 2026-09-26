@@ -4,7 +4,7 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Definition.UnitTests.Layouts
 {
     /// <summary>
-    /// FormEditModesExtensions 單元測試。
+    /// Unit tests for FormEditModesExtensions.
     /// </summary>
     public class FormEditModesExtensionsTests
     {
@@ -21,7 +21,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         [InlineData(FormEditModes.None, SingleFormMode.Add, false)]
         [InlineData(FormEditModes.None, SingleFormMode.Edit, false)]
         [InlineData(FormEditModes.None, SingleFormMode.View, false)]
-        [DisplayName("Allows 依旗標與表單模式回傳是否可編輯；View 永遠 false")]
+        [DisplayName("Allows returns whether editing is allowed from the flags and the form mode, and View is always false")]
         public void Allows_FlagAndMode_ReturnsExpected(FormEditModes modes, SingleFormMode formMode, bool expected)
         {
             Assert.Equal(expected, modes.Allows(formMode));

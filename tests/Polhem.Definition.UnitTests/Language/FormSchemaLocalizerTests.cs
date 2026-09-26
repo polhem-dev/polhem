@@ -12,13 +12,13 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition.UnitTests.Language
 {
     /// <summary>
-    /// <see cref="FormSchemaLocalizer"/> 行為測試：依約定 key 覆蓋 Caption / DisplayName、
-    /// 缺譯保留原值、namespace = ProgId。
+    /// Behavior tests for <see cref="FormSchemaLocalizer"/>: overriding Caption / DisplayName by convention keys,
+    /// keeping the original value when a translation is missing, and namespace = ProgId.
     /// </summary>
     public class FormSchemaLocalizerTests
     {
         [Fact]
-        [DisplayName("命中時應以語系資源覆蓋 FormSchema.DisplayName")]
+        [DisplayName("A hit overrides FormSchema.DisplayName with the language resource")]
         public void Localize_HitSchemaDisplayName_OverridesValue()
         {
             var defineAccess = BuildDefineAccessWith(
@@ -37,7 +37,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("命中時應以語系資源覆蓋 FormTable.DisplayName（key 帶 TableName）")]
+        [DisplayName("A hit overrides FormTable.DisplayName with the language resource (the key carries the TableName)")]
         public void Localize_HitTableDisplayName_OverridesValue()
         {
             var defineAccess = BuildDefineAccessWith(
@@ -56,7 +56,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("命中時應以語系資源覆蓋 FormField.Caption（key 帶 FieldName）")]
+        [DisplayName("A hit overrides FormField.Caption with the language resource (the key carries the FieldName)")]
         public void Localize_HitFieldCaption_OverridesValue()
         {
             var defineAccess = BuildDefineAccessWith(
@@ -76,10 +76,10 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("缺譯時應保留原字面值（向下相容）")]
+        [DisplayName("A missing translation keeps the original literal value (backward compatible)")]
         public void Localize_MissingKeys_PreservesOriginalValues()
         {
-            var defineAccess = BuildDefineAccessWith(lang: "zh-TW", ns: "Customer"); // 空 resource
+            var defineAccess = BuildDefineAccessWith(lang: "zh-TW", ns: "Customer"); // Empty resource.
             var schema = BuildSchema("Customer", "Customer (raw)");
             var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
 
@@ -91,21 +91,21 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("ProgId 為空時應 no-op，不丟例外")]
+        [DisplayName("An empty ProgId is a no-op and does not throw")]
         public void Localize_EmptyProgId_NoOp()
         {
             var defineAccess = BuildDefineAccessWith(lang: "zh-TW", ns: "Customer");
-            var schema = BuildSchema(progId: "", displayName: "X"); // 空 ProgId
+            var schema = BuildSchema(progId: "", displayName: "X");
             var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
 
             var exception = Record.Exception(() => localizer.Localize(schema, "zh-TW"));
 
             Assert.Null(exception);
-            Assert.Equal("X", schema.DisplayName); // 未變
+            Assert.Equal("X", schema.DisplayName);
         }
 
         [Fact]
-        [DisplayName("Lang 為空或空白時應 no-op，不丟例外")]
+        [DisplayName("An empty or whitespace Lang is a no-op and does not throw")]
         public void Localize_EmptyLang_NoOp()
         {
             var defineAccess = BuildDefineAccessWith(
@@ -121,7 +121,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LangEnumName 命中時應以語系 enum 替換 ListItems")]
+        [DisplayName("A LangEnumName hit replaces ListItems with the language enum")]
         public void Localize_LangEnumName_HitsLocalEnum_ReplacesListItems()
         {
             var defineAccess = new StubDefineAccess(defaultLang: "en-US");
@@ -138,7 +138,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LangEnumName 帶 namespace (Common.X) 跨 namespace 取共用 enum")]
+        [DisplayName("A LangEnumName with a namespace (Common.X) takes a shared enum across namespaces")]
         public void Localize_LangEnumName_FullyQualified_FetchesAcrossNamespaces()
         {
             var defineAccess = new StubDefineAccess(defaultLang: "en-US");
@@ -154,12 +154,12 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LangEnumName 缺譯時保留原 ListItems (向下相容)")]
+        [DisplayName("A missing LangEnumName translation keeps the original ListItems (backward compatible)")]
         public void Localize_LangEnumName_Miss_PreservesOriginalListItems()
         {
-            var defineAccess = new StubDefineAccess(defaultLang: "en-US"); // 沒任何 enum
+            var defineAccess = new StubDefineAccess(defaultLang: "en-US"); // No enums at all.
             var schema = BuildSchemaWithLangEnumField(progId: "Customer", langEnumName: "Status");
-            // 預先寫入 fallback ListItems（XML 中可能有靜態定義）
+            // Pre-populate fallback ListItems, which the XML may define statically.
             var statusField = schema.Tables![0].Fields!["status"];
             statusField.ListItems!.Add("0", "Active (fallback)");
             statusField.ListItems!.Add("1", "Inactive (fallback)");
@@ -167,18 +167,17 @@ namespace Polhem.Definition.UnitTests.Language
 
             localizer.Localize(schema, "zh-TW");
 
-            // 缺譯時不應清掉既有 ListItems
+            // A missing translation must not clear the existing ListItems.
             Assert.Equal(2, statusField.ListItems!.Count);
             Assert.Equal("Active (fallback)", statusField.ListItems!["0"].Text);
         }
 
         [Fact]
-        [DisplayName("LangEnumName 為空時 ListItems 保持原樣（靜態定義無變動）")]
+        [DisplayName("ListItems stay as they are when LangEnumName is empty (static definitions unchanged)")]
         public void Localize_NoLangEnumName_PreservesListItems()
         {
             var defineAccess = new StubDefineAccess(defaultLang: "en-US");
             var schema = BuildSchema("Customer", "Customer");
-            // 添加靜態 ListItems 而不設 LangEnumName
             var nameField = schema.Tables![0].Fields!["sys_name"];
             nameField.ListItems!.Add("a", "A");
             nameField.ListItems!.Add("b", "B");
@@ -191,11 +190,11 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LangEnumName 命中時走預設語系 fallback")]
+        [DisplayName("A LangEnumName hit goes through the default language fallback")]
         public void Localize_LangEnumName_DefaultLangFallback()
         {
             var defineAccess = new StubDefineAccess(defaultLang: "en-US");
-            // 只有 en-US 有 enum，zh-TW 沒
+            // Only en-US has the enum, zh-TW does not.
             defineAccess.AddEnum("en-US", "Customer", "Status", ("0", "Active"), ("1", "Inactive"));
             var schema = BuildSchemaWithLangEnumField(progId: "Customer", langEnumName: "Status");
             var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));

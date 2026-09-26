@@ -4,12 +4,12 @@ using Polhem.Definition.Collections;
 namespace Polhem.Definition.UnitTests.Collections
 {
     /// <summary>
-    /// Property 與 PropertyCollection 測試。
+    /// Tests for Property and PropertyCollection.
     /// </summary>
     public class PropertyCollectionTests
     {
         [Fact]
-        [DisplayName("Property 建構子應正確設定 Name 與 Value")]
+        [DisplayName("Property constructor sets Name and Value")]
         public void Property_Constructor_SetsNameAndValue()
         {
             // Act
@@ -21,7 +21,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Property ToString 應回傳 Name=Value 格式")]
+        [DisplayName("Property ToString returns the Name=Value format")]
         public void Property_ToString_ReturnsNameEqualsValue()
         {
             // Arrange
@@ -32,7 +32,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("PropertyCollection.Add(name,value) 應新增項目")]
+        [DisplayName("PropertyCollection.Add(name, value) adds an item")]
         public void Add_StringValue_AddsItem()
         {
             // Arrange
@@ -48,7 +48,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("GetValue 字串版 存在應回傳屬性值，否則回傳預設值")]
+        [DisplayName("String GetValue returns the property value when it exists, otherwise the default")]
         public void GetValue_String_ReturnsValueOrDefault()
         {
             // Arrange
@@ -63,7 +63,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("GetValue bool 版 存在應轉換為布林，否則回傳預設值")]
+        [DisplayName("Bool GetValue converts the value to a boolean when it exists, otherwise returns the default")]
         public void GetValue_Bool_ReturnsConvertedOrDefault()
         {
             // Arrange
@@ -78,7 +78,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("GetValue int 版 存在應轉換為整數，否則回傳預設值")]
+        [DisplayName("Int GetValue converts the value to an integer when it exists, otherwise returns the default")]
         public void GetValue_Int_ReturnsConvertedOrDefault()
         {
             // Arrange

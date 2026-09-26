@@ -7,12 +7,12 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// FormSchema.PermissionModelId / FormField.ScopeRole 與 PermissionBindingValidator 的測試。
+    /// Tests for FormSchema.PermissionModelId, FormField.ScopeRole and PermissionBindingValidator.
     /// </summary>
     public class PermissionBindingTests
     {
         /// <summary>
-        /// 建立一份帶權限綁定的示範 FormSchema（PO001 → PurchaseOrder，主表標 Owner/Dept 欄）。
+        /// Builds a sample FormSchema with a permission binding (PO001 bound to PurchaseOrder, with Owner and Dept columns marked on the master table).
         /// </summary>
         private static FormSchema BuildForm(string modelId = "PurchaseOrder")
         {
@@ -38,7 +38,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("FormSchema.PermissionModelId 應透過 XmlAttribute 序列化往返")]
+        [DisplayName("FormSchema.PermissionModelId round-trips through XML as an XmlAttribute")]
         public void FormSchema_PermissionModelId_RoundTrips()
         {
             var schema = BuildForm();
@@ -52,7 +52,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("FormField.ScopeRole 應透過 XmlAttribute 序列化往返")]
+        [DisplayName("FormField.ScopeRole round-trips through XML as an XmlAttribute")]
         public void FormField_ScopeRole_RoundTrips()
         {
             var schema = BuildForm();
@@ -67,7 +67,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("FormField.ScopeRole 為 None 時 XML 不應輸出該屬性")]
+        [DisplayName("FormField.ScopeRole is not written to XML when it is None")]
         public void FormField_ScopeRoleNone_OmittedFromXml()
         {
             var schema = new FormSchema("PO001", "採購單") { CategoryId = "company" };
@@ -80,7 +80,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("FormSchema.Clone 應保留 PermissionModelId")]
+        [DisplayName("FormSchema.Clone keeps PermissionModelId")]
         public void FormSchema_Clone_PreservesPermissionModelId()
         {
             var schema = BuildForm();
@@ -91,7 +91,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("FormField.Clone 應保留 ScopeRole")]
+        [DisplayName("FormField.Clone keeps ScopeRole")]
         public void FormField_Clone_PreservesScopeRole()
         {
             var schema = BuildForm();
@@ -102,7 +102,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Validator 合法綁定應回傳空清單")]
+        [DisplayName("Validator returns an empty list for a valid binding")]
         public void Validate_ValidBinding_ReturnsEmpty()
         {
             var schemas = new FormSchema[] { BuildForm() };
@@ -113,7 +113,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Validator PermissionModelId 不存在應回報錯誤")]
+        [DisplayName("Validator reports an error for a PermissionModelId that does not exist")]
         public void Validate_UnknownModelId_ReturnsError()
         {
             var schemas = new FormSchema[] { BuildForm("NoSuchModel") };
@@ -125,7 +125,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Validator 主表多個 Owner 欄應通過（OR 聯集，不再限制單欄）")]
+        [DisplayName("Validator accepts several Owner columns on the master table (OR union, no longer limited to one column)")]
         public void Validate_MultipleOwnerColumns_Allowed()
         {
             var schema = BuildForm();
@@ -137,7 +137,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Validator 主表多個 Dept 欄應通過（調職單調出/調入部門）")]
+        [DisplayName("Validator accepts several Dept columns on the master table (such as the from and to departments of a transfer form)")]
         public void Validate_MultipleDeptColumns_Allowed()
         {
             var schema = BuildForm();
@@ -149,11 +149,11 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Validator 明細表標 ScopeRole 應回報錯誤（record scope 僅限主表）")]
+        [DisplayName("Validator reports an error for ScopeRole on a detail table (record scope is master table only)")]
         public void Validate_DetailScopeRole_ReturnsError()
         {
             var schema = BuildForm();
-            // 明細表（非主表）標 ScopeRole → 違規：scope 僅主表
+            // ScopeRole on a detail table (not the master) is a violation, because scope applies to the master table only.
             var detail = schema.Tables!.Add("PO001_Item", "採購單明細");
             var item = detail.Fields!.Add("owner_rowid", "擁有者", FieldDbType.Guid);
             item.ScopeRole = ScopeRole.Owner;
@@ -165,7 +165,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("FormField.SensitiveCategory 應透過 XmlAttribute 序列化往返")]
+        [DisplayName("FormField.SensitiveCategory round-trips through XML as an XmlAttribute")]
         public void FormField_SensitiveCategory_RoundTrips()
         {
             var schema = BuildForm();
@@ -179,7 +179,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("FormField.SensitiveCategory 為 None 時 XML 不應輸出該屬性")]
+        [DisplayName("FormField.SensitiveCategory is not written to XML when it is None")]
         public void FormField_SensitiveCategoryNone_OmittedFromXml()
         {
             var schema = new FormSchema("PO001", "採購單") { CategoryId = "company" };
@@ -191,7 +191,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("FormField.Clone 應保留 SensitiveCategory")]
+        [DisplayName("FormField.Clone keeps SensitiveCategory")]
         public void FormField_Clone_PreservesSensitiveCategory()
         {
             var schema = BuildForm();
@@ -203,21 +203,21 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Validator 敏感分類對應的 well-known model 不存在應回報錯誤")]
+        [DisplayName("Validator reports an error when the well-known model for a sensitive category does not exist")]
         public void Validate_SensitiveCategoryWithoutModel_ReturnsError()
         {
             var schema = BuildForm();
             schema.Tables!["PO001"].Fields!.Add("total_cost", "成本", FieldDbType.Decimal).SensitiveCategory = SensitiveCategory.Cost;
             var schemas = new FormSchema[] { schema };
 
-            // BuildRegistry 只有 PurchaseOrder，沒有 well-known 的 Cost model → 應報錯
+            // `BuildRegistry` only has PurchaseOrder and no well-known Cost model, so an error is expected.
             var errors = PermissionBindingValidator.Validate(schemas, BuildRegistry());
 
             Assert.Contains(errors, e => e.Contains("Cost") && e.Contains("total_cost"));
         }
 
         [Fact]
-        [DisplayName("Validator 敏感分類 well-known model 存在時應通過")]
+        [DisplayName("Validator accepts a sensitive category when its well-known model exists")]
         public void Validate_SensitiveCategoryWithModel_ReturnsEmpty()
         {
             var schema = BuildForm();

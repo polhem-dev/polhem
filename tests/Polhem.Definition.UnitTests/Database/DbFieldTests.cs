@@ -5,12 +5,12 @@ using Polhem.Definition.Database;
 namespace Polhem.Definition.UnitTests.Database
 {
     /// <summary>
-    /// DbField 建構、屬性預設、Clone、Compare 與 ToString 的測試。
+    /// Tests for DbField construction, property defaults, Clone, Compare and ToString.
     /// </summary>
     public class DbFieldTests
     {
         [Fact]
-        [DisplayName("DbField 預設建構子應以 FieldDbType.String 作為 DbType 預設值")]
+        [DisplayName("DbField default constructor uses FieldDbType.String as the default DbType")]
         public void DefaultConstructor_HasExpectedDefaults()
         {
             var field = new DbField();
@@ -28,7 +28,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("DbField 參數化建構子應依序指派 FieldName、Caption、DbType")]
+        [DisplayName("DbField parameterized constructor assigns FieldName, Caption and DbType in order")]
         public void ParameterizedConstructor_AssignsCoreProperties()
         {
             var field = new DbField("sys_id", "編號", FieldDbType.Integer);
@@ -39,7 +39,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("FieldName 屬性應透明讀寫底層 Key")]
+        [DisplayName("FieldName reads and writes the underlying Key")]
         public void FieldName_MirrorsKey()
         {
             var field = new DbField { FieldName = "k1" };
@@ -51,7 +51,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Clone 應完整複製所有欄位值")]
+        [DisplayName("Clone copies every field value")]
         public void Clone_CopiesAllFields()
         {
             var source = new DbField("amount", "金額", FieldDbType.Decimal)
@@ -79,7 +79,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Compare 所有關鍵欄位相同時應回傳 true")]
+        [DisplayName("Compare returns true when every key field is equal")]
         public void Compare_SameFields_ReturnsTrue()
         {
             var a = new DbField("name", "名稱", FieldDbType.String)
@@ -94,7 +94,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Compare DbType 不同應回傳 false")]
+        [DisplayName("Compare returns false for a different DbType")]
         public void Compare_DifferentDbType_ReturnsFalse()
         {
             var a = new DbField("x", "x", FieldDbType.String);
@@ -104,7 +104,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Compare AllowNull 不同應回傳 false")]
+        [DisplayName("Compare returns false for a different AllowNull")]
         public void Compare_DifferentAllowNull_ReturnsFalse()
         {
             var a = new DbField("x", "x", FieldDbType.String) { AllowNull = true };
@@ -114,7 +114,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Compare String 型別 Length 不同應回傳 false")]
+        [DisplayName("Compare returns false for a different Length on a String type")]
         public void Compare_StringDifferentLength_ReturnsFalse()
         {
             var a = new DbField("x", "x", FieldDbType.String) { Length = 50 };
@@ -124,7 +124,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Compare 非 String 型別時 Length 差異不影響結果")]
+        [DisplayName("Compare ignores a Length difference on a non-String type")]
         public void Compare_NonStringLengthIgnored()
         {
             var a = new DbField("x", "x", FieldDbType.Integer) { Length = 10 };
@@ -134,7 +134,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Compare Decimal Precision 不同應回傳 false")]
+        [DisplayName("Compare returns false for a different Decimal Precision")]
         public void Compare_DecimalDifferentPrecision_ReturnsFalse()
         {
             var a = new DbField("x", "x", FieldDbType.Decimal) { Precision = 18, Scale = 4 };
@@ -144,7 +144,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Compare Decimal Scale 不同應回傳 false")]
+        [DisplayName("Compare returns false for a different Decimal Scale")]
         public void Compare_DecimalDifferentScale_ReturnsFalse()
         {
             var a = new DbField("x", "x", FieldDbType.Decimal) { Precision = 18, Scale = 2 };
@@ -154,7 +154,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Compare 非 Decimal 型別時 Precision/Scale 差異不影響結果")]
+        [DisplayName("Compare ignores Precision/Scale differences on a non-Decimal type")]
         public void Compare_NonDecimalPrecisionScaleIgnored()
         {
             var a = new DbField("x", "x", FieldDbType.String) { Precision = 10, Scale = 2 };
@@ -164,7 +164,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Compare DateTime 定義端 scale 未設應正規化為 7 與 datetime2(7) 相符")]
+        [DisplayName("Compare normalizes an unset DateTime scale on the defined side to 7, matching datetime2(7)")]
         public void Compare_DateTimeDefinedScaleUnset_MatchesDatetime2()
         {
             // Defined field carries no explicit scale (XML never sets it); the real datetime2(7)
@@ -176,7 +176,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Compare DateTime 定義端 datetime2(7) 與既有 datetime(scale 3) 不符應回傳 false")]
+        [DisplayName("Compare returns false for a defined datetime2(7) against an existing datetime (scale 3)")]
         public void Compare_DateTimeDefinedVsLegacyDatetime_ReturnsFalse()
         {
             // Legacy `datetime` reverse-maps to scale 3; a defined datetime2 normalizes to 7,
@@ -188,7 +188,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Compare DateTime 兩端皆 datetime2(7) 應收斂為相符")]
+        [DisplayName("Compare treats datetime2(7) on both sides as equal")]
         public void Compare_DateTimeBothDatetime2_ReturnsTrue()
         {
             var a = new DbField("created_at", "Created", FieldDbType.DateTime) { Scale = 7 };
@@ -198,7 +198,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Compare DefaultValue 不同應回傳 false")]
+        [DisplayName("Compare returns false for a different DefaultValue")]
         public void Compare_DifferentDefaultValue_ReturnsFalse()
         {
             var a = new DbField("x", "x", FieldDbType.String) { DefaultValue = "A" };
@@ -208,7 +208,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("ToString 應回傳 FieldName - Caption 格式")]
+        [DisplayName("ToString returns the FieldName - Caption format")]
         public void ToString_ReturnsFieldNameAndCaption()
         {
             var field = new DbField("sys_id", "編號", FieldDbType.String);
@@ -217,7 +217,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Compare OriginalFieldName 不同不影響結果（僅為 rename 提示）")]
+        [DisplayName("Compare ignores a different OriginalFieldName (it is only a rename hint)")]
         public void Compare_OriginalFieldNameIgnored()
         {
             var a = new DbField("x", "x", FieldDbType.String) { OriginalFieldName = "old_x" };

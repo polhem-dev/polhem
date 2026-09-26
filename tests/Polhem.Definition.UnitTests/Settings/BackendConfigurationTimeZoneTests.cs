@@ -4,17 +4,17 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// <see cref="BackendConfiguration.DefaultTimeZone"/> 的預設值測試。
+    /// Tests for the default value of <see cref="BackendConfiguration.DefaultTimeZone"/>.
     /// </summary>
     /// <remarks>
-    /// 這個預設值是刻意的相容性選擇，不是隨手挑的常數：st_user.time_zone 是本版新增的欄位，
-    /// 既有資料列全為空，若預設為空（＝UTC）會讓所有既有部署在升級後時刻整體位移。
-    /// 改動此值等同改變既有部署的顯示時間，屬 breaking change。
+    /// This default is a deliberate compatibility choice, not an arbitrary constant: st_user.time_zone was a new column,
+    /// so every existing row is empty, and an empty default (meaning UTC) would shift all times of every existing deployment
+    /// after the upgrade. Changing this value changes the displayed times of existing deployments and is a breaking change.
     /// </remarks>
     public class BackendConfigurationTimeZoneTests
     {
         [Fact]
-        [DisplayName("DefaultTimeZone 預設應為 Asia/Taipei（升級相容）")]
+        [DisplayName("DefaultTimeZone defaults to Asia/Taipei (upgrade compatibility)")]
         public void DefaultTimeZone_Default_IsAsiaTaipei()
         {
             var config = new BackendConfiguration();
@@ -23,13 +23,13 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("DefaultTimeZone 可設為空字串以採用 UTC")]
+        [DisplayName("DefaultTimeZone can be set to an empty string to use UTC")]
         public void DefaultTimeZone_CanBeClearedForUtc()
         {
             var config = new BackendConfiguration { DefaultTimeZone = string.Empty };
 
-            // 空字串是合法設定值：轉換層（FrameworkClock / DateTimeZoneConverter /
-            // PayloadZoneConverter）一律把空時區視為 UTC，不做轉換。
+            // An empty string is a valid setting: the conversion layer (FrameworkClock / DateTimeZoneConverter /
+            // PayloadZoneConverter) treats an empty time zone as UTC and does not convert.
             Assert.Empty(config.DefaultTimeZone);
         }
     }

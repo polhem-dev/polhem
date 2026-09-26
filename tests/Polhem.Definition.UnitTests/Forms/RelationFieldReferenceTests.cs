@@ -7,7 +7,7 @@ namespace Polhem.Definition.UnitTests.Forms
     public class RelationFieldReferenceTests
     {
         [Fact]
-        [DisplayName("預設建構子應建立 FieldName/SourceProgId/SourceField 皆為空字串的實例")]
+        [DisplayName("Default constructor creates an instance with empty FieldName, SourceProgId and SourceField")]
         public void DefaultConstructor_CreatesInstance_WithEmptyFields()
         {
             var reference = new RelationFieldReference();
@@ -18,7 +18,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ToString 應回傳 \"{SourceProgId}.{SourceField} -> {FieldName}\" 格式")]
+        [DisplayName("ToString returns the \"{SourceProgId}.{SourceField} -> {FieldName}\" format")]
         public void ToString_ReturnsFormattedString()
         {
             var field = new FormField("dept_id", "部門 ID", FieldDbType.String);

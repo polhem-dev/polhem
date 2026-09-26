@@ -42,14 +42,14 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("建構子傳入 null defineAccess 應拋出 ArgumentNullException")]
+        [DisplayName("The constructor throws ArgumentNullException for a null defineAccess")]
         public void Constructor_NullDefineAccess_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new DefineAccessDatabaseSettingsProvider(null!));
         }
 
         [Fact]
-        [DisplayName("Get 應回傳底層 IDefineAccess 提供的 DatabaseSettings")]
+        [DisplayName("Get returns the DatabaseSettings provided by the underlying IDefineAccess")]
         public void Get_ReturnsSettingsFromDefineAccess()
         {
             var expected = new DatabaseSettings();
@@ -59,7 +59,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetItem 傳入 null 應拋出 ArgumentNullException")]
+        [DisplayName("GetItem throws ArgumentNullException for null")]
         public void GetItem_NullId_ThrowsArgumentNullException()
         {
             var provider = CreateProvider();
@@ -68,7 +68,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetItem 傳入空白字串應拋出 ArgumentNullException")]
+        [DisplayName("GetItem throws ArgumentNullException for a whitespace string")]
         public void GetItem_WhitespaceId_ThrowsArgumentNullException()
         {
             var provider = CreateProvider();
@@ -77,7 +77,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetItem 找不到指定 id 應拋出 KeyNotFoundException")]
+        [DisplayName("GetItem throws KeyNotFoundException for an unknown id")]
         public void GetItem_UnknownId_ThrowsKeyNotFoundException()
         {
             var provider = CreateProvider();
@@ -86,7 +86,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetItem 存在的 id 應回傳對應 DatabaseItem")]
+        [DisplayName("GetItem returns the matching DatabaseItem for an existing id")]
         public void GetItem_ExistingId_ReturnsDatabaseItem()
         {
             var settings = new DatabaseSettings();
@@ -99,7 +99,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("ValidateRequired 缺少 common 項目應拋出 InvalidOperationException")]
+        [DisplayName("ValidateRequired throws InvalidOperationException when the common item is missing")]
         public void ValidateRequired_MissingCommonItem_ThrowsInvalidOperationException()
         {
             var provider = CreateProvider();
@@ -108,7 +108,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("ValidateRequired 含有 common 項目應不拋出例外")]
+        [DisplayName("ValidateRequired does not throw when the common item is present")]
         public void ValidateRequired_WithCommonItem_DoesNotThrow()
         {
             var settings = new DatabaseSettings();

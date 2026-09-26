@@ -5,51 +5,57 @@ using System.Text.Json;
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// 相依閘門：斷言受 <c>POLHEM9001</c> 鎖定的每個組件，其**傳遞相依閉包**都落在白名單內。
+    /// Dependency gate: asserts that the **transitive dependency closure** of every assembly locked by <c>POLHEM9001</c>
+    /// stays within the allowlist.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// adr-036 立下的判準是「會不會讓定義層長出外部套件相依」，但當時是以人眼 grep 關鍵字落實，
-    /// 因此漏掉了經 <c>Polhem.Expressions</c> 傳遞進來的 <c>DynamicExpresso.Core</c>。本測試把該判準
-    /// 變成可執行檢查：新增任何外部相依都必須顯式加進白名單，逼出一次決策而非默默通過。
+    /// adr-036 set the criterion "does this give the definition layer an external package dependency", but at the time it was
+    /// enforced by grepping for keywords by eye, so it missed <c>DynamicExpresso.Core</c>, which came in transitively through
+    /// <c>Polhem.Expressions</c>. This test turns the criterion into an executable check: any new external dependency must be
+    /// added to the allowlist explicitly, forcing a decision instead of passing silently.
     /// </para>
     /// <para>
-    /// 資料來源是**本測試組件自己的 <c>.deps.json</c>**，而非 <c>Polhem.Definition.deps.json</c> ——
-    /// 後者不會被複製到測試輸出目錄。deps.json 的 <c>targets</c> 區段逐一記錄每個 library 的直接
-    /// 相依邊，故從 <c>Polhem.Definition</c> 這個節點做 BFS 得到的正是它自己的閉包，不受本測試專案
-    /// 另外引用了哪些專案影響。用 deps.json 而非
-    /// <see cref="Assembly.GetReferencedAssemblies"/>，是因為後者只反映「實際被 IL 引用」的組件，
-    /// 宣告了卻尚未使用的套件相依會漏掉 —— 而那正是本閘門要攔的東西。
+    /// The data source is **this test assembly's own <c>.deps.json</c>**, not <c>Polhem.Definition.deps.json</c>, which is
+    /// not copied to the test output directory. The <c>targets</c> section of deps.json records the direct dependency edges
+    /// of every library, so a BFS from the <c>Polhem.Definition</c> node yields exactly its own closure, regardless of which
+    /// other projects this test project references. deps.json is used instead of
+    /// <see cref="Assembly.GetReferencedAssemblies"/> because the latter only reflects assemblies actually referenced by IL:
+    /// a package dependency that is declared but not yet used would be missed, and that is exactly what this gate must catch.
     /// </para>
     /// <para>
-    /// 閉包中不會出現 BCL：框架組件由共用框架（Microsoft.NETCore.App）解析，不列入 deps.json 的
-    /// library 清單。標了 <c>PrivateAssets="all"</c> 的建置期套件（SourceLink、analyzer）同理。
+    /// The BCL never appears in the closure: framework assemblies are resolved from the shared framework
+    /// (Microsoft.NETCore.App) and are not in the deps.json library list. The same holds for build-time packages marked
+    /// <c>PrivateAssets="all"</c> (SourceLink, analyzers).
     /// </para>
     /// <para>
-    /// <b>為什麼三個 root 都要守。</b><c>POLHEM9001</c> 的啟用條件是
-    /// <c>src/Directory.Build.targets</c> 裡三個專案名的字串比對：專案改名、或有人編輯該檔時漏掉
-    /// 一項，target 會靜默不執行而<b>沒有任何東西會紅</b>。<c>Polhem.Base</c> 先前實質上有 backstop
-    /// （它在 <c>Polhem.Definition</c> 的閉包內），但 <c>Polhem.Api.Contracts</c> 位於<b>下游</b>、不在
-    /// 任何閉包的觀察範圍內，唯一的守衛就是那個名字字串。把三個都列為 root 之後，建置期鎖失效時
-    /// 這裡仍然攔得住。
+    /// <b>Why all three roots are guarded.</b> <c>POLHEM9001</c> is enabled by a string comparison against three project
+    /// names in <c>src/Directory.Build.targets</c>: if a project is renamed, or someone edits that file and drops one, the
+    /// target silently stops running and <b>nothing turns red</b>. <c>Polhem.Base</c> used to have a backstop in practice
+    /// (it is inside the closure of <c>Polhem.Definition</c>), but <c>Polhem.Api.Contracts</c> is <b>downstream</b> and
+    /// outside every closure being observed, so its only guard was that name string. With all three listed as roots,
+    /// this test still catches it when the build-time lock stops working.
     /// </para>
     /// <para>
-    /// 白名單在此與 <c>Directory.Build.targets</c> 的 <c>PolhemAllowedDependency</c> 各存一份，
-    /// <b>這是刻意的</b>：任一邊放寬而另一邊沒跟，就會有一邊變紅。<c>POLHEM9001</c> 的錯誤訊息本來就
-    /// 要求改三個地方（允許清單、本測試、ADR-038），麻煩本身就是目的 —— 逼出一次決策而非默默通過。
+    /// The allowlist exists both here and in <c>PolhemAllowedDependency</c> of <c>Directory.Build.targets</c>.
+    /// <b>This is deliberate</b>: if one side is relaxed and the other is not, one of them turns red. The <c>POLHEM9001</c>
+    /// error message already asks for changes in three places (the allowlist, this test, ADR-038); the friction is the
+    /// point, forcing a decision instead of passing silently.
     /// </para>
     /// </remarks>
     public class DefinitionDependencyGateTests
     {
         /// <summary>
-        /// 受 <c>POLHEM9001</c> 鎖定的組件，以及各自允許出現在傳遞相依閉包中的組件／套件。
+        /// The assemblies locked by <c>POLHEM9001</c>, and the assemblies and packages each may have in its transitive
+        /// dependency closure.
         /// </summary>
         /// <remarks>
-        /// 與 <c>src/Directory.Build.targets</c> 的 <c>PolhemAllowedDependency</c> 逐項對應。
-        /// <c>Polhem.Base</c> 的清單刻意是空的 —— 它不得有任何會流到消費者的相依。
-        /// <c>Microsoft.Extensions.Localization.Abstractions</c>（由
-        /// <c>Language/PolhemStringLocalizer.cs</c> 使用）是 Microsoft 第一方的純抽象套件、隨 .NET
-        /// 版本走，不帶實作也不鎖定任何引擎，故列入白名單。第三方實作套件則不得出現在此。
+        /// Matches <c>PolhemAllowedDependency</c> in <c>src/Directory.Build.targets</c> entry by entry.
+        /// The list for <c>Polhem.Base</c> is deliberately empty: it must not have any dependency that flows to consumers.
+        /// <c>Microsoft.Extensions.Localization.Abstractions</c> (used by
+        /// <c>Language/PolhemStringLocalizer.cs</c>) is a Microsoft first-party pure abstraction package versioned with .NET.
+        /// It carries no implementation and locks in no engine, so it is allowed. Third-party implementation packages must not
+        /// appear here.
         /// </remarks>
         private static readonly Dictionary<string, string[]> s_lockedLibraries =
             new(StringComparer.OrdinalIgnoreCase)
@@ -68,7 +74,7 @@ namespace Polhem.Definition.UnitTests
 
         [Theory]
         [MemberData(nameof(LockedLibraries))]
-        [DisplayName("受 POLHEM9001 鎖定的組件，其傳遞相依不得超出白名單")]
+        [DisplayName("Transitive dependencies of the assemblies locked by POLHEM9001 stay within the allowlist")]
         public void TransitiveDependencies_StayWithinWhitelist(string rootLibrary)
         {
             var allowed = new HashSet<string>(s_lockedLibraries[rootLibrary], StringComparer.OrdinalIgnoreCase);
@@ -81,39 +87,39 @@ namespace Polhem.Definition.UnitTests
 
             Assert.True(
                 unexpected.Length == 0,
-                $"{rootLibrary} 出現白名單外的傳遞相依：{string.Join(", ", unexpected)}。" +
-                "加在這一層的任何東西會被框架的每一個消費者繼承（adr-038 判準）；若這是刻意決策，" +
-                "請同時加進 src/Directory.Build.targets 的 PolhemAllowedDependency、本測試的白名單，" +
-                "並於 ADR-038 說明理由。");
+                $"{rootLibrary} has transitive dependencies outside the allowlist: {string.Join(", ", unexpected)}. " +
+                "Anything added at this layer is inherited by every consumer of the framework (the adr-038 criterion). If this is a deliberate decision, " +
+                "add it to PolhemAllowedDependency in src/Directory.Build.targets and to the allowlist of this test, " +
+                "and record the reason in ADR-038.");
         }
 
         [Fact]
-        [DisplayName("相依閘門確實走到了每個受鎖組件的相依邊")]
+        [DisplayName("The dependency gate actually walks the dependency edges of every locked assembly")]
         public void DependencyClosure_IsNotVacuous()
         {
-            // 若 deps.json 的節點名稱有變、BFS 起點解析失敗而回傳空集合，上面那條會「無條件通過」。
-            // 這條把「閘門有在看東西」本身也變成斷言。
+            // If the node names in deps.json change and resolving the BFS root returns an empty set, the test above would pass
+            // unconditionally. This test turns "the gate is looking at something" into an assertion as well.
             Assert.Equal(3, s_lockedLibraries.Count);
             Assert.Contains("Polhem.Base", ResolveDependencyClosure("Polhem.Definition"), StringComparer.OrdinalIgnoreCase);
             Assert.Contains("Polhem.Definition", ResolveDependencyClosure("Polhem.Api.Contracts"), StringComparer.OrdinalIgnoreCase);
 
-            // Polhem.Base 的閉包是空的（那正是它的約束），所以改驗節點本身在圖中 ——
-            // 否則「白名單外的相依為 0」會因為根本沒查到這個節點而恆真。
+            // The closure of `Polhem.Base` is empty (that is its constraint), so check that the node itself is in the graph.
+            // Otherwise "zero dependencies outside the allowlist" would always hold because the node was never found.
             Assert.True(ReadDependencyGraph().ContainsKey("Polhem.Base"));
         }
 
         /// <summary>
-        /// 從測試組件的 deps.json 讀出相依圖，並回傳 <paramref name="rootLibrary"/> 的傳遞相依閉包
-        /// （不含自身）。
+        /// Reads the dependency graph from the test assembly's deps.json and returns the transitive dependency closure of
+        /// <paramref name="rootLibrary"/> (excluding itself).
         /// </summary>
-        /// <param name="rootLibrary">起點 library 名稱（不含版本）。</param>
+        /// <param name="rootLibrary">The name of the starting library, without the version.</param>
         private static HashSet<string> ResolveDependencyClosure(string rootLibrary)
         {
             var graph = ReadDependencyGraph();
 
             Assert.True(
                 graph.ContainsKey(rootLibrary),
-                $"deps.json 中找不到 {rootLibrary} 這個 library，相依閘門無從檢查。");
+                $"Library {rootLibrary} was not found in deps.json, so the dependency gate cannot check it.");
 
             var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var pending = new Queue<string>(graph[rootLibrary]);
@@ -130,17 +136,17 @@ namespace Polhem.Definition.UnitTests
         }
 
         /// <summary>
-        /// 讀取測試組件的 deps.json，回傳「library 名稱 → 直接相依名稱」的相依圖。
+        /// Reads the test assembly's deps.json and returns the dependency graph as library name to direct dependency names.
         /// </summary>
         private static Dictionary<string, string[]> ReadDependencyGraph()
         {
             var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
             var depsPath = Path.Combine(AppContext.BaseDirectory, $"{assemblyName}.deps.json");
-            Assert.True(File.Exists(depsPath), $"找不到相依資訊檔：{depsPath}");
+            Assert.True(File.Exists(depsPath), $"Dependency file not found: {depsPath}");
 
             using var document = JsonDocument.Parse(File.ReadAllText(depsPath));
-            // 指定 RuntimeIdentifier 時會有兩個 target（RID-less 與 RID-specific）；取條目最多的
-            // 那個，兩種建置方式下都拿得到完整圖。
+            // When a `RuntimeIdentifier` is specified there are two targets (RID-less and RID-specific). Taking the one with
+            // the most entries gets the complete graph under both kinds of build.
             var target = document.RootElement
                 .GetProperty("targets")
                 .EnumerateObject()
@@ -151,7 +157,7 @@ namespace Polhem.Definition.UnitTests
             var graph = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
             foreach (var library in target.EnumerateObject())
             {
-                // key 的格式是 "Name/Version"。
+                // The key has the format "Name/Version".
                 var name = library.Name.Split('/')[0];
                 graph[name] = library.Value.TryGetProperty("dependencies", out var dependencies)
                     ? dependencies.EnumerateObject().Select(entry => entry.Name).ToArray()

@@ -17,7 +17,7 @@ namespace Polhem.Definition.UnitTests
         [InlineData(DefineType.FormSchema, typeof(FormSchema))]
         [InlineData(DefineType.FormLayout, typeof(FormLayout))]
         [InlineData(DefineType.PermissionModels, typeof(PermissionModels))]
-        [DisplayName("ToClrType 傳入有效定義類型應回傳正確的型別")]
+        [DisplayName("ToClrType returns the correct type for a valid define type")]
         public void ToClrType_ValidType_ReturnsExpectedType(DefineType defineType, Type expectedType)
         {
             var result = defineType.ToClrType();
@@ -26,7 +26,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("ToClrType 傳入未支援類型應拋出 NotSupportedException")]
+        [DisplayName("ToClrType throws NotSupportedException for an unsupported type")]
         public void ToClrType_UnsupportedType_ThrowsNotSupportedException()
         {
             var invalid = (DefineType)999;
@@ -35,7 +35,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("ToClrType Language 未在映射字典中應拋出 NotSupportedException")]
+        [DisplayName("ToClrType throws NotSupportedException for Language, which is not in the mapping dictionary")]
         public void ToClrType_Language_ThrowsNotSupportedException()
         {
             Assert.Throws<NotSupportedException>(() => DefineType.Language.ToClrType());

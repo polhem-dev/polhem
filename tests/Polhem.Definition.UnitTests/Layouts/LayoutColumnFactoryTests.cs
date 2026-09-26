@@ -6,7 +6,7 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Definition.UnitTests.Layouts
 {
     /// <summary>
-    /// LayoutColumnFactory 單元測試（共用 helper）。
+    /// Unit tests for LayoutColumnFactory (a shared helper).
     /// </summary>
     public class LayoutColumnFactoryTests
     {
@@ -15,7 +15,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         [InlineData(ControlType.CheckEdit, FieldDbType.String, ControlType.CheckEdit)]
         [InlineData(ControlType.MemoEdit, FieldDbType.String, ControlType.MemoEdit)]
         [InlineData(ControlType.DropDownEdit, FieldDbType.Integer, ControlType.DropDownEdit)]
-        [DisplayName("ResolveControlType 非 Auto 時應原樣回傳指定值")]
+        [DisplayName("ResolveControlType returns the specified value as is when it is not Auto")]
         public void ResolveControlType_NonAuto_ReturnsAsIs(ControlType type, FieldDbType dbType, ControlType expected)
         {
             var actual = LayoutColumnFactory.ResolveControlType(type, dbType);
@@ -35,7 +35,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         [InlineData(FieldDbType.Decimal, ControlType.NumericEdit)]
         [InlineData(FieldDbType.Currency, ControlType.NumericEdit)]
         [InlineData(FieldDbType.Guid, ControlType.TextEdit)]
-        [DisplayName("ResolveControlType Auto 時應依 DbType 推導預設控制型態")]
+        [DisplayName("ResolveControlType infers the default control type from the DbType when it is Auto")]
         public void ResolveControlType_Auto_MapsDbType(FieldDbType dbType, ControlType expected)
         {
             var actual = LayoutColumnFactory.ResolveControlType(ControlType.Auto, dbType);
@@ -44,7 +44,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ToField 應將 FormField 屬性複製至 LayoutField")]
+        [DisplayName("ToField copies the FormField properties to a LayoutField")]
         public void ToField_CopiesProperties()
         {
             var formField = new FormField("amount", "金額", FieldDbType.Decimal)
@@ -64,7 +64,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ToColumn 應將 FormField 屬性（含 Width）複製至 LayoutColumn")]
+        [DisplayName("ToColumn copies the FormField properties (including Width) to a LayoutColumn")]
         public void ToColumn_CopiesProperties()
         {
             var formField = new FormField("amount", "金額", FieldDbType.Decimal)
@@ -86,7 +86,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ToField ControlType=Auto + DbType=Boolean 應推導為 CheckEdit")]
+        [DisplayName("ToField infers CheckEdit for ControlType=Auto + DbType=Boolean")]
         public void ToField_AutoControlType_BooleanDbType_ProducesCheckEdit()
         {
             var formField = new FormField("active", "啟用", FieldDbType.Boolean)
@@ -100,7 +100,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ToField/ToColumn 應傳遞 ReadOnly 與 Required 旗標")]
+        [DisplayName("ToField/ToColumn pass the ReadOnly and Required flags through")]
         public void ToFieldAndColumn_PropagateReadOnlyAndRequired()
         {
             var formField = new FormField("amount", "金額", FieldDbType.Decimal)
@@ -119,7 +119,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ToField/ToColumn 應傳遞 NumberKind 語意型別")]
+        [DisplayName("ToField/ToColumn pass the NumberKind semantic kind through")]
         public void ToFieldAndColumn_PropagateNumberKind()
         {
             var formField = new FormField("amount", "金額", FieldDbType.Decimal)
@@ -135,7 +135,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ToField/ToColumn 應傳遞 CurrencyField（CUKY 參照欄名）")]
+        [DisplayName("ToField/ToColumn pass CurrencyField (the CUKY reference field name) through")]
         public void ToFieldAndColumn_PropagateCurrencyField()
         {
             var formField = new FormField("home_amount", "本幣金額", FieldDbType.Decimal)
@@ -152,7 +152,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ToField/ToColumn 應傳遞 UnitField（UNIT 參照欄名）")]
+        [DisplayName("ToField/ToColumn pass UnitField (the UNIT reference field name) through")]
         public void ToFieldAndColumn_PropagateUnitField()
         {
             var formField = new FormField("order_qty", "數量", FieldDbType.Decimal)
@@ -169,7 +169,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ToColumn Width=0 應保留 0 表示 auto/未設")]
+        [DisplayName("ToColumn keeps Width=0 as 0, meaning auto/unset")]
         public void ToColumn_WidthZero_StaysZero()
         {
             var formField = new FormField("col", "欄", FieldDbType.String);
@@ -180,7 +180,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ResolveControlType Auto + RelationProgId 應解析為 ButtonEdit")]
+        [DisplayName("ResolveControlType resolves Auto + RelationProgId to ButtonEdit")]
         public void ResolveControlType_AutoWithRelation_ProducesButtonEdit()
         {
             var formField = new FormField("customer_rowid", "客戶", FieldDbType.Guid)
@@ -194,7 +194,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ResolveControlType 顯式 ControlType 應優先於 RelationProgId 推導")]
+        [DisplayName("ResolveControlType gives an explicit ControlType precedence over the RelationProgId inference")]
         public void ResolveControlType_ExplicitTypeWithRelation_ExplicitWins()
         {
             var formField = new FormField("customer_rowid", "客戶", FieldDbType.Guid)
@@ -209,7 +209,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("GetDisplayFields 顯式宣告應優先於慣例推導")]
+        [DisplayName("GetDisplayFields gives an explicit declaration precedence over the convention")]
         public void GetDisplayFields_Explicit_WinsOverConvention()
         {
             var formField = new FormField("customer_rowid", "客戶", FieldDbType.Guid)
@@ -226,7 +226,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("GetDisplayFields 未設時依慣例取 sys_id 與 sys_name 的目的欄（編號+名稱）")]
+        [DisplayName("GetDisplayFields without a setting takes the destination fields of sys_id and sys_name by convention (ID + name)")]
         public void GetDisplayFields_Convention_UsesIdAndNameMappings()
         {
             var formField = new FormField("customer_rowid", "客戶", FieldDbType.Guid)
@@ -242,7 +242,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("GetDisplayFields 交易型目標只映射 sys_id 時應只回傳編號欄（單號顯示）")]
+        [DisplayName("GetDisplayFields returns only the ID field when a transactional target maps only sys_id (document number display)")]
         public void GetDisplayFields_IdMappingOnly_ReturnsIdField()
         {
             var formField = new FormField("po_rowid", "採購單", FieldDbType.Guid)
@@ -257,7 +257,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("GetDisplayFields 非 relation 欄位應回傳空集合")]
+        [DisplayName("GetDisplayFields returns an empty collection for a non-relation field")]
         public void GetDisplayFields_NonRelationField_ReturnsEmpty()
         {
             var formField = new FormField("amount", "金額", FieldDbType.Decimal);
@@ -268,7 +268,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ToField relation 欄位應帶 ButtonEdit 與慣例 DisplayFields")]
+        [DisplayName("ToField gives a relation field a ButtonEdit and the convention DisplayFields")]
         public void ToField_RelationField_CarriesButtonEditAndDisplayField()
         {
             var formField = new FormField("customer_rowid", "客戶", FieldDbType.Guid)
@@ -284,7 +284,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ToColumn relation 欄位應帶 ButtonEdit 與慣例 DisplayFields")]
+        [DisplayName("ToColumn gives a relation field a ButtonEdit and the convention DisplayFields")]
         public void ToColumn_RelationField_CarriesButtonEditAndDisplayField()
         {
             var formField = new FormField("product_rowid", "商品", FieldDbType.Guid)

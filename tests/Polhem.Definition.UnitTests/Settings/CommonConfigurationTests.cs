@@ -4,12 +4,12 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// CommonConfiguration 單元測試。
+    /// Unit tests for CommonConfiguration.
     /// </summary>
     public class CommonConfigurationTests
     {
         [Fact]
-        [DisplayName("預設建構子應初始化為預設值")]
+        [DisplayName("The default constructor initializes the default values")]
         public void DefaultConstructor_InitializesDefaults()
         {
             var config = new CommonConfiguration();
@@ -21,7 +21,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("屬性應可被設定並讀回")]
+        [DisplayName("Properties can be set and read back")]
         public void Properties_AreSettable()
         {
             var payload = new ApiPayloadOptions { Compressor = "none" };
@@ -40,7 +40,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ToString 應回傳型別名稱")]
+        [DisplayName("ToString returns the type name")]
         public void ToString_ReturnsTypeName()
         {
             var config = new CommonConfiguration();

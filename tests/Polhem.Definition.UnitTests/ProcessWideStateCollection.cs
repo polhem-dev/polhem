@@ -1,39 +1,39 @@
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// 序列化會碰到 process-wide 狀態的測試類別。
+    /// Serializes the test classes that touch process-wide state.
     /// </summary>
     /// <remarks>
-    /// 這個組件先前既無 <c>[Collection]</c> 也無 <c>DisableTestParallelization</c>，卻同時有三種
-    /// 互相衝突的行為：
+    /// This assembly used to have neither <c>[Collection]</c> nor <c>DisableTestParallelization</c>, yet it had three
+    /// conflicting behaviors at the same time:
     /// <list type="number">
-    /// <item><c>MasterKeyProviderTests</c> 會把 <c>POLHEM_MASTER_KEY</c> 環境變數設為 <c>null</c>
-    /// 再於 <c>finally</c> 還原。</item>
-    /// <item><c>PolhemTestFixtureSmokeTests</c> 在**測試 body 內**建立 DI 容器。落在上面那個 null
-    /// 視窗內的容器會走 <c>MasterKeyProvider</c> 的 <c>autoCreate</c> 分支產生一把新金鑰並寫回
-    /// 環境變數，接著被 <c>finally</c> 蓋掉 —— 該容器就此持有一把跟其他東西對不上的 master key，
-    /// 之後以「解密／HMAC 失敗」現形，而錯誤完全不指向真因。</item>
-    /// <item><c>GlobalEventsTests</c> 斷言全域事件的觸發次數，而每建一個容器就會經
-    /// <c>DatabaseSettingsCache</c> 觸發一次。</item>
+    /// <item><c>MasterKeyProviderTests</c> sets the <c>POLHEM_MASTER_KEY</c> environment variable to <c>null</c>
+    /// and restores it in <c>finally</c>.</item>
+    /// <item><c>PolhemTestFixtureSmokeTests</c> builds DI containers **inside the test body**. A container built inside
+    /// that null window takes the <c>autoCreate</c> branch of <c>MasterKeyProvider</c>, generates a new key and writes it
+    /// back to the environment variable, which <c>finally</c> then overwrites. That container ends up holding a master key
+    /// that matches nothing else, which later shows up as a decryption or HMAC failure that does not point to the cause.</item>
+    /// <item><c>GlobalEventsTests</c> asserts how many times a global event fires, and every container built fires it
+    /// once through <c>DatabaseSettingsCache</c>.</item>
     /// </list>
     /// <para>
-    /// WARNING: 判準是「**碰到**同一份 process-wide 狀態」，不是「修改它」。讀取端落在寫入端的
-    /// try/finally 視窗裡，行為一樣會錯 —— 這正是本 repo 先前踩過的形狀（見
-    /// <c>rules/testing.md</c>）。
+    /// WARNING: The criterion is **touching** the same process-wide state, not modifying it. A reader that falls inside a
+    /// writer's try/finally window misbehaves just the same; this is exactly the shape this repository has hit before (see
+    /// <c>rules/testing.md</c>).
     /// </para>
     /// <para>
-    /// NOTE: 本 collection 自 2026-09-04 起是**冗餘**的 —— 整個組件已由 <c>AssemblyInfo.cs</c> 的
-    /// <c>DisableTestParallelization</c> 序列化，**新增測試類別不必再記得加進來**。保留它是作為
-    /// 「哪些類別會碰 process-wide 狀態、以及為什麼」的紀錄（與 <c>Polhem.Api.Core</c> 的
-    /// <c>ApiServiceOptionsStateCollection</c> 同一個做法）。<b>不要因為它冗餘就移除
-    /// <c>DisableTestParallelization</c> 換回它</b> —— 那等於把結構性保障換回「記得補」，
-    /// 而那個要求必然遺漏，且漏掉時沒有任何訊號。
+    /// NOTE: Since 2026-09-04 this collection is **redundant**: the whole assembly is serialized by
+    /// <c>DisableTestParallelization</c> in <c>AssemblyInfo.cs</c>, so **new test classes need not be added here**. It is
+    /// kept as a record of which classes touch process-wide state and why (the same approach as
+    /// <c>ApiServiceOptionsStateCollection</c> in <c>Polhem.Api.Core</c>). <b>Do not remove
+    /// <c>DisableTestParallelization</c> and switch back to this collection because it is redundant</b>: that would trade a
+    /// structural guarantee for "remember to add it", a requirement that is bound to be missed, with no signal when it is.
     /// </para>
     /// </remarks>
     [CollectionDefinition(Name)]
     public static class ProcessWideStateCollection
     {
-        /// <summary>Collection 名稱。</summary>
+        /// <summary>The collection name.</summary>
         public const string Name = "ProcessWideState";
     }
 }

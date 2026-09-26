@@ -6,12 +6,12 @@ using Polhem.Definition.Organization;
 namespace Polhem.Definition.UnitTests.Organization
 {
     /// <summary>
-    /// DepartmentTree 的查詢邏輯（子樹 / 祖先 / 防環）與三棲序列化（XML / JSON；MessagePack 因
-    /// codec 在 Polhem.Api.Core，於該層測）的測試。以合成節點驗證、不綁 DB。
+    /// Tests for the query logic of DepartmentTree (subtree, ancestors, cycle protection) and its triple serialization
+    /// (XML / JSON; MessagePack is tested in Polhem.Api.Core, where its codec lives). Uses synthetic nodes, no database.
     /// </summary>
     public class DepartmentTreeTests
     {
-        // 樹：總公司(root) → 業務部 → 業務一課；管理部(root，獨立)
+        // Tree: HQ (root) -> SALES -> SALES1, plus ADMIN as a separate root.
         private static DepartmentTree Build(out Guid hq, out Guid sales, out Guid sales1, out Guid admin)
         {
             hq = Guid.NewGuid();
@@ -29,7 +29,7 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("GetSelfAndDescendants 根節點回傳整棵子樹")]
+        [DisplayName("GetSelfAndDescendants of a root returns the whole subtree")]
         public void GetSelfAndDescendants_Root_ReturnsWholeSubtree()
         {
             var tree = Build(out var hq, out var sales, out var sales1, out _);
@@ -43,7 +43,7 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("GetSelfAndDescendants 中間節點回傳自身 + 後代")]
+        [DisplayName("GetSelfAndDescendants of a middle node returns itself and its descendants")]
         public void GetSelfAndDescendants_Mid_ReturnsSelfAndDescendants()
         {
             var tree = Build(out var hq, out var sales, out var sales1, out _);
@@ -57,7 +57,7 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("GetSelfAndDescendants 葉節點只回傳自身")]
+        [DisplayName("GetSelfAndDescendants of a leaf returns only itself")]
         public void GetSelfAndDescendants_Leaf_ReturnsSelf()
         {
             var tree = Build(out _, out _, out var sales1, out _);
@@ -69,7 +69,7 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("GetSelfAndDescendants 未知節點回傳空")]
+        [DisplayName("GetSelfAndDescendants of an unknown node returns an empty set")]
         public void GetSelfAndDescendants_Unknown_ReturnsEmpty()
         {
             var tree = Build(out _, out _, out _, out _);
@@ -78,7 +78,7 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("GetSelfAndAncestors 葉節點回傳到根的鏈")]
+        [DisplayName("GetSelfAndAncestors of a leaf returns the chain to the root")]
         public void GetSelfAndAncestors_Leaf_ReturnsChainToRoot()
         {
             var tree = Build(out var hq, out var sales, out var sales1, out _);
@@ -92,7 +92,7 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("Contains / GetNode / Roots 正確")]
+        [DisplayName("Contains, GetNode and Roots return the expected results")]
         public void ContainsNodeRoots_Correct()
         {
             var tree = Build(out var hq, out _, out var sales1, out var admin);
@@ -101,22 +101,22 @@ namespace Polhem.Definition.UnitTests.Organization
             Assert.False(tree.Contains(Guid.NewGuid()));
             Assert.Equal("業務一課", tree.GetNode(sales1)!.DeptName);
             Assert.Null(tree.GetNode(Guid.NewGuid()));
-            // 兩個 root：總公司、管理部
+            // Two roots: HQ and ADMIN.
             Assert.Equal(2, tree.Roots!.Count);
             Assert.Contains(tree.Roots, n => n.RowId == hq);
             Assert.Contains(tree.Roots, n => n.RowId == admin);
         }
 
         [Fact]
-        [DisplayName("父子互指的環不應造成無限遞迴")]
+        [DisplayName("A parent-child cycle does not cause infinite recursion")]
         public void GetSelfAndDescendants_Cycle_DoesNotLoopForever()
         {
             var a = Guid.NewGuid();
             var b = Guid.NewGuid();
             var tree = new DepartmentTree("C001",
             [
-                new DepartmentRow(a, "A", "A", b, Guid.Empty),  // A 的上級是 B
-                new DepartmentRow(b, "B", "B", a, Guid.Empty),  // B 的上級是 A（環）
+                new DepartmentRow(a, "A", "A", b, Guid.Empty),  // The parent of A is B.
+                new DepartmentRow(b, "B", "B", a, Guid.Empty),  // The parent of B is A, which closes the cycle.
             ]);
 
             var ex = Record.Exception(() =>
@@ -129,7 +129,7 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("XML round-trip 還原後巢狀結構與查詢一致（index 重建）")]
+        [DisplayName("XML round-trip restores the nesting and consistent queries (the index is rebuilt)")]
         public void XmlRoundTrip_PreservesNestingAndQueries()
         {
             var tree = Build(out var hq, out var sales, out var sales1, out _);
@@ -138,13 +138,13 @@ namespace Polhem.Definition.UnitTests.Organization
             var restored = XmlCodec.Deserialize<DepartmentTree>(xml)!;
 
             Assert.Equal("C001", restored.CompanyId);
-            Assert.Equal(2, restored.Roots!.Count);                              // 兩個 root
-            Assert.Equal(3, restored.GetSelfAndDescendants(hq).Count);           // 巢狀子樹還原
-            Assert.Equal(new[] { sales1, sales, hq }, restored.GetSelfAndAncestors(sales1)); // 祖先鏈還原
+            Assert.Equal(2, restored.Roots!.Count);
+            Assert.Equal(3, restored.GetSelfAndDescendants(hq).Count);
+            Assert.Equal(new[] { sales1, sales, hq }, restored.GetSelfAndAncestors(sales1));
         }
 
         [Fact]
-        [DisplayName("JSON round-trip 還原後巢狀結構與查詢一致（index 重建）")]
+        [DisplayName("JSON round-trip restores the nesting and consistent queries (the index is rebuilt)")]
         public void JsonRoundTrip_PreservesNestingAndQueries()
         {
             var tree = Build(out var hq, out var sales, out var sales1, out _);

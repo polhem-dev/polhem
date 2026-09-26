@@ -9,8 +9,8 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition.UnitTests.Language
 {
     /// <summary>
-    /// <see cref="LanguageService"/> 租戶客製化疊加測試：cust 有 key→cust 值；cust 無 key→base 值；
-    /// cust resource 不存在→全 base；customizeId 空 / 無 reader→短路純 base（reader 零呼叫）。
+    /// Tenant customization overlay tests for <see cref="LanguageService"/>: a key in cust gives the cust value, a key missing from cust gives the base value,
+    /// a missing cust resource gives the base for everything, and an empty customizeId or no reader short-circuits to the base alone (zero reader calls).
     /// </summary>
     public class LanguageServiceCustomizeTests
     {
@@ -20,7 +20,7 @@ namespace Polhem.Definition.UnitTests.Language
         private static readonly string[] s_custOrderTexts = ["客製狀態", "初稿"];
 
         [Fact]
-        [DisplayName("cust 有 key 時應回傳 cust 值（覆寫 base）")]
+        [DisplayName("Returns the cust value when cust has the key (overriding the base)")]
         public void TryGetLangText_CustHasKey_ReturnsCustValue()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -33,13 +33,13 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("cust resource 有但缺該 key 時應回退 base 值")]
+        [DisplayName("Falls back to the base value when the cust resource exists but lacks the key")]
         public void TryGetLangText_CustMissesKey_ReturnsBaseValue()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
             defineAccess.AddResource("zh-TW", "Common", ("OK", "確定"), ("Cancel", "取消"));
             var reader = new SpyCustomizeReader();
-            // cust resource 只覆寫 OK，沒有 Cancel
+            // The cust resource overrides only OK and has no Cancel.
             reader.AddLanguage("acme", "zh-TW", "Common", ("OK", "客製確定"));
             var svc = new LanguageService(defineAccess, reader);
 
@@ -47,19 +47,19 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("cust resource 不存在時應全回 base 值")]
+        [DisplayName("Returns base values for everything when the cust resource does not exist")]
         public void TryGetLangText_NoCustResource_ReturnsBaseValue()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
             defineAccess.AddResource("zh-TW", "Common", ("OK", "確定"));
-            var reader = new SpyCustomizeReader(); // acme 沒有任何客製
+            var reader = new SpyCustomizeReader(); // acme has no customization at all.
             var svc = new LanguageService(defineAccess, reader);
 
             Assert.Equal("確定", svc.GetLangText("acme", "zh-TW", "Common", "OK"));
         }
 
         [Fact]
-        [DisplayName("customizeId 空時短路純 base，reader 零呼叫")]
+        [DisplayName("The overload without a customizeId short-circuits to the base alone with zero reader calls")]
         public void EmptyCustomizeId_ShortCircuits_ReaderNotCalled()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -68,35 +68,34 @@ namespace Polhem.Definition.UnitTests.Language
             reader.AddLanguage("acme", "zh-TW", "Common", ("OK", "客製確定"));
             var svc = new LanguageService(defineAccess, reader);
 
-            // 經由不帶 customizeId 的 base 多載
+            // Through the base overload that takes no customizeId.
             Assert.Equal("確定", svc.GetLangText("zh-TW", "Common.OK"));
             Assert.Equal(0, reader.GetCustomizeLanguageCallCount);
         }
 
         [Fact]
-        [DisplayName("無 reader 注入時行為與純 base 一致（向後相容）")]
+        [DisplayName("Without an injected reader the behavior matches the base alone (backward compatible)")]
         public void NoReader_BehavesAsBase()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
             defineAccess.AddResource("zh-TW", "Common", ("OK", "確定"));
-            var svc = new LanguageService(defineAccess); // 無 reader
+            var svc = new LanguageService(defineAccess); // No reader.
 
-            // 即使帶 customizeId，無 reader 即退化為 base
+            // Even with a customizeId, having no reader degrades to the base.
             Assert.Equal("確定", svc.GetLangText("acme", "zh-TW", "Common", "OK"));
         }
 
         [Fact]
-        [DisplayName("同 namespace 同時載入套裝與客製：20 key 只客製 5 個，其餘延用套裝，客製獨有 key 亦生效")]
+        [DisplayName("Base and customization loaded for the same namespace: of 20 keys only 5 are customized, the rest come from the base, and a customization-only key also works")]
         public void TryGetLangText_PartialOverride_MergesPerKeyAtLookupTime()
         {
-            // 套裝語系檔：20 個 key。
             var baseItems = Enumerable.Range(1, 20)
                 .Select(i => ($"Key{i:00}", $"套裝{i:00}"))
                 .ToArray();
             var defineAccess = new StubDefineAccess("zh-TW");
             defineAccess.AddResource("zh-TW", "Customer", baseItems);
 
-            // 客製語系檔：只改其中 5 個 key，另加 1 個套裝沒有的 key。
+            // The customization language file changes only 5 of the keys and adds 1 key the base does not have.
             var reader = new SpyCustomizeReader();
             reader.AddLanguage("acme", "zh-TW", "Customer",
                 ("Key03", "客製03"), ("Key07", "客製07"), ("Key11", "客製11"),
@@ -108,20 +107,20 @@ namespace Polhem.Definition.UnitTests.Language
             foreach (var (key, _) in baseItems)
             {
                 string expected = overridden.Contains(key, StringComparer.Ordinal)
-                    ? $"客製{key.Substring(3)}"   // 同一個 key 兩邊都有 → 客製優先
-                    : $"套裝{key.Substring(3)}";  // 客製沒有 → 延用套裝
+                    ? $"客製{key.Substring(3)}"   // Both sides have the key, so the customization wins.
+                    : $"套裝{key.Substring(3)}";  // The customization lacks it, so the base value is used.
                 Assert.Equal(expected, svc.GetLangText("acme", "zh-TW", "Customer", key));
             }
 
-            // 客製獨有的 key 也查得到（套裝無則加入）。
+            // A customization-only key is found too (added when the base lacks it).
             Assert.Equal("客製獨有", svc.GetLangText("acme", "zh-TW", "Customer", "KeyOnlyInCustomize"));
 
-            // 同一份套裝資源在未帶 customizeId 時完全不受影響（另一家公司 / 未客製的公司）。
+            // The same base resource is entirely unaffected by a lookup without a customizeId (another company, or one without customization).
             Assert.Equal("套裝03", svc.GetLangText("zh-TW", "Customer", "Key03"));
         }
 
         [Fact]
-        [DisplayName("跨租戶隔離：A 公司的客製不影響 B 公司的查找結果")]
+        [DisplayName("Tenant isolation: company A's customization does not affect company B's lookup results")]
         public void TryGetLangText_DifferentCustomizeIds_AreIsolated()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -133,12 +132,12 @@ namespace Polhem.Definition.UnitTests.Language
 
             Assert.Equal("acme 客製", svc.GetLangText("acme", "zh-TW", "Customer", "Key01"));
             Assert.Equal("globex 客製", svc.GetLangText("globex", "zh-TW", "Customer", "Key01"));
-            // 沒有客製檔的公司照樣拿套裝值。
+            // A company without a customization file still gets the base value.
             Assert.Equal("套裝01", svc.GetLangText("initech", "zh-TW", "Customer", "Key01"));
         }
 
         [Fact]
-        [DisplayName("Enum 疊加：cust 覆寫全部 entry 時各 entry 皆回 cust 文字")]
+        [DisplayName("Enum overlay: when cust overrides every entry, each entry returns the cust text")]
         public void GetLangEnum_CustOverridesEveryEntry_ReturnsCustText()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -155,14 +154,14 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("Enum 是整組取代不是逐 entry 疊加：套裝有而客製沒有的 entry 不會保留")]
+        [DisplayName("An enum is replaced as a whole, not overlaid per entry: entries the base has but the customization lacks are not kept")]
         public void GetLangEnum_CustHasEnum_ReplacesWholeSetWithoutMergingBaseEntries()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
             defineAccess.AddEnum("zh-TW", "Order", "OrderStatus",
                 ("0", "草稿"), ("1", "待審"), ("2", "已審"), ("3", "出貨"), ("4", "作廢"));
             var reader = new SpyCustomizeReader();
-            // 客製只列 2 個 entry → 結果就只有這 2 個，套裝其餘 3 個不會被併進來
+            // The customization lists only 2 entries, so the result has only those 2 and the other 3 base entries are not merged in.
             reader.AddEnum("acme", "zh-TW", "Order", "OrderStatus", ("1", "待簽核"), ("4", "註銷"));
             var svc = new LanguageService(defineAccess, reader);
 
@@ -176,7 +175,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("Enum 整組取代：客製檔的 entry 順序即為結果順序")]
+        [DisplayName("Enum replaced as a whole: the entry order of the customization file is the result order")]
         public void GetLangEnum_CustHasEnum_PreservesCustomizeDocumentOrder()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -193,11 +192,11 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("Enum 疊加：base 無該 enum 時整組回 cust enum")]
+        [DisplayName("Enum overlay: returns the whole cust enum when the base does not have the enum")]
         public void GetLangEnum_BaseMissesEnum_ReturnsCustEnum()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
-            defineAccess.AddResource("zh-TW", "Order", ("OK", "確定")); // 有 resource 但無 enum
+            defineAccess.AddResource("zh-TW", "Order", ("OK", "確定")); // The resource exists but has no enum.
             var reader = new SpyCustomizeReader();
             reader.AddEnum("acme", "zh-TW", "Order", "OrderStatus", ("0", "客製草稿"));
             var svc = new LanguageService(defineAccess, reader);
@@ -209,7 +208,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("Enum 取代不得污染套裝快取實例（定義資料 init 後不可異動）")]
+        [DisplayName("Enum replacement must not pollute the base cached instance (definition data is immutable after init)")]
         public void GetLangEnum_Overlay_DoesNotMutateBaseCachedInstance()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -220,7 +219,7 @@ namespace Polhem.Definition.UnitTests.Language
 
             svc.GetLangEnum("acme", "zh-TW", "Order", "OrderStatus");
 
-            // 未帶 customizeId 的查找（另一家未客製的公司）必須完全看不到客製痕跡
+            // A lookup without a customizeId (another company without customization) must see no trace of the customization.
             var baseResult = svc.GetLangEnum("zh-TW", "Order", "OrderStatus");
             Assert.NotNull(baseResult);
             Assert.Equal(2, baseResult!.Entries.Count);
@@ -229,7 +228,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("回歸防護：未帶 customizeId 時直接回套裝快取實例（未複製）")]
+        [DisplayName("Regression guard: without a customizeId the base cached instance is returned directly (not copied)")]
         public void GetLangEnum_NoCustomizeId_ReturnsBaseCachedInstance()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -245,13 +244,13 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("回歸防護：cust 無該 enum 時直接回套裝快取實例（未複製）")]
+        [DisplayName("Regression guard: when cust lacks the enum the base cached instance is returned directly (not copied)")]
         public void GetLangEnum_CustMissesEnum_ReturnsBaseCachedInstance()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
             defineAccess.AddEnum("zh-TW", "Order", "OrderStatus", ("0", "草稿"));
             var reader = new SpyCustomizeReader();
-            // cust resource 存在但只覆寫文字 key、沒有 OrderStatus enum
+            // The cust resource exists but overrides only text keys and has no OrderStatus enum.
             reader.AddLanguage("acme", "zh-TW", "Order", ("OK", "客製確定"));
             var svc = new LanguageService(defineAccess, reader);
 
@@ -261,13 +260,13 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("Enum 疊加：cust 無該 enum 時回 base enum")]
+        [DisplayName("Enum overlay: returns the base enum when cust lacks the enum")]
         public void GetLangEnum_CustMissesEnum_ReturnsBaseEnum()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
             defineAccess.AddEnum("zh-TW", "Common", "Gender", ("M", "男"), ("F", "女"));
             var reader = new SpyCustomizeReader();
-            // cust resource 存在但只覆寫文字 key、沒有 Gender enum
+            // The cust resource exists but overrides only text keys and has no Gender enum.
             reader.AddLanguage("acme", "zh-TW", "Common", ("OK", "客製確定"));
             var svc = new LanguageService(defineAccess, reader);
 

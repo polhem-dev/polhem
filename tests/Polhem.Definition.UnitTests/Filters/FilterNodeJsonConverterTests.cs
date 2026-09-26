@@ -6,22 +6,22 @@ using Polhem.Definition.Filters;
 namespace Polhem.Definition.UnitTests.Filters
 {
     /// <summary>
-    /// 守住「宣告型別為 <see cref="FilterNode"/> 的成員」在 JSON 上的多型。
+    /// Guards JSON polymorphism for members whose declared type is <see cref="FilterNode"/>.
     /// </summary>
     /// <remarks>
-    /// System.Text.Json 綁的是宣告型別：把 <see cref="FilterGroup"/> 指派給
-    /// <see cref="FilterNode"/> 屬性後，少了 converter 就只會寫出 <c>{"kind":"Group"}</c>，
-    /// 運算子與整棵子樹**靜默消失、不擲例外**。
+    /// System.Text.Json binds to the declared type: once a <see cref="FilterGroup"/> is assigned to a
+    /// <see cref="FilterNode"/> property, without the converter only <c>{"kind":"Group"}</c> is written,
+    /// and the operator and the whole subtree **disappear silently, without an exception**.
     /// <para>
-    /// 這個洞長期存在卻沒浮現，因為編碼過的 body 一直只走 MessagePack（那端有自己的
-    /// filter node formatter）。JSON body codec 上線後它就在最常用的清單查詢上生效了。
+    /// The hole existed for a long time without surfacing, because encoded bodies only ever went through MessagePack
+    /// (which has its own filter node formatter). Once the JSON body codec shipped, it took effect on the most common list queries.
     /// </para>
     /// </remarks>
     public class FilterNodeJsonConverterTests
     {
         /// <summary>
-        /// 承載一個宣告型別為 <see cref="FilterNode"/> 的成員——正是會出問題的形狀。
-        /// 標註方式與 wire 上的實際持有者一致（屬性層級，不是型別層級）。
+        /// Carries a member whose declared type is <see cref="FilterNode"/>, which is exactly the shape that breaks.
+        /// The annotation matches the actual holder on the wire (at the property level, not the type level).
         /// </summary>
         private sealed class FilterHolder
         {
@@ -38,7 +38,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("宣告型別為 FilterNode 的成員應寫出完整子樹，而非只有判別碼")]
+        [DisplayName("A member declared as FilterNode writes the full subtree, not just the discriminator")]
         public void Serialize_FilterNodeMember_KeepsSubtree()
         {
             var json = JsonCodec.Serialize(new FilterHolder { Filter = BuildGroup() });
@@ -49,7 +49,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("宣告型別為 FilterNode 的成員應還原為原本的具體型別與內容")]
+        [DisplayName("A member declared as FilterNode is restored to its original concrete type and content")]
         public void RoundTrip_FilterNodeMember_RestoresConcreteType()
         {
             var json = JsonCodec.Serialize(new FilterHolder { Filter = BuildGroup() });
@@ -65,7 +65,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("單一條件指派給 FilterNode 成員時應還原為 FilterCondition")]
+        [DisplayName("A single condition assigned to a FilterNode member is restored as a FilterCondition")]
         public void RoundTrip_ConditionAsNode_RestoresCondition()
         {
             var holder = new FilterHolder
@@ -81,7 +81,7 @@ namespace Polhem.Definition.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("FilterNode 成員為 null 時應原樣還原為 null")]
+        [DisplayName("A null FilterNode member is restored as null")]
         public void RoundTrip_NullNode_StaysNull()
         {
             var restored = JsonCodec.Deserialize<FilterHolder>(

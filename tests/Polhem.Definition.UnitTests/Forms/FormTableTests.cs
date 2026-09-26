@@ -5,8 +5,8 @@ using Polhem.Definition.Forms;
 namespace Polhem.Definition.UnitTests.Forms
 {
     /// <summary>
-    /// FormTable 未覆蓋路徑測試：ToString、GenerateDbTable、
-    /// RelationFieldReferences 的 KeyNotFoundException/InvalidOperationException 分支。
+    /// Tests for FormTable paths not covered elsewhere: ToString, GenerateDbTable, and the
+    /// KeyNotFoundException/InvalidOperationException branches of RelationFieldReferences.
     /// </summary>
     public class FormTableTests
     {
@@ -20,7 +20,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ToString 應回傳 TableName 與 DisplayName 的串接")]
+        [DisplayName("ToString returns TableName and DisplayName joined")]
         public void ToString_ReturnsTableNameDashDisplayName()
         {
             var ft = new FormTable("Customer", "客戶");
@@ -28,7 +28,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("GenerateDbTable 應透過 TableSchemaGenerator 建立 TableSchema")]
+        [DisplayName("GenerateDbTable builds a TableSchema through TableSchemaGenerator")]
         public void GenerateDbTable_DelegatesToSchemaGenerator()
         {
             var ft = BuildBasic();
@@ -41,11 +41,11 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("RelationFieldReferences 對 DestinationField 不存在於 Fields 應拋 KeyNotFoundException")]
+        [DisplayName("RelationFieldReferences throws KeyNotFoundException when a DestinationField is not in Fields")]
         public void RelationFieldReferences_MissingDestinationField_Throws()
         {
             var ft = BuildBasic();
-            // 帶 RelationProgId 的 DbField,mapping 的 DestinationField 指向不存在欄位
+            // A DbField with a RelationProgId whose mapping's `DestinationField` points to a field that does not exist.
             var rel = new FormField("dept_rowid", "部門", FieldDbType.String)
             {
                 RelationProgId = "Department"
@@ -57,11 +57,11 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("RelationFieldReferences 對重複 DestinationField 應拋 InvalidOperationException")]
+        [DisplayName("RelationFieldReferences throws InvalidOperationException for a duplicate DestinationField")]
         public void RelationFieldReferences_DuplicateDestinationField_Throws()
         {
             var ft = BuildBasic();
-            // 兩個不同的關聯欄位,mapping 都寫入同一個 DestinationField → 觸發 seen.Add 失敗
+            // Two different relation fields whose mappings both write the same `DestinationField`, which makes `seen.Add` fail.
             var rel1 = new FormField("dept_rowid", "部門", FieldDbType.String)
             {
                 RelationProgId = "Department"
@@ -81,7 +81,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("RelationFieldReferences 對合法 mapping 應建立對應引用")]
+        [DisplayName("RelationFieldReferences builds the matching references for a valid mapping")]
         public void RelationFieldReferences_ValidMapping_BuildsReference()
         {
             var ft = BuildBasic();

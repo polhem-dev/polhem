@@ -8,8 +8,9 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition.UnitTests.Storage
 {
     /// <summary>
-    /// <see cref="CustomizeOnlyStorage"/> 嚴格只讀行為測試：客製檔存在→回該檔；不存在→null（不 fallback）；
-    /// 非三類方法→<see cref="NotSupportedException"/>。
+    /// Tests for the strictly read-only behavior of <see cref="CustomizeOnlyStorage"/>: an existing customization file is
+    /// returned; a missing one returns null (no fallback); methods for types other than ProgramSettings, FormLayout and
+    /// Language throw <see cref="NotSupportedException"/>.
     /// </summary>
     public sealed class CustomizeOnlyStorageTests : IDisposable
     {
@@ -31,7 +32,7 @@ namespace Polhem.Definition.UnitTests.Storage
             => new(new CustomizeOnlyPathOptions(_root, CustomizeId));
 
         [Fact]
-        [DisplayName("GetFormLayout 客製檔存在時應回傳該檔內容")]
+        [DisplayName("GetFormLayout returns the content of an existing customization file")]
         public void GetFormLayout_FileExists_ReturnsLayout()
         {
             var paths = new CustomizeOnlyPathOptions(_root, CustomizeId);
@@ -45,14 +46,14 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetFormLayout 客製檔不存在時應回傳 null（不 fallback、不丟例外）")]
+        [DisplayName("GetFormLayout returns null when the customization file is missing (no fallback, no exception)")]
         public void GetFormLayout_FileMissing_ReturnsNull()
         {
             Assert.Null(CreateStorage().GetFormLayout("NonExistent"));
         }
 
         [Fact]
-        [DisplayName("GetLanguage 客製檔存在時應回傳該檔內容")]
+        [DisplayName("GetLanguage returns the content of an existing customization file")]
         public void GetLanguage_FileExists_ReturnsResource()
         {
             var paths = new CustomizeOnlyPathOptions(_root, CustomizeId);
@@ -66,35 +67,35 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetLanguage 客製檔不存在時應回傳 null")]
+        [DisplayName("GetLanguage returns null when the customization file is missing")]
         public void GetLanguage_FileMissing_ReturnsNull()
         {
             Assert.Null(CreateStorage().GetLanguage("zh-TW", "NonExistent"));
         }
 
         [Fact]
-        [DisplayName("GetFormSchema 應拋出 NotSupportedException（override 層不服務）")]
+        [DisplayName("GetFormSchema throws NotSupportedException (the override layer does not serve it)")]
         public void GetFormSchema_ThrowsNotSupported()
         {
             Assert.Throws<NotSupportedException>(() => CreateStorage().GetFormSchema("Employee"));
         }
 
         [Fact]
-        [DisplayName("GetTableSchema 應拋出 NotSupportedException")]
+        [DisplayName("GetTableSchema throws NotSupportedException")]
         public void GetTableSchema_ThrowsNotSupported()
         {
             Assert.Throws<NotSupportedException>(() => CreateStorage().GetTableSchema("common", "st_user"));
         }
 
         [Fact]
-        [DisplayName("GetDbCategorySettings 應拋出 NotSupportedException")]
+        [DisplayName("GetDbCategorySettings throws NotSupportedException")]
         public void GetDbCategorySettings_ThrowsNotSupported()
         {
             Assert.Throws<NotSupportedException>(() => CreateStorage().GetDbCategorySettings());
         }
 
         [Fact]
-        [DisplayName("所有 Save 方法應拋出 NotSupportedException（嚴格只讀）")]
+        [DisplayName("Save methods throw NotSupportedException (strictly read-only)")]
         public void SaveMethods_ThrowNotSupported()
         {
             var storage = CreateStorage();
@@ -104,14 +105,14 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("建構子傳入 null paths 應拋出 ArgumentNullException")]
+        [DisplayName("The constructor throws ArgumentNullException for null paths")]
         public void Constructor_NullPaths_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new CustomizeOnlyStorage(null!));
         }
 
         [Fact]
-        [DisplayName("GetChangeSource 三個客製型別應回報 getter 實際讀取的檔案路徑")]
+        [DisplayName("GetChangeSource reports the file path the getter actually reads for the customizable types")]
         public void GetChangeSource_CustomizableTypes_ReportsSameFilePathAsGetter()
         {
             var paths = new CustomizeOnlyPathOptions(_root, CustomizeId);
@@ -129,7 +130,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetChangeSource 客製檔尚未建立時仍回報路徑（檔案出現本身就是變更）")]
+        [DisplayName("GetChangeSource still reports the path when the customization file does not exist yet (the file appearing is itself a change)")]
         public void GetChangeSource_FileMissing_StillReportsPath()
         {
             var source = CreateStorage().GetChangeSource(DefineType.FormLayout, "NeverCreated");
@@ -139,7 +140,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetChangeSource 對 override 層不服務的型別應回報無訊號而非丟例外")]
+        [DisplayName("GetChangeSource reports no signal instead of throwing for types the override layer does not serve")]
         public void GetChangeSource_UnsupportedTypes_ReturnsNone()
         {
             var storage = CreateStorage();
@@ -150,7 +151,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetChangeSource 缺少必要 key 時應回報無訊號")]
+        [DisplayName("GetChangeSource reports no signal when a required key is missing")]
         public void GetChangeSource_MissingKeys_ReturnsNone()
         {
             var storage = CreateStorage();

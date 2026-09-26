@@ -5,7 +5,7 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// UnitSettings（系統層計量單位主檔）：GetDecimals 命中/fallback，以及三棲（XML / JSON）round-trip。
+    /// UnitSettings (the system-level unit of measure master): GetDecimals hits and fallback, and the XML / JSON round-trips.
     /// </summary>
     public class UnitSettingsTests
     {
@@ -20,7 +20,7 @@ namespace Polhem.Definition.UnitTests.Settings
         [InlineData("KG", 3)]
         [InlineData("PCS", 0)]
         [InlineData("M", 2)]
-        [DisplayName("GetDecimals 命中回該單位位數")]
+        [DisplayName("GetDecimals returns the unit's decimals on a hit")]
         public void GetDecimals_Hit_ReturnsUnitDecimals(string code, int expected)
         {
             var settings = BuildSettings();
@@ -29,7 +29,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("GetDecimals 未命中回 fallback 0")]
+        [DisplayName("GetDecimals returns the fallback 0 on a miss")]
         public void GetDecimals_Miss_ReturnsFallback()
         {
             var settings = BuildSettings();
@@ -39,7 +39,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("GetDecimals 單位碼比對不分大小寫")]
+        [DisplayName("GetDecimals matches unit codes case-insensitively")]
         public void GetDecimals_CaseInsensitive()
         {
             var settings = BuildSettings();
@@ -48,7 +48,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Find 命中回項目、未命中回 null")]
+        [DisplayName("Find returns the item on a hit and null on a miss")]
         public void Find_HitAndMiss()
         {
             var settings = BuildSettings();
@@ -58,7 +58,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("UnitSettings XML 序列化應正確還原所有欄位")]
+        [DisplayName("UnitSettings round-trips every field through XML serialization")]
         public void UnitSettings_XmlRoundtrip_PreservesItems()
         {
             var original = BuildSettings();
@@ -77,7 +77,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("UnitSettings JSON 序列化應正確還原所有欄位")]
+        [DisplayName("UnitSettings round-trips every field through JSON serialization")]
         public void UnitSettings_JsonRoundtrip_PreservesItems()
         {
             var original = BuildSettings();

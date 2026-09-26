@@ -6,8 +6,8 @@ using Polhem.Definition.Identity;
 namespace Polhem.Definition.UnitTests.Forms
 {
     /// <summary>
-    /// NumberFormatApplier.Bake：依公司位數對 FormSchema 數值欄 bake 顯示格式；
-    /// explicit NumberFormat 優先、None 略過、company 位數反映於格式。
+    /// NumberFormatApplier.Bake bakes display formats into the numeric fields of a FormSchema from the company's decimal places.
+    /// An explicit NumberFormat wins, None is skipped, and the company's decimal places show in the format.
     /// </summary>
     public class NumberFormatApplierTests
     {
@@ -29,7 +29,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Bake 對 Company/SystemFixed 欄套用框架預設格式；Currency（金額）不 bake")]
+        [DisplayName("Bake applies the framework default format to Company/SystemFixed fields and does not bake Currency (amount) fields")]
         public void Bake_NullCompany_FrameworkFormat()
         {
             var schema = SchemaWith(
@@ -46,7 +46,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Bake 金額欄不 bake，且無 CurrencyField 時繼承主檔幣別欄")]
+        [DisplayName("Bake does not bake an amount field, which inherits the master currency field when it has no CurrencyField")]
         public void Bake_AmountField_NotBaked_InheritsMasterCurrencyField()
         {
             var schema = SchemaWith(new FormField("amount", "金額", FieldDbType.Decimal) { NumberKind = NumberKind.Amount });
@@ -60,7 +60,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Bake 金額欄已指定 CurrencyField 時不被主檔幣別欄覆蓋")]
+        [DisplayName("Bake does not overwrite an amount field's explicit CurrencyField with the master currency field")]
         public void Bake_AmountField_ExplicitCurrencyField_NotOverwritten()
         {
             var schema = SchemaWith(new FormField("home_amount", "本幣金額", FieldDbType.Decimal)
@@ -76,7 +76,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Bake 主檔無幣別欄時金額欄 CurrencyField 維持空")]
+        [DisplayName("Bake leaves an amount field's CurrencyField empty when the master has no currency field")]
         public void Bake_AmountField_NoMasterCurrencyField_LeavesEmpty()
         {
             var schema = SchemaWith(new FormField("amount", "金額", FieldDbType.Decimal) { NumberKind = NumberKind.Amount });
@@ -87,7 +87,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Bake 公司 A vs B 位數不同 → 格式字串不同")]
+        [DisplayName("Bake produces different format strings for companies A and B with different decimal places")]
         public void Bake_DifferentCompanies_DifferentFormats()
         {
             var companyA = CompanyWith(new NumberFormatItem(NumberKind.Percent, 2));
@@ -104,7 +104,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Bake explicit NumberFormat 優先，不被覆蓋")]
+        [DisplayName("Bake keeps an explicit NumberFormat instead of overwriting it")]
         public void Bake_ExplicitFormat_Preserved()
         {
             var field = new FormField("amount", "金額", FieldDbType.Decimal)
@@ -120,7 +120,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Bake 綁 UnitField 的數量欄不 bake（runtime 依單位解析）")]
+        [DisplayName("Bake does not bake a quantity field bound to a UnitField (resolved at runtime by unit)")]
         public void Bake_QuantityWithUnitField_NotBaked()
         {
             var field = new FormField("order_qty", "數量", FieldDbType.Decimal)
@@ -138,7 +138,7 @@ namespace Polhem.Definition.UnitTests.Forms
         [Theory]
         [InlineData(NumberKind.Quantity)]
         [InlineData(NumberKind.Weight)]
-        [DisplayName("Bake 未綁 UnitField 的數量／重量欄也不 bake，公司位數不參與")]
+        [DisplayName("Bake does not bake quantity/weight fields without a UnitField either, and company decimal places do not apply")]
         public void Bake_UnitKindWithoutUnitField_NotBaked(NumberKind kind)
         {
             var field = new FormField("line_value", "數值", FieldDbType.Decimal) { NumberKind = kind };
@@ -150,7 +150,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Bake NumberKind=None 欄位略過，不套格式")]
+        [DisplayName("Bake skips NumberKind=None fields and applies no format")]
         public void Bake_NoneKind_Skipped()
         {
             var field = new FormField("memo", "備註", FieldDbType.String);
@@ -162,7 +162,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("HasNumericField 有 NumberKind 欄回 true、全 None 回 false")]
+        [DisplayName("HasNumericField returns true when a field has a NumberKind and false when all are None")]
         public void HasNumericField_DetectsNumericFields()
         {
             var numeric = SchemaWith(new FormField("amount", "金額", FieldDbType.Decimal) { NumberKind = NumberKind.Amount });
@@ -173,13 +173,13 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Bake 只動傳入實例，來源 schema（模擬快取）不受污染")]
+        [DisplayName("Bake changes only the instance passed in, and the source schema (simulating the cache) is not polluted")]
         public void Bake_DoesNotAffectSourceSchema()
         {
-            // 用 Percent（Company 來源、會 bake）驗證污染隔離；Amount 不 bake 不適合此測試。
+            // Percent (company-sourced, so it is baked) checks pollution isolation. Amount is not baked, so it does not fit this test.
             var source = SchemaWith(new FormField("disc", "折扣", FieldDbType.Decimal) { NumberKind = NumberKind.Percent });
 
-            // 模擬交付流程：clone 後才 bake，來源保持空 NumberFormat
+            // Mimic the delivery flow: bake only after cloning, so the source keeps an empty `NumberFormat`.
             var clone = source.Clone();
             NumberFormatApplier.Bake(clone, null);
 

@@ -4,15 +4,15 @@ using Polhem.Definition.Language;
 namespace Polhem.Definition.UnitTests.Language
 {
     /// <summary>
-    /// 補強語言模型型別 ToString() 方法與集合無參建構子的測試覆蓋率。
-    /// 涵蓋 LanguageEnum、LanguageEnumEntry、LanguageItem、LanguageResource，
-    /// 以及 LanguageEnumCollection、LanguageItemCollection、LanguageEnumEntryCollection
-    /// 的無參建構子路徑。
+    /// Adds coverage for the ToString() methods of the language model types and the parameterless constructors of their collections.
+    /// Covers LanguageEnum, LanguageEnumEntry, LanguageItem and LanguageResource,
+    /// and the parameterless constructor paths of LanguageEnumCollection, LanguageItemCollection and
+    /// LanguageEnumEntryCollection.
     /// </summary>
     public class LanguageModelToStringTests
     {
         [Fact]
-        [DisplayName("LanguageEnum.ToString 應回傳含名稱與 Entries 數的字串")]
+        [DisplayName("LanguageEnum.ToString returns a string with the name and the number of Entries")]
         public void LanguageEnum_ToString_ContainsNameAndEntryCount()
         {
             var langEnum = new LanguageEnum { Name = "Gender" };
@@ -23,7 +23,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LanguageEnumEntry.ToString 應回傳 Code = Text 格式")]
+        [DisplayName("LanguageEnumEntry.ToString returns the Code = Text format")]
         public void LanguageEnumEntry_ToString_FormatsCodeAndText()
         {
             var entry = new LanguageEnumEntry { Code = "M", Text = "男" };
@@ -32,7 +32,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LanguageItem.ToString 應回傳 Key = Value 格式")]
+        [DisplayName("LanguageItem.ToString returns the Key = Value format")]
         public void LanguageItem_ToString_FormatsKeyAndValue()
         {
             var item = new LanguageItem { Key = "OK", Value = "確定" };
@@ -41,7 +41,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LanguageResource.ToString 應包含 Namespace、Lang、Items 數與 Enums 數")]
+        [DisplayName("LanguageResource.ToString contains the Namespace, Lang, number of Items and number of Enums")]
         public void LanguageResource_ToString_ContainsAllParts()
         {
             var resource = new LanguageResource { Namespace = "Common", Lang = "zh-TW" };
@@ -51,7 +51,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LanguageEnumCollection 無參建構子應建立非 null 的空集合")]
+        [DisplayName("LanguageEnumCollection parameterless constructor creates a non-null empty collection")]
         public void LanguageEnumCollection_ParameterlessConstructor_CreatesEmptyCollection()
         {
             var collection = new LanguageEnumCollection();
@@ -61,7 +61,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LanguageItemCollection 無參建構子應建立非 null 的空集合")]
+        [DisplayName("LanguageItemCollection parameterless constructor creates a non-null empty collection")]
         public void LanguageItemCollection_ParameterlessConstructor_CreatesEmptyCollection()
         {
             var collection = new LanguageItemCollection();
@@ -71,7 +71,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LanguageEnumEntryCollection 無參建構子應建立非 null 的空集合")]
+        [DisplayName("LanguageEnumEntryCollection parameterless constructor creates a non-null empty collection")]
         public void LanguageEnumEntryCollection_ParameterlessConstructor_CreatesEmptyCollection()
         {
             var collection = new LanguageEnumEntryCollection();

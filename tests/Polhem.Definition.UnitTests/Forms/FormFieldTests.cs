@@ -6,23 +6,22 @@ using Polhem.Definition.Forms;
 namespace Polhem.Definition.UnitTests.Forms
 {
     /// <summary>
-    /// FormField 未覆蓋路徑測試：Table 屬性的 Collection==null 分支、
-    /// 歸屬 FormTable 後取得 Owner、ToString 格式。
+    /// Tests for FormField paths not covered elsewhere: the Collection==null branch of the Table property,
+    /// getting the owner after joining a FormTable, and the ToString format.
     /// </summary>
     public class FormFieldTests
     {
         [Fact]
-        [DisplayName("Table 於 Collection 為 null 時應回傳 null")]
+        [DisplayName("Table returns null when Collection is null")]
         public void Table_NoCollection_ReturnsNull()
         {
             var field = new FormField("sys_no", "流水號", FieldDbType.AutoIncrement);
 
-            // 尚未加入任何 FormFieldCollection,Collection 為 null
             Assert.Null(field.Table);
         }
 
         [Fact]
-        [DisplayName("Table 於加入 FormTable.Fields 後應回傳該 FormTable")]
+        [DisplayName("Table returns the FormTable after the field is added to FormTable.Fields")]
         public void Table_AddedToFormTable_ReturnsOwner()
         {
             var ft = new FormTable("Customer", "客戶");
@@ -33,7 +32,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ToString 應回傳 \"FieldName - Caption\"")]
+        [DisplayName("ToString returns \"FieldName - Caption\"")]
         public void ToString_ReturnsFieldNameDashCaption()
         {
             var field = new FormField("sys_no", "流水號", FieldDbType.AutoIncrement);
@@ -42,7 +41,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("NumberKind 預設為 None")]
+        [DisplayName("NumberKind defaults to None")]
         public void NumberKind_DefaultsToNone()
         {
             var field = new FormField("amount", "金額", FieldDbType.Decimal);
@@ -51,7 +50,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("NumberKind XML round-trip 應保留語意型別")]
+        [DisplayName("NumberKind XML round-trip keeps the semantic kind")]
         public void NumberKind_XmlRoundtrip_Preserved()
         {
             var original = new FormField("unit_price", "單價", FieldDbType.Decimal)
@@ -67,7 +66,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("NumberKind=None 為預設值時序列化應省略屬性")]
+        [DisplayName("NumberKind=None at its default is omitted from serialization")]
         public void NumberKind_None_OmitsXmlAttribute()
         {
             var field = new FormField("col", "欄", FieldDbType.String);
@@ -78,7 +77,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Clone 應複製 NumberKind、ReadOnly、Required")]
+        [DisplayName("Clone copies NumberKind, ReadOnly and Required")]
         public void Clone_CopiesNumberKindReadOnlyRequired()
         {
             var original = new FormField("amount", "金額", FieldDbType.Decimal)
@@ -96,7 +95,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("CurrencyField XML round-trip 應保留 CUKY 參照欄名")]
+        [DisplayName("CurrencyField XML round-trip keeps the CUKY reference field name")]
         public void CurrencyField_XmlRoundtrip_Preserved()
         {
             var original = new FormField("home_amount", "本幣金額", FieldDbType.Decimal)
@@ -113,7 +112,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("CurrencyField 為空預設值時序列化應省略屬性")]
+        [DisplayName("CurrencyField at its empty default is omitted from serialization")]
         public void CurrencyField_Empty_OmitsXmlAttribute()
         {
             var field = new FormField("col", "欄", FieldDbType.String);
@@ -124,7 +123,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Clone 應複製 CurrencyField")]
+        [DisplayName("Clone copies CurrencyField")]
         public void Clone_CopiesCurrencyField()
         {
             var original = new FormField("home_amount", "本幣金額", FieldDbType.Decimal)
@@ -139,7 +138,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("UnitField XML round-trip 應保留 UNIT 參照欄名")]
+        [DisplayName("UnitField XML round-trip keeps the UNIT reference field name")]
         public void UnitField_XmlRoundtrip_Preserved()
         {
             var original = new FormField("order_qty", "數量", FieldDbType.Decimal)
@@ -156,7 +155,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("UnitField 為空預設值時序列化應省略屬性")]
+        [DisplayName("UnitField at its empty default is omitted from serialization")]
         public void UnitField_Empty_OmitsXmlAttribute()
         {
             var field = new FormField("col", "欄", FieldDbType.String);
@@ -167,7 +166,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Clone 應複製 UnitField")]
+        [DisplayName("Clone copies UnitField")]
         public void Clone_CopiesUnitField()
         {
             var original = new FormField("order_qty", "數量", FieldDbType.Decimal)

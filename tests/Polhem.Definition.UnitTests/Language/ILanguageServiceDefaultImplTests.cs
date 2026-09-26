@@ -4,8 +4,8 @@ using Polhem.Definition.Language;
 namespace Polhem.Definition.UnitTests.Language
 {
     /// <summary>
-    /// 驗證 <see cref="ILanguageService"/> 四個預設介面實作的委派行為。
-    /// 使用不覆寫這四個預設方法的最小實作類別，透過介面型別呼叫以觸發預設實作路徑。
+    /// Verifies that the default interface implementations of <see cref="ILanguageService"/> (GetLangText, TryGetLangText, GetLangEnum, GetLangEnumText) delegate correctly.
+    /// Uses a minimal implementation that does not override these default methods, and calls through the interface type to hit the default implementation paths.
     /// </summary>
     public class ILanguageServiceDefaultImplTests
     {
@@ -40,7 +40,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("ILanguageService 預設實作 GetLangText(4參數) 應委派給 GetLangText(3參數)")]
+        [DisplayName("ILanguageService default GetLangText (4 parameters) delegates to GetLangText (3 parameters)")]
         public void GetLangText_DefaultImpl4Args_DelegatesTo3ArgOverload()
         {
             ILanguageService svc = new MinimalLanguageService();
@@ -49,7 +49,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("ILanguageService 預設實作 TryGetLangText(5參數) 應委派給 TryGetLangText(4參數)")]
+        [DisplayName("ILanguageService default TryGetLangText (5 parameters) delegates to TryGetLangText (4 parameters)")]
         public void TryGetLangText_DefaultImpl5Args_DelegatesTo4ArgOverload()
         {
             ILanguageService svc = new MinimalLanguageService();
@@ -59,7 +59,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("ILanguageService 預設實作 GetLangEnum(4參數) 應委派給 GetLangEnum(3參數)")]
+        [DisplayName("ILanguageService default GetLangEnum (4 parameters) delegates to GetLangEnum (3 parameters)")]
         public void GetLangEnum_DefaultImpl4Args_DelegatesTo3ArgOverload()
         {
             ILanguageService svc = new MinimalLanguageService();
@@ -69,7 +69,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("ILanguageService 預設實作 GetLangEnumText(4參數) 應委派給 GetLangEnumText(3參數)")]
+        [DisplayName("ILanguageService default GetLangEnumText (4 parameters) delegates to GetLangEnumText (3 parameters)")]
         public void GetLangEnumText_DefaultImpl4Args_DelegatesTo3ArgOverload()
         {
             ILanguageService svc = new MinimalLanguageService();

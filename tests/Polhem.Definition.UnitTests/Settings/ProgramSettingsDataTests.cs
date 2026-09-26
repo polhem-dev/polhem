@@ -6,12 +6,12 @@ namespace Polhem.Definition.UnitTests.Settings
 {
 
     /// <summary>
-    /// ProgramSettings、ProgramItem 等型別註冊表類別的測試。
+    /// Tests for the program registry classes such as ProgramSettings and ProgramItem.
     /// </summary>
     public class ProgramSettingsDataTests
     {
         [Fact]
-        [DisplayName("ProgramItem 預設建構子應初始化為空字串")]
+        [DisplayName("ProgramItem default constructor initializes empty strings")]
         public void ProgramItem_DefaultConstructor_InitializesEmpty()
         {
             var item = new ProgramItem();
@@ -22,7 +22,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ProgramItem.BusinessObject 預設應為空字串")]
+        [DisplayName("ProgramItem.BusinessObject defaults to an empty string")]
         public void ProgramItem_BusinessObject_DefaultsToEmpty()
         {
             var item = new ProgramItem("P001", "客戶維護");
@@ -31,7 +31,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ProgramItem.BusinessObject 為空時 XML 不應輸出該屬性")]
+        [DisplayName("ProgramItem.BusinessObject is not written to XML when empty")]
         public void ProgramItem_BusinessObject_EmptyOmittedFromXml()
         {
             var settings = new ProgramSettings();
@@ -43,7 +43,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ProgramItem.BusinessObject 有值時應透過 XmlAttribute 序列化往返")]
+        [DisplayName("ProgramItem.BusinessObject round-trips through XML as an XmlAttribute when set")]
         public void ProgramItem_BusinessObject_RoundTripsThroughXml()
         {
             var settings = new ProgramSettings();
@@ -60,7 +60,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ProgramItem 帶參數建構子應設定 ProgId 與 DisplayName")]
+        [DisplayName("ProgramItem parameterized constructor sets ProgId and DisplayName")]
         public void ProgramItem_ParameterizedConstructor_SetsProperties()
         {
             var item = new ProgramItem("P001", "客戶維護");
@@ -71,7 +71,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ProgramItem.ToString 應回傳 \"ProgId - DisplayName\"")]
+        [DisplayName("ProgramItem.ToString returns 'ProgId - DisplayName'")]
         public void ProgramItem_ToString_ReturnsFormatted()
         {
             var item = new ProgramItem("P001", "客戶維護");
@@ -80,7 +80,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ProgramItemCollection Add(progId, displayName) 應新增並回傳項目")]
+        [DisplayName("ProgramItemCollection Add(progId, displayName) adds and returns the item")]
         public void ProgramItemCollection_Add_AddsAndReturnsItem()
         {
             var settings = new ProgramSettings();
@@ -94,7 +94,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("攤平後同一 progId 重複註冊應在載入期即被集合擋下")]
+        [DisplayName("In the flattened registry, registering the same progId twice is rejected by the collection at load time")]
         public void ProgramItemCollection_DuplicateProgId_Throws()
         {
             var settings = new ProgramSettings();
@@ -104,7 +104,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ProgramSettings 預設應有非空 Items")]
+        [DisplayName("ProgramSettings has a non-null Items by default")]
         public void ProgramSettings_Default_HasItems()
         {
             var settings = new ProgramSettings();
@@ -115,7 +115,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ProgramSettings.Items 於序列化且集合為空時應回傳 null")]
+        [DisplayName("ProgramSettings.Items returns null when serializing an empty collection")]
         public void ProgramSettings_Items_EmptyDuringSerialize_ReturnsNull()
         {
             var settings = new ProgramSettings();
@@ -125,7 +125,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ProgramSettings.SetSerializeState 應更新狀態並傳遞至 Items")]
+        [DisplayName("ProgramSettings.SetSerializeState updates the state and propagates it to Items")]
         public void ProgramSettings_SetSerializeState_UpdatesState()
         {
             var settings = new ProgramSettings();
@@ -138,7 +138,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ProgramSettings.SetObjectFilePath 應更新檔案路徑")]
+        [DisplayName("ProgramSettings.SetObjectFilePath updates the file path")]
         public void ProgramSettings_SetObjectFilePath_UpdatesPath()
         {
             var settings = new ProgramSettings();

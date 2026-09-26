@@ -5,12 +5,12 @@ using Polhem.Definition.Collections;
 namespace Polhem.Definition.UnitTests.Collections
 {
     /// <summary>
-    /// ListItem 與 ListItemCollection 測試。
+    /// Tests for ListItem and ListItemCollection.
     /// </summary>
     public class ListItemCollectionTests
     {
         [Fact]
-        [DisplayName("ListItem 建構子應正確設定 Value 與 Text")]
+        [DisplayName("ListItem constructor sets Value and Text")]
         public void ListItem_Constructor_SetsValueAndText()
         {
             // Act
@@ -22,7 +22,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("ListItem ToString 應回傳 Text")]
+        [DisplayName("ListItem ToString returns Text")]
         public void ListItem_ToString_ReturnsText()
         {
             // Arrange
@@ -33,7 +33,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("ListItemCollection Add(value,text) 應新增項目並回傳")]
+        [DisplayName("ListItemCollection Add(value, text) adds the item and returns it")]
         public void Add_ValueAndText_AddsAndReturnsItem()
         {
             // Arrange
@@ -49,7 +49,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("FromTable 應依指定欄位填入 Value 與 Text")]
+        [DisplayName("FromTable fills Value and Text from the specified columns")]
         public void FromTable_PopulatesItemsFromDataTable()
         {
             // Arrange

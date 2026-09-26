@@ -11,8 +11,8 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition.UnitTests.Language
 {
     /// <summary>
-    /// <see cref="FormSchemaLocalizer"/> 租戶客製化疊加測試：cust 有 key→cust 值；cust 無 key→base 值；
-    /// enum 疊加；customizeId 空 / 舊 2-arg 多載→短路純 base（reader 零呼叫，逐位元同現況）。
+    /// Tenant customization overlay tests for <see cref="FormSchemaLocalizer"/>: a key in cust gives the cust value, a key missing from cust gives the base value,
+    /// enums are overlaid, and an empty customizeId or the old 2-arg overload short-circuits to the base alone (zero reader calls, bit-for-bit the same as before).
     /// </summary>
     public class FormSchemaLocalizerCustomizeTests
     {
@@ -26,7 +26,7 @@ namespace Polhem.Definition.UnitTests.Language
             => string.Format(CultureInfo.InvariantCulture, FormSchemaLocalizer.TableDisplayNameKeyFormat, tableName);
 
         [Fact]
-        [DisplayName("cust 有 Field.Caption 時應以 cust 值覆蓋 base 值")]
+        [DisplayName("A Field.Caption in cust overrides the base value")]
         public void Localize_CustHasFieldCaption_UsesCustValue()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -42,7 +42,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("cust 缺該 key 時應回退 base 值（per-key 疊加）")]
+        [DisplayName("A key missing from cust falls back to the base value (per-key overlay)")]
         public void Localize_CustMissesKey_FallsBackToBase()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -52,7 +52,7 @@ namespace Polhem.Definition.UnitTests.Language
                 (FieldKey("sys_id"), "客戶編號"),
                 (FieldKey("sys_name"), "客戶名稱"));
             var reader = new SpyCustomizeReader();
-            // 客製檔只覆寫一個 key，其餘應全部來自 base
+            // The customization file overrides only one key, so everything else must come from the base.
             reader.AddLanguage("acme", "zh-TW", "Customer", (FieldKey("sys_name"), "客戶抬頭"));
             var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, reader));
             var schema = BuildSchema();
@@ -66,13 +66,13 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("cust 有同名 LanguageEnum 時 ListItems 應整組換成客製選項集")]
+        [DisplayName("A LanguageEnum with the same name in cust replaces the ListItems with the customization's whole option set")]
         public void Localize_CustHasLangEnum_ListItemsReplacedByCustEnum()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
             defineAccess.AddEnum("zh-TW", "Customer", "Status", ("0", "啟用"), ("1", "停用"), ("2", "凍結"));
             var reader = new SpyCustomizeReader();
-            // 客製檔必須列出它要的完整選項集——沒列的套裝選項不會被併進來
+            // The customization file must list the complete option set it wants, because base options it omits are not merged in.
             reader.AddEnum("acme", "zh-TW", "Customer", "Status", ("1", "暫停"), ("9", "客製狀態"));
             var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, reader));
             var schema = BuildSchemaWithLangEnumField("Status");
@@ -85,14 +85,14 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("cust resource 不存在時所有欄位應全回 base 值")]
+        [DisplayName("Every field falls back to the base value when the cust resource does not exist")]
         public void Localize_NoCustResource_AllValuesFromBase()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
             defineAccess.AddResource("zh-TW", "Customer",
                 (FormSchemaLocalizer.SchemaDisplayNameKey, "客戶"),
                 (FieldKey("sys_name"), "客戶名稱"));
-            var reader = new SpyCustomizeReader(); // acme 沒有任何客製檔
+            var reader = new SpyCustomizeReader(); // acme has no customization files at all.
             var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, reader));
             var schema = BuildSchema();
 
@@ -102,10 +102,10 @@ namespace Polhem.Definition.UnitTests.Language
             Assert.Equal("客戶名稱", schema.Tables![0].Fields!["sys_name"].Caption);
         }
 
-        // ---- 回歸防護：未設 CustomizeId 的部署行為必須與現況逐位元一致 ----
+        // ---- Regression guard: a deployment without a CustomizeId must behave bit-for-bit as before ----
 
         [Fact]
-        [DisplayName("回歸防護：舊 2-arg 多載不得碰客製層（reader 零呼叫）")]
+        [DisplayName("Regression guard: the old 2-arg overload never touches the customization layer (zero reader calls)")]
         public void Localize_LegacyOverload_NeverTouchesCustomizeLayer()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -122,7 +122,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("回歸防護：customizeId 為空時不得碰客製層（reader 零呼叫）")]
+        [DisplayName("Regression guard: an empty customizeId never touches the customization layer (zero reader calls)")]
         public void Localize_EmptyCustomizeId_NeverTouchesCustomizeLayer()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -139,7 +139,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("回歸防護：空 customizeId 的結果與舊 2-arg 多載完全相同")]
+        [DisplayName("Regression guard: the result for an empty customizeId is identical to the old 2-arg overload")]
         public void Localize_EmptyCustomizeId_MatchesLegacyOverloadResult()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -161,7 +161,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("Lang 為空時即使帶 customizeId 也應 no-op（短路早於客製查找）")]
+        [DisplayName("An empty Lang is a no-op even with a customizeId (the short-circuit comes before the customization lookup)")]
         public void Localize_EmptyLang_NoOpEvenWithCustomizeId()
         {
             var defineAccess = new StubDefineAccess("zh-TW");

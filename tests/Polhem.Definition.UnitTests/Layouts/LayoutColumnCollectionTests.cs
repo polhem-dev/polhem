@@ -4,12 +4,12 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Definition.UnitTests.Layouts
 {
     /// <summary>
-    /// LayoutColumnCollection 單元測試。
+    /// Unit tests for LayoutColumnCollection.
     /// </summary>
     public class LayoutColumnCollectionTests
     {
         [Fact]
-        [DisplayName("Add 應建立並回傳具正確屬性的 LayoutColumn")]
+        [DisplayName("Add creates and returns a LayoutColumn with the given properties")]
         public void Add_ValidParams_ReturnsColumnWithCorrectProperties()
         {
             var collection = new LayoutColumnCollection();
@@ -22,7 +22,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("Add 應將欄位加入集合中，可由索引取出")]
+        [DisplayName("Add puts the column in the collection, where it can be retrieved by index")]
         public void Add_ValidParams_ColumnIsAddedToCollection()
         {
             var collection = new LayoutColumnCollection();
@@ -34,7 +34,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("Add 多次呼叫應依序加入全部欄位")]
+        [DisplayName("Calling Add several times adds every column in order")]
         public void Add_MultipleCalls_AddsAllColumns()
         {
             var collection = new LayoutColumnCollection();

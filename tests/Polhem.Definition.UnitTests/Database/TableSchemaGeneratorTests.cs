@@ -6,12 +6,12 @@ using Polhem.Definition.Forms;
 namespace Polhem.Definition.UnitTests.Database
 {
     /// <summary>
-    /// TableSchemaGenerator 將 FormTable 轉換為 TableSchema 的測試。
+    /// Tests for TableSchemaGenerator converting a FormTable into a TableSchema.
     /// </summary>
     public class TableSchemaGeneratorTests
     {
         [Fact]
-        [DisplayName("Generate 傳入 null 應拋出 ArgumentNullException")]
+        [DisplayName("Generate throws ArgumentNullException for null")]
         public void Generate_NullFormTable_ThrowsArgumentNullException()
         {
             // Arrange
@@ -21,14 +21,14 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("GetCategoryId 傳入 null 應拋出 ArgumentNullException")]
+        [DisplayName("GetCategoryId throws ArgumentNullException for null")]
         public void GetCategoryId_NullFormSchema_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => TableSchemaGenerator.GetCategoryId(null!));
         }
 
         [Fact]
-        [DisplayName("GetCategoryId CategoryId 為空字串應拋出 InvalidOperationException 並含 ProgId")]
+        [DisplayName("GetCategoryId throws InvalidOperationException mentioning the ProgId when CategoryId is empty")]
         public void GetCategoryId_EmptyCategoryId_ThrowsInvalidOperationException()
         {
             var schema = new FormSchema("Demo", "示範");
@@ -39,7 +39,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("GetCategoryId 已設定 CategoryId 應回傳對應字串")]
+        [DisplayName("GetCategoryId returns the CategoryId string when it is set")]
         public void GetCategoryId_CategoryIdSet_ReturnsValue()
         {
             var schema = new FormSchema("Demo", "示範") { CategoryId = "common" };
@@ -48,7 +48,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Generate 有 DbTableName 時應使用 DbTableName 作為表名")]
+        [DisplayName("Generate uses DbTableName as the table name when it is set")]
         public void Generate_DbTableNameSpecified_UsesDbTableName()
         {
             // Arrange
@@ -62,7 +62,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Generate 無 DbTableName 時應使用 TableName")]
+        [DisplayName("Generate uses TableName when there is no DbTableName")]
         public void Generate_NoDbTableName_UsesTableName()
         {
             // Arrange
@@ -76,12 +76,11 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Generate 應僅加入 DbField 類型欄位，忽略其他欄位類型")]
+        [DisplayName("Generate adds only DbField-type fields and ignores other field types")]
         public void Generate_OnlyAddsDbFields()
         {
             // Arrange
             var formTable = BuildFormTable();
-            // 加入非 DbField 類型的欄位，應被忽略
             formTable.Fields!.Add(new FormField("virtual_field", "虛擬欄位", FieldDbType.String, FieldType.RelationField));
 
             // Act
@@ -92,7 +91,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Generate 應自動加入主鍵索引於 sys_no")]
+        [DisplayName("Generate adds a primary key index on sys_no automatically")]
         public void Generate_AddsPrimaryKeyIndexOnSysNo()
         {
             // Arrange
@@ -109,7 +108,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Generate 應自動加入 sys_rowid 唯一索引")]
+        [DisplayName("Generate adds a unique index on sys_rowid automatically")]
         public void Generate_AddsUniqueIndexOnRowId()
         {
             // Arrange
@@ -124,7 +123,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Generate 欄位 MaxLength 應對應至 DbField.Length")]
+        [DisplayName("Generate maps the field MaxLength to DbField.Length")]
         public void Generate_MapsMaxLengthToDbFieldLength()
         {
             // Arrange
@@ -139,7 +138,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Generate 有 RelationProgId 的欄位應加入外鍵索引")]
+        [DisplayName("Generate adds a foreign key index for a field with a RelationProgId")]
         public void Generate_FieldWithRelationProgId_AddsForeignKeyIndex()
         {
             // Arrange

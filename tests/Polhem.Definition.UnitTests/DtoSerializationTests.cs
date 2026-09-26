@@ -10,12 +10,12 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// 核心 DTO 的 XML / JSON 序列化 round-trip 測試。
+    /// XML / JSON serialization round-trip tests for the core DTOs.
     /// </summary>
     public class DtoSerializationTests
     {
         [Fact]
-        [DisplayName("FormSchema 含主檔欄位 XML 序列化應正確還原結構")]
+        [DisplayName("FormSchema with master table fields round-trips its structure through XML serialization")]
         public void FormSchema_XmlRoundtrip_PreservesStructure()
         {
             // Arrange
@@ -41,7 +41,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("FormSchema JSON 序列化應正確還原結構")]
+        [DisplayName("FormSchema round-trips its structure through JSON serialization")]
         public void FormSchema_JsonRoundtrip_PreservesStructure()
         {
             // Arrange
@@ -60,7 +60,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("TableSchema 含欄位與主鍵索引 XML 序列化應正確還原")]
+        [DisplayName("TableSchema with fields and a primary key index round-trips through XML serialization")]
         public void TableSchema_XmlRoundtrip_PreservesFieldsAndIndexes()
         {
             // Arrange
@@ -91,7 +91,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("TableSchema Clone 應深度複製欄位與索引")]
+        [DisplayName("TableSchema Clone deep-copies fields and indexes")]
         public void TableSchema_Clone_DeepCopies()
         {
             // Arrange
@@ -112,7 +112,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("FormLayout 含 Sections 與 Details XML 序列化應正確還原結構")]
+        [DisplayName("FormLayout with Sections and Details round-trips its structure through XML serialization")]
         public void FormLayout_FullStructure_XmlRoundtrip()
         {
             // Arrange
@@ -192,7 +192,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("LayoutColumn Width=0 序列化時應省略 Width 屬性")]
+        [DisplayName("LayoutColumn omits the Width attribute when Width is 0")]
         public void LayoutColumn_WidthZero_OmitsXmlAttribute()
         {
             // Arrange
@@ -206,7 +206,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("LayoutColumn Width 有值時 round-trip 應保留")]
+        [DisplayName("LayoutColumn keeps a non-zero Width through a round-trip")]
         public void LayoutColumn_NonZeroWidth_PreservesValue()
         {
             // Arrange
@@ -222,7 +222,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("FormField ListItems XML 序列化應正確還原")]
+        [DisplayName("FormField ListItems round-trip through XML serialization")]
         public void FormField_ListItems_XmlRoundtrip()
         {
             // Arrange
@@ -243,7 +243,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("DatabaseSettings XML 序列化應正確還原 Servers 與 Items")]
+        [DisplayName("DatabaseSettings round-trips Items through XML serialization")]
         public void DatabaseSettings_XmlRoundtrip_PreservesCollections()
         {
             // Arrange
@@ -269,7 +269,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("DatabaseSettings Clone 應建立獨立副本")]
+        [DisplayName("DatabaseSettings Clone creates an independent copy")]
         public void DatabaseSettings_Clone_ProducesIndependentCopy()
         {
             // Arrange
@@ -286,11 +286,11 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("ProgramSettings XML 序列化應正確還原")]
+        [DisplayName("ProgramSettings round-trips through XML serialization")]
         public void ProgramSettings_XmlRoundtrip_Succeeds()
         {
-            // Arrange —— 必須填入可辨識的資料：序列化空實例後只斷言 NotNull，
-            // 連「序列化把每個欄位都吃掉」都驗不出來。
+            // Arrange: the data must be recognizable. Serializing an empty instance and asserting only NotNull
+            // cannot even detect serialization dropping every field.
             var original = new ProgramSettings();
             original.Items!.Add(new ProgramItem("Employee", "員工資料") { BusinessObject = "Polhem.Business.FormBusinessObject", Repository = "Polhem.Repository.DataFormRepository" });
             original.Items.Add(new ProgramItem("Order", "訂單"));
@@ -311,10 +311,10 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("DbCategorySettings XML 序列化應正確還原")]
+        [DisplayName("DbCategorySettings round-trips through XML serialization")]
         public void DbCategorySettings_XmlRoundtrip_Succeeds()
         {
-            // Arrange —— 理由同上：空實例的 round-trip 不構成證據。
+            // Arrange: same reason as above, a round-trip of an empty instance is no evidence.
             var original = new DbCategorySettings();
             original.Categories!.Add(new DbCategory { Id = "common", DisplayName = "共用資料庫" });
             original.Categories.Add(new DbCategory { Id = "company", DisplayName = "公司資料庫" });
@@ -331,7 +331,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("SystemSettings JSON 序列化應正確還原主要屬性")]
+        [DisplayName("SystemSettings round-trips its main properties through JSON serialization")]
         public void SystemSettings_JsonRoundtrip_PreservesConfiguration()
         {
             // Arrange

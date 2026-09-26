@@ -17,7 +17,7 @@ namespace Polhem.Definition.UnitTests.Database
             new() { FieldName = "work_start", Caption = "Start", DbType = dbType, Length = length };
 
         [Fact]
-        [DisplayName("定義為 Time、DB 反推為 String(5) 應視為相同，不產生 schema diff")]
+        [DisplayName("A Time definition and a String(5) reverse-mapped from the DB are equal and produce no schema diff")]
         public void Compare_TimeAgainstFiveLengthString_ReportsNoDifference()
         {
             var defined = Field(FieldDbType.Time);
@@ -27,14 +27,14 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("兩側皆為 Time 應視為相同")]
+        [DisplayName("Time on both sides is equal")]
         public void Compare_TimeAgainstTime_ReportsNoDifference()
         {
             Assert.True(Field(FieldDbType.Time).Compare(Field(FieldDbType.Time)));
         }
 
         [Fact]
-        [DisplayName("定義為 Time、DB 為較寬的 String 應判定為差異並觸發升級")]
+        [DisplayName("A Time definition against a wider String in the DB is a difference that triggers an upgrade")]
         public void Compare_TimeAgainstWiderString_ReportsDifference()
         {
             var defined = Field(FieldDbType.Time);
@@ -44,7 +44,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("Time 與非字串型別仍應判定為差異")]
+        [DisplayName("Time against a non-string type is still a difference")]
         public void Compare_TimeAgainstNonString_ReportsDifference()
         {
             Assert.False(Field(FieldDbType.Time).Compare(Field(FieldDbType.DateTime)));
@@ -52,7 +52,7 @@ namespace Polhem.Definition.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("既有 String 欄位長度比對行為不受影響")]
+        [DisplayName("Length comparison of existing String columns is unchanged")]
         public void Compare_StringLengths_Unchanged()
         {
             Assert.True(Field(FieldDbType.String, 50).Compare(Field(FieldDbType.String, 50)));

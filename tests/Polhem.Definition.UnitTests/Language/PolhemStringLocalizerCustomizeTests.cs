@@ -9,8 +9,8 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition.UnitTests.Language
 {
     /// <summary>
-    /// <see cref="PolhemStringLocalizer{T}"/> 租戶客製化管道測試：customizeIdProvider 命中→cust 值；
-    /// cust 缺 key→base 值；既有 1-arg / 2-arg 建構子→短路純 base（reader 零呼叫，逐位元同現況）。
+    /// Tenant customization pipeline tests for <see cref="PolhemStringLocalizer{T}"/>: a customizeIdProvider hit gives the cust value,
+    /// a key missing from cust gives the base value, and the existing 1-arg / 2-arg constructors short-circuit to the base alone (zero reader calls, bit-for-bit the same as before).
     /// </summary>
     public class PolhemStringLocalizerCustomizeTests
     {
@@ -19,7 +19,7 @@ namespace Polhem.Definition.UnitTests.Language
         public sealed class CommonResources { }
 
         [Fact]
-        [DisplayName("customizeIdProvider 有值且 cust 有 key 時應回 cust 值")]
+        [DisplayName("Returns the cust value when customizeIdProvider has a value and cust has the key")]
         public void Indexer_CustHasKey_ReturnsCustValue()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -36,7 +36,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("cust 缺該 key 時應回退 base 值")]
+        [DisplayName("Falls back to the base value when cust lacks the key")]
         public void Indexer_CustMissesKey_ReturnsBaseValue()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -50,7 +50,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("cust 與 base 都缺 key 時 ResourceNotFound=true 且值為 fullKey")]
+        [DisplayName("ResourceNotFound=true with the fullKey as the value when both cust and base lack the key")]
         public void Indexer_BothMiss_ReturnsResourceNotFound()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -65,7 +65,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("customizeIdProvider 回傳 null 時視為空字串，走純 base 不拋例外")]
+        [DisplayName("A null from customizeIdProvider is treated as an empty string and uses the base alone without throwing")]
         public void Indexer_NullCustomizeId_TreatedAsEmpty()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -80,7 +80,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("customizeIdProvider 傳 null 應拋 ArgumentNullException")]
+        [DisplayName("Passing a null customizeIdProvider throws ArgumentNullException")]
         public void Ctor_NullCustomizeIdProvider_Throws()
         {
             var svc = new LanguageService(new StubDefineAccess("zh-TW"));
@@ -89,10 +89,10 @@ namespace Polhem.Definition.UnitTests.Language
                 new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW", null!));
         }
 
-        // ---- 回歸防護：未設 CustomizeId 的部署行為必須與現況逐位元一致 ----
+        // ---- Regression guard: a deployment without a CustomizeId must behave bit-for-bit as before ----
 
         [Fact]
-        [DisplayName("回歸防護：2-arg 建構子不得碰客製層（reader 零呼叫）")]
+        [DisplayName("Regression guard: the 2-arg constructor never touches the customization layer (zero reader calls)")]
         public void Indexer_LangProviderOnlyCtor_NeverTouchesCustomizeLayer()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
@@ -107,7 +107,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("回歸防護：customizeIdProvider 回傳空字串等同 2-arg 建構子")]
+        [DisplayName("Regression guard: an empty string from customizeIdProvider is equivalent to the 2-arg constructor")]
         public void Indexer_EmptyCustomizeId_MatchesLangProviderOnlyCtor()
         {
             var defineAccess = new StubDefineAccess("zh-TW");

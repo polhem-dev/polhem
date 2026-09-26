@@ -1,13 +1,15 @@
-// 整組件序列化，而非逐類別掛 [Collection]。
+// The whole assembly is serialized, instead of putting [Collection] on each class.
 //
-// 這個組件有數個測試類別會碰同一份 process-wide 狀態（POLHEM_MASTER_KEY 環境變數、
-// GlobalEvents、以及測試 body 內建立的 DI 容器），詳見 ProcessWideStateCollection 的註解。
+// Several test classes in this assembly touch the same process-wide state (the `POLHEM_MASTER_KEY`
+// environment variable, `GlobalEvents`, and DI containers built inside test bodies); see the comment
+// on `ProcessWideStateCollection`.
 //
-// 逐類別掛 [Collection] 靠的是「新增測試時記得補」，而讀取端會隨新測試持續增加 ——
-// 那種要求必然遺漏，且漏掉時看起來有序列化、實際沒有，不會有任何編譯或測試訊號。
-// 組件層一次序列化把它變成結構性的。ProcessWideStateCollection 因此變成冗餘，
-// 但保留作為「哪些類別會碰 process-wide 狀態」的紀錄（與 Polhem.Api.Core 的
-// ApiServiceOptionsStateCollection 同一個做法）。
+// Putting [Collection] on each class relies on remembering to add it with every new test, and the readers
+// keep growing as tests are added. Such a requirement is bound to be missed, and when it is, the tests look
+// serialized but are not, with no compile or test signal.
+// Serializing once at the assembly level makes it structural. `ProcessWideStateCollection` is therefore
+// redundant, but it is kept as a record of which classes touch process-wide state (the same approach as
+// `ApiServiceOptionsStateCollection` in Polhem.Api.Core).
 //
-// 成本實測（2026-09-04，1,086 筆測試）：序列化前 352–634 ms，序列化後 723–823 ms。
+// Measured cost (2026-09-04, 1,086 tests): 352-634 ms before serializing, 723-823 ms after.
 [assembly: Xunit.CollectionBehavior(DisableTestParallelization = true)]

@@ -3,53 +3,53 @@ using System.ComponentModel;
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// 打包閘門：斷言 <c>Polhem.Definition.targets</c> 以 <c>buildTransitive/</c> 發布，
-    /// 而非只對直接消費者生效的 <c>build/</c>。
+    /// Packaging gate: asserts that <c>Polhem.Definition.targets</c> ships in <c>buildTransitive/</c>,
+    /// not in <c>build/</c>, which only takes effect for direct consumers.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// NuGet 只對**直接** <c>PackageReference</c> 匯入套件的 <c>build/</c> 資料夾。這支 targets 的
-    /// 職責是把消費端的定義檔注入 <c>AdditionalFiles</c>，供 POLHEM1xxx / POLHEM2xxx 讀取；放在
-    /// <c>build/</c> 時，凡是只引用 <c>Polhem.Business</c> / <c>Polhem.Db</c> / <c>Polhem.Api.AspNetCore</c> /
-    /// <c>Polhem.Hosting</c> 的專案（<c>Polhem.Definition</c> 為遞移相依）都拿不到它。
+    /// NuGet imports the <c>build/</c> folder only for a **direct** <c>PackageReference</c>. This targets file
+    /// injects the consumer's definition files into <c>AdditionalFiles</c> for POLHEM1xxx / POLHEM2xxx to read. In
+    /// <c>build/</c>, every project that references only <c>Polhem.Business</c> / <c>Polhem.Db</c> / <c>Polhem.Api.AspNetCore</c> /
+    /// <c>Polhem.Hosting</c> (with <c>Polhem.Definition</c> as a transitive dependency) does not get it.
     /// </para>
     /// <para>
-    /// 這個失效**完全沒有症狀**：analyzer 組件本身會遞移流入並正常載入，只是讀不到任何檔案，
-    /// 於是規則靜默通過，不會有任何診斷指出這件事。實際發生過一次，且是由外部 repo
-    /// （bee-northwind-avalonia，4.21.0）實測 <c>AdditionalFiles</c> 為 0 筆才發現的。
+    /// This failure has **no symptom at all**: the analyzer assembly still flows in transitively and loads, it just
+    /// reads no files, so the rules pass silently and no diagnostic points it out. It happened once, and was found
+    /// only when an external repository (bee-northwind-avalonia, 4.21.0) measured zero <c>AdditionalFiles</c>.
     /// </para>
     /// <para>
-    /// 本測試檢查的是 repository 的原始檔佈局與 <c>Pack</c> 宣告，而不是實際打出來的 nupkg ——
-    /// 在單元測試裡跑一次 <c>dotnet pack</c> 太慢。要攔的回歸（把資料夾或 <c>PackagePath</c> 改回
-    /// <c>build</c>）在這一層就看得見。
+    /// This test checks the repository's source layout and <c>Pack</c> declarations, not the packed nupkg:
+    /// running <c>dotnet pack</c> in a unit test is too slow. The regression it guards against (changing the folder
+    /// or <c>PackagePath</c> back to <c>build</c>) is visible at this level.
     /// </para>
     /// </remarks>
     public class BuildAssetPackagingGateTests
     {
         /// <summary>
-        /// MSBuild targets 檔必須位於此資料夾，才會對遞移消費者生效。
+        /// The MSBuild targets file must be in this folder to take effect for transitive consumers.
         /// </summary>
         private const string RequiredFolder = "buildTransitive";
 
         [Fact]
-        [DisplayName("Polhem.Definition.targets 位於 buildTransitive 而非 build 資料夾")]
+        [DisplayName("Polhem.Definition.targets is in the buildTransitive folder, not build")]
         public void DefinitionTargets_LiveUnderBuildTransitive()
         {
             var projectDir = GetDefinitionProjectDirectory();
 
             Assert.True(
                 File.Exists(Path.Combine(projectDir, RequiredFolder, "Polhem.Definition.targets")),
-                $"找不到 {RequiredFolder}/Polhem.Definition.targets。這支 targets 必須放在 " +
-                $"{RequiredFolder}/，否則只有直接引用 Polhem.Definition 的專案會匯入它。");
+                $"{RequiredFolder}/Polhem.Definition.targets not found. The targets file must be in " +
+                $"{RequiredFolder}/, otherwise only projects that reference Polhem.Definition directly import it.");
 
             Assert.False(
                 Directory.Exists(Path.Combine(projectDir, "build")),
-                "src/Polhem.Definition/build/ 不應存在。NuGet 只對直接 PackageReference 匯入 build/，" +
-                $"而 {RequiredFolder}/ 對直接與遞移消費者都生效，故不需要第二份。");
+                "src/Polhem.Definition/build/ must not exist. NuGet imports build/ only for a direct PackageReference, " +
+                $"while {RequiredFolder}/ applies to both direct and transitive consumers, so a second copy is not needed.");
         }
 
         [Fact]
-        [DisplayName("csproj 把 targets 打包到 buildTransitive 路徑")]
+        [DisplayName("The csproj packs the targets file to the buildTransitive path")]
         public void DefinitionCsproj_PacksTargetsToBuildTransitive()
         {
             var csproj = File.ReadAllText(
@@ -61,7 +61,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         /// <summary>
-        /// 取得 <c>src/Polhem.Definition</c> 的絕對路徑。
+        /// Gets the absolute path of <c>src/Polhem.Definition</c>.
         /// </summary>
         private static string GetDefinitionProjectDirectory()
         {
@@ -71,10 +71,10 @@ namespace Polhem.Definition.UnitTests
                 dir = dir.Parent;
             }
 
-            Assert.True(dir != null, "自測試輸出目錄往上找不到 repository 根目錄（.git）。");
+            Assert.True(dir != null, "Could not find the repository root (.git) above the test output directory.");
 
             var projectDir = Path.Combine(dir!.FullName, "src", "Polhem.Definition");
-            Assert.True(Directory.Exists(projectDir), $"找不到 {projectDir}。");
+            Assert.True(Directory.Exists(projectDir), $"{projectDir} not found.");
 
             return projectDir;
         }

@@ -4,12 +4,12 @@ using Polhem.Definition.Identity;
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// SessionInfo / SessionUser / UserInfo 等 DTO 基本屬性測試。
+    /// Basic property tests for DTOs such as SessionInfo, SessionUser and UserInfo.
     /// </summary>
     public class DtoPropertyTests
     {
         [Fact]
-        [DisplayName("SessionInfo GetKey 應回傳 AccessToken 的字串表示")]
+        [DisplayName("SessionInfo GetKey returns the AccessToken as a string")]
         public void SessionInfo_GetKey_ReturnsAccessTokenString()
         {
             // Arrange
@@ -21,7 +21,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("SessionInfo 預設值應為空 Guid 與 zh-TW 文化")]
+        [DisplayName("SessionInfo defaults to an empty Guid and an empty culture and time zone")]
         public void SessionInfo_Defaults_ReturnsExpectedValues()
         {
             // Act
@@ -30,15 +30,15 @@ namespace Polhem.Definition.UnitTests
             // Assert
             Assert.Equal(Guid.Empty, info.AccessToken);
             Assert.Null(info.CompanyId);
-            // 空值即「未指定」：實際語系與時區由登入時填入
-            // （st_user.culture / st_user.time_zone，否則 DefaultLanguage / DefaultTimeZone）
+            // Empty means unspecified: the actual culture and time zone are filled in at login
+            // (from st_user.culture / st_user.time_zone, otherwise DefaultLanguage / DefaultTimeZone).
             Assert.Empty(info.Culture);
             Assert.Empty(info.TimeZone);
             Assert.Empty(info.ApiEncryptionKey);
         }
 
         [Fact]
-        [DisplayName("CompanyInfo GetKey 應回傳 CompanyId")]
+        [DisplayName("CompanyInfo GetKey returns CompanyId")]
         public void CompanyInfo_GetKey_ReturnsCompanyId()
         {
             // Arrange
@@ -54,7 +54,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompanyInfo 預設建構式應產生空字串欄位")]
+        [DisplayName("CompanyInfo default constructor produces empty string fields")]
         public void CompanyInfo_Defaults_ReturnsEmptyStrings()
         {
             // Act
@@ -67,7 +67,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompanyInfo ToString 應回傳 CompanyId : CompanyName 格式")]
+        [DisplayName("CompanyInfo ToString returns the 'CompanyId : CompanyName' format")]
         public void CompanyInfo_ToString_ReturnsFormattedString()
         {
             // Arrange
@@ -78,7 +78,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("SessionInfo ToString 應回傳 UserId : UserName 格式")]
+        [DisplayName("SessionInfo ToString returns the 'UserId : UserName' format")]
         public void SessionInfo_ToString_ReturnsFormattedString()
         {
             // Arrange
@@ -89,7 +89,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("SessionUser ToString 應回傳 UserID : UserName 格式")]
+        [DisplayName("SessionUser ToString returns the 'UserID : UserName' format")]
         public void SessionUser_ToString_ReturnsFormattedString()
         {
             // Arrange
@@ -100,7 +100,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("SessionUser 預設值應為空 Guid / MinValue")]
+        [DisplayName("SessionUser defaults to an empty Guid and DateTime.MinValue")]
         public void SessionUser_Defaults_ReturnsExpectedValues()
         {
             // Act
@@ -113,7 +113,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("UserInfo 預設應使用 zh-TW 與空時區（即 UTC）")]
+        [DisplayName("UserInfo defaults to zh-TW and an empty time zone (meaning UTC)")]
         public void UserInfo_Defaults_ReturnsExpectedCultureAndTimeZone()
         {
             // Act
@@ -121,7 +121,7 @@ namespace Polhem.Definition.UnitTests
 
             // Assert
             Assert.Equal("zh-TW", user.Culture);
-            // 空值即 UTC：實際時區由伺服器於登入時提供
+            // Empty means UTC: the actual time zone is supplied by the server at login.
             Assert.Empty(user.TimeZone);
         }
     }

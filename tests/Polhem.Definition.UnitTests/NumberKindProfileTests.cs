@@ -12,7 +12,7 @@ namespace Polhem.Definition.UnitTests
         [InlineData(NumberKind.Cost, 'N')]
         [InlineData(NumberKind.ExchangeRate, 'N')]
         [InlineData(NumberKind.Percent, 'P')]
-        [DisplayName("GetFormatLetter 百分比回 P、其餘回 N")]
+        [DisplayName("GetFormatLetter returns P for Percent and N for every other kind")]
         public void GetFormatLetter_ReturnsExpectedLetter(NumberKind kind, char expected)
         {
             Assert.Equal(expected, NumberKindProfile.GetFormatLetter(kind));
@@ -26,7 +26,7 @@ namespace Polhem.Definition.UnitTests
         [InlineData(NumberKind.UnitPrice, 4)]
         [InlineData(NumberKind.Cost, 4)]
         [InlineData(NumberKind.ExchangeRate, 5)]
-        [DisplayName("GetDefaultDecimals 回傳契約表的框架預設位數")]
+        [DisplayName("GetDefaultDecimals returns the framework default decimals from the contract table")]
         public void GetDefaultDecimals_ReturnsContractDefaults(NumberKind kind, int expected)
         {
             Assert.Equal(expected, NumberKindProfile.GetDefaultDecimals(kind));
@@ -40,7 +40,7 @@ namespace Polhem.Definition.UnitTests
         [InlineData(NumberKind.UnitPrice, RoundingPolicy.Preserve)]
         [InlineData(NumberKind.Cost, RoundingPolicy.Preserve)]
         [InlineData(NumberKind.ExchangeRate, RoundingPolicy.Preserve)]
-        [DisplayName("GetRoundingPolicy 四捨五入類回 Round、不捨入類回 Preserve")]
+        [DisplayName("GetRoundingPolicy returns Round for rounded kinds and Preserve for unrounded kinds")]
         public void GetRoundingPolicy_ReturnsExpectedPolicy(NumberKind kind, RoundingPolicy expected)
         {
             Assert.Equal(expected, NumberKindProfile.GetRoundingPolicy(kind));
@@ -54,7 +54,7 @@ namespace Polhem.Definition.UnitTests
         [InlineData(NumberKind.Percent, DecimalsSource.Company)]
         [InlineData(NumberKind.UnitPrice, DecimalsSource.Company)]
         [InlineData(NumberKind.Cost, DecimalsSource.Company)]
-        [DisplayName("GetDecimalsSource 回傳契約表的位數來源")]
+        [DisplayName("GetDecimalsSource returns the decimals source from the contract table")]
         public void GetDecimalsSource_ReturnsContractSource(NumberKind kind, DecimalsSource expected)
         {
             Assert.Equal(expected, NumberKindProfile.GetDecimalsSource(kind));
@@ -66,7 +66,7 @@ namespace Polhem.Definition.UnitTests
         [InlineData(NumberKind.Cost, 4, "N4")]
         [InlineData(NumberKind.ExchangeRate, 5, "N5")]
         [InlineData(NumberKind.Percent, 2, "P2")]
-        [DisplayName("BuildFormatString 由種類與位數組出格式字串")]
+        [DisplayName("BuildFormatString composes the format string from the kind and the decimals")]
         public void BuildFormatString_ComposesLetterAndDecimals(NumberKind kind, int decimals, string expected)
         {
             Assert.Equal(expected, NumberKindProfile.BuildFormatString(kind, decimals));

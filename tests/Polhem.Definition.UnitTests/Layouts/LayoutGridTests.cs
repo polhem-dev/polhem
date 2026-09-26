@@ -5,12 +5,12 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Definition.UnitTests.Layouts
 {
     /// <summary>
-    /// LayoutGrid 單元測試。
+    /// Unit tests for LayoutGrid.
     /// </summary>
     public class LayoutGridTests
     {
         [Fact]
-        [DisplayName("預設建構子應初始化為對應預設值")]
+        [DisplayName("Default constructor initializes the expected default values")]
         public void DefaultConstructor_InitializesDefaults()
         {
             var grid = new LayoutGrid();
@@ -22,7 +22,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("AllowEditModes 非預設值經 XML round-trip 還原；預設值不落檔")]
+        [DisplayName("A non-default AllowEditModes is restored through an XML round-trip, and the default is not written")]
         public void AllowEditModes_XmlRoundTrip_PreservesValueAndOmitsDefault()
         {
             var layout = new FormLayout();
@@ -43,7 +43,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("帶參數建構子應設定 TableName 與 Caption")]
+        [DisplayName("Parameterized constructor sets TableName and Caption")]
         public void ParameterizedConstructor_SetsProperties()
         {
             var grid = new LayoutGrid("Orders", "訂單");
@@ -53,7 +53,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ToString 應回傳 \"TableName - Caption\"")]
+        [DisplayName("ToString returns \"TableName - Caption\"")]
         public void ToString_ReturnsFormatted()
         {
             var grid = new LayoutGrid("Orders", "訂單");
@@ -62,7 +62,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("Columns 未序列化狀態應回傳集合實例")]
+        [DisplayName("Columns returns the collection instance when not serializing")]
         public void Columns_DefaultState_ReturnsCollection()
         {
             var grid = new LayoutGrid();
@@ -71,7 +71,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("Columns 於序列化且集合為空時應回傳 null")]
+        [DisplayName("Columns returns null when serializing an empty collection")]
         public void Columns_EmptyDuringSerialize_ReturnsNull()
         {
             var grid = new LayoutGrid();
@@ -81,7 +81,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("SetSerializeState 應設定自身狀態")]
+        [DisplayName("SetSerializeState sets the object's own state")]
         public void SetSerializeState_UpdatesState()
         {
             var grid = new LayoutGrid();
@@ -92,7 +92,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("AllowActions 屬性應可被設定並讀回")]
+        [DisplayName("AllowActions can be set and read back")]
         public void AllowActions_Settable()
         {
             var grid = new LayoutGrid { AllowActions = GridControlAllowActions.None };

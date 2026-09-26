@@ -4,43 +4,43 @@ using Polhem.Definition.Logging;
 namespace Polhem.Definition.UnitTests.Logging
 {
     /// <summary>
-    /// <see cref="AuditRuleMode"/> 三態解析與 <see cref="CompanyAuditRules"/> 查表的單元測試。
-    /// 純邏輯、不碰資料庫：這是 per-form 稽核規則的語意核心。
+    /// Unit tests for resolving the three states of <see cref="AuditRuleMode"/> and for the <see cref="CompanyAuditRules"/> lookup.
+    /// Pure logic that never touches the database: this is the semantic core of per-form audit rules.
     /// </summary>
     public class AuditRuleTests
     {
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        [DisplayName("Inherit 應沿用該軸的部署預設值")]
+        [DisplayName("Inherit uses the deployment default of that axis")]
         public void Resolve_Inherit_ReturnsInheritedValue(bool inherited)
         {
             Assert.Equal(inherited, AuditRuleMode.Inherit.Resolve(inherited));
         }
 
         [Fact]
-        [DisplayName("On 應覆寫部署預設的 false —— per-form 規則的主要用途")]
+        [DisplayName("On overrides a deployment default of false (the main purpose of per-form rules)")]
         public void Resolve_On_OverridesDisabledDefault()
         {
             Assert.True(AuditRuleMode.On.Resolve(false));
         }
 
         [Fact]
-        [DisplayName("Off 應覆寫部署預設的 true")]
+        [DisplayName("Off overrides a deployment default of true")]
         public void Resolve_Off_OverridesEnabledDefault()
         {
             Assert.False(AuditRuleMode.Off.Resolve(true));
         }
 
         [Fact]
-        [DisplayName("Inherit 的列舉值應為 0，未設定的資料庫欄位才會落在繼承語意")]
+        [DisplayName("The enum value of Inherit is 0, so an unset database column falls into the inherit semantics")]
         public void AuditRuleMode_Inherit_IsZero()
         {
             Assert.Equal(0, (int)AuditRuleMode.Inherit);
         }
 
         [Fact]
-        [DisplayName("Find 應以宣告的 progId 取回規則")]
+        [DisplayName("Find returns the rule by its declared progId")]
         public void Find_KnownProgId_ReturnsRule()
         {
             var rules = new CompanyAuditRules("C001",
@@ -55,7 +55,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("Find 查無規則應回 null —— 未宣告的表單即全軸 Inherit")]
+        [DisplayName("Find returns null when there is no rule (an undeclared form inherits on every axis)")]
         public void Find_UnknownProgId_ReturnsNull()
         {
             var rules = new CompanyAuditRules("C001",
@@ -65,7 +65,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("Find 應區分大小寫（Ordinal）—— progId 是識別碼不是顯示文字")]
+        [DisplayName("Find is case-sensitive (Ordinal), because a progId is an identifier, not display text")]
         public void Find_DifferentCasing_ReturnsNull()
         {
             var rules = new CompanyAuditRules("C001",
@@ -75,7 +75,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("空的規則集合應可建立，且每次查詢都回 null")]
+        [DisplayName("An empty rule set can be created and every lookup returns null")]
         public void EmptyRules_FindAlwaysReturnsNull()
         {
             var rules = new CompanyAuditRules("C001", []);
@@ -85,7 +85,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("Find 傳入空字串應回 null 而非拋例外")]
+        [DisplayName("Find returns null instead of throwing for an empty string")]
         public void Find_EmptyProgId_ReturnsNull()
         {
             var rules = new CompanyAuditRules("C001", []);
@@ -94,7 +94,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("重複 progId 應保留第一筆，不因一列壞資料讓整間公司的稽核掛掉")]
+        [DisplayName("A duplicate progId keeps the first entry, so one bad row does not break auditing for the whole company")]
         public void DuplicateProgId_KeepsFirstRule()
         {
             var rules = new CompanyAuditRules("C001",

@@ -5,7 +5,7 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Identity
 {
     /// <summary>
-    /// CompanyRolePermissions 的層一判定邏輯測試（多角色 OR 合併、未授予、user→role）。
+    /// Tests for the tier-one decision logic of CompanyRolePermissions (OR-merging across roles, no grant, user to role).
     /// </summary>
     public class CompanyRolePermissionsTests
     {
@@ -32,7 +32,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetAllowed 單一角色回傳該角色的 action mask")]
+        [DisplayName("GetAllowed returns the action mask of a single role")]
         public void GetAllowed_SingleRole_ReturnsMask()
         {
             var perms = Build();
@@ -43,7 +43,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetAllowed 多角色對同 model 應 OR 合併（能力累加）")]
+        [DisplayName("GetAllowed OR-merges several roles on the same model (capabilities add up)")]
         public void GetAllowed_MultiRole_OrMerges()
         {
             var perms = Build();
@@ -56,7 +56,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetAllowed 未授予的 model 回傳 None")]
+        [DisplayName("GetAllowed returns None for a model with no grant")]
         public void GetAllowed_UnauthorizedModel_ReturnsNone()
         {
             var perms = Build();
@@ -68,19 +68,19 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetAllowed 只算使用者持有的角色，排除未持有角色的授權")]
+        [DisplayName("GetAllowed counts only the roles the user holds and excludes grants of other roles")]
         public void GetAllowed_OnlyHeldRoles_ExcludesOthers()
         {
             var perms = Build();
 
-            // 只持有 Buyer → 不含 Manager 的 Delete
+            // Only Buyer is held, so Manager's Delete is not included.
             var allowed = perms.GetAllowed(s_buyer, "PurchaseOrder");
 
             Assert.False(allowed.HasFlag(PermissionAction.Delete));
         }
 
         [Fact]
-        [DisplayName("GetAllowedByModel 回傳每個 model 的 OR 合併 mask（多角色累加）")]
+        [DisplayName("GetAllowedByModel returns the OR-merged mask for each model (roles add up)")]
         public void GetAllowedByModel_MultiRole_OrMergesPerModel()
         {
             var perms = Build();
@@ -92,7 +92,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetAllowedByModel 只含使用者有 grant 的 model；無 grant 的 model 不出現")]
+        [DisplayName("GetAllowedByModel contains only models the user has grants for, and models without a grant do not appear")]
         public void GetAllowedByModel_OnlyGrantedModels()
         {
             var perms = Build();
@@ -102,12 +102,12 @@ namespace Polhem.Definition.UnitTests.Identity
             Assert.True(map.ContainsKey("PurchaseOrder"));
             Assert.True(map.ContainsKey("Vendor"));
             Assert.False(map.ContainsKey("Requisition"));
-            // 只持有 Buyer → PurchaseOrder 不含 Manager 的 Delete
+            // Only Buyer is held, so PurchaseOrder does not include Manager's Delete.
             Assert.False(map["PurchaseOrder"].HasFlag(PermissionAction.Delete));
         }
 
         [Fact]
-        [DisplayName("GetAllowedByModel 空角色回傳空字典")]
+        [DisplayName("GetAllowedByModel returns an empty dictionary for no roles")]
         public void GetAllowedByModel_NoRoles_ReturnsEmpty()
         {
             var perms = Build();
@@ -118,7 +118,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetEffectiveScopes 單一角色回傳該 (model, action) 的 scope")]
+        [DisplayName("GetEffectiveScopes returns the scope of a single role for the (model, action)")]
         public void GetEffectiveScopes_SingleRole_ReturnsScope()
         {
             var perms = Build();
@@ -129,12 +129,12 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetEffectiveScopes 多角色對同 (model, action) 各回一個 scope（供合併）")]
+        [DisplayName("GetEffectiveScopes returns one scope per role for the same (model, action), to be merged")]
         public void GetEffectiveScopes_MultiRole_ReturnsEach()
         {
             var perms = Build();
 
-            // Buyer.Read=Dept、Manager.Read=All → 兩個 scope 待合併（resolver 端「任一 All 不過濾」）
+            // Buyer Read is Dept and Manager Read is All, so there are two scopes to merge (the resolver applies "any All means no filter").
             var scopes = perms.GetEffectiveScopes(s_buyerManager, "PurchaseOrder", PermissionAction.Read);
 
             Assert.Equal(2, scopes.Count);
@@ -143,28 +143,28 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetEffectiveScopes 同角色不同 action 可有不同 scope（看 vs 改範圍不同）")]
+        [DisplayName("GetEffectiveScopes allows different scopes for different actions of the same role (view and edit ranges differ)")]
         public void GetEffectiveScopes_PerAction_Differs()
         {
             var perms = Build();
 
-            // Buyer 對 PurchaseOrder：Read=Dept（可看部門）、Update=Own（只改自己的）
+            // Buyer on PurchaseOrder has Read as Dept (can view the department) and Update as Own (can edit only their own).
             Assert.Equal(new[] { ScopeStrategy.Dept }, perms.GetEffectiveScopes(s_buyer, "PurchaseOrder", PermissionAction.Read));
             Assert.Equal(new[] { ScopeStrategy.Own }, perms.GetEffectiveScopes(s_buyer, "PurchaseOrder", PermissionAction.Update));
         }
 
         [Fact]
-        [DisplayName("GetEffectiveScopes 未授予該 action 回傳空")]
+        [DisplayName("GetEffectiveScopes returns empty for an action that is not granted")]
         public void GetEffectiveScopes_Ungranted_ReturnsEmpty()
         {
             var perms = Build();
 
-            // Buyer 沒有 PurchaseOrder.Delete
+            // Buyer has no `PurchaseOrder.Delete` grant.
             Assert.Empty(perms.GetEffectiveScopes(s_buyer, "PurchaseOrder", PermissionAction.Delete));
         }
 
         [Fact]
-        [DisplayName("GetUserRoleIds 回傳該使用者被指派的角色")]
+        [DisplayName("GetUserRoleIds returns the roles assigned to the user")]
         public void GetUserRoleIds_ReturnsAssignedRoles()
         {
             var perms = Build();
@@ -177,7 +177,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetUserRoleIds 對未指派的使用者回傳空")]
+        [DisplayName("GetUserRoleIds returns empty for a user with no assignment")]
         public void GetUserRoleIds_UnknownUser_ReturnsEmpty()
         {
             var perms = Build();

@@ -5,12 +5,12 @@ using Polhem.Definition.Database;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// DatabaseServer 資料類別測試。
+    /// Tests for the DatabaseServer data class.
     /// </summary>
     public class DatabaseServerTests
     {
         [Fact]
-        [DisplayName("DatabaseServer 預設值應為空字串與 SQLServer")]
+        [DisplayName("DatabaseServer defaults to empty strings and SQLServer")]
         public void DatabaseServer_Default_HasExpectedDefaults()
         {
             var server = new DatabaseServer();
@@ -24,7 +24,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("DatabaseServer.Id 應對映至 Key")]
+        [DisplayName("DatabaseServer.Id maps to Key")]
         public void DatabaseServer_Id_MapsToKey()
         {
             var server = new DatabaseServer { Id = "main" };
@@ -34,7 +34,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("DatabaseServer.Clone 應產生獨立等值副本")]
+        [DisplayName("DatabaseServer.Clone produces an independent equal copy")]
         public void DatabaseServer_Clone_ProducesEqualCopy()
         {
             var server = new DatabaseServer
@@ -59,7 +59,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("DatabaseServer.ToString 應回傳 \"Id - DisplayName\"")]
+        [DisplayName("DatabaseServer.ToString returns 'Id - DisplayName'")]
         public void DatabaseServer_ToString_ReturnsFormatted()
         {
             var server = new DatabaseServer

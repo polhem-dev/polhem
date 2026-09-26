@@ -3,21 +3,21 @@ using System.ComponentModel;
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// <see cref="PathOptions"/> 檔案路徑組合測試。直接針對 PathOptions instance 進行，
-    /// 不操弄 <see cref="DefinePathInfo"/> 等 process-wide static，可與其他 test class 平行執行。
+    /// File path composition tests for <see cref="PathOptions"/>. They work directly on a PathOptions instance
+    /// and do not touch process-wide statics such as <c>DefinePathInfo</c>, so they can run in parallel with other test classes.
     /// </summary>
     /// <remarks>
-    /// 早期 <c>DefinePathInfoTests</c> 透過 try/finally 切換 <see cref="DefinePathInfo.CurrentOptions"/>
-    /// 全域狀態，必須掛 <c>[Collection("Initialize")]</c> 才能避免 race。Phase 5 PR 5.4f 將其改為
-    /// 純 PathOptions instance 測試 —— DefinePathInfo 既只是 thin facade（每個 method 都直接 delegate
-    /// 給 PathOptions），測 PathOptions 即同等覆蓋。DefinePathInfo facade 本身將於 PR 5.7 刪除。
+    /// The earlier <c>DefinePathInfoTests</c> switched the global state of <c>DefinePathInfo.CurrentOptions</c>
+    /// in try/finally and needed <c>[Collection("Initialize")]</c> to avoid races. They were rewritten as pure
+    /// PathOptions instance tests: <c>DefinePathInfo</c> was only a thin facade (every method delegated directly
+    /// to PathOptions), so testing PathOptions gives the same coverage. The facade itself has since been removed.
     /// </remarks>
     public class PathOptionsFilePathTests
     {
         private const string TestRoot = "/tmp/polhem-define-tests";
 
         [Fact]
-        [DisplayName("GetSystemSettingsFilePath 應回傳定義根目錄下的 SystemSettings.xml")]
+        [DisplayName("GetSystemSettingsFilePath returns SystemSettings.xml under the definition root")]
         public void GetSystemSettingsFilePath_ValidDefinePath_ReturnsExpectedPath()
         {
             var paths = new PathOptions { DefinePath = TestRoot };
@@ -25,7 +25,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDatabaseSettingsFilePath 應回傳定義根目錄下的 DatabaseSettings.xml")]
+        [DisplayName("GetDatabaseSettingsFilePath returns DatabaseSettings.xml under the definition root")]
         public void GetDatabaseSettingsFilePath_ValidDefinePath_ReturnsExpectedPath()
         {
             var paths = new PathOptions { DefinePath = TestRoot };
@@ -33,7 +33,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetProgramSettingsFilePath 應回傳定義根目錄下的 ProgramSettings.xml")]
+        [DisplayName("GetProgramSettingsFilePath returns ProgramSettings.xml under the definition root")]
         public void GetProgramSettingsFilePath_ValidDefinePath_ReturnsExpectedPath()
         {
             var paths = new PathOptions { DefinePath = TestRoot };
@@ -41,7 +41,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDbCategorySettingsFilePath 應回傳定義根目錄下的 DbCategorySettings.xml")]
+        [DisplayName("GetDbCategorySettingsFilePath returns DbCategorySettings.xml under the definition root")]
         public void GetDbCategorySettingsFilePath_ValidDefinePath_ReturnsExpectedPath()
         {
             var paths = new PathOptions { DefinePath = TestRoot };
@@ -49,7 +49,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetTableSchemaFilePath 應組合 TableSchema/<categoryId>/<table>.TableSchema.xml")]
+        [DisplayName("GetTableSchemaFilePath composes TableSchema/<categoryId>/<table>.TableSchema.xml")]
         public void GetTableSchemaFilePath_ValidInput_ReturnsExpectedPath()
         {
             var paths = new PathOptions { DefinePath = TestRoot };
@@ -58,7 +58,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFormSchemaFilePath 應組合 FormSchema/<progId>.FormSchema.xml")]
+        [DisplayName("GetFormSchemaFilePath composes FormSchema/<progId>.FormSchema.xml")]
         public void GetFormSchemaFilePath_ValidInput_ReturnsExpectedPath()
         {
             var paths = new PathOptions { DefinePath = TestRoot };
@@ -67,7 +67,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetFormLayoutFilePath 應組合 FormLayout/<layoutId>.FormLayout.xml")]
+        [DisplayName("GetFormLayoutFilePath composes FormLayout/<layoutId>.FormLayout.xml")]
         public void GetFormLayoutFilePath_ValidInput_ReturnsExpectedPath()
         {
             var paths = new PathOptions { DefinePath = TestRoot };
@@ -76,7 +76,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetLanguageFilePath 應組合 Language/<lang>/<namespace>.Language.xml")]
+        [DisplayName("GetLanguageFilePath composes Language/<lang>/<namespace>.Language.xml")]
         public void GetLanguageFilePath_ValidInput_ReturnsExpectedPath()
         {
             var paths = new PathOptions { DefinePath = TestRoot };

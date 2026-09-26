@@ -5,12 +5,12 @@ using Polhem.Definition.Security;
 namespace Polhem.Definition.UnitTests.Security
 {
     /// <summary>
-    /// EncryptionKeyProtector 正常與錯誤路徑測試。
+    /// Tests for the normal and error paths of EncryptionKeyProtector.
     /// </summary>
     public class EncryptionKeyProtectorTests
     {
         [Fact]
-        [DisplayName("GenerateEncryptedKey 使用有效 Master Key 應可後續解密還原")]
+        [DisplayName("GenerateEncryptedKey with a valid master key can be decrypted back")]
         public void GenerateEncryptedKey_ValidMasterKey_CanBeDecrypted()
         {
             // Arrange
@@ -28,7 +28,7 @@ namespace Polhem.Definition.UnitTests.Security
         [Theory]
         [InlineData(null)]
         [InlineData(new byte[0])]
-        [DisplayName("GenerateEncryptedKey 傳入空 Master Key 應拋出 ArgumentException")]
+        [DisplayName("GenerateEncryptedKey throws ArgumentException for an empty master key")]
         public void GenerateEncryptedKey_EmptyMasterKey_ThrowsArgumentException(byte[]? masterKey)
         {
             // Act & Assert
@@ -38,7 +38,7 @@ namespace Polhem.Definition.UnitTests.Security
         [Theory]
         [InlineData(null)]
         [InlineData(new byte[0])]
-        [DisplayName("DecryptEncryptedKey 傳入空 Master Key 應拋出 ArgumentException")]
+        [DisplayName("DecryptEncryptedKey throws ArgumentException for an empty master key")]
         public void DecryptEncryptedKey_EmptyMasterKey_ThrowsArgumentException(byte[]? masterKey)
         {
             // Act & Assert
@@ -50,7 +50,7 @@ namespace Polhem.Definition.UnitTests.Security
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("DecryptEncryptedKey 密文為空應拋出 ArgumentException")]
+        [DisplayName("DecryptEncryptedKey throws ArgumentException for an empty ciphertext")]
         public void DecryptEncryptedKey_EmptyCipherText_ThrowsArgumentException(string? cipherText)
         {
             // Arrange
@@ -62,7 +62,7 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("DecryptEncryptedKey 使用錯誤的 Master Key 應拋出例外")]
+        [DisplayName("DecryptEncryptedKey throws with the wrong master key")]
         public void DecryptEncryptedKey_WrongMasterKey_Throws()
         {
             // Arrange
@@ -76,7 +76,7 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("DecryptEncryptedKey 密文非 Base64 格式應拋出 FormatException")]
+        [DisplayName("DecryptEncryptedKey throws FormatException for a ciphertext that is not Base64")]
         public void DecryptEncryptedKey_NonBase64CipherText_ThrowsFormatException()
         {
             // Arrange

@@ -7,13 +7,13 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Security
 {
     /// <summary>
-    /// MasterKeyProvider 來源載入與錯誤路徑測試。
+    /// Tests for source loading and error paths of MasterKeyProvider.
     /// </summary>
     [Collection(Polhem.Definition.UnitTests.ProcessWideStateCollection.Name)]
     public class MasterKeyProviderTests
     {
         [Fact]
-        [DisplayName("GetMasterKey 檔案來源存在有效 Base64 應回傳對應位元組")]
+        [DisplayName("GetMasterKey returns the bytes of a file source that holds valid Base64")]
         public void GetMasterKey_FileSource_ReturnsBytes()
         {
             // Arrange
@@ -40,7 +40,7 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey 檔案不存在且 autoCreate=false 應拋出 FileNotFoundException")]
+        [DisplayName("GetMasterKey throws FileNotFoundException for a missing file with autoCreate=false")]
         public void GetMasterKey_FileMissing_NoAutoCreate_ThrowsFileNotFound()
         {
             // Arrange
@@ -56,7 +56,7 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey 檔案不存在且 autoCreate=true 應建立檔案並回傳內容")]
+        [DisplayName("GetMasterKey creates the file and returns its content for a missing file with autoCreate=true")]
         public void GetMasterKey_FileMissing_AutoCreate_CreatesAndReturnsKey()
         {
             // Arrange
@@ -82,7 +82,7 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey 檔案內容非 Base64 應拋出 InvalidOperationException")]
+        [DisplayName("GetMasterKey throws InvalidOperationException when the file content is not Base64")]
         public void GetMasterKey_InvalidBase64Content_ThrowsInvalidOperation()
         {
             // Arrange
@@ -107,7 +107,7 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey 檔案內容為空應拋出 InvalidOperationException")]
+        [DisplayName("GetMasterKey throws InvalidOperationException when the file content is empty")]
         public void GetMasterKey_EmptyFileContent_ThrowsInvalidOperation()
         {
             // Arrange
@@ -131,7 +131,7 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey 環境變數來源存在應回傳對應位元組")]
+        [DisplayName("GetMasterKey returns the bytes of an existing environment variable source")]
         public void GetMasterKey_EnvironmentSource_ReturnsBytes()
         {
             // Arrange
@@ -158,7 +158,7 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey 環境變數不存在且 autoCreate=false 應拋出 InvalidOperationException")]
+        [DisplayName("GetMasterKey throws InvalidOperationException for a missing environment variable with autoCreate=false")]
         public void GetMasterKey_EnvironmentMissing_NoAutoCreate_Throws()
         {
             // Arrange
@@ -175,7 +175,7 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey 環境變數不存在且 autoCreate=true 應建立變數並回傳內容")]
+        [DisplayName("GetMasterKey creates the variable and returns its content for a missing environment variable with autoCreate=true")]
         public void GetMasterKey_EnvironmentMissing_AutoCreate_CreatesAndReturnsKey()
         {
             // Arrange
@@ -202,12 +202,12 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey 檔案路徑為空字串時會套用預設檔名 Master.key")]
+        [DisplayName("GetMasterKey applies the default file name Master.key for a blank file path")]
         public void GetMasterKey_EmptyFilePath_UsesDefaultFileName()
         {
-            // Arrange: 空字串會被替換為 "Master.key"，於 DefinePath 下尋找。
-            // 建立全新空白暫存目錄，確保「預設檔不存在 → 拋 FileNotFoundException」的斷言成立
-            // （避免被 tests/Define/Master.key 等既存 fixture 干擾）。
+            // Arrange: a blank value is replaced with "Master.key" and looked up under DefinePath.
+            // A fresh empty temp directory makes sure the default file does not exist, so the call throws
+            // (and existing fixtures such as tests/Define/Master.key cannot interfere).
             var tempPath = Path.Combine(Path.GetTempPath(), $"polhem-mk-{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempPath);
             try
@@ -218,7 +218,7 @@ namespace Polhem.Definition.UnitTests.Security
                     Value = "   "
                 };
 
-                // Act & Assert: definePath 為 temp 空資料夾，預期默認檔名 Master.key 不存在 → 拋例外
+                // Act & Assert: definePath is an empty temp folder, so the default Master.key does not exist and the call throws.
                 var ex = Record.Exception(() => MasterKeyProvider.GetMasterKey(source, tempPath));
                 Assert.NotNull(ex);
             }
@@ -229,7 +229,7 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey 環境變數名為空白時讀取 POLHEM_MASTER_KEY 的值")]
+        [DisplayName("GetMasterKey with a blank variable name reads the value of POLHEM_MASTER_KEY")]
         public void GetMasterKey_EmptyVarName_ReadsPolhemMasterKey()
         {
             // Deployments set this variable by name. The test below only checks that a missing
@@ -255,10 +255,10 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey 環境變數名為空字串時套用預設 POLHEM_MASTER_KEY")]
+        [DisplayName("GetMasterKey with a blank variable name falls back to POLHEM_MASTER_KEY and throws when it is not set")]
         public void GetMasterKey_EmptyVarName_UsesDefaultVarName()
         {
-            // Arrange: 先確保預設變數為空，再呼叫
+            // Arrange: make sure the default variable is empty before the call.
             string? original = Environment.GetEnvironmentVariable("POLHEM_MASTER_KEY");
             Environment.SetEnvironmentVariable("POLHEM_MASTER_KEY", null);
 
@@ -280,10 +280,10 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey 不支援的 Type 應拋 InvalidOperationException（default 分支）")]
+        [DisplayName("GetMasterKey throws InvalidOperationException for an unsupported Type (the default branch)")]
         public void GetMasterKey_UnsupportedType_ThrowsInvalidOperation()
         {
-            // enum 實際只有 File=0 / Environment=1，透過 cast 傳入 99 觸發 switch default
+            // The enum only has File=0 and Environment=1, so casting 99 reaches the switch default.
             var source = new MasterKeySource
             {
                 Type = (MasterKeySourceType)99,
@@ -295,10 +295,10 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey autoCreate=true 但檔案已存在時應讀取既有檔案內容")]
+        [DisplayName("GetMasterKey with autoCreate=true reads the existing file when it already exists")]
         public void GetMasterKey_FileExists_AutoCreate_ReturnsExistingKey()
         {
-            // 檔案已存在 → File.Exists 為 true → 直接跳到 ReadAllTextShared，不執行 CreateNew 路徑
+            // The file exists, so `File.Exists` is true and the code goes straight to `ReadAllTextShared` without the CreateNew path.
             byte[] expected = AesCbcHmacKeyGenerator.GenerateCombinedKey();
             string filePath = Path.Combine(Path.GetTempPath(), $"polhem-mk-existing-{Guid.NewGuid()}.key");
             File.WriteAllText(filePath, Convert.ToBase64String(expected));

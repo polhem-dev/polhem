@@ -6,14 +6,14 @@ using Polhem.Definition.Sorting;
 namespace Polhem.Definition.UnitTests.Collections
 {
     /// <summary>
-    /// CollectionItem / KeyCollectionItem 基底行為測試。
-    /// 使用 <see cref="SortField"/>/<see cref="SortFieldCollection"/>（非 keyed）
-    /// 與 <see cref="Parameter"/>/<see cref="ParameterCollection"/>（keyed）作為受測樣本。
+    /// Tests for the base behavior of CollectionItem / KeyCollectionItem.
+    /// Uses <see cref="SortField"/>/<see cref="SortFieldCollection"/> (not keyed)
+    /// and <see cref="Parameter"/>/<see cref="ParameterCollection"/> (keyed) as the subjects under test.
     /// </summary>
     public class MessagePackCollectionItemTests
     {
         [Fact]
-        [DisplayName("預設建構之 CollectionItem，SerializeState 為 None、Tag 為 null、Collection 為 null")]
+        [DisplayName("Default-constructed CollectionItem has SerializeState None, a null Tag and a null Collection")]
         public void DefaultState_IsExpected()
         {
             var item = new SortField("Id", SortDirection.Asc);
@@ -24,7 +24,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("SetSerializeState 應更新自身狀態")]
+        [DisplayName("SetSerializeState updates the item's own state")]
         public void SetSerializeState_UpdatesState()
         {
             var item = new SortField();
@@ -35,7 +35,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Tag 屬性應可被設定並讀回")]
+        [DisplayName("Tag can be set and read back")]
         public void Tag_Settable()
         {
             var item = new SortField();
@@ -47,7 +47,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("加入集合後，Collection 應回傳所屬集合")]
+        [DisplayName("After being added, Collection returns the owning collection")]
         public void Collection_AfterAdd_ReturnsOwner()
         {
             var collection = new SortFieldCollection();
@@ -59,7 +59,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Remove 應從所屬集合中移除自身")]
+        [DisplayName("Remove removes the item from its owning collection")]
         public void Remove_RemovesSelfFromCollection()
         {
             var collection = new SortFieldCollection();
@@ -73,7 +73,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("未加入集合時呼叫 Remove 應不拋出例外")]
+        [DisplayName("Remove does not throw when the item is not in a collection")]
         public void Remove_WithoutCollection_DoesNotThrow()
         {
             var item = new SortField();
@@ -85,12 +85,12 @@ namespace Polhem.Definition.UnitTests.Collections
     }
 
     /// <summary>
-    /// KeyCollectionItem 專屬行為測試（Key 設定、Remove、SerializeState）。
+    /// Tests for behavior specific to KeyCollectionItem (setting Key, Remove, SerializeState).
     /// </summary>
     public class MessagePackKeyCollectionItemTests
     {
         [Fact]
-        [DisplayName("預設建構，Key 為空字串、SerializeState 為 None、Collection 為 null")]
+        [DisplayName("Default construction gives an empty Key, SerializeState None and a null Collection")]
         public void DefaultState_IsExpected()
         {
             var item = new Parameter();
@@ -102,7 +102,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("未加入集合時，Key 可自由設定")]
+        [DisplayName("Key can be set freely when the item is not in a collection")]
         public void Key_Settable_WhenNotInCollection()
         {
             var item = new Parameter { Key = "Alpha" };
@@ -112,7 +112,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("加入集合後變更 Key，集合索引應跟著更新")]
+        [DisplayName("Changing Key after the item is added updates the collection index")]
         public void Key_Change_WhileInCollection_UpdatesCollectionIndex()
         {
             var collection = new ParameterCollection
@@ -129,7 +129,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Key 設為相同值應為無動作")]
+        [DisplayName("Setting Key to the same value is a no-op")]
         public void Key_SetSameValue_NoOp()
         {
             var collection = new ParameterCollection
@@ -145,7 +145,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("SetSerializeState 應更新自身狀態")]
+        [DisplayName("SetSerializeState updates the item's own state")]
         public void SetSerializeState_UpdatesState()
         {
             var item = new Parameter("P", 1);
@@ -156,7 +156,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Remove 應從所屬集合中移除自身")]
+        [DisplayName("Remove removes the item from its owning collection")]
         public void Remove_RemovesSelfFromCollection()
         {
             var collection = new ParameterCollection
@@ -173,7 +173,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("未加入集合時呼叫 Remove 應不拋出例外")]
+        [DisplayName("Remove does not throw when the item is not in a collection")]
         public void Remove_WithoutCollection_DoesNotThrow()
         {
             var item = new Parameter("X", 1);

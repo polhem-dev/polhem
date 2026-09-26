@@ -5,8 +5,9 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// <see cref="PluginSettings"/> 的定義層行為：宣告順序即執行順序、同一 program 內型別不可重複、
-    /// 時點隨型別一起 round-trip，以及缺 <c>Stage</c> 屬性時落到 <see cref="PluginStage.None"/>。
+    /// Definition-layer behavior of <see cref="PluginSettings"/>: declaration order is execution order, a type may not be
+    /// repeated within one program, the stage round-trips with its type, and a missing <c>Stage</c> attribute yields
+    /// <see cref="PluginStage.None"/>.
     /// </summary>
     public class PluginSettingsTests
     {
@@ -29,7 +30,7 @@ namespace Polhem.Definition.UnitTests.Settings
         ];
 
         [Fact]
-        [DisplayName("GetPluginBindings 依宣告順序回傳，順序即執行順序")]
+        [DisplayName("GetPluginBindings returns bindings in declaration order, which is the execution order")]
         public void GetPluginBindings_ReturnsDeclarationOrder()
         {
             var settings = new PluginSettings();
@@ -42,7 +43,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("GetPluginBindings 對未宣告的 progId 回空集合，不回 null")]
+        [DisplayName("GetPluginBindings returns an empty collection, not null, for an undeclared progId")]
         public void GetPluginBindings_UnknownProgId_ReturnsEmpty()
         {
             var settings = new PluginSettings();
@@ -53,7 +54,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("GetPluginBindings 回傳的是值複本，改它不會動到 cache 裡的定義")]
+        [DisplayName("GetPluginBindings returns value copies, so changing one does not touch the cached definition")]
         public void GetPluginBindings_ReturnsValueCopies()
         {
             var settings = new PluginSettings();
@@ -67,7 +68,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("同一 program 內重複宣告同一型別應在加入時就被拒")]
+        [DisplayName("Declaring the same type twice within one program is rejected when it is added")]
         public void Plugins_DuplicateType_Throws()
         {
             var program = new PluginSettings().Items!.Add("Order");
@@ -78,7 +79,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("不同 program 可各自宣告同一型別")]
+        [DisplayName("Different programs can each declare the same type")]
         public void Plugins_SameTypeUnderDifferentPrograms_Allowed()
         {
             var settings = new PluginSettings();
@@ -90,7 +91,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("XML round-trip 後 progId、鏈序與各自的時點皆保留")]
+        [DisplayName("An XML round-trip keeps the progIds, the chain order and each stage")]
         public void XmlRoundTrip_PreservesProgramsOrderAndStages()
         {
             var settings = new PluginSettings();
@@ -106,7 +107,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("時點寫成 XML 屬性，手寫檔一眼看得出哪個 plugin 跑在哪個時點")]
+        [DisplayName("The stage is written as an XML attribute, so a hand-written file shows at a glance which plugin runs at which stage")]
         public void Serialize_WritesStageAsXmlAttribute()
         {
             var settings = new PluginSettings();
@@ -119,11 +120,12 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("★手寫檔漏了 Stage 屬性時落到 None，而不是靜靜變成第一個時點")]
+        [DisplayName("A hand-written file missing the Stage attribute yields None instead of silently becoming the first stage")]
         public void Deserialize_MissingStageAttribute_YieldsNone()
         {
-            // 少一個 XmlAttribute 不會有任何錯誤，屬性會拿到型別預設值——列舉的 0 值因此保留給
-            // 「沒宣告」，讓兩道閘門講得出「你沒宣告 Stage」而不是一句對不上的時點比較。
+            // A missing XmlAttribute raises no error; the property just gets the type's default value. The enum's 0 value is
+            // therefore reserved for "not declared", so both gates can say "you did not declare a Stage" instead of reporting a
+            // stage comparison that makes no sense.
             const string xml = """
                 <?xml version="1.0" encoding="utf-8"?>
                 <PluginSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -143,7 +145,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("空的 PluginSettings round-trip 後仍可用，且不含任何 program")]
+        [DisplayName("An empty PluginSettings stays usable after a round-trip and contains no program")]
         public void XmlRoundTrip_Empty_StaysUsable()
         {
             var restored = XmlCodec.Deserialize<PluginSettings>(XmlCodec.Serialize(new PluginSettings()))!;

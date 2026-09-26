@@ -4,12 +4,12 @@ using Polhem.Definition.Collections;
 namespace Polhem.Definition.UnitTests.Collections
 {
     /// <summary>
-    /// Property 單元測試。
+    /// Unit tests for Property.
     /// </summary>
     public class PropertyTests
     {
         [Fact]
-        [DisplayName("預設建構子應初始化為空字串")]
+        [DisplayName("Default constructor initializes Name and Value to empty strings")]
         public void DefaultConstructor_InitializesEmpty()
         {
             var property = new Property();
@@ -19,7 +19,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("帶參數建構子應設定 Name 與 Value")]
+        [DisplayName("Parameterized constructor sets Name and Value")]
         public void ParameterizedConstructor_SetsProperties()
         {
             var property = new Property("Color", "Red");
@@ -29,7 +29,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("Name 應與 Key 對映")]
+        [DisplayName("Name maps to Key")]
         public void Name_MapsToKey()
         {
             var property = new Property { Name = "Alpha" };
@@ -41,7 +41,7 @@ namespace Polhem.Definition.UnitTests.Collections
         }
 
         [Fact]
-        [DisplayName("ToString 應回傳 \"Name=Value\"")]
+        [DisplayName("ToString returns \"Name=Value\"")]
         public void ToString_ReturnsFormatted()
         {
             var property = new Property("Color", "Red");

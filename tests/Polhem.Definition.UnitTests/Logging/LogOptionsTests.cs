@@ -7,7 +7,7 @@ namespace Polhem.Definition.UnitTests.Logging
     public class LogOptionsTests
     {
         [Fact]
-        [DisplayName("LogOptions.ToString 應回傳類別名稱")]
+        [DisplayName("LogOptions.ToString returns the class name")]
         public void ToString_DefaultInstance_ReturnsTypeName()
         {
             var options = new LogOptions();
@@ -15,7 +15,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("LogOptions 預設建構子應初始化 DbAccess 子選項")]
+        [DisplayName("LogOptions default constructor initializes the DbAccess sub-options")]
         public void DefaultConstructor_InitializesDbAccess()
         {
             var options = new LogOptions();
@@ -23,7 +23,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("DbAccessAnomalyLogOptions.ToString 應回傳類別名稱")]
+        [DisplayName("DbAccessAnomalyLogOptions.ToString returns the class name")]
         public void DbAccessAnomalyLogOptions_ToString_ReturnsTypeName()
         {
             var options = new DbAccessAnomalyLogOptions();
@@ -31,7 +31,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("DbAccessAnomalyLogOptions 預設屬性值應與規格一致")]
+        [DisplayName("DbAccessAnomalyLogOptions default property values match the specification")]
         public void DbAccessAnomalyLogOptions_DefaultValues_MatchSpecification()
         {
             var options = new DbAccessAnomalyLogOptions();

@@ -4,12 +4,12 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// TableItem 資料類別測試。
+    /// Tests for the TableItem data class.
     /// </summary>
     public class TableItemTests
     {
         [Fact]
-        [DisplayName("TableItem 預設值應為空字串")]
+        [DisplayName("TableItem defaults to empty strings")]
         public void TableItem_Default_HasEmptyProperties()
         {
             var item = new TableItem();
@@ -19,7 +19,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("TableItem.TableName 應對映至 Key")]
+        [DisplayName("TableItem.TableName maps to Key")]
         public void TableItem_TableName_MapsToKey()
         {
             var item = new TableItem { TableName = "st_user" };
@@ -29,7 +29,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("TableItem.ToString 應回傳 \"TableName - DisplayName\"")]
+        [DisplayName("TableItem.ToString returns 'TableName - DisplayName'")]
         public void TableItem_ToString_ReturnsFormatted()
         {
             var item = new TableItem

@@ -28,7 +28,7 @@ namespace Polhem.Definition.UnitTests
         };
 
         [Fact]
-        [DisplayName("ILLink descriptor 的組件名與型別萬用字元都指得到實際的組件與命名空間")]
+        [DisplayName("Assembly names and type wildcards in the ILLink descriptor resolve to real assemblies and namespaces")]
         public void Descriptor_NamesExistingAssembliesAndNamespaces()
         {
             var assemblies = LoadDescriptor().Root!.Elements("assembly").ToList();

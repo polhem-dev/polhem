@@ -29,7 +29,7 @@ namespace Polhem.Definition.UnitTests
         private const int ExpectedEmbeddedCount = 36;
 
         [Fact]
-        [DisplayName("ListEmbedded 應回傳 36 個框架預設檔（18 st_* + 3 FormSchema + 3 FormLayout + 6 Language + 1 DbCategorySettings + 1 CurrencySettings + 1 UnitSettings + 1 SystemSettings + 1 DatabaseSettings + 1 PermissionModels）")]
+        [DisplayName("ListEmbedded returns 36 framework default files (18 st_* + 3 FormSchema + 3 FormLayout + 6 Language + 1 DbCategorySettings + 1 CurrencySettings + 1 UnitSettings + 1 SystemSettings + 1 DatabaseSettings + 1 PermissionModels)")]
         public void ListEmbedded_ReturnsExpectedCount()
         {
             var files = Defaults.ListEmbedded();
@@ -38,7 +38,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("ListEmbedded 使用 forward-slash 分隔且回傳結果為排序後")]
+        [DisplayName("ListEmbedded uses forward slashes and returns sorted results")]
         public void ListEmbedded_UsesForwardSlashAndSorted()
         {
             var files = Defaults.ListEmbedded();
@@ -58,7 +58,7 @@ namespace Polhem.Definition.UnitTests
         [InlineData("FormSchema/Department.FormSchema.xml")]
         [InlineData("FormLayout/Employee.FormLayout.xml")]
         [InlineData("Language/zh-TW/Department.Language.xml")]
-        [DisplayName("ListEmbedded 應包含關鍵框架預設檔")]
+        [DisplayName("ListEmbedded contains the key framework default files")]
         public void ListEmbedded_ContainsKeyFiles(string expected)
         {
             var files = Defaults.ListEmbedded();
@@ -67,7 +67,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("OpenEmbedded 對 AuditRule.FormSchema.xml 應帶出權限模型與語系化下拉來源")]
+        [DisplayName("OpenEmbedded of AuditRule.FormSchema.xml declares the permission model and localized dropdown sources")]
         public void OpenEmbedded_AuditRuleFormSchema_DeclaresPermissionModelAndLangEnum()
         {
             var schema = XmlCodec.Deserialize<FormSchema>(ReadEmbedded("FormSchema/AuditRule.FormSchema.xml"));
@@ -75,14 +75,14 @@ namespace Polhem.Definition.UnitTests
             Assert.NotNull(schema);
             Assert.Equal("AuditRule", schema!.ProgId);
             Assert.Equal("company", schema.CategoryId);
-            // 稽核政策是特權操作，是框架自帶表單中唯一宣告權限模型的一張。
+            // Audit policy is a privileged operation; it is the only framework-bundled form that declares a permission model.
             Assert.Equal("AuditRule", schema.PermissionModelId);
 
             var fields = schema.MasterTable!.Fields!;
             Assert.Equal("AuditRuleMode", fields["change_mode"]!.LangEnumName);
             Assert.Equal("AuditRuleMode", fields["access_mode"]!.LangEnumName);
-            // ControlType.Auto 會 fall back 到 TextEdit，不會因為有選項來源就給下拉——
-            // 少了這個屬性，選項載得到卻沒地方顯示。
+            // `ControlType.Auto` falls back to TextEdit and does not become a dropdown just because there is an option source.
+            // Without this attribute, the options load but have nowhere to be shown.
             Assert.Equal(ControlType.DropDownEdit, fields["change_mode"]!.ControlType);
             Assert.Equal(ControlType.DropDownEdit, fields["access_mode"]!.ControlType);
             Assert.Equal(ControlType.CheckEdit, fields["is_sensitive"]!.ControlType);
@@ -91,7 +91,7 @@ namespace Polhem.Definition.UnitTests
         [Theory]
         [InlineData("zh-TW")]
         [InlineData("en-US")]
-        [DisplayName("AuditRule 語系檔應含三態下拉的 AuditRuleMode enum")]
+        [DisplayName("The AuditRule language file contains the AuditRuleMode enum for the three-state dropdown")]
         public void OpenEmbedded_AuditRuleLanguage_HasThreeStateEnum(string lang)
         {
             var resource = XmlCodec.Deserialize<LanguageResource>(
@@ -101,13 +101,13 @@ namespace Polhem.Definition.UnitTests
             var modes = resource!.GetEnum("AuditRuleMode");
 
             Assert.NotNull(modes);
-            // 三個 code 必須對上 AuditRuleMode 的持久化值，錯一個下拉就選不到對的東西。
+            // The three codes must match the persisted values of `AuditRuleMode`; if one is wrong, the dropdown cannot select the right value.
             Assert.Equal(["0", "1", "2"], modes!.Entries.Select(e => e.Code));
             Assert.All(modes.Entries, e => Assert.False(string.IsNullOrWhiteSpace(e.Text)));
         }
 
         [Fact]
-        [DisplayName("OpenEmbedded 對 PermissionModels.xml 應帶出框架自用的 AuditRule 模型")]
+        [DisplayName("OpenEmbedded of PermissionModels.xml contains the framework's own AuditRule model")]
         public void OpenEmbedded_PermissionModels_ContainsAuditRuleModel()
         {
             var models = XmlCodec.Deserialize<PermissionModels>(ReadEmbedded("PermissionModels.xml"));
@@ -120,7 +120,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("OpenEmbedded 對 st_user.TableSchema.xml 可成功 deserialize 為 TableSchema")]
+        [DisplayName("OpenEmbedded of st_user.TableSchema.xml deserializes to a TableSchema")]
         public void OpenEmbedded_StUserTableSchema_DeserializesSuccessfully()
         {
             var schema = XmlCodec.Deserialize<TableSchema>(ReadEmbedded("TableSchema/common/st_user.TableSchema.xml"));
@@ -131,7 +131,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("OpenEmbedded 對 Department.FormSchema.xml 可成功 deserialize")]
+        [DisplayName("OpenEmbedded of Department.FormSchema.xml deserializes")]
         public void OpenEmbedded_DepartmentFormSchema_DeserializesSuccessfully()
         {
             var schema = XmlCodec.Deserialize<FormSchema>(ReadEmbedded("FormSchema/Department.FormSchema.xml"));
@@ -141,7 +141,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("OpenEmbedded 對 CurrencySettings.xml 可 deserialize 且位數依幣別（JPY=0、USD=2、BHD=3）")]
+        [DisplayName("OpenEmbedded of CurrencySettings.xml deserializes with decimals by currency (JPY=0, USD=2, BHD=3)")]
         public void OpenEmbedded_CurrencySettings_DeserializesWithCurrencyDecimals()
         {
             var settings = XmlCodec.Deserialize<CurrencySettings>(ReadEmbedded("CurrencySettings.xml"));
@@ -154,7 +154,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("OpenEmbedded 對 UnitSettings.xml 可 deserialize 且位數依單位（KG=3、PCS=0）")]
+        [DisplayName("OpenEmbedded of UnitSettings.xml deserializes with decimals by unit (KG=3, PCS=0)")]
         public void OpenEmbedded_UnitSettings_DeserializesWithUnitDecimals()
         {
             var settings = XmlCodec.Deserialize<UnitSettings>(ReadEmbedded("UnitSettings.xml"));
@@ -166,7 +166,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("OpenEmbedded 對精簡版 DbCategorySettings.xml 只列 st_* 五張 company 表（無 ft_project）")]
+        [DisplayName("OpenEmbedded of the minimal DbCategorySettings.xml lists only st_* tables under company (no ft_project)")]
         public void OpenEmbedded_DbCategorySettings_HasOnlyStTables()
         {
             var settings = XmlCodec.Deserialize<DbCategorySettings>(ReadEmbedded("DbCategorySettings.xml"));
@@ -178,36 +178,36 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("OpenEmbedded 對 SystemSettings.xml 可成功 deserialize 並具備合理 production 預設（IsDebugMode=false、MasterKeySource=Environment）")]
+        [DisplayName("OpenEmbedded of SystemSettings.xml deserializes with sensible production defaults (IsDebugMode=false, MasterKeySource=Environment)")]
         public void OpenEmbedded_SystemSettings_HasConservativeDefaults()
         {
             var settings = XmlCodec.Deserialize<SystemSettings>(ReadEmbedded("SystemSettings.xml"));
 
             Assert.NotNull(settings);
-            // 保守預設：debug off、MasterKey 指向 env var（消費者部署時再決定具體值或改 source）
+            // Conservative defaults: debug is off and the master key points to an environment variable (the consumer decides the
+            // actual value, or changes the source, when deploying).
             Assert.False(settings!.CommonConfiguration.IsDebugMode);
             var masterKey = settings.BackendConfiguration.SecurityKeySettings.MasterKeySource;
             Assert.Equal(Polhem.Definition.Security.MasterKeySourceType.Environment, masterKey.Type);
             Assert.Equal("POLHEM_MASTER_KEY", masterKey.Value);
-            // ApiPayloadOptions 預設值
             Assert.Equal("aes-cbc-hmac", settings.CommonConfiguration.ApiPayloadOptions.Encryptor);
         }
 
         [Fact]
-        [DisplayName("OpenEmbedded 對 DatabaseSettings.xml 為空殼（Items 為 null 或空集合）— 連線字串是部署選擇")]
+        [DisplayName("OpenEmbedded of DatabaseSettings.xml is an empty stub (Items null or empty), because connection strings are a deployment choice")]
         public void OpenEmbedded_DatabaseSettings_IsEmptyStub()
         {
             var settings = XmlCodec.Deserialize<DatabaseSettings>(ReadEmbedded("DatabaseSettings.xml"));
 
             Assert.NotNull(settings);
-            // Items 與 Servers 在序列化為空時會被 IsSerializeEmpty 短路成 null，
-            // deserialize 回來可能是 null 或空集合——兩者都代表「沒有任何 DatabaseItem 預設」。
+            // When empty, Items and Servers are short-circuited to null by `IsSerializeEmpty` during serialization, so they may come
+            // back as null or as an empty collection; both mean there is no default DatabaseItem.
             Assert.True(settings!.Items == null || settings.Items.Count == 0);
             Assert.True(settings.Servers == null || settings.Servers.Count == 0);
         }
 
         [Fact]
-        [DisplayName("OpenEmbedded 支援 Windows-style backslash 路徑（自動正規化）")]
+        [DisplayName("OpenEmbedded accepts Windows-style backslash paths (normalized automatically)")]
         public void OpenEmbedded_AcceptsBackslashPath()
         {
             using var stream = Defaults.OpenEmbedded("TableSchema\\common\\st_user.TableSchema.xml");
@@ -216,7 +216,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("OpenEmbedded 對不存在的 relativePath 應拋 FileNotFoundException")]
+        [DisplayName("OpenEmbedded throws FileNotFoundException for a relativePath that does not exist")]
         public void OpenEmbedded_UnknownPath_ThrowsFileNotFound()
         {
             Assert.Throws<FileNotFoundException>(
@@ -227,17 +227,16 @@ namespace Polhem.Definition.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("OpenEmbedded 對 null / 空字串應拋 ArgumentException（含 ArgumentNullException）")]
+        [DisplayName("OpenEmbedded throws ArgumentException (including ArgumentNullException) for null, empty or whitespace")]
         public void OpenEmbedded_InvalidArg_ThrowsArgumentException(string? path)
         {
-            // ArgumentException.ThrowIfNullOrWhiteSpace 對 null 拋 ArgumentNullException、
-            // 對空字串拋 ArgumentException——兩者皆繼承自 ArgumentException，用
-            // ThrowsAny 涵蓋。
+            // `ArgumentException.ThrowIfNullOrWhiteSpace` throws ArgumentNullException for null and ArgumentException for an
+            // empty string. Both derive from ArgumentException, so ThrowsAny covers them.
             Assert.ThrowsAny<ArgumentException>(() => Defaults.OpenEmbedded(path!));
         }
 
         [Fact]
-        [DisplayName("MaterializeTo 對空目錄寫出全部框架預設檔（含子目錄結構）")]
+        [DisplayName("MaterializeTo writes every framework default file to an empty directory (including the subdirectory structure)")]
         public void MaterializeTo_EmptyDirectory_WritesAllFiles()
         {
             var tempDir = CreateTempDir();
@@ -248,7 +247,7 @@ namespace Polhem.Definition.UnitTests
                 Assert.Equal(ExpectedEmbeddedCount, result.WrittenCount);
                 Assert.Equal(0, result.SkippedCount);
 
-                // 抽樣驗證實際檔案存在
+                // Spot-check that the files exist.
                 Assert.True(File.Exists(Path.Combine(tempDir, "DbCategorySettings.xml")));
                 Assert.True(File.Exists(Path.Combine(tempDir, "TableSchema", "common", "st_user.TableSchema.xml")));
                 Assert.True(File.Exists(Path.Combine(tempDir, "Language", "zh-TW", "Department.Language.xml")));
@@ -260,7 +259,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("MaterializeTo 預設 Overwrite=false：第二次跑全部 skip")]
+        [DisplayName("MaterializeTo with the default Overwrite=false skips every file on the second run")]
         public void MaterializeTo_DefaultOverwriteFalse_SkipsExistingOnSecondRun()
         {
             var tempDir = CreateTempDir();
@@ -279,7 +278,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("MaterializeTo Overwrite=true：第二次跑全部 overwrite")]
+        [DisplayName("MaterializeTo with Overwrite=true overwrites every file on the second run")]
         public void MaterializeTo_OverwriteTrue_RewritesExisting()
         {
             var tempDir = CreateTempDir();
@@ -287,7 +286,7 @@ namespace Polhem.Definition.UnitTests
             {
                 Defaults.MaterializeTo(tempDir);
 
-                // 故意把第一個檔覆寫為空字串，模擬使用者改動
+                // Deliberately overwrite the first file with an empty string to simulate a user edit.
                 var sentinelFile = Path.Combine(tempDir, "DbCategorySettings.xml");
                 File.WriteAllText(sentinelFile, string.Empty);
 
@@ -304,7 +303,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("MaterializeTo 寫出後 SystemSettings.xml / DatabaseSettings.xml 也應存在")]
+        [DisplayName("MaterializeTo also writes SystemSettings.xml and DatabaseSettings.xml")]
         public void MaterializeTo_WritesSystemAndDatabaseSettings()
         {
             var tempDir = CreateTempDir();
@@ -322,7 +321,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("MaterializeTo Filter 限縮為 TableSchema 子集應只寫 TableSchema 檔")]
+        [DisplayName("MaterializeTo with a Filter limited to TableSchema writes only TableSchema files")]
         public void MaterializeTo_FilterTableSchemaOnly_WritesTableSchemasOnly()
         {
             var tempDir = CreateTempDir();
@@ -348,18 +347,18 @@ namespace Polhem.Definition.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("MaterializeTo 對 null / 空字串路徑應拋 ArgumentException（含 ArgumentNullException）")]
+        [DisplayName("MaterializeTo throws ArgumentException (including ArgumentNullException) for a null, empty or whitespace path")]
         public void MaterializeTo_InvalidPath_ThrowsArgumentException(string? path)
         {
             Assert.ThrowsAny<ArgumentException>(() => Defaults.MaterializeTo(path!));
         }
 
         [Fact]
-        [DisplayName("MaterializeTo 對不存在的目錄會自動建立")]
+        [DisplayName("MaterializeTo creates a directory that does not exist")]
         public void MaterializeTo_NonexistentDirectory_CreatesIt()
         {
             var tempDir = Path.Combine(Path.GetTempPath(), $"polhem-defaults-{Guid.NewGuid():N}");
-            // 故意不 Directory.CreateDirectory
+            // Deliberately no `Directory.CreateDirectory` call.
             try
             {
                 var result = Defaults.MaterializeTo(tempDir);
@@ -374,7 +373,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("MaterializeResult.WrittenRelativePaths 與 SkippedRelativePaths 加總應等於 ExpectedEmbeddedCount（minus Filter 排除）")]
+        [DisplayName("MaterializeResult WrittenRelativePaths plus SkippedRelativePaths equals ExpectedEmbeddedCount")]
         public void MaterializeResult_WrittenPlusSkipped_EqualsTotal()
         {
             var tempDir = CreateTempDir();

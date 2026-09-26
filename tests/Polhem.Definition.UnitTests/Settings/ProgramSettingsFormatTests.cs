@@ -4,7 +4,7 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// 舊版巢狀 ProgramSettings.xml 的偵測（載入期 fail fast，避免靜默讀成空註冊表）。
+    /// Detection of the legacy nested ProgramSettings.xml (fail fast at load time instead of silently reading an empty registry).
     /// </summary>
     public class ProgramSettingsFormatTests
     {
@@ -27,21 +27,21 @@ namespace Polhem.Definition.UnitTests.Settings
             """;
 
         [Fact]
-        [DisplayName("舊版巢狀格式應被判定為 legacy")]
+        [DisplayName("The legacy nested format is detected as legacy")]
         public void IsLegacyFormat_NestedLayout_ReturnsTrue()
         {
             Assert.True(ProgramSettingsFormat.IsLegacyFormat(LegacyXml));
         }
 
         [Fact]
-        [DisplayName("攤平後的格式不應被判定為 legacy")]
+        [DisplayName("The flattened format is not detected as legacy")]
         public void IsLegacyFormat_FlatLayout_ReturnsFalse()
         {
             Assert.False(ProgramSettingsFormat.IsLegacyFormat(CurrentXml));
         }
 
         [Fact]
-        [DisplayName("空註冊表（無任何子元素）不應被判定為 legacy")]
+        [DisplayName("An empty registry (no child elements) is not detected as legacy")]
         public void IsLegacyFormat_EmptyRoot_ReturnsFalse()
         {
             Assert.False(ProgramSettingsFormat.IsLegacyFormat("<ProgramSettings />"));
@@ -50,14 +50,14 @@ namespace Polhem.Definition.UnitTests.Settings
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("空字串不應被判定為 legacy")]
+        [DisplayName("An empty string is not detected as legacy")]
         public void IsLegacyFormat_Empty_ReturnsFalse(string xml)
         {
             Assert.False(ProgramSettingsFormat.IsLegacyFormat(xml));
         }
 
         [Fact]
-        [DisplayName("註解或屬性值中出現 Categories 字樣不應誤判為 legacy")]
+        [DisplayName("The word Categories in a comment or an attribute value is not mistaken for legacy")]
         public void IsLegacyFormat_CategoriesOnlyInCommentOrAttribute_ReturnsFalse()
         {
             // A plain string match would hit both of these; only a real child element of the root
@@ -74,7 +74,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("EnsureCurrentFormat 對舊格式應拋出並指向遷移命令")]
+        [DisplayName("EnsureCurrentFormat throws for the legacy format and points to the migration command")]
         public void EnsureCurrentFormat_Legacy_ThrowsPointingAtMigration()
         {
             var ex = Assert.Throws<NotSupportedException>(
@@ -85,7 +85,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("EnsureCurrentFormat 對新格式不應拋出")]
+        [DisplayName("EnsureCurrentFormat does not throw for the current format")]
         public void EnsureCurrentFormat_Current_DoesNotThrow()
         {
             var exception = Record.Exception(

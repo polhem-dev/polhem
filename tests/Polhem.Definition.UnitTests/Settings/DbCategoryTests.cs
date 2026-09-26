@@ -5,12 +5,12 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// DbCategory 單元測試。
+    /// Unit tests for DbCategory.
     /// </summary>
     public class DbCategoryTests
     {
         [Fact]
-        [DisplayName("預設建構子應初始化為空字串")]
+        [DisplayName("The default constructor initializes empty strings")]
         public void DefaultConstructor_InitializesEmpty()
         {
             var category = new DbCategory();
@@ -20,7 +20,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Id 應與 Key 對映")]
+        [DisplayName("Id maps to Key")]
         public void Id_MapsToKey()
         {
             var category = new DbCategory { Id = "common" };
@@ -32,7 +32,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ToString 應回傳 \"Id - DisplayName\"")]
+        [DisplayName("ToString returns 'Id - DisplayName'")]
         public void ToString_ReturnsFormatted()
         {
             var category = new DbCategory { Id = "common", DisplayName = "共用資料庫" };
@@ -41,7 +41,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Tables 未序列化狀態應回傳集合實例")]
+        [DisplayName("Tables returns a collection instance when not serializing")]
         public void Tables_DefaultState_ReturnsCollection()
         {
             var category = new DbCategory();
@@ -50,7 +50,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Tables 於序列化且集合為空時應回傳 null")]
+        [DisplayName("Tables returns null when serializing an empty collection")]
         public void Tables_EmptyDuringSerialize_ReturnsNull()
         {
             var category = new DbCategory();
@@ -60,7 +60,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("SetSerializeState 應設定自身狀態")]
+        [DisplayName("SetSerializeState sets the object's own state")]
         public void SetSerializeState_UpdatesState()
         {
             var category = new DbCategory();

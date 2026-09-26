@@ -6,7 +6,7 @@ namespace Polhem.Definition.UnitTests.Organization
     public class EmployeeRowTests
     {
         [Fact]
-        [DisplayName("EmployeeRow ctor 應正確設定所有屬性")]
+        [DisplayName("EmployeeRow constructor sets every property")]
         public void Ctor_SetsAllProperties()
         {
             var rowId = Guid.NewGuid();
@@ -23,7 +23,7 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("EmployeeRow 相同屬性值的兩個實例應相等")]
+        [DisplayName("Two EmployeeRow instances with the same property values are equal")]
         public void Equality_SameValues_AreEqual()
         {
             var rowId = Guid.NewGuid();
@@ -38,7 +38,7 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("EmployeeRow ToString 應回傳含所有屬性資訊的字串")]
+        [DisplayName("EmployeeRow ToString returns a string containing the property values")]
         public void ToString_ContainsPropertyValues()
         {
             var rowId = Guid.NewGuid();
@@ -51,7 +51,7 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("EmployeeRow Deconstruct 應正確拆解所有屬性")]
+        [DisplayName("EmployeeRow Deconstruct returns every property")]
         public void Deconstruct_ReturnsAllProperties()
         {
             var rowId = Guid.NewGuid();

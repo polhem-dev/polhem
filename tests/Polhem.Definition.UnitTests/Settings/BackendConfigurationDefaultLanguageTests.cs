@@ -4,17 +4,18 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// <see cref="BackendConfiguration.DefaultLanguage"/> 的預設值測試。
+    /// Tests for the default value of <see cref="BackendConfiguration.DefaultLanguage"/>.
     /// </summary>
     /// <remarks>
-    /// 與 <see cref="BackendConfigurationTimeZoneTests"/> 同理，預設值是刻意的相容性選擇：
-    /// SessionInfo.Culture 原本硬編為 zh-TW，既有部署實際上都跑在該語系；改為由使用者屬性
-    /// 決定後，未設值者必須落回同一個值才不會在升級後整體換語言。
+    /// As with <see cref="BackendConfigurationTimeZoneTests"/>, the default is a deliberate compatibility choice:
+    /// SessionInfo.Culture used to be hard-coded to zh-TW, so existing deployments all run in that culture. Now that a user
+    /// attribute decides it, users without a value must fall back to the same value, or the whole language changes after the
+    /// upgrade.
     /// </remarks>
     public class BackendConfigurationDefaultLanguageTests
     {
         [Fact]
-        [DisplayName("DefaultLanguage 預設應為 zh-TW（升級相容）")]
+        [DisplayName("DefaultLanguage defaults to zh-TW (upgrade compatibility)")]
         public void DefaultLanguage_Default_IsZhTw()
         {
             var config = new BackendConfiguration();
@@ -23,7 +24,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("DefaultLanguage 可設為空字串，交由語言服務自行決定預設")]
+        [DisplayName("DefaultLanguage can be set to an empty string, leaving the default to the language service")]
         public void DefaultLanguage_CanBeCleared()
         {
             var config = new BackendConfiguration { DefaultLanguage = string.Empty };

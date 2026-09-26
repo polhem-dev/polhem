@@ -4,12 +4,12 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// 簡易設定類別（WebsiteConfiguration、FrontendConfiguration 等）測試。
+    /// Tests for the simple configuration classes (WebsiteConfiguration, FrontendConfiguration and others).
     /// </summary>
     public class SystemConfigurationTests
     {
         [Fact]
-        [DisplayName("BackgroundServiceConfiguration.ToString 應回傳型別名稱")]
+        [DisplayName("BackgroundServiceConfiguration.ToString returns the type name")]
         public void BackgroundServiceConfiguration_ToString_ReturnsTypeName()
         {
             var config = new BackgroundServiceConfiguration();
@@ -18,7 +18,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("FrontendConfiguration.ToString 應回傳型別名稱")]
+        [DisplayName("FrontendConfiguration.ToString returns the type name")]
         public void FrontendConfiguration_ToString_ReturnsTypeName()
         {
             var config = new FrontendConfiguration();
@@ -27,7 +27,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("WebsiteConfiguration.ToString 應回傳型別名稱")]
+        [DisplayName("WebsiteConfiguration.ToString returns the type name")]
         public void WebsiteConfiguration_ToString_ReturnsTypeName()
         {
             var config = new WebsiteConfiguration();
@@ -36,7 +36,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("BackendConfiguration.ToString 應回傳型別名稱")]
+        [DisplayName("BackendConfiguration.ToString returns the type name")]
         public void BackendConfiguration_ToString_ReturnsTypeName()
         {
             var config = new BackendConfiguration();

@@ -5,12 +5,12 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// ClientSettings 與端點集合相關類別的測試。
+    /// Tests for ClientSettings and the endpoint collection classes.
     /// </summary>
     public class ClientSettingsTests
     {
         [Fact]
-        [DisplayName("EndpointItem 預設建構子應初始化為空字串")]
+        [DisplayName("EndpointItem default constructor initializes empty strings")]
         public void EndpointItem_DefaultConstructor_InitializesEmpty()
         {
             var item = new EndpointItem();
@@ -20,7 +20,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("EndpointItem 帶參數建構子應正確設定 Name 與 Endpoint")]
+        [DisplayName("EndpointItem parameterized constructor sets Name and Endpoint")]
         public void EndpointItem_ParameterizedConstructor_SetsProperties()
         {
             var item = new EndpointItem("primary", "https://api.example.com");
@@ -30,7 +30,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("EndpointItemCollection Add(name, endpoint) 應新增並回傳項目")]
+        [DisplayName("EndpointItemCollection Add(name, endpoint) adds and returns the item")]
         public void EndpointItemCollection_Add_AddsAndReturnsItem()
         {
             var collection = new EndpointItemCollection();
@@ -44,7 +44,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ClientSettings 預設建構子應設定 CreateTime 與空 Endpoint")]
+        [DisplayName("ClientSettings default constructor sets CreateTime and an empty Endpoint")]
         public void ClientSettings_DefaultConstructor_InitializesState()
         {
             var before = DateTime.UtcNow;
@@ -58,7 +58,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ClientSettings.EndpointItems 在未序列化狀態下應回傳集合")]
+        [DisplayName("ClientSettings.EndpointItems returns the collection when not serializing")]
         public void ClientSettings_EndpointItems_ReturnsCollection()
         {
             var settings = new ClientSettings();
@@ -71,7 +71,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ClientSettings.Endpoint 可設定與讀取")]
+        [DisplayName("ClientSettings.Endpoint can be set and read")]
         public void ClientSettings_Endpoint_CanBeSet()
         {
             var settings = new ClientSettings
@@ -83,7 +83,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ClientSettings.SetSerializeState 應更新序列化狀態")]
+        [DisplayName("ClientSettings.SetSerializeState updates the serialize state")]
         public void ClientSettings_SetSerializeState_UpdatesState()
         {
             var settings = new ClientSettings();
@@ -94,7 +94,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ClientSettings.SetObjectFilePath 應更新檔案路徑")]
+        [DisplayName("ClientSettings.SetObjectFilePath updates the file path")]
         public void ClientSettings_SetObjectFilePath_UpdatesPath()
         {
             var settings = new ClientSettings();
@@ -105,7 +105,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ClientSettings.EndpointItems 於序列化且空集合時應回傳 null")]
+        [DisplayName("ClientSettings.EndpointItems returns null when serializing an empty collection")]
         public void ClientSettings_EndpointItems_EmptyDuringSerialize_ReturnsNull()
         {
             var settings = new ClientSettings();

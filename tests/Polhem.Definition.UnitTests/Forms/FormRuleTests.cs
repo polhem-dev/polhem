@@ -6,18 +6,18 @@ using Polhem.Definition.Forms;
 namespace Polhem.Definition.UnitTests.Forms
 {
     /// <summary>
-    /// PR1（定義層）測試：<see cref="FormField.ValueExpression"/> /
-    /// <see cref="FormField.DefaultValueExpression"/> 與 <see cref="FormRule"/> /
-    /// <see cref="FormSchema.Rules"/> 的 XML 序列化往返、空值省略、以及 Clone 深拷貝。
-    /// FormSchema 以 XML 為唯一傳輸序列化路徑（後端 XmlCodec.Serialize → 前端
-    /// XmlCodec.Deserialize），故不含 JSON / MessagePack 往返。
+    /// Definition-layer tests: XML serialization round-trips, omission of empty values, and Clone deep copies of
+    /// <see cref="FormField.ValueExpression"/> / <see cref="FormField.DefaultValueExpression"/>, <see cref="FormRule"/> and
+    /// <see cref="FormSchema.Rules"/>.
+    /// FormSchema uses XML as its only transport serialization path (XmlCodec.Serialize on the server, then
+    /// XmlCodec.Deserialize on the client), so there are no JSON / MessagePack round-trips here.
     /// </summary>
     public class FormRuleTests
     {
         #region FormField expression properties
 
         [Fact]
-        [DisplayName("FormField ValueExpression 應透過 XmlAttribute 序列化往返")]
+        [DisplayName("FormField ValueExpression round-trips through XmlAttribute serialization")]
         public void ValueExpression_RoundTripsThroughXml()
         {
             var field = new FormField("amount", "金額", FieldDbType.Currency)
@@ -34,7 +34,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("FormField DefaultValueExpression 應透過 XmlAttribute 序列化往返")]
+        [DisplayName("FormField DefaultValueExpression round-trips through XmlAttribute serialization")]
         public void DefaultValueExpression_RoundTripsThroughXml()
         {
             var field = new FormField("order_date", "訂單日期", FieldDbType.DateTime)
@@ -50,7 +50,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("FormField 運算式屬性為空預設值時序列化應省略屬性")]
+        [DisplayName("FormField expression properties at their empty defaults are omitted from serialization")]
         public void ExpressionProperties_Empty_OmitXmlAttributes()
         {
             var field = new FormField("sys_name", "名稱", FieldDbType.String);
@@ -66,7 +66,7 @@ namespace Polhem.Definition.UnitTests.Forms
         #region FormRule serialization
 
         [Fact]
-        [DisplayName("FormRule 所有屬性應透過 XmlAttribute 序列化往返")]
+        [DisplayName("Every FormRule property round-trips through XmlAttribute serialization")]
         public void FormRule_RoundTripsThroughXml()
         {
             var rule = new FormRule("amount_positive", "amount > 0", "已核准訂單金額必須大於 0")
@@ -93,7 +93,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("FormRule BeforeDelete trigger 應序列化往返")]
+        [DisplayName("FormRule BeforeDelete trigger round-trips through serialization")]
         public void FormRule_BeforeDeleteTrigger_RoundTripsThroughXml()
         {
             var rule = new FormRule("no_delete_closed", "status != \"Closed\"", "已結案不可刪除")
@@ -109,7 +109,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("FormRule When 為空時序列化應省略屬性（一律套用）")]
+        [DisplayName("FormRule with an empty When omits the attribute from serialization (the rule always applies)")]
         public void FormRule_EmptyWhen_OmitsXmlAttribute()
         {
             var rule = new FormRule("always", "amount > 0", "金額必須大於 0");
@@ -124,7 +124,7 @@ namespace Polhem.Definition.UnitTests.Forms
         #region FormSchema.Rules
 
         [Fact]
-        [DisplayName("FormSchema.Rules 新建時為空、序列化不輸出 Rules 節點")]
+        [DisplayName("FormSchema.Rules is empty when created and serialization emits no Rules node")]
         public void Rules_Empty_OmittedFromXml()
         {
             var schema = new FormSchema("Order", "訂單") { CategoryId = "company" };
@@ -135,7 +135,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("FormSchema.Rules 應透過 XML 序列化往返")]
+        [DisplayName("FormSchema.Rules round-trips through XML serialization")]
         public void Rules_RoundTripThroughXml()
         {
             var schema = BuildSchemaWithRule();
@@ -152,7 +152,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("FormSchema.Clone 應 deep-copy Rules，每個 entry 都是獨立實例")]
+        [DisplayName("FormSchema.Clone deep-copies Rules, and every entry is an independent instance")]
         public void Clone_CopiesRules()
         {
             var source = BuildSchemaWithRule();
@@ -165,13 +165,12 @@ namespace Polhem.Definition.UnitTests.Forms
             Assert.NotSame(source.Rules!["amount_positive"], clone.Rules!["amount_positive"]);
             Assert.Equal("amount > 0", clone.Rules!["amount_positive"].Condition);
 
-            // mutate clone 不影響來源
             clone.Rules!["amount_positive"].Message = "changed";
             Assert.Equal("金額必須大於 0", source.Rules!["amount_positive"].Message);
         }
 
         [Fact]
-        [DisplayName("FormSchema.Clone 應 deep-copy FormField.ValueExpression")]
+        [DisplayName("FormSchema.Clone deep-copies FormField.ValueExpression")]
         public void Clone_CopiesFieldValueExpression()
         {
             var source = BuildSchemaWithRule();

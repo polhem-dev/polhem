@@ -6,12 +6,12 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Identity
 {
     /// <summary>
-    /// CompanyInfo 數值位數解析（公司覆寫 vs 框架預設）與 CompanyNumberFormats 三棲 round-trip。
+    /// CompanyInfo decimal place resolution (company override vs framework default) and CompanyNumberFormats XML/JSON round-trips.
     /// </summary>
     public class CompanyInfoTests
     {
         [Fact]
-        [DisplayName("GetDecimals 公司覆寫存在時應回覆寫值")]
+        [DisplayName("GetDecimals returns the override when the company has one")]
         public void GetDecimals_Override_ReturnsOverride()
         {
             var company = new CompanyInfo
@@ -24,19 +24,18 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetDecimals 無公司覆寫時應退框架預設位數")]
+        [DisplayName("GetDecimals falls back to the framework default decimal places when the company has no override")]
         public void GetDecimals_NoOverride_ReturnsFrameworkDefault()
         {
             var company = new CompanyInfo { CompanyId = "C001" };
 
-            // 框架預設：Amount=2、UnitPrice=4、Weight=3
             Assert.Equal(2, company.GetDecimals(NumberKind.Amount));
             Assert.Equal(4, company.GetDecimals(NumberKind.UnitPrice));
             Assert.Equal(3, company.GetDecimals(NumberKind.Weight));
         }
 
         [Fact]
-        [DisplayName("GetDecimals 部分覆寫時應只覆寫指定 kind、其餘退框架預設")]
+        [DisplayName("GetDecimals with a partial override overrides only the specified kinds and falls back to the framework default for the rest")]
         public void GetDecimals_PartialOverride_OthersFallBack()
         {
             var company = new CompanyInfo
@@ -45,12 +44,12 @@ namespace Polhem.Definition.UnitTests.Identity
                 NumberFormats = [new NumberFormatItem(NumberKind.UnitPrice, 6)],
             };
 
-            Assert.Equal(6, company.GetDecimals(NumberKind.UnitPrice));   // 覆寫
-            Assert.Equal(2, company.GetDecimals(NumberKind.Percent));     // 框架預設
+            Assert.Equal(6, company.GetDecimals(NumberKind.UnitPrice));   // Overridden.
+            Assert.Equal(2, company.GetDecimals(NumberKind.Percent));     // Framework default.
         }
 
         [Fact]
-        [DisplayName("FindDecimals 命中回位數、未命中回 null")]
+        [DisplayName("FindDecimals returns the decimal places on a hit and null on a miss")]
         public void FindDecimals_HitAndMiss()
         {
             CompanyNumberFormats formats = [new NumberFormatItem(NumberKind.Cost, 5)];
@@ -60,7 +59,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("CompanyNumberFormats XML 序列化應正確還原覆寫項")]
+        [DisplayName("CompanyNumberFormats XML serialization restores the override items")]
         public void CompanyNumberFormats_XmlRoundtrip_PreservesItems()
         {
             CompanyNumberFormats original =
@@ -79,7 +78,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("CompanyNumberFormats JSON 序列化應正確還原覆寫項")]
+        [DisplayName("CompanyNumberFormats JSON serialization restores the override items")]
         public void CompanyNumberFormats_JsonRoundtrip_PreservesItems()
         {
             CompanyNumberFormats original = [new NumberFormatItem(NumberKind.Amount, 0)];
@@ -92,7 +91,7 @@ namespace Polhem.Definition.UnitTests.Identity
             Assert.Equal(0, restored.FindDecimals(NumberKind.Amount));
         }
 
-        // --- 多幣別：本幣 / 現金捨入 / 可用幣別 ---
+        // --- Multi-currency: home currency / cash rounding / allowed currencies ---
 
         private static CurrencySettings BuildCurrencies() =>
         [
@@ -102,7 +101,7 @@ namespace Polhem.Definition.UnitTests.Identity
         ];
 
         [Fact]
-        [DisplayName("GetCashRounding 公司覆寫存在時回覆寫單位（CHF→0.05）")]
+        [DisplayName("GetCashRounding returns the override unit when the company has one (CHF → 0.05)")]
         public void GetCashRounding_Override_ReturnsOverride()
         {
             var currencies = BuildCurrencies();
@@ -116,7 +115,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetCashRounding 無公司覆寫時退幣別自然最小單位")]
+        [DisplayName("GetCashRounding falls back to the currency's natural smallest unit when the company has no override")]
         public void GetCashRounding_NoOverride_ReturnsCurrencyNaturalUnit()
         {
             var currencies = BuildCurrencies();
@@ -127,7 +126,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetAllowedCurrencies 白名單非空時回子集")]
+        [DisplayName("GetAllowedCurrencies returns the subset when the allowlist is not empty")]
         public void GetAllowedCurrencies_NonEmpty_ReturnsSubset()
         {
             var currencies = BuildCurrencies();
@@ -141,7 +140,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("GetAllowedCurrencies 白名單空時回全系統幣別碼")]
+        [DisplayName("GetAllowedCurrencies returns every system currency code when the allowlist is empty")]
         public void GetAllowedCurrencies_Empty_ReturnsAllSystemCodes()
         {
             var currencies = BuildCurrencies();
@@ -151,7 +150,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("CompanyInfo 多幣別欄位 XML round-trip 應保留本幣/現金捨入/白名單")]
+        [DisplayName("CompanyInfo multi-currency fields keep home currency, cash rounding and allowlist through an XML round-trip")]
         public void CompanyInfo_MultiCurrencyFields_XmlRoundtrip()
         {
             var original = new CompanyInfo
@@ -172,7 +171,7 @@ namespace Polhem.Definition.UnitTests.Identity
         }
 
         [Fact]
-        [DisplayName("CompanyCashRounding.FindUnit 命中回單位、未命中回 null")]
+        [DisplayName("CompanyCashRounding.FindUnit returns the unit on a hit and null on a miss")]
         public void CompanyCashRounding_FindUnit_HitAndMiss()
         {
             CompanyCashRounding rounding = [new CashRoundingItem("CHF", 0.05m)];

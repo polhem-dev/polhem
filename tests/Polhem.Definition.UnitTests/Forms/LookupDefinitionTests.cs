@@ -9,13 +9,13 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Definition.UnitTests.Forms
 {
     /// <summary>
-    /// Lookup 定義層測試：FormField.DisplayFields 與 FormSchema.LookupFields 的
-    /// 序列化 round-trip、Clone 同步，以及 FormLayoutGenerator 對 relation 欄位的解析。
+    /// Definition-layer lookup tests: serialization round-trips and Clone of FormField.DisplayFields and
+    /// FormSchema.LookupFields, and how FormLayoutGenerator resolves relation fields.
     /// </summary>
     public class LookupDefinitionTests
     {
         /// <summary>
-        /// 建立含 relation 欄位的測試 schema（鏡照 tests/Define Project 形狀）。
+        /// Builds a test schema with a relation field (mirroring the shape of the Project schema in tests/Define).
         /// </summary>
         private static FormSchema BuildSchema()
         {
@@ -44,7 +44,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("DisplayFields 與 LookupFields 經 XML 序列化應正確還原")]
+        [DisplayName("DisplayFields and LookupFields are restored through XML serialization")]
         public void XmlRoundTrip_RestoresDisplayFieldAndLookupFields()
         {
             var schema = BuildSchema();
@@ -58,7 +58,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("DisplayFields 與 LookupFields 應出現在 JSON 輸出（JS 前端單向消費）")]
+        [DisplayName("DisplayFields and LookupFields appear in the JSON output (consumed one way by JS frontends)")]
         public void JsonSerialize_CarriesDisplayFieldAndLookupFields()
         {
             var schema = BuildSchema();
@@ -83,7 +83,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("未設定的 DisplayFields 與 LookupFields 不應出現在 XML 輸出")]
+        [DisplayName("DisplayFields and LookupFields that are not set do not appear in the XML output")]
         public void XmlSerialize_DefaultsOmitted()
         {
             var schema = new FormSchema("Customer", "客戶") { CategoryId = "company" };
@@ -97,7 +97,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Clone 應複製 DisplayFields 與 LookupFields")]
+        [DisplayName("Clone copies DisplayFields and LookupFields")]
         public void Clone_CopiesDisplayFieldAndLookupFields()
         {
             var schema = BuildSchema();
@@ -109,7 +109,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("GetLookupFields 依宣告順序回傳並略過 master 不存在的欄位")]
+        [DisplayName("GetLookupFields returns fields in declaration order and skips fields missing from the master")]
         public void GetLookupFields_Declared_SkipsMissingFields()
         {
             var schema = BuildSchema();
@@ -123,7 +123,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("GetLookupFields 未宣告時應預設取 sys_id 與 sys_name")]
+        [DisplayName("GetLookupFields defaults to sys_id and sys_name when nothing is declared")]
         public void GetLookupFields_NotDeclared_DefaultsToIdAndName()
         {
             var schema = BuildSchema();
@@ -137,7 +137,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("GetLookupFields 宣告含 sys_rowid 應排除（呼叫端固定 prepend）")]
+        [DisplayName("GetLookupFields excludes a declared sys_rowid (callers always prepend it)")]
         public void GetLookupFields_DeclaredRowId_Excluded()
         {
             var schema = BuildSchema();
@@ -150,7 +150,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("GetLookupFields master 無 sys_name 時預設集只回傳 sys_id")]
+        [DisplayName("GetLookupFields default set returns only sys_id when the master has no sys_name")]
         public void GetLookupFields_MasterWithoutSysName_DefaultsToIdOnly()
         {
             var schema = new FormSchema("Unit", "單位") { CategoryId = "common" };
@@ -164,7 +164,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("GetLookupLayout 應含 lookup 欄位與隱藏 sys_rowid、不允許編輯動作")]
+        [DisplayName("GetLookupLayout contains the lookup fields and a hidden sys_rowid, and allows no edit actions")]
         public void GetLookupLayout_BuildsSelectionOnlyGrid()
         {
             var schema = BuildSchema();
@@ -180,7 +180,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate relation 欄位應解析為 ButtonEdit 並帶 DisplayFields")]
+        [DisplayName("FormLayoutGenerator.Generate resolves a relation field to a ButtonEdit carrying DisplayFields")]
         public void Generate_RelationField_ResolvesButtonEditWithDisplayField()
         {
             var schema = BuildSchema();
@@ -193,36 +193,36 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate：relation 欄 Visible=false 仍產出 ButtonEdit；被 DisplayFields 涵蓋的欄位不另行產生")]
+        [DisplayName("FormLayoutGenerator.Generate still emits a ButtonEdit for a relation field with Visible=false, and fields covered by DisplayFields are not emitted separately")]
         public void Generate_RelationField_CoversDisplayFields()
         {
-            // 直觀設定：rowid 的原始值（Guid）永遠不會被看到 → Visible=false；
-            // ref 欄位是實際看到的值 → Visible=true。ButtonEdit 由 RelationProgId
-            // 驅動產生並承載 DisplayFields，被涵蓋的欄位不再各自出現。
+            // The intuitive setup: the raw rowid value (a Guid) is never seen, so it is Visible=false.
+            // The ref fields are the values actually seen, so they are Visible=true. The ButtonEdit is generated from `RelationProgId`
+            // and carries `DisplayFields`, and the covered fields no longer appear on their own.
             var schema = BuildSchema();
             var customerField = schema.MasterTable!.Fields!["customer_rowid"];
             customerField.Visible = false;
-            customerField.DisplayFields = string.Empty;  // 慣例：ref_customer_id + ref_customer_name
+            customerField.DisplayFields = string.Empty;  // By convention, `ref_customer_id` plus `ref_customer_name`.
 
             var layout = FormLayoutGenerator.Generate(schema, "default");
             var fields = layout.Sections![0].Fields!;
 
-            // relation 欄位仍產出（編輯入口）
+            // The relation field is still emitted as the editing entry point.
             var lookup = fields.First(f => f.FieldName == "customer_rowid");
             Assert.Equal(ControlType.ButtonEdit, lookup.ControlType);
             Assert.Equal("ref_customer_id,ref_customer_name", lookup.DisplayFields);
-            // 被複合顯示涵蓋的欄位不另行產生
+            // Fields covered by the composite display are not emitted separately.
             Assert.DoesNotContain(fields, f => f.FieldName == "ref_customer_id");
             Assert.DoesNotContain(fields, f => f.FieldName == "ref_customer_name");
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate：未被 DisplayFields 涵蓋的 ref 欄位仍各自產出（不丟資訊）")]
+        [DisplayName("FormLayoutGenerator.Generate still emits ref fields not covered by DisplayFields on their own (no information is lost)")]
         public void Generate_UncoveredRelationDisplayField_StillEmitted()
         {
             var schema = BuildSchema();
             var customerField = schema.MasterTable!.Fields!["customer_rowid"];
-            // 顯式只顯示名稱 → ref_customer_id 未被涵蓋，應以獨立欄位產出
+            // Only the name is shown explicitly, so `ref_customer_id` is not covered and must be emitted as its own field.
             customerField.DisplayFields = "ref_customer_name";
 
             var layout = FormLayoutGenerator.Generate(schema, "default");
@@ -233,7 +233,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate：明細表套用同一套涵蓋規則")]
+        [DisplayName("FormLayoutGenerator.Generate applies the same coverage rule to detail tables")]
         public void Generate_DetailGrid_CoversDisplayFields()
         {
             var schema = BuildSchema();

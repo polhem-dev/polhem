@@ -8,8 +8,8 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Customization
 {
     /// <summary>
-    /// <see cref="CustomizeOverlay"/> 測試：四種型別各自的選用粒度，以及任一層缺席時的行為。
-    /// 這個類別是前後端共用的選用演算法，兩端行為一致與否全繫於此，所以粒度要逐條釘住。
+    /// Tests for <see cref="CustomizeOverlay"/>: the selection granularity of each type, and the behavior when either layer is missing.
+    /// This class is the selection algorithm shared by server and client, and whether the two sides agree depends entirely on it, so each granularity is pinned down separately.
     /// </summary>
     public class CustomizeOverlayTests
     {
@@ -24,10 +24,10 @@ namespace Polhem.Definition.UnitTests.Customization
         private static readonly PluginBinding[] s_custDedupeOnly =
             [new("Cust.Dedupe, Cust", PluginStage.BeforeSave)];
 
-        // ---- 語系文字：per key ----
+        // ---- Language text: per key ----
 
         [Fact]
-        [DisplayName("文字：客製有該 key 時取客製值")]
+        [DisplayName("Text: takes the customization value when the customization has the key")]
         public void TryGetLangText_CustomizeHasKey_ReturnsCustomizeValue()
         {
             var cust = Resource(("OK", "送出"));
@@ -38,7 +38,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("文字：客製沒有該 key 時延用套裝值")]
+        [DisplayName("Text: falls back to the base value when the customization lacks the key")]
         public void TryGetLangText_CustomizeMissesKey_FallsBackToBase()
         {
             var cust = Resource(("OK", "送出"));
@@ -49,7 +49,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("文字：客製獨有的 key 也查得到（套裝無則加入）")]
+        [DisplayName("Text: a key only the customization has is found too (added when the base lacks it)")]
         public void TryGetLangText_CustomizeOnlyKey_IsFound()
         {
             var cust = Resource(("OnlyInCustomize", "客製獨有"));
@@ -60,7 +60,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("文字：客製為 null 時等同純套裝")]
+        [DisplayName("Text: a null customization behaves like the base alone")]
         public void TryGetLangText_NoCustomize_UsesBase()
         {
             Assert.True(CustomizeOverlay.TryGetLangText(null, Resource(("OK", "確定")), "OK", out var text));
@@ -68,7 +68,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("文字：套裝為 null 時仍可從客製取得")]
+        [DisplayName("Text: a null base still returns the customization value")]
         public void TryGetLangText_NoBase_UsesCustomize()
         {
             Assert.True(CustomizeOverlay.TryGetLangText(Resource(("OK", "送出")), null, "OK", out var text));
@@ -76,7 +76,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("文字：兩層皆無該 key 時回 false 且 text 為空字串")]
+        [DisplayName("Text: returns false with an empty text when neither layer has the key")]
         public void TryGetLangText_BothMiss_ReturnsFalse()
         {
             Assert.False(CustomizeOverlay.TryGetLangText(Resource(), Resource(), "Nope", out var text));
@@ -84,17 +84,17 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("文字：兩層皆 null 時回 false，不丟例外")]
+        [DisplayName("Text: returns false without throwing when both layers are null")]
         public void TryGetLangText_BothNull_ReturnsFalse()
         {
             Assert.False(CustomizeOverlay.TryGetLangText(null, null, "Nope", out var text));
             Assert.Equal(string.Empty, text);
         }
 
-        // ---- 語系 enum：整組取代 ----
+        // ---- Language enum: replaced as a whole ----
 
         [Fact]
-        [DisplayName("enum：客製有同名 enum 時整組取代，套裝獨有的 entry 不保留")]
+        [DisplayName("Enum: a customization enum with the same name replaces the whole set, and base-only entries are dropped")]
         public void GetLangEnum_CustomizeHasEnum_ReplacesWholeSet()
         {
             var cust = ResourceWithEnum("Gender", ("M", "先生"));
@@ -109,7 +109,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("enum：客製沒有該 enum 時延用套裝整組")]
+        [DisplayName("Enum: falls back to the whole base set when the customization lacks the enum")]
         public void GetLangEnum_CustomizeMissesEnum_FallsBackToBase()
         {
             var cust = Resource(("OK", "送出"));
@@ -122,16 +122,16 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("enum：兩層皆無時回 null")]
+        [DisplayName("Enum: returns null when neither layer has it")]
         public void GetLangEnum_BothMiss_ReturnsNull()
         {
             Assert.Null(CustomizeOverlay.GetLangEnum(null, null, "Gender"));
         }
 
-        // ---- ProgramSettings：per progId ----
+        // ---- ProgramSettings: per progId ----
 
         [Fact]
-        [DisplayName("ProgramItem：客製有該 progId 時取客製項目")]
+        [DisplayName("ProgramItem: takes the customization item when the customization has the progId")]
         public void FindProgramItem_CustomizeHasProgId_ReturnsCustomizeItem()
         {
             var cust = Settings(("P001", "Cust.Bo"));
@@ -141,7 +141,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("ProgramItem：客製沒有該 progId 時延用套裝項目（per progId 而非整檔）")]
+        [DisplayName("ProgramItem: falls back to the base item when the customization lacks the progId (per progId, not per file)")]
         public void FindProgramItem_CustomizeMissesProgId_FallsBackToBase()
         {
             var cust = Settings(("P001", "Cust.Bo"));
@@ -151,7 +151,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("ProgramItem：兩層皆無該 progId 或皆為 null 時回 null")]
+        [DisplayName("ProgramItem: returns null when neither layer has the progId or both are null")]
         public void FindProgramItem_BothMiss_ReturnsNull()
         {
             Assert.Null(CustomizeOverlay.FindProgramItem(Settings(), Settings(), "P999"));
@@ -159,7 +159,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("ProgramItem：客製只寫 BusinessObject 時 Repository 沿用套裝")]
+        [DisplayName("ProgramItem: Repository comes from the base when the customization sets only BusinessObject")]
         public void FindProgramItem_CustomizeOmitsRepository_InheritsBaseRepository()
         {
             var cust = Settings(("Order", "Tenant.OrderBO, Tenant"));
@@ -177,7 +177,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("ProgramItem：客製只寫 Repository 時 BusinessObject 沿用套裝")]
+        [DisplayName("ProgramItem: BusinessObject comes from the base when the customization sets only Repository")]
         public void FindProgramItem_CustomizeOmitsBusinessObject_InheritsBaseBusinessObject()
         {
             var cust = new ProgramSettings();
@@ -200,7 +200,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("ProgramItem：合成產生新實例，兩層的快取實例都不被異動")]
+        [DisplayName("ProgramItem: merging produces a new instance and mutates neither layer's cached instance")]
         public void FindProgramItem_BothLayersDeclare_ReturnsNewInstanceWithoutMutatingEither()
         {
             var cust = Settings(("Order", "Tenant.OrderBO, Tenant"));
@@ -220,7 +220,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("ProgramItem：只有一層宣告時直接回該層實例，不做多餘配置")]
+        [DisplayName("ProgramItem: returns that layer's instance directly when only one layer declares it, with no extra allocation")]
         public void FindProgramItem_SingleLayerDeclares_ReturnsThatInstance()
         {
             var cust = Settings(("Order", "Tenant.OrderBO, Tenant"));
@@ -231,7 +231,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("ProgramItem：每個可寫字串屬性都參與欄位級合成（新增屬性未同步就會紅）")]
+        [DisplayName("ProgramItem: every writable string property takes part in the field-level merge (a new property not wired in turns this red)")]
         public void FindProgramItem_EveryWritableStringProperty_TakesPartInTheMerge()
         {
             var properties = MergedProgramItemProperties();
@@ -239,7 +239,7 @@ namespace Polhem.Definition.UnitTests.Customization
 
             foreach (var property in properties)
             {
-                // 套裝每個屬性都有值；客製只填目前受測的這一個。
+                // Every base property has a value; the customization sets only the one under test.
                 var baseItem = new ProgramItem { ProgId = "Order" };
                 foreach (var other in properties)
                     other.SetValue(baseItem, $"base-{other.Name}");
@@ -271,10 +271,10 @@ namespace Polhem.Definition.UnitTests.Customization
                 .Where(p => p.Name is not (nameof(ProgramItem.ProgId) or nameof(ProgramItem.Key)))
                 .ToArray();
 
-        // ---- PluginSettings：per progId 相加 ----
+        // ---- PluginSettings: concatenated per progId ----
 
         [Fact]
-        [DisplayName("plugin：兩層皆有時相加，套裝在前、客製在後")]
+        [DisplayName("Plugin: concatenates both layers when both declare it, base first and customization last")]
         public void GetPluginBindings_BothLayers_ConcatenatesBaseThenCustomize()
         {
             var @base = Plugins(("Order", s_pkgChain));
@@ -284,7 +284,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("plugin：只有一層宣告時回該層的鏈")]
+        [DisplayName("Plugin: returns that layer's chain when only one layer declares it")]
         public void GetPluginBindings_SingleLayer_ReturnsThatChain()
         {
             var @base = Plugins(("Order", s_pkgAuditOnly));
@@ -295,7 +295,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("plugin：兩層皆無該 progId 或皆為 null 時回空集合")]
+        [DisplayName("Plugin: returns an empty collection when neither layer has the progId or both are null")]
         public void GetPluginBindings_BothMiss_ReturnsEmpty()
         {
             Assert.Empty(CustomizeOverlay.GetPluginBindings(Plugins(), Plugins(), "Nope"));
@@ -303,20 +303,20 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("plugin：客製無法停用套裝的 plugin——沒有 tombstone，相加是唯一語意")]
+        [DisplayName("Plugin: a customization cannot disable a base plugin (there is no tombstone, concatenation is the only semantics)")]
         public void GetPluginBindings_CustomizeCannotSuppressBase()
         {
             var @base = Plugins(("Order", s_pkgAuditOnly));
             var cust = Plugins(("Order", []));
 
-            // 客製宣告了該 progId 但鏈為空，套裝的 plugin 仍然在。
+            // The customization declares the progId with an empty chain, and the base plugin is still there.
             Assert.Equal(s_pkgAuditOnly, CustomizeOverlay.GetPluginBindings(cust, @base, "Order"));
         }
 
-        // ---- FormLayout：整檔取代 ----
+        // ---- FormLayout: replaced as a whole file ----
 
         [Fact]
-        [DisplayName("FormLayout：客製存在時整檔取代")]
+        [DisplayName("FormLayout: an existing customization replaces the whole file")]
         public void PickFormLayout_CustomizeExists_WinsOutright()
         {
             var cust = new FormLayout { LayoutId = "Employee", Caption = "客製" };
@@ -326,7 +326,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("FormLayout：客製不存在時回套裝；兩者皆無時回 null（由呼叫端改用生成）")]
+        [DisplayName("FormLayout: returns the base when there is no customization, and null when neither exists (the caller generates one instead)")]
         public void PickFormLayout_FallsBackThenNull()
         {
             var @base = new FormLayout { LayoutId = "Employee" };
@@ -336,7 +336,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("MenuSettings：客製存在時整份取代套裝（不逐節點合併）")]
+        [DisplayName("MenuSettings: an existing customization replaces the whole base (no per-node merge)")]
         public void PickMenuSettings_CustomizeExists_WinsOutright()
         {
             var cust = new MenuSettings();
@@ -348,7 +348,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("MenuSettings：客製不存在時回套裝；兩者皆無時回 null")]
+        [DisplayName("MenuSettings: returns the base when there is no customization, and null when neither exists")]
         public void PickMenuSettings_FallsBackThenNull()
         {
             var @base = new MenuSettings();
@@ -358,7 +358,7 @@ namespace Polhem.Definition.UnitTests.Customization
         }
 
         [Fact]
-        [DisplayName("ProgramSettings：攤平後仍為 per-progId 覆寫，客製未宣告者落回套裝")]
+        [DisplayName("ProgramSettings: the flat registry still overlays per progId, and undeclared progIds fall back to the base")]
         public void FindProgramItem_FlatRegistry_OverlaysPerProgId()
         {
             var cust = Settings(("Order", "Tenant.OrderBO, Tenant"));

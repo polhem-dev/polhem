@@ -7,15 +7,15 @@ namespace Polhem.Definition.UnitTests.Security
     public class MasterKeyProviderRetryTests
     {
         [Fact]
-        [DisplayName("GetMasterKey autoCreate=true 父目錄不存在時應觸發 catch(IOException) fallthrough 並於重試耗盡後拋出例外")]
+        [DisplayName("GetMasterKey with autoCreate=true and a missing parent directory falls through catch(IOException) and throws after the retries run out")]
         public void GetMasterKey_AutoCreate_ParentDirMissing_TriggersIoExceptionFallback()
         {
-            // 父目錄（polhem-missing-<guid>）不存在：
-            //   FileStream(FileMode.CreateNew) → DirectoryNotFoundException（IOException 子類）
-            //   → LoadFromFile 的 catch(IOException) 捕獲，fallthrough 到 ReadAllTextShared
-            //   → ReadAllTextShared 逐次重試（ReadRetryCount=5，每次 Thread.Sleep 50ms），
-            //     第 5 次 when (attempt < 4) 為 false，例外向上傳播。
-            // 預期耗時約 200ms（4 × 50ms sleep）。
+            // The parent directory (polhem-missing-<guid>) does not exist, so:
+            //   `FileStream(FileMode.CreateNew)` throws DirectoryNotFoundException (a subclass of IOException),
+            //   the catch(IOException) in `LoadFromFile` catches it and falls through to `ReadAllTextShared`,
+            //   `ReadAllTextShared` retries (ReadRetryCount=5, with Thread.Sleep 50ms each time),
+            //   and on the 5th attempt the filter (attempt < 4) is false, so the exception propagates.
+            // Expected duration is about 200ms (4 x 50ms sleep).
             string missingParent = Path.Combine(
                 Path.GetTempPath(),
                 $"polhem-missing-{Guid.NewGuid():N}",

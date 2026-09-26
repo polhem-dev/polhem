@@ -3,11 +3,11 @@ using System.ComponentModel;
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// <see cref="PathOptions"/> 對外部輸入路徑片段的防護測試。
+    /// Tests for the protection of <see cref="PathOptions"/> against externally supplied path segments.
     /// </summary>
     /// <remarks>
-    /// 這些片段（progId / layoutId / categoryId / tableName / lang / ns）來自 API 引數與
-    /// 反序列化後的定義物件，組成檔案路徑時屬不受信任輸入。
+    /// These segments (progId / layoutId / categoryId / tableName / lang / ns) come from API arguments and deserialized
+    /// definition objects, so they are untrusted input when composed into file paths.
     /// </remarks>
     public class PathOptionsTraversalTests
     {
@@ -27,7 +27,7 @@ namespace Polhem.Definition.UnitTests
 
         [Theory]
         [MemberData(nameof(HostilePathSegments))]
-        [DisplayName("GetFormSchemaFilePath 對可逃逸的 progId 應拋 ArgumentException")]
+        [DisplayName("GetFormSchemaFilePath throws ArgumentException for a progId that can escape the root")]
         public void GetFormSchemaFilePath_HostileProgId_Throws(string progId)
         {
             Assert.Throws<ArgumentException>(() => CreateOptions().GetFormSchemaFilePath(progId));
@@ -35,7 +35,7 @@ namespace Polhem.Definition.UnitTests
 
         [Theory]
         [MemberData(nameof(HostilePathSegments))]
-        [DisplayName("GetFormLayoutFilePath 對可逃逸的 layoutId 應拋 ArgumentException")]
+        [DisplayName("GetFormLayoutFilePath throws ArgumentException for a layoutId that can escape the root")]
         public void GetFormLayoutFilePath_HostileLayoutId_Throws(string layoutId)
         {
             Assert.Throws<ArgumentException>(() => CreateOptions().GetFormLayoutFilePath(layoutId));
@@ -43,7 +43,7 @@ namespace Polhem.Definition.UnitTests
 
         [Theory]
         [MemberData(nameof(HostilePathSegments))]
-        [DisplayName("GetTableSchemaFilePath 對可逃逸的 categoryId 應拋 ArgumentException")]
+        [DisplayName("GetTableSchemaFilePath throws ArgumentException for a categoryId that can escape the root")]
         public void GetTableSchemaFilePath_HostileCategoryId_Throws(string categoryId)
         {
             Assert.Throws<ArgumentException>(() => CreateOptions().GetTableSchemaFilePath(categoryId, "Employee"));
@@ -51,20 +51,20 @@ namespace Polhem.Definition.UnitTests
 
         [Theory]
         [MemberData(nameof(HostilePathSegments))]
-        [DisplayName("GetLanguageFilePath 對可逃逸的 namespace 應拋 ArgumentException")]
+        [DisplayName("GetLanguageFilePath throws ArgumentException for a namespace that can escape the root")]
         public void GetLanguageFilePath_HostileNamespace_Throws(string ns)
         {
             Assert.Throws<ArgumentException>(() => CreateOptions().GetLanguageFilePath("zh-TW", ns));
         }
 
         [Fact]
-        [DisplayName("rooted 片段必須被擋——Path.Combine 會丟棄其前所有片段")]
+        [DisplayName("A rooted segment is blocked, because Path.Combine discards every segment before it")]
         public void GetFormSchemaFilePath_RootedSegment_DoesNotEscapeRoot()
         {
             var options = CreateOptions();
 
-            // 這是比 ".." 更隱蔽的破口：Path.Combine(a, b, "/x") 直接回傳 "/x"，
-            // 完全不經過 DefinePath。若未擋下，檔案會落在檔案系統的任意位置。
+            // This is a subtler hole than "..": `Path.Combine(a, b, "/x")` returns "/x" directly and never goes
+            // through `DefinePath`. If it were not blocked, the file could land anywhere in the file system.
             var ex = Assert.Throws<ArgumentException>(
                 () => options.GetFormSchemaFilePath("/tmp/evil"));
             Assert.Contains("illegal path characters", ex.Message, StringComparison.Ordinal);
@@ -75,7 +75,7 @@ namespace Polhem.Definition.UnitTests
         [InlineData("common")]
         [InlineData("zh-TW")]
         [InlineData("")]
-        [DisplayName("合法片段應照常組出路徑")]
+        [DisplayName("Valid segments compose the path as usual")]
         public void ValidSegments_ProduceExpectedPath(string progId)
         {
             var options = CreateOptions();

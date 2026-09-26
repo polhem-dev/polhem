@@ -6,13 +6,13 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Definition.UnitTests.Layouts
 {
     /// <summary>
-    /// <see cref="FormLayoutCaptionApplier"/> 測試：layout 定義檔只負責結構，顯示文字一律取自
-    /// 已在地化的 <see cref="FormSchema"/>；schema 沒有的欄位保留 layout 檔原值。
+    /// Tests for <see cref="FormLayoutCaptionApplier"/>: a layout definition file only defines structure, and display text always comes from
+    /// the localized <see cref="FormSchema"/>. Fields the schema does not have keep the value from the layout file.
     /// </summary>
     public class FormLayoutCaptionApplierTests
     {
         [Fact]
-        [DisplayName("欄位 caption 應改取自 schema（覆蓋 layout 檔的靜態文字）")]
+        [DisplayName("Field captions come from the schema (overriding the static text of the layout file)")]
         public void Apply_FieldCaption_TakenFromSchema()
         {
             var layout = BuildLayout();
@@ -25,7 +25,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("表單 / 區塊 / 明細標題應改取自 schema")]
+        [DisplayName("Form, section and detail captions come from the schema")]
         public void Apply_ContainerCaptions_TakenFromSchema()
         {
             var layout = BuildLayout();
@@ -39,7 +39,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("明細欄 caption 應取自對應 FormTable 的欄位")]
+        [DisplayName("Detail column captions come from the fields of the matching FormTable")]
         public void Apply_DetailColumnCaption_TakenFromDetailTable()
         {
             var layout = BuildLayout();
@@ -51,7 +51,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("schema 沒有的欄位應保留 layout 檔原值（layout 可能落後於 schema）")]
+        [DisplayName("A field the schema does not have keeps the layout file value (the layout may lag behind the schema)")]
         public void Apply_FieldMissingFromSchema_KeepsLayoutText()
         {
             var layout = BuildLayout();
@@ -64,7 +64,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("schema 沒有的明細表應整組保留原值")]
+        [DisplayName("A detail table the schema does not have keeps all of its original values")]
         public void Apply_DetailTableMissingFromSchema_KeepsLayoutText()
         {
             var layout = BuildLayout();
@@ -80,7 +80,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("layout 為 null 或 schema 為 null 應拋 ArgumentNullException")]
+        [DisplayName("A null layout or a null schema throws ArgumentNullException")]
         public void Apply_NullArguments_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => FormLayoutCaptionApplier.Apply(null!, BuildSchema()));
@@ -88,7 +88,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("空 Sections / Details 的 layout 不應丟例外")]
+        [DisplayName("A layout with empty Sections / Details does not throw")]
         public void Apply_EmptyLayout_DoesNotThrow()
         {
             var layout = new FormLayout { LayoutId = "Employee", ProgId = "Employee" };
@@ -105,7 +105,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         private static LayoutColumn Column(LayoutGrid grid, string fieldName)
             => grid.Columns!.First(c => c.FieldName == fieldName);
 
-        // layout 檔帶的是作者當初寫死的文字，全部應被 schema 覆蓋
+        // The layout file carries the text its author hard-coded, and all of it must be overridden by the schema.
         private static FormLayout BuildLayout()
         {
             var layout = new FormLayout
@@ -125,7 +125,7 @@ namespace Polhem.Definition.UnitTests.Layouts
             return layout;
         }
 
-        // 模擬「已在地化」的 schema：文字都是最終要顯示的中文
+        // Simulates an already localized schema, whose text is the final Chinese to display.
         private static FormSchema BuildSchema()
         {
             var schema = new FormSchema("Employee", "員工") { CategoryId = "common" };

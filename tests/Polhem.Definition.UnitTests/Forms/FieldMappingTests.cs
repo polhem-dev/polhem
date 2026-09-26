@@ -6,7 +6,7 @@ namespace Polhem.Definition.UnitTests.Forms
     public class FieldMappingTests
     {
         [Fact]
-        [DisplayName("ToString 應回傳 \"{SourceField} -> {DestinationField}\" 格式")]
+        [DisplayName("ToString returns the \"{SourceField} -> {DestinationField}\" format")]
         public void ToString_ReturnsFormattedString()
         {
             var mapping = new FieldMapping("dept_name", "name");

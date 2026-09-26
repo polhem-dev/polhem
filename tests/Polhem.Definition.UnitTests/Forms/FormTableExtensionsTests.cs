@@ -6,9 +6,9 @@ using Polhem.Definition.Forms;
 namespace Polhem.Definition.UnitTests.Forms
 {
     /// <summary>
-    /// 驗證 <see cref="FormTableExtensions.ApplyFieldDbTypes"/>（路徑一：框架依 schema 標記）。
-    /// ADO.NET 把 date 欄位一律回報為 System.DateTime，故 SQL 取回的 DataTable 必須把 schema
-    /// 的欄位型別重播上去，才會與依 schema 自建的空白 DataTable 同構。
+    /// Verifies <see cref="FormTableExtensions.ApplyFieldDbTypes"/> (path one: the framework tags columns from the schema).
+    /// ADO.NET reports every date column as System.DateTime, so a DataTable read back from SQL must have the schema's
+    /// field types replayed onto it to match the shape of an empty DataTable built from the schema.
     /// </summary>
     public class FormTableExtensionsTests
     {
@@ -24,7 +24,7 @@ namespace Polhem.Definition.UnitTests.Forms
 
         private static DataTable BuildProviderTable()
         {
-            // 模擬 ADO.NET 回報的型別：Date 與 DateTime 都是 DateTime、Currency 是 decimal。
+            // Mimic the types ADO.NET reports: Date and DateTime are both DateTime, and Currency is decimal.
             var table = new DataTable("Order");
             table.Columns.Add("order_date", typeof(DateTime));
             table.Columns.Add("created_at", typeof(DateTime));
@@ -33,7 +33,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyFieldDbTypes 應把 schema 的欄位型別重播到 SQL 取回的欄位上")]
+        [DisplayName("ApplyFieldDbTypes replays the schema's field types onto the columns read back from SQL")]
         public void ApplyFieldDbTypes_MarksColumnsFromSchema()
         {
             var table = BuildProviderTable();
@@ -46,7 +46,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyFieldDbTypes 不改動欄位的 CLR 型別")]
+        [DisplayName("ApplyFieldDbTypes does not change the CLR type of a column")]
         public void ApplyFieldDbTypes_LeavesClrTypesUnchanged()
         {
             var table = BuildProviderTable();
@@ -58,10 +58,10 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("schema 未涵蓋的欄位應保持未標記，不擲例外")]
+        [DisplayName("A column the schema does not cover stays untagged without throwing")]
         public void ApplyFieldDbTypes_ColumnsOutsideSchema_LeftUnmarked()
         {
-            // 查詢可能回傳超出宣告欄位的欄（彙總、運算式），這些欄仍走 CLR 型別反推。
+            // A query may return columns beyond the declared fields (aggregates, expressions), and those still infer from the CLR type.
             var table = BuildProviderTable();
             table.Columns.Add("row_count", typeof(int));
 
@@ -72,10 +72,10 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("schema 宣告了但查詢未回傳的欄位不應擲例外")]
+        [DisplayName("A field the schema declares but the query does not return does not throw")]
         public void ApplyFieldDbTypes_FieldsMissingFromResult_DoNotThrow()
         {
-            // 部分欄位查詢（如只 SELECT sys_rowid）是常態，不可因此失敗。
+            // Partial-column queries (such as selecting only `sys_rowid`) are routine and must not fail.
             var table = new DataTable("Order");
             table.Columns.Add("order_date", typeof(DateTime));
 

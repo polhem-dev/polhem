@@ -11,15 +11,15 @@ namespace Polhem.Definition.UnitTests
     public class DefinitionSerializationTests
     {
         /// <summary>
-        /// 物件序列化。
+        /// Serializes an object.
         /// </summary>
-        /// <param name="value">物件。</param>
-        /// <param name="isXml">測試 XML 序列化。</param>
-        /// <param name="isJson">測試 JSON 序列化。</param>
+        /// <param name="value">The object.</param>
+        /// <param name="isXml">Whether to test XML serialization.</param>
+        /// <param name="isJson">Whether to test JSON serialization.</param>
         private static void SerializeObject<T>(object value, bool isXml = true, bool isJson = true)
         {
-            // XML 序列化：round-trip 後再序列化應與原字串一致，才證明所有欄位都被還原
-            // （只驗 NotNull 會讓「欄位序列化時遺失」的情況假綠燈通過）。
+            // XML: re-serializing after the round-trip must equal the original string; only that proves every field was
+            // restored (checking only NotNull lets a field lost in serialization pass as green).
             if (isXml)
             {
                 string xml = XmlCodec.Serialize(value);
@@ -27,7 +27,7 @@ namespace Polhem.Definition.UnitTests
                 Assert.NotNull(value2);
                 Assert.Equal(xml, XmlCodec.Serialize(value2!));
             }
-            // JSON 序列化：同樣以 re-serialize 相等驗證還原保真度。
+            // JSON: fidelity is verified the same way, by re-serializing and comparing.
             if (isJson)
             {
                 string json = JsonCodec.Serialize(value);
@@ -38,7 +38,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         /// <summary>
-        /// 建立測試資料集。
+        /// Creates the test data set.
         /// </summary>
         private static DataSet CreateDataSet()
         {
@@ -48,7 +48,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         /// <summary>
-        /// 建立測試使用的資料表。
+        /// Creates the data table used by the tests.
         /// </summary>
         private static DataTable CreateDataTable()
         {
@@ -61,10 +61,10 @@ namespace Polhem.Definition.UnitTests
         }
 
         /// <summary>
-        /// 清單項目集合序列化。
+        /// Serialization of the list item collection.
         /// </summary>
         [Fact]
-        [DisplayName("ListItemCollection 序列化與反序列化應正確還原")]
+        [DisplayName("ListItemCollection round-trips through XML and JSON serialization")]
         public void SerializeListItems_XmlAndJson_RoundTripsCorrectly()
         {
             var items = new ListItemCollection
@@ -77,10 +77,10 @@ namespace Polhem.Definition.UnitTests
         }
 
         /// <summary>
-        /// 參數集合序列化。
+        /// Serialization of the parameter collection.
         /// </summary>
         [Fact]
-        [DisplayName("ParameterCollection 序列化與反序列化應正確還原")]
+        [DisplayName("ParameterCollection round-trips through JSON serialization")]
         public void SerializeParameters_Json_RoundTripsCorrectly()
         {
             var parameters = new ParameterCollection
@@ -94,10 +94,10 @@ namespace Polhem.Definition.UnitTests
         }
 
         /// <summary>
-        /// 系統設定序列化。
+        /// Serialization of the system settings.
         /// </summary>
         [Fact]
-        [DisplayName("SystemSettings 序列化與反序列化應正確還原")]
+        [DisplayName("SystemSettings round-trips through XML serialization")]
         public void SerializeSystemSettings_Xml_RoundTripsCorrectly()
         {
             var settings = new SystemSettings();
@@ -107,21 +107,18 @@ namespace Polhem.Definition.UnitTests
         }
 
         /// <summary>
-        /// 測試 Ping 方法參數的序列化。
+        /// Tests serialization of the Ping method arguments.
         /// </summary>
-        [Fact(DisplayName = "PingArgs 與 PingResult 序列化與反序列化應正確還原")]
+        [Fact(DisplayName = "PingArgs and PingResult round-trip through JSON serialization")]
         public void SerializePing_Json_RoundTripsCorrectly()
         {
-            // 建立 TPingArgs 並設定屬性與參數
             var args = new PingArgs
             {
                 ClientName = "TestClient",
                 TraceId = Guid.NewGuid().ToString()
             };
-            // 測試序列化
             SerializeObject<PingArgs>(args, false, true);
 
-            // 建立 TPingResult 並設定屬性與參數
             var result = new PingResult
             {
                 Status = "pong",
@@ -129,14 +126,13 @@ namespace Polhem.Definition.UnitTests
                 Version = "1.2.3",
                 TraceId = Guid.NewGuid().ToString()
             };
-            // 測試序列化
             SerializeObject<PingResult>(result, false, true);
         }
 
         /// <summary>
-        /// 測試 Filters 可正確序列化與還原屬性集合填充。
+        /// Tests that Filters serialize and restore the filled property collections.
         /// </summary>
-        [Fact(DisplayName = "FilterGroup 序列化與反序列化應正確還原")]
+        [Fact(DisplayName = "FilterGroup round-trips through XML and JSON serialization")]
         public void SerializeFilters_XmlAndJson_RoundTripsCorrectly()
         {
             var root = FilterGroup.All(
@@ -146,7 +142,6 @@ namespace Polhem.Definition.UnitTests
                     FilterCondition.Between("HireDate", new DateTime(2024, 1, 1), new DateTime(2024, 12, 31))
                 )
             );
-            // 測試序列化
             SerializeObject<FilterGroup>(root, true, true);
         }
     }

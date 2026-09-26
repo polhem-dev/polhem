@@ -10,9 +10,9 @@ using Polhem.Expressions;
 namespace Polhem.Definition.UnitTests.Forms
 {
     /// <summary>
-    /// <see cref="FormExpressionCalculator"/> 測試：row-level 計算（含 RoundByKind 捨入、宣告順序鏈）、
-    /// 只填空欄的預設值、只回報實際變動欄、以及「來源欄 → 計算欄」相依圖。使用真實
-    /// <see cref="DynamicExpressoEvaluator"/>，純邏輯、無資料庫。
+    /// Tests for <see cref="FormExpressionCalculator"/>: row-level computation (including RoundByKind rounding and declaration-order chains),
+    /// default values that fill only empty columns, reporting only the columns that actually changed, and the "source column → computed column"
+    /// dependency map. Uses the real <see cref="DynamicExpressoEvaluator"/>, pure logic with no database.
     /// </summary>
     public class FormExpressionCalculatorTests
     {
@@ -68,7 +68,7 @@ namespace Polhem.Definition.UnitTests.Forms
             return table;
         }
 
-        // UTC+14：使用者時區的當下與 UTC 當下必定相差 14 小時，斷言兩種基準時不會剛好重疊。
+        // UTC+14: the current time in the user's time zone is always 14 hours from the current UTC time, so assertions on the two bases cannot coincide.
         private const string Kiritimati = "Pacific/Kiritimati";
 
         private static FormSchema BuildStampSchema()
@@ -104,11 +104,11 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyFieldExpressions（伺服端存檔）：Now() 以 UTC 為基準，Today() 仍取使用者時區的今天")]
+        [DisplayName("ApplyFieldExpressions (server save): Now() uses UTC as its basis while Today() still takes today in the user's time zone")]
         public void ApplyFieldExpressions_NowIsUtcBasis_TodayIsUserDay()
         {
-            // 伺服端存檔時 DataSet 已是 UTC（ADR-032 D3）。Now() 若取使用者時區的牆上時間，
-            // 寫進 DateTime 欄就會以使用者時區存進約定存 UTC 的欄位。
+            // On a server save the DataSet is already UTC (ADR-032 D3). If `Now()` took the wall-clock time of the user's time zone,
+            // writing it into a DateTime column would store user-zone time in a column that by convention holds UTC.
             var dataSet = BuildStampDataSet();
             var utcBefore = DateTime.UtcNow;
 
@@ -122,11 +122,11 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ValidateRules（伺服端存檔）：規則裡的 Now() 與 UTC 儲存格以同一基準比較")]
+        [DisplayName("ValidateRules (server save): Now() in a rule is compared with UTC cells on the same basis")]
         public void ValidateRules_NowComparesAgainstUtcCells()
         {
-            // 儲存格是 UTC 的一小時後，以 UTC 比較應判為晚於現在而擋下。
-            // Now() 若取 UTC+14 的牆上時間，這筆會被誤判為早於現在而放行。
+            // The cell is one hour after UTC now, so a UTC comparison judges it later than now and blocks it.
+            // If `Now()` took the UTC+14 wall-clock time, this row would be misjudged as earlier than now and let through.
             var schema = BuildStampSchema();
             schema.Rules!.Add("created_not_future", "created_at <= Now()", "建立時間不得晚於現在");
             var dataSet = BuildStampDataSet();
@@ -138,7 +138,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyDefaultRow（用戶端預覽）：Now() 以使用者時區為基準，因為用戶端的 DataSet 以使用者時區呈現")]
+        [DisplayName("ApplyDefaultRow (client preview): Now() uses the user's time zone as its basis, because the client DataSet is shown in the user's time zone")]
         public void ApplyDefaultRow_NowIsUserZoneBasis()
         {
             var schema = BuildStampSchema();
@@ -152,7 +152,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyComputedRow：amount = price * qty 回填並回報變動欄")]
+        [DisplayName("ApplyComputedRow fills amount = price * qty and reports the changed column")]
         public void ApplyComputedRow_ComputesAndReportsChanged()
         {
             var schema = BuildOrderSchema();
@@ -165,7 +165,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyComputedRow：宣告順序鏈 tax 依 amount（同一次求值取得更新後的 amount）")]
+        [DisplayName("ApplyComputedRow chains in declaration order: tax depends on amount and sees the updated amount in the same evaluation")]
         public void ApplyComputedRow_ChainsInDeclarationOrder()
         {
             var schema = BuildOrderSchema();
@@ -173,17 +173,17 @@ namespace Polhem.Definition.UnitTests.Forms
 
             _calculator.ApplyComputedRow(schema, schema.MasterTable!, table.Rows[0], new RoundingContext());
 
-            // amount = 200；tax = 200 * 0.05 = 10（tax 觀察到同一次求出的 amount，而非舊值）
+            // The amount is 200 and the tax is 200 * 0.05 = 10, because tax sees the amount computed in the same pass, not the old value.
             Assert.Equal(200m, table.Rows[0]["amount"]);
             Assert.Equal(10m, table.Rows[0]["tax"]);
         }
 
         [Fact]
-        [DisplayName("ApplyComputedRow：Amount kind 依 NumberKind 捨入至 2 位（away-from-zero）")]
+        [DisplayName("ApplyComputedRow rounds the Amount kind to 2 places by NumberKind (away from zero)")]
         public void ApplyComputedRow_RoundsByNumberKind()
         {
             var schema = BuildOrderSchema();
-            // 2.125 * 1 = 2.125 → Amount 2 位、四捨五入(away) → 2.13
+            // 2.125 * 1 = 2.125, and Amount rounds to 2 places away from zero, giving 2.13.
             var table = BuildOrderTable(price: 2.125m, qty: 1m);
 
             _calculator.ApplyComputedRow(schema, schema.MasterTable!, table.Rows[0], new RoundingContext());
@@ -192,11 +192,11 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyComputedRow：值未變動時不回報（compare-first，避免事件雜訊）")]
+        [DisplayName("ApplyComputedRow does not report unchanged values (compare first, to avoid event noise)")]
         public void ApplyComputedRow_NoChange_ReturnsEmpty()
         {
             var schema = BuildOrderSchema();
-            // 先填好等於計算結果的 amount / tax，再算一次應無變動
+            // Pre-fill `amount` and `tax` with the computed results, so computing again changes nothing.
             var table = BuildOrderTable(price: 10m, qty: 3m, amount: 30m, tax: 1.5m);
 
             var changed = _calculator.ApplyComputedRow(schema, schema.MasterTable!, table.Rows[0], new RoundingContext());
@@ -205,7 +205,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyDefaultRow：空欄以運算式填入並回報；已有值不覆寫")]
+        [DisplayName("ApplyDefaultRow fills empty columns from expressions and reports them, without overwriting existing values")]
         public void ApplyDefaultRow_FillsOnlyEmpty()
         {
             var schema = BuildOrderSchema();
@@ -213,18 +213,18 @@ namespace Polhem.Definition.UnitTests.Forms
 
             var changed = _calculator.ApplyDefaultRow(schema.MasterTable!, table.Rows[0]);
 
-            // UTC，不是 DateTime.Today：框架的日期預設值是 UtcNow.Date（ADR-032 D12）。
-            // 用本地日斷言會讓本機在 UTC+8 的 00:00–08:00 必定失敗，而 CI 跑 UTC 永遠看不到。
+            // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
+            // Asserting the local date would always fail locally between 00:00 and 08:00 in UTC+8, and CI running in UTC would never see it.
             Assert.Equal(DateTime.UtcNow.Date, table.Rows[0]["order_date"]);
             Assert.Contains("order_date", changed);
 
-            // 第二次呼叫：order_date 已有值 → 不覆寫、不回報
+            // The second call finds `order_date` already set, so it neither overwrites nor reports it.
             var again = _calculator.ApplyDefaultRow(schema.MasterTable!, table.Rows[0]);
             Assert.Empty(again);
         }
 
         [Fact]
-        [DisplayName("欄名大小寫與宣告不同時運算式仍解析：變數以宣告欄名為 key，非 DataColumn 名")]
+        [DisplayName("Expressions still resolve when column casing differs from the declaration: variables are keyed by the declared field name, not the DataColumn name")]
         public void ApplyComputedRow_UppercaseColumnNames_StillResolvesIdentifiers()
         {
             // Columns are deliberately cased differently from the declared (lower-case) field names.
@@ -254,7 +254,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("欄名大小寫與宣告不同時 ValidateRules 仍解析規則識別字（customer_rowid != Guid.Empty 型）")]
+        [DisplayName("ValidateRules still resolves rule identifiers when column casing differs from the declaration")]
         public void ValidateRules_UppercaseColumnNames_StillResolvesIdentifiers()
         {
             var schema = BuildOrderSchema();
@@ -276,7 +276,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("BuildDependencyMap：price / qty → amount；amount → tax（來源欄對映受影響計算欄）")]
+        [DisplayName("BuildDependencyMap maps price / qty to amount and amount to tax (source column to the computed columns it affects)")]
         public void BuildDependencyMap_MapsSourceToComputed()
         {
             var schema = BuildOrderSchema();
@@ -286,12 +286,12 @@ namespace Polhem.Definition.UnitTests.Forms
             Assert.Contains("amount", map["price"]);
             Assert.Contains("amount", map["qty"]);
             Assert.Contains("tax", map["amount"]);
-            // status 不是任何計算欄的來源
+            // `status` is not a source of any computed field.
             Assert.False(map.ContainsKey("status"));
         }
 
         [Fact]
-        [DisplayName("BuildDependencyMap：來源欄 key 大小寫不敏感（對齊 DataTable 欄名查找）")]
+        [DisplayName("BuildDependencyMap source column keys are case-insensitive (matching DataTable column lookup)")]
         public void BuildDependencyMap_KeysAreCaseInsensitive()
         {
             var schema = BuildOrderSchema();
@@ -336,7 +336,7 @@ namespace Polhem.Definition.UnitTests.Forms
         [Theory]
         [InlineData(NumberKind.Quantity)]
         [InlineData(NumberKind.Weight)]
-        [DisplayName("ApplyComputedRow：數量／重量計算欄未綁 UnitField → 擲 InvalidOperationException")]
+        [DisplayName("ApplyComputedRow throws InvalidOperationException for a quantity/weight computed field without a UnitField")]
         public void ApplyComputedRow_UnitKindWithoutUnitField_Throws(NumberKind kind)
         {
             var schema = BuildPackingSchema(kind, unitField: string.Empty);
@@ -348,7 +348,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyComputedRow：未綁 UnitField 的數量輸入欄（非計算欄）不擲")]
+        [DisplayName("ApplyComputedRow does not throw for a quantity input field (not computed) without a UnitField")]
         public void ApplyComputedRow_UnboundQuantityInputField_DoesNotThrow()
         {
             // qty is a Quantity input field with no UnitField; only computed fields are checked.
@@ -362,7 +362,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyComputedRow：綁了單位但該列單位空 → 計算結果不捨入")]
+        [DisplayName("ApplyComputedRow does not round the result when a unit is bound but the row's unit is empty")]
         public void ApplyComputedRow_EmptyRowUnit_NotRounded()
         {
             var schema = BuildPackingSchema(NumberKind.Weight, unitField: "uom");
@@ -375,7 +375,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyComputedRow：綁了單位且該列單位為 KG → 依單位捨入至 3 位")]
+        [DisplayName("ApplyComputedRow rounds to 3 places by unit when a unit is bound and the row's unit is KG")]
         public void ApplyComputedRow_RowUnit_RoundsByUnit()
         {
             var schema = BuildPackingSchema(NumberKind.Weight, unitField: "uom");
@@ -384,7 +384,7 @@ namespace Polhem.Definition.UnitTests.Forms
 
             _calculator.ApplyComputedRow(schema, schema.MasterTable!, table.Rows[0], ctx);
 
-            // 2 * 1.23456 = 2.46912 → KG 3 位 → 2.469
+            // 2 * 1.23456 = 2.46912, and KG rounds to 3 places, giving 2.469.
             Assert.Equal(2.469m, table.Rows[0]["packed"]);
         }
     }

@@ -7,29 +7,26 @@ using Polhem.Base.Security;
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// 測試 SecurityKeys 初始化與解密功能。
+    /// Tests for SecurityKeys initialization and decryption.
     /// </summary>
     public class SecurityKeysTests
     {
         /// <summary>
-        /// 驗證 SecurityKeys 可以正確解密 API 與 Cookie 金鑰。
+        /// Verifies that SecurityKeys decrypts the API and cookie keys correctly.
         /// </summary>
         [Fact]
-        [DisplayName("SecurityKeys 初始化後應正確解密 API 與 Cookie 金鑰")]
+        [DisplayName("SecurityKeys decrypts the API and cookie keys correctly after initialization")]
         public void InitializeSecurityKeys_ValidMasterKey_DecryptsKeysCorrectly()
         {
-            // 建立模擬金鑰
             byte[] masterKey = AesCbcHmacKeyGenerator.GenerateCombinedKey();
             byte[] apiKey = AesCbcHmacKeyGenerator.GenerateCombinedKey();
             byte[] cookieKey = AesCbcHmacKeyGenerator.GenerateCombinedKey();
 
             AesCbcHmacKeyGenerator.FromCombinedKey(masterKey, out byte[] aesKey, out byte[] hmacKey);
 
-            // 加密後產生 base64 字串
             string apiEncrypted = Convert.ToBase64String(AesCbcHmacCryptor.Encrypt(apiKey, aesKey, hmacKey));
             string cookieEncrypted = Convert.ToBase64String(AesCbcHmacCryptor.Encrypt(cookieKey, aesKey, hmacKey));
 
-            // 寫入模擬 master.key 檔案
             string filePath = SaveTempMasterKey(masterKey);
 
             var settings = new SecurityKeySettings
@@ -50,9 +47,9 @@ namespace Polhem.Definition.UnitTests
         }
 
         /// <summary>
-        /// 載入金鑰設定。
+        /// Loads the key settings.
         /// </summary>
-        /// <param name="settings">金鑰設定。</param>
+        /// <param name="settings">The key settings.</param>
         private static void LoadSecurityKey(SecurityKeySettings settings, out byte[] apiKey, out byte[] cookieKey)
         {
             byte[] masterKey = MasterKeyProvider.GetMasterKey(settings.MasterKeySource, definePath: string.Empty);
@@ -60,14 +57,12 @@ namespace Polhem.Definition.UnitTests
 
             apiKey = Array.Empty<byte>();
             cookieKey = Array.Empty<byte>();
-            // 解密 API 金鑰，如果設定中有提供。
             if (StringUtilities.IsNotEmpty(settings.ApiEncryptionKey))
             {
                 byte[] bytes = Convert.FromBase64String(settings.ApiEncryptionKey);
                 apiKey = AesCbcHmacCryptor.Decrypt(bytes, aesKey, hmacKey);
             }
 
-            // 解密 Cookie 金鑰，如果設定中有提供。
             if (StringUtilities.IsNotEmpty(settings.CookieEncryptionKey))
             {
                 byte[] bytes = Convert.FromBase64String(settings.CookieEncryptionKey);
@@ -76,7 +71,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("SecurityKeySettings.ToString 應回傳類別名稱字串")]
+        [DisplayName("SecurityKeySettings.ToString returns the class name")]
         public void SecurityKeySettings_ToString_ReturnsClassName()
         {
             var settings = new SecurityKeySettings();
@@ -85,10 +80,10 @@ namespace Polhem.Definition.UnitTests
         }
 
         /// <summary>
-        /// 將 master key 寫入暫存檔，回傳檔案路徑。
+        /// Writes the master key to a temp file and returns the file path.
         /// </summary>
-        /// <param name="key">金鑰位元組。</param>
-        /// <returns>檔案路徑。</returns>
+        /// <param name="key">The key bytes.</param>
+        /// <returns>The file path.</returns>
         private static string SaveTempMasterKey(byte[] key)
         {
             string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "temp-master.key");

@@ -5,8 +5,9 @@ using Polhem.Definition.Forms;
 namespace Polhem.Definition.UnitTests
 {
     /// <summary>
-    /// <see cref="FormSchema"/> 補測：<see cref="FormSchema.FindField"/> 的主檔／具名表／欄位不存在分支、
-    /// <see cref="FormSchema.GetLookupFields"/> 在無主檔時的早退，以及 <see cref="FormSchema.ToString"/>。
+    /// Additional tests for <see cref="FormSchema"/>: the master, named-table and missing-field branches of
+    /// <see cref="FormSchema.FindField"/>, the early return of <see cref="FormSchema.GetLookupFields"/> when there
+    /// is no master table, and <see cref="FormSchema.ToString"/>.
     /// </summary>
     public class FormSchemaCoverageTests
     {
@@ -23,7 +24,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("FindField：tableName 為空時解析主檔並回傳既有欄位")]
+        [DisplayName("FindField resolves the master table and returns an existing field when tableName is empty")]
         public void FindField_EmptyTableName_ResolvesMasterField()
         {
             var schema = BuildMasterDetailSchema();
@@ -35,7 +36,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("FindField：指定既有具名表可回傳該表欄位")]
+        [DisplayName("FindField returns the field of an existing named table")]
         public void FindField_NamedTablePresent_ResolvesField()
         {
             var schema = BuildMasterDetailSchema();
@@ -47,7 +48,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("FindField：指定的具名表不存在時回傳 null")]
+        [DisplayName("FindField returns null when the named table does not exist")]
         public void FindField_NamedTableAbsent_ReturnsNull()
         {
             var schema = BuildMasterDetailSchema();
@@ -58,7 +59,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("FindField：表存在但欄位不存在時回傳 null")]
+        [DisplayName("FindField returns null when the table exists but the field does not")]
         public void FindField_FieldAbsent_ReturnsNull()
         {
             var schema = BuildMasterDetailSchema();
@@ -69,10 +70,10 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("FindField：主檔不存在（ProgId 未對映表）時回傳 null")]
+        [DisplayName("FindField returns null when there is no master table (the ProgId maps to no table)")]
         public void FindField_NoMasterTable_ReturnsNull()
         {
-            var schema = new FormSchema();   // ProgId 為空 → MasterTable 為 null
+            var schema = new FormSchema();   // An empty ProgId leaves MasterTable null.
 
             var field = schema.FindField("sys_id");
 
@@ -80,10 +81,10 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetLookupFields：無主檔時回傳空清單")]
+        [DisplayName("GetLookupFields returns an empty list when there is no master table")]
         public void GetLookupFields_NoMasterTable_ReturnsEmpty()
         {
-            var schema = new FormSchema();   // 無主檔
+            var schema = new FormSchema();   // No master table.
 
             var fields = schema.GetLookupFields();
 
@@ -91,7 +92,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetLookupFields：有主檔時回傳 sys_id / sys_name 的預設查詢欄位集")]
+        [DisplayName("GetLookupFields returns the default lookup fields sys_id and sys_name when there is a master table")]
         public void GetLookupFields_WithMaster_ReturnsDefaultFields()
         {
             var schema = BuildMasterDetailSchema();
@@ -103,7 +104,7 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("ToString：回傳「ProgId - DisplayName」格式")]
+        [DisplayName("ToString returns the 'ProgId - DisplayName' format")]
         public void ToString_ReturnsProgIdDashDisplayName()
         {
             var schema = new FormSchema("Order", "訂單");

@@ -8,7 +8,7 @@ namespace Polhem.Definition.UnitTests.Logging
 {
     /// <summary>
     /// <see cref="AuditEntry"/> / <see cref="NullAuditLogWriter"/> / <see cref="AuditLogOptions"/>
-    /// 的單元測試：驗證共通欄位組裝、no-op writer 行為與預設選項。
+    /// Unit tests: they verify the assembly of the common columns, the no-op writer behavior and the default options.
     /// </summary>
     public class AuditLoggingTests
     {
@@ -23,7 +23,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("GetColumns 應含共通欄位（含去正規化 user_name/company_name）並附加子類欄位")]
+        [DisplayName("GetColumns contains the common columns (including the denormalized user_name/company_name) followed by the subclass columns")]
         public void GetColumns_IncludesCommonAndSubclassColumns()
         {
             var rowId = Guid.NewGuid();
@@ -54,7 +54,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("GetColumns 順序：sys_rowid 為第一欄、子類欄位在最後")]
+        [DisplayName("GetColumns order: sys_rowid is the first column and the subclass columns come last")]
         public void GetColumns_OrdersCommonFirstThenSubclass()
         {
             var columns = new TestAuditEntry { Extra = "x" }.GetColumns();
@@ -64,7 +64,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("LogTimeUtc 預設為 UTC 時間")]
+        [DisplayName("LogTimeUtc defaults to a UTC time")]
         public void LogTimeUtc_DefaultsToUtc()
         {
             var entry = new TestAuditEntry();
@@ -73,7 +73,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("LoginAuditEntry 目標表與 event/fail_reason 欄位正確")]
+        [DisplayName("LoginAuditEntry has the right target table and event/fail_reason columns")]
         public void LoginAuditEntry_ColumnsAndTable()
         {
             var entry = new LoginAuditEntry
@@ -94,7 +94,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("GetColumns 共通欄位應含呼叫端應用識別（api_key_id / api_key_name）")]
+        [DisplayName("GetColumns common columns include the calling application's identity (api_key_id / api_key_name)")]
         public void GetColumns_IncludesApiKeyIdentity()
         {
             var entry = new TestAuditEntry
@@ -111,7 +111,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("未經金鑰閘門的呼叫，api_key_id / api_key_name 應為 null 而非空字串")]
+        [DisplayName("For a call that did not pass the key gate, api_key_id / api_key_name are null rather than empty strings")]
         public void GetColumns_WithoutApiKey_LeavesIdentityNull()
         {
             var map = new TestAuditEntry { Extra = "x" }.GetColumns().ToDictionary(c => c.Name, c => c.Value);
@@ -121,11 +121,11 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("DbAnomalyEntry 不含共通欄位，因此也不含呼叫端應用識別")]
+        [DisplayName("DbAnomalyEntry has no common columns and therefore no calling application identity")]
         public void DbAnomalyEntry_OmitsApiKeyIdentity()
         {
-            // DB 異常的視角是 database_id + command，沒有「誰在呼叫」——它覆寫掉整組共通欄位，
-            // 新增的識別欄因此自然不會出現在 st_log_anomaly_db。
+            // A DB anomaly is seen from `database_id` + `command`, with no notion of who is calling. It overrides the whole set of common columns,
+            // so the new identity columns naturally do not appear in `st_log_anomaly_db`.
             var entry = new DbAnomalyEntry
             {
                 DatabaseId = "common",
@@ -141,7 +141,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("ChangeAuditEntry 目標表與 prog_id/table_name/row_key/change_kind/is_sensitive/changes_xml 欄位正確")]
+        [DisplayName("ChangeAuditEntry has the right target table and prog_id/table_name/row_key/change_kind/is_sensitive/changes_xml columns")]
         public void ChangeAuditEntry_ColumnsAndTable()
         {
             var entry = new ChangeAuditEntry
@@ -166,7 +166,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("AccessAuditEntry 目標表與 prog_id/row_key 欄位正確（不記欄位）")]
+        [DisplayName("AccessAuditEntry has the right target table and prog_id/row_key columns (no field values recorded)")]
         public void AccessAuditEntry_ColumnsAndTable()
         {
             var entry = new AccessAuditEntry
@@ -189,7 +189,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("ApiAnomalyEntry：目標表 + method/kind/timing 欄位，含共通 who 欄")]
+        [DisplayName("ApiAnomalyEntry has its target table and method/kind/timing columns, plus the common who columns")]
         public void ApiAnomalyEntry_Columns()
         {
             var entry = new ApiAnomalyEntry
@@ -212,7 +212,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("DbAnomalyEntry：精簡（無 who/company），保留 database_id/command/kind")]
+        [DisplayName("DbAnomalyEntry is minimal (no who/company) and keeps database_id/command/kind")]
         public void DbAnomalyEntry_LeanColumns()
         {
             var entry = new DbAnomalyEntry
@@ -241,7 +241,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("DataSet DiffGram 序列化應保留修改欄位的新舊值（changes_xml 設計核心）")]
+        [DisplayName("DataSet DiffGram serialization keeps the old and new values of modified columns (the core of the changes_xml design)")]
         public void DiffGram_PreservesOldAndNewValues()
         {
             var ds = new DataSet("form");
@@ -278,7 +278,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("NullAuditLogWriter.Write 不應拋例外")]
+        [DisplayName("NullAuditLogWriter.Write does not throw")]
         public void NullAuditLogWriter_Write_DoesNotThrow()
         {
             var exception = Record.Exception(() => NullAuditLogWriter.Instance.Write(new TestAuditEntry()));
@@ -287,7 +287,7 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("AuditLogOptions 預設：關閉、背景寫入、檢視記錄關閉")]
+        [DisplayName("AuditLogOptions defaults: disabled, background writer, access logging disabled")]
         public void AuditLogOptions_Defaults()
         {
             var options = new AuditLogOptions();

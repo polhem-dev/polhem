@@ -7,13 +7,13 @@ using Polhem.Definition.Database;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// DatabaseSettings DTO 行為 + DatabaseSettingsCryptor 加解密測試。
-    /// 加解密職責於 Phase 5 從 DTO 移出到獨立靜態工具類，不再依賴 process-wide 加密金鑰。
+    /// Tests for the DatabaseSettings DTO behavior and DatabaseSettingsCryptor encryption and decryption.
+    /// Encryption was moved out of the DTO into a separate static utility class and no longer depends on a process-wide encryption key.
     /// </summary>
     public class DatabaseSettingsTests
     {
         [Fact]
-        [DisplayName("預設建構子應初始化為空集合與預設狀態")]
+        [DisplayName("The default constructor initializes empty collections and the default state")]
         public void DefaultConstructor_InitializesDefaults()
         {
             var settings = new DatabaseSettings();
@@ -27,7 +27,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Servers 於序列化且集合為空時應回傳 null")]
+        [DisplayName("Servers returns null when serializing an empty collection")]
         public void Servers_EmptyDuringSerialize_ReturnsNull()
         {
             var settings = new DatabaseSettings();
@@ -37,7 +37,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Items 於序列化且集合為空時應回傳 null")]
+        [DisplayName("Items returns null when serializing an empty collection")]
         public void Items_EmptyDuringSerialize_ReturnsNull()
         {
             var settings = new DatabaseSettings();
@@ -47,7 +47,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("SetObjectFilePath 應更新檔案路徑")]
+        [DisplayName("SetObjectFilePath updates the file path")]
         public void SetObjectFilePath_UpdatesPath()
         {
             var settings = new DatabaseSettings();
@@ -58,7 +58,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("SetSerializeState 應更新自身狀態")]
+        [DisplayName("SetSerializeState updates the object's own state")]
         public void SetSerializeState_UpdatesState()
         {
             var settings = new DatabaseSettings();
@@ -69,7 +69,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Clone 應深層複製 Servers 與 Items")]
+        [DisplayName("Clone deep-copies Servers and Items")]
         public void Clone_DeepCopiesServersAndItems()
         {
             var settings = new DatabaseSettings();
@@ -106,7 +106,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Cryptor.EncryptInPlace 於 key 為空時不應修改 Password")]
+        [DisplayName("Cryptor.EncryptInPlace does not modify Password when the key is empty")]
         public void Cryptor_EncryptInPlace_NoKey_IsNoOp()
         {
             var settings = new DatabaseSettings();
@@ -120,7 +120,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Cryptor.DecryptInPlace 於 key 為空時不應修改 Password")]
+        [DisplayName("Cryptor.DecryptInPlace does not modify Password when the key is empty")]
         public void Cryptor_DecryptInPlace_NoKey_IsNoOp()
         {
             var settings = new DatabaseSettings();
@@ -134,7 +134,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Cryptor.EncryptInPlace 應加密明文 Password 並加上 enc: 前綴")]
+        [DisplayName("Cryptor.EncryptInPlace encrypts a plaintext Password and adds the enc: prefix")]
         public void Cryptor_EncryptInPlace_EncryptsPlainPassword()
         {
             var key = AesCbcHmacKeyGenerator.GenerateCombinedKey();
@@ -151,7 +151,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Cryptor.EncryptInPlace 不應二次加密已帶 enc: 前綴的 Password")]
+        [DisplayName("Cryptor.EncryptInPlace does not encrypt a Password that already has the enc: prefix again")]
         public void Cryptor_EncryptInPlace_AlreadyEncrypted_NotReEncrypted()
         {
             var key = AesCbcHmacKeyGenerator.GenerateCombinedKey();
@@ -166,7 +166,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Cryptor.Encrypt + Decrypt 應為明文 Password 的往返")]
+        [DisplayName("Cryptor Encrypt and Decrypt round-trip a plaintext Password")]
         public void Cryptor_EncryptThenDecrypt_RoundTripsPassword()
         {
             var key = AesCbcHmacKeyGenerator.GenerateCombinedKey();
@@ -183,7 +183,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Cryptor.DecryptInPlace 於 Password 為明文時不應修改")]
+        [DisplayName("Cryptor.DecryptInPlace does not modify a plaintext Password")]
         public void Cryptor_DecryptInPlace_PlainPassword_LeftUnchanged()
         {
             var key = AesCbcHmacKeyGenerator.GenerateCombinedKey();
@@ -198,7 +198,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Cryptor.EncryptInPlace 作用於 Clone 不應影響來源物件的 Password")]
+        [DisplayName("Cryptor.EncryptInPlace on a Clone does not affect the source object's Password")]
         public void Clone_ThenEncrypt_DoesNotMutateSource()
         {
             var key = AesCbcHmacKeyGenerator.GenerateCombinedKey();
@@ -219,7 +219,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Cryptor.DecryptInPlace 於無效 base64 的 enc: Password 應回傳空字串")]
+        [DisplayName("Cryptor.DecryptInPlace returns an empty string for an enc: Password with invalid base64")]
         public void Cryptor_DecryptInPlace_InvalidBase64_ReturnsEmpty()
         {
             var key = AesCbcHmacKeyGenerator.GenerateCombinedKey();

@@ -9,7 +9,7 @@ namespace Polhem.Definition.UnitTests.Organization
             => new DepartmentNode(Guid.NewGuid(), id, id, Guid.Empty);
 
         [Fact]
-        [DisplayName("AddRange 傳入 null 應直接返回，不拋例外")]
+        [DisplayName("AddRange returns without throwing for null")]
         public void AddRange_NullInput_DoesNotThrow()
         {
             var collection = new DepartmentNodeCollection();
@@ -18,7 +18,7 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("AddRange 傳入空集合應不新增任何節點")]
+        [DisplayName("AddRange adds no nodes for an empty collection")]
         public void AddRange_EmptyCollection_DoesNotAddAny()
         {
             var collection = new DepartmentNodeCollection();
@@ -27,7 +27,7 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("AddRange 集合含 null 元素應略過 null，只新增有效節點")]
+        [DisplayName("AddRange skips null elements and adds only valid nodes")]
         public void AddRange_CollectionWithNullElements_SkipsNulls()
         {
             var collection = new DepartmentNodeCollection();
@@ -38,7 +38,7 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("AddRange 傳入有效節點集合應全部新增至 collection")]
+        [DisplayName("AddRange adds every node of a valid collection")]
         public void AddRange_ValidNodes_AddsAll()
         {
             var collection = new DepartmentNodeCollection();

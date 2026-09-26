@@ -4,12 +4,12 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// ApiPayloadOptions 單元測試。
+    /// Unit tests for ApiPayloadOptions.
     /// </summary>
     public class ApiPayloadOptionsTests
     {
         [Fact]
-        [DisplayName("預設建構子應初始化為預設 Compressor/Encryptor")]
+        [DisplayName("The default constructor initializes the default Compressor and Encryptor")]
         public void DefaultConstructor_InitializesDefaults()
         {
             var options = new ApiPayloadOptions();
@@ -19,7 +19,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("屬性應可被設定並讀回")]
+        [DisplayName("Properties can be set and read back")]
         public void Properties_AreSettable()
         {
             var options = new ApiPayloadOptions
@@ -33,7 +33,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ToString 應回傳完整設定字串")]
+        [DisplayName("ToString returns the full settings string")]
         public void ToString_ReturnsFormatted()
         {
             var options = new ApiPayloadOptions

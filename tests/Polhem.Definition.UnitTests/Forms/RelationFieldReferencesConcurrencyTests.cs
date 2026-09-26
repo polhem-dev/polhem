@@ -6,12 +6,12 @@ using Polhem.Definition.Forms;
 namespace Polhem.Definition.UnitTests.Forms
 {
     /// <summary>
-    /// 驗證 <see cref="FormTable.RelationFieldReferences"/> 的 lazy 建立在並行下只發生一次。
+    /// Verifies that the lazy construction of <see cref="FormTable.RelationFieldReferences"/> happens only once under concurrency.
     /// </summary>
     /// <remarks>
-    /// <c>FormSchema</c> 來自 process-wide 快取，因此兩個請求首次觸碰同一份 schema 時會在此相遇。
-    /// 先前是無保護的 null 檢查：會重複建立、把不同實例交給不同呼叫端，而建立過程本身會擲例外
-    /// （欄位對應有誤時），於是例外從一個看起來只是讀取的 property getter 冒出來、時機還不確定。
+    /// <c>FormSchema</c> comes from the process-wide cache, so two requests touching the same schema for the first time meet here.
+    /// It used to be an unprotected null check: it built the index more than once, handed different instances to different callers, and the build itself throws
+    /// (when a field mapping is wrong), so the exception surfaced from what looks like a read-only property getter, at an unpredictable time.
     /// </remarks>
     public class RelationFieldReferencesConcurrencyTests
     {
@@ -34,7 +34,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("並行首次讀取 RelationFieldReferences 應只建立一份，且每個呼叫端拿到同一個實例")]
+        [DisplayName("Concurrent first reads of RelationFieldReferences build it once and every caller gets the same instance")]
         public void RelationFieldReferences_ConcurrentFirstAccess_YieldsOneInstance()
         {
             var table = BuildTable();
@@ -42,12 +42,12 @@ namespace Polhem.Definition.UnitTests.Forms
             var results = new RelationFieldReferenceCollection[32];
             Parallel.For(0, results.Length, i => results[i] = table.RelationFieldReferences);
 
-            // 不是「都非 null」而是「都是同一個」—— 重複建立正是先前的缺陷。
+            // Not "all non-null" but "all the same instance", because building it more than once was exactly the earlier defect.
             Assert.All(results, r => Assert.Same(results[0], r));
         }
 
         [Fact]
-        [DisplayName("RelationFieldReferences 應正確建出反向索引")]
+        [DisplayName("RelationFieldReferences builds the reverse index correctly")]
         public void RelationFieldReferences_BuildsReverseIndex()
         {
             var references = BuildTable().RelationFieldReferences;

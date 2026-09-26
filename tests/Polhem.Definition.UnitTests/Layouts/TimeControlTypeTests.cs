@@ -11,7 +11,7 @@ namespace Polhem.Definition.UnitTests.Layouts
     public class TimeControlTypeTests
     {
         [Fact]
-        [DisplayName("Time 欄位的 Auto 控件型別應解析為 TimeEdit")]
+        [DisplayName("The Auto control type of a Time field resolves to TimeEdit")]
         public void ResolveControlType_TimeField_ResolvesToTimeEdit()
         {
             Assert.Equal(ControlType.TimeEdit,
@@ -19,7 +19,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("明確指定的控件型別優先於 Time 的預設")]
+        [DisplayName("An explicitly specified control type takes precedence over the Time default")]
         public void ResolveControlType_ExplicitType_Wins()
         {
             Assert.Equal(ControlType.TextEdit,
@@ -27,7 +27,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("TimeEdit 必須位於 ControlType 尾端，避免既有 payload 位移")]
+        [DisplayName("TimeEdit must be at the end of ControlType so existing payloads do not shift")]
         public void TimeEdit_IsAppendedAtEndOfEnum()
         {
             var values = Enum.GetValues<ControlType>();

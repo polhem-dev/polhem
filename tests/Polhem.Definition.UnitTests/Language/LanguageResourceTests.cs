@@ -6,12 +6,12 @@ using Polhem.Definition.Language;
 namespace Polhem.Definition.UnitTests.Language
 {
     /// <summary>
-    /// <see cref="LanguageResource"/> 的核心序列化與查詢測試。
+    /// Core serialization and lookup tests for <see cref="LanguageResource"/>.
     /// </summary>
     public class LanguageResourceTests
     {
         [Fact]
-        [DisplayName("LanguageResource XML round-trip 保留 Namespace / Lang / Items / Enums")]
+        [DisplayName("LanguageResource XML round-trip keeps Namespace / Lang / Items / Enums")]
         public void XmlRoundTrip_PreservesAllFields()
         {
             var original = CreateSample();
@@ -31,7 +31,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LanguageResource XML 屬性以 XmlAttribute 形式輸出（Namespace / Lang）")]
+        [DisplayName("LanguageResource writes Namespace / Lang as XML attributes")]
         public void XmlSerialization_NamespaceAndLang_AsXmlAttributes()
         {
             var resource = CreateSample();
@@ -43,7 +43,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LanguageResource JSON 序列化包含關鍵屬性與巢狀結構（給 JS 端消費）")]
+        [DisplayName("LanguageResource JSON serialization includes the key properties and nested structure (for JS consumers)")]
         public void JsonSerialization_ContainsKeyStructure()
         {
             var resource = CreateSample();
@@ -72,7 +72,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LanguageResource JSON 以 camelCase 輸出屬性名")]
+        [DisplayName("LanguageResource JSON writes property names in camelCase")]
         public void JsonSerialization_PropertyNames_AreCamelCase()
         {
             var resource = CreateSample();
@@ -87,7 +87,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("GetText 命中時回傳對應 value")]
+        [DisplayName("GetText returns the value on a hit")]
         public void GetText_ExistingKey_ReturnsValue()
         {
             var resource = CreateSample();
@@ -97,7 +97,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("GetText 找不到 key 時回傳 null")]
+        [DisplayName("GetText returns null when the key is not found")]
         public void GetText_MissingKey_ReturnsNull()
         {
             var resource = CreateSample();
@@ -106,7 +106,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("GetEnum 命中時回傳對應 LanguageEnum")]
+        [DisplayName("GetEnum returns the matching LanguageEnum on a hit")]
         public void GetEnum_ExistingName_ReturnsEnum()
         {
             var resource = CreateSample();
@@ -120,7 +120,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("GetEnum 找不到名稱時回傳 null")]
+        [DisplayName("GetEnum returns null when the name is not found")]
         public void GetEnum_MissingName_ReturnsNull()
         {
             var resource = CreateSample();
@@ -129,7 +129,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LanguageEnum.GetText 找不到 code 時回傳 null")]
+        [DisplayName("LanguageEnum.GetText returns null when the code is not found")]
         public void LanguageEnum_GetText_MissingCode_ReturnsNull()
         {
             var resource = CreateSample();
@@ -139,7 +139,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("空 LanguageResource 序列化往返應保留空集合")]
+        [DisplayName("An empty LanguageResource keeps its empty collections through a serialization round-trip")]
         public void XmlRoundTrip_EmptyResource_PreservesEmptyCollections()
         {
             var original = new LanguageResource
@@ -161,7 +161,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LanguageItemCollection Add 重複 key 應 throw")]
+        [DisplayName("LanguageItemCollection Add throws for a duplicate key")]
         public void LanguageItemCollection_DuplicateKey_Throws()
         {
             var resource = new LanguageResource { Namespace = "Test", Lang = "en-US" };
@@ -171,7 +171,7 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("LanguageItemCollection 透過 key indexer 取得 item")]
+        [DisplayName("LanguageItemCollection gets an item through the key indexer")]
         public void LanguageItemCollection_KeyIndexer_RetrievesItem()
         {
             var resource = CreateSample();

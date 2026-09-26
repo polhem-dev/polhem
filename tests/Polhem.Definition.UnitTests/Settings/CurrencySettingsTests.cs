@@ -5,8 +5,8 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// CurrencySettings（系統層幣別主檔）：GetRounding / GetDecimals（因子反推）/ fallback，
-    /// 以及三棲（XML / JSON）round-trip。
+    /// CurrencySettings (the system-level currency master): GetRounding, GetDecimals (derived from the rounding factor),
+    /// fallback, and the XML / JSON round-trips.
     /// </summary>
     public class CurrencySettingsTests
     {
@@ -18,7 +18,7 @@ namespace Polhem.Definition.UnitTests.Settings
         ];
 
         [Fact]
-        [DisplayName("GetRounding 命中應回該幣別自然最小單位")]
+        [DisplayName("GetRounding returns the currency's natural smallest unit on a hit")]
         public void GetRounding_Hit_ReturnsRounding()
         {
             var settings = BuildSettings();
@@ -29,7 +29,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("GetRounding 未命中應退 fallback 0.01")]
+        [DisplayName("GetRounding falls back to 0.01 on a miss")]
         public void GetRounding_Miss_ReturnsFallback()
         {
             var settings = BuildSettings();
@@ -39,7 +39,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("GetRounding 幣別碼比對應不分大小寫")]
+        [DisplayName("GetRounding matches currency codes case-insensitively")]
         public void GetRounding_CaseInsensitive()
         {
             var settings = BuildSettings();
@@ -52,7 +52,7 @@ namespace Polhem.Definition.UnitTests.Settings
         [InlineData("JPY", 0)]
         [InlineData("BHD", 3)]
         [InlineData("XXX", 2)] // fallback 0.01 → 2
-        [DisplayName("GetDecimals 由因子反推顯示位數")]
+        [DisplayName("GetDecimals derives the display decimals from the rounding factor")]
         public void GetDecimals_DerivesFromRounding(string code, int expected)
         {
             var settings = BuildSettings();
@@ -67,7 +67,7 @@ namespace Polhem.Definition.UnitTests.Settings
         [InlineData("10", 0)]
         [InlineData("0.05", 2)]
         [InlineData("0", 0)]
-        [DisplayName("DecimalsFromRounding 由因子計算位數（decimal-safe）")]
+        [DisplayName("DecimalsFromRounding computes the decimals from the rounding factor (decimal-safe)")]
         public void DecimalsFromRounding_ComputesDecimals(string roundingText, int expected)
         {
             var rounding = decimal.Parse(roundingText, System.Globalization.CultureInfo.InvariantCulture);
@@ -76,7 +76,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Find 命中回項目、未命中回 null")]
+        [DisplayName("Find returns the item on a hit and null on a miss")]
         public void Find_HitAndMiss()
         {
             var settings = BuildSettings();
@@ -86,7 +86,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("CurrencySettings XML 序列化應正確還原所有欄位")]
+        [DisplayName("CurrencySettings round-trips every field through XML serialization")]
         public void CurrencySettings_XmlRoundtrip_PreservesItems()
         {
             var original = BuildSettings();
@@ -107,7 +107,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("CurrencySettings JSON 序列化應正確還原所有欄位")]
+        [DisplayName("CurrencySettings round-trips every field through JSON serialization")]
         public void CurrencySettings_JsonRoundtrip_PreservesItems()
         {
             var original = BuildSettings();

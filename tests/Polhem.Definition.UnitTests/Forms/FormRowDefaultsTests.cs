@@ -24,7 +24,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Apply 應原樣保留 master sys_rowid 的字串大小寫於 sys_master_rowid")]
+        [DisplayName("Apply keeps the string casing of the master sys_rowid as is in sys_master_rowid")]
         public void Apply_PreservesMasterRowIdStringCasing()
         {
             var detail = BuildDetailTable();
@@ -43,7 +43,7 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Apply 以 Guid master row id 應原樣寫入 sys_master_rowid")]
+        [DisplayName("Apply writes a Guid master row id to sys_master_rowid as is")]
         public void Apply_GuidMasterRowId_WritesVerbatim()
         {
             var detail = BuildDetailTable();

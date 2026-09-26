@@ -5,12 +5,12 @@ using Polhem.Definition.Security;
 namespace Polhem.Definition.UnitTests.Settings
 {
     /// <summary>
-    /// MasterKeySource 測試。
+    /// Tests for MasterKeySource.
     /// </summary>
     public class MasterKeySourceTests
     {
         [Fact]
-        [DisplayName("預設建構子應以 Type=Environment、Value=空字串 初始化")]
+        [DisplayName("The default constructor initializes Type=Environment and an empty Value")]
         public void DefaultConstructor_InitializesDefaults()
         {
             var source = new MasterKeySource();
@@ -20,7 +20,7 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("屬性應可被設定並讀回")]
+        [DisplayName("Properties can be set and read back")]
         public void Properties_AreSettable()
         {
             var source = new MasterKeySource
@@ -36,7 +36,7 @@ namespace Polhem.Definition.UnitTests.Settings
         [Theory]
         [InlineData(MasterKeySourceType.File, "File")]
         [InlineData(MasterKeySourceType.Environment, "Environment")]
-        [DisplayName("ToString 應回傳 Type 的字串表示")]
+        [DisplayName("ToString returns the string form of Type")]
         public void ToString_ReturnsTypeName(MasterKeySourceType type, string expected)
         {
             var source = new MasterKeySource { Type = type };

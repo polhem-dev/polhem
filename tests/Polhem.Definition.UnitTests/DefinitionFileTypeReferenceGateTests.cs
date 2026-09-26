@@ -21,7 +21,7 @@ namespace Polhem.Definition.UnitTests
             RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
         [Fact]
-        [DisplayName("定義檔中的組件限定型別名稱都指得到存在的專案與型別")]
+        [DisplayName("Assembly-qualified type names in definition files resolve to existing projects and types")]
         public void DefinitionFiles_TypeReferencesResolveToDeclaredTypes()
         {
             var root = FindRepositoryRoot();

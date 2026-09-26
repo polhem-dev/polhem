@@ -10,14 +10,14 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition.UnitTests.Storage
 {
     /// <summary>
-    /// FileDefineStorage 讀寫 XML 檔案的行為測試。
-    /// 各測試使用隔離的臨時目錄做為 DefinePath（透過 <c>WithTempDefinePath</c>），
-    /// 不操弄 <see cref="DefinePathInfo"/> 等 process-wide static，可與其他 test class 平行執行。
+    /// Tests for how FileDefineStorage reads and writes XML files.
+    /// Each test uses an isolated temp directory as DefinePath (through <c>WithTempDefinePath</c>) and does not touch
+    /// process-wide statics such as <c>DefinePathInfo</c>, so it can run in parallel with other test classes.
     /// </summary>
     public class FileDefineStorageTests
     {
         [Fact]
-        [DisplayName("SaveFormSchema / GetFormSchema 應可寫入後讀回相同結構")]
+        [DisplayName("SaveFormSchema / GetFormSchema writes and reads back the same structure")]
         public void SaveAndGetFormSchema_RoundTrips()
         {
             WithTempDefinePath(paths =>
@@ -40,7 +40,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetFormSchema 檔案不存在應拋出 FileNotFoundException")]
+        [DisplayName("GetFormSchema throws FileNotFoundException for a missing file")]
         public void GetFormSchema_FileNotFound_Throws()
         {
             WithTempDefinePath(paths =>
@@ -54,7 +54,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("SaveTableSchema / GetTableSchema 應可寫入後讀回")]
+        [DisplayName("SaveTableSchema / GetTableSchema writes and reads back")]
         public void SaveAndGetTableSchema_RoundTrips()
         {
             WithTempDefinePath(paths =>
@@ -76,7 +76,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetTableSchema 檔案不存在應拋出 FileNotFoundException")]
+        [DisplayName("GetTableSchema throws FileNotFoundException for a missing file")]
         public void GetTableSchema_FileNotFound_Throws()
         {
             WithTempDefinePath(paths =>
@@ -90,7 +90,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("SaveFormLayout / GetFormLayout 應可寫入後讀回")]
+        [DisplayName("SaveFormLayout / GetFormLayout writes and reads back")]
         public void SaveAndGetFormLayout_RoundTrips()
         {
             WithTempDefinePath(paths =>
@@ -110,7 +110,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetFormLayout 檔案不存在應回 null（履行介面宣告的 nullable 契約）")]
+        [DisplayName("GetFormLayout returns null for a missing file (honoring the nullable contract declared by the interface)")]
         public void GetFormLayout_FileNotFound_ReturnsNull()
         {
             WithTempDefinePath(paths =>
@@ -118,19 +118,19 @@ namespace Polhem.Definition.UnitTests.Storage
                 // Arrange
                 var storage = new FileDefineStorage(paths);
 
-                // Act & Assert —— 缺 layout 檔是正常情境（框架改以 FormSchema 生成），不是錯誤
+                // Act & Assert: a missing layout file is a normal case (the framework generates one from the FormSchema), not an error.
                 Assert.Null(storage.GetFormLayout("missing"));
             });
         }
 
         [Fact]
-        [DisplayName("SaveDbCategorySettings / GetDbCategorySettings 應可寫入後讀回")]
+        [DisplayName("SaveDbCategorySettings / GetDbCategorySettings writes and reads back")]
         public void SaveAndGetDbCategorySettings_RoundTrips()
         {
             WithTempDefinePath(paths =>
             {
-                // Arrange —— 存空實例再讀回只證明「檔案存在且反序列化不擲例外」，
-                // 證不到內容有寫進去，故填入可辨識的資料。
+                // Arrange: saving an empty instance and reading it back only proves that the file exists and deserializes without
+                // throwing, not that the content was written, so recognizable data is filled in.
                 var storage = new FileDefineStorage(paths);
                 var settings = new DbCategorySettings();
                 settings.Categories!.Add(new DbCategory { Id = "common", DisplayName = "共用資料庫" });
@@ -147,7 +147,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetDbCategorySettings 檔案不存在應拋出 FileNotFoundException")]
+        [DisplayName("GetDbCategorySettings throws FileNotFoundException for a missing file")]
         public void GetDbCategorySettings_FileNotFound_Throws()
         {
             WithTempDefinePath(paths =>
@@ -161,12 +161,12 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("SaveProgramSettings / GetProgramSettings 應可寫入後讀回")]
+        [DisplayName("SaveProgramSettings / GetProgramSettings writes and reads back")]
         public void SaveAndGetProgramSettings_RoundTrips()
         {
             WithTempDefinePath(paths =>
             {
-                // 理由同 SaveAndGetDbCategorySettings_RoundTrips。
+                // Same reason as in `SaveAndGetDbCategorySettings_RoundTrips`.
                 var storage = new FileDefineStorage(paths);
                 var settings = new ProgramSettings();
                 settings.Items!.Add(new ProgramItem("Employee", "員工資料"));
@@ -181,7 +181,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetProgramSettings 檔案不存在應拋出 FileNotFoundException")]
+        [DisplayName("GetProgramSettings throws FileNotFoundException for a missing file")]
         public void GetProgramSettings_FileNotFound_Throws()
         {
             WithTempDefinePath(paths =>
@@ -192,7 +192,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("SaveLanguage / GetLanguage 應可寫入後讀回相同語言資源")]
+        [DisplayName("SaveLanguage / GetLanguage writes and reads back the same language resource")]
         public void SaveAndGetLanguage_RoundTrips()
         {
             WithTempDefinePath(paths =>
@@ -210,7 +210,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("GetLanguage 檔案不存在應回傳 null（非拋例外）")]
+        [DisplayName("GetLanguage returns null for a missing file (instead of throwing)")]
         public void GetLanguage_FileNotFound_ReturnsNull()
         {
             WithTempDefinePath(paths =>
@@ -222,7 +222,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("SaveMenuSettings / GetMenuSettings 應可寫入後讀回巢狀結構")]
+        [DisplayName("SaveMenuSettings / GetMenuSettings writes and reads back the nested structure")]
         public void SaveAndGetMenuSettings_RoundTrips()
         {
             WithTempDefinePath(paths =>
@@ -246,7 +246,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("MenuSettings.xml 不存在時 GetMenuSettings 應回傳 null（無選單的部署屬正常）")]
+        [DisplayName("GetMenuSettings returns null when MenuSettings.xml does not exist (a deployment without a menu is normal)")]
         public void GetMenuSettings_FileMissing_ReturnsNull()
         {
             WithTempDefinePath(paths =>
@@ -258,7 +258,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("MenuSettings 全樹 Id 重複時 GetMenuSettings 應於載入期拋出")]
+        [DisplayName("GetMenuSettings throws at load time when an Id is duplicated anywhere in the MenuSettings tree")]
         public void GetMenuSettings_DuplicateIdAcrossTree_Throws()
         {
             WithTempDefinePath(paths =>
@@ -283,7 +283,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("舊版巢狀 ProgramSettings.xml 應於載入期拋出並指向遷移命令，而非靜默讀成空註冊表")]
+        [DisplayName("A legacy nested ProgramSettings.xml throws at load time and points to the migration command, instead of silently reading as an empty registry")]
         public void GetProgramSettings_LegacyLayout_ThrowsPointingAtMigration()
         {
             WithTempDefinePath(paths =>
@@ -306,7 +306,7 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("攤平後的註冊表項目（含 BusinessObject）應可寫入後讀回")]
+        [DisplayName("Flattened registry items (including BusinessObject) write and read back")]
         public void SaveAndGetProgramSettings_FlatItems_RoundTrip()
         {
             WithTempDefinePath(paths =>
@@ -324,8 +324,8 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         /// <summary>
-        /// 建立新的臨時目錄並把對應的 <see cref="PathOptions"/> 傳給 <paramref name="action"/>，
-        /// 測試結束後刪除目錄。Tests inject the supplied <see cref="PathOptions"/> directly into
+        /// Creates a new temp directory, passes the matching <see cref="PathOptions"/> to <paramref name="action"/>, and
+        /// deletes the directory after the test. Tests inject the supplied <see cref="PathOptions"/> directly into
         /// <see cref="FileDefineStorage"/> rather than relying on the shared
         /// <see cref="DefinePathInfo"/> static facade.
         /// </summary>

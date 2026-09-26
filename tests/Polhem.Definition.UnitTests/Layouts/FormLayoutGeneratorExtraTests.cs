@@ -6,9 +6,9 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Definition.UnitTests.Layouts
 {
     /// <summary>
-    /// FormLayoutGenerator 補強測試：
-    /// 涵蓋 Detail Grid 的 ControlType 推導、系統欄位白名單（sys_rowid + sys_master_rowid），
-    /// 以及主檔／明細表的空欄位邊界。
+    /// Additional tests for FormLayoutGenerator:
+    /// the ControlType inference of detail grids, the system field allowlist (sys_rowid + sys_master_rowid),
+    /// and the empty-field edge cases of master and detail tables.
     /// </summary>
     public class FormLayoutGeneratorExtraTests
     {
@@ -28,7 +28,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         [InlineData(ControlType.DropDownEdit, ControlType.DropDownEdit)]
         [InlineData(ControlType.CheckEdit, ControlType.CheckEdit)]
         [InlineData(ControlType.MemoEdit, ControlType.MemoEdit)]
-        [DisplayName("FormLayoutGenerator.Generate 明細表非 Auto ControlType 應原樣保留")]
+        [DisplayName("FormLayoutGenerator.Generate keeps a non-Auto ControlType of a detail table as is")]
         public void Generate_DetailTable_NonAutoControlType_PreservesValue(
             ControlType controlType, ControlType expected)
         {
@@ -48,7 +48,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         [InlineData(FieldDbType.Text, ControlType.MemoEdit)]
         [InlineData(FieldDbType.String, ControlType.TextEdit)]
         [InlineData(FieldDbType.Integer, ControlType.NumericEdit)]
-        [DisplayName("FormLayoutGenerator.Generate 明細表 ControlType=Auto 應依 DbType 推導 ControlType")]
+        [DisplayName("FormLayoutGenerator.Generate infers the ControlType from the DbType for ControlType=Auto in a detail table")]
         public void Generate_DetailTable_AutoControlType_MapsDbTypeToControlType(
             FieldDbType dbType, ControlType expected)
         {
@@ -63,7 +63,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate 明細表 Width 應原樣傳遞至 LayoutColumn")]
+        [DisplayName("FormLayoutGenerator.Generate passes the Width of a detail table through to LayoutColumn")]
         public void Generate_DetailTable_PassesWidth()
         {
             var schema = BuildMasterDetailSchema();
@@ -77,7 +77,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate 明細表 Width=0 應保留 0（auto/未設）")]
+        [DisplayName("FormLayoutGenerator.Generate keeps a detail table Width=0 as 0 (auto/unset)")]
         public void Generate_DetailTable_WidthZero_StaysZero()
         {
             var schema = BuildMasterDetailSchema();
@@ -91,7 +91,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate 明細表應跳過 Visible=false 的非系統欄位")]
+        [DisplayName("FormLayoutGenerator.Generate skips non-system fields with Visible=false in a detail table")]
         public void Generate_DetailTable_SkipsInvisibleNonSystemFields()
         {
             var schema = BuildMasterDetailSchema();
@@ -107,7 +107,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate 明細表所有欄位皆不可見時不應新增對應 Grid")]
+        [DisplayName("FormLayoutGenerator.Generate adds no grid for a detail table whose fields are all invisible")]
         public void Generate_DetailTable_AllFieldsInvisible_DoesNotAddGrid()
         {
             var schema = BuildMasterDetailSchema();
@@ -120,7 +120,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate 明細表存在 sys_rowid 應補入 Grid 並設為 Visible=false")]
+        [DisplayName("FormLayoutGenerator.Generate adds an existing sys_rowid of a detail table to the grid with Visible=false")]
         public void Generate_DetailTable_AddsHiddenRowIdColumn()
         {
             var schema = BuildMasterDetailSchema();
@@ -137,7 +137,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate 明細表存在 sys_master_rowid 應補入 Grid 並設為 Visible=false")]
+        [DisplayName("FormLayoutGenerator.Generate adds an existing sys_master_rowid of a detail table to the grid with Visible=false")]
         public void Generate_DetailTable_AddsHiddenMasterRowIdColumn()
         {
             var schema = BuildMasterDetailSchema();
@@ -154,7 +154,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate 主檔不會自動補入系統欄位（白名單僅作用於 Grid）")]
+        [DisplayName("FormLayoutGenerator.Generate does not add system fields to the master automatically (the allowlist applies only to grids)")]
         public void Generate_MasterSection_DoesNotAutoAddSystemFields()
         {
             var schema = new FormSchema("Demo", "示範");
@@ -169,10 +169,10 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator.Generate 無主檔時主檔 Section 不產生，僅保留明細 Grid")]
+        [DisplayName("FormLayoutGenerator.Generate produces no master Section without a master table and keeps only the detail grid")]
         public void Generate_NoMasterTable_OnlyDetailGrid()
         {
-            // ProgId 與 Tables 不匹配 → MasterTable 為 null
+            // The ProgId does not match any table, so `MasterTable` is null.
             var schema = new FormSchema("NotExist", "不存在");
             var other = schema.Tables!.Add("Other", "其他");
             other.Fields!.Add("col", "欄", FieldDbType.String);
@@ -187,7 +187,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        [DisplayName("FormLayoutGenerator.Generate 主檔欄位 FormField.ReadOnly 應傳遞到 LayoutField.ReadOnly")]
+        [DisplayName("FormLayoutGenerator.Generate passes FormField.ReadOnly of a master field to LayoutField.ReadOnly")]
         public void Generate_MasterField_PropagatesReadOnly(bool readOnly)
         {
             var schema = new FormSchema("Demo", "示範");
@@ -203,7 +203,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        [DisplayName("FormLayoutGenerator.Generate 明細欄位 FormField.ReadOnly 應傳遞到 LayoutColumn.ReadOnly")]
+        [DisplayName("FormLayoutGenerator.Generate passes FormField.ReadOnly of a detail field to LayoutColumn.ReadOnly")]
         public void Generate_DetailColumn_PropagatesReadOnly(bool readOnly)
         {
             var schema = BuildMasterDetailSchema();

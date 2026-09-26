@@ -5,12 +5,12 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Definition.UnitTests.Layouts
 {
     /// <summary>
-    /// LayoutColumn 單元測試。
+    /// Unit tests for LayoutColumn.
     /// </summary>
     public class LayoutColumnTests
     {
         [Fact]
-        [DisplayName("預設建構子應初始化為對應預設值")]
+        [DisplayName("Default constructor initializes the expected default values")]
         public void DefaultConstructor_InitializesDefaults()
         {
             var column = new LayoutColumn();
@@ -26,7 +26,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("帶參數建構子應設定 FieldName、Caption 與 ControlType")]
+        [DisplayName("Parameterized constructor sets FieldName, Caption and ControlType")]
         public void ParameterizedConstructor_SetsProperties()
         {
             var column = new LayoutColumn("Amount", "金額", ControlType.TextEdit);
@@ -37,7 +37,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ToString 應回傳 \"FieldName - Caption\"")]
+        [DisplayName("ToString returns \"FieldName - Caption\"")]
         public void ToString_ReturnsFormatted()
         {
             var column = new LayoutColumn("Amount", "金額", ControlType.TextEdit);
@@ -46,7 +46,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ExtendedProperties 未序列化狀態應回傳集合實例")]
+        [DisplayName("ExtendedProperties returns the collection instance when not serializing")]
         public void ExtendedProperties_DefaultState_ReturnsCollection()
         {
             var column = new LayoutColumn();
@@ -55,7 +55,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("ExtendedProperties 於序列化且集合為空時應回傳 null")]
+        [DisplayName("ExtendedProperties returns null when serializing an empty collection")]
         public void ExtendedProperties_EmptyDuringSerialize_ReturnsNull()
         {
             var column = new LayoutColumn();
@@ -65,7 +65,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("SetSerializeState 應設定自身狀態")]
+        [DisplayName("SetSerializeState sets the object's own state")]
         public void SetSerializeState_UpdatesState()
         {
             var column = new LayoutColumn();
@@ -76,7 +76,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("屬性應可被設定並讀回")]
+        [DisplayName("Properties can be set and read back")]
         public void Properties_AreSettable()
         {
             var column = new LayoutColumn
