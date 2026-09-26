@@ -33,13 +33,13 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("JsonRpcExecutor.IsLocalCall 預設須為 false（LocalOnly 保護的基礎）")]
+        [DisplayName("JsonRpcExecutor.IsLocalCall defaults to false (the basis of LocalOnly protection)")]
         public void IsLocalCall_Default_IsFalse()
         {
-            // LocalOnly 方法（如 SystemBO.CreateSession / SaveDefine）的整套保護建立在這個
-            // 預設值上：ApiAccessValidator 只在 IsLocalCall 為 false 時擋下遠端呼叫。
-            // 預設為 false 表示「忘了設」會落在安全的一邊；改成 true 或移除初始值會讓
-            // 任何未明確設值的呼叫路徑取得本地呼叫權限。
+            // The whole protection of LocalOnly methods (such as `SystemBO.CreateSession` and `SaveDefine`) rests on
+            // this default: `ApiAccessValidator` blocks remote calls only when `IsLocalCall` is false.
+            // A false default means "forgot to set it" lands on the safe side. Changing it to true or removing the
+            // initial value would give local call rights to any call path that does not set it explicitly.
             var executor = new JsonRpcExecutor(
                 _fx.GetRequiredService<IBusinessObjectFactory>(),
                 _fx.GetRequiredService<IAccessTokenValidator>(),
@@ -49,15 +49,14 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 執行 API 方法。
+        /// Executes an API method.
         /// </summary>
-        /// <param name="accessToken">存取權杖。</param>
-        /// <param name="progId">程式代碼。</param>
-        /// <param name="action">執行動作。</param>
-        /// <param name="value">傳入值。</param>
+        /// <param name="accessToken">The access token.</param>
+        /// <param name="progId">The program ID.</param>
+        /// <param name="action">The action to execute.</param>
+        /// <param name="value">The value passed in.</param>
         private T ApiExecute<T>(Guid accessToken, string progId, string action, object value)
         {
-            // 設定 JSON-RPC 請求模型
             var request = new JsonRpcRequest()
             {
                 Method = $"{progId}.{action}",
@@ -74,7 +73,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 取得有效的測試 AccessToken（直接在 SessionInfoService 植入，不經過 Login）。
+        /// Gets a valid test AccessToken (planted directly in SessionInfoService, without going through Login).
         /// </summary>
         private Guid GetAccessToken()
         {
@@ -84,10 +83,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 透過 API 執行 Ping 方法。
+        /// Executes the Ping method through the API.
         /// </summary>
         [Fact]
-        [DisplayName("Ping 應回傳正確狀態與追蹤識別碼")]
+        [DisplayName("Ping returns the correct status and trace ID")]
         public void Ping_ValidRequest_ReturnsOkStatus()
         {
             var args = new PingRequest()
@@ -102,10 +101,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 測試 GetCommonConfiguration 方法。
+        /// Tests the GetCommonConfiguration method.
         /// </summary>
         [Fact]
-        [DisplayName("GetCommonConfiguration 應回傳非 null 結果")]
+        [DisplayName("GetCommonConfiguration returns a non-null result")]
         public void GetCommonConfiguration_ValidRequest_ReturnsNotNull()
         {
             var args = new GetCommonConfigurationRequest();
@@ -114,14 +113,14 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 模擬 JS 前端送 Plain 格式但完全省略 params.type 欄位，
-        /// 驗證 server 仍能透過 BO 方法 reflection 拿到目標型別並正確反序列化。
+        /// Simulates a JS front end sending Plain format with the params.type field omitted entirely, and verifies
+        /// that the server still gets the target type through reflection on the BO method and deserializes correctly.
         /// </summary>
         [Fact]
-        [DisplayName("Plain 格式不帶 type 欄位 server 應正常反序列化")]
+        [DisplayName("The server deserializes Plain format without a type field normally")]
         public void Ping_PlainWithoutTypeField_DeserializesAndReturnsOk()
         {
-            // params 內完全沒有 "type" 欄位 — 模擬 JS 原生送出的 JSON
+            // The params have no "type" field at all, simulating JSON sent natively from JS.
             const string json = """
                 {
                     "jsonrpc": "2.0",
@@ -137,7 +136,7 @@ namespace Polhem.Api.Core.UnitTests
             var request = JsonCodec.Deserialize<JsonRpcRequest>(json);
             Assert.NotNull(request);
             Assert.Equal(PayloadFormat.Plain, request.Params.Format);
-            Assert.Equal(string.Empty, request.Params.TypeName); // type 未送 → 預設空字串
+            Assert.Equal(string.Empty, request.Params.TypeName); // An unsent type defaults to an empty string.
 
             var executor = NewExecutor(Guid.Empty);
             var response = executor.Execute(request);
@@ -150,11 +149,11 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 模擬 JS 前端送 Plain 格式且 params.type 為空字串，
-        /// 驗證 server 行為與「完全省略 type」一致。
+        /// Simulates a JS front end sending Plain format with an empty params.type, and verifies that the server
+        /// behaves the same as when the type is omitted entirely.
         /// </summary>
         [Fact]
-        [DisplayName("Plain 格式 type 為空字串 server 應正常反序列化")]
+        [DisplayName("The server deserializes Plain format with an empty type normally")]
         public void Ping_PlainWithEmptyTypeField_DeserializesAndReturnsOk()
         {
             const string json = """
@@ -183,11 +182,11 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 模擬 JS 前端送 Plain 格式且 params.type 帶錯誤型別字串，
-        /// 驗證 Plain 路徑完全不讀 type 欄位 (RestoreFrom 在 Plain 分支前 early-return)。
+        /// Simulates a JS front end sending Plain format with a bogus type string in params.type, and verifies that the
+        /// Plain path never reads the type field (RestoreFrom returns early before the Plain branch).
         /// </summary>
         [Fact]
-        [DisplayName("Plain 格式 type 帶錯誤型別字串 server 應忽略並正常反序列化")]
+        [DisplayName("The server ignores a bogus type string in Plain format and deserializes normally")]
         public void Ping_PlainWithBogusTypeField_IgnoresTypeAndReturnsOk()
         {
             const string json = """
@@ -210,8 +209,8 @@ namespace Polhem.Api.Core.UnitTests
             var executor = NewExecutor(Guid.Empty);
             var response = executor.Execute(request);
 
-            // 若 Plain 路徑讀了 type，這裡會炸 (whitelist 拒絕 / 無法載入型別)；
-            // 不炸代表框架完全忽略 type，靠 BO 方法 reflection 拿到 PingRequest。
+            // If the Plain path read the type, this would fail (whitelist rejection or a type that cannot load).
+            // Not failing means the framework ignores the type entirely and gets `PingRequest` by reflection on the BO method.
             Assert.Null(response.Error);
             var result = response.Result!.Value as PingResponse;
             Assert.NotNull(result);
@@ -219,16 +218,14 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 透過 API 執行 Hello 方法。
+        /// Executes the Hello method through the API.
         /// </summary>
         [Fact]
-        [DisplayName("ExecFunc 執行 Hello 應回傳非 null 結果")]
+        [DisplayName("ExecFunc running Hello returns a non-null result")]
         public void ExecFunc_Hello_ReturnsNotNull()
         {
-            // 取得 AccessToken
             Guid accessToken = GetAccessToken();
 
-            // 設定 JSON-RPC 請求模型
             var request = new JsonRpcRequest()
             {
                 Method = $"{SysProgIds.System}.ExecFunc",
@@ -240,12 +237,10 @@ namespace Polhem.Api.Core.UnitTests
             };
 
             _ = request.ToJson();
-            // 執行 API 方法
             var executor = NewExecutor(accessToken);
             var response = executor.Execute(request);
-            // 取得 ExecFunc 方法傳出結果
             var execFuncResult = response.Result!.Value as ExecFuncResponse;
-            Assert.NotNull(execFuncResult);  // 確認 ExecFunc 方法傳出結果不為 null
+            Assert.NotNull(execFuncResult);
         }
     }
 }

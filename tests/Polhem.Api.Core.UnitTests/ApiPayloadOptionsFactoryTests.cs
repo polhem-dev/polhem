@@ -4,13 +4,13 @@ using Polhem.Api.Core.Transformers;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// ApiPayloadOptionsFactory 測試。
+    /// ApiPayloadOptionsFactory tests.
     /// </summary>
     public class ApiPayloadOptionsFactoryTests
     {
 
         [Fact]
-        [DisplayName("CreateCompressor(\"gzip\") 應回傳 GzipPayloadCompressor")]
+        [DisplayName("CreateCompressor(\"gzip\") returns GzipPayloadCompressor")]
         public void CreateCompressor_Gzip_ReturnsGzipCompressor()
         {
             var compressor = ApiPayloadOptionsFactory.CreateCompressor("gzip");
@@ -21,7 +21,7 @@ namespace Polhem.Api.Core.UnitTests
         [Theory]
         [InlineData("none")]
         [InlineData("")]
-        [DisplayName("CreateCompressor(\"none\"/\"\") 應回傳 NoCompressionCompressor")]
+        [DisplayName("CreateCompressor(\"none\"/\"\") returns NoCompressionCompressor")]
         public void CreateCompressor_None_ReturnsNoCompressionCompressor(string name)
         {
             var compressor = ApiPayloadOptionsFactory.CreateCompressor(name);
@@ -30,14 +30,14 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateCompressor 傳入未支援名稱應拋出 NotSupportedException")]
+        [DisplayName("CreateCompressor throws NotSupportedException for an unsupported name")]
         public void CreateCompressor_Unknown_Throws()
         {
             Assert.Throws<NotSupportedException>(() => ApiPayloadOptionsFactory.CreateCompressor("lzma"));
         }
 
         [Fact]
-        [DisplayName("CreateEncryptor(\"aes-cbc-hmac\") 應回傳 AesPayloadEncryptor")]
+        [DisplayName("CreateEncryptor(\"aes-cbc-hmac\") returns AesPayloadEncryptor")]
         public void CreateEncryptor_AesCbcHmac_ReturnsAesPayloadEncryptor()
         {
             var encryptor = ApiPayloadOptionsFactory.CreateEncryptor("aes-cbc-hmac", isDebugMode: false);
@@ -48,7 +48,7 @@ namespace Polhem.Api.Core.UnitTests
         [Theory]
         [InlineData("none")]
         [InlineData("")]
-        [DisplayName("CreateEncryptor(\"none\"/\"\") 於 Debug 模式下應回傳 NoEncryptionEncryptor")]
+        [DisplayName("CreateEncryptor(\"none\"/\"\") returns NoEncryptionEncryptor in debug mode")]
         public void CreateEncryptor_None_DebugMode_ReturnsNoEncryptionEncryptor(string name)
         {
             var encryptor = ApiPayloadOptionsFactory.CreateEncryptor(name, isDebugMode: true);
@@ -57,14 +57,14 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateEncryptor(\"none\") 於非 Debug 模式下應拋出 InvalidOperationException")]
+        [DisplayName("CreateEncryptor(\"none\") throws InvalidOperationException outside debug mode")]
         public void CreateEncryptor_None_ProductionMode_Throws()
         {
             Assert.Throws<InvalidOperationException>(() => ApiPayloadOptionsFactory.CreateEncryptor("none", isDebugMode: false));
         }
 
         [Fact]
-        [DisplayName("CreateEncryptor 傳入未支援名稱應拋出 NotSupportedException")]
+        [DisplayName("CreateEncryptor throws NotSupportedException for an unsupported name")]
         public void CreateEncryptor_Unknown_Throws()
         {
             Assert.Throws<NotSupportedException>(() => ApiPayloadOptionsFactory.CreateEncryptor("rsa", isDebugMode: true));

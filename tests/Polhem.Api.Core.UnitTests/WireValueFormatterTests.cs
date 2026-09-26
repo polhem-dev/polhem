@@ -9,15 +9,16 @@ using MessagePack;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// <c>WireValueFormatter</c> 的白名單與 round-trip 測試。
+    /// Allow-list and round-trip tests for <c>WireValueFormatter</c>.
     /// </summary>
     /// <remarks>
-    /// 前身為 <c>SafeTypelessFormatterTests</c>。formatter 由 <c>TypelessFormatter</c> 包裝改為
-    /// 判別式封閉集合後，白名單語意不變，改變的是「未知型別」那條路徑的框架格式。
+    /// Formerly <c>SafeTypelessFormatterTests</c>. When the formatter changed from wrapping <c>TypelessFormatter</c>
+    /// to a closed discriminated set, the allow-list semantics stayed the same; what changed is the framing of the
+    /// unknown-type path.
     /// </remarks>
     public class WireValueFormatterTests
     {
-        [Fact(DisplayName = "ParameterCollection 允許安全的基礎型別序列化")]
+        [Fact(DisplayName = "ParameterCollection round-trips safe primitive types")]
         public void ParameterCollection_AllowedPrimitiveTypes_RoundTrip()
         {
             var original = new ParameterCollection
@@ -53,7 +54,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData(64UL)]
         [InlineData(1.5f)]
         [InlineData(2.5d)]
-        [DisplayName("整數與浮點各寬度皆應 round-trip 回原型別")]
+        [DisplayName("Integers and floating-point values of every width round-trip to their original type")]
         public void ParameterValue_NumericWidths_RoundTrip(object value)
         {
             var restored = RoundTripValue(value);
@@ -63,7 +64,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("非數值的已知型別皆應 round-trip 回原型別")]
+        [DisplayName("Known non-numeric types round-trip to their original type")]
         public void ParameterValue_KnownReferenceAndStructTypes_RoundTrip()
         {
             var guid = Guid.NewGuid();
@@ -77,7 +78,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("object[] 條件值（IN 子句）應遞迴 round-trip")]
+        [DisplayName("An object[] condition value (IN clause) round-trips recursively")]
         public void ParameterValue_ObjectArray_RoundTrip()
         {
             var guid = Guid.NewGuid();
@@ -89,12 +90,13 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Equal(guid, restored[2]);
         }
 
-        [DynamicCodeFact(DisplayName = "ParameterCollection 允許 Polhem 命名空間型別序列化（具名型別通道，需動態碼）")]
+        [DynamicCodeFact(DisplayName = "ParameterCollection round-trips a type in a Polhem namespace (named-type path, needs dynamic code)")]
         public void ParameterCollection_AllowedPolhemTypes_RoundTrip()
         {
-            // 這條走的是 `WireValueFormatter` 的「具名型別」分支：型別不在封閉判別集合內，
-            // 只能經非泛型多載遞迴，因此在無動態碼的 runtime（iOS）上不可用——
-            // 那是 `SysInfo.AllowedTypeNamespaces` 這個可設定擴充點的固有限制，非缺陷。
+            // This takes the named-type branch of `WireValueFormatter`. The type is outside the closed discriminated set
+            // and can only recurse through the non-generic overload, so it is unavailable on a runtime without dynamic
+            // code (iOS). That is an inherent limit of the configurable `SysInfo.AllowedTypeNamespaces` extension point,
+            // not a defect.
             var inner = new ParameterCollection
             {
                 { "Nested", "value" }
@@ -114,7 +116,7 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Equal("value", restoredChild["Nested"].Value);
         }
 
-        [Fact(DisplayName = "ParameterCollection 允許 DateOnly 序列化（日曆日語意的 filter 值）")]
+        [Fact(DisplayName = "ParameterCollection round-trips DateOnly (a calendar-date filter value)")]
         public void ParameterCollection_DateOnly_RoundTrip()
         {
             var original = new ParameterCollection
@@ -129,7 +131,7 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Equal(new DateOnly(2026, 7, 25), restored["DateOnlyValue"].Value);
         }
 
-        [Fact(DisplayName = "FilterCondition 的 DateOnly 條件值應可 round-trip")]
+        [Fact(DisplayName = "A DateOnly condition value of FilterCondition round-trips")]
         public void FilterCondition_DateOnlyValue_RoundTrip()
         {
             var original = FilterCondition.Equal("hire_date", new DateOnly(2026, 7, 25));
@@ -157,7 +159,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData("Polhem.Api.Contracts.SomeDto")]
         [InlineData("Polhem.Api.Core.Something")]
         [InlineData("Polhem.Business.Employee")]
-        [DisplayName("IsTypeAllowed 應允許原始型別與白名單命名空間")]
+        [DisplayName("IsTypeAllowed allows primitive types and allow-listed namespaces")]
         public void IsTypeAllowed_AllowedTypes_ReturnsTrue(string fullName)
         {
             Assert.True(WireTypeWhitelist.IsTypeAllowed(fullName));
@@ -171,21 +173,21 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData("Evil.Namespace.Exploit")]
         [InlineData("SomeMalicious.Attacker.Type")]
         [InlineData("System.Data.DataRow")]
-        [DisplayName("IsTypeAllowed 應拒絕不在白名單的型別")]
+        [DisplayName("IsTypeAllowed rejects types outside the allow list")]
         public void IsTypeAllowed_DisallowedTypes_ReturnsFalse(string fullName)
         {
             Assert.False(WireTypeWhitelist.IsTypeAllowed(fullName));
         }
 
         [Fact]
-        [DisplayName("WireValueFormatter.Instance 應提供單例")]
+        [DisplayName("WireValueFormatter.Instance provides a singleton")]
         public void Instance_IsNotNull()
         {
             Assert.NotNull(WireValueFormatter.Instance);
         }
 
         [Fact]
-        [DisplayName("Deserialize 於 nil payload 應回傳 null")]
+        [DisplayName("Deserialize returns null for a nil payload")]
         public void Deserialize_NilPayload_ReturnsNull()
         {
             var bytes = MessagePackCodec.Serialize<object?>(null);
@@ -194,11 +196,11 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Deserialize 非白名單型別應在解析型別前擋下")]
+        [DisplayName("Deserialize blocks a type outside the allow list before resolving the type")]
         public void Deserialize_DisallowedType_ThrowsInvalidOperation()
         {
-            // 手工組出「具名型別」那條路徑的封套，型別名為白名單外的型別。
-            // 攔截點在 `Type.GetType` 之前，故此型別自始不會被載入。
+            // Builds a named-type envelope by hand, naming a type outside the allow list.
+            // The check runs before `Type.GetType`, so the type is never loaded.
             var bytes = BuildNamedEnvelope(typeof(global::System.Diagnostics.Process).AssemblyQualifiedName!);
 
             var exception = Assert.Throws<InvalidOperationException>(
@@ -208,7 +210,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Deserialize 未知判別碼應拋 MessagePackSerializationException")]
+        [DisplayName("Deserialize throws MessagePackSerializationException for an unknown discriminator")]
         public void Deserialize_UnknownCode_Throws()
         {
             var buffer = new ArrayBufferWriter<byte>();
@@ -241,7 +243,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 區域方法而非 lambda：`ref` 區域變數無法被 lambda 捕捉（CS8175）。
+        /// A method rather than a lambda: a lambda cannot capture a `ref` local (CS8175).
         /// </summary>
         private static object? DeserializeViaFormatter(byte[] bytes)
         {

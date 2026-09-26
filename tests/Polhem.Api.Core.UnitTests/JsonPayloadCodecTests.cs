@@ -10,20 +10,21 @@ using Polhem.Definition.Settings;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 每個請求協商 body codec 的測試：JSON codec 的來回、object 成員的型別保真，
-    /// 以及未啟用 / 格式不合的 codec 名稱如何被拒。
+    /// Tests for the per-request body codec negotiation: JSON codec round-trips, type fidelity of `object` members,
+    /// and how codec names that are not enabled or are malformed get rejected.
     /// </summary>
     /// <remarks>
-    /// 會改寫 <see cref="ApiServiceOptions"/> 的 process-wide 靜態元件，故列入
-    /// <c>ApiServiceOptionsState</c>（整組件已 <c>DisableTestParallelization</c>，
-    /// 此標記用於標示「本類會改寫靜態元件」）。
+    /// These tests rewrite the process-wide static components of <see cref="ApiServiceOptions"/>, so the class is in
+    /// <c>ApiServiceOptionsState</c> (the whole assembly already uses <c>DisableTestParallelization</c>; the
+    /// attribute marks that this class rewrites static components).
     /// </remarks>
     [Collection("ApiServiceOptionsState")]
     public class JsonPayloadCodecTests
     {
         /// <summary>
-        /// 把 payload 管線設回框架預設（messagepack / gzip / aes-cbc-hmac），並回傳可還原原狀的
-        /// disposable。json codec 本身不需要啟用——兩種 codec 恆可用。
+        /// Resets the payload pipeline to the framework defaults (messagepack / gzip / aes-cbc-hmac) and returns a
+        /// disposable that restores the previous state. The json codec itself needs no enabling: both codecs are
+        /// always available.
         /// </summary>
         private static Restore UseDefaultPipeline()
         {
@@ -49,7 +50,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("宣告 json codec 的 Encoded payload 應能原樣來回")]
+        [DisplayName("An Encoded payload declaring the json codec round-trips unchanged")]
         public void TransformTo_JsonCodec_RoundTrips()
         {
             using var _ = UseDefaultPipeline();
@@ -71,7 +72,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetChangeDetailResponse 的 DataSet 經 json codec 來回應保留列狀態與原值")]
+        [DisplayName("The DataSet of a GetChangeDetailResponse keeps row states and original values through a json codec round-trip")]
         public void TransformTo_JsonCodec_ChangeDetailDataSet_PreservesRowStates()
         {
             using var _ = UseDefaultPipeline();
@@ -94,12 +95,12 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Theory]
-        [DisplayName("json codec 的 object 成員應保住原型別，不退化為 JSON 的預設對應")]
-        [InlineData(12.5)]          // decimal：JSON number 會退化為 double
-        [InlineData(9007199254740993L)] // long：超過 2^53，JSON number 會失精度
+        [DisplayName("The json codec keeps the original type of an object member instead of falling back to the default JSON mapping")]
+        [InlineData(12.5)]          // decimal: a JSON number would fall back to double.
+        [InlineData(9007199254740993L)] // long: above 2^53, a JSON number would lose precision.
         public void TransformTo_JsonCodec_PreservesObjectMemberType(object value)
         {
-            // InlineData 無法直接給 decimal，這裡把 double 個案轉回 decimal 再驗。
+            // `InlineData` cannot supply a decimal directly, so the double case is converted back to decimal here.
             object original = value is double d ? (decimal)d : value;
 
             using var _ = UseDefaultPipeline();
@@ -118,7 +119,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("json codec 的 object 成員為 Guid 時應還原為 Guid 而非字串")]
+        [DisplayName("The json codec restores a Guid object member as a Guid, not a string")]
         public void TransformTo_JsonCodec_PreservesGuidObjectMember()
         {
             using var _ = UseDefaultPipeline();
@@ -137,7 +138,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("未宣告 codec 的 payload 不應在信封寫入 codec 欄位")]
+        [DisplayName("A payload that declares no codec writes no codec field into the envelope")]
         public void TransformTo_NoCodec_LeavesCodecBlank()
         {
             using var _ = UseDefaultPipeline();
@@ -149,7 +150,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResolvePayloadSerializer 對空字串應回傳部署預設 codec")]
+        [DisplayName("ResolvePayloadSerializer returns the deployment default codec for a blank name")]
         public void ResolvePayloadSerializer_Blank_ReturnsDefault()
         {
             using var _ = UseDefaultPipeline();
@@ -159,7 +160,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResolvePayloadSerializer 應無條件認得兩種內建 codec")]
+        [DisplayName("ResolvePayloadSerializer always recognizes the built-in codecs")]
         public void ResolvePayloadSerializer_BuiltInCodecs_AlwaysResolve()
         {
             using var _ = UseDefaultPipeline();
@@ -171,7 +172,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResolvePayloadSerializer 對名稱合法但不存在的 codec 應拒絕")]
+        [DisplayName("ResolvePayloadSerializer rejects a well-formed name of a codec that does not exist")]
         public void ResolvePayloadSerializer_UnknownCodec_Throws()
         {
             using var _ = UseDefaultPipeline();
@@ -182,7 +183,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Theory]
-        [DisplayName("ResolvePayloadSerializer 對格式不合的 codec 名稱應拒絕且不回顯內容")]
+        [DisplayName("ResolvePayloadSerializer rejects a malformed codec name without echoing it")]
         [InlineData("JSON")]
         [InlineData("json; DROP")]
         [InlineData("json\nInjected: header")]
@@ -194,20 +195,19 @@ namespace Polhem.Api.Core.UnitTests
             var ex = Assert.Throws<NotSupportedException>(
                 () => ApiServiceOptions.ResolvePayloadSerializer(codec));
 
-            // 名稱來自 wire，錯誤訊息不得把它原樣帶出去。
+            // The name comes from the wire, so the error message must not carry it back out verbatim.
             Assert.DoesNotContain(codec, ex.Message, StringComparison.Ordinal);
         }
 
         [Fact]
-        [DisplayName("以 messagepack 編碼卻宣告 json 的 body 應解碼失敗，不得靜默產生預設值")]
+        [DisplayName("A body encoded with messagepack but declared as json fails to decode instead of silently producing defaults")]
         public void RestoreFrom_MessagePackBodyDeclaredAsJson_Fails()
         {
             using var _ = UseDefaultPipeline();
             var payload = new JsonRpcParams { Value = new Parameter("greeting", "hello") };
 
-            // 以預設 codec（messagepack）編碼……
+            // Encode with the default codec (messagepack), then claim the body is json.
             ApiPayloadConverter.TransformTo(payload, PayloadFormat.Encoded);
-            // ……再謊稱 body 是 json。
             payload.Codec = PayloadCodecNames.Json;
 
             Assert.ThrowsAny<Exception>(

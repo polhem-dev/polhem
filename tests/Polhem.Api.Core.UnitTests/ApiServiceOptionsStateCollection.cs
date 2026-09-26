@@ -1,28 +1,30 @@
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 序列化所有會改寫 <see cref="ApiServiceOptions"/> process-wide 靜態元件
-    /// （<c>PayloadSerializer</c> / <c>PayloadCompressor</c> / <c>PayloadEncryptor</c>）的測試類。
+    /// Serializes every test class that changes the process-wide static components of
+    /// <see cref="ApiServiceOptions"/> (<c>PayloadSerializer</c> / <c>PayloadCompressor</c> / <c>PayloadEncryptor</c>).
     /// </summary>
     /// <remarks>
-    /// 這些測試以 try/finally 快照還原靜態值，但那只在**串行執行**下成立。xUnit 預設
-    /// collection-per-class 會讓不同測試類平行跑，而 <c>ApiPayloadTransformer</c> 直接讀取
-    /// 這些靜態值，且它位於 <c>JsonRpcExecutor</c> 加密／編碼 payload 的必經路徑上。
-    /// 本機多核排程鬆不一定觸發；CI 2-core 才會紅，且失敗訊息會是
-    /// <c>NoEncryptionEncryptor is only permitted in debug/development mode</c>
-    /// —— 看起來像 production 安全 bug，實為測試互相污染。
-    /// 根治方式是把這三個元件 DI 化；在那之前以此 collection 序列化。
+    /// These tests snapshot and restore the static values with try/finally, but that only holds when they **run
+    /// serially**. xUnit's default collection-per-class runs different test classes in parallel, and
+    /// <c>ApiPayloadTransformer</c> reads these static values directly on the path every <c>JsonRpcExecutor</c>
+    /// payload takes to be encrypted or encoded. Loose scheduling on a many-core local machine does not always
+    /// trigger it; it goes red on 2-core CI, and the failure message is
+    /// <c>NoEncryptionEncryptor is only permitted in debug/development mode</c>, which looks like a production
+    /// security bug but is really tests contaminating each other.
+    /// The root fix is to move these components into DI; until then this collection serializes them.
     /// <para>
-    /// <b>2026-08-07 補強</b>：本 collection 只涵蓋**寫入端**，而**讀取端**（約 19 個走 payload
-    /// 管線的 round-trip 測試類）一樣會踩，CI build #31169045420 即因此紅。讀取端會隨新測試
-    /// 持續增加，逐類補 <c>[Collection]</c> 必然遺漏，故改以 <c>AssemblyInfo.cs</c> 的
-    /// <c>DisableTestParallelization</c> 整體序列化本組件。本 collection 保留作為「哪些類別會
-    /// 改寫靜態元件」的標記。
+    /// <b>Reinforced on 2026-08-07</b>: this collection only covers the **writers**, and the **readers** (about 19
+    /// round-trip test classes going through the payload pipeline at the time) hit the same problem; CI build
+    /// #31169045420 went red because of it. Readers keep growing with new tests, and adding <c>[Collection]</c> class
+    /// by class is bound to miss some, so the whole assembly is serialized instead with
+    /// <c>DisableTestParallelization</c> in <c>AssemblyInfo.cs</c>. This collection is kept as a marker of "which
+    /// classes change the static components".
     /// </para>
     /// </remarks>
     [CollectionDefinition("ApiServiceOptionsState")]
     public class ApiServiceOptionsStateCollection
     {
-        // 純 marker，無 fixture
+        // A pure marker with no fixture.
     }
 }

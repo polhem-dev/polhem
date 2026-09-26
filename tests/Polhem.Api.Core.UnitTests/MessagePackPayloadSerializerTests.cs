@@ -4,12 +4,12 @@ using Polhem.Api.Core.Transformers;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// MessagePackPayloadSerializer 測試。
+    /// Tests for MessagePackPayloadSerializer.
     /// </summary>
     public class MessagePackPayloadSerializerTests
     {
         [Fact]
-        [DisplayName("SerializationMethod 應為 \"messagepack\"")]
+        [DisplayName("SerializationMethod is \"messagepack\"")]
         public void SerializationMethod_IsMessagePack()
         {
             var serializer = new MessagePackPayloadSerializer();
@@ -18,7 +18,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Serialize/Deserialize 應正確還原字串內容")]
+        [DisplayName("Serialize/Deserialize round-trips a string")]
         public void SerializeDeserialize_String_RoundTrip()
         {
             var serializer = new MessagePackPayloadSerializer();
@@ -31,7 +31,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Serialize/Deserialize 應正確還原整數內容")]
+        [DisplayName("Serialize/Deserialize round-trips an integer")]
         public void SerializeDeserialize_Int_RoundTrip()
         {
             var serializer = new MessagePackPayloadSerializer();

@@ -10,45 +10,46 @@ using Polhem.Definition.Security;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 把「哪些 API 方法不需要登入」維持成一份需要具名申報的白名單，並釘住它們在
-    /// HTTP 層實際遇到的門檻。
+    /// Keeps "which API methods need no login" as an allow list where every entry is declared by name, and pins
+    /// the gate those methods actually meet at the HTTP layer.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 免登入的方法就是這個框架對外的匿名攻擊面。宣告它的地方是
-    /// <see cref="ApiAccessRequirement.Anonymous"/>，而那只是方法上的一個 attribute 參數——
-    /// 新增一個標了它的方法，不會有任何東西要求說明理由。這份白名單就是那個要求。
+    /// The methods that need no login are this framework's anonymous attack surface. They are declared with
+    /// <see cref="ApiAccessRequirement.Anonymous"/>, which is only an attribute argument on a method: adding a
+    /// method marked with it asks nobody for a reason. This allow list is that request.
     /// </para>
     /// <para>
-    /// <b>兩層各自把關，判斷來源不同。</b><see cref="ApiAuthorizationValidator"/> 在 HTTP 層
-    /// 以硬編的方法名清單決定要不要 <c>Authorization</c> header；
-    /// <see cref="ApiAccessValidator"/> 在 BO 層讀 attribute 決定要不要真的驗證 token。
-    /// 兩者不對齊的後果寫在 <see cref="AnonymousMethods_HttpGate_IsPinned"/>：標了
-    /// <c>Anonymous</c> 卻不在 HTTP 層清單裡的方法，需要一個 header，但那個 header
-    /// <b>只被檢查能不能 parse 成 Guid</b>——送任意 Guid 即可通過。那道檢查不構成認證。
+    /// <b>Two layers guard separately, from different sources.</b> <see cref="ApiAuthorizationValidator"/>, at the
+    /// HTTP layer, decides from a hard-coded list of method names whether an <c>Authorization</c> header is required.
+    /// <see cref="ApiAccessValidator"/>, at the BO layer, reads the attribute to decide whether the token is really
+    /// validated. What happens when the two disagree is pinned in <see cref="AnonymousMethods_HttpGate_IsPinned"/>:
+    /// a method marked <c>Anonymous</c> but missing from the HTTP-layer list needs a header, yet that header
+    /// <b>is only checked for whether it parses as a Guid</b>, so any Guid passes. That check is not authentication.
     /// </para>
     /// </remarks>
     public class AnonymousApiSurfaceTests
     {
         /// <summary>
-        /// 免登入方法的白名單。key 為「宣告型別.方法名」，value 是它為什麼可以免登入。
+        /// The allow list of methods that need no login. The key is "DeclaringType.MethodName"; the value is why it
+        /// may skip login.
         /// </summary>
         /// <remarks>
-        /// 新增一項之前先問：**未登入者拿到這個回應，能知道什麼？** 回應內容才是攻擊面，
-        /// 方法名不是。
+        /// Before adding an entry, ask: **what does someone who is not logged in learn from this response?** The
+        /// response content is the attack surface, not the method name.
         /// </remarks>
         private static readonly Dictionary<string, string> s_anonymousAllowList = new(StringComparer.Ordinal)
         {
             ["SystemBusinessObject.Ping"] =
-                "連通性探測。資料庫不可用時仍須能回答，因此連 API key 都豁免；框架版本只在通過金鑰閘門後才揭露。",
+                "Connectivity probe. It must answer even when the database is unavailable, so it is exempt even from the API key; the framework version is revealed only after passing the key gate.",
             ["SystemBusinessObject.Login"] =
-                "登入本身。免登入是定義上的必然；API key 仍要求，因為「哪個應用嘗試登入」正是要記錄的事。",
+                "Login itself. Needing no login is inherent by definition; the API key is still required, because which application is attempting to log in is exactly what should be recorded.",
             ["SystemBusinessObject.GetCommonConfiguration"] =
-                "客戶端啟動流程在登入前就需要它決定壓縮與加密設定。回應內容是部署層的 payload 設定，不含資料。",
+                "The client startup flow needs it before login to decide the compression and encryption settings. The response is the deployment-level payload configuration and contains no data.",
             ["SystemBusinessObject.CreateSession"] =
-                "宣告為 LocalOnly，遠端呼叫在 BO 層一律被拒——它不是匿名攻擊面的一部分，Anonymous 只對行程內呼叫有意義。",
+                "Declared LocalOnly, so remote calls are rejected at the BO layer. It is not part of the anonymous attack surface; Anonymous only matters for in-process calls.",
             ["BusinessObject.ExecFuncAnonymous"] =
-                "讓應用掛載自訂的匿名函式。**其攻擊面取決於應用怎麼實作**，框架端只保證它要求 Encoded 以上傳輸。",
+                "Lets an application plug in its own anonymous functions. **Its attack surface depends on how the application implements it**; the framework only requires Encoded or stronger transport.",
         };
 
         private static Dictionary<string, ApiAccessControlAttribute> AnonymousMethods()
@@ -66,51 +67,51 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("每個免登入的 API 方法都必須具名申報並附上理由")]
+        [DisplayName("Every API method that needs no login is declared by name in the allow list with a reason")]
         public void AnonymousMethods_AreAllExplicitlyAllowListed()
         {
             var actual = AnonymousMethods();
 
-            // 掃不到任何免登入方法代表掃描壞了（至少 Login 一定是）——沒有這條，下面會變恆真。
+            // Finding no anonymous method means the scan is broken (Login is always one). Without this, the checks below pass vacuously.
             Assert.NotEmpty(actual);
 
             var undeclared = actual.Keys.Where(k => !s_anonymousAllowList.ContainsKey(k)).ToList();
             Assert.True(undeclared.Count == 0,
-                "下列方法標了 Anonymous 但未申報於白名單，等於在無人審視下擴大匿名攻擊面：" +
+                "The following methods are marked Anonymous but not declared in the allow list, which widens the anonymous attack surface without review:" +
                 global::System.Environment.NewLine +
                 string.Join(global::System.Environment.NewLine, undeclared) +
                 global::System.Environment.NewLine +
-                "補上白名單時請寫明「未登入者拿到這個回應能知道什麼」，而不只是它為什麼方便。");
+                "When adding them to the allow list, state what someone who is not logged in learns from the response, not just why it is convenient.");
 
             var ghosts = s_anonymousAllowList.Keys.Where(k => !actual.ContainsKey(k)).ToList();
             Assert.True(ghosts.Count == 0,
-                "下列方法列在免登入白名單但已不存在或不再是 Anonymous，應一併清掉——" +
-                "白名單裡的幽靈條目會讓下一次安全盤點高估或誤判攻擊面：" +
+                "The following methods are in the no-login allow list but no longer exist or are no longer Anonymous; remove them. " +
+                "Ghost entries in the allow list make the next security inventory overestimate or misjudge the attack surface:" +
                 global::System.Environment.NewLine +
                 string.Join(global::System.Environment.NewLine, ghosts));
 
             foreach (var (name, reason) in s_anonymousAllowList)
-                Assert.False(string.IsNullOrWhiteSpace(reason), $"{name} 的免登入理由不得為空。");
+                Assert.False(string.IsNullOrWhiteSpace(reason), $"The no-login reason for {name} must not be empty.");
         }
 
         [Fact]
-        [DisplayName("免登入方法在 HTTP 層的實際門檻：只有 Ping 與 Login 真的不需要 header")]
+        [DisplayName("The actual HTTP-layer gate for anonymous methods: only Ping and Login really need no header")]
         public void AnonymousMethods_HttpGate_IsPinned()
         {
             var validator = new ApiAuthorizationValidator();
 
-            // 不帶 Authorization header 時仍然通過的，才是真正不需要 header 的方法。
+            // Only a method that passes without an `Authorization` header truly needs no header.
             static ApiAuthorizationContext WithoutHeader(string method) => new()
             {
                 Method = method,
-                ApiKey = "present",          // 金鑰閘門未啟用時只檢查非空
+                ApiKey = "present",          // With the key gate disabled, only non-emptiness is checked.
                 Authorization = string.Empty,
             };
 
             Assert.True(validator.Validate(WithoutHeader($"{SysProgIds.System}.Ping")).IsValid);
             Assert.True(validator.Validate(WithoutHeader($"{SysProgIds.System}.Login")).IsValid);
 
-            // 其餘標了 Anonymous 的方法，HTTP 層仍要求 header。
+            // The other methods marked Anonymous still require a header at the HTTP layer.
             string[] requireHeader =
             [
                 $"{SysProgIds.System}.GetCommonConfiguration",
@@ -119,10 +120,10 @@ namespace Polhem.Api.Core.UnitTests
             foreach (var method in requireHeader)
                 Assert.False(validator.Validate(WithoutHeader(method)).IsValid, method);
 
-            // WARNING: 但那道 header 只被檢查能不能 parse 成 Guid——任意 Guid 即可通過，
-            // 而 BO 層因為 attribute 是 Anonymous 也不會驗證它。這四個方法因此實際上是
-            // 匿名可達的，header 不構成認證。把它釘在這裡，是為了讓任何只讀 HTTP 層
-            // 白名單的人不會低估攻擊面。
+            // WARNING: That header is only checked for whether it parses as a Guid, so any Guid passes, and the BO
+            // layer does not validate it either because the attribute is Anonymous. These methods are therefore
+            // reachable anonymously in practice, and the header is not authentication. It is pinned here so that
+            // anyone reading only the HTTP-layer allow list does not underestimate the attack surface.
             foreach (var method in requireHeader)
             {
                 var result = validator.Validate(new ApiAuthorizationContext

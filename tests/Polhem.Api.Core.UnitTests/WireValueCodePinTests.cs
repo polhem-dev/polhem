@@ -9,24 +9,25 @@ using MessagePack;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 把 <c>WireValueCode</c> 的判別碼釘死在 wire 上。
+    /// Pins the discriminators of <c>WireValueCode</c> on the wire.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 這些數值**是 wire 格式的一部分**：重新編號會讓新舊版本對同一串位元組解讀出不同型別，
-    /// 而那是**靜默**的——`WireContractDriftTests` 比對的是「型別有沒有註冊」，不看編號；
-    /// round-trip 測試在同一個行程內編碼與解碼，兩邊一起改也一樣會過。
+    /// These values **are part of the wire format**: renumbering makes old and new versions read the same bytes as
+    /// different types, and **silently** so. `WireContractDriftTests` compares whether a type is registered, not its
+    /// number, and a round-trip test encodes and decodes in the same process, so it still passes when both sides change.
     /// </para>
     /// <para>
-    /// 因此本檔測兩層：常數表本身（改動即紅），以及**實際編出來的位元組**（連同封套框架一起釘）。
-    /// 只釘常數不夠——有人若把常數與測試表一起改，仍會靜默通過；連編碼一起釘，則那次改動必須
-    /// 同時改動 golden 值，讀起來就是一次明示的 wire 變更。
+    /// So this file tests two layers: the constant table itself (any change turns it red), and **the bytes actually
+    /// written** (pinned together with the envelope framing). Pinning only the constants is not enough: someone who
+    /// changes the constants and the test table together still passes silently. With the encoding pinned too, that
+    /// change must also change the golden values, and it reads as an explicit wire change.
     /// </para>
     /// </remarks>
     public class WireValueCodePinTests
     {
         /// <summary>
-        /// 判別碼的權威表。**新增型別只能往後接號，既有的一律不得改動。**
+        /// The authoritative table of discriminators. **A new type only takes the next number; existing ones never change.**
         /// </summary>
         public static TheoryData<int, int, string> PinnedCodes => new()
         {
@@ -56,17 +57,17 @@ namespace Polhem.Api.Core.UnitTests
 
         [Theory]
         [MemberData(nameof(PinnedCodes))]
-        [DisplayName("WireValueCode 的每個判別碼都必須維持原值")]
+        [DisplayName("Every WireValueCode discriminator keeps its pinned value")]
         public void Code_KeepsItsPinnedValue(int actual, int expected, string name)
         {
             Assert.True(
                 actual == expected,
-                $"WireValueCode.{name} 由 {expected} 變成 {actual}。判別碼是 wire 格式的一部分，" +
-                "改動會讓新舊版本對同一串位元組解讀出不同型別。新增型別請往後接號。");
+                $"WireValueCode.{name} changed from {expected} to {actual}. Discriminators are part of the wire format; " +
+                "changing one makes old and new versions read the same bytes as different types. Give a new type the next number.");
         }
 
         [Fact]
-        [DisplayName("Count 必須恰好是最高判別碼加一（派發表大小的依據）")]
+        [DisplayName("Count is exactly the highest discriminator plus one (it sizes the dispatch table)")]
         public void Count_IsOnePastTheHighestCode()
         {
             var highest = PinnedCodes.Select(row => (int)row[1]).Max();
@@ -75,12 +76,13 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 每個判別碼配一個樣本值，用來驗證**實際編出來的位元組**。
+        /// One sample value per discriminator, used to verify **the bytes actually written**.
         /// </summary>
         /// <remarks>
-        /// WARNING: 期望值寫**字面數字**，不可改用 <c>WireValueCode.X</c> —— 用常數的話，
-        /// 重新編號時期望值會跟著一起變，測試自我一致因而恆綠。第一版就是這樣寫的，
-        /// 在反向驗證（對調 Guid 與 ByteArray）時只有常數表那個測試紅，本測試全綠。
+        /// WARNING: The expected values are **literal numbers** and must not be changed to <c>WireValueCode.X</c>.
+        /// With the constants, the expected values would follow a renumbering, so the test would be self-consistent and
+        /// always green. The first version was written that way: in a reverse check (swapping Guid and ByteArray) only
+        /// the constant-table test went red, and this test stayed all green.
         /// </remarks>
         public static TheoryData<object, int> SampleValues => new()
         {
@@ -108,22 +110,23 @@ namespace Polhem.Api.Core.UnitTests
         };
 
         [Theory]
-        // 樣本值刻意是 object（判別碼本來就是為異質值而設），無法在探索期序列化成個別 data row，
-        // 故關閉探索期列舉（xUnit1045）；測試仍照跑，只是 Test Explorer 顯示為單一項目。
+        // The sample values are deliberately `object` (discriminators exist for heterogeneous values), so they cannot be
+        // serialized into separate data rows at discovery time. Discovery enumeration is therefore disabled (xUnit1045).
+        // The tests still run; Test Explorer just shows them as a single item.
         [MemberData(nameof(SampleValues), DisableDiscoveryEnumeration = true)]
-        [DisplayName("封套實際寫出的第一個元素就是該型別的判別碼")]
+        [DisplayName("The first element the envelope actually writes is the discriminator of the value type")]
         public void Envelope_WritesTheExpectedDiscriminator(object value, int expectedCode)
         {
             var bytes = SerializeValue(value);
             var reader = new MessagePackReader(new ReadOnlySequence<byte>(bytes));
 
-            // 封套是「兩元素陣列：判別碼 + 值」。連陣列標頭一起斷言，框架本身改了也會紅。
+            // The envelope is a two-element array of discriminator and value. Asserting the array header too turns the test red if the framing itself changes.
             Assert.Equal(2, reader.ReadArrayHeader());
             Assert.Equal(expectedCode, reader.ReadInt32());
         }
 
         [Fact]
-        [DisplayName("DataTable 值也走同一個封套，判別碼為 21")]
+        [DisplayName("A DataTable value goes through the same envelope with discriminator 21")]
         public void Envelope_DataTable_WritesItsDiscriminator()
         {
             var table = new DataTable("t");
@@ -138,10 +141,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("DateTimeOffset 應可 round-trip 並保留時間偏移")]
+        [DisplayName("DateTimeOffset round-trips and keeps its offset")]
         public void DateTimeOffset_RoundTrips_PreservingOffset()
         {
-            // 判別碼 15 先前是唯一沒有 round-trip 測試的分支。
+            // Discriminator 15 used to be the only branch without a round-trip test.
             var value = new DateTimeOffset(2026, 8, 12, 1, 2, 3, TimeSpan.FromHours(8));
 
             var source = new ParameterCollection { { "v", value } };
@@ -153,11 +156,12 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 取出單一值經 <c>WireValueFormatter</c> 寫出的原始位元組。
+        /// Returns the raw bytes that <c>WireValueFormatter</c> writes for a single value.
         /// </summary>
         /// <remarks>
-        /// 走 <c>ParameterCollection</c> 再切位元組會混入外層封套，故直接呼叫 formatter；
-        /// options 取自 <c>MessagePackCodec</c>，才與正式路徑用的是同一組 resolver。
+        /// Going through <c>ParameterCollection</c> and slicing the bytes would mix in the outer envelope, so the
+        /// formatter is called directly. The options come from <c>MessagePackCodec</c> so that the resolver is the same
+        /// one the production path uses.
         /// </remarks>
         private static byte[] SerializeValue(object value)
         {

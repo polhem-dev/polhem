@@ -18,15 +18,16 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip：將 <c>Employee.GetList</c>
-    /// 透過 executor 派發到 <c>FormBusinessObject.GetList</c>、再由 stub
-    /// <c>IDataFormRepository</c> 回傳已知 DataTable，驗證：
+    /// An end-to-end round-trip through <see cref="JsonRpcExecutor"/>: <c>Employee.GetList</c> is dispatched by the
+    /// executor to <c>FormBusinessObject.GetList</c>, and a stub <c>IDataFormRepository</c> returns a known
+    /// DataTable. It verifies that:
     /// <list type="bullet">
-    /// <item>action 路由（progId.action 反射查表）正確找到方法</item>
-    /// <item>ApiInputConverter（GetListRequest → GetListArgs）保留 Filter / SortFields</item>
-    /// <item>ApiOutputConverter（GetListResult → GetListResponse）命名慣例反射有作用</item>
+    /// <item>action routing (the reflection lookup of progId.action) finds the method</item>
+    /// <item>ApiInputConverter (GetListRequest → GetListArgs) keeps Filter / SortFields</item>
+    /// <item>ApiOutputConverter (GetListResult → GetListResponse) name-convention reflection works</item>
     /// </list>
-    /// 不接實體 DB；DB 端的 SQL 行為由 P2 的 <c>FormBusinessObjectGetListTests</c> 覆蓋。
+    /// No real database is involved; the SQL behavior on the database side is covered by
+    /// <c>FormBusinessObjectGetListTests</c>.
     /// </summary>
     public class GetListJsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
     {
@@ -35,10 +36,10 @@ namespace Polhem.Api.Core.UnitTests.Form
         public GetListJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Employee.GetList 經 JsonRpcExecutor 應派發到 FormBusinessObject.GetList 並回傳 stub DataTable")]
+        [DisplayName("Employee.GetList through JsonRpcExecutor dispatches to FormBusinessObject.GetList and returns the stub DataTable")]
         public void GetList_ThroughJsonRpc_DispatchesAndReturnsTable()
         {
-            // Arrange: 預備 stub repository 與已知 DataTable
+            // Arrange
             var table = new DataTable("Employee");
             table.Columns.Add("sys_id", typeof(string));
             table.Columns.Add("sys_name", typeof(string));
@@ -52,8 +53,8 @@ namespace Polhem.Api.Core.UnitTests.Form
                 _fx.Provider,
                 (typeof(IRepositoryFactory), stubFactory));
 
-            // 自建 BO factory 注入覆寫後的 IServiceProvider —— production BO 透過
-            // PolhemContext.Services 取 IRepositoryFactory 時就會拿到 stub。
+            // A hand-built BO factory gets the overriding `IServiceProvider`, so when the production BO resolves
+            // `IRepositoryFactory` through `PolhemContext.Services` it receives the stub.
             var boFactory = new BusinessObjectFactory(
                 overrideServices,
                 _fx.GetRequiredService<IDefineAccess>(),
@@ -89,7 +90,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             // Act
             var response = executor.Execute(request);
 
-            // Assert: response 成功
+            // Assert
             Assert.Null(response.Error);
             var result = Assert.IsType<GetListResponse>(response.Result!.Value);
             Assert.NotNull(result.Table);
@@ -97,7 +98,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             Assert.Equal("E001", result.Table.Rows[0]["sys_id"]);
             Assert.Equal("員工乙", result.Table.Rows[1]["sys_name"]);
 
-            // Assert: stub 收到的 args 內容（驗證 ApiInputConverter 保留 Filter / SortFields）
+            // Assert: the args the stub received show that ApiInputConverter kept Filter / SortFields.
             Assert.Equal("sys_id,sys_name", stubRepository.LastSelectFields);
             var condition = Assert.IsType<FilterCondition>(stubRepository.LastFilter);
             Assert.Equal("sys_rowid", condition.FieldName);
@@ -109,10 +110,10 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("Employee.GetList 帶 Paging 應由 executor 透傳到 BO；回傳 PagingInfo 經 ApiOutputConverter 對齊到 Response.Paging")]
+        [DisplayName("Employee.GetList with Paging is passed through to the BO by the executor, and the returned PagingInfo is mapped to Response.Paging by ApiOutputConverter")]
         public void GetList_ThroughJsonRpc_PreservesPagingAndReturnsPagingInfo()
         {
-            // Arrange: stub repository 回傳 paging 資訊
+            // Arrange
             var table = new DataTable("Employee");
             table.Columns.Add("sys_id", typeof(string));
             table.Rows.Add("E001");
@@ -164,14 +165,14 @@ namespace Polhem.Api.Core.UnitTests.Form
             // Act
             var response = executor.Execute(request);
 
-            // Assert: stub 收到的 PagingOptions
+            // Assert: the PagingOptions the stub received.
             Assert.Null(response.Error);
             Assert.NotNull(stubRepository.LastPaging);
             Assert.Equal(2, stubRepository.LastPaging!.Page);
             Assert.Equal(25, stubRepository.LastPaging.PageSize);
             Assert.True(stubRepository.LastPaging.IncludeTotalCount);
 
-            // Assert: response.Paging 由 ApiOutputConverter 命名慣例 copy 對齊
+            // Assert: `response.Paging` is copied by the ApiOutputConverter name convention.
             var result = Assert.IsType<GetListResponse>(response.Result!.Value);
             Assert.NotNull(result.Paging);
             Assert.Equal(2, result.Paging!.Page);

@@ -9,14 +9,14 @@ using Polhem.Definition.Paging;
 namespace Polhem.Api.Core.UnitTests.AuditLog
 {
     /// <summary>
-    /// AuditLog 軸 wire DTO 經 <see cref="MessagePackCodec"/> 的 round-trip 驗證：清單回應的
-    /// <c>DataTable</c> + <c>PagingInfo</c>、明細回應的巢狀 <c>List&lt;RecordFieldChange&gt;</c>、
-    /// 以及 <c>GetChangeLogRequest</c> 的 typed filter 欄位（含 nullable enum）皆能完整還原。
+    /// Round-trip verification of the AuditLog wire DTOs through <see cref="MessagePackCodec"/>: the <c>DataTable</c> and
+    /// <c>PagingInfo</c> of list responses, the nested <c>List&lt;RecordFieldChange&gt;</c> of the detail response, and
+    /// the typed filter fields of <c>GetChangeLogRequest</c> (including a nullable enum) are all restored in full.
     /// </summary>
     public class AuditLogMessagePackTests
     {
         [Fact]
-        [DisplayName("GetChangeLogRequest 應 round-trip 還原 typed filter（含 nullable enum / 分頁）")]
+        [DisplayName("GetChangeLogRequest round-trips its typed filter, including a nullable enum and paging")]
         public void GetChangeLogRequest_RoundTrip()
         {
             var from = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -42,7 +42,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetChangeDetailResponse 帶巢狀 Fields 應完整 round-trip")]
+        [DisplayName("GetChangeDetailResponse with nested Fields round-trips in full")]
         public void GetChangeDetailResponse_RoundTrip_PreservesFields()
         {
             var sysRowId = Guid.NewGuid();
@@ -76,7 +76,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetLoginLogRequest 應 round-trip 還原 nullable LoginEvent + 分頁")]
+        [DisplayName("GetLoginLogRequest round-trips a nullable LoginEvent and paging")]
         public void GetLoginLogRequest_RoundTrip()
         {
             var request = new GetLoginLogRequest
@@ -96,7 +96,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("LogListResponse 帶 DataTable + PagingInfo 應 round-trip（login/access/anomaly 共用）")]
+        [DisplayName("LogListResponse with a DataTable and PagingInfo round-trips (shared by the login, access and anomaly logs)")]
         public void LogListResponse_RoundTrip()
         {
             var table = new DataTable("st_log_login");
@@ -120,7 +120,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetTopApiMethodsRequest 應 round-trip 還原時間窗 + TopN")]
+        [DisplayName("GetTopApiMethodsRequest round-trips its time window and TopN")]
         public void GetTopApiMethodsRequest_RoundTrip()
         {
             var from = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -135,7 +135,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("LogAggregateResponse 帶聚合 DataTable 應 round-trip（summary/topN 共用）")]
+        [DisplayName("LogAggregateResponse with an aggregate DataTable round-trips (shared by summary and top-N)")]
         public void LogAggregateResponse_RoundTrip()
         {
             var table = new DataTable("agg");
@@ -152,7 +152,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetChangeDetailResponse 的 DataSet 應 round-trip 保留列狀態與原值")]
+        [DisplayName("GetChangeDetailResponse DataSet round-trip preserves row states and original values")]
         public void GetChangeDetailResponse_RoundTrip_PreservesDataSetRowStates()
         {
             var response = new GetChangeDetailResponse
@@ -168,7 +168,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
             AssertChangeDataSet(restored!.DataSet!);
         }
 
-        /// <summary>一列 Modified（原值 Alice → Alice Wang）、一列 Unchanged。</summary>
+        /// <summary>One Modified row (Alice → Alice Wang) and one Unchanged row.</summary>
         internal static DataSet NewChangeDataSet()
         {
             var dataSet = new DataSet("Employee");
@@ -194,7 +194,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetChangeDetailResponse 空 Fields 應 round-trip 且不 NRE")]
+        [DisplayName("GetChangeDetailResponse with empty Fields round-trips without a NullReferenceException")]
         public void GetChangeDetailResponse_EmptyFields_RoundTrip()
         {
             var response = new GetChangeDetailResponse { SysRowId = Guid.NewGuid() };

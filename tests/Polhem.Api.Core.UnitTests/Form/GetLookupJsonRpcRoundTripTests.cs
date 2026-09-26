@@ -18,11 +18,11 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// 走 <see cref="JsonRpcExecutor"/> 的 round-trip：將 <c>Employee.GetLookup</c> 派發到
-    /// <c>FormBusinessObject.GetLookup</c>、由 stub <c>IDataFormRepository</c> 回傳已知
-    /// DataTable，驗證 server 端的 lookup 欄位集解析（Employee 未宣告 LookupFields →
-    /// 預設 <c>sys_rowid,sys_id,sys_name</c>）、SearchText 組出的 OR Contains 過濾、
-    /// 與未帶 Paging 時的預設分頁。
+    /// A round trip through <see cref="JsonRpcExecutor"/>: dispatches <c>Employee.GetLookup</c> to
+    /// <c>FormBusinessObject.GetLookup</c>, with a stub <c>IDataFormRepository</c> returning a known DataTable, and
+    /// verifies the server-side lookup field set resolution (Employee declares no LookupFields, so the default
+    /// <c>sys_rowid,sys_id,sys_name</c> applies), the OR Contains filter built from SearchText, and the default paging
+    /// when no Paging is sent.
     /// </summary>
     public class GetLookupJsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
     {
@@ -31,7 +31,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         public GetLookupJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Employee.GetLookup 經 JsonRpcExecutor 應以預設欄位集查詢並回傳 stub DataTable")]
+        [DisplayName("Employee.GetLookup through JsonRpcExecutor queries with the default field set and returns the stub DataTable")]
         public void GetLookup_ThroughJsonRpc_UsesDefaultLookupFieldSet()
         {
             var table = new DataTable("Employee");
@@ -82,7 +82,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("Employee.GetLookup 帶 Paging 應透傳；SearchText 空白不組過濾")]
+        [DisplayName("Employee.GetLookup passes explicit Paging through and builds no filter without SearchText")]
         public void GetLookup_ThroughJsonRpc_PreservesExplicitPaging()
         {
             var table = new DataTable("Employee");

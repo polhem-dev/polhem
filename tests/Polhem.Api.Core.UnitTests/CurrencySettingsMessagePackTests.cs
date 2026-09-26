@@ -5,14 +5,14 @@ using Polhem.Definition.Settings;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 驗證 CurrencySettings（系統層幣別主檔）的 MessagePack wire round-trip。CurrencySettings
-    /// ship 給 client 供 UI runtime 解析金額位數，其集合須由自訂 FormatterResolver 的
-    /// CollectionBaseFormatter&lt;CurrencySettings, CurrencyItem&gt; 處理。
+    /// Verifies the MessagePack wire round-trip of CurrencySettings (the system-level currency master). CurrencySettings
+    /// ships to the client so the UI can resolve amount decimals at run time, and its collection must be handled by
+    /// the custom FormatterResolver's CollectionBaseFormatter&lt;CurrencySettings, CurrencyItem&gt;.
     /// </summary>
     public sealed class CurrencySettingsMessagePackTests
     {
         [Fact]
-        [DisplayName("CurrencySettings MessagePack round-trip 應保留所有幣別與位數")]
+        [DisplayName("A CurrencySettings MessagePack round-trip keeps every currency and its decimals")]
         public void CurrencySettings_RoundTrip_PreservesItems()
         {
             CurrencySettings original =
@@ -37,7 +37,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("CurrencySettings 空集合 MessagePack round-trip 應回空集合（非 null）")]
+        [DisplayName("An empty CurrencySettings MessagePack round-trip returns an empty collection (not null)")]
         public void CurrencySettings_Empty_RoundTrip_Succeeds()
         {
             CurrencySettings original = [];

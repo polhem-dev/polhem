@@ -5,13 +5,13 @@ using Polhem.Api.Core.Messages.Form;
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// <see cref="DeleteRequest"/> / <see cref="DeleteResponse"/> 的 MessagePack
-    /// round-trip 驗證。最小型別,只需確認 RowId 與 RowsAffected 還原。
+    /// MessagePack round-trip tests for <see cref="DeleteRequest"/> / <see cref="DeleteResponse"/>.
+    /// Minimal types, so only RowId and RowsAffected need to come back.
     /// </summary>
     public class DeleteMessagePackTests
     {
         [Fact]
-        [DisplayName("DeleteRequest RowId 應 round-trip 還原")]
+        [DisplayName("DeleteRequest round-trip restores RowId")]
         public void DeleteRequest_RoundTrip_PreservesRowId()
         {
             var rowId = Guid.NewGuid();
@@ -25,7 +25,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("DeleteResponse RowsAffected 應 round-trip 還原")]
+        [DisplayName("DeleteResponse round-trip restores RowsAffected")]
         public void DeleteResponse_RoundTrip_PreservesRowsAffected()
         {
             var response = new DeleteResponse { RowsAffected = 5 };
@@ -38,7 +38,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("DeleteResponse RowsAffected = 0 應 round-trip 為 0")]
+        [DisplayName("DeleteResponse with RowsAffected = 0 round-trips as 0")]
         public void DeleteResponse_ZeroRowsAffected_RoundTrip()
         {
             var response = new DeleteResponse();

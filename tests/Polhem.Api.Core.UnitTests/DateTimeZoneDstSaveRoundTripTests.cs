@@ -12,22 +12,26 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// DST 回撥重疊時段的「讀進 → 改別的欄位 → 存回」：時間點欄位的值必須不變。
+    /// Load, change another column, save back, during the DST fall-back overlap: the value of an instant column must
+    /// not change.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 美東 2026-11-01 的 05:30Z 與 06:30Z 經 <see cref="DateTimeZoneConverter.UtcToUser(System.Data.DataSet?, string)"/>
-    /// 都成為牆上時間 01:30。這份資訊在回應轉入使用者時區的那一刻就消失了，任何從牆上時間換回 UTC 的做法
-    /// 都只能確定性地解析為其中一個。
+    /// In US Eastern time on 2026-11-01, both 05:30Z and 06:30Z become the wall-clock time 01:30 through
+    /// <see cref="DateTimeZoneConverter.UtcToUser(System.Data.DataSet?, string)"/>. The information is lost the moment
+    /// the response is converted into the user's time zone, and any conversion from wall-clock time back to UTC can
+    /// only resolve deterministically to one of the two.
     /// </para>
     /// <para>
-    /// 修正在伺服端：<see cref="FormBusinessObject.Save"/> 不採用傳入的 <c>DateTime</c>，修改列的時間點欄位
-    /// 以資料庫讀回的值覆蓋。所以這裡刻意把使用者時區的 <c>DataSet</c> 原樣交給 Save，不經任何請求方向的換算。
+    /// The fix is on the server: <see cref="FormBusinessObject.Save"/> does not take the incoming <c>DateTime</c>; the
+    /// instant columns of modified rows are overwritten with the values read back from the database. So this test
+    /// deliberately hands the user-time-zone <c>DataSet</c> to Save as is, without any request-direction conversion.
     /// </para>
     /// <para>
-    /// 整條鏈都用真的元件：回應方向的換算、Save 的正規化、<c>DataFormRepository</c> 的 adapter 寫入，
-    /// 最後直接以 SQL 讀回資料庫裡的值。缺陷的症狀只在資料庫裡看得到，這一組釘住的是
-    /// 「使用者沒碰的值，存回後資料庫裡仍是原值」。
+    /// The whole chain uses real components: the response-direction conversion, the normalization in Save, the adapter
+    /// write of <c>DataFormRepository</c>, and finally reading the stored value back with SQL. The defect only shows in
+    /// the database, so these tests pin that a value the user did not touch is still the original value in the
+    /// database after saving.
     /// </para>
     /// </remarks>
     public class DateTimeZoneDstSaveRoundTripTests : IClassFixture<SharedDbFixture>
@@ -36,7 +40,7 @@ namespace Polhem.Api.Core.UnitTests
         private const string NameColumn = "name";
         private const string InstantColumn = "occurred_at";
 
-        // 較早那一個 UTC 值：01:30 EDT。06:30Z 是同一個牆上時間的 01:30 EST。
+        // The earlier UTC value is 01:30 EDT. 06:30Z is the same wall-clock time as 01:30 EST.
         private static readonly DateTime s_firstOccurrenceUtc = new(2026, 11, 1, 5, 30, 0, DateTimeKind.Unspecified);
 
         private readonly SharedDbFixture _fx;
@@ -44,7 +48,7 @@ namespace Polhem.Api.Core.UnitTests
         public DateTimeZoneDstSaveRoundTripTests(SharedDbFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("前提：05:30Z 與 06:30Z 在 America/New_York 是同一個牆上時間")]
+        [DisplayName("Precondition: 05:30Z and 06:30Z are the same wall-clock time in America/New_York")]
         public void Precondition_BothUtcValuesShareOneWallClockTime()
         {
             var zone = TimeZoneInfo.FindSystemTimeZoneById(NewYork);
@@ -56,27 +60,27 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：DST 重疊時段的時間點欄位，改同列別的欄位存回後值應不變")]
+        [DisplayName("SQLite: an instant column in the DST overlap keeps its stored value when another column of the row is changed and saved")]
         public void Save_Sqlite_AmbiguousInstantUntouched_KeepsStoredValue()
             => RunUntouchedInstantKeepsValue(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：DST 重疊時段的時間點欄位，改同列別的欄位存回後值應不變")]
+        [DisplayName("SQL Server: an instant column in the DST overlap keeps its stored value when another column of the row is changed and saved")]
         public void Save_SqlServer_AmbiguousInstantUntouched_KeepsStoredValue()
             => RunUntouchedInstantKeepsValue(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：DST 重疊時段的時間點欄位，改同列別的欄位存回後值應不變")]
+        [DisplayName("PostgreSQL: an instant column in the DST overlap keeps its stored value when another column of the row is changed and saved")]
         public void Save_PostgreSql_AmbiguousInstantUntouched_KeepsStoredValue()
             => RunUntouchedInstantKeepsValue(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：DST 重疊時段的時間點欄位，改同列別的欄位存回後值應不變")]
+        [DisplayName("MySQL: an instant column in the DST overlap keeps its stored value when another column of the row is changed and saved")]
         public void Save_MySql_AmbiguousInstantUntouched_KeepsStoredValue()
             => RunUntouchedInstantKeepsValue(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：DST 重疊時段的時間點欄位，改同列別的欄位存回後值應不變")]
+        [DisplayName("Oracle: an instant column in the DST overlap keeps its stored value when another column of the row is changed and saved")]
         public void Save_Oracle_AmbiguousInstantUntouched_KeepsStoredValue()
             => RunUntouchedInstantKeepsValue(DatabaseType.Oracle);
 
@@ -99,7 +103,7 @@ namespace Polhem.Api.Core.UnitTests
                     "VALUES ({0}, {1}, {2})",
                     rowId, "before", s_firstOccurrenceUtc);
 
-                // 伺服端 GetData 交給 Connector 的形狀是 UTC；用戶端手上的是轉進使用者時區之後的那一份。
+                // Server-side `GetData` hands UTC to the connector; the client holds the copy converted into the user's time zone.
                 var loaded = new FormBusinessObject(form.CreateContext(), Guid.NewGuid(), progId)
                     .GetData(new GetDataArgs { RowId = rowId }).DataSet!;
                 var onScreen = DateTimeZoneConverter.UtcToUser(loaded, NewYork)!;

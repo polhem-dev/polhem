@@ -15,13 +15,15 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 表單讀回的時間點欄位，經回應方向換算後必須位移到使用者時區；日期欄位不位移。
+    /// An instant column read back by a form must shift to the user's time zone after the response-direction
+    /// conversion; a date column does not shift.
     /// </summary>
     /// <remarks>
-    /// 直接把 <see cref="FormBusinessObject.GetData"/> 的結果交給換算器，對應同程序（Local）呼叫：
-    /// 那條路徑不經序列化，換算器看到的就是 repository 讀回的 <c>DataTable</c> 本身。
-    /// SQLite 另外驗兩條 wire：wire 依宣告型別重建欄位，換算器看到的形狀與同程序不同，
-    /// 兩者都要對。SQLite 以文字存放日期，是唯一需要 repository 轉換欄位型別的資料庫。
+    /// Handing the result of <see cref="FormBusinessObject.GetData"/> straight to the converter matches an in-process
+    /// (Local) call: that path does not serialize, so the converter sees the <c>DataTable</c> the repository read back.
+    /// SQLite also covers the two wires: a wire rebuilds columns from the declared types, so the converter sees a
+    /// different shape than in process, and both must be right. SQLite stores dates as text and is the only database
+    /// where the repository has to convert the column type.
     /// </remarks>
     public class DateTimeZoneFormReadTests : IClassFixture<SharedDbFixture>
     {
@@ -38,42 +40,42 @@ namespace Polhem.Api.Core.UnitTests
         public DateTimeZoneFormReadTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：表單讀回的時間點欄位，同程序換算到使用者時區應位移")]
+        [DisplayName("SQLite: an instant column read back by a form shifts to the user time zone in an in-process conversion")]
         public void UtcToUser_Sqlite_FormInstantColumn_ShiftsToUserZone()
             => Assert.Equal(s_expectedTaipei, InstantAfter(DatabaseType.SQLite, InProcess));
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SQL Server：表單讀回的時間點欄位，同程序換算到使用者時區應位移")]
+        [DisplayName("SQL Server: an instant column read back by a form shifts to the user time zone in an in-process conversion")]
         public void UtcToUser_SqlServer_FormInstantColumn_ShiftsToUserZone()
             => Assert.Equal(s_expectedTaipei, InstantAfter(DatabaseType.SQLServer, InProcess));
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("PostgreSQL：表單讀回的時間點欄位，同程序換算到使用者時區應位移")]
+        [DisplayName("PostgreSQL: an instant column read back by a form shifts to the user time zone in an in-process conversion")]
         public void UtcToUser_PostgreSql_FormInstantColumn_ShiftsToUserZone()
             => Assert.Equal(s_expectedTaipei, InstantAfter(DatabaseType.PostgreSQL, InProcess));
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("MySQL：表單讀回的時間點欄位，同程序換算到使用者時區應位移")]
+        [DisplayName("MySQL: an instant column read back by a form shifts to the user time zone in an in-process conversion")]
         public void UtcToUser_MySql_FormInstantColumn_ShiftsToUserZone()
             => Assert.Equal(s_expectedTaipei, InstantAfter(DatabaseType.MySQL, InProcess));
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Oracle：表單讀回的時間點欄位，同程序換算到使用者時區應位移")]
+        [DisplayName("Oracle: an instant column read back by a form shifts to the user time zone in an in-process conversion")]
         public void UtcToUser_Oracle_FormInstantColumn_ShiftsToUserZone()
             => Assert.Equal(s_expectedTaipei, InstantAfter(DatabaseType.Oracle, InProcess));
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：表單讀回的時間點欄位經 MessagePack wire 後，換算到使用者時區應位移")]
+        [DisplayName("SQLite: an instant column read back by a form shifts to the user time zone after the MessagePack wire")]
         public void UtcToUser_SqliteAfterMessagePackWire_ShiftsToUserZone()
             => Assert.Equal(s_expectedTaipei, InstantAfter(DatabaseType.SQLite, OverMessagePack));
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：表單讀回的時間點欄位經 JSON wire 後，換算到使用者時區應位移")]
+        [DisplayName("SQLite: an instant column read back by a form shifts to the user time zone after the JSON wire")]
         public void UtcToUser_SqliteAfterJsonWire_ShiftsToUserZone()
             => Assert.Equal(s_expectedTaipei, InstantAfter(DatabaseType.SQLite, OverJson));
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：表單讀回的日期欄位，同程序換算到使用者時區不應位移")]
+        [DisplayName("SQLite: a date column read back by a form does not shift in an in-process conversion to the user time zone")]
         public void UtcToUser_Sqlite_FormDateColumn_DoesNotShift()
             => Assert.Equal(s_storedDay, ValueUtilities.CDateTime(ReadAndConvert(DatabaseType.SQLite, InProcess)[DayColumn]));
 

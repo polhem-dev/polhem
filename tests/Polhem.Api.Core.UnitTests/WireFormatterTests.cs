@@ -9,23 +9,24 @@ using Polhem.Definition.Sorting;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 手寫 wire formatter 的 round-trip 與形狀測試。
+    /// Round-trip and shape tests for the hand-written wire formatters.
     /// </summary>
     /// <remarks>
-    /// 這裡驗的是 round-trip 保真度。**型別與 formatter 的成員清單是否一致，不在這裡驗**——
-    /// 那由 <c>WireContractDriftTests</c> 承擔，它比對 <c>IWireContract.WireMemberNames</c>
-    /// 與型別當下的形狀。
+    /// What is verified here is round-trip fidelity. **Whether a type and its formatter agree on the member list is
+    /// not verified here**; that is the job of <c>WireContractDriftTests</c>, which compares
+    /// <c>IWireContract.WireMemberNames</c> with the current shape of the type.
     /// <para>
-    /// 先前這裡有一組 <c>WireMemberCount</c> 斷言，宣稱是「型別與 formatter 之間唯一的連結」。
-    /// 它讀回 formatter 自己寫的 map header、再與 formatter 自己宣告的常數比較，
-    /// 也就是 <c>Assert.Equal(X, X)</c>——在任何情況下都不可能失敗。八個手寫 formatter 的
-    /// 目標型別因此從未有過形狀守衛。已改為讓那些 formatter 實作 <c>IWireContract</c>。
+    /// There used to be a set of <c>WireMemberCount</c> assertions here, claimed to be "the only link between a type
+    /// and its formatter". They read back the map header the formatter itself wrote and compared it with a constant
+    /// the formatter itself declared, which is <c>Assert.Equal(X, X)</c> and can never fail. The target types of the
+    /// eight hand-written formatters therefore never had a shape guard. Those formatters now implement
+    /// <c>IWireContract</c> instead.
     /// </para>
     /// </remarks>
     public class WireFormatterTests
     {
         [Fact]
-        [DisplayName("SortField 應 round-trip")]
+        [DisplayName("SortField round-trips")]
         public void SortField_RoundTripsWithDeclaredMemberCount()
         {
             var source = new SortField("cust_id", SortDirection.Desc);
@@ -38,7 +39,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("框架管理的成員不得上 wire")]
+        [DisplayName("Framework-managed members do not travel over the wire")]
         public void FrameworkManagedMembers_DoNotTravel()
         {
             var source = new SortField("cust_id", SortDirection.Asc) { Tag = "should-not-travel" };
@@ -52,7 +53,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("DepartmentNode 應 round-trip，含巢狀子節點")]
+        [DisplayName("DepartmentNode round-trips, including nested children")]
         public void DepartmentNode_RoundTripsWithNestedChildren()
         {
             var source = new DepartmentNode
@@ -76,7 +77,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("DepartmentTree 應 round-trip 整棵樹")]
+        [DisplayName("DepartmentTree round-trips the whole tree")]
         public void DepartmentTree_RoundTrips()
         {
             var source = new DepartmentTree
@@ -94,7 +95,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("NumberFormatItem 應 round-trip，且成員數相符")]
+        [DisplayName("NumberFormatItem round-trips")]
         public void NumberFormatItem_RoundTrips()
         {
             var source = new NumberFormatItem { Kind = NumberKind.Amount, Decimals = 4 };
@@ -107,7 +108,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("CashRoundingItem 應 round-trip，且成員數相符")]
+        [DisplayName("CashRoundingItem round-trips")]
         public void CashRoundingItem_RoundTrips()
         {
             var source = new CashRoundingItem { CurrencyCode = "TWD", Unit = 0.5m };
@@ -120,7 +121,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("AllowedCurrencyItem 應 round-trip，且成員數相符")]
+        [DisplayName("AllowedCurrencyItem round-trips")]
         public void AllowedCurrencyItem_RoundTrips()
         {
             var source = new AllowedCurrencyItem { Code = "USD" };
@@ -132,7 +133,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Parameter 應 round-trip，Value 走白名單型別")]
+        [DisplayName("Parameter round-trips values of allowlisted types")]
         public void Parameter_RoundTripsAllowedValueTypes()
         {
             var source = new ParameterCollection
@@ -151,7 +152,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Parameter.Value 帶白名單外型別必須被擋下")]
+        [DisplayName("Parameter.Value of a type outside the allowlist is blocked")]
         public void Parameter_DisallowedValueType_IsBlocked()
         {
             var source = new ParameterCollection
@@ -159,14 +160,15 @@ namespace Polhem.Api.Core.UnitTests
                 new Parameter("evil", new Version(1, 2, 3, 4)),
             };
 
-            // 這是安全邊界：具名型別通道若放行白名單外型別即為 gadget 破口。
-            // `WireValueFormatter` 在寫入端就擋，比先前只在讀取端擋更早一步；
-            // 讀取端的檢查仍在（見 WireValueFormatterTests 的手工封套測試）。
+            // This is a security boundary: a named-type channel that lets through types outside the allowlist is a
+            // gadget hole. `WireValueFormatter` blocks it on the writing side, one step earlier than the old
+            // read-side-only check. The read-side check is still there (see the hand-built envelope tests in
+            // `WireValueFormatterTests`).
             Assert.NotNull(Record.Exception(() => MessagePackCodec.Serialize(source)));
         }
 
         [Fact]
-        [DisplayName("CompanyInfo 應 round-trip，含三個遞移集合")]
+        [DisplayName("CompanyInfo round-trips, including its transitive collections")]
         public void CompanyInfo_RoundTripsTransitiveCollections()
         {
             var source = new Polhem.Definition.Identity.CompanyInfo

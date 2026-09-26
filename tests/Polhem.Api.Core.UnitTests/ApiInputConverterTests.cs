@@ -6,8 +6,8 @@ using Polhem.Api.Core.Conversion;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// ApiInputConverter.Convert 的分支覆蓋：null 來源、型別相容、JsonElement
-    /// 反序列化、介面/抽象型別直接回傳、屬性複製與型別不符略過。
+    /// Branch coverage of ApiInputConverter.Convert: a null source, a compatible type, JsonElement deserialization,
+    /// returning the source as is for interface/abstract targets, property copying, and skipping mismatched types.
     /// </summary>
     public class ApiInputConverterTests
     {
@@ -43,7 +43,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Convert 於 null 來源應回傳 null")]
+        [DisplayName("Convert returns null for a null source")]
         public void Convert_NullSource_ReturnsNull()
         {
             var result = ApiInputConverter.Convert(null!, typeof(TargetDto));
@@ -51,7 +51,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Convert 於 source 已相容 target 型別時應原樣回傳")]
+        [DisplayName("Convert returns the source as is when it is already compatible with the target type")]
         public void Convert_SourceAssignableToTarget_ReturnsSame()
         {
             var source = new TargetDto { Name = "x", Age = 1 };
@@ -60,17 +60,17 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Convert 於目標為介面型別應回傳原 source")]
+        [DisplayName("Convert returns the original source when the target is an interface type")]
         public void Convert_TargetIsInterface_ReturnsSource()
         {
-            // source 不實作 IMarker → 不觸發 IsInstanceOfType；但目標為 interface → 直接回傳
+            // The source does not implement `IMarker`, so the `IsInstanceOfType` path is not taken; the interface target alone returns it.
             var source = new SourceDto { Name = "x" };
             var result = ApiInputConverter.Convert(source, typeof(IMarker));
             Assert.Same(source, result);
         }
 
         [Fact]
-        [DisplayName("Convert 於目標為抽象型別應回傳原 source")]
+        [DisplayName("Convert returns the original source when the target is an abstract type")]
         public void Convert_TargetIsAbstract_ReturnsSource()
         {
             var source = new SourceDto { Name = "x" };
@@ -79,7 +79,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Convert 應複製同名且型別相容的公開屬性至目標實例")]
+        [DisplayName("Convert copies public properties with the same name and a compatible type to a new target instance")]
         public void Convert_CopiesMatchingPropertiesToNewTarget()
         {
             var source = new SourceDto { Name = "Alice", Age = 30, Extra = "Z" };
@@ -92,19 +92,19 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Convert 應略過目標型別與 source 不相容的屬性")]
+        [DisplayName("Convert skips properties whose target type is incompatible with the source")]
         public void Convert_SkipsPropertiesWithIncompatibleTypes()
         {
             var source = new SourceDto { Name = "Alice" };
             var result = ApiInputConverter.Convert(source, typeof(TypeMismatchTarget));
 
             var target = Assert.IsType<TypeMismatchTarget>(result);
-            // source.Name 為 string，target.Name 為 int → 略過，保留 int 預設 0
+            // `source.Name` is a string and `target.Name` is an int, so it is skipped and keeps the default 0.
             Assert.Equal(0, target.Name);
         }
 
         [Fact]
-        [DisplayName("Convert 於 JsonElement 來源應以 camelCase 大小寫不敏感反序列化")]
+        [DisplayName("Convert deserializes a JsonElement source with camelCase names case-insensitively")]
         public void Convert_JsonElement_DeserializesCaseInsensitive()
         {
             var json = """{"name":"Bob","age":42}""";
@@ -124,7 +124,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Convert 於 JsonElement 來源應透過 DataTable converter 還原 RowState 與欄位值")]
+        [DisplayName("Convert restores RowState and column values from a JsonElement source through the DataTable converter")]
         public void Convert_JsonElement_DeserializesDataSetWithRowState()
         {
             // Regression: ApiInputConverter must include DataSet/DataTable/StringEnum
@@ -171,7 +171,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Convert 於 JsonElement 來源應支援 PascalCase 屬性名")]
+        [DisplayName("Convert accepts PascalCase property names in a JsonElement source")]
         public void Convert_JsonElement_AcceptsPascalCase()
         {
             var json = """{"Name":"Cathy","Age":7}""";

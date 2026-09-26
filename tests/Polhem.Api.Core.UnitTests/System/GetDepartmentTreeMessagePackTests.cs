@@ -6,13 +6,13 @@ using Polhem.Definition.Organization;
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// GetDepartmentTree wire DTO 的 MessagePack round-trip：含 ApiResponse base 的 Tree 物件
-    /// （含集合）跨 wire 還原、null tree、空 request 邊界。
+    /// MessagePack round-trip of the GetDepartmentTree wire DTOs: the Tree object on an ApiResponse base (including its
+    /// collections) restored across the wire, a null tree, and the empty request edge case.
     /// </summary>
     public class GetDepartmentTreeMessagePackTests
     {
         [Fact]
-        [DisplayName("GetDepartmentTreeResponse MessagePack round-trip 保留 Tree 與節點")]
+        [DisplayName("GetDepartmentTreeResponse MessagePack round-trip preserves the Tree and its nodes")]
         public void Response_RoundTrip_PreservesTree()
         {
             var hq = Guid.NewGuid();
@@ -31,12 +31,12 @@ namespace Polhem.Api.Core.UnitTests.System
 
             Assert.NotNull(restored.Tree);
             Assert.Equal("C001", restored.Tree!.CompanyId);
-            Assert.Single(restored.Tree.Roots!);                              // 巢狀：單一 root（總公司）
+            Assert.Single(restored.Tree.Roots!);                              // Nested: a single root (HQ).
             Assert.Equal(2, restored.Tree.GetSelfAndDescendants(hq).Count);
         }
 
         [Fact]
-        [DisplayName("GetDepartmentTreeResponse null Tree round-trip 不應 NRE")]
+        [DisplayName("GetDepartmentTreeResponse with a null Tree round-trips without a NullReferenceException")]
         public void Response_NullTree_RoundTrip()
         {
             var bytes = MessagePackCodec.Serialize(new GetDepartmentTreeResponse { Tree = null });
@@ -46,7 +46,7 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("GetDepartmentTreeRequest 無 wire 成員，仍應真的走完序列化並產生新實例")]
+        [DisplayName("GetDepartmentTreeRequest has no wire members yet still goes through serialization and yields a new instance")]
         public void Request_RoundTrip()
         {
             var request = new GetDepartmentTreeRequest();
@@ -54,8 +54,8 @@ namespace Polhem.Api.Core.UnitTests.System
             var bytes = MessagePackCodec.Serialize(request);
             var restored = MessagePackCodec.Deserialize<GetDepartmentTreeRequest>(bytes);
 
-            // 理由同 GetNewDataMessagePackTests：無 wire 成員可比對，能證的是 formatter
-            // 有註冊且真的跑過。
+            // Same reason as in `GetNewDataMessagePackTests`: there are no wire members to compare, so what can be
+            // proven is that the formatter is registered and actually ran.
             Assert.NotEmpty(bytes);
             Assert.IsType<GetDepartmentTreeRequest>(restored);
             Assert.NotSame(request, restored);

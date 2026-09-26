@@ -9,24 +9,27 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Api.Core.UnitTests.MessagePack
 {
     /// <summary>
-    /// 定義型 response 的 MessagePack byte round-trip 測試。
+    /// MessagePack byte round-trip tests for the definition responses.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 這三個 response 以前直接把 Define 物件送上 wire，靠 ContractlessStandardResolver 反射處理。
-    /// 那條路對<b>回程</b>是壞的：定義型別的巢狀集合是 get-only，JSON / MessagePack 依可寫性繫結，
-    /// 送得出去卻收不回來——.NET 呼叫端會拿到只有純量欄位、沒有 Tables／Sections 的空殼，且不報錯。
+    /// GetFormSchemaResponse, GetFormLayoutResponse and GetLanguageResponse used to put the Define objects on the wire
+    /// directly, handled by ContractlessStandardResolver reflection. That path was broken on the <b>way back</b>: the
+    /// nested collections of definition types are get-only, and JSON / MessagePack bind by writability, so they could
+    /// be sent but not received. A .NET caller got an empty shell with only the scalar fields and no Tables/Sections,
+    /// and no error.
     /// </para>
     /// <para>
-    /// 現在三者一律改帶 XML 字串。本測試因此改為驗證兩件事：wire 上的字串 byte round-trip 無損，
-    /// 以及還原後的 XML 反序列化回定義物件時，<b>巢狀集合確實還在</b>——後者正是舊做法失守、
-    /// 而這次改版要保證的那一點。
+    /// They now all carry an XML string instead. So this test checks two things: the string survives the byte
+    /// round-trip on the wire, and when the restored XML is deserialized back into a definition object, <b>the nested
+    /// collections are really there</b>. The latter is exactly what the old approach lost and what this change is
+    /// meant to guarantee.
     /// </para>
     /// </remarks>
     public class ObjectResponseMessagePackTests
     {
         [Fact]
-        [DisplayName("GetFormSchemaResponse byte round-trip 後，XML 仍能還原出帶 Tables 的 FormSchema")]
+        [DisplayName("After a GetFormSchemaResponse byte round-trip, the XML still restores a FormSchema with its Tables")]
         public void GetFormSchemaResponse_ByteRoundTrip_PreservesNestedCollections()
         {
             var schema = new FormSchema("Employee", "員工資料");
@@ -42,12 +45,12 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
             Assert.NotNull(roundTripped);
             Assert.Equal("Employee", roundTripped!.ProgId);
             Assert.Equal("員工資料", roundTripped.DisplayName);
-            // 舊做法在這一行失守：集合會是空的
+            // The old approach failed here: the collection came back empty.
             Assert.Single(roundTripped.Tables!);
         }
 
         [Fact]
-        [DisplayName("GetFormLayoutResponse byte round-trip 後，XML 仍能還原出帶 Sections 的 FormLayout")]
+        [DisplayName("After a GetFormLayoutResponse byte round-trip, the XML still restores a FormLayout with its Sections")]
         public void GetFormLayoutResponse_ByteRoundTrip_PreservesNestedCollections()
         {
             var layout = new FormLayout { LayoutId = "Employee", ProgId = "Employee", Caption = "員工資料", ColumnCount = 3 };
@@ -66,7 +69,7 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
         }
 
         [Fact]
-        [DisplayName("GetLanguageResponse byte round-trip 後，XML 仍能還原出帶 Items 的 LanguageResource")]
+        [DisplayName("After a GetLanguageResponse byte round-trip, the XML still restores a LanguageResource with its Items")]
         public void GetLanguageResponse_ByteRoundTrip_PreservesNestedCollections()
         {
             var resource = new LanguageResource { Namespace = "Common", Lang = "zh-TW" };
@@ -84,7 +87,7 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
         }
 
         [Fact]
-        [DisplayName("定義不存在時回空 Xml，byte round-trip 後仍為空")]
+        [DisplayName("An empty Xml (returned when the definition does not exist) stays empty after a byte round-trip")]
         public void EmptyXml_ByteRoundTrip_StaysEmpty()
         {
             var original = new GetFormLayoutResponse { Xml = string.Empty };

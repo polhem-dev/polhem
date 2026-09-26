@@ -4,12 +4,12 @@ using Polhem.Api.Core.MessagePack;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// SerializableDataRelation 測試。
+    /// SerializableDataRelation tests.
     /// </summary>
     public class SerializableDataRelationTests
     {
         [Fact]
-        [DisplayName("預設建構子應初始化空集合與空字串")]
+        [DisplayName("The default constructor initializes empty collections and empty strings")]
         public void DefaultConstructor_InitializesEmpty()
         {
             var relation = new SerializableDataRelation();
@@ -24,7 +24,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("屬性應可被設定並讀回")]
+        [DisplayName("Properties can be set and read back")]
         public void Properties_AreSettable()
         {
             var relation = new SerializableDataRelation

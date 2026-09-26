@@ -19,7 +19,7 @@ namespace Polhem.Api.Core.UnitTests
         private static readonly FakeTokenProvider s_denyAll = new() { Result = false };
 
         [Fact]
-        [DisplayName("ValidateAccess 於方法未標記 ApiAccessControl 時應拋 UnauthorizedAccessException")]
+        [DisplayName("ValidateAccess throws UnauthorizedAccessException when the method has no ApiAccessControl")]
         public void ValidateAccess_NoAttribute_Throws()
         {
             var method = typeof(DummyApi).GetMethod(nameof(DummyApi.Method_NoAttribute));
@@ -35,7 +35,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ValidateAccess 於 Authenticated 要求但 AccessToken 為 Empty 時應拋")]
+        [DisplayName("ValidateAccess throws when Authenticated is required and the AccessToken is empty")]
         public void ValidateAccess_Authenticated_EmptyToken_Throws()
         {
             var method = typeof(DummyApi).GetMethod(nameof(DummyApi.Method_Authenticated));
@@ -51,7 +51,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ValidateAccess 於 Authenticated 要求且 provider 回傳 false 時應拋")]
+        [DisplayName("ValidateAccess throws when Authenticated is required and the provider returns false")]
         public void ValidateAccess_Authenticated_InvalidToken_Throws()
         {
             var fake = new FakeTokenProvider { Result = false };
@@ -68,7 +68,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ValidateAccess 於 Authenticated 要求且 provider 回傳 true 時應通過")]
+        [DisplayName("ValidateAccess passes when Authenticated is required and the provider returns true")]
         public void ValidateAccess_Authenticated_ValidToken_Succeeds()
         {
             var fake = new FakeTokenProvider { Result = true };
@@ -85,7 +85,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ValidateAccess 傳入 null tokenValidator 應拋 ArgumentNullException")]
+        [DisplayName("ValidateAccess throws ArgumentNullException for a null tokenValidator")]
         public void ValidateAccess_NullTokenValidator_Throws()
         {
             var method = typeof(DummyApi).GetMethod(nameof(DummyApi.Method_Authenticated));
@@ -101,23 +101,23 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Theory]
-        [DisplayName("ValidateAccess 依保護等級與傳輸格式正確驗證存取權限")]
-        [InlineData(ApiProtectionLevel.Public, PayloadFormat.Plain, true)]                      // 遠端呼叫 Public API，使用 Plain 傳輸 → ✅ 允許
-        [InlineData(ApiProtectionLevel.Encoded, PayloadFormat.Encoded, true)]                  // 遠端呼叫 Encoded API，使用 Encoded 傳輸 → ✅ 允許
-        [InlineData(ApiProtectionLevel.Encoded, PayloadFormat.Plain, false)]                   // 遠端呼叫 Encoded API，使用 Plain 傳輸 → ❌ 拒絕（缺少編碼）
-        [InlineData(ApiProtectionLevel.Encrypted, PayloadFormat.Encrypted, true)]              // 遠端呼叫 Encrypted API，使用 Encrypted 傳輸 → ✅ 允許
-        [InlineData(ApiProtectionLevel.Encrypted, PayloadFormat.Encoded, false)]               // 遠端呼叫 Encrypted API，使用 Encoded 傳輸 → ❌ 拒絕（缺少加密）
-        [InlineData(ApiProtectionLevel.LocalOnly, PayloadFormat.Plain, true, true)]            // 近端呼叫 LocalOnly API，使用 Plain 傳輸 → ✅ 允許（本機無格式限制）
-        [InlineData(ApiProtectionLevel.Encrypted, PayloadFormat.Plain, true, true)]            // 近端呼叫 Encrypted API，使用 Plain 傳輸 → ✅ 允許（本機不受加密限制）
-        [InlineData(ApiProtectionLevel.Encoded, PayloadFormat.Plain, true, true)]              // 近端呼叫 Encoded API，使用 Plain 傳輸 → ✅ 允許（本機不受編碼限制）
-        [InlineData(ApiProtectionLevel.Public, PayloadFormat.Plain, true, true)]               // 近端呼叫 Public API，使用 Plain 傳輸 → ✅ 允許
+        [DisplayName("ValidateAccess validates access according to the protection level and payload format")]
+        [InlineData(ApiProtectionLevel.Public, PayloadFormat.Plain, true)]                      // Remote call, Public API, Plain transport → allowed
+        [InlineData(ApiProtectionLevel.Encoded, PayloadFormat.Encoded, true)]                  // Remote call, Encoded API, Encoded transport → allowed
+        [InlineData(ApiProtectionLevel.Encoded, PayloadFormat.Plain, false)]                   // Remote call, Encoded API, Plain transport → rejected (not encoded)
+        [InlineData(ApiProtectionLevel.Encrypted, PayloadFormat.Encrypted, true)]              // Remote call, Encrypted API, Encrypted transport → allowed
+        [InlineData(ApiProtectionLevel.Encrypted, PayloadFormat.Encoded, false)]               // Remote call, Encrypted API, Encoded transport → rejected (not encrypted)
+        [InlineData(ApiProtectionLevel.LocalOnly, PayloadFormat.Plain, true, true)]            // Local call, LocalOnly API, Plain transport → allowed (no format restriction locally)
+        [InlineData(ApiProtectionLevel.Encrypted, PayloadFormat.Plain, true, true)]            // Local call, Encrypted API, Plain transport → allowed (no encryption requirement locally)
+        [InlineData(ApiProtectionLevel.Encoded, PayloadFormat.Plain, true, true)]              // Local call, Encoded API, Plain transport → allowed (no encoding requirement locally)
+        [InlineData(ApiProtectionLevel.Public, PayloadFormat.Plain, true, true)]               // Local call, Public API, Plain transport → allowed
         public void ValidateAccess_VariousFormats_ValidatesCorrectly(
             ApiProtectionLevel protectionLevel,
             PayloadFormat format,
             bool expectedSuccess,
             bool isLocal = false)
         {
-            // Arrange: 依 protectionLevel 抓對應的方法
+            // Arrange
             var method = protectionLevel switch
             {
                 ApiProtectionLevel.Public => typeof(DummyApi).GetMethod(nameof(DummyApi.Method_Public)),
@@ -131,7 +131,7 @@ namespace Polhem.Api.Core.UnitTests
             {
                 Format = format,
                 IsLocalCall = isLocal,
-                AccessToken = Guid.NewGuid() // 模擬有效的 AccessToken
+                AccessToken = Guid.NewGuid()
             };
 
             // Act & Assert
@@ -148,7 +148,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ValidateAccess 繼承 Base Method 的屬性：Override 未標記時應使用基底方法屬性")]
+        [DisplayName("ValidateAccess uses the base method attribute when an override has none")]
         public void ValidateAccess_BaseMethodAttribute_InheritedByOverride_Succeeds()
         {
             var method = typeof(DerivedApi).GetMethod(nameof(DerivedApi.Method_Override));
@@ -164,7 +164,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ValidateAccess Class 層級屬性：方法未標記時應使用 Class 屬性")]
+        [DisplayName("ValidateAccess uses the class-level attribute when the method has none")]
         public void ValidateAccess_ClassLevelAttribute_UsedWhenMethodHasNone_Succeeds()
         {
             var method = typeof(ClassLevelApi).GetMethod(nameof(ClassLevelApi.Method_NoAttribute));
@@ -180,10 +180,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ValidateAccess 方法屬性應覆蓋 Class 層級屬性")]
+        [DisplayName("ValidateAccess lets a method attribute override the class-level attribute")]
         public void ValidateAccess_MethodAttributeOverridesClassAttribute_MethodWins()
         {
-            // Class 層級為 Public，方法標記為 Encrypted；Plain 傳輸應因方法屬性而被拒
+            // The class is Public and the method is Encrypted, so Plain transport is rejected because of the method attribute.
             var method = typeof(ClassLevelApi).GetMethod(nameof(ClassLevelApi.Method_WithAttribute));
             var context = new ApiCallContext
             {
@@ -197,7 +197,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ValidateAccess LocalOnly API 遠端呼叫應拋 UnauthorizedAccessException")]
+        [DisplayName("ValidateAccess throws UnauthorizedAccessException for a remote call to a LocalOnly API")]
         public void ValidateAccess_LocalOnlyApi_RemoteCall_Throws()
         {
             var method = typeof(DummyApi).GetMethod(nameof(DummyApi.Method_LocalOnly));
@@ -240,17 +240,17 @@ namespace Polhem.Api.Core.UnitTests
 
         private class DerivedApi : BaseApi
         {
-            // 沒有標記 [ApiAccessControl]，應繼承 BaseApi.Method_Override 的屬性
+            // No `[ApiAccessControl]` here, so the attribute of `BaseApi.Method_Override` applies.
             public override void Method_Override() { }
         }
 
         [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Anonymous)]
         private class ClassLevelApi
         {
-            // 沒有方法層級屬性，應使用 Class 層級的 Public + Anonymous
+            // No method-level attribute, so the class-level Public + Anonymous applies.
             public static void Method_NoAttribute() { }
 
-            // 方法層級屬性覆蓋 Class 層級屬性
+            // The method-level attribute overrides the class-level one.
             [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Anonymous)]
             public static void Method_WithAttribute() { }
         }

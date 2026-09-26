@@ -7,14 +7,14 @@ using Polhem.Definition;
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// <see cref="SaveRequest"/> / <see cref="SaveResponse"/> 的 MessagePack
-    /// round-trip 驗證。重點:三種 <see cref="DataRowState"/>(Added /
-    /// Modified / Deleted)混合的 DataSet 還原與 AffectedRows 字典。
+    /// MessagePack round-trip tests of <see cref="SaveRequest"/> / <see cref="SaveResponse"/>. The focus: restoring
+    /// a DataSet that mixes <see cref="DataRowState"/> values (Unchanged / Added / Modified / Deleted), and the
+    /// AffectedRows dictionary.
     /// </summary>
     public class SaveMessagePackTests
     {
         [Fact]
-        [DisplayName("SaveRequest DataSet 混合 Added/Modified/Deleted row state 應完整還原")]
+        [DisplayName("A SaveRequest DataSet with mixed Unchanged/Added/Modified/Deleted row states is fully restored")]
         public void SaveRequest_DataSet_PreservesMixedRowStates()
         {
             var dataSet = new DataSet("Employee");
@@ -34,7 +34,6 @@ namespace Polhem.Api.Core.UnitTests.Form
             master.Rows.Add(deletedId, "待刪除");
             master.AcceptChanges();
 
-            // 一個 Modified row(改名稱),一個 Deleted row,一個 Added row
             master.Rows.Find(modifiedId)![SysFields.Name] = "已修改名稱";
             master.Rows.Find(deletedId)!.Delete();
             master.Rows.Add(addedId, "全新一筆");
@@ -50,7 +49,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             Assert.NotNull(restored!.DataSet);
             var restoredMaster = restored.DataSet!.Tables["Employee"]!;
 
-            // 還原後應該保有所有 row(含 Deleted),且 RowState 對齊
+            // Every row, including the Deleted one, must survive with its RowState.
             DataRow? FindByCurrentOrOriginal(Guid id)
             {
                 foreach (DataRow r in restoredMaster.Rows)
@@ -71,7 +70,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("SaveResponse 帶 AffectedRows 與 refreshed DataSet 應 round-trip 還原")]
+        [DisplayName("SaveResponse with AffectedRows and a refreshed DataSet round-trips intact")]
         public void SaveResponse_RoundTrip_PreservesAffectedRowsAndDataSet()
         {
             var dataSet = new DataSet("Employee");
@@ -103,7 +102,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("SaveResponse AffectedRows 為空字典應 round-trip 為空字典")]
+        [DisplayName("SaveResponse with an empty AffectedRows dictionary round-trips as an empty dictionary")]
         public void SaveResponse_EmptyAffectedRows_RoundTrip()
         {
             var response = new SaveResponse();

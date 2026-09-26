@@ -8,10 +8,10 @@ using Polhem.Base.Serialization;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 驗證欄位語意標記在 MessagePack wire 路徑的承接，以及與 JSON 路徑的一致性。
-    /// wire 序列化有 MessagePack 與 JSON 兩份平行實作（分居 Polhem.Api.Core 與 Polhem.Base），
-    /// 改一份忘一份是最可能的失誤，且部署上通常只跑一種 PayloadFormat、切換時才炸——
-    /// 故格式間一致性必須有測試釘住。
+    /// Verifies that column semantic markers are carried over the MessagePack wire path and agree with the JSON path.
+    /// Wire serialization has parallel MessagePack and JSON implementations (in Polhem.Api.Core and Polhem.Base),
+    /// so changing one and forgetting the other is the most likely mistake. A deployment usually runs only one
+    /// PayloadFormat and breaks only when it switches, so consistency between the formats must be pinned by tests.
     /// </summary>
     public class FieldDbTypeWireMarkerTests
     {
@@ -33,7 +33,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("MessagePack round-trip 應保留 Date 標記而非退回 DateTime")]
+        [DisplayName("MessagePack round-trip preserves the Date marker instead of falling back to DateTime")]
         public void MessagePackRoundTrip_PreservesDateMarker()
         {
             var table = BuildTable();
@@ -47,7 +47,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SerializableDataTable 的 wire 欄位型別應為 Date")]
+        [DisplayName("SerializableDataTable carries Date as the wire column type")]
         public void SerializableDataTable_CarriesDateOnWire()
         {
             var table = BuildTable();
@@ -59,7 +59,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("MessagePack round-trip 後日曆日欄位的 CLR 型別仍為 DateTime")]
+        [DisplayName("A calendar-day column keeps DateTime as its CLR type after a MessagePack round-trip")]
         public void MessagePackRoundTrip_DateColumnStaysDateTimeClrType()
         {
             var table = BuildTable();
@@ -75,7 +75,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("兩種 wire 格式 round-trip 後的欄位標記應完全相同")]
+        [DisplayName("Column markers are identical after a round-trip through either wire format")]
         public void BothWireFormats_ProduceIdenticalMarkers()
         {
             var table = BuildTable();
@@ -96,7 +96,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("未標記的 DataTable 經 MessagePack round-trip 行為不變")]
+        [DisplayName("An unmarked DataTable behaves the same after a MessagePack round-trip")]
         public void MessagePackRoundTrip_UnmarkedTable_BehaviourUnchanged()
         {
             var table = new DataTable("t");
@@ -110,7 +110,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("DataSet 經 MessagePack round-trip 應逐表保留欄位標記")]
+        [DisplayName("DataSet MessagePack round-trip preserves column markers per table")]
         public void DataSetRoundTrip_PreservesMarkersPerTable()
         {
             var dataSet = new DataSet("ds");

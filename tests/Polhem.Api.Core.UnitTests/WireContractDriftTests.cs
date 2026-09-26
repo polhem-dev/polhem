@@ -9,21 +9,23 @@ using MessagePack.Formatters;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 守衛 wire 型別與其 formatter 註冊之間的漂移。
+    /// Guards against drift between the wire types and their formatter registrations.
     /// </summary>
     /// <remarks>
-    /// 編譯器不會把型別與 formatter 綁在一起：`Polhem.Api.Core.Messages.*` 新增一個型別、
-    /// 或既有 wire 型別新增一個屬性，都不會有任何東西提醒你去補註冊——桌面上 contractless
-    /// 會默默接手，直到 iOS 上炸成 <c>FormatterNotRegisteredException</c> 或欄位靜默消失。
+    /// The compiler does not bind a type to its formatter: adding a type under `Polhem.Api.Core.Messages.*`,
+    /// or a property to an existing wire type, reminds nobody to add the registration. On desktop the contractless
+    /// resolver silently takes over, until iOS blows up with <c>FormatterNotRegisteredException</c> or a field
+    /// silently disappears.
     /// <para>
-    /// 本測試從與 <c>WireContracts</c> 相同的根走一次型別閉包，逐一比對註冊清單。
-    /// 它是「必須顯式註冊」這條規則的唯一自動化把關。
+    /// This test walks the type closure from the same roots as <c>WireContracts</c> and compares it with the
+    /// registration list type by type. It is the only automated check of the "must register explicitly" rule.
     /// </para>
     /// </remarks>
     public class WireContractDriftTests
     {
         /// <summary>
-        /// 不經任何訊息屬性抵達、但確實會上 wire 的型別（藏在 `object` 成員內，或以定義資料取得）。
+        /// Types that are not reached through any message property but do go on the wire (hidden inside an
+        /// `object` member, or obtained as definition data).
         /// </summary>
         private static readonly Type[] s_extraRoots =
         [
@@ -36,21 +38,23 @@ namespace Polhem.Api.Core.UnitTests
         ];
 
         /// <summary>
-        /// 閉包一定看得到的型別。任一不在，代表閉包本身壞了。
+        /// Types the closure must always contain. If any is missing, the closure itself is broken.
         /// </summary>
         /// <remarks>
-        /// 閉包的起點是命名空間**字串**比對。命名空間改名或訊息型別搬家，閉包不會變空、
-        /// 而是**部分萎縮**成只剩 <c>s_extraRoots</c>——此時 <c>missing.Count == 0</c> 依然成立，
-        /// 兩條檢查一起變成恆真。單純的 <c>NotEmpty</c> 擋不到這種萎縮，所以這裡釘住具體型別。
+        /// The closure starts from a namespace **string** match. If a namespace is renamed or the message types move,
+        /// the closure does not become empty; it **partly shrinks** to only <c>s_extraRoots</c>. Then
+        /// <c>missing.Count == 0</c> still holds and both checks become vacuously true. A plain <c>NotEmpty</c>
+        /// cannot catch that shrinkage, so specific types are pinned here.
         /// </remarks>
         /// <remarks>
-        /// 四個型別刻意取自不同的可達路徑：訊息命名空間的根、契約命名空間的根、
-        /// 掛在 <c>ApiMessageBase</c> 上因而每個訊息都會經過的集合、以及多型子型別。
-        /// 任一條路徑斷掉都會被指名，而不是只看到一個數字變小。
+        /// The types are deliberately taken from different reachability paths: the root of the message namespace,
+        /// the root of the contracts namespace, a collection hanging off <c>ApiMessageBase</c> (and so passed by
+        /// every message), and a polymorphic subtype. A broken path is named, instead of only showing up as a
+        /// smaller number.
         /// <para>
-        /// 注意 <c>FormSchema</c> 之類的定義型別**不在**閉包內：它以 XML 字串夾在 wire 上傳輸，
-        /// 不是以物件形式。第一版把它列為 canary，被這條測試當場擋下——這也順帶說明了
-        /// 下限斷言為何不能只寫一個數字。
+        /// Note that definition types such as <c>FormSchema</c> are **not** in the closure: they travel on the wire
+        /// as XML strings, not as objects. The first version listed it as a canary and this test rejected it on the
+        /// spot, which also shows why the lower-bound assertion cannot be just a number.
         /// </para>
         /// </remarks>
         private static readonly Type[] s_closureCanaries =
@@ -62,32 +66,32 @@ namespace Polhem.Api.Core.UnitTests
         ];
 
         [Fact]
-        [DisplayName("型別閉包與註冊清單都不得為空或萎縮（防止兩條漂移檢查變成恆真）")]
+        [DisplayName("The type closure and the registration list are neither empty nor shrunken (so the drift checks cannot pass vacuously)")]
         public void WireTypeClosure_AndRegistrations_AreNotVacuous()
         {
             var closure = WireTypeClosure();
             var contracts = MessagePackCodec.RegisteredFormatters.OfType<IWireContract>().ToList();
 
-            // 下限刻意寫得比現況寬鬆：它要擋的是「掉到只剩 s_extraRoots」這種數量級的萎縮，
-            // 不是要在每次新增型別時被迫改數字。
+            // The lower bound is deliberately looser than the current count. It is meant to catch shrinkage on the
+            // scale of "only `s_extraRoots` left", not to force a number change every time a type is added.
             Assert.True(closure.Count > 80,
-                $"wire 型別閉包只有 {closure.Count} 個型別，遠低於預期。閉包的根是命名空間字串比對，" +
-                "若命名空間改名或訊息型別搬家，下面兩條漂移檢查會靜默變成恆真。");
+                $"The wire type closure has only {closure.Count} types, far fewer than expected. The closure roots come from a namespace string match; " +
+                "if a namespace is renamed or the message types move, the drift checks below silently become vacuously true.");
             Assert.True(contracts.Count > 80,
-                $"只有 {contracts.Count} 個 IWireContract 註冊，遠低於預期。" +
-                "WireContracts_MatchTypeShape 會因此變成空迴圈而恆真。");
+                $"Only {contracts.Count} IWireContract registrations, far fewer than expected. " +
+                "WireContracts_MatchTypeShape would then loop over nothing and pass vacuously.");
 
             var missingCanaries = s_closureCanaries
                 .Where(t => !closure.Contains(t))
                 .Select(t => t.FullName!)
                 .ToList();
             Assert.True(missingCanaries.Count == 0,
-                $"下列型別必定在 wire 型別閉包內，卻不在：{Environment.NewLine}" +
+                $"These types must be in the wire type closure, but are not:{Environment.NewLine}" +
                 string.Join(Environment.NewLine, missingCanaries));
         }
 
         [Fact]
-        [DisplayName("wire 型別閉包內每個型別都必須有顯式註冊的 formatter")]
+        [DisplayName("Every type in the wire type closure has an explicitly registered formatter")]
         public void WireTypeClosure_IsFullyRegistered()
         {
             var registered = RegisteredTypes();
@@ -99,12 +103,12 @@ namespace Polhem.Api.Core.UnitTests
 
             Assert.True(
                 missing.Count == 0,
-                $"以下 wire 型別沒有顯式 formatter，在 iOS（無動態碼）上會失敗：{Environment.NewLine}" +
+                $"These wire types have no explicit formatter and will fail on iOS (no dynamic code):{Environment.NewLine}" +
                 string.Join(Environment.NewLine, missing));
         }
 
         [Fact]
-        [DisplayName("每個註冊的 wire 合約都必須是閉包到得了的型別（反方向）")]
+        [DisplayName("Every registered wire contract is for a type reachable from the closure (the reverse direction)")]
         public void RegisteredContracts_AreReachableFromTheClosure()
         {
             var closure = WireTypeClosure();
@@ -117,18 +121,18 @@ namespace Polhem.Api.Core.UnitTests
                 .OrderBy(n => n, StringComparer.Ordinal)
                 .ToList();
 
-            // WireTypeClosure_IsFullyRegistered 驗的是「閉包 ⊆ 註冊」，抓不到反方向的
-            // 「註冊了但誰也到不了」。ApiErrorInfo 正是這樣的實例：它早已被 JsonRpcError
-            // 取代、零消費者，卻仍掛在 WireContracts 裡，兩輪體檢都沒有任何機制指出來。
-            // 這條是那道缺口的把關——多出來的註冊不是無害的冗餘，它讓死型別看起來還活著。
+            // `WireTypeClosure_IsFullyRegistered` checks "closure ⊆ registrations" and cannot catch the reverse,
+            // "registered but reachable from nowhere". `ApiErrorInfo` was such a case: long replaced by `JsonRpcError`
+            // with zero consumers, it still sat in `WireContracts`, and no mechanism pointed it out in two health checks.
+            // This check closes that gap. An extra registration is not harmless redundancy: it makes a dead type look alive.
             Assert.True(
                 unreachable.Count == 0,
-                $"下列型別註冊了 wire 合約，卻不在 wire 型別閉包內——不是死碼，就是閉包漏走了一條路徑：" +
+                $"These types have a registered wire contract but are not in the wire type closure. Either they are dead code, or the closure misses a path:" +
                 $"{Environment.NewLine}{string.Join(Environment.NewLine, unreachable)}");
         }
 
         [Fact]
-        [DisplayName("每個 WireContract 的成員清單必須與型別當下的形狀一致")]
+        [DisplayName("The member list of every WireContract matches the current shape of its type")]
         public void WireContracts_MatchTypeShape()
         {
             var drift = new List<string>();
@@ -142,29 +146,30 @@ namespace Polhem.Api.Core.UnitTests
                 var onlyInContract = actual.Except(expected, StringComparer.Ordinal).ToList();
 
                 if (onlyOnType.Count > 0)
-                    drift.Add($"{contract.WireType.FullName}: 型別上有但未註冊 → {string.Join(", ", onlyOnType)}");
+                    drift.Add($"{contract.WireType.FullName}: on the type but not registered → {string.Join(", ", onlyOnType)}");
                 if (onlyInContract.Count > 0)
-                    drift.Add($"{contract.WireType.FullName}: 已註冊但型別上已無 → {string.Join(", ", onlyInContract)}");
+                    drift.Add($"{contract.WireType.FullName}: registered but no longer on the type → {string.Join(", ", onlyInContract)}");
             }
 
             Assert.True(
                 drift.Count == 0,
-                $"wire 合約與型別形狀不一致：{Environment.NewLine}{string.Join(Environment.NewLine, drift)}");
+                $"Wire contracts do not match the type shapes:{Environment.NewLine}{string.Join(Environment.NewLine, drift)}");
         }
 
         /// <summary>
-        /// wire 成員的定義與 JSON 相同：public 可讀可寫、且未被 <c>[JsonIgnore]</c> 排除的屬性。
-        /// 框架管理成員（<c>Tag</c> / <c>Key</c> / <c>SerializeState</c>）都帶著該標註，
-        /// 因此自動被排除。
+        /// Wire members are defined the same way as for JSON: public readable and writable properties not excluded by
+        /// <c>[JsonIgnore]</c>. The framework-managed members (<c>Tag</c> / <c>Key</c> / <c>SerializeState</c>) all
+        /// carry that attribute, so they are excluded automatically.
         /// </summary>
         /// <remarks>
-        /// WARNING: 必須讀 <see cref="JsonIgnoreAttribute.Condition"/>，不能只看標註存不存在。
-        /// <c>[JsonIgnore(Condition = JsonIgnoreCondition.Never)]</c> 的語意是**永不忽略** ——
-        /// 只看存在性會把它判成「被忽略」，剛好相反。<c>FormField</c> 與 <c>DbField</c> 已在用這個
-        /// 寫法，目前不在 wire 閉包內故未爆，但那是運氣不是設計。
+        /// WARNING: <see cref="JsonIgnoreAttribute.Condition"/> must be read; the presence of the attribute is not
+        /// enough. <c>[JsonIgnore(Condition = JsonIgnoreCondition.Never)]</c> means **never ignore**, and a presence
+        /// check would judge it "ignored", the exact opposite. <c>FormField</c> and <c>DbField</c> already use this
+        /// form. They are not in the wire closure today, so nothing broke, but that is luck, not design.
         /// <para>
-        /// 同一個 bug 曾出現在 POLHEM4007（規則只看 attribute 存在、未讀 <c>Condition</c>），
-        /// 該規則於 2026-07-30 剔除時已記錄成因 —— 然後它活在這裡。
+        /// The same bug once existed in POLHEM4007 (the rule checked only that the attribute was present and did not
+        /// read <c>Condition</c>). Its cause was recorded when that rule was removed on 2026-07-30, and then it lived
+        /// on here.
         /// </para>
         /// </remarks>
         private static List<string> WireMemberNames(Type type) =>
@@ -177,7 +182,7 @@ namespace Polhem.Api.Core.UnitTests
                 .ToList();
 
         /// <summary>
-        /// 每個註冊的 formatter 所涵蓋的型別（由 <c>IMessagePackFormatter&lt;T&gt;</c> 的 T 取得）。
+        /// The types covered by the registered formatters (taken from the T of <c>IMessagePackFormatter&lt;T&gt;</c>).
         /// </summary>
         private static HashSet<Type> RegisteredTypes()
         {
@@ -196,7 +201,8 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 從 API 訊息合約走出的型別閉包，回傳其中「需要顯式 formatter」的型別。
+        /// Walks the type closure from the API message contracts and returns the types in it that need an explicit
+        /// formatter.
         /// </summary>
         private static HashSet<Type> WireTypeClosure()
         {

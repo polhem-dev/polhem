@@ -14,7 +14,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
     public class JsonRpcExecutorUserMessageExceptionTests
     {
         [Fact]
-        [DisplayName("MapException 於 UserMessageException 應回傳 UserMessage code 與原訊息")]
+        [DisplayName("MapException returns the UserMessage code and the original message for UserMessageException")]
         public void MapException_UserMessageException_ReturnsUserMessageCode()
         {
             var ex = new UserMessageException("欄位不能為空");
@@ -26,7 +26,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("MapException 於 ForbiddenException 應回傳 PermissionDenied code 與原訊息")]
+        [DisplayName("MapException returns the PermissionDenied code and the original message for ForbiddenException")]
         public void MapException_ForbiddenException_ReturnsPermissionDeniedCode()
         {
             var ex = new ForbiddenException("Permission denied: 'Delete' on model 'PurchaseOrder'.");
@@ -38,11 +38,12 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("MapException 於 CompanyAccessDeniedException 應回傳 CompanyAccessDenied code 與原訊息")]
+        [DisplayName("MapException returns the CompanyAccessDenied code and the original message for CompanyAccessDeniedException")]
         public void MapException_CompanyAccessDeniedException_ReturnsCompanyAccessDeniedCode()
         {
-            // 這條分支必須排在 BCL 白名單之前：本型別若落到白名單，會被歸成一般業務訊息
-            // (-32099)，前端就無法對「無權進入公司」做 403 的統一處理。
+            // This branch must come before the BCL allowlist. If this type fell through to the allowlist it would be
+            // classed as a plain business message (-32099), and the front end could not handle "no right to enter the
+            // company" uniformly as a 403.
             var ex = new CompanyAccessDeniedException("Company access denied.");
 
             var (code, message) = JsonRpcExecutor.MapException(ex);
@@ -52,11 +53,12 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("MapException 於 CompanyNotEnteredException 應回傳 CompanyNotEntered code 與原訊息")]
+        [DisplayName("MapException returns the CompanyNotEntered code and the original message for CompanyNotEnteredException")]
         public void MapException_CompanyNotEnteredException_ReturnsCompanyNotEnteredCode()
         {
-            // 未進公司是可復原的協定狀態，不是要顯示給使用者的業務訊息。落到 -32099 的話，
-            // 前端只能把訊息原文彈出來，無從得知該把使用者導去公司選擇。
+            // Not having entered a company is a recoverable protocol state, not a business message for the user.
+            // Mapped to -32099, the front end could only pop up the raw message and would have no way to know it
+            // should send the user to company selection.
             var ex = new CompanyNotEnteredException("No company has been entered for this session.");
 
             var (code, message) = JsonRpcExecutor.MapException(ex);
@@ -66,7 +68,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("MapException 於白名單 BCL 例外應回傳 UserMessage code(過渡期相容)")]
+        [DisplayName("MapException returns the UserMessage code for an allowlisted BCL exception (transitional compatibility)")]
         public void MapException_BclWhitelistException_ReturnsUserMessageCode()
         {
             var ex = new InvalidOperationException("Session state is not valid.");
@@ -78,7 +80,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("MapException 於 ArgumentException 應回傳 UserMessage code")]
+        [DisplayName("MapException returns the UserMessage code for ArgumentException")]
         public void MapException_ArgumentException_ReturnsUserMessageCode()
         {
             var ex = new ArgumentException("CompanyId is required.");
@@ -89,7 +91,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("MapException 於 UnauthorizedAccessException 應回傳 UserMessage code")]
+        [DisplayName("MapException returns the UserMessage code for UnauthorizedAccessException")]
         public void MapException_UnauthorizedAccessException_ReturnsUserMessageCode()
         {
             var ex = new UnauthorizedAccessException("Session not found or has expired.");
@@ -100,7 +102,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("MapException 於 FormatException 應回傳 UserMessage code")]
+        [DisplayName("MapException returns the UserMessage code for FormatException")]
         public void MapException_FormatException_ReturnsUserMessageCode()
         {
             var ex = new FormatException("Invalid method format.");
@@ -111,13 +113,13 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("MapException 於非白名單例外應回傳 InternalError code 與遮蔽訊息(非 debug 模式)")]
+        [DisplayName("MapException returns the InternalError code and a masked message for a non-allowlisted exception (outside debug mode)")]
         public void MapException_UnknownException_ReturnsInternalErrorCode()
         {
             var ex = new MissingMethodException("Method 'DefinitelyNotAMethod' not found.");
 
-            // 遮蔽只在非 debug 模式生效，而測試行程本身跑在 debug 模式
-            // （tests/Define 的 SystemSettings）。這裡要驗的是 production 行為。
+            // Masking only applies outside debug mode, and the test process itself runs in debug mode (the
+            // SystemSettings in tests/Define). What is verified here is the production behavior.
             bool original = SysInfo.IsDebugMode;
             try
             {
@@ -134,7 +136,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("MapException 於通用 Exception 應回傳 InternalError code(非 debug 模式不洩漏原訊息)")]
+        [DisplayName("MapException returns the InternalError code for a generic Exception (the original message does not leak outside debug mode)")]
         public void MapException_GenericException_ReturnsInternalErrorCode()
         {
             var ex = new Exception("Some internal failure.");
@@ -147,7 +149,6 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
                 Assert.Equal(JsonRpcErrorCode.InternalError, code);
                 Assert.Equal("Internal server error", message);
-                // 確認原訊息不洩漏。
                 Assert.DoesNotContain("Some internal failure", message);
             }
             finally
@@ -157,7 +158,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("MapException 於 debug 模式應透傳基礎設施例外原訊息(code 維持 InternalError)")]
+        [DisplayName("MapException passes through the original message of an infrastructure exception in debug mode (the code stays InternalError)")]
         public void MapException_DebugMode_PassesThroughInfrastructureMessage()
         {
             bool original = SysInfo.IsDebugMode;
@@ -178,7 +179,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("MapException 於 debug 模式不應改變使用者面例外的對應結果")]
+        [DisplayName("MapException in debug mode leaves the mapping of user-facing exceptions unchanged")]
         public void MapException_DebugMode_LeavesUserFacingMappingUnchanged()
         {
             bool original = SysInfo.IsDebugMode;

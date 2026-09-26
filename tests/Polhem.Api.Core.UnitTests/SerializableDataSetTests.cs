@@ -5,7 +5,7 @@ using Polhem.Api.Core.MessagePack;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// SerializableDataSet 的 FromDataSet/ToDataSet 與 DataRelation round-trip 測試。
+    /// FromDataSet/ToDataSet and DataRelation round-trip tests for SerializableDataSet.
     /// </summary>
     public class SerializableDataSetTests
     {
@@ -40,7 +40,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("FromDataSet 應保留 DataSetName、Tables 與 Relations")]
+        [DisplayName("FromDataSet preserves DataSetName, Tables and Relations")]
         public void FromDataSet_PreservesNameTablesRelations()
         {
             var ds = BuildMasterDetailDataSet();
@@ -60,7 +60,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ToDataSet 應還原 DataSet 並重建 Relations")]
+        [DisplayName("ToDataSet restores the DataSet and rebuilds Relations")]
         public void ToDataSet_RestoresDataSetAndRelations()
         {
             var ds = BuildMasterDetailDataSet();
@@ -81,7 +81,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("含 Relation 的 DataSet 經 MessagePack round-trip 應保持結構")]
+        [DisplayName("A DataSet with a Relation keeps its structure through a MessagePack round-trip")]
         public void DataSet_WithRelation_MessagePackRoundTrip_PreservesStructure()
         {
             var ds = BuildMasterDetailDataSet();
@@ -98,7 +98,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("無 Relation 的 DataSet 轉換 Relations 應為空集合")]
+        [DisplayName("Converting a DataSet without Relations gives an empty Relations collection")]
         public void FromDataSet_NoRelations_ReturnsEmptyRelations()
         {
             var ds = new DataSet("Simple");

@@ -8,7 +8,7 @@ namespace Polhem.Api.Core.UnitTests.Filters
     public class FilterNodeMessagePackSpike
     {
         [Fact]
-        [DisplayName("SPIKE：FilterNode MessagePack round-trip 含巢狀 group 應保留型別與值")]
+        [DisplayName("SPIKE: FilterNode with a nested group keeps its types and values through a MessagePack round-trip")]
         public void RoundTrip_NestedGroup_PreservesUnionAndValues()
         {
             FilterNode original = FilterGroup.All(
@@ -52,7 +52,7 @@ namespace Polhem.Api.Core.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("SPIKE：FilterCondition.In MessagePack round-trip 應保留清單值")]
+        [DisplayName("SPIKE: FilterCondition.In keeps its list values through a MessagePack round-trip")]
         public void RoundTrip_InCondition_PreservesValues()
         {
             FilterNode original = FilterCondition.In("sys_id", new object[] { "E001", "E002", "E003" });
@@ -68,7 +68,7 @@ namespace Polhem.Api.Core.UnitTests.Filters
         }
 
         [Fact]
-        [DisplayName("SPIKE：SortFieldCollection MessagePack round-trip 應保留欄位與方向")]
+        [DisplayName("SPIKE: SortFieldCollection keeps its fields and directions through a MessagePack round-trip")]
         public void RoundTrip_SortFieldCollection_PreservesValues()
         {
             var original = new SortFieldCollection

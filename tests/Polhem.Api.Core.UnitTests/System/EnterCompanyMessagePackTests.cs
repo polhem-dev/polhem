@@ -7,14 +7,14 @@ using Polhem.Definition.Settings;
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// EnterCompanyRequest / EnterCompanyResponse 經 <see cref="MessagePackCodec"/> 的
-    /// wire 層 round-trip 序列化驗證，重點：CompanyInfo 巢狀物件在框架的 composite
-    /// resolver 下能正確還原四個 [Key] 欄位。
+    /// Wire-level round-trip serialization tests of EnterCompanyRequest / EnterCompanyResponse through
+    /// <see cref="MessagePackCodec"/>. The focus: the nested CompanyInfo object restores its fields correctly under
+    /// the framework's composite resolver.
     /// </summary>
     public class EnterCompanyMessagePackTests
     {
         [Fact]
-        [DisplayName("EnterCompanyRequest 帶 CompanyId 應 round-trip 還原")]
+        [DisplayName("EnterCompanyRequest with a CompanyId round-trips intact")]
         public void EnterCompanyRequest_RoundTrip_PreservesCompanyId()
         {
             var request = new EnterCompanyRequest { CompanyId = "C001" };
@@ -27,7 +27,7 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("EnterCompanyRequest 預設 CompanyId 應 round-trip 為空字串")]
+        [DisplayName("EnterCompanyRequest with the default CompanyId round-trips as an empty string")]
         public void EnterCompanyRequest_DefaultValue_RoundTrip()
         {
             var request = new EnterCompanyRequest();
@@ -40,7 +40,7 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("EnterCompanyResponse.Company 應 round-trip 保留 CompanyInfo 四欄位")]
+        [DisplayName("EnterCompanyResponse.Company round-trips CompanyId, CompanyName and CompanyDatabaseId of CompanyInfo")]
         public void EnterCompanyResponse_RoundTrip_PreservesCompanyInfo()
         {
             var response = new EnterCompanyResponse
@@ -63,7 +63,7 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("EnterCompanyResponse.Capabilities 應 round-trip 保留每個 model 的 action mask")]
+        [DisplayName("EnterCompanyResponse.Capabilities round-trips the action mask of every model")]
         public void EnterCompanyResponse_RoundTrip_PreservesCapabilities()
         {
             var response = new EnterCompanyResponse
@@ -85,7 +85,7 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("EnterCompanyResponse 預設 Capabilities 應 round-trip 為空字典")]
+        [DisplayName("EnterCompanyResponse with default Capabilities round-trips as an empty dictionary")]
         public void EnterCompanyResponse_DefaultCapabilities_RoundTripEmpty()
         {
             var response = new EnterCompanyResponse { Company = new CompanyInfo { CompanyId = "C001" } };

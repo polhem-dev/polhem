@@ -4,17 +4,18 @@ using Polhem.Api.Core.Transformers;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// ApiPayloadTransformer 測試。需保存／還原 <see cref="ApiServiceOptions"/> 靜態狀態以避免影響其他測試。
+    /// ApiPayloadTransformer tests. The <see cref="ApiServiceOptions"/> static state is saved and restored to avoid
+    /// affecting other tests.
     /// </summary>
     /// <remarks>
-    /// try/finally 還原只在串行下成立，故加入 <c>ApiServiceOptionsState</c> collection
-    /// 與其他會改寫同一組靜態元件的測試類序列化。
+    /// Restoring in try/finally only holds when tests run serially, so this class joins the
+    /// <c>ApiServiceOptionsState</c> collection to serialize with the other test classes that modify the same statics.
     /// </remarks>
     [Collection("ApiServiceOptionsState")]
     public class ApiPayloadTransformerTests
     {
         [Fact]
-        [DisplayName("Encode 後 Decode 應還原原始 string 物件")]
+        [DisplayName("Decode after Encode restores the original string")]
         public void EncodeDecode_String_RoundTrip()
         {
             var transformer = new ApiPayloadTransformer();
@@ -27,7 +28,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Encode 傳入 null 應拋出 ArgumentNullException")]
+        [DisplayName("Encode throws ArgumentNullException for a null payload")]
         public void Encode_NullPayload_ThrowsArgumentNullException()
         {
             var transformer = new ApiPayloadTransformer();
@@ -36,7 +37,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Decode 傳入 null 應拋出 ArgumentNullException")]
+        [DisplayName("Decode throws ArgumentNullException for a null payload")]
         public void Decode_NullPayload_ThrowsArgumentNullException()
         {
             var transformer = new ApiPayloadTransformer();
@@ -45,7 +46,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Decode 傳入非 byte 陣列應拋出 InvalidOperationException")]
+        [DisplayName("Decode throws InvalidOperationException for a payload that is not a byte array")]
         public void Decode_NonByteArray_ThrowsInvalidOperationException()
         {
             var transformer = new ApiPayloadTransformer();
@@ -55,7 +56,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Encrypt 與 Decrypt 於 NoEncryptionEncryptor 下應回傳原始 byte")]
+        [DisplayName("Encrypt and Decrypt return the original bytes with NoEncryptionEncryptor")]
         public void EncryptDecrypt_NoEncryption_ReturnsSameBytes()
         {
             var originalEncryptor = ApiServiceOptions.PayloadEncryptor;
@@ -79,7 +80,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Encrypt 傳入 null rawBytes 應拋出 ArgumentNullException")]
+        [DisplayName("Encrypt throws ArgumentNullException for null rawBytes")]
         public void Encrypt_NullBytes_ThrowsArgumentNullException()
         {
             var transformer = new ApiPayloadTransformer();
@@ -88,7 +89,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Decrypt 傳入 null encryptedBytes 應拋出 ArgumentNullException")]
+        [DisplayName("Decrypt throws ArgumentNullException for null encryptedBytes")]
         public void Decrypt_NullBytes_ThrowsArgumentNullException()
         {
             var transformer = new ApiPayloadTransformer();

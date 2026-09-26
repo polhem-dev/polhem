@@ -5,12 +5,12 @@ using Polhem.Api.Core.MessagePack;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// DataSetFormatter / DataTableFormatter 的 null round-trip 測試，涵蓋 WriteNil/TryReadNil 路徑。
+    /// Null round-trip tests for DataSetFormatter / DataTableFormatter, covering the WriteNil/TryReadNil paths.
     /// </summary>
     public class MessagePackNullFormatterTests
     {
         [Fact]
-        [DisplayName("DataSet null 序列化應可反序列化回 null")]
+        [DisplayName("A null DataSet serializes and deserializes back to null")]
         public void DataSet_Null_Serialize_RoundTrip_ReturnsNull()
         {
             DataSet? original = null;
@@ -22,7 +22,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("DataTable null 序列化應可反序列化回 null")]
+        [DisplayName("A null DataTable serializes and deserializes back to null")]
         public void DataTable_Null_Serialize_RoundTrip_ReturnsNull()
         {
             DataTable? original = null;
@@ -34,7 +34,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("空 DataSet 序列化應可還原為空集合")]
+        [DisplayName("An empty DataSet round-trips to an empty table collection")]
         public void DataSet_Empty_Serialize_RoundTrip_ReturnsEmpty()
         {
             var original = new DataSet("Empty");
@@ -47,7 +47,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("空 DataTable 序列化應可還原為空資料表")]
+        [DisplayName("An empty DataTable round-trips to an empty table")]
         public void DataTable_Empty_Serialize_RoundTrip_ReturnsEmpty()
         {
             var original = new DataTable("Empty");

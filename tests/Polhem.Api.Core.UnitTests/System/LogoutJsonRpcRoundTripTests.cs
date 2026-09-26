@@ -12,13 +12,14 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip：將 <c>System.Logout</c>
-    /// 透過 executor 派發到 <see cref="Polhem.Business.System.SystemBusinessObject.Logout"/>，
-    /// 驗證 SessionInfo 從快取消失且回傳成功。
+    /// End-to-end round-trip through <see cref="JsonRpcExecutor"/>: dispatches <c>System.Logout</c> through the
+    /// executor to <see cref="Polhem.Business.System.SystemBusinessObject.Logout"/> and verifies that the SessionInfo
+    /// disappears from the cache and the call succeeds.
     /// <para>
-    /// 需要 <see cref="SharedDbFixture"/>（而非 <c>PolhemTestFixture</c>）：session 持久化落地後，
-    /// Logout 會刪除 `st_session` 的種子，因此本測試對 <c>st_session</c> 有真實相依。單靠 <c>PolhemTestFixture</c> 不會建 schema，
-    /// 只有在別的測試行程剛好先建好表時才會通過——那是 CI 上偶發紅的來源。
+    /// Needs <see cref="SharedDbFixture"/> (not <c>PolhemTestFixture</c>): since sessions are persisted, Logout
+    /// deletes the seeded `st_session` row, so this test really depends on <c>st_session</c>. <c>PolhemTestFixture</c>
+    /// alone does not create the schema, so the test would only pass when another test process happened to create the
+    /// table first, which was the source of intermittent red runs on CI.
     /// </para>
     /// </summary>
     public class LogoutJsonRpcRoundTripTests : IClassFixture<SharedDbFixture>
@@ -55,7 +56,7 @@ namespace Polhem.Api.Core.UnitTests.System
             };
 
         [Fact]
-        [DisplayName("System.Logout 應移除 SessionInfo 並回傳成功")]
+        [DisplayName("System.Logout removes the SessionInfo and succeeds")]
         public void Logout_ValidSession_RemovesSessionInfo()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -69,7 +70,7 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("System.Logout 對已進公司的 session 應先清 CompanyId 再移除")]
+        [DisplayName("System.Logout removes a session that has already entered a company")]
         public void Logout_AfterEnteredCompany_ClearsThenRemoves()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();

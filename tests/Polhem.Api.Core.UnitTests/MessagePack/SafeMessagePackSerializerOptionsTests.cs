@@ -5,9 +5,8 @@ using MessagePack.Resolvers;
 namespace Polhem.Api.Core.UnitTests.MessagePack
 {
     /// <summary>
-    /// SafeMessagePackSerializerOptions 測試：
-    /// 驗證 ThrowIfDeserializingTypeIsDisallowed 會依白名單擋下不合法型別，
-    /// 並確認 Clone 以同類型回傳新的 instance。
+    /// SafeMessagePackSerializerOptions tests: verifies that ThrowIfDeserializingTypeIsDisallowed blocks types not on
+    /// the allow-list, and that Clone returns a new instance of the same type.
     /// </summary>
     public class SafeMessagePackSerializerOptionsTests
     {
@@ -15,7 +14,7 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
             => new SafeMessagePackSerializerOptions(StandardResolver.Instance);
 
         [Fact]
-        [DisplayName("不在白名單中的型別應拋 InvalidOperationException")]
+        [DisplayName("A type not on the allow-list throws InvalidOperationException")]
         public void ThrowIfDisallowed_TypeNotInWhitelist_Throws()
         {
             var options = Create();
@@ -28,23 +27,23 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
         }
 
         [Fact]
-        [DisplayName("白名單中的 primitive 型別應不拋出例外")]
+        [DisplayName("A primitive type on the allow-list does not throw")]
         public void ThrowIfDisallowed_AllowedPrimitive_DoesNotThrow()
         {
             var options = Create();
 
-            // System.String 是 AllowedPrimitiveTypes 成員
+            // `System.String` is a member of `AllowedPrimitiveTypes`.
             var ex = Record.Exception(() => options.ThrowIfDeserializingTypeIsDisallowed(typeof(string)));
             Assert.Null(ex);
         }
 
         [Fact]
-        [DisplayName("WithResolver 複製後型別應為 SafeMessagePackSerializerOptions")]
+        [DisplayName("The copy made by WithResolver is a SafeMessagePackSerializerOptions")]
         public void Clone_ViaWithResolver_ReturnsSafeOptions()
         {
             var options = Create();
 
-            // WithResolver 內部會呼叫 Clone 產生同型別的新 instance
+            // `WithResolver` calls `Clone` internally to create a new instance of the same type.
             var cloned = options.WithResolver(ContractlessStandardResolver.Instance);
 
             Assert.IsType<SafeMessagePackSerializerOptions>(cloned);

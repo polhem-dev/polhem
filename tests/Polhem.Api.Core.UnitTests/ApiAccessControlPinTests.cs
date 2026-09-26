@@ -6,32 +6,34 @@ using Polhem.Business;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 把每個 API 方法的保護等級與驗證需求釘死，讓「調高門檻」變成一次必須正視的判斷。
+    /// Pins the protection level and access requirement of every API method, so that raising the bar becomes a
+    /// decision someone has to face.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 提高某方法的 <c>ProtectionLevel</c>（例如 Public → Encrypted）或把
-    /// <c>AccessRequirement</c> 從 Anonymous 改為 Authenticated，會讓**既有的客戶端當場被拒**。
-    /// 這類變更原本沒有任何機制會發現：attribute 的**參數**不進 <c>PublicAPI.Shipped.txt</c>，
-    /// analyzer 看不到，wire 樣本也看不到——它不改變 payload 的形狀，只改變誰能送。
+    /// Raising a method's <c>ProtectionLevel</c> (for example Public → Encrypted) or changing its
+    /// <c>AccessRequirement</c> from Anonymous to Authenticated makes **existing clients get rejected on the spot**.
+    /// No mechanism used to notice such a change: attribute **arguments** do not go into <c>PublicAPI.Shipped.txt</c>,
+    /// so the analyzer cannot see them, and neither can the wire fixtures, because the change does not alter the
+    /// payload's shape, only who may send it.
     /// </para>
     /// <para>
-    /// 其餘的合約變更多半已有守護：訊息屬性、型別名、方法名、列舉成員都在
-    /// <c>PublicAPI.Shipped.txt</c> 裡（訊息型別不使用 <c>[JsonPropertyName]</c>，
-    /// 所以 wire 上的名字就是 C# 名經 camelCase 轉換），改名會讓 analyzer 紅。
-    /// 存取控制是唯一的例外，因此單獨釘在這裡。
+    /// Most other contract changes are already guarded: message properties, type names, method names and enum
+    /// members are in <c>PublicAPI.Shipped.txt</c> (message types do not use <c>[JsonPropertyName]</c>, so the
+    /// name on the wire is the C# name converted to camelCase), and renaming one turns the analyzer red.
+    /// Access control is the one exception, so it is pinned here on its own.
     /// </para>
     /// <para>
-    /// 新增 API 方法一樣會讓本測試紅。那是刻意的：補上一列的同時，會被迫回答
-    /// 「這個方法該讓誰、以什麼保護等級呼叫」，而不是沿用複製來的 attribute。
+    /// Adding an API method also turns this test red. That is deliberate: adding the row forces an answer to
+    /// "who may call this method, and at what protection level" instead of reusing a copied attribute.
     /// </para>
     /// </remarks>
     public class ApiAccessControlPinTests
     {
         /// <summary>
-        /// 期望值刻意寫**字串**而非 <c>ApiProtectionLevel.Public</c> 這樣的列舉引用。
-        /// 用列舉引用的話，把成員改名或換掉它的語意，這裡會跟著改、測試照過；
-        /// 寫字串才能同時抓到「換成別的等級」與「等級被改名」。
+        /// The expected values are deliberately **strings**, not enum references such as <c>ApiProtectionLevel.Public</c>.
+        /// With enum references, renaming a member or changing its meaning would change this table too and the test
+        /// would still pass. Strings catch both "switched to another level" and "the level was renamed".
         /// </summary>
         private static readonly Dictionary<string, (string Protection, string Requirement)> s_expected = new(StringComparer.Ordinal)
         {
@@ -77,11 +79,11 @@ namespace Polhem.Api.Core.UnitTests
         };
 
         /// <summary>
-        /// 以與 <see cref="JsonRpcExecutor"/> 相同的解析規則掃出實際的存取控制宣告。
+        /// Scans the actual access control declarations with the same resolution rules as <see cref="JsonRpcExecutor"/>.
         /// </summary>
         /// <remarks>
-        /// 走 <see cref="ApiAccessValidator.FindAccessControl"/> 而不是自己讀 attribute：
-        /// 那裡才有 method → base method → declaring type 的優先序，而執行期用的正是它。
+        /// Goes through <see cref="ApiAccessValidator.FindAccessControl"/> instead of reading the attribute directly:
+        /// only that method has the method → base method → declaring type precedence, and it is what runs in production.
         /// </remarks>
         private static Dictionary<string, (string Protection, string Requirement)> Actual()
         {
@@ -98,13 +100,13 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("API 方法的保護等級與驗證需求都不得在無人察覺下變動")]
+        [DisplayName("API method protection levels and access requirements cannot change unnoticed")]
         public void AccessControl_MatchesPinnedDeclarations()
         {
             var actual = Actual();
 
-            // 掃不到任何方法代表掃描本身壞了（型別搬家、繼承關係變更），
-            // 而不是「全部合規」——沒有這一條，下面的比對會一起變成恆真。
+            // Finding no methods means the scan itself is broken (a type moved, the inheritance changed), not that
+            // everything complies. Without this check, the comparison below would pass vacuously.
             Assert.NotEmpty(actual);
 
             var problems = new List<string>();
@@ -113,14 +115,14 @@ namespace Polhem.Api.Core.UnitTests
             {
                 if (!actual.TryGetValue(name, out var found))
                 {
-                    problems.Add($"{name}：已釘住但掃不到（方法被移除或改名？既有客戶端會收到 MethodNotFound）");
+                    problems.Add($"{name}: pinned but not found (method removed or renamed? existing clients will get MethodNotFound)");
                     continue;
                 }
 
                 if (found != expected)
                 {
                     problems.Add(
-                        $"{name}：宣告由 ({expected.Protection}, {expected.Requirement}) 變成 " +
+                        $"{name}: declaration changed from ({expected.Protection}, {expected.Requirement}) to " +
                         $"({found.Protection}, {found.Requirement})");
                 }
             }
@@ -128,15 +130,16 @@ namespace Polhem.Api.Core.UnitTests
             foreach (var name in actual.Keys.Where(k => !s_expected.ContainsKey(k)))
             {
                 var found = actual[name];
-                problems.Add($"{name}：新的 API 方法（{found.Protection}, {found.Requirement}），尚未釘住");
+                problems.Add($"{name}: new API method ({found.Protection}, {found.Requirement}), not pinned yet");
             }
 
             Assert.True(problems.Count == 0,
-                "API 存取控制宣告與釘住的清單不符：" + global::System.Environment.NewLine +
+                "API access control declarations do not match the pinned list:" + global::System.Environment.NewLine +
                 string.Join(global::System.Environment.NewLine, problems) + global::System.Environment.NewLine +
                 global::System.Environment.NewLine +
-                "調高保護等級或改用 Authenticated，會讓既有客戶端當場被拒——包含不隨框架一起發版的" +
-                "前端。確認過影響後再更新本清單；新增方法則是被要求回答一次「這該讓誰呼叫」。");
+                "Raising the protection level or switching to Authenticated rejects existing clients on the spot, " +
+                "including front ends that are not released with the framework. Update this list only after checking " +
+                "the impact. A new method requires answering once: who should be allowed to call it?");
         }
     }
 }

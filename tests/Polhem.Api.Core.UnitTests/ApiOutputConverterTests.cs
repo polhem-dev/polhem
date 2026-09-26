@@ -7,12 +7,12 @@ using Polhem.Api.Core.Conversion;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// ApiOutputConverter 的 Convert 與 ConvertResultValue 測試。
+    /// Tests for ApiOutputConverter.Convert and ConvertResultValue.
     /// </summary>
     public class ApiOutputConverterTests
     {
         [Fact]
-        [DisplayName("Convert 於 null 應回傳 null")]
+        [DisplayName("Convert returns null for null")]
         public void Convert_Null_ReturnsNull()
         {
             var result = ApiOutputConverter.Convert(null!);
@@ -20,7 +20,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Convert 於 BO Result 應轉成對應 API Response")]
+        [DisplayName("Convert turns a BO Result into the matching API Response")]
         public void Convert_BoResult_ReturnsApiResponse()
         {
             var boResult = new PingResult
@@ -39,7 +39,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Convert 於名稱無 Result 後綴之物件應回傳原物件")]
+        [DisplayName("Convert returns the original object when its type name has no Result suffix")]
         public void Convert_NonResultSuffix_ReturnsOriginal()
         {
             var input = "hello";
@@ -48,7 +48,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ConvertResultValue 於 value 已為目標型別時應直接回傳")]
+        [DisplayName("ConvertResultValue returns the value directly when it is already the target type")]
         public void ConvertResultValue_DirectType_ReturnsSame()
         {
             var original = new PingResponse { Status = "x" };
@@ -58,7 +58,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ConvertResultValue 於 JsonElement 應反序列化為目標型別")]
+        [DisplayName("ConvertResultValue deserializes a JsonElement into the target type")]
         public void ConvertResultValue_JsonElement_Deserializes()
         {
             var json = """{"status":"ok","traceId":"T1"}""";
@@ -73,7 +73,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ConvertResultValue 於相容引用型別應強制轉型")]
+        [DisplayName("ConvertResultValue casts a compatible reference type")]
         public void ConvertResultValue_CastablePath_ReturnsCast()
         {
             object value = "hello";

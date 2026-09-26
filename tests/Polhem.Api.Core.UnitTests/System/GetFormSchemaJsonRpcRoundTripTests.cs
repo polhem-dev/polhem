@@ -14,15 +14,15 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip：將
-    /// <c>System.GetFormSchema</c> 透過 executor 派發到
-    /// <see cref="Polhem.Business.System.SystemBusinessObject.GetFormSchema"/>，驗證：
+    /// An end-to-end round trip through <see cref="JsonRpcExecutor"/>: dispatches
+    /// <c>System.GetFormSchema</c> through the executor to
+    /// <see cref="Polhem.Business.System.SystemBusinessObject.GetFormSchema"/> and verifies that:
     /// <list type="bullet">
-    /// <item>action 路由（progId.action 反射查表）正確找到方法</item>
-    /// <item>ApiInputConverter（GetFormSchemaRequest → GetFormSchemaArgs）保留 ProgId</item>
-    /// <item>ApiOutputConverter（GetFormSchemaResult → GetFormSchemaResponse）命名慣例反射有作用，
-    ///   FormSchema 物件 deep-copy 正確</item>
-    /// <item>從 IDefineAccess 取出 fixture seed 的 Employee schema</item>
+    /// <item>action routing (the progId.action reflection lookup) finds the method</item>
+    /// <item>ApiInputConverter (GetFormSchemaRequest → GetFormSchemaArgs) keeps the ProgId</item>
+    /// <item>ApiOutputConverter (GetFormSchemaResult → GetFormSchemaResponse) naming-convention reflection works,
+    ///   and the FormSchema arrives intact as XML</item>
+    /// <item>the Employee schema seeded by the fixture is read from IDefineAccess</item>
     /// </list>
     /// </summary>
     public class GetFormSchemaJsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
@@ -32,7 +32,7 @@ namespace Polhem.Api.Core.UnitTests.System
         public GetFormSchemaJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("System.GetFormSchema 經 JsonRpcExecutor 應派發成功並回傳 fixture seed 的 Employee schema")]
+        [DisplayName("System.GetFormSchema dispatches through JsonRpcExecutor and returns the Employee schema seeded by the fixture")]
         public void GetFormSchema_ThroughJsonRpc_DispatchesAndReturnsSchema()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
@@ -67,17 +67,17 @@ namespace Polhem.Api.Core.UnitTests.System
 
             Assert.Null(response.Error);
             var result = Assert.IsType<GetFormSchemaResponse>(response.Result!.Value);
-            // 定義一律以 XML 上線——巢狀集合是 get-only，JSON / MessagePack 收不回來
+            // Definitions travel as XML because their nested collections are get-only, which JSON and MessagePack cannot read back.
             Assert.False(string.IsNullOrEmpty(result.Xml));
             var schema = XmlCodec.Deserialize<FormSchema>(result.Xml!);
             Assert.NotNull(schema);
             Assert.Equal("Employee", schema!.ProgId);
             Assert.NotNull(schema.Tables);
-            Assert.True(schema.Tables!.Count > 0, "Schema 應至少有一個 master table");
+            Assert.True(schema.Tables!.Count > 0, "The schema should have at least one master table.");
         }
 
         [Fact]
-        [DisplayName("System.GetFormSchema 對空 ProgId 應回 RpcError")]
+        [DisplayName("System.GetFormSchema returns an RpcError for an empty ProgId")]
         public void GetFormSchema_EmptyProgId_ReturnsRpcError()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);

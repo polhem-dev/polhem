@@ -5,20 +5,20 @@ using Polhem.Api.Core.Messages;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// ApiPayloadConverter TypeName 白名單驗證測試（純邏輯，無 process-wide state 相依）。
+    /// Tests for the ApiPayloadConverter transforms and its TypeName allow list (pure logic, no dependency on process-wide state).
     /// </summary>
     public class ApiPayloadConverterTests
     {
         private static byte[] MakeKey()
         {
-            // AES-CBC-HMAC 需要 64 bytes 組合金鑰（32 AES + 32 HMAC）
+            // AES-CBC-HMAC needs a 64-byte combined key (32 bytes AES + 32 bytes HMAC).
             var key = new byte[64];
             for (int i = 0; i < key.Length; i++) key[i] = (byte)i;
             return key;
         }
 
         [Fact]
-        [DisplayName("TransformTo Plain 應直接設 Format 並回傳")]
+        [DisplayName("TransformTo Plain sets Format and returns without changing the value")]
         public void TransformTo_Plain_SetsFormatAndReturns()
         {
             var payload = new JsonRpcParams { Value = "hello" };
@@ -30,7 +30,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("TransformTo 於 Encoded 但 Value 為 null 應拋出 InvalidOperationException")]
+        [DisplayName("TransformTo Encoded throws InvalidOperationException when Value is null")]
         public void TransformTo_Encoded_NullValue_Throws()
         {
             var payload = new JsonRpcParams { Value = null };
@@ -42,7 +42,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("TransformTo 於 Encrypted 但 key 為 null 應拋出 InvalidOperationException")]
+        [DisplayName("TransformTo Encrypted throws InvalidOperationException when the key is null")]
         public void TransformTo_Encrypted_NullKey_Throws()
         {
             var payload = new JsonRpcParams { Value = "hello" };
@@ -54,7 +54,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("TransformTo 於 Encrypted 但 key 為空陣列應拋出 InvalidOperationException")]
+        [DisplayName("TransformTo Encrypted throws InvalidOperationException when the key is an empty array")]
         public void TransformTo_Encrypted_EmptyKey_Throws()
         {
             var payload = new JsonRpcParams { Value = "hello" };
@@ -66,7 +66,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("TransformTo Encoded 後 RestoreFrom Encoded 應還原原始字串")]
+        [DisplayName("RestoreFrom Encoded after TransformTo Encoded restores the original string")]
         public void TransformTo_Encoded_RoundTrip_RestoresOriginalValue()
         {
             var payload = new JsonRpcParams { Value = "哈囉,世界" };
@@ -84,7 +84,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("TransformTo Encrypted 後 RestoreFrom Encrypted 應還原原始字串")]
+        [DisplayName("RestoreFrom Encrypted after TransformTo Encrypted restores the original string")]
         public void TransformTo_Encrypted_RoundTrip_RestoresOriginalValue()
         {
             var key = MakeKey();
@@ -102,7 +102,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("TransformTo Plain 時即使 key 為 null 也不應拋")]
+        [DisplayName("TransformTo Plain does not throw even when the key is null")]
         public void TransformTo_Plain_NullKey_DoesNotThrow()
         {
             var payload = new JsonRpcParams { Value = "x" };
@@ -114,7 +114,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("RestoreFrom 於 Value 非 byte[] 應拋出 InvalidCastException")]
+        [DisplayName("RestoreFrom throws InvalidCastException when Value is not a byte[]")]
         public void RestoreFrom_NonByteArrayValue_ThrowsInvalidCastException()
         {
             var payload = new JsonRpcParams
@@ -128,10 +128,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("RestoreFrom 於 TypeName 無法解析為 Type 應拋出 InvalidOperationException")]
+        [DisplayName("RestoreFrom throws InvalidOperationException when TypeName cannot be resolved to a Type")]
         public void RestoreFrom_UnresolvableTypeName_Throws()
         {
-            // 通過白名單 (Polhem.Api.Core.*) 但無對應實際型別
+            // Passes the allow list (`Polhem.Api.Core.*`) but names no real type.
             var payload = new JsonRpcParams
             {
                 Value = new byte[] { 0x01 },
@@ -145,7 +145,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("RestoreFrom 於 Encrypted 但 key 為 null 應拋出 InvalidOperationException")]
+        [DisplayName("RestoreFrom Encrypted throws InvalidOperationException when the key is null")]
         public void RestoreFrom_Encrypted_NullKey_Throws()
         {
             var payload = new JsonRpcParams
@@ -161,7 +161,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("RestoreFrom 於 Encrypted 但 key 為空陣列應拋出 InvalidOperationException")]
+        [DisplayName("RestoreFrom Encrypted throws InvalidOperationException when the key is an empty array")]
         public void RestoreFrom_Encrypted_EmptyKey_Throws()
         {
             var payload = new JsonRpcParams
@@ -182,7 +182,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData("Polhem.Base.SomeClass, Polhem.Base")]
         [InlineData("Polhem.Api.Contracts.SomeDto, Polhem.Api.Contracts")]
         [InlineData("System.Int32")]
-        [DisplayName("RestoreFrom 應允許白名單內的 TypeName")]
+        [DisplayName("RestoreFrom allows a TypeName inside the allow list")]
         public void RestoreFrom_AllowedTypeName_DoesNotThrowValidationError(string typeName)
         {
             var payload = new JsonRpcParams
@@ -219,7 +219,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData("Evil.Namespace.Exploit[], Evil.Assembly")]
         // Malformed names must fail closed rather than fall through to `Type.GetType`.
         [InlineData("Polhem.Base.Broken`1[[Evil.Namespace.Exploit, Evil.Assembly], Polhem.Base")]
-        [DisplayName("RestoreFrom 應拒絕不在白名單內的 TypeName")]
+        [DisplayName("RestoreFrom rejects a TypeName outside the allow list")]
         public void RestoreFrom_DisallowedTypeName_ThrowsInvalidOperationException(string typeName)
         {
             var payload = new JsonRpcParams
@@ -235,7 +235,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("RestoreFrom Plain 格式不做 TypeName 驗證")]
+        [DisplayName("RestoreFrom with the Plain format skips TypeName validation")]
         public void RestoreFrom_PlainFormat_SkipsValidation()
         {
             var payload = new JsonRpcParams
@@ -250,7 +250,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("RestoreFrom 缺少 TypeName 應拋出例外")]
+        [DisplayName("RestoreFrom throws InvalidOperationException when TypeName is missing")]
         public void RestoreFrom_MissingTypeName_ThrowsInvalidOperationException()
         {
             var payload = new JsonRpcParams

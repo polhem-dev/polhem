@@ -5,19 +5,18 @@ using Polhem.Api.Core.MessagePack;
 namespace Polhem.Api.Core.UnitTests.MessagePack
 {
     /// <summary>
-    /// SerializableDataTable 邊界與錯誤路徑測試：
-    /// 涵蓋 Detached row 略過、DBNull default 轉 null、主鍵為空或含不存在欄位、
-    /// 以及 Modified/Deleted row 在 round-trip 後保留 original / current 值。
+    /// Edge case and error path tests for SerializableDataTable, covering a DBNull default becoming null, primary
+    /// keys that are empty or name missing columns, and the row state and original / current values of rows after a
+    /// round-trip.
     /// </summary>
     public class SerializableDataTableEdgeTests
     {
         [Fact]
-        [DisplayName("FromDataTable 欄位 DBNull default 應轉為 null")]
+        [DisplayName("FromDataTable turns a column's DBNull default into null")]
         public void FromDataTable_ColumnDBNullDefault_BecomesNull()
         {
             var dt = new DataTable("T");
             var col = new DataColumn("Name", typeof(string));
-            // DataColumn 的 DefaultValue 預設即為 DBNull.Value
             Assert.Equal(DBNull.Value, col.DefaultValue);
             dt.Columns.Add(col);
 
@@ -27,7 +26,7 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
         }
 
         [Fact]
-        [DisplayName("FromDataTable 欄位有具體 default 應保留")]
+        [DisplayName("FromDataTable preserves a concrete column default")]
         public void FromDataTable_ColumnConcreteDefault_IsPreserved()
         {
             var dt = new DataTable("T");
@@ -37,13 +36,12 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
             var sdt = SerializableDataTable.FromDataTable(dt);
             Assert.Equal(42, sdt.Columns[0].DefaultValue);
 
-            // ToDataTable 還原後預設值也應一致
             var restored = SerializableDataTable.ToDataTable(sdt);
             Assert.Equal(42, restored.Columns["Age"]!.DefaultValue);
         }
 
         [Fact]
-        [DisplayName("ToDataTable 主鍵為空清單時應不設定 PrimaryKey")]
+        [DisplayName("ToDataTable sets no PrimaryKey when the primary key list is empty")]
         public void ToDataTable_EmptyPrimaryKeys_NoPrimaryKeyApplied()
         {
             var sdt = new SerializableDataTable { TableName = "T" };
@@ -61,7 +59,7 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
         }
 
         [Fact]
-        [DisplayName("ToDataTable 主鍵參照不存在欄位時應過濾後為空")]
+        [DisplayName("ToDataTable filters out a primary key that names a missing column, leaving none")]
         public void ToDataTable_PrimaryKeyWithMissingColumn_IsFilteredOut()
         {
             var sdt = new SerializableDataTable { TableName = "T" };
@@ -80,7 +78,7 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
         }
 
         [Fact]
-        [DisplayName("ToDataTable 主鍵混合存在與不存在欄位時應只套用存在欄位")]
+        [DisplayName("ToDataTable applies only the existing columns when the primary key mixes existing and missing columns")]
         public void ToDataTable_PrimaryKeyMixedValidAndMissing_AppliesOnlyValid()
         {
             var sdt = new SerializableDataTable { TableName = "T" };
@@ -101,7 +99,7 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
         }
 
         [Fact]
-        [DisplayName("FromDataTable→ToDataTable 對 Modified row 應保留 Original 與 Current 值")]
+        [DisplayName("FromDataTable then ToDataTable preserves the Original and Current values of a Modified row")]
         public void RoundTrip_ModifiedRow_PreservesOriginalAndCurrent()
         {
             var dt = new DataTable("T");
@@ -119,7 +117,7 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
         }
 
         [Fact]
-        [DisplayName("FromDataTable→ToDataTable 對 Deleted row 應還原為 Deleted 且保留 Original")]
+        [DisplayName("FromDataTable then ToDataTable restores a Deleted row as Deleted and preserves its Original values")]
         public void RoundTrip_DeletedRow_PreservesOriginal()
         {
             var dt = new DataTable("T");
@@ -137,7 +135,7 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
         }
 
         [Fact]
-        [DisplayName("FromDataTable→ToDataTable 對 Unchanged row 應保留 Unchanged")]
+        [DisplayName("FromDataTable then ToDataTable keeps an Unchanged row Unchanged")]
         public void RoundTrip_UnchangedRow_PreservesState()
         {
             var dt = new DataTable("T");

@@ -4,12 +4,12 @@ using Polhem.Api.Core.JsonRpc;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// ApiPayloadFrame 的編解碼測試（純邏輯，不觸及 process-wide 狀態）。
+    /// Encoding and decoding tests for ApiPayloadFrame (pure logic that does not touch process-wide state).
     /// </summary>
     public class ApiPayloadFrameTests
     {
         [Fact]
-        [DisplayName("Prepend 後 Extract 應還原所有欄位與 body")]
+        [DisplayName("Extract after Prepend restores every field and the body")]
         public void Extract_AfterPrepend_RoundTripsAllFields()
         {
             var body = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
@@ -24,10 +24,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Prepend 應以 big-endian 寫入，且 body 緊接在 17 bytes 之後")]
+        [DisplayName("Prepend writes big-endian, and the body follows immediately after 17 bytes")]
         public void Prepend_WritesBigEndianAtFixedOffsets()
         {
-            // 位元組順序固定為 big-endian、與平台無關：兩端可能跑在不同架構上。
+            // The byte order is fixed to big-endian regardless of platform, because the two ends may run on different architectures.
             var frame = new ApiPayloadFrame(timestampMs: 0x0102030405060708, sequence: 0x1112131415161718);
 
             var framed = frame.Prepend(new byte[] { 0xAA });
@@ -42,7 +42,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Extract 於恰好 17 bytes 應回傳空 body 而非拋錯")]
+        [DisplayName("Extract on exactly 17 bytes returns an empty body instead of throwing")]
         public void Extract_ExactlyFrameSized_ReturnsEmptyBody()
         {
             var framed = new ApiPayloadFrame(1, 2).Prepend(Array.Empty<byte>());
@@ -53,22 +53,22 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Extract 於長度不足應拋出 ReplayRejectedException 而非索引越界")]
+        [DisplayName("Extract on a buffer that is too short throws ReplayRejectedException rather than an index out of range")]
         public void Extract_BufferShorterThanFrame_ThrowsReplayRejected()
         {
-            // 舊版用戶端沒有 frame，其 body 開頭會被當成 frame 讀；長度不足時必須是
-            // 明確的拒絕，不能讓它變成 IndexOutOfRangeException。
+            // An old client sends no frame, so the start of its body is read as a frame. When it is too short, the
+            // result must be an explicit rejection, not an `IndexOutOfRangeException`.
             var tooShort = new byte[ApiPayloadFrame.Version1Size - 1];
 
             Assert.Throws<ReplayRejectedException>(() => ApiPayloadFrame.Extract(tooShort, out _));
         }
 
         [Fact]
-        [DisplayName("Extract 於版本不符應拋出 ReplayRejectedException")]
+        [DisplayName("Extract throws ReplayRejectedException for an unknown version")]
         public void Extract_UnknownVersion_ThrowsReplayRejected()
         {
-            // frame 不自帶長度，讀取端必須先由 version 得知要吃掉幾個 byte，
-            // 因此無法辨識的版本只能拒絕。
+            // The frame carries no length, so the reader learns from the version how many bytes to consume.
+            // An unrecognized version can therefore only be rejected.
             var framed = new ApiPayloadFrame(1, 2).Prepend(new byte[] { 0x01 });
             framed[0] = 0xFE;
 

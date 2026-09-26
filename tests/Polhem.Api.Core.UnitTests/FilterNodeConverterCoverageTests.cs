@@ -6,22 +6,23 @@ using Polhem.Definition.Filters;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 守住每個宣告型別為 <see cref="FilterNode"/> 的屬性都掛了
-    /// <see cref="FilterNodeJsonConverter"/>。
+    /// Guards that every property declared as <see cref="FilterNode"/> carries
+    /// <see cref="FilterNodeJsonConverter"/>.
     /// </summary>
     /// <remarks>
-    /// 少了標註不會有任何徵兆：System.Text.Json 綁宣告型別，於是整棵篩選子樹靜默消失，
-    /// 既不擲例外也不留紀錄。編譯器不會提醒，型別本身也無從標註——converter 一旦標在
-    /// <see cref="FilterNode"/> 上就會被子類繼承而無限遞迴（stack 爆掉、直接 segfault），
-    /// 所以標註只能逐屬性下，而「逐屬性」正是會漏的那種規則。
+    /// A missing attribute shows no symptom: System.Text.Json binds to the declared type, so the whole filter subtree
+    /// disappears silently, with no exception and no log. The compiler does not warn, and the type itself cannot carry
+    /// the attribute: a converter placed on <see cref="FilterNode"/> is inherited by the subclasses and recurses
+    /// forever (the stack overflows and the process crashes). So the attribute can only go on each property, and a
+    /// per-property rule is exactly the kind that gets missed.
     /// <para>
-    /// 因此把它變成測試：新增一個 <see cref="FilterNode"/> 屬性卻忘了標註，這裡就會紅。
+    /// Hence this test: adding a <see cref="FilterNode"/> property without the attribute turns it red.
     /// </para>
     /// </remarks>
     public class FilterNodeConverterCoverageTests
     {
         [Fact]
-        [DisplayName("每個 FilterNode 型別的屬性都必須標註 FilterNodeJsonConverter")]
+        [DisplayName("Every property of type FilterNode declares FilterNodeJsonConverter")]
         public void EveryFilterNodeProperty_DeclaresTheConverter()
         {
             var assemblies = new[]
@@ -36,13 +37,14 @@ namespace Polhem.Api.Core.UnitTests
                 .Where(t => t is { IsClass: true, IsAbstract: false })
                 .SelectMany(t => t.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                 .Where(p => p.PropertyType == typeof(FilterNode))
-                // 只看可寫入的：有 setter 才會參與反序列化，也才是 wire 上的持有者。
-                // get-only 的（如 BO 執行期 context 的 DeleteContext.ScopeFilter，同一個物件
-                // 還帶著 repository 介面）從不經過 JSON，標註它只會誤導讀者以為它上 wire。
+                // Only writable properties count: only a property with a setter takes part in deserialization and
+                // holds a value on the wire. A get-only one (such as `DeleteContext.ScopeFilter` on the BO runtime
+                // context, an object that also carries repository interfaces) never goes through JSON, and marking it
+                // would only mislead readers into thinking it goes on the wire.
                 .Where(p => p.SetMethod?.IsPublic == true)
                 .ToList();
 
-            // 掃不到任何屬性代表掃描本身壞了（型別搬家、組件換名），而不是「全部合規」。
+            // Finding no property means the scan itself is broken (a type moved, an assembly renamed), not that everything complies.
             Assert.NotEmpty(properties);
 
             var missing = properties
@@ -52,8 +54,8 @@ namespace Polhem.Api.Core.UnitTests
                 .ToList();
 
             Assert.True(missing.Count == 0,
-                "下列 FilterNode 屬性未標註 [JsonConverter(typeof(FilterNodeJsonConverter))]，" +
-                "JSON 序列化時會靜默丟失整棵篩選子樹：" + global::System.Environment.NewLine +
+                "The following FilterNode properties lack [JsonConverter(typeof(FilterNodeJsonConverter))], " +
+                "so JSON serialization silently drops the whole filter subtree:" + global::System.Environment.NewLine +
                 string.Join(global::System.Environment.NewLine, missing));
         }
     }

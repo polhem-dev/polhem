@@ -7,18 +7,19 @@ using Polhem.Definition.Logging;
 namespace Polhem.Api.Core.UnitTests.MessagePack
 {
     /// <summary>
-    /// <c>Polhem.Api.Contracts</c> 內具象 DTO 的 wire round-trip 測試（MessagePack + JSON）。
+    /// Wire round-trip tests for the concrete DTOs in <c>Polhem.Api.Contracts</c> (MessagePack and JSON).
     /// </summary>
     /// <remarks>
-    /// 契約組件多為介面，但夾雜少數具象 DTO，且都標了
-    /// <c>[MessagePackObject(keyAsPropertyName: true)]</c>——代表它們會實際上 wire，先前卻只可能
-    /// 被上層測試間接觸及，缺乏直接驗證。這些是純 wire DTO（不落磁碟），依序列化規範只需
-    /// MessagePack + JSON 兩軸，不需 XML。
+    /// The contracts assembly is mostly interfaces but includes a few concrete DTOs, all marked
+    /// <c>[MessagePackObject(keyAsPropertyName: true)]</c>. That means they really travel over the wire, yet they
+    /// were previously only reached indirectly by higher-level tests and had no direct verification. They are pure
+    /// wire DTOs (never written to disk), so under the serialization rules they need only MessagePack and JSON, not
+    /// XML.
     /// </remarks>
     public class ContractsDtoRoundTripTests
     {
         [Fact]
-        [DisplayName("RecordFieldChange MessagePack 與 JSON round-trip 應正確還原（含 null 值欄位）")]
+        [DisplayName("RecordFieldChange round-trips through MessagePack and JSON, including a null-valued field")]
         public void RecordFieldChange_RoundTrips_PreservesValues()
         {
             var original = new RecordFieldChange

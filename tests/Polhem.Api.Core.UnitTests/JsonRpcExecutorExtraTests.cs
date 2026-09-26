@@ -9,11 +9,11 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// JsonRpcExecutor 補強測試：
-    /// 涵蓋錯誤路徑（ParseMethod 例外、空 progId、未知 action）、ExecuteAsync 路徑與屬性設定。
+    /// Additional JsonRpcExecutor tests covering the error paths (ParseMethod exceptions, an empty progId, an unknown
+    /// action), the ExecuteAsync path and property assignment.
     /// </summary>
-    // 斷言遮蔽訊息，而遮蔽與否取決於 SysInfo.IsDebugMode 這個 process-wide 靜態，
-    // 故與切換該旗標的測試類序列化（見 SysInfoStaticCollection）。
+    // These tests assert masked messages, and masking depends on the process-wide static `SysInfo.IsDebugMode`.
+    // So they are serialized with the test classes that toggle that flag (see `SysInfoStaticCollection`).
     [Collection("SysInfoStatic")]
     public class JsonRpcExecutorExtraTests : IClassFixture<PolhemTestFixture>
     {
@@ -38,7 +38,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("屬性 setter 應正確設定 AccessToken 與 IsLocalCall")]
+        [DisplayName("The property setters assign AccessToken and IsLocalCall")]
         public void Properties_AssignableAfterConstruction()
         {
             var token = Guid.NewGuid();
@@ -49,7 +49,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsLocalCall 預設為 false")]
+        [DisplayName("IsLocalCall defaults to false")]
         public void IsLocalCall_DefaultsToFalse()
         {
             var executor = new JsonRpcExecutor(
@@ -60,7 +60,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecuteAsync 應可正確完成 Ping 方法")]
+        [DisplayName("ExecuteAsync completes the Ping method")]
         public async Task ExecuteAsync_Ping_Succeeds()
         {
             var request = new JsonRpcRequest
@@ -78,7 +78,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Execute 於 Method 缺少 '.' 應回傳 FormatException 使用者訊息")]
+        [DisplayName("Execute returns the FormatException user message when Method has no '.'")]
         public void Execute_MethodMissingDot_ReturnsFormatExceptionMessage()
         {
             var request = new JsonRpcRequest
@@ -97,7 +97,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Execute 於 Method 為空字串應回傳 FormatException 使用者訊息")]
+        [DisplayName("Execute returns the FormatException user message when Method is an empty string")]
         public void Execute_EmptyMethod_ReturnsFormatExceptionMessage()
         {
             var request = new JsonRpcRequest
@@ -114,10 +114,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Execute 於 progId 為空字串應回傳 ArgumentException 使用者訊息")]
+        [DisplayName("Execute returns the ArgumentException user message when progId is an empty string")]
         public void Execute_EmptyProgId_ReturnsArgumentExceptionMessage()
         {
-            // ".Ping" 經 ParseMethod 後 progId = ""、action = "Ping"
+            // `ParseMethod` splits ".Ping" into an empty progId and the action "Ping".
             var request = new JsonRpcRequest
             {
                 Method = ".Ping",
@@ -132,7 +132,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Execute 於未知 Action 應將 MissingMethodException 遮罩為 Internal server error(非 debug 模式)")]
+        [DisplayName("Execute masks MissingMethodException for an unknown Action as Internal server error (outside debug mode)")]
         public void Execute_UnknownAction_ReturnsGenericInternalError()
         {
             var request = new JsonRpcRequest
@@ -142,8 +142,9 @@ namespace Polhem.Api.Core.UnitTests
                 Id = "1"
             };
 
-            // 測試 fixture 本身跑在 debug 模式（tests/Define 的 SystemSettings），而遮蔽只在
-            // 非 debug 模式生效。這裡要驗的是 production 行為，故明確關掉而不是沿用環境值。
+            // The test fixture itself runs in debug mode (the SystemSettings in tests/Define), and masking only
+            // applies outside debug mode. What is verified here is the production behavior, so debug mode is turned
+            // off explicitly rather than taken from the environment.
             bool original = SysInfo.IsDebugMode;
             try
             {
@@ -161,7 +162,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Execute 於未知 Action 在 debug 模式應透傳原始例外訊息")]
+        [DisplayName("Execute passes through the original exception message for an unknown Action in debug mode")]
         public void Execute_UnknownAction_DebugMode_PassesThroughMessage()
         {
             var request = new JsonRpcRequest
@@ -188,12 +189,12 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Execute 於非 System progId 應進入 CreateBusinessObject 分支")]
+        [DisplayName("Execute takes the CreateBusinessObject branch for a non-System progId")]
         public void Execute_NonSystemProgId_InvokesCreateBusinessObject()
         {
-            // 使用已定義的 Department progId,未知 action 會被 MissingMethodException 攔截;
-            // 無論 Form BO 是否成功建立,CreateBusinessObject 的 else 分支
-            // 皆會被執行,覆蓋 CreateBusinessObject 的 delegation。
+            // Uses the defined Department progId, and the unknown action is caught as a `MissingMethodException`.
+            // Whether or not the Form BO is created, the else branch of `CreateBusinessObject` runs, which covers
+            // the delegation in `CreateBusinessObject`.
             var request = new JsonRpcRequest
             {
                 Method = "Department.DefinitelyNotAMethod",
@@ -207,7 +208,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Execute 回傳 Response 應回填 Method 與 Id")]
+        [DisplayName("The Response returned by Execute echoes Method and Id")]
         public void Execute_Response_EchoesMethodAndId()
         {
             var id = Guid.NewGuid().ToString();

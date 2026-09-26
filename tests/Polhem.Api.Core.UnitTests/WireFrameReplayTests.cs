@@ -12,24 +12,25 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 重放防護 frame 走完整 payload 管線的行為測試。
+    /// Behavior tests for the replay protection frame going through the full payload pipeline.
     /// </summary>
     /// <remarks>
-    /// 會改寫 <see cref="ApiServiceOptions.RequireWireFrame"/> 這個 process-wide 靜態開關，
-    /// 故掛 ApiServiceOptionsState collection 標記，並一律以 try/finally 還原。
+    /// These tests change the process-wide static switch <see cref="ApiServiceOptions.RequireWireFrame"/>,
+    /// so the class carries the ApiServiceOptionsState collection marker and always restores it with try/finally.
     /// <para>
-    /// 本類別**完全不碰資料庫**，需要 token 的測試一律用
-    /// <see cref="TestSessionFactory.CreateAccessToken"/> 取得 —— 它把 SessionInfo 直接寫進
-    /// session 快取，server 端因此讀得到而不必走 rebuild 路徑查 <c>st_session</c>。
-    /// 這裡驗的是重放序號的判斷（<c>ReplayWindowStore</c>，純記憶體），session 從哪裡來與它無關。
+    /// This class **never touches the database**. Tests that need a token get it from
+    /// <see cref="TestSessionFactory.CreateAccessToken"/>, which writes the SessionInfo straight into the
+    /// session cache, so the server finds it without taking the rebuild path that queries <c>st_session</c>.
+    /// What is verified here is the replay sequence check (<c>ReplayWindowStore</c>, in memory only), which does not
+    /// depend on where the session comes from.
     /// </para>
     /// <para>
-    /// NOTE: 先前兩筆測試直接拿 <c>Guid.NewGuid()</c> 當 token，於是每次呼叫都落到 rebuild 路徑，
-    /// 讓一組純邏輯測試變成需要資料庫容器 —— 沒有容器的環境會紅在
-    /// <c>Connection string for database 'common' is null</c>，而不是任何與重放有關的原因。
-    /// 當時的修法是掛 <see cref="SharedDbFixture"/> 讓它有表可讀；正解是根本不要產生那個相依。
-    /// <c>rules/testing.md</c> 第 2 條也是這個意思：純邏輯測試不該用 <c>[DbFact]</c> 跳過，
-    /// 那種紅燈要直接修掉。
+    /// NOTE: Two tests used to pass <c>Guid.NewGuid()</c> as the token, so every call fell into the rebuild path,
+    /// and a set of pure logic tests came to need a database container. Without a container they went red with
+    /// <c>Connection string for database 'common' is null</c>, not for any reason related to replay.
+    /// The fix at the time was to attach <see cref="SharedDbFixture"/> so there was a table to read; the right fix
+    /// is not to create that dependency at all. Item 2 of <c>rules/testing.md</c> says the same: pure logic tests
+    /// must not be skipped with <c>[DbFact]</c>, and such a red light is to be fixed directly.
     /// </para>
     /// </remarks>
     [Collection("ApiServiceOptionsState")]
@@ -58,7 +59,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("開關關閉時 Encrypted round-trip 不應產生 frame")]
+        [DisplayName("Encrypted round-trip produces no frame when the switch is off")]
         public void RestoreFrom_FrameNotRequired_LeavesFrameNull()
         {
             WithFrameRequired(false, () =>
@@ -75,7 +76,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("開關開啟時 Encrypted round-trip 應還原 frame 與 body")]
+        [DisplayName("Encrypted round-trip restores the frame and the body when the switch is on")]
         public void RestoreFrom_FrameRequired_RoundTripsFrameAndBody()
         {
             WithFrameRequired(true, () =>
@@ -93,10 +94,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Plain 格式即使開關開啟也不帶 frame")]
+        [DisplayName("Plain format carries no frame even when the switch is on")]
         public void TransformTo_PlainWithFrameRequired_WritesNoFrame()
         {
-            // Plain 沒有封套，frame 放進去也只是明文、攻擊者可任意改寫，等於沒防護。
+            // Plain has no envelope, so a frame would be plaintext that an attacker can rewrite freely and would protect nothing.
             WithFrameRequired(true, () =>
             {
                 var payload = new JsonRpcParams { Value = "hello" };
@@ -109,11 +110,12 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("寫入端有 frame 而讀取端未預期時應解碼失敗（兩端設定必須一致）")]
+        [DisplayName("Decoding fails when the writer adds a frame the reader does not expect (both ends must agree)")]
         public void RestoreFrom_FrameWrittenButNotExpected_FailsToDecode()
         {
-            // frame 的有無不由封包自述（那會是降級攻擊面），因此兩端設定不一致時
-            // 必然失敗——這正是預期行為，也是升級時要先兩端佈署再開開關的理由。
+            // Whether a frame is present is not declared by the packet itself (that would be a downgrade attack
+            // surface), so mismatched settings on the two ends fail. This is expected, and it is why an upgrade
+            // deploys both ends before turning the switch on.
             var key = MakeKey();
             var payload = new JsonRpcParams { Value = new PingRequest { ClientName = "a" } };
 
@@ -134,7 +136,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("frame 時間戳超出容許時窗應回 ReplayRejected")]
+        [DisplayName("A frame timestamp outside the allowed window returns ReplayRejected")]
         public void Execute_FrameTimestampOutsideWindow_ReturnsReplayRejected()
         {
             WithFrameRequired(true, () =>
@@ -149,7 +151,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("frame 時間戳落在容許時窗內應正常執行")]
+        [DisplayName("A frame timestamp within the allowed window executes normally")]
         public void Execute_FrameTimestampWithinWindow_Succeeds()
         {
             WithFrameRequired(true, () =>
@@ -163,32 +165,32 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("宣告 UniqueSequence 的方法重複序號應回 ReplayRejected")]
+        [DisplayName("A repeated sequence on a method that declares UniqueSequence returns ReplayRejected")]
         public void Execute_RepeatedSequenceOnGuardedMethod_ReturnsReplayRejected()
         {
             WithFrameRequired(true, () =>
             {
-                // 每個測試用獨立 token，視窗才不會與其他測試互相干擾。
+                // Each test uses its own token so that its window does not interfere with other tests.
                 var token = TestSessionFactory.CreateAccessToken(_fx);
 
                 var first = Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), token);
                 var replay = Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), token);
                 var nextSequence = Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(2), token);
 
-                // 第一次會一路走到 BO 內部（"noop" 這個自訂方法不存在，故為 InternalError）
-                // ——重點在它不是 ReplayRejected，表示序號檢查放行了。
+                // The first call goes all the way into the BO (the custom method "noop" does not exist, hence
+                // InternalError). What matters is that it is not ReplayRejected, meaning the sequence check let it through.
                 Assert.Equal((int)JsonRpcErrorCode.InternalError, first.Error!.Code);
                 Assert.Equal((int)JsonRpcErrorCode.ReplayRejected, replay.Error!.Code);
-                // 換一個序號仍應放行，證明拒絕是針對重複而非一律擋下。
+                // A different sequence still passes, which shows the rejection targets repeats rather than blocking everything.
                 Assert.Equal((int)JsonRpcErrorCode.InternalError, nextSequence.Error!.Code);
             });
         }
 
         [Fact]
-        [DisplayName("未宣告序號檢查的方法重複序號應正常執行")]
+        [DisplayName("A repeated sequence on a method without a sequence check executes normally")]
         public void Execute_RepeatedSequenceOnUnguardedMethod_Succeeds()
         {
-            // 查詢類方法重放無害，全面套用只是徒增每次呼叫的判斷。
+            // Replaying a query method is harmless, and applying the check everywhere would only add work to every call.
             WithFrameRequired(true, () =>
             {
                 var token = TestSessionFactory.CreateAccessToken(_fx);
@@ -200,28 +202,28 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("匿名呼叫不做序號檢查（無 session 可計數）")]
+        [DisplayName("Anonymous calls skip the sequence check (there is no session to count against)")]
         public void Execute_RepeatedSequenceAnonymously_Succeeds()
         {
-            // 序號是 per session 的。匿名呼叫全共用 Guid.Empty，若也檢查，
-            // 不同用戶端會互相把對方的序號用掉而大量誤拒。
+            // Sequences are per session. Anonymous calls all share `Guid.Empty`, so checking them would let
+            // different clients use up each other's sequences and cause many false rejections.
             WithFrameRequired(true, () =>
             {
                 var first = Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), Guid.Empty);
                 var replay = Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), Guid.Empty);
 
-                // 同上，InternalError 表示兩次都通過了序號閘門走到 BO 內部。
+                // As above, InternalError means both calls passed the sequence gate and reached the BO.
                 Assert.Equal((int)JsonRpcErrorCode.InternalError, first.Error!.Code);
                 Assert.Equal((int)JsonRpcErrorCode.InternalError, replay.Error!.Code);
             });
         }
 
         [Fact]
-        [DisplayName("重放拒絕應記為 AnomalyKind.Replay 而非 Error")]
+        [DisplayName("A replay rejection is logged as AnomalyKind.Replay rather than Error")]
         public void Execute_ReplayRejected_IsLoggedAsReplayAnomaly()
         {
-            // 折進泛用 Error 的話，「某 session 連續被拒」這個訊號就看不見了——
-            // 而那正好是用戶端時鐘偏移或有人重送封包的判別依據。
+            // Folded into the generic Error kind, the signal "one session is rejected repeatedly" would disappear,
+            // and that signal is exactly how client clock skew or resent packets are told apart.
             WithFrameRequired(true, () =>
             {
                 var staleMs = DateTimeOffset.UtcNow.AddHours(-1).ToUnixTimeMilliseconds();
@@ -234,19 +236,19 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 以指定的 frame 送出一次 Encoded 的 Ping 呼叫（Ping 未宣告序號檢查）。
+        /// Sends one Encoded Ping call with the given frame (Ping declares no sequence check).
         /// </summary>
-        /// <param name="frame">要夾帶的重放防護 frame。</param>
+        /// <param name="frame">The replay protection frame to attach.</param>
         private JsonRpcResponse ExecutePing(ApiPayloadFrame frame)
             => Execute("Ping", new PingRequest { ClientName = "replay-test" }, frame, Guid.Empty);
 
         /// <summary>
-        /// 以指定的 frame 與 token 送出一次 Encoded 的 SystemBO 呼叫。
+        /// Sends one Encoded SystemBO call with the given frame and token.
         /// </summary>
-        /// <param name="action">動作名稱。</param>
-        /// <param name="value">傳入值。</param>
-        /// <param name="frame">要夾帶的重放防護 frame。</param>
-        /// <param name="accessToken">存取權杖；<see cref="Guid.Empty"/> 代表匿名呼叫。</param>
+        /// <param name="action">The action name.</param>
+        /// <param name="value">The value passed in.</param>
+        /// <param name="frame">The replay protection frame to attach.</param>
+        /// <param name="accessToken">The access token; <see cref="Guid.Empty"/> means an anonymous call.</param>
         private JsonRpcResponse Execute(string action, object value, ApiPayloadFrame frame, Guid accessToken)
         {
             var executor = new JsonRpcExecutor(
@@ -255,8 +257,8 @@ namespace Polhem.Api.Core.UnitTests
                 _fx.GetRequiredService<IApiEncryptionKeyProvider>())
             {
                 AccessToken = accessToken,
-                // 本機呼叫可跳過 token 驗證，讓測試不必先建立 session（那會碰資料庫）；
-                // 序號檢查本身與此無關，它只看 token 是否為 Empty。
+                // A local call skips token validation, so the test need not create a session first (that would
+                // touch the database). The sequence check does not depend on this; it only looks at whether the token is empty.
                 IsLocalCall = true,
             };
 
@@ -267,7 +269,7 @@ namespace Polhem.Api.Core.UnitTests
                 Id = Guid.NewGuid().ToString(),
             };
 
-            // Encoded 而非 Encrypted：frame 的讀取與加密無關，而 Encoded 不需要傳輸金鑰。
+            // Encoded rather than Encrypted: reading the frame is unrelated to encryption, and Encoded needs no transport key.
             ApiPayloadConverter.TransformTo(request.Params, PayloadFormat.Encoded);
 
             return executor.Execute(request);
@@ -277,9 +279,9 @@ namespace Polhem.Api.Core.UnitTests
             => new(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sequence);
 
         /// <summary>
-        /// 以啟用 anomaly 記錄的 executor 送出一次呼叫，回傳捕捉到的 anomaly 紀錄。
+        /// Sends one call through an executor with anomaly logging enabled and returns the captured anomaly entries.
         /// </summary>
-        /// <param name="frame">要夾帶的重放防護 frame。</param>
+        /// <param name="frame">The replay protection frame to attach.</param>
         private List<AnomalyEntry> ExecuteAndCaptureAnomalies(ApiPayloadFrame frame)
         {
             var writer = new CapturingAnomalyLogWriter();

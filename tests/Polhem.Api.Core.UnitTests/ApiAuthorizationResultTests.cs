@@ -5,12 +5,12 @@ using Polhem.Api.Core.JsonRpc;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// ApiAuthorizationResult 測試。
+    /// Tests for ApiAuthorizationResult.
     /// </summary>
     public class ApiAuthorizationResultTests
     {
         [Fact]
-        [DisplayName("預設建構子應為 IsValid=false、AccessToken=Guid.Empty")]
+        [DisplayName("The default constructor gives IsValid=false and AccessToken=Guid.Empty")]
         public void DefaultConstructor_InitializesDefaults()
         {
             var result = new ApiAuthorizationResult();
@@ -21,7 +21,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Success 應回傳 IsValid=true 並設定 AccessToken")]
+        [DisplayName("Success returns IsValid=true and sets AccessToken")]
         public void Success_SetsValidTrueAndToken()
         {
             var token = Guid.NewGuid();
@@ -34,7 +34,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Fail 應回傳 IsValid=false 並設定 Code 與 ErrorMessage")]
+        [DisplayName("Fail returns IsValid=false and sets Code and ErrorMessage")]
         public void Fail_SetsValidFalseCodeAndMessage()
         {
             var result = ApiAuthorizationResult.Fail(JsonRpcErrorCode.Unauthorized, "無權限");
@@ -49,7 +49,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData(JsonRpcErrorCode.InvalidRequest, "invalid")]
         [InlineData(JsonRpcErrorCode.MethodNotFound, "not found")]
         [InlineData(JsonRpcErrorCode.Unauthorized, "unauthorized")]
-        [DisplayName("Fail 應保留指定的 Code 與 ErrorMessage")]
+        [DisplayName("Fail keeps the given Code and ErrorMessage")]
         public void Fail_PreservesCodeAndMessage(JsonRpcErrorCode code, string message)
         {
             var result = ApiAuthorizationResult.Fail(code, message);

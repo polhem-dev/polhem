@@ -12,13 +12,14 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip：將 <c>System.LeaveCompany</c>
-    /// 透過 executor 派發到 <see cref="Polhem.Business.System.SystemBusinessObject.LeaveCompany"/>，
-    /// 驗證 SessionInfo.CompanyId 被清空且回傳成功。
+    /// An end-to-end round-trip through <see cref="JsonRpcExecutor"/>: <c>System.LeaveCompany</c> is dispatched by the
+    /// executor to <see cref="Polhem.Business.System.SystemBusinessObject.LeaveCompany"/>, and the test verifies that
+    /// SessionInfo.CompanyId is cleared and the call succeeds.
     /// <para>
-    /// 需要 <see cref="SharedDbFixture"/>（而非 <c>PolhemTestFixture</c>）：session 持久化落地後，
-    /// LeaveCompany 會更新 `st_session` 的種子，因此本測試對 <c>st_session</c> 有真實相依。單靠 <c>PolhemTestFixture</c> 不會建 schema，
-    /// 只有在別的測試行程剛好先建好表時才會通過——那是 CI 上偶發紅的來源。
+    /// It needs <see cref="SharedDbFixture"/> (not <c>PolhemTestFixture</c>): since sessions are persisted,
+    /// LeaveCompany updates the session's row in `st_session`, so this test really depends on <c>st_session</c>.
+    /// <c>PolhemTestFixture</c> alone does not create the schema, and the test would pass only when another test
+    /// process happened to create the tables first. That was the source of intermittent red runs in CI.
     /// </para>
     /// </summary>
     public class LeaveCompanyJsonRpcRoundTripTests : IClassFixture<SharedDbFixture>
@@ -55,10 +56,10 @@ namespace Polhem.Api.Core.UnitTests.System
             };
 
         [Fact]
-        [DisplayName("System.LeaveCompany 應清空 SessionInfo.CompanyId 並回傳成功")]
+        [DisplayName("System.LeaveCompany clears SessionInfo.CompanyId and succeeds")]
         public void LeaveCompany_AfterEntered_ClearsCompanyId()
         {
-            // Arrange：建立 session 並設 CompanyId
+            // Arrange
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
             var session = sessionService.Get(accessToken)!;
@@ -75,7 +76,7 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("System.LeaveCompany 對未進公司狀態應 idempotent 回傳成功")]
+        [DisplayName("System.LeaveCompany is idempotent and succeeds when no company has been entered")]
         public void LeaveCompany_WhenNotEntered_Idempotent()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();

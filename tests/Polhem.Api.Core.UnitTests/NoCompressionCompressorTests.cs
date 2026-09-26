@@ -4,12 +4,12 @@ using Polhem.Api.Core.Transformers;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// NoCompressionCompressor 測試。
+    /// Tests for NoCompressionCompressor.
     /// </summary>
     public class NoCompressionCompressorTests
     {
         [Fact]
-        [DisplayName("CompressionMethod 應為 \"none\"")]
+        [DisplayName("CompressionMethod is \"none\"")]
         public void CompressionMethod_IsNone()
         {
             var compressor = new NoCompressionCompressor();
@@ -18,7 +18,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Compress 應回傳原始 byte 陣列")]
+        [DisplayName("Compress returns the original byte array")]
         public void Compress_ReturnsSameBytes()
         {
             var compressor = new NoCompressionCompressor();
@@ -30,7 +30,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Decompress 應回傳原始 byte 陣列")]
+        [DisplayName("Decompress returns the original byte array")]
         public void Decompress_ReturnsSameBytes()
         {
             var compressor = new NoCompressionCompressor();

@@ -6,8 +6,9 @@ using Polhem.Definition.Security;
 namespace Polhem.Api.Core.UnitTests.Authorization
 {
     /// <summary>
-    /// <see cref="ApiAuthorizationValidator"/> 對 API 金鑰驗證結果的決策：相容態沿用非空檢查、
-    /// 嚴格態依驗證結果放行或拒絕、以及金鑰豁免清單只含 <c>System.Ping</c>。
+    /// How <see cref="ApiAuthorizationValidator"/> decides on the API key validation result: the compatibility state
+    /// keeps the presence check, the strict state allows or rejects according to the validation result, and the key
+    /// exemption list contains only <c>System.Ping</c>.
     /// </summary>
     public class ApiKeyGateAuthorizationTests
     {
@@ -26,7 +27,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Fact]
-        [DisplayName("金鑰有效時應放行")]
+        [DisplayName("A valid key is allowed")]
         public void Validate_ValidKey_Succeeds()
         {
             var context = NewContext(new ApiKeyValidationResult(ApiKeyStatus.Valid, "app", "App"));
@@ -37,7 +38,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Theory]
-        [DisplayName("嚴格態下金鑰未帶或無效時應拒絕，且四種情境訊息一致")]
+        [DisplayName("A missing or invalid key is rejected in the strict state with the same message")]
         [InlineData(ApiKeyStatus.NotProvided)]
         [InlineData(ApiKeyStatus.Invalid)]
         public void Validate_GateInForce_RejectedKey_FailsWithSameMessage(ApiKeyStatus status)
@@ -52,7 +53,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Theory]
-        [DisplayName("相容態(尚未發放金鑰)與行程內呼叫應沿用非空檢查：非空放行")]
+        [DisplayName("The compatibility state (no keys issued yet) and in-process calls keep the presence check: a non-empty key is allowed")]
         [InlineData(ApiKeyStatus.NotConfigured)]
         [InlineData(ApiKeyStatus.NotChecked)]
         public void Validate_GateNotInForce_NonEmptyKey_Succeeds(ApiKeyStatus status)
@@ -65,7 +66,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Theory]
-        [DisplayName("相容態(尚未發放金鑰)與行程內呼叫應沿用非空檢查：空值拒絕")]
+        [DisplayName("The compatibility state (no keys issued yet) and in-process calls keep the presence check: an empty key is rejected")]
         [InlineData(ApiKeyStatus.NotConfigured)]
         [InlineData(ApiKeyStatus.NotChecked)]
         public void Validate_GateNotInForce_EmptyKey_Fails(ApiKeyStatus status)
@@ -79,7 +80,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Fact]
-        [DisplayName("System.Ping 免金鑰：嚴格態下未帶金鑰仍應放行")]
+        [DisplayName("System.Ping needs no key: it is allowed without a key in the strict state")]
         public void Validate_Ping_NoKey_Succeeds()
         {
             var context = NewContext(new ApiKeyValidationResult(ApiKeyStatus.NotProvided),
@@ -91,7 +92,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Fact]
-        [DisplayName("System.Ping 免金鑰：嚴格態下帶錯金鑰仍應放行(狀態另由 PingResult 回報)")]
+        [DisplayName("System.Ping needs no key: it is allowed with a wrong key in the strict state (PingResult reports the status separately)")]
         public void Validate_Ping_InvalidKey_Succeeds()
         {
             var context = NewContext(new ApiKeyValidationResult(ApiKeyStatus.Invalid, "app", string.Empty),
@@ -103,7 +104,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Theory]
-        [DisplayName("Bearer 豁免清單不等於金鑰豁免清單：Login 與 GetApiPayloadOptions 仍需金鑰")]
+        [DisplayName("The Bearer exemption list is not the key exemption list: Login and GetApiPayloadOptions still need a key")]
         [InlineData("System.Login")]
         [InlineData("System.GetApiPayloadOptions")]
         public void Validate_BearerExemptMethods_StillRequireApiKey(string method)
@@ -118,7 +119,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Fact]
-        [DisplayName("驗證結果為 null 時應退回相容態的非空檢查")]
+        [DisplayName("A null validation result falls back to the presence check of the compatibility state")]
         public void Validate_NullValidation_FallsBackToPresenceCheck()
         {
             var context = new ApiAuthorizationContext

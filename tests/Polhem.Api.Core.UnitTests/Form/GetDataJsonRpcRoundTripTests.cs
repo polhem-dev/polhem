@@ -14,10 +14,10 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip:確認
-    /// <c>Employee.GetData</c> 的 <c>RowId</c> 經 ApiInputConverter 對拷到
-    /// <c>GetDataArgs</c>,且 stub 回傳的 DataSet 經 ApiOutputConverter 對拷
-    /// 回 wire response,並保留 <c>DataSetName == ProgId</c> 的框架不變式。
+    /// An end-to-end round-trip through <see cref="JsonRpcExecutor"/>: confirms that the <c>RowId</c> of
+    /// <c>Employee.GetData</c> is copied to <c>GetDataArgs</c> by ApiInputConverter, that the DataSet returned by the
+    /// stub is copied back into the wire response by ApiOutputConverter, and that the framework invariant
+    /// <c>DataSetName == ProgId</c> holds.
     /// </summary>
     public class GetDataJsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
     {
@@ -26,7 +26,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         public GetDataJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Employee.GetData 經 JsonRpcExecutor 應透傳 RowId 並回傳完整 DataSet")]
+        [DisplayName("Employee.GetData through JsonRpcExecutor passes RowId through and returns the full DataSet")]
         public void GetData_ThroughJsonRpc_PreservesRowIdAndReturnsDataSet()
         {
             var rowId = Guid.NewGuid();
@@ -73,7 +73,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             Assert.Null(response.Error);
             var result = Assert.IsType<GetDataResponse>(response.Result!.Value);
             Assert.NotNull(result.DataSet);
-            // 框架不變式:DataSet.DataSetName == ProgId,Tables[ProgId] 即 Master。
+            // Framework invariant: `DataSet.DataSetName` equals the ProgId, and `Tables[ProgId]` is the master table.
             Assert.Equal("Employee", result.DataSet!.DataSetName);
             Assert.Equal("員工甲", result.DataSet.Tables["Employee"]!.Rows[0][SysFields.Name]);
 

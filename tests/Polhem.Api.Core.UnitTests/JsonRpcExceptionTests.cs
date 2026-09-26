@@ -4,12 +4,12 @@ using Polhem.Api.Core.JsonRpc;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// JsonRpcException 測試。
+    /// Tests for JsonRpcException.
     /// </summary>
     public class JsonRpcExceptionTests
     {
         [Fact]
-        [DisplayName("建構子應設定 HttpStatusCode、ErrorCode、RpcMessage 與 Message")]
+        [DisplayName("The constructor sets HttpStatusCode, ErrorCode, RpcMessage and Message")]
         public void Constructor_SetsAllProperties()
         {
             var ex = new JsonRpcException(400, JsonRpcErrorCode.InvalidRequest, "invalid payload");
@@ -24,7 +24,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData(JsonRpcErrorCode.ParseError)]
         [InlineData(JsonRpcErrorCode.MethodNotFound)]
         [InlineData(JsonRpcErrorCode.Unauthorized)]
-        [DisplayName("建構子應保留指定的 ErrorCode")]
+        [DisplayName("The constructor keeps the given ErrorCode")]
         public void Constructor_PreservesErrorCode(JsonRpcErrorCode code)
         {
             var ex = new JsonRpcException(500, code, "x");

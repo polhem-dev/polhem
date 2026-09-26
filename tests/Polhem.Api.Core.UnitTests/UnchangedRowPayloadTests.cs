@@ -5,13 +5,13 @@ using Polhem.Api.Core.MessagePack;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 驗證 Unchanged 列只攜帶 Current 一份值。
+    /// Verifies that an Unchanged row carries only one set of values, the Current one.
     /// </summary>
     /// <remarks>
-    /// 這不是罕見情形：<c>DataFormRepository.GetData</c> 回傳前呼叫 <c>AcceptChanges()</c>
-    /// （回應契約明載），因此**每一筆從資料庫讀出來的列**都是 Unchanged。先前 Unchanged 與
-    /// Modified 共用同一個 case、送出兩份完全相同的值，而還原端只讀 Current —— payload 與
-    /// 序列化 CPU 都是兩倍，且沒有任何讀取端用得到那一份。
+    /// This is not a rare case: <c>DataFormRepository.GetData</c> calls <c>AcceptChanges()</c> before returning (as
+    /// stated in the response contract), so **every row read from the database** is Unchanged. Unchanged and Modified
+    /// used to share one case and send two identical sets of values, while the restoring side read only Current:
+    /// double the payload and the serialization CPU, for a copy no reader used.
     /// </remarks>
     public class UnchangedRowPayloadTests
     {
@@ -22,12 +22,12 @@ namespace Polhem.Api.Core.UnitTests
             table.Columns.Add("name", typeof(string));
             table.Rows.Add(1, "alpha");
             table.Rows.Add(2, "beta");
-            table.AcceptChanges();   // 讀取路徑的實際狀態
+            table.AcceptChanges();   // The actual state on the read path.
             return table;
         }
 
         [Fact]
-        [DisplayName("Unchanged 列不應攜帶 OriginalValues")]
+        [DisplayName("An Unchanged row carries no OriginalValues")]
         public void Unchanged_CarriesCurrentOnly()
         {
             var serializable = SerializableDataTable.FromDataTable(BuildTable());
@@ -41,7 +41,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Modified 列仍應同時攜帶 Current 與 Original")]
+        [DisplayName("A Modified row still carries both Current and Original")]
         public void Modified_StillCarriesBoth()
         {
             var table = BuildTable();
@@ -55,7 +55,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Unchanged 列去掉 Original 後 round-trip 仍應完全還原")]
+        [DisplayName("Unchanged rows without Original still round-trip completely")]
         public void Unchanged_RoundTripsUnaffected()
         {
             var original = BuildTable();
@@ -69,12 +69,12 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Equal("alpha", restored.Rows[0]["name"]);
             Assert.Equal("beta", restored.Rows[1]["name"]);
 
-            // Original 版本仍取得到 —— AcceptChanges 讓兩個版本相等，這正是不必送第二份的理由。
+            // The Original version is still available. `AcceptChanges` makes both versions equal, which is exactly why the second copy need not be sent.
             Assert.Equal("alpha", restored.Rows[0]["name", DataRowVersion.Original]);
         }
 
         [Fact]
-        [DisplayName("Unchanged 列的 payload 應明顯小於送兩份時")]
+        [DisplayName("The payload of Unchanged rows is smaller than when both versions are sent")]
         public void Unchanged_PayloadIsSmaller()
         {
             var unchanged = BuildTable();
@@ -86,9 +86,9 @@ namespace Polhem.Api.Core.UnitTests
             var unchangedSize = MessagePackCodec.Serialize(unchanged).Length;
             var modifiedSize = MessagePackCodec.Serialize(modified).Length;
 
-            // 同樣兩列同樣欄位，差別只在 Modified 多送一份 Original。
+            // Same rows and columns; the only difference is the extra Original that Modified sends.
             Assert.True(unchangedSize < modifiedSize,
-                $"Unchanged payload ({unchangedSize} B) 應小於 Modified ({modifiedSize} B)。");
+                $"Unchanged payload ({unchangedSize} B) should be smaller than Modified ({modifiedSize} B).");
         }
     }
 }

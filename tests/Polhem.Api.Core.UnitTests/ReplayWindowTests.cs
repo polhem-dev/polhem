@@ -5,12 +5,12 @@ using Polhem.Api.Core.JsonRpc;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// ReplayWindow 滑動視窗演算法測試（純邏輯，不觸及 process-wide 狀態）。
+    /// Tests of the ReplayWindow sliding window algorithm (pure logic, no process-wide state).
     /// </summary>
     public class ReplayWindowTests
     {
         [Fact]
-        [DisplayName("首次序號不論大小皆應接受並成為基準")]
+        [DisplayName("The first sequence number is accepted whatever its size and becomes the baseline")]
         public void TryAccept_FirstSequence_IsAccepted()
         {
             var window = new ReplayWindow();
@@ -19,7 +19,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("重複的序號應被拒")]
+        [DisplayName("A repeated sequence number is rejected")]
         public void TryAccept_RepeatedSequence_IsRejected()
         {
             var window = new ReplayWindow();
@@ -29,23 +29,23 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("遞增序號應全部接受")]
+        [DisplayName("Increasing sequence numbers are all accepted")]
         public void TryAccept_IncreasingSequences_AllAccepted()
         {
             var window = new ReplayWindow();
 
             for (long i = 1; i <= 500; i++)
             {
-                Assert.True(window.TryAccept(i), $"sequence {i} 應被接受");
+                Assert.True(window.TryAccept(i), $"sequence {i} should be accepted");
             }
         }
 
         [Fact]
-        [DisplayName("視窗內亂序到達應全部接受（並行取號但送達順序不保證）")]
+        [DisplayName("Out-of-order arrivals within the window are all accepted because concurrent senders do not guarantee arrival order")]
         public void TryAccept_OutOfOrderWithinWindow_AllAccepted()
         {
-            // 取號是原子的，但多個 connector 並行送出時到達順序不固定。
-            // 嚴格遞增會誤殺這種正常流量，因此視窗必須容忍亂序。
+            // Taking a number is atomic, but when several connectors send concurrently the arrival order is not fixed.
+            // A strictly increasing rule would reject this normal traffic, so the window must tolerate reordering.
             var window = new ReplayWindow();
             window.TryAccept(100);
 
@@ -55,7 +55,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("落在視窗之後的舊序號應被拒")]
+        [DisplayName("An old sequence number behind the window is rejected")]
         public void TryAccept_SequenceBehindWindow_IsRejected()
         {
             var window = new ReplayWindow();
@@ -65,7 +65,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("前跳超過視窗寬度應清空位圖，先前的序號不再可用")]
+        [DisplayName("A forward jump beyond the window width clears the bitmap so earlier sequence numbers can no longer be used")]
         public void TryAccept_JumpBeyondWindow_ClearsEarlierSlots()
         {
             var window = new ReplayWindow();
@@ -77,7 +77,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("前跳恰好等於上限應接受")]
+        [DisplayName("A forward jump exactly at the limit is accepted")]
         public void TryAccept_JumpExactlyAtLimit_IsAccepted()
         {
             var window = new ReplayWindow();
@@ -87,12 +87,12 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("前跳超過上限應被拒，避免一次算錯就讓 session 卡死")]
+        [DisplayName("A forward jump beyond the limit is rejected so one miscalculation cannot lock up the session")]
         public void TryAccept_JumpBeyondLimit_IsRejected()
         {
-            // 沒有上限的話，用戶端一次整數運算失誤送出接近 long.MaxValue 的序號，
-            // 該 session 之後所有正常請求都會落在視窗外而被拒——token 有效、
-            // 金鑰正確卻全部失敗，極難診斷。
+            // Without a limit, a single integer arithmetic mistake on the client that sends a number near `long.MaxValue`
+            // would put every later normal request of that session outside the window. They would all fail with a valid
+            // token and correct keys, which is extremely hard to diagnose.
             var window = new ReplayWindow();
             window.TryAccept(1);
 
@@ -101,7 +101,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("負數序號應被拒")]
+        [DisplayName("A negative sequence number is rejected")]
         public void TryAccept_NegativeSequence_IsRejected()
         {
             var window = new ReplayWindow();
@@ -110,10 +110,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("同一序號並行送入應只被接受一次")]
+        [DisplayName("The same sequence number sent concurrently is accepted exactly once")]
         public void TryAccept_SameSequenceConcurrently_AcceptedExactlyOnce()
         {
-            // 視窗會被同一 session 的並行請求共用，read-modify-write 必須是原子的。
+            // Concurrent requests of the same session share the window, so the read-modify-write must be atomic.
             var window = new ReplayWindow();
             var results = new ConcurrentBag<bool>();
 
@@ -123,7 +123,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("視窗寬度內的不同序號並行送入應全部接受")]
+        [DisplayName("Distinct sequence numbers within the window width sent concurrently are all accepted")]
         public void TryAccept_DistinctSequencesConcurrently_AllAccepted()
         {
             var window = new ReplayWindow();

@@ -14,11 +14,10 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip:確認
-    /// <c>Employee.Save</c> 的 <c>SaveRequest.DataSet</c> 經 ApiInputConverter
-    /// 對拷到 <c>SaveArgs.DataSet</c> 時 row state 保留,且 stub 回傳的
-    /// refreshed DataSet 與 AffectedRows 經 ApiOutputConverter 對拷回 wire
-    /// response。
+    /// End-to-end round-trip through <see cref="JsonRpcExecutor"/>: confirms that the row state of
+    /// <c>SaveRequest.DataSet</c> for <c>Employee.Save</c> is kept when ApiInputConverter copies it to
+    /// <c>SaveArgs.DataSet</c>, and that the refreshed DataSet and AffectedRows returned by the stub are copied back
+    /// to the wire response by ApiOutputConverter.
     /// </summary>
     public class SaveJsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
     {
@@ -27,10 +26,9 @@ namespace Polhem.Api.Core.UnitTests.Form
         public SaveJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Employee.Save 經 JsonRpcExecutor 應保留 RowState 並回傳 refreshed DataSet + AffectedRows")]
+        [DisplayName("Employee.Save through JsonRpcExecutor keeps the RowState and returns the refreshed DataSet and AffectedRows")]
         public void Save_ThroughJsonRpc_PreservesRowStatesAndReturnsRefreshed()
         {
-            // 準備一份 DataSet,master 含 1 個 Added row
             var input = new DataSet("Employee");
             var master = new DataTable("Employee");
             master.Columns.Add(SysFields.RowId, typeof(Guid));
@@ -39,7 +37,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             master.Rows.Add(rowId, "全新員工");
             input.Tables.Add(master);
 
-            // Refreshed DataSet 含 server-generated 欄位(模擬 trigger 寫回)
+            // The refreshed DataSet has a server-generated column, simulating a value written back by a trigger.
             var refreshed = new DataSet("Employee");
             var refreshedMaster = new DataTable("Employee");
             refreshedMaster.Columns.Add(SysFields.RowId, typeof(Guid));
@@ -89,12 +87,11 @@ namespace Polhem.Api.Core.UnitTests.Form
 
             Assert.Null(response.Error);
             var result = Assert.IsType<SaveResponse>(response.Result!.Value);
-            // 框架不變式:refreshed DataSet 也以 ProgId 為 DataSetName。
+            // Framework invariant: the refreshed DataSet also uses the ProgId as its DataSetName.
             Assert.NotNull(result.DataSet);
             Assert.Equal("Employee", result.DataSet!.DataSetName);
             Assert.Equal(1, result.AffectedRows["Employee"]);
 
-            // BO 收到的 DataSet 應保留 Added row state
             Assert.NotNull(stub.LastSavedDataSet);
             var savedMaster = stub.LastSavedDataSet!.Tables["Employee"]!;
             Assert.Equal(DataRowState.Added, savedMaster.Rows[0].RowState);

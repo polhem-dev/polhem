@@ -5,12 +5,12 @@ using Polhem.Api.Core.Transformers;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// GzipPayloadCompressor 測試。
+    /// Tests for GzipPayloadCompressor.
     /// </summary>
     public class GzipPayloadCompressorTests
     {
         [Fact]
-        [DisplayName("CompressionMethod 應為 \"gzip\"")]
+        [DisplayName("CompressionMethod is \"gzip\"")]
         public void CompressionMethod_IsGzip()
         {
             var compressor = new GzipPayloadCompressor();
@@ -19,7 +19,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Compress 後 Decompress 應還原原始內容")]
+        [DisplayName("Decompress after Compress restores the original content")]
         public void CompressDecompress_RoundTrip_RestoresOriginalBytes()
         {
             var compressor = new GzipPayloadCompressor();
@@ -35,7 +35,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Compress 壓縮後長度應不同於原始內容")]
+        [DisplayName("Compress makes repetitive content shorter than the original")]
         public void Compress_ProducesDifferentBytes()
         {
             var compressor = new GzipPayloadCompressor();

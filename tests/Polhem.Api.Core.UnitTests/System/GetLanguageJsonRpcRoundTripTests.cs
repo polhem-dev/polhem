@@ -13,15 +13,14 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip：將
-    /// <c>System.GetLanguage</c> 透過 executor 派發到
-    /// <see cref="Polhem.Business.System.SystemBusinessObject.GetLanguage"/>，驗證：
+    /// End-to-end round-trip through <see cref="JsonRpcExecutor"/>: dispatches <c>System.GetLanguage</c> through the
+    /// executor to <see cref="Polhem.Business.System.SystemBusinessObject.GetLanguage"/> and verifies that:
     /// <list type="bullet">
-    /// <item>action 路由（progId.action 反射查表）正確找到方法</item>
-    /// <item>ApiInputConverter（GetLanguageRequest → GetLanguageArgs）保留 Lang / Namespace</item>
-    /// <item>ApiOutputConverter（GetLanguageResult → GetLanguageResponse）命名慣例反射有作用，
-    ///   LanguageResource 物件 deep-copy 正確</item>
-    /// <item>從 IDefineAccess 取出 fixture seed 的語系資源</item>
+    /// <item>action routing (the progId.action reflection lookup) finds the method</item>
+    /// <item>ApiInputConverter (GetLanguageRequest → GetLanguageArgs) keeps Lang / Namespace</item>
+    /// <item>the naming-convention reflection of ApiOutputConverter (GetLanguageResult → GetLanguageResponse) works,
+    ///   and the LanguageResource object is deep-copied correctly</item>
+    /// <item>the language resource seeded by the fixture is read from IDefineAccess</item>
     /// </list>
     /// </summary>
     public class GetLanguageJsonRpcRoundTripTests : IClassFixture<GetLanguageJsonRpcRoundTripTests.LangFixture>
@@ -31,7 +30,7 @@ namespace Polhem.Api.Core.UnitTests.System
         public GetLanguageJsonRpcRoundTripTests(LangFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("System.GetLanguage 經 JsonRpcExecutor 應派發成功並回傳 fixture seed 的 LanguageResource")]
+        [DisplayName("System.GetLanguage dispatches through JsonRpcExecutor and returns the LanguageResource seeded by the fixture")]
         public void GetLanguage_ThroughJsonRpc_DispatchesAndReturnsResource()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
@@ -82,7 +81,7 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("System.GetLanguage 對不存在的 namespace 應 dispatch 成功並回空 Xml")]
+        [DisplayName("System.GetLanguage dispatches for a missing namespace and returns empty Xml")]
         public void GetLanguage_MissingNamespace_DispatchSucceedsWithEmptyXml()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
@@ -121,7 +120,7 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("System.GetLanguage 對空 Lang 應回 RpcError")]
+        [DisplayName("System.GetLanguage returns an RpcError for an empty Lang")]
         public void GetLanguage_EmptyLang_ReturnsRpcError()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);

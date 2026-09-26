@@ -21,10 +21,10 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.AuditLog
 {
     /// <summary>
-    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip：<c>AuditLog.*</c> 三個 action 應經
-    /// dispatch 分支派發到 <see cref="Polhem.Business.AuditLog.LogBusinessObject"/>，由 stub repository
-    /// 回傳已知資料，驗證 axis 路由 + Input/Output Converter。權限以 fake ICompanyAuthorizationService 放行；
-    /// 不接實體 DB。
+    /// An end-to-end round trip through <see cref="JsonRpcExecutor"/>: the <c>AuditLog.*</c> actions are dispatched
+    /// through the dispatch branch to <see cref="Polhem.Business.AuditLog.LogBusinessObject"/>, and a stub repository
+    /// returns known data, verifying the axis routing and the input/output converters. A fake
+    /// ICompanyAuthorizationService grants permission; no real database is involved.
     /// </summary>
     public class AuditLogJsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
     {
@@ -64,7 +64,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("AuditLog.GetChangeLog 經 executor 應派發並回標頭 DataTable + 分頁")]
+        [DisplayName("AuditLog.GetChangeLog dispatches through the executor and returns the header DataTable with paging")]
         public void GetChangeLog_ThroughJsonRpc_Dispatches()
         {
             var repo = new StubAuditLogRepository(HeaderPage(2), null);
@@ -78,7 +78,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("AuditLog.GetChangeDetail 經 executor 應派發並回還原後的 Fields")]
+        [DisplayName("AuditLog.GetChangeDetail dispatches through the executor and returns the restored header with no DataSet for an empty payload")]
         public void GetChangeDetail_ThroughJsonRpc_Dispatches()
         {
             var sysRowId = Guid.NewGuid();
@@ -94,7 +94,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("AuditLog.GetChangeDetail 經 executor 應把還原出的 DataSet 帶到 wire response")]
+        [DisplayName("AuditLog.GetChangeDetail through the executor carries the restored DataSet to the wire response")]
         public void GetChangeDetail_ThroughJsonRpc_CarriesDataSet()
         {
             var sysRowId = Guid.NewGuid();
@@ -112,8 +112,9 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         }
 
         /// <summary>
-        /// 手寫一份帶內嵌 schema 的變更集 payload。寫入端 <c>AuditDiffGram</c> 是 <c>Polhem.Business</c>
-        /// 的 internal 型別，這個測試組件看不到，所以照它的形狀（外層元素 + XSD + DiffGram）直接寫出。
+        /// Writes a change-set payload with an embedded schema by hand. The writer, <c>AuditDiffGram</c>, is internal to
+        /// <c>Polhem.Business</c> and invisible to this test assembly, so its shape (outer element + XSD + DiffGram) is
+        /// written out directly.
         /// </summary>
         private static string SchemaBoundChangePayload()
         {
@@ -138,7 +139,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         [InlineData("GetAccessLog")]
         [InlineData("GetApiAnomalyLog")]
         [InlineData("GetDbAnomalyLog")]
-        [DisplayName("AuditLog 各清單 action 經 executor 應派發並回 LogListResponse")]
+        [DisplayName("Each AuditLog list action dispatches through the executor and returns a LogListResponse")]
         public void ListActions_ThroughJsonRpc_ReturnLogListResponse(string action)
         {
             var repo = new StubAuditLogRepository(HeaderPage(2), null);
@@ -162,7 +163,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         [InlineData("GetApiAnomalySummary")]
         [InlineData("GetDbAnomalySummary")]
         [InlineData("GetTopApiMethods")]
-        [DisplayName("AuditLog 各聚合 action 經 executor 應派發並回 LogAggregateResponse")]
+        [DisplayName("Each AuditLog aggregate action dispatches through the executor and returns a LogAggregateResponse")]
         public void AggregateActions_ThroughJsonRpc_ReturnLogAggregateResponse(string action)
         {
             var repo = new StubAuditLogRepository(HeaderPage(0), null);

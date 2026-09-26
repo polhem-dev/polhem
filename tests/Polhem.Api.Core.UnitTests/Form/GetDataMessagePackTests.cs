@@ -7,14 +7,13 @@ using Polhem.Definition;
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// <see cref="GetDataRequest"/> / <see cref="GetDataResponse"/> 的
-    /// MessagePack round-trip 驗證:DataSet 內 Master + Detail 還原(row
-    /// state 為 Unchanged)。
+    /// MessagePack round-trip tests for <see cref="GetDataRequest"/> / <see cref="GetDataResponse"/>: the Master and
+    /// Detail tables in the DataSet are restored (with row state Unchanged).
     /// </summary>
     public class GetDataMessagePackTests
     {
         [Fact]
-        [DisplayName("GetDataRequest 帶 RowId 應 round-trip 還原")]
+        [DisplayName("GetDataRequest with a RowId round-trips")]
         public void GetDataRequest_RoundTrip_PreservesRowId()
         {
             var rowId = Guid.NewGuid();
@@ -28,7 +27,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("GetDataRequest 預設值應 round-trip 還原 RowId = Guid.Empty")]
+        [DisplayName("GetDataRequest with default values round-trips to RowId = Guid.Empty")]
         public void GetDataRequest_DefaultValues_RoundTrip()
         {
             var request = new GetDataRequest();
@@ -41,7 +40,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("GetDataResponse 帶 Master + Detail 與 Unchanged row state 應完整還原")]
+        [DisplayName("GetDataResponse with Master and Detail tables and Unchanged row states is fully restored")]
         public void GetDataResponse_RoundTrip_PreservesUnchangedRowState()
         {
             var dataSet = new DataSet("Employee");
@@ -82,7 +81,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("GetDataResponse.DataSet = null 應 round-trip 為 null")]
+        [DisplayName("GetDataResponse.DataSet = null round-trips as null")]
         public void GetDataResponse_NullDataSet_RoundTrip()
         {
             var response = new GetDataResponse { DataSet = null };

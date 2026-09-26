@@ -12,10 +12,10 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip：將 <c>System.GetDepartmentTree</c>
-    /// 透過 executor 派發到 <see cref="Polhem.Business.System.SystemBusinessObject.GetDepartmentTree"/>，
-    /// 驗證 action 路由、ApiInputConverter（Request→Args）、ApiOutputConverter（Result→Response）。
-    /// 未 EnterCompany 時回 null tree（不碰 DB，聚焦 dispatch 路徑）。
+    /// An end-to-end round-trip through <see cref="JsonRpcExecutor"/>: <c>System.GetDepartmentTree</c> is dispatched by
+    /// the executor to <see cref="Polhem.Business.System.SystemBusinessObject.GetDepartmentTree"/>, verifying action
+    /// routing, ApiInputConverter (Request→Args) and ApiOutputConverter (Result→Response).
+    /// Without EnterCompany it returns a null tree (no DB access, so the test focuses on the dispatch path).
     /// </summary>
     public class GetDepartmentTreeJsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
     {
@@ -23,7 +23,7 @@ namespace Polhem.Api.Core.UnitTests.System
         public GetDepartmentTreeJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("System.GetDepartmentTree 經 JsonRpcExecutor 派發成功；未進公司回 null tree")]
+        [DisplayName("System.GetDepartmentTree dispatches through JsonRpcExecutor and returns a null tree before a company is entered")]
         public void GetDepartmentTree_ThroughJsonRpc_NoCompany_ReturnsNullTree()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
@@ -55,7 +55,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
             Assert.Null(response.Error);
             var result = Assert.IsType<GetDepartmentTreeResponse>(response.Result!.Value);
-            Assert.Null(result.Tree); // 未 EnterCompany → CompanyId 空 → 不查 service、tree 為 null
+            Assert.Null(result.Tree); // Without EnterCompany the CompanyId is empty, so no service is queried and the tree is null.
         }
     }
 }

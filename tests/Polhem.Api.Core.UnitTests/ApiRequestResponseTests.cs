@@ -11,7 +11,7 @@ namespace Polhem.Api.Core.UnitTests
     public class ApiRequestResponseTests
     {
         [Fact]
-        [DisplayName("LoginRequest 繼承 ApiRequest 並實作 ILoginRequest")]
+        [DisplayName("LoginRequest inherits ApiRequest and implements ILoginRequest")]
         public void LoginRequest_InheritsApiRequest_ImplementsInterface()
         {
             var request = new LoginRequest
@@ -28,7 +28,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("LoginResponse 繼承 ApiResponse 並實作 ILoginResponse")]
+        [DisplayName("LoginResponse inherits ApiResponse and implements ILoginResponse")]
         public void LoginResponse_InheritsApiResponse_ImplementsInterface()
         {
             var token = Guid.NewGuid();
@@ -45,7 +45,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("LoginRequest MessagePack 序列化與反序列化")]
+        [DisplayName("LoginRequest round-trips through MessagePack")]
         public void LoginRequest_MessagePackRoundTrip_PreservesData()
         {
             var original = new LoginRequest
@@ -64,7 +64,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("LoginResponse MessagePack 序列化與反序列化")]
+        [DisplayName("LoginResponse round-trips through MessagePack")]
         public void LoginResponse_MessagePackRoundTrip_PreservesData()
         {
             var token = Guid.NewGuid();
@@ -89,7 +89,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("PingRequest MessagePack 序列化與反序列化")]
+        [DisplayName("PingRequest round-trips through MessagePack")]
         public void PingRequest_MessagePackRoundTrip_PreservesData()
         {
             var original = new PingRequest

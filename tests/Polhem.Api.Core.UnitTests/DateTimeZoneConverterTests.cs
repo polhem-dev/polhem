@@ -7,12 +7,14 @@ using Polhem.Base.Data;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// <see cref="DateTimeZoneConverter"/> 測試：instant 欄位由 UTC 轉為使用者時區、日曆日欄位不動、
-    /// 列狀態與兩個版本（Current / Original）皆保留、來源不被就地修改，以及過濾條件值的換算。
+    /// <see cref="DateTimeZoneConverter"/> tests: instant columns shift from UTC to the user's time zone, calendar-day
+    /// columns stay as they are, row states and both versions (Current / Original) are kept, the source is not
+    /// modified in place, and filter values are converted.
     /// </summary>
     /// <remarks>
-    /// 期望值一律由 <see cref="TimeZoneInfo"/> 動態推導，不寫死偏移量——測試在開發機
-    /// （Asia/Taipei）與 CI（UTC）下都必須成立。設計見 docs/adr/adr-032-datetime-timezone.md（D4）。
+    /// Expected values are always derived from <see cref="TimeZoneInfo"/> at run time, never hard-coded offsets, so the
+    /// tests hold both on a development machine (Asia/Taipei) and in CI (UTC). The design is in
+    /// docs/adr/adr-032-datetime-timezone.md (D4).
     /// </remarks>
     public class DateTimeZoneConverterTests
     {
@@ -44,7 +46,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("DateTime 欄位由 UTC 轉為使用者時區")]
+        [DisplayName("A DateTime column shifts from UTC to the user's time zone")]
         public void UtcToUser_ShiftsInstantColumn()
         {
             var converted = DateTimeZoneConverter.UtcToUser(BuildTableWithRow(), Taipei);
@@ -54,7 +56,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Date 欄位絕不轉換——日曆日沒有可重新表達的瞬間")]
+        [DisplayName("A Date column is never converted (a calendar day has no instant to re-express)")]
         public void UtcToUser_LeavesCalendarDayColumnUntouched()
         {
             var converted = DateTimeZoneConverter.UtcToUser(BuildTableWithRow(), Taipei);
@@ -64,7 +66,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("經 DataSet XML 讀回的 Date 欄位同樣絕不轉換")]
+        [DisplayName("A Date column read back from DataSet XML is not converted either")]
         public void UtcToUser_XmlRestoredCalendarDayColumn_LeftUntouched()
         {
             using var source = new DataSet("ds");
@@ -79,13 +81,13 @@ namespace Polhem.Api.Core.UnitTests
 
             var converted = DateTimeZoneConverter.UtcToUser(restored.Tables["orders"]!, Taipei);
 
-            // 讀回的標記是字串；沒被解析的話 Date 欄會被當成時間點平移到台北時間。
+            // The marker read back is a string. If it were not parsed, the Date column would be treated as an instant and shifted to Taipei time.
             Assert.NotNull(converted);
             Assert.Equal(new DateTime(2026, 1, 1, 0, 0, 0), (DateTime)converted.Rows[0]["order_date"]);
         }
 
         [Fact]
-        [DisplayName("空白時區為 no-op，且原樣回傳同一參考")]
+        [DisplayName("A blank time zone is a no-op and returns the same reference")]
         public void BlankTimeZone_IsNoOp()
         {
             var source = BuildTableWithRow();
@@ -96,7 +98,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("轉換不得就地修改來源——in-process 下來源是呼叫端自己的物件")]
+        [DisplayName("Conversion does not modify the source in place (in-process, the source is the caller's own object)")]
         public void Convert_DoesNotMutateSource()
         {
             var source = BuildTableWithRow();
@@ -107,10 +109,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Modified 列的 Current 與 Original 兩個版本都要轉換")]
+        [DisplayName("Both the Current and the Original version of a Modified row are converted")]
         public void Convert_ModifiedRow_ConvertsBothVersions()
         {
-            // 只轉 Current 會讓兩個版本落在不同時區，伺服端的並行檢查與稽核 DiffGram 都會失準。
+            // Converting only Current would leave the two versions in different time zones, which breaks the server's concurrency check and the audit DiffGram.
             var table = BuildTableWithRow();
             var newUtc = new DateTime(2026, 1, 2, 15, 0, 0, DateTimeKind.Unspecified);
             table.Rows[0]["created_at"] = newUtc;
@@ -126,10 +128,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Modified 列只改了非時間點欄位時，該欄的修改必須保留")]
+        [DisplayName("When a Modified row changed only a non-instant column, that edit is kept")]
         public void Convert_ModifiedRowWithNonInstantEdit_KeepsTheEdit()
         {
-            // 改寫 Original 要先 RejectChanges，而它會還原整列，不只時間點欄。
+            // Rewriting Original requires `RejectChanges` first, which reverts the whole row, not only the instant columns.
             var table = BuildTableWithRow();
             table.Rows[0]["remark"] = "edited";
 
@@ -143,7 +145,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Added 列維持 Added，且值已轉換")]
+        [DisplayName("An Added row stays Added and its values are converted")]
         public void Convert_AddedRow_KeepsState()
         {
             var table = BuildTable();
@@ -158,7 +160,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Deleted 列維持 Deleted，其 Original 值亦已轉換（稽核會讀它）")]
+        [DisplayName("A Deleted row stays Deleted and its Original values are converted too (the audit reads them)")]
         public void Convert_DeletedRow_KeepsStateAndConvertsOriginal()
         {
             var table = BuildTableWithRow();
@@ -173,7 +175,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Unchanged 列維持 Unchanged，不因轉換而變成 Modified")]
+        [DisplayName("An Unchanged row stays Unchanged and does not become Modified through conversion")]
         public void Convert_UnchangedRow_StaysUnchanged()
         {
             var converted = DateTimeZoneConverter.UtcToUser(BuildTableWithRow(), Taipei);
@@ -183,7 +185,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("DataSet 內每一張表都會被轉換")]
+        [DisplayName("Every table in a DataSet is converted")]
         public void Convert_DataSet_ConvertsEveryTable()
         {
             using var dataSet = new DataSet("s");
@@ -200,7 +202,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("DBNull 儲存格不受影響")]
+        [DisplayName("DBNull cells are left alone")]
         public void Convert_NullCell_IsLeftAlone()
         {
             var table = BuildTable();
@@ -217,7 +219,7 @@ namespace Polhem.Api.Core.UnitTests
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        [DisplayName("filter 值：DateTime 轉換、DateOnly 不轉")]
+        [DisplayName("Filter values: a DateTime is converted and a DateOnly is not")]
         public void ConvertFilterValue_RespectsValueType(bool toUtc)
         {
             var day = new DateOnly(2026, 1, 1);
@@ -230,7 +232,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("filter 值：非時間型別原樣回傳")]
+        [DisplayName("Filter values: a non-temporal value is returned as is")]
         public void ConvertFilterValue_NonTemporalValue_IsReturnedAsIs()
         {
             Assert.Equal("open", DateTimeZoneConverter.ConvertFilterValue("open", Taipei, toUtc: true));
@@ -238,11 +240,11 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("使用者時區為 UTC 時退化為恆等轉換——值逐 tick 不變")]
+        [DisplayName("With UTC as the user's time zone, conversion is the identity (values unchanged to the tick)")]
         public void UtcUser_ConversionIsIdentity()
         {
-            // D10 把「零成本」界定為複雜度而非執行成本：管線照跑，只是不改變值。
-            // 這條釘住那個「不改變」，避免日後有人在轉換路徑加上會動到值的處理。
+            // D10 defines "zero cost" as zero complexity, not zero run time: the pipeline still runs, it just does not
+            // change values. This test pins that "does not change", so nobody later adds value-altering work to the path.
             var converted = DateTimeZoneConverter.UtcToUser(BuildTableWithRow(), "UTC");
             var filterValue = (DateTime)DateTimeZoneConverter.ConvertFilterValue(s_utc9Am, "UTC", toUtc: true)!;
 
@@ -252,7 +254,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("無法解析的時區應擲例外，不得靜默略過轉換")]
+        [DisplayName("An unresolvable time zone throws instead of silently skipping the conversion")]
         public void Convert_UnresolvableZone_Throws()
         {
             var exception = Assert.Throws<InvalidOperationException>(

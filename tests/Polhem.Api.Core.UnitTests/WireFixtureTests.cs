@@ -13,25 +13,26 @@ using Polhem.Definition.Sorting;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 把 JSON body codec 的編碼規則釘成黃金樣本（`wire-fixtures/bodies/`），
-    /// 供另一個語言的 client 對照。
+    /// Pins the encoding rules of the JSON body codec as golden fixtures (`wire-fixtures/bodies/`)
+    /// for a client in another language to compare against.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 跨語言的 wire 只有雙向 round-trip 擋得住漂移：.NET 這端有
-    /// <c>WireContractDriftTests</c> 守 MessagePack 的註冊，但沒有任何東西看得到
-    /// TypeScript 那端。樣本是兩邊唯一的共同事實——.NET 產生並驗證它，TS 用它驗自己
-    /// 讀得懂（.NET 寫的）也寫得對（.NET 讀得回）。
+    /// Only a round trip in both directions stops a cross-language wire from drifting. On the .NET side,
+    /// <c>WireContractDriftTests</c> guards the MessagePack registrations, but nothing can see the
+    /// TypeScript side. The fixtures are the only fact both sides share: .NET produces and verifies them, and
+    /// TS uses them to check that it can read what .NET writes and writes what .NET can read back.
     /// </para>
     /// <para>
-    /// <b>樣本只固定 body 原文，不固定壓縮或加密後的 bytes。</b>gzip 的輸出跨 .NET
-    /// 版本不保證一致，而 AES-CBC 每次用隨機 IV，本質上就不可能固定。這兩層是標準
-    /// 演算法、各語言的 library 自己保證；需要釘住的是只有這個框架知道的 JSON 形狀。
+    /// <b>The fixtures pin only the raw body, not the compressed or encrypted bytes.</b> gzip output is not
+    /// guaranteed to be identical across .NET versions, and AES-CBC uses a random IV every time, so it cannot be
+    /// pinned at all. Those two layers are standard algorithms that each language's library guarantees; what needs
+    /// pinning is the JSON shape that only this framework knows.
     /// </para>
     /// <para>
-    /// 要重新產生（**只有在刻意變更編碼規則時**）：
+    /// To regenerate (**only when the encoding rules are changed on purpose**):
     /// <c>POLHEM_REGENERATE_WIRE_FIXTURES=1 dotnet test tests/Polhem.Api.Core.UnitTests/…</c>
-    /// 然後把 diff 讀過一遍再 commit——那份 diff 就是 wire 的變更說明。
+    /// then read the diff before committing. That diff is the description of the wire change.
     /// </para>
     /// </remarks>
     public class WireFixtureTests
@@ -41,28 +42,28 @@ namespace Polhem.Api.Core.UnitTests
         private static readonly DateTime s_fixedUtc = new(2026, 3, 14, 15, 9, 26, 535, DateTimeKind.Utc);
 
         /// <summary>
-        /// 每個樣本涵蓋一條編碼規則，而不是一個訊息型別。
+        /// Each fixture covers one encoding rule, not one message type.
         /// </summary>
         /// <remarks>
-        /// 逐訊息型別產樣本會得到上百個幾乎同構的檔案，卻漏掉真正會出錯的地方：
-        /// 判別碼、DataTable 形狀、camelCase、列舉的字串化。訊息型別本身是屬性袋，
-        /// TS 端由型別定義產生即可。
+        /// A fixture per message type would give hundreds of nearly identical files and still miss where things
+        /// actually go wrong: discriminators, the DataTable shape, camelCase, enums as strings. Message types
+        /// themselves are property bags; the TS side can generate them from the type definitions.
         /// </remarks>
         private static IEnumerable<(string Name, object Value, Type Type, string Description)> Cases()
         {
-            // 1. object 型別成員的判別式封套：JSON 分不出的每一組都要有樣本
+            // 1. The discriminated envelope of object-typed members: every group JSON cannot tell apart needs a fixture.
             foreach (var (name, value, desc) in ObjectMemberValues())
                 yield return ($"value-{name}", new Parameter("v", value), typeof(Parameter), desc);
 
-            // 2. DataTable：型別由 column metadata 還原，不走封套
+            // 2. DataTable: types are restored from column metadata, not through the envelope.
             yield return ("datatable", BuildTable(), typeof(DataTable),
                 "DataTable: cell types are restored from column metadata, so cells carry no discriminator. Covers rowState and the original/current pair on a Modified row.");
 
-            // 3. DataSet：master-detail 與 relations
+            // 3. DataSet: master-detail and relations.
             yield return ("dataset", BuildDataSet(), typeof(DataSet),
                 "DataSet: the shape of tables and relations.");
 
-            // 4. 訊息型別：camelCase、列舉字串化、巢狀集合
+            // 4. Message types: camelCase, enums as strings, nested collections.
             yield return ("message-ping-request", new PingRequest { ClientName = "web", TraceId = "t-001" },
                 typeof(PingRequest), "A message type: camelCase naming and the parameters collection inherited from ApiRequest.");
 
@@ -106,13 +107,14 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 樣本用的 master 表。
+        /// The master table used by the fixtures.
         /// </summary>
         /// <remarks>
-        /// <c>amount</c> 與 <c>ref_no</c> 刻意用<b>存不進 double</b> 的值：整份樣本的作用是讓另一個
-        /// 語言的 client 對照自己讀寫得對，而 <c>1234.56</c> 這種值就算被 <c>JSON.parse</c> 轉成 double
-        /// 也剛好看不出差別 —— 樣本會示範不出它要示範的規則。用 <c>decimal.MaxValue</c> 與
-        /// 2^53+1，讀取端只要把它們當數字處理就會立刻對不上。
+        /// <c>amount</c> and <c>ref_no</c> deliberately use values that <b>do not fit in a double</b>. The whole
+        /// point of the fixtures is to let a client in another language check that it reads and writes correctly,
+        /// and a value such as <c>1234.56</c> happens to look unchanged even after <c>JSON.parse</c> turns it into a
+        /// double, so the fixture would fail to demonstrate the rule. With <c>decimal.MaxValue</c> and 2^53+1, a reader
+        /// that treats them as numbers stops matching immediately.
         /// </remarks>
         private static DataTable BuildTable()
         {
@@ -128,7 +130,7 @@ namespace Polhem.Api.Core.UnitTests
             var modified = table.Rows.Add("E002", 10m, 1L, s_fixedUtc, s_fixedGuid);
             table.AcceptChanges();
             _ = unchanged;
-            modified["amount"] = 0.0000000000000000000000000001m;   // 造出 Modified：current 與 original 都要上線
+            modified["amount"] = 0.0000000000000000000000000001m;   // A Modified row puts both current and original on the wire.
 
             table.Rows.Add("E003", 7m, long.MaxValue, s_fixedUtc, s_fixedGuid);  // Added
             return table;
@@ -174,7 +176,7 @@ namespace Polhem.Api.Core.UnitTests
             };
         }
 
-        #region 樣本檔案
+        #region Fixture files
 
         private static string FixtureDirectory()
         {
@@ -182,7 +184,7 @@ namespace Polhem.Api.Core.UnitTests
             while (dir != null && !File.Exists(Path.Combine(dir.FullName, "Polhem.slnx")))
                 dir = dir.Parent;
 
-            Assert.NotNull(dir);   // 找不到 repo 根就不能默默通過
+            Assert.NotNull(dir);   // Not finding the repository root must not pass silently.
             return Path.Combine(dir!.FullName, "wire-fixtures", "bodies");
         }
 
@@ -190,7 +192,7 @@ namespace Polhem.Api.Core.UnitTests
             Environment.GetEnvironmentVariable("POLHEM_REGENERATE_WIRE_FIXTURES") == "1";
 
         /// <summary>
-        /// 以現行 codec 序列化案例，取回 body 的 JSON 文字。
+        /// Serializes a case with the current codec and returns the JSON text of the body.
         /// </summary>
         private static string EncodeBody(object value, Type type)
         {
@@ -214,7 +216,7 @@ namespace Polhem.Api.Core.UnitTests
         #endregion
 
         [Fact]
-        [DisplayName("wire 樣本應與現行 JSON codec 的編碼一致（不一致代表 wire 變了）")]
+        [DisplayName("Wire fixtures match the current JSON codec encoding (a mismatch means the wire changed)")]
         public void Fixtures_MatchCurrentEncoding()
         {
             var dir = FixtureDirectory();
@@ -237,34 +239,34 @@ namespace Polhem.Api.Core.UnitTests
 
                 if (!File.Exists(path))
                 {
-                    mismatches.Add($"{name}: 樣本檔不存在（{path}）");
+                    mismatches.Add($"{name}: fixture file does not exist ({path})");
                     continue;
                 }
 
                 var actual = File.ReadAllText(path).TrimEnd();
                 if (!string.Equals(actual, expected, StringComparison.Ordinal))
-                    mismatches.Add($"{name}: 樣本與現行編碼不符");
+                    mismatches.Add($"{name}: fixture does not match the current encoding");
             }
 
             Assert.True(mismatches.Count == 0,
-                "JSON body codec 的編碼與 wire 樣本不符：" + global::System.Environment.NewLine +
+                "The JSON body codec encoding does not match the wire fixtures:" + global::System.Environment.NewLine +
                 string.Join(global::System.Environment.NewLine, mismatches) + global::System.Environment.NewLine +
-                "若這是刻意的 wire 變更，以 POLHEM_REGENERATE_WIRE_FIXTURES=1 重新產生並逐筆讀過 diff；" +
-                "跨語言的 client 會依這份樣本解析，改動即為破壞性變更。");
+                "If this is an intended wire change, regenerate with POLHEM_REGENERATE_WIRE_FIXTURES=1 and read the diff entry by entry. " +
+                "Cross-language clients parse according to these fixtures, so a change is a breaking change.");
         }
 
         [Fact]
-        [DisplayName("樣本以 fixture 的 body 反序列化後再序列化應原樣復現（TS 端寫回來時 .NET 讀得回）")]
+        [DisplayName("Deserializing a fixture body and serializing it again reproduces it unchanged (.NET can read back what the TS side writes)")]
         public void Fixtures_RoundTripThroughDeserialize()
         {
             var dir = FixtureDirectory();
             if (RegenerateRequested)
-                return;   // 重新產生的那一輪還沒有可讀的樣本
+                return;   // The regenerating run has no fixtures to read yet.
 
             foreach (var (name, _, type, _) in Cases())
             {
                 var path = Path.Combine(dir, name + ".json");
-                Assert.True(File.Exists(path), $"{name}: 樣本檔不存在（{path}）");
+                Assert.True(File.Exists(path), $"{name}: fixture file does not exist ({path})");
 
                 using var doc = JsonDocument.Parse(File.ReadAllText(path));
                 var body = doc.RootElement.GetProperty("body").GetRawText();
@@ -283,12 +285,12 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("樣本集合不得萎縮：判別碼與結構案例都必須在（避免上面兩條檢查變成恆真）")]
+        [DisplayName("The fixture set does not shrink: discriminator and structure cases are all present (so the two checks above cannot pass vacuously)")]
         public void FixtureSet_IsNotVacuous()
         {
             var names = Cases().Select(c => c.Name).ToHashSet(StringComparer.Ordinal);
 
-            // 具名 canary 而非數字下限：命名規則一改，數字比對會默默照過。
+            // Named canaries rather than a numeric lower bound: if the naming changes, a count comparison would still pass silently.
             string[] required =
             [
                 "value-decimal", "value-int64", "value-guid", "value-datetime",
@@ -298,19 +300,20 @@ namespace Polhem.Api.Core.UnitTests
             foreach (var name in required)
                 Assert.Contains(name, names);
 
-            // 每個判別碼都要有樣本：漏一個就是 TS 端某個型別會靜默錯值。
+            // Every discriminator needs a fixture: missing one means some type silently gets a wrong value on the TS side.
             //
-            // 這裡刻意由 WireValueCode 的常數反射推導，而不是比對一個數字。原本寫的是
-            // `Assert.Equal(22, codeCases.Count)`，那個斷言有兩個問題：新增判別碼而不補樣本時
-            // 數量不變、照樣綠；而且它當時**已經是錯的**——22 個 value-* 檔其實是「21 個判別碼
-            // + value-null」，WireValueCode.DataTable(21) 從來沒有樣本，數字相等純屬巧合。
+            // This is deliberately derived by reflecting over the `WireValueCode` constants instead of comparing a number.
+            // The original assertion compared a hard-coded count of 22 with the number of value cases, and it had two
+            // problems. Adding a discriminator without a fixture left the count unchanged and still green. And it was
+            // **already wrong** at the time: the 22 value-* files were really 21 discriminators plus value-null, and
+            // `WireValueCode.DataTable` (21) never had a fixture. The equal numbers were pure coincidence.
             var codes = typeof(WireValueCode)
                 .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
                 .Where(f => f.IsLiteral && f.FieldType == typeof(int) && f.Name != nameof(WireValueCode.Count))
                 .Select(f => f.Name)
                 .ToList();
 
-            // 防空轉：反射條件寫失準時，下面的 foreach 會一圈都不跑。
+            // Guards against a vacuous loop: if the reflection filter is wrong, the `foreach` below never runs.
             Assert.Equal(WireValueCode.Count - 1, codes.Count);
 
             foreach (var code in codes)
@@ -318,8 +321,8 @@ namespace Polhem.Api.Core.UnitTests
                 string fixtureName = $"value-{code.ToLowerInvariant()}";
                 Assert.True(
                     names.Contains(fixtureName),
-                    $"WireValueCode.{code} 沒有對應的 {fixtureName} 樣本。跨語言 client 沒有東西可以" +
-                    "對照這個判別碼的形狀，寫錯了不會有人發現。");
+                    $"WireValueCode.{code} has no matching {fixtureName} fixture. Cross-language clients have nothing " +
+                    "to compare this discriminator's shape against, so a mistake would go unnoticed.");
             }
         }
     }

@@ -12,14 +12,13 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip：將 <c>System.EnterCompany</c>
-    /// 透過 executor 派發到 <see cref="Polhem.Business.System.SystemBusinessObject.EnterCompany"/>，
-    /// 驗證：
+    /// End-to-end round-trip through <see cref="JsonRpcExecutor"/>: dispatches <c>System.EnterCompany</c> through the
+    /// executor to <see cref="Polhem.Business.System.SystemBusinessObject.EnterCompany"/> and verifies that:
     /// <list type="bullet">
-    /// <item>action 路由（progId.action 反射查表）正確找到方法</item>
-    /// <item>ApiInputConverter（EnterCompanyRequest → EnterCompanyArgs）保留 CompanyId</item>
-    /// <item>ApiOutputConverter（EnterCompanyResult → EnterCompanyResponse）命名慣例反射有作用，CompanyInfo deep-copy 正確</item>
-    /// <item>BO 寫入 SessionInfo.CompanyId 後可被 ISessionInfoService 取回</item>
+    /// <item>action routing (the progId.action reflection lookup) finds the method</item>
+    /// <item>ApiInputConverter (EnterCompanyRequest → EnterCompanyArgs) keeps CompanyId</item>
+    /// <item>the naming-convention reflection of ApiOutputConverter (EnterCompanyResult → EnterCompanyResponse) works, and CompanyInfo is deep-copied correctly</item>
+    /// <item>the SessionInfo.CompanyId written by the BO can be read back from ISessionInfoService</item>
     /// </list>
     /// </summary>
     public class EnterCompanyJsonRpcRoundTripTests : IClassFixture<SharedDbFixture>
@@ -29,11 +28,11 @@ namespace Polhem.Api.Core.UnitTests.System
         public EnterCompanyJsonRpcRoundTripTests(SharedDbFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("System.EnterCompany 經 JsonRpcExecutor 應派發成功並寫入 SessionInfo.CompanyId")]
+        [DisplayName("System.EnterCompany dispatches through JsonRpcExecutor and writes SessionInfo.CompanyId")]
         public void EnterCompany_ThroughJsonRpc_DispatchesAndBindsCompany()
         {
-            // Arrange: 利用 SharedDatabaseState 已 seed 的 user '001' + company 'C001' 對照，
-            // 走完整的 cache miss → DB fallback + HasAccess JOIN 路徑。
+            // Arrange: uses the user '001' and company 'C001' mapping already seeded by `SharedDatabaseState`, so the
+            // call takes the full path of a cache miss, the DB fallback and the `HasAccess` JOIN.
             var accessToken = TestSessionFactory.CreateAccessToken(_fx, userId: "001");
 
             var boFactory = new BusinessObjectFactory(
@@ -65,7 +64,7 @@ namespace Polhem.Api.Core.UnitTests.System
             // Act
             var response = executor.Execute(request);
 
-            // Assert: response 成功並帶 CompanyInfo（cache miss 後從 DB 載入 seed company 'C001'）
+            // Assert: the response succeeds and carries the CompanyInfo of seed company 'C001', loaded from the DB after a cache miss.
             Assert.Null(response.Error);
             var result = Assert.IsType<EnterCompanyResponse>(response.Result!.Value);
             Assert.NotNull(result.Company);
@@ -75,14 +74,13 @@ namespace Polhem.Api.Core.UnitTests.System
             // reflection copy (empty when the seed grants the user nothing, but never null).
             Assert.NotNull(result.Capabilities);
 
-            // SessionInfo.CompanyId 已寫入
             var session = _fx.GetRequiredService<ISessionInfoService>().Get(accessToken);
             Assert.NotNull(session);
             Assert.Equal("C001", session.CompanyId);
         }
 
         [Fact]
-        [DisplayName("System.EnterCompany 對不存在的 CompanyId 應回 RpcError 且 SessionInfo.CompanyId 不變")]
+        [DisplayName("System.EnterCompany returns an RpcError for an unknown CompanyId and leaves SessionInfo.CompanyId unchanged")]
         public void EnterCompany_UnknownCompany_ReturnsRpcError()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx, userId: "001");

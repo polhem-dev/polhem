@@ -7,7 +7,7 @@ using Polhem.Api.Core.Messages;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// ApiPayloadJsonConverter 的 Read/Write 測試。
+    /// Read/Write tests for ApiPayloadJsonConverter.
     /// </summary>
     public class ApiPayloadJsonConverterTests
     {
@@ -18,7 +18,7 @@ namespace Polhem.Api.Core.UnitTests
             JsonSerializer.Serialize(payload);
 
         [Fact]
-        [DisplayName("Read 於 null token 應回傳 null")]
+        [DisplayName("Read returns null for a null token")]
         public void Read_NullToken_ReturnsNull()
         {
             var result = Deserialize("null");
@@ -26,14 +26,14 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Read 於非 StartObject token 應拋出 JsonException")]
+        [DisplayName("Read throws JsonException for a token that is not StartObject")]
         public void Read_NonStartObject_ThrowsJsonException()
         {
             Assert.Throws<JsonException>(() => Deserialize("123"));
         }
 
         [Fact]
-        [DisplayName("Read Plain 字串 value 應取出字串")]
+        [DisplayName("Read of a Plain string value returns the string")]
         public void Read_PlainStringValue_ReturnsString()
         {
             var json = """{"format":0,"value":"hello","type":""}""";
@@ -45,7 +45,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Read Plain 整數 value 應解析為 long")]
+        [DisplayName("Read of a Plain integer value parses it as long")]
         public void Read_PlainIntegerValue_ReturnsLong()
         {
             var json = """{"format":0,"value":42,"type":""}""";
@@ -56,7 +56,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Read Plain 浮點數 value 應解析為 double")]
+        [DisplayName("Read of a Plain floating-point value parses it as double")]
         public void Read_PlainDoubleValue_ReturnsDouble()
         {
             var json = """{"format":0,"value":3.14,"type":""}""";
@@ -67,7 +67,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Read Plain true 應解析為 bool")]
+        [DisplayName("Read of a Plain true value parses it as bool")]
         public void Read_PlainTrueValue_ReturnsTrue()
         {
             var json = """{"format":0,"value":true,"type":""}""";
@@ -77,7 +77,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Read Plain false 應解析為 bool")]
+        [DisplayName("Read of a Plain false value parses it as bool")]
         public void Read_PlainFalseValue_ReturnsFalse()
         {
             var json = """{"format":0,"value":false,"type":""}""";
@@ -87,7 +87,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Read Plain null value 應回傳 null Value")]
+        [DisplayName("Read of a Plain null value returns a null Value")]
         public void Read_PlainNullValue_ReturnsNullValue()
         {
             var json = """{"format":0,"value":null,"type":""}""";
@@ -98,7 +98,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Read Plain 物件 value 應保留 JsonElement")]
+        [DisplayName("Read of a Plain object value keeps it as a JsonElement")]
         public void Read_PlainObjectValue_ReturnsJsonElement()
         {
             var json = """{"format":0,"value":{"a":1},"type":""}""";
@@ -111,7 +111,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Read Encoded base64 字串 value 應解為 byte[]")]
+        [DisplayName("Read of an Encoded base64 string value decodes it to byte[]")]
         public void Read_EncodedBase64Value_ReturnsByteArray()
         {
             var original = Encoding.UTF8.GetBytes("raw-bytes");
@@ -127,10 +127,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Read Encoded 非 base64 字串 value 應回傳字串")]
+        [DisplayName("Read of an Encoded string value that is not base64 returns the string")]
         public void Read_EncodedInvalidBase64Value_ReturnsString()
         {
-            // 使用含非 base64 合法字元的字串觸發 FormatException
+            // Characters outside the base64 alphabet make decoding throw `FormatException`.
             var json = """{"format":1,"value":"not base64!@#","type":""}""";
             var payload = Deserialize(json);
 
@@ -140,7 +140,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Read Encoded 非字串 value 應走 Plain 解析路徑")]
+        [DisplayName("Read of an Encoded non-string value falls back to the Plain parsing path")]
         public void Read_EncodedNonStringValue_FallsBackToPlain()
         {
             var json = """{"format":1,"value":99,"type":""}""";
@@ -152,7 +152,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Read 未知屬性應被略過")]
+        [DisplayName("Read skips unknown properties")]
         public void Read_UnknownProperty_IsSkipped()
         {
             var json = """{"format":0,"value":"x","type":"","extra":{"nested":true}}""";
@@ -163,7 +163,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Write 於 null payload 應輸出 null")]
+        [DisplayName("Write outputs null for a null payload")]
         public void Write_NullPayload_WritesNull()
         {
             JsonRpcParams? payload = null;
@@ -172,7 +172,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Write 於 Value 為 null 應輸出 value=null")]
+        [DisplayName("Write outputs value=null when Value is null")]
         public void Write_NullValue_WritesNullValue()
         {
             var payload = new JsonRpcParams { Value = null, TypeName = "" };
@@ -182,7 +182,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Write 於 Value 為字串應輸出 JSON 字串")]
+        [DisplayName("Write outputs a JSON string when Value is a string")]
         public void Write_StringValue_WritesStringValue()
         {
             var payload = new JsonRpcParams { Value = "hello", TypeName = "System.String" };
@@ -192,7 +192,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Read/Write round-trip 應保留字串 value")]
+        [DisplayName("Read/Write round-trip preserves a string value")]
         public void ReadWrite_RoundTrip_PreservesStringValue()
         {
             var original = new JsonRpcParams { Value = "round-trip", TypeName = "" };
@@ -204,7 +204,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ApiPayloadJsonConverterFactory 可轉換具體 ApiPayload 子類")]
+        [DisplayName("ApiPayloadJsonConverterFactory can convert concrete ApiPayload subclasses")]
         public void Factory_CanConvert_ConcreteSubtype()
         {
             var factory = new ApiPayloadJsonConverterFactory();
@@ -213,7 +213,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ApiPayloadJsonConverterFactory 不應可轉換抽象 ApiPayload 或無關型別")]
+        [DisplayName("ApiPayloadJsonConverterFactory cannot convert the abstract ApiPayload or unrelated types")]
         public void Factory_CanConvert_RejectsAbstractOrUnrelated()
         {
             var factory = new ApiPayloadJsonConverterFactory();
@@ -222,7 +222,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ApiPayloadJsonConverterFactory.CreateConverter 應回傳對應泛型 converter")]
+        [DisplayName("ApiPayloadJsonConverterFactory.CreateConverter returns the matching generic converter")]
         public void Factory_CreateConverter_ReturnsGenericConverter()
         {
             var factory = new ApiPayloadJsonConverterFactory();
@@ -233,11 +233,11 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Read 直接呼叫 converter 於 Null token 應回傳 null（覆蓋 TokenType.Null 分支）")]
+        [DisplayName("Read on the converter called directly returns null for a Null token (covers the TokenType.Null branch)")]
         public void Read_DirectConverter_NullToken_ReturnsNull()
         {
-            // JsonSerializer.Deserialize<T>("null") 由框架短路回傳 null，不會進入 converter.Read，
-            // 因此要直接呼叫 converter 才能覆蓋 TokenType.Null 分支。
+            // `JsonSerializer.Deserialize<T>("null")` is short-circuited by the framework and never reaches
+            // `converter.Read`, so the converter has to be called directly to cover the `TokenType.Null` branch.
             var converter = new ApiPayloadJsonConverter<JsonRpcParams>();
             var bytes = Encoding.UTF8.GetBytes("null");
             var reader = new Utf8JsonReader(bytes);
@@ -248,11 +248,11 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Write 直接呼叫 converter 於 null value 應寫入 JSON null")]
+        [DisplayName("Write on the converter called directly writes JSON null for a null value")]
         public void Write_DirectConverter_NullValue_WritesNull()
         {
-            // JsonSerializer.Serialize(null) 由框架短路寫 null，不會進入 converter.Write，
-            // 因此要直接呼叫 converter 才能覆蓋 value == null 分支。
+            // `JsonSerializer.Serialize(null)` is short-circuited by the framework and never reaches
+            // `converter.Write`, so the converter has to be called directly to cover the `value == null` branch.
             var converter = new ApiPayloadJsonConverter<JsonRpcParams>();
             using var stream = new MemoryStream();
             using (var writer = new Utf8JsonWriter(stream))

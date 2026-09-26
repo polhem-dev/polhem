@@ -6,17 +6,18 @@ using Polhem.Definition.Settings;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// ApiServiceOptions 測試。由於 ApiServiceOptions 為靜態類別，測試會保存／還原原始實作以避免影響其他測試。
+    /// ApiServiceOptions tests. ApiServiceOptions is a static class, so the tests save and restore the original
+    /// implementations to avoid affecting other tests.
     /// </summary>
     /// <remarks>
-    /// try/finally 還原只在串行下成立，故加入 <c>ApiServiceOptionsState</c> collection
-    /// 與其他會改寫同一組靜態元件的測試類序列化。
+    /// Restoring in try/finally only holds when tests run serially, so this class joins the
+    /// <c>ApiServiceOptionsState</c> collection to serialize with the other test classes that modify the same statics.
     /// </remarks>
     [Collection("ApiServiceOptionsState")]
     public class ApiServiceOptionsTests
     {
         [Fact]
-        [DisplayName("預設實作應為對應的內建類別")]
+        [DisplayName("The default implementations are the matching built-in types")]
         public void DefaultImplementations_AreBuiltInTypes()
         {
             Assert.IsType<ApiAuthorizationValidator>(ApiServiceOptions.AuthorizationValidator);
@@ -26,7 +27,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("CurrentSettingsSummary 應包含三項 Method 名稱")]
+        [DisplayName("CurrentSettingsSummary contains the Serializer, Compressor and Encryptor entries")]
         public void CurrentSettingsSummary_ContainsMethodNames()
         {
             var summary = ApiServiceOptions.CurrentSettingsSummary;
@@ -37,7 +38,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Initialize(ApiPayloadOptions, isDebugMode) 應依名稱建立壓縮與加密實作")]
+        [DisplayName("Initialize(ApiPayloadOptions, isDebugMode) creates the compressor and encryptor by name")]
         public void Initialize_WithOptions_SetsImplementations()
         {
             var originalSerializer = ApiServiceOptions.PayloadSerializer;
@@ -53,8 +54,8 @@ namespace Polhem.Api.Core.UnitTests
 
                 ApiServiceOptions.Initialize(options, isDebugMode: true);
 
-                // 序列化不在此設定：兩種 codec 恆可用，由請求自行宣告，
-                // PayloadSerializer 維持預設以服務未宣告的請求。
+                // The serializer is not configured here. Every codec is always available and each request declares its
+                // own, so `PayloadSerializer` keeps its default to serve requests that declare none.
                 Assert.IsType<MessagePackPayloadSerializer>(ApiServiceOptions.PayloadSerializer);
                 Assert.IsType<NoCompressionCompressor>(ApiServiceOptions.PayloadCompressor);
                 Assert.IsType<NoEncryptionEncryptor>(ApiServiceOptions.PayloadEncryptor);
@@ -68,7 +69,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Initialize(serializer, compressor, encryptor) 應直接採用傳入實作")]
+        [DisplayName("Initialize(serializer, compressor, encryptor) uses the supplied instances as they are")]
         public void Initialize_WithInstances_SetsImplementations()
         {
             var originalSerializer = ApiServiceOptions.PayloadSerializer;
@@ -95,7 +96,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Initialize 傳入 null serializer 應拋出 ArgumentNullException")]
+        [DisplayName("Initialize throws ArgumentNullException for a null serializer")]
         public void Initialize_NullSerializer_Throws()
         {
             AssertThrowsAndRestore(() =>
@@ -103,7 +104,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Initialize 傳入 null compressor 應拋出 ArgumentNullException")]
+        [DisplayName("Initialize throws ArgumentNullException for a null compressor")]
         public void Initialize_NullCompressor_Throws()
         {
             AssertThrowsAndRestore(() =>
@@ -111,7 +112,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Initialize 傳入 null encryptor 應拋出 ArgumentNullException")]
+        [DisplayName("Initialize throws ArgumentNullException for a null encryptor")]
         public void Initialize_NullEncryptor_Throws()
         {
             AssertThrowsAndRestore(() =>
@@ -146,35 +147,35 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("AuthorizationValidator 設為 null 應拋出 ArgumentNullException")]
+        [DisplayName("Setting AuthorizationValidator to null throws ArgumentNullException")]
         public void AuthorizationValidator_SetNull_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => ApiServiceOptions.AuthorizationValidator = null!);
         }
 
         [Fact]
-        [DisplayName("PayloadTransformer 設為 null 應拋出 ArgumentNullException")]
+        [DisplayName("Setting PayloadTransformer to null throws ArgumentNullException")]
         public void PayloadTransformer_SetNull_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => ApiServiceOptions.PayloadTransformer = null!);
         }
 
         [Fact]
-        [DisplayName("PayloadSerializer 設為 null 應拋出 ArgumentNullException")]
+        [DisplayName("Setting PayloadSerializer to null throws ArgumentNullException")]
         public void PayloadSerializer_SetNull_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => ApiServiceOptions.PayloadSerializer = null!);
         }
 
         [Fact]
-        [DisplayName("PayloadCompressor 設為 null 應拋出 ArgumentNullException")]
+        [DisplayName("Setting PayloadCompressor to null throws ArgumentNullException")]
         public void PayloadCompressor_SetNull_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => ApiServiceOptions.PayloadCompressor = null!);
         }
 
         [Fact]
-        [DisplayName("PayloadEncryptor 設為 null 應拋出 ArgumentNullException")]
+        [DisplayName("Setting PayloadEncryptor to null throws ArgumentNullException")]
         public void PayloadEncryptor_SetNull_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => ApiServiceOptions.PayloadEncryptor = null!);

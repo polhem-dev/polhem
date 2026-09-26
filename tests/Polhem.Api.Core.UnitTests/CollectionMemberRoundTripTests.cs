@@ -6,17 +6,18 @@ using Polhem.Definition.Security;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 三個 <c>List&lt;T&gt;</c> wire 成員的**帶值** round-trip。
+    /// **Populated** round trips of <c>List&lt;T&gt;</c> wire members.
     /// </summary>
     /// <remarks>
-    /// 這三個成員先前只被空集合走過。空集合的 round-trip 證不到 item formatter 有註冊、
-    /// 也證不到每個欄位真的上得了 wire —— 集合寫成空陣列時，item 型別根本不會被解析。
-    /// 因此每個測試都放**至少兩個** item（順序也一併釘住）並逐欄比對。
+    /// These members used to be exercised only with empty collections. An empty round trip proves neither that the
+    /// item formatter is registered nor that every field really makes it onto the wire: when the collection is written
+    /// as an empty array, the item type is never resolved. So each test puts **at least two** items in (pinning their
+    /// order too) and compares them field by field.
     /// </remarks>
     public class CollectionMemberRoundTripTests
     {
         [Fact]
-        [DisplayName("ListApiKeysResponse.ApiKeys 應帶值 round-trip（含 nullable DateTime 的有值與 null 兩態）")]
+        [DisplayName("ListApiKeysResponse.ApiKeys round-trips populated, covering both a set and a null nullable DateTime")]
         public void ListApiKeysResponse_ApiKeys_RoundTrips()
         {
             var issued = new DateTime(2026, 8, 1, 9, 30, 0, DateTimeKind.Utc);
@@ -31,7 +32,7 @@ namespace Polhem.Api.Core.UnitTests
                         Contact = "ops@example.invalid", Enabled = true,
                         IssuedAt = issued, ExpiredAt = expired,
                     },
-                    // 兩個 nullable DateTime 皆為 null：null 與有值走的是不同的 wire 分支。
+                    // Both nullable `DateTime` values are null here; null and a set value take different wire branches.
                     new ApiKeySummary { SysId = "key-2", Enabled = false },
                 ],
             };

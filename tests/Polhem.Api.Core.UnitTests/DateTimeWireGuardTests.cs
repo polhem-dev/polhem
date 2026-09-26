@@ -9,7 +9,7 @@ using Polhem.Definition.Filters;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 驗證 ADR-032 D6 的兩條 wire 不變式：`DataSet` 查 `DateTimeMode`、鬆散 `DateTime` 查 `Kind`。
+    /// Verifies the wire invariants of ADR-032 D6: a `DataSet` is checked for `DateTimeMode`, and a loose `DateTime` for `Kind`.
     /// </summary>
     public class DateTimeWireGuardTests
     {
@@ -25,7 +25,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("DataTable 帶 UnspecifiedLocal 欄位時 guard 應擲例外")]
+        [DisplayName("The guard throws for a DataTable with an UnspecifiedLocal column")]
         public void Validate_DataTableWithUnspecifiedLocalColumn_Throws()
         {
             var exception = Assert.Throws<InvalidOperationException>(
@@ -36,7 +36,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("正規化後的 DataTable 應通過 guard")]
+        [DisplayName("A normalized DataTable passes the guard")]
         public void Validate_NormalizedDataTable_Passes()
         {
             var table = AdoNetShapedTable();
@@ -46,7 +46,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddColumn 建立的 DataTable 應通過 guard")]
+        [DisplayName("A DataTable built with AddColumn passes the guard")]
         public void Validate_FrameworkBuiltDataTable_Passes()
         {
             var table = new DataTable("orders");
@@ -57,7 +57,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("DataSet 內任一表違規即應擲例外")]
+        [DisplayName("The guard throws when any table in a DataSet violates the rule")]
         public void Validate_DataSetWithOneOffendingTable_Throws()
         {
             using var dataSet = new DataSet("s");
@@ -70,7 +70,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetChangeDetailResponse 帶違規 DataSet 時 guard 應擲例外")]
+        [DisplayName("The guard throws for a GetChangeDetailResponse carrying an offending DataSet")]
         public void Validate_ChangeDetailResponseWithOffendingDataSet_Throws()
         {
             using var dataSet = new DataSet("s");
@@ -81,7 +81,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("非 DateTime 欄位不受 DateTimeMode 檢查影響")]
+        [DisplayName("Non-DateTime columns are not subject to the DateTimeMode check")]
         public void Validate_TableWithoutDateTimeColumns_Passes()
         {
             var table = new DataTable("orders");
@@ -93,7 +93,7 @@ namespace Polhem.Api.Core.UnitTests
         [Theory]
         [InlineData(DateTimeKind.Unspecified)]
         [InlineData(DateTimeKind.Utc)]
-        [DisplayName("FilterCondition 值為 Unspecified 或 Utc 時應通過 guard")]
+        [DisplayName("A FilterCondition value with Kind Unspecified or Utc passes the guard")]
         public void Validate_FilterConditionWithNonLocalKind_Passes(DateTimeKind kind)
         {
             var filter = FilterCondition.Equal("created_at", DateTime.SpecifyKind(s_sample, kind));
@@ -102,7 +102,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("FilterCondition 值為 Kind=Local 時 guard 應擲例外")]
+        [DisplayName("The guard throws for a FilterCondition value with Kind=Local")]
         public void Validate_FilterConditionWithLocalKind_Throws()
         {
             var filter = FilterCondition.Equal("created_at", DateTime.SpecifyKind(s_sample, DateTimeKind.Local));
@@ -114,7 +114,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("巢狀 FilterGroup 內的違規值同樣應被攔下")]
+        [DisplayName("An offending value inside a nested FilterGroup is caught as well")]
         public void Validate_NestedFilterGroupWithLocalKind_Throws()
         {
             var nested = FilterGroup.All(
@@ -127,7 +127,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Between 條件的 SecondValue 同樣受檢查")]
+        [DisplayName("The SecondValue of a Between condition is checked as well")]
         public void Validate_FilterConditionSecondValueWithLocalKind_Throws()
         {
             var filter = new FilterCondition(
@@ -141,7 +141,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("DateOnly 條件值不受 Kind 檢查影響")]
+        [DisplayName("A DateOnly filter value is not subject to the Kind check")]
         public void Validate_FilterConditionWithDateOnly_Passes()
         {
             var filter = FilterCondition.Equal("order_date", new DateOnly(2026, 1, 1));
@@ -150,7 +150,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("null 與未涵蓋的型別一律放行")]
+        [DisplayName("null and uncovered types always pass")]
         public void Validate_NullOrUnknownValue_Passes()
         {
             Assert.Null(Record.Exception(() => DateTimeWireGuard.Validate(null)));

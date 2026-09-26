@@ -9,24 +9,25 @@ using System.Globalization;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 由訊息型別產生 TypeScript 宣告，供另一個語言的 client 消費。
+    /// Generates TypeScript declarations from the message types, for clients in another language.
     /// </summary>
     /// <remarks>
-    /// 手抄一份型別表在 TS 那端，就是同一份 API 合約的第二個權威來源——伺服端改了欄位名，
-    /// 那份抄本不會知道，而漂掉的症狀是欄位靜默消失。改由這裡產生，型別表就成為衍生物。
+    /// A hand-copied type table on the TS side would be a second authoritative source for the same API contract: when
+    /// the server renames a field, the copy does not know, and the symptom of the drift is a field that silently
+    /// disappears. Generated here, the type table becomes a derived artifact.
     /// <para>
-    /// 產生的是 <b>wire 形狀</b>而非 CLR 形狀：<c>Guid</c> 與 <c>DateTime</c> 在 JSON 上都是
-    /// 字串，列舉是字串字面值聯集（<c>JsonStringEnumConverter</c>），<c>object</c> 成員則是
-    /// 判別式封套。讀者要的是「這個 JSON 長什麼樣」，不是「C# 怎麼宣告」。
+    /// It generates the <b>wire shape</b>, not the CLR shape: <c>Guid</c> and <c>DateTime</c> are both strings in
+    /// JSON, enums are string literal unions (<c>JsonStringEnumConverter</c>), and <c>object</c> members are the
+    /// discriminated envelope. The reader wants to know what the JSON looks like, not how C# declares it.
     /// </para>
     /// </remarks>
     internal static class WireContractGenerator
     {
-        /// <summary>訊息型別所在的命名空間前綴。</summary>
+        /// <summary>The namespace prefix of the message types.</summary>
         private const string MessageNamespace = "Polhem.Api.Core.Messages";
 
         /// <summary>
-        /// 手寫的前言：這幾個型別的 wire 形狀由自訂 converter 決定，反射看不出來。
+        /// The hand-written preamble: the wire shape of these types is decided by custom converters, which reflection cannot see.
         /// </summary>
         private const string Preamble = """
             // Generated from the Polhem message types — do not edit by hand.
@@ -97,7 +98,7 @@ namespace Polhem.Api.Core.UnitTests
             """;
 
         /// <summary>
-        /// 產生完整的 <c>.d.ts</c> 內容。
+        /// Generates the complete <c>.d.ts</c> content.
         /// </summary>
         public static string Generate()
         {
@@ -135,12 +136,13 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 產生「型別名 → assembly-qualified name」的對映。
+        /// Generates the map from type name to assembly-qualified name.
         /// </summary>
         /// <remarks>
-        /// 編碼過的 payload 必須在信封裡指名型別，伺服端據以解析並過白名單。那串名字含
-        /// 命名空間與組件名，跨 repo 手抄必漂——訊息型別搬一次命名空間，抄本就指向一個
-        /// 解析不到的型別，而症狀是執行期被拒、不是編譯錯誤。
+        /// An encoded payload must name its type in the envelope, and the server resolves it and checks it against an
+        /// allow-list. The name contains the namespace and the assembly name, so a hand copy in another repo is bound
+        /// to drift: move a message type to another namespace once and the copy points to a type that cannot be
+        /// resolved. The symptom is a rejection at run time, not a compile error.
         /// </remarks>
         public static string GenerateTypeNames()
         {
@@ -193,7 +195,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 會上 wire 的屬性：公開、可讀寫，且未被 <c>[JsonIgnore]</c> 排除。
+        /// The properties that go on the wire: public, readable and writable, and not excluded by <c>[JsonIgnore]</c>.
         /// </summary>
         private static IEnumerable<PropertyInfo> WireProperties(Type type)
         {
@@ -204,9 +206,9 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 把 CLR 型別對映到它在 wire 上的形狀。
+        /// Maps a CLR type to its shape on the wire.
         /// </summary>
-        /// <returns>TypeScript 型別，以及該成員是否為選填。</returns>
+        /// <returns>The TypeScript type, and whether the member is optional.</returns>
         private static (string TsType, bool Optional) MapType(Type type, Queue<Type> pending)
         {
             var underlying = Nullable.GetUnderlyingType(type);
@@ -258,7 +260,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 取集合的元素型別：泛型參數優先，其次是 <c>KeyCollectionBase</c> 這類自訂集合的基底參數。
+        /// Gets a collection's element type: the generic argument first, then the base type's argument for custom collections such as <c>KeyCollectionBase</c>.
         /// </summary>
         private static Type? ElementTypeOf(Type type)
         {

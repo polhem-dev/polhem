@@ -11,13 +11,13 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.JsonRpc
 {
     /// <summary>
-    /// JsonRpcExecutor 覆蓋率補強測試：聚焦建構子 null 防護、異常記錄（anomaly detection）
-    /// 路徑（成功慢查詢 / 失敗錯誤記錄 / AnomalyEnabled 組合分支）與加密金鑰取得分支。
+    /// Coverage tests for JsonRpcExecutor: constructor null guards, the anomaly detection paths (slow successful
+    /// calls, failed calls, the AnomalyEnabled combinations) and the encryption key branch.
     /// </summary>
     /// <remarks>
-    /// fixture 必須是 <see cref="SharedDbFixture"/>：本檔的 executor 收到的是裸 <c>Guid.NewGuid()</c>
-    /// 權杖，真實 <see cref="IAccessTokenValidator"/> 因此必定 session cache miss，轉而走 rebuild
-    /// 路徑讀 <c>st_session</c>。只有 <c>SharedDbFixture</c> 會建 schema。
+    /// The fixture must be <see cref="SharedDbFixture"/>: the executors in this file receive a bare
+    /// <c>Guid.NewGuid()</c> token, so the real <see cref="IAccessTokenValidator"/> always misses the session cache
+    /// and takes the rebuild path, which reads <c>st_session</c>. Only <c>SharedDbFixture</c> creates the schema.
     /// </remarks>
     public class JsonRpcExecutorCoverageTests : IClassFixture<PolhemTestFixture>
     {
@@ -33,7 +33,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         private IApiEncryptionKeyProvider KeyProvider => _fx.GetRequiredService<IApiEncryptionKeyProvider>();
 
         /// <summary>
-        /// 捕捉 anomaly 寫入的假 writer。
+        /// A fake writer that captures anomaly writes.
         /// </summary>
         private sealed class CapturingAnomalyLogWriter : IAnomalyLogWriter
         {
@@ -43,7 +43,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         /// <summary>
-        /// 回傳固定 SessionInfo 的假 session service。
+        /// A fake session service that returns a fixed SessionInfo.
         /// </summary>
         private sealed class StubSessionInfoService : ISessionInfoService
         {
@@ -100,10 +100,10 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             ApiSlowThresholdMs = slowThresholdMs,
         };
 
-        // ---- 建構子 null 防護（lines 50-52） ----
+        // ---- Constructor null guards (lines 50-52) ----
 
         [Fact]
-        [DisplayName("建構子於 boFactory 為 null 應拋 ArgumentNullException")]
+        [DisplayName("Constructor throws ArgumentNullException for a null boFactory")]
         public void Constructor_NullBoFactory_ThrowsArgumentNullException()
         {
             var ex = Assert.Throws<ArgumentNullException>(
@@ -112,7 +112,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("建構子於 tokenValidator 為 null 應拋 ArgumentNullException")]
+        [DisplayName("Constructor throws ArgumentNullException for a null tokenValidator")]
         public void Constructor_NullTokenValidator_ThrowsArgumentNullException()
         {
             var ex = Assert.Throws<ArgumentNullException>(
@@ -121,7 +121,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("建構子於 keyProvider 為 null 應拋 ArgumentNullException")]
+        [DisplayName("Constructor throws ArgumentNullException for a null keyProvider")]
         public void Constructor_NullKeyProvider_ThrowsArgumentNullException()
         {
             var ex = Assert.Throws<ArgumentNullException>(
@@ -129,15 +129,15 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             Assert.Equal("keyProvider", ex.ParamName);
         }
 
-        // ---- 失敗 anomaly 記錄（lines 94/136-137、153-158、163-183、188-189） ----
+        // ---- Anomaly records for failures (lines 94/136-137, 153-158, 163-183, 188-189) ----
 
         [Fact]
-        [DisplayName("啟用 anomaly 且呼叫失敗應寫入 Error 類別的異常記錄")]
+        [DisplayName("A failed call with anomaly logging enabled writes an Error anomaly")]
         public void Execute_AnomalyEnabledFailure_WritesErrorAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
-            // 植入 session 而非裸 Guid：裸權杖會讓 token 驗證走 rebuild 路徑讀 st_session，
-            // 把一個「驗 anomaly 記了哪些欄位」的測試變成需要資料庫容器。
+            // A planted session instead of a bare `Guid`: a bare token makes token validation take the rebuild path
+            // and read `st_session`, which would turn a test about the anomaly fields into one that needs a database container.
             var token = TestSessionFactory.CreateAccessToken(_fx);
             var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()), token);
 
@@ -151,12 +151,12 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             Assert.Equal($"{SysProgIds.System}.DefinitelyNotAMethod", anomaly.Method);
             Assert.NotNull(anomaly.ErrorMessage);
             Assert.Null(anomaly.ThresholdMs);
-            // AccessToken 非空 → 記錄保留該權杖（line 170 的非空分支）。
+            // A non-empty `AccessToken` is kept in the record (the non-empty branch at line 170).
             Assert.Equal(token, anomaly.AccessToken);
         }
 
         [Fact]
-        [DisplayName("啟用 anomaly 且 AccessToken 為空的失敗記錄不應保留權杖")]
+        [DisplayName("A failure record with anomaly logging enabled and an empty AccessToken keeps no token")]
         public void Execute_AnomalyEnabledFailureEmptyToken_WritesNullAccessToken()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -166,14 +166,14 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
             Assert.NotNull(response.Error);
             var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
-            // AccessToken 為空 → 記錄不保留權杖（line 170 的空值分支）。
+            // An empty `AccessToken` is not kept in the record (the empty branch at line 170).
             Assert.Null(anomaly.AccessToken);
             Assert.Equal("u1", anomaly.UserId);
             Assert.Equal("C1", anomaly.CompanyId);
         }
 
         [Fact]
-        [DisplayName("異常記錄應帶入呼叫端應用識別（api_key_id / api_key_name）")]
+        [DisplayName("The anomaly record carries the caller's application identity (api_key_id / api_key_name)")]
         public void Execute_AnomalyEnabled_CarriesApiKeyIdentity()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -189,7 +189,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("未經金鑰閘門的呼叫，異常記錄的應用識別應為 null")]
+        [DisplayName("For a call that did not pass the API key gate, the anomaly record's application identity is null")]
         public void Execute_AnomalyEnabledWithoutApiKey_LeavesIdentityNull()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -202,10 +202,10 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             Assert.Null(anomaly.ApiKeyName);
         }
 
-        // ---- 成功 anomaly 記錄（lines 143-148；慢查詢） ----
+        // ---- Anomaly records for successful calls (lines 143-148; slow calls) ----
 
         [Fact]
-        [DisplayName("啟用 anomaly 且成功但未逾慢查詢門檻不應寫入記錄")]
+        [DisplayName("A successful call under the slow threshold with anomaly logging enabled writes no record")]
         public void Execute_AnomalyEnabledFastSuccess_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -215,29 +215,28 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
             Assert.Null(response.Error);
             Assert.NotNull(response.Result);
-            // 快速成功呼叫遠低於 3000ms 門檻，不應產生 Slow 記錄。
             Assert.Empty(writer.Entries);
         }
 
         [Fact]
-        [DisplayName("啟用 anomaly 且逾慢查詢門檻時如有記錄應為 Slow 類別")]
+        [DisplayName("With anomaly logging enabled and the slow threshold exceeded, any record written is a Slow anomaly")]
         public void Execute_AnomalyEnabledSlowSuccess_WritesSlowAnomalyWhenExceeded()
         {
             var writer = new CapturingAnomalyLogWriter();
-            // 門檻設 1ms：reflection invoke + 追蹤幾乎必然逾越，觸發 Slow 寫入（line 147）。
+            // A 1 ms threshold: the reflection invoke plus tracing almost certainly exceeds it and triggers the Slow write (line 147).
             var executor = NewAuditExecutor(writer, EnabledOptions(slowThresholdMs: 1), new StubSessionInfoService(NewSession()), Guid.Empty);
 
             var response = executor.Execute(PingRequest());
 
             Assert.Null(response.Error);
-            // 斷言對「是否逾越」皆成立：若有寫入必為 Slow，避免計時造成 flaky。
+            // The assertion holds whether or not the threshold was exceeded (any record must be Slow), so timing cannot make it flaky.
             Assert.All(writer.Entries, e => Assert.Equal(AnomalyKind.Slow, Assert.IsType<ApiAnomalyEntry>(e).Kind));
         }
 
-        // ---- AnomalyEnabled 組合分支（line 137 br7/8） ----
+        // ---- AnomalyEnabled combinations (line 137 br7/8) ----
 
         [Fact]
-        [DisplayName("有 writer 但 auditOptions 停用時失敗不應寫入記錄")]
+        [DisplayName("A failure writes no record when a writer exists but auditOptions is disabled")]
         public void Execute_AuditOptionsDisabled_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -251,7 +250,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("有 writer 但 AnomalyEnabled 為 false 時失敗不應寫入記錄")]
+        [DisplayName("A failure writes no record when a writer exists but AnomalyEnabled is false")]
         public void Execute_AnomalyFlagDisabled_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -265,7 +264,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("有 writer 但 auditOptions 為 null 時失敗不應寫入記錄")]
+        [DisplayName("A failure writes no record when a writer exists but auditOptions is null")]
         public void Execute_AuditOptionsNull_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -278,7 +277,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("有 writer 與啟用選項但 sessionService 為 null 時失敗不應寫入記錄")]
+        [DisplayName("A failure writes no record when a writer and enabled options exist but sessionService is null")]
         public void Execute_SessionServiceNull_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
@@ -290,14 +289,15 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             Assert.Empty(writer.Entries);
         }
 
-        // ---- 加密金鑰取得分支（line 200：Encrypted 分支） ----
+        // ---- Encryption key branch (line 200: the Encrypted branch) ----
 
         [Fact]
-        [DisplayName("非本地呼叫且 Encrypted 格式應進入加密金鑰取得分支")]
+        [DisplayName("A remote call in Encrypted format enters the encryption key branch")]
         public void Execute_EncryptedFormatRemoteCall_HitsEncryptionKeyBranch()
         {
-            // Ping 為 Public/Anonymous，Encrypted 格式通過存取驗證後會取得加密金鑰（line 200 Encrypted 分支），
-            // 隨後對未加密 payload 解密會失敗 → 回傳錯誤；重點在覆蓋 Encrypted 分支。
+            // Ping is Public/Anonymous, so an Encrypted request passes access validation and fetches the encryption key
+            // (the Encrypted branch at line 200). Decrypting the unencrypted payload then fails and an error is returned.
+            // The point is to cover the Encrypted branch.
             var request = new JsonRpcRequest
             {
                 Method = $"{SysProgIds.System}.Ping",
@@ -313,7 +313,6 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
             var response = executor.Execute(request);
 
-            // 未提供有效金鑰 / payload 非加密 → 應以錯誤收場。
             Assert.NotNull(response.Error);
         }
     }

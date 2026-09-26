@@ -14,9 +14,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip:將
-    /// <c>Employee.GetNewData</c> 透過 executor 派發到 BO,並由 stub repository
-    /// 回傳已知 skeleton DataSet,驗證命名 convention 對拷 + DataSet 還原。
+    /// An end-to-end round-trip through <see cref="JsonRpcExecutor"/>: <c>Employee.GetNewData</c> is dispatched by the
+    /// executor to the BO, and a stub repository returns a known skeleton DataSet. It verifies the name-convention
+    /// copy and the DataSet restore.
     /// </summary>
     public class GetNewDataJsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
     {
@@ -25,7 +25,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         public GetNewDataJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Employee.GetNewData 經 JsonRpcExecutor 應派發到 BO 並回傳 stub skeleton DataSet")]
+        [DisplayName("Employee.GetNewData through JsonRpcExecutor dispatches to the BO and returns the stub skeleton DataSet")]
         public void GetNewData_ThroughJsonRpc_DispatchesAndReturnsDataSet()
         {
             var skeleton = new DataSet("Employee");
@@ -71,7 +71,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             Assert.Null(response.Error);
             var result = Assert.IsType<GetNewDataResponse>(response.Result!.Value);
             Assert.NotNull(result.DataSet);
-            // 框架不變式:DataSet.DataSetName == ProgId,Tables[ProgId] 即 Master。
+            // Framework invariant: `DataSet.DataSetName` equals the ProgId, and `Tables[ProgId]` is the master table.
             Assert.Equal("Employee", result.DataSet!.DataSetName);
             Assert.Equal(skeletonRowId, (Guid)result.DataSet.Tables["Employee"]!.Rows[0][SysFields.RowId]);
 

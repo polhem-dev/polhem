@@ -7,13 +7,13 @@ using Polhem.Api.Core.Transformers;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// codec 協商的兩個邊角：顯式指名部署預設、以及可用清單要與實際接受的一致。
+    /// Edge cases of codec negotiation: explicitly naming the deployment default, and the accepted list matching what is actually accepted.
     /// </summary>
     [Collection("ApiServiceOptionsState")]
     public class PayloadCodecNegotiationEdgeTests
     {
         /// <summary>
-        /// 只實作兩參數多載的 transformer —— 也就是協商機制出現之前的每一個自訂 transformer。
+        /// A transformer that implements only the two-argument overloads, like every custom transformer written before negotiation existed.
         /// </summary>
         private sealed class LegacyTransformer : IApiPayloadTransformer
         {
@@ -29,11 +29,12 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("顯式指名部署預設的 codec，不得要求 transformer 支援協商")]
+        [DisplayName("Explicitly naming the deployment default codec does not require the transformer to support negotiation")]
         public void Encode_CodecNamesTheDeploymentDefault_UsesTheTwoArgumentOverload()
         {
-            // 這是最自然的寫法：client 想確定用哪個 codec 就把它寫出來。它什麼都沒改變，
-            // 卻曾經讓只實作兩參數多載的自訂 transformer 吃到 NotSupportedException。
+            // This is the most natural way to write it: a client that wants to be sure which codec is used names it.
+            // It changes nothing, yet it once made a custom transformer with only the two-argument overloads throw
+            // `NotSupportedException`.
             var previousTransformer = ApiServiceOptions.PayloadTransformer;
             try
             {
@@ -49,7 +50,7 @@ namespace Polhem.Api.Core.UnitTests
 
                 Assert.Null(exception);
 
-                // 對照組：指名一個「會改變 body」的 codec 才該要求新能力。
+                // Control: only naming a codec that changes the body should require the new capability.
                 var other = ApiServiceOptions.AcceptedPayloadCodecs
                     .First(c => !string.Equals(c, ApiServiceOptions.PayloadSerializer.SerializationMethod, StringComparison.Ordinal));
                 var negotiated = new JsonRpcParams { Value = new PingRequest { ClientName = "a" }, Codec = other };
@@ -64,11 +65,11 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("AcceptedPayloadCodecs 必須涵蓋 ResolvePayloadSerializer 實際接受的每個名稱")]
+        [DisplayName("Every name in AcceptedPayloadCodecs resolves through ResolvePayloadSerializer, and the deployment default is listed")]
         public void AcceptedPayloadCodecs_CoversEveryNameThatResolves()
         {
-            // 這份清單就是 client 拿來協商的依據。裝了自訂 serializer 的部署曾經被告知
-            // 「你接受的那個 codec 不存在」。
+            // Clients negotiate from this list. A deployment with a custom serializer was once told that the codec it
+            // accepts does not exist.
             foreach (var codec in ApiServiceOptions.AcceptedPayloadCodecs)
             {
                 var serializer = ApiServiceOptions.ResolvePayloadSerializer(codec);

@@ -4,19 +4,19 @@ using Polhem.Api.Core.Messages;
 namespace Polhem.Api.Core.UnitTests.Contracts
 {
     /// <summary>
-    /// 守住「契約軸對稱性」：<c>Polhem.Api.Core.Messages.*</c> 下每個 wire 型別
-    /// （<see cref="ApiRequest"/>／<see cref="ApiResponse"/> 子型別）都必須實作
-    /// <c>Polhem.Api.Contracts</c> 中的同名 <c>I*</c> 契約介面。
+    /// Guards the symmetry of the contracts axis: every wire type under <c>Polhem.Api.Core.Messages.*</c>
+    /// (subtypes of <see cref="ApiRequest"/> / <see cref="ApiResponse"/>) must implement the <c>I*</c> contract
+    /// interface of the same name in <c>Polhem.Api.Contracts</c>.
     /// </summary>
     /// <remarks>
-    /// 此對稱性過去只靠人工維持。2026-07-28 的體檢發現 <c>GetDepartmentTreeRequest</c>
-    /// 漏了契約介面，而上一輪體檢曾宣稱此軸「100% 對齊」—— 破了兩個月無人察覺，
-    /// 因為沒有任何測試守著。本測試即為該缺口的補強。
+    /// This symmetry used to be kept by hand. The 2026-07-28 health check found <c>GetDepartmentTreeRequest</c>
+    /// missing its contract interface, although the previous health check had declared this axis "100% aligned".
+    /// It was broken for two months without anyone noticing, because no test guarded it. This test closes that gap.
     /// </remarks>
     public class ApiContractPairingTests
     {
         /// <summary>
-        /// 取得所有需要配對契約介面的 wire 型別。
+        /// Returns every wire type that needs a matching contract interface.
         /// </summary>
         public static TheoryData<Type> WireMessageTypes()
         {
@@ -33,7 +33,7 @@ namespace Polhem.Api.Core.UnitTests.Contracts
 
         [Theory]
         [MemberData(nameof(WireMessageTypes))]
-        [DisplayName("每個 wire 訊息型別都應實作同名的 I* 契約介面")]
+        [DisplayName("Every wire message type implements the I* contract interface of the same name")]
         public void WireMessageType_ImplementsMatchingContractInterface(Type wireType)
         {
             var expectedName = "I" + wireType.Name;
@@ -42,15 +42,15 @@ namespace Polhem.Api.Core.UnitTests.Contracts
                 .Any(i => string.Equals(i.Name, expectedName, StringComparison.Ordinal));
 
             Assert.True(implemented,
-                $"{wireType.FullName} 未實作契約介面 {expectedName}。" +
-                "每個 wire 訊息型別都必須有配對的契約介面（見 Polhem.Api.Contracts）。");
+                $"{wireType.FullName} does not implement the contract interface {expectedName}. " +
+                "Every wire message type needs a matching contract interface (see Polhem.Api.Contracts).");
         }
 
         [Fact]
-        [DisplayName("wire 訊息型別的列舉不應為空")]
+        [DisplayName("The enumeration of wire message types is not empty")]
         public void WireMessageTypes_IsNotEmpty()
         {
-            // 防止上面的 Theory 因反射條件寫錯而變成零案例的假綠燈
+            // Keeps the theory above from passing with zero cases when the reflection filter is wrong.
             Assert.NotEmpty(WireMessageTypes());
         }
     }

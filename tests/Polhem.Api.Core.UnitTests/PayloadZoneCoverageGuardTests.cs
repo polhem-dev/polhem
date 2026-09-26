@@ -9,19 +9,23 @@ using Polhem.Definition.Filters;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 守門測試：<see cref="PayloadZoneConverter"/> 以「列舉具體型別」的 switch 決定要處理什麼，
-    /// 其型別註解也自承「新增 message 型別不會自動覆蓋」。本測試把那句警告變成會紅的測試——
-    /// 反射掃出 <c>Polhem.Api.Core.Messages.*</c> 內所有承載 <c>DataSet</c> / <c>DataTable</c> /
-    /// <c>FilterNode</c> 的 message 型別，逐一實際跑一次並斷言處理真的發生。
+    /// Gate test: <see cref="PayloadZoneConverter"/> decides what to handle with a switch that lists concrete types,
+    /// and its own type comment admits that "new message types are not covered automatically". This test turns that
+    /// warning into a test that goes red: reflection finds every message type in <c>Polhem.Api.Core.Messages.*</c>
+    /// that carries a <c>DataSet</c> / <c>DataTable</c> / <c>FilterNode</c>, runs each one through the converter and
+    /// asserts that the handling really happened.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 處理依方向與載體而不同（ADR-032 D4）：回應的資料必須轉入使用者時區；請求的過濾條件必須轉為 UTC；
-    /// 請求的 <c>DataSet</c> / <c>DataTable</c> 必須換成副本，且值不換算——in-process 呼叫時伺服端會就地改寫它。
+    /// The handling depends on direction and carrier (ADR-032 D4): response data must be shifted into the user's time
+    /// zone; request filter conditions must be converted to UTC; a request <c>DataSet</c> / <c>DataTable</c> must be
+    /// replaced with a copy whose values are not converted, because in an in-process call the server rewrites it in
+    /// place.
     /// </para>
     /// <para>
-    /// 這比「維護一份型別名單」強：名單只能證明有人記得改名單，本測試證明處理真的發生。
-    /// 新增一個帶資料的 message 型別卻忘了接進 switch，這裡會直接失敗並指名該型別。
+    /// This is stronger than maintaining a list of types: a list only proves that someone remembered to update the
+    /// list, while this test proves the handling happens. Adding a message type that carries data but forgetting to
+    /// wire it into the switch fails here and names the type.
     /// </para>
     /// </remarks>
     public class PayloadZoneCoverageGuardTests
@@ -29,7 +33,7 @@ namespace Polhem.Api.Core.UnitTests
         private const string Taipei = "Asia/Taipei";
         private static readonly DateTime s_utc9Am = new(2026, 1, 1, 9, 0, 0, DateTimeKind.Unspecified);
 
-        /// <summary>掃出所有承載時間資料的 message 型別，連同其承載屬性。</summary>
+        /// <summary>Finds every message type that carries temporal data, together with its carrier property.</summary>
         public static TheoryData<string> CarrierTypeNames()
         {
             var data = new TheoryData<string>();
@@ -55,7 +59,7 @@ namespace Polhem.Api.Core.UnitTests
                 || typeof(FilterNode).IsAssignableFrom(p.PropertyType));
 
         [Fact]
-        [DisplayName("掃描應找到承載時間資料的 message 型別（掃描本身失效時要看得出來）")]
+        [DisplayName("The scan finds message types that carry temporal data (so a broken scan is visible)")]
         public void CarrierScan_FindsTypes()
         {
             Assert.NotEmpty(CarrierTypes());
@@ -63,7 +67,7 @@ namespace Polhem.Api.Core.UnitTests
 
         [Theory]
         [MemberData(nameof(CarrierTypeNames))]
-        [DisplayName("每個承載時間資料的 message 型別都必須被 PayloadZoneConverter 實際處理")]
+        [DisplayName("Every message type that carries temporal data is actually handled by PayloadZoneConverter")]
         public void EveryCarrierType_IsActuallyConverted(string typeName)
         {
             var type = CarrierTypes().Single(t => t.FullName == typeName);
@@ -123,15 +127,15 @@ namespace Polhem.Api.Core.UnitTests
             };
 
             Assert.True(expected == actual,
-                $"'{typeName}' 未被 PayloadZoneConverter 轉換（值仍為 {actual:O}，" +
-                $"預期 {expected:O}）。新增帶資料的 message 型別時，請一併接進該類別的 switch。");
+                $"'{typeName}' was not converted by PayloadZoneConverter (the value is still {actual:O}, " +
+                $"expected {expected:O}). When you add a message type that carries data, wire it into that class's switch too.");
         }
 
         private static void AssertIsolatedUnconverted(object payload, object? sent, string typeName)
         {
             Assert.True(!ReferenceEquals(payload, sent),
-                $"'{typeName}' 的請求資料未被 PayloadZoneConverter.IsolateRequest 換成副本。" +
-                "in-process 呼叫時伺服端會就地改寫它，新增帶資料的 message 型別時，請一併接進該類別的 switch。");
+                $"The request data of '{typeName}' was not replaced with a copy by PayloadZoneConverter.IsolateRequest. " +
+                "In an in-process call the server rewrites it in place. When you add a message type that carries data, wire it into that class's switch too.");
 
             var actual = sent switch
             {
@@ -140,7 +144,7 @@ namespace Polhem.Api.Core.UnitTests
                 _ => throw new InvalidOperationException($"Unhandled carrier shape on '{typeName}'.")
             };
             Assert.True(actual == s_utc9Am,
-                $"'{typeName}' 的請求資料被換算了（值為 {actual:O}）。請求方向的 DataSet 不換算時區。");
+                $"The request data of '{typeName}' was converted (the value is {actual:O}). A DataSet in the request direction is not time-zone converted.");
         }
 
         private static DateTime Expected(bool toUtc)

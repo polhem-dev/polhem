@@ -6,14 +6,14 @@ using Polhem.Definition.Identity;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 驗證 CompanyInfo（含 CompanyNumberFormats 集合）的 MessagePack wire round-trip。
-    /// CompanyInfo 經 IEnterCompanyResponse.Company 走 MessagePack，CompanyNumberFormats
-    /// 須由自訂 FormatterResolver 的 CollectionBaseFormatter 處理。
+    /// Verifies the MessagePack wire round-trip of CompanyInfo (including the CompanyNumberFormats collection).
+    /// CompanyInfo travels over MessagePack through IEnterCompanyResponse.Company, and CompanyNumberFormats has to be
+    /// handled by the CollectionBaseFormatter of the custom FormatterResolver.
     /// </summary>
     public sealed class CompanyInfoMessagePackTests
     {
         [Fact]
-        [DisplayName("CompanyInfo 含數值覆寫項 MessagePack round-trip 應保留覆寫與基本欄位")]
+        [DisplayName("CompanyInfo with number format overrides keeps the overrides and basic fields through a MessagePack round-trip")]
         public void CompanyInfo_WithNumberFormats_RoundTrip_Succeeds()
         {
             var original = new CompanyInfo
@@ -41,12 +41,12 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Equal(2, restored.NumberFormats.Count);
             Assert.Equal(3, restored.GetDecimals(NumberKind.Percent));
             Assert.Equal(6, restored.GetDecimals(NumberKind.UnitPrice));
-            // 未覆寫者退框架預設
+            // A kind that is not overridden falls back to the framework default.
             Assert.Equal(2, restored.GetDecimals(NumberKind.Amount));
         }
 
         [Fact]
-        [DisplayName("CompanyInfo 空數值覆寫表 MessagePack round-trip 應回空表並全退框架預設")]
+        [DisplayName("CompanyInfo with an empty number format table round-trips through MessagePack to an empty table that falls back to the framework defaults")]
         public void CompanyInfo_EmptyNumberFormats_RoundTrip_Succeeds()
         {
             var original = new CompanyInfo { CompanyId = "C001", CompanyName = "測試公司" };
@@ -60,7 +60,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompanyInfo 含本幣/現金捨入/白名單 MessagePack round-trip 應保留三者")]
+        [DisplayName("CompanyInfo keeps the default currency, cash rounding and currency allowlist through a MessagePack round-trip")]
         public void CompanyInfo_WithMultiCurrencyFields_RoundTrip_Succeeds()
         {
             var original = new CompanyInfo
@@ -82,7 +82,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompanyInfo 空多幣別欄位 MessagePack round-trip 應回空表/空本幣")]
+        [DisplayName("CompanyInfo with empty multi-currency fields round-trips through MessagePack to empty tables and an empty default currency")]
         public void CompanyInfo_EmptyMultiCurrencyFields_RoundTrip_Succeeds()
         {
             var original = new CompanyInfo { CompanyId = "C001", CompanyName = "測試公司" };

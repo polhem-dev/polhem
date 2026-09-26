@@ -5,17 +5,18 @@ using Polhem.Definition.Filters;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// <c>FilterNodeFormatter</c> 的多型 round-trip 測試。
+    /// Polymorphic round-trip tests for <c>FilterNodeFormatter</c>.
     /// </summary>
     /// <remarks>
-    /// 多型判別由 formatter 手寫，編譯器不會把型別與 formatter 綁在一起。漂移守衛是
-    /// <c>WireContractDriftTests</c>，經由 <c>FilterConditionFormatter</c> /
-    /// <c>FilterGroupFormatter</c> 上的 <c>IWireContract</c> 實作；這裡驗的是 round-trip 保真度。
+    /// The polymorphic discrimination is hand-written in the formatter, and the compiler does not bind the types to
+    /// the formatter. The drift guard is <c>WireContractDriftTests</c>, through the <c>IWireContract</c>
+    /// implementations on <c>FilterConditionFormatter</c> / <c>FilterGroupFormatter</c>; this class checks round-trip
+    /// fidelity.
     /// </remarks>
     public class FilterNodeWireTests
     {
         [Fact]
-        [DisplayName("FilterCondition 應 round-trip 為正確子型別")]
+        [DisplayName("FilterCondition round-trips as the correct subtype")]
         public void FilterCondition_RoundTripsAsCorrectSubtype()
         {
             FilterNode source = new FilterCondition("cust_id", ComparisonOperator.Equal, "A01")
@@ -36,7 +37,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("FilterGroup 應 round-trip 為正確子型別")]
+        [DisplayName("FilterGroup round-trips as the correct subtype")]
         public void FilterGroup_RoundTripsAsCorrectSubtype()
         {
             FilterNode source = new FilterGroup(LogicalOperator.Or)
@@ -55,7 +56,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("巢狀三層的過濾樹應完整 round-trip")]
+        [DisplayName("A filter tree nested three levels deep round-trips completely")]
         public void NestedFilterTree_RoundTrips()
         {
             FilterNode source = new FilterGroup(LogicalOperator.And)
@@ -93,7 +94,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData("text")]
         [InlineData(42)]
         [InlineData(true)]
-        [DisplayName("FilterCondition.Value 各型別皆應 round-trip")]
+        [DisplayName("FilterCondition.Value round-trips for various types")]
         public void ConditionValue_VariousTypes_RoundTrip(object value)
         {
             FilterNode source = new FilterCondition("f", ComparisonOperator.Equal, value);
@@ -104,7 +105,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("FilterCondition.Value 為 Guid / DateTime / decimal 亦應 round-trip")]
+        [DisplayName("FilterCondition.Value round-trips for Guid / DateTime / decimal too")]
         public void ConditionValue_FrameworkTypes_RoundTrip()
         {
             var guid = Guid.NewGuid();
@@ -129,7 +130,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Between 條件的 SecondValue 應 round-trip")]
+        [DisplayName("The SecondValue of a Between condition round-trips")]
         public void ConditionSecondValue_RoundTrips()
         {
             FilterNode source = new FilterCondition("amount", ComparisonOperator.Between, 100, 200);
@@ -142,7 +143,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("FilterNodeCollection 內的元素應保留各自的子型別")]
+        [DisplayName("Elements in a FilterNodeCollection keep their own subtypes")]
         public void FilterNodeCollection_PreservesElementSubtypes()
         {
             var source = new FilterNodeCollection
@@ -160,7 +161,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Kind 為 null 的過濾節點應 round-trip 為 null")]
+        [DisplayName("A null filter node round-trips as null")]
         public void NullFilterNode_RoundTrips()
         {
             FilterNode? source = null;

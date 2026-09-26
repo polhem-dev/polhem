@@ -1,19 +1,21 @@
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 序列化本組件內所有讀寫 <c>SysInfo.IsDebugMode</c> 的測試類。
+    /// Serializes every test class in this assembly that reads or writes <c>SysInfo.IsDebugMode</c>.
     /// </summary>
     /// <remarks>
-    /// <c>JsonRpcExecutor.MapException</c> 在 debug 模式下改為透傳基礎設施例外的原訊息，
-    /// 因此「斷言遮蔽訊息」與「切到 debug 模式驗證透傳」這兩類測試共用同一個 process-wide
-    /// 靜態。xUnit 預設不同 test class 平行執行，不序列化就會互相污染 ——
-    /// 症狀是斷言遮蔽訊息的測試偶發拿到原始例外訊息。
+    /// In debug mode <c>JsonRpcExecutor.MapException</c> passes through the original message of infrastructure
+    /// exceptions, so tests that "assert the masked message" and tests that "switch to debug mode to verify the
+    /// pass-through" share the same process-wide static. xUnit runs different test classes in parallel by default,
+    /// and without serialization they contaminate each other; the symptom is that a test asserting the masked
+    /// message intermittently gets the original exception message.
     ///
-    /// collection 不跨組件，故 <c>Polhem.Base.UnitTests</c> 的同名定義在此不適用，需各自宣告。
+    /// A collection does not span assemblies, so the definition of the same name in <c>Polhem.Base.UnitTests</c>
+    /// does not apply here; each assembly declares its own.
     /// </remarks>
     [CollectionDefinition("SysInfoStatic")]
     public class SysInfoStaticCollection
     {
-        // 純 marker，無 fixture
+        // A pure marker with no fixture.
     }
 }

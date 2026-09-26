@@ -13,10 +13,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// 走 <see cref="JsonRpcExecutor"/> 的 end-to-end round-trip:確認
-    /// <c>Employee.Delete</c> 的 <c>DeleteRequest.RowId</c> 經 ApiInputConverter
-    /// 對拷到 <c>DeleteArgs.RowId</c>,stub 回傳的 <c>RowsAffected</c> 經
-    /// ApiOutputConverter 對拷回 wire response。
+    /// An end-to-end round-trip through <see cref="JsonRpcExecutor"/>: confirms that <c>DeleteRequest.RowId</c> of
+    /// <c>Employee.Delete</c> is copied to <c>DeleteArgs.RowId</c> by ApiInputConverter, and that the
+    /// <c>RowsAffected</c> returned by the stub is copied back to the wire response by ApiOutputConverter.
     /// </summary>
     public class DeleteJsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
     {
@@ -25,7 +24,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         public DeleteJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("Employee.Delete 經 JsonRpcExecutor 應透傳 RowId 並回傳 RowsAffected")]
+        [DisplayName("Employee.Delete through JsonRpcExecutor passes RowId through and returns RowsAffected")]
         public void Delete_ThroughJsonRpc_PreservesRowIdAndReturnsRowsAffected()
         {
             var rowId = Guid.NewGuid();

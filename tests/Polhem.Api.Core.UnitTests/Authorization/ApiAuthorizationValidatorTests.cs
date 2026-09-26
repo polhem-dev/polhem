@@ -5,14 +5,14 @@ using Polhem.Api.Core.JsonRpc;
 namespace Polhem.Api.Core.UnitTests.Authorization
 {
     /// <summary>
-    /// ApiAuthorizationValidator 單元測試。
+    /// ApiAuthorizationValidator unit tests.
     /// </summary>
     public class ApiAuthorizationValidatorTests
     {
         private static ApiAuthorizationValidator CreateValidator() => new();
 
         [Fact]
-        [DisplayName("Validate 於 context 為 null 時應回傳 InvalidRequest 失敗")]
+        [DisplayName("Validate fails with InvalidRequest for a null context")]
         public void Validate_NullContext_Fails()
         {
             var result = CreateValidator().Validate(null!);
@@ -23,7 +23,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Theory]
-        [DisplayName("Validate 於 ApiKey 缺失或空白時應回傳 InvalidRequest 失敗")]
+        [DisplayName("Validate fails with InvalidRequest for a missing or blank ApiKey")]
         [InlineData("")]
         [InlineData("   ")]
         public void Validate_MissingApiKey_Fails(string apiKey)
@@ -43,7 +43,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Theory]
-        [DisplayName("Validate 於免授權方法應回傳成功且 AccessToken 為 Empty")]
+        [DisplayName("Validate succeeds with an empty AccessToken for methods that need no authorization")]
         [InlineData("System.Ping")]
         [InlineData("System.GetApiPayloadOptions")]
         [InlineData("System.Login")]
@@ -63,7 +63,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Fact]
-        [DisplayName("Validate 於需要授權但缺少 Authorization 標頭時應失敗")]
+        [DisplayName("Validate fails when authorization is required but the Authorization header is missing")]
         public void Validate_MissingAuthorizationHeader_Fails()
         {
             var context = new ApiAuthorizationContext
@@ -81,7 +81,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Fact]
-        [DisplayName("Validate 於 Authorization 格式非 Bearer 時應失敗")]
+        [DisplayName("Validate fails when the Authorization scheme is not Bearer")]
         public void Validate_NonBearerAuthorization_Fails()
         {
             var context = new ApiAuthorizationContext
@@ -99,7 +99,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Fact]
-        [DisplayName("Validate 於 Bearer token 非 Guid 格式時應失敗")]
+        [DisplayName("Validate fails when the Bearer token is not a Guid")]
         public void Validate_InvalidBearerToken_Fails()
         {
             var context = new ApiAuthorizationContext
@@ -117,7 +117,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Fact]
-        [DisplayName("Validate 於 Bearer 前綴為大小寫變體時仍應成功(OrdinalIgnoreCase)")]
+        [DisplayName("Validate succeeds with a differently cased Bearer prefix (OrdinalIgnoreCase)")]
         public void Validate_BearerPrefixCaseInsensitive_Succeeds()
         {
             var token = Guid.NewGuid();
@@ -135,7 +135,7 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Fact]
-        [DisplayName("Validate 於有效 Bearer token 應回傳成功並帶 AccessToken")]
+        [DisplayName("Validate succeeds with a valid Bearer token and returns its AccessToken")]
         public void Validate_ValidBearerToken_Succeeds()
         {
             var token = Guid.NewGuid();

@@ -5,9 +5,9 @@ using Polhem.Api.Core.Messages.System;
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// plugin 維護 API 的 wire 層 round-trip。兩個方向都以 XML 字串承載綁定，
-    /// 而不是 <c>PluginSettings</c> 物件——那些是 get-only 巢狀集合，
-    /// 物件形式送到 .NET 用戶端會靜默收不回來（決策 L7 踩過的形狀）。
+    /// Wire-level round trips of the plugin maintenance API. Both directions carry the bindings as an XML string
+    /// rather than a <c>PluginSettings</c> object: those are get-only nested collections, and in object form they
+    /// silently fail to arrive at a .NET client.
     /// </summary>
     public class CustomizePluginSettingsMessagePackTests
     {
@@ -15,7 +15,7 @@ namespace Polhem.Api.Core.UnitTests.System
             """<PluginSettings><Items><ProgramPluginItem ProgId="Order"><Plugins><PluginItem Type="A.B, A" /></Plugins></ProgramPluginItem></Items></PluginSettings>""";
 
         [Fact]
-        [DisplayName("GetCustomizePluginSettingsRequest round-trip 保留 CustomizeId")]
+        [DisplayName("GetCustomizePluginSettingsRequest round-trip keeps CustomizeId")]
         public void GetRequest_RoundTrip_PreservesCustomizeId()
         {
             var request = new GetCustomizePluginSettingsRequest { CustomizeId = "acme" };
@@ -28,7 +28,7 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("GetCustomizePluginSettingsResponse round-trip 保留 XML 原文")]
+        [DisplayName("GetCustomizePluginSettingsResponse round-trip keeps the XML text")]
         public void GetResponse_RoundTrip_PreservesXml()
         {
             var response = new GetCustomizePluginSettingsResponse { Xml = SampleXml };
@@ -41,7 +41,7 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("SaveCustomizePluginSettingsRequest round-trip 保留兩個欄位")]
+        [DisplayName("SaveCustomizePluginSettingsRequest round-trip keeps CustomizeId and Xml")]
         public void SaveRequest_RoundTrip_PreservesBothFields()
         {
             var request = new SaveCustomizePluginSettingsRequest { CustomizeId = "acme", Xml = SampleXml };
@@ -55,7 +55,7 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("SaveCustomizePluginSettingsResponse round-trip 保留筆數")]
+        [DisplayName("SaveCustomizePluginSettingsResponse round-trip keeps PluginCount")]
         public void SaveResponse_RoundTrip_PreservesCount()
         {
             var response = new SaveCustomizePluginSettingsResponse { PluginCount = 3 };
@@ -68,7 +68,7 @@ namespace Polhem.Api.Core.UnitTests.System
         }
 
         [Fact]
-        [DisplayName("預設值 round-trip 不 NRE，空字串進空字串出")]
+        [DisplayName("Default values round-trip without a NullReferenceException, and empty strings come back empty")]
         public void DefaultValues_RoundTrip()
         {
             var restored = MessagePackCodec.Deserialize<SaveCustomizePluginSettingsRequest>(

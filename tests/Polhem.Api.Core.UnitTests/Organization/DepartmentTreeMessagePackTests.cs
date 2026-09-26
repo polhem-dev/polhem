@@ -5,13 +5,13 @@ using Polhem.Definition.Organization;
 namespace Polhem.Api.Core.UnitTests.Organization
 {
     /// <summary>
-    /// DepartmentTree 的 MessagePack round-trip（第三棲；XML/JSON 在 Polhem.Definition.UnitTests 測）。
-    /// 驗證扁平節點跨 MessagePack 還原、查詢 index 重建。
+    /// MessagePack round-trip of DepartmentTree (the third format; XML and JSON are tested in Polhem.Definition.UnitTests).
+    /// Verifies that the tree built from flat rows is restored across MessagePack and that the lookup index is rebuilt.
     /// </summary>
     public class DepartmentTreeMessagePackTests
     {
         [Fact]
-        [DisplayName("DepartmentTree MessagePack round-trip 還原後查詢一致")]
+        [DisplayName("DepartmentTree lookups give the same results after a MessagePack round-trip")]
         public void DepartmentTree_MessagePack_RoundTrip()
         {
             var hq = Guid.NewGuid();
@@ -28,15 +28,15 @@ namespace Polhem.Api.Core.UnitTests.Organization
             var restored = MessagePackCodec.Deserialize<DepartmentTree>(bytes)!;
 
             Assert.Equal("C001", restored.CompanyId);
-            Assert.Single(restored.Roots!);                                   // 巢狀：單一 root（總公司）
-            // index 在反序列化後 lazy 重建
+            Assert.Single(restored.Roots!);                                   // Nested: a single root (HQ).
+            // The index is rebuilt lazily after deserialization.
             Assert.Equal(3, restored.GetSelfAndDescendants(hq).Count);
             Assert.Equal(2, restored.GetSelfAndDescendants(sales).Count);
-            Assert.Equal(new[] { sales1, sales, hq }, restored.GetSelfAndAncestors(sales1)); // 巢狀父子鏈還原
+            Assert.Equal(new[] { sales1, sales, hq }, restored.GetSelfAndAncestors(sales1)); // The nested parent chain is restored.
         }
 
         [Fact]
-        [DisplayName("空 DepartmentTree MessagePack round-trip 不應 NRE")]
+        [DisplayName("An empty DepartmentTree round-trips through MessagePack without a NullReferenceException")]
         public void EmptyDepartmentTree_MessagePack_RoundTrip()
         {
             var tree = new DepartmentTree("C001", []);

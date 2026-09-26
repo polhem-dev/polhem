@@ -1,17 +1,18 @@
-// ApiServiceOptionsTests 與 ApiPayloadTransformerTests 必須暫時改寫 process-wide static
-// ApiServiceOptions.PayloadSerializer / PayloadCompressor / PayloadEncryptor 才能驗證
-// Initialize 的組裝路徑；與此同時**整個 payload 管線的讀取端**（約 19 個 JSON-RPC
-// round-trip 測試類）都會讀同一組靜態值，平行執行下會 race。
+// `ApiServiceOptionsTests` and `ApiPayloadTransformerTests` have to modify the process-wide statics
+// `ApiServiceOptions.PayloadSerializer`, `PayloadCompressor` and `PayloadEncryptor` temporarily to verify how
+// `Initialize` assembles them. Meanwhile **every reader of the payload pipeline** (about 19 JSON-RPC round-trip
+// test classes at the time) reads the same statics, so running in parallel races.
 //
-// 原本只把兩個「寫入端」類別加進 ApiServiceOptionsState collection，漏掉讀取端——
-// 但讀取端一樣會踩。CI build #31169045420（2026-08-07）即因此紅在
-// JsonRpcSerializationTests.JsonRpcRequest_Serialize_ReturnsValidJson：
-// Encode 用 GzipPayloadCompressor 壓完，另一類別在視窗內把 Compressor 換成
-// NoCompressionCompressor，Decode 於是把 gzip bytes 原樣餵給 MessagePack →
-// `Unexpected msgpack code 31`（0x1F 正是 gzip magic 的第一個 byte）。
-// 錯誤訊息完全指向序列化，看不出根因是測試互相污染。
+// Originally only the two writer classes were put in the `ApiServiceOptionsState` collection and the readers were
+// missed, yet the readers are hit just the same. CI build #31169045420 (2026-08-07) went red for this reason in
+// `JsonRpcSerializationTests.JsonRpcRequest_Serialize_ReturnsValidJson`. Encode compressed with
+// `GzipPayloadCompressor`, another class swapped the compressor for `NoCompressionCompressor` within that window,
+// and Decode fed the gzip bytes unchanged to MessagePack, giving `Unexpected msgpack code 31` (0x1F is the first
+// byte of the gzip magic number). The error message points entirely at serialization and does not reveal that the
+// root cause is tests contaminating each other.
 //
-// 讀取端會隨新的 round-trip 測試持續增加，逐類補 [Collection] 必然遺漏；整體關閉平行
-// 最簡且不易遺漏（同 Polhem.ObjectCaching.UnitTests 的既有做法）。實測代價約 0.25 秒
-// （平行 ~0.40s → 串行 ~0.66s）。根治方式仍是把這三個元件 DI 化。
+// Readers keep growing with new round-trip tests, so adding `[Collection]` class by class is bound to miss some.
+// Disabling parallelization for the whole assembly is the simplest option and hard to get wrong (the same approach
+// as in `Polhem.ObjectCaching.UnitTests`). The measured cost is about 0.25 seconds (parallel ~0.40s, serial ~0.66s).
+// The real fix is still to move these components into DI.
 [assembly: Xunit.CollectionBehavior(DisableTestParallelization = true)]

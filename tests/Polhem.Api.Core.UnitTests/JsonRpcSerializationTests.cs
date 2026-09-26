@@ -8,15 +8,15 @@ using Polhem.Api.Core.Messages;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// JSON-RPC 模型的 JSON 序列化測試，確保前後端 JSON 傳輸格式正確。
+    /// JSON serialization tests for the JSON-RPC models, making sure the JSON wire format between front end and back end is correct.
     /// </summary>
     public class JsonRpcSerializationTests
     {
         /// <summary>
-        /// 測試 JsonRpcRequest 序列化後保留所有屬性，且 JSON key 名稱符合 JSON-RPC 2.0 規範。
+        /// Tests that JsonRpcRequest keeps all properties after serialization.
         /// </summary>
         [Fact]
-        [DisplayName("JsonRpcRequest JSON 序列化保留所有屬性")]
+        [DisplayName("JsonRpcRequest JSON serialization preserves all properties")]
         public void JsonRpcRequest_Serialize_PreservesAllProperties()
         {
             var request = new JsonRpcRequest
@@ -39,7 +39,7 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Equal("test-payload", deserialized.Params.Value);
             Assert.Equal("System.String", deserialized.Params.TypeName);
 
-            // 驗證 SerializeState 不會出現在 JSON 中（標記了 [JsonIgnore]）
+            // `SerializeState` must not appear in the JSON because it is marked `[JsonIgnore]`.
             using var jDoc = JsonDocument.Parse(json);
             var root = jDoc.RootElement;
             Assert.False(root.TryGetProperty("SerializeState", out _));
@@ -47,10 +47,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 測試 JsonRpcResponse 成功回應的序列化。
+        /// Tests serialization of a successful JsonRpcResponse.
         /// </summary>
         [Fact]
-        [DisplayName("JsonRpcResponse 成功回應 JSON 序列化")]
+        [DisplayName("JsonRpcResponse success response round-trips through JSON")]
         public void JsonRpcResponse_Success_Serialize()
         {
             var result = new JsonRpcResult
@@ -81,10 +81,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 測試 JsonRpcResponse 錯誤回應的序列化，含 JsonRpcErrorCode 數值驗證。
+        /// Tests serialization of an error JsonRpcResponse, including the numeric JsonRpcErrorCode value.
         /// </summary>
         [Fact]
-        [DisplayName("JsonRpcResponse 錯誤回應 JSON 序列化")]
+        [DisplayName("JsonRpcResponse error response round-trips through JSON")]
         public void JsonRpcResponse_Error_Serialize()
         {
             var response = new JsonRpcResponse
@@ -112,10 +112,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 測試 JsonRpcError 所有屬性的 round-trip。
+        /// Tests the round-trip of every JsonRpcError property.
         /// </summary>
         [Fact]
-        [DisplayName("JsonRpcError JSON 序列化保留所有屬性")]
+        [DisplayName("JsonRpcError JSON serialization preserves all properties")]
         public void JsonRpcError_Serialize_PreservesAllProperties()
         {
             var error = new JsonRpcError(
@@ -133,13 +133,13 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 測試 ApiPayload（透過 JsonRpcParams / JsonRpcResult）的 format、value、type 屬性序列化。
+        /// Tests serialization of the format, value and type properties of ApiPayload (through JsonRpcParams).
         /// </summary>
         [Theory]
         [InlineData(PayloadFormat.Plain)]
         [InlineData(PayloadFormat.Encoded)]
         [InlineData(PayloadFormat.Encrypted)]
-        [DisplayName("ApiPayload JSON 序列化保留 Format 和 TypeName")]
+        [DisplayName("ApiPayload JSON serialization preserves Format and TypeName")]
         public void ApiPayload_Serialize_PreservesFormatAndTypeName(PayloadFormat format)
         {
             // Create payload with the specified format via JSON round-trip
@@ -154,20 +154,18 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Equal("sample-data", deserialized.Value);
             Assert.Equal("Polhem.Api.Core.Messages.System.PingRequest", deserialized.TypeName);
 
-            // 驗證 format 序列化為數值
             using var jDoc = JsonDocument.Parse(json);
             var root = jDoc.RootElement;
             Assert.Equal((int)format, root.GetProperty("format").GetInt32());
         }
 
         /// <summary>
-        /// 模擬前端送出的 JSON 字串，驗證能正確反序列化為 JsonRpcRequest。
+        /// Simulates a JSON string sent by the front end and verifies that it deserializes into a JsonRpcRequest.
         /// </summary>
         [Fact]
-        [DisplayName("前端 JSON 字串反序列化為 JsonRpcRequest")]
+        [DisplayName("A front-end JSON string deserializes into JsonRpcRequest")]
         public void JsonRpcRequest_FromJsonString_Deserialize()
         {
-            // 模擬前端送出的 JSON-RPC 請求
             const string json = """
                 {
                     "jsonrpc": "2.0",
@@ -194,10 +192,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// 驗證 JsonRpcResponse 序列化後的 JSON key 名稱符合 JSON-RPC 2.0 規範。
+        /// Verifies that the JSON key names of a serialized JsonRpcResponse follow the JSON-RPC 2.0 specification.
         /// </summary>
         [Fact]
-        [DisplayName("JsonRpcResponse 序列化 JSON key 名稱符合 JSON-RPC 2.0 規範")]
+        [DisplayName("JsonRpcResponse serializes JSON key names that follow the JSON-RPC 2.0 specification")]
         public void JsonRpcResponse_ToJsonString_MatchesExpectedFormat()
         {
             var response = new JsonRpcResponse
@@ -216,19 +214,17 @@ namespace Polhem.Api.Core.UnitTests
             using var jDoc = JsonDocument.Parse(json);
             var root = jDoc.RootElement;
 
-            // 驗證 JSON key 名稱為小寫（符合 JSON-RPC 2.0 規範）
+            // The JSON-RPC 2.0 specification uses lowercase key names.
             Assert.True(root.TryGetProperty("jsonrpc", out _));
             Assert.True(root.TryGetProperty("method", out _));
             Assert.True(root.TryGetProperty("id", out _));
             Assert.True(root.TryGetProperty("result", out _));
 
-            // 驗證 result 內部 key 名稱
             var resultObj = root.GetProperty("result");
             Assert.True(resultObj.TryGetProperty("format", out _));
             Assert.True(resultObj.TryGetProperty("value", out _));
             Assert.True(resultObj.TryGetProperty("type", out _));
 
-            // 驗證不應出現 PascalCase key
             Assert.False(root.TryGetProperty("Jsonrpc", out _));
             Assert.False(root.TryGetProperty("Method", out _));
             Assert.False(root.TryGetProperty("Id", out _));
@@ -236,10 +232,10 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// JSON-RPC 請求模型序列化。
+        /// Serializes the JSON-RPC request model.
         /// </summary>
         [Fact]
-        [DisplayName("JsonRpcRequest 序列化應產生有效 JSON 並支援編碼與解碼")]
+        [DisplayName("JsonRpcRequest serializes to valid JSON and supports encoding and decoding")]
         public void JsonRpcRequest_Serialize_ReturnsValidJson()
         {
             var request = new JsonRpcRequest()
@@ -254,12 +250,10 @@ namespace Polhem.Api.Core.UnitTests
             string json = request.ToJson();
             Assert.NotEmpty(json);
 
-            // 測試編碼
             ApiPayloadConverter.TransformTo(request.Params, PayloadFormat.Encoded);
             string encodedJson = request.ToJson();
             Assert.NotEmpty(encodedJson);
 
-            // 測試解碼
             ApiPayloadConverter.RestoreFrom(request.Params, PayloadFormat.Encoded);
             string decodedJson = request.ToJson();
             Assert.NotEmpty(decodedJson);

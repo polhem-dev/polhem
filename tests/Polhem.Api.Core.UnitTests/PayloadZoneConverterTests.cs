@@ -8,8 +8,9 @@ using Polhem.Definition.Filters;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// <see cref="PayloadZoneConverter"/> 測試：回應方向轉入使用者時區；請求方向只轉過濾條件，
-    /// <c>DataSet</c> 複製但不轉換，且呼叫端自己的物件在呼叫後原封不動。
+    /// <see cref="PayloadZoneConverter"/> tests: the response direction converts into the user's time zone; the request
+    /// direction converts only filter conditions, copies the <c>DataSet</c> without converting it, and leaves the
+    /// caller's own objects untouched after the call.
     /// </summary>
     public class PayloadZoneConverterTests
     {
@@ -40,7 +41,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("回應方向：GetListResponse.Table 轉為使用者時區")]
+        [DisplayName("Response direction: GetListResponse.Table is converted to the user's time zone")]
         public void ToUserZone_GetListResponse_ConvertsTable()
         {
             var response = new GetListResponse { Table = BuildTable() };
@@ -51,7 +52,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("回應方向：GetDataResponse.DataSet 轉為使用者時區")]
+        [DisplayName("Response direction: GetDataResponse.DataSet is converted to the user's time zone")]
         public void ToUserZone_GetDataResponse_ConvertsDataSet()
         {
             var response = new GetDataResponse { DataSet = BuildDataSet() };
@@ -63,11 +64,11 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("請求方向：送出期間 DataSet 是未換算的副本，伺服端改寫副本後呼叫端物件不變")]
+        [DisplayName("Request direction: while sending, the DataSet is an unconverted copy, and the caller's object is unchanged after the server rewrites the copy")]
         public void IsolateRequest_SaveRequest_CopiesWithoutConvertingAndRestores()
         {
             var original = BuildDataSet();
-            // 呼叫端手上的值以使用者時區呈現（Connector 收到回應時已轉過）。
+            // The caller holds values in the user's time zone (the Connector already converted them when the response arrived).
             var userLocal = ExpectedInTaipei(s_utc9Am);
             original.Tables["orders"]!.Rows[0]["created_at"] = userLocal;
             original.AcceptChanges();
@@ -79,7 +80,7 @@ namespace Polhem.Api.Core.UnitTests
                 var sent = request.DataSet!.Tables["orders"]!.Rows[0];
                 Assert.Equal(userLocal, (DateTime)sent["created_at"]);
 
-                // in-process 下伺服端拿到的就是這個物件：它會改寫時間欄，寫入後再 AcceptChanges。
+                // In process, the server receives this very object: it rewrites the time column and calls `AcceptChanges` after writing.
                 sent["created_at"] = s_utc9Am;
                 request.DataSet.AcceptChanges();
             }
@@ -89,7 +90,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("請求方向：沒有使用者時區時 DataSet 仍然複製，過濾條件原樣送出")]
+        [DisplayName("Request direction: without a user time zone the DataSet is still copied and the filter is sent as is")]
         public void IsolateRequest_BlankTimeZone_CopiesDataSetAndLeavesFilter()
         {
             var original = BuildDataSet();
@@ -109,7 +110,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("請求方向：filter 的 DateTime 值轉為 UTC，DateOnly 不動，且原樹不被修改")]
+        [DisplayName("Request direction: DateTime values in the filter are converted to UTC, DateOnly is untouched, and the original tree is not modified")]
         public void IsolateRequest_GetListRequest_ConvertsFilterWithoutMutatingSource()
         {
             var userLocal = ExpectedInTaipei(s_utc9Am);
@@ -131,7 +132,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("回應方向：空白時區為 no-op")]
+        [DisplayName("Response direction: a blank time zone is a no-op")]
         public void ToUserZone_BlankTimeZone_LeavesPayloadAlone()
         {
             var response = new GetListResponse { Table = BuildTable() };
@@ -142,7 +143,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("未涵蓋的型別與 null 一律略過")]
+        [DisplayName("Unsupported types and null are ignored")]
         public void UnknownPayload_IsIgnored()
         {
             Assert.Null(Record.Exception(() => PayloadZoneConverter.ToUserZone("plain", Taipei)));

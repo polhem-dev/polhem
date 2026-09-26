@@ -10,17 +10,18 @@ using Polhem.Base.Serialization;
 namespace Polhem.Api.Core.UnitTests.Contracts
 {
     /// <summary>
-    /// 對**所有** API 合約型別（<see cref="ApiRequest"/>／<see cref="ApiResponse"/> 子型別）驗證能以
-    /// **MessagePack 與 JSON 兩種** wire format 序列化並保真往返。反射列舉組件,自動涵蓋現有與未來合約 ——
-    /// 任何合約異動只要破壞其中一種格式的傳遞（新增不支援的屬性型別、[Key] 對調、屬性名不對稱、
-    /// 移除無參數建構子等）即會失敗。
+    /// Verifies that **every** API contract type (subtypes of <see cref="ApiRequest"/> / <see cref="ApiResponse"/>)
+    /// serializes in **both the MessagePack and JSON** wire formats and round-trips faithfully. The assembly is
+    /// enumerated by reflection, so current and future contracts are covered automatically. Any contract change that
+    /// breaks either format (a new unsupported property type, swapped [Key]s, asymmetric property names, a removed
+    /// parameterless constructor and so on) fails here.
     /// </summary>
     /// <remarks>
-    /// 做法對齊 sibling repo 的 SoarCloud.Api.Core.Tests/Transformers/ApiContractSerializationTests。
-    /// 兩個 serializer 策略對齊 polhem wire 真實路徑:MessagePack 走 <see cref="MessagePackCodec"/>
-    /// （含 SafeMessagePackSerializerOptions + 自訂 formatter + resolver 鏈）、JSON 走
-    /// <see cref="JsonCodec"/>（含 DataSet/DataTable converter、camelCase、enum-as-string、
-    /// IObjectSerialize 生命週期 hook）。
+    /// The approach follows SoarCloud.Api.Core.Tests/Transformers/ApiContractSerializationTests in the sibling repo.
+    /// The two serializer strategies follow polhem's real wire paths: MessagePack goes through
+    /// <see cref="MessagePackCodec"/> (SafeMessagePackSerializerOptions, custom formatters and the resolver chain), and
+    /// JSON goes through <see cref="JsonCodec"/> (DataSet/DataTable converters, camelCase, enum-as-string and the
+    /// IObjectSerialize lifecycle hooks).
     /// </remarks>
     public class ApiContractSerializationTests
     {
@@ -28,14 +29,14 @@ namespace Polhem.Api.Core.UnitTests.Contracts
         private static readonly DateTime s_sampleUtc = new(2026, 7, 22, 10, 0, 0, DateTimeKind.Utc);
         private static readonly DateTimeOffset s_sampleOffset = new(2026, 7, 22, 10, 0, 0, TimeSpan.Zero);
 
-        // JsonCodec 只有泛型 Deserialize<T>(string, bool),反射掃型別時以 MakeGenericMethod 呼叫。
+        // `JsonCodec` only has the generic `Deserialize<T>(string, bool)`, so the reflection scan calls it through `MakeGenericMethod`.
         private static readonly MethodInfo s_jsonDeserializeGeneric = typeof(JsonCodec)
             .GetMethods(BindingFlags.Public | BindingFlags.Static)
             .Single(m => m.Name == nameof(JsonCodec.Deserialize)
                 && m.IsGenericMethodDefinition
                 && m.GetParameters() is [{ ParameterType.FullName: "System.String" }, ..]);
 
-        // 兩種 wire 序列化策略:合約異動須在兩者皆能保真傳遞。統一以 byte[] 為比對單位。
+        // The two wire serialization strategies. A contract change must round-trip faithfully in both, compared as byte arrays.
         private static readonly IReadOnlyDictionary<string, SerializerStrategy> s_strategies =
             new Dictionary<string, SerializerStrategy>(StringComparer.Ordinal)
             {
@@ -70,7 +71,7 @@ namespace Polhem.Api.Core.UnitTests.Contracts
 
         [Theory]
         [MemberData(nameof(Cases))]
-        [DisplayName("API 合約型別經 MessagePack/JSON 序列化應保真往返")]
+        [DisplayName("API contract types round-trip faithfully through MessagePack and JSON")]
         public void Contract_SerializesAndRoundTrips(string serializerName, Type type)
         {
             var strategy = s_strategies[serializerName];
@@ -83,19 +84,19 @@ namespace Polhem.Api.Core.UnitTests.Contracts
             Assert.NotNull(restored);
             Assert.IsType(type, restored);
 
-            // 保真:決定性序列化下,還原後再序列化應得相同 bytes（值無遺失）。
+            // Fidelity: serialization is deterministic, so serializing the restored object again yields the same bytes when no value was lost.
             Assert.Equal(bytes, strategy.Serialize(restored!, type));
         }
 
         /// <summary>
-        /// 以樣本非預設值填滿可寫（public setter）scalar 屬性,讓保真檢查有意義;
-        /// 巢狀 class 遞歸一層填 scalar,集合／字典／DataSet 維持預設。
+        /// Fills writable (public setter) scalar properties with non-default sample values so the fidelity check means
+        /// something. Nested classes are populated recursively with scalars; collections, dictionaries and DataSets keep their defaults.
         /// </summary>
         private static void Populate(object instance, int depth)
         {
             foreach (var property in instance.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                // 只填 public getter + public setter;排除 SerializeState（private setter）等。
+                // Only properties with a public getter and a public setter, which excludes `SerializeState` (private setter) and similar.
                 if (property.GetMethod is not { IsPublic: true } || property.SetMethod is not { IsPublic: true })
                 {
                     continue;
@@ -127,20 +128,21 @@ namespace Polhem.Api.Core.UnitTests.Contracts
 
             if (target.IsEnum)
             {
-                // 取第一個非零成員（若有）,否則預設,讓保真檢查對 enum 有意義。
+                // Take the second declared member when there is one, otherwise the only one, so the fidelity check means something for enums.
                 var values = Enum.GetValues(target);
                 return values.Length > 1 ? values.GetValue(1) : values.GetValue(0);
             }
 
-            // DataSet / DataTable:盲目遞歸 Populate 會亂設 EnforceConstraints 等,脆弱且不可靠。
-            // 其深度 round-trip 已由既有 Form/*MessagePackTests、AuditLog/* 與 *JsonRpcRoundTripTests
-            // 以真實資料覆蓋,此處留 null,breadth 測試仍覆蓋該合約其餘 scalar 欄位。
+            // DataSet and DataTable: populating them blindly would set properties such as `EnforceConstraints` at
+            // random, which is fragile and unreliable. Their deep round-trip is covered with real data by the existing
+            // Form/*MessagePackTests, AuditLog/* and *JsonRpcRoundTripTests. They stay null here, and this breadth test
+            // still covers the contract's other scalar properties.
             if (target == typeof(DataSet) || target == typeof(DataTable)) { return null; }
 
-            // 集合／字典:維持預設（空）,避免泛型填值複雜度;空集合仍能保真往返。
+            // Collections and dictionaries keep their default (empty) to avoid the complexity of generic filling. Empty collections still round-trip.
             if (target != typeof(string) && typeof(IEnumerable).IsAssignableFrom(target)) { return null; }
 
-            // 巢狀複雜型別:遞歸一層填 scalar,驗證物件圖也能序列化。
+            // Nested complex types are populated recursively with scalars, which checks that object graphs serialize too.
             if (target is { IsClass: true } && target != typeof(object)
                 && depth < 2 && target.GetConstructor(Type.EmptyTypes) is not null)
             {

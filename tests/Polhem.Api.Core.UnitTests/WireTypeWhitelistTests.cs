@@ -23,7 +23,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData("Polhem.Definition.Collections.ParameterCollection, Polhem.Definition")]
         [InlineData("Polhem.Api.Core.Messages.System.LoginRequest, Polhem.Api.Core")]
         [InlineData("Polhem.Base.Something, Polhem.Base, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null")]
-        [DisplayName("IsAssemblyQualifiedNameAllowed 應接受白名單內的名稱")]
+        [DisplayName("IsAssemblyQualifiedNameAllowed accepts names on the whitelist")]
         public void IsAssemblyQualifiedNameAllowed_AllowedName_ReturnsTrue(string name)
         {
             Assert.True(WireTypeWhitelist.IsAssemblyQualifiedNameAllowed(name));
@@ -32,7 +32,7 @@ namespace Polhem.Api.Core.UnitTests
         [Theory]
         [InlineData("Evil.Namespace.Exploit, Evil.Assembly")]
         [InlineData("System.Diagnostics.Process, System.Diagnostics.Process")]
-        [DisplayName("IsAssemblyQualifiedNameAllowed 應拒絕白名單外的名稱")]
+        [DisplayName("IsAssemblyQualifiedNameAllowed rejects names not on the whitelist")]
         public void IsAssemblyQualifiedNameAllowed_DisallowedName_ReturnsFalse(string name)
         {
             Assert.False(WireTypeWhitelist.IsAssemblyQualifiedNameAllowed(name));
@@ -49,7 +49,7 @@ namespace Polhem.Api.Core.UnitTests
         // Array forms.
         [InlineData("Evil.Namespace.Exploit[], Evil.Assembly")]
         [InlineData("Polhem.Base.Holder`1[[Evil.Namespace.Exploit[], Evil.Assembly]], Polhem.Base")]
-        [DisplayName("IsAssemblyQualifiedNameAllowed 應拒絕夾帶在泛型參數或陣列元素中的型別")]
+        [DisplayName("IsAssemblyQualifiedNameAllowed rejects types smuggled in as generic arguments or array elements")]
         public void IsAssemblyQualifiedNameAllowed_SmuggledArgument_ReturnsFalse(string name)
         {
             Assert.False(WireTypeWhitelist.IsAssemblyQualifiedNameAllowed(name));
@@ -69,14 +69,14 @@ namespace Polhem.Api.Core.UnitTests
         // Pointer and by-ref forms never appear on this wire.
         [InlineData("Polhem.Base.Ok*, Polhem.Base")]
         [InlineData("Polhem.Base.Ok&, Polhem.Base")]
-        [DisplayName("IsAssemblyQualifiedNameAllowed 對空值與畸形名稱應 fail-closed")]
+        [DisplayName("IsAssemblyQualifiedNameAllowed fails closed for empty and malformed names")]
         public void IsAssemblyQualifiedNameAllowed_MalformedName_ReturnsFalse(string? name)
         {
             Assert.False(WireTypeWhitelist.IsAssemblyQualifiedNameAllowed(name));
         }
 
         [Fact]
-        [DisplayName("IsAssemblyQualifiedNameAllowed 應拒絕過長的名稱")]
+        [DisplayName("IsAssemblyQualifiedNameAllowed rejects overlong names")]
         public void IsAssemblyQualifiedNameAllowed_OverlongName_ReturnsFalse()
         {
             var name = "Polhem.Base." + new string('a', 2000);
@@ -85,7 +85,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsAssemblyQualifiedNameAllowed 應拒絕巢狀過深的名稱")]
+        [DisplayName("IsAssemblyQualifiedNameAllowed rejects names nested too deeply")]
         public void IsAssemblyQualifiedNameAllowed_ExcessiveNesting_ReturnsFalse()
         {
             // Ten levels of nesting, every named type allowed. Depth alone must reject it, so a
@@ -100,7 +100,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsRuntimeTypeAllowed 應拒絕帶有不允許泛型參數的具現型別")]
+        [DisplayName("IsRuntimeTypeAllowed rejects a constructed generic type with a disallowed generic argument")]
         public void IsRuntimeTypeAllowed_ConstructedGenericWithDisallowedArgument_ReturnsFalse()
         {
             // `Polhem.Base.Collections.Dictionary<T>` is an allowed outer type; the argument is not.
@@ -111,7 +111,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsRuntimeTypeAllowed 應接受泛型參數也在白名單內的具現型別")]
+        [DisplayName("IsRuntimeTypeAllowed accepts a constructed generic type whose generic argument is also on the whitelist")]
         public void IsRuntimeTypeAllowed_ConstructedGenericWithAllowedArgument_ReturnsTrue()
         {
             var type = typeof(Polhem.Base.Collections.Dictionary<>).MakeGenericType(typeof(string));
@@ -124,7 +124,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData(typeof(object[]))]
         [InlineData(typeof(string))]
         [InlineData(typeof(global::System.Data.DataTable))]
-        [DisplayName("IsRuntimeTypeAllowed 應接受白名單內的型別")]
+        [DisplayName("IsRuntimeTypeAllowed accepts types on the whitelist")]
         public void IsRuntimeTypeAllowed_AllowedType_ReturnsTrue(Type type)
         {
             Assert.True(WireTypeWhitelist.IsRuntimeTypeAllowed(type));
@@ -133,7 +133,7 @@ namespace Polhem.Api.Core.UnitTests
         [Theory]
         [InlineData(typeof(global::System.Text.StringBuilder))]
         [InlineData(typeof(global::System.Text.StringBuilder[]))]
-        [DisplayName("IsRuntimeTypeAllowed 應拒絕白名單外的型別與其陣列")]
+        [DisplayName("IsRuntimeTypeAllowed rejects types not on the whitelist and their arrays")]
         public void IsRuntimeTypeAllowed_DisallowedType_ReturnsFalse(Type type)
         {
             Assert.False(WireTypeWhitelist.IsRuntimeTypeAllowed(type));

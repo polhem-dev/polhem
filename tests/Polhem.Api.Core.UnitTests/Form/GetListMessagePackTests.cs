@@ -9,14 +9,14 @@ using Polhem.Definition.Sorting;
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// GetListRequest / GetListResponse 經 <see cref="MessagePackCodec"/> 的 wire 層
-    /// round-trip 序列化驗證，重點：FilterNode union（FilterGroup + FilterCondition）
-    /// 與 DataTable formatter 在框架的 composite resolver 下能正確還原。
+    /// Wire-level round-trip serialization tests of GetListRequest / GetListResponse through
+    /// <see cref="MessagePackCodec"/>. The focus: the FilterNode union (FilterGroup + FilterCondition) and the
+    /// DataTable formatter restore correctly under the framework's composite resolver.
     /// </summary>
     public class GetListMessagePackTests
     {
         [Fact]
-        [DisplayName("GetListRequest 帶 FilterGroup + FilterCondition 應 round-trip 還原")]
+        [DisplayName("GetListRequest with FilterGroup + FilterCondition round-trips intact")]
         public void GetListRequest_RoundTrip_PreservesFilterUnion()
         {
             var rowId = Guid.NewGuid();
@@ -38,23 +38,22 @@ namespace Polhem.Api.Core.UnitTests.Form
             Assert.Equal(request.SelectFields, restored!.SelectFields);
             Assert.NotNull(restored.Filter);
 
-            // FilterGroup 還原為 FilterGroup（外層 All）
+            // The outer All group.
             var outerGroup = Assert.IsType<FilterGroup>(restored.Filter);
             Assert.Equal(LogicalOperator.And, outerGroup.Operator);
             Assert.Equal(2, outerGroup.Nodes.Count);
 
-            // 第一個 child：FilterCondition (sys_rowid)
+            // First child: the `sys_rowid` condition.
             var firstCondition = Assert.IsType<FilterCondition>(outerGroup.Nodes[0]);
             Assert.Equal("sys_rowid", firstCondition.FieldName);
             Assert.Equal(rowId, firstCondition.Value);
 
-            // 第二個 child：FilterGroup (內層 Any)
+            // Second child: the inner Any group.
             var innerGroup = Assert.IsType<FilterGroup>(outerGroup.Nodes[1]);
             Assert.Equal(LogicalOperator.Or, innerGroup.Operator);
             Assert.Equal(2, innerGroup.Nodes.Count);
             Assert.All(innerGroup.Nodes, n => Assert.IsType<FilterCondition>(n));
 
-            // SortFields 還原
             Assert.NotNull(restored.SortFields);
             Assert.Single(restored.SortFields!);
             Assert.Equal("ref_dept_name", restored.SortFields![0].FieldName);
@@ -62,7 +61,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("GetListRequest 四欄都為預設值應 round-trip 為相等內容")]
+        [DisplayName("GetListRequest with every field at its default value round-trips to equal content")]
         public void GetListRequest_DefaultValues_RoundTrip()
         {
             var request = new GetListRequest();
@@ -78,7 +77,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("GetListRequest 帶 PagingOptions 應 round-trip 還原 Page / PageSize / IncludeTotalCount")]
+        [DisplayName("GetListRequest with PagingOptions round-trips Page / PageSize / IncludeTotalCount")]
         public void GetListRequest_RoundTrip_PreservesPagingOptions()
         {
             var request = new GetListRequest
@@ -98,7 +97,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("GetListResponse.Table 帶 DataTable 應 round-trip 還原欄位與列")]
+        [DisplayName("GetListResponse.Table with a DataTable round-trips its columns and rows")]
         public void GetListResponse_RoundTrip_PreservesDataTable()
         {
             var table = new DataTable("Employee");
@@ -123,7 +122,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("GetListResponse.Table = null 應 round-trip 為 null")]
+        [DisplayName("GetListResponse.Table = null round-trips as null")]
         public void GetListResponse_NullTable_RoundTrip()
         {
             var response = new GetListResponse { Table = null };
@@ -137,7 +136,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("GetListResponse 帶 PagingInfo 應 round-trip 還原 Page / PageSize / TotalCount / HasMore")]
+        [DisplayName("GetListResponse with PagingInfo round-trips Page / PageSize / TotalCount / HasMore")]
         public void GetListResponse_RoundTrip_PreservesPagingInfo()
         {
             var response = new GetListResponse

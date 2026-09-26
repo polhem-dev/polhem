@@ -3,16 +3,17 @@ using System.ComponentModel;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 把產生的 TypeScript 合約釘住：訊息型別一改，這裡就紅。
+    /// Pins the generated TypeScript contract: change a message type and this goes red.
     /// </summary>
     /// <remarks>
-    /// 與 <c>WireFixtureTests</c> 同一個模式，守的是另一半——樣本釘住「值長什麼樣」，
-    /// 這裡釘住「型別有哪些欄位」。兩者都不是為了阻止修改，而是不讓修改在無人察覺下發生：
-    /// 欄位改名對舊的跨語言 client 是破壞性變更，而編譯器看不到那一端。
+    /// The same pattern as <c>WireFixtureTests</c>, guarding the other half: the fixtures pin what the values look
+    /// like, and this pins which fields the types have. Neither exists to prevent changes; both keep changes from
+    /// happening unnoticed. Renaming a field is a breaking change for older cross-language clients, and the compiler
+    /// cannot see that side.
     /// <para>
-    /// 要重新產生（**只有在刻意變更合約時**）：
+    /// To regenerate (**only when deliberately changing the contract**):
     /// <c>POLHEM_REGENERATE_WIRE_CONTRACTS=1 dotnet test tests/Polhem.Api.Core.UnitTests/…</c>
-    /// 然後把 diff 讀過一遍再 commit。
+    /// then read through the diff before committing.
     /// </para>
     /// </remarks>
     public class WireContractGeneratorTests
@@ -34,7 +35,7 @@ namespace Polhem.Api.Core.UnitTests
             Environment.GetEnvironmentVariable("POLHEM_REGENERATE_WIRE_CONTRACTS") == "1";
 
         [Fact]
-        [DisplayName("產生的 TypeScript 合約應與現行訊息型別一致")]
+        [DisplayName("The generated TypeScript contract matches the current message types")]
         public void GeneratedContract_MatchesMessageTypes()
         {
             var generated = WireContractGenerator.Generate();
@@ -47,17 +48,17 @@ namespace Polhem.Api.Core.UnitTests
                 return;
             }
 
-            Assert.True(File.Exists(path), $"合約檔不存在（{path}）。以 POLHEM_REGENERATE_WIRE_CONTRACTS=1 產生。");
+            Assert.True(File.Exists(path), $"The contract file does not exist ({path}). Generate it with POLHEM_REGENERATE_WIRE_CONTRACTS=1.");
 
             var actual = File.ReadAllText(path);
             Assert.True(string.Equals(actual, generated, StringComparison.Ordinal),
-                "訊息型別與已產生的 TypeScript 合約不符。" + Environment.NewLine +
-                "若這是刻意的合約變更，以 POLHEM_REGENERATE_WIRE_CONTRACTS=1 重新產生並逐筆讀過 diff——" +
-                "欄位改名或移除，對不隨框架一起發版的 client 是破壞性變更。");
+                "The message types do not match the generated TypeScript contract." + Environment.NewLine +
+                "If this is a deliberate contract change, regenerate with POLHEM_REGENERATE_WIRE_CONTRACTS=1 and read every line of the diff. " +
+                "Renaming or removing a field is a breaking change for clients that are not released with the framework.");
         }
 
         [Fact]
-        [DisplayName("產生的型別名對映應與現行訊息型別一致")]
+        [DisplayName("The generated type name map matches the current message types")]
         public void GeneratedTypeNames_MatchMessageTypes()
         {
             var generated = WireContractGenerator.GenerateTypeNames();
@@ -70,16 +71,16 @@ namespace Polhem.Api.Core.UnitTests
                 return;
             }
 
-            Assert.True(File.Exists(path), $"型別名對映不存在（{path}）。以 POLHEM_REGENERATE_WIRE_CONTRACTS=1 產生。");
+            Assert.True(File.Exists(path), $"The type name map does not exist ({path}). Generate it with POLHEM_REGENERATE_WIRE_CONTRACTS=1.");
 
             Assert.True(string.Equals(File.ReadAllText(path), generated, StringComparison.Ordinal),
-                "訊息型別與已產生的型別名對映不符。" + Environment.NewLine +
-                "訊息型別搬命名空間或改名，會讓跨語言 client 送出一個伺服端解析不到的型別名——" +
-                "症狀是執行期被拒，不是編譯錯誤。");
+                "The message types do not match the generated type name map." + Environment.NewLine +
+                "Moving a message type to another namespace or renaming it makes cross-language clients send a type name the server cannot resolve. " +
+                "The symptom is a rejection at run time, not a compile error.");
         }
 
         [Fact]
-        [DisplayName("型別名必須是 assembly-qualified，否則伺服端解析不到")]
+        [DisplayName("Generated type names are assembly-qualified, otherwise the server cannot resolve them")]
         public void GeneratedTypeNames_AreAssemblyQualified()
         {
             var generated = WireContractGenerator.GenerateTypeNames();
@@ -93,18 +94,18 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("產生的內容不得萎縮：關鍵訊息型別與 wire 專屬形狀都必須在")]
+        [DisplayName("The generated contract is not vacuous: key message types and wire-specific shapes are present")]
         public void GeneratedContract_IsNotVacuous()
         {
             var generated = WireContractGenerator.Generate();
 
-            // 具名 canary 而非數量下限：命名空間搬家會讓產出變空，而數字比對照樣會過。
+            // Named canaries rather than a minimum count: a namespace move can empty the output while a count check still passes.
             string[] required =
             [
                 "export interface LoginRequest {",
                 "export interface GetListRequest {",
                 "export interface PingResponse {",
-                // wire 專屬形狀：反射看不出這幾個，它們由自訂 converter 決定。
+                // Wire-specific shapes: reflection cannot see these, because custom converters decide them.
                 "export type WireValueEnvelope =",
                 "export interface DataSet {",
                 "export interface DataTable {",
@@ -114,14 +115,14 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("wire 形狀而非 CLR 形狀：Guid 與 DateTime 應為字串，列舉應為字串字面值聯集")]
+        [DisplayName("The contract describes the wire shape, not the CLR shape: Guid and DateTime are strings and enums are string literal unions")]
         public void GeneratedContract_DescribesWireShapeNotClrShape()
         {
             var generated = WireContractGenerator.Generate();
 
-            // LoginResponse.AccessToken 是 Guid，在 JSON 上是字串。
+            // `LoginResponse.AccessToken` is a Guid, which is a string in JSON.
             Assert.Contains("accessToken: string;", generated, StringComparison.Ordinal);
-            // 列舉以字串上線（JsonStringEnumConverter），不是數字。
+            // Enums go on the wire as strings (`JsonStringEnumConverter`), not numbers.
             Assert.Contains("export type DefineType = '", generated, StringComparison.Ordinal);
             Assert.DoesNotContain(": Guid;", generated, StringComparison.Ordinal);
             Assert.DoesNotContain(": DateTime;", generated, StringComparison.Ordinal);

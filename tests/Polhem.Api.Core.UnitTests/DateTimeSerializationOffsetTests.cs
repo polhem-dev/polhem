@@ -10,17 +10,20 @@ using Polhem.Definition.Collections;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// 釘住「序列化不得對時間值做時區偏移」這條不變式，涵蓋 MessagePack / JSON / XML 三種路徑。
+    /// Pins the invariant "serialization must not shift time values by a time zone offset" across the MessagePack,
+    /// JSON and XML paths.
     /// </summary>
     /// <remarks>
-    /// 三個路徑的行為並不對稱，缺一條測試就會有一種格式無人看守：
-    /// MessagePack 與 JSON 恆寫 naive 值、不受 <c>DataColumn.DateTimeMode</c> 影響；
-    /// XML 是唯一會依 <c>DateTimeMode</c> 決定要不要寫出時區偏移的格式，而 .NET 的預設
-    /// <c>UnspecifiedLocal</c> 正是「會寫出偏移」的那個值。偏移一旦進了 XML，跨時區讀回就會位移
-    /// 甚至跨日。設計背景見 docs/adr/adr-032-datetime-timezone.md。
+    /// The paths do not behave symmetrically, so each missing test leaves one format unguarded.
+    /// MessagePack and JSON always write naive values and are unaffected by <c>DataColumn.DateTimeMode</c>.
+    /// XML is the only format that decides by <c>DateTimeMode</c> whether to write an offset, and the .NET default
+    /// <c>UnspecifiedLocal</c> is exactly the value that writes one. Once an offset is in the XML, reading it back in
+    /// another time zone shifts the value, possibly across a date boundary. The design background is in
+    /// docs/adr/adr-032-datetime-timezone.md.
     ///
-    /// 測試在任何時區下都必須成立（開發機多為 Asia/Taipei、CI 為 UTC），因此凡結果與本地時區
-    /// 相關者，一律由 <see cref="TimeZoneInfo.Local"/> 動態推導期望值，不寫死偏移量。
+    /// The tests must hold in any time zone (developer machines are mostly Asia/Taipei, CI is UTC), so every expected
+    /// value that depends on the local time zone is derived from <see cref="TimeZoneInfo.Local"/> instead of a
+    /// hard-coded offset.
     /// </remarks>
     public class DateTimeSerializationOffsetTests
     {
@@ -62,7 +65,7 @@ namespace Polhem.Api.Core.UnitTests
         private static string ExtractXmlValue(string xml)
         {
             var match = Regex.Match(xml, "<d>([^<]+)</d>", RegexOptions.None, TimeSpan.FromSeconds(1));
-            Assert.True(match.Success, "XML 未包含預期的 <d> 欄位值。");
+            Assert.True(match.Success, "The XML does not contain the expected <d> element value.");
             return match.Groups[1].Value;
         }
 
@@ -73,13 +76,13 @@ namespace Polhem.Api.Core.UnitTests
             return (DateTime)dataSet.Tables[0].Rows[0]["d"];
         }
 
-        #region DataColumn 對 Kind 的正規化
+        #region DataColumn normalization of Kind
 
         [Theory]
         [InlineData(DateTimeKind.Unspecified)]
         [InlineData(DateTimeKind.Utc)]
         [InlineData(DateTimeKind.Local)]
-        [DisplayName("DataColumn 於 DateTimeMode=Unspecified 下將任何 Kind 正規化為 Unspecified 且不改數值")]
+        [DisplayName("DataColumn with DateTimeMode=Unspecified normalizes any Kind to Unspecified without changing the value")]
         public void DataColumn_UnspecifiedMode_NormalizesAnyKindWithoutShifting(DateTimeKind kind)
         {
             var table = BuildTable(DataSetDateTime.Unspecified, DateTime.SpecifyKind(s_sample, kind));
@@ -92,7 +95,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddColumn 建立的 DateTime 欄位其 DateTimeMode 必為 Unspecified")]
+        [DisplayName("AddColumn creates DateTime and Date columns with DateTimeMode=Unspecified")]
         public void AddColumn_DateTimeColumns_UseUnspecifiedDateTimeMode()
         {
             var table = new DataTable("orders");
@@ -105,10 +108,10 @@ namespace Polhem.Api.Core.UnitTests
 
         #endregion
 
-        #region 三格式 round-trip 不得偏移
+        #region Round-trips in every format must not shift values
 
         [Fact]
-        [DisplayName("MessagePack 還原的 DataTable 其 DateTime 欄位 DateTimeMode 為 Unspecified")]
+        [DisplayName("A DataTable restored from MessagePack has DateTimeMode=Unspecified on its DateTime column")]
         public void MessagePack_RebuiltTable_UsesUnspecifiedDateTimeMode()
         {
             var table = new DataTable("orders");
@@ -122,7 +125,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("JSON 還原的 DataTable 其 DateTime 欄位 DateTimeMode 為 Unspecified")]
+        [DisplayName("A DataTable restored from JSON has DateTimeMode=Unspecified on its DateTime column")]
         public void Json_RebuiltTable_UsesUnspecifiedDateTimeMode()
         {
             var table = new DataTable("orders");
@@ -136,7 +139,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("NormalizeDateTimeMode 將 ADO.NET 預設的 UnspecifiedLocal 轉為 Unspecified 且不改數值")]
+        [DisplayName("NormalizeDateTimeMode converts the ADO.NET default UnspecifiedLocal to Unspecified without changing the value")]
         public void NormalizeDateTimeMode_ConvertsAdoNetDefaultWithoutShifting()
         {
             // A table shaped the way DbDataAdapter.Fill / DataTable.Load leave it.
@@ -157,7 +160,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData(DateTimeKind.Unspecified)]
         [InlineData(DateTimeKind.Utc)]
         [InlineData(DateTimeKind.Local)]
-        [DisplayName("MessagePack round-trip 不改動 DataTable 儲存格的時間數值")]
+        [DisplayName("MessagePack round-trip does not change the time value of a DataTable cell")]
         public void MessagePack_DataTableRoundTrip_PreservesWallClock(DateTimeKind kind)
         {
             var table = BuildTable(DataSetDateTime.Unspecified, DateTime.SpecifyKind(s_sample, kind));
@@ -174,7 +177,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData(DateTimeKind.Unspecified)]
         [InlineData(DateTimeKind.Utc)]
         [InlineData(DateTimeKind.Local)]
-        [DisplayName("JSON round-trip 不改動 DataTable 儲存格的時間數值")]
+        [DisplayName("JSON round-trip does not change the time value of a DataTable cell")]
         public void Json_DataTableRoundTrip_PreservesWallClock(DateTimeKind kind)
         {
             var table = BuildTable(DataSetDateTime.Unspecified, DateTime.SpecifyKind(s_sample, kind));
@@ -191,7 +194,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData(DateTimeKind.Unspecified)]
         [InlineData(DateTimeKind.Utc)]
         [InlineData(DateTimeKind.Local)]
-        [DisplayName("XML round-trip 於 DateTimeMode=Unspecified 下不改動時間數值")]
+        [DisplayName("XML round-trip with DateTimeMode=Unspecified does not change the time value")]
         public void Xml_DataTableRoundTrip_PreservesWallClock(DateTimeKind kind)
         {
             var xml = WriteXml(BuildTable(DataSetDateTime.Unspecified, DateTime.SpecifyKind(s_sample, kind)));
@@ -208,7 +211,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData(DateTimeKind.Unspecified)]
         [InlineData(DateTimeKind.Utc)]
         [InlineData(DateTimeKind.Local)]
-        [DisplayName("MessagePack 與 JSON 兩條 wire 對同一儲存格得出相同結果")]
+        [DisplayName("MessagePack and JSON wires produce the same result for the same cell")]
         public void MessagePackAndJson_AgreeOnCellValue(DateTimeKind kind)
         {
             var value = DateTime.SpecifyKind(s_sample, kind);
@@ -225,10 +228,10 @@ namespace Polhem.Api.Core.UnitTests
 
         #endregion
 
-        #region XML 寫出端：DateTimeMode 決定是否帶偏移
+        #region XML write side: DateTimeMode decides whether an offset is written
 
         [Fact]
-        [DisplayName("XML 於 DateTimeMode=Unspecified 下寫出的值不得帶時區偏移")]
+        [DisplayName("XML with DateTimeMode=Unspecified writes the value without a time zone offset")]
         public void Xml_UnspecifiedMode_WritesNoOffset()
         {
             var wire = ExtractXmlValue(WriteXml(BuildTable(DataSetDateTime.Unspecified, s_sample)));
@@ -237,7 +240,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("XML 於 .NET 預設的 UnspecifiedLocal 下會寫出時區偏移（此為必須改設 Unspecified 的理由）")]
+        [DisplayName("XML with the .NET default UnspecifiedLocal writes a time zone offset, which is why Unspecified must be set")]
         public void Xml_UnspecifiedLocalMode_WritesOffset()
         {
             var wire = ExtractXmlValue(WriteXml(BuildTable(DataSetDateTime.UnspecifiedLocal, s_sample)));
@@ -250,12 +253,12 @@ namespace Polhem.Api.Core.UnitTests
 
         #endregion
 
-        #region XML 讀入端：wire 上的偏移一律被套用
+        #region XML read side: an offset on the wire is always applied
 
         [Theory]
         [InlineData("Unspecified")]
         [InlineData("UnspecifiedLocal")]
-        [DisplayName("XML 讀入時 wire 上既有的偏移仍會被套用（Unspecified 不代表忽略偏移）")]
+        [DisplayName("XML read still applies an offset present on the wire because Unspecified does not mean ignoring it")]
         public void Xml_Read_AppliesOffsetPresentOnWire(string mode)
         {
             // A payload produced by a +08:00 writer. Both Unspecified and UnspecifiedLocal convert it
@@ -271,7 +274,7 @@ namespace Polhem.Api.Core.UnitTests
         [Theory]
         [InlineData("Unspecified")]
         [InlineData("UnspecifiedLocal")]
-        [DisplayName("XML 讀入 naive 值時不做任何偏移，兩種 Unspecified 模式行為一致")]
+        [DisplayName("XML read does not shift a naive value, and both Unspecified modes behave the same")]
         public void Xml_Read_NaiveValue_IsNotShifted(string mode)
         {
             var value = ReadXmlValue(mode, "2026-01-01T09:00:00");
@@ -282,12 +285,12 @@ namespace Polhem.Api.Core.UnitTests
 
         #endregion
 
-        #region 強型別屬性：Kind 在兩條 wire 上的存活差異
+        #region Strongly typed properties: how Kind survives on the two wires
 
         [Theory]
         [InlineData(DateTimeKind.Unspecified)]
         [InlineData(DateTimeKind.Utc)]
-        [DisplayName("MessagePack typeless 對非 Local 的 DateTime 保留數值並一律標為 Utc")]
+        [DisplayName("MessagePack typeless keeps the value of a non-Local DateTime and always marks it Utc")]
         public void MessagePack_TypelessNonLocalKind_PreservesWallClockAsUtc(DateTimeKind kind)
         {
             var original = new ParameterCollection { { "d", DateTime.SpecifyKind(s_sample, kind) } };
@@ -302,7 +305,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("MessagePack typeless 對 Kind=Local 的 DateTime 會把數值位移為 UTC")]
+        [DisplayName("MessagePack typeless shifts a DateTime with Kind=Local to UTC")]
         public void MessagePack_TypelessLocalKind_ShiftsWallClockToUtc()
         {
             // The msgpack timestamp extension stores an absolute instant, so the formatter converts a
@@ -321,7 +324,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("同一個 Local 值：DataTable 路徑保住牆上時間，DTO typeless 路徑則位移為 UTC")]
+        [DisplayName("For the same Local value the DataTable path keeps the wall-clock time while the typeless DTO path shifts it to UTC")]
         public void MessagePack_DataTableAndTypelessPaths_DisagreeOnLocalKind()
         {
             // Not a bug to fix but an asymmetry to remember: `DataColumn` normalises the kind away
@@ -341,7 +344,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("JSON 對 Kind=Local 的 DateTime 會寫出時區偏移（D6 禁止 Local 進 wire 的依據）")]
+        [DisplayName("JSON writes a time zone offset for a DateTime with Kind=Local, the basis for D6 forbidding Local on the wire")]
         public void Json_LocalKind_WritesOffsetOnWire()
         {
             var json = JsonCodec.Serialize(DateTime.SpecifyKind(s_sample, DateTimeKind.Local));
@@ -353,7 +356,7 @@ namespace Polhem.Api.Core.UnitTests
         [Theory]
         [InlineData(DateTimeKind.Unspecified)]
         [InlineData(DateTimeKind.Utc)]
-        [DisplayName("JSON 對 Unspecified 與 Utc 的 DateTime 皆保留原數值")]
+        [DisplayName("JSON keeps the value of Unspecified and Utc DateTimes")]
         public void Json_NonLocalKinds_PreserveWallClock(DateTimeKind kind)
         {
             var original = DateTime.SpecifyKind(s_sample, kind);

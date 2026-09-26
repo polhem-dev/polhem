@@ -4,12 +4,12 @@ using Polhem.Api.Core.Transformers;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// NoEncryptionEncryptor 測試。僅測試行為；實際安全規範禁止在 production 使用此類別。
+    /// NoEncryptionEncryptor tests. They test behavior only; the security rules forbid using this class in production.
     /// </summary>
     public class NoEncryptionEncryptorTests
     {
         [Fact]
-        [DisplayName("EncryptionMethod 應為 \"none\"")]
+        [DisplayName("EncryptionMethod is \"none\"")]
         public void EncryptionMethod_IsNone()
         {
             var encryptor = new NoEncryptionEncryptor();
@@ -18,7 +18,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Encrypt 應回傳原始 byte 陣列")]
+        [DisplayName("Encrypt returns the original byte array")]
         public void Encrypt_ReturnsSameBytes()
         {
             var encryptor = new NoEncryptionEncryptor();
@@ -31,7 +31,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Decrypt 應回傳原始 byte 陣列")]
+        [DisplayName("Decrypt returns the original byte array")]
         public void Decrypt_ReturnsSameBytes()
         {
             var encryptor = new NoEncryptionEncryptor();

@@ -5,13 +5,13 @@ using Polhem.Base.Security;
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
-    /// AesPayloadEncryptor 安全性測試
+    /// Security tests for AesPayloadEncryptor.
     /// </summary>
     public class AesPayloadEncryptorTests
     {
         private readonly AesPayloadEncryptor _encryptor = new AesPayloadEncryptor();
 
-        [Fact(DisplayName = "Encrypt 使用 null Key 應拋出 CryptographicException")]
+        [Fact(DisplayName = "Encrypt throws CryptographicException for a null key")]
         public void Encrypt_NullKey_ThrowsCryptographicException()
         {
             var data = new byte[] { 1, 2, 3 };
@@ -20,7 +20,7 @@ namespace Polhem.Api.Core.UnitTests
                 _encryptor.Encrypt(data, null!));
         }
 
-        [Fact(DisplayName = "Encrypt 使用空 Key 應拋出 CryptographicException")]
+        [Fact(DisplayName = "Encrypt throws CryptographicException for an empty key")]
         public void Encrypt_EmptyKey_ThrowsCryptographicException()
         {
             var data = new byte[] { 1, 2, 3 };
@@ -29,7 +29,7 @@ namespace Polhem.Api.Core.UnitTests
                 _encryptor.Encrypt(data, Array.Empty<byte>()));
         }
 
-        [Fact(DisplayName = "Decrypt 使用 null Key 應拋出 CryptographicException")]
+        [Fact(DisplayName = "Decrypt throws CryptographicException for a null key")]
         public void Decrypt_NullKey_ThrowsCryptographicException()
         {
             var data = new byte[] { 1, 2, 3 };
@@ -38,7 +38,7 @@ namespace Polhem.Api.Core.UnitTests
                 _encryptor.Decrypt(data, null!));
         }
 
-        [Fact(DisplayName = "Decrypt 使用空 Key 應拋出 CryptographicException")]
+        [Fact(DisplayName = "Decrypt throws CryptographicException for an empty key")]
         public void Decrypt_EmptyKey_ThrowsCryptographicException()
         {
             var data = new byte[] { 1, 2, 3 };
@@ -47,7 +47,7 @@ namespace Polhem.Api.Core.UnitTests
                 _encryptor.Decrypt(data, Array.Empty<byte>()));
         }
 
-        [Fact(DisplayName = "Encrypt/Decrypt 使用有效 Key 應正確加解密")]
+        [Fact(DisplayName = "Encrypt and Decrypt round-trip the data with a valid key")]
         public void Encrypt_Decrypt_ValidKey_RoundTrip()
         {
             var originalData = new byte[] { 10, 20, 30, 40, 50 };

@@ -7,13 +7,13 @@ using Polhem.Definition.Paging;
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// GetLookupRequest / GetLookupResponse 經 <see cref="MessagePackCodec"/> 的 wire 層
-    /// round-trip 序列化驗證。
+    /// Wire-level round-trip serialization tests of GetLookupRequest / GetLookupResponse through
+    /// <see cref="MessagePackCodec"/>.
     /// </summary>
     public class GetLookupMessagePackTests
     {
         [Fact]
-        [DisplayName("GetLookupRequest 帶 SearchText 與 Paging 應 round-trip 還原")]
+        [DisplayName("GetLookupRequest with SearchText and Paging round-trips intact")]
         public void GetLookupRequest_RoundTrip_PreservesValues()
         {
             var request = new GetLookupRequest
@@ -34,7 +34,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("GetLookupRequest 預設值應 round-trip 為相等內容")]
+        [DisplayName("GetLookupRequest with default values round-trips to equal content")]
         public void GetLookupRequest_DefaultValues_RoundTrip()
         {
             var request = new GetLookupRequest();
@@ -48,7 +48,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("GetLookupResponse 帶 DataTable 與 PagingInfo 應 round-trip 還原")]
+        [DisplayName("GetLookupResponse with a DataTable and PagingInfo round-trips intact")]
         public void GetLookupResponse_RoundTrip_PreservesTableAndPaging()
         {
             var table = new DataTable("Customer");
@@ -76,7 +76,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("GetLookupResponse.Table = null 應 round-trip 為 null")]
+        [DisplayName("GetLookupResponse.Table = null round-trips as null")]
         public void GetLookupResponse_NullTable_RoundTrip()
         {
             var response = new GetLookupResponse { Table = null };

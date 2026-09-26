@@ -7,14 +7,14 @@ using Polhem.Definition;
 namespace Polhem.Api.Core.UnitTests.Form
 {
     /// <summary>
-    /// <see cref="GetNewDataRequest"/> / <see cref="GetNewDataResponse"/> 的
-    /// MessagePack round-trip 驗證。重點:DataSet skeleton(空 detail
-    /// table、master 1 row Added 狀態)經 wire 還原後結構與 RowState 一致。
+    /// MessagePack round-trip tests of <see cref="GetNewDataRequest"/> / <see cref="GetNewDataResponse"/>. The focus:
+    /// a DataSet skeleton (an empty detail table, one Added master row) keeps its structure and RowState after the
+    /// wire round-trip.
     /// </summary>
     public class GetNewDataMessagePackTests
     {
         [Fact]
-        [DisplayName("GetNewDataRequest 無 wire 成員，仍應真的走完序列化並產生新實例")]
+        [DisplayName("GetNewDataRequest has no wire members but still goes through serialization and yields a new instance")]
         public void GetNewDataRequest_Empty_RoundTrips()
         {
             var request = new GetNewDataRequest();
@@ -22,16 +22,17 @@ namespace Polhem.Api.Core.UnitTests.Form
             var bytes = MessagePackCodec.Serialize(request);
             var restored = MessagePackCodec.Deserialize<GetNewDataRequest>(bytes);
 
-            // 這個訊息型別確實沒有任何 wire 成員（`SerializeState` 標了 [JsonIgnore]），
-            // 因此沒有值可以比對。能斷言的是「formatter 有註冊、真的跑過」：產出非空位元組，
-            // 且還原的是一個**新**實例而非同一個參考——只寫 Assert.NotNull 連這兩點都證不到。
+            // This message type really has no wire members (`SerializeState` carries `[JsonIgnore]`), so there are no
+            // values to compare. What can be asserted is that the formatter is registered and actually ran: it produces
+            // non-empty bytes, and restores a **new** instance rather than the same reference. `Assert.NotNull` alone
+            // proves neither.
             Assert.NotEmpty(bytes);
             Assert.IsType<GetNewDataRequest>(restored);
             Assert.NotSame(request, restored);
         }
 
         [Fact]
-        [DisplayName("GetNewDataResponse 帶 master Added row + 空 detail table 應完整還原 RowState 與 schema")]
+        [DisplayName("GetNewDataResponse with an Added master row and an empty detail table restores RowState and schema completely")]
         public void GetNewDataResponse_SkeletonDataSet_RoundTripPreservesAddedRowState()
         {
             var dataSet = new DataSet("Employee");
@@ -69,7 +70,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         }
 
         [Fact]
-        [DisplayName("GetNewDataResponse.DataSet = null 應 round-trip 為 null")]
+        [DisplayName("GetNewDataResponse.DataSet = null round-trips as null")]
         public void GetNewDataResponse_NullDataSet_RoundTrip()
         {
             var response = new GetNewDataResponse { DataSet = null };
