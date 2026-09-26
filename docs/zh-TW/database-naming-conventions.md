@@ -1,3 +1,4 @@
+<!-- source: en/database-naming-conventions.md blob: 80bcb7052970b11733e468f3998c1c85bc32bc96 -->
 # 資料庫命名規範  
 
 [English](../en/database-naming-conventions.md) · [← 文件索引](README.md)

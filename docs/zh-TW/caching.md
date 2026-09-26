@@ -1,3 +1,4 @@
+<!-- source: en/caching.md blob: 057e832dd6e8709eb34092a8d571237e8f111b0a -->
 # 快取機制
 
 [English](../en/caching.md) · [← 文件索引](README.md)

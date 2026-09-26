@@ -1,9 +1,8 @@
-<!-- source: zh-TW/README.md blob: abfd4bf617371f00c2e2d6e6bb4dbf98a87e459a -->
 # Polhem Documentation
 
 [繁體中文](../zh-TW/README.md)
 
-The `docs/` folder contains the public-facing developer documentation for the Polhem framework. Every document listed below exists in English and Traditional Chinese under the same file name: `docs/en/` holds the English versions and `docs/zh-TW/` the Traditional Chinese ones. Traditional Chinese is the source; other languages are translations of it.
+The `docs/` folder contains the public-facing developer documentation for the Polhem framework. Every document listed below exists in English and Traditional Chinese under the same file name: `docs/en/` holds the English versions and `docs/zh-TW/` the Traditional Chinese ones. English is the source; other languages are translations of it.
 
 The first line of every translation is an HTML comment recording which version of the source it was translated from (the source file's git blob hash). When the source changes and the translation is not re-checked and its comment updated, [`check-docs-i18n.sh`](../../check-docs-i18n.sh) reports the translation as stale. Whether a stale translation fails CI or is only reported depends on the language; that policy lives in the script's header.
 

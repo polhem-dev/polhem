@@ -93,9 +93,9 @@ that apply even when nobody asked for a release: `rules/releasing.md`.
 
 ## Architecture reference
 
-Before implementing a feature or a module, read `docs/en/README.md` (or `docs/zh-TW/README.md`, currently the
-translation source): the index of the public documents, covering the architecture overview, development guidelines
-and constraints, databases and design concepts. Then open the documents it points to. The background of design
+Before implementing a feature or a module, read `docs/en/README.md` (the source; `docs/zh-TW/README.md` is its
+translation): the index of the public documents, covering the architecture overview, development guidelines and
+constraints, databases and design concepts. Then open the documents it points to. The background of design
 decisions is in `docs/adr/`; the details of each package are in the `README.md` of each `src/` project.
 
 **The pitfall log `docs/repo-ops/gotchas/`** (maintainer documents, not public) records pitfalls that have been hit

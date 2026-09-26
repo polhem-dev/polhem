@@ -1,3 +1,4 @@
+<!-- source: en/terminology.md blob: aed270718a15221fcabb4b0a32c16c7da068f1f8 -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../en/terminology.md) · [← 文件索引](README.md)

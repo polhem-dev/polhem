@@ -1,4 +1,3 @@
-<!-- source: zh-TW/formschema-data-access.md blob: 54cb8ce4c264cb42a7686e399df2cc8c5938f9e2 -->
 # FormSchema-Driven Database Access
 
 [繁體中文](../zh-TW/formschema-data-access.md) · [← Docs Index](README.md)

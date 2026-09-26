@@ -1,3 +1,4 @@
+<!-- source: en/development-constraints.md blob: 2768d3d3ec36aa1211b86b737ced1d80fe218899 -->
 # 開發限制與反模式
 
 [English](../en/development-constraints.md) · [← 文件索引](README.md)

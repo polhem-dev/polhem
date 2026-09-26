@@ -1,3 +1,4 @@
+<!-- source: en/customization.md blob: 5ecca0da13a911b24dceb5932b59e0d15ba5e6d2 -->
 # 租戶客製化
 
 [English](../en/customization.md) · [← 文件索引](README.md)

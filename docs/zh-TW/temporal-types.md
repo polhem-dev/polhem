@@ -1,3 +1,4 @@
+<!-- source: en/temporal-types.md blob: 01b86d2ce5abec57395ae3effa3c76d248d43600 -->
 # 時間型別總覽：`Date`、`DateTime`、`Time`
 
 [English](../en/temporal-types.md) · [← 文件索引](README.md)

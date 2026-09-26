@@ -1,4 +1,3 @@
-<!-- source: zh-TW/api-bo-contract-design.md blob: 544bbb54c35081fafc0959209de6f59cf2075b28 -->
 # API Contract and BO Parameter Design Principles
 
 [繁體中文](../zh-TW/api-bo-contract-design.md) · [← Docs Index](README.md)

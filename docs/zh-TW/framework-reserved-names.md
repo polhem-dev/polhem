@@ -1,3 +1,4 @@
+<!-- source: en/framework-reserved-names.md blob: 18cfc066c98f9dc210d17b1d911c5aee0310c44a -->
 # 框架保留命名
 
 [English](../en/framework-reserved-names.md) · [← 文件索引](README.md)

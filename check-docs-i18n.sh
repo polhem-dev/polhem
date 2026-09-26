@@ -10,14 +10,14 @@
 # Configuration: the list of languages and their policies is written only here. Other documents point to this
 # file and do not copy it.
 # ---------------------------------------------------------------------------------------------
-SOURCE_LANG="zh-TW"
+SOURCE_LANG="en"
 
 # Translation languages and policies, as space-separated "language:policy" pairs. The language switch line lists
 # the source language first, then the others in this order.
 #   strict   every source document needs a translation; a missing, stale or malformed translation fails the script.
 #   partial  only the documents on the required list need a translation; stale translations and missing optional
 #            ones are only reported, without failing.
-TRANSLATIONS="en:strict"
+TRANSLATIONS="zh-TW:strict"
 
 # Required list of a partial language: the variable is named REQUIRED_<language code with - replaced by _>, and
 # its value is a space-separated list of paths relative to docs/<language>/. Example:
@@ -37,7 +37,7 @@ autonym() {
 # ---------------------------------------------------------------------------------------------
 #
 # Translation header: the first line of every translation
-#   <!-- source: zh-TW/caching.md blob: <40 hex digits> -->
+#   <!-- source: en/caching.md blob: <40 hex digits> -->
 # - It records the blob hash of the source document (git hash-object), not a commit hash. Changing a source and
 #   its translation in the same commit is normal, and a commit hash only exists after the commit; a blob hash
 #   depends only on the file content and exists before. So it also does not depend on the depth of the git

@@ -1,4 +1,3 @@
-<!-- source: zh-TW/jsonrpc-frontend-integration.md blob: c792954c6208a2fd6b4b0997c05f0d53563ef96f -->
 # JSON-RPC Frontend Integration Guide
 
 [繁體中文](../zh-TW/jsonrpc-frontend-integration.md) · [← Docs Index](README.md)

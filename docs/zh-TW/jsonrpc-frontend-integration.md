@@ -1,3 +1,4 @@
+<!-- source: en/jsonrpc-frontend-integration.md blob: d3498099fe7ba31542269e694a92505e9cc65a4d -->
 # JSON-RPC 前端整合指引
 
 [English](../en/jsonrpc-frontend-integration.md) · [← 文件索引](README.md)

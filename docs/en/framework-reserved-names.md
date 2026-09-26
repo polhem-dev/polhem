@@ -1,4 +1,3 @@
-<!-- source: zh-TW/framework-reserved-names.md blob: beb81475ae389b3f9865e2732df0a541e8d373de -->
 # Framework-Reserved Names
 
 [繁體中文](../zh-TW/framework-reserved-names.md) · [← Docs Index](README.md)

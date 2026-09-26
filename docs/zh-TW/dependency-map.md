@@ -1,3 +1,4 @@
+<!-- source: en/dependency-map.md blob: cca2e096437a0f0bbef5749f3d96c2ee9468d1e1 -->
 # 專案相依性全景圖
 
 [English](../en/dependency-map.md) · [← 文件索引](README.md)

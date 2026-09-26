@@ -1,3 +1,4 @@
+<!-- source: en/api-bo-contract-design.md blob: c8e223445cdd088ce56ab9d0770594ea218b6fbe -->
 # API 合約與 BO 參數設計原則
 
 [English](../en/api-bo-contract-design.md) · [← 文件索引](README.md)

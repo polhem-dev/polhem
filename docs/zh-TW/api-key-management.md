@@ -1,3 +1,4 @@
+<!-- source: en/api-key-management.md blob: f14c36b2ef707496e634b79e3cda5d0043b0513f -->
 # API 金鑰管理
 
 [English](../en/api-key-management.md) · [← 文件索引](README.md)

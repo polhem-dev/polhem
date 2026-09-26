@@ -1,3 +1,4 @@
+<!-- source: en/api-method-reference.md blob: dc63fe7c831b931afc61fe55167c118219d490ab -->
 # API 方法參考
 
 [English](../en/api-method-reference.md) · [← 文件索引](README.md)

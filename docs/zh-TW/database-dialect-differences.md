@@ -1,3 +1,4 @@
+<!-- source: en/database-dialect-differences.md blob: 78d59c0f561e73e3b971fb0420902074c21c286e -->
 # 資料庫方言差異（DDL）
 
 [English](../en/database-dialect-differences.md) · [← 文件索引](README.md)

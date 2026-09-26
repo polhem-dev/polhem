@@ -1,3 +1,4 @@
+<!-- source: en/analyzer-rules.md blob: 2996b925a3cc1a1053f668dcec5496d24404e514 -->
 # Analyzer 規則
 
 [English](../en/analyzer-rules.md) · [← 文件索引](README.md)

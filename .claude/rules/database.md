@@ -14,7 +14,7 @@
 framework (needed by the record-scope and organization tree features) yet live in the **company database**; the
 permission tables `st_role` / `st_role_grant` / `st_user_role` are the same, and `user_rowid` logically points across
 databases to `st_user.sys_rowid` in common. "st_ in common, ft_ in company" is only a common combination, not a rule.
-The authoritative list is `docs/zh-TW/framework-reserved-names.md`.
+The authoritative list is `docs/en/framework-reserved-names.md`.
 
 `FormSchema.CategoryId` (and `DbCategory.Id`, `DatabaseItem.CategoryId`) **is not a free-form string**:
 `FormRepositoryFactory.ParseCategoryId` accepts only the three values and throws `Unknown schema.CategoryId` for

@@ -1,4 +1,3 @@
-<!-- source: zh-TW/expression-rules.md blob: b093645fbd1c6df122cc9d0a16bc0018aa21b9cb -->
 # Expressions and Rules (Field Computation and Pre-Save / Pre-Delete Validation)
 
 [繁體中文](../zh-TW/expression-rules.md) · [← Docs Index](README.md)

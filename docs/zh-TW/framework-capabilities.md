@@ -1,3 +1,4 @@
+<!-- source: en/framework-capabilities.md blob: b793e60f31b95cff66073afd4a808a0311d76fab -->
 # 框架機制清單
 
 [English](../en/framework-capabilities.md) · [← 文件索引](README.md)

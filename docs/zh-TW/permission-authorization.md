@@ -1,3 +1,4 @@
+<!-- source: en/permission-authorization.md blob: a05d1ed5b9efc86fefdf83f342fbc090120ab0da -->
 # 權限與授權指南
 
 [English](../en/permission-authorization.md) · [← 文件索引](README.md)

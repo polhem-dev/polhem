@@ -72,7 +72,7 @@ by anyone else at all. Naming the directory to describe a convention is fine. Ma
 
 ### 4. Keeping languages in sync
 
-**Under `docs/`**: `docs/zh-TW/` is the source and every other language folder is a translation. The list of languages
+**Under `docs/`**: `docs/en/` is the source and every other language folder is a translation. The list of languages
 and each one's policy (strict / partial) is written only in the header of `check-docs-i18n.sh`; it is not repeated here.
 That script enforces it, and the Docs Check workflow runs it on every push.
 

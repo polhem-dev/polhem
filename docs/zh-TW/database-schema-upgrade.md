@@ -1,3 +1,4 @@
+<!-- source: en/database-schema-upgrade.md blob: 11c15e3453df8a2ae11aeebe1bbe22510e0ca36f -->
 # 資料庫 Schema 升級指引
 
 [English](../en/database-schema-upgrade.md) · [← 文件索引](README.md)

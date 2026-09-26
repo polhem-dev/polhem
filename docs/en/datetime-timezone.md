@@ -1,4 +1,3 @@
-<!-- source: zh-TW/datetime-timezone.md blob: 265315d89fa42f4c88acd34c24a3d35e2e3bfa7a -->
 # Time Zones
 
 [繁體中文](../zh-TW/datetime-timezone.md) · [← Docs Index](README.md)

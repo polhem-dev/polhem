@@ -1,3 +1,4 @@
+<!-- source: en/expression-rules.md blob: dade8ddf64e60030691df7d3e3f7b072b9555e8d -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../en/expression-rules.md) · [← 文件索引](README.md)
