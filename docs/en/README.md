@@ -82,7 +82,6 @@ Look things up while you work.
 | Folder | Description |
 |--------|-------------|
 | [`adr/`](../adr/README.md) | Architecture Decision Records — the primary source for *why* a design is the way it is. The index lists every ADR with its status (accepted / superseded) |
-| [`changelogs/`](../changelogs/) | Per-version change detail behind the root `CHANGELOG.md` |
 
 ---
 
@@ -106,5 +105,4 @@ The same documents, grouped by subject. A document appearing under several topic
 
 Excluded from the listing above; consult them directly when needed.
 
-- **`plans/`** — Design and planning documents for in-progress or completed initiatives. These are point-in-time working documents, **not reference material**: an older plan may no longer describe current behaviour. Nothing outside this folder links into it — treat the documents above as the source of truth.
 - **`repo-ops/`** — Operational documentation for this repository (CI / branch protection); not relevant to framework users.

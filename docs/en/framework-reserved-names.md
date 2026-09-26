@@ -92,7 +92,7 @@ When extending polhem or building applications on top of it:
     - **Programmatic API** (canonical): `Polhem.Definition.Defaults.MaterializeTo("./Define")` writes every embedded framework default XML into the given directory. Skip-existing by default — re-runs are safe and won't clobber your customisations. See `Polhem.Definition.Defaults` in [`src/Polhem.Definition/Defaults.cs`](../../src/Polhem.Definition/Defaults.cs).
     - **CLI** (recommended for CI / setup scripts): install once with `dotnet tool install -g Polhem.Cli` (upgrade later via `dotnet tool update -g Polhem.Cli`), then `dotnet polhem defines materialize --path ./Define` — thin shell over the same API. Run `dotnet polhem defines list` to see every embedded file, `dotnet polhem defines materialize --filter TableSchema/` to materialise a subset.
     - **Browse on GitHub**: every embedded default lives under [`src/Polhem.Definition/Defaults/`](../../src/Polhem.Definition/Defaults/) in this repo — open the file you care about, copy its contents into your `DefinePath`.
-- **Framework updates that change `st_*` tables** are flagged as breaking changes in the [CHANGELOG](../../CHANGELOG.md). Renaming a table requires a manual `RENAME TABLE` — see [Table Schema Upgrade Guide §Renaming framework tables](database-schema-upgrade.md).
+- **Framework updates that change `st_*` tables** are flagged as breaking changes in the CHANGELOG. Renaming a table requires a manual `RENAME TABLE` — see [Table Schema Upgrade Guide §Renaming framework tables](database-schema-upgrade.md).
 
 ---
 

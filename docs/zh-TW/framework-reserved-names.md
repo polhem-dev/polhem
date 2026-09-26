@@ -91,7 +91,7 @@
     - **程式碼層 API**（canonical）：`Polhem.Definition.Defaults.MaterializeTo("./Define")` 把所有 embedded 框架預設 XML 寫入指定目錄。預設 skip-existing，重複跑安全、不會覆蓋你的客製。詳見 [`src/Polhem.Definition/Defaults.cs`](../../src/Polhem.Definition/Defaults.cs)。
     - **CLI**（CI / setup 腳本首選）：一次性安裝 `dotnet tool install -g Polhem.Cli`（之後升版用 `dotnet tool update -g Polhem.Cli`），後續 `dotnet polhem defines materialize --path ./Define`——同一份 API 的 thin shell。`dotnet polhem defines list` 列出所有 embedded 檔、`dotnet polhem defines materialize --filter TableSchema/` 只 materialize 子集。
     - **GitHub 瀏覽**：所有 embedded 預設都活在 repo 的 [`src/Polhem.Definition/Defaults/`](../../src/Polhem.Definition/Defaults/)——打開你要的檔，內容複製到自家 `DefinePath`。
-- **框架升版若異動 `st_*` 表結構**，會在 [CHANGELOG](../../CHANGELOG.zh-TW.md) 中標示為 breaking change。改名類異動需手動執行 `RENAME TABLE`——範例見 [資料表結構升級指南 §框架表改名](database-schema-upgrade.md)。
+- **框架升版若異動 `st_*` 表結構**，會在 CHANGELOG 中標示為 breaking change。改名類異動需手動執行 `RENAME TABLE`——範例見 [資料表結構升級指南 §框架表改名](database-schema-upgrade.md)。
 
 ---
 

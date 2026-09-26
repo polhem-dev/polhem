@@ -1,29 +1,34 @@
 #!/usr/bin/env bash
-# markdown 相對連結檢查：連結指向的檔案或資料夾必須存在。
+# Relative markdown links: the file or folder a link points to must exist.
 #
-# 為什麼要有：編譯器不看文件、測試不跑它，文件搬移或改名後連結集體失效，沒有任何機制會發現。
+# Why: the compiler does not read documents and no test runs them. When a document is moved or
+# renamed, the links to it break together, and nothing else notices.
 #
-# 範圍：git 追蹤中、以及未追蹤但未被忽略的 .md。gitignored 的 docs/internal、
-# bin、obj 因此自然排除。另外排除 docs/plans/archive/：封存 plan 是凍結的歷史紀錄，
-# 它指向當時存在、後來被移走的檔案是正常的。active 的 docs/plans/*.md 要掃，那些還會有人照著做。
+# Scope: .md files that git tracks, plus untracked files that are not ignored. The ignored
+# local/, bin/ and obj/ are therefore left out.
 #
-# 抓的型式：inline 連結與圖片的 `](target)`。fenced code block 與 inline code 內的不算，
-# 規則文件裡示範「錯誤寫法」的樣本就放在那裡。外部 scheme（http:、mailto: 等）與純錨點略過。
-# fence 的開合依 CommonMark 判定：收尾 fence 不帶 info string，且長度不短於開頭。
-# 只看「行首是 ```」就切換的話，fence 內的 ```bash 會被當成收尾，之後整份檔案的判定全部錯位。
+# What it catches: inline links and images, `](target)`. Links inside fenced code blocks and
+# inline code do not count; rule documents keep their examples of what not to write there.
+# External schemes (http:, mailto: and so on) and bare anchors are skipped.
+# Fences open and close by the CommonMark rules: a closing fence has no info string and is at
+# least as long as the opening one. Toggling on any line that starts with ``` would treat a
+# ```bash inside a fence as its end, and every later decision in the file would be off.
 #
-# 行號後綴（`](path/Foo.cs:120)`）是桌面 app 可點擊的慣例，plan 裡常用：去掉後綴再驗檔案，行號本身不驗。
+# A line suffix (`](path/Foo.cs:120)`) is the desktop app's clickable convention. It is removed
+# before the file is checked; the line number itself is not checked.
 #
-# IMPORTANT: 存在與否以 git 的路徑清單比對，不用 `[[ -e ]]`。macOS 的檔案系統不分大小寫，
-# `-e` 會放過大小寫寫錯的連結，而那種連結在 GitHub 與 Linux CI 上是 404。
-# 副作用是連向 gitignored 檔案的連結也會被報出來，這是對的：外部讀者開不到那些檔案。
+# IMPORTANT: existence is checked against git's list of paths, not with `[[ -e ]]`. The macOS
+# file system is case-insensitive, so `-e` accepts a link with the wrong case, which is a 404 on
+# GitHub and on Linux CI. A side effect is that links to ignored files are reported too, which
+# is correct: readers cannot open those files.
 #
-# 已知限制：
-# - 不驗錨點。中文與標點的 heading slug 規則各 renderer 不同，驗了誤報會很多。
-# - 不抓 HTML 的 <a href> / <img src>，也不抓 reference-style 定義（[id]: path）。
-# - 反引號裸路徑（`docs/x.md`）不是連結，這支抓不到。
+# Known limits:
+# - Anchors are not checked. Heading slug rules for CJK text and punctuation differ between
+#   renderers, and checking them would produce many false positives.
+# - HTML <a href> / <img src> and reference-style definitions ([id]: path) are not caught.
+# - A path in backticks (`docs/x.md`) is not a link, so it is not checked here.
 #
-# 預期輸出：無輸出、exit 0。有死連結時逐筆列出「檔案:行號: 連結目標」並 exit 1。
+# Expected output: nothing, exit 0. Each broken link is listed as "file:line: target" with exit 1.
 set -uo pipefail
 cd "$(dirname "$0")"
 
@@ -32,7 +37,7 @@ trap 'rm -f "$known_paths"' EXIT
 
 git ls-files --cached --others --exclude-standard > "$known_paths"
 
-git ls-files -z --cached --others --exclude-standard -- '*.md' ':!docs/plans/archive/' \
+git ls-files -z --cached --others --exclude-standard -- '*.md' \
   | LC_ALL=C xargs -0 awk -v known="$known_paths" '
     function normalize(p,    n, parts, out, i, m, r) {
       n = split(p, parts, "/")

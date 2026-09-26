@@ -1,89 +1,74 @@
 #!/usr/bin/env bash
-# 公開文件不得引用 docs/plans/ —— 落地檢查（規範見 .claude/rules/public-docs.md）
+# Pointer checks for committed files. The rules are in .claude/rules/public-docs.md.
 #
-# (1)~(5) 涵蓋三種引用型式（路徑 / 點名檔名 / 純文字）× 兩種範圍（markdown / 原始碼與建置檔），
-# (6) 防「指向外部讀者開不了的檔案」，(7) 防「指向已不存在的 plan」。
-# 每一道都是補出來的，對應過一批長期漏網；**不要自行縮減範圍或副檔名**。
+# Plans and other personal working documents live in local/, which git ignores. Nobody else
+# can open them: not a contributor's clone, not CI, not a reader on GitHub. So:
+#   (1) no committed file may name a plan file,
+#   (2) no committed file may point to a specific file under local/,
+#   (3) public documents may not point into .claude/ (agent guidance, not product documentation),
+#   (4) public documents should not refer readers to "the plan" in prose.
+# (1)-(3) are expected to print nothing and make the script exit 1 when they do.
+# (4) has known false positives and is advisory; read each hit.
 #
-# 預期輸出：(1) 只剩 docs/en/README.md / docs/zh-TW/README.md 對 plans/ 資料夾的性質說明；
-#           (2)(4)(5)(6) 完全無輸出；(3)(7) 有已知誤報，須逐筆判讀（見規範文件的誤報表）。
+# Each check was added after a batch of references had slipped through for a long time.
+# Do not narrow the scope or the file types.
 set -uo pipefail
 cd "$(dirname "$0")"
 
-MD_ROOTS=(docs/ README.md README.zh-TW.md CHANGELOG.md CHANGELOG.zh-TW.md src/ samples/ apps/ tools/)
-SRC_ROOTS=(src/ samples/ apps/ tools/)
-SRC_EXT=(--include="*.cs" --include="*.axaml" --include="*.razor"
-         --include="*.js" --include="*.ts" --include="*.html"
-         --include="*.xml" --include="*.csproj" --include="*.props" --include="*.targets"
-         --include="*.sh" --include="*.yml" --include="*.yaml" --include="*.json")
+MD_ROOTS=(docs/ README.md README.zh-TW.md CHANGELOG.md CHANGELOG.zh-TW.md CONTRIBUTING.md CONTRIBUTING.zh-TW.md src/ samples/ apps/ tools/)
 
-# docs/repo-ops 是維運文件、不是公開文件，引用 plan 合法，故排除
-# 這三個 helper 一律回 0：它們是過濾器，`grep -v` 濾光全部時會回 1，那不是錯誤。
-exclude_md() {
-  grep -v "^docs/plans/" | grep -v "^docs/internal/" | grep -v "^docs/repo-ops/"
-  return 0
-}
+PLAN_FILE_RE='plan-[a-z0-9]+(-[a-z0-9.]+)+\.md'
+LOCAL_FILE_RE='(^|[^A-Za-z0-9_.-])local/[A-Za-z0-9_./-]*[A-Za-z0-9_-]\.[A-Za-z]{1,5}([^A-Za-z0-9]|$)'
 
-exclude_build() {
-  grep -v "/obj/" | grep -v "/bin/"
-  return 0
-}
+failed=0
 
 section() {
-  local number="$1" title="$2"
-  printf '\n=== (%s) %s ===\n' "$number" "$title"
+  printf '\n=== (%s) %s ===\n' "$1" "$2"
   return 0
 }
 
-section 1 "markdown — 路徑 / 連結型引用"
-grep -rn --include="*.md" -e "plans/" -e "](plan-" "${MD_ROOTS[@]}" 2>/dev/null | exclude_md
+# Prints the hits and records a failure when there are any. Called with the hits as an argument,
+# not at the end of a pipeline: a pipeline runs it in a subshell, where setting `failed` is lost.
+report() {
+  if [[ -n "$1" ]]; then
+    printf '%s\n' "$1"
+    failed=1
+  fi
+  return 0
+}
 
-section 2 "markdown — 點名 plan 檔名（預期無輸出）"
-grep -rnE --include="*.md" "plan-[a-z0-9]+(-[a-z0-9]+)+" "${MD_ROOTS[@]}" 2>/dev/null | exclude_md
+# Every tracked file, plus untracked files that are not ignored. local/ is ignored, so it is
+# never scanned itself.
+repo_files() {
+  git ls-files -z --cached --others --exclude-standard
+}
 
-section 3 "markdown — 純文字提及（有已知誤報，逐筆判讀）"
-grep -rnE --include="*.md" "見 plan|本 plan|plan (的|內|各)|(the|migration|integration) plan" \
-  "${MD_ROOTS[@]}" 2>/dev/null | exclude_md
+# docs/repo-ops/ holds maintainer documents, not public ones. It is still scanned by (1) and (2).
+public_md_filter() {
+  grep -v "^docs/repo-ops/"
+  return 0
+}
 
-section 4 "原始碼與建置檔 — 路徑型引用（預期無輸出）"
-grep -rn "docs/plans" "${SRC_ROOTS[@]}" "${SRC_EXT[@]}" 2>/dev/null | exclude_build
+# A full URL to the old repository is a pointer readers can follow: its plans stay readable
+# in the archived jeff377/bee-library. Links to a URL, and bare URLs, are removed before matching.
+section 1 "all files — names a plan file (expected empty)"
+report "$(repo_files | xargs -0 grep -InE "$PLAN_FILE_RE" 2>/dev/null \
+  | sed -E -e 's#\[[^]]*\]\(https?://[^)]*\)##g' -e 's#https?://[^ )>"]*##g' \
+  | grep -E "^[^:]+:[0-9]+:.*$PLAN_FILE_RE")"
 
-section 5 "原始碼與建置檔 — 點名 plan 檔名（預期無輸出）"
-grep -rnE "plan-[a-z0-9]+(-[a-z0-9]+)+" "${SRC_ROOTS[@]}" "${SRC_EXT[@]}" 2>/dev/null | exclude_build
+# Naming the directories (`local/plans/`) to explain the convention is fine; pointing at a file
+# inside them is not.
+section 2 "all files — points to a file under local/ (expected empty)"
+report "$(repo_files | xargs -0 grep -InE "$LOCAL_FILE_RE" 2>/dev/null)"
 
-# `.claude/` 依 rules/public-docs.md 是「給 agent 的工程規範，非產品文件」，與 docs/plans/
-# 同屬公開文件不得指向的對象。這一道與上面五道方向不同：那些防「指向階段性文件」，
-# 這道防「指向外部讀者根本開不了的檔案」——`~/.claude/...`（使用者家目錄）尤其如此。
-#
-# 實例：docs/api-method-reference 曾連向 .claude/rules/security.md 與一支 skill，
-# adr-006 更指向 `~/.claude/rules/code-style.md`。這五處活到 2026-09-04 的盤點才被抓到，
-# 因為前五道只掃 docs/plans/，不涵蓋這個方向。
-section 6 "markdown — 指向 .claude/（預期無輸出）"
-# CLAUDE.md 本身就是 agent 規範、不是公開文件（見 rules/public-docs.md 的分類表），
-# 它指向 .claude/rules/ 完全合法，排除之。
-grep -rn --include="*.md" -e "\.claude/" "${MD_ROOTS[@]}" 2>/dev/null \
-  | grep -v "/CLAUDE\.md:" | exclude_md
+# CLAUDE.md files are agent guidance themselves, so they may point into .claude/.
+section 3 "public markdown — points into .claude/ (expected empty)"
+report "$(grep -rn --include="*.md" -e "\.claude/" "${MD_ROOTS[@]}" 2>/dev/null \
+  | grep -v "/CLAUDE\.md:" | public_md_filter)"
 
-# (1)~(6) 問的都是「**該不該**引用」，母體限定在公開文件。這一道問的是另一件事：
-# 「引用的**對象還在不在**」——它不看引用者是誰，掃全 repo，因此涵蓋 tests/、.claude/、
-# 根目錄建置檔這些前六道刻意排除的地方。
-#
-# 死指標與「違規引用」是兩種不同的病：前者連維運文件、測試註解、agent 設定都會犯，
-# 而封存 plan 一到期被清除，前一輪還合法的引用就集體變成死指標，**沒有任何機制會發現**。
-#
-# 實例：2026-09-06 清除 28 份到期封存 plan 時，全 repo 掃出 8 處指向早已不存在的 plan，
-# 最舊的目標消失於好幾輪之前。其中 samples/Web.Js.Demo/form-renderer.js 那筆，
-# 是出貨給使用者當範例讀的程式碼指著讀者永遠打不開的檔案。
-#
-# docs/plans/archive/ 排除在外：封存 plan 是凍結的歷史紀錄，它提到當時存在、後來被清除的
-# 兄弟 plan 完全合理，不該報。active 的 docs/plans/*.md 則**要**掃——那是還會被人照著做的文件。
-section 7 "全 repo — 指向不存在的 plan（死指標；有已知誤報，逐筆判讀）"
-grep -rnoE "plan-[a-z0-9]+(-[a-z0-9.]+)+\.md" . \
-    --exclude-dir=.git --exclude-dir=obj --exclude-dir=bin --exclude-dir=node_modules \
-    --exclude-dir=archive 2>/dev/null \
-  | while IFS= read -r hit; do
-      name="${hit##*:}"
-      [[ -e "docs/plans/$name" ]] || [[ -e "docs/plans/archive/$name" ]] || echo "$hit"
-    done | sort -u
+section 4 "public markdown — refers to a plan in prose (known false positives; read each hit)"
+grep -rnE --include="*.md" "見 plan|本 plan|plan (的|內|各)|(see|the|migration|integration) plan" \
+  "${MD_ROOTS[@]}" 2>/dev/null | public_md_filter
 
 echo
+exit "$failed"

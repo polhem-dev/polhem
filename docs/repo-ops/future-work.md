@@ -67,7 +67,7 @@ Day 29 的對帳表。**而鐵人賽發文後只有當日可改。**
 `polhem-concepts`（FormSchema 中樞 / DataSet DTO / BO / Repository 雙軌 / common-company scope）、
 序列化、快取。
 
-**啟動時第一步**：寫 `docs/plans/plan-polhem-developer-skills.md`（plugin 結構、各 skill 的消費端改寫、
+**啟動時第一步**：寫一份 plan（plugin 結構、各 skill 的消費端改寫、
 散佈/維護機制、與發版綁定）。消費端最易錯的觀念是 DB scope，見 `.claude/rules/database.md`。
 
 ## 部署期作業的工具程式
@@ -320,7 +320,7 @@ company-scope 資料庫相依快取那一族是現成 pattern，`polhem-add-cach
 
 **啟動時第一步**：先寫一個 throw-away test 實跑上面那條純定義換算鏈（確認靜態推導成立），
 再定資料模型（第三題），然後依 `polhem-add-cache-object` 開匯率快取物件。
-捨入政策本身另有 `docs/plans/plan-rounding-mode.md`。
+捨入政策本身另案規劃。
 
 ## BPM／Workflow：簽核流程與單據狀態轉換
 
@@ -334,7 +334,7 @@ BPM／Workflow（簽核流程、單據狀態轉換）是未來的發展方向。
 兩層授權（動作 gate 加 record scope，見 [ADR-019](../adr/adr-019-permission-authorization-model.md)）。
 
 **落地之前的約束**：公開文件不寫「支援 BPM」，因為那會是沒有機制支撐的能力宣稱。
-公開文件的定位修正已經照這條排除 BPM（[plan-docs-positioning.md](../plans/archive/plan-docs-positioning.md)）。
+公開文件的定位修正已經照這條排除 BPM（[plan-docs-positioning.md](https://github.com/jeff377/bee-library/blob/7d6cc9d9/docs/plans/archive/plan-docs-positioning.md)）。
 **落地之後**，要回頭在公開文件的適用範圍補上 BPM。
 
 **要先答的問題**：
@@ -424,7 +424,7 @@ bee-oauth2 已先走完同一條路：
 - `Polhem.OAuth2` 三個套件的 1.0.0 已於 2026-09-15 發佈。
 - 五個 `Bee.OAuth2.*` 已凍結，`jeff377/bee-oauth2` 已 archive。
 
-完整的移植步驟、決策紀錄與實作紀錄見封存的 [plan-polhem-oauth2.md](../plans/archive/plan-polhem-oauth2.md)。
+完整的移植步驟、決策紀錄與實作紀錄見封存的 [plan-polhem-oauth2.md](https://github.com/jeff377/bee-library/blob/7d6cc9d9/docs/plans/archive/plan-polhem-oauth2.md)。
 bee-library 改名另開時，以它作為撰寫 plan 的參考。這份封存 plan **長期保留**，不隨一個月的封存期限清除。
 
 對照上一節「要一併決定的」：

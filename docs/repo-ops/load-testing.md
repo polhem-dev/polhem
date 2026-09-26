@@ -120,6 +120,6 @@ dotnet run --project tools/Polhem.LoadTests -c Release -- run --mode Remote --en
 
 ## 相關
 
-- `docs/plans/archive/plan-load-testing.md` —— 設計決策與推導過程（已封存的階段性文件，記載當時的打算而非現行行為）
+- [plan-load-testing.md](https://github.com/jeff377/bee-library/blob/7d6cc9d9/docs/plans/archive/plan-load-testing.md)（bee-library）—— 設計決策與推導過程（已封存的階段性文件，記載當時的打算而非現行行為）
 - `tools/Polhem.LoadTests/loadtest.sample.json` —— 設定項的權威來源
 - `.claude/rules/testing.md` —— 單元測試規範（與本檔無關，勿混用）
