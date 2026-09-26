@@ -14,24 +14,27 @@ using Polhem.Repository.Form;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// <see cref="ProgramSettingsRepositoryTypeResolver"/>：<c>ProgramItem.Repository</c> 的四條解析路徑
-    /// （有值 / 無值 / 型別載不到 / 型別非衍生）與租戶客製 overlay 的取代行為。
+    /// <see cref="ProgramSettingsRepositoryTypeResolver"/>: the resolution paths of <c>ProgramItem.Repository</c>
+    /// (set, empty, type cannot be loaded, type not derived) and the replacement behavior of the tenant customization
+    /// overlay.
     /// </summary>
     /// <remarks>
-    /// 這些測試原本以工廠為對象（<c>ProgramItemRepositoryBindingTests</c>），為了建工廠得備妥
-    /// 資料庫存取、連線、路由三個永遠不會被呼叫的 stub。解析抽成獨立型別後直接測它。
-    /// 例外訊息的斷言原封搬過來；型別斷言從「建出的實例是某型別」改成「解析出的型別是某型別」，
-    /// 因為受測對象現在回傳的是 <see cref="Type"/>。工廠依解析結果建出實例、帶上 progId 的那一半
-    /// 見 <see cref="RepositoryFactoryGuardTests"/>。
+    /// These tests used to target the factory (<c>ProgramItemRepositoryBindingTests</c>), which meant preparing
+    /// stubs for database access, connections and routing that were never called, just to build the factory. Once
+    /// resolution was extracted into its own type, the tests target it directly. The exception message assertions
+    /// were carried over unchanged; the type assertions changed from "the built instance is of some type" to "the
+    /// resolved type is some type", because the subject now returns a <see cref="Type"/>. The other half, where the
+    /// factory builds an instance from the resolved type and passes the progId, is in
+    /// <see cref="RepositoryFactoryGuardTests"/>.
     /// </remarks>
     public class ProgramSettingsRepositoryTypeResolverTests
     {
         private const string ProgId = "Employee";
         private const string CustomizeId = "acme";
 
-        #region Stubs 與測試用 repository
+        #region Stubs and test repositories
 
-        /// <summary>綁定成功時應解析出的自訂 repository。</summary>
+        /// <summary>The custom repository resolved when the binding succeeds.</summary>
         public class CustomEmployeeRepository : DataFormRepository
         {
             public CustomEmployeeRepository(IRepositoryContext ctx, Guid accessToken, string progId)
@@ -40,7 +43,7 @@ namespace Polhem.Repository.UnitTests
             }
         }
 
-        /// <summary>租戶客製層應解析出的 repository，用來證明客製項整筆取代基底項。</summary>
+        /// <summary>The repository resolved from the tenant customization layer, proving that a customized item replaces the base item entirely.</summary>
         public class TenantEmployeeRepository : DataFormRepository
         {
             public TenantEmployeeRepository(IRepositoryContext ctx, Guid accessToken, string progId)
@@ -49,7 +52,7 @@ namespace Polhem.Repository.UnitTests
             }
         }
 
-        /// <summary>不衍生自 <see cref="DataFormRepository"/>，用來驗證契約檢查。</summary>
+        /// <summary>Not derived from <see cref="DataFormRepository"/>; used to check the contract validation.</summary>
         public class NotARepository
         {
         }
@@ -80,7 +83,7 @@ namespace Polhem.Repository.UnitTests
             public void SaveLanguage(LanguageResource resource) => throw new NotImplementedException();
         }
 
-        /// <summary>只認得一組 (customizeId → ProgramSettings)。</summary>
+        /// <summary>Knows only one (customizeId → ProgramSettings) pair.</summary>
         private sealed class StubCustomizeReader : ICustomizeDefineReader
         {
             private readonly string _customizeId;
@@ -101,7 +104,7 @@ namespace Polhem.Repository.UnitTests
             public FormLayout? GetCustomizeFormLayout(string customizeId, string layoutId) => null;
         }
 
-        /// <summary>對指定權杖回傳帶 CustomizeId 的 session，其餘回 null。</summary>
+        /// <summary>Returns a session with a CustomizeId for the given token, and null for any other.</summary>
         private sealed class StubSessionInfoService : ISessionInfoService
         {
             private readonly Guid _token;
@@ -141,14 +144,14 @@ namespace Polhem.Repository.UnitTests
         #endregion
 
         [Fact]
-        [DisplayName("建構子傳入 null defineAccess 應拋 ArgumentNullException")]
+        [DisplayName("Constructor throws ArgumentNullException for a null defineAccess")]
         public void Constructor_NullDefineAccess_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new ProgramSettingsRepositoryTypeResolver(null!));
         }
 
         [Fact]
-        [DisplayName("Repository 有值應建出註冊的型別")]
+        [DisplayName("A set Repository resolves to the registered type")]
         public void Resolve_BoundRepository_ReturnsRegisteredType()
         {
             var resolver = CreateResolver(Registry(TypeNameOf<CustomEmployeeRepository>()));
@@ -159,7 +162,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("Repository 留空應沿用框架預設 DataFormRepository")]
+        [DisplayName("An empty Repository falls back to the framework default DataFormRepository")]
         public void Resolve_EmptyRepository_FallsBackToDefault()
         {
             var resolver = CreateResolver(Registry(repositoryTypeName: null));
@@ -170,7 +173,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("註冊表根本沒有這個 progId 時應沿用框架預設，不視為錯誤")]
+        [DisplayName("A progId missing from the registry falls back to the framework default and is not an error")]
         public void Resolve_ProgIdNotRegistered_FallsBackToDefault()
         {
             var resolver = CreateResolver(new ProgramSettings());
@@ -181,7 +184,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("沒有 ProgramSettings.xml 時應沿用框架預設，不視為錯誤")]
+        [DisplayName("Without ProgramSettings.xml it falls back to the framework default and is not an error")]
         public void Resolve_NoRegistryFile_FallsBackToDefault()
         {
             var resolver = CreateResolver(programs: null);
@@ -192,7 +195,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("Repository 型別載不到應直接拋，訊息指名 progId 與型別名")]
+        [DisplayName("A Repository type that cannot be loaded throws with a message naming the progId and the type name")]
         public void Resolve_UnloadableType_ThrowsNamingBoth()
         {
             const string TypeName = "Nowhere.NoSuchRepository, Nowhere.Assembly";
@@ -206,7 +209,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("Repository 型別非 DataFormRepository 衍生應直接拋，訊息指名 progId 與型別名")]
+        [DisplayName("A Repository type not derived from DataFormRepository throws with a message naming the progId and the type name")]
         public void Resolve_NotDerivedFromDataFormRepository_ThrowsNamingBoth()
         {
             string typeName = TypeNameOf<NotARepository>();
@@ -221,7 +224,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("租戶客製層宣告該 progId 時應整筆取代基底層的綁定")]
+        [DisplayName("A tenant customization layer that declares the progId replaces the base binding entirely")]
         public void Resolve_CustomizationDeclaresProgId_ReplacesBaseBinding()
         {
             var token = Guid.NewGuid();
@@ -236,7 +239,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("session 無客製代號時應解析基底層綁定")]
+        [DisplayName("A session without a customization ID resolves the base binding")]
         public void Resolve_SessionWithoutCustomizeId_UsesBaseBinding()
         {
             var token = Guid.NewGuid();
@@ -251,7 +254,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("客製層未宣告該 progId 時應落回基底層綁定")]
+        [DisplayName("A customization layer that does not declare the progId falls back to the base binding")]
         public void Resolve_CustomizationSilentOnProgId_FallsBackToBase()
         {
             var token = Guid.NewGuid();

@@ -7,9 +7,9 @@ using Microsoft.Extensions.Hosting;
 namespace Polhem.Api.AspNetCore.UnitTests
 {
     /// <summary>
-    /// 測試 <see cref="Controllers.ApiServiceController.IsDevelopment"/> 屬性。
-    /// 使用自製 <c>FakeServiceProvider</c> 注入 <see cref="IHostEnvironment"/>，
-    /// 不需要 PolhemTestFixture 或共享的後端 DI 容器。
+    /// Tests the <see cref="Controllers.ApiServiceController.IsDevelopment"/> property.
+    /// A hand-written <c>FakeServiceProvider</c> injects <see cref="IHostEnvironment"/>, so neither
+    /// PolhemTestFixture nor the shared backend DI container is needed.
     /// </summary>
     public class ApiServiceControllerIsDevelopmentTests
     {
@@ -42,7 +42,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsDevelopment 在 Development 環境應回傳 true")]
+        [DisplayName("IsDevelopment returns true in the Development environment")]
         public void IsDevelopment_DevelopmentEnvironment_ReturnsTrue()
         {
             var controller = CreateController(Environments.Development);
@@ -50,7 +50,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsDevelopment 在 Production 環境應回傳 false")]
+        [DisplayName("IsDevelopment returns false in the Production environment")]
         public void IsDevelopment_ProductionEnvironment_ReturnsFalse()
         {
             var controller = CreateController(Environments.Production);

@@ -8,8 +8,8 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// 5 DB round-trip 測試：seed company 'C001' 於 <see cref="SharedDatabaseState"/> 建好，
-    /// 測試覆蓋 enabled / nonexistent / disabled 三種情境。
+    /// Round-trip tests across the database providers. The seed company 'C001' is created by
+    /// <see cref="SharedDatabaseState"/>; the tests cover enabled, nonexistent and disabled.
     /// </summary>
     public class CompanyRepositoryTests : IClassFixture<SharedDbFixture>
     {
@@ -50,23 +50,23 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("GetById 'C001' on SQL Server 應回傳啟用中的 seed company")]
+        [DisplayName("GetById 'C001' returns the enabled seed company on SQL Server")]
         public void GetById_Enabled_SqlServer() => RunGetByIdEnabled(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("GetById 'C001' on PostgreSQL 應回傳啟用中的 seed company")]
+        [DisplayName("GetById 'C001' returns the enabled seed company on PostgreSQL")]
         public void GetById_Enabled_PostgreSql() => RunGetByIdEnabled(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("GetById 'C001' on SQLite 應回傳啟用中的 seed company")]
+        [DisplayName("GetById 'C001' returns the enabled seed company on SQLite")]
         public void GetById_Enabled_Sqlite() => RunGetByIdEnabled(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("GetById 'C001' on MySQL 應回傳啟用中的 seed company")]
+        [DisplayName("GetById 'C001' returns the enabled seed company on MySQL")]
         public void GetById_Enabled_MySql() => RunGetByIdEnabled(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("GetById 'C001' on Oracle 應回傳啟用中的 seed company")]
+        [DisplayName("GetById 'C001' returns the enabled seed company on Oracle")]
         public void GetById_Enabled_Oracle() => RunGetByIdEnabled(DatabaseType.Oracle);
 
         #endregion
@@ -81,23 +81,23 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("GetById 不存在公司 on SQL Server 應回傳 null")]
+        [DisplayName("GetById returns null for a nonexistent company on SQL Server")]
         public void GetById_NotFound_SqlServer() => RunGetByIdNotFound(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("GetById 不存在公司 on PostgreSQL 應回傳 null")]
+        [DisplayName("GetById returns null for a nonexistent company on PostgreSQL")]
         public void GetById_NotFound_PostgreSql() => RunGetByIdNotFound(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("GetById 不存在公司 on SQLite 應回傳 null")]
+        [DisplayName("GetById returns null for a nonexistent company on SQLite")]
         public void GetById_NotFound_Sqlite() => RunGetByIdNotFound(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("GetById 不存在公司 on MySQL 應回傳 null")]
+        [DisplayName("GetById returns null for a nonexistent company on MySQL")]
         public void GetById_NotFound_MySql() => RunGetByIdNotFound(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("GetById 不存在公司 on Oracle 應回傳 null")]
+        [DisplayName("GetById returns null for a nonexistent company on Oracle")]
         public void GetById_NotFound_Oracle() => RunGetByIdNotFound(DatabaseType.Oracle);
 
         #endregion
@@ -106,8 +106,9 @@ namespace Polhem.Repository.UnitTests
 
         private void RunGetByIdDisabled(DatabaseType dbType)
         {
-            // 建一筆 disabled company；查詢應回 null。本 sub-test 透過原生 SQL 寫 seed
-            // 以避免依賴尚未實作的 admin API。company id 用隨機後綴避免 5 DB 殘留汙染。
+            // Create a disabled company; the query must return null. This sub-test seeds with raw SQL to avoid
+            // depending on an admin API that does not exist yet. The company ID has a random suffix so leftovers in
+            // the provider databases do not pollute later runs.
             var dbAccess = _fx.NewDbAccess(TestDbConventions.GetDatabaseId(dbType, DbCategoryIds.Common));
             var companyId = string.Concat("DISABLED_", Guid.NewGuid().ToString("N").AsSpan(0, 8));
             string tbl = dbType.QuoteIdentifier("st_company");
@@ -151,23 +152,23 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("GetById 停用公司 on SQL Server 應回傳 null（query 層過濾）")]
+        [DisplayName("GetById returns null for a disabled company on SQL Server (filtered at the query layer)")]
         public void GetById_Disabled_SqlServer() => RunGetByIdDisabled(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("GetById 停用公司 on PostgreSQL 應回傳 null（query 層過濾）")]
+        [DisplayName("GetById returns null for a disabled company on PostgreSQL (filtered at the query layer)")]
         public void GetById_Disabled_PostgreSql() => RunGetByIdDisabled(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("GetById 停用公司 on SQLite 應回傳 null（query 層過濾）")]
+        [DisplayName("GetById returns null for a disabled company on SQLite (filtered at the query layer)")]
         public void GetById_Disabled_Sqlite() => RunGetByIdDisabled(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("GetById 停用公司 on MySQL 應回傳 null（query 層過濾）")]
+        [DisplayName("GetById returns null for a disabled company on MySQL (filtered at the query layer)")]
         public void GetById_Disabled_MySql() => RunGetByIdDisabled(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("GetById 停用公司 on Oracle 應回傳 null（query 層過濾）")]
+        [DisplayName("GetById returns null for a disabled company on Oracle (filtered at the query layer)")]
         public void GetById_Disabled_Oracle() => RunGetByIdDisabled(DatabaseType.Oracle);
 
         #endregion

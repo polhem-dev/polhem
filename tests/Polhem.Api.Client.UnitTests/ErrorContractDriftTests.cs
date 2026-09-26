@@ -7,27 +7,31 @@ using Polhem.Base.Exceptions;
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// 守衛錯誤契約兩端之間的漂移。
+    /// Guards against drift between the two ends of the error contract.
     /// </summary>
     /// <remarks>
-    /// 伺服端 <c>JsonRpcExecutor.MapException</c> 把例外映成錯誤碼，呼叫端
-    /// <c>ApiConnector.FinalizeResponse</c> 再把錯誤碼映回例外。兩者互為反函數，
-    /// 但**編譯器不會把它們綁在一起**：伺服端多回一個碼而呼叫端沒跟上，那個碼會安靜落到
-    /// 通用分支，例外型別 doc 上承諾的 <c>catch</c> 從此永遠不會進去，編譯得過、測試也未必測得到。
+    /// On the server, <c>JsonRpcExecutor.MapException</c> maps exceptions to error codes; on the caller,
+    /// <c>ApiConnector.FinalizeResponse</c> maps the codes back to exceptions. The two are inverses of each other,
+    /// but **the compiler does not tie them together**: if the server returns a new code and the caller does not
+    /// follow, that code silently falls into the generic branch, the <c>catch</c> promised by the exception type's
+    /// doc is never entered again, and it still compiles and may well pass the tests.
     /// <para>
-    /// 這不是假想的失敗樣態。<see cref="JsonRpcErrorCode.ReplayRejected"/> 就是這樣漂掉的：
-    /// 伺服端四處丟 <see cref="ReplayRejectedException"/>、映成 -32005，呼叫端整整少了一條分支。
-    /// 本測試是「兩端必須一致」這條規則的唯一自動化把關。
+    /// This is not a hypothetical failure. <see cref="JsonRpcErrorCode.ReplayRejected"/> drifted exactly this way:
+    /// the server threw <see cref="ReplayRejectedException"/> in several places and mapped it to -32005, while the
+    /// caller was missing the branch entirely. This test is the automated check for the rule that both ends must
+    /// agree.
     /// </para>
     /// <para>
-    /// 本測試同時要求**每個錯誤碼都被分類**。新增列舉成員而不歸類，這裡就會紅 ——
-    /// 目的是逼出一次決策（這個碼要不要有呼叫端型別），而不是讓它默默存在。
+    /// This test also requires **every error code to be classified**. Adding an enum member without classifying it
+    /// turns this red. The purpose is to force a decision (does this code get a caller-side type) instead of
+    /// letting it exist silently.
     /// </para>
     /// </remarks>
     public class ErrorContractDriftTests
     {
         /// <summary>
-        /// 有專屬例外型別的錯誤碼：伺服端由該型別映出此碼，呼叫端須把此碼重建回該型別。
+        /// Error codes with a dedicated exception type: the server maps that type to the code, and the caller must
+        /// rebuild the code into that type.
         /// </summary>
         private static readonly (JsonRpcErrorCode Code, Type ExceptionType)[] s_reconstructedCodes =
         [
@@ -39,8 +43,8 @@ namespace Polhem.Api.Client.UnitTests
         ];
 
         /// <summary>
-        /// 刻意不重建的錯誤碼：它們產生於執行器之外（傳輸層、剖析層），或訊息本就不該給使用者看，
-        /// 呼叫端一律落到通用分支。
+        /// Error codes deliberately not rebuilt: they arise outside the executor (transport or parsing layer), or
+        /// their message is not meant for users, so the caller always falls into the generic branch.
         /// </summary>
         private static readonly JsonRpcErrorCode[] s_transportOnlyCodes =
         [
@@ -50,13 +54,14 @@ namespace Polhem.Api.Client.UnitTests
         ];
 
         /// <summary>
-        /// 目前全 repo 沒有任何產生者的錯誤碼 —— 已知技術債，尚未決定要補產生者還是移除成員。
+        /// Error codes that nothing in the repository currently produces. Known technical debt: it has not been
+        /// decided whether to add a producer or remove the member.
         /// </summary>
         /// <remarks>
-        /// 尤其 <see cref="JsonRpcErrorCode.Unauthorized"/>：認證失敗實際走
-        /// <c>ApiAuthorizationValidator</c> 回 <see cref="JsonRpcErrorCode.InvalidRequest"/>
-        /// 加 HTTP 401，這個碼從未上過線。列在這裡是為了讓它**被看見**；
-        /// 要讓本測試轉綠而把新碼塞進這個桶，正是本測試要防的事。
+        /// In particular <see cref="JsonRpcErrorCode.Unauthorized"/>: an authentication failure actually goes through
+        /// <c>ApiAuthorizationValidator</c>, which returns <see cref="JsonRpcErrorCode.InvalidRequest"/> with HTTP 401,
+        /// so this code has never been on the wire. It is listed here so that it **is visible**. Putting a new code
+        /// into this bucket to turn the test green is exactly what this test is meant to prevent.
         /// </remarks>
         private static readonly JsonRpcErrorCode[] s_noProducerCodes =
         [
@@ -66,8 +71,8 @@ namespace Polhem.Api.Client.UnitTests
         ];
 
         /// <summary>
-        /// 伺服端白名單上、會與 <see cref="UserMessageException"/> 一起收斂成
-        /// <see cref="JsonRpcErrorCode.UserMessage"/> 的過渡期 BCL 例外。
+        /// The transitional BCL exceptions on the server-side whitelist that collapse, together with
+        /// <see cref="UserMessageException"/>, into <see cref="JsonRpcErrorCode.UserMessage"/>.
         /// </summary>
         private static readonly Type[] s_userMessageWhitelist =
         [
@@ -110,7 +115,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("每個 JsonRpcErrorCode 成員都必須被分類且只分類一次（新增成員不得默默略過）")]
+        [DisplayName("Every JsonRpcErrorCode member is classified exactly once (a new member cannot slip through)")]
         public void ErrorCodeClassification_CoversEveryMemberExactlyOnce()
         {
             var declared = Enum.GetValues<JsonRpcErrorCode>().ToHashSet();
@@ -126,28 +131,29 @@ namespace Polhem.Api.Client.UnitTests
                 .ToList();
 
             Assert.True(unclassified.Count == 0,
-                $"這些錯誤碼沒有被分類，請決定它屬於哪一類：{string.Join(", ", unclassified)}");
+                $"These error codes are not classified; decide which category each belongs to: {string.Join(", ", unclassified)}");
             Assert.True(duplicated.Count == 0,
-                $"這些錯誤碼被分到多個類別：{string.Join(", ", duplicated)}");
+                $"These error codes are classified into more than one category: {string.Join(", ", duplicated)}");
             Assert.Empty(classified.Except(declared));
         }
 
         [Fact]
-        [DisplayName("三個分類桶都不得為空，且釘住各自的代表成員（防止分類檢查變成恆真）")]
+        [DisplayName("The classification buckets are not empty and each pins a representative member (so the classification check cannot become vacuous)")]
         public void ErrorCodeClassification_BucketsAreNotVacuous()
         {
             Assert.NotEmpty(s_reconstructedCodes);
             Assert.NotEmpty(s_transportOnlyCodes);
             Assert.NotEmpty(s_userMessageWhitelist);
 
-            // 三個桶各釘一個代表成員：整桶被清空或搬走時，上面的 NotEmpty 擋不到，這裡擋得到。
+            // Each bucket pins one representative member. If a whole bucket is emptied or moved, the `NotEmpty`
+            // checks above do not catch it, but these do.
             Assert.Contains(s_reconstructedCodes, pair => pair.Code == JsonRpcErrorCode.UserMessage);
             Assert.Contains(JsonRpcErrorCode.InternalError, s_transportOnlyCodes);
             Assert.Contains(typeof(ArgumentException), s_userMessageWhitelist);
         }
 
         [Fact]
-        [DisplayName("登錄表必須把衍生型別排在基底型別之前（否則後者會吃掉前者）")]
+        [DisplayName("The registry lists derived types before their base types (otherwise the base type swallows the derived one)")]
         public void ErrorContract_DeclaresDerivedTypesBeforeTheirBaseTypes()
         {
             var rows = JsonRpcErrorContract.Rows;
@@ -157,22 +163,23 @@ namespace Polhem.Api.Client.UnitTests
             {
                 for (int j = i + 1; j < rows.Count; j++)
                 {
-                    // 比對是 IsInstanceOfType（可指派），所以排在前面的基底型別會攔下後面的衍生型別，
-                    // 讓那一列永遠match不到。這不是風格問題，是那一列直接失效。
+                    // Matching uses `IsInstanceOfType` (assignability), so a base type listed earlier catches a
+                    // derived type listed later, and that row never matches. This is not a style issue; the row is
+                    // simply dead.
                     if (rows[i].ExceptionType != rows[j].ExceptionType
                         && rows[i].ExceptionType.IsAssignableFrom(rows[j].ExceptionType))
                     {
-                        shadowed.Add($"{rows[j].ExceptionType.Name}(第 {j} 列) 被 {rows[i].ExceptionType.Name}(第 {i} 列) 遮蔽");
+                        shadowed.Add($"{rows[j].ExceptionType.Name} (row {j}) is shadowed by {rows[i].ExceptionType.Name} (row {i})");
                     }
                 }
             }
 
             Assert.True(shadowed.Count == 0,
-                $"登錄表順序錯誤，下列各列永遠不會被match到：{string.Join("；", shadowed)}");
+                $"The registry order is wrong; these rows can never match: {string.Join("; ", shadowed)}");
         }
 
         [Fact]
-        [DisplayName("每個可重建的錯誤碼在登錄表中只能有一個重建型別")]
+        [DisplayName("Each rebuildable error code has exactly one rebuild type in the registry")]
         public void ErrorContract_DeclaresExactlyOneRebuildPerCode()
         {
             var duplicated = JsonRpcErrorContract.Rows
@@ -183,15 +190,16 @@ namespace Polhem.Api.Client.UnitTests
                 .ToList();
 
             Assert.True(duplicated.Count == 0,
-                $"這些錯誤碼宣告了多個重建型別，呼叫端會拿到先宣告的那個：{string.Join(", ", duplicated)}");
+                $"These error codes declare more than one rebuild type, and the caller gets the one declared first: {string.Join(", ", duplicated)}");
         }
 
         [Fact]
-        [DisplayName("登錄表可重建的碼必須與本測試宣告的規格完全一致")]
+        [DisplayName("The rebuildable codes in the registry match the specification declared in this test exactly")]
         public void ErrorContract_RebuildableCodes_MatchDeclaredSpecification()
         {
-            // 本測試的 s_reconstructedCodes 是**規格**，刻意獨立於實作手寫一份：
-            // 測試若改讀受測程式自己的清單，就只是拿實作驗證實作，什麼也證明不了。
+            // `s_reconstructedCodes` in this test is **the specification**, deliberately written by hand independently
+            // of the implementation. If the test read the list of the code under test, it would only verify the
+            // implementation against itself and prove nothing.
             var expected = s_reconstructedCodes
                 .Select(pair => (pair.Code, pair.ExceptionType))
                 .OrderBy(pair => (int)pair.Code)
@@ -207,7 +215,7 @@ namespace Polhem.Api.Client.UnitTests
 
         [Theory]
         [MemberData(nameof(ReconstructedCodes))]
-        [DisplayName("伺服端應把宣告的例外型別映成宣告的錯誤碼，且原樣保留訊息")]
+        [DisplayName("The server maps each declared exception type to its declared error code and keeps the message as is")]
         public void MapException_DeclaredExceptionType_ReturnsDeclaredCode(
             JsonRpcErrorCode expectedCode, Type exceptionType)
         {
@@ -222,7 +230,7 @@ namespace Polhem.Api.Client.UnitTests
 
         [Theory]
         [MemberData(nameof(ReconstructedCodes))]
-        [DisplayName("呼叫端應把宣告的錯誤碼重建回宣告的例外型別，且訊息不加前綴")]
+        [DisplayName("The caller rebuilds each declared error code into its declared exception type without prefixing the message")]
         public async Task FinalizeResponse_DeclaredCode_RebuildsDeclaredExceptionType(
             JsonRpcErrorCode code, Type expectedExceptionType)
         {
@@ -238,7 +246,7 @@ namespace Polhem.Api.Client.UnitTests
 
         [Theory]
         [MemberData(nameof(TransportOnlyCodes))]
-        [DisplayName("呼叫端對刻意不重建的錯誤碼應落到通用分支並保留碼與原訊息")]
+        [DisplayName("The caller sends deliberately unrebuilt error codes to the generic branch and keeps the code and the original message")]
         public async Task FinalizeResponse_TransportOnlyCode_FallsBackToGenericBranch(JsonRpcErrorCode code)
         {
             const string message = "transport level failure";
@@ -254,7 +262,7 @@ namespace Polhem.Api.Client.UnitTests
 
         [Theory]
         [MemberData(nameof(UserMessageWhitelist))]
-        [DisplayName("白名單 BCL 例外應與 UserMessageException 一同收斂為 UserMessage code（多對一是刻意的）")]
+        [DisplayName("Whitelisted BCL exceptions collapse into the UserMessage code together with UserMessageException (many-to-one is intended)")]
         public void MapException_WhitelistedBclException_CollapsesToUserMessage(Type exceptionType)
         {
             const string message = "whitelisted bcl message";
@@ -266,11 +274,11 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("多對一不可逆：白名單 BCL 例外經 wire 一律重建為 UserMessageException")]
+        [DisplayName("Many-to-one is irreversible: a whitelisted BCL exception crosses the wire and is rebuilt as UserMessageException")]
         public async Task FinalizeResponse_UserMessageCode_AlwaysRebuildsUserMessageException()
         {
-            // 伺服端丟的是 InvalidOperationException，回到呼叫端只剩一個整數，
-            // 能還原的就是這個整數認得的型別。這是刻意的取捨，不是缺陷。
+            // The server throws `InvalidOperationException`, but only an integer reaches the caller, and all it can
+            // restore is the type that integer identifies. This is a deliberate trade-off, not a defect.
             var (code, message) = JsonRpcExecutor.MapException(new InvalidOperationException("state is wrong"));
 
             var exception = await Record.ExceptionAsync(() =>

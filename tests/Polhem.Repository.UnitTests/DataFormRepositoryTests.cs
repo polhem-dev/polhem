@@ -18,9 +18,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// 針對 <see cref="DataFormRepository"/> 建構子驗證、<see cref="DataFormRepository.GetNewData"/>
-    /// 及私有靜態輔助方法（<c>ConvertDefaultValue</c>、<c>TryCoerceToGuid</c>）的純邏輯測試，
-    /// 不需資料庫連線。
+    /// Pure logic tests for the constructor validation of <see cref="DataFormRepository"/>,
+    /// <see cref="DataFormRepository.GetNewData"/> and the private static helpers (<c>ConvertDefaultValue</c>,
+    /// <c>TryCoerceToGuid</c>). No database connection is needed.
     /// </summary>
     public class DataFormRepositoryTests
     {
@@ -63,7 +63,7 @@ namespace Polhem.Repository.UnitTests
             public int Count => 0;
         }
 
-        // CA1861: 所有 typeof() 陣列抽成 static readonly
+        // CA1861: the `typeof()` arrays are hoisted into static readonly fields.
         private static readonly Type[] s_convertDefaultValueParams = [typeof(string), typeof(Type)];
         private static readonly Type[] s_tryCoerceToGuidParams = [typeof(object)];
 
@@ -92,10 +92,10 @@ namespace Polhem.Repository.UnitTests
 
         #endregion
 
-        #region 建構子驗證
+        #region Constructor validation
 
         [Fact]
-        [DisplayName("DataFormRepository 建構子傳入 null ctx 應拋 ArgumentNullException")]
+        [DisplayName("DataFormRepository constructor throws ArgumentNullException for a null ctx")]
         public void Constructor_NullContext_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -103,7 +103,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("DataFormRepository 建構子傳入 null schema 應拋 ArgumentNullException")]
+        [DisplayName("DataFormRepository constructor throws ArgumentNullException for a null schema")]
         public void Constructor_NullSchema_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -111,7 +111,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("DataFormRepository 建構子傳入 null databaseId 應拋 ArgumentNullException")]
+        [DisplayName("DataFormRepository constructor throws ArgumentNullException for a null databaseId")]
         public void Constructor_NullDatabaseId_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -121,7 +121,7 @@ namespace Polhem.Repository.UnitTests
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("DataFormRepository 建構子傳入空白 databaseId 應拋 ArgumentException")]
+        [DisplayName("DataFormRepository constructor throws ArgumentException for a blank databaseId")]
         public void Constructor_BlankDatabaseId_ThrowsArgumentException(string databaseId)
         {
             Assert.Throws<ArgumentException>(() =>
@@ -129,18 +129,18 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("統一簽章後 null progId 正規化為空字串，不再拋例外")]
+        [DisplayName("With the unified signature a null progId is normalized to an empty string instead of throwing")]
         public void Constructor_NullProgId_NormalizesToEmpty()
         {
-            // 註冊表軸的 repository 一定有 progId；框架軸沒有，統一簽章下傳空字串即可。
-            // 兩者共用同一個建構函式，因此 progId 不再是必填。
+            // A repository on the registry axis always has a progId; one on the framework axis does not, and with
+            // the unified signature it passes an empty string. Both share one constructor, so progId is optional.
             var repo = new DataFormRepository(TestRepositoryContext.Create(new StubConnectionManager(), defineAccess: new StubDefineAccess(), dbAccessFactory: new StubDbAccessFactory()), null!, BuildSchema(), "testdb");
 
             Assert.Equal(string.Empty, repo.ProgId);
         }
 
         [Fact]
-        [DisplayName("DataFormRepository 建構子正確設定 ProgId 屬性")]
+        [DisplayName("DataFormRepository constructor sets the ProgId property")]
         public void Constructor_ValidArgs_SetsProgId()
         {
             var repo = CreateRepository();
@@ -152,7 +152,7 @@ namespace Polhem.Repository.UnitTests
         #region GetNewData
 
         [Fact]
-        [DisplayName("GetNewData Schema 含 MasterTable 應回傳含一列 master 資料的 DataSet")]
+        [DisplayName("GetNewData returns a DataSet with one master row when the schema has a master table")]
         public void GetNewData_SchemaWithMasterTable_ReturnsDataSetWithOneRow()
         {
             var repo = CreateRepository();
@@ -165,7 +165,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetNewData master 列的 sys_rowid 應為非空 Guid")]
+        [DisplayName("GetNewData gives the master row a non-empty sys_rowid Guid")]
         public void GetNewData_MasterRow_HasNonEmptyRowId()
         {
             var repo = CreateRepository();
@@ -178,13 +178,15 @@ namespace Polhem.Repository.UnitTests
         [Theory]
         [InlineData("Pacific/Kiritimati")]
         [InlineData("Pacific/Pago_Pago")]
-        [DisplayName("GetNewData 新列的 DateTime 預設值為 UTC 當下，Date 預設值為使用者時區的今天")]
+        [DisplayName("GetNewData defaults a new row's DateTime to the current UTC time and its Date to today in the user's time zone")]
         public void GetNewData_TimeDefaults_DateTimeIsUtcAndDateIsUserDay(string timeZoneId)
         {
-            // 伺服端的 DataSet 以 UTC 表示（ADR-032 D3），回應經 Connector 時會被當成 UTC 換算。
-            // 骨架表經 AddColumn 建立；欄位若帶建欄當下的時鐘預設值，FormRowDefaults 會被略過。
-            // UTC+14 與 UTC-11：任何時刻至少有一個時區的「今天」與 UTC 不同，Date 斷言不會因為
-            // 剛好同一天而空轉；DateTime 則兩者都與 UTC 相差十小時以上。
+            // The server-side DataSet is in UTC (ADR-032 D3), and the Connector converts the response as UTC.
+            // The skeleton table is built with `AddColumn`. If a column carried a clock default taken when the column
+            // was created, `FormRowDefaults` would be skipped.
+            // UTC+14 and UTC-11: at any moment at least one of the two zones has a "today" different from UTC, so
+            // the Date assertion cannot pass vacuously on a day that happens to match. For DateTime, both zones
+            // differ from UTC by more than ten hours.
             var schema = new FormSchema("Employee", "Employee");
             var master = schema.Tables!.Add("Employee", "Employee");
             master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
@@ -202,7 +204,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetNewData Schema 無 MasterTable 應拋 InvalidOperationException")]
+        [DisplayName("GetNewData throws InvalidOperationException when the schema has no master table")]
         public void GetNewData_SchemaWithoutMasterTable_ThrowsInvalidOperationException()
         {
             var schema = new FormSchema("NoMaster", "NoMaster");
@@ -211,7 +213,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetNewData master 列應由 schema 補非空值（含無欄位預設的 Short 型別）")]
+        [DisplayName("GetNewData seeds non-null values into the master row from the schema (including a Short column without a default)")]
         public void GetNewData_MasterRow_SeedsNonNullDefaults()
         {
             // The master table name must match CreateRepository's progId ("Employee").
@@ -232,27 +234,27 @@ namespace Polhem.Repository.UnitTests
 
         #endregion
 
-        #region ConvertDefaultValue（私有靜態方法）
+        #region ConvertDefaultValue (private static method)
 
         [Theory]
         [InlineData("hello world")]
         [InlineData("")]
-        [DisplayName("ConvertDefaultValue string 型別應直接回傳原始字串")]
+        [DisplayName("ConvertDefaultValue returns the raw string for the string type")]
         public void ConvertDefaultValue_StringType_ReturnsRawString(string rawValue)
         {
             var method = GetPrivateStaticMethod("ConvertDefaultValue", s_convertDefaultValueParams);
-            // rawValue 為變數，避免 CA1861（new object[] { variable, typeof(...) } 不觸發）
+            // `rawValue` is a variable, which avoids CA1861 (an array with a variable element does not trigger it).
             var result = method.Invoke(null, new object[] { rawValue, typeof(string) });
             Assert.Equal(rawValue, result);
         }
 
         [Fact]
-        [DisplayName("ConvertDefaultValue Guid 型別傳入有效 Guid 字串應解析回傳")]
+        [DisplayName("ConvertDefaultValue parses a valid Guid string for the Guid type")]
         public void ConvertDefaultValue_GuidType_ValidString_ReturnsParsedGuid()
         {
             var method = GetPrivateStaticMethod("ConvertDefaultValue", s_convertDefaultValueParams);
             var expected = Guid.NewGuid();
-            // expected.ToString() 為變數，避免 CA1861
+            // `expected.ToString()` is not a constant, which avoids CA1861.
             var result = method.Invoke(null, new object[] { expected.ToString(), typeof(Guid) });
             Assert.Equal(expected, (Guid)result!);
         }
@@ -260,7 +262,7 @@ namespace Polhem.Repository.UnitTests
         [Theory]
         [InlineData("not-a-guid")]
         [InlineData("12345")]
-        [DisplayName("ConvertDefaultValue Guid 型別傳入無效字串應回傳 Guid.Empty")]
+        [DisplayName("ConvertDefaultValue returns Guid.Empty for an invalid string with the Guid type")]
         public void ConvertDefaultValue_GuidType_InvalidString_ReturnsGuidEmpty(string invalidGuid)
         {
             var method = GetPrivateStaticMethod("ConvertDefaultValue", s_convertDefaultValueParams);
@@ -271,7 +273,7 @@ namespace Polhem.Repository.UnitTests
         [Theory]
         [InlineData("42", 42)]
         [InlineData("0", 0)]
-        [DisplayName("ConvertDefaultValue int 型別傳入有效數字字串應轉換回傳")]
+        [DisplayName("ConvertDefaultValue converts a valid numeric string for the int type")]
         public void ConvertDefaultValue_IntType_ValidString_ReturnsInt(string raw, int expected)
         {
             var method = GetPrivateStaticMethod("ConvertDefaultValue", s_convertDefaultValueParams);
@@ -282,7 +284,7 @@ namespace Polhem.Repository.UnitTests
         [Theory]
         [InlineData("not-a-number")]
         [InlineData("abc")]
-        [DisplayName("ConvertDefaultValue int 型別傳入無效字串應回傳 DBNull.Value")]
+        [DisplayName("ConvertDefaultValue returns DBNull.Value for an invalid string with the int type")]
         public void ConvertDefaultValue_IntType_InvalidString_ReturnsDBNull(string invalidInt)
         {
             var method = GetPrivateStaticMethod("ConvertDefaultValue", s_convertDefaultValueParams);
@@ -292,26 +294,26 @@ namespace Polhem.Repository.UnitTests
 
         #endregion
 
-        #region TryCoerceToGuid（私有靜態方法）
+        #region TryCoerceToGuid (private static method)
 
         [Fact]
-        [DisplayName("TryCoerceToGuid 傳入 Guid 應直接回傳相同 Guid")]
+        [DisplayName("TryCoerceToGuid returns the same Guid for a Guid input")]
         public void TryCoerceToGuid_GuidInput_ReturnsSameGuid()
         {
             var method = GetPrivateStaticMethod("TryCoerceToGuid", s_tryCoerceToGuidParams);
             var expected = Guid.NewGuid();
-            // expected 為變數，不觸發 CA1861
+            // `expected` is a variable, so CA1861 does not trigger.
             var result = method.Invoke(null, new object?[] { expected });
             Assert.Equal(expected, (Guid)result!);
         }
 
         [Fact]
-        [DisplayName("TryCoerceToGuid 傳入有效 Guid 字串應解析並回傳 Guid")]
+        [DisplayName("TryCoerceToGuid parses a valid Guid string and returns the Guid")]
         public void TryCoerceToGuid_ValidGuidString_ReturnsParsedGuid()
         {
             var method = GetPrivateStaticMethod("TryCoerceToGuid", s_tryCoerceToGuidParams);
             var expected = Guid.NewGuid();
-            // expected.ToString() 為變數，不觸發 CA1861
+            // `expected.ToString()` is not a constant, so CA1861 does not trigger.
             var result = method.Invoke(null, new object?[] { expected.ToString() });
             Assert.Equal(expected, (Guid)result!);
         }
@@ -319,7 +321,7 @@ namespace Polhem.Repository.UnitTests
         [Theory]
         [InlineData("not-a-guid")]
         [InlineData("12345")]
-        [DisplayName("TryCoerceToGuid 傳入無效字串應回傳 null")]
+        [DisplayName("TryCoerceToGuid returns null for an invalid string")]
         public void TryCoerceToGuid_InvalidString_ReturnsNull(string invalidGuid)
         {
             var method = GetPrivateStaticMethod("TryCoerceToGuid", s_tryCoerceToGuidParams);
@@ -328,11 +330,11 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("TryCoerceToGuid 傳入 null 應回傳 null")]
+        [DisplayName("TryCoerceToGuid returns null for a null input")]
         public void TryCoerceToGuid_NullInput_ReturnsNull()
         {
             var method = GetPrivateStaticMethod("TryCoerceToGuid", s_tryCoerceToGuidParams);
-            // 使用本地變數 nullValue 避免 new object?[] { null } 觸發 CA1861
+            // The local `nullValue` keeps the array literal from triggering CA1861.
             object? nullValue = null;
             var result = method.Invoke(null, new object?[] { nullValue });
             Assert.Null(result);

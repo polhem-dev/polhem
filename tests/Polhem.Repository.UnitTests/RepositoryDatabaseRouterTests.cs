@@ -7,9 +7,9 @@ using Polhem.Definition.Identity;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// <see cref="RepositoryDatabaseRouter"/> 行為測試。Stub 化 ISessionInfoService /
-    /// ICompanyInfoService 不需實體 DB；專注驗證 DbScope → databaseId 解析路徑與
-    /// 錯誤分支。
+    /// Behavior tests for <see cref="RepositoryDatabaseRouter"/>. ISessionInfoService and ICompanyInfoService are
+    /// stubbed, so no physical DB is needed. The tests focus on the DbScope → databaseId resolution paths and the
+    /// error branches.
     /// </summary>
     public class RepositoryDatabaseRouterTests
     {
@@ -49,7 +49,7 @@ namespace Polhem.Repository.UnitTests
         #endregion
 
         [Fact]
-        [DisplayName("Resolve(Common) 應回固定 \"common\"，不需 session")]
+        [DisplayName("Resolve(Common) returns the fixed \"common\" without a session")]
         public void Resolve_Common_ReturnsCommon()
         {
             var (router, _, _) = NewRouter();
@@ -57,7 +57,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("Resolve(Log) 應回固定 \"log\"，不需 session（支援 pre-EnterCompany 寫 log）")]
+        [DisplayName("Resolve(Log) returns the fixed \"log\" without a session (so logs can be written before EnterCompany)")]
         public void Resolve_Log_ReturnsLog()
         {
             var (router, _, _) = NewRouter();
@@ -65,7 +65,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("Resolve(Common/Log) 帶 Guid.Empty 仍能回固定 databaseId")]
+        [DisplayName("Resolve(Common/Log) still returns the fixed databaseId with Guid.Empty")]
         public void Resolve_CommonAndLogWithEmptyAccessToken_ReturnsFixedDatabaseId()
         {
             var (router, _, _) = NewRouter();
@@ -74,7 +74,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("Resolve(Company) 在 session 與 CompanyInfo 齊備時應回 CompanyDatabaseId")]
+        [DisplayName("Resolve(Company) returns CompanyDatabaseId when both the session and CompanyInfo exist")]
         public void Resolve_CompanyWithSession_ReturnsCompanyDatabaseId()
         {
             var (router, sessions, companies) = NewRouter();
@@ -86,7 +86,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("Resolve(Company) 在 session 不存在時應拋 UnauthorizedAccessException")]
+        [DisplayName("Resolve(Company) throws UnauthorizedAccessException when there is no session")]
         public void Resolve_CompanyNoSession_ThrowsUnauthorized()
         {
             var (router, _, _) = NewRouter();
@@ -95,23 +95,23 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("Resolve(Company) 在 session 未進公司時應拋 CompanyNotEntered")]
+        [DisplayName("Resolve(Company) throws CompanyNotEntered when the session has not entered a company")]
         public void Resolve_CompanySessionWithoutCompanyId_ThrowsCompanyNotEntered()
         {
             var (router, sessions, _) = NewRouter();
             var token = Guid.NewGuid();
             sessions.Set(new SessionInfo { AccessToken = token, UserId = "u", CompanyId = null });
 
-            // 型別而非訊息字串：訊息會落到 client 的畫面上，錯誤「碼」才是前端據以導向
-            // 公司選擇的依據。先前這裡把錯誤碼名稱當成訊息文字釘住，等於把 CompanyNotEntered
-            // 這個字串顯示給使用者看。
+            // Assert the type, not the message: the message ends up on the client's screen, and the error code is
+            // what the front end uses to redirect to company selection. This test used to pin the error code name
+            // as the message text, which amounted to showing the string "CompanyNotEntered" to the user.
             var ex = Assert.Throws<CompanyNotEnteredException>(
                 () => router.Resolve(DbScope.Company, token));
             Assert.DoesNotContain("CompanyNotEntered", ex.Message, StringComparison.Ordinal);
         }
 
         [Fact]
-        [DisplayName("Resolve(Company) 在 CompanyInfo cache miss 時應拋 InvalidOperationException 且訊息不含 CompanyId")]
+        [DisplayName("Resolve(Company) throws InvalidOperationException without the CompanyId in the message on a CompanyInfo cache miss")]
         public void Resolve_CompanyInfoCacheMiss_ThrowsAndDoesNotLeakCompanyId()
         {
             var (router, sessions, _) = NewRouter();
@@ -124,7 +124,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("Resolve(Company) 多公司指向同一 CompanyDatabaseId 都應正確回傳該 id")]
+        [DisplayName("Resolve(Company) returns the shared CompanyDatabaseId for each of several companies pointing to it")]
         public void Resolve_TwoCompaniesWithSameCompanyDatabaseId_BothReturnSameDatabaseId()
         {
             var (router, sessions, companies) = NewRouter();
@@ -141,7 +141,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("Ctor 傳入 null services 應拋 ArgumentNullException")]
+        [DisplayName("Ctor throws ArgumentNullException for null services")]
         public void Ctor_NullServices_ThrowsArgumentNullException()
         {
             var companies = new StubCompanyInfoService();

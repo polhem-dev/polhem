@@ -5,16 +5,16 @@ using Polhem.Definition;
 namespace Polhem.Api.Client.UnitTests.FormData
 {
     /// <summary>
-    /// <see cref="FormDataGuard"/> 的前置條件與訊息。
+    /// The preconditions and messages of <see cref="FormDataGuard"/>.
     /// </summary>
     /// <remarks>
-    /// 訊息文字本身就是重點：它是開發者把表單接錯時唯一讀得到的東西，
-    /// 兩份副本會漂成對同一個錯誤的兩種說法。
+    /// The message text itself is the point: it is the only thing a developer gets to read after wiring a form up
+    /// wrong, and two copies would drift into two different explanations of the same error.
     /// </remarks>
     public class FormDataGuardTests
     {
         [Fact]
-        [DisplayName("沒有 connector 時應說明是哪個操作、以及該從哪裡補")]
+        [DisplayName("Without a connector the message names the operation and where to supply the connector")]
         public void RequireConnector_Null_ThrowsNamingOperationAndRemedy()
         {
             var ex = Assert.Throws<InvalidOperationException>(
@@ -25,7 +25,7 @@ namespace Polhem.Api.Client.UnitTests.FormData
         }
 
         [Fact]
-        [DisplayName("沒有載入主檔列時應明講「沒有主檔列」")]
+        [DisplayName("With no master row loaded the message says so explicitly")]
         public void RequireMasterRowId_NoRow_Throws()
         {
             var ex = Assert.Throws<InvalidOperationException>(() => FormDataGuard.RequireMasterRowId(null));
@@ -34,7 +34,7 @@ namespace Polhem.Api.Client.UnitTests.FormData
         }
 
         [Fact]
-        [DisplayName("主檔表缺 rowid 欄位時，訊息要與「沒有主檔列」區分開")]
+        [DisplayName("A master table without the rowid column gives a message distinct from \"no master row\"")]
         public void RequireMasterRowId_MissingColumn_ThrowsDistinctMessage()
         {
             var table = new DataTable("master");
@@ -50,7 +50,7 @@ namespace Polhem.Api.Client.UnitTests.FormData
         }
 
         [Fact]
-        [DisplayName("rowid 為 null 時，訊息要與「缺欄位」區分開")]
+        [DisplayName("A null rowid gives a message distinct from \"missing column\"")]
         public void RequireMasterRowId_NullValue_ThrowsDistinctMessage()
         {
             var row = NewMasterRow(DBNull.Value);
@@ -62,7 +62,7 @@ namespace Polhem.Api.Client.UnitTests.FormData
         }
 
         [Fact]
-        [DisplayName("rowid 為 Guid 或字串都應取得同一個值")]
+        [DisplayName("A rowid stored as a Guid or as a string yields the same value")]
         public void RequireMasterRowId_GuidOrString_BothParse()
         {
             var id = Guid.NewGuid();

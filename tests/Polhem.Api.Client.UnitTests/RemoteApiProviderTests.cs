@@ -4,7 +4,7 @@ using Polhem.Api.Client.Providers;
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// 針對 <see cref="RemoteApiProvider"/> 建構子與屬性的純邏輯測試。
+    /// Pure logic tests for the constructor and properties of <see cref="RemoteApiProvider"/>.
     /// </summary>
     public class RemoteApiProviderTests
     {
@@ -12,14 +12,14 @@ namespace Polhem.Api.Client.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("RemoteApiProvider 建構子空白 endpoint 應拋 ArgumentException")]
+        [DisplayName("RemoteApiProvider constructor throws ArgumentException for a blank endpoint")]
         public void Constructor_NullOrEmptyEndpoint_ThrowsArgumentException(string? endpoint)
         {
             Assert.Throws<ArgumentException>(() => new RemoteApiProvider(endpoint!, Guid.Empty));
         }
 
         [Fact]
-        [DisplayName("RemoteApiProvider 建構子應正確設定 Endpoint 與 AccessToken")]
+        [DisplayName("RemoteApiProvider constructor sets Endpoint and AccessToken")]
         public void Constructor_ValidArgs_SetsProperties()
         {
             var token = Guid.NewGuid();
@@ -30,7 +30,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("RemoteApiProvider 建構子可接受 Guid.Empty 作為 AccessToken（用於 Login/Ping）")]
+        [DisplayName("RemoteApiProvider constructor accepts Guid.Empty as AccessToken (for Login and Ping)")]
         public void Constructor_EmptyAccessToken_IsAccepted()
         {
             var provider = new RemoteApiProvider("http://example.com/api", Guid.Empty);

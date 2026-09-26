@@ -8,8 +8,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// EmployeeRepository 的 5 DB round-trip 測試：在 company DB insert st_employee
-    /// （含 user_rowid / dept_rowid 連結），驗證 GetByUserRowId 查回對應員工、未知 user 回 null。
+    /// Round-trip tests of EmployeeRepository across the database providers: insert st_employee into the company DB
+    /// (with the user_rowid / dept_rowid links), then verify that GetByUserRowId returns the matching employee and
+    /// null for an unknown user.
     /// </summary>
     public class EmployeeRepositoryTests : IClassFixture<SharedDbFixture>
     {
@@ -51,7 +52,6 @@ namespace Polhem.Repository.UnitTests
                 Assert.Equal(deptRowId, employee.DeptRowId);
                 Assert.Equal(userRowId, employee.UserRowId);
 
-                // 未知 user → null
                 Assert.Null(CreateRepo().GetByUserRowId(databaseId, Guid.NewGuid()));
             }
             finally

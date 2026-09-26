@@ -2,7 +2,7 @@
 @apiKey = test-api-key
 @accessToken = Bearer 22AC9A7C-6E76-4C07-8560-89784D86AA76
 
-// Ping ¤èªk
+// Ping method
 POST {{baseUrl}}/api
 Accept: application/json
 content-type: application/json

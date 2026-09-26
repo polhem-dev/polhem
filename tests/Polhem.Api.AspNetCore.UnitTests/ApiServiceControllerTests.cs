@@ -7,7 +7,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
 {
     /// <summary>
     /// Tests for error-path branches in <see cref="Controllers.ApiServiceController"/>.
-    /// 純錯誤路徑驗證（415/400/401），不依賴 PolhemTestFixture / 後端 DI 容器。
+    /// Error paths only (415/400/401), with no dependency on PolhemTestFixture or the backend DI container.
     /// </summary>
     public class ApiServiceControllerTests
     {
@@ -36,7 +36,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("PostAsync 非 application/json Content-Type 應回傳 415")]
+        [DisplayName("PostAsync returns 415 for a Content-Type other than application/json")]
         public async Task PostAsync_WrongContentType_Returns415()
         {
             var result = await PostAsync("text/plain", "{}");
@@ -46,7 +46,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("PostAsync Content-Type 缺少時應回傳 415")]
+        [DisplayName("PostAsync returns 415 when Content-Type is missing")]
         public async Task PostAsync_NullContentType_Returns415()
         {
             var result = await PostAsync("", "{}");
@@ -56,7 +56,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("PostAsync 空請求主體應回傳 400")]
+        [DisplayName("PostAsync returns 400 for an empty request body")]
         public async Task PostAsync_EmptyBody_Returns400()
         {
             var result = await PostAsync("application/json", "   ");
@@ -66,7 +66,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("PostAsync 無效 JSON 應回傳 400 ParseError")]
+        [DisplayName("PostAsync returns 400 ParseError for invalid JSON")]
         public async Task PostAsync_InvalidJson_Returns400ParseError()
         {
             var result = await PostAsync("application/json", "not-valid-json{{{");
@@ -76,7 +76,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("PostAsync JSON 缺少 method 欄位應回傳 400")]
+        [DisplayName("PostAsync returns 400 when the JSON has no method field")]
         public async Task PostAsync_MissingMethod_Returns400()
         {
             var result = await PostAsync("application/json", "{\"id\":\"1\",\"params\":{}}");
@@ -86,11 +86,11 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("PostAsync 無 API 金鑰應回傳 401")]
+        [DisplayName("PostAsync returns 401 without an API key")]
         public async Task PostAsync_MissingApiKey_Returns401()
         {
-            // 以 ExecFunc 而非 Ping 為測試對象：Ping 已刻意免金鑰（健康檢查在資料庫不可用時
-            // 仍須作答），因此不再是「缺金鑰即 401」的樣本。
+            // Uses ExecFunc rather than Ping. Ping deliberately needs no key (a health check must still answer
+            // when the database is unavailable), so it is no longer an example of "missing key means 401".
             const string body = "{\"method\":\"System.ExecFunc\",\"id\":\"1\",\"params\":{}}";
             var result = await PostAsync("application/json", body, apiKey: null);
 
@@ -99,7 +99,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("PostAsync 需要認證的方法但無 Authorization 標頭應回傳 401")]
+        [DisplayName("PostAsync returns 401 for a method that requires authentication without an Authorization header")]
         public async Task PostAsync_AuthRequiredButNoAuthorization_Returns401()
         {
             const string body = "{\"method\":\"System.ExecFunc\",\"id\":\"1\",\"params\":{}}";
@@ -110,19 +110,21 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
     
         [Theory]
-        [InlineData(1_000)]        // 遠低於門檻
-        [InlineData(40_000)]       // 越過 EnableBuffering 的 30 KB 門檻（先前會落到暫存檔）
+        [InlineData(1_000)]        // Well below the threshold.
+        [InlineData(40_000)]       // Past the 30 KB threshold of `EnableBuffering` (it used to spill to a temp file).
         [InlineData(300_000)]
-        [DisplayName("大於緩衝門檻的請求主體仍應正確解析（改為直接讀 stream 的迴歸保護）")]
+        [DisplayName("A request body larger than the buffering threshold still parses correctly (regression guard for reading the stream directly)")]
         public async Task PostAsync_LargeBody_ParsesCorrectly(int payloadSize)
         {
-            // 這是本次改動的實際風險：從「整份讀成字串再 parse」換成「直接從 stream 反序列化」，
-            // 出錯的形態會是部分讀取或編碼問題，而且只在大 body 上顯現。
+            // This is the real risk of deserializing straight from the stream instead of reading the whole body
+            // into a string first: a failure shows up as a partial read or an encoding problem, and only with a
+            // large body.
             var large = await PostAsync("application/json", BuildPingBody(new string('a', payloadSize)));
             var small = await PostAsync("application/json", BuildPingBody("x"));
 
-            // 不變式是「body 大小不得改變結果」。這個裸測試環境沒有後端 DI，兩者都會停在同一個
-            // 下游失敗上；重點是大 body 不會因為解析壞掉而變成 400。
+            // The invariant is that the body size must not change the result. This bare test environment has no
+            // backend DI, so both stop at the same downstream failure. The point is that a large body does not
+            // turn into a 400 because parsing broke.
             var largeResult = Assert.IsType<ObjectResult>(large);
             var smallResult = Assert.IsType<ObjectResult>(small);
 
@@ -131,11 +133,11 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("多位元組字元跨讀取邊界仍應正確解析")]
+        [DisplayName("Multi-byte characters across a read buffer boundary still parse correctly")]
         public async Task PostAsync_MultiByteCharactersAcrossBufferBoundary_ParsesCorrectly()
         {
-            // 直接從 stream 讀時，UTF-8 的多位元組字元可能落在內部緩衝邊界上。
-            // 用大量中文字把邊界撞出來。
+            // When reading straight from the stream, a UTF-8 multi-byte character can straddle an internal buffer
+            // boundary. A large amount of CJK text makes that happen.
             var payload = string.Concat(Enumerable.Repeat("測試字串", 20_000));
             var multiByte = await PostAsync("application/json", BuildPingBody(payload));
             var ascii = await PostAsync("application/json", BuildPingBody("x"));
@@ -145,7 +147,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
             Assert.Equal(Assert.IsType<ObjectResult>(ascii).StatusCode, multiByteResult.StatusCode);
         }
 
-        /// <summary>組出一個帶指定字串載荷的合法 JSON-RPC 請求。</summary>
+        /// <summary>Builds a valid JSON-RPC request carrying the given string payload.</summary>
         private static string BuildPingBody(string payload)
             => "{\"id\":\"1\",\"method\":\"System.Ping\",\"params\":{\"value\":\"" + payload + "\"}}";
 }

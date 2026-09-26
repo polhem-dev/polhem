@@ -18,10 +18,11 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// <see cref="RepositoryFactory"/> 建構子的相依防護、progId 軸解析定義錯誤時的失敗語意，
-    /// 以及工廠與 <see cref="IRepositoryTypeResolver"/> 之間的委派契約。
-    /// 以 stub 相依隔離，不需要資料庫；兩軸的正常解析路徑見 <see cref="RepositoryFactoryTests"/>，
-    /// 註冊表綁定本身的解析見 <see cref="ProgramSettingsRepositoryTypeResolverTests"/>。
+    /// The dependency guards of the <see cref="RepositoryFactory"/> constructor, the failure semantics when the
+    /// progId axis resolves a faulty definition, and the delegation contract between the factory and
+    /// <see cref="IRepositoryTypeResolver"/>. Dependencies are isolated with stubs, so no database is needed. The
+    /// normal resolution paths of both axes are in <see cref="RepositoryFactoryTests"/>; the resolution of the
+    /// registry binding itself is in <see cref="ProgramSettingsRepositoryTypeResolverTests"/>.
     /// </summary>
     public class RepositoryFactoryGuardTests
     {
@@ -38,9 +39,10 @@ namespace Polhem.Repository.UnitTests
             public SystemSettings GetSystemSettings() => throw new NotImplementedException();
             public void SaveSystemSettings(SystemSettings settings) => throw new NotImplementedException();
             public void SaveDatabaseSettings(DatabaseSettings settings) => throw new NotImplementedException();
-            // 本檔不驗註冊表綁定，一律回報「沒有 ProgramSettings.xml」——這是正式
-            // IDefineAccess 在檔案不存在時的行為，工廠據此落回框架預設 repository。
-            // 綁定本身的解析見 ProgramSettingsRepositoryTypeResolverTests。
+            // This file does not test the registry binding, so it always reports "no ProgramSettings.xml". That is
+            // what the real `IDefineAccess` does when the file does not exist, and the factory then falls back to
+            // the framework default repository. The binding itself is tested in
+            // `ProgramSettingsRepositoryTypeResolverTests`.
             public ProgramSettings GetProgramSettings() => throw new FileNotFoundException("ProgramSettings.xml");
             public void SaveProgramSettings(ProgramSettings settings) => throw new NotImplementedException();
             public DbCategorySettings GetDbCategorySettings() => throw new NotImplementedException();
@@ -74,7 +76,7 @@ namespace Polhem.Repository.UnitTests
             public string Resolve(DbScope scope, Guid accessToken) => DbCategoryIds.Common;
         }
 
-        /// <summary>固定回傳指定型別，並記下工廠傳進來的引數。</summary>
+        /// <summary>Always returns the given type and records the arguments the factory passed in.</summary>
         private sealed class StubTypeResolver(Type type) : IRepositoryTypeResolver
         {
             public Guid? ReceivedAccessToken { get; private set; }
@@ -88,7 +90,7 @@ namespace Polhem.Repository.UnitTests
             }
         }
 
-        /// <summary>resolver 綁定的自訂 repository。</summary>
+        /// <summary>The custom repository bound by the resolver.</summary>
         public class BoundRepository : DataFormRepository
         {
             public BoundRepository(IRepositoryContext ctx, Guid accessToken, string progId)
@@ -97,7 +99,7 @@ namespace Polhem.Repository.UnitTests
             }
         }
 
-        /// <summary>不衍生自 <see cref="DataFormRepository"/>，用來驗證工廠端的契約檢查。</summary>
+        /// <summary>Not derived from <see cref="DataFormRepository"/>; used to check the factory's contract validation.</summary>
         public class NotARepository
         {
         }
@@ -124,7 +126,7 @@ namespace Polhem.Repository.UnitTests
         #endregion
 
         [Fact]
-        [DisplayName("RepositoryFactory 建構子傳入 null defineAccess 應拋 ArgumentNullException")]
+        [DisplayName("RepositoryFactory constructor throws ArgumentNullException for a null defineAccess")]
         public void RepositoryFactory_NullDefineAccess_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new RepositoryFactory(
@@ -133,7 +135,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("RepositoryFactory 建構子傳入 null dbAccessFactory 應拋 ArgumentNullException")]
+        [DisplayName("RepositoryFactory constructor throws ArgumentNullException for a null dbAccessFactory")]
         public void RepositoryFactory_NullDbAccessFactory_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new RepositoryFactory(
@@ -142,7 +144,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("RepositoryFactory 建構子傳入 null connectionManager 應拋 ArgumentNullException")]
+        [DisplayName("RepositoryFactory constructor throws ArgumentNullException for a null connectionManager")]
         public void RepositoryFactory_NullConnectionManager_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new RepositoryFactory(
@@ -151,7 +153,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("RepositoryFactory 建構子傳入 null router 應拋 ArgumentNullException")]
+        [DisplayName("RepositoryFactory constructor throws ArgumentNullException for a null router")]
         public void RepositoryFactory_NullRouter_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new RepositoryFactory(
@@ -160,7 +162,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("RepositoryFactory 建構子傳入 null typeResolver 應拋 ArgumentNullException")]
+        [DisplayName("RepositoryFactory constructor throws ArgumentNullException for a null typeResolver")]
         public void RepositoryFactory_NullTypeResolver_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new RepositoryFactory(
@@ -169,7 +171,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("工廠應依 resolver 給的型別建出實例，並帶上 progId")]
+        [DisplayName("The factory builds an instance of the type the resolver returns and passes the progId")]
         public void CreateFormRepository_ResolverBindsCustomType_BuildsThatTypeWithProgId()
         {
             var factory = CreateFactory(typeResolver: new StubTypeResolver(typeof(BoundRepository)));
@@ -181,11 +183,12 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("工廠應把呼叫端的 accessToken 與 progId 原樣交給 resolver（租戶客製靠 token 找 session）")]
+        [DisplayName("The factory passes the caller's accessToken and progId to the resolver unchanged (tenant customization finds the session by token)")]
         public void CreateFormRepository_ForwardsAccessTokenAndProgIdToResolver()
         {
-            // token 若沒傳到 resolver，客製代號就讀不到、租戶的 Repository 覆寫整批失效，
-            // 而每個請求照樣成功 —— 預設路徑的測試全都看不出來。
+            // If the token does not reach the resolver, the customization ID cannot be read and every tenant
+            // Repository override silently stops working, while every request still succeeds. None of the
+            // default-path tests would notice.
             var resolver = DefaultResolver();
             var factory = CreateFactory(typeResolver: resolver);
             var token = Guid.NewGuid();
@@ -197,7 +200,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("resolver 回傳非 DataFormRepository 衍生型別時，工廠應拋並指名 progId 與型別")]
+        [DisplayName("When the resolver returns a type not derived from DataFormRepository, the factory throws naming the progId and the type")]
         public void CreateFormRepository_ResolverReturnsNonRepositoryType_ThrowsNamingProgIdAndType()
         {
             var factory = CreateFactory(typeResolver: new StubTypeResolver(typeof(NotARepository)));
@@ -211,7 +214,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateFormRepository 傳入空白 progId 應拋 ArgumentException")]
+        [DisplayName("CreateFormRepository throws ArgumentException for a blank progId")]
         public void CreateFormRepository_WhitespaceProgId_ThrowsArgumentException()
         {
             var factory = CreateFactory();
@@ -219,7 +222,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateFormRepository Schema 無 CategoryId 應拋 InvalidOperationException 且訊息含 CategoryId")]
+        [DisplayName("CreateFormRepository throws InvalidOperationException mentioning CategoryId when the schema has no CategoryId")]
         public void CreateFormRepository_EmptyCategoryId_ThrowsInvalidOperationException()
         {
             var stub = new StubDefineAccess { CategoryId = string.Empty };
@@ -230,7 +233,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateFormRepository 未知 CategoryId 應拋 InvalidOperationException 且訊息含未知值")]
+        [DisplayName("CreateFormRepository throws InvalidOperationException containing the unknown value for an unknown CategoryId")]
         public void CreateFormRepository_UnknownCategoryId_ThrowsInvalidOperationException()
         {
             var stub = new StubDefineAccess { CategoryId = "unknown_db" };
@@ -244,7 +247,7 @@ namespace Polhem.Repository.UnitTests
         [InlineData(DbCategoryIds.Common)]
         [InlineData(DbCategoryIds.Company)]
         [InlineData(DbCategoryIds.Log)]
-        [DisplayName("CreateFormRepository 有效 CategoryId 應回傳 DataFormRepository")]
+        [DisplayName("CreateFormRepository returns a DataFormRepository for a valid CategoryId")]
         public void CreateFormRepository_ValidCategoryId_ReturnsDataFormRepository(string categoryId)
         {
             var stub = new StubDefineAccess { CategoryId = categoryId };

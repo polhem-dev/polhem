@@ -8,8 +8,8 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// 針對 <see cref="IDatabaseRepository"/> 預設實作的純邏輯測試。
-    /// 透過 <see cref="SystemRepositoryFactory"/> 取得實例（避免直接依賴 internal 型別）。
+    /// Pure logic tests for the default implementation of <see cref="IDatabaseRepository"/>.
+    /// The instance comes from <see cref="SystemRepositoryFactory"/> (to avoid depending on the internal type directly).
     /// </summary>
     public class DatabaseRepositoryTests : IClassFixture<SharedDbFixture>
     {
@@ -27,7 +27,7 @@ namespace Polhem.Repository.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("UpgradeTableSchema 空白 databaseId 應拋 ArgumentException")]
+        [DisplayName("UpgradeTableSchema throws ArgumentException for a blank databaseId")]
         public void UpgradeTableSchema_EmptyDatabaseId_ThrowsArgumentException(string? databaseId)
         {
             var repo = CreateRepository();
@@ -38,7 +38,7 @@ namespace Polhem.Repository.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("UpgradeTableSchema 空白 categoryId 應拋 ArgumentException")]
+        [DisplayName("UpgradeTableSchema throws ArgumentException for a blank categoryId")]
         public void UpgradeTableSchema_EmptyCategoryId_ThrowsArgumentException(string? categoryId)
         {
             var repo = CreateRepository();
@@ -49,7 +49,7 @@ namespace Polhem.Repository.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("UpgradeTableSchema 空白 tableName 應拋 ArgumentException")]
+        [DisplayName("UpgradeTableSchema throws ArgumentException for a blank tableName")]
         public void UpgradeTableSchema_EmptyTableName_ThrowsArgumentException(string? tableName)
         {
             var repo = CreateRepository();
@@ -57,12 +57,12 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("TestConnection 傳入未註冊的 DatabaseType 應拋 KeyNotFoundException")]
+        [DisplayName("TestConnection throws KeyNotFoundException for an unregistered DatabaseType")]
         public void TestConnection_UnregisteredDatabaseType_ThrowsKeyNotFoundException()
         {
-            // GlobalFixture 已註冊全部既定 DatabaseType（SQLServer / PostgreSQL / SQLite /
-            // MySQL / Oracle）。為了仍能驗證「未註冊 DatabaseType 應拋 KeyNotFoundException」
-            // 這條保護邏輯，這裡 cast 一個 enum 範圍外的整數作為「永遠不會被註冊」的 placeholder。
+            // GlobalFixture registers every defined DatabaseType. To still check the guard that an unregistered
+            // DatabaseType throws `KeyNotFoundException`, this casts an integer outside the enum range as a
+            // placeholder that will never be registered.
             var repo = CreateRepository();
             var item = new DatabaseItem
             {
@@ -75,22 +75,22 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("TestConnection 傳入 null DatabaseItem 應拋 NullReferenceException（依現況）")]
+        [DisplayName("TestConnection throws NullReferenceException for a null DatabaseItem (current behavior)")]
         public void TestConnection_NullItem_ThrowsNullReferenceException()
         {
-            // 目前實作未對 null 做防護，呼叫 item.DatabaseType 時會拋 NullReferenceException；
-            // 測試僅記錄現況，若日後加上防護需同步調整。
+            // The current implementation has no null guard, so reading `item.DatabaseType` throws
+            // `NullReferenceException`. The test only records the current behavior and must change if a guard is added.
             var repo = CreateRepository();
             Assert.Throws<NullReferenceException>(() => repo.TestConnection(null!));
         }
 
         [Fact]
-        [DisplayName("TestConnection 含 {@DbName} 佔位符且 DbName 非空時應完成替換並嘗試連線")]
+        [DisplayName("TestConnection replaces the {@DbName} placeholder when DbName is set and attempts to connect")]
         public void TestConnection_WithDbNamePlaceholder_ReplacesAndAttempts()
         {
-            // 以合法 SQL Server 連線字串語法但指向不存在的主機，確保：
-            // 1. 字串替換成功（未替換則 SqlConnection 仍接受 {@DbName} 作為 catalog 名）
-            // 2. 最終在 Open() 階段失敗，而不是因字串解析拋 ArgumentException
+            // Uses valid SQL Server connection string syntax pointing at a host that does not exist, to make sure that
+            // (1) the replacement succeeds (without it, `SqlConnection` would still accept `{@DbName}` as the catalog
+            // name), and (2) it finally fails at `Open()` rather than throwing `ArgumentException` while parsing.
             var repo = CreateRepository();
             var item = new DatabaseItem
             {
@@ -100,14 +100,14 @@ namespace Polhem.Repository.UnitTests
                 DbName = "polhem_test_placeholder_db"
             };
 
-            // 期望 Open 時拋出 SqlException 或相容例外（連線失敗）。
+            // Expect `Open` to throw `SqlException` or a compatible exception (connection failure).
             var ex = Record.Exception(() => repo.TestConnection(item));
             Assert.NotNull(ex);
             Assert.IsNotType<ArgumentException>(ex);
         }
 
         [Fact]
-        [DisplayName("TestConnection 含 {@UserId} 與 {@Password} 佔位符且皆非空時應完成替換")]
+        [DisplayName("TestConnection replaces the {@UserId} and {@Password} placeholders when both are set")]
         public void TestConnection_WithUserIdAndPasswordPlaceholder_ReplacesAndAttempts()
         {
             var repo = CreateRepository();
@@ -126,7 +126,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("TestConnection 所有佔位符同時指定時應完成替換")]
+        [DisplayName("TestConnection replaces all placeholders when all are specified")]
         public void TestConnection_WithAllPlaceholders_ReplacesAndAttempts()
         {
             var repo = CreateRepository();

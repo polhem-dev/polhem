@@ -12,8 +12,8 @@ using Polhem.Api.Core.Transformers;
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// 針對 <see cref="ApiConnector"/> 的 <c>ExecuteAsync</c> 與輔助流程的純邏輯測試。
-    /// 以 <see cref="FakeJsonRpcProvider"/> 取代實際的 JSON-RPC 提供者，避免依賴任何外部服務。
+    /// Pure logic tests for <c>ExecuteAsync</c> of <see cref="ApiConnector"/> and its helper flow.
+    /// <see cref="FakeJsonRpcProvider"/> replaces the real JSON-RPC provider, so no external service is needed.
     /// </summary>
     public class ApiConnectorExecuteTests
     {
@@ -21,7 +21,7 @@ namespace Polhem.Api.Client.UnitTests
         private const string TestAction = "Echo";
 
         /// <summary>
-        /// 公開 <see cref="ApiConnector"/> 的 <c>ExecuteAsync</c>，以便於測試中直接呼叫。
+        /// Exposes <c>ExecuteAsync</c> of <see cref="ApiConnector"/> so the tests can call it directly.
         /// </summary>
         private sealed class TestApiConnector : ApiConnector
         {
@@ -32,7 +32,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         /// <summary>
-        /// 可自訂回應內容的假 <see cref="IJsonRpcProvider"/>，僅用於單元測試。
+        /// A fake <see cref="IJsonRpcProvider"/> with a customizable response, for unit tests only.
         /// </summary>
         private sealed class FakeJsonRpcProvider : IJsonRpcProvider
         {
@@ -53,7 +53,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         /// <summary>
-        /// 透過反射將 <see cref="ApiConnector.Provider"/>（private setter）替換為測試用提供者。
+        /// Replaces <see cref="ApiConnector.Provider"/> (private setter) with the test provider through reflection.
         /// </summary>
         private static void InjectProvider(ApiConnector connector, IJsonRpcProvider provider)
         {
@@ -70,7 +70,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecuteAsync 成功時應回傳 Provider 的結果並轉換為目標型別")]
+        [DisplayName("ExecuteAsync returns the provider result converted to the target type on success")]
         public async Task ExecuteAsync_Plain_ReturnsConvertedResult()
         {
             var provider = new FakeJsonRpcProvider();
@@ -87,7 +87,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecuteAsync 於 Provider 回傳 Error 時應拋出 InvalidOperationException")]
+        [DisplayName("ExecuteAsync throws InvalidOperationException when the provider returns an Error")]
         public async Task ExecuteAsync_WithErrorResponse_ThrowsInvalidOperationException()
         {
             var provider = new FakeJsonRpcProvider
@@ -109,7 +109,7 @@ namespace Polhem.Api.Client.UnitTests
         [Theory]
         [InlineData(null)]
         [InlineData("")]
-        [DisplayName("ExecuteAsync 空白 progId 應拋 ArgumentException")]
+        [DisplayName("ExecuteAsync throws ArgumentException for an empty progId")]
         public async Task ExecuteAsync_EmptyProgId_ThrowsArgumentException(string? progId)
         {
             var connector = CreateConnector(new FakeJsonRpcProvider());
@@ -118,7 +118,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecuteAsync 啟用 Tracer 時應寫入 Request／Response 追蹤事件")]
+        [DisplayName("ExecuteAsync writes Request and Response trace events when the tracer is enabled")]
         public async Task ExecuteAsync_WithTracerEnabled_WritesTraceEvents()
         {
             var writer = new CapturingTraceWriter();
@@ -132,7 +132,7 @@ namespace Polhem.Api.Client.UnitTests
                 var result = await connector.ExecuteAsync<string>(TestProgId, TestAction, new object(), PayloadFormat.Plain);
 
                 Assert.Equal("ok", result);
-                // 應有 Start (Execute.Unit.Echo)、Request Point、Response Point、End 四筆事件
+                // Expected events: Start (Execute.Unit.Echo), the Request point, the Response point and End.
                 Assert.Contains(writer.Events, e => e.Kind == TraceEventKind.Start);
                 Assert.Contains(writer.Events, e => e.Kind == TraceEventKind.End);
                 Assert.Contains(writer.Events, e => e.Kind == TraceEventKind.Point
@@ -149,9 +149,9 @@ namespace Polhem.Api.Client.UnitTests
         #region PayloadCodec
 
         /// <summary>
-        /// 模擬 server 的回應：沿用請求宣告的 codec 與格式編碼回應，正是
-        /// <c>JsonRpcExecutor</c> 的行為。少了這一步，client 端會拿到一個沒有 TypeName
-        /// 的 Result 而在還原時失敗——那是測試骨架的問題，不是待測行為。
+        /// Simulates the server's response: it encodes the response with the codec and format the request declared,
+        /// which is what <c>JsonRpcExecutor</c> does. Without this step the client gets a Result without a TypeName
+        /// and fails while restoring it, which is a problem of the test scaffolding, not the behavior under test.
         /// </summary>
         private static FakeJsonRpcProvider CreateEchoProvider(PayloadFormat format)
         {
@@ -163,7 +163,7 @@ namespace Polhem.Api.Client.UnitTests
                     {
                         Result = new JsonRpcResult { Value = "echoed", Codec = req.Params.Codec }
                     };
-                    // Encrypted 未帶金鑰時 client 端會降級為 Encoded，回應照同一格式編碼。
+                    // Without a key the client degrades Encrypted to Encoded, so the response uses the same format.
                     var actual = format == PayloadFormat.Plain ? PayloadFormat.Plain : PayloadFormat.Encoded;
                     ApiPayloadConverter.TransformTo(response.Result, actual);
                     return response;
@@ -172,7 +172,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Theory]
-        [DisplayName("設定 PayloadCodec 後，非 Plain 的請求應在信封標記該 codec")]
+        [DisplayName("With PayloadCodec set, a non-Plain request stamps that codec on the envelope")]
         [InlineData(PayloadFormat.Encoded)]
         [InlineData(PayloadFormat.Encrypted)]
         public async Task ExecuteAsync_WithPayloadCodec_StampsCodecOnRequest(PayloadFormat format)
@@ -181,7 +181,8 @@ namespace Polhem.Api.Client.UnitTests
             var connector = CreateConnector(provider);
             connector.PayloadCodec = PayloadCodecNames.Json;
 
-            // Encrypted 在未設金鑰時會自動降級為 Encoded，兩者都會編碼 body，正是本測試要看的。
+            // Without a key, Encrypted degrades to Encoded automatically. Both encode the body, which is what this
+            // test looks at.
             await connector.ExecuteAsync<string>(TestProgId, TestAction, "payload", format);
 
             Assert.Equal(PayloadCodecNames.Json, provider.LastRequest!.Params.Codec);
@@ -189,7 +190,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("未設定 PayloadCodec 時信封的 codec 應留空，維持既有 MessagePack 行為")]
+        [DisplayName("Without PayloadCodec the envelope codec stays blank, keeping the existing MessagePack behavior")]
         public async Task ExecuteAsync_WithoutPayloadCodec_LeavesCodecBlank()
         {
             var provider = CreateEchoProvider(PayloadFormat.Encoded);
@@ -201,7 +202,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("Plain 請求不帶編碼後的 body，因此不應標記 codec")]
+        [DisplayName("A Plain request carries no encoded body, so it does not stamp a codec")]
         public async Task ExecuteAsync_PlainFormat_DoesNotStampCodec()
         {
             var provider = CreateEchoProvider(PayloadFormat.Plain);
@@ -214,7 +215,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("以 json codec 送出的請求，回應同樣以 json codec 編碼時應能解回原值")]
+        [DisplayName("A request sent with the json codec decodes a response encoded with the json codec")]
         public async Task ExecuteAsync_JsonCodec_RoundTripsThroughResponse()
         {
             var provider = CreateEchoProvider(PayloadFormat.Encoded);
@@ -230,13 +231,13 @@ namespace Polhem.Api.Client.UnitTests
         #endregion
 
         /// <summary>
-        /// 收集追蹤事件的測試用 writer。
+        /// A test writer that collects trace events.
         /// </summary>
         /// <remarks>
-        /// <c>SysInfo.TraceListener</c> 是 process-wide static；當此測試類別把 listener
-        /// 指向本實例時，**所有並行執行的測試類別**透過 Tracer 觸發的事件都會被
-        /// 此 writer 捕捉到。為避免「Collection was modified」的並行列舉錯誤，
-        /// Events 必須使用執行緒安全容器並提供 snapshot 列舉語意。
+        /// <c>SysInfo.TraceListener</c> is a process-wide static. While this test class points the listener at this
+        /// instance, events raised through the tracer by **every test class running in parallel** are captured by
+        /// this writer. To avoid the concurrent enumeration error "Collection was modified", Events must use a
+        /// thread-safe container with snapshot enumeration semantics.
         /// </remarks>
         private sealed class CapturingTraceWriter : ITraceWriter
         {

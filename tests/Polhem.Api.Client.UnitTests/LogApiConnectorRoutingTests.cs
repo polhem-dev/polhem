@@ -10,14 +10,14 @@ using Polhem.Definition;
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// <see cref="LogApiConnector"/> 九個方法的路由測試。
+    /// Routing tests for the methods of <see cref="LogApiConnector"/>.
     /// </summary>
     /// <remarks>
-    /// 這九個方法都是薄包裝，真正的風險是**路由抄錯**：其中五個共用
-    /// <c>LogListResponse</c>、三個共用 <c>LogAggregateResponse</c>，因此把
-    /// <c>GetDbAnomalyLog</c> 寫成 <c>GetApiAnomalyLog</c> 會回傳看起來完全合理的資料，
-    /// 型別系統與 round-trip 測試都不會出聲。這裡逐一釘住送出的
-    /// <c>Method</c>（<c>progId.action</c>）與「原封不動傳遞 request 物件」。
+    /// These methods are thin wrappers, and the real risk is **a copy-paste routing error**: several share
+    /// <c>LogListResponse</c> and several share <c>LogAggregateResponse</c>, so writing <c>GetDbAnomalyLog</c> as
+    /// <c>GetApiAnomalyLog</c> returns data that looks perfectly reasonable, and neither the type system nor the
+    /// round-trip tests notice. These tests pin down the <c>Method</c> sent (<c>progId.action</c>) for each one,
+    /// and that the request object is passed on unchanged.
     /// </remarks>
     public class LogApiConnectorRoutingTests
     {
@@ -31,8 +31,8 @@ namespace Polhem.Api.Client.UnitTests
                 LastRequest = request;
                 var result = new JsonRpcResult { Value = ResultValue };
 
-                // 連線器預設要求 Encrypted，但未登入時（無傳輸金鑰）會降級為 Encoded；
-                // 這裡照同一格式回覆，整條 restore 路徑才走得完。
+                // The connector asks for Encrypted by default but degrades to Encoded when not logged in (no
+                // transport key). Replying in the same format lets the whole restore path run.
                 ApiPayloadConverter.TransformTo(result, PayloadFormat.Encoded);
                 return Task.FromResult(new JsonRpcResponse(request) { Result = result });
             }
@@ -49,7 +49,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         /// <summary>
-        /// 每個方法一列：呼叫方式、預期的 action、以及該方法的回應型別實例。
+        /// One row per method: the method name and the expected action.
         /// </summary>
         public static TheoryData<string, string> RoutedActions => new()
         {
@@ -66,7 +66,7 @@ namespace Polhem.Api.Client.UnitTests
 
         [Theory]
         [MemberData(nameof(RoutedActions))]
-        [DisplayName("每個方法都必須送出自己那一個 action，且 progId 為 AuditLog")]
+        [DisplayName("Each method sends its own action with the AuditLog progId")]
         public async Task Method_RoutesToItsOwnAction(string methodName, string expectedAction)
         {
             var (provider, expectedRequestType) = await InvokeAsync(methodName);
@@ -74,13 +74,14 @@ namespace Polhem.Api.Client.UnitTests
             Assert.NotNull(provider.LastRequest);
             Assert.Equal($"{SysProgIds.AuditLog}.{expectedAction}", provider.LastRequest!.Method);
 
-            // 同時釘住送出的 request 型別：只比對 action 字串的話，「action 對、卻塞錯 request
-            // 型別」這種抄錯仍會通過（多個方法共用同一個回應型別，看不出差異）。
+            // Also pin down the request type sent. Comparing only the action string would still pass a
+            // copy-paste error with the right action but the wrong request type (several methods share one
+            // response type, so the difference would not show).
             Assert.StartsWith(expectedRequestType.FullName!, provider.LastRequest.Params.TypeName, StringComparison.Ordinal);
         }
 
         [Fact]
-        [DisplayName("九個 action 必須兩兩不同（抄錯路由的直接徵兆）")]
+        [DisplayName("The routed actions are all distinct (a duplicate is a direct sign of a copy-paste routing error)")]
         public void RoutedActions_AreAllDistinct()
         {
             var actions = RoutedActions.Select(row => (string)row[1]).ToList();
@@ -89,7 +90,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetChangeDetailAsync 應把 sysRowId 包進 request 的對應欄位")]
+        [DisplayName("GetChangeDetailAsync wraps sysRowId into the matching request field")]
         public async Task GetChangeDetailAsync_WrapsSysRowId()
         {
             var (connector, provider) = Create(new GetChangeDetailResponse());
@@ -97,8 +98,9 @@ namespace Polhem.Api.Client.UnitTests
 
             await connector.GetChangeDetailAsync(sysRowId);
 
-            // payload 在送出前已轉為 Encoded（Value 被序列化進 bytes），故解回來檢查——
-            // 這也順帶證明 request 真的完整上了 wire，而不是只有型別名對。
+            // The payload was converted to Encoded before sending (`Value` is serialized into bytes), so restore
+            // it before checking. This also shows the request really went onto the wire intact, not just its
+            // type name.
             var payload = provider.LastRequest!.Params;
             ApiPayloadConverter.RestoreFrom(payload, PayloadFormat.Encoded);
             var sent = Assert.IsType<GetChangeDetailRequest>(payload.Value);
@@ -106,12 +108,13 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         /// <summary>
-        /// 依方法名叫用，並回傳對應的 provider。回應值用該方法宣告的回傳型別的新實例。
+        /// Invokes the method by name and returns its provider. The response value is a new instance of the
+        /// method's declared return type.
         /// </summary>
         private static async Task<(CapturingProvider Provider, Type RequestType)> InvokeAsync(string methodName)
         {
             var method = typeof(LogApiConnector).GetMethod(methodName)
-                ?? throw new InvalidOperationException($"找不到 {methodName}。");
+                ?? throw new InvalidOperationException($"{methodName} not found.");
             var responseType = method.ReturnType.GetGenericArguments()[0];
             var (connector, provider) = Create(Activator.CreateInstance(responseType)!);
 
@@ -123,7 +126,8 @@ namespace Polhem.Api.Client.UnitTests
 
             await (Task)method.Invoke(connector, [argument])!;
 
-            // 取 Guid 的那個多載自己包 request，預期型別由方法名推導。
+            // The overload that takes a `Guid` builds the request itself, so the expected type is derived from the
+            // method name.
             var requestType = isGuid ? typeof(GetChangeDetailRequest) : parameter.ParameterType;
             return (provider, requestType);
         }

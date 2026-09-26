@@ -9,9 +9,10 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// RolePermissionRepository 的 5 DB round-trip 測試：在 company DB insert st_role_grant /
-    /// st_user_role（關聯欄一律 sys_id 業務鍵），驗證 GetRoleGrants / GetUserRoles 查回正確
-    /// （allowed_actions 還原為 PermissionAction mask、user→role 以 sys_id 配對）。
+    /// Round-trip tests of RolePermissionRepository across the database providers: insert st_role_grant and
+    /// st_user_role into the company DB (every relation column uses the sys_id business key), then verify that
+    /// GetRoleGrants and GetUserRoles read them back correctly (allowed_actions restored to a PermissionAction mask,
+    /// user→role matched by sys_id).
     /// </summary>
     public class RolePermissionRepositoryTests : IClassFixture<SharedDbFixture>
     {

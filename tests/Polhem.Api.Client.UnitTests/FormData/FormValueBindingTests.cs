@@ -7,11 +7,12 @@ using Polhem.Definition.Forms;
 namespace Polhem.Api.Client.UnitTests.FormData
 {
     /// <summary>
-    /// <see cref="FormValueBinding"/> 的值轉換規則。
+    /// The value conversion rules of <see cref="FormValueBinding"/>.
     /// </summary>
     /// <remarks>
-    /// 這些規則原本各自私有地存在於兩個 UI head，doc 自承「沒有任何機制強制兩邊一致」，
-    /// 而兩邊確實漂了。下沉為單一實作之後，這裡是它唯一的驗證點。
+    /// These rules used to exist as private copies in two UI heads, whose docs admitted that "no mechanism keeps the
+    /// two consistent", and the two did drift. Now that they are a single shared implementation, this is where they
+    /// are verified.
     /// </remarks>
     public class FormValueBindingTests
     {
@@ -25,14 +26,14 @@ namespace Polhem.Api.Client.UnitTests.FormData
         }
 
         [Fact]
-        [DisplayName("空字串寫入可為空的欄位應得 DBNull")]
+        [DisplayName("An empty string written to a nullable column becomes DBNull")]
         public void ToColumnValue_EmptyIntoNullableColumn_ReturnsDBNull()
         {
             Assert.Equal(DBNull.Value, FormValueBinding.ToColumnValue(string.Empty, Column(typeof(string), allowDBNull: true)));
         }
 
         [Fact]
-        [DisplayName("空字串寫入 NOT NULL 欄位，應採用該欄位已設好的預設值")]
+        [DisplayName("An empty string written to a NOT NULL column uses the column's seeded default value")]
         public void ToColumnValue_EmptyIntoNonNullableColumn_UsesSeededDefault()
         {
             var column = Column(typeof(string), allowDBNull: false, defaultValue: "seeded");
@@ -43,14 +44,15 @@ namespace Polhem.Api.Client.UnitTests.FormData
         [Theory]
         [InlineData(typeof(string), "")]
         [InlineData(typeof(int), 0)]
-        [DisplayName("回歸：NOT NULL 欄位的 DefaultValue 仍是 DBNull 時，不得寫回 DBNull")]
+        [DisplayName("Regression: a NOT NULL column whose DefaultValue is still DBNull does not get DBNull written back")]
         public void ToColumnValue_EmptyIntoNonNullableColumnWithUnseededDefault_ReturnsNonNull(Type type, object expected)
         {
-            // Blazor head 的私有副本在這個情境回 DBNull，寫進 NOT NULL 欄位後 EndEdit 會擲
-            // NoNullAllowedException；Avalonia head 早已修好而另一邊沒跟。伺服器回應常帶的是
-            // 原始 ADO.NET column（DefaultValue 還是 DBNull），所以這不是邊角情境。
+            // The Blazor head's private copy returned DBNull here, and after writing it to a NOT NULL column
+            // `EndEdit` threw `NoNullAllowedException`. The Avalonia head had long been fixed, but the other side
+            // did not follow. Server responses often carry raw ADO.NET columns (whose `DefaultValue` is still
+            // DBNull), so this is not a corner case.
             var column = Column(type, allowDBNull: false);
-            Assert.Equal(DBNull.Value, column.DefaultValue); // 前提：這個欄位確實沒被 seed 過
+            Assert.Equal(DBNull.Value, column.DefaultValue); // Precondition: the column really has no seeded default.
 
             var actual = FormValueBinding.ToColumnValue(string.Empty, column);
 
@@ -60,14 +62,14 @@ namespace Polhem.Api.Client.UnitTests.FormData
 
         [Theory]
         [InlineData("string", typeof(string), "string")]
-        [DisplayName("字串欄位原樣寫入")]
+        [DisplayName("A string column is written as is")]
         public void ToColumnValue_String_PassesThrough(string value, Type type, string expected)
         {
             Assert.Equal(expected, FormValueBinding.ToColumnValue(value, Column(type, allowDBNull: true)));
         }
 
         [Fact]
-        [DisplayName("Guid / byte[] / DateTime 各走自己的剖析路徑（Convert.ChangeType 對前兩者無效）")]
+        [DisplayName("Guid, byte[] and DateTime each use their own parsing path (Convert.ChangeType does not work for the first two)")]
         public void ToColumnValue_NonConvertibleTypes_UseDedicatedParsing()
         {
             var guid = Guid.NewGuid();
@@ -91,10 +93,10 @@ namespace Polhem.Api.Client.UnitTests.FormData
         [InlineData("8:30", "08:30")]
         [InlineData("08:30", "08:30")]
         [InlineData("0:05", "00:05")]
-        [DisplayName("時刻欄寫入時正規化為定寬 HH:mm")]
+        [DisplayName("A time-of-day column is normalized to fixed-width HH:mm on write")]
         public void ToColumnValue_TimeColumn_NormalizesToFixedWidth(string value, string expected)
         {
-            // 定寬才讓字典序等於時序；"8:30" 原樣存入會排在 "10:00" 之後。
+            // Fixed width makes lexical order equal time order. Stored as is, "8:30" would sort after "10:00".
             Assert.Equal(expected, FormValueBinding.ToColumnValue(value, TimeColumn()));
         }
 
@@ -103,30 +105,31 @@ namespace Polhem.Api.Client.UnitTests.FormData
         [InlineData("08:99")]
         [InlineData("8:")]
         [InlineData("abc")]
-        [DisplayName("時刻欄遇到無法解析的輸入擲 FormatException，不原樣寫入也不清空")]
+        [DisplayName("A time-of-day column throws FormatException for unparsable input instead of writing it as is or clearing it")]
         public void ToColumnValue_TimeColumnInvalidInput_ThrowsFormatException(string value)
         {
-            // 表格儲存格靠這個例外保留前一個有效值；回空字串會讓打錯一個字就清掉資料。
+            // A grid cell relies on this exception to keep the previous valid value. Returning an empty string would
+            // wipe the data on a single typo.
             Assert.Throws<FormatException>(() => FormValueBinding.ToColumnValue(value, TimeColumn()));
         }
 
         [Fact]
-        [DisplayName("清空時刻欄寫回空字串（未填），不是 00:00")]
+        [DisplayName("Clearing a time-of-day column writes an empty string (unset), not 00:00")]
         public void ToColumnValue_TimeColumnEmpty_ReturnsUnset()
         {
             Assert.Equal(string.Empty, FormValueBinding.ToColumnValue(string.Empty, TimeColumn()));
         }
 
         [Fact]
-        [DisplayName("未帶宣告型別標記的字串欄不做時刻正規化")]
+        [DisplayName("A string column without the declared type marker is not normalized as a time of day")]
         public void ToColumnValue_UnmarkedStringColumn_DoesNotNormalizeTime()
         {
-            // 判斷依據是欄位的 FieldDbType 標記，不是值長得像時刻。
+            // The decision is based on the column's `FieldDbType` marker, not on the value looking like a time.
             Assert.Equal("8:30", FormValueBinding.ToColumnValue("8:30", Column(typeof(string), allowDBNull: true)));
         }
 
         [Fact]
-        [DisplayName("純日期以 yyyy-MM-dd 呈現，帶時間才加 T 時分秒")]
+        [DisplayName("A date-only value is shown as yyyy-MM-dd, and the T time part is added only when there is a time")]
         public void ToBindingString_DateTime_UsesIso8601ByPrecision()
         {
             Assert.Equal("2026-09-04", FormValueBinding.ToBindingString(new DateTime(2026, 9, 4, 0, 0, 0, DateTimeKind.Local)));
@@ -134,13 +137,13 @@ namespace Polhem.Api.Client.UnitTests.FormData
         }
 
         [Fact]
-        [DisplayName("數值以 InvariantCulture 呈現，不隨執行緒文化改變")]
+        [DisplayName("Numbers are shown with InvariantCulture regardless of the thread culture")]
         public void ToBindingString_Numeric_IsCultureInvariant()
         {
             var previous = CultureInfo.CurrentCulture;
             try
             {
-                // de-DE 的小數點是逗號；沒有 InvariantCulture 這條會回 "1,5"。
+                // The de-DE decimal separator is a comma, so without InvariantCulture this would return "1,5".
                 CultureInfo.CurrentCulture = new CultureInfo("de-DE");
                 Assert.Equal("1.5", FormValueBinding.ToBindingString(1.5m));
             }
@@ -148,7 +151,7 @@ namespace Polhem.Api.Client.UnitTests.FormData
         }
 
         [Fact]
-        [DisplayName("null 與 DBNull 都呈現為空字串")]
+        [DisplayName("null and DBNull are both shown as an empty string")]
         public void ToBindingString_NullAndDBNull_ReturnEmpty()
         {
             Assert.Equal(string.Empty, FormValueBinding.ToBindingString(null));
@@ -156,7 +159,7 @@ namespace Polhem.Api.Client.UnitTests.FormData
         }
 
         [Fact]
-        [DisplayName("BuildEmptyDataSet 依 schema 建出對應的空資料表")]
+        [DisplayName("BuildEmptyDataSet creates an empty table for each schema table")]
         public void BuildEmptyDataSet_CreatesOneTablePerSchemaTable()
         {
             var schema = new FormSchema { ProgId = "test_form" };
@@ -173,7 +176,7 @@ namespace Polhem.Api.Client.UnitTests.FormData
         }
 
         [Fact]
-        [DisplayName("GetEmptyValue 對每種欄位型別都回非 null")]
+        [DisplayName("GetEmptyValue returns non-null for every column type")]
         public void GetEmptyValue_KnownTypes_AreNeverNull()
         {
             Assert.Equal(string.Empty, FormValueBinding.GetEmptyValue(typeof(string)));

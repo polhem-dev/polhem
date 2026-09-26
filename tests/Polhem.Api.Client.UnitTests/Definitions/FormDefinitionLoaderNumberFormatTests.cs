@@ -9,14 +9,16 @@ using Polhem.Definition.Identity;
 namespace Polhem.Api.Client.UnitTests.Definitions
 {
     /// <summary>
-    /// <see cref="FormDefinitionLoader"/> 對數值格式的 bake 行為。
+    /// How <see cref="FormDefinitionLoader"/> bakes number formats.
     /// </summary>
     /// <remarks>
-    /// 定義類 API 一律供應「原樣儲存」的定義，公司位數的套用因此落在需求端。本組測試釘住
-    /// 「loader 會 bake」這件事本身——這條線斷過一次：伺服端在 v4.x 把 bake 移除並註明改由
-    /// 需求端處理，但需求端當時沒有補上，於是公司位數對任何 head 都不生效。
+    /// The definition APIs serve definitions "as stored", so applying the company's decimal places falls to the
+    /// consumer. These tests pin down the fact that the loader bakes them. This link broke once: in v4.x the server
+    /// removed the bake with a note that the consumer would handle it, but the consumer had not done so yet, so the
+    /// company's decimal places had no effect on any head.
     /// <para>
-    /// 用 fake connector 而非 <c>[DbFact]</c>：待驗的是 loader 的加工步驟，不是取得定義的傳輸。
+    /// Uses a fake connector rather than <c>[DbFact]</c>: what is under test is the loader's processing step, not
+    /// the transport that fetches the definitions.
     /// </para>
     /// </remarks>
     public class FormDefinitionLoaderNumberFormatTests
@@ -24,7 +26,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         private const string ProgId = "Order";
 
         /// <summary>
-        /// 每次 <c>GetDefine</c> 都回一份全新的 schema，避免測試之間共用實例而互相污染。
+        /// Returns a brand new schema on every <c>GetDefine</c>, so tests do not share an instance and pollute each other.
         /// </summary>
         private sealed class SchemaConnector : SystemApiConnector
         {
@@ -57,11 +59,11 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("GetLocalizedSchemaAsync 空語系路徑也會 bake 數值格式")]
+        [DisplayName("GetLocalizedSchemaAsync bakes the number format on the blank-language path too")]
         public async Task GetLocalizedSchemaAsync_BlankLang_BakesNumberFormat()
         {
-            // 空語系是最常走到的路徑（CultureInfo.InvariantCulture.Name 就是空字串），
-            // 而格式與語系無關，所以這條路徑不能略過 bake。
+            // The blank language is the most common path (`CultureInfo.InvariantCulture.Name` is an empty string),
+            // and the format does not depend on the language, so this path must not skip the bake.
             var loader = CreateLoader(CompanyWithPercentDecimals(3));
 
             var schema = await loader.GetLocalizedSchemaAsync(ProgId, string.Empty);
@@ -70,7 +72,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("GetLocalizedSchemaAsync 未提供 CompanyAccessor 時 bake 框架預設格式")]
+        [DisplayName("GetLocalizedSchemaAsync bakes the framework default format without a CompanyAccessor")]
         public async Task GetLocalizedSchemaAsync_NoCompanyAccessor_BakesFrameworkDefault()
         {
             var loader = new FormDefinitionLoader(new ClientDefineAccess(new SchemaConnector()));
@@ -81,7 +83,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("GetLocalizedSchemaAsync 不同公司位數應得到不同格式")]
+        [DisplayName("GetLocalizedSchemaAsync yields different formats for companies with different decimal places")]
         public async Task GetLocalizedSchemaAsync_DifferentCompanies_DifferentFormats()
         {
             var schemaA = await CreateLoader(CompanyWithPercentDecimals(2)).GetLocalizedSchemaAsync(ProgId, string.Empty);
@@ -92,7 +94,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("GetLocalizedSchemaAsync 金額欄不 bake，但繼承主檔幣別欄供 UI 逐列解析")]
+        [DisplayName("GetLocalizedSchemaAsync does not bake amount fields but has them inherit the master currency field for per-row resolution in the UI")]
         public async Task GetLocalizedSchemaAsync_AmountField_InheritsMasterCurrencyField()
         {
             var loader = CreateLoader(CompanyWithPercentDecimals(2));
@@ -105,11 +107,12 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("CompanyAccessor 為委派：更換公司後同一個 loader 應改用新公司的位數")]
+        [DisplayName("CompanyAccessor is a delegate: after the company changes, the same loader uses the new company's decimal places")]
         public async Task CompanyAccessor_IsRead_PerCall()
         {
-            // 委派而非值：EnterCompany / LeaveCompany 會在 session 存續期間換公司，
-            // 建構時快照下來的公司會讓 loader 一直 bake 前一租戶的位數。
+            // A delegate rather than a value: `EnterCompany` and `LeaveCompany` change the company during the
+            // session's lifetime, and a company captured at construction would keep the loader baking the previous
+            // tenant's decimal places.
             CompanyInfo? current = CompanyWithPercentDecimals(2);
             var loader = new FormDefinitionLoader(new ClientDefineAccess(new SchemaConnector()))
             {

@@ -5,13 +5,14 @@ using Polhem.Definition.Language;
 namespace Polhem.Api.Client.UnitTests.Definitions
 {
     /// <summary>
-    /// <see cref="SnapshotLanguageService"/> 測試：用戶端在已取回的兩層快照上做選用與預設語系
-    /// fallback，行為必須與伺服端的 <c>LanguageService</c> 一致（兩者都走 <c>CustomizeOverlay</c>）。
+    /// Tests for <see cref="SnapshotLanguageService"/>: the client picks values and falls back to the default
+    /// language over the two-layer snapshot it already fetched, and must behave like the server-side
+    /// <c>LanguageService</c> (both go through <c>CustomizeOverlay</c>).
     /// </summary>
     public class SnapshotLanguageServiceTests
     {
         [Fact]
-        [DisplayName("客製有該 key 時取客製值")]
+        [DisplayName("Returns the customized value when the customization has the key")]
         public void GetLangText_CustomizeHasKey_ReturnsCustomizeValue()
         {
             var svc = Build(("zh-TW", "Common", Res(("OK", "確定")), Res(("OK", "送出"))));
@@ -20,7 +21,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("客製沒有該 key 時延用套裝值")]
+        [DisplayName("Falls back to the base value when the customization does not have the key")]
         public void GetLangText_CustomizeMissesKey_FallsBackToBase()
         {
             var svc = Build(("zh-TW", "Common", Res(("OK", "確定"), ("Cancel", "取消")), Res(("OK", "送出"))));
@@ -29,7 +30,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("要求語系查無時應退到預設語系")]
+        [DisplayName("Falls back to the default language when the requested language has no match")]
         public void GetLangText_MissingInRequestedLang_FallsBackToDefaultLang()
         {
             var svc = Build(
@@ -41,7 +42,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("預設語系的客製層同樣參與 fallback")]
+        [DisplayName("The customization layer of the default language also takes part in the fallback")]
         public void GetLangText_DefaultLangFallback_AlsoOverlaysCustomize()
         {
             var svc = Build(
@@ -53,7 +54,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("兩層與 fallback 皆查無時回 fullKey（與伺服端同一個最後手段）")]
+        [DisplayName("Returns fullKey when both layers and the fallback miss (the same last resort as the server)")]
         public void GetLangText_AllMiss_ReturnsFullKey()
         {
             var svc = Build(("zh-TW", "Common", Res(), null));
@@ -62,7 +63,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("快照沒有該 namespace 時不丟例外，視同查無")]
+        [DisplayName("A namespace missing from the snapshot does not throw and counts as a miss")]
         public void GetLangText_NamespaceNotInSnapshot_TreatedAsMiss()
         {
             var svc = Build(("zh-TW", "Common", Res(("OK", "確定")), null));
@@ -72,7 +73,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("fullKey 多載於第一個點切開")]
+        [DisplayName("The fullKey overload splits on the first dot")]
         public void GetLangText_FullKey_SplitsOnFirstDot()
         {
             var svc = Build(("zh-TW", "Customer", Res(("Field.sys_name.Caption", "客戶名稱")), null));
@@ -81,7 +82,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("Enum：客製有同名 enum 時整組取代")]
+        [DisplayName("Enum: a customized enum with the same name replaces the whole set")]
         public void GetLangEnum_CustomizeHasEnum_ReplacesWholeSet()
         {
             var svc = Build(("zh-TW", "Common",
@@ -96,7 +97,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         }
 
         [Fact]
-        [DisplayName("Enum：要求語系查無時應退到預設語系")]
+        [DisplayName("Enum: falls back to the default language when the requested language has no match")]
         public void GetLangEnum_MissingInRequestedLang_FallsBackToDefaultLang()
         {
             var svc = Build(

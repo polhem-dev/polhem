@@ -5,13 +5,15 @@ using Polhem.Definition.Filters;
 namespace Polhem.Api.Client.UnitTests.Connectors
 {
     /// <summary>
-    /// 驗證 <see cref="Polhem.Api.Client.Connectors.ApiConnector"/> 送出請求前的
-    /// <see cref="Polhem.Api.Core.JsonRpc.DateTimeWireGuard"/> 檢查不因使用者時區換算而失效（ADR-032 D6）。
+    /// Verifies that the <see cref="Polhem.Api.Core.JsonRpc.DateTimeWireGuard"/> check that
+    /// <see cref="Polhem.Api.Client.Connectors.ApiConnector"/> runs before sending a request is not defeated by the
+    /// user time zone conversion (ADR-032 D6).
     /// </summary>
     /// <remarks>
-    /// 時區換算會把過濾條件值改為 <see cref="DateTimeKind.Unspecified"/>，guard 若排在換算之後，
-    /// 登入後（有使用者時區）的 <see cref="DateTimeKind.Local"/> 值就一律放行。
-    /// 只測 guard 本身的 <c>DateTimeWireGuardTests</c> 看不到這個先後順序。
+    /// The time zone conversion changes filter values to <see cref="DateTimeKind.Unspecified"/>. If the guard ran
+    /// after the conversion, every <see cref="DateTimeKind.Local"/> value would pass once the user is logged in
+    /// (with a user time zone). <c>DateTimeWireGuardTests</c>, which tests only the guard itself, cannot see this
+    /// ordering.
     /// </remarks>
     public class ApiConnectorDateTimeGuardTests
     {
@@ -20,7 +22,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         [Theory]
         [InlineData("")]
         [InlineData("Asia/Taipei")]
-        [DisplayName("過濾條件帶 Kind=Local 時，不論是否設定使用者時區都應擲例外")]
+        [DisplayName("A filter value with Kind=Local throws whether or not a user time zone is set")]
         public async Task ExecuteAsync_FilterWithLocalKind_ThrowsRegardlessOfUserTimeZone(string userTimeZoneId)
         {
             var request = Request(DateTime.SpecifyKind(s_sample, DateTimeKind.Local));
@@ -32,7 +34,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("已設定使用者時區時，Kind=Unspecified 的過濾條件值應正常送出")]
+        [DisplayName("With a user time zone set, a filter value with Kind=Unspecified is sent normally")]
         public async Task ExecuteAsync_FilterWithUnspecifiedKindAndUserTimeZone_Succeeds()
         {
             var result = await ApiConnectorTestHost.ExecuteAsUserAsync(Request(s_sample), "Asia/Taipei");

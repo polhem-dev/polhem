@@ -4,12 +4,12 @@ using Polhem.Api.Client.Providers;
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// 針對 <see cref="LocalApiProvider"/> 建構子與屬性的純邏輯測試。
+    /// Pure logic tests for the constructor and properties of <see cref="LocalApiProvider"/>.
     /// </summary>
     public class LocalApiProviderTests
     {
         [Fact]
-        [DisplayName("LocalApiProvider 建構子應正確設定 AccessToken")]
+        [DisplayName("LocalApiProvider constructor sets AccessToken")]
         public void Constructor_SetsAccessToken()
         {
             var token = Guid.NewGuid();
@@ -19,7 +19,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("LocalApiProvider 建構子可接受 Guid.Empty")]
+        [DisplayName("LocalApiProvider constructor accepts Guid.Empty")]
         public void Constructor_EmptyAccessToken_IsAccepted()
         {
             var provider = new LocalApiProvider(Guid.Empty);

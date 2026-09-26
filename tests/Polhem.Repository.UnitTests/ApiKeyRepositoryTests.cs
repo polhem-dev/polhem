@@ -10,12 +10,12 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// <see cref="ApiKeyRepository"/> 的讀寫測試：雜湊金鑰的 round-trip、停用列被查詢層排除、
-    /// 以及相容閘門（<c>GetGateState</c>）在有啟用金鑰時轉為 in force。
+    /// Read/write tests for <see cref="ApiKeyRepository"/>: the round-trip of hashed keys, and the compatibility gate
+    /// (<c>GetGateState</c>) turning in force once an enabled key exists.
     /// </summary>
     /// <remarks>
-    /// 每個測試用唯一 <c>sys_id</c>（`rt-{guid}`）並在 finally 清理，因為實體資料庫由多個平行
-    /// 測試行程共用。
+    /// Each test uses a unique <c>sys_id</c> (`rt-{guid}`) and cleans up in finally, because the physical database is
+    /// shared by several test processes running in parallel.
     /// </remarks>
     public class ApiKeyRepositoryTests : IClassFixture<SharedDbFixture>
     {
@@ -79,29 +79,29 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("Insert 後 GetEnabledById on SQL Server 應完整取回金鑰列")]
+        [DisplayName("GetEnabledById reads back the full key row after Insert on SQL Server")]
         public void Insert_ThenGet_SqlServer() => RunRoundTrip(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("Insert 後 GetEnabledById on PostgreSQL 應完整取回金鑰列")]
+        [DisplayName("GetEnabledById reads back the full key row after Insert on PostgreSQL")]
         public void Insert_ThenGet_PostgreSql() => RunRoundTrip(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("Insert 後 GetEnabledById on SQLite 應完整取回金鑰列")]
+        [DisplayName("GetEnabledById reads back the full key row after Insert on SQLite")]
         public void Insert_ThenGet_Sqlite() => RunRoundTrip(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("Insert 後 GetEnabledById on MySQL 應完整取回金鑰列")]
+        [DisplayName("GetEnabledById reads back the full key row after Insert on MySQL")]
         public void Insert_ThenGet_MySql() => RunRoundTrip(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("Insert 後 GetEnabledById on Oracle 應完整取回金鑰列")]
+        [DisplayName("GetEnabledById reads back the full key row after Insert on Oracle")]
         public void Insert_ThenGet_Oracle() => RunRoundTrip(DatabaseType.Oracle);
 
         #endregion
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("Insert 未指定到期時間時 GetEnabledById 應回 null 到期時間")]
+        [DisplayName("GetEnabledById returns a null expiry when Insert specified no expiry")]
         public void Insert_WithoutExpiry_ReadsBackNull()
         {
             const DatabaseType databaseType = DatabaseType.SQLite;
@@ -129,14 +129,14 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("GetEnabledById 於 sys_id 查無時應回傳 null")]
+        [DisplayName("GetEnabledById returns null for an unknown sys_id")]
         public void GetEnabledById_UnknownSysId_ReturnsNull()
         {
             Assert.Null(CreateRepo(DatabaseType.SQLite).GetEnabledById(NewSysId()));
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("Exists 應在寫入後為 true、清理後為 false")]
+        [DisplayName("Exists is false before the insert and true after it")]
         public void Exists_ReflectsRowPresence()
         {
             const DatabaseType databaseType = DatabaseType.SQLite;
@@ -162,7 +162,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("GetGateState 於存在啟用金鑰時應為 in force（發第一把金鑰即關上閘門）")]
+        [DisplayName("GetGateState is in force when an enabled key exists (issuing the first key closes the gate)")]
         public void GetGateState_WithEnabledKey_IsInForce()
         {
             const DatabaseType databaseType = DatabaseType.SQLite;
@@ -188,7 +188,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("GetGateState 於表存在時不應擲例外（表存在與否走 schema provider 判定）")]
+        [DisplayName("GetGateState does not throw when the table exists (table existence is decided by the schema provider)")]
         public void GetGateState_TableExists_DoesNotThrow()
         {
             var exception = Record.Exception(() => CreateRepo(DatabaseType.SQLite).GetGateState());

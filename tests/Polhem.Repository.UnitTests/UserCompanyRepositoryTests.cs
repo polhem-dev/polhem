@@ -8,9 +8,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// 5 DB round-trip 測試：seed user '001' ↔ company 'C001' 對照於
-    /// <see cref="SharedDatabaseState"/> 已建好；測試覆蓋三種情境 — granted+enabled、
-    /// not-granted、granted+disabled。
+    /// Round-trip tests across the database providers. The seed user '001' ↔ company 'C001' mapping is already
+    /// created by <see cref="SharedDatabaseState"/>; the tests cover granted+enabled, not-granted and
+    /// granted+disabled.
     /// </summary>
     public class UserCompanyRepositoryTests : IClassFixture<SharedDbFixture>
     {
@@ -34,23 +34,23 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("HasAccess('001','C001') on SQL Server seed 對照存在 → true")]
+        [DisplayName("HasAccess('001','C001') returns true for the seeded mapping on SQL Server")]
         public void HasAccess_Granted_SqlServer() => RunHasAccessGranted(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("HasAccess('001','C001') on PostgreSQL seed 對照存在 → true")]
+        [DisplayName("HasAccess('001','C001') returns true for the seeded mapping on PostgreSQL")]
         public void HasAccess_Granted_PostgreSql() => RunHasAccessGranted(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("HasAccess('001','C001') on SQLite seed 對照存在 → true")]
+        [DisplayName("HasAccess('001','C001') returns true for the seeded mapping on SQLite")]
         public void HasAccess_Granted_Sqlite() => RunHasAccessGranted(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("HasAccess('001','C001') on MySQL seed 對照存在 → true")]
+        [DisplayName("HasAccess('001','C001') returns true for the seeded mapping on MySQL")]
         public void HasAccess_Granted_MySql() => RunHasAccessGranted(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("HasAccess('001','C001') on Oracle seed 對照存在 → true")]
+        [DisplayName("HasAccess('001','C001') returns true for the seeded mapping on Oracle")]
         public void HasAccess_Granted_Oracle() => RunHasAccessGranted(DatabaseType.Oracle);
 
         #endregion
@@ -64,23 +64,23 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("HasAccess 不存在公司 on SQL Server → false")]
+        [DisplayName("HasAccess returns false for a nonexistent company on SQL Server")]
         public void HasAccess_NotGranted_SqlServer() => RunHasAccessNotGranted(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("HasAccess 不存在公司 on PostgreSQL → false")]
+        [DisplayName("HasAccess returns false for a nonexistent company on PostgreSQL")]
         public void HasAccess_NotGranted_PostgreSql() => RunHasAccessNotGranted(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("HasAccess 不存在公司 on SQLite → false")]
+        [DisplayName("HasAccess returns false for a nonexistent company on SQLite")]
         public void HasAccess_NotGranted_Sqlite() => RunHasAccessNotGranted(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("HasAccess 不存在公司 on MySQL → false")]
+        [DisplayName("HasAccess returns false for a nonexistent company on MySQL")]
         public void HasAccess_NotGranted_MySql() => RunHasAccessNotGranted(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("HasAccess 不存在公司 on Oracle → false")]
+        [DisplayName("HasAccess returns false for a nonexistent company on Oracle")]
         public void HasAccess_NotGranted_Oracle() => RunHasAccessNotGranted(DatabaseType.Oracle);
 
         #endregion
@@ -89,7 +89,7 @@ namespace Polhem.Repository.UnitTests
 
         private void RunHasAccessDisabledCompany(DatabaseType dbType)
         {
-            // Seed: 建 disabled company + 對照 user '001' → 該公司；HasAccess 應為 false。
+            // Seed a disabled company and map user '001' to it; HasAccess must be false.
             var dbAccess = _fx.NewDbAccess(TestDbConventions.GetDatabaseId(dbType, DbCategoryIds.Common));
             var companyId = string.Concat("DIS_", Guid.NewGuid().ToString("N").AsSpan(0, 6));
             var companyRowId = Guid.NewGuid();
@@ -126,7 +126,6 @@ namespace Polhem.Repository.UnitTests
                 companyRowId, companyId, "停用公司", "common", string.Empty, "USD", string.Empty, string.Empty);
             dbAccess.Execute(insertCompany);
 
-            // 取 user '001' rowid
             var lookupUser = new DbCommandSpec(DbCommandKind.Scalar,
                 $"SELECT {colRowId} FROM {tblUser} WHERE {colSysId} = {{0}}", "001");
             var userResult = dbAccess.Execute(lookupUser);
@@ -163,23 +162,23 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("HasAccess 已授權但公司停用 on SQL Server → false")]
+        [DisplayName("HasAccess returns false for a granted but disabled company on SQL Server")]
         public void HasAccess_GrantedDisabled_SqlServer() => RunHasAccessDisabledCompany(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("HasAccess 已授權但公司停用 on PostgreSQL → false")]
+        [DisplayName("HasAccess returns false for a granted but disabled company on PostgreSQL")]
         public void HasAccess_GrantedDisabled_PostgreSql() => RunHasAccessDisabledCompany(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("HasAccess 已授權但公司停用 on SQLite → false")]
+        [DisplayName("HasAccess returns false for a granted but disabled company on SQLite")]
         public void HasAccess_GrantedDisabled_Sqlite() => RunHasAccessDisabledCompany(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("HasAccess 已授權但公司停用 on MySQL → false")]
+        [DisplayName("HasAccess returns false for a granted but disabled company on MySQL")]
         public void HasAccess_GrantedDisabled_MySql() => RunHasAccessDisabledCompany(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("HasAccess 已授權但公司停用 on Oracle → false")]
+        [DisplayName("HasAccess returns false for a granted but disabled company on Oracle")]
         public void HasAccess_GrantedDisabled_Oracle() => RunHasAccessDisabledCompany(DatabaseType.Oracle);
 
         #endregion

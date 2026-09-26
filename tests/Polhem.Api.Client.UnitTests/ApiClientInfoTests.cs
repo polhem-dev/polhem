@@ -3,15 +3,15 @@ using System.ComponentModel;
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// 針對 <see cref="ApiClientInfo"/> 靜態屬性的純邏輯測試。與 <c>ApiConnectValidatorTests</c>
-    /// 同 mutate process-wide static <c>ApiClientInfo.SupportedConnectTypes</c>，故同列入
-    /// <c>[Collection("ApiClientInfoState")]</c> 串行，避免平行 class race。
+    /// Pure logic tests for the static properties of <see cref="ApiClientInfo"/>. Like <c>ApiConnectValidatorTests</c>
+    /// it mutates the process-wide static <c>ApiClientInfo.SupportedConnectTypes</c>, so both are in
+    /// <c>[Collection("ApiClientInfoState")]</c> and run serially, avoiding races between parallel classes.
     /// </summary>
     [Collection("ApiClientInfoState")]
     public class ApiClientInfoTests
     {
         /// <summary>
-        /// 執行測試前先備份靜態狀態，測試結束後還原，避免跨測試污染。
+        /// Backs up the static state before the test and restores it afterwards, so tests do not pollute each other.
         /// </summary>
         private static void WithSnapshot(Action action)
         {
@@ -35,7 +35,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ApiClientInfo 預設值應符合設計")]
+        [DisplayName("ApiClientInfo defaults match the design")]
         public void Defaults_AreExpected()
         {
             WithSnapshot(() =>
@@ -55,7 +55,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ApiClientInfo.SupportedConnectTypes 可被覆寫並讀回")]
+        [DisplayName("ApiClientInfo.SupportedConnectTypes can be overwritten and read back")]
         public void SupportedConnectTypes_CanBeOverwritten()
         {
             WithSnapshot(() =>
@@ -69,7 +69,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ApiClientInfo.ConnectType 可被覆寫並讀回")]
+        [DisplayName("ApiClientInfo.ConnectType can be overwritten and read back")]
         public void ConnectType_CanBeOverwritten()
         {
             WithSnapshot(() =>
@@ -80,7 +80,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ApiClientInfo.Endpoint 與 ApiKey 可被覆寫並讀回")]
+        [DisplayName("ApiClientInfo.Endpoint and ApiKey can be overwritten and read back")]
         public void EndpointAndApiKey_CanBeOverwritten()
         {
             WithSnapshot(() =>
@@ -94,7 +94,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ApiClientInfo.ApiEncryptionKey 可被替換為新陣列")]
+        [DisplayName("ApiClientInfo.ApiEncryptionKey can be replaced with a new array")]
         public void ApiEncryptionKey_CanBeReplaced()
         {
             WithSnapshot(() =>
@@ -108,7 +108,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("SupportedConnectTypes.Both 等於 Local 與 Remote 的 OR")]
+        [DisplayName("SupportedConnectTypes.Both equals Local OR Remote")]
         public void SupportedConnectTypes_Both_EqualsLocalOrRemote()
         {
             Assert.Equal(SupportedConnectTypes.Local | SupportedConnectTypes.Remote, SupportedConnectTypes.Both);

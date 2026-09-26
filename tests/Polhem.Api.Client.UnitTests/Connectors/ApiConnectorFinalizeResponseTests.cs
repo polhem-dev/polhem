@@ -11,13 +11,13 @@ namespace Polhem.Api.Client.UnitTests.Connectors
     /// exception types (round-trip with <c>JsonRpcExecutor.MapException</c>).
     /// </summary>
     /// <remarks>
-    /// 本檔逐則驗證單一錯誤碼的行為與訊息形狀；「兩端對映是否一致、有無新碼漏接」
-    /// 由 <see cref="ErrorContractDriftTests"/> 守。
+    /// This file checks the behavior and message shape of individual error codes one by one. Whether the two ends
+    /// map consistently, and whether a new code is missed, is guarded by <see cref="ErrorContractDriftTests"/>.
     /// </remarks>
     public class ApiConnectorFinalizeResponseTests
     {
         [Fact]
-        [DisplayName("FinalizeResponse 於 UserMessage code 應拋出 UserMessageException 且訊息純淨無前綴")]
+        [DisplayName("FinalizeResponse throws UserMessageException for the UserMessage code with a clean, unprefixed message")]
         public async Task FinalizeResponse_UserMessageCode_ThrowsUserMessageException()
         {
             var ex = await Assert.ThrowsAsync<UserMessageException>(() =>
@@ -28,7 +28,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("FinalizeResponse 於 PermissionDenied code 應拋出 ForbiddenException 且訊息純淨無前綴")]
+        [DisplayName("FinalizeResponse throws ForbiddenException for the PermissionDenied code with a clean, unprefixed message")]
         public async Task FinalizeResponse_PermissionDeniedCode_ThrowsForbiddenException()
         {
             const string message = "Permission denied: 'Delete' on model 'PurchaseOrder'.";
@@ -41,7 +41,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("FinalizeResponse 於 ReplayRejected code 應拋出 ReplayRejectedException 且訊息純淨無前綴")]
+        [DisplayName("FinalizeResponse throws ReplayRejectedException for the ReplayRejected code with a clean, unprefixed message")]
         public async Task FinalizeResponse_ReplayRejectedCode_ThrowsReplayRejectedException()
         {
             const string message = "The request timestamp is 90 seconds away from server time, outside the accepted window.";
@@ -54,7 +54,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("FinalizeResponse 於 InternalError code 應拋出 InvalidOperationException 並保留前綴格式")]
+        [DisplayName("FinalizeResponse throws InvalidOperationException for the InternalError code and keeps the prefixed format")]
         public async Task FinalizeResponse_InternalErrorCode_ThrowsInvalidOperationException()
         {
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -66,7 +66,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("FinalizeResponse 於 ParseError 等其他協定 code 應拋出 InvalidOperationException(迴歸)")]
+        [DisplayName("FinalizeResponse throws InvalidOperationException for other protocol codes such as MethodNotFound (regression)")]
         public async Task FinalizeResponse_OtherProtocolCode_ThrowsInvalidOperationException()
         {
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -77,7 +77,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("UserMessageException 可被 catch (Exception) 接住(迴歸:既有寬泛 catch 仍能運作)")]
+        [DisplayName("UserMessageException can be caught by catch (Exception) (regression: existing broad catches still work)")]
         public async Task FinalizeResponse_UserMessageException_StillCaughtAsException()
         {
             Exception? caught = null;
@@ -95,7 +95,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("FinalizeResponse 於成功響應應正常回傳結果(迴歸)")]
+        [DisplayName("FinalizeResponse returns the result for a successful response (regression)")]
         public async Task FinalizeResponse_NoError_ReturnsValue()
         {
             var result = await ApiConnectorTestHost.ExecuteWithResultAsync();

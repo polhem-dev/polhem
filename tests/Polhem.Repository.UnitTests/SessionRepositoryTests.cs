@@ -8,18 +8,20 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// <see cref="SessionRepository"/> 的種子讀寫測試，五家 provider 各跑一輪。
+    /// Seed read/write tests for <see cref="SessionRepository"/>, one run per provider.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <c>st_session</c> 存的是重建種子而非 SessionInfo 快照——只放無法再推導的值
-    /// （token / 使用者 / 到期 / 公司）。因此測試重點在 round-trip 與三個寫入操作的效果。
+    /// <c>st_session</c> stores a rebuild seed, not a SessionInfo snapshot: only the values that cannot be derived
+    /// again (token, user, expiry, company). So the tests focus on the round-trip and on the effect of the insert,
+    /// update and delete operations.
     /// </para>
     /// <para>
-    /// 本類別的測試以 <see cref="ProviderScopedRouter"/> 把 <c>DbScope.Common</c> 導向該
-    /// provider 的測試資料庫。用預設路由的話全部會落在 SQL Server：<c>UpdateSession</c> 的
-    /// 佔位符順序是 <c>{1} {2} {0}</c>，而 Oracle 的位置綁定會把 <c>DateTime</c> 送進
-    /// <c>access_token</c>（RAW(16)）——那個缺陷正是在這條路徑上，卻由壓測而非測試發現。
+    /// The tests in this class use <see cref="ProviderScopedRouter"/> to route <c>DbScope.Common</c> to that
+    /// provider's test database. With the default routing they would all land on SQL Server. The placeholder order
+    /// of <c>UpdateSession</c> is <c>{1} {2} {0}</c>, and Oracle's positional binding sent a <c>DateTime</c> into
+    /// <c>access_token</c> (RAW(16)). That defect was exactly on this path, yet it was found by a load test rather
+    /// than by a test.
     /// </para>
     /// </remarks>
     public class SessionRepositoryTests : IClassFixture<SharedDbFixture>
@@ -63,28 +65,28 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("InsertSession 寫入的種子應可由 GetSession 完整取回（SQL Server）")]
+        [DisplayName("A seed written by InsertSession is fully read back by GetSession (SQL Server)")]
         public void InsertSession_ThenGetSession_RoundTrips_SqlServer() => RunInsertThenGet(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("InsertSession 寫入的種子應可由 GetSession 完整取回（PostgreSQL）")]
+        [DisplayName("A seed written by InsertSession is fully read back by GetSession (PostgreSQL)")]
         public void InsertSession_ThenGetSession_RoundTrips_PostgreSql() => RunInsertThenGet(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("InsertSession 寫入的種子應可由 GetSession 完整取回（SQLite）")]
+        [DisplayName("A seed written by InsertSession is fully read back by GetSession (SQLite)")]
         public void InsertSession_ThenGetSession_RoundTrips_Sqlite() => RunInsertThenGet(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("InsertSession 寫入的種子應可由 GetSession 完整取回（MySQL）")]
+        [DisplayName("A seed written by InsertSession is fully read back by GetSession (MySQL)")]
         public void InsertSession_ThenGetSession_RoundTrips_MySql() => RunInsertThenGet(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("InsertSession 寫入的種子應可由 GetSession 完整取回（Oracle）")]
+        [DisplayName("A seed written by InsertSession is fully read back by GetSession (Oracle)")]
         public void InsertSession_ThenGetSession_RoundTrips_Oracle() => RunInsertThenGet(DatabaseType.Oracle);
 
         #endregion
 
-        #region GetSession — 不存在的 token
+        #region GetSession — nonexistent token
 
         private void RunGetSessionNotFound(DatabaseType databaseType)
         {
@@ -92,28 +94,28 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("GetSession 傳入不存在的 AccessToken 應回傳 null（SQL Server）")]
+        [DisplayName("GetSession returns null for a nonexistent AccessToken (SQL Server)")]
         public void GetSession_NonExistentToken_ReturnsNull_SqlServer() => RunGetSessionNotFound(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("GetSession 傳入不存在的 AccessToken 應回傳 null（PostgreSQL）")]
+        [DisplayName("GetSession returns null for a nonexistent AccessToken (PostgreSQL)")]
         public void GetSession_NonExistentToken_ReturnsNull_PostgreSql() => RunGetSessionNotFound(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("GetSession 傳入不存在的 AccessToken 應回傳 null（SQLite）")]
+        [DisplayName("GetSession returns null for a nonexistent AccessToken (SQLite)")]
         public void GetSession_NonExistentToken_ReturnsNull_Sqlite() => RunGetSessionNotFound(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("GetSession 傳入不存在的 AccessToken 應回傳 null（MySQL）")]
+        [DisplayName("GetSession returns null for a nonexistent AccessToken (MySQL)")]
         public void GetSession_NonExistentToken_ReturnsNull_MySql() => RunGetSessionNotFound(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("GetSession 傳入不存在的 AccessToken 應回傳 null（Oracle）")]
+        [DisplayName("GetSession returns null for a nonexistent AccessToken (Oracle)")]
         public void GetSession_NonExistentToken_ReturnsNull_Oracle() => RunGetSessionNotFound(DatabaseType.Oracle);
 
         #endregion
 
-        #region GetSession — 已過期的種子
+        #region GetSession — expired seed
 
         private void RunGetSessionExpired(DatabaseType databaseType)
         {
@@ -125,28 +127,28 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("GetSession 已過期的種子應回傳 null（SQL Server）")]
+        [DisplayName("GetSession returns null for an expired seed (SQL Server)")]
         public void GetSession_ExpiredSeed_ReturnsNull_SqlServer() => RunGetSessionExpired(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("GetSession 已過期的種子應回傳 null（PostgreSQL）")]
+        [DisplayName("GetSession returns null for an expired seed (PostgreSQL)")]
         public void GetSession_ExpiredSeed_ReturnsNull_PostgreSql() => RunGetSessionExpired(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("GetSession 已過期的種子應回傳 null（SQLite）")]
+        [DisplayName("GetSession returns null for an expired seed (SQLite)")]
         public void GetSession_ExpiredSeed_ReturnsNull_Sqlite() => RunGetSessionExpired(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("GetSession 已過期的種子應回傳 null（MySQL）")]
+        [DisplayName("GetSession returns null for an expired seed (MySQL)")]
         public void GetSession_ExpiredSeed_ReturnsNull_MySql() => RunGetSessionExpired(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("GetSession 已過期的種子應回傳 null（Oracle）")]
+        [DisplayName("GetSession returns null for an expired seed (Oracle)")]
         public void GetSession_ExpiredSeed_ReturnsNull_Oracle() => RunGetSessionExpired(DatabaseType.Oracle);
 
         #endregion
 
-        #region UpdateSession — 佔位符順序為 {1} {2} {0}，位置綁定會在此錯位
+        #region UpdateSession — placeholder order {1} {2} {0}, where positional binding goes wrong
 
         private void RunUpdateSession(DatabaseType databaseType)
         {
@@ -159,7 +161,7 @@ namespace Polhem.Repository.UnitTests
 
             Assert.Equal("C002", repo.GetSession(seed.AccessToken)!.CompanyId);
 
-            // 離開公司即清空，重建才不會把使用者放回已離開的公司
+            // Leaving the company clears it, so a rebuild does not put the user back into a company they left.
             seed.CompanyId = null;
             repo.UpdateSession(seed);
 
@@ -167,23 +169,23 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("UpdateSession 應覆寫既有種子的 CompanyId（SQL Server）")]
+        [DisplayName("UpdateSession overwrites the CompanyId of an existing seed (SQL Server)")]
         public void UpdateSession_OverwritesCompanyId_SqlServer() => RunUpdateSession(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("UpdateSession 應覆寫既有種子的 CompanyId（PostgreSQL）")]
+        [DisplayName("UpdateSession overwrites the CompanyId of an existing seed (PostgreSQL)")]
         public void UpdateSession_OverwritesCompanyId_PostgreSql() => RunUpdateSession(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("UpdateSession 應覆寫既有種子的 CompanyId（SQLite）")]
+        [DisplayName("UpdateSession overwrites the CompanyId of an existing seed (SQLite)")]
         public void UpdateSession_OverwritesCompanyId_Sqlite() => RunUpdateSession(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("UpdateSession 應覆寫既有種子的 CompanyId（MySQL）")]
+        [DisplayName("UpdateSession overwrites the CompanyId of an existing seed (MySQL)")]
         public void UpdateSession_OverwritesCompanyId_MySql() => RunUpdateSession(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("UpdateSession 應覆寫既有種子的 CompanyId（Oracle）")]
+        [DisplayName("UpdateSession overwrites the CompanyId of an existing seed (Oracle)")]
         public void UpdateSession_OverwritesCompanyId_Oracle() => RunUpdateSession(DatabaseType.Oracle);
 
         #endregion
@@ -204,28 +206,28 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("DeleteSession 應刪除種子且重複呼叫為冪等（SQL Server）")]
+        [DisplayName("DeleteSession deletes the seed and a repeated call is idempotent (SQL Server)")]
         public void DeleteSession_RemovesSeed_AndIsIdempotent_SqlServer() => RunDeleteSession(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("DeleteSession 應刪除種子且重複呼叫為冪等（PostgreSQL）")]
+        [DisplayName("DeleteSession deletes the seed and a repeated call is idempotent (PostgreSQL)")]
         public void DeleteSession_RemovesSeed_AndIsIdempotent_PostgreSql() => RunDeleteSession(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("DeleteSession 應刪除種子且重複呼叫為冪等（SQLite）")]
+        [DisplayName("DeleteSession deletes the seed and a repeated call is idempotent (SQLite)")]
         public void DeleteSession_RemovesSeed_AndIsIdempotent_Sqlite() => RunDeleteSession(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("DeleteSession 應刪除種子且重複呼叫為冪等（MySQL）")]
+        [DisplayName("DeleteSession deletes the seed and a repeated call is idempotent (MySQL)")]
         public void DeleteSession_RemovesSeed_AndIsIdempotent_MySql() => RunDeleteSession(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("DeleteSession 應刪除種子且重複呼叫為冪等（Oracle）")]
+        [DisplayName("DeleteSession deletes the seed and a repeated call is idempotent (Oracle)")]
         public void DeleteSession_RemovesSeed_AndIsIdempotent_Oracle() => RunDeleteSession(DatabaseType.Oracle);
 
         #endregion
 
-        #region GetSession 無副作用 + DeleteExpiredSessions
+        #region GetSession has no side effect + DeleteExpiredSessions
 
         private void RunGetSessionHasNoSideEffect(DatabaseType databaseType)
         {
@@ -233,35 +235,36 @@ namespace Polhem.Repository.UnitTests
             var expired = CreateSeed(expiresInSeconds: -3600);
             repo.InsertSession(expired);
 
-            // 過期列由查詢條件過濾，不再 delete-on-read
+            // Expired rows are filtered out by the query condition; there is no delete-on-read.
             Assert.Null(repo.GetSession(expired.AccessToken));
-            // 讀完該列仍在，交由清理排程回收——若讀取仍會刪除，這裡就沒有東西可刪了
+            // The row is still there after the read and is left to the cleanup schedule. If the read still deleted
+            // it, there would be nothing left to delete here.
             Assert.True(repo.DeleteExpiredSessions() >= 1);
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("GetSession 不得產生任何寫入（讀取純化，SQL Server）")]
+        [DisplayName("GetSession performs no writes (side-effect-free read, SQL Server)")]
         public void GetSession_HasNoSideEffect_SqlServer() => RunGetSessionHasNoSideEffect(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("GetSession 不得產生任何寫入（讀取純化，PostgreSQL）")]
+        [DisplayName("GetSession performs no writes (side-effect-free read, PostgreSQL)")]
         public void GetSession_HasNoSideEffect_PostgreSql() => RunGetSessionHasNoSideEffect(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("GetSession 不得產生任何寫入（讀取純化，SQLite）")]
+        [DisplayName("GetSession performs no writes (side-effect-free read, SQLite)")]
         public void GetSession_HasNoSideEffect_Sqlite() => RunGetSessionHasNoSideEffect(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("GetSession 不得產生任何寫入（讀取純化，MySQL）")]
+        [DisplayName("GetSession performs no writes (side-effect-free read, MySQL)")]
         public void GetSession_HasNoSideEffect_MySql() => RunGetSessionHasNoSideEffect(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("GetSession 不得產生任何寫入（讀取純化，Oracle）")]
+        [DisplayName("GetSession performs no writes (side-effect-free read, Oracle)")]
         public void GetSession_HasNoSideEffect_Oracle() => RunGetSessionHasNoSideEffect(DatabaseType.Oracle);
 
         #endregion
 
-        #region DeleteExpiredSessions 只刪過期列
+        #region DeleteExpiredSessions deletes only expired rows
 
         private void RunDeleteExpiredSessions(DatabaseType databaseType)
         {
@@ -275,7 +278,7 @@ namespace Polhem.Repository.UnitTests
 
             Assert.NotNull(repo.GetSession(live.AccessToken));
 
-            // 冪等：第二次執行不應再影響未過期列，也不應擲例外
+            // Idempotent: a second run must not affect unexpired rows or throw.
             var exception = Record.Exception(() => repo.DeleteExpiredSessions());
             Assert.Null(exception);
             Assert.NotNull(repo.GetSession(live.AccessToken));
@@ -284,28 +287,28 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("DeleteExpiredSessions 應刪除過期列、保留未過期列且重複執行冪等（SQL Server）")]
+        [DisplayName("DeleteExpiredSessions deletes expired rows, keeps unexpired ones and is idempotent (SQL Server)")]
         public void DeleteExpiredSessions_RemovesOnlyExpired_AndIsIdempotent_SqlServer() => RunDeleteExpiredSessions(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("DeleteExpiredSessions 應刪除過期列、保留未過期列且重複執行冪等（PostgreSQL）")]
+        [DisplayName("DeleteExpiredSessions deletes expired rows, keeps unexpired ones and is idempotent (PostgreSQL)")]
         public void DeleteExpiredSessions_RemovesOnlyExpired_AndIsIdempotent_PostgreSql() => RunDeleteExpiredSessions(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("DeleteExpiredSessions 應刪除過期列、保留未過期列且重複執行冪等（SQLite）")]
+        [DisplayName("DeleteExpiredSessions deletes expired rows, keeps unexpired ones and is idempotent (SQLite)")]
         public void DeleteExpiredSessions_RemovesOnlyExpired_AndIsIdempotent_Sqlite() => RunDeleteExpiredSessions(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("DeleteExpiredSessions 應刪除過期列、保留未過期列且重複執行冪等（MySQL）")]
+        [DisplayName("DeleteExpiredSessions deletes expired rows, keeps unexpired ones and is idempotent (MySQL)")]
         public void DeleteExpiredSessions_RemovesOnlyExpired_AndIsIdempotent_MySql() => RunDeleteExpiredSessions(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("DeleteExpiredSessions 應刪除過期列、保留未過期列且重複執行冪等（Oracle）")]
+        [DisplayName("DeleteExpiredSessions deletes expired rows, keeps unexpired ones and is idempotent (Oracle)")]
         public void DeleteExpiredSessions_RemovesOnlyExpired_AndIsIdempotent_Oracle() => RunDeleteExpiredSessions(DatabaseType.Oracle);
 
         #endregion
 
-        #region 未帶 CompanyId 的種子
+        #region Seed without CompanyId
 
         private void RunSeedWithoutCompanyId(DatabaseType databaseType)
         {
@@ -318,23 +321,23 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("未帶 CompanyId 的種子應重建為未進公司狀態（SQL Server）")]
+        [DisplayName("A seed without CompanyId rebuilds into the no-company state (SQL Server)")]
         public void GetSession_SeedWithoutCompanyId_RebuildsAsCompanyLess_SqlServer() => RunSeedWithoutCompanyId(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("未帶 CompanyId 的種子應重建為未進公司狀態（PostgreSQL）")]
+        [DisplayName("A seed without CompanyId rebuilds into the no-company state (PostgreSQL)")]
         public void GetSession_SeedWithoutCompanyId_RebuildsAsCompanyLess_PostgreSql() => RunSeedWithoutCompanyId(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("未帶 CompanyId 的種子應重建為未進公司狀態（SQLite）")]
+        [DisplayName("A seed without CompanyId rebuilds into the no-company state (SQLite)")]
         public void GetSession_SeedWithoutCompanyId_RebuildsAsCompanyLess_Sqlite() => RunSeedWithoutCompanyId(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("未帶 CompanyId 的種子應重建為未進公司狀態（MySQL）")]
+        [DisplayName("A seed without CompanyId rebuilds into the no-company state (MySQL)")]
         public void GetSession_SeedWithoutCompanyId_RebuildsAsCompanyLess_MySql() => RunSeedWithoutCompanyId(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("未帶 CompanyId 的種子應重建為未進公司狀態（Oracle）")]
+        [DisplayName("A seed without CompanyId rebuilds into the no-company state (Oracle)")]
         public void GetSession_SeedWithoutCompanyId_RebuildsAsCompanyLess_Oracle() => RunSeedWithoutCompanyId(DatabaseType.Oracle);
 
         #endregion

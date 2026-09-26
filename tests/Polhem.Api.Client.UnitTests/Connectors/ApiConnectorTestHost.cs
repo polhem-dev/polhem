@@ -7,12 +7,14 @@ using Polhem.Api.Core.Messages;
 namespace Polhem.Api.Client.UnitTests.Connectors
 {
     /// <summary>
-    /// 以假的 <see cref="IJsonRpcProvider"/> 驅動 <see cref="ApiConnector"/> 走完一次呼叫，
-    /// 讓測試能觀察請求送出前與回應收到後的實際行為，而不需要真的 server。
+    /// Drives <see cref="ApiConnector"/> through one complete call with a fake <see cref="IJsonRpcProvider"/>, so the
+    /// tests can observe the actual behavior before the request is sent and after the response arrives, without a
+    /// real server.
     /// </summary>
     /// <remarks>
-    /// <c>FinalizeResponse</c> 與 <c>PrepareRequest</c> 都是 private，刻意不以反射直接呼叫：
-    /// 測試要驗的是呼叫端看得到的行為，而步驟之間的先後順序只有走完整條呼叫路徑才驗得到。
+    /// <c>FinalizeResponse</c> and <c>PrepareRequest</c> are both private and are deliberately not called through
+    /// reflection: the tests check behavior the caller can see, and the order between steps can only be checked by
+    /// going through the whole call path.
     /// </remarks>
     internal static class ApiConnectorTestHost
     {
@@ -51,10 +53,10 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         /// <summary>
-        /// 執行一次呼叫，server 以指定的錯誤碼與訊息回應。
+        /// Runs one call to which the server responds with the given error code and message.
         /// </summary>
-        /// <param name="code">server 回傳的 JSON-RPC 錯誤碼。</param>
-        /// <param name="message">server 回傳的訊息。</param>
+        /// <param name="code">The JSON-RPC error code the server returns.</param>
+        /// <param name="message">The message the server returns.</param>
         public static Task<string> ExecuteWithErrorAsync(JsonRpcErrorCode code, string message)
         {
             var provider = new FakeJsonRpcProvider
@@ -69,7 +71,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         /// <summary>
-        /// 執行一次呼叫，server 以成功結果回應（預設值 "ok"）。
+        /// Runs one call to which the server responds with a successful result (the default value "ok").
         /// </summary>
         public static Task<string> ExecuteWithResultAsync()
         {
@@ -78,21 +80,23 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         /// <summary>
-        /// 以指定的使用者時區送出一次請求，server 以成功結果回應（預設值 "ok"）。
+        /// Sends one request with the given user time zone; the server responds with a successful result (the
+        /// default value "ok").
         /// </summary>
-        /// <param name="value">請求的 payload 值。</param>
-        /// <param name="userTimeZoneId">使用者的 IANA 時區 id；空字串代表尚未登入、不做時區換算。</param>
+        /// <param name="value">The payload value of the request.</param>
+        /// <param name="userTimeZoneId">The user's IANA time zone ID; an empty string means not logged in, with no time zone conversion.</param>
         public static Task<string> ExecuteAsUserAsync(object value, string userTimeZoneId)
             => ExecuteAsUserAsync(value, userTimeZoneId, _ => { });
 
         /// <summary>
-        /// 以指定的使用者時區送出一次請求，並在「伺服端」收到請求時執行 <paramref name="onServer"/>。
+        /// Sends one request with the given user time zone and runs <paramref name="onServer"/> when the "server"
+        /// receives it.
         /// </summary>
-        /// <param name="value">請求的 payload 值。</param>
-        /// <param name="userTimeZoneId">使用者的 IANA 時區 id；空字串代表尚未登入、不做時區換算。</param>
+        /// <param name="value">The payload value of the request.</param>
+        /// <param name="userTimeZoneId">The user's IANA time zone ID; an empty string means not logged in, with no time zone conversion.</param>
         /// <param name="onServer">
-        /// 在 provider 內對收到的請求執行的動作。provider 不經序列化，收到的就是 Connector 交出去的物件，
-        /// 與 in-process 呼叫的形狀相同。
+        /// The action run inside the provider on the received request. The provider does not serialize, so it
+        /// receives the very object the Connector handed over, the same shape as an in-process call.
         /// </param>
         public static Task<string> ExecuteAsUserAsync(object value, string userTimeZoneId, Action<JsonRpcRequest> onServer)
         {

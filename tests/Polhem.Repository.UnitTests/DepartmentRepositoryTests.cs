@@ -8,8 +8,9 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// DepartmentRepository 的 5 DB round-trip 測試：在 company DB insert st_department
-    /// （含 parent_rowid 連結），驗證 GetDepartments 查回節點與父子關係正確。
+    /// Round-trip tests of DepartmentRepository across the database providers: insert st_department into the company
+    /// DB (with the parent_rowid link), then verify that GetDepartments returns the nodes with the correct
+    /// parent/child relationship.
     /// </summary>
     public class DepartmentRepositoryTests : IClassFixture<SharedDbFixture>
     {

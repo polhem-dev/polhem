@@ -8,23 +8,23 @@ using Polhem.Api.Core.Messages;
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// 透過 <see cref="SharedDbFixture"/> 觸發 GlobalFixture 的 <c>ApiClientInfo.LocalServiceProvider</c>
-    /// 與 SharedDatabaseState 初始化；本機模式 [DbFact] 測試會走過 LocalApiProvider 解析後端
-    /// JsonRpcExecutor，並透過 SQL Server 完成 CreateSession 流程。
+    /// Uses <see cref="SharedDbFixture"/> to trigger the GlobalFixture's initialization of
+    /// <c>ApiClientInfo.LocalServiceProvider</c> and SharedDatabaseState. The local-mode [DbFact] tests go through
+    /// LocalApiProvider to resolve the backend JsonRpcExecutor, and complete the CreateSession flow on SQL Server.
     /// </summary>
     public class SystemApiConnectorTests : IClassFixture<SharedDbFixture>
     {
         public SystemApiConnectorTests(SharedDbFixture _)
         {
-            // fixture 僅用於觸發 GlobalFixture / SharedDatabaseState 初始化；
-            // 測試方法直接使用 process-wide ApiClientInfo.LocalServiceProvider。
+            // The fixture only triggers the GlobalFixture and SharedDatabaseState initialization. The test methods
+            // use the process-wide `ApiClientInfo.LocalServiceProvider` directly.
         }
 
         /// <summary>
-        /// 測試 SystemApiConnector 的 CreateSessionAsync 方法。
+        /// Tests the CreateSessionAsync method of SystemApiConnector.
         /// </summary>
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SystemApiConnector CreateSessionAsync 應回傳有效的 AccessToken")]
+        [DisplayName("SystemApiConnector CreateSessionAsync returns a valid AccessToken")]
         public async Task CreateSessionAsync_ValidArgs_ReturnsValidToken()
         {
             // Arrange
@@ -32,7 +32,7 @@ namespace Polhem.Api.Client.UnitTests
             int expiresIn = 600;
             bool oneTime = false;
 
-            // 產生一個隨機 Guid 作為 accessToken（僅用於初始化，CreateSession 會回傳新的 token）
+            // A random access token is only needed to construct the connector. `CreateSession` returns a new token.
             Guid accessToken = Guid.NewGuid();
             var connector = new SystemApiConnector(accessToken);
 
@@ -40,11 +40,11 @@ namespace Polhem.Api.Client.UnitTests
             Guid newToken = await connector.CreateSessionAsync(userId, expiresIn, oneTime);
 
             // Assert
-            Assert.NotEqual(Guid.Empty, newToken); // 應取得有效 accessToken
+            Assert.NotEqual(Guid.Empty, newToken);
         }
 
         [Fact]
-        [DisplayName("SystemApiConnector Local 建構子應建立 LocalApiProvider")]
+        [DisplayName("SystemApiConnector local constructor creates a LocalApiProvider")]
         public void Constructor_Local_SetsAccessTokenAndLocalProvider()
         {
             var token = Guid.NewGuid();
@@ -55,7 +55,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("SystemApiConnector Remote 建構子應建立 RemoteApiProvider")]
+        [DisplayName("SystemApiConnector remote constructor creates a RemoteApiProvider")]
         public void Constructor_Remote_SetsAccessTokenAndRemoteProvider()
         {
             var token = Guid.NewGuid();
@@ -69,7 +69,7 @@ namespace Polhem.Api.Client.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("SystemApiConnector Remote 建構子空白 endpoint 應拋 ArgumentException")]
+        [DisplayName("SystemApiConnector remote constructor throws ArgumentException for a blank endpoint")]
         public void Constructor_RemoteEmptyEndpoint_ThrowsArgumentException(string? endpoint)
         {
             Assert.Throws<ArgumentException>(() => new SystemApiConnector(endpoint!, Guid.NewGuid()));
@@ -78,7 +78,7 @@ namespace Polhem.Api.Client.UnitTests
         [Theory]
         [InlineData(null)]
         [InlineData("")]
-        [DisplayName("SystemApiConnector.ExecuteAsync 空白 action 應拋 ArgumentException")]
+        [DisplayName("SystemApiConnector.ExecuteAsync throws ArgumentException for an empty action")]
         public async Task ExecuteAsync_EmptyAction_ThrowsArgumentException(string? action)
         {
             var connector = new SystemApiConnector(Guid.NewGuid());
@@ -87,7 +87,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SystemApiConnector.PingAsync 本機連線應成功回應")]
+        [DisplayName("SystemApiConnector.PingAsync succeeds over a local connection")]
         public async Task PingAsync_LocalConnector_Succeeds()
         {
             var connector = new SystemApiConnector(Guid.NewGuid());

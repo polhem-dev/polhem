@@ -16,14 +16,14 @@ namespace Polhem.Api.Client.UnitTests
         [InlineData("not-a-url", false)]
         [InlineData("", false)]
         [InlineData("/local/path", false)]
-        [DisplayName("IsUrl 應僅對絕對 http/https URL 回傳 true")]
+        [DisplayName("IsUrl returns true only for absolute http/https URLs")]
         public void IsUrl_RecognizesHttpSchemes(string input, bool expected)
         {
             Assert.Equal(expected, HttpUtilities.IsUrl(input));
         }
 
         [Fact]
-        [DisplayName("GetAsync 應將 Header 傳遞並取回回應主體")]
+        [DisplayName("GetAsync sends the headers and returns the response body")]
         public async Task GetAsync_SendsRequestAndReturnsBody()
         {
             await using var server = await LoopbackHttpServer.StartAsync();
@@ -37,7 +37,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("PostAsync 應以 JSON Content-Type 送出 body 並取回回應")]
+        [DisplayName("PostAsync sends the body with a JSON Content-Type and returns the response")]
         public async Task PostAsync_SendsJsonBodyAndReturnsResponse()
         {
             await using var server = await LoopbackHttpServer.StartAsync();
@@ -51,7 +51,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetAsync 於 HTTP 非 2xx 回應應拋出 HttpRequestException")]
+        [DisplayName("GetAsync throws HttpRequestException for a non-2xx HTTP response")]
         public async Task GetAsync_NonSuccessStatus_Throws()
         {
             await using var server = await LoopbackHttpServer.StartAsync(statusLine: "HTTP/1.1 500 Internal Server Error", body: "fail");
@@ -61,7 +61,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEndpointReachableAsync 對運作中的 endpoint 應回傳 true")]
+        [DisplayName("IsEndpointReachableAsync returns true for a running endpoint")]
         public async Task IsEndpointReachableAsync_RunningServer_ReturnsTrue()
         {
             await using var server = await LoopbackHttpServer.StartAsync();
@@ -72,7 +72,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEndpointReachableAsync 對 4xx 回應仍視為 reachable 並回傳 true")]
+        [DisplayName("IsEndpointReachableAsync treats a 4xx response as reachable and returns true")]
         public async Task IsEndpointReachableAsync_NotFoundStatus_ReturnsTrue()
         {
             await using var server = await LoopbackHttpServer.StartAsync(statusLine: "HTTP/1.1 404 Not Found", body: string.Empty);
@@ -83,17 +83,17 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsEndpointReachableAsync 連線被拒絕時應回傳 false")]
+        [DisplayName("IsEndpointReachableAsync returns false when the connection is refused")]
         public async Task IsEndpointReachableAsync_ConnectionRefused_ReturnsFalse()
         {
-            // 127.0.0.1:1 為 reserved port,本機不會有服務監聽,連線必然被拒絕
+            // Port 1 on 127.0.0.1 is reserved and nothing listens on it locally, so the connection is refused.
             bool result = await HttpUtilities.IsEndpointReachableAsync("http://127.0.0.1:1/probe");
 
             Assert.False(result);
         }
 
         [Fact]
-        [DisplayName("IsEndpointReachableAsync 探測逾時時應回傳 false")]
+        [DisplayName("IsEndpointReachableAsync returns false when the probe times out")]
         public async Task IsEndpointReachableAsync_Timeout_ReturnsFalse()
         {
             await using var stall = await StallingServer.StartAsync();

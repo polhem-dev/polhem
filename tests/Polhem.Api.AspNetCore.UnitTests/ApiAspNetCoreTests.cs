@@ -15,24 +15,24 @@ using Polhem.Api.Core.Messages;
 namespace Polhem.Api.AspNetCore.UnitTests
 {
         /// <remarks>
-    /// 用 <c>SharedDbFixture</c> 而非 <c>PolhemTestFixture</c>：走 controller 的請求會讓 executor
-    /// 碰 common 資料庫，<c>PolhemTestFixture</c> 不建 schema。
+    /// Uses <c>SharedDbFixture</c> rather than <c>PolhemTestFixture</c>: a request through the controller makes the
+    /// executor touch the common database, and <c>PolhemTestFixture</c> does not create the schema.
     /// <para>
-    /// 本類別驗的是 JSON-RPC 執行本身，金鑰閘門不是它的主題，因此
-    /// <see cref="IApiKeyValidator"/> 固定為 <see cref="UnconfiguredApiKeyValidator"/>，
-    /// <b>不讀實體金鑰存放處</b>。先前能過只是因為 <c>st_api_key</c> 剛好是空的 ——
-    /// 而那不是本類別的任何保證：只要該表存在一列啟用金鑰，閘門就 in force，
-    /// <c>"valid-api-key"</c> 不符金鑰格式便成為 <c>ApiKeyStatus.Invalid</c> → 401。
-    /// 症狀完全不指向真因，看起來像「預期 200 拿到 401」。
+    /// This class checks JSON-RPC execution itself; the key gate is not its subject, so
+    /// <see cref="IApiKeyValidator"/> is fixed to <see cref="UnconfiguredApiKeyValidator"/> and
+    /// <b>the real key store is not read</b>. It used to pass only because <c>st_api_key</c> happened to be
+    /// empty, which this class does not control: as soon as that table holds one enabled key, the gate is in
+    /// force, and <c>"valid-api-key"</c>, which is not in key format, becomes <c>ApiKeyStatus.Invalid</c> → 401.
+    /// The symptom does not point to the cause at all; it looks like "expected 200, got 401".
     /// </para>
     /// <para>
-    /// 那一列從哪來有兩條路，本機紅 / CI 綠的成因是<b>前者</b>：
-    /// (1) <b>殘留</b> —— 本機是持久容器，列會跨測試回合留著；CI 每次都是全新容器，
-    /// 該表恆為空，所以同一份程式碼在 CI 上一直是綠的。
-    /// (2) <b>平行寫入</b> —— <c>ApiKeyRepositoryTests</c> 會往同一個 common 資料庫寫啟用金鑰，
-    /// 正常會在 <c>finally</c> 清掉，但與本專案平行執行時仍有窗口。
-    /// （<c>21642741</c> 之後只剩 <c>Insert_ThenGet_SqlServer</c> 一支落在 SQL Server，
-    /// 其餘已改打各自 provider，窗口變窄但沒有消失。）
+    /// Such a row can come from two places, and red locally / green in CI is caused by <b>the first</b>:
+    /// (1) <b>leftovers</b>: the local container is persistent, so rows survive across test runs, while CI
+    /// starts from a fresh container every time and the table is empty, so the same code stayed green in CI.
+    /// (2) <b>parallel writes</b>: <c>ApiKeyRepositoryTests</c> writes enabled keys to the same common database
+    /// and normally removes them in <c>finally</c>, but there is still a window when it runs in parallel with
+    /// this project. (Since <c>21642741</c> only <c>Insert_ThenGet_SqlServer</c> still targets SQL Server and
+    /// the rest use their own providers, so the window is narrower but has not gone away.)
     /// </para>
     /// </remarks>
     public class ApiAspNetCoreTests : IClassFixture<SharedDbFixture>
@@ -46,12 +46,12 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         /// <summary>
-        /// 測試用的 ApiServiceController 類別。
+        /// The ApiServiceController class used by the tests.
         /// </summary>
         public class ApiServiceController : Controllers.ApiServiceController { }
 
         /// <summary>
-        /// 測試用 <see cref="IHostEnvironment"/>；ApiServiceController.IsDevelopment 會解析此服務。
+        /// Test <see cref="IHostEnvironment"/>; ApiServiceController.IsDevelopment resolves this service.
         /// </summary>
         private sealed class TestHostEnvironment : IHostEnvironment
         {
@@ -63,8 +63,9 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         /// <summary>
-        /// 固定回報「此部署尚未發放金鑰」，讓本類別的變動維度只剩 JSON-RPC 執行本身。
-        /// 這正是先前依賴實體 <c>st_api_key</c> 為空才成立的狀態，只是現在由測試自己保證。
+        /// Always reports "this deployment has not issued any keys", so JSON-RPC execution is the only varying
+        /// dimension of this class. That is the state which used to depend on the real <c>st_api_key</c> being
+        /// empty; the test now sets it up itself.
         /// </summary>
         private sealed class UnconfiguredApiKeyValidator : IApiKeyValidator
         {
@@ -73,14 +74,13 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         /// <summary>
-        /// 取得 JSON-RPC 請求模型的 JSON 字串。
+        /// Gets the JSON string of a JSON-RPC request model.
         /// </summary>
-        /// <param name="progId">程式代碼。</param>
-        /// <param name="action">執行動作。</param>
-        /// <param name="args">傳入值。</param>
+        /// <param name="progId">The program ID.</param>
+        /// <param name="action">The action to execute.</param>
+        /// <param name="args">The input value.</param>
         private static string GetRpcRequestJson(string progId, string action, object args)
         {
-            // 設定 JSON-RPC 請求模型
             var request = new JsonRpcRequest()
             {
                 Method = $"{progId}.{action}",
@@ -94,25 +94,24 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         /// <summary>
-        /// 執行 ApiServiceController 並傳回反序列化結果。
+        /// Runs ApiServiceController and returns the deserialized result.
         /// </summary>
-        /// <typeparam name="TResult">回傳型別。</typeparam>
-        /// <param name="accessToken">存取權杖。</param>
-        /// <param name="progId">程式代碼。</param>
-        /// <param name="action">執行動作。</param>
-        /// <param name="args">JSON-RPC 傳入參數。</param>
-        /// <returns>反序列化後的執行結果。</returns>
+        /// <typeparam name="TResult">The result type.</typeparam>
+        /// <param name="accessToken">The access token.</param>
+        /// <param name="progId">The program ID.</param>
+        /// <param name="action">The action to execute.</param>
+        /// <param name="args">The JSON-RPC input arguments.</param>
+        /// <returns>The deserialized execution result.</returns>
         private async Task<TResult> ExecuteRpcAsync<TResult>(Guid accessToken, string progId, string action, object args)
         {
-            // 建立 JSON-RPC 請求內容
             string json = GetRpcRequestJson(progId, action, args);
 
             var requestBody = new MemoryStream(Encoding.UTF8.GetBytes(json));
             var context = new DefaultHttpContext
             {
-                // Phase 4 後 ApiServiceController 透過 HttpContext.RequestServices 解析
-                // JsonRpcExecutor 與 IHostEnvironment；測試使用 TestOverrideServiceProvider 在
-                // per-class fixture 的 IServiceProvider 之上補上一個 IHostEnvironment fake。
+                // ApiServiceController resolves `JsonRpcExecutor` and `IHostEnvironment` through
+                // `HttpContext.RequestServices`. The test uses `TestOverrideServiceProvider` to add a fake
+                // `IHostEnvironment` on top of the per-class fixture's `IServiceProvider`.
                 RequestServices = new TestOverrideServiceProvider(
                     _fx.Provider,
                     (typeof(IHostEnvironment), new TestHostEnvironment()),
@@ -133,7 +132,6 @@ namespace Polhem.Api.AspNetCore.UnitTests
                 }
             };
 
-            // 執行 API
             var result = await controller.PostAsync(apiKey, authorization);
             var contentResult = Assert.IsType<ContentResult>(result);
             Assert.Equal(StatusCodes.Status200OK, contentResult.StatusCode);
@@ -145,7 +143,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         /// <summary>
-        /// 取得有效的測試 AccessToken（直接在 SessionInfoService 植入，不經過 Login）。
+        /// Gets a valid test AccessToken (seeded directly into SessionInfoService, without going through Login).
         /// </summary>
         private Guid GetAccessToken()
         {
@@ -155,10 +153,10 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         /// <summary>
-        /// 測試 Ping 方法。
+        /// Tests the Ping method.
         /// </summary>
         [Fact]
-        [DisplayName("Ping 應回傳正確狀態與追蹤識別碼")]
+        [DisplayName("Ping returns the ok status and the trace ID")]
         public async Task Ping_ValidRequest_ReturnsOkStatus()
         {
             var args = new PingRequest()
@@ -173,7 +171,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecFunc 執行 Hello 應回傳非 null 結果")]
+        [DisplayName("ExecFunc with Hello returns a non-null result")]
         public async Task ExecFunc_Hello_ReturnsNotNull()
         {
             Guid accessToken = GetAccessToken();

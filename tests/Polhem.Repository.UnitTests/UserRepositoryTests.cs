@@ -8,7 +8,8 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// UserRepository 單元測試：驗證 GetRowIdBySysId 的純邏輯分支與 5 DB round-trip 行為。
+    /// UserRepository unit tests: the pure logic branches of GetRowIdBySysId and its round-trip behavior across the
+    /// database providers.
     /// </summary>
     public class UserRepositoryTests : IClassFixture<SharedDbFixture>
     {
@@ -24,7 +25,7 @@ namespace Polhem.Repository.UnitTests
                 string.Empty);
 
         [Fact]
-        [DisplayName("建構子傳入 null connectionManager 應拋出 ArgumentNullException")]
+        [DisplayName("Constructor throws ArgumentNullException for a null connectionManager")]
         public void Constructor_NullConnectionManager_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new UserRepository(TestRepositoryContext.Create(null!), Guid.Empty, string.Empty));
@@ -34,7 +35,7 @@ namespace Polhem.Repository.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("GetRowIdBySysId 傳入 null 或空白字串應直接回傳 Guid.Empty")]
+        [DisplayName("GetRowIdBySysId returns Guid.Empty for a null or blank string")]
         public void GetRowIdBySysId_NullOrWhitespace_ReturnsGuidEmpty(string? userId)
         {
             var repo = new UserRepository(TestRepositoryContext.Create(new StubConnectionManager()), Guid.Empty, string.Empty);
@@ -46,33 +47,32 @@ namespace Polhem.Repository.UnitTests
         {
             var repo = CreateRepo(databaseType);
 
-            // seed user "001" 由 SharedDbFixture 預先建立
+            // The seed user "001" is created in advance by SharedDbFixture.
             var rowId = repo.GetRowIdBySysId("001");
             Assert.NotEqual(Guid.Empty, rowId);
 
-            // 不存在的使用者 → Guid.Empty
             var missing = repo.GetRowIdBySysId("__nonexistent_user_xyz__");
             Assert.Equal(Guid.Empty, missing);
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("GetRowIdBySysId 存在的使用者回傳非空 RowId，不存在者回傳 Guid.Empty（SQL Server）")]
+        [DisplayName("GetRowIdBySysId returns a non-empty RowId for an existing user and Guid.Empty for a missing one (SQL Server)")]
         public void RoundTrip_SqlServer() => RunRoundTrip(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
-        [DisplayName("GetRowIdBySysId 存在的使用者回傳非空 RowId，不存在者回傳 Guid.Empty（PostgreSQL）")]
+        [DisplayName("GetRowIdBySysId returns a non-empty RowId for an existing user and Guid.Empty for a missing one (PostgreSQL)")]
         public void RoundTrip_PostgreSql() => RunRoundTrip(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("GetRowIdBySysId 存在的使用者回傳非空 RowId，不存在者回傳 Guid.Empty（SQLite）")]
+        [DisplayName("GetRowIdBySysId returns a non-empty RowId for an existing user and Guid.Empty for a missing one (SQLite)")]
         public void RoundTrip_Sqlite() => RunRoundTrip(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.MySQL)]
-        [DisplayName("GetRowIdBySysId 存在的使用者回傳非空 RowId，不存在者回傳 Guid.Empty（MySQL）")]
+        [DisplayName("GetRowIdBySysId returns a non-empty RowId for an existing user and Guid.Empty for a missing one (MySQL)")]
         public void RoundTrip_MySql() => RunRoundTrip(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
-        [DisplayName("GetRowIdBySysId 存在的使用者回傳非空 RowId，不存在者回傳 Guid.Empty（Oracle）")]
+        [DisplayName("GetRowIdBySysId returns a non-empty RowId for an existing user and Guid.Empty for a missing one (Oracle)")]
         public void RoundTrip_Oracle() => RunRoundTrip(DatabaseType.Oracle);
 
         private sealed class StubConnectionManager : IDbConnectionManager

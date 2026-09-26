@@ -8,21 +8,22 @@ using Polhem.Definition.Settings;
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// 針對 <see cref="ClientDefineAccess"/> 的 async 型別化存取、快取與例外傳遞測試。
-    /// 以 local <see cref="SystemApiConnector"/> 建構，需要 <c>ApiClientInfo.LocalServiceProvider</c>
-    /// 由 <see cref="Polhem.Tests.Shared.PolhemTestFixture"/> 的 ctor 一次性 wire up。
+    /// Tests for the async typed access, caching and exception propagation of <see cref="ClientDefineAccess"/>.
+    /// It is built on a local <see cref="SystemApiConnector"/>, which needs <c>ApiClientInfo.LocalServiceProvider</c>
+    /// to be wired up once by the constructor of <see cref="Polhem.Tests.Shared.PolhemTestFixture"/>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 本類別**不碰資料庫**：定義全部來自檔案，token 以
-    /// <see cref="Polhem.Tests.Shared.TestSessionFactory.CreateAccessToken"/> 取得，
-    /// 它把 SessionInfo 直接寫進 session 快取，server 端讀得到就不必查 <c>st_session</c>。
+    /// This class **does not touch the database**: all definitions come from files, and the token comes from
+    /// <see cref="Polhem.Tests.Shared.TestSessionFactory.CreateAccessToken"/>, which writes the SessionInfo
+    /// straight into the session cache. When the server finds it there, it does not need to query <c>st_session</c>.
     /// </para>
     /// <para>
-    /// NOTE: 先前每個測試都拿裸 <c>Guid.NewGuid()</c> 打本機 <c>GetDefine</c>，而該方法要求已驗證
-    /// 身分，於是 server 端 session cache miss → 走 rebuild 路徑讀 <c>st_session</c>。當時的修法是
-    /// 掛 <c>SharedDbFixture</c> 讓它有表可讀 —— 那讓一組「驗定義檔存取與快取」的測試變成需要
-    /// 資料庫容器。正解是根本不要產生那個相依。
+    /// NOTE: each test used to call the local <c>GetDefine</c> with a bare <c>Guid.NewGuid()</c>. That method
+    /// requires an authenticated identity, so the server-side session cache missed and took the rebuild path,
+    /// reading <c>st_session</c>. The fix at the time was to attach <c>SharedDbFixture</c> so there was a table
+    /// to read, which made a set of tests about definition file access and caching need a database container.
+    /// The right fix is not to create that dependency at all.
     /// </para>
     /// </remarks>
     public class ClientDefineAccessTests : IClassFixture<Polhem.Tests.Shared.PolhemTestFixture>
@@ -31,8 +32,8 @@ namespace Polhem.Api.Client.UnitTests
 
         public ClientDefineAccessTests(Polhem.Tests.Shared.PolhemTestFixture fx)
         {
-            // fixture 用於觸發 ApiClientInfo.LocalServiceProvider 的 wire up，並作為植入
-            // session 的目標；測試方法本身走 process-wide 的 LocalServiceProvider。
+            // The fixture triggers the wiring of `ApiClientInfo.LocalServiceProvider` and is the target for
+            // seeding the session. The test methods themselves use the process-wide `LocalServiceProvider`.
             _fx = fx;
         }
 
@@ -43,7 +44,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess 建構子以 SystemApiConnector 建立時不應拋例外")]
+        [DisplayName("ClientDefineAccess constructor does not throw when given a SystemApiConnector")]
         public void Constructor_WithConnector_DoesNotThrow()
         {
             var connector = new SystemApiConnector(Guid.NewGuid());
@@ -52,7 +53,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess.GetSystemSettingsAsync 本機連線應回傳系統設定")]
+        [DisplayName("ClientDefineAccess.GetSystemSettingsAsync returns the system settings over a local connection")]
         public async Task GetSystemSettingsAsync_LocalConnector_ReturnsSettings()
         {
             var access = CreateAccess();
@@ -63,7 +64,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess.GetDatabaseSettingsAsync 本機連線應回傳資料庫設定")]
+        [DisplayName("ClientDefineAccess.GetDatabaseSettingsAsync returns the database settings over a local connection")]
         public async Task GetDatabaseSettingsAsync_LocalConnector_ReturnsSettings()
         {
             var access = CreateAccess();
@@ -74,7 +75,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess.GetDbCategorySettingsAsync 本機連線應回傳資料庫類別設定")]
+        [DisplayName("ClientDefineAccess.GetDbCategorySettingsAsync returns the database category settings over a local connection")]
         public async Task GetDbCategorySettingsAsync_LocalConnector_ReturnsSettings()
         {
             var access = CreateAccess();
@@ -85,7 +86,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess.GetFormSchemaAsync 本機連線應回傳表單結構定義")]
+        [DisplayName("ClientDefineAccess.GetFormSchemaAsync returns the form schema over a local connection")]
         public async Task GetFormSchemaAsync_LocalConnector_ReturnsFormSchema()
         {
             var access = CreateAccess();
@@ -96,19 +97,20 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess.GetCurrencySettingsAsync 本機連線應可取得（未部署則回 null，不拋例外）")]
+        [DisplayName("ClientDefineAccess.GetCurrencySettingsAsync does not throw over a local connection (returns null when not deployed)")]
         public async Task GetCurrencySettingsAsync_LocalConnector_DoesNotThrow()
         {
             var access = CreateAccess();
 
-            // 幣別 master 未必部署於測試 Define fixture；無論回傳值或 null，取用路徑皆不應拋例外。
+            // The currency master is not necessarily deployed in the test Define fixture. Whether it returns a value
+            // or null, the access path must not throw.
             var exception = await Record.ExceptionAsync(() => access.GetCurrencySettingsAsync());
 
             Assert.Null(exception);
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess.GetUnitSettingsAsync 本機連線應可取得（未部署則回 null，不拋例外）")]
+        [DisplayName("ClientDefineAccess.GetUnitSettingsAsync does not throw over a local connection (returns null when not deployed)")]
         public async Task GetUnitSettingsAsync_LocalConnector_DoesNotThrow()
         {
             var access = CreateAccess();
@@ -119,7 +121,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess.GetTableSchemaAsync 本機連線應回傳資料表結構定義")]
+        [DisplayName("ClientDefineAccess.GetTableSchemaAsync returns the table schema over a local connection")]
         public async Task GetTableSchemaAsync_LocalConnector_ReturnsTableSchema()
         {
             var access = CreateAccess();
@@ -130,7 +132,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess.GetProgramSettingsAsync 應回傳程式設定")]
+        [DisplayName("ClientDefineAccess.GetProgramSettingsAsync returns the program settings")]
         public async Task GetProgramSettingsAsync_ReturnsProgramSettings()
         {
             var access = new ClientDefineAccess(new CountingConnector());
@@ -142,7 +144,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess.GetPermissionModelsAsync 應回傳權限模型")]
+        [DisplayName("ClientDefineAccess.GetPermissionModelsAsync returns the permission models")]
         public async Task GetPermissionModelsAsync_ReturnsPermissionModels()
         {
             var access = new ClientDefineAccess(new CountingConnector());
@@ -154,7 +156,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess.GetFormLayoutAsync 應回傳表單排版")]
+        [DisplayName("ClientDefineAccess.GetFormLayoutAsync returns the form layout")]
         public async Task GetFormLayoutAsync_ReturnsFormLayout()
         {
             var access = new ClientDefineAccess(new CountingConnector());
@@ -166,7 +168,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess.GetLanguageAsync 應回傳語言資源")]
+        [DisplayName("ClientDefineAccess.GetLanguageAsync returns the language resource")]
         public async Task GetLanguageAsync_ReturnsLanguageResource()
         {
             var access = new ClientDefineAccess(new CountingConnector());
@@ -178,7 +180,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess 重複讀取同一鍵應使用快取回傳相同物件")]
+        [DisplayName("ClientDefineAccess returns the same cached object when the same key is read again")]
         public async Task GetSystemSettingsAsync_SecondCall_ReturnsCachedObject()
         {
             var access = CreateAccess();
@@ -191,13 +193,13 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("同一鍵的並發 miss 應去重為單一 connector 抓取")]
+        [DisplayName("Concurrent misses on the same key are deduplicated into a single connector fetch")]
         public async Task GetFormLayoutAsync_ConcurrentMiss_DeduplicatesToSingleFetch()
         {
             var connector = new GatedConnector();
             var access = new ClientDefineAccess(connector);
 
-            // 兩個並發 miss：第一個同步插入 in-flight task，第二個命中同一 task。
+            // Two concurrent misses: the first inserts the in-flight task synchronously, and the second hits that task.
             var t1 = access.GetFormLayoutAsync("L1");
             var t2 = access.GetFormLayoutAsync("L1");
             connector.Release();
@@ -207,25 +209,25 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClearCache 後同一鍵應重新向 connector 抓取（切換租戶不回舊疊加結果）")]
+        [DisplayName("After ClearCache the same key is fetched from the connector again (switching tenants does not return the old overlay)")]
         public async Task ClearCache_AfterClear_RefetchesFromConnector()
         {
             var connector = new CountingConnector();
             var access = new ClientDefineAccess(connector);
 
             await access.GetFormLayoutAsync("L1");
-            await access.GetFormLayoutAsync("L1"); // 第二次命中本地快取，不打 connector
+            await access.GetFormLayoutAsync("L1");
             Assert.Equal(1, connector.GetDefineCallCount);
 
-            // 模擬 EnterCompany 切換公司導致 customizeId 變動後的清快取。
+            // Simulates the cache clear after `EnterCompany` switches company and the customizeId changes.
             access.ClearCache();
 
-            await access.GetFormLayoutAsync("L1"); // 快取已清，必須重新抓取
+            await access.GetFormLayoutAsync("L1");
             Assert.Equal(2, connector.GetDefineCallCount);
         }
 
         [Fact]
-        [DisplayName("ClearCache 不影響後續正常快取行為")]
+        [DisplayName("ClearCache does not break caching afterwards")]
         public async Task ClearCache_DoesNotBreakSubsequentCaching()
         {
             var connector = new CountingConnector();
@@ -234,20 +236,19 @@ namespace Polhem.Api.Client.UnitTests
             await access.GetFormLayoutAsync("L1");
             access.ClearCache();
             await access.GetFormLayoutAsync("L1");
-            await access.GetFormLayoutAsync("L1"); // 清快取後重新抓一次，之後仍走快取
+            await access.GetFormLayoutAsync("L1");
             Assert.Equal(2, connector.GetDefineCallCount);
         }
 
         [Fact]
-        [DisplayName("失敗的抓取不應污染快取，下次讀取應重新嘗試")]
+        [DisplayName("A failed fetch does not poison the cache and the next read retries")]
         public async Task GetFormLayoutAsync_FailedFetch_IsEvictedAndRetried()
         {
             var connector = new FlakyConnector();
             var access = new ClientDefineAccess(connector);
 
-            // 第一次抓取拋例外，不得快取 faulted task。
+            // The first fetch throws, and the faulted task must not be cached.
             await Assert.ThrowsAsync<InvalidOperationException>(() => access.GetFormLayoutAsync("L1"));
-            // 第二次（connector 已恢復）應重新抓取並成功。
             var result = await access.GetFormLayoutAsync("L1");
 
             Assert.NotNull(result);
@@ -255,14 +256,13 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ClientDefineAccess 底層 connector 拋例外應原樣傳遞，非 AggregateException")]
+        [DisplayName("ClientDefineAccess propagates the underlying connector exception as is, not as AggregateException")]
         public async Task GetSystemSettingsAsync_PropagatesConnectorException()
         {
-            // 指向不可達 endpoint：HTTP 呼叫必然失敗，觸發 connector 端例外。
+            // Points at an unreachable endpoint, so the HTTP call fails and the connector throws.
             var connector = new SystemApiConnector("http://127.0.0.1:1/", Guid.NewGuid());
             var access = new ClientDefineAccess(connector);
 
-            // async/await 解包後原例外應原樣傳出，而非 AggregateException。
             var ex = await Assert.ThrowsAnyAsync<Exception>(() => access.GetSystemSettingsAsync());
             Assert.IsNotType<AggregateException>(ex);
         }

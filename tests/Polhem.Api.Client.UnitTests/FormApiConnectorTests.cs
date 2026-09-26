@@ -6,14 +6,14 @@ using Polhem.Api.Core.Messages;
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// 針對 <see cref="FormApiConnector"/> 建構子與參數驗證的純邏輯測試。
+    /// Pure logic tests for the constructors and argument validation of <see cref="FormApiConnector"/>.
     /// </summary>
     public class FormApiConnectorTests
     {
         private const string TestProgId = "Employee";
 
         [Fact]
-        [DisplayName("FormApiConnector Local 建構子應設定 ProgId 與 LocalApiProvider")]
+        [DisplayName("FormApiConnector local constructor sets ProgId and a LocalApiProvider")]
         public void Constructor_Local_SetsProgIdAndProvider()
         {
             var token = Guid.NewGuid();
@@ -25,7 +25,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("FormApiConnector Remote 建構子應設定 ProgId 與 RemoteApiProvider")]
+        [DisplayName("FormApiConnector remote constructor sets ProgId and a RemoteApiProvider")]
         public void Constructor_Remote_SetsProgIdAndProvider()
         {
             var token = Guid.NewGuid();
@@ -40,7 +40,7 @@ namespace Polhem.Api.Client.UnitTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("FormApiConnector Remote 建構子空白 endpoint 應拋 ArgumentException")]
+        [DisplayName("FormApiConnector remote constructor throws ArgumentException for a blank endpoint")]
         public void Constructor_RemoteEmptyEndpoint_ThrowsArgumentException(string? endpoint)
         {
             Assert.Throws<ArgumentException>(() => new FormApiConnector(endpoint!, Guid.NewGuid(), TestProgId));
@@ -49,7 +49,7 @@ namespace Polhem.Api.Client.UnitTests
         [Theory]
         [InlineData(null)]
         [InlineData("")]
-        [DisplayName("FormApiConnector.ExecuteAsync 空白 action 應拋 ArgumentException")]
+        [DisplayName("FormApiConnector.ExecuteAsync throws ArgumentException for an empty action")]
         public async Task ExecuteAsync_EmptyAction_ThrowsArgumentException(string? action)
         {
             var connector = new FormApiConnector(Guid.NewGuid(), TestProgId);
@@ -58,7 +58,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("FormApiConnector.SaveAsync 傳入 null DataSet 應拋 ArgumentNullException")]
+        [DisplayName("FormApiConnector.SaveAsync throws ArgumentNullException for a null DataSet")]
         public async Task SaveAsync_NullDataSet_ThrowsArgumentNullException()
         {
             var connector = new FormApiConnector(Guid.NewGuid(), TestProgId);
@@ -66,14 +66,13 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("FormApiConnector CRUD async 方法不應有同名同步版本(async-only 慣例)")]
+        [DisplayName("FormApiConnector CRUD async methods have no synchronous counterpart (async-only convention)")]
         public void CrudAsyncMethods_HaveNoSyncCounterpart()
         {
             var type = typeof(FormApiConnector);
 
-            // 計畫 §1.3 確立的新慣例:CRUD 4 個 action 僅以 async 方法暴露,
-            // 不再順手加同步 wrapper(避免 sync-over-async 在 Blazor Server
-            // 切半 thread pool 的反 pattern)。
+            // Convention: the CRUD actions are exposed only as async methods, with no synchronous wrappers.
+            // This avoids the sync-over-async anti-pattern, which ties up thread pool threads under Blazor Server.
             string[] crudAsyncNames = { "GetNewDataAsync", "GetDataAsync", "SaveAsync", "DeleteAsync" };
             foreach (var asyncName in crudAsyncNames)
             {

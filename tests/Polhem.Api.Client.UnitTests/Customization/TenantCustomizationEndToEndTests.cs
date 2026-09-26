@@ -55,10 +55,10 @@ namespace Polhem.Api.Client.UnitTests.Customization
 
         public TenantCustomizationEndToEndTests(TenantCustomizationFixture fx) { _fx = fx; }
 
-        // ---- 客製生效 ----
+        // ---- Customization takes effect ----
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("進入帶 customize_id 的公司後，取得的 schema 欄位 caption 應為客製值")]
+        [DisplayName("After entering a company with a customize_id, the schema field caption is the customized value")]
         public async Task GetLocalizedSchema_AfterEnteringCustomizedCompany_UsesTenantText()
         {
             using var scope = await TenantScope.EnterAsync(this, TenantCustomizationFixture.CustomizeId);
@@ -72,7 +72,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("進入帶 customize_id 的公司後，BO 型別應解析為客製 ProgramSettings 綁定的型別")]
+        [DisplayName("After entering a company with a customize_id, the BO type resolves to the type bound by the customized ProgramSettings")]
         public async Task CreateBusinessObject_Form_AfterEnteringCustomizedCompany_ResolvesTenantType()
         {
             using var scope = await TenantScope.EnterAsync(this, TenantCustomizationFixture.CustomizeId);
@@ -84,7 +84,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("離開公司後客製即失效，重新取得的 schema 應回到 base 文字")]
+        [DisplayName("After leaving the company the customization no longer applies and a reloaded schema returns to the base text")]
         public async Task GetLocalizedSchema_AfterLeavingCompany_FallsBackToBase()
         {
             using var scope = await TenantScope.EnterAsync(this, TenantCustomizationFixture.CustomizeId);
@@ -101,7 +101,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("進入帶 customize_id 的公司後，執行階段 layout 應整檔採用客製定義，caption 取自在地化 schema")]
+        [DisplayName("After entering a company with a customize_id, the runtime layout uses the whole customized file and takes captions from the localized schema")]
         public async Task GetRuntimeLayout_AfterEnteringCustomizedCompany_UsesTenantLayout()
         {
             using var scope = await TenantScope.EnterAsync(this, TenantCustomizationFixture.CustomizeId);
@@ -119,10 +119,10 @@ namespace Polhem.Api.Client.UnitTests.Customization
             Assert.Equal(TenantCustomizationFixture.OverriddenCaption, LayoutCaptionOf(layout, TenantCustomizationFixture.OverriddenField));
         }
 
-        // ---- 跨租戶隔離 ----
+        // ---- Cross-tenant isolation ----
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("跨租戶隔離：另一個 customize_id 沒有客製檔時應取得純 base 結果")]
+        [DisplayName("Cross-tenant isolation: another customize_id without customization files gets the plain base result")]
         public async Task GetLocalizedSchema_OtherTenantWithoutOverrides_MatchesBaseLayer()
         {
             using var scope = await TenantScope.EnterAsync(this, TenantCustomizationFixture.UncustomizedId);
@@ -133,7 +133,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("跨租戶隔離：另一個 customize_id 的 BO 型別應解析為框架預設 FormBusinessObject")]
+        [DisplayName("Cross-tenant isolation: the BO type of another customize_id resolves to the framework default FormBusinessObject")]
         public async Task CreateBusinessObject_Form_OtherTenantWithoutOverrides_ResolvesDefaultType()
         {
             using var scope = await TenantScope.EnterAsync(this, TenantCustomizationFixture.UncustomizedId);
@@ -144,10 +144,10 @@ namespace Polhem.Api.Client.UnitTests.Customization
             Assert.IsType<FormBusinessObject>(bo);
         }
 
-        // ---- 回歸防護：未設 CustomizeId 的部署行為零變化 ----
+        // ---- Regression guard: a deployment without CustomizeId behaves exactly as before ----
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("回歸防護：未進公司的 session 取得的執行階段 layout 應來自 base 定義檔")]
+        [DisplayName("Regression guard: a session that has not entered a company gets the runtime layout from the base definition file")]
         public async Task GetRuntimeLayout_SessionWithoutCompany_UsesBaseLayoutDefinition()
         {
             var sessions = _fx.GetRequiredService<ISessionInfoService>();
@@ -171,7 +171,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("兩層皆無 layout 定義時應擲例外，不由 schema 即時推導")]
+        [DisplayName("Throws when neither layer has a layout definition instead of deriving one from the schema")]
         // The exception type is deliberately not asserted: a missing base definition surfaces from
         // the server (`CacheDefineAccess.GetFormLayout` throws, relayed as `UserMessageException`)
         // before the loader's own guard for the empty-payload case can run. What this test pins is
@@ -198,7 +198,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("回歸防護：未進公司的 session 取得的 schema 應與純 base 逐位元一致")]
+        [DisplayName("Regression guard: a session that has not entered a company gets a schema identical to the plain base, byte for byte")]
         public async Task GetLocalizedSchema_SessionWithoutCompany_MatchesBaseLayerByteForByte()
         {
             var sessions = _fx.GetRequiredService<ISessionInfoService>();
@@ -216,7 +216,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("回歸防護：未進公司的 session 應解析為框架預設 FormBusinessObject")]
+        [DisplayName("Regression guard: a session that has not entered a company resolves to the framework default FormBusinessObject")]
         public void CreateBusinessObject_Form_SessionWithoutCompany_ResolvesDefaultType()
         {
             var sessions = _fx.GetRequiredService<ISessionInfoService>();

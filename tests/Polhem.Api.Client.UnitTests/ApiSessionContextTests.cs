@@ -4,17 +4,17 @@ using Polhem.Api.Client.Connectors;
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// 驗證 per-session 狀態不再是 process-wide static。
+    /// Verifies that per-session state is no longer a process-wide static.
     /// </summary>
     /// <remarks>
-    /// 缺陷本身是「兩個 session 共用一份傳輸金鑰」，所以測試的重點不是「屬性存得進去」，
-    /// 而是**兩個 session 彼此不可見**。
+    /// The defect was "two sessions share one transport key", so the point of the tests is not that a property
+    /// can be stored, but that **two sessions cannot see each other**.
     /// </remarks>
     [Collection("ApiClientInfoState")]
     public class ApiSessionContextTests
     {
         [Fact]
-        [DisplayName("兩個 session 的傳輸金鑰不應互相覆蓋")]
+        [DisplayName("Two sessions do not overwrite each other's transport key")]
         public void TwoSessions_DoNotOverwriteEachOthersEncryptionKey()
         {
             var a = new ApiSessionContext { ApiEncryptionKey = [1, 2, 3] };
@@ -25,7 +25,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("兩個 session 的使用者時區不應互相覆蓋")]
+        [DisplayName("Two sessions do not overwrite each other's user time zone")]
         public void TwoSessions_DoNotOverwriteEachOthersTimeZone()
         {
             var a = new ApiSessionContext { UserTimeZoneId = "Asia/Taipei" };
@@ -36,7 +36,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("帶 session 建構的 connector 應持有該 session，而非 Ambient")]
+        [DisplayName("A connector constructed with a session holds that session, not Ambient")]
         public void Connector_WithSession_UsesThatSession()
         {
             var session = new ApiSessionContext { UserTimeZoneId = "Asia/Taipei" };
@@ -47,7 +47,7 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("未帶 session 建構的 connector 應退回 Ambient（既有單使用者宿主行為不變）")]
+        [DisplayName("A connector constructed without a session falls back to Ambient (existing single-user hosts are unchanged)")]
         public void Connector_WithoutSession_FallsBackToAmbient()
         {
             var connector = new SystemApiConnector(Guid.NewGuid());
@@ -56,10 +56,10 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ApiClientInfo 的兩個 per-session 屬性應是 Ambient 的 facade")]
+        [DisplayName("The per-session properties of ApiClientInfo are facades over Ambient")]
         public void ApiClientInfo_DelegatesToAmbient()
         {
-            // 舊 API 仍可用，且與 Ambient 是同一份狀態 —— 桌面宿主不需要改任何東西。
+            // The old API still works and shares its state with Ambient, so desktop hosts need no change.
             var originalZone = ApiClientInfo.UserTimeZoneId;
             var originalKey = ApiClientInfo.ApiEncryptionKey;
             try
@@ -78,10 +78,11 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("session 為 null 時建構 connector 應擲例外，而非靜默退回 Ambient")]
+        [DisplayName("Constructing a connector with a null session throws instead of silently falling back to Ambient")]
         public void Connector_NullSession_Throws()
         {
-            // 靜默退回 Ambient 會讓多使用者宿主的設定錯誤變成「看起來能跑、實際共用金鑰」。
+            // Silently falling back to Ambient would turn a configuration error in a multi-user host into
+            // "looks like it works, but actually shares the key".
             Assert.Throws<ArgumentNullException>(
                 () => new SystemApiConnector(Guid.NewGuid(), null!));
         }

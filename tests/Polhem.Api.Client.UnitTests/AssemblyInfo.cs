@@ -1,15 +1,17 @@
-// ApiClientInfoTests / ApiConnectValidatorTests 必須暫時改寫 process-wide static
-// ApiClientInfo.SupportedConnectTypes / ConnectType / Endpoint / ApiKey / ApiEncryptionKey
-// 才能驗證對應邏輯；而 ApiConnector 在每次請求路徑上都會讀 ApiEncryptionKey
-// （ApiConnector.cs:202,209,231）、RemoteApiProvider 讀 ApiKey、ApiConnectValidator 讀
-// SupportedConnectTypes，平行執行下讀取端會落在寫入端的 try/finally 還原視窗裡。
+// `ApiClientInfoTests` and `ApiConnectValidatorTests` have to temporarily overwrite the process-wide statics
+// `ApiClientInfo.SupportedConnectTypes`, `ConnectType`, `Endpoint`, `ApiKey` and `ApiEncryptionKey` to check
+// their logic. Meanwhile `ApiConnector` reads the encryption key on every request path, `RemoteApiProvider`
+// reads `ApiKey` and `ApiConnectValidator` reads `SupportedConnectTypes`, so under parallel execution a reader
+// lands inside a writer's try/finally restore window.
 //
-// ApiClientInfoState collection 已收了三個類別（含刻意加入的讀取端
-// TenantCustomizationEndToEndTests），但 SystemApiConnectorTests 與 ClientDefineAccessTests
-// 這兩個同樣會驅動 connector 的讀取端漏掉了。這與 Polhem.Api.Core.UnitTests 在 CI build
-// #31169045420 踩到的是同一種讀寫不對稱——那次是實際紅了，這裡目前只是潛伏。
+// The `ApiClientInfoState` collection already groups several classes (including the reader
+// `TenantCustomizationEndToEndTests`, added on purpose), but `SystemApiConnectorTests` and
+// `ClientDefineAccessTests`, which also drive the connector, were missed. This is the same read/write asymmetry
+// that `Polhem.Api.Core.UnitTests` hit in CI build #31169045420. That time it actually went red; here it is
+// only latent for now.
 //
-// 讀取端會隨新測試增加，逐類補 [Collection] 必然遺漏；整體關閉平行最簡且不易遺漏
-// （同 Polhem.ObjectCaching.UnitTests / Polhem.Api.Core.UnitTests 的做法）。
-// 根治方式是把 ApiClientInfo 的 per-session 狀態 DI 化（體檢項目 N-2）。
+// Readers grow with new tests, so adding `[Collection]` class by class is bound to miss some. Turning off
+// parallelization for the whole assembly is simplest and hard to get wrong (the same approach as
+// `Polhem.ObjectCaching.UnitTests` and `Polhem.Api.Core.UnitTests`). The root fix is to move the per-session
+// state of `ApiClientInfo` into DI.
 [assembly: Xunit.CollectionBehavior(DisableTestParallelization = true)]

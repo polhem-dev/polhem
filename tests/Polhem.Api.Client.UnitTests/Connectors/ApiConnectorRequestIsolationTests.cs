@@ -6,14 +6,16 @@ using Polhem.Base.Data;
 namespace Polhem.Api.Client.UnitTests.Connectors
 {
     /// <summary>
-    /// 驗證 <see cref="Polhem.Api.Client.Connectors.ApiConnector"/> 送出存檔請求時，伺服端拿到的
-    /// <c>DataSet</c> 是副本：伺服端就地改寫它，不會改到呼叫端手上的那一份（ADR-032 D4）。
+    /// Verifies that when <see cref="Polhem.Api.Client.Connectors.ApiConnector"/> sends a save request, the server
+    /// gets a copy of the <c>DataSet</c>: when the server rewrites it in place, the caller's copy is not changed
+    /// (ADR-032 D4).
     /// </summary>
     /// <remarks>
-    /// in-process 呼叫（<c>LocalApiProvider</c> + <c>Plain</c>）沒有序列化邊界，伺服端收到的就是
-    /// Connector 交出去的物件。<c>FormBusinessObject.Save</c> 會改寫時間欄，寫入後 adapter 還會
-    /// <c>AcceptChanges</c>；少了複製，畫面上的單據會跟著變成 UTC 值且失去未存狀態。
-    /// 這裡以假的 provider 在「伺服端」就地改寫收到的物件，重現同一個形狀。
+    /// An in-process call (<c>LocalApiProvider</c> + <c>Plain</c>) has no serialization boundary, so the server
+    /// receives the very object the Connector handed over. <c>FormBusinessObject.Save</c> rewrites the time
+    /// columns, and after writing, the adapter also calls <c>AcceptChanges</c>. Without the copy, the document on
+    /// screen would turn into UTC values and lose its unsaved state. Here a fake provider rewrites the received
+    /// object in place on the "server", reproducing the same shape.
     /// </remarks>
     public class ApiConnectorRequestIsolationTests
     {
@@ -23,7 +25,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         [Theory]
         [InlineData("")]
         [InlineData("Asia/Taipei")]
-        [DisplayName("伺服端就地改寫存檔的 DataSet 時，呼叫端的 DataSet 應維持原值與未存狀態，且送出的值未經換算")]
+        [DisplayName("When the server rewrites the saved DataSet in place, the caller's DataSet keeps its values and unsaved state, and the sent value is not converted")]
         public async Task ExecuteAsync_ServerRewritesSavedDataSet_LeavesCallerDataSetUntouched(string userTimeZoneId)
         {
             var original = BuildEditedDataSet();

@@ -18,10 +18,10 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// 補強 <see cref="DataFormRepository"/> 中尚未覆蓋的私有靜態方法
-    /// （<c>DefaultSortForPaging</c>、<c>ExtractMasterRowId</c>）
-    /// 以及 <see cref="DataFormRepository.GetNewData"/> 的 Detail 資料表與預設值路徑。
-    /// 不需資料庫連線。
+    /// Covers the private static methods of <see cref="DataFormRepository"/> not covered elsewhere
+    /// (<c>DefaultSortForPaging</c>, <c>ExtractMasterRowId</c>)
+    /// and the detail table and default value paths of <see cref="DataFormRepository.GetNewData"/>.
+    /// No database connection is needed.
     /// </summary>
     public class DataFormRepositoryAdditionalTests
     {
@@ -74,10 +74,10 @@ namespace Polhem.Repository.UnitTests
 
         #endregion
 
-        #region DefaultSortForPaging（私有靜態方法）
+        #region DefaultSortForPaging (private static method)
 
         [Fact]
-        [DisplayName("DefaultSortForPaging 傳入無 MasterTable 的 Schema 應拋 InvalidOperationException")]
+        [DisplayName("DefaultSortForPaging throws InvalidOperationException for a schema without a master table")]
         public void DefaultSortForPaging_SchemaWithoutMasterTable_ThrowsInvalidOperationException()
         {
             var method = typeof(DataFormRepository).GetMethod(
@@ -94,7 +94,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("DefaultSortForPaging MasterTable 不含 sys_no 欄位時應拋 InvalidOperationException")]
+        [DisplayName("DefaultSortForPaging throws InvalidOperationException when the master table has no sys_no field")]
         public void DefaultSortForPaging_MasterTableWithoutSysNoField_ThrowsInvalidOperationException()
         {
             var method = typeof(DataFormRepository).GetMethod(
@@ -112,7 +112,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("DefaultSortForPaging MasterTable 含 sys_no 欄位時應回傳 SortFieldCollection")]
+        [DisplayName("DefaultSortForPaging returns a SortFieldCollection when the master table has a sys_no field")]
         public void DefaultSortForPaging_MasterTableWithSysNoField_ReturnsSortFieldCollection()
         {
             var method = typeof(DataFormRepository).GetMethod(
@@ -131,10 +131,10 @@ namespace Polhem.Repository.UnitTests
 
         #endregion
 
-        #region ExtractMasterRowId（私有靜態方法）
+        #region ExtractMasterRowId (private static method)
 
         [Fact]
-        [DisplayName("ExtractMasterRowId DataSet 不含指定資料表時應回傳 null")]
+        [DisplayName("ExtractMasterRowId returns null when the DataSet does not contain the given table")]
         public void ExtractMasterRowId_DataSetWithoutMasterTable_ReturnsNull()
         {
             var method = typeof(DataFormRepository).GetMethod(
@@ -150,7 +150,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExtractMasterRowId 資料表含有效 sys_rowid 的列時應回傳對應 Guid")]
+        [DisplayName("ExtractMasterRowId returns the Guid of a row with a valid sys_rowid")]
         public void ExtractMasterRowId_MasterTableWithValidRowId_ReturnsGuid()
         {
             var method = typeof(DataFormRepository).GetMethod(
@@ -172,7 +172,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExtractMasterRowId 資料表只含 Deleted 列時應回傳 null")]
+        [DisplayName("ExtractMasterRowId returns null when the table holds only Deleted rows")]
         public void ExtractMasterRowId_OnlyDeletedRows_ReturnsNull()
         {
             var method = typeof(DataFormRepository).GetMethod(
@@ -196,10 +196,10 @@ namespace Polhem.Repository.UnitTests
 
         #endregion
 
-        #region GetNewData（補強路徑）
+        #region GetNewData (additional paths)
 
         [Fact]
-        [DisplayName("GetNewData Schema 含 Detail 資料表時 DataSet 應包含該 Detail 資料表")]
+        [DisplayName("GetNewData includes the detail table in the DataSet when the schema has one")]
         public void GetNewData_SchemaWithDetailTable_DataSetContainsDetailTable()
         {
             var schema = new FormSchema("Order", "Order");
@@ -217,11 +217,11 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetNewData 骨架應含 RelationField 欄位（lookup 寫回落地）、排除 VirtualField")]
+        [DisplayName("GetNewData skeleton includes RelationField columns (so lookup write-back lands) and excludes VirtualField")]
         public void GetNewData_Skeleton_IncludesRelationFieldsExcludesVirtual()
         {
-            // 回歸：骨架缺 ref_* 欄位時，client 端 lookup 寫回會被 SetField 靜默跳過，
-            // 新增流程選取的顯示值永遠帶不回表單。
+            // Regression: without the `ref_*` columns in the skeleton, the client's lookup write-back is silently
+            // skipped by `SetField`, and the display value picked while adding a record never reaches the form.
             var schema = new FormSchema("Project", "Project");
             var master = schema.Tables!.Add("Project", "Project");
             master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
@@ -240,7 +240,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetNewData 欄位有字串預設值時 master 列應套用該預設值")]
+        [DisplayName("GetNewData applies a field's string default value to the master row")]
         public void GetNewData_FieldWithStringDefaultValue_AppliesDefault()
         {
             var schema = new FormSchema("Employee", "Employee");

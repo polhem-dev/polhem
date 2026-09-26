@@ -21,7 +21,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("UsePolhemFramework 傳入 null 應拋出 ArgumentNullException")]
+        [DisplayName("UsePolhemFramework throws ArgumentNullException for a null app")]
         public void UsePolhemFramework_NullApp_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() =>
@@ -29,7 +29,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("UsePolhemFramework 應回傳相同 IApplicationBuilder 實例（Phase 7 後為 no-op）")]
+        [DisplayName("UsePolhemFramework returns the same IApplicationBuilder instance")]
         public void UsePolhemFramework_ValidApp_ReturnsSameApp()
         {
             var services = new ServiceCollection();
@@ -42,7 +42,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("UsePolhemFramework 以 Polhem.Api.AspNetCore 為 logger category")]
+        [DisplayName("UsePolhemFramework logs under the Polhem.Api.AspNetCore category")]
         public void UsePolhemFramework_LogsUnderAssemblyCategory()
         {
             // A deployment's logging configuration can set levels for the startup warnings by this

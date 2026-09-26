@@ -10,8 +10,8 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// <see cref="RepositoryFactory"/> 的兩個軸：progId 軸（型別隨 progId 變動）與框架軸
-    /// （型別固定、以介面指名）。
+    /// The two axes of <see cref="RepositoryFactory"/>: the progId axis (the type varies with the progId) and the
+    /// framework axis (the type is fixed and named by its interface).
     /// </summary>
     public class RepositoryFactoryTests : IClassFixture<SharedDbFixture>
     {
@@ -21,7 +21,8 @@ namespace Polhem.Repository.UnitTests
         private RepositoryFactory CreateFactory()
         {
             var defineAccess = _fx.GetRequiredService<Definition.Storage.IDefineAccess>();
-            // 不帶客製讀取與 session：與改寫前一樣只看基底註冊表，也不會為了未快取的 token 去讀 st_session。
+            // No customization reader and no session: only the base registry is consulted, and an uncached token
+            // never causes a read of `st_session`.
             return new(
                 _fx.Provider,
                 defineAccess,
@@ -32,12 +33,12 @@ namespace Polhem.Repository.UnitTests
         }
 
         /// <summary>
-        /// 沿用正式路由對 Common / Log 的固定規則，Company 直接回測試代號。
+        /// Keeps the production router's fixed rules for Common and Log, and returns a test ID for Company.
         /// </summary>
         /// <remarks>
-        /// tests/Define 下每張 FormSchema 都是 company scope，正式路由需要一個已進入公司的
-        /// session 才解析得出來。本檔要驗的是工廠本身（型別對應、契約檢查、scope 宣告），
-        /// session 路由另有 RepositoryDatabaseRouter 的測試涵蓋。
+        /// Every FormSchema under tests/Define is company scope, and the production router can only resolve it with a
+        /// session that has entered a company. This file tests the factory itself (type mapping, contract checks,
+        /// scope declarations); session routing is covered by the RepositoryDatabaseRouter tests.
         /// </remarks>
         private sealed class StubRouter : IRepositoryDatabaseRouter
         {
@@ -49,7 +50,7 @@ namespace Polhem.Repository.UnitTests
             };
         }
 
-        // ---- 框架軸 ----
+        // ---- Framework axis ----
 
         [Theory]
         [InlineData(typeof(ISessionRepository))]
@@ -63,7 +64,7 @@ namespace Polhem.Repository.UnitTests
         [InlineData(typeof(IEmployeeRepository))]
         [InlineData(typeof(IAuditLogRepository))]
         [InlineData(typeof(IAuditLogWriteRepository))]
-        [DisplayName("Create<T> 應能建立每一個框架 repository")]
+        [DisplayName("Create<T> builds every framework repository")]
         public void Create_EveryFrameworkRepository_Resolves(Type contract)
         {
             var factory = CreateFactory();
@@ -77,7 +78,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("Create<T> 未註冊的介面應拋 NotSupportedException 並指名該介面")]
+        [DisplayName("Create<T> throws NotSupportedException naming the interface for an unregistered interface")]
         public void Create_UnregisteredContract_Throws()
         {
             var factory = CreateFactory();
@@ -88,7 +89,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("每次 Create<T> 應回傳新實例——repository 帶 per-call 狀態，不可共用")]
+        [DisplayName("Each Create<T> returns a new instance (a repository carries per-call state and must not be shared)")]
         public void Create_ReturnsNewInstanceEachTime()
         {
             var factory = CreateFactory();
@@ -97,7 +98,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("宣告 Common scope 的 repository 應解析到 common 資料庫")]
+        [DisplayName("A repository that declares the Common scope resolves to the common database")]
         public void Create_CommonScopeRepository_RoutesToCommon()
         {
             var repository = (RepositoryBase)CreateFactory().Create<ISessionRepository>();
@@ -106,11 +107,12 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("每個方法自帶 databaseId 的 repository 不應在建構期解析路由")]
+        [DisplayName("A repository whose methods each take a databaseId does not resolve routing at construction")]
         public void Create_CallerRoutedRepository_ResolvesNoDatabase()
         {
-            // 這三個的呼叫端是 cache provider 與 session bootstrap：它們被告知要讀哪一家公司，
-            // 手上沒有 token。若建構期就以 session 解析，讀到的會是呼叫者的公司而不是被指定的那家。
+            // The callers of these repositories are the cache providers and the session bootstrap. They are told which
+            // company to read and hold no token. Resolving from the session at construction would read the caller's
+            // company instead of the one requested.
             foreach (var repository in new RepositoryBase[]
             {
                 (RepositoryBase)CreateFactory().Create<IRolePermissionRepository>(),
@@ -123,7 +125,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("無 session 時建立 Common scope repository 不應拋例外")]
+        [DisplayName("Creating a Common scope repository without a session does not throw")]
         public void Create_CommonScopeWithoutSession_DoesNotThrow()
         {
             var factory = CreateFactory();
@@ -133,10 +135,10 @@ namespace Polhem.Repository.UnitTests
             Assert.Null(exception);
         }
 
-        // ---- progId 軸 ----
+        // ---- progId axis ----
 
         [Fact]
-        [DisplayName("CreateFormRepository 應回傳綁定該 progId 的 repository")]
+        [DisplayName("CreateFormRepository returns a repository bound to the progId")]
         public void CreateFormRepository_ReturnsRepositoryBoundToProgId()
         {
             var repository = CreateFactory()
@@ -147,7 +149,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateFormRepository 要求的介面若解析型別未實作應拋出並指名兩者")]
+        [DisplayName("CreateFormRepository throws naming both when the resolved type does not implement the requested interface")]
         public void CreateFormRepository_UnimplementedContract_Throws()
         {
             var factory = CreateFactory();
@@ -162,7 +164,7 @@ namespace Polhem.Repository.UnitTests
         [Theory]
         [InlineData(null)]
         [InlineData("")]
-        [DisplayName("CreateFormRepository 傳入空白 progId 應拋 ArgumentException")]
+        [DisplayName("CreateFormRepository throws ArgumentException for an empty progId")]
         public void CreateFormRepository_BlankProgId_Throws(string? progId)
         {
             var factory = CreateFactory();
@@ -171,7 +173,7 @@ namespace Polhem.Repository.UnitTests
                 () => factory.CreateFormRepository<IDataFormRepository>(Guid.Empty, progId!));
         }
 
-        /// <summary>沒有任何 repository 實作的介面，用於驗證型別不符時的錯誤訊息。</summary>
+        /// <summary>An interface no repository implements, used to check the error message for a type mismatch.</summary>
         public interface IUnimplementedFormRepository : IDataFormRepository { }
 
         private static string GetDatabaseId(RepositoryBase repository)

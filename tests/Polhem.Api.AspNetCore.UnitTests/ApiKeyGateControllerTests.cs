@@ -13,24 +13,26 @@ using Microsoft.Extensions.Hosting;
 namespace Polhem.Api.AspNetCore.UnitTests
 {
     /// <summary>
-    /// 控制器對 API 金鑰閘門的接線：驗證器擲例外時必須 fail closed（拒絕），
-    /// 而不是被當成「此部署尚未發放金鑰」而放行。
+    /// How the controller wires the API key gate: when the validator throws, the request must fail closed
+    /// (rejected) instead of passing as if "this deployment has not issued any keys".
     /// </summary>
         /// <remarks>
-    /// 用 <c>SharedDbFixture</c> 而非 <c>PolhemTestFixture</c>：這些請求走到 executor 後仍會碰
-    /// common 資料庫，<c>PolhemTestFixture</c> 不建 schema。
+    /// Uses <c>SharedDbFixture</c> rather than <c>PolhemTestFixture</c>: once these requests reach the executor
+    /// they still touch the common database, and <c>PolhemTestFixture</c> does not create the schema.
     /// <para>
-    /// 金鑰驗證這一維由每個測試自己指定的 <see cref="IApiKeyValidator"/> 決定，
-    /// <b>不讀實體金鑰存放處</b>。這是刻意的：一旦讓本類別去讀 <c>st_api_key</c>，
-    /// 閘門是否 in force 就取決於該表當下有沒有列，而那不是本類別的任何保證。
-    /// 症狀還完全不指向真因：閘門 in force 時任何非金鑰格式的標頭都成為
-    /// <c>ApiKeyStatus.Invalid</c> → 401，看起來像「預期 200 拿到 401」。
+    /// The key validation dimension is decided by the <see cref="IApiKeyValidator"/> each test supplies,
+    /// <b>not by the real key store</b>. This is deliberate: once this class reads <c>st_api_key</c>,
+    /// whether the gate is in force depends on whether that table holds a row at the moment, which this
+    /// class does not control. The symptom does not point to the cause either: with the gate in force, any
+    /// header that is not in key format becomes <c>ApiKeyStatus.Invalid</c> → 401, which looks like
+    /// "expected 200, got 401".
     /// </para>
     /// <para>
-    /// 那一列從哪來有兩條路，本機紅 / CI 綠的成因是<b>前者</b>：
-    /// (1) <b>殘留</b> —— 本機是持久容器，列會跨測試回合留著；CI 每次都是全新容器，
-    /// 該表恆為空。(2) <b>平行寫入</b> —— <c>ApiKeyRepositoryTests</c> 會往同一個 common
-    /// 資料庫寫啟用金鑰，正常會在 <c>finally</c> 清掉，但與本專案平行執行時仍有窗口。
+    /// Such a row can come from two places, and red locally / green in CI is caused by <b>the first</b>:
+    /// (1) <b>leftovers</b>: the local container is persistent, so rows survive across test runs, while CI
+    /// starts from a fresh container every time and the table is empty. (2) <b>parallel writes</b>:
+    /// <c>ApiKeyRepositoryTests</c> writes enabled keys to the same common database and normally removes them in
+    /// <c>finally</c>, but there is still a window when it runs in parallel with this project.
     /// </para>
     /// </remarks>
     public class ApiKeyGateControllerTests : IClassFixture<SharedDbFixture>
@@ -51,7 +53,8 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         /// <summary>
-        /// 模擬「金鑰存放處無法讀取」——資料庫不可用時驗證路徑會擲出的形狀。
+        /// Simulates "the key store cannot be read", the shape the validation path throws when the database is
+        /// unavailable.
         /// </summary>
         private sealed class ThrowingApiKeyValidator : IApiKeyValidator
         {
@@ -68,8 +71,9 @@ namespace Polhem.Api.AspNetCore.UnitTests
 
         private async Task<IActionResult> PostAsync(string method, IApiKeyValidator? validator, string apiKey)
         {
-            // 帶有效 Bearer token，讓唯一的變動維度是 API 金鑰；否則需授權的方法會先因缺
-            // Authorization 標頭被拒，測不到金鑰閘門。
+            // Send a valid Bearer token so the API key is the only varying dimension. Otherwise a method that
+            // requires authorization is rejected first for the missing `Authorization` header, and the key gate
+            // is never reached.
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
             var request = new JsonRpcRequest
             {
@@ -108,7 +112,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("金鑰驗證擲例外時應 fail closed 回 401，而非降級為寬鬆態")]
+        [DisplayName("A throwing key validator fails closed with 401 instead of degrading to the lenient mode")]
         public async Task Post_ValidatorThrows_FailsClosed()
         {
             var result = await PostAsync($"{SysProgIds.System}.GetCommonConfiguration",
@@ -119,7 +123,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("金鑰驗證擲例外時 System.Ping 仍應作答（健康檢查免金鑰）")]
+        [DisplayName("System.Ping still answers when the key validator throws (health checks need no key)")]
         public async Task Post_ValidatorThrows_PingStillAnswers()
         {
             var result = await PostAsync($"{SysProgIds.System}.Ping",
@@ -132,7 +136,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("嚴格態下金鑰無效時應回 401，且訊息不透露拒絕原因")]
+        [DisplayName("In strict mode an invalid key returns 401 with a message that does not reveal the rejection reason")]
         public async Task Post_InvalidKey_ReturnsUnauthorizedWithMergedMessage()
         {
             var validator = new FixedApiKeyValidator(
@@ -147,7 +151,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("未註冊 IApiKeyValidator 的 host 應沿用非空檢查（相容態）")]
+        [DisplayName("A host without a registered IApiKeyValidator keeps the non-empty check (compatibility mode)")]
         public async Task Post_NoValidatorRegistered_UsesPresenceCheck()
         {
             var result = await PostAsync($"{SysProgIds.System}.GetCommonConfiguration", validator: null, apiKey: "any-key");
@@ -157,7 +161,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("嚴格態下 Ping 帶無效金鑰應回報 Invalid 且不含版本號")]
+        [DisplayName("In strict mode Ping with an invalid key reports Invalid and omits the version")]
         public async Task Post_Ping_InvalidKey_ReportsStatusWithoutVersion()
         {
             var validator = new FixedApiKeyValidator(

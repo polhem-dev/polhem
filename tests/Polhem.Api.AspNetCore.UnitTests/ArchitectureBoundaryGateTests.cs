@@ -5,43 +5,47 @@ using System.Text.Json;
 namespace Polhem.Api.AspNetCore.UnitTests
 {
     /// <summary>
-    /// 把架構文件裡的四條硬約束變成可執行檢查。
+    /// Turns the hard constraints of the architecture documents into executable checks.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 這四條是本框架分層宣稱的核心（見 <c>docs/en/development-constraints.md</c> 與
-    /// <c>docs/en/dependency-map.md</c>），先前<b>只靠每輪體檢時人／代理重掃</b>來確認 ——
-    /// 而 ADR-038 那一條邊反而有兩道閘門守著。體檢一年跑幾次，違規進 main 到被發現之間
-    /// 是好幾週。
+    /// These constraints are the core of the framework's layering claims (see
+    /// <c>docs/en/development-constraints.md</c> and <c>docs/en/dependency-map.md</c>). They used to be confirmed
+    /// <b>only by a person or agent rescanning during each health check</b>, while the ADR-038 edge had two
+    /// gates. Health checks run a few times a year, so weeks passed between a violation reaching main and its
+    /// discovery.
     /// </para>
     /// <para>
-    /// <b>為什麼放在這個測試專案。</b>斷言的資料來源是測試組件自己的 <c>.deps.json</c>，
-    /// 因此圖裡看得到的節點就是本專案傳遞閉包內的節點。<c>Polhem.Api.AspNetCore.UnitTests</c>
-    /// 是唯一同時看得到整條後端（經 <c>Polhem.Api.AspNetCore</c> → <c>Polhem.Hosting</c>）與
-    /// <c>Polhem.Api.Client</c>（經 <c>Polhem.Tests.Shared</c>）的專案。後者尤其關鍵：**被禁的那個
-    /// 節點必須存在於圖中**，否則「不在閉包內」會因為它根本不在圖裡而恆真。
+    /// <b>Why it lives in this test project.</b> The assertions read the test assembly's own <c>.deps.json</c>,
+    /// so the nodes visible in the graph are the nodes in this project's transitive closure.
+    /// <c>Polhem.Api.AspNetCore.UnitTests</c> is the only project that sees both the whole backend (through
+    /// <c>Polhem.Api.AspNetCore</c> → <c>Polhem.Hosting</c>) and <c>Polhem.Api.Client</c> (through
+    /// <c>Polhem.Tests.Shared</c>). The latter is essential: **the forbidden node must exist in the graph**,
+    /// otherwise "not in the closure" is always true simply because the node is not in the graph at all.
     /// </para>
     /// <para>
-    /// 手法沿用 <c>DefinitionDependencyGateTests</c>：讀 deps.json 的 <c>targets</c> 區段建圖、
-    /// 從指定節點 BFS。用 deps.json 而非 <see cref="Assembly.GetReferencedAssemblies"/>，
-    /// 是因為後者只反映「實際被 IL 引用」的組件，宣告了卻尚未使用的參考會漏掉 ——
-    /// 而那正是本閘門要攔的東西。
+    /// The technique follows <c>DefinitionDependencyGateTests</c>: build the graph from the <c>targets</c> section
+    /// of deps.json and run a BFS from the given node. It uses deps.json rather than
+    /// <see cref="Assembly.GetReferencedAssemblies"/> because the latter only reflects assemblies actually
+    /// referenced by the IL, so a reference that is declared but not yet used would be missed, and that is
+    /// exactly what this gate is meant to stop.
     /// </para>
     /// </remarks>
     public class ArchitectureBoundaryGateTests
     {
-        /// <summary>組裝層：依定義會跨越每一層，因此是唯一可以直接相依實作組件的地方。</summary>
+        /// <summary>The composition layer: by definition it spans every layer, so it is the only place that may depend directly on implementation assemblies.</summary>
         private const string CompositionRoot = "Polhem.Hosting";
 
-        /// <summary>「這個組件的傳遞閉包不得含有那個組件」的清單。</summary>
+        /// <summary>The list of "this assembly's transitive closure must not contain that assembly".</summary>
         public static TheoryData<string, string> ForbiddenEdges() => new()
         {
-            // 1. 商業邏輯層不得相依資料存取實作 —— BO 只透過 Repository 抽象取得資料。
+            // 1. The business logic layer must not depend on the data access implementation. A BO gets data only
+            //    through the Repository abstractions.
             { "Polhem.Business", "Polhem.Db" },
             { "Polhem.Business", "Polhem.Repository" },
 
-            // 2. 後端不得相依 client 端函式庫。Polhem.Web.Blazor.Server 相依它是正確的
-            //    （那是前端 RCL），所以不在此列。
+            // 2. The backend must not depend on the client library. `Polhem.Web.Blazor.Server` depending on it is
+            //    correct (it is a front-end RCL), so it is not listed.
             { "Polhem.Api.AspNetCore", "Polhem.Api.Client" },
             { "Polhem.Hosting", "Polhem.Api.Client" },
             { "Polhem.Api.Core", "Polhem.Api.Client" },
@@ -50,32 +54,35 @@ namespace Polhem.Api.AspNetCore.UnitTests
             { "Polhem.Db", "Polhem.Api.Client" },
         };
 
-        /// <summary>「這個組件不得<b>用到</b>那個組件的型別」的清單。</summary>
+        /// <summary>The list of "this assembly must not <b>use</b> types from that assembly".</summary>
         /// <remarks>
         /// <para>
-        /// 與上面的閉包清單管的不是同一件事，工具也不同。閉包用 deps.json，抓得到「宣告了卻還沒
-        /// 使用」的相依；這裡要抓的是**反過來的那一半** —— 用了型別卻沒有在 csproj 宣告。
+        /// This guards something different from the closure list above, with a different tool. The closure uses
+        /// deps.json and catches dependencies that are declared but not yet used; this list catches **the
+        /// opposite half**, types that are used without being declared in the csproj.
         /// </para>
         /// <para>
-        /// WARNING: 這一條<b>不能</b>用 deps.json。SDK 會在 Build 之前把傳遞專案參考併進
-        /// <c>@(ProjectReference)</c>，所以程式碼可以 <c>using</c> 一個只是「經由別人傳遞進來」的
-        /// 組件，而 csproj 與 deps.json 上都不會有那條邊。實測過：把 API 層改回直接解析
-        /// <c>ICacheContainer</c>，deps.json 版本的斷言照樣是綠的。<see cref="Assembly.GetReferencedAssemblies"/>
-        /// 反映的是編譯後 IL 真正參考了誰，那才是這條約束要看的東西。
+        /// WARNING: this check <b>cannot</b> use deps.json. The SDK merges transitive project references into
+        /// <c>@(ProjectReference)</c> before Build, so code can <c>using</c> an assembly that only arrives
+        /// transitively through another one, and neither the csproj nor deps.json shows that edge. Measured: with
+        /// the API layer changed back to resolving <c>ICacheContainer</c> directly, the deps.json version of the
+        /// assertion stayed green. <see cref="Assembly.GetReferencedAssemblies"/> reflects what the compiled IL
+        /// really references, and that is what this constraint has to look at.
         /// </para>
         /// </remarks>
         public static TheoryData<string, string> ForbiddenAssemblyUsages() => new()
         {
-            // API 層不得知道快取是怎麼實作的 —— 它問的是「這個部署有沒有生效的 API key gate」，
-            // 該問題經 Polhem.Definition 的 IApiKeyGateStateProvider 提出。
-            // development-constraints 的禁止表列了「API 層直接參考 Repository 層」，
-            // 這一條落在表外但形狀相同。
+            // The API layer must not know how the cache is implemented. It asks "does this deployment have an
+            // API key gate in force", and that question goes through `IApiKeyGateStateProvider` in
+            // `Polhem.Definition`. The "Cross-Layer Forbidden Practices" table in development-constraints lists
+            // "the API layer references the Repository layer directly". This entry is outside that table but has
+            // the same shape.
             { "Polhem.Api.AspNetCore", "Polhem.ObjectCaching" },
         };
 
         [Theory]
         [MemberData(nameof(ForbiddenAssemblyUsages))]
-        [DisplayName("硬約束：指定組件的 IL 不得參考被禁組件（傳遞可見不代表可以用）")]
+        [DisplayName("Hard constraint: the IL of the given assembly does not reference the forbidden assembly (transitively visible does not mean usable)")]
         public void CompiledAssembly_DoesNotReferenceForbiddenAssembly(string root, string forbidden)
         {
             var assembly = LoadFrameworkAssembly(root);
@@ -84,59 +91,61 @@ namespace Polhem.Api.AspNetCore.UnitTests
                 .Where(name => name != null)
                 .ToArray();
 
-            // 防空轉：載錯組件或參考表是空的，下面的斷言會恆真。
+            // Guards against a vacuous pass: with the wrong assembly loaded or an empty reference list, the
+            // assertion below would always hold.
             Assert.NotEmpty(referenced);
             Assert.Contains("Polhem.Definition", referenced, StringComparer.OrdinalIgnoreCase);
 
             Assert.False(
                 referenced.Contains(forbidden, StringComparer.OrdinalIgnoreCase),
-                $"{root} 的 IL 參考了 {forbidden}，跨越了分層邊界 —— 傳遞看得到不代表可以用。" +
-                "若需要它提供的某個答案，請在 Polhem.Definition 開一個唯讀查詢介面，由組裝層注入實作。");
+                $"The IL of {root} references {forbidden}, which crosses a layer boundary. Being transitively visible does not make it usable. " +
+                "If you need an answer it provides, add a read-only query interface to Polhem.Definition and let the composition layer inject the implementation.");
         }
 
         /// <summary>
-        /// 從測試輸出目錄載入指定的框架組件。
+        /// Loads the given framework assembly from the test output directory.
         /// </summary>
-        /// <param name="assemblyName">組件名稱（不含副檔名）。</param>
+        /// <param name="assemblyName">The assembly name (without the extension).</param>
         private static Assembly LoadFrameworkAssembly(string assemblyName)
         {
             var path = Path.Combine(AppContext.BaseDirectory, $"{assemblyName}.dll");
-            Assert.True(File.Exists(path), $"找不到組件：{path}");
+            Assert.True(File.Exists(path), $"Assembly not found: {path}");
             return Assembly.LoadFrom(path);
         }
 
         [Theory]
         [MemberData(nameof(ForbiddenEdges))]
-        [DisplayName("硬約束：指定組件的傳遞相依閉包不得含有被禁組件")]
+        [DisplayName("Hard constraint: the transitive dependency closure of the given assembly does not contain the forbidden assembly")]
         public void TransitiveClosure_DoesNotContainForbiddenAssembly(string root, string forbidden)
         {
             var graph = ReadDependencyGraph();
 
-            // 兩個節點都必須在圖裡，否則這條斷言會因為「看不到」而恆真。
-            Assert.True(graph.ContainsKey(root), $"deps.json 中找不到 {root}，閘門無從檢查。");
+            // Both nodes must be in the graph, otherwise the assertion always holds because the node is not visible.
+            Assert.True(graph.ContainsKey(root), $"{root} not found in deps.json, so the gate cannot check it.");
             Assert.True(
                 graph.ContainsKey(forbidden),
-                $"deps.json 中找不到 {forbidden}。被禁的節點不在圖中時，下面的斷言會恆真 —— " +
-                "本測試專案必須（直接或間接）看得到它。");
+                $"{forbidden} not found in deps.json. When the forbidden node is not in the graph, the assertion below always holds; " +
+                "this test project must see it (directly or transitively).");
 
             var closure = ResolveClosure(graph, root);
 
             Assert.False(
                 closure.Contains(forbidden),
-                $"{root} 的傳遞相依閉包出現 {forbidden}，違反分層硬約束。" +
-                $"若這是刻意的架構變更，請同步修改 docs/en/development-constraints.md 與 " +
-                "docs/en/dependency-map.md，並在此列出理由後移除該條目。");
+                $"The transitive dependency closure of {root} contains {forbidden}, which violates a hard layering constraint. " +
+                $"If this is a deliberate architectural change, update docs/en/development-constraints.md and " +
+                "docs/en/dependency-map.md as well, state the reason here and remove the entry.");
         }
 
         [Fact]
-        [DisplayName("硬約束：Repository 抽象不得被繞過（只有組裝層能直接相依實作）")]
+        [DisplayName("Hard constraint: the Repository abstractions are not bypassed (only the composition layer depends on the implementation directly)")]
         public void RepositoryImplementation_IsOnlyReferencedByTheCompositionRoot()
         {
             var graph = ReadDependencyGraph();
             const string Implementation = "Polhem.Repository";
-            Assert.True(graph.ContainsKey(Implementation), $"deps.json 中找不到 {Implementation}。");
+            Assert.True(graph.ContainsKey(Implementation), $"{Implementation} not found in deps.json.");
 
-            // 只看直接相依：傳遞相依是組裝層自己帶進來的，不算繞過。
+            // Only direct dependencies count. Transitive ones are brought in by the composition layer itself and
+            // are not a bypass.
             var offenders = graph
                 .Where(entry => entry.Key.StartsWith("Polhem.", StringComparison.Ordinal))
                 .Where(entry => !IsExempt(entry.Key))
@@ -147,8 +156,8 @@ namespace Polhem.Api.AspNetCore.UnitTests
 
             Assert.True(
                 offenders.Length == 0,
-                $"下列組件直接相依 {Implementation} 而非 Polhem.Repository.Abstractions：" +
-                $"{string.Join(", ", offenders)}。資料存取應經抽象取得，具體實作由組裝層注入。");
+                $"These assemblies depend directly on {Implementation} instead of Polhem.Repository.Abstractions: " +
+                $"{string.Join(", ", offenders)}. Data access should go through the abstractions, with the implementation injected by the composition layer.");
 
             static bool IsExempt(string name)
                 => string.Equals(name, CompositionRoot, StringComparison.OrdinalIgnoreCase)
@@ -158,19 +167,20 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("硬約束：Polhem.Api.Contracts 只放合約，不得混入實作")]
+        [DisplayName("Hard constraint: Polhem.Api.Contracts holds only contracts and no implementation")]
         public void ApiContracts_ContainNoImplementation()
         {
             var assembly = typeof(Polhem.Api.Contracts.System.IPingRequest).Assembly;
             const string RootNamespace = "Polhem.Api.Contracts";
 
-            // 只看原始碼宣告的型別。WARNING: 覆蓋率插樁會**往組件裡注入型別**——coverlet 注入
-            // 的是 Coverlet.Core.Instrumentation.Tracker.<組件名>_<guid>，帶著 RecordHit 等方法，
-            // 對這道閘門看起來就是「合約軸混進了實作」。以命名空間限縮而非列舉工具名，
-            // 因為每種插樁工具都注在自己的命名空間下。
+            // Only types declared in source count. WARNING: coverage instrumentation **injects types into the
+            // assembly**. Coverlet injects `Coverlet.Core.Instrumentation.Tracker.<assembly>_<guid>` with methods
+            // such as `RecordHit`, which to this gate looks like implementation mixed into the contracts.
+            // The filter is by namespace rather than by tool name, because each instrumentation tool injects
+            // under its own namespace.
             //
-            // 這條在精簡模式的 CI 上驗不到：覆蓋率只在完整模式收（build-ci.yml 的
-            // --collect:"XPlat Code Coverage"）。本機重現要帶同一個旗標。
+            // Lite-mode CI cannot catch this: coverage is collected only in full mode (the
+            // `--collect:"XPlat Code Coverage"` in build-ci.yml). A local reproduction needs the same flag.
             var types = assembly.GetTypes()
                 .Where(type => !type.IsNested)
                 .Where(type => type.Namespace is not null
@@ -178,13 +188,15 @@ namespace Polhem.Api.AspNetCore.UnitTests
                         || type.Namespace.StartsWith(RootNamespace + ".", StringComparison.Ordinal)))
                 .ToArray();
 
-            // 防空轉：放在過濾**之後**——上面那道命名空間條件若寫錯，迴圈會一圈都不跑而恆綠。
+            // Guards against a vacuous pass, placed **after** the filter: if the namespace condition above is wrong,
+            // the loop never runs and the test is always green.
             Assert.NotEmpty(types);
 
             var offenders = new List<string>();
             foreach (var type in types.Where(t => !t.IsInterface && !t.IsEnum))
             {
-                // 合約軸的非介面型別只有純資料載體：屬性存取子與建構子以外的方法都算實作。
+                // Non-interface types in the contracts are pure data carriers only. Any method other than property
+                // accessors and constructors counts as implementation.
                 var methods = type
                     .GetMethods(BindingFlags.Public | BindingFlags.NonPublic
                               | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
@@ -194,19 +206,19 @@ namespace Polhem.Api.AspNetCore.UnitTests
 
                 if (methods.Length > 0)
                 {
-                    offenders.Add($"{type.FullName}（{string.Join(", ", methods)}）");
+                    offenders.Add($"{type.FullName} ({string.Join(", ", methods)})");
                 }
             }
 
             Assert.True(
                 offenders.Count == 0,
-                $"Polhem.Api.Contracts 出現帶行為的型別：{string.Join("; ", offenders)}。" +
-                "合約軸只描述形狀 —— 實作屬於 Polhem.Api.Core 的訊息型別或 BO 層，混進來會讓" +
-                "每個消費者都繼承到它。");
+                $"Polhem.Api.Contracts contains types with behavior: {string.Join("; ", offenders)}. " +
+                "The contracts describe shape only. Implementation belongs to the message types of Polhem.Api.Core or to the BO layer; " +
+                "mixed in here, every consumer inherits it.");
         }
 
         /// <summary>
-        /// 回傳 <paramref name="root"/> 的傳遞相依閉包（不含自身）。
+        /// Returns the transitive dependency closure of <paramref name="root"/> (excluding itself).
         /// </summary>
         private static HashSet<string> ResolveClosure(Dictionary<string, string[]> graph, string root)
         {
@@ -225,17 +237,17 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         /// <summary>
-        /// 讀取測試組件的 deps.json，回傳「library 名稱 → 直接相依名稱」的相依圖。
+        /// Reads the test assembly's deps.json and returns the dependency graph "library name → direct dependency names".
         /// </summary>
         private static Dictionary<string, string[]> ReadDependencyGraph()
         {
             var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
             var depsPath = Path.Combine(AppContext.BaseDirectory, $"{assemblyName}.deps.json");
-            Assert.True(File.Exists(depsPath), $"找不到相依資訊檔：{depsPath}");
+            Assert.True(File.Exists(depsPath), $"Dependency file not found: {depsPath}");
 
             using var document = JsonDocument.Parse(File.ReadAllText(depsPath));
-            // 指定 RuntimeIdentifier 時會有兩個 target（RID-less 與 RID-specific）；取條目最多的
-            // 那個，兩種建置方式下都拿得到完整圖。
+            // With a `RuntimeIdentifier` there are two targets (RID-less and RID-specific). Taking the one with the
+            // most entries gets the full graph under both kinds of build.
             var target = document.RootElement
                 .GetProperty("targets")
                 .EnumerateObject()
@@ -246,7 +258,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
             var graph = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
             foreach (var library in target.EnumerateObject())
             {
-                // key 的格式是 "Name/Version"。
+                // The key has the format "Name/Version".
                 var name = library.Name.Split('/')[0];
                 graph[name] = library.Value.TryGetProperty("dependencies", out var dependencies)
                     ? dependencies.EnumerateObject().Select(entry => entry.Name).ToArray()

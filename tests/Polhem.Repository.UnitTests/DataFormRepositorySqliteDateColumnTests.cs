@@ -8,10 +8,12 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// SQLite 以文字存放日期，<c>DataFormRepository</c> 讀回時必須依 FormSchema 宣告換成 <see cref="DateTime"/> 欄。
+    /// SQLite stores dates as text, so <c>DataFormRepository</c> must turn them into <see cref="DateTime"/> columns
+    /// according to the FormSchema declaration when reading them back.
     /// </summary>
     /// <remarks>
-    /// 其他資料庫的驅動本來就交回 <see cref="DateTime"/>，這裡驗的是只有 SQLite 會走到的轉換。
+    /// The drivers of the other databases already return <see cref="DateTime"/>; this checks the conversion that
+    /// only SQLite goes through.
     /// </remarks>
     public class DataFormRepositorySqliteDateColumnTests : IClassFixture<SharedDbFixture>
     {
@@ -26,7 +28,7 @@ namespace Polhem.Repository.UnitTests
         public DataFormRepositorySqliteDateColumnTests(SharedDbFixture fx) { _fx = fx; }
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetData 讀回的 DateTime 欄應為 DateTime 型別且值不變")]
+        [DisplayName("SQLite: a DateTime column read by GetData is of type DateTime with its value unchanged")]
         public void GetData_SqliteDateTimeColumn_ReadsAsDateTime()
             => WithForm((form, progId) =>
             {
@@ -38,7 +40,7 @@ namespace Polhem.Repository.UnitTests
             });
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：GetData 讀回的 Date 欄應為 DateTime 型別並保留 Date 宣告")]
+        [DisplayName("SQLite: a Date column read by GetData is of type DateTime and keeps its Date declaration")]
         public void GetData_SqliteDateColumn_ReadsAsDateTimeMarkedDate()
             => WithForm((form, progId) =>
             {
@@ -50,7 +52,7 @@ namespace Polhem.Repository.UnitTests
             });
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：沒有資料列的 GetList 結果，DateTime 欄仍應為 DateTime 型別")]
+        [DisplayName("SQLite: in a GetList result with no rows, a DateTime column is still of type DateTime")]
         public void GetList_SqliteEmptyResult_DateTimeColumnIsDateTime()
             => WithForm((form, _) =>
             {
@@ -61,7 +63,7 @@ namespace Polhem.Repository.UnitTests
             });
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：DateTime 欄存著無法剖析的文字時，GetData 應擲 InvalidOperationException")]
+        [DisplayName("SQLite: GetData throws InvalidOperationException when a DateTime column holds unparsable text")]
         public void GetData_SqliteTextThatIsNotADate_Throws()
             => WithForm((form, progId) =>
             {
@@ -71,7 +73,7 @@ namespace Polhem.Repository.UnitTests
             });
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("SQLite：DateTime 欄存著空字串時，GetData 應讀成 DBNull")]
+        [DisplayName("SQLite: GetData reads an empty string in a DateTime column as DBNull")]
         public void GetData_SqliteEmptyText_ReadsAsDbNull()
             => WithForm((form, progId) =>
             {

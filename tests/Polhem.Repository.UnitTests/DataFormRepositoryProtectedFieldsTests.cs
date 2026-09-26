@@ -9,16 +9,17 @@ using Polhem.Repository.Form;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// 驗證 <c>DataFormRepository.RemoveProtectedFields</c>：即使部署端的 FormSchema 宣告了
-    /// 受保護欄，寫入命令的欄位集合也不得包含它。
+    /// Verifies <c>DataFormRepository.RemoveProtectedFields</c>: even if a deployment's FormSchema declares a
+    /// protected field, the field set of the write command must not contain it.
     /// </summary>
     /// <remarks>
-    /// 這是提權防線，不是整理工作——`st_user` 沒有出貨的 FormSchema，但部署端可以自建一張
-    /// 使用者維護表單。少了這道剔除，該表單就是一條讓一般使用者把自己標成部署層管理員的路。
+    /// This is a defense against privilege escalation, not housekeeping. `st_user` ships no FormSchema, but a
+    /// deployment can build its own user maintenance form. Without this removal, that form is a way for an ordinary
+    /// user to mark themselves as a deployment admin.
     ///
-    /// 以 reflection 直接測私有靜態方法，與本測試類既有的 `ConvertDefaultValue` /
-    /// `TryCoerceToGuid` 同一做法：防線的行為只在這個方法裡，走完整 Save 需要實體資料表，
-    /// 換來的覆蓋卻是同一件事。
+    /// The private static method is tested directly through reflection, the same approach as the existing
+    /// `ConvertDefaultValue` / `TryCoerceToGuid` tests: the defense lives only in this method, and a full Save would
+    /// need a physical table while covering the same thing.
     /// </remarks>
     public class DataFormRepositoryProtectedFieldsTests
     {
@@ -44,7 +45,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("FormSchema 宣告 st_user.deployment_admin 時，寫入用的 schema 仍不含該欄")]
+        [DisplayName("When a FormSchema declares st_user.deployment_admin, the schema used for writing still excludes it")]
         public void RemoveProtectedFields_DropsDeploymentAdmin()
         {
             var tableSchema = BuildUserTableSchema();
@@ -56,7 +57,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("剔除受保護欄不影響同表的其他欄位")]
+        [DisplayName("Removing the protected field leaves the other fields of the table intact")]
         public void RemoveProtectedFields_KeepsOtherColumns()
         {
             var tableSchema = BuildUserTableSchema();
@@ -68,7 +69,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("其他資料表的同名欄不受影響——保護是 table + column 成對判定")]
+        [DisplayName("A column with the same name in another table is unaffected (protection matches table and column as a pair)")]
         public void RemoveProtectedFields_OtherTableSameColumn_Kept()
         {
             var schema = new FormSchema("ft_order", "Order");

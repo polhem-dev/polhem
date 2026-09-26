@@ -7,15 +7,16 @@ using Polhem.Tests.Shared;
 namespace Polhem.Repository.UnitTests
 {
     /// <summary>
-    /// 驗證 <c>st_user.deployment_admin</c> 的讀寫，含「查無使用者」的降級行為。
+    /// Verifies reading and writing <c>st_user.deployment_admin</c>, including the fallback for an unknown user.
     /// </summary>
     /// <remarks>
-    /// 同 <see cref="UserRepositoryLocaleTests"/>：<see cref="UserRepository"/> 內部自行解析
-    /// <c>common</c> 分類，因此這**不是** per-provider 矩陣，<c>[DbFact]</c> 僅用於該 provider
-    /// 不可連線時自動跳過。
+    /// As in <see cref="UserRepositoryLocaleTests"/>: <see cref="UserRepository"/> resolves the <c>common</c>
+    /// category internally, so this is **not** a per-provider matrix, and <c>[DbFact]</c> only skips the tests when
+    /// that provider is unreachable.
     ///
-    /// 每個測試建自己的使用者列而不動 seed 使用者 '001'——實體資料庫由多個平行測試行程共用，
-    /// 共用同一列會讓「旗標現在是什麼」變成競賽（見 <see cref="TestUsers"/>）。
+    /// Each test creates its own user row and leaves the seed user '001' alone. The physical database is shared by
+    /// several test processes running in parallel, and sharing one row would turn "what the flag is right now" into
+    /// a race (see <see cref="TestUsers"/>).
     /// </remarks>
     public class UserRepositoryDeploymentAdminTests : IClassFixture<SharedDbFixture>
     {
@@ -27,7 +28,7 @@ namespace Polhem.Repository.UnitTests
         private UserRepository CreateRepo() => new UserRepository(TestRepositoryContext.Create(ConnectionManager), Guid.Empty, string.Empty);
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SetDeploymentAdmin 寫入後 IsDeploymentAdmin 應讀回同一值")]
+        [DisplayName("IsDeploymentAdmin reads back the value written by SetDeploymentAdmin")]
         public void SetDeploymentAdmin_RoundTrips()
         {
             string userId = TestUsers.Create(ConnectionManager, "repo-admin");
@@ -48,7 +49,7 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("新建的使用者預設不是部署層管理員（欄位 DEFAULT 生效）")]
+        [DisplayName("A new user is not a deployment admin by default (the column DEFAULT applies)")]
         public void IsDeploymentAdmin_NewUser_DefaultsToFalse()
         {
             string userId = TestUsers.Create(ConnectionManager, "repo-default");
@@ -63,14 +64,14 @@ namespace Polhem.Repository.UnitTests
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("IsDeploymentAdmin 查無使用者應回傳 false（授權問題，兩種情況都拒）")]
+        [DisplayName("IsDeploymentAdmin returns false for an unknown user (an authorization question, so both cases deny)")]
         public void IsDeploymentAdmin_UnknownUser_ReturnsFalse()
         {
             Assert.False(CreateRepo().IsDeploymentAdmin("no-such-user"));
         }
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SetDeploymentAdmin 查無使用者應回傳 false 而非擲例外")]
+        [DisplayName("SetDeploymentAdmin returns false for an unknown user instead of throwing")]
         public void SetDeploymentAdmin_UnknownUser_ReturnsFalse()
         {
             Assert.False(CreateRepo().SetDeploymentAdmin("no-such-user", true));
@@ -79,7 +80,7 @@ namespace Polhem.Repository.UnitTests
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("空白 userId 應直接回傳 false，不查資料庫")]
+        [DisplayName("A blank userId returns false without querying the database")]
         public void BlankUserId_ReturnsFalse(string userId)
         {
             var repo = CreateRepo();
