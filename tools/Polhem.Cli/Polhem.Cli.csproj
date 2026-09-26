@@ -1,5 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Package metadata shared with the src/ packages: icon, license, repository, SourceLink, symbols. -->
+  <Import Project="..\..\Package.props" />
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
@@ -23,21 +26,23 @@
       stamped 4.8.0.0. Do not reintroduce a local copy.
     -->
 
-    <!-- Package metadata (lock-stepped with src/Directory.Build.props). -->
-    <Company>Polhem</Company>
-    <Authors>Polhem contributors</Authors>
-    <Product>Polhem</Product>
-    <Copyright>Copyright (c) Polhem contributors</Copyright>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/polhem-dev/polhem</PackageProjectUrl>
+    <!-- Published like the src/ packages, so it keeps their strictness even though tools/ opts out of it. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- Required by EnforceCodeStyleInBuild for IDE0005 (unnecessary usings) to run during the build. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <Description>Polhem framework CLI. Currently ships the `defines` subcommand group for materialising / listing framework default define files (TableSchema / FormSchema / FormLayout / Language / SystemSettings / DatabaseSettings) shipped as embedded resources by Polhem.Definition.</Description>
+    <Description>Polhem framework CLI, a dotnet tool invoked as `dotnet polhem`. Writes out and lists the default definition files embedded in Polhem.Definition, and migrates a ProgramSettings.xml that still carries its menu into a flat registry plus MenuSettings.xml.</Description>
     <PackageTags>polhem;cli;dotnet-tool;defines</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- ProjectReference works for dotnet tool packaging: referenced DLLs are included in the tool package. -->
     <ProjectReference Include="..\..\src\Polhem.Definition\Polhem.Definition.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>

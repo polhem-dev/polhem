@@ -8,7 +8,7 @@ on:
       - 'src/**'
       - 'tests/**'
       - '*.slnx'
-      - 'Directory.Build.props'
+      - '*.props'
       - '.github/workflows/build-ci.yml'
       - 'SonarQube.Analysis.xml'
   # No paths filter on pull requests: `build` is a required check of the branch protection on `main`, and a

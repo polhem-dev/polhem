@@ -38,3 +38,8 @@ jobs:
     # under .claude/. Its fourth check is advisory and does not affect the exit code.
     - name: Check public document references
       run: ./check-public-docs.sh
+
+    # Fails when an XML doc comment in src/ names a type with <c> that exists nowhere, or names a type of the same
+    # project with <c> where <see cref> would let the compiler guard it. Rules: .claude/rules/code-style.md.
+    - name: Check XML doc type references
+      run: ./check-xmldoc-refs.sh

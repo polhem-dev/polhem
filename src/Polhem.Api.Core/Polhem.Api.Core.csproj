@@ -3,24 +3,20 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <Description>Encapsulates API support such as model definitions, encryption, and serialization.</Description>
-    <PackageTags>polhem;api;core;service;dynamicapi</PackageTags>
+    <Description>The JSON-RPC 2.0 layer of the Polhem framework: request and response messages, the payload codecs, compression and encryption, and the server-side dispatcher.</Description>
+    <PackageTags>polhem;api;jsonrpc;messagepack;serialization;encryption</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Declared explicitly even though Polhem.Definition already brings it in transitively.
-         MessagePack is this project's wire ABI, not an incidental dependency: 70 files here
-         use it and the default payload format is MessagePack. Leaving the version pinned
-         solely by Polhem.Definition means a change there would alter this package's on-the-wire
-         behaviour with no local signal, and consumers of the published NuGet package could
-         not see the contract at all. -->
+    <!-- The only MessagePack dependency in the repository (adr-036): the hand-written wire
+         formatters live here, and a request that declares no codec is decoded as MessagePack. -->
     <PackageReference Include="MessagePack" Version="3.1.7" />
   </ItemGroup>
 
   <!--
-    Framework convention analyzers applied to this project itself. POLHEM4001 (missing
-    CollectionBaseFormatter registration) only activates in the compilation that owns the registration
-    list, which is this one — without this reference that rule would never run anywhere.
+    Framework convention analyzers applied to this project itself: the collection shape rules
+    (POLHEM4005, POLHEM4006) apply to the wire types declared here, and without this reference they
+    stay silent for this assembly.
   -->
   <ItemGroup>
     <ProjectReference Include="..\Polhem.Analyzers\Polhem.Analyzers.csproj"

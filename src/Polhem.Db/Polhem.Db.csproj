@@ -4,14 +4,14 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <Description>Database abstraction with dynamic command generation and connection binding.</Description>
-    <PackageTags>polhem;database;dbccess;orm;sql;connection;query</PackageTags>
+    <PackageTags>polhem;database;dataaccess;orm;sql;connection;query</PackageTags>
   </PropertyGroup>
 
   <!--
-    Framework convention analyzers applied to this project itself: POLHEM4002-4006 check the shape of
-    collection types that go over the wire or through XmlSerializer's reflection-only path, and the
-    framework collections here are exactly that. Without this reference the rules stay silent for
-    this assembly (POLHEM4001 is the only one that reaches across assemblies).
+    Framework convention analyzers applied to this project itself: POLHEM4005 and POLHEM4006 check the
+    shape of collection types that go over the wire or through XmlSerializer's reflection-only path, and
+    the framework collections here are exactly that. Without this reference the rules stay silent for
+    this assembly.
   -->
   <ItemGroup>
     <ProjectReference Include="..\Polhem.Analyzers\Polhem.Analyzers.csproj"

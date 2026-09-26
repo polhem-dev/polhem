@@ -1,0 +1,47 @@
+<Project>
+
+  <!--
+    The package metadata and reproducibility settings of every project published to NuGet.
+
+    Imported by src/Directory.Build.props (the framework packages) and by tools/Polhem.Cli/Polhem.Cli.csproj
+    (the dotnet tool, which lives under tools/ and deliberately does not inherit the src/ build baseline).
+    Before this file existed the CLI carried a hand-copied subset of this metadata, and it had already lost the
+    icon, the repository link, SourceLink and the symbol package.
+
+    Like Version.props, it is deliberately not named Directory.Build.props, so it does not attach itself to
+    samples/ and apps/ by directory discovery.
+
+    PackageReadmeFile names README.md, but the README item itself is added by the importer: the framework
+    packages ship the repository README, while the CLI ships its own.
+  -->
+  <PropertyGroup>
+    <Company>Polhem</Company>
+    <Authors>Polhem contributors</Authors>
+    <Product>Polhem</Product>
+    <Copyright>Copyright (c) Polhem contributors</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/polhem-dev/polhem</PackageProjectUrl>
+    <PackageIcon>polhem.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <RepositoryUrl>https://github.com/polhem-dev/polhem</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)polhem.png" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.303" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>

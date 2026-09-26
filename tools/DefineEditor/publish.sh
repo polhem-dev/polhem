@@ -9,7 +9,8 @@
 #   ./publish.sh osx-arm64         # one RID
 #   ./publish.sh --self-contained  # bundle the runtime (much larger, no .NET dep)
 #   ./publish.sh --single-file     # produce a single executable + a few native libs
-#   ./publish.sh --app-bundle      # wrap macOS RIDs as Polhem.DefineEditor.app (double-clickable)
+#   ./publish.sh --app-bundle      # wrap macOS RIDs as Polhem.DefineEditor.app (double-clickable);
+#                                  # implies --single-file, because the bundle only carries the executable
 #
 # Skips PublishTrimmed (XmlSerializer reflection); see README for context.
 
@@ -17,7 +18,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT="${SCRIPT_DIR}/Polhem.DefineEditor.csproj"
-REPO_ROOT="$( cd "${SCRIPT_DIR}/../.." && pwd )"
 
 if [[ ! -f "${PROJECT}" ]]; then
     echo "error: csproj not found at ${PROJECT}" >&2
@@ -32,7 +32,7 @@ for arg in "$@"; do
     case "${arg}" in
         --self-contained) SELF_CONTAINED="true" ;;
         --single-file) SINGLE_FILE="true" ;;
-        --app-bundle) APP_BUNDLE="true" ;;
+        --app-bundle) APP_BUNDLE="true"; SINGLE_FILE="true" ;;
         *) RIDS+=("${arg}") ;;
     esac
 done
@@ -41,7 +41,13 @@ if [[ ${#RIDS[@]} -eq 0 ]]; then
     RIDS=(osx-arm64 osx-x64 win-x64 linux-x64)
 fi
 
-VERSION="$(grep -E '<Version>' "${REPO_ROOT}/src/Directory.Build.props" | head -1 | sed -E 's/.*<Version>([^<]+)<\/Version>.*/\1/')"
+# Ask MSBuild for the evaluated version rather than parsing a props file: the version lives in Version.props,
+# imported through tools/Directory.Build.props, and parsing a file by path broke once already when it moved.
+VERSION="$(dotnet msbuild "${PROJECT}" -getProperty:Version)"
+if [[ -z "${VERSION}" ]]; then
+    echo "error: could not evaluate the Version property of ${PROJECT}" >&2
+    exit 1
+fi
 
 build_app_bundle() {
     local rid="$1"

@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <Description>Avalonia desktop control library for Polhem (FormSchema-driven UI for Windows / macOS / Linux).</Description>
+    <Description>Avalonia control library for Polhem: FormSchema-driven UI for desktop, browser (WebAssembly), iOS and Android heads.</Description>
+    <PackageTags>polhem;avalonia;ui;controls;forms</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

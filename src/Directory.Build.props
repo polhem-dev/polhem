@@ -2,21 +2,13 @@
 
   <!-- The single source of version information; tools/ imports the same file. POLHEM9002 checks at build time that the three version properties agree. -->
   <Import Project="$(MSBuildThisFileDirectory)../Version.props" />
+  <!-- Package metadata shared with the published dotnet tool (tools/Polhem.Cli). -->
+  <Import Project="$(MSBuildThisFileDirectory)../Package.props" />
 
   <PropertyGroup>
-<!---->
-    <Company>Polhem</Company>
-    <Authors>Polhem contributors</Authors>
-    <Product>Polhem</Product>
-    <Copyright>Copyright (c) Polhem contributors</Copyright>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/polhem-dev/polhem</PackageProjectUrl>
-    <PackageIcon>polhem.png</PackageIcon>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!-- CI packs in a separate step (build-ci.yml, nuget-publish.yml), so its build step does not pack as well. -->
+    <GeneratePackageOnBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">false</GeneratePackageOnBuild>
 
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
 
@@ -24,12 +16,6 @@
 
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <Deterministic>true</Deterministic>
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <RepositoryUrl>https://github.com/polhem-dev/polhem</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
 
     <!-- Opt-in per-project SARIF diagnostics, used to regenerate the PublicAPI baselines in bulk.
          Off unless PolhemSarifDir is passed, so normal builds are unaffected. Procedure:
@@ -38,13 +24,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)..\polhem.png" Pack="true" PackagePath="\" />
     <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\" />
-    <None Include="$(MSBuildThisFileDirectory)..\LICENSE.txt" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.303" PrivateAssets="All"/>
     <!-- Public API surface tracking. RS0016/RS0017 turn "a published type or member was added,
          removed or changed" into a build failure unless the baseline below is updated in the same
          commit, so a breaking change can no longer reach a release without someone noticing.
