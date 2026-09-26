@@ -15,11 +15,11 @@ namespace Avalonia.DemoCenter.Modules.Grids
         public override string Category => "Grid";
 
         /// <inheritdoc/>
-        public override string Title => "List mode（唯讀清單）";
+        public override string Title => "List mode (read-only list)";
 
         /// <inheritdoc/>
         public override string Description =>
-            "GridControl 以 list mode 綁定獨立 DataTable（不屬任何 FormDataObject）：唯讀、無新增/刪除工具列；欄位由 LayoutGrid 定義。";
+            "GridControl in list mode, bound to a standalone DataTable (not part of any FormDataObject): read-only, no add/delete toolbar, columns defined by a LayoutGrid.";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -30,8 +30,8 @@ namespace Avalonia.DemoCenter.Modules.Grids
             return new ScrollViewer
             {
                 Content = DataEditorParts.Section(
-                    "員工清單（list mode）",
-                    "list-mode 綁定的 grid 不可編輯、無工具列；生產的 ListView 另加後端 reload 與列事件（見 Avalonia.Demo）。",
+                    "Employee list (list mode)",
+                    "A list-mode grid is not editable and has no toolbar. The production ListView adds back-end reload and row events (see Avalonia.Demo).",
                     grid),
             };
         }

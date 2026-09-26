@@ -15,15 +15,15 @@ namespace Avalonia.DemoCenter.Modules.Layouts
     public sealed class AutoFormLayoutModule : DemoModuleBase
     {
         /// <inheritdoc/>
-        public override string Category => "Layout 排版";
+        public override string Category => "Layout";
 
         /// <inheritdoc/>
-        public override string Title => "FormLayout 設計階段產生";
+        public override string Title => "FormLayout generated at design time";
 
         /// <inheritdoc/>
         public override string Description =>
-            "FormLayoutGenerator.Generate 由 schema 產生表單 layout（區段 + 欄位擺放），作為設計階段的起點；"
-            + "執行階段一律讀已存檔的 FormLayout 定義，不會即時推導。";
+            "FormLayoutGenerator.Generate produces a form layout (sections and field placement) from the schema as a design-time starting point; "
+            + "at run time the app reads the saved FormLayout definition instead of deriving one on the fly.";
 
         /// <inheritdoc/>
         public override Control BuildView()

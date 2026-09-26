@@ -18,8 +18,8 @@ internal static class FormSchemaNodeDisplay
             (FormSchemaKinds.Field, FormField f) => Field(f),
             (FormSchemaKinds.Mapping, FieldMapping m) => Mapping(m),
             (FormSchemaKinds.ListItem, ListItem i) => ListItem(i),
-            (FormSchemaKinds.RelationGroup, FormField f) => ("Relation", $"RelationProgId：{f.RelationProgId}"),
-            (FormSchemaKinds.LookupGroup, FormField f) => ("Lookup", $"LookupProgId：{f.LookupProgId}"),
+            (FormSchemaKinds.RelationGroup, FormField f) => ("Relation", $"RelationProgId: {f.RelationProgId}"),
+            (FormSchemaKinds.LookupGroup, FormField f) => ("Lookup", $"LookupProgId: {f.LookupProgId}"),
             (FormSchemaKinds.ListItemsGroup, FormField f) => ListItemsGroup(f),
             _ => (string.Empty, null),
         };
@@ -27,47 +27,47 @@ internal static class FormSchemaNodeDisplay
     private static (string, string) Schema(FormSchema s) => (
         $"{s.ProgId}  —  {s.DisplayName}",
         string.Join(Environment.NewLine,
-            $"ProgId：{s.ProgId}",
-            $"DisplayName：{s.DisplayName}",
-            $"CategoryId：{s.CategoryId}",
-            $"ListFields：{s.ListFields}",
-            $"PermissionModelId：{s.PermissionModelId}"));
+            $"ProgId: {s.ProgId}",
+            $"DisplayName: {s.DisplayName}",
+            $"CategoryId: {s.CategoryId}",
+            $"ListFields: {s.ListFields}",
+            $"PermissionModelId: {s.PermissionModelId}"));
 
     private static (string, string) Table(FormTable t) => (
         $"{t.TableName}  —  {t.DisplayName}",
         string.Join(Environment.NewLine,
-            $"TableName：{t.TableName}",
-            $"DbTableName：{t.DbTableName}",
-            $"DisplayName：{t.DisplayName}"));
+            $"TableName: {t.TableName}",
+            $"DbTableName: {t.DbTableName}",
+            $"DisplayName: {t.DisplayName}"));
 
     private static (string, string) Field(FormField f) => (
         $"{f.FieldName}  —  {f.Caption}",
         string.Join(Environment.NewLine,
-            $"FieldName：{f.FieldName}",
-            $"Caption：{f.Caption}",
-            $"DbType：{f.DbType}",
-            $"Type：{f.Type}",
-            $"ControlType：{f.ControlType}",
-            $"MaxLength：{f.MaxLength}",
-            $"DefaultValue：{f.DefaultValue}",
-            $"Visible：{f.Visible}",
-            $"ScopeRole：{f.ScopeRole}"));
+            $"FieldName: {f.FieldName}",
+            $"Caption: {f.Caption}",
+            $"DbType: {f.DbType}",
+            $"Type: {f.Type}",
+            $"ControlType: {f.ControlType}",
+            $"MaxLength: {f.MaxLength}",
+            $"DefaultValue: {f.DefaultValue}",
+            $"Visible: {f.Visible}",
+            $"ScopeRole: {f.ScopeRole}"));
 
     private static (string, string) Mapping(FieldMapping m) => (
         $"{m.SourceField}  →  {m.DestinationField}",
         string.Join(Environment.NewLine,
-            $"SourceField：{m.SourceField}",
-            $"DestinationField：{m.DestinationField}"));
+            $"SourceField: {m.SourceField}",
+            $"DestinationField: {m.DestinationField}"));
 
     private static (string, string) ListItem(ListItem i) => (
         $"{i.Value}  —  {i.Text}",
         string.Join(Environment.NewLine,
-            $"Value：{i.Value}",
-            $"Text：{i.Text}"));
+            $"Value: {i.Value}",
+            $"Text: {i.Text}"));
 
     private static (string, string) ListItemsGroup(FormField f) => (
         $"ListItems ({f.ListItems?.Count ?? 0})",
         string.IsNullOrEmpty(f.LangEnumName)
             ? "(Static ListItems)"
-            : $"LangEnumName：{f.LangEnumName} (overrides static items)");
+            : $"LangEnumName: {f.LangEnumName} (overrides static items)");
 }

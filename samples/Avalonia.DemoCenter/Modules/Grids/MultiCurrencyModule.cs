@@ -26,11 +26,11 @@ namespace Avalonia.DemoCenter.Modules.Grids
         public override string Category => "Grid";
 
         /// <inheritdoc/>
-        public override string Title => "多幣別金額";
+        public override string Title => "Multi-currency amounts";
 
         /// <inheritdoc/>
         public override string Description =>
-            "金額欄依該列幣別欄（sys_currency）解析位數（USD 2 / JPY 0 / BHD 3）；切換單據貨幣 → 同一批金額值即時改位數。原幣欄合計：全同幣才顯、混幣不顯；本幣欄（TWD）恆顯合計。";
+            "Amount columns resolve their decimals from the row's currency column, sys_currency (USD 2 / JPY 0 / BHD 3); switching the document currency changes the decimals of the same amounts live. The original-currency total is shown only when every row has the same currency, not for mixed currencies; the home-currency (TWD) total is always shown.";
 
         // Curated client currency master (the subset this demo uses).
         private static CurrencySettings BuildCurrencies() =>
@@ -49,7 +49,7 @@ namespace Avalonia.DemoCenter.Modules.Grids
             ("Gizmo", 250.125m, "BHD", 21260m),
         };
 
-        private static readonly string[] s_documentModes = ["混幣（原樣）", "全部 USD", "全部 JPY"];
+        private static readonly string[] s_documentModes = ["Mixed (as seeded)", "All USD", "All JPY"];
 
         private readonly CurrencySettings _currencies = BuildCurrencies();
 
@@ -70,17 +70,17 @@ namespace Avalonia.DemoCenter.Modules.Grids
             var homeTotal = new TextBlock();
             void RefreshTotals()
             {
-                originalTotal.Text = "原幣合計：" + FormatOriginalTotal(table);
-                homeTotal.Text = "本幣合計（TWD）：" + FormatHomeTotal(table);
+                originalTotal.Text = "Original-currency total: " + FormatOriginalTotal(table);
+                homeTotal.Text = "Home-currency total (TWD): " + FormatHomeTotal(table);
             }
             RefreshTotals();
 
             var modeIndex = 0;
-            var toggle = new Button { Content = "單據貨幣：" + s_documentModes[modeIndex] };
+            var toggle = new Button { Content = "Document currency: " + s_documentModes[modeIndex] };
             toggle.Click += (_, _) =>
             {
                 modeIndex = (modeIndex + 1) % s_documentModes.Length;
-                toggle.Content = "單據貨幣：" + s_documentModes[modeIndex];
+                toggle.Content = "Document currency: " + s_documentModes[modeIndex];
                 ApplyDocumentCurrency(table, modeIndex);
                 grid.RefreshRows();
                 RefreshTotals();
@@ -89,8 +89,8 @@ namespace Avalonia.DemoCenter.Modules.Grids
             return new ScrollViewer
             {
                 Content = DataEditorParts.Section(
-                    "多幣別金額（金額欄依列幣別解析位數）",
-                    "amount 欄綁 sys_currency（CUKY）；切換單據貨幣 → 同批金額值改位數。原幣欄混幣不顯合計、同幣才顯；本幣欄恆顯。",
+                    "Multi-currency amounts (amount decimals follow the row currency)",
+                    "The amount column is bound to sys_currency (CUKY); switching the document currency changes the decimals of the same amounts. The original-currency total is shown only for a single currency, not for mixed ones; the home-currency total is always shown.",
                     toggle, grid, originalTotal, homeTotal),
             };
         }
@@ -114,7 +114,7 @@ namespace Avalonia.DemoCenter.Modules.Grids
             var cells = table.Rows.Cast<System.Data.DataRow>()
                 .Select(r => (ValueUtilities.CDecimal(r["amount"]), ValueUtilities.CStr(r["sys_currency"])));
             var total = AmountColumnSummary.TryComputeTotal(cells);
-            if (total is null) { return "— 混幣，不合計"; }
+            if (total is null) { return "— mixed currencies, no total"; }
 
             // All rows share one currency here → format by it.
             string code = ValueUtilities.CStr(table.Rows[0]["sys_currency"]);
@@ -135,34 +135,34 @@ namespace Avalonia.DemoCenter.Modules.Grids
 
         private static LayoutGrid BuildLayout()
         {
-            var layout = new LayoutGrid("OrderLine", "訂單明細");
-            layout.Columns!.Add(new LayoutColumn("product", "品名", ControlType.TextEdit));
-            layout.Columns.Add(new LayoutColumn("amount", "金額(原幣)", ControlType.NumericEdit)
+            var layout = new LayoutGrid("OrderLine", "Order lines");
+            layout.Columns!.Add(new LayoutColumn("product", "Product", ControlType.TextEdit));
+            layout.Columns.Add(new LayoutColumn("amount", "Amount (original)", ControlType.NumericEdit)
             {
                 NumberKind = NumberKind.Amount,
                 CurrencyField = "sys_currency",
             });
-            layout.Columns.Add(new LayoutColumn("sys_currency", "幣別", ControlType.TextEdit));
-            layout.Columns.Add(new LayoutColumn("home_amount", "金額(本幣)", ControlType.NumericEdit)
+            layout.Columns.Add(new LayoutColumn("sys_currency", "Currency", ControlType.TextEdit));
+            layout.Columns.Add(new LayoutColumn("home_amount", "Amount (home)", ControlType.NumericEdit)
             {
                 NumberKind = NumberKind.Amount,
                 CurrencyField = "local_currency",
             });
-            layout.Columns.Add(new LayoutColumn("local_currency", "本幣", ControlType.TextEdit));
+            layout.Columns.Add(new LayoutColumn("local_currency", "Home currency", ControlType.TextEdit));
             return layout;
         }
 
         private static FormDataObject BuildData()
         {
-            var schema = new FormSchema("Order", "訂單");
-            schema.Tables!.Add("Order", "訂單").Fields!.Add("order_no", "單號", FieldDbType.String);
+            var schema = new FormSchema("Order", "Order");
+            schema.Tables!.Add("Order", "Order").Fields!.Add("order_no", "Order No.", FieldDbType.String);
 
-            var line = schema.Tables.Add("OrderLine", "明細");
-            line.Fields!.Add("product", "品名", FieldDbType.String);
-            line.Fields!.Add(new FormField("amount", "金額(原幣)", FieldDbType.Decimal) { NumberKind = NumberKind.Amount, CurrencyField = "sys_currency" });
-            line.Fields!.Add("sys_currency", "幣別", FieldDbType.String);
-            line.Fields!.Add(new FormField("home_amount", "金額(本幣)", FieldDbType.Decimal) { NumberKind = NumberKind.Amount, CurrencyField = "local_currency" });
-            line.Fields!.Add("local_currency", "本幣", FieldDbType.String);
+            var line = schema.Tables.Add("OrderLine", "Lines");
+            line.Fields!.Add("product", "Product", FieldDbType.String);
+            line.Fields!.Add(new FormField("amount", "Amount (original)", FieldDbType.Decimal) { NumberKind = NumberKind.Amount, CurrencyField = "sys_currency" });
+            line.Fields!.Add("sys_currency", "Currency", FieldDbType.String);
+            line.Fields!.Add(new FormField("home_amount", "Amount (home)", FieldDbType.Decimal) { NumberKind = NumberKind.Amount, CurrencyField = "local_currency" });
+            line.Fields!.Add("local_currency", "Home currency", FieldDbType.String);
 
             var data = new FormDataObject(schema);
             data.InitializeNewMaster();

@@ -1,15 +1,16 @@
 <Project>
 
   <!--
-    tools/ 為開發期工具，獨立於核心套件的建置基調。
-    本檔案刻意「不」import repo 根的 Directory.Build.props，
-    讓 tools/ 完全自主：不上 NuGet、不套用 src/ 的嚴格分析設定。
+    tools/ holds development-time tools and is independent of the build baseline of the core packages.
+    This file deliberately does NOT import the Directory.Build.props at the repository root,
+    so tools/ is fully self-contained: not published to NuGet, and without the strict analysis settings of src/.
 
-    版號是唯一的例外，而且是刻意的：Polhem.Cli 雖然位於 tools/，卻**會**發布到 NuGet
-    （見 .github/workflows/nuget-publish.yml）。它先前自帶一份版號，落後框架十二個 minor，
-    因此每一版發布的 Polhem.Cli 內組件標的都是 4.8.0.0。版號改由 Version.props 單一來源提供，
-    這種漂移在結構上就不可能再發生。這是「具名檔案的顯式 import」而非繼承根 props，
-    上一段的自主性不受影響。
+    The version is the one exception, and it is deliberate: Polhem.Cli lives under tools/ but IS published to
+    NuGet (see .github/workflows/nuget-publish.yml). It used to carry its own version, which fell twelve minor
+    versions behind the framework, so every published Polhem.Cli stamped its assembly as 4.8.0.0. With the
+    version now supplied by the single source Version.props, that drift cannot happen again by construction.
+    This is an explicit import of a named file, not inheritance of the root props, so the independence
+    described above is unaffected.
   -->
   <Import Project="$(MSBuildThisFileDirectory)../Version.props" />
 

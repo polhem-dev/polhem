@@ -10,7 +10,7 @@
              x:CompileBindings="True">
 
     <UserControl.Styles>
-        <!-- VS Code welcome 頁的連結式按鈕：無框、主色文字、手型游標 -->
+        <!-- Link-style buttons like the VS Code welcome page: no border, primary-color text, hand cursor -->
         <Style Selector="Button.link">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -33,7 +33,7 @@
                        Text="{loc:Loc About_Subtitle}"/>
 
             <Grid ColumnDefinitions="5*,56,4*">
-                <!-- 左欄：開始 + 最近 -->
+                <!-- Left column: Start + Recent -->
                 <StackPanel Grid.Column="0" Spacing="8">
                     <TextBlock Classes="h2" Text="{loc:Loc Welcome_SectionStart}"/>
                     <Button Classes="link" Command="{Binding OpenFolderCommand}">
@@ -61,7 +61,7 @@
                                IsVisible="{Binding !HasRecentSolutions}"/>
                 </StackPanel>
 
-                <!-- 右欄：操作提示 -->
+                <!-- Right column: usage tips -->
                 <StackPanel Grid.Column="2" Spacing="10">
                     <TextBlock Classes="h2" Text="{loc:Loc Welcome_SectionTips}"/>
                     <TextBlock Classes="muted" TextWrapping="Wrap" Text="{loc:Loc Welcome_Tip1}"/>

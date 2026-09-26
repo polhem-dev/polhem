@@ -9,7 +9,7 @@ namespace Avalonia.DemoCenter
     /// Demo Center shell: a global toolbar (theme toggle), a navigation tree (theme → case),
     /// and a Demo / Source tab pair. The Demo tab hosts the live scenario view; the Source
     /// tab shows the module's real embedded source. FormMode switching is not global — it
-    /// lives inside the "FormMode 顯示狀態" theme so it never drives unrelated demos.
+    /// lives inside the "FormMode States" theme so it never drives unrelated demos.
     /// </summary>
     public partial class MainWindow : Window
     {

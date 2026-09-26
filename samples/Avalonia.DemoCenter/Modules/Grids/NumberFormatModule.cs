@@ -26,21 +26,21 @@ namespace Avalonia.DemoCenter.Modules.Grids
         public override string Category => "Grid";
 
         /// <inheritdoc/>
-        public override string Title => "數值格式化";
+        public override string Title => "Number formatting";
 
         /// <inheritdoc/>
         public override string Description =>
-            "每欄依 NumberKind 解析顯示位數（單價 N4 / 金額 N2 / 折扣 P2）；數量與重量綁單位欄、依該列單位解析（PCS 0 / KG 3），不隨公司變；切換公司走公司覆寫位數即時改變；雙擊數值 cell 以 NumericEdit 就地編輯（focus 顯示完整精度、blur 依格式，顯示捨入不回寫）。";
+            "Each column resolves its display decimals from its NumberKind (unit price N4 / amount N2 / discount P2). Quantity and weight are bound to unit columns and follow the row's unit (PCS 0 / KG 3), independent of the company. Switching the company applies its overridden decimals live. Double-click a numeric cell to edit it in place with NumericEdit (full precision on focus, formatted on blur; display rounding is not written back).";
 
         // Numeric order-line columns: (data field, caption, semantic kind, unit field). Quantity and
         // weight must bind a unit field; the other kinds take none.
         private static readonly (string Field, string Caption, NumberKind Kind, string UnitField)[] NumericColumns =
         {
-            ("quantity", "數量", NumberKind.Quantity, "quantity_uom"),
-            ("unit_price", "單價", NumberKind.UnitPrice, ""),
-            ("amount", "金額", NumberKind.Amount, ""),
-            ("gross_weight", "重量", NumberKind.Weight, "weight_uom"),
-            ("discount_pct", "折扣", NumberKind.Percent, ""),
+            ("quantity", "Quantity", NumberKind.Quantity, "quantity_uom"),
+            ("unit_price", "Unit price", NumberKind.UnitPrice, ""),
+            ("amount", "Amount", NumberKind.Amount, ""),
+            ("gross_weight", "Weight", NumberKind.Weight, "weight_uom"),
+            ("discount_pct", "Discount", NumberKind.Percent, ""),
         };
 
         // Curated client unit master (the subset this demo uses).
@@ -71,19 +71,19 @@ namespace Avalonia.DemoCenter.Modules.Grids
             return new ScrollViewer
             {
                 Content = DataEditorParts.Section(
-                    "數值格式化（NumberKind → 位數）",
-                    "同一批資料，每欄依 NumberKind 解析出不同位數。切換公司 → 走公司覆寫位數（單價 4→2、折扣 P2→P4）即時重算；數量與重量跟該列單位走，不受公司影響。單價以完整精度保存、顯示捨入不回寫。",
+                    "Number formatting (NumberKind → decimals)",
+                    "The same data, with each column resolving different decimals from its NumberKind. Switching the company applies its overridden decimals (unit price 4→2, discount P2→P4) live; quantity and weight follow the row's unit and are not affected by the company. Unit prices are stored at full precision; display rounding is not written back.",
                     toggle, grid),
             };
         }
 
         private static string CompanyLabel(bool useOverrides)
-            => useOverrides ? "公司 B（覆寫位數）— 點此切回 A" : "公司 A（框架預設）— 點此切到 B";
+            => useOverrides ? "Company B (overridden decimals) — click to switch back to A" : "Company A (framework defaults) — click to switch to B";
 
         private static LayoutGrid BuildLayout(CompanyInfo? company)
         {
-            var layout = new LayoutGrid("OrderLine", "訂單明細");
-            layout.Columns!.Add(new LayoutColumn("product", "品名", ControlType.TextEdit));
+            var layout = new LayoutGrid("OrderLine", "Order lines");
+            layout.Columns!.Add(new LayoutColumn("product", "Product", ControlType.TextEdit));
             foreach (var (field, caption, kind, unitField) in NumericColumns)
             {
                 layout.Columns.Add(new LayoutColumn(field, caption, ControlType.NumericEdit)
@@ -93,14 +93,14 @@ namespace Avalonia.DemoCenter.Modules.Grids
                     NumberFormat = NumberFormatResolver.ResolveFormat(kind, company),
                 });
                 if (!string.IsNullOrEmpty(unitField))
-                    layout.Columns.Add(new LayoutColumn(unitField, "單位", ControlType.TextEdit));
+                    layout.Columns.Add(new LayoutColumn(unitField, "Unit", ControlType.TextEdit));
             }
             return layout;
         }
 
         private static CompanyInfo CompanyWithOverrides()
         {
-            var company = new CompanyInfo { CompanyId = "B", CompanyName = "公司 B", DefaultCurrency = "USD" };
+            var company = new CompanyInfo { CompanyId = "B", CompanyName = "Company B", DefaultCurrency = "USD" };
             company.NumberFormats.Add(new NumberFormatItem(NumberKind.UnitPrice, 2));
             company.NumberFormats.Add(new NumberFormatItem(NumberKind.Percent, 4));
             return company;
@@ -108,15 +108,15 @@ namespace Avalonia.DemoCenter.Modules.Grids
 
         private static FormDataObject BuildData()
         {
-            var schema = new FormSchema("Order", "訂單");
-            schema.Tables!.Add("Order", "訂單").Fields!.Add("order_no", "單號", FieldDbType.String);
+            var schema = new FormSchema("Order", "Order");
+            schema.Tables!.Add("Order", "Order").Fields!.Add("order_no", "Order No.", FieldDbType.String);
 
-            var line = schema.Tables.Add("OrderLine", "明細");
-            line.Fields!.Add("product", "品名", FieldDbType.String);
+            var line = schema.Tables.Add("OrderLine", "Lines");
+            line.Fields!.Add("product", "Product", FieldDbType.String);
             foreach (var (field, caption, kind, unitField) in NumericColumns)
                 line.Fields!.Add(new FormField(field, caption, FieldDbType.Decimal) { NumberKind = kind, UnitField = unitField });
-            line.Fields!.Add("quantity_uom", "數量單位", FieldDbType.String);
-            line.Fields!.Add("weight_uom", "重量單位", FieldDbType.String);
+            line.Fields!.Add("quantity_uom", "Quantity unit", FieldDbType.String);
+            line.Fields!.Add("weight_uom", "Weight unit", FieldDbType.String);
 
             var data = new FormDataObject(schema);
             data.InitializeNewMaster();

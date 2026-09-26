@@ -25,11 +25,11 @@ namespace Avalonia.DemoCenter.Modules.Grids
         public override string Category => "Grid";
 
         /// <inheritdoc/>
-        public override string Title => "多單位數量";
+        public override string Title => "Multi-unit quantities";
 
         /// <inheritdoc/>
         public override string Description =>
-            "數量欄依該列單位欄（qty_uom）解析位數（PCS 0 / KG 3 / M 2）；切換單位 → 同一批數量值即時改位數。數量合計：全同單位才顯、混單位不顯。";
+            "The quantity column resolves its decimals from the row's unit column, qty_uom (PCS 0 / KG 3 / M 2); switching the unit changes the decimals of the same quantities live. The quantity total is shown only when every row has the same unit, not for mixed units.";
 
         // Curated client unit master (the subset this demo uses).
         private static UnitSettings BuildUnits() =>
@@ -46,7 +46,7 @@ namespace Avalonia.DemoCenter.Modules.Grids
             ("Cable", 12.345m, "M"),
         };
 
-        private static readonly string[] s_unitModes = ["混單位（原樣）", "全部 KG", "全部 PCS"];
+        private static readonly string[] s_unitModes = ["Mixed (as seeded)", "All KG", "All PCS"];
 
         private readonly UnitSettings _units = BuildUnits();
 
@@ -64,15 +64,15 @@ namespace Avalonia.DemoCenter.Modules.Grids
             grid.Bind(BuildLayout(), table);
 
             var qtyTotal = new TextBlock();
-            void RefreshTotal() => qtyTotal.Text = "數量合計：" + FormatQtyTotal(table);
+            void RefreshTotal() => qtyTotal.Text = "Quantity total: " + FormatQtyTotal(table);
             RefreshTotal();
 
             var modeIndex = 0;
-            var toggle = new Button { Content = "計量單位：" + s_unitModes[modeIndex] };
+            var toggle = new Button { Content = "Unit of measure: " + s_unitModes[modeIndex] };
             toggle.Click += (_, _) =>
             {
                 modeIndex = (modeIndex + 1) % s_unitModes.Length;
-                toggle.Content = "計量單位：" + s_unitModes[modeIndex];
+                toggle.Content = "Unit of measure: " + s_unitModes[modeIndex];
                 ApplyUnit(table, modeIndex);
                 grid.RefreshRows();
                 RefreshTotal();
@@ -81,8 +81,8 @@ namespace Avalonia.DemoCenter.Modules.Grids
             return new ScrollViewer
             {
                 Content = DataEditorParts.Section(
-                    "多單位數量（數量欄依列單位解析位數）",
-                    "qty 欄綁 qty_uom（UNIT）；切換單位 → 同批數量值改位數。混單位不顯合計、同單位才顯。",
+                    "Multi-unit quantities (quantity decimals follow the row unit)",
+                    "The qty column is bound to qty_uom (UNIT); switching the unit changes the decimals of the same quantities. The total is shown only for a single unit, not for mixed ones.",
                     toggle, grid, qtyTotal),
             };
         }
@@ -105,7 +105,7 @@ namespace Avalonia.DemoCenter.Modules.Grids
             var cells = table.Rows.Cast<System.Data.DataRow>()
                 .Select(r => (ValueUtilities.CDecimal(r["qty"]), ValueUtilities.CStr(r["qty_uom"])));
             var total = AmountColumnSummary.TryComputeTotal(cells);
-            if (total is null) { return "— 混單位，不合計"; }
+            if (total is null) { return "— mixed units, no total"; }
 
             string code = ValueUtilities.CStr(table.Rows[0]["qty_uom"]);
             string format = NumberFormatResolver.ResolveFormat(
@@ -115,26 +115,26 @@ namespace Avalonia.DemoCenter.Modules.Grids
 
         private static LayoutGrid BuildLayout()
         {
-            var layout = new LayoutGrid("OrderLine", "訂單明細");
-            layout.Columns!.Add(new LayoutColumn("product", "品名", ControlType.TextEdit));
-            layout.Columns.Add(new LayoutColumn("qty", "數量", ControlType.NumericEdit)
+            var layout = new LayoutGrid("OrderLine", "Order lines");
+            layout.Columns!.Add(new LayoutColumn("product", "Product", ControlType.TextEdit));
+            layout.Columns.Add(new LayoutColumn("qty", "Quantity", ControlType.NumericEdit)
             {
                 NumberKind = NumberKind.Quantity,
                 UnitField = "qty_uom",
             });
-            layout.Columns.Add(new LayoutColumn("qty_uom", "單位", ControlType.TextEdit));
+            layout.Columns.Add(new LayoutColumn("qty_uom", "Unit", ControlType.TextEdit));
             return layout;
         }
 
         private static FormDataObject BuildData()
         {
-            var schema = new FormSchema("Order", "訂單");
-            schema.Tables!.Add("Order", "訂單").Fields!.Add("order_no", "單號", FieldDbType.String);
+            var schema = new FormSchema("Order", "Order");
+            schema.Tables!.Add("Order", "Order").Fields!.Add("order_no", "Order No.", FieldDbType.String);
 
-            var line = schema.Tables.Add("OrderLine", "明細");
-            line.Fields!.Add("product", "品名", FieldDbType.String);
-            line.Fields!.Add(new FormField("qty", "數量", FieldDbType.Decimal) { NumberKind = NumberKind.Quantity, UnitField = "qty_uom" });
-            line.Fields!.Add("qty_uom", "單位", FieldDbType.String);
+            var line = schema.Tables.Add("OrderLine", "Lines");
+            line.Fields!.Add("product", "Product", FieldDbType.String);
+            line.Fields!.Add(new FormField("qty", "Quantity", FieldDbType.Decimal) { NumberKind = NumberKind.Quantity, UnitField = "qty_uom" });
+            line.Fields!.Add("qty_uom", "Unit", FieldDbType.String);
 
             var data = new FormDataObject(schema);
             data.InitializeNewMaster();

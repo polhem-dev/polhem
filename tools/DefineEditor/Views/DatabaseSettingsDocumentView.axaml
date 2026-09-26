@@ -55,9 +55,9 @@
                         Classes="surface-sunken" CornerRadius="3">
                     <StackPanel Spacing="4" x:DataType="vm:DatabaseServerEditor">
                         <TextBlock Text="{loc:Loc DatabaseSettings_ParsePreview}" Classes="muted" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding ParseResult.UserId, StringFormat='UserId：{0}'}"/>
-                        <TextBlock Text="{Binding ParseResult.Password, StringFormat='Password：{0}'}"/>
-                        <TextBlock Text="{Binding ParseResult.RewrittenConnectionString, StringFormat='ConnectionString：{0}'}" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding ParseResult.UserId, StringFormat='UserId: {0}'}"/>
+                        <TextBlock Text="{Binding ParseResult.Password, StringFormat='Password: {0}'}"/>
+                        <TextBlock Text="{Binding ParseResult.RewrittenConnectionString, StringFormat='ConnectionString: {0}'}" TextWrapping="Wrap"/>
                         <ItemsControl ItemsSource="{Binding ParseResult.Errors}" Margin="0,4,0,0">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate><TextBlock Text="{Binding}" Foreground="{DynamicResource SemiColorDanger}" FontSize="11" TextWrapping="Wrap"/></DataTemplate>
@@ -119,10 +119,10 @@
                         Classes="surface-sunken" CornerRadius="3">
                     <StackPanel Spacing="4" x:DataType="vm:DatabaseItemEditor">
                         <TextBlock Text="{loc:Loc DatabaseSettings_ParsePreview}" Classes="muted" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding ParseResult.UserId, StringFormat='UserId：{0}'}"/>
-                        <TextBlock Text="{Binding ParseResult.Password, StringFormat='Password：{0}'}"/>
-                        <TextBlock Text="{Binding ParseResult.DbName, StringFormat='DbName：{0}'}"/>
-                        <TextBlock Text="{Binding ParseResult.RewrittenConnectionString, StringFormat='ConnectionString：{0}'}" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding ParseResult.UserId, StringFormat='UserId: {0}'}"/>
+                        <TextBlock Text="{Binding ParseResult.Password, StringFormat='Password: {0}'}"/>
+                        <TextBlock Text="{Binding ParseResult.DbName, StringFormat='DbName: {0}'}"/>
+                        <TextBlock Text="{Binding ParseResult.RewrittenConnectionString, StringFormat='ConnectionString: {0}'}" TextWrapping="Wrap"/>
                         <ItemsControl ItemsSource="{Binding ParseResult.Errors}" Margin="0,4,0,0">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate><TextBlock Text="{Binding}" Foreground="{DynamicResource SemiColorDanger}" FontSize="11" TextWrapping="Wrap"/></DataTemplate>

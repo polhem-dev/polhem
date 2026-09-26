@@ -14,14 +14,14 @@ namespace Avalonia.DemoCenter.Modules.DataBinding
     public sealed class ExplicitBindingModule : DemoModuleBase
     {
         /// <inheritdoc/>
-        public override string Category => "資料繫結";
+        public override string Category => "Data Binding";
 
         /// <inheritdoc/>
-        public override string Title => "明確繫結";
+        public override string Title => "Explicit binding";
 
         /// <inheritdoc/>
         public override string Description =>
-            "editor.Bind(dataObject, layoutField) 直接綁定，不靠容器 ambient scope；適合控件在 scope 外或 host 自管綁定。";
+            "editor.Bind(dataObject, layoutField) binds directly without the container's ambient scope; useful when a control sits outside the scope or the host manages binding itself.";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -36,10 +36,10 @@ namespace Avalonia.DemoCenter.Modules.DataBinding
             var stack = new StackPanel { Spacing = 16, Margin = new Thickness(4) };
             stack.Children.Add(DataEditorParts.Section(
                 "editor.Bind(dataObject, layoutField)",
-                "根節點未設 ambient DataObject；編輯器由 Bind(...) 明確綁定。",
+                "The root sets no ambient DataObject; the editors are bound explicitly with Bind(...).",
                 DataEditorParts.LabeledRow("name", editor)));
             stack.Children.Add(DataEditorParts.Section(
-                "即時值",
+                "Live values",
                 null,
                 DataEditorParts.LiveValue(data, "name")));
             return new ScrollViewer { Content = stack };

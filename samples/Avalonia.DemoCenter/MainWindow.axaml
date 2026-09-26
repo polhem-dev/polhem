@@ -7,7 +7,7 @@
   <DockPanel>
 
     <!-- Global toolbar: nav toggle + title + theme (Light/Dark). FormMode switching lives
-         inside the "FormMode 顯示狀態" theme, not globally. -->
+         inside the "FormMode States" theme, not globally. -->
     <Border DockPanel.Dock="Top" Padding="12,8" BorderThickness="0,0,0,1" BorderBrush="#22808080">
       <DockPanel>
         <ToggleSwitch x:Name="ThemeToggle"
@@ -17,7 +17,7 @@
                       IsCheckedChanged="OnThemeToggled" />
         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
           <Button x:Name="ToggleNavButton" Content="≡" Padding="10,2"
-                  Click="OnToggleNav" ToolTip.Tip="顯示 / 隱藏導覽樹" />
+                  Click="OnToggleNav" ToolTip.Tip="Show / hide the navigation tree" />
           <TextBlock Text="Polhem.UI.Avalonia Demo Center" FontSize="16" FontWeight="Bold"
                      VerticalAlignment="Center" />
         </StackPanel>

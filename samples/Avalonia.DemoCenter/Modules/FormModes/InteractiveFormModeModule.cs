@@ -17,15 +17,15 @@ namespace Avalonia.DemoCenter.Modules.FormModes
     public sealed class InteractiveFormModeModule : DemoModuleBase
     {
         /// <inheritdoc/>
-        public override string Category => "FormMode 顯示狀態";
+        public override string Category => "FormMode States";
 
         /// <inheritdoc/>
-        public override string Title => "互動切換";
+        public override string Title => "Interactive switching";
 
         /// <inheritdoc/>
         public override string Description =>
-            "用下方 FormMode 下拉切 View / Add / Edit，即時驅動這組控件與明細 grid 的唯讀 / 編輯狀態"
-            + "（View：去框唯讀、ButtonEdit 圖示隱藏、grid 唯讀且工具列隱藏）。";
+            "Use the FormMode drop-down below to switch between View / Add / Edit; it drives the read-only / editable state of these controls and the detail grid live"
+            + " (View: borderless read-only, ButtonEdit icon hidden, grid read-only with the toolbar hidden).";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -42,14 +42,14 @@ namespace Avalonia.DemoCenter.Modules.FormModes
                 Children =
                 {
                     DataEditorParts.Section(
-                        "主檔控件",
+                        "Master controls",
                         null,
                         DataEditorParts.LabeledRow("emp_name (TextEdit)", new TextEdit { FieldName = "emp_name" }),
                         DataEditorParts.LabeledRow("dept (DropDownEdit)", new DropDownEdit { FieldName = "dept" }),
                         DataEditorParts.LabeledRow("hire_date (DateEdit)", new DateEdit { FieldName = "hire_date" }),
                         DataEditorParts.LabeledRow("is_active (CheckEdit)", new CheckEdit { FieldName = "is_active", Content = "Active" }),
                         DataEditorParts.LabeledRow("emp_code (ButtonEdit)", new ButtonEdit { FieldName = "emp_code" })),
-                    DataEditorParts.Section("Phones 明細 (GridControl)", null, grid),
+                    DataEditorParts.Section("Phones detail (GridControl)", null, grid),
                 },
             };
             FormScope.SetDataObject(controls, data);

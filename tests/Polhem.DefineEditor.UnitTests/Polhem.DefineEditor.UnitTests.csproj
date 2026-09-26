@@ -9,10 +9,11 @@
     <IsTestProject>true</IsTestProject>
 
     <!--
-      DefineEditor 不在 Polhem.slnx 裡。MSBuild 建 solution 時，對「不在 solution 內」的
-      ProjectReference 預設會拿掉 Configuration，被參考的專案因此退回 Debug 編譯；但 restore 是以
-      Release 評估的，DefineEditor 只在 Debug 帶入的 AvaloniaUI.DiagnosticsSupport 就沒有編譯資產，
-      #if DEBUG 裡的 WithDeveloperTools() 會 CS1061。這裡讓 Configuration 照常往下傳。
+      DefineEditor is not in Polhem.slnx. When MSBuild builds a solution, it drops Configuration by default
+      for a ProjectReference that is not in the solution, so the referenced project falls back to a Debug build.
+      Restore, however, was evaluated for Release, so AvaloniaUI.DiagnosticsSupport (which DefineEditor only
+      brings in for Debug) has no compile assets, and WithDeveloperTools() inside #if DEBUG fails with CS1061.
+      This setting lets Configuration flow down as usual.
     -->
     <ShouldUnsetParentConfigurationAndPlatform>false</ShouldUnsetParentConfigurationAndPlatform>
   </PropertyGroup>

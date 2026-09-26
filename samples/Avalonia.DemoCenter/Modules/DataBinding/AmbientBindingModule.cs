@@ -14,14 +14,14 @@ namespace Avalonia.DemoCenter.Modules.DataBinding
     public sealed class AmbientBindingModule : DemoModuleBase
     {
         /// <inheritdoc/>
-        public override string Category => "資料繫結";
+        public override string Category => "Data Binding";
 
         /// <inheritdoc/>
-        public override string Title => "Ambient 繫結";
+        public override string Title => "Ambient binding";
 
         /// <inheritdoc/>
         public override string Description =>
-            "容器以 FormScope.SetDataObject 設一次 DataObject；子編輯器只給 FieldName，attach 時自動綁定，免逐一接線。";
+            "The container sets the DataObject once with FormScope.SetDataObject. Child editors only set FieldName and bind automatically on attach, with no per-editor wiring.";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -30,12 +30,12 @@ namespace Avalonia.DemoCenter.Modules.DataBinding
             return DataEditorParts.Compose(
                 data,
                 DataEditorParts.Section(
-                    "容器設一次，子控件自動綁定",
-                    "本視圖根節點已 FormScope.SetDataObject(data)；下列編輯器只設 FieldName。",
+                    "Set once on the container, child controls bind automatically",
+                    "The root of this view calls FormScope.SetDataObject(data); the editors below only set FieldName.",
                     DataEditorParts.LabeledRow("name (TextEdit)", new TextEdit { FieldName = "name" }),
                     DataEditorParts.LabeledRow("dept (DropDownEdit)", new DropDownEdit { FieldName = "dept" })),
                 DataEditorParts.Section(
-                    "即時值",
+                    "Live values",
                     null,
                     DataEditorParts.LiveValue(data, "name", "dept")));
         }

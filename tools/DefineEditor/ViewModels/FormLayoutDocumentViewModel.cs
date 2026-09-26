@@ -108,10 +108,10 @@ public sealed partial class FormLayoutDocumentViewModel : SingletonDocumentViewM
         var l = (FormLayout)node.Payload!;
         node.Header = $"{l.LayoutId}  —  {l.Caption}";
         node.Detail = string.Join(Environment.NewLine,
-            $"LayoutId：{l.LayoutId}",
-            $"ProgId：{l.ProgId}",
-            $"Caption：{l.Caption}",
-            $"ColumnCount：{l.ColumnCount}");
+            $"LayoutId: {l.LayoutId}",
+            $"ProgId: {l.ProgId}",
+            $"Caption: {l.Caption}",
+            $"ColumnCount: {l.ColumnCount}");
     }
 
     private static void RefreshSectionsGroup(SettingsTreeNode node)
@@ -133,10 +133,10 @@ public sealed partial class FormLayoutDocumentViewModel : SingletonDocumentViewM
         var s = (LayoutSection)node.Payload!;
         node.Header = $"{s.Name}  —  {s.Caption}";
         node.Detail = string.Join(Environment.NewLine,
-            $"Name：{s.Name}",
-            $"Caption：{s.Caption}",
-            $"ShowCaption：{s.ShowCaption}",
-            $"Fields：{s.Fields?.Count ?? 0}");
+            $"Name: {s.Name}",
+            $"Caption: {s.Caption}",
+            $"ShowCaption: {s.ShowCaption}",
+            $"Fields: {s.Fields?.Count ?? 0}");
     }
 
     private static void RefreshLayoutField(SettingsTreeNode node)
@@ -144,12 +144,12 @@ public sealed partial class FormLayoutDocumentViewModel : SingletonDocumentViewM
         var f = (LayoutField)node.Payload!;
         node.Header = $"{f.FieldName}  —  {f.Caption}";
         node.Detail = string.Join(Environment.NewLine,
-            $"FieldName：{f.FieldName}",
-            $"Caption：{f.Caption}",
-            $"ControlType：{f.ControlType}",
-            $"RowSpan/ColumnSpan：{f.RowSpan}/{f.ColumnSpan}",
-            $"Visible：{f.Visible}",
-            $"ReadOnly：{f.ReadOnly}");
+            $"FieldName: {f.FieldName}",
+            $"Caption: {f.Caption}",
+            $"ControlType: {f.ControlType}",
+            $"RowSpan/ColumnSpan: {f.RowSpan}/{f.ColumnSpan}",
+            $"Visible: {f.Visible}",
+            $"ReadOnly: {f.ReadOnly}");
     }
 
     private static void RefreshGrid(SettingsTreeNode node)
@@ -157,10 +157,10 @@ public sealed partial class FormLayoutDocumentViewModel : SingletonDocumentViewM
         var g = (LayoutGrid)node.Payload!;
         node.Header = $"{g.TableName}  —  {g.Caption}";
         node.Detail = string.Join(Environment.NewLine,
-            $"TableName：{g.TableName}",
-            $"Caption：{g.Caption}",
-            $"AllowActions：{g.AllowActions}",
-            $"Columns：{g.Columns?.Count ?? 0}");
+            $"TableName: {g.TableName}",
+            $"Caption: {g.Caption}",
+            $"AllowActions: {g.AllowActions}",
+            $"Columns: {g.Columns?.Count ?? 0}");
     }
 
     private static void RefreshLayoutColumn(SettingsTreeNode node)
@@ -168,12 +168,12 @@ public sealed partial class FormLayoutDocumentViewModel : SingletonDocumentViewM
         var c = (LayoutColumn)node.Payload!;
         node.Header = $"{c.FieldName}  —  {c.Caption}";
         node.Detail = string.Join(Environment.NewLine,
-            $"FieldName：{c.FieldName}",
-            $"Caption：{c.Caption}",
-            $"ControlType：{c.ControlType}",
-            $"Width：{c.Width}",
-            $"Visible：{c.Visible}",
-            $"ReadOnly：{c.ReadOnly}");
+            $"FieldName: {c.FieldName}",
+            $"Caption: {c.Caption}",
+            $"ControlType: {c.ControlType}",
+            $"Width: {c.Width}",
+            $"Visible: {c.Visible}",
+            $"ReadOnly: {c.ReadOnly}");
     }
 
     [RelayCommand(CanExecute = nameof(CanAddSection))]

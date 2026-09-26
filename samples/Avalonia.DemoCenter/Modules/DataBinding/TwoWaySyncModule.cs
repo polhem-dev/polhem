@@ -13,14 +13,14 @@ namespace Avalonia.DemoCenter.Modules.DataBinding
     public sealed class TwoWaySyncModule : DemoModuleBase
     {
         /// <inheritdoc/>
-        public override string Category => "資料繫結";
+        public override string Category => "Data Binding";
 
         /// <inheritdoc/>
-        public override string Title => "雙向同步";
+        public override string Title => "Two-way sync";
 
         /// <inheritdoc/>
         public override string Description =>
-            "兩個控件綁同一欄位：在其中一個輸入後離開（或按 Enter）提交，另一個與下方值同步更新（FormDataObject 為單一真實來源）。";
+            "Two controls bound to the same field: type in one and leave it (or press Enter) to commit, and the other one and the values below update with it (FormDataObject is the single source of truth).";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -30,12 +30,12 @@ namespace Avalonia.DemoCenter.Modules.DataBinding
             return DataEditorParts.Compose(
                 data,
                 DataEditorParts.Section(
-                    "兩控件綁同一欄位 name",
-                    "在上面任一個輸入框輸入後離開（或按 Enter），另一個同步更新。",
-                    DataEditorParts.LabeledRow("編輯器 A", new TextEdit { FieldName = "name" }),
-                    DataEditorParts.LabeledRow("編輯器 B", new TextEdit { FieldName = "name" })),
+                    "Two controls bound to the same field, name",
+                    "Type in either box above and leave it (or press Enter); the other one updates.",
+                    DataEditorParts.LabeledRow("Editor A", new TextEdit { FieldName = "name" }),
+                    DataEditorParts.LabeledRow("Editor B", new TextEdit { FieldName = "name" })),
                 DataEditorParts.Section(
-                    "即時值",
+                    "Live values",
                     null,
                     DataEditorParts.LiveValue(data, "name")));
         }

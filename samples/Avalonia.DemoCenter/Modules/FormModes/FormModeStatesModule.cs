@@ -18,15 +18,15 @@ namespace Avalonia.DemoCenter.Modules.FormModes
     public sealed class FormModeStatesModule : DemoModuleBase
     {
         /// <inheritdoc/>
-        public override string Category => "FormMode 顯示狀態";
+        public override string Category => "FormMode States";
 
         /// <inheritdoc/>
-        public override string Title => "控件 × FormMode 三態（含 AllowEditModes）";
+        public override string Title => "Controls × the three FormModes (with AllowEditModes)";
 
         /// <inheritdoc/>
         public override string Description =>
-            "三欄分別釘住 View / Add / Edit；各欄同一組欄位但 AllowEditModes 不同——name=All、code 只 Add、"
-            + "dept 只 Edit、audit=None。一眼比對控件每模式呈現與逐欄可編輯閘控。不受工具列 FormMode 影響。";
+            "Three columns pinned to View / Add / Edit, each with the same fields but different AllowEditModes: name=All, code only Add, "
+            + "dept only Edit, audit=None. Compare at a glance how each control renders per mode and how editing is gated per field. Not affected by the toolbar FormMode.";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -42,11 +42,11 @@ namespace Avalonia.DemoCenter.Modules.FormModes
                     Spacing = 4,
                     Children =
                     {
-                        new TextBlock { Text = "AllowEditModes 設定", FontWeight = FontWeight.Bold },
-                        Hint("name — All（Add + Edit 可編）"),
-                        Hint("code — Add（僅 Add 可編，如 key 欄）"),
-                        Hint("dept — Edit（僅 Edit 可編）"),
-                        Hint("audit — None（任何模式皆不可編，如稽核欄）"),
+                        new TextBlock { Text = "AllowEditModes settings", FontWeight = FontWeight.Bold },
+                        Hint("name — All (editable in Add and Edit)"),
+                        Hint("code — Add (editable only in Add, like a key field)"),
+                        Hint("dept — Edit (editable only in Edit)"),
+                        Hint("audit — None (never editable, like an audit field)"),
                     },
                 },
             };

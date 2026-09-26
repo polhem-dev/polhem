@@ -21,25 +21,25 @@ namespace Avalonia.DemoCenter.Modules.Permissions
     /// <remarks>
     /// The capability snapshot is just a <c>Dictionary&lt;modelId, PermissionAction&gt;</c>, so a demo
     /// can fabricate it in memory and exercise the exact same resolver the shipped views use. Field
-    /// permission spans both tables: the master's <c>承辦人身分證</c> (PersonalData) and the detail
-    /// grid's <c>單價</c> (Cost) column each degrade by their category — the resolver reverse-looks-up
+    /// permission spans both tables: the master's <c>Handler ID number</c> (PersonalData) and the detail
+    /// grid's <c>Unit price</c> (Cost) column each degrade by their category — the resolver reverse-looks-up
     /// the <see cref="FormField.SensitiveCategory"/> from the schema by (table, field). UX only; in a
     /// real app the snapshot comes from the server and the back end stays authoritative.
     /// </remarks>
     public sealed class PermissionCapabilityModule : DemoModuleBase
     {
         /// <inheritdoc/>
-        public override string Category => "權限 Capability";
+        public override string Category => "Permission Capability";
 
         /// <inheritdoc/>
-        public override string Title => "互動權限模擬器（主檔／明細）";
+        public override string Title => "Interactive permission simulator (master/detail)";
 
         /// <inheritdoc/>
         public override string Description =>
-            "左側勾選模擬角色授權（等同 EnterCompany 回傳的 capability 快照），右側「採購單」主檔＋明細即時降級："
-            + "無權的工具列命令隱藏；主檔敏感欄（承辦人身分證＝PersonalData）依 Read/Update 呈現 隱藏／唯讀／可編輯；"
-            + "明細 Grid 的敏感欄（單價＝Cost）無 Read 時整欄隱藏。預設全授權（完整表單）——"
-            + "取消勾選觀察對應元素即時降級；關掉「啟用 capability」→ 快照 null → 全放行。";
+            "Tick the boxes on the left to simulate role grants (the same as the capability snapshot EnterCompany returns); the Purchase Order master and detail on the right degrade live: "
+            + "toolbar commands without permission are hidden; the sensitive master field (Handler ID number = PersonalData) is hidden, read-only or editable according to Read/Update; "
+            + "the sensitive detail grid column (Unit price = Cost) is hidden entirely without Read. Everything is granted by default (the full form); "
+            + "untick a box to watch the matching element degrade live. Turning off Enable capability makes the snapshot null, which allows everything.";
 
         private const string FormModel = "PurchaseOrder";
         private const string CostModel = "Cost";
@@ -61,9 +61,9 @@ namespace Avalonia.DemoCenter.Modules.Permissions
             var commands = new[] { newBtn, saveBtn, deleteBtn, viewBtn };
             var toolbar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { newBtn, saveBtn, deleteBtn, viewBtn } };
 
-            var idField = MakeField("sys_id", "單號");
-            var vendorField = MakeField("vendor", "供應商");
-            var handlerField = MakeField("handler_id", "承辦人身分證");   // SensitiveCategory=PersonalData
+            var idField = MakeField("sys_id", "Order No.");
+            var vendorField = MakeField("vendor", "Vendor");
+            var handlerField = MakeField("handler_id", "Handler ID number");   // SensitiveCategory=PersonalData
             var masterFields = new[] { idField, vendorField, handlerField };
 
             var masterBody = new StackPanel { Spacing = 10, Children = { toolbar, idField.Row, vendorField.Row, handlerField.Row } };
@@ -74,13 +74,13 @@ namespace Avalonia.DemoCenter.Modules.Permissions
                 Spacing = 12,
                 Children =
                 {
-                    DataEditorParts.Section("主檔 PO001（PermissionModelId = PurchaseOrder）", null, masterBody),
-                    DataEditorParts.Section("明細 PO001_Item（GridControl，單價欄 = Cost）", null, detailHost),
+                    DataEditorParts.Section("Master PO001 (PermissionModelId = PurchaseOrder)", null, masterBody),
+                    DataEditorParts.Section("Detail PO001_Item (GridControl, Unit price column = Cost)", null, detailHost),
                 },
             };
 
             // ---- Left: simulated grant toggles ----
-            var active = new CheckBox { Content = "啟用 capability（否則快照為 null → 全放行）", IsChecked = true };
+            var active = new CheckBox { Content = "Enable capability (otherwise the snapshot is null → everything allowed)", IsChecked = true };
 
             // Everything granted by default → the full form shows on open; uncheck a grant to
             // watch that command / field degrade live.
@@ -96,9 +96,9 @@ namespace Avalonia.DemoCenter.Modules.Permissions
                 Children =
                 {
                     active,
-                    GrantSection("採購單 model（PurchaseOrder）— 驅動工具列命令", poCreate, poRead, poUpdate, poDelete),
-                    GrantSection("個資分類（PersonalData）— 驅動主檔「身分證」欄", piiRead, piiUpdate),
-                    GrantSection("成本分類（Cost）— 驅動明細「單價」欄", costRead, costUpdate),
+                    GrantSection("Purchase Order model (PurchaseOrder) — drives the toolbar commands", poCreate, poRead, poUpdate, poDelete),
+                    GrantSection("Personal data category (PersonalData) — drives the master ID number field", piiRead, piiUpdate),
+                    GrantSection("Cost category (Cost) — drives the detail Unit price column", costRead, costUpdate),
                 },
             };
 
@@ -141,7 +141,7 @@ namespace Avalonia.DemoCenter.Modules.Permissions
             var root = new Grid { Margin = new Thickness(4), ColumnSpacing = 24 };
             root.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
             root.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            var grantsSection = DataEditorParts.Section("模擬授權（capability 快照）", null, grantsPanel);
+            var grantsSection = DataEditorParts.Section("Simulated grants (capability snapshot)", null, grantsPanel);
             Grid.SetColumn(grantsSection, 0);
             Grid.SetColumn(formBody, 1);
             root.Children.Add(grantsSection);
@@ -152,17 +152,17 @@ namespace Avalonia.DemoCenter.Modules.Permissions
         // Master PO001 (with a PersonalData field) + detail PO001_Item (with a Cost column).
         private static FormSchema BuildSchema()
         {
-            var schema = new FormSchema(MasterTable, "採購單") { PermissionModelId = FormModel };
+            var schema = new FormSchema(MasterTable, "Purchase Order") { PermissionModelId = FormModel };
 
-            var master = schema.Tables!.Add(MasterTable, "採購單");
-            master.Fields!.Add("sys_id", "單號", FieldDbType.String);
-            master.Fields!.Add("vendor", "供應商", FieldDbType.String);
-            master.Fields!.Add("handler_id", "承辦人身分證", FieldDbType.String).SensitiveCategory = SensitiveCategory.PersonalData;
+            var master = schema.Tables!.Add(MasterTable, "Purchase Order");
+            master.Fields!.Add("sys_id", "Order No.", FieldDbType.String);
+            master.Fields!.Add("vendor", "Vendor", FieldDbType.String);
+            master.Fields!.Add("handler_id", "Handler ID number", FieldDbType.String).SensitiveCategory = SensitiveCategory.PersonalData;
 
-            var detail = schema.Tables.Add(DetailTable, "明細");
-            detail.Fields!.Add("item_name", "品項", FieldDbType.String);
-            detail.Fields!.Add("qty", "數量", FieldDbType.Integer);
-            detail.Fields!.Add("unit_cost", "單價", FieldDbType.Decimal).SensitiveCategory = SensitiveCategory.Cost;
+            var detail = schema.Tables.Add(DetailTable, "Items");
+            detail.Fields!.Add("item_name", "Item", FieldDbType.String);
+            detail.Fields!.Add("qty", "Quantity", FieldDbType.Integer);
+            detail.Fields!.Add("unit_cost", "Unit price", FieldDbType.Decimal).SensitiveCategory = SensitiveCategory.Cost;
 
             return schema;
         }
@@ -172,12 +172,12 @@ namespace Avalonia.DemoCenter.Modules.Permissions
             var data = new FormDataObject(schema);
             data.InitializeNewMaster();
             data.SetField("sys_id", "PO-2026-001");
-            data.SetField("vendor", "宏碁股份有限公司");
+            data.SetField("vendor", "Acer Inc.");
             data.SetField("handler_id", "A123456789");
 
             var items = data.DataSet.Tables[DetailTable]!;
-            items.Rows.Add("螺絲 M4", 100, 3.5m);
-            items.Rows.Add("墊片 8mm", 50, 1.2m);
+            items.Rows.Add("Screw M4", 100, 3.5m);
+            items.Rows.Add("Washer 8mm", 50, 1.2m);
             return data;
         }
 
@@ -185,10 +185,10 @@ namespace Avalonia.DemoCenter.Modules.Permissions
         // columns (narrowing only), then bound. Fresh layout means re-granting Cost.Read re-shows the column.
         private static Control BuildDetailGrid(FormSchema schema, FormDataObject data, IReadOnlyDictionary<string, PermissionAction>? snapshot)
         {
-            var layout = new LayoutGrid(DetailTable, "明細");
-            layout.Columns!.Add(new LayoutColumn("item_name", "品項", ControlType.TextEdit));
-            layout.Columns.Add(new LayoutColumn("qty", "數量", ControlType.TextEdit));
-            layout.Columns.Add(new LayoutColumn("unit_cost", "單價", ControlType.TextEdit));
+            var layout = new LayoutGrid(DetailTable, "Items");
+            layout.Columns!.Add(new LayoutColumn("item_name", "Item", ControlType.TextEdit));
+            layout.Columns.Add(new LayoutColumn("qty", "Quantity", ControlType.TextEdit));
+            layout.Columns.Add(new LayoutColumn("unit_cost", "Unit price", ControlType.TextEdit));
 
             foreach (var column in layout.Columns)
             {

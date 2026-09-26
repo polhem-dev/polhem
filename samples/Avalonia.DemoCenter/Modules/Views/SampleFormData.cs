@@ -20,17 +20,17 @@ namespace Avalonia.DemoCenter.Modules.Views
         /// </summary>
         public static FormSchema BuildMasterFormSchema()
         {
-            var schema = new FormSchema("Employee", "員工");
-            var master = schema.Tables!.Add("Employee", "員工");
-            master.Fields!.Add("emp_code", "代碼", FieldDbType.String);
-            master.Fields.Add("emp_name", "姓名", FieldDbType.String);
-            var dept = master.Fields.Add("dept", "部門", FieldDbType.String);
+            var schema = new FormSchema("Employee", "Employee");
+            var master = schema.Tables!.Add("Employee", "Employee");
+            master.Fields!.Add("emp_code", "Code", FieldDbType.String);
+            master.Fields.Add("emp_name", "Name", FieldDbType.String);
+            var dept = master.Fields.Add("dept", "Department", FieldDbType.String);
             dept.ListItems!.Add("HR", "Human Resources");
             dept.ListItems.Add("IT", "Information Technology");
             dept.ListItems.Add("FIN", "Finance");
-            master.Fields.Add("hire_date", "到職日", FieldDbType.Date);
-            master.Fields.Add("is_active", "在職", FieldDbType.Boolean);
-            master.Fields.Add("notes", "備註", FieldDbType.String);
+            master.Fields.Add("hire_date", "Hire Date", FieldDbType.Date);
+            master.Fields.Add("is_active", "Active", FieldDbType.Boolean);
+            master.Fields.Add("notes", "Notes", FieldDbType.String);
             return schema;
         }
 
@@ -47,7 +47,7 @@ namespace Avalonia.DemoCenter.Modules.Views
             data.SetField("dept", "IT");
             data.SetField("hire_date", "2026-06-11");
             data.SetField("is_active", bool.TrueString);
-            data.SetField("notes", "備註內容");
+            data.SetField("notes", "Some notes");
             return data;
         }
 
@@ -56,11 +56,11 @@ namespace Avalonia.DemoCenter.Modules.Views
         /// </summary>
         public static LayoutGrid BuildPhonesLayout()
         {
-            var layout = new LayoutGrid("Phones", "電話");
-            layout.Columns!.Add(new LayoutColumn("phone", "號碼", ControlType.TextEdit));
-            layout.Columns.Add(new LayoutColumn("type", "類型", ControlType.DropDownEdit));
-            layout.Columns.Add(new LayoutColumn("is_primary", "主要", ControlType.CheckEdit));
-            layout.Columns.Add(new LayoutColumn("valid_from", "生效日", ControlType.DateEdit));
+            var layout = new LayoutGrid("Phones", "Phones");
+            layout.Columns!.Add(new LayoutColumn("phone", "Number", ControlType.TextEdit));
+            layout.Columns.Add(new LayoutColumn("type", "Type", ControlType.DropDownEdit));
+            layout.Columns.Add(new LayoutColumn("is_primary", "Primary", ControlType.CheckEdit));
+            layout.Columns.Add(new LayoutColumn("valid_from", "Valid From", ControlType.DateEdit));
             return layout;
         }
 
@@ -69,26 +69,26 @@ namespace Avalonia.DemoCenter.Modules.Views
         /// </summary>
         public static FormSchema BuildSchema()
         {
-            var schema = new FormSchema("Employee", "員工");
+            var schema = new FormSchema("Employee", "Employee");
 
-            var master = schema.Tables!.Add("Employee", "員工");
-            master.Fields!.Add("emp_code", "代碼", FieldDbType.String);
-            master.Fields.Add("emp_name", "姓名", FieldDbType.String);
-            master.Fields.Add("hire_date", "到職日", FieldDbType.Date);
-            var dept = master.Fields.Add("dept", "部門", FieldDbType.String);
+            var master = schema.Tables!.Add("Employee", "Employee");
+            master.Fields!.Add("emp_code", "Code", FieldDbType.String);
+            master.Fields.Add("emp_name", "Name", FieldDbType.String);
+            master.Fields.Add("hire_date", "Hire Date", FieldDbType.Date);
+            var dept = master.Fields.Add("dept", "Department", FieldDbType.String);
             dept.ListItems!.Add("HR", "Human Resources");
             dept.ListItems.Add("IT", "Information Technology");
             dept.ListItems.Add("FIN", "Finance");
-            master.Fields.Add("is_active", "在職", FieldDbType.Boolean);
+            master.Fields.Add("is_active", "Active", FieldDbType.Boolean);
 
-            var phones = schema.Tables.Add("Phones", "電話");
-            phones.Fields!.Add("phone", "號碼", FieldDbType.String);
-            var phoneType = phones.Fields.Add("type", "類型", FieldDbType.String);
-            phoneType.ListItems!.Add("Office", "公司");
-            phoneType.ListItems.Add("Mobile", "行動");
-            phoneType.ListItems.Add("Home", "住家");
-            phones.Fields.Add("is_primary", "主要", FieldDbType.Boolean);
-            phones.Fields.Add("valid_from", "生效日", FieldDbType.Date);
+            var phones = schema.Tables.Add("Phones", "Phones");
+            phones.Fields!.Add("phone", "Number", FieldDbType.String);
+            var phoneType = phones.Fields.Add("type", "Type", FieldDbType.String);
+            phoneType.ListItems!.Add("Office", "Office");
+            phoneType.ListItems.Add("Mobile", "Mobile");
+            phoneType.ListItems.Add("Home", "Home");
+            phones.Fields.Add("is_primary", "Primary", FieldDbType.Boolean);
+            phones.Fields.Add("valid_from", "Valid From", FieldDbType.Date);
 
             return schema;
         }
@@ -121,12 +121,12 @@ namespace Avalonia.DemoCenter.Modules.Views
         /// </summary>
         public static LayoutGrid BuildEmployeeListLayout()
         {
-            var layout = new LayoutGrid("Employee", "員工清單");
-            layout.Columns!.Add(new LayoutColumn("emp_code", "代碼", ControlType.TextEdit));
-            layout.Columns.Add(new LayoutColumn("emp_name", "姓名", ControlType.TextEdit));
-            layout.Columns.Add(new LayoutColumn("dept", "部門", ControlType.DropDownEdit));
-            layout.Columns.Add(new LayoutColumn("hire_date", "到職日", ControlType.DateEdit));
-            layout.Columns.Add(new LayoutColumn("is_active", "在職", ControlType.CheckEdit));
+            var layout = new LayoutGrid("Employee", "Employee list");
+            layout.Columns!.Add(new LayoutColumn("emp_code", "Code", ControlType.TextEdit));
+            layout.Columns.Add(new LayoutColumn("emp_name", "Name", ControlType.TextEdit));
+            layout.Columns.Add(new LayoutColumn("dept", "Department", ControlType.DropDownEdit));
+            layout.Columns.Add(new LayoutColumn("hire_date", "Hire Date", ControlType.DateEdit));
+            layout.Columns.Add(new LayoutColumn("is_active", "Active", ControlType.CheckEdit));
             return layout;
         }
 

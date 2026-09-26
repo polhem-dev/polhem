@@ -86,9 +86,9 @@ public sealed partial class PermissionModelsDocumentViewModel : SingletonDocumen
         var m = (PermissionModel)node.Payload!;
         node.Header = $"{m.ModelId}  —  {m.DisplayName}";
         node.Detail = string.Join(Environment.NewLine,
-            $"ModelId：{m.ModelId}",
-            $"DisplayName：{m.DisplayName}",
-            $"Rules：{m.Rules?.Count ?? 0}");
+            $"ModelId: {m.ModelId}",
+            $"DisplayName: {m.DisplayName}",
+            $"Rules: {m.Rules?.Count ?? 0}");
     }
 
     private static void RefreshRule(SettingsTreeNode node)
@@ -96,8 +96,8 @@ public sealed partial class PermissionModelsDocumentViewModel : SingletonDocumen
         var r = (PermissionRule)node.Payload!;
         node.Header = $"{r.Action}  →  {r.Scope}";
         node.Detail = string.Join(Environment.NewLine,
-            $"Action：{r.Action}",
-            $"Scope：{r.Scope}");
+            $"Action: {r.Action}",
+            $"Scope: {r.Scope}");
     }
 
     [RelayCommand(CanExecute = nameof(CanAddModel))]

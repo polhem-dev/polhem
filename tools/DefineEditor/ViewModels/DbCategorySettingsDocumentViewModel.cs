@@ -87,9 +87,9 @@ public sealed partial class DbCategorySettingsDocumentViewModel : SingletonDocum
         var c = (DbCategory)node.Payload!;
         node.Header = $"{c.Id}  —  {c.DisplayName}";
         node.Detail = string.Join(Environment.NewLine,
-            $"Id：{c.Id}",
-            $"DisplayName：{c.DisplayName}",
-            $"Tables：{c.Tables?.Count ?? 0}");
+            $"Id: {c.Id}",
+            $"DisplayName: {c.DisplayName}",
+            $"Tables: {c.Tables?.Count ?? 0}");
     }
 
     private static void RefreshTable(SettingsTreeNode node)
@@ -97,8 +97,8 @@ public sealed partial class DbCategorySettingsDocumentViewModel : SingletonDocum
         var t = (TableItem)node.Payload!;
         node.Header = $"{t.TableName}  —  {t.DisplayName}";
         node.Detail = string.Join(Environment.NewLine,
-            $"TableName：{t.TableName}",
-            $"DisplayName：{t.DisplayName}");
+            $"TableName: {t.TableName}",
+            $"DisplayName: {t.DisplayName}");
     }
 
     [RelayCommand(CanExecute = nameof(CanAddCategory))]

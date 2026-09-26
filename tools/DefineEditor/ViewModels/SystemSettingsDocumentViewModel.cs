@@ -98,10 +98,10 @@ public sealed partial class SystemSettingsDocumentViewModel : SingletonDocumentV
         var c = (CommonConfiguration)node.Payload!;
         node.Header = "CommonConfiguration";
         node.Detail = string.Join(Environment.NewLine,
-            $"Version：{c.Version}",
-            $"IsDebugMode：{c.IsDebugMode}",
-            $"DefaultLang：{c.DefaultLang}",
-            $"AllowedTypeNamespaces：{c.AllowedTypeNamespaces}");
+            $"Version: {c.Version}",
+            $"IsDebugMode: {c.IsDebugMode}",
+            $"DefaultLang: {c.DefaultLang}",
+            $"AllowedTypeNamespaces: {c.AllowedTypeNamespaces}");
     }
 
     private static void RefreshBackend(SettingsTreeNode node)
@@ -121,10 +121,10 @@ public sealed partial class SystemSettingsDocumentViewModel : SingletonDocumentV
         var s = (SecurityKeySettings)node.Payload!;
         node.Header = "SecurityKeySettings";
         node.Detail = string.Join(Environment.NewLine,
-            $"ApiEncryptionKey：{Mask(s.ApiEncryptionKey)}",
-            $"CookieEncryptionKey：{Mask(s.CookieEncryptionKey)}",
-            $"ConfigEncryptionKey：{Mask(s.ConfigEncryptionKey)}",
-            $"DatabaseEncryptionKey：{Mask(s.DatabaseEncryptionKey)}");
+            $"ApiEncryptionKey: {Mask(s.ApiEncryptionKey)}",
+            $"CookieEncryptionKey: {Mask(s.CookieEncryptionKey)}",
+            $"ConfigEncryptionKey: {Mask(s.ConfigEncryptionKey)}",
+            $"DatabaseEncryptionKey: {Mask(s.DatabaseEncryptionKey)}");
     }
 
     private static void RefreshBackendComponents(SettingsTreeNode node)
@@ -138,10 +138,10 @@ public sealed partial class SystemSettingsDocumentViewModel : SingletonDocumentV
         var c = (CacheNotifyOptions)node.Payload!;
         node.Header = "CacheNotifyOptions";
         node.Detail = string.Join(Environment.NewLine,
-            $"Enabled：{c.Enabled}",
-            $"IntervalSeconds：{c.IntervalSeconds}",
-            $"MarginSeconds：{c.MarginSeconds}",
-            $"DatabaseId：{c.DatabaseId}");
+            $"Enabled: {c.Enabled}",
+            $"IntervalSeconds: {c.IntervalSeconds}",
+            $"MarginSeconds: {c.MarginSeconds}",
+            $"DatabaseId: {c.DatabaseId}");
     }
 
     private static void RefreshFrontend(SettingsTreeNode node)
@@ -174,8 +174,8 @@ public sealed partial class SystemSettingsDocumentViewModel : SingletonDocumentV
         var p = (Property)node.Payload!;
         node.Header = $"{p.Name}  =  {Mask(p.Value)}";
         node.Detail = string.Join(Environment.NewLine,
-            $"Name：{p.Name}",
-            $"Value：{p.Value}");
+            $"Name: {p.Name}",
+            $"Value: {p.Value}");
     }
 
     private static string Mask(string s) =>

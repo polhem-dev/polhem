@@ -4,7 +4,7 @@
 
     <Styles.Resources>
         <!-- =================================================================
-             圖示資料：Material Design Icons (Apache-2.0)，採 24×24 path data
+             Icon data: Material Design Icons (Apache-2.0), 24×24 path data
              ================================================================= -->
         <StreamGeometry x:Key="IconSave">M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z</StreamGeometry>
         <StreamGeometry x:Key="IconAdd">M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z</StreamGeometry>
@@ -30,45 +30,45 @@
         <StreamGeometry x:Key="IconApply">M9,16.17L4.83,12L3.41,13.41L9,19L21,7L19.59,5.59L9,16.17Z</StreamGeometry>
 
         <!-- =================================================================
-             Define-type 圖示（MDI 24×24）— 樹節點 / 分頁 head 共用
+             Define-type icons (MDI 24×24), shared by tree nodes and tab headers
              ================================================================= -->
-        <!-- DefinePath 根（folder-multiple-outline） -->
+        <!-- DefinePath root (folder-multiple-outline) -->
         <StreamGeometry x:Key="DefRoot">M3,7V17A2,2 0 0,0 5,19H21V17H5V7H3M19,15H7A2,2 0 0,1 5,13V5A2,2 0 0,1 7,3H10L12,5H19A2,2 0 0,1 21,7V13A2,2 0 0,1 19,15M7,5V13H19V7H11.17L9.17,5H7Z</StreamGeometry>
-        <!-- 「系統設定」分組（tune-vertical） -->
+        <!-- System settings group (tune-vertical) -->
         <StreamGeometry x:Key="DefSystemGroup">M10,4V8H14V6H20V4H14V2H10V4M10,12V10H4V12H10V14H14V12H20V10H14V8H10M10,18V16H4V18H10V20H14V18H20V16H14V14H10V16Z</StreamGeometry>
-        <!-- 子分類資料夾（folder-outline） -->
+        <!-- Subcategory folder (folder-outline) -->
         <StreamGeometry x:Key="DefCategory">M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4M20,18H4V6H9.17L11.17,8H20V18Z</StreamGeometry>
 
-        <!-- 9 種定義型別 -->
-        <!-- SystemSettings（cog） -->
+        <!-- Definition types -->
+        <!-- SystemSettings (cog) -->
         <StreamGeometry x:Key="DefSystemSettings">M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z</StreamGeometry>
-        <!-- DatabaseSettings（database） -->
+        <!-- DatabaseSettings (database) -->
         <StreamGeometry x:Key="DefDatabaseSettings">M12,3C7.58,3 4,4.79 4,7C4,9.21 7.58,11 12,11C16.42,11 20,9.21 20,7C20,4.79 16.42,3 12,3M4,9V12C4,14.21 7.58,16 12,16C16.42,16 20,14.21 20,12V9C20,11.21 16.42,13 12,13C7.58,13 4,11.21 4,9M4,14V17C4,19.21 7.58,21 12,21C16.42,21 20,19.21 20,17V14C20,16.21 16.42,18 12,18C7.58,18 4,16.21 4,14Z</StreamGeometry>
-        <!-- DbCategorySettings（folder-multiple-outline，多個 DB 分類） -->
+        <!-- DbCategorySettings (folder-multiple-outline, several DB categories) -->
         <StreamGeometry x:Key="DefDbCategorySettings">M3,7V17A2,2 0 0,0 5,19H21V17H5V7H3M19,15H7A2,2 0 0,1 5,13V5A2,2 0 0,1 7,3H10L12,5H19A2,2 0 0,1 21,7V13A2,2 0 0,1 19,15M7,5V13H19V7H11.17L9.17,5H7Z</StreamGeometry>
-        <!-- ProgramSettings（view-list） -->
+        <!-- ProgramSettings (view-list) -->
         <StreamGeometry x:Key="DefProgramSettings">M9,5V9H21V5M9,19H21V15H9M9,14H21V10H9M4,9H8V5H4M4,19H8V15H4M4,14H8V10H4V14Z</StreamGeometry>
 
-        <!-- MenuSettings（menu） -->
+        <!-- MenuSettings (menu) -->
         <StreamGeometry x:Key="DefMenuSettings">M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z</StreamGeometry>
-        <!-- PermissionModels（shield-lock-outline） -->
+        <!-- PermissionModels (shield-lock-outline) -->
         <StreamGeometry x:Key="DefPermissionModels">M12,12H19C18.47,16.11 15.72,19.78 12,20.92V12H5V6.3L12,3.18M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M11,11H13V13H11V11M11,7H13V9H11V7Z</StreamGeometry>
-        <!-- FormSchema（text-box-outline，表單欄位） -->
+        <!-- FormSchema (text-box-outline, form fields) -->
         <StreamGeometry x:Key="DefFormSchema">M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3H19M19,5H5V19H19V5M17,15V17H7V15H17M17,11V13H7V11H17M17,7V9H7V7H17Z</StreamGeometry>
-        <!-- TableSchema（table，DB 表） -->
+        <!-- TableSchema (table, DB table) -->
         <StreamGeometry x:Key="DefTableSchema">M5,4H19A2,2 0 0,1 21,6V18A2,2 0 0,1 19,20H5A2,2 0 0,1 3,18V6A2,2 0 0,1 5,4M5,8V12H11V8H5M13,8V12H19V8H13M5,14V18H11V14H5M13,14V18H19V14H13Z</StreamGeometry>
-        <!-- FormLayout（view-dashboard，UI 排版） -->
+        <!-- FormLayout (view-dashboard, UI layout) -->
         <StreamGeometry x:Key="DefFormLayout">M13,3V9H21V3M13,21H21V11H13M3,21H11V15H3M3,13H11V3H3V13Z</StreamGeometry>
-        <!-- Language（translate） -->
+        <!-- Language (translate) -->
         <StreamGeometry x:Key="DefLanguage">M12.87,15.07L10.33,12.56L10.36,12.53C12.1,10.59 13.34,8.36 14.07,6H17V4H10V2H8V4H1V6H12.17C11.5,7.92 10.44,9.75 9,11.35C8.07,10.32 7.3,9.19 6.69,8H4.69C5.42,9.63 6.42,11.17 7.67,12.56L2.58,17.58L4,19L9,14L12.11,17.11L12.87,15.07M18.5,10H16.5L12,22H14L15.12,19H19.87L21,22H23L18.5,10M15.88,17L17.5,12.67L19.12,17H15.88Z</StreamGeometry>
-        <!-- 後備（file-outline） -->
+        <!-- Fallback (file-outline) -->
         <StreamGeometry x:Key="DefUnknown">M13,9V3.5L18.5,9M6,2C4.89,2 4,2.89 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z</StreamGeometry>
 
         <!-- Welcome tab: home icon -->
         <StreamGeometry x:Key="DefWelcome">M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z</StreamGeometry>
 
         <!-- =================================================================
-             內層樹節點圖示（每編輯器內部展開的小節點）
+             Inner tree node icons (the small nodes expanded inside each editor)
              ================================================================= -->
         <StreamGeometry x:Key="IconLookup">M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z</StreamGeometry>
         <StreamGeometry x:Key="IconArrowRight">M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z</StreamGeometry>
@@ -83,7 +83,7 @@
     </Styles.Resources>
 
     <!-- =================================================================
-         工具列按鈕（含圖示 + 短標籤 + tooltip）— 外觀交給 Semi，僅留尺寸
+         Toolbar buttons (icon + short label + tooltip). Semi owns the look; only sizes are set here
          ================================================================= -->
     <Style Selector="Button.tool">
         <Setter Property="Padding" Value="11,6"/>
@@ -91,17 +91,17 @@
         <Setter Property="MinHeight" Value="32"/>
     </Style>
 
-    <!-- 主行為按鈕（例：儲存）：Semi SolidButton 主題 + Primary 語意 class -->
+    <!-- Primary action button (for example Save): Semi SolidButton theme + the Primary semantic class -->
     <Style Selector="Button.tool.Primary">
         <Setter Property="Theme" Value="{DynamicResource SolidButton}"/>
     </Style>
 
-    <!-- 危險按鈕（例：刪除）：Semi SolidButton 主題 + Danger 語意 class -->
+    <!-- Dangerous action button (for example Delete): Semi SolidButton theme + the Danger semantic class -->
     <Style Selector="Button.tool.Danger">
         <Setter Property="Theme" Value="{DynamicResource SolidButton}"/>
     </Style>
 
-    <!-- 圖示按鈕內部 PathIcon -->
+    <!-- PathIcon inside icon buttons -->
     <Style Selector="Button.tool PathIcon">
         <Setter Property="Width" Value="16"/>
         <Setter Property="Height" Value="16"/>
@@ -109,7 +109,7 @@
     </Style>
 
     <!-- =================================================================
-         屬性面板響應式排版（label + 自由伸展的 input）
+         Responsive property panel rows (label + an input that stretches freely)
          ================================================================= -->
     <Style Selector="DockPanel.row">
         <Setter Property="LastChildFill" Value="True"/>
@@ -138,7 +138,7 @@
         <Setter Property="HorizontalAlignment" Value="Left"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
-    <!-- 短欄位（數字、Lang code）用 .row.short 縮限到固定寬 -->
+    <!-- Short fields (numbers, Lang codes) use .row.short to limit them to a fixed width -->
     <Style Selector="DockPanel.row.short > TextBox">
         <Setter Property="HorizontalAlignment" Value="Left"/>
         <Setter Property="Width" Value="140"/>
@@ -149,7 +149,7 @@
     </Style>
 
     <!-- =================================================================
-         面板區塊背景（Semi 分層 token：Bg0 主面、Bg1 沉面、Bg2 抬升面）
+         Panel backgrounds (Semi layer tokens: Bg0 main surface, Bg1 sunken, Bg2 raised)
          ================================================================= -->
     <Style Selector="Border.surface">
         <Setter Property="Background" Value="{DynamicResource SemiColorBackground0}"/>
@@ -186,13 +186,14 @@
         <Setter Property="FontFamily" Value="ui-monospace, Menlo, Consolas, monospace"/>
     </Style>
 
-    <!-- 文件內層樹（各編輯器左欄）：沉面層 -->
+    <!-- Inner document tree (left column of each editor): sunken layer -->
     <Style Selector="TreeView">
         <Setter Property="Background" Value="{DynamicResource SemiColorBackground1}"/>
     </Style>
-    <!-- 仿 VS Code sidebar：左側方案樹整欄套專屬底色（SidebarBackground 定義於
-         App.axaml ThemeDictionaries —— Light 比編輯區深一階、Dark 淺一階），
-         欄內 TreeView 改透明讓整欄同色；文件內層樹不受影響（上方泛用樣式）。 -->
+    <!-- VS Code style sidebar: the whole solution tree column gets its own background (SidebarBackground
+         is defined in the App.axaml ThemeDictionaries, one step darker than the editor area in Light and one
+         step lighter in Dark). The TreeView in the column is transparent so the column is one color; the inner
+         document trees are not affected (they use the general style above). -->
     <Style Selector="Grid.sidebar">
         <Setter Property="Background" Value="{DynamicResource SidebarBackground}"/>
     </Style>
@@ -203,7 +204,7 @@
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Padding" Value="2,4"/>
     </Style>
-    <!-- 樹節點 / 分頁 head 用的 PathIcon -->
+    <!-- PathIcon for tree nodes and tab headers -->
     <Style Selector="PathIcon.tree-icon">
         <Setter Property="Width" Value="18"/>
         <Setter Property="Height" Value="18"/>
@@ -214,20 +215,20 @@
         <Setter Property="Height" Value="16"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
-    <!-- 屬性面板捲動區：捲軸不蓋輸入框，獨佔右側欄位 -->
+    <!-- Property panel scroll area: the scroll bar gets its own column on the right instead of covering the inputs -->
     <Style Selector="ScrollViewer.props-pane">
         <Setter Property="AllowAutoHide" Value="False"/>
         <Setter Property="Padding" Value="0,0,4,0"/>
     </Style>
 
-    <!-- 編輯器內層樹節點圖示 -->
+    <!-- Inner tree node icons of the editors -->
     <Style Selector="PathIcon.inner-icon">
         <Setter Property="Width" Value="14"/>
         <Setter Property="Height" Value="14"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
-    <!-- 字型：統一走 Inter（已透過 Program.cs WithInterFont 註冊） -->
+    <!-- Font: Inter everywhere (registered through WithInterFont in Program.cs) -->
     <Style Selector="Window">
         <Setter Property="FontFamily" Value="fonts:Inter#Inter, $Default"/>
         <Setter Property="FontSize" Value="14"/>
@@ -239,7 +240,7 @@
     </Style>
 
     <!-- =================================================================
-         Tab（IDE 風密度）+ 關閉鈕 — 配色交給 Semi，僅留尺寸
+         Tabs (IDE-style density) + close button. Semi owns the colors; only sizes are set here
          ================================================================= -->
     <Style Selector="TabItem">
         <Setter Property="FontSize" Value="13"/>
@@ -247,7 +248,7 @@
         <Setter Property="Padding" Value="14,6"/>
     </Style>
 
-    <!-- Tab 內的關閉按鈕（無框小鈕，hover 走 Semi fill） -->
+    <!-- Close button inside a tab (small borderless button; hover uses the Semi fill) -->
     <Style Selector="Button.tabclose">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
@@ -262,7 +263,7 @@
         <Setter Property="Foreground" Value="{DynamicResource SemiColorText0}"/>
     </Style>
 
-    <!-- 表格按鈕（行內用：未來擴充） -->
+    <!-- Table buttons (inline use, for future extension) -->
     <Style Selector="Button.icon">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>

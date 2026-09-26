@@ -17,11 +17,11 @@ namespace Avalonia.DemoCenter.Modules.Grids
         public override string Category => "Grid";
 
         /// <inheritdoc/>
-        public override string Title => "Ambient 綁定";
+        public override string Title => "Ambient binding";
 
         /// <inheritdoc/>
         public override string Description =>
-            "只設 TableName，grid 經 FormScope 自動綁定明細表、欄位由表自動產生——免給 Layout。";
+            "Only TableName is set: the grid binds to the detail table through FormScope and its columns are generated from the table, with no Layout needed.";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -32,8 +32,8 @@ namespace Avalonia.DemoCenter.Modules.Grids
             var root = new ScrollViewer
             {
                 Content = DataEditorParts.Section(
-                    "Ambient 綁定（只設 TableName）",
-                    "未給 Layout；欄位由 Phones 表自動產生。",
+                    "Ambient binding (TableName only)",
+                    "No Layout given; the columns are generated from the Phones table.",
                     grid),
             };
             FormScope.SetDataObject(root, data);

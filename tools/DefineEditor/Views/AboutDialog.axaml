@@ -13,13 +13,13 @@
 
     <Border Padding="28,24">
         <DockPanel>
-            <!-- 確認列 -->
+            <!-- Confirmation row -->
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
                         HorizontalAlignment="Right" Margin="0,18,0,0">
                 <Button Classes="tool Primary" Content="{loc:Loc Action_OK}" Click="OnOk" MinWidth="100"/>
             </StackPanel>
 
-            <!-- 主體 -->
+            <!-- Body -->
             <StackPanel Spacing="10" HorizontalAlignment="Center">
                 <PathIcon Data="{StaticResource DefRoot}" Width="56" Height="56"
                           HorizontalAlignment="Center"

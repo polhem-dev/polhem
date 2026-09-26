@@ -12,9 +12,9 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
-                <!-- 仿 VS Code 的 sidebar 配色：Light 比編輯區（白）深一階、
-                     Dark 比編輯區淺一階，讓方案樹與定義編輯區有明確區隔。
-                     色值取自 VS Code 預設主題的 sideBar.background。 -->
+                <!-- Sidebar colors modelled on VS Code: one step darker than the (white) editor area in Light,
+                     one step lighter in Dark, so the solution tree is clearly set apart from the definition editor.
+                     The values come from sideBar.background in the VS Code default themes. -->
                 <ResourceDictionary x:Key="Light">
                     <SolidColorBrush x:Key="SidebarBackground">#F3F3F3</SolidColorBrush>
                 </ResourceDictionary>

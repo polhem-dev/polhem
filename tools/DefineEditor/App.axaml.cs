@@ -64,8 +64,8 @@ public partial class App : Application
 
     public override void Initialize()
     {
-        // macOS 主選單列的應用程式名（NSApplication.AppName）。短名慣例同
-        // VS Code 的 "Code"；About 對話框內文仍用完整名稱 Polhem.DefineEditor。
+        // The application name in the macOS main menu bar (`NSApplication.AppName`). A short name follows
+        // the convention of VS Code's "Code". The About dialog text still uses the full name Polhem.DefineEditor.
         Name = AppMenuName;
         AvaloniaXamlLoader.Load(this);
 

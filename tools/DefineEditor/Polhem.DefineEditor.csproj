@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- 直連核心定義模型與 XmlCodec（不走 NuGet），零序列化轉換。 -->
+    <!-- References the core definition model and XmlCodec directly (not through NuGet), so no serialization conversion is needed. -->
     <ProjectReference Include="..\..\src\Polhem.Definition\Polhem.Definition.csproj" />
     <ProjectReference Include="..\..\src\Polhem.Base\Polhem.Base.csproj" />
   </ItemGroup>

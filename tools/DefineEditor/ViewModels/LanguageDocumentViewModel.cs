@@ -92,9 +92,9 @@ public sealed partial class LanguageDocumentViewModel : SingletonDocumentViewMod
         var r = (LanguageResource)node.Payload!;
         node.Header = $"{r.Namespace} [{r.Lang}]";
         node.Detail = string.Join(Environment.NewLine,
-            $"Namespace：{r.Namespace}",
-            $"Lang：{r.Lang}",
-            $"Items：{r.Items.Count}，Enums：{r.Enums.Count}");
+            $"Namespace: {r.Namespace}",
+            $"Lang: {r.Lang}",
+            $"Items: {r.Items.Count}, Enums: {r.Enums.Count}");
     }
 
     private static void RefreshItemsGroup(SettingsTreeNode node)
@@ -115,21 +115,21 @@ public sealed partial class LanguageDocumentViewModel : SingletonDocumentViewMod
     {
         var i = (LanguageItem)node.Payload!;
         node.Header = $"{i.Key}  =  {i.Value}";
-        node.Detail = $"Key：{i.Key}\nValue：{i.Value}";
+        node.Detail = $"Key: {i.Key}\nValue: {i.Value}";
     }
 
     private static void RefreshEnum(SettingsTreeNode node)
     {
         var e = (LanguageEnum)node.Payload!;
         node.Header = $"{e.Name}  ({e.Entries.Count} entries)";
-        node.Detail = $"Name：{e.Name}\nEntries：{e.Entries.Count}";
+        node.Detail = $"Name: {e.Name}\nEntries: {e.Entries.Count}";
     }
 
     private static void RefreshEnumEntry(SettingsTreeNode node)
     {
         var e = (LanguageEnumEntry)node.Payload!;
         node.Header = $"{e.Code}  =  {e.Text}";
-        node.Detail = $"Code：{e.Code}\nText：{e.Text}";
+        node.Detail = $"Code: {e.Code}\nText: {e.Text}";
     }
 
     [RelayCommand(CanExecute = nameof(CanAddItem))]

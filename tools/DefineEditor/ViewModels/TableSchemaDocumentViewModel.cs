@@ -96,9 +96,9 @@ public sealed partial class TableSchemaDocumentViewModel : SingletonDocumentView
         var s = (TableSchema)node.Payload!;
         node.Header = $"{s.TableName}  —  {s.DisplayName}";
         node.Detail = string.Join(Environment.NewLine,
-            $"TableName：{s.TableName}",
-            $"DisplayName：{s.DisplayName}",
-            $"Fields：{s.Fields?.Count ?? 0}，Indexes：{s.Indexes?.Count ?? 0}");
+            $"TableName: {s.TableName}",
+            $"DisplayName: {s.DisplayName}",
+            $"Fields: {s.Fields?.Count ?? 0}, Indexes: {s.Indexes?.Count ?? 0}");
     }
 
     private static void RefreshFieldsGroup(SettingsTreeNode node)
@@ -120,13 +120,13 @@ public sealed partial class TableSchemaDocumentViewModel : SingletonDocumentView
         var f = (DbField)node.Payload!;
         node.Header = $"{f.FieldName}  —  {f.Caption}";
         node.Detail = string.Join(Environment.NewLine,
-            $"FieldName：{f.FieldName}",
-            $"Caption：{f.Caption}",
-            $"DbType：{f.DbType}",
-            $"Length：{f.Length}",
-            $"Precision/Scale：{f.Precision}/{f.Scale}",
-            $"AllowNull：{f.AllowNull}",
-            $"DefaultValue：{f.DefaultValue}");
+            $"FieldName: {f.FieldName}",
+            $"Caption: {f.Caption}",
+            $"DbType: {f.DbType}",
+            $"Length: {f.Length}",
+            $"Precision/Scale: {f.Precision}/{f.Scale}",
+            $"AllowNull: {f.AllowNull}",
+            $"DefaultValue: {f.DefaultValue}");
     }
 
     private static void RefreshIndex(SettingsTreeNode node)
@@ -134,17 +134,17 @@ public sealed partial class TableSchemaDocumentViewModel : SingletonDocumentView
         var i = (DbTableIndex)node.Payload!;
         node.Header = $"{i.Name}  ({(i.PrimaryKey ? "PK" : i.Unique ? "Unique" : "Index")})";
         node.Detail = string.Join(Environment.NewLine,
-            $"Name：{i.Name}",
-            $"PrimaryKey：{i.PrimaryKey}",
-            $"Unique：{i.Unique}",
-            $"IndexFields：{i.IndexFields?.Count ?? 0}");
+            $"Name: {i.Name}",
+            $"PrimaryKey: {i.PrimaryKey}",
+            $"Unique: {i.Unique}",
+            $"IndexFields: {i.IndexFields?.Count ?? 0}");
     }
 
     private static void RefreshIndexField(SettingsTreeNode node)
     {
         var i = (IndexField)node.Payload!;
         node.Header = $"{i.FieldName}  {i.SortDirection}";
-        node.Detail = $"FieldName：{i.FieldName}\nSortDirection：{i.SortDirection}";
+        node.Detail = $"FieldName: {i.FieldName}\nSortDirection: {i.SortDirection}";
     }
 
     [RelayCommand(CanExecute = nameof(CanAddField))]

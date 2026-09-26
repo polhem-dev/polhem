@@ -14,7 +14,7 @@
              x:CompileBindings="True">
 
     <UserControl.DataTemplates>
-        <!-- FormSchema 屬性面板 -->
+        <!-- FormSchema property panel -->
         <DataTemplate DataType="forms:FormSchema">
             <StackPanel Spacing="2" x:DataType="forms:FormSchema">
                 <TextBlock Classes="h2" Text="{loc:Loc FormSchema_Props}" Margin="0,0,0,8"/>
@@ -41,7 +41,7 @@
             </StackPanel>
         </DataTemplate>
 
-        <!-- FormTable 屬性面板 -->
+        <!-- FormTable property panel -->
         <DataTemplate DataType="forms:FormTable">
             <StackPanel Spacing="2" x:DataType="forms:FormTable">
                 <TextBlock Classes="h2" Text="{loc:Loc FormSchema_TableProps}" Margin="0,0,0,8"/>
@@ -60,7 +60,7 @@
             </StackPanel>
         </DataTemplate>
 
-        <!-- FormField 屬性面板 -->
+        <!-- FormField property panel -->
         <DataTemplate DataType="forms:FormField">
             <StackPanel Spacing="2" x:DataType="forms:FormField">
                 <TextBlock Classes="h2" Text="{loc:Loc FormSchema_FieldProps}" Margin="0,0,0,8"/>
@@ -133,7 +133,7 @@
             </StackPanel>
         </DataTemplate>
 
-        <!-- FieldMapping 屬性面板 -->
+        <!-- FieldMapping property panel -->
         <DataTemplate DataType="forms:FieldMapping">
             <StackPanel Spacing="2" x:DataType="forms:FieldMapping">
                 <TextBlock Classes="h2" Text="{loc:Loc FormSchema_FieldMappingProps}" Margin="0,0,0,8"/>
@@ -148,7 +148,7 @@
             </StackPanel>
         </DataTemplate>
 
-        <!-- MappingGroupEditor（RelationGroup / LookupGroup 專屬編輯區） -->
+        <!-- MappingGroupEditor (the dedicated editor for RelationGroup / LookupGroup) -->
         <DataTemplate DataType="vm:MappingGroupEditor">
             <StackPanel Spacing="2" x:DataType="vm:MappingGroupEditor" Name="MappingEditorRoot">
                 <TextBlock Classes="h2" Text="{Binding PanelTitle}" Margin="0,0,0,8"/>
@@ -183,7 +183,7 @@
             </StackPanel>
         </DataTemplate>
 
-        <!-- ListItem 屬性面板 -->
+        <!-- ListItem property panel -->
         <DataTemplate DataType="collections:ListItem">
             <StackPanel Spacing="2" x:DataType="collections:ListItem">
                 <TextBlock Classes="h2" Text="{loc:Loc FormSchema_ListItemProps}" Margin="0,0,0,8"/>
@@ -200,14 +200,14 @@
     </UserControl.DataTemplates>
 
     <DockPanel>
-        <!-- 標題列 + 工具列 -->
+        <!-- Title row + toolbar -->
 
-        <!-- 狀態列 -->
+        <!-- Status row -->
         <Border DockPanel.Dock="Bottom" Classes="statusbar" Padding="12,5">
             <TextBlock Classes="muted" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"/>
         </Border>
 
-        <!-- 驗證結果面板 -->
+        <!-- Validation results panel -->
         <Border DockPanel.Dock="Bottom" Classes="surface-sunken" Padding="12,8"
                 IsVisible="{Binding Issues.Count}">
             <DockPanel>
@@ -227,7 +227,7 @@
             </DockPanel>
         </Border>
 
-        <!-- 內層樹 + 屬性面板 -->
+        <!-- Inner tree + property panel -->
         <Grid ColumnDefinitions="*,4,1.2*">
             <TreeView Grid.Column="0"
                       ItemsSource="{Binding Roots}"

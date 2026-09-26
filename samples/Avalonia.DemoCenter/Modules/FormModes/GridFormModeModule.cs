@@ -16,23 +16,23 @@ namespace Avalonia.DemoCenter.Modules.FormModes
     public sealed class GridFormModeModule : DemoModuleBase
     {
         /// <inheritdoc/>
-        public override string Category => "FormMode 顯示狀態";
+        public override string Category => "FormMode States";
 
         /// <inheritdoc/>
         public override string Title => "Grid × FormMode";
 
         /// <inheritdoc/>
         public override string Description =>
-            "同一明細 GridControl 在三態下的差異：View 唯讀且工具列隱藏；Add / Edit 可編輯且顯示新增/刪除工具列"
-            + "（AllowEdit + AllowEditModes 合成）。各區段以 FormScope 釘住模式。";
+            "The same detail GridControl in the three modes: View is read-only with the toolbar hidden; Add / Edit are editable and show the add/delete toolbar"
+            + " (AllowEdit combined with AllowEditModes). Each section pins its mode through FormScope.";
 
         /// <inheritdoc/>
         public override Control BuildView()
         {
             var stack = new StackPanel { Spacing = 16, Margin = new Thickness(4) };
-            stack.Children.Add(Section(SingleFormMode.View, "View（唯讀、工具列隱藏）"));
-            stack.Children.Add(Section(SingleFormMode.Add, "Add（可編輯、顯示工具列）"));
-            stack.Children.Add(Section(SingleFormMode.Edit, "Edit（可編輯、顯示工具列）"));
+            stack.Children.Add(Section(SingleFormMode.View, "View (read-only, toolbar hidden)"));
+            stack.Children.Add(Section(SingleFormMode.Add, "Add (editable, toolbar shown)"));
+            stack.Children.Add(Section(SingleFormMode.Edit, "Edit (editable, toolbar shown)"));
             return new ScrollViewer { Content = stack };
         }
 
@@ -40,11 +40,11 @@ namespace Avalonia.DemoCenter.Modules.FormModes
         {
             var data = SampleFormData.BuildMasterDetail(SampleFormData.BuildSchema());
 
-            var layout = new LayoutGrid("Phones", "電話");
-            layout.Columns!.Add(new LayoutColumn("phone", "號碼", ControlType.TextEdit));
-            layout.Columns.Add(new LayoutColumn("type", "類型", ControlType.DropDownEdit));
-            layout.Columns.Add(new LayoutColumn("is_primary", "主要", ControlType.CheckEdit));
-            layout.Columns.Add(new LayoutColumn("valid_from", "生效日", ControlType.DateEdit));
+            var layout = new LayoutGrid("Phones", "Phones");
+            layout.Columns!.Add(new LayoutColumn("phone", "Number", ControlType.TextEdit));
+            layout.Columns.Add(new LayoutColumn("type", "Type", ControlType.DropDownEdit));
+            layout.Columns.Add(new LayoutColumn("is_primary", "Primary", ControlType.CheckEdit));
+            layout.Columns.Add(new LayoutColumn("valid_from", "Valid From", ControlType.DateEdit));
 
             var grid = new GridControl { MinHeight = 130 };
             grid.Bind(data, layout);

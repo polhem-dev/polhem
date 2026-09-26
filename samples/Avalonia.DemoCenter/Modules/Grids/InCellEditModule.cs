@@ -15,11 +15,11 @@ namespace Avalonia.DemoCenter.Modules.Grids
         public override string Category => "Grid";
 
         /// <inheritdoc/>
-        public override string Title => "In-cell 編輯";
+        public override string Title => "In-cell editing";
 
         /// <inheritdoc/>
         public override string Description =>
-            "GridControl InCell 模式：雙擊 cell（或 F2）就地編輯；下拉 / 日期 / 勾選為單擊置換編輯器。內建新增 / 刪除工具列。";
+            "GridControl InCell mode: double-click a cell (or press F2) to edit in place; drop-down, date and check cells swap in their editor on a single click. Built-in add / delete toolbar.";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -31,8 +31,8 @@ namespace Avalonia.DemoCenter.Modules.Grids
             return new ScrollViewer
             {
                 Content = DataEditorParts.Section(
-                    "In-cell 編輯",
-                    "雙擊 cell（或 F2）進入編輯，Enter / 點別處 commit、Esc 取消。",
+                    "In-cell editing",
+                    "Double-click a cell (or press F2) to edit; Enter or clicking elsewhere commits, Esc cancels.",
                     grid),
             };
         }

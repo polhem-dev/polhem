@@ -117,12 +117,12 @@ public sealed partial class DatabaseSettingsDocumentViewModel : SingletonDocumen
         var s = (DatabaseServer)node.Payload!;
         node.Header = $"{s.Id}  —  {s.DisplayName}";
         node.Detail = string.Join(Environment.NewLine,
-            $"Id：{s.Id}",
-            $"DisplayName：{s.DisplayName}",
-            $"DatabaseType：{s.DatabaseType}",
-            $"UserId：{s.UserId}",
-            $"Password：{(string.IsNullOrEmpty(s.Password) ? "(empty)" : "******")}",
-            $"ConnectionString：{s.ConnectionString}");
+            $"Id: {s.Id}",
+            $"DisplayName: {s.DisplayName}",
+            $"DatabaseType: {s.DatabaseType}",
+            $"UserId: {s.UserId}",
+            $"Password: {(string.IsNullOrEmpty(s.Password) ? "(empty)" : "******")}",
+            $"ConnectionString: {s.ConnectionString}");
     }
 
     private static void RefreshItem(SettingsTreeNode node)
@@ -130,14 +130,14 @@ public sealed partial class DatabaseSettingsDocumentViewModel : SingletonDocumen
         var i = (DatabaseItem)node.Payload!;
         node.Header = $"{i.Id}  —  {i.DisplayName}";
         node.Detail = string.Join(Environment.NewLine,
-            $"Id：{i.Id}",
-            $"CategoryId：{i.CategoryId}",
-            $"DatabaseType：{i.DatabaseType}",
-            $"ServerId：{(string.IsNullOrEmpty(i.ServerId) ? "(none, supplies own connection string)" : i.ServerId)}",
-            $"DbName：{i.DbName}",
-            $"UserId：{i.UserId}",
-            $"Password：{(string.IsNullOrEmpty(i.Password) ? "(empty)" : "******")}",
-            $"ConnectionString：{i.ConnectionString}");
+            $"Id: {i.Id}",
+            $"CategoryId: {i.CategoryId}",
+            $"DatabaseType: {i.DatabaseType}",
+            $"ServerId: {(string.IsNullOrEmpty(i.ServerId) ? "(none, supplies own connection string)" : i.ServerId)}",
+            $"DbName: {i.DbName}",
+            $"UserId: {i.UserId}",
+            $"Password: {(string.IsNullOrEmpty(i.Password) ? "(empty)" : "******")}",
+            $"ConnectionString: {i.ConnectionString}");
     }
 
     [RelayCommand(CanExecute = nameof(CanAddServer))]

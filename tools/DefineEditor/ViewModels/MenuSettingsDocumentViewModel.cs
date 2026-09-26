@@ -98,11 +98,11 @@ public sealed partial class MenuSettingsDocumentViewModel : SingletonDocumentVie
         var f = (MenuFolder)node.Payload!;
         node.Header = $"{f.Id}  —  {f.Caption}";
         node.Detail = string.Join(Environment.NewLine,
-            $"Id：{f.Id}",
-            $"Caption：{f.Caption}",
-            $"Order：{f.Order}",
-            $"Visible：{f.Visible}",
-            $"Items：{f.Items?.Count ?? 0}");
+            $"Id: {f.Id}",
+            $"Caption: {f.Caption}",
+            $"Order: {f.Order}",
+            $"Visible: {f.Visible}",
+            $"Items: {f.Items?.Count ?? 0}");
     }
 
     private static void RefreshEntry(SettingsTreeNode node)
@@ -110,11 +110,11 @@ public sealed partial class MenuSettingsDocumentViewModel : SingletonDocumentVie
         var e = (MenuEntry)node.Payload!;
         node.Header = $"{e.Id}  —  {e.Caption}";
         node.Detail = string.Join(Environment.NewLine,
-            $"Id：{e.Id}",
-            $"ProgId：{e.ProgId}",
-            $"Caption：{e.Caption}",
-            $"Order：{e.Order}",
-            $"Visible：{e.Visible}");
+            $"Id: {e.Id}",
+            $"ProgId: {e.ProgId}",
+            $"Caption: {e.Caption}",
+            $"Order: {e.Order}",
+            $"Visible: {e.Visible}");
     }
 
     /// <summary>

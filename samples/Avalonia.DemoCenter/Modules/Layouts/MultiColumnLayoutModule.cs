@@ -12,14 +12,14 @@ namespace Avalonia.DemoCenter.Modules.Layouts
     public sealed class MultiColumnLayoutModule : DemoModuleBase
     {
         /// <inheritdoc/>
-        public override string Category => "Layout 排版";
+        public override string Category => "Layout";
 
         /// <inheritdoc/>
-        public override string Title => "多欄排版（ColumnCount / ColumnSpan）";
+        public override string Title => "Multi-column layout (ColumnCount / ColumnSpan)";
 
         /// <inheritdoc/>
         public override string Description =>
-            "設 FormLayout.ColumnCount=2 兩欄排列，並讓 notes 欄 ColumnSpan=2 跨整列；欄位依跨欄自動換行擺放。";
+            "FormLayout.ColumnCount=2 lays the fields out in two columns, and the notes field spans the whole row with ColumnSpan=2; fields wrap automatically according to their spans.";
 
         /// <inheritdoc/>
         public override Control BuildView()

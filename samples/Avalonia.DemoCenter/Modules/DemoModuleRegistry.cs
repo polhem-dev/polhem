@@ -20,25 +20,25 @@ namespace Avalonia.DemoCenter.Modules
         /// <summary>All registered demo modules, in navigation order.</summary>
         public static IReadOnlyList<IDemoModule> Modules { get; } =
         [
-            // 控件類型 (ControlTypes).
+            // Control Types.
             new ControlGalleryModule(),
             new FieldControlComparisonModule(),
             new TableControlComparisonModule(),
-            // 資料繫結 (Data Binding).
+            // Data Binding.
             new AmbientBindingModule(),
             new ExplicitBindingModule(),
             new TwoWaySyncModule(),
             new DataObjectEventsModule(),
-            // 唯讀與必填 (Read-only & Required).
+            // Read-only & Required.
             new ReadOnlyFieldModule(),
             new RequiredReadOnlyMarkModule(),
-            // FormMode 顯示狀態.
+            // FormMode States.
             new InteractiveFormModeModule(),
             new FormModeStatesModule(),
             new GridFormModeModule(),
-            // 開窗選資料 (Lookup).
+            // Lookup.
             new LookupPickerModule(),
-            // Layout 排版.
+            // Layout.
             new AutoFormLayoutModule(),
             new MultiColumnLayoutModule(),
             // Grid.
@@ -51,7 +51,7 @@ namespace Avalonia.DemoCenter.Modules
             new MultiUnitModule(),
             // Master-Detail.
             new MasterDetailModule(),
-            // 權限 Capability (front-end permission degradation).
+            // Permission Capability (front-end permission degradation).
             new PermissionCapabilityModule(),
         ];
     }

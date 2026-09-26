@@ -16,14 +16,14 @@ namespace Avalonia.DemoCenter.Modules.ReadOnlyRequired
     public sealed class ReadOnlyFieldModule : DemoModuleBase
     {
         /// <inheritdoc/>
-        public override string Category => "唯讀與必填";
+        public override string Category => "Read-only & Required";
 
         /// <inheritdoc/>
         public override string Title => "LayoutField.ReadOnly";
 
         /// <inheritdoc/>
         public override string Description =>
-            "以 LayoutField.ReadOnly=true 逐欄設定永久唯讀：去框留底線、CheckEdit 灰框留字；無論 FormMode 為何都唯讀。";
+            "LayoutField.ReadOnly=true makes a field permanently read-only: the border is removed and an underline remains, CheckEdit gets a grey box and keeps its text; it stays read-only whatever the FormMode.";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -33,15 +33,15 @@ namespace Avalonia.DemoCenter.Modules.ReadOnlyRequired
             return DataEditorParts.Compose(
                 data,
                 DataEditorParts.Section(
-                    "一般（依 FormMode 可編輯）",
-                    "ambient 綁定，預設 Edit 可編輯（FormMode 驅動唯讀見「FormMode 顯示狀態」主題）。",
+                    "Normal (editable according to FormMode)",
+                    "Ambient binding, editable in the default Edit mode (for read-only driven by FormMode, see the FormMode States theme).",
                     DataEditorParts.LabeledRow("name", new TextEdit { FieldName = "name" }),
                     DataEditorParts.LabeledRow("hire_date", new DateEdit { FieldName = "hire_date" }),
                     DataEditorParts.LabeledRow("dept", new DropDownEdit { FieldName = "dept" }),
                     DataEditorParts.LabeledRow("active", new CheckEdit { FieldName = "active", Content = "Active" })),
                 DataEditorParts.Section(
-                    "唯讀（LayoutField.ReadOnly=true）",
-                    "永久唯讀：文字 / 日期 / 下拉去框留底線，CheckEdit 灰框留字。",
+                    "Read-only (LayoutField.ReadOnly=true)",
+                    "Permanently read-only: text, date and drop-down editors lose their border and keep an underline; CheckEdit gets a grey box and keeps its text.",
                     DataEditorParts.LabeledRow("name", ReadOnly(new TextEdit(), data, "name")),
                     DataEditorParts.LabeledRow("hire_date", ReadOnly(new DateEdit(), data, "hire_date")),
                     DataEditorParts.LabeledRow("dept", ReadOnly(new DropDownEdit(), data, "dept")),

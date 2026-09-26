@@ -20,8 +20,8 @@ flow:
       - "Demo Center"
       - "FormMode"
       # Navigation tree themes (Category nodes).
-      - "控件類型"
-      - "資料繫結"
+      - "Control Types"
+      - "Data Binding"
       - "Grid"
       - "Master-Detail"
 

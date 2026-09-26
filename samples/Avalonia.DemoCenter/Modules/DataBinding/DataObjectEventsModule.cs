@@ -21,18 +21,18 @@ namespace Avalonia.DemoCenter.Modules.DataBinding
     /// </summary>
     public sealed class DataObjectEventsModule : DemoModuleBase
     {
-        private const string EmptyLog = "（尚無事件 — 編輯欄位、明細 cell，或按下方按鈕）";
+        private const string EmptyLog = "(No events yet — edit a field or a detail cell, or press the button below)";
 
         /// <inheritdoc/>
-        public override string Category => "資料繫結";
+        public override string Category => "Data Binding";
 
         /// <inheritdoc/>
-        public override string Title => "DataObject 事件";
+        public override string Title => "DataObject events";
 
         /// <inheritdoc/>
         public override string Description =>
-            "FormDataObject 的事件：FieldValueChanged（欄位異動）、RowAdded / RowDeleted（明細加/刪列）、"
-            + "IsDirtyChanged（髒/乾淨翻轉）、DataSetReplaced（DataSet 置換/重置）。下方記錄即時顯示。";
+            "FormDataObject events: FieldValueChanged (a field changes), RowAdded / RowDeleted (a detail row is added or deleted), "
+            + "IsDirtyChanged (dirty/clean flips), DataSetReplaced (the DataSet is replaced or reset). The log below shows them live.";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -56,33 +56,33 @@ namespace Avalonia.DemoCenter.Modules.DataBinding
             data.RowAdded += (_, e) => Append($"RowAdded            {e.TableName}");
             data.RowDeleted += (_, e) => Append($"RowDeleted          {e.TableName}");
             data.IsDirtyChanged += (_, _) => Append($"IsDirtyChanged      IsDirty = {data.IsDirty}");
-            data.DataSetReplaced += (_, _) => Append("DataSetReplaced     （DataSet 置換 / 內容重置）");
+            data.DataSetReplaced += (_, _) => Append("DataSetReplaced     (DataSet replaced / contents reset)");
 
             var grid = new GridControl { MinHeight = 150, EditMode = GridEditMode.InCell };
             grid.Bind(data, SampleFormData.BuildPhonesLayout());
 
-            var reinitButton = new Button { Content = "重新初始化主檔 — InitializeNewMaster()", HorizontalAlignment = HorizontalAlignment.Left };
+            var reinitButton = new Button { Content = "Reinitialize the master — InitializeNewMaster()", HorizontalAlignment = HorizontalAlignment.Left };
             reinitButton.Click += (_, _) => data.InitializeNewMaster();
 
             return DataEditorParts.Compose(
                 data,
                 DataEditorParts.Section(
-                    "主檔（Employee）",
-                    "編輯下列欄位 → FieldValueChanged。",
+                    "Master (Employee)",
+                    "Edit the fields below → FieldValueChanged.",
                     DataEditorParts.LabeledRow("emp_name", new TextEdit { FieldName = "emp_name" }),
                     DataEditorParts.LabeledRow("dept", new DropDownEdit { FieldName = "dept" }),
                     DataEditorParts.LabeledRow("is_active", new CheckEdit { FieldName = "is_active", Content = "Active" })),
                 DataEditorParts.Section(
-                    "明細（Phones）",
-                    "雙擊 cell 編輯 → FieldValueChanged（經 DataTable 橋接）；grid 工具列 + / 刪 列 → RowAdded / RowDeleted。",
+                    "Detail (Phones)",
+                    "Double-click a cell to edit → FieldValueChanged (bridged through the DataTable); grid toolbar add / delete row → RowAdded / RowDeleted.",
                     grid),
                 DataEditorParts.Section(
-                    "DataSetReplaced 觸發",
-                    "InitializeNewMaster() 重置主檔內容並發 DataSetReplaced；上方主檔欄位會 re-pull 清空。",
+                    "Triggering DataSetReplaced",
+                    "InitializeNewMaster() resets the master and raises DataSetReplaced; the master fields above re-pull and clear.",
                     reinitButton),
                 DataEditorParts.Section(
-                    "事件記錄（最新在上）",
-                    "FormDataObject 的事件統一在此顯示。",
+                    "Event log (newest first)",
+                    "All FormDataObject events are shown here.",
                     log));
         }
     }

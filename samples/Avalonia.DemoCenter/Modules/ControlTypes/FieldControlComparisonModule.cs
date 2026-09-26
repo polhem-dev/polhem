@@ -19,15 +19,15 @@ namespace Avalonia.DemoCenter.Modules.ControlTypes
     public sealed class FieldControlComparisonModule : DemoModuleBase
     {
         /// <inheritdoc/>
-        public override string Category => "控件類型";
+        public override string Category => "Control Types";
 
         /// <inheritdoc/>
-        public override string Title => "原生 vs 繼承（BindFieldControl）";
+        public override string Title => "Native vs derived (BindFieldControl)";
 
         /// <inheritdoc/>
         public override string Description =>
-            "欄位級控件（IBindFieldControl / IFieldEditor）並排原生 Avalonia 控件，每個 ControlType "
-            + "各含「一般」與「唯讀」兩列。繼承控件以 StyleKeyOverride 沿用原生 ControlTheme。";
+            "Field-level controls (IBindFieldControl / IFieldEditor) side by side with native Avalonia controls, with a Normal row "
+            + "and a Read-only row for each ControlType. The derived controls reuse the native ControlTheme through StyleKeyOverride.";
 
         /// <inheritdoc/>
         public override Control BuildView() => new ViewBuilder().Build();
@@ -50,13 +50,13 @@ namespace Avalonia.DemoCenter.Modules.ControlTypes
                     new TextEdit { FieldName = "emp_name" },
                     BindReadOnly(new TextEdit(), "emp_name"));
 
-                AddSection("MemoEdit ← TextBox（多行）",
+                AddSection("MemoEdit ← TextBox (multi-line)",
                     new TextBox { Text = "Multi-line memo content.", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 60 },
                     new TextBox { Text = "Multi-line memo content.", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 60, IsReadOnly = true },
                     new MemoEdit { FieldName = "notes" },
                     BindReadOnly(new MemoEdit(), "notes"));
 
-                AddSection("ButtonEdit ← TextBox（InnerRightContent 按鈕）",
+                AddSection("ButtonEdit ← TextBox (InnerRightContent button)",
                     new TextBox { Text = "EMP-001", InnerRightContent = new Button { Content = "…", Focusable = false } },
                     new TextBox { Text = "EMP-001", InnerRightContent = new Button { Content = "…", Focusable = false, IsEnabled = false }, IsReadOnly = true },
                     new ButtonEdit { FieldName = "emp_code" },
@@ -68,7 +68,7 @@ namespace Avalonia.DemoCenter.Modules.ControlTypes
                     new DateEdit { FieldName = "hire_date" },
                     BindReadOnly(new DateEdit(), "hire_date"));
 
-                AddSection("YearMonthEdit ← DatePicker（DayVisible=False）",
+                AddSection("YearMonthEdit ← DatePicker (DayVisible=False)",
                     new DatePicker { DayVisible = false, SelectedDate = new DateTimeOffset(new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeSpan.Zero) },
                     new DatePicker { DayVisible = false, SelectedDate = new DateTimeOffset(new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeSpan.Zero), IsEnabled = false },
                     new YearMonthEdit { FieldName = "pay_month" },
@@ -142,12 +142,12 @@ namespace Avalonia.DemoCenter.Modules.ControlTypes
                 for (var i = 0; i < 3; i++)
                     grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
 
-                AddCell(grid, 0, 1, new TextBlock { Text = "原生控件", FontWeight = FontWeight.SemiBold });
-                AddCell(grid, 0, 2, new TextBlock { Text = "繼承控件（已綁定）", FontWeight = FontWeight.SemiBold });
-                AddCell(grid, 1, 0, new TextBlock { Text = "一般", Opacity = 0.7, VerticalAlignment = VerticalAlignment.Center });
+                AddCell(grid, 0, 1, new TextBlock { Text = "Native control", FontWeight = FontWeight.SemiBold });
+                AddCell(grid, 0, 2, new TextBlock { Text = "Derived control (bound)", FontWeight = FontWeight.SemiBold });
+                AddCell(grid, 1, 0, new TextBlock { Text = "Normal", Opacity = 0.7, VerticalAlignment = VerticalAlignment.Center });
                 AddCell(grid, 1, 1, nativeNormal);
                 AddCell(grid, 1, 2, editorNormal);
-                AddCell(grid, 2, 0, new TextBlock { Text = "唯讀 / 停用", Opacity = 0.7, VerticalAlignment = VerticalAlignment.Center });
+                AddCell(grid, 2, 0, new TextBlock { Text = "Read-only / disabled", Opacity = 0.7, VerticalAlignment = VerticalAlignment.Center });
                 AddCell(grid, 2, 1, nativeRestricted);
                 AddCell(grid, 2, 2, editorRestricted);
 

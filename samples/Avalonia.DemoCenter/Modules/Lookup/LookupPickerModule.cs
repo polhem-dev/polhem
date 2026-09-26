@@ -23,15 +23,15 @@ namespace Avalonia.DemoCenter.Modules.Lookup
         private static readonly string[] s_codes = ["EMP-001", "EMP-002", "EMP-003", "EMP-004"];
 
         /// <inheritdoc/>
-        public override string Category => "開窗選資料";
+        public override string Category => "Lookup";
 
         /// <inheritdoc/>
-        public override string Title => "ButtonEdit 開窗選資料";
+        public override string Title => "ButtonEdit lookup picker";
 
         /// <inheritdoc/>
         public override string Description =>
-            "點 ButtonEdit 右側放大鏡圖示開窗、選取後寫回值（本機 picker）。"
-            + "生產的 RelationProgId → LookupDialog 後端查詢流程見 Avalonia.Demo。";
+            "Click the magnifier icon on the right of the ButtonEdit to open a picker; the selection is written back (a local picker). "
+            + "The production RelationProgId → LookupDialog back-end query flow is in Avalonia.Demo.";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -47,13 +47,13 @@ namespace Avalonia.DemoCenter.Modules.Lookup
             return DataEditorParts.Compose(
                 data,
                 DataEditorParts.Section(
-                    "開窗選資料",
-                    "點右側放大鏡開 picker，選取後值即時寫回（唯讀時圖示隱藏 — 見下方唯讀區與 FormMode 主題）。",
+                    "Lookup picker",
+                    "Click the magnifier on the right to open the picker; the selected value is written back immediately (the icon is hidden when read-only — see the read-only section below and the FormMode States theme).",
                     DataEditorParts.LabeledRow("code", bound),
                     DataEditorParts.LiveValue(data, "code")),
                 DataEditorParts.Section(
-                    "唯讀（圖示隱藏）",
-                    "ReadOnly=true 時圖示隱藏、僅顯示值。",
+                    "Read-only (icon hidden)",
+                    "With ReadOnly=true the icon is hidden and only the value is shown.",
                     DataEditorParts.LabeledRow("code", readOnly)));
         }
 
@@ -72,8 +72,8 @@ namespace Avalonia.DemoCenter.Modules.Lookup
             };
 
             string? result = null;
-            var ok = new Button { Content = "選取", IsDefault = true, MinWidth = 72 };
-            var cancel = new Button { Content = "取消", IsCancel = true, MinWidth = 72 };
+            var ok = new Button { Content = "Select", IsDefault = true, MinWidth = 72 };
+            var cancel = new Button { Content = "Cancel", IsCancel = true, MinWidth = 72 };
 
             var buttons = new StackPanel
             {
@@ -87,7 +87,7 @@ namespace Avalonia.DemoCenter.Modules.Lookup
 
             var dialog = new Window
             {
-                Title = "選擇代碼",
+                Title = "Choose a code",
                 Width = 260,
                 Height = 320,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,

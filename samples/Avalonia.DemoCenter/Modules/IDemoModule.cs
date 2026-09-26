@@ -10,10 +10,10 @@ namespace Avalonia.DemoCenter.Modules
     /// </summary>
     public interface IDemoModule
     {
-        /// <summary>Top-level theme, e.g. "資料繫結" / "唯讀與必填" / "Grid".</summary>
+        /// <summary>Top-level theme, e.g. "Data Binding" / "Read-only &amp; Required" / "Grid".</summary>
         string Category { get; }
 
-        /// <summary>The case title shown as the navigation leaf, e.g. "Ambient 繫結".</summary>
+        /// <summary>The case title shown as the navigation leaf, e.g. "Ambient binding".</summary>
         string Title { get; }
 
         /// <summary>One-line description shown in the case header.</summary>

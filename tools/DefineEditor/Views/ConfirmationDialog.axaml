@@ -13,7 +13,7 @@
 
     <Border Padding="22,20">
         <DockPanel>
-            <!-- 標題列 -->
+            <!-- Title row -->
             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="12" Margin="0,0,0,14">
                 <Border Width="36" Height="36" CornerRadius="18"
                         Background="{DynamicResource SemiColorWarning}" VerticalAlignment="Top">
@@ -24,7 +24,7 @@
                            TextWrapping="Wrap" MaxWidth="360"/>
             </StackPanel>
 
-            <!-- 按鈕列（DiscardButton 僅三鍵的「未儲存」模式顯示，置左，仿 macOS Don't Save 慣例） -->
+            <!-- Button row. DiscardButton only shows in the three-button unsaved-changes mode, on the left, following the macOS Don't Save convention. -->
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
                         HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
                 <Button x:Name="DiscardButton" Classes="tool" Click="OnDiscard" MinWidth="90"
@@ -33,7 +33,7 @@
                 <Button x:Name="ConfirmButton" Classes="tool Primary" Content="{loc:Loc Action_OK}" Click="OnConfirm" MinWidth="100"/>
             </StackPanel>
 
-            <!-- 訊息本文 -->
+            <!-- Message body -->
             <TextBlock x:Name="MessageText" TextWrapping="Wrap"
                       />
         </DockPanel>

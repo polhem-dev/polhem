@@ -16,12 +16,12 @@ namespace Avalonia.DemoCenter.Modules.MasterDetail
         public override string Category => "Master-Detail";
 
         /// <inheritdoc/>
-        public override string Title => "主檔 + 明細";
+        public override string Title => "Master + detail";
 
         /// <inheritdoc/>
         public override string Description =>
-            "Employee 主檔區段 + Phones 明細 grid，綁定同一個 FormDataObject（預設 Edit 可編輯）。"
-            + "生產的後端載入/存檔流程見 Avalonia.Demo。";
+            "An Employee master section and a Phones detail grid bound to the same FormDataObject (editable in the default Edit mode). "
+            + "The production back-end load/save flow is in Avalonia.Demo.";
 
         /// <inheritdoc/>
         public override Control BuildView()

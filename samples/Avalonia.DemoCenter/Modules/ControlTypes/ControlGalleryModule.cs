@@ -18,15 +18,15 @@ namespace Avalonia.DemoCenter.Modules.ControlTypes
             ["name", "notes", "code", "hire_date", "pay_month", "dept", "active"];
 
         /// <inheritdoc/>
-        public override string Category => "控件類型";
+        public override string Category => "Control Types";
 
         /// <inheritdoc/>
-        public override string Title => "控件一覽";
+        public override string Title => "Control gallery";
 
         /// <inheritdoc/>
         public override string Description =>
-            "每個 ControlType 對應的繼承控件各一，經 FormScope ambient 綁定；文字控件輸入後離開（或 Enter）、"
-            + "下拉/勾選/日期選取後即更新下方值。";
+            "One derived control per ControlType, bound through the FormScope ambient scope. Text controls update the values below when you leave them (or press Enter); "
+            + "drop-downs, check boxes and date pickers update them on selection.";
 
         /// <inheritdoc/>
         public override Control BuildView()
@@ -34,8 +34,8 @@ namespace Avalonia.DemoCenter.Modules.ControlTypes
             var data = BuildDataObject();
 
             var editors = DataEditorParts.Section(
-                "繼承控件一覽",
-                "每個控件綁定一個欄位（預設 Edit 模式可編輯）；FormMode 模式切換見「FormMode 顯示狀態」主題。",
+                "Derived controls",
+                "Each control is bound to one field (editable in the default Edit mode). For switching FormMode, see the FormMode States theme.",
                 DataEditorParts.LabeledRow("TextEdit", new TextEdit { FieldName = "name" }),
                 DataEditorParts.LabeledRow("MemoEdit", new MemoEdit { FieldName = "notes", MinHeight = 56 }),
                 DataEditorParts.LabeledRow("ButtonEdit", new ButtonEdit { FieldName = "code" }),
@@ -45,7 +45,7 @@ namespace Avalonia.DemoCenter.Modules.ControlTypes
                 DataEditorParts.LabeledRow("CheckEdit", new CheckEdit { FieldName = "active", Content = "Active" }));
 
             var values = DataEditorParts.Section(
-                "FormDataObject 即時欄位值",
+                "FormDataObject live field values",
                 null,
                 DataEditorParts.LiveValue(data, s_fields));
 

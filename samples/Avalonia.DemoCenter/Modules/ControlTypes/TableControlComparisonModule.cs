@@ -19,15 +19,15 @@ namespace Avalonia.DemoCenter.Modules.ControlTypes
     public sealed class TableControlComparisonModule : DemoModuleBase
     {
         /// <inheritdoc/>
-        public override string Category => "控件類型";
+        public override string Category => "Control Types";
 
         /// <inheritdoc/>
-        public override string Title => "原生 vs 繼承（BindTableControl）";
+        public override string Title => "Native vs derived (BindTableControl)";
 
         /// <inheritdoc/>
         public override string Description =>
-            "表格級控件（IBindTableControl）：GridControl 並排原生 DataGrid，示範 Layout / Ambient "
-            + "綁定與 in-cell / EditForm 編輯模式（編輯策略見 ADR-021）。";
+            "Table-level control (IBindTableControl): GridControl side by side with the native DataGrid, showing Layout / Ambient "
+            + "binding and the in-cell / EditForm edit modes (the editing strategy is in ADR-021).";
 
         /// <inheritdoc/>
         public override Control BuildView() => new ViewBuilder().Build();
@@ -84,11 +84,11 @@ namespace Avalonia.DemoCenter.Modules.ControlTypes
                 var phoneTable = _data.DataSet.Tables["Phones"]!;
 
                 var layout = new LayoutGrid("Phones", "Phones");
-                layout.Columns!.Add(new LayoutColumn("phone", "Phone（唯讀）", ControlType.TextEdit) { ReadOnly = true });
-                layout.Columns.Add(new LayoutColumn("type", "Type（必填）", ControlType.DropDownEdit) { Required = true });
-                layout.Columns.Add(new LayoutColumn("is_primary", "Primary（Check）", ControlType.CheckEdit));
-                layout.Columns.Add(new LayoutColumn("valid_from", "Valid From（Date）", ControlType.DateEdit));
-                layout.Columns.Add(new LayoutColumn("bill_month", "Bill Month（YearMonth）", ControlType.YearMonthEdit));
+                layout.Columns!.Add(new LayoutColumn("phone", "Phone (read-only)", ControlType.TextEdit) { ReadOnly = true });
+                layout.Columns.Add(new LayoutColumn("type", "Type (required)", ControlType.DropDownEdit) { Required = true });
+                layout.Columns.Add(new LayoutColumn("is_primary", "Primary (Check)", ControlType.CheckEdit));
+                layout.Columns.Add(new LayoutColumn("valid_from", "Valid From (Date)", ControlType.DateEdit));
+                layout.Columns.Add(new LayoutColumn("bill_month", "Bill Month (YearMonth)", ControlType.YearMonthEdit));
 
                 var bound = new GridControl { MinHeight = 120 };
                 bound.Bind(_data, layout);
@@ -97,9 +97,9 @@ namespace Avalonia.DemoCenter.Modules.ControlTypes
                 // shows every column without truncation.
                 var section = new StackPanel { Spacing = 8 };
                 section.Children.Add(new TextBlock { Text = "GridControl ← DataGrid", FontSize = 15, FontWeight = FontWeight.Bold });
-                section.Children.Add(new TextBlock { Text = "原生控件 (DataGrid)", FontWeight = FontWeight.SemiBold });
+                section.Children.Add(new TextBlock { Text = "Native control (DataGrid)", FontWeight = FontWeight.SemiBold });
                 section.Children.Add(BuildNativeGrid(phoneTable));
-                section.Children.Add(new TextBlock { Text = "繼承控件 (GridControl, Layout 綁定)", FontWeight = FontWeight.SemiBold });
+                section.Children.Add(new TextBlock { Text = "Derived control (GridControl, Layout binding)", FontWeight = FontWeight.SemiBold });
                 section.Children.Add(bound);
 
                 _host.Children.Add(Card(section));
@@ -120,7 +120,7 @@ namespace Avalonia.DemoCenter.Modules.ControlTypes
                 var section = new StackPanel { Spacing = 8 };
                 section.Children.Add(new TextBlock
                 {
-                    Text = "GridControl EditForm 模式（grid 唯讀，雙擊列或 Edit 鈕開彈窗編輯）",
+                    Text = "GridControl EditForm mode (the grid is read-only; double-click a row or press the Edit button to edit it in a dialog)",
                     FontSize = 15,
                     FontWeight = FontWeight.Bold,
                 });

@@ -54,7 +54,7 @@ public abstract partial class SingletonDocumentViewModelBase : DocumentViewModel
 
     /// <summary>
     /// Whether the currently selected node can be deleted — visibility hint
-    /// for the context-menu "刪除" item. Mirrors <c>CanDelete()</c> so the
+    /// for the context-menu "Delete" item. Mirrors <c>CanDelete()</c> so the
     /// menu item appears exactly when the command would execute.
     /// </summary>
     public bool SelectedKindCanDelete =>

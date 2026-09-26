@@ -23,8 +23,8 @@ sealed class Program
             .UsePlatformDetect()
             .With(new MacOSPlatformOptions
             {
-                // 關掉預設的 macOS 應用程式選單（About Avalonia / Quit 等），
-                // 改由 App.ConfigureNativeAppMenu 自己組裝有 About 我們版本的選單。
+                // Turn off the default macOS application menu (About Avalonia, Quit and so on).
+                // `App.ConfigureApplicationMenu` builds our own menu, whose About shows this app.
                 DisableDefaultApplicationMenuItems = true,
             })
 #if DEBUG

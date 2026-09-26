@@ -14,34 +14,34 @@ namespace Avalonia.DemoCenter.Modules.ReadOnlyRequired
     public sealed class RequiredReadOnlyMarkModule : DemoModuleBase
     {
         /// <inheritdoc/>
-        public override string Category => "唯讀與必填";
+        public override string Category => "Read-only & Required";
 
         /// <inheritdoc/>
-        public override string Title => "必填 / 唯讀標示";
+        public override string Title => "Required / read-only markers";
 
         /// <inheritdoc/>
         public override string Description =>
-            "GridControl 欄位以表頭文字色標示狀態：唯讀=棕、必填=藍（唯讀優先）。掃一眼表頭即知欄位狀態。";
+            "GridControl marks column state with the header text color: read-only = brown, required = blue (read-only wins). A glance at the headers shows each column's state.";
 
         /// <inheritdoc/>
         public override Control BuildView()
         {
             var data = SampleFormData.BuildMasterDetail(SampleFormData.BuildSchema());
 
-            var layout = new LayoutGrid("Phones", "電話");
-            layout.Columns!.Add(new LayoutColumn("phone", "號碼（唯讀）", ControlType.TextEdit) { ReadOnly = true });
-            layout.Columns.Add(new LayoutColumn("type", "類型（必填）", ControlType.DropDownEdit) { Required = true });
-            layout.Columns.Add(new LayoutColumn("is_primary", "主要", ControlType.CheckEdit));
-            layout.Columns.Add(new LayoutColumn("valid_from", "生效日", ControlType.DateEdit));
+            var layout = new LayoutGrid("Phones", "Phones");
+            layout.Columns!.Add(new LayoutColumn("phone", "Number (read-only)", ControlType.TextEdit) { ReadOnly = true });
+            layout.Columns.Add(new LayoutColumn("type", "Type (required)", ControlType.DropDownEdit) { Required = true });
+            layout.Columns.Add(new LayoutColumn("is_primary", "Primary", ControlType.CheckEdit));
+            layout.Columns.Add(new LayoutColumn("valid_from", "Valid From", ControlType.DateEdit));
 
             var grid = new GridControl { MinHeight = 180 };
             grid.Bind(data, layout);
 
             var stack = new StackPanel { Spacing = 8, Margin = new Thickness(4) };
-            stack.Children.Add(new TextBlock { Text = "欄位狀態以表頭色標示", FontSize = 15, FontWeight = FontWeight.Bold });
+            stack.Children.Add(new TextBlock { Text = "Column state shown by header color", FontSize = 15, FontWeight = FontWeight.Bold });
             stack.Children.Add(new TextBlock
             {
-                Text = "「號碼」唯讀 → 棕色表頭；「類型」必填 → 藍色表頭；其餘預設色。",
+                Text = "Number is read-only → brown header; Type is required → blue header; the others use the default color.",
                 FontSize = 12,
                 Opacity = 0.7,
                 TextWrapping = TextWrapping.Wrap,

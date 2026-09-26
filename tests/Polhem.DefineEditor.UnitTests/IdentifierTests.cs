@@ -14,7 +14,7 @@ namespace Polhem.DefineEditor.UnitTests
     public class IdentifierTests
     {
         [Fact]
-        [DisplayName("LocalizationService 找得到內嵌的字串資源")]
+        [DisplayName("LocalizationService finds the embedded string resources")]
         public void Localization_ResolvesEmbeddedStrings()
         {
             // The indexer falls back to the key when a lookup finds nothing.
@@ -22,7 +22,7 @@ namespace Polhem.DefineEditor.UnitTests
         }
 
         [Fact]
-        [DisplayName("使用者設定檔位於 Polhem.DefineEditor 資料夾")]
+        [DisplayName("The user settings file lives in the Polhem.DefineEditor folder")]
         public void UserSettings_LiveInPolhemDefineEditorFolder()
         {
             var folder = Path.GetFileName(Path.GetDirectoryName(UserSettings.GetConfigPath()));
