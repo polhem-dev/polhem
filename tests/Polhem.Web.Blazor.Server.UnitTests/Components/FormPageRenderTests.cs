@@ -9,9 +9,9 @@ using Microsoft.AspNetCore.Components.Rendering;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// 補強 <see cref="FormPage"/> Razor 模板 <c>BuildRenderTree</c> 的覆蓋率。
-    /// 測試在無 DI 環境下以反射設定私有欄位並呼叫 <c>BuildRenderTree</c>，
-    /// 涵蓋錯誤、Loading、完整工具列（IsDirty false / true）四條模板分支。
+    /// Covers the Razor template <c>BuildRenderTree</c> of <see cref="FormPage"/>.
+    /// The tests set private fields through reflection and call <c>BuildRenderTree</c> without DI,
+    /// covering the template branches for error, loading, and the full toolbar (IsDirty false and true).
     /// </summary>
     public class FormPageRenderTests
     {
@@ -53,7 +53,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("BuildRenderTree 有錯誤訊息時應渲染錯誤區塊且不拋出例外")]
+        [DisplayName("BuildRenderTree renders the error block without throwing when there is an error message")]
         public void BuildRenderTree_WithError_DoesNotThrow()
         {
             var page = new FormPage();
@@ -64,7 +64,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("BuildRenderTree 初始化進行中時應渲染 Loading 區塊且不拋出例外")]
+        [DisplayName("BuildRenderTree renders the loading block without throwing while initialization is in progress")]
         public void BuildRenderTree_Initializing_DoesNotThrow()
         {
             var page = new FormPage();
@@ -73,7 +73,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("BuildRenderTree DataObject 為 null 且已完成初始化時應渲染 Loading 區塊且不拋出例外")]
+        [DisplayName("BuildRenderTree renders the loading block without throwing when DataObject is null after initialization")]
         public void BuildRenderTree_DataObjectNull_DoesNotThrow()
         {
             var page = new FormPage();
@@ -83,7 +83,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("BuildRenderTree DataObject 已設定且 IsDirty 為 false 時應渲染完整工具列且不拋出例外")]
+        [DisplayName("BuildRenderTree renders the full toolbar without throwing when DataObject is set and IsDirty is false")]
         public void BuildRenderTree_DataObjectSet_NotDirty_DoesNotThrow()
         {
             var page = new FormPage();
@@ -94,7 +94,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("BuildRenderTree DataObject IsDirty 為 true 時應渲染 unsaved 提示且不拋出例外")]
+        [DisplayName("BuildRenderTree renders the unsaved hint without throwing when DataObject.IsDirty is true")]
         public void BuildRenderTree_DataObjectDirty_DoesNotThrow()
         {
             var page = new FormPage();

@@ -11,8 +11,8 @@ using Bunit;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// DynamicForm 時刻輸入（<see cref="ControlType.TimeEdit"/>）的行為測試，對齊 Avalonia 的
-    /// <c>TimeEdit</c>：寬鬆輸入正規化為定寬 HH:mm、清空代表未填、無法解析的輸入保留前一個有效值。
+    /// Behavior tests for the DynamicForm time input (<see cref="ControlType.TimeEdit"/>), aligned with Avalonia's
+    /// <c>TimeEdit</c>: loose input is normalized to fixed-width HH:mm, an empty input means unset, and unparsable input keeps the last valid value.
     /// </summary>
     public class DynamicFormTimeEditTests : BunitContext
     {
@@ -41,7 +41,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private static IElement TimeInput(IRenderedComponent<DynamicForm> cut) => cut.Find(TimeInputSelector);
 
         [Fact]
-        [DisplayName("渲染時以定寬 HH:mm 顯示")]
+        [DisplayName("The time input renders as fixed-width HH:mm")]
         public void Render_DisplaysFixedWidthForm()
         {
             var schema = BuildSchema();
@@ -56,7 +56,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("變更時應將寬鬆輸入正規化為定寬 HH:mm")]
+        [DisplayName("A change normalizes loose input to fixed-width HH:mm")]
         public void Change_NormalizesLooseInput()
         {
             var schema = BuildSchema();
@@ -71,7 +71,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("清空輸入框應寫回空字串（未填），不是 00:00")]
+        [DisplayName("Clearing the input writes back an empty string (unset), not 00:00")]
         public void Change_EmptyText_WritesUnset(string empty)
         {
             var schema = BuildSchema();
@@ -85,7 +85,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("00:00 為合法時刻，應正常寫回")]
+        [DisplayName("00:00 is a valid time and is written back normally")]
         public void Change_Midnight_IsStored()
         {
             var schema = BuildSchema();
@@ -101,7 +101,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [InlineData("25:00")]
         [InlineData("08:99")]
         [InlineData("abc")]
-        [DisplayName("無法解析的輸入應保留前一個有效值，不清空欄位")]
+        [DisplayName("Unparsable input keeps the last valid value instead of clearing the field")]
         public void Change_InvalidText_KeepsLastValidValue(string invalid)
         {
             var schema = BuildSchema();
@@ -115,7 +115,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("時刻輸入的變更事件應標記回推 value，被拒絕的輸入才會在瀏覽器上回到保留值")]
+        [DisplayName("The time input's change handler is marked as updating value, so a rejected input reverts to the kept value in the browser")]
         public void ChangeHandler_UpdatesValueAttribute()
         {
             var schema = BuildSchema();

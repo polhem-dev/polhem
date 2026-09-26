@@ -10,8 +10,8 @@ using Polhem.UI.Avalonia.Controls;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// GridControl per-cell 幣別感知：金額欄依該列幣別欄（CUKY）當前值解析位數；
-    /// 同欄不同列不同幣別 → 不同位數；列幣別空退 grid 預設幣別；無 CurrencySettings 時退欄級 baked 格式。
+    /// GridControl per-cell currency awareness: an amount column resolves its decimals from the current value of the row's currency column (CUKY).
+    /// Different currencies in the same column give different decimals; an empty row currency falls back to the grid's default currency; without CurrencySettings the column's baked format applies.
     /// </summary>
     public class GridControlCurrencyTests
     {
@@ -64,46 +64,46 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("同欄 USD/JPY/BHD 三列 → 各列位數依幣別（2/0/3）")]
+        [DisplayName("USD/JPY/BHD rows in the same column each get the decimals of their currency (2/0/3)")]
         public void AmountColumn_PerRowCurrency_DifferentDecimals()
         {
             var table = AmountTable((1234.567m, "USD"), (1234.567m, "JPY"), (1234.567m, "BHD"));
             var grid = BindGrid(table, Currencies());
 
-            Assert.Equal("1,234.57", AmountCellText(grid, table, 0));   // USD → 2 位
-            Assert.Equal("1,235", AmountCellText(grid, table, 1));      // JPY → 0 位
-            Assert.Equal("1,234.567", AmountCellText(grid, table, 2));  // BHD → 3 位
+            Assert.Equal("1,234.57", AmountCellText(grid, table, 0));   // USD: 2 decimals.
+            Assert.Equal("1,235", AmountCellText(grid, table, 1));      // JPY: 0 decimals.
+            Assert.Equal("1,234.567", AmountCellText(grid, table, 2));  // BHD: 3 decimals.
         }
 
         [Fact]
-        [DisplayName("幣別解析勝過欄級 baked 格式（JPY 列忽略 N2、顯 0 位）")]
+        [DisplayName("Currency resolution overrides the column's baked format (a JPY row ignores N2 and shows 0 decimals)")]
         public void AmountColumn_CurrencyResolution_OverridesBakedFormat()
         {
             var table = AmountTable((1234.567m, "JPY"));
             var grid = BindGrid(table, Currencies());
 
-            // baked "N2" 應被幣別解析（JPY 0 位）覆蓋。
+            // The currency resolution (JPY, 0 decimals) must override the baked "N2".
             Assert.Equal("1,235", AmountCellText(grid, table, 0, bakedFormat: "N2"));
         }
 
         [Fact]
-        [DisplayName("列幣別欄為空時退 grid 預設幣別（master 文件幣別 / 公司本幣）")]
+        [DisplayName("An empty row currency falls back to the grid's default currency (the master document currency or the company home currency)")]
         public void AmountColumn_EmptyRowCurrency_FallsBackToDefaultCurrencyCode()
         {
             var table = AmountTable((1234.567m, string.Empty));
             var grid = BindGrid(table, Currencies(), defaultCode: "JPY");
 
-            Assert.Equal("1,235", AmountCellText(grid, table, 0)); // 退 JPY → 0 位
+            Assert.Equal("1,235", AmountCellText(grid, table, 0)); // Falls back to JPY: 0 decimals.
         }
 
         [Fact]
-        [DisplayName("未設 CurrencySettings 時金額欄用欄級 baked 格式（幣別感知關閉）")]
+        [DisplayName("Without CurrencySettings the amount column uses the column's baked format (currency awareness off)")]
         public void AmountColumn_NoCurrencySettings_UsesBakedFormat()
         {
             var table = AmountTable((1234.567m, "JPY"));
             var grid = BindGrid(table, currencies: null);
 
-            // 欄級 baked 格式維持（此處給 N2）；幣別感知關閉。
+            // The column's baked format (N2 here) is kept because currency awareness is off.
             Assert.Equal("1,234.57", AmountCellText(grid, table, 0, bakedFormat: "N2"));
         }
     }

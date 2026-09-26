@@ -5,10 +5,10 @@ using Polhem.Web.Blazor.Server.Components;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// 補強 <see cref="FormPage.OnInitializedAsync"/> 有效 ProgId 路徑的覆蓋率。
-    /// Factory 未注入（null）時，try 區塊內拋出 NullReferenceException，
-    /// 由 catch 接住並設定 _error，finally 重設 _isInitializing，
-    /// 無需 Blazor 渲染器即可完整覆蓋 try-catch-finally 三個分支。
+    /// Covers <see cref="FormPage.OnInitializedAsync"/> with a valid ProgId.
+    /// When Factory is not injected (null), a NullReferenceException is thrown inside the try block,
+    /// the catch sets _error and the finally resets _isInitializing,
+    /// so all three branches of try-catch-finally are covered without a Blazor renderer.
     /// </summary>
     public class FormPagePathCoverageTests
     {
@@ -36,7 +36,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync 有效 ProgId 且 Factory 未注入時應進入 catch 並設定錯誤訊息")]
+        [DisplayName("OnInitializedAsync enters the catch and sets an error message for a valid ProgId when Factory is not injected")]
         public async Task OnInitializedAsync_ValidProgIdNullFactory_CatchesExceptionAndSetsError()
         {
             var page = CreatePageWithProgId("TestProg");
@@ -46,7 +46,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync 有效 ProgId 且 Factory 未注入時 finally 應將 _isInitializing 設為 false")]
+        [DisplayName("OnInitializedAsync sets _isInitializing to false in finally for a valid ProgId when Factory is not injected")]
         public async Task OnInitializedAsync_ValidProgIdNullFactory_FinallyResetsIsInitializing()
         {
             var page = CreatePageWithProgId("TestProg");

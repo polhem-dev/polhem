@@ -24,7 +24,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind 後載入布林初值")]
+        [DisplayName("Bind loads the initial boolean value")]
         public void Bind_TrueValue_LoadsIntoIsChecked()
         {
             var dataObject = BuildDataObject();
@@ -37,7 +37,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("勾選變更寫回 FormDataObject")]
+        [DisplayName("A change of the check state is written back to FormDataObject")]
         public void IsCheckedChanged_AfterBind_WritesBack()
         {
             var dataObject = BuildDataObject();
@@ -50,7 +50,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("SetControlState View 模式停用，Edit 模式啟用")]
+        [DisplayName("SetControlState disables the editor in View mode and enables it in Edit mode")]
         public void SetControlState_ViewMode_TogglesIsEnabled()
         {
             var dataObject = BuildDataObject();
@@ -65,7 +65,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AllowEditModes=Add 時僅新增模式啟用")]
+        [DisplayName("With AllowEditModes=Add only Add mode enables the editor")]
         public void SetControlState_AllowEditModesAdd_OnlyAddEnabled()
         {
             var dataObject = BuildDataObject();
@@ -84,7 +84,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FieldValue 接受 bool 與字串表示")]
+        [DisplayName("FieldValue accepts bool and string representations")]
         public void FieldValue_BoolAndString_MapToIsChecked()
         {
             var editor = new CheckEdit();

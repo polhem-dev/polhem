@@ -7,9 +7,9 @@ using Microsoft.AspNetCore.Components;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// 針對 <see cref="FormPage"/> 的結構性 smoke 測試。
-    /// 確認公開參數屬性、CascadingParameter、[Inject] 注入與預設值等編譯期宣告正確；
-    /// OnInitializedAsync 等方法需 Blazor 渲染器驅動，留待 Phase 2 bUnit 整合測試覆蓋。
+    /// Structural smoke tests for <see cref="FormPage"/>.
+    /// They confirm the compile-time declarations: public parameter properties, CascadingParameter, [Inject] injection and default values.
+    /// Methods such as OnInitializedAsync need the Blazor renderer and are left to bUnit integration tests.
     /// </summary>
     public class FormPageTests
     {
@@ -30,14 +30,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("FormPage 為 Blazor ComponentBase 子類別")]
+        [DisplayName("FormPage is a subclass of Blazor ComponentBase")]
         public void Type_IsComponentBaseSubclass()
         {
             Assert.True(typeof(ComponentBase).IsAssignableFrom(typeof(FormPage)));
         }
 
         [Fact]
-        [DisplayName("ProgId 屬性同時標有 [Parameter] 及 [EditorRequired]")]
+        [DisplayName("The ProgId property is marked with both [Parameter] and [EditorRequired]")]
         public void ProgId_HasParameterAndEditorRequiredAttributes()
         {
             var property = GetPublicProperty(nameof(FormPage.ProgId));
@@ -46,7 +46,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("AccessToken 屬性標有 [CascadingParameter]")]
+        [DisplayName("The AccessToken property is marked with [CascadingParameter]")]
         public void AccessToken_HasCascadingParameterAttribute()
         {
             var property = GetPublicProperty(nameof(FormPage.AccessToken));
@@ -54,7 +54,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("Factory 私有屬性標有 [Inject] 且型別為 PolhemApiConnectorFactory")]
+        [DisplayName("The private Factory property is marked with [Inject] and is of type PolhemApiConnectorFactory")]
         public void Factory_IsInjectedPolhemApiConnectorFactory()
         {
             var property = GetNonPublicProperty("Factory");
@@ -63,7 +63,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("FormPage 預設 ProgId 為空字串")]
+        [DisplayName("FormPage ProgId defaults to an empty string")]
         public void ProgId_Default_IsEmptyString()
         {
             var page = new FormPage();
@@ -71,7 +71,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("FormPage 預設 AccessToken 為 Guid.Empty")]
+        [DisplayName("FormPage AccessToken defaults to Guid.Empty")]
         public void AccessToken_Default_IsGuidEmpty()
         {
             var page = new FormPage();

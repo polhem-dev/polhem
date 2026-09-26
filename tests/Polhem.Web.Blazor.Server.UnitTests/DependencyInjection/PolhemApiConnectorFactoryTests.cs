@@ -11,7 +11,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
     public class PolhemApiConnectorFactoryTests
     {
         [Fact]
-        [DisplayName("Local 模式 CreateFormConnector 使用 LocalApiProvider")]
+        [DisplayName("CreateFormConnector in Local mode uses LocalApiProvider")]
         public void Local_CreateFormConnector_UsesLocalProvider()
         {
             var factory = new PolhemApiConnectorFactory(new PolhemBlazorOptions().UseLocalProvider());
@@ -23,7 +23,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         }
 
         [Fact]
-        [DisplayName("Remote 模式 CreateFormConnector 使用 RemoteApiProvider 並保留 ProgId")]
+        [DisplayName("CreateFormConnector in Remote mode uses RemoteApiProvider and keeps ProgId")]
         public void Remote_CreateFormConnector_UsesRemoteProvider()
         {
             var options = new PolhemBlazorOptions().UseRemoteProvider("http://api.example.com/api");
@@ -36,7 +36,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         }
 
         [Fact]
-        [DisplayName("Local 模式 CreateSystemConnector 使用 LocalApiProvider")]
+        [DisplayName("CreateSystemConnector in Local mode uses LocalApiProvider")]
         public void Local_CreateSystemConnector_UsesLocalProvider()
         {
             var factory = new PolhemApiConnectorFactory(new PolhemBlazorOptions());
@@ -47,7 +47,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         }
 
         [Fact]
-        [DisplayName("Remote 模式 CreateSystemConnector 使用 RemoteApiProvider")]
+        [DisplayName("CreateSystemConnector in Remote mode uses RemoteApiProvider")]
         public void Remote_CreateSystemConnector_UsesRemoteProvider()
         {
             var options = new PolhemBlazorOptions().UseRemoteProvider("http://api.example.com/api");
@@ -59,7 +59,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         }
 
         [Fact]
-        [DisplayName("CreateFormConnector 對空白 progId 拋 ArgumentException")]
+        [DisplayName("CreateFormConnector throws ArgumentException for a blank progId")]
         public void CreateFormConnector_BlankProgId_Throws()
         {
             var factory = new PolhemApiConnectorFactory(new PolhemBlazorOptions());
@@ -67,7 +67,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         }
 
         [Fact]
-        [DisplayName("PolhemApiConnectorFactory 對 null options 拋 ArgumentNullException")]
+        [DisplayName("PolhemApiConnectorFactory throws ArgumentNullException for null options")]
         public void Constructor_NullOptions_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new PolhemApiConnectorFactory(null!));

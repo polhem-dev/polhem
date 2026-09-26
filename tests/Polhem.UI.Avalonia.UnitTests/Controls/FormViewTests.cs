@@ -141,7 +141,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         // ---- type / property surface ----
 
         [Fact]
-        [DisplayName("FormView 為 Avalonia UserControl 子類別")]
+        [DisplayName("FormView is a subclass of Avalonia UserControl")]
         public void Type_IsUserControlSubclass()
         {
             Assert.True(typeof(UserControl).IsAssignableFrom(typeof(FormView)));
@@ -155,7 +155,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         [InlineData(nameof(FormView.FormMode), "FormModeProperty")]
         [InlineData(nameof(FormView.DetailEditMode), "DetailEditModeProperty")]
         [InlineData(nameof(FormView.CompactWidthThreshold), "CompactWidthThresholdProperty")]
-        [DisplayName("公開屬性皆有對應的 StyledProperty 註冊")]
+        [DisplayName("Every public property has a matching StyledProperty registration")]
         public void PublicProperties_HaveMatchingStyledProperty(string propertyName, string styledPropertyFieldName)
         {
             var property = typeof(FormView).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
@@ -169,7 +169,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         // ---- CRUD / mode flow ----
 
         [Fact]
-        [DisplayName("ViewAsync 載入記錄並進入 View 模式")]
+        [DisplayName("ViewAsync loads the record and enters View mode")]
         public async Task ViewAsync_LoadsRecord_EntersViewMode()
         {
             var rowId = Guid.NewGuid();
@@ -192,7 +192,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("EditAsync 載入記錄並進入 Edit 模式")]
+        [DisplayName("EditAsync loads the record and enters Edit mode")]
         public async Task EditAsync_LoadsRecord_EntersEditMode()
         {
             var rowId = Guid.NewGuid();
@@ -208,7 +208,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("NewAsync 取得空白資料並進入 Add 模式")]
+        [DisplayName("NewAsync gets blank data and enters Add mode")]
         public async Task NewAsync_GetsBlank_EntersAddMode()
         {
             var called = false;
@@ -229,7 +229,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("Save 成功呼叫 SaveAsync 並觸發 Saved")]
+        [DisplayName("Save on success calls SaveAsync and raises Saved")]
         public async Task Save_OnSuccess_CallsSaveAndRaisesSaved()
         {
             var rowId = Guid.NewGuid();
@@ -256,7 +256,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("Save 失敗觸發 ErrorOccurred 且不觸發 Saved")]
+        [DisplayName("Save on failure raises ErrorOccurred and does not raise Saved")]
         public async Task Save_OnFailure_RaisesErrorAndNotSaved()
         {
             var rowId = Guid.NewGuid();
@@ -280,7 +280,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("Cancel / Back 觸發 Closed")]
+        [DisplayName("Cancel / Back raise Closed")]
         public async Task Close_RaisesClosed()
         {
             var rowId = Guid.NewGuid();
@@ -300,7 +300,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("View 模式只顯示返回鈕；Edit 模式顯示儲存/取消")]
+        [DisplayName("View mode shows only the back button; Edit mode shows save and cancel")]
         public async Task Toolbar_ReflectsMode()
         {
             var rowId = Guid.NewGuid();
@@ -324,7 +324,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         // ---- FormMode broadcast (ported from the retired SingleFormBase) ----
 
         [Fact]
-        [DisplayName("預設 View 並把 ambient scope 釘到 View")]
+        [DisplayName("FormMode defaults to View and pins the ambient scope to View")]
         public void Defaults_PinScopeToView()
         {
             var view = new TestFormView();
@@ -333,7 +333,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("OnFormModeChanged hook 於每次模式變更後被呼叫")]
+        [DisplayName("The OnFormModeChanged hook is called after every mode change")]
         public void OnFormModeChanged_InvokedPerChange()
         {
             var view = new TestFormView();
@@ -346,7 +346,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("子樹編輯器隨 FormMode 廣播切換唯讀（真實管線）")]
+        [DisplayName("Editors in the subtree toggle read-only with the FormMode broadcast (real pipeline)")]
         public void FormModeBroadcast_TogglesRenderedEditor()
         {
             var schema = BuildRenderSchema();
@@ -374,7 +374,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("程式寫入欄位後綁定編輯器即時刷新（lookup 寫回的基礎）")]
+        [DisplayName("A bound editor refreshes immediately after code writes the field (the basis of lookup write-back)")]
         public void SetField_RefreshesBoundEditor()
         {
             var schema = BuildRenderSchema();
@@ -399,7 +399,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         // ---- rendering (ported from the retired DynamicForm) ----
 
         [Fact]
-        [DisplayName("渲染後每個 Section 一個 Border")]
+        [DisplayName("Rendering produces one Border per Section")]
         public void Render_OneBorderPerSection()
         {
             var schema = BuildRenderSchema();
@@ -414,7 +414,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("欄位數超過 ColumnCount 時 Grid 換行配置")]
+        [DisplayName("The Grid wraps to new rows when the field count exceeds ColumnCount")]
         public void Render_FieldGridWrapsWhenFieldsExceedColumnCount()
         {
             var layout = new FormLayout { ColumnCount = 2 };
@@ -436,7 +436,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("FormLayout.Details 在 master sections 之後渲染為綁定的 GridControl")]
+        [DisplayName("FormLayout.Details render as bound GridControls after the master sections")]
         public void Render_DetailsRenderDetailGridControl()
         {
             var layout = new FormLayout { ColumnCount = 2 };
@@ -459,7 +459,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("DetailEditMode=EditForm 時明細 grid 唯讀且工具列含 Edit 鈕")]
+        [DisplayName("With DetailEditMode=EditForm the detail grid is read-only and the toolbar has an Edit button")]
         public void Render_DetailEditMode_EditForm()
         {
             var layout = new FormLayout { ColumnCount = 2 };
@@ -486,7 +486,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         [InlineData(800.0, 600.0, false)]   // wide → not compact
         [InlineData(600.0, 600.0, false)]   // exactly threshold → not compact
         [InlineData(0.0, 600.0, false)]     // unmeasured → not compact
-        [DisplayName("IsCompactWidth 依寬度與門檻判定 compact")]
+        [DisplayName("IsCompactWidth decides compact from the width and the threshold")]
         public void IsCompactWidth_ByWidthAndThreshold(double width, double threshold, bool expected)
         {
             Assert.Equal(expected, FormView.IsCompactWidth(width, threshold));
@@ -505,7 +505,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("窄視窗下明細 grid 切 EditForm，放寬後重排回 DetailEditMode")]
+        [DisplayName("A narrow viewport switches the detail grid to EditForm and widening restores DetailEditMode")]
         public void DetailEditMode_RespondsToViewportWidth()
         {
             var layout = new FormLayout { ColumnCount = 2 };
@@ -529,7 +529,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("窄視窗下主檔欄位重排為單欄，放寬後恢復多欄")]
+        [DisplayName("A narrow viewport reflows the master fields into one column and widening restores several columns")]
         public void MasterFields_ReflowToSingleColumnWhenCompact()
         {
             var layout = new FormLayout { ColumnCount = 2 };
@@ -557,7 +557,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         [InlineData(ControlType.ButtonEdit, typeof(ButtonEdit))]
         [InlineData(ControlType.TextEdit, typeof(TextEdit))]
         [InlineData(ControlType.Auto, typeof(TextEdit))]
-        [DisplayName("BuildInputControl 依 ControlType 分派對應的 field editor")]
+        [DisplayName("BuildInputControl dispatches to the field editor matching ControlType")]
         public void BuildInputControl_DispatchesByControlType(ControlType controlType, Type expectedControlType)
         {
             var dataObject = new FormDataObject(BuildRenderSchema());
@@ -570,7 +570,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("ReadOnly 欄位建立的編輯器為唯讀")]
+        [DisplayName("A ReadOnly field gets a read-only editor")]
         public void BuildInputControl_ReadOnlyField_CreatesReadOnlyTextEdit()
         {
             var dataObject = new FormDataObject(BuildRenderSchema());
@@ -583,7 +583,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("CheckEdit 勾選變更會回寫 DataObject 欄位")]
+        [DisplayName("Toggling a CheckEdit writes back to the DataObject field")]
         public void BuildInputControl_CheckEdit_WritesBackToDataObject()
         {
             var dataObject = new FormDataObject(BuildRenderSchema());
@@ -672,7 +672,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("編輯 master 來源欄即時重算計算欄（amount = price * qty）")]
+        [DisplayName("Editing a master source field recomputes the computed field immediately (amount = price * qty)")]
         public async Task LiveRecompute_MasterSourceEdit_RecomputesComputedField()
         {
             var rowId = Guid.NewGuid();
@@ -698,7 +698,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("NewAsync 後 master 空欄以 DefaultValueExpression 即時填入（order_date = Today()）")]
+        [DisplayName("After NewAsync, empty master fields are filled immediately from DefaultValueExpression (order_date = Today())")]
         public async Task LiveRecompute_NewAsync_AppliesDefaultValueExpression()
         {
             var connector = new FakeFormApiConnector
@@ -720,13 +720,13 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
             await view.NewAsync();
 
-            // UTC，不是 DateTime.Today：框架的日期預設值是 UtcNow.Date（ADR-032 D12）。
-            // 用本地日斷言會讓本機在 UTC+8 的 00:00–08:00 必定失敗，而 CI 跑 UTC 永遠看不到。
+            // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
+            // Asserting the local date always fails locally between 00:00 and 08:00 at UTC+8, which CI running in UTC never sees.
             Assert.Equal(DateTime.UtcNow.Date, view.DataObject!.MasterRow!["order_date"]);
         }
 
         [Fact]
-        [DisplayName("編輯 detail 來源欄即時重算 detail 計算欄（回寫至 DataRow）")]
+        [DisplayName("Editing a detail source field recomputes the detail computed field immediately (written back to the DataRow)")]
         public async Task LiveRecompute_DetailSourceEdit_RecomputesDetailComputedField()
         {
             var rowId = Guid.NewGuid();
@@ -761,7 +761,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("Tier 2：注入 CurrencySettings 後計算欄依幣別位數捨入（BHD 3 位，Tier 1 為 2 位）")]
+        [DisplayName("Tier 2: with CurrencySettings injected, the computed field rounds to the currency's decimals (BHD 3 places, Tier 1 would be 2)")]
         public async Task LiveRecompute_Tier2Currency_RoundsByCurrencyDecimals()
         {
             var rowId = Guid.NewGuid();
@@ -804,14 +804,14 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             };
 
             await view.EditAsync(rowId);
-            // price 2.1235 * qty 1 = 2.1235 → BHD 3 位、away-from-zero → 2.124（Tier 1 兩位會是 2.12）
+            // `price` 2.1235 * `qty` 1 = 2.1235, rounded away from zero to the 3 decimals of BHD gives 2.124 (Tier 1 with 2 decimals would give 2.12).
             view.DataObject!.SetField("qty", "1");
 
             Assert.Equal(2.124m, view.DataObject!.MasterRow!["amount"]);
         }
 
         [Fact]
-        [DisplayName("Layout 已由 host 設定時應直接採用，不經定義來源解析")]
+        [DisplayName("A Layout already set by the host is used directly without resolving it from the definition source")]
         public async Task ResolveLayout_HostSuppliedLayout_IsUsedAsIs()
         {
             var connector = new FakeFormApiConnector

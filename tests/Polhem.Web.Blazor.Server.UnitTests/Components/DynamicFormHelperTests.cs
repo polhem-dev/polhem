@@ -15,7 +15,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private static readonly Type[] s_layoutSectionParam = [typeof(LayoutSection)];
 
         [Fact]
-        [DisplayName("BuildGridStyle Layout 為 null 時應預設回傳 1 欄 CSS grid 樣式")]
+        [DisplayName("BuildGridStyle returns a one-column CSS grid style by default when Layout is null")]
         public void BuildGridStyle_NullLayout_DefaultsToOneColumn()
         {
             var component = new DynamicForm();
@@ -27,7 +27,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("BuildGridStyle ColumnCount 為 3 時應回傳 3 欄 CSS grid 樣式")]
+        [DisplayName("BuildGridStyle returns a three-column CSS grid style when ColumnCount is 3")]
         public void BuildGridStyle_ThreeColumns_ReturnsThreeColumnStyle()
         {
             var component = new DynamicForm();
@@ -42,7 +42,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("BuildFieldStyle 預設 span 應回傳 grid-row:span 1;grid-column:span 1 樣式")]
+        [DisplayName("BuildFieldStyle returns grid-row:span 1;grid-column:span 1 for the default span")]
         public void BuildFieldStyle_DefaultSpans_ReturnsSpanOneOne()
         {
             var field = new LayoutField();
@@ -56,7 +56,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [Theory]
         [InlineData(2, 3, "grid-row:span 2;grid-column:span 3")]
         [InlineData(1, 4, "grid-row:span 1;grid-column:span 4")]
-        [DisplayName("BuildFieldStyle 指定 span 應回傳對應 CSS grid 樣式")]
+        [DisplayName("BuildFieldStyle returns the matching CSS grid style for a given span")]
         public void BuildFieldStyle_CustomSpans_ReturnsCorrectStyle(int rowSpan, int colSpan, string expected)
         {
             var field = new LayoutField { RowSpan = rowSpan, ColumnSpan = colSpan };
@@ -68,7 +68,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("FieldInputId 應回傳 IdPrefix 與 FieldName 組合的 HTML id 字串")]
+        [DisplayName("FieldInputId returns an HTML id combining IdPrefix and FieldName")]
         public void FieldInputId_WithPrefix_ReturnsPrefixedId()
         {
             var component = new DynamicForm();
@@ -84,7 +84,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("EnumerateSections Layout 為 null 時應回傳空序列")]
+        [DisplayName("EnumerateSections returns an empty sequence when Layout is null")]
         public void EnumerateSections_NullLayout_ReturnsEmpty()
         {
             var component = new DynamicForm();
@@ -97,7 +97,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("EnumerateSections Layout 含一個 Section 時應回傳該 Section")]
+        [DisplayName("EnumerateSections returns the section when Layout contains one Section")]
         public void EnumerateSections_WithOneSection_ReturnsSingleSection()
         {
             var component = new DynamicForm();
@@ -115,7 +115,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("EnumerateFields 應只回傳 Visible 為 true 的欄位")]
+        [DisplayName("EnumerateFields returns only fields whose Visible is true")]
         public void EnumerateFields_MixedVisibility_ReturnsOnlyVisibleFields()
         {
             var section = new LayoutSection();
@@ -132,7 +132,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("EnumerateOptions DataObject 為 null 時應回傳空集合")]
+        [DisplayName("EnumerateOptions returns an empty collection when DataObject is null")]
         public void EnumerateOptions_NullDataObject_ReturnsEmpty()
         {
             var component = new DynamicForm();
@@ -146,7 +146,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("BuildGridStyle ColumnCount 為 0 時應修正為 1 欄並回傳對應 CSS grid 樣式")]
+        [DisplayName("BuildGridStyle corrects a ColumnCount of 0 to one column and returns the matching CSS grid style")]
         public void BuildGridStyle_ZeroColumnCount_DefaultsToOneColumn()
         {
             var component = new DynamicForm();
@@ -161,7 +161,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("EnumerateOptions DataObject 有欄位但欄位名稱不存在時應回傳空集合")]
+        [DisplayName("EnumerateOptions returns an empty collection when DataObject has fields but not the named one")]
         public void EnumerateOptions_DataObjectFieldNotFound_ReturnsEmpty()
         {
             var schema = new FormSchema("Employee", "Employee");
@@ -183,7 +183,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("EnumerateOptions DataObject 有欄位且欄位含 ListItems 時應回傳對應選項清單")]
+        [DisplayName("EnumerateOptions returns the matching option list when the field has ListItems")]
         public void EnumerateOptions_DataObjectFieldWithListItems_ReturnsItems()
         {
             var schema = new FormSchema("Employee", "Employee");

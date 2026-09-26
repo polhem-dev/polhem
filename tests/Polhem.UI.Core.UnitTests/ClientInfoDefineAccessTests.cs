@@ -5,10 +5,10 @@ using Polhem.Api.Core.Messages.System;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// 補強 <see cref="ClientInfo.DefineAccess"/> getter 的覆蓋率：
-    /// 驗證快取行為（兩次存取回傳同一實例）以及
-    /// 當 AccessToken 變更時快取被清除（兩次存取回傳不同實例）。
-    /// 因修改靜態狀態，納入 <c>ClientInfoState</c> collection 確保串行執行。
+    /// Covers the <see cref="ClientInfo.DefineAccess"/> getter:
+    /// the caching behavior (two accesses return the same instance) and
+    /// the cache being cleared when AccessToken changes (two accesses return different instances).
+    /// It mutates static state, so it runs serially in the <c>ClientInfoState</c> collection.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoDefineAccessTests
@@ -20,7 +20,7 @@ namespace Polhem.UI.Core.UnitTests
             typeof(ClientInfo).GetField("s_systemConnector", BindingFlags.NonPublic | BindingFlags.Static)!;
 
         [Fact]
-        [DisplayName("DefineAccess getter 多次存取應回傳同一快取實例")]
+        [DisplayName("DefineAccess getter returns the same cached instance on repeated access")]
         public void DefineAccess_AccessedTwice_ReturnsSameInstance()
         {
             var originalDefineAccess = s_defineAccessField.GetValue(null);
@@ -41,7 +41,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("AccessToken 變更後 DefineAccess getter 應回傳新實例（快取已清除）")]
+        [DisplayName("DefineAccess getter returns a new instance after AccessToken changes (the cache is cleared)")]
         public void DefineAccess_AfterTokenChange_ReturnsNewInstance()
         {
             var originalDefineAccess = s_defineAccessField.GetValue(null);

@@ -22,7 +22,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         [InlineData(ControlType.CheckEdit, typeof(CheckEdit))]
         [InlineData(ControlType.NumericEdit, typeof(NumericEdit))]
         [InlineData(ControlType.Auto, typeof(TextEdit))]
-        [DisplayName("FieldEditorFactory 依 ControlType 建立對應編輯器（Auto fallback 為 TextEdit）")]
+        [DisplayName("FieldEditorFactory creates the editor matching ControlType (Auto falls back to TextEdit)")]
         public void Create_ControlType_ReturnsMatchingEditor(ControlType controlType, Type expectedType)
         {
             var editor = FieldEditorFactory.Create(controlType);
@@ -40,7 +40,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         [InlineData(typeof(DropDownEdit), typeof(ComboBox))]
         [InlineData(typeof(CheckEdit), typeof(CheckBox))]
         [InlineData(typeof(NumericEdit), typeof(TextBox))]
-        [DisplayName("各編輯器 StyleKeyOverride 指向原生基底（防隱形控件回歸）")]
+        [DisplayName("Each editor's StyleKeyOverride points to its native base (guards against invisible-control regressions)")]
         public void StyleKeyOverride_Editor_PointsToNativeBase(Type editorType, Type expectedStyleKey)
         {
             var editor = (Control)Activator.CreateInstance(editorType)!;

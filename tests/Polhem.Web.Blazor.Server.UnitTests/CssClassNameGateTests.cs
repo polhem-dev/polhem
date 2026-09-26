@@ -19,7 +19,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         private static readonly Regex s_markupClass = new(@"polhem-[A-Za-z0-9_-]+", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
         [Fact]
-        [DisplayName("Blazor Demo 樣式表的 polhem- 選擇器都對應到元件標記中的 class")]
+        [DisplayName("Every polhem- selector in the Blazor demo stylesheet matches a class in the component markup")]
         public void DemoStylesheet_SelectorsMatchRenderedClasses()
         {
             var root = FindRepositoryRoot();

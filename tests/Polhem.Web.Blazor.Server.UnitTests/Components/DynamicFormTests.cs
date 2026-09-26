@@ -36,7 +36,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("DynamicForm 為 Blazor ComponentBase 子類別")]
+        [DisplayName("DynamicForm is a subclass of Blazor ComponentBase")]
         public void Type_IsComponentBaseSubclass()
         {
             Assert.True(typeof(ComponentBase).IsAssignableFrom(typeof(DynamicForm)));
@@ -46,7 +46,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [InlineData(nameof(DynamicForm.Layout))]
         [InlineData(nameof(DynamicForm.DataObject))]
         [InlineData(nameof(DynamicForm.IdPrefix))]
-        [DisplayName("公開屬性皆標註 [Parameter]")]
+        [DisplayName("Public properties are all marked with [Parameter]")]
         public void PublicProperties_AreMarkedAsParameters(string name)
         {
             var property = GetProperty(name);
@@ -54,7 +54,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("可實例化 DynamicForm 並透過 reflection 指派 Layout/DataObject 參數")]
+        [DisplayName("DynamicForm can be instantiated and its Layout/DataObject parameters assigned through reflection")]
         public void CanInstantiateAndAssignParameters()
         {
             var schema = BuildSchema();
@@ -76,7 +76,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("FormLayoutGenerator 產出的 FormLayout 至少含一個 Section,可被 DynamicForm 消費")]
+        [DisplayName("The FormLayout produced by FormLayoutGenerator contains at least one Section that DynamicForm can consume")]
         public void GeneratedLayout_HasAtLeastOneSection()
         {
             var schema = BuildSchema();

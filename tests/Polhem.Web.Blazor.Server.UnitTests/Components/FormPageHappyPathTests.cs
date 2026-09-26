@@ -16,9 +16,9 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// 補強 <see cref="FormPage.OnInitializedAsync"/> 有效 ProgId 且 Factory 正常運作時的覆蓋率。
-    /// 以 <see cref="FakeSystemConnector"/> 和 <see cref="FakeFormConnector"/> 模擬完整的
-    /// 初始化路徑，涵蓋 try 區塊內 schema 取得、layout 建立、DataObject 建立及 ReloadList 等行為。
+    /// Covers <see cref="FormPage.OnInitializedAsync"/> with a valid ProgId and a working Factory.
+    /// <see cref="FakeSystemConnector"/> and <see cref="FakeFormConnector"/> simulate the full
+    /// initialization path, covering the schema fetch, layout creation, DataObject creation and ReloadList inside the try block.
     /// </summary>
     public class FormPageHappyPathTests
     {
@@ -52,7 +52,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 if (typeof(T) == typeof(FormLayout))
                     return Task.FromResult((T)(object)FormLayoutGenerator.Generate(_schema, _schema.ProgId));
 
-                throw new NotSupportedException($"GetDefineAsync<{typeof(T).Name}> 未在 Fake 中支援。");
+                throw new NotSupportedException($"GetDefineAsync<{typeof(T).Name}> is not supported by the fake.");
             }
         }
 
@@ -92,7 +92,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync 有效 ProgId 且 Factory 正常時應初始化完成不設定 _error")]
+        [DisplayName("OnInitializedAsync completes initialization without setting _error for a valid ProgId and a working Factory")]
         public async Task OnInitializedAsync_ValidProgIdAndWorkingFactory_CompletesWithoutError()
         {
             var schema = BuildSchema();
@@ -110,7 +110,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync 有效 ProgId 且 Factory 正常時 _isInitializing 應設為 false")]
+        [DisplayName("OnInitializedAsync sets _isInitializing to false for a valid ProgId and a working Factory")]
         public async Task OnInitializedAsync_ValidProgIdAndWorkingFactory_SetsIsInitializingFalse()
         {
             var schema = BuildSchema();
@@ -128,7 +128,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync 有效 ProgId 且 Factory 正常時 _dataObject 應設為非 null")]
+        [DisplayName("OnInitializedAsync sets _dataObject to non-null for a valid ProgId and a working Factory")]
         public async Task OnInitializedAsync_ValidProgIdAndWorkingFactory_SetsDataObjectNonNull()
         {
             var schema = BuildSchema();

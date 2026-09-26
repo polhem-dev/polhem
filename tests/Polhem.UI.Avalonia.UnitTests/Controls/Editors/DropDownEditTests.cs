@@ -27,7 +27,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind 後自動載入 FormField.ListItems 為選項")]
+        [DisplayName("Bind loads FormField.ListItems as the options")]
         public void Bind_FieldWithListItems_LoadsOptions()
         {
             var dataObject = BuildDataObject();
@@ -41,7 +41,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind 後依欄位值選取對應項目")]
+        [DisplayName("Bind selects the item matching the field value")]
         public void Bind_ExistingValue_SelectsMatchingItem()
         {
             var dataObject = BuildDataObject();
@@ -55,7 +55,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("選取變更以 ListItem.Value 寫回")]
+        [DisplayName("A selection change is written back as ListItem.Value")]
         public void SelectionChanged_AfterBind_WritesBackValue()
         {
             var dataObject = BuildDataObject();
@@ -68,7 +68,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("他方 SetField 後自動選取新值")]
+        [DisplayName("A SetField from another writer selects the new value")]
         public void FieldValueChanged_OtherWriter_UpdatesSelection()
         {
             var dataObject = BuildDataObject();
@@ -82,7 +82,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AllowEditModes=Add 時僅新增模式啟用")]
+        [DisplayName("With AllowEditModes=Add only Add mode enables the editor")]
         public void SetControlState_AllowEditModesAdd_OnlyAddEnabled()
         {
             var dataObject = BuildDataObject();
@@ -103,7 +103,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind 後 ReadOnlyText 顯示選取項目的文字")]
+        [DisplayName("ReadOnlyText shows the text of the selected item after Bind")]
         public void ReadOnlyText_AfterBind_ShowsSelectedItemText()
         {
             var dataObject = BuildDataObject();

@@ -5,13 +5,13 @@ using Polhem.Api.Client;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// 補強 <see cref="ClientInfo.ParseCommandLineArgs"/> 私有方法的測試覆蓋率。
-    /// 此類別為純讀取操作，無需加入 ClientInfoState collection。
+    /// Covers the private method <see cref="ClientInfo.ParseCommandLineArgs"/>.
+    /// This class only reads, so it does not need the ClientInfoState collection.
     /// </summary>
     public class ClientInfoParseArgsTests
     {
         [Fact]
-        [DisplayName("ParseCommandLineArgs 透過反射呼叫應回傳非 null 的字典")]
+        [DisplayName("ParseCommandLineArgs called through reflection returns a non-null dictionary")]
         public void ParseCommandLineArgs_InvokedViaReflection_ReturnsNonNull()
         {
             var method = typeof(ClientInfo).GetMethod(
@@ -23,7 +23,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ParseCommandLineArgs 回傳的字典應支援大小寫不分的鍵查詢（OrdinalIgnoreCase）")]
+        [DisplayName("ParseCommandLineArgs returns a dictionary with case-insensitive key lookup (OrdinalIgnoreCase)")]
         public void ParseCommandLineArgs_Result_SupportsCaseInsensitiveKeys()
         {
             var method = typeof(ClientInfo).GetMethod(
@@ -38,8 +38,8 @@ namespace Polhem.UI.Core.UnitTests
     }
 
     /// <summary>
-    /// 補強 <see cref="ClientInfo"/> <c>SetConnectType</c> 私有方法與遠端連線快取路徑的測試覆蓋率。
-    /// 因修改靜態狀態，與 EndpointStorageTests 同屬 ClientInfoState collection，確保串行執行。
+    /// Covers the private method <c>SetConnectType</c> of <see cref="ClientInfo"/> and the remote connector caching path.
+    /// It mutates static state, so it shares the ClientInfoState collection with EndpointStorageTests to run serially.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoConnectorTests
@@ -61,7 +61,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SetConnectType Local 應將 ApiClientInfo.ConnectType 設為 Local")]
+        [DisplayName("SetConnectType Local sets ApiClientInfo.ConnectType to Local")]
         public void SetConnectType_LocalEndpoint_SetsConnectTypeToLocal()
         {
             var method = GetSetConnectTypeMethod();
@@ -81,7 +81,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SetConnectType Remote 應將 ApiClientInfo.ConnectType 設為 Remote 並更新 Endpoint")]
+        [DisplayName("SetConnectType Remote sets ApiClientInfo.ConnectType to Remote and updates Endpoint")]
         public void SetConnectType_RemoteEndpoint_SetsConnectTypeAndEndpoint()
         {
             var method = GetSetConnectTypeMethod();
@@ -101,7 +101,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateFormApiConnector Remote 連線類型應回傳非 null 的 FormApiConnector")]
+        [DisplayName("CreateFormApiConnector with the Remote connect type returns a non-null FormApiConnector")]
         public void CreateFormApiConnector_RemoteConnectType_ReturnsNonNullConnector()
         {
             var originalType = ApiClientInfo.ConnectType;
@@ -121,7 +121,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SystemApiConnector getter Remote 連線類型應建立並回傳非 null 的遠端 Connector")]
+        [DisplayName("SystemApiConnector getter with the Remote connect type creates and returns a non-null remote connector")]
         public void SystemApiConnector_RemoteConnectType_ReturnsNonNullConnector()
         {
             var originalType = ApiClientInfo.ConnectType;

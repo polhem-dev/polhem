@@ -5,8 +5,8 @@ using Polhem.Web.Blazor.Server.Components;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// 補強 <see cref="FormPage.OnInitializedAsync"/> 早期返回路徑的測試覆蓋率。
-    /// ProgId 為空時在存取 Factory 之前即提前返回，不需要 Blazor 渲染器支援。
+    /// Covers the early-return path of <see cref="FormPage.OnInitializedAsync"/>.
+    /// An empty ProgId returns before Factory is accessed, so no Blazor renderer is needed.
     /// </summary>
     public class FormPageCoverageTests
     {
@@ -17,7 +17,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             typeof(FormPage).GetField("_isInitializing", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         [Fact]
-        [DisplayName("OnInitializedAsync ProgId 為空字串時應設定錯誤訊息")]
+        [DisplayName("OnInitializedAsync sets an error message when ProgId is an empty string")]
         public async Task OnInitializedAsync_EmptyProgId_SetsErrorMessage()
         {
             var page = new FormPage();
@@ -31,7 +31,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync ProgId 為空字串時應將 _isInitializing 設為 false")]
+        [DisplayName("OnInitializedAsync sets _isInitializing to false when ProgId is an empty string")]
         public async Task OnInitializedAsync_EmptyProgId_SetsIsInitializingFalse()
         {
             var page = new FormPage();
@@ -44,7 +44,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitializedAsync ProgId 為空白字串時應設定錯誤訊息")]
+        [DisplayName("OnInitializedAsync sets an error message when ProgId is whitespace")]
         public async Task OnInitializedAsync_WhitespaceProgId_SetsErrorMessage()
         {
 #pragma warning disable BL0005

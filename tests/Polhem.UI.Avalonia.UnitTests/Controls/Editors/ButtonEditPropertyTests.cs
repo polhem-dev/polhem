@@ -10,9 +10,9 @@ using Polhem.UI.Avalonia.DataObjects;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// 補強 <see cref="ButtonEdit"/> 覆蓋率：非 lookup 欄位的 SetControlState（呼叫 base），
-    /// OnPropertyChanged 在 IsReadOnly 變更時同步按鈕啟用狀態，
-    /// 版面層級 DisplayFields 覆寫 ResolveDisplayFieldNames 路徑。
+    /// Additional coverage for <see cref="ButtonEdit"/>: SetControlState of a non-lookup field (calls base),
+    /// OnPropertyChanged syncing the button's enabled state when IsReadOnly changes,
+    /// and the layout-level DisplayFields override path of ResolveDisplayFieldNames.
     /// </summary>
     public class ButtonEditPropertyTests
     {
@@ -43,7 +43,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("非 lookup 欄位 SetControlState Edit 模式：IsReadOnly=false，按鈕啟用")]
+        [DisplayName("SetControlState in Edit mode on a non-lookup field sets IsReadOnly=false and enables the button")]
         public void SetControlState_NonLookup_EditMode_IsReadOnlyFalseButtonEnabled()
         {
             var schema = BuildOrderSchema();
@@ -60,7 +60,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("非 lookup 欄位 SetControlState View 模式：IsReadOnly=true，按鈕停用")]
+        [DisplayName("SetControlState in View mode on a non-lookup field sets IsReadOnly=true and disables the button")]
         public void SetControlState_NonLookup_ViewMode_IsReadOnlyTrueButtonDisabled()
         {
             var schema = BuildOrderSchema();
@@ -77,7 +77,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("非 lookup 欄位直接設定 IsReadOnly 後按鈕啟用狀態同步（OnPropertyChanged 路徑）")]
+        [DisplayName("Setting IsReadOnly directly on a non-lookup field syncs the button's enabled state (OnPropertyChanged path)")]
         public void IsReadOnly_SetTrue_NonLookup_ButtonBecomesDisabled()
         {
             var editor = new ButtonEdit();
@@ -89,7 +89,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("版面層級 DisplayFields 覆寫時 Text 只顯示版面指定的欄位値")]
+        [DisplayName("With a layout-level DisplayFields override, Text shows only the field values the layout names")]
         public void RefreshFromSource_LayoutDisplayFieldsOverride_ShowsOnlyLayoutFields()
         {
             var schema = BuildOrderSchema();

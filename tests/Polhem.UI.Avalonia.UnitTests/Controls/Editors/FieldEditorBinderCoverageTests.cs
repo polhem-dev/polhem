@@ -8,10 +8,10 @@ using Polhem.UI.Avalonia.DataObjects;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// 補強 <see cref="FieldEditorBinder"/> 的 ambient 綁定路徑覆蓋率：透過反射對
-    /// <see cref="TextEdit"/> 的私有 _binder 呼叫 NotifyAttached / NotifyDetached，
-    /// 模擬 OnAttachedToLogicalTree / OnDetachedFromLogicalTree 的觸發路徑。
-    /// 同時驗證 OnBindingContextChanged 在已附加後切換 DataObject 的重新綁定行為。
+    /// Covers the ambient binding path of <see cref="FieldEditorBinder"/>: it calls NotifyAttached / NotifyDetached through
+    /// reflection on the private _binder of <see cref="TextEdit"/>,
+    /// simulating how OnAttachedToLogicalTree / OnDetachedFromLogicalTree trigger them.
+    /// It also verifies that OnBindingContextChanged rebinds when the DataObject changes after attaching.
     /// </summary>
     public class FieldEditorBinderCoverageTests
     {
@@ -48,7 +48,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("NotifyAttached：ambient DataObject + FieldName 已設定時自動綁定編輯器並載入初值")]
+        [DisplayName("NotifyAttached binds the editor and loads the initial value when the ambient DataObject and FieldName are set")]
         public void NotifyAttached_WithAmbientDataObjectAndFieldName_BindsEditorAndLoadsValue()
         {
             var dataObject = BuildDataObject("Alice");
@@ -62,7 +62,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("NotifyAttached：ambient DataObject 未設定時不綁定，Text 維持 null")]
+        [DisplayName("NotifyAttached does not bind when the ambient DataObject is not set, and Text stays null")]
         public void NotifyAttached_NoAmbientDataObject_DoesNotBind()
         {
             var editor = new TextEdit();
@@ -74,7 +74,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("NotifyDetached：ambient 綁定後呼叫 NotifyDetached，後續 SetField 不再刷新編輯器")]
+        [DisplayName("After NotifyDetached on an ambient binding, later SetField calls no longer refresh the editor")]
         public void NotifyDetached_AfterAmbientBind_StopsUpdates()
         {
             var dataObject = BuildDataObject("Alice");
@@ -88,12 +88,11 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             InvokeNotifyDetached(binder);
 
             dataObject.SetField("emp_name", "Bob");
-            // 已解除綁定 → 刷新事件不再路由至編輯器
             Assert.Equal("Alice", editor.Text);
         }
 
         [Fact]
-        [DisplayName("OnBindingContextChanged：附加後切換 DataObject，編輯器重新綁定到新 DataObject")]
+        [DisplayName("OnBindingContextChanged rebinds the editor to the new DataObject when it changes after attaching")]
         public void OnBindingContextChanged_AfterAttach_NewDataObject_Rebinds()
         {
             var dataObject1 = BuildDataObject("Alice");
@@ -105,14 +104,14 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             InvokeNotifyAttached(GetBinder(editor));
             Assert.Equal("Alice", editor.Text);
 
-            // 切換 DataObject → 觸發 DataObjectProperty.Changed 類別 handler → OnBindingContextChanged → 重新綁定
+            // Changing the DataObject fires the `DataObjectProperty.Changed` class handler, which calls `OnBindingContextChanged` to rebind.
             FormScope.SetDataObject(editor, dataObject2);
 
             Assert.Equal("Bob", editor.Text);
         }
 
         [Fact]
-        [DisplayName("OnBindingContextChanged：相同 DataObject + 相同 FieldName，不重新綁定（短路）")]
+        [DisplayName("OnBindingContextChanged does not rebind for the same DataObject and FieldName (short-circuit)")]
         public void OnBindingContextChanged_SameDataObjectAndFieldName_IsNoOp()
         {
             var dataObject = BuildDataObject("Carol");
@@ -124,7 +123,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             editor.Text = "Carol-modified";
 
-            // 再次設定相同 DataObject → short-circuit，不重新載入初值，Text 維持修改後值
+            // Setting the same DataObject again short-circuits, so the initial value is not reloaded and Text keeps the edited value.
             FormScope.SetDataObject(editor, dataObject);
             Assert.Equal("Carol-modified", editor.Text);
         }

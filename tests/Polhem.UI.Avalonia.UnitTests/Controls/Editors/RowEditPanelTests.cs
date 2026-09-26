@@ -57,7 +57,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind 啟動編輯 session 並依可見欄位產生編輯器")]
+        [DisplayName("Bind starts an edit session and creates editors for the visible fields")]
         public void Bind_BuildsEditorsAndStartsSession()
         {
             var dataObject = BuildDataObject();
@@ -79,7 +79,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Commit 落實編輯、補發事件並標 dirty")]
+        [DisplayName("Commit applies the edit, publishes the events and marks dirty")]
         public void Commit_WritesThroughAndPublishes()
         {
             var dataObject = BuildDataObject();
@@ -111,7 +111,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Cancel 完整還原、零事件、不弄髒")]
+        [DisplayName("Cancel restores everything with no events and does not mark dirty")]
         public void Cancel_RestoresSilently()
         {
             var dataObject = BuildDataObject();
@@ -138,7 +138,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         [Theory]
         [InlineData(false, 2)]  // wide screen → two columns
         [InlineData(true, 1)]   // compact screen → single column
-        [DisplayName("Compact 旗標決定編輯表單欄數")]
+        [DisplayName("The compact flag decides the column count of the edit form")]
         public void Compact_DrivesColumnCount(bool compact, int expectedColumns)
         {
             var dataObject = BuildDataObject();
@@ -157,14 +157,14 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         [InlineData(900.0, false)]  // desktop → not compact
         [InlineData(600.0, false)]  // exactly threshold → not compact
         [InlineData(0.0, false)]    // unmeasured → not compact
-        [DisplayName("IsCompactWidth 依螢幕寬度判定 compact")]
+        [DisplayName("IsCompactWidth decides compact from the screen width")]
         public void IsCompactWidth_ByScreenWidth(double width, bool expected)
         {
             Assert.Equal(expected, RowEditPanel.IsCompactWidth(width));
         }
 
         [Fact]
-        [DisplayName("重複 Bind 取消前一筆 session")]
+        [DisplayName("Binding again cancels the previous session")]
         public void Rebind_CancelsPreviousSession()
         {
             var dataObject = BuildDataObject();

@@ -7,14 +7,14 @@ using Polhem.UI.Core.Permissions;
 namespace Polhem.UI.Core.UnitTests.Permissions
 {
     /// <summary>
-    /// <see cref="ElementCapabilityResolver"/> 的純函式判定測試：命令 Can（any-of / 未綁 model /
-    /// null 快照）、敏感欄位 Read/Update 兩階降級、Grid 動作交集。
+    /// Pure-function decision tests for <see cref="ElementCapabilityResolver"/>: command Can (any-of, no bound model,
+    /// null snapshot), the two-step Read/Update downgrade of sensitive fields, and the intersection of grid actions.
     /// </summary>
     public class ElementCapabilityResolverTests
     {
         private static readonly ElementCapabilityResolver s_resolver = ElementCapabilityResolver.Default;
 
-        // PO001 → PurchaseOrder，主表帶一個一般欄與一個敏感成本欄（SensitiveCategory=Cost）。
+        // PO001 maps to PurchaseOrder. The master table has one ordinary field and one sensitive cost field (`SensitiveCategory=Cost`).
         private static FormSchema BuildSchema()
         {
             var schema = new FormSchema("PO001", "採購單") { PermissionModelId = "PurchaseOrder" };
@@ -32,7 +32,7 @@ namespace Polhem.UI.Core.UnitTests.Permissions
         }
 
         [Fact]
-        [DisplayName("Can 有授予該 action 應允許")]
+        [DisplayName("Can allows an action that is granted")]
         public void Can_GrantedAction_ReturnsTrue()
         {
             var caps = Caps(("PurchaseOrder", PermissionAction.Create | PermissionAction.Read));
@@ -41,7 +41,7 @@ namespace Polhem.UI.Core.UnitTests.Permissions
         }
 
         [Fact]
-        [DisplayName("Can 未授予該 action 應拒絕")]
+        [DisplayName("Can denies an action that is not granted")]
         public void Can_UngrantedAction_ReturnsFalse()
         {
             var caps = Caps(("PurchaseOrder", PermissionAction.Create | PermissionAction.Read));
@@ -50,16 +50,16 @@ namespace Polhem.UI.Core.UnitTests.Permissions
         }
 
         [Fact]
-        [DisplayName("Can 複合旗標採 any-of：Save=Create|Update 只要有其一即允許")]
+        [DisplayName("Can treats combined flags as any-of: Save=Create|Update is allowed when either is granted")]
         public void Can_CombinedFlags_AnyOf()
         {
-            var caps = Caps(("PurchaseOrder", PermissionAction.Update)); // 只有 Update
+            var caps = Caps(("PurchaseOrder", PermissionAction.Update)); // Only Update.
 
             Assert.True(s_resolver.Can(BuildSchema(), PermissionAction.Create | PermissionAction.Update, caps));
         }
 
         [Fact]
-        [DisplayName("Can action 為 None（未綁定命令）一律允許")]
+        [DisplayName("Can always allows an action of None (no bound command)")]
         public void Can_NoneAction_ReturnsTrue()
         {
             var caps = Caps(("PurchaseOrder", PermissionAction.None));
@@ -68,24 +68,24 @@ namespace Polhem.UI.Core.UnitTests.Permissions
         }
 
         [Fact]
-        [DisplayName("Can 表單未宣告 PermissionModelId 一律允許")]
+        [DisplayName("Can always allows a form that declares no PermissionModelId")]
         public void Can_NoPermissionModel_ReturnsTrue()
         {
-            var schema = new FormSchema("PO001", "採購單"); // 無 PermissionModelId
+            var schema = new FormSchema("PO001", "採購單"); // No PermissionModelId.
             var caps = Caps(("PurchaseOrder", PermissionAction.None));
 
             Assert.True(s_resolver.Can(schema, PermissionAction.Delete, caps));
         }
 
         [Fact]
-        [DisplayName("Can 快照為 null（enforcement 未啟用）一律允許")]
+        [DisplayName("Can always allows when the snapshot is null (enforcement is off)")]
         public void Can_NullSnapshot_ReturnsTrue()
         {
             Assert.True(s_resolver.Can(BuildSchema(), PermissionAction.Delete, capabilities: null));
         }
 
         [Fact]
-        [DisplayName("ResolveField 非敏感欄（None）不控管")]
+        [DisplayName("ResolveField does not restrict a non-sensitive field (None)")]
         public void ResolveField_NonSensitive_Allowed()
         {
             var caps = Caps(("Cost", PermissionAction.None));
@@ -96,10 +96,10 @@ namespace Polhem.UI.Core.UnitTests.Permissions
         }
 
         [Fact]
-        [DisplayName("ResolveField 敏感欄無 Read 應隱藏")]
+        [DisplayName("ResolveField hides a sensitive field without Read")]
         public void ResolveField_SensitiveNoRead_Hidden()
         {
-            var caps = Caps(("Cost", PermissionAction.None)); // Cost 無任何權限
+            var caps = Caps(("Cost", PermissionAction.None)); // No permission at all on Cost.
 
             var cap = s_resolver.ResolveField(BuildSchema(), "total_cost", tableName: "", caps);
 
@@ -107,7 +107,7 @@ namespace Polhem.UI.Core.UnitTests.Permissions
         }
 
         [Fact]
-        [DisplayName("ResolveField 敏感欄有 Read 無 Update 應唯讀")]
+        [DisplayName("ResolveField makes a sensitive field read-only with Read but no Update")]
         public void ResolveField_SensitiveReadNoUpdate_ReadOnly()
         {
             var caps = Caps(("Cost", PermissionAction.Read));
@@ -119,7 +119,7 @@ namespace Polhem.UI.Core.UnitTests.Permissions
         }
 
         [Fact]
-        [DisplayName("ResolveField 敏感欄有 Read+Update 不降級")]
+        [DisplayName("ResolveField does not downgrade a sensitive field with Read and Update")]
         public void ResolveField_SensitiveReadUpdate_Allowed()
         {
             var caps = Caps(("Cost", PermissionAction.Read | PermissionAction.Update));
@@ -130,7 +130,7 @@ namespace Polhem.UI.Core.UnitTests.Permissions
         }
 
         [Fact]
-        [DisplayName("ResolveField 快照為 null 敏感欄也不控管")]
+        [DisplayName("ResolveField does not restrict a sensitive field when the snapshot is null")]
         public void ResolveField_NullSnapshot_Allowed()
         {
             var cap = s_resolver.ResolveField(BuildSchema(), "total_cost", tableName: "", capabilities: null);

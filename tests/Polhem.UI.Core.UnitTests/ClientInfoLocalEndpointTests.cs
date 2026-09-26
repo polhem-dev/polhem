@@ -4,17 +4,17 @@ using Polhem.Api.Client;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// 補強 <see cref="ClientInfo"/> 中以有效本機端點路徑觸發
-    /// <c>InitializeConnectAsync</c> 與 <c>SetEndpointAsync</c> 深層路徑的測試覆蓋率。
+    /// Covers the deep paths of <c>InitializeConnectAsync</c> and <c>SetEndpointAsync</c> in <see cref="ClientInfo"/>
+    /// that a valid local endpoint path reaches.
     /// <para>
-    /// 兩個方法在端點通過 <c>ApiConnectValidator.ValidateAsync</c> 驗證後才會呼叫
-    /// <c>SetConnectType</c> 再 <c>await SystemApiConnector.InitializeAsync()</c>；現有測試僅以
-    /// 空字串端點觸發驗證拋例外，因此那兩步至今未被執行。本測試以含 <c>SystemSettings.xml</c>
-    /// 的暫存目錄通過驗證，覆蓋該兩步（<c>InitializeAsync</c> 在無本機 API 服務時仍會拋例外，
-    /// 但 <c>SetConnectType</c> 已先完成；<c>return true;</c> 與 <c>SaveEndpoint</c> 需要正常運行的
-    /// API 服務，保留為「無法在 CI 中覆蓋」）。
+    /// Both methods call <c>SetConnectType</c> and then <c>await SystemApiConnector.InitializeAsync()</c> only after the
+    /// endpoint passes <c>ApiConnectValidator.ValidateAsync</c>. The other tests only use an empty endpoint, which makes
+    /// validation throw, so those two steps never ran. These tests pass validation with a temporary directory containing
+    /// <c>SystemSettings.xml</c> and cover both steps (<c>InitializeAsync</c> still throws without a local API service,
+    /// but <c>SetConnectType</c> has already completed. <c>return true;</c> and <c>SaveEndpoint</c> need a running
+    /// API service and remain not coverable in CI).
     /// </para>
-    /// 因修改靜態狀態，與其他 ClientInfoState 測試同屬 collection，確保串行執行。
+    /// It mutates static state, so it shares the collection with the other ClientInfoState tests to run serially.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoLocalEndpointTests
@@ -37,13 +37,13 @@ namespace Polhem.UI.Core.UnitTests
         {
             var tempDir = Path.Combine(Path.GetTempPath(), $"polhem-ci-{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
-            // ApiConnectValidator.ValidateLocal 僅檢查檔案是否存在，不驗證內容
+            // `ApiConnectValidator.ValidateLocal` only checks that the file exists, not its content.
             File.WriteAllText(Path.Combine(tempDir, "SystemSettings.xml"), "<SystemSettings />");
             return tempDir;
         }
 
         [Fact]
-        [DisplayName("InitializeAsync(IUIViewService) 有效本機路徑通過驗證後應將 ConnectType 設為 Local")]
+        [DisplayName("InitializeAsync(IUIViewService) sets ConnectType to Local after a valid local path passes validation")]
         public async Task InitializeAsync_ValidLocalPath_SetsConnectTypeToLocal()
         {
             var tempDir = CreateTempDefinePath();
@@ -54,9 +54,9 @@ namespace Polhem.UI.Core.UnitTests
             try
             {
                 ClientInfo.EndpointStorage = new FakeEndpointStorage(tempDir);
-                // InitializeConnectAsync 會設定 SupportedConnectTypes = Both，ValidateAsync 通過後呼叫
-                // SetConnectType(Local, tempDir) 再 await SystemApiConnector.InitializeAsync()；
-                // 無本機 API 服務時 InitializeAsync 拋例外，catch 捕捉並回傳 false。
+                // `InitializeConnectAsync` sets `SupportedConnectTypes` to `Both`. After `ValidateAsync` passes it calls
+                // `SetConnectType(Local, tempDir)` and then `SystemApiConnector.InitializeAsync()`. Without a local API
+                // service `InitializeAsync` throws, and the catch returns false.
                 await ClientInfo.InitializeAsync(new FakeUIViewService(), SupportedConnectTypes.Both);
                 Assert.Equal(ConnectType.Local, ApiClientInfo.ConnectType);
             }
@@ -71,7 +71,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SetEndpointAsync 有效本機路徑通過驗證後應將 ConnectType 設為 Local")]
+        [DisplayName("SetEndpointAsync sets ConnectType to Local after a valid local path passes validation")]
         public async Task SetEndpointAsync_ValidLocalPath_SetsConnectTypeToLocal()
         {
             var tempDir = CreateTempDefinePath();
@@ -80,10 +80,10 @@ namespace Polhem.UI.Core.UnitTests
             var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
             try
             {
-                // SetEndpointAsync 自身不設定 SupportedConnectTypes，需在呼叫前確保 Local 受支援
+                // `SetEndpointAsync` does not set `SupportedConnectTypes` itself, so Local must be supported before the call.
                 ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
-                // ValidateAsync 通過後呼叫 SetConnectType(Local, tempDir)，再 await
-                // SystemApiConnector.InitializeAsync()；無本機 API 服務時拋例外向上傳播，SaveEndpoint 不會被執行。
+                // After `ValidateAsync` passes it calls `SetConnectType(Local, tempDir)` and then `SystemApiConnector.InitializeAsync()`.
+                // Without a local API service that throws and propagates, so `SaveEndpoint` never runs.
                 await Record.ExceptionAsync(() => ClientInfo.SetEndpointAsync(tempDir));
                 Assert.Equal(ConnectType.Local, ApiClientInfo.ConnectType);
             }

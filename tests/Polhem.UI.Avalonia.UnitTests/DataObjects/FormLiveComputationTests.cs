@@ -8,9 +8,9 @@ using Polhem.UI.Avalonia.DataObjects;
 namespace Polhem.UI.Avalonia.UnitTests.DataObjects
 {
     /// <summary>
-    /// <see cref="FormLiveComputation"/> 測試：即時重算回寫、相依圖 gating（無依賴欄 / 計算欄自身不觸發）、
-    /// re-entrancy guard、預設值套用。前端走與後端相同的 <see cref="FormExpressionCalculator"/>，故對相同
-    /// 輸入產出相同數值（對照後端 <c>FormRuleProcessorTests</c> 的斷言值）。
+    /// <see cref="FormLiveComputation"/> tests: live recompute and write-back, dependency graph gating (fields without dependents and the computed field itself do not trigger),
+    /// the re-entrancy guard, and applying defaults. The client uses the same <see cref="FormExpressionCalculator"/> as the server, so the same
+    /// input produces the same values (compare the assertions of the server-side <c>FormRuleProcessorTests</c>).
     /// </summary>
     public class FormLiveComputationTests
     {
@@ -55,7 +55,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("Recompute：編輯 qty 觸發 amount 重算並回寫（值同後端 price*qty）")]
+        [DisplayName("Recompute: editing qty recomputes and writes back amount (the same value as the server's price*qty)")]
         public void Recompute_OnSourceChange_WritesComputedField()
         {
             var live = new FormLiveComputation(BuildOrderSchema());
@@ -68,7 +68,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("Recompute：Amount kind 依 NumberKind 捨入至 2 位（Tier 1 框架預設位數）")]
+        [DisplayName("Recompute: an Amount kind rounds to 2 decimals by NumberKind (the Tier 1 framework default)")]
         public void Recompute_RoundsByFrameworkDefaultDecimals()
         {
             var live = new FormLiveComputation(BuildOrderSchema());
@@ -80,7 +80,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("Recompute：變更無依賴欄（status）不重算、回報空")]
+        [DisplayName("Recompute: changing a field with no dependents (status) does not recompute and reports nothing")]
         public void Recompute_NonSourceField_NoOp()
         {
             var live = new FormLiveComputation(BuildOrderSchema());
@@ -89,12 +89,11 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
             var changed = live.Recompute("Order", "status", table.Rows[0]);
 
             Assert.Empty(changed);
-            // amount 未被計算填入（仍為 DBNull）
             Assert.Equal(DBNull.Value, table.Rows[0]["amount"]);
         }
 
         [Fact]
-        [DisplayName("Recompute：計算欄自身變更不作為觸發源（回報空）")]
+        [DisplayName("Recompute: a change to the computed field itself is not a trigger (reports nothing)")]
         public void Recompute_ComputedFieldChange_NotATrigger()
         {
             var live = new FormLiveComputation(BuildOrderSchema());
@@ -106,22 +105,20 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("Recompute：重算進行中（IsRecomputing）時再進入回報空（re-entrancy guard）")]
+        [DisplayName("Recompute: IsRecomputing is false before and after a recompute (the re-entrancy guard flag)")]
         public void Recompute_WhileRecomputing_IsGuarded()
         {
             var live = new FormLiveComputation(BuildOrderSchema());
             var table = BuildOrderTable(price: 10m, qty: 3m);
 
-            // 不在重算中：旗標為 false
             Assert.False(live.IsRecomputing);
             var changed = live.Recompute("Order", "qty", table.Rows[0]);
             Assert.Contains("amount", changed);
-            // 重算結束後旗標復位
             Assert.False(live.IsRecomputing);
         }
 
         [Fact]
-        [DisplayName("ApplyDefaults：新列空欄以 DefaultValueExpression 填入")]
+        [DisplayName("ApplyDefaults: empty fields of a new row are filled from DefaultValueExpression")]
         public void ApplyDefaults_FillsEmptyDefaultExpression()
         {
             var live = new FormLiveComputation(BuildOrderSchema());
@@ -129,14 +126,14 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
 
             var changed = live.ApplyDefaults("Order", table.Rows[0]);
 
-            // UTC，不是 DateTime.Today：框架的日期預設值是 UtcNow.Date（ADR-032 D12）。
-            // 用本地日斷言會讓本機在 UTC+8 的 00:00–08:00 必定失敗，而 CI 跑 UTC 永遠看不到。
+            // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
+            // Asserting the local date always fails locally between 00:00 and 08:00 at UTC+8, which CI running in UTC never sees.
             Assert.Equal(DateTime.UtcNow.Date, table.Rows[0]["order_date"]);
             Assert.Contains("order_date", changed);
         }
 
         [Fact]
-        [DisplayName("重現 Northwind：string 型別的 Guid 鍵欄不使數值計算欄崩潰（wire/SQLite GUID 存 TEXT）")]
+        [DisplayName("Northwind repro: a string-typed Guid key column does not crash the numeric computed field (the wire and SQLite store GUIDs as TEXT)")]
         public void Recompute_StringTypedGuidKeyColumn_DoesNotThrow()
         {
             var schema = new FormSchema("Order", "Order") { CategoryId = "company" };
@@ -174,7 +171,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("大寫欄名（真實 DataSet 形狀）：以大寫欄名觸發仍重算，不 degrade（識別字大小寫）")]
+        [DisplayName("Uppercase column names (the real DataSet shape): a trigger with an uppercase column name still recomputes without degrading (identifier casing)")]
         public void Recompute_UppercaseColumnNames_StillRecomputes()
         {
             var live = new FormLiveComputation(BuildOrderSchema());
@@ -200,13 +197,13 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("Graceful degrade：運算式求值失敗不拋例外、停用預覽，後續重算 no-op")]
+        [DisplayName("Graceful degrade: a failed expression evaluation does not throw, disables the preview, and later recomputes are no-ops")]
         public void Recompute_EvaluationFailure_DegradesGracefully()
         {
             var schema = new FormSchema("Order", "Order") { CategoryId = "company" };
             var table = schema.Tables!.Add("Order", "Order");
             table.Fields!.Add(new FormField("qty", "Qty", FieldDbType.Decimal));
-            // 參照不存在欄位 → 求值時 parse 失敗（unknown identifier）
+            // A reference to a missing field makes evaluation fail to parse (unknown identifier).
             table.Fields!.Add(new FormField("amount", "Amount", FieldDbType.Currency)
             {
                 ValueExpression = "qty * nonexistent_field",
@@ -219,18 +216,17 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
             data.Columns.Add("amount", typeof(decimal));
             data.Rows.Add(3m, 0m);
 
-            // 求值失敗不應拋例外（波及 ADO.NET 事件會弄壞表單）
+            // A failed evaluation must not throw: the exception would spread into the ADO.NET events and break the form.
             var exception = Record.Exception(() => live.Recompute("Order", "qty", data.Rows[0]));
             Assert.Null(exception);
             Assert.True(live.IsDegraded);
 
-            // 停用後後續重算為 no-op
             var again = live.Recompute("Order", "qty", data.Rows[0]);
             Assert.Empty(again);
         }
 
         [Fact]
-        [DisplayName("Recompute：欄名大小寫不敏感（事件欄名大小寫可能異於 schema）")]
+        [DisplayName("Recompute: field names are case-insensitive (the event's column name casing may differ from the schema)")]
         public void Recompute_FieldNameCaseInsensitive()
         {
             var live = new FormLiveComputation(BuildOrderSchema());

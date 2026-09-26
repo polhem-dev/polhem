@@ -3,13 +3,13 @@ using System.ComponentModel;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// <see cref="VersionInfo"/> 逐一覆蓋每個公開屬性的 getter 與其 fallback 分支。
-    /// 這些屬性讀取 entry assembly metadata,無法在 runtime 變更,故以「不拋例外 + 回傳合理形狀」為斷言。
+    /// Covers the getter of each public property of <see cref="VersionInfo"/> and its fallback branch.
+    /// These properties read entry assembly metadata and cannot be changed at runtime, so the assertions are "does not throw and returns a sensible shape".
     /// </summary>
     public class VersionInfoCoverageTests
     {
         [Fact]
-        [DisplayName("VersionInfo.Product getter 不應拋例外且回傳非 null")]
+        [DisplayName("VersionInfo.Product getter does not throw and returns non-null")]
         public void Product_Getter_ReturnsNonNull()
         {
             var value = VersionInfo.Product;
@@ -18,7 +18,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("VersionInfo.Company getter 不應拋例外且回傳非 null")]
+        [DisplayName("VersionInfo.Company getter does not throw and returns non-null")]
         public void Company_Getter_ReturnsNonNull()
         {
             var value = VersionInfo.Company;
@@ -27,7 +27,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("VersionInfo.Description getter 不應拋例外且回傳非 null")]
+        [DisplayName("VersionInfo.Description getter does not throw and returns non-null")]
         public void Description_Getter_ReturnsNonNull()
         {
             var value = VersionInfo.Description;
@@ -36,7 +36,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("VersionInfo.Version getter 應回傳已剝除 Git hash 的版本字串")]
+        [DisplayName("VersionInfo.Version getter returns the version string with the Git hash stripped")]
         public void Version_Getter_HasNoGitHashSuffix()
         {
             var value = VersionInfo.Version;
@@ -46,7 +46,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("VersionInfo.FileVersion getter 不應拋例外且回傳非 null")]
+        [DisplayName("VersionInfo.FileVersion getter does not throw and returns non-null")]
         public void FileVersion_Getter_ReturnsNonNull()
         {
             var value = VersionInfo.FileVersion;
@@ -55,7 +55,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("VersionInfo.AssemblyVersion getter 不應拋例外且回傳非 null")]
+        [DisplayName("VersionInfo.AssemblyVersion getter does not throw and returns non-null")]
         public void AssemblyVersion_Getter_ReturnsNonNull()
         {
             var value = VersionInfo.AssemblyVersion;
@@ -64,7 +64,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("VersionInfo.FullInformationalVersion getter 不應拋例外且回傳非 null")]
+        [DisplayName("VersionInfo.FullInformationalVersion getter does not throw and returns non-null")]
         public void FullInformationalVersion_Getter_ReturnsNonNull()
         {
             var value = VersionInfo.FullInformationalVersion;
@@ -73,7 +73,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("VersionInfo 所有公開屬性連續讀取不應拋例外")]
+        [DisplayName("VersionInfo reads every public property in a row without throwing")]
         public void AllProperties_SequentialRead_DoesNotThrow()
         {
             var exception = Record.Exception(() =>

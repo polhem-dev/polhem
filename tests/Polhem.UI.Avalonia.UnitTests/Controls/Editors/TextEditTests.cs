@@ -33,7 +33,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind 後載入欄位初值")]
+        [DisplayName("Bind loads the initial field value")]
         public void Bind_ExistingValue_LoadsIntoText()
         {
             var dataObject = BuildDataObject();
@@ -46,7 +46,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("逐字輸入不寫回(離開控件或 Enter 才提交)")]
+        [DisplayName("Typing does not write back (committing takes leaving the control or Enter)")]
         public void Typing_AloneDoesNotWriteBack()
         {
             var dataObject = BuildDataObject();
@@ -62,7 +62,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("單行 TextEdit 按 Enter 提交,寫回 FormDataObject")]
+        [DisplayName("A single-line TextEdit commits on Enter and writes back to FormDataObject")]
         public void EnterKey_OnSingleLine_WritesBack()
         {
             var dataObject = BuildDataObject();
@@ -77,7 +77,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind 後套用 FormField.MaxLength")]
+        [DisplayName("Bind applies FormField.MaxLength")]
         public void Bind_FieldWithMaxLength_AppliesMaxLength()
         {
             var dataObject = BuildDataObject();
@@ -89,7 +89,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind 帶 LayoutField.ReadOnly 時編輯器唯讀")]
+        [DisplayName("Bind with LayoutField.ReadOnly makes the editor read-only")]
         public void Bind_ReadOnlyLayoutField_SetsIsReadOnly()
         {
             var dataObject = BuildDataObject();
@@ -102,7 +102,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("他方 SetField 同欄位時編輯器自動刷新")]
+        [DisplayName("The editor refreshes when another writer calls SetField on the same field")]
         public void FieldValueChanged_OtherWriter_RefreshesEditor()
         {
             var dataObject = BuildDataObject();
@@ -115,7 +115,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("DataSetReplaced 後編輯器重拉值")]
+        [DisplayName("The editor reloads its value after DataSetReplaced")]
         public void DataSetReplaced_AfterBind_RefreshesEditor()
         {
             var dataObject = BuildDataObject();
@@ -129,7 +129,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("編輯器刷新不回寫、不弄髒資料（echo 防護）")]
+        [DisplayName("An editor refresh does not write back or dirty the data (echo guard)")]
         public void Refresh_FromSource_DoesNotDirtyDataObject()
         {
             var dataObject = BuildDataObject();
@@ -143,7 +143,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("SetControlState View 模式唯讀，Edit 模式可編輯")]
+        [DisplayName("SetControlState makes the editor read-only in View mode and editable in Edit mode")]
         public void SetControlState_ViewMode_TogglesReadOnly()
         {
             var dataObject = BuildDataObject();
@@ -162,7 +162,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Unbind 後輸入不再寫回")]
+        [DisplayName("Input no longer writes back after Unbind")]
         public void Unbind_AfterBind_StopsWriteBack()
         {
             var dataObject = BuildDataObject();
@@ -177,7 +177,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("列綁定：載入明細列值、寫回該列、套用明細表 metadata")]
+        [DisplayName("Row binding loads the detail row value, writes back to that row and applies the detail table metadata")]
         public void BindRow_DetailRow_LoadsWritesAndAppliesMetadata()
         {
             var schema = new FormSchema("Employee", "Employee");
@@ -205,7 +205,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("列綁定：他列變更不刷新、本列他方變更會刷新")]
+        [DisplayName("Row binding: a change on another row does not refresh; another writer's change on this row does")]
         public void BindRow_EventFiltering_MatchesTargetRowOnly()
         {
             var schema = new FormSchema("Employee", "Employee");
@@ -231,7 +231,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("MemoEdit 預設多行設定")]
+        [DisplayName("MemoEdit defaults to multi-line settings")]
         public void MemoEdit_Defaults_AreMultiLine()
         {
             var editor = new MemoEdit();
@@ -242,7 +242,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("ButtonEdit 內嵌按鈕並轉發 ButtonClick")]
+        [DisplayName("ButtonEdit embeds a button and forwards ButtonClick")]
         public void ButtonEdit_EmbeddedButton_RaisesButtonClick()
         {
             var editor = new ButtonEdit();
@@ -257,7 +257,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("ButtonEdit View 模式停用內嵌按鈕，Edit 模式恢復")]
+        [DisplayName("ButtonEdit disables the embedded button in View mode and restores it in Edit mode")]
         public void ButtonEdit_SetControlState_TogglesButtonEnabled()
         {
             var dataObject = BuildDataObject();
@@ -273,7 +273,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("ButtonEdit 綁定 ReadOnly LayoutField 時停用內嵌按鈕")]
+        [DisplayName("ButtonEdit disables the embedded button when bound to a ReadOnly LayoutField")]
         public void ButtonEdit_BindReadOnlyLayoutField_DisablesButton()
         {
             var dataObject = BuildDataObject();
@@ -287,7 +287,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AllowEditModes=Add 時僅新增模式可編輯（如單號欄）")]
+        [DisplayName("With AllowEditModes=Add only Add mode is editable (for example a document number field)")]
         public void SetControlState_AllowEditModesAdd_OnlyAddEditable()
         {
             var dataObject = BuildDataObject();
@@ -306,7 +306,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("ButtonEdit AllowEditModes=Add 時內嵌按鈕跟隨模式啟停")]
+        [DisplayName("With AllowEditModes=Add the embedded ButtonEdit button is enabled and disabled with the mode")]
         public void ButtonEdit_AllowEditModesAdd_ButtonFollowsMode()
         {
             var dataObject = BuildDataObject();

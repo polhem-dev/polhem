@@ -4,12 +4,12 @@ using Polhem.UI.Avalonia.Controls;
 namespace Polhem.UI.Avalonia.UnitTests.Controls
 {
     /// <summary>
-    /// AmountColumnSummary：原幣欄全同幣才顯合計、混幣不顯（回 null）、本幣欄（欄內同幣）恆可加總。
+    /// AmountColumnSummary: a transaction-currency column shows a total only when every row has the same currency and shows none for mixed currencies (returns null); a home-currency column (one currency throughout) can always be totaled.
     /// </summary>
     public class AmountColumnSummaryTests
     {
         [Fact]
-        [DisplayName("全欄同幣 → 回合計")]
+        [DisplayName("TryComputeTotal returns the total when every row has the same currency")]
         public void TryComputeTotal_SameCurrency_ReturnsSum()
         {
             var total = AmountColumnSummary.TryComputeTotal(
@@ -21,7 +21,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("混幣（USD+JPY）→ 回 null（不顯合計）")]
+        [DisplayName("TryComputeTotal returns null (no total shown) for mixed currencies (USD+JPY)")]
         public void TryComputeTotal_MixedCurrency_ReturnsNull()
         {
             var total = AmountColumnSummary.TryComputeTotal(
@@ -33,10 +33,9 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("本幣欄（欄內恆同幣）→ 恆回合計")]
+        [DisplayName("TryComputeTotal always returns the total for a home-currency column (one currency throughout)")]
         public void TryComputeTotal_HomeCurrencyColumn_AlwaysTotals()
         {
-            // 本幣欄每列皆公司本幣（如 TWD）→ 單幣 → 恆可加總。
             var total = AmountColumnSummary.TryComputeTotal(
             [
                 (300m, "TWD"), (31000m, "TWD"), (1650m, "TWD"),
@@ -46,7 +45,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("幣別碼比對不分大小寫")]
+        [DisplayName("TryComputeTotal compares currency codes case-insensitively")]
         public void TryComputeTotal_CaseInsensitiveCurrency()
         {
             var total = AmountColumnSummary.TryComputeTotal(
@@ -58,7 +57,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("空集合 → 回合計 0")]
+        [DisplayName("TryComputeTotal returns a total of 0 for an empty collection")]
         public void TryComputeTotal_Empty_ReturnsZero()
         {
             var total = AmountColumnSummary.TryComputeTotal([]);

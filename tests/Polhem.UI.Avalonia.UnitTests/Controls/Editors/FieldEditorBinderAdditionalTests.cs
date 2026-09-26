@@ -8,9 +8,9 @@ using Polhem.UI.Avalonia.DataObjects;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// 補強 <see cref="FieldEditorBinder"/> 覆蓋率：透過 FormScope 屬性觸發
-    /// <c>OnFormModeChanged</c> 路徑（class handler 路徑，有別於直接呼叫
-    /// <c>SetControlState</c>）。
+    /// Additional coverage for <see cref="FieldEditorBinder"/>: the <c>OnFormModeChanged</c> path triggered through
+    /// the FormScope property (the class handler path, as opposed to calling
+    /// <c>SetControlState</c> directly).
     /// </summary>
     public class FieldEditorBinderAdditionalTests
     {
@@ -25,7 +25,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("透過 FormScope.FormModeProperty 觸發 OnFormModeChanged，View 模式套用唯讀")]
+        [DisplayName("Setting FormScope.FormModeProperty triggers OnFormModeChanged and View mode applies read-only")]
         public void OnFormModeChanged_ViaFormScopeProperty_ViewMode_SetsReadOnly()
         {
             var dataObject = BuildDataObject();
@@ -42,7 +42,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("透過 FormScope.FormModeProperty 切換為 Edit 模式，編輯器可編輯")]
+        [DisplayName("Switching FormScope.FormModeProperty to Edit mode makes the editor editable")]
         public void OnFormModeChanged_ViaFormScopeProperty_EditMode_ClearsReadOnly()
         {
             var dataObject = BuildDataObject();
@@ -57,7 +57,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AllowEditModes=Add 時 Edit 模式透過 FormScope 觸發後仍唯讀")]
+        [DisplayName("With AllowEditModes=Add the editor stays read-only after Edit mode is set through FormScope")]
         public void OnFormModeChanged_ViaFormScope_AllowEditModesAdd_EditModeReadOnly()
         {
             var dataObject = BuildDataObject();
@@ -65,11 +65,9 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             var editor = new TextEdit();
             editor.Bind(dataObject, field);
 
-            // Add 模式：AllowEditModes.Allows(Add) = true → 可編輯
             FormScope.SetFormMode(editor, SingleFormMode.Add);
             Assert.False(editor.IsReadOnly);
 
-            // Edit 模式：AllowEditModes.Allows(Edit) = false → 唯讀
             FormScope.SetFormMode(editor, SingleFormMode.Edit);
             Assert.True(editor.IsReadOnly);
         }

@@ -14,11 +14,11 @@ using Polhem.Web.Blazor.Server.DependencyInjection;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// 補強 <see cref="FormPage"/> 四個 Action handler 在 <c>_dataObject</c> 非 null 時
-    /// 的覆蓋率，以及 <c>ReloadListAsync</c> 的覆蓋率。
-    /// Action handler 以無 connector 的 <see cref="FormDataObject"/> 觸發例外，
-    /// 例外由 <c>RunGuardedAsync</c> 捕捉並設定 <c>_error</c>；
-    /// <c>ReloadListAsync</c> 由注入的 <see cref="FakeFactory"/> 驅動完整路徑。
+    /// Covers the four action handlers of <see cref="FormPage"/> when <c>_dataObject</c> is not null,
+    /// and <c>ReloadListAsync</c>.
+    /// The action handlers trigger an exception with a <see cref="FormDataObject"/> that has no connector.
+    /// <c>RunGuardedAsync</c> catches it and sets <c>_error</c>.
+    /// <c>ReloadListAsync</c> runs its full path driven by the injected <see cref="FakeFactory"/>.
     /// </summary>
     public class FormPageNonNullDataObjectTests
     {
@@ -78,7 +78,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnRowSelectedAsync _dataObject 非 null 且無 connector 時應透過 RunGuardedAsync 捕捉例外並設定 _error")]
+        [DisplayName("OnRowSelectedAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _error")]
         public async Task OnRowSelectedAsync_NonNullDataObjectNoConnector_SetsError()
         {
             var page = CreatePageWithDataObject();
@@ -87,7 +87,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnNewAsync _dataObject 非 null 且無 connector 時應透過 RunGuardedAsync 捕捉例外並設定 _error")]
+        [DisplayName("OnNewAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _error")]
         public async Task OnNewAsync_NonNullDataObjectNoConnector_SetsError()
         {
             var page = CreatePageWithDataObject();
@@ -96,7 +96,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnSaveAsync _dataObject 非 null 且無 connector 時應透過 RunGuardedAsync 捕捉例外並設定 _error")]
+        [DisplayName("OnSaveAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _error")]
         public async Task OnSaveAsync_NonNullDataObjectNoConnector_SetsError()
         {
             var page = CreatePageWithDataObject();
@@ -105,7 +105,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnDeleteAsync _dataObject 非 null 且無 connector 時應透過 RunGuardedAsync 捕捉例外並設定 _error")]
+        [DisplayName("OnDeleteAsync with a non-null _dataObject and no connector catches the exception through RunGuardedAsync and sets _error")]
         public async Task OnDeleteAsync_NonNullDataObjectNoConnector_SetsError()
         {
             var page = CreatePageWithDataObject();
@@ -114,7 +114,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("ReloadListAsync 使用 FakeFactory 應成功設定 _listRows 為非 null DataTable")]
+        [DisplayName("ReloadListAsync with FakeFactory sets _listRows to a non-null DataTable")]
         public async Task ReloadListAsync_WithFakeFactory_SetsListRows()
         {
             var page = new FormPage();

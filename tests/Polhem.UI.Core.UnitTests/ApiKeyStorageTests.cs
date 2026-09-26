@@ -3,14 +3,14 @@ using System.ComponentModel;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// <see cref="ApiKeyStorage"/> 的單元測試，與 <see cref="EndpointStorageTests"/> 對稱：
-    /// 預設實作以 <see cref="ClientInfo.ClientSettings"/> 為後盾。
+    /// Unit tests for <see cref="ApiKeyStorage"/>, symmetric with <see cref="EndpointStorageTests"/>:
+    /// the default implementation is backed by <see cref="ClientInfo.ClientSettings"/>.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ApiKeyStorageTests
     {
         [Fact]
-        [DisplayName("LoadApiKey 應從 ClientInfo.ClientSettings.ApiKey 讀取金鑰")]
+        [DisplayName("LoadApiKey reads the key from ClientInfo.ClientSettings.ApiKey")]
         public void LoadApiKey_ReturnsClientSettingsApiKey()
         {
             var storage = new ApiKeyStorage();
@@ -27,7 +27,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SetApiKey 應更新 ClientInfo.ClientSettings.ApiKey 的值")]
+        [DisplayName("SetApiKey updates the value of ClientInfo.ClientSettings.ApiKey")]
         public void SetApiKey_ValidValue_UpdatesClientSettingsApiKey()
         {
             var storage = new ApiKeyStorage();
@@ -44,7 +44,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveApiKey 應更新 ClientInfo.ClientSettings.ApiKey 並儲存設定")]
+        [DisplayName("SaveApiKey updates ClientInfo.ClientSettings.ApiKey and saves the settings")]
         public void SaveApiKey_ValidValue_UpdatesApiKeyAndSaves()
         {
             var storage = new ApiKeyStorage();

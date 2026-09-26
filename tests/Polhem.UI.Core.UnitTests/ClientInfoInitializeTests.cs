@@ -5,10 +5,10 @@ using Polhem.Api.Client;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// 補強 <see cref="ClientInfo.InitializeAsync(IUIViewService,SupportedConnectTypes)"/> 的覆蓋率。
-    /// 此方法在端點無效時會呼叫 <see cref="IUIViewService.ShowApiConnectAsync"/>；
-    /// 以輕量 fake 取代真實 UI 服務，無需啟動後端即可覆蓋 try-catch 路徑。
-    /// 與其他修改靜態狀態的測試同屬 <c>ClientInfoState</c> collection，確保串行執行。
+    /// Covers <see cref="ClientInfo.InitializeAsync(IUIViewService,SupportedConnectTypes)"/>.
+    /// When the endpoint is invalid, this method calls <see cref="IUIViewService.ShowApiConnectAsync"/>.
+    /// A lightweight fake replaces the real UI service, so the try-catch path is covered without a backend.
+    /// It shares the <c>ClientInfoState</c> collection with the other tests that mutate static state, so they run serially.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoInitializeTests
@@ -39,7 +39,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("InitializeAsync(IUIViewService) ShowApiConnectAsync 回傳 false 時應回傳 false")]
+        [DisplayName("InitializeAsync(IUIViewService) returns false when ShowApiConnectAsync returns false")]
         public async Task InitializeAsync_ShowApiConnectReturnsFalse_ReturnsFalse()
         {
             var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
@@ -57,7 +57,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("InitializeAsync(IUIViewService) ShowApiConnectAsync 回傳 true 時應回傳 true")]
+        [DisplayName("InitializeAsync(IUIViewService) returns true when ShowApiConnectAsync returns true")]
         public async Task InitializeAsync_ShowApiConnectReturnsTrue_ReturnsTrue()
         {
             var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
@@ -75,7 +75,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("InitializeAsync(IUIViewService) 呼叫後 UIViewService 應設為傳入的 service 實例")]
+        [DisplayName("InitializeAsync(IUIViewService) sets UIViewService to the passed service instance")]
         public async Task InitializeAsync_SetsUIViewServiceToPassedInstance()
         {
             var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
@@ -94,7 +94,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("InitializeAsync(IUIViewService) 呼叫後 Arguments 應為非 null 字典")]
+        [DisplayName("InitializeAsync(IUIViewService) leaves Arguments as a non-null dictionary")]
         public async Task InitializeAsync_SetsArgumentsToNonNull()
         {
             var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
@@ -113,14 +113,14 @@ namespace Polhem.UI.Core.UnitTests
     }
 
     /// <summary>
-    /// 補強 <see cref="ClientInfo.InitializeAsync(string)"/> 的覆蓋率。
-    /// 空字串端點會在 <see cref="ApiConnectValidator.ValidateAsync"/> 前即失敗，
-    /// 不修改任何靜態狀態，無需加入序列化 collection。
+    /// Covers <see cref="ClientInfo.InitializeAsync(string)"/>.
+    /// An empty endpoint fails before <see cref="ApiConnectValidator.ValidateAsync"/>
+    /// and mutates no static state, so no serializing collection is needed.
     /// </summary>
     public class ClientInfoStringEndpointTests
     {
         [Fact]
-        [DisplayName("InitializeAsync(string) 空字串端點應拋 ArgumentException")]
+        [DisplayName("InitializeAsync(string) throws ArgumentException for an empty endpoint")]
         public async Task InitializeAsync_EmptyStringEndpoint_ThrowsArgumentException()
         {
             await Assert.ThrowsAsync<ArgumentException>(() => ClientInfo.InitializeAsync(string.Empty));

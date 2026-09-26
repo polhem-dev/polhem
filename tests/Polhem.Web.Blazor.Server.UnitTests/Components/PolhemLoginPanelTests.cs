@@ -33,7 +33,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("PolhemLoginPanel 為 Blazor ComponentBase 子類別")]
+        [DisplayName("PolhemLoginPanel is a subclass of Blazor ComponentBase")]
         public void Type_IsComponentBaseSubclass()
         {
             Assert.True(typeof(ComponentBase).IsAssignableFrom(typeof(PolhemLoginPanel)));
@@ -44,7 +44,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [InlineData(nameof(PolhemLoginPanel.PasswordLabel))]
         [InlineData(nameof(PolhemLoginPanel.SubmitLabel))]
         [InlineData(nameof(PolhemLoginPanel.OnLoggedIn))]
-        [DisplayName("公開屬性皆標註 [Parameter]")]
+        [DisplayName("Public properties are all marked with [Parameter]")]
         public void PublicProperties_AreMarkedAsParameters(string name)
         {
             var property = GetProperty(name);
@@ -52,7 +52,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnLoggedIn 屬性型別為 EventCallback<LoginResponse>")]
+        [DisplayName("The OnLoggedIn property is of type EventCallback<LoginResponse>")]
         public void OnLoggedIn_IsEventCallbackOfLoginResponse()
         {
             var property = GetProperty(nameof(PolhemLoginPanel.OnLoggedIn));
@@ -60,7 +60,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("Factory 屬性透過 [Inject] 注入 PolhemApiConnectorFactory")]
+        [DisplayName("The Factory property is injected with PolhemApiConnectorFactory through [Inject]")]
         public void Factory_IsInjected()
         {
             var property = GetNonPublicProperty("Factory");
@@ -69,7 +69,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("Label 屬性具有預設值 User ID / Password / Sign in")]
+        [DisplayName("The label properties default to User ID / Password / Sign in")]
         public void LabelProperties_HaveSensibleDefaults()
         {
             var panel = new PolhemLoginPanel();
@@ -79,7 +79,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnLoggedIn 預設狀態應無委派（HasDelegate 為 false）")]
+        [DisplayName("OnLoggedIn has no delegate by default (HasDelegate is false)")]
         public void OnLoggedIn_Default_HasNoDelegate()
         {
             var panel = new PolhemLoginPanel();

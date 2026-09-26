@@ -8,9 +8,9 @@ using Polhem.UI.Avalonia.Controls;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// 補強 <see cref="GridControl"/> 覆蓋率：private static 輔助方法
-    /// ComposeDisplayText / SplitDisplayFields、BuildCellEditor null 路徑、
-    /// AddRow 在 DataTable 為 null 時的 no-op。
+    /// Additional coverage for <see cref="GridControl"/>: the private static helpers
+    /// ComposeDisplayText / SplitDisplayFields, the null paths of BuildCellEditor,
+    /// and AddRow being a no-op when DataTable is null.
     /// </summary>
     public class GridControlAdditionalTests
     {
@@ -46,7 +46,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("SplitDisplayFields 空字串回傳空陣列")]
+        [DisplayName("SplitDisplayFields returns an empty array for an empty string")]
         public void SplitDisplayFields_EmptyString_ReturnsEmptyArray()
         {
             var result = InvokeSplitDisplayFields(string.Empty);
@@ -55,7 +55,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("SplitDisplayFields 逗號分隔字串回傳修剪後的陣列")]
+        [DisplayName("SplitDisplayFields returns a trimmed array for a comma-separated string")]
         public void SplitDisplayFields_CommaSeparated_ReturnsTrimmedElements()
         {
             var result = InvokeSplitDisplayFields(" sys_id , sys_name ");
@@ -64,7 +64,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("ComposeDisplayText 以顯示欄位組合儲存格文字")]
+        [DisplayName("ComposeDisplayText composes the cell text from the display fields")]
         public void ComposeDisplayText_WithDisplayFields_JoinsValues()
         {
             var table = BuildSimpleTable();
@@ -76,7 +76,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("ComposeDisplayText 欄位不存在時回傳空字串")]
+        [DisplayName("ComposeDisplayText returns an empty string when the field does not exist")]
         public void ComposeDisplayText_MissingField_ReturnsEmpty()
         {
             var table = BuildSimpleTable();
@@ -89,7 +89,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("ComposeDisplayText rowView 為 null 時回傳空字串")]
+        [DisplayName("ComposeDisplayText returns an empty string when rowView is null")]
         public void ComposeDisplayText_NullRowView_ReturnsEmpty()
         {
             var result = InvokeComposeDisplayText(null, s_idAndNameFields, string.Empty, string.Empty);
@@ -98,7 +98,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("BuildCellEditor 在 rowView 為 null 時回傳 TextBlock")]
+        [DisplayName("BuildCellEditor returns a TextBlock when rowView is null")]
         public void BuildCellEditor_NullRowView_ReturnsTextBlock()
         {
             var grid = new GridControl();
@@ -115,7 +115,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("BuildCellEditor 在欄位不存在於 DataTable 時回傳 TextBlock")]
+        [DisplayName("BuildCellEditor returns a TextBlock when the field is not in the DataTable")]
         public void BuildCellEditor_FieldMissingFromTable_ReturnsTextBlock()
         {
             var table = BuildSimpleTable();
@@ -133,7 +133,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AddRow 在 DataTable 為 null 時為 no-op，不拋例外")]
+        [DisplayName("AddRow is a no-op without throwing when DataTable is null")]
         public void AddRow_NullDataTable_IsNoOp()
         {
             var grid = new GridControl();

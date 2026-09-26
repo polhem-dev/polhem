@@ -52,7 +52,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("由 FormSchema 推導出對應的 DataSet 與欄位")]
+        [DisplayName("The constructor derives the matching DataSet and columns from FormSchema")]
         public void Constructor_FromSchema_BuildsExpectedDataSetShape()
         {
             var schema = BuildEmployeeSchema();
@@ -76,7 +76,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("初始狀態 MasterRow 為 null,InitializeNewMaster 後存在一筆空列")]
+        [DisplayName("MasterRow is initially null and one empty row exists after InitializeNewMaster")]
         public void InitializeNewMaster_AddsSingleEmptyRow()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -91,7 +91,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("GetField 在無 MasterRow 時回傳空字串")]
+        [DisplayName("GetField returns an empty string when there is no MasterRow")]
         public void GetField_NoMasterRow_ReturnsEmpty()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -100,7 +100,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 在無 MasterRow 時為 no-op")]
+        [DisplayName("SetField is a no-op when there is no MasterRow")]
         public void SetField_NoMasterRow_IsNoOp()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -112,7 +112,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入字串欄位後 GetField 可讀回相同值")]
+        [DisplayName("GetField reads back the same value after SetField writes a string field")]
         public void SetField_String_RoundTripsThroughGetField()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -125,7 +125,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入與現值相同的值時不標記 IsDirty(初始 render echo 防護)")]
+        [DisplayName("SetField does not mark IsDirty when writing the current value (guards against the initial render echo)")]
         public void SetField_SameValue_DoesNotMarkDirty()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -139,7 +139,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入 Boolean 欄位後 GetField 回傳 True/False 字串")]
+        [DisplayName("GetField returns a True/False string after SetField writes a Boolean field")]
         public void SetField_Boolean_RoundTripsThroughGetField()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -155,7 +155,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入 Date 欄位後 GetField 回傳 ISO yyyy-MM-dd 格式")]
+        [DisplayName("GetField returns ISO yyyy-MM-dd format after SetField writes a Date field")]
         public void SetField_Date_RoundTripsAsIsoDate()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -169,7 +169,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入 Decimal 欄位後 GetField 回傳 Invariant 格式")]
+        [DisplayName("GetField returns invariant format after SetField writes a Decimal field")]
         public void SetField_Decimal_UsesInvariantFormatting()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -182,7 +182,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入空字串對允許 DBNull 的欄位會設為 DBNull")]
+        [DisplayName("SetField with an empty string sets a column that allows DBNull to DBNull")]
         public void SetField_EmptyString_OnNullableColumn_SetsDbNull()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -197,7 +197,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入空字串對 NOT NULL 欄位會回退到欄位預設值")]
+        [DisplayName("SetField with an empty string falls back to the column default for a NOT NULL column")]
         public void SetField_EmptyString_OnNotNullColumn_FallsBackToDefault()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -213,7 +213,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("GetField/SetField 在欄位不存在時不丟例外")]
+        [DisplayName("GetField/SetField do not throw when the column does not exist")]
         public void GetField_AndSetField_UnknownColumn_AreTolerated()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -226,7 +226,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("GetFormField 可回傳 master table 上的 FormField 元資料")]
+        [DisplayName("GetFormField returns the FormField metadata of the master table")]
         public void GetFormField_ReturnsMasterFieldMetadata()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -239,14 +239,14 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("建構子在 schema 為 null 時拋出 ArgumentNullException")]
+        [DisplayName("The constructor throws ArgumentNullException when schema is null")]
         public void Constructor_NullSchema_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new FormDataObject(null!));
         }
 
         [Fact]
-        [DisplayName("建構子在 ProgId 為空字串時拋出 ArgumentException")]
+        [DisplayName("The constructor throws ArgumentException when ProgId is an empty string")]
         public void Constructor_EmptyProgId_Throws()
         {
             var schema = new FormSchema();
@@ -256,7 +256,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         // --- server round-trip via FormApiConnector ---
 
         [Fact]
-        [DisplayName("LoadAsync 在無 connector 時拋出 InvalidOperationException")]
+        [DisplayName("LoadAsync throws InvalidOperationException when there is no connector")]
         public async Task LoadAsync_NoConnector_Throws()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -264,7 +264,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("LoadAsync 成功時以伺服器 DataSet 取代本地並重置 IsDirty")]
+        [DisplayName("LoadAsync on success replaces the local DataSet with the server's and resets IsDirty")]
         public async Task LoadAsync_Success_ReplacesDataSetAndResetsDirty()
         {
             var schema = BuildEmployeeSchema();
@@ -290,7 +290,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("LoadAsync 在 server 回傳 null DataSet 時拋出 InvalidOperationException")]
+        [DisplayName("LoadAsync throws InvalidOperationException when the server returns a null DataSet")]
         public async Task LoadAsync_NotFound_Throws()
         {
             var connector = new FakeFormApiConnector
@@ -304,7 +304,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("NewAsync 成功時以伺服器骨架取代本地並重置 IsDirty")]
+        [DisplayName("NewAsync on success replaces the local DataSet with the server skeleton and resets IsDirty")]
         public async Task NewAsync_Success_ReplacesDataSetAndResetsDirty()
         {
             var rowId = Guid.NewGuid();
@@ -324,7 +324,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("NewAsync 在 server 回傳 null DataSet 時拋出 InvalidOperationException")]
+        [DisplayName("NewAsync throws InvalidOperationException when the server returns a null DataSet")]
         public async Task NewAsync_NullDataSet_Throws()
         {
             var connector = new FakeFormApiConnector
@@ -337,7 +337,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("NewAsync 在無 connector 時拋出 InvalidOperationException")]
+        [DisplayName("NewAsync throws InvalidOperationException when there is no connector")]
         public async Task NewAsync_NoConnector_Throws()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -345,7 +345,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SaveAsync 成功時以伺服器 refreshed DataSet 取代本地並重置 IsDirty")]
+        [DisplayName("SaveAsync on success replaces the local DataSet with the server's refreshed DataSet and resets IsDirty")]
         public async Task SaveAsync_Success_ReplacesDataSetAndResetsDirty()
         {
             var schema = BuildEmployeeSchema();
@@ -375,7 +375,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SaveAsync 在 server 回傳 null DataSet 時保留本地內容並重置 IsDirty")]
+        [DisplayName("SaveAsync keeps the local content and resets IsDirty when the server returns a null DataSet")]
         public async Task SaveAsync_NullRefreshedDataSet_KeepsLocalAndResetsDirty()
         {
             var connector = new FakeFormApiConnector
@@ -395,7 +395,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SaveAsync 在無 connector 時拋出 InvalidOperationException")]
+        [DisplayName("SaveAsync throws InvalidOperationException when there is no connector")]
         public async Task SaveAsync_NoConnector_Throws()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -403,7 +403,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("DeleteAsync 成功時呼叫 connector 並重設為空白 DataSet")]
+        [DisplayName("DeleteAsync on success calls the connector and resets to an empty DataSet")]
         public async Task DeleteAsync_Success_ResetsToEmptyDataSet()
         {
             var schema = BuildEmployeeSchema();
@@ -434,7 +434,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("DeleteAsync 在無 MasterRow 時拋出 InvalidOperationException")]
+        [DisplayName("DeleteAsync throws InvalidOperationException when there is no MasterRow")]
         public async Task DeleteAsync_NoMasterRow_Throws()
         {
             var connector = new FakeFormApiConnector();
@@ -444,7 +444,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("DeleteAsync 在無 connector 時拋出 InvalidOperationException")]
+        [DisplayName("DeleteAsync throws InvalidOperationException when there is no connector")]
         public async Task DeleteAsync_NoConnector_Throws()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -454,7 +454,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入新值時觸發一次 FieldValueChanged 並攜帶欄位名與綁定字串")]
+        [DisplayName("SetField with a new value raises FieldValueChanged once with the field name and the binding string")]
         public void SetField_NewValue_RaisesFieldValueChangedOnce()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -473,7 +473,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("明細列直接寫入 DataRow 也觸發 FieldValueChanged（事件橋接）並標記 dirty")]
+        [DisplayName("Writing a detail DataRow directly also raises FieldValueChanged (event bridge) and marks dirty")]
         public void DetailRowDirectWrite_RaisesFieldValueChangedAndDirties()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -498,7 +498,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("Detached 列（NewRow 未 Add）的寫入不觸發 FieldValueChanged")]
+        [DisplayName("A write to a detached row (NewRow without Add) does not raise FieldValueChanged")]
         public void DetachedRowWrite_DoesNotRaiseFieldValueChanged()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -515,7 +515,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("明細增列 / 刪列經橋接標記 dirty，AcceptChanges 不標")]
+        [DisplayName("Adding or deleting a detail row marks dirty through the bridge; AcceptChanges does not")]
         public void DetailRowAddDelete_DirtyTracking()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -536,7 +536,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("DataSet 置換後新表寫入仍觸發事件、舊表寫入不再觸發（重訂閱）")]
+        [DisplayName("After the DataSet is replaced, writes to the new tables raise events and writes to the old ones no longer do (resubscription)")]
         public async Task ReplaceDataSet_MovesSubscriptionToNewTables()
         {
             var oldDataObjectSeedRowId = Guid.NewGuid();
@@ -564,7 +564,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入相同值時不觸發 FieldValueChanged（echo 防護）")]
+        [DisplayName("SetField with the same value does not raise FieldValueChanged (echo guard)")]
         public void SetField_SameValue_DoesNotRaiseFieldValueChanged()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -580,7 +580,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("InitializeNewMaster 觸發 DataSetReplaced")]
+        [DisplayName("InitializeNewMaster raises DataSetReplaced")]
         public void InitializeNewMaster_RaisesDataSetReplaced()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -594,7 +594,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("LoadAsync 置換 DataSet 後觸發 DataSetReplaced")]
+        [DisplayName("LoadAsync raises DataSetReplaced after replacing the DataSet")]
         public async Task LoadAsync_Success_RaisesDataSetReplaced()
         {
             var rowId = Guid.NewGuid();
@@ -613,7 +613,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SaveAsync 在 server 回傳 null DataSet 時不觸發 DataSetReplaced")]
+        [DisplayName("SaveAsync does not raise DataSetReplaced when the server returns a null DataSet")]
         public async Task SaveAsync_NullRefreshedDataSet_DoesNotRaiseDataSetReplaced()
         {
             var connector = new FakeFormApiConnector
@@ -632,7 +632,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("列編輯協定：BeginRowEdit 期間事件靜默，CommitRowEdit 只補發本次變更欄位並標 dirty")]
+        [DisplayName("Row edit protocol: events are silent during BeginRowEdit, and CommitRowEdit publishes only the fields changed in the session and marks dirty")]
         public void RowEditProtocol_CommitPublishesSessionChangesOnly()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -664,7 +664,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("列編輯協定：CancelRowEdit 完整還原且零事件、不弄髒")]
+        [DisplayName("Row edit protocol: CancelRowEdit restores everything with no events and does not mark dirty")]
         public void RowEditProtocol_CancelRestoresSilently()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -688,7 +688,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("列編輯協定：無變更的 Commit 不發事件、不弄髒")]
+        [DisplayName("Row edit protocol: a Commit without changes raises no events and does not mark dirty")]
         public void RowEditProtocol_CommitWithoutChanges_StaysSilent()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -710,7 +710,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("列存取 API 拒絕不屬於本 DataSet 的列")]
+        [DisplayName("The row accessor APIs reject a row that does not belong to this DataSet")]
         public void RowAccessors_ForeignRow_Throws()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -725,7 +725,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("新明細列由 FormSchema 補非空值（sys_rowid 新 Guid、master 連結、各型別預設、DBNull 型別補值）")]
+        [DisplayName("A new detail row gets non-null values from FormSchema (a new Guid for sys_rowid, the master link, per-type defaults, a value for DBNull-default columns)")]
         public void NewDetailRow_SeedsNonNullDefaultsFromSchema()
         {
             var schema = new FormSchema("Order", "Order");
@@ -755,8 +755,8 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
             Assert.Equal(string.Empty, line["note"]);
             Assert.Equal(0, line["qty"]);
             Assert.Equal(0m, line["price"]);
-            // UTC，不是 DateTime.Today：框架的日期預設值是 UtcNow.Date（ADR-032 D12）。
-            // 用本地日斷言會讓本機在 UTC+8 的 00:00–08:00 必定失敗，而 CI 跑 UTC 永遠看不到。
+            // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
+            // Asserting the local date always fails locally between 00:00 and 08:00 at UTC+8, which CI running in UTC never sees.
             Assert.Equal(DateTime.UtcNow.Date, line["order_date"]);
             Assert.Equal(Guid.Empty, (Guid)line["product_rowid"]);        // non-key Guid → empty
             Assert.NotEqual(DBNull.Value, line["seq"]);                   // seeded (no column default)
@@ -764,7 +764,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("新增明細經 BeginRowEdit/CommitRowEdit 後 SaveAsync 應送出該 Added 明細列")]
+        [DisplayName("A detail added through BeginRowEdit/CommitRowEdit reaches SaveAsync as an Added detail row")]
         public async Task AddDetail_EditFormFlow_ReachesSaveAsAddedRow()
         {
             var schema = new FormSchema("Order", "Order");
@@ -808,7 +808,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("明細新增列觸發 RowAdded（帶 TableName + Row）")]
+        [DisplayName("Adding a detail row raises RowAdded with TableName and Row")]
         public void RowAdded_OnDetailRowAdd_Fires()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -827,7 +827,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("明細刪除列觸發 RowDeleted（帶 TableName + Row）")]
+        [DisplayName("Deleting a detail row raises RowDeleted with TableName")]
         public void RowDeleted_OnDetailRowDelete_Fires()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -847,7 +847,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("IsDirtyChanged 只在值翻轉時觸發,重複弄髒不重發")]
+        [DisplayName("IsDirtyChanged fires only when the value flips; dirtying again does not fire it again")]
         public void IsDirtyChanged_FiresOnlyOnTransition()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());

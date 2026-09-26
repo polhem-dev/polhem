@@ -10,7 +10,7 @@ using Bunit;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// 補強 DynamicForm.razor switch 中 YearMonthEdit / MemoEdit / DropDownEdit 分支的渲染覆蓋率。
+    /// Covers rendering of the YearMonthEdit, MemoEdit and DropDownEdit branches of the switch in DynamicForm.razor.
     /// </summary>
     public class DynamicFormControlTypeRenderTests : BunitContext
     {
@@ -20,7 +20,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("DynamicForm YearMonthEdit 欄位應渲染 input[type=month] 元素")]
+        [DisplayName("DynamicForm renders an input[type=month] element for a YearMonthEdit field")]
         public void DynamicForm_YearMonthEditField_RendersMonthInput()
         {
             var schema = new FormSchema("T", "T");
@@ -37,7 +37,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("DynamicForm MemoEdit 欄位應渲染 textarea 元素")]
+        [DisplayName("DynamicForm renders a textarea element for a MemoEdit field")]
         public void DynamicForm_MemoEditField_RendersTextarea()
         {
             var schema = new FormSchema("T", "T");
@@ -54,7 +54,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("DynamicForm DropDownEdit 欄位應渲染 select 元素並包含選項")]
+        [DisplayName("DynamicForm renders a select element with the options for a DropDownEdit field")]
         public void DynamicForm_DropDownEditField_RendersSelectWithOptions()
         {
             var schema = new FormSchema("T", "T");

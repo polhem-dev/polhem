@@ -13,8 +13,8 @@ using Polhem.UI.Avalonia.DataObjects;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// 補強 <see cref="ButtonEdit"/> 覆蓋率：ButtonClick 事件（非 lookup 欄）、
-    /// Delete/Back 清除 lookup 選取、版面層級 DisplayFields 覆寫。
+    /// Additional coverage for <see cref="ButtonEdit"/>: the ButtonClick event (non-lookup field),
+    /// Delete/Back clearing the lookup selection, and the layout-level DisplayFields override.
     /// </summary>
     public class ButtonEditAdditionalTests
     {
@@ -73,7 +73,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("非 lookup 欄位點擊按鈕觸發 ButtonClick 事件")]
+        [DisplayName("Clicking the button of a non-lookup field raises the ButtonClick event")]
         public async Task OnButtonClickAsync_NonLookupField_RaisesButtonClickEvent()
         {
             var schema = BuildOrderSchema();
@@ -92,7 +92,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Delete 鍵在 lookup 允許編輯模式下清除選取值")]
+        [DisplayName("The Delete key clears the selected value when the lookup allows editing")]
         public void OnKeyDown_Delete_LookupModeAllowEdit_ClearsSelection()
         {
             var dataObject = BuildOrderDataObject();
@@ -113,7 +113,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Back 鍵同樣清除 lookup 選取值")]
+        [DisplayName("The Back key also clears the lookup selection")]
         public void OnKeyDown_Back_LookupModeAllowEdit_ClearsSelection()
         {
             var dataObject = BuildOrderDataObject();
@@ -132,14 +132,13 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("版面層級 DisplayFields 覆寫 schema 預設，僅顯示指定欄位")]
+        [DisplayName("Layout-level DisplayFields override the schema default and show only the given fields")]
         public void RefreshFromSource_WithLayoutDisplayFields_UsesLayoutOverride()
         {
             var schema = BuildOrderSchema();
             var dataObject = new FormDataObject(schema);
             dataObject.InitializeNewMaster();
 
-            // 版面只顯示客戶代碼，不顯示名稱
             var layoutField = new LayoutField
             {
                 FieldName = "customer_rowid",
@@ -155,7 +154,6 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
                 field,
                 BuildSelectedCustomerRow(Guid.NewGuid(), "C001", "客戶甲"));
 
-            // 版面覆寫後只取 ref_customer_id，不含名稱
             Assert.Equal("C001", editor.Text);
         }
     }

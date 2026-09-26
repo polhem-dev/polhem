@@ -7,12 +7,12 @@ using Bunit;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// 渲染測試：觸發 DynamicGrid.razor 的 BuildRenderTree，補強 .razor 模板行覆蓋率。
+    /// Render tests: they run BuildRenderTree of DynamicGrid.razor to cover the lines of the .razor template.
     /// </summary>
     public class DynamicGridRenderTests : BunitContext
     {
         [Fact]
-        [DisplayName("DynamicGrid Layout 為 null 時應渲染空狀態 div 並包含預設文字")]
+        [DisplayName("DynamicGrid renders the empty-state div with the default text when Layout is null")]
         public void DynamicGrid_NullLayout_RendersEmptyDiv()
         {
             var cut = Render<DynamicGrid>();
@@ -21,7 +21,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("DynamicGrid 傳入有資料的 Layout 與 Rows 後應渲染表格")]
+        [DisplayName("DynamicGrid renders a table when given a Layout and Rows with data")]
         public void DynamicGrid_WithLayoutAndRows_RendersTable()
         {
             var layout = new LayoutGrid();

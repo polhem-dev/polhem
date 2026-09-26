@@ -11,9 +11,9 @@ using Polhem.UI.Avalonia.DataObjects;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// 補強 <see cref="GridControl"/> 覆蓋率：RefreshFromDataObject 空 DataObject 路徑、
-    /// Unbind 公開方法、RefreshRows、DeleteSelectedRow 無選取路徑、
-    /// BuildCellEditor DropDownEdit 無清單項目回退 TextBox。
+    /// Additional coverage for <see cref="GridControl"/>: RefreshFromDataObject without a DataObject,
+    /// the public Unbind method, RefreshRows, DeleteSelectedRow without a selection,
+    /// and BuildCellEditor falling back to a TextBox for a DropDownEdit without list items.
     /// </summary>
     public class GridControlCoverageTests
     {
@@ -39,7 +39,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("RefreshFromDataObject 在無 DataObject 時為 no-op，DataTable 維持 null")]
+        [DisplayName("RefreshFromDataObject is a no-op without a DataObject, and DataTable stays null")]
         public void RefreshFromDataObject_NullDataObject_IsNoOp()
         {
             var grid = new GridControl();
@@ -51,7 +51,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Unbind 在無綁定狀態下不拋例外")]
+        [DisplayName("Unbind does not throw when nothing is bound")]
         public void Unbind_WhenNotBound_DoesNotThrow()
         {
             var grid = new GridControl();
@@ -62,7 +62,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Unbind 在明細綁定後釋放，後續 DataSetReplaced 不再更新表格")]
+        [DisplayName("Unbind releases a detail binding, so a later DataSetReplaced no longer updates the table")]
         public async Task Unbind_AfterExplicitBind_StopsRefreshOnDataSetReplaced()
         {
             var schema = new FormSchema("Employee", "Employee");
@@ -98,7 +98,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("RefreshRows 在 DataTable 為 null 時清空 ItemsSource 不拋例外")]
+        [DisplayName("RefreshRows clears ItemsSource without throwing when DataTable is null")]
         public void RefreshRows_NullDataTable_ClearsItemsSourceSafely()
         {
             var layout = new LayoutGrid("Items", "Items");
@@ -113,7 +113,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("DeleteSelectedRow 在無選取列時為 no-op，表格列數不變")]
+        [DisplayName("DeleteSelectedRow is a no-op without a selected row, and the row count is unchanged")]
         public void DeleteSelectedRow_NothingSelected_IsNoOp()
         {
             var table = new DataTable("Items");
@@ -132,7 +132,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("BuildCellEditor DropDownEdit 欄位無清單項目時回傳 TextBox")]
+        [DisplayName("BuildCellEditor returns a TextBox for a DropDownEdit field without list items")]
         public void BuildCellEditor_DropDownEditWithoutListItems_ReturnsTextBox()
         {
             var dataObject = BuildDataObjectWithDetail();

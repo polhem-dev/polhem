@@ -11,9 +11,9 @@ using Polhem.UI.Avalonia.DataObjects;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// ButtonEdit lookup 顯示綁定測試：顯示欄位取值（非 Guid）、lookup 寫回後的
-    /// 顯示同步（WatchFieldName）、顯示文字不得寫回 rowid 欄位、lookup 模式下
-    /// 文字框恆唯讀。
+    /// ButtonEdit lookup display binding tests: the display fields supply the text (not the Guid), the display
+    /// stays in sync after a lookup write-back (WatchFieldName), the display text is never written back to the rowid field,
+    /// and the text box is always read-only in lookup mode.
     /// </summary>
     public class ButtonEditLookupTests
     {
@@ -60,7 +60,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("lookup 欄位的 Text 應組合顯示「編號 - 名稱」而非 Guid")]
+        [DisplayName("The Text of a lookup field shows the composed \"id - name\", not the Guid")]
         public void RefreshFromSource_ShowsComposedIdAndName()
         {
             var (editor, dataObject, field) = BindLookupEditor();
@@ -71,19 +71,19 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("任一顯示欄位值變更應同步刷新 Text（WatchFieldNames）")]
+        [DisplayName("A change to any display field refreshes Text (WatchFieldNames)")]
         public void DisplayFieldChange_RefreshesText()
         {
             var (editor, dataObject, _) = BindLookupEditor();
 
-            // 只有名稱欄有值：編號欄空白會被略過，組合結果只剩名稱。
+            // Only the name field has a value. The empty id field is skipped, so the result is the name alone.
             dataObject.SetField("ref_customer_name", "客戶乙");
 
             Assert.Equal("客戶乙", editor.Text);
         }
 
         [Fact]
-        [DisplayName("程式設 Text 不得寫回 rowid 欄位（顯示文字非綁定值）")]
+        [DisplayName("Setting Text from code does not write back to the rowid field (the display text is not the bound value)")]
         public void TextAssignment_DoesNotWriteBackToBoundField()
         {
             var (editor, dataObject, field) = BindLookupEditor();
@@ -96,7 +96,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("lookup 模式 Edit 狀態下文字框仍唯讀")]
+        [DisplayName("In lookup mode the text box stays read-only in the Edit state")]
         public void SetControlState_LookupMode_TextStaysReadOnly()
         {
             var (editor, _, _) = BindLookupEditor();
@@ -108,10 +108,10 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("row-scoped 綁定（EditForm 模式）lookup 寫回應更新該列並刷新顯示")]
+        [DisplayName("With a row-scoped binding (EditForm mode) the lookup write-back updates that row and refreshes the display")]
         public void RowScopedBinding_LookupWriteBack_UpdatesRowAndText()
         {
-            // 主檔 + 明細：明細列選商品（RowEditPanel / RowEditDialog 的綁定路徑）。
+            // Master plus detail, with a product picked on a detail row (the binding path of `RowEditPanel` and `RowEditDialog`).
             var schema = new FormSchema("Order", "訂單") { CategoryId = "company" };
             var master = schema.Tables!.Add("Order", "訂單");
             master.Fields!.Add(new FormField(SysFields.RowId, "唯一識別", FieldDbType.Guid));
@@ -148,7 +148,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("非 relation 欄位維持 TextEdit 行為（Edit 可編輯、無 lookup）")]
+        [DisplayName("A non-relation field keeps the TextEdit behavior (editable in Edit, no lookup)")]
         public void NonRelationField_KeepsTextEditBehaviour()
         {
             var schema = BuildOrderSchema();

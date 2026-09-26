@@ -34,7 +34,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             => editor.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
 
         [Fact]
-        [DisplayName("Bind 後以定寬 HH:mm 顯示")]
+        [DisplayName("After Bind the value is displayed as fixed-width HH:mm")]
         public void Bind_DisplaysFixedWidthForm()
         {
             var dataObject = BuildDataObject();
@@ -49,7 +49,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("提交時應將寬鬆輸入正規化為定寬 HH:mm")]
+        [DisplayName("A commit normalizes loose input to fixed-width HH:mm")]
         public void Commit_NormalizesLooseInput()
         {
             var dataObject = BuildDataObject();
@@ -64,7 +64,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("清空欄位應寫回空字串（未填），不是 00:00")]
+        [DisplayName("Clearing the field writes back an empty string (unset), not 00:00")]
         public void Commit_EmptyText_WritesUnset()
         {
             var dataObject = BuildDataObject();
@@ -80,7 +80,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("00:00 為合法時刻，應正常寫回")]
+        [DisplayName("00:00 is a valid time and is written back normally")]
         public void Commit_Midnight_IsStored()
         {
             var dataObject = BuildDataObject();
@@ -97,7 +97,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         [InlineData("25:00")]
         [InlineData("08:99")]
         [InlineData("abc")]
-        [DisplayName("無法解析的輸入應保留前一個有效值，不清空欄位")]
+        [DisplayName("Unparsable input keeps the last valid value instead of clearing the field")]
         public void Commit_InvalidText_KeepsLastValidValue(string invalid)
         {
             var dataObject = BuildDataObject();
@@ -112,14 +112,14 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("輸入長度上限應為時刻格式寬度")]
+        [DisplayName("The maximum input length is the width of the time format")]
         public void MaxLength_MatchesStorageWidth()
         {
             Assert.Equal(ValueUtilities.TimeOnlyLength, new TimeEdit().MaxLength);
         }
 
         [Fact]
-        [DisplayName("編輯器工廠對 TimeEdit 應產生 TimeEdit 控件")]
+        [DisplayName("The editor factory creates a TimeEdit control for TimeEdit")]
         public void Factory_TimeEdit_CreatesTimeEditor()
         {
             Assert.IsType<TimeEdit>(FieldEditorFactory.Create(ControlType.TimeEdit));

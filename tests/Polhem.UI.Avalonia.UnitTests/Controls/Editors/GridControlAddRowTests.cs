@@ -9,8 +9,8 @@ using Polhem.Definition.Layouts;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// GridControl.AddRow 對新明細列的初始化：每列指派自己的 sys_rowid（主鍵），並連結
-    /// 母表的 sys_master_rowid，避免新增明細存檔時違反 NOT NULL / 唯一鍵或與母表脫鉤。
+    /// How GridControl.AddRow initializes a new detail row: each row gets its own sys_rowid (primary key) and is linked to
+    /// the master's sys_master_rowid, so saving a new detail neither violates NOT NULL or the unique key nor loses its master.
     /// </summary>
     public class GridControlAddRowTests
     {
@@ -27,7 +27,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AddRow 應指派新 sys_rowid 並連結母表 sys_master_rowid")]
+        [DisplayName("AddRow assigns a new sys_rowid and links the master's sys_master_rowid")]
         public void AddRow_AssignsRowIdAndMasterLink()
         {
             var schema = BuildOrderSchema();
@@ -49,7 +49,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AddRow 連續新增兩列應得到不同的 sys_rowid")]
+        [DisplayName("AddRow gives two consecutive rows different sys_rowid values")]
         public void AddRow_TwoRows_GetDistinctRowIds()
         {
             var schema = BuildOrderSchema();

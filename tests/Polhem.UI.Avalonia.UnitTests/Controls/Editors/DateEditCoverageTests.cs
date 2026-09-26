@@ -9,8 +9,8 @@ using Polhem.UI.Avalonia.DataObjects;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// 補強 <see cref="DateEdit"/> 覆蓋率：ParseToOffset null/無效路徑、
-    /// FieldValue setter 各型別分支、Bind(FormDataObject, LayoutFieldBase, DataRow) 明細列綁定。
+    /// Additional coverage for <see cref="DateEdit"/>: the null and invalid paths of ParseToOffset,
+    /// each type branch of the FieldValue setter, and the detail-row binding Bind(FormDataObject, LayoutFieldBase, DataRow).
     /// </summary>
     public class DateEditCoverageTests
     {
@@ -44,7 +44,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("ParseToOffset：null 字串回傳 null")]
+        [DisplayName("ParseToOffset returns null for a null string")]
         public void ParseToOffset_NullString_ReturnsNull()
         {
             var result = InvokeParseToOffset(null);
@@ -53,7 +53,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("ParseToOffset：無效日期字串回傳 null")]
+        [DisplayName("ParseToOffset returns null for an invalid date string")]
         public void ParseToOffset_InvalidDateString_ReturnsNull()
         {
             var result = InvokeParseToOffset("not-a-date");
@@ -62,7 +62,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("ParseToOffset：合法日期字串回傳對應 DateTimeOffset（偏移 Zero、Kind Unspecified）")]
+        [DisplayName("ParseToOffset returns the matching DateTimeOffset for a valid date string (offset Zero, Kind Unspecified)")]
         public void ParseToOffset_ValidDateString_ReturnsDateTimeOffset()
         {
             var result = InvokeParseToOffset("2026-06-01");
@@ -75,7 +75,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FieldValue setter：null 値將 SelectedDate 設為 null")]
+        [DisplayName("FieldValue setter sets SelectedDate to null for a null value")]
         public void FieldValue_SetNull_SetsSelectedDateNull()
         {
             var dataObject = BuildDataObject();
@@ -90,7 +90,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FieldValue setter：DateTimeOffset 値直接指派給 SelectedDate")]
+        [DisplayName("FieldValue setter assigns a DateTimeOffset value directly to SelectedDate")]
         public void FieldValue_SetDateTimeOffset_SetsSelectedDate()
         {
             var editor = new DateEdit();
@@ -102,7 +102,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FieldValue setter：DateTime 値轉換為 Kind Unspecified 偏移 Zero 的 DateTimeOffset")]
+        [DisplayName("FieldValue setter converts a DateTime value to a DateTimeOffset with Kind Unspecified and offset Zero")]
         public void FieldValue_SetDateTime_SetsDateOnlyWithUnspecifiedKind()
         {
             var editor = new DateEdit();
@@ -118,7 +118,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FieldValue setter：字串値透過 ParseToOffset 解析後設定 SelectedDate")]
+        [DisplayName("FieldValue setter parses a string value through ParseToOffset and sets SelectedDate")]
         public void FieldValue_SetStringDate_ParsesAndSetsSelectedDate()
         {
             var editor = new DateEdit();
@@ -132,7 +132,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind(FormDataObject, LayoutFieldBase, DataRow) 明細列綁定後讀取列値")]
+        [DisplayName("Bind(FormDataObject, LayoutFieldBase, DataRow) reads the row value after binding a detail row")]
         public void Bind_WithDataRow_LoadsValueFromRow()
         {
             var dataObject = BuildDataObjectWithDetail();

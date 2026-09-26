@@ -9,9 +9,9 @@ using Polhem.UI.Avalonia.DataObjects;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// 補強 <see cref="ButtonEdit"/> 覆蓋率：lookup 無顯示欄位時 RefreshFromSource
-    /// 回傳空字串（ApplyMetadata 的 HasLookup+空 displayFields 路徑）、
-    /// OpenLookupAsync 在不允許編輯時提早回傳而不呼叫 LookupDialog。
+    /// Additional coverage for <see cref="ButtonEdit"/>: RefreshFromSource returns an empty string when the lookup has
+    /// no display fields (the HasLookup plus empty displayFields path of ApplyMetadata), and
+    /// OpenLookupAsync returns early without calling LookupDialog when editing is not allowed.
     /// </summary>
     public class ButtonEditCoverageTests
     {
@@ -20,7 +20,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             var schema = new FormSchema("Order", "Order");
             var table = schema.Tables!.Add("Order", "Order");
             table.Fields!.Add(new FormField("order_id", "Order ID", FieldDbType.String));
-            // lookup 欄無 RelationFieldMappings → GetDisplayFields() 回傳空集合
+            // A lookup field without `RelationFieldMappings` makes `GetDisplayFields()` return an empty collection.
             table.Fields!.Add(new FormField("vendor_rowid", "Vendor", FieldDbType.Guid)
             {
                 RelationProgId = "Vendor",
@@ -60,7 +60,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("lookup 欄無 RelationFieldMappings 時 HasLookup 仍為 true 但 Text 顯示空字串")]
+        [DisplayName("A lookup field without RelationFieldMappings still has HasLookup true but shows an empty Text")]
         public void RefreshFromSource_LookupWithNoDisplayFields_SetsEmptyText()
         {
             var dataObject = BuildDataObjectWithLookupNoDisplayFields();
@@ -72,21 +72,20 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("lookup 欄有值但無 DisplayFields 時刷新也顯示空字串")]
+        [DisplayName("A lookup field with a value but no DisplayFields still shows an empty string after a refresh")]
         public void RefreshFromSource_LookupValueSetNoDisplayFields_TextRemainsEmpty()
         {
             var dataObject = BuildDataObjectWithLookupNoDisplayFields();
             var editor = new ButtonEdit();
             editor.Bind(dataObject, "vendor_rowid");
 
-            // 設定 rowid 值，但因無 displayFields → Text 仍為空字串
             dataObject.SetField("vendor_rowid", Guid.NewGuid().ToString());
 
             Assert.Equal(string.Empty, editor.Text);
         }
 
         [Fact]
-        [DisplayName("OnButtonClickAsync 在 View 模式（不允許編輯）時提早回傳，不呼叫 LookupDialog")]
+        [DisplayName("OnButtonClickAsync returns early in View mode (editing not allowed) without calling LookupDialog")]
         public async Task OnButtonClickAsync_LookupInViewMode_ReturnsEarlyWithoutDialog()
         {
             var dataObject = BuildOrderDataObjectWithLookup();
@@ -95,7 +94,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             editor.SetControlState(SingleFormMode.View);
             Assert.True(editor.HasLookup);
 
-            // 設定 View 模式後 _allowLookupEdit = false → OpenLookupAsync 直接回傳，不進 LookupDialog
+            // View mode sets `_allowLookupEdit` to false, so `OpenLookupAsync` returns without opening `LookupDialog`.
             var exception = await Record.ExceptionAsync(() => InvokeOnButtonClickAsync(editor));
 
             Assert.Null(exception);

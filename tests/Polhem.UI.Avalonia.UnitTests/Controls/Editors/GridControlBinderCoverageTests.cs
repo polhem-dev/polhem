@@ -9,10 +9,10 @@ using Polhem.UI.Avalonia.DataObjects;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// 補強 <see cref="GridControlBinder"/> 的 ambient 綁定路徑覆蓋率：透過反射對
-    /// <see cref="GridControl"/> 的私有 _binder 呼叫 NotifyAttached / NotifyDetached，
-    /// 模擬 OnAttachedToLogicalTree / OnDetachedFromLogicalTree 的觸發路徑。
-    /// 同時驗證 OnBindingContextChanged 在已附加後切換 DataObject 的重新綁定行為。
+    /// Covers the ambient binding path of <see cref="GridControlBinder"/>: it calls NotifyAttached / NotifyDetached through
+    /// reflection on the private _binder of <see cref="GridControl"/>,
+    /// simulating how OnAttachedToLogicalTree / OnDetachedFromLogicalTree trigger them.
+    /// It also verifies that OnBindingContextChanged rebinds when the DataObject changes after attaching.
     /// </summary>
     public class GridControlBinderCoverageTests
     {
@@ -58,7 +58,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("NotifyAttached：ambient DataObject + TableName 已設定時自動綁定網格並載入明細表")]
+        [DisplayName("NotifyAttached binds the grid and loads the detail table when the ambient DataObject and TableName are set")]
         public void NotifyAttached_WithAmbientDataObjectAndTableName_BindsGridToDetailTable()
         {
             var dataObject = BuildDataObjectWithDetail("02-1234");
@@ -73,7 +73,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("NotifyAttached：ambient DataObject 未設定時不綁定，DataTable 維持 null")]
+        [DisplayName("NotifyAttached does not bind when the ambient DataObject is not set, and DataTable stays null")]
         public void NotifyAttached_NoAmbientDataObject_DoesNotBind()
         {
             var grid = new GridControl();
@@ -85,7 +85,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("NotifyDetached：ambient 綁定後呼叫 NotifyDetached，Binder 釋放 DataObject")]
+        [DisplayName("After NotifyDetached on an ambient binding, the binder releases the DataObject")]
         public void NotifyDetached_AfterAmbientBind_ClearsBinderDataObject()
         {
             var dataObject = BuildDataObjectWithDetail("02-1234");
@@ -102,7 +102,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("OnBindingContextChanged：附加後切換 DataObject，網格重新綁定到新 DataObject 的明細表")]
+        [DisplayName("OnBindingContextChanged rebinds the grid to the new DataObject's detail table when it changes after attaching")]
         public void OnBindingContextChanged_AfterAttach_NewDataObject_Rebinds()
         {
             var dataObject1 = BuildDataObjectWithDetail("phone-1");
@@ -114,21 +114,21 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             InvokeNotifyAttached(GetBinder(grid));
             Assert.Same(dataObject1.DataSet.Tables["EmployeePhone"], grid.DataTable);
 
-            // 切換 DataObject → DataObjectProperty.Changed class handler → OnBindingContextChanged → TryAmbientBind → 重新綁定
+            // Changing the DataObject fires the `DataObjectProperty.Changed` class handler, which goes through `OnBindingContextChanged` and `TryAmbientBind` to rebind.
             FormScope.SetDataObject(grid, dataObject2);
 
             Assert.Same(dataObject2.DataSet.Tables["EmployeePhone"], grid.DataTable);
         }
 
         [Fact]
-        [DisplayName("OnBindingContextChanged：未附加時（_attached=false）不觸發綁定，DataTable 維持 null")]
+        [DisplayName("OnBindingContextChanged does not bind before attaching (_attached=false), and DataTable stays null")]
         public void OnBindingContextChanged_NotAttached_IsNoOp()
         {
             var dataObject = BuildDataObjectWithDetail("02-1234");
             var grid = new GridControl();
             grid.TableName = "EmployeePhone";
 
-            // 未呼叫 NotifyAttached → _attached = false → class handler 觸發但 OnBindingContextChanged 早期回傳
+            // Without `NotifyAttached`, `_attached` is false: the class handler fires but `OnBindingContextChanged` returns early.
             FormScope.SetDataObject(grid, dataObject);
 
             Assert.Null(grid.DataTable);

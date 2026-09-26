@@ -9,7 +9,7 @@ namespace Polhem.UI.Core.UnitTests
     public class EndpointStorageTests
     {
         [Fact]
-        [DisplayName("LoadEndpoint 應從 ClientInfo.ClientSettings.Endpoint 讀取端點")]
+        [DisplayName("LoadEndpoint reads the endpoint from ClientInfo.ClientSettings.Endpoint")]
         public void LoadEndpoint_ReturnsClientSettingsEndpoint()
         {
             var storage = new EndpointStorage();
@@ -27,7 +27,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SetEndpoint 應更新 ClientInfo.ClientSettings.Endpoint 的值")]
+        [DisplayName("SetEndpoint updates the value of ClientInfo.ClientSettings.Endpoint")]
         public void SetEndpoint_ValidValue_UpdatesClientSettingsEndpoint()
         {
             var storage = new EndpointStorage();
@@ -44,7 +44,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveEndpoint 應更新 ClientInfo.ClientSettings.Endpoint 並儲存設定")]
+        [DisplayName("SaveEndpoint updates ClientInfo.ClientSettings.Endpoint and saves the settings")]
         public void SaveEndpoint_ValidValue_UpdatesEndpointAndSaves()
         {
             var storage = new EndpointStorage();

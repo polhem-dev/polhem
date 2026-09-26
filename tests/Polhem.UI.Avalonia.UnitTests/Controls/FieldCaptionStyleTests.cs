@@ -12,21 +12,21 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
     public class FieldCaptionStyleTests
     {
         [Fact]
-        [DisplayName("一般欄位（非唯讀非必填）標題不上色")]
+        [DisplayName("An ordinary field caption (neither read-only nor required) is not colored")]
         public void GetCaptionForeground_Normal_ReturnsNull()
         {
             Assert.Null(FieldCaptionStyle.GetCaptionForeground(readOnly: false, required: false));
         }
 
         [Fact]
-        [DisplayName("唯讀欄位標題不上色（改以括號標示）")]
+        [DisplayName("A read-only field caption is not colored (parentheses mark it instead)")]
         public void GetCaptionForeground_ReadOnly_ReturnsNull()
         {
             Assert.Null(FieldCaptionStyle.GetCaptionForeground(readOnly: true, required: false));
         }
 
         [Fact]
-        [DisplayName("必填欄位標題為藍色")]
+        [DisplayName("A required field caption is blue")]
         public void GetCaptionForeground_Required_ReturnsBlue()
         {
             var brush = Assert.IsType<ISolidColorBrush>(
@@ -35,28 +35,28 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("唯讀＋必填時唯讀優先（不套用必填藍色）")]
+        [DisplayName("Read-only takes precedence over required (the required blue is not applied)")]
         public void GetCaptionForeground_ReadOnlyAndRequired_ReturnsNull()
         {
             Assert.Null(FieldCaptionStyle.GetCaptionForeground(readOnly: true, required: true));
         }
 
         [Fact]
-        [DisplayName("唯讀欄位標題以括號包覆，例如 Amount → (Amount)")]
+        [DisplayName("A read-only field caption is wrapped in parentheses, for example Amount becomes (Amount)")]
         public void FormatCaption_ReadOnly_WrapsInParentheses()
         {
             Assert.Equal("(Amount)", FieldCaptionStyle.FormatCaption("Amount", readOnly: true));
         }
 
         [Fact]
-        [DisplayName("可編輯欄位標題維持原樣")]
+        [DisplayName("An editable field caption stays as is")]
         public void FormatCaption_Editable_ReturnsPlain()
         {
             Assert.Equal("Amount", FieldCaptionStyle.FormatCaption("Amount", readOnly: false));
         }
 
         [Fact]
-        [DisplayName("唯讀但標題為空時不加括號")]
+        [DisplayName("A read-only field with an empty caption gets no parentheses")]
         public void FormatCaption_ReadOnlyEmptyCaption_ReturnsEmpty()
         {
             Assert.Equal(string.Empty, FieldCaptionStyle.FormatCaption(string.Empty, readOnly: true));

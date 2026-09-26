@@ -70,7 +70,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             => Assert.IsType<StackPanel>(Assert.IsType<DockPanel>(grid.Content).Children[0]);
 
         [Fact]
-        [DisplayName("GridControl 為 ContentControl 組合，內含工具列與 DataGrid")]
+        [DisplayName("GridControl is a ContentControl composite containing a toolbar and a DataGrid")]
         public void Type_IsContentControlCompositeWithBaseStyleKey()
         {
             var grid = new GridControl();
@@ -87,7 +87,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("預設為唯讀、單選、不自動產生欄位、工具列隱藏")]
+        [DisplayName("Defaults are read-only, single selection, no auto-generated columns and a hidden toolbar")]
         public void Defaults_AreReadOnlySingleSelection()
         {
             var grid = new GridControl();
@@ -100,7 +100,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind(layout, rows) 僅產生可見欄位並掛上資料")]
+        [DisplayName("Bind(layout, rows) builds only the visible columns and attaches the data")]
         public void Bind_LayoutAndRows_BuildsVisibleColumns()
         {
             var grid = new GridControl();
@@ -117,7 +117,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("LayoutColumn.Width 大於 0 時轉為固定欄寬")]
+        [DisplayName("LayoutColumn.Width greater than 0 becomes a fixed column width")]
         public void Bind_ColumnWithWidth_AppliesPixelWidth()
         {
             var grid = new GridControl();
@@ -130,7 +130,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind(dataObject, layout) 依 TableName 解析明細表")]
+        [DisplayName("Bind(dataObject, layout) resolves the detail table by TableName")]
         public void Bind_DataObjectDetail_ResolvesTable()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -145,7 +145,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind(dataObject, layout) 找不到表時綁定為空（只剩表頭）")]
+        [DisplayName("Bind(dataObject, layout) binds empty (headers only) when the table is not found")]
         public void Bind_DataObjectMissingTable_BindsEmpty()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -161,7 +161,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("設定 DataTable 屬性重建資料列、欄位沿用既有 layout")]
+        [DisplayName("Setting the DataTable property rebuilds the rows and keeps the columns of the existing layout")]
         public void DataTable_Setter_RebuildsRowsKeepsColumns()
         {
             var grid = new GridControl();
@@ -175,7 +175,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("RowSelected 事件帶回選取列的 sys_rowid Guid")]
+        [DisplayName("The RowSelected event returns the sys_rowid Guid of the selected row")]
         public void RowSelected_InvokesHandlerWithSysRowId()
         {
             var rows = BuildEmployeeRows();
@@ -197,7 +197,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Row 缺少 sys_rowid 時 RowSelected 不會觸發")]
+        [DisplayName("RowSelected does not fire when the row has no sys_rowid")]
         public void RowSelected_NoSysRowIdColumn_DoesNotInvokeHandler()
         {
             var table = new DataTable("Employee");
@@ -219,7 +219,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("DataSet 置換後依 TableName 重解析新的明細表實例")]
+        [DisplayName("After the DataSet is replaced, the new detail table instance is resolved again by TableName")]
         public async Task Bind_DataObjectDetail_DataSetReplaced_ReResolvesTable()
         {
             var schema = new FormSchema("Employee", "Employee");
@@ -254,7 +254,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("明細綁定 + AllowActions.Edit 時 Edit 模式可編輯、View 模式唯讀")]
+        [DisplayName("With a detail binding and AllowActions.Edit, Edit mode is editable and View mode is read-only")]
         public void SetControlState_DetailBoundEditMode_TogglesReadOnly()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -272,7 +272,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AllowActions 不含 Edit 時任何模式皆唯讀")]
+        [DisplayName("Without Edit in AllowActions, every mode is read-only")]
         public void SetControlState_AllowActionsWithoutEdit_StaysReadOnly()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -290,7 +290,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("列表模式（無 FormDataObject）維持唯讀")]
+        [DisplayName("List mode (no FormDataObject) stays read-only")]
         public void SetControlState_ListMode_StaysReadOnly()
         {
             var grid = new GridControl();
@@ -302,7 +302,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("SetControlState 映射 AllowEdit：View 關閉、Add/Edit 開啟")]
+        [DisplayName("SetControlState maps AllowEdit: off in View, on in Add/Edit")]
         public void SetControlState_MapsFormModeToAllowEdit()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -322,7 +322,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("SetControlState 依 LayoutGrid.AllowEditModes 限縮可編輯模式")]
+        [DisplayName("SetControlState narrows the editable modes by LayoutGrid.AllowEditModes")]
         public void SetControlState_AllowEditModes_NarrowsModes()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -344,7 +344,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AllowEditModes=None 時任何模式皆不可編輯")]
+        [DisplayName("With AllowEditModes=None no mode is editable")]
         public void SetControlState_AllowEditModesNone_NeverEditable()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -361,7 +361,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("明細綁定時工具列隨 AllowEdit 顯示/隱藏")]
+        [DisplayName("With a detail binding the toolbar shows and hides with AllowEdit")]
         public void AllowEdit_DetailBound_TogglesToolbarVisibility()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -382,7 +382,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("list-mode 綁定即使 AllowEdit 開啟仍隱藏工具列且唯讀")]
+        [DisplayName("A list-mode binding keeps the toolbar hidden and read-only even with AllowEdit on")]
         public void AllowEdit_ListMode_KeepsToolbarHiddenAndReadOnly()
         {
             var grid = new GridControl();
@@ -395,7 +395,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("工具列按鈕依 AllowActions 與 EditMode 顯示")]
+        [DisplayName("Toolbar buttons show according to AllowActions and EditMode")]
         public void Toolbar_ButtonVisibility_FollowsAllowActionsAndEditMode()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -433,7 +433,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AllowActions=None 時工具列不顯示")]
+        [DisplayName("The toolbar does not show when AllowActions=None")]
         public void Toolbar_NoAllowedActions_StaysHidden()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -451,7 +451,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AddRow 新增列、補齊 NOT NULL 預設並標記 dirty")]
+        [DisplayName("AddRow adds a row, fills NOT NULL defaults and marks dirty")]
         public void AddRow_AppendsRowAndMarksDirty()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -467,7 +467,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AddRow 對 wire 形態（無 DefaultValue 的 NOT NULL 欄）補型別空值")]
+        [DisplayName("AddRow fills typed empty values for a wire-shaped table (NOT NULL columns without DefaultValue)")]
         public void AddRow_WireShapedTable_SeedsNonNullDefaults()
         {
             var table = new DataTable("Items");
@@ -486,7 +486,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("DeleteSelectedRow 將選取列標記 Deleted 並標記 dirty")]
+        [DisplayName("DeleteSelectedRow marks the selected row Deleted and marks dirty")]
         public void DeleteSelectedRow_MarksRowDeletedAndDirty()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -505,7 +505,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("文字 cell editor 寫回 DataRow，無效輸入保留原值")]
+        [DisplayName("The text cell editor writes back to the DataRow and keeps the original value on invalid input")]
         public void BuildCellEditor_TextEditor_WritesBackAndIgnoresInvalid()
         {
             var table = new DataTable("Items");
@@ -539,7 +539,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("時刻欄 cell editor 寫回時正規化為定寬 HH:mm，無效輸入保留原值")]
+        [DisplayName("The time cell editor normalizes to fixed-width HH:mm on write-back and keeps the original value on invalid input")]
         public void BuildCellEditor_TimeColumn_NormalizesAndIgnoresInvalid()
         {
             var table = new DataTable("Shifts");
@@ -565,7 +565,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("CheckEdit cell editor 以 CheckBox 寫回布林")]
+        [DisplayName("The CheckEdit cell editor writes a boolean back through a CheckBox")]
         public void BuildCellEditor_CheckEditor_WritesBoolean()
         {
             var table = new DataTable("Items");
@@ -585,7 +585,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("LayoutColumn.ReadOnly 反映到 DataGrid 欄位唯讀（可編輯 grid 上驗證）")]
+        [DisplayName("LayoutColumn.ReadOnly makes the DataGrid column read-only (checked on an editable grid)")]
         public void Bind_ReadOnlyColumn_SetsColumnReadOnly()
         {
             // The DataGridColumn.IsReadOnly getter coerces with the owning grid's
@@ -606,7 +606,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("唯讀欄位 Header 以括號標示，可編輯欄位維持原樣")]
+        [DisplayName("A read-only column header is wrapped in parentheses and an editable one stays as is")]
         public void Bind_ReadOnlyColumn_HeaderParenthesised()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -622,7 +622,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Popup 型欄位（Check/DropDown/Date/YearMonth）繞過編輯管線改走常駐編輯器")]
+        [DisplayName("Popup-type columns (Check/DropDown/Date/YearMonth) bypass the edit pipeline and use a resident editor")]
         public void BuildColumn_PopupEditorTypes_BypassEditPipeline()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -647,7 +647,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("互動 cell：布林為置中勾選框；popup 型唯讀為文字、可編輯為點擊置換 host")]
+        [DisplayName("Interactive cells: a boolean is a centered check box; a read-only popup type is text and an editable one is a click-to-replace host")]
         public void BuildInteractiveCell_StateVariants_BuildExpectedControls()
         {
             var table = new DataTable("Items");
@@ -689,7 +689,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Date 系 cell editor 使用三段式 DatePicker 並依格式寫回")]
+        [DisplayName("Date cell editors use the segmented DatePicker and write back by format")]
         public void BuildCellEditor_DateEditor_UsesSegmentedDatePicker()
         {
             var table = new DataTable("Items");
@@ -720,7 +720,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("DropDown cell editor 選取後以 ListItem.Value 寫回 DataRow")]
+        [DisplayName("The DropDown cell editor writes ListItem.Value back to the DataRow after a selection")]
         public void BuildCellEditor_DropDownEditor_WritesBackValue()
         {
             var dataObject = BuildDataObjectWithDetail();
@@ -747,7 +747,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("EndEdit 在無編輯狀態下不拋例外")]
+        [DisplayName("EndEdit does not throw when nothing is being edited")]
         public void EndEdit_NoActiveEdit_DoesNotThrow()
         {
             var grid = new GridControl();
@@ -759,7 +759,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("TryGetRowId 接受 Guid 欄位、字串可解析的 Guid、DBNull 時回傳 false")]
+        [DisplayName("TryGetRowId accepts a Guid column and a parsable Guid string, and returns false for DBNull")]
         public void TryGetRowId_VariantInputs_Behaviour()
         {
             var method = typeof(GridControl).GetMethod(
@@ -795,7 +795,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FormatCell 對日期、格式字串、null、缺失欄位各情境回傳預期字串")]
+        [DisplayName("FormatCell returns the expected string for dates, format strings, null and missing columns")]
         public void FormatCell_VariantInputs_FormatsExpectedString()
         {
             var method = typeof(GridControl).GetMethod(

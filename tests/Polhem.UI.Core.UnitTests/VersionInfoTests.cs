@@ -3,26 +3,26 @@ using System.ComponentModel;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// <see cref="VersionInfo"/> 純讀取 entry assembly metadata,smoke 測試確保不拋例外。
+    /// <see cref="VersionInfo"/> only reads entry assembly metadata. These smoke tests make sure it does not throw.
     /// </summary>
     public class VersionInfoTests
     {
         [Fact]
-        [DisplayName("VersionInfo.Product 應回傳非空字串")]
+        [DisplayName("VersionInfo.Product returns a non-empty string")]
         public void Product_ReturnsNonEmptyString()
         {
             Assert.False(string.IsNullOrEmpty(VersionInfo.Product));
         }
 
         [Fact]
-        [DisplayName("VersionInfo.Version 應回傳非空字串")]
+        [DisplayName("VersionInfo.Version returns a non-empty string")]
         public void Version_ReturnsNonEmptyString()
         {
             Assert.False(string.IsNullOrEmpty(VersionInfo.Version));
         }
 
         [Fact]
-        [DisplayName("VersionInfo.AssemblyVersion 應回傳非空字串")]
+        [DisplayName("VersionInfo.AssemblyVersion returns a non-empty string")]
         public void AssemblyVersion_ReturnsNonEmptyString()
         {
             Assert.False(string.IsNullOrEmpty(VersionInfo.AssemblyVersion));

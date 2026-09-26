@@ -4,14 +4,14 @@ using Polhem.Api.Client;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// 驗證 <see cref="ClientInfo"/> 在遠端端點無法連線時的防護行為。
+    /// Verifies how <see cref="ClientInfo"/> guards against a remote endpoint that cannot be reached.
     /// <para>
-    /// <c>ApiConnectValidator.ValidateRemoteAsync</c> 會先以 HTTP HEAD 探測連線性
-    /// （<c>HttpUtilities.IsEndpointReachableAsync</c>），再呼叫 <c>PingAsync</c>；
-    /// 任一步驟失敗均在 <c>SetConnectType</c> 被呼叫之前拋出例外。
-    /// 本類別僅驗證此拋出行為本身，以及 <c>InitializeConnectAsync</c> 對該例外的吞除策略。
+    /// <c>ApiConnectValidator.ValidateRemoteAsync</c> first probes connectivity with an HTTP HEAD request
+    /// (<c>HttpUtilities.IsEndpointReachableAsync</c>), then calls <c>PingAsync</c>.
+    /// If either step fails, the exception is thrown before <c>SetConnectType</c> is called.
+    /// This class verifies only that throwing behavior and how <c>InitializeConnectAsync</c> swallows the exception.
     /// </para>
-    /// 因修改靜態狀態，與其他 ClientInfoState 測試同屬 collection，確保串行執行。
+    /// It mutates static state, so it shares the collection with the other ClientInfoState tests to run serially.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoRemoteEndpointTests
@@ -33,7 +33,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("InitializeAsync(IUIViewService) 無法連線的遠端 URL 端點應回傳 false")]
+        [DisplayName("InitializeAsync(IUIViewService) returns false for an unreachable remote URL endpoint")]
         public async Task InitializeAsync_UnreachableRemoteUrl_ReturnsFalse()
         {
             var originalStorage = ClientInfo.EndpointStorage;
@@ -53,7 +53,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SetEndpointAsync 無法連線的遠端 URL 應拋出 InvalidOperationException")]
+        [DisplayName("SetEndpointAsync throws InvalidOperationException for an unreachable remote URL")]
         public async Task SetEndpointAsync_UnreachableRemoteUrl_ThrowsInvalidOperationException()
         {
             var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
@@ -70,7 +70,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("InitializeAsync(string) 無法連線的遠端 URL 應拋出 InvalidOperationException")]
+        [DisplayName("InitializeAsync(string) throws InvalidOperationException for an unreachable remote URL")]
         public async Task InitializeAsync_UnreachableRemoteUrl_ThrowsInvalidOperationException()
         {
             var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;

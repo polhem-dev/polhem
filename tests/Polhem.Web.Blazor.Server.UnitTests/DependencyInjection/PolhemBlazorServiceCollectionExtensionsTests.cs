@@ -11,7 +11,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
     public class PolhemBlazorServiceCollectionExtensionsTests
     {
         [Fact]
-        [DisplayName("AddPolhemBlazor 不帶 configure 時預設 Local 模式")]
+        [DisplayName("AddPolhemBlazor without configure defaults to Local mode")]
         public void AddPolhemBlazor_NoConfigure_DefaultsToLocal()
         {
             var services = new ServiceCollection();
@@ -24,7 +24,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         }
 
         [Fact]
-        [DisplayName("AddPolhemBlazor + UseLocalProvider 維持 Local 模式")]
+        [DisplayName("AddPolhemBlazor with UseLocalProvider keeps Local mode")]
         public void AddPolhemBlazor_UseLocalProvider_StaysLocal()
         {
             var services = new ServiceCollection();
@@ -36,7 +36,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         }
 
         [Fact]
-        [DisplayName("AddPolhemBlazor + UseRemoteProvider 切換為 Remote 模式並保留 endpoint")]
+        [DisplayName("AddPolhemBlazor with UseRemoteProvider switches to Remote mode and keeps the endpoint")]
         public void AddPolhemBlazor_UseRemoteProvider_SwitchesToRemote()
         {
             var services = new ServiceCollection();
@@ -49,7 +49,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         }
 
         [Fact]
-        [DisplayName("AddPolhemBlazor 註冊 PolhemApiConnectorFactory")]
+        [DisplayName("AddPolhemBlazor registers PolhemApiConnectorFactory")]
         public void AddPolhemBlazor_RegistersConnectorFactory()
         {
             var services = new ServiceCollection();
@@ -64,7 +64,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        [DisplayName("UseRemoteProvider 拒絕空 endpoint")]
+        [DisplayName("UseRemoteProvider rejects an empty endpoint")]
         public void UseRemoteProvider_EmptyEndpoint_Throws(string? endpoint)
         {
             var options = new PolhemBlazorOptions();
@@ -72,7 +72,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         }
 
         [Fact]
-        [DisplayName("AddPolhemBlazor 對 null services 拋 ArgumentNullException")]
+        [DisplayName("AddPolhemBlazor throws ArgumentNullException for null services")]
         public void AddPolhemBlazor_NullServices_Throws()
         {
             IServiceCollection? services = null;

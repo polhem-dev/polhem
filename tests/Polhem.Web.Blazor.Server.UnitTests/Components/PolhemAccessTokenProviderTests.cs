@@ -14,14 +14,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     public class PolhemAccessTokenProviderTests
     {
         [Fact]
-        [DisplayName("PolhemAccessTokenProvider 為 Blazor ComponentBase 子類別")]
+        [DisplayName("PolhemAccessTokenProvider is a subclass of Blazor ComponentBase")]
         public void Type_IsComponentBaseSubclass()
         {
             Assert.True(typeof(ComponentBase).IsAssignableFrom(typeof(PolhemAccessTokenProvider)));
         }
 
         [Fact]
-        [DisplayName("ChildContent 為 RenderFragment<PolhemAccessTokenProvider> 並標註 [Parameter]")]
+        [DisplayName("ChildContent is a RenderFragment<PolhemAccessTokenProvider> marked with [Parameter]")]
         public void ChildContent_IsTemplatedParameter()
         {
             var property = typeof(PolhemAccessTokenProvider).GetProperty(
@@ -33,7 +33,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("初始狀態 AccessToken 為 Guid.Empty 且 IsAuthenticated 為 false")]
+        [DisplayName("Initially AccessToken is Guid.Empty and IsAuthenticated is false")]
         public void InitialState_IsAnonymous()
         {
             var provider = new PolhemAccessTokenProvider();
@@ -42,7 +42,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("SetToken 指派非空 Guid 後 AccessToken 與 IsAuthenticated 同步更新")]
+        [DisplayName("SetToken with a non-empty Guid updates AccessToken and IsAuthenticated together")]
         public void SetToken_NonEmptyGuid_UpdatesStateAndAuthenticatedFlag()
         {
             var provider = new PolhemAccessTokenProvider();
@@ -55,7 +55,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("Clear 將 AccessToken 重設為 Guid.Empty 且 IsAuthenticated 變回 false")]
+        [DisplayName("Clear resets AccessToken to Guid.Empty and IsAuthenticated back to false")]
         public void Clear_ResetsStateToAnonymous()
         {
             var provider = new PolhemAccessTokenProvider();
@@ -68,7 +68,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("SetToken 對同值不應拋出例外（無 renderer 仍安全）")]
+        [DisplayName("SetToken with the same value does not throw (safe without a renderer)")]
         public void SetToken_IdempotentForSameValue_DoesNotThrow()
         {
             var provider = new PolhemAccessTokenProvider();
@@ -82,7 +82,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnInitialized 呼叫後 _isAttached 應設為 true")]
+        [DisplayName("OnInitialized sets _isAttached to true")]
         public void OnInitialized_SetsIsAttachedToTrue()
         {
             var provider = new PolhemAccessTokenProvider();

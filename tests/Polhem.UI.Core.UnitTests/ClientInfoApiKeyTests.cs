@@ -4,9 +4,9 @@ using Polhem.Api.Client;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// <see cref="ClientInfo"/> 的 API 金鑰接縫：讀寫走可替換的 <see cref="IApiKeyStorage"/>，
-    /// 以及 <see cref="ClientInfo.ApplyApiKey"/>「應用內建值只當首次啟動的種子」的語意——
-    /// 這正是「更換金鑰不需重新編譯用戶端」成立的關鍵。
+    /// The API key seam of <see cref="ClientInfo"/>: reads and writes go through a replaceable <see cref="IApiKeyStorage"/>,
+    /// and <see cref="ClientInfo.ApplyApiKey"/> uses the value shipped with the app only as a first-run seed.
+    /// That is what lets the key be changed without recompiling the client.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoApiKeyTests
@@ -28,7 +28,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         /// <summary>
-        /// 以替換的 storage 執行測試，結束後還原兩個 process-wide static。
+        /// Runs the test with a replaced storage, then restores both process-wide statics.
         /// </summary>
         private static void WithFakeStorage(Action<FakeApiKeyStorage> action)
         {
@@ -48,7 +48,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetApiKey 應轉交給 ApiKeyStorage")]
+        [DisplayName("GetApiKey delegates to ApiKeyStorage")]
         public void GetApiKey_DelegatesToStorage()
         {
             WithFakeStorage(fake =>
@@ -60,7 +60,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SetApiKey 應持久化並立即套用到後續 API 呼叫")]
+        [DisplayName("SetApiKey persists the key and applies it to subsequent API calls immediately")]
         public void SetApiKey_PersistsAndApplies()
         {
             WithFakeStorage(fake =>
@@ -74,7 +74,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ApplyApiKey 於存放為空時應以應用內建值作為種子並寫入")]
+        [DisplayName("ApplyApiKey seeds and saves the shipped value when the storage is empty")]
         public void ApplyApiKey_EmptyStorage_SeedsWithDefault()
         {
             WithFakeStorage(fake =>
@@ -88,7 +88,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ApplyApiKey 於已有存放值時應採用存放值，內建值不覆蓋")]
+        [DisplayName("ApplyApiKey keeps the stored value when one exists and the shipped value does not overwrite it")]
         public void ApplyApiKey_ExistingStorage_KeepsStoredValue()
         {
             WithFakeStorage(fake =>
@@ -98,14 +98,14 @@ namespace Polhem.UI.Core.UnitTests
                 ClientInfo.ApplyApiKey("shipped-default");
 
                 Assert.Equal("configured.secret", fake.Stored);
-                // 已有值就不該再寫一次；這也是「更換後不會被下次啟動蓋回去」的保證。
+                // An existing value is not written again. This is what keeps a changed key from being reverted on the next start.
                 Assert.Equal(0, fake.SaveCount);
                 Assert.Equal("configured.secret", ApiClientInfo.ApiKey);
             });
         }
 
         [Fact]
-        [DisplayName("ApplyApiKey 於未給內建值且存放為空時應套用空字串且不寫入")]
+        [DisplayName("ApplyApiKey applies an empty string without saving when there is no shipped value and the storage is empty")]
         public void ApplyApiKey_NoDefaultAndEmptyStorage_AppliesEmpty()
         {
             WithFakeStorage(fake =>

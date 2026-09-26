@@ -71,7 +71,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("ListView 為 UserControl 子類別")]
+        [DisplayName("ListView is a subclass of UserControl")]
         public void Type_IsUserControlSubclass()
         {
             Assert.True(typeof(UserControl).IsAssignableFrom(typeof(ListView)));
@@ -82,7 +82,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         [InlineData(nameof(ListView.AccessToken), "AccessTokenProperty")]
         [InlineData(nameof(ListView.Schema), "SchemaProperty")]
         [InlineData(nameof(ListView.FormConnector), "FormConnectorProperty")]
-        [DisplayName("公開屬性皆有對應的 StyledProperty 註冊")]
+        [DisplayName("Every public property has a matching StyledProperty registration")]
         public void PublicProperties_HaveMatchingStyledProperty(string propertyName, string styledPropertyFieldName)
         {
             var property = typeof(ListView).GetProperty(
@@ -95,7 +95,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("InitializeAsync 透過 GetList 載入清單，SelectFields 帶 sys_rowid 前綴")]
+        [DisplayName("InitializeAsync loads the list through GetList with SelectFields prefixed by sys_rowid")]
         public async Task InitializeAsync_LoadsListWithRowIdPrefixedSelectFields()
         {
             string? requestedSelectFields = null;
@@ -119,7 +119,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("ComputeSelectFields 不重複 sys_rowid")]
+        [DisplayName("ComputeSelectFields does not duplicate sys_rowid")]
         public void ComputeSelectFields_DoesNotDuplicateRowId()
         {
             var schema = BuildSchema();
@@ -133,7 +133,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("選取列後按 View 觸發 ViewRequested 並帶正確 rowId")]
+        [DisplayName("View after selecting a row raises ViewRequested with the correct rowId")]
         public async Task View_AfterRowSelected_RaisesViewRequested()
         {
             var rowId = Guid.NewGuid();
@@ -154,7 +154,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("選取列後按 Edit 觸發 EditRequested 並帶正確 rowId")]
+        [DisplayName("Edit after selecting a row raises EditRequested with the correct rowId")]
         public async Task Edit_AfterRowSelected_RaisesEditRequested()
         {
             var rowId = Guid.NewGuid();
@@ -175,7 +175,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("選取列後雙擊觸發 ViewRequested（開啟唯讀檢視，不進入編輯）")]
+        [DisplayName("Double-tapping a selected row raises ViewRequested (opens the read-only view, not edit)")]
         public async Task DoubleTap_AfterRowSelected_RaisesViewRequested()
         {
             var rowId = Guid.NewGuid();
@@ -199,7 +199,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("未選取列時 Edit 不觸發 EditRequested")]
+        [DisplayName("Edit without a selected row does not raise EditRequested")]
         public async Task Edit_WithoutSelection_DoesNotRaiseEditRequested()
         {
             var connector = new FakeFormApiConnector
@@ -218,7 +218,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("New 觸發 AddRequested")]
+        [DisplayName("New raises AddRequested")]
         public async Task New_RaisesAddRequested()
         {
             var connector = new FakeFormApiConnector
@@ -237,7 +237,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("選取列後 Delete 呼叫 DeleteAsync 並重載清單")]
+        [DisplayName("Delete after selecting a row calls DeleteAsync and reloads the list")]
         public async Task Delete_AfterRowSelected_DeletesAndReloads()
         {
             var rowId = Guid.NewGuid();
@@ -268,7 +268,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("清單載入失敗觸發 ErrorOccurred")]
+        [DisplayName("A failed list load raises ErrorOccurred")]
         public async Task ReloadAsync_OnFailure_RaisesErrorOccurred()
         {
             var connector = new FakeFormApiConnector

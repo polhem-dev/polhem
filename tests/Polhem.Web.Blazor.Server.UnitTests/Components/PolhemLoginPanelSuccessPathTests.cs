@@ -11,13 +11,13 @@ using Microsoft.AspNetCore.Components;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// 補強 <see cref="PolhemLoginPanel.OnSubmitAsync"/> 成功路徑的覆蓋率。
-    /// 使用假 Factory + 假 IJsonRpcProvider，讓 LoginAsync 在不需要真實 API 服務的情況下
-    /// 回傳可控制的 <see cref="LoginResponse"/>，覆蓋以下四條路徑：
-    /// 1. AccessToken 為空 → 設定錯誤訊息並提前返回
-    /// 2. AccessToken 有效 → 清除密碼欄位
-    /// 3. AccessToken 有效且無 OnLoggedIn 委派 → 正常完成
-    /// 4. AccessToken 有效且有 OnLoggedIn 委派 → 呼叫 callback
+    /// Covers the success path of <see cref="PolhemLoginPanel.OnSubmitAsync"/>.
+    /// A fake Factory and a fake IJsonRpcProvider make LoginAsync return a controllable <see cref="LoginResponse"/>
+    /// without a real API service, covering these paths:
+    /// 1. Empty AccessToken: sets an error message and returns early.
+    /// 2. Valid AccessToken: clears the password field.
+    /// 3. Valid AccessToken without an OnLoggedIn delegate: completes normally.
+    /// 4. Valid AccessToken with an OnLoggedIn delegate: invokes the callback.
     /// </summary>
     public class PolhemLoginPanelSuccessPathTests
     {
@@ -79,7 +79,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnSubmitAsync LoginAsync 回傳空 AccessToken 時應設定登入失敗的錯誤訊息")]
+        [DisplayName("OnSubmitAsync sets a login failure error message when LoginAsync returns an empty AccessToken")]
         public async Task OnSubmitAsync_EmptyAccessToken_SetsLoginFailedError()
         {
             var panel = CreatePanelWithFakeFactory(new LoginResponse { AccessToken = Guid.Empty });
@@ -92,7 +92,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnSubmitAsync 登入成功後應清除密碼欄位為空字串")]
+        [DisplayName("OnSubmitAsync clears the password field to an empty string after a successful login")]
         public async Task OnSubmitAsync_SuccessfulLogin_ClearsPasswordField()
         {
             var panel = CreatePanelWithFakeFactory(new LoginResponse { AccessToken = Guid.NewGuid() });
@@ -104,7 +104,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnSubmitAsync 登入成功且無 OnLoggedIn 委派時不拋例外，且不設定錯誤訊息")]
+        [DisplayName("OnSubmitAsync does not throw or set an error message after a successful login without an OnLoggedIn delegate")]
         public async Task OnSubmitAsync_SuccessfulLoginNoDelegate_NoErrorSet()
         {
             var panel = CreatePanelWithFakeFactory(new LoginResponse { AccessToken = Guid.NewGuid() });
@@ -115,7 +115,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnSubmitAsync 登入成功且有 OnLoggedIn 委派時應呼叫 callback 並傳入 LoginResponse")]
+        [DisplayName("OnSubmitAsync invokes the callback with the LoginResponse after a successful login with an OnLoggedIn delegate")]
         public async Task OnSubmitAsync_SuccessfulLoginWithDelegate_InvokesCallback()
         {
             var expectedToken = Guid.NewGuid();

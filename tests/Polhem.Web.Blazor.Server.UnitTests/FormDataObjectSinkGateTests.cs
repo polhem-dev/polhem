@@ -5,19 +5,19 @@ using Polhem.Web.Blazor.Server.DataObjects;
 namespace Polhem.Web.Blazor.Server.UnitTests
 {
     /// <summary>
-    /// <see cref="FormDataObject"/> 不得再自帶一份已下沉到 <c>Polhem.Api.Client</c> 的值轉換規則。
+    /// <see cref="FormDataObject"/> must not carry its own copy of the value conversion rules that moved down to <c>Polhem.Api.Client</c>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 這些成員原本在本 head 與 <c>Polhem.UI.Avalonia</c> 各有一份逐字副本，doc 寫著「刻意平行、
-    /// 沒有任何機制強制」—— 然後就真的漂了：<c>ConvertToColumnValue</c> 一邊修好了
-    /// 「不要把 <c>DBNull</c> 寫進 NOT NULL 欄位」，另一邊帶著那個 bug 繼續跑。
-    /// 現在單一實作在 <c>Polhem.Api.Client.FormValueBinding</c> / <c>FormDataGuard</c>。
+    /// These members used to have a verbatim copy in this head and in <c>Polhem.UI.Avalonia</c>, and the doc said "deliberately parallel,
+    /// nothing enforces it". Then they really drifted: one side of <c>ConvertToColumnValue</c> fixed
+    /// "do not write <c>DBNull</c> into a NOT NULL column" while the other kept running with the bug.
+    /// The single implementation now lives in <c>Polhem.Api.Client.FormValueBinding</c> / <c>FormDataGuard</c>.
     /// </para>
     /// <para>
-    /// NOTE: 這道閘門擋的是**照原名再貼一份回來**，也就是實際發生過的那種失誤
-    /// （在本 head 撞到 bug、不知道有共用實作、於是就地補一個私有方法）。
-    /// 改名的副本它擋不到 —— 別把它當成完整的重複偵測。
+    /// NOTE: This gate catches **a copy pasted back under the original name**, which is the mistake that actually happened
+    /// (hitting a bug in this head, not knowing about the shared implementation, and adding a private method on the spot).
+    /// It does not catch a renamed copy, so do not treat it as full duplicate detection.
     /// </para>
     /// </remarks>
     public class FormDataObjectSinkGateTests
@@ -33,7 +33,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         ];
 
         [Fact]
-        [DisplayName("FormDataObject 不得重新宣告已下沉到 Polhem.Api.Client 的成員")]
+        [DisplayName("FormDataObject does not redeclare the members moved down to Polhem.Api.Client")]
         public void FormDataObject_DoesNotRedeclareSunkMembers()
         {
             var declared = typeof(FormDataObject)
@@ -41,14 +41,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests
                 .Select(m => m.Name)
                 .ToArray();
 
-            // 對照組：確定真的讀到了成員清單，而不是空陣列讓斷言白過。
+            // Control check: make sure the member list was really read, so an empty array cannot pass the assertion vacuously.
             Assert.Contains("GetField", declared, StringComparer.Ordinal);
 
             var redeclared = s_sunkMembers.Where(n => declared.Contains(n, StringComparer.Ordinal)).ToArray();
 
             Assert.True(
                 redeclared.Length == 0,
-                $"以下成員已下沉到 Polhem.Api.Client，不該在此重新宣告：{string.Join(", ", redeclared)}");
+                $"These members moved down to Polhem.Api.Client and must not be redeclared here: {string.Join(", ", redeclared)}");
         }
     }
 }

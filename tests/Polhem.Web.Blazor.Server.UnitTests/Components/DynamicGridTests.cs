@@ -9,10 +9,10 @@ using Microsoft.AspNetCore.Components;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// 結構與純邏輯測試，涵蓋 <see cref="DynamicGrid"/> 的靜態輔助方法
-    /// (<c>TryGetRowId</c>、<c>FormatCell</c>、<c>BuildColumnStyle</c>) 以及
-    /// 私有計算屬性 <c>VisibleColumns</c>。
-    /// 需要 Blazor 渲染器的 render cycle 測試留待 bUnit 整合測試覆蓋。
+    /// Structural and pure-logic tests covering the static helper methods of <see cref="DynamicGrid"/>
+    /// (<c>TryGetRowId</c>, <c>FormatCell</c>, <c>BuildColumnStyle</c>) and
+    /// the private computed property <c>VisibleColumns</c>.
+    /// Render cycle tests that need the Blazor renderer are left to bUnit integration tests.
     /// </summary>
     public class DynamicGridTests
     {
@@ -47,7 +47,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         // ──────────────────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("TryGetRowId 資料表無 sys_rowid 欄位時應回傳 false")]
+        [DisplayName("TryGetRowId returns false when the table has no sys_rowid column")]
         public void TryGetRowId_NoRowIdColumn_ReturnsFalse()
         {
             var table = new DataTable();
@@ -60,7 +60,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("TryGetRowId sys_rowid 欄位值為 DBNull 時應回傳 false")]
+        [DisplayName("TryGetRowId returns false when the sys_rowid value is DBNull")]
         public void TryGetRowId_DbNullValue_ReturnsFalse()
         {
             var table = new DataTable();
@@ -73,7 +73,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("TryGetRowId sys_rowid 欄位為 Guid 型別時應回傳 true 並輸出對應值")]
+        [DisplayName("TryGetRowId returns true and outputs the value when the sys_rowid column is of type Guid")]
         public void TryGetRowId_GuidValue_ReturnsTrueAndOutputsGuid()
         {
             var expected = Guid.NewGuid();
@@ -88,7 +88,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("TryGetRowId sys_rowid 為有效 Guid 字串時應回傳 true 並輸出對應值")]
+        [DisplayName("TryGetRowId returns true and outputs the value when sys_rowid is a valid Guid string")]
         public void TryGetRowId_ValidGuidString_ReturnsTrueAndOutputsGuid()
         {
             var expected = Guid.NewGuid();
@@ -103,7 +103,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("TryGetRowId sys_rowid 為無效 Guid 字串時應回傳 false")]
+        [DisplayName("TryGetRowId returns false when sys_rowid is an invalid Guid string")]
         public void TryGetRowId_InvalidGuidString_ReturnsFalse()
         {
             var table = new DataTable();
@@ -121,7 +121,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         // ──────────────────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("FormatCell 資料表無對應欄位時應回傳空字串")]
+        [DisplayName("FormatCell returns an empty string when the table has no matching column")]
         public void FormatCell_MissingColumn_ReturnsEmpty()
         {
             var table = new DataTable();
@@ -133,7 +133,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("FormatCell 欄位值為 DBNull 時應回傳空字串")]
+        [DisplayName("FormatCell returns an empty string when the value is DBNull")]
         public void FormatCell_DbNullValue_ReturnsEmpty()
         {
             var table = new DataTable();
@@ -147,7 +147,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("FormatCell DateTime 無時間部分時應格式化為 yyyy-MM-dd")]
+        [DisplayName("FormatCell formats a DateTime without a time part as yyyy-MM-dd")]
         public void FormatCell_DateTimeWithNoTime_ReturnsDateOnly()
         {
             var table = new DataTable();
@@ -161,7 +161,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("FormatCell DateTime 含時間部分時應格式化為 yyyy-MM-dd HH:mm:ss")]
+        [DisplayName("FormatCell formats a DateTime with a time part as yyyy-MM-dd HH:mm:ss")]
         public void FormatCell_DateTimeWithTime_ReturnsDateTimeFormat()
         {
             var table = new DataTable();
@@ -175,7 +175,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("FormatCell 欄位為字串型別時應回傳原始字串值")]
+        [DisplayName("FormatCell returns the original string value for a string column")]
         public void FormatCell_StringValue_ReturnsRawString()
         {
             var table = new DataTable();
@@ -189,7 +189,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("FormatCell 設定 DisplayFormat 時應優先使用 DisplayFormat 格式化值")]
+        [DisplayName("FormatCell formats the value with DisplayFormat first when it is set")]
         public void FormatCell_WithDisplayFormat_UsesDisplayFormat()
         {
             var table = new DataTable();
@@ -203,7 +203,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("FormatCell 設定 NumberFormat 時應使用 NumberFormat 格式化數值")]
+        [DisplayName("FormatCell formats a number with NumberFormat when it is set")]
         public void FormatCell_WithNumberFormat_UsesNumberFormat()
         {
             var table = new DataTable();
@@ -221,7 +221,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         // ──────────────────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("BuildColumnStyle Width 為 0 時應回傳空字串")]
+        [DisplayName("BuildColumnStyle returns an empty string when Width is 0")]
         public void BuildColumnStyle_ZeroWidth_ReturnsEmpty()
         {
             var column = new LayoutColumn { Width = 0 };
@@ -230,7 +230,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("BuildColumnStyle Width 為正值時應回傳含寬度的 CSS 樣式字串")]
+        [DisplayName("BuildColumnStyle returns a CSS style string with the width when Width is positive")]
         public void BuildColumnStyle_PositiveWidth_ReturnsWidthStyle()
         {
             var column = new LayoutColumn { Width = 120 };
@@ -243,7 +243,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         // ──────────────────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("VisibleColumns Layout 為 null 時應回傳空序列")]
+        [DisplayName("VisibleColumns returns an empty sequence when Layout is null")]
         public void VisibleColumns_NullLayout_ReturnsEmpty()
         {
             var component = new DynamicGrid();
@@ -256,7 +256,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("VisibleColumns 應只回傳 Visible 為 true 的欄位")]
+        [DisplayName("VisibleColumns returns only columns whose Visible is true")]
         public void VisibleColumns_MixedVisibility_ReturnsOnlyVisible()
         {
             var component = new DynamicGrid();
@@ -281,14 +281,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         // ──────────────────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("DynamicGrid 為 Blazor ComponentBase 子類別")]
+        [DisplayName("DynamicGrid is a subclass of Blazor ComponentBase")]
         public void Type_IsComponentBaseSubclass()
         {
             Assert.True(typeof(ComponentBase).IsAssignableFrom(typeof(DynamicGrid)));
         }
 
         [Fact]
-        [DisplayName("EmptyText 預設值為 'No data.'")]
+        [DisplayName("EmptyText defaults to 'No data.'")]
         public void EmptyText_Default_IsNoData()
         {
             var component = new DynamicGrid();
@@ -300,7 +300,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [InlineData(nameof(DynamicGrid.Rows))]
         [InlineData(nameof(DynamicGrid.OnRowSelected))]
         [InlineData(nameof(DynamicGrid.EmptyText))]
-        [DisplayName("公開屬性皆標有 [Parameter]")]
+        [DisplayName("Public properties are all marked with [Parameter]")]
         public void PublicProperties_AreMarkedAsParameters(string name)
         {
             var property = typeof(DynamicGrid).GetProperty(
@@ -322,7 +322,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnRowClickAsync OnRowSelected 無委派時應直接返回，不拋例外")]
+        [DisplayName("OnRowClickAsync returns without throwing when OnRowSelected has no delegate")]
         public async Task OnRowClickAsync_NoDelegate_ReturnsWithoutError()
         {
             var component = new DynamicGrid();
@@ -336,7 +336,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnRowClickAsync row 無 sys_rowid 欄位時有委派也不呼叫 callback")]
+        [DisplayName("OnRowClickAsync does not invoke the callback when the row has no sys_rowid column, even with a delegate")]
         public async Task OnRowClickAsync_HasDelegateButNoRowId_DoesNotInvokeCallback()
         {
             var invoked = false;
@@ -356,7 +356,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnRowClickAsync row 含有效 sys_rowid 且有委派時應呼叫 callback 並傳入正確 Guid")]
+        [DisplayName("OnRowClickAsync invokes the callback with the correct Guid when the row has a valid sys_rowid and a delegate")]
         public async Task OnRowClickAsync_ValidRowWithDelegate_InvokesCallbackWithRowId()
         {
             var expectedGuid = Guid.NewGuid();
@@ -381,7 +381,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         // ──────────────────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("FormatCell 整數值無格式設定時應使用 IFormattable 以 InvariantCulture 格式化")]
+        [DisplayName("FormatCell formats an integer without format settings through IFormattable with InvariantCulture")]
         public void FormatCell_IntegerWithNoFormat_UsesIFormattableToString()
         {
             var table = new DataTable();

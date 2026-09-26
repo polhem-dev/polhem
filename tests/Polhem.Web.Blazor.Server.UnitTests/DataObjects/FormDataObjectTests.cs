@@ -51,7 +51,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("由 FormSchema 推導出對應的 DataSet 與欄位")]
+        [DisplayName("The constructor derives the matching DataSet and columns from FormSchema")]
         public void Constructor_FromSchema_BuildsExpectedDataSetShape()
         {
             var schema = BuildEmployeeSchema();
@@ -75,7 +75,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("初始狀態 MasterRow 為 null,InitializeNewMaster 後存在一筆空列")]
+        [DisplayName("MasterRow is initially null and one empty row exists after InitializeNewMaster")]
         public void InitializeNewMaster_AddsSingleEmptyRow()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -90,7 +90,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("GetField 在無 MasterRow 時回傳空字串")]
+        [DisplayName("GetField returns an empty string when there is no MasterRow")]
         public void GetField_NoMasterRow_ReturnsEmpty()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -99,7 +99,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 在無 MasterRow 時為 no-op")]
+        [DisplayName("SetField is a no-op when there is no MasterRow")]
         public void SetField_NoMasterRow_IsNoOp()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -111,7 +111,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入字串欄位後 GetField 可讀回相同值")]
+        [DisplayName("GetField reads back the same value after SetField writes a string field")]
         public void SetField_String_RoundTripsThroughGetField()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -124,7 +124,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入 Boolean 欄位後 GetField 回傳 True/False 字串")]
+        [DisplayName("GetField returns a True/False string after SetField writes a Boolean field")]
         public void SetField_Boolean_RoundTripsThroughGetField()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -140,7 +140,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入 Date 欄位後 GetField 回傳 ISO yyyy-MM-dd 格式")]
+        [DisplayName("GetField returns ISO yyyy-MM-dd format after SetField writes a Date field")]
         public void SetField_Date_RoundTripsAsIsoDate()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -154,7 +154,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入 Decimal 欄位後 GetField 回傳 Invariant 格式")]
+        [DisplayName("GetField returns invariant format after SetField writes a Decimal field")]
         public void SetField_Decimal_UsesInvariantFormatting()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -167,7 +167,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入空字串對允許 DBNull 的欄位會設為 DBNull")]
+        [DisplayName("SetField with an empty string sets a column that allows DBNull to DBNull")]
         public void SetField_EmptyString_OnNullableColumn_SetsDbNull()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -182,7 +182,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SetField 寫入空字串對 NOT NULL 欄位會回退到欄位預設值")]
+        [DisplayName("SetField with an empty string falls back to the column default for a NOT NULL column")]
         public void SetField_EmptyString_OnNotNullColumn_FallsBackToDefault()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -198,7 +198,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("GetField/SetField 在欄位不存在時不丟例外")]
+        [DisplayName("GetField/SetField do not throw when the column does not exist")]
         public void GetField_AndSetField_UnknownColumn_AreTolerated()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -211,7 +211,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("GetFormField 可回傳 master table 上的 FormField 元資料")]
+        [DisplayName("GetFormField returns the FormField metadata of the master table")]
         public void GetFormField_ReturnsMasterFieldMetadata()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -224,14 +224,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("建構子在 schema 為 null 時拋出 ArgumentNullException")]
+        [DisplayName("The constructor throws ArgumentNullException when schema is null")]
         public void Constructor_NullSchema_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new FormDataObject(null!));
         }
 
         [Fact]
-        [DisplayName("建構子在 ProgId 為空字串時拋出 ArgumentException")]
+        [DisplayName("The constructor throws ArgumentException when ProgId is an empty string")]
         public void Constructor_EmptyProgId_Throws()
         {
             var schema = new FormSchema();
@@ -241,7 +241,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         // --- Phase 1b: server round-trip via FormApiConnector ---
 
         [Fact]
-        [DisplayName("LoadAsync 在無 connector 時拋出 InvalidOperationException")]
+        [DisplayName("LoadAsync throws InvalidOperationException when there is no connector")]
         public async Task LoadAsync_NoConnector_Throws()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -249,7 +249,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("LoadAsync 成功時以伺服器 DataSet 取代本地並重置 IsDirty")]
+        [DisplayName("LoadAsync on success replaces the local DataSet with the server's and resets IsDirty")]
         public async Task LoadAsync_Success_ReplacesDataSetAndResetsDirty()
         {
             var schema = BuildEmployeeSchema();
@@ -275,7 +275,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("LoadAsync 在 server 回傳 null DataSet 時拋出 InvalidOperationException")]
+        [DisplayName("LoadAsync throws InvalidOperationException when the server returns a null DataSet")]
         public async Task LoadAsync_NotFound_Throws()
         {
             var connector = new FakeFormApiConnector
@@ -289,7 +289,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("NewAsync 成功時以伺服器骨架取代本地並重置 IsDirty")]
+        [DisplayName("NewAsync on success replaces the local DataSet with the server skeleton and resets IsDirty")]
         public async Task NewAsync_Success_ReplacesDataSetAndResetsDirty()
         {
             var rowId = Guid.NewGuid();
@@ -309,7 +309,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("NewAsync 在 server 回傳 null DataSet 時拋出 InvalidOperationException")]
+        [DisplayName("NewAsync throws InvalidOperationException when the server returns a null DataSet")]
         public async Task NewAsync_NullDataSet_Throws()
         {
             var connector = new FakeFormApiConnector
@@ -322,7 +322,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("NewAsync 在無 connector 時拋出 InvalidOperationException")]
+        [DisplayName("NewAsync throws InvalidOperationException when there is no connector")]
         public async Task NewAsync_NoConnector_Throws()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -330,7 +330,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SaveAsync 成功時以伺服器 refreshed DataSet 取代本地並重置 IsDirty")]
+        [DisplayName("SaveAsync on success replaces the local DataSet with the server's refreshed DataSet and resets IsDirty")]
         public async Task SaveAsync_Success_ReplacesDataSetAndResetsDirty()
         {
             var schema = BuildEmployeeSchema();
@@ -360,7 +360,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SaveAsync 在 server 回傳 null DataSet 時保留本地內容並重置 IsDirty")]
+        [DisplayName("SaveAsync keeps the local content and resets IsDirty when the server returns a null DataSet")]
         public async Task SaveAsync_NullRefreshedDataSet_KeepsLocalAndResetsDirty()
         {
             var connector = new FakeFormApiConnector
@@ -380,7 +380,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("SaveAsync 在無 connector 時拋出 InvalidOperationException")]
+        [DisplayName("SaveAsync throws InvalidOperationException when there is no connector")]
         public async Task SaveAsync_NoConnector_Throws()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
@@ -388,7 +388,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("DeleteAsync 成功時呼叫 connector 並重設為空白 DataSet")]
+        [DisplayName("DeleteAsync on success calls the connector and resets to an empty DataSet")]
         public async Task DeleteAsync_Success_ResetsToEmptyDataSet()
         {
             var schema = BuildEmployeeSchema();
@@ -419,7 +419,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("DeleteAsync 在無 MasterRow 時拋出 InvalidOperationException")]
+        [DisplayName("DeleteAsync throws InvalidOperationException when there is no MasterRow")]
         public async Task DeleteAsync_NoMasterRow_Throws()
         {
             var connector = new FakeFormApiConnector();
@@ -429,7 +429,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("DeleteAsync 在無 connector 時拋出 InvalidOperationException")]
+        [DisplayName("DeleteAsync throws InvalidOperationException when there is no connector")]
         public async Task DeleteAsync_NoConnector_Throws()
         {
             var dataObject = new FormDataObject(BuildEmployeeSchema());

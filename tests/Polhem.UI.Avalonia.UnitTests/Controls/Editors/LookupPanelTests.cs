@@ -10,8 +10,8 @@ using Polhem.UI.Avalonia.Controls.Editors;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// LookupPanel 單元測試：layout 綁定、ReloadAsync 經 stub connector 的取數與
-    /// SearchText 傳遞、選取 commit / cancel 事件、載入失敗不拋例外。
+    /// LookupPanel unit tests: layout binding, ReloadAsync fetching through a stub connector and
+    /// passing SearchText, the commit / cancel selection events, and a failed load not throwing.
     /// </summary>
     public class LookupPanelTests
     {
@@ -37,7 +37,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind 應以 GetLookupLayout 建立 grid 欄位（含隱藏 sys_rowid）")]
+        [DisplayName("Bind builds the grid columns from GetLookupLayout (including the hidden sys_rowid)")]
         public void Bind_BuildsLookupLayoutColumns()
         {
             var panel = new LookupPanel();
@@ -51,7 +51,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("ReloadAsync 應傳遞 SearchText 並以回應填入 grid")]
+        [DisplayName("ReloadAsync passes SearchText and fills the grid from the response")]
         public async Task ReloadAsync_PassesSearchTextAndPopulatesGrid()
         {
             var table = BuildLookupTable(
@@ -70,7 +70,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Commit 無選取應為 no-op；有選取應以該列觸發 Committed")]
+        [DisplayName("Commit is a no-op without a selection and raises Committed with the selected row otherwise")]
         public async Task Commit_RaisesCommittedOnlyWithSelection()
         {
             var rowId = Guid.NewGuid();
@@ -93,7 +93,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Cancel 應觸發 Cancelled")]
+        [DisplayName("Cancel raises Cancelled")]
         public void Cancel_RaisesCancelled()
         {
             var panel = new LookupPanel();
@@ -106,7 +106,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("ReloadAsync 連線失敗應顯示錯誤而不拋例外")]
+        [DisplayName("ReloadAsync does not throw when the connection fails and leaves the grid without data")]
         public async Task ReloadAsync_ConnectorFailure_DoesNotThrow()
         {
             var panel = new LookupPanel();

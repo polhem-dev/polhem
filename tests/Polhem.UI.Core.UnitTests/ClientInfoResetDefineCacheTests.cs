@@ -6,10 +6,10 @@ using Polhem.Api.Client.Connectors;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// 補強 <see cref="ClientInfo.ResetDefineCache"/> 的測試覆蓋率。
-    /// 驗證 _defineAccess 為 null 時不拋例外（no-op），
-    /// 以及 _defineAccess 為 ClientDefineAccess 時呼叫 ClearCache 不拋例外。
-    /// 因修改靜態狀態，納入 ClientInfoState collection 確保串行執行。
+    /// Covers <see cref="ClientInfo.ResetDefineCache"/>.
+    /// Verifies that it does not throw when _defineAccess is null (a no-op),
+    /// and that calling ClearCache does not throw when _defineAccess is a ClientDefineAccess.
+    /// It mutates static state, so it runs serially in the ClientInfoState collection.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoResetDefineCacheTests
@@ -18,7 +18,7 @@ namespace Polhem.UI.Core.UnitTests
             typeof(ClientInfo).GetField("s_defineAccess", BindingFlags.NonPublic | BindingFlags.Static)!;
 
         [Fact]
-        [DisplayName("ResetDefineCache _defineAccess 為 null 時應直接回傳，不拋例外")]
+        [DisplayName("ResetDefineCache returns without throwing when _defineAccess is null")]
         public void ResetDefineCache_WhenDefineAccessIsNull_DoesNotThrow()
         {
             var original = s_defineAccessField.GetValue(null);
@@ -35,7 +35,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResetDefineCache _defineAccess 為 ClientDefineAccess 時應呼叫 ClearCache 且不拋例外")]
+        [DisplayName("ResetDefineCache calls ClearCache without throwing when _defineAccess is a ClientDefineAccess")]
         public void ResetDefineCache_WhenDefineAccessIsClientDefineAccess_DoesNotThrow()
         {
             var original = s_defineAccessField.GetValue(null);

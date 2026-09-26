@@ -10,8 +10,8 @@ using Polhem.UI.Avalonia.Controls;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// GridControl per-cell 單位感知：數量欄依該列單位欄（UNIT）當前值解析位數；
-    /// 同欄不同列不同單位 → 不同位數；列單位空退欄級 baked 格式；無 UnitSettings 退 baked。
+    /// GridControl per-cell unit awareness: a quantity column resolves its decimals from the current value of the row's unit column (UNIT).
+    /// Different units in the same column give different decimals; an empty row unit falls back to the column's baked format, as does a missing UnitSettings.
     /// </summary>
     public class GridControlUnitTests
     {
@@ -62,30 +62,30 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("同欄 PCS/KG/M 三列 → 各列位數依單位（0/3/2）")]
+        [DisplayName("PCS/KG/M rows in the same column each get the decimals of their unit (0/3/2)")]
         public void QtyColumn_PerRowUnit_DifferentDecimals()
         {
             var table = QtyTable((12.345m, "PCS"), (12.345m, "KG"), (12.345m, "M"));
             var grid = BindGrid(table, Units());
 
-            Assert.Equal("12", QtyCellText(grid, table, 0));      // PCS → 0 位
-            Assert.Equal("12.345", QtyCellText(grid, table, 1));  // KG → 3 位
-            Assert.Equal("12.35", QtyCellText(grid, table, 2));   // M → 2 位（12.345 → 12.35）
+            Assert.Equal("12", QtyCellText(grid, table, 0));      // PCS: 0 decimals.
+            Assert.Equal("12.345", QtyCellText(grid, table, 1));  // KG: 3 decimals.
+            Assert.Equal("12.35", QtyCellText(grid, table, 2));   // M: 2 decimals (12.345 becomes 12.35).
         }
 
         [Fact]
-        [DisplayName("列單位空時退欄級 baked 格式（不做單位解析）")]
+        [DisplayName("An empty row unit falls back to the column's baked format (no unit resolution)")]
         public void QtyColumn_EmptyRowUnit_UsesBakedFormat()
         {
             var table = QtyTable((12.345m, string.Empty));
             var grid = BindGrid(table, Units());
 
-            // 列單位空 → 不解析 → 用欄級 baked（此處 N0）。
+            // An empty row unit is not resolved, so the column's baked format (N0 here) applies.
             Assert.Equal("12", QtyCellText(grid, table, 0, bakedFormat: "N0"));
         }
 
         [Fact]
-        [DisplayName("未設 UnitSettings 時數量欄用欄級 baked 格式（單位感知關閉）")]
+        [DisplayName("Without UnitSettings the quantity column uses the column's baked format (unit awareness off)")]
         public void QtyColumn_NoUnitSettings_UsesBakedFormat()
         {
             var table = QtyTable((12.345m, "KG"));

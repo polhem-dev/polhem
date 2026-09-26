@@ -13,9 +13,9 @@ using Polhem.UI.Avalonia.DataObjects;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// GridControl lookup 欄測試：lookup 欄繞過 DataGrid 編輯管線（column 唯讀）、
-    /// cell 顯示 DisplayFields 組合值而非 Guid、可編輯時包 hit-testable host、
-    /// 唯讀 / list 模式呈現純文字。
+    /// GridControl lookup column tests: a lookup column bypasses the DataGrid edit pipeline (the column is read-only),
+    /// the cell shows the composed DisplayFields value instead of the Guid, an editable cell is wrapped in a hit-testable host,
+    /// and read-only / list mode shows plain text.
     /// </summary>
     public class GridControlLookupTests
     {
@@ -55,7 +55,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("lookup 欄的 DataGrid column 應為唯讀（繞過編輯管線）")]
+        [DisplayName("The DataGrid column of a lookup field is read-only (bypasses the edit pipeline)")]
         public void Bind_LookupColumn_BypassesEditPipeline()
         {
             var (grid, _, _) = BindDetailGrid();
@@ -65,7 +65,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
                 .First(c => Equals(c.Header, "商品"));
 
             Assert.True(lookupColumn.IsReadOnly);
-            // 非 lookup 欄不受影響（qty 仍走標準編輯管線）
+            // A non-lookup column is unaffected: `qty` still goes through the standard edit pipeline.
             var qtyColumn = grid.InnerGrid.Columns
                 .OfType<DataGridTemplateColumn>()
                 .First(c => Equals(c.Header, "數量"));
@@ -73,7 +73,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("可編輯 lookup cell 應為 hit-testable host、顯示 DisplayFields 組合值並帶開窗圖示")]
+        [DisplayName("An editable lookup cell is a hit-testable host showing the composed DisplayFields value with a lookup icon")]
         public void BuildLookupCell_Editable_WrapsTextInHost()
         {
             var (grid, dataObject, line) = BindDetailGrid();
@@ -85,7 +85,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             var host = Assert.IsType<Border>(cell);
             Assert.NotNull(host.Background);
-            // 可編輯狀態：text 在左、開窗圖示靠右（DockPanel 容器）
+            // Editable state: the text on the left and the lookup icon on the right (a `DockPanel` container).
             var content = Assert.IsType<DockPanel>(host.Child);
             var text = content.Children.OfType<TextBlock>().Single();
             Assert.Equal("商品甲", text.Text);
@@ -94,7 +94,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("list 模式（無 data object）lookup 欄 cell 應為純文字顯示 DisplayField")]
+        [DisplayName("A lookup cell on a read-only grid is plain text showing the DisplayField")]
         public void BuildLookupCell_ReadOnlyGrid_PlainText()
         {
             var (grid, dataObject, line) = BindDetailGrid();
@@ -102,7 +102,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             var rowView = line.Table.DefaultView[0];
             var column = grid.Layout!.Columns!.First(c => c.FieldName == "product_rowid");
 
-            // 唯讀 grid（View 模式 / list 模式同路徑）
+            // A read-only grid (View mode and list mode take the same path).
             grid.AllowEdit = false;
 
             var cell = InvokeBuildLookupCell(grid, rowView, column, field);
@@ -112,11 +112,11 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("list 模式 Bind(layout, rows) 的 ButtonEdit 欄文字 cell 應取 DisplayFields")]
+        [DisplayName("In list mode, a text cell of a ButtonEdit column bound with Bind(layout, rows) uses DisplayFields")]
         public void ListMode_ButtonEditColumn_UsesDisplayFieldText()
         {
-            // 無 data object 的 list 模式：lookup 偵測為 null、走文字 branch，
-            // 文字欄位仍應取 DisplayFields 而非 rowid。
+            // In list mode there is no data object, so lookup detection returns null and the text branch runs.
+            // The text cell must still use `DisplayFields` rather than the rowid.
             var schema = BuildOrderSchema();
             var layout = FormLayoutGenerator.Generate(schema, "default").Details![0];
             var rows = new DataTable("OrderLine");
@@ -129,7 +129,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             var grid = new GridControl();
             grid.Bind(layout, rows);
 
-            // 透過 column 的 CellTemplate 實際 build 一個 cell 驗證文字來源
+            // Build a real cell through the column's `CellTemplate` to check where the text comes from.
             var column = grid.InnerGrid.Columns
                 .OfType<DataGridTemplateColumn>()
                 .First(c => Equals(c.Header, "商品"));

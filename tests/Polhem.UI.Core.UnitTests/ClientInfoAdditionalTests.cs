@@ -4,16 +4,16 @@ using Polhem.Api.Core.Messages.System;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// 補強 <see cref="ClientInfo"/> 中尚未被覆蓋的非修改路徑。
-    /// <c>ClientInfoCoverageTests</c> 中的 <c>ClientInfoConnectorTests</c> 會透過反射將
-    /// <c>_systemConnector</c> 靜態欄位設為 null，與此處的快取驗證測試存在競態風險，
-    /// 因此須納入同一 collection 串行執行。
+    /// Covers the non-mutating paths of <see cref="ClientInfo"/> not covered elsewhere.
+    /// <c>ClientInfoConnectorTests</c> in <c>ClientInfoCoverageTests</c> sets the static field
+    /// <c>_systemConnector</c> to null through reflection, which races with the caching tests here,
+    /// so this class must run serially in the same collection.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoReadOnlyTests
     {
         [Fact]
-        [DisplayName("GetEndpoint 應回傳字串，不拋例外")]
+        [DisplayName("GetEndpoint returns a string without throwing")]
         public void GetEndpoint_Default_ReturnsStringWithoutThrowing()
         {
             var result = ClientInfo.GetEndpoint();
@@ -21,7 +21,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SystemApiConnector getter 應以 Lazy 模式建立非 null 實例")]
+        [DisplayName("SystemApiConnector getter lazily creates a non-null instance")]
         public void SystemApiConnector_LocalConnectType_ReturnsNotNull()
         {
             var connector = ClientInfo.SystemApiConnector;
@@ -29,7 +29,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SystemApiConnector getter 多次存取應回傳同一實例（快取）")]
+        [DisplayName("SystemApiConnector getter returns the same cached instance on repeated access")]
         public void SystemApiConnector_AccessedTwice_ReturnsSameInstance()
         {
             var first = ClientInfo.SystemApiConnector;
@@ -38,7 +38,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("DefineAccess getter 應以 Lazy 模式建立非 null 的 ClientDefineAccess 實例")]
+        [DisplayName("DefineAccess getter lazily creates a non-null ClientDefineAccess instance")]
         public void DefineAccess_LocalConnectType_ReturnsNotNull()
         {
             var access = ClientInfo.DefineAccess;
@@ -46,7 +46,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateFormApiConnector 應回傳非 null 的 FormApiConnector 實例")]
+        [DisplayName("CreateFormApiConnector returns a non-null FormApiConnector instance")]
         public void CreateFormApiConnector_LocalConnectType_ReturnsNotNull()
         {
             var connector = ClientInfo.CreateFormApiConnector("TestProg");
@@ -55,14 +55,14 @@ namespace Polhem.UI.Core.UnitTests
     }
 
     /// <summary>
-    /// 補強 <see cref="ClientInfo"/> 中會修改靜態狀態的路徑。
-    /// 與 <c>EndpointStorageTests</c> 同屬 <c>ClientInfoState</c> collection，確保串行執行。
+    /// Covers the paths of <see cref="ClientInfo"/> that mutate static state.
+    /// Shares the <c>ClientInfoState</c> collection with <c>EndpointStorageTests</c> so they run serially.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoMutatingTests
     {
         [Fact]
-        [DisplayName("ApplyLoginResult 傳入有效 LoginResponse 應設定 AccessToken 與 UserInfo")]
+        [DisplayName("ApplyLoginResult with a valid LoginResponse sets AccessToken and UserInfo")]
         public void ApplyLoginResult_ValidLoginResponse_SetsAccessTokenAndUserInfo()
         {
             var token = Guid.NewGuid();
@@ -87,7 +87,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ApplyLoginResult 以不同 Token 連續呼叫兩次，應以最後一次結果為準")]
+        [DisplayName("ApplyLoginResult called twice with different tokens keeps the last result")]
         public void ApplyLoginResult_CalledTwice_LastResultWins()
         {
             var tokenA = Guid.NewGuid();

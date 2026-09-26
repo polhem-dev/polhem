@@ -9,10 +9,10 @@ using Polhem.UI.Avalonia.Controls;
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
     /// <summary>
-    /// 補強 <see cref="GridControl"/> 覆蓋率：FormatCell 各資料型別路徑、
-    /// TryConvertCellValue 成功與例外路徑、TryGetRowId 各欄位狀態、
-    /// SetControlState 依版面模式切換 AllowEdit、AddRow、
-    /// BuildCellEditor CheckEdit/DateEdit、BuildInteractiveCell 唯讀路徑。
+    /// Additional coverage for <see cref="GridControl"/>: the per-type paths of FormatCell,
+    /// the success and exception paths of TryConvertCellValue, each column state for TryGetRowId,
+    /// SetControlState toggling AllowEdit by layout mode, AddRow,
+    /// BuildCellEditor for CheckEdit/DateEdit, and the read-only path of BuildInteractiveCell.
     /// </summary>
     public class GridControlFormatTests
     {
@@ -74,7 +74,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FormatCell：rowView 為 null 時回傳空字串")]
+        [DisplayName("FormatCell returns an empty string when rowView is null")]
         public void FormatCell_NullRowView_ReturnsEmptyString()
         {
             var result = InvokeFormatCell(null, "col", string.Empty, string.Empty);
@@ -83,7 +83,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FormatCell：欄位不存在時回傳空字串")]
+        [DisplayName("FormatCell returns an empty string when the field does not exist")]
         public void FormatCell_MissingColumn_ReturnsEmptyString()
         {
             var table = new DataTable("T");
@@ -96,7 +96,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FormatCell：值為 DBNull 時回傳空字串")]
+        [DisplayName("FormatCell returns an empty string when the value is DBNull")]
         public void FormatCell_DBNullValue_ReturnsEmptyString()
         {
             var table = new DataTable("T");
@@ -109,7 +109,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FormatCell：DateTime 含時間部分時格式化為 yyyy-MM-dd HH:mm:ss")]
+        [DisplayName("FormatCell formats a DateTime with a time part as yyyy-MM-dd HH:mm:ss")]
         public void FormatCell_DateTimeWithTime_FormatsWithTimePart()
         {
             var dt = new DateTime(2026, 1, 15, 14, 30, 0, DateTimeKind.Unspecified);
@@ -123,7 +123,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FormatCell：DateTime 無時間部分時格式化為 yyyy-MM-dd")]
+        [DisplayName("FormatCell formats a DateTime without a time part as yyyy-MM-dd")]
         public void FormatCell_DateTimeWithNoTime_FormatsDateOnly()
         {
             var dt = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Unspecified);
@@ -137,7 +137,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FormatCell：指定 displayFormat 時套用顯示格式")]
+        [DisplayName("FormatCell applies displayFormat when it is given")]
         public void FormatCell_WithDisplayFormat_AppliesDisplayFormat()
         {
             var table = new DataTable("T");
@@ -150,7 +150,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FormatCell：指定 numberFormat 時套用數字格式")]
+        [DisplayName("FormatCell applies numberFormat when it is given")]
         public void FormatCell_WithNumberFormat_AppliesNumberFormat()
         {
             var table = new DataTable("T");
@@ -163,7 +163,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("TryConvertCellValue：合法整數字串轉換成功回傳 true")]
+        [DisplayName("TryConvertCellValue returns true for a valid integer string")]
         public void TryConvertCellValue_ValidIntString_ReturnsTrue()
         {
             var column = new DataColumn("qty", typeof(int));
@@ -174,7 +174,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("TryConvertCellValue：無法解析字串時回傳 false，不拋例外")]
+        [DisplayName("TryConvertCellValue returns false without throwing for an unparsable string")]
         public void TryConvertCellValue_InvalidString_ReturnsFalse()
         {
             var column = new DataColumn("qty", typeof(int));
@@ -185,7 +185,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("TryGetRowId：無 sys_rowid 欄位時回傳 false")]
+        [DisplayName("TryGetRowId returns false when there is no sys_rowid column")]
         public void TryGetRowId_NoRowIdColumn_ReturnsFalse()
         {
             var table = new DataTable("T");
@@ -198,7 +198,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("TryGetRowId：sys_rowid 為 DBNull 時回傳 false")]
+        [DisplayName("TryGetRowId returns false when sys_rowid is DBNull")]
         public void TryGetRowId_DBNullValue_ReturnsFalse()
         {
             var table = new DataTable("T");
@@ -211,7 +211,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("TryGetRowId：sys_rowid 為 Guid 類型時回傳 true 並輸出該 Guid")]
+        [DisplayName("TryGetRowId returns true and outputs the Guid when sys_rowid is of type Guid")]
         public void TryGetRowId_GuidValue_ReturnsTrueWithCorrectGuid()
         {
             var expected = Guid.NewGuid();
@@ -226,7 +226,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("TryGetRowId：sys_rowid 為可解析字串時回傳 true 並輸出對應 Guid")]
+        [DisplayName("TryGetRowId returns true and outputs the matching Guid when sys_rowid is a parsable string")]
         public void TryGetRowId_StringGuidValue_ReturnsTrueWithCorrectGuid()
         {
             var expected = Guid.NewGuid();
@@ -241,7 +241,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("SetControlState View 模式：AllowEdit 設為 false")]
+        [DisplayName("SetControlState in View mode sets AllowEdit to false")]
         public void SetControlState_ViewMode_SetsAllowEditFalse()
         {
             var layout = new LayoutGrid("T", "T");
@@ -257,7 +257,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("SetControlState Edit 模式且版面允許 All 編輯模式：AllowEdit 設為 true")]
+        [DisplayName("SetControlState in Edit mode with a layout allowing All edit modes sets AllowEdit to true")]
         public void SetControlState_EditModeWithAllowingLayout_SetsAllowEditTrue()
         {
             var layout = new LayoutGrid("T", "T");
@@ -272,7 +272,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AddRow 有 DataTable 時新增一筆列")]
+        [DisplayName("AddRow adds a row when there is a DataTable")]
         public void AddRow_WithNonNullableColumn_AddsRow()
         {
             var (grid, table) = BindSimpleGrid("name", typeof(string));
@@ -284,7 +284,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("BuildCellEditor CheckEdit 欄位回傳 CheckBox")]
+        [DisplayName("BuildCellEditor returns a CheckBox for a CheckEdit field")]
         public void BuildCellEditor_CheckEdit_ReturnsCheckBox()
         {
             var (grid, table) = BindSimpleGrid("active", typeof(bool));
@@ -298,7 +298,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("BuildCellEditor DateEdit 欄位回傳 DatePicker")]
+        [DisplayName("BuildCellEditor returns a DatePicker for a DateEdit field")]
         public void BuildCellEditor_DateEdit_ReturnsDatePicker()
         {
             var (grid, table) = BindSimpleGrid("hire_date", typeof(DateTime));
@@ -312,7 +312,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("BuildInteractiveCell CheckEdit 唯讀時回傳已停用的 CheckBox")]
+        [DisplayName("BuildInteractiveCell returns a disabled CheckBox for a read-only CheckEdit")]
         public void BuildInteractiveCell_CheckEditReadOnly_ReturnsDisabledCheckBox()
         {
             var (grid, table) = BindSimpleGrid("active", typeof(bool));
@@ -327,7 +327,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("BuildInteractiveCell 非 CheckEdit 唯讀時回傳 TextBlock")]
+        [DisplayName("BuildInteractiveCell returns a TextBlock for a read-only non-CheckEdit field")]
         public void BuildInteractiveCell_DateEditReadOnly_ReturnsTextBlock()
         {
             var (grid, table) = BindSimpleGrid("hire_date", typeof(DateTime));

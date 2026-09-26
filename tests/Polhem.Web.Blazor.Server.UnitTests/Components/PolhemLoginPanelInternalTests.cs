@@ -5,9 +5,9 @@ using Polhem.Web.Blazor.Server.Components;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// 補強 <see cref="PolhemLoginPanel.OnSubmitAsync"/> 兩條可在無 DI 環境下觸發的路徑：
-    /// 1. _isBusy guard（直接返回，不觸碰 Factory）
-    /// 2. Factory 未注入時的 try-catch-finally 路徑（NRE 被 catch 接住）
+    /// Covers the two paths of <see cref="PolhemLoginPanel.OnSubmitAsync"/> that can run without DI:
+    /// 1. The _isBusy guard (returns directly without touching Factory).
+    /// 2. The try-catch-finally path when Factory is not injected (the NRE is caught).
     /// </summary>
     public class PolhemLoginPanelInternalTests
     {
@@ -27,7 +27,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnSubmitAsync _isBusy 為 true 時應直接返回，不呼叫 Factory 且不拋例外")]
+        [DisplayName("OnSubmitAsync returns directly without calling Factory or throwing when _isBusy is true")]
         public async Task OnSubmitAsync_WhenBusy_ReturnsImmediatelyWithoutError()
         {
             var panel = new PolhemLoginPanel();
@@ -39,7 +39,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("OnSubmitAsync Factory 未注入時應進入 catch 設定錯誤訊息，且 _isBusy 恢復 false")]
+        [DisplayName("OnSubmitAsync enters the catch, sets an error message and restores _isBusy to false when Factory is not injected")]
         public async Task OnSubmitAsync_NullFactory_CatchesExceptionAndResetsBusy()
         {
             var panel = new PolhemLoginPanel();

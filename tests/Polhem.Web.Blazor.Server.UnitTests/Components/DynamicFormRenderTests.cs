@@ -9,7 +9,7 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// 渲染測試：觸發 DynamicForm.razor 的 BuildRenderTree，補強 .razor 模板行覆蓋率。
+    /// Render tests: they run BuildRenderTree of DynamicForm.razor to cover the lines of the .razor template.
     /// </summary>
     public class DynamicFormRenderTests : BunitContext
     {
@@ -24,7 +24,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("DynamicForm Layout 為 null 時應渲染空狀態 div")]
+        [DisplayName("DynamicForm renders the empty-state div when Layout is null")]
         public void DynamicForm_NullLayout_RendersEmptyDiv()
         {
             var cut = Render<DynamicForm>();
@@ -32,7 +32,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("DynamicForm 傳入 Layout 與 DataObject 後應渲染表單容器")]
+        [DisplayName("DynamicForm renders the form container when given Layout and DataObject")]
         public void DynamicForm_WithLayoutAndDataObject_RendersFormContainer()
         {
             var schema = BuildSchema();
@@ -47,7 +47,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("DynamicForm Section ShowCaption 為 false 時不應渲染 legend 元素")]
+        [DisplayName("DynamicForm does not render a legend element when the Section's ShowCaption is false")]
         public void DynamicForm_SectionShowCaptionFalse_DoesNotRenderLegend()
         {
             var schema = BuildSchema();

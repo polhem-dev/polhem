@@ -9,8 +9,8 @@ using Polhem.UI.Avalonia.DataObjects;
 namespace Polhem.UI.Avalonia.UnitTests.DataObjects
 {
     /// <summary>
-    /// FormDataObject lookup 寫回測試：ApplyLookupSelection 的 rowid + mapping 寫回、
-    /// LookupFieldMappings 優先序、來源欄位缺漏的硬錯誤、ClearLookupSelection 清空。
+    /// FormDataObject lookup write-back tests: ApplyLookupSelection writes the rowid and the mapped fields,
+    /// LookupFieldMappings take precedence, a missing source field is a hard error, and ClearLookupSelection clears them.
     /// </summary>
     public class FormDataObjectLookupTests
     {
@@ -44,7 +44,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("ApplyLookupSelection 應寫入 rowid 並依 RelationFieldMappings 寫回 ref 欄位")]
+        [DisplayName("ApplyLookupSelection writes the rowid and writes back the ref fields by RelationFieldMappings")]
         public void ApplyLookupSelection_WritesRowIdAndMappedFields()
         {
             var dataObject = new FormDataObject(BuildOrderSchema());
@@ -61,7 +61,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("ApplyLookupSelection LookupFieldMappings 應優先於 RelationFieldMappings")]
+        [DisplayName("ApplyLookupSelection gives LookupFieldMappings precedence over RelationFieldMappings")]
         public void ApplyLookupSelection_LookupMappingsWin()
         {
             var schema = BuildOrderSchema();
@@ -75,19 +75,19 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
             dataObject.ApplyLookupSelection(field, BuildSelectedRow(Guid.NewGuid(), "C002", "客戶乙"));
 
             Assert.Equal("C002", dataObject.GetField("ref_customer_id"));
-            // RelationFieldMappings 的 sys_name 映射不應被套用
+            // The `sys_name` mapping from `RelationFieldMappings` must not be applied.
             Assert.Equal(string.Empty, dataObject.GetField("ref_customer_name"));
         }
 
         [Fact]
-        [DisplayName("ApplyLookupSelection 來源欄位不在選取列應拋 InvalidOperationException")]
+        [DisplayName("ApplyLookupSelection throws InvalidOperationException when a source field is missing from the selected row")]
         public void ApplyLookupSelection_MissingSourceField_Throws()
         {
             var dataObject = new FormDataObject(BuildOrderSchema());
             dataObject.InitializeNewMaster();
             var field = dataObject.GetFormField("customer_rowid")!;
 
-            // 選取列缺 sys_name（mapping 來源欄位）
+            // The selected row lacks `sys_name`, the mapping source field.
             var table = new DataTable("Customer");
             table.Columns.Add(SysFields.RowId, typeof(Guid));
             table.Columns.Add(SysFields.Id, typeof(string));
@@ -99,7 +99,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("ApplyLookupSelection 選取列缺 sys_rowid 應拋 InvalidOperationException")]
+        [DisplayName("ApplyLookupSelection throws InvalidOperationException when the selected row has no sys_rowid")]
         public void ApplyLookupSelection_MissingRowId_Throws()
         {
             var dataObject = new FormDataObject(BuildOrderSchema());
@@ -115,7 +115,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("ClearLookupSelection 應清空 rowid 與所有映射目的欄位")]
+        [DisplayName("ClearLookupSelection clears the rowid and every mapped target field")]
         public void ClearLookupSelection_ResetsRowIdAndMappedFields()
         {
             var dataObject = new FormDataObject(BuildOrderSchema());

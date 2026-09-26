@@ -5,15 +5,15 @@ using Polhem.Definition.Identity;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// <see cref="ClientInfo.Company"/> 快取測試：<see cref="ClientInfo.ApplyEnterCompanyResult"/> 存入
-    /// EnterCompany 回應的公司，<see cref="ClientInfo.ClearCompanyContext"/> 清除。修改靜態狀態，故納入
-    /// <c>ClientInfoState</c> collection 串行執行，並於結尾還原。
+    /// <see cref="ClientInfo.Company"/> cache tests: <see cref="ClientInfo.ApplyEnterCompanyResult"/> stores
+    /// the company from the EnterCompany response and <see cref="ClientInfo.ClearCompanyContext"/> clears it. It mutates
+    /// static state, so it runs serially in the <c>ClientInfoState</c> collection and restores the state at the end.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoCompanyTests
     {
         [Fact]
-        [DisplayName("ApplyEnterCompanyResult 快取公司；ClearCompanyContext 清除")]
+        [DisplayName("ApplyEnterCompanyResult caches the company and ClearCompanyContext clears it")]
         public void ApplyEnterCompanyResult_CachesCompany_ClearResets()
         {
             try

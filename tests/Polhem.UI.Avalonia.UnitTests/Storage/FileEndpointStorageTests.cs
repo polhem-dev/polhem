@@ -32,7 +32,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("ApiKeyFilePath 為 LocalApplicationData/<appName>/apikey.txt")]
+        [DisplayName("ApiKeyFilePath is LocalApplicationData/<appName>/apikey.txt")]
         public void ApiKeyFilePath_CombinesLocalAppDataAndAppName()
         {
             var appName = NewAppName();
@@ -42,7 +42,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("SetApiKey 只改記憶體快取，不落地；SaveApiKey 才寫檔")]
+        [DisplayName("SetApiKey changes only the in-memory cache without writing; SaveApiKey writes the file")]
         public void SetApiKey_DoesNotTouchDisk_SaveApiKeyDoes()
         {
             var appName = NewAppName();
@@ -65,7 +65,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("SaveApiKey 寫入後新實例應讀回同一把金鑰，且與 endpoint 互不干擾")]
+        [DisplayName("After SaveApiKey, a new instance reads back the same key, independent of the endpoint")]
         public void SaveApiKey_RoundTripsIndependentlyOfEndpoint()
         {
             var appName = NewAppName();
@@ -86,7 +86,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("LoadApiKey 於尚未寫入時應回空字串")]
+        [DisplayName("LoadApiKey returns an empty string when nothing has been written yet")]
         public void LoadApiKey_NoFile_ReturnsEmpty()
         {
             var appName = NewAppName();
@@ -101,7 +101,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("建構子在 appName 為 null 或空白時拋出例外")]
+        [DisplayName("The constructor throws when appName is null or whitespace")]
         public void Constructor_NullOrWhitespaceAppName_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new FileEndpointStorage(null!));
@@ -109,7 +109,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("FilePath 為 LocalApplicationData/<appName>/endpoint.txt")]
+        [DisplayName("FilePath is LocalApplicationData/<appName>/endpoint.txt")]
         public void FilePath_CombinesLocalAppDataAndAppName()
         {
             var appName = NewAppName();
@@ -119,7 +119,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("LoadEndpoint 在檔案不存在時回傳空字串")]
+        [DisplayName("LoadEndpoint returns an empty string when the file does not exist")]
         public void LoadEndpoint_MissingFile_ReturnsEmpty()
         {
             var storage = new FileEndpointStorage(NewAppName());
@@ -128,7 +128,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("SetEndpoint 只更新記憶體快取,不寫入磁碟")]
+        [DisplayName("SetEndpoint updates only the in-memory cache without writing to disk")]
         public void SetEndpoint_CachesInMemoryWithoutTouchingDisk()
         {
             var appName = NewAppName();
@@ -148,7 +148,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("SaveEndpoint 建立目錄並寫入檔案,新實例可讀回")]
+        [DisplayName("SaveEndpoint creates the directory and writes the file, and a new instance reads it back")]
         public void SaveEndpoint_WritesFile_NewInstanceReadsItBack()
         {
             var appName = NewAppName();
@@ -169,7 +169,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("LoadEndpoint 會修剪檔案內容前後空白")]
+        [DisplayName("LoadEndpoint trims leading and trailing whitespace from the file content")]
         public void LoadEndpoint_TrimsFileContent()
         {
             var appName = NewAppName();

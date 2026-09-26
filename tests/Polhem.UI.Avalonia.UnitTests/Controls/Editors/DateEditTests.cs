@@ -25,7 +25,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind 後載入日期初值")]
+        [DisplayName("Bind loads the initial date value")]
         public void Bind_ExistingDate_LoadsIntoSelectedDate()
         {
             var dataObject = BuildDataObject();
@@ -39,7 +39,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("選取日期以 yyyy-MM-dd 寫回")]
+        [DisplayName("A selected date is written back as yyyy-MM-dd")]
         public void SelectedDateChanged_AfterBind_WritesBackIsoDate()
         {
             var dataObject = BuildDataObject();
@@ -53,7 +53,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("YearMonthEdit 隱藏日欄並以 yyyy-MM 寫回")]
+        [DisplayName("YearMonthEdit hides the day part and writes back yyyy-MM")]
         public void YearMonthEdit_SelectedDate_WritesBackYearMonth()
         {
             var dataObject = BuildDataObject();
@@ -68,7 +68,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("空欄位 Bind 後 SelectedDate 為 null")]
+        [DisplayName("SelectedDate is null after binding an empty field")]
         public void Bind_EmptyValue_LeavesSelectedDateNull()
         {
             var dataObject = BuildDataObject();
@@ -80,7 +80,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("AllowEditModes=Add 時僅新增模式啟用")]
+        [DisplayName("With AllowEditModes=Add only Add mode enables the editor")]
         public void SetControlState_AllowEditModesAdd_OnlyAddEnabled()
         {
             var dataObject = BuildDataObject();
@@ -101,7 +101,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("Bind 後 ReadOnlyText 以 yyyy-MM-dd 格式化")]
+        [DisplayName("ReadOnlyText is formatted as yyyy-MM-dd after Bind")]
         public void ReadOnlyText_AfterBind_FormatsSelectedDate()
         {
             var dataObject = BuildDataObject();
@@ -114,7 +114,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("YearMonthEdit 的 ReadOnlyText 以 yyyy-MM 格式化")]
+        [DisplayName("ReadOnlyText of YearMonthEdit is formatted as yyyy-MM")]
         public void ReadOnlyText_YearMonthEdit_FormatsYearMonth()
         {
             var dataObject = BuildDataObject();

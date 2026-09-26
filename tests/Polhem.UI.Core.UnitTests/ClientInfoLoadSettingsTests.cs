@@ -10,9 +10,9 @@ using Polhem.Definition.Settings;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// 補強 <see cref="ClientInfo.LoadClientSettings"/> 檔案存在路徑的覆蓋率，
-    /// 以及 <c>AccessToken</c> setter 設定相同 Token 時不重設 connector 快取的行為。
-    /// 因修改靜態狀態，與其他 ClientInfoState 測試同屬 collection，確保串行執行。
+    /// Covers the file-exists path of <see cref="ClientInfo.LoadClientSettings"/>,
+    /// and that the <c>AccessToken</c> setter does not reset the connector cache when given the same token.
+    /// It mutates static state, so it shares the collection with the other ClientInfoState tests to run serially.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoLoadSettingsTests
@@ -24,7 +24,7 @@ namespace Polhem.UI.Core.UnitTests
             typeof(ClientInfo).GetField("s_systemConnector", BindingFlags.NonPublic | BindingFlags.Static)!;
 
         [Fact]
-        [DisplayName("LoadClientSettings 設定檔存在時應成功反序列化並回傳非 null 的 ClientSettings")]
+        [DisplayName("LoadClientSettings deserializes an existing settings file and returns a non-null ClientSettings")]
         public void ClientSettings_FileExists_ReturnsDeserializedSettings()
         {
             string exeName = Assembly.GetEntryAssembly()?.GetName().Name ?? "Client";
@@ -47,7 +47,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("LoadClientSettings 設定檔為空檔案時（反序列化回傳 null）應拋 InvalidOperationException")]
+        [DisplayName("LoadClientSettings throws InvalidOperationException for an empty settings file (deserialization returns null)")]
         public void ClientSettings_EmptyFile_ThrowsInvalidOperationException()
         {
             string exeName = Assembly.GetEntryAssembly()?.GetName().Name ?? "Client";
@@ -55,7 +55,6 @@ namespace Polhem.UI.Core.UnitTests
             string filePath = Path.Combine(FileUtilities.GetAssemblyPath(), fileName);
             var originalCached = s_clientSettingsField.GetValue(null);
 
-            // 空白檔案內容 → XmlCodec.Deserialize<T>("") 回傳 null → ?? throw InvalidOperationException
             File.WriteAllText(filePath, string.Empty);
             try
             {
@@ -72,7 +71,7 @@ namespace Polhem.UI.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("AccessToken setter 設定相同 Token 時不應重設 _systemConnector 快取")]
+        [DisplayName("AccessToken setter does not reset the _systemConnector cache when given the same token")]
         public void AccessToken_SameTokenSetTwice_ConnectorCachePreserved()
         {
             var token = Guid.NewGuid();
@@ -92,7 +91,6 @@ namespace Polhem.UI.Core.UnitTests
                 var connector = ClientInfo.SystemApiConnector;
                 Assert.NotNull(connector);
 
-                // 設定相同 Token，不應觸發 _systemConnector = null
                 ClientInfo.ApplyLoginResult(new LoginResponse
                 {
                     AccessToken = token,

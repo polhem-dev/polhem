@@ -3,12 +3,12 @@ using System.ComponentModel;
 namespace Polhem.Web.Blazor.Server.UnitTests
 {
     /// <summary>
-    /// 骨架階段的煙霧測試：確認專案可編譯、組件可載入。
+    /// Smoke test from the scaffolding stage: confirms the project compiles and the assembly loads.
     /// </summary>
     public class SmokeTests
     {
         [Fact]
-        [DisplayName("骨架階段組件可載入")]
+        [DisplayName("The assembly loads (scaffolding-stage smoke test)")]
         public void AssemblyLoads()
         {
             var assembly = typeof(SmokeTests).Assembly;

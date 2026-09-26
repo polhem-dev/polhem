@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Components.Rendering;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// 補強 <see cref="PolhemLoginPanel"/> Razor 模板 <c>BuildRenderTree</c> 的覆蓋率。
-    /// 測試在無 DI 環境下直接呼叫 <c>BuildRenderTree</c>，
-    /// 涵蓋有無錯誤訊息的兩條條件分支。
+    /// Covers the Razor template <c>BuildRenderTree</c> of <see cref="PolhemLoginPanel"/>.
+    /// The tests call <c>BuildRenderTree</c> directly without DI,
+    /// covering the two conditional branches with and without an error message.
     /// </summary>
     public class PolhemLoginPanelRenderTests
     {
@@ -26,7 +26,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("BuildRenderTree 無錯誤訊息時不應拋出例外")]
+        [DisplayName("BuildRenderTree does not throw when there is no error message")]
         public void BuildRenderTree_NoError_DoesNotThrow()
         {
             var component = new PolhemLoginPanel();
@@ -35,7 +35,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("BuildRenderTree 有錯誤訊息時應渲染錯誤提示區塊且不拋出例外")]
+        [DisplayName("BuildRenderTree renders the error block without throwing when there is an error message")]
         public void BuildRenderTree_WithError_DoesNotThrow()
         {
             var component = new PolhemLoginPanel();
