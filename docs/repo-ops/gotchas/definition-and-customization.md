@@ -1,84 +1,94 @@
-# 踩雷誌：定義層與客製覆蓋層
+# Pitfall log: the definition layer and the customization override layer
 
-對應硬規則見 `.claude/rules/definition.md`；定義型別的設計規範見 `src/Polhem.Definition/CLAUDE.md`。
+The matching hard rules are in `.claude/rules/definition.md`; the design rules for definition types are in
+`src/Polhem.Definition/CLAUDE.md`.
 
-## 「客製範圍有幾種」有兩種數法，而文件各用各的 → 同一個漏連踩三次
+## "How many kinds of customization scope are there" can be counted two ways, and each document used its own → the same omission hit three times
 
-**症狀**：想知道客製覆蓋層到底服務哪些定義，翻文件會拿到三個互相對不上的答案，而且每一個
-看起來都很肯定。實際踩到的三處（全部在 2026-08-12 至 08-13 之間陸續查出）：
+**Symptom**: when you want to know which definitions the customization override layer actually serves, the documents
+give three answers that do not agree with each other, and each one sounds certain. The three places actually hit (all
+found one after another between 2026-08-12 and 08-13):
 
-| 文件 | 當時寫的 | 漏了什麼 |
+| Document | What it said at the time | What it left out |
 |------|---------|---------|
-| `docs/adr/adr-016-*.md` 的 2026-08-06 修訂表 | 「現行**五類**」 | `MenuSettings` 整個不在表上 |
-| `docs/en/customization.md` / `.zh-TW.md` 的「該用哪一種」表 | 五列 | 同上 |
-| `docs/en/definition-files-overview.md` / `.zh-TW.md` §7 | 「**四種型別**，三種粒度」 | `PluginSettings`，也就是唯一「相加」的那種粒度 |
+| The 2026-08-06 revision table in `docs/adr/adr-016-*.md` | "currently **five kinds**" | `MenuSettings` was not in the table at all |
+| The "which one to use" table in `docs/en/customization.md` / `.zh-TW.md` | five rows | same as above |
+| §7 of `docs/en/definition-files-overview.md` / `.zh-TW.md` | "**four types**, three granularities" | `PluginSettings`, which is the only granularity that "adds" |
 
-三處漏的**不是同一項**，所以交叉比對也對不出來：前兩處漏 `MenuSettings`，第三處漏
-`PluginSettings`。
+The three places **did not leave out the same item**, so cross-checking them does not catch it either: the first two
+left out `MenuSettings`, the third left out `PluginSettings`.
 
-**根因不是誰粗心，是「客製範圍」本來就有兩種數法，而三處各用各的、又都只寫一個數字**：
+**The root cause is not that someone was careless. "Customization scope" can inherently be counted two ways, and the
+three places each used their own while each writing down a single number**:
 
-- 以**定義檔**計 → **五份**：`Language` / `FormLayout` / `ProgramSettings` / `PluginSettings` /
-  `MenuSettings`。**這個數字是穩定的**，因為它就是 `ICustomizeDefineReader` 的方法數。
-- 以**「想改什麼」**計 → 數字取決於切多細：`ProgramItem` 的兩個綁定（`BusinessObject` /
-  `Repository`）各自獨立算兩件，`Language` 的文字與選項集又是兩種粒度算兩件。
-  同一套機制因此可以被說成五件、六件或七件，**每一種都不算錯**。
+- Counted by **definition file** → **five**: `Language` / `FormLayout` / `ProgramSettings` / `PluginSettings` /
+  `MenuSettings`. **This number is stable**, because it is the number of methods of `ICustomizeDefineReader`.
+- Counted by **"what you want to change"** → the number depends on how finely you cut: the two bindings of
+  `ProgramItem` (`BusinessObject` / `Repository`) each count as a separate item, and the text and the option sets of
+  `Language` are two granularities that count as two items.
+  So the same mechanism can be described as five, six or seven items, and **none of them is wrong**.
 
-於是「五類」在 ADR 裡指的是意圖、在別處可能指的是檔案，兩邊都自稱五而內容不同，
-**看起來一致反而讓漏掉的那一項更難被發現**。
+As a result, "five kinds" in the ADR meant intents, and elsewhere it may have meant files. Both sides said five with
+different contents, and **looking consistent made the missing item even harder to spot**.
 
-**正解**：
+**Fix**:
 
-1. **要查客製範圍，看原始碼不看文件。** 權威來源是
-   `src/Polhem.Definition/Customization/CustomizeOverlay.cs` 的 XML doc（逐條列出粒度與理由）
-   與 `src/Polhem.Definition/CustomizeOnlyPathOptions.cs`（自陳「the override layer serves only
-   those five types」）。這兩處比所有文件都精確。
-2. **文件寫數字時必須指明數的是檔案還是意圖。** 只寫「五類」不寫數法，就是下一次漏掉一項
-   而沒有人發現的原因。
-3. **往覆蓋層加第六種定義時，要同步的是三個地方**（ADR-016 的現況表、`customization` 雙語的
-   「該用哪一種」表、`definition-files-overview` 雙語的 §7 表），而不是只改離你最近的那一份。
+1. **To find out the customization scope, read the source code, not the documents.** The authoritative sources are
+   the XML doc of `src/Polhem.Definition/Customization/CustomizeOverlay.cs` (which lists each granularity and its
+   reason) and `src/Polhem.Definition/CustomizeOnlyPathOptions.cs` (which states "the override layer serves only
+   those five types"). These two are more precise than any document.
+2. **When a document writes a number, it must say whether it counts files or intents.** Writing only "five kinds"
+   without the way of counting is exactly why the next missing item will go unnoticed.
+3. **When adding a sixth kind of definition to the override layer, three places must be updated together** (the
+   current-state table in ADR-016, the "which one to use" table in both languages of `customization`, and the §7 table
+   in both languages of `definition-files-overview`), not just the one closest to you.
 
-**已修**：[`7160afd2`](https://github.com/jeff377/bee-library/commit/7160afd2)（補 `PluginSettings`）、[`c4014ee5`](https://github.com/jeff377/bee-library/commit/c4014ee5)（補 `MenuSettings`）。
-**殘留的注意事項**：三處表格仍然各用各的數法，只是現在都標明了是哪一種；
-**沒有任何機制保證它們與 `ICustomizeDefineReader` 同步**，加第六種時仍然只能靠人記得。
+**Fixed**: [`7160afd2`](https://github.com/jeff377/bee-library/commit/7160afd2) (added `PluginSettings`), [`c4014ee5`](https://github.com/jeff377/bee-library/commit/c4014ee5) (added `MenuSettings`).
+**Remaining caveat**: the three tables still each use their own way of counting; they now just say which one.
+**No mechanism keeps them in sync with `ICustomizeDefineReader`**; when a sixth kind is added, it still depends on
+someone remembering.
 
-## 客製覆蓋層的粒度不是「越細越好」，`PluginSettings` 是唯一相加的那種
+## The granularity of the customization override layer is not "the finer the better"; `PluginSettings` is the only one that adds
 
-容易誤以為粒度是實作方便度的結果，實際上分界線是**這份東西的性質**
-（理由完整寫在 `CustomizeOverlay` 的 XML doc）：
+It is easy to assume the granularity is a result of implementation convenience. In fact the dividing line is **the
+nature of the thing** (the full reasons are in the XML doc of `CustomizeOverlay`):
 
-| 性質 | 粒度 | 哪些 |
+| Nature | Granularity | Which |
 |------|------|------|
-| 一袋彼此獨立的值 | key 級疊加 | `Language` 的文字 |
-| 一個組合起來才成立的整體 | 整檔／整組取代 | `FormLayout`、`MenuSettings`、`Language` 的選項集 |
-| 一組彼此獨立的綁定 | progId 級再分屬性級 | `ProgramSettings` |
-| **一條依序執行的鏈** | **progId 級相加** | **`PluginSettings`** |
+| A bag of independent values | Layered per key | The text of `Language` |
+| A whole that only holds together as a combination | Replaced as a whole file / whole set | `FormLayout`, `MenuSettings`, the option sets of `Language` |
+| A set of independent bindings | Per progId, then per property | `ProgramSettings` |
+| **A chain executed in order** | **Added per progId** | **`PluginSettings`** |
 
-`PluginSettings` 之所以自成一類，是因為它兩者都不是：plugin 本來就是「加一段」而不是
-「取代一段」，所以套裝鏈先跑、客製鏈接著跑，兩層不互斥。**這也是它最容易在文件裡被漏掉的
-原因**——它不符合「挑一個」那個心智模型，寫表格的人數到「粒度有幾種」時會漏掉它。
+`PluginSettings` is a category of its own because it is neither of the others: a plugin is by nature "add a step",
+not "replace a step", so the packaged chain runs first and the customized chain runs after it, and the two layers do
+not exclude each other. **That is also why it is the one most easily left out of documents**: it does not fit the
+"pick one" mental model, and whoever writes the table misses it when counting "how many granularities there are".
 
-⚠️ **連帶的一條**：`PluginSettings` 同時是**唯一可寫的客製定義**（`LocalOnly` 維護 API），
-客製層其餘一律唯讀。所以「客製層唯讀」這句話在引用時要加上例外，否則會與維護 API 的存在矛盾。
+⚠️ **A related point**: `PluginSettings` is also **the only writable customized definition** (the `LocalOnly`
+maintenance API); everything else in the customization layer is read-only. So when "the customization layer is
+read-only" is quoted, add the exception, otherwise it contradicts the existence of the maintenance API.
 
-## `FormSchema` 中樞圖畫三個層，但「資料庫」那一格不只有 `TableSchema`
+## The `FormSchema` hub diagram draws three layers, but the "database" box is not only `TableSchema`
 
-**症狀**：`definition-files-overview` §2 的圖把 `FormSchema` 的下游畫成
-`FormLayout` / `TableSchema` / 規則，而**正下方的「對資料庫」那一條講的是「執行期依
-`FormSchema` 產生 SQL」**。圖畫的是結構定義，內文講的是執行期存取，兩者不是同一件事，
-讀者對不起來。
+**Symptom**: the diagram in §2 of `definition-files-overview` drew the downstream of `FormSchema` as
+`FormLayout` / `TableSchema` / rules, while **the "towards the database" item right below it talked about "generating
+SQL from `FormSchema` at runtime"**. The diagram showed structural definitions and the text talked about runtime
+access; the two are not the same thing, and readers could not match them up.
 
-**根因**：`FormSchema` 往資料庫那個方向有**兩種**衍生，時機完全不同：
+**Root cause**: `FormSchema` has **two** derivations towards the database, at completely different times:
 
-- **scaffold 期**：由 `FormSchema` 產出一份 `TableSchema`（之後它就是獨立的定義檔，不再跟著變）
-- **執行期**：每次請求依 `FormSchema` 現組 SQL（沒有 ORM、沒有 entity 類別）
+- **Scaffold time**: a `TableSchema` is produced from `FormSchema` (after that it is an independent definition file
+  and no longer follows it)
+- **Runtime**: every request builds SQL on the spot from `FormSchema` (no ORM, no entity classes)
 
-把兩者塞進同一格而只寫前者，會讓框架最有特色的那一半（執行期組 SQL）從圖上消失。
+Putting both in the same box and writing only the first one makes the most distinctive half of the framework
+(building SQL at runtime) disappear from the diagram.
 
-**已修**：[`7160afd2`](https://github.com/jeff377/bee-library/commit/7160afd2)，該格改為 `TableSchema ＋ 執行期 SQL`，說明列改為「存在哪裡 · 怎麼進出」。
+**Fixed**: [`7160afd2`](https://github.com/jeff377/bee-library/commit/7160afd2); the box was changed to `TableSchema ＋ 執行期 SQL`, and the caption row was changed to "where it is stored · how it goes in and out".
 
-⚠️ **已複驗過而不必動的一處**：`docs/architecture-overview.*` §11 的整體架構圖也是
-`FormSchema → FormLayout / TableSchema` 兩節點，乍看是同一個問題，**實際上不是**——
-那是一張**分層**架構圖，SQL 產生掛在下方 Repository 那一層
-（「FormSchema-driven（CRUD SQL 自動產生）」），歸屬正確。
-記在這裡是為了避免下次有人看到那兩個節點又重開一次同樣的檢查。
+⚠️ **One place that was re-checked and needs no change**: the overall architecture diagram in §11 of
+`docs/architecture-overview.*` also has the two nodes `FormSchema → FormLayout / TableSchema`, which at first glance
+looks like the same problem. **It is not**: that is a **layered** architecture diagram, and SQL generation hangs off
+the Repository layer below it ("FormSchema-driven（CRUD SQL 自動產生）"), which is the correct place.
+It is recorded here so that the next person who sees those two nodes does not reopen the same check.

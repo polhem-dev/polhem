@@ -1,85 +1,96 @@
-# 公開 API 基準（PublicAPI.*.txt）維運
+# Maintaining the public API baseline (PublicAPI.*.txt)
 
-`src/` 下每個套件都有一對基準檔，記錄該組件已宣告的公開表面：
+Every package under `src/` has a pair of baseline files that record the public surface the assembly has declared:
 
-| 檔案 | 內容 |
+| File | Content |
 |------|------|
-| `PublicAPI.Shipped.txt` | **已發布**版本的公開表面。發版時才整批更新 |
-| `PublicAPI.Unshipped.txt` | 上次發版**之後**新增的公開 API |
+| `PublicAPI.Shipped.txt` | The public surface of the **released** version. Updated in one batch only at release time |
+| `PublicAPI.Unshipped.txt` | Public APIs added **since** the last release |
 
-由 `Microsoft.CodeAnalysis.PublicApiAnalyzers` 在每次 build 比對，兩個方向都擋：
+`Microsoft.CodeAnalysis.PublicApiAnalyzers` compares them on every build and blocks in both directions:
 
-| 情況 | 診斷 | 你要做的事 |
+| Situation | Diagnostic | What you do |
 |------|------|-----------|
-| 新增了 public 型別／成員 | `RS0016` | 把診斷訊息裡的那一行加進 `PublicAPI.Unshipped.txt` |
-| 刪除或改了簽名 | `RS0017` | 從基準檔刪掉舊的那一行（**這正是 review 要看見的 diff**） |
-| Razor 產生碼的 nullable-oblivious 簽名 | `RS0041` | 已於 `Polhem.Web.Blazor.Server.csproj` 以 `NoWarn` 關閉，見該處註解 |
-| 新多載的參數比既有「帶 optional 參數」的多載還多 | `RS0027` | **不能靠加基準檔解決**，要改設計，見下節 |
+| A public type / member was added | `RS0016` | Add the line from the diagnostic message to `PublicAPI.Unshipped.txt` |
+| Something was removed or its signature changed | `RS0017` | Delete the old line from the baseline file (**this is exactly the diff review needs to see**) |
+| Nullable-oblivious signatures in Razor-generated code | `RS0041` | Turned off with `NoWarn` in `Polhem.Web.Blazor.Server.csproj`; see the comment there |
+| A new overload has more parameters than an existing overload "with optional parameters" | `RS0027` | **Cannot be solved by adding to the baseline file**; the design must change, see the next section |
 
-> **為什麼要有這個機制**：在此之前，「公開表面有刪改」的唯一把關是 commit subject 要帶 `!`，
-> 而這道人工關卡已經連續兩次漏掉真實的 breaking（`IExcelHelper`、`IEvictableCache`，
-> 兩個 commit 的 subject 都沒有 `!`）。基準檔把它變成 build 失敗，以及 review 時看得見的一行 diff。
+> **Why this mechanism exists**: before it, the only guard on "the public surface was removed or changed" was that
+> the commit subject had to carry `!`, and that manual check had missed real breaks twice in a row (`IExcelHelper`,
+> `IEvictableCache`; neither commit subject had `!`). The baseline files turn it into a build failure and a line of
+> diff visible in review.
 >
-> **注意「gate 關閉」不等於「舊帳清完」**（2026-08-07 補）：上面兩個案例的下場不同——
-> `IEvictableCache` 雖然 commit 沒標 `!`，CHANGELOG **有**記到（4.16.0 根檔雙語 + 明細檔雙語）；
-> `IExcelHelper` 則是**連 CHANGELOG 都沒有**，直到 2026-08-07 的框架體檢查出才回溯補記。
-> 導入基準檔擋住的是「以後」，先前已經漏出去的仍需人工回補，不會自己消失。
+> **Note that "the gate is closed" does not mean "the old debt is paid"** (added 2026-08-07): the two cases above
+> ended differently. Although the `IEvictableCache` commit was not marked `!`, the CHANGELOG **did** record it (4.16.0,
+> both languages of the root file and both languages of the detail file); `IExcelHelper` had **no CHANGELOG entry at
+> all** until the framework health check on 2026-08-07 found it and it was recorded retroactively.
+> Introducing the baseline files blocks "from now on"; what had already leaked out before still needs to be backfilled
+> by hand and does not disappear on its own.
 
-## `RS0027`：既有多載帶 optional 參數時，加不了參數更多的新多載
+## `RS0027`: when an existing overload has optional parameters, you cannot add a new overload with more parameters
 
-**症狀**：想為既有公開方法加一個「參數更多」的新多載來承載新功能，build 直接失敗：
+**Symptom**: you want to add a new overload with "more parameters" to an existing public method to carry a new
+feature, and the build fails right away:
 
 ```text
 error RS0027: 'TransformTo' violates the backcompat requirement:
 'API with optional parameter(s) should have the most parameters amongst its public overloads'
 ```
 
-**這一則與上表其他診斷不同：它不是「基準檔沒申報」，把新簽章加進
-`PublicAPI.Unshipped.txt` 完全沒用。** 分析器擋的是簽章組合本身。
+**This one differs from the other diagnostics in the table above: it is not "not declared in the baseline file", and
+adding the new signature to `PublicAPI.Unshipped.txt` does nothing at all.** The analyzer blocks the combination of
+signatures itself.
 
-**根因**：既有多載已經帶預設參數 ——
-`TransformTo(ApiPayload, PayloadFormat, byte[]? encryptionKey = null)`。RS0027 要求
-「帶 optional 參數的 API 必須是所有公開多載中參數最多的那個」，因此任何參數更多的新多載，
-都會讓**既有那個**變成違規。而既有多載已 shipped，拿掉它的預設值是破壞性變更 ——
-兩邊都動不了。
+**Root cause**: the existing overload already has a default parameter:
+`TransformTo(ApiPayload, PayloadFormat, byte[]? encryptionKey = null)`. RS0027 requires that "an API with optional
+parameters must have the most parameters among all its public overloads", so any new overload with more parameters
+makes **the existing one** a violation. And the existing overload has shipped, so removing its default value is a
+breaking change. Neither side can move.
 
-**正解：不加多載，把新資料掛成型別上的屬性讓方法讀取。**
-2026-09-01 的 JSON-RPC 重放防護階段 1（[`509b17e7`](https://github.com/jeff377/bee-library/commit/509b17e7)）就是這樣解的：新的 frame 資料改掛
-`ApiPayload.Frame`（`[JsonIgnore]`，`src/Polhem.Api.Core/JsonRpc/ApiPayload.cs`），
-`ApiPayloadConverter.TransformTo` / `RestoreFrom` 兩個簽章一個字都沒動。
+**The right fix: do not add an overload; put the new data on the type as a property that the method reads.**
+Stage 1 of JSON-RPC replay protection on 2026-09-01 ([`509b17e7`](https://github.com/jeff377/bee-library/commit/509b17e7))
+solved it this way: the new frame data was placed on `ApiPayload.Frame` (`[JsonIgnore]`,
+`src/Polhem.Api.Core/JsonRpc/ApiPayload.cs`), and not a single character of the two signatures
+`ApiPayloadConverter.TransformTo` / `RestoreFrom` changed.
 
-**副作用反而是好的**：簽章不動，呼叫端（`src/Polhem.Api.Client/Connectors/ApiConnector.cs`）
-也跟著不用改。「被迫掛屬性」在這裡不是妥協 —— 新資料本來就屬於 payload 的狀態，
-從一開始就該是屬性而非額外參數。
+**The side effect is actually good**: because the signatures did not change, the caller
+(`src/Polhem.Api.Client/Connectors/ApiConnector.cs`) did not need to change either. "Being forced to use a property"
+is not a compromise here: the new data belongs to the payload's state and should have been a property rather than an
+extra parameter from the start.
 
-**次佳選項是新多載改名**（如 `TransformToFramed`）：編得過，但公開 API 表面會多出一組
-語意重疊的名字。只有在新資料真的不屬於任何既有型別時才考慮。
+**The second-best option is to give the new overload a different name** (such as `TransformToFramed`): it compiles,
+but the public API surface gains a set of names with overlapping meaning. Consider it only when the new data really
+belongs to no existing type.
 
-> 判別法：**要新加的東西是「這次呼叫的參數」還是「這個物件的狀態」？**
-> 是狀態就掛屬性，RS0027 只是提早把這個設計問題攤開。
-> 若確定該是參數，第一次設計公開方法時就別急著給預設值 —— optional 參數把該方法
-> **永久釘死**成「參數最多的那個多載」，是比想像中更硬的長期約束。
+> To decide: **is the new thing "a parameter of this call" or "state of this object"?**
+> If it is state, make it a property; RS0027 just brings this design question into the open early.
+> If it really should be a parameter, do not rush to give it a default value when you first design a public method:
+> an optional parameter **permanently pins** that method as "the overload with the most parameters", a harder
+> long-term constraint than you might think.
 
-## 日常：改了公開 API 怎麼辦
+## Day to day: what to do when you changed a public API
 
-build 失敗的訊息本身就含正確格式的那一行，例如：
+The build failure message itself contains the line in the correct format, for example:
 
 ```text
 error RS0016: Symbol 'Polhem.Base.Foo.Bar() -> void' is not part of the declared public API
 ```
 
-把單引號內的字串整行貼進該專案的 `PublicAPI.Unshipped.txt` 即可（維持排序不是硬性要求，但建議）。
-IDE 內也可用分析器提供的 code fix（*Add to public API*）自動加入。
+Paste the string inside the single quotes as a whole line into that project's `PublicAPI.Unshipped.txt` (keeping it
+sorted is not a hard requirement, but recommended).
+In the IDE you can also use the code fix the analyzer provides (*Add to public API*) to add it automatically.
 
-## 發版時
+## At release time
 
-把各專案 `PublicAPI.Unshipped.txt` 的內容併入同專案的 `PublicAPI.Shipped.txt`，
-再把 `Unshipped` 清空（保留 `#nullable enable` 標頭）。併入前的 `Unshipped` 內容就是
-該版新增公開 API 的完整清單，可直接拿來對帳 CHANGELOG。
+Merge the contents of each project's `PublicAPI.Unshipped.txt` into the same project's `PublicAPI.Shipped.txt`, then
+empty `Unshipped` (keep the `#nullable enable` header). The contents of `Unshipped` before the merge are the complete
+list of public APIs added in that version, and can be used directly to reconcile the CHANGELOG.
 
-## 整批重建基準（少用）
+## Rebuilding the baseline in bulk (rarely)
 
-只有在基準檔大規模失準時才需要——例如剛導入分析器，或一次搬動大量命名空間。
+Needed only when the baseline files are badly out of line, for example right after introducing the analyzer, or when
+moving many namespaces at once.
 
 ```bash
 SARIF=$(mktemp -d)
@@ -93,41 +104,43 @@ for i in $(seq 1 10); do
 done
 ```
 
-需要迴圈是因為相依專案要先編譯成功，下一層才會被分析——每跑一輪解開一層，
-本 repo 的相依深度約需 6 輪收斂。
+The loop is needed because a dependent project must compile successfully before the next layer gets analyzed. Each
+round unlocks one layer; the dependency depth of this repo needs about 6 rounds to converge.
 
-`-p:PolhemSarifDir` 這個開關定義在 `src/Directory.Build.props`，未傳值時完全不生效。
+The `-p:PolhemSarifDir` switch is defined in `src/Directory.Build.props` and has no effect at all when no value is
+passed.
 
 ---
 
-## Analyzer 規則的同一套機制（`AnalyzerReleases.*.md`）
+## The same mechanism for analyzer rules (`AnalyzerReleases.*.md`)
 
-`src/Polhem.Analyzers/` 另有一對基準檔，形狀與 `PublicAPI.*` 相同，由
-`Microsoft.CodeAnalysis.Analyzers` 的 release tracking 比對：
+`src/Polhem.Analyzers/` has another pair of baseline files, the same shape as `PublicAPI.*`, compared by the release
+tracking of `Microsoft.CodeAnalysis.Analyzers`:
 
-| 檔案 | 內容 |
+| File | Content |
 |------|------|
-| `AnalyzerReleases.Shipped.md` | **已發布**版本的規則，依 `## Release x.y.z` 分節 |
-| `AnalyzerReleases.Unshipped.md` | 上次發版**之後**新增／移除／改嚴重度的規則 |
+| `AnalyzerReleases.Shipped.md` | The rules of **released** versions, in sections by `## Release x.y.z` |
+| `AnalyzerReleases.Unshipped.md` | Rules added / removed / changed in severity **since** the last release |
 
-| 情況 | 診斷 |
+| Situation | Diagnostic |
 |------|------|
-| 新規則未申報 | `RS2000` |
-| 已出貨規則消失，且未在 Removed Rules 申報 | `RS2003` |
+| A new rule is not declared | `RS2000` |
+| A shipped rule disappeared and was not declared under Removed Rules | `RS2003` |
 
-> ⚠️ **`RS2003` 對空的 Shipped 檔完全不會觸發。** 本 repo 的 `Shipped.md` 從建立起到
-> 4.28.0 之前**一行都沒有**，而 analyzer 自 4.16.0 就隨 `Polhem.Definition` 出貨了。
-> 後果正是空基準檔該有的後果：`RS2000` 照樣擋得住「新規則未申報」，但「已出貨的規則被移除」
-> 這一半形同不存在 —— **POLHEM4001–POLHEM4004 在 4.19.0 被退役，沒有任何東西出聲**。
-> 4.28.0 依 tag 快照回填了 4.16.0 / 4.18.0 / 4.19.0 三節。
+> ⚠️ **`RS2003` never fires against an empty Shipped file.** This repo's `Shipped.md` **had not a single line** from
+> its creation until before 4.28.0, while the analyzer had shipped with `Polhem.Definition` since 4.16.0.
+> The consequence was exactly what an empty baseline file implies: `RS2000` still blocked "a new rule is not
+> declared", but the "a shipped rule was removed" half effectively did not exist. **POLHEM4001–POLHEM4004 were
+> retired in 4.19.0, and nothing made a sound.**
+> 4.28.0 backfilled the three sections 4.16.0 / 4.18.0 / 4.19.0 from tag snapshots.
 
-### 發版時要做的事
+### What to do at release time
 
-`PublicAPI.Unshipped.txt → Shipped.txt` 之外，**還有第三份基準要搬**：
+Besides `PublicAPI.Unshipped.txt → Shipped.txt`, **there is a third baseline to move**:
 
 ```
-AnalyzerReleases.Unshipped.md  →  AnalyzerReleases.Shipped.md（新增一節 ## Release x.y.z）
+AnalyzerReleases.Unshipped.md  →  AnalyzerReleases.Shipped.md (add a new section ## Release x.y.z)
 ```
 
-漏搬不會有任何訊號 —— 規則會永遠停在 Unshipped，而 `RS2003` 也就永遠保護不到它。
-這正是 4.16.0–4.27.0 之間發生的事。
+Forgetting to move it gives no signal at all: the rules stay in Unshipped forever, and `RS2003` never protects them.
+That is exactly what happened between 4.16.0 and 4.27.0.

@@ -1,21 +1,22 @@
-# 測試撰寫樣板
+# Test templates
 
-本 repo 自家測試套件（`tests/Polhem.*.UnitTests`）的可貼用樣板。**維運文件、非公開文件**
-——讀者是 polhem 的維護者，不是框架使用者。
+Copy-ready templates for this repo's own test suites (`tests/Polhem.*.UnitTests`). **A maintainer document, not a
+public document**: its readers are polhem maintainers, not framework users.
 
-**規則與判準常駐於 `.claude/rules/testing.md`**（哪種情境用哪個 attribute、哪個 fixture、
-env var 命名規則、全域狀態的平行安全要求）。本檔只放程式碼形狀，**不重複條文**。
-兩邊有衝突時以 `rules/testing.md` 為準。
+**The rules and criteria are always loaded from `.claude/rules/testing.md`** (which attribute and which fixture to use
+in which situation, the env var naming rule, the parallel-safety requirements for global state). This file holds only
+the shape of the code and **does not repeat the rules**.
+When the two conflict, `rules/testing.md` wins.
 
 ---
 
-## 基本形狀
+## Basic shapes
 
-### 單一驗證：`[Fact]`
+### A single check: `[Fact]`
 
 ```csharp
 [Fact]
-[DisplayName("建立 Session 應回傳有效 Token")]
+[DisplayName("CreateSession returns a valid token")]
 public void CreateSession_ReturnsValidToken()
 {
     var token = _repo.CreateSession(user);
@@ -23,13 +24,13 @@ public void CreateSession_ReturnsValidToken()
 }
 ```
 
-### 參數化：`[Theory]` + `[InlineData]`
+### Parameterized: `[Theory]` + `[InlineData]`
 
 ```csharp
 [Theory]
 [InlineData(DefineType.SystemSettings, typeof(SystemSettings))]
 [InlineData(DefineType.UserSettings, typeof(UserSettings))]
-[DisplayName("ToClrType 回傳正確型別")]
+[DisplayName("ToClrType returns the matching CLR type")]
 public void ToClrType_ValidType(DefineType defineType, Type expectedType)
 {
     var result = defineType.ToClrType();
@@ -37,14 +38,14 @@ public void ToClrType_ValidType(DefineType defineType, Type expectedType)
 }
 ```
 
-### 需要資料庫：`[DbFact(DatabaseType)]`
+### Needs a database: `[DbFact(DatabaseType)]`
 
-每個 `DatabaseType` 各寫一支，連線 ID 用 `common_{dbtype_lower}`
-（由 `TestDbConventions.GetDatabaseId` 產生）：
+Write one test per `DatabaseType`. The connection ID is `common_{dbtype_lower}` (produced by
+`TestDbConventions.GetDatabaseId`):
 
 ```csharp
 [DbFact(DatabaseType.SQLServer)]
-[DisplayName("SQL Server 上 ExecuteDataTable 查詢應回傳有效 DataTable")]
+[DisplayName("ExecuteDataTable query returns a valid DataTable on SQL Server")]
 public void ExecuteDataTable_SqlServer_ReturnsDataTable()
 {
     var dbAccess = new DbAccess("common_sqlserver");
@@ -53,7 +54,7 @@ public void ExecuteDataTable_SqlServer_ReturnsDataTable()
 }
 
 [DbFact(DatabaseType.PostgreSQL)]
-[DisplayName("PostgreSQL 上 ExecuteDataTable 查詢應回傳有效 DataTable")]
+[DisplayName("ExecuteDataTable query returns a valid DataTable on PostgreSQL")]
 public void ExecuteDataTable_PostgreSQL_ReturnsDataTable()
 {
     var dbAccess = new DbAccess("common_postgresql");
@@ -62,15 +63,16 @@ public void ExecuteDataTable_PostgreSQL_ReturnsDataTable()
 }
 ```
 
-### 需要本機服務：`[LocalOnlyFact]` / `[LocalOnlyTheory]`
+### Needs a local service: `[LocalOnlyFact]` / `[LocalOnlyTheory]`
 
-> **下面是示意、不是現存程式碼——別去 grep 它。** 兩個 attribute 目前無使用者
-> （2026-08-11 實測），留著是因為「需要本機服務的整合測試」這個情境仍成立。
+> **The following is an illustration, not existing code; do not grep for it.** Neither attribute has a user at
+> present (measured 2026-08-11). They are kept because the situation "an integration test that needs a local service"
+> still exists.
 
 ```csharp
 [LocalOnlyTheory]
 [InlineData("http://localhost/jsonrpc/api")]
-[DisplayName("ApiConnectValidator 驗證 URL 應回傳遠端連線類型")]
+[DisplayName("ApiConnectValidator returns the remote connect type for a URL")]
 public void Validate_ValidUrl_ReturnsRemoteConnectType(string apiUrl) { ... }
 ```
 
@@ -78,8 +80,8 @@ public void Validate_ValidUrl_ReturnsRemoteConnectType(string apiUrl) { ... }
 
 ## Per-class fixture
 
-需要 DI-resolved 後端服務（`IDefineAccess` / `ISessionInfoService` /
-`IBusinessObjectFactory` 等）時：
+When you need DI-resolved backend services (`IDefineAccess` / `ISessionInfoService` / `IBusinessObjectFactory` and
+so on):
 
 ```csharp
 public class MyTests : IClassFixture<PolhemTestFixture>
@@ -96,18 +98,18 @@ public class MyTests : IClassFixture<PolhemTestFixture>
 }
 ```
 
-Fixture 的選擇（`PolhemTestFixture` / `UseTempDefinePath` / `SharedDbFixture`）見
-`.claude/rules/testing.md` —— **選錯 fixture 是「本機綠、CI 紅」的頭號成因**，
-那條判準留在常駐區。
+Choosing the fixture (`PolhemTestFixture` / `UseTempDefinePath` / `SharedDbFixture`) is covered in
+`.claude/rules/testing.md`. **The wrong fixture is the number-one cause of "green locally, red in CI"**, so that
+criterion stays in the always-loaded section.
 
 ---
 
-## 寫檔隔離：`SaveDefine` 系列必須切到 temp
+## Write isolation: the `SaveDefine` family must switch to temp
 
-規則見 `.claude/rules/testing.md`（`tests/Define/` 是多專案共用的固定資料，不得寫入）。
-以下是兩種做法的形狀。
+The rule is in `.claude/rules/testing.md` (`tests/Define/` is fixed data shared by several projects and must not be
+written to). The shapes of the two approaches follow.
 
-### Fixture-level（推薦）
+### Fixture level (recommended)
 
 ```csharp
 public sealed class WritableDefineFixture : PolhemTestFixture
@@ -132,7 +134,7 @@ public class MySaveTests : IClassFixture<WritableDefineFixture>
 
 ### Method-level inline temp dir
 
-對純資料寫入測試（不需 DI），inline temp dir 比建立 fixture subclass 更輕：
+For pure data-writing tests (no DI), an inline temp dir is lighter than creating a fixture subclass:
 
 ```csharp
 [Fact]
@@ -156,19 +158,20 @@ public void SaveSystemSettings_WritesFile()
 
 ---
 
-## 全域狀態的序列化 marker
+## Serialization marker for global state
 
-需要保護尚未 DI 化的 process-wide static 時（判準與現存清單見 `rules/testing.md`）：
+When you need to protect a process-wide static that has not been moved into DI yet (the criteria and the current list
+are in `rules/testing.md`):
 
 ```csharp
-// 1. 在 test 專案根目錄宣告 collection
+// 1. Declare the collection at the root of the test project.
 [CollectionDefinition("DbConnectionState")]
 public class DbConnectionStateCollection
 {
-    // 純 marker，無 fixture
+    // A pure marker, with no fixture.
 }
 
-// 2. 所有會修改該 static 的 test class 加同一 [Collection]
+// 2. Every test class that modifies that static gets the same [Collection].
 [Collection("DbConnectionState")]
 public class DbConnectionManagerTests { ... }
 
@@ -176,5 +179,5 @@ public class DbConnectionManagerTests { ... }
 public class DbAccessFactoryTests { ... }
 ```
 
-**用 `const` 而非字串字面值**（如 `ProcessWideStateCollection.Name`）：打錯字的字面值會讓
-xUnit 建一個沒人共用的隱式分組，看起來有序列化、實際沒有，且不會有編譯錯。
+**Use a `const` rather than a string literal** (such as `ProcessWideStateCollection.Name`): a mistyped literal makes
+xUnit create an implicit group that nobody shares. It looks serialized but is not, and there is no compile error.

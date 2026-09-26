@@ -1,182 +1,208 @@
-# 計量單位小數位的外部佐證（prior art）
+# External evidence on unit-of-measure decimals (prior art)
 
-**這不是踩雷誌**，所以不放在 `gotchas/`。它是一份**設計決策的外部佐證**：查 SAP 與 Odoo
-怎麼處理計量單位（unit of measure）的小數位與捨入，用來檢驗 polhem 現行設計哪些是
-刻意、哪些是缺口。
+**This is not a pitfall log**, so it is not in `gotchas/`. It is **external evidence for a design decision**: a look at
+how SAP and Odoo handle the decimals and rounding of units of measure, used to check which parts of polhem's current
+design are deliberate and which are gaps.
 
-決定本身與拒絕過的替代方案在
-[ADR-026](../adr/adr-026-numeric-semantics-rounding.md) —— **本檔不複寫那些**，只放外部對照與判讀。
-Polhem 這一側的現況以原始碼為準，本檔提到的型別與成員名稱就是查證入口。
+The decision itself and the alternatives that were rejected are in
+[ADR-026](../adr/adr-026-numeric-semantics-rounding.md). **This file does not copy them**; it holds only the external
+comparison and its reading.
+The current state on the Polhem side is defined by the source code; the type and member names mentioned in this file
+are the entry points for checking it.
 
-> **這是 2026-09-11 查到的狀態，不是持續維護的比較表。** 兩家都在演進（Odoo 19 就把
-> 逐單位的捨入設定整個拿掉了），下次要引用前先確認還成立。查證邊界寫在文末附錄，一併讀。
+> **This is the state found on 2026-09-11, not a continuously maintained comparison.** Both products keep evolving
+> (Odoo 19 removed the per-unit rounding setting entirely); confirm that it still holds before citing it next time.
+> The limits of the verification are in the appendix at the end; read them too.
 
-## 一句話結論
+## Conclusion in brief
 
-- **「位數放在系統層、逐單位設定」三者一致**，層級本身不需要改。
-- **單位存位數**（而不是捨入單位）這一點 Polhem 跟 SAP 一樣；Odoo 16–18 存捨入單位，
-  **19 起連逐單位都不設了**，只剩一個全系統位數。
-- 真正的差異有兩個：**手填數量不捨、也不擋**（兩家都有機制），以及
-  **沒綁單位的數量欄會退到公司層位數**（兩家都沒有這個層級）。
+- **"Decimals live at the system level, set per unit" is the same in all three**; the level itself does not need to
+  change.
+- **The unit stores decimals** (not a rounding unit): Polhem is the same as SAP here. Odoo 16–18 stores a rounding
+  unit, and **from 19 on does not even set it per unit**, leaving only one system-wide number of decimals.
+- There are two real differences: **a manually entered quantity is neither rounded nor rejected** (both products have
+  a mechanism for this), and **a quantity field not bound to a unit falls back to the company-level decimals** (neither
+  product has that level).
 
-## 五個問題的對照
+## The five questions compared
 
-| 問題 | SAP（ECC／S/4HANA） | Odoo | Polhem |
+| Question | SAP (ECC / S/4HANA) | Odoo | Polhem |
 |---|---|---|---|
-| **1. 位數存哪** | `T006`（client 層）兩欄：`ANDEC` 捨入位數、`DECAN` 顯示位數，都是整數型別。`QUAN` 欄本身的 DB 小數位與單位位數無關 | 16–18：每個單位的 `uom.uom.rounding`（捨入單位，預設 0.01）＋全域 `decimal.precision`「Product Unit of Measure」。saas-18.1：`rounding` 改為由全域位數算出。saas-19.2 起：欄位移除 | `UnitItem.Decimals`（整數，系統層 define `UnitSettings`）。DB scale 與它正交（ADR-026 D6） |
-| **2. 捨入單位與位數分開？** | 兩欄都是位數，沒有捨入單位。「捨到倍數」在物料／工廠層（`MARC-BSTRF`、捨入參數檔 `RDPRF`），性質是業務規則 | 16–18 分開：`rounding` 管換算、全域位數管 ORM 寫入，兩者之間只有畫面 onchange 警告。19 起合一 | 一個數字兩用：顯示（`NumberFormatResolver.ResolveFormat`）與捨入（`RoundByKind`）。沒有捨入單位 |
-| **3. 誰決定、覆寫到哪層** | client 層。公司代碼、物料、單據列的位數覆寫機制，官方來源查不到 | 全資料庫一份，`decimal.precision` 沒有公司欄位。16–18 可逐單位；產品、單據列都不行 | 系統層。欄位綁了單位就不看公司；沒綁時退公司位數（見〈單位設定的層級〉） |
-| **4. 何時捨、怎麼捨** | 顯示依 `DECAN`。換算用 `UNIT_CONVERSION_SIMPLE` 的 `ROUND_SIGN`（`+` 上、`-` 下、`X` 商業、空白不捨，預設空白），依據 `T006` 哪一欄**未確認**。輸入沒有框架層捨入，由應用層拒絕（例：採購 `ME 678`） | 有 `digits` 的 Float 欄在進 cache／寫 DB 時 `float_round`，預設 HALF-UP（遠離零）。換算 `_compute_quantity` 預設 `UP`，捨到目標單位；`stock.move.product_qty` 改用 HALF-UP。17.0 完成數量不合單位精度時擲 `UserError` | 只捨計算欄（`FormExpressionCalculator.ApplyComputed` → `RoundByKind`，`AwayFromZero`）。`NumericEdit` 寫回完整精度，只在顯示時格式化。沒有單位換算 |
-| **5. 明細單位不同時的合計** | ALV 以 `QFIELDNAME` 綁單位欄，合計 "displayed separately by unit"（分單位小計）。交貨單抬頭 `LIKP-BTGEW`＋`GEWEI`，換算成抬頭單位的規則在 ECC 查不到 | 銷售／採購明細數量欄沒有合計；`stock.move` 清單有 `sum` 且不換算（讀 XML 推論，未實跑）；`sale.report` 在 SQL 先換成產品基準單位再加總；出貨重量用系統單一重量單位 | 框架 Grid 沒有頁尾合計。`AmountColumnSummary.TryComputeTotal` 對混單位回 `null`（不換算），目前只有 DemoCenter 的 `MultiUnitModule` 手接 |
+| **1. Where the decimals are stored** | `T006` (client level), two columns: `ANDEC` rounding decimals and `DECAN` display decimals, both integers. The DB scale of the `QUAN` field itself is unrelated to the unit's decimals | 16–18: each unit's `uom.uom.rounding` (a rounding unit, default 0.01) + the global `decimal.precision` "Product Unit of Measure". saas-18.1: `rounding` becomes computed from the global decimals. From saas-19.2: the field is removed | `UnitItem.Decimals` (an integer, in the system-level define `UnitSettings`). DB scale is orthogonal to it (ADR-026 D6) |
+| **2. Are the rounding unit and the decimals separate?** | Both columns are decimals; there is no rounding unit. "Round to a multiple" lives at the material / plant level (`MARC-BSTRF`, rounding profile `RDPRF`) and is a business rule | Separate in 16–18: `rounding` governs conversion, the global decimals govern ORM writes, and the only link between them is an onchange warning on screen. Merged from 19 on | One number with two uses: display (`NumberFormatResolver.ResolveFormat`) and rounding (`RoundByKind`). No rounding unit |
+| **3. Who decides, and down to which level it can be overridden** | Client level. No override mechanism at company code, material or document line level could be found in official sources | One per database; `decimal.precision` has no company field. Per unit in 16–18; not per product or per document line | System level. A field bound to a unit ignores the company; an unbound one falls back to the company decimals (see "Levels of unit settings: the three compared") |
+| **4. When and how it rounds** | Display follows `DECAN`. Conversion uses `ROUND_SIGN` of `UNIT_CONVERSION_SIMPLE` (`+` up, `-` down, `X` commercial, blank no rounding, default blank); which `T006` column it relies on is **unconfirmed**. Input has no framework-level rounding; the application layer rejects it (for example purchasing `ME 678`) | A Float field with `digits` is `float_round`ed when it enters the cache / is written to the DB, HALF-UP by default (away from zero). Conversion `_compute_quantity` defaults to `UP`, rounding to the target unit; `stock.move.product_qty` uses HALF-UP instead. In 17.0 a done quantity that does not fit the unit precision raises `UserError` | Only calculated fields are rounded (`FormExpressionCalculator.ApplyComputed` → `RoundByKind`, `AwayFromZero`). `NumericEdit` writes back full precision and only formats on display. No unit conversion |
+| **5. Totals when detail lines have different units** | ALV binds the unit field with `QFIELDNAME`, and the total is "displayed separately by unit" (subtotals per unit). The delivery header has `LIKP-BTGEW` + `GEWEI`; the rule for converting to the header unit could not be found in ECC | Sales / purchase line quantity fields have no total; the `stock.move` list has `sum` and does not convert (inferred from the XML, not run); `sale.report` converts to the product's base unit in SQL before summing; shipping weight uses the system's single weight unit | The framework Grid has no footer total. `AmountColumnSummary.TryComputeTotal` returns `null` for mixed units (no conversion); currently only DemoCenter's `MultiUnitModule` wires it up by hand |
 
-### Odoo 的版本差異（影響上表結論的部分）
+### Odoo version differences (the parts that affect the table above)
 
-| 項目 | 16.0 / 17.0 / 18.0 | saas-18.1 起 | saas-19.2 起（master 相同） |
+| Item | 16.0 / 17.0 / 18.0 | From saas-18.1 | From saas-19.2 (master the same) |
 |---|---|---|---|
-| `uom.category` | 存在 | 移除，改為 `relative_factor` ＋ `relative_uom_id` 樹狀結構 | — |
-| `uom.uom.rounding` | stored，逐單位設定，`CHECK (rounding>0)` | compute，值為 `10**-precision_get('Product Unit')`，逐單位覆寫消失 | 欄位移除 |
-| 全域精度名稱 | 「Product Unit of Measure」（product 模組） | 「Product Unit」（搬到 uom 模組） | 同左 |
-| `_compute_quantity` 捨到哪 | 目標單位的 `rounding` | 同左（但已等於全域位數） | 直接用全域位數 |
-| `float_round` 捨入法 | 16.0 只有 `UP`／`DOWN`／`HALF-UP`；17.0 加 `HALF-EVEN`／`HALF-DOWN`；18.0 未知方法改擲 `ValueError` | — | — |
-| 單據列單位欄名 | `product_uom` | — | 19.0 為 `product_uom_id` |
+| `uom.category` | Exists | Removed, replaced by a tree structure of `relative_factor` + `relative_uom_id` | — |
+| `uom.uom.rounding` | Stored, set per unit, `CHECK (rounding>0)` | Computed, value `10**-precision_get('Product Unit')`; per-unit override is gone | Field removed |
+| Name of the global precision | "Product Unit of Measure" (product module) | "Product Unit" (moved to the uom module) | Same as left |
+| What `_compute_quantity` rounds to | The target unit's `rounding` | Same as left (but already equal to the global decimals) | The global decimals directly |
+| `float_round` rounding methods | 16.0 has only `UP` / `DOWN` / `HALF-UP`; 17.0 adds `HALF-EVEN` / `HALF-DOWN`; 18.0 raises `ValueError` for an unknown method | — | — |
+| Unit field name on document lines | `product_uom` | — | `product_uom_id` in 19.0 |
 
-`_compute_quantity` 的預設 `rounding_method='UP'` 在所有查過的版本都沒變。
+The default `rounding_method='UP'` of `_compute_quantity` did not change in any version checked.
 
-## 對 polhem 的意義
+## What it means for polhem
 
-### 1. 手填數量不捨、也不擋 —— 缺口（未決）
+### 1. A manually entered quantity is neither rounded nor rejected: a gap (undecided)
 
-- ADR-026 D1 寫 `NumberKind` 決定「(b) 是否於寫入時捨入」，`Quantity`／`Weight` 屬 `Round`；
-  `.claude/rules/database.md` 也寫四捨五入類「寫入時 `AwayFromZero` 捨到該欄位位數」。
-- 實作上 `RoundByKind` 的呼叫端只有 `FormExpressionCalculator`；`NumericEdit` 寫回完整精度，
-  `FormBusinessObject` 存檔也不捨。
-- 後果：單位 PCS（0 位）手填 1.5，畫面顯示 2、資料庫存 1.5；以它為來源的合計會跟畫面上的明細
-  對不起來 —— 正是 D2 round-then-sum 要防的事。**這條不限單位，金額與百分比同樣成立。**
-- 兩家都有機制：Odoo 在 ORM 寫入時捨到全域位數；SAP 在應用層拒絕超位數輸入。
-- **2026-09-11 決定先記錄、不處理。** 待決的方向有三：存檔前捨 `Round` 類、超位數時擋輸入、
-  或把 ADR 的「寫入時」改成「計算後」對齊現行實作。
+- ADR-026 D1 says `NumberKind` decides "(b) whether to round on write", and `Quantity` / `Weight` are `Round`;
+  `.claude/rules/database.md` also says the rounded kinds are "rounded `AwayFromZero` to the column's scale on write".
+- In the implementation, the only caller of `RoundByKind` is `FormExpressionCalculator`; `NumericEdit` writes back
+  full precision, and saving through `FormBusinessObject` does not round either.
+- Consequence: with unit PCS (0 places), entering 1.5 by hand shows 2 on screen and stores 1.5 in the database; a total
+  based on it will not match the detail lines on screen, which is exactly what D2's round-then-sum is meant to
+  prevent. **This is not limited to units; amounts and percentages are the same.**
+- Both products have a mechanism: Odoo rounds to the global decimals on ORM write; SAP rejects input with too many
+  decimals in the application layer.
+- **Decided on 2026-09-11: record it, do not handle it yet.** Three directions are open: round the `Round` kinds before
+  saving, reject input with too many decimals, or change the ADR's "on write" to "after calculation" to match the
+  current implementation.
 
-### 2. 單位代碼查不到時退 0 位、不報錯 —— 缺口候選
+### 2. An unknown unit code falls back to 0 places without an error: a candidate gap
 
-- `UnitSettings.GetDecimals` 查不到回 `FallbackDecimals`（0）。`FormField.UnitField` 的 XML doc
-  只說明空值退公司位數，沒提查不到的情形。重量欄綁到打錯的 `KGS`，1.234 會被捨成 1。
-- ADR-026 的 2026-09-10 修訂把公司本幣改為必填，理由是「退路換到的是靜默的錯誤位數」——
-  這裡是同一個形狀。
-- Odoo 的單位欄是指向 `uom.uom` 的 Many2one，無效代碼進不去。SAP 單位 domain `MEINS` 的
-  值表是 `T006`（見附錄查證邊界）。
-- 幣別那一側（查不到退 0.01）同形狀，不在本次範圍。
+- `UnitSettings.GetDecimals` returns `FallbackDecimals` (0) when it finds nothing. The XML doc of `FormField.UnitField`
+  only explains that an empty value falls back to the company decimals, and says nothing about an unknown code. A
+  weight field bound to a mistyped `KGS` rounds 1.234 to 1.
+- ADR-026's revision of 2026-09-10 made the company's local currency required, on the grounds that "what the fallback
+  buys is silently wrong decimals"; this is the same shape.
+- Odoo's unit field is a Many2one pointing to `uom.uom`, so an invalid code cannot get in. The value table of SAP's
+  unit domain `MEINS` is `T006` (see the limits of the verification in the appendix).
+- The currency side (falling back to 0.01 when nothing is found) has the same shape and is out of scope this time.
 
-### 3. 單位存位數、幣別存捨入單位 —— 對齊 SAP，合理，但理由沒寫
+### 3. Units store decimals, currencies store a rounding unit: aligned with SAP and reasonable, but the reason is not written down
 
-- 業界沒有「單位必須存捨入單位」的慣例：SAP 存位數，Odoo 19 連逐單位都放棄。
-  「捨到 0.5 箱」這類需求在 SAP 是物料層的業務規則（`BSTRF`／`RDPRF`），不是單位的位數。
-- ADR-026 與引入時的 commit [`eb10bc0c`](https://github.com/jeff377/bee-library/commit/eb10bc0c) 只寫「位數直存」，沒寫為什麼跟幣別不同。
-  算有意識但沒留理由；要補的話一句話進 ADR-026 即可。
+- The industry has no convention that "a unit must store a rounding unit": SAP stores decimals, and Odoo 19 gave up
+  even the per-unit setting.
+  A need such as "round to 0.5 boxes" is, in SAP, a material-level business rule (`BSTRF` / `RDPRF`), not the unit's
+  decimals.
+- ADR-026 and the commit that introduced it, [`eb10bc0c`](https://github.com/jeff377/bee-library/commit/eb10bc0c),
+  only say "decimals are stored directly", not why this differs from currencies.
+  It counts as deliberate but without a recorded reason; one sentence in ADR-026 would be enough to add it.
 
-### 4. `ANDEC`／`DECAN` 合成一欄 —— 簡化可接受，但 XML doc 寫錯
+### 4. `ANDEC` / `DECAN` merged into one column: an acceptable simplification, but the XML doc is wrong
 
-SAP 分捨入位數與顯示位數；Polhem 一個 `Decimals` 兩用；Odoo 19 也合一。
-問題在 `UnitItem.Decimals` 的 XML doc 寫「display decimal places (SAP T006 `ANDEC`)」：
-`ANDEC` 是**捨入**位數、顯示位數是 `DECAN`，而且這個值實際上也用在捨入。
+SAP separates rounding decimals and display decimals; Polhem uses one `Decimals` for both; Odoo 19 merged them too.
+The problem is that the XML doc of `UnitItem.Decimals` says "display decimal places (SAP T006 `ANDEC`)":
+`ANDEC` is the **rounding** decimals and the display decimals are `DECAN`, and this value is in fact also used for
+rounding.
 
-### 5. 沒有單位換算 —— 範圍外，但 ADR 沒記
+### 5. No unit conversion: out of scope, but the ADR does not record it
 
-SAP 有 `T006` 的 SI 換算欄位（`ZAEHL`／`NENNR`／`EXP10`／`ADDKO`）與物料層 `MARM`；
-Odoo 有 `factor`（19 起 `relative_factor`）。Polhem 的 `UnitItem.Dimension` 只做 UI 分組，
-因此混單位合計只能隱藏，做不到 Odoo 報表那樣先換成基準單位再加。
-ADR-026「未做」清單列了 TCURF、KPEIN、DIFF，沒列單位換算。
+SAP has the SI conversion columns of `T006` (`ZAEHL` / `NENNR` / `EXP10` / `ADDKO`) and the material-level `MARM`;
+Odoo has `factor` (`relative_factor` from 19 on). Polhem's `UnitItem.Dimension` is only for UI grouping,
+so a mixed-unit total can only be hidden; it cannot convert to a base unit first and then sum, the way Odoo's reports
+do.
+ADR-026's "not done" list names TCURF, KPEIN and DIFF, but not unit conversion.
 
-### 6. 混單位合計 —— 方向一致，cookbook 說過頭
+### 6. Mixed-unit totals: the direction agrees, the cookbook overstates it
 
-「不跨單位相加」與 SAP 一致（SAP 分單位小計，Polhem 整個不顯示）。但 cookbook
-〈Units of measure〉讀起來像 Grid 內建了這個 gate，實際上框架 Grid 沒有頁尾，只有 sample 手接。
+"Do not add across units" agrees with SAP (SAP shows subtotals per unit; Polhem shows nothing at all). But the
+cookbook's "Units of measure" section reads as if the Grid had this gate built in, when in fact the framework Grid has
+no footer and only a sample wires it up by hand.
 
-### 7. 只有列層單位、沒有表單層 —— 刻意，已記錄
+### 7. Only a row-level unit, no form-level unit: deliberate, already recorded
 
-commit [`eb10bc0c`](https://github.com/jeff377/bee-library/commit/eb10bc0c) 與 cookbook 都寫明 per-row。SAP 的 `UNIT` 參照、Odoo 的單位欄也都在列上，不衝突。
+Commit [`eb10bc0c`](https://github.com/jeff377/bee-library/commit/eb10bc0c) and the cookbook both state that it is
+per-row. SAP's `UNIT` reference and Odoo's unit field are also on the row, so there is no conflict.
 
-## 單位設定的層級：三者比較
+## Levels of unit settings: the three compared
 
-| 層級 | SAP | Odoo | Polhem | 判讀 |
+| Level | SAP | Odoo | Polhem | Reading |
 |---|---|---|---|---|
-| **系統／租戶**（SAP client、Odoo 資料庫、Polhem 部署） | `T006`：逐單位位數、SI 換算、維度 | 全域精度：所有數量欄的寫入位數；19 起是唯一的位數來源 | `UnitSettings`：逐單位位數 | 三者都放這層，**不是問題** |
-| **公司** | 無（官方來源查不到覆寫機制） | 無（`decimal.precision` 沒有公司欄位） | **有**：`CompanyInfo.NumberFormats` 的 `Quantity`／`Weight` 項，只在欄位沒綁單位時生效 | **兩家都沒有的層級**，見下 |
-| **單位** | `ANDEC`（捨入位數）＋`DECAN`（顯示位數） | 16–18：`rounding`（捨入單位）；19 起無 | `Decimals`（位數，顯示與捨入共用） | 與 SAP 同；比 Odoo 19 細 |
-| **物料／產品** | 基準單位＋替代單位換算（`MARM`）；工廠層倍數捨入（`MARC-BSTRF`／`RDPRF`），不是位數 | 產品選基準單位（`uom_id`）；沒有位數欄 | 無。框架沒有產品主檔，列上的單位值由應用帶入 | 位數三者都不放這層；換算與倍數在兩家落在這層，Polhem **沒有接縫** |
-| **單據列** | 列帶單位；`QUAN` 欄必須參照單位欄；超位數由應用層擋（`ME 678`） | 列選單位（Many2one）；位數跟系統；17.0 庫存移動不合精度擲例外 | 列上 `UnitField` 的值決定位數；手填值不捨、不擋 | 綁定形狀一致；差在**沒有強制**（上方第 1 點） |
-| **數量欄沒綁單位時** | 不存在：ABAP Dictionary 要求每個 `QUAN` 欄指定參照的單位欄 | 照用系統位數（寫入位數本來就不跟單位走） | 退公司位數 → 框架預設，交付時由 `NumberFormatApplier.Bake` 烤進 `NumberFormat` | **Polhem 獨有**，與「公司」那列是同一件事 |
-| **單位代碼無效時** | 單位 domain `MEINS` 的值表是 `T006`；各欄是否硬擋未逐欄查 | 進不去（外鍵） | 退 0 位、不報錯 | 上方第 2 點 |
+| **System / tenant** (SAP client, Odoo database, Polhem deployment) | `T006`: per-unit decimals, SI conversion, dimension | Global precision: the write decimals of every quantity field; from 19 on the only source of decimals | `UnitSettings`: per-unit decimals | All three put it at this level; **not a problem** |
+| **Company** | None (no override mechanism could be found in official sources) | None (`decimal.precision` has no company field) | **Yes**: the `Quantity` / `Weight` entries of `CompanyInfo.NumberFormats`, effective only when the field is not bound to a unit | **A level neither of the others has**; see below |
+| **Unit** | `ANDEC` (rounding decimals) + `DECAN` (display decimals) | 16–18: `rounding` (a rounding unit); none from 19 on | `Decimals` (decimals, shared by display and rounding) | Same as SAP; finer than Odoo 19 |
+| **Material / product** | Base unit + alternative unit conversion (`MARM`); plant-level multiple rounding (`MARC-BSTRF` / `RDPRF`), which is not decimals | The product chooses a base unit (`uom_id`); no decimals field | None. The framework has no product master; the unit value on a row is supplied by the application | None of the three puts decimals at this level; in the other two, conversion and multiples land at this level, and Polhem **has no seam** |
+| **Document line** | The line carries a unit; a `QUAN` field must reference a unit field; too many decimals are rejected by the application layer (`ME 678`) | The line chooses a unit (Many2one); the decimals follow the system; in 17.0 a stock move that does not fit the precision raises an exception | The value of the row's `UnitField` decides the decimals; a manually entered value is neither rounded nor rejected | The binding has the same shape; the difference is **no enforcement** (point 1 above) |
+| **Quantity field not bound to a unit** | Does not exist: the ABAP Dictionary requires every `QUAN` field to name the unit field it references | Uses the system decimals as usual (the write decimals never followed the unit anyway) | Falls back to the company decimals → the framework default, baked into `NumberFormat` by `NumberFormatApplier.Bake` at delivery | **Unique to Polhem**; the same thing as the "Company" row |
+| **Invalid unit code** | The value table of the unit domain `MEINS` is `T006`; whether each field enforces it was not checked field by field | Cannot get in (foreign key) | Falls back to 0 places without an error | Point 2 above |
 
-**判讀：層級本身沒放錯，有問題的是公司層那條退路。**
+**Reading: the levels themselves are not misplaced; the problem is the company-level fallback.**
 
-- **位數放系統層、逐單位設定**，Polhem 與 SAP 相同、比 Odoo 19 細。不需要往公司層或產品層搬 ——
-  兩家都沒有公司層的單位位數，也都不把位數放在產品上。
-- **公司層退路是兩家都沒有的東西。** 同一個「數量」語意，位數來源會因 schema 作者有沒有設
-  `UnitField` 而在系統層與公司層之間跳；同一張沒綁單位的表單交付給兩間公司，數量可以顯示成不同位數，
-  綁了單位的欄卻不會。SAP 從 ABAP Dictionary 層面就不允許沒有單位參照的數量欄；Odoo 的寫入位數
-  從來不跟單位走，也就不存在「沒綁時退到哪」的問題。
-- ADR-026 D1 的表格有寫「無則退公司」，但沒寫理由。對照同一份 ADR 2026-09-10 修訂的推理，
-  這條退路換到的也是「沒有人為這個欄選過的位數」。**可能的方向（未決）**：
-  - 要求 `Quantity`／`Weight` 必綁 `UnitField`，沒綁時報錯（SAP 的做法）；
-  - 沒綁時改走系統層預設、不經公司（Odoo 的做法）；
-  - 維持現狀，但把理由補進 ADR-026。
+- **Decimals at the system level, set per unit**: Polhem is the same as SAP and finer than Odoo 19. There is no need to
+  move them to the company or product level: neither product has unit decimals at the company level, and neither puts
+  decimals on the product.
+- **The company-level fallback is something neither product has.** For the same "quantity" semantics, the source of
+  the decimals jumps between the system level and the company level depending on whether the schema author set a
+  `UnitField`. The same unbound form delivered to two companies can show quantities with different decimals, while a
+  bound field cannot. SAP does not allow a quantity field without a unit reference at the ABAP Dictionary level; in
+  Odoo the write decimals never follow the unit, so the question "where does it fall back to when unbound" does not
+  exist.
+- The table in ADR-026 D1 does say "otherwise fall back to the company", but gives no reason. By the reasoning of the
+  same ADR's 2026-09-10 revision, what this fallback buys is also "decimals that nobody chose for this field".
+  **Possible directions (undecided)**:
+  - require `Quantity` / `Weight` to be bound to a `UnitField`, and report an error when unbound (the SAP approach);
+  - when unbound, use the system-level default instead, without going through the company (the Odoo approach);
+  - keep the current behavior, but add the reason to ADR-026.
 
-  **2026-09-11 使用者傾向第一項**（理由：綁定 `UnitField` 與多幣別作法一致），已另擬
-  [plan-unit-field-required.md](https://github.com/jeff377/bee-library/blob/7d6cc9d9/docs/plans/archive/plan-unit-field-required.md) 評估。
-- **物料層的空缺是範圍問題，不是層級放錯**：框架沒有產品主檔，換算與倍數捨入若要做，接縫會落在
-  應用層。ADR-026「未做」清單目前沒提到它（上方第 5 點）。
+  **On 2026-09-11 the user leaned towards the first** (reason: binding a `UnitField` is consistent with the
+  multi-currency approach), and
+  [plan-unit-field-required.md](https://github.com/jeff377/bee-library/blob/7d6cc9d9/docs/plans/archive/plan-unit-field-required.md)
+  was drafted separately to evaluate it.
+- **The gap at the material level is a question of scope, not a misplaced level**: the framework has no product
+  master, so if conversion and multiple rounding are ever done, the seam will land in the application layer. ADR-026's
+  "not done" list does not mention it yet (point 5 above).
 
 ---
 
-## 附錄：查證邊界
+## Appendix: limits of the verification
 
-> **別把這份當定論。**
+> **Do not treat this as settled.**
 >
-> **親自重抓核對過的**：Odoo 17.0／19.0／master 的 `addons/uom/models/uom_uom.py`
-> （`rounding` 欄位、約束、`_compute_quantity`）、17.0 `odoo/tools/float_utils.py` 的
-> HALF-UP 定義、17.0／19.0 `sale_order_line.py` 的單位欄型別；SAP 官方的 ABAP Dictionary
-> 數量欄頁與 ALV 欄位目錄頁；sapdatasheet 上 `ANDEC`／`DECAN` 的描述與 `MEINS` 的值表。
-> 其餘 Odoo 行號與 SAP 出處由調查代理讀取，未逐一重抓。
+> **Fetched again and checked in person**: Odoo 17.0 / 19.0 / master `addons/uom/models/uom_uom.py`
+> (the `rounding` field, the constraint, `_compute_quantity`), the HALF-UP definition in 17.0
+> `odoo/tools/float_utils.py`, and the unit field type in 17.0 / 19.0 `sale_order_line.py`; SAP's official ABAP
+> Dictionary page on quantity fields and the ALV field catalog page; the descriptions of `ANDEC` / `DECAN` and the
+> value table of `MEINS` on sapdatasheet.
+> The other Odoo line numbers and SAP sources were read by a research agent and not fetched again one by one.
 >
-> **SAP 的來源品質參差**：`ANDEC` 的定義只找得到資料字典鏡像站（sapdatasheet，第三方），
-> help.sap.com 沒有直接定義；community.sap.com 一律回 403，只看得到搜尋摘要。
+> **SAP sources vary in quality**: the definition of `ANDEC` could only be found on a data dictionary mirror site
+> (sapdatasheet, third party); help.sap.com has no direct definition; community.sap.com always returned 403, so only
+> search snippets were visible.
 >
-> **值表不等於硬檢查**：`MEINS` 的值表是 `T006`，但 SAP 的值表只是建議外鍵的來源，
-> 各欄位實際有沒有檢查要看該欄的外鍵定義，這點沒有逐欄查。
+> **A value table is not a hard check**: the value table of `MEINS` is `T006`, but in SAP a value table is only the
+> source of a proposed foreign key; whether each field actually checks it depends on that field's foreign key
+> definition, and this was not checked field by field.
 >
-> **仍未查的**：`UNIT_CONVERSION_SIMPLE` 依據的是 `ANDEC` 還是 `DECAN`；S/4HANA
-> `I_UnitOfMeasure` 的小數位欄位名；ECC 抬頭重量換算規則；S/4HANA 是否改變
-> `ANDEC`／`DECAN` 語意；Odoo 前端輸入時是否先捨；`stock.move` 清單跨單位直接相加
-> 是讀 XML 推的，沒實際跑。
+> **Still unchecked**: whether `UNIT_CONVERSION_SIMPLE` relies on `ANDEC` or `DECAN`; the name of the decimals field
+> in S/4HANA `I_UnitOfMeasure`; the ECC header weight conversion rule; whether S/4HANA changed the semantics of
+> `ANDEC` / `DECAN`; whether the Odoo front end rounds on input; the direct cross-unit sum in the `stock.move` list was
+> inferred from the XML and not actually run.
 
-## 附錄：出處
+## Appendix: sources
 
 **SAP**
 
-- ABAP Dictionary 數量欄（官方）：https://help.sap.com/doc/abapdocu_753_index_htm/7.53/en-US/abenddic_quantity_field.htm
-- `WRITE … UNIT`（官方）：https://help.sap.com/doc/abapdocu_751_index_htm/7.51/en-us/abapwrite_to_options.htm
-- ALV 數量／幣別欄（官方）：https://help.sap.com/saphelp_nw73/helpdata/en/4e/bd13c61041389ee10000000a421937/content.htm
-- 單位換算 function group SCV0（官方）：https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/dfb0aaab14280fe10000000a42189c/content.htm
-- `T006`（第三方）：https://www.sapdatasheet.org/abap/tabl/t006.html
-- `ANDEC`／`DECAN`（第三方）：https://www.sapdatasheet.org/abap/dtel/andec.html 、https://www.sapdatasheet.org/abap/dtel/decan.html
-- `MEINS` domain（第三方）：https://www.sapdatasheet.org/abap/doma/meins.html
-- `UNIT_CONVERSION_SIMPLE` 參數（第三方）：https://www.sapdatasheet.org/abap/func/unit_conversion_simple.html
-- `BSTRF`／`RDPRF`（第三方）：https://www.sapdatasheet.org/abap/dtel/bstrf.html 、https://www.sapdatasheet.org/abap/tabl/marc-rdprf.html
-- 訊息 `ME 678`（第三方）：https://www.sapdatasheet.org/abap/msag/me-678.html
+- ABAP Dictionary quantity fields (official): https://help.sap.com/doc/abapdocu_753_index_htm/7.53/en-US/abenddic_quantity_field.htm
+- `WRITE … UNIT` (official): https://help.sap.com/doc/abapdocu_751_index_htm/7.51/en-us/abapwrite_to_options.htm
+- ALV quantity / currency fields (official): https://help.sap.com/saphelp_nw73/helpdata/en/4e/bd13c61041389ee10000000a421937/content.htm
+- Unit conversion function group SCV0 (official): https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-US/48/dfb0aaab14280fe10000000a42189c/content.htm
+- `T006` (third party): https://www.sapdatasheet.org/abap/tabl/t006.html
+- `ANDEC` / `DECAN` (third party): https://www.sapdatasheet.org/abap/dtel/andec.html, https://www.sapdatasheet.org/abap/dtel/decan.html
+- `MEINS` domain (third party): https://www.sapdatasheet.org/abap/doma/meins.html
+- `UNIT_CONVERSION_SIMPLE` parameters (third party): https://www.sapdatasheet.org/abap/func/unit_conversion_simple.html
+- `BSTRF` / `RDPRF` (third party): https://www.sapdatasheet.org/abap/dtel/bstrf.html, https://www.sapdatasheet.org/abap/tabl/marc-rdprf.html
+- Message `ME 678` (third party): https://www.sapdatasheet.org/abap/msag/me-678.html
 
-**Odoo**（master 行號為 2026-09-11 抓取當下）
+**Odoo** (master line numbers as fetched on 2026-09-11)
 
-- 17.0 `uom_uom.py`（`rounding` L66、約束 L81、`_compute_quantity` L211–239）：https://github.com/odoo/odoo/blob/17.0/addons/uom/models/uom_uom.py#L66
-- 19.0 `uom_uom.py`（`_compute_rounding` L62–67）：https://github.com/odoo/odoo/blob/19.0/addons/uom/models/uom_uom.py#L62-L67
-- master `uom_uom.py`（`_compute_quantity` L139–167）：https://github.com/odoo/odoo/blob/master/addons/uom/models/uom_uom.py#L139-L167
-- 17.0 `product_data.xml`（全域精度 L35–38）：https://github.com/odoo/odoo/blob/17.0/addons/product/data/product_data.xml#L35-L38
-- 17.0 `product/models/uom_uom.py`（onchange 警告 L10–21）：https://github.com/odoo/odoo/blob/17.0/addons/product/models/uom_uom.py#L10-L21
-- 17.0 `decimal_precision.py`（無公司欄位 L21–34）：https://github.com/odoo/odoo/blob/17.0/odoo/addons/base/models/decimal_precision.py#L21-L34
-- 17.0 `fields.py`（Float 寫入捨入 L1531–1555）：https://github.com/odoo/odoo/blob/17.0/odoo/fields.py#L1531-L1555
-- 17.0 `float_utils.py`（`float_round` L35–111）：https://github.com/odoo/odoo/blob/17.0/odoo/tools/float_utils.py#L35-L111
-- 17.0 `stock_move.py`（`product_qty` L279–282、`_set_quantity` L388–403）：https://github.com/odoo/odoo/blob/17.0/addons/stock/models/stock_move.py#L279-L282
-- 17.0 `stock_move_views.xml`（`sum` L28、L47–48）：https://github.com/odoo/odoo/blob/17.0/addons/stock/views/stock_move_views.xml#L28
-- 17.0 `sale_report.py`（換算後加總 L94–98、L176–177）：https://github.com/odoo/odoo/blob/17.0/addons/sale/report/sale_report.py#L94-L98
-- 17.0 `stock_delivery/models/stock_move.py`（重量 L33–38）：https://github.com/odoo/odoo/blob/17.0/addons/stock_delivery/models/stock_move.py#L33-L38
-- 17.0／19.0 `sale_order_line.py`（單位欄 17.0 L120、19.0 L132）：https://github.com/odoo/odoo/blob/17.0/addons/sale/models/sale_order_line.py#L120
-- 17.0 Purchase UoM 文件（rounding 與 Decimal Accuracy 說明）：https://www.odoo.com/documentation/17.0/applications/inventory_and_mrp/purchase/products/uom.html
+- 17.0 `uom_uom.py` (`rounding` L66, constraint L81, `_compute_quantity` L211–239): https://github.com/odoo/odoo/blob/17.0/addons/uom/models/uom_uom.py#L66
+- 19.0 `uom_uom.py` (`_compute_rounding` L62–67): https://github.com/odoo/odoo/blob/19.0/addons/uom/models/uom_uom.py#L62-L67
+- master `uom_uom.py` (`_compute_quantity` L139–167): https://github.com/odoo/odoo/blob/master/addons/uom/models/uom_uom.py#L139-L167
+- 17.0 `product_data.xml` (global precision L35–38): https://github.com/odoo/odoo/blob/17.0/addons/product/data/product_data.xml#L35-L38
+- 17.0 `product/models/uom_uom.py` (onchange warning L10–21): https://github.com/odoo/odoo/blob/17.0/addons/product/models/uom_uom.py#L10-L21
+- 17.0 `decimal_precision.py` (no company field, L21–34): https://github.com/odoo/odoo/blob/17.0/odoo/addons/base/models/decimal_precision.py#L21-L34
+- 17.0 `fields.py` (Float rounding on write, L1531–1555): https://github.com/odoo/odoo/blob/17.0/odoo/fields.py#L1531-L1555
+- 17.0 `float_utils.py` (`float_round` L35–111): https://github.com/odoo/odoo/blob/17.0/odoo/tools/float_utils.py#L35-L111
+- 17.0 `stock_move.py` (`product_qty` L279–282, `_set_quantity` L388–403): https://github.com/odoo/odoo/blob/17.0/addons/stock/models/stock_move.py#L279-L282
+- 17.0 `stock_move_views.xml` (`sum` L28, L47–48): https://github.com/odoo/odoo/blob/17.0/addons/stock/views/stock_move_views.xml#L28
+- 17.0 `sale_report.py` (sum after conversion, L94–98, L176–177): https://github.com/odoo/odoo/blob/17.0/addons/sale/report/sale_report.py#L94-L98
+- 17.0 `stock_delivery/models/stock_move.py` (weight L33–38): https://github.com/odoo/odoo/blob/17.0/addons/stock_delivery/models/stock_move.py#L33-L38
+- 17.0 / 19.0 `sale_order_line.py` (unit field, 17.0 L120, 19.0 L132): https://github.com/odoo/odoo/blob/17.0/addons/sale/models/sale_order_line.py#L120
+- 17.0 Purchase UoM documentation (explains rounding and Decimal Accuracy): https://www.odoo.com/documentation/17.0/applications/inventory_and_mrp/purchase/products/uom.html

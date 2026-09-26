@@ -1,34 +1,38 @@
-# 踩雷誌：測試、CI 與發佈
+# Pitfall log: tests, CI and publishing
 
-對應硬規則見 `.claude/rules/testing.md`、`.claude/rules/commit-verification.md`。
+The matching hard rules are in `.claude/rules/testing.md` and `.claude/rules/commit-verification.md`.
 
-## CI path filter 造成的驗證死角
+## The verification blind spot created by the CI path filter
 
-`.github/workflows/build-ci.yml` 的 `push` / `pull_request` 只認：
-`src/**`、`tests/**`、`*.slnx`、`Directory.Build.props`、`SonarQube.Analysis.xml`、
-`.github/workflows/build-ci.yml`。
+The `push` / `pull_request` triggers of `.github/workflows/build-ci.yml` only recognize:
+`src/**`, `tests/**`, `*.slnx`, `Directory.Build.props`, `SonarQube.Analysis.xml`,
+`.github/workflows/build-ci.yml`.
 
-**Why**：samples/ 是 demo、docs/ 是文件，兩者異動都不影響 NuGet 套件正確性，省 runner 時間。
+**Why**: samples/ are demos and docs/ are documents; changes to either do not affect the correctness of the NuGet
+packages, and this saves runner time.
 
-**日常影響**：純 `samples/**` 或 `docs/**` 的 commit push 到 main 後**不要等 CI**、也不要觸發
-`/ci-watch`——沒事可看。SonarCloud 也只在 CI 跑完後被觸發，samples-only 修正不會立刻反映。
-（同一 commit 若既動 src/ 也動 samples/，CI 會跑。）
+**Day-to-day effect**: after pushing a commit that touches only `samples/**` or `docs/**` to main, **do not wait for
+CI** and do not trigger `/ci-watch`: there is nothing to look at. SonarCloud is also only triggered after CI finishes,
+so a samples-only fix is not reflected right away.
+(If the same commit touches both src/ and samples/, CI runs.)
 
-### ⚠️ 連帶缺口：三個方案根本沒被建過
+### ⚠️ The related gap: three solutions are never built at all
 
-`tools/` / `samples/` / `apps/` **既不在 `Polhem.slnx` 內，也不在 path filter 內**，
-所以「本機 `dotnet build Polhem.slnx` + `./test.sh` 全綠」**不代表它們還能編譯**，CI 也不會
-替你發現。
+`tools/` / `samples/` / `apps/` are **neither in `Polhem.slnx` nor in the path filter**, so "local
+`dotnet build Polhem.slnx` + `./test.sh` all green" **does not mean they still compile**, and CI will not find out for
+you either.
 
-**`tools/Polhem.LoadTests` 是「編譯」這一項的例外**：它的單元測試專案在 slnx 內並以
-`ProjectReference` 指向它，所以它跟著被建，編不過會當場紅。**但這個例外只到編譯為止**
-——SonarCloud 仍然看不到它的原始碼，理由見本檔〈Sonar 查出來的 0，可能是「沒看」而不是
-「乾淨」〉。別把它推廣到 `tools/` 其餘專案，那些連建都不會建。
+**`tools/Polhem.LoadTests` is the exception for "compiling"**: its unit test project is in the slnx and points to it
+with a `ProjectReference`, so it gets built along with it and goes red on the spot if it does not compile. **But the
+exception stops at compiling**: SonarCloud still cannot see its source code; the reason is in this file's
+section § A 0 from Sonar may mean "not looked at" rather than "clean". Do not extend it to the rest of
+`tools/`; those are not even built.
 
-**實例**：刪除 `BackendComponents.EnterpriseObjectService` 後，`tools/DefineEditor` 的 axaml 綁定
-殘留造成 AVLN2000——本機與 CI 兩邊都是綠的，直到手動建 `tools/Polhem.Tools.slnx` 才爆。
+**Instance**: after `BackendComponents.EnterpriseObjectService` was deleted, leftover axaml bindings in
+`tools/DefineEditor` caused AVLN2000. Both local and CI were green, until `tools/Polhem.Tools.slnx` was built by hand
+and it blew up.
 
-**刪除或改名任何公開型別／成員時，必須額外建這三個方案**：
+**When deleting or renaming any public type/member, these three solutions must also be built**:
 
 ```bash
 dotnet build samples/Polhem.Samples.slnx --configuration Release
@@ -36,200 +40,222 @@ dotnet build tools/Polhem.Tools.slnx --configuration Release
 dotnet build apps/Polhem.Northwind/Polhem.Northwind.slnx --configuration Release -p:ValidateXcodeVersion=false
 ```
 
-XAML／axaml 綁定尤其危險：它們是**字串綁定，grep 得到但 C# 編譯器看不到**。
+XAML/axaml bindings are especially dangerous: they are **string bindings that grep can find but the C# compiler cannot
+see**.
 
-## 測試 fixture 選錯被誤判為 flaky
+## A wrongly chosen test fixture misjudged as flaky
 
-**症狀**：`LogoutJsonRpcRoundTripTests` / `LeaveCompanyJsonRpcRoundTripTests` 在 CI 偶發紅，
-斷言 `Assert.Null(response.Error)` 失敗、實際值是被遮蔽的 `-32000 Internal server error`。
+**Symptom**: `LogoutJsonRpcRoundTripTests` / `LeaveCompanyJsonRpcRoundTripTests` occasionally go red in CI; the
+assertion `Assert.Null(response.Error)` fails, and the actual value is the masked `-32000 Internal server error`.
 
-**根因**：這兩個 class 用 `IClassFixture<PolhemTestFixture>`，但 session 持久化落地後 `Logout` 會
-DELETE、`LeaveCompany` 會 UPDATE `st_session` —— 對資料庫有真實相依。**`PolhemTestFixture` 不建
-schema**（只有 `SharedDbFixture` 會），所以只有在「別的測試行程剛好先把表建好」時才通過。
-同資料夾的 `EnterCompanyJsonRpcRoundTripTests` 早就用 `SharedDbFixture`，正是同一個理由。
+**Root cause**: these two classes use `IClassFixture<PolhemTestFixture>`, but after session persistence landed,
+`Logout` DELETEs and `LeaveCompany` UPDATEs `st_session`: they have a real dependency on the database.
+**`PolhemTestFixture` does not create the schema** (only `SharedDbFixture` does), so they only pass when "another test
+process happened to create the tables first". `EnterCompanyJsonRpcRoundTripTests` in the same folder had long used
+`SharedDbFixture`, for exactly this reason.
 
-**為何被誤判為 flaky**：`gh run rerun --failed` 一次剛好轉綠（競賽條件本來就會這樣），
-加上非開發模式把例外訊息遮蔽成 `Internal server error`，看不出是「表不存在」。
+**Why it was misjudged as flaky**: one `gh run rerun --failed` happened to turn it green (a race condition does exactly
+that), and outside development mode the exception message is masked as `Internal server error`, so you cannot see that
+"the table does not exist".
 
-**心法**：**一次重跑轉綠不足以判定 flaky。** 同一組測試在不同 commit 的**首次**執行都紅，
-就該當真 bug 查。重跑只用來收集證據，不是結案依據。
+**The takeaway**: **one rerun turning green is not enough to call a test flaky.** If the same group of tests is red on
+the **first** run of different commits, investigate it as a real bug. A rerun is only for collecting evidence, not a
+reason to close the case.
 
-### 找出全部違規類別的窮盡掃描法
+### An exhaustive scan to find every offending class
 
-**別用 grep 推理代替執行。** 觸發面比想像廣：不只 `IAccessTokenValidator`，任何
-`SessionInfoService.Get(未快取 token)` 都算 —— 含 BO 內部的 `GetLangText` /
-`GetCurrentCustomizeId` / 查目前公司。
+**Do not substitute grep reasoning for execution.** The trigger surface is wider than you think: not just
+`IAccessTokenValidator`, but any `SessionInfoService.Get(uncached token)`, including `GetLangText` /
+`GetCurrentCustomizeId` / looking up the current company inside a BO.
 
-做法：drop 掉 `st_session`，再逐專案跑「排除所有 `SharedDbFixture` 類別」的子集 ——
-建表的類別不參與，依賴該表的測試就必定現形。
+How: drop `st_session`, then run, project by project, the subset that "excludes every `SharedDbFixture` class". The
+classes that create tables do not take part, so tests that depend on the table are bound to show up.
 
 ```bash
 docker exec sql2025 /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '<pw>' -C \
   -d common -Q "DROP TABLE IF EXISTS st_session;"
-# 排除該專案內所有繼承 SharedDbFixture 的類別
+# Exclude every class in the project that inherits SharedDbFixture.
 dotnet test tests/<Proj>/<Proj>.csproj -c Release --settings .runsettings \
   --filter "FullyQualifiedName!~.ClassA.&FullyQualifiedName!~.ClassB."
 ```
 
-`--filter` 的值務必用雙引號包住（含 `&`，否則 shell 會吃掉）。
-表由下一次 `SharedDatabaseState.EnsureSchemaAndSeed` 重建，對其他測試無殘留。
+Always wrap the `--filter` value in double quotes (it contains `&`, which the shell would otherwise consume).
+The table is recreated by the next `SharedDatabaseState.EnsureSchemaAndSeed`, leaving nothing behind for other tests.
 
-> 2026-08-04 用此法一次掃出 4 個違規類別（`ClientDefineAccessTests`、
-> `JsonRpcExecutorCoverageTests`、`LogBusinessObjectTests`、`CacheTests`），
-> 而先前僅以 grep 推理只找到第 1 個。
+> On 2026-08-04 this method found 4 offending classes in one pass (`ClientDefineAccessTests`,
+> `JsonRpcExecutorCoverageTests`, `LogBusinessObjectTests`, `CacheTests`), while grep reasoning alone had found only
+> the first one.
 
-## 快取自載 DB 時假設「該 DB 一定有設定」
+## A cache that loads from the DB itself assumes "the DB is always configured"
 
-**症狀**：本機全綠、CI 紅。
+**Symptom**: all green locally, red in CI.
 
-**根因**：`DbConnectionManagerService.GetConnectionInfo` 對未登錄的 databaseId 會擲
-`KeyNotFoundException`（KeyedCollection 的 indexer 先炸，程式碼裡那句 `InvalidOperationException`
-是**死路徑**），而呼叫端往往只想知道「這筆資料在不在」。
+**Root cause**: `DbConnectionManagerService.GetConnectionInfo` throws `KeyNotFoundException` for an unregistered
+databaseId (the KeyedCollection indexer blows up first; the `InvalidOperationException` in the code is a **dead path**),
+while the caller often only wants to know "does this data exist".
 
-**本機測不出來**：`tests/Define` 的 DatabaseSettings 有 common，本機 fixture 一律連得到；
-`Polhem.ObjectCaching.UnitTests` 等不掛 DB 的 fixture 只有在 CI 才會走到未設定路徑。
+**Why it cannot be caught locally**: the DatabaseSettings in `tests/Define` have common, so local fixtures can always
+connect; fixtures without a DB, such as `Polhem.ObjectCaching.UnitTests`, only reach the unconfigured path in CI.
 
-**正解**：自載前先確認該 DB 已設定
-（`IDatabaseSettingsProvider.Get().Items.GetOrDefault(id)`），未設定即視為「沒有這個資料來源」
-回 null，**不要吞例外**。2026-07-30 於 SessionInfoCache 重建踩到並修正（[`caf45975`](https://github.com/jeff377/bee-library/commit/caf45975)）。
+**Fix**: before loading by itself, check that the DB is configured
+(`IDatabaseSettingsProvider.Get().Items.GetOrDefault(id)`); if it is not configured, treat it as "there is no such data
+source" and return null. **Do not swallow the exception.** Hit and fixed on 2026-07-30 in the SessionInfoCache rebuild
+([`caf45975`](https://github.com/jeff377/bee-library/commit/caf45975)).
 
-## `.gitignore` 的 `[Ll]og/` 吃掉原始碼資料夾
+## `[Ll]og/` in `.gitignore` swallows source folders
 
-**症狀**：在 `src/**/Log/` 或 `tests/**/Log/` 新增 `.cs`，`git status` **完全看不到**、
-`git add -A` 不會加入 → commit 缺檔、CI 缺檔編譯失敗。
-`git check-ignore -v <file>` 會指向 `.gitignore:<n> [Ll]og/`。
+**Symptom**: a new `.cs` in `src/**/Log/` or `tests/**/Log/` is **completely invisible** to `git status`, and
+`git add -A` does not add it → the commit is missing the file, and CI fails to compile because of the missing file.
+`git check-ignore -v <file>` points to `.gitignore:<n> [Ll]og/`.
 
-**Why**：`[Ll]og/`（VS 範本預設）本意是忽略 log 輸出目錄，但會忽略**任何**名為 `Log/` 或 `log/`
-的資料夾，包含命名空間資料夾。IDE0130 又強制資料夾對映命名空間，無法只改資料夾名保留 `.Log`
-命名空間；`!` negation 對「被規則匹配到的目錄」下的檔案再包含也**無效**。
+**Why**: `[Ll]og/` (the Visual Studio template default) is meant to ignore log output directories, but it ignores
+**any** folder named `Log/` or `log/`, including namespace folders. IDE0130 also forces folders to map to namespaces,
+so you cannot rename just the folder and keep the `.Log` namespace; a `!` negation that re-includes files under "a
+directory matched by the rule" is also **ineffective**.
 
-**正解**：稽核查詢讀取側一律用 `AuditLog/`（命名空間 `...AuditLog`），**不要**用 `Log/`。
-`AuditLog` 也對齊 progId / 軸名。未來任何要用 `Log` 當資料夾名的情況同理改別名
-（`AuditLog` / `Logging` 皆可，`Logging` 未被忽略）。
+**Fix**: the read side of audit queries always uses `AuditLog/` (namespace `...AuditLog`), **not** `Log/`.
+`AuditLog` also matches the progId / axis name. In any future case that wants `Log` as a folder name, use another name
+in the same way (`AuditLog` / `Logging` both work; `Logging` is not ignored).
 
-## 死碼掃描：attribute 必須 grep 簡寫
+## Dead code scans: attributes must be grepped by their short form
 
-**症狀**：把某個 `*Attribute` 判為「零使用」，刪除後 build 立刻失敗。
+**Symptom**: some `*Attribute` is judged "unused", and the build fails as soon as it is deleted.
 
-**根因**：C# 的 attribute 使用端幾乎一律用**去 `Attribute` 後綴的簡寫**（`[TreeNodeIgnore]`），
-只 grep 全名 `TreeNodeIgnoreAttribute` 會得到假的「零使用」結論。
+**Root cause**: C# attribute usages almost always use the **short form without the `Attribute` suffix**
+(`[TreeNodeIgnore]`); grepping only for the full name `TreeNodeIgnoreAttribute` gives a false "unused" conclusion.
 
-**實例**：2026-07-28 框架體檢的死碼清單把 `TreeNodeIgnoreAttribute` 列為零使用，實際有 7 處
-生產用途（`CollectionItem` / `KeyCollectionItem` / `FormField` / `FormRule` / `FormSchema` /
-`MessagePackCollectionItem` / `MessagePackKeyCollectionItem`）。
+**Instance**: the dead code list of the 2026-07-28 framework health check listed `TreeNodeIgnoreAttribute` as unused,
+when it actually had 7 production uses (`CollectionItem` / `KeyCollectionItem` / `FormField` / `FormRule` /
+`FormSchema` / `MessagePackCollectionItem` / `MessagePackKeyCollectionItem`).
 
-**正解**：對 `*Attribute` 型別用 `grep -rn "TypeName"`（不加 `Attribute` 後綴、不加尾界）。
-同理適用於任何有語法糖簡寫的型別。
+**Fix**: for `*Attribute` types use `grep -rn "TypeName"` (without the `Attribute` suffix and without a trailing
+boundary). The same applies to any type with a syntactic-sugar short form.
 
-## Sonar 查出來的 0，可能是「沒看」而不是「乾淨」
+## A 0 from Sonar may mean "not looked at" rather than "clean"
 
-**症狀**：修完某條 Sonar 規則，用 `/api/issues/search?rules=csharpsquid:SXXXX` 查回 0，
-就判定清乾淨了。實際上那個檔案從來不在 SonarCloud 的分析範圍內，**回 0 與程式碼無關**。
+**Symptom**: after fixing a Sonar rule, querying `/api/issues/search?rules=csharpsquid:SXXXX` returns 0, and it is
+judged clean. In fact that file was never inside SonarCloud's analysis scope, and **the 0 has nothing to do with the
+code**.
 
-**根因**：SonarCloud 實際只看 `src/` 與 `tests/`。2026-09-10 實測：全專案 1,760 個被分析的
-檔案裡，`tools/` 只佔 **2 個**，而且都不是 C#（`tools/scripts/gen-public-api.py`、
-`tools/DefineEditor/publish.sh`，靠一般檔案偵測進來）。**`tools/**/*.cs` 一個都沒有** ——
-即使 `tools/Polhem.LoadTests` 確實會經由 `tests/Polhem.LoadTests.UnitTests` 的 `ProjectReference`
-被建起來。**機制沒查清楚**（SonarScanner 理應攔得到傳遞建置的專案），此處只記可重現的事實。
+**Root cause**: SonarCloud actually only looks at `src/` and `tests/`. Measured on 2026-09-10: of the 1,760 analyzed
+files in the whole project, `tools/` accounts for only **2**, and neither is C# (`tools/scripts/gen-public-api.py`,
+`tools/DefineEditor/publish.sh`, which came in through generic file detection). **There is not a single
+`tools/**/*.cs`**, even though `tools/Polhem.LoadTests` really is built through the `ProjectReference` of
+`tests/Polhem.LoadTests.UnitTests`. **The mechanism has not been worked out** (SonarScanner should be able to intercept
+transitively built projects); only the reproducible facts are recorded here.
 
-**正解**：宣稱某條規則清乾淨之前，先確認那個檔案在不在分析範圍內。
+**Fix**: before claiming a rule is clean, confirm that the file is inside the analysis scope.
 
 ```bash
 curl -s "https://sonarcloud.io/api/components/tree?component=jeff377_bee-library&qualifiers=FIL,UTS&ps=500" \
   | python3 -c "import sys,json;[print(c['path']) for c in json.load(sys.stdin)['components']]"
 ```
 
-回應會分頁（`ps` 上限 500），檔案數超過就要翻頁再合併。
+The response is paginated (`ps` is capped at 500); if there are more files, page through and merge.
 
-**順帶一提，分支 A/B 讀不到**：這個組織方案不給讀非 main 分支的資料，
-`?branch=<name>` 一律回 `Organization is not allowed to access data from non main branches`。
-想比對兩種寫法就別繞 CI，走下面的本機重現。
+**Incidentally, branch A/B cannot be read**: this organization's plan does not allow reading data from non-main
+branches, and `?branch=<name>` always returns `Organization is not allowed to access data from non main branches`.
+To compare two ways of writing something, do not go through CI; use the local reproduction below.
 
-### 本機重現 Sonar 規則（也涵蓋 CI 看不到的 `tools/`）
+### Reproducing Sonar rules locally (also covers `tools/`, which CI cannot see)
 
 ```bash
-dotnet add <專案>.csproj package SonarAnalyzer.CSharp
-dotnet build <專案>.csproj -c Release --no-incremental -p:TreatWarningsAsErrors=false
-# 讀完 warning 後把 PackageReference 移掉
+dotnet add <project>.csproj package SonarAnalyzer.CSharp
+dotnet build <project>.csproj -c Release --no-incremental -p:TreatWarningsAsErrors=false
+# After reading the warnings, remove the PackageReference again.
 ```
 
-比等完整模式 CI 快得多，而且是唯一能對 `tools/` 下 C# 跑 Sonar 規則的方法。
+Much faster than waiting for a full-mode CI run, and the only way to run Sonar rules on the C# under `tools/`.
 
-### 被這個方法推翻的一條：guard 放哪跟 S2077 無關
+### One claim this method overturned: where the guard sits has nothing to do with S2077
 
-本檔一度寫過「把白名單化的 guard 從呼叫端搬到拼接處，S2077 就會被認掉」。
-**2026-09-10 用上述本機 analyzer 做 A/B（除 guard 位置外 diff 為 0 行）證明那是錯的**：
-兩種擺法照樣報 S2077，只差行號。當初看到的「歸零」正是上面那個假綠燈造成的錯覺。
+This file once said "move the allowlisting guard from the caller to the concatenation site, and S2077 will be
+accepted". **On 2026-09-10 an A/B with the local analyzer above (a diff of 0 lines apart from the guard's position)
+proved that wrong**: both placements still report S2077; only the line number differs. The "drop to zero" seen at the
+time was an illusion caused by the false green light described above.
 
-**guard 該放拼接處的理由仍然完全成立，但那是給人看的**——讀者站在拼接那行，要看得出是什麼
-在保護它。**別再宣稱它能讓掃描器閉嘴。**
+**The reason for putting the guard at the concatenation site still fully holds, but it is for people**: a reader
+standing at the concatenation line should be able to see what protects it. **Do not claim again that it silences the
+scanner.**
 
-### 仍成立的部分：識別碼與值要分開處理
+### What still holds: identifiers and values are handled separately
 
-「改成參數化」對識別碼不成立：資料庫名、表名、欄名都是識別碼，`CREATE DATABASE @name`
-在任何引擎都是語法錯誤。**識別碼只能白名單化後拼接，值才該參數化**，而兩者常在同一個方法裡
-並存。同一次 A/B 量到的效果（`SchemaPreparer.cs`，SonarAnalyzer 10.34.0）：
+"Switch to parameters" does not work for identifiers: database names, table names and column names are identifiers,
+and `CREATE DATABASE @name` is a syntax error in every engine. **Identifiers can only be allowlisted and then
+concatenated; only values should be parameterized**, and the two often coexist in the same method. The effect measured
+in the same A/B (`SchemaPreparer.cs`, SonarAnalyzer 10.34.0):
 
-| 位置 | commit [`2e80fafb`](https://github.com/jeff377/bee-library/commit/2e80fafb) 之前 | 之後 |
+| Location | Before commit [`2e80fafb`](https://github.com/jeff377/bee-library/commit/2e80fafb) | After |
 |------|------|------|
-| PostgreSQL 存在性 probe（**值** → 改參數化） | S2077 | **消失** |
-| PostgreSQL `CREATE DATABASE`（**識別碼** → 只能白名單化） | S2077 | **仍在**（`SchemaPreparer.cs:169`） |
-| `Program.cs` 的 serve 位址（S1075 → 抽進設定） | S1075 | **消失** |
+| PostgreSQL existence probe (**value** → parameterized) | S2077 | **gone** |
+| PostgreSQL `CREATE DATABASE` (**identifier** → can only be allowlisted) | S2077 | **still there** (`SchemaPreparer.cs:169`) |
+| The serve address in `Program.cs` (S1075 → moved into settings) | S1075 | **gone** |
 
-**參數化會讓 S2077 消失，白名單化不會。** 識別碼那一類註定留著，處置照
-`.claude/rules/sonarcloud.md` 的人工判讀——只是在 `tools/` 這裡連標 False Positive 的地方
-都沒有，因為 SonarCloud 看不到它。
+**Parameterizing makes S2077 go away; allowlisting does not.** The identifier kind is bound to stay, and is handled
+by the human review in `.claude/rules/sonarcloud.md`. Only, here in `tools/` there is not even a place to mark it
+False Positive, because SonarCloud cannot see it.
 
-## 新增 src 套件時最容易漏的一步
+## The step most easily missed when adding a src package
 
-`.github/workflows/nuget-publish.yml` 與 `build-ci.yml` 的 pack step 是**逐一
-`dotnet pack src/Polhem.X/...` 列舉，不是 glob**。漏了新套件：
+The pack steps of `.github/workflows/nuget-publish.yml` and `build-ci.yml` **enumerate
+`dotnet pack src/Polhem.X/...` one by one; they are not a glob**. If a new package is left out:
 
-- **nuget-publish**：該套件**不會被推上 NuGet**，但 workflow 仍**顯示 success**
-  （它只推 `./nupkgs` 內既有的）。消費端 restore 依賴此新套件的其他 4.x 套件時會失敗。
-- **build-ci**：pack 驗證漏測該套件。
+- **nuget-publish**: the package is **not pushed to NuGet**, but the workflow still **shows success** (it only pushes
+  what is already in `./nupkgs`). Consumers restoring other 4.x packages that depend on the new package will fail.
+- **build-ci**: pack verification does not cover the package.
 
-**2026-07-09 實例**：4.14.0 發佈 `Polhem.Expressions`（新套件），兩個 workflow 的 pack 清單都漏列
-→ 首次 publish 成功但 NuGet 上沒有 `Polhem.Expressions.4.14.0`，而 Polhem.Business / Definition /
-UI.Avalonia 都依賴它。修法：補兩個 workflow 的 pack 行，commit，**刪除並重推 tag** 到含修正的
-commit 觸發 publish，`--skip-duplicate` 讓已發佈的跳過、只補推新套件。
+**Instance, 2026-07-09**: 4.14.0 released `Polhem.Expressions` (a new package), and the pack lists of both workflows
+left it out → the first publish succeeded, but `Polhem.Expressions.4.14.0` was not on NuGet, while
+Polhem.Business / Definition / UI.Avalonia all depend on it. Fix: add the pack line to both workflows, commit, **delete
+the tag and push it again** onto the commit containing the fix to trigger publish; `--skip-duplicate` skips what was
+already published and pushes only the new package.
 
-**排查徵兆**：publish workflow 綠、但
-`curl https://api.nuget.org/v3-flatcontainer/<pkg-lowercase>/index.json` 回 BlobNotFound
-（且非索引延遲）。確認 push 步驟 log 有無 `Pushing <Pkg>.nupkg... Your package was pushed.`
-——沒有就是漏列。
+**Signs to look for**: the publish workflow is green, but
+`curl https://api.nuget.org/v3-flatcontainer/<pkg-lowercase>/index.json` returns BlobNotFound
+(and it is not index delay). Check whether the push step log has `Pushing <Pkg>.nupkg... Your package was pushed.`;
+if not, it was left out.
 
-**同時要同步**（雙語文件必須兩份都改）：
+**Also update at the same time** (for bilingual documents, both files must change):
 
-- `docs/en/dependency-map.md` + `.zh-TW.md`：mermaid 加節點 + 相依邊、外部套件表加一列、
-  Architectural Notes、開頭「N 個 src/ 專案」數字 +1。
-- `README.md` + `.zh-TW.md`：Shared / Backend / Frontend 套件表擇一加一列。
-- `.claude/CLAUDE.md`：「N 個專案」數字 +1。
+- `docs/en/dependency-map.md` + `.zh-TW.md`: add the node + dependency edges to the mermaid diagram, add a row to the
+  external package table, Architectural Notes, and +1 on the "N src/ projects" number at the top.
+- `README.md` + `.zh-TW.md`: add a row to one of the Shared / Backend / Frontend package tables.
+- `.claude/CLAUDE.md`: +1 on the "N projects" number.
 
-## 框架體檢（`polhem-framework-review`）的方法論
+## Methodology of the framework health check (`polhem-framework-review`)
 
-各次結果與分級計畫每輪一份，落在維護者本機的 `local/plans/`（不入版控；列有未修安全問題的放 `local/internal/`）。
-bee-library 時期的各輪封存在舊 repo 的 `docs/plans/archive/`。以下是**跨體檢沿用**的方法：
+The results and graded plan of each round are one document per round, kept in the maintainer's local `local/plans/`
+(not under version control; those listing unfixed security issues go in `local/internal/`).
+The rounds from the bee-library period are archived in the old repository's `docs/plans/archive/`. The methods below
+**carry over across health checks**:
 
-1. **「分數下降」多半是掃描深度提升，不是回歸——但必須逐項用 git 驗證才能這樣說。**
-   2026-07-28 那輪多數降幅來自把 `PackageReference`、`git show` 歷史比對、**實際執行驗證**納入掃描；
-   各代理用 git 逐項查了問題引入時間，確認多為長期既有。不能憑感覺說「這不是回歸」。
-2. **體檢基準不可寫「死碼 0」這類無從驗證的斷言，要寫具體型別清單。**
-   上一輪基準宣稱「空 class 0、死碼 0」，下一輪查出至少 15 個零使用型別且全部早於上次——
-   判定過於樂觀（很可能只掃了完全無引用的檔案，未追到「宣告 + DI 註冊」或「宣告 + 佔位測試」
-   這類假陽性存活的型別）。**佔位測試會讓死碼在覆蓋率報告上呈現為已測試。**
-3. **P0 級發現值得付實測成本，把「理論推斷」釘成「已知失敗模式」。**
-   序列化面向的 P0（定義類 response 在 MessagePack wire 上內容全滅）原本只是推斷，在 scratchpad
-   建獨立 console 專案 ProjectReference 到 `Polhem.Api.Core`、走公開的 `MessagePackPayloadSerializer`
-   實測後，釘死失敗模式為**沉默空殼**——修法選擇取決於這個答案。
+1. **A "falling score" is mostly deeper scanning, not a regression, but you may only say so after verifying each item
+   with git.**
+   In the 2026-07-28 round, most of the drops came from bringing `PackageReference`, `git show` history comparison and
+   **actual execution checks** into the scan; each agent used git to check item by item when the problem was
+   introduced, and confirmed that most had existed for a long time. You cannot say "this is not a regression" from a
+   feeling.
+2. **A health check baseline must not state unverifiable claims like "dead code 0"; it must list concrete types.**
+   The previous round's baseline claimed "empty classes 0, dead code 0", and the next round found at least 15 unused
+   types, all older than the previous round. The judgement was too optimistic (it most likely scanned only files with
+   no references at all, and did not track types that survive as false positives through "declaration + DI
+   registration" or "declaration + placeholder test"). **Placeholder tests make dead code show up as tested in the
+   coverage report.**
+3. **A P0 finding is worth the cost of measurement, to pin a "theoretical inference" down as a "known failure mode".**
+   The P0 in the serialization dimension (definition responses losing all their content on the MessagePack wire) was
+   originally only an inference. After building a standalone console project in the scratchpad with a
+   ProjectReference to `Polhem.Api.Core` and measuring through the public `MessagePackPayloadSerializer`, the failure
+   mode was pinned down as a **silent empty shell**; the choice of fix depended on this answer.
 
-> **已關閉的流程缺口**：public API 把關曾連兩輪漏標 breaking（`IExcelHelper`、`IEvictableCache`
-> 移除都沒標 `!`），根因是「commit 前綴是 changelog 唯一來源，卻無機制檢查 public surface 有刪改」。
-> 已引入 `PublicApiAnalyzers` 的 `PublicAPI.Shipped.txt` / `Unshipped.txt`（見
-> `docs/repo-ops/public-api-baseline.md`），漏標即 build 失敗；分析器看不到的「已申報但二進位
-> 不相容」由 pre-commit hook 攤開提示。
+> **A process gap that has been closed**: the public API gate missed marking breaking changes two rounds in a row (the
+> removals of `IExcelHelper` and `IEvictableCache` were not marked `!`). The root cause was "the commit prefix is the
+> only source of the changelog, yet no mechanism checks whether the public surface had deletions or changes".
+> `PublicAPI.Shipped.txt` / `Unshipped.txt` of `PublicApiAnalyzers` have been introduced (see
+> `docs/repo-ops/public-api-baseline.md`), so a missing mark fails the build; what the analyzer cannot see, "declared
+> but binary incompatible", is laid out as a notice by the pre-commit hook.
 >
-> **但「gate 關閉」不等於「舊帳清完」**（2026-08-07 補）：那兩個案例的下場不同——
-> `IEvictableCache` 的 CHANGELOG **有**記到，`IExcelHelper` 則連 CHANGELOG 都沒有，
-> 直到 2026-08-07 的體檢查出才回溯補進 4.16.0 明細檔。導入機制擋的是「以後」，
-> 先前漏出去的要人工回補。**下次引入任何 gate 時，同時列一份「gate 之前已經漏掉什麼」的清單。**
+> **But "gate closed" does not mean "old debts paid"** (added 2026-08-07): the two cases ended differently.
+> `IEvictableCache` **was** recorded in the CHANGELOG, while `IExcelHelper` was not even in the CHANGELOG until the
+> 2026-08-07 health check found it and it was backfilled into the 4.16.0 detail file. Introducing a mechanism blocks
+> "from now on"; what leaked out before has to be backfilled by hand. **The next time any gate is introduced, also make
+> a list of "what had already leaked out before the gate".**

@@ -1,63 +1,66 @@
-# SonarCloud 整合設定指南
+# SonarCloud integration setup guide
 
-本文件記錄將一個 GitHub Repo 接上 SonarCloud、並在 CI 上傳測試覆蓋率所需的完整設定流程。未來新專案可依此文件快速建立一致的接入方式。
+This document records the complete setup needed to connect a GitHub repo to SonarCloud and upload test coverage from
+CI. New projects can follow it to set up the same integration quickly.
 
-## 適用情境
+## When it applies
 
-- .NET 專案（C#）
-- GitHub Actions 作為 CI
-- 使用 `coverlet.collector` 收集覆蓋率
-- SonarCloud 以 Organization + Project Key 組合識別
+- .NET projects (C#)
+- GitHub Actions as CI
+- Coverage collected with `coverlet.collector`
+- SonarCloud identifies the project by the combination of Organization and Project Key
 
-## 為何需要 CI-based Analysis
+## Why CI-based analysis is needed
 
-SonarCloud 預設啟用「**Automatic Analysis**」模式，只做靜態分析，**無法接收 CI 上傳的測試覆蓋率報告**。要讓覆蓋率顯示於 SonarCloud：
-- 必須關閉 Automatic Analysis
-- 改由 CI 透過 SonarScanner for .NET 執行分析並上傳覆蓋率
+SonarCloud enables "**Automatic Analysis**" by default. It only does static analysis and **cannot receive coverage
+reports uploaded from CI**. To show coverage in SonarCloud:
+- Automatic Analysis must be turned off
+- CI runs the analysis with SonarScanner for .NET and uploads the coverage instead
 
-## 整體流程（一次性設定）
+## Overall flow (one-time setup)
 
-1. SonarCloud 匯入專案（若尚未建立）
-2. 關閉 Automatic Analysis
-3. 產生 SonarCloud Token
-4. 將 Token 加入 GitHub Repo Secret（名稱 `SONAR_TOKEN`）
-5. 在 CI workflow 加入 SonarScanner 步驟
-6. Push 觸發 CI，驗證 SonarCloud 收到覆蓋率
+1. Import the project into SonarCloud (if it does not exist yet)
+2. Turn off Automatic Analysis
+3. Generate a SonarCloud token
+4. Add the token as a GitHub repo secret (named `SONAR_TOKEN`)
+5. Add the SonarScanner steps to the CI workflow
+6. Push to trigger CI, and verify that SonarCloud received the coverage
 
-## 步驟 1｜匯入 SonarCloud 專案
+## Step 1 | Import the SonarCloud project
 
-1. 登入 https://sonarcloud.io
-2. `+` → `Analyze new project` → 選擇 GitHub Repo
-3. 完成後記下兩個識別：
-   - **Organization Key**（個人通常為 GitHub 帳號，如 `jeff377`）
-   - **Project Key**（通常為 `{org}_{repo}`，如 `jeff377_bee-library`）
+1. Sign in to https://sonarcloud.io
+2. `+` → `Analyze new project` → choose the GitHub repo
+3. When it is done, note the two identifiers:
+   - **Organization Key** (for a personal account usually the GitHub account, such as `jeff377`)
+   - **Project Key** (usually `{org}_{repo}`, such as `jeff377_bee-library`)
 
-## 步驟 2｜關閉 Automatic Analysis
+## Step 2 | Turn off Automatic Analysis
 
-1. 進入 SonarCloud 專案 → `Administration` → `Analysis Method`
-2. 將「**Automatic Analysis**」開關**關閉（OFF）**
+1. Open the SonarCloud project → `Administration` → `Analysis Method`
+2. Switch "**Automatic Analysis**" **off (OFF)**
 
-> 未關閉會導致 CI 上傳被拒，錯誤訊息：*"You are running CI analysis while Automatic Analysis is enabled"*
+> If it stays on, the CI upload is rejected with the error: *"You are running CI analysis while Automatic Analysis is enabled"*
 
-## 步驟 3｜產生 SonarCloud Token
+## Step 3 | Generate a SonarCloud token
 
-1. SonarCloud 右上頭像 → `My Account` → `Security`
-2. 於 `Generate Tokens` 輸入識別名稱（建議格式 `<repo>-ci`，例如 `polhem-library-ci`）
-3. `Generate` → **立刻複製 token**（只會顯示一次）
+1. SonarCloud avatar at the top right → `My Account` → `Security`
+2. Under `Generate Tokens`, enter an identifying name (suggested format `<repo>-ci`, for example `polhem-library-ci`)
+3. `Generate` → **copy the token immediately** (it is shown only once)
 
-## 步驟 4｜加入 GitHub Repo Secret
+## Step 4 | Add the GitHub repo secret
 
-1. 前往 `https://github.com/{owner}/{repo}/settings/secrets/actions`
+1. Go to `https://github.com/{owner}/{repo}/settings/secrets/actions`
 2. `New repository secret`
-   - Name：**`SONAR_TOKEN`**（全專案統一此名稱）
-   - Secret：貼上步驟 3 的 token
+   - Name: **`SONAR_TOKEN`** (the same name in every project)
+   - Secret: paste the token from step 3
 3. `Add secret`
 
-> 名稱固定為 `SONAR_TOKEN` 的目的：workflow 可跨專案重用，不需逐專案改引用名。
+> The name is fixed as `SONAR_TOKEN` so that the workflow can be reused across projects without changing the
+> reference name in each one.
 
-## 步驟 5｜CI Workflow 設定
+## Step 5 | CI workflow setup
 
-以下為最小可運作的 `build-ci.yml`（Windows runner）：
+The following is a minimal working `build-ci.yml` (Windows runner):
 
 ```yaml
 jobs:
@@ -68,7 +71,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0          # SonarCloud 需要完整 git history 做 SCM blame
+        fetch-depth: 0          # SonarCloud needs the full git history for SCM blame
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -117,49 +120,54 @@ jobs:
       run: dotnet sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
 ```
 
-新專案複製時需替換：
-- `{ProjectKey}` → SonarCloud Project Key（如 `jeff377_bee-library`）
-- `{OrganizationKey}` → SonarCloud Organization Key（如 `jeff377`）
-- `<Solution>.slnx` → 實際的 solution 檔名
+When copying it into a new project, replace:
+- `{ProjectKey}` → the SonarCloud Project Key (such as `jeff377_bee-library`)
+- `{OrganizationKey}` → the SonarCloud Organization Key (such as `jeff377`)
+- `<Solution>.slnx` → the actual solution file name
 
-## 步驟 6｜驗證覆蓋率已上傳
+## Step 6 | Verify that coverage was uploaded
 
-Push 觸發 CI，等 CI 成功後用 API 確認：
+Push to trigger CI. After CI succeeds, confirm through the API:
 
 ```bash
 curl -s "https://sonarcloud.io/api/measures/component?component={ProjectKey}&metricKeys=coverage,line_coverage,branch_coverage,ncloc" | python3 -m json.tool
 ```
 
-應看到 `coverage`、`line_coverage`、`branch_coverage` 三個指標有數值。若只有 `ncloc`，代表 SonarCloud 收到分析但未收到覆蓋率 → 回去檢查：
-- `coverage.opencover.xml` 是否有產生（`dotnet test` log）
-- `sonar.cs.opencover.reportsPaths` 路徑 pattern 是否涵蓋實際產生位置
+The three metrics `coverage`, `line_coverage` and `branch_coverage` should have values. If there is only `ncloc`,
+SonarCloud received the analysis but not the coverage → go back and check:
+- whether `coverage.opencover.xml` was produced (the `dotnet test` log)
+- whether the `sonar.cs.opencover.reportsPaths` path pattern covers the actual output location
 
-也可直接開啟：
+You can also open it directly:
 ```
 https://sonarcloud.io/summary/new_code?id={ProjectKey}&branch=main
 ```
 
-## 常見錯誤與排除
+## Common errors and fixes
 
-| 症狀 | 原因 | 解法 |
+| Symptom | Cause | Fix |
 |------|------|------|
-| `sonar.token= is invalid`（空值） | GitHub Secret 名稱與 workflow 引用不符 | 確認 secret 名稱為 `SONAR_TOKEN` |
-| `You are running CI analysis while Automatic Analysis is enabled` | 未關閉 Automatic Analysis | 回步驟 2 |
-| SonarCloud 只顯示 `ncloc` 無 `coverage` 指標 | Automatic Analysis 模式或覆蓋率檔路徑不符 | 關閉 Automatic Analysis、確認 `reportsPaths` pattern |
-| `No coverage` badge | 同上 | 同上 |
-| CI 所有測試 Skipped 導致覆蓋率異常低 | `[LocalOnlyFact]` 在 CI 環境下會跳過 | 正常現象；純邏輯測試勿使用 `LocalOnlyFact` |
+| `sonar.token= is invalid` (empty value) | The GitHub secret name does not match the workflow reference | Confirm the secret is named `SONAR_TOKEN` |
+| `You are running CI analysis while Automatic Analysis is enabled` | Automatic Analysis was not turned off | Go back to step 2 |
+| SonarCloud shows only `ncloc` and no `coverage` metric | Automatic Analysis mode, or the coverage file path does not match | Turn off Automatic Analysis and check the `reportsPaths` pattern |
+| `No coverage` badge | Same as above | Same as above |
+| All tests Skipped in CI, so coverage is abnormally low | `[LocalOnlyFact]` is skipped in the CI environment | Expected; do not use `LocalOnlyFact` for pure logic tests |
 
-## 注意事項
+## Notes
 
-- **Windows runner 必要**：SonarScanner for .NET 在 Linux runner 上可運作，但本專案使用 Windows runner 與 PowerShell 語法，未跨平台驗證
-- **Java 17 必要**：SonarScanner v6+ 需 Java 17 執行期
-- **`fetch-depth: 0` 必要**：否則 SonarCloud 無法做 SCM blame、new-code 分析會失準
-- **`--collect:"XPlat Code Coverage;Format=opencover"`**：必須指定 `Format=opencover`，否則 coverlet 預設輸出 Cobertura，SonarScanner for .NET 讀不到
-- **測試結果（trx）未上傳**：本設定僅上傳覆蓋率，不上傳測試執行結果。若需 SonarCloud 顯示測試總數，需額外加 `--logger trx` 並設定 `sonar.cs.vstest.reportsPaths`
-- **覆蓋率排除 `tests/` 與 `samples/`**：避免測試專案自身列入覆蓋率分母導致虛高；依專案結構調整 `sonar.coverage.exclusions`
+- **A Windows runner is required**: SonarScanner for .NET works on a Linux runner, but this project uses a Windows
+  runner and PowerShell syntax and has not been verified cross-platform
+- **Java 17 is required**: SonarScanner v6+ needs a Java 17 runtime
+- **`fetch-depth: 0` is required**: otherwise SonarCloud cannot do SCM blame, and the new-code analysis is inaccurate
+- **`--collect:"XPlat Code Coverage;Format=opencover"`**: `Format=opencover` must be given. Otherwise coverlet
+  outputs Cobertura by default, which SonarScanner for .NET cannot read
+- **Test results (trx) are not uploaded**: this setup uploads only coverage, not test execution results. For
+  SonarCloud to show the total number of tests, add `--logger trx` and set `sonar.cs.vstest.reportsPaths`
+- **Coverage excludes `tests/` and `samples/`**: this keeps the test projects themselves out of the coverage
+  denominator, which would inflate it. Adjust `sonar.coverage.exclusions` to the project structure
 
-## 參考
+## References
 
-- [SonarScanner for .NET 官方文件](https://docs.sonarsource.com/sonarqube-cloud/advanced-setup/ci-based-analysis/sonarscanner-for-net/)
-- [coverlet `--collect` 參數說明](https://github.com/coverlet-coverage/coverlet/blob/master/Documentation/VSTestIntegration.md)
-- 本專案實作：[build-ci.yml](../../.github/workflows/build-ci.yml)
+- [SonarScanner for .NET official documentation](https://docs.sonarsource.com/sonarqube-cloud/advanced-setup/ci-based-analysis/sonarscanner-for-net/)
+- [coverlet `--collect` parameter reference](https://github.com/coverlet-coverage/coverlet/blob/master/Documentation/VSTestIntegration.md)
+- This project's implementation: [build-ci.yml](../../.github/workflows/build-ci.yml)

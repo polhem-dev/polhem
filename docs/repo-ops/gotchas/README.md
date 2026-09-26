@@ -1,39 +1,46 @@
-# 踩雷誌（Gotchas）
+# Pitfall log (gotchas)
 
-維護 polhem 時實際踩過、且**下次很可能再踩**的雷，附症狀、根因與正解。
+Pitfalls actually hit while maintaining polhem that are **likely to be hit again**, with the symptom, the root cause
+and the fix.
 
-**這不是規範文件。** 硬性規則寫在 `.claude/rules/`（每個 session 常駐）；本目錄是**按需查閱**的
-脈絡與推導過程——記錄「為什麼那條規則長那樣」「當時症狀看起來像什麼」，避免同一個坑用同樣的
-誤判方式再走一次。
+**This is not a rules document.** Hard rules are written in `.claude/rules/` (always loaded in every session); this
+directory is context and reasoning to **read on demand**. It records "why that rule looks the way it does" and "what
+the symptom looked like at the time", so that nobody walks into the same hole with the same misjudgement again.
 
-**這也不是公開文件**（見 `.claude/rules/public-docs.md`）：讀者是 polhem 的維護者，
-不是框架使用者。對外的設計決策寫 `docs/adr/`，對外的行為說明寫 `docs/` 根目錄。
+**Nor is this a public document** (see `.claude/rules/public-docs.md`): its readers are polhem maintainers, not
+framework users. Public design decisions go in `docs/adr/`; public descriptions of behavior go in the root of `docs/`.
 
-| 檔案 | 涵蓋 |
-|------|------|
-| [database.md](database.md) | Oracle `''`=NULL / 位置綁定 / `RAW(16)` 讀成 `byte[]`、MySQL TEXT/UUID、SQLite GUID 大小寫、decimal scale、datetime2 參數層、深分頁 `OFFSET` 成本與決定、壓測與單元測試共用 schema |
-| [serialization-and-expressions.md](serialization-and-expressions.md) | MessagePack ctor 順序與 wire 事實、運算式引擎兩雷、AOT 實測結論 |
-| [avalonia-controls.md](avalonia-controls.md) | Avalonia 控件實證雷（DataGrid、唯讀外觀、事件、並行） |
-| [mobile-trim-aot.md](mobile-trim-aot.md) | 行動端 trim / AOT：決策樹推導、reflection-only 重現法保真度、build 與驗證命令配方、**iOS 建置警告的判讀（永遠不是 0 警告）** |
-| [test-ci-release.md](test-ci-release.md) | 測試 fixture 缺口、CI path filter 的驗證死角、**Sonar 的 0 可能是「沒看」而不是「乾淨」（`tools/**/*.cs` 不在分析範圍）**、本機重現 Sonar 規則的方法、發佈與體檢流程雷 |
-| [northwind-heads.md](northwind-heads.md) | Northwind 四 head 工具鏈（含 iOS 的 Xcode 版本綁定）、獨立 repo 同步流程與該 repo 的 CI |
-| [definition-and-customization.md](definition-and-customization.md) | 客製範圍的兩種數法（同一個漏連踩三次）、覆蓋層粒度、`FormSchema` 中樞圖的兩種衍生 |
+| File | Covers |
+|------|--------|
+| [database.md](database.md) | Oracle `''`=NULL / positional binding / `RAW(16)` read back as `byte[]`, MySQL TEXT/UUID, SQLite GUID casing, decimal scale, the datetime2 parameter layer, the cost of deep-pagination `OFFSET` and the decision on it, the schema shared by load tests and unit tests |
+| [serialization-and-expressions.md](serialization-and-expressions.md) | MessagePack ctor order and wire facts, the two expression engine pitfalls, measured AOT conclusions |
+| [avalonia-controls.md](avalonia-controls.md) | Proven Avalonia control pitfalls (DataGrid, read-only appearance, events, parallelism) |
+| [mobile-trim-aot.md](mobile-trim-aot.md) | Mobile trim / AOT: the reasoning behind the decision tree, the fidelity of the reflection-only reproduction, build and verification command recipes, **interpreting iOS build warnings (never 0 warnings)** |
+| [test-ci-release.md](test-ci-release.md) | Test fixture gaps, the verification blind spot of the CI path filter, **a 0 from Sonar may mean "not looked at" rather than "clean" (`tools/**/*.cs` is outside the analysis scope)**, how to reproduce Sonar rules locally, pitfalls in the publishing and health check processes |
+| [northwind-heads.md](northwind-heads.md) | The toolchains of the four Northwind heads (including the Xcode version binding of iOS), the sync process for the standalone repository and that repository's CI |
+| [definition-and-customization.md](definition-and-customization.md) | The two ways of counting the customization scope (the same omission hit three times in a row), the granularity of the override layer, the two derivations of the `FormSchema` hub diagram |
 
-## 不在本目錄的鄰居
+## Neighbours that are not in this directory
 
-分頁做法的**外部佐證**（Odoo / SAP RAP / SAP CAP / Microsoft ASP.NET OData 各自怎麼分頁）
-寫在 [../pagination-prior-art.md](../pagination-prior-art.md)——那不是踩雷誌，是設計決策的
-佐證，沒有症狀也沒有正解。本目錄 `database.md` 的深分頁那條只留量測、決定與範圍，
-外部對照一律指過去。
+The **external evidence** for the pagination approach (how Odoo / SAP RAP / SAP CAP / Microsoft ASP.NET OData each
+paginate) is in [../pagination-prior-art.md](../pagination-prior-art.md). That is not a pitfall log; it is evidence
+for a design decision, with no symptom and no fix. The deep pagination entry in this directory's `database.md` keeps
+only the measurements, the decision and the scope, and always points there for the external comparison.
 
-公開 API 基準（`PublicApiAnalyzers`）的雷寫在
-[../public-api-baseline.md](../public-api-baseline.md)——那份已經是該分析器的權威維運文件，
-拆兩處放必漂。**撞到 `RS0027`（既有多載帶 optional 參數，就加不了參數更多的新多載）先看那份**，
-它是「改設計」而非「補基準檔」的一類。
+The pitfalls of the public API baseline (`PublicApiAnalyzers`) are in
+[../public-api-baseline.md](../public-api-baseline.md). That document is already the authoritative operational
+document for the analyzer, and keeping it in two places guarantees drift.
+**When you hit `RS0027` (an existing overload has optional parameters, so you cannot add a new overload with more
+parameters), read that document first.** It belongs to the kind that means "change the design", not "update the
+baseline file".
 
-## 寫入原則
+## Writing principles
 
-- **只記「再踩機率高」的**。一次性的環境問題、已被框架根治且不會復發的，不留。
-- 每則要能回答三件事：**症狀長什麼樣**、**根因**、**正解**。少了症狀就查不到它。
-- 已根治的雷仍值得留，但要明寫「已修（commit）」與**殘留的注意事項**——沒有殘留就刪掉。
-- 對應的硬規則若已寫進 `.claude/rules/`，這裡只放脈絡，不重複條文。
+- **Record only what is likely to be hit again.** One-off environment problems, and problems the framework has fixed
+  at the root and that will not recur, are not kept.
+- Each entry must answer three things: **what the symptom looks like**, **the root cause**, and **the fix**. Without
+  the symptom, nobody can find it.
+- A pitfall that has been fixed at the root is still worth keeping, but it must say "fixed (commit)" explicitly and
+  state the **remaining caveats**. If nothing remains, delete it.
+- If the matching hard rule is already in `.claude/rules/`, this directory keeps only the context and does not repeat
+  the rule text.

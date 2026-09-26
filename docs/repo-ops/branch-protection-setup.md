@@ -1,33 +1,34 @@
-# GitHub 分支保護設定指南
+# GitHub branch protection setup guide
 
-本文件記錄 `main` 分支保護規則的設定方式，適用於個人開發者在多裝置（Mac / Windows / App）環境下的工作流程。
+This document records how the protection rules for the `main` branch are set up. It suits a single developer who
+works across several devices (Mac / Windows / App).
 
-## 適用情境
+## When it applies
 
-| 裝置 | 編譯環境 | 工作方式 |
+| Device | Build environment | How you work |
 |------|----------|----------|
-| Mac / Windows | 有 | 可直接 push to `main` |
-| App（如 Claude Code） | 無 | 建分支 → PR → CI 通過後合併 |
+| Mac / Windows | Yes | Can push to `main` directly |
+| App (such as Claude Code) | No | Create a branch → PR → merge after CI passes |
 
-## 設定內容
+## Settings
 
-使用 GitHub Classic Branch Protection API，對 `main` 分支啟用以下規則：
+Use the GitHub Classic Branch Protection API to enable the following rules on the `main` branch:
 
-| 設定項目 | 值 | 說明 |
+| Setting | Value | Description |
 |----------|----|------|
-| `required_status_checks.contexts` | `["build"]` | PR 合併前必須通過 `build` job |
-| `required_status_checks.strict` | `true` | PR 分支必須與 main 同步後才能合併 |
-| `enforce_admins` | `false` | Repo admin 可直接 push，不受 PR 限制 |
-| `required_pull_request_reviews` | `null` | 不要求 Code Review（個人專案） |
-| `restrictions` | `null` | 不限制誰可以 push |
-| `allow_force_pushes` | `false` | 禁止 force push |
-| `allow_deletions` | `false` | 禁止刪除 main 分支 |
-| `required_linear_history` | `false` | 允許 merge commit |
-| `required_signatures` | `false` | 不要求 commit 簽章 |
+| `required_status_checks.contexts` | `["build"]` | A PR must pass the `build` job before it merges |
+| `required_status_checks.strict` | `true` | A PR branch must be up to date with main before it can merge |
+| `enforce_admins` | `false` | Repo admins can push directly, without the PR restriction |
+| `required_pull_request_reviews` | `null` | No code review required (personal project) |
+| `restrictions` | `null` | No restriction on who can push |
+| `allow_force_pushes` | `false` | Force pushes are forbidden |
+| `allow_deletions` | `false` | Deleting the main branch is forbidden |
+| `required_linear_history` | `false` | Merge commits are allowed |
+| `required_signatures` | `false` | Commit signatures are not required |
 
-## 設定指令
+## Command
 
-使用 `gh` CLI 一鍵設定：
+Set it up in one step with the `gh` CLI:
 
 ```bash
 gh api repos/{owner}/{repo}/branches/main/protection \
@@ -45,22 +46,23 @@ gh api repos/{owner}/{repo}/branches/main/protection \
 EOF
 ```
 
-> `contexts` 中的 `"build"` 需對應 CI workflow 中的 job 名稱。
+> The `"build"` in `contexts` must match the job name in the CI workflow.
 
-## 驗證設定
+## Verifying the settings
 
 ```bash
-# 查看目前保護規則
+# Show the current protection rules
 gh api repos/{owner}/{repo}/branches/main/protection
 
-# 移除保護規則（如需重設）
+# Remove the protection rules (to reset them)
 gh api repos/{owner}/{repo}/branches/main/protection --method DELETE
 ```
 
-## 前提條件
+## Prerequisites
 
-1. **CI Workflow 必須已存在且觸發過**：GitHub 需要至少執行過一次 `build` job，才能識別該 status check context
-2. **Workflow 需包含 `pull_request` 觸發條件**：
+1. **The CI workflow must already exist and have run**: GitHub must have run the `build` job at least once before it
+   recognizes that status check context
+2. **The workflow must include a `pull_request` trigger**:
 
 ```yaml
 on:
@@ -69,8 +71,9 @@ on:
       - main
 ```
 
-## 注意事項
+## Notes
 
-- `enforce_admins: false` 是讓 admin 可以直接 push 的關鍵，設為 `true` 則所有人都必須走 PR
-- 如果 repo 有多人協作，建議將 `required_pull_request_reviews` 設為 `{"required_approving_review_count": 1}`
-- `strict: true` 要求 PR 分支在合併前必須與 main 同步（rebase），可設為 `false` 放寬此限制
+- `enforce_admins: false` is what lets admins push directly. Set it to `true` and everyone must go through a PR
+- If several people work on the repo, set `required_pull_request_reviews` to `{"required_approving_review_count": 1}`
+- `strict: true` requires a PR branch to be up to date with main (rebased) before it merges. Set it to `false` to
+  relax this

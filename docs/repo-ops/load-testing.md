@@ -1,29 +1,35 @@
-# 壓測取數規範
+# Load test measurement rules
 
-`tools/Polhem.LoadTests` 的使用方式與取數紀律。**維運文件、非公開文件**——讀者是 polhem
-的維護者，不是框架使用者。
+How to use `tools/Polhem.LoadTests` and the discipline for taking numbers. **A maintainer document, not a public
+document**: its readers are polhem maintainers, not framework users.
 
-設定項的完整清單與各項意義**不在本檔**：以 `tools/Polhem.LoadTests/loadtest.sample.json`
-（每一項都有註解）與各設定型別的 XML doc 為準。本檔只寫「怎麼跑」與「怎麼讀數字」。
+The complete list of settings and what each one means is **not in this file**: the authority is
+`tools/Polhem.LoadTests/loadtest.sample.json` (every item has a comment) and the XML docs of each settings type. This
+file covers only "how to run it" and "how to read the numbers".
 
 ---
 
-## 前置條件
+## Prerequisites
 
-1. **資料庫容器**在跑（`./test.sh` 用的那組，容器名見 `test.sh` 檔頭）。
-2. **連線字串**以 `POLHEM_TEST_CONNSTR_{DBTYPE}` 提供，與 `./test.sh` 同一個變數。
+1. **The database containers** are running (the set used by `./test.sh`; the container names are in the header of
+   `test.sh`).
+2. **Connection strings** are provided as `POLHEM_TEST_CONNSTR_{DBTYPE}`, the same variables as `./test.sh`.
 
-   **例外：連線字串必須帶 `{@DbName}`**，那是 `loadtest_` 前綴唯一的施力點。沒有它的
-   連線字串（Oracle 的指的是服務而非資料庫）會讓每個 category 都解析到該字串已經指定的
-   那個地方——也就是單元測試自己的 schema，而 run 會在裡面建表寫資料。這種情況會被直接
-   拒絕，補救方式是另設 `POLHEM_LOADTEST_CONNSTR_{DBTYPE}` 指向一個保留給壓測的 schema；
-   該變數存在時優先採用，且不做這項檢查（等於操作者明講「這個歸壓測寫」）。
-3. **`prepare` 跑過一次**：建立壓測專屬資料庫、建表、植入帳號與資料。
+   **Exception: the connection string must contain `{@DbName}`**, which is the only place the `loadtest_` prefix can
+   take effect. A connection string without it (Oracle's points to a service, not a database) makes every category
+   resolve to wherever that string already points, which is the unit tests' own schema, and the run would create
+   tables and write data there. Such a string is rejected outright. The remedy is to set
+   `POLHEM_LOADTEST_CONNSTR_{DBTYPE}` separately, pointing to a schema reserved for load testing. When that variable
+   exists it takes precedence and this check is skipped (it amounts to the operator stating "this one is for load
+   tests to write to").
+3. **`prepare` has run once**: it creates the load-test databases, creates the tables, and seeds the accounts and
+   data.
 
-### Oracle：先開一個專用 schema
+### Oracle: create a dedicated schema first
 
-其他四家靠 `{@DbName}` 換資料庫名就能隔離，Oracle 不行——它的連線字串指的是服務。
-隔離只能靠**另一個 user/schema**，因此得先手動開一個（需要 `CREATE USER` 權限）：
+The other four isolate by swapping the database name through `{@DbName}`; Oracle cannot, because its connection
+string points to a service. Isolation can only come from **another user/schema**, so create one by hand first (this
+needs the `CREATE USER` privilege):
 
 ```bash
 docker exec -i oracle23ai sqlplus -S 'sys/<ORACLE_PWD>@localhost:1521/FREEPDB1 as sysdba' <<'SQL'
@@ -34,16 +40,18 @@ exit
 SQL
 ```
 
-`<ORACLE_PWD>` 是容器的 `ORACLE_PWD` 環境變數（`docker inspect` 讀得到），本檔不複寫。
-建好之後把 `POLHEM_LOADTEST_CONNSTR_ORACLE` 指過去，`prepare` 就會把 25 張表與植入資料
-全部建在那裡，不碰 `testuser`：
+`<ORACLE_PWD>` is the container's `ORACLE_PWD` environment variable (readable with `docker inspect`); this file does
+not copy it. Once it is created, point `POLHEM_LOADTEST_CONNSTR_ORACLE` at it, and `prepare` builds all 25 tables and
+the seed data there, without touching `testuser`:
 
 ```bash
 export POLHEM_LOADTEST_CONNSTR_ORACLE='Data Source=localhost:1521/FREEPDB1;User Id=loadtest;Password=<password>;'
 ```
 
-跑完值得回頭確認隔離真的成立（`testuser` 的 `ft_customer` 應停在單元測試的種子列數）——
-**這一步不是形式**：先前正是因為沒驗證這條路徑，壓測把十萬列寫進了 `testuser`。
+After the run it is worth checking that the isolation really held (`ft_customer` of `testuser` should stay at the
+unit tests' seed row count).
+**This step is not a formality**: it was exactly because this path was not verified that a load test once wrote a
+hundred thousand rows into `testuser`.
 
 ```bash
 export POLHEM_TEST_CONNSTR_SQLSERVER='...'
@@ -51,75 +59,83 @@ dotnet run --project tools/Polhem.LoadTests -c Release -- prepare
 dotnet run --project tools/Polhem.LoadTests -c Release -- run
 ```
 
-Remote 模式另需先起伺服端（另一個終端機）：
+Remote mode also needs the server started first (in another terminal):
 
 ```bash
 dotnet run --project tools/Polhem.LoadTests -c Release -- serve
 dotnet run --project tools/Polhem.LoadTests -c Release -- run --mode Remote --endpoint http://localhost:5199/api
 ```
 
-`--vu` / `--duration` / `--warmup` / `--mode` / `--endpoint` / `--protection` 可覆寫設定檔；
-完整旗標見 `--help`。
+`--vu` / `--duration` / `--warmup` / `--mode` / `--endpoint` / `--protection` can override the settings file; the
+full list of flags is in `--help`.
 
-## 兩條硬性排除
+## Two hard exclusions
 
-### 不跑 SQLite
+### No SQLite
 
-它是檔案式單機／嵌入式定位，不是伺服端選項，且全域寫入鎖會讓併發寫呈現實際上不存在的瓶頸。
-設定驗證會直接拒絕，訊息說明原因。
+It is positioned as a file-based, single-machine / embedded database, not a server option, and its global write lock
+would show a bottleneck on concurrent writes that does not exist in practice.
+Settings validation rejects it outright, with a message that explains why.
 
-> **不要用「SQLite 走不同程式碼路徑」當理由。** 它獨有的差異集中在 DDL 層，而壓測打的是
-> DML 熱路徑——在那條路徑上 `SqliteProviderFactory` 刻意把它與其他 provider 拉齊了。
+> **Do not use "SQLite takes a different code path" as the reason.** Its unique differences are concentrated in the
+> DDL layer, while the load test hits the DML hot path, and on that path `SqliteProviderFactory` deliberately brings
+> it in line with the other providers.
 
-### 不進 CI
+### Not in CI
 
-壓測數字在 CI runner 上噪音太大，當閘門只會製造 flaky，而 flaky 閘門的下場是被忽略或被關掉。
-手動觸發、結果記進文件即可。
+Load test numbers on a CI runner are too noisy. As a gate they would only produce flakiness, and a flaky gate ends up
+ignored or turned off.
+Trigger it by hand and record the results in documents.
 
-## 取數紀律
+## Measurement discipline
 
-- **warm-up 不可省。** 快取在首次使用才載入，沒有 warm-up 的百分位描述的是冷啟動。
-- **正式數字在真實伺服端 provider 上取**，預設 SQL Server。
-- **錯誤數與延遲一起讀。** 一份半數呼叫快速失敗的報告，只看延遲會非常漂亮——實作上曾經
-  出現過整輪 0 成功而延遲欄全是 0 的情形。
-- **報告指名的場景，未必是壞掉的地方。** 錯誤數大到與工作量無關（動輒百萬、千萬）時，
-  幾乎一定是**某個瞬間失敗的東西在封閉模型下全速空轉**，而不是那個場景真的被呼叫了那麼多次。
-  先看 `ErrorSamples` 裡的訊息，別從場景名開始查。登入這條已經修掉了（失敗會在跑之前中止，
-  見下），其餘成因仍可能以這個形狀出現。
-- **登入失敗現在會擋在量測之前。** 訊息點名 VU 與帳號，exit code 非零，且**不產出報告**。
-  看到它就是前置條件沒備好——先確認 `prepare` 跑過、`auth.*` 與植入的帳號對得上，
-  不要去看場景。
-- **知道自己量的是哪一種模型。** 預設封閉模型（每個 VU 等前一次回來才發下一次），送出速率
-  會隨系統變慢而下降，因此**不會**顯示開放模型找得到的尾延遲崩潰。它貼近人使用商業應用的
-  樣子，但要找飽和點得換模型。
+- **Warm-up cannot be skipped.** Caches load on first use, so percentiles without warm-up describe a cold start.
+- **Official numbers are taken on a real server provider**, SQL Server by default.
+- **Read the error count together with the latency.** A report in which half the calls fail fast looks great if you
+  only read latency. In practice there was once a whole round with 0 successes and a latency column of all 0.
+- **The scenario the report names is not necessarily what is broken.** When the error count is so large that it has
+  nothing to do with the workload (millions, tens of millions), it is almost always **something failing instantly
+  and spinning at full speed under the closed model**, not that scenario really being called that many times.
+  Read the messages in `ErrorSamples` first; do not start from the scenario name. The login case has been fixed (a
+  failure now aborts before the run, see below), but other causes can still show up in this shape.
+- **A login failure now stops before measurement.** The message names the VU and the account, the exit code is
+  non-zero, and **no report is produced**. When you see it, a prerequisite is not in place: check first that
+  `prepare` has run and that `auth.*` matches the seeded accounts. Do not look at the scenarios.
+- **Know which model you are measuring.** The default is the closed model (each VU waits for the previous call to
+  return before sending the next), so the send rate drops as the system slows down, and it therefore **does not**
+  show the tail latency collapse that an open model finds. It is close to how people use a business application, but
+  to find the saturation point you need to switch models.
 
-## 報告
+## Reports
 
-三層輸出：console、Markdown、JSON，預設寫到 `artifacts/loadtest/`（已 gitignore）。
+Three layers of output: console, Markdown and JSON, written by default to `artifacts/loadtest/` (gitignored).
 
-**值得留的手動複製到本目錄**，其餘不必保存——多數跑動是探索性的。
+**Copy the ones worth keeping into this directory by hand**; the rest need not be kept, since most runs are
+exploratory.
 
-### 數字怎麼寫才不會漂
+### Writing numbers so they do not drift
 
-結果一律記成「**當時量到什麼**」。報告的中繼資料區已帶齊版本（含 commit）、provider、模式、
-機器與負載形狀，複製過來時**連同中繼資料一起**，不要只摘延遲數字。
+Always record results as "**what was measured at the time**". The metadata section of the report already carries the
+version (including the commit), provider, mode, machine and load shape. When you copy a report here, **copy the
+metadata with it**; do not extract only the latency numbers.
 
-**不要寫成「本框架吞吐為 X」**——那是複寫，必漂，且沒有任何機制會發現它過期
-（見 `.claude/rules/single-source.md`）。需要對外交代效能特性時另行升格成 ADR 或公開文件。
+**Do not write "this framework's throughput is X"**: that is a copy, it is bound to drift, and no mechanism will
+notice when it is out of date (see `.claude/rules/single-source.md`). When performance characteristics must be
+stated externally, promote them to an ADR or a public document.
 
-## 已知限制
+## Known limitations
 
-判讀報告時需要知道的幾件事：
+Things you need to know when reading a report:
 
-| 限制 | 影響 |
+| Limitation | Effect |
 |------|------|
-| **Oracle 需要專用 schema** | 它的連線字串沒有 `{@DbName}`，`loadtest_` 前綴無從施力，所以預設會被拒絕。要跑 Oracle 得先備妥一個專用 schema 並以 `POLHEM_LOADTEST_CONNSTR_ORACLE` 指向它，做法見上方「Oracle：先開一個專用 schema」。 |
-| **Remote run 量不到快取** | 計數 provider 在驅動程式的 process，被操作的快取在伺服端。報告會標示 `Not observed`，JSON 帶 `CacheObserved: false`。要量快取行為得用 Local 模式。 |
-| **`Order` 的 BO 綁定會被清掉** | 那組定義把 `Order` 綁到 demo 伺服端組件，驅動程式不引用它（引用等於把應用的商業邏輯摺進「量框架」的數字）。該程式因此退回框架自身實作，報告的 `Dropped bindings` 會列出。 |
-| **植入的關聯欄位不是真外鍵** | 每張表獨立植入，關聯欄拿到的是生成值。對讀取場景足夠——量的是查詢本身；需要主檔與明細對得起來的場景得自己植入。 |
+| **Oracle needs a dedicated schema** | Its connection string has no `{@DbName}`, so the `loadtest_` prefix has nowhere to take effect and it is rejected by default. To run Oracle, first prepare a dedicated schema and point `POLHEM_LOADTEST_CONNSTR_ORACLE` at it; see "Oracle: create a dedicated schema first" above. |
+| **A Remote run cannot measure the cache** | The counting provider is in the driver's process, while the cache being exercised is on the server. The report marks it `Not observed`, and the JSON carries `CacheObserved: false`. Use Local mode to measure cache behavior. |
+| **The BO binding of `Order` is removed** | That set of definitions binds `Order` to the demo server assembly, which the driver does not reference (referencing it would fold the application's business logic into numbers meant to "measure the framework"). That program therefore falls back to the framework's own implementation, and the report lists it under `Dropped bindings`. |
+| **Seeded relation fields are not real foreign keys** | Each table is seeded independently, and relation fields get generated values. That is enough for read scenarios, which measure the query itself; a scenario that needs master and detail to match must seed its own data. |
 
-## 相關
+## Related
 
-- [plan-load-testing.md](https://github.com/jeff377/bee-library/blob/7d6cc9d9/docs/plans/archive/plan-load-testing.md)（bee-library）—— 設計決策與推導過程（已封存的階段性文件，記載當時的打算而非現行行為）
-- `tools/Polhem.LoadTests/loadtest.sample.json` —— 設定項的權威來源
-- `.claude/rules/testing.md` —— 單元測試規範（與本檔無關，勿混用）
+- [plan-load-testing.md](https://github.com/jeff377/bee-library/blob/7d6cc9d9/docs/plans/archive/plan-load-testing.md) (bee-library): design decisions and how they were derived (an archived working document that records what was intended at the time, not current behavior)
+- `tools/Polhem.LoadTests/loadtest.sample.json`: the authoritative source for the settings
+- `.claude/rules/testing.md`: the unit test rules (unrelated to this file; do not mix them up)
