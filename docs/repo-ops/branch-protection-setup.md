@@ -1,79 +1,67 @@
-# GitHub branch protection setup guide
+# Branch protection and repository settings
 
-This document records how the protection rules for the `main` branch are set up. It suits a single developer who
-works across several devices (Mac / Windows / App).
+This document records how `main` of `polhem-dev/polhem` is protected and which repository settings go with it.
+The workflow they enforce is described in `.claude/rules/pull-request.md`: every change, including the maintainers',
+reaches `main` through a pull request.
 
-## When it applies
+## Branch protection on `main`
 
-| Device | Build environment | How you work |
-|------|----------|----------|
-| Mac / Windows | Yes | Can push to `main` directly |
-| App (such as Claude Code) | No | Create a branch → PR → merge after CI passes |
+Set with the classic branch protection API:
 
-## Settings
-
-Use the GitHub Classic Branch Protection API to enable the following rules on the `main` branch:
-
-| Setting | Value | Description |
-|----------|----|------|
-| `required_status_checks.contexts` | `["build"]` | A PR must pass the `build` job before it merges |
-| `required_status_checks.strict` | `true` | A PR branch must be up to date with main before it can merge |
-| `enforce_admins` | `false` | Repo admins can push directly, without the PR restriction |
-| `required_pull_request_reviews` | `null` | No code review required (personal project) |
-| `restrictions` | `null` | No restriction on who can push |
-| `allow_force_pushes` | `false` | Force pushes are forbidden |
-| `allow_deletions` | `false` | Deleting the main branch is forbidden |
-| `required_linear_history` | `false` | Merge commits are allowed |
-| `required_signatures` | `false` | Commit signatures are not required |
-
-## Command
-
-Set it up in one step with the `gh` CLI:
+| Setting | Value | Why |
+|---------|-------|-----|
+| `required_status_checks.contexts` | `["build", "docs"]` | The `build` job of `build-ci.yml` and the `docs` job of `docs-check.yml` must pass |
+| `required_status_checks.strict` | `true` | The branch must be up to date with `main` before it merges |
+| `enforce_admins` | `true` | The rules apply to administrators too; nobody pushes to `main` directly |
+| `required_pull_request_reviews.required_approving_review_count` | `0` | A pull request is required, but no approval: with a single maintainer, a required approval would block every pull request they open, because GitHub does not let authors approve their own |
+| `required_pull_request_reviews.require_code_owner_reviews` | `false` | `.github/CODEOWNERS` only requests a review |
+| `restrictions` | `null` | No restriction on who can push to pull request branches |
+| `allow_force_pushes` / `allow_deletions` | `false` | `main` cannot be rewritten or deleted |
 
 ```bash
-gh api repos/{owner}/{repo}/branches/main/protection \
-  --method PUT \
-  --input - <<'EOF'
+gh api repos/polhem-dev/polhem/branches/main/protection --method PUT --input - <<'EOF'
 {
-  "required_status_checks": {
-    "strict": true,
-    "contexts": ["build"]
+  "required_status_checks": { "strict": true, "contexts": ["build", "docs"] },
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 0,
+    "require_code_owner_reviews": false,
+    "dismiss_stale_reviews": false
   },
-  "enforce_admins": false,
-  "required_pull_request_reviews": null,
-  "restrictions": null
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
 }
 EOF
 ```
 
-> The `"build"` in `contexts` must match the job name in the CI workflow.
+Show the current rules with `gh api repos/polhem-dev/polhem/branches/main/protection`.
 
-## Verifying the settings
+When a second maintainer joins, raise `required_approving_review_count` to `1` and consider
+`require_code_owner_reviews`; from then on each maintainer's pull requests can be approved by the other.
+
+## Repository settings
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| `allow_squash_merge` | `true` | The only merge method: one pull request becomes one commit on `main` |
+| `allow_merge_commit` / `allow_rebase_merge` | `false` | |
+| `delete_branch_on_merge` | `true` | Merged branches are removed |
+| `allow_auto_merge` | `true` | `gh pr merge --auto --squash` merges once the checks pass. It merges as the person who enabled it, so the push to `main` starts workflows normally and no token is needed |
 
 ```bash
-# Show the current protection rules
-gh api repos/{owner}/{repo}/branches/main/protection
-
-# Remove the protection rules (to reset them)
-gh api repos/{owner}/{repo}/branches/main/protection --method DELETE
+gh api repos/polhem-dev/polhem --method PATCH \
+  -F allow_squash_merge=true -F allow_merge_commit=false -F allow_rebase_merge=false \
+  -F delete_branch_on_merge=true -F allow_auto_merge=true
 ```
 
-## Prerequisites
+## Constraints on the workflows
 
-1. **The CI workflow must already exist and have run**: GitHub must have run the `build` job at least once before it
-   recognizes that status check context
-2. **The workflow must include a `pull_request` trigger**:
-
-```yaml
-on:
-  pull_request:
-    branches:
-      - main
-```
-
-## Notes
-
-- `enforce_admins: false` is what lets admins push directly. Set it to `true` and everyone must go through a PR
-- If several people work on the repo, set `required_pull_request_reviews` to `{"required_approving_review_count": 1}`
-- `strict: true` requires a PR branch to be up to date with main (rebased) before it merges. Set it to `false` to
-  relax this
+- **A required check must start on every pull request.** A required workflow with a `paths` filter on
+  `pull_request` never reports on a pull request outside those paths, and that pull request waits forever.
+  This is why the `pull_request` trigger of `build-ci.yml` has no `paths` filter; its `push` trigger still has one.
+- **The check names are the job names** (`build`, `docs`). Renaming a job requires changing the protection too;
+  otherwise every pull request waits for a check that no longer exists.
+- **The push that created `main` did not start `build-ci.yml`.** On 2026-09-26 the first push of this repository
+  started `docs-check.yml`, which has no `paths` filter, but not `build-ci.yml`, whose `push` trigger has one.
+  The full run was started with `workflow_dispatch` (`db_scope=all`) instead.
