@@ -295,6 +295,9 @@ jobs:
     # (Polhem.Definition / Polhem.Base). The latter was not gated before, and it is the kind that has actually
     # broken: the get-only setter defect of LanguageEnum.Entries (https://github.com/jeff377/bee-library/commit/5e748b08)
     # was found by a manual scan, not by CI.
+    # The other projects in the list test the rest of what a mobile head ships: the expression interpreter
+    # (Polhem.Expressions), the API client (Polhem.Api.Client) and the two UI layers (Polhem.UI.Core,
+    # Polhem.UI.Avalonia). Test projects of server-only packages stay out.
     #
     # Known blind spot: this gate runs on CoreCLR, where MakeGenericType / MakeGenericMethod are not affected by
     # the switch. MakeGenericType is exactly why ADR-037 requires closed generic instantiations to be registered,
@@ -309,7 +312,11 @@ jobs:
         for proj in \
           tests/Polhem.Api.Core.UnitTests/Polhem.Api.Core.UnitTests.csproj \
           tests/Polhem.Definition.UnitTests/Polhem.Definition.UnitTests.csproj \
-          tests/Polhem.Base.UnitTests/Polhem.Base.UnitTests.csproj
+          tests/Polhem.Base.UnitTests/Polhem.Base.UnitTests.csproj \
+          tests/Polhem.Expressions.UnitTests/Polhem.Expressions.UnitTests.csproj \
+          tests/Polhem.Api.Client.UnitTests/Polhem.Api.Client.UnitTests.csproj \
+          tests/Polhem.UI.Core.UnitTests/Polhem.UI.Core.UnitTests.csproj \
+          tests/Polhem.UI.Avalonia.UnitTests/Polhem.UI.Avalonia.UnitTests.csproj
         do
           dotnet test "$proj" --configuration Release --verbosity normal -p:DynamicCodeSupport=false
         done

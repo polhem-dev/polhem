@@ -4,13 +4,20 @@
 
   The definition graph (FormSchema, TableSchema, FormLayout, the *Settings family,
   LanguageResource and their nested collections) is transported over the JSON-RPC wire
-  as an XML string and reconstructed ON THE CLIENT via XmlCodec.Deserialize<T>, which
-  drives XmlSerializer's reflection-only path on AOT targets (iOS) and trimmed Android
-  Release builds. Under trim the linker removes the parameterless constructors, public
-  property setters, and the strongly-typed collection Add(T) members it considers unused,
-  because nothing references them statically - the only caller is the reflection path.
-  At runtime that surfaces as the misleading "XmlSerializeErrorDetails, 2, 2" (line 2,
-  column 2 is the root element opening; the XML is fine, the type metadata was trimmed).
+  as an XML string and reconstructed ON THE CLIENT via XmlCodec.Deserialize<T>. The only
+  callers of the parameterless constructors, public property setters and strongly-typed
+  collection Add(T) members are XmlSerializer's reflection, so a trimmer that processes
+  this assembly removes them as unused. At runtime that would surface as the misleading
+  "XmlSerializeErrorDetails, 2, 2" (line 2, column 2 is the root element opening; the XML
+  is fine, the type metadata was trimmed).
+
+  That happens only when this assembly is actually trimmed: under TrimMode=full or
+  NativeAOT. Polhem.Definition is not marked IsTrimmable, so the SDK default partial trim
+  of the iOS, Mac Catalyst and Android heads copies it untouched (measured 2026-09-26),
+  and this file changes nothing there. Full trim and NativeAOT are unsupported because the
+  System.Text.Json envelope breaks under both (POLHEM9004 in
+  buildTransitive/Polhem.Definition.targets warns about them); this descriptor keeps the
+  XML half working under them all the same.
 
   This descriptor is embedded as the logical resource "ILLink.Descriptors.xml" so the
   trimmer auto-applies it for EVERY downstream consumer of the Polhem.Definition package -

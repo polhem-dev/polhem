@@ -1,3 +1,9 @@
+using Polhem.Definition.Database;
+using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
+using Polhem.Definition.Layouts;
+using Polhem.Definition.Settings;
+
 namespace Polhem.Definition
 {
     /// <summary>
@@ -5,36 +11,29 @@ namespace Polhem.Definition
     /// </summary>
     public static class DefineTypeExtensions
     {
-        private static readonly Dictionary<DefineType, string> s_defineTypeNames = new()
-        {
-            { DefineType.SystemSettings,   "Polhem.Definition.Settings.SystemSettings" },
-            { DefineType.DatabaseSettings, "Polhem.Definition.Settings.DatabaseSettings" },
-            { DefineType.DbCategorySettings, "Polhem.Definition.Settings.DbCategorySettings" },
-            { DefineType.ProgramSettings,  "Polhem.Definition.Settings.ProgramSettings" },
-            { DefineType.MenuSettings,     "Polhem.Definition.Settings.MenuSettings" },
-            { DefineType.PluginSettings,   "Polhem.Definition.Settings.PluginSettings" },
-            { DefineType.TableSchema,      "Polhem.Definition.Database.TableSchema" },
-            { DefineType.FormSchema,       "Polhem.Definition.Forms.FormSchema" },
-            { DefineType.FormLayout,       "Polhem.Definition.Layouts.FormLayout" },
-            { DefineType.PermissionModels, "Polhem.Definition.Settings.PermissionModels" },
-            { DefineType.CurrencySettings, "Polhem.Definition.Settings.CurrencySettings" },
-            { DefineType.UnitSettings,     "Polhem.Definition.Settings.UnitSettings" },
-        };
-
         /// <summary>
         /// Gets the CLR type for the specified define type.
         /// </summary>
         /// <param name="defineType">The define data type.</param>
-        /// <exception cref="NotSupportedException">Thrown when the define type is not registered.</exception>
-        public static Type ToClrType(this DefineType defineType)
+        /// <exception cref="NotSupportedException">Thrown when the value is not a member of <see cref="DefineType"/>.</exception>
+        public static Type ToClrType(this DefineType defineType) => defineType switch
         {
-            if (!s_defineTypeNames.TryGetValue(defineType, out string? typeName))
-                throw new NotSupportedException($"Type not found: {defineType}");
-            var assembly = typeof(DefineTypeExtensions).Assembly;
-            var type = assembly.GetType(typeName);
-            if (type == null)
-                throw new NotSupportedException($"Type not found: {typeName}");
-            return type;
-        }
+            DefineType.SystemSettings => typeof(SystemSettings),
+            DefineType.DatabaseSettings => typeof(DatabaseSettings),
+            DefineType.DbCategorySettings => typeof(DbCategorySettings),
+            DefineType.ProgramSettings => typeof(ProgramSettings),
+            DefineType.TableSchema => typeof(TableSchema),
+            DefineType.FormSchema => typeof(FormSchema),
+            DefineType.FormLayout => typeof(FormLayout),
+            DefineType.Language => typeof(LanguageResource),
+            DefineType.PermissionModels => typeof(PermissionModels),
+            DefineType.CurrencySettings => typeof(CurrencySettings),
+            DefineType.UnitSettings => typeof(UnitSettings),
+            DefineType.MenuSettings => typeof(MenuSettings),
+            DefineType.PluginSettings => typeof(PluginSettings),
+            // NOTE: A new `DefineType` member without an arm above falls through to this throw. The test
+            // `ToClrType_EveryDefineType_IsMapped` in Polhem.Definition.UnitTests fails when that happens.
+            _ => throw new NotSupportedException($"Type not found: {defineType}")
+        };
     }
 }

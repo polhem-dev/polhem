@@ -35,29 +35,55 @@ namespace Polhem.Api.Client
 
             return s_clientMap.GetOrAdd(cacheKey, _ =>
             {
-                if (OperatingSystem.IsBrowser())
+                var baseAddress = new Uri($"{baseUri.Scheme}://{baseUri.Host}:{baseUri.Port}/");
+                var timeout = TimeSpan.FromSeconds(30);
+                if (UsesPlatformDefaultHandler())
                 {
-                    // Browser hosts route HttpClient through BrowserHttpHandler (fetch API).
-                    // SocketsHttpHandler is not implemented on browser-wasm; connection pooling
-                    // and DNS refresh are owned by the browser itself.
-                    return new HttpClient
-                    {
-                        BaseAddress = new Uri($"{baseUri.Scheme}://{baseUri.Host}:{baseUri.Port}/"),
-                        Timeout = TimeSpan.FromSeconds(30)
-                    };
+                    return new HttpClient { BaseAddress = baseAddress, Timeout = timeout };
                 }
 
                 var handler = new SocketsHttpHandler
                 {
                     PooledConnectionLifetime = TimeSpan.FromMinutes(5)
                 };
-                return new HttpClient(handler)
-                {
-                    BaseAddress = new Uri($"{baseUri.Scheme}://{baseUri.Host}:{baseUri.Port}/"),
-                    Timeout = TimeSpan.FromSeconds(30)
-                };
+                return new HttpClient(handler) { BaseAddress = baseAddress, Timeout = timeout };
             });
         }
+
+        /// <summary>
+        /// Gets whether the current platform builds its shared clients on the runtime's default handler
+        /// rather than on an explicit <see cref="SocketsHttpHandler"/>.
+        /// </summary>
+        internal static bool UsesPlatformDefaultHandler()
+            => UsesPlatformDefaultHandler(
+                OperatingSystem.IsBrowser(),
+                OperatingSystem.IsAndroid(),
+                OperatingSystem.IsIOS() || OperatingSystem.IsTvOS() || OperatingSystem.IsMacCatalyst());
+
+        /// <summary>
+        /// Decides whether a platform builds its shared clients on the runtime's default handler.
+        /// </summary>
+        /// <param name="isBrowser">Whether the host is browser-wasm.</param>
+        /// <param name="isAndroid">Whether the host is Android.</param>
+        /// <param name="isAppleMobile">Whether the host is iOS, tvOS or Mac Catalyst.</param>
+        /// <returns>True for the browser and the mobile platforms; false for desktop and server hosts.</returns>
+        /// <remarks>
+        /// <para>
+        /// On the browser, <see cref="SocketsHttpHandler"/> is not implemented; the default handler goes
+        /// through the fetch API, and the browser owns connection pooling and DNS refresh.
+        /// </para>
+        /// <para>
+        /// On iOS, tvOS, Mac Catalyst and Android, the default handler is the native one, built on
+        /// NSURLSession on Apple platforms and on the Android network stack. It honours the device's TLS stack,
+        /// App Transport Security, system proxy and VPN, user-installed certificates and the network
+        /// security configuration, none of which an explicit <see cref="SocketsHttpHandler"/> goes through,
+        /// so the app would behave differently from other apps on a managed device. Connection lifetime and
+        /// DNS refresh are left to the native stack there; on desktop
+        /// <see cref="SocketsHttpHandler.PooledConnectionLifetime"/> covers them.
+        /// </para>
+        /// </remarks>
+        internal static bool UsesPlatformDefaultHandler(bool isBrowser, bool isAndroid, bool isAppleMobile)
+            => isBrowser || isAndroid || isAppleMobile;
 
         /// <summary>
         /// Determines whether the specified input is a valid URL.

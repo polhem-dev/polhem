@@ -74,7 +74,7 @@ dotnet add package Polhem.Db
 |---|---|
 | **Polhem.Api.Client.dll** | Connector for local or remote invocation of backend Business Objects (`LocalApiProvider` / `RemoteApiProvider`). |
 | **Polhem.UI.Core.dll** | Cross-platform UI common layer (`ClientInfo` / `IEndpointStorage` / `IUIViewService` / `VersionInfo`); shared by native UI hosts for client-side connection state and endpoint persistence. |
-| **Polhem.UI.Avalonia.dll** | Avalonia desktop control library (Windows / macOS / Linux); ships FormSchema-driven controls (`FormView` / `ListView` / `GridControl` plus a field-editor family with `FormScope` ambient binding, all backed by `FormDataObject`) plus a file-backed `FileEndpointStorage`. Single `net10.0` TFM; Avalonia 12.0.0 + DataGrid 12.0.0 as lower bound. |
+| **Polhem.UI.Avalonia.dll** | Avalonia control library for desktop (Windows / macOS / Linux), browser (WebAssembly), iOS and Android heads; ships FormSchema-driven controls (`FormView` / `ListView` / `GridControl` plus a field-editor family with `FormScope` ambient binding, all backed by `FormDataObject`). Single `net10.0` TFM; Avalonia 12.0.0 + DataGrid 12.0.0 as lower bound. |
 | **Polhem.Web.Blazor.Server.dll** | Razor Class Library (RCL) for Blazor Server hosts; provides DI-scoped connectors and Blazor components (`DynamicForm`, `FormDataObject`). |
 
 ### Tooling (dotnet tool)

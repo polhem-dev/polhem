@@ -9,7 +9,7 @@ namespace Polhem.Northwind.Android;
 /// single-view lifetime; all client wiring and app-builder configuration live there, so this type
 /// only declares the Android launch metadata. <see cref="ConfigChanges.Orientation"/> /
 /// <see cref="ConfigChanges.ScreenSize"/> let the activity handle rotation without being recreated,
-/// so Avalonia reflows the layout in place (responsive layout is exercised in plan stage 4).
+/// so Avalonia reflows the layout in place.
 /// </summary>
 [Activity(
     Label = "Polhem.Northwind",

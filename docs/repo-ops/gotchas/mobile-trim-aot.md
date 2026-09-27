@@ -14,6 +14,12 @@ It applies to every mobile / Apple platform head. Currently that is `net10.0-ios
 **Solved (2026-06-27, verified by measurement)**: embedding a descriptor in `Polhem.Definition` solves it
 (`../../../src/Polhem.Definition/ILLink.Descriptors.xml`). The context below is kept to explain the why.
 
+**Scope (measured 2026-09-26)**: the descriptor acts only when `Polhem.Definition` is itself trimmed, that is under
+`TrimMode=full` or NativeAOT. The Polhem assemblies are not `IsTrimmable`, so the SDK default partial trim of the iOS,
+Mac Catalyst and Android heads copies them byte-identical, descriptor or not. On a default head the `2, 2` failure
+below comes from half B and the overloaded `Add` (see "Diagnostic noise" in `.claude/rules/apple-mobile-trim.md`),
+not from the trimmer.
+
 For `net10.0-ios` / `net10.0-maccatalyst` in Release, the Mono linker strips reflection dependencies that are not
 referenced. The most common hit is the reflection fallback of `System.Xml.Serialization` being stripped →
 `XmlCodec.Deserialize<FormSchema>` throws:
@@ -58,6 +64,23 @@ metadata that was stripped**.
   subtypes" is exactly why a wildcard covers everything at once.
 - Measured: a full trim on the Android emulator strips 57% without the descriptor and keeps ~98% with it; the
   round-trip passes in both.
+
+### Supported trim modes (measured 2026-09-26)
+
+A console probe that serializes the JSON-RPC envelope, a message body and a FormSchema, published under each mode:
+
+| Mode | Result |
+|------|--------|
+| Partial (the mobile SDK default) | Polhem DLLs byte-identical to the input; all steps pass |
+| `TrimMode=full` | Message bodies and XML pass, but the envelope silently loses `"jsonrpc"` and `"id"`: their getters are read only by System.Text.Json reflection |
+| NativeAOT | The envelope serializes to `{}`, deserializing it throws; the XML round-trip still passes |
+| `JsonSerializerIsReflectionEnabledByDefault=false` (a trimmed desktop or browser-wasm default) | Every envelope (de)serialization throws, in partial and full alike |
+
+So the supported set is untrimmed and partial. `POLHEM9004` in
+`../../../src/Polhem.Definition/buildTransitive/Polhem.Definition.targets` warns a package consumer about the other
+three; a `ProjectReference` consumer does not import `buildTransitive/`. Making full trim or NativeAOT work needs the
+envelope and message types source-generated (`JsonSerializerContext`), and only then `IsTrimmable` /
+`IsAotCompatible`: marking the assemblies first would make partial trim start trimming them.
 
 ### Verification status
 
@@ -299,10 +322,11 @@ If it is not in the closure, the causal chain stops there; there is no need to d
 
 ## 5. Inventory technique
 
-How to inventory the whole definition layer for "collection property type shape" problems (scan everything at once;
-do not look file by file): use reflection to list every `CollectionBase<>` / `KeyCollectionBase<>` property, and filter
-those that "have `[XmlElement]`, no public setter, and are not marked `[XmlIgnore]`".
-Scan result on 2026-08-10: only `LanguageEnum.Entries` in the whole repository, now fixed.
+The type-shape inventory used to be a reflection scan run by hand: list every `CollectionBase<>` /
+`KeyCollectionBase<>` property and filter those that "have `[XmlElement]`, no public setter, and are not marked
+`[XmlIgnore]`". Scan result on 2026-08-10: only `LanguageEnum.Entries` in the whole repository, since fixed.
+It is now automated by `XmlSerializerShapeGateTests` in `tests/Polhem.Definition.UnitTests`, which walks every type
+the definition roots reach and checks all three shape rules on every test run.
 
 The hard requirements on type shape themselves are always loaded from `.claude/rules/apple-mobile-trim.md`.
 
