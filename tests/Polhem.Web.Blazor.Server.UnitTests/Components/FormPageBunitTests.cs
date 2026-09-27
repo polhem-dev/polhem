@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Data;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.Form;
@@ -9,11 +10,13 @@ using Polhem.Base.Data;
 using Polhem.Definition;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Paging;
 using Polhem.Definition.Sorting;
 using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DependencyInjection;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
@@ -23,8 +26,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     /// failure replaces the page with the error message.
     /// </summary>
     /// <remarks>
-    /// The connector factory is replaced with a fake whose system connector serves a schema and a layout, and whose
-    /// form connector records every call. No backend runs.
+    /// The services are what <see cref="PolhemBlazorServiceCollectionExtensions.AddPolhemBlazor"/> registers,
+    /// including the localizer the toolbar reads its text from, with the connector factory replaced by a fake whose
+    /// system connector serves a schema and a layout and whose form connector records every call. No backend runs.
+    /// <para>
+    /// The toolbar text follows the UI culture. Each test pins <c>en-US</c> so the run does not depend on the
+    /// machine's culture, and finds a button by the text the registered localizer gives for its key, so the lookup
+    /// holds in any culture.
+    /// </para>
     /// </remarks>
     public class FormPageBunitTests : BunitContext
     {
@@ -155,6 +164,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var schema = BuildSchema();
             var form = new RecordingFormConnector(schema);
+            Services.AddPolhemBlazor();
+            // Registered after `AddPolhemBlazor`, so this fake is the factory the page resolves.
             Services.AddSingleton<PolhemApiConnectorFactory>(new FakeFactory(new DefinitionConnector(schema, hasLayout), form));
             return form;
         }
@@ -162,16 +173,23 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private IRenderedComponent<FormPage> RenderPage(string progId = TestProgId)
             => Render<FormPage>(p => p.Add(c => c.ProgId, progId));
 
-        private static bool IsDisabled(IRenderedComponent<FormPage> cut, string buttonText)
-            => cut.FindAll("div.polhem-form-page__toolbar button").Single(b => b.TextContent == buttonText).HasAttribute("disabled");
+        private AngleSharp.Dom.IElement ToolbarButton(IRenderedComponent<FormPage> cut, string textKey)
+        {
+            string text = PolhemUIText.Get(Services.GetRequiredService<IStringLocalizer<PolhemUIText>>(), textKey);
+            return cut.FindAll("div.polhem-form-page__toolbar button").Single(b => b.TextContent == text);
+        }
 
-        private static void Click(IRenderedComponent<FormPage> cut, string buttonText)
-            => cut.FindAll("div.polhem-form-page__toolbar button").Single(b => b.TextContent == buttonText).Click();
+        private bool IsDisabled(IRenderedComponent<FormPage> cut, string textKey)
+            => ToolbarButton(cut, textKey).HasAttribute("disabled");
+
+        private void Click(IRenderedComponent<FormPage> cut, string textKey)
+            => ToolbarButton(cut, textKey).Click();
 
         [Fact]
         [DisplayName("On load the page lists the rows from GetList, and Save and Delete stay disabled until a record is open")]
         public void Initialize_ListsRowsAndDisablesSaveAndDeleteWithoutRecord()
         {
+            using var culture = new CultureScope("en-US");
             var form = RegisterFactory();
 
             var cut = RenderPage();
@@ -179,9 +197,9 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
             Assert.Equal(1, form.GetListCount);
             Assert.Contains("Alice", cut.Find("table.polhem-dynamic-grid").TextContent, StringComparison.Ordinal);
-            Assert.False(IsDisabled(cut, "New"));
-            Assert.True(IsDisabled(cut, "Save"));
-            Assert.True(IsDisabled(cut, "Delete"));
+            Assert.False(IsDisabled(cut, PolhemUIText.New));
+            Assert.True(IsDisabled(cut, PolhemUIText.Save));
+            Assert.True(IsDisabled(cut, PolhemUIText.Delete));
             Assert.Empty(cut.FindAll("div.polhem-form-page__error"));
         }
 
@@ -189,28 +207,46 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [DisplayName("Clicking a list row loads that record and enables Save and Delete")]
         public void RowClick_LoadsRecordAndEnablesSaveAndDelete()
         {
+            using var culture = new CultureScope("en-US");
             var form = RegisterFactory();
             var cut = RenderPage();
             cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
 
             cut.FindAll("tr.polhem-dynamic-grid__row")[1].Click();
 
-            cut.WaitForAssertion(() => Assert.False(IsDisabled(cut, "Save")));
+            cut.WaitForAssertion(() => Assert.False(IsDisabled(cut, PolhemUIText.Save)));
             Assert.Equal([s_bobRowId], form.Loaded);
-            Assert.False(IsDisabled(cut, "Delete"));
+            Assert.False(IsDisabled(cut, PolhemUIText.Delete));
         }
 
         [Fact]
         [DisplayName("New asks the connector for a new record and enables Save")]
         public void New_RequestsNewDataAndEnablesSave()
         {
+            using var culture = new CultureScope("en-US");
             var form = RegisterFactory();
             var cut = RenderPage();
-            cut.WaitForAssertion(() => Assert.True(IsDisabled(cut, "Save")));
+            cut.WaitForAssertion(() => Assert.True(IsDisabled(cut, PolhemUIText.Save)));
 
-            Click(cut, "New");
+            Click(cut, PolhemUIText.New);
 
-            cut.WaitForAssertion(() => Assert.False(IsDisabled(cut, "Save")));
+            cut.WaitForAssertion(() => Assert.False(IsDisabled(cut, PolhemUIText.Save)));
+            Assert.Equal(1, form.NewCount);
+        }
+
+        [Fact]
+        [DisplayName("Under zh-TW the toolbar shows the translated labels and its buttons still work")]
+        public void Toolbar_UnderZhTw_ShowsTranslatedLabelsAndWorks()
+        {
+            using var culture = new CultureScope("zh-TW");
+            var form = RegisterFactory();
+            var cut = RenderPage();
+            cut.WaitForAssertion(() => Assert.True(IsDisabled(cut, PolhemUIText.Save)));
+
+            Assert.NotEqual(PolhemUIText.New, ToolbarButton(cut, PolhemUIText.New).TextContent);
+            Click(cut, PolhemUIText.New);
+
+            cut.WaitForAssertion(() => Assert.False(IsDisabled(cut, PolhemUIText.Save)));
             Assert.Equal(1, form.NewCount);
         }
 
@@ -218,13 +254,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [DisplayName("Save sends the open record to the connector and reloads the list")]
         public void Save_SavesOpenRecordAndReloadsList()
         {
+            using var culture = new CultureScope("en-US");
             var form = RegisterFactory();
             var cut = RenderPage();
             cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
             cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
-            cut.WaitForAssertion(() => Assert.False(IsDisabled(cut, "Save")));
+            cut.WaitForAssertion(() => Assert.False(IsDisabled(cut, PolhemUIText.Save)));
 
-            Click(cut, "Save");
+            Click(cut, PolhemUIText.Save);
 
             cut.WaitForAssertion(() => Assert.Equal(2, form.GetListCount));
             var saved = Assert.Single(form.Saved);
@@ -236,24 +273,26 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [DisplayName("Delete removes the open record through the connector, reloads the list and closes the record")]
         public void Delete_DeletesOpenRecordReloadsListAndClosesRecord()
         {
+            using var culture = new CultureScope("en-US");
             var form = RegisterFactory();
             var cut = RenderPage();
             cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("tr.polhem-dynamic-grid__row").Count));
             cut.FindAll("tr.polhem-dynamic-grid__row")[0].Click();
-            cut.WaitForAssertion(() => Assert.False(IsDisabled(cut, "Delete")));
+            cut.WaitForAssertion(() => Assert.False(IsDisabled(cut, PolhemUIText.Delete)));
 
-            Click(cut, "Delete");
+            Click(cut, PolhemUIText.Delete);
 
             cut.WaitForAssertion(() => Assert.Equal(2, form.GetListCount));
             Assert.Equal([s_aliceRowId], form.Deleted);
-            Assert.True(IsDisabled(cut, "Save"));
-            Assert.True(IsDisabled(cut, "Delete"));
+            Assert.True(IsDisabled(cut, PolhemUIText.Save));
+            Assert.True(IsDisabled(cut, PolhemUIText.Delete));
         }
 
         [Fact]
         [DisplayName("A failing action replaces the page with its error message")]
         public void Action_Fails_ShowsErrorMessage()
         {
+            using var culture = new CultureScope("en-US");
             var form = RegisterFactory();
             form.GetDataFailure = new InvalidOperationException("Record is locked by another user.");
             var cut = RenderPage();
@@ -270,6 +309,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [DisplayName("A missing FormLayout definition shows a configuration error instead of the form")]
         public void Initialize_NoFormLayout_ShowsConfigurationError()
         {
+            using var culture = new CultureScope("en-US");
             RegisterFactory(hasLayout: false);
 
             var cut = RenderPage();
@@ -284,6 +324,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [DisplayName("A blank ProgId shows the ProgId error without calling the backend")]
         public void Initialize_BlankProgId_ShowsProgIdError()
         {
+            using var culture = new CultureScope("en-US");
             var form = RegisterFactory();
 
             var cut = RenderPage(progId: string.Empty);
