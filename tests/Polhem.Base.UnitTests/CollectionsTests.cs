@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Data;
 using Polhem.Base.Collections;
-using Polhem.Base.Serialization;
 
 namespace Polhem.Base.UnitTests
 {
@@ -93,23 +92,6 @@ namespace Polhem.Base.UnitTests
 
             Assert.Same(owner, items.Owner);
             Assert.Equal("tag", items.Tag);
-        }
-
-        [Fact]
-        [DisplayName("SetSerializeState propagates to every item")]
-        public void SetSerializeState_PropagatesToItems()
-        {
-            var items = new Items();
-            var a = new Item { Name = "a" };
-            var b = new Item { Name = "b" };
-            items.Add(a);
-            items.Add(b);
-
-            items.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Equal(SerializeState.Serialize, items.SerializeState);
-            Assert.Equal(SerializeState.Serialize, a.SerializeState);
-            Assert.Equal(SerializeState.Serialize, b.SerializeState);
         }
     }
 
@@ -211,20 +193,6 @@ namespace Polhem.Base.UnitTests
 
             untyped.Remove(a);
             Assert.Single(items);
-        }
-
-        [Fact]
-        [DisplayName("SetSerializeState propagates to every item")]
-        public void SetSerializeState_PropagatesToItems()
-        {
-            var items = new KeyedItems();
-            var a = new KeyedItem { Key = "a" };
-            items.Add(a);
-
-            items.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Equal(SerializeState.Serialize, items.SerializeState);
-            Assert.Equal(SerializeState.Serialize, a.SerializeState);
         }
 
         [Fact]

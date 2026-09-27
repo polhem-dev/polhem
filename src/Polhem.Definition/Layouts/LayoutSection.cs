@@ -1,8 +1,8 @@
+using System.Text.Json.Serialization;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using Polhem.Base.Attributes;
 using Polhem.Base.Collections;
-using Polhem.Base.Serialization;
 
 namespace Polhem.Definition.Layouts
 {
@@ -52,21 +52,19 @@ namespace Polhem.Definition.Layouts
         {
             get
             {
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _fields!)) { return null; }
                 if (_fields == null) { _fields = []; }
                 return _fields;
             }
         }
 
         /// <summary>
-        /// Sets the serialization state.
+        /// Gets whether <see cref="Fields"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
         /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public override void SetSerializeState(SerializeState serializeState)
-        {
-            base.SetSerializeState(serializeState);
-            _fields?.SetSerializeState(serializeState);
-        }
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool FieldsSpecified => _fields is { Count: > 0 };
 
         /// <summary>
         /// Creates a fully independent copy of this section, including its fields.

@@ -3,7 +3,7 @@ namespace Polhem.Base.Serialization
     /// <summary>
     /// Interface for objects that support serialization to a file.
     /// </summary>
-    public interface IObjectSerializeFile : IObjectSerialize
+    public interface IObjectSerializeFile : IObjectSerializeBase
     {
         /// <summary>
         /// Gets the serialization-bound file path.

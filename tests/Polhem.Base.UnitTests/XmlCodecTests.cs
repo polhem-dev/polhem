@@ -5,9 +5,6 @@ namespace Polhem.Base.UnitTests
 {
     public class XmlCodecTests : SerializationTestBase
     {
-        private static readonly SerializeState[] s_expectedStateChanges =
-            { SerializeState.Serialize, SerializeState.None };
-
         [Fact]
         [DisplayName("Serialize and Deserialize round-trip the values")]
         public void Xml_Roundtrip_PreservesValues()
@@ -38,20 +35,18 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("XML serialization raises SerializeState while running and clears it afterwards")]
-        public void Xml_Serialize_RaisesAndClearsSerializeState()
+        [DisplayName("Serialize omits a collection whose inherited Specified property is false and writes it otherwise")]
+        public void Serialize_SpecifiedProperty_ControlsCollectionElement()
         {
-            var source = new SerializationTestPayload { Name = "Bob", Age = 20 };
+            var empty = new SpecifiedPayload { Name = "Bob" };
+            var filled = new SpecifiedPayload { Name = "Bob", Tags = ["a"] };
 
-            string xml = XmlCodec.Serialize(source);
+            string emptyXml = XmlCodec.Serialize(empty);
+            string filledXml = XmlCodec.Serialize(filled);
 
-            Assert.Equal(s_expectedStateChanges, source.StateChanges);
-            Assert.Equal(SerializeState.None, source.SerializeState);
-
-            // Deserialization must not touch the state, so `IsSerializeEmpty` keeps every value.
-            var restored = XmlCodec.Deserialize<SerializationTestPayload>(xml)!;
-            Assert.Empty(restored.StateChanges);
-            Assert.Equal(SerializeState.None, restored.SerializeState);
+            Assert.DoesNotContain("<Tags", emptyXml, StringComparison.Ordinal);
+            Assert.Contains("<Tags>", filledXml, StringComparison.Ordinal);
+            Assert.Equal(["a"], XmlCodec.Deserialize<SpecifiedPayload>(filledXml)!.Tags);
         }
 
         [Fact]

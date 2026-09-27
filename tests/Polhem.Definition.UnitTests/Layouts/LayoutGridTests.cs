@@ -71,24 +71,14 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("Columns returns null when serializing an empty collection")]
-        public void Columns_EmptyDuringSerialize_ReturnsNull()
-        {
-            var grid = new LayoutGrid();
-            grid.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Null(grid.Columns);
-        }
-
-        [Fact]
-        [DisplayName("SetSerializeState sets the object's own state")]
-        public void SetSerializeState_UpdatesState()
+        [DisplayName("Columns is not serialized while it is empty, whether or not it was read")]
+        public void Columns_EmptyCollection_IsNotSerialized()
         {
             var grid = new LayoutGrid();
 
-            grid.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Equal(SerializeState.Serialize, grid.SerializeState);
+            Assert.False(grid.ColumnsSpecified);
+            Assert.Empty(grid.Columns!);
+            Assert.False(grid.ColumnsSpecified);
         }
 
         [Fact]

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Reflection;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Db;
+using Polhem.Hosting.Audit;
 using Polhem.Db.Manager;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
@@ -128,6 +129,47 @@ namespace Polhem.Hosting.UnitTests
             {
                 try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* best effort */ }
             }
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        [DisplayName("A host's own IAuditLogSink replaces the database sink whether it is registered before or after AddPolhemFramework")]
+        public void AddPolhemFramework_HostRegistersAuditLogSink_HostSinkIsUsed(bool registerBefore)
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-sink-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                var configuration = new BackendConfiguration();
+                configuration.AuditLogOptions.Enabled = true;
+                configuration.AuditLogOptions.UseBackgroundWriter = false;
+                var hostSink = new RecordingAuditLogSink();
+
+                var services = new ServiceCollection();
+                services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
+                if (registerBefore) { services.AddSingleton<IAuditLogSink>(hostSink); }
+                services.AddPolhemFramework(
+                    configuration,
+                    new PathOptions { DefinePath = tempDir },
+                    autoCreateMasterKey: true);
+                if (!registerBefore) { services.AddSingleton<IAuditLogSink>(hostSink); }
+
+                using var sp = services.BuildServiceProvider();
+
+                Assert.Same(hostSink, sp.GetRequiredService<IAuditLogSink>());
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { /* best effort */ }
+            }
+        }
+
+        private sealed class RecordingAuditLogSink : IAuditLogSink
+        {
+            public List<AuditEntry> Entries { get; } = [];
+
+            public void WriteBatch(IReadOnlyList<AuditEntry> entries) => Entries.AddRange(entries);
         }
 
         [Theory]

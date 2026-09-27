@@ -1,8 +1,8 @@
+using System.Text.Json.Serialization;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using Polhem.Base.Attributes;
 using Polhem.Base.Collections;
-using Polhem.Base.Serialization;
 
 namespace Polhem.Definition.Settings
 {
@@ -66,22 +66,19 @@ namespace Polhem.Definition.Settings
         {
             get
             {
-                // Return null if the collection is empty during serialization
-                if (SerializationUtilities.IsSerializeEmpty(this.SerializeState, _rules!)) { return null; }
                 if (_rules == null) { _rules = new PermissionRuleCollection(this); }
                 return _rules;
             }
         }
 
         /// <summary>
-        /// Sets the serialization state.
+        /// Gets whether <see cref="Rules"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
         /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public override void SetSerializeState(SerializeState serializeState)
-        {
-            base.SetSerializeState(serializeState);
-            _rules?.SetSerializeState(serializeState);
-        }
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool RulesSpecified => _rules is { Count: > 0 };
 
         /// <summary>
         /// Returns a string representation of this object.

@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using Polhem.Api.Core.MessagePack;
-using Polhem.Base.Serialization;
 using Polhem.Definition;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Organization;
@@ -43,12 +42,10 @@ namespace Polhem.Api.Core.UnitTests
         public void FrameworkManagedMembers_DoNotTravel()
         {
             var source = new SortField("cust_id", SortDirection.Asc) { Tag = "should-not-travel" };
-            source.SetSerializeState(SerializeState.Serialize);
 
             var result = MessagePackCodec.Deserialize<SortField>(MessagePackCodec.Serialize(source));
 
             Assert.Null(result.Tag);
-            Assert.Equal(SerializeState.None, result.SerializeState);
             Assert.Null(result.Collection);
         }
 

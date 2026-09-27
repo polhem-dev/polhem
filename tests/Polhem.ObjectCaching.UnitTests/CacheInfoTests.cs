@@ -61,6 +61,24 @@ namespace Polhem.ObjectCaching.UnitTests
             }
         }
 
+        [Theory]
+        [InlineData("Polhem.ObjectCaching.Providers.NoSuchProvider, Polhem.NoSuchAssembly")]
+        [InlineData("Polhem.ObjectCaching.Providers.NoSuchProvider, Polhem.ObjectCaching")]
+        [InlineData("Polhem.ObjectCaching.CacheItemPolicy, Polhem.ObjectCaching")]
+        [DisplayName("Initialize rejects an unusable CacheProvider name at startup, naming the setting, and keeps the current Provider")]
+        public void Initialize_UnusableCacheProvider_ThrowsAndKeepsProvider(string typeName)
+        {
+            var config = new BackendConfiguration();
+            config.Components.CacheProvider = typeName;
+            var originalProvider = CacheInfo.Provider;
+
+            var ex = Assert.Throws<InvalidOperationException>(() => CacheInfo.Initialize(config));
+
+            Assert.Contains("BackendComponents.CacheProvider", ex.Message, StringComparison.Ordinal);
+            Assert.Contains(typeName, ex.Message, StringComparison.Ordinal);
+            Assert.Same(originalProvider, CacheInfo.Provider);
+        }
+
         private sealed class FakeCacheProvider : ICacheProvider
         {
             public bool Contains(string key) => false;

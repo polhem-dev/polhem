@@ -44,6 +44,10 @@ namespace Polhem.ObjectCaching
         /// data (e.g. test fixtures that pre-populate <see cref="DatabaseSettings.Items"/>).
         /// </remarks>
         /// <param name="configuration">The backend configuration.</param>
+        /// <exception cref="InvalidOperationException">
+        /// <see cref="BackendComponents.CacheProvider"/> names a type that cannot be loaded or that
+        /// does not implement <see cref="ICacheProvider"/>. <see cref="Provider"/> is left unchanged.
+        /// </exception>
         public static void Initialize(BackendConfiguration configuration)
         {
             ArgumentNullException.ThrowIfNull(configuration);
@@ -53,7 +57,28 @@ namespace Polhem.ObjectCaching
             var newType = Type.GetType(configured);
             if (newType != null && newType == Provider.GetType()) return;
 
-            Provider = (AssemblyLoader.CreateInstance(configured) as ICacheProvider)!;
+            // A wrong name used to leave `Provider` null, and the failure surfaced as a
+            // NullReferenceException on the first cache access of some later request. It is
+            // reported here instead, at startup, naming the setting to fix.
+            object? created;
+            try
+            {
+                created = AssemblyLoader.CreateInstance(configured);
+            }
+            catch (Exception ex) when (ex is FileNotFoundException or FileLoadException or BadImageFormatException)
+            {
+                throw new InvalidOperationException(
+                    $"BackendComponents.CacheProvider names '{configured}', whose assembly could not be loaded.", ex);
+            }
+
+            Provider = created switch
+            {
+                ICacheProvider provider => provider,
+                null => throw new InvalidOperationException(
+                    $"BackendComponents.CacheProvider names '{configured}', which was not found in its assembly."),
+                _ => throw new InvalidOperationException(
+                    $"BackendComponents.CacheProvider names '{configured}', which does not implement {nameof(ICacheProvider)}."),
+            };
         }
 
     }

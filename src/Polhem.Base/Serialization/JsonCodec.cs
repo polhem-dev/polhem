@@ -1,14 +1,23 @@
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Polhem.Base.Serialization
 {
     /// <summary>
     /// JSON serialization codec. Round-trips objects via <see cref="JsonSerializer"/>
-    /// with framework defaults (camelCase) and dispatches lifecycle hooks for
-    /// objects implementing <see cref="IObjectSerialize"/>.
+    /// with framework defaults (camelCase).
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// A public <c>bool {Property}Specified</c> property on the serialized type is honoured the same way
+    /// <c>XmlSerializer</c> honours it, so a definition omits the same empty collections in both
+    /// formats. The decision is read from the value, never stored on it, which keeps serializing a
+    /// process-wide cached instance free of side effects for concurrent readers.
+    /// <c>ShouldSerialize{Property}()</c> methods are not consulted, which keeps the output of the types
+    /// that use them for XML only unchanged here.
+    /// </para>
     /// <para>
     /// WARNING: the option instances below are shared and must stay shared.
     /// <see cref="JsonSerializerOptions"/> is where System.Text.Json caches the contract it builds
@@ -53,7 +62,8 @@ namespace Polhem.Base.Serialization
             {
                 WriteIndented = writeIndented,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DefaultIgnoreCondition = ignoreCondition
+                DefaultIgnoreCondition = ignoreCondition,
+                TypeInfoResolver = new DefaultJsonTypeInfoResolver { Modifiers = { ApplySpecifiedProperties } }
             };
 
             // Custom converters for DataSet/DataTable with full metadata preservation
@@ -63,6 +73,29 @@ namespace Polhem.Base.Serialization
             options.Converters.Add(new JsonStringEnumConverter());
 
             return options;
+        }
+
+        /// <summary>
+        /// Wires each property that has a matching public <c>bool {Property}Specified</c> property on
+        /// the serialized type to it, mirroring the <c>XmlSerializer</c> convention.
+        /// </summary>
+        /// <param name="typeInfo">The contract being built; runs once per type per option instance.</param>
+        private static void ApplySpecifiedProperties(JsonTypeInfo typeInfo)
+        {
+            if (typeInfo.Kind != JsonTypeInfoKind.Object) { return; }
+
+            foreach (var property in typeInfo.Properties)
+            {
+                if (property.AttributeProvider is not PropertyInfo clrProperty) { continue; }
+
+                var specified = typeInfo.Type.GetProperty(
+                    clrProperty.Name + "Specified", BindingFlags.Public | BindingFlags.Instance);
+                if (specified is null || specified.PropertyType != typeof(bool) || specified.GetMethod is null) { continue; }
+
+                var inner = property.ShouldSerialize;
+                property.ShouldSerialize = (owner, value) =>
+                    (inner is null || inner(owner, value)) && (bool)specified.GetValue(owner)!;
+            }
         }
 
         /// <summary>
@@ -104,10 +137,6 @@ namespace Polhem.Base.Serialization
         /// <param name="writeIndented">Whether the output is indented for human reading.</param>
         private static string SerializeCore(object value, bool ignoreDefaultValue, bool ignoreNullValue, bool writeIndented)
         {
-            // See SerializationLifecycle.BeginSerialize: the state must be cleared even when the
-            // serializer throws, or the value stays marked as serializing for the rest of the process.
-            using var scope = SerializationLifecycle.BeginSerialize(value);
-
             var options = GetJsonSerializerOptions(ignoreDefaultValue, ignoreNullValue, writeIndented);
             return JsonSerializer.Serialize(value, value?.GetType() ?? typeof(object), options);
         }

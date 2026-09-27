@@ -60,7 +60,6 @@ Polhem.Web.Blazor.Server.DataObjects.FormDataObject.NewAsync() -> System.Threadi
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.SaveAsync() -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.SetField(string! fieldName, string? value) -> void
 Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory
-Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.PolhemApiConnectorFactory(Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions! options) -> void
 Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.PolhemApiConnectorFactory(Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions! options, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.Mode.get -> Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode
 Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions

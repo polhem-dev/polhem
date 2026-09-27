@@ -38,12 +38,6 @@ namespace Polhem.Api.Core.UnitTests
             Assert.NotNull(deserialized.Params);
             Assert.Equal("test-payload", deserialized.Params.Value);
             Assert.Equal("System.String", deserialized.Params.TypeName);
-
-            // `SerializeState` must not appear in the JSON because it is marked `[JsonIgnore]`.
-            using var jDoc = JsonDocument.Parse(json);
-            var root = jDoc.RootElement;
-            Assert.False(root.TryGetProperty("SerializeState", out _));
-            Assert.False(root.TryGetProperty("serializeState", out _));
         }
 
         /// <summary>

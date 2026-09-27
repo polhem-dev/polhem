@@ -10,7 +10,7 @@ namespace Polhem.Base.Collections
     /// Base class for strongly-typed keyed collections.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
-    public class KeyCollectionBase<T> : KeyedCollection<string, T>, IKeyCollectionBase, IObjectSerialize, ITagProperty
+    public class KeyCollectionBase<T> : KeyedCollection<string, T>, IKeyCollectionBase, IObjectSerializeBase, ITagProperty
         where T : class, IKeyCollectionItem  // Item type must implement IKeyCollectionItem
     {
         #region Constructors
@@ -85,30 +85,6 @@ namespace Polhem.Base.Collections
         public void Insert(int index, IKeyCollectionItem value)
         {
             base.Insert(index, (T)value);
-        }
-
-        #endregion
-
-        #region IObjectSerialize Interface
-
-        /// <summary>
-        /// Gets the current serialization state.
-        /// </summary>
-        [XmlIgnore, JsonIgnore]
-        [Browsable(false)]
-        public SerializeState SerializeState { get; private set; } = SerializeState.None;
-
-        /// <summary>
-        /// Sets the serialization state for this collection and all of its items.
-        /// </summary>
-        /// <param name="serializeState">The serialization state to set.</param>
-        public virtual void SetSerializeState(SerializeState serializeState)
-        {
-            SerializeState = serializeState;
-            foreach (var item in this.OfType<IObjectSerialize>())
-            {
-                item.SetSerializeState(serializeState);
-            }
         }
 
         #endregion

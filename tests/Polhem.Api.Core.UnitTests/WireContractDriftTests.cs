@@ -158,7 +158,7 @@ namespace Polhem.Api.Core.UnitTests
 
         /// <summary>
         /// Wire members are defined the same way as for JSON: public readable and writable properties not excluded by
-        /// <c>[JsonIgnore]</c>. The framework-managed members (<c>Tag</c> / <c>Key</c> / <c>SerializeState</c>) all
+        /// <c>[JsonIgnore]</c>. The framework-managed members (<c>Tag</c> / <c>Key</c>) both
         /// carry that attribute, so they are excluded automatically.
         /// </summary>
         /// <remarks>

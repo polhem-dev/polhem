@@ -39,33 +39,48 @@ namespace Polhem.Base.UnitTests
     }
 
     /// <summary>
-    /// Test payload used to verify serialization round-trips and the serialize-state lifecycle.
+    /// Test payload used to verify serialization round-trips.
     /// </summary>
-    public class SerializationTestPayload : IObjectSerializeBase, IObjectSerialize, IObjectSerializeFile
+    public class SerializationTestPayload : IObjectSerializeFile
     {
         public string Name { get; set; } = string.Empty;
         public int Age { get; set; }
-
-        private SerializeState _state = SerializeState.None;
-        [XmlIgnore, JsonIgnore]
-        public SerializeState SerializeState => _state;
-
-        public void SetSerializeState(SerializeState serializeState)
-        {
-            _state = serializeState;
-            StateChanges.Add(serializeState);
-        }
 
         private string _objectFilePath = string.Empty;
         [XmlIgnore, JsonIgnore]
         public string ObjectFilePath => _objectFilePath;
         public void SetObjectFilePath(string filePath) => _objectFilePath = filePath;
+    }
 
-        /// <summary>
-        /// Every state transition in order, so tests can assert the codec raised the flag
-        /// during serialization and cleared it afterwards.
-        /// </summary>
+    /// <summary>
+    /// Payload whose <see cref="Tags"/> list is gated by a get-only <c>Specified</c> property, the
+    /// convention both codecs honour for omitting empty collections, declared on a base class the way
+    /// definition types declare it.
+    /// </summary>
+    public class SpecifiedPayloadBase : IObjectSerializeBase
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public List<string> Tags { get; set; } = [];
+
         [XmlIgnore, JsonIgnore]
-        public List<SerializeState> StateChanges { get; } = [];
+        public bool TagsSpecified => Tags.Count > 0;
+    }
+
+    /// <summary>
+    /// The subclass actually serialized, so the tests cover a <c>Specified</c> property inherited from a base class.
+    /// </summary>
+    public class SpecifiedPayload : SpecifiedPayloadBase
+    {
+        /// <summary>
+        /// Still written to JSON when empty, because only the <c>Specified</c> convention is consulted there.
+        /// </summary>
+        /// <remarks>
+        /// Declared here, not on the base class: the reflection-only <c>XmlSerializer</c> throws on a
+        /// <c>ShouldSerialize</c> method inherited from a base class.
+        /// </remarks>
+        public List<string> Notes { get; set; } = [];
+
+        public bool ShouldSerializeNotes() => Notes.Count > 0;
     }
 }

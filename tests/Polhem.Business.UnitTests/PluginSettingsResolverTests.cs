@@ -179,6 +179,27 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
+        [DisplayName("A chain built from settings that were reloaded before it was cached is not served for the reloaded settings")]
+        public void Resolve_ReloadBeforeCacheWrite_DoesNotPinOldChain()
+        {
+            var access = new StubDefineAccess(Build("Order", Sample));
+            var resolver = new PluginSettingsResolver(access);
+            bool reloaded = false;
+            resolver.BeforeCacheWrite = () =>
+            {
+                if (reloaded) { return; }
+                reloaded = true;
+                access.Current = Build("Order", Sample, Other);
+                resolver.Resolve("", "Invoice");
+            };
+
+            _ = resolver.Resolve("", "Order");
+            resolver.BeforeCacheWrite = null;
+
+            Assert.Equal([typeof(SamplePlugin), typeof(OtherPlugin)], resolver.Resolve("", "Order").Types);
+        }
+
+        [Fact]
         [DisplayName("The chain cache is rebuilt after the definition instance changes (a file-watcher reload)")]
         public void Resolve_SettingsInstanceChanged_RebuildsChain()
         {

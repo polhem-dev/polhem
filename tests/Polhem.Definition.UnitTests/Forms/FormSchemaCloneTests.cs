@@ -123,19 +123,6 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Clone does not mutate the source's SerializeState (unlike XmlCodec.Serialize)")]
-        public void Clone_DoesNotMutateSerializeState()
-        {
-            var source = BuildSchema();
-            Assert.Equal(Polhem.Base.Serialization.SerializeState.None, source.SerializeState);
-
-            _ = source.Clone();
-
-            // Clone is a pure read and must not touch the source's `SerializeState`, which `XmlCodec.Serialize` does.
-            Assert.Equal(Polhem.Base.Serialization.SerializeState.None, source.SerializeState);
-        }
-
-        [Fact]
         [DisplayName("Concurrent Clone calls on the same source do not interfere and each gets an independent copy")]
         public void Clone_ParallelInvocations_ProduceIndependentCopies()
         {

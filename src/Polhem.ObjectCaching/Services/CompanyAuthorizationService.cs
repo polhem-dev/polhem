@@ -27,16 +27,18 @@ namespace Polhem.ObjectCaching.Services
         /// <inheritdoc/>
         public bool Can(Guid accessToken, string modelId, PermissionAction action)
         {
-            var session = _sessionInfoService.Get(accessToken);
-            if (session == null || string.IsNullOrEmpty(session.CompanyId) || session.Roles.Count == 0)
+            // One snapshot for the whole check: the company and the roles must come from the same
+            // company entry, and a concurrent EnterCompany / LeaveCompany swaps the whole scope.
+            var scope = _sessionInfoService.Get(accessToken)?.CompanyScope;
+            if (scope == null || string.IsNullOrEmpty(scope.CompanyId) || scope.Roles.Count == 0)
             {
                 return false;
             }
 
-            var snapshot = _rolePermissionService.Get(session.CompanyId);
+            var snapshot = _rolePermissionService.Get(scope.CompanyId);
             if (snapshot == null) { return false; }
 
-            return snapshot.GetAllowed(session.Roles, modelId).HasFlag(action);
+            return snapshot.GetAllowed(scope.Roles, modelId).HasFlag(action);
         }
     }
 }

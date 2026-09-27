@@ -30,22 +30,6 @@ namespace Polhem.Definition.Settings
         #region IObjectSerializeFile Interface
 
         /// <summary>
-        /// Serialization state.
-        /// </summary>
-        [XmlIgnore, JsonIgnore]
-        [Browsable(false)]
-        public SerializeState SerializeState { get; private set; } = SerializeState.None;
-
-        /// <summary>
-        /// Set serialization state.
-        /// </summary>
-        /// <param name="serializeState">Serialization state.</param>
-        public void SetSerializeState(SerializeState serializeState)
-        {
-            SerializeState = serializeState;
-        }
-
-        /// <summary>
         /// Serialized binding file.
         /// </summary>
         [XmlIgnore, JsonIgnore]
@@ -114,12 +98,19 @@ namespace Polhem.Definition.Settings
         {
             get
             {
-                // Return null if the collection is empty during serialization
-                if (SerializationUtilities.IsSerializeEmpty(this.SerializeState, _extendedProperties!)) { return null; }
                 if (_extendedProperties == null) { _extendedProperties = []; }
                 return _extendedProperties;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="ExtendedProperties"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool ExtendedPropertiesSpecified => _extendedProperties is { Count: > 0 };
 
         /// <summary>
         /// Object description.

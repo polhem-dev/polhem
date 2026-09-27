@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.JsonRpc
     /// <summary>
     /// JSON-RPC response model.
     /// </summary>
-    public class JsonRpcResponse : IObjectSerialize
+    public class JsonRpcResponse : IObjectSerializeBase
     {
         #region Constructors
 
@@ -24,26 +24,6 @@ namespace Polhem.Api.Core.JsonRpc
         {
             Method = request.Method; // Echo back the invoked method name
             Id = request.Id;  // Set the unique identifier from the request
-        }
-
-        #endregion
-
-        #region IObjectSerialize
-
-        /// <summary>
-        /// Gets the serialization state.
-        /// </summary>
-        [JsonIgnore]
-        public SerializeState SerializeState { get; private set; } = SerializeState.None;
-
-        /// <summary>
-        /// Sets the serialization state.
-        /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public virtual void SetSerializeState(SerializeState serializeState)
-        {
-            SerializeState = serializeState;
-            Result?.SetSerializeState(serializeState);
         }
 
         #endregion

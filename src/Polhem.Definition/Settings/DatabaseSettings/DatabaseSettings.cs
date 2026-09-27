@@ -30,25 +30,6 @@ namespace Polhem.Definition.Settings
         #region IObjectSerializeFile Interface
 
         /// <summary>
-        /// Gets the serialization state.
-        /// </summary>
-        [XmlIgnore]
-        [JsonIgnore]
-        [Browsable(false)]
-        public SerializeState SerializeState { get; private set; } = SerializeState.None;
-
-        /// <summary>
-        /// Sets the serialization state.
-        /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public void SetSerializeState(SerializeState serializeState)
-        {
-            SerializeState = serializeState;
-            _servers?.SetSerializeState(serializeState);
-            _items?.SetSerializeState(serializeState);
-        }
-
-        /// <summary>
         /// Gets the file path bound to serialization.
         /// </summary>
         [XmlIgnore]
@@ -83,12 +64,19 @@ namespace Polhem.Definition.Settings
         {
             get
             {
-                // Return null if the collection is empty during serialization
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _servers!)) { return null; }
                 if (_servers == null) { _servers = []; }
                 return _servers;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="Servers"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool ServersSpecified => _servers is { Count: > 0 };
 
         /// <summary>
         /// Gets the database connection settings collection.
@@ -99,12 +87,19 @@ namespace Polhem.Definition.Settings
         {
             get
             {
-                // Return null if the collection is empty during serialization
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _items!)) { return null; }
                 if (_items == null) { _items = []; }
                 return _items;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="Items"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool ItemsSpecified => _items is { Count: > 0 };
 
         /// <summary>
         /// Creates a copy of this instance.
@@ -121,7 +116,6 @@ namespace Polhem.Definition.Settings
 
             return copy;
         }
-
 
     }
 }

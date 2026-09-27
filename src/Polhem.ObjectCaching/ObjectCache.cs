@@ -77,6 +77,11 @@ namespace Polhem.ObjectCaching
         /// Concurrent misses on the same key produce one instance, not one per caller.
         /// Callers rely on that: several compare cached values by reference to detect a reload,
         /// and a duplicate instance would read as a change that never happened.
+        /// <para>
+        /// A fill that overlaps an invalidation — <see cref="Remove"/>, a notify version bump or a
+        /// rewrite of a watched file — does not keep what it loaded; see
+        /// <see cref="CacheInvalidation"/> and <see cref="CacheItemPolicy"/>.
+        /// </para>
         /// </remarks>
         public virtual T? Get()
         {
@@ -92,11 +97,16 @@ namespace Polhem.ObjectCaching
                 if (CacheInfo.Provider.Get(key) is T fresh)
                     return fresh;
 
-                // Create and insert the object into the cache, then return it
+                // Every invalidation source is read before the load, so one that lands during the
+                // load is detected instead of being mistaken for the state the value was read at.
+                long generation = CacheInvalidation.Read(key);
+                var policy = BuildPolicy();
+                policy.CaptureChangeBaseline();
+
                 var value = CreateInstance();
                 if (value != null)
                 {
-                    CacheInfo.Provider.Set(key, value, BuildPolicy());
+                    CacheInvalidation.StoreIfCurrent(key, generation, value, policy);
                 }
                 return value;
             });
@@ -109,6 +119,7 @@ namespace Polhem.ObjectCaching
         public virtual void Set(T value)
         {
             string key = GetKey();
+            CacheInvalidation.Advance(key);
             CacheInfo.Provider.Set(key, value, BuildPolicy());
         }
 
@@ -118,6 +129,7 @@ namespace Polhem.ObjectCaching
         public virtual void Remove()
         {
             string key = GetKey();
+            CacheInvalidation.Advance(key);
             CacheInfo.Provider.Remove(key);
         }
 

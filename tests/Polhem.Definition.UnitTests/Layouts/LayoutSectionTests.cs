@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Base.Serialization;
 using Polhem.Definition.Layouts;
 
 namespace Polhem.Definition.UnitTests.Layouts
@@ -39,24 +38,14 @@ namespace Polhem.Definition.UnitTests.Layouts
         }
 
         [Fact]
-        [DisplayName("Fields returns null when serializing an empty collection")]
-        public void Fields_EmptyDuringSerialize_ReturnsNull()
-        {
-            var section = new LayoutSection();
-            section.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Null(section.Fields);
-        }
-
-        [Fact]
-        [DisplayName("SetSerializeState sets the object's own state")]
-        public void SetSerializeState_UpdatesState()
+        [DisplayName("Fields is not serialized while it is empty, whether or not it was read")]
+        public void Fields_EmptyCollection_IsNotSerialized()
         {
             var section = new LayoutSection();
 
-            section.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Equal(SerializeState.Serialize, section.SerializeState);
+            Assert.False(section.FieldsSpecified);
+            Assert.Empty(section.Fields!);
+            Assert.False(section.FieldsSpecified);
         }
 
         [Fact]

@@ -37,7 +37,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private sealed class FakeFactory : PolhemApiConnectorFactory
         {
             public FakeFactory()
-                : base(new PolhemBlazorOptions().UseLocalProvider()) { }
+                : base(new PolhemBlazorOptions().UseLocalProvider(), new Polhem.Api.Client.ApiSessionContext()) { }
 
             public override FormApiConnector CreateFormConnector(Guid accessToken, string progId)
                 => new FakeFormConnector();

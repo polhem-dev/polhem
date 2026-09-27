@@ -2,7 +2,6 @@ using System.ComponentModel;
 using System.Data;
 using Polhem.Base;
 using Polhem.Base.Data;
-using Polhem.Base.Serialization;
 using Polhem.Definition.Forms;
 
 namespace Polhem.Definition.UnitTests.Forms
@@ -33,18 +32,17 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("Apply returns immediately without throwing when formTable.Fields is null (an empty collection being serialized)")]
-        public void Apply_NullFields_NoThrow()
+        [DisplayName("Apply returns without throwing when formTable.Fields is empty")]
+        public void Apply_EmptyFields_NoThrow()
         {
             var schema = new FormSchema("Order", "Order");
             var formTable = schema.Tables!.Add("Order", "Order");
-            formTable.SetSerializeState(SerializeState.Serialize);   // With empty Fields the getter returns null.
             var row = NewSingleColumnRow();
 
             var ex = Record.Exception(() => FormRowDefaults.Apply(formTable, row));
 
             Assert.Null(ex);
-            Assert.Null(formTable.Fields);
+            Assert.Empty(formTable.Fields!);
         }
 
         [Fact]

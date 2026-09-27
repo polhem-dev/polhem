@@ -3,9 +3,23 @@ using System.Xml;
 namespace Polhem.Base.Serialization
 {
     /// <summary>
-    /// XML serialization codec. Round-trips objects via <see cref="System.Xml.Serialization.XmlSerializer"/>
-    /// and dispatches lifecycle hooks for objects implementing <see cref="IObjectSerialize"/>.
+    /// XML serialization codec. Round-trips objects via <see cref="System.Xml.Serialization.XmlSerializer"/>.
     /// </summary>
+    /// <remarks>
+    /// The codec sets no state on the value it serializes, so serializing a process-wide cached
+    /// definition does not change what concurrent readers of it see (pinned for definitions by
+    /// <c>CachedDefinitionSerializationTests</c>). Empty collections are omitted by the owning type's
+    /// get-only <c>{Property}Specified</c> properties, which <c>XmlSerializer</c> reads.
+    /// <para>
+    /// NOTE: definitions use <c>{Property}Specified</c> rather than <c>ShouldSerialize{Property}()</c>.
+    /// The reflection-only <c>XmlSerializer</c> (the path on iOS, where dynamic code is unavailable)
+    /// throws <see cref="NullReferenceException"/> when a <c>ShouldSerialize</c> method is declared on a
+    /// base class of the type being written, and several definition types are serialized through a
+    /// subclass (<c>LayoutField</c> and <c>LayoutColumn</c> share <c>LayoutFieldBase</c>). A
+    /// <c>Specified</c> property does not have that defect; the mobile AOT gate in the CI workflow
+    /// runs the serialization tests with dynamic code disabled.
+    /// </para>
+    /// </remarks>
     public static class XmlCodec
     {
         /// <summary>
@@ -16,10 +30,6 @@ namespace Polhem.Base.Serialization
         {
             if (value == null)
                 return string.Empty;
-
-            // The scope clears the serialize state even when the serializer throws; leaving it set
-            // is permanent, and these values are often process-wide cached definitions.
-            using var scope = SerializationLifecycle.BeginSerialize(value);
 
             using Utf8StringWriter writer = new Utf8StringWriter();
             var serializer = XmlSerializerCache.Get(value.GetType());

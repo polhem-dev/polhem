@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using Polhem.Base.Security;
-using Polhem.Base.Serialization;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Database;
 
@@ -22,28 +21,29 @@ namespace Polhem.Definition.UnitTests.Settings
             Assert.NotNull(settings.Items);
             Assert.Empty(settings.Servers!);
             Assert.Empty(settings.Items!);
-            Assert.Equal(SerializeState.None, settings.SerializeState);
             Assert.Equal(string.Empty, settings.ObjectFilePath);
         }
 
         [Fact]
-        [DisplayName("Servers returns null when serializing an empty collection")]
-        public void Servers_EmptyDuringSerialize_ReturnsNull()
+        [DisplayName("Servers is not serialized while it is empty, whether or not it was read")]
+        public void Servers_EmptyCollection_IsNotSerialized()
         {
             var settings = new DatabaseSettings();
-            settings.SetSerializeState(SerializeState.Serialize);
 
-            Assert.Null(settings.Servers);
+            Assert.False(settings.ServersSpecified);
+            Assert.Empty(settings.Servers!);
+            Assert.False(settings.ServersSpecified);
         }
 
         [Fact]
-        [DisplayName("Items returns null when serializing an empty collection")]
-        public void Items_EmptyDuringSerialize_ReturnsNull()
+        [DisplayName("Items is not serialized while it is empty, whether or not it was read")]
+        public void Items_EmptyCollection_IsNotSerialized()
         {
             var settings = new DatabaseSettings();
-            settings.SetSerializeState(SerializeState.Serialize);
 
-            Assert.Null(settings.Items);
+            Assert.False(settings.ItemsSpecified);
+            Assert.Empty(settings.Items!);
+            Assert.False(settings.ItemsSpecified);
         }
 
         [Fact]
@@ -55,17 +55,6 @@ namespace Polhem.Definition.UnitTests.Settings
             settings.SetObjectFilePath("/tmp/databases.xml");
 
             Assert.Equal("/tmp/databases.xml", settings.ObjectFilePath);
-        }
-
-        [Fact]
-        [DisplayName("SetSerializeState updates the object's own state")]
-        public void SetSerializeState_UpdatesState()
-        {
-            var settings = new DatabaseSettings();
-
-            settings.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Equal(SerializeState.Serialize, settings.SerializeState);
         }
 
         [Fact]

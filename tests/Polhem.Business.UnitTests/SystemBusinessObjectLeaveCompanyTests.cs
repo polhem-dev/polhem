@@ -23,7 +23,7 @@ namespace Polhem.Business.UnitTests
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
             var session = sessionService.Get(accessToken)!;
-            session.CompanyId = "C001";
+            session.CompanyScope = new SessionCompanyScope("C001", string.Empty, [], Guid.Empty, Guid.Empty, Guid.Empty);
             sessionService.Set(session);
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
 

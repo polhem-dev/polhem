@@ -39,9 +39,9 @@ namespace Polhem.Api.Core.Transformers
     /// either: its reader requires the envelope, so it would break every client sending bare values.
     /// </item>
     /// <item>
-    /// <b>Empty collections are written, not omitted.</b> This codec does not dispatch the
-    /// <see cref="IObjectSerialize"/> lifecycle, so the <c>IsSerializeEmpty</c> short-circuit Plain relies
-    /// on does not apply and a member such as <c>parameters</c> appears as <c>[]</c>.
+    /// <b>Empty collections are written, not omitted.</b> Plain goes through
+    /// <see cref="Polhem.Base.Serialization.JsonCodec"/>, which honours <c>{Property}Specified</c>
+    /// properties; this codec's options do not, so a member such as <c>parameters</c> appears as <c>[]</c>.
     /// </item>
     /// </list>
     /// The fixtures under <c>wire-fixtures/</c> are bodies for <b>this</b> codec — the

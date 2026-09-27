@@ -19,7 +19,7 @@ namespace Polhem.Base.Collections
     /// </para>
     /// </remarks>
     /// <typeparam name="T">The type of the collection items.</typeparam>
-    public abstract class CollectionBase<T> : Collection<T>, ICollectionBase, IObjectSerialize, ITagProperty
+    public abstract class CollectionBase<T> : Collection<T>, ICollectionBase, IObjectSerializeBase, ITagProperty
         where T : class, ICollectionItem  // Item type must implement ICollectionItem
     {
         #region Constructors
@@ -94,31 +94,6 @@ namespace Polhem.Base.Collections
         public void Insert(int index, ICollectionItem value)
         {
             base.Insert(index, (T)value);
-        }
-
-        #endregion
-
-        #region IObjectSerialize Interface
-
-        /// <summary>
-        /// Gets the current serialization state.
-        /// </summary>
-        [XmlIgnore, JsonIgnore]
-        [Browsable(false)]
-        public SerializeState SerializeState { get; private set; } = SerializeState.None;
-
-        /// <summary>
-        /// Sets the serialization state for this collection and all of its items.
-        /// </summary>
-        /// <param name="serializeState">The serialization state to set.</param>
-        public virtual void SetSerializeState(SerializeState serializeState)
-        {
-            SerializeState = serializeState;
-            foreach (var item in this)
-            {
-                if (item is IObjectSerialize serializable)
-                    serializable.SetSerializeState(serializeState);
-            }
         }
 
         #endregion

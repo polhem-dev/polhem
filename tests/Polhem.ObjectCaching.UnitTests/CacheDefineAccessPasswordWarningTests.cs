@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Polhem.Base.Security;
+using Polhem.Base.Serialization;
 using Polhem.Definition;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
@@ -44,7 +45,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("SaveDatabaseSettings with a ConfigEncryptionKey encrypts the password and logs nothing")]
+        [DisplayName("SaveDatabaseSettings with a ConfigEncryptionKey encrypts the password in the file and logs nothing")]
         public void SaveDatabaseSettings_WithKey_LogsNothing()
         {
             using var temp = TempDir.Create();
@@ -54,7 +55,22 @@ namespace Polhem.ObjectCaching.UnitTests
             CreateAccess(temp.Options, AesCbcHmacKeyGenerator.GenerateCombinedKey(), logger).SaveDatabaseSettings(settings);
 
             Assert.Empty(logger.Entries);
-            Assert.StartsWith("enc:", settings.Servers!["s1"].Password, StringComparison.Ordinal);
+            var written = XmlCodec.DeserializeFromFile<DatabaseSettings>(temp.Options.GetDatabaseSettingsFilePath())!;
+            Assert.StartsWith("enc:", written.Servers!["s1"].Password, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("SaveDatabaseSettings leaves the instance it is given in plain text, so saving the cached instance does not encrypt it for its readers")]
+        public void SaveDatabaseSettings_WithKey_DoesNotEncryptArgument()
+        {
+            using var temp = TempDir.Create();
+            var settings = SettingsWithPassword();
+            settings.Items!.Add(new DatabaseItem { Id = "common", Password = "item-pw" });
+
+            CreateAccess(temp.Options, AesCbcHmacKeyGenerator.GenerateCombinedKey(), new ListLogger()).SaveDatabaseSettings(settings);
+
+            Assert.Equal("plain-pw", settings.Servers!["s1"].Password);
+            Assert.Equal("item-pw", settings.Items!["common"].Password);
         }
 
         [Fact]

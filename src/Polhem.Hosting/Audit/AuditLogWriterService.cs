@@ -106,8 +106,9 @@ namespace Polhem.Hosting.Audit
         /// <see cref="Polhem.Hosting.CacheNotify.CacheNotifyPoller"/> and <see cref="Polhem.Hosting.Session.ExpiredSessionCleanupService"/> call framework-internal
         /// code, so they can enumerate what it throws and let anything else through as a bug —
         /// <see cref="Polhem.Hosting.Session.ExpiredSessionCleanupService"/> has a test pinning exactly that. Here the call goes to
-        /// <see cref="IAuditLogSink"/>, a public DI seam: a deployment's own sink can throw anything
-        /// at all, and the framework has no list to write. Losing a batch of log records is strictly
+        /// <see cref="IAuditLogSink"/>, a public DI seam that a deployment can replace (see its
+        /// remarks): that deployment's own sink can throw anything at all, and the framework has no
+        /// list to write. Losing a batch of log records is strictly
         /// better than stopping the application over one, and the failure is reported at error level
         /// rather than swallowed.
         /// </para>

@@ -30,24 +30,6 @@ namespace Polhem.Definition.Database
         #region IObjectSerializeFile Interface
 
         /// <summary>
-        /// Gets the serialization state.
-        /// </summary>
-        [XmlIgnore, JsonIgnore]
-        [Browsable(false)]
-        public SerializeState SerializeState { get; private set; } = SerializeState.None;
-
-        /// <summary>
-        /// Sets the serialization state.
-        /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public void SetSerializeState(SerializeState serializeState)
-        {
-            SerializeState = serializeState;
-            _fields?.SetSerializeState(serializeState);
-            _indexes?.SetSerializeState(serializeState);
-        }
-
-        /// <summary>
         /// Gets the serialization-bound file path.
         /// </summary>
         [XmlIgnore, JsonIgnore]
@@ -100,12 +82,19 @@ namespace Polhem.Definition.Database
         {
             get
             {
-                // Return null if the collection is empty during serialization
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _fields!)) { return null; }
                 if (_fields == null) { _fields = new DbFieldCollection(this); }
                 return _fields;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="Fields"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool FieldsSpecified => _fields is { Count: > 0 };
 
         /// <summary>
         /// Gets the index collection.
@@ -117,12 +106,19 @@ namespace Polhem.Definition.Database
         {
             get
             {
-                // Return null if the collection is empty during serialization
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _indexes!)) { return null; }
                 if (_indexes == null) { _indexes = new DbTableIndexCollection(this); }
                 return _indexes;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="Indexes"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool IndexesSpecified => _indexes is { Count: > 0 };
 
         /// <summary>
         /// Gets the primary key index.

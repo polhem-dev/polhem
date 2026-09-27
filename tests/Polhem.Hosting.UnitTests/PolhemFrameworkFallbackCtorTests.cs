@@ -125,6 +125,30 @@ namespace Polhem.Hosting.UnitTests
             }
         }
 
+        [Theory]
+        [InlineData("Polhem.Hosting.UnitTests.NoSuchValidator, Polhem.NoSuchAssembly")]
+        [InlineData("Polhem.Hosting.UnitTests.NoSuchValidator, Polhem.Hosting.UnitTests")]
+        [InlineData("Polhem.Hosting.UnitTests.ParameterlessDefineStorageStub, Polhem.Hosting.UnitTests")]
+        [DisplayName("A BackendComponents type name that cannot be used fails with an error naming the setting and the type")]
+        public void CreateConfigurableService_UnusableTypeName_ErrorNamesSettingAndType(string typeName)
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-badtype-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                using var sp = BuildProviderWithAccessTokenValidator(typeName, tempDir);
+
+                var ex = Assert.Throws<InvalidOperationException>(() => sp.GetRequiredService<IAccessTokenValidator>());
+
+                Assert.Contains("BackendComponents.AccessTokenValidator", ex.Message, StringComparison.Ordinal);
+                Assert.Contains(typeName, ex.Message, StringComparison.Ordinal);
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+            }
+        }
+
         private static ServiceProvider BuildProviderWithAccessTokenValidator(string typeName, string tempDir)
         {
             var configuration = new BackendConfiguration();

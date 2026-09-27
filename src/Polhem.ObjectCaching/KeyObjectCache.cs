@@ -136,6 +136,11 @@ namespace Polhem.ObjectCaching
         /// beyond the wasted work: <see cref="Polhem.Definition.Identity.SessionInfo"/> is cached here, and two callers holding
         /// different instances of the same session means a write through one — <c>EnterCompany</c>,
         /// for example — is invisible to the other.
+        /// <para>
+        /// A fill that overlaps an invalidation — <see cref="Remove"/>, a notify version bump or a
+        /// rewrite of a watched file — does not keep what it loaded; see
+        /// <see cref="CacheInvalidation"/> and <see cref="CacheItemPolicy"/>.
+        /// </para>
         /// </remarks>
         /// <param name="key">The member key.</param>
         public virtual T? Get(string key)
@@ -165,17 +170,29 @@ namespace Polhem.ObjectCaching
                 if (current is T fresh)
                     return fresh;
 
+                // Every invalidation source is read before the load, so one that lands during the
+                // load is detected instead of being mistaken for the state the value was read at.
+                long generation = CacheInvalidation.Read(cacheKey);
+                var policy = BuildPolicy(key);
+                policy.CaptureChangeBaseline();
+                var negPolicy = BuildNegativePolicy(key);
+                negPolicy?.CaptureChangeBaseline();
+
                 var value = CreateInstance(key);
                 if (value != null)
                 {
-                    CacheInfo.Provider.Set(cacheKey, value, BuildPolicy(key));
+                    CacheInvalidation.StoreIfCurrent(cacheKey, generation, value, policy);
                 }
-                else if (BuildNegativePolicy(key) is { } negPolicy)
+                else if (negPolicy != null)
                 {
-                    if (misses != null)
-                        misses.Add(cacheKey, ExpiryOf(negPolicy), negPolicy.ChangeNotifyKey);
-                    else
-                        CacheInfo.Provider.Set(cacheKey, KeyObjectCacheSentinel.MissMarker, negPolicy);
+                    if (misses == null)
+                        CacheInvalidation.StoreIfCurrent(cacheKey, generation, KeyObjectCacheSentinel.MissMarker, negPolicy);
+                    else if (CacheInvalidation.Read(cacheKey) == generation)
+                    {
+                        misses.Add(cacheKey, ExpiryOf(negPolicy), negPolicy.ChangeNotifyKey, negPolicy.NotifyVersionBaseline);
+                        if (CacheInvalidation.Read(cacheKey) != generation)
+                            misses.Remove(cacheKey);
+                    }
                 }
                 return value;
             });
@@ -189,6 +206,7 @@ namespace Polhem.ObjectCaching
         public virtual void Set(string key, T value)
         {
             string cacheKey = GetCacheKey(key);
+            CacheInvalidation.Advance(cacheKey);
             _boundedMisses?.Remove(cacheKey);
             CacheInfo.Provider.Set(cacheKey, value, BuildPolicy(key));
         }
@@ -212,6 +230,7 @@ namespace Polhem.ObjectCaching
         public virtual void Remove(string key)
         {
             string cacheKey = GetCacheKey(key);
+            CacheInvalidation.Advance(cacheKey);
             _boundedMisses?.Remove(cacheKey);
             CacheInfo.Provider.Remove(cacheKey);
         }

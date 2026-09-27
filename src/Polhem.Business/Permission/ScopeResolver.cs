@@ -38,7 +38,8 @@ namespace Polhem.Business.Permission
         /// <inheritdoc/>
         public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionAction action, FormSchema formSchema)
         {
-            var session = _sessionInfoService.Get(accessToken);
+            // One snapshot for the whole resolution; see SessionInfo.CompanyScope.
+            var session = _sessionInfoService.Get(accessToken)?.CompanyScope;
             var scopes = ResolveScopes(session, modelId, action);
             if (scopes == null) { return null; }                                  // unrestricted (All)
             if (scopes.Count == 0 || session == null) { return DenyAll(formSchema); }
@@ -62,7 +63,7 @@ namespace Polhem.Business.Permission
 
         // Returns null for an unrestricted scope (any role grants All); otherwise the distinct set of
         // restrictive strategies to OR-union. An empty set means deny (no usable grant — fail closed).
-        private IReadOnlyList<ScopeStrategy>? ResolveScopes(SessionInfo? session, string modelId, PermissionAction action)
+        private IReadOnlyList<ScopeStrategy>? ResolveScopes(SessionCompanyScope? session, string modelId, PermissionAction action)
         {
             if (session == null || string.IsNullOrEmpty(session.CompanyId)) { return []; }
 
@@ -112,7 +113,7 @@ namespace Polhem.Business.Permission
         // ONE master column (e.g. a transfer form's from/to department, so both departments' managers
         // see the record); every marked column contributes one flat OR branch. Dept / DeptAndSub also
         // OR-in Own so a user always sees records they own.
-        private FilterNode? BuildScopePredicate(ScopeStrategy scope, SessionInfo session, IReadOnlyList<string> ownerFields, IReadOnlyList<string> deptFields, IReadOnlyList<object> ownerIds)
+        private FilterNode? BuildScopePredicate(ScopeStrategy scope, SessionCompanyScope session, IReadOnlyList<string> ownerFields, IReadOnlyList<string> deptFields, IReadOnlyList<object> ownerIds)
         {
             var parts = new List<FilterNode>();
             switch (scope)
@@ -151,7 +152,7 @@ namespace Polhem.Business.Permission
         }
 
         // Each dept column: deptField IN (department + descendants). The subtree is expanded once.
-        private void AddDeptSubtree(List<FilterNode> parts, IReadOnlyList<string> deptFields, SessionInfo session)
+        private void AddDeptSubtree(List<FilterNode> parts, IReadOnlyList<string> deptFields, SessionCompanyScope session)
         {
             if (deptFields.Count == 0 || session.DeptRowId == Guid.Empty) { return; }
             var tree = _departmentTreeService.Get(session.CompanyId!);
@@ -201,7 +202,7 @@ namespace Polhem.Business.Permission
             return "sys_rowid";
         }
 
-        private static List<object> OwnerIdentities(SessionInfo session)
+        private static List<object> OwnerIdentities(SessionCompanyScope session)
         {
             var ids = new List<object>(2);
             if (session.UserRowId != Guid.Empty) { ids.Add(session.UserRowId); }

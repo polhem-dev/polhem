@@ -1,9 +1,9 @@
+using System.Text.Json.Serialization;
 using Polhem.Definition.Database;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using Polhem.Base;
 using Polhem.Base.Attributes;
-using Polhem.Base.Serialization;
 using Polhem.Base.Collections;
 
 namespace Polhem.Definition.Forms
@@ -96,12 +96,19 @@ namespace Polhem.Definition.Forms
         {
             get
             {
-                // Return null if the collection is empty during serialization
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _fields!)) { return null; }
                 if (_fields == null) { _fields = new FormFieldCollection(this); }
                 return _fields;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="Fields"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool FieldsSpecified => _fields is { Count: > 0 };
 
         /// <summary>
         /// Gets every field marked <see cref="ScopeRole.Owner"/> (resolved by the <c>Own</c>
@@ -191,16 +198,6 @@ namespace Polhem.Definition.Forms
             }
 
             return references;
-        }
-
-        /// <summary>
-        /// Sets the serialization state.
-        /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public override void SetSerializeState(SerializeState serializeState)
-        {
-            base.SetSerializeState(serializeState);
-            _fields?.SetSerializeState(serializeState);
         }
 
         /// <summary>
