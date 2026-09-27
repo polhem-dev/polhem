@@ -1,14 +1,14 @@
 # Web.Js.Demo
 
-[English](README.md)
+[English](README.md) | **繁體中文**
 
 示範如何用純 JavaScript（瀏覽器原生）呼叫 Polhem 的 JSON-RPC API ——
 不需要 `npm`、不需要 build、不需要任何框架。JS 前端走
 `PayloadFormat.Plain`（見 [ADR-014](../../docs/adr/adr-014-jsonrpc-plain-public-default.zh-TW.md)），
 所有請求都是純 JSON。
 
-涵蓋降為 `Public` 供 JS 存取的 7 個方法，加上用 JSON-native FormSchema /
-FormLayout endpoints 做 schema-driven UI 渲染：
+它呼叫的每個方法都宣告為 `Public`，Plain 請求才進得去。頁面也會依 FormSchema /
+FormLayout 定義渲染出表單：
 
 | 區塊 | 對應方法 |
 |------|---------|
@@ -16,7 +16,7 @@ FormLayout endpoints 做 schema-driven UI 渲染：
 | Ping | `System.Ping`（不需 auth） |
 | Enter Company | `System.EnterCompany` / `System.LeaveCompany`（錯誤路徑示範 — 見 UI hint） |
 | Employee CRUD | `Employee.GetList` / `GetData` / `GetNewData` / `Save` / `Delete` |
-| FormDefinition-driven 渲染 | `System.GetFormSchema` / `System.GetFormLayout` → 動態 form |
+| FormDefinition-driven 渲染 | `System.GetFormSchema` / `System.GetFormLayout` → 定義 XML → 動態 form |
 | Logout | `System.Logout` |
 
 ## 怎麼跑
@@ -57,8 +57,8 @@ FormLayout endpoints 做 schema-driven UI 渲染：
 | 檔案 | 用途 |
 |------|------|
 | `index.html` | 最小 UI — Login 表單、CRUD 按鈕、動態 form 區、結果輸出區。Vanilla CSS，無外部依賴。 |
-| `polhem-api-client.js` | ES module：`rpcCall(method, value)` + `systemApi.*` + `formApi(progId)` + `RpcError` + token 狀態管理。 |
-| `form-renderer.js` | ES module：吃一份 `FormLayout` JSON tree、產生可操作的 HTML 表單（CSS Grid、controlType dispatch）。匯出 `bindDataSet` / `collectDataSet` 做雙向資料綁定。 |
+| `polhem-api-client.js` | ES module：匯出 `systemApi.*`、`formApi(progId)`、`RpcError` 與 access token 輔助函式。所有呼叫都經過模組內部的 `rpcCall(method, value)`，定義 XML 也在這裡解析成一般物件。 |
+| `form-renderer.js` | ES module：吃解析後的 `FormLayout` 物件、產生可操作的 HTML 表單（CSS Grid、controlType dispatch）。匯出 `bindDataSet` / `collectDataSet` 做雙向資料綁定。 |
 | `app.js` | UI 事件綁定；依賴 `polhem-api-client.js` 與 `form-renderer.js`。 |
 | `.smoke.yaml` | `demo-smoke` skill 的設定檔 — 啟動兩個 prerequisite server 並驗證頁面載入後出現預期的區塊文字。檔案開頭註解說明瀏覽器 tier 限制（無法點擊 → 只能 load-level smoke）。 |
 
@@ -67,16 +67,17 @@ FormLayout endpoints 做 schema-driven UI 渲染：
 | Header | 值 | 說明 |
 |--------|-----|------|
 | `Content-Type` | `application/json` | JSON-RPC body |
-| `X-Api-Key` | `quickstart-demo`（寫死於 client） | 預設的 `ApiAuthorizationValidator` 只要求非空字串，不檢查實際值。Production host 必須註冊更嚴格的 validator。 |
+| `X-Api-Key` | `quickstart-demo`（寫死於 client） | 識別呼叫端應用程式。預設的 `ApiAuthorizationValidator` 只在部署尚未發放任何 API 金鑰時接受任意非空值；發放金鑰後，這個值必須是該金鑰。正式部署應發放金鑰。 |
 | `Authorization` | `Bearer <accessToken>` | 只在 `Login` 取得 AccessToken 後才送。所有 `[ApiAccessControl]` 為 `Authenticated` 的方法都需要。 |
 
 ## FormDefinition-driven 渲染
 
-UI 區塊 6 示範 schema-driven 表單的端到端 JSON 路徑 —— React / Vue / Angular
-app 通常在這個 pattern 上加自己的元件層：
+UI 區塊 5 示範 schema-driven 表單的端到端路徑 —— React / Vue / Angular
+app 通常在這個 pattern 上加自己的元件層。定義以 XML 字串傳輸（回應的 `xml`
+成員），由 `polhem-api-client.js` 解析成一般物件；資料則以 JSON 傳輸：
 
 ```
-GetFormSchema + GetFormLayout（並行）→ FormLayout JSON
+GetFormSchema + GetFormLayout（並行）→ 定義 XML → 解析後的 FormLayout
         ↓
 renderFormLayout(layout, container)     ← 產生可操作的 HTML 表單
         ↓
@@ -115,9 +116,10 @@ Save                                     → server 回傳 refreshed DataSet
 保持 demo 零依賴，可以清楚示範真實 JS 框架整合（React / Vue / Angular）
 需要的最小 surface。
 
-如果你的專案已經用 TypeScript toolchain，直接把 `polhem-api-client.js`
-複製到 `src/` 改寫成 TS interface 就好 —— API surface 還很小，
-手寫 TypeScript interface 比 codegen 划算。
+如果你的專案已經用 TypeScript toolchain，與其移植這個檔案，不如看
+TypeScript client [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js)。
+它的型別來自 [`wire-contracts/`](../../wire-contracts/README.md) 產生的宣告，
+因此會跟著 server 的 message 型別走。
 
 ## 相關文件
 

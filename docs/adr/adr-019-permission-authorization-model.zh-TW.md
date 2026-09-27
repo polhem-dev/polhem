@@ -1,4 +1,4 @@
-<!-- source: adr/adr-019-permission-authorization-model.md blob: 5596b7961fa118b83fbe95b084cb37021d03b217 -->
+<!-- source: adr/adr-019-permission-authorization-model.md blob: b9466ce988a8fa5d526ebaccb29e298a6d85b804 -->
 # ADR-019：權限授權模型（兩層 enforcement + record scope）
 
 [English](adr-019-permission-authorization-model.md)
@@ -60,6 +60,8 @@ Polhem 原本只有**身分驗證**（[ADR-012](adr-012-session-company-context.
 - **Create 不套 scope**：新列無「既存範圍」可違反，由動作授權（層一）把關。
 - **scope 僅主表 / 整筆完整性**：只判主表列、只查主表 → 主檔過了明細隨整筆放行，不會「主檔過、某明細被擋」的半套。
 
+  > ⚠️ 最後兩項描述的是決策當下的設計。現行的存檔路徑也會檢查新增與修改的主檔列留下的值，而且不讓明細列只憑主檔的檢查就放行；執行這些檢查的機制列在文末〈實作演進〉。
+
 ## 後果與取捨
 
 - ✅ **判權限零 DB**：身分快照 + per-company 快取（角色／權限／部門樹）；DB 只在登入、進公司、改配置時碰。
@@ -70,6 +72,17 @@ Polhem 原本只有**身分驗證**（[ADR-012](adr-012-session-company-context.
 - ⚠️ **快照語意**：`Roles` / employee / dept 在已進公司的 session 是快照，配置中途變動不即時反映（可接受；需即時可加重進公司刷新或 cache-notify）。
 - ⚠️ **fail-closed 邊界**：scope 需要的欄缺失或身分為空 → 不匹配任何列（安全預設）。`PermissionBindingValidator` 可提前檢出這類定義缺失，但**框架不自動執行**，需宿主自行接（見[使用者指南](../zh-TW/permission-authorization.md#定義驗證由宿主呼叫)）。
 - ✅ **前端 capability（element 細粒度降級）已實作（2026-07-03）**：層一／層二仍在後端方法層權威 enforce、不靠前端。權限可視為**三維度 × 兩把關點**——**動作**維度在後端權威 gate、同時投影到前端決定工具列命令／按鈕狀態；**列**維度僅後端；新增**欄**維度（`FormField.SensitiveCategory` → well-known 分類 model，依 Read/Update 隱藏／唯讀）僅前端。capability 快照搭 `EnterCompany` 回傳（`EnterCompanyResponse.Capabilities`）、快取於 `ClientInfo.Capabilities`、由 `Polhem.UI.Core.Permissions.ElementCapabilityResolver` 解析。前端**純 UX、非資料邊界**（後端未遮罩敏感欄值）。詳見[使用者指南](../zh-TW/permission-authorization.md)第二部分。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：明細列各自受檢。** 「主檔過了明細隨整筆放行」已不再描述現行存檔路徑。`EnforceWriteScope` 與 `EnforceDetailOwnership`（`src/Polhem.Business/Form/FormBusinessObject.WriteScope.cs`）會拒絕帶有明細列卻沒有主表的 payload；要求每個寫入的明細列其 `sys_master_rowid` 指向本 payload 中的主檔列；要求每個修改或刪除的明細列在資料庫中本來就屬於本 payload 的某個既存主檔列；以 UPDATE 與 DELETE 所繫結的 Original rowid 檢查主檔範圍；並拒絕 rowid 改變的列。回歸測試在 `FormBusinessObjectWriteScopeTests`（`tests/Polhem.Business.UnitTests/Form/FormBusinessObjectWriteScopeTests.cs`）。
+- **2026-09-27：新值也檢查範圍。** 「Create 不套 scope」已不成立：`EnforceNewValueScope` 要求 Added 或 Modified 主檔列留下的值落在呼叫者的 Create 或 Update 範圍內，並在 `BeforeSave` 步驟之後評估，因此只能存取自己記錄的使用者無法建立屬於他人的記錄，也無法把記錄移出自己的範圍。
+- **2026-09-27：讀取路徑收窄。** `GetList` 只接受表單資料表有宣告的 filter 與排序欄位，並拒絕 `ProtectedFields` 欄位。不受 Read 動作 gate 的 `GetLookup` 會套用 Read 的 record scope；BO 可覆寫 `LookupAppliesRecordScope` 退出（`src/Polhem.Business/Form/FormBusinessObject.Read.cs`）。
+- **2026-09-27：啟動時回報未受保護的表單。** host 會記錄警告，列出 FormSchema 未宣告 `PermissionModelId` 的已註冊表單（`src/Polhem.Hosting/Registry/UnguardedFormWarningService.cs`）。
+- **2026-09-27：session 快照是單一不可變物件。** `EnterCompany` 快照的角色與 `UserRowId` / `EmployeeRowId` / `DeptRowId` 身分，現在組成一個 `SessionCompanyScope`，以單次寫入替換；見 [ADR-012](adr-012-session-company-context.zh-TW.md)〈實作演進〉。
+- **2026-09-27：capability resolver 搬移。** `ElementCapabilityResolver` 現為 `Polhem.Api.Client.Permissions.ElementCapabilityResolver`（`src/Polhem.Api.Client/Permissions/`），讓兩個 UI head 都能使用；上文前端 capability 一項寫的是當時的位置。
 
 ## 參考
 

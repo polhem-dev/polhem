@@ -36,7 +36,7 @@ dotnet run                          # → http://localhost:5055
 |--------|--------|
 | 如何起一個 Polhem 後端、註冊自訂 BO、暴露 JSON-RPC API | [`QuickStart.Server`](QuickStart.Server/README.zh-TW.md) |
 | 如何用 `Polhem.Api.Client` 從第三方端連 Polhem(Remote 模式) | [`QuickStart.Console`](QuickStart.Console/README.zh-TW.md) |
-| 如何在 Blazor 內用 `Polhem.Web.Blazor.Server` 元件(Local 派遣,效能最佳) | [`Blazor.Server.Demo`](Blazor.Server.Demo/README.zh-TW.md) |
+| 如何在 Blazor 內用 `Polhem.Web.Blazor.Server` 元件（Local，in-process 派遣） | [`Blazor.Server.Demo`](Blazor.Server.Demo/README.zh-TW.md) |
 | 同一份 `FormSchema` 在桌面／瀏覽器／行動端 Avalonia 上如何渲染 | [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.zh-TW.md) |
 | 主題導向控件 demo center（導覽樹 主題→案例、Demo/Source 分頁、主題/FormMode 工具列）：資料繫結、唯讀必填、FormMode、Layout、Grid、原生 vs 繼承比對 | [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.zh-TW.md) |
 | 如何用純 JavaScript 從瀏覽器呼叫 Polhem（前端無 .NET，走 Plain wire format） | [`Web.Js.Demo`](Web.Js.Demo/README.zh-TW.md) |
@@ -63,7 +63,7 @@ Blazor.Server.Demo                ← 不需另起 server,前後端同 process
 
 ## 共用帳號
 
-Blazor demo 的 Login 走 `demo / demo`:
+`Blazor.Server.Demo` 與 `Web.Js.Demo`（經由 `QuickStart.Server`）以 `demo / demo` 登入：
 
 | 欄位 | 值 |
 |------|-----|
@@ -71,30 +71,21 @@ Blazor demo 的 Login 走 `demo / demo`:
 | Password | `demo` |
 | 顯示名稱 | `Demo User` |
 
-由 [`DemoAuthenticatingSystemBusinessObject`](Polhem.Samples.Shared/DemoAuthenticatingSystemBusinessObject.cs) 寫死比對,不查 `st_user`,因此**完全不需要 seed 任何系統資料表**。
+`samples/Define/ProgramSettings.xml` 把保留的 `System` progId 綁到 [`DemoAuthenticatingSystemBusinessObject`](Polhem.Samples.Shared/DemoAuthenticatingSystemBusinessObject.cs)，它只把帳密比對換成寫死的比較，因此不涉及密碼雜湊或使用者維護。登入的其餘流程仍是框架自己的，所以 [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) 照樣建立 `st_user` 與 `st_session`，並在 `st_user` 寫入一筆 `demo`（使用者的時區與語系從這裡讀）。
 
-`QuickStart.Server` / `QuickStart.Console` 的 `Echo.Echo` 標 `[ApiAccessControl(Public, Anonymous)]`,**不需要登入**。
+`QuickStart.Server` / `QuickStart.Console` 的 `Echo.Echo` 標 `[ApiAccessControl(Public, Anonymous)]`，**不需要登入**。
 
 ## 共用 Define
 
-[`samples/Define/`](Define/) 是所有 demo 共用的定義檔目錄。各 host 用「從執行目錄向上找 `Define/SystemSettings.xml`」的策略指向這裡(見 [`DemoBackend.ResolveDefinePath`](Polhem.Samples.Shared/DemoBackend.cs)),確保「同一份定義驅動多個前端」。
+[`samples/Define/`](Define/) 是所有 demo 共用的定義檔目錄：各設定檔、FormSchema 與其存檔的 FormLayout，以及 demo 資料表與 demo 需要的框架表的 TableSchema。目前有哪些檔案，請直接看該資料夾。各 host 用「從 `AppContext.BaseDirectory` 向上找 `Define/SystemSettings.xml`」的策略指向這裡（見 [`DemoBackend.ResolveDefinePath`](Polhem.Samples.Shared/DemoBackend.cs)），讓同一份定義驅動每個前端。
 
-```
-Define/
-├── SystemSettings.xml                       # 系統設定(IsDebugMode=true、MasterKeySource=Environment)
-├── DbCategorySettings.xml                   # 一個 common category
-├── DatabaseSettings.xml                     # SQLite local DB(quickstart.db)
-├── FormSchema/
-│   └── Employee.FormSchema.xml              # master-detail 示範(員工 + 員工電話)
-└── TableSchema/
-    └── common/
-        ├── ft_employee.TableSchema.xml
-        └── ft_employee_phone.TableSchema.xml
-```
+### demo 資料表為何放在 `common`
+
+在實際應用中，業務表（`ft_*`）屬於 **company** 分類，`common` 只放跨公司共用的框架表。samples 刻意把全部放在 `common`、只用一個 SQLite 資料庫、也沒有公司：這讓每個 demo 只需一個資料庫，並可略過進入公司的登入步驟（`EnterCompany`）。這是 demo 的簡化，不是可以照抄的模式。正式的配置見 [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.zh-TW.md)：有 `common`、`company`、`log` 三個分類，session 也會進入公司。
 
 ## Master key
 
-`SystemSettings.xml` 預設 `MasterKeySource.Type = Environment`、`Value = POLHEM_MASTER_KEY`,所以每個 demo host 都從環境變數讀加密 master key。[`DemoBackend.AddPolhemBackend`](Polhem.Samples.Shared/DemoBackend.cs) 在 `POLHEM_MASTER_KEY` 未設時會自動注入一個固定 demo 值(`DemoCredentials.DemoMasterKey`),fresh clone 可零設定直接跑,且 `quickstart.db` 跨 run 的加密內容仍能正常解密。
+`SystemSettings.xml` 預設 `MasterKeySource.Type = Environment`、`Value = POLHEM_MASTER_KEY`,所以每個 demo host 都從環境變數讀加密 master key。[`DemoBackend.AddPolhemBackend`](Polhem.Samples.Shared/DemoBackend.cs) 在 `POLHEM_MASTER_KEY` 未設時會自動注入一個固定 demo 值(`DemoCredentials.DemoMasterKey`),fresh clone 可零設定直接跑。每個 session 的 API 加密金鑰由 master key 推導，所以固定值也讓已登入的 session 在 host 重啟後仍可使用。
 
 > **Production host 必須覆寫 demo master key。** demo 常數會進 git 公開,僅供 demo 使用。真實部署必須在 process 啟動「之前」由部署機制(K8s Secret、env file、Vault、AWS Secrets Manager…)把 `POLHEM_MASTER_KEY` 設為真實 secret;bootstrap 僅在變數未設時才填值,外部已注入的值會被保留。
 
@@ -104,11 +95,11 @@ Define/
 
 | 檔案 | 由誰建立 | 內容 | gitignore 規則 |
 |------|----------|------|----------------|
-| `samples/<Host>/quickstart.db` | [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) | SQLite,含 `ft_employee` + `ft_employee_phone` 兩張表與 3 筆 demo 資料(Alice / Bob / Carol) | `/samples/**/*.db` |
+| `samples/<Host>/quickstart.db` | [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) | SQLite，含 demo 資料表與框架表，並寫入 demo 員工、部門與 `demo` 使用者列 | `/samples/**/*.db` |
 
 > 兩個 host(`QuickStart.Server` / `Blazor.Server.Demo`)**各有自己的 `quickstart.db`**,不會互相干擾。同一個 host 重跑會沿用既有資料(schema 建立與 seed 都是 idempotent)。
 
-要重置 demo 資料:直接刪 `samples/<Host>/quickstart.db` 重跑即可。要輪換 demo master key:改 `DemoCredentials.DemoMasterKey`(或在外部把 `POLHEM_MASTER_KEY` 設成新值)並一併刪所有 `quickstart.db`(舊資料用舊 key 加密,留著會解不開)。
+要重置 demo 資料:直接刪 `samples/<Host>/quickstart.db` 重跑即可。要輪換 demo master key：改 `DemoCredentials.DemoMasterKey`，或在外部把 `POLHEM_MASTER_KEY` 設成新值。以舊 key 登入的 session 會失效，重新登入即可。
 
 ## Local vs Remote 派遣模式
 
@@ -119,15 +110,17 @@ Polhem 的 `Polhem.Api.Client` 對呼叫端有**一致的 API 表面**,差異只
 | **Local** | client → `LocalApiProvider` → `JsonRpcExecutor` → BO(同 process) | Blazor Server、in-process 工具、跨 BO 直接呼叫 | `Blazor.Server.Demo` |
 | **Remote** | client → `RemoteApiProvider` → HTTP POST → `ApiServiceController` → `JsonRpcExecutor` → BO | Console、桌面、行動端、跨機器 | `QuickStart.Console` |
 
-切換只是 `AddPolhemBlazor` / `ApiClientInfo` 一行設定:
+在 Blazor Server host 裡，切換只是 `AddPolhemBlazor` 的一行設定；其他情境則是選用哪個 connector 建構子（Remote 傳 endpoint，Local 傳 backend 的 `IServiceProvider`，見 [`QuickStart.Console`](QuickStart.Console/README.zh-TW.md)）：
 
 ```csharp
 // Local
 builder.Services.AddPolhemBlazor(o => o.UseLocalProvider());
 
 // Remote
-builder.Services.AddPolhemBlazor(o => o.UseRemoteProvider("http://host:5070/api"));
+builder.Services.AddPolhemBlazor(o => o.UseRemoteProvider("http://host:5050/api"));
 ```
+
+Local 呼叫是受信任的 in-process 呼叫：backend 對它略過 access token 檢查與 `LocalOnly` 限制。使用者必須受限於自身權限的網站請用 Remote。
 
 ## 建置全部 samples
 
@@ -139,21 +132,21 @@ dotnet build samples/Polhem.Samples.slnx
 
 ## 常見問題
 
-**Q: Port 5050/5055/5070 被佔用怎麼辦?**
+**Q: Port 5050/5055 被佔用怎麼辦？**
 編輯 `samples/<Host>/Properties/launchSettings.json` 的 `applicationUrl`。別忘了同步更新指向該 host 的設定 —— 例如 `QuickStart.Console` 的 `--endpoint` 旗標。
 
 **Q: 出現 `Could not locate 'Define/SystemSettings.xml' walking up from ...`?**
 請從 polhem checkout 目錄內執行 `dotnet run`,不要把 binary 拷貝到 repo 外。`DemoBackend` 是用「從 `AppContext.BaseDirectory` 向上找」的策略,跳出 repo 後找不到 `Define/`。
 
 **Q: 兩個 host 同時跑會不會打架?**
-不會。兩個 host port 不同(5050 / 5055),各自有獨立的 `quickstart.db`,共用 `samples/Define/` 但只讀不寫。兩個都跑 + Console 一起測試完全可行。
+不會。兩個 host port 不同（5050 / 5055），各自有獨立的 `quickstart.db`，共用 `samples/Define/`。兩個都跑再加上 Console 一起測試可行。
 
 **Q: 改了 `src/` 下的 library,要怎麼反映到 demo?**
 重跑即可,`ProjectReference` 會自動 rebuild。不需要 `dotnet pack` / 也不需要清快取。
 
 ## 刻意不做
 
-- 真實 ERP 業務情境(銷售單、進貨單等)— 留給未來獨立 demo repo
+- 真實 ERP 業務情境（訂單、master-detail 單據、lookup、公司資料庫）— 見 [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.zh-TW.md)
 - SQL Server / PostgreSQL / Oracle / MySQL — SQLite 已足夠示範
-- 認證 / 授權完整流程(OAuth、JWT、實際 `st_user` 表)— 用 hard-coded `demo/demo` 帶過
+- 認證 / 授權完整流程（OAuth、JWT、存檔的密碼雜湊、公司與角色）— 帳密比對用 hard-coded `demo/demo` 帶過
 - 部署腳本(Docker / k8s / TestFlight / Microsoft Store)

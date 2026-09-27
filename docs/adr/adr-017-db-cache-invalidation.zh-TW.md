@@ -1,4 +1,4 @@
-<!-- source: adr/adr-017-db-cache-invalidation.md blob: a67bd750927dba233b1becda3786b058f284a622 -->
+<!-- source: adr/adr-017-db-cache-invalidation.md blob: 7846ffbc77ba09154ff8ba254b1b17773b08b98f -->
 # ADR-017：資料庫快取相依/失效機制（通知表 + 輪詢 + 慣例分派）
 
 [English](adr-017-db-cache-invalidation.md)
@@ -99,13 +99,19 @@ ADR 記錄的是決策當下的設計，以下為後續實作的偏離，供讀�
 註冊表把 poller 的通知分派到對應快取執行 `Remove`；現行做法改為 poller 發布 notify-key 版本，
 由 `MemoryCacheProvider` 的 `CacheNotifyToken` 在下次讀取時使條目過期。
 
-決策層的四條核心不變式**全部維持有效** —— 同 transaction bump、以 version 判定、DB 時鐘單一來源、
-不主動重載。改變的只是最後一項的達成手段：從「主動 Remove」變成「標記版本、讓既有條目自然過期」，
-少了一份需要維護的路由表，也不再需要每個快取型別實作額外介面。
+決策層的核心不變式**全部維持有效** —— 同 transaction bump、以 version 判定、DB 時鐘單一來源、
+不主動重載、新增快取零註冊。改變的只是最後兩項的達成手段：從「主動 Remove」變成「標記版本、讓既有條目自然過期」，
+少了一份需要維護的路由表，也不再需要每個快取型別實作額外介面。零註冊慣例現在位於 `CacheGroup`
+（`src/Polhem.ObjectCaching/ObjectCache.cs`、`src/Polhem.ObjectCaching/KeyObjectCache.cs`），預設為型別名，
+並以它組出每個條目預設的 `ChangeNotifyKey`。
 
 **DB 伺服器時區已不影響正確性。** 不變式 3 原文提到「DB 伺服器設為 UTC+0 時所有值即 UTC」；
 現行 `CacheNotifyService` 改由各 dialect 的 `GetDefaultValueExpression(FieldDbType.DateTime)`
-取值，五種資料庫一律回 UTC，與伺服器時區設定無關。
+取值，SQL Server、MySQL、PostgreSQL、Oracle 與 SQLite 一律回 UTC，與伺服器時區設定無關。
+
+**DB 相依快取自行 read-through。** 不變式 4 提到「service 層 load-on-miss」。DB 相依快取現在自行載入缺少的條目：
+`CreateInstance` 呼叫 `ICacheDataSourceProvider`（例如 `src/Polhem.ObjectCaching/Database/CompanyInfoCache.cs`），
+前面的服務只讀取快取。不變式本身不變：沒有再被讀取的就不會重載。
 
 ## 相關文件
 

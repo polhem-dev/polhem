@@ -1,4 +1,4 @@
-<!-- source: adr/adr-011-di-replaces-service-locator.md blob: ceb2c63498ce78735c72824d029cf883fac7deee -->
+<!-- source: adr/adr-011-di-replaces-service-locator.md blob: ea453be6d113f293b60ffc543b38fbbb55b7c916 -->
 # ADR-011：採用 DI 取代靜態 Service Locator
 
 [English](adr-011-di-replaces-service-locator.md)
@@ -14,7 +14,7 @@ Supersedes [ADR-003](adr-003-static-service-locator.zh-TW.md)。
 ADR-003（採用靜態 Service Locator）的前提已不再適用：
 
 - 框架已從 netstandard2.0 改為 **net10.0**，可直接使用 `Microsoft.Extensions.DependencyInjection`，不再需要避開 DI 容器以維持跨 target 相容性
-- 靜態 facade 累積的測試隔離成本超過原本「簡化初始化」的收益 —— 主計畫盤點顯示 BackendInfo 系靜態類別被 **159 個測試**引用，需要 `GlobalFixture` / `TempDefinePath` / `[Collection("Initialize")]` 等多重機制維持隔離，仍頻繁出現 process-wide static race
+- 靜態 facade 累積的測試隔離成本超過原本「簡化初始化」的收益 —— 當時的盤點顯示 BackendInfo 系靜態類別被 **159 個測試**引用，需要 `GlobalFixture` / `TempDefinePath` / `[Collection("Initialize")]` 等多重機制維持隔離，仍頻繁出現 process-wide static race
 - BO 隱含相依（呼叫端的依賴關係不在建構子中明確宣告）、初始化順序敏感（違反會在執行時期才發現）、不符現代 .NET 慣例
 
 ## 決策
@@ -34,7 +34,7 @@ ADR-003（採用靜態 Service Locator）的前提已不再適用：
 ## 取捨
 
 - **近端模式（`Polhem.Api.Client` in-process）需處理 ServiceProvider 注入點**：在 client process 內呼叫後端邏輯時，目前以 `ApiClientInfo.LocalServiceProvider` 過渡保留靜態 holder。待後續 `Polhem.Api.Client` 重構時再決定如何套用本 ADR 的 DI 註冊邏輯
-- **BO 子類仍走零 DI 註冊**：ERP 應用會有上千個 `FormBusinessObject` 子類，由 progId XML 表派發；應用開發者寫新 BO 時不應接觸 DI API。改採 `IPolhemContext` 聚合 BO 必用核心服務 + `ActivatorUtilities.CreateInstance(sp, boType, accessToken, progId, isLocalCall)` 由 factory 建構（見主計畫 §「設計原則 §4」）
+- **BO 子類仍走零 DI 註冊**：ERP 應用會有上千個 `FormBusinessObject` 子類，由 progId XML 表派發；應用開發者寫新 BO 時不應接觸 DI API。改採 `IPolhemContext` 聚合 BO 必用核心服務 + `ActivatorUtilities.CreateInstance(sp, boType, accessToken, progId, isLocalCall)` 由 factory 建構
 - **遷移為 v5.0 破壞性變更**：採全 DI 路徑、不留 `[Obsolete]` 過渡層、不引入 dual-ctor 或相容 adapter。每個 phase 在單一 PR 內完成該層所有靜態 facade 引用的刪除
 
 ## 影響
@@ -51,7 +51,7 @@ ADR-003（採用靜態 Service Locator）的前提已不再適用：
 
 ### 保留的 process-wide static（registry-style 一次寫入，不影響並行）
 
-- `SysInfo` —— process-wide debug flag / payload options（一次寫入）
+- `SysInfo` —— process-wide 的版本、debug flag 與 wire 上允許的型別命名空間（一次寫入）
 - `CacheInfo.Provider` —— cache backend（per-host 設定一次）
 - `DbProviderRegistry` —— ADO.NET `DbProviderFactory` 註冊表
 - `DbDialectRegistry` —— framework `IDialectFactory` 註冊表
@@ -82,6 +82,14 @@ ADR-003（採用靜態 Service Locator）的前提已不再適用：
 - `[Collection("Initialize")]` / `GlobalFixture` / `PolhemTestServices` / `TempDefinePath` 全數移除
 - 取代為 `IClassFixture<PolhemTestFixture>`（per-class `IServiceProvider`）+ `SharedDbFixture`（process-wide shared DB schema/seed）
 - xUnit 平行恢復：本機 wall-clock ~2.7x parallel speedup（2749 tests）
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：BO 如何建構。** `BusinessObjectFactory.CreateBusinessObject`（`src/Polhem.Business/BusinessObjectFactory.cs`）以 `Activator.CreateInstance(type, ctx, accessToken, progId, isLocalCall)` 建構 BO：context 是明確傳入的，因此 BO 建構子無法向容器要求其他服務。`IPolhemContext` 已更名為 `IBusinessObjectContext`。
+- **2026-09-27：近端模式的 holder。** `ApiClientInfo.LocalServiceProvider` 已移除。`LocalApiProvider` 與近端 connector 的建構子改為接收 `IServiceProvider`，原生 UI head 則把它放在 `ClientInfo.LocalServiceProvider`（`src/Polhem.UI.Core/ClientInfo.cs`）。
+- **2026-09-27：測試平行化。** 有數個測試組件又對整個組件停用平行化，因為其中的測試共用 `ApiServiceOptions` 之類的 process-wide 狀態（例如 `Polhem.Api.Core.UnitTests` 與 `Polhem.ObjectCaching.UnitTests`；各自在 `CollectionBehavior` attribute 旁說明理由）。在 `Polhem.Api.Core.UnitTests` 中，補記提到的 `ApiServiceOptionsState` collection 只保留作為標記。其餘測試組件仍平行執行。
 
 ## 實作參考
 

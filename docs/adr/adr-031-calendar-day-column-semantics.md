@@ -162,6 +162,19 @@ single helper in `Polhem.Base.Data.DataColumnExtensions`, shared by both convert
   `DataView.ToTable()`. Where they are lost, the logic silently falls back to "infer from the CLR type", and the
   symptom is that the marker on the wire turns back into `DateTime`.
 
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: the MessagePack carrier of the marker.** `SerializableDataColumn`, named in "Context", option 3 and the
+  decision table, is removed. `DataTableFormatter` (`src/Polhem.Api.Core/MessagePack/DataTableFormatter.cs`) now writes
+  each column entry with a `fieldDbType` element taken from `ResolveFieldDbType`, and the reader restores it with
+  `ApplyFieldDbType`, so the decision holds unchanged: no separate semantics field, the marker read first. The new
+  shape also changed the structure and size of the MessagePack payload, so "the payload's structure and size do not
+  change" in "Consequences" describes this decision only (see
+  [ADR-030](adr-030-messagepack-name-based-keys.md), "Implementation evolution").
+
 ## Related
 
 - ADR-026 (numeric semantics and rounding): the same family of "definition-layer semantics must reach through to the

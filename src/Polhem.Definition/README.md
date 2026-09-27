@@ -14,10 +14,10 @@ It holds no business logic: interfaces, POCOs, enums and attributes. Changes her
 
 It is **not** free of I/O today, and the difference matters if you are reasoning about layering.
 `Storage/` (the file-backed definition storage), `Security/MasterKeyProvider`, `PathOptions` /
-`CustomizeOnlyPathOptions` and `Defaults` read and write definition files from disk. Moving them out
-is a data migration rather than a refactor — `BackendDefaultTypes.DefineStorage` names those types in
-every existing deployment's `SystemSettings.xml`, so relocating them needs a compatibility mapping for
-the old type names — and they stay here until that is done.
+`CustomizeOnlyPathOptions` and `Defaults` read and write files on disk. Moving them out is a data
+migration rather than a refactor — a deployment's `SystemSettings.xml` can name the storage type by its
+assembly-qualified name (`BackendComponents.DefineStorage`), so relocating it needs a compatibility
+mapping for the old type name — and they stay here until that is done.
 
 - **Layer**: foundation — the shared type system every upper layer speaks.
 - **Dependencies**: locked to an explicit allowlist by the **POLHEM9001** build gate. Anything added here
@@ -41,7 +41,7 @@ the old type names — and they stay here until that is done.
 - **Security contracts** — interfaces like `IAccessTokenValidator` and `IApiEncryptionKeyProvider` define security boundaries without imposing implementation details.
 - **DefineType-driven CRUD** — the `DefineType` enum and the `DefineTypeExtensions.ToClrType()` extension method map definition categories to CLR types, enabling generic load/save through `IDefineAccess` and `IDefineStorage`.
 - **Centralized settings model** — `SystemSettings`, `DatabaseSettings`, `ProgramSettings`, and `MenuSettings` provide a typed configuration surface that replaces ad-hoc key-value lookups. `ProgramSettings` is the framework's type registry: one flat entry per progId, binding it to a business object (`ProgramItem.BusinessObject`) and a repository (`ProgramItem.Repository`); either left empty falls back to the framework default. `MenuSettings` owns the navigation menu, which the registry no longer carries (see [ADR-034](../../docs/adr/adr-034-progid-type-registry.md)).
-- **Tenant customization overlay** — `ICustomizeDefineReader` + `CustomizeOnlyStorage` provide a per-tenant read-only override layer over base definitions, for Language / FormLayout / ProgramSettings / MenuSettings only, driven by `SessionInfo.CustomizeId`. The base cache is never mutated; lookups overlay per key / progId / whole-file without merging (see [ADR-016](../../docs/adr/adr-016-multitenant-customization-overlay.md)).
+- **Tenant customization overlay** — `ICustomizeDefineReader` + `CustomizeOnlyStorage` provide a per-tenant read-only override layer over base definitions, for Language / FormLayout / ProgramSettings / MenuSettings / PluginSettings only (`CustomizeOnlyPathOptions`), driven by `SessionInfo.CustomizeId`. The overlay reads the override beside the cached base definition rather than writing into it; lookups choose per key / progId / whole file without merging (see [ADR-016](../../docs/adr/adr-016-multitenant-customization-overlay.md)).
 
 ## Key Public APIs
 
@@ -56,60 +56,43 @@ the old type names — and they stay here until that is done.
 | `IDatabaseSettingsProvider` | DI service exposing the current `DatabaseSettings` snapshot and lookup helpers |
 | `SessionInfo` / `SessionUser` | Session and user context |
 | `IDefineAccess` / `IDefineStorage` | Definition load/save contracts |
-| `ICustomizeDefineReader` | Tenant customization-override reader (Language / FormLayout / ProgramSettings / MenuSettings) |
+| `ICustomizeDefineReader` | Tenant customization-override reader (Language / FormLayout / ProgramSettings / MenuSettings / PluginSettings) |
 | `CustomizeOnlyStorage` / `CustomizeOnlyPathOptions` | Strict read-only storage for the customization layer (`{CustomizePath}/{customizeId}/...`, missing file → null) |
 | `IBusinessObjectFactory` | Factory contract for business object creation |
 | `DefineTypeExtensions.ToClrType()` | Extension method for DefineType-to-CLR-type resolution |
-| `BackendDefaultTypes` | String constants for default provider type names |
 | `DefineType` | Enum categorizing all definition kinds (FormSchema, TableSchema, Settings, etc.) |
 
 ## Design Conventions
 
 - **XML annotations only** — a serializable property carries `[XmlElement]` / `[XmlAttribute]` and, where a member must stay off the JSON wire, `[JsonIgnore]`. Both are BCL vocabulary. **Do not add MessagePack attributes**: they would put a transport package on the dependency surface of every consumer, which is exactly what POLHEM9001 refuses.
-- **Replaceable services via XML registry** — `BackendComponents` (in `SystemSettings.xml`) declares the concrete type name for each replaceable interface (`IDefineAccess`, `ISessionInfoService`, etc.). `AddPolhemFramework` reads the registry at startup and registers the configured types in the DI container; `BackendDefaultTypes` holds the framework-default type-name constants.
+- **Replaceable services via XML registry** — `BackendComponents` (in `SystemSettings.xml`) may name a concrete type for each replaceable interface (`IDefineAccess`, `ISessionInfoService`, etc.). `AddPolhemFramework` (in `Polhem.Hosting`) reads it at startup and registers the configured types in the DI container; a blank entry means the framework default.
 - **Factory methods on FilterCondition** — prefer `FilterCondition.Equal(...)` over `new FilterCondition { ... }` for readability and consistency.
 - **DefineType enum as dispatch key** — `DefineTypeExtensions.ToClrType()` maps enum values to CLR types, enabling generic definition CRUD without hard-coding type references.
-- **XML doc comments in English** — all public APIs carry English XML documentation to ensure IntelliSense readability for NuGet consumers worldwide.
+- **XML doc comments in English** — public APIs are documented in English for IntelliSense. A public member without an XML comment fails the build (`CS1591` under `GenerateDocumentationFile` and `TreatWarningsAsErrors`).
 - **Nullable Reference Types enabled** — the project opts into NRT (`<Nullable>enable</Nullable>`) and treats warnings as errors, enforcing null-safety at compile time.
 
 ## Directory Structure
 
-```
-Polhem.Definition/
-  Attributes/       Access control attributes (ApiAccessControl, ExecFuncAccessControl)
-  Collections/      ListItem, Parameter, PropertyCollection
-  Database/         TableSchema, DbField, DbFieldCollection, DbTableIndex,
-                    DatabaseType, FieldType, DbAccessAnomalyLogLevel, DbUpgradeAction
-  Filters/          FilterCondition, FilterGroup, FilterNode, FilterNodeKind,
-                    ComparisonOperator, LogicalOperator
-  Forms/            FormSchema, FormField, FormFieldCollection, FormTable
-  Identity/         SessionInfo, SessionUser, UserInfo, IUserInfo, ISessionInfoService
-  Layouts/          FormLayout, LayoutSection, LayoutField, LayoutGrid, LayoutColumn,
-                    ControlType, GridControlAllowActions, SingleFormMode, FormEditModes,
-                    IUIControl, IBindFieldControl, IBindTableControl
-  Logging/          IAuditLogWriter, AuditEntry, LoginAuditEntry, AccessAuditEntry,
-                    ChangeAuditEntry, ApiAnomalyEntry, DbAnomalyEntry, LogOptions
-  Security/         IAccessTokenValidator, IApiEncryptionKeyProvider,
-                    MasterKeyProvider, MasterKeySourceType,
-                    ApiAccessRequirement, ApiProtectionLevel
-  Settings/         SystemSettings, DatabaseSettings, ProgramSettings, MenuSettings, DbCategorySettings
-  Attributes/       ApiAccessControlAttribute and the other declarative markers
-  Collections/      KeyCollection-based collection types (Parameter, Property, ...)
-  Customization/    Tenant customization overlay
-  Defaults/         The definition files shipped with the framework (embedded resources)
-  Language/         ILanguageService, LanguageResource, FormSchemaLocalizer
-  Organization/     DepartmentTree, EmployeeContext
-  Paging/           PagingInfo and friends
-  Sorting/          SortField, SortFieldCollection, SortDirection
-  Storage/          IDefineAccess, ICustomizeDefineReader, CustomizeOnlyStorage (and friends)
-  (root)            Cross-cutting infrastructure:
-                    BackendDefaultTypes, DefineTypeExtensions, DefineType,
-                    GlobalEvents, PropertyCategories,
-                    SysFields, SysProgIds, SystemActions,
-                    PathOptions, CustomizeOnlyPathOptions,
-                    IDatabaseSettingsProvider, IBusinessObjectFactory,
-                    ICacheDataSourceProvider
-```
+| Folder | Main types |
+|--------|------------|
+| `Attributes/` | `ApiAccessControlAttribute` |
+| `Collections/` | `ListItem`, `Parameter`, `Property` and their collections |
+| `Customization/` | `CustomizeOverlay` (the tenant customization overlay) |
+| `Database/` | `TableSchema`, `DbField`, `DbTableIndex`, `DatabaseType`, `FieldType`, `DbCategoryIds` |
+| `Defaults/` | The definition files shipped with the framework (embedded resources, see `Defaults`) |
+| `Filters/` | `FilterCondition`, `FilterGroup`, `FilterNode`, `ComparisonOperator`, `LogicalOperator` |
+| `Forms/` | `FormSchema`, `FormTable`, `FormField`, `FormRule` |
+| `Identity/` | `SessionInfo`, `SessionUser`, `UserInfo`, `CompanyInfo`, `EmployeeContext`, `ISessionInfoService` |
+| `Language/` | `ILanguageService`, `LanguageResource`, `FormSchemaLocalizer`, `MenuLocalizer`, `LanguageResourceStringLocalizer` |
+| `Layouts/` | `FormLayout`, `LayoutSection`, `LayoutField`, `LayoutGrid`, `LayoutColumn`, `ControlType` |
+| `Logging/` | `IAuditLogWriter`, `AuditEntry` and its subtypes, `AuditRule`, `LogOptions` |
+| `Organization/` | `DepartmentTree`, `IDepartmentTreeService` |
+| `Paging/` | `PagingInfo`, `PagingOptions` |
+| `Security/` | `IAccessTokenValidator`, `IApiEncryptionKeyProvider`, `MasterKeyProvider`, `ApiAccessRequirement`, `ApiProtectionLevel`, the API key types |
+| `Settings/` | `SystemSettings`, `DatabaseSettings`, `DbCategorySettings`, `ProgramSettings`, `MenuSettings`, `PluginSettings` and the other `*Settings` |
+| `Sorting/` | `SortField`, `SortFieldCollection`, `SortDirection` |
+| `Storage/` | `IDefineAccess`, `IDefineStorage`, `FileDefineStorage`, `ICustomizeDefineReader`, `CustomizeOnlyStorage` |
+| project root | Cross-cutting infrastructure: `DefineType`, `DefineTypeExtensions`, `PathOptions`, `CustomizeOnlyPathOptions`, `IDatabaseSettingsProvider`, `IBusinessObjectFactory`, `ICacheDataSourceProvider`, `SysFields`, `SysProgIds`, `SystemActions` |
 
 The namespace layout follows the design principles in [ADR-008](../../docs/adr/adr-008-polhem-db-namespace-layout.md):
 syntax/model/factory separation; concrete content grouped by domain (`Database`, `Filters`, `Forms`, `Layouts`, etc.); the root layer reserved for cross-cutting infrastructure (system constants, global service-locator interfaces, framework-wide enums).

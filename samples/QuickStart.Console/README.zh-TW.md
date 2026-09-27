@@ -49,9 +49,13 @@ dotnet run -- --endpoint http://other-host:5050/api --apikey app-id.secret
 // Remote（本 demo）
 var connector = new SystemApiConnector("http://localhost:5050/api", Guid.Empty);
 
-// Local（在同一個 process 內，需要先設定 ApiClientInfo.LocalServiceProvider）
-ApiClientInfo.LocalServiceProvider = services.AddPolhemFramework(...).BuildServiceProvider();
-var connector = new SystemApiConnector(Guid.Empty);
+// Local（在同一個 process 內）：傳入註冊了 backend 的 service provider
+var services = new ServiceCollection();
+services.AddPolhemFramework(settings.BackendConfiguration, paths);
+using var provider = services.BuildServiceProvider();
+var connector = new SystemApiConnector(provider, Guid.Empty);
 ```
 
-Local 模式的完整 composition 由 [`QuickStart.Server/Program.cs`](../QuickStart.Server/Program.cs) 示範（它就是一個 in-process backend）。如果要在 console 內用 Local 模式，把 Server 的 bootstrap 程式碼複製過來、走 `BuildServiceProvider()` 即可。
+Local 版的 connector 建構子接收註冊 backend 的那個 `IServiceProvider`；`BuildServiceProvider` 來自 `Microsoft.Extensions.DependencyInjection` 套件。完整的 backend bootstrap（master key、SQLite 註冊、載入設定、`AddPolhemFramework`）是 `QuickStart.Server` 呼叫的 [`DemoBackend.AddPolhemBackend`](../Polhem.Samples.Shared/DemoBackend.cs)；console host 在一般的 `ServiceCollection` 上照同樣步驟做即可。
+
+> Local 呼叫是受信任的 in-process 呼叫：backend 對它略過 access token 檢查與 `LocalOnly` 限制。只在呼叫端可被信任、能存取整個 backend 的情境使用。

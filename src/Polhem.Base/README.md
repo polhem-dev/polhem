@@ -1,6 +1,7 @@
 # Polhem.Base
 
-> Cross-layer shared utility library providing type conversion, cryptography, serialization, collections, tracing, and background services.
+> Cross-layer shared utility library: type conversion, cryptographic primitives, serialization, collections,
+> ADO.NET helpers and the expression abstraction.
 
 [繁體中文](README.zh-TW.md)
 
@@ -20,45 +21,47 @@
 - `ValueUtilities` -- safe type conversions (`CInt`, `CStr`, `CBool`, …). The temporal members
   (`CDateOnly`, `CDateTime`, `CTimeOnly`) return a nullable from their one-argument form and take
   an explicit fallback in the two-argument overload — an unparseable input yields `null` rather
-  than a sentinel date that could reach a report
-- `FrameworkClock` -- the framework's clock. `UtcNow()` for instants; `Now(timeZoneId)` for a
-  wall-clock reading in a given zone, returned as `Unspecified` (never `Local`). A blank zone id
-  means UTC
-- `StringExtensions` / `StringUtilities` -- string manipulation helpers (encoding, formatting, comparison)
-- `DateTimeExtensions` -- date utilities including ROC (Minguo) calendar support
+  than a sentinel date that could reach a report. `CDateTime` also parses ROC (Minguo) date strings.
+  `CBool` accepts language-neutral codes only (`1`, `T`, `TRUE`, `Y`, `YES`, ignoring case); see its
+  XML documentation
+- `FrameworkClock` -- "today" and "now" in a user's time zone: `Today(timeZoneId)` and
+  `Now(timeZoneId)`, returned as `Unspecified` (never `Local`); a blank zone id means UTC.
+  `Now(timeZoneId, DateTimeBasis)` picks UTC on the server side of the connector. System timestamps
+  use `DateTime.UtcNow` directly
+- `StringExtensions` / `StringUtilities` -- string splitting, trimming and case-insensitive comparison helpers
+- `DateTimeExtensions` -- `DateTime` extension methods
 
 ### Cryptography & Security
 
 - `AesCbcHmacCryptor` -- AES-256-CBC encryption with HMAC-SHA256 authentication (random IV per operation)
 - `RsaCryptor` -- RSA asymmetric encryption
 - `PasswordHasher` -- PBKDF2-SHA256 password hashing
+- `ApiKeyHasher` / `AccessTokenHasher` -- hashing of API key secrets and of access tokens for storage
 - `FileHashValidator` -- file integrity verification via SHA-256
 - `AesCbcHmacKeyGenerator` -- cryptographic key generation
 
 ### Serialization & Compression
 
-- `XmlCodec` / `JsonCodec` -- unified XML / JSON serialization via `System.Text.Json`
-- `XmlSerializerCache` -- cached XML serializer instances to avoid repeated reflection
+- `XmlCodec` -- XML serialization through `XmlSerializer`
+- `JsonCodec` -- JSON serialization through `System.Text.Json` (camelCase)
 - `Gzip` -- Gzip compression / decompression for payload handling
 
 ### Collections
 
-- `KeyCollectionBase<T>` -- generic keyed collection base class
-- `StringHashSet` -- case-control hash set for string lookups
-- `CollectionExtensions` -- LINQ-style extension methods for common collection operations
+- `CollectionBase<T>` / `KeyCollectionBase<T>` -- abstract base classes for the framework's (keyed) collections
+- `StringHashSet` -- a string set that compares ignoring case (ordinal)
 
 ### Data Access Helpers
 
-- `DataTable` / `DataSet` / `DataRow` / `DataRowView` extension methods for simplified ADO.NET usage
+- `DataTable` / `DataSet` / `DataRow` / `DataRowView` / `DataView` extension methods for simplified ADO.NET usage
   (`DataRowViewExtensions.GetFieldValue<T>` is the data-binding counterpart of `DataRowExtensions`)
 - `FieldDbType` and `DbTypeConverter` -- database type mapping utilities
-- `DataTableComparer.IsEqual` -- structural + row-state + cell-value comparison of two `DataTable`s,
-  for asserting that a serialization round trip preserved a table exactly
 
-### Tracing & Diagnostics
+### Exceptions
 
-- `Tracer` / `TraceContext` -- structured diagnostic tracing
-- `TraceDispatcher` / `ITraceWriter` -- pluggable trace output targets
+- `UserMessageException` -- a message meant for the end user, carrying a key and arguments that are
+  resolved in the user's culture; `ForbiddenException`, `AuthenticationRequiredException` and the
+  company-scope exceptions sit next to it in `Exceptions/`
 
 ### Expression Abstraction
 
@@ -75,35 +78,25 @@
 | Class / Interface | Purpose |
 |-------------------|---------|
 | `ValueUtilities` | Safe type conversion with defaults |
-| `StringExtensions` / `StringUtilities` | String encoding, formatting, comparison |
-| `DateTimeExtensions` | Date utilities and ROC calendar |
+| `FrameworkClock` | Today / now in a user's time zone |
+| `StringExtensions` / `StringUtilities` | String splitting, trimming, comparison |
 | `AesCbcHmacCryptor` | Authenticated symmetric encryption |
 | `PasswordHasher` | Password hashing (PBKDF2-SHA256) |
 | `XmlCodec` / `JsonCodec` | XML / JSON serialization |
-| `IObjectSerialize` | Serialization provider interface |
+| `IObjectSerializeFile` | An object bound to the file path it is serialized to |
 | `IKeyObject` | Keyed entity interface used across layers |
-| `Tracer` | Diagnostic trace entry point |
+| `UserMessageException` | End-user message with a localizable key |
 | `IExpressionEvaluator` | Expression evaluation abstraction (implementation in `Polhem.Expressions`) |
 | `ExpressionPolicy` | Shared type / null policy for expression variables |
 
 ## Design Conventions
 
-- **Static utility classes** -- `ValueUtilities`, `StringUtilities`, `DateTimeExtensions` expose functionality as static methods; no instance state.
+- **Static utility classes** -- `ValueUtilities`, `StringUtilities` and `FileUtilities` expose functionality as static methods; no instance state.
 - **Constant-time comparison** -- `CryptographicOperations.FixedTimeEquals` is used for HMAC / hash validation to prevent timing attacks.
-- **Interface-based extensibility** -- serialization is abstracted via `IObjectSerialize`.
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
 
 ## Directory Structure
 
-```
-Polhem.Base/
-  Attributes/          # TreeNodeAttribute, TreeNodeIgnoreAttribute
-  Collections/         # KeyCollectionBase<T>, StringHashSet, CollectionExtensions
-  Data/                # DataTable/DataSet extensions, FieldDbType, DbTypeConverter
-  Expressions/         # IExpressionEvaluator, ExpressionPolicy, ExpressionEvaluationException
-  Security/            # AES, RSA, PBKDF2, file hash utilities
-  Serialization/       # JSON/XML serialization, GZip compression
-  Tracing/             # Tracer, TraceContext, TraceDispatcher, ITraceListener, ITraceWriter
-  *.cs (root)          # ValueUtilities, StringExtensions, StringUtilities, DateTimeExtensions, FileUtilities,
-                       # IPValidator, SysInfo, IKeyObject, etc.
-```
+The folders group the source by feature: `Attributes/`, `Collections/`, `Data/`, `Exceptions/`, `Expressions/`,
+`Security/` and `Serialization/`. General utilities (`ValueUtilities`, `FrameworkClock`, `StringUtilities`,
+`FileUtilities`, `SysInfo`, `IKeyObject`, …) sit at the project root.

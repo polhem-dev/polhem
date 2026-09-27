@@ -1,4 +1,4 @@
-<!-- source: adr/adr-040-audit-trail-taxonomy.md blob: 572f10cbda8559cbf354cb1eeeb922e1469924b7 -->
+<!-- source: adr/adr-040-audit-trail-taxonomy.md blob: 79be090111fdb662b214bf1b5b10d679b77533f0 -->
 # ADR-040：稽核軌跡的分類軸與寫入策略
 
 [English](adr-040-audit-trail-taxonomy.md)
@@ -162,7 +162,7 @@
 只有 `DbAnomalyEntry` 沒有——它覆寫 `AddCommonColumns` 成空的，並且保持原樣。
 一份共通結構要決定的不是有哪些共通欄，是誰可以整組不要。
 
-**未納入本次**：讀取側仍由 `LogBusinessObject` 一併服務，九支查詢方法共用保留 progId
+**未納入本次**：讀取側仍由 `LogBusinessObject` 一併服務，其查詢方法共用保留 progId
 `AuditLog` 的授權。合規稽核與維運排錯在 ERP 是兩種角色，把讀取權限拆開價值更高，
 但那是權限模型的題目、不是寫入介面的題目，另案處理。
 
@@ -291,4 +291,24 @@ BCL 方法，因此 `XmlSerializer` 產出的 payload 與此等價。不走它�
   [資料庫設定指引](../zh-TW/database-settings-guide.md) 的多資料庫情境。
 - 相關 ADR：[ADR-017](adr-017-db-cache-invalidation.zh-TW.md)、
   [ADR-018](adr-018-db-define-storage.zh-TW.md)、
-  [ADR-019](adr-019-permission-authorization-model.zh-TW.md)。
+  [ADR-019](adr-019-permission-authorization-model.zh-TW.md)、
+  [ADR-027](adr-027-audit-trail.zh-TW.md)（本 ADR 所分類的較早稽核軌跡設計）、
+  [ADR-041](adr-041-per-form-audit-rule.zh-TW.md)。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **背景與決策二提到的診斷型別已不存在。** `ILogWriter` / `LogEntry` 已作為死碼移除（見
+  [ADR-027](adr-027-audit-trail.zh-TW.md) 的實作演進），2026-09-27 手寫的 tracing 子系統（`Tracer` / `TraceContext`）
+  也已移除。純技術 observability 現在只走 host 的 `ILogger`；決策二所做的「與業務稽核分離」不變。
+- **選配的 EAV 檔位從未實作。** 決策五與後果一節把它描述為取得欄位級統計的途徑；`src/` 中沒有任何實作，
+  [ADR-041](adr-041-per-form-audit-rule.zh-TW.md) 也刻意不照搬 Odoo 的 full / fast 檔位。異動記錄的欄位級查詢靠解析 DiffGram。
+- **沒有逐筆強制同步寫入。** 決策六說異動記錄可強制同步寫入；實際存在的是部署層級的開關
+  `AuditLogOptions.UseBackgroundWriter`（設為 `false` 時每筆都同步寫入），以及背景寫入器在有界佇列滿時改為同步寫入
+  （`src/Polhem.Definition/Settings/SystemSettings/AuditLogOptions.cs`）。背景寫入器每一批在一個交易內寫入
+  （`src/Polhem.Repository/AuditLog/AuditLogWriteRepository.cs`）。
+- **2026-09-27：讀寫兩側的名稱。** 讀取側的 BO 現為 `AuditLogBusinessObject`（`src/Polhem.Business/AuditLog/`），
+  仍在保留 progId `AuditLog` 之下；其 DB 異常查詢要求部署管理員（`DeploymentAction.ReadDbAnomalyLog`），
+  而非公司範圍的 `AuditLog` 讀取權限。無動作的寫入器是 `NullLogWriter`，背景與同步寫入器最終寫入的 sink 是公開、可替換的
+  `IAuditLogSink`（`src/Polhem.Hosting/Audit/`）。日誌表存的是 token 指紋（`token_fingerprint`），不再存 access token。

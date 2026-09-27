@@ -116,12 +116,18 @@ denormalized and self-contained". Core decisions:
 - **Related**: the registration of the system tables is in
   [framework-reserved-names §1.3](../en/framework-reserved-names.md); `DbScope.Log` routing is in
   [ADR-010](adr-010-logical-database-category.md); the DataForm Save pipeline is in
-  [ADR-024](adr-024-dataform-save-dataadapter.md).
+  [ADR-024](adr-024-dataform-save-dataadapter.md); the classification axes and write strategy of the audit trail,
+  recorded afterwards, are in [ADR-040](adr-040-audit-trail-taxonomy.md).
 - **To do**: ~~per-form audit rules~~ (**implemented, see [ADR-041](adr-041-per-form-audit-rule.md)**); DB anomaly
   detection for `ExecuteBatch` / `UpdateDataTables` (currently only the main `Execute` path); an existing SQL Server
   upgrade idempotency bug in `st_cache_notify` (a separate issue).
 
-## Postscript (2026-08-07): the diagnostic logging types have changed
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+### 2026-08-07: the diagnostic logging types have changed
 
 The `ILogWriter` / `LogEntry` mentioned in the "Context" table and in option 4 above **were removed in Phase 5
 together with the dead Logging code of `BackendInfo`**
@@ -133,3 +139,22 @@ business auditing", and removing them only cleared out dead code.
 The current diagnostics / tracing surface is `Tracer` / `TraceContext` / `ITraceWriter` (`src/Polhem.Base/Tracing/`)
 plus the host's own `ILogger`. The text above is kept as it was to preserve the inventory at the time of the decision;
 it is not a description of the current state.
+
+### Later changes
+
+- **2026-08-24: the write interface is split in two.** Anomaly producers write through `IAnomalyLogWriter`, and
+  `IAuditLogWriter` carries the login, change and access entries; one write pipeline still implements both. The lazily
+  resolved factory of option 7 is now `Func<IAnomalyLogWriter?>` (`src/Polhem.Db/DbAccessFactory.cs`). The reasons are
+  in [ADR-040](adr-040-audit-trail-taxonomy.md) § 7.
+- **2026-09-27: the tracing subsystem is removed.** `Tracer`, `TraceContext`, `ITraceWriter` and
+  `src/Polhem.Base/Tracing/`, which the 2026-08-07 subsection names as the current diagnostics surface, no longer
+  exist. Diagnostics go through the host's `ILogger`; for example `JsonRpcExecutor.Logger` records the real message of
+  a failure that the remote caller only sees as a generic one.
+- **2026-09-27: log rows store a token fingerprint.** The common columns include `token_fingerprint`
+  (`AuditEntry.TokenFingerprint`, computed by `AccessTokenHasher.ComputeFingerprint`) instead of the access token, so
+  a log row can still be correlated with its session without holding a usable credential
+  (`src/Polhem.Definition/Logging/AuditEntry.cs`).
+- **2026-09-27: the write pipeline.** The write repository persists a batch as one transactional `DbBatchSpec`
+  instead of one commit per entry (`src/Polhem.Repository/AuditLog/AuditLogWriteRepository.cs`). The terminal writer behind the log database and
+  the fallback file is the public `IAuditLogSink` (`src/Polhem.Hosting/Audit/IAuditLogSink.cs`), which a deployment can
+  replace to ship records elsewhere.

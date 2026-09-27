@@ -252,3 +252,28 @@ runtime side, and JS front ends have no matching need.
   methods
 - **Packaging as an NPM package** — the upgrade path has three stages (pure JS sample → TS + Vite → NPM package); it
   does not start until the trigger conditions are met
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing
+with the current code:
+
+- **2026-09-27: Anonymous and authenticated calls are told apart by `[ApiAccessControl]` alone.** The hand-kept list
+  of methods exempt from the Bearer header was removed: a request without an `Authorization` header is an anonymous
+  call, and the method's declared `ApiAccessRequirement` decides whether it is admitted. A missing, unknown or expired
+  access token on a method that needs one is answered with JSON-RPC `Unauthorized` (-32001) through
+  `AuthenticationRequiredException` (`src/Polhem.Base/Exceptions/AuthenticationRequiredException.cs`), not with an
+  HTTP 401.
+- **2026-09-27: Plain requests carry typed filter and parameter values.** Object-typed filter and parameter values in
+  a `Plain` request are bound by their JSON kind (string, integer, decimal, boolean, array) by
+  `PlainValueJsonConverter` (`src/Polhem.Api.Core/Json/`), so a `Plain` `GetList` with a valued filter reaches the SQL
+  parameter with a usable value.
+- **2026-09-27: `GetDefine` has a remote allow-list.** A remote caller may read only the definition types the shipped
+  clients need (FormSchema, FormLayout, Language, MenuSettings, CurrencySettings and UnitSettings); table schemas and
+  every other type are refused to a remote caller
+  (`src/Polhem.Business/System/SystemBusinessObject.Define.cs`). The `System.GetDefine` row in "The full API surface
+  callable from JS front ends" describes the state at the time of the decision.
+- **2026-09-27: A JavaScript/TypeScript client exists.** The "Packaging as an NPM package" item under "Out of scope"
+  has moved on: the client lives in its own repository,
+  [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js), which also covers the encrypted path
+  that [ADR-044](adr-044-payload-codec-negotiation.md) opened.

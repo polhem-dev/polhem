@@ -1,4 +1,4 @@
-<!-- source: adr/adr-028-expression-rule-engine.md blob: 6a309b1267f0668003d3583666b1c416e6c63afe -->
+<!-- source: adr/adr-028-expression-rule-engine.md blob: 6698511b8650e378764936cf03e491e786b2c3a8 -->
 # ADR-028：自訂運算式與規則引擎（減少 BO 手寫程式碼）
 
 [English](adr-028-expression-rule-engine.md)
@@ -56,3 +56,19 @@
 - **邊界（另案，本 ADR 不涵蓋）**：跨列/明細聚合（`SUM(detail)`）、虛擬顯示計算欄、`BeforeInsert`/`BeforeUpdate` 更細觸發、多捨入模式（銀行家/無條件捨去/進位，屬數值子系統擴充）、求值 timeout 與 Session 變數曝露。
 
 - **相依**：新增第三方套件 `DynamicExpresso.Core`（MIT）。引擎經 `Expression.Compile()`，行動端/WASM AOT 目標的即時運算需另行實測（同 ADR-025 的 trim/AOT 脈絡）——但因後端為權威，此風險僅影響前端預覽、不影響資料正確性。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：沙箱函式。** 〈決策〉列的函式是決策當下的清單，沙箱後來又增加了幾個（例如 `UtcNow` 與
+  `IsNullOrWhiteSpace`）。權威清單是 `src/Polhem.Expressions/DynamicExpressoEvaluator.cs` 的 `s_helperFunctions`。
+- **2026-09-27：行動端的 AOT 與 trim。** 〈相依〉的 AOT 問題已有答案：動態程式碼不受支援時，`Expression.Compile()`
+  會退回 DynamicExpresso 的直譯器，即時運算不需停用任何東西。`.github/workflows/build-ci.yml` 的 CI Mobile AOT gate
+  以 `-p:DynamicCodeSupport=false` 執行 `tests/Polhem.Expressions.UnitTests`。trim 是另一回事：DynamicExpresso
+  以反射找到運算式指名的成員，因此 `Polhem.Expressions` 隨套件附帶 `src/Polhem.Expressions/ILLink.Descriptors.xml`，
+  保留沙箱曝露的型別；描述檔與曝露型別不一致時，`TrimmerDescriptorGateTests`（`tests/Polhem.Expressions.UnitTests`）
+  會失敗。
+- **2026-09-27：規則訊息已在地化。** 不通過的 `FormRule` 以其 `Message` 作為英文文字，並在規則與 schema 皆有名稱時帶上
+  語系鍵 `{ProgId}.Rule.{RuleId}.Message`，由伺服端依 session 的文化解析
+  （`src/Polhem.Definition/Forms/FormExpressionCalculator.cs`）。

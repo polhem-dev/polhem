@@ -1,4 +1,4 @@
-<!-- source: adr/adr-004-messagepack-payload.md blob: daff315c2b8eacad0937e6486af075c5079635b7 -->
+<!-- source: adr/adr-004-messagepack-payload.md blob: 5f32e0632ddffbd05945dd389f41f6f76dd65db7 -->
 # ADR-004：使用 MessagePack 作為 API Payload 序列化格式
 
 [English](adr-004-messagepack-payload.md)
@@ -62,5 +62,11 @@
 - `Polhem.Api.Core/Registry/ApiContractRegistry.cs`：API 型別註冊
   —— **此型別與 `Registry/` 資料夾其後已移除**（原為「BO 回傳純 POCO」情境所設，該情境未成形），
   理由見 `src/Polhem.Api.Contracts/README.md`。
-- `Polhem.Definition` 的集合型別（FilterCondition、PackageUpdateQuery 等）也使用 MessagePack 序列化
+- 會上 wire 的 `Polhem.Definition` 型別（篩選節點 `FilterCondition` / `FilterGroup`，以及 `FilterNodeCollection`、`ListItemCollection` 等集合）也使用 MessagePack 序列化
 - API Payload 格式分三級：Plain（無編碼）、Encoded（MessagePack + GZip）、Encrypted（MessagePack + GZip + AES）
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-03：「影響」描述的是單一 codec。** 其中稱 `MessagePackPayloadSerializer` 為「預設 Payload 序列化器」，並把 Encoded 與 Encrypted 寫成 MessagePack + GZip（+ AES）。自 [ADR-044](adr-044-payload-codec-negotiation.zh-TW.md) 起，Encoded 或 Encrypted payload 的 body 以請求所宣告的 codec 寫成（另一個內建的是 `JsonPayloadSerializer`），未宣告時使用 MessagePack。壓縮與加密步驟不變。

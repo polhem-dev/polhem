@@ -117,3 +117,16 @@ For example: `PingResult` → `PingResponse`, `LoginResult` → `LoginResponse`.
   convention is followed
 - A name that deviates from the convention lets the BO's return value flow straight to the client (which may cause
   type errors), and should be checked strictly in code review
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-08-09: API types carry no serialization attributes.** "Context" describes `{Action}Request` /
+  `{Action}Response` as carrying MessagePack serialization attributes. Since
+  [ADR-036](adr-036-wire-serialization-externalized.md) they are plain classes, and their wire binding is a formatter
+  registered explicitly in `src/Polhem.Api.Core/MessagePack/WireContracts.*.cs`
+  ([ADR-037](adr-037-wire-explicit-registration.md)). The naming convention of this ADR is unchanged.
+- **2026-09-27: where the conversion runs.** `ApiOutputConverter.Convert` is now called from
+  `JsonRpcExecutor.ExecuteAsync`; the `ExecuteAsyncCore` method named under "Implementation points" no longer exists.

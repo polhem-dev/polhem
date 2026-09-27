@@ -1,4 +1,4 @@
-<!-- source: adr/adr-044-payload-codec-negotiation.md blob: 91d549715b372fa03734ce2ce548b1fac168fa3b -->
+<!-- source: adr/adr-044-payload-codec-negotiation.md blob: 9379ebb0a8bce72fd1462243b872c9eecaf8de79 -->
 # ADR-044：body codec 由每個請求宣告，JSON 與 MessagePack 並存
 
 [English](adr-044-payload-codec-negotiation.md)
@@ -174,3 +174,12 @@ AES-CBC 每則訊息用隨機 IV，本質上不可能固定。那兩層是標準
 - 時區責任不隨 codec 轉移。[ADR-032](adr-032-datetime-timezone.zh-TW.md) 把轉換點定在 Connector，
   伺服端既不轉換也不檢查；另一個語言的客戶端必須自行負責 UTC 正規化，
   **漏掉的症狀是日期靜默偏移而不是報錯**。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：以程式覆寫預設 codec 的途徑也已移除。** 決策五移除了 `Serializer` 設定，但
+  `ApiServiceOptions.PayloadSerializer` 當時仍可在程式中替換。它現在是唯讀的，`ApiServiceOptions.Initialize`
+  也不再接受 serializer。框架未內建的 codec 以 `ApiServiceOptions.RegisterPayloadCodec` 加入，它拒絕內建的名稱；
+  未宣告 codec 的請求一律以 MessagePack 讀取（`src/Polhem.Api.Core/ApiServiceOptions.cs`）。

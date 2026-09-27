@@ -1,6 +1,6 @@
 # Polhem.Repository.Abstractions
 
-> Abstract interface library for the data access layer, defining Repository and Provider contracts.
+> Abstract interface library for the data access layer, defining the repository contracts and the repository factory.
 
 [繁體中文](README.zh-TW.md)
 
@@ -15,11 +15,6 @@
 
 ## Key Features
 
-### Repository Contracts
-
-- `ISessionRepository` -- session lifecycle operations: create, retrieve, and validate user sessions via access tokens
-- `IDatabaseRepository` -- database administration operations: connection testing and table schema upgrades
-
 ### Factory Contract
 
 - `IRepositoryFactory` -- the single entry point for obtaining a repository, on either axis:
@@ -27,9 +22,24 @@
   and `Create<T>(accessToken)` for the framework axis (fixed types named by their interface).
   Both are generic, so adding a repository never widens the interface.
 
-### Form Repository Contracts
+### Form Repository Contracts (`Form/`)
 
-- `IDataFormRepository` -- repository interface for data form CRUD operations
+- `IDataFormRepository` -- repository interface for data form CRUD operations; `DataFormListResult` carries a list page
+
+### System Repository Contracts (`System/`)
+
+- `ISessionRepository` -- persistence of the session seed: `GetSession`, `InsertSession`, `UpdateSession`,
+  `DeleteSession`, `DeleteExpiredSessions`
+- `IDatabaseRepository` -- connection testing (`TestConnection`) and schema migration (`UpgradeTableSchema`)
+- `IUserRepository`, `IUserCompanyRepository`, `ICompanyRepository`, `IDepartmentRepository`,
+  `IEmployeeRepository`, `IRolePermissionRepository`, `IApiKeyRepository` -- the framework's user, company,
+  organization, permission and API key tables
+
+### Audit Log Contracts (`AuditLog/`)
+
+- `IAuditLogRepository` -- queries of the audit and anomaly logs, with the `*LogQuery` types and `AuditLogPage`
+- `IAuditLogWriteRepository` -- writes audit and anomaly entries
+- `IAuditRuleRepository` -- reads the audit rules and signals that they changed
 
 ### Database Routing Contract
 
@@ -39,27 +49,24 @@
 
 | Interface / Class | Purpose |
 |-------------------|---------|
-| `ISessionRepository` | Session persistence: `GetSession` / `InsertSession` / `UpdateSession` / `DeleteSession` / `DeleteExpiredSessions` |
-| `IDatabaseRepository` | Connection testing (`TestConnection`) and schema migration (`UpgradeTableSchema`) |
 | `IRepositoryFactory` | The single entry point for every repository, on both axes |
 | `IDataFormRepository` | Contract for data form data access |
+| `ISessionRepository` | Session seed persistence |
+| `IDatabaseRepository` | Connection testing and schema migration |
+| `IAuditLogRepository` / `IAuditLogWriteRepository` | Audit log queries and writes |
 | `IRepositoryDatabaseRouter` | Resolves the physical databaseId for a logical `DbScope` and access token |
 
 ## Design Conventions
 
-- **Repository Pattern** -- each domain concern (session, database, form) has a dedicated repository interface.
+- **Repository Pattern** -- each domain concern has a dedicated repository interface.
 - **One factory, two axes** -- `IRepositoryFactory` resolves progId-bound repositories through the registry and framework repositories by their interface. It replaced three factories, one of which grew a method per system table.
 - **Passive contracts, injected via DI** -- this project defines contracts only; there is no static holder or service locator. Concrete implementations are registered in the DI container and injected where needed, rather than resolved from a static entry point or read from a static `BackendConfiguration`.
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
 
 ## Directory Structure
 
-```
-Polhem.Repository.Abstractions/
-  AuditLog/                      # IAuditLogRepository, IAuditLogWriteRepository
-                                 # + query / entry types
-  Form/                          # IDataFormRepository
-  Factories/                     # IRepositoryFactory
-  System/                        # ISessionRepository, IDatabaseRepository
-  IRepositoryDatabaseRouter.cs   # DB routing contract (DbScope -> databaseId)
-```
+- `AuditLog/` -- `IAuditLogRepository`, `IAuditLogWriteRepository`, `IAuditRuleRepository` and the query types
+- `Factories/` -- `IRepositoryFactory`
+- `Form/` -- `IDataFormRepository`, `DataFormListResult`
+- `System/` -- the system repository contracts
+- project root -- `IRepositoryDatabaseRouter` (`DbScope` -> databaseId)

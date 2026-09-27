@@ -76,3 +76,13 @@ interface dynamically from FormLayout:
 - `Polhem.Base/Security/PasswordHasher.cs` has had its `#if NETSTANDARD2_0` conditional compilation removed and uses
   PBKDF2-SHA256 throughout
 - The netstandard2.0-related restrictions in the development guidelines have been removed as well
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: target frameworks other than `net10.0`.** The packages and tools target `net10.0`, with two kinds of
+  exception. `src/Polhem.Analyzers` targets `netstandard2.0`, because Roslyn analyzers are loaded by the compiler,
+  which requires it. The platform heads of the demo application target platform-specific frameworks
+  (`net10.0-ios`, `net10.0-android`, `net10.0-browser` under `apps/Polhem.Northwind/`).

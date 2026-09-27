@@ -49,9 +49,13 @@ This console uses **Remote mode** (HTTP to the server). `Polhem.Api.Client` also
 // Remote (this demo)
 var connector = new SystemApiConnector("http://localhost:5050/api", Guid.Empty);
 
-// Local (same process; requires ApiClientInfo.LocalServiceProvider to be set)
-ApiClientInfo.LocalServiceProvider = services.AddPolhemFramework(...).BuildServiceProvider();
-var connector = new SystemApiConnector(Guid.Empty);
+// Local (same process): pass the service provider that holds the backend
+var services = new ServiceCollection();
+services.AddPolhemFramework(settings.BackendConfiguration, paths);
+using var provider = services.BuildServiceProvider();
+var connector = new SystemApiConnector(provider, Guid.Empty);
 ```
 
-[`QuickStart.Server/Program.cs`](../QuickStart.Server/Program.cs) is itself a complete in-process backend wiring; to use Local mode from a console, copy its bootstrap code and call `BuildServiceProvider()`.
+The local connector constructors take the `IServiceProvider` the backend was registered in; `BuildServiceProvider` comes from the `Microsoft.Extensions.DependencyInjection` package. A complete backend bootstrap (master key, SQLite registration, settings loading, `AddPolhemFramework`) is [`DemoBackend.AddPolhemBackend`](../Polhem.Samples.Shared/DemoBackend.cs), which `QuickStart.Server` calls; a console host follows the same steps on a plain `ServiceCollection`.
+
+> A Local call is a trusted in-process call: the backend skips the access token check and the `LocalOnly` restriction for it. Use it only where the calling code is trusted with the whole backend.

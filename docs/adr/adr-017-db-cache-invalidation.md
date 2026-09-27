@@ -151,15 +151,23 @@ registry to dispatch the poller's notifications to the matching cache to run `Re
 the poller publish notify-key versions, and `CacheNotifyToken` of `MemoryCacheProvider` expires the entry on the next
 read.
 
-The four core invariants at the decision level **all still hold** — bump in the same transaction, decide by version,
-the DB clock as the single source, no active reload. Only the means of achieving the last one changed: from "actively
-Remove" to "mark the version and let existing entries expire naturally", which removes a routing table that needed
-maintenance and no longer requires every cache type to implement an extra interface.
+The core invariants at the decision level **all still hold** — bump in the same transaction, decide by version,
+the DB clock as the single source, no active reload, zero registration for a new cache. Only the means of achieving
+the last two changed: from "actively Remove" to "mark the version and let existing entries expire naturally", which
+removes a routing table that needed maintenance and no longer requires every cache type to implement an extra
+interface. The zero-registration convention now lives in `CacheGroup` (`src/Polhem.ObjectCaching/ObjectCache.cs`,
+`src/Polhem.ObjectCaching/KeyObjectCache.cs`), which defaults to the type name and builds each entry's default
+`ChangeNotifyKey` from it.
 
 **The DB server time zone no longer affects correctness.** The original text of invariant 3 said "when the DB server
 is set to UTC+0, all values are UTC"; the current `CacheNotifyService` instead takes the value from each dialect's
-`GetDefaultValueExpression(FieldDbType.DateTime)`, and all five databases return UTC regardless of the server's time
-zone setting.
+`GetDefaultValueExpression(FieldDbType.DateTime)`, and SQL Server, MySQL, PostgreSQL, Oracle and SQLite all return
+UTC regardless of the server's time zone setting.
+
+**Database-dependent caches read through on their own.** Invariant 4 mentions "the service layer's load-on-miss".
+The database-dependent caches now load a missing entry themselves: `CreateInstance` calls `ICacheDataSourceProvider`
+(for example `src/Polhem.ObjectCaching/Database/CompanyInfoCache.cs`), and the services in front of them only read
+the cache. The invariant is unchanged: nothing is reloaded until it is read again.
 
 ## Related
 

@@ -41,7 +41,7 @@ IDefineStorage` (which also implements `ICustomizeDefineReader`), placed in `Pol
 
 1. **Bootstrap split**: `SystemSettings` / `DatabaseSettings` **stay as files** (settings required at startup;
    `DatabaseSettings` is "how to connect to the DB" itself, and cannot possibly live in the DB it describes). The
-   other 6 types go into the DB.
+   other storable types go into the DB.
 
 2. **`define_type` = `typeof(T).Name`** → the storage discriminator, the cache group dispatched by convention in
    [ADR-017](adr-017-db-cache-invalidation.md), and the bump group are all the same thing (note that the cached type
@@ -68,7 +68,7 @@ IDefineStorage` (which also implements `ICustomizeDefineReader`), placed in `Pol
 ### The customization overlay lives in the same table
 
 Tenant customization overrides (`Language` / `FormLayout` / `ProgramSettings`) go into the same `st_define` table
-through the `customize_id` column (`"*"` = base); the three reads of `ICustomizeDefineReader` query by that
+through the `customize_id` column (`"*"` = base); the reads of `ICustomizeDefineReader` query by that
 `customize_id` and return `null` when a row is missing (the same read-only semantics as the file version). This is
 more uniform than the file model's two directories.
 
@@ -117,6 +117,28 @@ empty table and throw. This data migration is a deployment task.
 5. **Splitting the composite key into two columns `key1`/`key2`**: rejected. It would be inconsistent with the single
    string cache key of [ADR-017](adr-017-db-cache-invalidation.md); a single `define_key` matches the notification
    key and needs no schema change if the key becomes more composite in the future.
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing
+with the current code:
+
+- **2026-07-01 to 2026-08-06: More types in `st_define`.** `CurrencySettings` and `UnitSettings` (2026-07-01),
+  `MenuSettings` (2026-08-04, split out of `ProgramSettings`) and `PluginSettings` (2026-08-06) were added as
+  definition types and are stored in `st_define` like the rest; the "Into the DB" table above lists the types of the
+  time. The current list is the set of `Get`/`Save` members of `IDefineStorage`, implemented in
+  `src/Polhem.Db/Storage/DbDefineStorage.cs`.
+- **2026-08-04 to 2026-08-06: The customization reader grew, and one customization is writable.**
+  `ICustomizeDefineReader` (`src/Polhem.Definition/Storage/ICustomizeDefineReader.cs`) reads the customization of
+  `Language`, `ProgramSettings`, `MenuSettings`, `FormLayout` and `PluginSettings`. Plugin bindings are no longer
+  read-only: `DbDefineStorage` also implements `ICustomizeDefineWriter`, whose `SaveCustomizePluginSettings` stores a
+  tenant's plugin bindings.
+- **2026-07-29: Alternative 4 became the current approach.** Database-dependent caches load a missing entry
+  themselves: `CreateInstance` calls `ICacheDataSourceProvider` (for example
+  `src/Polhem.ObjectCaching/Database/CompanyInfoCache.cs`), and services such as `CompanyInfoService` only read the
+  cache. `ICacheDataSourceProvider` is an interface in `Polhem.Definition` implemented in `Polhem.Business`
+  (`src/Polhem.Business/Providers/CacheDataSourceProvider.cs`), so `Polhem.ObjectCaching` still has no project
+  reference to the data layer. See also [ADR-017](adr-017-db-cache-invalidation.md) "Implementation evolution".
 
 ## Related documents
 

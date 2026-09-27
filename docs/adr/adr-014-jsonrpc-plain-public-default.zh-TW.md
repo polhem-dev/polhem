@@ -1,4 +1,4 @@
-<!-- source: adr/adr-014-jsonrpc-plain-public-default.md blob: 5b2f6d935c76202f621823f02d43169d97b4080f -->
+<!-- source: adr/adr-014-jsonrpc-plain-public-default.md blob: 825f4ba4ae63c08cc53583a0fc056beaa5ac7073 -->
 # ADR-014：JSON-RPC `Plain` 開放策略 — `Public` 為預設保護等級，HTTPS 為信任界線
 
 [English](adr-014-jsonrpc-plain-public-default.md)
@@ -196,3 +196,12 @@ JS 走 `Plain` + HTTPS + Bearer Token 的雙重保護線，與 ADR-013 Family B�
 - **DTO codegen / TypeScript 自動產生** — 屬工具鏈議題，與 `ProtectionLevel` 決策無關
 - **跨來源呼叫的 CORS 預設值** — host 各自決定，與 BO 方法保護等級獨立
 - **NPM 套件化** — 升級路徑分三階段（純 JS sample → TS + Vite → NPM 套件），觸發條件未到不啟動
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：匿名與已驗證呼叫只由 `[ApiAccessControl]` 區分。** 人工維護的「免 Bearer header 方法清單」已移除：沒有 `Authorization` header 的請求就是匿名呼叫，由方法宣告的 `ApiAccessRequirement` 決定是否放行。需要 access token 的方法若 token 缺少、未知或過期，以 JSON-RPC `Unauthorized`（-32001）經由 `AuthenticationRequiredException`（`src/Polhem.Base/Exceptions/AuthenticationRequiredException.cs`）回應，而不是 HTTP 401。
+- **2026-09-27：Plain 請求攜帶具型別的 filter 與參數值。** `Plain` 請求中型別為 object 的 filter 與參數值，由 `PlainValueJsonConverter`（`src/Polhem.Api.Core/Json/`）依 JSON 種類（字串、整數、decimal、布林、陣列）繫結，因此帶值 filter 的 `Plain` `GetList` 能以可用的值送達 SQL 參數。
+- **2026-09-27：`GetDefine` 對遠端呼叫採允許清單。** 遠端呼叫者只能讀取隨附 client 需要的定義類型（FormSchema、FormLayout、Language、MenuSettings、CurrencySettings 與 UnitSettings）；table schema 與其他所有類型一律拒絕遠端呼叫（`src/Polhem.Business/System/SystemBusinessObject.Define.cs`）。〈JS 前端可呼叫的完整 API 表面〉中 `System.GetDefine` 那一列描述的是決策當下的狀態。
+- **2026-09-27：已有 JavaScript/TypeScript client。** 「不在範圍」中的「NPM 套件化」一項已有進展：client 位於獨立 repository [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js)，也涵蓋 [ADR-044](adr-044-payload-codec-negotiation.zh-TW.md) 開放的加密路徑。

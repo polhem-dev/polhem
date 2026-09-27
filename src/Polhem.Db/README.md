@@ -1,6 +1,6 @@
 # Polhem.Db
 
-> Database abstraction layer providing dynamic SQL generation, parameterized queries, multi-database support, and IL-based object mapping.
+> Database abstraction layer providing dynamic SQL generation, parameterized queries, multi-database support, and row-to-object mapping.
 
 [繁體中文](README.zh-TW.md)
 
@@ -44,11 +44,11 @@ The framework routes SQL generation and schema reading by `DatabaseType` through
 - `IDialectFactory` -- per-provider factory exposing `IFormCommandBuilder`, `ICreateTableCommandBuilder`, `ITableAlterCommandBuilder`, `ITableRebuildCommandBuilder`, `ITableSchemaProvider`, and `GetDefaultValueExpression(FieldDbType)`
 - `DbDialectRegistry` -- maps `DatabaseType` to its `IDialectFactory` (mirrors how `DbProviderRegistry` maps to ADO.NET `DbProviderFactory`); registration is explicit and performed by the host
 - Built-in dialect implementations:
-  - **SQL Server** (`Providers/SqlServer/`) -- full support: form SELECT / INSERT / UPDATE / DELETE, CREATE/ALTER/REBUILD DDL, schema introspection
+  - **SQL Server** (`Providers/SqlServer/`) -- full support: form SELECT / INSERT / UPDATE / DELETE, CREATE/ALTER/REBUILD DDL, schema introspection via the `sys.*` catalog views
   - **PostgreSQL** (`Providers/PostgreSql/`) -- full support: form SELECT / INSERT / UPDATE / DELETE, CREATE/ALTER/REBUILD DDL, schema introspection via `information_schema` + `pg_catalog`
   - **SQLite** (`Providers/Sqlite/`) -- full support: form SELECT / INSERT / UPDATE / DELETE, CREATE DDL, ALTER (limited to ADD / RENAME COLUMN / Index — every other column-level mutation falls back to REBUILD), schema introspection via `sqlite_master` + `PRAGMA`. Targeted at file-backed single-process and embedded scenarios; see the limitations list below
   - **MySQL** (`Providers/MySql/`) -- full support: form SELECT / INSERT / UPDATE / DELETE, CREATE/ALTER/REBUILD DDL, schema introspection via `information_schema`
-  - **Oracle** (`Providers/Oracle/`) -- full support: form SELECT / INSERT / UPDATE / DELETE, CREATE/ALTER/REBUILD DDL, schema introspection via `USER_*` data-dictionary views. Identifiers are emitted as quoted-UPPERCASE (`"ST_USER"`) — aligning with Oracle's natural unquoted-fold-to-UPPER convention while keeping reserved-word columns and special-character names safe. The provider lowercases identifiers at the read-back boundary so the rest of the framework (FormSchema, Repository, Business) sees a consistent lowercase abstraction across all 5 supported databases. See [docs/en/database-naming-conventions.md §5.3](../../docs/en/database-naming-conventions.md) for the full identifier strategy
+  - **Oracle** (`Providers/Oracle/`) -- full support: form SELECT / INSERT / UPDATE / DELETE, CREATE/ALTER/REBUILD DDL, schema introspection via `USER_*` data-dictionary views. Identifiers are emitted as quoted-UPPERCASE (`"ST_USER"`) — aligning with Oracle's natural unquoted-fold-to-UPPER convention while keeping reserved-word columns and special-character names safe. The provider lowercases identifiers at the read-back boundary so the rest of the framework (FormSchema, Repository, Business) sees a consistent lowercase abstraction across every supported database. See [docs/en/database-naming-conventions.md §5.3](../../docs/en/database-naming-conventions.md) for the full identifier strategy
 
 #### SQLite Known Limitations
 
@@ -59,7 +59,7 @@ The following are SQLite engine or `Microsoft.Data.Sqlite` driver capability dif
 - **No `COMMENT ON`**: SQLite does not persist `DisplayName` / `Caption`; `SqliteCreateTableCommandBuilder` is silent no-op for descriptions and `SqliteTableSchemaProvider` always reads them back as empty. Keep captions in the FormSchema XML at the application layer.
 - **TYPE AFFINITY rather than strict types**: declared type strings such as `VARCHAR(50)` / `NUMERIC(18,2)` are written verbatim and SQLite applies affinity rules. `SqliteTableSchemaProvider` reverse-parses them from `PRAGMA table_info`.
 - **No schema concept**: every table lives in `main`, identifiers are always unqualified (still `"..."`-quoted).
-- **The `DbDataAdapter` is supplied by the framework**: `Microsoft.Data.Sqlite.SqliteFactory` does not provide a `DbDataAdapter`. The framework's `SqliteProviderFactory` wrapper adds a home-grown `SqliteDataAdapter`, so **once that wrapper is registered (see the registration example above), `DbAccess.UpdateDataTable` works exactly as it does on the other providers** — SQLite runs through the same adapter-based read/write path and needs no bespoke fallback. Registering the raw `SqliteFactory.Instance` directly is what loses this.
+- **The `DbDataAdapter` is supplied by the framework**: `Microsoft.Data.Sqlite.SqliteFactory` does not provide a `DbDataAdapter`. The framework's `SqliteProviderFactory` wrapper adds a home-grown `SqliteDataAdapter`, so **once that wrapper is registered (see the registration example below), `DbAccess.UpdateDataTable` works exactly as it does on the other providers** — SQLite runs through the same adapter-based read/write path and needs no bespoke fallback. Registering the raw `SqliteFactory.Instance` directly is what loses this.
 - **PK index naming**: SQLite auto-generates the PK backing index as `sqlite_autoindex_*`; `SqliteTableSchemaProvider` normalises it to the framework's `pk_{table}` convention so `TableSchemaComparer` matches by name.
 - **Driver**: uses [`Microsoft.Data.Sqlite`](https://learn.microsoft.com/dotnet/standard/data/sqlite/); recommended connection strings are an in-memory shared cache `Data Source=file:polhem_test_sqlite?mode=memory&cache=shared` for tests, or `Data Source={path}.db` for file-backed deployments.
 
@@ -74,7 +74,7 @@ using Polhem.Db.Manager;
 using Polhem.Db.Providers.PostgreSql;
 using Polhem.Db.Providers.Sqlite;
 using Polhem.Db.Providers.SqlServer;
-using Polhem.Definition;
+using Polhem.Definition.Database;
 using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
 using Npgsql;
@@ -87,15 +87,16 @@ DbDialectRegistry.Register(DatabaseType.SQLServer, new SqlDialectFactory());
 DbProviderRegistry.Register(DatabaseType.PostgreSQL, NpgsqlFactory.Instance);
 DbDialectRegistry.Register(DatabaseType.PostgreSQL, new PgDialectFactory());
 
-// SQLite
-DbProviderRegistry.Register(DatabaseType.SQLite, SqliteFactory.Instance);
+// SQLite: wrap the driver's factory so a DbDataAdapter is available (see the limitations above)
+DbProviderRegistry.Register(DatabaseType.SQLite, new SqliteProviderFactory(SqliteFactory.Instance));
 DbDialectRegistry.Register(DatabaseType.SQLite, new SqliteDialectFactory());
 
 // Configure connection items in DatabaseSettings (typically loaded from XML);
 // each item picks its DatabaseType and one of the registered providers.
 ```
 
-A `DatabaseItem` carries `Id`, `DatabaseType`, and `ConnectionString`. The framework looks up the provider/dialect by `DatabaseType` whenever a `DbAccess` / `TableSchemaBuilder` / `TableUpgradeOrchestrator` is created with that item's `Id`. PostgreSQL connection string template:
+A `DatabaseItem` carries `Id`, `DatabaseType`, and `ConnectionString`. The framework looks up the provider/dialect by `DatabaseType` whenever a `DbAccess` / `TableSchemaBuilder` / `TableUpgradeOrchestrator` is created with that item's `Id`. The `{@DbName}`, `{@UserId}` and `{@Password}` placeholders are resolved by
+`ConnectionStringTemplate`. PostgreSQL connection string template:
 
 ```
 Host=localhost;Port=5432;Database={@DbName};Username={@UserId};Password={@Password}
@@ -103,19 +104,18 @@ Host=localhost;Port=5432;Database={@DbName};Username={@UserId};Password={@Passwo
 
 ### Schema Introspection & Upgrade
 
-- `ITableSchemaProvider` -- per-provider schema reader (SQL Server uses `sys.*`, PostgreSQL uses `information_schema` + `pg_catalog`)
+- `ITableSchemaProvider` -- per-provider reader of the live database schema (the sources each provider reads are listed above)
 - `TableSchemaBuilder` -- compares the defined schema against the live database and produces or executes the upgrade commands
 - `TableSchemaComparer` -- structured diff (`TableSchemaDiff`) listing add/alter/drop changes
 - `TableUpgradeOrchestrator` -- ALTER-based upgrade with rebuild fallback when ALTER cannot apply all changes; routes through the dialect factory
 - `ITableAlterCommandBuilder` / `ITableRebuildCommandBuilder` -- per-provider DDL generation for in-place ALTER and full table rebuild
 - `TableSchemaCommandBuilder` -- generates IUD commands from `TableSchema`
 
-### IL-Based Object Mapping
+### Object Mapping
 
-- `ILMapper<T>` -- high-performance `DbDataReader`-to-object mapping via IL emit
-- Automatic column-to-property matching (case-insensitive)
-- Per-query-shape delegate caching with `ConcurrentDictionary`
-- Supports `List<T>` and `IEnumerable<T>` (deferred) materialization
+- `DbAccess.Query<T>` / `QueryAsync<T>` -- run a command and map each row to a `T` (a type with a
+  parameterless constructor), matching columns to settable public properties by name, ignoring case. The mapper is an internal
+  IL-emitted delegate cached per result shape
 
 
 ### Temporal Types Across Providers
@@ -145,75 +145,42 @@ converted — see [ADR-033](../../docs/adr/adr-033-time-of-day-semantics.md).
 | `DbCommandSpec` | Parameterized command specification with placeholder auto-conversion |
 | `DbBatchSpec` | Batch command execution with transaction support |
 | `SelectCommandBuilder` | FormSchema-driven SELECT command building |
-| `IDialectFactory` | Per-provider factory for SQL/schema builders (SQL Server, PostgreSQL) |
+| `IDialectFactory` | Per-provider factory for SQL / schema builders |
 | `IFormCommandBuilder` | Provider-specific CRUD generation interface |
 | `ITableSchemaProvider` | Provider-specific live-database schema reader |
 | `DbDialectRegistry` | `DatabaseType` → `IDialectFactory` registry |
 | `IDbConnectionManager` | Connection information registry |
 | `DbProviderRegistry` | ADO.NET `DbProviderFactory` resolution |
-| `ILMapper<T>` | IL emit-based DataReader-to-object mapping |
 | `TableSchemaCommandBuilder` | Schema-based IUD command generation |
 
 ## Design Conventions
 
 - **Builder Pattern** -- query composition through `SelectBuilder`, `FromBuilder`, `WhereBuilder` and `SortBuilder`, each responsible for a single SQL clause. They are concrete classes: the matching one-implementation interfaces were removed, because no caller ever held one by its interface type.
 - **Specification Pattern** -- `DbCommandSpec`, `DbBatchSpec`, and `DataTableUpdateSpec` encapsulate execution intent as data, decoupling command definition from execution.
-- **IL Emit Mapping** -- `ILMapper<T>` generates `DynamicMethod` delegates at runtime for zero-reflection DataReader mapping; delegates are cached per query shape.
+- **IL Emit Mapping** -- `Query<T>` maps rows through `DynamicMethod` delegates generated at runtime and cached per query shape, instead of reflecting on every row.
 - **Placeholder Auto-Conversion** -- `DbCommandSpec` accepts both positional (`{0}`, `{1}`) and named (`{Name}`) placeholders, converting them to provider-specific parameter syntax (`@p0`, `:p0`).
 - **Provider Pattern** -- database-specific behavior (quoting, parameter prefixes, DDL, schema introspection) is isolated behind provider interfaces; routing is centralized in `DbDialectRegistry`. Hosts register the dialects they actually use; `Polhem.Db` does not auto-register any of them.
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
 
 ## Directory Structure
 
-```
-Polhem.Db/
-  Ddl/             # DDL string-generation contracts:
-                   # ICreateTableCommandBuilder, ITableAlterCommandBuilder,
-                   # ITableRebuildCommandBuilder
-  Dml/             # DML string-generation contracts and builders:
-                   # IFormCommandBuilder,
-                   # SelectCommandBuilder / DeleteCommandBuilder,
-                   # (insert / update go through DataAdapter, see ADR-024)
-                   # SelectBuilder, FromBuilder, LimitBuilder,
-                   # WhereBuilder/InternalWhereBuilder/WhereBuildResult,
-                   # SortBuilder,
-                   # SelectContext, SelectContextBuilder,
-                   # QueryFieldMapping, QueryFieldMappingCollection,
-                   # TableJoin, TableJoinCollection,
-                   # IParameterCollector, DefaultParameterCollector,
-                   # TableSchemaCommandBuilder, JoinType
-  Schema/          # TableSchema model + comparison + upgrade flow (no SQL emission):
-                   # TableSchemaBuilder, TableSchemaComparer, TableSchemaDiff,
-                   # TableUpgradeOrchestrator, UpgradePlan, UpgradeStage,
-                   # UpgradeStageKind, UpgradeOptions, UpgradeExecutionMode,
-                   # ChangeExecutionKind, DescriptionLevel, DescriptionChange,
-                   # ITableSchemaProvider (live-DB schema reader contract),
-                   # AlterCompatibilityRules, RebuildSchemaFactory
-                   # (dialect-neutral rules shared by all five providers)
-    Changes/       # AddFieldChange, AlterFieldChange, RenameFieldChange,
-                   # AddIndexChange, DropIndexChange, ITableChange
-  CacheNotify/     # st_cache_notify access, both directions:
-                   # ICacheNotifyService/CacheNotifyService (version bump),
-                   # ICacheNotifyReader/CacheNotifyReader (poll read),
-                   # CacheNotifyChange
-  Storage/         # DbDefineStorage (definitions persisted in the database)
-  Providers/       # IDialectFactory (provider-factory contract)
-    SqlServer/     # SQL Server implementations (DDL + DML + SchemaProvider + Helper)
-    PostgreSql/    # PostgreSQL implementations
-    MySql/         # MySQL implementations
-    Oracle/        # Oracle implementations
-    Sqlite/        # SQLite implementations
-  Manager/         # IDbConnectionManager, DbProviderRegistry, DbConnectionInfo,
-                   # DbDialectRegistry
-  *.cs (root)      # Cross-cutting infrastructure:
-                   # DbAccess, DbCommandSpec, DbCommandSpecCollection,
-                   # DbBatchSpec, DbBatchResult, DbCommandResult,
-                   # DbCommandResultCollection, DbCommandKind,
-                   # DbConnectionScope, DbParameterSpec, DbParameterSpecCollection,
-```
+- `Ddl/` -- DDL string-generation contracts (`ICreateTableCommandBuilder`, `ITableAlterCommandBuilder`, …)
+- `Dml/` -- DML string-generation contracts and builders (`IFormCommandBuilder`, `SelectCommandBuilder`,
+  the clause builders, `SelectContext`, `TableSchemaCommandBuilder`); insert and update go through the
+  `DbDataAdapter` (see [ADR-024](../../docs/adr/adr-024-dataform-save-dataadapter.md))
+- `Schema/` -- the `TableSchema` comparison and upgrade flow (`TableSchemaBuilder`, `TableSchemaComparer`,
+  `TableUpgradeOrchestrator`, `ITableSchemaProvider`); it emits no SQL itself. `Schema/Changes/` holds the change types
+- `CacheNotify/` -- both directions of `st_cache_notify`: `ICacheNotifyService` (version bump) and
+  `ICacheNotifyReader` (poll read)
+- `Storage/` -- `DbDefineStorage` (definitions persisted in the database)
+- `Providers/` -- `IDialectFactory`, with one sub-folder per provider (`SqlServer/`, `PostgreSql/`, `MySql/`,
+  `Oracle/`, `Sqlite/`)
+- `Manager/` -- `IDbConnectionManager`, `DbProviderRegistry`, `DbDialectRegistry`, `DbConnectionInfo`,
+  `ConnectionStringTemplate`
+- project root -- `DbAccess`, `DbCommandSpec`, `DbBatchSpec`, `DbConnectionScope` and their result and parameter types
 
 The namespace layout follows three principles (see [ADR-008](../../docs/adr/adr-008-polhem-db-namespace-layout.md)):
 
 1. **Syntax layer (`Polhem.Db.Ddl` / `Polhem.Db.Dml`) vs model layer (`Polhem.Db.Schema`)** — namespaces emitting SQL strings live under `Ddl` or `Dml`; namespaces operating on the `TableSchema` model live under `Schema`.
 2. **Contracts by responsibility, implementations by provider** — abstract contracts go to the responsibility-named namespace; concrete per-provider implementations all live in `Polhem.Db.Providers.{X}` regardless of whether they implement DDL, DML, or schema-reading contracts.
-3. **`Polhem.Db.Providers` keeps only `IDialectFactory`** — it is the factory binding contract, not a grab-bag for per-provider interfaces.
+3. **`IDialectFactory` is the only public type in `Polhem.Db.Providers`** — it is the factory binding contract, not a grab-bag for per-provider interfaces.

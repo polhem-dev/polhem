@@ -1,4 +1,4 @@
-<!-- source: adr/adr-033-time-of-day-semantics.md blob: c433b82e88222572aba1bfa26245ef25299b7665 -->
+<!-- source: adr/adr-033-time-of-day-semantics.md blob: 9ac33f389e52f56555aba9a78bffb0a4f5542a61 -->
 # ADR-033：時刻語意（`FieldDbType.Time`）以定寬字串承載
 
 [English](adr-033-time-of-day-semantics.md)
@@ -125,6 +125,16 @@
 **回歸守衛**：`tests/Polhem.Db.UnitTests/TimeOfDayColumnIntegrationTests.cs` 於五家資料庫建表、
 round-trip，並斷言時刻欄位的 schema 比對收斂 —— 物理形狀化約一旦遺失，該斷言即失敗。
 單元測試抓不到這個回歸。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：UI 層與公開文件已存在。** 〈影響〉中「UI 層與公開文件尚未實作」描述的是決策當下。Avalonia 的編輯器是
+  `src/Polhem.UI.Avalonia/Controls/Editors/TimeEdit.cs`，Blazor Server 表單在
+  `src/Polhem.Web.Blazor.Server/Components/DynamicForm.razor` 與 `DynamicForm.razor.cs` 處理 `ControlType.TimeEdit`；
+  兩者都以 `ValueUtilities.CTimeString` 正規化輸入，清空欄位時存入空字串。消費端指引見
+  [時間型別總覽](../zh-TW/temporal-types.md)。
 
 ## 相關
 

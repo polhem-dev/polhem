@@ -111,6 +111,29 @@ putting them into the registry would only make it carry things that do not belon
   the whole repository**. `Unauthorized` is especially misleading: an authentication failure actually returns
   `InvalidRequest` plus HTTP 401. This decision does not settle whether they stay or go, but the tests now require
   every member to be classified, so they are no longer invisible.
-- Bringing the six transitional BCL exceptions of `UserMessage` in line is still to do. It is orthogonal to this
-  decision: afterwards the number of branches on both ends stays the same, because those six types were never in the
-  part that caused the divergence.
+- Bringing the transitional rows of `UserMessage` in line is still to do: the BCL exceptions
+  `UnauthorizedAccessException`, `ArgumentException`, `InvalidOperationException`, `NotSupportedException` and
+  `FormatException`, and the framework's own `JsonRpcException`. It is orthogonal to this decision: afterwards the
+  number of branches on both ends stays the same, because those types were never in the part that caused the
+  divergence.
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: BCL exceptions no longer reach remote callers verbatim.** The BCL rows of the registry keep their
+  error code but travel with a fixed message per row, and the real message is logged on the server
+  (`JsonRpcExecutor.Logger`). Only the framework's own exception types carry their message to the caller; a throw site
+  whose text is meant for the end user throws `UserMessageException`. `JsonRpcExecutorUserMessageExceptionTests`
+  (`tests/Polhem.Api.Core.UnitTests/JsonRpc/`) pins both halves, and the rows are listed by name in
+  `src/Polhem.Api.Core/JsonRpc/JsonRpcErrorContract.cs`.
+- **2026-09-27: `Unauthorized` has a producer.** An authentication failure (a missing, invalid or expired access
+  token) now answers `JsonRpcErrorCode.Unauthorized` (-32001) through `AuthenticationRequiredException`, which the
+  registry lists ahead of the `UnauthorizedAccessException` row it derives from; the client restores it as an
+  `UnauthorizedAccessException`. The Consequences' "authentication failure returns `InvalidRequest` plus HTTP 401" no
+  longer holds, and a request without an `Authorization` header is treated as an anonymous call. `MethodNotFound` and
+  `InvalidParams` still have no producer.
+- **2026-09-27: `UserMessageException` can carry a message key and arguments**, resolved with the session culture
+  when the message is localized (`src/Polhem.Base/Exceptions/UserMessageException.cs`).
+

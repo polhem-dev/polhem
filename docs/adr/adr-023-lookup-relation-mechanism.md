@@ -36,8 +36,8 @@ Breaking down the requirements:
    creating the cognitive load of "two sets of relation definitions" and a risk of inconsistency.
 3. **Reuse the existing relation field semantics + automatic resolution by the layout generator (adopted)**: a
    relation field already holds the complete information of "which form it points to and which fields it brings
-   back"; all that is missing is the "display field" and the "lookup window UI". Add two definition properties,
-   `DisplayField` / `LookupFields`, and have `FormLayoutGenerator` produce a lookup-window editor for relation fields
+   back"; all that is missing is the "display field" and the "lookup window UI". Add the definition properties
+   `DisplayFields` / `LookupFields`, and have `FormLayoutGenerator` produce a lookup-window editor for relation fields
    automatically, without adding a parallel relation definition.
 
 ## Decision
@@ -48,7 +48,7 @@ Adopt **option 3**, in three layers:
 
 - Relation fields keep `RelationProgId` + `RelationFieldMappings` (source → `ref_*`) as the **single source of truth
   for the relation**.
-- Add `DisplayField` / `DisplayFields`: the lookup editor and list show a composite "code - name" (the separator is
+- Add `DisplayFields`: the lookup editor and list show a composite "code - name" (the separator is
   " - ", to avoid confusion with names that contain spaces).
 - Add `FormSchema.LookupFields`: the set of fields the lookup window's list presents.
 - Coverage rule of `FormLayoutGenerator`: a relation field is resolved automatically to a `ButtonEdit` (a
@@ -90,3 +90,18 @@ display value has no column to land in after selection and cannot be brought bac
 - Consistent with the in-cell editing strategy of [ADR-021](adr-021-avalonia-datagrid-editing-strategy.md): relation
   fields in details take the "click to swap in the editor" path, so the lookup window is not torn down by the
   DataGrid editing pipeline.
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: lookups are no longer desktop-only.** `LookupDialog` and `RowEditDialog` share one hosting decision in
+  `src/Polhem.UI.Avalonia/Controls/Editors/DialogHosting.cs`: a native modal `Window` only when the desktop
+  classic-window lifetime provides a `Window` owner, and otherwise the panel opens on the top level's overlay layer
+  through `OverlayDialogHost` (the browser, iOS and Android heads). No `IDialogPresenter` abstraction was introduced.
+  The decision is covered by `DialogHostingTests` in `tests/Polhem.UI.Avalonia.UnitTests`.
+- **2026-09-27: `GetLookup` applies the `Read` record scope.** The lookup candidates are limited to the caller's
+  `Read` record scope, AND-combined with the search filter and `GetLookupFilter()`. A business object whose lookup
+  must offer every row, such as a shared master list, opts out by overriding `LookupAppliesRecordScope`
+  (`src/Polhem.Business/Form/FormBusinessObject.Read.cs`).

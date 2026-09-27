@@ -1,4 +1,4 @@
-<!-- source: adr/adr-037-wire-explicit-registration.md blob: 1a0e2f39d2292d7ccd6cd95bb921a85632211fe6 -->
+<!-- source: adr/adr-037-wire-explicit-registration.md blob: 2db8b73446f3e48fe06acaa98e6d6cc91e0d8a7c -->
 # ADR-037：wire 型別一律顯式註冊 formatter，`object` 值改用判別式封套
 
 [English](adr-037-wire-explicit-registration.md)
@@ -121,3 +121,19 @@ ADR-036「放棄 source generator 退路」那條代價的依據（reflection fa
   而該面向已由 NativeAOT 涵蓋，故列為低風險的形式缺口。
 - **具名型別逃生門在行動端仍不可用**。要讓 host 自訂型別也能上行動端的 wire，
   需要另一套「host 註冊自己的 formatter」機制，本 ADR 不處理。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **註冊清單由人工維護。** 代價一節說它由型別閉包機械產生、以重跑閉包維護。它當初確實這樣起頭，但現在沒有可重跑的產生器：
+  `src/Polhem.Api.Core/MessagePack/` 的 `WireContracts.*.cs` 由人工編修，閉包中有型別或成員不在註冊裡時，
+  `WireContractDriftTests`（`tests/Polhem.Api.Core.UnitTests/`）會失敗。
+- **2026-09-27：具名型別分支處理列舉與 `ParameterCollection` 時不再需要動態程式碼。** 在字串判別子之後，
+  `WireValueFormatter` 把白名單內的列舉寫成其底層整數、以 `Enum.ToObject` 讀回；具名表中的型別（`ParameterCollection`）
+  與已知集合一樣有封閉泛型的讀寫委派，因此兩者在 iOS 與 Mac Catalyst 上都可用。寫出的位元組與非泛型多載相同，
+  wire 不變（`WireValueFormatterNamedTypeTests` 釘住這些位元組）。其他具名型別仍走非泛型多載，沒有動態程式碼時擲出
+  指名該型別的 `NotSupportedException`，並建議改用 JSON body codec。因此〈未納入〉中關於行動端逃生門的那一項，
+  對 host 自訂型別仍然成立。
+- **2026-09-27：元素型別在白名單內的陣列可通過逃生門**，兩端、兩種 body codec 皆然；寫入端事先執行與讀取端相同的檢查
+  （`WireTypeWhitelist.IsNamedValueTypeAllowed`）。`WireTypeWhitelist` 也會檢查 assembly-qualified 型別名中的組件名部分。

@@ -1,4 +1,4 @@
-<!-- source: adr/adr-001-dataset-as-dto.md blob: fc9952256c3da479074f4ca00f0168a3e1a9b48b -->
+<!-- source: adr/adr-001-dataset-as-dto.md blob: 3010b671c66ba6cb057c36adeef62e93009518cf -->
 # ADR-001：使用 DataSet 作為跨層 DTO
 
 [English](adr-001-dataset-as-dto.md)
@@ -36,7 +36,7 @@
 
 ## 影響
 
-- 所有跨層資料傳遞統一使用 DataSet，不混用 POCO DTO
+- 表單資料（主檔與明細記錄）以 DataSet 跨層傳遞，不為每個表單產生 POCO DTO。Business Object 方法的參數與結果則是一般 POCO（`{Action}Args` / `{Action}Result`，見 [ADR-007](adr-007-convention-based-type-resolution.zh-TW.md)），涉及表單資料時再攜帶 DataSet
 - FormSchema 驅動的 CRUD 操作依賴 DataRow.RowState 判斷操作類型
 - 自訂 MessagePack Formatter（位於 `Polhem.Api.Core/MessagePack/`）負責 DataSet 的高效序列化
 - `Polhem.Base/Data/` 提供 DataTable / DataSet / DataRow 擴展方法簡化操作

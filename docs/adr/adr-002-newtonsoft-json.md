@@ -49,9 +49,10 @@ Use `Newtonsoft.Json` as the only JSON serialization library.
 Both main obstacles have been removed:
 
 - **netstandard2.0 has been dropped**: every project migrated to the single target framework net10.0 on 2026-04-14
-  (see [ADR-006](adr-006-dual-target-framework.md)), and STJ is fully featured on net10.0.
+  (see [ADR-006](adr-006-dual-target-framework.md), which also notes the later exceptions), and STJ is fully featured
+  on net10.0.
 - **The DataSet security constraint is under control**: restricting DataSet column types to the `FieldDbType` enum
-  (13 fixed types, all basic types STJ supports natively) removes the security risk of arbitrary `System.Type`s.
+  (a fixed set of basic types, all supported natively by STJ) removes the security risk of arbitrary `System.Type`s.
 
 In addition, STJ is built into the framework (no third-party dependency), performs better and has continued official
 investment, so the time was right to migrate.
@@ -60,8 +61,9 @@ investment, so the time was right to migrate.
 
 Use `System.Text.Json` as the only JSON serialization library; bringing `Newtonsoft.Json` back in is forbidden.
 
-The encapsulation point is `Polhem.Base/Serialization/JsonCodec.cs`. By default it uses camelCase property names and
-indented output, and it registers the framework's custom converters:
+The encapsulation point is `Polhem.Base/Serialization/JsonCodec.cs`. It uses camelCase property names, writes compact
+output (only `SerializeToFile` indents, because a person reads the file), and registers the framework's custom
+converters:
 
 | Converter | Purpose |
 |-----------|---------|
@@ -95,15 +97,27 @@ indented output, and it registers the framework's custom converters:
 |------|--------|
 | `JsonSerializationBinder.cs` | Removed (the cross-runtime name mapping `mscorlib` ↔ `System.Private.CoreLib` is no longer needed with the single net10.0 target) |
 | `Newtonsoft.Json` NuGet dependency | Removed from every `*.csproj` |
-| Serialization rule in `code-style.md` | Updated to "JSON serialization uses System.Text.Json" |
+| Serialization rule in the repository's code style rules | Updated to "JSON serialization uses System.Text.Json" |
 
 ## Consequences
 
-- All JSON operations go through `JsonCodec`; `JsonSerializer` is no longer called directly, so the framework's
-  default options stay consistent
+- General-purpose JSON (JSON files, the JSON-RPC envelope) goes through `JsonCodec`, so the framework's default
+  options stay consistent. The API layer keeps its own shared options where the wire needs different settings:
+  `JsonPayloadSerializer` for a JSON payload body and `ApiInputConverter` for Plain request values (both in
+  `src/Polhem.Api.Core/`); custom converters call `JsonSerializer` inside themselves
 - The three serializations keep their separate roles: XML stores definitions, MessagePack carries internal payloads,
   JSON connects to external systems
 - All three front-end repositories are new, so there is no JSON format compatibility issue with existing clients;
   the migration kept no backward compatibility layer
 - With `JsonSerializationBinder` removed, the difference in type names across runtimes disappears naturally because
   the framework has a single net10.0 target
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-03: JSON also carries payload bodies.** The table under "Context" and the Consequences give JSON the role
+  of external integration only. Since [ADR-044](adr-044-payload-codec-negotiation.md), each request declares its body
+  codec, and JSON is available for `Encoded` / `Encrypted` payload bodies next to MessagePack (which remains the
+  codec when none is declared).

@@ -1,4 +1,4 @@
-<!-- source: adr/adr-008-polhem-db-namespace-layout.md blob: fa91daf35179206a72f16609f231245c57ec9059 -->
+<!-- source: adr/adr-008-polhem-db-namespace-layout.md blob: 0de4d6364f67b295adac98b8d3622f810e943d4f -->
 # ADR-008：Polhem.Db 命名空間佈局——語法層與模型層分離
 
 [English](adr-008-polhem-db-namespace-layout.md)
@@ -44,7 +44,7 @@
    - `Polhem.Db.Schema`：操作 `TableSchema` 模型（builder façade、comparer、diff、upgrade orchestrator、plan、stage 等）+ 讀取契約（`ITableSchemaProvider`）
    - `Polhem.Db.Providers`：僅留 `IDialectFactory`
 
-   依賴方向 `Schema → Ddl`（升級流程呼叫 DDL builder），單向。
+   `Schema` 的升級流程呼叫 DDL builder，而 DDL 契約反過來以 `Schema` 的變更模型（`TableSchemaDiff`、`Polhem.Db.Schema.Changes` 內的型別）為輸入，因此兩個命名空間互相參照；兩者都與 `Polhem.Db.Dml` 分離。
 
 2. **契約依職能歸類，實作依 provider 歸類**
 
@@ -75,7 +75,7 @@ Polhem.Db                       # 跨切面基礎設施：DbAccess、DbAccessFac
 Polhem.Db.Manager               # IDbConnectionManager、DbProviderRegistry、DbDialectRegistry
 Polhem.Db.CacheNotify           # 跨行程快取失效通知
 Polhem.Db.Storage               # DbDefineStorage（定義落 DB 的儲存實作）
-Polhem.Db.Ddl                   # DDL 字串產生契約（3 個 I*CommandBuilder）
+Polhem.Db.Ddl                   # DDL 字串產生契約（I*CommandBuilder 介面）
 Polhem.Db.Dml                   # DML 字串產生 + 構件（含 IFormCommandBuilder、TableSchemaCommandBuilder、JoinType）
 Polhem.Db.Schema                # TableSchema 模型 / 比對 / 升級流程 + ITableSchemaProvider
 Polhem.Db.Schema.Changes        # Add/Alter/Drop/Rename Field / Index 等變更模型
@@ -108,6 +108,13 @@ provider 註冊入口（`using Polhem.Db.Providers.Sqlite; DbDialectRegistry.Reg
    - 拒絕原因：`Schema/*` 並不產 SQL（只做模型比對與流程），改名為 `Ddl` 會把「模型層」與「語法層」兩個關注點混在一起，本質上不正確。
 3. **provider 子目錄內進一步分 DDL/DML 兩個子命名空間**（如 `Polhem.Db.Providers.Sqlite.Ddl`）。
    - 拒絕原因：對稱性差且每個 provider 子目錄檔案數不大（約 8–9 份），切割成本大於價值。違反「實作依 provider 歸類」的設計簡潔性。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：更多契約與 provider。** `Polhem.Db.Ddl` 另有 `IDescriptionSyncCommandBuilder`，且除上列之外還有 MySQL 與 Oracle 的 provider 命名空間（`Polhem.Db.Providers.MySql`、`Polhem.Db.Providers.Oracle`）。SQL Server 資料夾已不再有獨立的 Helper 與 TypeMapping 檔案，其方言規則位於 `SqlSchemaSyntax`。
+- **2026-09-27：`Polhem.Db.Providers` 的根目錄。** `IDialectFactory` 仍是其中唯一的公開型別，但根目錄另有各 provider 實作共用的 internal 輔助類別（如 `IndexStatementJoiner`、`SqlLiteralParser`）。
 
 ## 相關文件
 

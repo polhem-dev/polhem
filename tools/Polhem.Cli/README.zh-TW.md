@@ -21,11 +21,12 @@ dotnet tool install --global Polhem.Cli
 | `dotnet polhem defines split-menu` | 把仍帶著選單的 `ProgramSettings.xml` 拆成扁平的程式清單加上 `MenuSettings.xml` |
 | `dotnet polhem keys protect` | 產生一把新金鑰並以主金鑰加密後印出，即 `SystemSettings.xml` 的 `SecurityKeySettings` 所存的值（例如 `ApiEncryptionKey`） |
 
-各指令的選項由工具本身列出：
+各指令的選項由工具本身列出，以它為準：
 
 ```bash
+dotnet polhem --help
 dotnet polhem help defines
-dotnet polhem help keys
+dotnet polhem defines split-menu --help
 ```
 
 ## 授權

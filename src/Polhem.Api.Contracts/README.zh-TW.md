@@ -1,6 +1,6 @@
 # Polhem.Api.Contracts
 
-> API 層與商業邏輯層之間的契約介面庫，定義所有 Request/Response 介面。
+> API 層與商業邏輯層之間的契約介面庫，定義 Request/Response 介面。
 
 [English](README.md)
 
@@ -18,7 +18,9 @@
 ### 驗證契約
 
 - `ILoginRequest` / `ILoginResponse` -- RSA 金鑰交換登入流程（用戶端傳送 `ClientPublicKey`，伺服器回傳 `ApiEncryptionKey`）
-- `ICreateSessionRequest` / `ICreateSessionResponse` -- 驗證成功後建立 Session
+- `ICreateSessionRequest` / `ICreateSessionResponse` -- 為指定使用者 id 建立 Session，只接受行程內（本機）呼叫
+- `ILogoutRequest` / `ILogoutResponse` -- 結束呼叫端的 Session
+- `IEnterCompanyRequest` / `ILeaveCompanyRequest`（及其回應）-- Session 的公司範圍
 
 ### 健康檢查
 
@@ -37,10 +39,21 @@
 
 - `IGetCommonConfigurationRequest` / `IGetCommonConfigurationResponse` -- 擷取共用應用程式組態
 
-### 套件管理
+### 定義與組織
 
-- `PackageUpdateQuery` -- 更新檢查的查詢參數
-- `PackageUpdateInfo` -- 更新中繼資料（版本、大小、SHA-256、交付模式），以 MessagePack 序列化
+- `IGetFormSchemaRequest`、`IGetFormLayoutRequest`、`IGetLanguageRequest`（及其回應）-- 具型別的定義讀取
+- `IGetCustomizePluginSettingsRequest` / `ISaveCustomizePluginSettingsRequest`（及其回應）-- 租戶的外掛設定
+- `IGetDepartmentTreeRequest` / `IGetDepartmentTreeResponse` -- 公司的部門樹
+
+### API 金鑰與部署管理
+
+- `ICreateApiKeyRequest`、`IListApiKeysRequest`、`ISetApiKeyEnabledRequest`、`ISetApiKeyExpiryRequest`（及其回應）-- API 金鑰管理
+- `ISetDeploymentAdminRequest` / `ISetDeploymentAdminResponse` -- 授予或撤銷部署管理員旗標
+
+### 表單與稽核紀錄
+
+- `Form/` -- `IGetListRequest`、`IGetDataRequest`、`IGetNewDataRequest`、`ISaveRequest`、`IDeleteRequest`、`IGetLookupRequest` 及其回應
+- `AuditLog/` -- 異動、存取、登入與異常紀錄查詢，以及 `IAuditLogListResponse`、`IAuditLogAggregateResponse`、`RecordFieldChange`
 
 ## 主要公開 API
 
@@ -53,13 +66,12 @@
 | `ISaveDefineRequest` / `ISaveDefineResponse` | 定義儲存契約 |
 | `IExecFuncRequest` / `IExecFuncResponse` | 自訂函式執行契約 |
 | `IGetCommonConfigurationRequest` / `IGetCommonConfigurationResponse` | 組態擷取契約 |
-| `PackageUpdateQuery` | 更新檢查查詢參數 |
 
 ## 設計慣例
 
 - **軸分命名空間** -- 介面依 `System` / `Form` / `AuditLog` 子命名空間分組，對映 `Polhem.Business.*` 與 `Polhem.Api.Core.Messages.*` 兩層，使「合約介面、訊息實作、商業物件」三者共用同一軸。跨 BO 的泛用 `IExecFunc*` 派發契約保留在根命名空間 `Polhem.Api.Contracts`（鏡像 `Polhem.Api.Core.Messages` 根層的 `ExecFunc*` 實作）。
 - **純介面定義** -- 每個 API 操作以 `IXxxRequest` / `IXxxResponse` 配對定義，本專案不含任何實作邏輯。
-- **不帶序列化標註** -- 資料類別如 `PackageUpdateInfo` 是帶 public 可讀寫屬性的普通型別。它們與 wire 的綁定以手寫 formatter 的形式住在 `Polhem.Api.Core`，因此本套件不相依任何傳輸格式（[ADR-036](../../docs/adr/adr-036-wire-serialization-externalized.zh-TW.md)）。
+- **不帶序列化標註** -- 資料類別如 `RecordFieldChange` 是帶 public 可讀寫屬性的普通型別。它們與 wire 的綁定以手寫 formatter 的形式住在 `Polhem.Api.Core`，因此本套件不相依任何傳輸格式（[ADR-036](../../docs/adr/adr-036-wire-serialization-externalized.zh-TW.md)）。
 - **RSA 安全機制** -- 登入契約包含 `ClientPublicKey`（用戶端產生）與 `ApiEncryptionKey`（伺服器產生），用於安全金鑰交換。
 - **啟用可為 Null 參考型別**（`<Nullable>enable</Nullable>`）。
 
@@ -67,14 +79,14 @@
 
 它們不是裝飾性的標記——有兩個機制在執行期與編譯期依賴它們。
 
-**1. 讓一個靜默的反射複製保證完整。** 每一次 API 呼叫都經 `ApiInputConverter.Convert` 雙向轉換，
+**1. 讓一個靜默的反射複製保證完整。** 每一次 API 呼叫都經內部的 `ApiInputConverter.Convert` 雙向轉換，
 而它是**以屬性名稱比對**來複製的：入站由 `JsonRpcExecutor` 呼叫，把 wire 訊息轉成 BO 參數；
 出站由 `ApiOutputConverter` 呼叫，把 BO 結果轉成 wire 回應。名稱對不上就靜默跳過——不擲例外、
 不警告，呼叫看起來成功但該欄位是空的。正因為 `LoginRequest` 與 `LoginArgs` 都實作
 `ILoginRequest`，編譯器才會逼兩邊帶同一組成員，複製也就不可能只複製一半。
 
 **2. 作為 wire 不變式的判別依據。** `DateTimeWireGuard` 以回應契約
-（`IGetListResponse`、`ISaveResponse`、`ILogListResponse` 等）做 pattern matching，
+（`IGetListResponse`、`ISaveResponse`、`IAuditLogListResponse` 等）做 pattern matching，
 辨識出帶有 `DataSet` 或裸 `DateTime` 的 payload，並對其強制 ADR-032 的 wire 不變式。
 
 配對的兩側都由測試把關，而非靠人工 review：`ApiContractPairingTests`（位於
@@ -94,16 +106,6 @@
 Polhem.Api.Contracts/
   IExecFuncRequest.cs / IExecFuncResponse.cs          # 根層 — 跨 BO 泛用派發
   System/                                             # namespace Polhem.Api.Contracts.System
-    ILoginRequest.cs / ILoginResponse.cs
-    ICreateSessionRequest.cs / ICreateSessionResponse.cs
-    IPingRequest.cs / IPingResponse.cs
-    IEnterCompany* / ILeaveCompany* / IGetLanguage*
-    IGetDefine* / ISaveDefine* / IGetFormSchema* / IGetFormLayout* / IGetDepartmentTreeResponse
-    IGetCommonConfiguration*
   Form/                                               # namespace Polhem.Api.Contracts.Form
-    IGetList* / IGetData* / IGetNewData* / ISave* / IDelete* / IGetLookup*
   AuditLog/                                           # namespace Polhem.Api.Contracts.AuditLog
-    IGetChangeLog* / IGetChangeDetail* / IGetAccessLog* / IGetLoginLog*
-    IGetApiAnomaly* / IGetDbAnomaly* / IGetTopApiMethodsRequest
-    ILogListResponse.cs / ILogAggregateResponse.cs / RecordFieldChange.cs
 ```

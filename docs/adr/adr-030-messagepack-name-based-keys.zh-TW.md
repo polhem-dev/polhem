@@ -1,4 +1,4 @@
-<!-- source: adr/adr-030-messagepack-name-based-keys.md blob: f0dc433568b7ea028c8024cc27c4fa673727d341 -->
+<!-- source: adr/adr-030-messagepack-name-based-keys.md blob: 90fc591aaf5c50550010d68eb5a16bcb5c8660fe -->
 # ADR-030：MessagePack 合約改採 property-name key（keyAsPropertyName）
 
 [English](adr-030-messagepack-name-based-keys.md)
@@ -135,3 +135,12 @@ ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對�
 `BEE4001`–`BEE4004` 發佈；此處的 `POLHEM` 拼法來自更名。Polhem 從未以這些編號發佈規則：它的 analyzer 發佈紀錄從
 1.0.0 開始，`POLHEM4001`–`POLHEM4004` 為保留編號、永不重用，因此從 Bee.NET 帶過來的抑制設定不會讓新規則失聲。保留編號列於
 [Analyzer 規則](../zh-TW/analyzer-rules.md)。
+
+- **2026-09-27：MessagePack 上的 `DataTable` 列改為依位置排列。** 〈補做：SerializableData\* 收斂〉的 `SerializableData*`
+  型別已移除。`DataTableFormatter` 與 `DataSetFormatter`（`src/Polhem.Api.Core/MessagePack/`）先寫一次資料表的欄位清單，
+  再把每一列寫成依欄位順序排列的陣列，不再每列一個以名稱為鍵的 map；欄名只在欄位清單中傳一次。JSON body codec 與
+  `Plain` 維持原本的形狀。該補做段落所述的每列鍵名成本已不存在。
+- **2026-09-27：缺席成員的意義。** 採名稱為鍵後，成員可能不出現在 wire 上。JSON body codec 與 `Plain` 會省略等於 CLR
+  預設值的成員，MessagePack 則寫出每個成員；因此初始值不同於 CLR 預設值的 wire 成員一律寫出
+  （`[JsonIgnore(Condition = JsonIgnoreCondition.Never)]`），缺席的成員在每種 codec 上都代表 CLR 預設值。
+  此規則由 `WireDefaultOmissionTests`（`tests/Polhem.Api.Core.UnitTests`）強制。

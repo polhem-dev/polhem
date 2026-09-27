@@ -1,4 +1,4 @@
-<!-- source: adr/adr-027-audit-trail.md blob: 1e1fafd31a6cc24dffca912659d0098188e9d20a -->
+<!-- source: adr/adr-027-audit-trail.md blob: a8651868713adae2edf40ac7381ce6b30e6d09e7 -->
 # ADR-027：資料軌跡 / 稽核日誌（六軸 `st_log_*` 設計）
 
 [English](adr-027-audit-trail.md)
@@ -53,10 +53,14 @@
 
 - **正面**：可回溯的業務資料軌跡（登入 / 異動含新舊值與 delete before-image / 檢視 / 異常）；一致的 opt-in、best-effort、去正規化自足、安全消毒設計；量體受控（檢視敏感度驅動、異常只記問題）。
 - **取捨**：異動記錄以「簡潔 + 可還原顯示」換取「欄位級 SQL 查詢力」（有需要再開選配 EAV）；best-effort 有極小漏失窗口（有需要再升 transactional outbox，entry / schema 不變）。
-- **相關**：系統表登記見 [framework-reserved-names §1.3](../zh-TW/framework-reserved-names.md)；`DbScope.Log` 路由見 [ADR-010](adr-010-logical-database-category.zh-TW.md)；DataForm Save 管線見 [ADR-024](adr-024-dataform-save-dataadapter.zh-TW.md)。
+- **相關**：系統表登記見 [framework-reserved-names §1.3](../zh-TW/framework-reserved-names.md)；`DbScope.Log` 路由見 [ADR-010](adr-010-logical-database-category.zh-TW.md)；DataForm Save 管線見 [ADR-024](adr-024-dataform-save-dataadapter.zh-TW.md)；事後補記的稽核軌跡分類軸與寫入策略見 [ADR-040](adr-040-audit-trail-taxonomy.zh-TW.md)。
 - **待辦**：~~per-form 稽核規則~~（**已實作，見 [ADR-041](adr-041-per-form-audit-rule.zh-TW.md)**）；`ExecuteBatch` / `UpdateDataTables` 的 DB 異常偵測（目前僅 `Execute` 主路徑）；`st_cache_notify` 既有 SQL Server 升級 idempotency bug（另案）。
 
-## 後記（2026-08-07）：診斷日誌的型別已變
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+### 2026-08-07：診斷日誌的型別已變
 
 上方〈背景〉表與選項 4 提到的 `ILogWriter` / `LogEntry` **已於 Phase 5 隨 `BackendInfo` 的
 Logging 死碼一併移除**（[`5037c128`](https://github.com/jeff377/bee-library/commit/5037c128) / [`32f84941`](https://github.com/jeff377/bee-library/commit/32f84941)），本 ADR 的決策不受影響——那兩個型別在
@@ -64,3 +68,18 @@ Logging 死碼一併移除**（[`5037c128`](https://github.com/jeff377/bee-libra
 
 現行的診斷 / 追蹤面是 `Tracer` / `TraceContext` / `ITraceWriter`（`src/Polhem.Base/Tracing/`）
 加上宿主自己的 `ILogger`。上文保留原文字是為了保存決策當下的盤點，不是現況描述。
+
+### 後續變化
+
+- **2026-08-24：寫入介面一分為二。** 異常的產生端改走 `IAnomalyLogWriter`，`IAuditLogWriter` 承載登入、異動與檢視記錄；
+  兩者仍由同一條寫入管線實作。選項 7 的延遲解析工廠現為 `Func<IAnomalyLogWriter?>`（`src/Polhem.Db/DbAccessFactory.cs`）。
+  理由見 [ADR-040](adr-040-audit-trail-taxonomy.zh-TW.md) § 7。
+- **2026-09-27：追蹤子系統已移除。** 2026-08-07 小節列為現行診斷面的 `Tracer`、`TraceContext`、`ITraceWriter` 與
+  `src/Polhem.Base/Tracing/` 已不存在。診斷改走宿主的 `ILogger`，例如 `JsonRpcExecutor.Logger` 記下遠端呼叫端只看到
+  通用訊息的那次失敗的真正訊息。
+- **2026-09-27：日誌列存 token 指紋。** 共通欄位存的是 `token_fingerprint`（`AuditEntry.TokenFingerprint`，由
+  `AccessTokenHasher.ComputeFingerprint` 計算）而非 access token，日誌列仍可對應到所屬 session，卻不持有可用的憑證
+  （`src/Polhem.Definition/Logging/AuditEntry.cs`）。
+- **2026-09-27：寫入管線。** 寫入 repository 把一個批次以單一交易的 `DbBatchSpec` 寫入，不再每筆各自 commit
+  （`src/Polhem.Repository/AuditLog/AuditLogWriteRepository.cs`）。log 資料庫與備援檔案背後的最終寫入端是公開的
+  `IAuditLogSink`（`src/Polhem.Hosting/Audit/IAuditLogSink.cs`），部署端可替換它，把記錄送往他處。

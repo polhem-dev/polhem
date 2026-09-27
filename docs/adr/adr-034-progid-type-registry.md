@@ -74,7 +74,7 @@ registry.
 > **Revision (2026-08-16): the failure strategies of the two axes have been converged; both always throw directly.**
 > The table above, "ordinary progId → silent fallback", and the next section, "`Repository` is the opposite of
 > `BusinessObject`", are **the decision at the time; the original text is kept as a record**. For the current behavior,
-> see "Revision history" at the end of this ADR.
+> see "Implementation evolution" at the end of this ADR.
 
 ### The failure strategy of `Repository` is the opposite of `BusinessObject`
 
@@ -185,7 +185,7 @@ private IOrderRepository Repository() => CreateFormRepository<IOrderRepository>(
 For an example, see `apps/Polhem.Northwind/Polhem.Northwind.Server/Repositories/IOrderRepository.cs` and
 `OrderRepository.cs` in the same directory.
 
-## Revision history
+## Implementation evolution
 
 ### 2026-08-16: The failure strategies of the two axes converge (always throw directly)
 
@@ -218,6 +218,20 @@ As a consequence, a resolution failure **does not enter the type cache** (when t
 nothing is written), so every call throws, and it does not silently pass from the second call on.
 The `ILogger` constructor overload of `ProgramSettingsBoTypeResolver` is kept (existing callers still compile and
 bind), but it no longer has a purpose: with the fallback gone, that degrade log has nothing to report.
+
+### 2026-09-27: the resolver's cache and the progId casing
+
+- **The `ILogger` constructor overload is gone.** The paragraph above says it was kept for existing callers; it was
+  removed with the other ignored constructor parameters before 1.0, and `ProgramSettingsBoTypeResolver` now has only
+  the `(IDefineAccess)` and `(IDefineAccess, ICustomizeDefineReader?)` constructors.
+- **The type cache is no longer a plain `GetOrAdd`.** A resolution is cached only for a progId the registry names, so
+  names that arrive from the wire cannot grow the cache, and each entry remembers the `ProgramSettings` instances it
+  was resolved from and is used only while those are still the current instances; a reload makes every entry resolve
+  again. Failures are still never cached. The plugin axis (`src/Polhem.Business/Form/PluginSettingsResolver.cs`)
+  follows the same rule about the settings instances.
+- **The business object receives the progId in its declared casing**: the `ProgramItem.ProgId` of the registry entry,
+  or the reserved name's own spelling, whatever casing the caller used (`src/Polhem.Business/BusinessObjectFactory.cs`).
+  Lookups keyed by the progId inside the business object therefore see one spelling per program.
 
 ## Related
 

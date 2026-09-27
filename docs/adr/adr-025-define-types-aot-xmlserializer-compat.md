@@ -96,4 +96,27 @@ handles collections as usual, and `[XmlArray]` / polymorphism are preserved):
      owner constructor).
   3. Serialized **item types must also have a public parameterless constructor**.
   Compatibility with the reflection XmlSerializer is a hard requirement, so that future new types do not hit the same
-  pitfall on AOT targets.
+  pitfall on AOT targets. The analyzers and the test that enforce these rules today are listed under
+  "Implementation evolution" below.
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-08-09: the `MessagePack*CollectionBase<T>` bases named in D1 no longer exist.** They were merged back
+  into the `Polhem.Base.Collections` bases by [ADR-036](adr-036-wire-serialization-externalized.md);
+  D1 applies to those.
+- **2026-09-27: what enforces the follow-up rules.** The analyzer POLHEM4005 (warning) reports a framework collection
+  that declares an additional public `Add` overload, and POLHEM4006 (error) reports a framework collection or
+  collection item without a public parameterless constructor (`src/Polhem.Analyzers/DiagnosticIds.cs`). Abstract
+  types are not constructed by a deserializer and are exempt; `KeyCollectionBase<T>` and `CollectionBase<T>` are now
+  both abstract with protected constructors, and the rules apply to their concrete subclasses.
+  `XmlSerializerShapeGateTests` (`tests/Polhem.Definition.UnitTests`) walks every type the definition files reach and
+  checks the same shape rules, plus one more that the reflection-only serializer imposes: a collection property mapped
+  to repeated `[XmlElement]` must have a public setter.
+- **2026-09-27: empty collections are omitted by `XSpecified` properties.** The per-object serialize state that used to
+  decide whether an empty collection is written was removed, because serializing a cached definition mutated it.
+  Empty collections are now omitted by get-only `{Property}Specified` properties. `ShouldSerialize{Property}()` was
+  not used for this, because the reflection-only XmlSerializer on iOS throws when that method is declared on a base
+  class.

@@ -98,6 +98,10 @@ Line B layer 2 (scope)        filters / guards rows by the scope of (model, acti
   queried → once the master passes, the details go through with the whole record, so there is no half-way "master
   passes, one detail is blocked".
 
+  > ⚠️ The last two items describe the design at the time of the decision. The current save path also checks the
+  > values new and changed master rows leave behind, and does not let detail rows pass on the master check alone; the
+  > checks that do this are named under "Implementation evolution" at the end.
+
 ## Consequences and trade-offs
 
 - ✅ **Zero DB for permission checks**: identity snapshot + per-company caches (roles / permissions / department
@@ -125,6 +129,36 @@ Line B layer 2 (scope)        filters / guards rows by the scope of (model, acti
   `Polhem.UI.Core.Permissions.ElementCapabilityResolver`. The frontend is **pure UX, not a data boundary** (the
   backend does not mask sensitive column values). See Part 2 of the
   [user guide](../en/permission-authorization.md) for details.
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing
+with the current code:
+
+- **2026-09-27: Detail rows are checked on their own.** "Once the master passes, the details go through" no longer
+  describes the save path. `EnforceWriteScope` and `EnforceDetailOwnership`
+  (`src/Polhem.Business/Form/FormBusinessObject.WriteScope.cs`) refuse a payload that carries detail rows but no
+  master table; require every written detail row's `sys_master_rowid` to name a master row of the payload; require
+  every modified or deleted detail row to already belong, in the database, to an existing master row of the payload;
+  check master scope on the Original rowid that the UPDATE and DELETE bind; and refuse a row whose rowid changes.
+  The regression tests are in `FormBusinessObjectWriteScopeTests`
+  (`tests/Polhem.Business.UnitTests/Form/FormBusinessObjectWriteScopeTests.cs`).
+- **2026-09-27: New values are scope-checked.** "Create does not apply scope" no longer holds: `EnforceNewValueScope`
+  requires the values an Added or Modified master row leaves behind to be inside the caller's Create or Update scope,
+  evaluated after the `BeforeSave` step, so a user limited to their own records cannot create a record owned by
+  someone else or move one out of their reach.
+- **2026-09-27: Read paths are narrowed.** `GetList` accepts only filter and sort fields that the form's table
+  declares, and refuses `ProtectedFields` columns. `GetLookup`, which is not gated by the Read action, applies the
+  Read record scope; a business object opts out by overriding `LookupAppliesRecordScope`
+  (`src/Polhem.Business/Form/FormBusinessObject.Read.cs`).
+- **2026-09-27: Unguarded forms are reported at startup.** The host logs a warning naming the registered forms whose
+  FormSchema declares no `PermissionModelId` (`src/Polhem.Hosting/Registry/UnguardedFormWarningService.cs`).
+- **2026-09-27: The session snapshot is one immutable object.** The roles and the `UserRowId` / `EmployeeRowId` /
+  `DeptRowId` identities that `EnterCompany` snapshots now form one `SessionCompanyScope`, swapped in a single write;
+  see [ADR-012](adr-012-session-company-context.md) "Implementation evolution".
+- **2026-09-27: The capability resolver moved.** `ElementCapabilityResolver` is now
+  `Polhem.Api.Client.Permissions.ElementCapabilityResolver` (`src/Polhem.Api.Client/Permissions/`), so both UI heads
+  can use it; the frontend capability entry above names its location at the time.
 
 ## References
 

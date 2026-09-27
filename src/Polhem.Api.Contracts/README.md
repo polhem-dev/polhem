@@ -1,6 +1,6 @@
 # Polhem.Api.Contracts
 
-> Contract interface library between the API layer and business logic layer, defining all Request/Response interfaces.
+> Contract interface library between the API layer and business logic layer, defining the Request/Response interfaces.
 
 [繁體中文](README.zh-TW.md)
 
@@ -18,7 +18,9 @@
 ### Authentication Contracts
 
 - `ILoginRequest` / `ILoginResponse` -- RSA key-exchange login flow (client sends `ClientPublicKey`, server returns `ApiEncryptionKey`)
-- `ICreateSessionRequest` / `ICreateSessionResponse` -- session creation after successful authentication
+- `ICreateSessionRequest` / `ICreateSessionResponse` -- session creation for a user id, accepted from in-process (local) calls only
+- `ILogoutRequest` / `ILogoutResponse` -- ends the caller's session
+- `IEnterCompanyRequest` / `ILeaveCompanyRequest` (and their responses) -- company scope of the session
 
 ### Health Check
 
@@ -37,10 +39,21 @@
 
 - `IGetCommonConfigurationRequest` / `IGetCommonConfigurationResponse` -- retrieve shared application configuration
 
-### Package Management
+### Definitions and Organization
 
-- `PackageUpdateQuery` -- query parameters for update check
-- `PackageUpdateInfo` -- update metadata (version, size, SHA-256, delivery mode), serialized with MessagePack
+- `IGetFormSchemaRequest`, `IGetFormLayoutRequest`, `IGetLanguageRequest` (and their responses) -- typed definition reads
+- `IGetCustomizePluginSettingsRequest` / `ISaveCustomizePluginSettingsRequest` (and their responses) -- a tenant's plugin settings
+- `IGetDepartmentTreeRequest` / `IGetDepartmentTreeResponse` -- the company's department tree
+
+### API Keys and Deployment Administration
+
+- `ICreateApiKeyRequest`, `IListApiKeysRequest`, `ISetApiKeyEnabledRequest`, `ISetApiKeyExpiryRequest` (and their responses) -- API key management
+- `ISetDeploymentAdminRequest` / `ISetDeploymentAdminResponse` -- grants or revokes the deployment administrator flag
+
+### Forms and Audit Logs
+
+- `Form/` -- `IGetListRequest`, `IGetDataRequest`, `IGetNewDataRequest`, `ISaveRequest`, `IDeleteRequest`, `IGetLookupRequest` and their responses
+- `AuditLog/` -- the change, access, login and anomaly log queries, with `IAuditLogListResponse`, `IAuditLogAggregateResponse` and `RecordFieldChange`
 
 ## Key Public APIs
 
@@ -53,13 +66,12 @@
 | `ISaveDefineRequest` / `ISaveDefineResponse` | Definition persistence contract |
 | `IExecFuncRequest` / `IExecFuncResponse` | Custom function execution contract |
 | `IGetCommonConfigurationRequest` / `IGetCommonConfigurationResponse` | Configuration retrieval contract |
-| `PackageUpdateQuery` | Update check query parameters |
 
 ## Design Conventions
 
 - **Axis-based namespaces** -- interfaces are grouped into `System` / `Form` / `AuditLog` sub-namespaces that mirror the `Polhem.Business.*` and `Polhem.Api.Core.Messages.*` layers, so a contract, its message implementation, and its business object share the same axis. The generic cross-BO `IExecFunc*` dispatch contract stays at the root `Polhem.Api.Contracts` (mirroring the root-level `ExecFunc*` implementation in `Polhem.Api.Core.Messages`).
 - **Pure interface definitions** -- each API operation is defined as an `IXxxRequest` / `IXxxResponse` pair; no implementation logic in this project.
-- **No serialization attributes** -- data classes such as `PackageUpdateInfo` are plain types with public read/write properties. Their binding to the wire lives in `Polhem.Api.Core` as hand-written formatters, so this package takes no dependency on a transport format ([ADR-036](../../docs/adr/adr-036-wire-serialization-externalized.md)).
+- **No serialization attributes** -- data classes such as `RecordFieldChange` are plain types with public read/write properties. Their binding to the wire lives in `Polhem.Api.Core` as hand-written formatters, so this package takes no dependency on a transport format ([ADR-036](../../docs/adr/adr-036-wire-serialization-externalized.md)).
 - **RSA-based security** -- the login contract includes `ClientPublicKey` (client-generated) and `ApiEncryptionKey` (server-generated) for secure key exchange.
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
 
@@ -68,7 +80,7 @@
 They are not decorative markers. Two mechanisms depend on them at runtime and at compile time.
 
 **1. They make a silent reflective copy total.** Every API call converts in both directions through
-`ApiInputConverter.Convert`, which copies public properties **by matching name** — inbound from the
+the internal `ApiInputConverter.Convert`, which copies public properties **by matching name** — inbound from the
 wire message to the BO argument (called by `JsonRpcExecutor`), outbound from the BO result to the
 wire response (called by `ApiOutputConverter`). A name that does not match is skipped silently: no
 exception, no warning, and the call appears to succeed with that field left empty. Because both
@@ -76,7 +88,7 @@ exception, no warning, and the call appears to succeed with that field left empt
 the same members, so the copy cannot be partial.
 
 **2. They are the discriminator for wire invariants.** `DateTimeWireGuard` pattern-matches on the
-response contracts (`IGetListResponse`, `ISaveResponse`, `ILogListResponse`, and others) to find the
+response contracts (`IGetListResponse`, `ISaveResponse`, `IAuditLogListResponse`, and others) to find the
 payloads that carry a `DataSet` or a loose `DateTime`, and enforces the ADR-032 wire invariants on
 them.
 
@@ -99,16 +111,6 @@ Interfaces are organized into axis sub-folders (folder = sub-namespace); the cro
 Polhem.Api.Contracts/
   IExecFuncRequest.cs / IExecFuncResponse.cs          # root — cross-BO generic dispatch
   System/                                             # namespace Polhem.Api.Contracts.System
-    ILoginRequest.cs / ILoginResponse.cs
-    ICreateSessionRequest.cs / ICreateSessionResponse.cs
-    IPingRequest.cs / IPingResponse.cs
-    IEnterCompany* / ILeaveCompany* / IGetLanguage*
-    IGetDefine* / ISaveDefine* / IGetFormSchema* / IGetFormLayout* / IGetDepartmentTreeResponse
-    IGetCommonConfiguration*
   Form/                                               # namespace Polhem.Api.Contracts.Form
-    IGetList* / IGetData* / IGetNewData* / ISave* / IDelete* / IGetLookup*
   AuditLog/                                           # namespace Polhem.Api.Contracts.AuditLog
-    IGetChangeLog* / IGetChangeDetail* / IGetAccessLog* / IGetLoginLog*
-    IGetApiAnomaly* / IGetDbAnomaly* / IGetTopApiMethodsRequest
-    ILogListResponse.cs / ILogAggregateResponse.cs / RecordFieldChange.cs
 ```

@@ -55,7 +55,9 @@ implementations by provider**", with the following namespace layout:
      plan, stage and so on) + the reading contract (`ITableSchemaProvider`)
    - `Polhem.Db.Providers`: keeps only `IDialectFactory`
 
-   The dependency direction is `Schema → Ddl` (the upgrade flow calls the DDL builders), one way only.
+   The upgrade flow in `Schema` calls the DDL builders, and the DDL contracts in turn take the change models of
+   `Schema` (`TableSchemaDiff`, the types in `Polhem.Db.Schema.Changes`) as input, so the two namespaces reference each
+   other; both stay separate from `Polhem.Db.Dml`.
 
 2. **Group contracts by function, implementations by provider**
 
@@ -89,7 +91,7 @@ Polhem.Db                       # Cross-cutting infrastructure: DbAccess, DbAcce
 Polhem.Db.Manager               # IDbConnectionManager, DbProviderRegistry, DbDialectRegistry
 Polhem.Db.CacheNotify           # Cross-process cache invalidation notification
 Polhem.Db.Storage               # DbDefineStorage (the storage implementation that puts definitions in the DB)
-Polhem.Db.Ddl                   # DDL string generation contracts (3 I*CommandBuilder)
+Polhem.Db.Ddl                   # DDL string generation contracts (the I*CommandBuilder interfaces)
 Polhem.Db.Dml                   # DML string generation + building blocks (including IFormCommandBuilder, TableSchemaCommandBuilder, JoinType)
 Polhem.Db.Schema                # TableSchema model / comparison / upgrade flow + ITableSchemaProvider
 Polhem.Db.Schema.Changes        # Change models such as Add/Alter/Drop/Rename Field / Index
@@ -128,6 +130,19 @@ No separate version bump (stays on `4.0.x`); listing the mapping table in the re
    `Polhem.Db.Providers.Sqlite.Ddl`).
    - Reason for rejection: poor symmetry, and each provider subfolder has few files (about 8-9), so a split costs more
      than it is worth. It violates the simplicity of "implementations are grouped by provider".
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: more contracts and providers.** `Polhem.Db.Ddl` also holds `IDescriptionSyncCommandBuilder`, and
+  there are provider namespaces for MySQL and Oracle (`Polhem.Db.Providers.MySql`, `Polhem.Db.Providers.Oracle`)
+  next to the ones listed above. The SQL Server folder no longer has separate Helper and TypeMapping files; its
+  dialect rules live in `SqlSchemaSyntax`.
+- **2026-09-27: the root of `Polhem.Db.Providers`.** `IDialectFactory` is still its only public type, but it also
+  holds internal helpers shared by the provider implementations (such as `IndexStatementJoiner` and
+  `SqlLiteralParser`).
 
 ## Related documents
 
