@@ -10,9 +10,10 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// <summary>
     /// Presents a panel as a modal overlay on the current top level's
     /// <see cref="OverlayLayer"/>. This is the single-view fallback for hosts that cannot
-    /// open a native <see cref="Window"/> — notably the browser (WASM) head, where a
-    /// <c>Window.ShowDialog</c> throws. Desktop heads keep using the window path; only the
-    /// browser branch of <see cref="LookupDialog"/> / <see cref="RowEditDialog"/> calls this.
+    /// open a native <see cref="Window"/>: the browser (WASM), iOS and Android heads, where
+    /// creating a window throws. <see cref="LookupDialog"/> and <see cref="RowEditDialog"/> call
+    /// this whenever <see cref="DialogHosting.GetWindowOwner"/> finds no owning window; the desktop
+    /// classic-window lifetime keeps the window path.
     /// </summary>
     internal static class OverlayDialogHost
     {

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Reflection;
 
 namespace Polhem.UI.Core.UnitTests
 {
@@ -52,6 +53,18 @@ namespace Polhem.UI.Core.UnitTests
             var value = VersionInfo.FileVersion;
 
             Assert.NotNull(value);
+        }
+
+        [Fact]
+        [DisplayName("VersionInfo.FileVersion comes from the entry assembly's AssemblyFileVersionAttribute, not from the file on disk")]
+        public void FileVersion_Getter_ReadsFileVersionAttribute()
+        {
+            // The file-based lookup it replaces threw `ArgumentException` wherever `Assembly.Location` is empty
+            // (Android assembly stores, browser WebAssembly, single-file publishes).
+            var entry = Assembly.GetEntryAssembly() ?? typeof(VersionInfo).Assembly;
+            var expected = entry.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "Unknown";
+
+            Assert.Equal(expected, VersionInfo.FileVersion);
         }
 
         [Fact]

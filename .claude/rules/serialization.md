@@ -68,14 +68,24 @@ misjudgements are in `src/Polhem.Api.Core/CLAUDE.md`; a missed registration is c
 > it.** How it was disproved, and the record of the time it broke the entire iOS wire, are kept in
 > `src/Polhem.Api.Core/CLAUDE.md`.
 
-## AOT: DynamicExpresso needs no special handling (this rule is unchanged)
+## DynamicExpresso: AOT needs nothing, trimming needs the descriptor
 
-DynamicExpresso's `Expression.Compile()` automatically falls back to the **interpreter** when
-`IsDynamicCodeSupported=false`.
+The two halves have opposite answers, and reading "needs nothing" as covering both is how the trim half was missed.
 
-**Mobile does not need to disable live computation for AOT.** The degrade mechanism of
-`FormLiveComputation.IsDegraded` protects against "syntax/identifier errors in customer-written expressions" and is
-**unrelated to AOT**.
+- **Dynamic code (AOT): nothing to do.** DynamicExpresso's `Expression.Compile()` falls back to the **interpreter**
+  when `IsDynamicCodeSupported=false`. Mobile does not need to disable live computation for AOT.
+- **Trimming: `src/Polhem.Expressions/ILLink.Descriptors.xml` is required.** DynamicExpresso finds `Math.*`,
+  `string.*`, `DateOnly.*` and every other member an expression names by reflection, so the default mobile trim
+  (`TrimMode=partial`) removes the ones nothing else references. Measured on 2026-09-26 without the descriptor:
+  `Math.Round`, `Math.Abs`, `ToUpper()`, `Today().AddDays(1)`, `Math.PI` and others fail with "No applicable method" /
+  "No property or field". The descriptor ships inside the package and roots the interpreter's exposed types;
+  `TrimmerDescriptorGateTests` (tests/Polhem.Expressions.UnitTests) fails when the exposed types and the descriptor
+  disagree. **When you reference a new type in the interpreter or add a helper function with a new return type,
+  add it to the descriptor.**
+
+The degrade mechanism of `FormLiveComputation.IsDegraded` protects against syntax and identifier errors in
+customer-written expressions. A trimmed-away member looks exactly like one of those errors, which is why the trim
+failure was silent: the form just stopped computing live.
 
 ## Two hard requirements for the expression variable table
 

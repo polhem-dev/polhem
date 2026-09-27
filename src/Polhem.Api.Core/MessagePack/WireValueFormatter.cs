@@ -1,7 +1,10 @@
 using System.Data;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 using MessagePack;
 using MessagePack.Formatters;
 using Polhem.Api.Core.Wire;
+using Polhem.Definition.Collections;
 
 namespace Polhem.Api.Core.MessagePack
 {
@@ -29,11 +32,20 @@ namespace Polhem.Api.Core.MessagePack
     /// class-initialisation time, so the whole path stays generic.
     /// <para>
     /// The discriminator is an <c>int</c> for the known set and a <c>string</c> type name for
-    /// anything else. The string branch is the escape hatch for the application-configured
-    /// namespaces (<see cref="Polhem.Base.SysInfo.AllowedTypeNamespaces"/>): it still goes through the non-generic
-    /// overload and therefore still only works where dynamic code does. That is a deliberate
-    /// trade — it keeps the existing extensibility on the server without holding the framework's
-    /// own value types hostage to it.
+    /// anything else. Behind the string branch sit three kinds of payload. Enums are written as
+    /// their underlying integer and read back with <see cref="Enum.ToObject(Type, long)"/>, and the
+    /// types in the named table (<see cref="ParameterCollection"/>) have closed generic delegates
+    /// like the known set; neither needs dynamic code. Everything else is the escape hatch for the
+    /// application-configured namespaces (<see cref="Polhem.Base.SysInfo.AllowedTypeNamespaces"/>):
+    /// it goes through the non-generic overload, so it only works where dynamic code does, and
+    /// elsewhere fails with a <see cref="NotSupportedException"/> that names the type. That is a
+    /// deliberate trade — it keeps the existing extensibility on the server without holding the
+    /// framework's own value types hostage to it.
+    /// </para>
+    /// <para>
+    /// The enum and named-table payloads are the bytes the non-generic overload writes for those
+    /// types, so peers that still take the escape hatch for them read them unchanged.
+    /// <c>WireValueFormatterNamedTypeTests</c> pins both the golden bytes and the equivalence.
     /// </para>
     /// <para>
     /// NOTE: This envelope replaced the ext-type-100 framing <c>TypelessFormatter</c> emits, which
@@ -52,6 +64,7 @@ namespace Polhem.Api.Core.MessagePack
         private static readonly Dictionary<Type, int> s_codes = [];
         private static readonly WireValueWriter?[] s_writers = new WireValueWriter?[WireValueCode.Count];
         private static readonly WireValueReader?[] s_readers = new WireValueReader?[WireValueCode.Count];
+        private static readonly Dictionary<Type, (WireValueWriter Write, WireValueReader Read)> s_namedTypes = [];
 
         private WireValueFormatter() { }
 
@@ -109,6 +122,9 @@ namespace Polhem.Api.Core.MessagePack
                         array[i] = Instance.Deserialize(ref reader, options);
                     return array;
                 });
+
+            // Types that travel under their type name, with a formatter the resolver already registers.
+            AddNamed<ParameterCollection>();
         }
 
         /// <summary>
@@ -125,6 +141,20 @@ namespace Polhem.Api.Core.MessagePack
                     => MessagePackSerializer.Serialize(ref writer, cast(value), options),
                 (ref MessagePackReader reader, MessagePackSerializerOptions options)
                     => MessagePackSerializer.Deserialize<TValue>(ref reader, options));
+        }
+
+        /// <summary>
+        /// Registers a type for the named branch: it keeps the type-name discriminator, but its payload
+        /// goes through a closed generic serializer instead of the non-generic overload.
+        /// </summary>
+        private static void AddNamed<TValue>()
+        {
+            s_namedTypes.Add(
+                typeof(TValue),
+                ((object value, ref MessagePackWriter writer, MessagePackSerializerOptions options)
+                    => MessagePackSerializer.Serialize(ref writer, (TValue)value, options),
+                 (ref MessagePackReader reader, MessagePackSerializerOptions options)
+                    => MessagePackSerializer.Deserialize<TValue>(ref reader, options)));
         }
 
         /// <summary>
@@ -170,8 +200,75 @@ namespace Polhem.Api.Core.MessagePack
             }
 
             writer.Write(type.AssemblyQualifiedName);
-            MessagePackSerializer.Serialize(type, ref writer, value, options);
+            WriteNamedPayload(type, value, ref writer, options);
         }
+
+        /// <summary>
+        /// Writes the payload that follows a type-name discriminator.
+        /// </summary>
+        private static void WriteNamedPayload(Type type, object value, ref MessagePackWriter writer, MessagePackSerializerOptions options)
+        {
+            if (s_namedTypes.TryGetValue(type, out var named))
+            {
+                named.Write(value, ref writer, options);
+            }
+            else if (type.IsEnum)
+            {
+                // MessagePack writes the smallest encoding for a value whatever the declared width, so writing
+                // through a 64-bit overload produces the same bytes as an enum formatter writing the underlying type.
+                if (IsUnsigned(Enum.GetUnderlyingType(type)))
+                    writer.Write(Convert.ToUInt64(value, CultureInfo.InvariantCulture));
+                else
+                    writer.Write(Convert.ToInt64(value, CultureInfo.InvariantCulture));
+            }
+            else
+            {
+                EnsureDynamicCode(type, RuntimeFeature.IsDynamicCodeSupported);
+                MessagePackSerializer.Serialize(type, ref writer, value, options);
+            }
+        }
+
+        /// <summary>
+        /// Reads the payload that follows a type-name discriminator.
+        /// </summary>
+        private static object? ReadNamedPayload(Type type, ref MessagePackReader reader, MessagePackSerializerOptions options)
+        {
+            if (s_namedTypes.TryGetValue(type, out var named))
+                return named.Read(ref reader, options);
+
+            if (type.IsEnum)
+            {
+                return IsUnsigned(Enum.GetUnderlyingType(type))
+                    ? Enum.ToObject(type, reader.ReadUInt64())
+                    : Enum.ToObject(type, reader.ReadInt64());
+            }
+
+            EnsureDynamicCode(type, RuntimeFeature.IsDynamicCodeSupported);
+            return MessagePackSerializer.Deserialize(type, ref reader, options);
+        }
+
+        /// <summary>
+        /// Throws when the non-generic overload cannot run, naming the type so the failure points at the value
+        /// rather than at MessagePack's internals.
+        /// </summary>
+        /// <param name="type">The value type about to take the non-generic path.</param>
+        /// <param name="isDynamicCodeSupported">Whether the runtime can generate code, from <see cref="RuntimeFeature.IsDynamicCodeSupported"/>.</param>
+        /// <exception cref="NotSupportedException">Thrown when <paramref name="isDynamicCodeSupported"/> is <c>false</c>.</exception>
+        internal static void EnsureDynamicCode(Type type, bool isDynamicCodeSupported)
+        {
+            if (isDynamicCodeSupported)
+                return;
+
+            throw new NotSupportedException(
+                $"Wire value type '{type.FullName}' has no formatter that works without dynamic code, and this runtime "
+                + "cannot generate one (iOS and Mac Catalyst run without dynamic code). Send one of the framework's "
+                + "closed value types, an enum or a ParameterCollection instead, or declare the JSON body codec for "
+                + "this request.");
+        }
+
+        private static bool IsUnsigned(Type underlyingType)
+            => underlyingType == typeof(byte) || underlyingType == typeof(ushort)
+                || underlyingType == typeof(uint) || underlyingType == typeof(ulong);
 
         /// <summary>
         /// Deserializes the value.
@@ -215,7 +312,7 @@ namespace Polhem.Api.Core.MessagePack
                 var type = Type.GetType(typeName)
                     ?? throw new InvalidOperationException($"MessagePack deserialization blocked: unknown type '{typeName}'.");
                 options.ThrowIfDeserializingTypeIsDisallowed(type);
-                return MessagePackSerializer.Deserialize(type, ref reader, options);
+                return ReadNamedPayload(type, ref reader, options);
             }
             finally
             {

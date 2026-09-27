@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Trimmer preservation roots for the expression engine, shipped with the package.
+
+  DynamicExpresso resolves every member an expression names (`Math.Round`, `name.ToUpper()`,
+  `Today().AddDays(1)`, `Guid.Empty`) by reflection over the types the interpreter exposes. The
+  trimmer cannot see those calls, so a trimmed app keeps only the members something else in its
+  closure happens to reference. The mobile heads trim the SDK assemblies by default
+  (`TrimMode=partial`), and measured on 2026-09-26 that removed `Math.Round`, `Math.Abs`,
+  `Math.Ceiling`, `Math.Truncate`, `String.ToUpper`, `String.PadLeft` and `DateOnly.AddDays`. The
+  expression then fails to parse with "No applicable method", and live computation switches itself
+  off for the whole form.
+
+  The list is the interpreter's exposed surface: the types DynamicExpresso references by name under
+  `InterpreterOptions.Default`, the types `DynamicExpressoEvaluator` references itself, and the
+  return types of its helper functions. TrimmerDescriptorGateTests in
+  tests/Polhem.Expressions.UnitTests compares it with `DynamicExpressoEvaluator.ExposedTypes`, so a
+  type added to the interpreter without a root here fails that test.
+
+  This covers trimming only. Dynamic code is a separate question: without it (every iOS build) the
+  LINQ expression interpreter runs the compiled lambda, and that needs nothing from this file.
+-->
+<linker>
+  <assembly fullname="System.Private.CoreLib">
+    <type fullname="System.Boolean" preserve="all" />
+    <type fullname="System.Byte" preserve="all" />
+    <type fullname="System.Char" preserve="all" />
+    <type fullname="System.Convert" preserve="all" />
+    <type fullname="System.DateOnly" preserve="all" />
+    <type fullname="System.DateTime" preserve="all" />
+    <type fullname="System.Decimal" preserve="all" />
+    <type fullname="System.Double" preserve="all" />
+    <type fullname="System.Guid" preserve="all" />
+    <type fullname="System.Int16" preserve="all" />
+    <type fullname="System.Int32" preserve="all" />
+    <type fullname="System.Int64" preserve="all" />
+    <type fullname="System.Math" preserve="all" />
+    <type fullname="System.Object" preserve="all" />
+    <type fullname="System.SByte" preserve="all" />
+    <type fullname="System.Single" preserve="all" />
+    <type fullname="System.String" preserve="all" />
+    <type fullname="System.TimeSpan" preserve="all" />
+    <type fullname="System.UInt16" preserve="all" />
+    <type fullname="System.UInt32" preserve="all" />
+    <type fullname="System.UInt64" preserve="all" />
+  </assembly>
+  <assembly fullname="System.Linq">
+    <type fullname="System.Linq.Enumerable" preserve="all" />
+  </assembly>
+</linker>

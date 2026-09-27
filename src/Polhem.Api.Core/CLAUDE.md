@@ -52,10 +52,16 @@ attribute and are excluded automatically.
 ### `object` members use a discriminated envelope, not `TypelessFormatter`
 
 `object` members such as `Parameter.Value` / `FilterCondition.Value` are handled by `WireValueFormatter`: the
-framework's own closed set of types is read and written with an int discriminator + closed generic delegates; other
-allow-listed types go through an escape hatch of "type name + non-generic overload", and **that branch only works on
-runtimes that have dynamic code**. To send a new value type on mobile, add it to the closed set (`WireValueCode` +
-a `WireValueFormatter` registration); do not count on the escape hatch.
+framework's own closed set of types is read and written with an int discriminator + closed generic delegates. Other
+allow-listed types carry their type name as the discriminator. Behind the name, **enums** (underlying integer +
+`Enum.ToObject`) and the types in the named table (`AddNamed<T>`, currently `ParameterCollection`) are AOT-safe;
+everything else goes through the escape hatch of the non-generic overload, and **that only works on runtimes that
+have dynamic code** (elsewhere it throws a `NotSupportedException` naming the type).
+
+To send a new value type on mobile, prefer `AddNamed<T>` when the type already has a registered formatter: the wire
+bytes stay what the escape hatch wrote, so no fixture or other-language client changes. A new `WireValueCode` changes
+the wire and has a downstream (see `.claude/rules/serialization.md`). `WireValueFormatterNamedTypeTests` pins the
+named-branch bytes and runs in the AOT gate.
 
 ## AOT: MessagePack's reflection fallback only covers attributed types (corrected 2026-08-10)
 

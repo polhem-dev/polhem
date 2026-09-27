@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Reflection;
 
 namespace Polhem.UI.Core
@@ -35,7 +34,12 @@ namespace Polhem.UI.Core
         /// <summary>
         /// File version, mapped to the <c>&lt;FileVersion&gt;</c> property in the .csproj.
         /// </summary>
-        public static string FileVersion => FileVerInfo.FileVersion ?? Unknown;
+        /// <remarks>
+        /// Read from <see cref="AssemblyFileVersionAttribute"/>, not from the file on disk, so it also works
+        /// where the assembly has no file path: Android assembly stores, browser WebAssembly and
+        /// single-file publishes.
+        /// </remarks>
+        public static string FileVersion => GetFileVersion(EntryAssembly);
 
         /// <summary>
         /// Assembly version, mapped to the <c>&lt;AssemblyVersion&gt;</c> property; defaults to <see cref="Version"/> + ".0" when absent.
@@ -50,8 +54,8 @@ namespace Polhem.UI.Core
         private static string? InformationalVersion =>
             GetAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
-        private static FileVersionInfo FileVerInfo =>
-            FileVersionInfo.GetVersionInfo(EntryAssembly.Location);
+        private static string GetFileVersion(Assembly assembly) =>
+            assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? Unknown;
 
         private static T? GetAttribute<T>() where T : Attribute =>
             EntryAssembly.GetCustomAttribute<T>();

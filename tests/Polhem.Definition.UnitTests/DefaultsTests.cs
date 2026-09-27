@@ -4,6 +4,7 @@ using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
+using Polhem.Definition.Logging;
 using Polhem.Definition.Settings;
 
 namespace Polhem.Definition.UnitTests
@@ -86,6 +87,87 @@ namespace Polhem.Definition.UnitTests
             Assert.Equal(ControlType.DropDownEdit, fields["change_mode"]!.ControlType);
             Assert.Equal(ControlType.DropDownEdit, fields["access_mode"]!.ControlType);
             Assert.Equal(ControlType.CheckEdit, fields["is_sensitive"]!.ControlType);
+        }
+
+        [Fact]
+        [DisplayName("The AuditRule mode dropdowns carry static options whose codes are the persisted AuditRuleMode values")]
+        public void OpenEmbedded_AuditRuleFormSchema_ModeFieldsHaveStaticOptions()
+        {
+            var fields = ReadAuditRuleSchema().MasterTable!.Fields!;
+            var expectedCodes = Enum.GetValues<AuditRuleMode>()
+                .Select(mode => ((int)mode).ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+            // These are what a head shows when no localization runs (no definition loader, a blank culture) or when
+            // it runs for a language with no resource file. Without them the dropdowns were empty.
+            Assert.Equal(expectedCodes, fields["change_mode"]!.ListItems!.Select(item => item.Value));
+            Assert.Equal(expectedCodes, fields["access_mode"]!.ListItems!.Select(item => item.Value));
+        }
+
+        [Fact]
+        [DisplayName("The shipped AuditRule schema and layout carry no Chinese text in their captions and display names")]
+        public void OpenEmbedded_AuditRuleDefinitions_HaveNoChineseCaptions()
+        {
+            var schema = ReadAuditRuleSchema();
+            var layout = XmlCodec.Deserialize<FormLayout>(ReadEmbedded("FormLayout/AuditRule.FormLayout.xml"))!;
+            var texts = new List<string> { schema.DisplayName, schema.MasterTable!.DisplayName, layout.Caption };
+            texts.AddRange(schema.MasterTable.Fields!.Select(field => field.Caption));
+            texts.AddRange(schema.MasterTable.Fields!.SelectMany(field => field.ListItems!).Select(item => item.Text));
+            texts.AddRange(layout.Sections!.SelectMany(section => section.Fields!).Select(field => field.Caption));
+
+            Assert.All(texts, text => Assert.DoesNotContain(text, c => c >= '\u2E80'));
+        }
+
+        [Theory]
+        [InlineData("fr-FR", "Inherit")]
+        [InlineData("zh-TW", "沿用預設")]
+        [DisplayName("Localizing the AuditRule schema keeps the static options on a miss and replaces them from the language enum on a hit")]
+        public void AuditRuleFormSchema_Localize_FallsBackToStaticOptions(string lang, string expectedFirstText)
+        {
+            var schema = ReadAuditRuleSchema();
+            var resource = lang == "zh-TW"
+                ? XmlCodec.Deserialize<LanguageResource>(ReadEmbedded("Language/zh-TW/AuditRule.Language.xml"))
+                : null;
+
+            new FormSchemaLocalizer(new SingleResourceLanguageService(resource)).Localize(schema, lang);
+
+            var options = schema.MasterTable!.Fields!["change_mode"]!.ListItems!;
+            Assert.Equal(3, options.Count);
+            Assert.Equal(expectedFirstText, options[0].Text);
+        }
+
+        private static FormSchema ReadAuditRuleSchema()
+            => XmlCodec.Deserialize<FormSchema>(ReadEmbedded("FormSchema/AuditRule.FormSchema.xml"))!;
+
+        /// <summary>
+        /// Answers from one language resource, or from none, whatever language is asked for.
+        /// </summary>
+        private sealed class SingleResourceLanguageService : ILanguageService
+        {
+            private readonly LanguageResource? _resource;
+
+            public SingleResourceLanguageService(LanguageResource? resource) => _resource = resource;
+
+            public string GetLangText(string lang, string fullKey) => fullKey;
+
+            public string GetLangText(string lang, string @namespace, string subKey) => subKey;
+
+            public bool TryGetLangText(string lang, string fullKey, out string text)
+            {
+                text = string.Empty;
+                return false;
+            }
+
+            public bool TryGetLangText(string lang, string @namespace, string subKey, out string text)
+            {
+                text = _resource?.GetText(subKey) ?? string.Empty;
+                return _resource?.GetText(subKey) != null;
+            }
+
+            public LanguageEnum? GetLangEnum(string lang, string fullName) => null;
+
+            public LanguageEnum? GetLangEnum(string lang, string @namespace, string enumName) => _resource?.GetEnum(enumName);
+
+            public string? GetLangEnumText(string lang, string fullName, string code) => null;
         }
 
         [Theory]

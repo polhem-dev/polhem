@@ -3,6 +3,9 @@
   <Items>
     <ProgramItem ProgId="System" DisplayName="System" BusinessObject="Polhem.Samples.Shared.DemoAuthenticatingSystemBusinessObject, Polhem.Samples.Shared" />
     <ProgramItem ProgId="AuditLog" DisplayName="AuditLog" BusinessObject="Polhem.Business.AuditLog.LogBusinessObject, Polhem.Business" />
+    <!-- QuickStart.Server's anonymous Echo method. Only that host ships the assembly; another sample host that is
+         asked for "Echo" fails with a message naming this binding. -->
+    <ProgramItem ProgId="Echo" DisplayName="Echo" BusinessObject="QuickStart.Server.BusinessObjects.EchoBusinessObject, QuickStart.Server" />
     <!-- No BusinessObject attribute: AuditRule is a framework-reserved progId and resolves to
          AuditRuleBusinessObject on its own. The entry stays declared so startup self-registration
          has nothing missing to add, since that path rewrites this whole file. -->

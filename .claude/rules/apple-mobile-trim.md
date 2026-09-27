@@ -45,7 +45,7 @@ directory, a rebuildable cache directory, or key-value preference storage. The f
 `IEndpointStorage`: a mobile head replaces it with the platform implementation at startup. Do not keep the desktop's
 file-based default.
 
-## trim: solved, stop spending time on it
+## XmlSerializer under trim: solved, stop spending time on it
 
 The `XmlSerializer` failure under Apple Release trimming **was solved and verified by measurement on 2026-06-27**.
 The fix is `src/Polhem.Definition/ILLink.Descriptors.xml` (**its file header documents the mechanism and the preserve
@@ -59,9 +59,10 @@ automatically.
 - **Adding a definition type requires nothing for trimming.** The descriptor covers everything at once with a
   wildcard root.
 
-> ⚠️ This section covers only **the `XmlSerializer` (definition file) half**, **not the MessagePack wire**.
-> The wire path has its own requirement (every type must have an explicitly registered formatter); see
-> `rules/serialization.md`.
+> ⚠️ This section covers only **the `XmlSerializer` (definition file) half**. Two other paths have their own
+> requirements, both in `rules/serialization.md`: the MessagePack wire (every type needs an explicitly registered
+> formatter), and the expression engine, whose BCL members are kept by a separate descriptor,
+> `src/Polhem.Expressions/ILLink.Descriptors.xml`.
 
 ## AOT: Android cannot verify the dynamic-code half
 
@@ -133,7 +134,9 @@ Violators are always definition-layer types → for the full rules and the corre
 - `rules/avalonia.md`: Avalonia-specific rules (version compatibility, control pitfalls)
 - `rules/serialization.md`: the AOT conclusions for MessagePack / DynamicExpresso. **The two conclusions are
   opposite**: MessagePack's contractless resolver has **no** reflection fallback, so every wire type needs an
-  explicitly registered formatter; DynamicExpresso automatically falls back to the interpreter and needs nothing.
+  explicitly registered formatter; DynamicExpresso automatically falls back to the interpreter and needs nothing for
+  AOT. **Trimming is different**: DynamicExpresso needs `src/Polhem.Expressions/ILLink.Descriptors.xml`.
   ("MessagePack also has a fallback" is an old conclusion disproved by measurement on 2026-08-10; do not reason
   from it.)
 - `src/Polhem.Definition/ILLink.Descriptors.xml`: the file that implements the adopted fix
+- `src/Polhem.Expressions/ILLink.Descriptors.xml`: the trim roots for the members expressions reach by reflection

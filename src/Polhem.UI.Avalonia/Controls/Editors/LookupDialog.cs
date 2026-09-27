@@ -46,9 +46,11 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             // and the dialog stays usable (retry via the search button).
             _ = panel.ReloadAsync();
 
-            // Browser (WASM) hosts cannot open a native Window; host the panel on the
-            // top level's OverlayLayer instead. Desktop keeps the native modal window.
-            if (OperatingSystem.IsBrowser())
+            // Single-view hosts (browser, iOS, Android) cannot open a native Window, so the panel goes on
+            // the top level's OverlayLayer instead. Only the desktop classic-window lifetime keeps the
+            // native modal window.
+            var topLevel = TopLevel.GetTopLevel(host);
+            if (DialogHosting.GetWindowOwner(topLevel) is not { } owner)
             {
                 var completed = new TaskCompletionSource();
                 panel.Committed += (_, row) => { selected = row; completed.TrySetResult(); };
@@ -69,20 +71,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             panel.Committed += (_, row) => { selected = row; window.Close(); };
             panel.Cancelled += (_, _) => window.Close();
 
-            if (TopLevel.GetTopLevel(host) is Window owner)
-            {
-                await window.ShowDialog(owner);
-            }
-            else
-            {
-                // Embedded hosts without a Window cannot parent a modal dialog;
-                // fall back to a free-standing window and await its closure.
-                var closed = new TaskCompletionSource();
-                window.Closed += (_, _) => closed.TrySetResult();
-                window.Show();
-                await closed.Task;
-            }
-
+            await window.ShowDialog(owner);
             return selected;
         }
     }

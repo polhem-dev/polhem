@@ -314,9 +314,12 @@ feat(samples): add {Sample.Name} — {one-line description}
   not build samples; to verify sample changes locally you must run the build by hand
 - **`samples/Define/Master.key` and `samples/**/quickstart.db` are both gitignored**: they are generated automatically
   on the first run; do not commit them
-- **The Echo BO is anonymous Public** — to add a new anonymous BO, copy `EchoBusinessObject` + register it in
-  `QuickStartBoTypeResolver`; to add an authenticated BO, go through the DemoBackend path in
-  `samples/Polhem.Samples.Shared`
+- **The Echo BO is anonymous Public** — to add a new anonymous BO, copy `EchoBusinessObject` + bind its progId in
+  `samples/Define/ProgramSettings.xml` (the `BusinessObject` attribute); to add an authenticated BO, go through the
+  DemoBackend path in `samples/Polhem.Samples.Shared`
+- **Do not register your own `IBoTypeResolver` in a sample host**: the last registration replaces the framework's
+  ProgramSettings-based resolver, so the `System` binding to `DemoAuthenticatingSystemBusinessObject` stops applying
+  and demo/demo login is rejected. QuickStart.Server did exactly this until 2026-09-27
 
 ## Outside this skill's scope
 
