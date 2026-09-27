@@ -72,13 +72,23 @@ namespace Polhem.Api.Client.Providers
         /// <summary>
         /// Creates the HTTP header collection for the request.
         /// </summary>
+        /// <remarks>
+        /// The <c>Authorization</c> header is sent only when there is an access token. The server treats a request
+        /// without the header as an anonymous call and leaves the decision to the method's access control, and a
+        /// deployment that overrides <c>IsAuthorizationRequired</c> to refuse such requests must not be bypassed by a
+        /// placeholder token.
+        /// </remarks>
         private NameValueCollection CreateHeaders()
         {
-            return new NameValueCollection
+            var headers = new NameValueCollection
             {
-                { ApiHeaders.ApiKey, ApiClientInfo.ApiKey },
-                { ApiHeaders.Authorization, $"Bearer {AccessToken}" }
+                { ApiHeaders.ApiKey, ApiClientInfo.ApiKey }
             };
+            if (AccessToken != Guid.Empty)
+            {
+                headers.Add(ApiHeaders.Authorization, $"Bearer {AccessToken}");
+            }
+            return headers;
         }
 
     }
