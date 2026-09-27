@@ -4,6 +4,11 @@
 // DateTime are both strings here, enums are string literal unions (the server writes
 // them with JsonStringEnumConverter), and an object-typed member is the discriminated
 // envelope this package calls a wire value.
+//
+// An optional member may be absent, and absent means the CLR default: the JSON wires
+// leave out null and default values (0, false, the first member of an enum, an empty
+// Guid, 0001-01-01T00:00:00). A value-typed member is required only where the server
+// always writes it, because its initial value in .NET is not the CLR default.
 
 /**
  * An object-typed member as it appears on the wire: `[code, value]`, or null when the
@@ -72,11 +77,17 @@ export type ApiKeyType = 'Internal' | 'ThirdParty';
 
 export type ChangeKind = 'Insert' | 'Update' | 'Delete';
 
+export type ComparisonOperator = 'Equal' | 'NotEqual' | 'GreaterThan' | 'GreaterThanOrEqual' | 'LessThan' | 'LessThanOrEqual' | 'Like' | 'In' | 'Between' | 'StartsWith' | 'EndsWith' | 'Contains';
+
 export type DefineType = 'SystemSettings' | 'DatabaseSettings' | 'DbCategorySettings' | 'ProgramSettings' | 'TableSchema' | 'FormSchema' | 'FormLayout' | 'Language' | 'PermissionModels' | 'CurrencySettings' | 'UnitSettings' | 'MenuSettings' | 'PluginSettings';
+
+export type LogicalOperator = 'And' | 'Or';
 
 export type LoginEvent = 'LoginSucceeded' | 'LoginFailed' | 'LockedOut' | 'Logout' | 'ServiceSessionCreated';
 
 export type NumberKind = 'None' | 'Quantity' | 'Weight' | 'Amount' | 'Percent' | 'UnitPrice' | 'Cost' | 'ExchangeRate';
+
+export type PermissionAction = 'None' | 'Create' | 'Read' | 'Update' | 'Delete' | 'Print' | 'Export';
 
 export type SortDirection = 'Asc' | 'Desc';
 
@@ -86,7 +97,7 @@ export interface AllowedCurrencyItem {
 
 export interface ApiKeySummary {
   contact?: string;
-  enabled: boolean;
+  enabled?: boolean;
   expiredAt?: string;
   issuedAt?: string;
   keyType: ApiKeyType;
@@ -96,7 +107,7 @@ export interface ApiKeySummary {
 
 export interface CashRoundingItem {
   currencyCode?: string;
-  unit: number;
+  unit?: number;
 }
 
 export interface CompanyInfo {
@@ -127,33 +138,33 @@ export interface CreateApiKeyResponse {
 
 export interface CreateSessionRequest {
   expiresIn: number;
-  oneTime: boolean;
+  oneTime?: boolean;
   parameters?: Parameter[];
   userID?: string;
 }
 
 export interface CreateSessionResponse {
-  accessToken: string;
-  expiredAt: string;
+  accessToken?: string;
+  expiredAt?: string;
   parameters?: Parameter[];
 }
 
 export interface DeleteRequest {
   parameters?: Parameter[];
-  rowId: string;
+  rowId?: string;
 }
 
 export interface DeleteResponse {
   parameters?: Parameter[];
-  rowsAffected: number;
+  rowsAffected?: number;
 }
 
 export interface DepartmentNode {
   children?: DepartmentNode[];
   deptId?: string;
   deptName?: string;
-  managerRowId: string;
-  rowId: string;
+  managerRowId?: string;
+  rowId?: string;
 }
 
 export interface DepartmentTree {
@@ -167,7 +178,7 @@ export interface EnterCompanyRequest {
 }
 
 export interface EnterCompanyResponse {
-  capabilities?: string[];
+  capabilities?: Record<string, PermissionAction>;
   company?: CompanyInfo;
   parameters?: Parameter[];
 }
@@ -181,8 +192,22 @@ export interface ExecFuncResponse {
   parameters?: Parameter[];
 }
 
-export interface FilterNode {
+export interface FilterCondition {
+  fieldName?: string;
+  ignoreIfNull?: boolean;
+  kind?: 'Condition';
+  operator?: ComparisonOperator;
+  secondValue?: WireValueEnvelope;
+  value?: WireValueEnvelope;
 }
+
+export interface FilterGroup {
+  kind: 'Group';
+  nodes?: FilterNode[];
+  operator?: LogicalOperator;
+}
+
+export type FilterNode = FilterCondition | FilterGroup;
 
 export interface GetAccessLogRequest {
   fromUtc?: string;
@@ -212,20 +237,20 @@ export interface GetApiAnomalySummaryRequest {
 
 export interface GetChangeDetailRequest {
   parameters?: Parameter[];
-  sysRowId: string;
+  sysRowId?: string;
 }
 
 export interface GetChangeDetailResponse {
-  changeKind: ChangeKind;
+  changeKind?: ChangeKind;
   dataSet?: DataSet;
   fields?: RecordFieldChange[];
-  isSensitive: boolean;
-  logTime: string;
+  isSensitive?: boolean;
+  logTime?: string;
   parameters?: Parameter[];
   progId?: string;
   rowKey?: string;
   source?: string;
-  sysRowId: string;
+  sysRowId?: string;
   userId?: string;
   userName?: string;
 }
@@ -262,7 +287,7 @@ export interface GetCustomizePluginSettingsResponse {
 
 export interface GetDataRequest {
   parameters?: Parameter[];
-  rowId: string;
+  rowId?: string;
 }
 
 export interface GetDataResponse {
@@ -286,7 +311,7 @@ export interface GetDbAnomalySummaryRequest {
 }
 
 export interface GetDefineRequest {
-  defineType: DefineType;
+  defineType?: DefineType;
   keys?: string[];
   parameters?: Parameter[];
 }
@@ -424,9 +449,9 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string;
+  accessToken?: string;
   apiEncryptionKey?: string;
-  expiredAt: string;
+  expiredAt?: string;
   parameters?: Parameter[];
   timeZone?: string;
   userId?: string;
@@ -442,19 +467,19 @@ export interface LogoutResponse {
 }
 
 export interface NumberFormatItem {
-  decimals: number;
-  kind: NumberKind;
+  decimals?: number;
+  kind?: NumberKind;
 }
 
 export interface PagingInfo {
-  hasMore: boolean;
-  page: number;
-  pageSize: number;
+  hasMore?: boolean;
+  page?: number;
+  pageSize?: number;
   totalCount?: number;
 }
 
 export interface PagingOptions {
-  includeTotalCount: boolean;
+  includeTotalCount?: boolean;
   page: number;
   pageSize: number;
 }
@@ -471,7 +496,7 @@ export interface PingRequest {
 }
 
 export interface PingResponse {
-  apiKeyStatus: ApiKeyStatus;
+  apiKeyStatus?: ApiKeyStatus;
   parameters?: Parameter[];
   serverTime: string;
   status?: string;
@@ -484,7 +509,7 @@ export interface RecordFieldChange {
   newValue?: string;
   oldValue?: string;
   rowKey?: string;
-  rowState: ChangeKind;
+  rowState?: ChangeKind;
   tableName?: string;
 }
 
@@ -496,11 +521,11 @@ export interface SaveCustomizePluginSettingsRequest {
 
 export interface SaveCustomizePluginSettingsResponse {
   parameters?: Parameter[];
-  pluginCount: number;
+  pluginCount?: number;
 }
 
 export interface SaveDefineRequest {
-  defineType: DefineType;
+  defineType?: DefineType;
   keys?: string[];
   parameters?: Parameter[];
   xml?: string;
@@ -516,19 +541,19 @@ export interface SaveRequest {
 }
 
 export interface SaveResponse {
-  affectedRows?: string[];
+  affectedRows?: Record<string, number>;
   dataSet?: DataSet;
   parameters?: Parameter[];
 }
 
 export interface SetApiKeyEnabledRequest {
-  enabled: boolean;
+  enabled?: boolean;
   parameters?: Parameter[];
   sysId?: string;
 }
 
 export interface SetApiKeyEnabledResponse {
-  enabled: boolean;
+  enabled?: boolean;
   parameters?: Parameter[];
   sysId?: string;
 }
@@ -546,18 +571,18 @@ export interface SetApiKeyExpiryResponse {
 }
 
 export interface SetDeploymentAdminRequest {
-  isDeploymentAdmin: boolean;
+  isDeploymentAdmin?: boolean;
   parameters?: Parameter[];
   userId?: string;
 }
 
 export interface SetDeploymentAdminResponse {
-  isDeploymentAdmin: boolean;
+  isDeploymentAdmin?: boolean;
   parameters?: Parameter[];
   userId?: string;
 }
 
 export interface SortField {
-  direction: SortDirection;
+  direction?: SortDirection;
   fieldName?: string;
 }

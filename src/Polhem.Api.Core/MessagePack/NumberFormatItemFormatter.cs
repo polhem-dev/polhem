@@ -21,8 +21,10 @@ namespace Polhem.Api.Core.MessagePack
     internal sealed class NumberFormatItemFormatter : IMessagePackFormatter<NumberFormatItem?>, IWireContract
     {
         /// <summary>
-        /// Wire member names, in write order. The single source for both the map header and the
-        /// drift check — they cannot disagree because they read the same array.
+        /// Wire member names, in write order. The single source for the map header and the drift
+        /// check, which therefore agree. The <c>Serialize</c> and <c>Deserialize</c> bodies are a
+        /// second copy the array cannot reach; <c>WireCodecParityTests</c> is what catches a member
+        /// missing from either.
         /// </summary>
         private static readonly string[] s_wireMembers =
         [

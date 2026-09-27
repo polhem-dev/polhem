@@ -120,12 +120,51 @@ namespace Polhem.Api.Core.UnitTests
         {
             var generated = WireContractGenerator.Generate();
 
-            // `LoginResponse.AccessToken` is a Guid, which is a string in JSON.
-            Assert.Contains("accessToken: string;", generated, StringComparison.Ordinal);
+            // `LoginResponse.AccessToken` is a Guid, which is a string in JSON. It is optional because the JSON wires
+            // leave out an empty Guid like any other default value.
+            Assert.Contains("accessToken?: string;", generated, StringComparison.Ordinal);
             // Enums go on the wire as strings (`JsonStringEnumConverter`), not numbers.
             Assert.Contains("export type DefineType = '", generated, StringComparison.Ordinal);
             Assert.DoesNotContain(": Guid;", generated, StringComparison.Ordinal);
             Assert.DoesNotContain(": DateTime;", generated, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("A polymorphic member is the union of its concrete shapes, each carrying its discriminator")]
+        public void GeneratedContract_RendersPolymorphicFilterAsUnion()
+        {
+            var generated = WireContractGenerator.Generate();
+
+            Assert.Contains("export type FilterNode = FilterCondition | FilterGroup;", generated, StringComparison.Ordinal);
+            Assert.Contains("export interface FilterCondition {", generated, StringComparison.Ordinal);
+            Assert.Contains("export interface FilterGroup {", generated, StringComparison.Ordinal);
+            // `Condition` is the enum's default, so the JSON wires leave it out and the reader assumes it when absent.
+            Assert.Contains("  kind?: 'Condition';", generated, StringComparison.Ordinal);
+            Assert.Contains("  kind: 'Group';", generated, StringComparison.Ordinal);
+            Assert.Contains("export type ComparisonOperator = '", generated, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("A value-typed member is optional unless the server always writes it, because the JSON wires omit default values")]
+        public void GeneratedContract_MarksDefaultOmittedValueMembersOptional()
+        {
+            var generated = WireContractGenerator.Generate();
+
+            // `PagingInfo.HasMore` is left out when false.
+            Assert.Contains("  hasMore?: boolean;", generated, StringComparison.Ordinal);
+            // `CreateSessionRequest.ExpiresIn` initialises to 3600, so it is always written and therefore required.
+            Assert.Contains("  expiresIn: number;", generated, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("A dictionary member is a string-keyed record of its value type, not an array of its key type")]
+        public void GeneratedContract_RendersDictionaryAsRecord()
+        {
+            var generated = WireContractGenerator.Generate();
+
+            Assert.Contains("  affectedRows?: Record<string, number>;", generated, StringComparison.Ordinal);
+            Assert.Contains("  capabilities?: Record<string, PermissionAction>;", generated, StringComparison.Ordinal);
+            Assert.DoesNotContain("affectedRows?: string[];", generated, StringComparison.Ordinal);
         }
     }
 }

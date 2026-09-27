@@ -51,31 +51,7 @@ namespace Polhem.Definition.Filters
 
             foreach (var element in doc.RootElement.EnumerateArray())
             {
-                // Determine the target type based on the Kind property
-                FilterNode? node;
-                if (element.TryGetProperty("kind", out var kindProp))
-                {
-                    var kindValue = kindProp.ValueKind == JsonValueKind.String
-                        ? Enum.Parse<FilterNodeKind>(kindProp.GetString()!)
-                        : (FilterNodeKind)kindProp.GetInt32();
-                    switch (kindValue)
-                    {
-                        case FilterNodeKind.Condition:
-                            node = element.Deserialize<FilterCondition>(options);
-                            break;
-                        case FilterNodeKind.Group:
-                            node = element.Deserialize<FilterGroup>(options);
-                            break;
-                        default:
-                            throw new JsonException($"Unknown FilterNodeKind: {kindValue}");
-                    }
-                }
-                else
-                {
-                    // No Kind property — default to FilterCondition
-                    node = element.Deserialize<FilterCondition>(options);
-                }
-
+                var node = FilterNodeJsonConverter.ReadNode(element, options);
                 if (node != null)
                     nodes.Add(node);
             }

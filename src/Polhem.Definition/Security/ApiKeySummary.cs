@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 
 namespace Polhem.Definition.Security
 {
@@ -33,6 +34,9 @@ namespace Polhem.Definition.Security
         /// Gets or sets the key classification. A label for operators; it carries no authorization
         /// meaning.
         /// </summary>
+        // Written even when 0/default: the initialiser is not the CLR default, so omitting the value would let the
+        // reader substitute the initialiser. Enforced for every wire member by `WireDefaultOmissionTests`.
+        [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
         public ApiKeyType KeyType { get; set; } = ApiKeyType.Internal;
 
         /// <summary>

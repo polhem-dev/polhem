@@ -36,6 +36,11 @@ namespace Polhem.Api.Core.UnitTests
             // DateTime are both strings here, enums are string literal unions (the server writes
             // them with JsonStringEnumConverter), and an object-typed member is the discriminated
             // envelope this package calls a wire value.
+            //
+            // An optional member may be absent, and absent means the CLR default: the JSON wires
+            // leave out null and default values (0, false, the first member of an enum, an empty
+            // Guid, 0001-01-01T00:00:00). A value-typed member is required only where the server
+            // always writes it, because its initial value in .NET is not the CLR default.
 
             /**
              * An object-typed member as it appears on the wire: `[code, value]`, or null when the
@@ -124,7 +129,9 @@ namespace Polhem.Api.Core.UnitTests
                     continue;
                 }
 
-                interfaces[type.Name] = RenderInterface(type, pending);
+                interfaces[type.Name] = type.IsAbstract
+                    ? RenderUnion(type, pending)
+                    : RenderInterface(type, pending);
             }
 
             var builder = new StringBuilder();
@@ -178,45 +185,104 @@ namespace Polhem.Api.Core.UnitTests
             return $"export type {type.Name} = {string.Join(" | ", members)};{Environment.NewLine}";
         }
 
+        /// <summary>
+        /// Renders an abstract wire type as the union of its concrete subtypes.
+        /// </summary>
+        /// <remarks>
+        /// A polymorphic member such as <c>GetListRequest.Filter</c> is declared as the abstract base, which has no
+        /// wire members of its own: rendered as an interface it came out as <c>{}</c>, and the concrete shapes never
+        /// appeared in the contract at all.
+        /// </remarks>
+        private static string RenderUnion(Type type, Queue<Type> pending)
+        {
+            var subtypes = ConcreteSubtypes(type);
+            foreach (var subtype in subtypes) pending.Enqueue(subtype);
+
+            var members = subtypes.Count == 0 ? "never" : string.Join(" | ", subtypes.Select(t => t.Name));
+            return $"export type {type.Name} = {members};{Environment.NewLine}";
+        }
+
         private static string RenderInterface(Type type, Queue<Type> pending)
         {
             var builder = new StringBuilder();
             builder.AppendLine(CultureInfo.InvariantCulture, $"export interface {type.Name} {{");
 
-            foreach (var property in WireProperties(type))
+            var lines = new SortedDictionary<string, string>(StringComparer.Ordinal);
+            foreach (var (name, line) in DiscriminatorLines(type)) lines[name] = line;
+
+            foreach (var property in WireClosure.Members(type))
             {
-                var (tsType, optional) = MapType(property.PropertyType, pending);
                 var name = JsonNamingPolicy.CamelCase.ConvertName(property.Name);
-                builder.AppendLine(CultureInfo.InvariantCulture, $"  {name}{(optional ? "?" : "")}: {tsType};");
+                var optional = IsOptional(property);
+                lines[name] = $"  {name}{(optional ? "?" : "")}: {MapType(property.PropertyType, pending)};";
             }
+
+            foreach (var line in lines.Values) builder.AppendLine(line);
 
             builder.AppendLine("}");
             return builder.ToString();
         }
 
         /// <summary>
-        /// The properties that go on the wire: public, readable and writable, and not excluded by <c>[JsonIgnore]</c>.
+        /// Whether a member may be absent from the JSON wire.
         /// </summary>
-        private static IEnumerable<PropertyInfo> WireProperties(Type type)
+        /// <remarks>
+        /// The JSON body codec and <c>Plain</c> leave out any member equal to its CLR default, value types included,
+        /// so only a member the server always writes is required. That is a value-typed member carrying
+        /// <c>[JsonIgnore(Condition = JsonIgnoreCondition.Never)]</c>; <c>WireDefaultOmissionTests</c> requires it on
+        /// every member whose initialiser is not the CLR default.
+        /// </remarks>
+        private static bool IsOptional(PropertyInfo property)
         {
-            return type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => p.CanRead && p.CanWrite)
-                .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() == null)
-                .OrderBy(p => p.Name, StringComparer.Ordinal);
+            var type = property.PropertyType;
+            var isNonNullableValue = type.IsValueType && Nullable.GetUnderlyingType(type) == null;
+            return !(isNonNullableValue && WireClosure.IsAlwaysWritten(property));
         }
 
         /// <summary>
-        /// Maps a CLR type to its shape on the wire.
+        /// The discriminator of a concrete subtype of an abstract wire type, as a literal member.
         /// </summary>
-        /// <returns>The TypeScript type, and whether the member is optional.</returns>
-        private static (string TsType, bool Optional) MapType(Type type, Queue<Type> pending)
+        /// <remarks>
+        /// The discriminator is a get-only enum property the subtype overrides, so it is not a wire member under
+        /// <see cref="WireClosure.Members"/>, but System.Text.Json writes it. It follows the same omission rule as
+        /// any other member: the subtype whose value is the enum's default travels without it, which is also what
+        /// the reader assumes when it is missing.
+        /// </remarks>
+        private static IEnumerable<(string Name, string Line)> DiscriminatorLines(Type type)
         {
-            var underlying = Nullable.GetUnderlyingType(type);
-            var optional = underlying != null || !type.IsValueType;
-            var actual = underlying ?? type;
+            var baseType = type.BaseType;
+            if (baseType == null || !baseType.IsAbstract || type.GetConstructor(Type.EmptyTypes) == null)
+                yield break;
 
-            return (MapNonNullable(actual, pending), optional);
+            var instance = Activator.CreateInstance(type)!;
+            var discriminators = baseType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.PropertyType.IsEnum && p.SetMethod == null)
+                .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() is not { Condition: JsonIgnoreCondition.Always });
+
+            foreach (var property in discriminators)
+            {
+                var value = property.GetValue(instance)!;
+                var optional = Equals(value, Activator.CreateInstance(property.PropertyType));
+                var name = JsonNamingPolicy.CamelCase.ConvertName(property.Name);
+                yield return (name, $"  {name}{(optional ? "?" : "")}: '{value}';");
+            }
         }
+
+        /// <summary>
+        /// The concrete subtypes of an abstract wire type, found in the assembly that declares it.
+        /// </summary>
+        private static List<Type> ConcreteSubtypes(Type type) =>
+            type.Assembly.GetTypes()
+                .Where(t => t.IsClass && !t.IsAbstract && t.IsPublic && t.IsSubclassOf(type))
+                .OrderBy(t => t.Name, StringComparer.Ordinal)
+                .ToList();
+
+        /// <summary>
+        /// Maps a member's CLR type to its shape on the wire. Whether the member may be absent is decided separately,
+        /// by <see cref="IsOptional"/>.
+        /// </summary>
+        private static string MapType(Type type, Queue<Type> pending)
+            => MapNonNullable(Nullable.GetUnderlyingType(type) ?? type, pending);
 
         private static string MapNonNullable(Type type, Queue<Type> pending)
         {
@@ -242,6 +308,14 @@ namespace Polhem.Api.Core.UnitTests
             {
                 var element = type.GetElementType()!;
                 return $"{MapNonNullable(element, pending)}[]";
+            }
+
+            // A dictionary is a JSON object keyed by strings. It used to fall through to the collection branch below,
+            // which took the key type as the element and rendered `Dictionary<string, int>` as `string[]`.
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+            {
+                var value = type.GetGenericArguments()[1];
+                return $"Record<string, {MapType(value, pending)}>";
             }
 
             if (typeof(IEnumerable).IsAssignableFrom(type))

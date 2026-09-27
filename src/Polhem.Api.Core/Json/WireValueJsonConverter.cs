@@ -70,12 +70,11 @@ namespace Polhem.Api.Core.Json
                 return;
             }
 
-            // NOTE: Both ends of this escape hatch must screen the same shape. The writer holds a
-            // `Type` and the reader holds a name, so they call different overloads — but both walk
-            // generic arguments and array element types rather than testing one flat string.
+            // NOTE: Both ends of this escape hatch must screen the same shape, and this check is the
+            // reader's own pair of checks run in advance: see `WireTypeWhitelist.IsNamedValueTypeAllowed`.
             var fullName = type.FullName
                 ?? throw new InvalidOperationException("Cannot serialize a type with no FullName.");
-            if (!WireTypeWhitelist.IsRuntimeTypeAllowed(type))
+            if (!WireTypeWhitelist.IsNamedValueTypeAllowed(type))
             {
                 throw new InvalidOperationException(
                     $"JSON serialization blocked: type '{fullName}' is not in the allowed type whitelist.");

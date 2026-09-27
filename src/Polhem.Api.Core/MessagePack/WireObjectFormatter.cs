@@ -38,7 +38,8 @@ namespace Polhem.Api.Core.MessagePack
     /// <para>
     /// The contract is the same one JSON uses: every public read/write property that is not
     /// <c>[JsonIgnore]</c>. <c>WireContractDriftTests</c> asserts that for every registered type,
-    /// so a property added to a wire type without being registered here fails the build.
+    /// so a property added to a wire type without being registered here fails that test run. It is
+    /// a test, not a build step.
     /// </para>
     /// </remarks>
     /// <typeparam name="T">The wire type.</typeparam>

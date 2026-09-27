@@ -183,7 +183,51 @@ namespace Polhem.Api.Core.MessagePack
             if (names.Count == 0)
                 return false;
 
-            return names.TrueForAll(IsTypeAllowed);
+            return names.TrueForAll(IsTypeNameAllowed);
+        }
+
+        /// <summary>
+        /// Validates the type a named wire value is about to be written as, applying every check the
+        /// reading end applies to it.
+        /// </summary>
+        /// <remarks>
+        /// IMPORTANT: both escape hatches (<see cref="WireValueFormatter"/> and
+        /// <see cref="Polhem.Api.Core.Json.WireValueJsonConverter"/>) call this before they write a type name, and their readers
+        /// call <see cref="IsAssemblyQualifiedNameAllowed"/> on that same name and then
+        /// <see cref="IsRuntimeTypeAllowed(Type)"/> on the type it resolves to. Screening the writer
+        /// with only the second check let values such as <c>int[]</c> serialize on the client and be
+        /// refused by the server, so the failure surfaced in the other process.
+        /// <c>WireTypeWhitelistTests</c> pins the two ends against each other.
+        /// </remarks>
+        /// <param name="type">The runtime type of the value.</param>
+        /// <returns><c>true</c> when the reading end will accept the type.</returns>
+        public static bool IsNamedValueTypeAllowed(Type type)
+            => IsRuntimeTypeAllowed(type) && IsAssemblyQualifiedNameAllowed(type.AssemblyQualifiedName);
+
+        /// <summary>
+        /// Validates one type name taken from an assembly-qualified name, where array ranks are still
+        /// bound to the name.
+        /// </summary>
+        /// <remarks>
+        /// Applies the same rule as <see cref="IsRuntimeTypeAllowed(Type)"/>: a whole-name match first
+        /// (<c>System.Byte[]</c>, <c>System.Object[]</c>), then a single-dimensional array of an allowed
+        /// element type, nested no deeper than the runtime check allows. A multi-dimensional rank is
+        /// refused; System.Text.Json cannot carry one, so the two codecs could not agree on it.
+        /// </remarks>
+        private static bool IsTypeNameAllowed(string name)
+        {
+            for (var depth = 0; depth <= MaxNestingDepth; depth++)
+            {
+                if (s_allowedPrimitiveTypes.Contains(name))
+                    return true;
+
+                if (!name.EndsWith("[]", StringComparison.Ordinal))
+                    return !name.EndsWith(']') && IsTypeAllowed(name);
+
+                name = name[..^2];
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -217,8 +261,9 @@ namespace Polhem.Api.Core.MessagePack
 
             if (type.IsArray)
             {
+                // Single-dimensional only, matching the name screen: see `IsTypeNameAllowed`.
                 var elementType = type.GetElementType();
-                return elementType != null && IsRuntimeTypeAllowed(elementType, depth + 1);
+                return type.IsSZArray && elementType != null && IsRuntimeTypeAllowed(elementType, depth + 1);
             }
 
             if (type.IsConstructedGenericType)

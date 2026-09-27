@@ -1,6 +1,10 @@
 using System.ComponentModel;
+using System.Data;
 using System.Text.Json;
+using Polhem.Api.Core.JsonRpc;
+using Polhem.Api.Core.Messages.Form;
 using Polhem.Api.Core.Messages.System;
+using Polhem.Base.Serialization;
 using Polhem.Business.System;
 using Polhem.Api.Core.Conversion;
 
@@ -79,6 +83,30 @@ namespace Polhem.Api.Core.UnitTests
             object value = "hello";
             var result = ApiOutputConverter.ConvertResultValue<string>(value);
             Assert.Equal("hello", result);
+        }
+        [Fact]
+        [DisplayName("ConvertResultValue keeps every row of a DataTable in a Plain list response")]
+        public void ConvertResultValue_PlainGetListResponse_KeepsTableRows()
+        {
+            var table = new DataTable("Employee");
+            table.Columns.Add("sys_id", typeof(string));
+            table.Rows.Add("E001");
+            table.Rows.Add("E002");
+            table.AcceptChanges();
+            var response = new JsonRpcResponse
+            {
+                Id = "1",
+                Result = new JsonRpcResult { Value = new GetListResponse { Table = table } },
+            };
+
+            // The Plain wire: the server writes the response with `JsonCodec`, the client reads it back and converts
+            // the value, which arrives as a `JsonElement`.
+            var received = JsonCodec.Deserialize<JsonRpcResponse>(JsonCodec.Serialize(response))!;
+            var result = ApiOutputConverter.ConvertResultValue<GetListResponse>(received.Result!.Value!);
+
+            Assert.NotNull(result?.Table);
+            Assert.Equal(2, result!.Table!.Rows.Count);
+            Assert.Equal("E002", result.Table.Rows[1]["sys_id"]);
         }
     }
 }

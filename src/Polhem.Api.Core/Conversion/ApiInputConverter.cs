@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Polhem.Api.Core.Json;
 using Polhem.Base.Serialization;
 
 namespace Polhem.Api.Core.Conversion
@@ -12,12 +13,29 @@ namespace Polhem.Api.Core.Conversion
     /// </summary>
     public static class ApiInputConverter
     {
-        // Must include the same converters as JsonCodec on the write side, otherwise
-        // Plain-format requests carrying DataSet / DataTable / string-encoded enums
-        // (e.g. RowState) silently deserialize to defaults and the call appears to
-        // succeed with empty data. Keep this list in sync with
-        // Polhem.Base.Serialization.JsonCodec.GetJsonSerializerOptions.
-        private static readonly JsonSerializerOptions s_caseInsensitiveOptions = CreateReadOptions();
+        /// <summary>
+        /// The options every <c>Plain</c> body is read with, on the server (requests) and on the client
+        /// (<see cref="ApiOutputConverter.ConvertResultValue{T}"/>, responses).
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// WARNING: the <c>DataTable</c>, <c>DataSet</c> and enum converters must match the ones
+        /// <see cref="JsonCodec"/> writes with. A reader missing one does not fail: a table
+        /// deserializes with no rows, an enum throws, and the call appears to succeed with empty data.
+        /// Both directions share this one instance so the list cannot drift between them, which is how
+        /// the response side lost its table rows before.
+        /// </para>
+        /// <para>
+        /// <see cref="PlainValueJsonConverter"/> is what only this reader has: a <c>Plain</c> body
+        /// carries <c>object</c>-typed members as bare values, and without it they arrive as
+        /// <see cref="JsonElement"/>, which no database provider can bind as a parameter.
+        /// </para>
+        /// <para>
+        /// Shared, never rebuilt per call: <see cref="JsonSerializerOptions"/> caches the contract it
+        /// builds for each type.
+        /// </para>
+        /// </remarks>
+        internal static JsonSerializerOptions PlainReadOptions { get; } = CreateReadOptions();
 
         private static JsonSerializerOptions CreateReadOptions()
         {
@@ -25,6 +43,7 @@ namespace Polhem.Api.Core.Conversion
             options.Converters.Add(new DataTableJsonConverter());
             options.Converters.Add(new DataSetJsonConverter());
             options.Converters.Add(new JsonStringEnumConverter());
+            options.Converters.Add(PlainValueJsonConverter.Instance);
             return options;
         }
 
@@ -48,7 +67,7 @@ namespace Polhem.Api.Core.Conversion
             // with camelCase naming policy (see JsonCodec internal options).
             if (source is JsonElement element)
             {
-                return JsonSerializer.Deserialize(element.GetRawText(), targetType, s_caseInsensitiveOptions);
+                return element.Deserialize(targetType, PlainReadOptions);
             }
 
             // If the target is an interface, we cannot create an instance directly

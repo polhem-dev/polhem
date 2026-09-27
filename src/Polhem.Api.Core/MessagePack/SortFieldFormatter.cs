@@ -17,15 +17,18 @@ namespace Polhem.Api.Core.MessagePack
     /// code runs on desktop and on device.
     /// <para>
     /// WARNING: Adding a property to <see cref="SortField"/> means adding it here too. Nothing in
-    /// the compiler ties the two together — the guard is the member-count assertion in the wire
-    /// round-trip tests, which fails as soon as the shapes drift apart.
+    /// the compiler ties the two together. <c>WireContractDriftTests</c> fails when the member list
+    /// below falls behind the type, and <c>WireCodecParityTests</c> when the read or write code
+    /// falls behind the list.
     /// </para>
     /// </remarks>
     internal sealed class SortFieldFormatter : IMessagePackFormatter<SortField?>, IWireContract
     {
         /// <summary>
-        /// Wire member names, in write order. The single source for both the map header and the
-        /// drift check — they cannot disagree because they read the same array.
+        /// Wire member names, in write order. The single source for the map header and the drift
+        /// check, which therefore agree. The <c>Serialize</c> and <c>Deserialize</c> bodies are a
+        /// second copy the array cannot reach; <c>WireCodecParityTests</c> is what catches a member
+        /// missing from either.
         /// </summary>
         private static readonly string[] s_wireMembers =
         [

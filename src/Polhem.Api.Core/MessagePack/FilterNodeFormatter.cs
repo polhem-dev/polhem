@@ -21,10 +21,11 @@ namespace Polhem.Api.Core.MessagePack
     /// </para>
     /// <para>
     /// WARNING: Adding a property to <see cref="FilterCondition"/> or <see cref="FilterGroup"/> —
-    /// or adding a third subclass — means updating this formatter. The guard is the
-    /// <c>WireContractDriftTests</c>, by way of the two subtype formatters in
-    /// <c>FilterNodeSubtypeFormatters.cs</c> — this formatter covers the abstract base, which has no
-    /// wire members of its own to compare.
+    /// or adding a third subclass — means updating this formatter. The guard is
+    /// <c>WireContractDriftTests</c> (the member lists) and <c>WireCodecParityTests</c> (the read
+    /// and write code), by way of the two subtype adapters <see cref="FilterConditionFormatter"/>
+    /// and <see cref="FilterGroupFormatter"/> — this formatter covers the abstract base, which has
+    /// no wire members of its own to compare.
     /// </para>
     /// </remarks>
     internal sealed class FilterNodeFormatter : IMessagePackFormatter<FilterNode?>
