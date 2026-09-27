@@ -1,6 +1,6 @@
 ---
 name: polhem-app-scaffold
-description: Wiring conventions for building a "standalone Polhem backend app/demo" in polhem (or in a standalone repository after it graduates) — without Polhem.Samples.Shared, depending only on public Polhem.* packages or ProjectReference. Covers the easiest thing to get wrong, DB scoping (CategoryId is the common/company/log scope selector; business data must be company), a lightweight company context, custom auth (no st_user), the seeder (DbCategorySettings-driven table creation + sys_id relation seeding), ProgramSettings doubling as BO binding + menu source, the rule that the Server must not depend on Polhem.Api.Client, and operational pitfalls that keep recurring. Use when the user wants to "start a Polhem app / backend", "build a demo that will graduate to its own repository", "wire up a Polhem backend host myself", "configure DatabaseSettings / DbCategorySettings / the company database", "how Polhem splits common vs company", and similar requests; trigger proactively even if they do not say scaffold.
+description: Wiring conventions for building a "standalone Polhem backend app/demo" in polhem (or in a standalone repository after it graduates) — without Polhem.Samples.Shared, depending only on public Polhem.* packages or ProjectReference. Covers the easiest thing to get wrong, DB scoping (CategoryId is the common/company/log scope selector; business data must be company), the company context (sign-in against st_user, then EnterCompany, even for a single company), the seeder (DbCategorySettings-driven table creation + sys_id relation seeding), ProgramSettings as the server-side BO/Repository registry and MenuSettings as the menu, the rule that the Server must not depend on Polhem.Api.Client, and operational pitfalls that keep recurring. Use when the user wants to "start a Polhem app / backend", "build a demo that will graduate to its own repository", "wire up a Polhem backend host myself", "configure DatabaseSettings / DbCategorySettings / the company database", "how Polhem splits common vs company", and similar requests; trigger proactively even if they do not say scaffold.
 ---
 
 # Standalone Polhem backend wiring
@@ -38,7 +38,7 @@ marks `apps/Polhem.Northwind/` as the complete implementation to compare against
 | **`polhem-app-scaffold`** (this skill) | Adds DB scoping + company context + seeder on top of the items below |
 | `polhem-jsonrpc-backend` | **Authoritative templates for host bootstrap / empty controller / the login trio / client calls** |
 | `polhem-sample-add` | Front-end/backend pairing for `samples/` projects (may use Polhem.Samples.Shared) |
-| `polhem-add-form` | Adding a form to an already-wired app (FormSchema/TableSchema/registration) |
+| `polhem-add-form` | Adding a form to an already-wired app (FormSchema/FormLayout/TableSchema/registration/menu) |
 | `polhem-scaffold-from-formschema` | Generating layout/language/tableschema sidecars from one FormSchema |
 | `demo-smoke` | End-to-end smoke test once wired |
 
@@ -83,12 +83,14 @@ Three things to put in place:
 > `SysInfo` → `ApiServiceOptions` → `AddPolhemFramework`, empty controller).
 > That file is the single authoritative source; this file does not duplicate it.
 
-On top of that template, **this scenario (company scope + seeder) needs only two extra things**:
+On top of that template, **this scenario (company scope + seeder) adds no service overrides**. Northwind registers
+nothing after `AddPolhemFramework`: sign-in, company entry and company lookup all run the framework's own
+implementations against rows the seeder writes (Part 3). What it does add:
 
-1. **Override one more service, `ICompanyInfoService`** → lightweight company (Part 3). Like the factory / resolver,
-   it must be registered with `AddSingleton` **after** `AddPolhemFramework` (the later registration wins).
-2. **`UseXxxBackend` runs the full seeder** (Part 5), not just the creation of the single framework table
-   `st_cache_notify`.
+1. **`Defaults.MaterializeTo` lays down the framework's `TableSchema/common/` and `TableSchema/log/` definitions**
+   (skip-if-exists), and `DbCategorySettings.xml` registers those tables under `common` / `log`, so the ordinary
+   category loop builds them (Part 5).
+2. **`UseXxxBackend` runs the full seeder** (Part 5) before `app.UsePolhemFramework()`.
 
 Implementation to compare against: `apps/Polhem.Northwind/Polhem.Northwind.Server/NorthwindBackend.cs`.
 
@@ -126,14 +128,18 @@ The correct approach is to follow the framework's two steps; it costs less than 
 Implementation to compare against: `apps/Polhem.Northwind/Polhem.Northwind.Server/NorthwindSchemaSeeder.cs`
 (`SeedCommon`) and `apps/Polhem.Northwind/Polhem.Northwind.UI/ViewModels/LoginViewModel.cs`.
 
-## Part 4 — Custom auth (no st_user)
+## Part 4 — Authentication: the framework's `st_user` sign-in
 
-> **For the complete code of the login trio** (Credentials / authenticating System BO / factory) **see the
-> `polhem-jsonrpc-backend` skill's `references/business-object.md`**. This file does not duplicate it.
+Northwind has no authentication code. The seeder writes one account into `st_user` (password hashed with
+`PasswordHasher.HashPassword`, plus `time_zone` / `culture`, which the session reads), and `Login` runs the framework's
+own `st_user` check. The reserved progId `System` is listed in `ProgramSettings.xml` without a `BusinessObject`, so it
+resolves to the framework's `SystemBusinessObject`. Compare against `NorthwindCredentials.cs` and `SeedDemoUser` in
+`NorthwindSchemaSeeder.cs`.
 
-The only difference in this scenario: the authenticating BO's `Login` **also stamps the company** (Part 3);
-the `AuthenticateUser` part is the same as that template. Compare against
-`NorthwindAuthenticatingSystemBusinessObject`.
+Only when accounts live somewhere else: subclass `SystemBusinessObject`, override `AuthenticateUser`, and bind the
+subclass to `System` with `ProgramItem.BusinessObject` (the samples do this with
+`samples/Polhem.Samples.Shared/DemoAuthenticatingSystemBusinessObject.cs`). The company still comes from
+`EnterCompany` (Part 3); do not stamp it inside the login override.
 
 ## Part 5 — Seeder (create tables + seed data)
 
@@ -142,9 +148,13 @@ when empty).
 
 - **Table creation is data-driven**: enumerate each category in `DbCategorySettings`,
   `new TableSchemaBuilder(category.Id, ...)` + `Execute(category.Id, tableName)` — `category.Id` is both the **target
-  db** and the **TableSchema folder**. Framework tables (`st_cache_notify`) are built into common with a separate common
-  builder. **This makes "add a table = pure XML (TableSchema + one DbCategorySettings entry)" hold; the seeder needs no
-  C# changes.**
+  db** and the **TableSchema folder**. Framework tables go through the same loop: they are registered under `common` /
+  `log` like any other table. **This makes "add a table = pure XML (TableSchema + one DbCategorySettings entry)" hold;
+  the seeder needs no C# changes.**
+- **Check the framework table registration at startup**: `VerifyCommonRegistration` compares the tables registered
+  under `common` with the common TableSchemas the framework ships (`Defaults.ListEmbedded`) and fails startup on a gap.
+  A hand-kept list once missed a table sign-in had started to need, and the only symptom was a generic API error at
+  login.
 - **Seed data goes into the company db** (business data): `dbAccessFactory.Create("company")`.
 - **Relation seeding uses `sys_id`**: relation fields in the JSON hold the target `sys_id` (human-readable), and the
   seeder resolves it to `sys_rowid`. **Forward** (target already created) resolves inline; **Deferred** (circular,
@@ -153,18 +163,23 @@ when empty).
 - **Copy SeedData to the output**: csproj
   `<Content Update="SeedData\**\*.json" CopyToOutputDirectory="PreserveNewest" />`.
 
-## Part 6 — ProgramSettings does two jobs
+## Part 6 — ProgramSettings is the registry, MenuSettings is the menu
 
-`Define/ProgramSettings.xml` serves two purposes in one file:
-1. **BO binding**: `ProgramItem.BusinessObject="Ns.Type, Asm"` → `ProgramSettingsBoTypeResolver` loads the custom
-   `FormBusinessObject`. Empty → framework default (pure definition CRUD).
-2. **Navigation menu source**: the front end enumerates category→header, item→form link from
-   `ClientInfo.DefineAccess.GetProgramSettings()` (data-driven, not hard-coded `NavItems`). `ProgramCategory` groups
-   the menu (unrelated to the DB's common/company).
+Two definition files, with different readers:
 
-> GetDefine transports via `GetDefineResult.Xml` (an XML string); a definition type only needs to be XML-serializable
-> to be fetched remotely (same path as FormSchema). `SystemBusinessObject.GetDefine` only blocks remote fetches of
-> `SystemSettings`/`DatabaseSettings`; ProgramSettings can be fetched remotely.
+1. **`Define/ProgramSettings.xml` — the server-side type registry.** A flat `<Items>` list of `<ProgramItem>`:
+   `BusinessObject="Ns.Type, Asm"` → `ProgramSettingsBoTypeResolver` (the default `IBoTypeResolver`) loads the custom
+   `FormBusinessObject`; `Repository` binds a `DataFormRepository` subclass the same way. Empty or absent → framework
+   default (pure definition CRUD). A name that is present but will not load throws. Remote `GetDefine` refuses this
+   type (`SystemBusinessObject.GetDefine` serves remote callers an allow-list of client-side types only), and the old
+   nested `<Categories><ProgramCategory>` layout is rejected on load by `ProgramSettingsFormat.EnsureCurrentFormat`.
+2. **`Define/MenuSettings.xml` — the navigation menu**, read by the client through
+   `ClientDefineAccess.GetMenuSettingsAsync()`: `<MenuFolder>` groups (nesting allowed) of `<MenuEntry Id="..."
+   ProgId="...">`, with `Order`, `Caption` and a design-time `Visible` switch (not a permission). `Id` is unique across
+   the tree and independent of `ProgId`.
+
+The full description is `docs/en/definition-files-overview.md` § 4 and § 4b; compare against
+`apps/Polhem.Northwind/Define/ProgramSettings.xml` and `MenuSettings.xml`.
 
 ---
 
@@ -177,7 +192,8 @@ when empty).
 3. **TableSchema folder name = CategoryId**.
 4. **The slnx does not list `Define/` files**: they are runtime data and go stale; the server reads the whole directory
    via `PathOptions.DefinePath`.
-5. **Override services are registered after `AddPolhemFramework`** (the later one wins).
+5. **If you do override a service, register it after `AddPolhemFramework`** (the later registration wins). Northwind
+   overrides none; do not replace `ICompanyInfoService` to skip `EnterCompany` (Part 3).
 6. **Mark computed / server-derived fields `FormField.ReadOnly="true"`** (e.g. an amount computed by the BO) — when the
    FormLayout is generated this carries over to `LayoutField.ReadOnly`, so there is no need to mark it again in the
    layout. **The FormLayout itself must still be written to a file** (it is not generated automatically at runtime).
@@ -189,8 +205,8 @@ when empty).
   `app.Run()`) — do not misread it.
 - **Schema changes need a rebuild**: after adding a column, delete `*.db` and re-run so the seeder rebuilds it
   (create-if-not-exists does not ALTER existing tables to add columns). `.db` should be gitignored.
-- **apps/ is not in CI**: `build-ci.yml` only triggers on `src/ tests/ slnx props sonar yml`. Backend correctness
-  relies on a local build + `demo-smoke`; when you change low-level src, CI still builds src+tests.
+- **apps/ is not in CI**: `build-ci.yml` builds and tests only `Polhem.slnx`, which does not include `apps/`. Backend
+  correctness relies on a local build + `demo-smoke`; when you change low-level src, CI still builds src+tests.
 - **Avalonia UI self-testing is handed to the user**: computer-use's `request_access` does not recognize a bare
   dotnet process running Avalonia (it must be wrapped in a .app); once it compiles, hand it to the user to test.
 - **The symptoms of wrong company wiring are unmistakable**: every form reports `CompanyNotEntered` (the session has no
@@ -204,4 +220,5 @@ when empty).
 - [ ] The Server csproj has no `Polhem.Api.Client`
 - [ ] Every business FormSchema has `CategoryId="company"`, TableSchema is in the `company/` folder, and
       DbCategorySettings has the matching category
+- [ ] Every form has a FormLayout and a `MenuEntry` in `MenuSettings.xml`
 - [ ] Form CRUD works after login (company routing works) — hand to the user to self-test, or use `demo-smoke`

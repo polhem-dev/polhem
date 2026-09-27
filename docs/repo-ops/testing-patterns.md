@@ -16,11 +16,11 @@ When the two conflict, `rules/testing.md` wins.
 
 ```csharp
 [Fact]
-[DisplayName("CreateSession returns a valid token")]
-public void CreateSession_ReturnsValidToken()
+[DisplayName("ToClrType maps FormSchema to the FormSchema type")]
+public void ToClrType_FormSchema_ReturnsFormSchemaType()
 {
-    var token = _repo.CreateSession(user);
-    Assert.NotNull(token);
+    var result = DefineType.FormSchema.ToClrType();
+    Assert.Equal(typeof(FormSchema), result);
 }
 ```
 
@@ -29,9 +29,9 @@ public void CreateSession_ReturnsValidToken()
 ```csharp
 [Theory]
 [InlineData(DefineType.SystemSettings, typeof(SystemSettings))]
-[InlineData(DefineType.UserSettings, typeof(UserSettings))]
+[InlineData(DefineType.Language, typeof(LanguageResource))]
 [DisplayName("ToClrType returns the matching CLR type")]
-public void ToClrType_ValidType(DefineType defineType, Type expectedType)
+public void ToClrType_ValidType_ReturnsExpectedType(DefineType defineType, Type expectedType)
 {
     var result = defineType.ToClrType();
     Assert.Equal(expectedType, result);
@@ -41,32 +41,39 @@ public void ToClrType_ValidType(DefineType defineType, Type expectedType)
 ### Needs a database: `[DbFact(DatabaseType)]`
 
 Write one test per `DatabaseType`. The connection ID is `common_{dbtype_lower}` (produced by
-`TestDbConventions.GetDatabaseId`):
+`TestDbConventions.GetDatabaseId`), and `DbAccess` comes from the fixture's `IDbAccessFactory` through
+`NewDbAccess`; a test does not construct `DbAccess` itself:
 
 ```csharp
-[DbFact(DatabaseType.SQLServer)]
-[DisplayName("ExecuteDataTable query returns a valid DataTable on SQL Server")]
-public void ExecuteDataTable_SqlServer_ReturnsDataTable()
+public class MyDbTests : IClassFixture<SharedDbFixture>
 {
-    var dbAccess = new DbAccess("common_sqlserver");
-    var result = dbAccess.Execute(command);
-    Assert.NotNull(result.Table);
-}
+    private readonly SharedDbFixture _fx;
+    public MyDbTests(SharedDbFixture fx) { _fx = fx; }
 
-[DbFact(DatabaseType.PostgreSQL)]
-[DisplayName("ExecuteDataTable query returns a valid DataTable on PostgreSQL")]
-public void ExecuteDataTable_PostgreSQL_ReturnsDataTable()
-{
-    var dbAccess = new DbAccess("common_postgresql");
-    var result = dbAccess.Execute(command);
-    Assert.NotNull(result.Table);
+    [DbFact(DatabaseType.SQLServer)]
+    [DisplayName("Execute returns a DataTable on SQL Server")]
+    public void Execute_SqlServer_ReturnsDataTable()
+    {
+        var dbAccess = _fx.NewDbAccess(TestDbConventions.GetDatabaseId(DatabaseType.SQLServer));
+        var result = dbAccess.Execute(new DbCommandSpec(DbCommandKind.DataTable, "SELECT sys_id FROM st_user"));
+        Assert.NotNull(result.Table);
+    }
+
+    [DbFact(DatabaseType.PostgreSQL)]
+    [DisplayName("Execute returns a DataTable on PostgreSQL")]
+    public void Execute_PostgreSQL_ReturnsDataTable()
+    {
+        var dbAccess = _fx.NewDbAccess(TestDbConventions.GetDatabaseId(DatabaseType.PostgreSQL));
+        var result = dbAccess.Execute(new DbCommandSpec(DbCommandKind.DataTable, "SELECT sys_id FROM st_user"));
+        Assert.NotNull(result.Table);
+    }
 }
 ```
 
 ### Needs a local service: `[LocalOnlyFact]` / `[LocalOnlyTheory]`
 
-> **The following is an illustration, not existing code; do not grep for it.** Neither attribute has a user at
-> present (measured 2026-08-11). They are kept because the situation "an integration test that needs a local service"
+> **The following is an illustration, not existing code; do not grep for it** (`ApiConnectValidator` only has
+> `ValidateAsync`). Neither attribute had a user when this was measured on 2026-08-11. They are kept because the situation "an integration test that needs a local service"
 > still exists.
 
 ```csharp
@@ -166,18 +173,21 @@ are in `rules/testing.md`):
 ```csharp
 // 1. Declare the collection at the root of the test project: a pure marker with no fixture, whose name is a const.
 [CollectionDefinition(Name)]
-public static class DbConnectionStateCollection
+public static class SysInfoStaticCollection
 {
-    public const string Name = "DbConnectionState";
+    public const string Name = "SysInfoStatic";
 }
 
 // 2. Every test class that modifies that static references the constant.
-[Collection(DbConnectionStateCollection.Name)]
-public class DbConnectionManagerTests { ... }
+[Collection(SysInfoStaticCollection.Name)]
+public class SysInfoTests { ... }
 
-[Collection(DbConnectionStateCollection.Name)]
-public class DbAccessFactoryTests { ... }
+[Collection(SysInfoStaticCollection.Name)]
+public class SysInfoSecurityTests { ... }
 ```
+
+The example is the real one in `tests/Polhem.Base.UnitTests`; the list of existing collections is in
+`tests/CLAUDE.md`.
 
 **Reference the `const`, never repeat the string**: a mistyped literal makes xUnit create an implicit group that
 nobody shares. It looks serialized but is not, and there is no compile error; a mistyped constant does not compile.

@@ -83,7 +83,8 @@ No step may be skipped or reordered.
 - Never write **plaintext keys, tokens or passwords** to logs or exception messages
 - Never use `MD5` or `SHA1` for security hashing (SHA-256 or stronger only)
 - Never hardcode any key or credential in source code
-- Never use `NoEncryptionEncryptor` outside tests
+- Never select the `none` encryptor (the internal `NoEncryptionEncryptor`) outside tests and development;
+  `ApiPayloadOptionsFactory.CreateEncryptor` rejects it unless the host runs in debug mode
 - Never compare HMAC / hash results directly with `==`
 
 ## File integrity

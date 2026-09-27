@@ -22,7 +22,8 @@ description: "Design guidance for \"triple serialization\" (XML / JSON / Message
   `Plain` embeds JSON; the body of `Encoded`/`Encrypted` **is declared per request in the envelope's `codec` field**
   (adr-044), and is MessagePack when none is declared. For the criteria and names see `rules/serialization.md` and
   `PayloadCodecNames`.
-  ⚠️ "The framework has no JSON body serializer" is a conclusion from **before 4.26.0**; do not reason from it any more.
+  ⚠️ "The framework has no JSON body serializer" is a conclusion from **Bee.NET 4.26.0 and earlier**; do not reason
+  from it any more.
 - An object that must "go to the front end and also be saved as a snapshot" → **needs all three** (e.g.
   `DepartmentTree`).
 - An API DTO that only crosses the wire → needs JSON + MessagePack, not XML.
@@ -86,8 +87,9 @@ public class FooNodeCollection : CollectionBase<FooNode> { }
 ```
 
 ```csharp
-// MessagePackCodec.BuildFormatters(): without this line, mobile cannot read it back
-new CollectionBaseFormatter<FooNodeCollection, FooNode>(),
+// WireContracts.<Axis>.cs (for a definition-layer collection, WireContracts.Definition.cs):
+// without this line, mobile cannot read it back
+list.Add(new CollectionBaseFormatter<FooNodeCollection, FooNode>());
 ```
 
 ### Choosing a collection base
@@ -106,8 +108,9 @@ new CollectionBaseFormatter<FooNodeCollection, FooNode>(),
 
 Reflection-only `XmlSerializer` (the iOS path) is stricter about type shape than desktop: **only one public instance
 `Add`**, **a parameterless constructor is required**, and **a collection property mapped to repeated `[XmlElement]`
-must have a public setter**. The first two are enforced by `POLHEM4005` / `POLHEM4006`; the third is only caught by the
-AOT gate in CI.
+must have a public setter**. The first two are enforced at build time by `POLHEM4005` / `POLHEM4006`;
+`XmlSerializerShapeGateTests` (tests/Polhem.Definition.UnitTests) checks all three over every type the definition
+roots reach.
 
 > **The full rules for all three, the exception-message mapping, and the correct way to write the setter (clear, then
 > `Add` one by one; do not swap the field) →
@@ -117,11 +120,13 @@ AOT gate in CI.
 ## `object` members use the discriminated envelope
 
 `object` members such as `Parameter.Value` / `FilterCondition.Value` are handled by `WireValueFormatter`,
-**not `TypelessFormatter`**. To send a new value type on mobile → add it to the closed `WireValueCode` set;
-do not count on the whitelist escape hatch (that branch only works on runtimes with dynamic code).
+**not `TypelessFormatter`**. To send a new value type on mobile, do not count on the whitelist escape hatch (that
+branch only works on runtimes with dynamic code). When the type already has a registered formatter, prefer the named
+table (`AddNamed<T>`): the wire bytes stay what the escape hatch wrote. A new `WireValueCode` changes the wire, and
+the change has a downstream in another repository (`rules/serialization.md`).
 
 **The numeric values of `WireValueCode` are part of the wire format and must not be renumbered**: that breaks
-cross-version compatibility, and the drift test cannot catch it. Mechanism details are in
+cross-version compatibility. `WireValueCodePinTests` pins them for both codecs. Mechanism details are in
 `src/Polhem.Api.Core/CLAUDE.md`.
 
 ## Wire transport patterns (API side)
@@ -145,11 +150,12 @@ cross-version compatibility, and the drift test cannot catch it. Mechanism detai
    `WireTypeWhitelist.IsAssemblyQualifiedNameAllowed`**; do not split the string yourself. The commas of generic
    arguments come before the assembly separator, so splitting on the first comma leaves the arguments completely
    unchecked (an unauthenticated-reachable bypass was fixed on 2026-08-11).
-4. **Serializing a process-wide cached instance pollutes the source**: `XmlCodec.Serialize(obj)` flips flags **on the
-   source object** through `IObjectSerialize.SetSerializeState` and recurses into child collections (so that empty
-   collection getters return `null` during serialization, and definition files on disk do not carry redundant elements
-   such as `<Tables />`). Therefore **it cannot be used as a free deep clone**; to mutate an object taken from the
-   cache, always `Clone()` first (see `rules/definition.md`).
+4. **Serializing must not change the object**: `XmlCodec` sets no state on the value it serializes, so serializing a
+   process-wide cached definition is safe (`CachedDefinitionSerializationTests` pins it). Empty collections are
+   omitted by get-only `{Property}Specified` properties that decide from the value (`src/Polhem.Definition/CLAUDE.md`).
+   Do not bring back per-object serialize state: the removed `IObjectSerialize.SetSerializeState` wrote onto the
+   source and corrupted shared instances under concurrency. To mutate an object taken from the cache, `Clone()` first
+   (see `rules/definition.md`).
 5. **A lazy index must be rebuildable after deserialization**: serialization only carries the flat state; the lookup
    index is built lazily (thread-safe) on the first lookup after restore; the index itself is not serialized.
 6. **An Oracle Guid reads back as `byte[]` (RAW 16)**: `ValueUtilities.CGuid` already supports coercing `byte[]`;
@@ -182,8 +188,8 @@ var fromMp = MessagePackCodec.Deserialize<Foo>(bytes)!;
   `IEnumerable` with `null`, so for collection members it only guarantees that "an empty instance can round-trip".
 - Test the empty-collection / single-node boundaries once each.
 - **Mobile gate**: `dotnet test <project> -c Release --settings .runsettings -p:DynamicCodeSupport=false`
-  (zero failures expected). CI runs the same gate on the `Polhem.Api.Core` / `Polhem.Definition` / `Polhem.Base`
-  projects.
+  (zero failures expected). CI runs the same gate over the test projects listed in the "Mobile AOT gate" step of
+  `.github/workflows/build-ci.yml`.
 
 ## Complete checklist
 
@@ -196,10 +202,12 @@ var fromMp = MessagePackCodec.Deserialize<Foo>(bytes)!;
       `[XmlElement]` have a public setter
 - [ ] **Register the contract in `WireContracts.<Axis>.cs`**; register `CollectionBaseFormatter<,>` for collections;
       add new closed generic instantiations to `WireContracts.Generics.cs`
-- [ ] New value types for `object` members are added to the closed `WireValueCode` set, without relying on the escape
-      hatch
-- [ ] No mutation or `XmlCodec.Serialize` on cached instances obtained from `IDefineAccess.GetX(...)` (`Clone()` first
-      if you need to change one)
+- [ ] New value types for `object` members go through the named table or a new `WireValueCode`, without relying on
+      the escape hatch
+- [ ] Empty collections are omitted through a get-only `{Property}Specified`, not through state set during
+      serialization
+- [ ] No mutation of cached instances obtained from `IDefineAccess.GetX(...)` (`Clone()` first if you need to change
+      one)
 - [ ] Round-trip tests **compare values** (not just `Assert.NotNull`), collection members carry values, empty-collection
       boundary included
 - [ ] `dotnet build Polhem.slnx -c Release --no-incremental` 0w/0e
@@ -214,7 +222,7 @@ var fromMp = MessagePackCodec.Deserialize<Foo>(bytes)!;
 | Collection bases | `src/Polhem.Base/Collections/CollectionBase.cs` / `KeyCollectionBase.cs` / `CollectionItem.cs` / `KeyCollectionItem.cs` |
 | **Everything on the wire side** (registration list, formatters, resolver chain, `object` envelope, whitelist, drift gate) | `src/Polhem.Api.Core/MessagePack/` (**for the file list see `src/Polhem.Api.Core/CLAUDE.md`**; not listed here) |
 | XML persistence codec | `src/Polhem.Base/Serialization/XmlCodec.cs` |
-| Serialization lifecycle (SerializeState propagation) | `src/Polhem.Base/Serialization/IObjectSerialize.cs` |
+| Omitting empty collections (`{Property}Specified`) | `src/Polhem.Definition/CLAUDE.md`; `FormSchema.TablesSpecified` is the reference |
 | Round-trip test samples | `tests/Polhem.Api.Core.UnitTests/TestFunc.cs`, `tests/Polhem.Api.Core.UnitTests/WireFormatterTests.cs` |
 
 ## Related rules

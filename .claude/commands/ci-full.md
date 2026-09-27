@@ -1,14 +1,15 @@
 ---
-description: Trigger full-mode CI (all four databases + SonarCloud), wait for it, and report the result
+description: Trigger full-mode CI (SQL Server, SQLite, PostgreSQL, MySQL and Oracle + SonarCloud), wait for it, and report the result
 argument-hint: "[branch name, default main]"
 ---
 
 # CI Full
 
-Trigger **full-mode** CI on branch `$1` (`main` if not given): all four databases
-(SQL Server / PostgreSQL / MySQL / Oracle) plus a SonarCloud scan, about 8 minutes.
+Trigger **full-mode** CI on branch `$1` (`main` if not given): the lite-mode databases (SQL Server, SQLite) plus
+PostgreSQL, MySQL and Oracle, and a SonarCloud scan; about 8 minutes when last measured. The authoritative list is the
+`Resolve database scope` step of `.github/workflows/build-ci.yml` (`POLHEM_TEST_REQUIRED_DATABASES`).
 
-> `build-ci.yml` defaults to lean mode (SQL Server + SQLite, Sonar skipped, about 3.5 minutes).
+> `build-ci.yml` defaults to lite mode (SQL Server + SQLite, Sonar skipped, about 3.5 minutes).
 > For the criteria and the rule "ask the user before pushing", see
 > `.claude/rules/testing.md` § CI database scope: ask the user before pushing.
 
@@ -47,9 +48,9 @@ Wait in the background with `gh run watch <id> --exit-status` (about 8 minutes),
 
 ### 4. Report
 
-- **Success** → report the total duration, and confirm the tests for all four databases actually ran
+- **Success** → report the total duration, and confirm the PostgreSQL / MySQL / Oracle tests actually ran
   (check that the two steps `Wait for extra database containers` and `Enable extra database connection strings`
-  are success, not skipped; skipped means the mode detection did not take effect, and you effectively ran lean mode
+  are success, not skipped; skipped means the mode detection did not take effect, and you effectively ran lite mode
   for nothing).
 - **Failure** → get `gh run view <id> --log-failed` and classify it following "When CI fails" in
   `.claude/rules/pull-request.md`: fix what is clearly fixable and commit it, getting the fix to `main` as that file
@@ -61,7 +62,7 @@ Wait in the background with `gh run watch <id> --exit-status` (about 8 minutes),
 - The change touches `src/Polhem.Db/Providers/**`, `src/Polhem.Repository/**`, `SchemaSyntax` /
   `DbTypeMapper` / `NormalizeDbType`, or any SQL generation logic
 - **Before a release** (mandatory)
-- You want an extra SonarCloud scan (lean mode does not run Sonar, so issues pile up until the next full-mode run
+- You want an extra SonarCloud scan (lite mode does not run Sonar, so issues pile up until the next full-mode run
   surfaces them)
 
 > Another way to trigger it: put the `[all-db]` marker in the commit message (for a PR, the PR title), and the push

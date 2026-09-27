@@ -22,8 +22,8 @@ Every package under `src/` has a pair of baseline files that record the public s
 > diff visible in review.
 >
 > **Note that "the gate is closed" does not mean "the old debt is paid"** (added 2026-08-07): the two cases above
-> ended differently. Although the `IEvictableCache` commit was not marked `!`, the CHANGELOG **did** record it (4.16.0,
-> both languages of the root file and both languages of the detail file); `IExcelHelper` had **no CHANGELOG entry at
+> ended differently. Although the `IEvictableCache` commit was not marked `!`, the CHANGELOG **did** record it
+> (Bee.NET 4.16.0, both languages of the root file and both languages of the detail file); `IExcelHelper` had **no CHANGELOG entry at
 > all** until the framework health check on 2026-08-07 found it and it was recorded retroactively.
 > Introducing the baseline files blocks "from now on"; what had already leaked out before still needs to be backfilled
 > by hand and does not disappear on its own.
@@ -129,8 +129,8 @@ tracking of `Microsoft.CodeAnalysis.Analyzers`:
 
 > ⚠️ **`RS2003` never fires against an empty Shipped file.** In Bee.NET, the framework Polhem continues, this file
 > **had not a single line** from its creation until before 4.28.0, while the analyzer had shipped with the
-> definition package since 4.16.0. The consequence was exactly what an empty baseline file implies: `RS2000` still
-> blocked "a new rule is not declared", but the "a shipped rule was removed" half effectively did not exist.
+> definition package since 4.16.0 (both Bee.NET versions). The consequence was exactly what an empty baseline file
+> implies: `RS2000` still blocked "a new rule is not declared", but the "a shipped rule was removed" half effectively did not exist.
 > **BEE4001–BEE4004 were retired in Bee.NET 4.19.0, and nothing made a sound.**
 >
 > Polhem's `Shipped.md` starts at a single `## Release 1.0.0` section listing the rules active at that release. The
@@ -146,4 +146,4 @@ AnalyzerReleases.Unshipped.md  →  AnalyzerReleases.Shipped.md (add a new secti
 ```
 
 Forgetting to move it gives no signal at all: the rules stay in Unshipped forever, and `RS2003` never protects them.
-That is exactly what happened between 4.16.0 and 4.27.0.
+That is exactly what happened in Bee.NET between 4.16.0 and 4.27.0.

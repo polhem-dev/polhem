@@ -23,13 +23,14 @@ screenshots, clean up. What each demo's "success screen" looks like is written i
 
 ## Prerequisites
 
-- The main macOS development machine (Mac Catalyst samples / Blazor in Safari both depend on it)
+- The main macOS development machine (computer-use drives its desktop apps and browser)
 - The `claude` desktop app has computer-use MCP permission
 - The sample has already been built (this skill does not build)
 
 ## Configuration file: `<project-root>/.smoke.yaml`
 
-Every demo with a GUI carries its own `.smoke.yaml`. Example (actual file: `apps/Polhem.Northwind/.smoke.yaml`):
+Every demo with a GUI carries its own `.smoke.yaml` (find them with `find samples apps -name .smoke.yaml`). Example,
+abridged from `apps/Polhem.Northwind/.smoke.yaml` (the real file continues into the Orders list and an order record):
 
 ```yaml
 # apps/Polhem.Northwind/.smoke.yaml
@@ -164,8 +165,8 @@ for pid in "${prerequisite_pids[@]}"; do
   kill "$pid" 2>/dev/null
 done
 
-# confirm the port is released
-lsof -i :5050 -sTCP:LISTEN 2>/dev/null  # should be empty
+# confirm the port is released (the server's port is in its Properties/launchSettings.json)
+lsof -i :<port> -sTCP:LISTEN 2>/dev/null  # should be empty
 ```
 
 ### Step 6: report the conclusion
@@ -174,13 +175,13 @@ lsof -i :5050 -sTCP:LISTEN 2>/dev/null  # should be empty
 ✅ <project-root> smoke passed.
    - prerequisites: 1/1 ready
    - flow steps:    4/4 passed
-   - last screenshot: maui-demo-employee-page.png
+   - last screenshot: northwind-category-list.png
 
 ------ or ------
 
 ❌ <project-root> smoke failed at step "click Sign in".
    - prerequisites: 1/1 ready
-   - flow steps:    1/3 passed (step #2 timed out waiting for "Employee")
+   - flow steps:    1/3 passed (step #2 timed out waiting for "Master Data")
    - failure screenshot: smoke-failure-2026-05-23.png
 ```
 
@@ -188,11 +189,10 @@ lsof -i :5050 -sTCP:LISTEN 2>/dev/null  # should be empty
 
 | Skill | Handles |
 |-------|---------|
-| `verify` (global) | General "run it and check"; no concept of a sample, does not read `.smoke.yaml` |
-| `run` (global) | Launches the project's app; no verification steps, no teardown |
+| `run` (global) | Launches the project's app; no scripted verification steps, no teardown |
 | **`demo-smoke`** (this skill) | Reads `.smoke.yaml`, starts dependencies + app + clicks + verifies + cleans up |
 
-`demo-smoke` is the sample-level combination of `run` + `verify`.
+`demo-smoke` is `run` plus a scripted check and teardown, per demo.
 
 ## Known pitfalls
 

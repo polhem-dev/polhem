@@ -1,14 +1,15 @@
 # Client calls (Polhem.Api.Client)
 
-The frontend only needs a reference to `Polhem.Api.Client`. Based on `QuickStart.Console` and verified on a real
-project's client.
+The frontend only needs a reference to `Polhem.Api.Client`. Based on `samples/QuickStart.Console`; when this file and
+that sample disagree, the sample wins. Every connector method is asynchronous and takes a `CancellationToken`.
 
 ## Build a dedicated connector (recommended)
 
 The proper client↔server seam is **`Polhem.Api.Client.Connectors.ApiConnector`** (abstract base, `protected
-ExecuteAsync<T>(progId, action, value, format)`). `FormApiConnector` is a subclass of it (bound to a ProgId + a set of
-form CRUD methods). **A custom app should not use `FormApiConnector` directly** (it is for ERP forms) — follow its
-pattern: inherit `ApiConnector` and build a **dedicated connector** that wraps each domain action as a typed method:
+ExecuteAsync<T>(progId, action, value, format, cancellationToken)`). `FormApiConnector` is a subclass of it (bound to a
+ProgId + a set of form CRUD methods). **A custom app should not use `FormApiConnector` for its own actions** (it is
+for ERP forms) — follow its pattern: inherit `ApiConnector` and build a **dedicated connector** that wraps each domain
+action as a typed method:
 
 ```csharp
 using Polhem.Api.Client.Connectors;
@@ -17,22 +18,38 @@ using Polhem.Api.Core.Messages;   // PayloadFormat
 public sealed class XxxApiConnector : ApiConnector
 {
     public XxxApiConnector(string endpoint, Guid accessToken) : base(endpoint, accessToken) { }
-    // Local in-process: the base(accessToken) overload
+    // In-process (the backend runs in the same process): the (IServiceProvider services, Guid accessToken) overload.
+    // A host serving several users from one process passes each one its own ApiSessionContext.
 
     // One connector can serve several ProgIds (the base passes progId on every call).
-    public Task<GetLevelsResponse> GetLevelsAsync() =>
-        ExecuteAsync<GetLevelsResponse>("Game", "GetLevels", new GetLevelsRequest(), PayloadFormat.Plain);
-    // Actions that require login use PayloadFormat.Encrypted (call System.Login first and pass the token to the ctor).
+    public Task<GetLevelsResponse> GetLevelsAsync(CancellationToken cancellationToken = default) =>
+        ExecuteAsync<GetLevelsResponse>("Game", "GetLevels", new GetLevelsRequest(), PayloadFormat.Plain, cancellationToken);
 }
-
-// wire DTOs are matched by property name; no need to reference the server BO types. Use string for enum fields (see below).
-public sealed class GetLevelsRequest;
-public sealed class GetLevelsResponse { public List<LevelDto> Levels { get; set; } = new(); }
-public sealed class LevelDto { public string Name { get; set; } = ""; public string Difficulty { get; set; } = ""; /* ... */ }
 ```
 
 Benefit: callers (such as your `IXxxApi` implementation) depend only on the typed methods of `XxxApiConnector` and
 never touch raw action strings.
+
+## Which types the client needs
+
+It depends on the `PayloadFormat` of the call:
+
+| Format | What travels | What the client needs |
+|---|---|---|
+| `Plain` (Public actions only) | JSON bound by property name | Its own look-alike DTOs are enough |
+| `Encoded` / `Encrypted` | A body in the declared codec, plus the body's type name | The **same** args/result types as the server, from a shared assembly, allow-listed locally |
+
+For Encoded / Encrypted the server decodes the request body into the action's parameter type, and a type name that
+does not match it is refused (`ActionPayloadType`). The response carries the server's result type name, which the
+client resolves and screens against **its own** `AllowedTypeNamespaces`: `SystemApiConnector.InitializeAsync`
+deliberately ignores the server's list, so set the client's with `SysInfo.Initialize` before calling it.
+
+```csharp
+// Plain look-alike DTOs (no need to reference the server)
+public sealed class GetLevelsRequest;
+public sealed class GetLevelsResponse { public List<LevelDto> Levels { get; set; } = new(); }
+public sealed class LevelDto { public string Name { get; set; } = ""; public LevelDifficulty Difficulty { get; set; } }
+```
 
 ## System calls
 
@@ -40,20 +57,35 @@ never touch raw action strings.
 using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
 
-ApiClientInfo.ApiKey = "xxx-dev";   // any non-empty value passes the default check (use a real key store in production)
+ApiClientInfo.ApiKey = "xxx-dev";   // any non-empty value passes until the deployment issues its first API key
 var sys = new SystemApiConnector(endpoint, Guid.Empty);
-await sys.PingAsync();              // System.Ping (anonymous)
+await sys.PingAsync();              // System.Ping (anonymous, no API key needed)
+await sys.InitializeAsync();        // adopt the server's compressor / encryptor before Encoded or Encrypted calls
 ```
 - `endpoint`: `http://<host>:<port>/api`.
 
 ## Calls that require login
 
 ```csharp
-var login = sys.Login("demo", "demo");        // or use the higher-level ClientInfo/ApplyLoginResult wrapper
-var token = login.AccessToken;                // Guid
-var bo = new FormApiConnector(endpoint, token, "Game");
-var r = await bo.ExecuteAsync<TResult>("SomeAuthedAction", args, PayloadFormat.Encrypted);
+var login = await sys.LoginAsync("demo", "demo");   // stores the session key on the connector's session
+var token = login.AccessToken;                      // Guid
+var game = new XxxApiConnector(endpoint, token);
+var r = await game.SomeAuthedActionAsync();         // wraps ExecuteAsync<T>(..., PayloadFormat.Encrypted, ...)
 ```
+
+- `LoginAsync` performs the RSA handshake and puts the session encryption key on the connector's
+  `ApiSessionContext` (the ambient one unless you passed your own). A connector created afterwards on the same
+  session can send `Encrypted`; without a session key, `Encrypted` is downgraded to `Encoded`.
+- The Encrypted format relies on TLS against an active man-in-the-middle (`SystemApiConnector.InitializeAsync`
+  remarks). Use HTTPS outside development.
+
+## Choosing the body codec
+
+`PayloadFormat` decides encryption and compression; the body codec is a separate choice, declared per request
+(adr-044). A connector that sets nothing sends MessagePack. Set `ApiConnector.PayloadCodec` to
+`PayloadCodecNames.Json` to use the JSON codec for that connector's Encoded / Encrypted calls. This matters on iOS:
+the framework registers MessagePack formatters for its own wire types only, and your own types fall back to a
+resolver that needs dynamic code, which .NET for iOS does not have (`src/Polhem.Api.Core/CLAUDE.md`).
 
 ## endpoint (per target)
 
@@ -74,69 +106,36 @@ private static readonly string Endpoint = OperatingSystem.IsAndroid()
 ## Verification probe (most reliable)
 
 A standalone console project (referencing `Polhem.Api.Client`) that calls Ping + your first action against the local
-server. Much more reliable than curl (curl makes it hard to hand-build the ApiPayload envelope).
+server. It covers Encoded / Encrypted calls too, whose envelope is impractical to build by hand with curl.
 
 ```csharp
 ApiClientInfo.ApiKey = "xxx-dev";
 var sys = new SystemApiConnector("http://localhost:5180/api", Guid.Empty);
 await sys.PingAsync();                                    // → ok
-var game = new FormApiConnector("http://localhost:5180/api", Guid.Empty, "Game");
-var r = await game.ExecuteAsync<GetLevelsResponse>("GetLevels", new GetLevelsRequest(), PayloadFormat.Plain);
+var game = new XxxApiConnector("http://localhost:5180/api", Guid.Empty);
+var r = await game.GetLevelsAsync();
 Console.WriteLine($"{r.Levels.Count} levels");           // → expected count
 ```
 
-## ⚠️ Wire DTO deserialization (pitfalls hit in practice)
+## Wire DTO deserialization
 
-The response of `ExecuteAsync<T>(..., PayloadFormat.Plain)` is deserialized by **reflection-based System.Text.Json**
-(`Polhem.Api.Core/Conversion/ApiOutputConverter.ConvertResultValue<T>` → `JsonSerializer.Deserialize<T>(json,
-new(){PropertyNameCaseInsensitive=true})`) — there is no source-gen context. Property names are **PascalCase** and
-matched case-insensitively.
-(Plain uses JSON; only Encoded/Encrypted use MessagePack, and only then do `[MessagePackObject]`/`[Key]` matter.)
+A Plain response is read with System.Text.Json using `ApiInputConverter.PlainReadOptions`: property names match
+case-insensitively, enums are read as their names, and `DataTable` / `DataSet` have converters. Enum and table
+members therefore need no special handling in a look-alike DTO. Keep response DTOs to settable properties with a
+parameterless constructor.
 
-### Pitfall 1 (the easiest to hit): enum fields — the client deserialization options **do not register `JsonStringEnumConverter`**
-The server-side `JsonCodec` **does** serialize enums as **strings** (`"Master"`), but the `JsonSerializerOptions` used
-by the client's `ConvertResultValue` sets **only** `PropertyNameCaseInsensitive`, with **no** enum string converter.
-So if a wire DTO declares that field as `enum` or `int`, it throws `JsonException: The JSON value could not be
-converted to ... Path: $.xxx.difficulty`, and deserialization of the whole response fails (inside a fire-and-forget
-load it gets swallowed and looks like an "empty list / empty object").
-**This has nothing to do with mobile — desktop hits it too; you just do not see it if your DTO happens not to carry
-that enum field.**
+### Trimming on mobile
 
-**Fix**: declare the wire DTO's enum field as `string` and parse it yourself when mapping:
-```csharp
-public string Difficulty { get; set; } = "";   // receives "Master"
-// mapping:
-Difficulty = Enum.TryParse<LevelDifficulty>(w.Difficulty, ignoreCase: true, out var d) ? d : default,
-```
-(The same goes for `DataTable`/`DataSet` fields — `ConvertResultValue` does not register those converters either.
-Keep response DTOs to flat, settable primitive types + string where possible.)
-
-### Pitfall 2: Release full trim strips serialization metadata
-`Polhem.Api.Core` has **no** `ILLink.Descriptors.xml` (only `Polhem.Definition` has one, see the framework
-`CHANGELOG` v4.12). Under a Release full link (`TrimMode=full` / iOS/Android Release), the linker strips the setters
-and ctors of the response DTOs and their collection element types, and reflection-based STJ silently returns default
-values (reproducible on desktop with `dotnet publish -p:PublishTrimmed=true -p:TrimMode=full`; on the serialization
-side it throws at `JsonSerializer.GetTypeInfo`). **Note that Debug's `AndroidLinkMode=None` does not trim, so an empty
-result in Debug is usually pitfall 1, not this one.**
-**Fix**: in the mobile head csproj, set the serialization-related assemblies as trim roots:
-```xml
-<ItemGroup>
-  <TrimmerRootAssembly Include="Polhem.Api.Core" />
-  <TrimmerRootAssembly Include="Polhem.Base" />
-  <TrimmerRootAssembly Include="<the assembly holding your wire DTOs>" />
-  <TrimmerRootAssembly Include="<the assembly holding your domain types>" />
-</ItemGroup>
-```
+The supported configurations are untrimmed and the SDK's default partial trim (`TrimMode=partial`), which leaves the
+Polhem assemblies and your own app assembly untouched. `TrimMode=full` (also `AndroidLinkMode=Full` /
+`MtouchLink=Full`) and NativeAOT are **unsupported**: the JSON-RPC envelope is serialized by reflection and full
+trim removes members it needs. `POLHEM9004` warns about those configurations when the framework comes in as a package.
+The reasoning is in `rules/apple-mobile-trim.md` § Supported trim modes.
 
 ### Troubleshooting approach
-1. First confirm the server is correct with a desktop console probe. **The probe DTO must cover every field
-   (especially enums)**, otherwise, as happened to me, "that field just happened to be absent" fools you into
-   thinking it is a mobile-only problem.
-2. At the client call site, try/catch and log the **exception message** (logcat / file). The `Path` in a
-   `JsonException` points straight at the mismatched field/type — much faster than guessing "trimming/Mono".
-3. Confirmed enum/type mismatch → change the wire DTO (pitfall 1); confirmed Release trim → add trim roots
-   (pitfall 2).
 
-> **Verification result**: server + desktop client + **Android device against the real server** (GetLevels) all ran
-> end to end (confirmed by the device hero showing the `⋅LIVE` marker added on the server side). Both pitfalls above
-> were actually hit and fixed.
+1. First confirm the server is correct with a desktop console probe whose DTOs cover every member you rely on.
+2. At the client call site, catch and log the **exception message** (logcat / file). A `JsonException`'s `Path`
+   points straight at the mismatched member; a "Payload type ... is not in the allowed type whitelist" message points
+   at `AllowedTypeNamespaces`; a `FormatterNotRegisteredException` on iOS points at MessagePack with a host type.
+3. An empty result only in a Release mobile build → check the trim mode before anything else.

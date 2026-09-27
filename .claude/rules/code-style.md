@@ -123,7 +123,7 @@ but follow these rules:
   their implementations are related. Judge by **the implementation**: does this half of the code carry its own
   domain baggage (its own constants, formats, edge cases, external specifications)? If it does, split.
 - **The only case for not splitting: the type has no seam at all.** The typical case is a **pure property bag**.
-  Splitting `FormField` (nearly 500 lines, `[XmlAttribute]` throughout) would force you to invent categories that do
+  Splitting `FormField` (about 500 lines, `[XmlAttribute]` throughout) would force you to invent categories that do
   not exist in the domain, and what the reader wants is exactly one complete list.
   **"I can't think of how to split it" does not count.** You must be able to say "the members of this type are
   essentially one list".
