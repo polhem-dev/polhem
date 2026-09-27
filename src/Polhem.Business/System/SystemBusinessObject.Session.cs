@@ -10,6 +10,7 @@ using Polhem.Repository.Abstractions.System;
 using Polhem.Business.Session;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Security;
+using Polhem.Definition.Language;
 
 namespace Polhem.Business.System
 {
@@ -35,7 +36,8 @@ namespace Polhem.Business.System
             if (tracker != null && tracker.IsLockedOut(args.UserId))
             {
                 WriteLoginAudit(LoginEvent.LockedOut, args.UserId, null, null, "Account temporarily locked.", LoginSource);
-                throw new UserMessageException("Account is temporarily locked due to too many failed login attempts. Please try again later.");
+                throw new UserMessageException(PolhemMessages.LoginAccountLocked,
+                    "Account is temporarily locked due to too many failed login attempts. Please try again later.");
             }
 
             // 1. Authenticate credentials and retrieve the user name
@@ -43,7 +45,7 @@ namespace Polhem.Business.System
             {
                 tracker?.RecordFailure(args.UserId);
                 WriteLoginAudit(LoginEvent.LoginFailed, args.UserId, null, null, "Invalid username or password.", LoginSource);
-                throw new UserMessageException("Invalid username or password.");
+                throw new UserMessageException(PolhemMessages.LoginInvalidCredentials, "Invalid username or password.");
             }
 
             // Clear failed attempt history on successful login
@@ -72,6 +74,7 @@ namespace Polhem.Business.System
                 UserId = sessionInfo.UserId,
                 UserName = sessionInfo.UserName,
                 TimeZone = sessionInfo.TimeZone,
+                Culture = sessionInfo.Culture,
             };
         }
 
@@ -98,12 +101,12 @@ namespace Polhem.Business.System
                 throw new UserMessageException("CompanyId is required.");
 
             var sessionInfo = SessionInfoService.Get(AccessToken)
-                ?? throw new AuthenticationRequiredException("Session not found or has expired.");
+                ?? throw new AuthenticationRequiredException(PolhemMessages.SessionNotFound, "Session not found or has expired.");
 
             // The same binder runs on session rebuild, so entering a company and coming back from
             // an evicted cache land on identical session state.
             var binding = Services.GetRequiredService<SessionCompanyBinder>().Bind(sessionInfo, args.CompanyId)
-                ?? throw new CompanyAccessDeniedException("Company access denied.");
+                ?? throw new CompanyAccessDeniedException(PolhemMessages.CompanyAccessDenied, "Company access denied.");
 
             // Seed before cache: the company is the one snapshotted value that cannot be derived,
             // so a rebuild that missed it would silently drop the user back to "no company".
@@ -129,7 +132,7 @@ namespace Polhem.Business.System
             ArgumentNullException.ThrowIfNull(args);
 
             var sessionInfo = SessionInfoService.Get(AccessToken)
-                ?? throw new AuthenticationRequiredException("Session not found or has expired.");
+                ?? throw new AuthenticationRequiredException(PolhemMessages.SessionNotFound, "Session not found or has expired.");
 
             if (sessionInfo.CompanyId != null)
             {
@@ -335,7 +338,7 @@ namespace Polhem.Business.System
         /// Fills <see cref="SessionInfo.TimeZone"/> and <see cref="SessionInfo.Culture"/> from the
         /// user's <c>st_user</c> row, falling back to
         /// <see cref="BackendConfiguration.DefaultTimeZone"/> and
-        /// <see cref="BackendConfiguration.DefaultLanguage"/> respectively.
+        /// <see cref="CommonConfiguration.DefaultLanguage"/> respectively.
         /// </summary>
         /// <param name="sessionInfo">The session being created.</param>
         /// <remarks>
@@ -361,13 +364,13 @@ namespace Polhem.Business.System
 
             var repo = Services.GetRequiredService<IRepositoryFactory>().Create<IUserRepository>();
             var locale = repo.GetLocale(sessionInfo.UserId);
-            var backend = DefineAccess.GetSystemSettings().BackendConfiguration;
+            var settings = DefineAccess.GetSystemSettings();
             sessionInfo.TimeZone = StringUtilities.IsNotEmpty(locale.TimeZone)
                 ? locale.TimeZone
-                : backend.DefaultTimeZone;
+                : settings.BackendConfiguration.DefaultTimeZone;
             sessionInfo.Culture = StringUtilities.IsNotEmpty(locale.Culture)
                 ? locale.Culture
-                : backend.DefaultLanguage;
+                : settings.CommonConfiguration.DefaultLanguage;
         }
 
         private const int MaxExpiresInSeconds = 86400; // 24 hours

@@ -1,4 +1,5 @@
 using System.Data;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Polhem.Api.Client.Connectors;
@@ -13,6 +14,11 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// cancels. Schema and connector default to the ambient <see cref="ClientInfo"/>
     /// wiring; pass them explicitly to bypass it (tests, custom hosts).
     /// </summary>
+    /// <remarks>
+    /// The default schema is localized through <see cref="ClientInfo.DefinitionLoader"/> when the
+    /// host turned on <see cref="ClientInfo.UseDefinitionLoader"/>, so the dialog title and columns
+    /// read in the same language as the form that opened it.
+    /// </remarks>
     public static class LookupDialog
     {
         /// <summary>
@@ -21,7 +27,10 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// </summary>
         /// <param name="host">A visual inside the owning window; used to resolve the dialog owner.</param>
         /// <param name="progId">The target program identifier (the lookup source form).</param>
-        /// <param name="schema">The target form's schema; <c>null</c> loads it through <see cref="ClientInfo.DefineAccess"/> (cached).</param>
+        /// <param name="schema">
+        /// The target form's schema; <c>null</c> loads it through <see cref="ClientInfo.DefinitionLoader"/>
+        /// in the UI culture when one is in effect, else as stored through <see cref="ClientInfo.DefineAccess"/> (cached).
+        /// </param>
         /// <param name="connector">The connector for the target form; <c>null</c> creates one through <see cref="ClientInfo.CreateFormApiConnector"/>.</param>
         public static async Task<DataRow?> ShowAsync(
             Visual host,
@@ -32,9 +41,9 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             ArgumentNullException.ThrowIfNull(host);
             ArgumentException.ThrowIfNullOrWhiteSpace(progId);
 
-            schema ??= await ClientInfo.DefineAccess
-                .GetFormSchemaAsync(progId)
-                .ConfigureAwait(true);
+            schema ??= ClientInfo.DefinitionLoader is { } loader
+                ? await loader.GetLocalizedSchemaAsync(progId, CultureInfo.CurrentUICulture.Name).ConfigureAwait(true)
+                : await ClientInfo.DefineAccess.GetFormSchemaAsync(progId).ConfigureAwait(true);
             if (schema is null)
                 throw new InvalidOperationException($"FormSchema '{progId}' was not found for lookup.");
             connector ??= ClientInfo.CreateFormApiConnector(progId);

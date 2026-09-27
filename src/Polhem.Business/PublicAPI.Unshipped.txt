@@ -43,3 +43,5 @@ virtual Polhem.Business.AuditLog.AuditLogBusinessObject.GetDbAnomalyLog(Polhem.B
 virtual Polhem.Business.AuditLog.AuditLogBusinessObject.GetDbAnomalySummary(Polhem.Business.AuditLog.GetDbAnomalySummaryArgs! args) -> Polhem.Business.AuditLog.AuditLogAggregateResult!
 virtual Polhem.Business.AuditLog.AuditLogBusinessObject.GetLoginLog(Polhem.Business.AuditLog.GetLoginLogArgs! args) -> Polhem.Business.AuditLog.AuditLogListResult!
 virtual Polhem.Business.AuditLog.AuditLogBusinessObject.GetTopApiMethods(Polhem.Business.AuditLog.GetTopApiMethodsArgs! args) -> Polhem.Business.AuditLog.AuditLogAggregateResult!
+Polhem.Business.System.LoginResult.Culture.get -> string!
+Polhem.Business.System.LoginResult.Culture.set -> void

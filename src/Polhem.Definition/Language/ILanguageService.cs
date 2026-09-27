@@ -12,18 +12,26 @@ namespace Polhem.Definition.Language
     /// passes <c>lang</c> explicitly. BO base classes provide a convenience wrapper
     /// that reads <see cref="Identity.SessionInfo.Culture"/> for the current call.
     ///
-    /// Fall-back chain when a key cannot be resolved in the requested language:
-    /// <list type="number">
-    /// <item><description>Look up <c>(lang, namespace).subKey</c>.</description></item>
-    /// <item><description>If miss and <c>lang</c> ≠ <c>DefaultLang</c>,
-    /// retry against <c>(DefaultLang, namespace).subKey</c>
-    /// (<c>DefaultLang</c> is read from <see cref="Settings.CommonConfiguration.DefaultLang"/>).</description></item>
-    /// <item><description>If still miss, return the full key string as-is so the
-    /// missing translation is visible in the UI (developers can spot it).</description></item>
-    /// </list>
+    /// Every resolving member walks the chain returned by <see cref="LanguageFallback.GetChain"/>:
+    /// the requested culture, its parent cultures (<c>en-GB</c> → <c>en</c>), then
+    /// <see cref="DefaultLanguage"/> — which an English requested culture leaves out, because English is
+    /// the base text. When every culture misses, <see cref="GetLangText(string, string)"/>
+    /// returns the full key string so the missing translation is visible, and
+    /// <see cref="TryResolveLangText"/> reports a miss so the caller can keep its own base text.
+    /// The <c>TryGetLangText</c> overloads are the single-culture primitive the chain is built from
+    /// and look in the requested culture only.
     /// </remarks>
     public interface ILanguageService
     {
+        /// <summary>
+        /// Gets the configured default language, the last culture of the fall-back chain.
+        /// </summary>
+        /// <remarks>
+        /// Read from <see cref="Settings.CommonConfiguration.DefaultLanguage"/> by the server's
+        /// service. The default implementation returns an empty string, which drops the hop.
+        /// </remarks>
+        string DefaultLanguage => string.Empty;
+
         /// <summary>
         /// Resolves the localized text for the given full key
         /// (<c>"{namespace}.{subKey}"</c> — split on the first <c>.</c>).
@@ -71,8 +79,8 @@ namespace Polhem.Definition.Language
 
         /// <summary>
         /// Attempts to resolve the localized text in the requested <paramref name="lang"/> only.
-        /// **Does not apply the default-lang fall-back** — call sites that need the
-        /// fall-back should use <see cref="GetLangText(string, string)"/> instead.
+        /// **Does not walk the fall-back chain** — call sites that need it use
+        /// <see cref="TryResolveLangText"/> or <see cref="GetLangText(string, string)"/> instead.
         /// </summary>
         /// <param name="lang">The BCP-47 language code.</param>
         /// <param name="fullKey">The full key, e.g. <c>"Common.OK"</c>.</param>
@@ -82,7 +90,7 @@ namespace Polhem.Definition.Language
 
         /// <summary>
         /// Attempts to resolve the localized text in the requested <paramref name="lang"/> only,
-        /// using an explicit namespace and sub-key. **Does not apply the default-lang fall-back.**
+        /// using an explicit namespace and sub-key. **Does not walk the fall-back chain.**
         /// </summary>
         /// <param name="lang">The BCP-47 language code.</param>
         /// <param name="namespace">The resource namespace.</param>
@@ -109,9 +117,37 @@ namespace Polhem.Definition.Language
             => TryGetLangText(lang, @namespace, subKey, out text);
 
         /// <summary>
+        /// Resolves the localized text through the whole fall-back chain — requested culture, parent
+        /// cultures, then <see cref="DefaultLanguage"/> — and reports a miss instead of returning the
+        /// key, so the caller can keep its own base text.
+        /// </summary>
+        /// <param name="customizeId">The tenant customization code; empty resolves against the base layer only.</param>
+        /// <param name="lang">The BCP-47 language code; empty starts the chain at the default language.</param>
+        /// <param name="namespace">The resource namespace.</param>
+        /// <param name="subKey">The sub-key within that namespace.</param>
+        /// <param name="text">The resolved text on hit; empty string on miss.</param>
+        /// <returns><c>true</c> when some culture of the chain declares the key.</returns>
+        /// <remarks>
+        /// This is the lookup for text that has a base value of its own: a schema caption, a rule
+        /// message, UI text with an English default. The default implementation walks
+        /// <see cref="LanguageFallback.GetChain"/> over the single-culture
+        /// <see cref="TryGetLangText(string, string, string, string, out string)"/>.
+        /// </remarks>
+        bool TryResolveLangText(string customizeId, string lang, string @namespace, string subKey, out string text)
+        {
+            foreach (string culture in LanguageFallback.GetChain(lang, DefaultLanguage))
+            {
+                if (TryGetLangText(customizeId, culture, @namespace, subKey, out text))
+                    return true;
+            }
+            text = string.Empty;
+            return false;
+        }
+
+        /// <summary>
         /// Resolves a localized <see cref="LanguageEnum"/> (ordered code/text set) for the
-        /// given full name (<c>"{namespace}.{enumName}"</c>). Applies the default-lang
-        /// fall-back when the requested language has no matching enum.
+        /// given full name (<c>"{namespace}.{enumName}"</c>). Applies the fall-back chain
+        /// when the requested language has no matching enum.
         /// </summary>
         /// <param name="lang">The BCP-47 language code.</param>
         /// <param name="fullName">The full enum name, e.g. <c>"Common.Gender"</c>, <c>"Order.OrderStatus"</c>.</param>
@@ -120,7 +156,7 @@ namespace Polhem.Definition.Language
 
         /// <summary>
         /// Resolves a localized <see cref="LanguageEnum"/> using an explicit namespace
-        /// and enum name. Applies the default-lang fall-back when the requested language
+        /// and enum name. Applies the fall-back chain when the requested language
         /// has no matching enum.
         /// </summary>
         /// <param name="lang">The BCP-47 language code.</param>
@@ -150,7 +186,7 @@ namespace Polhem.Definition.Language
 
         /// <summary>
         /// Convenience: resolves a single localized text for a code within a
-        /// <see cref="LanguageEnum"/>. Applies the default-lang fall-back.
+        /// <see cref="LanguageEnum"/>. Applies the fall-back chain.
         /// </summary>
         /// <param name="lang">The BCP-47 language code.</param>
         /// <param name="fullName">The full enum name, e.g. <c>"Common.Gender"</c>.</param>

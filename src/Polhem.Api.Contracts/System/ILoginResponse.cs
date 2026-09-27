@@ -35,5 +35,11 @@ namespace Polhem.Api.Contracts.System
         /// client renders or seeds (ADR-032 D12).
         /// </summary>
         string TimeZone { get; }
+
+        /// <summary>
+        /// Gets the user's culture (e.g. zh-TW, en-US), the language the client renders in and the
+        /// server resolves this session's messages in.
+        /// </summary>
+        string Culture { get; }
     }
 }

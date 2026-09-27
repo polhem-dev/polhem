@@ -6,6 +6,7 @@ using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Server.Components;
 using Microsoft.AspNetCore.Components;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
@@ -28,9 +29,9 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private static string InvokeFormatCell(DataRow row, LayoutColumn column)
         {
             var method = typeof(DynamicGrid).GetMethod(
-                "FormatCell", BindingFlags.NonPublic | BindingFlags.Static);
+                "FormatCell", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.NotNull(method);
-            return (string)method!.Invoke(null, new object[] { row, column })!;
+            return (string)method!.Invoke(new DynamicGrid(), new object[] { row, column })!;
         }
 
         private static string InvokeBuildColumnStyle(LayoutColumn column)
@@ -146,9 +147,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("FormatCell formats a DateTime without a time part as yyyy-MM-dd")]
+        [DisplayName("FormatCell formats a DateTime without a time part as the culture's short date")]
         public void FormatCell_DateTimeWithNoTime_ReturnsDateOnly()
         {
+            using var culture = new CultureScope("de-DE");
             var table = new DataTable();
             table.Columns.Add("hire_date", typeof(DateTime));
             var row = table.NewRow();
@@ -156,13 +158,14 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             table.Rows.Add(row);
             var column = new LayoutColumn { FieldName = "hire_date" };
             var result = InvokeFormatCell(row, column);
-            Assert.Equal("2024-03-15", result);
+            Assert.Equal("15.03.2024", result);
         }
 
         [Fact]
-        [DisplayName("FormatCell formats a DateTime with a time part as yyyy-MM-dd HH:mm:ss")]
+        [DisplayName("FormatCell formats a DateTime with a time part as the culture's general date and time")]
         public void FormatCell_DateTimeWithTime_ReturnsDateTimeFormat()
         {
+            using var culture = new CultureScope("de-DE");
             var table = new DataTable();
             table.Columns.Add("created_at", typeof(DateTime));
             var row = table.NewRow();
@@ -170,7 +173,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             table.Rows.Add(row);
             var column = new LayoutColumn { FieldName = "created_at" };
             var result = InvokeFormatCell(row, column);
-            Assert.Equal("2024-03-15 14:30:45", result);
+            Assert.Equal("15.03.2024 14:30:45", result);
         }
 
         [Fact]
@@ -191,6 +194,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [DisplayName("FormatCell formats the value with DisplayFormat first when it is set")]
         public void FormatCell_WithDisplayFormat_UsesDisplayFormat()
         {
+            using var culture = new CultureScope("en-US");
             var table = new DataTable();
             table.Columns.Add("amount", typeof(double));
             var row = table.NewRow();
@@ -205,6 +209,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [DisplayName("FormatCell formats a number with NumberFormat when it is set")]
         public void FormatCell_WithNumberFormat_UsesNumberFormat()
         {
+            using var culture = new CultureScope("en-US");
             var table = new DataTable();
             table.Columns.Add("price", typeof(double));
             var row = table.NewRow();
@@ -287,11 +292,32 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("EmptyText defaults to 'No data.'")]
-        public void EmptyText_Default_IsNoData()
+        [DisplayName("EmptyText defaults to null, which shows the localized no-data text")]
+        public void EmptyText_Default_IsNull()
         {
             var component = new DynamicGrid();
-            Assert.Equal("No data.", component.EmptyText);
+            Assert.Null(component.EmptyText);
+        }
+
+        [Fact]
+        [DisplayName("FormatCell shows a Boolean as the localized yes / no text")]
+        public void FormatCell_BooleanValue_ShowsLocalizedText()
+        {
+            var table = new DataTable();
+            table.Columns.Add("active", typeof(bool));
+            var row = table.NewRow();
+            row["active"] = true;
+            table.Rows.Add(row);
+            var column = new LayoutColumn { FieldName = "active" };
+
+            using (new CultureScope("en-US"))
+            {
+                Assert.Equal("Yes", InvokeFormatCell(row, column));
+            }
+            using (new CultureScope("zh-TW"))
+            {
+                Assert.Equal("是", InvokeFormatCell(row, column));
+            }
         }
 
         [Theory]

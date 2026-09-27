@@ -218,10 +218,12 @@ namespace Polhem.Hosting
             services.AddSingleton<ISessionInfoService>(sp =>
                 CreateConfigurableService<ISessionInfoService>(sp, nameof(BackendComponents.SessionInfoService),
                     components.SessionInfoService, BackendDefaultTypes.SessionInfoService));
+            // The deployment's own language resources win; the framework's shipped translations of
+            // its own UI text and messages answer what they do not declare.
             services.AddSingleton<ILanguageService>(sp =>
-                new LanguageService(
+                new FrameworkLanguageService(new LanguageService(
                     sp.GetRequiredService<IDefineAccess>(),
-                    sp.GetRequiredService<ICustomizeDefineReader>()));
+                    sp.GetRequiredService<ICustomizeDefineReader>())));
             services.AddSingleton<ICompanyInfoService>(sp =>
                 CreateConfigurableService<ICompanyInfoService>(sp, nameof(BackendComponents.CompanyInfoService),
                     components.CompanyInfoService, BackendDefaultTypes.CompanyInfoService));
@@ -359,6 +361,7 @@ namespace Polhem.Hosting
                     sp.GetService<AuditLogOptions>(),
                     sp.GetService<ISessionInfoService>());
                 executor.Logger = sp.GetService<ILoggerFactory>()?.CreateLogger<JsonRpcExecutor>();
+                executor.LanguageService = sp.GetService<ILanguageService>();
                 return executor;
             });
 

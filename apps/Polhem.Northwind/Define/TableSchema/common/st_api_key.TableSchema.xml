@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableSchema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" DbName="common" TableName="st_api_key" DisplayName="API 金鑰">
+<TableSchema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" DbName="common" TableName="st_api_key" DisplayName="API Key">
 	<Fields>
-		<DbField FieldName="sys_no" Caption="流水號" DbType="AutoIncrement" />
-		<DbField FieldName="sys_rowid" Caption="唯一識別" DbType="Guid" />
-		<DbField FieldName="sys_id" Caption="金鑰識別碼" DbType="String" Length="50" />
-		<DbField FieldName="sys_name" Caption="應用程式名稱" DbType="String" Length="100" />
-		<DbField FieldName="hashed_key" Caption="雜湊金鑰" DbType="String" Length="200" />
-		<DbField FieldName="key_type" Caption="金鑰類型" DbType="Integer" DefaultValue="1" />
-		<DbField FieldName="contact" Caption="聯絡窗口" DbType="String" Length="100" AllowNull="true" />
-		<DbField FieldName="enabled" Caption="啟用" DbType="Boolean" DefaultValue="1" />
-		<DbField FieldName="expired_at" Caption="到期時間" DbType="DateTime" AllowNull="true" />
-		<DbField FieldName="sys_insert_time" Caption="寫入時間" DbType="DateTime" />
+		<DbField FieldName="sys_no" Caption="Sequence No." DbType="AutoIncrement" />
+		<DbField FieldName="sys_rowid" Caption="Row Id" DbType="Guid" />
+		<DbField FieldName="sys_id" Caption="Key Id" DbType="String" Length="50" />
+		<DbField FieldName="sys_name" Caption="Application Name" DbType="String" Length="100" />
+		<DbField FieldName="hashed_key" Caption="Hashed Key" DbType="String" Length="200" />
+		<DbField FieldName="key_type" Caption="Key Type" DbType="Integer" DefaultValue="1" />
+		<DbField FieldName="contact" Caption="Contact" DbType="String" Length="100" AllowNull="true" />
+		<DbField FieldName="enabled" Caption="Enabled" DbType="Boolean" DefaultValue="1" />
+		<DbField FieldName="expired_at" Caption="Expires At" DbType="DateTime" AllowNull="true" />
+		<DbField FieldName="sys_insert_time" Caption="Created At" DbType="DateTime" />
 	</Fields>
 	<Indexes>
 		<DbTableIndex Name="pk_{0}" Unique="true" PrimaryKey="true">

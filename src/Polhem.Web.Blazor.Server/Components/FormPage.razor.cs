@@ -4,6 +4,7 @@ using System.Data;
 using Polhem.Api.Client.Connectors;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Server.DataObjects;
 using Polhem.Web.Blazor.Server.DependencyInjection;
@@ -25,6 +26,14 @@ namespace Polhem.Web.Blazor.Server.Components
     /// (<see cref="AccessToken"/> defaults to <see cref="Guid.Empty"/>); the
     /// backend BO methods being called must then declare
     /// <see cref="Polhem.Definition.Security.ApiAccessRequirement.Anonymous"/> themselves.
+    /// <para>
+    /// Captions, the toolbar text and the display of numbers and dates follow the circuit's
+    /// <see cref="CultureInfo.CurrentUICulture"/> and <see cref="CultureInfo.CurrentCulture"/>. A
+    /// host applies the signed-in user's culture — <see cref="Polhem.Api.Core.Messages.System.LoginResponse.Culture"/>
+    /// — through ASP.NET Core request localization (for example a culture cookie set after sign-in),
+    /// because a circuit's culture is fixed when it starts. The page localizes when it initializes;
+    /// a language switch takes effect on pages opened afterwards.
+    /// </para>
     /// </remarks>
     public sealed partial class FormPage : ComponentBase
     {
@@ -53,6 +62,12 @@ namespace Polhem.Web.Blazor.Server.Components
 
         [Inject]
         private PolhemApiConnectorFactory Factory { get; set; } = default!;
+
+        // Nullable: a component created outside a renderer has no services, and still renders.
+        [Inject]
+        private IServiceProvider? Services { get; set; }
+
+        private string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
 
         /// <summary>
         /// Gets or sets the assembler that turns raw definitions into a localized schema and a

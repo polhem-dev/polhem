@@ -3,6 +3,7 @@ using Polhem.Base.Exceptions;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
+using Polhem.Definition.Language;
 
 namespace Polhem.Business.Form
 {
@@ -33,7 +34,7 @@ namespace Polhem.Business.Form
 
             var authorization = Services.GetRequiredService<ICompanyAuthorizationService>();
             if (!authorization.Can(AccessToken, modelId, action))
-                throw new ForbiddenException($"Permission denied: '{action}' on model '{modelId}'.");
+                throw new ForbiddenException(PolhemMessages.PermissionDenied, "Permission denied: '{0}' on model '{1}'.", action, modelId);
         }
 
         /// <summary>
@@ -82,7 +83,7 @@ namespace Polhem.Business.Form
             var denied = s_writeActions.FirstOrDefault(
                 action => required.HasFlag(action) && !authorization.Can(AccessToken, modelId, action));
             if (denied != PermissionActions.None)
-                throw new ForbiddenException($"Permission denied: '{denied}' on model '{modelId}'.");
+                throw new ForbiddenException(PolhemMessages.PermissionDenied, "Permission denied: '{0}' on model '{1}'.", denied, modelId);
         }
 
         /// <summary>

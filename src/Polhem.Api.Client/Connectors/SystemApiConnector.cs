@@ -171,7 +171,9 @@ namespace Polhem.Api.Client.Connectors
         /// <see cref="CommonConfiguration.AllowedTypeNamespaces"/> is ignored, because that list
         /// guards this client against what the server sends and cannot be the server's to widen.
         /// A client that must accept a deployment's own types configures its list locally, through
-        /// <see cref="SysInfo.Initialize"/>, before calling this.
+        /// <see cref="SysInfo.Initialize"/>, before calling this. The default language is taken as
+        /// advertised into <see cref="ApiClientInfo.DefaultLanguage"/>: a forged one changes only
+        /// which language a missing translation falls back to.
         /// </para>
         /// <para>
         /// The Encrypted payload format relies on TLS for protection against an active
@@ -192,6 +194,7 @@ namespace Polhem.Api.Client.Connectors
             var serverConfiguration = XmlCodec.Deserialize<CommonConfiguration>(result.CommonConfiguration)!;
             var configuration = AdoptServerConfiguration(serverConfiguration, SysInfo.IsDebugMode, SysInfo.AllowedTypeNamespaces);
             SysInfo.Initialize(configuration);
+            ApiClientInfo.DefaultLanguage = configuration.DefaultLanguage;
             // Initialize API service options: configure serializer, compressor, and encryptor implementations
             ApiServiceOptions.Initialize(configuration.ApiPayloadOptions, configuration.IsDebugMode);
         }
@@ -231,7 +234,7 @@ namespace Polhem.Api.Client.Connectors
             {
                 Version = serverConfiguration.Version,
                 IsDebugMode = clientIsDebugMode,
-                DefaultLang = serverConfiguration.DefaultLang,
+                DefaultLanguage = serverConfiguration.DefaultLanguage,
                 AllowedTypeNamespaces = string.Join('|', clientTypeNamespaces),
                 ApiPayloadOptions = payloadOptions,
             };

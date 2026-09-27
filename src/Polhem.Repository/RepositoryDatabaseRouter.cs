@@ -3,6 +3,7 @@ using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Identity;
 using Polhem.Repository.Abstractions;
+using Polhem.Definition.Language;
 
 namespace Polhem.Repository
 {
@@ -45,14 +46,14 @@ namespace Polhem.Repository
                 throw new InvalidOperationException($"Unsupported DbScope value: {scope}.");
 
             var session = _sessionService.Get(accessToken)
-                ?? throw new AuthenticationRequiredException("Session not found or has expired.");
+                ?? throw new AuthenticationRequiredException(PolhemMessages.SessionNotFound, "Session not found or has expired.");
 
             if (string.IsNullOrEmpty(session.CompanyId))
-                throw new CompanyNotEnteredException(
+                throw new CompanyNotEnteredException(PolhemMessages.CompanyNotEntered,
                     "No company has been entered for this session.");
 
             var company = _companyService.Get(session.CompanyId)
-                ?? throw new UserMessageException(
+                ?? throw new UserMessageException(PolhemMessages.CompanyInfoUnavailable,
                     "Company information unavailable; please re-enter the company.");
 
             return company.CompanyDatabaseId;

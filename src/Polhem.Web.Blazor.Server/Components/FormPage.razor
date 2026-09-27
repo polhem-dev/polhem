@@ -1,4 +1,5 @@
 @using Polhem.Web.Blazor.Server.DataObjects
+@using Polhem.Definition.Language
 
 <div class="polhem-form-page">
     @if (_error is not null)
@@ -7,17 +8,17 @@
     }
     else if (_isInitializing || _dataObject is null)
     {
-        <div class="polhem-form-page__loading">Loading…</div>
+        <div class="polhem-form-page__loading">@Text(PolhemUIText.Loading)</div>
     }
     else
     {
         <div class="polhem-form-page__toolbar">
-            <button type="button" disabled="@_isBusy" @onclick="OnNewAsync">New</button>
-            <button type="button" disabled="@(_isBusy || _dataObject.MasterRow is null)" @onclick="OnSaveAsync">Save</button>
-            <button type="button" disabled="@(_isBusy || _dataObject.MasterRow is null)" @onclick="OnDeleteAsync">Delete</button>
+            <button type="button" disabled="@_isBusy" @onclick="OnNewAsync">@Text(PolhemUIText.New)</button>
+            <button type="button" disabled="@(_isBusy || _dataObject.MasterRow is null)" @onclick="OnSaveAsync">@Text(PolhemUIText.Save)</button>
+            <button type="button" disabled="@(_isBusy || _dataObject.MasterRow is null)" @onclick="OnDeleteAsync">@Text(PolhemUIText.Delete)</button>
             @if (_dataObject.IsDirty)
             {
-                <span class="polhem-form-page__dirty">● unsaved</span>
+                <span class="polhem-form-page__dirty">@Text(PolhemUIText.Unsaved)</span>
             }
         </div>
 

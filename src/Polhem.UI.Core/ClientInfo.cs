@@ -1,5 +1,7 @@
+using System.Globalization;
 using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
+using Polhem.Api.Client.Definitions;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Base;
 using Polhem.Definition.Identity;
@@ -56,6 +58,7 @@ namespace Polhem.UI.Core
 
         private static SystemApiConnector? s_systemConnector;
         private static ClientDefineAccess? s_defineAccess;
+        private static FormDefinitionLoader? s_definitionLoader;
         private static Guid s_accessToken = Guid.Empty;
         private static IReadOnlyDictionary<string, PermissionActions>? s_capabilities;
         private static CompanyInfo? s_company;
@@ -108,6 +111,7 @@ namespace Polhem.UI.Core
                         s_accessToken = value;
                         s_systemConnector = null;
                         s_defineAccess = null;
+                        s_definitionLoader = null;
                         // A new (or cleared) token means a different identity — the cached capability
                         // snapshot no longer applies. Reset to null so degradation is disabled until
                         // the next EnterCompany populates it.
@@ -191,6 +195,50 @@ namespace Polhem.UI.Core
             get
             {
                 lock (s_stateGate) { return s_defineAccess ??= new ClientDefineAccess(SystemApiConnector); }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets whether views that were not given a definition loader of their own assemble
+        /// their definitions through <see cref="DefinitionLoader"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// One switch for the whole client, so a host turns localization on once instead of view by
+        /// view: the record form, the list and the lookup dialog all consult it, and a view's own
+        /// loader still wins. <c>false</c> — the default — renders definitions exactly as stored,
+        /// which costs no extra round trips and needs nothing but the stored files.
+        /// </para>
+        /// <para>
+        /// Views localize when they load. A language switch takes effect in views opened after it;
+        /// a view already on screen keeps the language it was opened in until it is reopened.
+        /// </para>
+        /// </remarks>
+        public static bool UseDefinitionLoader { get; set; }
+
+        /// <summary>
+        /// Gets the client-wide definition loader, or <c>null</c> when
+        /// <see cref="UseDefinitionLoader"/> is off.
+        /// </summary>
+        /// <remarks>
+        /// Built over <see cref="DefineAccess"/> with the entered <see cref="Company"/> as its
+        /// company accessor and <see cref="Polhem.Api.Client.ApiClientInfo.DefaultLanguage"/> as its
+        /// default language, and discarded together with <see cref="DefineAccess"/> when the access
+        /// token changes, so it never serves a previous identity's definitions.
+        /// </remarks>
+        public static FormDefinitionLoader? DefinitionLoader
+        {
+            get
+            {
+                if (!UseDefinitionLoader) { return null; }
+                lock (s_stateGate)
+                {
+                    return s_definitionLoader ??= new FormDefinitionLoader(
+                        s_defineAccess ??= new ClientDefineAccess(SystemApiConnector))
+                    {
+                        CompanyAccessor = static () => Company,
+                    };
+                }
             }
         }
 
@@ -451,9 +499,26 @@ namespace Polhem.UI.Core
         }
 
         /// <summary>
-        /// Applies the login response, populating <see cref="AccessToken"/> and <see cref="UserInfo"/>.
+        /// Applies the login response, populating <see cref="AccessToken"/> and <see cref="UserInfo"/>,
+        /// and makes the user's culture this process's culture.
         /// </summary>
         /// <param name="loginResponse">Result returned from the login API.</param>
+        /// <remarks>
+        /// <para>
+        /// The culture the server returns — <c>st_user.culture</c>, or the deployment's default
+        /// language — becomes <see cref="CultureInfo.CurrentUICulture"/> and
+        /// <see cref="CultureInfo.CurrentCulture"/>, for the current flow and as the process default
+        /// (<see cref="CultureInfo.DefaultThreadCurrentUICulture"/>). Everything that localizes reads
+        /// those: definition captions, the framework's own UI text, and the display and input of
+        /// numbers and dates. So a user whose account says <c>en-US</c> gets English on a Chinese
+        /// operating system.
+        /// </para>
+        /// <para>
+        /// An empty culture, or one this runtime does not know, leaves the process culture as it was.
+        /// Process-wide state is correct here for the same reason the rest of this class is: one
+        /// process serves one signed-in user.
+        /// </para>
+        /// </remarks>
         public static void ApplyLoginResult(LoginResponse loginResponse)
         {
             ArgumentNullException.ThrowIfNull(loginResponse);
@@ -467,12 +532,40 @@ namespace Polhem.UI.Core
                 // rather than silently adopting the device zone, which ADR-032 D4 rules out.
                 TimeZone = StringUtilities.IsNotEmpty(loginResponse.TimeZone)
                     ? loginResponse.TimeZone
-                    : new UserInfo().TimeZone
+                    : new UserInfo().TimeZone,
+                Culture = loginResponse.Culture ?? string.Empty,
             };
             // The Connector layer sits below this one, so it cannot read UserInfo — hand it the zone
             // it needs to convert payloads with (ADR-032 D4).
             ApiSessionContext.Ambient.UserTimeZoneId = UserInfo.TimeZone;
+            ApplyCulture(UserInfo.Culture);
             // NOTE: any further post-sign-in state belongs here.
+        }
+
+        /// <summary>
+        /// Makes <paramref name="culture"/> the current and default culture of this process.
+        /// </summary>
+        /// <param name="culture">A BCP-47 culture name; empty or unknown leaves the culture unchanged.</param>
+        /// <returns><c>true</c> when the culture was applied.</returns>
+        internal static bool ApplyCulture(string culture)
+        {
+            if (StringUtilities.IsEmpty(culture)) { return false; }
+
+            CultureInfo info;
+            try
+            {
+                info = CultureInfo.GetCultureInfo(culture);
+            }
+            catch (CultureNotFoundException)
+            {
+                return false;
+            }
+
+            CultureInfo.DefaultThreadCurrentCulture = info;
+            CultureInfo.DefaultThreadCurrentUICulture = info;
+            CultureInfo.CurrentCulture = info;
+            CultureInfo.CurrentUICulture = info;
+            return true;
         }
 
         private static Dictionary<string, string> ParseCommandLineArgs()

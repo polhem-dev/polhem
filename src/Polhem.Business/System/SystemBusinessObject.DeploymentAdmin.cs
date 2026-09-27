@@ -7,6 +7,7 @@ using Polhem.Definition.Logging;
 using Polhem.Definition.Security;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Repository.Abstractions.System;
+using Polhem.Definition.Language;
 
 namespace Polhem.Business.System
 {
@@ -47,7 +48,7 @@ namespace Polhem.Business.System
 
             if (StringUtilities.IsEmpty(args.UserId))
             {
-                throw new UserMessageException("A user id is required.");
+                throw new UserMessageException(PolhemMessages.DeploymentAdminUserIdRequired, "A user id is required.");
             }
 
             var repository = Services.GetRequiredService<IRepositoryFactory>().Create<IUserRepository>();
@@ -60,7 +61,7 @@ namespace Polhem.Business.System
 
             if (!repository.SetDeploymentAdmin(args.UserId, args.IsDeploymentAdmin))
             {
-                throw new UserMessageException($"No user with id '{args.UserId}' exists.");
+                throw new UserMessageException(PolhemMessages.DeploymentAdminUserNotFound, "No user with id '{0}' exists.", args.UserId);
             }
 
             if (auditing)

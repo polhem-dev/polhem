@@ -112,14 +112,15 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("UserInfo defaults to zh-TW and an empty time zone (meaning UTC)")]
+        [DisplayName("UserInfo defaults to an empty culture and an empty time zone, both supplied by the server at login")]
         public void UserInfo_Defaults_ReturnsExpectedCultureAndTimeZone()
         {
             // Act
             var user = new UserInfo();
 
             // Assert
-            Assert.Equal("zh-TW", user.Culture);
+            // Empty means the client keeps its own UI culture until login supplies the user's.
+            Assert.Empty(user.Culture);
             // Empty means UTC: the actual time zone is supplied by the server at login.
             Assert.Empty(user.TimeZone);
         }

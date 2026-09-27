@@ -1,4 +1,5 @@
 using System.Data;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
@@ -6,12 +7,14 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
+using Polhem.Api.Client.Definitions;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Core;
+using Polhem.Definition.Language;
 
 namespace Polhem.UI.Avalonia.Views
 {
@@ -80,23 +83,23 @@ namespace Polhem.UI.Avalonia.Views
         public ListView()
         {
             _errorLabel = new TextBlock { Foreground = Brushes.Red, IsVisible = false };
-            _loadingLabel = new TextBlock { Text = "Loading…", IsVisible = true };
+            _loadingLabel = new TextBlock { Text = UIText.Get(PolhemUIText.Loading), IsVisible = true };
 
             // Tag each command with the permission action it requires; the capability resolver
             // hides an un-permitted button. Untagged controls stay visible (opt-in).
-            _viewButton = new Button { Content = "View", IsEnabled = false };
+            _viewButton = new Button { Content = UIText.Get(PolhemUIText.View), IsEnabled = false };
             PermissionScope.SetAction(_viewButton, PermissionActions.Read);
             _viewButton.Click += (_, _) => OnViewClicked();
 
-            _newButton = new Button { Content = "New", IsEnabled = false };
+            _newButton = new Button { Content = UIText.Get(PolhemUIText.New), IsEnabled = false };
             PermissionScope.SetAction(_newButton, PermissionActions.Create);
             _newButton.Click += (_, _) => OnNewClicked();
 
-            _editButton = new Button { Content = "Edit", IsEnabled = false };
+            _editButton = new Button { Content = UIText.Get(PolhemUIText.Edit), IsEnabled = false };
             PermissionScope.SetAction(_editButton, PermissionActions.Update);
             _editButton.Click += (_, _) => OnEditClicked();
 
-            _deleteButton = new Button { Content = "Delete", IsEnabled = false };
+            _deleteButton = new Button { Content = UIText.Get(PolhemUIText.Delete), IsEnabled = false };
             PermissionScope.SetAction(_deleteButton, PermissionActions.Delete);
             _deleteButton.Click += async (_, _) => await OnDeleteClickedAsync().ConfigureAwait(true);
 
@@ -130,7 +133,7 @@ namespace Polhem.UI.Avalonia.Views
             _cardList.SelectionChanged += (_, _) => OnCardSelectionChanged();
             _cardList.DoubleTapped += (_, _) => OnGridDoubleTapped();
 
-            _emptyListLabel = new TextBlock { Text = "No data.", IsVisible = false };
+            _emptyListLabel = new TextBlock { Text = UIText.Get(PolhemUIText.NoData), IsVisible = false };
 
             // DockPanel (not StackPanel): the chrome docks to the top and the content area fills the
             // remaining BOUNDED height as the last child. A StackPanel would give the grid unbounded
@@ -267,12 +270,36 @@ namespace Polhem.UI.Avalonia.Views
         }
 
         /// <summary>
+        /// Gets or sets the assembler that localizes the schema the column headers come from, for
+        /// this view only. <c>null</c> — the default — uses <see cref="ClientInfo.DefinitionLoader"/>,
+        /// which is <c>null</c> unless the host turned on <see cref="ClientInfo.UseDefinitionLoader"/>;
+        /// with neither, the headers are the schema's stored captions.
+        /// </summary>
+        /// <remarks>
+        /// The same switch <see cref="FormView.DefinitionLoader"/> reads, so the list and the record
+        /// it opens show the same captions. The schema is localized once, when the list loads;
+        /// switching the language does not re-localize a list already on screen — reopen it.
+        /// </remarks>
+        public FormDefinitionLoader? DefinitionLoader { get; set; }
+
+        /// <summary>
         /// Resolves the <see cref="FormSchema"/> for <paramref name="progId"/> when the host did
-        /// not pre-set <see cref="Schema"/>. Defaults to the cached <see cref="ClientInfo.DefineAccess"/>;
-        /// override to supply a schema without touching the static <see cref="ClientInfo"/>.
+        /// not pre-set <see cref="Schema"/>. Localizes through <see cref="DefinitionLoader"/> or the
+        /// client-wide loader when one is in effect, else fetches the stored schema through the
+        /// cached <see cref="ClientInfo.DefineAccess"/>; override to supply a schema without touching
+        /// the static <see cref="ClientInfo"/>.
         /// </summary>
         protected virtual async Task<FormSchema?> ResolveSchemaAsync(string progId)
-            => await ClientInfo.DefineAccess.GetFormSchemaAsync(progId).ConfigureAwait(false);
+            => (DefinitionLoader ?? ClientInfo.DefinitionLoader) is { } loader
+                ? await loader.GetLocalizedSchemaAsync(progId, ResolveLang()).ConfigureAwait(false)
+                : await ClientInfo.DefineAccess.GetFormSchemaAsync(progId).ConfigureAwait(false);
+
+        /// <summary>
+        /// Resolves the language the list renders in. Defaults to the UI culture, which
+        /// <see cref="ClientInfo.ApplyLoginResult"/> sets to the signed-in user's culture. Only
+        /// consulted when a definition loader is in effect.
+        /// </summary>
+        protected virtual string ResolveLang() => CultureInfo.CurrentUICulture.Name;
 
         /// <summary>
         /// Resolves the <see cref="FormApiConnector"/> for the list / delete round-trips.

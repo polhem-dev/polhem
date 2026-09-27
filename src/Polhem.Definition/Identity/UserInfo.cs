@@ -16,9 +16,15 @@ namespace Polhem.Definition.Identity
         public string UserName { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the user culture (e.g., zh-TW, en-US).
+        /// Gets or sets the user culture (e.g., zh-TW, en-US). An empty value means the client
+        /// keeps its own UI culture.
         /// </summary>
-        public string Culture { get; set; } = "zh-TW";
+        /// <remarks>
+        /// Empty by default, matching <see cref="SessionInfo.Culture"/>: the effective culture is
+        /// supplied by the server at login, from <c>st_user.culture</c> or the deployment's default
+        /// language.
+        /// </remarks>
+        public string Culture { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the user time zone (IANA format recommended, e.g., Asia/Taipei).

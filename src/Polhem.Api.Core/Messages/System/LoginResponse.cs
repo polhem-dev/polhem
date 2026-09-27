@@ -42,5 +42,14 @@ namespace Polhem.Api.Core.Messages.System
         /// </remarks>
         public string TimeZone { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the user's culture (e.g. zh-TW, en-US): <c>st_user.culture</c>, or the
+        /// deployment's default language when the user has none.
+        /// </summary>
+        /// <remarks>
+        /// Returned so the client renders in the language the account says rather than the
+        /// device's; the server resolves its own messages for this session in the same culture.
+        /// </remarks>
+        public string Culture { get; set; } = string.Empty;
     }
 }

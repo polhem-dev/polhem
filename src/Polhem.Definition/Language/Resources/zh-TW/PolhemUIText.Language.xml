@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Traditional Chinese (Taiwan) translation of the framework's own UI text, shipped inside
+  Polhem.Definition. The English base text and the keys are in PolhemUIText.cs; PolhemTextResourceTests
+  keeps this file and that list in step. A host overrides an entry with a PolhemUIText language
+  resource of its own.
+-->
+<LanguageResource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Namespace="PolhemUIText" Lang="zh-TW">
+  <Items>
+    <LanguageItem Key="Loading" Value="載入中…" />
+    <LanguageItem Key="NoData" Value="沒有資料。" />
+    <LanguageItem Key="View" Value="檢視" />
+    <LanguageItem Key="New" Value="新增" />
+    <LanguageItem Key="Add" Value="新增" />
+    <LanguageItem Key="Edit" Value="編輯" />
+    <LanguageItem Key="Delete" Value="刪除" />
+    <LanguageItem Key="Save" Value="儲存" />
+    <LanguageItem Key="Cancel" Value="取消" />
+    <LanguageItem Key="Back" Value="返回" />
+    <LanguageItem Key="OK" Value="確定" />
+    <LanguageItem Key="Search" Value="搜尋" />
+    <LanguageItem Key="Unsaved" Value="● 尚未儲存" />
+    <LanguageItem Key="True" Value="是" />
+    <LanguageItem Key="False" Value="否" />
+    <LanguageItem Key="UserId" Value="帳號" />
+    <LanguageItem Key="Password" Value="密碼" />
+    <LanguageItem Key="SignIn" Value="登入" />
+    <LanguageItem Key="SignInEmptyToken" Value="登入失敗：伺服器未傳回存取權杖。" />
+  </Items>
+  <Enums />
+</LanguageResource>

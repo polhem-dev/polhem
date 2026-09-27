@@ -5,6 +5,7 @@ using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.DataObjects;
+using Polhem.Definition.Language;
 
 namespace Polhem.UI.Avalonia.Controls.Editors
 {
@@ -176,9 +177,9 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 index++;
             }
 
-            var okButton = new Button { Content = "OK", MinWidth = 80 };
+            var okButton = new Button { Content = UIText.Get(PolhemUIText.Ok), MinWidth = 80 };
             okButton.Click += (_, _) => Commit();
-            var cancelButton = new Button { Content = "Cancel", MinWidth = 80 };
+            var cancelButton = new Button { Content = UIText.Get(PolhemUIText.Cancel), MinWidth = 80 };
             cancelButton.Click += (_, _) => Cancel();
 
             var buttons = new StackPanel

@@ -13,7 +13,7 @@
 -->
 <PermissionModels xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Models>
-    <PermissionModel ModelId="AuditRule" DisplayName="稽核規則">
+    <PermissionModel ModelId="AuditRule" DisplayName="Audit Rule">
       <Rules>
         <PermissionRule Action="Create" />
         <PermissionRule Action="Read" />

@@ -206,6 +206,96 @@ namespace Polhem.Definition.UnitTests.Language
             Assert.Equal("Active", statusField.ListItems!["0"].Text);
         }
 
+        [Fact]
+        [DisplayName("Captions and option sets fall back through the same chain, so a culture with no resource gets both in the default language")]
+        public void Localize_CultureWithoutResource_CaptionsAndEnumsBothUseDefaultLanguage()
+        {
+            var defineAccess = new StubDefineAccess(defaultLang: "zh-TW");
+            defineAccess.AddResource("zh-TW", "Customer", (FormSchemaLocalizer.SchemaDisplayNameKey, "客戶"));
+            defineAccess.AddEnum("zh-TW", "Customer", "Status", ("0", "有效"), ("1", "停用"));
+            var schema = BuildSchemaWithLangEnumField(progId: "Customer", langEnumName: "Status");
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
+
+            localizer.Localize(schema, "fr-FR");
+
+            Assert.Equal("客戶", schema.DisplayName);
+            Assert.Equal("有效", schema.Tables![0].Fields!["status"].ListItems!["0"].Text);
+        }
+
+        [Fact]
+        [DisplayName("A caption missing in en-GB resolves from the parent culture en")]
+        public void Localize_ParentCulture_ResolvesCaption()
+        {
+            var defineAccess = new StubDefineAccess(defaultLang: "");
+            defineAccess.AddResource("en", "Customer", (FormSchemaLocalizer.SchemaDisplayNameKey, "Customer (en)"));
+            var schema = BuildSchema("Customer", "Customer (raw)");
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
+
+            localizer.Localize(schema, "en-GB");
+
+            Assert.Equal("Customer (en)", schema.DisplayName);
+        }
+
+        [Theory]
+        [InlineData("en-GB", "Customer (raw)", "Customer Name (raw)", "Active")]
+        [InlineData("fr-FR", "客戶", "客戶名稱", "有效")]
+        [InlineData("zh-TW", "客戶", "客戶名稱", "有效")]
+        [DisplayName("On a zh-TW-default deployment with only zh-TW resources, en-GB gets the English base text while fr-FR and zh-TW get zh-TW")]
+        public void Localize_ZhTwDefaultOnlyZhTwResources_EnglishStopsAtBaseText(
+            string lang, string expectedSchema, string expectedField, string expectedOption)
+        {
+            var defineAccess = new StubDefineAccess(defaultLang: "zh-TW");
+            defineAccess.AddResource("zh-TW", "Customer",
+                (FormSchemaLocalizer.SchemaDisplayNameKey, "客戶"),
+                (string.Format(CultureInfo.InvariantCulture, FormSchemaLocalizer.FieldCaptionKeyFormat, "status"), "客戶名稱"));
+            defineAccess.AddEnum("zh-TW", "Customer", "Status", ("0", "有效"));
+            var schema = BuildSchemaWithLangEnumField(progId: "Customer", langEnumName: "Status");
+            schema.DisplayName = "Customer (raw)";
+            var status = schema.Tables![0].Fields!["status"];
+            status.Caption = "Customer Name (raw)";
+            status.ListItems!.Add(new ListItem("0", "Active"));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
+
+            localizer.Localize(schema, lang);
+
+            Assert.Equal(expectedSchema, schema.DisplayName);
+            Assert.Equal(expectedField, status.Caption);
+            Assert.Equal(expectedOption, status.ListItems!["0"].Text);
+        }
+
+        [Fact]
+        [DisplayName("A parent culture wins over the default language")]
+        public void Localize_ParentCulture_BeatsDefaultLanguage()
+        {
+            var defineAccess = new StubDefineAccess(defaultLang: "zh-TW");
+            defineAccess.AddResource("en", "Customer", (FormSchemaLocalizer.SchemaDisplayNameKey, "Customer (en)"));
+            defineAccess.AddResource("zh-TW", "Customer", (FormSchemaLocalizer.SchemaDisplayNameKey, "客戶"));
+            defineAccess.AddEnum("en", "Customer", "Status", ("0", "Active"));
+            defineAccess.AddEnum("zh-TW", "Customer", "Status", ("0", "有效"));
+            var schema = BuildSchemaWithLangEnumField(progId: "Customer", langEnumName: "Status");
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
+
+            localizer.Localize(schema, "en-GB");
+
+            Assert.Equal("Customer (en)", schema.DisplayName);
+            Assert.Equal("Active", schema.Tables![0].Fields!["status"].ListItems!["0"].Text);
+        }
+
+        [Fact]
+        [DisplayName("A key no culture of the chain declares keeps the schema's base text")]
+        public void Localize_KeyMissingEverywhere_KeepsBaseText()
+        {
+            var defineAccess = new StubDefineAccess(defaultLang: "zh-TW");
+            defineAccess.AddResource("zh-TW", "Customer", (FormSchemaLocalizer.SchemaDisplayNameKey, "客戶"));
+            var schema = BuildSchema("Customer", "Customer (raw)");
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
+
+            localizer.Localize(schema, "fr-FR");
+
+            Assert.Equal("客戶", schema.DisplayName);
+            Assert.Equal("Customer Name (raw)", schema.Tables![0].Fields!["sys_name"].Caption);
+        }
+
         private static FormSchema BuildSchema(string progId, string displayName)
         {
             var schema = new FormSchema(progId, displayName) { CategoryId = "common" };
@@ -246,7 +336,7 @@ namespace Polhem.Definition.UnitTests.Language
             public StubDefineAccess(string defaultLang)
             {
                 _systemSettings = new SystemSettings();
-                _systemSettings.CommonConfiguration.DefaultLang = defaultLang;
+                _systemSettings.CommonConfiguration.DefaultLanguage = defaultLang;
             }
 
             public void AddResource(string lang, string ns, params (string Key, string Value)[] items)

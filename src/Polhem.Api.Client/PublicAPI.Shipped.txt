@@ -32,7 +32,6 @@ Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(string! endpo
 Polhem.Api.Client.Definitions.FormDefinitionLoader
 Polhem.Api.Client.Definitions.FormDefinitionLoader.CompanyAccessor.get -> System.Func<Polhem.Definition.Identity.CompanyInfo?>?
 Polhem.Api.Client.Definitions.FormDefinitionLoader.CompanyAccessor.init -> void
-Polhem.Api.Client.Definitions.FormDefinitionLoader.FormDefinitionLoader(Polhem.Api.Client.ClientDefineAccess! defineAccess, string! defaultLang = "") -> void
 Polhem.Api.Client.Definitions.LanguageLayers
 Polhem.Api.Client.Definitions.LanguageLayers.Base.get -> Polhem.Definition.Language.LanguageResource?
 Polhem.Api.Client.Definitions.LanguageLayers.Base.init -> void
@@ -48,7 +47,6 @@ Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangEnum(string! lang, 
 Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangEnumText(string! lang, string! fullName, string! code) -> string?
 Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangText(string! lang, string! fullKey) -> string!
 Polhem.Api.Client.Definitions.SnapshotLanguageService.GetLangText(string! lang, string! namespace, string! subKey) -> string!
-Polhem.Api.Client.Definitions.SnapshotLanguageService.SnapshotLanguageService(System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Api.Client.Definitions.LanguageLayers>! snapshot, string! defaultLang) -> void
 Polhem.Api.Client.Definitions.SnapshotLanguageService.TryGetLangText(string! lang, string! fullKey, out string! text) -> bool
 Polhem.Api.Client.Definitions.SnapshotLanguageService.TryGetLangText(string! lang, string! namespace, string! subKey, out string! text) -> bool
 Polhem.Api.Client.FormDataGuard

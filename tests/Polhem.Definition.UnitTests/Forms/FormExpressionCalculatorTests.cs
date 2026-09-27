@@ -276,6 +276,50 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
+        [DisplayName("A failed rule carries its message as English text and the key {progId}.Rule.{RuleId}.Message for translation")]
+        public void ValidateRules_FailedRule_CarriesRuleMessageKey()
+        {
+            var schema = BuildOrderSchema();
+            schema.Rules!.Add("amount_positive", "amount > 0", "Amount must be greater than 0.");
+            var dataSet = BuildRuleDataSet(amount: -1m);
+
+            var ex = Assert.Throws<UserMessageException>(() =>
+                _calculator.ValidateRules(schema, dataSet, FormRuleTrigger.BeforeSave));
+
+            Assert.Equal("Amount must be greater than 0.", ex.Message);
+            Assert.Equal("Order.Rule.amount_positive.Message", ex.MessageKey);
+            Assert.Empty(ex.MessageArguments);
+        }
+
+        [Fact]
+        [DisplayName("A rule message with braces and no arguments travels verbatim")]
+        public void ValidateRules_FailedRuleWithBraces_KeepsLiteralText()
+        {
+            var schema = BuildOrderSchema();
+            schema.Rules!.Add("amount_positive", "amount > 0", "Amount {total} must be positive.");
+            var dataSet = BuildRuleDataSet(amount: -1m);
+
+            var ex = Assert.Throws<UserMessageException>(() =>
+                _calculator.ValidateRules(schema, dataSet, FormRuleTrigger.BeforeSave));
+
+            Assert.Equal("Amount {total} must be positive.", ex.Message);
+        }
+
+        private static DataSet BuildRuleDataSet(decimal amount)
+        {
+            var table = new DataTable("Order");
+            table.Columns.Add("price", typeof(decimal));
+            table.Columns.Add("qty", typeof(decimal));
+            table.Columns.Add("amount", typeof(decimal));
+            table.Columns.Add("tax", typeof(decimal));
+            table.Columns.Add("status", typeof(string));
+            table.Rows.Add(10m, 2m, amount, 0m, "Draft");
+            var dataSet = new DataSet("Order");
+            dataSet.Tables.Add(table);
+            return dataSet;
+        }
+
+        [Fact]
         [DisplayName("BuildDependencyMap maps price / qty to amount and amount to tax (source column to the computed columns it affects)")]
         public void BuildDependencyMap_MapsSourceToComputed()
         {

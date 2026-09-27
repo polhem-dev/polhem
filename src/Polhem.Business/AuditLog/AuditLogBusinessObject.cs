@@ -9,6 +9,7 @@ using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 using Polhem.Repository.Abstractions.AuditLog;
 using Polhem.Repository.Abstractions.Factories;
+using Polhem.Definition.Language;
 
 namespace Polhem.Business.AuditLog
 {
@@ -88,7 +89,7 @@ namespace Polhem.Business.AuditLog
             EnsureAuditReadAllowed();
 
             var table = Repository().GetChangeById(args.SysRowId, CurrentCompanyId())
-                ?? throw new UserMessageException("Change record not found.");
+                ?? throw new UserMessageException(PolhemMessages.AuditLogChangeNotFound, "Change record not found.");
             var row = table.Rows[0];
             var (fields, dataSet) = ChangeDiffGramReader.ReadDetail(ReadNullableString(row["changes_xml"]));
 
@@ -261,7 +262,7 @@ namespace Polhem.Business.AuditLog
         {
             var authorization = Services.GetRequiredService<ICompanyAuthorizationService>();
             if (!authorization.Can(AccessToken, SysProgIds.AuditLog, PermissionActions.Read))
-                throw new UserMessageException("Not authorized to read the audit log.");
+                throw new UserMessageException(PolhemMessages.AuditLogReadDenied, "Not authorized to read the audit log.");
         }
 
         /// <summary>
@@ -278,7 +279,7 @@ namespace Polhem.Business.AuditLog
         {
             var authorization = Services.GetRequiredService<IDeploymentAuthorizationService>();
             if (!authorization.Can(AccessToken, DeploymentAction.ReadDbAnomalyLog))
-                throw new UserMessageException("Not authorized to read the database anomaly log.");
+                throw new UserMessageException(PolhemMessages.AuditLogAnomalyReadDenied, "Not authorized to read the database anomaly log.");
         }
 
         /// <summary>Reads a log-time column as a UTC <see cref="DateTime"/> (the write side stores UTC).</summary>

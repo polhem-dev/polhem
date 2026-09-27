@@ -172,7 +172,7 @@ namespace Polhem.Api.Core.JsonRpc
                 // exceptions surface their original message; everything else is flattened to a
                 // generic message to avoid leaking internals, and the real one is logged here.
                 var (code, message) = MapException(rootEx);
-                response.Error = new JsonRpcError((int)code, message);
+                response.Error = new JsonRpcError((int)code, LocalizeMessage(rootEx, message));
                 LogMaskedFailure(request.Method, rootEx, code);
                 LogApiFailureAnomaly(request.Method, rootEx, stopwatch);
             }

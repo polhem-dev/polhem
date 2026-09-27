@@ -100,7 +100,7 @@ public sealed partial class SystemSettingsDocumentViewModel : SingletonDocumentV
         node.Detail = string.Join(Environment.NewLine,
             $"Version: {c.Version}",
             $"IsDebugMode: {c.IsDebugMode}",
-            $"DefaultLang: {c.DefaultLang}",
+            $"DefaultLanguage: {c.DefaultLanguage}",
             $"AllowedTypeNamespaces: {c.AllowedTypeNamespaces}");
     }
 

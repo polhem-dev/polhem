@@ -450,6 +450,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   accessToken?: string;
   apiEncryptionKey?: string;
+  culture?: string;
   expiredAt?: string;
   parameters?: Parameter[];
   timeZone?: string;

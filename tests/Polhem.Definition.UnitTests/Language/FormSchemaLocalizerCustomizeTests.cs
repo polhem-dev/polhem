@@ -161,10 +161,26 @@ namespace Polhem.Definition.UnitTests.Language
         }
 
         [Fact]
-        [DisplayName("An empty Lang is a no-op even with a customizeId (the short-circuit comes before the customization lookup)")]
-        public void Localize_EmptyLang_NoOpEvenWithCustomizeId()
+        [DisplayName("A blank Lang starts the fall-back chain at the default language, customization overlay included")]
+        public void Localize_EmptyLang_ResolvesInDefaultLanguage()
         {
             var defineAccess = new StubDefineAccess("zh-TW");
+            var reader = new SpyCustomizeReader();
+            reader.AddLanguage("acme", "zh-TW", "Customer", (FieldKey("sys_name"), "客戶抬頭"));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, reader));
+            var schema = BuildSchema();
+
+            localizer.Localize(schema, "acme", "  ");
+
+            Assert.Equal("客戶抬頭", schema.Tables![0].Fields!["sys_name"].Caption);
+            Assert.Equal("Customer ID (raw)", schema.Tables![0].Fields!["sys_id"].Caption);
+        }
+
+        [Fact]
+        [DisplayName("A blank Lang with no default language leaves the schema untouched and reads no customization")]
+        public void Localize_EmptyLangNoDefault_NoOp()
+        {
+            var defineAccess = new StubDefineAccess("");
             var reader = new SpyCustomizeReader();
             reader.AddLanguage("acme", "zh-TW", "Customer", (FieldKey("sys_name"), "客戶抬頭"));
             var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, reader));
@@ -254,7 +270,7 @@ namespace Polhem.Definition.UnitTests.Language
             public StubDefineAccess(string defaultLang)
             {
                 _systemSettings = new SystemSettings();
-                _systemSettings.CommonConfiguration.DefaultLang = defaultLang;
+                _systemSettings.CommonConfiguration.DefaultLanguage = defaultLang;
             }
 
             public void AddResource(string lang, string ns, params (string Key, string Value)[] items)

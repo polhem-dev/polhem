@@ -111,3 +111,10 @@ virtual Polhem.Api.Client.Connectors.SystemApiConnector.LoginAsync(string! userI
 virtual Polhem.Api.Client.Connectors.SystemApiConnector.SetApiKeyExpiryAsync(string! sysId, System.DateTime? expiredAt, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.SetApiKeyExpiryResponse!>!
 virtual Polhem.Api.Client.Connectors.AuditLogApiConnector.GetChangeDetailAsync(Polhem.Api.Core.Messages.AuditLog.GetChangeDetailRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse!>!
 static Polhem.Api.Client.FormDataGuard.TryGetRowId(System.Data.DataRow! row, out System.Guid rowId) -> bool
+Polhem.Api.Client.Definitions.FormDefinitionLoader.FormDefinitionLoader(Polhem.Api.Client.ClientDefineAccess! defineAccess, string? defaultLanguage = null) -> void
+Polhem.Api.Client.Definitions.FormDefinitionLoader.GetMenuLocalizerAsync(string! lang, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Definition.Language.MenuLocalizer!>!
+Polhem.Api.Client.Definitions.SnapshotLanguageService.DefaultLanguage.get -> string!
+Polhem.Api.Client.Definitions.SnapshotLanguageService.SnapshotLanguageService(System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Api.Client.Definitions.LanguageLayers>! snapshot, string! defaultLanguage) -> void
+Polhem.Api.Client.Definitions.SnapshotLanguageService.TryResolveLangText(string! customizeId, string! lang, string! namespace, string! subKey, out string! text) -> bool
+static Polhem.Api.Client.ApiClientInfo.DefaultLanguage.get -> string!
+static Polhem.Api.Client.ApiClientInfo.DefaultLanguage.set -> void

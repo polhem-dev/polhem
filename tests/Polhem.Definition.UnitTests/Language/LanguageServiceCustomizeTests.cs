@@ -331,7 +331,7 @@ namespace Polhem.Definition.UnitTests.Language
             public StubDefineAccess(string defaultLang)
             {
                 _systemSettings = new SystemSettings();
-                _systemSettings.CommonConfiguration.DefaultLang = defaultLang;
+                _systemSettings.CommonConfiguration.DefaultLanguage = defaultLang;
             }
 
             public void AddResource(string lang, string ns, params (string Key, string Value)[] items)

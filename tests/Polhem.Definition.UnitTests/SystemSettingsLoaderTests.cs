@@ -21,7 +21,7 @@ namespace Polhem.Definition.UnitTests
             // cannot even detect the read path dropping every field.
             var original = new SystemSettings();
             original.CommonConfiguration.Version = "9.9.9";
-            original.CommonConfiguration.DefaultLang = "zh-TW";
+            original.CommonConfiguration.DefaultLanguage = "zh-TW";
             original.CommonConfiguration.IsDebugMode = true;
             XmlCodec.SerializeToFile(original, filePath);
 
@@ -31,7 +31,7 @@ namespace Polhem.Definition.UnitTests
             Assert.NotNull(loaded.BackendConfiguration);
             Assert.NotNull(loaded.CommonConfiguration);
             Assert.Equal("9.9.9", loaded.CommonConfiguration.Version);
-            Assert.Equal("zh-TW", loaded.CommonConfiguration.DefaultLang);
+            Assert.Equal("zh-TW", loaded.CommonConfiguration.DefaultLanguage);
             Assert.True(loaded.CommonConfiguration.IsDebugMode);
         }
 

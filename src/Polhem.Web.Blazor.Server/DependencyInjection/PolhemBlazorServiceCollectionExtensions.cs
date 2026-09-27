@@ -1,4 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Localization;
+using Polhem.Api.Client;
+using Polhem.Definition.Language;
 
 namespace Polhem.Web.Blazor.Server.DependencyInjection
 {
@@ -9,8 +13,10 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
     {
         /// <summary>
         /// Registers Polhem Blazor Server services: the resolved
-        /// <see cref="PolhemBlazorOptions"/> and a <see cref="PolhemApiConnectorFactory"/>
-        /// that hosts inject to build connectors with the configured provider.
+        /// <see cref="PolhemBlazorOptions"/>, a <see cref="PolhemApiConnectorFactory"/>
+        /// that hosts inject to build connectors with the configured provider, and the
+        /// <see cref="IStringLocalizer{T}"/> of <see cref="PolhemUIText"/> the components read their
+        /// own text from.
         /// </summary>
         /// <remarks>
         /// This call deliberately does <em>not</em> bundle <c>AddPolhemFramework</c>:
@@ -38,6 +44,18 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
             // transmission key out of another's requests. See PolhemApiConnectorFactory's remarks.
             services.AddScoped<Polhem.Api.Client.ApiSessionContext>();
             services.AddScoped<PolhemApiConnectorFactory>();
+            // The components' own text. TryAdd, so a host that registered its own localizer for
+            // PolhemUIText — before or instead of this call — keeps it. The default answers from the
+            // host's language resources when an in-process backend registered them, then from the
+            // translations shipped with the framework, in the circuit's CurrentUICulture.
+            services.TryAddSingleton<IStringLocalizer<PolhemUIText>>(sp =>
+            {
+                var hostService = sp.GetService<ILanguageService>();
+                var service = hostService is null
+                    ? new FrameworkLanguageService(null, static () => ApiClientInfo.DefaultLanguage)
+                    : new FrameworkLanguageService(hostService);
+                return new LanguageResourceStringLocalizer<PolhemUIText>(service);
+            });
             return services;
         }
     }

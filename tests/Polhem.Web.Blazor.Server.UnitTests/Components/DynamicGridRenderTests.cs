@@ -3,6 +3,7 @@ using System.Data;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Server.Components;
 using Bunit;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
@@ -15,9 +16,22 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [DisplayName("DynamicGrid renders the empty-state div with the default text when Layout is null")]
         public void DynamicGrid_NullLayout_RendersEmptyDiv()
         {
+            using var culture = new CultureScope("en-US");
             var cut = Render<DynamicGrid>();
             var emptyDiv = cut.Find("div.polhem-dynamic-grid--empty");
             Assert.Contains("No data.", emptyDiv.TextContent);
+        }
+
+        [Fact]
+        [DisplayName("DynamicGrid renders the empty-state text in the UI culture, and a host's EmptyText wins")]
+        public void DynamicGrid_NullLayoutUnderZhTw_RendersLocalizedEmptyText()
+        {
+            using var culture = new CultureScope("zh-TW");
+            var localized = Render<DynamicGrid>();
+            var overridden = Render<DynamicGrid>(p => p.Add(g => g.EmptyText, "Nothing here"));
+
+            Assert.Contains("沒有資料。", localized.Find("div.polhem-dynamic-grid--empty").TextContent);
+            Assert.Contains("Nothing here", overridden.Find("div.polhem-dynamic-grid--empty").TextContent);
         }
 
         [Fact]

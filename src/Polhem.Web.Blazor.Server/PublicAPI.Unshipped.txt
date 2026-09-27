@@ -1,2 +1,6 @@
 #nullable enable
 Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.PolhemApiConnectorFactory(Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions! options, Polhem.Api.Client.ApiSessionContext! session, System.IServiceProvider! services) -> void
+Polhem.Web.Blazor.Server.Components.DynamicGrid.EmptyText.get -> string?
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.PasswordLabel.get -> string?
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.SubmitLabel.get -> string?
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.UserIdLabel.get -> string?

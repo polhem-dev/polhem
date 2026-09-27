@@ -95,15 +95,16 @@ namespace Polhem.Definition.Identity
         }
 
         /// <summary>
-        /// Gets or sets the user culture (e.g., zh-TW, en-US). An empty value means the language
-        /// service falls back to the system default language.
+        /// Gets or sets the user culture (e.g., zh-TW, en-US). An empty value starts the language
+        /// fall-back chain at the system default language.
         /// </summary>
         /// <remarks>
         /// The default is deliberately empty rather than a named culture, for the same reason as
         /// <see cref="TimeZone"/>: hard-coding <c>zh-TW</c> made the language service's fallback
         /// path unreachable for every logged-in call and silently bound the framework to one
         /// region. Login fills this from <c>st_user.culture</c>, falling back to
-        /// <see cref="Polhem.Definition.Settings.BackendConfiguration.DefaultLanguage"/>.
+        /// <see cref="Polhem.Definition.Settings.CommonConfiguration.DefaultLanguage"/>, and returns it to
+        /// the client in the login response.
         /// </remarks>
         public string Culture { get; set; } = string.Empty;
 
