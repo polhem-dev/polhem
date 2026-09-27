@@ -6,9 +6,9 @@ namespace Polhem.UI.Core
     /// <remarks>
     /// Deliberately separate from <see cref="IEndpointStorage"/> rather than added to it: that
     /// interface's members are all named for the endpoint, and widening it would leave the name
-    /// describing only half of what it carries. Hosts assign both properties on
-    /// <see cref="ClientInfo"/>, and a platform storage class is free to implement both and be
-    /// assigned to each — the two values share a medium on every platform in practice.
+    /// describing only half of what it carries. A storage class is free to implement both and be
+    /// assigned to both properties on <see cref="ClientInfo"/>, as the default
+    /// <see cref="FileEndpointStorage"/> is.
     /// <para>
     /// NOTE: an API key held by a client is not a secret in the cryptographic sense — it can be
     /// recovered from the shipped application. The goal here is that changing it does not require

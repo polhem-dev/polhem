@@ -5,7 +5,6 @@ using Avalonia;
 using Avalonia.Android;
 using Polhem.Api.Client;
 using Polhem.Northwind.UI;
-using Polhem.UI.Avalonia.Storage;
 using Polhem.UI.Core;
 
 namespace Polhem.Northwind.Android;
@@ -32,14 +31,10 @@ public class Application : AvaloniaAndroidApplication<App>
     /// <inheritdoc/>
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
-        // Configure the Polhem client singletons before the Avalonia app initialises. The Android
-        // sandbox grants the app a writable per-user data directory, and FileEndpointStorage
-        // writes under SpecialFolder.LocalApplicationData (which maps there on Android), so the
-        // desktop file-backed storage applies unchanged. Verified in plan stage 3.
+        // Configure the Polhem client singletons before the Avalonia app initialises. The endpoint
+        // and the API key keep their default storage: it writes under the local application data
+        // folder, which on Android is inside the app's private data directory.
         ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
-        var storage = new FileEndpointStorage("Polhem.Northwind");
-        ClientInfo.EndpointStorage = storage;
-        ClientInfo.ApiKeyStorage = storage;
         // The shipped key only seeds empty storage on first run; after that the stored value wins,
         // so swapping keys is a settings change rather than a rebuild.
         ClientInfo.ApplyApiKey(AppDefaults.ApiKey);

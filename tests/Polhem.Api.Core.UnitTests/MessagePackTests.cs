@@ -83,9 +83,9 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         /// <summary>
-        /// Tests that a DBNull.Value cell survives the conversion to SerializableDataTable and back.
+        /// Tests that a DBNull.Value cell survives a MessagePack round-trip.
         /// </summary>
-        [Fact(DisplayName = "DataTable conversion through SerializableDataTable preserves DBNull values")]
+        [Fact(DisplayName = "DataTable MessagePack round-trip preserves DBNull values")]
         public void DataTable_SerializeWithDbNull_PreservesValues()
         {
             // Arrange
@@ -99,8 +99,7 @@ namespace Polhem.Api.Core.UnitTests
             dt.Rows.Add(row);
 
             // Act
-            var serializable = SerializableDataTable.FromDataTable(dt);
-            var restored = SerializableDataTable.ToDataTable(serializable);
+            var restored = MessagePackCodec.Deserialize<DataTable>(MessagePackCodec.Serialize(dt));
 
             // Assert
             Assert.Equal(1, restored.Rows[0]["Id"]);

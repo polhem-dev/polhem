@@ -56,7 +56,7 @@ namespace Polhem.UI.Core.UnitTests
 
     /// <summary>
     /// Covers the paths of <see cref="ClientInfo"/> that mutate static state.
-    /// Shares the <c>ClientInfoState</c> collection with <c>EndpointStorageTests</c> so they run serially.
+    /// Shares the <c>ClientInfoState</c> collection with the other ClientInfo tests so they run serially.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoMutatingTests

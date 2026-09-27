@@ -1,27 +1,37 @@
 using System.ComponentModel;
+using System.Reflection;
 
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// Smoke tests for the default state of <see cref="ClientInfo"/>.
-    /// <para>
-    /// Most tests only read default getters, but <c>ClientSettings_NoFile_ReturnsNonNull</c> triggers the lazy getter
-    /// of <see cref="ClientInfo.ClientSettings"/>, which creates and **caches** an empty <c>ClientSettings</c> in a static
-    /// field when there is no file. That is a write to process-wide static state.
-    /// So this class joins the other tests that touch <see cref="ClientInfo.ClientSettings"/> in
-    /// <c>[Collection("ClientInfoState")]</c> to run serially. Otherwise, on a 2-core CI runner, it races with
-    /// <c>EndpointStorageTests</c> (the empty instance overwrites the Endpoint just written).
-    /// </para>
+    /// Smoke tests for the default state of <see cref="ClientInfo"/>. Other classes in the <c>ClientInfoState</c>
+    /// collection replace these statics and restore them, so this class joins the collection to read the defaults
+    /// only while nobody else holds a replacement.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoTests
     {
         [Fact]
-        [DisplayName("ClientInfo.EndpointStorage defaults to an EndpointStorage instance")]
-        public void EndpointStorage_Default_IsEndpointStorageInstance()
+        [DisplayName("ClientInfo.EndpointStorage defaults to a FileEndpointStorage under LocalApplicationData named after the entry assembly")]
+        public void EndpointStorage_Default_IsFileEndpointStorageForEntryAssembly()
         {
-            Assert.NotNull(ClientInfo.EndpointStorage);
-            Assert.IsType<EndpointStorage>(ClientInfo.EndpointStorage);
+            var expected = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                Assembly.GetEntryAssembly()?.GetName().Name ?? "Polhem",
+                "endpoint.txt");
+
+            var storage = Assert.IsType<FileEndpointStorage>(ClientInfo.EndpointStorage);
+
+            Assert.Equal(expected, storage.FilePath);
+        }
+
+        [Fact]
+        [DisplayName("ClientInfo.ApiKeyStorage defaults to the same FileEndpointStorage instance as EndpointStorage")]
+        public void ApiKeyStorage_Default_IsSameFileEndpointStorageAsEndpointStorage()
+        {
+            var storage = Assert.IsType<FileEndpointStorage>(ClientInfo.ApiKeyStorage);
+
+            Assert.Same(ClientInfo.EndpointStorage, storage);
         }
 
         [Fact]
@@ -29,16 +39,6 @@ namespace Polhem.UI.Core.UnitTests
         public void AccessToken_Default_IsEmpty()
         {
             Assert.Equal(Guid.Empty, ClientInfo.AccessToken);
-        }
-
-        [Fact]
-        [DisplayName("ClientInfo.ClientSettings returns an empty ClientSettings without throwing when there is no file")]
-        public void ClientSettings_NoFile_ReturnsNonNull()
-        {
-            // The test process has no `{ExeName}.Settings.xml`, so the `ClientSettings` getter
-            // falls back to creating a new empty `ClientSettings`.
-            var settings = ClientInfo.ClientSettings;
-            Assert.NotNull(settings);
         }
 
         [Fact]

@@ -1,4 +1,4 @@
-<!-- source: adr/README.md blob: 9bebc95e72cb1114fc27fe2712c367dcf2367b0e -->
+<!-- source: adr/README.md blob: bc44a7f1fdd95b5060f8bc9dd35bb8b88e480311 -->
 # 架構決策紀錄（ADR）索引
 
 [English](README.md)
@@ -57,3 +57,4 @@ ADR 記錄**決策當下的脈絡與理由**，是理解「為何這樣設計」
 | [043](adr-043-error-contract-single-registry.zh-TW.md) | 錯誤契約以單一登錄表達，兩端從同一份宣告消費 | ✅ 已採納 |
 | [044](adr-044-payload-codec-negotiation.zh-TW.md) | body codec 由每個請求宣告，JSON 與 MessagePack 並存 | ✅ 已採納 |
 | [045](adr-045-language-policy-and-local-plans.zh-TW.md) | 共同維護的內容一律英文；計畫不進 repo | ✅ 已採納 |
+| [046](adr-046-api-evolution-policies-for-1-0.zh-TW.md) | 1.0 的 API 演進政策：同步的伺服器路徑、可擴充的主機介面、行程層級的設定 | ✅ 已採納 |

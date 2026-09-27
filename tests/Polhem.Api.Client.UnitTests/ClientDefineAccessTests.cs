@@ -279,7 +279,7 @@ namespace Polhem.Api.Client.UnitTests
 
             public int GetDefineCallCount { get; private set; }
 
-            public override Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null)
+            public override Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null, CancellationToken cancellationToken = default)
             {
                 GetDefineCallCount++;
                 return Task.FromResult(Activator.CreateInstance<T>());
@@ -301,7 +301,7 @@ namespace Polhem.Api.Client.UnitTests
 
             public void Release() => _gate.TrySetResult(true);
 
-            public override async Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null)
+            public override async Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null, CancellationToken cancellationToken = default)
             {
                 GetDefineCallCount++;
                 await _gate.Task.ConfigureAwait(false);
@@ -319,7 +319,7 @@ namespace Polhem.Api.Client.UnitTests
 
             public int GetDefineCallCount { get; private set; }
 
-            public override Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null)
+            public override Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null, CancellationToken cancellationToken = default)
             {
                 GetDefineCallCount++;
                 if (GetDefineCallCount == 1)

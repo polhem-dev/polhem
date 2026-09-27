@@ -270,21 +270,31 @@ namespace Polhem.Api.AspNetCore.Controllers
         /// </summary>
         /// <param name="accessToken">The access token.</param>
         /// <param name="request">The JSON-RPC request model.</param>
+        /// <remarks>
+        /// The executor receives <see cref="HttpContext.RequestAborted"/>, so a client that
+        /// disconnects before its call is dispatched does not run it. Such a request is answered
+        /// with status 499 rather than an error envelope, since nobody is left to read one.
+        /// </remarks>
         protected virtual async Task<IActionResult> HandleRequestAsync(Guid accessToken, JsonRpcRequest request)
         {
+            var aborted = HttpContext.RequestAborted;
             try
             {
                 var executor = HttpContext.RequestServices.GetRequiredService<JsonRpcExecutor>();
                 executor.AccessToken = accessToken;
                 executor.IsLocalCall = false;
                 executor.ApiKeyValidation = ApiKeyValidation;
-                var result = await executor.ExecuteAsync(request);
+                var result = await executor.ExecuteAsync(request, aborted);
                 return new ContentResult
                 {
                     Content = result.ToJson(),
                     ContentType = "application/json",
                     StatusCode = StatusCodes.Status200OK
                 };
+            }
+            catch (OperationCanceledException) when (aborted.IsCancellationRequested)
+            {
+                return new StatusCodeResult(StatusCodes.Status499ClientClosedRequest);
             }
             catch (Exception ex)
             {

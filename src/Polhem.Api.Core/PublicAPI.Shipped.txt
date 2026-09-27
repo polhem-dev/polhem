@@ -47,7 +47,6 @@ Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Version.get -> byte
 Polhem.Api.Core.JsonRpc.DateTimeWireGuard
 Polhem.Api.Core.JsonRpc.DateTimeZoneConverter
 Polhem.Api.Core.JsonRpc.IReplayWindowStore
-Polhem.Api.Core.JsonRpc.IReplayWindowStore.GetOrAdd(System.Guid accessToken) -> Polhem.Api.Core.JsonRpc.ReplayWindow!
 Polhem.Api.Core.JsonRpc.JsonRpcError
 Polhem.Api.Core.JsonRpc.JsonRpcError.Code.get -> int
 Polhem.Api.Core.JsonRpc.JsonRpcError.Code.set -> void
@@ -80,7 +79,6 @@ Polhem.Api.Core.JsonRpc.JsonRpcExecutor.AccessToken.get -> System.Guid
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.AccessToken.set -> void
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.ApiKeyValidation.get -> Polhem.Definition.Security.ApiKeyValidationResult!
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.ApiKeyValidation.set -> void
-Polhem.Api.Core.JsonRpc.JsonRpcExecutor.ExecuteAsync(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.JsonRpc.JsonRpcResponse!>!
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.IsLocalCall.get -> bool
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.IsLocalCall.set -> void
 Polhem.Api.Core.JsonRpc.JsonRpcParams
@@ -112,7 +110,6 @@ Polhem.Api.Core.JsonRpc.JsonRpcResult
 Polhem.Api.Core.JsonRpc.JsonRpcResult.JsonRpcResult() -> void
 Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore
 Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.Count.get -> int
-Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.GetOrAdd(System.Guid accessToken) -> Polhem.Api.Core.JsonRpc.ReplayWindow!
 Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.MemoryReplayWindowStore() -> void
 Polhem.Api.Core.JsonRpc.PayloadSwap
 Polhem.Api.Core.JsonRpc.PayloadSwap.Dispose() -> void
@@ -123,9 +120,6 @@ Polhem.Api.Core.JsonRpc.PayloadZoneConverter
 Polhem.Api.Core.JsonRpc.ReplayRejectedException
 Polhem.Api.Core.JsonRpc.ReplayRejectedException.ReplayRejectedException(string! message) -> void
 Polhem.Api.Core.JsonRpc.ReplayRejectedException.ReplayRejectedException(string! message, System.Exception! innerException) -> void
-Polhem.Api.Core.JsonRpc.ReplayWindow
-Polhem.Api.Core.JsonRpc.ReplayWindow.ReplayWindow() -> void
-Polhem.Api.Core.JsonRpc.ReplayWindow.TryAccept(long sequence) -> bool
 Polhem.Api.Core.Messages.ApiHeaders
 Polhem.Api.Core.Messages.ApiMessageBase
 Polhem.Api.Core.Messages.ApiMessageBase.ApiMessageBase() -> void
@@ -587,8 +581,6 @@ Polhem.Api.Core.Validator.ApiCallContext.IsLocalCall.get -> bool
 Polhem.Api.Core.Validator.ApiCallContext.IsLocalCall.set -> void
 const Polhem.Api.Core.JsonRpc.ApiPayloadFrame.CurrentVersion = 1 -> byte
 const Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Version1Size = 17 -> int
-const Polhem.Api.Core.JsonRpc.ReplayWindow.MaxForwardJump = 1000000 -> long
-const Polhem.Api.Core.JsonRpc.ReplayWindow.WindowSize = 64 -> int
 const Polhem.Api.Core.Messages.ApiHeaders.ApiKey = "X-Api-Key" -> string!
 const Polhem.Api.Core.Messages.ApiHeaders.Authorization = "Authorization" -> string!
 const Polhem.Api.Core.Messages.ApiHeaders.ContentType = "Content-Type" -> string!

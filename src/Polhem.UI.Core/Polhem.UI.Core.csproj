@@ -11,4 +11,8 @@
     <ProjectReference Include="..\Polhem.Api.Client\Polhem.Api.Client.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.UI.Core.UnitTests" />
+  </ItemGroup>
+
 </Project>

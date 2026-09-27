@@ -883,16 +883,16 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
             public Func<DataSet, SaveResponse>? SaveHandler { get; set; }
             public Func<Guid, DeleteResponse>? DeleteHandler { get; set; }
 
-            public override Task<GetDataResponse> GetDataAsync(Guid rowId)
+            public override Task<GetDataResponse> GetDataAsync(Guid rowId, CancellationToken cancellationToken = default)
                 => Task.FromResult((GetDataHandler ?? (_ => new GetDataResponse()))(rowId));
 
-            public override Task<GetNewDataResponse> GetNewDataAsync()
+            public override Task<GetNewDataResponse> GetNewDataAsync(CancellationToken cancellationToken = default)
                 => Task.FromResult((GetNewDataHandler ?? (() => new GetNewDataResponse()))());
 
-            public override Task<SaveResponse> SaveAsync(DataSet dataSet)
+            public override Task<SaveResponse> SaveAsync(DataSet dataSet, CancellationToken cancellationToken = default)
                 => Task.FromResult((SaveHandler ?? (_ => new SaveResponse()))(dataSet));
 
-            public override Task<DeleteResponse> DeleteAsync(Guid rowId)
+            public override Task<DeleteResponse> DeleteAsync(Guid rowId, CancellationToken cancellationToken = default)
                 => Task.FromResult((DeleteHandler ?? (_ => new DeleteResponse()))(rowId));
         }
     }

@@ -2,11 +2,9 @@ using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Base;
-using Polhem.Base.Serialization;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 using System.Net.Sockets;
-using System.Reflection;
 
 namespace Polhem.UI.Core
 {
@@ -54,7 +52,8 @@ namespace Polhem.UI.Core
         /// </remarks>
         private static readonly Lock s_stateGate = new();
 
-        private static ClientSettings? s_clientSettings;
+        private static readonly FileEndpointStorage s_defaultStorage = new(FileEndpointStorage.DefaultAppName);
+
         private static SystemApiConnector? s_systemConnector;
         private static ClientDefineAccess? s_defineAccess;
         private static Guid s_accessToken = Guid.Empty;
@@ -67,45 +66,27 @@ namespace Polhem.UI.Core
         public static IReadOnlyDictionary<string, string>? Arguments { get; private set; }
 
         /// <summary>
-        /// Endpoint persistence backend.
+        /// Gets or sets where the service endpoint is persisted.
         /// </summary>
-        public static IEndpointStorage EndpointStorage { get; set; } = new EndpointStorage();
+        /// <remarks>
+        /// Defaults to a <see cref="FileEndpointStorage"/> that keeps the endpoint under the per-user local
+        /// application data directory, in a folder named after the entry assembly. It is the same instance as the
+        /// default <see cref="ApiKeyStorage"/>. A browser WASM host has no persistent file system and replaces
+        /// both; see <see cref="FileEndpointStorage"/>. Assign it before
+        /// <see cref="InitializeAsync(IUIViewService, SupportedConnectTypes)"/> or <see cref="SetEndpointAsync(string)"/>.
+        /// </remarks>
+        public static IEndpointStorage EndpointStorage { get; set; } = s_defaultStorage;
 
         /// <summary>
-        /// Gets or sets the API key persistence strategy. Hosts that replace
-        /// <see cref="EndpointStorage"/> because their platform cannot write beside the assembly
-        /// (iOS, Android, browser WASM) must replace this too — otherwise the key falls back to a
-        /// settings file those platforms cannot persist.
+        /// Gets or sets where the API key is persisted.
         /// </summary>
-        public static IApiKeyStorage ApiKeyStorage { get; set; } = new ApiKeyStorage();
-
-        /// <summary>
-        /// Client settings loaded from <c>{ExeName}.Settings.xml</c>.
-        /// </summary>
-        public static ClientSettings ClientSettings
-        {
-            get
-            {
-                lock (s_stateGate) { return s_clientSettings ??= LoadClientSettings(); }
-            }
-        }
-
-        private static ClientSettings LoadClientSettings()
-        {
-            string exeName = Assembly.GetEntryAssembly()?.GetName().Name ?? "Client";
-            string fileName = $"{exeName}.Settings.xml";
-            string filePath = Path.Combine(FileUtilities.GetAssemblyPath(), fileName);
-
-            if (File.Exists(filePath))
-            {
-                return XmlCodec.DeserializeFromFile<ClientSettings>(filePath)
-                    ?? throw new InvalidOperationException($"Failed to deserialize client settings: {filePath}");
-            }
-
-            var settings = new ClientSettings();
-            settings.SetObjectFilePath(filePath);
-            return settings;
-        }
+        /// <remarks>
+        /// Defaults to the same <see cref="FileEndpointStorage"/> instance as <see cref="EndpointStorage"/>, which
+        /// keeps the key beside the endpoint in a file only its owner can read. A host that replaces
+        /// <see cref="EndpointStorage"/> because its platform cannot use the file system (browser WASM) replaces
+        /// this too.
+        /// </remarks>
+        public static IApiKeyStorage ApiKeyStorage { get; set; } = s_defaultStorage;
 
         /// <summary>
         /// Access token issued on a successful login.

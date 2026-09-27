@@ -35,15 +35,22 @@ namespace Polhem.Api.Client.Providers
         /// Asynchronously executes an API method.
         /// </summary>
         /// <param name="request">The JSON-RPC request model.</param>
-        public async Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        /// <remarks>
+        /// The call runs on the caller's thread, and business object methods are synchronous in
+        /// 1.0 (ADR-046), so the token is observed until the method is dispatched and not while it
+        /// runs.
+        /// </remarks>
+        public async Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var executor = _services.GetService(typeof(JsonRpcExecutor)) as JsonRpcExecutor
                 ?? throw new InvalidOperationException(
                     "JsonRpcExecutor is not registered in the service provider given to LocalApiProvider. " +
                     "Local API calls need the provider built from services.AddPolhemFramework(...).");
             executor.AccessToken = AccessToken;
             executor.IsLocalCall = true;
-            return await executor.ExecuteAsync(request).ConfigureAwait(false);
+            return await executor.ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
         }
     }
 }

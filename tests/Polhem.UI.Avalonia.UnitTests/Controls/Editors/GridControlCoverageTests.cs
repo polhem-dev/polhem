@@ -161,7 +161,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             public Func<Polhem.Api.Core.Messages.Form.GetNewDataResponse>? GetNewDataHandler { get; set; }
 
-            public override Task<Polhem.Api.Core.Messages.Form.GetNewDataResponse> GetNewDataAsync()
+            public override Task<Polhem.Api.Core.Messages.Form.GetNewDataResponse> GetNewDataAsync(CancellationToken cancellationToken = default)
                 => Task.FromResult((GetNewDataHandler ?? (() => new Polhem.Api.Core.Messages.Form.GetNewDataResponse()))());
         }
     }

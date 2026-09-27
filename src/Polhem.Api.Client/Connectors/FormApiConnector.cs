@@ -78,27 +78,37 @@ namespace Polhem.Api.Client.Connectors
         /// <param name="action">The action name to execute.</param>
         /// <param name="value">The input parameter for the action.</param>
         /// <param name="format">The payload encoding format for transmission.</param>
-        public async Task<T> ExecuteAsync<T>(string action, object value, PayloadFormat format = PayloadFormat.Encrypted)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public async Task<T> ExecuteAsync<T>(string action, object value, PayloadFormat format = PayloadFormat.Encrypted,
+            CancellationToken cancellationToken = default)
         {
-            return await base.ExecuteAsync<T>(ProgId, action, value, format).ConfigureAwait(false);
+            return await base.ExecuteAsync<T>(ProgId, action, value, format, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Asynchronously executes a custom method; requires authentication.
         /// </summary>
-        /// <param name="args">The input arguments.</param>
-        public async Task<ExecFuncResponse> ExecFuncAsync(ExecFuncRequest args)
+        /// <param name="request">The custom method identifier and its parameters.</param>
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        /// <remarks>
+        /// Takes the request message rather than separate arguments because the call is an open
+        /// parameter bag whose shape the application's custom method defines.
+        /// </remarks>
+        public virtual async Task<ExecFuncResponse> ExecFuncAsync(ExecFuncRequest request, CancellationToken cancellationToken = default)
         {
-            return await ExecuteAsync<ExecFuncResponse>(SystemActions.ExecFunc, args).ConfigureAwait(false);
+            return await ExecuteAsync<ExecFuncResponse>(SystemActions.ExecFunc, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
         /// Asynchronously executes a custom method; allows anonymous access.
         /// </summary>
-        /// <param name="args">The input arguments.</param>
-        public async Task<ExecFuncResponse> ExecFuncAnonymousAsync(ExecFuncRequest args)
+        /// <param name="request">The custom method identifier and its parameters.</param>
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<ExecFuncResponse> ExecFuncAnonymousAsync(ExecFuncRequest request, CancellationToken cancellationToken = default)
         {
-            return await ExecuteAsync<ExecFuncResponse>(SystemActions.ExecFuncAnonymous, args).ConfigureAwait(false);
+            return await ExecuteAsync<ExecFuncResponse>(SystemActions.ExecFuncAnonymous, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -114,6 +124,7 @@ namespace Polhem.Api.Client.Connectors
         /// The paging options; <c>null</c> is served as the first page of
         /// <see cref="PagingOptions.MaxPageSize"/> rows.
         /// </param>
+        /// <param name="cancellationToken">A token that cancels the call.</param>
         /// <remarks>
         /// The server never returns more than <see cref="PagingOptions.MaxPageSize"/> rows in one
         /// response. When the response's paging metadata reports more rows, pass a
@@ -124,7 +135,8 @@ namespace Polhem.Api.Client.Connectors
             string selectFields = "",
             FilterNode? filter = null,
             SortFieldCollection? sortFields = null,
-            PagingOptions? paging = null)
+            PagingOptions? paging = null,
+            CancellationToken cancellationToken = default)
         {
             var request = new GetListRequest
             {
@@ -133,7 +145,8 @@ namespace Polhem.Api.Client.Connectors
                 SortFields = sortFields,
                 Paging = paging,
             };
-            return await ExecuteAsync<GetListResponse>(FormActions.GetList, request).ConfigureAwait(false);
+            return await ExecuteAsync<GetListResponse>(FormActions.GetList, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -147,16 +160,19 @@ namespace Polhem.Api.Client.Connectors
         /// an empty value applies no search filter.
         /// </param>
         /// <param name="paging">The paging options; <c>null</c> applies the server-side default page size.</param>
+        /// <param name="cancellationToken">A token that cancels the call.</param>
         public virtual async Task<GetLookupResponse> GetLookupAsync(
             string searchText = "",
-            PagingOptions? paging = null)
+            PagingOptions? paging = null,
+            CancellationToken cancellationToken = default)
         {
             var request = new GetLookupRequest
             {
                 SearchText = searchText,
                 Paging = paging,
             };
-            return await ExecuteAsync<GetLookupResponse>(FormActions.GetLookup, request).ConfigureAwait(false);
+            return await ExecuteAsync<GetLookupResponse>(FormActions.GetLookup, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -164,10 +180,12 @@ namespace Polhem.Api.Client.Connectors
         /// FormSchema defaults and a server-issued <c>sys_rowid</c>; step 1 of
         /// the new-and-save flow.
         /// </summary>
-        public virtual async Task<GetNewDataResponse> GetNewDataAsync()
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<GetNewDataResponse> GetNewDataAsync(CancellationToken cancellationToken = default)
         {
             var request = new GetNewDataRequest();
-            return await ExecuteAsync<GetNewDataResponse>(FormActions.GetNewData, request).ConfigureAwait(false);
+            return await ExecuteAsync<GetNewDataResponse>(FormActions.GetNewData, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -175,10 +193,12 @@ namespace Polhem.Api.Client.Connectors
         /// <paramref name="rowId"/>; step 1 of the load-and-save flow.
         /// </summary>
         /// <param name="rowId">The master row identifier (<c>sys_rowid</c>).</param>
-        public virtual async Task<GetDataResponse> GetDataAsync(Guid rowId)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<GetDataResponse> GetDataAsync(Guid rowId, CancellationToken cancellationToken = default)
         {
             var request = new GetDataRequest { RowId = rowId };
-            return await ExecuteAsync<GetDataResponse>(FormActions.GetData, request).ConfigureAwait(false);
+            return await ExecuteAsync<GetDataResponse>(FormActions.GetData, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -187,11 +207,13 @@ namespace Polhem.Api.Client.Connectors
         /// of both the new-and-save and load-and-save flows.
         /// </summary>
         /// <param name="dataSet">The DataSet to persist.</param>
-        public virtual async Task<SaveResponse> SaveAsync(DataSet dataSet)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<SaveResponse> SaveAsync(DataSet dataSet, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(dataSet);
             var request = new SaveRequest { DataSet = dataSet };
-            return await ExecuteAsync<SaveResponse>(FormActions.Save, request).ConfigureAwait(false);
+            return await ExecuteAsync<SaveResponse>(FormActions.Save, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -200,10 +222,12 @@ namespace Polhem.Api.Client.Connectors
         /// <c>DataSet</c>.
         /// </summary>
         /// <param name="rowId">The master row identifier (<c>sys_rowid</c>).</param>
-        public virtual async Task<DeleteResponse> DeleteAsync(Guid rowId)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<DeleteResponse> DeleteAsync(Guid rowId, CancellationToken cancellationToken = default)
         {
             var request = new DeleteRequest { RowId = rowId };
-            return await ExecuteAsync<DeleteResponse>(FormActions.Delete, request).ConfigureAwait(false);
+            return await ExecuteAsync<DeleteResponse>(FormActions.Delete, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
     }

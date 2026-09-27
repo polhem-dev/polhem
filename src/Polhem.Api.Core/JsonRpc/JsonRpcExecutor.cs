@@ -99,8 +99,26 @@ namespace Polhem.Api.Core.JsonRpc
         /// Asynchronously executes an API method.
         /// </summary>
         /// <param name="request">The JSON-RPC request model.</param>
-        public async Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request)
+        /// <param name="cancellationToken">
+        /// A token that cancels the call, such as the HTTP request's abort token or the in-process
+        /// caller's own token.
+        /// </param>
+        /// <returns>The response; a failure of the method itself is reported in its error member.</returns>
+        /// <exception cref="OperationCanceledException">
+        /// <paramref name="cancellationToken"/> was cancelled before the business object method was
+        /// invoked. Cancellation is not turned into an error response: the caller asked to stop and
+        /// is not waiting for one.
+        /// </exception>
+        /// <remarks>
+        /// Business object methods are synchronous in 1.0 (ADR-046), so the token is observed up to
+        /// the point of dispatch — before the call starts, and while the replay store decides — and
+        /// not inside the method once it runs.
+        /// </remarks>
+        public async Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
         {
+            ArgumentNullException.ThrowIfNull(request);
+            cancellationToken.ThrowIfCancellationRequested();
+
             var response = new JsonRpcResponse(request);
             var stopwatch = AnomalyEnabled ? Stopwatch.StartNew() : null;
             try
@@ -129,7 +147,8 @@ namespace Polhem.Api.Core.JsonRpc
                 // payload is decrypted — it is a second gate after ValidateAccess, not part of it.
                 ApiPayloadConverter.RestoreRequest(request.Params, format, apiEncryptionKey, ActionPayloadType.Resolve(method));
                 ValidateFrameTimestamp(request.Params.Frame);
-                ValidateFrameSequence(method, request.Params.Frame);
+                await ValidateFrameSequenceAsync(method, request.Params.Frame, cancellationToken).ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
 
                 // Invoke the method and convert the result.
                 var value = await InvokeMethodAsync(businessObject, method, request.Params.Value)
@@ -141,6 +160,10 @@ namespace Polhem.Api.Core.JsonRpc
                 response.Result = new JsonRpcResult { Value = value, Codec = request.Params.Codec };
                 ApiPayloadConverter.TransformTo(response.Result, format, apiEncryptionKey);
                 LogApiSlowAnomaly(request.Method, stopwatch);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -181,21 +204,23 @@ namespace Polhem.Api.Core.JsonRpc
         /// </summary>
         /// <param name="method">The method being invoked, whose declaration says whether to check.</param>
         /// <param name="frame">The frame read from the request, or null when none was required.</param>
+        /// <param name="cancellationToken">A token that cancels the store's decision.</param>
         /// <exception cref="ReplayRejectedException">Thrown when the sequence repeats or is out of range.</exception>
         /// <remarks>
         /// Skipped for anonymous callers: sequence numbers are counted per session, and a call made
         /// without one has nothing to count against — every anonymous caller would otherwise share
         /// a single window and evict each other's numbers.
         /// </remarks>
-        private void ValidateFrameSequence(MethodInfo method, ApiPayloadFrame? frame)
+        private async ValueTask ValidateFrameSequenceAsync(MethodInfo method, ApiPayloadFrame? frame, CancellationToken cancellationToken)
         {
             if (frame == null || AccessToken == Guid.Empty) { return; }
 
             var attr = ApiAccessValidator.FindAccessControl(method);
             if (attr?.ReplayProtection != ApiReplayProtection.UniqueSequence) { return; }
 
-            var window = ApiServiceOptions.ReplayWindowStore.GetOrAdd(AccessToken);
-            if (!window.TryAccept(frame.Sequence))
+            bool accepted = await ApiServiceOptions.ReplayWindowStore
+                .TryAcceptAsync(AccessToken, frame.Sequence, cancellationToken).ConfigureAwait(false);
+            if (!accepted)
             {
                 throw new ReplayRejectedException(
                     "This request repeats a sequence number the session has already used, or falls outside the accepted range.");

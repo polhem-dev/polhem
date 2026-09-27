@@ -58,3 +58,4 @@ understanding why the design is the way it is.
 | [043](adr-043-error-contract-single-registry.md) | The error contract is expressed as a single registry that both ends consume from one declaration | ✅ Accepted |
 | [044](adr-044-payload-codec-negotiation.md) | The body codec is declared by each request; JSON and MessagePack coexist | ✅ Accepted |
 | [045](adr-045-language-policy-and-local-plans.md) | English for everything maintained together; plans stay out of the repository | ✅ Accepted |
+| [046](adr-046-api-evolution-policies-for-1-0.md) | API evolution policies for 1.0: a synchronous server path, growable host interfaces, process-wide configuration | ✅ Accepted |

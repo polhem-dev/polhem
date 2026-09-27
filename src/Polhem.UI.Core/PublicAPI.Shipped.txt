@@ -1,15 +1,5 @@
 #nullable enable
-Polhem.UI.Core.ApiKeyStorage
-Polhem.UI.Core.ApiKeyStorage.ApiKeyStorage() -> void
-Polhem.UI.Core.ApiKeyStorage.LoadApiKey() -> string!
-Polhem.UI.Core.ApiKeyStorage.SaveApiKey(string! apiKey) -> void
-Polhem.UI.Core.ApiKeyStorage.SetApiKey(string! apiKey) -> void
 Polhem.UI.Core.ClientInfo
-Polhem.UI.Core.EndpointStorage
-Polhem.UI.Core.EndpointStorage.EndpointStorage() -> void
-Polhem.UI.Core.EndpointStorage.LoadEndpoint() -> string!
-Polhem.UI.Core.EndpointStorage.SaveEndpoint(string! endpoint) -> void
-Polhem.UI.Core.EndpointStorage.SetEndpoint(string! endpoint) -> void
 Polhem.UI.Core.IApiKeyStorage
 Polhem.UI.Core.IApiKeyStorage.LoadApiKey() -> string!
 Polhem.UI.Core.IApiKeyStorage.SaveApiKey(string! apiKey) -> void
@@ -29,7 +19,6 @@ static Polhem.UI.Core.ClientInfo.ApplyApiKey(string! defaultApiKey = "") -> void
 static Polhem.UI.Core.ClientInfo.ApplyEnterCompanyResult(Polhem.Api.Core.Messages.System.EnterCompanyResponse! response) -> void
 static Polhem.UI.Core.ClientInfo.ApplyLoginResult(Polhem.Api.Core.Messages.System.LoginResponse! loginResponse) -> void
 static Polhem.UI.Core.ClientInfo.ClearCompanyContext() -> void
-static Polhem.UI.Core.ClientInfo.ClientSettings.get -> Polhem.Definition.Settings.ClientSettings!
 static Polhem.UI.Core.ClientInfo.Company.get -> Polhem.Definition.Identity.CompanyInfo?
 static Polhem.UI.Core.ClientInfo.CreateFormApiConnector(string! progId) -> Polhem.Api.Client.Connectors.FormApiConnector!
 static Polhem.UI.Core.ClientInfo.DefineAccess.get -> Polhem.Api.Client.ClientDefineAccess!

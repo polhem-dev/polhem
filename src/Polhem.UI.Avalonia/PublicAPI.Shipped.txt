@@ -180,16 +180,6 @@ Polhem.UI.Avalonia.DataObjects.RowChangedEventArgs
 Polhem.UI.Avalonia.DataObjects.RowChangedEventArgs.Row.get -> System.Data.DataRow!
 Polhem.UI.Avalonia.DataObjects.RowChangedEventArgs.RowChangedEventArgs(string! tableName, System.Data.DataRow! row) -> void
 Polhem.UI.Avalonia.DataObjects.RowChangedEventArgs.TableName.get -> string!
-Polhem.UI.Avalonia.Storage.FileEndpointStorage
-Polhem.UI.Avalonia.Storage.FileEndpointStorage.ApiKeyFilePath.get -> string!
-Polhem.UI.Avalonia.Storage.FileEndpointStorage.FileEndpointStorage(string! appName) -> void
-Polhem.UI.Avalonia.Storage.FileEndpointStorage.FilePath.get -> string!
-Polhem.UI.Avalonia.Storage.FileEndpointStorage.LoadApiKey() -> string!
-Polhem.UI.Avalonia.Storage.FileEndpointStorage.LoadEndpoint() -> string!
-Polhem.UI.Avalonia.Storage.FileEndpointStorage.SaveApiKey(string! apiKey) -> void
-Polhem.UI.Avalonia.Storage.FileEndpointStorage.SaveEndpoint(string! endpoint) -> void
-Polhem.UI.Avalonia.Storage.FileEndpointStorage.SetApiKey(string! apiKey) -> void
-Polhem.UI.Avalonia.Storage.FileEndpointStorage.SetEndpoint(string! endpoint) -> void
 Polhem.UI.Avalonia.Views.FormView
 Polhem.UI.Avalonia.Views.FormView.AccessToken.get -> System.Guid
 Polhem.UI.Avalonia.Views.FormView.AccessToken.set -> void

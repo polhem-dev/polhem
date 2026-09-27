@@ -321,10 +321,10 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
                 string selectFields = "",
                 Polhem.Definition.Filters.FilterNode? filter = null,
                 Polhem.Definition.Sorting.SortFieldCollection? sortFields = null,
-                Polhem.Definition.Paging.PagingOptions? paging = null)
+                Polhem.Definition.Paging.PagingOptions? paging = null, CancellationToken cancellationToken = default)
                 => Task.FromResult((GetListHandler ?? (_ => new GetListResponse()))(selectFields));
 
-            public override Task<DeleteResponse> DeleteAsync(Guid rowId)
+            public override Task<DeleteResponse> DeleteAsync(Guid rowId, CancellationToken cancellationToken = default)
                 => Task.FromResult((DeleteHandler ?? (_ => new DeleteResponse()))(rowId));
         }
     }

@@ -11,6 +11,8 @@ namespace Polhem.Api.Client.Providers
         /// Asynchronously executes an API method.
         /// </summary>
         /// <param name="request">The JSON-RPC request model.</param>
-        Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request);
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled.</exception>
+        Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken = default);
     }
 }

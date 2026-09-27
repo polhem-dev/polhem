@@ -78,7 +78,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
         {
             public TaskCompletionSource<GetDataResponse> Pending { get; } = new();
 
-            public override Task<GetDataResponse> GetDataAsync(Guid rowId) => Pending.Task;
+            public override Task<GetDataResponse> GetDataAsync(Guid rowId, CancellationToken cancellationToken = default) => Pending.Task;
         }
 
         private static FormSchema BuildSchema()

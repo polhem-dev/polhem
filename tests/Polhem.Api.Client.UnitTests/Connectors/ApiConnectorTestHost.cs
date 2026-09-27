@@ -27,8 +27,9 @@ namespace Polhem.Api.Client.UnitTests.Connectors
 
             public TestApiConnector(Guid accessToken, ApiSessionContext session) : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, accessToken, session) { }
 
-            public new Task<T> ExecuteAsync<T>(string progId, string action, object value, PayloadFormat format)
-                => base.ExecuteAsync<T>(progId, action, value, format);
+            public new Task<T> ExecuteAsync<T>(string progId, string action, object value, PayloadFormat format,
+                CancellationToken cancellationToken = default)
+                => base.ExecuteAsync<T>(progId, action, value, format, cancellationToken);
         }
 
         private sealed class FakeJsonRpcProvider : IJsonRpcProvider
@@ -36,7 +37,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
             public Func<JsonRpcRequest, JsonRpcResponse> ResponseFactory { get; set; }
                 = req => new JsonRpcResponse(req) { Result = new JsonRpcResult { Value = "ok" } };
 
-            public Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request)
+            public Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
                 => Task.FromResult(ResponseFactory(request));
         }
 

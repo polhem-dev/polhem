@@ -48,6 +48,43 @@ namespace Polhem.Api.Core.UnitTests
             Assert.False(executor.IsLocalCall);
         }
 
+        [Fact]
+        [DisplayName("ExecuteAsync with a cancelled token throws OperationCanceledException instead of returning an error envelope")]
+        public async Task ExecuteAsync_CancelledToken_ThrowsOperationCanceled()
+        {
+            var request = new JsonRpcRequest()
+            {
+                Method = $"{SysProgIds.System}.{SystemActions.Ping}",
+                Params = new JsonRpcParams() { Value = new PingRequest() },
+                Id = Guid.NewGuid().ToString()
+            };
+            using var cts = new CancellationTokenSource();
+            await cts.CancelAsync();
+
+            // A caller that cancelled is not waiting for an answer, so the executor must not turn the cancellation
+            // into an ordinary failure response the way it does for every other exception.
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                () => NewExecutor(Guid.Empty).ExecuteAsync(request, cts.Token));
+        }
+
+        [Fact]
+        [DisplayName("ExecuteAsync with a token that is never cancelled still answers normally")]
+        public async Task ExecuteAsync_LiveToken_ReturnsResult()
+        {
+            var request = new JsonRpcRequest()
+            {
+                Method = $"{SysProgIds.System}.{SystemActions.Ping}",
+                Params = new JsonRpcParams() { Value = new PingRequest() },
+                Id = Guid.NewGuid().ToString()
+            };
+            using var cts = new CancellationTokenSource();
+
+            var response = await NewExecutor(Guid.Empty).ExecuteAsync(request, cts.Token);
+
+            Assert.Null(response.Error);
+            Assert.IsType<PingResponse>(response.Result!.Value);
+        }
+
         /// <summary>
         /// Executes an API method.
         /// </summary>

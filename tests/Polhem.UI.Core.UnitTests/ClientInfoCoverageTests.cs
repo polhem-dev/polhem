@@ -39,7 +39,7 @@ namespace Polhem.UI.Core.UnitTests
 
     /// <summary>
     /// Covers the private method <c>SetConnectType</c> of <see cref="ClientInfo"/> and the remote connector caching path.
-    /// It mutates static state, so it shares the ClientInfoState collection with EndpointStorageTests to run serially.
+    /// It mutates static state, so it shares the ClientInfoState collection with the other ClientInfo tests to run serially.
     /// </summary>
     [Collection("ClientInfoState")]
     public class ClientInfoConnectorTests

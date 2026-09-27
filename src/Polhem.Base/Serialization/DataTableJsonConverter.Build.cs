@@ -52,7 +52,8 @@ namespace Polhem.Base.Serialization
                     dt.PrimaryKey = pkCols;
             }
 
-            // Restore rows (same logic as SerializableDataTable.ToDataTable)
+            // Restore rows. The MessagePack `DataTableFormatter` in Polhem.Api.Core restores each row state the
+            // same way.
             foreach (var rowDef in rows)
             {
                 var row = dt.NewRow();

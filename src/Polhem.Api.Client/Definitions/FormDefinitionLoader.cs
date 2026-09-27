@@ -61,6 +61,7 @@ namespace Polhem.Api.Client.Definitions
         /// </summary>
         /// <param name="progId">The program identifier.</param>
         /// <param name="lang">The BCP-47 language code; empty returns the schema unlocalized.</param>
+        /// <param name="cancellationToken">A token that cancels the call.</param>
         /// <returns>A schema safe to mutate — the cached instance is never handed out.</returns>
         /// <remarks>
         /// <para>
@@ -75,14 +76,14 @@ namespace Polhem.Api.Client.Definitions
         /// field renders with has nothing to do with which language the captions are in.
         /// </para>
         /// </remarks>
-        public async Task<FormSchema> GetLocalizedSchemaAsync(string progId, string lang)
+        public async Task<FormSchema> GetLocalizedSchemaAsync(string progId, string lang, CancellationToken cancellationToken = default)
         {
-            var raw = await _defineAccess.GetFormSchemaAsync(progId).ConfigureAwait(false);
+            var raw = await _defineAccess.GetFormSchemaAsync(progId, cancellationToken).ConfigureAwait(false);
             // The client define cache hands back a shared instance; every path clones before returning.
             var schema = raw.Clone();
             if (!string.IsNullOrWhiteSpace(lang))
             {
-                var languageService = await BuildLanguageServiceAsync(schema, lang).ConfigureAwait(false);
+                var languageService = await BuildLanguageServiceAsync(schema, lang, cancellationToken).ConfigureAwait(false);
                 new FormSchemaLocalizer(languageService).Localize(schema, lang);
             }
 
@@ -106,17 +107,19 @@ namespace Polhem.Api.Client.Definitions
         /// <param name="progId">The program identifier.</param>
         /// <param name="localizedSchema">The localized schema, from <see cref="GetLocalizedSchemaAsync"/>.</param>
         /// <param name="layoutId">The layout identifier; empty resolves to <paramref name="progId"/>.</param>
+        /// <param name="cancellationToken">A token that cancels the call.</param>
         /// <exception cref="InvalidOperationException">
         /// Thrown when neither layer stores a layout definition. Layouts are authored at design time
         /// and saved as definition files; the runtime never generates one from the schema.
         /// </exception>
-        public async Task<FormLayout> GetRuntimeLayoutAsync(string progId, FormSchema localizedSchema, string layoutId = "")
+        public async Task<FormLayout> GetRuntimeLayoutAsync(string progId, FormSchema localizedSchema, string layoutId = "",
+            CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(localizedSchema);
 
             string effectiveLayoutId = string.IsNullOrWhiteSpace(layoutId) ? progId : layoutId;
-            var customize = await _defineAccess.GetCustomizeFormLayoutAsync(progId, effectiveLayoutId).ConfigureAwait(false);
-            var @base = await _defineAccess.GetFormLayoutAsync(effectiveLayoutId).ConfigureAwait(false);
+            var customize = await _defineAccess.GetCustomizeFormLayoutAsync(progId, effectiveLayoutId, cancellationToken).ConfigureAwait(false);
+            var @base = await _defineAccess.GetFormLayoutAsync(effectiveLayoutId, cancellationToken).ConfigureAwait(false);
 
             var definition = CustomizeOverlay.PickFormLayout(customize, @base)
                 ?? throw new InvalidOperationException(
@@ -142,7 +145,7 @@ namespace Polhem.Api.Client.Definitions
         /// different, the default language too, so the service can apply the same fall-back the
         /// server does.
         /// </remarks>
-        private async Task<SnapshotLanguageService> BuildLanguageServiceAsync(FormSchema schema, string lang)
+        private async Task<SnapshotLanguageService> BuildLanguageServiceAsync(FormSchema schema, string lang, CancellationToken cancellationToken)
         {
             var namespaces = CollectNamespaces(schema);
             var languages = new List<string> { lang };
@@ -157,8 +160,8 @@ namespace Polhem.Api.Client.Definitions
             {
                 foreach (string ns in namespaces)
                 {
-                    var customize = await _defineAccess.GetCustomizeLanguageAsync(language, ns).ConfigureAwait(false);
-                    var @base = await SafeGetLanguageAsync(language, ns).ConfigureAwait(false);
+                    var customize = await _defineAccess.GetCustomizeLanguageAsync(language, ns, cancellationToken).ConfigureAwait(false);
+                    var @base = await SafeGetLanguageAsync(language, ns, cancellationToken).ConfigureAwait(false);
                     snapshot[SnapshotLanguageService.BuildKey(language, ns)] = new LanguageLayers(@base, customize);
                 }
             }
@@ -192,11 +195,11 @@ namespace Polhem.Api.Client.Definitions
         /// A namespace with no base resource is normal (a schema may be translated only in the
         /// customization layer, or not at all), so a missing file is an answer rather than a fault.
         /// </summary>
-        private async Task<LanguageResource?> SafeGetLanguageAsync(string lang, string ns)
+        private async Task<LanguageResource?> SafeGetLanguageAsync(string lang, string ns, CancellationToken cancellationToken)
         {
             try
             {
-                return await _defineAccess.GetLanguageAsync(lang, ns).ConfigureAwait(false);
+                return await _defineAccess.GetLanguageAsync(lang, ns, cancellationToken).ConfigureAwait(false);
             }
             catch (FileNotFoundException)
             {

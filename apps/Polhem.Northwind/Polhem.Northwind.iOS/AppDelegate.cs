@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.iOS;
 using Polhem.Api.Client;
 using Polhem.Northwind.UI;
-using Polhem.UI.Avalonia.Storage;
 using Polhem.UI.Core;
 using Foundation;
 
@@ -22,14 +21,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
     /// <inheritdoc/>
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
-        // Configure the Polhem client singletons before the Avalonia app initialises. iOS sandboxes
-        // the app, but FileEndpointStorage writes under the per-user local application data folder
-        // (SpecialFolder.LocalApplicationData maps to the app's writable Library directory on iOS),
-        // so the desktop file-backed storage applies unchanged. Verified in plan stage 3.
+        // Configure the Polhem client singletons before the Avalonia app initialises. The endpoint
+        // and the API key keep their default storage: it writes under the local application data
+        // folder, which on iOS is inside the app's writable sandbox container.
         ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
-        var storage = new FileEndpointStorage("Polhem.Northwind");
-        ClientInfo.EndpointStorage = storage;
-        ClientInfo.ApiKeyStorage = storage;
         // The shipped key only seeds empty storage on first run; after that the stored value wins,
         // so swapping keys is a settings change rather than a rebuild.
         ClientInfo.ApplyApiKey(AppDefaults.ApiKey);

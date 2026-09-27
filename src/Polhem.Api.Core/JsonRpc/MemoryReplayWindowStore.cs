@@ -20,6 +20,23 @@ namespace Polhem.Api.Core.JsonRpc
     /// </remarks>
     public sealed class MemoryReplayWindowStore : IReplayWindowStore
     {
+        /// <summary>
+        /// The number of sequence slots below the highest one seen that are still accepted once
+        /// each.
+        /// </summary>
+        public const int WindowSize = 64;
+
+        /// <summary>
+        /// How far above the highest seen sequence a new one may jump before it is refused.
+        /// </summary>
+        /// <remarks>
+        /// Without a ceiling, one client-side arithmetic slip that produces a sequence near
+        /// <see cref="long.MaxValue"/> would strand the session: every honest request afterwards
+        /// falls below the window and is refused, with a valid token and a correct key, which is
+        /// close to undiagnosable. The bound is set far above any real traffic pattern.
+        /// </remarks>
+        public const long MaxForwardJump = 1_000_000;
+
         private readonly ConcurrentDictionary<Guid, Entry> _entries = new();
         private readonly TimeProvider _clock;
         private long _lastSweepAtTimestamp;
@@ -60,7 +77,20 @@ namespace Polhem.Api.Core.JsonRpc
         }
 
         /// <inheritdoc />
-        public ReplayWindow GetOrAdd(Guid accessToken)
+        /// <remarks>
+        /// Completes synchronously: the decision is a few bit operations under a per-session lock.
+        /// </remarks>
+        public ValueTask<bool> TryAcceptAsync(Guid accessToken, long sequence, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return new ValueTask<bool>(GetOrAdd(accessToken).TryAccept(sequence));
+        }
+
+        /// <summary>
+        /// Returns the window for the given session, creating it on first use.
+        /// </summary>
+        /// <param name="accessToken">The session's access token.</param>
+        internal ReplayWindow GetOrAdd(Guid accessToken)
         {
             SweepIfDue();
 
