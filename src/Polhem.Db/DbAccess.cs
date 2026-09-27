@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Data;
 using System.Data.Common;
 using Polhem.Base.Data;
@@ -26,6 +25,17 @@ namespace Polhem.Db
         #region Constructors
 
         /// <summary>
+        /// Initializes a new instance of <see cref="DbAccess"/> for the specified database identifier,
+        /// with no command timeout cap and no DB anomaly logging.
+        /// </summary>
+        /// <param name="databaseId">The database identifier.</param>
+        /// <param name="connectionManager">The DI-resolved connection manager.</param>
+        public DbAccess(string databaseId, IDbConnectionManager connectionManager)
+            : this(databaseId, connectionManager, maxCommandTimeout: 0, anomalyWriter: null, anomalyOptions: null)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of <see cref="DbAccess"/> for the specified database identifier.
         /// </summary>
         /// <param name="databaseId">The database identifier.</param>
@@ -37,7 +47,7 @@ namespace Polhem.Db
         /// </param>
         /// <param name="maxCommandTimeout">
         /// Per-app upper bound applied to each <see cref="DbCommand.CommandTimeout"/>;
-        /// 0 (default) disables the cap, in which case the value supplied via
+        /// 0 disables the cap, in which case the value supplied via
         /// <see cref="DbCommandSpec.CommandTimeout"/> is used as-is.
         /// Typically supplied by <see cref="IDbAccessFactory"/> at the host level
         /// (e.g. 30 sec for mobile API, 60 sec for web, 120 sec for batch service).
@@ -47,10 +57,8 @@ namespace Polhem.Db
         /// null disables DB anomaly logging.
         /// </param>
         /// <param name="anomalyOptions">Optional DB anomaly thresholds and level.</param>
-        [SuppressMessage("ApiDesign", "RS0026:Do not add multiple overloads with optional parameters",
-            Justification = "The overload pair is not new API: both constructors shipped together and only this one's anomalyWriter parameter changed type (IAuditLogWriter to IAnomalyLogWriter). RS0026 guards against a caller silently rebinding when an optional-parameter overload is added alongside an existing one, which cannot happen when neither overload has ever existed without the other and their first parameters are of unrelated types.")]
-        public DbAccess(string databaseId, IDbConnectionManager connectionManager, int maxCommandTimeout = 0,
-            IAnomalyLogWriter? anomalyWriter = null, DbAccessAnomalyLogOptions? anomalyOptions = null)
+        public DbAccess(string databaseId, IDbConnectionManager connectionManager, int maxCommandTimeout,
+            IAnomalyLogWriter? anomalyWriter, DbAccessAnomalyLogOptions? anomalyOptions)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(databaseId);
             ArgumentNullException.ThrowIfNull(connectionManager);
@@ -67,6 +75,17 @@ namespace Polhem.Db
         }
 
         /// <summary>
+        /// Initializes a new instance of <see cref="DbAccess"/> using an externally managed
+        /// <see cref="DbConnection"/>, with no command timeout cap.
+        /// </summary>
+        /// <param name="externalConnection">The externally provided database connection.</param>
+        /// <param name="databaseType">The database type of the external connection.</param>
+        public DbAccess(DbConnection externalConnection, DatabaseType databaseType)
+            : this(externalConnection, databaseType, maxCommandTimeout: 0)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of <see cref="DbAccess"/> using an externally managed <see cref="DbConnection"/>.
         /// The connection lifetime is managed by the caller.
         /// </summary>
@@ -74,9 +93,9 @@ namespace Polhem.Db
         /// <param name="databaseType">The database type of the external connection.</param>
         /// <param name="maxCommandTimeout">
         /// Per-app upper bound applied to each <see cref="DbCommand.CommandTimeout"/>;
-        /// 0 (default) disables the cap. See the other constructor overload for details.
+        /// 0 disables the cap. See the other constructor overload for details.
         /// </param>
-        public DbAccess(DbConnection externalConnection, DatabaseType databaseType, int maxCommandTimeout = 0)
+        public DbAccess(DbConnection externalConnection, DatabaseType databaseType, int maxCommandTimeout)
         {
             _externalConnection = externalConnection ?? throw new ArgumentNullException(nameof(externalConnection));
             DatabaseType = databaseType;

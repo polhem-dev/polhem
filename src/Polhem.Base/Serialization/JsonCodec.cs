@@ -122,8 +122,7 @@ namespace Polhem.Base.Serialization
         /// <param name="value">The object to serialize.</param>
         /// <param name="ignoreDefaultValue">Whether to ignore default values.</param>
         /// <param name="ignoreNullValue">Whether to ignore null values.</param>
-        /// <param name="includeTypeName">This parameter is no longer used and will be removed in a future version.</param>
-        public static string Serialize(object value, bool ignoreDefaultValue = true, bool ignoreNullValue = true, bool includeTypeName = true)
+        public static string Serialize(object value, bool ignoreDefaultValue = true, bool ignoreNullValue = true)
         {
             return SerializeCore(value, ignoreDefaultValue, ignoreNullValue, writeIndented: false);
         }
@@ -146,8 +145,7 @@ namespace Polhem.Base.Serialization
         /// </summary>
         /// <typeparam name="T">The generic type.</typeparam>
         /// <param name="json">The JSON string.</param>
-        /// <param name="includeTypeName">This parameter is no longer used and will be removed in a future version.</param>
-        public static T? Deserialize<T>(string json, bool includeTypeName = true)
+        public static T? Deserialize<T>(string json)
         {
             // Deserialize the JSON string
             var options = GetJsonSerializerOptions(true, false, writeIndented: false);
@@ -165,7 +163,7 @@ namespace Polhem.Base.Serialization
         /// request path that is a second copy of every byte received, and for a large body it is a
         /// large-object-heap allocation per request per direction. Reading from the stream skips it.
         /// <para>
-        /// Uses the same options as <see cref="Deserialize{T}(string, bool)"/>, so the two agree on
+        /// Uses the same options as <see cref="Deserialize{T}(string)"/>, so the two agree on
         /// naming, enums and the <c>DataTable</c> / <c>DataSet</c> converters. Nothing here should
         /// ever construct its own options: they are the type-contract cache, and a per-call instance
         /// misses it every time.

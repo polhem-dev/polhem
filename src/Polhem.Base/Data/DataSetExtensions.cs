@@ -21,17 +21,6 @@ namespace Polhem.Base.Data
         }
 
         /// <summary>
-        /// Gets the first row of the master table.
-        /// </summary>
-        /// <param name="dataSet">The dataset.</param>
-        public static DataRow? GetMasterRow(this DataSet dataSet)
-        {
-            var table = GetMasterTable(dataSet);
-            if (table == null || table.IsEmpty()) { return null; }
-            return table.Rows[0];
-        }
-
-        /// <summary>
         /// Determines whether the dataset contains no data.
         /// </summary>
         /// <param name="dataSet">The dataset to check.</param>

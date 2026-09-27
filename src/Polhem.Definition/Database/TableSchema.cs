@@ -134,14 +134,6 @@ namespace Polhem.Definition.Database
         }
 
         /// <summary>
-        /// Gets or sets the table schema upgrade action.
-        /// </summary>
-        [XmlIgnore, JsonIgnore]
-        [Browsable(false)]
-        [DefaultValue(DbUpgradeAction.None)]
-        public DbUpgradeAction UpgradeAction { get; set; } = DbUpgradeAction.None;
-
-        /// <summary>
         /// Creates a copy of this instance.
         /// </summary>
         public TableSchema Clone()

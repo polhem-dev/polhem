@@ -16,7 +16,7 @@ namespace Polhem.Repository.System
     /// callers they look exactly like nonexistent companies, which matches the merged
     /// "Company access denied" error surface of <c>EnterCompany</c>.
     /// </remarks>
-    public class CompanyRepository : RepositoryBase, ICompanyRepository
+    internal sealed class CompanyRepository : RepositoryBase, ICompanyRepository
     {
         /// <summary>
         /// Initializes a new <see cref="CompanyRepository"/>.

@@ -9,25 +9,20 @@ namespace Polhem.Base.UnitTests
     public class AesCbcHmacKeyGeneratorTests
     {
         /// <summary>
-        /// Verifies that the AES and HMAC keys stay the same after generation, Base64 encoding and parsing.
+        /// Verifies that a generated combined key splits into a 32-byte AES key and a 32-byte HMAC key.
         /// </summary>
         [Fact]
-        [DisplayName("A generated combined key parsed back through Base64 yields the same AES and HMAC keys")]
-        public void GenerateAndParseKey_FromCombinedAndBase64_ReturnsConsistentKeys()
+        [DisplayName("A generated combined key splits into 32-byte AES and HMAC keys")]
+        public void FromCombinedKey_GeneratedKey_ReturnsTwo32ByteKeys()
         {
-            // Arrange
             byte[] combinedKey = AesCbcHmacKeyGenerator.GenerateCombinedKey();
 
-            // Act
-            AesCbcHmacKeyGenerator.FromCombinedKey(combinedKey, out var aesKey1, out var hmacKey1);
-            string base64 = Convert.ToBase64String(combinedKey);
-            AesCbcHmacKeyGenerator.FromBase64CombinedKey(base64, out var aesKey2, out var hmacKey2);
+            AesCbcHmacKeyGenerator.FromCombinedKey(combinedKey, out var aesKey, out var hmacKey);
 
-            // Assert
-            Assert.Equal(32, aesKey1.Length);
-            Assert.Equal(32, hmacKey1.Length);
-            Assert.Equal(aesKey1, aesKey2);
-            Assert.Equal(hmacKey1, hmacKey2);
+            Assert.Equal(32, aesKey.Length);
+            Assert.Equal(32, hmacKey.Length);
+            Assert.Equal(combinedKey[..32], aesKey);
+            Assert.Equal(combinedKey[32..], hmacKey);
         }
 
         /// <summary>

@@ -24,7 +24,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.GetDepartmentTree dispatches through JsonRpcExecutor and returns a null tree before a company is entered")]
-        public void GetDepartmentTree_ThroughJsonRpc_NoCompany_ReturnsNullTree()
+        public async Task GetDepartmentTree_ThroughJsonRpc_NoCompany_ReturnsNullTree()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
 
@@ -51,7 +51,7 @@ namespace Polhem.Api.Core.UnitTests.System
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var result = Assert.IsType<GetDepartmentTreeResponse>(response.Result!.Value);

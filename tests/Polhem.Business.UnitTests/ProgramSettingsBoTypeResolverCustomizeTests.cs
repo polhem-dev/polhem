@@ -7,7 +7,6 @@ using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
-using Microsoft.Extensions.Logging;
 
 namespace Polhem.Business.UnitTests
 {
@@ -172,20 +171,6 @@ namespace Polhem.Business.UnitTests
             Assert.Throws<InvalidOperationException>(() => resolver.Resolve("Order"));
         }
 
-        [Fact]
-        [DisplayName("The constructor overload that takes a logger still works (the logger is no longer used and receives nothing)")]
-        public void Ctor_LoggerOverload_StillResolvesAndLogsNothing()
-        {
-            var defineAccess = new ProgramSettingsDefineAccess(BuildSettings(("Order", BaseFormBoFqn)));
-            var logger = new RecordingLogger();
-            var resolver = new ProgramSettingsBoTypeResolver(defineAccess, null, logger);
-
-            var result = resolver.Resolve("Order");
-
-            Assert.Equal(typeof(ProgramSettingsBoTypeResolverTests.TestableCustomFormBo), result);
-            Assert.Empty(logger.Entries);
-        }
-
         // ---- Test doubles ----
 
         /// <summary>A type that does not inherit <see cref="BusinessObject"/>; used to verify the incompatible type failure path.</summary>
@@ -193,19 +178,6 @@ namespace Polhem.Business.UnitTests
 
         private static string NotABusinessObjectFqn =>
             $"{typeof(NotABusinessObject).FullName}, {typeof(NotABusinessObject).Assembly.GetName().Name}";
-
-        private sealed class RecordingLogger : ILogger<ProgramSettingsBoTypeResolver>
-        {
-            public List<(LogLevel Level, string Message)> Entries { get; } = [];
-
-            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
-
-            public bool IsEnabled(LogLevel logLevel) => true;
-
-            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
-                Func<TState, Exception?, string> formatter)
-                => Entries.Add((logLevel, formatter(state, exception)));
-        }
 
         private sealed class SpyCustomizeReader : ICustomizeDefineReader
         {

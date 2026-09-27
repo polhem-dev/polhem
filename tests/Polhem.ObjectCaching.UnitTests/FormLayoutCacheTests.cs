@@ -40,12 +40,10 @@ namespace Polhem.ObjectCaching.UnitTests
             public void SaveLanguage(LanguageResource resource) => throw new NotImplementedException();
         }
 
-        private static readonly PathOptions s_emptyPaths = new();
-
         private sealed class TestableFormLayoutCache : FormLayoutCache
         {
             public TestableFormLayoutCache(IDefineStorage storage, string cachePrefix = "")
-                : base(storage, s_emptyPaths, cachePrefix) { }
+                : base(storage, cachePrefix) { }
 
             public CacheItemPolicy GetCachePolicy(string key) => GetPolicy(key);
         }
@@ -54,7 +52,7 @@ namespace Polhem.ObjectCaching.UnitTests
         [DisplayName("Constructor throws ArgumentNullException for a null storage")]
         public void Constructor_NullStorage_ThrowsArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => new FormLayoutCache(null!, s_emptyPaths));
+            Assert.Throws<ArgumentNullException>(() => new FormLayoutCache(null!));
         }
 
         [Fact]
@@ -89,7 +87,7 @@ namespace Polhem.ObjectCaching.UnitTests
             string prefix = Guid.NewGuid().ToString("N");
             var layout = new FormLayout();
             var stub = new StubDefineStorage(layout);
-            var cache = new FormLayoutCache(stub, s_emptyPaths, prefix);
+            var cache = new FormLayoutCache(stub, prefix);
 
             var result = cache.Get("TestLayout");
 
@@ -103,7 +101,7 @@ namespace Polhem.ObjectCaching.UnitTests
         {
             string prefix = Guid.NewGuid().ToString("N");
             var stub = new StubDefineStorage();
-            var cache = new FormLayoutCache(stub, s_emptyPaths, prefix);
+            var cache = new FormLayoutCache(stub, prefix);
 
             var result = cache.Get("NonExistent");
 

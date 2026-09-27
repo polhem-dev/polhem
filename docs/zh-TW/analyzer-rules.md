@@ -1,4 +1,4 @@
-<!-- source: en/analyzer-rules.md blob: 2996b925a3cc1a1053f668dcec5496d24404e514 -->
+<!-- source: en/analyzer-rules.md blob: 7dca3e13a1ffafd90976b787adb81ae5921c0e9f -->
 # Analyzer 規則
 
 [English](../en/analyzer-rules.md) · [← 文件索引](README.md)
@@ -62,6 +62,10 @@ Polhem 隨套件提供 Roslyn analyzer，把框架慣例變成建置期診斷。
 |----|--------|------|
 | POLHEM4005 | Warning | 框架集合應只公開一個 public `Add` |
 | POLHEM4006 | Error | 參與序列化的型別必須有 public 無參數建構子 |
+
+POLHEM4001、POLHEM4002、POLHEM4003 與 POLHEM4004 為保留編號，永不重用。Polhem 以新名稱延續的 Bee.NET
+曾以這些編號發佈並退役規則（BEE4001 至 BEE4004）。從 Bee.NET 遷移過來、仍帶著其中某條抑制設定的專案，會以同號的
+POLHEM ID 保留那條設定；若新規則重用該編號，在那裡就會被靜默抑制。
 
 ### 建置閘門（POLHEM9xxx）
 

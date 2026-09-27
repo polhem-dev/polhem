@@ -225,3 +225,14 @@ How to reproduce (no csproj changes needed):
 ```bash
 dotnet test tests/Polhem.Api.Core.UnitTests/Polhem.Api.Core.UnitTests.csproj -c Release --settings .runsettings -p:DynamicCodeSupport=false
 ```
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following is a later change, for readers comparing with
+the current code:
+
+**The analyzer rule numbers above are Bee.NET's.** This decision was taken while the framework was Bee.NET, and the
+rules it names shipped as `BEE4001`–`BEE4004`; the `POLHEM` spelling here comes from the rename. Polhem never shipped
+rules under those numbers: its analyzer release history starts at 1.0.0, and `POLHEM4001`–`POLHEM4004` are reserved and
+never reused, so a suppression carried over from Bee.NET cannot silence a new rule. The reserved numbers are listed in
+the [analyzer rule reference](../en/analyzer-rules.md).

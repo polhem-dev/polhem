@@ -13,7 +13,7 @@ namespace Polhem.Repository.AuditLog
     /// log database via <see cref="DbAccess"/>. Table and column names match the write-side sink
     /// (unquoted lower-case snake_case) so reads line up with writes across every provider.
     /// </summary>
-    public class AuditLogRepository : RepositoryBase, IAuditLogRepository
+    internal sealed class AuditLogRepository : RepositoryBase, IAuditLogRepository
     {
         // Frequently used filter column names (bound as {n} placeholders, never inlined into SQL).
         private const string ColCompanyId = "company_id";

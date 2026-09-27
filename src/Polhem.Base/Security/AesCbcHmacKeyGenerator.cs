@@ -55,18 +55,5 @@ namespace Polhem.Base.Security
             Buffer.BlockCopy(combinedKey, 0, aesKey, 0, 32);
             Buffer.BlockCopy(combinedKey, 32, hmacKey, 0, 32);
         }
-
-        /// <summary>
-        /// Extracts the AES and HMAC keys from a Base64-encoded combined key string.
-        /// </summary>
-        /// <param name="base64">The Base64-encoded key string.</param>
-        /// <param name="aesKey">The extracted AES symmetric encryption key.</param>
-        /// <param name="hmacKey">The extracted HMAC verification key.</param>
-        /// <exception cref="ArgumentException">Thrown when the key length is not 64 bytes.</exception>
-        public static void FromBase64CombinedKey(string base64, out byte[] aesKey, out byte[] hmacKey)
-        {
-            var combinedKey = Convert.FromBase64String(base64);
-            FromCombinedKey(combinedKey, out aesKey, out hmacKey);
-        }
     }
 }

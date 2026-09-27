@@ -59,7 +59,7 @@ namespace Polhem.Tests.Shared
                 SessionInfoService = sp.GetRequiredService<ISessionInfoService>(),
                 // Bind a per-call LanguageService to the swapped IDefineAccess so language
                 // lookups in the test see the same temp-redirected store.
-                LanguageService = new LanguageService(defineAccess),
+                LanguageService = new LanguageService(defineAccess, null),
                 BoFactory = sp.GetRequiredService<IBusinessObjectFactory>(),
                 Services = sp,
             };

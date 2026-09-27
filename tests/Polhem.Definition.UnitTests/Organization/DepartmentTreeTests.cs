@@ -78,29 +78,13 @@ namespace Polhem.Definition.UnitTests.Organization
         }
 
         [Fact]
-        [DisplayName("GetSelfAndAncestors of a leaf returns the chain to the root")]
-        public void GetSelfAndAncestors_Leaf_ReturnsChainToRoot()
-        {
-            var tree = Build(out var hq, out var sales, out var sales1, out _);
-
-            var chain = tree.GetSelfAndAncestors(sales1);
-
-            Assert.Equal(3, chain.Count);
-            Assert.Contains(sales1, chain);
-            Assert.Contains(sales, chain);
-            Assert.Contains(hq, chain);
-        }
-
-        [Fact]
-        [DisplayName("Contains, GetNode and Roots return the expected results")]
+        [DisplayName("Contains and Roots return the expected results")]
         public void ContainsNodeRoots_Correct()
         {
-            var tree = Build(out var hq, out _, out var sales1, out var admin);
+            var tree = Build(out var hq, out _, out _, out var admin);
 
             Assert.True(tree.Contains(hq));
             Assert.False(tree.Contains(Guid.NewGuid()));
-            Assert.Equal("業務一課", tree.GetNode(sales1)!.DeptName);
-            Assert.Null(tree.GetNode(Guid.NewGuid()));
             // Two roots: HQ and ADMIN.
             Assert.Equal(2, tree.Roots!.Count);
             Assert.Contains(tree.Roots, n => n.RowId == hq);
@@ -122,7 +106,6 @@ namespace Polhem.Definition.UnitTests.Organization
             var ex = Record.Exception(() =>
             {
                 _ = tree.GetSelfAndDescendants(a);
-                _ = tree.GetSelfAndAncestors(a);
             });
 
             Assert.Null(ex);
@@ -140,7 +123,7 @@ namespace Polhem.Definition.UnitTests.Organization
             Assert.Equal("C001", restored.CompanyId);
             Assert.Equal(2, restored.Roots!.Count);
             Assert.Equal(3, restored.GetSelfAndDescendants(hq).Count);
-            Assert.Equal(new[] { sales1, sales, hq }, restored.GetSelfAndAncestors(sales1));
+            Assert.Equal(new[] { sales, sales1 }, restored.GetSelfAndDescendants(sales));
         }
 
         [Fact]
@@ -155,7 +138,7 @@ namespace Polhem.Definition.UnitTests.Organization
             Assert.Equal("C001", restored.CompanyId);
             Assert.Equal(2, restored.Roots!.Count);
             Assert.Equal(3, restored.GetSelfAndDescendants(hq).Count);
-            Assert.Equal(new[] { sales1, sales, hq }, restored.GetSelfAndAncestors(sales1));
+            Assert.Equal(new[] { sales, sales1 }, restored.GetSelfAndDescendants(sales));
         }
     }
 }

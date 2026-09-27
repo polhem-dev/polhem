@@ -66,7 +66,7 @@ to be an action at that level; a method-level attribute on it still wins.
 
 - The AccessToken is a **GUID**; never use a predictable value
 - Tokens have an **expiry time**; after expiry, re-authentication is required
-- One-time sessions are not supported: `CreateSession` rejects a request for one
+- There are no one-time sessions; a short-lived ordinary session is the substitute
 - Session data is stored in the database (`st_session`, `st_user`), not on the client
 
 ## Payload security pipeline

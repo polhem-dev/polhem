@@ -13,7 +13,7 @@ namespace Polhem.Repository.AuditLog
     /// the read side (<see cref="AuditLogRepository"/>) so reads line up with writes across every
     /// provider.
     /// </summary>
-    public class AuditLogWriteRepository : RepositoryBase, IAuditLogWriteRepository
+    internal sealed class AuditLogWriteRepository : RepositoryBase, IAuditLogWriteRepository
     {
         /// <summary>
         /// Initializes a new <see cref="AuditLogWriteRepository"/>.

@@ -33,7 +33,7 @@ namespace Polhem.Hosting.Registry
     /// request.
     /// </para>
     /// </remarks>
-    public sealed class ReservedProgIdRegistrationService : IHostedService
+    internal sealed class ReservedProgIdRegistrationService : IHostedService
     {
         private readonly IDefineAccess _defineAccess;
         private readonly IBoTypeResolver _resolver;

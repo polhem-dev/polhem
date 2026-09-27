@@ -8,3 +8,8 @@ static Polhem.Base.Security.PasswordHasher.NeedsRehash(string! hashedPassword) -
 Polhem.Base.Exceptions.AuthenticationRequiredException
 Polhem.Base.Exceptions.AuthenticationRequiredException.AuthenticationRequiredException(string! message) -> void
 Polhem.Base.Exceptions.AuthenticationRequiredException.AuthenticationRequiredException(string! message, System.Exception! innerException) -> void
+static Polhem.Base.Serialization.JsonCodec.Deserialize<T>(string! json) -> T?
+static Polhem.Base.Serialization.JsonCodec.Serialize(object! value, bool ignoreDefaultValue = true, bool ignoreNullValue = true) -> string!
+Polhem.Base.BeeNameHint
+static Polhem.Base.BeeNameHint.AppendTo(string! message, string? name) -> string!
+static Polhem.Base.BeeNameHint.Matches(string? name) -> bool

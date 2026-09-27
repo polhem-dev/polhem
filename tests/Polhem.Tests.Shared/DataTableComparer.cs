@@ -1,10 +1,14 @@
 using System.Data;
 
-namespace Polhem.Base.Data
+namespace Polhem.Tests.Shared
 {
     /// <summary>
-    /// Provides static methods for comparing two DataTables by row state and column values.
+    /// Compares two DataTables by row state and column values, for serialization round-trip tests.
     /// </summary>
+    /// <remarks>
+    /// Also compiled into <c>Polhem.Base.UnitTests</c> as a linked file, because that project does not
+    /// reference this one.
+    /// </remarks>
     public static class DataTableComparer
     {
         /// <summary>

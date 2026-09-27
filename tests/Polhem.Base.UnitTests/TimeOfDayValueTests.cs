@@ -47,10 +47,10 @@ namespace Polhem.Base.UnitTests
         [InlineData("", "")]
         [InlineData("25:99", "")]
         [InlineData("abc", "")]
-        [DisplayName("ToFieldValue normalizes a time of day to fixed-width HH:mm")]
-        public void ToFieldValue_Time_NormalizesToFixedWidth(string input, string expected)
+        [DisplayName("CTimeString normalizes a time of day to fixed-width HH:mm")]
+        public void CTimeString_Time_NormalizesToFixedWidth(string input, string expected)
         {
-            Assert.Equal(expected, FieldDbType.Time.ToFieldValue(input));
+            Assert.Equal(expected, ValueUtilities.CTimeString(input));
         }
 
         [Fact]
@@ -58,7 +58,7 @@ namespace Polhem.Base.UnitTests
         public void NormalizedValues_SortChronologically()
         {
             var raw = s_unsortedTimes;
-            var normalized = raw.Select(v => (string)FieldDbType.Time.ToFieldValue(v)).ToList();
+            var normalized = raw.Select(v => ValueUtilities.CTimeString(v)).ToList();
             var sorted = normalized.OrderBy(v => v, StringComparer.Ordinal).ToList();
             Assert.Equal(s_sortedTimes, sorted);
         }

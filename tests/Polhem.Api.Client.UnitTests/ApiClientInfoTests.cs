@@ -19,7 +19,6 @@ namespace Polhem.Api.Client.UnitTests
             var connectType = ApiClientInfo.ConnectType;
             var endpoint = ApiClientInfo.Endpoint;
             var apiKey = ApiClientInfo.ApiKey;
-            var encryptionKey = ApiClientInfo.ApiEncryptionKey;
             try
             {
                 action();
@@ -30,7 +29,6 @@ namespace Polhem.Api.Client.UnitTests
                 ApiClientInfo.ConnectType = connectType;
                 ApiClientInfo.Endpoint = endpoint;
                 ApiClientInfo.ApiKey = apiKey;
-                ApiClientInfo.ApiEncryptionKey = encryptionKey;
             }
         }
 
@@ -44,13 +42,11 @@ namespace Polhem.Api.Client.UnitTests
                 ApiClientInfo.ConnectType = ConnectType.Local;
                 ApiClientInfo.Endpoint = string.Empty;
                 ApiClientInfo.ApiKey = string.Empty;
-                ApiClientInfo.ApiEncryptionKey = Array.Empty<byte>();
 
                 Assert.Equal(SupportedConnectTypes.Both, ApiClientInfo.SupportedConnectTypes);
                 Assert.Equal(ConnectType.Local, ApiClientInfo.ConnectType);
                 Assert.Equal(string.Empty, ApiClientInfo.Endpoint);
                 Assert.Equal(string.Empty, ApiClientInfo.ApiKey);
-                Assert.Empty(ApiClientInfo.ApiEncryptionKey);
             });
         }
 
@@ -90,20 +86,6 @@ namespace Polhem.Api.Client.UnitTests
 
                 Assert.Equal("http://example.com", ApiClientInfo.Endpoint);
                 Assert.Equal("test-api-key", ApiClientInfo.ApiKey);
-            });
-        }
-
-        [Fact]
-        [DisplayName("ApiClientInfo.ApiEncryptionKey can be replaced with a new array")]
-        public void ApiEncryptionKey_CanBeReplaced()
-        {
-            WithSnapshot(() =>
-            {
-                byte[] key = { 0x01, 0x02, 0x03, 0x04 };
-                ApiClientInfo.ApiEncryptionKey = key;
-
-                Assert.Same(key, ApiClientInfo.ApiEncryptionKey);
-                Assert.Equal(4, ApiClientInfo.ApiEncryptionKey.Length);
             });
         }
 

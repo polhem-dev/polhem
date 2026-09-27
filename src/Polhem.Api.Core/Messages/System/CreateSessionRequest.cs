@@ -20,10 +20,5 @@ namespace Polhem.Api.Core.Messages.System
         // reader substitute the initialiser. Enforced for every wire member by `WireDefaultOmissionTests`.
         [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
         public int ExpiresIn { get; set; } = 3600;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether this is a one-time session.
-        /// </summary>
-        public bool OneTime { get; set; } = false;
     }
 }

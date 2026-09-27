@@ -18,7 +18,8 @@ namespace Polhem.Definition.Identity
     /// WARNING: this is a cache-shared instance. It must not be mutated after it is loaded — every
     /// session in the company receives the same reference, and <see cref="CompanyDatabaseId"/>
     /// selects which database that company's repositories read and write, so a mutation redirects
-    /// other sessions' data access. The setters exist for the serializers, not for callers. See
+    /// other sessions' data access. The properties are init-only; the override tables are still
+    /// mutable collections, so treat an instance handed to you by the cache as frozen. See
     /// <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
     /// </para>
     /// </remarks>
@@ -37,23 +38,23 @@ namespace Polhem.Definition.Identity
         #endregion
 
         /// <summary>
-        /// Gets or sets the company id (unique key).
+        /// Gets the company id (unique key).
         /// </summary>
-        public string CompanyId { get; set; } = string.Empty;
+        public string CompanyId { get; init; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the company display name.
+        /// Gets the company display name.
         /// </summary>
-        public string CompanyName { get; set; } = string.Empty;
+        public string CompanyName { get; init; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the logical <see cref="DatabaseSettings"/> id used for the
+        /// Gets the logical <see cref="DatabaseSettings"/> id used for the
         /// company-category database during this session.
         /// </summary>
-        public string CompanyDatabaseId { get; set; } = string.Empty;
+        public string CompanyDatabaseId { get; init; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the tenant customization code for this company.
+        /// Gets the tenant customization code for this company.
         /// </summary>
         /// <remarks>
         /// Empty means the standard (non-customized) deployment. Companies map many-to-one onto a
@@ -61,16 +62,16 @@ namespace Polhem.Definition.Identity
         /// <c>customize_id</c> column by <c>CompanyRepository</c>; <c>EnterCompany</c> copies it
         /// into <see cref="SessionInfo.CustomizeId"/> for the session's customization overlay.
         /// </remarks>
-        public string CustomizeId { get; set; } = string.Empty;
+        public string CustomizeId { get; init; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the company-level decimal-places override table. Empty means every kind uses
+        /// Gets the company-level decimal-places override table. Empty means every kind uses
         /// the framework default. Loaded from the <c>number_formats_xml</c> column by
         /// <c>CompanyRepository</c>; carries Percent and UnitPrice/Cost display decimals. Quantity and
         /// Weight entries have no effect: <see cref="NumberFormatResolver"/> resolves those kinds from
         /// their unit, never from the company.
         /// </summary>
-        public CompanyNumberFormats NumberFormats { get; set; } = [];
+        public CompanyNumberFormats NumberFormats { get; init; } = [];
 
         /// <summary>
         /// Gets the decimal places for the specified kind: the company override when present,
@@ -83,7 +84,7 @@ namespace Polhem.Definition.Identity
         }
 
         /// <summary>
-        /// Gets or sets the company's default (local/home) currency code — an ISO 4217 alpha-3 code
+        /// Gets the company's default (local/home) currency code — an ISO 4217 alpha-3 code
         /// matching a <see cref="CurrencySettings"/> entry. Loaded from the <c>default_currency</c> column
         /// by <c>CompanyRepository</c>.
         /// </summary>
@@ -93,21 +94,21 @@ namespace Polhem.Definition.Identity
         /// when it resolves an amount with no reference currency for this company. The property still
         /// defaults to an empty string so the serializers can round-trip an unset value.
         /// </remarks>
-        public string DefaultCurrency { get; set; } = string.Empty;
+        public string DefaultCurrency { get; init; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the company-level cash-rounding override table (SAP T001R-style). Empty means
+        /// Gets the company-level cash-rounding override table (SAP T001R-style). Empty means
         /// no extra cash rounding — final amounts stay at each currency's natural minor unit. Loaded
         /// from the <c>cash_rounding_xml</c> column by <c>CompanyRepository</c>.
         /// </summary>
-        public CompanyCashRounding CashRounding { get; set; } = [];
+        public CompanyCashRounding CashRounding { get; init; } = [];
 
         /// <summary>
-        /// Gets or sets the company's allowed-currency whitelist. Empty means every system currency is
+        /// Gets the company's allowed-currency whitelist. Empty means every system currency is
         /// usable. Drives the currency drop-down options on documents. Loaded from the
         /// <c>allowed_currencies_xml</c> column by <c>CompanyRepository</c>.
         /// </summary>
-        public CompanyAllowedCurrencies AllowedCurrencies { get; set; } = [];
+        public CompanyAllowedCurrencies AllowedCurrencies { get; init; } = [];
 
         /// <summary>
         /// Gets the effective cash-rounding unit for the specified currency: the company override when

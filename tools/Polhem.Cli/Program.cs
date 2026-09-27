@@ -4,7 +4,7 @@ namespace Polhem.Cli;
 
 /// <summary>
 /// Entry point for the <c>dotnet polhem</c> CLI. Routes to subcommand groups
-/// (<c>defines</c>) plus a few top-level helpers (<c>--version</c>, <c>--help</c>).
+/// (<c>defines</c>, <c>keys</c>) plus a few top-level helpers (<c>--version</c>, <c>--help</c>).
 /// </summary>
 internal static class Program
 {
@@ -41,6 +41,7 @@ internal static class Program
             "--version" or "-v" => PrintVersion(),
             "--help" or "-h" or "help" => Help(args),
             "defines" => DefinesCommand.Run(args.AsSpan(1).ToArray()),
+            "keys" => KeysCommand.Run(args.AsSpan(1).ToArray()),
             _ => throw new UsageException($"unknown command: '{args[0]}'"),
         };
     }
@@ -50,6 +51,10 @@ internal static class Program
         if (args.Length >= 2 && args[1] == "defines")
         {
             DefinesCommand.PrintHelp(Console.Out);
+        }
+        else if (args.Length >= 2 && args[1] == "keys")
+        {
+            KeysCommand.PrintHelp(Console.Out);
         }
         else
         {
@@ -77,6 +82,7 @@ internal static class Program
         writer.WriteLine();
         writer.WriteLine("Commands:");
         writer.WriteLine("  defines       Manage define files (materialize / list / split-menu)");
+        writer.WriteLine("  keys          Produce encrypted key values for SystemSettings.xml (protect)");
         writer.WriteLine();
         writer.WriteLine("Options:");
         writer.WriteLine("  --version, -v Print the CLI version and exit");

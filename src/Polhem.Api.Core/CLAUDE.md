@@ -113,6 +113,6 @@ parameterized constructor differed from the `[Key]` declaration order, a wire ro
 fields of the same type**, and XML / JSON would not catch it.
 
 **Since adr-036 there are no integer `[Key]`s anywhere in the repository.** Wire binding always goes by property name
-or by a formatter that names each member, so **this pitfall no longer exists**, and `POLHEM4004`, which guarded it,
-has been retired. A constructor parameter order that differs from the property declaration order (such as
-`CurrencyItem`) is normal.
+or by a formatter that names each member, so **this pitfall no longer exists**, and the analyzer rule that guarded it
+was retired. That rule was Bee.NET's `BEE4004`; Polhem never shipped it, and POLHEM4001–POLHEM4004 are reserved.
+A constructor parameter order that differs from the property declaration order (such as `CurrencyItem`) is normal.

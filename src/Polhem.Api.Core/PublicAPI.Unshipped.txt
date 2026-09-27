@@ -3,3 +3,7 @@ static Polhem.Api.Core.JsonRpc.JsonRpcExecutor.IsResolvableAction(System.Reflect
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.Logger.get -> Microsoft.Extensions.Logging.ILogger?
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.Logger.set -> void
 Polhem.Api.Core.Messages.ApiMessageBase.ParametersSpecified.get -> bool
+static Polhem.Api.Core.ApiServiceOptions.Initialize(Polhem.Api.Core.Transformers.IApiPayloadCompressor! compressor, Polhem.Api.Core.Transformers.IApiPayloadEncryptor! encryptor) -> void
+static Polhem.Api.Core.ApiServiceOptions.RegisterPayloadCodec(Polhem.Api.Core.Transformers.IApiPayloadSerializer! serializer) -> void
+Polhem.Api.Core.JsonRpc.JsonRpcExecutor.JsonRpcExecutor(Polhem.Definition.IBusinessObjectFactory! boFactory, Polhem.Definition.Security.IAccessTokenValidator! tokenValidator, Polhem.Definition.Security.IApiEncryptionKeyProvider! keyProvider) -> void
+Polhem.Api.Core.JsonRpc.JsonRpcExecutor.JsonRpcExecutor(Polhem.Definition.IBusinessObjectFactory! boFactory, Polhem.Definition.Security.IAccessTokenValidator! tokenValidator, Polhem.Definition.Security.IApiEncryptionKeyProvider! keyProvider, Polhem.Definition.Logging.IAnomalyLogWriter? anomalyWriter, Polhem.Definition.Settings.AuditLogOptions? auditOptions, Polhem.Definition.Identity.ISessionInfoService? sessionService) -> void

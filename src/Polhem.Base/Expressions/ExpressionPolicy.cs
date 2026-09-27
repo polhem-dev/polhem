@@ -15,13 +15,6 @@ namespace Polhem.Base.Expressions
     /// </remarks>
     public static class ExpressionPolicy
     {
-        /// <summary>
-        /// Maps a <see cref="FieldDbType"/> to the CLR type used for the corresponding expression
-        /// variable (for example <see cref="FieldDbType.Currency"/> maps to <see cref="decimal"/>).
-        /// </summary>
-        /// <param name="dbType">The database field type.</param>
-        public static Type ToClrType(FieldDbType dbType) => DbTypeConverter.ToType(dbType);
-
 
         /// <summary>
         /// Coerces a raw field value into a non-null value of the field's CLR type. A

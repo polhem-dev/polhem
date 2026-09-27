@@ -87,11 +87,10 @@ namespace Polhem.Db.UnitTests
         #region Structure and branches
 
         [Fact]
-        [DisplayName("GetCommandText produces a CREATE TABLE statement for UpgradeAction.New")]
+        [DisplayName("GetCommandText produces a CREATE TABLE statement")]
         public void GetCommandText_New_GeneratesCreateTable()
         {
             var schema = BuildSchema(FieldDbType.Integer);
-            schema.UpgradeAction = DbUpgradeAction.New;
             var builder = new SqlCreateTableCommandBuilder();
 
             string sql = builder.GetCommandText(schema);

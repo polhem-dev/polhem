@@ -90,27 +90,8 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("MapToList maps every row to a List<T>")]
-        public void MapToList_MapsAllRows()
-        {
-            ILMapper<SamplePoco>.ClearCache();
-            using var reader = BuildTable().CreateDataReader();
-            // Getting the schema requires `Read()`, and rebuilding the reader after `BuildTable` is impractical,
-            // so a separate reader provides the mapper that is then passed to `MapToList`.
-            using var schemaReader = BuildTable().CreateDataReader();
-            schemaReader.Read();
-            var mapper = ILMapper<SamplePoco>.CreateMapFunc(schemaReader);
-
-            var list = ILMapper<SamplePoco>.MapToList(reader, mapper);
-
-            Assert.Equal(2, list.Count);
-            Assert.Equal("Alice", list[0].Name);
-            Assert.Equal("Bob", list[1].Name);
-        }
-
-        [Fact]
-        [DisplayName("MapToEnumerable gives the same result as MapToList")]
-        public void MapToEnumerable_MatchesMapToList()
+        [DisplayName("MapToEnumerable maps every row in order")]
+        public void MapToEnumerable_MapsAllRows()
         {
             ILMapper<SamplePoco>.ClearCache();
             using var schemaReader = BuildTable().CreateDataReader();

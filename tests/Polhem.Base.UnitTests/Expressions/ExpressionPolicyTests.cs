@@ -10,21 +10,6 @@ namespace Polhem.Base.UnitTests.Expressions
     /// </summary>
     public class ExpressionPolicyTests
     {
-        [Theory]
-        [InlineData(FieldDbType.String, typeof(string))]
-        [InlineData(FieldDbType.Integer, typeof(int))]
-        [InlineData(FieldDbType.Long, typeof(long))]
-        [InlineData(FieldDbType.Decimal, typeof(decimal))]
-        [InlineData(FieldDbType.Currency, typeof(decimal))]
-        [InlineData(FieldDbType.Boolean, typeof(bool))]
-        [InlineData(FieldDbType.DateTime, typeof(DateTime))]
-        [InlineData(FieldDbType.Guid, typeof(Guid))]
-        [DisplayName("ToClrType maps each FieldDbType to its CLR type")]
-        public void ToClrType_MapsFieldDbTypeToClrType(FieldDbType dbType, Type expected)
-        {
-            Assert.Equal(expected, ExpressionPolicy.ToClrType(dbType));
-        }
-
         [Fact]
         [DisplayName("CoerceValue returns 0 (decimal) for DBNull in a numeric column")]
         public void CoerceValue_DbNullCurrency_ReturnsZero()

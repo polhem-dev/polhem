@@ -10,9 +10,8 @@ namespace Polhem.Api.Core.Authorization
     /// The strength of the API key check depends on whether the deployment has issued any keys.
     /// Once <c>st_api_key</c> holds an enabled key, <see cref="IApiKeyValidator"/> has already
     /// compared the supplied key against its stored hash and this validator enforces the verdict.
-    /// Until then the historical behaviour applies — a non-empty <c>X-Api-Key</c> passes — so
-    /// upgrading the framework does not lock existing deployments out, and <c>UsePolhemFramework</c>
-    /// logs a startup warning pointing at key management.
+    /// Until then a non-empty <c>X-Api-Key</c> passes, so a deployment works before its first key
+    /// is issued, and <c>UsePolhemFramework</c> logs a startup warning pointing at key management.
     /// <para>
     /// Either way, user authentication is the Bearer access token's job: the API key identifies the
     /// calling application, not the user.
@@ -143,8 +142,7 @@ namespace Polhem.Api.Core.Authorization
         /// <remarks>
         /// The gate is only in force once the deployment has issued a key. Before that
         /// (<see cref="ApiKeyStatus.NotConfigured"/>), and for in-process calls that never carry a
-        /// header (<see cref="ApiKeyStatus.NotChecked"/>), the historical presence-only check
-        /// applies so existing deployments keep working across the upgrade.
+        /// header (<see cref="ApiKeyStatus.NotChecked"/>), a presence-only check applies.
         /// </remarks>
         private static bool IsApiKeyAccepted(ApiAuthorizationContext context)
         {

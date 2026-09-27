@@ -41,7 +41,7 @@ namespace Polhem.Db.UnitTests.Dml
             table.DbTableName = "ft_" + progId.ToLowerInvariant();
             table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
             foreach (var name in sourceFields)
-                table.Fields!.AddStringField(name, name, 50);
+                table.Fields!.Add(new FormField(name, name, FieldDbType.String) { MaxLength = 50 });
             return schema;
         }
 

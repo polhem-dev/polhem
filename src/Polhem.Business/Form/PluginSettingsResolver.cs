@@ -151,8 +151,10 @@ namespace Polhem.Business.Form
 
         private static InvalidOperationException Unloadable(string progId, string typeName, Exception? inner)
             => new(
-                $"PluginSettings binds progId '{progId}' to plugin '{typeName}', which cannot be loaded. " +
-                "Fix the assembly-qualified type name, or remove the binding.",
+                BeeNameHint.AppendTo(
+                    $"PluginSettings binds progId '{progId}' to plugin '{typeName}', which cannot be loaded. " +
+                    "Fix the assembly-qualified type name, or remove the binding.",
+                    typeName),
                 inner);
     }
 }

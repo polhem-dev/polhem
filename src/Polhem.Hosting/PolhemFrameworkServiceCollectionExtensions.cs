@@ -40,9 +40,22 @@ namespace Polhem.Hosting
     {
         /// <summary>
         /// Registers Polhem framework services and decrypts security keys from
+        /// <paramref name="configuration"/>, failing when the master key is missing. See the
+        /// overload that takes <c>autoCreateMasterKey</c> for the details.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        /// <param name="configuration">The backend configuration (from SystemSettings.xml).</param>
+        /// <param name="pathOptions">Path configuration that locates definition files.</param>
+        public static IServiceCollection AddPolhemFramework(
+            this IServiceCollection services,
+            BackendConfiguration configuration,
+            PathOptions pathOptions)
+            => services.AddPolhemFramework(configuration, pathOptions, autoCreateMasterKey: false);
+
+        /// <summary>
+        /// Registers Polhem framework services and decrypts security keys from
         /// <paramref name="configuration"/>. This call alone brings the framework up:
-        /// <c>app.UsePolhemFramework()</c> carries no bootstrap work of its own since Phase 7
-        /// removed the transitional <c>DbConnectionManager</c> static shim — callers obtain
+        /// <c>app.UsePolhemFramework()</c> carries no bootstrap work of its own — callers obtain
         /// <see cref="DbAccess"/> via <see cref="IDbAccessFactory"/> (ctor injected). It does
         /// still run host-side startup checks, so an ASP.NET Core host should keep calling it.
         /// </summary>
@@ -57,7 +70,7 @@ namespace Polhem.Hosting
             this IServiceCollection services,
             BackendConfiguration configuration,
             PathOptions pathOptions,
-            bool autoCreateMasterKey = false)
+            bool autoCreateMasterKey)
         {
             ArgumentNullException.ThrowIfNull(services);
             ArgumentNullException.ThrowIfNull(configuration);
@@ -196,10 +209,9 @@ namespace Polhem.Hosting
             // 6d. Log writing. Opt-in; both writer interfaces stay injectable either way.
             RegisterAuditLogWriters(services, configuration.AuditLogOptions);
 
-            // 5. Replaceable core services. Lifetimes default to Singleton in Phase 4 —
-            //    no consumer requires per-request scope today, and registering as Scoped
-            //    would block resolution through the singleton BusinessObjectFactory.
-            //    Phase 5/6 will revisit per-request scope when a real need emerges.
+            // 5. Replaceable core services, registered as Singleton: no consumer requires
+            //    per-request scope today, and registering as Scoped would block resolution
+            //    through the singleton BusinessObjectFactory.
             services.AddSingleton<IAccessTokenValidator>(sp =>
                 CreateConfigurableService<IAccessTokenValidator>(sp, nameof(BackendComponents.AccessTokenValidator),
                     components.AccessTokenValidator, BackendDefaultTypes.AccessTokenValidator));
@@ -227,8 +239,7 @@ namespace Polhem.Hosting
             services.AddSingleton<IFormRuleProcessor, FormRuleProcessor>();
 
             // 6. IApiEncryptionKeyProvider — Static and Derived need key material from the
-            //    settings; Dynamic needs ISessionInfoService. Phase 5/6 unifies via
-            //    IOptions<T> + DI ctor.
+            //    settings; Dynamic needs ISessionInfoService.
             services.AddSingleton<IApiEncryptionKeyProvider>(sp =>
                 CreateApiEncryptionKeyProvider(sp, components.ApiEncryptionKeyProvider, keys));
 
@@ -335,10 +346,18 @@ namespace Polhem.Hosting
 
             // 10. JsonRpcExecutor — transient (per request); its dependencies (factories,
             //     validators, key providers) are resolved from the container at construction.
+            //     Built explicitly rather than by the activator, so the constructor that carries
+            //     anomaly logging is the one used, not whichever overload the activator prefers.
             //     The logger is a property, so it is assigned here rather than by the activator.
             services.AddTransient(sp =>
             {
-                var executor = ActivatorUtilities.CreateInstance<JsonRpcExecutor>(sp);
+                var executor = new JsonRpcExecutor(
+                    sp.GetRequiredService<IBusinessObjectFactory>(),
+                    sp.GetRequiredService<IAccessTokenValidator>(),
+                    sp.GetRequiredService<IApiEncryptionKeyProvider>(),
+                    sp.GetService<IAnomalyLogWriter>(),
+                    sp.GetService<AuditLogOptions>(),
+                    sp.GetService<ISessionInfoService>());
                 executor.Logger = sp.GetService<ILoggerFactory>()?.CreateLogger<JsonRpcExecutor>();
                 return executor;
             });
@@ -373,11 +392,11 @@ namespace Polhem.Hosting
             services.AddSingleton(options);
 
             bool anomalyEnabled = options is { Enabled: true, AnomalyEnabled: true };
-            if (!anomalyEnabled) { services.AddSingleton<IAnomalyLogWriter>(NullAuditLogWriter.Instance); }
+            if (!anomalyEnabled) { services.AddSingleton<IAnomalyLogWriter>(NullLogWriter.Instance); }
 
             if (!options.Enabled)
             {
-                services.AddSingleton<IAuditLogWriter>(NullAuditLogWriter.Instance);
+                services.AddSingleton<IAuditLogWriter>(NullLogWriter.Instance);
                 return;
             }
 

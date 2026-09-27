@@ -54,43 +54,43 @@ namespace Polhem.Api.Core.UnitTests.Form
 
         [DbFact(DatabaseType.SQLite)]
         [DisplayName("SQLite: a Plain GetList filtering with In, Between, a range and NotEqual binds its values and returns the matching rows")]
-        public void Plain_Sqlite_RangeAndSetFilters_ReturnMatchingRows() => RunPlainRangeAndSet(DatabaseType.SQLite);
+        public Task Plain_Sqlite_RangeAndSetFilters_ReturnMatchingRows() => RunPlainRangeAndSet(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
         [DisplayName("SQL Server: a Plain GetList filtering with In, Between, a range and NotEqual binds its values and returns the matching rows")]
-        public void Plain_SqlServer_RangeAndSetFilters_ReturnMatchingRows() => RunPlainRangeAndSet(DatabaseType.SQLServer);
+        public Task Plain_SqlServer_RangeAndSetFilters_ReturnMatchingRows() => RunPlainRangeAndSet(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.PostgreSQL)]
         [DisplayName("PostgreSQL: a Plain GetList filtering with In, Between, a range and NotEqual binds its values and returns the matching rows")]
-        public void Plain_PostgreSql_RangeAndSetFilters_ReturnMatchingRows() => RunPlainRangeAndSet(DatabaseType.PostgreSQL);
+        public Task Plain_PostgreSql_RangeAndSetFilters_ReturnMatchingRows() => RunPlainRangeAndSet(DatabaseType.PostgreSQL);
 
         [DbFact(DatabaseType.MySQL)]
         [DisplayName("MySQL: a Plain GetList filtering with In, Between, a range and NotEqual binds its values and returns the matching rows")]
-        public void Plain_MySql_RangeAndSetFilters_ReturnMatchingRows() => RunPlainRangeAndSet(DatabaseType.MySQL);
+        public Task Plain_MySql_RangeAndSetFilters_ReturnMatchingRows() => RunPlainRangeAndSet(DatabaseType.MySQL);
 
         [DbFact(DatabaseType.Oracle)]
         [DisplayName("Oracle: a Plain GetList filtering with In, Between, a range and NotEqual binds its values and returns the matching rows")]
-        public void Plain_Oracle_RangeAndSetFilters_ReturnMatchingRows() => RunPlainRangeAndSet(DatabaseType.Oracle);
+        public Task Plain_Oracle_RangeAndSetFilters_ReturnMatchingRows() => RunPlainRangeAndSet(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.SQLite)]
         [DisplayName("SQLite: a Plain GetList filtering with Equal on a text and an integer column, with the default kind and operator omitted, returns the one row")]
-        public void Plain_Sqlite_EqualFilters_ReturnOneRow() => RunPlainEqual(DatabaseType.SQLite);
+        public Task Plain_Sqlite_EqualFilters_ReturnOneRow() => RunPlainEqual(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
         [DisplayName("SQL Server: a Plain GetList filtering with Equal on a text and an integer column, with the default kind and operator omitted, returns the one row")]
-        public void Plain_SqlServer_EqualFilters_ReturnOneRow() => RunPlainEqual(DatabaseType.SQLServer);
+        public Task Plain_SqlServer_EqualFilters_ReturnOneRow() => RunPlainEqual(DatabaseType.SQLServer);
 
         [DbFact(DatabaseType.SQLite)]
         [DisplayName("SQLite: a GetList over the JSON body codec filtering with In, Between, a range and NotEqual returns the matching rows")]
-        public void JsonCodec_Sqlite_RangeAndSetFilters_ReturnMatchingRows() => RunJsonCodecRangeAndSet(DatabaseType.SQLite);
+        public Task JsonCodec_Sqlite_RangeAndSetFilters_ReturnMatchingRows() => RunJsonCodecRangeAndSet(DatabaseType.SQLite);
 
         [DbFact(DatabaseType.SQLServer)]
         [DisplayName("SQL Server: a GetList over the JSON body codec filtering with In, Between, a range and NotEqual returns the matching rows")]
-        public void JsonCodec_SqlServer_RangeAndSetFilters_ReturnMatchingRows() => RunJsonCodecRangeAndSet(DatabaseType.SQLServer);
+        public Task JsonCodec_SqlServer_RangeAndSetFilters_ReturnMatchingRows() => RunJsonCodecRangeAndSet(DatabaseType.SQLServer);
 
-        private void RunPlainRangeAndSet(DatabaseType databaseType)
+        private Task RunPlainRangeAndSet(DatabaseType databaseType)
         {
-            WithSeededForm(databaseType, (executor, progId) =>
+            return WithSeededForm(databaseType, async (executor, progId) =>
             {
                 var body = $$"""
                     {
@@ -108,15 +108,15 @@ namespace Polhem.Api.Core.UnitTests.Form
                     }
                     """;
 
-                var table = ExecutePlain(executor, progId, body);
+                var table = await ExecutePlain(executor, progId, body);
 
                 Assert.Equal(["B", "C"], SysIds(table));
             });
         }
 
-        private void RunPlainEqual(DatabaseType databaseType)
+        private Task RunPlainEqual(DatabaseType databaseType)
         {
-            WithSeededForm(databaseType, (executor, progId) =>
+            return WithSeededForm(databaseType, async (executor, progId) =>
             {
                 // The first node leaves out `kind` and `operator`, as the JSON wires do for their default values
                 // (Condition and Equal), so this also pins what an absent member means.
@@ -134,17 +134,16 @@ namespace Polhem.Api.Core.UnitTests.Form
                     }
                     """;
 
-                var table = ExecutePlain(executor, progId, body);
+                var table = await ExecutePlain(executor, progId, body);
 
                 Assert.Equal(["B"], SysIds(table));
             });
         }
 
-        private void RunJsonCodecRangeAndSet(DatabaseType databaseType)
+        private Task RunJsonCodecRangeAndSet(DatabaseType databaseType)
         {
-            WithSeededForm(databaseType, (executor, progId) =>
+            return WithSeededForm(databaseType, async (executor, progId) =>
             {
-                var serializer = ApiServiceOptions.PayloadSerializer;
                 var compressor = ApiServiceOptions.PayloadCompressor;
                 var encryptor = ApiServiceOptions.PayloadEncryptor;
                 ApiServiceOptions.Initialize(
@@ -173,7 +172,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                     };
                     ApiPayloadConverter.TransformTo(request.Params, PayloadFormat.Encoded);
 
-                    var response = executor.Execute(request);
+                    var response = await executor.ExecuteAsync(request);
 
                     Assert.Null(response.Error);
                     ApiPayloadConverter.RestoreFrom(response.Result!, PayloadFormat.Encoded);
@@ -182,7 +181,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                 }
                 finally
                 {
-                    ApiServiceOptions.Initialize(serializer, compressor, encryptor);
+                    ApiServiceOptions.Initialize(compressor, encryptor);
                 }
             });
         }
@@ -191,14 +190,14 @@ namespace Polhem.Api.Core.UnitTests.Form
         /// Runs a <c>Plain</c> request the way it travels: the body is parsed from JSON as the controller parses it,
         /// and the response is written to JSON and read back as the client reads it.
         /// </summary>
-        private static DataTable ExecutePlain(JsonRpcExecutor executor, string progId, string body)
+        private static async Task<DataTable> ExecutePlain(JsonRpcExecutor executor, string progId, string body)
         {
             var requestJson = $$"""
                 {"jsonrpc":"2.0","method":"{{progId}}.{{FormActions.GetList}}","params":{"format":0,"value":{{body}}},"id":"plain-1"}
                 """;
             var request = JsonCodec.Deserialize<JsonRpcRequest>(requestJson)!;
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var received = JsonCodec.Deserialize<JsonRpcResponse>(JsonCodec.Serialize(response))!;
@@ -215,7 +214,7 @@ namespace Polhem.Api.Core.UnitTests.Form
         /// Creates a transient form with a text, an integer and a decimal column, seeds three rows, and hands the test
         /// an executor whose business objects read that form.
         /// </summary>
-        private void WithSeededForm(DatabaseType databaseType, Action<JsonRpcExecutor, string> test)
+        private async Task WithSeededForm(DatabaseType databaseType, Func<JsonRpcExecutor, string, Task> test)
         {
             string progId = TransientForm.NewTableName("tb_glf_");
             var schema = new FormSchema(progId, "Filter values") { CategoryId = TransientForm.CategoryId };
@@ -254,7 +253,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                     IsLocalCall = true,
                 };
 
-                test(executor, progId);
+                await test(executor, progId);
             }
             finally
             {

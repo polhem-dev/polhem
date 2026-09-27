@@ -32,11 +32,11 @@ namespace Polhem.Db.UnitTests
             table.DbTableName = UserDbTableName;
             table.Fields!.Add(SysFields.No, "Sequence", FieldDbType.AutoIncrement);
             table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
-            table.Fields!.AddStringField("sys_id", "User Id", 20);
-            table.Fields!.AddStringField("sys_name", "User Name", 20);
-            table.Fields!.AddStringField("password", "Password", 40);
-            table.Fields!.AddStringField("email", "Email", 100);
-            table.Fields!.AddStringField("note", "Note", 200);
+            table.Fields!.Add(new FormField("sys_id", "User Id", FieldDbType.String) { MaxLength = 20 });
+            table.Fields!.Add(new FormField("sys_name", "User Name", FieldDbType.String) { MaxLength = 20 });
+            table.Fields!.Add(new FormField("password", "Password", FieldDbType.String) { MaxLength = 40 });
+            table.Fields!.Add(new FormField("email", "Email", FieldDbType.String) { MaxLength = 100 });
+            table.Fields!.Add(new FormField("note", "Note", FieldDbType.String) { MaxLength = 200 });
             return schema;
         }
 

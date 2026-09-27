@@ -27,7 +27,7 @@ namespace Polhem.Api.Core.UnitTests.Form
 
         [Fact]
         [DisplayName("Employee.Save through JsonRpcExecutor keeps the RowState and returns the refreshed DataSet and AffectedRows")]
-        public void Save_ThroughJsonRpc_PreservesRowStatesAndReturnsRefreshed()
+        public async Task Save_ThroughJsonRpc_PreservesRowStatesAndReturnsRefreshed()
         {
             var input = new DataSet("Employee");
             var master = new DataTable("Employee");
@@ -83,7 +83,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var result = Assert.IsType<SaveResponse>(response.Result!.Value);

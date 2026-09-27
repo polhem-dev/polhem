@@ -17,8 +17,8 @@ namespace Polhem.Definition.Forms
     {
         /// <summary>
         /// Returns whether the schema has any field carrying a semantic <see cref="NumberKind"/>
-        /// (i.e. any field that <see cref="Bake"/> could format). Used to skip cloning when there is
-        /// nothing to bake.
+        /// (i.e. any field that <see cref="Bake"/> could format). Lets a caller skip the bake, and the
+        /// company lookup it needs, when there is nothing to bake.
         /// </summary>
         /// <param name="schema">The schema to inspect (not mutated).</param>
         public static bool HasNumericField(FormSchema schema)

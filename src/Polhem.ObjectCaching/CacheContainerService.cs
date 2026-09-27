@@ -19,9 +19,8 @@ namespace Polhem.ObjectCaching
     {
         /// <summary>
         /// Initializes a new <see cref="CacheContainerService"/> bound to the supplied storage.
-        /// Uses empty <see cref="CachePrefix"/> by default so legacy bootstrap-then-DI flows
-        /// share the process-wide <see cref="CacheInfo.Provider"/> key namespace across
-        /// multiple container instances.
+        /// Uses an empty <see cref="CachePrefix"/>, so every container built this way shares the
+        /// process-wide <see cref="CacheInfo.Provider"/> key namespace.
         /// </summary>
         /// <param name="storage">The define storage shared by storage-backed caches.</param>
         /// <param name="paths">Path options used by file-backed caches.</param>
@@ -34,7 +33,7 @@ namespace Polhem.ObjectCaching
         /// </summary>
         /// <param name="storage">The define storage shared by storage-backed caches.</param>
         /// <param name="paths">Path options used by file-backed caches.</param>
-        /// <param name="cachePrefix">Per-owner cache namespace; <see cref="string.Empty"/> means "share the legacy unprefixed namespace".</param>
+        /// <param name="cachePrefix">Per-owner cache namespace; <see cref="string.Empty"/> means "share the unprefixed namespace".</param>
         public CacheContainerService(IDefineStorage storage, PathOptions paths, string cachePrefix)
             : this(storage, paths, cachePrefix, dataSource: null) { }
 
@@ -44,7 +43,7 @@ namespace Polhem.ObjectCaching
         /// </summary>
         /// <param name="storage">The define storage shared by storage-backed caches.</param>
         /// <param name="paths">Path options used by file-backed caches.</param>
-        /// <param name="cachePrefix">Per-owner cache namespace; <see cref="string.Empty"/> means "share the legacy unprefixed namespace".</param>
+        /// <param name="cachePrefix">Per-owner cache namespace; <see cref="string.Empty"/> means "share the unprefixed namespace".</param>
         /// <param name="dataSource">
         /// Lazy accessor for the cache data source; <c>null</c> leaves the database-backed caches
         /// without read-through, populated only through their <c>Set</c> methods.
@@ -65,17 +64,17 @@ namespace Polhem.ObjectCaching
 
             SystemSettings = new SystemSettingsCache(paths, CachePrefix);
             DatabaseSettings = new DatabaseSettingsCache(paths, CachePrefix);
-            ProgramSettings = new ProgramSettingsCache(storage, paths, CachePrefix);
-            MenuSettings = new MenuSettingsCache(storage, paths, CachePrefix);
-            PluginSettings = new PluginSettingsCache(storage, paths, CachePrefix);
+            ProgramSettings = new ProgramSettingsCache(storage, CachePrefix);
+            MenuSettings = new MenuSettingsCache(storage, CachePrefix);
+            PluginSettings = new PluginSettingsCache(storage, CachePrefix);
             PermissionModels = new PermissionModelsCache(paths, CachePrefix);
-            DbCategorySettings = new DbCategorySettingsCache(storage, paths, CachePrefix);
-            CurrencySettings = new CurrencySettingsCache(storage, paths, CachePrefix);
-            UnitSettings = new UnitSettingsCache(storage, paths, CachePrefix);
-            TableSchema = new TableSchemaCache(storage, paths, CachePrefix);
-            FormSchema = new FormSchemaCache(storage, paths, CachePrefix);
-            FormLayout = new FormLayoutCache(storage, paths, CachePrefix);
-            LanguageResource = new LanguageResourceCache(storage, paths, CachePrefix);
+            DbCategorySettings = new DbCategorySettingsCache(storage, CachePrefix);
+            CurrencySettings = new CurrencySettingsCache(storage, CachePrefix);
+            UnitSettings = new UnitSettingsCache(storage, CachePrefix);
+            TableSchema = new TableSchemaCache(storage, CachePrefix);
+            FormSchema = new FormSchemaCache(storage, CachePrefix);
+            FormLayout = new FormLayoutCache(storage, CachePrefix);
+            LanguageResource = new LanguageResourceCache(storage, CachePrefix);
             SessionInfo = new SessionInfoCache(dataSource, CachePrefix);
             CompanyInfo = new CompanyInfoCache(dataSource, CachePrefix);
             CompanyRolePermissions = new CompanyRolePermissionsCache(dataSource, CachePrefix);
@@ -87,7 +86,7 @@ namespace Polhem.ObjectCaching
 
         /// <summary>
         /// The namespace prefix used by every cache instance this container owns.
-        /// Empty for the legacy unprefixed mode; non-empty when explicit isolation
+        /// Empty for the shared unprefixed namespace; non-empty when explicit isolation
         /// is required (e.g. per-fixture test containers).
         /// </summary>
         public string CachePrefix { get; }

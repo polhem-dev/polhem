@@ -20,10 +20,10 @@ namespace Polhem.Db.UnitTests.Dml
             table.Fields!.Add(SysFields.No, "Sequence", FieldDbType.AutoIncrement);
             // Primary key.
             table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
-            table.Fields!.AddStringField("sys_id", "Employee Id", 50);
-            table.Fields!.AddStringField("sys_name", "Employee Name", 100);
+            table.Fields!.Add(new FormField("sys_id", "Employee Id", FieldDbType.String) { MaxLength = 50 });
+            table.Fields!.Add(new FormField("sys_name", "Employee Name", FieldDbType.String) { MaxLength = 100 });
             // Relation field — must be skipped.
-            table.Fields!.AddStringField("ref_dept_name", "Department Name", 100);
+            table.Fields!.Add(new FormField("ref_dept_name", "Department Name", FieldDbType.String) { MaxLength = 100 });
             table.Fields!["ref_dept_name"].Type = FieldType.RelationField;
             return schema;
         }

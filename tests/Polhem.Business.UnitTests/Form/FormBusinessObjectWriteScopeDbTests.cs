@@ -122,7 +122,7 @@ namespace Polhem.Business.UnitTests.Form
             var schema = new FormSchema(master, "Write scope") { CategoryId = TransientForm.CategoryId, PermissionModelId = "WsDbModel" };
             var masterTable = schema.Tables!.Add(master, "Write scope");
             masterTable.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
-            masterTable.Fields!.AddStringField("sys_id", "ID", 20);
+            masterTable.Fields!.Add(new FormField("sys_id", "ID", FieldDbType.String) { MaxLength = 20 });
             masterTable.Fields!.Add(OwnerField, "Owner", FieldDbType.Guid).ScopeRole = ScopeRole.Owner;
 
             var detailTable = schema.Tables.Add(detail, "Write scope item");

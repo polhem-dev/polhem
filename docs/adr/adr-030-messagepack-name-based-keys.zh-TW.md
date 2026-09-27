@@ -1,4 +1,4 @@
-<!-- source: adr/adr-030-messagepack-name-based-keys.md blob: 79ae0ca7799af423921062df686c51c8f19dae31 -->
+<!-- source: adr/adr-030-messagepack-name-based-keys.md blob: f0dc433568b7ea028c8024cc27c4fa673727d341 -->
 # ADR-030：MessagePack 合約改採 property-name key（keyAsPropertyName）
 
 [English](adr-030-messagepack-name-based-keys.md)
@@ -126,3 +126,12 @@
 
 - [ADR-004：使用 MessagePack 作為 API Payload 序列化格式](adr-004-messagepack-payload.zh-TW.md) —— 本 ADR revisit 其整數鍵的 schema-evolution 理由。
 - [ADR-025：定義型別 AOT XmlSerializer 相容](adr-025-define-types-aot-xmlserializer-compat.zh-TW.md) —— 行動端 AOT 序列化的相鄰脈絡。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+**上文的 analyzer 規則編號屬於 Bee.NET。** 本決策做成時框架仍名為 Bee.NET，文中提到的規則當時以
+`BEE4001`–`BEE4004` 發佈；此處的 `POLHEM` 拼法來自更名。Polhem 從未以這些編號發佈規則：它的 analyzer 發佈紀錄從
+1.0.0 開始，`POLHEM4001`–`POLHEM4004` 為保留編號、永不重用，因此從 Bee.NET 帶過來的抑制設定不會讓新規則失聲。保留編號列於
+[Analyzer 規則](../zh-TW/analyzer-rules.md)。

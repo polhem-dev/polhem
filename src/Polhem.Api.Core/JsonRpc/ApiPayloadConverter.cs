@@ -231,7 +231,7 @@ namespace Polhem.Api.Core.JsonRpc
             if (!WireTypeWhitelist.IsAssemblyQualifiedNameAllowed(typeName))
             {
                 throw new InvalidOperationException(
-                    $"Payload type '{typeName}' is not in the allowed type whitelist.");
+                    BeeNameHint.AppendTo($"Payload type '{typeName}' is not in the allowed type whitelist.", typeName));
             }
         }
     }

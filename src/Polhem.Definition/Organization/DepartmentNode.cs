@@ -31,25 +31,33 @@ namespace Polhem.Definition.Organization
             ManagerRowId = managerRowId;
         }
 
-        /// <summary>Gets or sets the department row id (<c>st_department.sys_rowid</c>).</summary>
+        /// <summary>Gets the department row id (<c>st_department.sys_rowid</c>).</summary>
         [XmlAttribute]
-        public Guid RowId { get; set; }
+        public Guid RowId { get; init; }
 
-        /// <summary>Gets or sets the department business id (<c>sys_id</c>).</summary>
+        /// <summary>Gets the department business id (<c>sys_id</c>).</summary>
         [XmlAttribute]
-        public string DeptId { get; set; } = string.Empty;
+        public string DeptId { get; init; } = string.Empty;
 
-        /// <summary>Gets or sets the department name (<c>sys_name</c>).</summary>
+        /// <summary>Gets the department name (<c>sys_name</c>).</summary>
         [XmlAttribute]
-        public string DeptName { get; set; } = string.Empty;
+        public string DeptName { get; init; } = string.Empty;
 
-        /// <summary>Gets or sets the manager (employee) row id.</summary>
+        /// <summary>Gets the manager (employee) row id.</summary>
         [XmlAttribute]
-        public Guid ManagerRowId { get; set; }
+        public Guid ManagerRowId { get; init; }
 
-        /// <summary>Gets or sets the child department nodes; <c>null</c> for a leaf.</summary>
+        private DepartmentNodeCollection? _children;
+
+        /// <summary>Gets the child department nodes; <c>null</c> for a leaf.</summary>
         [XmlArrayItem(typeof(DepartmentNode))]
-        public DepartmentNodeCollection? Children { get; set; }
+        public DepartmentNodeCollection? Children { get => _children; init => _children = value; }
+
+        /// <summary>
+        /// Returns the child collection, creating it first for a node that has none. Used only while
+        /// <see cref="DepartmentTree"/> assembles the forest, before the tree is handed out.
+        /// </summary>
+        internal DepartmentNodeCollection GetOrCreateChildren() => _children ??= [];
 
         /// <summary>
         /// Determines whether the <see cref="Children"/> property should be serialized — XmlSerializer

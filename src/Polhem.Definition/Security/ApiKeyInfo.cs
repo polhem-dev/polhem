@@ -16,48 +16,48 @@ namespace Polhem.Definition.Security
     /// a key stops working the moment it expires regardless of how long it stays cached.
     /// </para>
     /// <para>
-    /// WARNING: this is a cache-shared instance. It must not be mutated after it is loaded — every
-    /// caller presenting the same key receives the same reference, and this record decides whether
-    /// the call is authenticated. The setters exist for the serializers, not for callers. See
+    /// This is a cache-shared instance: every caller presenting the same key receives the same
+    /// reference, and this record decides whether the call is authenticated. Its properties are
+    /// init-only, so the compiler rejects a change after it is loaded. See
     /// <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
     /// </para>
     /// </remarks>
     public class ApiKeyInfo : IKeyObject
     {
         /// <summary>
-        /// Gets or sets the key identifier (<c>sys_id</c>), which is also the leading segment of the
+        /// Gets the key identifier (<c>sys_id</c>), which is also the leading segment of the
         /// plaintext key. Not a secret: it appears in logs and audit records by design.
         /// </summary>
-        public string SysId { get; set; } = string.Empty;
+        public string SysId { get; init; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the display name of the calling application (for example
+        /// Gets the display name of the calling application (for example
         /// <c>"Northwind Desktop"</c>).
         /// </summary>
-        public string SysName { get; set; } = string.Empty;
+        public string SysName { get; init; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the hashed secret segment, in the <c>v1.{salt}.{hash}</c> form produced by
+        /// Gets the hashed secret segment, in the <c>v1.{salt}.{hash}</c> form produced by
         /// <see cref="Polhem.Base.Security.ApiKeyHasher.HashSecret"/>.
         /// </summary>
-        public string HashedKey { get; set; } = string.Empty;
+        public string HashedKey { get; init; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the key classification (internal application or third party). A label for
+        /// Gets the key classification (internal application or third party). A label for
         /// operators; it carries no authorization meaning.
         /// </summary>
-        public ApiKeyType KeyType { get; set; } = ApiKeyType.Internal;
+        public ApiKeyType KeyType { get; init; } = ApiKeyType.Internal;
 
         /// <summary>
-        /// Gets or sets the contact for the third party holding this key, so an incident has
+        /// Gets the contact for the third party holding this key, so an incident has
         /// someone to reach.
         /// </summary>
-        public string Contact { get; set; } = string.Empty;
+        public string Contact { get; init; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the UTC expiry, or <c>null</c> when the key does not expire.
+        /// Gets the UTC expiry, or <c>null</c> when the key does not expire.
         /// </summary>
-        public DateTime? ExpiredAt { get; set; }
+        public DateTime? ExpiredAt { get; init; }
 
         /// <summary>
         /// Gets the cache key (the <see cref="SysId"/>).

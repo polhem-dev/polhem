@@ -243,19 +243,6 @@ namespace Polhem.Base.UnitTests
         }
     }
 
-    public class DictionaryTests
-    {
-        [Fact]
-        [DisplayName("Dictionary<T> uses case-insensitive keys")]
-        public void Lookup_IsCaseInsensitive()
-        {
-            var dict = new Dictionary<int> { ["Alpha"] = 1 };
-
-            Assert.Equal(1, dict["alpha"]);
-            Assert.True(dict.ContainsKey("ALPHA"));
-        }
-    }
-
     public class CollectionExtensionsTests
     {
         [Fact]

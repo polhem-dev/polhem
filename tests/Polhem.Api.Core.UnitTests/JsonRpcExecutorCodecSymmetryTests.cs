@@ -43,7 +43,6 @@ namespace Polhem.Api.Core.UnitTests
         /// </summary>
         private static Restore UseDefaultPipeline()
         {
-            var serializer = ApiServiceOptions.PayloadSerializer;
             var compressor = ApiServiceOptions.PayloadCompressor;
             var encryptor = ApiServiceOptions.PayloadEncryptor;
 
@@ -51,7 +50,7 @@ namespace Polhem.Api.Core.UnitTests
                 new ApiPayloadOptions { Compressor = "gzip", Encryptor = "aes-cbc-hmac" },
                 isDebugMode: true);
 
-            return new Restore(() => ApiServiceOptions.Initialize(serializer, compressor, encryptor));
+            return new Restore(() => ApiServiceOptions.Initialize(compressor, encryptor));
         }
 
         private sealed class Restore(Action action) : IDisposable
@@ -64,7 +63,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData(PayloadCodecNames.MessagePack)]
         [InlineData("")]   // Undeclared: the compatibility constant (MessagePack), and the response declares nothing either.
         [DisplayName("The response codec equals the one the request declared, and the body really decodes")]
-        public void Execute_EncodedRequest_AnswersWithTheDeclaredCodec(string codec)
+        public async Task Execute_EncodedRequest_AnswersWithTheDeclaredCodec(string codec)
         {
             using var _ = UseDefaultPipeline();
 
@@ -86,7 +85,7 @@ namespace Polhem.Api.Core.UnitTests
                 IsLocalCall = true,
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var result = Assert.IsType<JsonRpcResult>(response.Result);

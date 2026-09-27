@@ -63,14 +63,6 @@ namespace Polhem.ObjectCaching.Database
         }
 
         /// <summary>
-        /// Removes the cached gate state, so the next read reloads it.
-        /// </summary>
-        public void RemoveState()
-        {
-            Remove(ApiKeyGateState.CacheKey);
-        }
-
-        /// <summary>
         /// Loads the gate state from the data source.
         /// </summary>
         /// <param name="key">Always <see cref="ApiKeyGateState.CacheKey"/>.</param>

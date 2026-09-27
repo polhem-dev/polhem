@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Base.Tracing;
 
 namespace Polhem.Base.UnitTests
 {
@@ -11,9 +10,6 @@ namespace Polhem.Base.UnitTests
     {
         private readonly string _originalVersion;
         private readonly bool _originalDebug;
-        private readonly bool _originalToolMode;
-        private readonly bool _originalSingleFile;
-        private readonly ITraceListener? _originalListener;
         private readonly List<string> _originalNamespaces;
 
         private sealed class FakeConfig : ISysInfoConfiguration
@@ -23,27 +19,10 @@ namespace Polhem.Base.UnitTests
             public string AllowedTypeNamespaces { get; set; } = string.Empty;
         }
 
-        private sealed class FakeListener : ITraceListener
-        {
-            public TraceContext TraceStart(TraceLayers layer, string detail = "",
-                string category = "", object? tag = null, string name = "")
-                => throw new NotImplementedException();
-
-            public void TraceEnd(TraceContext ctx, TraceStatus status = TraceStatus.Ok, string? detail = null)
-            { }
-
-            public void TraceWrite(TraceLayers layer, string detail = "", TraceStatus status = TraceStatus.Ok,
-                string category = "", object? tag = null, string name = "")
-            { }
-        }
-
         public SysInfoTests()
         {
             _originalVersion = SysInfo.Version;
             _originalDebug = SysInfo.IsDebugMode;
-            _originalToolMode = SysInfo.IsToolMode;
-            _originalSingleFile = SysInfo.IsSingleFile;
-            _originalListener = SysInfo.TraceListener;
             _originalNamespaces = SysInfo.AllowedTypeNamespaces.ToList();
         }
 
@@ -51,9 +30,6 @@ namespace Polhem.Base.UnitTests
         {
             SysInfo.Version = _originalVersion;
             SysInfo.IsDebugMode = _originalDebug;
-            SysInfo.IsToolMode = _originalToolMode;
-            SysInfo.IsSingleFile = _originalSingleFile;
-            SysInfo.TraceListener = _originalListener;
             // Restore namespaces via Initialize with the original custom list (none here, defaults are enough).
             SysInfo.Initialize(new FakeConfig
             {
@@ -73,35 +49,14 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("TraceEnabled reflects whether a TraceListener is set")]
-        public void TraceListener_AffectsTraceEnabled()
-        {
-            SysInfo.TraceListener = null;
-            Assert.False(SysInfo.TraceEnabled);
-
-            SysInfo.TraceListener = new FakeListener();
-            Assert.True(SysInfo.TraceEnabled);
-        }
-
-        [Fact]
-        [DisplayName("The IsDebugMode / IsToolMode / IsSingleFile flags are read-write")]
-        public void ModeFlags_AreReadWrite()
+        [DisplayName("The IsDebugMode flag is read-write")]
+        public void IsDebugMode_IsReadWrite()
         {
             SysInfo.IsDebugMode = true;
-            SysInfo.IsToolMode = true;
-            SysInfo.IsSingleFile = true;
-
             Assert.True(SysInfo.IsDebugMode);
-            Assert.True(SysInfo.IsToolMode);
-            Assert.True(SysInfo.IsSingleFile);
 
             SysInfo.IsDebugMode = false;
-            SysInfo.IsToolMode = false;
-            SysInfo.IsSingleFile = false;
-
             Assert.False(SysInfo.IsDebugMode);
-            Assert.False(SysInfo.IsToolMode);
-            Assert.False(SysInfo.IsSingleFile);
         }
 
         [Fact]

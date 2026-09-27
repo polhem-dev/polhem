@@ -1,5 +1,3 @@
-using Polhem.Base.Tracing;
-
 namespace Polhem.Base
 {
     /// <summary>
@@ -13,34 +11,9 @@ namespace Polhem.Base
         public static string Version { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets a value indicating whether tracing is enabled (read-only; enabled when TraceListener is not null).
-        /// </summary>
-        public static bool TraceEnabled => TraceListener != null;
-
-        /// <summary>
-        /// Gets or sets the execution flow monitor, which provides system-level trace segment monitoring.
-        /// Called by the application to record the start, end, and individual events in the execution flow,
-        /// enabling performance analysis and exception tracing.
-        /// </summary>
-        public static ITraceListener? TraceListener { get; set; }
-
-        /// <summary>
         /// Gets or sets a value indicating whether debug mode is enabled.
         /// </summary>
         public static bool IsDebugMode { get; set; } = false;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the application is running in tool mode (e.g. SettingsEditor.exe).
-        /// This property can only be set during application startup and cannot be loaded from a configuration file.
-        /// Used to allow local execution without requiring AccessToken authentication.
-        /// </summary>
-        public static bool IsToolMode { get; set; } = false;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the application is published as a single-file executable (e.g. SettingsEditor.exe).
-        /// When published as a single file, dynamic object loading is not available and objects must be created via code.
-        /// </summary>
-        public static bool IsSingleFile { get; set; } = false;
 
         /// <summary>
         /// Backing field for <see cref="AllowedTypeNamespaces"/>.

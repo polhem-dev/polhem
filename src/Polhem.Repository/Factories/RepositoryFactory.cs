@@ -53,6 +53,27 @@ namespace Polhem.Repository.Factories
         };
 
         /// <summary>
+        /// Initializes a new <see cref="RepositoryFactory"/> for a host that does not poll the
+        /// cross-process cache invalidation channel.
+        /// </summary>
+        /// <param name="services">The host service provider, used for the escape hatch and for injecting a custom repository's own dependencies.</param>
+        /// <param name="defineAccess">The define access service.</param>
+        /// <param name="dbAccessFactory">The database access factory.</param>
+        /// <param name="connectionManager">The connection manager.</param>
+        /// <param name="router">Resolves a logical scope to a physical database id.</param>
+        /// <param name="typeResolver">Decides which repository type a progId is bound to.</param>
+        public RepositoryFactory(
+            IServiceProvider services,
+            IDefineAccess defineAccess,
+            IDbAccessFactory dbAccessFactory,
+            IDbConnectionManager connectionManager,
+            IRepositoryDatabaseRouter router,
+            IRepositoryTypeResolver typeResolver)
+            : this(services, defineAccess, dbAccessFactory, connectionManager, router, typeResolver, cacheNotify: null)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new <see cref="RepositoryFactory"/>.
         /// </summary>
         /// <param name="services">The host service provider, used for the escape hatch and for injecting a custom repository's own dependencies.</param>
@@ -75,7 +96,7 @@ namespace Polhem.Repository.Factories
             IDbConnectionManager connectionManager,
             IRepositoryDatabaseRouter router,
             IRepositoryTypeResolver typeResolver,
-            ICacheNotifyService? cacheNotify = null)
+            ICacheNotifyService? cacheNotify)
         {
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _typeResolver = typeResolver ?? throw new ArgumentNullException(nameof(typeResolver));

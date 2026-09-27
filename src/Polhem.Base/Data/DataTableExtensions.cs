@@ -107,24 +107,6 @@ namespace Polhem.Base.Data
         }
 
         /// <summary>
-        /// Sets the primary key of the table using a comma-separated list of column names.
-        /// </summary>
-        /// <param name="table">The target table.</param>
-        /// <param name="fieldNames">A comma-separated string of column names that form the primary key.</param>
-        public static void SetPrimaryKey(this DataTable table, string fieldNames)
-        {
-            string[] fieldNameArray = StringUtilities.Split(fieldNames, ",");
-            var dataColumns = new DataColumn[fieldNameArray.Length];
-            int iIndex = 0;
-            foreach (string fieldName in fieldNameArray)
-            {
-                dataColumns[iIndex] = table.Columns[fieldName]!;
-                iIndex++;
-            }
-            table.PrimaryKey = dataColumns;
-        }
-
-        /// <summary>
         /// Determines whether the table contains no rows.
         /// </summary>
         /// <param name="dataTable">The target table.</param>

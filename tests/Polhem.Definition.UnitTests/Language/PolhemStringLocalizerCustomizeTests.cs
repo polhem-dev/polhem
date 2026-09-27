@@ -83,7 +83,7 @@ namespace Polhem.Definition.UnitTests.Language
         [DisplayName("Passing a null customizeIdProvider throws ArgumentNullException")]
         public void Ctor_NullCustomizeIdProvider_Throws()
         {
-            var svc = new LanguageService(new StubDefineAccess("zh-TW"));
+            var svc = new LanguageService(new StubDefineAccess("zh-TW"), null);
 
             Assert.Throws<ArgumentNullException>(() =>
                 new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW", null!));

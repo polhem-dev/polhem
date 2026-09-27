@@ -127,12 +127,15 @@ tracking of `Microsoft.CodeAnalysis.Analyzers`:
 | A new rule is not declared | `RS2000` |
 | A shipped rule disappeared and was not declared under Removed Rules | `RS2003` |
 
-> ⚠️ **`RS2003` never fires against an empty Shipped file.** This repo's `Shipped.md` **had not a single line** from
-> its creation until before 4.28.0, while the analyzer had shipped with `Polhem.Definition` since 4.16.0.
-> The consequence was exactly what an empty baseline file implies: `RS2000` still blocked "a new rule is not
-> declared", but the "a shipped rule was removed" half effectively did not exist. **POLHEM4001–POLHEM4004 were
-> retired in 4.19.0, and nothing made a sound.**
-> 4.28.0 backfilled the three sections 4.16.0 / 4.18.0 / 4.19.0 from tag snapshots.
+> ⚠️ **`RS2003` never fires against an empty Shipped file.** In Bee.NET, the framework Polhem continues, this file
+> **had not a single line** from its creation until before 4.28.0, while the analyzer had shipped with the
+> definition package since 4.16.0. The consequence was exactly what an empty baseline file implies: `RS2000` still
+> blocked "a new rule is not declared", but the "a shipped rule was removed" half effectively did not exist.
+> **BEE4001–BEE4004 were retired in Bee.NET 4.19.0, and nothing made a sound.**
+>
+> Polhem's `Shipped.md` starts at a single `## Release 1.0.0` section listing the rules active at that release. The
+> Bee.NET history is not carried over, and POLHEM4001–POLHEM4004 are reserved and never reused
+> (`DiagnosticIds.ReservedIds`, checked by `DiagnosticIdDocumentationTests`).
 
 ### What to do at release time
 

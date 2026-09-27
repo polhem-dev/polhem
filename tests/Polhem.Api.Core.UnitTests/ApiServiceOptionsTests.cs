@@ -27,21 +27,9 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("CurrentSettingsSummary contains the Serializer, Compressor and Encryptor entries")]
-        public void CurrentSettingsSummary_ContainsMethodNames()
-        {
-            var summary = ApiServiceOptions.CurrentSettingsSummary;
-
-            Assert.Contains("Serializer:", summary);
-            Assert.Contains("Compressor:", summary);
-            Assert.Contains("Encryptor:", summary);
-        }
-
-        [Fact]
         [DisplayName("Initialize(ApiPayloadOptions, isDebugMode) creates the compressor and encryptor by name")]
         public void Initialize_WithOptions_SetsImplementations()
         {
-            var originalSerializer = ApiServiceOptions.PayloadSerializer;
             var originalCompressor = ApiServiceOptions.PayloadCompressor;
             var originalEncryptor = ApiServiceOptions.PayloadEncryptor;
             try
@@ -55,52 +43,39 @@ namespace Polhem.Api.Core.UnitTests
                 ApiServiceOptions.Initialize(options, isDebugMode: true);
 
                 // The serializer is not configured here. Every codec is always available and each request declares its
-                // own, so `PayloadSerializer` keeps its default to serve requests that declare none.
+                // own; `PayloadSerializer` is fixed and serves requests that declare none.
                 Assert.IsType<MessagePackPayloadSerializer>(ApiServiceOptions.PayloadSerializer);
                 Assert.IsType<NoCompressionCompressor>(ApiServiceOptions.PayloadCompressor);
                 Assert.IsType<NoEncryptionEncryptor>(ApiServiceOptions.PayloadEncryptor);
             }
             finally
             {
-                ApiServiceOptions.PayloadSerializer = originalSerializer;
                 ApiServiceOptions.PayloadCompressor = originalCompressor;
                 ApiServiceOptions.PayloadEncryptor = originalEncryptor;
             }
         }
 
         [Fact]
-        [DisplayName("Initialize(serializer, compressor, encryptor) uses the supplied instances as they are")]
+        [DisplayName("Initialize(compressor, encryptor) uses the supplied instances as they are")]
         public void Initialize_WithInstances_SetsImplementations()
         {
-            var originalSerializer = ApiServiceOptions.PayloadSerializer;
             var originalCompressor = ApiServiceOptions.PayloadCompressor;
             var originalEncryptor = ApiServiceOptions.PayloadEncryptor;
             try
             {
-                var serializer = new MessagePackPayloadSerializer();
                 var compressor = new NoCompressionCompressor();
                 var encryptor = new NoEncryptionEncryptor();
 
-                ApiServiceOptions.Initialize(serializer, compressor, encryptor);
+                ApiServiceOptions.Initialize(compressor, encryptor);
 
-                Assert.Same(serializer, ApiServiceOptions.PayloadSerializer);
                 Assert.Same(compressor, ApiServiceOptions.PayloadCompressor);
                 Assert.Same(encryptor, ApiServiceOptions.PayloadEncryptor);
             }
             finally
             {
-                ApiServiceOptions.PayloadSerializer = originalSerializer;
                 ApiServiceOptions.PayloadCompressor = originalCompressor;
                 ApiServiceOptions.PayloadEncryptor = originalEncryptor;
             }
-        }
-
-        [Fact]
-        [DisplayName("Initialize throws ArgumentNullException for a null serializer")]
-        public void Initialize_NullSerializer_Throws()
-        {
-            AssertThrowsAndRestore(() =>
-                ApiServiceOptions.Initialize(null!, new NoCompressionCompressor(), new NoEncryptionEncryptor()));
         }
 
         [Fact]
@@ -108,7 +83,7 @@ namespace Polhem.Api.Core.UnitTests
         public void Initialize_NullCompressor_Throws()
         {
             AssertThrowsAndRestore(() =>
-                ApiServiceOptions.Initialize(new MessagePackPayloadSerializer(), null!, new NoEncryptionEncryptor()));
+                ApiServiceOptions.Initialize(null!, new NoEncryptionEncryptor()));
         }
 
         [Fact]
@@ -116,7 +91,7 @@ namespace Polhem.Api.Core.UnitTests
         public void Initialize_NullEncryptor_Throws()
         {
             AssertThrowsAndRestore(() =>
-                ApiServiceOptions.Initialize(new MessagePackPayloadSerializer(), new NoCompressionCompressor(), null!));
+                ApiServiceOptions.Initialize(new NoCompressionCompressor(), null!));
         }
 
         /// <summary>
@@ -124,14 +99,13 @@ namespace Polhem.Api.Core.UnitTests
         /// restores the static implementations afterwards.
         /// </summary>
         /// <remarks>
-        /// <see cref="ApiServiceOptions.Initialize(Polhem.Api.Core.Transformers.IApiPayloadSerializer, Polhem.Api.Core.Transformers.IApiPayloadCompressor, Polhem.Api.Core.Transformers.IApiPayloadEncryptor)"/>
+        /// <see cref="ApiServiceOptions.Initialize(Polhem.Api.Core.Transformers.IApiPayloadCompressor, Polhem.Api.Core.Transformers.IApiPayloadEncryptor)"/>
         /// assigns its arguments one at a time, so a null in a later position throws after the earlier
         /// ones are already in place. Without the restore, whichever test in this class runs next sees
         /// the no-compression implementation, and the test order changes whenever the namespace does.
         /// </remarks>
         private static void AssertThrowsAndRestore(Action initialize)
         {
-            var originalSerializer = ApiServiceOptions.PayloadSerializer;
             var originalCompressor = ApiServiceOptions.PayloadCompressor;
             var originalEncryptor = ApiServiceOptions.PayloadEncryptor;
             try
@@ -140,7 +114,6 @@ namespace Polhem.Api.Core.UnitTests
             }
             finally
             {
-                ApiServiceOptions.PayloadSerializer = originalSerializer;
                 ApiServiceOptions.PayloadCompressor = originalCompressor;
                 ApiServiceOptions.PayloadEncryptor = originalEncryptor;
             }
@@ -161,13 +134,6 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Setting PayloadSerializer to null throws ArgumentNullException")]
-        public void PayloadSerializer_SetNull_Throws()
-        {
-            Assert.Throws<ArgumentNullException>(() => ApiServiceOptions.PayloadSerializer = null!);
-        }
-
-        [Fact]
         [DisplayName("Setting PayloadCompressor to null throws ArgumentNullException")]
         public void PayloadCompressor_SetNull_Throws()
         {
@@ -179,6 +145,82 @@ namespace Polhem.Api.Core.UnitTests
         public void PayloadEncryptor_SetNull_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => ApiServiceOptions.PayloadEncryptor = null!);
+        }
+
+        [Fact]
+        [DisplayName("A registered codec resolves by its name and is listed as accepted")]
+        public void RegisterPayloadCodec_CustomCodec_ResolvesByName()
+        {
+            var codec = new NamedCodec("test-codec");
+            try
+            {
+                ApiServiceOptions.RegisterPayloadCodec(codec);
+
+                Assert.Same(codec, ApiServiceOptions.ResolvePayloadSerializer("test-codec"));
+                Assert.Contains("test-codec", ApiServiceOptions.AcceptedPayloadCodecs);
+            }
+            finally
+            {
+                ApiServiceOptions.ResetPayloadCodecs();
+            }
+        }
+
+        [Fact]
+        [DisplayName("Registering a codec leaves an undeclared codec reading as MessagePack")]
+        public void RegisterPayloadCodec_CustomCodec_DoesNotChangeUndeclaredDefault()
+        {
+            try
+            {
+                ApiServiceOptions.RegisterPayloadCodec(new NamedCodec("test-codec"));
+
+                Assert.IsType<MessagePackPayloadSerializer>(ApiServiceOptions.ResolvePayloadSerializer(null));
+                Assert.IsType<MessagePackPayloadSerializer>(ApiServiceOptions.ResolvePayloadSerializer(string.Empty));
+            }
+            finally
+            {
+                ApiServiceOptions.ResetPayloadCodecs();
+            }
+        }
+
+        [Theory]
+        [InlineData(PayloadCodecNames.MessagePack)]
+        [InlineData(PayloadCodecNames.Json)]
+        [DisplayName("Registering a codec under a built-in name throws InvalidOperationException")]
+        public void RegisterPayloadCodec_BuiltInName_Throws(string name)
+        {
+            Assert.Throws<InvalidOperationException>(() => ApiServiceOptions.RegisterPayloadCodec(new NamedCodec(name)));
+            Assert.IsNotType<NamedCodec>(ApiServiceOptions.ResolvePayloadSerializer(name));
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("Upper")]
+        [InlineData("has space")]
+        [DisplayName("Registering a codec with a malformed name throws ArgumentException")]
+        public void RegisterPayloadCodec_MalformedName_Throws(string name)
+        {
+            Assert.Throws<ArgumentException>(() => ApiServiceOptions.RegisterPayloadCodec(new NamedCodec(name)));
+        }
+
+        [Fact]
+        [DisplayName("Registering a null codec throws ArgumentNullException")]
+        public void RegisterPayloadCodec_Null_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() => ApiServiceOptions.RegisterPayloadCodec(null!));
+        }
+
+        /// <summary>
+        /// A codec that only reports a name; the registration tests never serialize with it.
+        /// </summary>
+        private sealed class NamedCodec : IApiPayloadSerializer
+        {
+            public NamedCodec(string name) { SerializationMethod = name; }
+
+            public string SerializationMethod { get; }
+
+            public byte[] Serialize(object payload, Type type) => throw new NotSupportedException();
+
+            public object? Deserialize(byte[] bytes, Type type) => throw new NotSupportedException();
         }
     }
 }

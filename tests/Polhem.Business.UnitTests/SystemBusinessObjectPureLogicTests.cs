@@ -40,7 +40,7 @@ namespace Polhem.Business.UnitTests
         public void CreateSession_InvalidExpiresIn_ThrowsArgumentOutOfRange(int expiresIn)
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
-            var args = new CreateSessionArgs { UserID = "u01", ExpiresIn = expiresIn, OneTime = false };
+            var args = new CreateSessionArgs { UserID = "u01", ExpiresIn = expiresIn };
 
             Assert.Throws<ArgumentOutOfRangeException>(() => bo.CreateSession(args));
         }

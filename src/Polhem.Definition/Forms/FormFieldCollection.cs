@@ -28,20 +28,6 @@ namespace Polhem.Definition.Forms
         /// <param name="formTable">The owning form table.</param>
         public FormFieldCollection(FormTable formTable) : base(formTable)
         { }
-
-        /// <summary>
-        /// Adds a string field to the collection.
-        /// </summary>
-        /// <param name="fieldName">The field name.</param>
-        /// <param name="caption">The caption text.</param>
-        /// <param name="maxLength">The maximum string length.</param>
-        public FormField AddStringField(string fieldName, string caption, int maxLength)
-        {
-            var field = new FormField(fieldName, caption, FieldDbType.String);
-            field.MaxLength = maxLength;
-            base.Add(field);
-            return field;
-        }
     }
 
     /// <summary>

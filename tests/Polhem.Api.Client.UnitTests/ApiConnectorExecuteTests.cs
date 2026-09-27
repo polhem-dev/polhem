@@ -1,11 +1,8 @@
-using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Api.Client.Providers;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.JsonRpc;
-using Polhem.Base;
-using Polhem.Base.Tracing;
 using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Transformers;
 
@@ -117,35 +114,6 @@ namespace Polhem.Api.Client.UnitTests
                 await connector.ExecuteAsync<object>(progId!, TestAction, new object(), PayloadFormat.Plain));
         }
 
-        [Fact]
-        [DisplayName("ExecuteAsync writes Request and Response trace events when the tracer is enabled")]
-        public async Task ExecuteAsync_WithTracerEnabled_WritesTraceEvents()
-        {
-            var writer = new CapturingTraceWriter();
-            var previousListener = SysInfo.TraceListener;
-            SysInfo.TraceListener = new TraceDispatcher(writer);
-            try
-            {
-                var provider = new FakeJsonRpcProvider();
-                var connector = CreateConnector(provider);
-
-                var result = await connector.ExecuteAsync<string>(TestProgId, TestAction, new object(), PayloadFormat.Plain);
-
-                Assert.Equal("ok", result);
-                // Expected events: Start (Execute.Unit.Echo), the Request point, the Response point and End.
-                Assert.Contains(writer.Events, e => e.Kind == TraceEventKind.Start);
-                Assert.Contains(writer.Events, e => e.Kind == TraceEventKind.End);
-                Assert.Contains(writer.Events, e => e.Kind == TraceEventKind.Point
-                    && (e.Name ?? string.Empty).StartsWith("Request"));
-                Assert.Contains(writer.Events, e => e.Kind == TraceEventKind.Point
-                    && (e.Name ?? string.Empty).StartsWith("Response"));
-            }
-            finally
-            {
-                SysInfo.TraceListener = previousListener;
-            }
-        }
-
         #region PayloadCodec
 
         /// <summary>
@@ -229,20 +197,5 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         #endregion
-
-        /// <summary>
-        /// A test writer that collects trace events.
-        /// </summary>
-        /// <remarks>
-        /// <c>SysInfo.TraceListener</c> is a process-wide static. While this test class points the listener at this
-        /// instance, events raised through the tracer by **every test class running in parallel** are captured by
-        /// this writer. To avoid the concurrent enumeration error "Collection was modified", Events must use a
-        /// thread-safe container with snapshot enumeration semantics.
-        /// </remarks>
-        private sealed class CapturingTraceWriter : ITraceWriter
-        {
-            public ConcurrentQueue<TraceEvent> Events { get; } = new();
-            public void Write(TraceEvent evt) => Events.Enqueue(evt);
-        }
     }
 }

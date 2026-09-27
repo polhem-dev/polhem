@@ -86,15 +86,4 @@ namespace Polhem.Base.UnitTests
             Assert.NotNull(new TreeNodeIgnoreAttribute());
         }
     }
-
-    public class EnumDefaultsTests
-    {
-        [Fact]
-        [DisplayName("The default value of DateInterval is Year")]
-        public void DateInterval_DefaultValue_IsYear()
-        {
-            DateInterval value = default;
-            Assert.Equal(DateInterval.Year, value);
-        }
-    }
 }

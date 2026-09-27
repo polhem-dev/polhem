@@ -15,7 +15,7 @@ namespace Polhem.Repository.System
     /// Disabled keys are excluded at the query layer — to callers they look exactly like keys that
     /// never existed, which is what keeps the API from reporting which identifiers are real.
     /// </remarks>
-    public class ApiKeyRepository : RepositoryBase, IApiKeyRepository
+    internal sealed class ApiKeyRepository : RepositoryBase, IApiKeyRepository
     {
         private const string TableName = "st_api_key";
         private const string SysIdColumn = "sys_id";

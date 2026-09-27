@@ -195,3 +195,14 @@ across versions** (the old and new wires are incompatible by design, an expected
   revisits its schema-evolution reasoning for integer keys.
 - [ADR-025: AOT XmlSerializer compatibility for definition types](adr-025-define-types-aot-xmlserializer-compat.md):
   the neighboring context of mobile AOT serialization.
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following is a later change, for readers comparing with
+the current code:
+
+**The analyzer rule numbers above are Bee.NET's.** This decision was taken while the framework was Bee.NET, and the
+rules it names shipped as `BEE4001`–`BEE4004`; the `POLHEM` spelling here comes from the rename. Polhem never shipped
+rules under those numbers: its analyzer release history starts at 1.0.0, and `POLHEM4001`–`POLHEM4004` are reserved and
+never reused, so a suppression carried over from Bee.NET cannot silence a new rule. The reserved numbers are listed in
+the [analyzer rule reference](../en/analyzer-rules.md).

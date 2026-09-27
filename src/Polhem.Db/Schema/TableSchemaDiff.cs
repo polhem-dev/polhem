@@ -38,12 +38,22 @@ namespace Polhem.Db.Schema
         /// <summary>
         /// Gets the structural changes required to align the real table with the defined schema.
         /// </summary>
-        public List<ITableChange> Changes { get; } = [];
+        public IReadOnlyList<ITableChange> Changes => ChangeList;
 
         /// <summary>
         /// Gets the description (MS_Description) drift between the defined and actual schema.
         /// </summary>
-        public List<DescriptionChange> DescriptionChanges { get; } = [];
+        public IReadOnlyList<DescriptionChange> DescriptionChanges => DescriptionChangeList;
+
+        /// <summary>
+        /// The mutable store behind <see cref="Changes"/>, filled while the diff is built.
+        /// </summary>
+        internal List<ITableChange> ChangeList { get; } = [];
+
+        /// <summary>
+        /// The mutable store behind <see cref="DescriptionChanges"/>, filled while the diff is built.
+        /// </summary>
+        internal List<DescriptionChange> DescriptionChangeList { get; } = [];
 
         /// <summary>
         /// Gets a value indicating whether the diff contains no changes.

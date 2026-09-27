@@ -305,7 +305,7 @@ namespace Polhem.Business.UnitTests.Form
 
             var master = schema.Tables!.Add(progId, "Master");
             master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
-            master.Fields!.AddStringField(Note, "Note", 50);
+            master.Fields!.Add(new FormField(Note, "Note", FieldDbType.String) { MaxLength = 50 });
             master.Fields.Add(SysFields.InsertTime, "Insert Time", FieldDbType.DateTime);
             master.Fields.Add(SysFields.UpdateTime, "Update Time", FieldDbType.DateTime);
             master.Fields.Add(EventTime, "Event Time", FieldDbType.DateTime);
@@ -315,7 +315,7 @@ namespace Polhem.Business.UnitTests.Form
             var detail = schema.Tables.Add(progId + "_d", "Detail");
             detail.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
             detail.Fields.Add(SysFields.MasterRowId, "Master Row Id", FieldDbType.Guid);
-            detail.Fields!.AddStringField(Note, "Note", 50);
+            detail.Fields!.Add(new FormField(Note, "Note", FieldDbType.String) { MaxLength = 50 });
             detail.Fields.Add(LineTime, "Line Time", FieldDbType.DateTime);
 
             return new TransientForm(_fx, databaseType, schema);

@@ -68,14 +68,14 @@ namespace Polhem.ObjectCaching
             catch (Exception ex) when (ex is FileNotFoundException or FileLoadException or BadImageFormatException)
             {
                 throw new InvalidOperationException(
-                    $"BackendComponents.CacheProvider names '{configured}', whose assembly could not be loaded.", ex);
+                    BeeNameHint.AppendTo($"BackendComponents.CacheProvider names '{configured}', whose assembly could not be loaded.", configured), ex);
             }
 
             Provider = created switch
             {
                 ICacheProvider provider => provider,
                 null => throw new InvalidOperationException(
-                    $"BackendComponents.CacheProvider names '{configured}', which was not found in its assembly."),
+                    BeeNameHint.AppendTo($"BackendComponents.CacheProvider names '{configured}', which was not found in its assembly.", configured)),
                 _ => throw new InvalidOperationException(
                     $"BackendComponents.CacheProvider names '{configured}', which does not implement {nameof(ICacheProvider)}."),
             };

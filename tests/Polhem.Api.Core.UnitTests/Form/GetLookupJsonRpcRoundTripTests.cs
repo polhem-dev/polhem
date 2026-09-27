@@ -32,7 +32,7 @@ namespace Polhem.Api.Core.UnitTests.Form
 
         [Fact]
         [DisplayName("Employee.GetLookup through JsonRpcExecutor queries with the default field set and returns the stub DataTable")]
-        public void GetLookup_ThroughJsonRpc_UsesDefaultLookupFieldSet()
+        public async Task GetLookup_ThroughJsonRpc_UsesDefaultLookupFieldSet()
         {
             var table = new DataTable("Employee");
             table.Columns.Add("sys_rowid", typeof(Guid));
@@ -53,7 +53,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var result = Assert.IsType<GetLookupResponse>(response.Result!.Value);
@@ -83,7 +83,7 @@ namespace Polhem.Api.Core.UnitTests.Form
 
         [Fact]
         [DisplayName("Employee.GetLookup passes explicit Paging through and builds no filter without SearchText")]
-        public void GetLookup_ThroughJsonRpc_PreservesExplicitPaging()
+        public async Task GetLookup_ThroughJsonRpc_PreservesExplicitPaging()
         {
             var table = new DataTable("Employee");
             table.Columns.Add("sys_rowid", typeof(Guid));
@@ -106,7 +106,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             Assert.Null(stubRepository.LastFilter);

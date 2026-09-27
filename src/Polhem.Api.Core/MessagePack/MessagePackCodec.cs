@@ -88,6 +88,8 @@ namespace Polhem.Api.Core.MessagePack
                 // mobile heads (reflection-only AOT) take the same path as the desktop.
                 new SortFieldFormatter(),
                 new DepartmentNodeFormatter(),
+                new DepartmentTreeFormatter(),
+                new CompanyInfoFormatter(),
                 new NumberFormatItemFormatter(),
                 new CashRoundingItemFormatter(),
                 new AllowedCurrencyItemFormatter(),

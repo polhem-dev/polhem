@@ -58,6 +58,14 @@ namespace Polhem.Api.Core.UnitTests
             finally { ApiServiceOptions.RequireWireFrame = original; }
         }
 
+        private static async Task WithFrameRequiredAsync(bool value, Func<Task> action)
+        {
+            bool original = ApiServiceOptions.RequireWireFrame;
+            ApiServiceOptions.RequireWireFrame = value;
+            try { await action(); }
+            finally { ApiServiceOptions.RequireWireFrame = original; }
+        }
+
         [Fact]
         [DisplayName("Encrypted round-trip produces no frame when the switch is off")]
         public void RestoreFrom_FrameNotRequired_LeavesFrameNull()
@@ -137,13 +145,13 @@ namespace Polhem.Api.Core.UnitTests
 
         [Fact]
         [DisplayName("A frame timestamp outside the allowed window returns ReplayRejected")]
-        public void Execute_FrameTimestampOutsideWindow_ReturnsReplayRejected()
+        public async Task Execute_FrameTimestampOutsideWindow_ReturnsReplayRejected()
         {
-            WithFrameRequired(true, () =>
+            await WithFrameRequiredAsync(true, async () =>
             {
                 var staleMs = DateTimeOffset.UtcNow.AddHours(-1).ToUnixTimeMilliseconds();
 
-                var response = ExecutePing(new ApiPayloadFrame(staleMs, sequence: 0));
+                var response = await ExecutePing(new ApiPayloadFrame(staleMs, sequence: 0));
 
                 Assert.NotNull(response.Error);
                 Assert.Equal((int)JsonRpcErrorCode.ReplayRejected, response.Error!.Code);
@@ -152,13 +160,13 @@ namespace Polhem.Api.Core.UnitTests
 
         [Fact]
         [DisplayName("A frame timestamp within the allowed window executes normally")]
-        public void Execute_FrameTimestampWithinWindow_Succeeds()
+        public async Task Execute_FrameTimestampWithinWindow_Succeeds()
         {
-            WithFrameRequired(true, () =>
+            await WithFrameRequiredAsync(true, async () =>
             {
                 var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-                var response = ExecutePing(new ApiPayloadFrame(nowMs, sequence: 0));
+                var response = await ExecutePing(new ApiPayloadFrame(nowMs, sequence: 0));
 
                 Assert.Null(response.Error);
             });
@@ -166,16 +174,16 @@ namespace Polhem.Api.Core.UnitTests
 
         [Fact]
         [DisplayName("A repeated sequence on a method that declares UniqueSequence returns ReplayRejected")]
-        public void Execute_RepeatedSequenceOnGuardedMethod_ReturnsReplayRejected()
+        public async Task Execute_RepeatedSequenceOnGuardedMethod_ReturnsReplayRejected()
         {
-            WithFrameRequired(true, () =>
+            await WithFrameRequiredAsync(true, async () =>
             {
                 // Each test uses its own token so that its window does not interfere with other tests.
                 var token = TestSessionFactory.CreateAccessToken(_fx);
 
-                var first = Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), token);
-                var replay = Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), token);
-                var nextSequence = Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(2), token);
+                var first = await Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), token);
+                var replay = await Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), token);
+                var nextSequence = await Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(2), token);
 
                 // The first call goes all the way into the BO (the custom method "noop" does not exist, hence
                 // InternalError). What matters is that it is not ReplayRejected, meaning the sequence check let it through.
@@ -188,29 +196,29 @@ namespace Polhem.Api.Core.UnitTests
 
         [Fact]
         [DisplayName("A repeated sequence on a method without a sequence check executes normally")]
-        public void Execute_RepeatedSequenceOnUnguardedMethod_Succeeds()
+        public async Task Execute_RepeatedSequenceOnUnguardedMethod_Succeeds()
         {
             // Replaying a query method is harmless, and applying the check everywhere would only add work to every call.
-            WithFrameRequired(true, () =>
+            await WithFrameRequiredAsync(true, async () =>
             {
                 var token = TestSessionFactory.CreateAccessToken(_fx);
                 var value = new PingRequest { ClientName = "replay-test" };
 
-                Assert.Null(Execute("Ping", value, FrameWith(1), token).Error);
-                Assert.Null(Execute("Ping", value, FrameWith(1), token).Error);
+                Assert.Null((await Execute("Ping", value, FrameWith(1), token)).Error);
+                Assert.Null((await Execute("Ping", value, FrameWith(1), token)).Error);
             });
         }
 
         [Fact]
         [DisplayName("Anonymous calls skip the sequence check (there is no session to count against)")]
-        public void Execute_RepeatedSequenceAnonymously_Succeeds()
+        public async Task Execute_RepeatedSequenceAnonymously_Succeeds()
         {
             // Sequences are per session. Anonymous calls all share `Guid.Empty`, so checking them would let
             // different clients use up each other's sequences and cause many false rejections.
-            WithFrameRequired(true, () =>
+            await WithFrameRequiredAsync(true, async () =>
             {
-                var first = Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), Guid.Empty);
-                var replay = Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), Guid.Empty);
+                var first = await Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), Guid.Empty);
+                var replay = await Execute("ExecFunc", new ExecFuncRequest("noop"), FrameWith(1), Guid.Empty);
 
                 // As above, InternalError means both calls passed the sequence gate and reached the BO.
                 Assert.Equal((int)JsonRpcErrorCode.InternalError, first.Error!.Code);
@@ -220,15 +228,15 @@ namespace Polhem.Api.Core.UnitTests
 
         [Fact]
         [DisplayName("A replay rejection is logged as AnomalyKind.Replay rather than Error")]
-        public void Execute_ReplayRejected_IsLoggedAsReplayAnomaly()
+        public async Task Execute_ReplayRejected_IsLoggedAsReplayAnomaly()
         {
             // Folded into the generic Error kind, the signal "one session is rejected repeatedly" would disappear,
             // and that signal is exactly how client clock skew or resent packets are told apart.
-            WithFrameRequired(true, () =>
+            await WithFrameRequiredAsync(true, async () =>
             {
                 var staleMs = DateTimeOffset.UtcNow.AddHours(-1).ToUnixTimeMilliseconds();
 
-                var entries = ExecuteAndCaptureAnomalies(new ApiPayloadFrame(staleMs, sequence: 0));
+                var entries = await ExecuteAndCaptureAnomalies(new ApiPayloadFrame(staleMs, sequence: 0));
 
                 var entry = Assert.IsType<ApiAnomalyEntry>(Assert.Single(entries));
                 Assert.Equal(AnomalyKind.Replay, entry.Kind);
@@ -239,7 +247,7 @@ namespace Polhem.Api.Core.UnitTests
         /// Sends one Encoded Ping call with the given frame (Ping declares no sequence check).
         /// </summary>
         /// <param name="frame">The replay protection frame to attach.</param>
-        private JsonRpcResponse ExecutePing(ApiPayloadFrame frame)
+        private Task<JsonRpcResponse> ExecutePing(ApiPayloadFrame frame)
             => Execute("Ping", new PingRequest { ClientName = "replay-test" }, frame, Guid.Empty);
 
         /// <summary>
@@ -249,7 +257,7 @@ namespace Polhem.Api.Core.UnitTests
         /// <param name="value">The value passed in.</param>
         /// <param name="frame">The replay protection frame to attach.</param>
         /// <param name="accessToken">The access token; <see cref="Guid.Empty"/> means an anonymous call.</param>
-        private JsonRpcResponse Execute(string action, object value, ApiPayloadFrame frame, Guid accessToken)
+        private async Task<JsonRpcResponse> Execute(string action, object value, ApiPayloadFrame frame, Guid accessToken)
         {
             var executor = new JsonRpcExecutor(
                 _fx.GetRequiredService<IBusinessObjectFactory>(),
@@ -272,7 +280,7 @@ namespace Polhem.Api.Core.UnitTests
             // Encoded rather than Encrypted: reading the frame is unrelated to encryption, and Encoded needs no transport key.
             ApiPayloadConverter.TransformTo(request.Params, PayloadFormat.Encoded);
 
-            return executor.Execute(request);
+            return await executor.ExecuteAsync(request);
         }
 
         private static ApiPayloadFrame FrameWith(long sequence)
@@ -282,7 +290,7 @@ namespace Polhem.Api.Core.UnitTests
         /// Sends one call through an executor with anomaly logging enabled and returns the captured anomaly entries.
         /// </summary>
         /// <param name="frame">The replay protection frame to attach.</param>
-        private List<AnomalyEntry> ExecuteAndCaptureAnomalies(ApiPayloadFrame frame)
+        private async Task<List<AnomalyEntry>> ExecuteAndCaptureAnomalies(ApiPayloadFrame frame)
         {
             var writer = new CapturingAnomalyLogWriter();
             var executor = new JsonRpcExecutor(
@@ -308,7 +316,7 @@ namespace Polhem.Api.Core.UnitTests
                 Id = Guid.NewGuid().ToString(),
             };
             ApiPayloadConverter.TransformTo(request.Params, PayloadFormat.Encoded);
-            executor.Execute(request);
+            await executor.ExecuteAsync(request);
 
             return writer.Entries;
         }

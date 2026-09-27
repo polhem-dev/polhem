@@ -134,7 +134,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A failed call with anomaly logging enabled writes an Error anomaly")]
-        public void Execute_AnomalyEnabledFailure_WritesErrorAnomaly()
+        public async Task Execute_AnomalyEnabledFailure_WritesErrorAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
             // A planted session instead of a bare `Guid`: a bare token makes token validation take the rebuild path
@@ -142,7 +142,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             var token = TestSessionFactory.CreateAccessToken(_fx);
             var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()), token);
 
-            var response = executor.Execute(UnknownActionRequest());
+            var response = await executor.ExecuteAsync(UnknownActionRequest());
 
             Assert.NotNull(response.Error);
             var entry = Assert.Single(writer.Entries);
@@ -159,12 +159,12 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A failure record with anomaly logging enabled and an empty AccessToken keeps no fingerprint")]
-        public void Execute_AnomalyEnabledFailureEmptyToken_WritesNullFingerprint()
+        public async Task Execute_AnomalyEnabledFailureEmptyToken_WritesNullFingerprint()
         {
             var writer = new CapturingAnomalyLogWriter();
             var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()), Guid.Empty);
 
-            var response = executor.Execute(UnknownActionRequest());
+            var response = await executor.ExecuteAsync(UnknownActionRequest());
 
             Assert.NotNull(response.Error);
             var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
@@ -176,14 +176,14 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("The anomaly record carries the caller's application identity (api_key_id / api_key_name)")]
-        public void Execute_AnomalyEnabled_CarriesApiKeyIdentity()
+        public async Task Execute_AnomalyEnabled_CarriesApiKeyIdentity()
         {
             var writer = new CapturingAnomalyLogWriter();
             var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()), Guid.NewGuid());
             executor.ApiKeyValidation = new ApiKeyValidationResult(
                 ApiKeyStatus.Valid, "northwind-desktop", "Northwind Desktop");
 
-            executor.Execute(UnknownActionRequest());
+            await executor.ExecuteAsync(UnknownActionRequest());
 
             var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
             Assert.Equal("northwind-desktop", anomaly.ApiKeyId);
@@ -192,12 +192,12 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("For a call that did not pass the API key gate, the anomaly record's application identity is null")]
-        public void Execute_AnomalyEnabledWithoutApiKey_LeavesIdentityNull()
+        public async Task Execute_AnomalyEnabledWithoutApiKey_LeavesIdentityNull()
         {
             var writer = new CapturingAnomalyLogWriter();
             var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()), Guid.NewGuid());
 
-            executor.Execute(UnknownActionRequest());
+            await executor.ExecuteAsync(UnknownActionRequest());
 
             var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
             Assert.Null(anomaly.ApiKeyId);
@@ -208,12 +208,12 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A successful call under the slow threshold with anomaly logging enabled writes no record")]
-        public void Execute_AnomalyEnabledFastSuccess_WritesNoAnomaly()
+        public async Task Execute_AnomalyEnabledFastSuccess_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
             var executor = NewAuditExecutor(writer, EnabledOptions(slowThresholdMs: 3000), new StubSessionInfoService(NewSession()), Guid.Empty);
 
-            var response = executor.Execute(PingRequest());
+            var response = await executor.ExecuteAsync(PingRequest());
 
             Assert.Null(response.Error);
             Assert.NotNull(response.Result);
@@ -222,13 +222,13 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("With anomaly logging enabled and the slow threshold exceeded, any record written is a Slow anomaly")]
-        public void Execute_AnomalyEnabledSlowSuccess_WritesSlowAnomalyWhenExceeded()
+        public async Task Execute_AnomalyEnabledSlowSuccess_WritesSlowAnomalyWhenExceeded()
         {
             var writer = new CapturingAnomalyLogWriter();
             // A 1 ms threshold: the reflection invoke plus tracing almost certainly exceeds it and triggers the Slow write (line 147).
             var executor = NewAuditExecutor(writer, EnabledOptions(slowThresholdMs: 1), new StubSessionInfoService(NewSession()), Guid.Empty);
 
-            var response = executor.Execute(PingRequest());
+            var response = await executor.ExecuteAsync(PingRequest());
 
             Assert.Null(response.Error);
             // The assertion holds whether or not the threshold was exceeded (any record must be Slow), so timing cannot make it flaky.
@@ -239,13 +239,13 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A failure writes no record when a writer exists but auditOptions is disabled")]
-        public void Execute_AuditOptionsDisabled_WritesNoAnomaly()
+        public async Task Execute_AuditOptionsDisabled_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
             var options = new AuditLogOptions { Enabled = false, AnomalyEnabled = true };
             var executor = NewAuditExecutor(writer, options, new StubSessionInfoService(NewSession()), Guid.Empty);
 
-            var response = executor.Execute(UnknownActionRequest());
+            var response = await executor.ExecuteAsync(UnknownActionRequest());
 
             Assert.NotNull(response.Error);
             Assert.Empty(writer.Entries);
@@ -253,13 +253,13 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A failure writes no record when a writer exists but AnomalyEnabled is false")]
-        public void Execute_AnomalyFlagDisabled_WritesNoAnomaly()
+        public async Task Execute_AnomalyFlagDisabled_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
             var options = new AuditLogOptions { Enabled = true, AnomalyEnabled = false };
             var executor = NewAuditExecutor(writer, options, new StubSessionInfoService(NewSession()), Guid.Empty);
 
-            var response = executor.Execute(UnknownActionRequest());
+            var response = await executor.ExecuteAsync(UnknownActionRequest());
 
             Assert.NotNull(response.Error);
             Assert.Empty(writer.Entries);
@@ -267,12 +267,12 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A failure writes no record when a writer exists but auditOptions is null")]
-        public void Execute_AuditOptionsNull_WritesNoAnomaly()
+        public async Task Execute_AuditOptionsNull_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
             var executor = NewAuditExecutor(writer, options: null, session: new StubSessionInfoService(NewSession()), accessToken: Guid.Empty);
 
-            var response = executor.Execute(UnknownActionRequest());
+            var response = await executor.ExecuteAsync(UnknownActionRequest());
 
             Assert.NotNull(response.Error);
             Assert.Empty(writer.Entries);
@@ -280,12 +280,12 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A failure writes no record when a writer and enabled options exist but sessionService is null")]
-        public void Execute_SessionServiceNull_WritesNoAnomaly()
+        public async Task Execute_SessionServiceNull_WritesNoAnomaly()
         {
             var writer = new CapturingAnomalyLogWriter();
             var executor = NewAuditExecutor(writer, EnabledOptions(), session: null, accessToken: Guid.Empty);
 
-            var response = executor.Execute(UnknownActionRequest());
+            var response = await executor.ExecuteAsync(UnknownActionRequest());
 
             Assert.NotNull(response.Error);
             Assert.Empty(writer.Entries);
@@ -295,7 +295,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A remote call in Encrypted format enters the encryption key branch")]
-        public void Execute_EncryptedFormatRemoteCall_HitsEncryptionKeyBranch()
+        public async Task Execute_EncryptedFormatRemoteCall_HitsEncryptionKeyBranch()
         {
             // Ping is Public/Anonymous, so an Encrypted request passes access validation and fetches the encryption key
             // (the Encrypted branch at line 200). Decrypting the unencrypted payload then fails and an error is returned.
@@ -313,7 +313,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
                 IsLocalCall = false,
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.NotNull(response.Error);
         }

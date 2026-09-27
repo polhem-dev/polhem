@@ -111,7 +111,7 @@ namespace Polhem.Base.UnitTests
             Assert.Equal(string.Empty, ValueUtilities.CStr(null!));
             Assert.Equal(string.Empty, ValueUtilities.CStr(DBNull.Value));
             Assert.Equal("abc", ValueUtilities.CStr("abc"));
-            Assert.Equal("Day", ValueUtilities.CStr(DateInterval.Day));
+            Assert.Equal("Day", ValueUtilities.CStr(TestInterval.Day));
             Assert.Equal("123", ValueUtilities.CStr(123));
         }
 
@@ -122,7 +122,7 @@ namespace Polhem.Base.UnitTests
             Assert.Equal("N/A", ValueUtilities.CStr(null!, "N/A"));
             Assert.Equal("N/A", ValueUtilities.CStr(DBNull.Value, "N/A"));
             Assert.Equal("abc", ValueUtilities.CStr("abc", "N/A"));
-            Assert.Equal("Day", ValueUtilities.CStr(DateInterval.Day, "N/A"));
+            Assert.Equal("Day", ValueUtilities.CStr(TestInterval.Day, "N/A"));
         }
 
         // ---- CBool ----
@@ -170,25 +170,25 @@ namespace Polhem.Base.UnitTests
         // ---- CEnum ----
 
         [Theory]
-        [InlineData("Day", DateInterval.Day)]
-        [InlineData("day", DateInterval.Day)] // case-insensitive by framework default
-        [InlineData("Hour", DateInterval.Hour)]
+        [InlineData("Day", TestInterval.Day)]
+        [InlineData("day", TestInterval.Day)] // case-insensitive by framework default
+        [InlineData("Hour", TestInterval.Hour)]
         [DisplayName("CEnum(string, Type) returns the matching enum value for a valid string (case-insensitive)")]
-        public void CEnum_ValidString_ReturnsEnumValue(string input, DateInterval expected)
+        public void CEnum_ValidString_ReturnsEnumValue(string input, TestInterval expected)
         {
             // This test deliberately calls the non-generic overload to verify its behavior.
 #pragma warning disable CA2263 // Prefer generic overload when type is known
-            var result = ValueUtilities.CEnum(input, typeof(DateInterval));
+            var result = ValueUtilities.CEnum(input, typeof(TestInterval));
 #pragma warning restore CA2263
-            Assert.Equal(expected, (DateInterval)result);
+            Assert.Equal(expected, (TestInterval)result);
         }
 
         [Fact]
         [DisplayName("CEnum<T>(string) returns the enum value for a valid string and throws ArgumentException for an invalid one")]
         public void CEnum_Generic_ValidAndInvalid_BehavesAsExpected()
         {
-            Assert.Equal(DateInterval.Day, ValueUtilities.CEnum<DateInterval>("Day"));
-            Assert.Throws<ArgumentException>(() => ValueUtilities.CEnum<DateInterval>("NotExist"));
+            Assert.Equal(TestInterval.Day, ValueUtilities.CEnum<TestInterval>("Day"));
+            Assert.Throws<ArgumentException>(() => ValueUtilities.CEnum<TestInterval>("NotExist"));
         }
 
         // ---- IsNumeric / ConvertToNumber ----
@@ -202,8 +202,8 @@ namespace Polhem.Base.UnitTests
             Assert.True(ValueUtilities.IsNumeric(false));
 
             // Enum
-            Assert.True(ValueUtilities.IsNumeric(DateInterval.Day));
-            Assert.True(ValueUtilities.IsNumeric(DateInterval.Hour));
+            Assert.True(ValueUtilities.IsNumeric(TestInterval.Day));
+            Assert.True(ValueUtilities.IsNumeric(TestInterval.Hour));
 
             // Numeric types
             Assert.True(ValueUtilities.IsNumeric(123));
@@ -243,7 +243,7 @@ namespace Polhem.Base.UnitTests
             Assert.Equal((double)123.45, ValueUtilities.ConvertToNumber("123.45"));
             Assert.Equal(1, ValueUtilities.ConvertToNumber(true));
             Assert.Equal(0, ValueUtilities.ConvertToNumber(false));
-            Assert.Equal((int)DateInterval.Day, ValueUtilities.ConvertToNumber(DateInterval.Day));
+            Assert.Equal((int)TestInterval.Day, ValueUtilities.ConvertToNumber(TestInterval.Day));
             Assert.Equal(123, ValueUtilities.ConvertToNumber(123));
             Assert.Equal(123.45m, ValueUtilities.ConvertToNumber(123.45m));
         }
@@ -291,7 +291,7 @@ namespace Polhem.Base.UnitTests
         [DisplayName("CInt returns the underlying integer of an enum")]
         public void CInt_Enum_ReturnsIntegerValue()
         {
-            Assert.Equal((int)DateInterval.Day, ValueUtilities.CInt(DateInterval.Day));
+            Assert.Equal((int)TestInterval.Day, ValueUtilities.CInt(TestInterval.Day));
         }
 
         [Fact]

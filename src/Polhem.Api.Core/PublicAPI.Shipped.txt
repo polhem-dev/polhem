@@ -25,7 +25,6 @@ Polhem.Api.Core.Authorization.ApiAuthorizationValidator.ApiAuthorizationValidato
 Polhem.Api.Core.Authorization.ApiAuthorizationValidator.Validate(Polhem.Api.Core.Authorization.ApiAuthorizationContext! context) -> Polhem.Api.Core.Authorization.ApiAuthorizationResult!
 Polhem.Api.Core.Authorization.IApiAuthorizationValidator
 Polhem.Api.Core.Authorization.IApiAuthorizationValidator.Validate(Polhem.Api.Core.Authorization.ApiAuthorizationContext! context) -> Polhem.Api.Core.Authorization.ApiAuthorizationResult!
-Polhem.Api.Core.Conversion.ApiInputConverter
 Polhem.Api.Core.Conversion.ApiOutputConverter
 Polhem.Api.Core.JsonRpc.ApiPayload
 Polhem.Api.Core.JsonRpc.ApiPayload.ApiPayload() -> void
@@ -45,10 +44,6 @@ Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Prepend(byte[]! body) -> byte[]!
 Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Sequence.get -> long
 Polhem.Api.Core.JsonRpc.ApiPayloadFrame.TimestampMs.get -> long
 Polhem.Api.Core.JsonRpc.ApiPayloadFrame.Version.get -> byte
-Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverter<T>
-Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverter<T>.ApiPayloadJsonConverter() -> void
-Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverterFactory
-Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverterFactory.ApiPayloadJsonConverterFactory() -> void
 Polhem.Api.Core.JsonRpc.DateTimeWireGuard
 Polhem.Api.Core.JsonRpc.DateTimeZoneConverter
 Polhem.Api.Core.JsonRpc.IReplayWindowStore
@@ -85,11 +80,9 @@ Polhem.Api.Core.JsonRpc.JsonRpcExecutor.AccessToken.get -> System.Guid
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.AccessToken.set -> void
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.ApiKeyValidation.get -> Polhem.Definition.Security.ApiKeyValidationResult!
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.ApiKeyValidation.set -> void
-Polhem.Api.Core.JsonRpc.JsonRpcExecutor.Execute(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request) -> Polhem.Api.Core.JsonRpc.JsonRpcResponse!
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.ExecuteAsync(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.JsonRpc.JsonRpcResponse!>!
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.IsLocalCall.get -> bool
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.IsLocalCall.set -> void
-Polhem.Api.Core.JsonRpc.JsonRpcExecutor.JsonRpcExecutor(Polhem.Definition.IBusinessObjectFactory! boFactory, Polhem.Definition.Security.IAccessTokenValidator! tokenValidator, Polhem.Definition.Security.IApiEncryptionKeyProvider! keyProvider, Polhem.Definition.Logging.IAnomalyLogWriter? anomalyWriter = null, Polhem.Definition.Settings.AuditLogOptions? auditOptions = null, Polhem.Definition.Identity.ISessionInfoService? sessionService = null) -> void
 Polhem.Api.Core.JsonRpc.JsonRpcParams
 Polhem.Api.Core.JsonRpc.JsonRpcParams.JsonRpcParams() -> void
 Polhem.Api.Core.JsonRpc.JsonRpcRequest
@@ -361,8 +354,6 @@ Polhem.Api.Core.Messages.System.CreateSessionRequest
 Polhem.Api.Core.Messages.System.CreateSessionRequest.CreateSessionRequest() -> void
 Polhem.Api.Core.Messages.System.CreateSessionRequest.ExpiresIn.get -> int
 Polhem.Api.Core.Messages.System.CreateSessionRequest.ExpiresIn.set -> void
-Polhem.Api.Core.Messages.System.CreateSessionRequest.OneTime.get -> bool
-Polhem.Api.Core.Messages.System.CreateSessionRequest.OneTime.set -> void
 Polhem.Api.Core.Messages.System.CreateSessionRequest.UserID.get -> string!
 Polhem.Api.Core.Messages.System.CreateSessionRequest.UserID.set -> void
 Polhem.Api.Core.Messages.System.CreateSessionResponse
@@ -597,16 +588,6 @@ Polhem.Api.Core.Transformers.MessagePackPayloadSerializer.Deserialize(byte[]! by
 Polhem.Api.Core.Transformers.MessagePackPayloadSerializer.MessagePackPayloadSerializer() -> void
 Polhem.Api.Core.Transformers.MessagePackPayloadSerializer.SerializationMethod.get -> string!
 Polhem.Api.Core.Transformers.MessagePackPayloadSerializer.Serialize(object! value, System.Type! type) -> byte[]!
-Polhem.Api.Core.Transformers.NoCompressionCompressor
-Polhem.Api.Core.Transformers.NoCompressionCompressor.Compress(byte[]! bytes) -> byte[]!
-Polhem.Api.Core.Transformers.NoCompressionCompressor.CompressionMethod.get -> string!
-Polhem.Api.Core.Transformers.NoCompressionCompressor.Decompress(byte[]! bytes) -> byte[]!
-Polhem.Api.Core.Transformers.NoCompressionCompressor.NoCompressionCompressor() -> void
-Polhem.Api.Core.Transformers.NoEncryptionEncryptor
-Polhem.Api.Core.Transformers.NoEncryptionEncryptor.Decrypt(byte[]! bytes, byte[]! encryptionKey) -> byte[]!
-Polhem.Api.Core.Transformers.NoEncryptionEncryptor.Encrypt(byte[]! bytes, byte[]! encryptionKey) -> byte[]!
-Polhem.Api.Core.Transformers.NoEncryptionEncryptor.EncryptionMethod.get -> string!
-Polhem.Api.Core.Transformers.NoEncryptionEncryptor.NoEncryptionEncryptor() -> void
 Polhem.Api.Core.Transformers.PayloadCodecNames
 Polhem.Api.Core.Validator.ApiAccessValidator
 Polhem.Api.Core.Validator.ApiCallContext
@@ -627,24 +608,17 @@ const Polhem.Api.Core.Messages.ApiHeaders.Authorization = "Authorization" -> str
 const Polhem.Api.Core.Messages.ApiHeaders.ContentType = "Content-Type" -> string!
 const Polhem.Api.Core.Transformers.PayloadCodecNames.Json = "json" -> string!
 const Polhem.Api.Core.Transformers.PayloadCodecNames.MessagePack = "messagepack" -> string!
-override Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverter<T>.Read(ref System.Text.Json.Utf8JsonReader reader, System.Type! typeToConvert, System.Text.Json.JsonSerializerOptions! options) -> T?
-override Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverter<T>.Write(System.Text.Json.Utf8JsonWriter! writer, T! value, System.Text.Json.JsonSerializerOptions! options) -> void
-override Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverterFactory.CanConvert(System.Type! typeToConvert) -> bool
-override Polhem.Api.Core.JsonRpc.ApiPayloadJsonConverterFactory.CreateConverter(System.Type! typeToConvert, System.Text.Json.JsonSerializerOptions! options) -> System.Text.Json.Serialization.JsonConverter!
 override Polhem.Api.Core.JsonRpc.PayloadSwap.Equals(object? obj) -> bool
 override Polhem.Api.Core.JsonRpc.PayloadSwap.GetHashCode() -> int
 static Polhem.Api.Core.ApiServiceOptions.AcceptedPayloadCodecs.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
 static Polhem.Api.Core.ApiServiceOptions.AuthorizationValidator.get -> Polhem.Api.Core.Authorization.IApiAuthorizationValidator!
 static Polhem.Api.Core.ApiServiceOptions.AuthorizationValidator.set -> void
-static Polhem.Api.Core.ApiServiceOptions.CurrentSettingsSummary.get -> string!
-static Polhem.Api.Core.ApiServiceOptions.Initialize(Polhem.Api.Core.Transformers.IApiPayloadSerializer! serializer, Polhem.Api.Core.Transformers.IApiPayloadCompressor! compressor, Polhem.Api.Core.Transformers.IApiPayloadEncryptor! encryptor) -> void
 static Polhem.Api.Core.ApiServiceOptions.Initialize(Polhem.Definition.Settings.ApiPayloadOptions! payloadOptions, bool isDebugMode) -> void
 static Polhem.Api.Core.ApiServiceOptions.PayloadCompressor.get -> Polhem.Api.Core.Transformers.IApiPayloadCompressor!
 static Polhem.Api.Core.ApiServiceOptions.PayloadCompressor.set -> void
 static Polhem.Api.Core.ApiServiceOptions.PayloadEncryptor.get -> Polhem.Api.Core.Transformers.IApiPayloadEncryptor!
 static Polhem.Api.Core.ApiServiceOptions.PayloadEncryptor.set -> void
 static Polhem.Api.Core.ApiServiceOptions.PayloadSerializer.get -> Polhem.Api.Core.Transformers.IApiPayloadSerializer!
-static Polhem.Api.Core.ApiServiceOptions.PayloadSerializer.set -> void
 static Polhem.Api.Core.ApiServiceOptions.PayloadTransformer.get -> Polhem.Api.Core.Transformers.IApiPayloadTransformer!
 static Polhem.Api.Core.ApiServiceOptions.PayloadTransformer.set -> void
 static Polhem.Api.Core.ApiServiceOptions.ReplayWindowStore.get -> Polhem.Api.Core.JsonRpc.IReplayWindowStore!
@@ -656,7 +630,6 @@ static Polhem.Api.Core.ApiServiceOptions.WireFrameTimestampTolerance.get -> Syst
 static Polhem.Api.Core.ApiServiceOptions.WireFrameTimestampTolerance.set -> void
 static Polhem.Api.Core.Authorization.ApiAuthorizationResult.Fail(Polhem.Api.Core.JsonRpc.JsonRpcErrorCode code, string! errorMessage) -> Polhem.Api.Core.Authorization.ApiAuthorizationResult!
 static Polhem.Api.Core.Authorization.ApiAuthorizationResult.Success(System.Guid accessToken) -> Polhem.Api.Core.Authorization.ApiAuthorizationResult!
-static Polhem.Api.Core.Conversion.ApiInputConverter.Convert(object! source, System.Type! targetType) -> object?
 static Polhem.Api.Core.Conversion.ApiOutputConverter.Convert(object! boResult) -> object?
 static Polhem.Api.Core.Conversion.ApiOutputConverter.ConvertResultValue<T>(object! value) -> T?
 static Polhem.Api.Core.JsonRpc.ApiPayloadConverter.RestoreFrom(Polhem.Api.Core.JsonRpc.ApiPayload! payload, Polhem.Api.Core.Messages.PayloadFormat sourceFormat, byte[]? encryptionKey = null) -> void

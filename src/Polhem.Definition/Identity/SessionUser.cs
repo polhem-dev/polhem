@@ -39,12 +39,6 @@ namespace Polhem.Definition.Identity
         public DateTime EndTime { get; set; } = DateTime.MinValue;
 
         /// <summary>
-        /// Gets or sets a value indicating whether this token is one-time use only.
-        /// </summary>
-        [DefaultValue(false)]
-        public bool OneTime { get; set; } = false;
-
-        /// <summary>
         /// Gets or sets the company the session is currently working in, or <c>null</c> when it
         /// has not entered one.
         /// </summary>

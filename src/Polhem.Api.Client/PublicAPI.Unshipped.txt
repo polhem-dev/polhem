@@ -1,1 +1,2 @@
 #nullable enable
+Polhem.Api.Client.Connectors.SystemApiConnector.CreateSessionAsync(string! userID, int expiresIn = 3600) -> System.Threading.Tasks.Task<System.Guid>!

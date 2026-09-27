@@ -168,7 +168,8 @@ judgement.
   (under contractless, changing it to a public setter leaks it silently).
 - Collections: `MessagePackCollectionBase<>` subtypes must have a formatter explicitly registered in `MessagePackCodec`,
   otherwise **deserialization** throws `MessagePackSerializationException` (the serializing side is correct, so it only
-  shows up on read-back); POLHEM4001 already guards this at build time. Definition collections must not be bare
+  shows up on read-back). The build-time rule that guarded this was Bee.NET's BEE4001; Polhem has no such rule
+  (POLHEM4001–4004 are reserved), so `WireContractDriftTests` is the guard. Definition collections must not be bare
   `List<T>`/`Collection<T>`.
 - Newtonsoft.Json leftovers (should be 0).
 
@@ -432,7 +433,8 @@ an earlier round removed `IEnterpriseObjectService`, `EnterpriseObjectService`, 
 `BoApiSurfaceTests`, `ApiContractPairingTests` (including `WireMessageTypes_IsNotEmpty` against false greens),
 `comparedCount > 0` in `TestFunc`, the **public API snapshot** (`PublicApiAnalyzers` + 16 pairs of baseline files +
 `docs/repo-ops/public-api-baseline.md` + `tools/scripts/gen-public-api.py`; the highest-leverage gap of the previous round
-is closed), the POLHEM4001–4006 serialization rules of `Polhem.Analyzers`, **POLHEM3003** (ExecFunc access control,
+is closed), the POLHEM4005–4006 serialization rules of `Polhem.Analyzers` (POLHEM4001–4004 are reserved: they were
+Bee.NET's BEE4001–4004, retired before Polhem), **POLHEM3003** (ExecFunc access control,
 added 2026-08-07).
 
 **The single highest-leverage improvement for next round**: extend `BoApiSurfaceTests` to "every baseline item can be

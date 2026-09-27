@@ -56,28 +56,6 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("The per-session properties of ApiClientInfo are facades over Ambient")]
-        public void ApiClientInfo_DelegatesToAmbient()
-        {
-            // The old API still works and shares its state with Ambient, so desktop hosts need no change.
-            var originalZone = ApiClientInfo.UserTimeZoneId;
-            var originalKey = ApiClientInfo.ApiEncryptionKey;
-            try
-            {
-                ApiClientInfo.UserTimeZoneId = "Asia/Tokyo";
-                Assert.Equal("Asia/Tokyo", ApiSessionContext.Ambient.UserTimeZoneId);
-
-                ApiSessionContext.Ambient.ApiEncryptionKey = [7, 7];
-                Assert.Equal([7, 7], ApiClientInfo.ApiEncryptionKey);
-            }
-            finally
-            {
-                ApiClientInfo.UserTimeZoneId = originalZone;
-                ApiClientInfo.ApiEncryptionKey = originalKey;
-            }
-        }
-
-        [Fact]
         [DisplayName("Constructing a connector with a null session throws instead of silently falling back to Ambient")]
         public void Connector_NullSession_Throws()
         {

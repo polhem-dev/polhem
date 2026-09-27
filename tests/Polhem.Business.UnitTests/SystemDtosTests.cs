@@ -91,13 +91,12 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateSessionArgs defaults to ExpiresIn=3600 and OneTime=false")]
+        [DisplayName("CreateSessionArgs defaults to ExpiresIn=3600")]
         public void CreateSessionArgs_Defaults()
         {
             var args = new CreateSessionArgs();
             Assert.Equal(string.Empty, args.UserID);
             Assert.Equal(3600, args.ExpiresIn);
-            Assert.False(args.OneTime);
         }
 
         [Fact]

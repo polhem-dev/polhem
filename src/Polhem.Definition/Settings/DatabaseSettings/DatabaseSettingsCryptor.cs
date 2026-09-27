@@ -12,10 +12,9 @@ namespace Polhem.Definition.Settings
     /// are skipped on encrypt; passwords without the prefix are left untouched on decrypt.
     /// </summary>
     /// <remarks>
-    /// Phase 5 split the crypto concern out of the serialization callbacks on
-    /// <see cref="DatabaseSettings"/> so the DTO stops reaching to process-wide static
-    /// state during serialization. Callers (<c>CacheDefineAccess</c> at read/save time)
-    /// inject the combined key explicitly.
+    /// Kept out of the serialization callbacks on <see cref="DatabaseSettings"/> so the DTO does
+    /// not reach to process-wide static state during serialization. Callers
+    /// (<c>CacheDefineAccess</c> at read/save time) inject the combined key explicitly.
     /// </remarks>
     public static class DatabaseSettingsCryptor
     {

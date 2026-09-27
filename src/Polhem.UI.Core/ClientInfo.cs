@@ -64,7 +64,7 @@ namespace Polhem.UI.Core
         /// <summary>
         /// Command-line arguments parsed at <see cref="InitializeAsync(IUIViewService, SupportedConnectTypes)"/>.
         /// </summary>
-        public static Dictionary<string, string>? Arguments { get; private set; }
+        public static IReadOnlyDictionary<string, string>? Arguments { get; private set; }
 
         /// <summary>
         /// Endpoint persistence backend.
@@ -298,7 +298,7 @@ namespace Polhem.UI.Core
             // The time zone goes with it. Once the session is gone that zone belongs to nobody,
             // and leaving it behind means it would be used for conversions before the next sign-in
             // (ADR-032 D13). `ApplyLoginResult` fills it in again on the way back.
-            ApiClientInfo.UserTimeZoneId = string.Empty;
+            ApiSessionContext.Ambient.UserTimeZoneId = string.Empty;
         }
 
         /// <summary>
@@ -463,7 +463,7 @@ namespace Polhem.UI.Core
             };
             // The Connector layer sits below this one, so it cannot read UserInfo — hand it the zone
             // it needs to convert payloads with (ADR-032 D4).
-            ApiClientInfo.UserTimeZoneId = UserInfo.TimeZone;
+            ApiSessionContext.Ambient.UserTimeZoneId = UserInfo.TimeZone;
             // NOTE: any further post-sign-in state belongs here.
         }
 

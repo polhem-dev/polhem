@@ -19,7 +19,7 @@ namespace Polhem.Db
     /// Provides IL-based mapping functionality from <see cref="DbDataReader"/> to type <typeparamref name="T"/>.
     /// </summary>
     /// <typeparam name="T">The target type.</typeparam>
-    public static class ILMapper<T>
+    internal static class ILMapper<T>
     {
         /// <summary>
         /// Clears the cached mapping delegates for type <typeparamref name="T"/>.
@@ -57,21 +57,6 @@ namespace Polhem.Db
             var mapper = CreateMapper(fieldIndexes);
             ILMapperCache.Entries[key] = mapper;
             return mapper;
-        }
-
-        /// <summary>
-        /// Maps all rows from a <see cref="DbDataReader"/> to a <see cref="List{T}"/> using the specified mapper function.
-        /// </summary>
-        /// <param name="mapper">The mapping function.</param>
-        /// <param name="reader">The DbDataReader containing the query results.</param>
-        public static List<T> MapToList(DbDataReader reader, Func<DbDataReader, T> mapper)
-        {
-            var list = new List<T>();
-            while (reader.Read())
-            {
-                list.Add(mapper(reader));
-            }
-            return list;
         }
 
         /// <summary>

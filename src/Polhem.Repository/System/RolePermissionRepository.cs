@@ -14,7 +14,7 @@ namespace Polhem.Repository.System
     /// relations use <c>sys_id</c> business keys (role / user), matching the sys_id-only permission
     /// cache; row ids are reserved for single-record access.
     /// </summary>
-    public class RolePermissionRepository : RepositoryBase, IRolePermissionRepository
+    internal sealed class RolePermissionRepository : RepositoryBase, IRolePermissionRepository
     {
         private const string ColRoleId = "role_id";
 

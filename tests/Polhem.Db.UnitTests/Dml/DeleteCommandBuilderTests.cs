@@ -17,8 +17,8 @@ namespace Polhem.Db.UnitTests.Dml
             table.DbTableName = "st_employee";
             table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
             table.Fields!.Add(SysFields.MasterRowId, "Master Row ID", FieldDbType.Guid);
-            table.Fields!.AddStringField("sys_id", "Employee Id", 50);
-            table.Fields!.AddStringField("ref_dept_name", "Department Name", 100);
+            table.Fields!.Add(new FormField("sys_id", "Employee Id", FieldDbType.String) { MaxLength = 50 });
+            table.Fields!.Add(new FormField("ref_dept_name", "Department Name", FieldDbType.String) { MaxLength = 100 });
             table.Fields!["ref_dept_name"].Type = FieldType.RelationField;
             return schema;
         }

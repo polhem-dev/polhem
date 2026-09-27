@@ -120,7 +120,6 @@ Polhem.Api.Contracts.System.ICreateApiKeyResponse.ApiKey.get -> string!
 Polhem.Api.Contracts.System.ICreateApiKeyResponse.SysId.get -> string!
 Polhem.Api.Contracts.System.ICreateSessionRequest
 Polhem.Api.Contracts.System.ICreateSessionRequest.ExpiresIn.get -> int
-Polhem.Api.Contracts.System.ICreateSessionRequest.OneTime.get -> bool
 Polhem.Api.Contracts.System.ICreateSessionRequest.UserID.get -> string!
 Polhem.Api.Contracts.System.ICreateSessionResponse
 Polhem.Api.Contracts.System.ICreateSessionResponse.AccessToken.get -> System.Guid

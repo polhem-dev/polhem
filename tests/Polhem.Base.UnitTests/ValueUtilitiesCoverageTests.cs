@@ -34,7 +34,7 @@ namespace Polhem.Base.UnitTests
         [DisplayName("CStr returns the name of an enum and the ToString result of other objects")]
         public void CStr_EnumAndObject_ReturnsExpectedString()
         {
-            Assert.Equal("Hour", ValueUtilities.CStr(DateInterval.Hour));
+            Assert.Equal("Hour", ValueUtilities.CStr(TestInterval.Hour));
             Assert.Equal("42", ValueUtilities.CStr(42));
             Assert.Equal("3.5", ValueUtilities.CStr(3.5));
         }

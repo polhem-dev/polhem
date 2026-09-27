@@ -42,11 +42,11 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("An ordinary action on the test business object succeeds, so the refusals below are about resolution")]
-        public void Execute_OrdinaryAction_Succeeds()
+        public async Task Execute_OrdinaryAction_Succeeds()
         {
             var bo = new ExposedBusinessObject();
 
-            var response = NewExecutor(bo).Execute(Request(nameof(ExposedBusinessObject.Echo), "hello"));
+            var response = await NewExecutor(bo).ExecuteAsync(Request(nameof(ExposedBusinessObject.Echo), "hello"));
 
             Assert.Null(response.Error);
             Assert.Equal("hello", bo.LastCall);
@@ -60,11 +60,11 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         [InlineData(nameof(ExposedBusinessObject.Equals))]
         [InlineData(nameof(ExposedBusinessObject.NoArguments))]
         [DisplayName("An action name does not resolve to accessors, static or generic methods, object overrides, or other signatures")]
-        public void Execute_UnresolvableMember_IsRefusedWithoutInvoking(string action)
+        public async Task Execute_UnresolvableMember_IsRefusedWithoutInvoking(string action)
         {
             var bo = new ExposedBusinessObject();
 
-            var response = NewExecutor(bo).Execute(Request(action, "payload"));
+            var response = await NewExecutor(bo).ExecuteAsync(Request(action, "payload"));
 
             Assert.NotNull(response.Error);
             Assert.Equal((int)JsonRpcErrorCode.InternalError, response.Error!.Code);
@@ -75,11 +75,11 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("An encoded body is decoded into the parameter type the method declares")]
-        public void Execute_EncodedMatchingBody_IsDecodedAndInvoked()
+        public async Task Execute_EncodedMatchingBody_IsDecodedAndInvoked()
         {
             var bo = new ExposedBusinessObject();
 
-            var response = NewExecutor(bo).Execute(
+            var response = await NewExecutor(bo).ExecuteAsync(
                 Request(nameof(ExposedBusinessObject.Accept), new PingRequest { TraceId = "t-1" }, PayloadFormat.Encoded));
 
             Assert.Null(response.Error);
@@ -88,11 +88,11 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("An encoded body declaring another type is refused and the method is not invoked")]
-        public void Execute_EncodedBodyOfAnotherType_IsRefused()
+        public async Task Execute_EncodedBodyOfAnotherType_IsRefused()
         {
             var bo = new ExposedBusinessObject();
 
-            var response = NewExecutor(bo).Execute(
+            var response = await NewExecutor(bo).ExecuteAsync(
                 Request(nameof(ExposedBusinessObject.Accept), new FilterGroup(LogicalOperator.And), PayloadFormat.Encoded));
 
             Assert.NotNull(response.Error);
@@ -101,7 +101,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A BCL exception reaches the caller as a fixed message, and its real message is logged")]
-        public void Execute_BclException_ReturnsFixedMessageAndLogsRealOne()
+        public async Task Execute_BclException_ReturnsFixedMessageAndLogsRealOne()
         {
             var logger = new ListLogger();
             bool original = SysInfo.IsDebugMode;
@@ -109,8 +109,8 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             {
                 SysInfo.IsDebugMode = false;
 
-                var response = NewExecutor(new ExposedBusinessObject(), logger)
-                    .Execute(Request(nameof(ExposedBusinessObject.FailInternally), "x"));
+                var response = await NewExecutor(new ExposedBusinessObject(), logger)
+                    .ExecuteAsync(Request(nameof(ExposedBusinessObject.FailInternally), "x"));
 
                 Assert.Equal((int)JsonRpcErrorCode.UserMessage, response.Error!.Code);
                 Assert.Equal("The request could not be completed.", response.Error.Message);
@@ -128,7 +128,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A UserMessageException reaches the caller verbatim and is not logged as masked")]
-        public void Execute_UserMessageException_ReturnsItsMessage()
+        public async Task Execute_UserMessageException_ReturnsItsMessage()
         {
             var logger = new ListLogger();
             bool original = SysInfo.IsDebugMode;
@@ -136,8 +136,8 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             {
                 SysInfo.IsDebugMode = false;
 
-                var response = NewExecutor(new ExposedBusinessObject(), logger)
-                    .Execute(Request(nameof(ExposedBusinessObject.FailForUser), "x"));
+                var response = await NewExecutor(new ExposedBusinessObject(), logger)
+                    .ExecuteAsync(Request(nameof(ExposedBusinessObject.FailForUser), "x"));
 
                 Assert.Equal((int)JsonRpcErrorCode.UserMessage, response.Error!.Code);
                 Assert.Equal("Shown to the user.", response.Error.Message);
@@ -151,11 +151,11 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A call to an authenticated method without a valid token answers with the Unauthorized code (-32001)")]
-        public void Execute_AuthenticatedMethodWithoutToken_ReturnsUnauthorizedCode()
+        public async Task Execute_AuthenticatedMethodWithoutToken_ReturnsUnauthorizedCode()
         {
             var bo = new ExposedBusinessObject();
 
-            var response = NewExecutor(bo).Execute(Request(nameof(ExposedBusinessObject.SignedInOnly), "x"));
+            var response = await NewExecutor(bo).ExecuteAsync(Request(nameof(ExposedBusinessObject.SignedInOnly), "x"));
 
             Assert.Equal((int)JsonRpcErrorCode.Unauthorized, response.Error!.Code);
             Assert.Equal("AccessToken is required or invalid.", response.Error.Message);

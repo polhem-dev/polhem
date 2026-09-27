@@ -26,7 +26,7 @@ namespace Polhem.Api.Core.UnitTests.Form
 
         [Fact]
         [DisplayName("Employee.GetNewData through JsonRpcExecutor dispatches to the BO and returns the stub skeleton DataSet")]
-        public void GetNewData_ThroughJsonRpc_DispatchesAndReturnsDataSet()
+        public async Task GetNewData_ThroughJsonRpc_DispatchesAndReturnsDataSet()
         {
             var skeleton = new DataSet("Employee");
             var master = new DataTable("Employee");
@@ -66,7 +66,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var result = Assert.IsType<GetNewDataResponse>(response.Result!.Value);

@@ -32,7 +32,7 @@ namespace Polhem.Api.Core.UnitTests.Organization
             // The index is rebuilt lazily after deserialization.
             Assert.Equal(3, restored.GetSelfAndDescendants(hq).Count);
             Assert.Equal(2, restored.GetSelfAndDescendants(sales).Count);
-            Assert.Equal(new[] { sales1, sales, hq }, restored.GetSelfAndAncestors(sales1)); // The nested parent chain is restored.
+            Assert.Equal(new[] { sales, sales1 }, restored.GetSelfAndDescendants(sales)); // The nesting is restored.
         }
 
         [Fact]

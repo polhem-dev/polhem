@@ -57,7 +57,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.LeaveCompany clears SessionInfo.CompanyId and succeeds")]
-        public void LeaveCompany_AfterEntered_ClearsCompanyId()
+        public async Task LeaveCompany_AfterEntered_ClearsCompanyId()
         {
             // Arrange
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -67,7 +67,7 @@ namespace Polhem.Api.Core.UnitTests.System
             sessionService.Set(session);
 
             // Act
-            var response = BuildExecutor(accessToken).Execute(BuildRequest());
+            var response = await BuildExecutor(accessToken).ExecuteAsync(BuildRequest());
 
             // Assert
             Assert.Null(response.Error);
@@ -77,13 +77,13 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.LeaveCompany is idempotent and succeeds when no company has been entered")]
-        public void LeaveCompany_WhenNotEntered_Idempotent()
+        public async Task LeaveCompany_WhenNotEntered_Idempotent()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
             Assert.Null(sessionService.Get(accessToken)!.CompanyId);
 
-            var response = BuildExecutor(accessToken).Execute(BuildRequest());
+            var response = await BuildExecutor(accessToken).ExecuteAsync(BuildRequest());
 
             Assert.Null(response.Error);
             Assert.IsType<LeaveCompanyResponse>(response.Result!.Value);

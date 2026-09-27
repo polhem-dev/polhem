@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Data;
-using Polhem.Base.Data;
 using Polhem.Base.Serialization;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Base.UnitTests
 {
@@ -20,8 +20,8 @@ namespace Polhem.Base.UnitTests
         /// </summary>
         private static DataTable JsonRoundTripTable(DataTable table)
         {
-            string json = JsonCodec.Serialize(table, includeTypeName: false);
-            return JsonCodec.Deserialize<DataTable>(json, includeTypeName: false)!;
+            string json = JsonCodec.Serialize(table);
+            return JsonCodec.Deserialize<DataTable>(json)!;
         }
 
         /// <summary>
@@ -29,8 +29,8 @@ namespace Polhem.Base.UnitTests
         /// </summary>
         private static DataSet JsonRoundTripDataSet(DataSet dataSet)
         {
-            string json = JsonCodec.Serialize(dataSet, includeTypeName: false);
-            return JsonCodec.Deserialize<DataSet>(json, includeTypeName: false)!;
+            string json = JsonCodec.Serialize(dataSet);
+            return JsonCodec.Deserialize<DataSet>(json)!;
         }
 
         #endregion
@@ -449,8 +449,8 @@ namespace Polhem.Base.UnitTests
         [DisplayName("DataTable JSON serialization restores a null DataTable as null")]
         public void DataTable_JsonSerialize_Null_ReturnsNull()
         {
-            string json = JsonCodec.Serialize((DataTable?)null!, includeTypeName: false);
-            var restored = JsonCodec.Deserialize<DataTable?>(json, includeTypeName: false);
+            string json = JsonCodec.Serialize((DataTable?)null!);
+            var restored = JsonCodec.Deserialize<DataTable?>(json);
 
             Assert.Null(restored);
         }

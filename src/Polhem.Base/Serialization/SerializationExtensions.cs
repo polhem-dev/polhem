@@ -24,26 +24,6 @@ namespace Polhem.Base.Serialization
         }
 
         /// <summary>
-        /// Serializes the object to an XML file.
-        /// </summary>
-        /// <param name="value">The object to serialize.</param>
-        /// <param name="filePath">The XML file path.</param>
-        public static void ToXmlFile(this IObjectSerializeFile value, string filePath)
-        {
-            XmlCodec.SerializeToFile(value, filePath);
-        }
-
-        /// <summary>
-        /// Serializes the object to a JSON file.
-        /// </summary>
-        /// <param name="value">The object to serialize.</param>
-        /// <param name="filePath">The JSON file path.</param>
-        public static void ToJsonFile(this IObjectSerializeFile value, string filePath)
-        {
-            JsonCodec.SerializeToFile(value, filePath);
-        }
-
-        /// <summary>
         /// Saves the object to its bound file path.
         /// </summary>
         /// <param name="value">The object to save.</param>

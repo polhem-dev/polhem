@@ -32,7 +32,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
 
         public AuditLogJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
-        private JsonRpcResponse Dispatch(StubAuditLogRepository repo, string action, object request)
+        private async Task<JsonRpcResponse> Dispatch(StubAuditLogRepository repo, string action, object request)
         {
             var overrideServices = new TestOverrideServiceProvider(
                 _fx.Provider,
@@ -56,7 +56,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
                 IsLocalCall = true,
             };
 
-            return executor.Execute(new JsonRpcRequest
+            return await executor.ExecuteAsync(new JsonRpcRequest
             {
                 Method = $"{SysProgIds.AuditLog}.{action}",
                 Params = new JsonRpcParams { Value = request },
@@ -66,10 +66,10 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
 
         [Fact]
         [DisplayName("AuditLog.GetChangeLog dispatches through the executor and returns the header DataTable with paging")]
-        public void GetChangeLog_ThroughJsonRpc_Dispatches()
+        public async Task GetChangeLog_ThroughJsonRpc_Dispatches()
         {
             var repo = new StubAuditLogRepository(HeaderPage(2), null);
-            var response = Dispatch(repo, LogActions.GetChangeLog,
+            var response = await Dispatch(repo, LogActions.GetChangeLog,
                 new GetChangeLogRequest { ProgId = "Employee", ChangeKind = ChangeKind.Update });
 
             Assert.Null(response.Error);
@@ -80,11 +80,11 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
 
         [Fact]
         [DisplayName("AuditLog.GetChangeDetail dispatches through the executor and returns the restored header with no DataSet for an empty payload")]
-        public void GetChangeDetail_ThroughJsonRpc_Dispatches()
+        public async Task GetChangeDetail_ThroughJsonRpc_Dispatches()
         {
             var sysRowId = Guid.NewGuid();
             var repo = new StubAuditLogRepository(HeaderPage(0), DetailRow(sysRowId));
-            var response = Dispatch(repo, LogActions.GetChangeDetail,
+            var response = await Dispatch(repo, LogActions.GetChangeDetail,
                 new GetChangeDetailRequest { SysRowId = sysRowId });
 
             Assert.Null(response.Error);
@@ -96,13 +96,13 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
 
         [Fact]
         [DisplayName("AuditLog.GetChangeDetail through the executor carries the restored DataSet to the wire response")]
-        public void GetChangeDetail_ThroughJsonRpc_CarriesDataSet()
+        public async Task GetChangeDetail_ThroughJsonRpc_CarriesDataSet()
         {
             var sysRowId = Guid.NewGuid();
             var repo = new StubAuditLogRepository(HeaderPage(0),
                 DetailRow(sysRowId, ChangeKind.Update, SchemaBoundChangePayload()));
 
-            var response = Dispatch(repo, LogActions.GetChangeDetail,
+            var response = await Dispatch(repo, LogActions.GetChangeDetail,
                 new GetChangeDetailRequest { SysRowId = sysRowId });
 
             Assert.Null(response.Error);
@@ -141,7 +141,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         [InlineData("GetApiAnomalyLog")]
         [InlineData("GetDbAnomalyLog")]
         [DisplayName("Each AuditLog list action dispatches through the executor and returns a LogListResponse")]
-        public void ListActions_ThroughJsonRpc_ReturnLogListResponse(string action)
+        public async Task ListActions_ThroughJsonRpc_ReturnLogListResponse(string action)
         {
             var repo = new StubAuditLogRepository(HeaderPage(2), null);
             object request = action switch
@@ -152,7 +152,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
                 _ => new GetDbAnomalyLogRequest { DatabaseId = "company", Kind = AnomalyKind.Timeout },
             };
 
-            var response = Dispatch(repo, action, request);
+            var response = await Dispatch(repo, action, request);
 
             Assert.Null(response.Error);
             var result = Assert.IsType<LogListResponse>(response.Result!.Value);
@@ -165,7 +165,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         [InlineData("GetDbAnomalySummary")]
         [InlineData("GetTopApiMethods")]
         [DisplayName("Each AuditLog aggregate action dispatches through the executor and returns a LogAggregateResponse")]
-        public void AggregateActions_ThroughJsonRpc_ReturnLogAggregateResponse(string action)
+        public async Task AggregateActions_ThroughJsonRpc_ReturnLogAggregateResponse(string action)
         {
             var repo = new StubAuditLogRepository(HeaderPage(0), null);
             object request = action switch
@@ -175,7 +175,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
                 _ => new GetTopApiMethodsRequest { TopN = 5 },
             };
 
-            var response = Dispatch(repo, action, request);
+            var response = await Dispatch(repo, action, request);
 
             Assert.Null(response.Error);
             var result = Assert.IsType<LogAggregateResponse>(response.Result!.Value);

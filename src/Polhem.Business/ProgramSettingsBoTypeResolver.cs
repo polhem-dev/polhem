@@ -4,7 +4,6 @@ using Polhem.Business.Form;
 using Polhem.Definition.Customization;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
-using Microsoft.Extensions.Logging;
 
 namespace Polhem.Business
 {
@@ -100,27 +99,6 @@ namespace Polhem.Business
         {
             _defineAccess = defineAccess ?? throw new ArgumentNullException(nameof(defineAccess));
             _customizeReader = customizeReader;
-        }
-
-        /// <summary>
-        /// Initializes a new <see cref="ProgramSettingsBoTypeResolver"/> with an optional
-        /// tenant customization reader. The logger is no longer used and is ignored.
-        /// </summary>
-        /// <param name="defineAccess">The define access used to load <see cref="ProgramSettings"/>.</param>
-        /// <param name="customizeReader">The customization-override reader; <c>null</c> disables the overlay (pure base layer).</param>
-        /// <param name="logger">
-        /// Ignored. It received the degrade notices that existed while an unresolvable ordinary
-        /// binding fell back to <see cref="FormBusinessObject"/>; every such binding now throws, so
-        /// there is nothing left to report. The overload is kept so existing call sites still
-        /// compile and bind.
-        /// </param>
-        public ProgramSettingsBoTypeResolver(
-            IDefineAccess defineAccess,
-            ICustomizeDefineReader? customizeReader,
-            ILogger<ProgramSettingsBoTypeResolver>? logger)
-            : this(defineAccess, customizeReader)
-        {
-            _ = logger;
         }
 
         /// <summary>
@@ -260,8 +238,10 @@ namespace Polhem.Business
             ReservedProgIdBinding? reserved, string progId, string typeName, string origin, Exception? inner)
         {
             return new InvalidOperationException(
-                $"ProgramSettings registers {Subject(reserved, progId)} as '{typeName}' ({origin}), which cannot be loaded. " +
-                "Fix the assembly-qualified type name, or clear the binding to fall back to the framework default.",
+                BeeNameHint.AppendTo(
+                    $"ProgramSettings registers {Subject(reserved, progId)} as '{typeName}' ({origin}), which cannot be loaded. " +
+                    "Fix the assembly-qualified type name, or clear the binding to fall back to the framework default.",
+                    typeName),
                 inner);
         }
 

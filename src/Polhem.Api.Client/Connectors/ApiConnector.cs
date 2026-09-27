@@ -1,7 +1,6 @@
 using Polhem.Api.Core;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Base;
-using Polhem.Base.Tracing;
 using Polhem.Api.Client.Providers;
 using Polhem.Api.Core.Conversion;
 using Polhem.Api.Core.Messages;
@@ -123,44 +122,33 @@ namespace Polhem.Api.Client.Connectors
         protected async Task<T> ExecuteAsync<T>(string progId, string action, object value, PayloadFormat format)
         {
             ValidateArgs(progId, action);
-            var ctx = Tracer.Start(TraceLayers.ApiClient, string.Empty, name: $"ExecuteAsync.{progId}.{action}");
-            try
+
+            // The Connector is the only place time zones are applied (ADR-032 D4). A response
+            // converts into the user's zone. A request converts only its filter values: a data set
+            // is copied but not converted, because the server does not take DateTime values from a
+            // save. The swap is undone before returning so the caller's own request object is left
+            // exactly as it was handed over.
+            var timeZoneId = UserTimeZoneId;
+
+            // Guard the caller's own value before the filter conversion (ADR-032 D6). Conversion
+            // rewrites filter values to Kind=Unspecified, so a guard placed after it would pass
+            // every Kind=Local value on any signed-in call. It also sits ahead of every transform
+            // because in-process calls skip serialization, making this the one point both
+            // transports pass through.
+            DateTimeWireGuard.Validate(value);
+
+            T result;
+            using (PayloadZoneConverter.IsolateRequest(value, timeZoneId))
             {
-                // The Connector is the only place time zones are applied (ADR-032 D4). A response
-                // converts into the user's zone. A request converts only its filter values: a data set
-                // is copied but not converted, because the server does not take DateTime values from a
-                // save. The swap is undone before returning so the caller's own request object is left
-                // exactly as it was handed over.
-                var timeZoneId = UserTimeZoneId;
+                var (request, actualFormat) = PrepareRequest(progId, action, value, format);
 
-                // Guard the caller's own value before the filter conversion (ADR-032 D6). Conversion
-                // rewrites filter values to Kind=Unspecified, so a guard placed after it would pass
-                // every Kind=Local value on any signed-in call. It also sits ahead of every transform
-                // because in-process calls skip serialization, making this the one point both
-                // transports pass through.
-                DateTimeWireGuard.Validate(value);
+                // Invoke the JSON-RPC method (remote or local)
+                var response = await this.Provider.ExecuteAsync(request).ConfigureAwait(false);
 
-                T result;
-                using (PayloadZoneConverter.IsolateRequest(value, timeZoneId))
-                {
-                    var (request, actualFormat) = PrepareRequest(progId, action, value, format);
-
-                    // Invoke the JSON-RPC method (remote or local)
-                    var response = await this.Provider.ExecuteAsync(request).ConfigureAwait(false);
-
-                    result = FinalizeResponse<T>(response, actualFormat);
-                }
-                PayloadZoneConverter.ToUserZone(result, timeZoneId);
-                Tracer.End(ctx);
-                return result;
+                result = FinalizeResponse<T>(response, actualFormat);
             }
-            catch (Exception ex)
-            {
-                // Boundary: record any failure of the remote/local call on the trace span, then
-                // rethrow unchanged (preserving the stack). A catch-all is intentional here.
-                Tracer.End(ctx, TraceStatus.Error, ex.Message);
-                throw;
-            }
+            PayloadZoneConverter.ToUserZone(result, timeZoneId);
+            return result;
         }
 
         /// <summary>
@@ -184,19 +172,18 @@ namespace Polhem.Api.Client.Connectors
         }
 
         /// <summary>
-        /// Builds the JSON-RPC request, traces it, and transforms its payload to the target format.
+        /// Builds the JSON-RPC request and transforms its payload to the target format.
         /// </summary>
         private (JsonRpcRequest request, PayloadFormat actualFormat) PrepareRequest(
             string progId, string action, object value, PayloadFormat format)
         {
             var request = CreateRequest(progId, action, value);
-            TraceRequest(request);
             var actualFormat = TransformRequestPayload(request, format);
             return (request, actualFormat);
         }
 
         /// <summary>
-        /// Traces the response, checks for errors, restores the payload, and converts the result value.
+        /// Checks the response for errors, restores the payload, and converts the result value.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -204,8 +191,8 @@ namespace Polhem.Api.Client.Connectors
         /// the same declaration in <see cref="JsonRpcErrorContract"/> — a code that declares an
         /// exception type is rebuilt as that type carrying the original message with no prefix, so
         /// callers can <c>catch</c> the type instead of comparing integers. Everything else wraps
-        /// into <see cref="InvalidOperationException"/> with the legacy
-        /// <c>"API error: {code} - {message}"</c> format to preserve existing catch logic.
+        /// into <see cref="InvalidOperationException"/> with the message
+        /// <c>"API error: {code} - {message}"</c>.
         /// </para>
         /// <para>
         /// Adding a new exception type to the wire is therefore one edit, in the contract. It used
@@ -217,7 +204,6 @@ namespace Polhem.Api.Client.Connectors
         /// </remarks>
         private T FinalizeResponse<T>(JsonRpcResponse response, PayloadFormat actualFormat)
         {
-            TraceResponse(response);
             if (response.Error != null)
             {
                 if (JsonRpcErrorContract.TryRebuild(response.Error.Code, response.Error.Message, out var rebuilt))
@@ -314,26 +300,5 @@ namespace Polhem.Api.Client.Connectors
 
             ApiPayloadConverter.RestoreFrom(response.Result!, format, Session.ApiEncryptionKey);
         }
-
-        /// <summary>
-        /// Traces the JSON-RPC request model.
-        /// </summary>
-        /// <param name="request">The JSON-RPC request model.</param>
-        private static void TraceRequest(JsonRpcRequest request)
-        {
-            if (!Tracer.Enabled || request == null) return;
-            Tracer.Write(TraceLayers.ApiClient, string.Empty, TraceStatus.Ok, TraceCategories.JsonRpc, request, name: $"Request  - {request.Method}");
-        }
-
-        /// <summary>
-        /// Traces the JSON-RPC response model.
-        /// </summary>
-        /// <param name="response">The JSON-RPC response model.</param>
-        private static void TraceResponse(JsonRpcResponse response)
-        {
-            if (!Tracer.Enabled || response == null) return;
-            Tracer.Write(TraceLayers.ApiClient, string.Empty, TraceStatus.Ok, TraceCategories.JsonRpc, response, name: $"Response - {response.Method}");
-        }
-
     }
 }

@@ -7,7 +7,7 @@ namespace Polhem.Definition.Organization
     /// A per-company department tree snapshot, keyed by company id. The serialisable state is the
     /// nested <see cref="Roots"/> forest — each <see cref="DepartmentNode"/> carries its children —
     /// so XML / JSON / MessagePack all round-trip the hierarchy directly (a front end renders it as
-    /// a tree without re-assembly). The query index (row-id lookup, parent map) is built lazily and
+    /// a tree without re-assembly). The query index (row-id lookup) is built lazily and
     /// never serialised.
     /// </summary>
     /// <remarks>
@@ -18,8 +18,9 @@ namespace Polhem.Definition.Organization
     /// <para>
     /// WARNING: this is a cache-shared instance. It must not be mutated after construction — every
     /// session in the company receives the same reference, and the tree drives record-scope
-    /// authorization, so a mutation changes what other sessions may read. The setters exist for the
-    /// serializers, not for callers: treat an instance handed to you by the cache as frozen. See
+    /// authorization, so a mutation changes what other sessions may read. The properties are
+    /// init-only; the node collections are still mutable, so treat an instance handed to you by the
+    /// cache as frozen. See
     /// <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
     /// </para>
     /// </remarks>
@@ -43,13 +44,13 @@ namespace Polhem.Definition.Organization
             Roots = BuildForest(rows ?? []);
         }
 
-        /// <summary>Gets or sets the company id (cache key).</summary>
+        /// <summary>Gets the company id (cache key).</summary>
         [XmlAttribute]
-        public string CompanyId { get; set; } = string.Empty;
+        public string CompanyId { get; init; } = string.Empty;
 
-        /// <summary>Gets or sets the root department nodes (each nests its children); the serialised state.</summary>
+        /// <summary>Gets the root department nodes (each nests its children); the serialised state.</summary>
         [XmlArrayItem(typeof(DepartmentNode))]
-        public DepartmentNodeCollection? Roots { get; set; }
+        public DepartmentNodeCollection? Roots { get; init; }
 
         /// <summary>
         /// Gets the item key value (the company id).
@@ -77,7 +78,7 @@ namespace Polhem.Definition.Organization
                     && nodes.TryGetValue(parentRowId, out var parent)
                     && IsSafeEdge(rowId, parentRowId, parentOf))
                 {
-                    (parent.Children ??= []).Add(nodes[rowId]);
+                    parent.GetOrCreateChildren().Add(nodes[rowId]);
                 }
                 else
                 {
@@ -105,7 +106,6 @@ namespace Polhem.Definition.Organization
 
         // ---- lazy query index (not serialised) ----
         private Dictionary<Guid, DepartmentNode>? _byRowId;
-        private Dictionary<Guid, Guid>? _parentOf;
         private readonly object _indexLock = new();
         private volatile bool _indexBuilt;
 
@@ -117,20 +117,17 @@ namespace Polhem.Definition.Organization
                 if (_indexBuilt) { return; }
 
                 var byRowId = new Dictionary<Guid, DepartmentNode>();
-                var parentOf = new Dictionary<Guid, Guid>();
-                var stack = new Stack<(DepartmentNode node, Guid parentRowId)>();
-                foreach (var root in Roots ?? []) { stack.Push((root, Guid.Empty)); }
+                var stack = new Stack<DepartmentNode>();
+                foreach (var root in Roots ?? []) { stack.Push(root); }
                 while (stack.Count > 0)
                 {
-                    var (node, parentRowId) = stack.Pop();
+                    var node = stack.Pop();
                     // TryAdd guards against a shared/duplicate node reference looping the walk.
                     if (!byRowId.TryAdd(node.RowId, node)) { continue; }
-                    parentOf[node.RowId] = parentRowId;
-                    foreach (var child in node.Children ?? []) { stack.Push((child, node.RowId)); }
+                    foreach (var child in node.Children ?? []) { stack.Push(child); }
                 }
 
                 _byRowId = byRowId;
-                _parentOf = parentOf;
                 _indexBuilt = true;
             }
         }
@@ -159,42 +156,12 @@ namespace Polhem.Definition.Organization
             return result;
         }
 
-        /// <summary>
-        /// Returns the row id of the given department plus all of its ancestors up to the root.
-        /// Returns an empty list when the department is not in the tree.
-        /// </summary>
-        /// <param name="deptRowId">The department row id.</param>
-        public IReadOnlyList<Guid> GetSelfAndAncestors(Guid deptRowId)
-        {
-            EnsureIndex();
-            if (!_byRowId!.ContainsKey(deptRowId)) { return []; }
-
-            var result = new List<Guid>();
-            var visited = new HashSet<Guid>();
-            var current = deptRowId;
-            while (visited.Add(current) && _byRowId.ContainsKey(current))
-            {
-                result.Add(current);
-                if (!_parentOf!.TryGetValue(current, out var parent) || parent == Guid.Empty) { break; }
-                current = parent;
-            }
-            return result;
-        }
-
         /// <summary>Returns whether the tree contains a department with the given row id.</summary>
         /// <param name="deptRowId">The department row id.</param>
         public bool Contains(Guid deptRowId)
         {
             EnsureIndex();
             return _byRowId!.ContainsKey(deptRowId);
-        }
-
-        /// <summary>Gets the department node by row id, or <c>null</c> when not in the tree.</summary>
-        /// <param name="deptRowId">The department row id.</param>
-        public DepartmentNode? GetNode(Guid deptRowId)
-        {
-            EnsureIndex();
-            return _byRowId!.TryGetValue(deptRowId, out var node) ? node : null;
         }
     }
 }

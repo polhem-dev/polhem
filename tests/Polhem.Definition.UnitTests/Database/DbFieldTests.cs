@@ -24,7 +24,6 @@ namespace Polhem.Definition.UnitTests.Database
             Assert.Equal(0, field.Scale);
             Assert.False(field.AllowNull);
             Assert.Equal(string.Empty, field.DefaultValue);
-            Assert.Equal(DbUpgradeAction.None, field.UpgradeAction);
         }
 
         [Fact]

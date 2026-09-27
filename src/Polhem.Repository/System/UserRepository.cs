@@ -11,7 +11,7 @@ namespace Polhem.Repository.System
     /// Reads the common <c>st_user</c> table. Resolves a user's <c>sys_rowid</c> from its
     /// <c>sys_id</c> so company-scoped lookups (e.g. the employee link) can be keyed by row id.
     /// </summary>
-    public class UserRepository : RepositoryBase, IUserRepository
+    internal sealed class UserRepository : RepositoryBase, IUserRepository
     {
         private const string TableName = "st_user";
         private const string SysIdColumn = "sys_id";

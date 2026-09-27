@@ -26,7 +26,6 @@ namespace Polhem.Api.Core.MessagePack
                 .Member(nameof(Polhem.Api.Core.Messages.System.CreateSessionRequest.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
                 .Member(nameof(Polhem.Api.Core.Messages.System.CreateSessionRequest.UserID), static x => x.UserID, static (x, v) => x.UserID = v)
                 .Member(nameof(Polhem.Api.Core.Messages.System.CreateSessionRequest.ExpiresIn), static x => x.ExpiresIn, static (x, v) => x.ExpiresIn = v)
-                .Member(nameof(Polhem.Api.Core.Messages.System.CreateSessionRequest.OneTime), static x => x.OneTime, static (x, v) => x.OneTime = v)
                 .Build());
             list.Add(WireContract.For<Polhem.Api.Core.Messages.System.CreateSessionResponse>()
                 .Member(nameof(Polhem.Api.Core.Messages.System.CreateSessionResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)

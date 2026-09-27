@@ -29,7 +29,7 @@ namespace Polhem.Definition.UnitTests.Language
                     (FormSchemaLocalizer.SchemaDisplayNameKey, "客戶"),
                 });
             var schema = BuildSchema("Customer", "Customer (raw)");
-            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
 
             localizer.Localize(schema, "zh-TW");
 
@@ -48,7 +48,7 @@ namespace Polhem.Definition.UnitTests.Language
                     (string.Format(CultureInfo.InvariantCulture, FormSchemaLocalizer.TableDisplayNameKeyFormat, "Customer"), "客戶資料"),
                 });
             var schema = BuildSchema("Customer", "Customer (raw)");
-            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
 
             localizer.Localize(schema, "zh-TW");
 
@@ -67,7 +67,7 @@ namespace Polhem.Definition.UnitTests.Language
                     (string.Format(CultureInfo.InvariantCulture, FormSchemaLocalizer.FieldCaptionKeyFormat, "sys_name"), "客戶名稱"),
                 });
             var schema = BuildSchema("Customer", "Customer (raw)");
-            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
 
             localizer.Localize(schema, "zh-TW");
 
@@ -81,7 +81,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = BuildDefineAccessWith(lang: "zh-TW", ns: "Customer"); // Empty resource.
             var schema = BuildSchema("Customer", "Customer (raw)");
-            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
 
             localizer.Localize(schema, "zh-TW");
 
@@ -96,7 +96,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = BuildDefineAccessWith(lang: "zh-TW", ns: "Customer");
             var schema = BuildSchema(progId: "", displayName: "X");
-            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
 
             var exception = Record.Exception(() => localizer.Localize(schema, "zh-TW"));
 
@@ -113,7 +113,7 @@ namespace Polhem.Definition.UnitTests.Language
                 ns: "Customer",
                 items: new[] { (FormSchemaLocalizer.SchemaDisplayNameKey, "客戶") });
             var schema = BuildSchema("Customer", "Customer (raw)");
-            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
 
             localizer.Localize(schema, "  ");
 
@@ -127,7 +127,7 @@ namespace Polhem.Definition.UnitTests.Language
             var defineAccess = new StubDefineAccess(defaultLang: "en-US");
             defineAccess.AddEnum("zh-TW", "Customer", "Status", ("0", "啟用"), ("1", "停用"));
             var schema = BuildSchemaWithLangEnumField(progId: "Customer", langEnumName: "Status");
-            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
 
             localizer.Localize(schema, "zh-TW");
 
@@ -144,7 +144,7 @@ namespace Polhem.Definition.UnitTests.Language
             var defineAccess = new StubDefineAccess(defaultLang: "en-US");
             defineAccess.AddEnum("zh-TW", "Common", "Gender", ("M", "男"), ("F", "女"));
             var schema = BuildSchemaWithLangEnumField(progId: "Customer", langEnumName: "Common.Gender");
-            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
 
             localizer.Localize(schema, "zh-TW");
 
@@ -163,7 +163,7 @@ namespace Polhem.Definition.UnitTests.Language
             var statusField = schema.Tables![0].Fields!["status"];
             statusField.ListItems!.Add("0", "Active (fallback)");
             statusField.ListItems!.Add("1", "Inactive (fallback)");
-            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
 
             localizer.Localize(schema, "zh-TW");
 
@@ -181,7 +181,7 @@ namespace Polhem.Definition.UnitTests.Language
             var nameField = schema.Tables![0].Fields!["sys_name"];
             nameField.ListItems!.Add("a", "A");
             nameField.ListItems!.Add("b", "B");
-            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
 
             localizer.Localize(schema, "zh-TW");
 
@@ -197,7 +197,7 @@ namespace Polhem.Definition.UnitTests.Language
             // Only en-US has the enum, zh-TW does not.
             defineAccess.AddEnum("en-US", "Customer", "Status", ("0", "Active"), ("1", "Inactive"));
             var schema = BuildSchemaWithLangEnumField(progId: "Customer", langEnumName: "Status");
-            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
 
             localizer.Localize(schema, "zh-TW");
 

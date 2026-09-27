@@ -77,8 +77,8 @@ namespace Polhem.Business.UnitTests.Form
             var schema = new FormSchema(ProgId, "Lookup scope") { CategoryId = "company", PermissionModelId = permissionModelId };
             var table = schema.Tables!.Add(ProgId, "Lookup scope");
             table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
-            table.Fields!.AddStringField("sys_id", "ID", 50);
-            table.Fields!.AddStringField("sys_name", "Name", 50);
+            table.Fields!.Add(new FormField("sys_id", "ID", FieldDbType.String) { MaxLength = 50 });
+            table.Fields!.Add(new FormField("sys_name", "Name", FieldDbType.String) { MaxLength = 50 });
 
             return new PolhemContext
             {

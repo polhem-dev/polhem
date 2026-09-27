@@ -88,8 +88,13 @@ namespace Polhem.Api.Client.Definitions
 
             // The server serves definitions exactly as stored, so the company's decimal places
             // are applied here. Amounts and quantities/weights are left for the UI to resolve per
-            // row from their currency or unit. `Bake` skips those itself.
-            NumberFormatApplier.Bake(schema, CompanyAccessor?.Invoke());
+            // row from their currency or unit. `Bake` skips those itself. A schema with no numeric
+            // field skips the bake and the company lookup with it; the clone above stays, because
+            // the result must be safe to mutate either way.
+            if (NumberFormatApplier.HasNumericField(schema))
+            {
+                NumberFormatApplier.Bake(schema, CompanyAccessor?.Invoke());
+            }
             return schema;
         }
 

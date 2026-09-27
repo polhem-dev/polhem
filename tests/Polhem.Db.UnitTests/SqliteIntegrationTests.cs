@@ -219,9 +219,8 @@ namespace Polhem.Db.UnitTests
                 Assert.NotNull(real);
                 Assert.Equal(string.Empty, real!.Fields!["sys_rowid"].DefaultValue);
 
-                var compare = new TableSchemaComparer(define, real, DatabaseType.SQLite).Compare();
-                Assert.Equal(DbUpgradeAction.None, compare.Fields!["sys_rowid"].UpgradeAction);
-                Assert.Equal(DbUpgradeAction.None, compare.UpgradeAction);
+                var diff = new TableSchemaComparer(define, real, DatabaseType.SQLite).CompareToDiff();
+                Assert.Empty(diff.Changes);
             }
             finally
             {

@@ -54,8 +54,6 @@ namespace Polhem.Base.UnitTests
             Assert.False(StringUtilities.IsNotEmpty((string?)null));
             Assert.False(StringUtilities.IsNotEmpty(""));
             Assert.True(StringUtilities.IsNotEmpty("x"));
-            Assert.True(StringUtilities.IsNotEmptyText((object)"x"));
-            Assert.False(StringUtilities.IsNotEmptyText((object?)null));
         }
 
         // ---- Format ----

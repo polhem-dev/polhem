@@ -25,7 +25,7 @@ namespace Polhem.Api.Core.UnitTests.Form
 
         [Fact]
         [DisplayName("Employee.Delete through JsonRpcExecutor passes RowId through and returns RowsAffected")]
-        public void Delete_ThroughJsonRpc_PreservesRowIdAndReturnsRowsAffected()
+        public async Task Delete_ThroughJsonRpc_PreservesRowIdAndReturnsRowsAffected()
         {
             var rowId = Guid.NewGuid();
             var stub = new StubCrudDataFormRepository { DeleteResult = 1 };
@@ -58,7 +58,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var result = Assert.IsType<DeleteResponse>(response.Result!.Value);

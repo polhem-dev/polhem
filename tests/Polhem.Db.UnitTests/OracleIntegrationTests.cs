@@ -243,7 +243,7 @@ namespace Polhem.Db.UnitTests
                 var table = formSchema.Tables!.Add("Foo", "Foo");
                 table.DbTableName = tableName;
                 table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
-                table.Fields!.AddStringField("comment", "Comment", 100);
+                table.Fields!.Add(new FormField("comment", "Comment", FieldDbType.String) { MaxLength = 100 });
                 table.Fields!.Add("order", "Order", FieldDbType.Integer);
 
                 var formBuilder = new OracleFormCommandBuilder(formSchema, _fx.GetRequiredService<IDefineAccess>());
@@ -487,7 +487,7 @@ namespace Polhem.Db.UnitTests
             var table = schema.Tables!.Add("Foo", "Foo");
             table.DbTableName = tableName;
             table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
-            table.Fields!.AddStringField("name", "Name", 50);
+            table.Fields!.Add(new FormField("name", "Name", FieldDbType.String) { MaxLength = 50 });
             table.Fields!.Add("qty", "Qty", FieldDbType.Integer);
             return schema;
         }

@@ -180,8 +180,8 @@ namespace Polhem.Db.UnitTests.Dml
             var table = schema.Tables!.Add(UserForm, "Users");
             table.DbTableName = "st_user";
             table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
-            table.Fields!.AddStringField("sys_id", "User ID", 50);
-            table.Fields.AddStringField(ProtectedFields.Password, "Password", 200);
+            table.Fields!.Add(new FormField("sys_id", "User ID", FieldDbType.String) { MaxLength = 50 });
+            table.Fields.Add(new FormField(ProtectedFields.Password, "Password", FieldDbType.String) { MaxLength = 200 });
             return schema;
         }
 
@@ -191,7 +191,7 @@ namespace Polhem.Db.UnitTests.Dml
             var table = schema.Tables!.Add(UserFormWithoutPassword, "Users");
             table.DbTableName = "st_user";
             table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
-            table.Fields!.AddStringField("sys_id", "User ID", 50);
+            table.Fields!.Add(new FormField("sys_id", "User ID", FieldDbType.String) { MaxLength = 50 });
             return schema;
         }
 
@@ -201,15 +201,15 @@ namespace Polhem.Db.UnitTests.Dml
             var table = schema.Tables!.Add(ReferencingForm, "Referencing");
             table.DbTableName = "ft_guard_ref";
             table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
-            table.Fields!.AddStringField("sys_id", "ID", 50);
+            table.Fields!.Add(new FormField("sys_id", "ID", FieldDbType.String) { MaxLength = 50 });
 
             var foreignKey = table.Fields.Add("user_rowid", "User", FieldDbType.Guid);
             foreignKey.RelationProgId = UserForm;
             foreignKey.RelationFieldMappings!.Add("sys_id", "ref_user_id");
             foreignKey.RelationFieldMappings!.Add(ProtectedFields.Password, "ref_user_password");
 
-            table.Fields.AddStringField("ref_user_id", "User ID", 50).Type = FieldType.RelationField;
-            table.Fields.AddStringField("ref_user_password", "User password", 200).Type = FieldType.RelationField;
+            table.Fields.Add(new FormField("ref_user_id", "User ID", FieldDbType.String) { MaxLength = 50, Type = FieldType.RelationField });
+            table.Fields.Add(new FormField("ref_user_password", "User password", FieldDbType.String) { MaxLength = 200, Type = FieldType.RelationField });
             return schema;
         }
     }
