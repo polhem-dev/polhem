@@ -32,11 +32,12 @@ namespace Polhem.Api.Core.Transformers
     /// <item>
     /// <b><c>object</c>-typed members carry a discriminated envelope</b> (<c>[code, value]</c>) via
     /// <see cref="WireValueJsonConverter"/>, which Plain has always lacked. Plain writes and reads
-    /// the bare value. Sending this codec's shape as Plain does <b>not</b> fail — the member
-    /// deserializes to a <c>JsonElement</c> holding the two-element array and travels on, so a
-    /// <c>FilterCondition.Value</c> would reach WHERE construction as <c>[12,"100"]</c> with no
-    /// exception and no log line. The converter cannot simply be added to the Plain read path
-    /// either: its reader requires the envelope, so it would break every client sending bare values.
+    /// the bare value, read by <see cref="PlainValueJsonConverter"/>. Sending this codec's shape as
+    /// Plain does <b>not</b> fail reliably — the member deserializes to a two-element
+    /// <c>object[]</c> and travels on, so an <c>In</c> filter would match against the code and the
+    /// quoted value with no exception and no log line. The envelope converter cannot simply be added
+    /// to the Plain read path either: its reader requires the envelope, so it would break every
+    /// client sending bare values.
     /// </item>
     /// <item>
     /// <b>Empty collections are written, not omitted.</b> Plain goes through

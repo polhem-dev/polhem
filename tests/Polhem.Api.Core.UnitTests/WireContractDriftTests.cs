@@ -1,9 +1,5 @@
 using System.ComponentModel;
-using System.Data;
-using System.Reflection;
-using System.Text.Json.Serialization;
 using Polhem.Api.Core.MessagePack;
-using Polhem.Base.Collections;
 using MessagePack.Formatters;
 
 namespace Polhem.Api.Core.UnitTests
@@ -23,20 +19,6 @@ namespace Polhem.Api.Core.UnitTests
     /// </remarks>
     public class WireContractDriftTests
     {
-        /// <summary>
-        /// Types that are not reached through any message property but do go on the wire (hidden inside an
-        /// `object` member, or obtained as definition data).
-        /// </summary>
-        private static readonly Type[] s_extraRoots =
-        [
-            typeof(Polhem.Definition.Collections.ListItemCollection),
-            typeof(Polhem.Definition.Collections.PropertyCollection),
-            typeof(Polhem.Definition.Settings.CurrencySettings),
-            typeof(Polhem.Definition.Settings.UnitSettings),
-            typeof(SerializableDataSet),
-            typeof(SerializableDataTable),
-        ];
-
         /// <summary>
         /// Types the closure must always contain. If any is missing, the closure itself is broken.
         /// </summary>
@@ -69,7 +51,7 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("The type closure and the registration list are neither empty nor shrunken (so the drift checks cannot pass vacuously)")]
         public void WireTypeClosure_AndRegistrations_AreNotVacuous()
         {
-            var closure = WireTypeClosure();
+            var closure = WireClosure.Types();
             var contracts = MessagePackCodec.RegisteredFormatters.OfType<IWireContract>().ToList();
 
             // The lower bound is deliberately looser than the current count. It is meant to catch shrinkage on the
@@ -95,7 +77,7 @@ namespace Polhem.Api.Core.UnitTests
         public void WireTypeClosure_IsFullyRegistered()
         {
             var registered = RegisteredTypes();
-            var missing = WireTypeClosure()
+            var missing = WireClosure.Types()
                 .Where(t => !registered.Contains(t))
                 .Select(t => t.FullName!)
                 .OrderBy(n => n, StringComparer.Ordinal)
@@ -111,7 +93,7 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("Every registered wire contract is for a type reachable from the closure (the reverse direction)")]
         public void RegisteredContracts_AreReachableFromTheClosure()
         {
-            var closure = WireTypeClosure();
+            var closure = WireClosure.Types();
 
             var unreachable = MessagePackCodec.RegisteredFormatters
                 .OfType<IWireContract>()
@@ -132,6 +114,46 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
+        [DisplayName("Every registered formatter covers a type the closure reaches, not only the WireContract ones")]
+        public void RegisteredFormatters_AreReachableFromTheClosure()
+        {
+            var closure = WireClosure.Types();
+
+            // Registered types the closure legitimately omits: `object` members are carried by the value envelope
+            // formatter rather than recorded as a type that needs one, and an abstract base such as `FilterNode` is
+            // registered for its polymorphic members while only its concrete subtypes are recorded.
+            var orphans = RegisteredTypes()
+                .Where(t => !closure.Contains(t))
+                .Where(t => t != typeof(object))
+                .Where(t => !(t.IsAbstract && closure.Any(c => c.IsSubclassOf(t))))
+                .Select(t => t.FullName!)
+                .OrderBy(n => n, StringComparer.Ordinal)
+                .ToList();
+
+            // `RegisteredContracts_AreReachableFromTheClosure` only looks at `IWireContract`, so an enum, collection or
+            // generic registration that nothing reaches (`WireEnumFormatter<PayloadFormat>` was one) went unnoticed.
+            Assert.True(
+                orphans.Count == 0,
+                $"These types have a registered formatter but are not in the wire type closure. Either the registration is dead, or the closure misses a path:" +
+                $"{Environment.NewLine}{string.Join(Environment.NewLine, orphans)}");
+        }
+
+        [Fact]
+        [DisplayName("The closure walk understands every member shape it meets, so no member type escapes the registration check")]
+        public void WireTypeClosure_HasNoUnknownShapes()
+        {
+            var unknown = WireClosure.Walk().UnknownShapes;
+
+            // The walk used to return silently for a generic other than List<T> / Dictionary<TKey, TValue>, a struct or
+            // an interface. A member of such a shape then dropped out of the closure, and with it the check that its
+            // formatter is registered: the gate passed instead of failing.
+            Assert.True(
+                unknown.Count == 0,
+                $"The wire closure met member types it has no rule for. Teach `WireClosure.Walk` the shape, or change the member:" +
+                $"{Environment.NewLine}{string.Join(Environment.NewLine, unknown)}");
+        }
+
+        [Fact]
         [DisplayName("The member list of every WireContract matches the current shape of its type")]
         public void WireContracts_MatchTypeShape()
         {
@@ -139,7 +161,7 @@ namespace Polhem.Api.Core.UnitTests
 
             foreach (var contract in MessagePackCodec.RegisteredFormatters.OfType<IWireContract>())
             {
-                var expected = WireMemberNames(contract.WireType);
+                var expected = WireClosure.MemberNames(contract.WireType);
                 var actual = contract.WireMemberNames.ToList();
 
                 var onlyOnType = expected.Except(actual, StringComparer.Ordinal).ToList();
@@ -155,31 +177,6 @@ namespace Polhem.Api.Core.UnitTests
                 drift.Count == 0,
                 $"Wire contracts do not match the type shapes:{Environment.NewLine}{string.Join(Environment.NewLine, drift)}");
         }
-
-        /// <summary>
-        /// Wire members are defined the same way as for JSON: public readable and writable properties not excluded by
-        /// <c>[JsonIgnore]</c>. The framework-managed members (<c>Tag</c> / <c>Key</c>) both
-        /// carry that attribute, so they are excluded automatically.
-        /// </summary>
-        /// <remarks>
-        /// WARNING: <see cref="JsonIgnoreAttribute.Condition"/> must be read; the presence of the attribute is not
-        /// enough. <c>[JsonIgnore(Condition = JsonIgnoreCondition.Never)]</c> means **never ignore**, and a presence
-        /// check would judge it "ignored", the exact opposite. <c>FormField</c> and <c>DbField</c> already use this
-        /// form. They are not in the wire closure today, so nothing broke, but that is luck, not design.
-        /// <para>
-        /// The same bug once existed in POLHEM4007 (the rule checked only that the attribute was present and did not
-        /// read <c>Condition</c>). Its cause was recorded when that rule was removed on 2026-07-30, and then it lived
-        /// on here.
-        /// </para>
-        /// </remarks>
-        private static List<string> WireMemberNames(Type type) =>
-            type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => p.GetIndexParameters().Length == 0)
-                .Where(p => p.GetMethod is { IsPublic: true } && p.SetMethod is { IsPublic: true })
-                .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() is not { } ignore
-                            || ignore.Condition == JsonIgnoreCondition.Never)
-                .Select(p => p.Name)
-                .ToList();
 
         /// <summary>
         /// The types covered by the registered formatters (taken from the T of <c>IMessagePackFormatter&lt;T&gt;</c>).
@@ -199,100 +196,5 @@ namespace Polhem.Api.Core.UnitTests
             }
             return types;
         }
-
-        /// <summary>
-        /// Walks the type closure from the API message contracts and returns the types in it that need an explicit
-        /// formatter.
-        /// </summary>
-        private static HashSet<Type> WireTypeClosure()
-        {
-            var needs = new HashSet<Type>();
-            var seen = new HashSet<Type>();
-            var apiCore = typeof(MessagePackCodec).Assembly;
-            var contracts = typeof(Polhem.Api.Contracts.Form.IGetListRequest).Assembly;
-
-            foreach (var asm in new[] { apiCore, contracts })
-            {
-                foreach (var t in asm.GetTypes())
-                {
-                    if (!t.IsClass || t.IsAbstract || t.IsGenericTypeDefinition) continue;
-                    var ns = t.Namespace ?? string.Empty;
-                    if (ns.StartsWith("Polhem.Api.Core.Messages", StringComparison.Ordinal) ||
-                        ns.StartsWith("Polhem.Api.Contracts", StringComparison.Ordinal))
-                    {
-                        Visit(t);
-                    }
-                }
-            }
-            foreach (var t in s_extraRoots) Visit(t);
-
-            return needs;
-
-            void Visit(Type type)
-            {
-                var underlying = Nullable.GetUnderlyingType(type);
-                if (underlying != null)
-                {
-                    needs.Add(underlying);
-                    type = underlying;
-                }
-                if (!seen.Add(type)) return;
-
-                if (type.IsEnum) { needs.Add(type); return; }
-                if (IsBuiltIn(type)) return;
-                if (type.IsArray)
-                {
-                    var element = type.GetElementType()!;
-                    if (element != typeof(byte) && element != typeof(object)) needs.Add(type);
-                    Visit(element);
-                    return;
-                }
-                if (type == typeof(DataTable) || type == typeof(DataSet)) { needs.Add(type); return; }
-
-                if (type.IsGenericType)
-                {
-                    var definition = type.GetGenericTypeDefinition();
-                    if (definition == typeof(List<>) || definition == typeof(Dictionary<,>))
-                    {
-                        needs.Add(type);
-                        foreach (var a in type.GetGenericArguments()) Visit(a);
-                    }
-                    return;
-                }
-
-                if (!type.IsClass) return;
-
-                if (FrameworkCollectionItem(type) is { } item)
-                {
-                    needs.Add(type);
-                    Visit(item);
-                    return;
-                }
-
-                if (!type.IsAbstract) needs.Add(type);
-                foreach (var name in WireMemberNames(type))
-                    Visit(type.GetProperty(name)!.PropertyType);
-                foreach (var derived in type.Assembly.GetTypes().Where(x => x.BaseType == type && !x.IsAbstract))
-                    Visit(derived);
-            }
-        }
-
-        private static Type? FrameworkCollectionItem(Type type)
-        {
-            for (var b = type.BaseType; b != null; b = b.BaseType)
-            {
-                if (!b.IsGenericType) continue;
-                var d = b.GetGenericTypeDefinition();
-                if (d == typeof(CollectionBase<>) || d == typeof(KeyCollectionBase<>))
-                    return b.GetGenericArguments()[0];
-            }
-            return null;
-        }
-
-        private static bool IsBuiltIn(Type t) =>
-            t.IsPrimitive || t == typeof(string) || t == typeof(decimal) || t == typeof(Guid) ||
-            t == typeof(DateTime) || t == typeof(DateTimeOffset) || t == typeof(TimeSpan) ||
-            t == typeof(DateOnly) || t == typeof(TimeOnly) || t == typeof(object) ||
-            t == typeof(byte[]) || t == typeof(Type) || t == typeof(Uri) || t == typeof(Version);
     }
 }

@@ -2,6 +2,9 @@ using System.ComponentModel;
 using System.Data;
 using System.Text.Json;
 using Polhem.Api.Core.Conversion;
+using Polhem.Api.Core.Messages;
+using Polhem.Api.Core.Messages.Form;
+using Polhem.Definition.Filters;
 
 namespace Polhem.Api.Core.UnitTests
 {
@@ -183,6 +186,45 @@ namespace Polhem.Api.Core.UnitTests
             var target = Assert.IsType<TargetDto>(result);
             Assert.Equal("Cathy", target.Name);
             Assert.Equal(7, target.Age);
+        }
+        [Fact]
+        [DisplayName("Convert of a Plain list request turns bare filter values into CLR values the database layer can bind, not JsonElement")]
+        public void Convert_PlainGetListRequest_FilterValuesBecomeClrValues()
+        {
+            var json = """
+                {"filter":{"kind":"Group","nodes":[
+                  {"fieldName":"code","value":"A"},
+                  {"fieldName":"qty","operator":"Between","value":2,"secondValue":3},
+                  {"fieldName":"amount","operator":"GreaterThan","value":10.5},
+                  {"fieldName":"active","value":true},
+                  {"fieldName":"code","operator":"In","value":["A",1,null]}
+                ]}}
+                """;
+            using var doc = JsonDocument.Parse(json);
+
+            var request = Assert.IsType<GetListRequest>(ApiInputConverter.Convert(doc.RootElement.Clone(), typeof(GetListRequest)));
+
+            var nodes = Assert.IsType<FilterGroup>(request.Filter).Nodes.Cast<FilterCondition>().ToList();
+            Assert.Equal("A", Assert.IsType<string>(nodes[0].Value));
+            Assert.Equal(2L, Assert.IsType<long>(nodes[1].Value));
+            Assert.Equal(3L, Assert.IsType<long>(nodes[1].SecondValue));
+            Assert.Equal(10.5m, Assert.IsType<decimal>(nodes[2].Value));
+            Assert.True(Assert.IsType<bool>(nodes[3].Value));
+            Assert.Equal(new object?[] { "A", 1L, null }, Assert.IsType<object[]>(nodes[4].Value));
+        }
+
+        [Fact]
+        [DisplayName("Convert of a Plain body turns a bare parameter value into a CLR value, matching what the encoded formats deliver")]
+        public void Convert_PlainExecFuncRequest_ParameterValueBecomesClrValue()
+        {
+            var json = """{"funcId":"f","parameters":[{"name":"n","value":42},{"name":"o","value":{"a":1}}]}""";
+            using var doc = JsonDocument.Parse(json);
+
+            var request = Assert.IsType<ExecFuncRequest>(ApiInputConverter.Convert(doc.RootElement.Clone(), typeof(ExecFuncRequest)));
+
+            Assert.Equal(42L, Assert.IsType<long>(request.Parameters!["n"].Value));
+            // A JSON object has no CLR counterpart and stays as it arrived.
+            Assert.Equal(JsonValueKind.Object, Assert.IsType<JsonElement>(request.Parameters["o"].Value).ValueKind);
         }
     }
 }

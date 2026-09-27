@@ -2,7 +2,7 @@ using Polhem.Api.Core.MessagePack;
 using Polhem.Definition.Collections;
 using System.Reflection;
 using Polhem.Base.Serialization;
-using MessagePack;
+using System.Text.Json.Serialization;
 
 namespace Polhem.Api.Core.UnitTests
 {
@@ -15,11 +15,10 @@ namespace Polhem.Api.Core.UnitTests
         /// Tests MessagePack serialization and deserialization, comparing each restored property value.
         /// </summary>
         /// <remarks>
-        /// The comparison covers "every public readable property not marked <see cref="IgnoreMemberAttribute"/>".
-        /// It deliberately does not use the presence of <c>[Key]</c> as the gate. After the name-based key migration of
-        /// adr-030, most types use <c>[MessagePackObject(keyAsPropertyName: true)]</c> and their properties no longer
-        /// carry <c>[Key]</c>. With that gate the comparison loop would never run, and the whole helper would degrade
-        /// into a false green light with nothing but <c>Assert.NotNull</c>.
+        /// The comparison covers every public readable property that <c>[JsonIgnore]</c> does not always exclude,
+        /// which is the wire's own member rule (<c>WireClosure.Members</c>). A property the wire never carries is
+        /// never restored, so comparing it would only produce false failures; the framework-managed members such as
+        /// <c>ParametersSpecified</c> and <c>Tag</c> carry that attribute.
         /// </remarks>
         public static void TestMessagePackSerialization<T>(T obj)
         {
@@ -36,8 +35,8 @@ namespace Polhem.Api.Core.UnitTests
                 // An indexer cannot be read without index arguments.
                 if (property.GetIndexParameters().Length > 0) { continue; }
 
-                // Members marked as not serialized are never restored, so comparing them would only produce false failures.
-                if (property.IsDefined(typeof(IgnoreMemberAttribute), inherit: true)) { continue; }
+                // Members the wire never carries are never restored, so comparing them would only produce false failures.
+                if (property.GetCustomAttribute<JsonIgnoreAttribute>() is { Condition: JsonIgnoreCondition.Always }) { continue; }
 
                 var originalValue = property.GetValue(obj);
                 var deserializedValue = property.GetValue(deserialized);

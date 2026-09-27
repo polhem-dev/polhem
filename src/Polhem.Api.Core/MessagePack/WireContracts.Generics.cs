@@ -9,7 +9,6 @@ namespace Polhem.Api.Core.MessagePack
         /// </summary>
         private static void AddGenericInstantiations(List<IMessagePackFormatter> list)
         {
-            list.Add(new WireEnumFormatter<Polhem.Api.Core.Messages.PayloadFormat>());
             list.Add(new WireEnumFormatter<Polhem.Base.Data.FieldDbType>());
             list.Add(new WireEnumFormatter<Polhem.Definition.DefineType>());
             list.Add(new WireEnumFormatter<Polhem.Definition.Filters.ComparisonOperator>());

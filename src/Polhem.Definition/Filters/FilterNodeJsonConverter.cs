@@ -74,27 +74,62 @@ namespace Polhem.Definition.Filters
         }
 
         /// <summary>
-        /// Binds one node element to its concrete type. Kept in step with
-        /// <see cref="FilterNodeCollectionJsonConverter"/>, which reads the same discriminator.
+        /// Binds one node element to its concrete type. <see cref="FilterNodeCollectionJsonConverter"/>
+        /// reads each element of a collection through this same method.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// WARNING: the discriminator is matched without regard to case, as the member names are by the
+        /// options every request is read with. A case-sensitive lookup missed <c>"Kind"</c>, took the
+        /// node for a condition, and a PascalCase group silently became a condition with no field name.
+        /// An unknown discriminator is rejected rather than defaulted, for the same reason.
+        /// </para>
+        /// <para>
+        /// A node with no discriminator at all is a condition: <see cref="FilterNodeKind.Condition"/> is the
+        /// enum's default, and the JSON writers leave a default value out.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="JsonException">The element is not an object, or its discriminator names no known kind.</exception>
         internal static FilterNode? ReadNode(JsonElement element, JsonSerializerOptions options)
         {
-            if (!element.TryGetProperty("kind", out var kindProp))
-            {
-                // No Kind property — default to FilterCondition, matching the collection converter.
-                return element.Deserialize<FilterCondition>(options);
-            }
+            if (element.ValueKind != JsonValueKind.Object)
+                throw new JsonException($"A filter node must be a JSON object, not {element.ValueKind}.");
 
-            var kindValue = kindProp.ValueKind == JsonValueKind.String
-                ? Enum.Parse<FilterNodeKind>(kindProp.GetString()!)
-                : (FilterNodeKind)kindProp.GetInt32();
-
-            return kindValue switch
+            return ReadKind(element) switch
             {
                 FilterNodeKind.Condition => element.Deserialize<FilterCondition>(options),
                 FilterNodeKind.Group => element.Deserialize<FilterGroup>(options),
-                _ => throw new JsonException($"Unknown FilterNodeKind: {kindValue}")
+                var other => throw new JsonException($"Unknown FilterNodeKind: {other}")
             };
+        }
+
+        private static FilterNodeKind ReadKind(JsonElement element)
+        {
+            foreach (var property in element.EnumerateObject())
+            {
+                if (!string.Equals(property.Name, nameof(FilterNode.Kind), StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var value = property.Value;
+                switch (value.ValueKind)
+                {
+                    case JsonValueKind.String:
+                        var name = value.GetString();
+                        if (Enum.TryParse<FilterNodeKind>(name, ignoreCase: true, out var parsed)
+                            && Enum.IsDefined(parsed)
+                            && !int.TryParse(name, out _))
+                        {
+                            return parsed;
+                        }
+                        throw new JsonException($"Unknown FilterNodeKind: '{name}'.");
+                    case JsonValueKind.Number when value.TryGetInt32(out var number) && Enum.IsDefined((FilterNodeKind)number):
+                        return (FilterNodeKind)number;
+                    default:
+                        throw new JsonException($"Unknown FilterNodeKind: {value.GetRawText()}.");
+                }
+            }
+
+            return FilterNodeKind.Condition;
         }
     }
 }

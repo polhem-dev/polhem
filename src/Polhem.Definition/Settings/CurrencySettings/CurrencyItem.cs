@@ -1,6 +1,7 @@
 using Polhem.Base.Collections;
 using System.ComponentModel;
 using System.Xml.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Polhem.Definition.Settings
 {
@@ -55,6 +56,9 @@ namespace Polhem.Definition.Settings
         /// currency's inherent smallest unit and drives display decimals; it does not carry any
         /// company cash-rounding policy (see <see cref="CompanyCashRounding"/>).
         /// </summary>
+        // Written even when 0/default: the initialiser is not the CLR default, so omitting the value would let the
+        // reader substitute the initialiser. Enforced for every wire member by `WireDefaultOmissionTests`.
+        [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
         [XmlAttribute]
         public decimal Rounding { get; set; } = 0.01m;
 

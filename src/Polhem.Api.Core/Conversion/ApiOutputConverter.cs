@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Polhem.Api.Core.Conversion
 {
@@ -22,21 +21,6 @@ namespace Polhem.Api.Core.Conversion
         // since ConcurrentDictionary does not accept null values.
         private static readonly ConcurrentDictionary<Type, Type> s_cache = new();
         private static readonly Type s_noMatch = typeof(void);
-        /// <summary>
-        /// Read options for JSON responses.
-        /// </summary>
-        /// <remarks>
-        /// WARNING: <see cref="JsonStringEnumConverter"/> must stay, and must match whatever
-        /// <see cref="Polhem.Base.Serialization.JsonCodec"/> writes. That writer emits enums as names, so a reader without this
-        /// converter throws on the first response property that happens to be an enum. The converter
-        /// still accepts numeric values, so it only widens what can be read.
-        /// </remarks>
-        private static readonly JsonSerializerOptions s_caseInsensitiveOptions = new()
-        {
-            PropertyNameCaseInsensitive = true,
-            Converters = { new JsonStringEnumConverter() },
-        };
-
         private const string ResultSuffix = "Result";
         private const string ResponseSuffix = "Response";
 
@@ -74,7 +58,7 @@ namespace Polhem.Api.Core.Conversion
             if (value is T typed) return typed;
             if (value is JsonElement element)
             {
-                return JsonSerializer.Deserialize<T>(element.GetRawText(), s_caseInsensitiveOptions);
+                return element.Deserialize<T>(ApiInputConverter.PlainReadOptions);
             }
             return (T)value;
         }

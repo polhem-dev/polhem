@@ -73,7 +73,7 @@ namespace Polhem.Definition.Database
         /// <summary>
         /// Gets or sets the index schema upgrade action.
         /// </summary>
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         [Browsable(false)]
         [DefaultValue(DbUpgradeAction.None)]
         public DbUpgradeAction UpgradeAction { get; set; } = DbUpgradeAction.None;

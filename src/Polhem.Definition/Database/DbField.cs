@@ -134,7 +134,7 @@ namespace Polhem.Definition.Database
         /// <summary>
         /// Gets or sets the schema upgrade action used at runtime for field schema comparison. This property is not serialized.
         /// </summary>
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         [Browsable(false)]
         [DefaultValue(DbUpgradeAction.None)]
         public DbUpgradeAction UpgradeAction { get; set; } = DbUpgradeAction.None;

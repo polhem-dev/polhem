@@ -8,7 +8,7 @@ namespace Polhem.Definition.UnitTests.Collections
     /// Tests for the behavior of KeyCollectionBase / KeyCollectionItem.
     /// Uses the existing <see cref="Parameter"/> / <see cref="ParameterCollection"/> as the subjects under test.
     /// </summary>
-    public class MessagePackKeyCollectionTests
+    public class KeyCollectionBaseBehaviorTests
     {
         /// <summary>
         /// A subclass for testing the protected members (the owner constructor).

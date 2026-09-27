@@ -8,7 +8,7 @@ namespace Polhem.Definition.UnitTests.Collections
     /// Tests for the base behavior of CollectionBase.
     /// Uses SortFieldCollection/SortField as the concrete subtypes.
     /// </summary>
-    public class MessagePackCollectionBaseTests
+    public class CollectionBaseBehaviorTests
     {
         /// <summary>
         /// A subclass for testing the protected members (the owner constructor and SetOwner).

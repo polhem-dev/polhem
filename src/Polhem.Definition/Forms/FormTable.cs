@@ -164,7 +164,7 @@ namespace Polhem.Definition.Forms
         /// Gets the relation field reference collection.
         /// </summary>
         [Browsable(false)]
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public RelationFieldReferenceCollection RelationFieldReferences
         {
             get => _relationFieldReferences.Value;

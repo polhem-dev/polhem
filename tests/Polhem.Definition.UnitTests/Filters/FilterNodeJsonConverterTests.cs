@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Polhem.Base.Serialization;
 using Polhem.Definition.Filters;
@@ -88,6 +89,59 @@ namespace Polhem.Definition.UnitTests.Filters
                 JsonCodec.Serialize(new FilterHolder { Filter = null }));
 
             Assert.Null(restored!.Filter);
+        }
+        // The request readers are case-insensitive for member names; the discriminator must follow them.
+        private static readonly JsonSerializerOptions s_requestOptions = new()
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter() },
+        };
+
+        [Theory]
+        [InlineData("""{"Filter":{"Kind":"Group","Operator":"Or","Nodes":[{"FieldName":"a","Value":1}]}}""")]
+        [InlineData("""{"filter":{"kind":"group","operator":"Or","nodes":[{"fieldName":"a","value":1}]}}""")]
+        [InlineData("""{"filter":{"KIND":"GROUP","operator":"Or","nodes":[{"fieldName":"a","value":1}]}}""")]
+        [DisplayName("A group whose discriminator differs in case is read as a group, not silently turned into an empty condition")]
+        public void Read_DiscriminatorInAnotherCase_IsReadAsGroup(string json)
+        {
+            var holder = JsonSerializer.Deserialize<FilterHolder>(json, s_requestOptions)!;
+
+            var group = Assert.IsType<FilterGroup>(holder.Filter);
+            Assert.Equal(LogicalOperator.Or, group.Operator);
+            Assert.Equal("a", Assert.IsType<FilterCondition>(Assert.Single(group.Nodes)).FieldName);
+        }
+
+        [Theory]
+        [InlineData("""{"filter":{"kind":"Nope","fieldName":"a"}}""")]
+        [InlineData("""{"filter":{"kind":7,"fieldName":"a"}}""")]
+        [InlineData("""{"filter":{"kind":"1","fieldName":"a"}}""")]
+        [InlineData("""{"filter":{"kind":null,"fieldName":"a"}}""")]
+        [DisplayName("An unknown discriminator is rejected with a JsonException instead of defaulting to a condition")]
+        public void Read_UnknownDiscriminator_Throws(string json)
+        {
+            Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<FilterHolder>(json, s_requestOptions));
+        }
+
+        [Fact]
+        [DisplayName("A PascalCase discriminator inside a node list is read case-insensitively as well")]
+        public void Read_PascalCaseDiscriminatorInNodeList_IsReadAsGroup()
+        {
+            var json = """{"filter":{"kind":"Group","nodes":[{"Kind":"Group","Nodes":[{"fieldName":"a"}]}]}}""";
+
+            var holder = JsonSerializer.Deserialize<FilterHolder>(json, s_requestOptions)!;
+
+            var outer = Assert.IsType<FilterGroup>(holder.Filter);
+            var inner = Assert.IsType<FilterGroup>(Assert.Single(outer.Nodes));
+            Assert.Equal("a", Assert.IsType<FilterCondition>(Assert.Single(inner.Nodes)).FieldName);
+        }
+
+        [Fact]
+        [DisplayName("A null element in a node list is rejected with a JsonException")]
+        public void Read_NullElementInNodeList_Throws()
+        {
+            var json = """{"filter":{"kind":"Group","nodes":[null]}}""";
+
+            Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<FilterHolder>(json, s_requestOptions));
         }
     }
 }

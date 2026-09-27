@@ -58,7 +58,12 @@ namespace Polhem.Api.Core.MessagePack
 
                 for (int i = 0; i < count; i++)
                 {
-                    var element = MessagePackSerializer.Deserialize<TElement>(ref reader, options);
+                    // A nil element is malformed input, not an empty slot: the collection's `Add` throws a
+                    // NullReferenceException on it, which reached the caller as an internal server error
+                    // instead of a deserialization failure.
+                    var element = MessagePackSerializer.Deserialize<TElement>(ref reader, options)
+                        ?? throw new MessagePackSerializationException(
+                            $"A {typeof(TCollection).Name} element at index {i} is nil.");
                     collection.Add(element);
                 }
 
