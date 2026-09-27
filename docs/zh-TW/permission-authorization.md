@@ -1,4 +1,4 @@
-<!-- source: en/permission-authorization.md blob: a05d1ed5b9efc86fefdf83f342fbc090120ab0da -->
+<!-- source: en/permission-authorization.md blob: 4f9268ce9ee2fecbf4f038f09248f8c199e01608 -->
 # 權限與授權指南
 
 [English](../en/permission-authorization.md) · [← 文件索引](README.md)
@@ -13,7 +13,7 @@ Polhem 的權限分為**三個維度**，套用於**兩個把關點**——**後
 
 **動作維度在*兩個*把關點都套用**：後端在方法層 enforce（真正的邊界），前端則把它反映成命令／按鈕狀態，讓使用者不會被提供他做不到的動作。**列權限僅在後端**。**欄權限僅在前端**——是 UX 輔助、非資料邊界（見[第 10 節](#10-在-host-app-啟用-capabilityopt-in)警語）。
 
-兩個後端維度皆於請求時完全走記憶體快照（DB 只在載入快取、登入、`EnterCompany`、改配置時碰）。授權與 `ApiAccessControlAttribute`（管加密等級與是否需登入）**正交**。設計理由見 [ADR-019](../adr/adr-019-permission-authorization-model.zh-TW.md)。
+兩個後端維度所查的權限資料 —— 角色、授權、部門樹與 session 的身分 —— 在請求時都來自記憶體快照（只有載入快取、登入、`EnterCompany`、改配置時才為此讀 DB）。寫入時的 record scope 檢查仍會查詢資料列本身，見第 5 節。授權與 `ApiAccessControlAttribute`（管加密等級與是否需登入）**正交**。設計理由見 [ADR-019](../adr/adr-019-permission-authorization-model.zh-TW.md)。
 
 三個維度全部**以公司為範圍**。屬於整個部署、不屬於任何公司的資產 —— API 金鑰，以及部署端日後新增的其他項目 —— 由另一條平行判定管轄，見**第三部分**。
 
@@ -21,7 +21,7 @@ Polhem 的權限分為**三個維度**，套用於**兩個把關點**——**後
 
 # 第一部分 — 後端 enforcement（動作 + 列）
 
-動作與列兩個維度是權威把關。兩者皆完全走記憶體快照，且與表單解耦。
+動作與列兩個維度是權威把關。兩者的權限資料皆取自記憶體快照，且與表單解耦。
 
 ## 1. 定義權限模型
 
@@ -29,15 +29,17 @@ Polhem 的權限分為**三個維度**，套用於**兩個把關點**——**後
 
 ```xml
 <PermissionModels>
-  <PermissionModel ModelId="PurchaseOrder" DisplayName="採購單">
-    <Rules>
-      <PermissionRule Action="Read"   Scope="DeptAndSub" />
-      <PermissionRule Action="Update" Scope="Own" />
-      <PermissionRule Action="Delete" Scope="Own" />
-      <PermissionRule Action="Create" Scope="All" />
-      <!-- Print / Export 省略 Scope → 繼承 model 的 Read scope -->
-    </Rules>
-  </PermissionModel>
+  <Models>
+    <PermissionModel ModelId="PurchaseOrder" DisplayName="採購單">
+      <Rules>
+        <PermissionRule Action="Read"   Scope="DeptAndSub" />
+        <PermissionRule Action="Update" Scope="Own" />
+        <PermissionRule Action="Delete" Scope="Own" />
+        <PermissionRule Action="Create" Scope="All" />
+        <!-- Print / Export 省略 Scope → 繼承 model 的 Read scope -->
+      </Rules>
+    </PermissionModel>
+  </Models>
 </PermissionModels>
 ```
 
@@ -87,7 +89,7 @@ INSERT INTO st_role_grant (role_id, model_id, action, scope) VALUES
   ('Buyer', 'PurchaseOrder', 4 /*Update*/, 2 /*Own*/),
   ('Buyer', 'PurchaseOrder', 8 /*Delete*/, 2 /*Own*/);
 -- scope = ScopeStrategy：Inherit=0, All=1, Own=2, Dept=3, DeptAndSub=4
--- action = PermissionAction（flags）：Create=1, Read=2, Update=4, Delete=8, Print=16, Export=32
+-- action = PermissionActions（flags）：Create=1, Read=2, Update=4, Delete=8, Print=16, Export=32
 ```
 
 `scope = Inherit (0)` → 取 model 該 action 的預設（第 1 節）。
@@ -108,22 +110,28 @@ st_user.sys_rowid  ──(st_employee.user_rowid)──▶  st_employee  ──(
 
 `FormBusinessObject` 執行前先判 `(model, action)`：
 
-- `GetList` / `GetData` → `Read`
+- `GetList` / `GetData` / `GetNewData` → `Read`
 - `Save` → 逐列依 `RowState`：`Added`→`Create`、`Modified`→`Update`、`Deleted`→`Delete`
 - `Delete` → `Delete`
+- `GetLookup` **不**套動作 gate：沒權限瀏覽目標表單的使用者，仍需要從中挑選參照值。它能露出的範圍由表單的 `LookupFields` 與下方的 record scope 界定。
 
 多角色 **OR 聯集**（能力累加）。未過 → 拋 `ForbiddenException`。
 
 ### 層二 — record scope
 
-**讀取**（`GetList`、`GetData`）把 scope filter `AND` 進查詢。越範圍列被過濾掉；越範圍的單列查詢回 `null`（與「查無」不可區分，呼叫端無法探測看不到的列）。
+**讀取**（`GetList`、`GetData`、`GetLookup`）把 `Read` scope filter `AND` 進查詢。越範圍列被過濾掉；越範圍的單列查詢回 `null`（與「查無」不可區分，呼叫端無法探測看不到的列）。若某個 BO 的開窗必須提供所有列（例如共用的單位或幣別清單），可覆寫 `LookupAppliesRecordScope` 回傳 `false`，讓 `GetLookup` 不套 scope。
 
-**寫入**（`Update`、`Delete`）由對 DB 的**權威 re-query** 把關——`WHERE sys_rowid = id AND <scope>`——而**非**評估送來的 payload。偽造的 DataSet 無法 relabel 繞過。
+`GetList` 也限制呼叫端能指名的欄位：篩選與排序欄必須是表單該表宣告過的欄位，受保護欄位（見第 12 節）不能被選取、篩選或排序。未指定分頁的呼叫只回第一頁，筆數為 `PagingOptions.MaxPageSize`。
 
-- `Save` 只在主表列為「既存記錄存檔」（非 `Added`）時 re-check。只改表身、主表 `Unchanged` 仍算 `Update`。
-- `Delete(rowId)` 越範圍 → 回 0、不 cascade。
-- **`Create` 不套 scope**——新列無既存範圍可違反，由動作授權管。
-- scope **僅主表**：主檔過了，整筆（含明細）一併放行。
+**寫入**由對 DB 的**權威 re-query** 把關——`WHERE sys_rowid = id AND <scope>`——而**非**評估送來的 payload。偽造的 DataSet 無法 relabel 繞過。
+
+- `Save` 會檢查 payload 中每一筆既存主表列（`RowState` 非 `Added` 者）：一般以 `Update` scope 檢查，被刪除的列以 `Delete` scope 檢查；檢查的是 UPDATE / DELETE 陳述式實際綁定的 row id（該列的 Original 版本）。只改表身、主表 `Unchanged` 仍算 `Update`。
+- `Added` 或 `Modified` 的主表列存檔後留下的值，也必須落在呼叫者的 `Create` 或 `Update` scope 內。這道檢查在 `BeforeSave` 步驟之後、以該列的目前值進行，所以由預設值運算式、覆寫的 `DoBeforeSave` 或 plugin 填入的擁有者／部門值，才是被檢查的值。少了它，只能管自己記錄的使用者就能建立屬於別人的記錄，或把自己的記錄移到別的部門。
+- Original 與 Current 的 `sys_rowid` 不同的列一律拒絕；帶了明細列卻沒帶其所屬主表的 payload 也拒絕。
+- 明細跟隨主檔：每一筆寫入的明細列都必須指向本 payload 中的主表列；每一筆修改或刪除的明細列，在資料庫中必須早已屬於本 payload 的某筆既存主表列。
+- `Delete(rowId)` 越範圍 → 不影響任何列、不 cascade。
+
+拒絕時拋 `ForbiddenException`。
 
 ### scope 策略
 
@@ -173,18 +181,18 @@ INSERT INTO st_role_grant (role_id, model_id, action, scope) VALUES
 
 ## 8. capability 快照怎麼到前端
 
-`EnterCompany` 時，後端對 session 的角色算出 per-model action mask（`CompanyRolePermissions.GetAllowedByModel`），附在 `EnterCompanyResponse.Capabilities`——一個 `Dictionary<modelId, PermissionAction>`——搭 `EnterCompany` 這班既有往返，**零額外請求**。只有使用者持有 grant 的 model 會出現在 map 中。
+`EnterCompany` 時，後端對 session 的角色算出 per-model action mask（`CompanyRolePermissions.GetAllowedByModel`），附在 `EnterCompanyResponse.Capabilities`——一個 `Dictionary<modelId, PermissionActions>`——搭 `EnterCompany` 這班既有往返，**零額外請求**。只有使用者持有 grant 的 model 會出現在 map 中。
 
 ## 9. 前端如何降級
 
-`ClientInfo.Capabilities` 快取此快照（nullable），`Polhem.UI.Core.Permissions.ElementCapabilityResolver`（純函式、UI-agnostic）讀它：
+`ClientInfo.Capabilities`（`Polhem.UI.Core`）快取此快照（nullable），`Polhem.Api.Client.Permissions.ElementCapabilityResolver`（純函式、UI-agnostic）讀它。目前由 Avalonia 的視圖（`FormView`、`ListView`）套用；Blazor 元件不讀這份快照。
 
 - **`null` → capability 未啟用 → 什麼都不降級。** 從未進公司、或不用權限的 app，呈現與過去完全相同。
 - **非 null → 已啟用。** map 中缺某 model 即代表對它*無權*。
 
 兩種元素消費 resolver：
 
-- **命令按鈕**（工具列）。每顆按鈕建立時自帶所需 `PermissionAction`（`New`→`Create`、`Save`→`Create|Update`、`Delete`→`Delete`、`View`→`Read`）；resolver 的 `Can(...)` 以表單 `PermissionModelId` 判定，採 **any-of** 語意（`Save` 只要使用者有 `Create` 或 `Update` 其一即顯示）。無權按鈕被隱藏。這是**動作維度在前端的 UX 投影**。
+- **命令按鈕**（工具列）。每顆按鈕建立時自帶所需 `PermissionActions`（`New`→`Create`、`Edit`→`Update`、`Save`→`Create|Update`、`Delete`→`Delete`、`View`→`Read`）；resolver 的 `Can(...)` 以表單 `PermissionModelId` 判定，採 **any-of** 語意（`Save` 只要使用者有 `Create` 或 `Update` 其一即顯示）。無權按鈕被隱藏。這是**動作維度在前端的 UX 投影**。
 - **敏感欄位**。`ResolveField(...)` 讀欄位的 `SensitiveCategory`、查分類 model，依**兩個各自獨立的子 gate** 降級——`Read` 管*可見性*、`Update` 管*可編輯性*——所以一個欄位可以「看得到但不能改」。主表欄與明細 Grid 欄一體適用。
 
   | `<分類>.Read` | `<分類>.Update` | 結果 |
@@ -207,10 +215,9 @@ capability **未接線前一律 inert**，既有 app 不受影響。要啟用：
 2. `SystemApiConnector.EnterCompanyAsync` 之後，把回應交給 client 快取：
    ```csharp
    var response = await ClientInfo.SystemApiConnector.EnterCompanyAsync(companyId);
-   ClientInfo.ApplyEnterCompanyResult(response);   // 快取 capability 快照
-   ClientInfo.ResetDefineCache();                  // （既有）清掉舊租戶的定義快取
+   ClientInfo.ApplyEnterCompanyResult(response);   // 快取 capability 快照，並丟棄前一個租戶的定義快取
    ```
-3. `LeaveCompany` 時清除：`ClientInfo.ClearCompanyContext();`。
+3. `LeaveCompany` 或登出時清除：`ClientInfo.ClearCompanyContext();`（同時丟棄定義快取）。
 
 > **警語 — 欄權限是 UX，不是資料邊界。** `GetList` / `GetData` 仍會回傳敏感欄的值；前端只是把它隱藏／鎖定。繞過標準 UI 的 client 仍可能從 API 取得原始值。請把欄權限視為*呈現層*。任何**絕不能離開伺服器**的資料，應放在**動作**或**列**邊界（第一部分）或自成一個 permission model——而非僅靠 `SensitiveCategory`。伺服器端欄位遮罩屬另案（見非目標）。
 
@@ -233,23 +240,24 @@ capability **未接線前一律 inert**，既有 app 不受影響。要啟用：
 
 ## 11. 部署層授權涵蓋哪些作業
 
-`DeploymentAction` 刻意維持極小，目前只有一個成員：
+`DeploymentAction` 刻意維持極小，只列框架本身執行的動作：
 
 | 動作 | 受管的作業 |
 |------|-----------|
-| `ManageApiKey` | `SystemBO.CreateApiKey` —— 發放 API 金鑰 |
+| `ManageApiKey` | `SystemBusinessObject.CreateApiKey`、`ListApiKeys`、`SetApiKeyEnabled`、`SetApiKeyExpiry` —— 發放、列出、啟用／停用與設定 API 金鑰到期 |
+| `ReadDbAnomalyLog` | `AuditLogBusinessObject.GetDbAnomalyLog` —— 資料庫異常日誌（`st_log_anomaly_db`），不帶公司、記錄所有租戶的資料庫 id 與 SQL 命令樣板 |
 
-`CreateApiKey` **只對遠端呼叫**做這道判定。行程內呼叫免管理員 —— 這正是讓全新部署在還沒有任何管理員時，仍能在主機上鑄出第一把金鑰的原因。
+API 金鑰方法**只對遠端呼叫**做這道判定。行程內呼叫免管理員 —— 這正是讓全新部署在還沒有任何管理員時，仍能在主機上鑄出第一把金鑰的原因。資料庫異常日誌沒有這種開機需求，所以本機呼叫一樣要過這道判定。
 
 判定**每次都查資料庫**，刻意與公司層不對稱（後者從快取回答、完全不碰 DB）。理由：部署層作業低頻，而**撤銷管理員必須即時生效**，任何形式的快取都會帶來延遲。
 
 ## 12. 指派管理員
 
-`SystemBO.SetDeploymentAdmin(userId, isDeploymentAdmin)` 是 `st_user.deployment_admin` 的**唯一**寫入路徑，且為 `LocalOnly`：第一位管理員在主機上指派，之後就能由部署端自建的管理介面接手。
+`SystemBusinessObject.SetDeploymentAdmin`（用戶端為 `SystemApiConnector.SetDeploymentAdminAsync(userId, isDeploymentAdmin)`）是框架提供給 `st_user.deployment_admin` 的**唯一**寫入路徑，且為 `LocalOnly`：第一位管理員在主機上指派，之後就能由部署端自建的管理介面接手。
 
-「唯一寫入路徑」是 runtime 強制的，不是靠約定：`ProtectedFields` 列有該欄，FormSchema 驅動的寫入路徑（`DataFormRepository.Save`）會把它從所有 INSERT / UPDATE 剔除，**即使表單宣告了它**。少了這道，部署端只要自建一張 `st_user` 維護表單，就等於給了一般使用者自我提權的路。讀取不受影響 —— 表單可以顯示該欄，只是存不進去。
+框架在 runtime 讓 FormSchema 驅動的資料路徑碰不到這個欄位，不是靠約定：`ProtectedFields` 列有該欄，寫入路徑（`DataFormRepository.Save`）會把它從所有 INSERT / UPDATE 剔除，**即使表單宣告了它**。少了這道，部署端只要自建一張 `st_user` 維護表單，就等於給了一般使用者自我提權的路。讀取也受保護，因為可以被篩選或排序的欄位，就能一次比對一點地被讀出來：在選取清單、篩選或排序中指名受保護欄位的查詢會被拒絕，要求所有欄位的查詢則會略過它。
 
-`st_user.password` 以同樣方式受保護，理由更直接：該欄給的是「成為那個使用者」的權限，而且它的內容是有結構的 ——`PasswordHasher.VerifyPassword` 會從儲存字串裡剖析出迭代次數、鹽與雜湊。表單寫入該欄，存進去的會是驗證器從來不會產生的值。框架自己完全沒有寫入這個欄位的路徑。
+`st_user.password` 以同樣方式受保護，理由更直接：該欄給的是「成為那個使用者」的權限，而且它的內容是有結構的 ——`PasswordHasher.VerifyPassword` 會從儲存字串裡剖析出迭代次數、鹽與雜湊。表單寫入該欄，存進去的會是驗證器從來不會產生的值。框架自己只在登入成功後、用來替換強度較弱的既存雜湊時寫入該欄；框架沒有變更密碼的作業。
 
 > **升級注意：** 若部署端原本是透過自建的 `st_user` 維護表單設定密碼，此改動之後該欄會在存檔時被靜默剔除。請改走專門的密碼操作、由它負責雜湊；表單無法產生 `VerifyPassword` 接受的值。
 
@@ -257,7 +265,7 @@ capability **未接線前一律 inert**，既有 app 不受影響。要啟用：
 
 ## 13. 稽核留痕
 
-部署層作業記在變更軸（`st_log_change`），`prog_id` 為 `System`，`source` 標明作業（`System.SetDeploymentAdmin`、`System.CreateApiKey`），操作者一如其他稽核列去正規化寫進 `user_id` / `user_name`。`changes_xml` 帶前後值，因此追蹤得出是**授予**還是**撤銷** —— 兩者同為 `Update`，沒有前後值就分不出來。
+部署層作業記在變更軸（`st_log_change`），`prog_id` 為 `System`，`source` 標明作業（例如 `System.SetDeploymentAdmin`、`System.CreateApiKey`、`System.SetApiKeyEnabled`、`System.SetApiKeyExpiry`），操作者一如其他稽核列去正規化寫進 `user_id` / `user_name`。`changes_xml` 帶前後值，因此追蹤得出是**授予**還是**撤銷** —— 兩者同為 `Update`，沒有前後值就分不出來。
 
 兩個值得知道的性質：
 
@@ -280,10 +288,14 @@ API 金鑰的稽核列記錄金鑰的 id、名稱、類型、聯絡人與到期�
 每個 `FormSchema.PermissionModelId` 都指向存在的 model、`ScopeRole` 只標在主表、每個非 `None`
 的 `SensitiveCategory` 都有對應的 well-known model。每個違規回傳一則訊息，定義正確時回傳空清單。
 
-**框架不會替你呼叫它。** 沒有自動的載入期掃描——無效的綁定不會讓應用啟動失敗，而是延後成
-「權限判定靜默不作用」（空的 `PermissionModelId` 代表*不套權限*，所以 model id 打錯會退化成
-「無 enforcement」而非錯誤）。請自行在「失敗成本低」的位置呼叫：宿主啟動時、部署冒煙測試、
-或在 CI 對 `DefinePath` 下的定義跑一次。
+**框架不會替你呼叫它。** 無效的綁定不會讓應用啟動失敗，而是延後成「權限判定與預期不同」。
+`PermissionModelId` 指向 registry 中不存在的 model 時，動作 gate 仍會依帶有該 id 的授權判定，
+但 `Inherit` 授權找不到 model 預設值、會解析為 `All`，record scope 因此靜默消失。請自行在
+「失敗成本低」的位置呼叫：宿主啟動時、部署冒煙測試、或在 CI 對 `DefinePath` 下的定義跑一次。
+
+框架在啟動時檢查的是相反的情況：以 `AddPolhemFramework` 建立的宿主會記錄一則警告，列出
+`ProgramSettings` 中登記、但 `FormSchema` 未宣告 `PermissionModelId` 的表單，因為公司內每位
+已登入使用者都能讀寫這種表單。這則警告不會讓宿主停止。
 
 ```csharp
 var errors = PermissionBindingValidator.Validate(allFormSchemas, permissionModels);
@@ -294,16 +306,16 @@ if (errors.Count > 0)
 ## 快取與失效
 
 - 角色／授權／user-role 載入 per-company `CompanyRolePermissions` 快取；部門樹載入 per-company `DepartmentTree` 快取。兩者皆 DB 來源，由 common cache-notify poller 失效。
-- `SessionInfo` 持有請求時快照（`Roles`、`UserRowId`、`EmployeeRowId`、`DeptRowId`），`EnterCompany` 填入、`LeaveCompany` / `Logout` 清除。
+- `SessionInfo.CompanyScope`（一個 `SessionCompanyScope`）持有請求時快照（`Roles`、`UserRowId`、`EmployeeRowId`、`DeptRowId`），`EnterCompany` 填入、`LeaveCompany` / `Logout` 清除。它整份替換，所以判定不會看到甲公司的角色配上乙公司的 row id。
 - 前端 capability 快照（`ClientInfo.Capabilities`）同為某時間點：`EnterCompany` 填入、`LeaveCompany` / 換 token 時清除。授權變更後需重新 `EnterCompany` 才會刷新。
 - 快照為某時間點：改配置對「走快取的判定」即時反映（`Can` 現查快取）；已進公司 session 的 role/employee/部門快照於下次 `EnterCompany` 更新。
 
 ## 傳輸與憑證強化（正式環境）
 
-- **強制 HTTPS。** 登入請求以 `PayloadFormat.Encoded`（序列化 + 壓縮 + Base64，**非加密**）承載密碼；RSA 握手只保護 server 回傳的 session key。因此傳輸機密性完全仰賴 TLS。正式環境所有端點務必以 HTTPS 提供（並啟用 HSTS），切勿以純 HTTP 暴露 JSON-RPC 端點。
-- **覆寫 API 金鑰驗證器。** 預設 `ApiAuthorizationValidator` 只檢查 `X-Api-Key` 標頭非空、不驗其值 —— 真正的認證走 Bearer access token。若將 API 金鑰當作存取閘門，請覆寫 `ApiServiceOptions.AuthorizationValidator`，以常數時間比對對照設定的金鑰集。預設驗證器仍在使用時，`UsePolhemFramework` 會記錄啟動警告。
+- **強制 HTTPS。** `Login` 宣告為 `ApiProtectionLevel.Public`：`SystemApiConnector.LoginAsync` 以 `PayloadFormat.Encoded`（序列化 + 壓縮 + Base64，**非加密**）承載密碼，JavaScript 用戶端也可能以 Plain 送出。RSA 握手只保護 server 回傳的 session key，而瀏覽器（WebAssembly）用戶端會略過它。因此傳輸機密性完全仰賴 TLS。正式環境所有端點務必以 HTTPS 提供（並啟用 HSTS），切勿以純 HTTP 暴露 JSON-RPC 端點。
+- **發放 API 金鑰。** 在 `st_api_key` 有任一把啟用中的金鑰之前，預設 `ApiAuthorizationValidator` 接受任何非空的 `X-Api-Key`；有了之後，只有已發放、啟用中、未到期的金鑰能通過。`UsePolhemFramework` 會在啟動時回報閘門未生效，在 Development 以外的環境以錯誤等級記錄。API 金鑰識別的是呼叫的應用程式；使用者認證無論如何都走 Bearer access token。見 [API 金鑰管理](api-key-management.md)。需要不同傳輸層檢查的宿主，仍可替換 `ApiServiceOptions.AuthorizationValidator`。
 
 ## 非目標
 
-- **宣告式自訂命令模型** — 標準工具列命令目前於程式碼標記（第 9 節）；把 Print / Export / Approve 做成*資料驅動*的 `FormLayout` element 尚未模型化。未來加入時，自訂命令會自帶 opt-in 的 `PermissionAction`。
+- **宣告式自訂命令模型** — 標準工具列命令目前於程式碼標記（第 9 節）；把 Print / Export / Approve 做成*資料驅動*的 `FormLayout` element 尚未模型化。未來加入時，自訂命令會自帶 opt-in 的 `PermissionActions`。
 - **後端欄位遮罩** — 欄權限維度是前端 UX。伺服器端對敏感欄的遮罩（讓其值永不離開伺服器）尚未實作；今日對硬性資料機密請改用動作／列邊界。

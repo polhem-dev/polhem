@@ -1,4 +1,4 @@
-<!-- source: en/database-schema-upgrade.md blob: 11c15e3453df8a2ae11aeebe1bbe22510e0ca36f -->
+<!-- source: en/database-schema-upgrade.md blob: 5dcf6ce7af86f4f0bd9f5a5a0c530f04e5388e0d -->
 # 資料庫 Schema 升級指引
 
 [English](../en/database-schema-upgrade.md) · [← 文件索引](README.md)
@@ -8,7 +8,7 @@
 
 ## 1. 核心觀念
 
-Polhem 採 **define-driven schema**：資料表結構由 FormSchema / TableSchema 的 XML 定義為唯一來源，程式啟動或維運時由框架比對 define 與實際 DB，自動產生並執行所需的升級指令。
+Polhem 採 **define-driven schema**：資料表結構由 FormSchema / TableSchema 的 XML 定義為唯一來源。host 呼叫升級 API 時（程式啟動或維運時；框架不會自行執行），框架比對 define 與實際 DB，產生並執行所需的升級指令。
 
 開發者寫程式時只需要：
 
@@ -18,7 +18,7 @@ Polhem 採 **define-driven schema**：資料表結構由 FormSchema / TableSchem
 
 ### 成功契約
 
-> **升級成功返回後，DB 必須至少包含 define 裡所有欄位，且型別／長度／nullable 與 define 一致。**
+> **升級成功返回後，DB 至少包含 define 裡所有欄位，且型別／長度／nullable 與 define 一致**——方言無法表達定義的地方除外，例如 Oracle 的文字欄一律為 nullable（[資料庫方言差異 §3.1](database-dialect-differences.md#31-oracle-就是-null)）。
 
 這是從應用程式視角唯一重要的事。內部走 `ALTER TABLE` 或整表 rebuild 是 library 的選擇，呼叫端不需要關心。
 
@@ -134,14 +134,16 @@ foreach (var sql in plan.AllStatements)
 
 ### 觸發 Rebuild 的情境
 
-下表**以 SQL Server 為例**；各方言各自有把變更分類為 Alter / Rebuild / NotSupported 的規則。
+所有方言都從下表這套方言無關的規則出發；SQLite 與 Oracle 另有各自的限制。
 
 | 類型 | 範例 |
 |------|------|
 | **欄位型別跨 family 變更** | `String → Integer`、數值 → `Date`、`Boolean → 任何其他`、`Binary → 非 Binary`、`Guid ↔ String` |
-| **AutoIncrement 狀態切換** | 一般欄位 ↔ IDENTITY 欄位（SQL Server `ALTER COLUMN` 無法改 IDENTITY 屬性） |
+| **AutoIncrement 狀態切換** | 一般欄位 ↔ AutoIncrement 欄位（例如 SQL Server `ALTER COLUMN` 無法改 IDENTITY 屬性） |
 
 > **SQLite** 是極端案例：其 `ALTER TABLE` 僅支援 `ADD` / `RENAME` / `DROP COLUMN`，因此**任何**欄位型別、nullability 或 default 的變更都需重建。
+>
+> **Oracle** 在文字欄跨越 LOB 邊界（`VARCHAR2` ↔ `CLOB`）時也會重建，因為它的 `ALTER ... MODIFY` 不接受這種變更。
 
 **Rebuild 機制**：建臨時表 → `INSERT INTO tmp SELECT FROM original` → drop 舊表 → rename。大資料表（千萬筆）耗時可達數十分鐘到小時，期間表級鎖定。
 
@@ -152,30 +154,38 @@ Orchestrator 會逐一檢查 `TableSchemaDiff` 內每一筆 change：
 - 全部都能走 ALTER → ALTER 路徑
 - 任一筆需要 rebuild → 整表走 rebuild
 - 任一筆 provider 不支援 → 直接拋例外中止
+- rebuild 與欄位改名（§6）同時出現 → 拋例外；請拆成兩次部署
 
 > 設計上**刻意不暴露 Strategy option**：使用者不該需要決定「我這次要走 ALTER 還是 rebuild」，這由 schema 變更內容唯一決定。
 
 ## 5. UpgradeOptions
 
-目前僅有一個選項：
+各選項如 [UpgradeOptions](../../src/Polhem.Db/Schema/UpgradeOptions.cs) 所宣告（註解經簡化）：
 
 ```csharp
-public class UpgradeOptions
+public sealed class UpgradeOptions
 {
     /// <summary>
     /// 允許縮小欄位長度／精度的 ALTER COLUMN（可能截斷資料）。
     /// 預設 false：拒絕縮小，避免靜默資料遺失。
     /// </summary>
-    public bool AllowColumnNarrowing { get; set; } = false;
+    public bool AllowColumnNarrowing { get; init; } = false;
+
+    /// <summary>所有選項皆為預設值的共用執行個體。</summary>
+    public static UpgradeOptions Default { get; } = new UpgradeOptions();
 }
 ```
+
+屬性為 `init`-only，所以選項只能在建立執行個體時設定（`new UpgradeOptions { ... }`），共用的 `Default` 無法被修改。
 
 ### `AllowColumnNarrowing` 的意義
 
 當 define 的欄位長度／精度小於 DB 現況時：
 
-- 預設：**直接拒絕並拋例外**，避免靜默資料截斷
+- 預設：**直接拒絕並拋例外**（`InvalidOperationException`），避免靜默資料截斷
 - 開啟：明確同意截斷，並在 plan 的 `Warnings` 中記錄
+
+這項檢查屬於 ALTER 路徑。會重建資料表的 plan（SQLite 上的任何欄位變更，或含有需要重建之變更的 plan）不會參考這個選項：搬資料步驟會把舊值寫進新欄位，放不下的值如何處理由資料庫決定。重建同時會縮小欄位時，務必先 dry-run（§9）。
 
 ```csharp
 var options = new UpgradeOptions { AllowColumnNarrowing = true };
@@ -192,15 +202,16 @@ builder.Execute("company", "st_employee", options);
 <DbField FieldName="employee_no" OriginalFieldName="emp_no" Caption="員工編號" />
 ```
 
-升級時 comparer 會偵測到 `emp_no` → `employee_no` 的改名意圖，產出 `RenameFieldChange`，SQL 走 `sp_rename`（保留資料）。
+升級時 comparer 會偵測到 `emp_no` → `employee_no` 的改名意圖，產出 `RenameFieldChange`，以該方言的欄位改名語法執行（SQL Server 為 `sp_rename`，其他方言為 `ALTER TABLE ... RENAME COLUMN`），資料會保留。
 
 ### 使用規則
 
 | 情境 | 行為 |
 |------|------|
-| DB 有舊名 `emp_no`、無新名 | 執行 `sp_rename` |
-| DB 已有新名 `employee_no` | no-op（冪等，可重跑） |
-| DB 無舊名也無新名 | 警告 + 降級為新增欄位 |
+| DB 有舊名 `emp_no`、無新名 | 將欄位改名 |
+| DB 已有新名 `employee_no` | 不改名，照常比對該欄位（冪等，可重跑） |
+| DB 無舊名也無新名 | 新增 `employee_no` 欄位，不發出警告 |
+| 同一次升級也需要 rebuild | 拋例外拒絕（§4） |
 | 跨多版本連續改名 | **不支援**：每版部署完成後請清掉 `OriginalFieldName` |
 
 ### 適用情境
@@ -259,14 +270,14 @@ Stage 5: SyncDescriptions   同步表／欄位描述
 對大資料表（千萬筆以上）部署前，**強烈建議 dry-run** 先確認模式：
 
 ```csharp
-var diff = builder.CompareToDiff("common", "ft_orders");
+var diff = builder.CompareToDiff("company", "ft_orders");
 var plan = new TableUpgradeOrchestrator("myDb", connectionManager).Plan(diff);
 
 if (plan.Mode == UpgradeExecutionMode.Rebuild)
 {
     // 這次會走 rebuild — 排維護視窗
     Console.WriteLine("Rebuild will be triggered:");
-    Console.WriteLine(builder.GetCommandText("common", "ft_orders"));
+    Console.WriteLine(builder.GetCommandText("company", "ft_orders"));
 }
 ```
 
@@ -298,7 +309,7 @@ if (plan.Mode == UpgradeExecutionMode.Rebuild)
 
 ## 10. 框架表改名
 
-> 手動 rename DDL。供已落地部署在框架表名改版時（如下一版的 `ft_department` / `ft_employee` → `st_*`）對應 rename 不掉資料。對**公司資料庫**執行。
+> 手動 rename DDL，給以舊名稱保存框架表的資料庫使用。範例是 Polhem 1.0 之前完成的 `ft_department` / `ft_employee` → `st_department` / `st_employee` 改名：由使用舊名稱的早期版本建立的資料庫，需要它才能保留資料。對**公司資料庫**執行。
 
 框架的自動升級管線不會自動 rename 表（見 §8 不支援情境）。當跨版本框架改了系統表名稱，已預先建好舊名表的部署需手動 rename。
 
@@ -322,7 +333,7 @@ ALTER TABLE ft_department RENAME TO st_department;
 ALTER TABLE ft_employee   RENAME TO st_employee;
 ```
 
-附帶舊表名前綴的 index / foreign key（如 `pk_ft_employee`）在 `RENAME TABLE` 後維持原名照常運作；框架的 index 名稱樣板以 `{0}` 綁定建表當下的表名，未來新建的 index 會自動帶上 `pk_st_employee`。
+以舊表名命名的 index（如 `pk_ft_employee`、`rx_ft_employee`）不受改名影響，在改名後的表上照常運作。框架的 index 名稱樣板以 `{0}` 代表表名，所以定義此時預期的是 `rx_st_employee` 等名稱。下一次 schema 升級不論主鍵名稱為何都找得到主鍵，但其他 index 是以套用表名後的名稱比對：它找不到 `rx_st_employee`，於是在舊的 `rx_ft_employee` 旁再建一個。若不想留下重複的 index，請手動刪除舊名稱的 index。
 
 ## 11. 參考
 

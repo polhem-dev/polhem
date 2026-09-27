@@ -85,7 +85,7 @@ This document provides a standard term reference for technical writing, ensuring
 | `AuditEntry` | 稽核記錄基底 | Abstract base for one log row; carries the common who/when/where columns, subclasses add axis-specific columns |
 | `AnomalyEntry` | 異常記錄基底 | Abstract base for an execution-anomaly row, deriving from `AuditEntry` so both share one write pipeline; carries `Kind`, elapsed time, threshold, error type and message |
 | `AuditColumn` | 稽核欄位 | A name/value pair an `AuditEntry` contributes to its INSERT |
-| `NullAuditLogWriter` | 空寫入器 | No-op writer used when logging is disabled; serves both `IAuditLogWriter` and `IAnomalyLogWriter` |
+| `NullLogWriter` | 空寫入器 | No-op writer used when audit or anomaly logging is disabled; serves both `IAuditLogWriter` and `IAnomalyLogWriter` |
 | `LoginAuditEntry` | 登入稽核記錄 | Entry for `st_log_login` (login / logout / failure / lockout) |
 | `ChangeAuditEntry` | 異動稽核記錄 | Entry for `st_log_change` (data change, DataSet DiffGram before/after) |
 | `AccessAuditEntry` | 檢視稽核記錄 | Entry for `st_log_access` (record view) |
@@ -113,17 +113,18 @@ This document provides a standard term reference for technical writing, ensuring
 | `LanguageItem` | 語系項目 | A single localized text entry (`Key` + `Value`) within a `LanguageResource` |
 | `LanguageEnum` | 語系列舉 | An ordered set of code/text entries (for dropdowns, lookups) within a `LanguageResource` |
 | `LanguageEnumEntry` | 語系列舉項目 | A single `Code` + `Text` pair inside a `LanguageEnum` |
-| `ILanguageService` | 語系服務介面 | API for resolving localized text and enum entries by `(lang, namespace, key)`, with default-language fall-back |
+| `ILanguageService` | 語系服務介面 | API for resolving localized text and enum entries by `(lang, namespace, key)`, walking the `LanguageFallback` chain: the requested culture, its parent cultures, then the deployment default language (an English culture stops at the English base text) |
 | `LanguageService` | 語系服務 | Default `ILanguageService` implementation backed by `IDefineAccess.GetLanguage` and the framework cache |
-| `PolhemStringLocalizer<T>` | Polhem 字串本地化 | `Microsoft.Extensions.Localization.IStringLocalizer<T>` adapter — lets Blazor / ASP.NET Core consume language resources through the standard .NET surface |
-| `FormSchemaLocalizer` | 表單結構本地化 | Applies a `LanguageResource` to a cloned `FormSchema`, populating Caption / DisplayName and ComboBox options driven by `LangEnumName` |
+| `LanguageResourceStringLocalizer<T>` | 語系資源字串本地化 | `Microsoft.Extensions.Localization.IStringLocalizer<T>` adapter over `ILanguageService` — lets Blazor / ASP.NET Core components consume language resources through the standard .NET surface. The built-in UI text of the Avalonia and Blazor heads goes through it too |
+| `FormSchemaLocalizer` | 表單結構本地化 | Applies a `LanguageResource` to a cloned `FormSchema`, populating DisplayName / Caption and the `ListItems` options named by `LangEnumName` |
+| `MenuLocalizer` | 選單本地化 | Resolves the caption of a menu node from the `Menu` language namespace, keyed by the node's `Id`; a key no culture declares returns the node's own `Caption` |
 
 ### Other Interfaces
 
 | English | 中文 | Description |
 |---------|------|-------------|
 | `IUIControl` | UI 控制項介面 | Interface that controls UI component state by form mode |
-| `ICacheDataSourceProvider` | 快取資料來源提供者介面 | Provides cached user data for transient sessions |
+| `ICacheDataSourceProvider` | 快取資料來源提供者介面 | Supplies the database-dependent caches with their data: each method is the load path one cache calls on a miss (session rebuild, company info, role permissions, department tree, audit rules, API keys, API key gate state) |
 
 ---
 
@@ -148,7 +149,6 @@ This document provides a standard term reference for technical writing, ensuring
 |---------|------|-------------|
 | `BusinessObject` | 業務邏輯物件 | Base class for all BOs; handles business logic, does not access the database directly |
 | `DataSet` | 資料集 | Cross-layer DTO carrying Master-Detail data, with no business logic |
-| `UnitOfWork` | 工作單元 | Manages shared transactions across Repositories |
 
 ---
 
@@ -171,7 +171,6 @@ This document provides a standard term reference for technical writing, ensuring
 | `JsonRpcResponse` | JSON-RPC 回應 | JSON-RPC 2.0 response object |
 | `ExecFuncArgs` | 自訂函式執行參數 | Parameter object passed when invoking custom business functions |
 | `ApiAccessControlAttribute` | API 存取控制屬性 | Declares the protection level and authentication requirement of API endpoints |
-| `TraceContext` | 追蹤情境 | Records tracing information for API requests |
 
 ### Security
 
@@ -182,7 +181,7 @@ This document provides a standard term reference for technical writing, ensuring
 | `IApiPayloadEncryptor` | API Payload 加密介面 | Defines payload encryption / decryption behavior |
 | `AesCbcHmacCryptor` | AES-CBC-HMAC 加密器 | Standard encryption implementation using AES-256-CBC + HMAC-SHA256 |
 | `RsaCryptor` | RSA 加密器 | RSA asymmetric encryption implementation |
-| `NoEncryptionEncryptor` | 無加密器 | No-encryption implementation, for test environments only |
+| `NoEncryptionEncryptor` | 無加密器 | Internal no-encryption implementation (not public API). `ApiPayloadOptionsFactory.CreateEncryptor` returns it for the encryptor name `none` (or empty) only in debug mode, and throws otherwise |
 
 ---
 
@@ -226,7 +225,7 @@ This document provides a standard term reference for technical writing, ensuring
 | English | 中文 | Values |
 |---------|------|--------|
 | `FieldType` | 欄位種類 | `DbField` (database field), `RelationField` (relation field), `VirtualField` (virtual field) |
-| `FieldDbType` | 欄位資料庫型別 | `String`, `Integer`, `Decimal`, `DateTime`, `Date`, `Time`, `Boolean`, ... 15 in total |
+| `FieldDbType` | 欄位資料庫型別 | `String`, `Integer`, `Decimal`, `DateTime`, `Date`, `Time`, `Boolean`, ... (the full list is the enum's XML documentation) |
 | `ControlType` | 控制項類型 | `TextEdit`, `DropDownEdit`, `DateEdit`, `TimeEdit`, `CheckEdit`, ... |
 | `SingleFormMode` | 表單模式 | `View`, `Add`, `Edit` (exposed as the `FormScope.FormMode` attached property) |
 
@@ -254,9 +253,9 @@ See [Temporal Types](temporal-types.md) for the cross-layer reference, and
 
 | English | 中文 | Values |
 |---------|------|--------|
-| `ComparisonOperator` | 比較運算子 | `Equals`, `NotEquals`, `GreaterThan`, `LessThan`, `Like`, `In`, `Between`, ... |
+| `ComparisonOperator` | 比較運算子 | `Equal`, `NotEqual`, `GreaterThan`, `LessThan`, `Like`, `In`, `Between`, ... |
 | `LogicalOperator` | 邏輯運算子 | `And`, `Or` |
-| `SortDirection` | 排序方向 | `Ascending`, `Descending` |
+| `SortDirection` | 排序方向 | `Asc`, `Desc` |
 | `FilterNodeKind` | 篩選節點種類 | `Condition`, `Group` |
 
 ### API and Security
@@ -271,32 +270,32 @@ See [Temporal Types](temporal-types.md) for the cross-layer reference, and
 
 | English | 中文 | Description |
 |---------|------|-------------|
-| `DefineType` | 定義資料類別 | `SystemSettings`, `DatabaseSettings`, `DbCategorySettings`, `ProgramSettings`, `MenuSettings`, `TableSchema`, `FormSchema`, `FormLayout`, `Language`, `PermissionModels`, `CurrencySettings`, `UnitSettings`, `PluginSettings` — 13 values total |
+| `DefineType` | 定義資料類別 | `SystemSettings`, `DatabaseSettings`, `DbCategorySettings`, `ProgramSettings`, `MenuSettings`, `TableSchema`, `FormSchema`, `FormLayout`, `Language`, `PermissionModels`, `CurrencySettings`, `UnitSettings`, `PluginSettings` |
 
 ### Database
 
 | English | 中文 | Description |
 |---------|------|-------------|
 | `DatabaseType` | 資料庫類型 | `SQLServer`, `PostgreSQL`, `MySQL`, `Oracle`, `SQLite` |
-| `LoginEvent` | 登入事件 | `LoginSucceeded`, `LoginFailed`, `LockedOut`, `Logout` (recorded in `st_log_login`) |
+| `LoginEvent` | 登入事件 | `LoginSucceeded`, `LoginFailed`, `LockedOut`, `Logout`, `ServiceSessionCreated` (recorded in `st_log_login`) |
 | `ChangeKind` | 異動類型 | `Insert`, `Update`, `Delete` (recorded in `st_log_change`) |
-| `AnomalyKind` | 異常類型 | `Error`, `Timeout`, `Slow`, `LargeAffected`, `LargeResult`, `Unauthorized` (recorded in `st_log_anomaly_*`) |
+| `AnomalyKind` | 異常類型 | `Error`, `Timeout`, `Slow`, `LargeAffected`, `LargeResult`, `Unauthorized`, `Replay` (recorded in `st_log_anomaly_*`) |
 
 ---
 
 ## 11. System Fields
 
-The Polhem framework automatically maintains the following system fields in all managed tables:
+System field names are the constants of `SysFields` (`Polhem.Definition`). A table carries only the ones its schema declares, and the framework fills only some of them; the others are naming conventions:
 
 | Field Name | 中文 | Description |
 |------------|------|-------------|
-| `sys_no` | 流水號 | Auto-incremented sequential number for the row |
-| `sys_rowid` | 唯一識別碼 | Globally unique identifier for the row (GUID) |
-| `sys_master_rowid` | 主檔外鍵 | The master row's `sys_rowid` (used by detail tables) |
-| `sys_insert_time` | 建立時間 | Row creation timestamp |
-| `sys_update_time` | 更新時間 | Row last update timestamp |
-| `sys_valid_date` | 生效日期 | Effective start date of the row |
-| `sys_invalid_date` | 失效日期 | Expiry date of the row |
+| `sys_no` | 流水號 | Auto-incremented sequential number for the row, generated by the database; the primary key of a generated TableSchema |
+| `sys_rowid` | 唯一識別碼 | Globally unique identifier for the row (GUID), filled when a new row is seeded (`FormRowDefaults`) |
+| `sys_master_rowid` | 主檔外鍵 | The master row's `sys_rowid` (used by detail tables), filled when a new detail row is seeded |
+| `sys_insert_time` | 建立時間 | Row creation timestamp, stamped by the server on save |
+| `sys_update_time` | 更新時間 | Row last update timestamp, stamped by the server on save |
+| `sys_valid_date` | 生效日期 | Effective start date of the row. A naming convention only: the framework neither fills nor filters on it |
+| `sys_invalid_date` | 失效日期 | Expiry date of the row. A naming convention only: the framework neither fills nor filters on it |
 
 ---
 
@@ -323,11 +322,11 @@ The Polhem framework automatically maintains the following system fields in all 
 
 | English | 中文 | Description |
 |---------|------|-------------|
-| `ClientInfo` | 用戶端資訊 | Static singleton that manages connection state (endpoint, AccessToken, UserInfo) and exposes `SystemApiConnector` / `CreateFormApiConnector` / `DefineAccess`. Designed for the "one process = one user" model (Avalonia desktop / MAUI / native UI). **Must not be used in Blazor environments**, where multiple user circuits share a process |
-| `IEndpointStorage` | 端點儲存介面 | Abstraction for persisting the API endpoint (URL / settings) on the client side; default implementation stores in `{ExeName}.Settings.xml` (a `FileEndpointStorage` ships with `Polhem.UI.Avalonia` for the per-user `LocalApplicationData` path) |
+| `ClientInfo` | 用戶端資訊 | Static class that manages connection state (endpoint, AccessToken, UserInfo) and exposes `SystemApiConnector` / `CreateFormApiConnector` / `DefineAccess`. Designed for the "one process = one user" model of the Avalonia heads and other native UI. **Do not use it in Blazor Server**, where multiple user circuits share a process |
+| `IEndpointStorage` | 端點儲存介面 | Abstraction for persisting the API endpoint on the client side. The default for `ClientInfo.EndpointStorage` is `FileEndpointStorage` |
+| `FileEndpointStorage` | 檔案端點儲存 | File-backed `IEndpointStorage` and `IApiKeyStorage`: keeps the endpoint in `endpoint.txt` and the API key in `apikey.txt` under `LocalApplicationData/<appName>/`. The default for both `ClientInfo.EndpointStorage` and `ClientInfo.ApiKeyStorage`; a browser (WASM) head replaces both with storage backed by the browser |
 | `IUIViewService` | UI 視圖服務介面 | Host-supplied dialog service called when `ClientInfo.InitializeAsync` needs to ask the user for the endpoint (`ShowApiConnectAsync`); concrete implementation depends on the UI framework (Avalonia Window / MAUI ContentPage / WinForms Form, etc.) |
-| `VersionInfo` | 版本資訊 | Version metadata reported by the client to the backend during handshake |
-| `SupportedConnectTypes` | 支援連線類型 | Flags controlling which connection modes (`Local` / `Remote` / `Both`) the host allows during `ClientInfo.InitializeAsync` |
+| `SupportedConnectTypes` | 支援連線類型 | Flags controlling which connection modes (`Local` / `Remote` / `Both`) the host allows during `ClientInfo.InitializeAsync`; declared in `Polhem.Api.Client` |
 
 ### Avalonia Control Library (`Polhem.UI.Avalonia`)
 
@@ -335,22 +334,21 @@ The Polhem framework automatically maintains the following system fields in all 
 |---------|------|-------------|
 | `ListView` | 清單檢視 | Avalonia `UserControl` for the list side of a form screen: loads rows, handles selection and scrolling, renders them through a `GridControl` |
 | `GridControl` | 表格控件 | `ContentControl` composite (toolbar + inner `DataGrid` exposed as `InnerGrid`) driven by a `LayoutGrid`; implements `IBindTableControl`; cell rendering goes through `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` (ADR-020) and editing follows `GridEditMode` (ADR-021) |
-| Field editors（`TextEdit` / `MemoEdit` / `ButtonEdit` / `DateEdit` / `YearMonthEdit` / `DropDownEdit` / `CheckEdit`） | 欄位編輯器 | Native-control subclasses (`StyleKeyOverride` keeps the theme) bound to one `FormDataObject` field; auto-apply `FormField` metadata (MaxLength / ListItems) |
+| Field editors（`TextEdit` / `MemoEdit` / `ButtonEdit` / `NumericEdit` / `TimeEdit` / `DateEdit` / `YearMonthEdit` / `DropDownEdit` / `CheckEdit`） | 欄位編輯器 | Native-control subclasses (`StyleKeyOverride` keeps the theme) bound to one `FormDataObject` field; auto-apply `FormField` metadata (MaxLength / ListItems) |
 | `FormScope` | 表單作用域 | Attached inherited properties (`DataObject` / `FormMode`): set once on a container and descendant editors with a `FieldName` bind themselves |
 | `GridEditMode` | 表格編輯模式 | UI-layer editing model for `GridControl`: `InCell` (cell editing) / `EditForm` (popup row editing) |
 | `RowEditPanel` / `RowEditDialog` | 列編輯面板／彈窗 | EditForm-mode editing surface built from the field editors; uses the buffered row-edit protocol (`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit`) |
 | `FormView` | 表單檢視 | Avalonia single-record container: master sections + detail `GridControl`s + toolbar (New / Save / Delete); the list side is `ListView`. Resolves `Schema` / `FormConnector` / `AccessToken` from `ClientInfo` when the host sets only `ProgId` |
 | `FormDataObject` | 表單資料物件 | The view-model object bound by the Avalonia controls: carries the `DataSet`, bridges ADO.NET table events into `FieldValueChanged` / dirty tracking, and exposes the buffered row-edit protocol |
-| `FileEndpointStorage` | 檔案端點儲存 | File-backed `IEndpointStorage` implementation that persists the API endpoint to `LocalApplicationData/<appName>/endpoint.txt` |
 
 ### Web Frontend (`Polhem.Web.Blazor.Server`)
 
-`Polhem.Web.Blazor.Server` is a Razor Class Library (RCL) exposing `DynamicForm`, `DynamicGrid` and `FormDataObject`, with DI-scoped connectors so each SignalR circuit carries its own AccessToken. A Blazor WASM package once existed alongside it and was removed in v4.16.0; a WASM app of your own reaches the backend through `Polhem.Api.Client` (`RemoteApiProvider`) directly.
+`Polhem.Web.Blazor.Server` is a Razor Class Library (RCL) exposing `DynamicForm`, `DynamicGrid` and `FormDataObject`, with DI-scoped connectors so each SignalR circuit carries its own AccessToken. There is no Blazor WebAssembly package; a WASM app of your own reaches the backend through `Polhem.Api.Client` (`RemoteApiProvider`) directly.
 
 | English | 中文 | Description |
 |---------|------|-------------|
 | `DynamicForm` (Razor component) | 動態表單元件 | Blazor component that renders a FormSchema-driven form |
-| `FormDataObject` | 表單資料物件 | Data-binding object bound by the Blazor `DynamicForm`. Deliberately separate from the Avalonia type of the same name — see `rules/avalonia.md` for why the duplication is kept |
+| `FormDataObject` | 表單資料物件 | Data-binding object bound by the Blazor `DynamicForm`. A separate type from the Avalonia `FormDataObject`; the value rules both heads share (DataSet seeding, value coercion, display formatting, CRUD preconditions) live once in `Polhem.Api.Client` (`FormValueBinding`, `FormDataGuard`) |
 | `AddPolhemBlazor` | Blazor Server 註冊擴充方法 | `IServiceCollection` extension that registers the Blazor Server RCL services (DI-scoped connectors) |
 
 ### Api Client Providers (`Polhem.Api.Client`)

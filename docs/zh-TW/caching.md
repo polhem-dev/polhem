@@ -1,4 +1,4 @@
-<!-- source: en/caching.md blob: 057e832dd6e8709eb34092a8d571237e8f111b0a -->
+<!-- source: en/caching.md blob: f90e59c1afcdbc7315185a38f261305abe9a8cb2 -->
 # 快取機制
 
 [English](../en/caching.md) · [← 文件索引](README.md)
@@ -59,7 +59,7 @@ flowchart TB
     caches -- "miss：資料庫資料" --> datasource
 ```
 
-四個角色，各自的職責：
+快取層內的角色，各自的職責：
 
 | 角色 | 型別 | 職責 |
 |------|------|------|
@@ -91,24 +91,24 @@ Provider 的職責刻意壓到最小 —— 沒有 atomic get-or-create、不懂
 （`FormSchema` —— 每個 `progId` 一份）。複合鍵以**點**壓平成單一字串：`TableSchema` 的 key 是
 `"{categoryId}.{tableName}"`，`LanguageResource` 是 `"{lang}.{namespace}"`。
 
-> **有三個定義快取直接讀檔，不經 `IDefineStorage`**：`SystemSettingsCache`、
-> `DatabaseSettingsCache` 與 `PermissionModelsCache` 在 `CreateInstance` 中直接由 `PathOptions`
-> 解析路徑並反序列化 XML。它們是 bootstrap 定義 —— 必須在資料庫連線存在**之前**就讀得到 ——
+> **`SystemSettingsCache`、`DatabaseSettingsCache` 與 `PermissionModelsCache` 直接讀檔，
+> 不經 `IDefineStorage`**：它們在 `CreateInstance` 中直接由 `PathOptions` 解析路徑並反序列化 XML。它們是 bootstrap 定義 —— 必須在資料庫連線存在**之前**就讀得到 ——
 > 所以即使 `IDefineStorage` 改為資料庫版，它們的來源也不變。
 
 ---
 
 ## 4. 一次讀取的內部流程
 
-兩個基底類別的 `Get()` 都是同樣三步：
+兩個基底類別的 `Get()` 都走同樣的步驟：
 
 ```
 1. 讀 provider。命中 → 直接回傳。沒有鎖、沒有配置。
 2. Miss → 對這個 key 進入 single-flight。
-3. 在 flight 內：再確認一次 provider，然後 CreateInstance()、寫入、回傳。
+3. 在 flight 內：再確認一次 provider，記下該 key 的失效狀態，
+   CreateInstance()，除非期間該 key 已被失效才寫入，然後回傳。
 ```
 
-其中兩個細節不能省。
+以下幾個細節不能省。
 
 ### Single-flight：並行 miss 只產生一個實例
 
@@ -124,6 +124,16 @@ Provider 的職責刻意壓到最小 —— 沒有 atomic get-or-create、不懂
 > 確保不會誤刪比自己新的 flight。**不可**把它改成 per-key 鎖表：key 含呼叫端提供的值
 > （例如 access token），一張只增不減的表等於無上限。
 
+### 與失效重疊的填入會丟棄結果
+
+填入讀到舊資料，寫入端 commit 並呼叫 `Remove` —— 此時什麼都移不掉，因為填入還沒寫入 ——
+接著填入把舊資料存了進去。在 sliding 視窗下，熱門 key 會無限期保有這個過期值。為了堵住這個缺口，
+填入會在載入**之前**記下該 key 的失效狀態：每次 `Remove` 與 `Set` 都會推進的失效世代
+（`CacheInvalidation`），以及其政策的變更基準 —— 已觀察到的 notify 版本與每個被監看檔案的
+寫入時間。只有在載入後世代仍未改變時才會寫入；條目的 token 則與載入前取得的基準比較，
+因此在載入期間發生的 notify bump 或檔案改寫，會讓條目在第一次被讀取時就過期。
+`CacheFillInvalidationRaceTests` 涵蓋了這些情境。
+
 ### 負向快取：miss 本身也可以被快取
 
 若 `CreateInstance` 回 `null`，`KeyObjectCache<T>` 會在該 key 下存入一個 process-wide 哨兵值，
@@ -131,12 +141,15 @@ Provider 的職責刻意壓到最小 —— 沒有 atomic get-or-create、不懂
 cache penetration —— 反覆查詢一個資料不存在的 key，否則每次都會打到資料庫。
 
 負向視窗刻意比正向短，好讓「在別處被建立出來的資料」在有界的延遲內可見。有兩個快取覆寫了預設，
-而兩者都是**安全決策**而非調校：
+而兩者都是**安全決策**而非調校。它們的 key 來自呼叫端，所以其標記不放進共用的 provider，
+而是各自存放在一個以 `MaxNegativeEntries` 設上限的集合裡。集合滿了之後，後續的 miss 在標記過期前
+都不再快取，因此一連串互不相同的未知 key 無法讓記憶體無限成長。
 
-- **`SessionInfoCache` 完全停用負向快取**（`GetNegativePolicy` 回 `null`）。若把每次未通過認證的
-  查詢都記成負向條目，等於讓匿名流量以任意 access token 灌爆快取 —— 記憶體用量由攻擊者決定。
-  而它省下的重建，不過是一次回傳空集合的索引查詢。
-- **`ApiKeyCache` 縮短為 1 分鐘**，讓剛簽發的金鑰能盡快生效。
+- **`SessionInfoCache` 將 miss 快取 1 分鐘**，最多記住 `SessionInfoCache.MaxNegativeTokens` 個
+  未知的 access token。一個請求在決定存取權之前會解析 session 不只一次，沒有標記的話，
+  未知 token 每次查詢都要讀一次 `st_session`。登入時以 `Set` 寫入新 session，會清掉該 token 的標記。
+- **`ApiKeyCache` 將 miss 快取 1 分鐘**，最多記住 `ApiKeyCache.MaxNegativeIds` 個未知識別碼，
+  讓剛簽發的金鑰能盡快生效。
 
 負向條目帶有與正常條目相同的 notify 相依，所以「被快取的 miss」也會在該筆資料於其他 process
 被建立後清掉。
@@ -147,21 +160,25 @@ cache penetration —— 反覆查詢一個資料不存在的 key，否則每次
 
 ## 5. 條目如何失去效力
 
-四種互相獨立的信號，一筆條目可以同時帶多種。
+這些信號互相獨立，一筆條目可以同時帶多種。
 
 | 信號 | 由誰設定 | 影響範圍 | 何時偵測 |
 |------|---------|---------|---------|
 | **時間** | `CacheItemPolicy` —— 預設 20 分鐘 sliding | 本 process | 讀取時 |
 | **顯式 `Remove`** | `IDefineAccess.SaveX`、各服務寫入路徑 | 本 process | 立即 |
-| **檔案異動** | `ChangeMonitorFilePaths` | 共用同一檔案系統的所有 process | 讀取時 |
+| **檔案異動** | `ChangeMonitorFilePaths` | 共用同一檔案系統的所有 process | 讀取時，每筆條目每秒最多檢查一次 |
 | **cache-notify 版本** | `ChangeNotifyKey` | 輪詢同一個資料庫的所有 process | 讀取時 |
 
-四者中有三者是在**讀取時**偵測，而非由背景巡掃。`MemoryCache` 在每次 `TryGetValue` 都會評估條目
-的到期 token，而 `FileModificationToken` 與 `CacheNotifyToken` 都是把「插入當下取的快照」與
-「此刻的值」相比。沒有計時器、沒有 callback、不主動驅逐。
+除了 `Remove` 以外，所有信號都是在**讀取時**偵測，而非由背景巡掃。`MemoryCache` 在每次
+`TryGetValue` 都會評估條目的到期 token，而 `FileModificationToken` 與 `CacheNotifyToken` 都是把
+「載入值之前取得的基準」與「此刻的值」相比。沒有計時器、沒有 callback、不主動驅逐。
+
+檔案式定義在一個請求內會被查詢好幾次，所以 `FileModificationToken` 每秒最多看一次檔案
+（`FileWriteTime.RecheckInterval`），其間沿用上一次的答案。第一次檢查不會延後。因此直接在磁碟上
+修改定義檔，最多可能有一秒沒被察覺；經由 `IDefineAccess.SaveX` 存檔則會自行移除條目，不必等待。
 
 由此得到一個結果：**沒人讀的失效條目不花任何成本。** 一個自變更後就沒人打開過的
-`FormSchema`，根本不會被重載。這正是失效設計四條不變式之一 ——
+`FormSchema`，根本不會被重載。這也是跨 process 設計的不變式之一（[§6.4](#64-不變式)）——
 *失效不重載，只保證下次讀取拿到新值*。
 
 ### 信號從哪來
@@ -228,11 +245,11 @@ policy.ChangeNotifyKey        = changeSource.NotifyKey;   // 資料庫式 storag
   （表不存在則是明確的 schema 答案，**確實**回報未啟用。）
 - **重建 session 是一條真正的認證路徑。** `SessionInfoCache.CreateInstance` 會由 `st_session`
   的種子重建 session，這使得**每一個寫入該表的人**都成了鑄造合法 token 的管道。任何新增的寫入端
-  必須自行完成認證、或限定為可信呼叫者 —— 這正是 `SystemBO.CreateSession` 標為 `LocalOnly` 的原因。
+  必須自行完成認證、或限定為可信呼叫者 —— 這正是 `SystemBusinessObject.CreateSession` 標為 `LocalOnly` 的原因。
 
 ### 6.3 跨 process 失效：通知表
 
-四個元件，依變更流經的順序：
+變更依序流經的步驟：
 
 | 步驟 | 元件 | 位置 |
 |------|------|------|
@@ -256,9 +273,9 @@ MySQL 用 `ON DUPLICATE KEY`、SQL Server（加 `HOLDLOCK`）與 Oracle 用 `MER
 `CacheInfo.NotifyVersions`，而每一筆帶有相符 `ChangeNotifyKey` 的條目會在下次讀取時**自己**過期。
 正是這一點，讓單一 poller 能失效掉「單一注入容器根本搆不到」的 per-tenant / per-fixture 容器裡的條目。
 
-### 6.4 四條不變式
+### 6.4 不變式
 
-以下四點是這個設計要保證的性質。完整理由與被否決的替代方案見
+以下是這個設計要保證的性質。完整理由與被否決的替代方案見
 [ADR-017](../adr/adr-017-db-cache-invalidation.zh-TW.md)。
 
 1. **bump 必須與資料變更在同一 transaction 提交。** 否則 poller 可能在資料可見之前就看到通知，
@@ -336,12 +353,12 @@ t=9.2  節點 B：某個請求讀取 FormSchema "Employee"。MemoryCache 評估�
 
 | 快取 | Key | 來源方法 | 備註 |
 |------|-----|---------|------|
-| `SessionInfoCache` | access token（GUID） | `GetSessionInfo` | **停用負向快取**；由 `st_session` 種子重建 session |
+| `SessionInfoCache` | access token（GUID） | `GetSessionInfo` | 負向視窗 **1 分鐘**，存於有上限的集合；由 `st_session` 種子重建 session |
 | `CompanyInfoCache` | `companyId` | `GetCompanyInfo` | 由 repository 資料庫 router 消費 |
 | `CompanyRolePermissionsCache` | `companyId` | `GetCompanyRolePermissions` | 各公司的權限快照 |
 | `DepartmentTreeCache` | `companyId` | `GetDepartmentTree` | 各公司的組織樹 |
 | `CompanyAuditRulesCache` | `companyId` | `GetCompanyAuditRules` | 各公司的稽核規則快照 |
-| `ApiKeyCache` | 金鑰識別碼 | `GetApiKey` | **60 分鐘絕對到期**；負向視窗縮短為 1 分鐘 |
+| `ApiKeyCache` | 金鑰識別碼 | `GetApiKey` | **60 分鐘絕對到期**；負向視窗 **1 分鐘**，存於有上限的集合 |
 | `ApiKeyGateCache` | 單一固定 key | `GetApiKeyGateState` | **60 分鐘絕對到期**；與 `ApiKeyInfo` 共用 cache group，金鑰異動也會失效閘門 |
 
 ---
@@ -378,17 +395,24 @@ key 命名空間。正式環境的容器用空字串；測試 fixture 用唯一�
 由於 cache-notify 的 poller 是**發布版本**而非驅逐條目，租戶容器自動參與跨 process 失效，
 無需任何註冊。
 
+多數租戶什麼都沒覆寫，但凡是帶客製化代碼的租戶，每個請求都會查詢 reader。因此對
+`ProgramSettings`、`MenuSettings` 與 `PluginSettings`，`CustomizeDefineReader` 會先探測租戶的檔案
+是否存在，再去碰租戶容器，並把「沒有這個檔」的答案記住一秒（`OverrideFileProbe`）。存在的檔案
+每次讀取都會探測，所以被刪除的覆寫會立即停止提供。`CustomizeDefineWriter` 存檔時會丟掉記住的答案，
+因此它的寫入在下次讀取就看得到；以其他方式複製進來的檔案，最多可能要一秒才會被察覺。
+
 ---
 
 ## 9. 快取中的定義資料不可異動
 
 **任何由 `IDefineAccess.GetX(...)` 取得的物件都是 process-wide 共用實例，init 完成後不得異動。**
 每個 session 拿到的是同一個 reference；為某個 session 做的改動會洩漏到所有 session，
-並行異動則會 race。
+並行異動則會 race。資料庫快取也一樣；它們的型別（例如 `CompanyInfo`）只公開 init-only 屬性，
+且不提供 `Clone()`。
 
 要讓定義隨 session 而異，先 `Clone()` 再改副本。要持久化變更，走 `IDefineAccess.SaveX(...)`
-（寫入 storage 並失效快取）。`XmlCodec.Serialize(cached)` **不是**免費的 deep-clone ——
-它會在來源物件上翻動序列化狀態。
+（寫入 storage 並失效快取）。以 `XmlCodec.Serialize` 序列化快取中的定義（例如要送上 wire）
+只會讀取它。
 
 `SessionInfo` 是刻意的例外：它本來就是 per-session。
 
@@ -415,8 +439,14 @@ key 命名空間。正式環境的容器用空字串；測試 fixture 用唯一�
 下次讀取會重試。
 
 由於沒有到期機制，**切換租戶（`EnterCompany` / `LeaveCompany`）後必須呼叫 `ClearCache()`**。
-伺服端會依 session 的客製化代碼覆蓋 FormLayout、Language 與 ProgramSettings，但這個快取只以
-`progId` / `layoutId` / namespace 當 key —— 不清空的話，會繼續提供前一個租戶的覆蓋結果。
+用戶端快取的內容有一部分取決於 session 的客製化代碼：FormLayout 與 Language 的租戶層
+（`GetCustomizeFormLayoutAsync`、`GetCustomizeLanguageAsync`，連「沒有覆寫」的答案也會快取），
+以及 `MenuSettings` —— 伺服端會先依 session 的客製化代碼解析好再回傳。這個快取只以 `progId` /
+`layoutId` / 語系與 namespace 當 key —— 不清空的話，會繼續提供前一個租戶的結果。
+
+遠端用戶端只能讀取 UI 需要的定義型別：`SystemBusinessObject.GetDefine` 對非本機呼叫者拒絕其他
+所有型別，所以 `GetProgramSettingsAsync` 這類存取方法只在本機連線下可用。允許清單寫在
+`GetDefine` 的 XML 文件中。
 
 ---
 

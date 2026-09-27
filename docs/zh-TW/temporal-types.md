@@ -1,4 +1,4 @@
-<!-- source: en/temporal-types.md blob: 01b86d2ce5abec57395ae3effa3c76d248d43600 -->
+<!-- source: en/temporal-types.md blob: b7845cfbf366f19bc870825adfea356d3d2cf3ce -->
 # 時間型別總覽：`Date`、`DateTime`、`Time`
 
 [English](../en/temporal-types.md) · [← 文件索引](README.md)
@@ -281,7 +281,7 @@ col created_at: clr=DateTime marker=DateTime value=2026-07-27 08:30:15
 col work_start: clr=String   marker=Time     value=08:30
 ```
 
-由於整數是位置式的，**新的 `FieldDbType` 成員一律只能 append** ——
+由於整數是位置式的，**新的 `FieldDbType` 成員必須加在最後** ——
 插入到中間會讓其後所有值位移，打斷既有 payload。
 
 ### 篩選條件

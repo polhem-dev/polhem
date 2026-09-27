@@ -18,18 +18,27 @@ gate**, after which only issued keys are accepted. There is no setting to flip.
 
 | State | Behaviour |
 |---|---|
-| `st_api_key` absent, or holds no enabled key | Gate not in force: any non-empty header passes. `UsePolhemFramework` logs a startup warning. |
+| `st_api_key` absent, or holds no enabled key | Gate not in force: any non-empty header passes. `UsePolhemFramework` reports it at startup — as a warning in the Development environment, as an error everywhere else. |
 | At least one enabled key | Gate in force: the header must carry a valid, enabled, unexpired key. |
+
+The default validator exempts one method from the key, `System.Ping`, so a health check still
+answers when the key store cannot be read.
 
 Rejections are deliberately merged into one outcome — malformed, unknown, disabled and expired are
 indistinguishable to the caller, so the API cannot be used to probe which identifiers exist. The
 reasons are separated in the audit record only.
 
+An identifier that is not issued (or whose key is disabled) is remembered as unknown for one minute,
+in a bounded set, so a client that keeps retrying with a revoked key does not reach the database on
+every call. Each distinct unknown identifier still costs one database read; throttling probe traffic
+belongs to a rate limit in front of the API. Issuing or enabling a key clears the marker through the
+same cache-notify as any other key change.
+
 ## 2. Issuing a key
 
-`SystemBO.CreateApiKey` generates the secret server-side and returns the complete plaintext key
-**once**. Only a salted hash is stored, so the framework cannot show the key again — losing it means
-issuing a replacement, which is the rotation procedure anyway.
+`SystemBusinessObject.CreateApiKey` generates the secret server-side and returns the complete
+plaintext key **once**. Only a salted hash is stored, so the framework cannot show the key again —
+losing it means issuing a replacement, which is the rotation procedure anyway.
 
 ```csharp
 var response = await connector.CreateApiKeyAsync(
@@ -56,6 +65,13 @@ management is gated on the deployment-level axis instead:
 - **An in-process (local) call passes without one.** That is the bootstrap path: a deployment with
   no administrator yet must still be able to mint its first key on the host.
 
+The rule covers every key management method: `CreateApiKey`, `ListApiKeys`, `SetApiKeyEnabled` and
+`SetApiKeyExpiry`. All of them require an Encrypted call, and `CreateApiKey`, `SetApiKeyEnabled` and
+`SetApiKeyExpiry` also declare replay protection (`ApiReplayProtection.UniqueSequence`): when the
+deployment turns on `ApiServiceOptions.RequireWireFrame`, a replayed copy of such a call is refused.
+The limits of that check are in
+[Development Constraints § API Replay Protection](development-constraints.md#api-replay-protection-constraints).
+
 See [Permission & Authorization, Part 3](permission-authorization.md) for the deployment-level model
 and how to appoint the first administrator.
 
@@ -68,10 +84,12 @@ both live in the middle of it.
    convention is a suffix: `acme-portal` → `acme-portal-2`. Both keys are enabled and both work.
 2. **Move the clients over.** Update the stored key on each installation (see §6). Traffic shifts
    gradually; nothing breaks while it does.
-3. **Confirm the old key is idle.** The audit trail records `api_key_id` on every call, so a query
-   over the login and change logs shows whether anything still presents the old identifier.
-4. **Disable the old key.** `SetApiKeyEnabled(sysId, false)` revokes it **immediately** across every
-   server process — the invalidation travels with the write, so no cache keeps it alive.
+3. **Confirm the old key is idle.** The login, change, access and API-anomaly logs record
+   `api_key_id`, so a query over them shows whether anything still presents the old identifier.
+4. **Disable the old key.** `SetApiKeyEnabled(sysId, false)` revokes it. The change is announced
+   through cache-notify in the same transaction as the write, so every server process drops its
+   cached copy on its next poll (`CacheNotifyOptions.IntervalSeconds`) instead of honouring the key
+   until the cache entry lapses.
 
 Instead of step 4 you can set an expiry (`SetApiKeyExpiry`) to schedule the retirement rather than
 performing it. A past instant is accepted there, which retires a key as of now while leaving the
@@ -99,13 +117,19 @@ revoke.
 Clients read and persist their key through `IApiKeyStorage` (`Polhem.UI.Core`), assigned as
 `ClientInfo.ApiKeyStorage`. `ClientInfo.ApplyApiKey(defaultApiKey)` seeds empty storage with the
 application's built-in value and otherwise uses what is stored, so changing a key never requires
-recompiling a client. Platform-appropriate implementations ship for file-backed and browser-backed
-hosts; see the `Polhem.UI.Core` and `Polhem.UI.Avalonia` READMEs.
+recompiling a client.
+
+The default is `FileEndpointStorage`, which keeps the key in `apikey.txt` beside the endpoint, in a
+folder named after the application under the per-user local application data directory. The file is
+written owner-only: on Unix it is created with mode `0600`, and on Windows it inherits the per-user
+folder's access list. Browser (WebAssembly) hosts have no persistent file system and replace both
+`ClientInfo.EndpointStorage` and `ClientInfo.ApiKeyStorage` with an implementation backed by browser
+storage; the framework does not ship one.
 
 ## 7. What gets recorded
 
-Every audit row carries `api_key_id` and `api_key_name`, so "which application did this" is
-answerable on the login, change, access and API-anomaly axes without a join.
+Rows on the login, change, access and API-anomaly logs carry `api_key_id` and `api_key_name`, so
+"which application did this" is answerable without a join.
 
 Key management operations are themselves recorded, on the change axis under the `System` prog id,
 marked sensitive, with before/after values — an issued key logs its identifier, name, type, contact

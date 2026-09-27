@@ -1,4 +1,4 @@
-<!-- source: en/api-key-management.md blob: f14c36b2ef707496e634b79e3cda5d0043b0513f -->
+<!-- source: en/api-key-management.md blob: 9b707a51469357cdcc6ee76b41f499f4e87f43fd -->
 # API 金鑰管理
 
 [English](../en/api-key-management.md) · [← 文件索引](README.md)
@@ -17,15 +17,22 @@ API 金鑰回答的是**哪個應用程式在呼叫**。它不是使用者鑑別
 
 | 狀態 | 行為 |
 |---|---|
-| `st_api_key` 不存在，或無任何啟用中的金鑰 | 閘門未生效：任何非空標頭皆通過。`UsePolhemFramework` 會記錄啟動警告。 |
+| `st_api_key` 不存在，或無任何啟用中的金鑰 | 閘門未生效：任何非空標頭皆通過。`UsePolhemFramework` 會在啟動時回報 —— 在 Development 環境為警告，其他環境為錯誤。 |
 | 至少一把啟用中的金鑰 | 閘門生效：標頭必須帶有效、啟用中、未過期的金鑰。 |
+
+預設驗證器只讓一個方法免金鑰：`System.Ping`，讓健康檢查在金鑰存放讀不到時仍能回應。
 
 拒絕的理由刻意合併為單一結果 —— 格式錯誤、查無此金鑰、已停用、已過期，對呼叫端而言不可區分，
 因此無法用 API 探測哪些識別碼存在。理由只在稽核記錄中區分。
 
+未發放（或金鑰已停用）的識別碼會以「查無」記住一分鐘，存在一個有上限的集合裡，所以拿已撤銷
+金鑰不斷重試的用戶端不會每次都打到資料庫。每個不同的未知識別碼仍要付一次資料庫讀取；節流探測
+流量是 API 前端速率限制的工作。發放或啟用金鑰時，這個標記會透過與其他金鑰變更相同的
+cache-notify 清掉。
+
 ## 2. 發放金鑰
 
-`SystemBO.CreateApiKey` 由伺服端產生祕密段，完整明文金鑰**只回傳一次**。伺服端只存加鹽雜湊，
+`SystemBusinessObject.CreateApiKey` 由伺服端產生祕密段，完整明文金鑰**只回傳一次**。伺服端只存加鹽雜湊，
 框架無法再次顯示金鑰 —— 遺失就得重發一把，而那本來就是輪替流程。
 
 ```csharp
@@ -52,6 +59,12 @@ Console.WriteLine(response.ApiKey);    // "acme-portal.<secret>"
 - **行程內（本機）呼叫免管理員。** 這是 bootstrap 路徑：尚無管理員的部署仍必須能在主機上
   鑄出第一把金鑰。
 
+這條規則涵蓋所有金鑰管理方法：`CreateApiKey`、`ListApiKeys`、`SetApiKeyEnabled` 與
+`SetApiKeyExpiry`。它們全都要求 Encrypted 呼叫，其中 `CreateApiKey`、`SetApiKeyEnabled` 與
+`SetApiKeyExpiry` 另外宣告了重放防護（`ApiReplayProtection.UniqueSequence`）：部署開啟
+`ApiServiceOptions.RequireWireFrame` 後，這類呼叫被重放的副本會遭拒絕。這道檢查的限制見
+[開發限制 § API 重放防護](development-constraints.md#api-重放防護限制)。
+
 部署層模型與第一位管理員的指派方式，見[權限與授權指南第三部分](permission-authorization.md)。
 
 ## 4. 輪替金鑰
@@ -61,10 +74,11 @@ Console.WriteLine(response.ApiKey);    // "acme-portal.<secret>"
 1. **發第二把。** `sys_id` 具唯一性，新金鑰必須有自己的識別碼 —— 慣例是加後綴：
    `acme-portal` → `acme-portal-2`。兩把都啟用、都能用。
 2. **用戶端逐步換過去。** 逐一更新各安裝的存放金鑰（見 §6）。流量會慢慢移轉，過程中不中斷。
-3. **確認舊金鑰已無流量。** 稽核記錄每次呼叫都帶 `api_key_id`，查一下登入與異動記錄即可確認
+3. **確認舊金鑰已無流量。** 登入、異動、檢視與 API 異常日誌都記錄 `api_key_id`，查一下即可確認
    是否還有人在用舊識別碼。
-4. **停用舊金鑰。** `SetApiKeyEnabled(sysId, false)` 會**立即**在所有伺服器行程撤銷它 ——
-   失效通知與寫入同一個交易，不會有任何快取讓它多活一段時間。
+4. **停用舊金鑰。** `SetApiKeyEnabled(sysId, false)` 會撤銷它。變更透過 cache-notify 在與寫入
+   相同的交易中發布，所以每個伺服器行程會在下一次輪詢（`CacheNotifyOptions.IntervalSeconds`）
+   時丟棄快取副本，而不是一直接受該金鑰到快取項目過期為止。
 
 第 4 步也可以改用 `SetApiKeyExpiry` 設定到期時間，把退役排程而不是當下執行。該方法接受已過去的
 時間，等於「即刻起失效」，同時把理由留在資料列上。
@@ -88,13 +102,18 @@ Console.WriteLine(response.ApiKey);    // "acme-portal.<secret>"
 
 用戶端透過 `IApiKeyStorage`（`Polhem.UI.Core`）讀寫金鑰，以 `ClientInfo.ApiKeyStorage` 指派。
 `ClientInfo.ApplyApiKey(defaultApiKey)` 在存放為空時以應用內建值作為種子寫入，否則一律以存放值
-為準，因此更換金鑰不需要重新編譯任何用戶端。檔案式與瀏覽器式的平台實作皆已出貨，
-見 `Polhem.UI.Core` 與 `Polhem.UI.Avalonia` 的 README。
+為準，因此更換金鑰不需要重新編譯任何用戶端。
+
+預設是 `FileEndpointStorage`：金鑰存在端點旁的 `apikey.txt`，位於每位使用者本機應用程式資料目錄下、
+以應用程式命名的資料夾。這個檔案只有擁有者能讀：在 Unix 上以 `0600` 模式建立，在 Windows 上繼承
+該使用者資料夾的存取清單。瀏覽器（WebAssembly）宿主沒有持久的檔案系統，會把
+`ClientInfo.EndpointStorage` 與 `ClientInfo.ApiKeyStorage` 都換成以瀏覽器儲存體實作的版本；
+框架並未出貨這樣的實作。
 
 ## 7. 留下什麼記錄
 
-每一列稽核記錄都帶 `api_key_id` 與 `api_key_name`，因此登入、異動、檢視與 API 異常四個軸上，
-「這是哪個應用做的」都不需要 join 就答得出來。
+登入、異動、檢視與 API 異常日誌的資料列都帶 `api_key_id` 與 `api_key_name`，因此「這是哪個應用
+做的」不需要 join 就答得出來。
 
 金鑰管理操作本身也會留痕：記在異動軸、`prog_id` 為 `System`、標為敏感、帶前後值 ——
 發放一把金鑰會記下識別碼、名稱、類型、聯絡人與到期時間，**絕不記錄祕密段或其雜湊**。

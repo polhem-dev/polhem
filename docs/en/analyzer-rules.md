@@ -29,14 +29,17 @@ build time, where the message can name both the cause and the fix.
 
 
 > **POLHEM1008 is invisible by default, and that is a deliberate trade-off.** Leaving unmarked forms
-> open is the framework's gradual-adoption stance (see the XML doc on `FormBusinessObject.Authorize`),
-> and a warning would fail the build of every deployment that is midway through adopting permission
-> models. The cost is that `Info` maps to an MSBuild message, which the default verbosity does not
-> print — and every definition analyzer is a compilation-end diagnostic, so IDEs do not surface it
-> live either. **The rule exists, but you will not see it.** Raise it in `.editorconfig` once a
-> deployment has finished adopting permission models, and it starts doing real work:
+> open is the framework's gradual-adoption stance (see
+> [Bind a form to the model](permission-authorization.md#2-bind-a-form-to-the-model)), and a warning
+> would fail the build of every deployment that treats warnings as errors and is midway through
+> adopting permission models. The cost is that `Info` maps to an MSBuild message, which the default
+> verbosity does not print — and every definition analyzer is a compilation-end diagnostic, so IDEs do
+> not surface it live either. **The rule exists, but you will not see it.** Raise it in `.globalconfig`
+> once a deployment has finished adopting permission models, and it starts doing real work (a
+> definition file rule does not read `.editorconfig`; see [Adjusting severity](#adjusting-severity)):
 >
 > ```ini
+> is_global = true
 > dotnet_diagnostic.POLHEM1008.severity = warning
 > ```
 
@@ -82,7 +85,8 @@ the same number, and a new rule reusing the number would be silently suppressed 
 | POLHEM9004 | Warning | The project is configured for NativeAOT, full trimming, or System.Text.Json with reflection disabled; Polhem supports none of them |
 
 **None of the POLHEM9xxx are Roslyn analyzers**; they are MSBuild targets, listed here so the numbering
-has one home. POLHEM9001 and POLHEM9002 live in `src/Directory.Build.targets` and are framework-internal —
+has one home. POLHEM9001 lives in `src/Directory.Build.targets` and POLHEM9002 in `Version.targets` at the
+repository root (imported by the `Directory.Build.targets` of `src/` and `tools/`); both are framework-internal —
 a consumer project cannot trigger them. POLHEM9003 ships in the package and is opt-in; see
 [Checking what the glob matched](#checking-what-the-glob-matched). POLHEM9004 also ships in the package and is on
 by default; its conditions, and the `PolhemSuppressTrimSupportWarning` property that turns it off, are documented in

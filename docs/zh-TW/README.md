@@ -1,4 +1,4 @@
-<!-- source: en/README.md blob: 2a854b97d77c7e827e1f3560da0710e781ca415b -->
+<!-- source: en/README.md blob: e64158bb8db4c837be997ebcbce25e18a14b40d1 -->
 # Polhem 文件
 
 [English](../en/README.md)
@@ -26,7 +26,7 @@
 |------|------|------|------|
 | [快速上手](getting-started.md) | 教學 | 中 | 從零建出第一個 Polhem 後端：套件、`DefinePath`、DI 接線、第一張表單與商業物件，再由用戶端呼叫 |
 | [架構總覽](architecture-overview.md) | 概念 | 長 | 定義導向架構（Definition-Driven Architecture）的設計理念與實踐模式 |
-| [定義檔全景](definition-files-overview.md) | 概念 | 中 | 全部 13 種定義檔的全景圖：各自管什麼、彼此怎麼串、改了哪個會影響哪一層 |
+| [定義檔全景](definition-files-overview.md) | 概念 | 中 | 所有定義檔的全景圖：各自管什麼、彼此怎麼串、改了哪個會影響哪一層 |
 
 > 遇到不熟的術語？另開一頁擺著[術語對照表](terminology.md)。
 >
@@ -41,7 +41,7 @@
 | [FormSchema 驅動的資料庫存取](formschema-data-access.md) | 概念 | 中 | Polhem.Db 如何以 FormSchema 為單位動態產生 SQL，以及它為何不是 ORM |
 | [API ↔ BO 契約設計](api-bo-contract-design.md) | 概念 | 中 | API 契約三層分離（Contracts / API Type / BO Type）與驅動它的命名慣例 |
 | [專案相依性全景圖](dependency-map.md) | 概念 | 短 | `src/` 專案之間的相依關係，以及維持相依圖無環的規則 |
-| [快取機制](caching.md) | 概念 | 長 | 定義快取與資料庫相依快取如何運作：讀取路徑、四種失效信號，以及跨 process / 多節點的通知表機制 |
+| [快取機制](caching.md) | 概念 | 長 | 定義快取與資料庫相依快取如何運作：讀取路徑、失效信號，以及跨 process / 多節點的通知表機制 |
 
 ## 3. 開發指引
 
@@ -58,7 +58,8 @@
 | [Wire 合約](../../wire-contracts/README.md) | 參考 | 短 | 由訊息型別產生的 TypeScript 合約 —— 非 .NET 用戶端據以實作的對象 |
 | [Wire Fixtures](../../wire-fixtures/README.md) | 參考 | 短 | 每個 wire 訊息的 golden body 樣本，供用戶端實作對照驗證 |
 | [DatabaseSettings 與 DbCategorySettings 指引](database-settings-guide.md) | 指引 | 長 | 兩個資料庫相關設定檔的結構、存取方式與運作流程 |
-| [資料庫 Schema 升級](database-schema-upgrade.md) | 指引 | 中 | 將定義變更同步到線上資料庫：diff → plan → execute 管線、ALTER vs 重建、乾跑 |
+| [資料庫 Schema 升級](database-schema-upgrade.md) | 指引 | 長 | 將定義變更同步到線上資料庫：diff → plan → execute 管線、ALTER vs 重建、乾跑 |
+| [平台支援](platform-support.md) | 指引 | 中 | 支援的 head（桌面、瀏覽器、iOS、Android、Blazor Server）、可用的裁剪與 AOT 設定，以及瀏覽器或行動裝置 head 的檢查清單 |
 
 ## 4. 查詢參考
 
@@ -68,14 +69,14 @@
 |------|------|------|------|
 | [框架機制清單](framework-capabilities.md) | 參考 | 中 | 單頁列出框架提供的所有機制，依領域分組，每項一行 |
 | [術語對照表](terminology.md) | 參考 | 長 | 框架中英文術語對照，依層別編排 |
-| [API 方法參考](api-method-reference.md) | 參考 | 短 | 透過 JSON-RPC 對外公開的所有 BO 方法單頁總覽，含 `[ApiAccessControl]` 設定與用途 |
+| [API 方法參考](api-method-reference.md) | 參考 | 中 | 透過 JSON-RPC 對外公開的所有 BO 方法單頁總覽，含 `[ApiAccessControl]` 設定與用途 |
 | [框架保留命名](framework-reserved-names.md) | 參考 | 短 | 框架擁有的 `st_*` 系統表與保留 `progId` registry |
 | [資料庫命名規範](database-naming-conventions.md) | 參考 | 中 | 表名、欄位、索引、系統欄位的命名規則；跨資料庫大小寫敏感性對照 |
 | [資料庫方言差異（DDL）](database-dialect-differences.md) | 參考 | 中 | 跨方言的 DDL 規則與例外（預設值、nullability、引號、AutoIncrement）；文字/數值欄為何 NOT NULL |
-| [時間型別總覽：Date、DateTime、Time](temporal-types.md) | 參考 | 中 | 三者如何選擇，以及各自在資料庫、`DataSet`、程式碼與三種序列化中的承載方式 |
+| [時間型別總覽：Date、DateTime、Time](temporal-types.md) | 參考 | 長 | 三者如何選擇，以及各自在資料庫、`DataSet`、程式碼與三種序列化中的承載方式 |
 | [時區處理](datetime-timezone.md) | 參考 | 短 | UTC 儲存、轉換發生在哪裡、使用者時區的設定，以及自寫 SQL 與非 .NET 用戶端該做什麼 |
-| [Analyzer 規則](analyzer-rules.md) | 參考 | 短 | 隨套件提供的建置期診斷：規則清單、如何調整嚴重度、版本政策 |
-| [開發限制與反模式](development-constraints.md) | 參考 | 中 | 框架的設計限制與禁止事項，亦適合供 AI Coding 工具參考 |
+| [Analyzer 規則](analyzer-rules.md) | 參考 | 中 | 隨套件提供的建置期診斷：規則清單、如何調整嚴重度、版本政策 |
+| [開發限制與反模式](development-constraints.md) | 參考 | 長 | 框架的設計限制與禁止事項，亦適合供 AI Coding 工具參考 |
 
 ## 5. 深入閱讀
 
@@ -96,6 +97,7 @@
 | **定義層** | [定義檔全景](definition-files-overview.md) · [架構總覽](architecture-overview.md) · [運算式與規則](expression-rules.md) · [保留命名](framework-reserved-names.md) |
 | **多租戶** | [租戶客製化](customization.md) · [定義檔全景](definition-files-overview.md) · [開發指引](development-cookbook.md) · [快取機制](caching.md) |
 | **快取與效能** | [快取機制](caching.md) · [開發指引](development-cookbook.md) · [開發限制與反模式](development-constraints.md) |
+| **用戶端 head 與平台** | [平台支援](platform-support.md) · [JSON-RPC 前端整合](jsonrpc-frontend-integration.md) · [開發指引](development-cookbook.md) |
 | **API 與前端** | [契約設計](api-bo-contract-design.md) · [API 方法參考](api-method-reference.md) · [JSON-RPC 前端整合](jsonrpc-frontend-integration.md) · [權限與授權](permission-authorization.md) · [API 金鑰管理](api-key-management.md) |
 | **型別與時間** | [時間型別總覽](temporal-types.md) · [時區處理](datetime-timezone.md) |
 | **品質與規範** | [Analyzer 規則](analyzer-rules.md) · [開發限制與反模式](development-constraints.md) · [命名規範](database-naming-conventions.md) |

@@ -1,4 +1,4 @@
-<!-- source: en/analyzer-rules.md blob: ab859441cbdc4c7b68c518a20f038723f3890982 -->
+<!-- source: en/analyzer-rules.md blob: a26ab2c052c5bc0dfb263525137cb95fa9f92288 -->
 # Analyzer 規則
 
 [English](../en/analyzer-rules.md) · [← 文件索引](README.md)
@@ -27,12 +27,14 @@ Polhem 隨套件提供 Roslyn analyzer，把框架慣例變成建置期診斷。
 
 
 > **POLHEM1008 預設看不到，這是刻意的取捨。** 未標記的表單保持開放是框架的漸進採用策略
-> （見 `FormBusinessObject.Authorize` 的 XML doc），把它設成 warning 會讓每個採用到一半的
-> 部署當場 build 失敗。代價是 `Info` 對應 MSBuild message、預設 verbosity 下不顯示，而
-> definition analyzer 都是 CompilationEnd、IDE 也不會即時顯示 —— **等於機制存在但你不會看到**。
-> 完成權限模型導入之後，在 `.editorconfig` 提升它才有實際把關效果：
+> （見[表單綁定 model](permission-authorization.md#2-表單綁定-model)），把它設成 warning 會讓每個
+> 把警告視為錯誤、且權限模型採用到一半的部署當場 build 失敗。代價是 `Info` 對應 MSBuild message、
+> 預設 verbosity 下不顯示，而 definition analyzer 都是 CompilationEnd、IDE 也不會即時顯示 ——
+> **等於機制存在但你不會看到**。完成權限模型導入之後，在 `.globalconfig` 提升它才有實際把關效果
+> （定義檔規則不讀 `.editorconfig`，見[調整嚴重度](#調整嚴重度)）：
 >
 > ```ini
+> is_global = true
 > dotnet_diagnostic.POLHEM1008.severity = warning
 > ```
 
@@ -77,7 +79,8 @@ POLHEM ID 保留那條設定；若新規則重用該編號，在那裡就會被�
 | POLHEM9004 | Warning | 專案設定為 NativeAOT、完整修剪（full trim），或停用反射的 System.Text.Json；Polhem 皆不支援 |
 
 **POLHEM9xxx 都不是 Roslyn analyzer**，而是 MSBuild target；列在此處是為了讓編號有一個統一的歸屬。
-POLHEM9001 與 POLHEM9002 位於 `src/Directory.Build.targets`，屬框架內部規則，消費端專案不會觸發；
+POLHEM9001 位於 `src/Directory.Build.targets`，POLHEM9002 位於 repository 根目錄的 `Version.targets`
+（由 `src/` 與 `tools/` 的 `Directory.Build.targets` 匯入），兩者都屬框架內部規則，消費端專案不會觸發；
 POLHEM9003 隨套件發布且為 opt-in，見[確認 glob 實際比對到什麼](#確認-glob-實際比對到什麼)。
 POLHEM9004 同樣隨套件發布，預設啟用；觸發條件與關閉它的 `PolhemSuppressTrimSupportWarning` 屬性，
 寫在套件內的 `buildTransitive/Polhem.Definition.targets`。

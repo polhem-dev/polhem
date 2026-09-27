@@ -1,4 +1,4 @@
-<!-- source: en/customization.md blob: 5ecca0da13a911b24dceb5932b59e0d15ba5e6d2 -->
+<!-- source: en/customization.md blob: 5a2fa388689499393de9efba722677c4ef8b343e -->
 # 租戶客製化
 
 [English](../en/customization.md) · [← 文件索引](README.md)
@@ -13,13 +13,14 @@
 就解析到套裝層，與這個功能不存在時完全相同——那是預設值，成本為零。
 
 租戶絕不由呼叫端指定。它來自 session：session 進入公司時，`st_company.customize_id` 會被複製到
-`SessionInfo.CustomizeId`，伺服端所有消費端一律只從那裡讀。
+`SessionInfo.CustomizeId`，伺服端的消費端從那裡讀取。唯一的例外是僅限本機的 plugin 維護 API
+（[見下文](#除了-plugin-之外都是唯讀)），它會指名要維護的租戶。
 
 ## 該用哪一種
 
 | 你想改的 | 用 | 檔案位置 |
 |---|---|---|
-| 欄位標題、表單名稱、訊息、選項文字 | **語系資源** | `{CustomizePath}/{customizeId}/Language/{lang}/{namespace}.Language.xml` |
+| 欄位標題、表單名稱、規則訊息、選項文字 | **語系資源** | `{CustomizePath}/{customizeId}/Language/{lang}/{namespace}.Language.xml` |
 | 哪些欄位出現、畫面怎麼排 | **FormLayout** | `{CustomizePath}/{customizeId}/FormLayout/{layoutId}.FormLayout.xml` |
 | 選單怎麼分組、排序、標題，哪些項目看得到 | **MenuSettings** | `{CustomizePath}/{customizeId}/MenuSettings.xml` |
 | 一個程式的整體行為——驗證、流程、AnyCode SQL | **客製 BO** | `{CustomizePath}/{customizeId}/ProgramSettings.xml` |
@@ -55,15 +56,21 @@ var paths = new PathOptions
 最常見的客製，而且只改定義檔。疊加是 **per key**：租戶的檔案只放要改的 key，其餘全部——包含
 套裝日後才新增的翻譯——都來自套裝層。
 
-namespace 就是表單的 `ProgId`。三種 sub-key 涵蓋一張表單：
+namespace 就是表單的 `ProgId`。以下 sub-key 涵蓋一張表單：
 
 | Sub-key | 覆寫的對象 |
 |---|---|
 | `Schema.DisplayName` | 表單自己的名稱 |
 | `Table.{TableName}.DisplayName` | 表單內某個表格的名稱 |
 | `Field.{FieldName}.Caption` | 某個欄位的標題 |
+| `Rule.{RuleId}.Message` | 存檔時未通過的 schema 規則訊息 |
 
-要讓租戶 `acme` 把客戶欄位叫作「帳戶」：
+定義檔裡寫的文字是基底文字，以英文撰寫。沒有任何語系資源宣告的 key 就沿用它。
+
+規則訊息在規則未通過時由伺服端解析，採用 session 的語系與客製化代碼，所以租戶的語系檔可以像其他
+key 一樣改寫它。規則必須有 `RuleId`；沒有的規則一律顯示基底文字。
+
+要讓租戶 `acme` 在繁體中文下把客戶欄位叫作「帳戶」：
 
 ```xml
 <!-- Customize/acme/Language/zh-TW/Order.Language.xml -->
@@ -94,9 +101,10 @@ namespace 就是表單的 `ProgId`。三種 sub-key 涵蓋一張表單：
 **標題不在 layout 檔裡**：UI head 選定 layout 之後，會從已在地化的 schema 套用標題，所以即使
 客製了 layout，改標題仍然屬於語系資源的事。
 
-> **它怎麼到畫面上。** API 一律供應原始定義，組裝發生在用戶端的 `FormDefinitionLoader`：它取回
-> 兩層、有租戶 layout 就用租戶的、兩層都沒有就從 schema 生一份。**不經過 `FormDefinitionLoader`
-> 的 UI head 看不到 layout 客製。**
+> **它怎麼到畫面上。** API 供應原始的 layout 定義，組裝發生在用戶端的 `FormDefinitionLoader`：
+> 它取回兩層、有租戶 layout 就用租戶的。兩層都沒有時，`GetRuntimeLayoutAsync` 會拋出
+> `InvalidOperationException`：layout 在設計期撰寫，執行期絕不從 schema 生成。**不經過
+> `FormDefinitionLoader` 的 UI head 看不到 layout 客製。**
 
 ## BO 與 Repository：換掉一個程式的行為
 
@@ -145,18 +153,19 @@ namespace 就是表單的 `ProgId`。三種 sub-key 涵蓋一張表單：
 plugin 是唯一「兩層**相加**」的產物：套裝鏈先跑、租戶鏈後跑。因此租戶**無法停用**套裝的
 plugin——要拿掉套裝行為，請繼承 BO 覆寫該子方法。
 
-四個時點、每次操作的生命週期、以及「送往其他系統的副作用該寫在哪」，見開發指引的
+各個時點、每次操作的生命週期、以及「送往其他系統的副作用該寫在哪」，見開發指引的
 [業務 plugin](development-cookbook.md)。
 
 ## 除了 plugin 之外都是唯讀
 
-客製檔由部署工具產生、執行期讀取；覆蓋層上其餘所有寫入一律拋例外。**`PluginSettings` 是例外**
-——部署透過 `SystemBO.GetCustomizePluginSettings` / `SaveCustomizePluginSettings` 維護自己的
+客製檔由部署工具產生、執行期讀取；檔案式覆蓋層上其餘所有寫入一律拋出 `NotSupportedException`
+（`CustomizeOnlyStorage`）。**`PluginSettings` 是例外**——部署透過
+`SystemBusinessObject.GetCustomizePluginSettings` / `SaveCustomizePluginSettings` 維護自己的
 plugin 綁定。
 
 兩者皆為 `LocalOnly`：這些綁定決定「哪些程式碼會在存檔與刪除流程裡執行」，因此只有 in-process
 可達，由跑在主機上的維護工具呼叫。儲存時會逐一驗證每個綁定型別——必須可載入、繼承
-`FormBusinessPlugin`、且至少 override 一個時點——一筆不合格就整份拒存。
+`FormBusinessPlugin`、且恰好 override 其綁定所指定的那個時點——一筆不合格就整份拒存。
 
 檔案式儲存下，寫入落在服務該次呼叫的那台機器，因此多節點部署需要把 `CustomizePath` 放在共享
 儲存上，或改用資料庫式儲存（後者天生共享）。

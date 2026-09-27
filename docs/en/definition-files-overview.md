@@ -10,17 +10,19 @@ Polhem is definition-driven: the XML under your `DefinePath` is not configuratio
 
 ## 1. The Full Set
 
-Thirteen definition types, enumerated as `DefineType` and all reached through `IDefineAccess`. Nine are single files at the root of `DefinePath`; four are keyed and live in subfolders.
+The definition types are enumerated as `DefineType` and all reached through `IDefineAccess`. `FormSchema`, `TableSchema`, `FormLayout` and `Language` are keyed and live in subfolders; the others are single files at the root of `DefinePath`.
+
+The text written in the definition files — captions, display names, rule messages, menu captions — is the base text, in English. `Language` files translate it; a key no language resource declares keeps the base text.
 
 | Definition | File path under `DefinePath` | Owns | Read in depth |
 |------------|------------------------------|------|---------------|
 | **FormSchema** | `FormSchema/{progId}.FormSchema.xml` | The definition hub: fields, types, relations, master-detail structure, computed fields and rules | [Architecture Overview](architecture-overview.md) |
 | **TableSchema** | `TableSchema/{categoryId}/{tableName}.TableSchema.xml` | The physical table: columns, types, lengths, nullability, indexes | [Schema Upgrade](database-schema-upgrade.md) |
 | **FormLayout** | `FormLayout/{layoutId}.FormLayout.xml` | How the form is arranged on screen. Authored at design time — the runtime renders this file and fails when it is absent | [Architecture Overview](architecture-overview.md) |
-| **Language** | `Language/{lang}/{namespace}.Language.xml` | Localised captions and enum entries, one file per namespace × language | — |
+| **Language** | `Language/{lang}/{namespace}.Language.xml` | Translations of the base text — captions, enum entries, rule messages, menu captions — one file per namespace × language | [Tenant Customization](customization.md) |
 | **SystemSettings** | `SystemSettings.xml` | Process-wide settings: master key source, payload options, debug mode | [Development Cookbook](development-cookbook.md) |
 | **DatabaseSettings** | `DatabaseSettings.xml` | Physical databases and their connection strings | [Database Settings Guide](database-settings-guide.md) |
-| **DbCategorySettings** | `DbCategorySettings.xml` | Which logical category each table belongs to, and which database serves it | [Database Settings Guide](database-settings-guide.md) |
+| **DbCategorySettings** | `DbCategorySettings.xml` | Which logical category (`common` / `company` / `log`) each table belongs to. The databases are not listed here: each `DatabaseItem` in `DatabaseSettings` names the category it holds | [Database Settings Guide](database-settings-guide.md) |
 | **ProgramSettings** | `ProgramSettings.xml` | The type registry: progId → the business object and repository bound to it. Server-side only | — |
 | **MenuSettings** | `MenuSettings.xml` | The navigation menu: folders, ordering, captions and visibility, each entry pointing at a progId | — |
 | **PermissionModels** | `PermissionModels.xml` | Permission model registry: models, actions and record-scope strategies | [Permission & Authorization](permission-authorization.md) |
@@ -51,11 +53,11 @@ One `FormSchema` drives three layers at once. This is the single most important 
 - **Against the UI**: `FormLayout` arranges the fields a FormSchema declares; controls read the field metadata (max length, list items, read-only, relation → lookup) directly.
 - **Against validation**: computed fields and `FormRule` entries live inside the FormSchema itself. See [Expressions and Rules](expression-rules.md).
 
-The practical consequence: **ordinary CRUD requires no code**. A FormSchema, its TableSchema, a `DbCategorySettings` entry and a `ProgramSettings` item are a working form.
+The practical consequence: **ordinary CRUD requires no code**. A FormSchema, its TableSchema, its FormLayout and a `DbCategorySettings` entry are a working form, and a `MenuEntry` in `MenuSettings` puts it on the menu. A `ProgramSettings` item is needed only to bind a custom business object or repository: a progId the registry does not name resolves to `FormBusinessObject` and `DataFormRepository` (§4).
 
 ## 3. The Startup Trio
 
-Three settings files are read in a fixed order during host startup, and each depends on the one before it:
+Three settings files underpin every data access, and the first must load before the other two:
 
 ```text
 SystemSettings.xml          ──▶ SysInfo.Initialize + ApiServiceOptions.Initialize
@@ -63,18 +65,18 @@ SystemSettings.xml          ──▶ SysInfo.Initialize + ApiServiceOptions.Ini
         │
         ▼
 DatabaseSettings.xml        ──▶ physical databases + connection strings
-   (referenced by id)            (decrypted using the master key)
+   (referenced by id)            (passwords decrypted using the master key)
         │
         ▼
-DbCategorySettings.xml      ──▶ table → category → database resolution
+DbCategorySettings.xml      ──▶ table → category
    (common / company / log)
 ```
 
-`SystemSettings` must load before anything else because the master key it names is what decrypts the connection strings in `DatabaseSettings`. See [Development Cookbook § Framework Initialization Order](development-cookbook.md#framework-initialization-order) for the full sequence, and [Development Constraints](development-constraints.md) for what breaks when the order is violated.
+`SystemSettings` must load before anything else because the master key it names is what decrypts the database passwords in `DatabaseSettings`. See [Development Cookbook § Framework Initialization Order](development-cookbook.md#framework-initialization-order) for the full sequence, and [Development Constraints](development-constraints.md) for what breaks when the order is violated.
 
 ### Category is a scope selector, not a free string
 
-`CategoryId` accepts exactly three values, and picking the wrong one is the most common setup mistake:
+`CategoryId` accepts exactly three values (`RepositoryFactory.ParseCategoryId` throws for anything else), and picking the wrong one is the most common setup mistake:
 
 | Category | Meaning |
 |----------|---------|
@@ -118,14 +120,18 @@ would behave generically for a while, and on the data-access side it would run t
 and writes through the generic SQL its author replaced on purpose, surfacing later with the data
 already wrong.
 
-`System` and `AuditLog` are reserved progIds and are entries like any other. The host registers
-them at startup if they are absent, and they carry a tighter base-type constraint than ordinary
-progIds: they must resolve to the framework object for that axis, or a subclass of it. Their
-`Repository` is left empty — their business objects are not schema-driven CRUD and reach data
-through the framework repositories instead.
+`System`, `AuditLog` and `AuditRule` are reserved progIds (`ReservedProgIds`) and are entries like
+any other. The host registers them at startup if they are absent, and they carry a tighter
+base-type constraint than ordinary progIds: `System` must resolve to `SystemBusinessObject` and
+`AuditLog` to `AuditLogBusinessObject`, or a subclass; `AuditRule`, a form whose default business
+object is `AuditRuleBusinessObject`, must resolve to a `FormBusinessObject`. A binding outside that
+base stops the host from starting. The registration leaves their `Repository` empty: `System` and
+`AuditLog` reach data through the framework repositories, and `AuditRule` uses the schema-driven
+default.
 
 `ProgramSettings` is **server-side only**. It carries assembly-qualified type names that no client
-has any use for, so remote `GetDefine` refuses it alongside `SystemSettings` and `DatabaseSettings`.
+has any use for, so remote `GetDefine` refuses it: a remote caller may read only the definition
+types a client needs to render forms and menus (see [API Method Reference](api-method-reference.md)).
 
 ## 4b. MenuSettings Is the Navigation Menu
 
@@ -148,27 +154,29 @@ Where a program *appears* is a separate definition, read by the client:
   by `ProgId`.
 - **Folders nest arbitrarily** and exist only to group entries.
 - **`Visible` is a design-time switch, not a permission.** It is the same for every user;
-  per-user visibility belongs to [PermissionModels](permission-authorization.md). The client
+  per-user visibility belongs to [PermissionModels](permission-authorization.md). The framework
   applies no permission filter to the menu today.
-- **`Caption` localisation** goes through `LanguageResource` in the `Menu` namespace, sub-keys
-  `Folder.{id}.Caption` / `Entry.{id}.Caption` — keyed by `Id` rather than `ProgId`, since the same
-  program may appear under different titles.
+- **`Caption` is the base text; translations** live in `LanguageResource` in the `Menu` namespace,
+  sub-keys `Folder.{id}.Caption` / `Entry.{id}.Caption` — keyed by `Id` rather than `ProgId`, since
+  the same program may appear under different titles. `MenuLocalizer` resolves them, and a client
+  gets one from `FormDefinitionLoader.GetMenuLocalizerAsync`; a key no culture declares keeps the
+  node's own `Caption`.
 
 Splitting the two apart follows from what each is for. The registry is read by the server and holds
 type names; the menu is read by the client and holds ordering, captions and visibility. They have
 different readers, different lifecycles and different sensitivity — and keeping type names off the
 wire is a direct consequence.
 
-Adding a form to a running application is therefore five XML edits and no code.
+Adding a form to a running application is therefore a matter of XML edits, with no code.
 
 ## 5. Change One, Change What Else
 
 | You changed | Also update |
 |-------------|-------------|
-| Added a field to a **FormSchema** | The matching **TableSchema** column, then run a [schema upgrade](database-schema-upgrade.md); add it to the **FormLayout** if it should be visible; add its caption to **Language** |
-| Added a **new form** | **FormSchema** + **TableSchema** + a table entry in **DbCategorySettings** + a `ProgramItem` in **ProgramSettings** + a `MenuEntry` in **MenuSettings** |
+| Added a field to a **FormSchema** | The matching **TableSchema** column, then run a [schema upgrade](database-schema-upgrade.md); add it to the **FormLayout** if it should be visible; add translations of its caption to **Language** |
+| Added a **new form** | **FormSchema** + **TableSchema** + **FormLayout** + a table entry in **DbCategorySettings** + a `MenuEntry` in **MenuSettings**; a `ProgramItem` in **ProgramSettings** only to bind a custom business object or repository |
 | Added a **table** | Its **TableSchema** must sit in the `TableSchema/{categoryId}/` folder matching its `DbCategorySettings` category — the folder name *is* the category |
-| Added a **database** | **DatabaseSettings** entry first, then point a category at it in **DbCategorySettings** |
+| Added a **database** | A `DatabaseItem` in **DatabaseSettings** whose `CategoryId` names the category it holds; a company database is assigned to its company through `st_company.company_database_id` — see [Database Settings Guide](database-settings-guide.md) |
 | Changed a **currency or unit precision** | **CurrencySettings** / **UnitSettings**; field-level rounding follows `NumberKind`, not the raw column type |
 | Added a **permission-controlled action** | **PermissionModels**, then the relevant `FormField.ScopeRole` entries — see [Permission & Authorization](permission-authorization.md) |
 
@@ -222,7 +230,7 @@ builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths);
 
 The directory need not exist. A tenant that supplies no file for a given lookup falls back to the base layer.
 
-### Five types, at four granularities
+### The customizable types and their granularity
 
 | Type | Overlay granularity |
 |------|--------------------|
@@ -253,18 +261,18 @@ Owning it whole cuts both ways: a field added to the base `FormSchema` later **d
 
 > **FormSchema and TableSchema are permanently excluded.** Both drive the database schema and the validation rules as well as the UI; letting them diverge per tenant would split the physical schema. This is a decision, not a gap — see ADR-016.
 
-> The overlay is **read-only**. Customization files are produced by deployment tooling; every `SaveXxx` on the override layer throws.
+> The overlay is **read-only, except for `PluginSettings`**. Customization files are produced by deployment tooling; every other `SaveXxx` on the file-backed override layer throws `NotSupportedException` (`CustomizeOnlyStorage`). Plugin bindings are maintained through the local-only `SystemBusinessObject.SaveCustomizePluginSettings` — see [Tenant Customization](customization.md#read-only-except-for-plugins).
 
 ### Where `customizeId` comes from
 
-`CompanyInfo.CustomizeId` (column `st_company.customize_id`) is copied onto `SessionInfo.CustomizeId` when the session enters a company, and cleared on leave / logout. Server-side consumers read it from `SessionInfo` and nowhere else.
+`CompanyInfo.CustomizeId` (column `st_company.customize_id`) is copied onto `SessionInfo.CustomizeId` when the session enters a company, and cleared on leave / logout. Server-side consumers read it from `SessionInfo`; the local-only plugin maintenance API, which names the tenant it maintains, is the one exception.
 
 Two consequences worth planning around:
 
 - **Nothing is customized before `EnterCompany`.** The login screen, the company picker, and every message on the way there resolve against the base layer, because there is no `CustomizeId` yet.
 - **`SessionInfo.CustomizeId` is a snapshot, not a live value.** It is copied at the moment the session enters the company, the same as roles and the employee context. Editing `st_company.customize_id` afterwards does not move existing sessions — they pick the new value up on the next `EnterCompany`.
 
-> **Security boundary:** the server never accepts a `customizeId` supplied by a client as the lookup key — doing so would let a caller choose which tenant's customization to read. Clients receive their own `CustomizeId` from `EnterCompany` for their own UI localization only; the server always reads `SessionInfo.CustomizeId`.
+> **Security boundary:** no API a remote caller can reach accepts a `customizeId` from the client as the lookup key — doing so would let a caller choose which tenant's customization to read. The plugin maintenance calls that do take one are `LocalOnly`. Clients receive their own `CustomizeId` from `EnterCompany` for their own UI localization only; the server always reads `SessionInfo.CustomizeId`.
 
 ---
 

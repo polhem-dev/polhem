@@ -22,13 +22,17 @@ dotnet new web -o MyApp.Server
 cd MyApp.Server
 dotnet add package Polhem.Api.AspNetCore
 dotnet add package Polhem.Db
+dotnet add package Microsoft.Data.Sqlite
 ```
+
+`Microsoft.Data.Sqlite` is the ADO.NET driver for the SQLite database used below. The framework ships no driver;
+step 3 lists the package for each database.
 
 **Which host package?** `Polhem.Api.AspNetCore` transitively pulls in `Polhem.Hosting`, the composition root. If you are hosting outside ASP.NET Core — WinForms, WPF, Console, Worker Service — reference `Polhem.Hosting` directly instead and skip step 4's `UsePolhemFramework` call.
 
 ## 2. Materialise the `DefinePath`
 
-The framework boots from a directory of XML definition files (its `DefinePath`). The framework's own minimum set — the `st_*` TableSchemas, `SystemSettings.xml`, `DatabaseSettings.xml`, `DbCategorySettings.xml` and the shipped Department / Employee forms — is embedded in `Polhem.Definition.dll`. Materialise it once:
+The framework boots from a directory of XML definition files (its `DefinePath`). Its default set — the settings files such as `SystemSettings.xml`, `DatabaseSettings.xml` and `DbCategorySettings.xml`, the `st_*` TableSchemas, and the shipped forms with their language resources — is embedded in `Polhem.Definition.dll`. `dotnet polhem defines list` prints the full list. Materialise it once, from the project folder:
 
 ```bash
 dotnet tool install -g Polhem.Cli
@@ -37,10 +41,33 @@ dotnet polhem defines materialize --path ./Define
 
 Skip-existing is the default, so re-running never overwrites your own edits. The same operation is available programmatically via `Polhem.Definition.Defaults.MaterializeTo(...)`.
 
-Then edit two files under `./Define`:
+Then edit two files under `./Define`.
 
-- **`SystemSettings.xml`** — set `MasterKeySource`. `Environment` is the default and reads the key from `POLHEM_MASTER_KEY`.
-- **`DatabaseSettings.xml`** — add your connection string.
+**`SystemSettings.xml`** — set `MasterKeySource`, the source of the master key that protects the other keys. The
+shipped value is `Environment`, which reads the key from the `POLHEM_MASTER_KEY` environment variable. For this
+walkthrough, switch it to a key file:
+
+```xml
+<MasterKeySource>
+  <Type>File</Type>
+  <Value>Master.key</Value>
+</MasterKeySource>
+```
+
+A relative `Value` is resolved against the `DefinePath`. With `autoCreateMasterKey: true` (step 4), the first start
+writes `Define/Master.key` and every later start reads the same key. Keep that file out of source control.
+
+**`DatabaseSettings.xml`** — add the database. The framework tables this walkthrough needs belong to the `common`
+category, so one entry for it is enough:
+
+```xml
+<DatabaseSettings>
+  <Items>
+    <DatabaseItem Id="common" CategoryId="common" DatabaseType="SQLite"
+                  ConnectionString="Data Source=myapp.db" />
+  </Items>
+</DatabaseSettings>
+```
 
 → Every definition file and what it owns: [Definition Files Overview](definition-files-overview.md). The full file list and consumer extension rules: [Framework-Reserved Names](framework-reserved-names.md).
 
@@ -86,12 +113,24 @@ DbDialectRegistry.Register(DatabaseType.SQLServer, new SqlDialectFactory());
 
 ## 4. Wire the DI container
 
+The whole `Program.cs`, starting with the two registrations of step 3:
+
 ```csharp
+using Microsoft.Data.Sqlite;
 using Polhem.Api.AspNetCore;
 using Polhem.Api.Core;
 using Polhem.Base;
+using Polhem.Db;
+using Polhem.Db.Manager;
+using Polhem.Db.Providers.Sqlite;
+using Polhem.Db.Schema;
 using Polhem.Definition;
+using Polhem.Definition.Database;
+using Polhem.Definition.Storage;
 using Polhem.Hosting;
+
+DbProviderRegistry.Register(DatabaseType.SQLite, new SqliteProviderFactory(SqliteFactory.Instance));
+DbDialectRegistry.Register(DatabaseType.SQLite, new SqliteDialectFactory());
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -111,12 +150,36 @@ builder.Services.AddPolhemFramework(
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
+// Create the framework tables of the common category that do not exist yet.
+var defineAccess = app.Services.GetRequiredService<IDefineAccess>();
+var connectionManager = app.Services.GetRequiredService<IDbConnectionManager>();
+var common = defineAccess.GetDbCategorySettings().Categories!["common"];
+var schemaBuilder = new TableSchemaBuilder("common", defineAccess, connectionManager);
+foreach (var table in common.Tables!)
+    schemaBuilder.Execute("common", table.TableName);
+
 app.UsePolhemFramework();
 app.MapControllers();
 app.Run();
 ```
 
-**The order matters.** `SystemSettingsLoader.Load` must precede `SysInfo.Initialize`, which must precede `AddPolhemFramework`. `UsePolhemFramework` registers no middleware and no endpoint — it only runs startup checks.
+- `SysInfo.Initialize` and `ApiServiceOptions.Initialize` set process-wide values (the debug flag, the allowed type
+  namespaces, the payload compressor and encryptor) that requests read. Call them before the host starts serving.
+- **The framework does not create its tables.** Even an anonymous call reads `st_api_key` to check the `X-Api-Key`
+  header, and a lookup that fails because the table is missing rejects the call; the cache-notify poller reads
+  `st_cache_notify`. The loop creates every table `DbCategorySettings.xml` registers under `common`, and on later
+  starts brings them in line with their TableSchema. A real application creates its own tables the same way, with
+  one `TableSchemaBuilder` per database (see [Database Schema Upgrade](database-schema-upgrade.md)).
+- `UsePolhemFramework` registers no middleware and no endpoint. It runs host-side startup checks; today it logs
+  while no API key has been issued (a warning in the Development environment, an error elsewhere). It reads
+  `st_api_key`, so call it after the tables exist.
+- `autoCreateMasterKey: true` creates the master key when it is missing. With the `File` source of step 2 that
+  happens once. With the `Environment` source the generated key only lives in the process's environment, so every
+  start gets a different key, and values encrypted with the previous one can no longer be decrypted. Do not combine
+  `Environment` with `autoCreateMasterKey: true` outside a throwaway demo.
+- `./Define` and `Data Source=myapp.db` are relative to the working directory, so start the server from the
+  project folder.
 
 → The startup flow diagram and what `AddPolhemFramework` registers: [Development Cookbook § Framework Initialization Order](development-cookbook.md#framework-initialization-order). The constraints behind the ordering: [Development Constraints § Initialization Order](development-constraints.md#initialization-order-constraints).
 
@@ -138,7 +201,7 @@ public class ApiController : ApiServiceController
 
 ## 6. Write your first business object
 
-A business object is reached by its **progId**. Anything other than `"System"` is dispatched as a form business object, so inherit `FormBusinessObject` and mirror its constructor signature:
+A business object is reached by its **progId**. The framework reserves `System`, `AuditLog` and `AuditRule` (`ReservedProgIds`); any other progId is dispatched as a form business object, so inherit `FormBusinessObject` and mirror its constructor signature. Put the code in `BusinessObjects/EchoBusinessObject.cs`:
 
 ```csharp
 using Polhem.Business;
@@ -161,7 +224,7 @@ public class EchoResult : BusinessResult
 
 public class EchoBusinessObject : FormBusinessObject
 {
-    public EchoBusinessObject(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
+    public EchoBusinessObject(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
         : base(ctx, accessToken, progId, isLocalCall)
     {
     }
@@ -175,9 +238,9 @@ public class EchoBusinessObject : FormBusinessObject
 }
 ```
 
-`[ApiAccessControl]` is what makes the method reachable and decides its protection level. `Public` + `Anonymous` needs neither an access token nor the encryption handshake — appropriate for a first call, and **not** for real data.
+`[ApiAccessControl]` is what makes the method reachable and decides its protection level: a call to a method no attribute covers is refused, and analyzer POLHEM3001 warns about such a method at build time. `Public` + `Anonymous` needs neither an access token nor the encryption handshake — appropriate for a first call, and **not** for real data.
 
-The progId-to-type binding lives in `ProgramSettings.xml` — the framework-wide type registry. No resolution code is required:
+The progId-to-type binding lives in `ProgramSettings.xml` — the framework-wide type registry. No resolution code is required. Create `Define/ProgramSettings.xml`:
 
 ```xml
 <ProgramSettings>
@@ -193,14 +256,29 @@ framework's default `FormBusinessObject`, so **only progIds that need custom log
 The same entry can also bind a dedicated repository through the `Repository` attribute; the two
 attributes are independent.
 
-The framework self-registers missing reserved progIds at startup, so this file is created
-automatically when absent. See [ADR-034](../adr/adr-034-progid-type-registry.md).
+At startup the framework adds any reserved progId the file is missing and writes the file back (it creates the
+file when it is absent), so you will find `System`, `AuditLog` and `AuditRule` entries next to `Echo` after the
+first run. See [ADR-034](../adr/adr-034-progid-type-registry.md).
 
 → Naming rules for `Args` / `Result` and the three-tier contract separation: [API ↔ BO Contract Design](api-bo-contract-design.md). Which methods belong on an interface: [Development Constraints](development-constraints.md).
 
 ## 7. Call it from a client
 
-From .NET, use `Polhem.Api.Client`:
+Start the server on a fixed port (`dotnet new web` picks a random one in `launchSettings.json`):
+
+```bash
+dotnet run --urls http://localhost:5050
+```
+
+From .NET, use `Polhem.Api.Client`, in a separate project:
+
+```bash
+dotnet new console -o MyApp.Client
+cd MyApp.Client
+dotnet add package Polhem.Api.Client
+```
+
+`Program.cs`:
 
 ```csharp
 using Polhem.Api.Client;
@@ -214,11 +292,29 @@ var result = await connector.ExecuteAsync<EchoResponse>(
     "Echo",
     new EchoRequest { Message = "hello" },
     PayloadFormat.Plain);
+
+Console.WriteLine(result.Response);
+
+public class EchoRequest
+{
+    public string Message { get; set; } = string.Empty;
+}
+
+public class EchoResponse
+{
+    public string Response { get; set; } = string.Empty;
+}
 ```
+
+`dotnet run` prints `echo: hello`.
 
 Keep the client's request / response DTOs separate from the server's `Args` / `Result` — that is how a third-party integrator sees the contract, and it keeps the wire shape honest.
 
-`PayloadFormat.Plain` matches the `Public` + `Anonymous` declaration above. Anything protected requires `Login` first, which issues the access token and the RSA handshake.
+Every call carries the `X-Api-Key` header. While no API key has been issued (`st_api_key` holds no enabled key), any
+non-empty value is accepted, which is what `UsePolhemFramework` warned about at startup. Once a key is issued, only
+issued keys are. → [API Key Management](api-key-management.md).
+
+`PayloadFormat.Plain` matches the `Public` + `Anonymous` declaration above. A method that requires authentication or encryption needs `Login` first, which issues the access token and, through an RSA handshake, the session encryption key.
 
 → Calling from JavaScript / TypeScript with no .NET on the client: [JSON-RPC Frontend Integration](jsonrpc-frontend-integration.md). Every exposed method and its access control: [API Method Reference](api-method-reference.md).
 

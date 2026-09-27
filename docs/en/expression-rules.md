@@ -14,13 +14,13 @@ For the background and the decision itself, see [ADR-028](../adr/adr-028-express
 | Field default | `FormField.DefaultValueExpression` | On row insert, only when the field is empty |
 | Validation / precondition | `FormRule` under `FormSchema` | `BeforeSave` / `BeforeDelete` |
 
-> **The backend is authoritative.** On save, the backend always recomputes computed fields from the definition and overwrites whatever the client submitted; validation also runs on the backend. Live client-side computation (planned) is a UX preview only — correctness never depends on the client.
+> **The backend is authoritative.** On save, `FormBusinessObject.DoBeforeSave` recomputes computed fields from the definition and overwrites whatever the client submitted, then runs the validation rules; `DoBeforeDelete` runs the delete rules. The Avalonia UI's live computation (`FormLiveComputation`; the Blazor components have none) recomputes fields as the user edits, but it is a UX preview only: it rounds with the framework's default decimal places, and the server corrects the values on save.
 
 ## Expression Syntax
 
 - **A variable is a field name.** Write the field name directly, e.g. `unit_price * qty`. Every field on the same row is available.
 - **Operators**: a subset of C# syntax (`+ - * /`, `> >= < <= == !=`, `&& || !`, the ternary `? :`, and string `==`).
-- **Available functions and types** (sandbox allowlist): `Math` (`Math.Round`, `Math.Abs`, …), `Today()`, `Now()`, `UtcNow()`, `IsNullOrEmpty(s)`, `IsNullOrWhiteSpace(s)`, and `Guid` (e.g. `customer_rowid != Guid.Empty`).
+- **Available functions and types**: the helper functions `Today()`, `Now()`, `UtcNow()`, `IsNullOrEmpty(s)` and `IsNullOrWhiteSpace(s)`; the types an expression can name, such as `Math` (`Math.Round`, `Math.Abs`, …), `Convert`, `DateTime`, `TimeSpan` and `Guid` (e.g. `customer_rowid != Guid.Empty`); and the members of a field's value (`name.Length`, `Today().AddDays(1)`). The types come from DynamicExpresso's default set plus the ones `DynamicExpressoEvaluator` adds; [`ILLink.Descriptors.xml`](../../src/Polhem.Expressions/ILLink.Descriptors.xml) lists every type whose members an expression can reach, and `TrimmerDescriptorGateTests` keeps that list in line with the interpreter.
 
   **Semantics of the time functions** (see [ADR-032](../adr/adr-032-datetime-timezone.md)):
 
@@ -33,7 +33,9 @@ For the background and the decision itself, see [ADR-028](../adr/adr-028-express
   `Today()` returns `DateOnly` rather than `DateTime` because a calendar day is always expressed as `DateOnly` in the framework. The `DataSet` cell is the sole exception, since a `DataColumn` can only carry a calendar day as `DateTime`. You may write `Today()` into either a `Date` or a `DateTime` field; the framework performs the conversion when writing the cell.
 
   > **To write into or compare with a `DateTime` field, use `Now()`, not `UtcNow()`.** A client-side `DataSet` is held in the user's time zone, so a `UtcNow()` value written during live preview shows up off by the user's offset. On save the server does not take `DateTime` values from the client — it evaluates the expression again or keeps the stored value — so the saved data is unaffected; what is wrong is the value on screen before saving.
-- **Forbidden**: reflection, IO, and loading arbitrary types. Any identifier outside the allowlist fails at parse time as a configuration error.
+- **Unknown identifiers**: a type name that is not exposed (`File`, `Process`, …) or a misspelled field name fails to parse. On the server the save or delete then fails; on the client, live computation switches itself off for that form.
+- **Not a security sandbox.** Members of a value are resolved by reflection, so the parser does not stop an expression from reaching further. What keeps expressions safe is where they come from: definition files, which remote callers cannot write (`SaveDefine` is `LocalOnly`). Never build expression text from user input.
+- **Trimmed apps**: the members an expression calls are found by reflection, which the trimmer cannot see. `Polhem.Expressions` ships a trimmer descriptor that keeps them; see [Platform Support](platform-support.md#trimmer-descriptors-shipped-in-the-packages).
 - **Null handling**: an empty field (`DBNull`) is substituted with its type default (`0` for numbers, an empty string for text, `Guid.Empty`, …), so `unit_price * qty` evaluates to `0` on empty input rather than failing.
 
 ## Computed Fields: `ValueExpression`
@@ -45,7 +47,7 @@ For the background and the decision itself, see [ADR-028](../adr/adr-028-express
 ```
 
 - Recomputed before save for `Added` / `Modified` rows. `Unchanged` rows are left alone, so they are never falsely marked as modified.
-- **Rounding** follows the field's `NumberKind` (`Amount` → 2 decimals, `Quantity` → 0, `UnitPrice` → full precision, …; adjustable per company / currency / unit — see [ADR-026](../adr/adr-026-numeric-semantics-rounding.md)). Detail rows are therefore each rounded first and only then summed (round-then-sum), so the total always reconciles.
+- **Rounding** follows the field's `NumberKind` (framework defaults: `Amount` → 2 decimals, `Quantity` → 0, `UnitPrice` → full precision, …; the decimals come from the currency, the unit or the company — see [ADR-026](../adr/adr-026-numeric-semantics-rounding.md)). A computed `Quantity` or `Weight` field must declare its `UnitField`; without one the computation throws. Each detail row is rounded first, so a total summed from the rounded rows (round-then-sum) reconciles with them.
 - Computed fields are usually paired with `ReadOnly="true"`.
 - Several computed fields on the same row may depend on each other: evaluation follows **declaration order**, so a later expression sees the values just computed by earlier ones.
 
@@ -56,8 +58,8 @@ For the background and the decision itself, see [ADR-028](../adr/adr-028-express
            DefaultValueExpression="Today()" />
 ```
 
-- Evaluated on row insert, and **only applied when the field is empty** — an existing value is never overwritten.
-- When a literal `DefaultValue` is also present, the expression wins.
+- Evaluated on row insert, and **only applied when the field is still empty** (no value, or an empty string) — an existing value is never overwritten.
+- Rows the framework creates are seeded before the expression runs. A text field starts empty, but a numeric field starts at `0`, a `Guid` field at `Guid.Empty` and a `Date` field at today, and a new master record also receives the field's literal `DefaultValue`. A seeded value is not empty, so the expression does not replace it.
 
 ## Validation and Preconditions: `FormRule`
 
@@ -80,7 +82,7 @@ For the background and the decision itself, see [ADR-028](../adr/adr-028-express
 |-----------|-------------|
 | `Condition` | The condition that **must hold** (returns bool). A `false` result is a violation: the action is aborted and `Message` is shown |
 | `When` | Optional **applicability** condition. Empty means always apply; `false` skips the whole rule (treated as passing); only `true` proceeds to check `Condition` |
-| `Message` | The message shown to the user when the rule fails |
+| `Message` | The message shown to the user when the rule fails. It is the base text; a language resource entry `Rule.{RuleId}.Message` of the form translates it, resolved on the server in the session's culture |
 | `Trigger` | `BeforeSave` (default) or `BeforeDelete` |
 | `TargetTable` | Empty targets the master table; a detail table name checks that table **row by row** |
 | `Order` | Evaluation order within the same trigger (lower runs first) |
@@ -92,7 +94,7 @@ For the background and the decision itself, see [ADR-028](../adr/adr-028-express
 
 ## When a Business Object Is Still Required (Current Boundary)
 
-The Phase 1 expression engine is a **per-row** model. The following cases cannot yet be expressed declaratively and require overriding `DoBeforeSave` / `DoBeforeDelete` in a custom business object:
+The expression engine is a **per-row** model. The following cases cannot yet be expressed declaratively and require overriding `DoBeforeSave` / `DoBeforeDelete` in a custom business object:
 
 - **Cross-row aggregation**, such as "the header total is the sum of the detail amounts" or "at least one detail row is required" — both need computation across rows.
 - **Database lookups**, such as "a status transition must be checked against the state already stored" or "fetch the next number from a sequence".

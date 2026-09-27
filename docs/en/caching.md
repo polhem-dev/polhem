@@ -61,7 +61,7 @@ flowchart TB
     caches -- "miss: database data" --> datasource
 ```
 
-Four roles, and what each is responsible for:
+The roles inside the cache layer, and what each is responsible for:
 
 | Piece | Type | Responsibility |
 |-------|------|----------------|
@@ -96,9 +96,9 @@ type addressed by a string key (`FormSchema` — one per `progId`). A composite 
 into one string with a dot: `TableSchema` is keyed `"{categoryId}.{tableName}"`,
 `LanguageResource` is keyed `"{lang}.{namespace}"`.
 
-> **Three define caches read files directly, not through `IDefineStorage`**: `SystemSettingsCache`,
-> `DatabaseSettingsCache` and `PermissionModelsCache` deserialize their XML from a `PathOptions`
-> path in `CreateInstance`. They are the bootstrap definitions — the ones that must be readable
+> **`SystemSettingsCache`, `DatabaseSettingsCache` and `PermissionModelsCache` read files directly,
+> not through `IDefineStorage`**: they deserialize their XML from a `PathOptions` path in
+> `CreateInstance`. They are the bootstrap definitions — the ones that must be readable
 > before a database connection exists — so a database-backed `IDefineStorage` does not change where
 > they come from.
 
@@ -106,15 +106,16 @@ into one string with a dot: `TableSchema` is keyed `"{categoryId}.{tableName}"`,
 
 ## 4. Anatomy of a Read
 
-`Get()` on either base class is the same three steps:
+`Get()` on either base class follows the same steps:
 
 ```
 1. Read the provider.  Hit → return it. Done, no lock, no allocation.
 2. Miss → enter single-flight for this key.
-3. Inside the flight: re-check the provider, then CreateInstance(), store, return.
+3. Inside the flight: re-check the provider, note the key's invalidation state,
+   CreateInstance(), store unless the key was invalidated meanwhile, return.
 ```
 
-Two details in that flow cannot be skipped.
+The details below cannot be skipped.
 
 ### Single-flight: concurrent misses produce one instance
 
@@ -132,6 +133,18 @@ to detect a reload; a duplicate instance would read as a change that never happe
 > table: keys include caller-supplied values such as access tokens, so a table that only grows is
 > unbounded.
 
+### A fill that overlaps an invalidation discards its result
+
+A fill reads old data, a writer commits and calls `Remove` — which finds nothing, because the fill
+has not stored yet — and the fill then stores the old data. Under a sliding window a hot key would
+keep that stale value indefinitely. To close this, a fill records the key's invalidation state
+**before** it loads: the invalidation generation that every `Remove` and `Set` advances
+(`CacheInvalidation`), and the change baselines of its policy — the observed notify version and
+the write time of each watched file. The value is stored only if the generation is unchanged after
+the load, and the entry's tokens compare against the baselines taken before the load, so a notify
+bump or a file rewrite that landed during the load expires the entry on its first read.
+`CacheFillInvalidationRaceTests` covers these cases.
+
 ### Negative caching: a miss can itself be cached
 
 If `CreateInstance` returns `null`, `KeyObjectCache<T>` stores a process-wide sentinel under the key
@@ -141,13 +154,17 @@ key whose data does not exist would otherwise hit the database every time.
 
 The negative window is deliberately shorter than the positive one so that data created elsewhere
 becomes visible within a bounded delay. Two caches override the default, and both overrides are
-security decisions rather than tuning:
+security decisions rather than tuning. Their keys come from the caller, so their markers do not go
+into the shared provider: each keeps them in a set of its own, capped by `MaxNegativeEntries`. Once
+the set is full, further misses go uncached until markers expire, so a stream of distinct unknown
+keys cannot grow memory without bound.
 
-- **`SessionInfoCache` disables negative caching entirely** (`GetNegativePolicy` returns `null`).
-  Caching every unauthenticated lookup would let anonymous traffic inflate the cache with markers
-  for arbitrary access tokens — memory whose size an attacker chooses. The rebuild it would save is
-  one indexed read that returns nothing.
-- **`ApiKeyCache` shortens it to 1 minute**, so a newly issued key starts working promptly.
+- **`SessionInfoCache` caches a miss for 1 minute**, capped at `SessionInfoCache.MaxNegativeTokens`
+  unknown access tokens. A request resolves its session more than once before its access is
+  decided, so without a marker an unknown token cost one `st_session` read per lookup. Signing in
+  stores the new session with `Set`, which clears any marker for that token.
+- **`ApiKeyCache` caches a miss for 1 minute**, capped at `ApiKeyCache.MaxNegativeIds` unknown
+  identifiers, so a newly issued key starts working promptly.
 
 Negative entries carry the same notify dependency as real ones, so a cached miss also clears once
 the entry is created in another process.
@@ -159,23 +176,29 @@ configuration error, not a lookup miss.
 
 ## 5. How an Entry Stops Being Valid
 
-Four independent signals, and an entry can carry several at once.
+The signals are independent, and an entry can carry several at once.
 
 | Signal | Set by | Scope | Detected |
 |--------|--------|-------|----------|
 | **Time** | `CacheItemPolicy` — 20-minute sliding by default | This process | On read |
 | **Explicit `Remove`** | `IDefineAccess.SaveX`, service write paths | This process | Immediately |
-| **File modification** | `ChangeMonitorFilePaths` | Any process sharing the filesystem | On read |
+| **File modification** | `ChangeMonitorFilePaths` | Any process sharing the filesystem | On read, at most once per second per entry |
 | **Cache-notify version** | `ChangeNotifyKey` | Any process polling the same database | On read |
 
-Three of the four are detected **on read**, not by a background sweep. `MemoryCache` evaluates each
-entry's expiration tokens on every `TryGetValue`, and both `FileModificationToken` and
-`CacheNotifyToken` compare a snapshot taken at insertion against the current value at that moment.
-No timer, no callback, no eager eviction.
+Every signal except `Remove` is detected **on read**, not by a background sweep. `MemoryCache`
+evaluates each entry's expiration tokens on every `TryGetValue`, and both `FileModificationToken`
+and `CacheNotifyToken` compare the baseline taken before the value was loaded against the current
+value at that moment. No timer, no callback, no eager eviction.
+
+A file-backed definition is looked up several times per request, so `FileModificationToken` looks
+at the file at most once per second (`FileWriteTime.RecheckInterval`) and reuses its last answer in
+between. The first check is not deferred. An edit made to a definition file directly on disk can
+therefore go unnoticed for up to a second; a save through `IDefineAccess.SaveX` removes the entry
+itself and does not wait.
 
 One consequence follows: **an invalidated entry costs nothing until somebody reads it.** A `FormSchema` nobody has opened since the change is simply never reloaded.
-This is one of the four invariants of the invalidation design — *invalidation does not reload, it
-only ensures the next read gets a fresh value*.
+This is also an invariant of the cross-process design ([§6.4](#64-the-invariants)) — *invalidation
+does not reload, it only ensures the next read gets a fresh value*.
 
 ### Where the signals come from
 
@@ -247,11 +270,11 @@ Two load-path rules are security-relevant rather than architectural:
 - **A rebuilt session is a real authentication path.** `SessionInfoCache.CreateInstance` rebuilds a
   session from its `st_session` seed, which makes every writer of that table a way to mint a token
   that satisfies token validation. Any new writer must authenticate for itself or be confined to
-  trusted callers — which is why `SystemBO.CreateSession` is `LocalOnly`.
+  trusted callers — which is why `SystemBusinessObject.CreateSession` is `LocalOnly`.
 
 ### 6.3 Cross-process invalidation: the notify table
 
-Four components, in the order a change travels through them:
+The steps a change travels through, in order:
 
 | Step | Component | Where |
 |------|-----------|-------|
@@ -278,9 +301,9 @@ publishes versions into `CacheInfo.NotifyVersions`, and every entry carrying a m
 `ChangeNotifyKey` expires itself on its next read. That is what lets one poller invalidate entries
 in per-tenant and per-fixture containers a single injected container could never have reached.
 
-### 6.4 The four invariants
+### 6.4 The invariants
 
-The four properties this design guarantees. Their full rationale, and the alternatives rejected to
+The properties this design guarantees. Their full rationale, and the alternatives rejected to
 get here, are in [ADR-017](../adr/adr-017-db-cache-invalidation.md).
 
 1. **The bump must commit in the same transaction as the data change.** Otherwise a poller can see
@@ -363,12 +386,12 @@ a cache uses the framework default of a **20-minute sliding** window with negati
 
 | Cache | Key | Source method | Notes |
 |-------|-----|---------------|-------|
-| `SessionInfoCache` | access token (GUID) | `GetSessionInfo` | **Negative caching disabled**; rebuilds a session from its `st_session` seed |
+| `SessionInfoCache` | access token (GUID) | `GetSessionInfo` | Negative window **1 minute**, in a capped set; rebuilds a session from its `st_session` seed |
 | `CompanyInfoCache` | `companyId` | `GetCompanyInfo` | Consumed by the repository database router |
 | `CompanyRolePermissionsCache` | `companyId` | `GetCompanyRolePermissions` | Per-company permission snapshot |
 | `DepartmentTreeCache` | `companyId` | `GetDepartmentTree` | Per-company organization tree |
 | `CompanyAuditRulesCache` | `companyId` | `GetCompanyAuditRules` | Per-company audit-rule snapshot |
-| `ApiKeyCache` | key identifier | `GetApiKey` | **60-minute absolute**; negative window shortened to 1 minute |
+| `ApiKeyCache` | key identifier | `GetApiKey` | **60-minute absolute**; negative window **1 minute**, in a capped set |
 | `ApiKeyGateCache` | single fixed key | `GetApiKeyGateState` | **60-minute absolute**; shares `ApiKeyInfo`'s cache group so key changes invalidate the gate too |
 
 ---
@@ -407,17 +430,27 @@ path, and the two layers are combined by `CustomizeOverlay`, not by the cache. S
 Because the cache-notify poller publishes versions rather than evicting entries, tenant containers
 participate in cross-process invalidation automatically, with no registration.
 
+Most tenants override nothing, yet the reader is consulted on every request of a tenant that has a
+customization code. For `ProgramSettings`, `MenuSettings` and `PluginSettings`, `CustomizeDefineReader`
+therefore probes for the tenant's file before it touches the tenant container, and remembers a "no
+such file" answer for one second (`OverrideFileProbe`). A file that exists is probed on every read,
+so a deleted override stops being served at once. `CustomizeDefineWriter` drops the remembered
+answer when it saves, so its write is visible to the next read; a file copied in by other means can
+take up to a second to be noticed.
+
 ---
 
 ## 9. Cached Definitions Are Immutable
 
 **Anything obtained from `IDefineAccess.GetX(...)` is a process-wide shared instance and must not be
 mutated after initialization.** Every session holds the same reference; a change made for one
-session leaks into all of them, and concurrent mutation races.
+session leaks into all of them, and concurrent mutation races. The same holds for the database
+caches; their types (`CompanyInfo`, for example) expose init-only properties and provide no
+`Clone()`.
 
 To vary a definition per session, `Clone()` it first and mutate the copy. To change it durably, go
-through `IDefineAccess.SaveX(...)`, which persists and invalidates. `XmlCodec.Serialize(cached)` is
-**not** a free deep-clone — it mutates serialization state on the source object.
+through `IDefineAccess.SaveX(...)`, which persists and invalidates. Serializing a cached definition
+with `XmlCodec.Serialize` — to send it over the wire, for example — only reads it.
 
 `SessionInfo` is the deliberate exception: it is per-session already.
 
@@ -444,9 +477,16 @@ awaits the same in-flight fetch instead of issuing a second round trip. A **fail
 evicted with a compare-and-remove so a failure never poisons the cache and the next read retries.
 
 Because there is no expiry, **`ClearCache()` must be called after a tenant switch**
-(`EnterCompany` / `LeaveCompany`). The server overlays FormLayout, Language and ProgramSettings
-per the session's customization code, but this cache keys them only by `progId` / `layoutId` /
-namespace — without a flush it would keep serving the previous tenant's overlaid result.
+(`EnterCompany` / `LeaveCompany`). Some of what the client caches depends on the session's
+customization code: the tenant layers of FormLayout and Language (`GetCustomizeFormLayoutAsync`,
+`GetCustomizeLanguageAsync`, which also cache a "no override" answer), and `MenuSettings`, which
+the server resolves for the session's customization code before returning it. This cache keys them
+only by `progId` / `layoutId` / language and namespace — without a flush it would keep serving the
+previous tenant's result.
+
+A remote client reads only the definition types a UI needs: `SystemBusinessObject.GetDefine`
+refuses every other type to a non-local caller, so accessors such as `GetProgramSettingsAsync`
+work over a local connection only. The allow-list is in the XML documentation of `GetDefine`.
 
 ---
 
