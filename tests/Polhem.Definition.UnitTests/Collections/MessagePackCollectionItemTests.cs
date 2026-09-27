@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Base.Serialization;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Sorting;
 
@@ -13,25 +12,13 @@ namespace Polhem.Definition.UnitTests.Collections
     public class MessagePackCollectionItemTests
     {
         [Fact]
-        [DisplayName("Default-constructed CollectionItem has SerializeState None, a null Tag and a null Collection")]
+        [DisplayName("Default-constructed CollectionItem has a null Tag and a null Collection")]
         public void DefaultState_IsExpected()
         {
             var item = new SortField("Id", SortDirection.Asc);
 
-            Assert.Equal(SerializeState.None, item.SerializeState);
             Assert.Null(item.Tag);
             Assert.Null(item.Collection);
-        }
-
-        [Fact]
-        [DisplayName("SetSerializeState updates the item's own state")]
-        public void SetSerializeState_UpdatesState()
-        {
-            var item = new SortField();
-
-            item.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Equal(SerializeState.Serialize, item.SerializeState);
         }
 
         [Fact]
@@ -85,18 +72,17 @@ namespace Polhem.Definition.UnitTests.Collections
     }
 
     /// <summary>
-    /// Tests for behavior specific to KeyCollectionItem (setting Key, Remove, SerializeState).
+    /// Tests for behavior specific to KeyCollectionItem (setting Key, Remove).
     /// </summary>
     public class MessagePackKeyCollectionItemTests
     {
         [Fact]
-        [DisplayName("Default construction gives an empty Key, SerializeState None and a null Collection")]
+        [DisplayName("Default construction gives an empty Key, a null Collection and a null Tag")]
         public void DefaultState_IsExpected()
         {
             var item = new Parameter();
 
             Assert.Equal(string.Empty, item.Key);
-            Assert.Equal(SerializeState.None, item.SerializeState);
             Assert.Null(item.Collection);
             Assert.Null(item.Tag);
         }
@@ -142,17 +128,6 @@ namespace Polhem.Definition.UnitTests.Collections
 
             Assert.True(collection.Contains("Alpha"));
             Assert.Single(collection);
-        }
-
-        [Fact]
-        [DisplayName("SetSerializeState updates the item's own state")]
-        public void SetSerializeState_UpdatesState()
-        {
-            var item = new Parameter("P", 1);
-
-            item.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Equal(SerializeState.Serialize, item.SerializeState);
         }
 
         [Fact]

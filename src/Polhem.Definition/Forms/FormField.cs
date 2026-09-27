@@ -1,7 +1,6 @@
 using Polhem.Base;
 using Polhem.Base.Attributes;
 using Polhem.Base.Data;
-using Polhem.Base.Serialization;
 using Polhem.Base.Collections;
 using System.Text.Json.Serialization;
 using System.ComponentModel;
@@ -233,12 +232,19 @@ namespace Polhem.Definition.Forms
         {
             get
             {
-                // Return null if the collection is empty during serialization
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _relationFieldMappings!)) { return null; }
                 if (_relationFieldMappings == null) { _relationFieldMappings = []; }
                 return _relationFieldMappings;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="RelationFieldMappings"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool RelationFieldMappingsSpecified => _relationFieldMappings is { Count: > 0 };
 
         /// <summary>
         /// Gets or sets the program ID of the UI lookup/selection window.
@@ -261,12 +267,19 @@ namespace Polhem.Definition.Forms
         {
             get
             {
-                // Return null if the collection is empty during serialization
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _lookupFieldMappings!)) { return null; }
                 if (_lookupFieldMappings == null) { _lookupFieldMappings = []; }
                 return _lookupFieldMappings;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="LookupFieldMappings"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool LookupFieldMappingsSpecified => _lookupFieldMappings is { Count: > 0 };
 
         /// <summary>
         /// Gets or sets the local fields whose values are displayed in place of this
@@ -330,11 +343,19 @@ namespace Polhem.Definition.Forms
         {
             get
             {
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _listItems!)) { return null; }
                 if (_listItems == null) { _listItems = []; }
                 return _listItems;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="ListItems"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool ListItemsSpecified => _listItems is { Count: > 0 };
 
         /// <summary>
         /// Gets or sets the name of a localized <see cref="Language.LanguageEnum"/> used as
@@ -433,18 +454,6 @@ namespace Polhem.Definition.Forms
                     fields.Add(mapping.DestinationField);
             }
             return fields;
-        }
-
-        /// <summary>
-        /// Sets the serialization state.
-        /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public override void SetSerializeState(SerializeState serializeState)
-        {
-            base.SetSerializeState(serializeState);
-            _relationFieldMappings?.SetSerializeState(serializeState);
-            _lookupFieldMappings?.SetSerializeState(serializeState);
-            _listItems?.SetSerializeState(serializeState);
         }
 
         /// <summary>

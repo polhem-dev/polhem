@@ -226,6 +226,11 @@ namespace Polhem.Api.Client.Connectors
         /// server returns an empty <see cref="LoginResponse.ApiEncryptionKey"/>, and subsequent
         /// <see cref="PayloadFormat.Encrypted"/> requests are auto-downgraded to
         /// <see cref="PayloadFormat.Encoded"/> by <see cref="ApiConnector"/>.
+        /// <para>
+        /// On success the connector's <see cref="ApiConnector.Session"/> receives the session key and
+        /// the user's time zone (<see cref="LoginResponse.TimeZone"/>), which date-time conversion of
+        /// later calls on that session uses.
+        /// </para>
         /// </remarks>
         /// <param name="userID">The user account identifier.</param>
         /// <param name="password">The user password.</param>
@@ -252,6 +257,11 @@ namespace Polhem.Api.Client.Connectors
                 string sessionKey = RsaCryptor.DecryptWithPrivateKey(result.ApiEncryptionKey, privateKey);
                 Session.ApiEncryptionKey = Convert.FromBase64String(sessionKey);
             }
+
+            // The connector owns the session it signs in, the key above included. Setting the zone
+            // here rather than in a UI head is what gives every head, a multi-user Blazor circuit
+            // among them, the ADR-032 conversion of this user's date-time values.
+            Session.UserTimeZoneId = result.TimeZone ?? string.Empty;
 
             return result;
         }

@@ -34,8 +34,7 @@ namespace Polhem.Hosting
         private static IDefineAccess ResolveDefineAccess(string? typeName, IDefineStorage storage, PathOptions paths, ICacheContainer cache, byte[] configEncryptionKey, ICustomizeDefineReader customizeReader, ILogger? logger)
         {
             var resolvedName = string.IsNullOrWhiteSpace(typeName) ? BackendDefaultTypes.DefineAccess : typeName;
-            var type = AssemblyLoader.GetType(resolvedName)
-                ?? throw new InvalidOperationException($"IDefineAccess type '{resolvedName}' not found.");
+            var type = LoadComponentType(nameof(BackendComponents.DefineAccess), resolvedName, typeof(IDefineAccess));
 
             var ctorWithLogger = type.GetConstructor(new[] { typeof(IDefineStorage), typeof(PathOptions), typeof(ICacheContainer), typeof(byte[]), typeof(ICustomizeDefineReader), typeof(ILogger) });
             if (ctorWithLogger != null)
@@ -69,8 +68,7 @@ namespace Polhem.Hosting
         private static IDefineStorage CreateDefineStorage(string? configured, string fallback, IServiceProvider sp, PathOptions paths)
         {
             var typeName = string.IsNullOrWhiteSpace(configured) ? fallback : configured;
-            var type = AssemblyLoader.GetType(typeName)
-                ?? throw new InvalidOperationException($"IDefineStorage type '{typeName}' not found.");
+            var type = LoadComponentType(nameof(BackendComponents.DefineStorage), typeName, typeof(IDefineStorage));
 
             // Prefer an (IServiceProvider) ctor — used by DB-backed storage (e.g. DbDefineStorage),
             // which resolves its dependencies lazily to avoid a construction cycle through
@@ -83,7 +81,7 @@ namespace Polhem.Hosting
             if (ctorWithPaths != null)
                 return (IDefineStorage)ctorWithPaths.Invoke(new object[] { paths });
 
-            return (AssemblyLoader.CreateInstance(typeName) as IDefineStorage)
+            return (IDefineStorage?)Activator.CreateInstance(type)
                 ?? throw new InvalidOperationException($"Failed to construct IDefineStorage: {typeName}");
         }
 
@@ -93,12 +91,15 @@ namespace Polhem.Hosting
         /// falls back to parameterless construction only when the type declares a public
         /// parameterless ctor.
         /// </summary>
-        private static T CreateConfigurableService<T>(IServiceProvider sp, string? configured, string fallback)
+        /// <param name="sp">The service provider.</param>
+        /// <param name="settingName">The <see cref="BackendComponents"/> property the type name came from, for errors.</param>
+        /// <param name="configured">The configured type name, or blank for the default.</param>
+        /// <param name="fallback">The default type name.</param>
+        private static T CreateConfigurableService<T>(IServiceProvider sp, string settingName, string? configured, string fallback)
             where T : class
         {
             var typeName = string.IsNullOrWhiteSpace(configured) ? fallback : configured;
-            var type = AssemblyLoader.GetType(typeName)
-                ?? throw new InvalidOperationException($"Type '{typeName}' not found for service '{typeof(T).Name}'.");
+            var type = LoadComponentType(settingName, typeName, typeof(T));
 
             // The fallback exists for legacy parameterless implementations. A type without such a
             // ctor has nothing to fall back to, so the filter lets the ActivatorUtilities exception
@@ -127,8 +128,7 @@ namespace Polhem.Hosting
         private static IApiEncryptionKeyProvider CreateApiEncryptionKeyProvider(IServiceProvider sp, string? configured, SecurityKeys keys)
         {
             var typeName = string.IsNullOrWhiteSpace(configured) ? BackendDefaultTypes.ApiEncryptionKeyProvider : configured;
-            var type = AssemblyLoader.GetType(typeName)
-                ?? throw new InvalidOperationException($"Type '{typeName}' not found for IApiEncryptionKeyProvider.");
+            var type = LoadComponentType(nameof(BackendComponents.ApiEncryptionKeyProvider), typeName, typeof(IApiEncryptionKeyProvider));
 
             if (type == typeof(StaticApiEncryptionKeyProvider))
                 return new StaticApiEncryptionKeyProvider(keys.ApiEncryptionKey);
@@ -142,6 +142,46 @@ namespace Polhem.Hosting
                     : DerivedApiEncryptionKeyProvider.FromMasterKey(keys.MasterKey);
             }
             return (IApiEncryptionKeyProvider)ActivatorUtilities.CreateInstance(sp, type);
+        }
+
+        /// <summary>
+        /// Loads the implementation type a <see cref="BackendComponents"/> setting names, and fails
+        /// with an error that names the setting and the type when it cannot be used.
+        /// </summary>
+        /// <param name="settingName">The <see cref="BackendComponents"/> property the type name came from.</param>
+        /// <param name="typeName">The assembly-qualified type name.</param>
+        /// <param name="contract">The service type the implementation must be assignable to.</param>
+        /// <exception cref="InvalidOperationException">
+        /// The assembly cannot be loaded, the type is not in it, or the type does not implement <paramref name="contract"/>.
+        /// </exception>
+        /// <remarks>
+        /// Without this a missing assembly surfaced as a bare <see cref="FileNotFoundException"/> from
+        /// the loader, which says what file was missing but not which of the settings named it.
+        /// </remarks>
+        private static Type LoadComponentType(string settingName, string typeName, Type contract)
+        {
+            Type? type;
+            try
+            {
+                type = AssemblyLoader.GetType(typeName);
+            }
+            catch (Exception ex) when (ex is FileNotFoundException or FileLoadException or BadImageFormatException)
+            {
+                throw new InvalidOperationException(
+                    $"BackendComponents.{settingName} names '{typeName}', whose assembly could not be loaded.", ex);
+            }
+
+            if (type == null)
+            {
+                throw new InvalidOperationException(
+                    $"BackendComponents.{settingName} names '{typeName}', which was not found in its assembly.");
+            }
+            if (!contract.IsAssignableFrom(type))
+            {
+                throw new InvalidOperationException(
+                    $"BackendComponents.{settingName} names '{typeName}', which does not implement {contract.Name}.");
+            }
+            return type;
         }
 
         /// <summary>

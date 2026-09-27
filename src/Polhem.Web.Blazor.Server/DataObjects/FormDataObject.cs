@@ -36,6 +36,14 @@ namespace Polhem.Web.Blazor.Server.DataObjects
     /// said nothing enforced the parallel, and the two copies did in fact diverge, with one side
     /// writing <see cref="DBNull"/> into a non-nullable column long after the other had fixed it.
     /// </para>
+    /// <para>
+    /// NOTE: the async methods resume on the caller's context (<c>ConfigureAwait(true)</c>). Their
+    /// continuations replace <see cref="DataSet"/> and flip <see cref="IsLoading"/> /
+    /// <see cref="IsDirty"/>, which the components read while rendering, and Blazor renders and
+    /// handles events for a circuit on that circuit's dispatcher; called from a component event
+    /// handler, this keeps those writes on it. The Avalonia head's counterpart does the same for
+    /// its UI thread.
+    /// </para>
     /// </remarks>
     public class FormDataObject
     {
@@ -188,7 +196,7 @@ namespace Polhem.Web.Blazor.Server.DataObjects
             IsLoading = true;
             try
             {
-                var response = await connector.GetDataAsync(rowId).ConfigureAwait(false);
+                var response = await connector.GetDataAsync(rowId).ConfigureAwait(true);
                 if (response.DataSet is null)
                     throw new InvalidOperationException(
                         $"No master row found for {SysFields.RowId} = {rowId}.");
@@ -217,7 +225,7 @@ namespace Polhem.Web.Blazor.Server.DataObjects
             IsLoading = true;
             try
             {
-                var response = await connector.SaveAsync(DataSet).ConfigureAwait(false);
+                var response = await connector.SaveAsync(DataSet).ConfigureAwait(true);
                 if (response.DataSet is not null)
                     DataSet = response.DataSet;
                 IsDirty = false;
@@ -245,7 +253,7 @@ namespace Polhem.Web.Blazor.Server.DataObjects
             IsLoading = true;
             try
             {
-                await connector.DeleteAsync(rowId).ConfigureAwait(false);
+                await connector.DeleteAsync(rowId).ConfigureAwait(true);
                 DataSet = FormValueBinding.BuildEmptyDataSet(_schema);
                 IsDirty = false;
             }
@@ -271,7 +279,7 @@ namespace Polhem.Web.Blazor.Server.DataObjects
             IsLoading = true;
             try
             {
-                var response = await connector.GetNewDataAsync().ConfigureAwait(false);
+                var response = await connector.GetNewDataAsync().ConfigureAwait(true);
                 if (response.DataSet is null)
                     throw new InvalidOperationException(
                         "GetNewData returned a null DataSet; cannot initialize a new master row.");

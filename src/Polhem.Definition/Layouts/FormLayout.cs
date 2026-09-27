@@ -31,24 +31,6 @@ namespace Polhem.Definition.Layouts
         #region IObjectSerializeFile Interface
 
         /// <summary>
-        /// Gets the serialization state.
-        /// </summary>
-        [XmlIgnore, JsonIgnore]
-        [Browsable(false)]
-        public SerializeState SerializeState { get; private set; } = SerializeState.None;
-
-        /// <summary>
-        /// Sets the serialization state.
-        /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public void SetSerializeState(SerializeState serializeState)
-        {
-            SerializeState = serializeState;
-            _sections?.SetSerializeState(serializeState);
-            _details?.SetSerializeState(serializeState);
-        }
-
-        /// <summary>
         /// Gets the file path bound to serialization.
         /// </summary>
         [XmlIgnore, JsonIgnore]
@@ -116,11 +98,19 @@ namespace Polhem.Definition.Layouts
         {
             get
             {
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _sections!)) { return null; }
                 if (_sections == null) { _sections = []; }
                 return _sections;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="Sections"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool SectionsSpecified => _sections is { Count: > 0 };
 
         /// <summary>
         /// Gets the detail grid collection.
@@ -135,11 +125,19 @@ namespace Polhem.Definition.Layouts
         {
             get
             {
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _details!)) { return null; }
                 if (_details == null) { _details = []; }
                 return _details;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="Details"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool DetailsSpecified => _details is { Count: > 0 };
 
         /// <summary>
         /// Creates a fully independent copy of this layout, including every section, field,

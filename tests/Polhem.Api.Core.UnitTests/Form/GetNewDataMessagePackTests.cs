@@ -22,8 +22,8 @@ namespace Polhem.Api.Core.UnitTests.Form
             var bytes = MessagePackCodec.Serialize(request);
             var restored = MessagePackCodec.Deserialize<GetNewDataRequest>(bytes);
 
-            // This message type really has no wire members (`SerializeState` carries `[JsonIgnore]`), so there are no
-            // values to compare. What can be asserted is that the formatter is registered and actually ran: it produces
+            // This message type declares no wire members of its own, and the inherited `Parameters` is left empty here,
+            // so there are no values to compare. What can be asserted is that the formatter is registered and actually ran: it produces
             // non-empty bytes, and restores a **new** instance rather than the same reference. `Assert.NotNull` alone
             // proves neither.
             Assert.NotEmpty(bytes);

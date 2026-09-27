@@ -69,7 +69,10 @@ namespace Polhem.ObjectCaching
         /// <param name="cacheKey">The normalized cache key.</param>
         /// <param name="expiresAt">When the marker lapses.</param>
         /// <param name="notifyKey">The cache-notify key whose version bump also clears the marker.</param>
-        public void Add(string cacheKey, DateTimeOffset expiresAt, string? notifyKey)
+        /// <param name="notifyVersion">
+        /// The notify version observed before the miss was looked up, or <c>null</c> to take the current one.
+        /// </param>
+        public void Add(string cacheKey, DateTimeOffset expiresAt, string? notifyKey, long? notifyVersion = null)
         {
             var now = _timeProvider.GetUtcNow();
             if (expiresAt <= now) { return; }
@@ -85,7 +88,7 @@ namespace Polhem.ObjectCaching
                 if (_markers.Count >= _capacity) { return; }
             }
 
-            long version = notifyKey == null ? 0 : CacheInfo.NotifyVersions.GetVersion(notifyKey);
+            long version = notifyKey == null ? 0 : notifyVersion ?? CacheInfo.NotifyVersions.GetVersion(notifyKey);
             _markers[cacheKey] = new Marker(expiresAt, notifyKey, version);
         }
 

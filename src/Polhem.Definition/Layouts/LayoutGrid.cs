@@ -1,8 +1,8 @@
+using System.Text.Json.Serialization;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using Polhem.Base.Attributes;
 using Polhem.Base.Collections;
-using Polhem.Base.Serialization;
 
 namespace Polhem.Definition.Layouts
 {
@@ -82,21 +82,19 @@ namespace Polhem.Definition.Layouts
         {
             get
             {
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _columns!)) { return null; }
                 if (_columns == null) { _columns = []; }
                 return _columns;
             }
         }
 
         /// <summary>
-        /// Sets the serialization state.
+        /// Gets whether <see cref="Columns"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
         /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public override void SetSerializeState(SerializeState serializeState)
-        {
-            base.SetSerializeState(serializeState);
-            _columns?.SetSerializeState(serializeState);
-        }
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool ColumnsSpecified => _columns is { Count: > 0 };
 
         /// <summary>
         /// Creates a fully independent copy of this grid, including its columns.

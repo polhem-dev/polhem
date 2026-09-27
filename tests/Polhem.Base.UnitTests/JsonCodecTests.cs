@@ -5,25 +5,31 @@ namespace Polhem.Base.UnitTests
 {
     public class JsonCodecTests : SerializationTestBase
     {
-        private static readonly SerializeState[] s_expectedStateChanges =
-            { SerializeState.Serialize, SerializeState.None };
+        [Fact]
+        [DisplayName("Serialize honours an inherited Specified property the same way XmlSerializer does")]
+        public void Serialize_SpecifiedProperty_ControlsProperty()
+        {
+            var empty = new SpecifiedPayload { Name = "Carol" };
+            var filled = new SpecifiedPayload { Name = "Carol", Tags = ["a"] };
+
+            string emptyJson = JsonCodec.Serialize(empty, ignoreDefaultValue: false, ignoreNullValue: false);
+            string filledJson = JsonCodec.Serialize(filled);
+
+            Assert.DoesNotContain("\"tags\"", emptyJson, StringComparison.Ordinal);
+            Assert.DoesNotContain("tagsSpecified", filledJson, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("\"tags\":[\"a\"]", filledJson, StringComparison.Ordinal);
+            Assert.Equal(["a"], JsonCodec.Deserialize<SpecifiedPayload>(filledJson)!.Tags);
+        }
 
         [Fact]
-        [DisplayName("JSON serialization raises SerializeState while it runs and clears it afterwards")]
-        public void Json_Serialize_RaisesAndClearsSerializeState()
+        [DisplayName("Serialize does not consult ShouldSerialize methods, so JSON output of types using them for XML is unchanged")]
+        public void Serialize_ShouldSerializeMethod_IsNotConsulted()
         {
-            var source = new SerializationTestPayload { Name = "Carol", Age = 40 };
+            var payload = new SpecifiedPayload { Name = "Carol" };
 
-            string json = JsonCodec.Serialize(source);
+            string json = JsonCodec.Serialize(payload);
 
-            Assert.Equal(s_expectedStateChanges, source.StateChanges);
-            Assert.Equal(SerializeState.None, source.SerializeState);
-
-            // Deserialization must not touch the state, so `IsSerializeEmpty` keeps every value.
-            var restored = JsonCodec.Deserialize<SerializationTestPayload>(json)!;
-            Assert.Equal("Carol", restored.Name);
-            Assert.Equal(40, restored.Age);
-            Assert.Empty(restored.StateChanges);
+            Assert.Contains("\"notes\":[]", json, StringComparison.Ordinal);
         }
 
         [Fact]

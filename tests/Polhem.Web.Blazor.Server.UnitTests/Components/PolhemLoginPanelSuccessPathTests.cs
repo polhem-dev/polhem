@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Reflection;
+using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Client.Providers;
 using Polhem.Api.Core.JsonRpc;
@@ -43,13 +44,18 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private sealed class FakeConnectorFactory : PolhemApiConnectorFactory
         {
             private readonly IJsonRpcProvider _provider;
+            private readonly ApiSessionContext _session;
 
-            public FakeConnectorFactory(IJsonRpcProvider provider) : base(new PolhemBlazorOptions())
-                => _provider = provider;
+            public FakeConnectorFactory(IJsonRpcProvider provider, ApiSessionContext session)
+                : base(new PolhemBlazorOptions(), session)
+            {
+                _provider = provider;
+                _session = session;
+            }
 
             public override SystemApiConnector CreateSystemConnector(Guid accessToken)
             {
-                var connector = new SystemApiConnector(accessToken);
+                var connector = new SystemApiConnector(accessToken, _session);
                 typeof(ApiConnector)
                     .GetProperty(nameof(ApiConnector.Provider), BindingFlags.Public | BindingFlags.Instance)!
                     .SetValue(connector, _provider);
@@ -70,10 +76,10 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             await (Task)method.Invoke(panel, null)!;
         }
 
-        private static PolhemLoginPanel CreatePanelWithFakeFactory(LoginResponse response)
+        private static PolhemLoginPanel CreatePanelWithFakeFactory(LoginResponse response, ApiSessionContext? session = null)
         {
             var panel = new PolhemLoginPanel();
-            var factory = new FakeConnectorFactory(new FakeLoginProvider(response));
+            var factory = new FakeConnectorFactory(new FakeLoginProvider(response), session ?? new ApiSessionContext());
             s_factoryProp.SetValue(panel, factory);
             return panel;
         }
@@ -101,6 +107,20 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             await InvokeOnSubmitAsync(panel);
 
             Assert.Equal(string.Empty, (string?)s_passwordField.GetValue(panel));
+        }
+
+        [Fact]
+        [DisplayName("A successful login sets the user's time zone on the circuit's own session, not on the ambient one")]
+        public async Task OnSubmitAsync_SuccessfulLogin_SetsCircuitSessionTimeZone()
+        {
+            var circuitSession = new ApiSessionContext();
+            var panel = CreatePanelWithFakeFactory(
+                new LoginResponse { AccessToken = Guid.NewGuid(), TimeZone = "Asia/Tokyo" }, circuitSession);
+
+            await InvokeOnSubmitAsync(panel);
+
+            Assert.Equal("Asia/Tokyo", circuitSession.UserTimeZoneId);
+            Assert.NotEqual("Asia/Tokyo", ApiSessionContext.Ambient.UserTimeZoneId);
         }
 
         [Fact]

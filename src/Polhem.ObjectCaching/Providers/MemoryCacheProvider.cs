@@ -104,12 +104,14 @@ namespace Polhem.ObjectCaching.Providers
                 {
                     if (string.IsNullOrEmpty(path))
                         continue;
-                    options.AddExpirationToken(new FileModificationToken(path));
+                    DateTime? baseline = policy.FileWriteTimeBaselines != null
+                        && policy.FileWriteTimeBaselines.TryGetValue(path, out var written) ? written : null;
+                    options.AddExpirationToken(new FileModificationToken(path, baseline));
                 }
             }
 
             if (!string.IsNullOrEmpty(policy.ChangeNotifyKey))
-                options.AddExpirationToken(new CacheNotifyToken(policy.ChangeNotifyKey));
+                options.AddExpirationToken(new CacheNotifyToken(policy.ChangeNotifyKey, policy.NotifyVersionBaseline));
 
             return options;
         }
@@ -137,7 +139,8 @@ namespace Polhem.ObjectCaching.Providers
 
         /// <summary>
         /// Lazy file-modification change token: compares current LastWriteTimeUtc against the
-        /// snapshot taken at construction time. No background timer avoids the race condition
+        /// policy's pre-load baseline, or a snapshot taken at construction when the policy has none.
+        /// No background timer avoids the race condition
         /// where an immediately-firing polling timer evicts entries before they can be read.
         /// MemoryCache checks HasChanged on every TryGetValue call, so lazy detection is sufficient.
         /// </summary>
@@ -147,22 +150,10 @@ namespace Polhem.ObjectCaching.Providers
             private readonly DateTime _initialWriteTime;
             private volatile bool _hasChanged;
 
-            public FileModificationToken(string filePath)
+            public FileModificationToken(string filePath, DateTime? baseline)
             {
                 _filePath = filePath;
-                _initialWriteTime = GetWriteTime(filePath);
-            }
-
-            private static DateTime GetWriteTime(string path)
-            {
-                // A watched file that cannot be stat'ed is treated as "no known write time", which
-                // makes the token compare equal and the entry stay cached. Only the failures that
-                // mean exactly that are swallowed; anything else is a real fault and propagates.
-                try { return File.GetLastWriteTimeUtc(path); }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
-                {
-                    return DateTime.MinValue;
-                }
+                _initialWriteTime = baseline ?? FileWriteTime.Get(filePath);
             }
 
             public bool HasChanged
@@ -170,7 +161,7 @@ namespace Polhem.ObjectCaching.Providers
                 get
                 {
                     if (_hasChanged) return true;
-                    _hasChanged = GetWriteTime(_filePath) != _initialWriteTime;
+                    _hasChanged = FileWriteTime.Get(_filePath) != _initialWriteTime;
                     return _hasChanged;
                 }
             }
@@ -183,7 +174,7 @@ namespace Polhem.ObjectCaching.Providers
 
         /// <summary>
         /// Lazy cache-notify change token: compares the current observed version for a notify key
-        /// against the snapshot taken at construction. Deliberately mirrors
+        /// against the policy's pre-load baseline, or a snapshot taken at construction when it has none. Deliberately mirrors
         /// <see cref="FileModificationToken"/> — no background timer, detection happens on read —
         /// so notification-backed entries behave exactly like file-backed ones.
         /// </summary>
@@ -193,10 +184,10 @@ namespace Polhem.ObjectCaching.Providers
             private readonly long _initialVersion;
             private volatile bool _hasChanged;
 
-            public CacheNotifyToken(string notifyKey)
+            public CacheNotifyToken(string notifyKey, long? baseline)
             {
                 _notifyKey = notifyKey;
-                _initialVersion = CacheInfo.NotifyVersions.GetVersion(notifyKey);
+                _initialVersion = baseline ?? CacheInfo.NotifyVersions.GetVersion(notifyKey);
             }
 
             public bool HasChanged

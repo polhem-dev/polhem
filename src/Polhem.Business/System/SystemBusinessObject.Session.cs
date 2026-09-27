@@ -187,12 +187,7 @@ namespace Polhem.Business.System
         /// <param name="sessionInfo">The session to reset.</param>
         private static void ClearCompanyContext(SessionInfo sessionInfo)
         {
-            sessionInfo.CompanyId = null;
-            sessionInfo.CustomizeId = string.Empty;
-            sessionInfo.Roles = [];
-            sessionInfo.UserRowId = Guid.Empty;
-            sessionInfo.EmployeeRowId = Guid.Empty;
-            sessionInfo.DeptRowId = Guid.Empty;
+            sessionInfo.CompanyScope = SessionCompanyScope.None;
         }
 
         private const string LoginSource = "System.Login";

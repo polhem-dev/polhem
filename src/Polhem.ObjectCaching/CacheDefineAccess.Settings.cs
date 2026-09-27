@@ -65,13 +65,19 @@ namespace Polhem.ObjectCaching
 
         /// <summary>
         /// Saves the database settings. Plain-text <see cref="DatabaseServer.Password"/> /
-        /// <see cref="DatabaseItem.Password"/> are encrypted in place (already-prefixed
-        /// <c>enc:</c> values pass through) before serializing to XML.
+        /// <see cref="DatabaseItem.Password"/> are encrypted in the file that is written
+        /// (already-prefixed <c>enc:</c> values pass through); <paramref name="settings"/> itself is
+        /// left as it was, apart from its bound file path.
         /// </summary>
         /// <param name="settings">The database settings.</param>
         /// <remarks>
         /// Without a configuration encryption key the passwords are written as they are, and a warning
         /// is logged each time that happens.
+        /// <para>
+        /// The encryption runs on a copy. The natural edit pattern is Get, change, Save, and what Get
+        /// returns is the cached instance every connection reads: encrypting it in place would hand
+        /// concurrent readers ciphertext as a connection password until a later Get decrypted it again.
+        /// </para>
         /// </remarks>
         public void SaveDatabaseSettings(DatabaseSettings settings)
         {
@@ -80,9 +86,11 @@ namespace Polhem.ObjectCaching
             {
                 WarnIfPasswordsUnprotected(settings, "saved");
             }
-            DatabaseSettingsCryptor.EncryptInPlace(settings, _configEncryptionKey);
+            var toWrite = settings.Clone();
+            DatabaseSettingsCryptor.EncryptInPlace(toWrite, _configEncryptionKey);
             string filePath = _paths.GetDatabaseSettingsFilePath();
-            XmlCodec.SerializeToFile(settings, filePath);
+            XmlCodec.SerializeToFile(toWrite, filePath);
+            settings.SetObjectFilePath(filePath);
             // Invalidate the cache
             _cache.DatabaseSettings.Remove();
         }

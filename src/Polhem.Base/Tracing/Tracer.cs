@@ -5,6 +5,10 @@ namespace Polhem.Base.Tracing
     /// <summary>
     /// Static tracer utility class.
     /// </summary>
+    /// <remarks>
+    /// Each call reads <see cref="SysInfo.TraceListener"/> once, through <c>?.</c>. That property has a
+    /// public setter, so checking it and then reading it again could see it cleared in between.
+    /// </remarks>
     public static class Tracer
     {
         /// <summary>
@@ -27,8 +31,7 @@ namespace Polhem.Base.Tracing
             string category = "", object? tag = null,
             [CallerMemberName] string name = "")
         {
-            if (!Enabled) { return null; }
-            return SysInfo.TraceListener!.TraceStart(layer, detail, category, tag, name);
+            return SysInfo.TraceListener?.TraceStart(layer, detail, category, tag, name);
         }
 
         /// <summary>
@@ -39,8 +42,8 @@ namespace Polhem.Base.Tracing
         /// <param name="detail">Additional description; overrides the Detail set at start if provided.</param>
         public static void End(TraceContext? ctx, TraceStatus status = TraceStatus.Ok, string? detail = null)
         {
-            if (!Enabled || ctx == null) return;
-            SysInfo.TraceListener!.TraceEnd(ctx, status, detail);
+            if (ctx == null) return;
+            SysInfo.TraceListener?.TraceEnd(ctx, status, detail);
         }
 
         /// <summary>
@@ -57,8 +60,7 @@ namespace Polhem.Base.Tracing
             string category = "", object? tag = null,
             [CallerMemberName] string name = "")
         {
-            if (!Enabled) return;
-            SysInfo.TraceListener!.TraceWrite(layer, detail, status, category, tag, name);
+            SysInfo.TraceListener?.TraceWrite(layer, detail, status, category, tag, name);
         }
     }
 }

@@ -1,1 +1,3 @@
 #nullable enable
+Polhem.Hosting.Audit.IAuditLogSink
+Polhem.Hosting.Audit.IAuditLogSink.WriteBatch(System.Collections.Generic.IReadOnlyList<Polhem.Definition.Logging.AuditEntry!>! entries) -> void

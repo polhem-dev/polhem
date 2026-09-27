@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using Polhem.Base.Collections;
-using Polhem.Base.Serialization;
 using Polhem.Definition.Sorting;
 
 namespace Polhem.Definition.UnitTests.Collections
@@ -102,28 +101,6 @@ namespace Polhem.Definition.UnitTests.Collections
             col.Clear();
 
             Assert.Empty(col);
-        }
-
-        [Fact]
-        [DisplayName("SerializeState defaults to None")]
-        public void SerializeState_DefaultIsNone()
-        {
-            var col = new SortFieldCollection();
-            Assert.Equal(SerializeState.None, col.SerializeState);
-        }
-
-        [Fact]
-        [DisplayName("SetSerializeState updates the SerializeState of the collection and every item")]
-        public void SetSerializeState_PropagatesToItems()
-        {
-            var col = new SortFieldCollection();
-            var item = MakeField();
-            col.Add(item);
-
-            col.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Equal(SerializeState.Serialize, col.SerializeState);
-            Assert.Equal(SerializeState.Serialize, item.SerializeState);
         }
 
         [Fact]

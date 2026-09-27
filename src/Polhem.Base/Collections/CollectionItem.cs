@@ -9,7 +9,7 @@ namespace Polhem.Base.Collections
     /// <summary>
     /// Base class for strongly-typed collection items.
     /// </summary>
-    public abstract class CollectionItem : ICollectionItem, ITagProperty, IObjectSerialize
+    public abstract class CollectionItem : ICollectionItem, ITagProperty, IObjectSerializeBase
     {
         private ICollectionBase? _collection;
 
@@ -43,26 +43,6 @@ namespace Polhem.Base.Collections
         [XmlIgnore, JsonIgnore]
         [Browsable(false)]
         public object? Tag { get; set; }
-
-        #endregion
-
-        #region IObjectSerialize Interface
-
-        /// <summary>
-        /// Gets the current serialization state.
-        /// </summary>
-        [XmlIgnore, JsonIgnore]
-        [Browsable(false)]
-        public SerializeState SerializeState { get; private set; } = SerializeState.None;
-
-        /// <summary>
-        /// Sets the serialization state.
-        /// </summary>
-        /// <param name="serializeState">The serialization state to set.</param>
-        public virtual void SetSerializeState(SerializeState serializeState)
-        {
-            SerializeState = serializeState;
-        }
 
         #endregion
 

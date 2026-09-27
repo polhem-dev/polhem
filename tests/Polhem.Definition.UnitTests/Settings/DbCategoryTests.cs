@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Base.Serialization;
 using Polhem.Definition.Settings;
 
 namespace Polhem.Definition.UnitTests.Settings
@@ -50,24 +49,14 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("Tables returns null when serializing an empty collection")]
-        public void Tables_EmptyDuringSerialize_ReturnsNull()
-        {
-            var category = new DbCategory();
-            category.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Null(category.Tables);
-        }
-
-        [Fact]
-        [DisplayName("SetSerializeState sets the object's own state")]
-        public void SetSerializeState_UpdatesState()
+        [DisplayName("Tables is not serialized while it is empty, whether or not it was read")]
+        public void Tables_EmptyCollection_IsNotSerialized()
         {
             var category = new DbCategory();
 
-            category.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Equal(SerializeState.Serialize, category.SerializeState);
+            Assert.False(category.TablesSpecified);
+            Assert.Empty(category.Tables!);
+            Assert.False(category.TablesSpecified);
         }
     }
 }

@@ -1,35 +1,17 @@
+using System.Xml.Serialization;
+using System.Text.Json.Serialization;
+using System.ComponentModel;
 using Polhem.Definition.Collections;
 using Polhem.Base.Serialization;
-using System.Text.Json.Serialization;
 
 namespace Polhem.Api.Core.Messages
 {
     /// <summary>
     /// Base class for API message objects (requests and responses) with serialization support.
     /// </summary>
-    public abstract class ApiMessageBase : IObjectSerialize
+    public abstract class ApiMessageBase : IObjectSerializeBase
     {
         private ParameterCollection? _parameters = null;
-
-        #region IObjectSerialize
-
-        /// <summary>
-        /// Gets the serialization state.
-        /// </summary>
-        [JsonIgnore]
-        public SerializeState SerializeState { get; private set; } = SerializeState.None;
-
-        /// <summary>
-        /// Sets the serialization state.
-        /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public virtual void SetSerializeState(SerializeState serializeState)
-        {
-            SerializeState = serializeState;
-            _parameters?.SetSerializeState(serializeState);
-        }
-
-        #endregion
 
         /// <summary>
         /// Gets or sets the parameter collection.
@@ -50,8 +32,6 @@ namespace Polhem.Api.Core.Messages
         {
             get
             {
-                // Return null when the collection is empty during serialization
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _parameters!)) { return null; }
                 if (_parameters == null) { _parameters = []; }
                 return _parameters;
             }
@@ -60,5 +40,14 @@ namespace Polhem.Api.Core.Messages
                 _parameters = value;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="Parameters"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool ParametersSpecified => _parameters is { Count: > 0 };
     }
 }

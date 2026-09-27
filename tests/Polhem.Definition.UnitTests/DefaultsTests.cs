@@ -282,10 +282,8 @@ namespace Polhem.Definition.UnitTests
             var settings = XmlCodec.Deserialize<DatabaseSettings>(ReadEmbedded("DatabaseSettings.xml"));
 
             Assert.NotNull(settings);
-            // When empty, Items and Servers are short-circuited to null by `IsSerializeEmpty` during serialization, so they may come
-            // back as null or as an empty collection; both mean there is no default DatabaseItem.
-            Assert.True(settings!.Items == null || settings.Items.Count == 0);
-            Assert.True(settings.Servers == null || settings.Servers.Count == 0);
+            Assert.Empty(settings!.Items!);
+            Assert.Empty(settings.Servers!);
         }
 
         [Fact]

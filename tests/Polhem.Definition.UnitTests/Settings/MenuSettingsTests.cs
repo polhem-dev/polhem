@@ -35,7 +35,6 @@ namespace Polhem.Definition.UnitTests.Settings
             var settings = new MenuSettings();
 
             Assert.NotNull(settings.Items);
-            Assert.Equal(SerializeState.None, settings.SerializeState);
             Assert.Equal(string.Empty, settings.ObjectFilePath);
         }
 
@@ -51,25 +50,14 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("MenuSettings.SetSerializeState propagates to Items")]
-        public void MenuSettings_SetSerializeState_PropagatesToItems()
-        {
-            var settings = BuildNestedMenu();
-
-            settings.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Equal(SerializeState.Serialize, settings.SerializeState);
-            Assert.Equal(SerializeState.Serialize, settings.Items!.SerializeState);
-        }
-
-        [Fact]
-        [DisplayName("MenuSettings.Items returns null when serializing an empty collection")]
-        public void MenuSettings_Items_EmptyDuringSerialize_ReturnsNull()
+        [DisplayName("MenuSettings.Items is not serialized while it is empty, whether or not it was read")]
+        public void MenuSettings_Items_EmptyCollection_IsNotSerialized()
         {
             var settings = new MenuSettings();
-            settings.SetSerializeState(SerializeState.Serialize);
 
-            Assert.Null(settings.Items);
+            Assert.False(settings.ItemsSpecified);
+            Assert.Empty(settings.Items!);
+            Assert.False(settings.ItemsSpecified);
         }
 
         [Fact]

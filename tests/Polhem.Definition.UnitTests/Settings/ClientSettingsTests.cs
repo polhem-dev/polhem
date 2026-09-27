@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Base.Serialization;
 using Polhem.Definition.Settings;
 
 namespace Polhem.Definition.UnitTests.Settings
@@ -53,7 +52,6 @@ namespace Polhem.Definition.UnitTests.Settings
 
             Assert.InRange(settings.CreateTime, before.AddSeconds(-1), after.AddSeconds(1));
             Assert.Equal(string.Empty, settings.Endpoint);
-            Assert.Equal(SerializeState.None, settings.SerializeState);
             Assert.Equal(string.Empty, settings.ObjectFilePath);
         }
 
@@ -83,17 +81,6 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ClientSettings.SetSerializeState updates the serialize state")]
-        public void ClientSettings_SetSerializeState_UpdatesState()
-        {
-            var settings = new ClientSettings();
-
-            settings.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Equal(SerializeState.Serialize, settings.SerializeState);
-        }
-
-        [Fact]
         [DisplayName("ClientSettings.SetObjectFilePath updates the file path")]
         public void ClientSettings_SetObjectFilePath_UpdatesPath()
         {
@@ -105,13 +92,14 @@ namespace Polhem.Definition.UnitTests.Settings
         }
 
         [Fact]
-        [DisplayName("ClientSettings.EndpointItems returns null when serializing an empty collection")]
-        public void ClientSettings_EndpointItems_EmptyDuringSerialize_ReturnsNull()
+        [DisplayName("ClientSettings.EndpointItems is not serialized while it is empty, whether or not it was read")]
+        public void ClientSettings_EndpointItems_EmptyCollection_IsNotSerialized()
         {
             var settings = new ClientSettings();
-            settings.SetSerializeState(SerializeState.Serialize);
 
-            Assert.Null(settings.EndpointItems);
+            Assert.False(settings.EndpointItemsSpecified);
+            Assert.Empty(settings.EndpointItems!);
+            Assert.False(settings.EndpointItemsSpecified);
         }
     }
 }

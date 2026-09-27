@@ -34,7 +34,6 @@ Polhem.Api.Core.JsonRpc.ApiPayload.Codec.set -> void
 Polhem.Api.Core.JsonRpc.ApiPayload.Format.get -> Polhem.Api.Core.Messages.PayloadFormat
 Polhem.Api.Core.JsonRpc.ApiPayload.Frame.get -> Polhem.Api.Core.JsonRpc.ApiPayloadFrame?
 Polhem.Api.Core.JsonRpc.ApiPayload.Frame.set -> void
-Polhem.Api.Core.JsonRpc.ApiPayload.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Api.Core.JsonRpc.ApiPayload.TypeName.get -> string!
 Polhem.Api.Core.JsonRpc.ApiPayload.TypeName.set -> void
 Polhem.Api.Core.JsonRpc.ApiPayload.Value.get -> object?
@@ -103,7 +102,6 @@ Polhem.Api.Core.JsonRpc.JsonRpcRequest.Method.get -> string!
 Polhem.Api.Core.JsonRpc.JsonRpcRequest.Method.set -> void
 Polhem.Api.Core.JsonRpc.JsonRpcRequest.Params.get -> Polhem.Api.Core.JsonRpc.JsonRpcParams!
 Polhem.Api.Core.JsonRpc.JsonRpcRequest.Params.set -> void
-Polhem.Api.Core.JsonRpc.JsonRpcRequest.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Api.Core.JsonRpc.JsonRpcResponse
 Polhem.Api.Core.JsonRpc.JsonRpcResponse.Error.get -> Polhem.Api.Core.JsonRpc.JsonRpcError?
 Polhem.Api.Core.JsonRpc.JsonRpcResponse.Error.set -> void
@@ -117,7 +115,6 @@ Polhem.Api.Core.JsonRpc.JsonRpcResponse.Method.get -> string?
 Polhem.Api.Core.JsonRpc.JsonRpcResponse.Method.set -> void
 Polhem.Api.Core.JsonRpc.JsonRpcResponse.Result.get -> Polhem.Api.Core.JsonRpc.JsonRpcResult?
 Polhem.Api.Core.JsonRpc.JsonRpcResponse.Result.set -> void
-Polhem.Api.Core.JsonRpc.JsonRpcResponse.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Api.Core.JsonRpc.JsonRpcResult
 Polhem.Api.Core.JsonRpc.JsonRpcResult.JsonRpcResult() -> void
 Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore
@@ -141,7 +138,6 @@ Polhem.Api.Core.Messages.ApiMessageBase
 Polhem.Api.Core.Messages.ApiMessageBase.ApiMessageBase() -> void
 Polhem.Api.Core.Messages.ApiMessageBase.Parameters.get -> Polhem.Definition.Collections.ParameterCollection?
 Polhem.Api.Core.Messages.ApiMessageBase.Parameters.set -> void
-Polhem.Api.Core.Messages.ApiMessageBase.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Api.Core.Messages.ApiRequest
 Polhem.Api.Core.Messages.ApiRequest.ApiRequest() -> void
 Polhem.Api.Core.Messages.ApiResponse
@@ -681,7 +677,3 @@ static Polhem.Api.Core.Validator.ApiAccessValidator.FindAccessControl(System.Ref
 static Polhem.Api.Core.Validator.ApiAccessValidator.ValidateAccess(System.Reflection.MethodInfo! method, Polhem.Api.Core.Validator.ApiCallContext! context, Polhem.Definition.Security.IAccessTokenValidator! tokenValidator) -> void
 virtual Polhem.Api.Core.Authorization.ApiAuthorizationValidator.IsApiKeyRequired(string! method) -> bool
 virtual Polhem.Api.Core.Authorization.ApiAuthorizationValidator.IsAuthorizationRequired(string! method) -> bool
-virtual Polhem.Api.Core.JsonRpc.ApiPayload.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
-virtual Polhem.Api.Core.JsonRpc.JsonRpcRequest.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
-virtual Polhem.Api.Core.JsonRpc.JsonRpcResponse.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
-virtual Polhem.Api.Core.Messages.ApiMessageBase.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void

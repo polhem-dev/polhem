@@ -19,19 +19,27 @@ namespace Polhem.Business.Form
     /// </para>
     /// <para>
     /// Chains are cached by <c>(customizationCode, progId)</c>, which is also what makes the
-    /// declaration-versus-override check a one-off. When either layer's <see cref="PluginSettings"/>
-    /// instance changes — a file-watcher reload, detected by reference inequality — the cache is
-    /// reset on the next call.
+    /// declaration-versus-override check a one-off. Each chain remembers the base and customization
+    /// <see cref="PluginSettings"/> instances it was built from and is used only while the settings
+    /// just read are those same instances, so a file-watcher reload, which hands back new instances,
+    /// makes every chain build again on its next use.
     /// </para>
     /// </remarks>
     public sealed class PluginSettingsResolver : IFormPluginResolver
     {
         private readonly IDefineAccess _defineAccess;
         private readonly ICustomizeDefineReader? _customizeReader;
-        private readonly ConcurrentDictionary<string, FormPluginChain> _chainCache = new(StringComparer.OrdinalIgnoreCase);
-        private readonly object _resetLock = new();
-        private PluginSettings? _lastSettingsRef;
-        private readonly ConcurrentDictionary<string, PluginSettings?> _lastCustRefs = new(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, BuiltChain> _chainCache = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// A cached chain and the settings instances it was built from.
+        /// </summary>
+        /// <remarks>
+        /// NOTE: the settings references are the validity check, not a reset triggered by them. A
+        /// reset left a window in which a build from the old settings could be added after the cache
+        /// was cleared for the new ones, and it would then stay until the next reload.
+        /// </remarks>
+        private sealed record BuiltChain(PluginSettings? BaseSettings, PluginSettings? CustomizeSettings, FormPluginChain Chain);
 
         /// <summary>
         /// Initializes a new <see cref="PluginSettingsResolver"/> without customization support.
@@ -51,6 +59,12 @@ namespace Polhem.Business.Form
             _defineAccess = defineAccess ?? throw new ArgumentNullException(nameof(defineAccess));
             _customizeReader = customizeReader;
         }
+
+        /// <summary>
+        /// Runs after a chain is built and before it is cached. Exposed for tests, which land a
+        /// settings reload inside that window.
+        /// </summary>
+        internal Action? BeforeCacheWrite { get; set; }
 
         /// <inheritdoc/>
         public FormPluginChain Resolve(string customizeId, string progId)
@@ -73,8 +87,6 @@ namespace Polhem.Business.Form
             if (!string.IsNullOrEmpty(customizeId) && _customizeReader is not null)
                 custSettings = _customizeReader.GetCustomizePluginSettings(customizeId);
 
-            ResetCacheOnReload(customizeId, baseSettings, custSettings);
-
             // The NUL separator cannot occur in either part, so distinct pairs never collide; the
             // empty-code key is just the progId, keeping the base path identical to a host with no
             // customization configured.
@@ -82,36 +94,15 @@ namespace Polhem.Business.Form
                 ? progId
                 : customizeId + "\0" + progId;
 
-            return _chainCache.GetOrAdd(cacheKey, _ => BuildChain(custSettings, baseSettings, progId));
-        }
+            if (_chainCache.TryGetValue(cacheKey, out var cached)
+                && ReferenceEquals(cached.BaseSettings, baseSettings)
+                && ReferenceEquals(cached.CustomizeSettings, custSettings))
+                return cached.Chain;
 
-        /// <summary>
-        /// Resets the whole chain cache when the base or the relevant customization
-        /// <see cref="PluginSettings"/> instance changes. Reference equality is enough — the cache
-        /// hands back a new instance on reload, so a stale reference signals a stale chain.
-        /// </summary>
-        private void ResetCacheOnReload(string customizeId, PluginSettings? baseSettings, PluginSettings? custSettings)
-        {
-            bool hasCust = !string.IsNullOrEmpty(customizeId);
-            bool baseChanged = !ReferenceEquals(baseSettings, _lastSettingsRef);
-            bool custChanged = hasCust
-                && (!_lastCustRefs.TryGetValue(customizeId, out var prev) || !ReferenceEquals(prev, custSettings));
-            if (!baseChanged && !custChanged)
-                return;
-
-            lock (_resetLock)
-            {
-                baseChanged = !ReferenceEquals(baseSettings, _lastSettingsRef);
-                custChanged = hasCust
-                    && (!_lastCustRefs.TryGetValue(customizeId, out var prevLocked) || !ReferenceEquals(prevLocked, custSettings));
-                if (!baseChanged && !custChanged)
-                    return;
-
-                _chainCache.Clear();
-                _lastSettingsRef = baseSettings;
-                if (hasCust)
-                    _lastCustRefs[customizeId] = custSettings;
-            }
+            var chain = BuildChain(custSettings, baseSettings, progId);
+            BeforeCacheWrite?.Invoke();
+            _chainCache[cacheKey] = new BuiltChain(baseSettings, custSettings, chain);
+            return chain;
         }
 
         private static FormPluginChain BuildChain(PluginSettings? custSettings, PluginSettings? baseSettings, string progId)

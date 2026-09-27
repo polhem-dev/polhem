@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using Polhem.Base.Data;
-using Polhem.Base.Serialization;
 using Polhem.Db.Dml;
 using Polhem.Definition;
 using Polhem.Definition.Database;
@@ -107,14 +106,12 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
-        [DisplayName("Build skips a foreign key field whose RelationFieldMappings is null")]
-        public void Build_ForeignKeyWithNullMappings_SkipsField()
+        [DisplayName("Build skips a foreign key field whose RelationFieldMappings is empty")]
+        public void Build_ForeignKeyWithEmptyMappings_SkipsField()
         {
             var table = NewMainTable();
             var fk = AddForeignKey(table, "category_rowid", "Category");
-            // Under serialize state an untouched (empty) RelationFieldMappings getter returns
-            // null, exercising the null-mappings early-return in GetUsedRelationFieldMappings.
-            fk.SetSerializeState(SerializeState.Serialize);
+            Assert.Empty(fk.RelationFieldMappings!);
 
             var used = new HashSet<string> { "ref_category_id" };
             var define = new StubDefineAccess(_ => NewRelationSchema("Category", "sys_id"));

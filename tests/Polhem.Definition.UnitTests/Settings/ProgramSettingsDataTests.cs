@@ -110,31 +110,18 @@ namespace Polhem.Definition.UnitTests.Settings
             var settings = new ProgramSettings();
 
             Assert.NotNull(settings.Items);
-            Assert.Equal(SerializeState.None, settings.SerializeState);
             Assert.Equal(string.Empty, settings.ObjectFilePath);
         }
 
         [Fact]
-        [DisplayName("ProgramSettings.Items returns null when serializing an empty collection")]
-        public void ProgramSettings_Items_EmptyDuringSerialize_ReturnsNull()
+        [DisplayName("ProgramSettings.Items is not serialized while it is empty, whether or not it was read")]
+        public void ProgramSettings_Items_EmptyCollection_IsNotSerialized()
         {
             var settings = new ProgramSettings();
-            settings.SetSerializeState(SerializeState.Serialize);
 
-            Assert.Null(settings.Items);
-        }
-
-        [Fact]
-        [DisplayName("ProgramSettings.SetSerializeState updates the state and propagates it to Items")]
-        public void ProgramSettings_SetSerializeState_UpdatesState()
-        {
-            var settings = new ProgramSettings();
-            settings.Items!.Add("P001", "客戶維護");
-
-            settings.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Equal(SerializeState.Serialize, settings.SerializeState);
-            Assert.Equal(SerializeState.Serialize, settings.Items!.SerializeState);
+            Assert.False(settings.ItemsSpecified);
+            Assert.Empty(settings.Items!);
+            Assert.False(settings.ItemsSpecified);
         }
 
         [Fact]

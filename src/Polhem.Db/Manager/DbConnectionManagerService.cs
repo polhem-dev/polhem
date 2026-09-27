@@ -21,6 +21,12 @@ namespace Polhem.Db.Manager
         private readonly ConcurrentDictionary<string, DbConnectionInfo> _cache = new();
 
         /// <summary>
+        /// Advanced by <see cref="Clear"/> and <see cref="Remove"/> before they drop entries, so a
+        /// build that read the settings before the change does not store its result afterwards.
+        /// </summary>
+        private long _generation;
+
+        /// <summary>
         /// Initializes a new <see cref="DbConnectionManagerService"/> bound to the supplied
         /// <see cref="IDatabaseSettingsProvider"/>.
         /// </summary>
@@ -54,7 +60,22 @@ namespace Polhem.Db.Manager
             if (string.IsNullOrWhiteSpace(databaseId))
                 throw new ArgumentNullException(nameof(databaseId), "Database ID cannot be null or empty.");
 
-            return _cache.GetOrAdd(databaseId, CreateConnectionInfo);
+            if (_cache.TryGetValue(databaseId, out var cached))
+                return cached;
+
+            // NOTE: not `GetOrAdd(databaseId, CreateConnectionInfo)`. A build that reads the old
+            // settings, overlapped by a settings change whose `Clear` runs before the build inserts,
+            // would store the old connection string after the clear — and this dictionary never
+            // expires. The generation is read before the settings are, and re-checked after the insert.
+            long generation = Interlocked.Read(ref _generation);
+            var created = CreateConnectionInfo(databaseId);
+            if (Interlocked.Read(ref _generation) != generation)
+                return created;
+
+            var stored = _cache.GetOrAdd(databaseId, created);
+            if (Interlocked.Read(ref _generation) != generation)
+                _cache.TryRemove(new KeyValuePair<string, DbConnectionInfo>(databaseId, stored));
+            return stored;
         }
 
         private DbConnectionInfo CreateConnectionInfo(string databaseId)
@@ -124,10 +145,18 @@ namespace Polhem.Db.Manager
         }
 
         /// <inheritdoc/>
-        public bool Remove(string databaseId) => _cache.TryRemove(databaseId, out _);
+        public bool Remove(string databaseId)
+        {
+            Interlocked.Increment(ref _generation);
+            return _cache.TryRemove(databaseId, out _);
+        }
 
         /// <inheritdoc/>
-        public void Clear() => _cache.Clear();
+        public void Clear()
+        {
+            Interlocked.Increment(ref _generation);
+            _cache.Clear();
+        }
 
         /// <inheritdoc/>
         public bool Contains(string databaseId) => _cache.ContainsKey(databaseId);

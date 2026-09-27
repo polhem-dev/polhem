@@ -1,7 +1,7 @@
+using System.Text.Json.Serialization;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using Polhem.Base.Collections;
-using Polhem.Base.Serialization;
 using Polhem.Definition.Collections;
 
 namespace Polhem.Definition.Layouts
@@ -147,21 +147,19 @@ namespace Polhem.Definition.Layouts
         {
             get
             {
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _extendedProperties!)) { return null; }
                 if (_extendedProperties == null) { _extendedProperties = []; }
                 return _extendedProperties;
             }
         }
 
         /// <summary>
-        /// Sets the serialization state.
+        /// Gets whether <see cref="ExtendedProperties"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
         /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public override void SetSerializeState(SerializeState serializeState)
-        {
-            base.SetSerializeState(serializeState);
-            _extendedProperties?.SetSerializeState(serializeState);
-        }
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool ExtendedPropertiesSpecified => _extendedProperties is { Count: > 0 };
 
         /// <summary>
         /// Copies every member declared on this base class onto <paramref name="target"/>.

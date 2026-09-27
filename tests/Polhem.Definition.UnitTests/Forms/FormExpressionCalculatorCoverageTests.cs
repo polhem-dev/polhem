@@ -2,7 +2,6 @@ using System.ComponentModel;
 using System.Data;
 using Polhem.Base.Data;
 using Polhem.Base.Exceptions;
-using Polhem.Base.Serialization;
 using Polhem.Definition.Forms;
 using Polhem.Expressions;
 
@@ -50,17 +49,16 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyFieldExpressions returns early without throwing when schema.Tables is null (an empty collection being serialized)")]
-        public void ApplyFieldExpressions_NullTables_ReturnsEarly()
+        [DisplayName("ApplyFieldExpressions returns without throwing when schema.Tables is empty")]
+        public void ApplyFieldExpressions_EmptyTables_ReturnsEarly()
         {
             var schema = new FormSchema("Order", "Order") { CategoryId = "company" };
-            schema.SetSerializeState(SerializeState.Serialize);   // With empty Tables the getter returns null.
 
             var ex = Record.Exception(() =>
                 _calculator.ApplyFieldExpressions(schema, new DataSet(), new RoundingContext()));
 
             Assert.Null(ex);
-            Assert.Null(schema.Tables);
+            Assert.Empty(schema.Tables!);
         }
 
         [Fact]
@@ -102,17 +100,16 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ValidateRules returns early without throwing when schema.Rules is null (an empty collection being serialized)")]
-        public void ValidateRules_NullRules_ReturnsEarly()
+        [DisplayName("ValidateRules returns without throwing when schema.Rules is empty")]
+        public void ValidateRules_EmptyRules_ReturnsEarly()
         {
             var schema = BuildComputeSchema();
-            schema.SetSerializeState(SerializeState.Serialize);   // With empty Rules the getter returns null.
 
             var ex = Record.Exception(() =>
                 _calculator.ValidateRules(schema, new DataSet(), FormRuleTrigger.BeforeSave));
 
             Assert.Null(ex);
-            Assert.Null(schema.Rules);
+            Assert.Empty(schema.Rules!);
         }
 
         [Fact]
@@ -282,12 +279,11 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyComputedRow returns an empty list when formTable.Fields is null")]
-        public void ApplyComputedRow_NullFields_ReturnsEmpty()
+        [DisplayName("ApplyComputedRow returns an empty list when formTable.Fields is empty")]
+        public void ApplyComputedRow_EmptyFields_ReturnsEmpty()
         {
             var schema = new FormSchema("Order", "Order");
             var formTable = schema.Tables!.Add("Order", "Order");
-            formTable.SetSerializeState(SerializeState.Serialize);   // Fields → null
             var table = new DataTable("Order");
             table.Columns.Add("a", typeof(string));
             var row = table.NewRow();
@@ -322,12 +318,11 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyDefaultRow returns an empty list when formTable.Fields is null")]
-        public void ApplyDefaultRow_NullFields_ReturnsEmpty()
+        [DisplayName("ApplyDefaultRow returns an empty list when formTable.Fields is empty")]
+        public void ApplyDefaultRow_EmptyFields_ReturnsEmpty()
         {
             var schema = new FormSchema("Order", "Order");
             var formTable = schema.Tables!.Add("Order", "Order");
-            formTable.SetSerializeState(SerializeState.Serialize);   // Fields → null
             var table = new DataTable("Order");
             table.Columns.Add("a", typeof(string));
             var row = table.NewRow();
@@ -339,12 +334,11 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("BuildDependencyMap returns an empty map when formTable.Fields is null")]
-        public void BuildDependencyMap_NullFields_ReturnsEmpty()
+        [DisplayName("BuildDependencyMap returns an empty map when formTable.Fields is empty")]
+        public void BuildDependencyMap_EmptyFields_ReturnsEmpty()
         {
             var schema = new FormSchema("Order", "Order");
             var formTable = schema.Tables!.Add("Order", "Order");
-            formTable.SetSerializeState(SerializeState.Serialize);   // Fields → null
 
             var map = _calculator.BuildDependencyMap(formTable);
 

@@ -2,3 +2,4 @@
 static Polhem.Api.Core.JsonRpc.JsonRpcExecutor.IsResolvableAction(System.Reflection.MethodInfo! method) -> bool
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.Logger.get -> Microsoft.Extensions.Logging.ILogger?
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.Logger.set -> void
+Polhem.Api.Core.Messages.ApiMessageBase.ParametersSpecified.get -> bool

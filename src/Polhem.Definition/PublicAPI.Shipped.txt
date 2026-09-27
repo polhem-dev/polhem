@@ -173,9 +173,7 @@ Polhem.Definition.Database.TableSchema.Fields.get -> Polhem.Definition.Database.
 Polhem.Definition.Database.TableSchema.GetPrimaryKey() -> Polhem.Definition.Database.DbTableIndex?
 Polhem.Definition.Database.TableSchema.Indexes.get -> Polhem.Definition.Database.DbTableIndexCollection?
 Polhem.Definition.Database.TableSchema.ObjectFilePath.get -> string!
-Polhem.Definition.Database.TableSchema.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Definition.Database.TableSchema.SetObjectFilePath(string! filePath) -> void
-Polhem.Definition.Database.TableSchema.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 Polhem.Definition.Database.TableSchema.TableName.get -> string!
 Polhem.Definition.Database.TableSchema.TableName.set -> void
 Polhem.Definition.Database.TableSchema.TableSchema() -> void
@@ -399,9 +397,7 @@ Polhem.Definition.Forms.FormSchema.PermissionModelId.set -> void
 Polhem.Definition.Forms.FormSchema.ProgId.get -> string!
 Polhem.Definition.Forms.FormSchema.ProgId.set -> void
 Polhem.Definition.Forms.FormSchema.Rules.get -> Polhem.Definition.Forms.FormRuleCollection?
-Polhem.Definition.Forms.FormSchema.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Definition.Forms.FormSchema.SetObjectFilePath(string! filePath) -> void
-Polhem.Definition.Forms.FormSchema.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 Polhem.Definition.Forms.FormSchema.Tables.get -> Polhem.Definition.Forms.FormTableCollection?
 Polhem.Definition.Forms.FormTable
 Polhem.Definition.Forms.FormTable.Clone() -> Polhem.Definition.Forms.FormTable!
@@ -558,20 +554,14 @@ Polhem.Definition.Identity.SessionInfo.AccessToken.set -> void
 Polhem.Definition.Identity.SessionInfo.ApiEncryptionKey.get -> byte[]!
 Polhem.Definition.Identity.SessionInfo.ApiEncryptionKey.set -> void
 Polhem.Definition.Identity.SessionInfo.CompanyId.get -> string?
-Polhem.Definition.Identity.SessionInfo.CompanyId.set -> void
 Polhem.Definition.Identity.SessionInfo.Culture.get -> string!
 Polhem.Definition.Identity.SessionInfo.Culture.set -> void
 Polhem.Definition.Identity.SessionInfo.CustomizeId.get -> string!
-Polhem.Definition.Identity.SessionInfo.CustomizeId.set -> void
 Polhem.Definition.Identity.SessionInfo.DeptRowId.get -> System.Guid
-Polhem.Definition.Identity.SessionInfo.DeptRowId.set -> void
 Polhem.Definition.Identity.SessionInfo.EmployeeRowId.get -> System.Guid
-Polhem.Definition.Identity.SessionInfo.EmployeeRowId.set -> void
 Polhem.Definition.Identity.SessionInfo.ExpiredAt.get -> System.DateTime
 Polhem.Definition.Identity.SessionInfo.ExpiredAt.set -> void
 Polhem.Definition.Identity.SessionInfo.GetKey() -> string!
-Polhem.Definition.Identity.SessionInfo.Roles.get -> System.Collections.Generic.ICollection<string!>!
-Polhem.Definition.Identity.SessionInfo.Roles.set -> void
 Polhem.Definition.Identity.SessionInfo.SessionInfo() -> void
 Polhem.Definition.Identity.SessionInfo.TimeZone.get -> string!
 Polhem.Definition.Identity.SessionInfo.TimeZone.set -> void
@@ -580,7 +570,6 @@ Polhem.Definition.Identity.SessionInfo.UserId.set -> void
 Polhem.Definition.Identity.SessionInfo.UserName.get -> string!
 Polhem.Definition.Identity.SessionInfo.UserName.set -> void
 Polhem.Definition.Identity.SessionInfo.UserRowId.get -> System.Guid
-Polhem.Definition.Identity.SessionInfo.UserRowId.set -> void
 Polhem.Definition.Identity.SessionUser
 Polhem.Definition.Identity.SessionUser.AccessToken.get -> System.Guid
 Polhem.Definition.Identity.SessionUser.AccessToken.set -> void
@@ -721,9 +710,7 @@ Polhem.Definition.Layouts.FormLayout.ObjectFilePath.get -> string!
 Polhem.Definition.Layouts.FormLayout.ProgId.get -> string!
 Polhem.Definition.Layouts.FormLayout.ProgId.set -> void
 Polhem.Definition.Layouts.FormLayout.Sections.get -> Polhem.Definition.Layouts.LayoutSectionCollection?
-Polhem.Definition.Layouts.FormLayout.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Definition.Layouts.FormLayout.SetObjectFilePath(string! filePath) -> void
-Polhem.Definition.Layouts.FormLayout.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 Polhem.Definition.Layouts.FormLayoutCaptionApplier
 Polhem.Definition.Layouts.FormLayoutGenerator
 Polhem.Definition.Layouts.GridControlAllowActions
@@ -1293,9 +1280,7 @@ Polhem.Definition.Settings.ClientSettings.Endpoint.get -> string!
 Polhem.Definition.Settings.ClientSettings.Endpoint.set -> void
 Polhem.Definition.Settings.ClientSettings.EndpointItems.get -> Polhem.Definition.Settings.EndpointItemCollection?
 Polhem.Definition.Settings.ClientSettings.ObjectFilePath.get -> string!
-Polhem.Definition.Settings.ClientSettings.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Definition.Settings.ClientSettings.SetObjectFilePath(string! filePath) -> void
-Polhem.Definition.Settings.ClientSettings.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 Polhem.Definition.Settings.CommonConfiguration
 Polhem.Definition.Settings.CommonConfiguration.AllowedTypeNamespaces.get -> string!
 Polhem.Definition.Settings.CommonConfiguration.AllowedTypeNamespaces.set -> void
@@ -1372,10 +1357,8 @@ Polhem.Definition.Settings.DatabaseSettings.CreateTime.get -> System.DateTime
 Polhem.Definition.Settings.DatabaseSettings.DatabaseSettings() -> void
 Polhem.Definition.Settings.DatabaseSettings.Items.get -> Polhem.Definition.Settings.DatabaseItemCollection?
 Polhem.Definition.Settings.DatabaseSettings.ObjectFilePath.get -> string!
-Polhem.Definition.Settings.DatabaseSettings.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Definition.Settings.DatabaseSettings.Servers.get -> Polhem.Definition.Settings.DatabaseServerCollection?
 Polhem.Definition.Settings.DatabaseSettings.SetObjectFilePath(string! filePath) -> void
-Polhem.Definition.Settings.DatabaseSettings.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 Polhem.Definition.Settings.DatabaseSettingsCryptor
 Polhem.Definition.Settings.DbCategory
 Polhem.Definition.Settings.DbCategory.DbCategory() -> void
@@ -1392,9 +1375,7 @@ Polhem.Definition.Settings.DbCategorySettings.Categories.get -> Polhem.Definitio
 Polhem.Definition.Settings.DbCategorySettings.CreateTime.get -> System.DateTime
 Polhem.Definition.Settings.DbCategorySettings.DbCategorySettings() -> void
 Polhem.Definition.Settings.DbCategorySettings.ObjectFilePath.get -> string!
-Polhem.Definition.Settings.DbCategorySettings.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Definition.Settings.DbCategorySettings.SetObjectFilePath(string! filePath) -> void
-Polhem.Definition.Settings.DbCategorySettings.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 Polhem.Definition.Settings.EndpointItem
 Polhem.Definition.Settings.EndpointItem.Endpoint.get -> string!
 Polhem.Definition.Settings.EndpointItem.Endpoint.set -> void
@@ -1446,9 +1427,7 @@ Polhem.Definition.Settings.MenuSettings.FindNode(string! id) -> Polhem.Definitio
 Polhem.Definition.Settings.MenuSettings.Items.get -> Polhem.Definition.Settings.MenuNodeCollection?
 Polhem.Definition.Settings.MenuSettings.MenuSettings() -> void
 Polhem.Definition.Settings.MenuSettings.ObjectFilePath.get -> string!
-Polhem.Definition.Settings.MenuSettings.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Definition.Settings.MenuSettings.SetObjectFilePath(string! filePath) -> void
-Polhem.Definition.Settings.MenuSettings.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 Polhem.Definition.Settings.MenuSettings.Validate(Polhem.Definition.Settings.ProgramSettings? registry = null) -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Definition.Settings.PermissionAction
 Polhem.Definition.Settings.PermissionAction.Create = 1 -> Polhem.Definition.Settings.PermissionAction
@@ -1475,9 +1454,7 @@ Polhem.Definition.Settings.PermissionModels
 Polhem.Definition.Settings.PermissionModels.Models.get -> Polhem.Definition.Settings.PermissionModelCollection?
 Polhem.Definition.Settings.PermissionModels.ObjectFilePath.get -> string!
 Polhem.Definition.Settings.PermissionModels.PermissionModels() -> void
-Polhem.Definition.Settings.PermissionModels.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Definition.Settings.PermissionModels.SetObjectFilePath(string! filePath) -> void
-Polhem.Definition.Settings.PermissionModels.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 Polhem.Definition.Settings.PermissionModels.Validate() -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Definition.Settings.PermissionRule
 Polhem.Definition.Settings.PermissionRule.Action.get -> Polhem.Definition.Settings.PermissionAction
@@ -1515,9 +1492,7 @@ Polhem.Definition.Settings.PluginSettings.GetPluginBindings(string! progId) -> S
 Polhem.Definition.Settings.PluginSettings.Items.get -> Polhem.Definition.Settings.ProgramPluginItemCollection?
 Polhem.Definition.Settings.PluginSettings.ObjectFilePath.get -> string!
 Polhem.Definition.Settings.PluginSettings.PluginSettings() -> void
-Polhem.Definition.Settings.PluginSettings.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Definition.Settings.PluginSettings.SetObjectFilePath(string! filePath) -> void
-Polhem.Definition.Settings.PluginSettings.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 Polhem.Definition.Settings.PluginStage
 Polhem.Definition.Settings.PluginStage.AfterDelete = 4 -> Polhem.Definition.Settings.PluginStage
 Polhem.Definition.Settings.PluginStage.AfterSave = 2 -> Polhem.Definition.Settings.PluginStage
@@ -1553,9 +1528,7 @@ Polhem.Definition.Settings.ProgramSettings
 Polhem.Definition.Settings.ProgramSettings.Items.get -> Polhem.Definition.Settings.ProgramItemCollection?
 Polhem.Definition.Settings.ProgramSettings.ObjectFilePath.get -> string!
 Polhem.Definition.Settings.ProgramSettings.ProgramSettings() -> void
-Polhem.Definition.Settings.ProgramSettings.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Definition.Settings.ProgramSettings.SetObjectFilePath(string! filePath) -> void
-Polhem.Definition.Settings.ProgramSettings.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 Polhem.Definition.Settings.ProgramSettingsFormat
 Polhem.Definition.Settings.ScopeStrategy
 Polhem.Definition.Settings.ScopeStrategy.All = 1 -> Polhem.Definition.Settings.ScopeStrategy
@@ -1593,9 +1566,7 @@ Polhem.Definition.Settings.SystemSettings.ExtendedProperties.get -> Polhem.Defin
 Polhem.Definition.Settings.SystemSettings.FrontendConfiguration.get -> Polhem.Definition.Settings.FrontendConfiguration!
 Polhem.Definition.Settings.SystemSettings.FrontendConfiguration.set -> void
 Polhem.Definition.Settings.SystemSettings.ObjectFilePath.get -> string!
-Polhem.Definition.Settings.SystemSettings.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Definition.Settings.SystemSettings.SetObjectFilePath(string! filePath) -> void
-Polhem.Definition.Settings.SystemSettings.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 Polhem.Definition.Settings.SystemSettings.SystemSettings() -> void
 Polhem.Definition.Settings.SystemSettings.WebsiteConfiguration.get -> Polhem.Definition.Settings.WebsiteConfiguration!
 Polhem.Definition.Settings.SystemSettings.WebsiteConfiguration.set -> void
@@ -1846,7 +1817,6 @@ override Polhem.Definition.CustomizeOnlyPathOptions.GetMenuSettingsFilePath() ->
 override Polhem.Definition.CustomizeOnlyPathOptions.GetPluginSettingsFilePath() -> string!
 override Polhem.Definition.CustomizeOnlyPathOptions.GetProgramSettingsFilePath() -> string!
 override Polhem.Definition.Database.DbField.ToString() -> string!
-override Polhem.Definition.Database.DbTableIndex.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 override Polhem.Definition.Database.DbTableIndex.ToString() -> string!
 override Polhem.Definition.Database.TableSchema.ToString() -> string!
 override Polhem.Definition.Filters.FilterCondition.Kind.get -> Polhem.Definition.Filters.FilterNodeKind
@@ -1857,11 +1827,9 @@ override Polhem.Definition.Filters.FilterNodeCollectionJsonConverter.Write(Syste
 override Polhem.Definition.Filters.FilterNodeJsonConverter.Read(ref System.Text.Json.Utf8JsonReader reader, System.Type! typeToConvert, System.Text.Json.JsonSerializerOptions! options) -> Polhem.Definition.Filters.FilterNode?
 override Polhem.Definition.Filters.FilterNodeJsonConverter.Write(System.Text.Json.Utf8JsonWriter! writer, Polhem.Definition.Filters.FilterNode! value, System.Text.Json.JsonSerializerOptions! options) -> void
 override Polhem.Definition.Forms.FieldMapping.ToString() -> string!
-override Polhem.Definition.Forms.FormField.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 override Polhem.Definition.Forms.FormField.ToString() -> string!
 override Polhem.Definition.Forms.FormRule.ToString() -> string!
 override Polhem.Definition.Forms.FormSchema.ToString() -> string!
-override Polhem.Definition.Forms.FormTable.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 override Polhem.Definition.Forms.FormTable.ToString() -> string!
 override Polhem.Definition.Forms.RelationFieldReference.ToString() -> string!
 override Polhem.Definition.Identity.CompanyInfo.ToString() -> string!
@@ -1883,11 +1851,8 @@ override Polhem.Definition.Language.LanguageItem.Key.set -> void
 override Polhem.Definition.Language.LanguageItem.ToString() -> string!
 override Polhem.Definition.Language.LanguageResource.ToString() -> string!
 override Polhem.Definition.Layouts.FormLayout.ToString() -> string!
-override Polhem.Definition.Layouts.LayoutFieldBase.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 override Polhem.Definition.Layouts.LayoutFieldBase.ToString() -> string!
-override Polhem.Definition.Layouts.LayoutGrid.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 override Polhem.Definition.Layouts.LayoutGrid.ToString() -> string!
-override Polhem.Definition.Layouts.LayoutSection.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 override Polhem.Definition.Layouts.LayoutSection.ToString() -> string!
 override Polhem.Definition.Logging.AccessAuditEntry.TableName.get -> string!
 override Polhem.Definition.Logging.ApiAnomalyEntry.TableName.get -> string!
@@ -1917,20 +1882,16 @@ override Polhem.Definition.Settings.CacheNotifyOptions.ToString() -> string!
 override Polhem.Definition.Settings.CommonConfiguration.ToString() -> string!
 override Polhem.Definition.Settings.DatabaseItem.ToString() -> string!
 override Polhem.Definition.Settings.DatabaseServer.ToString() -> string!
-override Polhem.Definition.Settings.DbCategory.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 override Polhem.Definition.Settings.DbCategory.ToString() -> string!
 override Polhem.Definition.Settings.FrontendConfiguration.ToString() -> string!
 override Polhem.Definition.Settings.MasterKeySource.ToString() -> string!
 override Polhem.Definition.Settings.MenuEntry.ToString() -> string!
-override Polhem.Definition.Settings.MenuFolder.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 override Polhem.Definition.Settings.MenuFolder.ToString() -> string!
-override Polhem.Definition.Settings.PermissionModel.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 override Polhem.Definition.Settings.PermissionModel.ToString() -> string!
 override Polhem.Definition.Settings.PermissionRule.ToString() -> string!
 override Polhem.Definition.Settings.PluginBinding.GetHashCode() -> int
 override Polhem.Definition.Settings.PluginItem.ToString() -> string!
 override Polhem.Definition.Settings.ProgramItem.ToString() -> string!
-override Polhem.Definition.Settings.ProgramPluginItem.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 override Polhem.Definition.Settings.ProgramPluginItem.ToString() -> string!
 override Polhem.Definition.Settings.SecurityKeySettings.ToString() -> string!
 override Polhem.Definition.Settings.SessionCleanupOptions.ToString() -> string!

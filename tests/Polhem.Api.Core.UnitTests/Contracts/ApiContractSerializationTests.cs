@@ -21,7 +21,7 @@ namespace Polhem.Api.Core.UnitTests.Contracts
     /// The two serializer strategies follow polhem's real wire paths: MessagePack goes through
     /// <see cref="MessagePackCodec"/> (SafeMessagePackSerializerOptions, custom formatters and the resolver chain), and
     /// JSON goes through <see cref="JsonCodec"/> (DataSet/DataTable converters, camelCase, enum-as-string and the
-    /// IObjectSerialize lifecycle hooks).
+    /// <c>{Property}Specified</c> convention).
     /// </remarks>
     public class ApiContractSerializationTests
     {
@@ -96,7 +96,7 @@ namespace Polhem.Api.Core.UnitTests.Contracts
         {
             foreach (var property in instance.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                // Only properties with a public getter and a public setter, which excludes `SerializeState` (private setter) and similar.
+                // Only properties with a public getter and a public setter, which excludes read-only framework members such as `Collection`.
                 if (property.GetMethod is not { IsPublic: true } || property.SetMethod is not { IsPublic: true })
                 {
                     continue;

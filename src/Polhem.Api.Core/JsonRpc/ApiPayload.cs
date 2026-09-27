@@ -9,30 +9,8 @@ namespace Polhem.Api.Core.JsonRpc
     /// Represents the standard API data structure, supporting serialization, compression, and encryption.
     /// </summary>
     [JsonConverter(typeof(ApiPayloadJsonConverterFactory))]
-    public abstract class ApiPayload : IObjectSerialize
+    public abstract class ApiPayload : IObjectSerializeBase
     {
-        #region IObjectSerialize
-
-        /// <summary>
-        /// Gets the serialization state.
-        /// </summary>
-        [JsonIgnore]
-        public SerializeState SerializeState { get; private set; } = SerializeState.None;
-
-        /// <summary>
-        /// Sets the serialization state.
-        /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public virtual void SetSerializeState(SerializeState serializeState)
-        {
-            SerializeState = serializeState;
-            if (Value is IObjectSerialize objectSerialize)
-            {
-                objectSerialize.SetSerializeState(serializeState);
-            }
-        }
-
-        #endregion
 
         /// <summary>
         /// Gets or sets the payload format (plain, encoded, or encrypted).

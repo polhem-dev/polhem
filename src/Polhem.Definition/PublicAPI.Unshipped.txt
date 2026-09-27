@@ -4,3 +4,48 @@ Polhem.Definition.Identity.DeploymentAction.ReadDbAnomalyLog = 2 -> Polhem.Defin
 Polhem.Definition.Logging.AuditEntry.TokenFingerprint.get -> string?
 Polhem.Definition.Logging.AuditEntry.TokenFingerprint.init -> void
 static Polhem.Definition.Settings.DatabaseSettingsCryptor.HasPasswords(Polhem.Definition.Settings.DatabaseSettings! settings) -> bool
+Polhem.Definition.Identity.SessionCompanyScope
+Polhem.Definition.Identity.SessionCompanyScope.CompanyId.get -> string?
+Polhem.Definition.Identity.SessionCompanyScope.CustomizeId.get -> string!
+Polhem.Definition.Identity.SessionCompanyScope.DeptRowId.get -> System.Guid
+Polhem.Definition.Identity.SessionCompanyScope.EmployeeRowId.get -> System.Guid
+Polhem.Definition.Identity.SessionCompanyScope.Roles.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Definition.Identity.SessionCompanyScope.SessionCompanyScope(string? companyId, string! customizeId, System.Collections.Generic.IEnumerable<string!>! roles, System.Guid userRowId, System.Guid employeeRowId, System.Guid deptRowId) -> void
+Polhem.Definition.Identity.SessionCompanyScope.UserRowId.get -> System.Guid
+Polhem.Definition.Identity.SessionInfo.CompanyId.init -> void
+Polhem.Definition.Identity.SessionInfo.CompanyScope.get -> Polhem.Definition.Identity.SessionCompanyScope!
+Polhem.Definition.Identity.SessionInfo.CompanyScope.set -> void
+Polhem.Definition.Identity.SessionInfo.CustomizeId.init -> void
+Polhem.Definition.Identity.SessionInfo.DeptRowId.init -> void
+Polhem.Definition.Identity.SessionInfo.EmployeeRowId.init -> void
+Polhem.Definition.Identity.SessionInfo.Roles.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Definition.Identity.SessionInfo.Roles.init -> void
+Polhem.Definition.Identity.SessionInfo.UserRowId.init -> void
+static Polhem.Definition.Identity.SessionCompanyScope.None.get -> Polhem.Definition.Identity.SessionCompanyScope!
+Polhem.Definition.Database.DbTableIndex.IndexFieldsSpecified.get -> bool
+Polhem.Definition.Database.TableSchema.FieldsSpecified.get -> bool
+Polhem.Definition.Database.TableSchema.IndexesSpecified.get -> bool
+Polhem.Definition.Forms.FormField.ListItemsSpecified.get -> bool
+Polhem.Definition.Forms.FormField.LookupFieldMappingsSpecified.get -> bool
+Polhem.Definition.Forms.FormField.RelationFieldMappingsSpecified.get -> bool
+Polhem.Definition.Forms.FormSchema.RulesSpecified.get -> bool
+Polhem.Definition.Forms.FormSchema.TablesSpecified.get -> bool
+Polhem.Definition.Forms.FormTable.FieldsSpecified.get -> bool
+Polhem.Definition.Layouts.FormLayout.DetailsSpecified.get -> bool
+Polhem.Definition.Layouts.FormLayout.SectionsSpecified.get -> bool
+Polhem.Definition.Layouts.LayoutFieldBase.ExtendedPropertiesSpecified.get -> bool
+Polhem.Definition.Layouts.LayoutGrid.ColumnsSpecified.get -> bool
+Polhem.Definition.Layouts.LayoutSection.FieldsSpecified.get -> bool
+Polhem.Definition.Settings.ClientSettings.EndpointItemsSpecified.get -> bool
+Polhem.Definition.Settings.DatabaseSettings.ItemsSpecified.get -> bool
+Polhem.Definition.Settings.DatabaseSettings.ServersSpecified.get -> bool
+Polhem.Definition.Settings.DbCategory.TablesSpecified.get -> bool
+Polhem.Definition.Settings.DbCategorySettings.CategoriesSpecified.get -> bool
+Polhem.Definition.Settings.MenuFolder.ItemsSpecified.get -> bool
+Polhem.Definition.Settings.MenuSettings.ItemsSpecified.get -> bool
+Polhem.Definition.Settings.PermissionModel.RulesSpecified.get -> bool
+Polhem.Definition.Settings.PermissionModels.ModelsSpecified.get -> bool
+Polhem.Definition.Settings.PluginSettings.ItemsSpecified.get -> bool
+Polhem.Definition.Settings.ProgramPluginItem.PluginsSpecified.get -> bool
+Polhem.Definition.Settings.ProgramSettings.ItemsSpecified.get -> bool
+Polhem.Definition.Settings.SystemSettings.ExtendedPropertiesSpecified.get -> bool

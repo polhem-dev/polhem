@@ -215,6 +215,33 @@ namespace Polhem.Business.UnitTests
         /// A test <see cref="IDefineAccess"/> that lets the caller replace the <see cref="ProgramSettings"/> instance,
         /// to verify the cache reset triggered by reference equality.
         /// </summary>
+        [Fact]
+        [DisplayName("A resolve overlapped by a settings reload does not leave its type cached for the reloaded settings")]
+        public void Resolve_ReloadBeforeCacheWrite_DoesNotPinOldType()
+        {
+            var plain = BuildSettings(("P001", null), ("P002", null));
+            var custom = BuildSettings(("P001", TestableCustomFormBoFqn), ("P002", null));
+            var defineAccess = new ProgramSettingsDefineAccess(plain);
+            var resolver = new ProgramSettingsBoTypeResolver(defineAccess);
+            bool reloaded = false;
+            resolver.BeforeCacheWrite = () =>
+            {
+                // The reload lands after this resolve read `plain` and before it caches, and another
+                // request resolves against the reloaded settings in between.
+                if (reloaded) { return; }
+                reloaded = true;
+                defineAccess.Current = custom;
+                resolver.Resolve("P002");
+            };
+
+            var during = resolver.Resolve("P001");
+            resolver.BeforeCacheWrite = null;
+            var after = resolver.Resolve("P001");
+
+            Assert.Equal(typeof(FormBusinessObject), during);
+            Assert.Equal(typeof(TestableCustomFormBo), after);
+        }
+
         private sealed class ProgramSettingsDefineAccess : IDefineAccess
         {
             public ProgramSettings Current { get; set; }

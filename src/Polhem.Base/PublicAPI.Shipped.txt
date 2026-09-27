@@ -16,7 +16,6 @@ Polhem.Base.Collections.CollectionBase<T>.CollectionBase(object! owner) -> void
 Polhem.Base.Collections.CollectionBase<T>.Insert(int index, Polhem.Base.Collections.ICollectionItem! value) -> void
 Polhem.Base.Collections.CollectionBase<T>.Owner.get -> object?
 Polhem.Base.Collections.CollectionBase<T>.Remove(Polhem.Base.Collections.ICollectionItem! value) -> void
-Polhem.Base.Collections.CollectionBase<T>.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Base.Collections.CollectionBase<T>.SetOwner(object! owner) -> void
 Polhem.Base.Collections.CollectionBase<T>.Tag.get -> object?
 Polhem.Base.Collections.CollectionBase<T>.Tag.set -> void
@@ -25,7 +24,6 @@ Polhem.Base.Collections.CollectionItem
 Polhem.Base.Collections.CollectionItem.Collection.get -> Polhem.Base.Collections.ICollectionBase?
 Polhem.Base.Collections.CollectionItem.CollectionItem() -> void
 Polhem.Base.Collections.CollectionItem.Remove() -> void
-Polhem.Base.Collections.CollectionItem.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Base.Collections.CollectionItem.SetCollection(Polhem.Base.Collections.ICollectionBase? collection) -> void
 Polhem.Base.Collections.CollectionItem.Tag.get -> object?
 Polhem.Base.Collections.CollectionItem.Tag.set -> void
@@ -58,14 +56,12 @@ Polhem.Base.Collections.KeyCollectionBase<T>.KeyCollectionBase() -> void
 Polhem.Base.Collections.KeyCollectionBase<T>.KeyCollectionBase(object! owner) -> void
 Polhem.Base.Collections.KeyCollectionBase<T>.Owner.get -> object?
 Polhem.Base.Collections.KeyCollectionBase<T>.Remove(Polhem.Base.Collections.IKeyCollectionItem! value) -> void
-Polhem.Base.Collections.KeyCollectionBase<T>.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Base.Collections.KeyCollectionBase<T>.Tag.get -> object?
 Polhem.Base.Collections.KeyCollectionBase<T>.Tag.set -> void
 Polhem.Base.Collections.KeyCollectionItem
 Polhem.Base.Collections.KeyCollectionItem.Collection.get -> Polhem.Base.Collections.IKeyCollectionBase?
 Polhem.Base.Collections.KeyCollectionItem.KeyCollectionItem() -> void
 Polhem.Base.Collections.KeyCollectionItem.Remove() -> void
-Polhem.Base.Collections.KeyCollectionItem.SerializeState.get -> Polhem.Base.Serialization.SerializeState
 Polhem.Base.Collections.KeyCollectionItem.SetCollection(Polhem.Base.Collections.IKeyCollectionBase? collection) -> void
 Polhem.Base.Collections.KeyCollectionItem.Tag.get -> object?
 Polhem.Base.Collections.KeyCollectionItem.Tag.set -> void
@@ -169,22 +165,13 @@ Polhem.Base.Serialization.DataSetJsonConverter.DataSetJsonConverter() -> void
 Polhem.Base.Serialization.DataTableJsonConverter
 Polhem.Base.Serialization.DataTableJsonConverter.DataTableJsonConverter() -> void
 Polhem.Base.Serialization.Gzip
-Polhem.Base.Serialization.IObjectSerialize
-Polhem.Base.Serialization.IObjectSerialize.SerializeState.get -> Polhem.Base.Serialization.SerializeState
-Polhem.Base.Serialization.IObjectSerialize.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 Polhem.Base.Serialization.IObjectSerializeBase
-Polhem.Base.Serialization.IObjectSerializeEmpty
-Polhem.Base.Serialization.IObjectSerializeEmpty.IsSerializeEmpty.get -> bool
 Polhem.Base.Serialization.IObjectSerializeFile
 Polhem.Base.Serialization.IObjectSerializeFile.ObjectFilePath.get -> string!
 Polhem.Base.Serialization.IObjectSerializeFile.SetObjectFilePath(string! filePath) -> void
 Polhem.Base.Serialization.JsonCodec
 Polhem.Base.Serialization.SerializationErrorData
 Polhem.Base.Serialization.SerializationExtensions
-Polhem.Base.Serialization.SerializationUtilities
-Polhem.Base.Serialization.SerializeState
-Polhem.Base.Serialization.SerializeState.None = 0 -> Polhem.Base.Serialization.SerializeState
-Polhem.Base.Serialization.SerializeState.Serialize = 1 -> Polhem.Base.Serialization.SerializeState
 Polhem.Base.Serialization.Utf8StringWriter
 Polhem.Base.Serialization.Utf8StringWriter.Utf8StringWriter() -> void
 Polhem.Base.Serialization.XmlCodec
@@ -351,7 +338,6 @@ static Polhem.Base.Serialization.SerializationExtensions.ToJson(this Polhem.Base
 static Polhem.Base.Serialization.SerializationExtensions.ToJsonFile(this Polhem.Base.Serialization.IObjectSerializeFile! value, string! filePath) -> void
 static Polhem.Base.Serialization.SerializationExtensions.ToXml(this Polhem.Base.Serialization.IObjectSerializeBase! value) -> string!
 static Polhem.Base.Serialization.SerializationExtensions.ToXmlFile(this Polhem.Base.Serialization.IObjectSerializeFile! value, string! filePath) -> void
-static Polhem.Base.Serialization.SerializationUtilities.IsSerializeEmpty(Polhem.Base.Serialization.SerializeState serializeState, object! value) -> bool
 static Polhem.Base.Serialization.XmlCodec.Deserialize(string! xml, System.Type! type) -> object?
 static Polhem.Base.Serialization.XmlCodec.Deserialize<T>(string! xml) -> T?
 static Polhem.Base.Serialization.XmlCodec.DeserializeFromFile<T>(string! filePath) -> T?
@@ -428,9 +414,5 @@ static Polhem.Base.ValueUtilities.IsNullOrDBNull(object? value) -> bool
 static Polhem.Base.ValueUtilities.IsNumeric(object! value) -> bool
 static Polhem.Base.ValueUtilities.IsNumeric(string! value, int length) -> bool
 static readonly Polhem.Base.ValueUtilities.TimeOnlyLength -> int
-virtual Polhem.Base.Collections.CollectionBase<T>.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
-virtual Polhem.Base.Collections.CollectionItem.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
-virtual Polhem.Base.Collections.KeyCollectionBase<T>.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void
 virtual Polhem.Base.Collections.KeyCollectionItem.Key.get -> string!
 virtual Polhem.Base.Collections.KeyCollectionItem.Key.set -> void
-virtual Polhem.Base.Collections.KeyCollectionItem.SetSerializeState(Polhem.Base.Serialization.SerializeState serializeState) -> void

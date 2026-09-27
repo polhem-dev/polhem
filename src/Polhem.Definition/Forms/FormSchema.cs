@@ -43,24 +43,6 @@ namespace Polhem.Definition.Forms
         #region IObjectSerializeFile Interface
 
         /// <summary>
-        /// Gets the serialization state.
-        /// </summary>
-        [XmlIgnore, JsonIgnore]
-        [Browsable(false)]
-        public SerializeState SerializeState { get; private set; } = SerializeState.None;
-
-        /// <summary>
-        /// Sets the serialization state.
-        /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public void SetSerializeState(SerializeState serializeState)
-        {
-            SerializeState = serializeState;
-            _tables?.SetSerializeState(serializeState);
-            _rules?.SetSerializeState(serializeState);
-        }
-
-        /// <summary>
         /// Gets the file path bound to serialization.
         /// </summary>
         [XmlIgnore, JsonIgnore]
@@ -167,12 +149,19 @@ namespace Polhem.Definition.Forms
         {
             get
             {
-                // Return null if the collection is empty during serialization
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _tables!)) { return null; }
                 if (_tables == null) { _tables = new FormTableCollection(this); }
                 return _tables;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="Tables"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool TablesSpecified => _tables is { Count: > 0 };
 
         /// <summary>
         /// Gets the master table.
@@ -208,12 +197,19 @@ namespace Polhem.Definition.Forms
         {
             get
             {
-                // Return null if the collection is empty during serialization
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _rules!)) { return null; }
                 if (_rules == null) { _rules = new FormRuleCollection(this); }
                 return _rules;
             }
         }
+
+        /// <summary>
+        /// Gets whether <see cref="Rules"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// </summary>
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool RulesSpecified => _rules is { Count: > 0 };
 
         /// <summary>
         /// Finds a field definition by name, treating this schema as the single source of truth

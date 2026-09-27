@@ -1,7 +1,7 @@
+using System.Text.Json.Serialization;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using Polhem.Base.Attributes;
-using Polhem.Base.Serialization;
 using Polhem.Base.Collections;
 
 namespace Polhem.Definition.Database
@@ -56,22 +56,19 @@ namespace Polhem.Definition.Database
         {
             get
             {
-                // Return null if the collection is empty during serialization
-                if (SerializationUtilities.IsSerializeEmpty(SerializeState, _indexFields!)) { return null; }
                 if (_indexFields == null) { _indexFields = []; }
                 return _indexFields;
             }
         }
 
         /// <summary>
-        /// Sets the serialization state.
+        /// Gets whether <see cref="IndexFields"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
+        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
         /// </summary>
-        /// <param name="serializeState">The serialization state.</param>
-        public override void SetSerializeState(SerializeState serializeState)
-        {
-            base.SetSerializeState(serializeState);
-            _indexFields?.SetSerializeState(serializeState);
-        }
+        [XmlIgnore, JsonIgnore]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool IndexFieldsSpecified => _indexFields is { Count: > 0 };
 
         /// <summary>
         /// Gets or sets the index schema upgrade action.

@@ -25,20 +25,6 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         private readonly ApiSessionContext _session;
 
         /// <summary>
-        /// Initializes a new instance of <see cref="PolhemApiConnectorFactory"/> sharing the process-wide
-        /// session state.
-        /// </summary>
-        /// <param name="options">The resolved Blazor options.</param>
-        /// <remarks>
-        /// Retained for source compatibility. A host serving several users from one process should use
-        /// the overload that takes an <see cref="ApiSessionContext"/>.
-        /// </remarks>
-        public PolhemApiConnectorFactory(PolhemBlazorOptions options)
-            : this(options, ApiSessionContext.Ambient)
-        {
-        }
-
-        /// <summary>
         /// Initializes a new instance of <see cref="PolhemApiConnectorFactory"/> for one session.
         /// </summary>
         /// <param name="options">The resolved Blazor options.</param>

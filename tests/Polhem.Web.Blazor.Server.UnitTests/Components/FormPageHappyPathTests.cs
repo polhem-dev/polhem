@@ -61,7 +61,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             private readonly FakeSystemConnector _systemConnector;
 
             public FakeFactory(FormSchema schema)
-                : base(new PolhemBlazorOptions().UseLocalProvider())
+                : base(new PolhemBlazorOptions().UseLocalProvider(), new Polhem.Api.Client.ApiSessionContext())
             {
                 _systemConnector = new FakeSystemConnector(schema);
             }

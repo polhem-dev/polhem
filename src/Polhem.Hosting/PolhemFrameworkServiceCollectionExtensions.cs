@@ -201,20 +201,20 @@ namespace Polhem.Hosting
             //    would block resolution through the singleton BusinessObjectFactory.
             //    Phase 5/6 will revisit per-request scope when a real need emerges.
             services.AddSingleton<IAccessTokenValidator>(sp =>
-                CreateConfigurableService<IAccessTokenValidator>(sp,
+                CreateConfigurableService<IAccessTokenValidator>(sp, nameof(BackendComponents.AccessTokenValidator),
                     components.AccessTokenValidator, BackendDefaultTypes.AccessTokenValidator));
             services.AddSingleton<ISessionInfoService>(sp =>
-                CreateConfigurableService<ISessionInfoService>(sp,
+                CreateConfigurableService<ISessionInfoService>(sp, nameof(BackendComponents.SessionInfoService),
                     components.SessionInfoService, BackendDefaultTypes.SessionInfoService));
             services.AddSingleton<ILanguageService>(sp =>
                 new LanguageService(
                     sp.GetRequiredService<IDefineAccess>(),
                     sp.GetRequiredService<ICustomizeDefineReader>()));
             services.AddSingleton<ICompanyInfoService>(sp =>
-                CreateConfigurableService<ICompanyInfoService>(sp,
+                CreateConfigurableService<ICompanyInfoService>(sp, nameof(BackendComponents.CompanyInfoService),
                     components.CompanyInfoService, BackendDefaultTypes.CompanyInfoService));
             services.AddSingleton<ICacheDataSourceProvider>(sp =>
-                CreateConfigurableService<ICacheDataSourceProvider>(sp,
+                CreateConfigurableService<ICacheDataSourceProvider>(sp, nameof(BackendComponents.CacheDataSourceProvider),
                     components.CacheDataSourceProvider, BackendDefaultTypes.CacheDataSourceProvider));
 
             // Company binding shared by EnterCompany and session rebuild — both must land on the
@@ -277,7 +277,7 @@ namespace Polhem.Hosting
                     sp.GetRequiredService<ICustomizeDefineReader>(),
                     sp.GetRequiredService<ISessionInfoService>()));
             services.AddSingleton<IRepositoryFactory>(sp =>
-                CreateConfigurableService<IRepositoryFactory>(sp,
+                CreateConfigurableService<IRepositoryFactory>(sp, nameof(BackendComponents.RepositoryFactory),
                     components.RepositoryFactory, BackendDefaultTypes.RepositoryFactory));
 
             // NOTE: individual repositories are deliberately NOT registered here. Consumers
@@ -387,7 +387,9 @@ namespace Polhem.Hosting
             // at registration — and only in a host that has audit logging on.
             services.AddSingleton<IAuditLogWriteRepository>(sp =>
                 sp.GetRequiredService<IRepositoryFactory>().Create<IAuditLogWriteRepository>());
-            services.AddSingleton<IAuditLogSink, AuditLogDbSink>();
+            // TryAdd: IAuditLogSink is the public seam for sending records somewhere other than the
+            // log database, so a sink the host registered first must not be overridden here.
+            services.TryAddSingleton<IAuditLogSink, AuditLogDbSink>();
 
             if (options.UseBackgroundWriter)
             {

@@ -7,6 +7,8 @@ namespace Polhem.Definition.Identity
     /// </summary>
     public class SessionInfo : IKeyObject, IUserInfo
     {
+        private SessionCompanyScope _companyScope = SessionCompanyScope.None;
+
         #region IKeyObject Interface
 
         /// <summary>
@@ -40,7 +42,29 @@ namespace Polhem.Definition.Identity
         public string UserName { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the ID of the company the user has entered for this session.
+        /// Gets or sets the company-scoped values of this session as one snapshot.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Set by <c>EnterCompany</c> and reset to <see cref="SessionCompanyScope.None"/> by
+        /// <c>LeaveCompany</c> / <c>Logout</c>, always as one reference write. The instance is shared by
+        /// every concurrent request carrying the access token, so a reader that needs more than one of
+        /// the company-scoped values reads this property once and takes them all from the snapshot;
+        /// reading <see cref="CompanyId"/> and then <see cref="Roles"/> can straddle a company switch.
+        /// </para>
+        /// <para>
+        /// The individual properties below are views of this snapshot. They can be given in an object
+        /// initializer, before the session is shared, but not assigned afterwards.
+        /// </para>
+        /// </remarks>
+        public SessionCompanyScope CompanyScope
+        {
+            get => Volatile.Read(ref _companyScope);
+            set => Volatile.Write(ref _companyScope, value ?? throw new ArgumentNullException(nameof(value)));
+        }
+
+        /// <summary>
+        /// Gets the ID of the company the user has entered for this session.
         /// </summary>
         /// <remarks>
         /// <c>null</c> means the user has logged in but has not yet entered a company.
@@ -49,10 +73,14 @@ namespace Polhem.Definition.Identity
         /// The value is set by <c>EnterCompany</c> and cleared by <c>LeaveCompany</c> /
         /// <c>Logout</c>.
         /// </remarks>
-        public string? CompanyId { get; set; }
+        public string? CompanyId
+        {
+            get => CompanyScope.CompanyId;
+            init => _companyScope = Rebuild(companyId: value);
+        }
 
         /// <summary>
-        /// Gets or sets the tenant customization code currently in effect for this session.
+        /// Gets the tenant customization code currently in effect for this session.
         /// </summary>
         /// <remarks>
         /// Empty means the standard (non-customized) deployment — every customization overlay
@@ -60,7 +88,11 @@ namespace Polhem.Definition.Identity
         /// <see cref="CompanyInfo.CustomizeId"/> by <c>EnterCompany</c> and cleared by
         /// <c>LeaveCompany</c> / <c>Logout</c> (in step with <see cref="CompanyId"/>).
         /// </remarks>
-        public string CustomizeId { get; set; } = string.Empty;
+        public string CustomizeId
+        {
+            get => CompanyScope.CustomizeId;
+            init => _companyScope = Rebuild(customizeId: value);
+        }
 
         /// <summary>
         /// Gets or sets the user culture (e.g., zh-TW, en-US). An empty value means the language
@@ -96,27 +128,35 @@ namespace Polhem.Definition.Identity
         public byte[] ApiEncryptionKey { get; set; } = Array.Empty<byte>();
 
         /// <summary>
-        /// Gets or sets the role ids assigned to the user within the current company.
+        /// Gets the role ids assigned to the user within the current company.
         /// </summary>
         /// <remarks>
         /// Populated by <c>EnterCompany</c> after the user enters a company (each id is an
         /// <c>st_role.sys_id</c>); the layer-1 permission check OR-merges these roles' grants.
         /// Cleared by <c>LeaveCompany</c> / <c>Logout</c> in step with <see cref="CompanyId"/>.
         /// </remarks>
-        public ICollection<string> Roles { get; set; } = [];
+        public IReadOnlyList<string> Roles
+        {
+            get => CompanyScope.Roles;
+            init => _companyScope = Rebuild(roles: value);
+        }
 
         /// <summary>
-        /// Gets or sets the current user's row id (<c>st_user.sys_rowid</c>) within the entered company.
+        /// Gets the current user's row id (<c>st_user.sys_rowid</c>) within the entered company.
         /// </summary>
         /// <remarks>
         /// Resolved and snapshotted by <c>EnterCompany</c> for record-scope <c>Own</c> filtering;
         /// <see cref="System.Guid.Empty"/> until a company is entered. Cleared by
         /// <c>LeaveCompany</c> / <c>Logout</c> in step with <see cref="CompanyId"/>.
         /// </remarks>
-        public Guid UserRowId { get; set; } = Guid.Empty;
+        public Guid UserRowId
+        {
+            get => CompanyScope.UserRowId;
+            init => _companyScope = Rebuild(userRowId: value);
+        }
 
         /// <summary>
-        /// Gets or sets the current user's linked employee row id (<c>st_employee.sys_rowid</c>) in
+        /// Gets the current user's linked employee row id (<c>st_employee.sys_rowid</c>) in
         /// the entered company.
         /// </summary>
         /// <remarks>
@@ -124,10 +164,14 @@ namespace Polhem.Definition.Identity
         /// <see cref="System.Guid.Empty"/> when the user has no employee in this company (or no
         /// company entered). Cleared by <c>LeaveCompany</c> / <c>Logout</c>.
         /// </remarks>
-        public Guid EmployeeRowId { get; set; } = Guid.Empty;
+        public Guid EmployeeRowId
+        {
+            get => CompanyScope.EmployeeRowId;
+            init => _companyScope = Rebuild(employeeRowId: value);
+        }
 
         /// <summary>
-        /// Gets or sets the current user's department row id (<c>st_employee.dept_rowid</c>) in the
+        /// Gets the current user's department row id (<c>st_employee.dept_rowid</c>) in the
         /// entered company.
         /// </summary>
         /// <remarks>
@@ -135,7 +179,28 @@ namespace Polhem.Definition.Identity
         /// <c>DeptAndSub</c> filtering; <see cref="System.Guid.Empty"/> when the user has no employee
         /// or no department (or no company entered). Cleared by <c>LeaveCompany</c> / <c>Logout</c>.
         /// </remarks>
-        public Guid DeptRowId { get; set; } = Guid.Empty;
+        public Guid DeptRowId
+        {
+            get => CompanyScope.DeptRowId;
+            init => _companyScope = Rebuild(deptRowId: value);
+        }
+
+        /// <summary>
+        /// Returns the current scope with the given values replaced; used by the init accessors only.
+        /// </summary>
+        private SessionCompanyScope Rebuild(
+            string? companyId = null, string? customizeId = null, IEnumerable<string>? roles = null,
+            Guid? userRowId = null, Guid? employeeRowId = null, Guid? deptRowId = null)
+        {
+            var current = _companyScope;
+            return new SessionCompanyScope(
+                companyId ?? current.CompanyId,
+                customizeId ?? current.CustomizeId,
+                roles ?? current.Roles,
+                userRowId ?? current.UserRowId,
+                employeeRowId ?? current.EmployeeRowId,
+                deptRowId ?? current.DeptRowId);
+        }
 
         /// <summary>
         /// Returns a string representation of this object.

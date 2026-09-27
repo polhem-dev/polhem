@@ -51,9 +51,10 @@ namespace Polhem.Business
     /// <para>
     /// Resolved types of registered progIds are cached keyed by <c>(customizeId, progId)</c>; a progId
     /// the registry does not name is resolved again on every call, so the cache cannot be grown by
-    /// arbitrary names from the wire. When either the base or a
-    /// customization <see cref="ProgramSettings"/> instance changes (e.g. after a file-watcher
-    /// reload, detected by reference inequality), the type cache is reset on the next call.
+    /// arbitrary names from the wire. Each entry remembers the base and customization
+    /// <see cref="ProgramSettings"/> instances it was resolved from and is used only while the
+    /// settings just read are those same instances; the cache hands back a new instance on a
+    /// file-watcher reload, so a reload makes every entry resolve again on its next use.
     /// Only successes are cached — a failing resolution leaves no entry, so a broken binding throws
     /// on every call rather than passing quietly from the second one on.
     /// </para>
@@ -67,10 +68,18 @@ namespace Polhem.Business
     {
         private readonly IDefineAccess _defineAccess;
         private readonly ICustomizeDefineReader? _customizeReader;
-        private readonly ConcurrentDictionary<string, Type> _typeCache = new(StringComparer.OrdinalIgnoreCase);
-        private readonly object _resetLock = new();
-        private ProgramSettings? _lastSettingsRef;
-        private readonly ConcurrentDictionary<string, ProgramSettings?> _lastCustRefs = new(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, ResolvedType> _typeCache = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// A cached resolution and the settings instances it was computed from.
+        /// </summary>
+        /// <remarks>
+        /// NOTE: the settings references are the validity check, not a reset triggered by them. A
+        /// reset left a window: a resolve that read the old settings could add its result after a
+        /// concurrent resolve had cleared the cache for the new ones, and nothing would clear it again
+        /// until the next reload. An entry that carries its source can never be served for other settings.
+        /// </remarks>
+        private sealed record ResolvedType(ProgramSettings? BaseSettings, ProgramSettings? CustomizeSettings, Type Type);
 
         /// <summary>
         /// Initializes a new <see cref="ProgramSettingsBoTypeResolver"/> without customization
@@ -119,6 +128,12 @@ namespace Polhem.Business
         /// </summary>
         internal int CachedTypeCount => _typeCache.Count;
 
+        /// <summary>
+        /// Runs after a type is resolved and before it is cached. Exposed for tests, which land a
+        /// settings reload inside that window.
+        /// </summary>
+        internal Action? BeforeCacheWrite { get; set; }
+
         /// <inheritdoc/>
         public Type Resolve(string progId) => Resolve("", progId);
 
@@ -145,8 +160,6 @@ namespace Polhem.Business
             if (!string.IsNullOrEmpty(customizeId) && _customizeReader is not null)
                 custSettings = _customizeReader.GetCustomizeProgramSettings(customizeId);
 
-            ResetCacheOnReload(customizeId, baseSettings, custSettings);
-
             // Composite key keeps each tenant's resolution physically isolated. The empty-customizeId
             // key is just the progId, so the base path is bit-for-bit identical to before. The NUL
             // separator cannot appear in either part, so distinct (customizeId, progId) pairs never collide.
@@ -154,8 +167,10 @@ namespace Polhem.Business
                 ? progId
                 : customizeId + "\0" + progId;
 
-            if (_typeCache.TryGetValue(cacheKey, out var cached))
-                return cached;
+            if (_typeCache.TryGetValue(cacheKey, out var cached)
+                && ReferenceEquals(cached.BaseSettings, baseSettings)
+                && ReferenceEquals(cached.CustomizeSettings, custSettings))
+                return cached.Type;
 
             var (type, registered) = ResolveCore(custSettings, baseSettings, customizeId, progId);
             // IMPORTANT: only progIds the registry knows are cached. The progId arrives from the wire
@@ -163,38 +178,11 @@ namespace Polhem.Business
             // anonymous traffic grow this map without bound; an unregistered one resolves to the
             // generic default at the cost of a registry lookup, which is all caching would have saved.
             if (registered)
-                _typeCache.TryAdd(cacheKey, type);
-            return type;
-        }
-
-        /// <summary>
-        /// Resets the whole type cache when the base or the relevant customization
-        /// <see cref="ProgramSettings"/> instance changes. Reference equality is enough — the
-        /// cache hands back a new instance on file-watcher reload, so a stale reference signals a
-        /// stale cache. A full clear on a (rare) reload is simpler and safer than per-key pruning.
-        /// </summary>
-        private void ResetCacheOnReload(string customizeId, ProgramSettings? baseSettings, ProgramSettings? custSettings)
-        {
-            bool hasCust = !string.IsNullOrEmpty(customizeId);
-            bool baseChanged = !ReferenceEquals(baseSettings, _lastSettingsRef);
-            bool custChanged = hasCust
-                && (!_lastCustRefs.TryGetValue(customizeId, out var prev) || !ReferenceEquals(prev, custSettings));
-            if (!baseChanged && !custChanged)
-                return;
-
-            lock (_resetLock)
             {
-                baseChanged = !ReferenceEquals(baseSettings, _lastSettingsRef);
-                custChanged = hasCust
-                    && (!_lastCustRefs.TryGetValue(customizeId, out var prevLocked) || !ReferenceEquals(prevLocked, custSettings));
-                if (!baseChanged && !custChanged)
-                    return;
-
-                _typeCache.Clear();
-                _lastSettingsRef = baseSettings;
-                if (hasCust)
-                    _lastCustRefs[customizeId] = custSettings;
+                BeforeCacheWrite?.Invoke();
+                _typeCache[cacheKey] = new ResolvedType(baseSettings, custSettings, type);
             }
+            return type;
         }
 
         /// <summary>

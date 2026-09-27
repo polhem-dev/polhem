@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using Polhem.Base.Collections;
-using Polhem.Base.Serialization;
 using Polhem.Definition.Collections;
 
 namespace Polhem.Definition.UnitTests.Collections
@@ -200,25 +199,6 @@ namespace Polhem.Definition.UnitTests.Collections
             Assert.True(col.Contains("New"));
             Assert.False(col.Contains("Old"));
             Assert.Equal(1, col["New"].Value);
-        }
-
-        [Fact]
-        [DisplayName("SetSerializeState updates the SerializeState of the collection and every item")]
-        public void SetSerializeState_PropagatesToItems()
-        {
-            var col = new ParameterCollection
-            {
-                new Parameter("P1", 1),
-                new Parameter("P2", 2)
-            };
-
-            col.SetSerializeState(SerializeState.Serialize);
-
-            Assert.Equal(SerializeState.Serialize, col.SerializeState);
-            foreach (var item in col)
-            {
-                Assert.Equal(SerializeState.Serialize, ((IObjectSerialize)item).SerializeState);
-            }
         }
 
         [Fact]
