@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Data;
-using Polhem.Base.Data;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Base.UnitTests
 {

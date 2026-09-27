@@ -13,36 +13,39 @@ namespace Polhem.Api.Core
     {
         private static IApiAuthorizationValidator s_authorizationValidator = new ApiAuthorizationValidator(); // Default implementation
         private static IApiPayloadTransformer s_payloadTransformer = new ApiPayloadTransformer(); // Default implementation
-        private static IApiPayloadSerializer s_payloadSerializer = new MessagePackPayloadSerializer(); // Default implementation
+        private static readonly IApiPayloadSerializer s_payloadSerializer = new MessagePackPayloadSerializer();
         private static IApiPayloadCompressor s_payloadCompressor = new GzipPayloadCompressor(); // Default implementation
         private static IApiPayloadEncryptor s_payloadEncryptor = new AesPayloadEncryptor(); // Default implementation
         private static TimeSpan s_wireFrameTimestampTolerance = TimeSpan.FromMinutes(5);
         private static IReplayWindowStore s_replayWindowStore = new MemoryReplayWindowStore();
+        private static readonly Lock s_codecsLock = new();
+
         /// <summary>
-        /// The body codecs a request may name, always all of them.
+        /// The body codecs a request may name: the built-in ones plus any registered through
+        /// <see cref="RegisterPayloadCodec"/>.
         /// </summary>
         /// <remarks>
-        /// Not a deployment setting. Both are the framework's own, both decode into the same
-        /// whitelisted types under the same depth limit, and System.Text.Json is already reachable
-        /// by an anonymous caller regardless — the envelope is JSON, and a Plain body is
-        /// deserialized by <see cref="Conversion.ApiInputConverter"/>. Gating the JSON body codec
-        /// behind a switch would have guarded a door that is open either way, while making a
-        /// browser client's support depend on a setting someone has to remember to turn on.
+        /// The built-in codecs are always available rather than a deployment setting. Both are the
+        /// framework's own, both decode into the same whitelisted types under the same depth limit,
+        /// and System.Text.Json is already reachable by an anonymous caller regardless — the
+        /// envelope is JSON, and a Plain body is deserialized by
+        /// <see cref="Conversion.ApiInputConverter"/>. Gating the JSON body codec behind a switch
+        /// would have guarded a door that is open either way, while making a browser client's
+        /// support depend on a setting someone has to remember to turn on.
+        /// <para>
+        /// Replaced as a whole under <see cref="s_codecsLock"/> on registration, so a reader always
+        /// sees a complete snapshot without taking the lock.
+        /// </para>
         /// </remarks>
-        private static readonly IReadOnlyDictionary<string, IApiPayloadSerializer> s_codecs =
-            new Dictionary<string, IApiPayloadSerializer>(StringComparer.Ordinal)
-            {
-                [PayloadCodecNames.MessagePack] = new MessagePackPayloadSerializer(),
-                [PayloadCodecNames.Json] = new JsonPayloadSerializer()
-            };
+        private static volatile IReadOnlyDictionary<string, IApiPayloadSerializer> s_codecs = CreateBuiltInCodecs();
 
         /// <summary>
         /// Initializes the API service options by configuring the compressor and encryptor implementations.
         /// </summary>
         /// <remarks>
-        /// The body codec is not configured here: both built-in codecs are always available and a
-        /// request names the one it speaks. <see cref="PayloadSerializer"/> stays at its default
-        /// and serves requests that name none.
+        /// The body codec is not configured here: the built-in codecs are always available and a
+        /// request names the one it speaks. A request that names none is read with
+        /// <see cref="PayloadSerializer"/>.
         /// </remarks>
         /// <param name="payloadOptions">Provides options related to API payload processing, such as serialization, compression, and encryption.</param>
         /// <param name="isDebugMode">
@@ -57,36 +60,84 @@ namespace Polhem.Api.Core
         }
 
         /// <summary>
-        /// Initializes the API payload encoding components by directly specifying the serializer, compressor, and encryptor implementations.
-        /// This overload can replace the default factory-based creation and is suitable for advanced customization scenarios.
+        /// Initializes the API payload encoding components by directly specifying the compressor and
+        /// encryptor implementations, in place of the factory-based creation.
         /// </summary>
         /// <remarks>
-        /// WARNING: <paramref name="serializer"/> is not "the codec this deployment uses" — the codec
-        /// is declared per request and the server answers with the same one (ADR-044). What this sets
-        /// is the codec a request that declares <b>none</b> is read as, and that answer is a
-        /// compatibility constant: every client predating negotiation sends MessagePack without
-        /// saying so. Installing a different serializer here therefore reads those clients' bodies
-        /// with a codec they did not use, and the failure is at deserialization time on the server,
-        /// far from this call.
-        /// <para>
-        /// The legitimate use is installing a serializer the framework does not ship, whose name
-        /// <see cref="ResolvePayloadSerializer"/> then also accepts. Swapping between the built-in
-        /// codecs is not a use for it.
-        /// </para>
+        /// The body codec is not set here. A request names its codec and the server answers with the
+        /// same one (ADR-044); a codec the framework does not ship is added with
+        /// <see cref="RegisterPayloadCodec"/>.
         /// </remarks>
-        /// <param name="serializer">The custom serializer.</param>
         /// <param name="compressor">The custom compressor.</param>
         /// <param name="encryptor">The custom encryptor.</param>
-        public static void Initialize(
-            IApiPayloadSerializer serializer,
-            IApiPayloadCompressor compressor,
-            IApiPayloadEncryptor encryptor)
+        public static void Initialize(IApiPayloadCompressor compressor, IApiPayloadEncryptor encryptor)
         {
-            PayloadSerializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             PayloadCompressor = compressor ?? throw new ArgumentNullException(nameof(compressor));
             PayloadEncryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
         }
 
+        /// <summary>
+        /// Registers a body codec the framework does not ship, so a request that names it is
+        /// served with it.
+        /// </summary>
+        /// <param name="serializer">
+        /// The codec. It answers to <see cref="IApiPayloadSerializer.SerializationMethod"/>, which
+        /// must be lower-case letters, digits and hyphens, up to 32 characters. Registering the
+        /// same name again replaces the earlier registration.
+        /// </param>
+        /// <exception cref="ArgumentNullException"><paramref name="serializer"/> is null.</exception>
+        /// <exception cref="ArgumentException">The codec name is not well-formed.</exception>
+        /// <exception cref="InvalidOperationException">The codec name is one of the built-in codecs.</exception>
+        /// <remarks>
+        /// Registration adds a codec; it cannot change what a request that names none is read as.
+        /// That is <see cref="PayloadSerializer"/>, MessagePack, a compatibility constant: every
+        /// client predating negotiation sends MessagePack without saying so. The built-in names are
+        /// refused for the same reason, since replacing one would change how every client that
+        /// names it is read.
+        /// </remarks>
+        public static void RegisterPayloadCodec(IApiPayloadSerializer serializer)
+        {
+            ArgumentNullException.ThrowIfNull(serializer);
+            string name = serializer.SerializationMethod;
+            if (string.IsNullOrEmpty(name) || !IsWellFormedCodecName(name))
+                throw new ArgumentException(
+                    "A payload codec name must be lower-case letters, digits and hyphens, up to 32 characters.",
+                    nameof(serializer));
+            if (IsBuiltInCodec(name))
+                throw new InvalidOperationException($"'{name}' is a built-in payload codec and cannot be replaced.");
+
+            lock (s_codecsLock)
+            {
+                var codecs = new Dictionary<string, IApiPayloadSerializer>(s_codecs, StringComparer.Ordinal)
+                {
+                    [name] = serializer
+                };
+                s_codecs = codecs;
+            }
+        }
+
+        /// <summary>
+        /// Removes every registered codec, leaving the built-in ones. For tests that register a
+        /// codec on this process-wide state.
+        /// </summary>
+        internal static void ResetPayloadCodecs()
+        {
+            lock (s_codecsLock)
+            {
+                s_codecs = CreateBuiltInCodecs();
+            }
+        }
+
+        private static Dictionary<string, IApiPayloadSerializer> CreateBuiltInCodecs() =>
+            new(StringComparer.Ordinal)
+            {
+                [PayloadCodecNames.MessagePack] = s_payloadSerializer,
+                [PayloadCodecNames.Json] = new JsonPayloadSerializer()
+            };
+
+        private static bool IsBuiltInCodec(string name) =>
+            string.Equals(name, PayloadCodecNames.MessagePack, StringComparison.Ordinal)
+            || string.Equals(name, PayloadCodecNames.Json, StringComparison.Ordinal);
 
         /// <summary>
         /// Gets or sets the API key and authorization validator.
@@ -107,13 +158,13 @@ namespace Polhem.Api.Core
         }
 
         /// <summary>
-        /// Gets or sets the payload serializer for the API transport layer.
+        /// Gets the body codec a request that names none is read with: MessagePack.
         /// </summary>
-        public static IApiPayloadSerializer PayloadSerializer
-        {
-            get => s_payloadSerializer;
-            set => s_payloadSerializer = value ?? throw new ArgumentNullException(nameof(value));
-        }
+        /// <remarks>
+        /// A compatibility constant rather than a setting: every client predating negotiation sends
+        /// MessagePack without saying so, so nothing can replace it.
+        /// </remarks>
+        public static IApiPayloadSerializer PayloadSerializer => s_payloadSerializer;
 
         /// <summary>
         /// Gets or sets the payload compressor for the API transport layer.
@@ -194,20 +245,11 @@ namespace Polhem.Api.Core
         /// Gets the names of the body codecs a request may ask for.
         /// </summary>
         /// <remarks>
-        /// WARNING: this must agree with <see cref="ResolvePayloadSerializer"/>, which also accepts
-        /// the name a custom <see cref="PayloadSerializer"/> reports. Listing only the built-in
-        /// registry told a deployment that had installed its own codec that the codec it accepts
-        /// does not exist — and this list is what a client is meant to negotiate against.
+        /// Read from the same registry <see cref="ResolvePayloadSerializer"/> resolves from, so a
+        /// name listed here always resolves. That is covered by
+        /// <c>AcceptedPayloadCodecs_CoversEveryNameThatResolves</c>.
         /// </remarks>
-        public static IReadOnlyCollection<string> AcceptedPayloadCodecs
-        {
-            get
-            {
-                string custom = PayloadSerializer.SerializationMethod;
-                if (s_codecs.ContainsKey(custom)) { return (IReadOnlyCollection<string>)s_codecs.Keys; }
-                return [.. s_codecs.Keys, custom];
-            }
-        }
+        public static IReadOnlyCollection<string> AcceptedPayloadCodecs => [.. s_codecs.Keys];
 
         /// <summary>
         /// Resolves the body codec a payload asked for by name.
@@ -235,11 +277,6 @@ namespace Polhem.Api.Core
             if (!IsWellFormedCodecName(codec))
                 throw new NotSupportedException("The requested payload codec name is not valid.");
 
-            // A custom serializer installed through the component overload answers to its own
-            // name, which is not one of the built-in two.
-            if (string.Equals(codec, PayloadSerializer.SerializationMethod, StringComparison.Ordinal))
-                return PayloadSerializer;
-
             if (s_codecs.TryGetValue(codec, out var serializer))
                 return serializer;
 
@@ -263,14 +300,5 @@ namespace Polhem.Api.Core
 
             return true;
         }
-
-        /// <summary>
-        /// Gets a summary of the current settings, including the active serializer, compressor, and encryptor.
-        /// </summary>
-        public static string CurrentSettingsSummary =>
-            $"Serializer: {PayloadSerializer.SerializationMethod}, " +
-            $"Codecs: {string.Join('|', AcceptedPayloadCodecs)}, " +
-            $"Compressor: {PayloadCompressor.CompressionMethod}, " +
-            $"Encryptor: {PayloadEncryptor.EncryptionMethod}";
     }
 }

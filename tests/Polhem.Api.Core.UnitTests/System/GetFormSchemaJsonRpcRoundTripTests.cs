@@ -33,7 +33,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.GetFormSchema dispatches through JsonRpcExecutor and returns the Employee schema seeded by the fixture")]
-        public void GetFormSchema_ThroughJsonRpc_DispatchesAndReturnsSchema()
+        public async Task GetFormSchema_ThroughJsonRpc_DispatchesAndReturnsSchema()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
 
@@ -63,7 +63,7 @@ namespace Polhem.Api.Core.UnitTests.System
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var result = Assert.IsType<GetFormSchemaResponse>(response.Result!.Value);
@@ -78,7 +78,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.GetFormSchema returns an RpcError for an empty ProgId")]
-        public void GetFormSchema_EmptyProgId_ReturnsRpcError()
+        public async Task GetFormSchema_EmptyProgId_ReturnsRpcError()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
 
@@ -108,7 +108,7 @@ namespace Polhem.Api.Core.UnitTests.System
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.NotNull(response.Error);
             Assert.Contains("ProgId is required", response.Error!.Message);

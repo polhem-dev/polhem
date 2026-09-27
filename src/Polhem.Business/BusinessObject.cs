@@ -78,21 +78,28 @@ namespace Polhem.Business
         public string ProgId { get; }
 
         /// <summary>
-        /// Gets the session information.
-        /// </summary>
-        public SessionInfo? SessionInfo { get; }
-
-        /// <summary>
         /// Gets a value indicating whether the call originates from a local source (e.g., same process or host as the server).
         /// </summary>
         public bool IsLocalCall { get; } = false;
 
+        private ApiKeyValidationResult _apiKeyValidation = ApiKeyValidationResult.NotChecked;
+
         /// <inheritdoc/>
         /// <remarks>
-        /// Assigned by the transport layer right after construction; business code only reads it.
-        /// In-process calls leave the default, since they carry no <c>X-Api-Key</c> header.
+        /// Implemented explicitly so that only the transport layer, which reaches it through the
+        /// interface, assigns the verdict. In-process calls leave the default, since they carry no
+        /// <c>X-Api-Key</c> header.
         /// </remarks>
-        public ApiKeyValidationResult ApiKeyValidation { get; set; } = ApiKeyValidationResult.NotChecked;
+        ApiKeyValidationResult IApiKeyContextAware.ApiKeyValidation
+        {
+            get => _apiKeyValidation;
+            set => _apiKeyValidation = value;
+        }
+
+        /// <summary>
+        /// Gets the API key verdict the transport layer assigned for the current call.
+        /// </summary>
+        protected ApiKeyValidationResult ApiKeyValidation => _apiKeyValidation;
 
         /// <summary>
         /// Gets the calling application's key identifier for audit rows, or <c>null</c> when the call
@@ -258,7 +265,7 @@ namespace Polhem.Business
         /// entered — both are ordinary states, not failures.
         /// </para>
         /// </remarks>
-        protected (string? UserId, string? UserName, string? CompanyId, string? CompanyName) ResolveAuditIdentity()
+        private protected (string? UserId, string? UserName, string? CompanyId, string? CompanyName) ResolveAuditIdentity()
         {
             var session = SessionInfoService.Get(AccessToken);
             var companyId = session?.CompanyId;

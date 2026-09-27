@@ -65,7 +65,6 @@ Polhem.Api.Client.Connectors.LogApiConnector.LogApiConnector(string! endpoint, S
 Polhem.Api.Client.Connectors.LogApiConnector.LogApiConnector(string! endpoint, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.SystemApiConnector
 Polhem.Api.Client.Connectors.SystemApiConnector.CreateApiKeyAsync(string! sysId, string! sysName, Polhem.Definition.Security.ApiKeyType keyType = Polhem.Definition.Security.ApiKeyType.Internal, string? contact = null, System.DateTime? expiredAt = null) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.CreateApiKeyResponse!>!
-Polhem.Api.Client.Connectors.SystemApiConnector.CreateSessionAsync(string! userID, int expiresIn = 3600, bool oneTime = false) -> System.Threading.Tasks.Task<System.Guid>!
 Polhem.Api.Client.Connectors.SystemApiConnector.EnterCompanyAsync(string! companyId) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.EnterCompanyResponse!>!
 Polhem.Api.Client.Connectors.SystemApiConnector.ExecFuncAnonymousAsync(Polhem.Api.Core.Messages.ExecFuncRequest! args) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.ExecFuncResponse!>!
 Polhem.Api.Client.Connectors.SystemApiConnector.ExecFuncAsync(Polhem.Api.Core.Messages.ExecFuncRequest! args) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.ExecFuncResponse!>!
@@ -112,7 +111,6 @@ Polhem.Api.Client.Definitions.SnapshotLanguageService.TryGetLangText(string! lan
 Polhem.Api.Client.Definitions.SnapshotLanguageService.TryGetLangText(string! lang, string! namespace, string! subKey, out string! text) -> bool
 Polhem.Api.Client.FormDataGuard
 Polhem.Api.Client.FormValueBinding
-Polhem.Api.Client.HttpUtilities
 Polhem.Api.Client.Providers.IJsonRpcProvider
 Polhem.Api.Client.Providers.IJsonRpcProvider.ExecuteAsync(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.JsonRpc.JsonRpcResponse!>!
 Polhem.Api.Client.Providers.LocalApiProvider
@@ -129,8 +127,6 @@ Polhem.Api.Client.SupportedConnectTypes.Both = Polhem.Api.Client.SupportedConnec
 Polhem.Api.Client.SupportedConnectTypes.Local = 1 -> Polhem.Api.Client.SupportedConnectTypes
 Polhem.Api.Client.SupportedConnectTypes.Remote = 2 -> Polhem.Api.Client.SupportedConnectTypes
 override Polhem.Api.Client.Definitions.LanguageLayers.GetHashCode() -> int
-static Polhem.Api.Client.ApiClientInfo.ApiEncryptionKey.get -> byte[]!
-static Polhem.Api.Client.ApiClientInfo.ApiEncryptionKey.set -> void
 static Polhem.Api.Client.ApiClientInfo.ApiKey.get -> string!
 static Polhem.Api.Client.ApiClientInfo.ApiKey.set -> void
 static Polhem.Api.Client.ApiClientInfo.ConnectType.get -> Polhem.Api.Client.ConnectType
@@ -141,8 +137,6 @@ static Polhem.Api.Client.ApiClientInfo.LocalServiceProvider.get -> System.IServi
 static Polhem.Api.Client.ApiClientInfo.LocalServiceProvider.set -> void
 static Polhem.Api.Client.ApiClientInfo.SupportedConnectTypes.get -> Polhem.Api.Client.SupportedConnectTypes
 static Polhem.Api.Client.ApiClientInfo.SupportedConnectTypes.set -> void
-static Polhem.Api.Client.ApiClientInfo.UserTimeZoneId.get -> string!
-static Polhem.Api.Client.ApiClientInfo.UserTimeZoneId.set -> void
 static Polhem.Api.Client.ApiConnectValidator.ValidateAsync(string! endpoint, bool allowGenerateSettings = false) -> System.Threading.Tasks.Task<Polhem.Api.Client.ConnectType>!
 static Polhem.Api.Client.ApiSessionContext.Ambient.get -> Polhem.Api.Client.ApiSessionContext!
 static Polhem.Api.Client.Definitions.LanguageLayers.operator !=(Polhem.Api.Client.Definitions.LanguageLayers left, Polhem.Api.Client.Definitions.LanguageLayers right) -> bool
@@ -154,10 +148,6 @@ static Polhem.Api.Client.FormValueBinding.BuildEmptyDataSet(Polhem.Definition.Fo
 static Polhem.Api.Client.FormValueBinding.GetEmptyValue(System.Type! targetType) -> object!
 static Polhem.Api.Client.FormValueBinding.ToBindingString(object? raw) -> string!
 static Polhem.Api.Client.FormValueBinding.ToColumnValue(string? value, System.Data.DataColumn! column) -> object!
-static Polhem.Api.Client.HttpUtilities.GetAsync(string! endpoint, System.Collections.Specialized.NameValueCollection? headers = null) -> System.Threading.Tasks.Task<string!>!
-static Polhem.Api.Client.HttpUtilities.IsEndpointReachableAsync(string! endpoint, System.TimeSpan? timeout = null) -> System.Threading.Tasks.Task<bool>!
-static Polhem.Api.Client.HttpUtilities.IsUrl(string! input) -> bool
-static Polhem.Api.Client.HttpUtilities.PostAsync(string! endpoint, string! body, System.Collections.Specialized.NameValueCollection? headers = null) -> System.Threading.Tasks.Task<string!>!
 virtual Polhem.Api.Client.Connectors.FormApiConnector.DeleteAsync(System.Guid rowId) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.DeleteResponse!>!
 virtual Polhem.Api.Client.Connectors.FormApiConnector.GetDataAsync(System.Guid rowId) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.GetDataResponse!>!
 virtual Polhem.Api.Client.Connectors.FormApiConnector.GetListAsync(string! selectFields = "", Polhem.Definition.Filters.FilterNode? filter = null, Polhem.Definition.Sorting.SortFieldCollection? sortFields = null, Polhem.Definition.Paging.PagingOptions? paging = null) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.GetListResponse!>!

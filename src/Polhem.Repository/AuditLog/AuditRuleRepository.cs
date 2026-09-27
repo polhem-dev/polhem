@@ -17,7 +17,7 @@ namespace Polhem.Repository.AuditLog
     /// session here would read the caller's company instead of the requested one — the same
     /// reasoning as <see cref="Polhem.Repository.System.DepartmentRepository"/>.
     /// </remarks>
-    public class AuditRuleRepository : RepositoryBase, IAuditRuleRepository
+    internal sealed class AuditRuleRepository : RepositoryBase, IAuditRuleRepository
     {
         private const string TableName = "st_audit_rule";
 

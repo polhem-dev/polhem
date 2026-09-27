@@ -25,7 +25,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddResource("zh-TW", "CommonResources", ("OK", "確定"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
             var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW");
 
             var result = localizer["OK"];
@@ -40,7 +40,7 @@ namespace Polhem.Definition.UnitTests.Language
         public void Indexer_Miss_ReturnsResourceNotFound()
         {
             var defineAccess = new StubDefineAccess("en-US"); // Neither language has it.
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
             var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW");
 
             var result = localizer["Nonexistent"];
@@ -57,7 +57,7 @@ namespace Polhem.Definition.UnitTests.Language
             var defineAccess = new StubDefineAccess("en-US");
             // Missing in zh-TW, present in en-US.
             defineAccess.AddResource("en-US", "CommonResources", ("OK", "OK"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
             var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW");
 
             var result = localizer["OK"];
@@ -72,7 +72,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddResource("zh-TW", "CommonResources", ("Greeting", "你好，{0}！"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
             var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW");
 
             var result = localizer["Greeting", "Jeff"];
@@ -86,7 +86,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddResource("ja-JP", "CommonResources", ("OK", "確認"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
             var localizer = new PolhemStringLocalizer<CommonResources>(svc);
 
             var previous = CultureInfo.CurrentUICulture;
@@ -108,7 +108,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddResource("zh-TW", "CommonResources", ("OK", "確定"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
             var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW");
 
             Assert.Empty(localizer.GetAllStrings(includeParentCultures: false));

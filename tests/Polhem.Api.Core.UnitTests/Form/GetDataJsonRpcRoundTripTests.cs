@@ -27,7 +27,7 @@ namespace Polhem.Api.Core.UnitTests.Form
 
         [Fact]
         [DisplayName("Employee.GetData through JsonRpcExecutor passes RowId through and returns the full DataSet")]
-        public void GetData_ThroughJsonRpc_PreservesRowIdAndReturnsDataSet()
+        public async Task GetData_ThroughJsonRpc_PreservesRowIdAndReturnsDataSet()
         {
             var rowId = Guid.NewGuid();
             var dataSet = new DataSet("Employee");
@@ -68,7 +68,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var result = Assert.IsType<GetDataResponse>(response.Result!.Value);

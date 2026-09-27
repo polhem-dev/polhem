@@ -147,7 +147,7 @@ namespace Polhem.Definition.UnitTests.Language
                 (FormSchemaLocalizer.SchemaDisplayNameKey, "客戶"),
                 (TableKey("Customer"), "客戶資料"),
                 (FieldKey("sys_id"), "客戶編號"));
-            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess));
+            var localizer = new FormSchemaLocalizer(new LanguageService(defineAccess, null));
 
             var viaLegacy = BuildSchema();
             localizer.Localize(viaLegacy, "zh-TW");

@@ -1,1 +1,2 @@
 #nullable enable
+static Polhem.UI.Core.ClientInfo.Arguments.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?

@@ -6,16 +6,12 @@ namespace Polhem.Definition.Logging
     /// <see cref="IAuditLogWriter"/> or <see cref="IAnomalyLogWriter"/> without a null check.
     /// Both are best-effort by design: a failure to record must not fail the operation being recorded.
     /// </summary>
-    /// <remarks>
-    /// The name predates the split into two writer interfaces and is kept: renaming a public type
-    /// would be a breaking change that buys nothing but a more fitting name.
-    /// </remarks>
-    public sealed class NullAuditLogWriter : IAuditLogWriter, IAnomalyLogWriter
+    public sealed class NullLogWriter : IAuditLogWriter, IAnomalyLogWriter
     {
         /// <summary>Gets the shared singleton instance.</summary>
-        public static NullAuditLogWriter Instance { get; } = new();
+        public static NullLogWriter Instance { get; } = new();
 
-        private NullAuditLogWriter() { }
+        private NullLogWriter() { }
 
         /// <inheritdoc/>
         public void Write(AuditEntry entry)

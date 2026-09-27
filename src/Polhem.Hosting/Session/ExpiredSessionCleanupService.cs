@@ -16,7 +16,7 @@ namespace Polhem.Hosting.Session
     /// while every sign-in inserts one — without this the table only grows. Deleting by expiry time
     /// is idempotent, so several nodes running this at once is safe and needs no coordination.
     /// </remarks>
-    public sealed class ExpiredSessionCleanupService : BackgroundService
+    internal sealed class ExpiredSessionCleanupService : BackgroundService
     {
         private readonly IRepositoryFactory _repositoryFactory;
         private readonly SessionCleanupOptions _options;

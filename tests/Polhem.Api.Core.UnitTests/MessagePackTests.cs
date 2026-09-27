@@ -2,10 +2,10 @@ using Polhem.Api.Core.MessagePack;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Filters;
 using System.Data;
-using Polhem.Base.Data;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Definition;
 using Polhem.Api.Core.Messages;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Api.Core.UnitTests
 {
@@ -391,8 +391,7 @@ namespace Polhem.Api.Core.UnitTests
             var args = new CreateSessionRequest
             {
                 UserID = "TestUser",
-                ExpiresIn = 7200,
-                OneTime = true
+                ExpiresIn = 7200
             };
 
             // Act & Assert

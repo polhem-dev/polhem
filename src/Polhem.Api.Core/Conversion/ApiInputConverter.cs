@@ -11,7 +11,7 @@ namespace Polhem.Api.Core.Conversion
     /// Used when the Executor receives an API type (e.g., LoginRequest) but the BO method
     /// expects a different type (e.g., ILoginRequest or LoginArgs).
     /// </summary>
-    public static class ApiInputConverter
+    internal static class ApiInputConverter
     {
         /// <summary>
         /// The options every <c>Plain</c> body is read with, on the server (requests) and on the client

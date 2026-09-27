@@ -40,10 +40,8 @@ namespace Polhem.Business.UnitTests
             var ctx = TestPolhemContext.CreateWithOverrides(_fx,
                 (typeof(IAuditLogWriter), writer),
                 (typeof(AuditLogOptions), s_loginAuditEnabled));
-            var bo = new TestableSystemBusinessObject(ctx, Guid.Empty, _ => (false, string.Empty))
-            {
-                ApiKeyValidation = validation,
-            };
+            var bo = new TestableSystemBusinessObject(ctx, Guid.Empty, _ => (false, string.Empty));
+            ((IApiKeyContextAware)bo).ApiKeyValidation = validation;
 
             Assert.Throws<UserMessageException>(
                 () => bo.Login(new LoginArgs { UserId = "user01", Password = "wrong" }));

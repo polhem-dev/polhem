@@ -6,13 +6,13 @@ namespace Polhem.Db.Dml
     public sealed class WhereBuildResult
     {
         /// <summary>
-        /// Gets or sets the WHERE clause string (with or without the "WHERE" keyword).
+        /// Gets the WHERE clause string (with or without the "WHERE" keyword).
         /// </summary>
-        public string WhereClause { get; set; } = string.Empty;
+        public string WhereClause { get; init; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the named parameters generated for the WHERE clause.
+        /// Gets the named parameters generated for the WHERE clause.
         /// </summary>
-        public IDictionary<string, object>? Parameters { get; set; } = null;
+        public IDictionary<string, object>? Parameters { get; init; }
     }
 }

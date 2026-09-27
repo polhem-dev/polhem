@@ -30,7 +30,9 @@ namespace Polhem.Api.Client.UnitTests.Definitions
         /// </summary>
         private sealed class SchemaConnector : SystemApiConnector
         {
-            public SchemaConnector() : base(Guid.NewGuid()) { }
+            private readonly bool _numeric;
+
+            public SchemaConnector(bool numeric = true) : base(Guid.NewGuid()) { _numeric = numeric; }
 
             public override Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null)
             {
@@ -39,8 +41,15 @@ namespace Polhem.Api.Client.UnitTests.Definitions
 
                 var schema = new FormSchema(ProgId, "訂單") { CurrencyField = "sys_currency" };
                 var table = schema.Tables!.Add(ProgId, "訂單");
-                table.Fields!.Add(new FormField("disc", "折扣", FieldDbType.Decimal) { NumberKind = NumberKind.Percent });
-                table.Fields!.Add(new FormField("amount", "金額", FieldDbType.Decimal) { NumberKind = NumberKind.Amount });
+                if (_numeric)
+                {
+                    table.Fields!.Add(new FormField("disc", "折扣", FieldDbType.Decimal) { NumberKind = NumberKind.Percent });
+                    table.Fields!.Add(new FormField("amount", "金額", FieldDbType.Decimal) { NumberKind = NumberKind.Amount });
+                }
+                else
+                {
+                    table.Fields!.Add(new FormField("note", "備註", FieldDbType.String));
+                }
                 return Task.FromResult((T)(object)schema);
             }
         }
@@ -56,6 +65,37 @@ namespace Polhem.Api.Client.UnitTests.Definitions
             var company = new CompanyInfo { CompanyId = "C001" };
             company.NumberFormats.Add(new NumberFormatItem(NumberKind.Percent, decimals));
             return company;
+        }
+
+        [Fact]
+        [DisplayName("GetLocalizedSchemaAsync does not look up the company for a schema without numeric fields")]
+        public async Task GetLocalizedSchemaAsync_NoNumericField_SkipsCompanyLookup()
+        {
+            int lookups = 0;
+            var loader = new FormDefinitionLoader(new ClientDefineAccess(new SchemaConnector(numeric: false)))
+            {
+                CompanyAccessor = () => { lookups++; return null; },
+            };
+
+            var schema = await loader.GetLocalizedSchemaAsync(ProgId, string.Empty);
+
+            Assert.Equal(0, lookups);
+            Assert.True(schema.Tables![ProgId].Fields!.Contains("note"));
+        }
+
+        [Fact]
+        [DisplayName("GetLocalizedSchemaAsync looks up the company once for a schema with numeric fields")]
+        public async Task GetLocalizedSchemaAsync_NumericField_LooksUpCompanyOnce()
+        {
+            int lookups = 0;
+            var loader = new FormDefinitionLoader(new ClientDefineAccess(new SchemaConnector()))
+            {
+                CompanyAccessor = () => { lookups++; return null; },
+            };
+
+            await loader.GetLocalizedSchemaAsync(ProgId, string.Empty);
+
+            Assert.Equal(1, lookups);
         }
 
         [Fact]

@@ -8,23 +8,6 @@ namespace Polhem.Api.Client
     /// </summary>
     public static class ApiClientInfo
     {
-        /// <summary>
-        /// Gets or sets the signed-in user's IANA time zone id; blank disables time zone conversion.
-        /// </summary>
-        /// <remarks>
-        /// The Connector converts payloads between UTC and this zone (ADR-032 D4). It lives here
-        /// rather than being read from the UI layer because <c>Polhem.Api.Client</c> sits below it; the
-        /// host assigns it at login and clears it at logout.
-        ///
-        /// Blank means no conversion, which is the correct state before sign-in — there is no user
-        /// whose zone could apply, and adopting the device's would reintroduce the second source of
-        /// truth D4 rejects.
-        /// </remarks>
-        public static string UserTimeZoneId
-        {
-            get => ApiSessionContext.Ambient.UserTimeZoneId;
-            set => ApiSessionContext.Ambient.UserTimeZoneId = value;
-        }
 
         /// <summary>
         /// Gets or sets the connection types supported by the application.
@@ -45,16 +28,6 @@ namespace Polhem.Api.Client
         /// Gets or sets the API key, typically loaded from configuration.
         /// </summary>
         public static string ApiKey { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the API transmission encryption key, exchanged via RSA public key.
-        /// Typically unused in local connection scenarios.
-        /// </summary>
-        public static byte[] ApiEncryptionKey
-        {
-            get => ApiSessionContext.Ambient.ApiEncryptionKey;
-            set => ApiSessionContext.Ambient.ApiEncryptionKey = value;
-        }
 
         /// <summary>
         /// Gets or sets the in-process backend service provider used by <see cref="Polhem.Api.Client.Providers.LocalApiProvider"/>.

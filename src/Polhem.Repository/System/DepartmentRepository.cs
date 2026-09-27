@@ -12,7 +12,7 @@ namespace Polhem.Repository.System
     /// (<c>sys_rowid</c> / <c>parent_rowid</c>), which the in-memory <see cref="DepartmentTree"/>
     /// turns into the hierarchy.
     /// </summary>
-    public class DepartmentRepository : RepositoryBase, IDepartmentRepository
+    internal sealed class DepartmentRepository : RepositoryBase, IDepartmentRepository
     {
         /// <summary>
         /// Initializes a new <see cref="DepartmentRepository"/>.

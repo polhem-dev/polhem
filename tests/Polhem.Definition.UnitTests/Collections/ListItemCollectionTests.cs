@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Data;
 using Polhem.Definition.Collections;
 
 namespace Polhem.Definition.UnitTests.Collections
@@ -46,28 +45,6 @@ namespace Polhem.Definition.UnitTests.Collections
             Assert.Single(collection);
             Assert.Same(added, collection["A"]);
             Assert.Equal("Alpha", added.Text);
-        }
-
-        [Fact]
-        [DisplayName("FromTable fills Value and Text from the specified columns")]
-        public void FromTable_PopulatesItemsFromDataTable()
-        {
-            // Arrange
-            var table = new DataTable();
-            table.Columns.Add("ValueCol", typeof(string));
-            table.Columns.Add("TextCol", typeof(string));
-            table.Rows.Add("01", "一");
-            table.Rows.Add("02", "二");
-
-            var collection = new ListItemCollection();
-
-            // Act
-            collection.FromTable(table, "ValueCol", "TextCol");
-
-            // Assert
-            Assert.Equal(2, collection.Count);
-            Assert.Equal("一", collection["01"].Text);
-            Assert.Equal("二", collection["02"].Text);
         }
     }
 }

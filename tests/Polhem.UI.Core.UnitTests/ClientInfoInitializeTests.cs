@@ -31,7 +31,7 @@ namespace Polhem.UI.Core.UnitTests
         private static void RestoreState(
             SupportedConnectTypes originalSupportedTypes,
             IUIViewService? originalViewService,
-            Dictionary<string, string>? originalArgs)
+            IReadOnlyDictionary<string, string>? originalArgs)
         {
             ApiClientInfo.SupportedConnectTypes = originalSupportedTypes;
             s_uiViewServiceProp.GetSetMethod(nonPublic: true)?.Invoke(null, new object?[] { originalViewService });

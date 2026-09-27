@@ -7,7 +7,7 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.UnitTests.Logging
 {
     /// <summary>
-    /// <see cref="AuditEntry"/> / <see cref="NullAuditLogWriter"/> / <see cref="AuditLogOptions"/>
+    /// <see cref="AuditEntry"/> / <see cref="NullLogWriter"/> / <see cref="AuditLogOptions"/>
     /// Unit tests: they verify the assembly of the common columns, the no-op writer behavior and the default options.
     /// </summary>
     public class AuditLoggingTests
@@ -278,10 +278,10 @@ namespace Polhem.Definition.UnitTests.Logging
         }
 
         [Fact]
-        [DisplayName("NullAuditLogWriter.Write does not throw")]
-        public void NullAuditLogWriter_Write_DoesNotThrow()
+        [DisplayName("NullLogWriter.Write does not throw")]
+        public void NullLogWriter_Write_DoesNotThrow()
         {
-            var exception = Record.Exception(() => NullAuditLogWriter.Instance.Write(new TestAuditEntry()));
+            var exception = Record.Exception(() => NullLogWriter.Instance.Write(new TestAuditEntry()));
 
             Assert.Null(exception);
         }

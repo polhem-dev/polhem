@@ -1,5 +1,3 @@
-using System.Data;
-using Polhem.Base;
 using Polhem.Base.Collections;
 
 namespace Polhem.Definition.Collections
@@ -18,20 +16,6 @@ namespace Polhem.Definition.Collections
         { }
 
         #endregion
-
-        /// <summary>
-        /// Populates items from a data table.
-        /// </summary>
-        /// <param name="table">The data table.</param>
-        /// <param name="valueField">The field name mapped to item value.</param>
-        /// <param name="textField">The field name mapped to display text.</param>
-        public void FromTable(DataTable table, string valueField, string textField)
-        {
-            foreach (DataRow row in table.Rows)
-            {
-                this.Add(ValueUtilities.CStr(row[valueField]), ValueUtilities.CStr(row[textField]));
-            }
-        }
     }
 
     /// <summary>

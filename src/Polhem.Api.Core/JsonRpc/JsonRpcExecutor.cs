@@ -3,7 +3,6 @@ using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Polhem.Base;
 using Polhem.Base.Exceptions;
-using Polhem.Base.Tracing;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Logging;
@@ -30,24 +29,36 @@ namespace Polhem.Api.Core.JsonRpc
         private readonly ISessionInfoService? _sessionService;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="JsonRpcExecutor"/> class without API anomaly
+        /// logging.
+        /// </summary>
+        /// <param name="boFactory">The business-object factory.</param>
+        /// <param name="tokenValidator">The access-token validator.</param>
+        /// <param name="keyProvider">The API encryption key provider.</param>
+        public JsonRpcExecutor(
+            IBusinessObjectFactory boFactory,
+            IAccessTokenValidator tokenValidator,
+            IApiEncryptionKeyProvider keyProvider)
+            : this(boFactory, tokenValidator, keyProvider, anomalyWriter: null, auditOptions: null, sessionService: null)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="JsonRpcExecutor"/> class.
         /// </summary>
         /// <param name="boFactory">The business-object factory.</param>
         /// <param name="tokenValidator">The access-token validator.</param>
         /// <param name="keyProvider">The API encryption key provider.</param>
-        /// <param name="anomalyWriter">
-        /// Optional audit writer for API anomaly records; null disables API anomaly logging.
-        /// Supplied by DI; direct construction (e.g. tests) may omit it.
-        /// </param>
-        /// <param name="auditOptions">Optional audit-log options (anomaly enable + API slow threshold).</param>
-        /// <param name="sessionService">Optional session lookup for the acting user (denormalised who).</param>
+        /// <param name="anomalyWriter">The writer for API anomaly records; null disables API anomaly logging.</param>
+        /// <param name="auditOptions">The audit-log options (anomaly enable + API slow threshold), or null.</param>
+        /// <param name="sessionService">The session lookup for the acting user (denormalised who), or null.</param>
         public JsonRpcExecutor(
             IBusinessObjectFactory boFactory,
             IAccessTokenValidator tokenValidator,
             IApiEncryptionKeyProvider keyProvider,
-            IAnomalyLogWriter? anomalyWriter = null,
-            AuditLogOptions? auditOptions = null,
-            ISessionInfoService? sessionService = null)
+            IAnomalyLogWriter? anomalyWriter,
+            AuditLogOptions? auditOptions,
+            ISessionInfoService? sessionService)
         {
             _boFactory = boFactory ?? throw new ArgumentNullException(nameof(boFactory));
             _tokenValidator = tokenValidator ?? throw new ArgumentNullException(nameof(tokenValidator));
@@ -72,9 +83,6 @@ namespace Polhem.Api.Core.JsonRpc
         /// given a generic one.
         /// </summary>
         /// <remarks>
-        /// A property rather than a constructor parameter: the constructor already ends in optional
-        /// parameters, so a longer overload is refused by analyzer rule RS0027, and a second, shorter one
-        /// would leave dependency injection two satisfiable constructors to choose between.
         /// <c>AddPolhemFramework</c> assigns it. Left null, failures still reach the caller with the
         /// generic message and nothing is logged here.
         /// </remarks>
@@ -88,37 +96,11 @@ namespace Polhem.Api.Core.JsonRpc
         public ApiKeyValidationResult ApiKeyValidation { get; set; } = ApiKeyValidationResult.NotChecked;
 
         /// <summary>
-        /// Executes an API method.
-        /// </summary>
-        /// <remarks>
-        /// This blocks on the asynchronous path. Every <c>await</c> it reaches uses
-        /// <c>ConfigureAwait(false)</c>, so it does not deadlock on a host with a
-        /// <see cref="System.Threading.SynchronizationContext"/> — but a business object that
-        /// resumes on the captured context would reintroduce that. Prefer
-        /// <see cref="ExecuteAsync"/> from any asynchronous caller.
-        /// </remarks>
-        /// <param name="request">The JSON-RPC request model.</param>
-        public JsonRpcResponse Execute(JsonRpcRequest request)
-        {
-            return ExecuteAsyncCore(request).GetAwaiter().GetResult();
-        }
-
-        /// <summary>
         /// Asynchronously executes an API method.
         /// </summary>
         /// <param name="request">The JSON-RPC request model.</param>
-        public Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request)
+        public async Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request)
         {
-            return ExecuteAsyncCore(request);
-        }
-
-        /// <summary>
-        /// Internal asynchronous execution core logic.
-        /// </summary>
-        /// <param name="request">The JSON-RPC request model.</param>
-        private async Task<JsonRpcResponse> ExecuteAsyncCore(JsonRpcRequest request)
-        {
-            var ctx = Tracer.Start(TraceLayers.ApiServer, string.Empty, name: request.Method);
             var response = new JsonRpcResponse(request);
             var stopwatch = AnomalyEnabled ? Stopwatch.StartNew() : null;
             try
@@ -158,7 +140,6 @@ namespace Polhem.Api.Core.JsonRpc
                 // the caller's format. A client that negotiated one cannot decode anything else.
                 response.Result = new JsonRpcResult { Value = value, Codec = request.Params.Codec };
                 ApiPayloadConverter.TransformTo(response.Result, format, apiEncryptionKey);
-                Tracer.End(ctx);
                 LogApiSlowAnomaly(request.Method, stopwatch);
             }
             catch (Exception ex)
@@ -170,7 +151,6 @@ namespace Polhem.Api.Core.JsonRpc
                 var (code, message) = MapException(rootEx);
                 response.Error = new JsonRpcError((int)code, message);
                 LogMaskedFailure(request.Method, rootEx, code);
-                Tracer.End(ctx, TraceStatus.Error, rootEx.Message);
                 LogApiFailureAnomaly(request.Method, rootEx, stopwatch);
             }
             return response;

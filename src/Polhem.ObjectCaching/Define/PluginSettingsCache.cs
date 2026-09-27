@@ -15,12 +15,10 @@ namespace Polhem.ObjectCaching.Define
         /// Initializes a new <see cref="PluginSettingsCache"/>.
         /// </summary>
         /// <param name="storage">The define storage backing this cache.</param>
-        /// <param name="paths">Retained for constructor symmetry with the other define caches; the monitored file paths come from <paramref name="storage"/>. Still validated as non-null.</param>
         /// <param name="cachePrefix">Per-owner cache namespace (see <see cref="ObjectCache{T}"/>).</param>
-        public PluginSettingsCache(IDefineStorage storage, PathOptions paths, string cachePrefix = "") : base(cachePrefix)
+        public PluginSettingsCache(IDefineStorage storage, string cachePrefix = "") : base(cachePrefix)
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
-            ArgumentNullException.ThrowIfNull(paths);
         }
 
         /// <summary>

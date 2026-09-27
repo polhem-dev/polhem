@@ -10,7 +10,7 @@ namespace Polhem.Repository.System
     /// <see cref="HasAccess"/> via a three-table JOIN against <c>st_user</c> and
     /// <c>st_company</c>, filtered by the company's <c>enabled</c> flag.
     /// </summary>
-    public class UserCompanyRepository : RepositoryBase, IUserCompanyRepository
+    internal sealed class UserCompanyRepository : RepositoryBase, IUserCompanyRepository
     {
         /// <summary>
         /// Initializes a new <see cref="UserCompanyRepository"/>.

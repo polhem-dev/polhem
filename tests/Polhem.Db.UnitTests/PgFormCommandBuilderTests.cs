@@ -57,7 +57,7 @@ namespace Polhem.Db.UnitTests
             var schema = new FormSchema("X", "X");
             var table = schema.Tables!.Add("Foo", "Foo");
             table.DbTableName = "tb_foo";
-            table.Fields!.AddStringField("name", "Name", 50);
+            table.Fields!.Add(new FormField("name", "Name", FieldDbType.String) { MaxLength = 50 });
 
             var builder = NewBuilder(schema);
             var spec = builder.BuildSelect("Foo", "");

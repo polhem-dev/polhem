@@ -1,4 +1,4 @@
-<!-- source: adr/adr-036-wire-serialization-externalized.md blob: e7e014f09743a4d625fa23ef55c795f0e5e72d60 -->
+<!-- source: adr/adr-036-wire-serialization-externalized.md blob: 7fae057e22fbe13f034776029346e2b55cc0ef22 -->
 # ADR-036：傳輸序列化外置至 API 層，定義層不再承載 MessagePack
 
 [English](adr-036-wire-serialization-externalized.md)
@@ -220,3 +220,12 @@ contractless 沒有 fallback 這件事，改變的是**該決策的實作代價*
 ```bash
 dotnet test tests/Polhem.Api.Core.UnitTests/Polhem.Api.Core.UnitTests.csproj -c Release --settings .runsettings -p:DynamicCodeSupport=false
 ```
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+**上文的 analyzer 規則編號屬於 Bee.NET。** 本決策做成時框架仍名為 Bee.NET，文中提到的規則當時以
+`BEE4001`–`BEE4004` 發佈；此處的 `POLHEM` 拼法來自更名。Polhem 從未以這些編號發佈規則：它的 analyzer 發佈紀錄從
+1.0.0 開始，`POLHEM4001`–`POLHEM4004` 為保留編號、永不重用，因此從 Bee.NET 帶過來的抑制設定不會讓新規則失聲。保留編號列於
+[Analyzer 規則](../zh-TW/analyzer-rules.md)。

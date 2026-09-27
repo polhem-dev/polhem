@@ -18,7 +18,7 @@ namespace Polhem.Hosting.CacheNotify
     /// failed poll is logged and the loop continues, so a transient database error does not stop
     /// invalidation permanently.
     /// </remarks>
-    public sealed class CacheNotifyPoller : BackgroundService
+    internal sealed class CacheNotifyPoller : BackgroundService
     {
         private readonly ICacheNotifyReader _reader;
         private readonly CacheNotifyOptions _options;

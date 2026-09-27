@@ -30,14 +30,13 @@ namespace Polhem.Api.Client.UnitTests
             // Arrange
             string userId = "001";
             int expiresIn = 600;
-            bool oneTime = false;
 
             // A random access token is only needed to construct the connector. `CreateSession` returns a new token.
             Guid accessToken = Guid.NewGuid();
             var connector = new SystemApiConnector(accessToken);
 
             // Act
-            Guid newToken = await connector.CreateSessionAsync(userId, expiresIn, oneTime);
+            Guid newToken = await connector.CreateSessionAsync(userId, expiresIn);
 
             // Assert
             Assert.NotEqual(Guid.Empty, newToken);

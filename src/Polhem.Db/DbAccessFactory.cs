@@ -25,21 +25,31 @@ namespace Polhem.Db
         private readonly DbAccessAnomalyLogOptions? _anomalyOptions;
 
         /// <summary>
+        /// Initializes a new <see cref="DbAccessFactory"/> with no command timeout cap and no DB
+        /// anomaly logging.
+        /// </summary>
+        /// <param name="connectionManager">The DI-resolved connection manager.</param>
+        public DbAccessFactory(IDbConnectionManager connectionManager)
+            : this(connectionManager, maxCommandTimeout: 0, anomalyWriterFactory: null, anomalyOptions: null)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new <see cref="DbAccessFactory"/>.
         /// </summary>
         /// <param name="connectionManager">The DI-resolved connection manager.</param>
         /// <param name="maxCommandTimeout">
         /// Per-app upper bound applied to each <see cref="System.Data.Common.DbCommand.CommandTimeout"/>;
-        /// 0 (default) disables the cap.
+        /// 0 disables the cap.
         /// </param>
         /// <param name="anomalyWriterFactory">
         /// Optional lazy resolver for the DB-anomaly audit writer; null disables DB anomaly logging.
         /// Lazy (a factory, not the instance) to break the construction cycle
         /// <c>IDbAccessFactory → IAnomalyLogWriter → AuditLogDbSink → IDbAccessFactory</c>.
         /// </param>
-        /// <param name="anomalyOptions">Optional DB anomaly thresholds / level.</param>
-        public DbAccessFactory(IDbConnectionManager connectionManager, int maxCommandTimeout = 0,
-            Func<IAnomalyLogWriter?>? anomalyWriterFactory = null, DbAccessAnomalyLogOptions? anomalyOptions = null)
+        /// <param name="anomalyOptions">DB anomaly thresholds / level, or null.</param>
+        public DbAccessFactory(IDbConnectionManager connectionManager, int maxCommandTimeout,
+            Func<IAnomalyLogWriter?>? anomalyWriterFactory, DbAccessAnomalyLogOptions? anomalyOptions)
         {
             _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
             _maxCommandTimeout = maxCommandTimeout;
@@ -54,7 +64,7 @@ namespace Polhem.Db
             // DbAccess against the log DB again, which would recurse. Everything else gets detection.
             bool logSelf = string.Equals(databaseId, DbCategoryIds.Log, StringComparison.Ordinal);
             if (logSelf)
-                return new DbAccess(databaseId, _connectionManager, _maxCommandTimeout);
+                return new DbAccess(databaseId, _connectionManager, _maxCommandTimeout, anomalyWriter: null, anomalyOptions: null);
 
             return new DbAccess(databaseId, _connectionManager, _maxCommandTimeout,
                 _anomalyWriterFactory?.Invoke(), _anomalyOptions);

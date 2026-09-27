@@ -17,20 +17,6 @@ namespace Polhem.Api.Core.MessagePack
                 .Member(nameof(Polhem.Definition.Collections.Property.Name), static x => x.Name, static (x, v) => x.Name = v)
                 .Member(nameof(Polhem.Definition.Collections.Property.Value), static x => x.Value, static (x, v) => x.Value = v)
                 .Build());
-            list.Add(WireContract.For<Polhem.Definition.Identity.CompanyInfo>()
-                .Member(nameof(Polhem.Definition.Identity.CompanyInfo.CompanyId), static x => x.CompanyId, static (x, v) => x.CompanyId = v)
-                .Member(nameof(Polhem.Definition.Identity.CompanyInfo.CompanyName), static x => x.CompanyName, static (x, v) => x.CompanyName = v)
-                .Member(nameof(Polhem.Definition.Identity.CompanyInfo.CompanyDatabaseId), static x => x.CompanyDatabaseId, static (x, v) => x.CompanyDatabaseId = v)
-                .Member(nameof(Polhem.Definition.Identity.CompanyInfo.CustomizeId), static x => x.CustomizeId, static (x, v) => x.CustomizeId = v)
-                .Member(nameof(Polhem.Definition.Identity.CompanyInfo.NumberFormats), static x => x.NumberFormats, static (x, v) => x.NumberFormats = v)
-                .Member(nameof(Polhem.Definition.Identity.CompanyInfo.DefaultCurrency), static x => x.DefaultCurrency, static (x, v) => x.DefaultCurrency = v)
-                .Member(nameof(Polhem.Definition.Identity.CompanyInfo.CashRounding), static x => x.CashRounding, static (x, v) => x.CashRounding = v)
-                .Member(nameof(Polhem.Definition.Identity.CompanyInfo.AllowedCurrencies), static x => x.AllowedCurrencies, static (x, v) => x.AllowedCurrencies = v)
-                .Build());
-            list.Add(WireContract.For<Polhem.Definition.Organization.DepartmentTree>()
-                .Member(nameof(Polhem.Definition.Organization.DepartmentTree.CompanyId), static x => x.CompanyId, static (x, v) => x.CompanyId = v)
-                .Member(nameof(Polhem.Definition.Organization.DepartmentTree.Roots), static x => x.Roots, static (x, v) => x.Roots = v)
-                .Build());
             list.Add(WireContract.For<Polhem.Definition.Paging.PagingInfo>()
                 .Member(nameof(Polhem.Definition.Paging.PagingInfo.Page), static x => x.Page, static (x, v) => x.Page = v)
                 .Member(nameof(Polhem.Definition.Paging.PagingInfo.PageSize), static x => x.PageSize, static (x, v) => x.PageSize = v)

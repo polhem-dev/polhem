@@ -91,7 +91,6 @@ namespace Polhem.Db.UnitTests
         public void GetCommandText_New_GeneratesCreateTable()
         {
             var schema = BuildSchema(FieldDbType.Integer);
-            schema.UpgradeAction = DbUpgradeAction.New;
             var builder = new PgCreateTableCommandBuilder();
 
             string sql = builder.GetCommandText(schema);

@@ -37,7 +37,7 @@ namespace Polhem.Api.Core.UnitTests.Form
 
         [Fact]
         [DisplayName("Employee.GetList through JsonRpcExecutor dispatches to FormBusinessObject.GetList and returns the stub DataTable")]
-        public void GetList_ThroughJsonRpc_DispatchesAndReturnsTable()
+        public async Task GetList_ThroughJsonRpc_DispatchesAndReturnsTable()
         {
             // Arrange
             var table = new DataTable("Employee");
@@ -88,7 +88,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             };
 
             // Act
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             // Assert
             Assert.Null(response.Error);
@@ -114,7 +114,7 @@ namespace Polhem.Api.Core.UnitTests.Form
 
         [Fact]
         [DisplayName("Employee.GetList with Paging is passed through to the BO by the executor, and the returned PagingInfo is mapped to Response.Paging by ApiOutputConverter")]
-        public void GetList_ThroughJsonRpc_PreservesPagingAndReturnsPagingInfo()
+        public async Task GetList_ThroughJsonRpc_PreservesPagingAndReturnsPagingInfo()
         {
             // Arrange
             var table = new DataTable("Employee");
@@ -166,7 +166,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             };
 
             // Act
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             // Assert: the PagingOptions the stub received.
             Assert.Null(response.Error);

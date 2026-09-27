@@ -11,7 +11,7 @@ namespace Polhem.Api.Core.JsonRpc
     /// based on the <see cref="ApiPayload.Format"/> property.
     /// </summary>
     /// <typeparam name="T">The concrete <see cref="ApiPayload"/> subtype.</typeparam>
-    public class ApiPayloadJsonConverter<T> : JsonConverter<T> where T : ApiPayload, new()
+    internal sealed class ApiPayloadJsonConverter<T> : JsonConverter<T> where T : ApiPayload, new()
     {
         /// <inheritdoc />
         public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

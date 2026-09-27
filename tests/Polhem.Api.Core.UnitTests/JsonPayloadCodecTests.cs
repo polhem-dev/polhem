@@ -28,7 +28,6 @@ namespace Polhem.Api.Core.UnitTests
         /// </summary>
         private static Restore UseDefaultPipeline()
         {
-            var originalSerializer = ApiServiceOptions.PayloadSerializer;
             var originalCompressor = ApiServiceOptions.PayloadCompressor;
             var originalEncryptor = ApiServiceOptions.PayloadEncryptor;
 
@@ -40,8 +39,7 @@ namespace Polhem.Api.Core.UnitTests
                 },
                 isDebugMode: true);
 
-            return new Restore(() => ApiServiceOptions.Initialize(
-                originalSerializer, originalCompressor, originalEncryptor));
+            return new Restore(() => ApiServiceOptions.Initialize(originalCompressor, originalEncryptor));
         }
 
         private sealed class Restore(Action action) : IDisposable

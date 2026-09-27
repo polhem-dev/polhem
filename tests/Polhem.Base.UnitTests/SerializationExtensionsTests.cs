@@ -19,21 +19,6 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("SerializationExtensions.ToXmlFile / ToJsonFile write the file")]
-        public void SerializationExtensions_FileMethods_WriteFile()
-        {
-            var source = new SerializationTestPayload { Name = "Grace", Age = 22 };
-            string xmlPath = TempPath("ext.xml");
-            string jsonPath = TempPath("ext.json");
-
-            source.ToXmlFile(xmlPath);
-            Assert.True(File.Exists(xmlPath));
-
-            source.ToJsonFile(jsonPath);
-            Assert.True(File.Exists(jsonPath));
-        }
-
-        [Fact]
         [DisplayName("SerializationExtensions.Save writes the format matching the file extension")]
         public void SerializationExtensions_Save_DispatchesByExtension()
         {

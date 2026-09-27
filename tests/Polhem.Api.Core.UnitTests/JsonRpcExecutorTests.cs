@@ -55,7 +55,7 @@ namespace Polhem.Api.Core.UnitTests
         /// <param name="progId">The program ID.</param>
         /// <param name="action">The action to execute.</param>
         /// <param name="value">The value passed in.</param>
-        private T ApiExecute<T>(Guid accessToken, string progId, string action, object value)
+        private async Task<T> ApiExecute<T>(Guid accessToken, string progId, string action, object value)
         {
             var request = new JsonRpcRequest()
             {
@@ -68,7 +68,7 @@ namespace Polhem.Api.Core.UnitTests
             };
 
             var executor = NewExecutor(accessToken);
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
             return (T)response.Result!.Value!;
         }
 
@@ -87,14 +87,14 @@ namespace Polhem.Api.Core.UnitTests
         /// </summary>
         [Fact]
         [DisplayName("Ping returns the correct status and trace ID")]
-        public void Ping_ValidRequest_ReturnsOkStatus()
+        public async Task Ping_ValidRequest_ReturnsOkStatus()
         {
             var args = new PingRequest()
             {
                 ClientName = "TestClient",
                 TraceId = "001",
             };
-            var result = ApiExecute<PingResponse>(Guid.Empty, SysProgIds.System, "Ping", args);
+            var result = await ApiExecute<PingResponse>(Guid.Empty, SysProgIds.System, "Ping", args);
             Assert.NotNull(result);
             Assert.Equal("ok", result.Status);
             Assert.Equal("001", result.TraceId);
@@ -105,10 +105,10 @@ namespace Polhem.Api.Core.UnitTests
         /// </summary>
         [Fact]
         [DisplayName("GetCommonConfiguration returns a non-null result")]
-        public void GetCommonConfiguration_ValidRequest_ReturnsNotNull()
+        public async Task GetCommonConfiguration_ValidRequest_ReturnsNotNull()
         {
             var args = new GetCommonConfigurationRequest();
-            var result = ApiExecute<GetCommonConfigurationResponse>(Guid.Empty, SysProgIds.System, SystemActions.GetCommonConfiguration, args);
+            var result = await ApiExecute<GetCommonConfigurationResponse>(Guid.Empty, SysProgIds.System, SystemActions.GetCommonConfiguration, args);
             Assert.NotNull(result);
         }
 
@@ -118,7 +118,7 @@ namespace Polhem.Api.Core.UnitTests
         /// </summary>
         [Fact]
         [DisplayName("The server deserializes Plain format without a type field normally")]
-        public void Ping_PlainWithoutTypeField_DeserializesAndReturnsOk()
+        public async Task Ping_PlainWithoutTypeField_DeserializesAndReturnsOk()
         {
             // The params have no "type" field at all, simulating JSON sent natively from JS.
             const string json = """
@@ -139,7 +139,7 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Equal(string.Empty, request.Params.TypeName); // An unsent type defaults to an empty string.
 
             var executor = NewExecutor(Guid.Empty);
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var result = response.Result!.Value as PingResponse;
@@ -154,7 +154,7 @@ namespace Polhem.Api.Core.UnitTests
         /// </summary>
         [Fact]
         [DisplayName("The server deserializes Plain format with an empty type normally")]
-        public void Ping_PlainWithEmptyTypeField_DeserializesAndReturnsOk()
+        public async Task Ping_PlainWithEmptyTypeField_DeserializesAndReturnsOk()
         {
             const string json = """
                 {
@@ -173,7 +173,7 @@ namespace Polhem.Api.Core.UnitTests
             Assert.NotNull(request);
 
             var executor = NewExecutor(Guid.Empty);
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var result = response.Result!.Value as PingResponse;
@@ -187,7 +187,7 @@ namespace Polhem.Api.Core.UnitTests
         /// </summary>
         [Fact]
         [DisplayName("The server ignores a bogus type string in Plain format and deserializes normally")]
-        public void Ping_PlainWithBogusTypeField_IgnoresTypeAndReturnsOk()
+        public async Task Ping_PlainWithBogusTypeField_IgnoresTypeAndReturnsOk()
         {
             const string json = """
                 {
@@ -207,7 +207,7 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Equal("NonExistent.Type.That.Should.Be.Ignored, FakeAssembly", request.Params.TypeName);
 
             var executor = NewExecutor(Guid.Empty);
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             // If the Plain path read the type, this would fail (whitelist rejection or a type that cannot load).
             // Not failing means the framework ignores the type entirely and gets `PingRequest` by reflection on the BO method.
@@ -222,7 +222,7 @@ namespace Polhem.Api.Core.UnitTests
         /// </summary>
         [Fact]
         [DisplayName("ExecFunc running Hello returns a non-null result")]
-        public void ExecFunc_Hello_ReturnsNotNull()
+        public async Task ExecFunc_Hello_ReturnsNotNull()
         {
             Guid accessToken = GetAccessToken();
 
@@ -238,7 +238,7 @@ namespace Polhem.Api.Core.UnitTests
 
             _ = request.ToJson();
             var executor = NewExecutor(accessToken);
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
             var execFuncResult = response.Result!.Value as ExecFuncResponse;
             Assert.NotNull(execFuncResult);
         }

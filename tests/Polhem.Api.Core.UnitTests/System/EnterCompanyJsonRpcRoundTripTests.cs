@@ -29,7 +29,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.EnterCompany dispatches through JsonRpcExecutor and writes SessionInfo.CompanyId")]
-        public void EnterCompany_ThroughJsonRpc_DispatchesAndBindsCompany()
+        public async Task EnterCompany_ThroughJsonRpc_DispatchesAndBindsCompany()
         {
             // Arrange: uses the user '001' and company 'C001' mapping already seeded by `SharedDatabaseState`, so the
             // call takes the full path of a cache miss, the DB fallback and the `HasAccess` JOIN.
@@ -62,7 +62,7 @@ namespace Polhem.Api.Core.UnitTests.System
             };
 
             // Act
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             // Assert: the response succeeds and carries the CompanyInfo of seed company 'C001', loaded from the DB after a cache miss.
             Assert.Null(response.Error);
@@ -81,7 +81,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.EnterCompany returns an RpcError for an unknown CompanyId and leaves SessionInfo.CompanyId unchanged")]
-        public void EnterCompany_UnknownCompany_ReturnsRpcError()
+        public async Task EnterCompany_UnknownCompany_ReturnsRpcError()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx, userId: "001");
 
@@ -111,7 +111,7 @@ namespace Polhem.Api.Core.UnitTests.System
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.NotNull(response.Error);
             Assert.Contains("Company access denied", response.Error!.Message);

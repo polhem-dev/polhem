@@ -42,44 +42,5 @@ namespace Polhem.Base.UnitTests
             Assert.Equal(DBNull.Value, FieldDbType.Short.GetDefaultValue());
             Assert.Equal(DBNull.Value, FieldDbType.Long.GetDefaultValue());
         }
-
-        [Fact]
-        [DisplayName("ToFieldValue takes the conversion branch that matches the FieldDbType")]
-        public void ToFieldValue_VariousDbTypes_ReturnsExpectedResult()
-        {
-            Assert.Equal("abc", FieldDbType.String.ToFieldValue("abc"));
-            Assert.Equal("abc", FieldDbType.Text.ToFieldValue("abc"));
-            Assert.True((bool)FieldDbType.Boolean.ToFieldValue("1")!);
-            Assert.Equal(123, FieldDbType.Integer.ToFieldValue("123"));
-            Assert.Equal(123.45m, FieldDbType.Decimal.ToFieldValue("123.45"));
-            Assert.Equal(123.45m, FieldDbType.Currency.ToFieldValue("123.45"));
-
-            var date = new DateTime(2026, 4, 18, 0, 0, 0, DateTimeKind.Unspecified);
-            Assert.Equal(date, FieldDbType.Date.ToFieldValue("2026-04-18"));
-            Assert.Equal(date, FieldDbType.DateTime.ToFieldValue("2026-04-18"));
-            // Regression: the Date branch must not switch to `ValueUtilities.CDateOnly`, which returns `DateOnly`.
-            // A calendar-date field is still a DateTime column on the `DataColumn`, and `DateOnly` does not
-            // implement `IConvertible`, so storing it back throws.
-            Assert.IsType<DateTime>(FieldDbType.Date.ToFieldValue("2026-04-18"));
-
-            var guid = Guid.NewGuid();
-            Assert.Equal(guid, FieldDbType.Guid.ToFieldValue(guid.ToString()));
-
-            // A FieldDbType without a conversion branch returns the value unchanged.
-            var raw = new byte[] { 0x01, 0x02 };
-            Assert.Same(raw, FieldDbType.Binary.ToFieldValue(raw));
-        }
-
-        [Fact]
-        [DisplayName("ToDbFieldValue returns DBNull.Value for DateTime.MinValue and otherwise delegates to ToFieldValue")]
-        public void ToDbFieldValue_DateTimeMinValue_ReturnsDbNull()
-        {
-            Assert.Equal(DBNull.Value, FieldDbType.DateTime.ToDbFieldValue(DateTime.MinValue));
-            Assert.Equal(DBNull.Value, FieldDbType.Date.ToDbFieldValue(DateTime.MinValue));
-
-            var date = new DateTime(2026, 4, 18, 0, 0, 0, DateTimeKind.Unspecified);
-            Assert.Equal(date, FieldDbType.DateTime.ToDbFieldValue(date));
-            Assert.Equal("abc", FieldDbType.String.ToDbFieldValue("abc"));
-        }
     }
 }

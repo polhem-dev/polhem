@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Polhem.Base.Data;
 using Polhem.Db.Providers.PostgreSql;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Storage;
@@ -18,7 +19,7 @@ namespace Polhem.Db.UnitTests
             var schema = new FormSchema("X", "X");
             var table = schema.Tables!.Add("Foo", "Foo");
             table.DbTableName = "tb_foo";
-            table.Fields!.AddStringField("name", "Name", 50);
+            table.Fields!.Add(new FormField("name", "Name", FieldDbType.String) { MaxLength = 50 });
             return schema;
         }
 

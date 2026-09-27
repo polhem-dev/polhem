@@ -7,7 +7,7 @@ using Polhem.Tests.Shared;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
-    /// Coverage tests for the protected properties of <see cref="BusinessObject"/> and <see cref="BusinessObject.SessionInfo"/>.
+    /// Coverage tests for the protected properties of <see cref="BusinessObject"/>.
     /// </summary>
     public class BusinessObjectPropertyTests : IClassFixture<PolhemTestFixture>
     {
@@ -28,14 +28,6 @@ namespace Polhem.Business.UnitTests
             public IBusinessObjectFactory ExposedBoFactory => BoFactory;
             public IServiceProvider ExposedServices => Services;
             public string InvokeResolveDatabaseId(DbScope scope) => ResolveDatabaseId(scope);
-        }
-
-        [Fact]
-        [DisplayName("The SessionInfo property returns null by default (the base class does not set it)")]
-        public void SessionInfo_DefaultValue_ReturnsNull()
-        {
-            var bo = new ExposedBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());
-            Assert.Null(bo.SessionInfo);
         }
 
         [Fact]

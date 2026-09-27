@@ -49,14 +49,6 @@ namespace Polhem.Base
         /// <param name="isTrim">Whether to trim leading and trailing whitespace before checking (default <c>true</c>).</param>
         public static bool IsNotEmpty(string? s, bool isTrim = true) => !IsEmpty(s, isTrim);
 
-        /// <summary>
-        /// Casts the value to a string, then determines whether that text is not empty.
-        /// </summary>
-        /// <remarks>See <see cref="IsEmptyText(object?)"/> for how this differs from
-        /// <see cref="ValueUtilities.IsEmpty(object)"/>.</remarks>
-        /// <param name="value">The value to check.</param>
-        public static bool IsNotEmptyText(object? value) => !IsEmptyText(value);
-
         #endregion
 
         #region Format

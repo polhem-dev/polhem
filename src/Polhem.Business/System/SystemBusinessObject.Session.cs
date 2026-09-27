@@ -393,8 +393,7 @@ namespace Polhem.Business.System
         /// </remarks>
         /// <param name="args">The input arguments.</param>
         /// <exception cref="NotSupportedException">
-        /// Thrown when the business object was not constructed for a local call, or when
-        /// <c>args.OneTime</c> is set.
+        /// Thrown when the business object was not constructed for a local call.
         /// </exception>
         [ApiAccessControl(ApiProtectionLevel.LocalOnly, ApiAccessRequirement.Anonymous)]
         public virtual CreateSessionResult CreateSession(CreateSessionArgs args)
@@ -409,17 +408,6 @@ namespace Polhem.Business.System
             if (args.ExpiresIn <= 0 || args.ExpiresIn > MaxExpiresInSeconds)
                 throw new ArgumentOutOfRangeException(nameof(args),
                     $"args.ExpiresIn must be between 1 and {MaxExpiresInSeconds} seconds.");
-            // One-time semantics used to rest on delete-on-read in the seed repository. Now that a
-            // session is cached at creation, the first use is a cache hit and the row is never
-            // read, so the guarantee could not be honoured. Refusing outright is the only honest
-            // option: silently degrading a security-flavoured promise to "ordinary session" is
-            // worse than failing. A future handoff-token design would consume the token by
-            // exchanging it for a real session, which is a genuine single consumption point.
-            if (args.OneTime)
-                throw new NotSupportedException(
-                    "One-time sessions are no longer supported. Create an ordinary session and " +
-                    "keep its lifetime short instead.");
-
             var userRepository = Services.GetRequiredService<IRepositoryFactory>().Create<IUserRepository>();
             // The message deliberately omits the user id. A remote caller only ever sees the fixed
             // message the error contract gives InvalidOperationException, but debug mode passes the

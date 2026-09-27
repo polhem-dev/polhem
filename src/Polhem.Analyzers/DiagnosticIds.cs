@@ -107,6 +107,18 @@ namespace Polhem.Analyzers
         public const string MissingPermissionModelId = "POLHEM1008";
 
         /// <summary>
+        /// Identifiers that are reserved and never reused: POLHEM4001 to POLHEM4004.
+        /// </summary>
+        /// <remarks>
+        /// Bee.NET, which Polhem continues under a new name, shipped and then retired BEE4001 to
+        /// BEE4004. A project migrated from Bee.NET maps its suppressions to POLHEM IDs by number, so a
+        /// new rule under one of these numbers would be silently suppressed there. The documented rule
+        /// list names them as reserved; <c>DiagnosticIdDocumentationTests</c> checks that none of them
+        /// is declared as a rule.
+        /// </remarks>
+        public static readonly IReadOnlyList<string> ReservedIds = new[] { "POLHEM4001", "POLHEM4002", "POLHEM4003", "POLHEM4004" };
+
+        /// <summary>
         /// A collection declares an additional public Add overload, which reflection-only
         /// serialization cannot resolve unambiguously.
         /// </summary>

@@ -31,7 +31,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.GetLanguage dispatches through JsonRpcExecutor and returns the LanguageResource seeded by the fixture")]
-        public void GetLanguage_ThroughJsonRpc_DispatchesAndReturnsResource()
+        public async Task GetLanguage_ThroughJsonRpc_DispatchesAndReturnsResource()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
 
@@ -65,7 +65,7 @@ namespace Polhem.Api.Core.UnitTests.System
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var result = Assert.IsType<GetLanguageResponse>(response.Result!.Value);
@@ -82,7 +82,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.GetLanguage dispatches for a missing namespace and returns empty Xml")]
-        public void GetLanguage_MissingNamespace_DispatchSucceedsWithEmptyXml()
+        public async Task GetLanguage_MissingNamespace_DispatchSucceedsWithEmptyXml()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
 
@@ -112,7 +112,7 @@ namespace Polhem.Api.Core.UnitTests.System
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var result = Assert.IsType<GetLanguageResponse>(response.Result!.Value);
@@ -121,7 +121,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.GetLanguage returns an RpcError for an empty Lang")]
-        public void GetLanguage_EmptyLang_ReturnsRpcError()
+        public async Task GetLanguage_EmptyLang_ReturnsRpcError()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
 
@@ -151,7 +151,7 @@ namespace Polhem.Api.Core.UnitTests.System
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.NotNull(response.Error);
             Assert.Contains("Lang is required", response.Error!.Message);

@@ -171,21 +171,6 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("SetPrimaryKey parses comma-separated column names and sets the primary key")]
-        public void SetPrimaryKey_ParsesCommaSeparatedColumns()
-        {
-            var table = new DataTable();
-            table.AddColumn("id", FieldDbType.Integer);
-            table.AddColumn("code", FieldDbType.String);
-
-            table.SetPrimaryKey("ID,CODE");   // resolved case-insensitively against lowercase columns
-
-            Assert.Equal(2, table.PrimaryKey.Length);
-            Assert.Equal("id", table.PrimaryKey[0].ColumnName);
-            Assert.Equal("code", table.PrimaryKey[1].ColumnName);
-        }
-
-        [Fact]
         [DisplayName("IsEmpty returns true or false according to the row count")]
         public void IsEmpty_ReflectsRowCount()
         {
@@ -234,31 +219,6 @@ namespace Polhem.Base.UnitTests
         {
             var ds = new DataSet("Orders");
             Assert.Null(ds.GetMasterTable());
-        }
-
-        [Fact]
-        [DisplayName("GetMasterRow returns the first row of the master table")]
-        public void GetMasterRow_ReturnsFirstRow()
-        {
-            var ds = new DataSet("Orders");
-            var table = new DataTable("Orders");
-            table.Columns.Add("Id", typeof(int));
-            table.Rows.Add(1);
-            table.Rows.Add(2);
-            ds.Tables.Add(table);
-
-            var row = ds.GetMasterRow();
-            Assert.NotNull(row);
-            Assert.Equal(1, row!["Id"]);
-        }
-
-        [Fact]
-        [DisplayName("GetMasterRow returns null when the master table is empty")]
-        public void GetMasterRow_EmptyTable_ReturnsNull()
-        {
-            var ds = new DataSet("Orders");
-            ds.Tables.Add(new DataTable("Orders"));
-            Assert.Null(ds.GetMasterRow());
         }
 
         [Fact]

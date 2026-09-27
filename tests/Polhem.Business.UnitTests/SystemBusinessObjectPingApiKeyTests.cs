@@ -18,10 +18,8 @@ namespace Polhem.Business.UnitTests
 
         private PingResult PingWith(ApiKeyValidationResult validation)
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System)
-            {
-                ApiKeyValidation = validation,
-            };
+            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+            ((IApiKeyContextAware)bo).ApiKeyValidation = validation;
             return bo.Ping(new PingArgs { TraceId = "T-1", ClientName = "unit" });
         }
 

@@ -49,3 +49,29 @@ Polhem.Definition.Settings.PluginSettings.ItemsSpecified.get -> bool
 Polhem.Definition.Settings.ProgramPluginItem.PluginsSpecified.get -> bool
 Polhem.Definition.Settings.ProgramSettings.ItemsSpecified.get -> bool
 Polhem.Definition.Settings.SystemSettings.ExtendedPropertiesSpecified.get -> bool
+Polhem.Definition.Logging.NullLogWriter
+Polhem.Definition.Logging.NullLogWriter.Write(Polhem.Definition.Logging.AnomalyEntry! entry) -> void
+Polhem.Definition.Logging.NullLogWriter.Write(Polhem.Definition.Logging.AuditEntry! entry) -> void
+static Polhem.Definition.Logging.NullLogWriter.Instance.get -> Polhem.Definition.Logging.NullLogWriter!
+Polhem.Definition.Identity.CompanyInfo.AllowedCurrencies.init -> void
+Polhem.Definition.Identity.CompanyInfo.CashRounding.init -> void
+Polhem.Definition.Identity.CompanyInfo.CompanyDatabaseId.init -> void
+Polhem.Definition.Identity.CompanyInfo.CompanyId.init -> void
+Polhem.Definition.Identity.CompanyInfo.CompanyName.init -> void
+Polhem.Definition.Identity.CompanyInfo.CustomizeId.init -> void
+Polhem.Definition.Identity.CompanyInfo.DefaultCurrency.init -> void
+Polhem.Definition.Identity.CompanyInfo.NumberFormats.init -> void
+Polhem.Definition.Organization.DepartmentNode.DeptId.init -> void
+Polhem.Definition.Organization.DepartmentNode.DeptName.init -> void
+Polhem.Definition.Organization.DepartmentNode.ManagerRowId.init -> void
+Polhem.Definition.Organization.DepartmentNode.RowId.init -> void
+Polhem.Definition.Organization.DepartmentTree.CompanyId.init -> void
+Polhem.Definition.Organization.DepartmentTree.Roots.init -> void
+Polhem.Definition.Security.ApiKeyGateState.InForce.init -> void
+Polhem.Definition.Security.ApiKeyInfo.Contact.init -> void
+Polhem.Definition.Security.ApiKeyInfo.ExpiredAt.init -> void
+Polhem.Definition.Security.ApiKeyInfo.HashedKey.init -> void
+Polhem.Definition.Security.ApiKeyInfo.KeyType.init -> void
+Polhem.Definition.Security.ApiKeyInfo.SysId.init -> void
+Polhem.Definition.Security.ApiKeyInfo.SysName.init -> void
+Polhem.Definition.Organization.DepartmentNode.Children.init -> void

@@ -90,7 +90,7 @@ namespace Polhem.Api.Core.UnitTests
             var schema = new FormSchema(progId, "DST round trip") { CategoryId = TransientForm.CategoryId };
             var table = schema.Tables!.Add(progId, "DST");
             table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
-            table.Fields!.AddStringField(NameColumn, "Name", 50);
+            table.Fields!.Add(new FormField(NameColumn, "Name", FieldDbType.String) { MaxLength = 50 });
             table.Fields.Add(InstantColumn, "Occurred At", FieldDbType.DateTime);
 
             var form = new TransientForm(_fx, databaseType, schema);

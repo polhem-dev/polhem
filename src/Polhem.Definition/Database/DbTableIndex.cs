@@ -71,14 +71,6 @@ namespace Polhem.Definition.Database
         public bool IndexFieldsSpecified => _indexFields is { Count: > 0 };
 
         /// <summary>
-        /// Gets or sets the index schema upgrade action.
-        /// </summary>
-        [XmlIgnore, JsonIgnore]
-        [Browsable(false)]
-        [DefaultValue(DbUpgradeAction.None)]
-        public DbUpgradeAction UpgradeAction { get; set; } = DbUpgradeAction.None;
-
-        /// <summary>
         /// Creates a copy of this instance.
         /// </summary>
         public DbTableIndex Clone()

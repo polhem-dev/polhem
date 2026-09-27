@@ -209,6 +209,20 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
+        [DisplayName("A Repository type with a Bee.NET name that cannot be loaded says it looks like a Bee.NET name")]
+        public void Resolve_UnloadableBeeType_MessageHasBeeHint()
+        {
+            const string TypeName = "Bee.Repository.Form.OrderRepository, Bee.Repository";
+            var resolver = CreateResolver(Registry(TypeName));
+
+            var ex = Assert.Throws<InvalidOperationException>(
+                () => resolver.Resolve(Guid.Empty, ProgId));
+
+            Assert.Contains("Bee.NET", ex.Message, StringComparison.Ordinal);
+            Assert.Contains("Migrating from Bee.NET", ex.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("A Repository type not derived from DataFormRepository throws with a message naming the progId and the type name")]
         public void Resolve_NotDerivedFromDataFormRepository_ThrowsNamingBoth()
         {

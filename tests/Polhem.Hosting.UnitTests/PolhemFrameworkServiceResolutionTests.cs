@@ -202,7 +202,7 @@ namespace Polhem.Hosting.UnitTests
                 var auditWriter = sp.GetRequiredService<IAuditLogWriter>();
                 var anomalyWriter = sp.GetRequiredService<IAnomalyLogWriter>();
 
-                Assert.IsNotType<NullAuditLogWriter>(auditWriter);
+                Assert.IsNotType<NullLogWriter>(auditWriter);
                 if (anomalyEnabled)
                 {
                     // One instance serves both interfaces, so queueing and fallback behave the same for both
@@ -211,7 +211,7 @@ namespace Polhem.Hosting.UnitTests
                 }
                 else
                 {
-                    Assert.Same(NullAuditLogWriter.Instance, anomalyWriter);
+                    Assert.Same(NullLogWriter.Instance, anomalyWriter);
                 }
             }
             finally

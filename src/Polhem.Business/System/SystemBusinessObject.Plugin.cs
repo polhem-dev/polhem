@@ -176,13 +176,13 @@ namespace Polhem.Business.System
             catch (Exception ex) when (ex is FileNotFoundException or FileLoadException or BadImageFormatException)
             {
                 throw new UserMessageException(
-                    $"Program '{progId}' declares plugin '{typeName}', which cannot be loaded.", ex);
+                    BeeNameHint.AppendTo($"Program '{progId}' declares plugin '{typeName}', which cannot be loaded.", typeName), ex);
             }
 
             if (type == null)
             {
                 throw new UserMessageException(
-                    $"Program '{progId}' declares plugin '{typeName}', which cannot be loaded.");
+                    BeeNameHint.AppendTo($"Program '{progId}' declares plugin '{typeName}', which cannot be loaded.", typeName));
             }
 
             if (!typeof(FormBusinessPlugin).IsAssignableFrom(type))

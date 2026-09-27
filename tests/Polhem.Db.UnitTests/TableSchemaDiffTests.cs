@@ -82,7 +82,7 @@ namespace Polhem.Db.UnitTests
         public void IsEmpty_WithStructuralChange_ReturnsFalse()
         {
             var diff = new TableSchemaDiff(BuildSchema(), BuildSchema());
-            diff.Changes.Add(new AddFieldChange(new DbField("age", "Age", FieldDbType.Integer)));
+            diff.ChangeList.Add(new AddFieldChange(new DbField("age", "Age", FieldDbType.Integer)));
 
             Assert.False(diff.IsEmpty);
         }
@@ -92,7 +92,7 @@ namespace Polhem.Db.UnitTests
         public void IsEmpty_WithDescriptionChange_ReturnsFalse()
         {
             var diff = new TableSchemaDiff(BuildSchema(), BuildSchema());
-            diff.DescriptionChanges.Add(new DescriptionChange
+            diff.DescriptionChangeList.Add(new DescriptionChange
             {
                 Level = DescriptionLevel.Table,
                 NewValue = "示範",

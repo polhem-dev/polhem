@@ -11,7 +11,7 @@ namespace Polhem.Repository.System
     /// employee linked to a user (<c>user_rowid</c>) so the user's department can be derived for
     /// record-scope filtering.
     /// </summary>
-    public class EmployeeRepository : RepositoryBase, IEmployeeRepository
+    internal sealed class EmployeeRepository : RepositoryBase, IEmployeeRepository
     {
         /// <summary>
         /// Initializes a new <see cref="EmployeeRepository"/>.

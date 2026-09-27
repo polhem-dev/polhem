@@ -9,6 +9,8 @@ namespace Polhem.Definition.Security
     /// </summary>
     public static class MasterKeyProvider
     {
+        private const string DefaultEnvironmentVariable = "POLHEM_MASTER_KEY";
+        private const string BeeEnvironmentVariable = "BEE_MASTER_KEY";
         private const int ReadRetryCount = 5;
         private const int ReadRetryDelayMs = 50;
 
@@ -135,7 +137,7 @@ namespace Polhem.Definition.Security
         {
             if (string.IsNullOrWhiteSpace(varName))
             {
-                varName = "POLHEM_MASTER_KEY";
+                varName = DefaultEnvironmentVariable;
             }
 
             string? value = Environment.GetEnvironmentVariable(varName);
@@ -148,10 +150,28 @@ namespace Polhem.Definition.Security
                     Environment.SetEnvironmentVariable(varName, newKey);
                     return newKey;
                 }
-                throw new InvalidOperationException("Environment variable '" + varName + "' not found.");
+                throw new InvalidOperationException(DescribeMissingVariable(varName));
             }
 
             return value;
+        }
+
+        /// <summary>
+        /// Builds the error for a master key variable that is not set, pointing out the Bee.NET
+        /// default when that one is set instead.
+        /// </summary>
+        /// <param name="varName">The variable that was looked up.</param>
+        private static string DescribeMissingVariable(string varName)
+        {
+            string message = "Environment variable '" + varName + "' not found.";
+            if (string.Equals(varName, DefaultEnvironmentVariable, StringComparison.Ordinal)
+                && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(BeeEnvironmentVariable)))
+            {
+                message += " " + BeeEnvironmentVariable + " is set, which is the Bee.NET default: rename it to " +
+                    DefaultEnvironmentVariable + ", or name it in the MasterKeySource of SystemSettings.xml. " +
+                    "See \"Migrating from Bee.NET\" in the Polhem README.";
+            }
+            return message;
         }
 
         /// <summary>

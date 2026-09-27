@@ -132,14 +132,6 @@ namespace Polhem.Definition.Database
         public string DefaultValue { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the schema upgrade action used at runtime for field schema comparison. This property is not serialized.
-        /// </summary>
-        [XmlIgnore, JsonIgnore]
-        [Browsable(false)]
-        [DefaultValue(DbUpgradeAction.None)]
-        public DbUpgradeAction UpgradeAction { get; set; } = DbUpgradeAction.None;
-
-        /// <summary>
         /// Creates a copy of this instance.
         /// </summary>
         public DbField Clone()

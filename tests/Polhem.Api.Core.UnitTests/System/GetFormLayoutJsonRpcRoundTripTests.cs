@@ -51,7 +51,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.GetFormLayout dispatches through JsonRpcExecutor and returns the default layout")]
-        public void GetFormLayout_ThroughJsonRpc_DispatchesAndReturnsLayout()
+        public async Task GetFormLayout_ThroughJsonRpc_DispatchesAndReturnsLayout()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
             var executor = NewExecutor(accessToken);
@@ -66,7 +66,7 @@ namespace Polhem.Api.Core.UnitTests.System
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.Null(response.Error);
             var result = Assert.IsType<GetFormLayoutResponse>(response.Result!.Value);
@@ -82,7 +82,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.GetFormLayout returns an RpcError for an empty ProgId")]
-        public void GetFormLayout_EmptyProgId_ReturnsRpcError()
+        public async Task GetFormLayout_EmptyProgId_ReturnsRpcError()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
             var executor = NewExecutor(accessToken);
@@ -97,7 +97,7 @@ namespace Polhem.Api.Core.UnitTests.System
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var response = executor.Execute(request);
+            var response = await executor.ExecuteAsync(request);
 
             Assert.NotNull(response.Error);
             Assert.Contains("ProgId is required", response.Error!.Message);

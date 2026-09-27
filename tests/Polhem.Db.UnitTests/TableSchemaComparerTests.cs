@@ -39,18 +39,6 @@ namespace Polhem.Db.UnitTests
             return schema;
         }
 
-        [Fact]
-        [DisplayName("A null RealTable marks the whole table as New")]
-        public void Compare_NullRealTable_MarksTableAsNew()
-        {
-            var define = BuildBaseSchema();
-            var comparer = new TableSchemaComparer(define, null, DatabaseType.SQLServer);
-
-            var result = comparer.Compare();
-
-            Assert.Equal(DbUpgradeAction.New, result.UpgradeAction);
-        }
-
         // ---------- Oracle: the definition's AllowNull is not comparable for String / Text ----------
         // Regression: Oracle always creates String/Text as nullable, so `OracleTableSchemaProvider` always reports
         // AllowNull=false to match definitions that say false. A definition that says AllowNull="true" never matched,
@@ -123,102 +111,6 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("UpgradeAction is None when the structures are identical")]
-        public void Compare_IdenticalSchemas_ReturnsNone()
-        {
-            var define = BuildBaseSchema();
-            var real = BuildRealSchema();
-            var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
-
-            var result = comparer.Compare();
-
-            Assert.Equal(DbUpgradeAction.None, result.UpgradeAction);
-        }
-
-        [Fact]
-        [DisplayName("A field missing from the real table is marked New and the table is upgraded")]
-        public void Compare_MissingField_MarksFieldAsNewAndUpgradesTable()
-        {
-            var define = BuildBaseSchema();
-            define.Fields!.Add("age", "Age", FieldDbType.Integer);
-
-            var real = BuildRealSchema();
-            var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
-
-            var result = comparer.Compare();
-
-            Assert.Equal(DbUpgradeAction.Upgrade, result.UpgradeAction);
-            Assert.Equal(DbUpgradeAction.New, result.Fields!["age"].UpgradeAction);
-        }
-
-        [Fact]
-        [DisplayName("A field with a different definition is marked Upgrade and the table is upgraded")]
-        public void Compare_DifferentField_MarksFieldAsUpgrade()
-        {
-            var define = BuildBaseSchema();
-            var real = BuildRealSchema();
-            real.Fields!["name"].Length = 30;  // Differs from the 50 in the definition.
-
-            var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
-            var result = comparer.Compare();
-
-            Assert.Equal(DbUpgradeAction.Upgrade, result.UpgradeAction);
-            Assert.Equal(DbUpgradeAction.Upgrade, result.Fields!["name"].UpgradeAction);
-        }
-
-        [Fact]
-        [DisplayName("An index missing from the real table is marked New and the table is upgraded")]
-        public void Compare_MissingIndex_MarksIndexAsNew()
-        {
-            var define = BuildBaseSchema();
-            define.Indexes!.Add("ix_{0}_name", "name", false);
-            var real = BuildRealSchema();
-
-            var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
-            var result = comparer.Compare();
-
-            Assert.Equal(DbUpgradeAction.Upgrade, result.UpgradeAction);
-            var idx = result.Indexes!["ix_{0}_name"];
-            Assert.Equal(DbUpgradeAction.New, idx.UpgradeAction);
-        }
-
-        [Fact]
-        [DisplayName("An index with a different definition is marked Upgrade")]
-        public void Compare_DifferentIndex_MarksIndexAsUpgrade()
-        {
-            var define = BuildBaseSchema();
-            define.Indexes!.Add("ix_{0}_name", "name", true);
-
-            var real = BuildRealSchema();
-            // The real table's index name is already formatted as "ix_st_demo_name", and its unique flag differs.
-            real.Indexes!.Add("ix_st_demo_name", "name", false);
-
-            var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
-            var result = comparer.Compare();
-
-            Assert.Equal(DbUpgradeAction.Upgrade, result.UpgradeAction);
-            Assert.Equal(DbUpgradeAction.Upgrade, result.Indexes!["ix_{0}_name"].UpgradeAction);
-        }
-
-        [Fact]
-        [DisplayName("Extra fields in the real table are appended to the comparison result")]
-        public void Compare_ExtraFieldInRealTable_AppendsExtensionField()
-        {
-            var define = BuildBaseSchema();
-            // Only an Upgrade reaches `AddExtensionFields`.
-            define.Fields!.Add("age", "Age", FieldDbType.Integer);
-
-            var real = BuildRealSchema();
-            real.Fields!.Add("legacy_col", "Legacy", FieldDbType.String, 10);
-
-            var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
-            var result = comparer.Compare();
-
-            Assert.Equal(DbUpgradeAction.Upgrade, result.UpgradeAction);
-            Assert.True(result.Fields!.Contains("legacy_col"));
-        }
-
-        [Fact]
         [DisplayName("The Comparer exposes the DefineTable and RealTable properties")]
         public void Properties_ExposeInputs()
         {
@@ -228,107 +120,6 @@ namespace Polhem.Db.UnitTests
 
             Assert.Same(define, comparer.DefineTable);
             Assert.Same(real, comparer.RealTable);
-        }
-
-        [Fact]
-        [DisplayName("A DisplayName-only difference gives UpgradeAction=None and a table-level entry in DescriptionChanges")]
-        public void Compare_OnlyTableDisplayNameDiffers_NoUpgradeButDescriptionChanged()
-        {
-            var define = BuildBaseSchema();
-            define.DisplayName = "示範資料表";
-            var real = BuildRealSchema();
-            real.DisplayName = string.Empty; // Not written to the database yet.
-
-            var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
-            var result = comparer.Compare();
-
-            Assert.Equal(DbUpgradeAction.None, result.UpgradeAction);
-            var change = Assert.Single(comparer.DescriptionChanges);
-            Assert.Equal(DescriptionLevel.Table, change.Level);
-            Assert.Equal("示範資料表", change.NewValue);
-            Assert.True(change.IsNew);
-        }
-
-        [Fact]
-        [DisplayName("A field Caption-only difference produces a column-level DescriptionChange (update mode)")]
-        public void Compare_OnlyFieldCaptionDiffers_DescriptionChangeIsUpdate()
-        {
-            var define = BuildBaseSchema();
-            define.Fields!["name"].Caption = "新名稱";
-            var real = BuildRealSchema();
-            real.Fields!["name"].Caption = "舊名稱"; // The database already has a different value.
-
-            var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
-            var result = comparer.Compare();
-
-            Assert.Equal(DbUpgradeAction.None, result.UpgradeAction);
-            var change = Assert.Single(comparer.DescriptionChanges);
-            Assert.Equal(DescriptionLevel.Column, change.Level);
-            Assert.Equal("name", change.FieldName);
-            Assert.Equal("新名稱", change.NewValue);
-            Assert.False(change.IsNew);
-        }
-
-        [Fact]
-        [DisplayName("An empty description in the definition produces no DescriptionChange (conservative policy)")]
-        public void Compare_EmptyDefineDescription_NoChangeGenerated()
-        {
-            var define = BuildBaseSchema();
-            define.DisplayName = string.Empty;
-            define.Fields!["name"].Caption = string.Empty;
-            var real = BuildRealSchema();
-            real.DisplayName = "DB 既有表說明";
-            real.Fields!["name"].Caption = "DB 既有欄位說明";
-
-            var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
-            var result = comparer.Compare();
-
-            Assert.Equal(DbUpgradeAction.None, result.UpgradeAction);
-            Assert.Empty(comparer.DescriptionChanges);
-        }
-
-        [Fact]
-        [DisplayName("Differences in both structure and descriptions give UpgradeAction=Upgrade and still fill DescriptionChanges (for the caller to decide)")]
-        public void Compare_SchemaAndDescriptionDiffer_UpgradePopulatesBoth()
-        {
-            var define = BuildBaseSchema();
-            define.DisplayName = "新表說明";
-            var real = BuildRealSchema();
-            real.Fields!["name"].Length = 30; // Triggers a schema Upgrade.
-
-            var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
-            var result = comparer.Compare();
-
-            Assert.Equal(DbUpgradeAction.Upgrade, result.UpgradeAction);
-            // DescriptionChanges are still produced; the caller decides whether to consume them.
-            Assert.Contains(comparer.DescriptionChanges, c => c.Level == DescriptionLevel.Table);
-        }
-
-        [Fact]
-        [DisplayName("DescriptionChanges is empty when RealTable is null (the schema CREATE path handles it)")]
-        public void Compare_NullRealTable_DescriptionChangesEmpty()
-        {
-            var define = BuildBaseSchema();
-            define.DisplayName = "示範資料表";
-
-            var comparer = new TableSchemaComparer(define, null, DatabaseType.SQLServer);
-            comparer.Compare();
-
-            Assert.Empty(comparer.DescriptionChanges);
-        }
-
-        [Fact]
-        [DisplayName("A field that exists only in the real table produces no DescriptionChange")]
-        public void Compare_ExtraFieldInRealTable_NoColumnDescriptionChange()
-        {
-            var define = BuildBaseSchema();
-            var real = BuildRealSchema();
-            real.Fields!.Add("legacy_col", "舊欄位說明", FieldDbType.String, 10);
-
-            var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
-            comparer.Compare();
-
-            Assert.DoesNotContain(comparer.DescriptionChanges, c => c.FieldName == "legacy_col");
         }
 
         // ---- CompareToDiff ----
@@ -480,34 +271,76 @@ namespace Polhem.Db.UnitTests
         }
 
         [Fact]
-        [DisplayName("CompareToDiff does not change the UpgradeAction of define or real (no mutation)")]
-        public void CompareToDiff_DoesNotMutateUpgradeAction()
+        [DisplayName("CompareToDiff produces a column-level DescriptionChange in update mode for a Caption-only difference")]
+        public void CompareToDiff_OnlyFieldCaptionDiffers_DescriptionChangeIsUpdate()
         {
             var define = BuildBaseSchema();
-            define.Fields!.Add("age", "Age", FieldDbType.Integer);
+            define.Fields!["name"].Caption = "新名稱";
             var real = BuildRealSchema();
-            real.Fields!["name"].Length = 30;
+            real.Fields!["name"].Caption = "舊名稱"; // The database already has a different value.
 
-            new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
+            var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
 
-            Assert.Equal(DbUpgradeAction.None, define.UpgradeAction);
-            Assert.Equal(DbUpgradeAction.None, define.Fields!["age"].UpgradeAction);
-            Assert.Equal(DbUpgradeAction.None, define.Fields!["name"].UpgradeAction);
+            Assert.Empty(diff.Changes);
+            var change = Assert.Single(diff.DescriptionChanges);
+            Assert.Equal(DescriptionLevel.Column, change.Level);
+            Assert.Equal("name", change.FieldName);
+            Assert.Equal("新名稱", change.NewValue);
+            Assert.False(change.IsNew);
         }
 
         [Fact]
-        [DisplayName("CompareToDiff does not affect the behavior of the old Compare() (separate DescriptionChanges source)")]
-        public void CompareToDiff_DoesNotPopulateLegacyDescriptionChanges()
+        [DisplayName("CompareToDiff produces no DescriptionChange for an empty field Caption in the definition (conservative policy)")]
+        public void CompareToDiff_EmptyDefineCaption_NoDescriptionChange()
         {
             var define = BuildBaseSchema();
-            define.DisplayName = "示範";
+            define.Fields!["name"].Caption = string.Empty;
             var real = BuildRealSchema();
-            var comparer = new TableSchemaComparer(define, real, DatabaseType.SQLServer);
+            real.Fields!["name"].Caption = "DB 既有欄位說明";
 
-            comparer.CompareToDiff();
+            var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
 
-            // CompareToDiff must not touch the DescriptionChanges of the old API.
-            Assert.Empty(comparer.DescriptionChanges);
+            Assert.Empty(diff.DescriptionChanges);
+        }
+
+        [Fact]
+        [DisplayName("CompareToDiff reports both structural and description differences when both exist")]
+        public void CompareToDiff_SchemaAndDescriptionDiffer_PopulatesBoth()
+        {
+            var define = BuildBaseSchema();
+            define.DisplayName = "新表說明";
+            var real = BuildRealSchema();
+            real.Fields!["name"].Length = 30;
+
+            var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
+
+            Assert.Single(diff.Changes.OfType<AlterFieldChange>());
+            Assert.Contains(diff.DescriptionChanges, c => c.Level == DescriptionLevel.Table);
+        }
+
+        [Fact]
+        [DisplayName("CompareToDiff produces no DescriptionChange when RealTable is null (the CREATE path handles descriptions)")]
+        public void CompareToDiff_NullRealTable_DescriptionChangesEmpty()
+        {
+            var define = BuildBaseSchema();
+            define.DisplayName = "示範資料表";
+
+            var diff = new TableSchemaComparer(define, null, DatabaseType.SQLServer).CompareToDiff();
+
+            Assert.Empty(diff.DescriptionChanges);
+        }
+
+        [Fact]
+        [DisplayName("CompareToDiff produces no DescriptionChange for a field that exists only in the real table")]
+        public void CompareToDiff_ExtraFieldInRealTable_NoColumnDescriptionChange()
+        {
+            var define = BuildBaseSchema();
+            var real = BuildRealSchema();
+            real.Fields!.Add("legacy_col", "舊欄位說明", FieldDbType.String, 10);
+
+            var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
+
+            Assert.DoesNotContain(diff.DescriptionChanges, c => c.FieldName == "legacy_col");
         }
 
         // ---- Rename detection via OriginalFieldName ----

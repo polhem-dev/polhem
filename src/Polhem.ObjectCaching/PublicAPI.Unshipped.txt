@@ -6,3 +6,13 @@ const Polhem.ObjectCaching.Database.SessionInfoCache.NegativeMinutes = 1 -> int
 override Polhem.ObjectCaching.Database.ApiKeyCache.MaxNegativeEntries.get -> int
 override Polhem.ObjectCaching.Database.SessionInfoCache.MaxNegativeEntries.get -> int
 virtual Polhem.ObjectCaching.KeyObjectCache<T>.MaxNegativeEntries.get -> int
+Polhem.ObjectCaching.Define.CurrencySettingsCache.CurrencySettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.DbCategorySettingsCache.DbCategorySettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.FormLayoutCache.FormLayoutCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.FormSchemaCache.FormSchemaCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.LanguageResourceCache.LanguageResourceCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.MenuSettingsCache.MenuSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.PluginSettingsCache.PluginSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.ProgramSettingsCache.ProgramSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.TableSchemaCache.TableSchemaCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.UnitSettingsCache.UnitSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void

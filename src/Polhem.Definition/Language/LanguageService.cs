@@ -27,15 +27,6 @@ namespace Polhem.Definition.Language
         private readonly ICustomizeDefineReader? _customizeReader;
 
         /// <summary>
-        /// Initializes a new <see cref="LanguageService"/> without customization support
-        /// (pure base layer). Backward-compatible convenience overload.
-        /// </summary>
-        /// <param name="defineAccess">The define data access used to load <see cref="LanguageResource"/> entries.</param>
-        public LanguageService(IDefineAccess defineAccess) : this(defineAccess, null)
-        {
-        }
-
-        /// <summary>
         /// Initializes a new <see cref="LanguageService"/> with an optional tenant customization reader.
         /// </summary>
         /// <param name="defineAccess">The define data access used to load <see cref="LanguageResource"/> entries.</param>

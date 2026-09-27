@@ -23,14 +23,15 @@ namespace Polhem.Hosting
     public static partial class PolhemFrameworkServiceCollectionExtensions
     {
         /// <summary>
-        /// Resolves the configured <see cref="IDefineAccess"/> implementation. Supports
+        /// Resolves the configured <see cref="IDefineAccess"/> implementation. The supported
+        /// constructors, tried in this order, are
         /// <c>(IDefineStorage, PathOptions, ICacheContainer, byte[], ICustomizeDefineReader, ILogger)</c>
         /// (used by <see cref="CacheDefineAccess"/>),
         /// <c>(IDefineStorage, PathOptions, ICacheContainer, byte[], ICustomizeDefineReader)</c>,
-        /// <c>(IDefineStorage, PathOptions, ICacheContainer, byte[])</c>,
-        /// <c>(IDefineStorage, PathOptions)</c>, <c>(IDefineStorage)</c> (legacy), and
-        /// parameterless ctors.
+        /// <c>(IDefineStorage, PathOptions, ICacheContainer, byte[])</c> and
+        /// <c>(IDefineStorage, PathOptions)</c>.
         /// </summary>
+        /// <exception cref="InvalidOperationException">The type declares none of the supported constructors.</exception>
         private static IDefineAccess ResolveDefineAccess(string? typeName, IDefineStorage storage, PathOptions paths, ICacheContainer cache, byte[] configEncryptionKey, ICustomizeDefineReader customizeReader, ILogger? logger)
         {
             var resolvedName = string.IsNullOrWhiteSpace(typeName) ? BackendDefaultTypes.DefineAccess : typeName;
@@ -52,19 +53,19 @@ namespace Polhem.Hosting
             if (ctorPaths != null)
                 return (IDefineAccess)ctorPaths.Invoke(new object[] { storage, paths });
 
-            var ctorWithStorage = type.GetConstructor(new[] { typeof(IDefineStorage) });
-            if (ctorWithStorage != null)
-                return (IDefineAccess)ctorWithStorage.Invoke(new object[] { storage });
-
-            return (IDefineAccess?)Activator.CreateInstance(type)
-                ?? throw new InvalidOperationException($"Failed to construct IDefineAccess: {resolvedName}");
+            throw new InvalidOperationException(
+                $"BackendComponents.{nameof(BackendComponents.DefineAccess)} names '{resolvedName}', which has no supported constructor. " +
+                "It needs one of (IDefineStorage, PathOptions, ICacheContainer, byte[], ICustomizeDefineReader, ILogger), " +
+                "(IDefineStorage, PathOptions, ICacheContainer, byte[], ICustomizeDefineReader), " +
+                "(IDefineStorage, PathOptions, ICacheContainer, byte[]) or (IDefineStorage, PathOptions).");
         }
 
         /// <summary>
-        /// Constructs the configured <see cref="IDefineStorage"/> implementation. Prefers
-        /// the <c>(PathOptions)</c> ctor (used by <see cref="FileDefineStorage"/> after
-        /// Phase 5 PR 5.2); falls back to a parameterless ctor for legacy implementations.
+        /// Constructs the configured <see cref="IDefineStorage"/> implementation through its
+        /// <c>(IServiceProvider)</c> constructor, or else its <c>(PathOptions)</c> constructor
+        /// (used by <see cref="FileDefineStorage"/>).
         /// </summary>
+        /// <exception cref="InvalidOperationException">The type declares neither constructor.</exception>
         private static IDefineStorage CreateDefineStorage(string? configured, string fallback, IServiceProvider sp, PathOptions paths)
         {
             var typeName = string.IsNullOrWhiteSpace(configured) ? fallback : configured;
@@ -81,41 +82,30 @@ namespace Polhem.Hosting
             if (ctorWithPaths != null)
                 return (IDefineStorage)ctorWithPaths.Invoke(new object[] { paths });
 
-            return (IDefineStorage?)Activator.CreateInstance(type)
-                ?? throw new InvalidOperationException($"Failed to construct IDefineStorage: {typeName}");
+            throw new InvalidOperationException(
+                $"BackendComponents.{nameof(BackendComponents.DefineStorage)} names '{typeName}', which has no supported constructor. " +
+                "It needs an (IServiceProvider) or a (PathOptions) constructor.");
         }
 
         /// <summary>
         /// Creates a configurable service whose implementation type is read from configuration.
-        /// Tries DI-aware construction first (ctor params resolved from <paramref name="sp"/>);
-        /// falls back to parameterless construction only when the type declares a public
-        /// parameterless ctor.
+        /// Constructor parameters are resolved from <paramref name="sp"/>.
         /// </summary>
         /// <param name="sp">The service provider.</param>
         /// <param name="settingName">The <see cref="BackendComponents"/> property the type name came from, for errors.</param>
         /// <param name="configured">The configured type name, or blank for the default.</param>
         /// <param name="fallback">The default type name.</param>
+        /// <remarks>
+        /// A constructor dependency that DI cannot resolve surfaces as the <see cref="ActivatorUtilities"/>
+        /// exception, whose message names the missing service. That is covered by
+        /// `CreateConfigurableService_UnregisteredCtorDependency_ExceptionNamesMissingService`.
+        /// </remarks>
         private static T CreateConfigurableService<T>(IServiceProvider sp, string settingName, string? configured, string fallback)
             where T : class
         {
             var typeName = string.IsNullOrWhiteSpace(configured) ? fallback : configured;
             var type = LoadComponentType(settingName, typeName, typeof(T));
-
-            // The fallback exists for legacy parameterless implementations. A type without such a
-            // ctor has nothing to fall back to, so the filter lets the ActivatorUtilities exception
-            // propagate untouched. Its message names the constructor parameter DI could not resolve,
-            // which is the only actionable clue when a registration is missing; retrying would
-            // replace it with a bare `MissingMethodException`. The propagation is covered by
-            // `CreateConfigurableService_UnregisteredCtorDependency_ExceptionNamesMissingService`.
-            try
-            {
-                return (T)ActivatorUtilities.CreateInstance(sp, type);
-            }
-            catch (InvalidOperationException ex) when (type.GetConstructor(Type.EmptyTypes) != null)
-            {
-                return (Activator.CreateInstance(type) as T)
-                    ?? throw new InvalidOperationException($"Failed to construct {typeof(T).Name}: {typeName}", ex);
-            }
+            return (T)ActivatorUtilities.CreateInstance(sp, type);
         }
 
         /// <summary>
@@ -168,13 +158,13 @@ namespace Polhem.Hosting
             catch (Exception ex) when (ex is FileNotFoundException or FileLoadException or BadImageFormatException)
             {
                 throw new InvalidOperationException(
-                    $"BackendComponents.{settingName} names '{typeName}', whose assembly could not be loaded.", ex);
+                    BeeNameHint.AppendTo($"BackendComponents.{settingName} names '{typeName}', whose assembly could not be loaded.", typeName), ex);
             }
 
             if (type == null)
             {
                 throw new InvalidOperationException(
-                    $"BackendComponents.{settingName} names '{typeName}', which was not found in its assembly.");
+                    BeeNameHint.AppendTo($"BackendComponents.{settingName} names '{typeName}', which was not found in its assembly.", typeName));
             }
             if (!contract.IsAssignableFrom(type))
             {

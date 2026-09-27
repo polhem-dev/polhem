@@ -37,14 +37,6 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("IsAssemblyLoaded reports the load state")]
-        public void IsAssemblyLoaded_ReflectsLoadState()
-        {
-            Assert.True(AssemblyLoader.IsAssemblyLoaded(BaseAssembly));
-            Assert.False(AssemblyLoader.IsAssemblyLoaded("Does.Not.Exist.dll"));
-        }
-
-        [Fact]
         [DisplayName("LoadAssembly returns the cached instance for an already loaded assembly")]
         public void LoadAssembly_AlreadyLoaded_ReturnsCached()
         {

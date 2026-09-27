@@ -16,7 +16,7 @@ namespace Polhem.ObjectCaching
         /// Per-owner namespace prepended to <see cref="GetKey"/>. Allows separate
         /// <see cref="CacheContainerService"/> instances (e.g. per-fixture test containers)
         /// to share the process-wide <see cref="CacheInfo.Provider"/> without colliding.
-        /// Empty for the legacy non-prefixed path.
+        /// Empty for the shared unprefixed namespace.
         /// </param>
         protected ObjectCache(string cachePrefix = "")
         {

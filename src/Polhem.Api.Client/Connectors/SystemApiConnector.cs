@@ -203,14 +203,12 @@ namespace Polhem.Api.Client.Connectors
         /// </summary>
         /// <param name="userID">The user account identifier.</param>
         /// <param name="expiresIn">The expiration time in seconds. Defaults to 3600.</param>
-        /// <param name="oneTime">Whether the session is valid for one-time use only.</param>
-        public async Task<Guid> CreateSessionAsync(string userID, int expiresIn = 3600, bool oneTime = false)
+        public async Task<Guid> CreateSessionAsync(string userID, int expiresIn = 3600)
         {
             var request = new CreateSessionRequest()
             {
                 UserID = userID,
-                ExpiresIn = expiresIn,
-                OneTime = oneTime
+                ExpiresIn = expiresIn
             };
             var result = await ExecuteAsync<CreateSessionResponse>(SystemActions.CreateSession, request, PayloadFormat.Plain).ConfigureAwait(false);
             return result.AccessToken;

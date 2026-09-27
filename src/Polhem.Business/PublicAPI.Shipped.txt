@@ -143,7 +143,6 @@ Polhem.Business.BusinessObject.AccessToken.get -> System.Guid
 Polhem.Business.BusinessObject.ApiKeyId.get -> string?
 Polhem.Business.BusinessObject.ApiKeyName.get -> string?
 Polhem.Business.BusinessObject.ApiKeyValidation.get -> Polhem.Definition.Security.ApiKeyValidationResult!
-Polhem.Business.BusinessObject.ApiKeyValidation.set -> void
 Polhem.Business.BusinessObject.BoFactory.get -> Polhem.Definition.IBusinessObjectFactory!
 Polhem.Business.BusinessObject.BusinessObject(Polhem.Definition.IPolhemContext! ctx, System.Guid accessToken, string! progId, bool isLocalCall = false) -> void
 Polhem.Business.BusinessObject.Context.get -> Polhem.Definition.IPolhemContext!
@@ -160,10 +159,8 @@ Polhem.Business.BusinessObject.GetLangText(string! namespace, string! subKey) ->
 Polhem.Business.BusinessObject.IsLocalCall.get -> bool
 Polhem.Business.BusinessObject.LanguageService.get -> Polhem.Definition.Language.ILanguageService!
 Polhem.Business.BusinessObject.ProgId.get -> string!
-Polhem.Business.BusinessObject.ResolveAuditIdentity() -> (string? UserId, string? UserName, string? CompanyId, string? CompanyName)
 Polhem.Business.BusinessObject.ResolveDatabaseId(Polhem.Definition.DbScope scope) -> string!
 Polhem.Business.BusinessObject.Services.get -> System.IServiceProvider!
-Polhem.Business.BusinessObject.SessionInfo.get -> Polhem.Definition.Identity.SessionInfo?
 Polhem.Business.BusinessObject.SessionInfoService.get -> Polhem.Definition.Identity.ISessionInfoService!
 Polhem.Business.BusinessObjectFactory
 Polhem.Business.BusinessObjectFactory.BusinessObjectFactory(System.IServiceProvider! services, Polhem.Definition.Storage.IDefineAccess! defineAccess, Polhem.Definition.Identity.ISessionInfoService! sessionInfoService, Polhem.Definition.Language.ILanguageService! languageService, Polhem.Business.IBoTypeResolver! resolver) -> void
@@ -173,9 +170,6 @@ Polhem.Business.BusinessResult
 Polhem.Business.BusinessResult.BusinessResult() -> void
 Polhem.Business.BusinessResult.Parameters.get -> Polhem.Definition.Collections.ParameterCollection!
 Polhem.Business.BusinessResult.Parameters.set -> void
-Polhem.Business.DefaultBoTypeResolver
-Polhem.Business.DefaultBoTypeResolver.DefaultBoTypeResolver() -> void
-Polhem.Business.DefaultBoTypeResolver.Resolve(string! progId) -> System.Type!
 Polhem.Business.ExecFuncArgs
 Polhem.Business.ExecFuncArgs.ExecFuncArgs() -> void
 Polhem.Business.ExecFuncArgs.ExecFuncArgs(string! funcID) -> void
@@ -325,7 +319,6 @@ Polhem.Business.Permission.ScopeResolver.ScopeResolver(Polhem.Definition.Identit
 Polhem.Business.ProgramSettingsBoTypeResolver
 Polhem.Business.ProgramSettingsBoTypeResolver.ProgramSettingsBoTypeResolver(Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
 Polhem.Business.ProgramSettingsBoTypeResolver.ProgramSettingsBoTypeResolver(Polhem.Definition.Storage.IDefineAccess! defineAccess, Polhem.Definition.Storage.ICustomizeDefineReader? customizeReader) -> void
-Polhem.Business.ProgramSettingsBoTypeResolver.ProgramSettingsBoTypeResolver(Polhem.Definition.Storage.IDefineAccess! defineAccess, Polhem.Definition.Storage.ICustomizeDefineReader? customizeReader, Microsoft.Extensions.Logging.ILogger<Polhem.Business.ProgramSettingsBoTypeResolver!>? logger) -> void
 Polhem.Business.ProgramSettingsBoTypeResolver.Resolve(string! customizeId, string! progId) -> System.Type!
 Polhem.Business.ProgramSettingsBoTypeResolver.Resolve(string! progId) -> System.Type!
 Polhem.Business.Providers.CacheDataSourceProvider
@@ -410,8 +403,6 @@ Polhem.Business.System.CreateSessionArgs
 Polhem.Business.System.CreateSessionArgs.CreateSessionArgs() -> void
 Polhem.Business.System.CreateSessionArgs.ExpiresIn.get -> int
 Polhem.Business.System.CreateSessionArgs.ExpiresIn.set -> void
-Polhem.Business.System.CreateSessionArgs.OneTime.get -> bool
-Polhem.Business.System.CreateSessionArgs.OneTime.set -> void
 Polhem.Business.System.CreateSessionArgs.UserID.get -> string!
 Polhem.Business.System.CreateSessionArgs.UserID.set -> void
 Polhem.Business.System.CreateSessionResult

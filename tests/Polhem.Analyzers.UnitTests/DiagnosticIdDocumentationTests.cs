@@ -26,15 +26,40 @@ namespace Polhem.Analyzers.UnitTests
             var documented = IdsIn(File.ReadAllText(Path.Combine(root, "docs", language, "analyzer-rules.md")))
                 .Where(id => id[6] != '9')
                 .ToHashSet(StringComparer.Ordinal);
-            var declared = typeof(DiagnosticIds)
-                .GetFields(BindingFlags.Public | BindingFlags.Static)
-                .Where(f => f.IsLiteral)
-                .Select(f => (string)f.GetRawConstantValue()!)
-                .ToHashSet(StringComparer.Ordinal);
+            var declared = DeclaredIds();
+
+            // Reserved IDs are documented as reserved, not as rules; the test below covers them.
+            documented.ExceptWith(DiagnosticIds.ReservedIds);
 
             Assert.NotEmpty(declared);
             Assert.Equal(declared.OrderBy(x => x, StringComparer.Ordinal), documented.OrderBy(x => x, StringComparer.Ordinal));
         }
+
+        [Theory]
+        [InlineData("en")]
+        [InlineData("zh-TW")]
+        [DisplayName("Every reserved analyzer ID is named in analyzer-rules.md and none is declared as a rule")]
+        public void AnalyzerRules_ReservedIdsAreDocumentedAndUnused(string language)
+        {
+            var root = FindRepositoryRoot();
+            var documented = IdsIn(File.ReadAllText(Path.Combine(root, "docs", language, "analyzer-rules.md")))
+                .ToHashSet(StringComparer.Ordinal);
+            var declared = DeclaredIds();
+
+            Assert.NotEmpty(DiagnosticIds.ReservedIds);
+            Assert.All(DiagnosticIds.ReservedIds, id =>
+            {
+                Assert.Contains(id, documented);
+                Assert.DoesNotContain(id, declared);
+            });
+        }
+
+        private static HashSet<string> DeclaredIds()
+            => typeof(DiagnosticIds)
+                .GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Where(f => f.IsLiteral)
+                .Select(f => (string)f.GetRawConstantValue()!)
+                .ToHashSet(StringComparer.Ordinal);
 
         [Theory]
         [InlineData("en")]

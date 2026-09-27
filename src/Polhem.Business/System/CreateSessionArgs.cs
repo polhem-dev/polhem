@@ -16,10 +16,5 @@ namespace Polhem.Business.System
         /// Gets or sets the expiration time in seconds. Defaults to 3600.
         /// </summary>
         public int ExpiresIn { get; set; } = 3600;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the session is valid for one-time use only.
-        /// </summary>
-        public bool OneTime { get; set; } = false;
     }
 }

@@ -9,7 +9,7 @@ namespace Polhem.Api.AspNetCore
 {
     /// <summary>
     /// Host-side activation for the Polhem framework. Pair with
-    /// <see cref="Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework"/>.
+    /// <see cref="Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework(Microsoft.Extensions.DependencyInjection.IServiceCollection, Polhem.Definition.Settings.BackendConfiguration, Polhem.Definition.PathOptions)"/>.
     /// </summary>
     public static class PolhemFrameworkApplicationBuilderExtensions
     {

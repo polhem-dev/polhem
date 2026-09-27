@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <Description>Base infrastructure for the Polhem framework, including collections, serialization, encryption, tracing, and general-purpose utilities.</Description>
-    <PackageTags>polhem;base;utilities;helpers;cryptography;encryption;hashing;serialization;compression;tracing;json</PackageTags>
+    <Description>Base infrastructure for the Polhem framework, including collections, serialization, encryption, and general-purpose utilities.</Description>
+    <PackageTags>polhem;base;utilities;helpers;cryptography;encryption;hashing;serialization;compression;json</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

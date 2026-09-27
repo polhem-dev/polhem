@@ -36,7 +36,6 @@ Polhem.UI.Core.Permissions.FieldCapability.Visible.init -> void
 Polhem.UI.Core.Permissions.IElementCapabilityResolver
 Polhem.UI.Core.Permissions.IElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionAction action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionAction>? capabilities) -> bool
 Polhem.UI.Core.Permissions.IElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionAction>? capabilities) -> Polhem.UI.Core.Permissions.FieldCapability
-Polhem.UI.Core.VersionInfo
 override Polhem.UI.Core.Permissions.FieldCapability.GetHashCode() -> int
 static Polhem.UI.Core.ClientInfo.AccessToken.get -> System.Guid
 static Polhem.UI.Core.ClientInfo.AllowGenerateSettings.get -> bool
@@ -46,7 +45,6 @@ static Polhem.UI.Core.ClientInfo.ApiKeyStorage.set -> void
 static Polhem.UI.Core.ClientInfo.ApplyApiKey(string! defaultApiKey = "") -> void
 static Polhem.UI.Core.ClientInfo.ApplyEnterCompanyResult(Polhem.Api.Core.Messages.System.EnterCompanyResponse! response) -> void
 static Polhem.UI.Core.ClientInfo.ApplyLoginResult(Polhem.Api.Core.Messages.System.LoginResponse! loginResponse) -> void
-static Polhem.UI.Core.ClientInfo.Arguments.get -> System.Collections.Generic.Dictionary<string!, string!>?
 static Polhem.UI.Core.ClientInfo.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionAction>?
 static Polhem.UI.Core.ClientInfo.ClearCompanyContext() -> void
 static Polhem.UI.Core.ClientInfo.ClientSettings.get -> Polhem.Definition.Settings.ClientSettings!
@@ -68,13 +66,6 @@ static Polhem.UI.Core.ClientInfo.UIViewService.get -> Polhem.UI.Core.IUIViewServ
 static Polhem.UI.Core.ClientInfo.UserInfo.get -> Polhem.Definition.Identity.UserInfo?
 static Polhem.UI.Core.Permissions.FieldCapability.operator !=(Polhem.UI.Core.Permissions.FieldCapability left, Polhem.UI.Core.Permissions.FieldCapability right) -> bool
 static Polhem.UI.Core.Permissions.FieldCapability.operator ==(Polhem.UI.Core.Permissions.FieldCapability left, Polhem.UI.Core.Permissions.FieldCapability right) -> bool
-static Polhem.UI.Core.VersionInfo.AssemblyVersion.get -> string!
-static Polhem.UI.Core.VersionInfo.Company.get -> string!
-static Polhem.UI.Core.VersionInfo.Description.get -> string!
-static Polhem.UI.Core.VersionInfo.FileVersion.get -> string!
-static Polhem.UI.Core.VersionInfo.FullInformationalVersion.get -> string!
-static Polhem.UI.Core.VersionInfo.Product.get -> string!
-static Polhem.UI.Core.VersionInfo.Version.get -> string!
 static readonly Polhem.UI.Core.Permissions.ElementCapabilityResolver.Default -> Polhem.UI.Core.Permissions.ElementCapabilityResolver!
 static readonly Polhem.UI.Core.Permissions.FieldCapability.Allowed -> Polhem.UI.Core.Permissions.FieldCapability
 ~override Polhem.UI.Core.Permissions.FieldCapability.Equals(object obj) -> bool

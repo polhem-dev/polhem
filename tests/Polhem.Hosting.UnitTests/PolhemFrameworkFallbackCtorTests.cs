@@ -36,8 +36,32 @@ namespace Polhem.Hosting.UnitTests
         public void SaveLanguage(LanguageResource resource) => throw new NotImplementedException();
     }
 
-    // Stub with only a parameterless ctor — exercises CreateDefineStorage
-    // parameterless ctor fallback path (the PathOptions ctor is intentionally absent).
+    // Stub with only an (IDefineStorage) ctor, which is not a supported IDefineAccess constructor.
+    public sealed class StorageOnlyDefineAccessStub : IDefineAccess
+    {
+        public StorageOnlyDefineAccessStub(IDefineStorage storage) { }
+        public object GetDefine(DefineType defineType, string[]? keys = null) => throw new NotImplementedException();
+        public void SaveDefine(DefineType defineType, object defineObject, string[]? keys = null) => throw new NotImplementedException();
+        public SystemSettings GetSystemSettings() => throw new NotImplementedException();
+        public void SaveSystemSettings(SystemSettings settings) => throw new NotImplementedException();
+        public DatabaseSettings GetDatabaseSettings() => throw new NotImplementedException();
+        public void SaveDatabaseSettings(DatabaseSettings settings) => throw new NotImplementedException();
+        public ProgramSettings GetProgramSettings() => throw new NotImplementedException();
+        public void SaveProgramSettings(ProgramSettings settings) => throw new NotImplementedException();
+        public DbCategorySettings GetDbCategorySettings() => throw new NotImplementedException();
+        public void SaveDbCategorySettings(DbCategorySettings settings) => throw new NotImplementedException();
+        public TableSchema GetTableSchema(string categoryId, string tableName) => throw new NotImplementedException();
+        public void SaveTableSchema(string categoryId, TableSchema tableSchema) => throw new NotImplementedException();
+        public FormSchema GetFormSchema(string progId) => throw new NotImplementedException();
+        public void SaveFormSchema(FormSchema formSchema) => throw new NotImplementedException();
+        public FormLayout GetFormLayout(string layoutId) => throw new NotImplementedException();
+        public void SaveFormLayout(FormLayout formLayout) => throw new NotImplementedException();
+        public LanguageResource GetLanguage(string lang, string ns) => throw new NotImplementedException();
+        public void SaveLanguage(LanguageResource resource) => throw new NotImplementedException();
+    }
+
+    // Stub with only a parameterless ctor. As a define storage it has no supported constructor,
+    // and as an access token validator it implements the wrong interface.
     public sealed class ParameterlessDefineStorageStub : IDefineStorage
     {
         public DbCategorySettings? GetDbCategorySettings() => null;
@@ -76,8 +100,7 @@ namespace Polhem.Hosting.UnitTests
         public bool Validate(Guid accessToken) => false;
     }
 
-    // Stub with only a parameterless ctor — the legacy implementation shape CreateConfigurableService
-    // still has to construct.
+    // Stub with only a parameterless ctor, which DI-aware construction handles like any other.
     public sealed class ParameterlessTokenValidatorStub : IAccessTokenValidator
     {
         public bool Validate(Guid accessToken) => false;
@@ -149,6 +172,28 @@ namespace Polhem.Hosting.UnitTests
             }
         }
 
+        [Fact]
+        [DisplayName("A BackendComponents type name from Bee.NET fails with a hint that it looks like a Bee.NET name")]
+        public void CreateConfigurableService_BeeTypeName_MessageHasBeeHint()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-bee-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                using var sp = BuildProviderWithAccessTokenValidator(
+                    "Bee.Business.Providers.AccessTokenValidator, Bee.Business", tempDir);
+
+                var ex = Assert.Throws<InvalidOperationException>(() => sp.GetRequiredService<IAccessTokenValidator>());
+
+                Assert.Contains("BackendComponents.AccessTokenValidator", ex.Message, StringComparison.Ordinal);
+                Assert.Contains("Bee.NET", ex.Message, StringComparison.Ordinal);
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+            }
+        }
+
         private static ServiceProvider BuildProviderWithAccessTokenValidator(string typeName, string tempDir)
         {
             var configuration = new BackendConfiguration();
@@ -192,8 +237,8 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateDefineStorage supports an IDefineStorage implementation that has only a parameterless constructor")]
-        public void CreateDefineStorage_ParameterlessCtorFallback_CreatesCorrectType()
+        [DisplayName("CreateDefineStorage rejects an IDefineStorage implementation without a supported constructor, naming the setting")]
+        public void CreateDefineStorage_ParameterlessOnly_ThrowsNamingSetting()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-pless-{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
@@ -210,9 +255,38 @@ namespace Polhem.Hosting.UnitTests
                     autoCreateMasterKey: true);
 
                 using var sp = services.BuildServiceProvider();
-                var storage = sp.GetRequiredService<IDefineStorage>();
+                var ex = Assert.Throws<InvalidOperationException>(() => sp.GetRequiredService<IDefineStorage>());
 
-                Assert.IsType<ParameterlessDefineStorageStub>(storage);
+                Assert.Contains("BackendComponents.DefineStorage", ex.Message, StringComparison.Ordinal);
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+            }
+        }
+
+        [Fact]
+        [DisplayName("ResolveDefineAccess rejects an IDefineAccess implementation without a supported constructor, naming the setting")]
+        public void ResolveDefineAccess_StorageOnlyCtor_ThrowsNamingSetting()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-1arg-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                var configuration = new BackendConfiguration();
+                configuration.Components.DefineAccess =
+                    "Polhem.Hosting.UnitTests.StorageOnlyDefineAccessStub, Polhem.Hosting.UnitTests";
+
+                var services = new ServiceCollection();
+                services.AddPolhemFramework(
+                    configuration,
+                    new PathOptions { DefinePath = tempDir },
+                    autoCreateMasterKey: true);
+
+                using var sp = services.BuildServiceProvider();
+                var ex = Assert.Throws<InvalidOperationException>(() => sp.GetRequiredService<IDefineAccess>());
+
+                Assert.Contains("BackendComponents.DefineAccess", ex.Message, StringComparison.Ordinal);
             }
             finally
             {

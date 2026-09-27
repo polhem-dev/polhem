@@ -26,7 +26,7 @@ namespace Polhem.Hosting.CacheNotify
     /// first seen after startup evicts once — a no-op when nothing is cached).
     /// </para>
     /// </remarks>
-    public sealed class CacheNotifyPollSession
+    internal sealed class CacheNotifyPollSession
     {
         private readonly ICacheNotifyReader _reader;
         private readonly string _databaseId;

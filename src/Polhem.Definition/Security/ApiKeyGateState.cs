@@ -18,11 +18,10 @@ namespace Polhem.Definition.Security
     /// instance of this type, and callers fail closed. See <see cref="IApiKeyValidator"/>.
     /// </para>
     /// <para>
-    /// WARNING: this is a cache-shared instance. It must not be mutated after it is loaded — the
-    /// whole deployment reads the same reference, so flipping <see cref="InForce"/> on it opens or
-    /// closes the gate for every caller at once. The setter exists for the serializers, not for
-    /// callers. See <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After
-    /// Init</i>.
+    /// This is a cache-shared instance: the whole deployment reads the same reference, so flipping
+    /// <see cref="InForce"/> on it would open or close the gate for every caller at once.
+    /// <see cref="InForce"/> is init-only, so the compiler rejects that. See
+    /// <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
     /// </para>
     /// </remarks>
     public class ApiKeyGateState : IKeyObject
@@ -36,10 +35,10 @@ namespace Polhem.Definition.Security
         public const string CacheKey = "[gate]";
 
         /// <summary>
-        /// Gets or sets a value indicating whether at least one enabled API key exists, which is
+        /// Gets a value indicating whether at least one enabled API key exists, which is
         /// what puts the gate in force.
         /// </summary>
-        public bool InForce { get; set; }
+        public bool InForce { get; init; }
 
         /// <summary>
         /// Gets the cache key (always <see cref="CacheKey"/>).

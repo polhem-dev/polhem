@@ -62,17 +62,6 @@ namespace Polhem.Db.Schema
         }
 
         /// <summary>
-        /// Compares the actual table schema with the defined schema and returns the legacy comparison result
-        /// (retained for existing callers; new code should use <see cref="CompareToDiff"/>).
-        /// </summary>
-        /// <param name="categoryId">The database category id.</param>
-        /// <param name="tableName">The table name.</param>
-        public TableSchema Compare(string categoryId, string tableName)
-        {
-            return CreateComparer(categoryId, tableName).Compare();
-        }
-
-        /// <summary>
         /// Produces a structured <see cref="TableSchemaDiff"/> for the specified table.
         /// </summary>
         /// <param name="categoryId">The database category id.</param>

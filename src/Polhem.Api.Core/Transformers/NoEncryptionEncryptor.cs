@@ -3,7 +3,7 @@ namespace Polhem.Api.Core.Transformers
     /// <summary>
     /// An encryptor implementation that performs no encryption or decryption.
     /// </summary>
-    public class NoEncryptionEncryptor : IApiPayloadEncryptor
+    internal sealed class NoEncryptionEncryptor : IApiPayloadEncryptor
     {
         /// <summary>
         /// Gets the identifier string for the encryption algorithm. "none" indicates no encryption is applied.

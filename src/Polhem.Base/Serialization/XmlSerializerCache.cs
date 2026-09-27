@@ -6,7 +6,7 @@ namespace Polhem.Base.Serialization
     /// <summary>
     /// Provides caching for <see cref="XmlSerializer"/> instances to improve serialization performance.
     /// </summary>
-    public static class XmlSerializerCache
+    internal static class XmlSerializerCache
     {
         /// <summary>
         /// Cache of previously created <see cref="XmlSerializer"/> instances.

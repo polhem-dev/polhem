@@ -20,7 +20,7 @@ namespace Polhem.Definition.UnitTests.Language
         [DisplayName("LanguageService constructor throws ArgumentNullException for null")]
         public void Constructor_NullDefineAccess_ThrowsArgumentNullException()
         {
-            var exception = Record.Exception(() => new LanguageService(null!));
+            var exception = Record.Exception(() => new LanguageService(null!, null));
             Assert.NotNull(exception);
             Assert.IsType<ArgumentNullException>(exception);
         }
@@ -30,7 +30,7 @@ namespace Polhem.Definition.UnitTests.Language
         public void GetLangEnum_LangEqualsDefaultLang_EnumMiss_ReturnsNull()
         {
             var defineAccess = new MinimalLangDefineAccess("zh-TW");
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             Assert.Null(svc.GetLangEnum("zh-TW", "Common", "Gender"));
         }
@@ -40,7 +40,7 @@ namespace Polhem.Definition.UnitTests.Language
         public void GetLangEnum_EmptyDefaultLang_EnumMiss_ReturnsNull()
         {
             var defineAccess = new MinimalLangDefineAccess("");
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             Assert.Null(svc.GetLangEnum("zh-TW", "Common", "Gender"));
         }
@@ -50,7 +50,7 @@ namespace Polhem.Definition.UnitTests.Language
         public void GetLangEnumText_NullLangEnum_ReturnsNull()
         {
             var defineAccess = new MinimalLangDefineAccess("en-US");
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             Assert.Null(svc.GetLangEnumText("zh-TW", "Common.NonExistentEnum", "M"));
         }
@@ -61,7 +61,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new MinimalLangDefineAccess("en-US");
             defineAccess.AddResource("zh-TW", "Common", ("OK", "確定"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             bool result = svc.TryGetLangText("zh-TW", "Common", "Missing", out string text);
 
@@ -74,7 +74,7 @@ namespace Polhem.Definition.UnitTests.Language
         public void GetLangText_EmptyDefaultLang_PrimaryMiss_ReturnsFallbackKey()
         {
             var defineAccess = new MinimalLangDefineAccess("");
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             Assert.Equal("Common.Missing", svc.GetLangText("zh-TW", "Common", "Missing"));
         }

@@ -54,16 +54,26 @@ namespace Polhem.Db.Storage
         private readonly string _databaseId;
 
         /// <summary>
+        /// Initializes a new <see cref="DbDefineStorage"/> with explicit dependencies, storing
+        /// definitions in the <see cref="DefineDatabaseId"/> (<c>common</c>) database.
+        /// </summary>
+        /// <param name="connectionManager">Supplies connections and the dialect for the define database.</param>
+        /// <param name="cacheNotify">Bumps the notification row in the same transaction as each save.</param>
+        public DbDefineStorage(IDbConnectionManager connectionManager, ICacheNotifyService cacheNotify)
+            : this(connectionManager, cacheNotify, DefineDatabaseId)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new <see cref="DbDefineStorage"/> with explicit dependencies (used by tests
         /// and direct construction).
         /// </summary>
         /// <param name="connectionManager">Supplies connections and the dialect for the define database.</param>
         /// <param name="cacheNotify">Bumps the notification row in the same transaction as each save.</param>
         /// <param name="databaseId">
-        /// The database hosting <c>st_define</c>; defaults to <see cref="DefineDatabaseId"/>
-        /// (<c>common</c>). Tests pass a dialect-specific id (e.g. <c>common_postgresql</c>).
+        /// The database hosting <c>st_define</c>. Tests pass a dialect-specific id (e.g. <c>common_postgresql</c>).
         /// </param>
-        public DbDefineStorage(IDbConnectionManager connectionManager, ICacheNotifyService cacheNotify, string databaseId = DefineDatabaseId)
+        public DbDefineStorage(IDbConnectionManager connectionManager, ICacheNotifyService cacheNotify, string databaseId)
         {
             _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
             _cacheNotify = cacheNotify ?? throw new ArgumentNullException(nameof(cacheNotify));

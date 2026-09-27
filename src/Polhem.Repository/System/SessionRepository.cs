@@ -24,7 +24,7 @@ namespace Polhem.Repository.System
     /// <c>SessionRepositoryTests</c> checks the stored row on every provider.
     /// </para>
     /// </remarks>
-    public class SessionRepository : RepositoryBase, ISessionRepository
+    internal sealed class SessionRepository : RepositoryBase, ISessionRepository
     {
         /// <summary>
         /// Initializes a new <see cref="SessionRepository"/>.

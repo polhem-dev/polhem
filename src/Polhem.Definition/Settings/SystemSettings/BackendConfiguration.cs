@@ -70,11 +70,9 @@ namespace Polhem.Definition.Settings
         /// <c>st_user.time_zone</c> of their own. An empty value means UTC.
         /// </summary>
         /// <remarks>
-        /// The default is <c>Asia/Taipei</c> rather than empty for backward compatibility: the
-        /// <c>st_user.time_zone</c> column was introduced in this release, so every existing row is
-        /// blank, and defaulting to UTC would shift all of their displayed times on upgrade.
-        /// Deployments outside that zone should set this explicitly — or set it to an empty string
-        /// to opt into UTC, which is what the conversion layer already does for a blank zone.
+        /// The default is <c>Asia/Taipei</c>. Deployments outside that zone should set this
+        /// explicitly, or set it to an empty string to use UTC, which is what the conversion layer
+        /// does for a blank zone.
         /// </remarks>
         [Category("Localization")]
         [Description("IANA time zone id applied when a user has no time zone of their own. Empty means UTC.")]
@@ -86,9 +84,9 @@ namespace Polhem.Definition.Settings
         /// An empty value falls through to the language service's own default.
         /// </summary>
         /// <remarks>
-        /// The default is <c>zh-TW</c> for backward compatibility: <see cref="Identity.SessionInfo.Culture"/>
-        /// used to be hard-coded to that value, so every existing deployment is implicitly running on
-        /// it. Deployments serving another language should set this explicitly.
+        /// The default is <c>zh-TW</c>, and it is what <see cref="Identity.SessionInfo.Culture"/> receives
+        /// for a user without a culture of their own. Deployments serving another language should
+        /// set this explicitly.
         /// </remarks>
         [Category("Localization")]
         [Description("Culture applied when a user has no culture of their own (e.g. zh-TW).")]

@@ -34,10 +34,18 @@ namespace Polhem.Definition
         /// <summary>
         /// Unique identifier of the creator (foreign key referencing sys_rowid of the user table).
         /// </summary>
+        /// <remarks>
+        /// A naming convention only: the framework neither stamps nor filters on this column. An
+        /// application that declares it fills it itself.
+        /// </remarks>
         public const string InsertUserRowId = "sys_insert_user_rowid";
         /// <summary>
         /// Unique identifier of the last updater (foreign key referencing sys_rowid of the user table).
         /// </summary>
+        /// <remarks>
+        /// A naming convention only: the framework neither stamps nor filters on this column. An
+        /// application that declares it fills it itself.
+        /// </remarks>
         public const string UpdateUserRowId = "sys_update_user_rowid";
 
         // ---- Lifecycle ----
@@ -55,6 +63,10 @@ namespace Polhem.Definition
         /// To query active records, use the condition:
         /// <c>CURRENT_DATE >= sys_valid_date</c>
         /// </summary>
+        /// <remarks>
+        /// A naming convention only: the framework neither stamps nor filters on this column, so a
+        /// query that must see only active records adds the condition itself.
+        /// </remarks>
         public const string ValidDate = "sys_valid_date";
         /// <summary>
         /// Record expiry date.
@@ -62,6 +74,10 @@ namespace Polhem.Definition
         /// To query active records, use the condition:
         /// <c>sys_invalid_date IS NULL OR CURRENT_DATE &lt; sys_invalid_date</c>
         /// </summary>
+        /// <remarks>
+        /// A naming convention only: the framework neither stamps nor filters on this column, so a
+        /// query that must see only active records adds the condition itself.
+        /// </remarks>
         public const string InvalidDate = "sys_invalid_date";
     }
 }

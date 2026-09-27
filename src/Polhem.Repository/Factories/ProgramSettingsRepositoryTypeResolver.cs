@@ -35,6 +35,16 @@ namespace Polhem.Repository.Factories
         private readonly ISessionInfoService? _sessionInfoService;
 
         /// <summary>
+        /// Initializes a new <see cref="ProgramSettingsRepositoryTypeResolver"/> that resolves every
+        /// progId against the base registry, with no customization overlay.
+        /// </summary>
+        /// <param name="defineAccess">Loads the base <see cref="ProgramSettings"/>.</param>
+        public ProgramSettingsRepositoryTypeResolver(IDefineAccess defineAccess)
+            : this(defineAccess, customizeReader: null, sessionInfoService: null)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new <see cref="ProgramSettingsRepositoryTypeResolver"/>.
         /// </summary>
         /// <param name="defineAccess">Loads the base <see cref="ProgramSettings"/>.</param>
@@ -42,8 +52,8 @@ namespace Polhem.Repository.Factories
         /// <param name="sessionInfoService">Reads the session's customization code; <c>null</c> has the same effect as a host with no sessions — the base registry applies.</param>
         public ProgramSettingsRepositoryTypeResolver(
             IDefineAccess defineAccess,
-            ICustomizeDefineReader? customizeReader = null,
-            ISessionInfoService? sessionInfoService = null)
+            ICustomizeDefineReader? customizeReader,
+            ISessionInfoService? sessionInfoService)
         {
             _defineAccess = defineAccess ?? throw new ArgumentNullException(nameof(defineAccess));
             _customizeReader = customizeReader;
@@ -140,8 +150,10 @@ namespace Polhem.Repository.Factories
 
         private static InvalidOperationException Unloadable(string progId, string typeName, Exception? inner)
             => new(
-                $"ProgramSettings binds progId '{progId}' to repository '{typeName}', which cannot be loaded. " +
-                "Fix the assembly-qualified type name, or clear the attribute to use the framework default.",
+                BeeNameHint.AppendTo(
+                    $"ProgramSettings binds progId '{progId}' to repository '{typeName}', which cannot be loaded. " +
+                    "Fix the assembly-qualified type name, or clear the attribute to use the framework default.",
+                    typeName),
                 inner);
     }
 }

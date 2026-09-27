@@ -111,7 +111,7 @@ namespace Polhem.ObjectCaching.UnitTests.Database
         }
 
         [Fact]
-        [DisplayName("ApiKeyGateCache reads once on GetState and reads again after RemoveState")]
+        [DisplayName("ApiKeyGateCache reads once on GetState and reads again after the entry is removed")]
         public void ApiKeyGateCache_ReadsThroughOnceThenReloadsAfterRemove()
         {
             var source = new CountingSource();
@@ -121,7 +121,7 @@ namespace Polhem.ObjectCaching.UnitTests.Database
             Assert.NotNull(cache.GetState());
             Assert.Equal(1, source.GateCalls);
 
-            cache.RemoveState();
+            cache.Remove(ApiKeyGateState.CacheKey);
             Assert.NotNull(cache.GetState());
             Assert.Equal(2, source.GateCalls);
         }

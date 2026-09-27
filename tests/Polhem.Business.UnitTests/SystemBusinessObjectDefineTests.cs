@@ -79,7 +79,7 @@ namespace Polhem.Business.UnitTests
                 {
                     DefineAccess = access,
                     SessionInfoService = sp.GetRequiredService<ISessionInfoService>(),
-                    LanguageService = new LanguageService(access),
+                    LanguageService = new LanguageService(access, null),
                     BoFactory = sp.GetRequiredService<IBusinessObjectFactory>(),
                     Services = new TestOverrideServiceProvider(sp, (typeof(PathOptions), tempPaths)),
                 };

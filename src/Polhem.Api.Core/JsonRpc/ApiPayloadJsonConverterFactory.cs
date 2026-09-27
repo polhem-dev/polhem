@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.JsonRpc
     /// <summary>
     /// Factory that creates <see cref="ApiPayloadJsonConverter{T}"/> for any <see cref="ApiPayload"/>-derived type.
     /// </summary>
-    public class ApiPayloadJsonConverterFactory : JsonConverterFactory
+    internal sealed class ApiPayloadJsonConverterFactory : JsonConverterFactory
     {
         /// <inheritdoc />
         public override bool CanConvert(Type typeToConvert)

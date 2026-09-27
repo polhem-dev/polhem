@@ -22,14 +22,13 @@ namespace Polhem.Db.UnitTests
             => new(databaseId, _fx.GetRequiredService<IDefineAccess>(), _fx.GetRequiredService<IDbConnectionManager>());
 
         [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("TableSchemaBuilder returns None for a table whose structure matches")]
-        public void Compare_UpToDateTable_ReturnsNoneAction()
+        [DisplayName("TableSchemaBuilder reports no structural change for a table whose structure matches")]
+        public void CompareToDiff_UpToDateTable_ReturnsNoChanges()
         {
             var builder = NewBuilder("common_sqlserver");
-            var result = builder.Compare("common", "st_user");
+            var result = builder.CompareToDiff("common", "st_user");
 
-            Assert.NotNull(result);
-            Assert.Equal(DbUpgradeAction.None, result.UpgradeAction);
+            Assert.Empty(result.Changes);
         }
 
         [DbFact(DatabaseType.SQLServer)]

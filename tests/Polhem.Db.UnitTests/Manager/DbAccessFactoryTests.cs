@@ -40,7 +40,7 @@ namespace Polhem.Db.UnitTests.Manager
         [DisplayName("DbAccessFactory creates an instance with a maxCommandTimeout")]
         public void DbAccessFactory_WithTimeout_CreatesInstance(int timeout)
         {
-            var factory = new DbAccessFactory(_manager, timeout);
+            var factory = new DbAccessFactory(_manager, timeout, anomalyWriterFactory: null, anomalyOptions: null);
             Assert.NotNull(factory);
         }
 
@@ -56,7 +56,7 @@ namespace Polhem.Db.UnitTests.Manager
                 ConnectionString = "Server=test;"
             });
 
-            var factory = new DbAccessFactory(_manager, 30);
+            var factory = new DbAccessFactory(_manager, 30, anomalyWriterFactory: null, anomalyOptions: null);
             var dbAccess = factory.Create(id);
 
             Assert.NotNull(dbAccess);

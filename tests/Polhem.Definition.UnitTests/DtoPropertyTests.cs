@@ -109,7 +109,6 @@ namespace Polhem.Definition.UnitTests
             // Assert
             Assert.Equal(Guid.Empty, user.AccessToken);
             Assert.Equal(DateTime.MinValue, user.EndTime);
-            Assert.False(user.OneTime);
         }
 
         [Fact]

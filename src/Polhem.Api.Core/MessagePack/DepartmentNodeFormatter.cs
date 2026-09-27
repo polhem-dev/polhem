@@ -81,26 +81,32 @@ namespace Polhem.Api.Core.MessagePack
             options.Security.DepthStep(ref reader);
             try
             {
-                var result = new DepartmentNode();
+                // Read into locals and construct once: the properties are init-only, so the node
+                // cannot be filled in after it exists.
+                Guid rowId = default;
+                string deptId = string.Empty;
+                string deptName = string.Empty;
+                Guid managerRowId = default;
+                DepartmentNodeCollection? children = null;
                 var count = reader.ReadMapHeader();
                 for (var i = 0; i < count; i++)
                 {
                     switch (reader.ReadString())
                     {
                         case nameof(DepartmentNode.RowId):
-                            result.RowId = MessagePackSerializer.Deserialize<Guid>(ref reader, options);
+                            rowId = MessagePackSerializer.Deserialize<Guid>(ref reader, options);
                             break;
                         case nameof(DepartmentNode.DeptId):
-                            result.DeptId = MessagePackSerializer.Deserialize<string>(ref reader, options);
+                            deptId = MessagePackSerializer.Deserialize<string>(ref reader, options);
                             break;
                         case nameof(DepartmentNode.DeptName):
-                            result.DeptName = MessagePackSerializer.Deserialize<string>(ref reader, options);
+                            deptName = MessagePackSerializer.Deserialize<string>(ref reader, options);
                             break;
                         case nameof(DepartmentNode.ManagerRowId):
-                            result.ManagerRowId = MessagePackSerializer.Deserialize<Guid>(ref reader, options);
+                            managerRowId = MessagePackSerializer.Deserialize<Guid>(ref reader, options);
                             break;
                         case nameof(DepartmentNode.Children):
-                            result.Children = MessagePackSerializer.Deserialize<DepartmentNodeCollection?>(ref reader, options);
+                            children = MessagePackSerializer.Deserialize<DepartmentNodeCollection?>(ref reader, options);
                             break;
                         default:
                             reader.Skip();
@@ -108,7 +114,14 @@ namespace Polhem.Api.Core.MessagePack
                     }
                 }
 
-                return result;
+                return new DepartmentNode
+                {
+                    RowId = rowId,
+                    DeptId = deptId,
+                    DeptName = deptName,
+                    ManagerRowId = managerRowId,
+                    Children = children,
+                };
             }
             finally
             {

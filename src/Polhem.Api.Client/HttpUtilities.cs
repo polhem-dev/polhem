@@ -15,7 +15,7 @@ namespace Polhem.Api.Client
     /// <c>Polhem.Base</c> takes abstractions that are genuinely shared across layers, not everything
     /// that happens to have no dependencies.
     /// </remarks>
-    public static class HttpUtilities
+    internal static class HttpUtilities
     {
         private static readonly ConcurrentDictionary<string, HttpClient> s_clientMap = new ConcurrentDictionary<string, HttpClient>();
 

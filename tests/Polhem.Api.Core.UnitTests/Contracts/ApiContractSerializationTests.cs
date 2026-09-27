@@ -47,7 +47,7 @@ namespace Polhem.Api.Core.UnitTests.Contracts
                     (obj, _) => Encoding.UTF8.GetBytes(JsonCodec.Serialize(obj)),
                     (bytes, type) => s_jsonDeserializeGeneric
                         .MakeGenericMethod(type)
-                        .Invoke(null, [Encoding.UTF8.GetString(bytes), true])),
+                        .Invoke(null, [Encoding.UTF8.GetString(bytes)])),
             };
 
         public static TheoryData<string, Type> Cases()

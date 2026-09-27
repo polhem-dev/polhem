@@ -1,3 +1,4 @@
+using Polhem.Base;
 using System.Collections.Frozen;
 using System.Data;
 using System.Globalization;
@@ -273,7 +274,7 @@ namespace Polhem.Api.Core.Json
             if (!WireTypeWhitelist.IsAssemblyQualifiedNameAllowed(typeName))
             {
                 throw new InvalidOperationException(
-                    $"JSON deserialization blocked: type '{typeName}' is not in the allowed type whitelist.");
+                    BeeNameHint.AppendTo($"JSON deserialization blocked: type '{typeName}' is not in the allowed type whitelist.", typeName));
             }
 
             var type = Type.GetType(typeName)

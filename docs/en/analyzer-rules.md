@@ -67,6 +67,11 @@ build time, where the message can name both the cause and the fix.
 | POLHEM4005 | Warning | A framework collection should expose a single public `Add` |
 | POLHEM4006 | Error | A serialised type must have a public parameterless constructor |
 
+POLHEM4001, POLHEM4002, POLHEM4003 and POLHEM4004 are reserved and will never be reused. Bee.NET, which
+Polhem continues under a new name, shipped and retired rules under those numbers (BEE4001 to BEE4004). A
+project migrated from Bee.NET that carries a suppression for one of them keeps it under the POLHEM ID with
+the same number, and a new rule reusing the number would be silently suppressed there.
+
 ### Build gates (POLHEM9xxx)
 
 | ID | Severity | Rule |

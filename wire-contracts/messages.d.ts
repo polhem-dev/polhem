@@ -138,7 +138,6 @@ export interface CreateApiKeyResponse {
 
 export interface CreateSessionRequest {
   expiresIn: number;
-  oneTime?: boolean;
   parameters?: Parameter[];
   userID?: string;
 }

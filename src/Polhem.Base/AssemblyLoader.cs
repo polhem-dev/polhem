@@ -41,19 +41,14 @@ namespace Polhem.Base
         }
 
         /// <summary>
-        /// Determines whether the specified assembly has been loaded.
-        /// </summary>
-        /// <param name="assemblyName">The assembly name.</param>
-        public static bool IsAssemblyLoaded(string assemblyName)
-        {
-            return FindAssembly(assemblyName) != null;
-        }
-
-        /// <summary>
         /// Loads the specified assembly.
         /// </summary>
         /// <param name="assemblyName">The assembly name.</param>
         /// <returns>The loaded assembly.</returns>
+        /// <exception cref="FileNotFoundException">
+        /// The assembly cannot be found. For a <c>Bee.*</c> assembly the message says it looks like a
+        /// Bee.NET name (see <see cref="BeeNameHint"/>).
+        /// </exception>
         public static Assembly LoadAssembly(string assemblyName)
         {
             // Return the cached assembly if already loaded
@@ -80,7 +75,14 @@ namespace Polhem.Base
                 string assemblyFile = StringUtilities.IsEmpty(Path.GetDirectoryName(assemblyName))
                     ? Path.Combine(FileUtilities.GetAssemblyPath(), assemblyName)
                     : assemblyName;
-                assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyFile);
+                try
+                {
+                    assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyFile);
+                }
+                catch (FileNotFoundException ex) when (BeeNameHint.Matches(simpleName))
+                {
+                    throw new FileNotFoundException(BeeNameHint.AppendTo(ex.Message, simpleName), ex.FileName, ex);
+                }
             }
             s_loadedAssemblies[assemblyName] = assembly;
 

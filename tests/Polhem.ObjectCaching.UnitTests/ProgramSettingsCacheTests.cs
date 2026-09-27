@@ -24,7 +24,7 @@ namespace Polhem.ObjectCaching.UnitTests
                 // A unique prefix avoids sharing cache keys with other tests.
                 var storage = new FileDefineStorage(pathOptions);
                 string cachePrefix = Guid.NewGuid().ToString("N");
-                var cache = new ProgramSettingsCache(storage, pathOptions, cachePrefix);
+                var cache = new ProgramSettingsCache(storage, cachePrefix);
 
                 var result = cache.Get();
 
@@ -41,15 +41,7 @@ namespace Polhem.ObjectCaching.UnitTests
         [DisplayName("Constructor throws ArgumentNullException for a null storage")]
         public void Constructor_NullStorage_ThrowsArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => new ProgramSettingsCache(null!, new PathOptions()));
-        }
-
-        [Fact]
-        [DisplayName("Constructor throws ArgumentNullException for a null PathOptions")]
-        public void Constructor_NullPathOptions_ThrowsArgumentNullException()
-        {
-            var storage = new FileDefineStorage(new PathOptions());
-            Assert.Throws<ArgumentNullException>(() => new ProgramSettingsCache(storage, null!));
+            Assert.Throws<ArgumentNullException>(() => new ProgramSettingsCache(null!));
         }
     }
 }

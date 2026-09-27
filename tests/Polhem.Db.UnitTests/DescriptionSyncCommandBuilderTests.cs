@@ -40,7 +40,7 @@ namespace Polhem.Db.UnitTests
             var added = define.Fields!.Add("api_key_id", "API Key", FieldDbType.String, 50);
             var real = BuildDefine();
             var diff = new TableSchemaDiff(define, real);
-            diff.Changes.Add(new AddFieldChange(added.Clone()));
+            diff.ChangeList.Add(new AddFieldChange(added.Clone()));
             return diff;
         }
 
@@ -48,7 +48,7 @@ namespace Polhem.Db.UnitTests
         {
             var define = BuildDefine();
             var diff = new TableSchemaDiff(define, BuildDefine());
-            diff.DescriptionChanges.Add(new DescriptionChange
+            diff.DescriptionChangeList.Add(new DescriptionChange
             {
                 Level = DescriptionLevel.Column,
                 FieldName = "name",
@@ -129,7 +129,7 @@ namespace Polhem.Db.UnitTests
             var diff = BuildCaptionDriftDiff();
             var oldField = diff.DefineTable.Fields!["name"].Clone();
             oldField.Length = 30;
-            diff.Changes.Add(new AlterFieldChange(oldField, diff.DefineTable.Fields!["name"].Clone()));
+            diff.ChangeList.Add(new AlterFieldChange(oldField, diff.DefineTable.Fields!["name"].Clone()));
 
             var statements = new MySqlDescriptionSyncCommandBuilder().GetStatements(diff);
 
@@ -145,7 +145,7 @@ namespace Polhem.Db.UnitTests
             var define = new TableSchema { TableName = "st_demo" };
             define.Fields!.Add("sys_no", "Sequence", FieldDbType.AutoIncrement);
             var diff = new TableSchemaDiff(define, define.Clone());
-            diff.DescriptionChanges.Add(new DescriptionChange
+            diff.DescriptionChangeList.Add(new DescriptionChange
             {
                 Level = DescriptionLevel.Column,
                 FieldName = "sys_no",
@@ -163,7 +163,7 @@ namespace Polhem.Db.UnitTests
         public void MySql_TableDescriptionDrift_EmitsTableComment()
         {
             var diff = new TableSchemaDiff(BuildDefine(), BuildDefine());
-            diff.DescriptionChanges.Add(new DescriptionChange
+            diff.DescriptionChangeList.Add(new DescriptionChange
             {
                 Level = DescriptionLevel.Table,
                 NewValue = "示範資料表",

@@ -57,12 +57,12 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.Logout removes the SessionInfo and succeeds")]
-        public void Logout_ValidSession_RemovesSessionInfo()
+        public async Task Logout_ValidSession_RemovesSessionInfo()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
 
-            var response = BuildExecutor(accessToken).Execute(BuildRequest());
+            var response = await BuildExecutor(accessToken).ExecuteAsync(BuildRequest());
 
             Assert.Null(response.Error);
             Assert.IsType<LogoutResponse>(response.Result!.Value);
@@ -71,7 +71,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         [Fact]
         [DisplayName("System.Logout removes a session that has already entered a company")]
-        public void Logout_AfterEnteredCompany_ClearsThenRemoves()
+        public async Task Logout_AfterEnteredCompany_ClearsThenRemoves()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
@@ -79,7 +79,7 @@ namespace Polhem.Api.Core.UnitTests.System
             session.CompanyScope = new SessionCompanyScope("C001", string.Empty, [], Guid.Empty, Guid.Empty, Guid.Empty);
             sessionService.Set(session);
 
-            var response = BuildExecutor(accessToken).Execute(BuildRequest());
+            var response = await BuildExecutor(accessToken).ExecuteAsync(BuildRequest());
 
             Assert.Null(response.Error);
             Assert.Null(sessionService.Get(accessToken));

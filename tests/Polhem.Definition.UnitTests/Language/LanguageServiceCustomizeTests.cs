@@ -79,7 +79,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("zh-TW");
             defineAccess.AddResource("zh-TW", "Common", ("OK", "確定"));
-            var svc = new LanguageService(defineAccess); // No reader.
+            var svc = new LanguageService(defineAccess, null); // No reader.
 
             // Even with a customizeId, having no reader degrades to the base.
             Assert.Equal("確定", svc.GetLangText("acme", "zh-TW", "Common", "OK"));

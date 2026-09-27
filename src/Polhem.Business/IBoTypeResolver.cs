@@ -9,7 +9,7 @@ namespace Polhem.Business
     /// <c>ProgramSettings.xml</c>. Every business object is resolved this way — the reserved
     /// progIds are registry entries like any other rather than a separate code path. Hosts that
     /// need to bypass <see cref="Polhem.Definition.Settings.ProgramSettings"/> entirely can replace the registration with
-    /// <see cref="DefaultBoTypeResolver"/> or a custom implementation.
+    /// a custom implementation.
     /// </remarks>
     public interface IBoTypeResolver
     {

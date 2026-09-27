@@ -20,7 +20,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddResource("zh-TW", "Common", ("OK", "確定"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             Assert.Equal("確定", svc.GetLangText("zh-TW", "Common.OK"));
         }
@@ -32,7 +32,7 @@ namespace Polhem.Definition.UnitTests.Language
             var defineAccess = new StubDefineAccess("en-US");
             // The subKey contains '.', so the split must happen at the first '.'.
             defineAccess.AddResource("zh-TW", "Customer", ("Field.Name.Caption", "客戶名稱"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             Assert.Equal("客戶名稱", svc.GetLangText("zh-TW", "Customer.Field.Name.Caption"));
         }
@@ -44,7 +44,7 @@ namespace Polhem.Definition.UnitTests.Language
             var defineAccess = new StubDefineAccess("en-US");
             // Missing in zh-TW, present in en-US.
             defineAccess.AddResource("en-US", "Common", ("OK", "OK"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             Assert.Equal("OK", svc.GetLangText("zh-TW", "Common.OK"));
         }
@@ -55,7 +55,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US");
             // Neither language has this key.
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             Assert.Equal("Common.OK", svc.GetLangText("zh-TW", "Common.OK"));
         }
@@ -66,7 +66,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddResource("zh-TW", "Customer", ("Field.Name.Caption", "客戶名稱"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             string viaFullKey = svc.GetLangText("zh-TW", "Customer.Field.Name.Caption");
             string viaExplicit = svc.GetLangText("zh-TW", "Customer", "Field.Name.Caption");
@@ -81,7 +81,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddResource("zh-TW", "Common", ("OK", "確定"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             bool ok = svc.TryGetLangText("zh-TW", "Common.OK", out string text);
 
@@ -95,7 +95,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddResource("en-US", "Common", ("OK", "OK")); // Only en-US has it.
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             bool ok = svc.TryGetLangText("zh-TW", "Common.OK", out string text);
 
@@ -109,7 +109,7 @@ namespace Polhem.Definition.UnitTests.Language
         public void GetLangText_MissingNamespace_ReturnsFullKey()
         {
             var defineAccess = new StubDefineAccess("en-US"); // No resources at all.
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             Assert.Equal("Nonexistent.Foo", svc.GetLangText("zh-TW", "Nonexistent.Foo"));
         }
@@ -120,7 +120,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("zh-TW"); // The default is zh-TW.
             defineAccess.AddResource("zh-TW", "Common", ("OK", "確定"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             Assert.Equal("確定", svc.GetLangText("zh-TW", "Common.OK"));
             Assert.Equal(1, defineAccess.GetLanguageCallCount);
@@ -132,7 +132,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddEnum("zh-TW", "Common", "Gender", ("M", "男"), ("F", "女"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             var langEnum = svc.GetLangEnum("zh-TW", "Common.Gender");
 
@@ -149,7 +149,7 @@ namespace Polhem.Definition.UnitTests.Language
             var defineAccess = new StubDefineAccess("en-US");
             // Missing in zh-TW, present in en-US.
             defineAccess.AddEnum("en-US", "Common", "Gender", ("M", "Male"), ("F", "Female"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             var langEnum = svc.GetLangEnum("zh-TW", "Common.Gender");
 
@@ -162,7 +162,7 @@ namespace Polhem.Definition.UnitTests.Language
         public void GetLangEnum_AllMiss_ReturnsNull()
         {
             var defineAccess = new StubDefineAccess("en-US");
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             Assert.Null(svc.GetLangEnum("zh-TW", "Common.Gender"));
         }
@@ -173,7 +173,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddEnum("zh-TW", "Common", "Gender", ("M", "男"), ("F", "女"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             var viaFullName = svc.GetLangEnum("zh-TW", "Common.Gender");
             var viaExplicit = svc.GetLangEnum("zh-TW", "Common", "Gender");
@@ -189,7 +189,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddEnum("zh-TW", "Common", "Gender", ("M", "男"), ("F", "女"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             Assert.Equal("男", svc.GetLangEnumText("zh-TW", "Common.Gender", "M"));
         }
@@ -200,7 +200,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddEnum("zh-TW", "Common", "Gender", ("M", "男"));
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
 
             Assert.Null(svc.GetLangEnumText("zh-TW", "Common.Gender", "X"));
         }
@@ -210,7 +210,7 @@ namespace Polhem.Definition.UnitTests.Language
         public void GetLangText_FullKeyWithNoDot_ReturnsFallbackKey()
         {
             var defineAccess = new StubDefineAccess("en-US");
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
             var result = svc.GetLangText("zh-TW", "NoDotKey");
             Assert.Equal("NoDotKey.", result);
         }
@@ -220,7 +220,7 @@ namespace Polhem.Definition.UnitTests.Language
         public void GetLangEnum_BlankNamespace_ReturnsNull()
         {
             var defineAccess = new StubDefineAccess("en-US");
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
             Assert.Null(svc.GetLangEnum("zh-TW", "  ", "Gender"));
         }
 
@@ -229,7 +229,7 @@ namespace Polhem.Definition.UnitTests.Language
         public void GetLangEnum_BlankEnumName_ReturnsNull()
         {
             var defineAccess = new StubDefineAccess("en-US");
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
             Assert.Null(svc.GetLangEnum("zh-TW", "Common", " "));
         }
 
@@ -238,7 +238,7 @@ namespace Polhem.Definition.UnitTests.Language
         public void GetLangText_EmptyDefaultLang_ReturnsFallbackKeyWithoutFallbackLookup()
         {
             var defineAccess = new StubDefineAccess("");
-            var svc = new LanguageService(defineAccess);
+            var svc = new LanguageService(defineAccess, null);
             var result = svc.GetLangText("zh-TW", "Common.OK");
             Assert.Equal("Common.OK", result);
             Assert.Equal(1, defineAccess.GetLanguageCallCount);

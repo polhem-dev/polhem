@@ -116,7 +116,7 @@ namespace Polhem.Db.UnitTests
             real.Fields!.Add("id", "Id", FieldDbType.Guid);
             var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
             // Force one change so that the rebuild produces non-empty SQL.
-            diff.Changes.Add(new AddFieldChange(new DbFieldForTest()));
+            diff.ChangeList.Add(new AddFieldChange(new DbFieldForTest()));
 
             var builder = _factory.CreateTableRebuildCommandBuilder();
             var sql = builder.GetCommandText(diff);

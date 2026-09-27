@@ -32,8 +32,8 @@
     <!-- Required by EnforceCodeStyleInBuild for IDE0005 (unnecessary usings) to run during the build. -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <Description>Polhem framework CLI, a dotnet tool invoked as `dotnet polhem`. Writes out and lists the default definition files embedded in Polhem.Definition, and migrates a ProgramSettings.xml that still carries its menu into a flat registry plus MenuSettings.xml.</Description>
-    <PackageTags>polhem;cli;dotnet-tool;defines</PackageTags>
+    <Description>Polhem framework CLI, a dotnet tool invoked as `dotnet polhem`. Writes out and lists the default definition files embedded in Polhem.Definition, migrates a ProgramSettings.xml that still carries its menu into a flat registry plus MenuSettings.xml, and produces the encrypted key values SystemSettings.xml stores.</Description>
+    <PackageTags>polhem;cli;dotnet-tool;defines;keys</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

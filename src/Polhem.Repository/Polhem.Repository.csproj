@@ -14,6 +14,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The framework repositories are internal: hosts consume them through the I*Repository contracts. -->
+    <InternalsVisibleTo Include="Polhem.Repository.UnitTests" />
+    <InternalsVisibleTo Include="Polhem.Hosting.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Polhem.Db\Polhem.Db.csproj" />
     <ProjectReference Include="..\Polhem.Repository.Abstractions\Polhem.Repository.Abstractions.csproj" />
   </ItemGroup>

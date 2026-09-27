@@ -29,7 +29,7 @@ namespace Polhem.Db.UnitTests
             var table = schema.Tables!.Add("Foo", "Foo");
             table.DbTableName = "tb_foo";
             table.Fields!.Add(SysFields.RowId, "Row ID", FieldDbType.Guid);
-            table.Fields!.AddStringField("name", "Name", 50);
+            table.Fields!.Add(new FormField("name", "Name", FieldDbType.String) { MaxLength = 50 });
             return schema;
         }
 

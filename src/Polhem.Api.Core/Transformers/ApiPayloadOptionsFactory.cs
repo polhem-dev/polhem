@@ -7,11 +7,11 @@ namespace Polhem.Api.Core.Transformers
     /// NOTE: there is deliberately no <c>CreateSerializer</c> here. The body codec is <b>not</b> a
     /// deployment setting — each request declares it on the payload envelope and the server answers
     /// with the same one (ADR-044). A factory taking a codec name kept implying otherwise, and the
-    /// implication was actively dangerous: feeding its result to
-    /// <see cref="Polhem.Api.Core.ApiServiceOptions.Initialize(Polhem.Api.Core.Transformers.IApiPayloadSerializer, Polhem.Api.Core.Transformers.IApiPayloadCompressor, Polhem.Api.Core.Transformers.IApiPayloadEncryptor)"/>
-    /// changes what a request that declares <i>no</i> codec is read as, which silently breaks every
-    /// client predating negotiation. Compressor and encryptor stay, because those two really are
-    /// deployment settings.
+    /// implication was actively dangerous, because it suggested the codec a request that declares
+    /// <i>no</i> codec is read as could be chosen, which would silently break every client
+    /// predating negotiation. A codec the framework does not ship is added with
+    /// <see cref="Polhem.Api.Core.ApiServiceOptions.RegisterPayloadCodec"/>. Compressor and
+    /// encryptor stay, because those two really are deployment settings.
     /// </remarks>
     public static class ApiPayloadOptionsFactory
     {

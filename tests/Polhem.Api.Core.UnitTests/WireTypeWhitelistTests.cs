@@ -145,8 +145,8 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("IsRuntimeTypeAllowed rejects a constructed generic type with a disallowed generic argument")]
         public void IsRuntimeTypeAllowed_ConstructedGenericWithDisallowedArgument_ReturnsFalse()
         {
-            // `Polhem.Base.Collections.Dictionary<T>` is an allowed outer type; the argument is not.
-            var type = typeof(Polhem.Base.Collections.Dictionary<>)
+            // `PolhemStringLocalizer<T>` is an allowed outer type (an unconstrained generic in an allowed namespace); the argument is not.
+            var type = typeof(Polhem.Definition.Language.PolhemStringLocalizer<>)
                 .MakeGenericType(typeof(global::System.Text.StringBuilder));
 
             Assert.False(WireTypeWhitelist.IsRuntimeTypeAllowed(type));
@@ -156,7 +156,7 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("IsRuntimeTypeAllowed accepts a constructed generic type whose generic argument is also on the whitelist")]
         public void IsRuntimeTypeAllowed_ConstructedGenericWithAllowedArgument_ReturnsTrue()
         {
-            var type = typeof(Polhem.Base.Collections.Dictionary<>).MakeGenericType(typeof(string));
+            var type = typeof(Polhem.Definition.Language.PolhemStringLocalizer<>).MakeGenericType(typeof(string));
 
             Assert.True(WireTypeWhitelist.IsRuntimeTypeAllowed(type));
         }

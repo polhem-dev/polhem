@@ -79,7 +79,7 @@ namespace Polhem.Api.Core.UnitTests
 
         [Fact]
         [DisplayName("Execute returns the FormatException user message when Method has no '.'")]
-        public void Execute_MethodMissingDot_ReturnsFormatExceptionMessage()
+        public async Task Execute_MethodMissingDot_ReturnsFormatExceptionMessage()
         {
             var request = new JsonRpcRequest
             {
@@ -88,7 +88,7 @@ namespace Polhem.Api.Core.UnitTests
                 Id = "1"
             };
 
-            var response = NewExecutor(Guid.Empty, isLocalCall: true).Execute(request);
+            var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
 
             Assert.Null(response.Result);
             Assert.NotNull(response.Error);
@@ -98,7 +98,7 @@ namespace Polhem.Api.Core.UnitTests
 
         [Fact]
         [DisplayName("Execute returns the FormatException user message when Method is an empty string")]
-        public void Execute_EmptyMethod_ReturnsFormatExceptionMessage()
+        public async Task Execute_EmptyMethod_ReturnsFormatExceptionMessage()
         {
             var request = new JsonRpcRequest
             {
@@ -107,7 +107,7 @@ namespace Polhem.Api.Core.UnitTests
                 Id = "1"
             };
 
-            var response = NewExecutor(Guid.Empty, isLocalCall: true).Execute(request);
+            var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
 
             Assert.NotNull(response.Error);
             Assert.Contains("Invalid method format", response.Error!.Message);
@@ -119,11 +119,11 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData("Order.Save.Extra")]
         [InlineData("Order.")]
         [DisplayName("Execute rejects a method whose progId or action has characters outside the allowed set")]
-        public void Execute_MethodWithInvalidCharacters_ReturnsFormatExceptionMessage(string method)
+        public async Task Execute_MethodWithInvalidCharacters_ReturnsFormatExceptionMessage(string method)
         {
             var request = new JsonRpcRequest { Method = method, Params = new JsonRpcParams(), Id = "1" };
 
-            var response = NewExecutor(Guid.Empty, isLocalCall: true).Execute(request);
+            var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
 
             Assert.NotNull(response.Error);
             Assert.Equal("Invalid method format.", response.Error!.Message);
@@ -131,12 +131,12 @@ namespace Polhem.Api.Core.UnitTests
 
         [Fact]
         [DisplayName("Execute rejects a progId longer than the limit without echoing it back")]
-        public void Execute_OverlongProgId_ReturnsFormatExceptionWithoutEcho()
+        public async Task Execute_OverlongProgId_ReturnsFormatExceptionWithoutEcho()
         {
             string progId = new('A', JsonRpcExecutor.MaxMethodPartLength + 1);
             var request = new JsonRpcRequest { Method = progId + ".GetList", Params = new JsonRpcParams(), Id = "1" };
 
-            var response = NewExecutor(Guid.Empty, isLocalCall: true).Execute(request);
+            var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
 
             Assert.NotNull(response.Error);
             Assert.Equal("Invalid method format.", response.Error!.Message);
@@ -144,12 +144,12 @@ namespace Polhem.Api.Core.UnitTests
 
         [Fact]
         [DisplayName("Execute accepts a progId exactly at the length limit")]
-        public void Execute_ProgIdAtLimit_PassesShapeCheck()
+        public async Task Execute_ProgIdAtLimit_PassesShapeCheck()
         {
             string progId = new('A', JsonRpcExecutor.MaxMethodPartLength);
             var request = new JsonRpcRequest { Method = progId + ".NoSuchAction", Params = new JsonRpcParams(), Id = "1" };
 
-            var response = NewExecutor(Guid.Empty, isLocalCall: true).Execute(request);
+            var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
 
             Assert.NotNull(response.Error);
             Assert.NotEqual("Invalid method format.", response.Error!.Message);
@@ -157,7 +157,7 @@ namespace Polhem.Api.Core.UnitTests
 
         [Fact]
         [DisplayName("Execute returns the ArgumentException user message when progId is an empty string")]
-        public void Execute_EmptyProgId_ReturnsArgumentExceptionMessage()
+        public async Task Execute_EmptyProgId_ReturnsArgumentExceptionMessage()
         {
             // `ParseMethod` splits ".Ping" into an empty progId and the action "Ping".
             var request = new JsonRpcRequest
@@ -167,7 +167,7 @@ namespace Polhem.Api.Core.UnitTests
                 Id = "1"
             };
 
-            var response = NewExecutor(Guid.Empty, isLocalCall: true).Execute(request);
+            var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
 
             Assert.NotNull(response.Error);
             Assert.Contains("ProgId", response.Error!.Message);
@@ -175,7 +175,7 @@ namespace Polhem.Api.Core.UnitTests
 
         [Fact]
         [DisplayName("Execute masks MissingMethodException for an unknown Action as Internal server error (outside debug mode)")]
-        public void Execute_UnknownAction_ReturnsGenericInternalError()
+        public async Task Execute_UnknownAction_ReturnsGenericInternalError()
         {
             var request = new JsonRpcRequest
             {
@@ -191,7 +191,7 @@ namespace Polhem.Api.Core.UnitTests
             try
             {
                 SysInfo.IsDebugMode = false;
-                var response = NewExecutor(Guid.Empty, isLocalCall: true).Execute(request);
+                var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
 
                 Assert.NotNull(response.Error);
                 Assert.Equal((int)JsonRpcErrorCode.InternalError, response.Error!.Code);
@@ -205,7 +205,7 @@ namespace Polhem.Api.Core.UnitTests
 
         [Fact]
         [DisplayName("Execute passes through the original exception message for an unknown Action in debug mode")]
-        public void Execute_UnknownAction_DebugMode_PassesThroughMessage()
+        public async Task Execute_UnknownAction_DebugMode_PassesThroughMessage()
         {
             var request = new JsonRpcRequest
             {
@@ -218,7 +218,7 @@ namespace Polhem.Api.Core.UnitTests
             try
             {
                 SysInfo.IsDebugMode = true;
-                var response = NewExecutor(Guid.Empty, isLocalCall: true).Execute(request);
+                var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
 
                 Assert.NotNull(response.Error);
                 Assert.Equal((int)JsonRpcErrorCode.InternalError, response.Error!.Code);
@@ -232,7 +232,7 @@ namespace Polhem.Api.Core.UnitTests
 
         [Fact]
         [DisplayName("Execute takes the CreateBusinessObject branch for a non-System progId")]
-        public void Execute_NonSystemProgId_InvokesCreateBusinessObject()
+        public async Task Execute_NonSystemProgId_InvokesCreateBusinessObject()
         {
             // Uses the defined Department progId, and the unknown action is caught as a `MissingMethodException`.
             // Whether or not the Form BO is created, the else branch of `CreateBusinessObject` runs, which covers
@@ -244,14 +244,14 @@ namespace Polhem.Api.Core.UnitTests
                 Id = "1"
             };
 
-            var response = NewExecutor(Guid.Empty, isLocalCall: true).Execute(request);
+            var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
 
             Assert.NotNull(response.Error);
         }
 
         [Fact]
         [DisplayName("The Response returned by Execute echoes Method and Id")]
-        public void Execute_Response_EchoesMethodAndId()
+        public async Task Execute_Response_EchoesMethodAndId()
         {
             var id = Guid.NewGuid().ToString();
             var request = new JsonRpcRequest
@@ -261,7 +261,7 @@ namespace Polhem.Api.Core.UnitTests
                 Id = id
             };
 
-            var response = NewExecutor(Guid.Empty, isLocalCall: true).Execute(request);
+            var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
 
             Assert.Equal(request.Method, response.Method);
             Assert.Equal(id, response.Id);

@@ -18,12 +18,10 @@ namespace Polhem.ObjectCaching.Define
         /// Initializes a new instance of <see cref="LanguageResourceCache"/>.
         /// </summary>
         /// <param name="storage">The define storage backing this cache.</param>
-        /// <param name="paths">Retained for constructor compatibility; the monitored file paths now come from <paramref name="storage"/>. Still validated as non-null.</param>
         /// <param name="cachePrefix">Per-owner cache namespace (see <see cref="KeyObjectCache{T}"/>).</param>
-        public LanguageResourceCache(IDefineStorage storage, PathOptions paths, string cachePrefix = "") : base(cachePrefix)
+        public LanguageResourceCache(IDefineStorage storage, string cachePrefix = "") : base(cachePrefix)
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
-            ArgumentNullException.ThrowIfNull(paths);
         }
 
         /// <summary>

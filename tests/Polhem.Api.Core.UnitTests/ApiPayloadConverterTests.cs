@@ -235,6 +235,23 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
+        [DisplayName("RestoreFrom rejects a Bee.NET TypeName with a hint that it looks like a Bee.NET name")]
+        public void RestoreFrom_BeeTypeName_MessageHasBeeHint()
+        {
+            var payload = new JsonRpcParams
+            {
+                Value = new byte[] { 0x01 },
+                TypeName = "Bee.Api.Core.Messages.System.PingRequest, Bee.Api.Core"
+            };
+
+            var ex = Assert.Throws<InvalidOperationException>(() =>
+                ApiPayloadConverter.RestoreFrom(payload, PayloadFormat.Encoded));
+
+            Assert.Contains("not in the allowed type whitelist", ex.Message, StringComparison.Ordinal);
+            Assert.Contains("Bee.NET", ex.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("RestoreFrom with the Plain format skips TypeName validation")]
         public void RestoreFrom_PlainFormat_SkipsValidation()
         {

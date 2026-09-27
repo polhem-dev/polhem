@@ -27,6 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- A test helper shared with the higher test projects; this project does not reference Polhem.Tests.Shared. -->
+    <Compile Include="..\Polhem.Tests.Shared\DataTableComparer.cs" Link="DataTableComparer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

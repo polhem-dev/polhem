@@ -14,10 +14,5 @@ namespace Polhem.Api.Contracts.System
         /// Gets the session expiration time in seconds.
         /// </summary>
         int ExpiresIn { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether this is a one-time session.
-        /// </summary>
-        bool OneTime { get; }
     }
 }

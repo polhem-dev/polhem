@@ -1,8 +1,10 @@
 using System.ComponentModel;
 using Polhem.Base.Data;
+using Polhem.Base;
 using Polhem.Db.Manager;
 using Polhem.Db.Providers;
 using Polhem.Db.Schema;
+using Polhem.Db.Schema.Changes;
 using Polhem.Definition.Database;
 using Polhem.Tests.Shared;
 
@@ -65,7 +67,7 @@ namespace Polhem.Db.UnitTests
 
                 dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery,
                     $"INSERT INTO {TableName} (sys_rowid, work_start) VALUES ({{0}}, {{1}})",
-                    Guid.NewGuid(), FieldDbType.Time.ToFieldValue("8:30")));
+                    Guid.NewGuid(), ValueUtilities.CTimeString("8:30")));
 
                 var read = dbAccess.Execute(new DbCommandSpec(DbCommandKind.DataTable,
                     $"SELECT work_start FROM {TableName}"));
@@ -80,8 +82,10 @@ namespace Polhem.Db.UnitTests
                 var real = Dialect(databaseType)
                     .CreateTableSchemaProvider(databaseId, connectionManager)
                     .GetTableSchema(TableName);
-                var compared = new TableSchemaComparer(BuildSchema(), real, databaseType).Compare();
-                Assert.Equal(DbUpgradeAction.None, compared.Fields!["work_start"].UpgradeAction);
+                var diff = new TableSchemaComparer(BuildSchema(), real, databaseType).CompareToDiff();
+                Assert.DoesNotContain(diff.Changes, c =>
+                    (c is AlterFieldChange alter && alter.NewField.FieldName == "work_start")
+                    || (c is AddFieldChange add && add.Field.FieldName == "work_start"));
             }
             finally
             {

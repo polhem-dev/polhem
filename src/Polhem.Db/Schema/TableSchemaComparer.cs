@@ -40,48 +40,6 @@ namespace Polhem.Db.Schema
         public DatabaseType DatabaseType { get; }
 
         /// <summary>
-        /// Gets the description drift between the defined and the actual schema.
-        /// Populated by <see cref="Compare"/>; independent of <see cref="DbUpgradeAction"/>.
-        /// </summary>
-        public List<DescriptionChange> DescriptionChanges { get; } = [];
-
-        /// <summary>
-        /// Executes the comparison and returns the resulting table schema with upgrade actions set.
-        /// </summary>
-        public TableSchema Compare()
-        {
-            // Create a clone of the defined table schema to use as the comparison result
-            var compareTable = this.DefineTable.Clone();
-            // No actual table exists; mark the entire table as new
-            if (this.RealTable == null)
-            {
-                compareTable.UpgradeAction = DbUpgradeAction.New;
-                return compareTable;
-            }
-            // Compare field definitions
-            if (!CompareFields(compareTable))
-                compareTable.UpgradeAction = DbUpgradeAction.Upgrade;
-            // Compare indexes
-            if (!CompareIndexes(compareTable))
-                compareTable.UpgradeAction = DbUpgradeAction.Upgrade;
-            // Append extra fields from the actual table
-            if (compareTable.UpgradeAction != DbUpgradeAction.None)
-                AddExtensionFields(compareTable);
-            // Detect description drift; does not affect UpgradeAction
-            CompareDescriptions();
-            return compareTable;
-        }
-
-        /// <summary>
-        /// Detects description drift between the defined and actual schema and populates <see cref="DescriptionChanges"/>.
-        /// Empty-define / non-empty-real is treated as no drift (conservative policy; avoids accidental removal).
-        /// </summary>
-        private void CompareDescriptions()
-        {
-            PopulateDescriptionChanges(this.DescriptionChanges);
-        }
-
-        /// <summary>
         /// Populates the given list with description drift entries between the defined and actual schema.
         /// Empty-define / non-empty-real is treated as no drift (conservative policy; avoids accidental removal).
         /// </summary>
@@ -132,34 +90,6 @@ namespace Polhem.Db.Schema
         }
 
         /// <summary>
-        /// Compares field definitions between the defined and actual table schemas.
-        /// </summary>
-        /// <param name="compareTable">The table schema used as the comparison result.</param>
-        private bool CompareFields(TableSchema compareTable)
-        {
-            bool isMatch = true;
-            foreach (DbField field in compareTable.Fields!)
-            {
-                if (this.RealTable!.Fields!.Contains(field.FieldName))
-                {
-                    if (!CompareField(field, this.RealTable.Fields[field.FieldName]))
-                    {
-                        // Field exists but differs; mark as upgrade
-                        field.UpgradeAction = DbUpgradeAction.Upgrade;
-                        isMatch = false;
-                    }
-                }
-                else
-                {
-                    // Field does not exist; mark as new
-                    field.UpgradeAction = DbUpgradeAction.New;
-                    isMatch = false;
-                }
-            }
-            return isMatch;
-        }
-
-        /// <summary>
         /// Compares a defined field against its database counterpart under the active dialect's
         /// nullability semantics.
         /// </summary>
@@ -197,35 +127,6 @@ namespace Polhem.Db.Schema
         }
 
         /// <summary>
-        /// Compares indexes between the defined and actual table schemas.
-        /// </summary>
-        /// <param name="compareTable">The table schema used as the comparison result.</param>
-        private bool CompareIndexes(TableSchema compareTable)
-        {
-            // Return false immediately if any index does not match
-            foreach (DbTableIndex index in compareTable.Indexes!)
-            {
-                var realIndex = FindRealIndex(index, compareTable.TableName);
-                if (realIndex != null)
-                {
-                    if (!index.Compare(realIndex, DatabaseType))
-                    {
-                        // Index exists but differs; mark as upgrade
-                        index.UpgradeAction = DbUpgradeAction.Upgrade;
-                        return false;
-                    }
-                }
-                else
-                {
-                    // Index does not exist; mark as new
-                    index.UpgradeAction = DbUpgradeAction.New;
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        /// <summary>
         /// Locates the matching index in <see cref="RealTable"/>. PK identity is the
         /// "single PK per table" flag (MySQL hardcodes the PK name as <c>PRIMARY</c>, so
         /// matching by formatted name would always miss); other indexes are matched by
@@ -249,21 +150,8 @@ namespace Polhem.Db.Schema
         }
 
         /// <summary>
-        /// Appends extra fields from the actual table that are not present in the defined schema.
-        /// </summary>
-        /// <param name="compareTable">The table schema used as the comparison result.</param>
-        private void AddExtensionFields(TableSchema compareTable)
-        {
-            foreach (var field in this.RealTable!.Fields!.Where(f => !compareTable.Fields!.Contains(f.FieldName)))
-            {
-                compareTable.Fields!.Add(field.Clone());
-            }
-        }
-
-        /// <summary>
         /// Produces a structured diff describing the differences between the defined schema and the actual database schema.
-        /// Unlike <see cref="Compare"/>, this does not mutate <see cref="DbUpgradeAction"/> on the cloned schema;
-        /// instead, each difference is represented as an <see cref="ITableChange"/> record.
+        /// Each difference is represented as an <see cref="ITableChange"/> record.
         /// Fields and indexes present only in the actual database (not in the defined schema) are preserved and produce no change entries.
         /// </summary>
         public TableSchemaDiff CompareToDiff()
@@ -277,7 +165,7 @@ namespace Polhem.Db.Schema
             // Index-level changes
             CollectIndexChanges(diff);
             // Description drift (table DisplayName and column Caption)
-            PopulateDescriptionChanges(diff.DescriptionChanges);
+            PopulateDescriptionChanges(diff.DescriptionChangeList);
             return diff;
         }
 
@@ -298,7 +186,7 @@ namespace Polhem.Db.Schema
                     // Any stale OriginalFieldName hint is treated as already-applied and ignored here.
                     var realField = this.RealTable.Fields[defineField.FieldName];
                     if (!CompareField(defineField, realField))
-                        diff.Changes.Add(new AlterFieldChange(realField.Clone(), defineField.Clone()));
+                        diff.ChangeList.Add(new AlterFieldChange(realField.Clone(), defineField.Clone()));
                     continue;
                 }
 
@@ -307,18 +195,18 @@ namespace Polhem.Db.Schema
                     && this.RealTable.Fields.Contains(defineField.OriginalFieldName))
                 {
                     var oldRealField = this.RealTable.Fields[defineField.OriginalFieldName];
-                    diff.Changes.Add(new RenameFieldChange(defineField.OriginalFieldName, defineField.Clone()));
+                    diff.ChangeList.Add(new RenameFieldChange(defineField.OriginalFieldName, defineField.Clone()));
                     // After rename, the column definition may still differ from the target; emit an
                     // AlterFieldChange against a projection of the real column under the new name.
                     var postRenameField = oldRealField.Clone();
                     postRenameField.FieldName = defineField.FieldName;
                     if (!CompareField(defineField, postRenameField))
-                        diff.Changes.Add(new AlterFieldChange(postRenameField, defineField.Clone()));
+                        diff.ChangeList.Add(new AlterFieldChange(postRenameField, defineField.Clone()));
                     continue;
                 }
 
                 // No column under the target name and no applicable rename hint — add as a new column.
-                diff.Changes.Add(new AddFieldChange(defineField.Clone()));
+                diff.ChangeList.Add(new AddFieldChange(defineField.Clone()));
             }
         }
 
@@ -337,13 +225,13 @@ namespace Polhem.Db.Schema
                 {
                     if (!defineIndex.Compare(realIndex, DatabaseType))
                     {
-                        diff.Changes.Add(new DropIndexChange(realIndex.Clone()));
-                        diff.Changes.Add(new AddIndexChange(defineIndex.Clone()));
+                        diff.ChangeList.Add(new DropIndexChange(realIndex.Clone()));
+                        diff.ChangeList.Add(new AddIndexChange(defineIndex.Clone()));
                     }
                 }
                 else
                 {
-                    diff.Changes.Add(new AddIndexChange(defineIndex.Clone()));
+                    diff.ChangeList.Add(new AddIndexChange(defineIndex.Clone()));
                 }
             }
         }

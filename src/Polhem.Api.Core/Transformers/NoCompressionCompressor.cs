@@ -3,7 +3,7 @@ namespace Polhem.Api.Core.Transformers
     /// <summary>
     /// A compressor implementation that performs no compression or decompression.
     /// </summary>
-    public class NoCompressionCompressor : IApiPayloadCompressor
+    internal sealed class NoCompressionCompressor : IApiPayloadCompressor
     {
         /// <summary>
         /// Gets the identifier string for the compression algorithm. "none" indicates no compression is applied.

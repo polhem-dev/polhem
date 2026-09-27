@@ -21,8 +21,7 @@ namespace Polhem.Business.UnitTests
             var args = new CreateSessionArgs
             {
                 UserID = "001",
-                ExpiresIn = 600,
-                OneTime = false
+                ExpiresIn = 600
             };
 
             // Act
@@ -71,18 +70,6 @@ namespace Polhem.Business.UnitTests
 
             var ex = Assert.Throws<NotSupportedException>(() => business.CreateSession(args));
             Assert.Contains("local calls", ex.Message);
-        }
-
-        [Fact]
-        [DisplayName("CreateSession asking for a one-time token throws NotSupportedException instead of silently degrading")]
-        public void CreateSession_OneTime_ThrowsNotSupported()
-        {
-            var business = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
-            var args = new CreateSessionArgs { UserID = "001", ExpiresIn = 600, OneTime = true };
-
-            // Because the session is written to the cache on creation, the first use is a cache hit and delete-on-read never fires,
-            // so the one-time semantics have nowhere to take effect. Letting a security guarantee fail silently is the worst option, so it is rejected explicitly.
-            Assert.Throws<NotSupportedException>(() => business.CreateSession(args));
         }
     }
 }

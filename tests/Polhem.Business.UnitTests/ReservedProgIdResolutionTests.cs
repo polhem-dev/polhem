@@ -88,6 +88,31 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
+        [DisplayName("A BusinessObject binding with a Bee.NET name that cannot be loaded says it looks like a Bee.NET name")]
+        public void Resolve_BeeTypeName_MessageHasBeeHint()
+        {
+            var resolver = new ProgramSettingsBoTypeResolver(
+                new StubDefineAccess(Registry((SysProgIds.AuditLog, "Bee.Business.AuditLog.LogBusinessObject, Bee.Business"))));
+
+            var ex = Assert.Throws<InvalidOperationException>(() => resolver.Resolve(SysProgIds.AuditLog));
+
+            Assert.Contains("Bee.NET", ex.Message, StringComparison.Ordinal);
+            Assert.Contains("Migrating from Bee.NET", ex.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("A BusinessObject binding with any other unloadable name carries no Bee.NET hint")]
+        public void Resolve_OtherUnloadableTypeName_MessageHasNoBeeHint()
+        {
+            var resolver = new ProgramSettingsBoTypeResolver(
+                new StubDefineAccess(Registry((SysProgIds.System, "Polhem.Business.NoSuchTypeXyz, Polhem.Business"))));
+
+            var ex = Assert.Throws<InvalidOperationException>(() => resolver.Resolve(SysProgIds.System));
+
+            Assert.DoesNotContain("Bee.NET", ex.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("A reserved progId throws as well when the assembly cannot be found")]
         public void Resolve_ReservedProgIdWithMissingAssembly_Throws()
         {
@@ -152,19 +177,6 @@ namespace Polhem.Business.UnitTests
                 new StubDefineAccess(Registry(("Report", Fqn(typeof(CustomLogBo))))));
 
             Assert.Equal(typeof(CustomLogBo), resolver.Resolve("Report"));
-        }
-
-        // ---- DefaultBoTypeResolver ----
-
-        [Fact]
-        [DisplayName("DefaultBoTypeResolver also returns the framework default for reserved progIds instead of always FormBusinessObject")]
-        public void DefaultResolver_HonoursReservedProgIds()
-        {
-            var resolver = new DefaultBoTypeResolver();
-
-            Assert.Equal(typeof(SystemBusinessObject), resolver.Resolve(SysProgIds.System));
-            Assert.Equal(typeof(LogBusinessObject), resolver.Resolve(SysProgIds.AuditLog));
-            Assert.Equal(typeof(FormBusinessObject), resolver.Resolve("Order"));
         }
 
         // ---- ReservedProgIds ----

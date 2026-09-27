@@ -20,7 +20,7 @@ namespace Polhem.Db.UnitTests
             var table = schema.Tables!.Add("demo", "Demo Table");
             table.DbTableName = "tb_demo";
             table.Fields!.Add("Id", "Id", FieldDbType.Integer);
-            table.Fields!.AddStringField("Name", "Name", 50);
+            table.Fields!.Add(new FormField("Name", "Name", FieldDbType.String) { MaxLength = 50 });
             return schema;
         }
 

@@ -27,12 +27,12 @@ namespace Polhem.Db.Schema
         /// <summary>
         /// Gets the ordered list of stages. Each stage runs in its own transaction.
         /// </summary>
-        public List<UpgradeStage> Stages { get; }
+        public IReadOnlyList<UpgradeStage> Stages { get; }
 
         /// <summary>
         /// Gets the warnings surfaced during planning (e.g. narrowing changes that were permitted).
         /// </summary>
-        public List<string> Warnings { get; }
+        public IReadOnlyList<string> Warnings { get; }
 
         /// <summary>
         /// Gets a value indicating whether the plan has nothing to execute.

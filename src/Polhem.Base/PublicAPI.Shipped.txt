@@ -27,8 +27,6 @@ Polhem.Base.Collections.CollectionItem.Remove() -> void
 Polhem.Base.Collections.CollectionItem.SetCollection(Polhem.Base.Collections.ICollectionBase? collection) -> void
 Polhem.Base.Collections.CollectionItem.Tag.get -> object?
 Polhem.Base.Collections.CollectionItem.Tag.set -> void
-Polhem.Base.Collections.Dictionary<T>
-Polhem.Base.Collections.Dictionary<T>.Dictionary() -> void
 Polhem.Base.Collections.ICollectionBase
 Polhem.Base.Collections.ICollectionBase.Add(Polhem.Base.Collections.ICollectionItem! value) -> void
 Polhem.Base.Collections.ICollectionBase.Insert(int index, Polhem.Base.Collections.ICollectionItem! value) -> void
@@ -72,7 +70,6 @@ Polhem.Base.Data.DataColumnExtensions
 Polhem.Base.Data.DataRowExtensions
 Polhem.Base.Data.DataRowViewExtensions
 Polhem.Base.Data.DataSetExtensions
-Polhem.Base.Data.DataTableComparer
 Polhem.Base.Data.DataTableExtensions
 Polhem.Base.Data.DataViewExtensions
 Polhem.Base.Data.DbTypeConverter
@@ -93,17 +90,6 @@ Polhem.Base.Data.FieldDbType.Text = 1 -> Polhem.Base.Data.FieldDbType
 Polhem.Base.Data.FieldDbType.Time = 14 -> Polhem.Base.Data.FieldDbType
 Polhem.Base.Data.FieldDbType.Unknown = 13 -> Polhem.Base.Data.FieldDbType
 Polhem.Base.Data.FieldDbTypeExtensions
-Polhem.Base.DateInterval
-Polhem.Base.DateInterval.Day = 4 -> Polhem.Base.DateInterval
-Polhem.Base.DateInterval.DayOfYear = 3 -> Polhem.Base.DateInterval
-Polhem.Base.DateInterval.Hour = 7 -> Polhem.Base.DateInterval
-Polhem.Base.DateInterval.Minute = 8 -> Polhem.Base.DateInterval
-Polhem.Base.DateInterval.Month = 2 -> Polhem.Base.DateInterval
-Polhem.Base.DateInterval.Quarter = 1 -> Polhem.Base.DateInterval
-Polhem.Base.DateInterval.Second = 9 -> Polhem.Base.DateInterval
-Polhem.Base.DateInterval.WeekOfYear = 5 -> Polhem.Base.DateInterval
-Polhem.Base.DateInterval.Weekday = 6 -> Polhem.Base.DateInterval
-Polhem.Base.DateInterval.Year = 0 -> Polhem.Base.DateInterval
 Polhem.Base.DateTimeBasis
 Polhem.Base.DateTimeBasis.UserZone = 0 -> Polhem.Base.DateTimeBasis
 Polhem.Base.DateTimeBasis.Utc = 1 -> Polhem.Base.DateTimeBasis
@@ -138,11 +124,6 @@ Polhem.Base.IDisplayName.DisplayName.get -> string!
 Polhem.Base.IDisplayName.DisplayName.set -> void
 Polhem.Base.IKeyObject
 Polhem.Base.IKeyObject.GetKey() -> string!
-Polhem.Base.IPValidator
-Polhem.Base.IPValidator.Blacklist.get -> System.Collections.Generic.IReadOnlyList<string!>!
-Polhem.Base.IPValidator.IPValidator(System.Collections.Generic.List<string!>! whitelist, System.Collections.Generic.List<string!>! blacklist) -> void
-Polhem.Base.IPValidator.IsIpAllowed(string! ipAddress) -> bool
-Polhem.Base.IPValidator.Whitelist.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Base.ISysInfoConfiguration
 Polhem.Base.ISysInfoConfiguration.AllowedTypeNamespaces.get -> string!
 Polhem.Base.ISysInfoConfiguration.AllowedTypeNamespaces.set -> void
@@ -175,74 +156,14 @@ Polhem.Base.Serialization.SerializationExtensions
 Polhem.Base.Serialization.Utf8StringWriter
 Polhem.Base.Serialization.Utf8StringWriter.Utf8StringWriter() -> void
 Polhem.Base.Serialization.XmlCodec
-Polhem.Base.Serialization.XmlSerializerCache
 Polhem.Base.StringExtensions
 Polhem.Base.StringUtilities
 Polhem.Base.SysInfo
-Polhem.Base.Tracing.ITraceListener
-Polhem.Base.Tracing.ITraceListener.TraceEnd(Polhem.Base.Tracing.TraceContext! ctx, Polhem.Base.Tracing.TraceStatus status = Polhem.Base.Tracing.TraceStatus.Ok, string? detail = null) -> void
-Polhem.Base.Tracing.ITraceListener.TraceStart(Polhem.Base.Tracing.TraceLayers layer, string! detail = "", string! category = "", object? tag = null, string! name = "") -> Polhem.Base.Tracing.TraceContext!
-Polhem.Base.Tracing.ITraceListener.TraceWrite(Polhem.Base.Tracing.TraceLayers layer, string! detail = "", Polhem.Base.Tracing.TraceStatus status = Polhem.Base.Tracing.TraceStatus.Ok, string! category = "", object? tag = null, string! name = "") -> void
-Polhem.Base.Tracing.ITraceWriter
-Polhem.Base.Tracing.ITraceWriter.Write(Polhem.Base.Tracing.TraceEvent! evt) -> void
-Polhem.Base.Tracing.TraceCategories
-Polhem.Base.Tracing.TraceContext
-Polhem.Base.Tracing.TraceContext.Category.get -> string!
-Polhem.Base.Tracing.TraceContext.Detail.get -> string!
-Polhem.Base.Tracing.TraceContext.Layer.get -> Polhem.Base.Tracing.TraceLayers
-Polhem.Base.Tracing.TraceContext.Name.get -> string!
-Polhem.Base.Tracing.TraceContext.Start.get -> System.DateTimeOffset
-Polhem.Base.Tracing.TraceContext.Stopwatch.get -> System.Diagnostics.Stopwatch!
-Polhem.Base.Tracing.TraceContext.Tag.get -> object?
-Polhem.Base.Tracing.TraceDispatcher
-Polhem.Base.Tracing.TraceDispatcher.TraceDispatcher(Polhem.Base.Tracing.ITraceWriter! writer) -> void
-Polhem.Base.Tracing.TraceDispatcher.TraceEnd(Polhem.Base.Tracing.TraceContext! ctx, Polhem.Base.Tracing.TraceStatus status = Polhem.Base.Tracing.TraceStatus.Ok, string? detail = null) -> void
-Polhem.Base.Tracing.TraceDispatcher.TraceStart(Polhem.Base.Tracing.TraceLayers layer, string! detail = "", string! category = "", object? tag = null, string! name = "") -> Polhem.Base.Tracing.TraceContext!
-Polhem.Base.Tracing.TraceDispatcher.TraceWrite(Polhem.Base.Tracing.TraceLayers layer, string! detail = "", Polhem.Base.Tracing.TraceStatus status = Polhem.Base.Tracing.TraceStatus.Ok, string! category = "", object? tag = null, string! name = "") -> void
-Polhem.Base.Tracing.TraceEvent
-Polhem.Base.Tracing.TraceEvent.Category.get -> string!
-Polhem.Base.Tracing.TraceEvent.Category.set -> void
-Polhem.Base.Tracing.TraceEvent.Detail.get -> string!
-Polhem.Base.Tracing.TraceEvent.Detail.set -> void
-Polhem.Base.Tracing.TraceEvent.DurationMs.get -> double
-Polhem.Base.Tracing.TraceEvent.DurationMs.set -> void
-Polhem.Base.Tracing.TraceEvent.Kind.get -> Polhem.Base.Tracing.TraceEventKind
-Polhem.Base.Tracing.TraceEvent.Kind.set -> void
-Polhem.Base.Tracing.TraceEvent.Layer.get -> Polhem.Base.Tracing.TraceLayers
-Polhem.Base.Tracing.TraceEvent.Layer.set -> void
-Polhem.Base.Tracing.TraceEvent.Name.get -> string!
-Polhem.Base.Tracing.TraceEvent.Name.set -> void
-Polhem.Base.Tracing.TraceEvent.Status.get -> Polhem.Base.Tracing.TraceStatus
-Polhem.Base.Tracing.TraceEvent.Status.set -> void
-Polhem.Base.Tracing.TraceEvent.Tag.get -> object?
-Polhem.Base.Tracing.TraceEvent.Tag.set -> void
-Polhem.Base.Tracing.TraceEvent.Time.get -> System.DateTimeOffset
-Polhem.Base.Tracing.TraceEvent.Time.set -> void
-Polhem.Base.Tracing.TraceEvent.TraceEvent() -> void
-Polhem.Base.Tracing.TraceEventKind
-Polhem.Base.Tracing.TraceEventKind.End = 1 -> Polhem.Base.Tracing.TraceEventKind
-Polhem.Base.Tracing.TraceEventKind.Point = 2 -> Polhem.Base.Tracing.TraceEventKind
-Polhem.Base.Tracing.TraceEventKind.Start = 0 -> Polhem.Base.Tracing.TraceEventKind
-Polhem.Base.Tracing.TraceLayers
-Polhem.Base.Tracing.TraceLayers.All = Polhem.Base.Tracing.TraceLayers.UI | Polhem.Base.Tracing.TraceLayers.ApiClient | Polhem.Base.Tracing.TraceLayers.ApiServer | Polhem.Base.Tracing.TraceLayers.Business | Polhem.Base.Tracing.TraceLayers.Data -> Polhem.Base.Tracing.TraceLayers
-Polhem.Base.Tracing.TraceLayers.ApiClient = 2 -> Polhem.Base.Tracing.TraceLayers
-Polhem.Base.Tracing.TraceLayers.ApiServer = 4 -> Polhem.Base.Tracing.TraceLayers
-Polhem.Base.Tracing.TraceLayers.Business = 8 -> Polhem.Base.Tracing.TraceLayers
-Polhem.Base.Tracing.TraceLayers.Data = 16 -> Polhem.Base.Tracing.TraceLayers
-Polhem.Base.Tracing.TraceLayers.None = 0 -> Polhem.Base.Tracing.TraceLayers
-Polhem.Base.Tracing.TraceLayers.UI = 1 -> Polhem.Base.Tracing.TraceLayers
-Polhem.Base.Tracing.TraceStatus
-Polhem.Base.Tracing.TraceStatus.Cancelled = 2 -> Polhem.Base.Tracing.TraceStatus
-Polhem.Base.Tracing.TraceStatus.Error = 1 -> Polhem.Base.Tracing.TraceStatus
-Polhem.Base.Tracing.TraceStatus.Ok = 0 -> Polhem.Base.Tracing.TraceStatus
-Polhem.Base.Tracing.Tracer
 Polhem.Base.ValueUtilities
 const Polhem.Base.Security.ApiKeyFormat.MaxSysIdLength = 50 -> int
 const Polhem.Base.Security.ApiKeyFormat.MinSysIdLength = 3 -> int
 const Polhem.Base.Security.ApiKeyFormat.Separator = '.' -> char
 const Polhem.Base.Serialization.SerializationErrorData.FilePath = "Polhem.FilePath" -> string!
-const Polhem.Base.Tracing.TraceCategories.General = "General" -> string!
-const Polhem.Base.Tracing.TraceCategories.JsonRpc = "JsonRpc" -> string!
 const Polhem.Base.ValueUtilities.TimeOnlyFormat = "HH:mm" -> string!
 override Polhem.Base.Collections.CollectionBase<T>.InsertItem(int index, T! item) -> void
 override Polhem.Base.Collections.CollectionBase<T>.RemoveItem(int index) -> void
@@ -259,7 +180,6 @@ static Polhem.Base.AssemblyLoader.CreateInstance(string! fullTypeName, params ob
 static Polhem.Base.AssemblyLoader.FindAssembly(string! assemblyName) -> System.Reflection.Assembly?
 static Polhem.Base.AssemblyLoader.GetType(string! assemblyName, string! typeName) -> System.Type?
 static Polhem.Base.AssemblyLoader.GetType(string! fullTypeName) -> System.Type?
-static Polhem.Base.AssemblyLoader.IsAssemblyLoaded(string! assemblyName) -> bool
 static Polhem.Base.AssemblyLoader.LoadAssembly(string! assemblyName) -> System.Reflection.Assembly!
 static Polhem.Base.Attributes.TreeNodeAttribute.GetDisplayText(object! value) -> string!
 static Polhem.Base.Collections.CollectionExtensions.GetValue<T>(this System.Data.PropertyCollection! collection, string! key, object? defaultValue) -> T?
@@ -270,10 +190,8 @@ static Polhem.Base.Data.DataRowExtensions.GetFieldValue<T>(this System.Data.Data
 static Polhem.Base.Data.DataRowExtensions.GetFieldValue<T>(this System.Data.DataRow! row, string! columnName, T defaultValue) -> T
 static Polhem.Base.Data.DataRowViewExtensions.GetFieldValue<T>(this System.Data.DataRowView! rowView, string! columnName) -> T
 static Polhem.Base.Data.DataRowViewExtensions.GetFieldValue<T>(this System.Data.DataRowView! rowView, string! columnName, T defaultValue) -> T
-static Polhem.Base.Data.DataSetExtensions.GetMasterRow(this System.Data.DataSet! dataSet) -> System.Data.DataRow?
 static Polhem.Base.Data.DataSetExtensions.GetMasterTable(this System.Data.DataSet! dataSet) -> System.Data.DataTable?
 static Polhem.Base.Data.DataSetExtensions.IsEmpty(this System.Data.DataSet! dataSet) -> bool
-static Polhem.Base.Data.DataTableComparer.IsEqual(System.Data.DataTable! dt1, System.Data.DataTable! dt2) -> bool
 static Polhem.Base.Data.DataTableExtensions.AddColumn(this System.Data.DataTable! table, string! fieldName, Polhem.Base.Data.FieldDbType dbType) -> System.Data.DataColumn!
 static Polhem.Base.Data.DataTableExtensions.AddColumn(this System.Data.DataTable! table, string! fieldName, Polhem.Base.Data.FieldDbType dbType, object! defaultValue) -> System.Data.DataColumn!
 static Polhem.Base.Data.DataTableExtensions.AddColumn(this System.Data.DataTable! table, string! fieldName, string! caption, Polhem.Base.Data.FieldDbType dbType, object! defaultValue) -> System.Data.DataColumn!
@@ -283,7 +201,6 @@ static Polhem.Base.Data.DataTableExtensions.IsEmpty(this System.Data.DataTable! 
 static Polhem.Base.Data.DataTableExtensions.LowercaseColumnNames(this System.Data.DataTable! dataTable) -> void
 static Polhem.Base.Data.DataTableExtensions.NormalizeDateTimeMode(this System.Data.DataTable! table) -> void
 static Polhem.Base.Data.DataTableExtensions.SetDateColumns(this System.Data.DataTable! table, params string![]! columnNames) -> void
-static Polhem.Base.Data.DataTableExtensions.SetPrimaryKey(this System.Data.DataTable! table, string! fieldNames) -> void
 static Polhem.Base.Data.DataViewExtensions.DeleteRows(this System.Data.DataView! dataView, bool acceptChanges) -> void
 static Polhem.Base.Data.DataViewExtensions.HasField(this System.Data.DataView! dataView, string! fieldName) -> bool
 static Polhem.Base.Data.DataViewExtensions.IsEmpty(this System.Data.DataView! dataView) -> bool
@@ -292,12 +209,9 @@ static Polhem.Base.Data.DbTypeConverter.ToFieldDbType(System.Type! type) -> Polh
 static Polhem.Base.Data.DbTypeConverter.ToType(Polhem.Base.Data.FieldDbType fieldDbType) -> System.Type!
 static Polhem.Base.Data.DbTypeConverter.ToTypeCode(System.Type! type) -> System.TypeCode
 static Polhem.Base.Data.FieldDbTypeExtensions.GetDefaultValue(this Polhem.Base.Data.FieldDbType dbType) -> object!
-static Polhem.Base.Data.FieldDbTypeExtensions.ToDbFieldValue(this Polhem.Base.Data.FieldDbType dbType, object! value) -> object!
-static Polhem.Base.Data.FieldDbTypeExtensions.ToFieldValue(this Polhem.Base.Data.FieldDbType dbType, object! value) -> object!
 static Polhem.Base.DateTimeExtensions.GetYearMonth(this System.DateTime dateValue) -> System.DateTime
 static Polhem.Base.Exceptions.ExceptionExtensions.Unwrap(this System.Exception! ex) -> System.Exception!
 static Polhem.Base.Expressions.ExpressionPolicy.CoerceValue(object? value, Polhem.Base.Data.FieldDbType dbType) -> object!
-static Polhem.Base.Expressions.ExpressionPolicy.ToClrType(Polhem.Base.Data.FieldDbType dbType) -> System.Type!
 static Polhem.Base.FileUtilities.FileReadText(string! filePath) -> string!
 static Polhem.Base.FileUtilities.FileWriteText(string! filePath, string! contents) -> void
 static Polhem.Base.FileUtilities.FileWriteText(string! filePath, string! contents, System.Text.Encoding! encoding) -> void
@@ -309,7 +223,6 @@ static Polhem.Base.FrameworkClock.Now(string! timeZoneId, Polhem.Base.DateTimeBa
 static Polhem.Base.FrameworkClock.Today(string! timeZoneId) -> System.DateOnly
 static Polhem.Base.Security.AesCbcHmacCryptor.Decrypt(byte[]! encryptedData, byte[]! aesKey, byte[]! hmacKey) -> byte[]!
 static Polhem.Base.Security.AesCbcHmacCryptor.Encrypt(byte[]! plainBytes, byte[]! aesKey, byte[]! hmacKey) -> byte[]!
-static Polhem.Base.Security.AesCbcHmacKeyGenerator.FromBase64CombinedKey(string! base64, out byte[]! aesKey, out byte[]! hmacKey) -> void
 static Polhem.Base.Security.AesCbcHmacKeyGenerator.FromCombinedKey(byte[]! combinedKey, out byte[]! aesKey, out byte[]! hmacKey) -> void
 static Polhem.Base.Security.AesCbcHmacKeyGenerator.GenerateBase64CombinedKey() -> string!
 static Polhem.Base.Security.AesCbcHmacKeyGenerator.GenerateCombinedKey() -> byte[]!
@@ -328,22 +241,17 @@ static Polhem.Base.Security.RsaCryptor.EncryptWithPublicKey(string! plainText, s
 static Polhem.Base.Security.RsaCryptor.GenerateRsaKeyPair(out string! publicKey, out string! privateKey) -> void
 static Polhem.Base.Serialization.Gzip.Compress(byte[]! bytes) -> byte[]!
 static Polhem.Base.Serialization.Gzip.Decompress(byte[]! bytes) -> byte[]!
-static Polhem.Base.Serialization.JsonCodec.Deserialize<T>(string! json, bool includeTypeName = true) -> T?
 static Polhem.Base.Serialization.JsonCodec.DeserializeAsync<T>(System.IO.Stream! stream, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<T?>
 static Polhem.Base.Serialization.JsonCodec.DeserializeFromFile<T>(string! filePath) -> T?
-static Polhem.Base.Serialization.JsonCodec.Serialize(object! value, bool ignoreDefaultValue = true, bool ignoreNullValue = true, bool includeTypeName = true) -> string!
 static Polhem.Base.Serialization.JsonCodec.SerializeToFile(object! value, string! filePath) -> void
 static Polhem.Base.Serialization.SerializationExtensions.Save(this Polhem.Base.Serialization.IObjectSerializeFile! value) -> void
 static Polhem.Base.Serialization.SerializationExtensions.ToJson(this Polhem.Base.Serialization.IObjectSerializeBase! value) -> string!
-static Polhem.Base.Serialization.SerializationExtensions.ToJsonFile(this Polhem.Base.Serialization.IObjectSerializeFile! value, string! filePath) -> void
 static Polhem.Base.Serialization.SerializationExtensions.ToXml(this Polhem.Base.Serialization.IObjectSerializeBase! value) -> string!
-static Polhem.Base.Serialization.SerializationExtensions.ToXmlFile(this Polhem.Base.Serialization.IObjectSerializeFile! value, string! filePath) -> void
 static Polhem.Base.Serialization.XmlCodec.Deserialize(string! xml, System.Type! type) -> object?
 static Polhem.Base.Serialization.XmlCodec.Deserialize<T>(string! xml) -> T?
 static Polhem.Base.Serialization.XmlCodec.DeserializeFromFile<T>(string! filePath) -> T?
 static Polhem.Base.Serialization.XmlCodec.Serialize(object! value) -> string!
 static Polhem.Base.Serialization.XmlCodec.SerializeToFile(object! value, string! filePath) -> void
-static Polhem.Base.Serialization.XmlSerializerCache.Get(System.Type! type) -> System.Xml.Serialization.XmlSerializer!
 static Polhem.Base.StringExtensions.LeftCut(this string? s, string! prefix) -> string!
 static Polhem.Base.StringExtensions.LeftRightCut(this string? s, string! prefix, string! suffix) -> string!
 static Polhem.Base.StringExtensions.RightCut(this string? s, string! suffix) -> string!
@@ -360,7 +268,6 @@ static Polhem.Base.StringUtilities.IsEmptyText(object? value) -> bool
 static Polhem.Base.StringUtilities.IsEquals(string? s1, string? s2, bool ignoreCase = true) -> bool
 static Polhem.Base.StringUtilities.IsEqualsOr(string? s, params string![]! values) -> bool
 static Polhem.Base.StringUtilities.IsNotEmpty(string? s, bool isTrim = true) -> bool
-static Polhem.Base.StringUtilities.IsNotEmptyText(object? value) -> bool
 static Polhem.Base.StringUtilities.LastIndexOf(string? s, string! value, bool ignoreCase = true) -> int
 static Polhem.Base.StringUtilities.Replace(string? s, string! search, string! replacement, bool ignoreCase = true) -> string!
 static Polhem.Base.StringUtilities.Split(string? s, string! delimiter) -> string![]!
@@ -370,20 +277,9 @@ static Polhem.Base.SysInfo.AllowedTypeNamespaces.get -> System.Collections.Gener
 static Polhem.Base.SysInfo.Initialize(Polhem.Base.ISysInfoConfiguration! configuration) -> void
 static Polhem.Base.SysInfo.IsDebugMode.get -> bool
 static Polhem.Base.SysInfo.IsDebugMode.set -> void
-static Polhem.Base.SysInfo.IsSingleFile.get -> bool
-static Polhem.Base.SysInfo.IsSingleFile.set -> void
-static Polhem.Base.SysInfo.IsToolMode.get -> bool
-static Polhem.Base.SysInfo.IsToolMode.set -> void
 static Polhem.Base.SysInfo.IsTypeNameAllowed(string! typeName) -> bool
-static Polhem.Base.SysInfo.TraceEnabled.get -> bool
-static Polhem.Base.SysInfo.TraceListener.get -> Polhem.Base.Tracing.ITraceListener?
-static Polhem.Base.SysInfo.TraceListener.set -> void
 static Polhem.Base.SysInfo.Version.get -> string!
 static Polhem.Base.SysInfo.Version.set -> void
-static Polhem.Base.Tracing.Tracer.Enabled.get -> bool
-static Polhem.Base.Tracing.Tracer.End(Polhem.Base.Tracing.TraceContext? ctx, Polhem.Base.Tracing.TraceStatus status = Polhem.Base.Tracing.TraceStatus.Ok, string? detail = null) -> void
-static Polhem.Base.Tracing.Tracer.Start(Polhem.Base.Tracing.TraceLayers layer, string! detail = "", string! category = "", object? tag = null, string! name = "") -> Polhem.Base.Tracing.TraceContext?
-static Polhem.Base.Tracing.Tracer.Write(Polhem.Base.Tracing.TraceLayers layer, string! detail = "", Polhem.Base.Tracing.TraceStatus status = Polhem.Base.Tracing.TraceStatus.Ok, string! category = "", object? tag = null, string! name = "") -> void
 static Polhem.Base.ValueUtilities.CBool(object! value, bool defaultValue = false) -> bool
 static Polhem.Base.ValueUtilities.CBool(string! value, bool defaultValue = false) -> bool
 static Polhem.Base.ValueUtilities.CDateOnly(object? value) -> System.DateOnly?

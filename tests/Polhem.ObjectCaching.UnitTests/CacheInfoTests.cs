@@ -79,6 +79,20 @@ namespace Polhem.ObjectCaching.UnitTests
             Assert.Same(originalProvider, CacheInfo.Provider);
         }
 
+        [Fact]
+        [DisplayName("Initialize rejects a Bee.NET CacheProvider name with a hint that it looks like a Bee.NET name")]
+        public void Initialize_BeeCacheProvider_MessageHasBeeHint()
+        {
+            var config = new BackendConfiguration();
+            config.Components.CacheProvider = "Bee.ObjectCaching.Providers.MemoryCacheProvider, Bee.ObjectCaching";
+            var originalProvider = CacheInfo.Provider;
+
+            var ex = Assert.Throws<InvalidOperationException>(() => CacheInfo.Initialize(config));
+
+            Assert.Contains("Bee.NET", ex.Message, StringComparison.Ordinal);
+            Assert.Same(originalProvider, CacheInfo.Provider);
+        }
+
         private sealed class FakeCacheProvider : ICacheProvider
         {
             public bool Contains(string key) => false;
