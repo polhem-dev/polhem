@@ -1,4 +1,4 @@
-<!-- source: en/analyzer-rules.md blob: 7dca3e13a1ffafd90976b787adb81ae5921c0e9f -->
+<!-- source: en/analyzer-rules.md blob: ab859441cbdc4c7b68c518a20f038723f3890982 -->
 # Analyzer 規則
 
 [English](../en/analyzer-rules.md) · [← 文件索引](README.md)
@@ -74,10 +74,13 @@ POLHEM ID 保留那條設定；若新規則重用該編號，在那裡就會被�
 | POLHEM9001 | Error | 受鎖組件只能參考其允許清單列出的項目 |
 | POLHEM9002 | Error | `Version`、`AssemblyVersion`、`FileVersion` 必須同步 |
 | POLHEM9003 | Error | 設了 `PolhemRequireDefinitionFiles` 但 `PolhemDefinitionFilesGlob` 比對不到任何檔案 |
+| POLHEM9004 | Warning | 專案設定為 NativeAOT、完整修剪（full trim），或停用反射的 System.Text.Json；Polhem 皆不支援 |
 
 **POLHEM9xxx 都不是 Roslyn analyzer**，而是 MSBuild target；列在此處是為了讓編號有一個統一的歸屬。
 POLHEM9001 與 POLHEM9002 位於 `src/Directory.Build.targets`，屬框架內部規則，消費端專案不會觸發；
 POLHEM9003 隨套件發布且為 opt-in，見[確認 glob 實際比對到什麼](#確認-glob-實際比對到什麼)。
+POLHEM9004 同樣隨套件發布，預設啟用；觸發條件與關閉它的 `PolhemSuppressTrimSupportWarning` 屬性，
+寫在套件內的 `buildTransitive/Polhem.Definition.targets`。
 POLHEM9001 的存在理由是：加在相依圖最底層那些組件上的任何東西，都會被框架的每一個消費者繼承
 （[ADR-038](../adr/adr-038-definition-dependency-boundary.zh-TW.md)）。**受鎖組件是哪幾個不寫在這裡**——
 由 `src/Directory.Build.targets` 宣告，而這份拷貝漂掉不會有任何機制發現；它已經漂過一次，

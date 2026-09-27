@@ -74,7 +74,7 @@ dotnet add package Polhem.Db
 |---|---|
 | **Polhem.Api.Client.dll** | 提供連接器機制，支援近端與遠端呼叫後端 Business Object（`LocalApiProvider` / `RemoteApiProvider`）。 |
 | **Polhem.UI.Core.dll** | 跨平台 UI 共通層（`ClientInfo` / `IEndpointStorage` / `IUIViewService` / `VersionInfo`），供原生 UI 宿主共用 client-side 連線狀態與 endpoint 持久化邏輯。 |
-| **Polhem.UI.Avalonia.dll** | Avalonia 桌面控制項套件（Windows / macOS / Linux），提供 FormSchema 驅動控制項（`FormView` / `ListView` / `GridControl` 加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞）與檔案後端 `FileEndpointStorage`。單一 `net10.0` TFM；下限版本鎖在 Avalonia 12.0.0 + DataGrid 12.0.0。 |
+| **Polhem.UI.Avalonia.dll** | Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器（WebAssembly）、iOS 與 Android head，提供 FormSchema 驅動控制項（`FormView` / `ListView` / `GridControl` 加上一組 field editor 與 `FormScope` ambient 綁定，皆以 `FormDataObject` 為資料中樞）。單一 `net10.0` TFM；下限版本鎖在 Avalonia 12.0.0 + DataGrid 12.0.0。 |
 | **Polhem.Web.Blazor.Server.dll** | Blazor Server 宿主用的 Razor Class Library（RCL），提供 DI scope 連接器與 Blazor 元件（`DynamicForm`、`FormDataObject`）。 |
 
 ### Tooling（dotnet tool）

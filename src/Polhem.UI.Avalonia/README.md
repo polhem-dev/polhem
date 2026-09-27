@@ -2,11 +2,11 @@
 
 [繁體中文](README.zh-TW.md)
 
-Avalonia desktop control library (Windows / macOS / Linux). Renders FormSchema-driven forms with a set of native-control subclasses deeply bound to the definition layer, all backed by the `FormDataObject` view-model.
+Avalonia control library for desktop (Windows / macOS / Linux), browser (WebAssembly), iOS and Android heads. Renders FormSchema-driven forms with a set of native-control subclasses deeply bound to the definition layer, all backed by the `FormDataObject` view-model.
 
 ## Architecture Position
 
-**Layer**: UI (desktop)
+**Layer**: UI (Avalonia heads: desktop, browser, iOS, Android)
 
 Belongs to the `Polhem.UI.*` family: connects to the backend through the `ClientInfo` static singleton (`Polhem.UI.Core`) with a per-process token model. Depends on `Polhem.Api.Client` for connectors and `Polhem.Definition` for schemas and layouts.
 
@@ -25,14 +25,13 @@ Single `net10.0` TFM. Lower-bound pins: `Avalonia 12.0.0` + `Avalonia.Controls.D
 | `GridEditMode` | UI-layer editing model for grids: `InCell` (cell editing, ADR-021 hybrid strategy) or `EditForm` (read-only grid + popup row editing). |
 | `RowEditPanel` / `RowEditDialog` | EditForm-mode editing surface built from the field editors; commits or cancels through the buffered row-edit protocol. |
 | `FormDataObject` | The view-model: carries the `DataSet`, bridges ADO.NET table events into `FieldValueChanged` / dirty tracking, exposes the async CRUD round-trips and the buffered row-edit protocol (`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit`). |
-| `FileEndpointStorage` | File-backed `IEndpointStorage` + `IApiKeyStorage`; persists the endpoint at `LocalApplicationData/<appName>/endpoint.txt` and the API key at `apikey.txt` beside it. |
 
 ## Usage
 
 ```csharp
 // Host bootstrap — wire the storages BEFORE any UI control instantiates.
 ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
-var storage = new FileEndpointStorage("MyApp");
+var storage = new FileEndpointStorage("MyApp");   // Polhem.UI.Core; a browser head supplies its own storage
 ClientInfo.EndpointStorage = storage;
 ClientInfo.ApiKeyStorage = storage;
 // Seeds empty storage on first run; the stored key wins afterwards, so changing it

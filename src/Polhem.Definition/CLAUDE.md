@@ -25,7 +25,9 @@ becomes an exception.**
   the property as that collection type.
 - Items inherit `KeyCollectionItem` / `CollectionItem`; a domain-meaningful key uses the proxy pattern
   (`FormField.FieldName { get => Key; set => Key = value; }` + `[XmlAttribute]`).
-- MessagePack scenarios use the `MessagePackKeyCollectionBase` / `MessagePackCollectionBase` variants.
+- The MessagePack wire needs no special base class (the MessagePack-specific variants were removed by ADR-036).
+  A collection that travels on the wire gets an explicitly registered formatter instead; see
+  `rules/serialization.md` § New wire types must have an explicitly registered formatter.
 - The only case where this may be bypassed: the item is a pure value-type DTO and **never appears within
   Polhem.Definition**.
 

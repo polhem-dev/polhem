@@ -79,11 +79,14 @@ the same number, and a new rule reusing the number would be silently suppressed 
 | POLHEM9001 | Error | A locked assembly may only reference what its allowlist names |
 | POLHEM9002 | Error | `Version`, `AssemblyVersion` and `FileVersion` must stay in step |
 | POLHEM9003 | Error | `PolhemDefinitionFilesGlob` matched no files while `PolhemRequireDefinitionFiles` is set |
+| POLHEM9004 | Warning | The project is configured for NativeAOT, full trimming, or System.Text.Json with reflection disabled; Polhem supports none of them |
 
 **None of the POLHEM9xxx are Roslyn analyzers**; they are MSBuild targets, listed here so the numbering
 has one home. POLHEM9001 and POLHEM9002 live in `src/Directory.Build.targets` and are framework-internal —
 a consumer project cannot trigger them. POLHEM9003 ships in the package and is opt-in; see
-[Checking what the glob matched](#checking-what-the-glob-matched). POLHEM9001 exists because anything
+[Checking what the glob matched](#checking-what-the-glob-matched). POLHEM9004 also ships in the package and is on
+by default; its conditions, and the `PolhemSuppressTrimSupportWarning` property that turns it off, are documented in
+`buildTransitive/Polhem.Definition.targets` inside the package. POLHEM9001 exists because anything
 added to the assemblies at the bottom of the dependency graph is inherited by every consumer of the
 framework ([ADR-038](../adr/adr-038-definition-dependency-boundary.md)). Which assemblies are locked is
 not listed here — `src/Directory.Build.targets` declares them and nothing would catch this copy

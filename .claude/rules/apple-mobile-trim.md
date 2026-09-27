@@ -50,7 +50,8 @@ file-based default.
 The `XmlSerializer` failure under Apple Release trimming **was solved and verified by measurement on 2026-06-27**.
 The fix is `src/Polhem.Definition/ILLink.Descriptors.xml` (**its file header documents the mechanism and the preserve
 scope; this file does not copy it**). Every downstream trim/AOT app, including external framework users, benefits
-automatically.
+automatically. The descriptor only acts when `Polhem.Definition` is itself trimmed, which the default partial trim
+does not do (next section).
 
 - **Do not try `<PublishTrimmed>false</PublishTrimmed>` / `<MtouchLink>None</MtouchLink>` /
   `<MtouchLink>SdkOnly</MtouchLink>` / turning on `UseInterpreter` alone again.** All four were tried and do not work
@@ -63,6 +64,23 @@ automatically.
 > requirements, both in `rules/serialization.md`: the MessagePack wire (every type needs an explicitly registered
 > formatter), and the expression engine, whose BCL members are kept by a separate descriptor,
 > `src/Polhem.Expressions/ILLink.Descriptors.xml`.
+
+## Supported trim modes: untrimmed and partial only
+
+The packages are not marked `IsTrimmable` / `IsAotCompatible`, so the SDK default partial trim (`TrimMode=partial`,
+what the iOS, Mac Catalyst and Android SDKs choose) copies the Polhem assemblies untouched. That is the supported
+configuration. **`TrimMode=full` and NativeAOT (`PublishAot=true`) are unsupported**: the System.Text.Json JSON-RPC
+envelope is serialized by reflection, so full trim silently drops its `jsonrpc` / `id` members and NativeAOT breaks
+every call. Full trim also covers `AndroidLinkMode=Full`, `MtouchLink=Full`, and `PublishTrimmed=true` without a
+`TrimMode` on desktop or browser-wasm.
+
+**`POLHEM9004`** warns about these configurations at build time. It lives in
+`src/Polhem.Definition/buildTransitive/Polhem.Definition.targets`; the conditions and the opt-out property are in that
+file, not copied here. Only a package reference imports `buildTransitive/`, so the heads in this repository, which use
+`ProjectReference`, never see it.
+
+**Do not add `IsTrimmable` / `IsAotCompatible` to fix a trim problem** before the System.Text.Json half is
+source-generated: it would make the default partial trim start trimming the Polhem assemblies.
 
 ## AOT: Android cannot verify the dynamic-code half
 
@@ -111,7 +129,8 @@ mapped to repeated `[XmlElement]` **must have a public setter**. Violations thro
 **none of them shows up on desktop at all**.
 
 Violators are always definition-layer types → for the full rules and the correct way to write the setter, see
-`src/Polhem.Definition/CLAUDE.md`; for the reflection inventory technique, see gotchas.
+`src/Polhem.Definition/CLAUDE.md`. `XmlSerializerShapeGateTests` (tests/Polhem.Definition.UnitTests) checks the three
+rules over every type the definition roots reach, so a violation turns the build's tests red on desktop.
 
 ## Diagnostic noise (so you do not take the long way round again)
 

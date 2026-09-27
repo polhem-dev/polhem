@@ -22,6 +22,24 @@ namespace Polhem.Api.Client.UnitTests
             Assert.Equal(expected, HttpUtilities.IsUrl(input));
         }
 
+        [Theory]
+        [InlineData(false, false, false, false)]
+        [InlineData(true, false, false, true)]
+        [InlineData(false, true, false, true)]
+        [InlineData(false, false, true, true)]
+        [DisplayName("UsesPlatformDefaultHandler is false only for desktop and server hosts")]
+        public void UsesPlatformDefaultHandler_ByPlatform_ReturnsExpected(bool isBrowser, bool isAndroid, bool isAppleMobile, bool expected)
+        {
+            Assert.Equal(expected, HttpUtilities.UsesPlatformDefaultHandler(isBrowser, isAndroid, isAppleMobile));
+        }
+
+        [Fact]
+        [DisplayName("UsesPlatformDefaultHandler keeps SocketsHttpHandler on the desktop test host")]
+        public void UsesPlatformDefaultHandler_DesktopHost_ReturnsFalse()
+        {
+            Assert.False(HttpUtilities.UsesPlatformDefaultHandler());
+        }
+
         [Fact]
         [DisplayName("GetAsync sends the headers and returns the response body")]
         public async Task GetAsync_SendsRequestAndReturnsBody()

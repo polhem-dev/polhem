@@ -2,11 +2,11 @@
 
 [English](README.md)
 
-Avalonia 桌面控制項套件（Windows / macOS / Linux）。以一組深度綁定定義層的原生控件子類渲染 FormSchema 驅動表單，資料中樞為 `FormDataObject` view-model。
+Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器（WebAssembly）、iOS 與 Android head。以一組深度綁定定義層的原生控件子類渲染 FormSchema 驅動表單，資料中樞為 `FormDataObject` view-model。
 
 ## 架構定位
 
-**層級**：UI（桌面）
+**層級**：UI（Avalonia head：桌面、瀏覽器、iOS、Android）
 
 屬於 `Polhem.UI.*` 家族：透過 `ClientInfo` 靜態單例（`Polhem.UI.Core`）連接後端，採 per-process token 模型。依賴 `Polhem.Api.Client`（連接器）與 `Polhem.Definition`（schema 與 layout）。
 
@@ -25,14 +25,13 @@ Avalonia 桌面控制項套件（Windows / macOS / Linux）。以一組深度綁
 | `GridEditMode` | grid 的 UI 層編輯模型：`InCell`（逐格編輯，ADR-021 混合策略）或 `EditForm`（唯讀 grid + 彈窗整列編輯）。 |
 | `RowEditPanel` / `RowEditDialog` | EditForm 模式的編輯面，由 field editors 組成；經暫存列編輯協定確認或取消。 |
 | `FormDataObject` | view-model：承載 `DataSet`、把 ADO.NET 表事件橋接為 `FieldValueChanged` 與 dirty 追蹤，提供非同步 CRUD 與暫存列編輯協定（`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit`）。 |
-| `FileEndpointStorage` | 檔案後端 `IEndpointStorage` + `IApiKeyStorage`；endpoint 落在 `LocalApplicationData/<appName>/endpoint.txt`，API 金鑰落在同層的 `apikey.txt`。 |
 
 ## 使用方式
 
 ```csharp
 // Host bootstrap — wire the storages BEFORE any UI control instantiates.
 ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
-var storage = new FileEndpointStorage("MyApp");
+var storage = new FileEndpointStorage("MyApp");   // Polhem.UI.Core；瀏覽器 head 自備儲存實作
 ClientInfo.EndpointStorage = storage;
 ClientInfo.ApiKeyStorage = storage;
 // Seeds empty storage on first run; the stored key wins afterwards, so changing it

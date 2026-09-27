@@ -17,12 +17,16 @@
 
     Set PolhemAnalyzeDefinitionFiles to false to opt out, or override PolhemDefinitionFilesGlob to point at
     a non-standard layout.
+
+    The file also carries POLHEM9004, the warning about publish configurations Polhem does not support;
+    its reasons are next to the PolhemCheckTrimSupport target below.
   -->
 
   <PropertyGroup>
     <PolhemAnalyzeDefinitionFiles Condition="'$(PolhemAnalyzeDefinitionFiles)' == ''">true</PolhemAnalyzeDefinitionFiles>
     <PolhemDefinitionFilesGlob Condition="'$(PolhemDefinitionFilesGlob)' == ''">Define\**\*.xml</PolhemDefinitionFilesGlob>
     <PolhemRequireDefinitionFiles Condition="'$(PolhemRequireDefinitionFiles)' == ''">false</PolhemRequireDefinitionFiles>
+    <PolhemSuppressTrimSupportWarning Condition="'$(PolhemSuppressTrimSupportWarning)' == ''">false</PolhemSuppressTrimSupportWarning>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PolhemAnalyzeDefinitionFiles)' == 'true'">
@@ -61,6 +65,48 @@
     <Error Condition="'$(PolhemRequireDefinitionFiles)' == 'true' AND '@(_PolhemDefinitionFile)' == ''"
            Code="POLHEM9003"
            Text="PolhemRequireDefinitionFiles is set, but PolhemDefinitionFilesGlob '$(PolhemDefinitionFilesGlob)' matched no files under '$(MSBuildProjectDirectory)'. The glob is rooted at the project directory: definitions kept beside the solution file need a relative path such as '..\Define\**\*.xml'." />
+
+  </Target>
+
+  <!--
+    POLHEM9004: a publish configuration that Polhem does not support.
+
+    The Polhem assemblies are not marked IsTrimmable or IsAotCompatible. The JSON-RPC envelope is
+    serialized by System.Text.Json through reflection, and nothing roots the members it reads. So the
+    supported configurations are an untrimmed publish and the SDK's partial trim, which is what the iOS,
+    Mac Catalyst and Android SDKs default to and which copies the Polhem assemblies untouched.
+
+    The three conditions below are the ones that break the wire, and none of them fails at build time:
+    - PublishAot: the envelope serializes to an empty object and deserializing it throws, so every call fails.
+    - Full trim: the envelope silently loses its `jsonrpc` and `id` members. A trimmed publish with no
+      TrimMode is full trim on desktop and browser-wasm, because the SDK fills TrimMode in only when it
+      runs the trimmer, after this target.
+    - JsonSerializerIsReflectionEnabledByDefault=false: every envelope (de)serialization throws. The SDK
+      sets this for a trimmed desktop or browser-wasm publish unless the project sets it to true.
+
+    The check runs in a target rather than at evaluation time, because the platform SDKs (iOS, Android,
+    browser-wasm) set TrimMode and PublishTrimmed in their own targets, which are imported after this file.
+    The Apple SDKs go further and set PublishTrimmed inside a target of their own, which may not have run
+    yet; they always trim an app, so on those platforms TrimMode=full is enough to warn.
+
+    Set PolhemSuppressTrimSupportWarning to true to silence it, for example in a project that has verified
+    its own configuration.
+  -->
+  <Target Name="PolhemCheckTrimSupport"
+          BeforeTargets="CoreCompile"
+          Condition="'$(PolhemSuppressTrimSupportWarning)' != 'true'">
+
+    <Warning Condition="'$(PublishAot)' == 'true'"
+             Code="POLHEM9004"
+             Text="PublishAot is set, but Polhem does not support NativeAOT: the JSON-RPC envelope is serialized by System.Text.Json through reflection, and every API call fails under NativeAOT. Publish without PublishAot, using at most the SDK's partial trim (TrimMode=partial). Set PolhemSuppressTrimSupportWarning=true to silence this warning." />
+
+    <Warning Condition="'$(PublishAot)' != 'true' AND (('$(PublishTrimmed)' == 'true' AND ('$(TrimMode)' == 'full' OR '$(TrimMode)' == '')) OR ('$(TrimMode)' == 'full' AND ('$(TargetPlatformIdentifier)' == 'ios' OR '$(TargetPlatformIdentifier)' == 'maccatalyst' OR '$(TargetPlatformIdentifier)' == 'tvos')))"
+             Code="POLHEM9004"
+             Text="The project trims with TrimMode=full (TrimMode is '$(TrimMode)'; with PublishTrimmed=true an empty value means the SDK default, which is full on desktop and browser-wasm, and AndroidLinkMode=Full or MtouchLink=Full also select it), but Polhem supports only TrimMode=partial: full trimming removes members of the JSON-RPC envelope that System.Text.Json reads through reflection, and requests go out without their 'jsonrpc' and 'id' members. Set TrimMode=partial, or turn trimming off. Set PolhemSuppressTrimSupportWarning=true to silence this warning." />
+
+    <Warning Condition="'$(PublishAot)' != 'true' AND '$(JsonSerializerIsReflectionEnabledByDefault)' == 'false'"
+             Code="POLHEM9004"
+             Text="JsonSerializerIsReflectionEnabledByDefault is false, but Polhem serializes the JSON-RPC envelope with reflection-based System.Text.Json, so every API call throws at run time. Set JsonSerializerIsReflectionEnabledByDefault=true in the project. Set PolhemSuppressTrimSupportWarning=true to silence this warning." />
 
   </Target>
 

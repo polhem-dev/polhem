@@ -13,8 +13,7 @@
     <!-- browser-wasm disables System.Text.Json reflection-based (de)serialization by default,
          so Polhem's JsonCodec throws "JsonSerializerIsReflectionDisabled" when (de)serializing the
          JSON-RPC envelope. Polhem's message types are not source-generated, so re-enable the
-         reflection path. (The XmlSerializer path used by FormSchema is handled separately via
-         trimming roots in the Release/publish phase.) -->
+         reflection path. Trimming itself is turned off below, so no trimming roots are involved. -->
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 

@@ -111,17 +111,19 @@ the FormSchema XmlSerializer, but `JsonCodec` / MessagePack / `TypeDescriptor` /
 report IL2026 (with `TreatWarningsAsErrors` the build fails outright); `TrimmerRootAssembly` does not remove the
 warnings. Full trim safety requires moving to source generation, which is a framework-level issue.
 
-**Dialogs**: `OverlayDialogHost` (internal); LookupDialog / RowEditDialog branch on `OperatingSystem.IsBrowser()`
-(browser → overlay, desktop → Window).
+**Dialogs**: `OverlayDialogHost` (internal); LookupDialog / RowEditDialog ask `DialogHosting` (browser, iOS and
+Android → overlay; only a desktop classic-window lifetime → native `Window`).
 
-**Connections are always async**: `SyncExecutor.Run` (`Task.Run(...).GetAwaiter().GetResult()`) throws **"Cannot wait
-on monitors on this runtime"** on the single-threaded browser-wasm runtime: it blocks the only thread waiting for the
-task, and completing the task needs the same thread to pump the event loop → deadlock. Desktop/WinForms tolerate it;
+**Connections are always async**: a sync-over-async wait (`Task.Run(...).GetAwaiter().GetResult()`, the shape of the
+former `SyncExecutor.Run`, since removed) throws **"Cannot wait on monitors on this runtime"** on the
+single-threaded browser-wasm runtime: it blocks the only thread waiting for the task, and completing the task needs the
+same thread to pump the event loop → deadlock. Desktop/WinForms tolerate it;
 WASM does not.
 **The client connection of any WASM head always uses `await ClientInfo.InitializeAsync(endpoint)`**; the sync
 `Initialize` and `Task.Run(() => sync())` wrappers are forbidden. The underlying HTTP is already `HttpClient` (WASM goes
-through `BrowserHttpHandler`/fetch), so async is safe all the way. Likewise, load definitions with
-`connector.GetDefineAsync`, not through the sync `IDefineAccess` (`RemoteDefineAccess` relies on SyncExecutor).
+through `BrowserHttpHandler`/fetch), so async is safe all the way. Likewise, load definitions through the async
+`ClientDefineAccess` (`GetFormSchemaAsync` and the other `Get…Async` members); the synchronous remote define access that
+wrapped such a wait no longer exists, so do not reintroduce one.
 
 **Environment pitfalls**: building WASM needs `sudo dotnet workload install wasm-tools`. Run it locally with the Claude
 preview (`.claude/launch.json` needs `autoPort:false`); **synthetic pointer events injected by the headless preview do
