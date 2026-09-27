@@ -36,10 +36,10 @@ namespace Polhem.Api.Client.UnitTests
             var connector = new SystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, accessToken);
 
             // Act
-            Guid newToken = await connector.CreateSessionAsync(userId, expiresIn);
+            var response = await connector.CreateSessionAsync(userId, expiresIn);
 
             // Assert
-            Assert.NotEqual(Guid.Empty, newToken);
+            Assert.NotEqual(Guid.Empty, response.AccessToken);
         }
 
         [Fact]

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Text.Json;
 using Polhem.Api.Core.MessagePack;
+using Polhem.Api.Core.UnitTests.MessagePack;
 using Polhem.Base.Data;
 using Polhem.Base.Serialization;
 
@@ -47,15 +48,15 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("SerializableDataTable carries Date as the wire column type")]
-        public void SerializableDataTable_CarriesDateOnWire()
+        [DisplayName("The MessagePack column entry carries Date as the wire column type")]
+        public void MessagePackColumnEntry_CarriesDateOnWire()
         {
             var table = BuildTable();
 
-            var sdt = SerializableDataTable.FromDataTable(table);
+            var wire = DataTableWire.Read(MessagePackCodec.Serialize(table));
 
-            var column = Assert.Single(sdt.Columns, c => c.ColumnName == "order_date");
-            Assert.Equal(FieldDbType.Date, column.DataType);
+            var column = Assert.Single(wire.Columns, c => c.Name == "order_date");
+            Assert.Equal((int)FieldDbType.Date, column.FieldDbType);
         }
 
         [Fact]

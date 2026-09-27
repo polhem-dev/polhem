@@ -45,6 +45,81 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
+        [DisplayName("TryAcceptAsync accepts a sequence once per session and rejects its repeat")]
+        public async Task TryAcceptAsync_RepeatedSequence_IsRejected()
+        {
+            var store = new MemoryReplayWindowStore();
+            var token = Guid.NewGuid();
+
+            Assert.True(await store.TryAcceptAsync(token, 7));
+            Assert.False(await store.TryAcceptAsync(token, 7));
+        }
+
+        [Fact]
+        [DisplayName("TryAcceptAsync accepts out-of-order sequences still inside the window")]
+        public async Task TryAcceptAsync_OutOfOrderInsideWindow_IsAccepted()
+        {
+            var store = new MemoryReplayWindowStore();
+            var token = Guid.NewGuid();
+
+            Assert.True(await store.TryAcceptAsync(token, 10));
+            Assert.True(await store.TryAcceptAsync(token, 12));
+            // Several requests are in flight on one session, so 11 can arrive after 12 and must still pass.
+            Assert.True(await store.TryAcceptAsync(token, 11));
+        }
+
+        [Fact]
+        [DisplayName("TryAcceptAsync keeps the sequence history of different sessions apart")]
+        public async Task TryAcceptAsync_DifferentTokens_AreIsolated()
+        {
+            var store = new MemoryReplayWindowStore();
+
+            Assert.True(await store.TryAcceptAsync(Guid.NewGuid(), 1));
+            Assert.True(await store.TryAcceptAsync(Guid.NewGuid(), 1));
+        }
+
+        [Fact]
+        [DisplayName("TryAcceptAsync accepts exactly one of many concurrent requests carrying the same sequence")]
+        public async Task TryAcceptAsync_ConcurrentSameSequence_AcceptsExactlyOne()
+        {
+            var store = new MemoryReplayWindowStore();
+            var token = Guid.NewGuid();
+
+            // Check-and-record is one step; a separate read and write would let several of these pass.
+            var results = await Task.WhenAll(Enumerable.Range(0, 32)
+                .Select(_ => Task.Run(async () => await store.TryAcceptAsync(token, 99))));
+
+            Assert.Equal(1, results.Count(accepted => accepted));
+        }
+
+        [Fact]
+        [DisplayName("TryAcceptAsync refuses a jump further ahead than MaxForwardJump")]
+        public async Task TryAcceptAsync_JumpBeyondMaxForwardJump_IsRejected()
+        {
+            var store = new MemoryReplayWindowStore();
+            var token = Guid.NewGuid();
+
+            Assert.True(await store.TryAcceptAsync(token, 1));
+            Assert.False(await store.TryAcceptAsync(token, 2 + MemoryReplayWindowStore.MaxForwardJump));
+        }
+
+        [Fact]
+        [DisplayName("TryAcceptAsync with a cancelled token throws and records nothing")]
+        public async Task TryAcceptAsync_CancelledToken_ThrowsAndRecordsNothing()
+        {
+            var store = new MemoryReplayWindowStore();
+            var token = Guid.NewGuid();
+            using var cts = new CancellationTokenSource();
+            await cts.CancelAsync();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                async () => await store.TryAcceptAsync(token, 5, cts.Token));
+
+            // Nothing was recorded, so the same number is still available to the real request.
+            Assert.True(await store.TryAcceptAsync(token, 5));
+        }
+
+        [Fact]
         [DisplayName("Windows of different tokens are isolated from each other")]
         public void GetOrAdd_DifferentTokens_AreIsolated()
         {

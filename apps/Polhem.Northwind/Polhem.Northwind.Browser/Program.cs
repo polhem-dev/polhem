@@ -29,8 +29,8 @@ internal sealed partial class Program
         CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");
 
         // Same client contract as the desktop head (Remote connector to the JSON-RPC
-        // backend), but the browser sandbox cannot write files, so endpoint persistence
-        // goes through localStorage instead of FileEndpointStorage.
+        // backend), but the browser has no persistent file system, so the endpoint and the
+        // API key go through localStorage instead of the default `FileEndpointStorage`.
         ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
         var storage = new BrowserLocalStorageEndpointStorage("Polhem.Northwind");
         ClientInfo.EndpointStorage = storage;

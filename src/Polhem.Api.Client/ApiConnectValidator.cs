@@ -15,12 +15,14 @@ namespace Polhem.Api.Client
         /// </summary>
         /// <param name="endpoint">The endpoint to validate: a URL for remote connections or a local path for local connections.</param>
         /// <param name="allowGenerateSettings">Whether to auto-generate missing settings files (SystemSettings.xml and DatabaseSettings.xml) for local connections.</param>
+        /// <param name="cancellationToken">A token that cancels remote validation.</param>
         /// <remarks>
         /// Remote validation awaits the ping and reachability probes instead of blocking on them,
         /// so it is safe on single-threaded runtimes (browser WASM) where blocking would throw
         /// "Cannot wait on monitors".
         /// </remarks>
-        public static async Task<ConnectType> ValidateAsync(string endpoint, bool allowGenerateSettings = false)
+        public static async Task<ConnectType> ValidateAsync(string endpoint, bool allowGenerateSettings = false,
+            CancellationToken cancellationToken = default)
         {
             if (StringUtilities.IsEmpty(endpoint))
                 throw new ArgumentException("Input cannot be null or empty.", nameof(endpoint));
@@ -33,7 +35,7 @@ namespace Polhem.Api.Client
             }
             else if (HttpUtilities.IsUrl(endpoint))
             {
-                await ValidateRemoteAsync(endpoint).ConfigureAwait(false);
+                await ValidateRemoteAsync(endpoint, cancellationToken).ConfigureAwait(false);
                 return ConnectType.Remote;
             }
             else
@@ -115,7 +117,8 @@ namespace Polhem.Api.Client
         /// Validates the remote connection settings, awaiting the reachability and ping probes.
         /// </summary>
         /// <param name="endpoint">The service endpoint.</param>
-        private static async Task ValidateRemoteAsync(string endpoint)
+        /// <param name="cancellationToken">A token that cancels the probes.</param>
+        private static async Task ValidateRemoteAsync(string endpoint, CancellationToken cancellationToken)
         {
             // Verify the application supports remote connections
             if (!ApiClientInfo.SupportedConnectTypes.HasFlag(SupportedConnectTypes.Remote))
@@ -123,11 +126,11 @@ namespace Polhem.Api.Client
             if (StringUtilities.IsEmpty(endpoint))
                 throw new ArgumentException("The endpoint must be specified.", nameof(endpoint));
             // Pre-check transport-level reachability before establishing the connector
-            if (!await HttpUtilities.IsEndpointReachableAsync(endpoint).ConfigureAwait(false))
+            if (!await HttpUtilities.IsEndpointReachableAsync(endpoint, cancellationToken: cancellationToken).ConfigureAwait(false))
                 throw new InvalidOperationException($"Endpoint not reachable: {endpoint}");
             // Use remote connection to execute the Ping method
             var connector = new SystemApiConnector(endpoint, Guid.Empty);
-            await connector.PingAsync().ConfigureAwait(false);
+            await connector.PingAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

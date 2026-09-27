@@ -22,6 +22,11 @@ namespace Polhem.Api.Client
     /// The accessors are asynchronous end-to-end, so they are safe on single-threaded runtimes such
     /// as browser WASM. Call <see cref="ClearCache"/> after a tenant switch (<c>EnterCompany</c> /
     /// <c>LeaveCompany</c>) to drop the previous tenant's overlaid results.
+    /// <para>
+    /// A cancellation token passed to a <c>Get*Async</c> accessor cancels only that caller's wait.
+    /// The fetch itself is shared by every concurrent caller of the same key, so it runs to
+    /// completion and is cached; one caller giving up must not fail the others.
+    /// </para>
     /// </remarks>
     public class ClientDefineAccess
     {
@@ -96,7 +101,8 @@ namespace Polhem.Api.Client
         /// <typeparam name="T">The target type.</typeparam>
         /// <param name="defineType">The definition data type.</param>
         /// <param name="keys">The keys used to locate the definition data.</param>
-        private async Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null)
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        private async Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys, CancellationToken cancellationToken)
         {
             string cacheKey = GetCacheKey(defineType, keys);
             var entry = this.List.GetOrAdd(
@@ -104,7 +110,12 @@ namespace Polhem.Api.Client
                 _ => new Lazy<Task<object>>(() => FetchAsync<T>(defineType, keys)));
             try
             {
-                return (T)await entry.Value.ConfigureAwait(false);
+                return (T)await entry.Value.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Only this caller's wait was cancelled; the shared fetch is unaffected and stays cached.
+                throw;
             }
             catch
             {
@@ -142,9 +153,10 @@ namespace Polhem.Api.Client
         /// <param name="defineType">The definition data type.</param>
         /// <param name="defineObject">The definition data object.</param>
         /// <param name="keys">The keys used to locate where the definition data is saved.</param>
-        private Task SaveDefineAsync(DefineType defineType, object defineObject, string[]? keys = null)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        private Task SaveDefineAsync(DefineType defineType, object defineObject, string[]? keys, CancellationToken cancellationToken)
         {
-            return this.Connector.SaveDefineAsync(defineType, defineObject, keys);
+            return this.Connector.SaveDefineAsync(defineType, defineObject, keys, cancellationToken);
         }
 
         /// <summary>
@@ -172,9 +184,10 @@ namespace Polhem.Api.Client
         /// Server-side definition: this succeeds on a local connection (tooling) and is rejected on a
         /// remote one. The server serves remote callers only the definition types clients render from.
         /// </remarks>
-        public Task<SystemSettings> GetSystemSettingsAsync()
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<SystemSettings> GetSystemSettingsAsync(CancellationToken cancellationToken = default)
         {
-            return GetDefineAsync<SystemSettings>(DefineType.SystemSettings);
+            return GetDefineAsync<SystemSettings>(DefineType.SystemSettings, null, cancellationToken);
         }
 
         /// <summary>
@@ -184,9 +197,10 @@ namespace Polhem.Api.Client
         /// Server-side definition: this succeeds on a local connection (tooling) and is rejected on a
         /// remote one. The server serves remote callers only the definition types clients render from.
         /// </remarks>
-        public Task<DatabaseSettings> GetDatabaseSettingsAsync()
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<DatabaseSettings> GetDatabaseSettingsAsync(CancellationToken cancellationToken = default)
         {
-            return GetDefineAsync<DatabaseSettings>(DefineType.DatabaseSettings);
+            return GetDefineAsync<DatabaseSettings>(DefineType.DatabaseSettings, null, cancellationToken);
         }
 
         /// <summary>
@@ -196,18 +210,20 @@ namespace Polhem.Api.Client
         /// Server-side definition: this succeeds on a local connection (tooling) and is rejected
         /// on a remote one. A shell wanting navigation calls <see cref="GetMenuSettingsAsync"/> instead.
         /// </remarks>
-        public Task<ProgramSettings> GetProgramSettingsAsync()
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<ProgramSettings> GetProgramSettingsAsync(CancellationToken cancellationToken = default)
         {
-            return GetDefineAsync<ProgramSettings>(DefineType.ProgramSettings);
+            return GetDefineAsync<ProgramSettings>(DefineType.ProgramSettings, null, cancellationToken);
         }
 
         /// <summary>
         /// Asynchronously gets the menu definition, already resolved against this session's tenant
         /// customization by the server.
         /// </summary>
-        public Task<MenuSettings> GetMenuSettingsAsync()
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<MenuSettings> GetMenuSettingsAsync(CancellationToken cancellationToken = default)
         {
-            return GetDefineAsync<MenuSettings>(DefineType.MenuSettings);
+            return GetDefineAsync<MenuSettings>(DefineType.MenuSettings, null, cancellationToken);
         }
 
         /// <summary>
@@ -217,9 +233,10 @@ namespace Polhem.Api.Client
         /// Server-side definition: this succeeds on a local connection (tooling) and is rejected on a
         /// remote one. The server serves remote callers only the definition types clients render from.
         /// </remarks>
-        public Task<PermissionModels> GetPermissionModelsAsync()
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<PermissionModels> GetPermissionModelsAsync(CancellationToken cancellationToken = default)
         {
-            return GetDefineAsync<PermissionModels>(DefineType.PermissionModels);
+            return GetDefineAsync<PermissionModels>(DefineType.PermissionModels, null, cancellationToken);
         }
 
         /// <summary>
@@ -229,9 +246,10 @@ namespace Polhem.Api.Client
         /// Server-side definition: this succeeds on a local connection (tooling) and is rejected on a
         /// remote one. The server serves remote callers only the definition types clients render from.
         /// </remarks>
-        public Task<DbCategorySettings> GetDbCategorySettingsAsync()
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<DbCategorySettings> GetDbCategorySettingsAsync(CancellationToken cancellationToken = default)
         {
-            return GetDefineAsync<DbCategorySettings>(DefineType.DbCategorySettings);
+            return GetDefineAsync<DbCategorySettings>(DefineType.DbCategorySettings, null, cancellationToken);
         }
 
         /// <summary>
@@ -243,18 +261,20 @@ namespace Polhem.Api.Client
         /// Server-side definition: this succeeds on a local connection (tooling) and is rejected on a
         /// remote one. The server serves remote callers only the definition types clients render from.
         /// </remarks>
-        public Task<TableSchema> GetTableSchemaAsync(string categoryId, string tableName)
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<TableSchema> GetTableSchemaAsync(string categoryId, string tableName, CancellationToken cancellationToken = default)
         {
-            return GetDefineAsync<TableSchema>(DefineType.TableSchema, new string[] { categoryId, tableName });
+            return GetDefineAsync<TableSchema>(DefineType.TableSchema, new string[] { categoryId, tableName }, cancellationToken);
         }
 
         /// <summary>
         /// Asynchronously gets the form schema for the specified program.
         /// </summary>
         /// <param name="progId">The program identifier.</param>
-        public Task<FormSchema> GetFormSchemaAsync(string progId)
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<FormSchema> GetFormSchemaAsync(string progId, CancellationToken cancellationToken = default)
         {
-            return GetDefineAsync<FormSchema>(DefineType.FormSchema, new string[] { progId });
+            return GetDefineAsync<FormSchema>(DefineType.FormSchema, new string[] { progId }, cancellationToken);
         }
 
         /// <summary>
@@ -267,9 +287,10 @@ namespace Polhem.Api.Client
         /// and picking between the two is the caller's job (see <see cref="Polhem.Api.Client.Definitions.FormDefinitionLoader"/>).
         /// <see cref="ClearCache"/> on tenant switch keeps the cache consistent.
         /// </remarks>
-        public Task<FormLayout> GetFormLayoutAsync(string layoutId)
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<FormLayout> GetFormLayoutAsync(string layoutId, CancellationToken cancellationToken = default)
         {
-            return GetDefineAsync<FormLayout>(DefineType.FormLayout, new string[] { layoutId });
+            return GetDefineAsync<FormLayout>(DefineType.FormLayout, new string[] { layoutId }, cancellationToken);
         }
 
         /// <summary>
@@ -283,10 +304,13 @@ namespace Polhem.Api.Client
         /// trip each. <see cref="ClearCache"/> on tenant switch is what keeps the customization
         /// entries from outliving the tenant they belong to.
         /// </remarks>
-        public Task<FormLayout?> GetCustomizeFormLayoutAsync(string progId, string layoutId = "")
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<FormLayout?> GetCustomizeFormLayoutAsync(string progId, string layoutId = "",
+            CancellationToken cancellationToken = default)
             => GetCustomizeAsync(
                 $"Customize_{DefineType.FormLayout}_{progId}.{layoutId}",
-                () => Connector.GetCustomizeFormLayoutAsync(progId, layoutId));
+                () => Connector.GetCustomizeFormLayoutAsync(progId, layoutId, CancellationToken.None),
+                cancellationToken);
 
         /// <summary>
         /// Asynchronously gets the tenant customization layer of a language resource;
@@ -294,24 +318,30 @@ namespace Polhem.Api.Client
         /// </summary>
         /// <param name="lang">The BCP-47 language code.</param>
         /// <param name="ns">The resource namespace.</param>
-        public Task<LanguageResource?> GetCustomizeLanguageAsync(string lang, string ns)
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<LanguageResource?> GetCustomizeLanguageAsync(string lang, string ns, CancellationToken cancellationToken = default)
             => GetCustomizeAsync(
                 $"Customize_{DefineType.Language}_{lang}.{ns}",
-                () => Connector.GetCustomizeLanguageAsync(lang, ns));
+                () => Connector.GetCustomizeLanguageAsync(lang, ns, CancellationToken.None),
+                cancellationToken);
 
         /// <summary>
         /// Shares the definition task cache for customization fetches. "No override" is a normal
         /// answer, so a <c>null</c> result is cached too rather than re-fetched on every lookup;
         /// the boxed sentinel is needed because the cache stores <c>Task&lt;object&gt;</c>.
         /// </summary>
-        private async Task<T?> GetCustomizeAsync<T>(string cacheKey, Func<Task<T?>> fetch) where T : class
+        private async Task<T?> GetCustomizeAsync<T>(string cacheKey, Func<Task<T?>> fetch, CancellationToken cancellationToken) where T : class
         {
             var entry = this.List.GetOrAdd(
                 cacheKey,
                 _ => new Lazy<Task<object>>(() => FetchCustomizeAsync(fetch)));
             try
             {
-                return await entry.Value.ConfigureAwait(false) as T;
+                return await entry.Value.WaitAsync(cancellationToken).ConfigureAwait(false) as T;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch
             {
@@ -331,9 +361,10 @@ namespace Polhem.Api.Client
         /// </summary>
         /// <param name="lang">The BCP-47 language code.</param>
         /// <param name="ns">The resource namespace.</param>
-        public Task<LanguageResource> GetLanguageAsync(string lang, string ns)
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<LanguageResource> GetLanguageAsync(string lang, string ns, CancellationToken cancellationToken = default)
         {
-            return GetDefineAsync<LanguageResource>(DefineType.Language, new string[] { lang, ns });
+            return GetDefineAsync<LanguageResource>(DefineType.Language, new string[] { lang, ns }, cancellationToken);
         }
 
         /// <summary>
@@ -341,9 +372,10 @@ namespace Polhem.Api.Client
         /// <c>null</c> when no currency master is deployed, in which case amounts fall back to
         /// framework-default decimal places.
         /// </summary>
-        public Task<CurrencySettings> GetCurrencySettingsAsync()
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<CurrencySettings> GetCurrencySettingsAsync(CancellationToken cancellationToken = default)
         {
-            return GetDefineAsync<CurrencySettings>(DefineType.CurrencySettings);
+            return GetDefineAsync<CurrencySettings>(DefineType.CurrencySettings, null, cancellationToken);
         }
 
         /// <summary>
@@ -351,9 +383,10 @@ namespace Polhem.Api.Client
         /// <c>null</c> when no unit master is deployed, in which case quantities/weights fall back to
         /// framework-default decimal places.
         /// </summary>
-        public Task<UnitSettings> GetUnitSettingsAsync()
+        /// <param name="cancellationToken">A token that cancels this caller's wait.</param>
+        public Task<UnitSettings> GetUnitSettingsAsync(CancellationToken cancellationToken = default)
         {
-            return GetDefineAsync<UnitSettings>(DefineType.UnitSettings);
+            return GetDefineAsync<UnitSettings>(DefineType.UnitSettings, null, cancellationToken);
         }
 
         #endregion
@@ -364,45 +397,50 @@ namespace Polhem.Api.Client
         /// Asynchronously saves the system settings.
         /// </summary>
         /// <param name="settings">The system settings.</param>
-        public Task SaveSystemSettingsAsync(SystemSettings settings)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public Task SaveSystemSettingsAsync(SystemSettings settings, CancellationToken cancellationToken = default)
         {
-            return SaveDefineAsync(DefineType.SystemSettings, settings);
+            return SaveDefineAsync(DefineType.SystemSettings, settings, null, cancellationToken);
         }
 
         /// <summary>
         /// Asynchronously saves the database settings.
         /// </summary>
         /// <param name="settings">The database settings.</param>
-        public Task SaveDatabaseSettingsAsync(DatabaseSettings settings)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public Task SaveDatabaseSettingsAsync(DatabaseSettings settings, CancellationToken cancellationToken = default)
         {
-            return SaveDefineAsync(DefineType.DatabaseSettings, settings);
+            return SaveDefineAsync(DefineType.DatabaseSettings, settings, null, cancellationToken);
         }
 
         /// <summary>
         /// Asynchronously saves the program settings.
         /// </summary>
         /// <param name="settings">The program settings.</param>
-        public Task SaveProgramSettingsAsync(ProgramSettings settings)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public Task SaveProgramSettingsAsync(ProgramSettings settings, CancellationToken cancellationToken = default)
         {
-            return SaveDefineAsync(DefineType.ProgramSettings, settings);
+            return SaveDefineAsync(DefineType.ProgramSettings, settings, null, cancellationToken);
         }
 
         /// <summary>
         /// Asynchronously saves the permission model registry.
         /// </summary>
         /// <param name="models">The permission model registry.</param>
-        public Task SavePermissionModelsAsync(PermissionModels models)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public Task SavePermissionModelsAsync(PermissionModels models, CancellationToken cancellationToken = default)
         {
-            return SaveDefineAsync(DefineType.PermissionModels, models);
+            return SaveDefineAsync(DefineType.PermissionModels, models, null, cancellationToken);
         }
 
         /// <summary>
         /// Asynchronously saves the database category settings.
         /// </summary>
         /// <param name="settings">The database category settings.</param>
-        public Task SaveDbCategorySettingsAsync(DbCategorySettings settings)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public Task SaveDbCategorySettingsAsync(DbCategorySettings settings, CancellationToken cancellationToken = default)
         {
-            return SaveDefineAsync(DefineType.DbCategorySettings, settings);
+            return SaveDefineAsync(DefineType.DbCategorySettings, settings, null, cancellationToken);
         }
 
         /// <summary>
@@ -410,36 +448,40 @@ namespace Polhem.Api.Client
         /// </summary>
         /// <param name="categoryId">The database category id.</param>
         /// <param name="tableSchema">The table schema.</param>
-        public Task SaveTableSchemaAsync(string categoryId, TableSchema tableSchema)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public Task SaveTableSchemaAsync(string categoryId, TableSchema tableSchema, CancellationToken cancellationToken = default)
         {
-            return SaveDefineAsync(DefineType.TableSchema, tableSchema, new string[] { categoryId });
+            return SaveDefineAsync(DefineType.TableSchema, tableSchema, new string[] { categoryId }, cancellationToken);
         }
 
         /// <summary>
         /// Asynchronously saves the form schema.
         /// </summary>
         /// <param name="formSchema">The form schema.</param>
-        public Task SaveFormSchemaAsync(FormSchema formSchema)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public Task SaveFormSchemaAsync(FormSchema formSchema, CancellationToken cancellationToken = default)
         {
-            return SaveDefineAsync(DefineType.FormSchema, formSchema);
+            return SaveDefineAsync(DefineType.FormSchema, formSchema, null, cancellationToken);
         }
 
         /// <summary>
         /// Asynchronously saves the form layout.
         /// </summary>
         /// <param name="formLayout">The form layout.</param>
-        public Task SaveFormLayoutAsync(FormLayout formLayout)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public Task SaveFormLayoutAsync(FormLayout formLayout, CancellationToken cancellationToken = default)
         {
-            return SaveDefineAsync(DefineType.FormLayout, formLayout);
+            return SaveDefineAsync(DefineType.FormLayout, formLayout, null, cancellationToken);
         }
 
         /// <summary>
         /// Asynchronously saves the language resource.
         /// </summary>
         /// <param name="resource">The language resource.</param>
-        public Task SaveLanguageAsync(LanguageResource resource)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public Task SaveLanguageAsync(LanguageResource resource, CancellationToken cancellationToken = default)
         {
-            return SaveDefineAsync(DefineType.Language, resource, new string[] { resource.Lang, resource.Namespace });
+            return SaveDefineAsync(DefineType.Language, resource, new string[] { resource.Lang, resource.Namespace }, cancellationToken);
         }
 
         #endregion

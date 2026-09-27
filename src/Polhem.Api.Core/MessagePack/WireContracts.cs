@@ -33,7 +33,6 @@ namespace Polhem.Api.Core.MessagePack
             AddSystemMessages(list);
             AddAuditLogMessages(list);
             AddEnvelopeMessages(list);
-            AddDataTypes(list);
             AddDefinitionTypes(list);
             AddGenericInstantiations(list);
             return list;

@@ -131,7 +131,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             public override Task<GetLookupResponse> GetLookupAsync(
                 string searchText = "",
-                Polhem.Definition.Paging.PagingOptions? paging = null)
+                Polhem.Definition.Paging.PagingOptions? paging = null, CancellationToken cancellationToken = default)
             {
                 LastSearchText = searchText;
                 return Task.FromResult(new GetLookupResponse { Table = _table });
@@ -144,7 +144,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             public override Task<GetLookupResponse> GetLookupAsync(
                 string searchText = "",
-                Polhem.Definition.Paging.PagingOptions? paging = null)
+                Polhem.Definition.Paging.PagingOptions? paging = null, CancellationToken cancellationToken = default)
                 => throw new InvalidOperationException("boom");
         }
     }

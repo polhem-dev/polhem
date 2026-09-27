@@ -75,6 +75,7 @@ namespace Polhem.Api.Client
         /// </summary>
         /// <param name="endpoint">The endpoint URL to probe.</param>
         /// <param name="timeout">The probe timeout. Defaults to 5 seconds.</param>
+        /// <param name="cancellationToken">A token that cancels the probe; cancelling it throws rather than reporting unreachable.</param>
         /// <returns>
         /// True if the server returns any HTTP response (including 4xx/5xx status codes);
         /// false on DNS failure, connection refused, or timeout.
@@ -85,9 +86,11 @@ namespace Polhem.Api.Client
         /// Use this only for transport-level reachability; verifying that the endpoint actually
         /// implements the expected service contract is the caller's responsibility.
         /// </remarks>
-        public static async Task<bool> IsEndpointReachableAsync(string endpoint, TimeSpan? timeout = null)
+        public static async Task<bool> IsEndpointReachableAsync(string endpoint, TimeSpan? timeout = null,
+            CancellationToken cancellationToken = default)
         {
-            using var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(5));
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            cts.CancelAfter(timeout ?? TimeSpan.FromSeconds(5));
             try
             {
                 HttpClient client = GetOrCreateClient(endpoint);
@@ -99,7 +102,7 @@ namespace Polhem.Api.Client
             {
                 return false;
             }
-            catch (TaskCanceledException)
+            catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
                 return false;
             }
@@ -111,10 +114,24 @@ namespace Polhem.Api.Client
         /// <param name="endpoint">The service endpoint.</param>
         /// <param name="body">The JSON string to pass in the request body.</param>
         /// <param name="headers">Custom request headers.</param>
-        public static async Task<string> PostAsync(string endpoint, string body, NameValueCollection? headers = null)
+        /// <param name="cancellationToken">A token that cancels the request.</param>
+        public static Task<string> PostAsync(string endpoint, string body, NameValueCollection? headers = null,
+            CancellationToken cancellationToken = default)
         {
-            HttpClient client = GetOrCreateClient(endpoint);
+            return PostAsync(GetOrCreateClient(endpoint), endpoint, body, headers, cancellationToken);
+        }
 
+        /// <summary>
+        /// Asynchronously sends a POST request through the given client.
+        /// </summary>
+        /// <param name="client">The client to send with.</param>
+        /// <param name="endpoint">The service endpoint.</param>
+        /// <param name="body">The JSON string to pass in the request body.</param>
+        /// <param name="headers">Custom request headers.</param>
+        /// <param name="cancellationToken">A token that cancels the request.</param>
+        public static async Task<string> PostAsync(HttpClient client, string endpoint, string body, NameValueCollection? headers,
+            CancellationToken cancellationToken)
+        {
             // Send POST request
             using (var request = new HttpRequestMessage(HttpMethod.Post, endpoint))
             {
@@ -128,10 +145,10 @@ namespace Polhem.Api.Client
                     }
                 }
 
-                using (HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false))
+                using (HttpResponseMessage response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false))
                 {
                     response.EnsureSuccessStatusCode();  // Verify success
-                    return await response.Content.ReadAsStringAsync().ConfigureAwait(false); // Read response content
+                    return await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false); // Read response content
                 }
             }
         }
@@ -141,7 +158,9 @@ namespace Polhem.Api.Client
         /// </summary>
         /// <param name="endpoint">The service endpoint.</param>
         /// <param name="headers">Custom request headers.</param>
-        public static async Task<string> GetAsync(string endpoint, NameValueCollection? headers = null)
+        /// <param name="cancellationToken">A token that cancels the request.</param>
+        public static async Task<string> GetAsync(string endpoint, NameValueCollection? headers = null,
+            CancellationToken cancellationToken = default)
         {
             HttpClient client = GetOrCreateClient(endpoint);
 
@@ -156,10 +175,10 @@ namespace Polhem.Api.Client
                     }
                 }
 
-                using (HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false))
+                using (HttpResponseMessage response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false))
                 {
                     response.EnsureSuccessStatusCode();  // Verify success
-                    return await response.Content.ReadAsStringAsync().ConfigureAwait(false);  // Read response content
+                    return await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);  // Read response content
                 }
             }
         }

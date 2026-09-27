@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Data;
 using Polhem.Api.Core.MessagePack;
+using Polhem.Api.Core.UnitTests.MessagePack;
 
 namespace Polhem.Api.Core.UnitTests
 {
@@ -27,31 +28,32 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("An Unchanged row carries no OriginalValues")]
+        [DisplayName("An Unchanged row carries one value per column, its Current values only")]
         public void Unchanged_CarriesCurrentOnly()
         {
-            var serializable = SerializableDataTable.FromDataTable(BuildTable());
+            var wire = DataTableWire.Read(MessagePackCodec.Serialize(BuildTable()));
 
-            Assert.All(serializable.Rows!, row =>
+            Assert.All(wire.Rows, row =>
             {
-                Assert.Equal(DataRowState.Unchanged, row.RowState);
-                Assert.NotNull(row.CurrentValues);
-                Assert.Null(row.OriginalValues);
+                Assert.Equal((int)DataRowState.Unchanged, row.State);
+                Assert.Equal(wire.Columns.Count, row.Cells.Count);
             });
+            Assert.Equal("alpha", DataTableWire.ReadString(wire.Rows[0].Cells[1]));
         }
 
         [Fact]
-        [DisplayName("A Modified row still carries both Current and Original")]
+        [DisplayName("A Modified row still carries both Original and Current")]
         public void Modified_StillCarriesBoth()
         {
             var table = BuildTable();
             table.Rows[0]["name"] = "changed";
 
-            var serializable = SerializableDataTable.FromDataTable(table);
-            var modified = serializable.Rows!.Single(r => r.RowState == DataRowState.Modified);
+            var wire = DataTableWire.Read(MessagePackCodec.Serialize(table));
+            var modified = wire.Rows.Single(r => r.State == (int)DataRowState.Modified);
 
-            Assert.Equal("changed", modified.CurrentValues!["name"]);
-            Assert.Equal("alpha", modified.OriginalValues!["name"]);
+            Assert.Equal(2 * wire.Columns.Count, modified.Cells.Count);
+            Assert.Equal("alpha", DataTableWire.ReadString(modified.Cells[1]));
+            Assert.Equal("changed", DataTableWire.ReadString(modified.Cells[wire.Columns.Count + 1]));
         }
 
         [Fact]

@@ -18,22 +18,21 @@ namespace Polhem.Api.Core.JsonRpc
     /// Instances are shared across concurrent requests on one session, so every read-modify-write
     /// runs under the instance lock.
     /// </para>
+    /// <para>
+    /// Internal because it is how <see cref="MemoryReplayWindowStore"/> keeps its state, not part
+    /// of the <see cref="IReplayWindowStore"/> contract: a shared store keeps its own state and
+    /// makes the decision there.
+    /// </para>
     /// </remarks>
-    public sealed class ReplayWindow
+    internal sealed class ReplayWindow
     {
         /// <summary>The number of preceding sequence slots the window remembers.</summary>
-        public const int WindowSize = 64;
+        public const int WindowSize = MemoryReplayWindowStore.WindowSize;
 
         /// <summary>
         /// How far above the highest seen sequence a new one may jump before it is refused.
         /// </summary>
-        /// <remarks>
-        /// Without a ceiling, one client-side arithmetic slip that produces a sequence near
-        /// <see cref="long.MaxValue"/> would strand the session: every honest request afterwards
-        /// falls below the window and is refused, with a valid token and a correct key, which is
-        /// close to undiagnosable. The bound is set far above any real traffic pattern.
-        /// </remarks>
-        public const long MaxForwardJump = 1_000_000;
+        public const long MaxForwardJump = MemoryReplayWindowStore.MaxForwardJump;
 
         private readonly Lock _gate = new();
         private long _highest = -1;

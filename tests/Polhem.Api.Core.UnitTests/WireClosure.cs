@@ -28,8 +28,8 @@ namespace Polhem.Api.Core.UnitTests
             typeof(Polhem.Definition.Collections.PropertyCollection),
             typeof(Polhem.Definition.Settings.CurrencySettings),
             typeof(Polhem.Definition.Settings.UnitSettings),
-            typeof(SerializableDataSet),
-            typeof(SerializableDataTable),
+            typeof(DataSet),
+            typeof(DataTable),
         ];
 
         /// <summary>

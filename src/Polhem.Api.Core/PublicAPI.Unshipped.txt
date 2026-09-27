@@ -21,3 +21,8 @@ Polhem.Api.Core.Messages.ExecFuncRequest.ExecFuncRequest(string! funcId) -> void
 Polhem.Api.Core.Messages.System.CreateSessionRequest.UserId.get -> string!
 Polhem.Api.Core.Messages.System.CreateSessionRequest.UserId.set -> void
 Polhem.Api.Core.Messages.System.EnterCompanyResponse.Capabilities.get -> System.Collections.Generic.Dictionary<string!, Polhem.Definition.Settings.PermissionActions>!
+Polhem.Api.Core.JsonRpc.IReplayWindowStore.TryAcceptAsync(System.Guid accessToken, long sequence, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Polhem.Api.Core.JsonRpc.JsonRpcExecutor.ExecuteAsync(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.JsonRpc.JsonRpcResponse!>!
+const Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.WindowSize = 64 -> int
+Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.TryAcceptAsync(System.Guid accessToken, long sequence, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+const Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.MaxForwardJump = 1000000 -> long

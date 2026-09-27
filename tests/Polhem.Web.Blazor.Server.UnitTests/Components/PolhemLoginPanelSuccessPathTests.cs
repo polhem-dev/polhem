@@ -37,7 +37,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
             public FakeLoginProvider(LoginResponse response) : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.Empty) => _response = response;
 
-            Task<JsonRpcResponse> IJsonRpcProvider.ExecuteAsync(JsonRpcRequest request)
+            Task<JsonRpcResponse> IJsonRpcProvider.ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken)
                 => Task.FromResult(new JsonRpcResponse { Result = new JsonRpcResult { Value = _response } });
         }
 

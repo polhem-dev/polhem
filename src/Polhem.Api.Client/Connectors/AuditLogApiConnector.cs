@@ -60,9 +60,11 @@ namespace Polhem.Api.Client.Connectors
         /// <param name="action">The action name to execute.</param>
         /// <param name="value">The input parameter for the action.</param>
         /// <param name="format">The payload encoding format for transmission.</param>
-        public async Task<T> ExecuteAsync<T>(string action, object value, PayloadFormat format = PayloadFormat.Encrypted)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public async Task<T> ExecuteAsync<T>(string action, object value, PayloadFormat format = PayloadFormat.Encrypted,
+            CancellationToken cancellationToken = default)
         {
-            return await base.ExecuteAsync<T>(SysProgIds.AuditLog, action, value, format).ConfigureAwait(false);
+            return await base.ExecuteAsync<T>(SysProgIds.AuditLog, action, value, format, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -72,83 +74,101 @@ namespace Polhem.Api.Client.Connectors
         /// <see cref="GetChangeDetailAsync"/>.
         /// </summary>
         /// <param name="request">The change-log list request (typed filter + optional paging).</param>
-        public virtual async Task<AuditLogListResponse> GetChangeLogAsync(GetChangeLogRequest request)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<AuditLogListResponse> GetChangeLogAsync(GetChangeLogRequest request, CancellationToken cancellationToken = default)
         {
-            return await ExecuteAsync<AuditLogListResponse>(AuditLogActions.GetChangeLog, request).ConfigureAwait(false);
+            return await ExecuteAsync<AuditLogListResponse>(AuditLogActions.GetChangeLog, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
         /// Asynchronously gets one change event's restored field-level before/after detail, by its log
         /// row id (<c>st_log_change.sys_rowid</c>).
         /// </summary>
-        /// <param name="sysRowId">The change event's log row id.</param>
-        public virtual async Task<GetChangeDetailResponse> GetChangeDetailAsync(Guid sysRowId)
+        /// <param name="request">The change-detail request, carrying the change event's log row id.</param>
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<GetChangeDetailResponse> GetChangeDetailAsync(GetChangeDetailRequest request,
+            CancellationToken cancellationToken = default)
         {
-            var request = new GetChangeDetailRequest { SysRowId = sysRowId };
-            return await ExecuteAsync<GetChangeDetailResponse>(AuditLogActions.GetChangeDetail, request).ConfigureAwait(false);
+            return await ExecuteAsync<GetChangeDetailResponse>(AuditLogActions.GetChangeDetail, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
         /// Asynchronously gets a filtered, paged list of <c>st_log_login</c> event headers.
         /// </summary>
         /// <param name="request">The login-log list request (typed filter + optional paging).</param>
-        public virtual async Task<AuditLogListResponse> GetLoginLogAsync(GetLoginLogRequest request)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<AuditLogListResponse> GetLoginLogAsync(GetLoginLogRequest request, CancellationToken cancellationToken = default)
         {
-            return await ExecuteAsync<AuditLogListResponse>(AuditLogActions.GetLoginLog, request).ConfigureAwait(false);
+            return await ExecuteAsync<AuditLogListResponse>(AuditLogActions.GetLoginLog, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
         /// Asynchronously gets a filtered, paged list of <c>st_log_access</c> record-view headers.
         /// </summary>
         /// <param name="request">The access-log list request (typed filter + optional paging).</param>
-        public virtual async Task<AuditLogListResponse> GetAccessLogAsync(GetAccessLogRequest request)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<AuditLogListResponse> GetAccessLogAsync(GetAccessLogRequest request, CancellationToken cancellationToken = default)
         {
-            return await ExecuteAsync<AuditLogListResponse>(AuditLogActions.GetAccessLog, request).ConfigureAwait(false);
+            return await ExecuteAsync<AuditLogListResponse>(AuditLogActions.GetAccessLog, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
         /// Asynchronously gets a filtered, paged list of <c>st_log_anomaly_api</c> API-anomaly headers.
         /// </summary>
         /// <param name="request">The API-anomaly list request (typed filter + optional paging).</param>
-        public virtual async Task<AuditLogListResponse> GetApiAnomalyLogAsync(GetApiAnomalyLogRequest request)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<AuditLogListResponse> GetApiAnomalyLogAsync(GetApiAnomalyLogRequest request, CancellationToken cancellationToken = default)
         {
-            return await ExecuteAsync<AuditLogListResponse>(AuditLogActions.GetApiAnomalyLog, request).ConfigureAwait(false);
+            return await ExecuteAsync<AuditLogListResponse>(AuditLogActions.GetApiAnomalyLog, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
         /// Asynchronously gets a filtered, paged list of <c>st_log_anomaly_db</c> DB-anomaly headers.
         /// </summary>
         /// <param name="request">The DB-anomaly list request (typed filter + optional paging).</param>
-        public virtual async Task<AuditLogListResponse> GetDbAnomalyLogAsync(GetDbAnomalyLogRequest request)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<AuditLogListResponse> GetDbAnomalyLogAsync(GetDbAnomalyLogRequest request, CancellationToken cancellationToken = default)
         {
-            return await ExecuteAsync<AuditLogListResponse>(AuditLogActions.GetDbAnomalyLog, request).ConfigureAwait(false);
+            return await ExecuteAsync<AuditLogListResponse>(AuditLogActions.GetDbAnomalyLog, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
         /// Asynchronously gets API-anomaly counts grouped by anomaly kind (monitoring summary).
         /// </summary>
         /// <param name="request">The summary request (optional time window).</param>
-        public virtual async Task<AuditLogAggregateResponse> GetApiAnomalySummaryAsync(GetApiAnomalySummaryRequest request)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<AuditLogAggregateResponse> GetApiAnomalySummaryAsync(GetApiAnomalySummaryRequest request, CancellationToken cancellationToken = default)
         {
-            return await ExecuteAsync<AuditLogAggregateResponse>(AuditLogActions.GetApiAnomalySummary, request).ConfigureAwait(false);
+            return await ExecuteAsync<AuditLogAggregateResponse>(AuditLogActions.GetApiAnomalySummary, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
         /// Asynchronously gets DB-anomaly counts grouped by anomaly kind (monitoring summary).
         /// </summary>
         /// <param name="request">The summary request (optional time window).</param>
-        public virtual async Task<AuditLogAggregateResponse> GetDbAnomalySummaryAsync(GetDbAnomalySummaryRequest request)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<AuditLogAggregateResponse> GetDbAnomalySummaryAsync(GetDbAnomalySummaryRequest request, CancellationToken cancellationToken = default)
         {
-            return await ExecuteAsync<AuditLogAggregateResponse>(AuditLogActions.GetDbAnomalySummary, request).ConfigureAwait(false);
+            return await ExecuteAsync<AuditLogAggregateResponse>(AuditLogActions.GetDbAnomalySummary, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
         /// Asynchronously gets the top API methods by anomaly count (monitoring hot-spots).
         /// </summary>
         /// <param name="request">The top-N request (optional time window + <c>TopN</c>).</param>
-        public virtual async Task<AuditLogAggregateResponse> GetTopApiMethodsAsync(GetTopApiMethodsRequest request)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        public virtual async Task<AuditLogAggregateResponse> GetTopApiMethodsAsync(GetTopApiMethodsRequest request, CancellationToken cancellationToken = default)
         {
-            return await ExecuteAsync<AuditLogAggregateResponse>(AuditLogActions.GetTopApiMethods, request).ConfigureAwait(false);
+            return await ExecuteAsync<AuditLogAggregateResponse>(AuditLogActions.GetTopApiMethods, request, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
 
     }

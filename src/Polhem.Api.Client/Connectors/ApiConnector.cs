@@ -122,9 +122,13 @@ namespace Polhem.Api.Client.Connectors
         /// <param name="action">The action name to execute.</param>
         /// <param name="value">The input parameter for the action.</param>
         /// <param name="format">The payload encoding format for transmission.</param>
-        protected async Task<T> ExecuteAsync<T>(string progId, string action, object value, PayloadFormat format)
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled.</exception>
+        protected async Task<T> ExecuteAsync<T>(string progId, string action, object value, PayloadFormat format,
+            CancellationToken cancellationToken = default)
         {
             ValidateArgs(progId, action);
+            cancellationToken.ThrowIfCancellationRequested();
 
             // The Connector is the only place time zones are applied (ADR-032 D4). A response
             // converts into the user's zone. A request converts only its filter values: a data set
@@ -146,7 +150,7 @@ namespace Polhem.Api.Client.Connectors
                 var (request, actualFormat) = PrepareRequest(progId, action, value, format);
 
                 // Invoke the JSON-RPC method (remote or local)
-                var response = await this.Provider.ExecuteAsync(request).ConfigureAwait(false);
+                var response = await this.Provider.ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
 
                 result = FinalizeResponse<T>(response, actualFormat);
             }

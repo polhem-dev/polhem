@@ -30,7 +30,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 string selectFields = "",
                 FilterNode? filter = null,
                 SortFieldCollection? sortFields = null,
-                PagingOptions? paging = null)
+                PagingOptions? paging = null, CancellationToken cancellationToken = default)
                 => Task.FromResult(new GetListResponse { Table = new DataTable("FakeList") });
         }
 
@@ -43,7 +43,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 _schema = schema;
             }
 
-            public override Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null)
+            public override Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null, CancellationToken cancellationToken = default)
             {
                 if (typeof(T) == typeof(FormSchema))
                     return Task.FromResult((T)(object)_schema);

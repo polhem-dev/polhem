@@ -34,7 +34,7 @@ namespace Polhem.Api.Client.UnitTests.Definitions
 
             public SchemaConnector(bool numeric = true) : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid()) { _numeric = numeric; }
 
-            public override Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null)
+            public override Task<T> GetDefineAsync<T>(DefineType defineType, string[]? keys = null, CancellationToken cancellationToken = default)
             {
                 if (defineType != DefineType.FormSchema)
                     return Task.FromResult(Activator.CreateInstance<T>());

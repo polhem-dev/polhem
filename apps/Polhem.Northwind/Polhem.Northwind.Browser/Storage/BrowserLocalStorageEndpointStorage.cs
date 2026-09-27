@@ -5,8 +5,8 @@ namespace Polhem.Northwind.Browser.Storage;
 
 /// <summary>
 /// <see cref="IEndpointStorage"/> / <see cref="IApiKeyStorage"/> implementation backed by the
-/// browser's <c>window.localStorage</c>. The browser (WASM) sandbox cannot write to the file system,
-/// so the file-backed <c>FileEndpointStorage</c> used by the desktop head does not apply;
+/// browser's <c>window.localStorage</c>. The browser (WASM) runtime has no persistent file system,
+/// so the default file-backed <see cref="FileEndpointStorage"/> would lose its writes on reload;
 /// this persists the endpoint and the API key under per-app localStorage keys instead.
 /// </summary>
 /// <remarks>
@@ -15,7 +15,7 @@ namespace Polhem.Northwind.Browser.Storage;
 /// in the head's <c>Program.Main</c>, before any code calls
 /// <see cref="ClientInfo.InitializeAsync(string)"/> or <see cref="ClientInfo.SetEndpointAsync(string)"/>.
 /// <para>
-/// Mirroring <c>FileEndpointStorage</c>, <see cref="SetEndpoint"/> mutates an in-memory cache
+/// Mirroring <see cref="FileEndpointStorage"/>, <see cref="SetEndpoint"/> mutates an in-memory cache
 /// only; the localStorage entry is written solely by <see cref="SaveEndpoint"/> so a bound
 /// input does not hit the JS boundary on every keystroke.
 /// </para>

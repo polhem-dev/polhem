@@ -69,7 +69,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             public override Task<GetLookupResponse> GetLookupAsync(
                 string searchText = "",
-                Polhem.Definition.Paging.PagingOptions? paging = null)
+                Polhem.Definition.Paging.PagingOptions? paging = null, CancellationToken cancellationToken = default)
                 => Task.FromResult(new GetLookupResponse { Table = new DataTable("Customer") });
         }
     }

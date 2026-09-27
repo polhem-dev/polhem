@@ -1,4 +1,14 @@
 #nullable enable
+Polhem.UI.Core.FileEndpointStorage
+Polhem.UI.Core.FileEndpointStorage.ApiKeyFilePath.get -> string!
+Polhem.UI.Core.FileEndpointStorage.FileEndpointStorage(string! appName) -> void
+Polhem.UI.Core.FileEndpointStorage.FilePath.get -> string!
+Polhem.UI.Core.FileEndpointStorage.LoadApiKey() -> string!
+Polhem.UI.Core.FileEndpointStorage.LoadEndpoint() -> string!
+Polhem.UI.Core.FileEndpointStorage.SaveApiKey(string! apiKey) -> void
+Polhem.UI.Core.FileEndpointStorage.SaveEndpoint(string! endpoint) -> void
+Polhem.UI.Core.FileEndpointStorage.SetApiKey(string! apiKey) -> void
+Polhem.UI.Core.FileEndpointStorage.SetEndpoint(string! endpoint) -> void
 static Polhem.UI.Core.ClientInfo.Arguments.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
 static Polhem.UI.Core.ClientInfo.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>?
 static Polhem.UI.Core.ClientInfo.CreateAuditLogApiConnector() -> Polhem.Api.Client.Connectors.AuditLogApiConnector!

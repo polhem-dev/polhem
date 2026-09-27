@@ -30,7 +30,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 string selectFields = "",
                 FilterNode? filter = null,
                 SortFieldCollection? sortFields = null,
-                PagingOptions? paging = null)
+                PagingOptions? paging = null, CancellationToken cancellationToken = default)
                 => Task.FromResult(new GetListResponse { Table = new DataTable("Test") });
         }
 

@@ -113,9 +113,9 @@ namespace Polhem.UI.Avalonia.Views
             return new RoundingContext
             {
                 Company = ClientInfo.Company,
-                CurrencySettings = await TryResolveSettingAsync(ClientInfo.DefineAccess.GetCurrencySettingsAsync)
+                CurrencySettings = await TryResolveSettingAsync(() => ClientInfo.DefineAccess.GetCurrencySettingsAsync())
                     .ConfigureAwait(true),
-                UnitSettings = await TryResolveSettingAsync(ClientInfo.DefineAccess.GetUnitSettingsAsync)
+                UnitSettings = await TryResolveSettingAsync(() => ClientInfo.DefineAccess.GetUnitSettingsAsync())
                     .ConfigureAwait(true),
             };
         }

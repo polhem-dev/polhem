@@ -26,7 +26,7 @@ namespace Polhem.Api.Client.UnitTests
             public JsonRpcRequest? LastRequest { get; private set; }
             public object? ResultValue { get; set; }
 
-            public Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request)
+            public Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
             {
                 LastRequest = request;
                 var result = new JsonRpcResult { Value = ResultValue };
@@ -90,13 +90,13 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetChangeDetailAsync wraps sysRowId into the matching request field")]
-        public async Task GetChangeDetailAsync_WrapsSysRowId()
+        [DisplayName("GetChangeDetailAsync sends the request's sysRowId unchanged")]
+        public async Task GetChangeDetailAsync_SendsSysRowId()
         {
             var (connector, provider) = Create(new GetChangeDetailResponse());
             var sysRowId = Guid.NewGuid();
 
-            await connector.GetChangeDetailAsync(sysRowId);
+            await connector.GetChangeDetailAsync(new GetChangeDetailRequest { SysRowId = sysRowId });
 
             // The payload was converted to Encoded before sending (`Value` is serialized into bytes), so restore
             // it before checking. This also shows the request really went onto the wire intact, not just its
@@ -118,17 +118,13 @@ namespace Polhem.Api.Client.UnitTests
             var responseType = method.ReturnType.GetGenericArguments()[0];
             var (connector, provider) = Create(Activator.CreateInstance(responseType)!);
 
+            // Every action method takes its request message followed by a cancellation token.
             var parameter = method.GetParameters()[0];
-            var isGuid = parameter.ParameterType == typeof(Guid);
-            var argument = isGuid
-                ? (object)Guid.NewGuid()
-                : Activator.CreateInstance(parameter.ParameterType)!;
+            var argument = Activator.CreateInstance(parameter.ParameterType)!;
 
-            await (Task)method.Invoke(connector, [argument])!;
+            await (Task)method.Invoke(connector, [argument, CancellationToken.None])!;
 
-            // The overload that takes a `Guid` builds the request itself, so the expected type is derived from the
-            // method name.
-            var requestType = isGuid ? typeof(GetChangeDetailRequest) : parameter.ParameterType;
+            var requestType = parameter.ParameterType;
             return (provider, requestType);
         }
     }
