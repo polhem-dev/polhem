@@ -24,7 +24,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Polhem.Base\Polhem.Base.csproj" />
-    <ProjectReference Include="..\..\src\Polhem.Business\Polhem.Business.csproj" />
     <ProjectReference Include="..\..\src\Polhem.Definition\Polhem.Definition.csproj" />
     <!--
       Polhem.Definition no longer references Polhem.Expressions (the abstraction now lives in Polhem.Base;

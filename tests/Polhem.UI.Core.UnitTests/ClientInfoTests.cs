@@ -8,7 +8,7 @@ namespace Polhem.UI.Core.UnitTests
     /// collection replace these statics and restore them, so this class joins the collection to read the defaults
     /// only while nobody else holds a replacement.
     /// </summary>
-    [Collection("ClientInfoState")]
+    [Collection(ClientInfoStateCollection.Name)]
     public class ClientInfoTests
     {
         [Fact]

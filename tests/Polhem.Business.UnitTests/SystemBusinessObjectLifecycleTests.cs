@@ -26,7 +26,7 @@ namespace Polhem.Business.UnitTests
 
         private static string UniqueCompanyId() => "C_" + Guid.NewGuid().ToString("N")[..12];
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("The whole session lifecycle Login → EnterCompany(A) → EnterCompany(B) → LeaveCompany → EnterCompany(A) → Logout stays consistent")]
         public void FullLifecycle_LoginThroughLogout_TransitionsCorrectly()
         {
@@ -115,7 +115,7 @@ namespace Polhem.Business.UnitTests
                 "DELETE FROM st_company WHERE sys_rowid = {0}", companyRowId));
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("EnterCompany after Logout throws AuthenticationRequiredException")]
         public void AfterLogout_EnterCompany_ThrowsUnauthorized()
         {
@@ -141,7 +141,7 @@ namespace Polhem.Business.UnitTests
             }
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("Logout directly after Login (without entering a company) succeeds idempotently")]
         public void Login_DirectLogout_WithoutEnteringCompany_Succeeds()
         {
@@ -157,7 +157,7 @@ namespace Polhem.Business.UnitTests
             Assert.Null(sessionService.Get(accessToken));
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("LeaveCompany after Login (without entering a company) is idempotent and SessionInfo.CompanyId stays null")]
         public void Login_LeaveCompanyWithoutEntering_Idempotent()
         {

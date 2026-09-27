@@ -149,18 +149,6 @@ namespace Polhem.Tests.Shared
             s_localServices = services.BuildServiceProvider();
         }
 
-        private static string FindRepoRoot(string startDir)
-        {
-            var dir = new DirectoryInfo(startDir);
-            while (dir != null)
-            {
-                if (dir.GetDirectories(".git").Length > 0)
-                    return dir.FullName;
-                dir = dir.Parent;
-            }
-            throw new InvalidOperationException($"Cannot find repo root from: {startDir}");
-        }
-
         /// <summary>
         /// Creates the process-wide shared define directory: a temp dir populated
         /// first with the contents of <c>tests/Define</c> (test-specific fixtures
@@ -170,7 +158,7 @@ namespace Polhem.Tests.Shared
         /// </summary>
         private static string CreateSharedDefinePath()
         {
-            var repoRoot = FindRepoRoot(AppContext.BaseDirectory);
+            var repoRoot = RepoRoot.Find();
             var testsDefine = Path.Combine(repoRoot, "tests", "Define");
 
             var sharedDir = Path.Combine(

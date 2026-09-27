@@ -40,7 +40,7 @@ namespace Polhem.Db.UnitTests
                 FilterCondition.Equal("DeptId", 10),
                 FilterGroup.Any(
                     FilterCondition.Contains("Name", "Lee"),
-                    FilterCondition.Between("HireDate", new DateTime(2024, 1, 1), new DateTime(2024, 12, 31))
+                    FilterCondition.Between("HireDate", new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Unspecified))
                 )
             );
 

@@ -9,7 +9,8 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     /// <summary>
     /// Structural smoke tests for <see cref="FormPage"/>.
     /// They confirm the compile-time declarations: public parameter properties, CascadingParameter, [Inject] injection and default values.
-    /// Methods such as OnInitializedAsync need the Blazor renderer and are left to bUnit integration tests.
+    /// The rendered behavior (load, row selection, New / Save / Delete, error display) is covered with bUnit by
+    /// <see cref="FormPageBunitTests"/>.
     /// </summary>
     public class FormPageTests
     {

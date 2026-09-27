@@ -9,8 +9,8 @@ namespace Polhem.Tests.Shared
     /// </summary>
     /// <remarks>
     /// Use as <c>IClassFixture&lt;SharedDbFixture&gt;</c> for any test class whose tests touch
-    /// the shared databases (e.g. via <c>SystemApiConnector.CreateSession</c>). Replaces the
-    /// legacy <c>[Collection("Initialize")]</c> + <c>DbGlobalFixture</c> binding for DB tests.
+    /// the shared databases (e.g. via <c>SystemApiConnector.CreateSession</c>), and gate each such test with
+    /// <see cref="DbFactAttribute"/> so it skips where that database is not configured.
     /// </remarks>
     public sealed class SharedDbFixture : PolhemTestFixture
     {

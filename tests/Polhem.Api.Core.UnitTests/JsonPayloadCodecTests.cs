@@ -18,7 +18,7 @@ namespace Polhem.Api.Core.UnitTests
     /// <c>ApiServiceOptionsState</c> (the whole assembly already uses <c>DisableTestParallelization</c>; the
     /// attribute marks that this class rewrites static components).
     /// </remarks>
-    [Collection("ApiServiceOptionsState")]
+    [Collection(ApiServiceOptionsStateCollection.Name)]
     public class JsonPayloadCodecTests
     {
         /// <summary>

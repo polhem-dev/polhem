@@ -14,7 +14,7 @@ namespace Polhem.Api.Core.UnitTests
     /// </summary>
     // These tests assert masked messages, and masking depends on the process-wide static `SysInfo.IsDebugMode`.
     // So they are serialized with the test classes that toggle that flag (see `SysInfoStaticCollection`).
-    [Collection("SysInfoStatic")]
+    [Collection(SysInfoStaticCollection.Name)]
     public class JsonRpcExecutorExtraTests : IClassFixture<PolhemTestFixture>
     {
         private readonly PolhemTestFixture _fx;
@@ -234,9 +234,9 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("Execute takes the CreateBusinessObject branch for a non-System progId")]
         public async Task Execute_NonSystemProgId_InvokesCreateBusinessObject()
         {
-            // Uses the defined Department progId, and the unknown action is caught as a `MissingMethodException`.
-            // Whether or not the Form BO is created, the else branch of `CreateBusinessObject` runs, which covers
-            // the delegation in `CreateBusinessObject`.
+            // Uses the defined Department progId with an unknown action. In debug mode the `MissingMethodException`
+            // message passes through and names the business object type the action was looked up on, which shows
+            // the form branch of `CreateBusinessObject` built it rather than the system one.
             var request = new JsonRpcRequest
             {
                 Method = "Department.DefinitelyNotAMethod",
@@ -244,9 +244,19 @@ namespace Polhem.Api.Core.UnitTests
                 Id = "1"
             };
 
-            var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
+            bool original = SysInfo.IsDebugMode;
+            try
+            {
+                SysInfo.IsDebugMode = true;
+                var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
 
-            Assert.NotNull(response.Error);
+                Assert.NotNull(response.Error);
+                Assert.Contains("business object 'FormBusinessObject'", response.Error!.Message, StringComparison.Ordinal);
+            }
+            finally
+            {
+                SysInfo.IsDebugMode = original;
+            }
         }
 
         [Fact]

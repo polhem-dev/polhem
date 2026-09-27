@@ -137,8 +137,9 @@ namespace Polhem.Db.UnitTests
             }
             catch (System.Data.Common.DbException ex)
             {
-                // Best-effort: the row may never have been inserted when the test failed early.
-                Console.WriteLine($"ParameterBindingOrderTests: cleanup of session {token} failed — {ex.GetType().Name}: {ex.Message}");
+                // Best-effort: the row may never have been inserted when the test failed early. The token is not
+                // printed: even a test token is an access token, and tokens stay out of logs.
+                Console.WriteLine($"ParameterBindingOrderTests: cleanup of a test session failed — {ex.GetType().Name}: {ex.Message}");
             }
         }
     }

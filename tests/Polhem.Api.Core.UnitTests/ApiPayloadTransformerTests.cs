@@ -11,7 +11,7 @@ namespace Polhem.Api.Core.UnitTests
     /// Restoring in try/finally only holds when tests run serially, so this class joins the
     /// <c>ApiServiceOptionsState</c> collection to serialize with the other test classes that modify the same statics.
     /// </remarks>
-    [Collection("ApiServiceOptionsState")]
+    [Collection(ApiServiceOptionsStateCollection.Name)]
     public class ApiPayloadTransformerTests
     {
         [Fact]

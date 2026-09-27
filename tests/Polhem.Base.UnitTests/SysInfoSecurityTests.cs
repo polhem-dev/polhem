@@ -5,7 +5,7 @@ namespace Polhem.Base.UnitTests
     /// <summary>
     /// Security tests for the SysInfo type name allowlist.
     /// </summary>
-    [Collection("SysInfoStatic")]
+    [Collection(SysInfoStaticCollection.Name)]
     public class SysInfoSecurityTests
     {
         [Theory]

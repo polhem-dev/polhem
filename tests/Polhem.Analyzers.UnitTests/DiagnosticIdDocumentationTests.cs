@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Analyzers.UnitTests
 {
@@ -22,7 +23,7 @@ namespace Polhem.Analyzers.UnitTests
         [DisplayName("The analyzer IDs listed in analyzer-rules.md match DiagnosticIds exactly")]
         public void AnalyzerRules_ListExactlyTheAnalyzerIds(string language)
         {
-            var root = FindRepositoryRoot();
+            var root = RepoRoot.Find();
             var documented = IdsIn(File.ReadAllText(Path.Combine(root, "docs", language, "analyzer-rules.md")))
                 .Where(id => id[6] != '9')
                 .ToHashSet(StringComparer.Ordinal);
@@ -41,7 +42,7 @@ namespace Polhem.Analyzers.UnitTests
         [DisplayName("Every reserved analyzer ID is named in analyzer-rules.md and none is declared as a rule")]
         public void AnalyzerRules_ReservedIdsAreDocumentedAndUnused(string language)
         {
-            var root = FindRepositoryRoot();
+            var root = RepoRoot.Find();
             var documented = IdsIn(File.ReadAllText(Path.Combine(root, "docs", language, "analyzer-rules.md")))
                 .ToHashSet(StringComparer.Ordinal);
             var declared = DeclaredIds();
@@ -67,7 +68,7 @@ namespace Polhem.Analyzers.UnitTests
         [DisplayName("Every build gate ID listed in analyzer-rules.md is raised by some targets file")]
         public void AnalyzerRules_BuildGateIdsAreRaisedByTargets(string language)
         {
-            var root = FindRepositoryRoot();
+            var root = RepoRoot.Find();
             var documented = IdsIn(File.ReadAllText(Path.Combine(root, "docs", language, "analyzer-rules.md")))
                 .Where(id => id[6] == '9')
                 .ToList();
@@ -83,16 +84,5 @@ namespace Polhem.Analyzers.UnitTests
 
         private static IEnumerable<string> IdsIn(string text)
             => s_id.Matches(text).Select(m => m.Value).Distinct(StringComparer.Ordinal);
-
-        private static string FindRepositoryRoot()
-        {
-            var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null && dir.GetDirectories(".git").Length == 0)
-            {
-                dir = dir.Parent;
-            }
-            Assert.True(dir != null, "No repository root (.git) above the test output directory.");
-            return dir!.FullName;
-        }
     }
 }

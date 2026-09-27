@@ -11,8 +11,8 @@ namespace Polhem.Definition.UnitTests.Storage
 {
     /// <summary>
     /// Tests for how FileDefineStorage reads and writes XML files.
-    /// Each test uses an isolated temp directory as DefinePath (through <c>WithTempDefinePath</c>) and does not touch
-    /// process-wide statics such as <c>DefinePathInfo</c>, so it can run in parallel with other test classes.
+    /// Each test uses an isolated temp directory as DefinePath (through <c>WithTempDefinePath</c>) and touches no
+    /// process-wide state, so it would stay correct if this assembly ran its test classes in parallel.
     /// </summary>
     public class FileDefineStorageTests
     {
@@ -326,8 +326,7 @@ namespace Polhem.Definition.UnitTests.Storage
         /// <summary>
         /// Creates a new temp directory, passes the matching <see cref="PathOptions"/> to <paramref name="action"/>, and
         /// deletes the directory after the test. Tests inject the supplied <see cref="PathOptions"/> directly into
-        /// <see cref="FileDefineStorage"/> rather than relying on the shared
-        /// <see cref="DefinePathInfo"/> static facade.
+        /// <see cref="FileDefineStorage"/>, so no test shares a define directory with another.
         /// </summary>
         private static void WithTempDefinePath(Action<PathOptions> action)
         {

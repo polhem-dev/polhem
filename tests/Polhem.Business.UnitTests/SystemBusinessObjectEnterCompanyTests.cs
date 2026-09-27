@@ -110,7 +110,7 @@ namespace Polhem.Business.UnitTests
 
         #endregion
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("EnterCompany returns the CompanyInfo and sets SessionInfo.CompanyId when the seed mapping exists")]
         public void EnterCompany_ValidCompany_BindsAndReturns()
         {
@@ -137,7 +137,7 @@ namespace Polhem.Business.UnitTests
             }
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("EnterCompany writes SessionInfo.CustomizeId when the company has a customize_id, and LeaveCompany clears it")]
         public void EnterCompany_CustomizedCompany_SetsThenClearsSessionCustomizeId()
         {
@@ -173,7 +173,7 @@ namespace Polhem.Business.UnitTests
             }
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("EnterCompany resolves and snapshots the user/employee/dept rowids, and LeaveCompany clears them")]
         public void EnterCompany_SnapshotsEmployeeContext_ThenClears()
         {
@@ -214,7 +214,7 @@ namespace Polhem.Business.UnitTests
             }
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("EnterCompany without a matching employee still snapshots the user rowid and leaves employee/dept empty")]
         public void EnterCompany_NoEmployee_SnapshotsUserRowIdOnly()
         {
@@ -239,7 +239,7 @@ namespace Polhem.Business.UnitTests
             }
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("EnterCompany with a CompanyId that does not exist throws Company access denied")]
         public void EnterCompany_UnknownCompany_ThrowsAccessDenied()
         {
@@ -264,7 +264,7 @@ namespace Polhem.Business.UnitTests
             }
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("EnterCompany throws Company access denied when the company exists but the user has no grant")]
         public void EnterCompany_NoAccess_ThrowsAccessDenied()
         {
@@ -293,7 +293,7 @@ namespace Polhem.Business.UnitTests
             }
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("EnterCompany throws Company access denied when the company is disabled even though the user has a grant")]
         public void EnterCompany_DisabledCompany_ThrowsAccessDenied()
         {
@@ -325,7 +325,7 @@ namespace Polhem.Business.UnitTests
             }
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("EnterCompany switching to another granted company overwrites SessionInfo.CompanyId")]
         public void EnterCompany_SwitchToAnotherCompany_Overwrites()
         {
@@ -359,7 +359,7 @@ namespace Polhem.Business.UnitTests
             }
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("EnterCompany called repeatedly with the same CompanyId is idempotent")]
         public void EnterCompany_SameCompany_Idempotent()
         {

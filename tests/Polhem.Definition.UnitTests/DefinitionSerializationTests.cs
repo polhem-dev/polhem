@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Data;
 using Polhem.Base.Serialization;
-using Polhem.Business.System;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Settings;
@@ -107,39 +106,17 @@ namespace Polhem.Definition.UnitTests
         }
 
         /// <summary>
-        /// Tests serialization of the Ping method arguments.
-        /// </summary>
-        [Fact(DisplayName = "PingArgs and PingResult round-trip through JSON serialization")]
-        public void SerializePing_Json_RoundTripsCorrectly()
-        {
-            var args = new PingArgs
-            {
-                ClientName = "TestClient",
-                TraceId = Guid.NewGuid().ToString()
-            };
-            SerializeObject<PingArgs>(args, false, true);
-
-            var result = new PingResult
-            {
-                Status = "pong",
-                ServerTime = new DateTime(2025, 5, 16, 8, 30, 0, DateTimeKind.Utc),
-                Version = "1.2.3",
-                TraceId = Guid.NewGuid().ToString()
-            };
-            SerializeObject<PingResult>(result, false, true);
-        }
-
-        /// <summary>
         /// Tests that Filters serialize and restore the filled property collections.
         /// </summary>
-        [Fact(DisplayName = "FilterGroup round-trips through XML and JSON serialization")]
+        [Fact]
+        [DisplayName("FilterGroup round-trips through XML and JSON serialization")]
         public void SerializeFilters_XmlAndJson_RoundTripsCorrectly()
         {
             var root = FilterGroup.All(
                 FilterCondition.Equal("DeptId", 10),
                 FilterGroup.Any(
                     FilterCondition.Contains("Name", "Lee"),
-                    FilterCondition.Between("HireDate", new DateTime(2024, 1, 1), new DateTime(2024, 12, 31))
+                    FilterCondition.Between("HireDate", new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Unspecified))
                 )
             );
             SerializeObject<FilterGroup>(root, true, true);

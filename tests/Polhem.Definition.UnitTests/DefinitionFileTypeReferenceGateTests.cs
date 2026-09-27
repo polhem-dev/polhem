@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Text.RegularExpressions;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Definition.UnitTests
 {
@@ -24,7 +25,7 @@ namespace Polhem.Definition.UnitTests
         [DisplayName("Assembly-qualified type names in definition files resolve to existing projects and types")]
         public void DefinitionFiles_TypeReferencesResolveToDeclaredTypes()
         {
-            var root = FindRepositoryRoot();
+            var root = RepoRoot.Find();
             var references = EnumerateDefinitionFiles(root)
                 .SelectMany(file => s_typeReference.Matches(File.ReadAllText(file))
                     .Select(m => (File: Path.GetRelativePath(root, file),
@@ -75,17 +76,6 @@ namespace Polhem.Definition.UnitTests
             return Directory.EnumerateFiles(Path.GetDirectoryName(project)!, "*.cs", SearchOption.AllDirectories)
                 .Select(File.ReadAllText)
                 .Any(text => namespacePattern.IsMatch(text) && declarationPattern.IsMatch(text));
-        }
-
-        private static string FindRepositoryRoot()
-        {
-            var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null && dir.GetDirectories(".git").Length == 0)
-            {
-                dir = dir.Parent;
-            }
-            Assert.True(dir != null, "No repository root (.git) above the test output directory.");
-            return dir!.FullName;
         }
     }
 }

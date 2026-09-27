@@ -8,7 +8,7 @@ namespace Polhem.Db.UnitTests
     /// Static-only tests for <see cref="OracleTableSchemaProvider"/>: validates the type-
     /// mapping and default-value parsing helpers that don't require a live Oracle connection.
     /// The full integration coverage (live <c>USER_*</c> dictionary reads, GetTableSchema
-    /// round-trip) is gated by <c>POLHEM_TEST_CONNSTR_ORACLE</c> and runs in Phase D.
+    /// round-trip) is gated by <c>POLHEM_TEST_CONNSTR_ORACLE</c> and lives in <see cref="OracleIntegrationTests"/>.
     /// </summary>
     public class OracleTableSchemaProviderStaticTests
     {

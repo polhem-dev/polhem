@@ -78,7 +78,8 @@ namespace Polhem.Definition.UnitTests
             table.Fields!.Add(new FormField("ref_manager_id", "部門主管編號", FieldDbType.String, FieldType.RelationField));
             table.Fields!.Add(new FormField("ref_manager_name", "部門主管名稱", FieldDbType.String, FieldType.RelationField));
 
-            Assert.NotNull(formSchema.MasterTable);
+            Assert.Same(table, formSchema.MasterTable);
+            Assert.Equal("Employee", table.RelationFieldReferences["ref_manager_name"].SourceProgId);
         }
 
         [Fact]
@@ -108,7 +109,12 @@ namespace Polhem.Definition.UnitTests
 
             var references = table.RelationFieldReferences;
 
-            Assert.NotNull(references);
+            // Every mapped destination field resolves back to its foreign key and the source field it copies.
+            Assert.Equal(4, references.Count);
+            var supervisor = references["ref_supervisor_name"];
+            Assert.Equal("dept_rowid", supervisor.ForeignKeyField.FieldName);
+            Assert.Equal("Department", supervisor.SourceProgId);
+            Assert.Equal("ref_manager_name", supervisor.SourceField);
         }
 
         [Fact]

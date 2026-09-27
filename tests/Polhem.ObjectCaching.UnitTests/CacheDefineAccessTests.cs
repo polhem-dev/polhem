@@ -103,16 +103,16 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetSystemSettings returns an instance")]
-        public void GetSystemSettings_ReturnsInstance() => Assert.NotNull(_access.GetSystemSettings());
+        [DisplayName("GetSystemSettings returns the settings from tests/Define")]
+        public void GetSystemSettings_ReturnsInstance() => Assert.Equal("1.0.0", _access.GetSystemSettings().CommonConfiguration.Version);
 
         [Fact]
         [DisplayName("GetDatabaseSettings returns an instance")]
         public void GetDatabaseSettings_ReturnsInstance() => Assert.NotNull(_access.GetDatabaseSettings());
 
         [Fact]
-        [DisplayName("GetDbCategorySettings returns an instance")]
-        public void GetDbCategorySettings_ReturnsInstance() => Assert.NotNull(_access.GetDbCategorySettings());
+        [DisplayName("GetDbCategorySettings returns the categories from tests/Define")]
+        public void GetDbCategorySettings_ReturnsInstance() => Assert.True(_access.GetDbCategorySettings().Categories!.Contains("company"));
 
         [Fact]
         [DisplayName("GetTableSchema returns an instance")]

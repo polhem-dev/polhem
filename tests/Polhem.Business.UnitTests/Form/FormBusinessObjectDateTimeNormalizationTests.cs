@@ -77,7 +77,7 @@ namespace Polhem.Business.UnitTests.Form
                 var dataSet = NewRecord(form, rowId, lineId);
 
                 var before = DateTime.UtcNow;
-                new FormBusinessObject(form.CreateContext(), Guid.NewGuid(), form.Schema.ProgId)
+                new FormBusinessObject(form.CreateContext(), TestSessionFactory.CreateAccessToken(_fx), form.Schema.ProgId)
                     .Save(new SaveArgs { DataSet = dataSet });
                 var after = DateTime.UtcNow;
 
@@ -128,7 +128,7 @@ namespace Polhem.Business.UnitTests.Form
                 var deletedLineId = Guid.NewGuid();
                 SeedStoredRecord(form, rowId, lineId, deletedLineId);
 
-                var dataSet = new FormBusinessObject(form.CreateContext(), Guid.NewGuid(), form.Schema.ProgId)
+                var dataSet = new FormBusinessObject(form.CreateContext(), TestSessionFactory.CreateAccessToken(_fx), form.Schema.ProgId)
                     .GetData(new GetDataArgs { RowId = rowId }).DataSet!;
 
                 var master = dataSet.Tables[form.Schema.ProgId]!.Rows[0];
@@ -149,7 +149,7 @@ namespace Polhem.Business.UnitTests.Form
 
                 var writer = new CapturingAuditLogWriter();
                 var before = DateTime.UtcNow;
-                new FormBusinessObject(form.CreateContext(AuditOverrides(writer)), Guid.NewGuid(), form.Schema.ProgId)
+                new FormBusinessObject(form.CreateContext(AuditOverrides(writer)), TestSessionFactory.CreateAccessToken(_fx), form.Schema.ProgId)
                     .Save(new SaveArgs { DataSet = dataSet });
                 var after = DateTime.UtcNow;
 
@@ -210,7 +210,7 @@ namespace Polhem.Business.UnitTests.Form
                 var lineId = Guid.NewGuid();
                 SeedStoredRecord(form, rowId, lineId, Guid.NewGuid());
 
-                var dataSet = new FormBusinessObject(form.CreateContext(), Guid.NewGuid(), form.Schema.ProgId)
+                var dataSet = new FormBusinessObject(form.CreateContext(), TestSessionFactory.CreateAccessToken(_fx), form.Schema.ProgId)
                     .GetData(new GetDataArgs { RowId = rowId }).DataSet!;
                 dataSet.Tables[form.Schema.ProgId]!.Rows[0][Note] = "changed";
                 FindRow(dataSet.Tables[DetailName(form)]!, lineId)[Note] = "changed line";
@@ -218,7 +218,7 @@ namespace Polhem.Business.UnitTests.Form
                 form.DbAccess.ExecuteNonQuery(
                     $"DELETE FROM {form.Quote(DetailName(form))} WHERE {form.Quote(SysFields.RowId)}={{0}}", lineId);
 
-                var bo = new FormBusinessObject(form.CreateContext(), Guid.NewGuid(), form.Schema.ProgId);
+                var bo = new FormBusinessObject(form.CreateContext(), TestSessionFactory.CreateAccessToken(_fx), form.Schema.ProgId);
                 Assert.Throws<UserMessageException>(() => bo.Save(new SaveArgs { DataSet = dataSet }));
 
                 // The master is processed before the detail and its read-back succeeds. That it was not written proves the whole batch stopped before any write.
@@ -239,7 +239,7 @@ namespace Polhem.Business.UnitTests.Form
         /// </summary>
         private sealed class AcceptsEventTimeBo : FormBusinessObject
         {
-            public AcceptsEventTimeBo(IBusinessObjectContext ctx, string progId) : base(ctx, Guid.NewGuid(), progId) { }
+            public AcceptsEventTimeBo(IBusinessObjectContext ctx, Guid accessToken, string progId) : base(ctx, accessToken, progId) { }
 
             protected override void NormalizeDateTimes(SaveContext context)
             {
@@ -269,7 +269,7 @@ namespace Polhem.Business.UnitTests.Form
                 dataSet.Tables[form.Schema.ProgId]!.Rows[0][EventTime] = s_clientValue;
 
                 var before = DateTime.UtcNow;
-                new AcceptsEventTimeBo(form.CreateContext(), form.Schema.ProgId).Save(new SaveArgs { DataSet = dataSet });
+                new AcceptsEventTimeBo(form.CreateContext(), TestSessionFactory.CreateAccessToken(_fx), form.Schema.ProgId).Save(new SaveArgs { DataSet = dataSet });
                 var after = DateTime.UtcNow;
 
                 Assert.Equal(s_clientValue, ReadInstant(form, form.Schema.ProgId, EventTime, rowId));

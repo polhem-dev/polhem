@@ -9,7 +9,7 @@ namespace Polhem.UI.Core.UnitTests
     /// <c>_systemConnector</c> to null through reflection, which races with the caching tests here,
     /// so this class must run serially in the same collection.
     /// </summary>
-    [Collection("ClientInfoState")]
+    [Collection(ClientInfoStateCollection.Name)]
     public class ClientInfoReadOnlyTests
     {
         [Fact]
@@ -50,7 +50,7 @@ namespace Polhem.UI.Core.UnitTests
         public void CreateFormApiConnector_LocalConnectType_ReturnsNotNull()
         {
             var connector = ClientInfo.CreateFormApiConnector("TestProg");
-            Assert.NotNull(connector);
+            Assert.Equal("TestProg", connector.ProgId);
         }
     }
 
@@ -58,7 +58,7 @@ namespace Polhem.UI.Core.UnitTests
     /// Covers the paths of <see cref="ClientInfo"/> that mutate static state.
     /// Shares the <c>ClientInfoState</c> collection with the other ClientInfo tests so they run serially.
     /// </summary>
-    [Collection("ClientInfoState")]
+    [Collection(ClientInfoStateCollection.Name)]
     public class ClientInfoMutatingTests
     {
         [Fact]

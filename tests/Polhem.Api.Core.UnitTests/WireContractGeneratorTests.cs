@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Api.Core.UnitTests
 {
@@ -23,12 +24,7 @@ namespace Polhem.Api.Core.UnitTests
 
         private static string ContractPath()
         {
-            var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "Polhem.slnx")))
-                dir = dir.Parent;
-
-            Assert.NotNull(dir);
-            return Path.Combine(dir!.FullName, "wire-contracts", "messages.d.ts");
+            return Path.Combine(RepoRoot.Find(), "wire-contracts", "messages.d.ts");
         }
 
         private static bool RegenerateRequested =>

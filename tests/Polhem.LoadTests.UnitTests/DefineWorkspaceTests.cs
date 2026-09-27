@@ -4,6 +4,7 @@ using Polhem.Definition.Database;
 using Polhem.Definition.Settings;
 using Polhem.LoadTests.Bootstrap;
 using Polhem.LoadTests.Configuration;
+using Polhem.Tests.Shared;
 
 namespace Polhem.LoadTests.UnitTests
 {
@@ -296,19 +297,7 @@ namespace Polhem.LoadTests.UnitTests
         }
 
         private static string LocateNorthwindDefine()
-        {
-            var directory = new DirectoryInfo(AppContext.BaseDirectory);
-            while (directory is not null)
-            {
-                var candidate = Path.Combine(
-                    directory.FullName, "apps", "Polhem.Northwind", "Define");
-                if (Directory.Exists(candidate)) { return candidate; }
-                directory = directory.Parent;
-            }
-            throw new DirectoryNotFoundException(
-                "Could not locate 'apps/Polhem.Northwind/Define' walking up from " +
-                $"'{AppContext.BaseDirectory}'.");
-        }
+            => Path.Combine(RepoRoot.Find(), "apps", "Polhem.Northwind", "Define");
 
         [Fact]
         [DisplayName("GuardIsolation passes when the connection string contains {@DbName}")]

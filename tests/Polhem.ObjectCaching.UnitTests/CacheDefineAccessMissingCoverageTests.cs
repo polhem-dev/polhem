@@ -45,16 +45,18 @@ namespace Polhem.ObjectCaching.UnitTests
         // ── ProgramSettings ──────────────────────────────────────────────────
 
         [Fact]
-        [DisplayName("GetProgramSettings after a save returns a ProgramSettings instance")]
-        public void GetProgramSettings_AfterSave_ReturnsInstance()
+        [DisplayName("GetProgramSettings after a save returns the saved registry")]
+        public void GetProgramSettings_AfterSave_ReturnsSavedRegistry()
         {
             using var temp = new TempDir();
             var access = CreateAccess(temp.Options);
-            access.SaveProgramSettings(new ProgramSettings());
+            var settings = new ProgramSettings();
+            settings.Items!.Add("Order", "Orders");
+            access.SaveProgramSettings(settings);
 
             var result = access.GetProgramSettings();
 
-            Assert.NotNull(result);
+            Assert.Equal("Orders", result.Items!["Order"].DisplayName);
         }
 
         [Fact]
@@ -184,7 +186,7 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetLanguage after a save returns a LanguageResource instance")]
+        [DisplayName("GetLanguage after a save returns the saved resource")]
         public void GetLanguage_AfterSave_ReturnsLanguageResource()
         {
             using var temp = new TempDir();
@@ -194,7 +196,8 @@ namespace Polhem.ObjectCaching.UnitTests
 
             var result = access.GetLanguage("zh-TW", "Common");
 
-            Assert.NotNull(result);
+            Assert.Equal("zh-TW", result!.Lang);
+            Assert.Equal("Common", result.Namespace);
         }
 
         [Fact]

@@ -8,7 +8,7 @@ namespace Polhem.Base.UnitTests
     /// </summary>
     public class ValueUtilitiesCoverageTests
     {
-        // ---- IsEmpty(DateTime) boundary (line 76) ----
+        // ---- IsEmpty(DateTime) boundary ----
 
         [Theory]
         [InlineData(1752, 12, 31, true)]  // before 1753 → empty
@@ -28,7 +28,7 @@ namespace Polhem.Base.UnitTests
             Assert.True(ValueUtilities.IsEmpty(DateTime.MinValue));
         }
 
-        // ---- CStr enum / ToString branches (line 129 / 131) ----
+        // ---- CStr enum / ToString branches ----
 
         [Fact]
         [DisplayName("CStr returns the name of an enum and the ToString result of other objects")]
@@ -39,7 +39,7 @@ namespace Polhem.Base.UnitTests
             Assert.Equal("3.5", ValueUtilities.CStr(3.5));
         }
 
-        // ---- CInt OverflowException catch (line 309/311) ----
+        // ---- CInt OverflowException catch ----
 
         [Fact]
         [DisplayName("CInt returns defaultValue for a value outside the int range (OverflowException branch)")]
@@ -50,7 +50,7 @@ namespace Polhem.Base.UnitTests
             Assert.Equal(-9, ValueUtilities.CInt(1e20, -9));
         }
 
-        // ---- CDecimal OverflowException catch (line 363/365) ----
+        // ---- CDecimal OverflowException catch ----
 
         [Fact]
         [DisplayName("CDecimal returns defaultValue for a value outside the decimal range (OverflowException branch)")]
@@ -61,7 +61,7 @@ namespace Polhem.Base.UnitTests
             Assert.Equal(-1m, ValueUtilities.CDecimal(1e30, -1m));
         }
 
-        // ---- CDouble / CDecimal normal conversion path (line 326 / 353) ----
+        // ---- CDouble / CDecimal normal conversion path ----
 
         [Fact]
         [DisplayName("CDouble returns the matching double for valid numeric input")]

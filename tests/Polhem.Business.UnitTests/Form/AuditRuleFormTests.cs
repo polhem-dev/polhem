@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Polhem.Business.AuditLog;
 using Polhem.Business.Form;
+using Polhem.Business.UnitTests.Fakes;
 using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Definition;
@@ -136,7 +137,9 @@ namespace Polhem.Business.UnitTests.Form
                 (typeof(IAuditLogWriter), writer),
                 (typeof(IAuditRuleService), ruleService),
                 (typeof(ICompanyAuthorizationService), new AllowAllAuthorization()),
-                (typeof(IScopeResolver), new UnrestrictedScopeResolver()));
+                (typeof(IScopeResolver), new UnrestrictedScopeResolver()),
+                // The real company lookup reads `st_company` in `common`, which is SQL Server whatever this test targets.
+                (typeof(ICompanyInfoService), new StubCompanyInfoService(new CompanyInfo { CompanyId = CompanyId })));
             return new AuditRuleBusinessObject(ctx, accessToken, SysProgIds.AuditRule);
         }
 

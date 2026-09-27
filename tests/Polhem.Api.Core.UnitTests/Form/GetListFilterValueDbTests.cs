@@ -42,7 +42,7 @@ namespace Polhem.Api.Core.UnitTests.Form
     /// <c>Plain</c> path has to match.
     /// </para>
     /// </remarks>
-    [Collection("ApiServiceOptionsState")]
+    [Collection(ApiServiceOptionsStateCollection.Name)]
     public class GetListFilterValueDbTests : IClassFixture<SharedDbFixture>
     {
         private const string Qty = "qty";

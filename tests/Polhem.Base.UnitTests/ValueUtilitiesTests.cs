@@ -359,7 +359,7 @@ namespace Polhem.Base.UnitTests
         public void CDateTime_VariousLengths_ParsesCorrectly(string input, int y, int m, int d)
         {
             var result = ValueUtilities.CDateTime(input);
-            Assert.Equal(new DateTime(y, m, d), result);
+            Assert.Equal(new DateTime(y, m, d, 0, 0, 0, DateTimeKind.Unspecified), result);
         }
 
         [Fact]
@@ -412,7 +412,7 @@ namespace Polhem.Base.UnitTests
         public void CDateTime_InvalidCalendarDate_FallsBackToDefault()
         {
             // `20150230` becomes "2015-02-30", which `Convert.ToDateTime` rejects. The exception is caught and defaultValue is returned.
-            var fallback = new DateTime(2000, 1, 1);
+            var fallback = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
             var result = ValueUtilities.CDateTime("20150230", fallback);
             Assert.Equal(fallback, result);
         }

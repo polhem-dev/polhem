@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Xml.Linq;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Cli.UnitTests
 {
@@ -35,16 +36,23 @@ namespace Polhem.Cli.UnitTests
             Assert.Contains("Usage: " + invocation + " defines", writer.ToString(), StringComparison.Ordinal);
         }
 
+        [Fact]
+        [DisplayName("The Usage line of the root help and of the keys help use the same command name as ToolCommandName")]
+        public void RootAndKeysHelp_UseInstalledCommandName()
+        {
+            var invocation = "dotnet " + ReadToolCommandName()["dotnet-".Length..];
+            using var keysHelp = new StringWriter();
+            KeysCommand.PrintHelp(keysHelp);
+
+            var (_, rootHelp, _) = ConsoleCapture.Run();
+
+            Assert.Contains("Usage: " + invocation + " <command>", rootHelp, StringComparison.Ordinal);
+            Assert.Contains("Usage: " + invocation + " keys", keysHelp.ToString(), StringComparison.Ordinal);
+        }
+
         private static string ReadToolCommandName()
         {
-            var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null && dir.GetDirectories(".git").Length == 0)
-            {
-                dir = dir.Parent;
-            }
-            Assert.True(dir != null, "No repository root (.git) above the test output directory.");
-
-            var project = XDocument.Load(Path.Combine(dir!.FullName, "tools", "Polhem.Cli", "Polhem.Cli.csproj"));
+            var project = XDocument.Load(Path.Combine(RepoRoot.Find(), "tools", "Polhem.Cli", "Polhem.Cli.csproj"));
             var name = project.Descendants("ToolCommandName").Select(e => e.Value).SingleOrDefault();
             Assert.True(name != null, "Polhem.Cli.csproj declares no ToolCommandName.");
             return name!;

@@ -165,7 +165,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
 
             Assert.Equal("2026-05-21", dataObject.GetField("hire_date"));
             var stored = (DateTime)dataObject.MasterRow!["hire_date"];
-            Assert.Equal(new DateTime(2026, 5, 21), stored);
+            Assert.Equal(new DateTime(2026, 5, 21, 0, 0, 0, DateTimeKind.Unspecified), stored);
         }
 
         [Fact]
@@ -743,6 +743,8 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         [DisplayName("A new detail row gets non-null values from FormSchema (a new Guid for sys_rowid, the master link, per-type defaults, a value for DBNull-default columns)")]
         public void NewDetailRow_SeedsNonNullDefaultsFromSchema()
         {
+            // Read before the act as well as after it, so a run that crosses midnight cannot fail.
+            var dayBefore = DateTime.UtcNow.Date;
             var schema = new FormSchema("Order", "Order");
             var master = schema.Tables!.Add("Order", "Order");
             master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
@@ -772,7 +774,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
             Assert.Equal(0m, line["price"]);
             // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
             // Asserting the local date always fails locally between 00:00 and 08:00 at UTC+8, which CI running in UTC never sees.
-            Assert.Equal(DateTime.UtcNow.Date, line["order_date"]);
+            Assert.InRange((DateTime)line["order_date"], dayBefore, DateTime.UtcNow.Date);
             Assert.Equal(Guid.Empty, (Guid)line["product_rowid"]);        // non-key Guid → empty
             Assert.NotEqual(DBNull.Value, line["seq"]);                   // seeded (no column default)
             Assert.Equal((short)0, line["seq"]);

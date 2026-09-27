@@ -107,6 +107,8 @@ namespace Polhem.Definition.UnitTests.Forms
         [DisplayName("ApplyFieldExpressions (server save): Now() uses UTC as its basis while Today() still takes today in the user's time zone")]
         public void ApplyFieldExpressions_NowIsUtcBasis_TodayIsUserDay()
         {
+            // Read before the act as well as after it, so a run that crosses midnight cannot fail.
+            var zoneDayBefore = FrameworkClock.Today(Kiritimati).ToDateTime(TimeOnly.MinValue);
             // On a server save the DataSet is already UTC (ADR-032 D3). If `Now()` took the wall-clock time of the user's time zone,
             // writing it into a DateTime column would store user-zone time in a column that by convention holds UTC.
             var dataSet = BuildStampDataSet();
@@ -118,7 +120,7 @@ namespace Polhem.Definition.UnitTests.Forms
             var row = dataSet.Tables["Stamp"]!.Rows[0];
             Assert.InRange((DateTime)row["created_at"], utcBefore, utcAfter);
             Assert.InRange((DateTime)row["touched_at"], utcBefore, utcAfter);
-            Assert.Equal(FrameworkClock.Today(Kiritimati).ToDateTime(TimeOnly.MinValue), (DateTime)row["stamp_date"]);
+            Assert.InRange((DateTime)row["stamp_date"], zoneDayBefore, FrameworkClock.Today(Kiritimati).ToDateTime(TimeOnly.MinValue));
         }
 
         [Fact]
@@ -208,6 +210,8 @@ namespace Polhem.Definition.UnitTests.Forms
         [DisplayName("ApplyDefaultRow fills empty columns from expressions and reports them, without overwriting existing values")]
         public void ApplyDefaultRow_FillsOnlyEmpty()
         {
+            // Read before the act as well as after it, so a run that crosses midnight cannot fail.
+            var dayBefore = DateTime.UtcNow.Date;
             var schema = BuildOrderSchema();
             var table = BuildOrderTable(price: 1m, qty: 1m);
 
@@ -215,7 +219,7 @@ namespace Polhem.Definition.UnitTests.Forms
 
             // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
             // Asserting the local date would always fail locally between 00:00 and 08:00 in UTC+8, and CI running in UTC would never see it.
-            Assert.Equal(DateTime.UtcNow.Date, table.Rows[0]["order_date"]);
+            Assert.InRange((DateTime)table.Rows[0]["order_date"], dayBefore, DateTime.UtcNow.Date);
             Assert.Contains("order_date", changed);
 
             // The second call finds `order_date` already set, so it neither overwrites nor reports it.

@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Security;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Business.UnitTests
 {
@@ -134,7 +135,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("The BO API baseline matches docs/{lang}/api-method-reference.md entry by entry")]
         public void Baseline_MatchesPublicMethodReference(string lang)
         {
-            string path = Path.Combine(FindRepoRoot(), "docs", lang, "api-method-reference.md");
+            string path = Path.Combine(RepoRoot.Find(), "docs", lang, "api-method-reference.md");
             Assert.True(File.Exists(path), $"Cannot find {path}.");
 
             var documented = new HashSet<string>(StringComparer.Ordinal);
@@ -171,7 +172,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("The methods that declare replay protection match the list in docs/{lang}/api-method-reference.md")]
         public void ReplayProtectedMethods_MatchPublicMethodReference(string lang)
         {
-            string text = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs", lang, "api-method-reference.md"));
+            string text = File.ReadAllText(Path.Combine(RepoRoot.Find(), "docs", lang, "api-method-reference.md"));
 
             var expected = s_expectedSurface
                 .Where(e => e.ReplayProtection == ApiReplayProtection.UniqueSequence)
@@ -201,25 +202,6 @@ namespace Polhem.Business.UnitTests
         /// </summary>
         [GeneratedRegex(@"^\|\s*`(\w+)`\s*\|\s*(\w+)\s*\|\s*(\w+)\s*\|", RegexOptions.Multiline)]
         private static partial Regex DocRowPattern();
-
-        /// <summary>
-        /// Walks up from the test assembly location to find the repository root.
-        /// </summary>
-        /// <remarks>
-        /// This duplicates about eight lines of the private method of the same name in <c>TestProcessBootstrap</c>. That one is deliberately not made public:
-        /// it is the fixture's startup path, and exposing it would make touching repository files from tests an open invitation,
-        /// while this only needs to find one document read-only.
-        /// </remarks>
-        private static string FindRepoRoot()
-        {
-            var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null)
-            {
-                if (dir.GetDirectories(".git").Length > 0) { return dir.FullName; }
-                dir = dir.Parent;
-            }
-            throw new InvalidOperationException($"Cannot find the repository root from {AppContext.BaseDirectory}.");
-        }
 
         /// <summary>
         /// Reflects over the <c>Polhem.Business</c> assembly and collects every

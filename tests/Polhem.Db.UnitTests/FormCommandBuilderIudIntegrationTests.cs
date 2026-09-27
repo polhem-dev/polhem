@@ -13,7 +13,7 @@ namespace Polhem.Db.UnitTests
 {
     /// <summary>
     /// Round-trip integration tests for the FormSchema-driven IUD command builders against a live database.
-    /// Targets the seeded <c>st_user</c> table created by <see cref="DbGlobalFixture"/> on each
+    /// Targets the seeded <c>st_user</c> table created by <see cref="SharedDbFixture"/> on each
     /// configured database. Uses an in-memory FormSchema mirroring that table so the test does
     /// not depend on a checked-in FormSchema XML.
     /// </summary>

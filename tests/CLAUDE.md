@@ -149,6 +149,22 @@ automatically.**
 > scenario "integration test that needs a local service" still exists. The examples in the template file are
 > **illustrations, not existing code**. Do not grep for them.
 
+### Needs dynamic code: `[DynamicCodeFact]`
+
+Skips when `RuntimeFeature.IsDynamicCodeSupported` is false, which is what the mobile AOT gate
+(`-p:DynamicCodeSupport=false`) reproduces. **Use for**: a desktop-only capability that genuinely cannot work without
+`Reflection.Emit`, such as serializing an application type that only the `SysInfo.AllowedTypeNamespaces` escape hatch
+admits. **Do not use for**: making an AOT gate failure of the framework's own wire types go away; that failure is the
+bug. The attribute's XML doc (`tests/Polhem.Tests.Shared/DynamicCodeFactAttribute.cs`) is the source.
+
+### Repository root: `RepoRoot.Find()`
+
+A test that reads a file from the working tree (a doc gate, a csproj gate, `tests/Define`) finds the root through
+`RepoRoot.Find()` in `tests/Polhem.Tests.Shared/`. It accepts `.git` as a file as well as a directory, so a git
+worktree resolves to itself rather than walking up into the main checkout. Projects that do not reference
+`Polhem.Tests.Shared` link the file in (`<Compile Include="..\Polhem.Tests.Shared\RepoRoot.cs" Link="RepoRoot.cs" />`).
+Do not write another walk-up loop.
+
 ### Per-class fixture (default pattern)
 
 When you need DI-resolved backend services (`IDefineAccess` / `ISessionInfoService` /
@@ -196,15 +212,17 @@ test class that modifies that static in the same `[Collection("<name>")]`. Templ
 Most tests now use fixture-scoped DI instances, which removes the race risk naturally. Every existing `[Collection]`
 protects a process-wide static that has not been moved to DI yet:
 
-| Collection | Protects |
+| Collection (the constant users reference) | Protects |
 |---|---|
-| `ClientInfoState` | `ClientInfo.*` |
-| `SysInfoStatic` | `SysInfo.*` (`Polhem.Base` and `Polhem.Api.Core` each define their own; across assemblies it has to be this way) |
-| `ApiClientInfoState` | `ApiClientInfo.*` |
+| `ClientInfoStateCollection.Name` | `ClientInfo.*` |
+| `SysInfoStaticCollection.Name` | `SysInfo.*` (`Polhem.Base` and `Polhem.Api.Core` each define their own; across assemblies it has to be this way) |
+| `ApiClientInfoStateCollection.Name` | `ApiClientInfo.*` |
 | `ProcessWideStateCollection.Name` | the `POLHEM_MASTER_KEY` environment variable, `GlobalEvents`, DI containers built inside a test body |
-| `ApiServiceOptionsState` | `ApiServiceOptions.*` |
+| `ApiServiceOptionsStateCollection.Name` | `ApiServiceOptions.*` |
 
-**Every name has a matching `CollectionDefinition`; there are no orphans.**
+Each definition is a `static` class declaring `public const string Name`, and every user writes
+`[Collection(XxxCollection.Name)]`. A mistyped constant does not compile; a mistyped string literal would silently
+create a collection nobody shares.
 
 Several assemblies instead serialize **as a whole** with `DisableTestParallelization`, which is more reliable than
 adding `[Collection]` class by class. Readers grow as new tests are added, and a requirement like "remember to add
@@ -224,9 +242,10 @@ grep -rn 'DisableTestParallelization *= *true' tests/ --include='*.cs'
 > `Polhem.Definition.UnitTests` so the claim became true (measured cost +0.2–0.4 seconds / 1,086 tests), and
 > **replace that list with the command above**. No mechanism would ever notice the list had drifted.
 
-> **When adding a collection, use a `const`, not a string literal** (for example `ProcessWideStateCollection.Name`).
-> A mistyped literal makes xUnit create an implicit group that nobody shares. It **looks serialized but is not**, and
-> there is no compile error.
+> **When adding a collection, follow the same shape: a `static` definition class with a `const` name, referenced
+> by the constant, never by a string literal.** A mistyped literal makes xUnit create an implicit group that nobody
+> shares. It **looks serialized but is not**, and there is no compile error. To check that no literal crept back in:
+> `grep -rn '\[Collection("' tests --include='*.cs'` should print nothing.
 
 ---
 
@@ -258,7 +277,7 @@ Full template in `docs/repo-ops/testing-patterns.md`.
 
 ## Common analyzer rejections
 
-The strict build stage of `build-ci.yml` blocks the PR outright. Three are especially easy to hit:
+The strict build stage of `build-ci.yml` blocks the PR outright. These are especially easy to hit:
 
 - **S2699**: every `[Fact]` / `[Theory]` needs at least one `Assert.*`. To verify "no exception", do not make a bare
   call; capture it with `Record.Exception` / `Record.ExceptionAsync` and then `Assert.Null(exception)`.
@@ -266,6 +285,11 @@ The strict build stage of `build-ci.yml` blocks the PR outright. Three are espec
   Extract it to a `private static readonly string[] s_xxx = { ... }` at the top of the file.
 - **IDE0005**: copying the header from another test file easily brings in unrelated `using` directives. Remove them
   one by one once you are done.
+- **CS1574 / CS1570 / CS1573**: XML comments in test code are checked like those in `src` (only CS1591, "missing
+  comment", is suppressed in `tests/Directory.Build.props`). A `<see cref>` to a type or member that no longer exists
+  fails the build. A private member of another assembly cannot be a cref; name it with `<c>`. In a test project that
+  has a `System` sub-namespace (`Polhem.Api.Core.UnitTests.System`, for example), qualify BCL types in a cref with
+  `global::`.
 
 ---
 

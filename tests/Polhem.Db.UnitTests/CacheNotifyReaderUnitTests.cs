@@ -15,7 +15,7 @@ namespace Polhem.Db.UnitTests
     /// of using reflection. The reflection version turned a rename into a runtime
     /// <c>Assert.NotNull() Failure: Value is null</c>, a message that points nowhere near the real cause, while the
     /// compiler could have caught it on the spot. <c>ThresholdBinding</c> is still private and still uses reflection.
-    /// </summary>
+    /// </remarks>
     public class CacheNotifyReaderUnitTests
     {
         private sealed class StubDbFactory : IDbAccessFactory

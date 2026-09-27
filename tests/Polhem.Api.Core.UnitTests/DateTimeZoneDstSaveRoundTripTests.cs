@@ -18,7 +18,7 @@ namespace Polhem.Api.Core.UnitTests
     /// <remarks>
     /// <para>
     /// In US Eastern time on 2026-11-01, both 05:30Z and 06:30Z become the wall-clock time 01:30 through
-    /// <see cref="DateTimeZoneConverter.UtcToUser(System.Data.DataSet?, string)"/>. The information is lost the moment
+    /// <see cref="DateTimeZoneConverter.UtcToUser(global::System.Data.DataSet, string)"/>. The information is lost the moment
     /// the response is converted into the user's time zone, and any conversion from wall-clock time back to UTC can
     /// only resolve deterministically to one of the two.
     /// </para>
@@ -104,12 +104,12 @@ namespace Polhem.Api.Core.UnitTests
                     rowId, "before", s_firstOccurrenceUtc);
 
                 // Server-side `GetData` hands UTC to the connector; the client holds the copy converted into the user's time zone.
-                var loaded = new FormBusinessObject(form.CreateContext(), Guid.NewGuid(), progId)
+                var loaded = new FormBusinessObject(form.CreateContext(), TestSessionFactory.CreateAccessToken(_fx), progId)
                     .GetData(new GetDataArgs { RowId = rowId }).DataSet!;
                 var onScreen = DateTimeZoneConverter.UtcToUser(loaded, NewYork)!;
                 onScreen.Tables[progId]!.Rows[0][NameColumn] = "after";
 
-                new FormBusinessObject(form.CreateContext(), Guid.NewGuid(), progId)
+                new FormBusinessObject(form.CreateContext(), TestSessionFactory.CreateAccessToken(_fx), progId)
                     .Save(new SaveArgs { DataSet = onScreen });
 
                 Assert.Equal("after", Convert.ToString(

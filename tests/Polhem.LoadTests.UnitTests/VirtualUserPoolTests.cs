@@ -48,34 +48,32 @@ namespace Polhem.LoadTests.UnitTests
             Assert.NotNull(exception.InnerException);
         }
 
-        [Fact]
-        [DisplayName("SignInAllAsync with more virtual users than accounts names a pooled account in the failure message")]
-        public async Task SignInAllAsync_MoreVirtualUsersThanAccounts_WrapsOntoThePool()
+        [Theory]
+        [InlineData(0, "loadtest_user_0")]
+        [InlineData(3, "loadtest_user_3")]
+        [InlineData(4, "loadtest_user_0")]
+        [InlineData(9, "loadtest_user_1")]
+        [DisplayName("ResolveUserId wraps virtual users beyond the pool size back onto the pooled accounts")]
+        public void ResolveUserId_MoreVirtualUsersThanAccounts_WrapsOntoThePool(int virtualUserIndex, string expected)
         {
-            // The pool holds four accounts, so the fifth virtual user reuses the first. The
-            // message must name the account actually used, not the virtual user index — an
-            // operator checking "loadtest_user_4" would find no such row.
+            // Tested directly: without a backend `SignInAllAsync` stops at virtual user 0, so the wrap is never
+            // reached through it. The failure message names this same account, so an operator is never sent
+            // looking for "loadtest_user_4", which does not exist in a pool of four.
             var pool = new VirtualUserPool(Auth());
 
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => pool.SignInAllAsync(virtualUsers: 5));
-
-            Assert.Contains("Virtual user 0", exception.Message, StringComparison.Ordinal);
-            Assert.Contains("loadtest_user_0", exception.Message, StringComparison.Ordinal);
+            Assert.Equal(expected, pool.ResolveUserId(virtualUserIndex));
         }
 
         [Fact]
-        [DisplayName("SignInAllAsync under the Shared token strategy names the first account in the failure message")]
-        public async Task SignInAllAsync_SharedTokenStrategy_UsesTheFirstAccount()
+        [DisplayName("ResolveUserId maps every virtual user to the first account under the Shared token strategy")]
+        public void ResolveUserId_SharedTokenStrategy_AlwaysFirstAccount()
         {
             var auth = Auth();
             auth.TokenStrategy = TokenStrategy.Shared;
             var pool = new VirtualUserPool(auth);
 
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => pool.SignInAllAsync(virtualUsers: 3));
-
-            Assert.Contains("loadtest_user_0", exception.Message, StringComparison.Ordinal);
+            Assert.Equal("loadtest_user_0", pool.ResolveUserId(2));
+            Assert.Equal("loadtest_user_0", pool.ResolveUserId(7));
         }
 
         [Fact]

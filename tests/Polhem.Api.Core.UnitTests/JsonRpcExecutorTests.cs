@@ -4,6 +4,7 @@ using Polhem.Api.Core.Messages.System;
 using Polhem.Base.Serialization;
 using Polhem.Definition;
 using Polhem.Definition.Security;
+using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
 using Polhem.Api.Core.Messages;
 
@@ -141,12 +142,16 @@ namespace Polhem.Api.Core.UnitTests
         /// Tests the GetCommonConfiguration method.
         /// </summary>
         [Fact]
-        [DisplayName("GetCommonConfiguration returns a non-null result")]
-        public async Task GetCommonConfiguration_ValidRequest_ReturnsNotNull()
+        [DisplayName("GetCommonConfiguration returns the CommonConfiguration of SystemSettings as XML")]
+        public async Task GetCommonConfiguration_ValidRequest_ReturnsConfigurationXml()
         {
             var args = new GetCommonConfigurationRequest();
             var result = await ApiExecute<GetCommonConfigurationResponse>(Guid.Empty, SysProgIds.System, SystemActions.GetCommonConfiguration, args);
-            Assert.NotNull(result);
+
+            // Values from `tests/Define/SystemSettings.xml`.
+            var configuration = XmlCodec.Deserialize<CommonConfiguration>(result.CommonConfiguration)!;
+            Assert.Equal("1.0.0", configuration.Version);
+            Assert.Equal("gzip", configuration.ApiPayloadOptions.Compressor);
         }
 
         /// <summary>
@@ -258,8 +263,8 @@ namespace Polhem.Api.Core.UnitTests
         /// Executes the Hello method through the API.
         /// </summary>
         [Fact]
-        [DisplayName("ExecFunc running Hello returns a non-null result")]
-        public async Task ExecFunc_Hello_ReturnsNotNull()
+        [DisplayName("ExecFunc running Hello returns the greeting of the system-level handler")]
+        public async Task ExecFunc_Hello_ReturnsGreeting()
         {
             Guid accessToken = GetAccessToken();
 
@@ -276,8 +281,8 @@ namespace Polhem.Api.Core.UnitTests
             _ = request.ToJson();
             var executor = NewExecutor(accessToken);
             var response = await executor.ExecuteAsync(request);
-            var execFuncResult = response.Result!.Value as ExecFuncResponse;
-            Assert.NotNull(execFuncResult);
+            var execFuncResult = Assert.IsType<ExecFuncResponse>(response.Result!.Value);
+            Assert.Equal("Hello system-level BusinessObject", execFuncResult.Parameters!.GetValue<string>("Hello"));
         }
     }
 }

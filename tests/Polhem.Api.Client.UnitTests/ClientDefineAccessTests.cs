@@ -61,7 +61,9 @@ namespace Polhem.Api.Client.UnitTests
 
             var settings = await access.GetSystemSettingsAsync();
 
-            Assert.NotNull(settings);
+            // Values from `tests/Define/SystemSettings.xml`.
+            Assert.Equal("1.0.0", settings.CommonConfiguration.Version);
+            Assert.Equal("gzip", settings.CommonConfiguration.ApiPayloadOptions.Compressor);
         }
 
         [Fact]
@@ -72,7 +74,11 @@ namespace Polhem.Api.Client.UnitTests
 
             var settings = await access.GetDatabaseSettingsAsync();
 
+            // Whatever entries are registered, none may reach the client with a plaintext password.
             Assert.NotNull(settings);
+            Assert.All(settings.Items ?? [], item => Assert.True(
+                string.IsNullOrEmpty(item.Password) || item.Password.StartsWith("enc:", StringComparison.Ordinal),
+                $"Item '{item.Id}' carries a password that is not in enc: form."));
         }
 
         [Fact]
@@ -83,7 +89,10 @@ namespace Polhem.Api.Client.UnitTests
 
             var settings = await access.GetDbCategorySettingsAsync();
 
-            Assert.NotNull(settings);
+            // The three scopes declared in `tests/Define/DbCategorySettings.xml`.
+            Assert.True(settings.Categories!.Contains("common"));
+            Assert.True(settings.Categories!.Contains("company"));
+            Assert.True(settings.Categories!.Contains("log"));
         }
 
         [Fact]
@@ -94,7 +103,8 @@ namespace Polhem.Api.Client.UnitTests
 
             var schema = await access.GetFormSchemaAsync("Employee");
 
-            Assert.NotNull(schema);
+            Assert.Equal("Employee", schema.ProgId);
+            Assert.True(schema.Tables!["Employee"].Fields!.Contains("ref_dept_name"));
         }
 
         [Fact]
@@ -129,7 +139,8 @@ namespace Polhem.Api.Client.UnitTests
 
             var schema = await access.GetTableSchemaAsync("common", "st_user");
 
-            Assert.NotNull(schema);
+            Assert.Equal("st_user", schema.TableName);
+            Assert.True(schema.Fields!.Contains("sys_id"));
         }
 
         [Fact]

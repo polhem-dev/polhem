@@ -8,7 +8,7 @@ namespace Polhem.UI.Core.UnitTests
     /// and <see cref="ClientInfo.ApplyApiKey"/> uses the value shipped with the app only as a first-run seed.
     /// That is what lets the key be changed without recompiling the client.
     /// </summary>
-    [Collection("ClientInfoState")]
+    [Collection(ClientInfoStateCollection.Name)]
     public class ClientInfoApiKeyTests
     {
         private sealed class FakeApiKeyStorage : IApiKeyStorage

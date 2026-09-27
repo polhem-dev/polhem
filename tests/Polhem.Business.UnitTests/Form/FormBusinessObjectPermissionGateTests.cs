@@ -24,7 +24,7 @@ namespace Polhem.Business.UnitTests.Form
     /// <c>SessionInfoService.Get</c> (for the current company and the locale) found nothing and took the rebuild path that reads
     /// <c>st_session</c>, so the whole class actually needed the container. It only became true after switching to
     /// <see cref="TestSessionFactory.CreateAccessToken"/>.
-    /// </summary>
+    /// </remarks>
     public class FormBusinessObjectPermissionGateTests : IClassFixture<PolhemTestFixture>
     {
         // FormSchema 'PermGateForm' declares PermissionModelId='PermGateModel', so the gate is enabled.

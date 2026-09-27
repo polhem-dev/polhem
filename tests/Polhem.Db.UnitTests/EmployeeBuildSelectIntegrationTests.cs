@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Data;
 using System.Globalization;
+using System.Data.Common;
 using Polhem.Db.Dml;
 using Polhem.Definition.Database;
 using Polhem.Definition.Filters;
@@ -288,7 +289,7 @@ namespace Polhem.Db.UnitTests
                     .Build(tableName, FilterCondition.Equal("sys_rowid", rowId));
                 db.Execute(spec);
             }
-            catch (Exception ex)
+            catch (DbException ex)
             {
                 // Cleanup is best-effort: a failed seed INSERT may leave no row to delete.
                 // Do not mask the assertion failure message.

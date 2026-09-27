@@ -8,7 +8,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     /// Covers the private methods of <see cref="FormPage"/>.
     /// Scope: the three paths of <c>RunGuardedAsync</c> (success, exception, busy guard),
     /// and the early return of the four action handlers when <c>_dataObject</c> is null.
-    /// Lifecycle tests that need the Blazor renderer or an API connector are left to bUnit integration tests.
+    /// The rendered lifecycle is covered with bUnit by <see cref="FormPageBunitTests"/>.
     /// </summary>
     public class FormPageInternalTests
     {

@@ -8,8 +8,9 @@ namespace Polhem.Base.UnitTests
         [DisplayName("LoadAssembly with an unknown assembly name (no directory) takes the FileNotFoundException fallback and throws")]
         public void LoadAssembly_UnknownNameNoDirectory_FallbackThrowsException()
         {
-            var exception = Record.Exception(() => AssemblyLoader.LoadAssembly("PolhemXyzNotExistFallback.dll"));
-            Assert.NotNull(exception);
+            var exception = Assert.Throws<FileNotFoundException>(() => AssemblyLoader.LoadAssembly("PolhemXyzNotExistFallback.dll"));
+            // The fallback looked for the file next to the framework assemblies.
+            Assert.Equal(Path.Combine(FileUtilities.GetAssemblyPath(), "PolhemXyzNotExistFallback.dll"), exception.FileName);
         }
 
         [Fact]
@@ -18,8 +19,8 @@ namespace Polhem.Base.UnitTests
         {
             string fakeAssemblyPath = Path.Combine(
                 Path.GetTempPath(), "polhem_fake_dir_xyz", "PolhemXyzNotExistFallback2.dll");
-            var exception = Record.Exception(() => AssemblyLoader.LoadAssembly(fakeAssemblyPath));
-            Assert.NotNull(exception);
+            var exception = Assert.Throws<FileNotFoundException>(() => AssemblyLoader.LoadAssembly(fakeAssemblyPath));
+            Assert.Equal(fakeAssemblyPath, exception.FileName);
         }
     }
 }

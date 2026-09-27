@@ -16,7 +16,7 @@ namespace Polhem.Business.UnitTests.Fakes
     {
         public DatabaseSettings Settings { get; } = new DatabaseSettings();
 
-        /// <summary>Optional permission-model registry returned by <see cref="GetPermissionModels"/>.</summary>
+        /// <summary>Optional permission-model registry returned by <see cref="IDefineAccess.GetPermissionModels"/>.</summary>
         public PermissionModels? PermissionModels { get; set; }
 
         public DatabaseSettings GetDatabaseSettings() => Settings;

@@ -1,9 +1,12 @@
 using Polhem.Business.Form;
+using Polhem.Business.UnitTests.Fakes;
 using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Identity;
+using Polhem.Definition.Logging;
 using Polhem.Definition.Storage;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Repository.Abstractions.Form;
@@ -23,6 +26,9 @@ namespace Polhem.Business.UnitTests.Form
     {
         public const string CategoryId = "company";
         public const string ProgId = "Employee";
+        public const string CompanyId = "CRUDTEST";
+        public const string CompanyName = "CRUD test company";
+        public const string UserId = "crud_test";
 
         private readonly SharedDbFixture _fx;
         private readonly string _databaseId;
@@ -47,7 +53,30 @@ namespace Polhem.Business.UnitTests.Form
         public IDataFormRepository Repository => _repository;
 
         /// <summary>
-        /// Builds a business object bound to the test repository.
+        /// Plants a session bound to <see cref="CompanyId"/> in the fixture's session cache and returns its token.
+        /// </summary>
+        /// <remarks>
+        /// A bare <see cref="Guid.NewGuid"/> token is not in the cache, so the BO would rebuild it from
+        /// <c>st_session</c> in <c>common</c>, which is always SQL Server. A test gated on SQLite or Oracle would then
+        /// need SQL Server without saying so, and it would only ever exercise the no-session path.
+        /// </remarks>
+        public Guid CreateSessionToken()
+        {
+            var accessToken = Guid.NewGuid();
+            _fx.GetRequiredService<ISessionInfoService>().Set(new SessionInfo
+            {
+                AccessToken = accessToken,
+                UserId = UserId,
+                UserName = UserId,
+                CompanyId = CompanyId,
+                ExpiredAt = DateTime.UtcNow.AddHours(1),
+                ApiEncryptionKey = [],
+            });
+            return accessToken;
+        }
+
+        /// <summary>
+        /// Builds a business object bound to the test repository, running under a planted company session.
         /// </summary>
         /// <param name="pluginResolver">
         /// Optional plugin chain resolver. Supplied by the plugin integration tests to bind a
@@ -55,15 +84,7 @@ namespace Polhem.Business.UnitTests.Form
         /// the fixture's own resolver applies and no plugin is bound.
         /// </param>
         public FormBusinessObject CreateBo(IFormPluginResolver? pluginResolver = null)
-        {
-            var factory = new StubFactory(_repository);
-            var ctx = pluginResolver == null
-                ? TestBusinessObjectContext.CreateWithOverrides(_fx, (typeof(IRepositoryFactory), factory))
-                : TestBusinessObjectContext.CreateWithOverrides(_fx,
-                    (typeof(IRepositoryFactory), factory),
-                    (typeof(IFormPluginResolver), pluginResolver));
-            return new FormBusinessObject(ctx, Guid.NewGuid(), ProgId);
-        }
+            => CreateBoWithSession(CreateSessionToken(), pluginResolver);
 
         /// <summary>
         /// Builds a business object bound to the test repository, with additional service
@@ -71,17 +92,25 @@ namespace Polhem.Business.UnitTests.Form
         /// <c>AuditLogOptions</c> and capture what <c>IAuditLogWriter</c> receives.
         /// </summary>
         public FormBusinessObject CreateBoWithOverrides(params (Type ServiceType, object? Instance)[] overrides)
-            => new FormBusinessObject(CreateContextWithOverrides(overrides), Guid.NewGuid(), ProgId);
+            => CreateBoWithSession(CreateSessionToken(), null, overrides);
 
         /// <summary>
         /// Builds the context <see cref="CreateBoWithOverrides"/> uses, for tests that construct a
         /// <see cref="FormBusinessObject"/> subclass of their own.
         /// </summary>
+        /// <remarks>
+        /// Besides the repository stub, it stubs <see cref="ICompanyInfoService"/> (knowing only
+        /// <see cref="CompanyId"/>) and <see cref="IAuditRuleService"/> (no rules). Both real services read
+        /// <c>common</c>, which is SQL Server whatever provider the test targets. Caller overrides win.
+        /// </remarks>
         public IBusinessObjectContext CreateContextWithOverrides(params (Type ServiceType, object? Instance)[] overrides)
         {
             var all = new List<(Type, object?)>
             {
-                (typeof(IRepositoryFactory), new StubFactory(_repository))
+                (typeof(IRepositoryFactory), new StubFactory(_repository)),
+                (typeof(ICompanyInfoService), new StubCompanyInfoService(
+                    new CompanyInfo { CompanyId = CompanyId, CompanyName = CompanyName })),
+                (typeof(IAuditRuleService), new NoAuditRuleService()),
             };
             all.AddRange(overrides);
             return TestBusinessObjectContext.CreateWithOverrides(_fx, [.. all]);
@@ -91,11 +120,7 @@ namespace Polhem.Business.UnitTests.Form
         /// Builds a business object bound to the test repository under a caller-supplied access
         /// token, optionally with a plugin chain and extra service overrides.
         /// </summary>
-        /// <param name="accessToken">
-        /// The token the BO runs under. The other factory methods mint a throwaway one, which
-        /// resolves to no session — fine until a test needs the session's company, as the per-form
-        /// audit rule lookup does.
-        /// </param>
+        /// <param name="accessToken">The token the BO runs under, usually from <see cref="CreateSessionToken"/>.</param>
         /// <param name="pluginResolver">Optional plugin chain resolver.</param>
         /// <param name="overrides">Service overrides layered on the fixture's provider.</param>
         public FormBusinessObject CreateBoWithSession(
@@ -103,17 +128,13 @@ namespace Polhem.Business.UnitTests.Form
             IFormPluginResolver? pluginResolver,
             params (Type ServiceType, object? Instance)[] overrides)
         {
-            var all = new List<(Type, object?)>
-            {
-                (typeof(IRepositoryFactory), new StubFactory(_repository))
-            };
+            var all = new List<(Type, object?)>();
             if (pluginResolver != null)
             {
                 all.Add((typeof(IFormPluginResolver), pluginResolver));
             }
             all.AddRange(overrides);
-            return new FormBusinessObject(
-                TestBusinessObjectContext.CreateWithOverrides(_fx, [.. all]), accessToken, ProgId);
+            return new FormBusinessObject(CreateContextWithOverrides([.. all]), accessToken, ProgId);
         }
 
         private sealed class StubFactory : IRepositoryFactory

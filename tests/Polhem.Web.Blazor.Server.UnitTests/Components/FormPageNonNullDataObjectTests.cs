@@ -83,7 +83,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var page = CreatePageWithDataObject();
             await InvokeMethodAsync(page, "OnRowSelectedAsync", new object[] { Guid.NewGuid() });
-            Assert.NotNull(s_errorField.GetValue(page) as string);
+            Assert.StartsWith("LoadAsync requires a FormApiConnector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -92,7 +92,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var page = CreatePageWithDataObject();
             await InvokeMethodAsync(page, "OnNewAsync", null);
-            Assert.NotNull(s_errorField.GetValue(page) as string);
+            Assert.StartsWith("NewAsync requires a FormApiConnector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -101,7 +101,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var page = CreatePageWithDataObject();
             await InvokeMethodAsync(page, "OnSaveAsync", null);
-            Assert.NotNull(s_errorField.GetValue(page) as string);
+            Assert.StartsWith("SaveAsync requires a FormApiConnector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -110,7 +110,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             var page = CreatePageWithDataObject();
             await InvokeMethodAsync(page, "OnDeleteAsync", null);
-            Assert.NotNull(s_errorField.GetValue(page) as string);
+            Assert.StartsWith("DeleteAsync requires a FormApiConnector", s_errorField.GetValue(page) as string, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -129,7 +129,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             var task = (Task)method!.Invoke(page, null)!;
             await task;
 
-            Assert.NotNull(s_listRowsField.GetValue(page) as DataTable);
+            Assert.Equal("Test", Assert.IsType<DataTable>(s_listRowsField.GetValue(page)).TableName);
         }
     }
 }

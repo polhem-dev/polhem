@@ -7,9 +7,9 @@ namespace Polhem.Api.Client.UnitTests
     /// <see cref="ApiClientInfo.SupportedConnectTypes"/> with try/finally, and tests within the class run serially
     /// (the xUnit default). The race risk with other test classes: <c>ApiClientInfoTests</c> mutates the same
     /// static, and although both snapshot and restore, they are both in
-    /// <c>[Collection("ApiClientInfoState")]</c> and run serially, so parallel classes do not race on the static.
+    /// <c>[Collection(ApiClientInfoStateCollection.Name)]</c> and run serially, so parallel classes do not race on the static.
     /// </summary>
-    [Collection("ApiClientInfoState")]
+    [Collection(ApiClientInfoStateCollection.Name)]
     public class ApiConnectValidatorTests
     {
         [Theory]

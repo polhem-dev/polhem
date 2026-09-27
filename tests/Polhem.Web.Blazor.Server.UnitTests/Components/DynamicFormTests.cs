@@ -10,10 +10,10 @@ using Polhem.Definition.Layouts;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// Structural checks for <see cref="DynamicForm"/>. Phase 1a verifies the public
-    /// component surface and that wiring through <see cref="FormLayoutGenerator.Generate"/>
-    /// produces a layout the component is willing to consume; deeper render assertions
-    /// (with bUnit) land alongside the host-app sample in Phase 1b.
+    /// Structural checks for <see cref="DynamicForm"/>: the public component surface, and that wiring through
+    /// <see cref="FormLayoutGenerator.Generate"/> produces a layout the component is willing to consume. Rendering is
+    /// covered with bUnit by <see cref="DynamicFormRenderTests"/>, <see cref="DynamicFormControlTypeRenderTests"/> and
+    /// <see cref="DynamicFormTimeEditTests"/>.
     /// </summary>
     public class DynamicFormTests
     {

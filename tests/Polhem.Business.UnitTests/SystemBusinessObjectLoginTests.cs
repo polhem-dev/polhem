@@ -31,7 +31,7 @@ namespace Polhem.Business.UnitTests
             public void Reset(string userId) => ResetCount++;
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("Login with successful authentication produces an AccessToken and expiry and creates a SessionInfo")]
         public void Login_Authenticated_ReturnsValidSessionToken()
         {
@@ -65,7 +65,7 @@ namespace Polhem.Business.UnitTests
             }
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("Login with a ClientPublicKey encrypts ApiEncryptionKey with RSA")]
         public void Login_WithClientPublicKey_EncryptsApiKey()
         {
@@ -194,7 +194,7 @@ namespace Polhem.Business.UnitTests
             Assert.Equal(0, tracker.FailureCount);
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("Login with successful authentication and a non-null tracker calls Reset")]
         public void Login_SuccessWithTracker_CallsReset()
         {

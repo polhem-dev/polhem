@@ -123,7 +123,8 @@ namespace Polhem.Hosting.UnitTests
                 using var sp = services.BuildServiceProvider();
 
                 Assert.NotNull(sp.GetRequiredService<IAuditLogWriteRepository>());
-                Assert.NotNull(sp.GetRequiredService<IAuditLogWriter>());
+                // With the background writer off, entries are written in-line rather than dropped by the null writer.
+                Assert.IsType<SynchronousAuditLogWriter>(sp.GetRequiredService<IAuditLogWriter>());
             }
             finally
             {

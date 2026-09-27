@@ -46,6 +46,7 @@ namespace Polhem.Definition.UnitTests.Settings
             var category = new DbCategory();
 
             Assert.NotNull(category.Tables);
+            Assert.Empty(category.Tables!);
         }
 
         [Fact]

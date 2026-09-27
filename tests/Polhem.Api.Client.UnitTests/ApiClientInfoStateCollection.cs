@@ -7,8 +7,10 @@ namespace Polhem.Api.Client.UnitTests
     /// to <c>Remote</c> while another sets it to <c>Both</c> mid-assertion (snapshot/restore alone
     /// only holds under serial execution, not parallel classes).
     /// </summary>
-    [CollectionDefinition("ApiClientInfoState")]
-    public sealed class ApiClientInfoStateCollection
+    [CollectionDefinition(Name)]
+    public static class ApiClientInfoStateCollection
     {
+        /// <summary>The collection name. Reference this constant instead of repeating the string.</summary>
+        public const string Name = "ApiClientInfoState";
     }
 }

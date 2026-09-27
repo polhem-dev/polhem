@@ -12,16 +12,20 @@ namespace Polhem.Api.Core.UnitTests.Contracts
     /// <summary>
     /// Verifies that **every** API contract type (subtypes of <see cref="ApiRequest"/> / <see cref="ApiResponse"/>)
     /// serializes in **both the MessagePack and JSON** wire formats and round-trips faithfully. The assembly is
-    /// enumerated by reflection, so current and future contracts are covered automatically. Any contract change that
-    /// breaks either format (a new unsupported property type, swapped [Key]s, asymmetric property names, a removed
-    /// parameterless constructor and so on) fails here.
+    /// enumerated by reflection, so current and future contracts are covered automatically.
     /// </summary>
     /// <remarks>
-    /// The approach follows SoarCloud.Api.Core.Tests/Transformers/ApiContractSerializationTests in the sibling repo.
+    /// What <see cref="Contract_SerializesAndRoundTrips"/> checks: every settable scalar property, including those of
+    /// nested classes up to two levels deep, is given a non-default value and must come back equal after the round
+    /// trip, and re-serializing the restored object must give the same bytes. Collections, dictionaries,
+    /// <c>DataSet</c> and <c>DataTable</c> properties keep their defaults here, so a change that only breaks those is
+    /// caught by the dedicated round-trip tests of the types that carry them, not by this one.
+    /// <para>
     /// The two serializer strategies follow polhem's real wire paths: MessagePack goes through
     /// <see cref="MessagePackCodec"/> (SafeMessagePackSerializerOptions, custom formatters and the resolver chain), and
     /// JSON goes through <see cref="JsonCodec"/> (DataSet/DataTable converters, camelCase, enum-as-string and the
     /// <c>{Property}Specified</c> convention).
+    /// </para>
     /// </remarks>
     public class ApiContractSerializationTests
     {
@@ -84,9 +88,47 @@ namespace Polhem.Api.Core.UnitTests.Contracts
             Assert.NotNull(restored);
             Assert.IsType(type, restored);
 
+            // A property dropped on write would be missing from both byte arrays below, so the populated values are
+            // compared one by one first.
+            AssertPopulatedValuesEqual(instance, restored!, type.Name, depth: 0);
+
             // Fidelity: serialization is deterministic, so serializing the restored object again yields the same bytes when no value was lost.
             Assert.Equal(bytes, strategy.Serialize(restored!, type));
         }
+
+        /// <summary>
+        /// Compares every property <see cref="Populate"/> set, recursing into nested classes the same way it does.
+        /// </summary>
+        private static void AssertPopulatedValuesEqual(object expected, object actual, string path, int depth)
+        {
+            foreach (var property in expected.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (property.GetMethod is not { IsPublic: true } || property.SetMethod is not { IsPublic: true }
+                    || SampleValue(property.PropertyType, depth) is null)
+                {
+                    continue;
+                }
+
+                var expectedValue = property.GetValue(expected);
+                var actualValue = property.GetValue(actual);
+                string propertyPath = path + "." + property.Name;
+                var target = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+
+                if (target.IsClass && target != typeof(string) && target != typeof(byte[]))
+                {
+                    Assert.True(actualValue is not null, $"{propertyPath} was lost in the round trip.");
+                    AssertPopulatedValuesEqual(expectedValue!, actualValue!, propertyPath, depth + 1);
+                }
+                else
+                {
+                    Assert.True(Equals(expectedValue, actualValue) || StructurallyEqualBytes(expectedValue, actualValue),
+                        $"{propertyPath}: expected '{expectedValue}', got '{actualValue}'.");
+                }
+            }
+        }
+
+        private static bool StructurallyEqualBytes(object? expected, object? actual)
+            => expected is byte[] a && actual is byte[] b && a.AsSpan().SequenceEqual(b);
 
         /// <summary>
         /// Fills writable (public setter) scalar properties with non-default sample values so the fidelity check means

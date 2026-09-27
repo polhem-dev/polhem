@@ -11,7 +11,7 @@ namespace Polhem.Db.UnitTests
 {
     /// <summary>
     /// Oracle provider/dialect smoke tests. Verifies that the test fixture
-    /// (<see cref="Polhem.Tests.Shared.GlobalFixture"/>) registers both the ADO.NET
+    /// (<see cref="SharedDatabaseState.EnsureRegistered"/>, run once per process) registers both the ADO.NET
     /// provider factory and the dialect factory at startup, so subsequent Oracle
     /// builder/integration tests can resolve them via the registries.
     /// </summary>
@@ -41,7 +41,7 @@ namespace Polhem.Db.UnitTests
         {
             var factory = DbProviderRegistry.Get(DatabaseType.Oracle);
 
-            Assert.NotNull(factory);
+            Assert.Same(global::Oracle.ManagedDataAccess.Client.OracleClientFactory.Instance, factory);
         }
 
         [Fact]
@@ -75,9 +75,9 @@ namespace Polhem.Db.UnitTests
 
             // Only builders without external dependencies are checked: CREATE / ALTER / Rebuild produce plain strings
             // and need no connection or FormSchema lookup.
-            Assert.NotNull(factory.CreateCreateTableCommandBuilder());
-            Assert.NotNull(factory.CreateTableAlterCommandBuilder());
-            Assert.NotNull(factory.CreateTableRebuildCommandBuilder());
+            Assert.IsType<OracleCreateTableCommandBuilder>(factory.CreateCreateTableCommandBuilder());
+            Assert.IsType<OracleTableAlterCommandBuilder>(factory.CreateTableAlterCommandBuilder());
+            Assert.IsType<OracleTableRebuildCommandBuilder>(factory.CreateTableRebuildCommandBuilder());
             // `CreateTableSchemaProvider` depends on a databaseId as in MySQL, so the integration tests cover it.
         }
 

@@ -161,7 +161,13 @@ namespace Polhem.Api.Core.UnitTests
             // gadget hole. `WireValueFormatter` blocks it on the writing side, one step earlier than the old
             // read-side-only check. The read-side check is still there (see the hand-built envelope tests in
             // `WireValueFormatterTests`).
-            Assert.NotNull(Record.Exception(() => MessagePackCodec.Serialize(source)));
+            var ex = Record.Exception(() => MessagePackCodec.Serialize(source));
+
+            // MessagePack may wrap what the formatter throws, so the refusal is looked for at the root.
+            Assert.NotNull(ex);
+            var blocked = Assert.IsType<InvalidOperationException>(ex.GetBaseException());
+            Assert.Contains("not in the allowed type whitelist", blocked.Message, StringComparison.Ordinal);
+            Assert.Contains(typeof(Version).FullName!, blocked.Message, StringComparison.Ordinal);
         }
 
         [Fact]

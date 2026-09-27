@@ -31,4 +31,9 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Shared with the test projects that reference Polhem.Tests.Shared; this project does not. -->
+    <Compile Include="..\Polhem.Tests.Shared\RepoRoot.cs" Link="RepoRoot.cs" />
+  </ItemGroup>
+
 </Project>

@@ -10,7 +10,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
     /// exception types to (<see cref="JsonRpcErrorCode"/>, message) pairs used in the
     /// JSON-RPC response envelope.
     /// </summary>
-    [Collection("SysInfoStatic")]
+    [Collection(SysInfoStaticCollection.Name)]
     public class JsonRpcExecutorUserMessageExceptionTests
     {
         [Fact]

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Polhem.Api.Core.MessagePack;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Filters;
@@ -17,7 +18,8 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests that MessagePack serializes and deserializes a DataSet correctly.
         /// </summary>
-        [Fact(DisplayName = "DataSet round-trips through MessagePack")]
+        [Fact]
+        [DisplayName("DataSet round-trips through MessagePack")]
         public void DataSet_Serialize_RoundTrip()
         {
             var dataSet = new DataSet("TestDataSet");
@@ -63,7 +65,8 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests that MessagePack serializes and deserializes a DataTable correctly.
         /// </summary>
-        [Fact(DisplayName = "DataTable round-trips through MessagePack")]
+        [Fact]
+        [DisplayName("DataTable round-trips through MessagePack")]
         public void DataTable_Serialize_RoundTrip()
         {
             var table = new DataTable("TestTable");
@@ -85,7 +88,8 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests that a DBNull.Value cell survives a MessagePack round-trip.
         /// </summary>
-        [Fact(DisplayName = "DataTable MessagePack round-trip preserves DBNull values")]
+        [Fact]
+        [DisplayName("DataTable MessagePack round-trip preserves DBNull values")]
         public void DataTable_SerializeWithDbNull_PreservesValues()
         {
             // Arrange
@@ -109,7 +113,8 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests that a DataTable keeps each row's RowState after serialization.
         /// </summary>
-        [Fact(DisplayName = "DataTable serialization preserves RowState")]
+        [Fact]
+        [DisplayName("DataTable serialization preserves RowState")]
         public void DataTable_SerializeWithRowState_PreservesState()
         {
             var table = new DataTable("SampleTable");
@@ -154,8 +159,9 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests serialization and deserialization of ListItemCollection.
         /// </summary>
-        [Fact(DisplayName = "ListItemCollection round-trips through MessagePack")]
-        public void TListItemCollection_Serialize_RoundTrip()
+        [Fact]
+        [DisplayName("ListItemCollection round-trips through MessagePack")]
+        public void ListItemCollection_Serialize_RoundTrip()
         {
             var original = new ListItemCollection()
             {
@@ -181,15 +187,16 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests that ParameterCollection serializes and deserializes values of several types.
         /// </summary>
-        [Fact(DisplayName = "ParameterCollection round-trips values of several types and keeps their types")]
-        public void TParameterCollection_Serialize_RoundTrip()
+        [Fact]
+        [DisplayName("ParameterCollection round-trips values of several types and keeps their types")]
+        public void ParameterCollection_Serialize_RoundTrip()
         {
             var original = new ParameterCollection
             {
                 { "IntValue", 123 },
                 { "StringValue", "測試字串" },
                 { "BoolValue", true },
-                { "DateTimeValue", new DateTime(2025, 5, 16, 10, 30, 0) },
+                { "DateTimeValue", new DateTime(2025, 5, 16, 10, 30, 0, DateTimeKind.Unspecified) },
                 { "DecimalValue", 123.45m },
                 { "DoubleValue", 9876.54321 },
                 { "NullValue", null! }
@@ -225,8 +232,9 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests that a ParameterCollection holding a DataTable serializes correctly.
         /// </summary>
-        [Fact(DisplayName = "ParameterCollection holding a DataTable round-trips through MessagePack")]
-        public void TParameterCollection_SerializeWithDataTable_RoundTrip()
+        [Fact]
+        [DisplayName("ParameterCollection holding a DataTable round-trips through MessagePack")]
+        public void ParameterCollection_SerializeWithDataTable_RoundTrip()
         {
             var table = new DataTable("TestTable");
             table.Columns.Add("Id", typeof(int));
@@ -257,8 +265,9 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests that PropertyCollection serializes and restores its property data.
         /// </summary>
-        [Fact(DisplayName = "PropertyCollection round-trips through MessagePack")]
-        public void TPropertyCollection_Serialize_RoundTrip()
+        [Fact]
+        [DisplayName("PropertyCollection round-trips through MessagePack")]
+        public void PropertyCollection_Serialize_RoundTrip()
         {
             var properties = new Polhem.Definition.Collections.PropertyCollection
             {
@@ -286,14 +295,15 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests that a nested filter tree serializes and restores its structure and values.
         /// </summary>
-        [Fact(DisplayName = "Nested FilterGroup round-trips through MessagePack")]
+        [Fact]
+        [DisplayName("Nested FilterGroup round-trips through MessagePack")]
         public void Filters_Serialize_RoundTrip()
         {
             var root = FilterGroup.All(
                 FilterCondition.Equal("DeptId", 10),
                 FilterGroup.Any(
                     FilterCondition.Contains("Name", "Lee"),
-                    FilterCondition.Between("HireDate", new DateTime(2024, 1, 1), new DateTime(2024, 12, 31))
+                    FilterCondition.Between("HireDate", new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Unspecified))
                 )
             );
 
@@ -324,14 +334,15 @@ namespace Polhem.Api.Core.UnitTests
             Assert.NotNull(cond3);
             Assert.Equal("HireDate", cond3.FieldName);
             Assert.Equal(ComparisonOperator.Between, cond3.Operator);
-            Assert.Equal(new DateTime(2024, 1, 1), cond3.Value);
-            Assert.Equal(new DateTime(2024, 12, 31), cond3.SecondValue);
+            Assert.Equal(new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), cond3.Value);
+            Assert.Equal(new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Unspecified), cond3.SecondValue);
         }
 
         /// <summary>
         /// Tests serialization of the Ping method's request and response.
         /// </summary>
-        [Fact(DisplayName = "Ping request and response round-trip through MessagePack")]
+        [Fact]
+        [DisplayName("Ping request and response round-trip through MessagePack")]
         public void Ping_Serialize_RoundTrip()
         {
             var args = new PingRequest
@@ -360,7 +371,8 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests serialization of the ExecFunc method's request and response.
         /// </summary>
-        [Fact(DisplayName = "ExecFunc request and response round-trip through MessagePack")]
+        [Fact]
+        [DisplayName("ExecFunc request and response round-trip through MessagePack")]
         public void ExecFunc_Serialize_RoundTrip()
         {
             var args = new ExecFuncRequest
@@ -383,7 +395,8 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests serialization of the CreateSession method's request and response.
         /// </summary>
-        [Fact(DisplayName = "CreateSession request and response round-trip through MessagePack")]
+        [Fact]
+        [DisplayName("CreateSession request and response round-trip through MessagePack")]
         public void CreateSession_Serialize_RoundTrip()
         {
             // Arrange
@@ -410,7 +423,8 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests serialization of the GetDefine method's request and response.
         /// </summary>
-        [Fact(DisplayName = "GetDefine request and response round-trip through MessagePack")]
+        [Fact]
+        [DisplayName("GetDefine request and response round-trip through MessagePack")]
         public void GetDefine_Serialize_RoundTrip()
         {
             // Arrange
@@ -436,7 +450,8 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests serialization of the GetCommonConfiguration method's request and response.
         /// </summary>
-        [Fact(DisplayName = "GetCommonConfiguration request and response round-trip through MessagePack")]
+        [Fact]
+        [DisplayName("GetCommonConfiguration request and response round-trip through MessagePack")]
         public void GetCommonConfiguration_Serialize_RoundTrip()
         {
             // Arrange: the request has no properties of its own, only the inherited `Parameters`.
@@ -461,7 +476,8 @@ namespace Polhem.Api.Core.UnitTests
         /// <summary>
         /// Tests serialization of the SaveDefine method's request and response.
         /// </summary>
-        [Fact(DisplayName = "SaveDefine request and response round-trip through MessagePack")]
+        [Fact]
+        [DisplayName("SaveDefine request and response round-trip through MessagePack")]
         public void SaveDefine_Serialize_RoundTrip()
         {
             // Arrange

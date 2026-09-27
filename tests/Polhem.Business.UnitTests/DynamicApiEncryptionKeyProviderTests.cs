@@ -3,6 +3,7 @@ using Polhem.Business.Providers;
 using Polhem.Definition.Identity;
 using Polhem.Tests.Shared;
 using Polhem.Base.Exceptions;
+using Polhem.Definition.Database;
 
 namespace Polhem.Business.UnitTests
 {
@@ -25,7 +26,7 @@ namespace Polhem.Business.UnitTests
             Assert.Throws<AuthenticationRequiredException>(() => provider.GetKey(Guid.Empty));
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("GetKey with an unknown AccessToken throws AuthenticationRequiredException")]
         public void GetKey_UnknownToken_ThrowsUnauthorized()
         {

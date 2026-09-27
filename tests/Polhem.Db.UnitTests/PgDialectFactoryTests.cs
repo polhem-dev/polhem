@@ -36,7 +36,7 @@ namespace Polhem.Db.UnitTests
         {
             var factory = DbProviderRegistry.Get(DatabaseType.PostgreSQL);
 
-            Assert.NotNull(factory);
+            Assert.Same(Npgsql.NpgsqlFactory.Instance, factory);
         }
 
         [Fact]
@@ -62,9 +62,9 @@ namespace Polhem.Db.UnitTests
 
             // Only builders without external dependencies are checked: CREATE / ALTER / Rebuild produce plain strings
             // and need no connection or FormSchema lookup.
-            Assert.NotNull(factory.CreateCreateTableCommandBuilder());
-            Assert.NotNull(factory.CreateTableAlterCommandBuilder());
-            Assert.NotNull(factory.CreateTableRebuildCommandBuilder());
+            Assert.IsType<PgCreateTableCommandBuilder>(factory.CreateCreateTableCommandBuilder());
+            Assert.IsType<PgTableAlterCommandBuilder>(factory.CreateTableAlterCommandBuilder());
+            Assert.IsType<PgTableRebuildCommandBuilder>(factory.CreateTableRebuildCommandBuilder());
         }
 
         [Fact]
@@ -75,7 +75,7 @@ namespace Polhem.Db.UnitTests
             var defineAccess = _fx.GetRequiredService<IDefineAccess>();
             var schema = new FormSchema("Foo", "Foo");
 
-            Assert.NotNull(factory.CreateFormCommandBuilder(schema, defineAccess));
+            Assert.IsType<PgFormCommandBuilder>(factory.CreateFormCommandBuilder(schema, defineAccess));
         }
 
         // The constructor of `PgTableSchemaProvider` eagerly creates `new DbAccess(databaseId)`. Without
@@ -87,7 +87,7 @@ namespace Polhem.Db.UnitTests
         {
             var factory = new PgDialectFactory();
 
-            Assert.NotNull(factory.CreateTableSchemaProvider("common_postgresql", _fx.GetRequiredService<IDbConnectionManager>()));
+            Assert.IsType<PgTableSchemaProvider>(factory.CreateTableSchemaProvider("common_postgresql", _fx.GetRequiredService<IDbConnectionManager>()));
         }
     }
 }

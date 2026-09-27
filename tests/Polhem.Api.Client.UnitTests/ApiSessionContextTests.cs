@@ -10,7 +10,7 @@ namespace Polhem.Api.Client.UnitTests
     /// The defect was "two sessions share one transport key", so the point of the tests is not that a property
     /// can be stored, but that **two sessions cannot see each other**.
     /// </remarks>
-    [Collection("ApiClientInfoState")]
+    [Collection(ApiClientInfoStateCollection.Name)]
     public class ApiSessionContextTests
     {
         [Fact]

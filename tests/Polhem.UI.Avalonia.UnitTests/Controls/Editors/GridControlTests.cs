@@ -39,8 +39,8 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             table.Columns.Add("sys_id", typeof(string));
             table.Columns.Add("sys_name", typeof(string));
             table.Columns.Add("hire_date", typeof(DateTime));
-            table.Rows.Add(Guid.NewGuid(), "E001", "Alice Chen", new DateTime(2024, 3, 1));
-            table.Rows.Add(Guid.NewGuid(), "E002", "Bob Liu", new DateTime(2025, 1, 15));
+            table.Rows.Add(Guid.NewGuid(), "E001", "Alice Chen", new DateTime(2024, 3, 1, 0, 0, 0, DateTimeKind.Unspecified));
+            table.Rows.Add(Guid.NewGuid(), "E002", "Bob Liu", new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Unspecified));
             return table;
         }
 
@@ -697,7 +697,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             var table = new DataTable("Items");
             table.Columns.Add("d", typeof(DateTime));
             table.Columns.Add("ym", typeof(string));
-            table.Rows.Add(new DateTime(2026, 1, 15), "2026-06");
+            table.Rows.Add(new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Unspecified), "2026-06");
             var rowView = table.DefaultView[0];
             var grid = new GridControl();
             grid.Bind(new LayoutGrid("Items", "Items"), table);
@@ -708,10 +708,10 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             var datePicker = Assert.IsType<DatePicker>(method!.Invoke(
                 grid, new object?[] { rowView, new LayoutColumn("d", "D", ControlType.DateEdit) }));
             Assert.True(datePicker.DayVisible);
-            Assert.Equal(new DateTime(2026, 1, 15), datePicker.SelectedDate!.Value.DateTime);
+            Assert.Equal(new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Unspecified), datePicker.SelectedDate!.Value.DateTime);
             datePicker.SelectedDate = new DateTimeOffset(
                 new DateTime(2026, 5, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeSpan.Zero);
-            Assert.Equal(new DateTime(2026, 5, 1), (DateTime)table.Rows[0]["d"]);
+            Assert.Equal(new DateTime(2026, 5, 1, 0, 0, 0, DateTimeKind.Unspecified), (DateTime)table.Rows[0]["d"]);
 
             var monthPicker = Assert.IsType<DatePicker>(method.Invoke(
                 grid, new object?[] { rowView, new LayoutColumn("ym", "YM", ControlType.YearMonthEdit) }));
@@ -804,8 +804,8 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             table.Columns.Add("amount", typeof(decimal));
             table.Columns.Add("nullable", typeof(string));
             table.Rows.Add(
-                new DateTime(2026, 5, 23),
-                new DateTime(2026, 5, 23, 9, 30, 15),
+                new DateTime(2026, 5, 23, 0, 0, 0, DateTimeKind.Unspecified),
+                new DateTime(2026, 5, 23, 9, 30, 15, DateTimeKind.Unspecified),
                 1234.56m,
                 DBNull.Value);
             var row = table.DefaultView[0];

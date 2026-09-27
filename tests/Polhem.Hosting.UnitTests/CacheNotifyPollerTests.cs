@@ -1,8 +1,10 @@
 using System.ComponentModel;
 using Polhem.Db.CacheNotify;
 using Polhem.Db.Manager;
+using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Identity;
+using Polhem.Definition.Storage;
 using Polhem.Hosting.CacheNotify;
 using Polhem.ObjectCaching;
 using Polhem.Tests.Shared;
@@ -46,9 +48,18 @@ namespace Polhem.Hosting.UnitTests
             return new CacheNotifyPollSession(databaseId, reader, marginSeconds: 5);
         }
 
-        private CompanyInfo SeedCompany(string companyId)
+        // A container of the test's own, without a data source. The fixture's container would read an evicted
+        // company back from `st_company` in `common`, which is always SQL Server, so a PostgreSQL, MySQL or Oracle
+        // run would silently need SQL Server too. Without read-through, a miss is simply null. Eviction still
+        // reaches this container because the poller publishes versions to the process-wide notify registry.
+        private static CacheContainerService NewContainer()
         {
-            var container = _fx.GetRequiredService<ICacheContainer>();
+            var paths = new PathOptions { DefinePath = Path.GetTempPath() };
+            return new CacheContainerService(new FileDefineStorage(paths), paths, "poller_" + Guid.NewGuid().ToString("N"), dataSource: null);
+        }
+
+        private static CompanyInfo SeedCompany(ICacheContainer container, string companyId)
+        {
             var info = new CompanyInfo { CompanyId = companyId, CompanyName = "RT " + companyId };
             container.CompanyInfo.Set(info);
             return info;
@@ -60,9 +71,9 @@ namespace Polhem.Hosting.UnitTests
         // window cannot catch another test's bump on the shared database.
         private void RunPollerLifecycle(DatabaseType databaseType)
         {
-            var container = _fx.GetRequiredService<ICacheContainer>();
+            var container = NewContainer();
             string companyId = "RT_" + Guid.NewGuid().ToString("N");
-            SeedCompany(companyId);
+            SeedCompany(container, companyId);
 
             var session = NewSession(databaseType);
 
@@ -75,7 +86,7 @@ namespace Polhem.Hosting.UnitTests
             Assert.Null(container.CompanyInfo.Get(companyId));
 
             // No new bump: re-seed then poll again; the unchanged version must not evict again.
-            SeedCompany(companyId);
+            SeedCompany(container, companyId);
             session.Poll();
             Assert.NotNull(container.CompanyInfo.Get(companyId));
         }
@@ -83,9 +94,9 @@ namespace Polhem.Hosting.UnitTests
         // A bump whose group maps to no cache is ignored: an unrelated seeded company survives.
         private void RunUnroutedGroupIgnored(DatabaseType databaseType)
         {
-            var container = _fx.GetRequiredService<ICacheContainer>();
+            var container = NewContainer();
             string companyId = "RT_" + Guid.NewGuid().ToString("N");
-            SeedCompany(companyId);
+            SeedCompany(container, companyId);
 
             var session = NewSession(databaseType);
             session.Poll(); // baseline

@@ -5,7 +5,7 @@ using Polhem.Web.Blazor.Server.Components;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// Covers the two paths of <see cref="PolhemLoginPanel.OnSubmitAsync"/> that can run without DI:
+    /// Covers the two paths of <c>PolhemLoginPanel.OnSubmitAsync</c> (private, so not a cref) that can run without DI:
     /// 1. The _isBusy guard (returns directly without touching Factory).
     /// 2. The try-catch-finally path when Factory is not injected (the NRE is caught).
     /// </summary>

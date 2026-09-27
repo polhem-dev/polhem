@@ -5,7 +5,7 @@ using Polhem.Api.Client;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// Covers the private method <see cref="ClientInfo.ParseCommandLineArgs"/>.
+    /// Covers the private method <c>ClientInfo.ParseCommandLineArgs</c> (a private member cannot be a cross-assembly cref).
     /// This class only reads, so it does not need the ClientInfoState collection.
     /// </summary>
     public class ClientInfoParseArgsTests
@@ -19,7 +19,7 @@ namespace Polhem.UI.Core.UnitTests
                 BindingFlags.NonPublic | BindingFlags.Static);
             Assert.NotNull(method);
             var result = method!.Invoke(null, null);
-            Assert.NotNull(result);
+            Assert.IsType<Dictionary<string, string>>(result);
         }
 
         [Fact]
@@ -41,7 +41,7 @@ namespace Polhem.UI.Core.UnitTests
     /// Covers the private method <c>SetConnectType</c> of <see cref="ClientInfo"/> and the remote connector caching path.
     /// It mutates static state, so it shares the ClientInfoState collection with the other ClientInfo tests to run serially.
     /// </summary>
-    [Collection("ClientInfoState")]
+    [Collection(ClientInfoStateCollection.Name)]
     public class ClientInfoConnectorTests
     {
         private static readonly Type[] s_setConnectTypeParams = [typeof(ConnectType), typeof(string)];
@@ -111,7 +111,7 @@ namespace Polhem.UI.Core.UnitTests
                 ApiClientInfo.ConnectType = ConnectType.Remote;
                 ApiClientInfo.Endpoint = "http://remote.example.com";
                 var connector = ClientInfo.CreateFormApiConnector("TestProg");
-                Assert.NotNull(connector);
+                Assert.Equal("TestProg", connector.ProgId);
             }
             finally
             {

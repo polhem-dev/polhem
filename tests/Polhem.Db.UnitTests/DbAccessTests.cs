@@ -40,14 +40,14 @@ namespace Polhem.Db.UnitTests
             var command = new DbCommandSpec(DbCommandKind.DataTable, sql);
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             var result = dbAccess.Execute(command);
-            Assert.NotNull(result.Table);
+            Assert.Contains(SysIds(result), id => id == "001");
 
             // The connection is managed by the caller.
             using (var conn = _fx.GetRequiredService<IDbConnectionManager>().CreateConnection("common_sqlserver"))
             {
                 dbAccess = new DbAccess(conn, DatabaseType.SQLServer);
                 result = dbAccess.Execute(command);
-                Assert.NotNull(result.Table);
+                Assert.Contains(SysIds(result), id => id == "001");
             }
 
             sql = "SELECT * FROM st_user WHERE sys_id = {0} OR sys_id = {1} ";
@@ -56,12 +56,12 @@ namespace Polhem.Db.UnitTests
             command.Parameters.Add("p2", "002");
             dbAccess = _fx.NewDbAccess("common_sqlserver");
             result = dbAccess.Execute(command);
-            Assert.NotNull(result.Table);
+            AssertOnlySeededIds(result);
 
             command = new DbCommandSpec(DbCommandKind.DataTable, sql, "001", "002");
             dbAccess = _fx.NewDbAccess("common_sqlserver");
             result = dbAccess.Execute(command);
-            Assert.NotNull(result.Table);
+            AssertOnlySeededIds(result);
 
             var parameters = new Dictionary<string, object>
             {
@@ -71,7 +71,18 @@ namespace Polhem.Db.UnitTests
             sql = "SELECT * FROM st_user WHERE sys_id = {p1} OR sys_id = {p2} ";
             command = new DbCommandSpec(DbCommandKind.DataTable, sql, parameters);
             result = dbAccess.Execute(command);
-            Assert.NotNull(result.Table);
+            AssertOnlySeededIds(result);
+        }
+
+        private static List<string> SysIds(DbCommandResult result)
+            => [.. result.Table!.Rows.Cast<System.Data.DataRow>().Select(r => (string)r["sys_id"])];
+
+        // Every parameter style must bind both values: the seeded "001" is found and nothing else leaks in.
+        private static void AssertOnlySeededIds(DbCommandResult result)
+        {
+            var ids = SysIds(result);
+            Assert.Contains("001", ids);
+            Assert.All(ids, id => Assert.True(id is "001" or "002", $"Unexpected sys_id '{id}'."));
         }
 
         /// <summary>
@@ -99,8 +110,8 @@ namespace Polhem.Db.UnitTests
             var command = new DbCommandSpec(DbCommandKind.NonQuery, sql, "001", i);
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             var result = dbAccess.Execute(command);
-            Assert.NotNull(result);
-            Assert.True(result.RowsAffected >= 0);
+            // The fixture seeds exactly one user with sys_id "001".
+            Assert.Equal(1, result.RowsAffected);
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -112,19 +123,18 @@ namespace Polhem.Db.UnitTests
             var command = new DbCommandSpec(DbCommandKind.NonQuery, sql, "001", i);
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             var result = await dbAccess.ExecuteAsync(command);
-            Assert.NotNull(result);
-            Assert.True(result.RowsAffected >= 0);
+            Assert.Equal(1, result.RowsAffected);
         }
 
         [DbFact(DatabaseType.SQLServer)]
         [DisplayName("ExecuteScalar returns a single value")]
         public void ExecuteScalar_SelectSingleValue_ReturnsScalar()
         {
-            string sql = "Select note From st_user Where sys_id = {0}";
+            string sql = "Select sys_id From st_user Where sys_id = {0}";
             var command = new DbCommandSpec(DbCommandKind.Scalar, sql, "001");
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             var result = dbAccess.Execute(command);
-            Assert.NotNull(result);
+            Assert.Equal("001", result.Scalar);
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -136,8 +146,11 @@ namespace Polhem.Db.UnitTests
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             var list = dbAccess.Query<User>(command);
             var list3 = dbAccess.Query<User2>(command);
-            Assert.NotNull(list);
-            Assert.NotNull(list3);
+            // Column aliases map onto properties case-insensitively (`userID` → `UserID`).
+            var seeded = Assert.Single(list, u => u.UserID == "001");
+            Assert.False(string.IsNullOrEmpty(seeded.UserName));
+            Assert.NotEqual(default, seeded.InsertTime);
+            Assert.Contains(list3, u => u.UserID == "001");
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -149,8 +162,9 @@ namespace Polhem.Db.UnitTests
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             var list = await dbAccess.QueryAsync<User>(command);
             var list2 = await dbAccess.QueryAsync<User2>(command);
-            Assert.NotNull(list);
-            Assert.NotNull(list2);
+            var seeded = Assert.Single(list, u => u.UserID == "001");
+            Assert.False(string.IsNullOrEmpty(seeded.UserName));
+            Assert.Contains(list2, u => u.UserID == "001");
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -193,7 +207,9 @@ namespace Polhem.Db.UnitTests
 
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             var result = dbAccess.ExecuteBatch(batch);
-            Assert.NotNull(result);
+            Assert.Equal(2, result.Results.Count);
+            Assert.Equal(1, Convert.ToInt32(result.Results[0].Scalar, CultureInfo.InvariantCulture));
+            Assert.Equal(1, result.Results[1].RowsAffected);
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -210,7 +226,9 @@ namespace Polhem.Db.UnitTests
 
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             var result = await dbAccess.ExecuteBatchAsync(batch);
-            Assert.NotNull(result);
+            Assert.Equal(2, result.Results.Count);
+            Assert.Equal(1, Convert.ToInt32(result.Results[0].Scalar, CultureInfo.InvariantCulture));
+            Assert.Equal(1, result.Results[1].RowsAffected);
         }
     }
 }

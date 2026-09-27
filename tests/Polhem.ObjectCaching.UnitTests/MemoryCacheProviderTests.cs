@@ -173,7 +173,7 @@ namespace Polhem.ObjectCaching.UnitTests
         /// A temporary directory per test that holds the watched file.
         /// </summary>
         /// <remarks>
-        /// <see cref="Microsoft.Extensions.FileProviders.PhysicalFileProvider"/> actually watches the parent directory
+        /// <c>PhysicalFileProvider</c> actually watches the parent directory
         /// of a watched file. If that directory is shared by tests running at the same time (such as
         /// <see cref="Path.GetTempPath"/>), another test creating or deleting a file there can trigger the change
         /// token by mistake and evict this test's entry early. A dedicated subdirectory isolates the watcher and

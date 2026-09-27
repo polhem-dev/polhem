@@ -29,8 +29,8 @@ namespace Polhem.Definition.UnitTests.Filters
         public void FilterCondition_Between_SetsBothValues()
         {
             // Arrange
-            var from = new DateTime(2026, 1, 1);
-            var to = new DateTime(2026, 12, 31);
+            var from = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+            var to = new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Unspecified);
 
             // Act
             var cond = FilterCondition.Between("HireDate", from, to);

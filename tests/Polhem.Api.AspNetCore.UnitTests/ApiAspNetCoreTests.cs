@@ -171,13 +171,13 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecFunc with Hello returns a non-null result")]
-        public async Task ExecFunc_Hello_ReturnsNotNull()
+        [DisplayName("ExecFunc with Hello returns the greeting of the system-level handler")]
+        public async Task ExecFunc_Hello_ReturnsGreeting()
         {
             Guid accessToken = GetAccessToken();
             var args = new ExecFuncRequest("Hello");
             var result = await ExecuteRpcAsync<ExecFuncResponse>(accessToken, SysProgIds.System, "ExecFunc", args);
-            Assert.NotNull(result);
+            Assert.Equal("Hello system-level BusinessObject", result.Parameters!.GetValue<string>("Hello"));
         }
     }
 }

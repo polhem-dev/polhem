@@ -2,23 +2,26 @@ using System.ComponentModel;
 using Polhem.Definition.Filters;
 using Polhem.Db.Providers.SqlServer;
 using Polhem.Tests.Shared;
-using Polhem.Definition.Database;
 using Polhem.Definition.Sorting;
 using Polhem.Definition.Storage;
 
 namespace Polhem.Db.UnitTests
 {
-    public class BuildSelectTests : IClassFixture<SharedDbFixture>
+    /// <summary>
+    /// SQL generation of <see cref="SqlFormCommandBuilder.BuildSelect"/>. Pure logic: the fixture only supplies the
+    /// FormSchema from <c>tests/Define</c>, so no database is needed and nothing is skipped without one.
+    /// </summary>
+    public class BuildSelectTests : IClassFixture<PolhemTestFixture>
     {
-        private readonly SharedDbFixture _fx;
+        private readonly PolhemTestFixture _fx;
 
-        public BuildSelectTests(SharedDbFixture fx) { _fx = fx; }
+        public BuildSelectTests(PolhemTestFixture fx) { _fx = fx; }
         private IDefineAccess DefineAccess => _fx.GetRequiredService<IDefineAccess>();
 
         private SqlFormCommandBuilder NewBuilder(string progId)
             => new(DefineAccess.GetFormSchema(progId), DefineAccess);
 
-        [DbFact(DatabaseType.SQLServer)]
+        [Fact]
         [DisplayName("BuildSelect produces no JOIN when only master fields are selected")]
         public void BuildSelect_SelectOnlyMasterFields_NoJoin()
         {
@@ -30,7 +33,7 @@ namespace Polhem.Db.UnitTests
             Assert.DoesNotContain("JOIN", command.CommandText, StringComparison.OrdinalIgnoreCase);
         }
 
-        [DbFact(DatabaseType.SQLServer)]
+        [Fact]
         [DisplayName("BuildSelect produces a JOIN when the Where condition uses a reference field")]
         public void BuildSelect_WhereOnReferencedField_GeneratesJoin()
         {
@@ -43,7 +46,7 @@ namespace Polhem.Db.UnitTests
             Assert.Contains("JOIN", command.CommandText, StringComparison.OrdinalIgnoreCase);
         }
 
-        [DbFact(DatabaseType.SQLServer)]
+        [Fact]
         [DisplayName("BuildSelect produces a JOIN when Order By uses a reference field")]
         public void BuildSelect_OrderByReferencedField_GeneratesJoin()
         {
@@ -60,7 +63,7 @@ namespace Polhem.Db.UnitTests
             Assert.Contains("JOIN", command.CommandText, StringComparison.OrdinalIgnoreCase);
         }
 
-        [DbFact(DatabaseType.SQLServer)]
+        [Fact]
         [DisplayName("BuildSelect produces several JOINs when several reference fields are selected")]
         public void BuildSelect_SelectWithMultipleReferences_GeneratesMultipleJoins()
         {
@@ -89,7 +92,7 @@ namespace Polhem.Db.UnitTests
             Assert.Contains("A.pm_rowid", normalized, StringComparison.OrdinalIgnoreCase);
         }
 
-        [DbFact(DatabaseType.SQLServer)]
+        [Fact]
         [DisplayName("BuildSelect with a multi-condition FilterGroup produces the parameters and JOINs")]
         public void BuildSelect_FilterGroupWithMultipleConditions_GeneratesParametersAndJoin()
         {
@@ -119,7 +122,7 @@ namespace Polhem.Db.UnitTests
             Assert.Contains("JOIN", command.CommandText, StringComparison.OrdinalIgnoreCase);
         }
 
-        [DbFact(DatabaseType.SQLServer)]
+        [Fact]
         [DisplayName("SqlFormCommandBuilder builds a Select command")]
         public void BuildSelect_WithAndWithoutFields_ReturnsCommands()
         {
@@ -133,9 +136,9 @@ namespace Polhem.Db.UnitTests
             Assert.False(string.IsNullOrWhiteSpace(command2.CommandText));
         }
 
-        [DbFact(DatabaseType.SQLServer)]
-        [DisplayName("SqlFormCommandBuilder builds a Select command with a filter and a sort")]
-        public void BuildSelect_WithFilterAndSort_ReturnsCommands()
+        [Fact]
+        [DisplayName("BuildSelect with a filter and a sort emits WHERE, ORDER BY and the filter parameter, and joins the relations a reference-field filter needs")]
+        public void BuildSelect_WithFilterAndSort_EmitsFilterSortAndJoins()
         {
             var builder = NewBuilder("Employee");
 
@@ -152,10 +155,15 @@ namespace Polhem.Db.UnitTests
             };
 
             var command = builder.BuildSelect("Employee", string.Empty, filter, sortFields);
-            Assert.NotNull(command);
+            Assert.Contains("WHERE", command.CommandText, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("ORDER BY", command.CommandText, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal("001", Assert.Single(command.Parameters).Value);
 
             var command2 = builder.BuildSelect("Employee", "sys_id,sys_name,ref_dept_name,ref_supervisor_name", filter, sortFields);
-            Assert.NotNull(command2);
+            Assert.True(CountJoins(command2.CommandText) >= 2,
+                $"Selecting two reference fields from different relations must join both: {command2.CommandText}");
+            Assert.Contains("ORDER BY", command2.CommandText, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal("001", Assert.Single(command2.Parameters).Value);
 
             filter = new FilterCondition
             {
@@ -164,7 +172,22 @@ namespace Polhem.Db.UnitTests
                 Value = "U001"
             };
             var command3 = builder.BuildSelect("Employee", "sys_id,sys_name", filter, sortFields);
-            Assert.NotNull(command2);
+            // The select list has no reference field, so every JOIN comes from the filter. `ref_supervisor_id` is the
+            // department's `ref_manager_id`, a relation of a relation, so reaching it takes two JOINs.
+            Assert.Equal(2, CountJoins(command3.CommandText));
+            Assert.Equal("U001", Assert.Single(command3.Parameters).Value);
+        }
+
+        private static int CountJoins(string commandText)
+        {
+            int count = 0;
+            int index = 0;
+            while ((index = commandText.IndexOf("JOIN", index, StringComparison.OrdinalIgnoreCase)) >= 0)
+            {
+                count++;
+                index += "JOIN".Length;
+            }
+            return count;
         }
     }
 }

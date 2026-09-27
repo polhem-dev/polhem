@@ -9,7 +9,7 @@ namespace Polhem.Api.Core.UnitTests
     /// <summary>
     /// Edge cases of codec negotiation: explicitly naming the deployment default, and the accepted list matching what is actually accepted.
     /// </summary>
-    [Collection("ApiServiceOptionsState")]
+    [Collection(ApiServiceOptionsStateCollection.Name)]
     public class PayloadCodecNegotiationEdgeTests
     {
         /// <summary>
