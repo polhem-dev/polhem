@@ -344,8 +344,10 @@ namespace Polhem.Definition.Forms
         /// </summary>
         /// <remarks>
         /// When non-empty, <see cref="Polhem.Definition.Language.FormSchemaLocalizer"/> replaces <c>ListItems</c> with
-        /// the resolved <see cref="Language.LanguageEnum"/> entries at API delivery time.
-        /// Leave empty to keep statically-defined <see cref="ListItems"/> as the option source.
+        /// the resolved <see cref="Language.LanguageEnum"/> entries at API delivery time. When the enum does
+        /// not resolve, or no localization runs at all, the static <see cref="ListItems"/> are kept, so
+        /// declaring both gives the dropdown a base-language fallback.
+        /// Leave empty to keep statically-defined <see cref="ListItems"/> as the only option source.
         /// </remarks>
         [XmlAttribute]
         [Category(PropertyCategories.Data)]

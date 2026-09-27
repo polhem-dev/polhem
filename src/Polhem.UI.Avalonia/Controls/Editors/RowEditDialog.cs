@@ -47,7 +47,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             // the top level's OverlayLayer instead. RowEditPanel cancels its buffered edit when it
             // detaches from the tree, so removing the overlay rolls back an uncommitted edit exactly
             // like closing the window did.
-            if (topLevel is not Window owner)
+            if (DialogHosting.GetWindowOwner(topLevel) is not { } owner)
             {
                 var completed = new TaskCompletionSource();
                 panel.EditCommitted += (_, _) => { committed = true; completed.TrySetResult(); };

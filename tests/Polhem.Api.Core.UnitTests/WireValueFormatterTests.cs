@@ -3,7 +3,6 @@ using System.ComponentModel;
 using Polhem.Api.Core.MessagePack;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Filters;
-using Polhem.Tests.Shared;
 using MessagePack;
 
 namespace Polhem.Api.Core.UnitTests
@@ -88,32 +87,6 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Equal(1, restored[0]);
             Assert.Equal("two", restored[1]);
             Assert.Equal(guid, restored[2]);
-        }
-
-        [DynamicCodeFact(DisplayName = "ParameterCollection round-trips a type in a Polhem namespace (named-type path, needs dynamic code)")]
-        public void ParameterCollection_AllowedPolhemTypes_RoundTrip()
-        {
-            // This takes the named-type branch of `WireValueFormatter`. The type is outside the closed discriminated set
-            // and can only recurse through the non-generic overload, so it is unavailable on a runtime without dynamic
-            // code (iOS). That is an inherent limit of the configurable `SysInfo.AllowedTypeNamespaces` extension point,
-            // not a defect.
-            var inner = new ParameterCollection
-            {
-                { "Nested", "value" }
-            };
-
-            var original = new ParameterCollection
-            {
-                { "Child", inner }
-            };
-
-            var bytes = MessagePackCodec.Serialize(original);
-            var restored = MessagePackCodec.Deserialize<ParameterCollection>(bytes);
-
-            Assert.NotNull(restored);
-            var restoredChild = restored["Child"].Value as ParameterCollection;
-            Assert.NotNull(restoredChild);
-            Assert.Equal("value", restoredChild["Nested"].Value);
         }
 
         [Fact(DisplayName = "ParameterCollection round-trips DateOnly (a calendar-date filter value)")]

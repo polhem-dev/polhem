@@ -52,6 +52,20 @@ namespace Polhem.Expressions
         }
 
         /// <summary>
+        /// Gets the types whose members an expression can reach: the types the interpreter references by
+        /// name, and the return type of every helper function.
+        /// </summary>
+        /// <remarks>
+        /// Exposed for <c>TrimmerDescriptorGateTests</c>, which checks that the embedded
+        /// <c>ILLink.Descriptors.xml</c> preserves every one of them. DynamicExpresso finds their members by
+        /// reflection, which the trimmer cannot see.
+        /// </remarks>
+        internal IReadOnlyCollection<Type> ExposedTypes =>
+            _interpreter.ReferencedTypes.Select(reference => reference.Type)
+                .Concat(s_helperFunctions.Select(helper => helper.Function.Method.ReturnType))
+                .ToHashSet();
+
+        /// <summary>
         /// The time zone the helper functions read, for the duration of one <c>Evaluate</c> call.
         /// </summary>
         /// <remarks>
@@ -82,6 +96,24 @@ namespace Polhem.Expressions
 #pragma warning restore IDE1006
 
         /// <summary>
+        /// The curated helper functions available to every expression.
+        /// </summary>
+        private static readonly (string Name, Delegate Function)[] s_helperFunctions =
+        [
+            // `Today()` yields a calendar day in the user's zone (ADR-032 D12). It is a DateOnly
+            // like every other date in the framework; `ExpressionPolicy.CoerceValue` widens it when
+            // the result lands in a DataSet cell, the one place a date must be a DateTime.
+            ("Today", (Func<DateOnly>)(() => FrameworkClock.Today(t_timeZoneId ?? string.Empty))),
+            // `Now()` follows the basis of the data set being evaluated, not the user's zone alone, so the
+            // value it writes or compares shares the basis of the cells around it: UTC in the server's
+            // pre-save pass, the user's zone in a client preview (ADR-032 D12).
+            ("Now", (Func<DateTime>)(() => FrameworkClock.Now(t_timeZoneId ?? string.Empty, t_basis))),
+            ("UtcNow", (Func<DateTime>)(() => DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified))),
+            ("IsNullOrEmpty", (Func<string?, bool>)string.IsNullOrEmpty),
+            ("IsNullOrWhiteSpace", (Func<string?, bool>)string.IsNullOrWhiteSpace),
+        ];
+
+        /// <summary>
         /// Registers the curated helper functions available to every expression.
         /// </summary>
         /// <param name="interpreter">The interpreter to register into.</param>
@@ -91,17 +123,8 @@ namespace Polhem.Expressions
             // `customer_rowid != Guid.Empty`). Guid is a value type with no IO surface.
             interpreter.Reference(typeof(Guid));
 
-            // `Today()` yields a calendar day in the user's zone (ADR-032 D12). It is a DateOnly
-            // like every other date in the framework; `ExpressionPolicy.CoerceValue` widens it when
-            // the result lands in a DataSet cell, the one place a date must be a DateTime.
-            interpreter.SetFunction("Today", (Func<DateOnly>)(() => FrameworkClock.Today(t_timeZoneId ?? string.Empty)));
-            // `Now()` follows the basis of the data set being evaluated, not the user's zone alone, so the
-            // value it writes or compares shares the basis of the cells around it: UTC in the server's
-            // pre-save pass, the user's zone in a client preview (ADR-032 D12).
-            interpreter.SetFunction("Now", (Func<DateTime>)(() => FrameworkClock.Now(t_timeZoneId ?? string.Empty, t_basis)));
-            interpreter.SetFunction("UtcNow", (Func<DateTime>)(() => DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)));
-            interpreter.SetFunction("IsNullOrEmpty", (Func<string?, bool>)string.IsNullOrEmpty);
-            interpreter.SetFunction("IsNullOrWhiteSpace", (Func<string?, bool>)string.IsNullOrWhiteSpace);
+            foreach (var (name, function) in s_helperFunctions)
+                interpreter.SetFunction(name, function);
         }
 
         /// <inheritdoc />

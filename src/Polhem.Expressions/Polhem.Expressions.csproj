@@ -19,4 +19,15 @@
     <InternalsVisibleTo Include="Polhem.Expressions.UnitTests" />
   </ItemGroup>
 
+  <!--
+    Trimmer preservation roots for the members expressions reach by reflection, shipped with the
+    package. The logical name "ILLink.Descriptors.xml" is the one the trimmer picks up from a
+    referenced assembly, so every trimmed consumer applies it. See the file for what it keeps and why.
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="ILLink.Descriptors.xml">
+      <LogicalName>ILLink.Descriptors.xml</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>
