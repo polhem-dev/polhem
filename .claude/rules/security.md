@@ -6,11 +6,12 @@
 - AES key length: **256-bit**
 - HMAC: **SHA-256**, with a separate 256-bit key
 - Use a **random IV** for every encryption; never reuse one
-- Verify the HMAC with `CompareBytes` (constant-time comparison) to prevent timing attacks
+- Verify the HMAC with `CryptographicOperations.FixedTimeEquals` (constant-time comparison) to prevent timing
+  attacks; `AesCbcHmacCryptor.Decrypt` is the reference
 
 ```csharp
 // Correct: constant-time comparison
-private static bool CompareBytes(byte[] a, byte[] b) { ... }
+if (!CryptographicOperations.FixedTimeEquals(hmac, expected)) { ... }
 
 // Forbidden: direct comparison can leak timing information
 if (hmac == expected) { ... }
@@ -35,13 +36,23 @@ policy involving "where the key comes from, who may access it, how it is verifie
 
 ## API access control
 
-Declare it with `[ApiAccessControl]`. **Prefer declaring it on the class so methods inherit it**; mark a method only
-when it needs to override.
+Declare it with `[ApiAccessControl]`, **preferably on each method**.
 
 ```csharp
-[ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
-public class OrderBO : FormBusinessObject { }
+public class OrderBO : FormBusinessObject
+{
+    [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
+    public virtual ApproveResult Approve(ApproveArgs args) { ... }
+}
 ```
+
+What an action name can reach is decided by `JsonRpcExecutor.IsResolvableAction`: a public, non-generic instance
+method with exactly one parameter that is not a property or event accessor and does not override an `object` member.
+Static methods and accessors are not reachable, so a class-level attribute no longer publishes them. It still
+publishes **every** such method the class and its subclasses declare (the attribute is inherited), including methods
+added later for internal use, and POLHEM3001 stays silent about all of them because the class attribute counts as a
+declaration. Use a class-level attribute only when every public one-parameter method of the class really is meant
+to be an action at that level; a method-level attribute on it still wins.
 
 **For the full values and meaning of the two enums, see their XML docs** (`src/Polhem.Definition/Security/ApiProtectionLevel.cs`,
 `ApiAccessRequirement.cs`). This file does not copy the enum members; that would drift.
@@ -55,7 +66,7 @@ public class OrderBO : FormBusinessObject { }
 
 - The AccessToken is a **GUID**; never use a predictable value
 - Tokens have an **expiry time**; after expiry, re-authentication is required
-- One-time tokens are supported
+- One-time sessions are not supported: `CreateSession` rejects a request for one
 - Session data is stored in the database (`st_session`, `st_user`), not on the client
 
 ## Payload security pipeline

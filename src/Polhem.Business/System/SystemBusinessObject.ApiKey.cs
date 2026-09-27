@@ -258,7 +258,7 @@ namespace Polhem.Business.System
         /// Rejects a caller who may not manage API keys.
         /// </summary>
         /// <param name="what">The attempted operation, as it reads in the rejection message.</param>
-        /// <exception cref="UnauthorizedAccessException">The caller is not authorized.</exception>
+        /// <exception cref="UserMessageException">The caller is not authorized.</exception>
         /// <remarks>
         /// WARNING: a local call passes without an administrator, and that is deliberate — it is the
         /// bootstrap path a deployment with no administrator yet depends on. Removing the
@@ -272,7 +272,7 @@ namespace Polhem.Business.System
             if (!Services.GetRequiredService<IDeploymentAuthorizationService>()
                          .Can(AccessToken, DeploymentAction.ManageApiKey))
             {
-                throw new UnauthorizedAccessException($"Not authorized to {what}.");
+                throw new UserMessageException($"Not authorized to {what}.");
             }
         }
 

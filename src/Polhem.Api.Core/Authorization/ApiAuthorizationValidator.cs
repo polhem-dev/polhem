@@ -31,25 +31,11 @@ namespace Polhem.Api.Core.Authorization
         private const string ApiKeyRejectedMessage = "Missing or invalid API key.";
 
         /// <summary>
-        /// The set of methods that do not require authorization (case-sensitive).
-        /// </summary>
-        private static readonly HashSet<string> s_noAuthMethods =
-        [
-            "System.Ping",
-            "System.GetApiPayloadOptions",
-            "System.Login"
-        ];
-
-        /// <summary>
         /// The set of methods that do not require an API key (case-sensitive).
         /// </summary>
         /// <remarks>
-        /// WARNING: two separate axes — do not merge this with <see cref="s_noAuthMethods"/>. That one
-        /// exempts methods from the Bearer token; this one exempts them from application identity.
-        /// Merging would give away two methods that must keep requiring a key: <c>System.Login</c>
-        /// is exactly where "which application attempted a sign-in" needs recording, and
-        /// <c>System.GetApiPayloadOptions</c> discloses payload and encryption negotiation settings
-        /// rather than answering a connectivity question.
+        /// This is the application-identity axis only. Whether a method needs a signed-in caller is
+        /// not decided here at all: that is <see cref="Polhem.Definition.Attributes.ApiAccessControlAttribute"/>'s job, read by <see cref="JsonRpcExecutor"/>.
         /// <para>
         /// <c>System.Ping</c> is exempt because a health check must still answer when the database
         /// is unavailable — the key lookup cannot be consulted then, and every other method fails
@@ -62,13 +48,31 @@ namespace Polhem.Api.Core.Authorization
         ];
 
         /// <summary>
-        /// Determines whether the specified JSON-RPC method requires authorization.
+        /// Determines whether a request for the specified JSON-RPC method must carry an
+        /// <c>Authorization</c> header.
         /// </summary>
         /// <param name="method">The JSON-RPC method name (case-sensitive).</param>
-        /// <returns><c>true</c> if authorization is required; otherwise, <c>false</c>.</returns>
+        /// <returns><c>true</c> if the header is mandatory; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>
+        /// The default demands it for no method. A request without the header proceeds as an
+        /// anonymous call, with an empty access token, and the executor's access check — which reads
+        /// the method's <see cref="Polhem.Definition.Attributes.ApiAccessControlAttribute"/> — refuses it unless the method is declared
+        /// <c>Anonymous</c>. That declaration is therefore the single source for which methods need
+        /// a session; a second list here used to disagree with it, demanding a header for
+        /// <c>GetCommonConfiguration</c> and <c>ExecFuncAnonymous</c> while exempting a method that no
+        /// longer existed.
+        /// </para>
+        /// <para>
+        /// The header was never authentication at this layer: it is only parsed, and any well-formed
+        /// token — the empty one included — passes. When it is present it must still be a well-formed
+        /// <c>Bearer</c> token. Override this to have the transport refuse a header-less request
+        /// before it reaches the executor.
+        /// </para>
+        /// </remarks>
         protected virtual bool IsAuthorizationRequired(string method)
         {
-            return !s_noAuthMethods.Contains(method);
+            return false;
         }
 
         /// <summary>
@@ -104,16 +108,14 @@ namespace Polhem.Api.Core.Authorization
                 return ApiAuthorizationResult.Fail(JsonRpcErrorCode.InvalidRequest, ApiKeyRejectedMessage);
             }
 
-            // For methods that do not require authorization, return success without an access token
-            if (!IsAuthorizationRequired(context.Method))
-            {
-                return ApiAuthorizationResult.Success(Guid.Empty);
-            }
-
-            // For methods requiring authorization, validate the Authorization header
+            // No header: an anonymous call, unless this deployment demands the header for the method.
+            // Whether the method admits anonymous callers is the executor's decision, from the
+            // method's own access declaration.
             if (string.IsNullOrWhiteSpace(context.Authorization))
             {
-                return ApiAuthorizationResult.Fail(JsonRpcErrorCode.InvalidRequest, "Missing Authorization header.");
+                return IsAuthorizationRequired(context.Method)
+                    ? ApiAuthorizationResult.Fail(JsonRpcErrorCode.InvalidRequest, "Missing Authorization header.")
+                    : ApiAuthorizationResult.Success(Guid.Empty);
             }
 
             // Verify that the Authorization header uses the Bearer token format

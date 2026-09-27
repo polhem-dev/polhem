@@ -43,10 +43,12 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Theory]
-        [DisplayName("Validate succeeds with an empty AccessToken for methods that need no authorization")]
+        [DisplayName("Validate succeeds with an empty AccessToken for the anonymous methods when no Authorization header is sent")]
         [InlineData("System.Ping")]
-        [InlineData("System.GetApiPayloadOptions")]
         [InlineData("System.Login")]
+        [InlineData("System.GetCommonConfiguration")]
+        [InlineData("System.ExecFuncAnonymous")]
+        [InlineData("Employee.ExecFuncAnonymous")]
         public void Validate_NoAuthMethod_SucceedsWithEmptyToken(string method)
         {
             var context = new ApiAuthorizationContext
@@ -63,9 +65,13 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Fact]
-        [DisplayName("Validate fails when authorization is required but the Authorization header is missing")]
-        public void Validate_MissingAuthorizationHeader_Fails()
+        [DisplayName("Validate lets a request without an Authorization header through as anonymous, leaving the access decision to the executor")]
+        public void Validate_MissingAuthorizationHeader_SucceedsAsAnonymous()
         {
+            // This used to fail for every method outside a hand-kept list. The header was never
+            // authentication at this layer — any well-formed token, the empty one included, passed — so
+            // the list only disagreed with [ApiAccessControl]. ApiAccessValidator refuses an Authenticated
+            // method called with the empty token (ApiAccessValidatorTests.ValidateAccess_Authenticated_EmptyToken_Throws).
             var context = new ApiAuthorizationContext
             {
                 ApiKey = "test-key",
@@ -75,9 +81,51 @@ namespace Polhem.Api.Core.UnitTests.Authorization
 
             var result = CreateValidator().Validate(context);
 
+            Assert.True(result.IsValid);
+            Assert.Equal(Guid.Empty, result.AccessToken);
+        }
+
+        [Fact]
+        [DisplayName("Validate still refuses a missing Authorization header for a method a subclass declares as requiring one")]
+        public void Validate_MissingAuthorizationHeader_RequiredBySubclass_Fails()
+        {
+            var context = new ApiAuthorizationContext
+            {
+                ApiKey = "test-key",
+                Method = "Foo.Bar",
+                Authorization = string.Empty
+            };
+
+            var result = new HeaderRequiredValidator().Validate(context);
+
             Assert.False(result.IsValid);
             Assert.Equal(JsonRpcErrorCode.InvalidRequest, result.Code);
             Assert.Equal("Missing Authorization header.", result.ErrorMessage);
+        }
+
+        [Theory]
+        [DisplayName("Validate parses a present Authorization header for every method, anonymous ones included")]
+        [InlineData("System.Ping")]
+        [InlineData("System.Login")]
+        [InlineData("Foo.Bar")]
+        public void Validate_MalformedHeader_FailsForEveryMethod(string method)
+        {
+            var context = new ApiAuthorizationContext
+            {
+                ApiKey = "test-key",
+                Method = method,
+                Authorization = "Bearer not-a-guid"
+            };
+
+            var result = CreateValidator().Validate(context);
+
+            Assert.False(result.IsValid);
+            Assert.Equal("Invalid access token.", result.ErrorMessage);
+        }
+
+        private sealed class HeaderRequiredValidator : ApiAuthorizationValidator
+        {
+            protected override bool IsAuthorizationRequired(string method) => true;
         }
 
         [Fact]

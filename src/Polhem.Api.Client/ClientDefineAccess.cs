@@ -135,8 +135,9 @@ namespace Polhem.Api.Client
         /// Every <c>Save*Async</c> method on this class routes through here, and the server-side
         /// <c>SystemBO.SaveDefine</c> is <c>LocalOnly</c>: writing a definition is a
         /// deployment-time operation. On a local connection these succeed; on a remote one the
-        /// server rejects the call with <see cref="UnauthorizedAccessException"/>. Reading
-        /// definitions works over both.
+        /// server rejects the call, which reaches the caller as a
+        /// <see cref="Polhem.Base.Exceptions.UserMessageException"/>. Reading definitions works over
+        /// both.
         /// </remarks>
         /// <param name="defineType">The definition data type.</param>
         /// <param name="defineObject">The definition data object.</param>

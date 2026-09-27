@@ -4,6 +4,7 @@ using Polhem.Definition.Identity;
 using Polhem.Tests.Shared;
 
 using Polhem.Definition;
+using Polhem.Base.Exceptions;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
@@ -79,12 +80,12 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("LeaveCompany throws UnauthorizedAccessException for an invalid session")]
-        public void LeaveCompany_NoSession_ThrowsUnauthorizedAccessException()
+        [DisplayName("LeaveCompany throws AuthenticationRequiredException for an invalid session")]
+        public void LeaveCompany_NoSession_ThrowsAuthenticationRequiredException()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), SysProgIds.System);
 
-            Assert.Throws<UnauthorizedAccessException>(() => bo.LeaveCompany(new LeaveCompanyArgs()));
+            Assert.Throws<AuthenticationRequiredException>(() => bo.LeaveCompany(new LeaveCompanyArgs()));
         }
     }
 }

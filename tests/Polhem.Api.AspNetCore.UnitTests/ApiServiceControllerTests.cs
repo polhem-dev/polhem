@@ -99,11 +99,26 @@ namespace Polhem.Api.AspNetCore.UnitTests
         }
 
         [Fact]
-        [DisplayName("PostAsync returns 401 for a method that requires authentication without an Authorization header")]
-        public async Task PostAsync_AuthRequiredButNoAuthorization_Returns401()
+        [DisplayName("PostAsync passes a request without an Authorization header on to the executor, whose access check decides")]
+        public async Task PostAsync_NoAuthorization_IsNotRefusedByTheTransport()
         {
+            // The transport used to answer 401 here from a hand-kept list of anonymous methods that disagreed with
+            // [ApiAccessControl]. The executor now refuses an Authenticated method called with the empty token
+            // (AnonymousApiSurfaceTests.AnonymousMethods_HttpGate_IsPinned). This bare host has no executor, so the
+            // call stops downstream with a 500 — the point is only that it is not the transport's 401.
             const string body = "{\"method\":\"System.ExecFunc\",\"id\":\"1\",\"params\":{}}";
             var result = await PostAsync("application/json", body, apiKey: "valid-api-key");
+
+            var obj = Assert.IsType<ObjectResult>(result);
+            Assert.NotEqual(StatusCodes.Status401Unauthorized, obj.StatusCode);
+        }
+
+        [Fact]
+        [DisplayName("PostAsync returns 401 for a malformed Authorization header")]
+        public async Task PostAsync_MalformedAuthorization_Returns401()
+        {
+            const string body = "{\"method\":\"System.Ping\",\"id\":\"1\",\"params\":{}}";
+            var result = await PostAsync("application/json", body, apiKey: "valid-api-key", authorization: "Bearer not-a-guid");
 
             var obj = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status401Unauthorized, obj.StatusCode);

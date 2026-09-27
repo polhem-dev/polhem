@@ -40,6 +40,7 @@ namespace Polhem.Api.Client.UnitTests
             (JsonRpcErrorCode.CompanyAccessDenied, typeof(CompanyAccessDeniedException)),
             (JsonRpcErrorCode.CompanyNotEntered, typeof(CompanyNotEnteredException)),
             (JsonRpcErrorCode.ReplayRejected, typeof(ReplayRejectedException)),
+            (JsonRpcErrorCode.Unauthorized, typeof(AuthenticationRequiredException)),
         ];
 
         /// <summary>
@@ -58,21 +59,19 @@ namespace Polhem.Api.Client.UnitTests
         /// decided whether to add a producer or remove the member.
         /// </summary>
         /// <remarks>
-        /// In particular <see cref="JsonRpcErrorCode.Unauthorized"/>: an authentication failure actually goes through
-        /// <c>ApiAuthorizationValidator</c>, which returns <see cref="JsonRpcErrorCode.InvalidRequest"/> with HTTP 401,
-        /// so this code has never been on the wire. It is listed here so that it **is visible**. Putting a new code
-        /// into this bucket to turn the test green is exactly what this test is meant to prevent.
+        /// <see cref="JsonRpcErrorCode.Unauthorized"/> used to be listed here: it had never been on the wire. It now
+        /// carries <see cref="AuthenticationRequiredException"/>. Putting a new code into this bucket to turn the test
+        /// green is exactly what this test is meant to prevent.
         /// </remarks>
         private static readonly JsonRpcErrorCode[] s_noProducerCodes =
         [
             JsonRpcErrorCode.MethodNotFound,
             JsonRpcErrorCode.InvalidParams,
-            JsonRpcErrorCode.Unauthorized,
         ];
 
         /// <summary>
-        /// The transitional BCL exceptions on the server-side whitelist that collapse, together with
-        /// <see cref="UserMessageException"/>, into <see cref="JsonRpcErrorCode.UserMessage"/>.
+        /// The BCL exceptions that collapse, together with <see cref="UserMessageException"/>, into
+        /// <see cref="JsonRpcErrorCode.UserMessage"/> — with a fixed message rather than their own.
         /// </summary>
         private static readonly Type[] s_userMessageWhitelist =
         [
@@ -278,14 +277,45 @@ namespace Polhem.Api.Client.UnitTests
         public async Task FinalizeResponse_UserMessageCode_AlwaysRebuildsUserMessageException()
         {
             // The server throws `InvalidOperationException`, but only an integer reaches the caller, and all it can
-            // restore is the type that integer identifies. This is a deliberate trade-off, not a defect.
+            // restore is the type that integer identifies. This is a deliberate trade-off, not a defect. The text
+            // is whatever the server sent: outside debug mode that is the contract's fixed message, not the
+            // exception's own (pinned in JsonRpcExecutorUserMessageExceptionTests), so this compares against the
+            // mapped message rather than against either literal.
             var (code, message) = JsonRpcExecutor.MapException(new InvalidOperationException("state is wrong"));
 
             var exception = await Record.ExceptionAsync(() =>
                 ApiConnectorTestHost.ExecuteWithErrorAsync(code, message));
 
             Assert.IsType<UserMessageException>(exception);
-            Assert.Equal("state is wrong", exception.Message);
+            Assert.Equal(message, exception.Message);
+        }
+
+        [Fact]
+        [DisplayName("An authentication failure crosses the wire as Unauthorized (-32001) and is rebuilt as an UnauthorizedAccessException carrying its message")]
+        public async Task AuthenticationFailure_RoundTripsAsUnauthorized()
+        {
+            var (code, message) = JsonRpcExecutor.MapException(
+                new AuthenticationRequiredException("AccessToken is required or invalid."));
+
+            Assert.Equal(JsonRpcErrorCode.Unauthorized, code);
+            Assert.Equal(-32001, (int)code);
+            Assert.Equal("AccessToken is required or invalid.", message);
+
+            var exception = await Record.ExceptionAsync(() =>
+                ApiConnectorTestHost.ExecuteWithErrorAsync(code, message));
+
+            var unauthorized = Assert.IsAssignableFrom<UnauthorizedAccessException>(exception);
+            Assert.IsType<AuthenticationRequiredException>(unauthorized);
+            Assert.Equal("AccessToken is required or invalid.", unauthorized.Message);
+        }
+
+        [Fact]
+        [DisplayName("A permission failure keeps its own code and is not reported as an authentication failure")]
+        public void PermissionFailure_IsNotUnauthorized()
+        {
+            var (code, _) = JsonRpcExecutor.MapException(new ForbiddenException("Permission denied."));
+
+            Assert.Equal(JsonRpcErrorCode.PermissionDenied, code);
         }
     }
 }

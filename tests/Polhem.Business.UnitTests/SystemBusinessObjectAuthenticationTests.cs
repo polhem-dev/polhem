@@ -9,6 +9,7 @@ using Polhem.Definition.Database;
 using Polhem.Definition.Identity;
 using Polhem.Repository.Abstractions.System;
 using Polhem.Tests.Shared;
+using Polhem.Base.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {
@@ -104,7 +105,7 @@ namespace Polhem.Business.UnitTests
         {
             WithUser(PasswordHasher.HashPassword(Password), userId =>
             {
-                var ex = Assert.Throws<UnauthorizedAccessException>(
+                var ex = Assert.Throws<UserMessageException>(
                     () => NewBo().Login(new LoginArgs { UserId = userId, Password = "wrong " + Password }));
                 Assert.Equal(RejectionMessage, ex.Message);
             });
@@ -116,7 +117,7 @@ namespace Polhem.Business.UnitTests
         {
             string unknown = $"nouser-{Guid.NewGuid():N}"[..20];
 
-            var ex = Assert.Throws<UnauthorizedAccessException>(
+            var ex = Assert.Throws<UserMessageException>(
                 () => NewBo().Login(new LoginArgs { UserId = unknown, Password = Password }));
 
             Assert.Equal(RejectionMessage, ex.Message);
@@ -128,9 +129,9 @@ namespace Polhem.Business.UnitTests
         {
             WithUser(" ", userId =>
             {
-                Assert.Throws<UnauthorizedAccessException>(
+                Assert.Throws<UserMessageException>(
                     () => NewBo().Login(new LoginArgs { UserId = userId, Password = string.Empty }));
-                Assert.Throws<UnauthorizedAccessException>(
+                Assert.Throws<UserMessageException>(
                     () => NewBo().Login(new LoginArgs { UserId = userId, Password = " " }));
             });
         }
@@ -144,7 +145,7 @@ namespace Polhem.Business.UnitTests
             string legacy = $"1000.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
 
             WithUser(legacy, userId =>
-                Assert.Throws<UnauthorizedAccessException>(
+                Assert.Throws<UserMessageException>(
                     () => NewBo().Login(new LoginArgs { UserId = userId, Password = Password })));
         }
 

@@ -67,49 +67,90 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             Assert.Equal("No company has been entered for this session.", message);
         }
 
-        [Fact]
-        [DisplayName("MapException returns the UserMessage code for an allowlisted BCL exception (transitional compatibility)")]
-        public void MapException_BclWhitelistException_ReturnsUserMessageCode()
+        [Theory]
+        [DisplayName("MapException sends a BCL exception under the UserMessage code with a fixed message outside debug mode")]
+        [InlineData(typeof(InvalidOperationException), "The request could not be completed.")]
+        [InlineData(typeof(ObjectDisposedException), "The request could not be completed.")]
+        [InlineData(typeof(ArgumentException), "The request is not valid.")]
+        [InlineData(typeof(ArgumentNullException), "The request is not valid.")]
+        [InlineData(typeof(ArgumentOutOfRangeException), "The request is not valid.")]
+        [InlineData(typeof(UnauthorizedAccessException), "Access denied.")]
+        [InlineData(typeof(NotSupportedException), "The request is not supported.")]
+        [InlineData(typeof(FormatException), "The request is not valid.")]
+        public void MapException_BclException_ReturnsFixedMessage(Type exceptionType, string expected)
         {
-            var ex = new InvalidOperationException("Session state is not valid.");
+            // These families carry internal detail from the BCL, the drivers and the framework's own
+            // infrastructure — table and parameter names, database identifiers, parser output — so their own
+            // text must not reach a remote caller.
+            var ex = (Exception)Activator.CreateInstance(exceptionType, "DatabaseServer 'db1' referenced by 'ft_secret'")!;
 
-            var (code, message) = JsonRpcExecutor.MapException(ex);
+            bool original = SysInfo.IsDebugMode;
+            try
+            {
+                SysInfo.IsDebugMode = false;
+                var (code, message) = JsonRpcExecutor.MapException(ex);
 
-            Assert.Equal(JsonRpcErrorCode.UserMessage, code);
-            Assert.Equal("Session state is not valid.", message);
+                Assert.Equal(JsonRpcErrorCode.UserMessage, code);
+                Assert.Equal(expected, message);
+            }
+            finally
+            {
+                SysInfo.IsDebugMode = original;
+            }
         }
 
         [Fact]
-        [DisplayName("MapException returns the UserMessage code for ArgumentException")]
-        public void MapException_ArgumentException_ReturnsUserMessageCode()
+        [DisplayName("MapException passes a BCL exception's own message through in debug mode")]
+        public void MapException_BclException_DebugMode_PassesMessageThrough()
         {
-            var ex = new ArgumentException("CompanyId is required.");
+            bool original = SysInfo.IsDebugMode;
+            try
+            {
+                SysInfo.IsDebugMode = true;
+                var (code, message) = JsonRpcExecutor.MapException(new InvalidOperationException("Session state is not valid."));
 
-            var (code, _) = JsonRpcExecutor.MapException(ex);
-
-            Assert.Equal(JsonRpcErrorCode.UserMessage, code);
+                Assert.Equal(JsonRpcErrorCode.UserMessage, code);
+                Assert.Equal("Session state is not valid.", message);
+            }
+            finally
+            {
+                SysInfo.IsDebugMode = original;
+            }
         }
 
         [Fact]
-        [DisplayName("MapException returns the UserMessage code for UnauthorizedAccessException")]
-        public void MapException_UnauthorizedAccessException_ReturnsUserMessageCode()
+        [DisplayName("MapException keeps the message of the framework's own JsonRpcException outside debug mode")]
+        public void MapException_JsonRpcException_KeepsItsMessage()
         {
-            var ex = new UnauthorizedAccessException("Session not found or has expired.");
+            bool original = SysInfo.IsDebugMode;
+            try
+            {
+                SysInfo.IsDebugMode = false;
+                var (code, message) = JsonRpcExecutor.MapException(
+                    new JsonRpcException(400, JsonRpcErrorCode.InvalidRequest, "Missing method"));
 
-            var (code, _) = JsonRpcExecutor.MapException(ex);
-
-            Assert.Equal(JsonRpcErrorCode.UserMessage, code);
+                Assert.Equal(JsonRpcErrorCode.UserMessage, code);
+                Assert.Equal("Missing method", message);
+            }
+            finally
+            {
+                SysInfo.IsDebugMode = original;
+            }
         }
 
         [Fact]
-        [DisplayName("MapException returns the UserMessage code for FormatException")]
-        public void MapException_FormatException_ReturnsUserMessageCode()
+        [DisplayName("Only framework-owned exception types are declared verbatim in the error contract")]
+        public void ErrorContract_VerbatimRows_AreFrameworkTypesOnly()
         {
-            var ex = new FormatException("Invalid method format.");
+            var bclAssembly = typeof(object).Assembly;
 
-            var (code, _) = JsonRpcExecutor.MapException(ex);
-
-            Assert.Equal(JsonRpcErrorCode.UserMessage, code);
+            foreach (var row in JsonRpcErrorContract.Rows)
+            {
+                if (row.IsVerbatim)
+                    Assert.NotEqual(bclAssembly, row.ExceptionType.Assembly);
+                else
+                    Assert.Equal(bclAssembly, row.ExceptionType.Assembly);
+            }
         }
 
         [Fact]

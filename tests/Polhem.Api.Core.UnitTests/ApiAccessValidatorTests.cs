@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Polhem.Api.Core.Validator;
+using Polhem.Base.Exceptions;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Security;
 using Polhem.Api.Core.Messages;
@@ -35,9 +36,11 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("ValidateAccess throws when Authenticated is required and the AccessToken is empty")]
+        [DisplayName("ValidateAccess throws an AuthenticationRequiredException when Authenticated is required and the AccessToken is empty")]
         public void ValidateAccess_Authenticated_EmptyToken_Throws()
         {
+            // The framework's own type rather than the BCL UnauthorizedAccessException: it travels as the
+            // Unauthorized code with its message, where the BCL type would travel as a fixed UserMessage.
             var method = typeof(DummyApi).GetMethod(nameof(DummyApi.Method_Authenticated));
             var context = new ApiCallContext
             {
@@ -46,12 +49,13 @@ namespace Polhem.Api.Core.UnitTests
                 AccessToken = Guid.Empty
             };
 
-            Assert.Throws<UnauthorizedAccessException>(() =>
+            var ex = Assert.Throws<AuthenticationRequiredException>(() =>
                 ApiAccessValidator.ValidateAccess(method!, context, s_denyAll));
+            Assert.Equal("AccessToken is required or invalid.", ex.Message);
         }
 
         [Fact]
-        [DisplayName("ValidateAccess throws when Authenticated is required and the provider returns false")]
+        [DisplayName("ValidateAccess throws an AuthenticationRequiredException when Authenticated is required and the provider returns false")]
         public void ValidateAccess_Authenticated_InvalidToken_Throws()
         {
             var fake = new FakeTokenProvider { Result = false };
@@ -63,7 +67,7 @@ namespace Polhem.Api.Core.UnitTests
                 AccessToken = Guid.NewGuid()
             };
 
-            Assert.Throws<UnauthorizedAccessException>(() =>
+            Assert.Throws<AuthenticationRequiredException>(() =>
                 ApiAccessValidator.ValidateAccess(method!, context, fake));
         }
 
@@ -212,6 +216,19 @@ namespace Polhem.Api.Core.UnitTests
                 ApiAccessValidator.ValidateAccess(method!, context, s_denyAll));
         }
 
+        [Fact]
+        [DisplayName("FindAccessControl reads a base type's type-level attribute for a method a subclass declares")]
+        public void FindAccessControl_BaseTypeAttribute_CoversSubclassMethod()
+        {
+            // POLHEM3001 relies on this: it treats such a method as covered, and must agree with the runtime.
+            var method = typeof(DerivedOfClassLevelApi).GetMethod(nameof(DerivedOfClassLevelApi.Declared))!;
+
+            var attr = ApiAccessValidator.FindAccessControl(method);
+
+            Assert.NotNull(attr);
+            Assert.Equal(ApiAccessRequirement.Anonymous, attr!.AccessRequirement);
+        }
+
         private class DummyApi
         {
             [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Anonymous)]
@@ -242,6 +259,13 @@ namespace Polhem.Api.Core.UnitTests
         {
             // No `[ApiAccessControl]` here, so the attribute of `BaseApi.Method_Override` applies.
             public override void Method_Override() { }
+        }
+
+        private sealed class DerivedOfClassLevelApi : ClassLevelApi
+        {
+            public string Last { get; private set; } = string.Empty;
+
+            public string Declared(string value) => Last = value;
         }
 
         [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Anonymous)]

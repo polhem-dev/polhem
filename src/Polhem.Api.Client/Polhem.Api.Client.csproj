@@ -11,4 +11,10 @@
     <ProjectReference Include="..\Polhem.Api.Core\Polhem.Api.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Lets the tests check how a server's unauthenticated configuration is adopted without
+         touching the process-wide SysInfo and ApiServiceOptions statics. -->
+    <InternalsVisibleTo Include="Polhem.Api.Client.UnitTests" />
+  </ItemGroup>
+
 </Project>

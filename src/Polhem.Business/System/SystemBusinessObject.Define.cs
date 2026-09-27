@@ -1,4 +1,5 @@
 using Polhem.Base.Serialization;
+using Polhem.Base.Exceptions;
 using Polhem.Definition;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Forms;
@@ -97,13 +98,13 @@ namespace Polhem.Business.System
         /// </para>
         /// </remarks>
         /// <param name="args">The input arguments.</param>
-        /// <exception cref="NotSupportedException">A remote caller asked for a type outside the allow-list.</exception>
+        /// <exception cref="UserMessageException">A remote caller asked for a type outside the allow-list.</exception>
         [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated)]
         public virtual GetDefineResult GetDefine(GetDefineArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
             if (!IsLocalCall && !IsRemoteReadableDefine(args.DefineType))
-                throw new NotSupportedException("The specified DefineType is not supported.");
+                throw new UserMessageException("The specified DefineType is not supported.");
             return GetDefineCore(args);
         }
 
@@ -144,10 +145,10 @@ namespace Polhem.Business.System
         {
             ArgumentNullException.ThrowIfNull(args);
             if (string.IsNullOrWhiteSpace(args.ProgId))
-                throw new ArgumentException("ProgId is required.", nameof(args));
+                throw new UserMessageException("ProgId is required.");
 
             var schema = DefineAccess.GetDefine(DefineType.FormSchema, new[] { args.ProgId }) as FormSchema
-                ?? throw new InvalidOperationException($"FormSchema '{args.ProgId}' not found.");
+                ?? throw new UserMessageException($"FormSchema '{args.ProgId}' not found.");
             return new GetFormSchemaResult { Xml = SerializeDefine(schema) };
         }
 
@@ -163,7 +164,7 @@ namespace Polhem.Business.System
             ArgumentNullException.ThrowIfNull(args);
 
             var sessionInfo = SessionInfoService.Get(AccessToken)
-                ?? throw new UnauthorizedAccessException("Session not found or has expired.");
+                ?? throw new AuthenticationRequiredException("Session not found or has expired.");
 
             DepartmentTree? tree = null;
             if (!string.IsNullOrEmpty(sessionInfo.CompanyId))
@@ -194,7 +195,7 @@ namespace Polhem.Business.System
         {
             ArgumentNullException.ThrowIfNull(args);
             if (string.IsNullOrWhiteSpace(args.ProgId))
-                throw new ArgumentException("ProgId is required.", nameof(args));
+                throw new UserMessageException("ProgId is required.");
 
             // An empty LayoutId means "this form's own layout". It resolves to the ProgId rather
             // than a literal "default" because layout definition files are named after the progId
@@ -236,9 +237,9 @@ namespace Polhem.Business.System
         {
             ArgumentNullException.ThrowIfNull(args);
             if (string.IsNullOrWhiteSpace(args.Lang))
-                throw new ArgumentException("Lang is required.", nameof(args));
+                throw new UserMessageException("Lang is required.");
             if (string.IsNullOrWhiteSpace(args.Namespace))
-                throw new ArgumentException("Namespace is required.", nameof(args));
+                throw new UserMessageException("Namespace is required.");
 
             // GetLanguage returns null when the resource file does not exist;
             // that is a normal scenario (missing translation), not an error.
@@ -266,7 +267,7 @@ namespace Polhem.Business.System
         {
             ArgumentNullException.ThrowIfNull(args);
             if (string.IsNullOrWhiteSpace(args.ProgId))
-                throw new ArgumentException("ProgId is required.", nameof(args));
+                throw new UserMessageException("ProgId is required.");
 
             string customizeId = GetCurrentCustomizeId();
             if (string.IsNullOrEmpty(customizeId))
@@ -293,9 +294,9 @@ namespace Polhem.Business.System
         {
             ArgumentNullException.ThrowIfNull(args);
             if (string.IsNullOrWhiteSpace(args.Lang))
-                throw new ArgumentException("Lang is required.", nameof(args));
+                throw new UserMessageException("Lang is required.");
             if (string.IsNullOrWhiteSpace(args.Namespace))
-                throw new ArgumentException("Namespace is required.", nameof(args));
+                throw new UserMessageException("Namespace is required.");
 
             string customizeId = GetCurrentCustomizeId();
             if (string.IsNullOrEmpty(customizeId))

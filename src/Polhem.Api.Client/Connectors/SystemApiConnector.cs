@@ -115,16 +115,88 @@ namespace Polhem.Api.Client.Connectors
         /// <summary>
         /// Asynchronously retrieves common parameters and environment configuration, then initializes the system.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// IMPORTANT: the answer arrives over an anonymous Plain call and nothing authenticates it, so
+        /// it is adopted only where a forged answer cannot weaken this client. The payload options
+        /// are taken, but a server-advertised <c>none</c> encryptor is refused unless this client is
+        /// itself in debug mode (<see cref="SysInfo.IsDebugMode"/> as it stood before the call); the
+        /// server's own debug flag is not adopted; and the server's
+        /// <see cref="CommonConfiguration.AllowedTypeNamespaces"/> is ignored, because that list
+        /// guards this client against what the server sends and cannot be the server's to widen.
+        /// A client that must accept a deployment's own types configures its list locally, through
+        /// <see cref="SysInfo.Initialize"/>, before calling this.
+        /// </para>
+        /// <para>
+        /// The Encrypted payload format relies on TLS for protection against an active
+        /// man-in-the-middle. The session key is exchanged in <see cref="LoginAsync"/> under a client
+        /// public key that nothing authenticates, and this configuration call is Plain; over plain
+        /// HTTP an intermediary can substitute either. Encryption protects the payload from passive
+        /// observers and from intermediaries that terminate TLS, not in place of TLS.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// The server advertises no payload encryption and this client is not in debug mode.
+        /// </exception>
         public async Task InitializeAsync()
         {
             // Retrieve common parameters and environment configuration for initialization
             var request = new GetCommonConfigurationRequest();
             var result = await ExecuteAsync<GetCommonConfigurationResponse>(SystemActions.GetCommonConfiguration, request, PayloadFormat.Plain).ConfigureAwait(false);
-            var configuration = XmlCodec.Deserialize<CommonConfiguration>(result.CommonConfiguration)!;
+            var serverConfiguration = XmlCodec.Deserialize<CommonConfiguration>(result.CommonConfiguration)!;
+            var configuration = AdoptServerConfiguration(serverConfiguration, SysInfo.IsDebugMode, SysInfo.AllowedTypeNamespaces);
             SysInfo.Initialize(configuration);
             // Initialize API service options: configure serializer, compressor, and encryptor implementations
             ApiServiceOptions.Initialize(configuration.ApiPayloadOptions, configuration.IsDebugMode);
         }
+
+        /// <summary>
+        /// Builds the configuration this client applies from the server's unauthenticated answer.
+        /// </summary>
+        /// <param name="serverConfiguration">The configuration the server advertised.</param>
+        /// <param name="clientIsDebugMode">Whether this client was in debug mode before the call.</param>
+        /// <param name="clientTypeNamespaces">The type namespaces this client already allows.</param>
+        /// <returns>
+        /// The server's version and payload options, with this client's own debug flag and type
+        /// namespaces.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// The server advertises the <c>none</c> encryptor, or none at all, and
+        /// <paramref name="clientIsDebugMode"/> is <c>false</c>.
+        /// </exception>
+        /// <remarks>
+        /// Checked here, before anything is applied, so a refused answer leaves this client exactly
+        /// as it was rather than half reconfigured.
+        /// </remarks>
+        internal static CommonConfiguration AdoptServerConfiguration(
+            CommonConfiguration serverConfiguration, bool clientIsDebugMode, IEnumerable<string> clientTypeNamespaces)
+        {
+            ArgumentNullException.ThrowIfNull(serverConfiguration);
+            ArgumentNullException.ThrowIfNull(clientTypeNamespaces);
+
+            var payloadOptions = serverConfiguration.ApiPayloadOptions ?? new ApiPayloadOptions();
+            if (!clientIsDebugMode && IsNoEncryption(payloadOptions.Encryptor))
+            {
+                throw new InvalidOperationException(
+                    "The server advertises no payload encryption. This client accepts that only when it is itself in debug mode.");
+            }
+
+            return new CommonConfiguration
+            {
+                Version = serverConfiguration.Version,
+                IsDebugMode = clientIsDebugMode,
+                DefaultLang = serverConfiguration.DefaultLang,
+                AllowedTypeNamespaces = string.Join('|', clientTypeNamespaces),
+                ApiPayloadOptions = payloadOptions,
+            };
+        }
+
+        /// <summary>
+        /// Says whether an encryptor name selects no encryption, by the same names
+        /// <see cref="Polhem.Api.Core.Transformers.ApiPayloadOptionsFactory.CreateEncryptor"/> accepts for it.
+        /// </summary>
+        private static bool IsNoEncryption(string? encryptor)
+            => string.IsNullOrEmpty(encryptor) || string.Equals(encryptor, "none", StringComparison.Ordinal);
 
         /// <summary>
         /// Asynchronously creates a new user session.

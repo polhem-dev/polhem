@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Polhem.Business.System;
 using Polhem.Definition;
 using Polhem.Tests.Shared;
+using Polhem.Base.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {
@@ -30,12 +31,12 @@ namespace Polhem.Business.UnitTests
         [InlineData(DefineType.PermissionModels)]
         [InlineData(DefineType.PluginSettings)]
         [InlineData((DefineType)999)]
-        [DisplayName("A remote GetDefine for a type outside the allow-list throws NotSupportedException")]
+        [DisplayName("A remote GetDefine for a type outside the allow-list throws UserMessageException")]
         public void GetDefine_RemoteTypeOutsideAllowList_Throws(DefineType defineType)
         {
             var bo = Bo(isLocalCall: false);
 
-            Assert.Throws<NotSupportedException>(() => bo.GetDefine(new GetDefineArgs { DefineType = defineType }));
+            Assert.Throws<UserMessageException>(() => bo.GetDefine(new GetDefineArgs { DefineType = defineType }));
         }
 
         [Fact]

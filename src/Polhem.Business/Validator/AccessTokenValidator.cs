@@ -1,5 +1,6 @@
 using Polhem.Definition.Security;
 using Polhem.Base;
+using Polhem.Base.Exceptions;
 using Polhem.Definition.Identity;
 
 namespace Polhem.Business.Validator
@@ -31,15 +32,15 @@ namespace Polhem.Business.Validator
             // If AccessToken is Guid.Empty, throw an unauthorized exception
             if (ValueUtilities.IsEmpty(accessToken))
             {
-                throw new UnauthorizedAccessException("Access token is required.");
+                throw new AuthenticationRequiredException("Access token is required.");
             }
 
             var sessionInfo = _sessionInfoService.Get(accessToken);
             if (sessionInfo == null)
-                throw new UnauthorizedAccessException("Session key not found or expired.");
+                throw new AuthenticationRequiredException("Session key not found or expired.");
 
             if (sessionInfo.ExpiredAt < DateTime.UtcNow)
-                throw new UnauthorizedAccessException("Session has expired.");
+                throw new AuthenticationRequiredException("Session has expired.");
 
             return sessionInfo.AccessToken == accessToken;
         }

@@ -45,14 +45,14 @@ namespace Polhem.Repository
                 throw new InvalidOperationException($"Unsupported DbScope value: {scope}.");
 
             var session = _sessionService.Get(accessToken)
-                ?? throw new UnauthorizedAccessException("Session not found or has expired.");
+                ?? throw new AuthenticationRequiredException("Session not found or has expired.");
 
             if (string.IsNullOrEmpty(session.CompanyId))
                 throw new CompanyNotEnteredException(
                     "No company has been entered for this session.");
 
             var company = _companyService.Get(session.CompanyId)
-                ?? throw new InvalidOperationException(
+                ?? throw new UserMessageException(
                     "Company information unavailable; please re-enter the company.");
 
             return company.CompanyDatabaseId;

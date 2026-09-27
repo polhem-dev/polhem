@@ -48,16 +48,26 @@ namespace Polhem.Api.Core.MessagePack
             if (reader.TryReadNil())
                 return null!;
 
-            var count = reader.ReadArrayHeader();
-            var collection = new TCollection();
-
-            for (int i = 0; i < count; i++)
+            // A collection is a level of nesting like any other. Without this step a recursive
+            // shape such as a filter group's node list counted only half its depth.
+            options.Security.DepthStep(ref reader);
+            try
             {
-                var element = MessagePackSerializer.Deserialize<TElement>(ref reader, options);
-                collection.Add(element);
-            }
+                var count = reader.ReadArrayHeader();
+                var collection = new TCollection();
 
-            return collection;
+                for (int i = 0; i < count; i++)
+                {
+                    var element = MessagePackSerializer.Deserialize<TElement>(ref reader, options);
+                    collection.Add(element);
+                }
+
+                return collection;
+            }
+            finally
+            {
+                reader.Depth--;
+            }
         }
     }
 

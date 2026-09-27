@@ -5,6 +5,7 @@ using Polhem.Definition.Logging;
 using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
+using Polhem.Base.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {
@@ -44,7 +45,7 @@ namespace Polhem.Business.UnitTests
                 ApiKeyValidation = validation,
             };
 
-            Assert.Throws<UnauthorizedAccessException>(
+            Assert.Throws<UserMessageException>(
                 () => bo.Login(new LoginArgs { UserId = "user01", Password = "wrong" }));
 
             return Assert.IsType<LoginAuditEntry>(Assert.Single(writer.Entries));

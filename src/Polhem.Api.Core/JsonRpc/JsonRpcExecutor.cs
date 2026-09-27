@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
 using Polhem.Base;
 using Polhem.Base.Exceptions;
-using Polhem.Base.Security;
 using Polhem.Base.Tracing;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
@@ -18,7 +18,7 @@ namespace Polhem.Api.Core.JsonRpc
     /// <summary>
     /// JSON-RPC request executor.
     /// </summary>
-    public class JsonRpcExecutor
+    public partial class JsonRpcExecutor
     {
         private static readonly char[] s_methodSeparators = new[] { '.' };
 
@@ -66,6 +66,19 @@ namespace Polhem.Api.Core.JsonRpc
         /// Gets or sets a value indicating whether the call originates from a local source (e.g., the same process or host as the server).
         /// </summary>
         public bool IsLocalCall { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets the logger that records the real message of a failure whose caller is only
+        /// given a generic one.
+        /// </summary>
+        /// <remarks>
+        /// A property rather than a constructor parameter: the constructor already ends in optional
+        /// parameters, so a longer overload is refused by analyzer rule RS0027, and a second, shorter one
+        /// would leave dependency injection two satisfiable constructors to choose between.
+        /// <c>AddPolhemFramework</c> assigns it. Left null, failures still reach the caller with the
+        /// generic message and nothing is logged here.
+        /// </remarks>
+        public ILogger? Logger { get; set; }
 
         /// <summary>
         /// Gets or sets the API key verdict for the current call, assigned by the transport layer.
@@ -132,7 +145,7 @@ namespace Polhem.Api.Core.JsonRpc
                 byte[]? apiEncryptionKey = GetApiEncryptionKey(format);
                 // The frame rides inside the envelope, so the replay gate can only run once the
                 // payload is decrypted — it is a second gate after ValidateAccess, not part of it.
-                ApiPayloadConverter.RestoreFrom(request.Params, format, apiEncryptionKey);
+                ApiPayloadConverter.RestoreRequest(request.Params, format, apiEncryptionKey, ActionPayloadType.Resolve(method));
                 ValidateFrameTimestamp(request.Params.Frame);
                 ValidateFrameSequence(method, request.Params.Frame);
 
@@ -151,11 +164,12 @@ namespace Polhem.Api.Core.JsonRpc
             catch (Exception ex)
             {
                 var rootEx = ex.Unwrap();
-                // Map the exception to a (code, message) pair. User-facing exceptions surface
-                // their original message; infrastructure exceptions are flattened to a generic
-                // message to avoid leaking internals.
+                // Map the exception to a (code, message) pair. The framework's user-facing
+                // exceptions surface their original message; everything else is flattened to a
+                // generic message to avoid leaking internals, and the real one is logged here.
                 var (code, message) = MapException(rootEx);
                 response.Error = new JsonRpcError((int)code, message);
+                LogMaskedFailure(request.Method, rootEx, code);
                 Tracer.End(ctx, TraceStatus.Error, rootEx.Message);
                 LogApiFailureAnomaly(request.Method, rootEx, stopwatch);
             }
@@ -207,89 +221,6 @@ namespace Polhem.Api.Core.JsonRpc
                     "This request repeats a sequence number the session has already used, or falls outside the accepted range.");
             }
         }
-
-        #region Anomaly detection
-
-        private bool AnomalyEnabled =>
-            _anomalyWriter != null && _sessionService != null
-            && _auditOptions is { Enabled: true, AnomalyEnabled: true };
-
-        /// <summary>Records a Slow anomaly when a completed call exceeds the configured threshold.</summary>
-        private void LogApiSlowAnomaly(string method, Stopwatch? stopwatch)
-        {
-            if (stopwatch == null || _auditOptions == null) { return; }
-            stopwatch.Stop();
-            int threshold = _auditOptions.ApiSlowThresholdMs;
-            if (threshold > 0 && stopwatch.ElapsedMilliseconds > threshold)
-                WriteApiAnomaly(method, AnomalyKind.Slow, stopwatch.ElapsedMilliseconds, thresholdMs: threshold);
-        }
-
-        /// <summary>Records an Error / Timeout anomaly for a failed call.</summary>
-        private void LogApiFailureAnomaly(string method, Exception rootEx, Stopwatch? stopwatch)
-        {
-            if (stopwatch == null) { return; }
-            stopwatch.Stop();
-            WriteApiAnomaly(method, ClassifyFailure(rootEx), stopwatch.ElapsedMilliseconds,
-                errorType: rootEx.GetType().Name, errorMessage: SanitizeMessage(rootEx.Message));
-        }
-
-        /// <summary>Decides which anomaly kind a failed call is filed under.</summary>
-        /// <param name="rootEx">The unwrapped exception that ended the call.</param>
-        /// <returns>The anomaly kind to record.</returns>
-        /// <remarks>
-        /// A replay rejection gets its own kind: unlike an Error it says nothing is broken, and a
-        /// run of them points at a drifted client clock or a caller resending captured packets —
-        /// neither of which is visible once folded into generic errors.
-        /// </remarks>
-        private static AnomalyKind ClassifyFailure(Exception rootEx)
-        {
-            if (rootEx is ReplayRejectedException) { return AnomalyKind.Replay; }
-            return IsTimeout(rootEx) ? AnomalyKind.Timeout : AnomalyKind.Error;
-        }
-
-        private void WriteApiAnomaly(string method, AnomalyKind kind, long elapsedMs,
-            int? thresholdMs = null, string? errorType = null, string? errorMessage = null)
-        {
-            if (_anomalyWriter == null || _sessionService == null) { return; }
-            var session = _sessionService.Get(AccessToken);
-            _anomalyWriter.Write(new ApiAnomalyEntry
-            {
-                UserId = session?.UserId,
-                UserName = session?.UserName,
-                CompanyId = session?.CompanyId,
-                TokenFingerprint = AccessTokenHasher.ComputeFingerprint(AccessToken),
-                ApiKeyId = NullIfEmpty(ApiKeyValidation.SysId),
-                ApiKeyName = NullIfEmpty(ApiKeyValidation.SysName),
-                Method = method,
-                Kind = kind,
-                ElapsedMs = elapsedMs > int.MaxValue ? int.MaxValue : (int)elapsedMs,
-                ThresholdMs = thresholdMs,
-                ErrorType = errorType,
-                ErrorMessage = errorMessage,
-                Source = method,
-            });
-        }
-
-        /// <summary>
-        /// Normalises an empty string to <c>null</c> so an audit column reads as "not applicable"
-        /// rather than blank.
-        /// </summary>
-        /// <param name="value">The value to normalise.</param>
-        private static string? NullIfEmpty(string? value)
-            => string.IsNullOrEmpty(value) ? null : value;
-
-        private static bool IsTimeout(Exception ex)
-            => ex is TimeoutException
-               || ex.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase);
-
-        private static string SanitizeMessage(string message)
-        {
-            // Message text only (no stack trace); flattened and capped.
-            var oneLine = message.Replace('\r', ' ').Replace('\n', ' ');
-            return oneLine.Length <= 1000 ? oneLine : oneLine[..1000];
-        }
-
-        #endregion
 
         /// <summary>
         /// Gets the API encryption key.
@@ -355,12 +286,59 @@ namespace Polhem.Api.Core.JsonRpc
         /// </summary>
         /// <param name="businessObject">The business object instance.</param>
         /// <param name="action">The action name.</param>
+        /// <remarks>
+        /// Only public instance methods are looked up, and a match that
+        /// <see cref="IsResolvableAction"/> refuses is reported exactly like a name that matched
+        /// nothing, so a caller cannot tell a property accessor from an absent method.
+        /// </remarks>
         private static MethodInfo GetMethod(object businessObject, string action)
         {
-            var method = businessObject.GetType().GetMethod(action);
-            if (method == null)
-                throw new MissingMethodException($"Method '{action}' not found in business object '{businessObject.GetType().Name}'.");
+            var type = businessObject.GetType();
+            var method = type.GetMethod(action, BindingFlags.Public | BindingFlags.Instance);
+            if (method == null || !IsResolvableAction(method))
+                throw new MissingMethodException($"Method '{action}' not found in business object '{type.Name}'.");
             return method;
+        }
+
+        /// <summary>
+        /// Says whether a method is one a JSON-RPC action name may resolve to.
+        /// </summary>
+        /// <param name="method">The candidate method.</param>
+        /// <returns>
+        /// <c>true</c> for a public, non-generic instance method that takes exactly one parameter,
+        /// is not a property or event accessor, and is not declared by <see cref="object"/>.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// IMPORTANT: this is the rule that keeps a type-level <see cref="Polhem.Definition.Attributes.ApiAccessControlAttribute"/> from
+        /// publishing more than the type's own actions. That attribute covers every method of its
+        /// type, and the lookup used to accept static methods and accessors as well, so a public
+        /// setter such as <c>set_X</c> became a remotely callable action at the type's protection
+        /// level. Analyzer rule <c>POLHEM3001</c> applies the same rule, so what it reports and what
+        /// can be called agree.
+        /// </para>
+        /// <para>
+        /// "Not declared by <see cref="object"/>" is how "declared on a business object" is
+        /// expressed at this layer, which cannot see <c>BusinessObject</c>: the framework's type
+        /// resolver, <c>ProgramSettingsBoTypeResolver</c>, refuses to bind a progId to anything but a
+        /// <c>BusinessObject</c> subclass, so a public instance method is either declared in that
+        /// hierarchy or inherited from <see cref="object"/>. An override of an <see cref="object"/>
+        /// member, such as <see cref="object.Equals(object)"/>, is refused too.
+        /// </para>
+        /// <para>
+        /// A single parameter is required because the executor always passes exactly one argument;
+        /// any other signature could only fail at invocation.
+        /// </para>
+        /// </remarks>
+        public static bool IsResolvableAction(MethodInfo method)
+        {
+            ArgumentNullException.ThrowIfNull(method);
+            return method.IsPublic
+                && !method.IsStatic
+                && !method.IsSpecialName
+                && !method.IsGenericMethod
+                && method.GetParameters().Length == 1
+                && method.GetBaseDefinition().DeclaringType != typeof(object);
         }
 
         /// <summary>
@@ -399,17 +377,17 @@ namespace Polhem.Api.Core.JsonRpc
 
         /// <summary>
         /// Maps an exception to the corresponding JSON-RPC error code and message used in
-        /// the response envelope. User-facing exceptions surface their original message;
-        /// infrastructure exceptions return a generic message to avoid leaking internals.
+        /// the response envelope. The framework's user-facing exceptions surface their original
+        /// message; every other exception returns a generic message to avoid leaking internals.
         /// </summary>
         /// <param name="ex">The exception (already unwrapped) to map.</param>
         /// <returns>A tuple of the JSON-RPC error code and the message to expose.</returns>
         /// <remarks>
         /// <para>
-        /// Which exception travels as which code is declared once, in
-        /// <see cref="JsonRpcErrorContract"/>, and the client rebuilds from that same declaration.
-        /// What stays here is only what the contract deliberately leaves out: the fallback for an
-        /// exception it does not cover.
+        /// Which exception travels as which code, and whether its own message travels with it, is
+        /// declared once, in <see cref="JsonRpcErrorContract"/>, and the client rebuilds from that
+        /// same declaration. What stays here is only what the contract deliberately leaves out: the
+        /// fallback for an exception it does not cover, and the debug-mode exception below.
         /// </para>
         /// <para>
         /// Exposed as <c>internal</c> for direct unit testing through
@@ -417,14 +395,13 @@ namespace Polhem.Api.Core.JsonRpc
         /// implementation detail.
         /// </para>
         /// <para>
-        /// In debug mode the infrastructure message is passed through instead of being replaced.
-        /// The generic message is the right answer in production — an infrastructure failure
-        /// should not describe the server's internals to a caller — but it leaves a developer
-        /// with nothing to work from: the executor handles the exception here rather than letting
-        /// it reach the transport, so nothing further up gets a chance to report it either. The
-        /// same trade-off is already made at the transport layer, where
-        /// <c>ApiServiceController</c> attaches the real message only when the host is running
-        /// in development.
+        /// In debug mode the real message is passed through instead of being replaced, both for an
+        /// uncovered exception and for a BCL exception the contract gives a fixed message. The
+        /// generic message is the right answer in production — such a failure should not describe
+        /// the server's internals to a caller — but it leaves a developer with nothing to work
+        /// from. The same trade-off is already made at the transport layer, where
+        /// <c>ApiServiceController</c> attaches the real message only when the host is running in
+        /// development.
         /// </para>
         /// <para>
         /// WARNING: the debug branch must stay gated on <see cref="SysInfo.IsDebugMode"/>, and
@@ -435,10 +412,31 @@ namespace Polhem.Api.Core.JsonRpc
         /// </remarks>
         internal static (JsonRpcErrorCode code, string message) MapException(Exception ex)
         {
-            if (JsonRpcErrorContract.TryGetCode(ex, out var code))
-                return (code, ex.Message);
+            if (JsonRpcErrorContract.TryGetCode(ex, out var code, out var fixedMessage))
+                return (code, fixedMessage == null || SysInfo.IsDebugMode ? ex.Message : fixedMessage);
             return (JsonRpcErrorCode.InternalError,
                 SysInfo.IsDebugMode ? ex.Message : "Internal server error");
+        }
+
+        /// <summary>
+        /// Logs a failure whose own message the contract does not let through to the caller.
+        /// </summary>
+        /// <param name="method">The JSON-RPC method that failed.</param>
+        /// <param name="rootEx">The unwrapped exception.</param>
+        /// <param name="code">The code the caller received.</param>
+        /// <remarks>
+        /// Logged whether or not debug mode passed the message through: the log is where an
+        /// operator looks, and it should not depend on how the caller was answered.
+        /// </remarks>
+        private void LogMaskedFailure(string method, Exception rootEx, JsonRpcErrorCode code)
+        {
+            if (Logger == null) { return; }
+            if (JsonRpcErrorContract.TryGetCode(rootEx, out _, out var fixedMessage) && fixedMessage == null) { return; }
+
+            if (code == JsonRpcErrorCode.InternalError)
+                Logger.LogError(rootEx, "JSON-RPC method {Method} failed; the caller received a generic error message.", method);
+            else
+                Logger.LogWarning(rootEx, "JSON-RPC method {Method} was refused; the caller received a generic message for error code {Code}.", method, (int)code);
         }
 
         /// <summary>

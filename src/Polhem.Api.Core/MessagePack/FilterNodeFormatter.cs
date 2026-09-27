@@ -97,6 +97,13 @@ namespace Polhem.Api.Core.MessagePack
         /// The discriminator is not guaranteed to arrive first, so the payload is buffered as a
         /// sequence of key/value pairs and bound once the kind is known. Filter trees are small —
         /// a request-scoped predicate, not a data set — so the extra pass costs nothing measurable.
+        /// <para>
+        /// WARNING: each buffered member is read back through a new reader, and that reader must
+        /// start at this node's depth. A fresh reader starts at zero, so a group nested inside a
+        /// group never accumulated depth, the security depth limit never fired, and a deeply
+        /// nested filter ended in a stack overflow that takes the whole process down. The depth is
+        /// carried by <see cref="Read{T}"/>; <c>MessagePackDepthLimitTests</c> pins it.
+        /// </para>
         /// </remarks>
         /// <exception cref="MessagePackSerializationException">
         /// Thrown when the discriminator is missing or unknown.
@@ -127,10 +134,11 @@ namespace Polhem.Api.Core.MessagePack
                     buffered.Add((key, reader.Sequence.Slice(start, reader.Position)));
                 }
 
+                var depth = reader.Depth;
                 return kind switch
                 {
-                    FilterNodeKind.Condition => ReadCondition(buffered, options),
-                    FilterNodeKind.Group => ReadGroup(buffered, options),
+                    FilterNodeKind.Condition => ReadCondition(buffered, depth, options),
+                    FilterNodeKind.Group => ReadGroup(buffered, depth, options),
                     _ => throw new MessagePackSerializationException(
                         $"Filter node payload carries no usable '{KindKey}' discriminator."),
                 };
@@ -192,7 +200,7 @@ namespace Polhem.Api.Core.MessagePack
         /// Binds the buffered members onto a <see cref="FilterCondition"/>.
         /// </summary>
         private static FilterCondition ReadCondition(
-            List<(string Key, ReadOnlySequence<byte> Value)> buffered, MessagePackSerializerOptions options)
+            List<(string Key, ReadOnlySequence<byte> Value)> buffered, int depth, MessagePackSerializerOptions options)
         {
             var result = new FilterCondition();
             foreach (var (key, value) in buffered)
@@ -200,19 +208,19 @@ namespace Polhem.Api.Core.MessagePack
                 switch (key)
                 {
                     case nameof(FilterCondition.FieldName):
-                        result.FieldName = Read<string>(value, options) ?? string.Empty;
+                        result.FieldName = Read<string>(value, depth, options) ?? string.Empty;
                         break;
                     case nameof(FilterCondition.Operator):
-                        result.Operator = Read<ComparisonOperator>(value, options);
+                        result.Operator = Read<ComparisonOperator>(value, depth, options);
                         break;
                     case nameof(FilterCondition.Value):
-                        result.Value = Read<object?>(value, options);
+                        result.Value = Read<object?>(value, depth, options);
                         break;
                     case nameof(FilterCondition.SecondValue):
-                        result.SecondValue = Read<object?>(value, options);
+                        result.SecondValue = Read<object?>(value, depth, options);
                         break;
                     case nameof(FilterCondition.IgnoreIfNull):
-                        result.IgnoreIfNull = Read<bool>(value, options);
+                        result.IgnoreIfNull = Read<bool>(value, depth, options);
                         break;
                     default:
                         break;
@@ -226,7 +234,7 @@ namespace Polhem.Api.Core.MessagePack
         /// Binds the buffered members onto a <see cref="FilterGroup"/>.
         /// </summary>
         private static FilterGroup ReadGroup(
-            List<(string Key, ReadOnlySequence<byte> Value)> buffered, MessagePackSerializerOptions options)
+            List<(string Key, ReadOnlySequence<byte> Value)> buffered, int depth, MessagePackSerializerOptions options)
         {
             var result = new FilterGroup();
             foreach (var (key, value) in buffered)
@@ -234,10 +242,10 @@ namespace Polhem.Api.Core.MessagePack
                 switch (key)
                 {
                     case nameof(FilterGroup.Operator):
-                        result.Operator = Read<LogicalOperator>(value, options);
+                        result.Operator = Read<LogicalOperator>(value, depth, options);
                         break;
                     case nameof(FilterGroup.Nodes):
-                        result.Nodes = Read<FilterNodeCollection>(value, options) ?? [];
+                        result.Nodes = Read<FilterNodeCollection>(value, depth, options) ?? [];
                         break;
                     default:
                         break;
@@ -250,9 +258,12 @@ namespace Polhem.Api.Core.MessagePack
         /// <summary>
         /// Deserializes one buffered member value.
         /// </summary>
-        private static T? Read<T>(ReadOnlySequence<byte> value, MessagePackSerializerOptions options)
+        /// <param name="value">The buffered member.</param>
+        /// <param name="depth">The depth of the node that owns the member.</param>
+        /// <param name="options">The serializer options.</param>
+        private static T? Read<T>(ReadOnlySequence<byte> value, int depth, MessagePackSerializerOptions options)
         {
-            var reader = new MessagePackReader(value);
+            var reader = new MessagePackReader(value) { Depth = depth };
             return MessagePackSerializer.Deserialize<T>(ref reader, options);
         }
     }

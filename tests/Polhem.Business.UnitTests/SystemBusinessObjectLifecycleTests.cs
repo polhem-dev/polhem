@@ -7,6 +7,7 @@ using Polhem.Definition.Identity;
 using Polhem.Tests.Shared;
 
 using Polhem.Definition;
+using Polhem.Base.Exceptions;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
@@ -115,7 +116,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("EnterCompany after Logout throws UnauthorizedAccessException")]
+        [DisplayName("EnterCompany after Logout throws AuthenticationRequiredException")]
         public void AfterLogout_EnterCompany_ThrowsUnauthorized()
         {
             var companyService = _fx.GetRequiredService<ICompanyInfoService>();
@@ -131,7 +132,7 @@ namespace Polhem.Business.UnitTests
                 var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
                 bo.Logout(new LogoutArgs());
 
-                Assert.Throws<UnauthorizedAccessException>(
+                Assert.Throws<AuthenticationRequiredException>(
                     () => bo.EnterCompany(new EnterCompanyArgs { CompanyId = companyId }));
             }
             finally

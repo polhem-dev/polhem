@@ -45,28 +45,39 @@ namespace Polhem.Api.Core.JsonRpc
         /// The factory the client uses for <paramref name="Code"/>, or <c>null</c> when this row
         /// only feeds the outbound direction. At most one row per code carries a factory.
         /// </param>
+        /// <param name="FixedMessage">
+        /// The message sent in place of the exception's own, or <c>null</c> when the type is one the
+        /// framework owns and throws only with text written for the caller.
+        /// </param>
         private sealed record Mapping(
             Type ExceptionType,
             JsonRpcErrorCode Code,
-            Func<string, Exception>? Rebuild);
+            Func<string, Exception>? Rebuild,
+            string? FixedMessage = null);
 
         /// <summary>
         /// The contract itself. Derived types first — see the ordering invariant in the type
         /// remarks.
         /// </summary>
         /// <remarks>
-        /// The rows that collapse into <see cref="JsonRpcErrorCode.UserMessage"/> without rebuilding
-        /// — <see cref="UnauthorizedAccessException"/>, <see cref="ArgumentException"/>,
-        /// <see cref="InvalidOperationException"/>, <see cref="NotSupportedException"/>,
-        /// <see cref="FormatException"/> and <see cref="JsonRpcException"/> — are a transition path,
-        /// not the destination: <see cref="UserMessageException"/> is the type new business code
-        /// should throw, and these are meant to be retired once the code that throws them has
-        /// migrated. Removing a row narrows what reaches the caller as a readable message, so each
-        /// one goes when its callers do, not before.
         /// <para>
-        /// NOTE: named rather than counted. This said "the six BCL rows", which had the count right
-        /// and the label wrong — <see cref="JsonRpcException"/> is the framework's own type, so no
-        /// wording with a number in it was true. A wrong name is visible to the reader; a wrong
+        /// IMPORTANT: only the framework's own exception types carry their message to the caller
+        /// verbatim. The BCL rows — <see cref="UnauthorizedAccessException"/>,
+        /// <see cref="ArgumentException"/>, <see cref="InvalidOperationException"/>,
+        /// <see cref="NotSupportedException"/> and <see cref="FormatException"/>, each with every
+        /// subclass — keep their code but travel with a fixed message. Those types are what the BCL,
+        /// the database drivers and the framework's own infrastructure throw with internal detail
+        /// in the text: table and column names, parameter names, server and database identifiers,
+        /// parser output. Treating the whole family as "safe to show" is what used to put that
+        /// detail in front of any caller. The real message is logged on the server instead, and a
+        /// throw site whose text is meant for the end user throws
+        /// <see cref="UserMessageException"/>. <c>JsonRpcExecutorUserMessageExceptionTests</c> pins
+        /// both halves.
+        /// </para>
+        /// <para>
+        /// NOTE: named rather than counted. This once said "the six BCL rows", which had the count
+        /// right and the label wrong — <see cref="JsonRpcException"/> is the framework's own type, so
+        /// no wording with a number in it was true. A wrong name is visible to the reader; a wrong
         /// count is not (<c>code-style.md</c>, "Do not write inventory counts of code artifacts").
         /// </para>
         /// </remarks>
@@ -81,32 +92,41 @@ namespace Polhem.Api.Core.JsonRpc
             new(typeof(ReplayRejectedException), JsonRpcErrorCode.ReplayRejected,
                 message => new ReplayRejectedException(message)),
 
+            // Ahead of the UnauthorizedAccessException row it derives from, which would otherwise
+            // swallow it into UserMessage with a fixed message.
+            new(typeof(AuthenticationRequiredException), JsonRpcErrorCode.Unauthorized,
+                message => new AuthenticationRequiredException(message)),
+
             // The canonical row for UserMessage, and the only one of the group that rebuilds:
             // the code is many-to-one on the way out, so the way back can only land here.
             new(typeof(UserMessageException), JsonRpcErrorCode.UserMessage,
                 message => new UserMessageException(message)),
 
-            new(typeof(UnauthorizedAccessException), JsonRpcErrorCode.UserMessage, null),
-            new(typeof(ArgumentException), JsonRpcErrorCode.UserMessage, null),
-            new(typeof(InvalidOperationException), JsonRpcErrorCode.UserMessage, null),
-            new(typeof(NotSupportedException), JsonRpcErrorCode.UserMessage, null),
-            new(typeof(FormatException), JsonRpcErrorCode.UserMessage, null),
+            new(typeof(UnauthorizedAccessException), JsonRpcErrorCode.UserMessage, null, "Access denied."),
+            new(typeof(ArgumentException), JsonRpcErrorCode.UserMessage, null, "The request is not valid."),
+            new(typeof(InvalidOperationException), JsonRpcErrorCode.UserMessage, null, "The request could not be completed."),
+            new(typeof(NotSupportedException), JsonRpcErrorCode.UserMessage, null, "The request is not supported."),
+            new(typeof(FormatException), JsonRpcErrorCode.UserMessage, null, "The request is not valid."),
             new(typeof(JsonRpcException), JsonRpcErrorCode.UserMessage, null),
         ];
 
         /// <summary>
         /// The contract in declaration order, for tests that assert its shape.
         /// </summary>
-        internal static IReadOnlyList<(Type ExceptionType, JsonRpcErrorCode Code, bool CanRebuild)> Rows { get; }
+        internal static IReadOnlyList<(Type ExceptionType, JsonRpcErrorCode Code, bool CanRebuild, bool IsVerbatim)> Rows { get; }
             = s_mappings
-                .Select(mapping => (mapping.ExceptionType, mapping.Code, mapping.Rebuild != null))
+                .Select(mapping => (mapping.ExceptionType, mapping.Code, mapping.Rebuild != null, mapping.FixedMessage == null))
                 .ToArray();
 
         /// <summary>
-        /// Finds the code an exception travels as.
+        /// Finds the code an exception travels as, and the message that may travel with it.
         /// </summary>
         /// <param name="exception">The exception, already unwrapped.</param>
         /// <param name="code">The code to send, when one is declared for this type.</param>
+        /// <param name="fixedMessage">
+        /// The message to send instead of <see cref="Exception.Message"/>, or <c>null</c> when the
+        /// exception's own message is meant for the caller.
+        /// </param>
         /// <returns>
         /// <c>true</c> when the contract covers this exception; <c>false</c> when the caller should
         /// apply its own fallback.
@@ -115,7 +135,7 @@ namespace Polhem.Api.Core.JsonRpc
         /// Internal because the executor is the only mapper in this direction. Widening it later is
         /// additive, so it stays closed until something outside this assembly needs it.
         /// </remarks>
-        internal static bool TryGetCode(Exception exception, out JsonRpcErrorCode code)
+        internal static bool TryGetCode(Exception exception, out JsonRpcErrorCode code, out string? fixedMessage)
         {
             ArgumentNullException.ThrowIfNull(exception);
 
@@ -123,10 +143,12 @@ namespace Polhem.Api.Core.JsonRpc
             if (mapping is null)
             {
                 code = default;
+                fixedMessage = null;
                 return false;
             }
 
             code = mapping.Code;
+            fixedMessage = mapping.FixedMessage;
             return true;
         }
 

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Security.Cryptography;
 using System.Text;
 using Polhem.Business.Providers;
+using Polhem.Base.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {
@@ -79,12 +80,12 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetKey throws UnauthorizedAccessException for Guid.Empty")]
+        [DisplayName("GetKey throws AuthenticationRequiredException for Guid.Empty")]
         public void GetKey_EmptyToken_Throws()
         {
             var provider = new DerivedApiEncryptionKeyProvider(CreateRootKey(0));
 
-            Assert.Throws<UnauthorizedAccessException>(() => provider.GetKey(Guid.Empty));
+            Assert.Throws<AuthenticationRequiredException>(() => provider.GetKey(Guid.Empty));
         }
 
         [Fact]

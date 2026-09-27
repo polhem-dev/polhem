@@ -54,11 +54,11 @@ namespace Polhem.Api.Core.Transformers
         /// The maximum nesting depth accepted from the wire.
         /// </summary>
         /// <remarks>
-        /// Matches the MessagePack codec's own depth limit. Left to the System.Text.Json default
+        /// Taken from the MessagePack codec's own depth limit. Left to the System.Text.Json default
         /// this would be a different number on each wire, which is exactly the kind of difference
         /// that only shows up as a production failure on one of them.
         /// </remarks>
-        private const int MaxDepth = 64;
+        private const int MaxDepth = Polhem.Api.Core.MessagePack.MessagePackCodec.MaxObjectGraphDepth;
 
         /// <summary>
         /// WARNING: shared and must stay shared. <see cref="JsonSerializerOptions"/> caches the

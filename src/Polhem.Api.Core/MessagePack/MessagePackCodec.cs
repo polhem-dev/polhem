@@ -28,10 +28,30 @@ namespace Polhem.Api.Core.MessagePack
         internal static IReadOnlyList<IMessagePackFormatter> RegisteredFormatters { get; } = BuildFormatters();
 
         /// <summary>
+        /// The deepest object graph a payload may carry.
+        /// </summary>
+        /// <remarks>
+        /// The same number as the JSON body codec's <c>MaxDepth</c>, so the two wires refuse the
+        /// same shapes. Both count one level per map or array, which is why a structure that fits
+        /// one fits the other.
+        /// </remarks>
+        internal const int MaxObjectGraphDepth = 64;
+
+        /// <summary>
         /// Statically initialized MessagePack serialization options, including custom formatters and resolvers.
         /// SafeMessagePackSerializerOptions overrides ThrowIfDeserializingTypeIsDisallowed
         /// to block disallowed types before object instantiation.
         /// </summary>
+        /// <remarks>
+        /// IMPORTANT: every payload this codec reads is treated as untrusted — the server reads
+        /// what any caller sends, and a client reads what arrives off the network.
+        /// <see cref="MessagePackSecurity.UntrustedData"/> hashes dictionary keys with a
+        /// collision-resistant comparer and turns on the object graph depth limit, which the
+        /// default <see cref="MessagePackSecurity.TrustedData"/> leaves unbounded. The limit is only
+        /// enforced by formatters that call <c>DepthStep</c>, so every hand-written formatter here
+        /// does; <c>MessagePackDepthLimitTests</c> checks the configured values and a nested
+        /// payload beyond them.
+        /// </remarks>
         private static readonly MessagePackSerializerOptions s_options = new SafeMessagePackSerializerOptions(
             CompositeResolver.Create(
                 RegisteredFormatters,
@@ -42,7 +62,8 @@ namespace Polhem.Api.Core.MessagePack
                 {
                     ContractlessStandardResolver.Instance, // Contractless resolver (without unsafe Typeless support)
                     StandardResolver.Instance              // Standard resolver
-                }));
+                }))
+            .WithSecurity(MessagePackSecurity.UntrustedData.WithMaximumObjectGraphDepth(MaxObjectGraphDepth));
 
         /// <summary>
         /// The options every serialization on this codec uses, exposed so

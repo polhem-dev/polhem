@@ -12,6 +12,7 @@ using Polhem.Repository.Abstractions.Factories;
 using Polhem.Tests.Shared;
 
 using Polhem.Definition;
+using Polhem.Base.Exceptions;
 namespace Polhem.Business.UnitTests.AuditLog
 {
     /// <summary>
@@ -69,11 +70,11 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetChangeLog throws UnauthorizedAccessException when not authorized")]
+        [DisplayName("GetChangeLog throws UserMessageException when not authorized")]
         public void GetChangeLog_NotAuthorized_Throws()
         {
             var bo = Bo(new StubAuditLogRepository(HeaderPage(0)), authorized: false);
-            Assert.Throws<UnauthorizedAccessException>(() => bo.GetChangeLog(new GetChangeLogArgs()));
+            Assert.Throws<UserMessageException>(() => bo.GetChangeLog(new GetChangeLogArgs()));
         }
 
         // ---- GetChangeDetail (restore one event) ----
@@ -131,30 +132,30 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("GetChangeDetail throws InvalidOperationException when nothing is found")]
+        [DisplayName("GetChangeDetail throws UserMessageException when nothing is found")]
         public void GetChangeDetail_NotFound_Throws()
         {
             var repo = new StubAuditLogRepository(HeaderPage(0), detail: null);
             var bo = Bo(repo);
-            Assert.Throws<InvalidOperationException>(() =>
+            Assert.Throws<UserMessageException>(() =>
                 bo.GetChangeDetail(new GetChangeDetailArgs { SysRowId = Guid.NewGuid() }));
         }
 
         [Fact]
-        [DisplayName("GetChangeDetail throws ArgumentException for a missing SysRowId")]
+        [DisplayName("GetChangeDetail throws UserMessageException for a missing SysRowId")]
         public void GetChangeDetail_EmptySysRowId_Throws()
         {
             var bo = Bo(new StubAuditLogRepository(HeaderPage(0)));
-            Assert.Throws<ArgumentException>(() =>
+            Assert.Throws<UserMessageException>(() =>
                 bo.GetChangeDetail(new GetChangeDetailArgs { SysRowId = Guid.Empty }));
         }
 
         [Fact]
-        [DisplayName("GetChangeDetail throws UnauthorizedAccessException when not authorized")]
+        [DisplayName("GetChangeDetail throws UserMessageException when not authorized")]
         public void GetChangeDetail_NotAuthorized_Throws()
         {
             var bo = Bo(new StubAuditLogRepository(HeaderPage(0)), authorized: false);
-            Assert.Throws<UnauthorizedAccessException>(() =>
+            Assert.Throws<UserMessageException>(() =>
                 bo.GetChangeDetail(new GetChangeDetailArgs { SysRowId = Guid.NewGuid() }));
         }
 
@@ -213,13 +214,13 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("The list methods throw UnauthorizedAccessException when not authorized")]
+        [DisplayName("The list methods throw UserMessageException when not authorized")]
         public void ListMethods_NotAuthorized_Throw()
         {
             var bo = Bo(new StubAuditLogRepository(HeaderPage(0)), authorized: false);
-            Assert.Throws<UnauthorizedAccessException>(() => bo.GetLoginLog(new GetLoginLogArgs()));
-            Assert.Throws<UnauthorizedAccessException>(() => bo.GetAccessLog(new GetAccessLogArgs()));
-            Assert.Throws<UnauthorizedAccessException>(() => bo.GetApiAnomalyLog(new GetApiAnomalyLogArgs()));
+            Assert.Throws<UserMessageException>(() => bo.GetLoginLog(new GetLoginLogArgs()));
+            Assert.Throws<UserMessageException>(() => bo.GetAccessLog(new GetAccessLogArgs()));
+            Assert.Throws<UserMessageException>(() => bo.GetApiAnomalyLog(new GetApiAnomalyLogArgs()));
         }
 
         [Fact]
@@ -229,8 +230,8 @@ namespace Polhem.Business.UnitTests.AuditLog
             // The company permission alone used to be enough, and `st_log_anomaly_db` carries every tenant's rows.
             var bo = Bo(new StubAuditLogRepository(HeaderPage(1)), authorized: true, deploymentAdmin: false);
 
-            Assert.Throws<UnauthorizedAccessException>(() => bo.GetDbAnomalyLog(new GetDbAnomalyLogArgs()));
-            Assert.Throws<UnauthorizedAccessException>(() => bo.GetDbAnomalySummary(new GetDbAnomalySummaryArgs()));
+            Assert.Throws<UserMessageException>(() => bo.GetDbAnomalyLog(new GetDbAnomalyLogArgs()));
+            Assert.Throws<UserMessageException>(() => bo.GetDbAnomalySummary(new GetDbAnomalySummaryArgs()));
         }
 
         [Fact]
@@ -293,12 +294,12 @@ namespace Polhem.Business.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("The aggregate methods throw UnauthorizedAccessException when not authorized")]
+        [DisplayName("The aggregate methods throw UserMessageException when not authorized")]
         public void AggregateMethods_NotAuthorized_Throw()
         {
             var bo = Bo(new StubAuditLogRepository(HeaderPage(0)), authorized: false);
-            Assert.Throws<UnauthorizedAccessException>(() => bo.GetApiAnomalySummary(new GetApiAnomalySummaryArgs()));
-            Assert.Throws<UnauthorizedAccessException>(() => bo.GetTopApiMethods(new GetTopApiMethodsArgs()));
+            Assert.Throws<UserMessageException>(() => bo.GetApiAnomalySummary(new GetApiAnomalySummaryArgs()));
+            Assert.Throws<UserMessageException>(() => bo.GetTopApiMethods(new GetTopApiMethodsArgs()));
         }
 
         // ---- helpers ----

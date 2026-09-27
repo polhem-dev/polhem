@@ -7,6 +7,7 @@ using Polhem.Definition.Database;
 using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
+using Polhem.Base.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {
@@ -152,7 +153,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("Login with failed authentication throws UnauthorizedAccessException and records the failure in the tracker")]
+        [DisplayName("Login with failed authentication throws UserMessageException and records the failure in the tracker")]
         public void Login_AuthenticateFails_ThrowsAndRecordsFailure()
         {
             var tracker = new RecordingTracker();
@@ -163,13 +164,13 @@ namespace Polhem.Business.UnitTests
                 _ => (false, string.Empty));
             var args = new LoginArgs { UserId = "bad", Password = "bad" };
 
-            Assert.Throws<UnauthorizedAccessException>(() => bo.Login(args));
+            Assert.Throws<UserMessageException>(() => bo.Login(args));
             Assert.Equal(1, tracker.FailureCount);
             Assert.Equal(0, tracker.ResetCount);
         }
 
         [Fact]
-        [DisplayName("Login for a locked-out account throws UnauthorizedAccessException without authenticating")]
+        [DisplayName("Login for a locked-out account throws UserMessageException without authenticating")]
         public void Login_AccountLockedOut_ThrowsBeforeAuthenticate()
         {
             var tracker = new RecordingTracker { LockedOut = true };
@@ -185,7 +186,7 @@ namespace Polhem.Business.UnitTests
                 });
             var args = new LoginArgs { UserId = "locked", Password = "x" };
 
-            Assert.Throws<UnauthorizedAccessException>(() => bo.Login(args));
+            Assert.Throws<UserMessageException>(() => bo.Login(args));
             Assert.Equal(0, authCalls);
             Assert.Equal(0, tracker.FailureCount);
         }

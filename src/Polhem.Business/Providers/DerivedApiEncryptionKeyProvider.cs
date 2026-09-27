@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Polhem.Base;
+using Polhem.Base.Exceptions;
 using Polhem.Definition.Security;
 
 namespace Polhem.Business.Providers
@@ -92,7 +93,7 @@ namespace Polhem.Business.Providers
         {
             if (ValueUtilities.IsEmpty(accessToken))
             {
-                throw new UnauthorizedAccessException("Access token is required.");
+                throw new AuthenticationRequiredException("Access token is required.");
             }
             return Derive(accessToken);
         }
