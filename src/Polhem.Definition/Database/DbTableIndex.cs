@@ -11,7 +11,7 @@ namespace Polhem.Definition.Database
     /// </summary>
     [Description("Table index schema.")]
     [TreeNode]
-    public class DbTableIndex : KeyCollectionItem
+    public sealed class DbTableIndex : KeyCollectionItem
     {
         private IndexFieldCollection? _indexFields = null;
 

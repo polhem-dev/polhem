@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Arguments for storing one tenant's business plugin bindings.
     /// </summary>
-    public class SaveCustomizePluginSettingsArgs : BusinessArgs, ISaveCustomizePluginSettingsRequest
+    public sealed class SaveCustomizePluginSettingsArgs : BusinessArgs, ISaveCustomizePluginSettingsRequest
     {
         /// <summary>
         /// Gets or sets the tenant customization code whose bindings are being stored.

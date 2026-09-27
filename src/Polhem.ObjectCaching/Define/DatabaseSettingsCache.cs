@@ -7,7 +7,7 @@ namespace Polhem.ObjectCaching.Define
     /// <summary>
     /// Database settings cache.
     /// </summary>
-    public class DatabaseSettingsCache : ObjectCache<DatabaseSettings>
+    public sealed class DatabaseSettingsCache : ObjectCache<DatabaseSettings>
     {
         private readonly PathOptions _paths;
 

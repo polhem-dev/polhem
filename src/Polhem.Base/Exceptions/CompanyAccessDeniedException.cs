@@ -17,7 +17,7 @@ namespace Polhem.Base.Exceptions
     /// company the caller has already entered.
     /// </para>
     /// </remarks>
-    public class CompanyAccessDeniedException : Exception
+    public sealed class CompanyAccessDeniedException : Exception
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="CompanyAccessDeniedException"/> class

@@ -6,7 +6,7 @@ namespace Polhem.Definition.Database
     /// <summary>
     /// Index field collection.
     /// </summary>
-    public class IndexFieldCollection : KeyCollectionBase<IndexField>
+    public sealed class IndexFieldCollection : KeyCollectionBase<IndexField>
     {
     }
 

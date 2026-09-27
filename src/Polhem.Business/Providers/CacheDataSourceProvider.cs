@@ -27,7 +27,7 @@ namespace Polhem.Business.Providers
     /// obtain its <c>CompanyDatabaseId</c>.
     /// </para>
     /// </remarks>
-    public class CacheDataSourceProvider : ICacheDataSourceProvider
+    public sealed class CacheDataSourceProvider : ICacheDataSourceProvider
     {
         private readonly IRepositoryFactory _repositoryFactory;
         private readonly IServiceProvider _services;

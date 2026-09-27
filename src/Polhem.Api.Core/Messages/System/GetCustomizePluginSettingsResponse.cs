@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response carrying one tenant's business plugin bindings.
     /// </summary>
-    public class GetCustomizePluginSettingsResponse : ApiResponse, IGetCustomizePluginSettingsResponse
+    public sealed class GetCustomizePluginSettingsResponse : ApiResponse, IGetCustomizePluginSettingsResponse
     {
         /// <summary>
         /// Gets or sets the bindings as XML, or an empty string when the tenant declares none.

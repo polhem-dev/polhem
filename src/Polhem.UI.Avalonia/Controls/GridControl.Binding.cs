@@ -17,7 +17,7 @@ namespace Polhem.UI.Avalonia.Controls
     /// in `.Rows`. Keeping the tree hooks here is deliberate — unsubscribing on detach is what stops a
     /// recycled template from driving a stale data object.
     /// </remarks>
-    public partial class GridControl
+    public sealed partial class GridControl
     {
         /// <summary>
         /// Binds a detail table: resolves the <see cref="System.Data.DataTable"/> named

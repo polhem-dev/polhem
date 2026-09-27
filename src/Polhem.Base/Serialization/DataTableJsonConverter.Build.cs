@@ -10,7 +10,7 @@ namespace Polhem.Base.Serialization
     /// Separate from reading because it is pure construction: no JSON tokens reach it, only the
     /// `ColumnDef` / `RowDef` intermediates, which live here for the same reason.
     /// </remarks>
-    public partial class DataTableJsonConverter
+    public sealed partial class DataTableJsonConverter
     {
         #region Build DataTable
 

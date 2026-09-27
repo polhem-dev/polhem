@@ -7,7 +7,7 @@ namespace Polhem.Db.Dml
     /// <summary>
     /// Builds DELETE command specifications from a form schema.
     /// </summary>
-    public class DeleteCommandBuilder
+    public sealed class DeleteCommandBuilder
     {
         private readonly FormSchema _formSchema;
         private readonly DatabaseType _databaseType;

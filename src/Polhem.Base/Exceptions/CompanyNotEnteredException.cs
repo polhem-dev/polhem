@@ -18,7 +18,7 @@ namespace Polhem.Base.Exceptions
     /// user verbatim.
     /// </para>
     /// </remarks>
-    public class CompanyNotEnteredException : Exception
+    public sealed class CompanyNotEnteredException : Exception
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="CompanyNotEnteredException"/> class

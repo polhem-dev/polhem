@@ -21,7 +21,7 @@ namespace Polhem.Business.Security
     /// Failures are closed: an unknown token, an unknown user, or a database error all deny.
     /// </para>
     /// </remarks>
-    public class DeploymentAuthorizationService : IDeploymentAuthorizationService
+    public sealed class DeploymentAuthorizationService : IDeploymentAuthorizationService
     {
         private readonly ISessionInfoService _sessionInfoService;
         private readonly IRepositoryFactory _repositoryFactory;

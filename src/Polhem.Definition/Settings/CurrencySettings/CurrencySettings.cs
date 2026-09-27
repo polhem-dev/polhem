@@ -19,7 +19,7 @@ namespace Polhem.Definition.Settings
     /// </remarks>
     [Description("System-level currency master.")]
     [XmlRoot("CurrencySettings")]
-    public class CurrencySettings : CollectionBase<CurrencyItem>
+    public sealed class CurrencySettings : CollectionBase<CurrencyItem>
     {
         /// <summary>The fallback rounding factor used when a currency code is not found (two decimals).</summary>
         public const decimal FallbackRounding = 0.01m;

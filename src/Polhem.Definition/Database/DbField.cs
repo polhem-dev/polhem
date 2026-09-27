@@ -13,7 +13,7 @@ namespace Polhem.Definition.Database
     /// </summary>
     [Description("Database field schema.")]
     [TreeNode]
-    public class DbField : KeyCollectionItem, IDefineField
+    public sealed class DbField : KeyCollectionItem, IDefineField
     {
         /// <summary>
         /// Initializes a new instance of <see cref="DbField"/>.

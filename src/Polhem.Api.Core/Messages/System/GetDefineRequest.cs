@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API request for the get definition operation.
     /// </summary>
-    public class GetDefineRequest : ApiRequest, IGetDefineRequest
+    public sealed class GetDefineRequest : ApiRequest, IGetDefineRequest
     {
         /// <summary>
         /// Gets or sets the definition type.

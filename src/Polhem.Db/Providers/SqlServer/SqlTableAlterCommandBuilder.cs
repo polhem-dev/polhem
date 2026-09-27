@@ -13,7 +13,7 @@ namespace Polhem.Db.Providers.SqlServer
     /// Supports <see cref="AddFieldChange"/>, <see cref="AlterFieldChange"/>,
     /// <see cref="AddIndexChange"/>, and <see cref="DropIndexChange"/> (including primary keys).
     /// </summary>
-    public class SqlTableAlterCommandBuilder : ITableAlterCommandBuilder
+    public sealed class SqlTableAlterCommandBuilder : ITableAlterCommandBuilder
     {
         /// <inheritdoc />
         public ChangeExecutionKind GetExecutionKind(ITableChange change)

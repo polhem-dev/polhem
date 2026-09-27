@@ -31,14 +31,23 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private static readonly PropertyInfo s_factoryProp =
             typeof(PolhemLoginPanel).GetProperty("Factory", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
-        private sealed class FakeLoginProvider : LocalApiProvider, IJsonRpcProvider
+        /// <summary>
+        /// Answers every call with the given login response. The connector treats any provider other than the
+        /// in-process one as a remote transport and encodes the request, so this encodes the response in the
+        /// request's format and codec, the way a server answers, and the connector's decode path accepts it.
+        /// </summary>
+        private sealed class FakeLoginProvider : IJsonRpcProvider
         {
             private readonly LoginResponse _response;
 
-            public FakeLoginProvider(LoginResponse response) : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.Empty) => _response = response;
+            public FakeLoginProvider(LoginResponse response) => _response = response;
 
-            Task<JsonRpcResponse> IJsonRpcProvider.ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken)
-                => Task.FromResult(new JsonRpcResponse { Result = new JsonRpcResult { Value = _response } });
+            public Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
+            {
+                var result = new JsonRpcResult { Value = _response, Codec = request.Params.Codec };
+                ApiPayloadConverter.TransformTo(result, request.Params.Format);
+                return Task.FromResult(new JsonRpcResponse(request) { Result = result });
+            }
         }
 
         private sealed class FakeConnectorFactory : PolhemApiConnectorFactory

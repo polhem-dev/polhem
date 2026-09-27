@@ -19,7 +19,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// data. Clearing the box is still an explicit way to unset the field.
     /// </para>
     /// </remarks>
-    public class TimeEdit : TextEdit
+    public sealed class TimeEdit : TextEdit
     {
         // The committed value in storage form. Text may briefly hold whatever the user is typing;
         // write-backs always use this.

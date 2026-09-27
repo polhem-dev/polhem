@@ -15,7 +15,7 @@ namespace Polhem.Definition.Language
     /// </remarks>
     [Description("Localized text and enum entries for one namespace × one language.")]
     [XmlRoot("LanguageResource")]
-    public class LanguageResource
+    public sealed class LanguageResource
     {
         private LanguageItemCollection? _items;
         private LanguageEnumCollection? _enums;

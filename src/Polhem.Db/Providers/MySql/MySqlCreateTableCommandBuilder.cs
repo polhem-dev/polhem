@@ -27,7 +27,7 @@ namespace Polhem.Db.Providers.MySql
     ///       stored as <c>'Jeff'</c> without builder-side <c>LOWER()</c> rewrites.</item>
     /// </list>
     /// </remarks>
-    public class MySqlCreateTableCommandBuilder : ICreateTableCommandBuilder
+    public sealed class MySqlCreateTableCommandBuilder : ICreateTableCommandBuilder
     {
         private const string BaseTableSuffix =
             " ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci";

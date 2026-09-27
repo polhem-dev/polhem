@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.JsonRpc
     /// <summary>
     /// JSON-RPC response model.
     /// </summary>
-    public class JsonRpcResponse : IObjectSerializeBase
+    public sealed class JsonRpcResponse : IObjectSerializeBase
     {
         #region Constructors
 

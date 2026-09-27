@@ -16,7 +16,7 @@ namespace Polhem.Definition.Settings
     /// </remarks>
     [Description("Business plugin binding.")]
     [TreeNode]
-    public class PluginItem : KeyCollectionItem
+    public sealed class PluginItem : KeyCollectionItem
     {
         #region Constructors
 

@@ -8,7 +8,7 @@ namespace Polhem.Definition.Database
     /// Database field schema collection.
     /// </summary>
     [TreeNode("Fields", true)]
-    public class DbFieldCollection : KeyCollectionBase<DbField>
+    public sealed class DbFieldCollection : KeyCollectionBase<DbField>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="DbFieldCollection"/>.

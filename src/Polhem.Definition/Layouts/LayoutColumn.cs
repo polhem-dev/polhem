@@ -9,7 +9,7 @@ namespace Polhem.Definition.Layouts
     /// </summary>
     [Description("Grid layout column.")]
     [TreeNode]
-    public class LayoutColumn : LayoutFieldBase
+    public sealed class LayoutColumn : LayoutFieldBase
     {
         /// <summary>
         /// Initializes a new instance of <see cref="LayoutColumn"/>.

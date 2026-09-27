@@ -7,7 +7,7 @@ namespace Polhem.ObjectCaching.Define
     /// <summary>
     /// Database category settings cache.
     /// </summary>
-    public class DbCategorySettingsCache : ObjectCache<DbCategorySettings>
+    public sealed class DbCategorySettingsCache : ObjectCache<DbCategorySettings>
     {
         private readonly IDefineStorage _storage;
 

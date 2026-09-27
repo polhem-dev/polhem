@@ -22,7 +22,7 @@ namespace Polhem.Db.Providers.MySql
     /// PG-style three-part ALTER (TYPE + NULLABILITY + DEFAULT) collapses into a
     /// single statement here.
     /// </remarks>
-    public class MySqlTableAlterCommandBuilder : ITableAlterCommandBuilder
+    public sealed class MySqlTableAlterCommandBuilder : ITableAlterCommandBuilder
     {
         /// <inheritdoc />
         public ChangeExecutionKind GetExecutionKind(ITableChange change)

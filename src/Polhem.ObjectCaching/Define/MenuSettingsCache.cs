@@ -7,7 +7,7 @@ namespace Polhem.ObjectCaching.Define
     /// <summary>
     /// Menu definition cache.
     /// </summary>
-    public class MenuSettingsCache : ObjectCache<MenuSettings>
+    public sealed class MenuSettingsCache : ObjectCache<MenuSettings>
     {
         private readonly IDefineStorage _storage;
 

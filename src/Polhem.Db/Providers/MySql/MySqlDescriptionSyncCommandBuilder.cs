@@ -18,7 +18,7 @@ namespace Polhem.Db.Providers.MySql
     /// have an <see cref="AlterFieldChange"/> in the same plan are skipped: re-issuing
     /// <c>MODIFY COLUMN</c> for them would be a second full table rebuild for no effect.
     /// </remarks>
-    public class MySqlDescriptionSyncCommandBuilder : IDescriptionSyncCommandBuilder
+    public sealed class MySqlDescriptionSyncCommandBuilder : IDescriptionSyncCommandBuilder
     {
         /// <inheritdoc />
         public IReadOnlyList<string> GetStatements(TableSchemaDiff diff)

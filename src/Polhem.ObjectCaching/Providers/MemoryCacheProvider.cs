@@ -6,7 +6,7 @@ namespace Polhem.ObjectCaching.Providers
     /// <summary>
     /// Cache provider implementation backed by <see cref="IMemoryCache"/>.
     /// </summary>
-    public class MemoryCacheProvider : ICacheProvider, IDisposable
+    public sealed class MemoryCacheProvider : ICacheProvider, IDisposable
     {
         private readonly MemoryCache _memoryCache;
         private bool _disposed;
@@ -121,19 +121,8 @@ namespace Polhem.ObjectCaching.Providers
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases managed resources held by this provider.
-        /// </summary>
-        /// <param name="disposing"><c>true</c> if called from <see cref="Dispose()"/>; otherwise <c>false</c>.</param>
-        protected virtual void Dispose(bool disposing)
-        {
             if (_disposed) return;
-            if (disposing)
-                _memoryCache.Dispose();
+            _memoryCache.Dispose();
             _disposed = true;
         }
 

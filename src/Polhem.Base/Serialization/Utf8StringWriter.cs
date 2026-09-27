@@ -5,7 +5,7 @@ namespace Polhem.Base.Serialization
     /// <summary>
     /// String writer that uses UTF-8 encoding.
     /// </summary>
-    public class Utf8StringWriter : StringWriter
+    public sealed class Utf8StringWriter : StringWriter
     {
         /// <summary>
         /// Gets the default UTF-8 encoding (without BOM).

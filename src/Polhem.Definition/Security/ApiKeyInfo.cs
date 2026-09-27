@@ -22,7 +22,7 @@ namespace Polhem.Definition.Security
     /// <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
     /// </para>
     /// </remarks>
-    public class ApiKeyInfo : IKeyObject
+    public sealed class ApiKeyInfo : IKeyObject
     {
         /// <summary>
         /// Gets the key identifier (<c>sys_id</c>), which is also the leading segment of the

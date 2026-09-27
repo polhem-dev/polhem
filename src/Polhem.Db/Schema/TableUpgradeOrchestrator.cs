@@ -11,7 +11,7 @@ namespace Polhem.Db.Schema
     /// Aggregation rules: all ALTER-capable → ALTER path; any rebuild-required → full rebuild;
     /// any NotSupported or rebuild-with-rename → throw.
     /// </summary>
-    public class TableUpgradeOrchestrator
+    public sealed class TableUpgradeOrchestrator
     {
         private readonly IDialectFactory _dialect;
         private readonly IDbConnectionManager _connectionManager;

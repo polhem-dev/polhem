@@ -13,7 +13,7 @@ namespace Polhem.ObjectCaching.Services
     /// the key must match exactly, since the cached entry carries it as its <c>ChangeNotifyKey</c>.
     /// The poller publishes the observed version, expiring the entry on its next read.
     /// </remarks>
-    public class RolePermissionService : IRolePermissionService
+    public sealed class RolePermissionService : IRolePermissionService
     {
         private readonly ICacheContainer _cache;
 

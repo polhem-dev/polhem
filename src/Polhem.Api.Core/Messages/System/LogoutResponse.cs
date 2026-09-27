@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response for the Logout operation. Carries no payload fields.
     /// </summary>
-    public class LogoutResponse : ApiResponse, ILogoutResponse
+    public sealed class LogoutResponse : ApiResponse, ILogoutResponse
     {
     }
 }

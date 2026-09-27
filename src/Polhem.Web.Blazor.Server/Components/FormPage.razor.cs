@@ -26,7 +26,7 @@ namespace Polhem.Web.Blazor.Server.Components
     /// backend BO methods being called must then declare
     /// <see cref="Polhem.Definition.Security.ApiAccessRequirement.Anonymous"/> themselves.
     /// </remarks>
-    public partial class FormPage : ComponentBase
+    public sealed partial class FormPage : ComponentBase
     {
         private FormSchema? _schema;
         private FormLayout? _formLayout;

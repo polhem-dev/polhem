@@ -5,7 +5,7 @@ namespace Polhem.Business.AuditLog
     /// <summary>
     /// Input arguments for the top-API-methods query.
     /// </summary>
-    public class GetTopApiMethodsArgs : BusinessArgs, IGetTopApiMethodsRequest
+    public sealed class GetTopApiMethodsArgs : BusinessArgs, IGetTopApiMethodsRequest
     {
         /// <summary>Gets or sets the inclusive lower bound on the event time (UTC).</summary>
         public DateTime? FromUtc { get; set; }

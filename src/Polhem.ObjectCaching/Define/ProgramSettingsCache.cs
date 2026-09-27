@@ -7,7 +7,7 @@ namespace Polhem.ObjectCaching.Define
     /// <summary>
     /// Program settings cache.
     /// </summary>
-    public class ProgramSettingsCache : ObjectCache<ProgramSettings>
+    public sealed class ProgramSettingsCache : ObjectCache<ProgramSettings>
     {
         private readonly IDefineStorage _storage;
 

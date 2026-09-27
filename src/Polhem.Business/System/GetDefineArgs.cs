@@ -6,7 +6,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Input arguments for retrieving definition data.
     /// </summary>
-    public class GetDefineArgs : BusinessArgs, IGetDefineRequest
+    public sealed class GetDefineArgs : BusinessArgs, IGetDefineRequest
     {
         /// <summary>
         /// Gets or sets the definition data type.

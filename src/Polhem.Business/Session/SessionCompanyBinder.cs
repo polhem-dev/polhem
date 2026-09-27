@@ -15,7 +15,7 @@ namespace Polhem.Business.Session
     /// signed in with. Re-running the access check on rebuild is also what makes a revoked company
     /// permission take effect: the session fails to come back rather than living on as a snapshot.
     /// </remarks>
-    public class SessionCompanyBinder
+    public sealed class SessionCompanyBinder
     {
         private readonly ICompanyInfoService _companyInfoService;
         private readonly IRepositoryFactory _repositoryFactory;

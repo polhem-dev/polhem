@@ -12,7 +12,7 @@ namespace Polhem.Definition.Layouts
     /// </summary>
     [Description("Layout section.")]
     [TreeNode]
-    public class LayoutSection : CollectionItem
+    public sealed class LayoutSection : CollectionItem
     {
         private LayoutFieldCollection? _fields = null;
 

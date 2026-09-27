@@ -5,7 +5,7 @@ namespace Polhem.Definition.Sorting
     /// <summary>
     /// A collection of sort fields.
     /// </summary>
-    public class SortFieldCollection : CollectionBase<SortField>
+    public sealed class SortFieldCollection : CollectionBase<SortField>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="SortFieldCollection"/>.

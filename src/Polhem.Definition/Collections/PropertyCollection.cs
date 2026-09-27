@@ -8,7 +8,7 @@ namespace Polhem.Definition.Collections
     /// A custom property collection.
     /// </summary>
     [Description("Custom property collection.")]
-    public class PropertyCollection : KeyCollectionBase<Property>
+    public sealed class PropertyCollection : KeyCollectionBase<Property>
     {
         /// <summary>
         /// Gets the string value of a property.

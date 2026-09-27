@@ -5,7 +5,7 @@ namespace Polhem.Business.Form
     /// <summary>
     /// Output result for the FormSchema-driven <c>Delete</c> operation.
     /// </summary>
-    public class DeleteResult : BusinessResult, IDeleteResponse
+    public sealed class DeleteResult : BusinessResult, IDeleteResponse
     {
         /// <summary>
         /// Gets or sets the number of master rows actually deleted.

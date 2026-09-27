@@ -28,7 +28,7 @@ namespace Polhem.Definition.Settings
     /// </remarks>
     [Description("Program settings.")]
     [TreeNode("Program Settings")]
-    public class ProgramSettings : IObjectSerializeFile
+    public sealed class ProgramSettings : IObjectSerializeFile
     {
         private ProgramItemCollection? _items = null;
 

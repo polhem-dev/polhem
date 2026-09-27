@@ -21,7 +21,7 @@ namespace Polhem.Db.Providers.Sqlite
     /// working without a Comparer change, the parsed PK index is exposed under the framework
     /// convention <c>pk_{table}</c>.
     /// </remarks>
-    public class SqliteTableSchemaProvider : ITableSchemaProvider
+    public sealed class SqliteTableSchemaProvider : ITableSchemaProvider
     {
         private readonly IDbConnectionManager _connectionManager;
         private readonly DbAccess _dbAccess;

@@ -15,7 +15,7 @@ namespace Polhem.Definition.Settings
     [Description("Expired session cleanup settings.")]
     [TreeNode("SessionCleanup")]
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class SessionCleanupOptions
+    public sealed class SessionCleanupOptions
     {
         /// <summary>
         /// Gets or sets a value indicating whether the cleanup job is enabled.

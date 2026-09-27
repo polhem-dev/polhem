@@ -16,7 +16,7 @@ namespace Polhem.Business
     /// — it is forwarded to every BO instance so the rare escape-hatch resolutions (login-only
     /// helpers etc.) reach the host's request scope.
     /// </remarks>
-    public class BusinessObjectFactory : IBusinessObjectFactory
+    public sealed class BusinessObjectFactory : IBusinessObjectFactory
     {
         private readonly IServiceProvider _services;
         private readonly IDefineAccess _defineAccess;

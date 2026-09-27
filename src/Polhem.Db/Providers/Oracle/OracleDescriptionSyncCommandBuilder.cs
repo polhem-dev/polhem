@@ -15,7 +15,7 @@ namespace Polhem.Db.Providers.Oracle
     /// consulted. Each statement is dispatched on its own — Oracle.ManagedDataAccess accepts only
     /// one statement per command (ORA-03405), so no trailing semicolons are emitted.
     /// </remarks>
-    public class OracleDescriptionSyncCommandBuilder : IDescriptionSyncCommandBuilder
+    public sealed class OracleDescriptionSyncCommandBuilder : IDescriptionSyncCommandBuilder
     {
         /// <inheritdoc />
         public IReadOnlyList<string> GetStatements(TableSchemaDiff diff)

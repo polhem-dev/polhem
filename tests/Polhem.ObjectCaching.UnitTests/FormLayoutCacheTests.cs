@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Reflection;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
@@ -40,12 +41,17 @@ namespace Polhem.ObjectCaching.UnitTests
             public void SaveLanguage(LanguageResource resource) => throw new NotImplementedException();
         }
 
-        private sealed class TestableFormLayoutCache : FormLayoutCache
+        /// <summary>
+        /// Calls the cache's policy override. <see cref="FormLayoutCache"/> is sealed, so its
+        /// <c>protected</c> override is reached through the base declaration; invoking the base method
+        /// dispatches virtually to the override under test.
+        /// </summary>
+        private static CacheItemPolicy GetCachePolicy(FormLayoutCache cache, string key)
         {
-            public TestableFormLayoutCache(IDefineStorage storage, string cachePrefix = "")
-                : base(storage, cachePrefix) { }
-
-            public CacheItemPolicy GetCachePolicy(string key) => GetPolicy(key);
+            var method = typeof(KeyObjectCache<FormLayout>).GetMethod(
+                "GetPolicy", BindingFlags.Instance | BindingFlags.NonPublic, [typeof(string)]);
+            Assert.NotNull(method);
+            return Assert.IsType<CacheItemPolicy>(method.Invoke(cache, [key]));
         }
 
         [Fact]
@@ -60,9 +66,9 @@ namespace Polhem.ObjectCaching.UnitTests
         public void GetPolicy_FileDefineStorage_SetsChangeMonitorFilePaths()
         {
             var storage = new FileDefineStorage(new PathOptions());
-            var cache = new TestableFormLayoutCache(storage);
+            var cache = new FormLayoutCache(storage);
 
-            var policy = cache.GetCachePolicy("Employee");
+            var policy = GetCachePolicy(cache, "Employee");
 
             Assert.NotNull(policy.ChangeMonitorFilePaths);
             Assert.Single(policy.ChangeMonitorFilePaths);
@@ -73,9 +79,9 @@ namespace Polhem.ObjectCaching.UnitTests
         public void GetPolicy_NonFileDefineStorage_NoChangeMonitorFilePaths()
         {
             var stub = new StubDefineStorage();
-            var cache = new TestableFormLayoutCache(stub);
+            var cache = new FormLayoutCache(stub);
 
-            var policy = cache.GetCachePolicy("Employee");
+            var policy = GetCachePolicy(cache, "Employee");
 
             Assert.Null(policy.ChangeMonitorFilePaths);
         }

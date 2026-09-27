@@ -7,7 +7,7 @@ namespace Polhem.Db.Schema
     /// Structured diff result produced by <see cref="TableSchemaComparer.CompareToDiff"/>.
     /// Provider-agnostic: describes what changed, not how the changes should be executed.
     /// </summary>
-    public class TableSchemaDiff
+    public sealed class TableSchemaDiff
     {
         /// <summary>
         /// Initializes a new instance of <see cref="TableSchemaDiff"/>.

@@ -26,7 +26,7 @@ namespace Polhem.ObjectCaching.Database
     /// Probe traffic belongs behind a rate limit at the edge; this cache is not the place to solve it.
     /// </para>
     /// </remarks>
-    public class ApiKeyCache : KeyObjectCache<ApiKeyInfo>
+    public sealed class ApiKeyCache : KeyObjectCache<ApiKeyInfo>
     {
         /// <summary>
         /// Absolute lifetime, in minutes, of a cached key.

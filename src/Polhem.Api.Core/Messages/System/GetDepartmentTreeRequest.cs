@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.Messages.System
     /// API request for the get department tree operation. Carries no parameters — the tree is
     /// scoped to the caller's current company resolved from the session.
     /// </summary>
-    public class GetDepartmentTreeRequest : ApiRequest, IGetDepartmentTreeRequest
+    public sealed class GetDepartmentTreeRequest : ApiRequest, IGetDepartmentTreeRequest
     {
     }
 }

@@ -7,7 +7,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API request for the create API key operation.
     /// </summary>
-    public class CreateApiKeyRequest : ApiRequest, ICreateApiKeyRequest
+    public sealed class CreateApiKeyRequest : ApiRequest, ICreateApiKeyRequest
     {
         /// <summary>
         /// Gets or sets the key identifier to issue.

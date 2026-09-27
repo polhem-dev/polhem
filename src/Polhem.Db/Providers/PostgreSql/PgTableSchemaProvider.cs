@@ -15,7 +15,7 @@ namespace Polhem.Db.Providers.PostgreSql
     /// <c>pg_catalog</c> for PG-specific features (descriptions, index columns).
     /// Operates against the <c>public</c> schema.
     /// </summary>
-    public class PgTableSchemaProvider : ITableSchemaProvider
+    public sealed class PgTableSchemaProvider : ITableSchemaProvider
     {
         private const string DefaultSchema = "public";
         private readonly DbAccess _dbAccess;

@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response for the create session operation.
     /// </summary>
-    public class CreateSessionResponse : ApiResponse, ICreateSessionResponse
+    public sealed class CreateSessionResponse : ApiResponse, ICreateSessionResponse
     {
         /// <summary>
         /// Gets or sets the access token.

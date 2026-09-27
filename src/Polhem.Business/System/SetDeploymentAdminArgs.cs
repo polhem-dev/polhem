@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Input arguments for granting or revoking a user's deployment administrator flag.
     /// </summary>
-    public class SetDeploymentAdminArgs : BusinessArgs, ISetDeploymentAdminRequest
+    public sealed class SetDeploymentAdminArgs : BusinessArgs, ISetDeploymentAdminRequest
     {
         /// <summary>
         /// Gets or sets the user business id (<c>st_user.sys_id</c>) whose flag is being set.

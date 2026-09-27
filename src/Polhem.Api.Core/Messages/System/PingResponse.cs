@@ -7,7 +7,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response for the ping operation.
     /// </summary>
-    public class PingResponse : ApiResponse, IPingResponse
+    public sealed class PingResponse : ApiResponse, IPingResponse
     {
         /// <summary>
         /// Gets or sets the server status.

@@ -14,7 +14,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// that loads its options from <see cref="Polhem.Definition.Forms.FormField.ListItems"/> and binds the selected
     /// <see cref="ListItem.Value"/> to a <see cref="FormDataObject"/> field.
     /// </summary>
-    public class DropDownEdit : ComboBox, IFieldEditor
+    public sealed class DropDownEdit : ComboBox, IFieldEditor
     {
         /// <summary>
         /// Identifies the <see cref="FieldName"/> styled property.

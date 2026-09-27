@@ -13,7 +13,7 @@ namespace Polhem.Db.Providers.Sqlite
     /// Skeleton: factory wiring is in place but the create-builder methods will land in the
     /// follow-up PRs (S2 form CRUD, S3 CREATE TABLE, S4 ALTER / REBUILD, S5 schema reader).
     /// </summary>
-    public class SqliteDialectFactory : IDialectFactory
+    public sealed class SqliteDialectFactory : IDialectFactory
     {
         /// <inheritdoc />
         public ITableSchemaProvider CreateTableSchemaProvider(string databaseId, IDbConnectionManager connectionManager)

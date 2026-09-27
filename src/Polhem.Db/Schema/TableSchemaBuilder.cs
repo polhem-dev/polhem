@@ -13,7 +13,7 @@ namespace Polhem.Db.Schema
     /// (ALTER-based strategy with rebuild fallback); metadata-only drift is handled by
     /// the provider-specific extended-property builder inside the orchestrator's description stage.
     /// </summary>
-    public class TableSchemaBuilder
+    public sealed class TableSchemaBuilder
     {
         private readonly IDialectFactory _dialect;
         private readonly DatabaseType _databaseType;

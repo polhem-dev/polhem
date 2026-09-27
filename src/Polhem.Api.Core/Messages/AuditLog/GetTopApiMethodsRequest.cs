@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.Messages.AuditLog
     /// <summary>
     /// API request for the top-API-methods operation.
     /// </summary>
-    public class GetTopApiMethodsRequest : ApiRequest, IGetTopApiMethodsRequest
+    public sealed class GetTopApiMethodsRequest : ApiRequest, IGetTopApiMethodsRequest
     {
         /// <summary>Gets or sets the inclusive lower bound on the event time (UTC).</summary>
         public DateTime? FromUtc { get; set; }

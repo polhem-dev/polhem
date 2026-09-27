@@ -9,7 +9,7 @@ namespace Polhem.Business.Validator
     /// Default implementation of <see cref="IAccessTokenValidator"/>.
     /// Validates the access token against the session info store.
     /// </summary>
-    public class AccessTokenValidator : IAccessTokenValidator
+    public sealed class AccessTokenValidator : IAccessTokenValidator
     {
         private readonly ISessionInfoService _sessionInfoService;
 

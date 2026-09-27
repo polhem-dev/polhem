@@ -24,7 +24,7 @@ namespace Polhem.Definition.Security
     /// <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
     /// </para>
     /// </remarks>
-    public class ApiKeyGateState : IKeyObject
+    public sealed class ApiKeyGateState : IKeyObject
     {
         /// <summary>
         /// The single cache key this state is stored under. Shares the cache group of

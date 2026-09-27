@@ -8,7 +8,7 @@ namespace Polhem.Definition.Forms
     /// A field mapping that maps a source field to a destination field.
     /// </summary>
     [Description("Field mapping.")]
-    public class FieldMapping : CollectionItem
+    public sealed class FieldMapping : CollectionItem
     {
         #region Constructors
 

@@ -13,7 +13,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Permission model registry.")]
     [TreeNode("Permission Models")]
-    public class PermissionModels : IObjectSerializeFile
+    public sealed class PermissionModels : IObjectSerializeFile
     {
         private PermissionModelCollection? _models = null;
 

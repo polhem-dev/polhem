@@ -8,7 +8,7 @@ namespace Polhem.ObjectCaching.Define
     /// <summary>
     /// Table schema cache.
     /// </summary>
-    public class TableSchemaCache : KeyObjectCache<TableSchema>
+    public sealed class TableSchemaCache : KeyObjectCache<TableSchema>
     {
         private readonly IDefineStorage _storage;
 

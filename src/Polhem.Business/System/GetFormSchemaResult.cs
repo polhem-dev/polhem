@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for retrieving a form schema as a typed object.
     /// </summary>
-    public class GetFormSchemaResult : BusinessResult, IGetFormSchemaResponse
+    public sealed class GetFormSchemaResult : BusinessResult, IGetFormSchemaResponse
     {
         /// <summary>
         /// Gets or sets the raw definition serialised as XML; empty when no definition exists.

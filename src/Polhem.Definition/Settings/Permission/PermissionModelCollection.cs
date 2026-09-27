@@ -9,7 +9,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Permission model collection.")]
     [TreeNode("Models", false)]
-    public class PermissionModelCollection : KeyCollectionBase<PermissionModel>
+    public sealed class PermissionModelCollection : KeyCollectionBase<PermissionModel>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="PermissionModelCollection"/>.

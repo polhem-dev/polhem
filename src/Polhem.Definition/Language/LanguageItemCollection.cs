@@ -10,7 +10,7 @@ namespace Polhem.Definition.Language
     /// </summary>
     [Description("Language item collection.")]
     [TreeNode("Items", true)]
-    public class LanguageItemCollection : KeyCollectionBase<LanguageItem>
+    public sealed class LanguageItemCollection : KeyCollectionBase<LanguageItem>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="LanguageItemCollection"/>.

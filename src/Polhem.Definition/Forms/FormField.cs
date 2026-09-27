@@ -16,7 +16,7 @@ namespace Polhem.Definition.Forms
     /// </summary>
     [Description("Form field.")]
     [TreeNode]
-    public class FormField : KeyCollectionItem
+    public sealed class FormField : KeyCollectionItem
     {
         private FieldMappingCollection? _relationFieldMappings = null;
         private FieldMappingCollection? _lookupFieldMappings = null;

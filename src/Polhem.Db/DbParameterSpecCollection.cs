@@ -8,7 +8,7 @@ namespace Polhem.Db
     /// <summary>
     /// A collection of <see cref="DbParameterSpec"/> instances.
     /// </summary>
-    public class DbParameterSpecCollection : KeyCollectionBase<DbParameterSpec>
+    public sealed class DbParameterSpecCollection : KeyCollectionBase<DbParameterSpec>
     {
     }
 

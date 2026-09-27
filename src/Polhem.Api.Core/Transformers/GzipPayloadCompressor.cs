@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Transformers
     /// <summary>
     /// GZip-based API transport layer data compressor.
     /// </summary>
-    public class GzipPayloadCompressor : IApiPayloadCompressor
+    public sealed class GzipPayloadCompressor : IApiPayloadCompressor
     {
         /// <summary>
         /// Gets the identifier string for the compression algorithm.

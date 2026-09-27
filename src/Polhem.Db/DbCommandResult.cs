@@ -6,7 +6,7 @@ namespace Polhem.Db
     /// <summary>
     /// A unified wrapper for a DbCommand execution result.
     /// </summary>
-    public class DbCommandResult : CollectionItem
+    public sealed class DbCommandResult : CollectionItem
     {
         /// <summary>
         /// Gets the execution kind of the database command.

@@ -9,7 +9,7 @@ namespace Polhem.Definition.Layouts
     /// </summary>
     [Description("Layout field.")]
     [TreeNode]
-    public class LayoutField : LayoutFieldBase
+    public sealed class LayoutField : LayoutFieldBase
     {
         private int _rowSpan = 1;
         private int _columnSpan = 1;

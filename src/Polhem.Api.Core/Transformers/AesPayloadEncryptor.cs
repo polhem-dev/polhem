@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.Transformers
     /// <summary>
     /// AES-based API transport layer data encryptor.
     /// </summary>
-    public class AesPayloadEncryptor : IApiPayloadEncryptor
+    public sealed class AesPayloadEncryptor : IApiPayloadEncryptor
     {
         /// <summary>
         /// Gets the identifier string for the encryption algorithm.

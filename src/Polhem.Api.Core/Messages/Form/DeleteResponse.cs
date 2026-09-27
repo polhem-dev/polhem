@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.Form
     /// <summary>
     /// API response for the form Delete operation.
     /// </summary>
-    public class DeleteResponse : ApiResponse, IDeleteResponse
+    public sealed class DeleteResponse : ApiResponse, IDeleteResponse
     {
         /// <summary>
         /// Gets or sets the number of master rows actually deleted.

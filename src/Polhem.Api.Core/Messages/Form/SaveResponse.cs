@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.Messages.Form
     /// <summary>
     /// API response for the form Save operation.
     /// </summary>
-    public class SaveResponse : ApiResponse, ISaveResponse
+    public sealed class SaveResponse : ApiResponse, ISaveResponse
     {
         /// <summary>
         /// Gets or sets the freshly re-loaded <c>DataSet</c>; merges in

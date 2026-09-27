@@ -7,7 +7,7 @@ namespace Polhem.Api.Core.Messages.Form
     /// <summary>
     /// API response for the form GetList operation.
     /// </summary>
-    public class GetListResponse : ApiResponse, IGetListResponse
+    public sealed class GetListResponse : ApiResponse, IGetListResponse
     {
         /// <summary>
         /// Gets or sets the result rows.

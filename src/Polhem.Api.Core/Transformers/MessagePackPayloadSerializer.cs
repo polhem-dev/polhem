@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Transformers
     /// <summary>
     /// API payload serializer that uses MessagePack.
     /// </summary>
-    public class MessagePackPayloadSerializer : IApiPayloadSerializer
+    public sealed class MessagePackPayloadSerializer : IApiPayloadSerializer
     {
         /// <summary>
         /// Gets the identifier string for the serialization format.

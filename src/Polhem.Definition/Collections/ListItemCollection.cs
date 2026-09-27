@@ -5,7 +5,7 @@ namespace Polhem.Definition.Collections
     /// <summary>
     /// List item collection.
     /// </summary>
-    public class ListItemCollection : KeyCollectionBase<ListItem>
+    public sealed class ListItemCollection : KeyCollectionBase<ListItem>
     {
         #region Constructors
 

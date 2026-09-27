@@ -6,7 +6,7 @@ namespace Polhem.Business.Form
     /// <summary>
     /// Input arguments for the form GetLookup operation.
     /// </summary>
-    public class GetLookupArgs : BusinessArgs, IGetLookupRequest
+    public sealed class GetLookupArgs : BusinessArgs, IGetLookupRequest
     {
         /// <summary>
         /// Gets or sets the search text matched against the string-typed lookup fields;

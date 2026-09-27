@@ -22,7 +22,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// hand-editable; the lookup flow is the only write path. The icon button follows
     /// the form mode (disabled in View mode or on a read-only layout field).
     /// </remarks>
-    public class ButtonEdit : TextEdit
+    public sealed class ButtonEdit : TextEdit
     {
         // Magnifier glyph taken from Semi.Avalonia `SemiIconSearchStroked` (MIT),
         // embedded so the editor renders the same under any application theme.

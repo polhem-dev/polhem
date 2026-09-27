@@ -23,7 +23,7 @@ namespace Polhem.Definition.Identity
     /// <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
     /// </para>
     /// </remarks>
-    public class CompanyInfo : IKeyObject
+    public sealed class CompanyInfo : IKeyObject
     {
         #region IKeyObject Interface
 

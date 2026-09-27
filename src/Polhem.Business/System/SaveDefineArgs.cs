@@ -6,7 +6,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Input arguments for saving definition data.
     /// </summary>
-    public class SaveDefineArgs : BusinessArgs, ISaveDefineRequest
+    public sealed class SaveDefineArgs : BusinessArgs, ISaveDefineRequest
     {
         /// <summary>
         /// Gets or sets the definition data type.

@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Input arguments for the LeaveCompany operation. Carries no fields.
     /// </summary>
-    public class LeaveCompanyArgs : BusinessArgs, ILeaveCompanyRequest
+    public sealed class LeaveCompanyArgs : BusinessArgs, ILeaveCompanyRequest
     {
     }
 }

@@ -40,7 +40,7 @@ namespace Polhem.Db.Providers.Oracle
     /// form is the only safe way to ship a multi-statement script through ADO.NET.
     /// </para>
     /// </remarks>
-    public class OracleCreateTableCommandBuilder : ICreateTableCommandBuilder
+    public sealed class OracleCreateTableCommandBuilder : ICreateTableCommandBuilder
     {
         private TableSchema? _dbTable;
 

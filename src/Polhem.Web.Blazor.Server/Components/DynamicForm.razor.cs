@@ -17,7 +17,7 @@ namespace Polhem.Web.Blazor.Server.Components
     /// (<see cref="FormLayout.Details"/>) are wired up in Phase 1b together with
     /// <see cref="DynamicGrid"/>.
     /// </remarks>
-    public partial class DynamicForm : ComponentBase
+    public sealed partial class DynamicForm : ComponentBase
     {
         private static readonly ListItem[] s_emptyOptions = Array.Empty<ListItem>();
 

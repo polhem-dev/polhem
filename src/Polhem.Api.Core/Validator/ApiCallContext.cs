@@ -20,7 +20,7 @@ namespace Polhem.Api.Core.Validator
     /// number, so the contract disagreed with the wire on a field of the same name.
     /// </para>
     /// </remarks>
-    public class ApiCallContext
+    public sealed class ApiCallContext
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiCallContext"/> class.

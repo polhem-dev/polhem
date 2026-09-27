@@ -7,7 +7,7 @@ namespace Polhem.ObjectCaching.Define
     /// <summary>
     /// Permission model registry cache.
     /// </summary>
-    public class PermissionModelsCache : ObjectCache<PermissionModels>
+    public sealed class PermissionModelsCache : ObjectCache<PermissionModels>
     {
         private readonly PathOptions _paths;
 

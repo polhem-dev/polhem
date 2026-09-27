@@ -7,7 +7,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response for the EnterCompany operation.
     /// </summary>
-    public class EnterCompanyResponse : ApiResponse, IEnterCompanyResponse
+    public sealed class EnterCompanyResponse : ApiResponse, IEnterCompanyResponse
     {
         /// <summary>
         /// Gets or sets the company information that was bound to the session.

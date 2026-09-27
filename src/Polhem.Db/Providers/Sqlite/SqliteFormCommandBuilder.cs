@@ -13,7 +13,7 @@ namespace Polhem.Db.Providers.Sqlite
     /// <see cref="PostgreSql.PgFormCommandBuilder"/> for the SQLite provider; all three methods
     /// delegate to the dialect-agnostic cores in <see cref="Polhem.Db.Dml"/>.
     /// </summary>
-    public class SqliteFormCommandBuilder : IFormCommandBuilder
+    public sealed class SqliteFormCommandBuilder : IFormCommandBuilder
     {
         private readonly IDefineAccess _defineAccess;
 

@@ -4,7 +4,7 @@ namespace Polhem.Db.Schema
     /// The execution plan for a table schema upgrade: the chosen mode, the ordered stages to run,
     /// and any warnings surfaced during planning.
     /// </summary>
-    public class UpgradePlan
+    public sealed class UpgradePlan
     {
         /// <summary>
         /// Initializes a new instance of <see cref="UpgradePlan"/>.

@@ -17,7 +17,7 @@ namespace Polhem.Definition.Security
     /// the case where the disabled ones matter.
     /// </para>
     /// </remarks>
-    public class ApiKeySummary
+    public sealed class ApiKeySummary
     {
         /// <summary>
         /// Gets or sets the key identifier (<c>sys_id</c>), which is also the leading segment of the

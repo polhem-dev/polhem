@@ -16,7 +16,7 @@ namespace Polhem.Definition
     /// provided by <see cref="FindUnit"/>.
     /// </remarks>
     [Description("Company cash-rounding override table.")]
-    public class CompanyCashRounding : CollectionBase<CashRoundingItem>
+    public sealed class CompanyCashRounding : CollectionBase<CashRoundingItem>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="CompanyCashRounding"/>.

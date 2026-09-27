@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.Messages.Form
     /// <summary>
     /// API request for the form GetLookup operation.
     /// </summary>
-    public class GetLookupRequest : ApiRequest, IGetLookupRequest
+    public sealed class GetLookupRequest : ApiRequest, IGetLookupRequest
     {
         /// <summary>
         /// Gets or sets the search text matched against the string-typed lookup fields;

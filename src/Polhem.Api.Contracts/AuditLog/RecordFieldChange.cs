@@ -12,7 +12,7 @@ namespace Polhem.Api.Contracts.AuditLog
     /// carries the before-image. For an update, only fields whose value actually changed are emitted,
     /// each carrying both the old and the new value.
     /// </remarks>
-    public class RecordFieldChange
+    public sealed class RecordFieldChange
     {
         /// <summary>
         /// Gets or sets the table the changed row belongs to (master or a detail table).

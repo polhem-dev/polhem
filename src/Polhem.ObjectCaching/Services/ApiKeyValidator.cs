@@ -20,7 +20,7 @@ namespace Polhem.ObjectCaching.Services
     /// keys". The caller converts a thrown exception into a rejection.
     /// </para>
     /// </remarks>
-    public class ApiKeyValidator : IApiKeyValidator
+    public sealed class ApiKeyValidator : IApiKeyValidator
     {
         private readonly ICacheContainer _cache;
 

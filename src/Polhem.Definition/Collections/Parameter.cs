@@ -8,7 +8,7 @@ namespace Polhem.Definition.Collections
     /// A parameter item.
     /// </summary>
     [DefaultProperty("Value")]
-    public class Parameter : KeyCollectionItem
+    public sealed class Parameter : KeyCollectionItem
     {
         #region Constructors
 

@@ -13,7 +13,7 @@ namespace Polhem.Definition.Forms
     /// </summary>
     [Description("Form schema definition.")]
     [TreeNode("Form Schema")]
-    public class FormSchema : IObjectSerializeFile
+    public sealed class FormSchema : IObjectSerializeFile
     {
         private FormTableCollection? _tables = null;
         private FormRuleCollection? _rules = null;

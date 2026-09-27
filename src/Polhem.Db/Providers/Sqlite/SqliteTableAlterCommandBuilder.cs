@@ -14,7 +14,7 @@ namespace Polhem.Db.Providers.Sqlite
     /// every other column-level mutation falls back to a full table rebuild via
     /// <see cref="SqliteTableRebuildCommandBuilder"/>.
     /// </summary>
-    public class SqliteTableAlterCommandBuilder : ITableAlterCommandBuilder
+    public sealed class SqliteTableAlterCommandBuilder : ITableAlterCommandBuilder
     {
         /// <inheritdoc />
         public ChangeExecutionKind GetExecutionKind(ITableChange change)

@@ -15,7 +15,7 @@ namespace Polhem.Db.Providers.Oracle
     /// <see cref="DatabaseType.Oracle"/>, so double-quote identifier quoting and
     /// <c>:</c> bind-variable prefix flow from the <see cref="DatabaseTypeExtensions"/> dictionaries.
     /// </summary>
-    public class OracleFormCommandBuilder : IFormCommandBuilder
+    public sealed class OracleFormCommandBuilder : IFormCommandBuilder
     {
         private readonly IDefineAccess _defineAccess;
 

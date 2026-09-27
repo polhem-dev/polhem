@@ -14,7 +14,7 @@ namespace Polhem.Db
     /// <summary>
     /// Describes a database command as an intermediary for <see cref="DbCommand"/>.
     /// </summary>
-    public class DbCommandSpec : CollectionItem
+    public sealed class DbCommandSpec : CollectionItem
     {
         private const int DefaultTimeout = 30;  // Default timeout in seconds
         private const string BindByNamePropertyName = "BindByName";

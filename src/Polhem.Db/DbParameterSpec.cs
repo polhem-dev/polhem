@@ -7,7 +7,7 @@ namespace Polhem.Db
     /// <summary>
     /// Describes a database command parameter as an intermediary for <see cref="DbParameter"/>.
     /// </summary>
-    public class DbParameterSpec : KeyCollectionItem
+    public sealed class DbParameterSpec : KeyCollectionItem
     {
         /// <summary>
         /// Initializes a new empty instance of <see cref="DbParameterSpec"/>.

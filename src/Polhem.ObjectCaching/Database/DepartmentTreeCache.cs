@@ -9,7 +9,7 @@ namespace Polhem.ObjectCaching.Database
     /// company database and reads <c>st_department</c>; invalidation goes through the common
     /// cache-notify table (cache group <see cref="DepartmentTree"/>).
     /// </summary>
-    public class DepartmentTreeCache : KeyObjectCache<DepartmentTree>
+    public sealed class DepartmentTreeCache : KeyObjectCache<DepartmentTree>
     {
         private readonly Func<ICacheDataSourceProvider>? _dataSource;
 

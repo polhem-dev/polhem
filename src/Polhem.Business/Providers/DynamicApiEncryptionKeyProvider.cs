@@ -9,7 +9,7 @@ namespace Polhem.Business.Providers
     /// <summary>
     /// Dynamic encryption key provider that retrieves the session key corresponding to the given AccessToken.
     /// </summary>
-    public class DynamicApiEncryptionKeyProvider : IApiEncryptionKeyProvider
+    public sealed class DynamicApiEncryptionKeyProvider : IApiEncryptionKeyProvider
     {
         private readonly ISessionInfoService _sessionInfoService;
 

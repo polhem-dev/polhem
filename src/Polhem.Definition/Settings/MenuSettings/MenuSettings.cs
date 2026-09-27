@@ -21,7 +21,7 @@ namespace Polhem.Definition.Settings
     /// </remarks>
     [Description("Menu settings.")]
     [TreeNode("Menu Settings")]
-    public class MenuSettings : IObjectSerializeFile
+    public sealed class MenuSettings : IObjectSerializeFile
     {
         private MenuNodeCollection? _items = null;
 

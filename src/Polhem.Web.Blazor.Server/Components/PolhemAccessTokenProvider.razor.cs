@@ -19,7 +19,7 @@ namespace Polhem.Web.Blazor.Server.Components
     /// across reconnect / refresh (ProtectedSessionStorage, sessionStorage,
     /// etc.) is deliberately out of scope for Phase 1d.
     /// </remarks>
-    public partial class PolhemAccessTokenProvider : ComponentBase
+    public sealed partial class PolhemAccessTokenProvider : ComponentBase
     {
         private bool _isAttached;
 

@@ -11,7 +11,7 @@ namespace Polhem.Base.Exceptions
     /// (HTTP 403 Forbidden semantics); the client reconstructs it from that code so callers
     /// can <c>catch (ForbiddenException)</c> and degrade the UI accordingly.
     /// </remarks>
-    public class ForbiddenException : Exception
+    public sealed class ForbiddenException : Exception
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ForbiddenException"/> class

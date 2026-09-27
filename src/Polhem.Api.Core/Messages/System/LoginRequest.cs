@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API request for the login operation.
     /// </summary>
-    public class LoginRequest : ApiRequest, ILoginRequest
+    public sealed class LoginRequest : ApiRequest, ILoginRequest
     {
         /// <summary>
         /// Gets or sets the user account identifier.

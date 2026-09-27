@@ -8,7 +8,7 @@ namespace Polhem.Api.Core.JsonRpc
     /// Anomaly detection half of <see cref="JsonRpcExecutor"/>: slow and failed calls written to the
     /// API anomaly log. Split out for file size only; behaviour is unchanged.
     /// </summary>
-    public partial class JsonRpcExecutor
+    public sealed partial class JsonRpcExecutor
     {
         private bool AnomalyEnabled =>
             _anomalyWriter != null && _sessionService != null

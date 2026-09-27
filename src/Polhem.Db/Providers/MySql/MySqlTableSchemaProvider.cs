@@ -20,7 +20,7 @@ namespace Polhem.Db.Providers.MySql
     /// provider does not take a schema parameter and always scopes queries to
     /// <c>DATABASE()</c>.
     /// </remarks>
-    public class MySqlTableSchemaProvider : ITableSchemaProvider
+    public sealed class MySqlTableSchemaProvider : ITableSchemaProvider
     {
         private readonly DbAccess _dbAccess;
 

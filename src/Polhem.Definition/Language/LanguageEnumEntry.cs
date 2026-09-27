@@ -9,7 +9,7 @@ namespace Polhem.Definition.Language
     /// dropdown option, lookup row, or other ordered enumeration of localized choices.
     /// </summary>
     [Description("Single code/text pair within a language enum.")]
-    public class LanguageEnumEntry : KeyCollectionItem
+    public sealed class LanguageEnumEntry : KeyCollectionItem
     {
         /// <summary>
         /// Gets or sets the persisted code stored in the database.

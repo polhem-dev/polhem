@@ -6,7 +6,7 @@ namespace Polhem.Definition.Attributes
     /// Attribute for annotating API method access control.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = true)]
-    public class ApiAccessControlAttribute : Attribute
+    public sealed class ApiAccessControlAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of <see cref="ApiAccessControlAttribute"/>.

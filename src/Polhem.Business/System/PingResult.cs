@@ -6,7 +6,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for the Ping method.
     /// </summary>
-    public class PingResult : BusinessResult, IPingResponse
+    public sealed class PingResult : BusinessResult, IPingResponse
     {
         /// <summary>
         /// Gets or sets the status, typically "ok" or "pong".

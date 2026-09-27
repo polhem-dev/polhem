@@ -13,7 +13,7 @@ namespace Polhem.UI.Avalonia.DataObjects
     /// uppercases column names, wire-deserialized tables keep the original casing) —
     /// compare them case-insensitively, matching DataTable lookup semantics.
     /// </remarks>
-    public class FieldValueChangedEventArgs : EventArgs
+    public sealed class FieldValueChangedEventArgs : EventArgs
     {
         /// <summary>
         /// Initializes a new instance of <see cref="FieldValueChangedEventArgs"/>.

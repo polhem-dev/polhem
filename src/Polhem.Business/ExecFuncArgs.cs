@@ -5,7 +5,7 @@ namespace Polhem.Business
     /// <summary>
     /// Input arguments for executing a custom method.
     /// </summary>
-    public class ExecFuncArgs : BusinessArgs, IExecFuncRequest
+    public sealed class ExecFuncArgs : BusinessArgs, IExecFuncRequest
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecFuncArgs"/> class.

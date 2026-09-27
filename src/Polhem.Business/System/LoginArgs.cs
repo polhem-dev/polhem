@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Input arguments for the login operation.
     /// </summary>
-    public class LoginArgs : BusinessArgs, ILoginRequest
+    public sealed class LoginArgs : BusinessArgs, ILoginRequest
     {
         /// <summary>
         /// Gets or sets the user account identifier.

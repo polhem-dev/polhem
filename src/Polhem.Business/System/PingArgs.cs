@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Input arguments for the Ping method.
     /// </summary>
-    public class PingArgs : BusinessArgs, IPingRequest
+    public sealed class PingArgs : BusinessArgs, IPingRequest
     {
         /// <summary>
         /// Gets or sets the client identifier name (optional).

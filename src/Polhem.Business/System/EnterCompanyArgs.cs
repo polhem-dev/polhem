@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Input arguments for the EnterCompany operation.
     /// </summary>
-    public class EnterCompanyArgs : BusinessArgs, IEnterCompanyRequest
+    public sealed class EnterCompanyArgs : BusinessArgs, IEnterCompanyRequest
     {
         /// <summary>
         /// Gets or sets the id of the company the caller wants to enter for this session.

@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response for the create API key operation.
     /// </summary>
-    public class CreateApiKeyResponse : ApiResponse, ICreateApiKeyResponse
+    public sealed class CreateApiKeyResponse : ApiResponse, ICreateApiKeyResponse
     {
         /// <summary>
         /// Gets or sets the key identifier that was issued.

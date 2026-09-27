@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API request for the save definition operation.
     /// </summary>
-    public class SaveDefineRequest : ApiRequest, ISaveDefineRequest
+    public sealed class SaveDefineRequest : ApiRequest, ISaveDefineRequest
     {
         /// <summary>
         /// Gets or sets the definition type.

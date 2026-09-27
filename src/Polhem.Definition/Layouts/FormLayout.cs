@@ -12,7 +12,7 @@ namespace Polhem.Definition.Layouts
     /// </summary>
     [Description("Form layout configuration.")]
     [TreeNode]
-    public class FormLayout : IObjectSerializeFile
+    public sealed class FormLayout : IObjectSerializeFile
     {
         private LayoutSectionCollection? _sections = null;
         private LayoutGridCollection? _details = null;

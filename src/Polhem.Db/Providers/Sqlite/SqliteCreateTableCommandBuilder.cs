@@ -14,7 +14,7 @@ namespace Polhem.Db.Providers.Sqlite
     /// AutoIncrement column line, and no <c>COMMENT ON</c> output (SQLite does not persist
     /// table or column descriptions).
     /// </summary>
-    public class SqliteCreateTableCommandBuilder : ICreateTableCommandBuilder
+    public sealed class SqliteCreateTableCommandBuilder : ICreateTableCommandBuilder
     {
         private TableSchema? _dbTable;
 

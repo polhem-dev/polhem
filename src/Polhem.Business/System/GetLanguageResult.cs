@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for retrieving a language resource as a typed object.
     /// </summary>
-    public class GetLanguageResult : BusinessResult, IGetLanguageResponse
+    public sealed class GetLanguageResult : BusinessResult, IGetLanguageResponse
     {
         /// <summary>
         /// Gets or sets the raw definition serialised as XML; empty when no definition exists.

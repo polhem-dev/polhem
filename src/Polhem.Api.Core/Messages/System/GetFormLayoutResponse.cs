@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response for the get form layout operation.
     /// </summary>
-    public class GetFormLayoutResponse : ApiResponse, IGetFormLayoutResponse
+    public sealed class GetFormLayoutResponse : ApiResponse, IGetFormLayoutResponse
     {
         /// <summary>
         /// Gets or sets the raw definition serialised as XML; empty when no definition exists.

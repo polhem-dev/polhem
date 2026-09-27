@@ -6,7 +6,7 @@ namespace Polhem.Business.Form
     /// <summary>
     /// Input arguments for the FormSchema-driven <c>Save</c> operation.
     /// </summary>
-    public class SaveArgs : BusinessArgs, ISaveRequest
+    public sealed class SaveArgs : BusinessArgs, ISaveRequest
     {
         /// <summary>
         /// Gets or sets the <c>DataSet</c> to persist. Each row's

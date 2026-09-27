@@ -3,7 +3,7 @@ namespace Polhem.Api.Core.JsonRpc
     /// <summary>
     /// Represents an exception that occurs while processing a JSON-RPC request.
     /// </summary>
-    public class JsonRpcException : Exception
+    public sealed class JsonRpcException : Exception
     {
         /// <summary>
         /// Gets the HTTP error status code.

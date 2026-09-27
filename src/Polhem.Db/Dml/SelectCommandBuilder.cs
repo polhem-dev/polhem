@@ -9,7 +9,7 @@ namespace Polhem.Db.Dml
     /// <summary>
     /// Builds SELECT command specifications from a form schema.
     /// </summary>
-    public class SelectCommandBuilder
+    public sealed class SelectCommandBuilder
     {
         private readonly FormSchema _formDefine;
         private readonly DatabaseType _databaseType;

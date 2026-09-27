@@ -10,7 +10,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Program item.")]
     [TreeNode]
-    public class ProgramItem : KeyCollectionItem
+    public sealed class ProgramItem : KeyCollectionItem
     {
         #region Constructors
 

@@ -22,7 +22,7 @@ namespace Polhem.Db.Providers.Oracle
     /// and <c>MODIFY</c> emits the full column definition in one statement (PG-style
     /// three-part ALTER is not used).
     /// </remarks>
-    public class OracleTableAlterCommandBuilder : ITableAlterCommandBuilder
+    public sealed class OracleTableAlterCommandBuilder : ITableAlterCommandBuilder
     {
         /// <inheritdoc />
         public ChangeExecutionKind GetExecutionKind(ITableChange change)

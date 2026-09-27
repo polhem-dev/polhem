@@ -10,7 +10,7 @@ namespace Polhem.Definition.Settings
     [Description("Backend parameters and environment settings.")]
     [TreeNode("Backend")]
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class BackendConfiguration
+    public sealed class BackendConfiguration
     {
         /// <summary>
         /// Logging options for configuring log parameters.

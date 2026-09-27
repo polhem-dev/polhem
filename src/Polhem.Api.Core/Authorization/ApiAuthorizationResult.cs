@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Authorization
     /// <summary>
     /// API authorization validation result.
     /// </summary>
-    public class ApiAuthorizationResult
+    public sealed class ApiAuthorizationResult
     {
         /// <summary>
         /// Gets or sets a value indicating whether validation succeeded.

@@ -6,7 +6,7 @@ namespace Polhem.ObjectCaching.Database
     /// <summary>
     /// Session information cache.
     /// </summary>
-    public class SessionInfoCache : KeyObjectCache<SessionInfo>
+    public sealed class SessionInfoCache : KeyObjectCache<SessionInfo>
     {
         private readonly Func<ICacheDataSourceProvider>? _dataSource;
 

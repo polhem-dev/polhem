@@ -19,7 +19,7 @@ namespace Polhem.Definition.Forms
     /// </remarks>
     [Description("Business rule.")]
     [TreeNode]
-    public class FormRule : KeyCollectionItem
+    public sealed class FormRule : KeyCollectionItem
     {
         #region Constructors
 

@@ -5,7 +5,7 @@ namespace Polhem.Db.Dml
     /// This class records all field mappings (used in Select, Where, and Order By clauses) and the associated
     /// TableJoin settings needed to compose a complete and correct SQL query.
     /// </summary>
-    public class SelectContext
+    public sealed class SelectContext
     {
         /// <summary>
         /// Gets or sets all field source mappings used by the query.

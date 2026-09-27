@@ -8,7 +8,7 @@ namespace Polhem.Definition.Database
     /// Table index collection.
     /// </summary>
     [TreeNode("Indexes", true)]
-    public class DbTableIndexCollection : KeyCollectionBase<DbTableIndex>
+    public sealed class DbTableIndexCollection : KeyCollectionBase<DbTableIndex>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="DbTableIndexCollection"/>.

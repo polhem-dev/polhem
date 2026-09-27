@@ -6,7 +6,7 @@ namespace Polhem.Business.Form
     /// <summary>
     /// Output result for the FormSchema-driven <c>GetNewData</c> operation.
     /// </summary>
-    public class GetNewDataResult : BusinessResult, IGetNewDataResponse
+    public sealed class GetNewDataResult : BusinessResult, IGetNewDataResponse
     {
         /// <summary>
         /// Gets or sets the blank <c>DataSet</c> skeleton.

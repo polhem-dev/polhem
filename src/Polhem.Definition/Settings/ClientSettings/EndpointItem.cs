@@ -8,7 +8,7 @@ namespace Polhem.Definition.Settings
     /// A service endpoint list item.
     /// </summary>
     [Description("Service endpoint list item.")]
-    public class EndpointItem : CollectionItem
+    public sealed class EndpointItem : CollectionItem
     {
         /// <summary>
         /// Initializes a new instance of <see cref="EndpointItem"/>.

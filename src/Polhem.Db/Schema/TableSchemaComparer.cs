@@ -8,7 +8,7 @@ namespace Polhem.Db.Schema
     /// <summary>
     /// Compares a defined table schema against the actual database table schema.
     /// </summary>
-    public class TableSchemaComparer
+    public sealed class TableSchemaComparer
     {
         /// <summary>
         /// Initializes a new instance of <see cref="TableSchemaComparer"/>.

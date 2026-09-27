@@ -21,7 +21,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// <see cref="LookupDialog"/> hosts it in a modal window, but the panel can be
     /// embedded anywhere and unit-tested without a window.
     /// </remarks>
-    public class LookupPanel : UserControl
+    public sealed class LookupPanel : UserControl
     {
         private readonly TextBox _searchBox;
         private readonly GridControl _grid;

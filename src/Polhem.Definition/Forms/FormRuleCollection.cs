@@ -9,7 +9,7 @@ namespace Polhem.Definition.Forms
     /// </summary>
     [Description("Business rule collection.")]
     [TreeNode("Rules", false)]
-    public class FormRuleCollection : KeyCollectionBase<FormRule>
+    public sealed class FormRuleCollection : KeyCollectionBase<FormRule>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="FormRuleCollection"/>.

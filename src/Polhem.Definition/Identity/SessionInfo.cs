@@ -5,7 +5,7 @@ namespace Polhem.Definition.Identity
     /// <summary>
     /// Backend session info that records runtime data for the connection established between a user and the server.
     /// </summary>
-    public class SessionInfo : IKeyObject, IUserInfo
+    public sealed class SessionInfo : IKeyObject, IUserInfo
     {
         private SessionCompanyScope _companyScope = SessionCompanyScope.None;
 

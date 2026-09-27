@@ -4,7 +4,7 @@ namespace Polhem.Base.Attributes
     /// Custom attribute applied to a property to indicate that it should be excluded from tree node generation.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class TreeNodeIgnoreAttribute : Attribute
+    public sealed class TreeNodeIgnoreAttribute : Attribute
     {
     }
 }

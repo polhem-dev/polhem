@@ -6,7 +6,7 @@ namespace Polhem.ObjectCaching.Services
     /// Session information access service. Ctor-injects <see cref="ICacheContainer"/>
     /// so per-host (or per-test-fixture) DI containers own their own session cache.
     /// </summary>
-    public class SessionInfoService : ISessionInfoService
+    public sealed class SessionInfoService : ISessionInfoService
     {
         private readonly ICacheContainer _cache;
 

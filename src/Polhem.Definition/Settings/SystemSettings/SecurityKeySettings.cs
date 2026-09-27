@@ -9,7 +9,7 @@ namespace Polhem.Definition.Settings
     [Description("Encryption key settings.")]
     [TreeNode("Security Keys")]
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class SecurityKeySettings
+    public sealed class SecurityKeySettings
     {
         /// <summary>
         /// Master key source.

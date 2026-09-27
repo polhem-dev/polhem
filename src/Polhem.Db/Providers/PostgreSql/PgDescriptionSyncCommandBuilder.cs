@@ -14,7 +14,7 @@ namespace Polhem.Db.Providers.PostgreSql
     /// here as well. <c>COMMENT ON</c> is an upsert, so <see cref="DescriptionChange.IsNew"/> is not
     /// consulted.
     /// </remarks>
-    public class PgDescriptionSyncCommandBuilder : IDescriptionSyncCommandBuilder
+    public sealed class PgDescriptionSyncCommandBuilder : IDescriptionSyncCommandBuilder
     {
         /// <inheritdoc />
         public IReadOnlyList<string> GetStatements(TableSchemaDiff diff)

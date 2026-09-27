@@ -14,7 +14,7 @@ namespace Polhem.Db.Providers.PostgreSql
     /// <c>SET / DROP DEFAULT</c>, <c>RENAME COLUMN</c>; constraint-based primary keys.
     /// Counterpart to <see cref="SqlServer.SqlTableAlterCommandBuilder"/>.
     /// </summary>
-    public class PgTableAlterCommandBuilder : ITableAlterCommandBuilder
+    public sealed class PgTableAlterCommandBuilder : ITableAlterCommandBuilder
     {
         /// <inheritdoc />
         public ChangeExecutionKind GetExecutionKind(ITableChange change)

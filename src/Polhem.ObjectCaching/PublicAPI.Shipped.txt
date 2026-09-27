@@ -205,44 +205,7 @@ Polhem.ObjectCaching.Services.SessionInfoService.SessionInfoService(Polhem.Objec
 Polhem.ObjectCaching.Services.SessionInfoService.Set(Polhem.Definition.Identity.SessionInfo! sessionInfo) -> void
 const Polhem.ObjectCaching.Database.ApiKeyCache.AbsoluteMinutes = 60 -> int
 const Polhem.ObjectCaching.Database.ApiKeyCache.NegativeMinutes = 1 -> int
-override Polhem.ObjectCaching.Database.ApiKeyCache.CreateInstance(string! key) -> Polhem.Definition.Security.ApiKeyInfo?
-override Polhem.ObjectCaching.Database.ApiKeyCache.GetNegativePolicy(string! key) -> Polhem.ObjectCaching.CacheItemPolicy?
-override Polhem.ObjectCaching.Database.ApiKeyCache.GetPolicy(string! key) -> Polhem.ObjectCaching.CacheItemPolicy!
 override Polhem.ObjectCaching.Database.ApiKeyGateCache.CacheGroup.get -> string!
-override Polhem.ObjectCaching.Database.ApiKeyGateCache.CreateInstance(string! key) -> Polhem.Definition.Security.ApiKeyGateState?
-override Polhem.ObjectCaching.Database.ApiKeyGateCache.GetPolicy(string! key) -> Polhem.ObjectCaching.CacheItemPolicy!
-override Polhem.ObjectCaching.Database.CompanyAuditRulesCache.CreateInstance(string! key) -> Polhem.Definition.Logging.CompanyAuditRules?
-override Polhem.ObjectCaching.Database.CompanyInfoCache.CreateInstance(string! key) -> Polhem.Definition.Identity.CompanyInfo?
-override Polhem.ObjectCaching.Database.CompanyRolePermissionsCache.CreateInstance(string! key) -> Polhem.Definition.Identity.CompanyRolePermissions?
-override Polhem.ObjectCaching.Database.DepartmentTreeCache.CreateInstance(string! key) -> Polhem.Definition.Organization.DepartmentTree?
-override Polhem.ObjectCaching.Database.SessionInfoCache.CreateInstance(string! key) -> Polhem.Definition.Identity.SessionInfo?
-override Polhem.ObjectCaching.Database.SessionInfoCache.GetNegativePolicy(string! key) -> Polhem.ObjectCaching.CacheItemPolicy?
-override Polhem.ObjectCaching.Define.CurrencySettingsCache.CreateInstance() -> Polhem.Definition.Settings.CurrencySettings?
-override Polhem.ObjectCaching.Define.CurrencySettingsCache.GetPolicy() -> Polhem.ObjectCaching.CacheItemPolicy!
-override Polhem.ObjectCaching.Define.DatabaseSettingsCache.CreateInstance() -> Polhem.Definition.Settings.DatabaseSettings?
-override Polhem.ObjectCaching.Define.DatabaseSettingsCache.GetPolicy() -> Polhem.ObjectCaching.CacheItemPolicy!
-override Polhem.ObjectCaching.Define.DbCategorySettingsCache.CreateInstance() -> Polhem.Definition.Settings.DbCategorySettings?
-override Polhem.ObjectCaching.Define.DbCategorySettingsCache.GetPolicy() -> Polhem.ObjectCaching.CacheItemPolicy!
-override Polhem.ObjectCaching.Define.FormLayoutCache.CreateInstance(string! key) -> Polhem.Definition.Layouts.FormLayout?
-override Polhem.ObjectCaching.Define.FormLayoutCache.GetPolicy(string! key) -> Polhem.ObjectCaching.CacheItemPolicy!
-override Polhem.ObjectCaching.Define.FormSchemaCache.CreateInstance(string! key) -> Polhem.Definition.Forms.FormSchema?
-override Polhem.ObjectCaching.Define.FormSchemaCache.GetPolicy(string! key) -> Polhem.ObjectCaching.CacheItemPolicy!
-override Polhem.ObjectCaching.Define.LanguageResourceCache.CreateInstance(string! key) -> Polhem.Definition.Language.LanguageResource?
-override Polhem.ObjectCaching.Define.LanguageResourceCache.GetPolicy(string! key) -> Polhem.ObjectCaching.CacheItemPolicy!
-override Polhem.ObjectCaching.Define.MenuSettingsCache.CreateInstance() -> Polhem.Definition.Settings.MenuSettings?
-override Polhem.ObjectCaching.Define.MenuSettingsCache.GetPolicy() -> Polhem.ObjectCaching.CacheItemPolicy!
-override Polhem.ObjectCaching.Define.PermissionModelsCache.CreateInstance() -> Polhem.Definition.Settings.PermissionModels?
-override Polhem.ObjectCaching.Define.PermissionModelsCache.GetPolicy() -> Polhem.ObjectCaching.CacheItemPolicy!
-override Polhem.ObjectCaching.Define.PluginSettingsCache.CreateInstance() -> Polhem.Definition.Settings.PluginSettings?
-override Polhem.ObjectCaching.Define.PluginSettingsCache.GetPolicy() -> Polhem.ObjectCaching.CacheItemPolicy!
-override Polhem.ObjectCaching.Define.ProgramSettingsCache.CreateInstance() -> Polhem.Definition.Settings.ProgramSettings?
-override Polhem.ObjectCaching.Define.ProgramSettingsCache.GetPolicy() -> Polhem.ObjectCaching.CacheItemPolicy!
-override Polhem.ObjectCaching.Define.SystemSettingsCache.CreateInstance() -> Polhem.Definition.Settings.SystemSettings?
-override Polhem.ObjectCaching.Define.SystemSettingsCache.GetPolicy() -> Polhem.ObjectCaching.CacheItemPolicy!
-override Polhem.ObjectCaching.Define.TableSchemaCache.CreateInstance(string! key) -> Polhem.Definition.Database.TableSchema?
-override Polhem.ObjectCaching.Define.TableSchemaCache.GetPolicy(string! key) -> Polhem.ObjectCaching.CacheItemPolicy!
-override Polhem.ObjectCaching.Define.UnitSettingsCache.CreateInstance() -> Polhem.Definition.Settings.UnitSettings?
-override Polhem.ObjectCaching.Define.UnitSettingsCache.GetPolicy() -> Polhem.ObjectCaching.CacheItemPolicy!
 static Polhem.ObjectCaching.CacheInfo.Initialize(Polhem.Definition.Settings.BackendConfiguration! configuration) -> void
 static Polhem.ObjectCaching.CacheInfo.NotifyVersions.get -> Polhem.ObjectCaching.ICacheNotifyVersionStore!
 static Polhem.ObjectCaching.CacheInfo.NotifyVersions.set -> void
@@ -264,4 +227,3 @@ virtual Polhem.ObjectCaching.ObjectCache<T>.GetKey() -> string!
 virtual Polhem.ObjectCaching.ObjectCache<T>.GetPolicy() -> Polhem.ObjectCaching.CacheItemPolicy!
 virtual Polhem.ObjectCaching.ObjectCache<T>.Remove() -> void
 virtual Polhem.ObjectCaching.ObjectCache<T>.Set(T! value) -> void
-virtual Polhem.ObjectCaching.Providers.MemoryCacheProvider.Dispose(bool disposing) -> void

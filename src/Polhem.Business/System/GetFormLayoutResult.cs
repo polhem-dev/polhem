@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for retrieving a form layout as a typed object.
     /// </summary>
-    public class GetFormLayoutResult : BusinessResult, IGetFormLayoutResponse
+    public sealed class GetFormLayoutResult : BusinessResult, IGetFormLayoutResponse
     {
         /// <summary>
         /// Gets or sets the raw definition serialised as XML; empty when no definition exists.

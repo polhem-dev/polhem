@@ -7,7 +7,7 @@ namespace Polhem.ObjectCaching.Define
     /// <summary>
     /// Form layout cache.
     /// </summary>
-    public class FormLayoutCache : KeyObjectCache<FormLayout>
+    public sealed class FormLayoutCache : KeyObjectCache<FormLayout>
     {
         private readonly IDefineStorage _storage;
 

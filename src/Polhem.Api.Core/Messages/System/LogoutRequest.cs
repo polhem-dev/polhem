@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API request for the Logout operation. Carries no payload fields.
     /// </summary>
-    public class LogoutRequest : ApiRequest, ILogoutRequest
+    public sealed class LogoutRequest : ApiRequest, ILogoutRequest
     {
     }
 }

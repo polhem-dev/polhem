@@ -15,7 +15,7 @@ namespace Polhem.Db.Providers.MySql
     /// <see cref="DatabaseType.MySQL"/>, so backtick identifier quoting and other
     /// MySQL-specific output flow from the <see cref="DatabaseTypeExtensions"/> dictionaries.
     /// </summary>
-    public class MySqlFormCommandBuilder : IFormCommandBuilder
+    public sealed class MySqlFormCommandBuilder : IFormCommandBuilder
     {
         private readonly IDefineAccess _defineAccess;
 

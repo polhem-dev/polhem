@@ -7,7 +7,7 @@ namespace Polhem.Api.Core.Messages.AuditLog
     /// <summary>
     /// API request for the change-log list operation.
     /// </summary>
-    public class GetChangeLogRequest : ApiRequest, IGetChangeLogRequest
+    public sealed class GetChangeLogRequest : ApiRequest, IGetChangeLogRequest
     {
         /// <summary>Gets or sets the inclusive lower bound on the event time (UTC).</summary>
         public DateTime? FromUtc { get; set; }

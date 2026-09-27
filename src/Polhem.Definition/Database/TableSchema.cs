@@ -11,7 +11,7 @@ namespace Polhem.Definition.Database
     /// </summary>
     [Description("Table schema.")]
     [TreeNode]
-    public class TableSchema : IObjectSerializeFile
+    public sealed class TableSchema : IObjectSerializeFile
     {
         private DbFieldCollection? _fields = null;
         private DbTableIndexCollection? _indexes = null;

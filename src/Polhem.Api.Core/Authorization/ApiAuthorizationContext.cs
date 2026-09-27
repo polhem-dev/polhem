@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Authorization
     /// <summary>
     /// API authorization validation context.
     /// </summary>
-    public class ApiAuthorizationContext
+    public sealed class ApiAuthorizationContext
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiAuthorizationContext"/> class.

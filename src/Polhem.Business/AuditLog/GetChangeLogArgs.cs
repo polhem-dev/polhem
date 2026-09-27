@@ -8,7 +8,7 @@ namespace Polhem.Business.AuditLog
     /// Input arguments for the change-log list query (typed, AND-combined filter over
     /// <c>st_log_change</c> event headers).
     /// </summary>
-    public class GetChangeLogArgs : BusinessArgs, IGetChangeLogRequest
+    public sealed class GetChangeLogArgs : BusinessArgs, IGetChangeLogRequest
     {
         /// <summary>Gets or sets the inclusive lower bound on the event time (UTC).</summary>
         public DateTime? FromUtc { get; set; }

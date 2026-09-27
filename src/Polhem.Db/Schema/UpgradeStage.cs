@@ -3,7 +3,7 @@ namespace Polhem.Db.Schema
     /// <summary>
     /// An ordered group of SQL statements that form one transactional step of an <see cref="UpgradePlan"/>.
     /// </summary>
-    public class UpgradeStage
+    public sealed class UpgradeStage
     {
         /// <summary>
         /// Initializes a new instance of <see cref="UpgradeStage"/>.

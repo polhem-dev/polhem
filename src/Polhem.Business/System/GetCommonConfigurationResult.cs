@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for retrieving common parameters and environment configuration.
     /// </summary>
-    public class GetCommonConfigurationResult : BusinessResult, IGetCommonConfigurationResponse
+    public sealed class GetCommonConfigurationResult : BusinessResult, IGetCommonConfigurationResponse
     {
         /// <summary>
         /// Gets or sets the common parameters and environment configuration.
