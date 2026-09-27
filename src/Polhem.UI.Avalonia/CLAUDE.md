@@ -37,7 +37,8 @@ controls + a composed GridControl + a FormView/ListView View layer + the lookup 
 - **Do not make Blazor depend on `Polhem.UI.Core` to remove duplication between Avalonia and Blazor.Server (such as
   `FormDataObject`)**: `docs/en/dependency-map.md` explicitly defines the `Polhem.UI.*` family by "whether it
   consumes the `Polhem.UI.Core` abstractions", so making Blazor depend on it would contradict the basis of that
-  definition. The approach taken is comments in both directions.
+  definition. Head-agnostic logic goes to `Polhem.Api.Client`, a common ancestor of both heads with no family
+  meaning: the `FormDataObject` value rules now live there once, in `FormValueBinding` and `FormDataGuard`.
 
 ## Acceptance baseline for control behavior
 

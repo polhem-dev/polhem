@@ -7,7 +7,8 @@
 >
 > This file keeps only what "you must know before writing, and would be too late if loaded later".
 
-- **xUnit** v2.9.3 + **coverlet**; the global `<Using Include="Xunit" />` is already configured.
+- **xUnit** v2 (the version is pinned in the test `.csproj` files) + **coverlet**; the global
+  `<Using Include="Xunit" />` is already configured.
 - Each `src/<Module>` maps to `tests/<Module>.UnitTests`; shared utilities are in `tests/Polhem.Tests.Shared/`.
 - Method naming is `<MethodName>_<Scenario>_<ExpectedResult>` (`ValidateToken_ExpiredToken_ReturnsFalse`), and
   always add a `[DisplayName]` with an English description.
@@ -24,8 +25,8 @@ These are decided **before you write the first line**, so they stay in the alway
    (a token not seeded into the cache makes the server take the rebuild path and read `st_session`).
 2. **When you need a database, use `[DbFact(DatabaseType.X)]` / `[DbTheory]`, not `[Fact]`.**
    It skips automatically when `POLHEM_TEST_CONNSTR_{DBTYPE}` is not set; `[Fact]` goes red in environments without
-   the container. It **does not apply** to pure logic / serialization tests: a bug there should be fixed directly,
-   not skipped.
+   the container. In CI, a skip for a database the run's mode requires fails `RequiredTestDatabaseGateTests`. It
+   **does not apply** to pure logic / serialization tests: a bug there should be fixed directly, not skipped.
 3. **Do not modify production `static` state** (except fixture initialization). xUnit runs different test classes in
    parallel, so touching the same static is bound to race; restoring it in `try/finally` only holds when running
    serially. When it cannot be avoided, put all related classes in the same `[Collection]`, and **use a `const`, not a
@@ -44,9 +45,9 @@ in `tests/CLAUDE.md`.
 
 ## CI database scope: ask the user before pushing
 
-`build-ci.yml` runs only **SQL Server + SQLite** by default (lite mode, about 3.5 minutes, and **no SonarCloud**).
-Running all four databases must be **requested explicitly**: put `[all-db]` in the commit message (for a PR, the PR
-title), or trigger `workflow_dispatch` manually with `db_scope=all`.
+`build-ci.yml` runs only **SQL Server + SQLite** by default (lite mode, a few minutes, and **no SonarCloud**).
+Running every database (PostgreSQL, MySQL and Oracle as well) must be **requested explicitly**: put `[all-db]` in
+the commit message (for a PR, the PR title), or trigger `workflow_dispatch` manually with `db_scope=all`.
 
 **Before pushing a branch or opening a pull request, always ask the user whether this change should run the full
 mode.** Do not decide yourself: whether to run everything depends on the user's risk judgement about this change,

@@ -10,8 +10,10 @@
 The body codec **is not a deployment setting**. Each request declares it in the `codec` field of the payload
 envelope, and the server **responds with the same codec**. **Undeclared means MessagePack**: that is a compatibility
 constant, not a chosen default (every client that predates negotiation declares nothing and sends MessagePack).
-The available names and their implementations are in `PayloadCodecNames` and
-`ApiPayloadOptionsFactory.CreateSerializer`; **this file does not copy that list**.
+The built-in names are in `PayloadCodecNames`; the registry that maps a name to its implementation is
+`ApiServiceOptions` (`ResolvePayloadSerializer`, `AcceptedPayloadCodecs`, and `RegisterPayloadCodec` for a codec the
+framework does not ship). **This file does not copy that list.** `ApiPayloadOptionsFactory` deliberately has no
+serializer factory: its remarks explain why.
 
 `PayloadFormat` (Plain/Encoded/Encrypted) is **the encryption/compression dimension**, orthogonal to the codec: a
 `Plain` body is always the envelope's own System.Text.Json; only `Encoded` / `Encrypted` bodies are spelled by the
@@ -21,10 +23,10 @@ Therefore, **when a .NET client (including the iOS / Android / WASM heads) decla
 MessagePack**, and `ApiConnector.PayloadCodec` is the only way to change it on that end. The assumption "mobile uses
 JSON, MessagePack is only between desktop/server" still does not hold.
 
-> ⚠️ **`ApiPayloadOptions.Serializer` was removed in 4.27.0** (breaking change); a `<Serializer>` element left over
-> in an existing `SystemSettings.xml` is **ignored**, not honoured.
+> ⚠️ **`ApiPayloadOptions.Serializer` was removed in Bee.NET 4.27.0** (breaking change); a `<Serializer>` element
+> left over in an existing `SystemSettings.xml` is **ignored**, not honoured.
 > "The framework has no JSON body serializer" and "`CreateSerializer` has only one case" are conclusions from
-> **4.26.0 and earlier**. **Do not reason from them any more.**
+> **Bee.NET 4.26.0 and earlier**. **Do not reason from them any more.**
 
 ## Wire shape changes have a downstream in another repository
 
@@ -62,7 +64,9 @@ throws `FormatterNotRegisteredException` (it does not just get slower).
 
 When you add `Polhem.Api.Core.Messages.*`, a definition-layer type or collection transitively reachable from it, you
 **must** register it in `src/Polhem.Api.Core/MessagePack/WireContracts.*.cs`. The full procedure and the three easy
-misjudgements are in `src/Polhem.Api.Core/CLAUDE.md`; a missed registration is caught by `WireContractDriftTests`.
+misjudgements are in `src/Polhem.Api.Core/CLAUDE.md`; a missed registration is caught by `WireContractDriftTests`,
+and a member the formatter writes but does not read back, or that the two body codecs carry differently, by
+`WireCodecParityTests`.
 
 > "MessagePack works under AOT" is an old conclusion disproved by measurement on 2026-08-10. **Do not reason from
 > it.** How it was disproved, and the record of the time it broke the entire iOS wire, are kept in

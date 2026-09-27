@@ -36,7 +36,7 @@ become pitfalls.
 | **LanguageResource** | When a multilingual interface is needed | No generator: build it by hand + the `FormSchemaLocalizer` sub-key constants. The FormSchema's own captions are the English base text; zh-TW (and any other culture) is the translation, derived with the glossary below. An en-US file is optional: omit it, or make it mirror the schema's captions |
 
 > **Division of labor with `polhem-add-form`**: adding a form to an existing app goes through `polhem-add-form`
-> (5 pure definition changes, **including the FormLayout**). This skill is the technique for producing that FormLayout
+> (pure definition changes, **including the FormLayout**). This skill is the technique for producing that FormLayout
 > (and the TableSchema / i18n). Generate the raw output, then hand-tune the layout; do not hand-write it.
 >
 > Once the files are on disk, the layout can also be generated / edited with `tools/DefineEditor`.

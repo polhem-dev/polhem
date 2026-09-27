@@ -25,7 +25,8 @@ Use the `/loop` mechanism to keep checking until CI passes or the user steps in:
      d. Architectural or ambiguous: stop the loop first and explain to the user
      e. After the fix, go to the next round and wait for the new CI run result
 
-2. Check the SonarCloud scan result (if build-ci.yml integrates SonarCloud):
+2. Check the SonarCloud scan result (only a full-mode run scans; a lite-mode run skips SonarCloud, so its
+   quality gate still shows the last full-mode run — see `.claude/rules/testing.md` § CI database scope):
    - Get the latest quality gate status through the sonarcloud API or gh checks
    - If there are new BLOCKER / HIGH / MEDIUM issues:
      a. Get the issue list and the corresponding code locations

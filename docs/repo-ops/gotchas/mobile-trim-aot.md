@@ -229,12 +229,15 @@ not necessarily.
 
 ## 4. Interpreting build warnings: the iOS head is never at 0 warnings
 
-### Current numbers (measured 2026-09-10)
+### Numbers measured 2026-09-10 (Bee.NET era)
+
+These were measured in bee-library before the rename to Polhem, so the assemblies were then called `Bee.*`; they are
+given below under today's `Polhem.*` names. The numbers are a record, not the current state.
 
 | Build | Reference form | MSBuild reports |
 |------|---------|-------------|
-| `apps/Polhem.Northwind.iOS` (this repository) | ProjectReference | 0 errors, **67 warnings** |
-| The iOS head of `bee-northwind-avalonia` | PackageReference 4.30.0 | 0 errors, **21 warnings** |
+| The in-repo iOS head (today `apps/Polhem.Northwind/Polhem.Northwind.iOS`) | ProjectReference | 0 errors, **67 warnings** |
+| The iOS head of the mirror `bee-northwind-avalonia` | PackageReference, Bee.NET 4.30.0 | 0 errors, **21 warnings** |
 
 The 21 warnings are made up of **13 × `IL2104`, 7 × `IL2026`, 1 × `IL2057`**.
 
@@ -303,8 +306,8 @@ IL2026: System.Data.DataSet.IXmlSerializable.GetSchema():
         Using member 'System.Data.DataSet.WriteXmlSchema(DataSet, XmlWriter)'
 ```
 
-`WriteXmlSchema` is exactly the method that `Polhem.Business.AuditLog.AuditDiffGram` uses since 4.30.0 to write the
-audit payload, so it looks as if that change introduced it. **It did not.** It is called by the BCL's internal
+`WriteXmlSchema` is exactly the method that the internal `Polhem.Business.AuditLog.AuditDiffGram` uses (since Bee.NET
+4.30.0) to write the audit payload, so it looks as if that change introduced it. **It did not.** It is called by the BCL's internal
 `IXmlSerializable.GetSchema()` itself, and it appears on a head whose closure **does not even contain
 `Polhem.Business`**.
 

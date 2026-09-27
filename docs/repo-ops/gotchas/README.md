@@ -8,12 +8,12 @@ directory is context and reasoning to **read on demand**. It records "why that r
 the symptom looked like at the time", so that nobody walks into the same hole with the same misjudgement again.
 
 **Nor is this a public document** (see `.claude/rules/public-docs.md`): its readers are polhem maintainers, not
-framework users. Public design decisions go in `docs/adr/`; public descriptions of behavior go in the root of `docs/`.
+framework users. Public design decisions go in `docs/adr/`; public descriptions of behavior go in `docs/en/` (the source) and its translations under `docs/<lang>/`.
 
 | File | Covers |
 |------|--------|
 | [database.md](database.md) | Oracle `''`=NULL / positional binding / `RAW(16)` read back as `byte[]`, MySQL TEXT/UUID, SQLite GUID casing, decimal scale, the datetime2 parameter layer, the cost of deep-pagination `OFFSET` and the decision on it, the schema shared by load tests and unit tests |
-| [serialization-and-expressions.md](serialization-and-expressions.md) | MessagePack ctor order and wire facts, the two expression engine pitfalls, measured AOT conclusions |
+| [serialization-and-expressions.md](serialization-and-expressions.md) | Wire facts (payload format vs codec), the retired MessagePack ctor-order and `[Union]` constraints (kept as history), the two expression engine pitfalls, measured AOT conclusions |
 | [avalonia-controls.md](avalonia-controls.md) | Proven Avalonia control pitfalls (DataGrid, read-only appearance, events, parallelism) |
 | [mobile-trim-aot.md](mobile-trim-aot.md) | Mobile trim / AOT: the reasoning behind the decision tree, the fidelity of the reflection-only reproduction, build and verification command recipes, **interpreting iOS build warnings (never 0 warnings)** |
 | [test-ci-release.md](test-ci-release.md) | Test fixture gaps, the verification blind spot of the CI path filter, **a 0 from Sonar may mean "not looked at" rather than "clean" (`tools/**/*.cs` is outside the analysis scope)**, how to reproduce Sonar rules locally, pitfalls in the publishing and health check processes |

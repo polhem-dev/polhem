@@ -2,35 +2,35 @@
 
 The matching hard rules are in `.claude/rules/database.md`. This file records symptoms, root causes and the reasoning.
 
-## Oracle: `''` == `NULL`, which breaks String NOT NULL columns whose "normal value is empty"
+## Oracle: `''` == `NULL`, which breaks String NOT NULL columns whose "normal value is empty" (fixed)
 
 **Symptom**: `./test.sh` is all green locally, CI fails, and **only Oracle** throws `ORA-01400` (cannot insert NULL).
 
-**Root cause**: Oracle has no "non-null empty string". The `VARCHAR2(n) DEFAULT '' NOT NULL` that the framework
-generates for an Oracle String column with `AllowNull=false` **contradicts itself** (`DEFAULT ''` is `DEFAULT NULL`,
-which conflicts with `NOT NULL`). Columns whose business value is always non-empty (`sys_id`, `sys_name`) are not
+**Root cause**: Oracle has no "non-null empty string". The `VARCHAR2(n) DEFAULT '' NOT NULL` that the framework used
+to generate for an Oracle String column with `AllowNull=false` **contradicts itself** (`DEFAULT ''` is `DEFAULT NULL`,
+which conflicts with `NOT NULL`). Columns whose business value is always non-empty (`sys_id`, `sys_name`) were not
 affected, because every INSERT supplies a non-empty value and never relies on the default; for **columns whose
 normal value is empty** (such as the multi-tenant `customize_id`), under a **fresh CREATE TABLE** every INSERT that
-omits the column or supplies an empty string fails.
+omitted the column or supplied an empty string failed.
 
-**Why it does not reproduce locally**: the persistent local container goes through **ALTER ADD** for existing tables,
-and ALTER ADD forces a column added to an existing table to be nullable, so the column has no NOT NULL constraint at
-all. Only CI, with a fresh CREATE every time, reaches the real definition.
+**Why it did not reproduce locally** (as recorded at the time): the persistent local container already had the
+table, so it reached the column through the upgrade path, while CI creates every table fresh. Do not reason from the
+old note that "ALTER ADD forces the column nullable": today every dialect's `ALTER TABLE ... ADD` emits the same
+column definition as `CREATE`, `NOT NULL` and `DEFAULT` included.
 
-**Fix (planned)**: fix the Oracle dialect. String/VARCHAR2 columns are always created nullable regardless of
-`AllowNull`, without `DEFAULT ''` (Oracle represents the empty string as NULL anyway); on the read side,
-`ValueUtilities.CStr(null)→""` already means the upper layers only ever see an empty string. This is a set of changes
-(DDL generation + the risk of repeated ALTERs in the schema diff + 10+ Oracle DDL tests).
-**Until that fix lands**, String columns that are "normally empty and must support Oracle" use `AllowNull="true"` as
-a stopgap.
+**Fix (landed)**: `OracleSchemaSyntax.GetNullabilityClause` emits every `String` / `Text` / `Time` column nullable,
+whatever `AllowNull` says, and without `DEFAULT ''`; `ValueUtilities.CStr(null)` returns `""`, so the upper layers
+only ever see an empty string, and `OracleTableSchemaProvider` reads such columns back as `AllowNull = false` so the
+schema diff stays stable. The `AllowNull="true"` stopgap is no longer needed; see `.claude/rules/database.md`.
 
 ## `DefaultValue` written as the type's built-in default → the schema comparison always reports "needs upgrade"
 
-**Symptom**: after adding a column with `DbType="Boolean" DefaultValue="0"`, `TableSchemaBuilder` **always** returns
-`DbUpgradeAction.Upgrade` for that table, and `GetCommandText` always emits SQL that drops and re-adds the default
-constraint, even right after the upgrade has run and the column and default in the DB are exactly right. Three tests
-that expect "structure in sync, so None / empty string / false" (`TableSchemaBuilderTests`) failed in a row because
-of it.
+**Symptom**: after adding a column with `DbType="Boolean" DefaultValue="0"`, `TableSchemaBuilder` **always**
+reports a change for that table (at the time as `DbUpgradeAction.Upgrade`; today `CompareToDiff` returns a
+`TableSchemaDiff` whose `Changes` is not empty), and `GetCommandText` always emits SQL that drops and re-adds the
+default constraint, even right after the upgrade has run and the column and default in the DB are exactly right.
+Three tests that expect "structure in sync, so no change / empty string / false" (`TableSchemaBuilderTests`) failed
+in a row because of it.
 
 **Root cause**: the read-back side **normalizes a default that equals the built-in default to an empty string**.
 `SqlTableSchemaProvider.ParseDBDefaultValue` first strips the `((0))` stored by SQL Server down to `0`, then compares it
@@ -49,7 +49,7 @@ covers both CREATE and ALTER ADD, and existing rows are filled with 0 just the s
 same DDL, without creating this permanent diff.
 
 > The more fundamental fix is to apply the same normalization to both sides of the comparison, but that would change
-> the diff behavior of all 5 providers. Until then, when adding a column, remember: "if the default equals the
+> the diff behavior of every provider. Until then, when adding a column, remember: "if the default equals the
 > built-in value, do not write it".
 
 > **There are two more entries with the same family of symptoms in this file**: Oracle's nullability projection (see
@@ -238,7 +238,7 @@ it just writes the wrong columns. `ORA-00932` only blew up by luck.
 **Fix**: `DbCommandSpec.CreateCommand` sets `BindByName = true` on Oracle text commands (set via reflection;
 `Polhem.Db` references no ADO.NET driver). **Do not rewrite SQL statement by statement to accommodate positional
 binding**: that requires everyone who writes SQL to remember an Oracle-only rule that no mechanism checks.
-The gate is `tests/Polhem.Db.UnitTests/ParameterBindingOrderTests.cs` (two per provider, for all five).
+The gate is `tests/Polhem.Db.UnitTests/ParameterBindingOrderTests.cs` (two per provider, for every provider under `src/Polhem.Db/Providers/`).
 
 ## Oracle: `RAW(16)` reads back as `byte[]`, so `is Guid` is always false (fixed, with remaining caveats)
 
@@ -250,14 +250,18 @@ unique key).
 **Root cause**: Oracle has no UUID type; `FieldDbType.Guid` maps to `RAW(16)`. **The write side was handled long
 ago** (`DbCommandSpec.NormalizeParameterValue` converts to `byte[]`), but each reader did its own thing.
 
-**Fix**: conversions always go through `ValueUtilities.CGuid(object)`, which **already accepts 16-byte arrays**.
-`DataFormRepository` missed it because it carried its own parallel implementation (`TryCoerceToGuid`).
+**Fix**: framework readers convert through `ValueUtilities.CGuid(object)`, which **already accepts 16-byte arrays**.
+`DataFormRepository` missed it at first because it carries its own parallel implementation (`TryCoerceToGuid`). That
+helper still exists on purpose: it returns null rather than `Guid.Empty` for a value that is no kind of Guid, which
+`ExtractMasterRowId` needs to skip a row. It now accepts 16-byte arrays too. Its remarks ask to keep its accepted
+shapes in step with `CGuid`; no test or analyzer enforces that, so when `CGuid` learns a new shape, change both.
 For FormSchema-driven result tables, `MarkFromSchema` additionally replaces, in place, a column declared as Guid but
 holding `byte[]` with a real Guid column; otherwise consumers get a DataTable that is "declared Guid, actually
 byte[]".
 
-**Remaining**: `FormDataGuard` and the grids of each UI head (`GridControl.Cells`, `DynamicGrid`, `ListView`) still
-use a bare `is Guid`. Data that went through `MarkFromSchema` is fine; other sources have not been checked.
+**Remaining**: `FormDataGuard` (`RequireMasterRowId`, `TryGetRowId`) accepts a `Guid` or a parseable string but not a
+16-byte array, and the grids of each UI head (`GridControl.Cells`, `ListView`, the Blazor `DynamicGrid`) read row ids
+through it. Data that went through `MarkFromSchema` is fine; other sources have not been checked.
 
 ## SQLite: date columns read back as `string`, so `is DateTime` is always false (fixed, with remaining caveats)
 
@@ -302,7 +306,7 @@ test fixture fails with
 `InvalidOperationException: Change narrows a column (AlterFieldChange)`
 (`InvalidOperationException` is not a `DbException`, `RunStep` does not catch it, and the whole Oracle setup aborts).
 
-**Root cause**: `databaseNamePrefix` has no effect on Oracle: all five tables live under the single `testuser` schema
+**Root cause**: `databaseNamePrefix` has no effect on Oracle: all the tables live under the single `testuser` schema
 (see the comment in `.runsettings`). The load test uses the `st_user` from `apps/Polhem.Northwind/Define` (`password`
 length 200), the unit tests use the one from `tests/Define` (length 40), and they overwrite each other.
 
@@ -406,6 +410,6 @@ RAP and CAP, and the limits of what was verified are all in
 - Seed JSON values are all strings (including numeric PKs such as order `"10248"`); **convert them by the target
   column's `FieldDbType`**, never guess the type from the value.
 - Bind dates with `DateTimeKind.Utc`: PG's Date maps to `timestamptz`, and Npgsql rejects Unspecified/Local; Utc is
-  safe on all 5 DBs.
+  safe on every supported DB.
 - If a persistent DB has old seed data left over, the gate skips → the related tables in that DB must be emptied by
   hand (including the gate table itself, to reopen the gate).

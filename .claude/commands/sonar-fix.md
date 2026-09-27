@@ -79,7 +79,7 @@ Fix mode uses `/loop` to repeat until an end condition holds.
       - An issue with no matching rule: add it straight to the skip list (reason: unknown rule)
    c. Keep an attempts counter for each issue (in memory, within this session)
    d. After applying the change, run:
-      dotnet build --configuration Release --no-restore
+      dotnet build Polhem.slnx --configuration Release --no-restore
       dotnet test <affected project>.csproj --configuration Release --settings .runsettings
    e. Verification passes → keep the staged change; fails → git restore, attempts+1
    f. attempts >= 3 → write to docs/.sonar-fix-state/skip.json (issues block), with the reason
@@ -99,7 +99,8 @@ Fix mode uses `/loop` to repeat until an end condition holds.
       chore(sonar-fix): handle X issues, add coverage for Y files
 
       by /sonar-fix
-      Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
+      <the Co-Authored-By trailer this session's own instructions specify>
+      ); do not hard-code a model name in the trailer
    b. Get the commit to main as .claude/rules/pull-request.md describes
    c. Call /ci-watch to watch CI + the quality gate until they pass (do not implement this logic yourself)
 
@@ -119,7 +120,11 @@ Fix mode uses `/loop` to repeat until an end condition holds.
 - Adding tests only adds files or `[Fact]`s under `tests/<Module>.UnitTests/`; existing assertions are not changed
 - **Never** touch:
   - public API signatures (method signature, class visibility)
-  - the encryption / session pipeline (`Polhem.Base/Cryptor/*`, `Polhem.Api.Core/Session/*`)
+  - the encryption / session pipeline: cryptographic primitives (`src/Polhem.Base/Security/`), key and access
+    policy (`src/Polhem.Definition/Security/`), the payload pipeline (`src/Polhem.Api.Core/Transformers/`), and
+    session handling (`src/Polhem.Business/System/SystemBusinessObject.Session.cs`, `src/Polhem.Business/Session/`,
+    `src/Polhem.Business/Validator/`, `src/Polhem.Repository/System/SessionRepository.cs`,
+    `src/Polhem.ObjectCaching/Services/SessionInfoService.cs`)
   - dependency versions in csproj / Directory.Build.props
 - Before every commit, `dotnet build --configuration Release` is mandatory
 - Before every commit, `dotnet test` on the affected projects is mandatory (the full test suite is too slow; only run

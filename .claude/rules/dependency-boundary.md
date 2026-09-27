@@ -9,6 +9,11 @@ contracts, data access, caching, business logic, API and UI layers, and `Polhem.
 project. **Any package added to these two layers spreads along the dependency chain to every consumer**, including
 pure UI heads and definition file tools that only want to read definitions.
 
+**`Polhem.Api.Contracts` is locked the same way.** It is not at the bottom, but it sits in the transitive closure of
+every UI head, so the same argument applies. Everything in this file about "these two projects" applies to it as
+well; which projects the gates govern is set in `src/Directory.Build.targets` (`PolhemEnforceDependencyBoundary`),
+not here.
+
 Likewise, **a `ProjectReference` to a downstream project counts too**: `Polhem.Definition` once transitively depended
 on `DynamicExpresso.Core` through `ProjectReference → Polhem.Expressions` (resolved by adr-038). The visible symptom
 was an extra dependency in the nuspec, but grepping for the package name never finds it.

@@ -23,7 +23,10 @@ collections):
    no native code on AOT. Enums use `WireEnumFormatter<T>`.
 
 A missing registration is caught by `WireContractDriftTests` (it walks the same type closure and compares it with
-the registration list), so there is no `WireMemberCount` constant to maintain by hand.
+the registration list), so there is no `WireMemberCount` constant to maintain by hand. A member that is registered
+but dropped on the way back in (a hand-written formatter's `Deserialize` skips unknown keys), or that the JSON and
+MessagePack codecs carry differently, is caught by `WireCodecParityTests`, which round-trips every registered contract
+through both codecs with every member set to a non-default value.
 
 **The JSON codec (adr-044) does not need any of this.** `JsonPayloadSerializer` goes through System.Text.Json, with
 the same shape as a `Plain` body. But the two wires **share the same set of `WireValueCode` discriminators**
@@ -31,9 +34,17 @@ the same shape as a `Plain` body. But the two wires **share the same set of `Wir
 in `wire-fixtures/`. When you change the envelope of an `object` member or the shape of a `DataTable` / enum,
 `WireFixtureTests` turns red, and **that diff is the description of the wire change**.
 
-**The definition of a wire member is the definition of JSON**: a public read-write property not marked
-`[JsonIgnore]`. Framework-managed members (`Tag` / `Key` / `SerializeState` / `Collection`) already carry that
-attribute and are excluded automatically.
+**The definition of a wire member is the definition of JSON**: a public read-write property that `[JsonIgnore]` does
+not exclude with `JsonIgnoreCondition.Always` (the attribute's default). Read the `Condition`, not the attribute's
+presence: `Never` and the `WhenWriting…` conditions leave the member on the wire. Framework-managed members (`Tag` /
+`Key`) carry `[JsonIgnore]` and are excluded automatically. The test-side definition is `WireClosure.Members`
+(tests/Polhem.Api.Core.UnitTests).
+
+**A member whose initializer is not its CLR default is marked `[JsonIgnore(Condition = JsonIgnoreCondition.Never)]`.**
+The JSON body codec and `Plain` omit a member equal to its CLR default, while MessagePack writes every member. Without
+the attribute an explicit default (`ExpiresIn = 0`) is left out over JSON and the reader's initializer fills in
+another value, so the two codecs deliver different requests. `WireDefaultOmissionTests` fails on a wire member that
+breaks this.
 
 ### Three easy misjudgments
 

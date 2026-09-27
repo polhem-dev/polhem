@@ -1,33 +1,5 @@
 {
   "issues": {},
   "files": {},
-  "humanReview": {
-    "AZ_0uLZNLC6lOXNwWSNe": {
-      "rule": "csharpsquid:S125",
-      "severity": "MAJOR",
-      "component": "src/Polhem.Api.Client/Definitions/FormDefinitionLoader.cs",
-      "line": 90,
-      "message": "Remove this commented out code.",
-      "reason": "rule-level blocklist (S125). The location is an English WHY comment (\"The server serves definitions exactly as stored, so the company's decimal places are applied here…\") explaining why decimal places are applied on the client and why Bake skips kinds bound to a currency or unit. It is not commented-out code. Mark it False Positive in the SonarCloud UI.",
-      "lastAttempt": "2026-08-12"
-    },
-    "AZ_VC6LFjIxvb7pVaS_H": {
-      "rule": "csharpsquid:S125",
-      "severity": "MAJOR",
-      "component": "src/Polhem.Business/Form/PluginSettingsResolver.cs",
-      "line": 136,
-      "message": "Remove this commented out code.",
-      "reason": "rule-level blocklist (S125). The location is an English WHY comment explaining that AssemblyLoader.LoadAssembly throws while AssemblyLoader.GetType returns null, which is the basis for the catch condition and the null check below. It is not commented-out code. Mark it False Positive in the SonarCloud UI.",
-      "lastAttempt": "2026-08-06"
-    },
-    "AZ_M9QWr-7bP7yQ_TV4j": {
-      "rule": "csharpsquid:S125",
-      "severity": "MAJOR",
-      "component": "src/Polhem.Hosting/PolhemFrameworkServiceCollectionExtensions.cs",
-      "line": 252,
-      "message": "Remove this commented out code.",
-      "reason": "rule-level blocklist (S125). The location is a numbered step comment in the DI registration (\"7. Login attempt tracker — optional service with no default impl…\") explaining why that step deliberately registers no service. It is not commented-out code. Mark it False Positive in the SonarCloud UI.",
-      "lastAttempt": "2026-08-06"
-    }
-  }
+  "humanReview": {}
 }

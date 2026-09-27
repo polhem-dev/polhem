@@ -15,8 +15,8 @@ Child collections in definition files (FormSchema / FormLayout / TableSchema / L
 `Polhem.Base.Collections.KeyCollectionBase<T>` (items have a key) or `CollectionBase<T>` (items have no key).
 **Do not use** bare BCL collections such as `List<T>`, `Collection<T>`, `IList<T>` as public property types.
 
-**Why:** it centralizes serialization, the `IObjectSerialize` lifecycle, `ITagProperty`, Owner back-navigation and
-key uniqueness checks in a single base. Supporting a new serialization format, adding change notification or doing
+**Why:** it centralizes serialization handling, `ITagProperty`, Owner back-navigation and key uniqueness checks in a
+single base. Supporting a new serialization format, adding change notification or doing
 cache invalidation in the future then means changing only the base.
 **A bare `List<T>` bypasses the base mechanism; when the base gains new behavior, this collection will not follow and
 becomes an exception.**
@@ -34,6 +34,20 @@ becomes an exception.**
 Reference implementations: `FormFieldCollection`, `LayoutColumnCollection`, `DbFieldCollection`,
 `LanguageItemCollection`.
 
+## Omitting an empty collection: a get-only `XSpecified`, never `ShouldSerializeX`
+
+A definition type that should not write an empty collection declares a get-only
+`public bool XSpecified => _x is { Count: > 0 };` marked `[XmlIgnore, JsonIgnore]` (plus `[Browsable(false)]` and
+`[EditorBrowsable(EditorBrowsableState.Never)]`); `FormSchema.TablesSpecified` is the reference. `XmlSerializer` and
+`JsonCodec` both read it, so XML and JSON omit the same collections.
+
+- **Not `ShouldSerializeX()`.** The reflection-only `XmlSerializer` on iOS throws `NullReferenceException` when that
+  method is declared on a base class of the type being written, and `JsonCodec` does not consult it at all. The
+  remarks of `XmlCodec` record the reason; the CI AOT gate runs the serialization tests with dynamic code disabled.
+- **Decide from the value, never store a flag on the object.** Serializing a process-wide cached definition must not
+  change what concurrent readers see; `CachedDefinitionSerializationTests` pins that for definitions. The removed
+  serialize-state mechanism (`IObjectSerialize` / `SetSerializeState`) broke exactly this.
+
 ## Field reference properties have no `Name` suffix
 
 A property that "refers to other fields by string name" is `XxxField` when singular and `XxxFields` for a
@@ -45,8 +59,9 @@ Existing family: `FormSchema.ListFields` / `LookupFields`, `FieldMapping.SourceF
 ## Mobile compatibility requirements for collection types (reflection-only `XmlSerializer`)
 
 The iOS AOT path uses the reflection-only `XmlSerializer`, which is stricter about type shape than the desktop.
-**These three points never show up on the desktop and only blow up on mobile**, and the violators are always
-definition types in this project:
+**The desktop serializer accepts all three of these; only the mobile path throws**, and the violators are always
+definition types in this project. `XmlSerializerShapeGateTests` (tests/Polhem.Definition.UnitTests) checks the three
+rules over every type the definition roots reach, so a violation fails the desktop test run:
 
 - A collection type may expose **only one** public instance `Add`; several overloads throw
   `AmbiguousMatchException`. Convenience overloads must be displaced into extension methods (see the one-type-per-file
@@ -75,5 +90,5 @@ file system).
 **There is no load-priority mechanism of "fall back to Defaults when DefinePath is missing something".**
 
 To use a framework system table in a project, **copy its definition from `Defaults/` into the project's
-`DefinePath`** as a starting point, then extend as needed (keep the framework's standard fields; features such as
+`DefinePath`** (`Defaults.MaterializeTo` does this at setup time) as a starting point, then extend as needed (keep the framework's standard fields; features such as
 permissions and organization depend on them).

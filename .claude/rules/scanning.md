@@ -24,12 +24,12 @@ var cmd = new DbCommandSpec(DbCommandKind.Scalar,
 - Do not scatter manual `.Dispose()` calls through the code (an exception easily skips the release)
 
 ```csharp
-// ✅ Correct
-using var conn = DbConnectionManager.CreateConnection("common");
+// ✅ Correct (connectionManager is the injected IDbConnectionManager)
+using var conn = connectionManager.CreateConnection(DbCategoryIds.Common);
 conn.Open();
 
 // ❌ Forbidden
-var conn = DbConnectionManager.CreateConnection("common");
+var conn = connectionManager.CreateConnection(DbCategoryIds.Common);
 conn.Open();
 // ... an exception here means Dispose never runs
 conn.Dispose();

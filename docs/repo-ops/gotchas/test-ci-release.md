@@ -4,21 +4,23 @@ The matching hard rules are in `.claude/rules/testing.md` and `.claude/rules/com
 
 ## The verification blind spot created by the CI path filter
 
-The `push` / `pull_request` triggers of `.github/workflows/build-ci.yml` only recognize:
-`src/**`, `tests/**`, `*.slnx`, `*.props`, `SonarQube.Analysis.xml`,
-`.github/workflows/build-ci.yml`.
+The `push` trigger of `.github/workflows/build-ci.yml` has a `paths` filter (the list is in the workflow file itself);
+the `pull_request` trigger deliberately has none, because `build` is a required check of the branch protection on
+`main` and a required check that never starts would leave a documentation-only pull request waiting forever (the
+reason is also written next to the trigger).
 
-**Why**: samples/ are demos and docs/ are documents; changes to either do not affect the correctness of the NuGet
-packages, and this saves runner time.
+**Why the push filter exists**: samples/ are demos and docs/ are documents; changes to either do not affect the
+correctness of the NuGet packages, and this saves runner time.
 
-**Day-to-day effect**: after pushing a commit that touches only `samples/**` or `docs/**` to main, **do not wait for
-CI** and do not trigger `/ci-watch`: there is nothing to look at. SonarCloud is also only triggered after CI finishes,
-so a samples-only fix is not reflected right away.
-(If the same commit touches both src/ and samples/, CI runs.)
+**Day-to-day effect**: every change reaches `main` through a pull request (`docs/repo-ops/branch-protection-setup.md`),
+so the pull request's own run is the check. After a pull request that touches only `samples/**` or `docs/**` is
+merged, **the push to `main` starts no Build CI run**: there is nothing to wait for and nothing for `/ci-watch` to look
+at. SonarCloud only runs in full mode after the tests, so a samples-only fix is not reflected there either.
+(If the same merge touches both src/ and samples/, CI runs.)
 
 ### ⚠️ The related gap: three solutions are never built at all
 
-`tools/` / `samples/` / `apps/` are **neither in `Polhem.slnx` nor in the path filter**, so "local
+`tools/` / `samples/` / `apps/` are **neither in `Polhem.slnx` nor in the push path filter**, and no CI step builds them, so "local
 `dotnet build Polhem.slnx` + `./test.sh` all green" **does not mean they still compile**, and CI will not find out for
 you either.
 
@@ -137,9 +139,9 @@ boundary). The same applies to any type with a syntactic-sugar short form.
 judged clean. In fact that file was never inside SonarCloud's analysis scope, and **the 0 has nothing to do with the
 code**.
 
-**Root cause**: SonarCloud actually only looks at `src/` and `tests/`. Measured on 2026-09-10: of the 1,760 analyzed
-files in the whole project, `tools/` accounts for only **2**, and neither is C# (`tools/scripts/gen-public-api.py`,
-`tools/DefineEditor/publish.sh`, which came in through generic file detection). **There is not a single
+**Root cause**: SonarCloud actually only looks at `src/` and `tests/`. Measured on 2026-09-10 on the old bee-library
+SonarCloud project (before the move to `polhem-dev_polhem`): of the 1,760 analyzed files in the whole project, `tools/` accounts for only **2**, and neither is C# (`tools/scripts/gen-public-api.py`,
+`tools/DefineEditor/publish.sh`, which came in through generic file detection). **There was not a single
 `tools/**/*.cs`**, even though `tools/Polhem.LoadTests` really is built through the `ProjectReference` of
 `tests/Polhem.LoadTests.UnitTests`. **The mechanism has not been worked out** (SonarScanner should be able to intercept
 transitively built projects); only the reproducible facts are recorded here.
@@ -197,30 +199,59 @@ False Positive, because SonarCloud cannot see it.
 
 ## The step most easily missed when adding a src package
 
-The pack steps of `.github/workflows/nuget-publish.yml` and `build-ci.yml` **enumerate
-`dotnet pack src/Polhem.X/...` one by one; they are not a glob**. If a new package is left out:
+The build-and-pack step of `.github/workflows/nuget-publish.yml` and the pack step of `build-ci.yml` **enumerate
+the projects one by one; they are not a glob**. If a new package is left out:
 
 - **nuget-publish**: the package is **not pushed to NuGet**, but the workflow still **shows success** (it only pushes
-  what is already in `./nupkgs`). Consumers restoring other 4.x packages that depend on the new package will fail.
+  what is already in `./nupkgs`). Consumers restoring other packages of that release that depend on the new package
+  will fail.
 - **build-ci**: pack verification does not cover the package.
 
-**Instance, 2026-07-09**: 4.14.0 released `Polhem.Expressions` (a new package), and the pack lists of both workflows
-left it out → the first publish succeeded, but `Polhem.Expressions.4.14.0` was not on NuGet, while
-Polhem.Business / Definition / UI.Avalonia all depend on it. Fix: add the pack line to both workflows, commit, **delete
-the tag and push it again** onto the commit containing the fix to trigger publish; `--skip-duplicate` skips what was
-already published and pushes only the new package.
+**Instance, 2026-07-09 (Bee.NET era)**: Bee.NET 4.14.0 released `Bee.Expressions` (a new package, today's
+`Polhem.Expressions`), and the pack lists of both workflows left it out → the first publish succeeded, but
+`Bee.Expressions.4.14.0` was not on NuGet, while Bee.Business / Definition / UI.Avalonia all depended on it. Fix: add
+the pack line to both workflows, commit, **delete the tag and push it again** onto the commit containing the fix to
+trigger publish; `--skip-duplicate` skips what was already published and pushes only the new package.
 
 **Signs to look for**: the publish workflow is green, but
 `curl https://api.nuget.org/v3-flatcontainer/<pkg-lowercase>/index.json` returns BlobNotFound
 (and it is not index delay). Check whether the push step log has `Pushing <Pkg>.nupkg... Your package was pushed.`;
 if not, it was left out.
 
-**Also update at the same time** (for bilingual documents, both files must change):
+### Steps for a new package
 
-- `docs/en/dependency-map.md` + `.zh-TW.md`: add the node + dependency edges to the mermaid diagram, add a row to the
-  external package table, Architectural Notes, and +1 on the "N src/ projects" number at the top.
-- `README.md` + `.zh-TW.md`: add a row to one of the Shared / Backend / Frontend package tables.
-- `.claude/CLAUDE.md`: +1 on the "N projects" number.
+1. Add the project to the list in the build-and-pack step of `nuget-publish.yml` (dependencies before dependents)
+   and to the pack step of `build-ci.yml`.
+2. **Add the package ID to the nuget.org Trusted Publishing policy** before the first release that contains it (see
+   "Publishing: NuGet Trusted Publishing" below). Otherwise its push is rejected, even though the pack lists are
+   right.
+3. Update the documents that list packages (for bilingual documents, both languages change):
+   - `docs/en/dependency-map.md` (then its translation under `docs/zh-TW/`, restamped with
+     `./check-docs-i18n.sh --stamp`): add the node + dependency edges to the mermaid diagram, a row to the external
+     package table if it brings one, and the Architectural Notes. The document deliberately states no project count.
+   - `README.md` + `README.zh-TW.md`: add a row to one of the package tables.
+
+## Publishing: NuGet Trusted Publishing
+
+`.github/workflows/nuget-publish.yml` runs when a `v*` tag is pushed (`.claude/rules/releasing.md`: an agent never
+pushes one on its own). It holds **no long-lived NuGet API key**:
+
+- The job has the `id-token: write` permission, and the `NuGet/login` step exchanges the GitHub OIDC token for a
+  temporary API key, which the push step uses.
+- The login step needs the repository secret `NUGET_USER`: the nuget.org user name (the profile name, not an e-mail
+  address) of the account whose Trusted Publishing policy is used. It is not a credential.
+- **The nuget.org policy must name this repository (owner + name) and the workflow file name** (`nuget-publish.yml`,
+  file name only). The job declares no GitHub environment, so the policy's optional environment field stays empty.
+  Renaming the workflow file or moving the repository to another owner changes what the OIDC token claims, and the
+  login step fails until the policy is updated.
+- **The policy's scopes decide which package IDs it may push** (a package glob, and whether pushing a *new* package
+  is allowed at all). The comment above the login step records that this repository's policy lists the package IDs,
+  so a new package ID has to be added there before its first publish, or its push is rejected.
+- The temporary key is valid for about an hour, which is why the login step runs after the build and pack.
+
+The nuget.org side is described in Microsoft's "Trusted Publishing" page for nuget.org.
+
+The workflow file is the authority for the steps; this section only records what lives outside the repository.
 
 ## Methodology of the framework health check (`polhem-framework-review`)
 
@@ -256,6 +287,6 @@ The rounds from the bee-library period are archived in the old repository's `doc
 >
 > **But "gate closed" does not mean "old debts paid"** (added 2026-08-07): the two cases ended differently.
 > `IEvictableCache` **was** recorded in the CHANGELOG, while `IExcelHelper` was not even in the CHANGELOG until the
-> 2026-08-07 health check found it and it was backfilled into the 4.16.0 detail file. Introducing a mechanism blocks
+> 2026-08-07 health check found it and it was backfilled into the Bee.NET 4.16.0 detail file. Introducing a mechanism blocks
 > "from now on"; what leaked out before has to be backfilled by hand. **The next time any gate is introduced, also make
 > a list of "what had already leaked out before the gate".**
