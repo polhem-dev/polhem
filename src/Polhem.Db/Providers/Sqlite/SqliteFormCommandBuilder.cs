@@ -10,8 +10,8 @@ namespace Polhem.Db.Providers.Sqlite
     /// <summary>
     /// SQLite form-related SQL command builder, generating Select, Count, and Delete
     /// statements. Counterpart to <see cref="SqlServer.SqlFormCommandBuilder"/> and
-    /// <see cref="PostgreSql.PgFormCommandBuilder"/> for the SQLite provider; all three methods
-    /// delegate to the dialect-agnostic cores in <see cref="Polhem.Db.Dml"/>.
+    /// <see cref="PostgreSql.PgFormCommandBuilder"/> for the SQLite provider; each method
+    /// delegates to the dialect-agnostic cores in <see cref="Polhem.Db.Dml"/>.
     /// </summary>
     public sealed class SqliteFormCommandBuilder : IFormCommandBuilder
     {

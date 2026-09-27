@@ -25,6 +25,10 @@ namespace Polhem.UI.Avalonia.DataObjects
     /// </remarks>
     public sealed class FormLiveComputation
     {
+        // The evaluator is built to be shared (the server registers one as a singleton): its compile
+        // cache is concurrent and a helper's per-call time zone travels in thread-static state.
+        private static readonly Lazy<DynamicExpressoEvaluator> s_sharedEvaluator = new(() => new DynamicExpressoEvaluator());
+
         private readonly FormSchema _schema;
         /// <summary>
         /// The signed-in user's IANA time zone id, or blank (meaning UTC) before login.
@@ -52,15 +56,16 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// places (Tier 1).
         /// </param>
         /// <param name="evaluator">
-        /// The expression evaluator; <c>null</c> creates a client-local <see cref="DynamicExpressoEvaluator"/>
-        /// (the client keeps its own compile cache, separate from the server's).
+        /// The expression evaluator; <c>null</c> uses one <see cref="DynamicExpressoEvaluator"/> shared by every
+        /// form in the process, so an expression compiled when one form opens is not compiled again when the
+        /// next one does.
         /// </param>
         public FormLiveComputation(FormSchema schema, RoundingContext? roundingContext = null,
             IExpressionEvaluator? evaluator = null)
         {
             ArgumentNullException.ThrowIfNull(schema);
             _schema = schema;
-            _calculator = new FormExpressionCalculator(evaluator ?? new DynamicExpressoEvaluator());
+            _calculator = new FormExpressionCalculator(evaluator ?? s_sharedEvaluator.Value);
             _roundingContext = roundingContext ?? new RoundingContext();
         }
 

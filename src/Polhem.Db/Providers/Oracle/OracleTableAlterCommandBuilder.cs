@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Text;
 using Polhem.Base;
 using Polhem.Db.Ddl;
 using Polhem.Db.Schema;
@@ -52,11 +50,7 @@ namespace Polhem.Db.Providers.Oracle
 
         /// <inheritdoc />
         public bool IsNarrowingChange(ITableChange change)
-        {
-            if (change is AlterFieldChange alter)
-                return AlterCompatibilityRules.IsNarrowing(alter.OldField, alter.NewField);
-            return false;
-        }
+            => AlterCompatibilityRules.IsNarrowingChange(change);
 
         /// <inheritdoc />
         public IReadOnlyList<string> GetStatements(string tableName, ITableChange change)
@@ -162,11 +156,12 @@ namespace Polhem.Db.Providers.Oracle
 
             if (index.PrimaryKey)
             {
-                string pkFields = BuildIndexFieldList(index, includeSortDirection: false);
+                // Oracle rejects `ASC` / `DESC` inside a `PRIMARY KEY` constraint.
+                string pkFields = DdlFragments.BuildIndexFieldList(index, OracleSchemaSyntax.QuoteName, includeSortDirection: false);
                 return $"ALTER TABLE {OracleSchemaSyntax.QuoteName(tableName)} ADD CONSTRAINT {OracleSchemaSyntax.QuoteName(indexName)} PRIMARY KEY ({pkFields});";
             }
 
-            string fields = BuildIndexFieldList(index, includeSortDirection: true);
+            string fields = DdlFragments.BuildIndexFieldList(index, OracleSchemaSyntax.QuoteName, includeSortDirection: true);
             string uniqueClause = index.Unique ? "UNIQUE " : string.Empty;
             return $"CREATE {uniqueClause}INDEX {OracleSchemaSyntax.QuoteName(indexName)} ON {OracleSchemaSyntax.QuoteName(tableName)} ({fields});";
         }
@@ -183,29 +178,6 @@ namespace Polhem.Db.Providers.Oracle
                 return $"ALTER TABLE {OracleSchemaSyntax.QuoteName(tableName)} DROP PRIMARY KEY;";
 
             return $"DROP INDEX {OracleSchemaSyntax.QuoteName(index.Name)};";
-        }
-
-        /// <summary>
-        /// Builds the comma-separated index field list. Sort direction (ASC/DESC) is
-        /// only valid on regular indexes; PK constraints reject it on Oracle.
-        /// </summary>
-        private static string BuildIndexFieldList(DbTableIndex index, bool includeSortDirection)
-        {
-            var sb = new StringBuilder();
-            foreach (IndexField field in index.IndexFields!)
-            {
-                if (sb.Length > 0) sb.Append(", ");
-                if (includeSortDirection)
-                {
-                    sb.Append(CultureInfo.InvariantCulture,
-                        $"{OracleSchemaSyntax.QuoteName(field.FieldName)} {field.SortDirection.ToString().ToUpperInvariant()}");
-                }
-                else
-                {
-                    sb.Append(OracleSchemaSyntax.QuoteName(field.FieldName));
-                }
-            }
-            return sb.ToString();
         }
     }
 }

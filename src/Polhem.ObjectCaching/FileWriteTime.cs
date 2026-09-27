@@ -6,6 +6,16 @@ namespace Polhem.ObjectCaching
     internal static class FileWriteTime
     {
         /// <summary>
+        /// How long a file-backed check may reuse its last answer before it looks at the file again.
+        /// </summary>
+        /// <remarks>
+        /// It bounds how long an edit made directly to a definition file on disk can go unnoticed.
+        /// Writes through the save methods of <see cref="Polhem.Definition.Storage.IDefineAccess"/> remove the cache entry themselves and do not wait
+        /// for it.
+        /// </remarks>
+        public static readonly TimeSpan RecheckInterval = TimeSpan.FromSeconds(1);
+
+        /// <summary>
         /// Returns the file's last write time in UTC, or <see cref="DateTime.MinValue"/> when it cannot be read.
         /// </summary>
         /// <param name="path">The watched file path.</param>

@@ -154,34 +154,23 @@ namespace Polhem.Business.Form
         /// Rewrites both versions of a modified row, leaving it Modified with every other edit intact.
         /// </summary>
         /// <remarks>
-        /// ADO.NET offers no way to write the Original version directly, so the row is rejected back to
-        /// Original, given the new Original values, accepted, then given its Current values again.
-        /// <para>
-        /// WARNING: <see cref="DataRow.RejectChanges"/> reverts every column, not only the instant ones,
-        /// so both versions are captured across the whole row before it runs. Restoring only the instant
-        /// columns would silently discard every other edit on the row.
-        /// </para>
+        /// The mechanics, including why the whole row has to be captured before
+        /// <see cref="DataRow.RejectChanges"/>, are in <see cref="Polhem.Base.Data.DataRowExtensions.RewriteVersions"/>.
         /// </remarks>
         private static void RestoreModifiedRow(DataRow row, List<(FormField Field, DataColumn Column)> fields,
             DataRow storedRow, DateTime utcNow)
         {
-            var original = CaptureRow(row, DataRowVersion.Original);
-            var current = CaptureRow(row, DataRowVersion.Current);
+            var restored = new Dictionary<DataColumn, (object Original, object Current)>();
             foreach (var (field, column) in fields)
             {
                 var storedValue = StoredCellValue(storedRow, field.FieldName);
-                original[column.Ordinal] = storedValue;
-                current[column.Ordinal] = IsField(field, SysFields.UpdateTime) ? CellValue(utcNow) : storedValue;
+                restored[column] = (storedValue, IsField(field, SysFields.UpdateTime) ? CellValue(utcNow) : storedValue);
             }
 
-            row.RejectChanges();
-            WriteRow(row, original);
-            row.AcceptChanges();
-            WriteRow(row, current);
-
-            // The repository picks UPDATE from the row state alone, so a row whose two versions now hold
-            // equal values must stay Modified even though the write above changed nothing.
-            if (row.RowState == DataRowState.Unchanged) { row.SetModified(); }
+            row.RewriteVersions((column, version, value) =>
+                restored.TryGetValue(column, out var values)
+                    ? version == DataRowVersion.Original ? values.Original : values.Current
+                    : value);
         }
 
         /// <summary>
@@ -198,33 +187,6 @@ namespace Polhem.Business.Form
             }
             row.AcceptChanges();
             row.Delete();
-        }
-
-        private static object[] CaptureRow(DataRow row, DataRowVersion version)
-        {
-            var values = new object[row.Table.Columns.Count];
-            foreach (DataColumn column in row.Table.Columns)
-            {
-                values[column.Ordinal] = row[column, version];
-            }
-            return values;
-        }
-
-        /// <summary>
-        /// Writes the columns whose value differs from what the row holds now.
-        /// </summary>
-        /// <remarks>
-        /// Skipping equal values is what lets this run over the whole row: an expression column
-        /// computes its own value and rejects a write, and a read-only column that did not change is
-        /// never assigned, so it cannot raise <see cref="ReadOnlyException"/>.
-        /// </remarks>
-        private static void WriteRow(DataRow row, object[] values)
-        {
-            foreach (DataColumn column in row.Table.Columns)
-            {
-                if (column.Expression.Length > 0 || Equals(row[column], values[column.Ordinal])) { continue; }
-                row[column] = values[column.Ordinal];
-            }
         }
 
         private static object StoredCellValue(DataRow storedRow, string fieldName)

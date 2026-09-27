@@ -135,15 +135,15 @@ namespace Polhem.UI.Avalonia.Controls
                 var selected = await LookupDialog.ShowAsync(this, progId).ConfigureAwait(true);
                 if (selected is null) return;
                 dataObject.ApplyLookupSelection(lookupField, selected, row);
-                // Realized text cells capture their value at template build;
-                // re-realize and scroll back to the affected row (same as a
-                // committed edit form).
+                // Realized text cells capture their value when the template is built, so the
+                // grid is re-realized and scrolled back to the affected row, the same as after a
+                // committed edit form.
                 RefreshAndFocusRow(row);
             }
             catch (Exception ex)
             {
-                // UI boundary: an async pointer handler must not crash the app;
-                // surface the failure as the grid's tooltip.
+                // UI boundary: an async pointer handler must not crash the app, so the failure
+                // is surfaced as the grid's tooltip.
                 ToolTip.SetTip(this, ex.Message);
             }
         }
@@ -267,8 +267,8 @@ namespace Polhem.UI.Avalonia.Controls
                     break;
                 case DatePicker picker:
                     // Pop the spinner flyout right away so a single click on the cell
-                    // goes straight to picking. DatePicker has no public open API;
-                    // raising Click on the template's flyout button is the supported
+                    // goes straight to picking. `DatePicker` has no public open API.
+                    // Raising `Click` on the template's flyout button is the supported
                     // route in. Background priority defers past the layout pass so the
                     // flyout positions against the realized picker.
                     picker.AttachedToVisualTree += (_, _) =>
@@ -462,21 +462,12 @@ namespace Polhem.UI.Avalonia.Controls
             var handler = RowSelected;
             if (handler is null) return;
             if (_grid.SelectedItem is not DataRowView rowView) return;
-            if (!TryGetRowId(rowView.Row, out var rowId)) return;
+            if (!FormDataGuard.TryGetRowId(rowView.Row, out var rowId)) return;
             handler(this, rowId);
         }
 
         private static IEnumerable<LayoutColumn> EnumerateVisibleColumns(LayoutGrid layout)
             => layout.Columns?.Where(c => c.Visible) ?? Enumerable.Empty<LayoutColumn>();
 
-        private static bool TryGetRowId(DataRow row, out Guid rowId)
-        {
-            rowId = Guid.Empty;
-            if (!row.Table.Columns.Contains(SysFields.RowId)) return false;
-            var raw = row[SysFields.RowId];
-            if (raw is null || raw == DBNull.Value) return false;
-            if (raw is Guid g) { rowId = g; return true; }
-            return Guid.TryParse(raw.ToString(), out rowId);
-        }
     }
 }

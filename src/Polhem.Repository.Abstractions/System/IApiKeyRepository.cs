@@ -6,7 +6,7 @@ namespace Polhem.Repository.Abstractions.System
     /// Data access interface for issued API keys (<c>st_api_key</c> in the common database).
     /// </summary>
     /// <remarks>
-    /// Backs <c>ApiKeyCache</c> through <c>ICacheDataSourceProvider</c>, so reads here run on a
+    /// Backs <c>ApiKeyCache</c> through <see cref="Polhem.Definition.ICacheDataSourceProvider"/>, so reads here run on a
     /// cache miss rather than on every request.
     /// </remarks>
     public interface IApiKeyRepository

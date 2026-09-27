@@ -21,8 +21,8 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// </remarks>
     public sealed class TimeEdit : TextEdit
     {
-        // The committed value in storage form. Text may briefly hold whatever the user is typing;
-        // write-backs always use this.
+        // The committed value in storage form. Text may briefly hold whatever the user is typing,
+        // so write-backs always use this.
         private string _value = string.Empty;
 
         /// <summary>

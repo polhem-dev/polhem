@@ -10,7 +10,7 @@ namespace Polhem.Db.Providers.Oracle
     /// <summary>
     /// Oracle 19c+ form-related SQL command builder, generating SELECT, SELECT COUNT,
     /// and DELETE statements. Counterpart to <see cref="MySql.MySqlFormCommandBuilder"/>
-    /// and <see cref="Sqlite.SqliteFormCommandBuilder"/>; all three methods delegate to
+    /// and <see cref="Sqlite.SqliteFormCommandBuilder"/>; each method delegates to
     /// the dialect-agnostic cores in <see cref="Polhem.Db.Dml"/> with
     /// <see cref="DatabaseType.Oracle"/>, so double-quote identifier quoting and
     /// <c>:</c> bind-variable prefix flow from the <see cref="DatabaseTypeExtensions"/> dictionaries.

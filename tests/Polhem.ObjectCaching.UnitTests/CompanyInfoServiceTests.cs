@@ -28,6 +28,7 @@ namespace Polhem.ObjectCaching.UnitTests
 
             public SessionInfo? GetSessionInfo(Guid accessToken) => null;
             public CompanyRolePermissions? GetCompanyRolePermissions(string companyId) => null;
+            public Polhem.Definition.Logging.CompanyAuditRules? GetCompanyAuditRules(string companyId) => null;
             public DepartmentTree? GetDepartmentTree(string companyId) => null;
             public ApiKeyInfo? GetApiKey(string sysId) => null;
             public ApiKeyGateState GetApiKeyGateState() => new();

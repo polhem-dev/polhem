@@ -37,11 +37,11 @@ namespace Polhem.ObjectCaching.Define
         /// <returns>The system settings instance.</returns>
         protected override SystemSettings? CreateInstance()
         {
-            string sFilePath = _paths.GetSystemSettingsFilePath();
-            if (!File.Exists(sFilePath))
-                throw new FileNotFoundException($"The file {sFilePath} does not exist.");
+            string filePath = _paths.GetSystemSettingsFilePath();
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException($"The file {filePath} does not exist.");
 
-            return XmlCodec.DeserializeFromFile<SystemSettings>(sFilePath);
+            return XmlCodec.DeserializeFromFile<SystemSettings>(filePath);
         }
     }
 }

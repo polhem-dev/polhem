@@ -1,3 +1,4 @@
+using Polhem.Api.AspNetCore;
 using Polhem.Api.Core;
 using Polhem.Base;
 using Polhem.Business;
@@ -105,9 +106,14 @@ public static class NorthwindBackend
     }
 
     /// <summary>
-    /// After the host is built: runs the schema seeder once.
+    /// After the host is built: runs the schema seeder once, then the framework's host-side startup
+    /// checks.
     /// </summary>
     /// <param name="app">The built web application.</param>
+    /// <remarks>
+    /// The startup checks run after the seeder because the API key check reads <c>st_api_key</c>,
+    /// which the seeder creates.
+    /// </remarks>
     public static void UseNorthwindBackend(this WebApplication app)
     {
         ArgumentNullException.ThrowIfNull(app);
@@ -116,6 +122,8 @@ public static class NorthwindBackend
         var connectionManager = app.Services.GetRequiredService<IDbConnectionManager>();
         var dbAccessFactory = app.Services.GetRequiredService<IDbAccessFactory>();
         NorthwindSchemaSeeder.EnsureSchemaAndSeed(defineAccess, connectionManager, dbAccessFactory);
+
+        app.UsePolhemFramework();
     }
 
     /// <summary>

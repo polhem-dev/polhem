@@ -22,12 +22,12 @@ namespace Polhem.Base.Collections
         /// <param name="delimiter">The delimiter character or string.</param>
         public void Add(string s, string delimiter)
         {
-            string[] oValues;
+            string[] values;
 
             if (StringUtilities.IsEmpty(s)) { return; }
 
-            oValues = StringUtilities.Split(s, delimiter);
-            foreach (string value in oValues)
+            values = StringUtilities.Split(s, delimiter);
+            foreach (string value in values)
                 this.Add(value);
         }
     }

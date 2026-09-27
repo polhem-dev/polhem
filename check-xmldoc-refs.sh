@@ -114,12 +114,12 @@ done < <(
 # really cannot resolve does it go into the allowlist below, with the reason.
 CREF_ALLOWLIST=(
   # --- Ambiguous names: several fully qualified candidates, and picking one could mislead ---
-  WhereBuilder
 )
 
 is_cref_allowed() {
   local id="${1%%.*}"
-  for a in "${CREF_ALLOWLIST[@]}"; do [[ "$id" == "$a" ]] && return 0; done
+  # The `+` form keeps an empty allowlist from tripping `set -u` on bash 3.2 (the macOS default).
+  for a in ${CREF_ALLOWLIST[@]+"${CREF_ALLOWLIST[@]}"}; do [[ "$id" == "$a" ]] && return 0; done
   return 1
 }
 

@@ -36,17 +36,24 @@ namespace Polhem.Db.Manager
 
         /// <summary>
         /// Registers an ADO.NET provider factory along with an optional connection initializer
-        /// that runs once on every newly opened connection of this database type.
+        /// that runs every time a connection of this database type is opened.
         /// Re-registering replaces the previous entry; passing <c>null</c> for
         /// <paramref name="connectionInitializer"/> clears any previously set initializer.
         /// </summary>
         /// <param name="type">The database type.</param>
         /// <param name="factory">The provider factory.</param>
         /// <param name="connectionInitializer">
-        /// Optional action invoked after a freshly created connection is opened. Typical use:
-        /// dialect-specific session settings (e.g. Oracle <c>ALTER SESSION SET NLS_COMP=...</c>).
-        /// The action runs against an already opened connection and may execute commands directly.
+        /// Optional action invoked after each <c>Open</c>. Typical use: dialect-specific session
+        /// settings (e.g. Oracle <c>ALTER SESSION SET NLS_COMP=...</c>). The action runs against an
+        /// already opened connection and may execute commands directly.
         /// </param>
+        /// <remarks>
+        /// IMPORTANT: "every open" includes a connection the provider's pool hands back, and
+        /// <see cref="DbAccess"/> opens a connection for each command it executes. An initializer that
+        /// sends a statement therefore adds one round trip to every command. Settings that belong to
+        /// the session for its whole life are cheaper in the connection string or a database logon
+        /// trigger, where the provider supports them.
+        /// </remarks>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="factory"/> is null.</exception>
         public static void Register(DatabaseType type, DbProviderFactory factory, Action<DbConnection>? connectionInitializer)
         {

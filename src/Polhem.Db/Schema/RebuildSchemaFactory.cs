@@ -41,8 +41,8 @@ namespace Polhem.Db.Schema
         {
             var tmpSchema = schema.Clone();
             tmpSchema.TableName = tableName;
-            // DisplayName is carried over so the tmp table gets the same extended property;
-            // after rename the properties remain attached to the (renamed) object.
+            // `DisplayName` is carried over so the tmp table gets the same extended property. After
+            // the rename the properties remain attached to the renamed object.
             tmpSchema.DisplayName = schema.DisplayName;
             return tmpSchema;
         }

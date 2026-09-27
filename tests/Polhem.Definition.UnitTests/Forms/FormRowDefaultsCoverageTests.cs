@@ -119,6 +119,26 @@ namespace Polhem.Definition.UnitTests.Forms
             Assert.Empty(binary);
         }
 
+        [Fact]
+        [DisplayName("DefaultForDbType agrees with FieldDbTypeExtensions.GetDefaultValue for every FieldDbType except Date and DateTime")]
+        public void DefaultForDbType_EveryNonDateType_MatchesGetDefaultValue()
+        {
+            foreach (var dbType in Enum.GetValues<FieldDbType>())
+            {
+                if (dbType is FieldDbType.Date or FieldDbType.DateTime)
+                    continue;
+
+                var fromDefinition = FormRowDefaults.DefaultForDbType(dbType);
+                var fromBase = dbType.GetDefaultValue();
+
+                Assert.Equal(fromBase.GetType(), fromDefinition.GetType());
+                if (fromBase is byte[] bytes)
+                    Assert.Equal(bytes, (byte[])fromDefinition);
+                else
+                    Assert.Equal(fromBase, fromDefinition);
+            }
+        }
+
         [Theory]
         [InlineData(FieldDbType.AutoIncrement)]
         [InlineData(FieldDbType.Unknown)]

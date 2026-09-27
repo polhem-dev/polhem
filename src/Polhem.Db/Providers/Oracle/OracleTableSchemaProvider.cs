@@ -32,7 +32,7 @@ namespace Polhem.Db.Providers.Oracle
     /// dictionary; output identifiers are lowercased before being placed onto
     /// <see cref="TableSchema"/> / <see cref="DbField"/> so the rest of the framework
     /// (FormSchema, Repository, Business) sees a consistent lowercase abstraction across
-    /// all 5 supported databases.
+    /// every supported database.
     /// </para>
     /// </remarks>
     public sealed class OracleTableSchemaProvider : ITableSchemaProvider
@@ -64,8 +64,8 @@ namespace Polhem.Db.Providers.Oracle
 
             if (!TableExists(storageName)) return null;
 
-            // The TableName surfaced to the framework follows the lowercase abstraction;
-            // pass the caller-supplied value through verbatim rather than the storage form.
+            // The `TableName` surfaced to the framework follows the lowercase abstraction, so the
+            // caller-supplied value passes through verbatim rather than the storage form.
             var dbTable = new TableSchema { TableName = tableName };
             dbTable.DisplayName = GetTableDescription(storageName);
 
@@ -172,13 +172,13 @@ namespace Polhem.Db.Providers.Oracle
         {
             while (!table.IsEmpty())
             {
-                var oRow = table.Rows[0];
+                var firstRow = table.Rows[0];
                 // The "Name" column carries Oracle's UPPERCASE storage form; we still need to
                 // RowFilter on the original string before lowercase-ing for the framework
                 // surface, otherwise the filter no longer matches the stored value.
-                string storageName = ValueUtilities.CStr(oRow["Name"]);
+                string storageName = ValueUtilities.CStr(firstRow["Name"]);
                 string name = storageName.ToLowerInvariant();
-                bool isUnique = ValueUtilities.CBool(oRow["IsUnique"]);
+                bool isUnique = ValueUtilities.CBool(firstRow["IsUnique"]);
 
                 var tableIndex = new DbTableIndex
                 {
@@ -256,7 +256,7 @@ namespace Polhem.Db.Providers.Oracle
             {
                 // Oracle stores column names in UPPERCASE; lowercase here so the framework's
                 // FormSchema / Repository surface remains case-consistent with the other
-                // 4 supported databases (per the adapter-boundary translation strategy).
+                // supported databases (per the adapter-boundary translation strategy).
                 FieldName = row.GetFieldValue<string>("FieldName").ToLowerInvariant(),
                 Caption = row.GetFieldValue<string>("Description"),
                 AllowNull = row.GetFieldValue<bool>("AllowDBNull")

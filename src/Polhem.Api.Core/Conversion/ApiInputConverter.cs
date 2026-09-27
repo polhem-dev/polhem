@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -37,6 +38,11 @@ namespace Polhem.Api.Core.Conversion
         /// </remarks>
         internal static JsonSerializerOptions PlainReadOptions { get; } = CreateReadOptions();
 
+        // The property pairs a conversion copies depend only on the two types, and looking them up
+        // by reflection on every call was most of the conversion's cost. The keys are the request,
+        // args, result and response types the API dispatches, a set fixed by the compiled code.
+        private static readonly ConcurrentDictionary<(Type Source, Type Target), (PropertyInfo Source, PropertyInfo Target)[]> s_copyPlans = new();
+
         private static JsonSerializerOptions CreateReadOptions()
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -75,21 +81,33 @@ namespace Polhem.Api.Core.Conversion
                 return source;
 
             var target = Activator.CreateInstance(targetType)!;
-            var sourceType = source.GetType();
-
-            // Copy all public instance properties from source to target
-            foreach (var targetProp in targetType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            var plan = s_copyPlans.GetOrAdd((source.GetType(), targetType), BuildCopyPlan);
+            foreach (var (sourceProp, targetProp) in plan)
             {
-                if (!targetProp.CanWrite) continue;
-
-                var sourceProp = sourceType.GetProperty(targetProp.Name, BindingFlags.Public | BindingFlags.Instance);
-                if (sourceProp != null && sourceProp.CanRead && targetProp.PropertyType.IsAssignableFrom(sourceProp.PropertyType))
-                {
-                    targetProp.SetValue(target, sourceProp.GetValue(source));
-                }
+                targetProp.SetValue(target, sourceProp.GetValue(source));
             }
 
             return target;
+        }
+
+        /// <summary>
+        /// Pairs every writable public instance property of the target with the readable source
+        /// property of the same name whose type it can hold.
+        /// </summary>
+        private static (PropertyInfo Source, PropertyInfo Target)[] BuildCopyPlan((Type Source, Type Target) types)
+        {
+            var plan = new List<(PropertyInfo Source, PropertyInfo Target)>();
+            foreach (var targetProp in types.Target.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (!targetProp.CanWrite) continue;
+
+                var sourceProp = types.Source.GetProperty(targetProp.Name, BindingFlags.Public | BindingFlags.Instance);
+                if (sourceProp != null && sourceProp.CanRead && targetProp.PropertyType.IsAssignableFrom(sourceProp.PropertyType))
+                {
+                    plan.Add((sourceProp, targetProp));
+                }
+            }
+            return plan.ToArray();
         }
     }
 }

@@ -53,6 +53,7 @@ namespace Polhem.Api.Core.MessagePack
         /// <summary>
         /// Deserializes the array, re-adding each item so the key index is rebuilt.
         /// </summary>
+        /// <exception cref="MessagePackSerializationException">An element of the array is nil.</exception>
         public TCollection? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
@@ -65,9 +66,12 @@ namespace Polhem.Api.Core.MessagePack
                 var collection = new TCollection();
                 for (var i = 0; i < count; i++)
                 {
-                    var element = MessagePackSerializer.Deserialize<TElement>(ref reader, options);
-                    if (element != null)
-                        collection.Add(element);
+                    // A nil element is malformed input, as in `CollectionBaseFormatter`. Skipping it would
+                    // silently hand the caller a shorter collection than the peer sent.
+                    var element = MessagePackSerializer.Deserialize<TElement>(ref reader, options)
+                        ?? throw new MessagePackSerializationException(
+                            $"A {typeof(TCollection).Name} element at index {i} is nil.");
+                    collection.Add(element);
                 }
 
                 return collection;

@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Text;
 using Polhem.Base;
 using Polhem.Db.Ddl;
-using Polhem.Base.Data;
 using Polhem.Db.Schema;
 using Polhem.Db.Schema.Changes;
 using Polhem.Definition.Database;
@@ -49,7 +48,7 @@ namespace Polhem.Db.Providers.PostgreSql
 
             // 3) Copy data from the original table (excluding newly-added and identity columns).
             sb.AppendLine("-- Move data");
-            sb.AppendLine(BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames));
+            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, PgSchemaSyntax.QuoteName));
 
             // 4) Drop the original table.
             sb.AppendLine("-- Drop old table");
@@ -65,20 +64,6 @@ namespace Polhem.Db.Providers.PostgreSql
         private static string BuildDropIfExistsStatement(string tableName)
         {
             return $"DROP TABLE IF EXISTS {PgSchemaSyntax.QuoteName(tableName)};";
-        }
-
-        private static string BuildInsertSelectStatement(string sourceTable, string targetTable, TableSchema schema, HashSet<string> addedFieldNames)
-        {
-            var fieldBuilder = new StringBuilder();
-            foreach (DbField field in schema.Fields!)
-            {
-                if (addedFieldNames.Contains(field.FieldName)) continue;
-                if (field.DbType == FieldDbType.AutoIncrement) continue;
-                if (fieldBuilder.Length > 0) fieldBuilder.Append(", ");
-                fieldBuilder.Append(PgSchemaSyntax.QuoteName(field.FieldName));
-            }
-            string fields = fieldBuilder.ToString();
-            return $"INSERT INTO {PgSchemaSyntax.QuoteName(targetTable)} ({fields}) \nSELECT {fields} FROM {PgSchemaSyntax.QuoteName(sourceTable)};";
         }
 
         private static string BuildRenameStatements(string oldTable, string newTable, TableSchema schema)

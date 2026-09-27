@@ -64,17 +64,17 @@ namespace Polhem.Definition.Database
         public static DbTableIndex Add(this DbTableIndexCollection? collection, string name, string fields, bool unique)
         {
             ArgumentNullException.ThrowIfNull(collection);
-            DbTableIndex oIndex;
-            string[] oFields;
+            DbTableIndex index;
+            string[] fieldNames;
 
-            oIndex = new DbTableIndex();
-            oIndex.Name = name;
-            oIndex.Unique = unique;
-            oFields = StringUtilities.Split(fields, ",");
-            foreach (string fieldName in oFields)
-                oIndex.IndexFields!.Add(fieldName);
-            collection.Add(oIndex);
-            return oIndex;
+            index = new DbTableIndex();
+            index.Name = name;
+            index.Unique = unique;
+            fieldNames = StringUtilities.Split(fields, ",");
+            foreach (string fieldName in fieldNames)
+                index.IndexFields!.Add(fieldName);
+            collection.Add(index);
+            return index;
         }
     }
 }

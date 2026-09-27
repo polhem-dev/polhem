@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Text;
 using Polhem.Base;
 using Polhem.Db.Ddl;
-using Polhem.Base.Data;
 using Polhem.Db.Schema;
 using Polhem.Db.Schema.Changes;
 using Polhem.Definition.Database;
@@ -48,7 +47,7 @@ namespace Polhem.Db.Providers.SqlServer
 
             // 3) Copy data from the original table (excluding newly-added and identity columns).
             sb.AppendLine("-- Move data");
-            sb.AppendLine(BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames));
+            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, SqlSchemaSyntax.QuoteName));
 
             // 4) Drop the original table.
             sb.AppendLine("-- Drop old table");
@@ -66,20 +65,6 @@ namespace Polhem.Db.Providers.SqlServer
             string escaped = SqlSchemaSyntax.EscapeSqlString(tableName);
             string quoted = SqlSchemaSyntax.QuoteName(tableName);
             return $"IF (SELECT COUNT(*) From sys.tables WHERE name=N'{escaped}')>0\n  DROP TABLE {quoted};";
-        }
-
-        private static string BuildInsertSelectStatement(string sourceTable, string targetTable, TableSchema schema, HashSet<string> addedFieldNames)
-        {
-            var fieldBuilder = new StringBuilder();
-            foreach (DbField field in schema.Fields!)
-            {
-                if (addedFieldNames.Contains(field.FieldName)) continue;
-                if (field.DbType == FieldDbType.AutoIncrement) continue;
-                if (fieldBuilder.Length > 0) fieldBuilder.Append(", ");
-                fieldBuilder.Append(SqlSchemaSyntax.QuoteName(field.FieldName));
-            }
-            string fields = fieldBuilder.ToString();
-            return $"INSERT INTO {SqlSchemaSyntax.QuoteName(targetTable)} ({fields}) \nSELECT {fields} FROM {SqlSchemaSyntax.QuoteName(sourceTable)};";
         }
 
         private static string BuildRenameStatements(string oldTable, string newTable, TableSchema schema)

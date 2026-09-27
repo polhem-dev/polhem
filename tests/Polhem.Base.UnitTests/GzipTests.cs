@@ -49,6 +49,25 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
+        [DisplayName("Compress uses the Fastest level, producing the same bytes as a Fastest GZipStream")]
+        public void Compress_AnyInput_UsesFastestLevel()
+        {
+            byte[] input = Encoding.UTF8.GetBytes(string.Concat(Enumerable.Range(0, 2000).Select(i => $"row {i} value {i * 7};")));
+
+            byte[] expected;
+            using (var stream = new MemoryStream())
+            {
+                using (var gzip = new System.IO.Compression.GZipStream(stream, System.IO.Compression.CompressionLevel.Fastest, true))
+                {
+                    gzip.Write(input, 0, input.Length);
+                }
+                expected = stream.ToArray();
+            }
+
+            Assert.Equal(expected, Gzip.Compress(input));
+        }
+
+        [Fact]
         [DisplayName("Decompress throws InvalidDataException when the output exceeds the 50 MB limit (zip bomb protection)")]
         public void Decompress_ExceedsMaxSize_ThrowsInvalidDataException()
         {

@@ -7,7 +7,9 @@ namespace Polhem.Definition
     /// <remarks>
     /// Return type is <c>object</c> rather than <c>IBusinessObject</c> to avoid a
     /// reverse dependency from <c>Polhem.Definition</c> to <c>Polhem.Business</c> (where
-    /// <c>IBusinessObject</c> lives). Callers cast to <c>IBusinessObject</c> at use sites.
+    /// <c>IBusinessObject</c> lives). The API layer dispatches on the returned object by
+    /// reflection; a BO calling another BO casts to the axis interface it needs, for example
+    /// through the <c>CreateFormBO</c> and <c>CreateSystemBO</c> extensions in <c>Polhem.Business</c>.
     /// </remarks>
     public interface IBusinessObjectFactory
     {

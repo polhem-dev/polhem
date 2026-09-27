@@ -55,5 +55,30 @@ namespace Polhem.Api.Client
 
             return raw is Guid g ? g : Guid.Parse(raw.ToString()!);
         }
+
+        /// <summary>
+        /// Reads a row's identifier when it has one.
+        /// </summary>
+        /// <param name="row">The row, typically the one a user selected in a grid or list.</param>
+        /// <param name="rowId">The row's identifier, or <see cref="Guid.Empty"/> when the method returns <c>false</c>.</param>
+        /// <returns>
+        /// <c>true</c> when the row's table has the identifier column and the row holds a GUID, or a string
+        /// that parses as one; otherwise <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        /// The non-throwing counterpart of <see cref="RequireMasterRowId"/>, for selection handlers that
+        /// ignore a row without an identifier instead of reporting it.
+        /// </remarks>
+        public static bool TryGetRowId(DataRow row, out Guid rowId)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+
+            rowId = Guid.Empty;
+            if (!row.Table.Columns.Contains(SysFields.RowId)) return false;
+            var raw = row[SysFields.RowId];
+            if (raw is null || raw == DBNull.Value) return false;
+            if (raw is Guid g) { rowId = g; return true; }
+            return Guid.TryParse(raw.ToString(), out rowId);
+        }
     }
 }

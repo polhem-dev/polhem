@@ -8,7 +8,7 @@ namespace Polhem.Analyzers.Definitions
     /// Reports POLHEM1002: a database category declares an identifier that is not an accepted scope.
     /// </summary>
     /// <remarks>
-    /// The framework routes on these three scopes only. A category under any other identifier registers
+    /// The framework routes on the scopes in <see cref="DbCategoryScopes"/> only. A category under any other identifier registers
     /// tables that nothing can ever resolve, and the tables appear simply to be unregistered.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]

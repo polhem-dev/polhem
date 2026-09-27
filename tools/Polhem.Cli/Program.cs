@@ -91,22 +91,3 @@ internal static class Program
         writer.WriteLine("Run 'dotnet polhem help <command>' for command-specific help.");
     }
 }
-
-/// <summary>
-/// Centralised exit codes so callers (CI scripts) can rely on stable values.
-/// </summary>
-internal static class ExitCodes
-{
-    public const int Success = 0;
-    public const int Error = 1;
-    public const int Usage = 2;
-}
-
-/// <summary>
-/// Thrown for argument-parsing / usage errors. Caught at the top of <c>Main</c>
-/// and translated to a usage message + exit code 2.
-/// </summary>
-internal sealed class UsageException : Exception
-{
-    public UsageException(string message) : base(message) { }
-}

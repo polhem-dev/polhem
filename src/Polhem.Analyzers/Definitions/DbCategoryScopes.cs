@@ -3,14 +3,14 @@ using System.Collections.Immutable;
 namespace Polhem.Analyzers.Definitions
 {
     /// <summary>
-    /// The database scope identifiers accepted by <c>CategoryId</c> and
-    /// <c>CategoryId</c>.
+    /// The database scope identifiers accepted by <c>FormSchema/@CategoryId</c> and
+    /// <c>DbCategory/@Id</c>.
     /// </summary>
     /// <remarks>
     /// IMPORTANT: These values duplicate the constants on <c>Polhem.Definition.Database.DbCategoryIds</c>.
     /// The duplication is unavoidable because analyzers target netstandard2.0 and cannot reference the
     /// net10.0 framework assembly. `DbCategoryScopesSyncTests` asserts that this list stays equal to
-    /// the framework constants, so adding a scope there fails the build until it is added here too.
+    /// the framework constants, so adding a scope there fails that test run until it is added here too.
     /// </remarks>
     internal static class DbCategoryScopes
     {

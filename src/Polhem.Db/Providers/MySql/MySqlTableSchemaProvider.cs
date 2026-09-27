@@ -50,7 +50,7 @@ namespace Polhem.Db.Providers.MySql
 
             var indexes = GetTableIndexes(tableName);
             ParsePrimaryKey(dbTable, indexes);
-            ParseIndexes(dbTable, indexes);
+            IndexRowsParser.ParseIndexes(dbTable, indexes);
 
             var columns = GetColumns(tableName);
             foreach (DataRow row in columns.Rows)
@@ -138,39 +138,6 @@ namespace Polhem.Db.Providers.MySql
                 tableIndex.IndexFields!.Add(indexField);
             }
             table.DefaultView.DeleteRows(true);
-        }
-
-        /// <summary>
-        /// Parses and populates all remaining (non-PK) indexes from the index data.
-        /// </summary>
-        private static void ParseIndexes(TableSchema dbTable, DataTable table)
-        {
-            while (!table.IsEmpty())
-            {
-                var oRow = table.Rows[0];
-                string name = ValueUtilities.CStr(oRow["Name"]);
-                bool isUnique = ValueUtilities.CBool(oRow["IsUnique"]);
-
-                var tableIndex = new DbTableIndex
-                {
-                    Name = name,
-                    Unique = isUnique
-                };
-                dbTable.Indexes!.Add(tableIndex);
-
-                table.DefaultView.RowFilter = $"Name='{name.Replace("'", "''")}'";
-                table.DefaultView.Sort = "Name,KeyOrdinal";
-                foreach (DataRowView rowView in table.DefaultView)
-                {
-                    var indexField = new IndexField
-                    {
-                        FieldName = ValueUtilities.CStr(rowView["FieldName"]),
-                        SortDirection = ValueUtilities.CBool(rowView["IsDesc"]) ? SortDirection.Desc : SortDirection.Asc
-                    };
-                    tableIndex.IndexFields!.Add(indexField);
-                }
-                table.DefaultView.DeleteRows(true);
-            }
         }
 
         /// <summary>

@@ -113,5 +113,38 @@ namespace Polhem.Base.UnitTests
                 AesCbcHmacCryptor.Decrypt(malicious, _aesKey, _hmacKey);
             });
         }
+
+        [Fact]
+        [DisplayName("Decrypt reads a ciphertext produced by the stream-based implementation that preceded the span rewrite")]
+        public void Decrypt_CiphertextFromPreviousImplementation_ReturnsPlaintext()
+        {
+            // Produced by the earlier `BinaryWriter` implementation with these keys. Any change to the
+            // layout [ivLength][iv][cipherLength][ciphertext][HMAC] makes this fail, which is the point:
+            // payloads encrypted by an older client or server must still decrypt.
+            byte[] aesKey = Enumerable.Range(0, 32).Select(i => (byte)i).ToArray();
+            byte[] hmacKey = Enumerable.Range(100, 32).Select(i => (byte)i).ToArray();
+            byte[] previous = Convert.FromHexString(
+                "100000009F578525F692144CF84293BA6A8BA5F520000000DC37D86CABD9F6C953E02B9D7F84C8DD" +
+                "C84FB3D32B24ACD67B341F2E607382AE42D92EE0C732E9031AD077C7774BDEC9430439832B064A09" +
+                "A54ACF9CAB0A5CC1");
+
+            byte[] decrypted = AesCbcHmacCryptor.Decrypt(previous, aesKey, hmacKey);
+
+            Assert.Equal("Polhem wire format pin", Encoding.UTF8.GetString(decrypted));
+        }
+
+        [Fact]
+        [DisplayName("Encrypt writes a 16-byte IV, the ciphertext length and a 32-byte HMAC around a block-aligned ciphertext")]
+        public void Encrypt_AnyInput_WritesDocumentedLayout()
+        {
+            byte[] plain = Encoding.UTF8.GetBytes("layout");
+
+            byte[] encrypted = AesCbcHmacCryptor.Encrypt(plain, _aesKey, _hmacKey);
+
+            Assert.Equal(16, BitConverter.ToInt32(encrypted, 0));
+            int cipherLength = BitConverter.ToInt32(encrypted, 20);
+            Assert.Equal(16, cipherLength);
+            Assert.Equal(4 + 16 + 4 + cipherLength + 32, encrypted.Length);
+        }
     }
 }

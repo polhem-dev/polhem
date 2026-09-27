@@ -184,6 +184,25 @@ namespace Polhem.ObjectCaching.UnitTests
         }
 
         [Fact]
+        [DisplayName("A plugin override saved through CustomizeDefineWriter is visible to the next read even right after a miss")]
+        public void GetCustomizePluginSettings_SavedByWriterAfterMiss_IsReadAtOnce()
+        {
+            var paths = new PathOptions { DefinePath = "/tmp/base", CustomizePath = _root };
+            var provider = new CacheContainerProvider(paths);
+            var reader = new CustomizeDefineReader(provider, paths);
+            var writer = new CustomizeDefineWriter(provider, paths);
+            Assert.Null(reader.GetCustomizePluginSettings(_customizeId));
+
+            var settings = new PluginSettings();
+            settings.Items!.Add("Order").Plugins!.Add("Cust.CreditLimit, Cust", PluginStage.BeforeSave);
+            writer.SaveCustomizePluginSettings(_customizeId, settings);
+
+            var read = reader.GetCustomizePluginSettings(_customizeId);
+            Assert.NotNull(read);
+            Assert.Single(read!.GetPluginBindings("Order"));
+        }
+
+        [Fact]
         [DisplayName("Tenants are isolated: A's plugin customization does not leak into B")]
         public void CrossTenant_PluginSettings_Isolated()
         {

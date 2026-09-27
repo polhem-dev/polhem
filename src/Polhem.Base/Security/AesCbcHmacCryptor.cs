@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Security.Cryptography;
 
 namespace Polhem.Base.Security
@@ -9,6 +10,11 @@ namespace Polhem.Base.Security
     /// </summary>
     public static class AesCbcHmacCryptor
     {
+        // Layout: [ivLength:int32 LE][iv][cipherLength:int32 LE][ciphertext][HMAC-SHA256 over everything before it].
+        private const int LengthPrefixSize = sizeof(int);
+        private const int IvSize = 16;
+        private const int HmacSize = 32;
+
         /// <summary>
         /// Encrypts data using AES-CBC and appends an HMAC authentication code.
         /// </summary>
@@ -16,38 +22,33 @@ namespace Polhem.Base.Security
         /// <param name="aesKey">The AES symmetric encryption key (32 bytes).</param>
         /// <param name="hmacKey">The HMAC verification key (32 bytes).</param>
         /// <returns>The encrypted byte data, containing the IV, ciphertext, and HMAC.</returns>
+        /// <remarks>
+        /// The whole result is written into one buffer sized up front. The payload pipeline encrypts
+        /// every Encrypted body, and building it through a stream and separate arrays allocated about
+        /// four times the output, most of it on the large object heap for a list response.
+        /// </remarks>
         public static byte[] Encrypt(byte[] plainBytes, byte[] aesKey, byte[] hmacKey)
         {
-            using (var aes = Aes.Create())
-            {
-                aes.Key = aesKey;
-                aes.Mode = CipherMode.CBC;
-                aes.Padding = PaddingMode.PKCS7;
-                aes.GenerateIV();
-                byte[] iv = aes.IV;
+            ArgumentNullException.ThrowIfNull(plainBytes);
 
-                using (var encryptor = aes.CreateEncryptor())
-                {
-                    byte[] cipherBytes = encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
+            using var aes = Aes.Create();
+            aes.Key = aesKey;
 
-                    using (var ms = new MemoryStream())
-                    using (var writer = new BinaryWriter(ms))
-                    {
-                        writer.Write(iv.Length);
-                        writer.Write(iv);
-                        writer.Write(cipherBytes.Length);
-                        writer.Write(cipherBytes);
+            Span<byte> iv = stackalloc byte[IvSize];
+            RandomNumberGenerator.Fill(iv);
 
-                        byte[] data = ms.ToArray();
+            int cipherLength = aes.GetCiphertextLengthCbc(plainBytes.Length, PaddingMode.PKCS7);
+            int headerLength = LengthPrefixSize + IvSize + LengthPrefixSize;
+            var result = new byte[headerLength + cipherLength + HmacSize];
 
-                        using (var hmac = new HMACSHA256(hmacKey))
-                        {
-                            byte[] hmacBytes = hmac.ComputeHash(data);
-                            return Combine(data, hmacBytes);
-                        }
-                    }
-                }
-            }
+            BinaryPrimitives.WriteInt32LittleEndian(result, IvSize);
+            iv.CopyTo(result.AsSpan(LengthPrefixSize));
+            BinaryPrimitives.WriteInt32LittleEndian(result.AsSpan(LengthPrefixSize + IvSize), cipherLength);
+            aes.EncryptCbc(plainBytes, iv, result.AsSpan(headerLength, cipherLength), PaddingMode.PKCS7);
+
+            HMACSHA256.HashData(hmacKey, result.AsSpan(0, headerLength + cipherLength),
+                result.AsSpan(headerLength + cipherLength, HmacSize));
+            return result;
         }
 
         /// <summary>
@@ -64,57 +65,33 @@ namespace Polhem.Base.Security
             if (encryptedData == null || encryptedData.Length < 72)
                 throw new CryptographicException("Invalid encrypted data.");
 
-            using (var ms = new MemoryStream(encryptedData))
-            using (var reader = new BinaryReader(ms))
-            {
-                int ivLength = reader.ReadInt32();
-                if (ivLength < 16 || ivLength > 32)
-                    throw new CryptographicException("Invalid IV length.");
+            int ivLength = BinaryPrimitives.ReadInt32LittleEndian(encryptedData);
+            if (ivLength < 16 || ivLength > 32)
+                throw new CryptographicException("Invalid IV length.");
 
-                byte[] iv = reader.ReadBytes(ivLength);
+            int cipherLength = BinaryPrimitives.ReadInt32LittleEndian(encryptedData.AsSpan(LengthPrefixSize + ivLength));
+            // Remaining bytes after ivLength field (4) + IV + cipherLength field (4) must hold ciphertext + HMAC (32)
+            if (cipherLength <= 0 || cipherLength > encryptedData.Length - ivLength - 40)
+                throw new CryptographicException("Invalid cipher data length.");
 
-                int cipherLength = reader.ReadInt32();
-                // Remaining bytes after ivLength field (4) + IV + cipherLength field (4) must hold ciphertext + HMAC (32)
-                if (cipherLength <= 0 || cipherLength > encryptedData.Length - ivLength - 40)
-                    throw new CryptographicException("Invalid cipher data length.");
+            int headerLength = LengthPrefixSize + ivLength + LengthPrefixSize;
+            var authenticated = encryptedData.AsSpan(0, headerLength + cipherLength);
+            var storedHmac = encryptedData.AsSpan(headerLength + cipherLength, HmacSize);
 
-                byte[] cipherBytes = reader.ReadBytes(cipherLength);
-                byte[] hmacBytes = reader.ReadBytes(32); // SHA-256 length
+            Span<byte> computedHmac = stackalloc byte[HmacSize];
+            HMACSHA256.HashData(hmacKey, authenticated, computedHmac);
+            if (!CryptographicOperations.FixedTimeEquals(storedHmac, computedHmac))
+                throw new CryptographicException("HMAC validation failed.");
 
-                byte[] dataToVerify = new byte[ivLength + cipherLength + 8];
-                Array.Copy(encryptedData, 0, dataToVerify, 0, dataToVerify.Length);
+            // The length check above admits 17 to 32 bytes, which AES-CBC cannot use as an IV. Rejected
+            // after the HMAC check, where the stream-based implementation also failed on it.
+            if (ivLength != IvSize)
+                throw new CryptographicException("Invalid IV length.");
 
-                using (var hmac = new HMACSHA256(hmacKey))
-                {
-                    byte[] computedHmac = hmac.ComputeHash(dataToVerify);
-                    if (!CryptographicOperations.FixedTimeEquals(hmacBytes, computedHmac))
-                        throw new CryptographicException("HMAC validation failed.");
-                }
-
-                using (var aes = Aes.Create())
-                {
-                    aes.Key = aesKey;
-                    aes.IV = iv;
-                    aes.Mode = CipherMode.CBC;
-                    aes.Padding = PaddingMode.PKCS7;
-
-                    using (var decryptor = aes.CreateDecryptor())
-                    {
-                        return decryptor.TransformFinalBlock(cipherBytes, 0, cipherBytes.Length);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Combines two byte arrays into one.
-        /// </summary>
-        private static byte[] Combine(byte[] a, byte[] b)
-        {
-            byte[] result = new byte[a.Length + b.Length];
-            Buffer.BlockCopy(a, 0, result, 0, a.Length);
-            Buffer.BlockCopy(b, 0, result, a.Length, b.Length);
-            return result;
+            using var aes = Aes.Create();
+            aes.Key = aesKey;
+            return aes.DecryptCbc(encryptedData.AsSpan(headerLength, cipherLength),
+                encryptedData.AsSpan(LengthPrefixSize, IvSize), PaddingMode.PKCS7);
         }
     }
 }

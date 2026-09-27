@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using Polhem.Base.Serialization;
 using Polhem.Tests.Shared;
 
@@ -453,6 +454,33 @@ namespace Polhem.Base.UnitTests
             var restored = JsonCodec.Deserialize<DataTable?>(json);
 
             Assert.Null(restored);
+        }
+
+        [Fact]
+        [DisplayName("A row value key whose casing differs from its column definition is still converted with the column's type")]
+        public void DataTable_JsonDeserialize_ValueKeyCasingDiffers_ConvertsWithColumnType()
+        {
+            var table = new DataTable("TestTable");
+            table.Columns.Add("Amount", typeof(decimal));
+            table.Rows.Add(1234.5m);
+            string json = JsonCodec.Serialize(table);
+            string rewritten = json.Replace("\"current\":{\"Amount\"", "\"current\":{\"AMOUNT\"", StringComparison.Ordinal);
+            Assert.NotEqual(json, rewritten);
+
+            // A culture whose decimal separator is a comma: without the column's type the quoted value would
+            // be converted by `DataTable` under this culture instead of parsed as an invariant decimal.
+            var previous = CultureInfo.CurrentCulture;
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+            try
+            {
+                var restored = JsonCodec.Deserialize<DataTable>(rewritten)!;
+
+                Assert.Equal(1234.5m, restored.Rows[0]["Amount"]);
+            }
+            finally
+            {
+                CultureInfo.CurrentCulture = previous;
+            }
         }
 
         #endregion

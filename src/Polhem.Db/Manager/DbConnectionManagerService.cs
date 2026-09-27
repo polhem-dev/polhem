@@ -18,7 +18,9 @@ namespace Polhem.Db.Manager
     public sealed class DbConnectionManagerService : IDbConnectionManager, IDisposable
     {
         private readonly IDatabaseSettingsProvider _provider;
-        private readonly ConcurrentDictionary<string, DbConnectionInfo> _cache = new();
+        // Case-insensitive like the `DatabaseItemCollection` it caches, so "Common" and "common" share
+        // one entry and `Remove` finds whichever casing was used to add it.
+        private readonly ConcurrentDictionary<string, DbConnectionInfo> _cache = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Advanced by <see cref="Clear"/> and <see cref="Remove"/> before they drop entries, so a

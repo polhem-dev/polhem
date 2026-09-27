@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Polhem.Base;
 using Polhem.Api.Core.MessagePack;
 using Polhem.Api.Core.Messages;
@@ -9,6 +10,10 @@ namespace Polhem.Api.Core.JsonRpc
     /// </summary>
     public static class ApiPayloadConverter
     {
+        // `Assembly.GetName()` builds a new `AssemblyName` on every call, and this runs on every
+        // encoded or encrypted response. The keys are the wire types, a set fixed by the compiled code.
+        private static readonly ConcurrentDictionary<Type, string> s_typeNames = new();
+
         /// <summary>
         /// Converts the specified payload object to the target format (encoded or encrypted).
         /// </summary>
@@ -39,7 +44,7 @@ namespace Polhem.Api.Core.JsonRpc
                 throw new InvalidOperationException("Payload.Value cannot be null.");
 
             var type = payload.Value.GetType();
-            payload.TypeName = type.FullName + ", " + type.Assembly.GetName().Name;
+            payload.TypeName = s_typeNames.GetOrAdd(type, static t => t.FullName + ", " + t.Assembly.GetName().Name);
 
             var transformer = ApiServiceOptions.PayloadTransformer;
 

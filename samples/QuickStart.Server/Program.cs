@@ -1,3 +1,4 @@
+using Polhem.Api.AspNetCore;
 using Polhem.Samples.Shared;
 
 namespace QuickStart.Server;
@@ -31,6 +32,10 @@ internal static class Program
 
         var app = builder.Build();
         app.UsePolhemBackend();
+
+        // Host-side framework startup checks. After UsePolhemBackend, because the API key check
+        // reads st_api_key, which the demo seeder creates.
+        app.UsePolhemFramework();
         app.UseCors();
         app.MapControllers();
         app.Run();

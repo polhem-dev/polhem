@@ -15,7 +15,7 @@ namespace Polhem.Base.Data
     /// <para>
     /// The declared type is therefore recorded in <see cref="DataColumn.ExtendedProperties"/> whenever
     /// the framework knows it, and <see cref="ResolveFieldDbType"/> prefers that record over inferring
-    /// from the CLR type. Serializers on both wire formats call these two methods so the mapping
+    /// from the CLR type. Serializers on both wire formats call both methods so the mapping
     /// decision lives in one place.
     /// </para>
     /// </remarks>

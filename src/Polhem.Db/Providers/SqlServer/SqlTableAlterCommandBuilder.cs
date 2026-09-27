@@ -17,28 +17,11 @@ namespace Polhem.Db.Providers.SqlServer
     {
         /// <inheritdoc />
         public ChangeExecutionKind GetExecutionKind(ITableChange change)
-        {
-            switch (change)
-            {
-                case AddFieldChange _:
-                case RenameFieldChange _:
-                case AddIndexChange _:
-                case DropIndexChange _:
-                    return ChangeExecutionKind.Alter;
-                case AlterFieldChange alter:
-                    return AlterCompatibilityRules.GetKindForTypeChange(alter.OldField.DbType, alter.NewField.DbType);
-                default:
-                    return ChangeExecutionKind.NotSupported;
-            }
-        }
+            => AlterCompatibilityRules.GetExecutionKind(change);
 
         /// <inheritdoc />
         public bool IsNarrowingChange(ITableChange change)
-        {
-            if (change is AlterFieldChange alter)
-                return AlterCompatibilityRules.IsNarrowing(alter.OldField, alter.NewField);
-            return false;
-        }
+            => AlterCompatibilityRules.IsNarrowingChange(change);
 
         /// <inheritdoc />
         public IReadOnlyList<string> GetStatements(string tableName, ITableChange change)
@@ -157,7 +140,7 @@ namespace Polhem.Db.Providers.SqlServer
         private static string BuildAddIndexStatement(string tableName, DbTableIndex index)
         {
             string indexName = StringUtilities.Format(index.Name, tableName);
-            string fields = BuildIndexFieldList(index);
+            string fields = DdlFragments.BuildIndexFieldList(index, SqlSchemaSyntax.QuoteName);
 
             if (index.PrimaryKey)
                 return $"ALTER TABLE {SqlSchemaSyntax.QuoteName(tableName)} ADD CONSTRAINT {SqlSchemaSyntax.QuoteName(indexName)} PRIMARY KEY ({fields});";
@@ -173,18 +156,6 @@ namespace Polhem.Db.Providers.SqlServer
                 return $"ALTER TABLE {SqlSchemaSyntax.QuoteName(tableName)} DROP CONSTRAINT {SqlSchemaSyntax.QuoteName(index.Name)};";
 
             return $"DROP INDEX {SqlSchemaSyntax.QuoteName(index.Name)} ON {SqlSchemaSyntax.QuoteName(tableName)};";
-        }
-
-        private static string BuildIndexFieldList(DbTableIndex index)
-        {
-            var sb = new StringBuilder();
-            foreach (IndexField field in index.IndexFields!)
-            {
-                if (sb.Length > 0) sb.Append(", ");
-                sb.Append(CultureInfo.InvariantCulture,
-                    $"{SqlSchemaSyntax.QuoteName(field.FieldName)} {field.SortDirection.ToString().ToUpperInvariant()}");
-            }
-            return sb.ToString();
         }
     }
 }

@@ -146,6 +146,5 @@ namespace Polhem.Db.Providers.PostgreSql
             }
             return sb.ToString().Trim();
         }
-
     }
 }

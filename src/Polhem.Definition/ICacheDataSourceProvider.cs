@@ -66,14 +66,8 @@ namespace Polhem.Definition
         /// A company with no rules yields an empty snapshot, not <c>null</c>: "every form inherits
         /// the deployment defaults" is an answer, whereas <c>null</c> means the company itself is
         /// unknown.
-        /// <para>
-        /// Defaulted rather than abstract so that adding it stayed binary-compatible for hosts with
-        /// their own implementation. The default is also the correct behaviour for them: no rules
-        /// means every form inherits the deployment-wide switches, which is what such a host had
-        /// before per-form rules existed.
-        /// </para>
         /// </remarks>
-        CompanyAuditRules? GetCompanyAuditRules(string companyId) => null;
+        CompanyAuditRules? GetCompanyAuditRules(string companyId);
 
         /// <summary>
         /// Gets the enabled API key with the specified identifier; <c>null</c> when no enabled,

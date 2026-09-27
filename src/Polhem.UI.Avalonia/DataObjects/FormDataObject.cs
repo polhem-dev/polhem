@@ -10,7 +10,7 @@ namespace Polhem.UI.Avalonia.DataObjects
     /// <summary>
     /// Holds the in-memory <see cref="System.Data.DataSet"/> for a single form view
     /// (one master row plus zero or more detail tables) and exposes a small string-based
-    /// access surface for two-way binding by <c>DynamicForm</c> / <c>DynamicGrid</c>.
+    /// access surface for two-way binding by the Avalonia form views and editors.
     /// </summary>
     /// <remarks>
     /// <para>

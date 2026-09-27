@@ -113,7 +113,7 @@ namespace Polhem.Db.Dml
             // Get the primary key field
             var keyField = this.TableSchema.Fields![SysFields.RowId];
             // Build the SET clause with field names and parameter values
-            int iCount = 0;
+            int setCount = 0;
             foreach (DbField field in this.TableSchema.Fields)
             {
                 if (field != keyField && field.DbType != FieldDbType.AutoIncrement)
@@ -121,10 +121,10 @@ namespace Polhem.Db.Dml
                     fieldName = QuoteIdentifier(field.FieldName);
                     // Add command parameter
                     command.Parameters.Add(field);
-                    if (iCount > 0)
+                    if (setCount > 0)
                         buffer.Append(", ");
                     buffer.Append(CultureInfo.InvariantCulture, $"{fieldName}={GetParameterName(field.FieldName)}");
-                    iCount++;
+                    setCount++;
                 }
             }
             // Add primary key condition to WHERE clause
