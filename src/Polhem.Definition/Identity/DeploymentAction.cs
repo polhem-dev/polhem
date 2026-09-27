@@ -9,9 +9,9 @@ namespace Polhem.Definition.Identity
     /// company roles live in each company's own database, so granting a company administrator any
     /// say over installation-wide assets would let one tenant act for all of them.
     /// <para>
-    /// The enumeration starts with the single action the framework needs today. Carrying the action
-    /// in the signature from the outset is the point — a later split into finer actions changes
-    /// only <see cref="IDeploymentAuthorizationService"/> implementations, not their callers.
+    /// The enumeration lists only the actions the framework performs. Carrying the action in the
+    /// signature is the point — a later split into finer grants changes only
+    /// <see cref="IDeploymentAuthorizationService"/> implementations, not their callers.
     /// </para>
     /// </remarks>
     public enum DeploymentAction
@@ -19,6 +19,13 @@ namespace Polhem.Definition.Identity
         /// <summary>
         /// Issue, revoke or inspect API keys (<c>st_api_key</c>).
         /// </summary>
-        ManageApiKey = 1
+        ManageApiKey = 1,
+
+        /// <summary>
+        /// Read the database anomaly log (<c>st_log_anomaly_db</c>). It carries no company and records
+        /// every tenant's database ids, SQL command templates and provider error messages, so it is an
+        /// installation-wide view rather than part of any one company's audit trail.
+        /// </summary>
+        ReadDbAnomalyLog = 2
     }
 }

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Globalization;
+using Polhem.Base.Security;
 using Polhem.Db;
 using Polhem.Definition.Database;
 using Polhem.Definition.Logging;
@@ -32,7 +33,7 @@ namespace Polhem.Hosting.UnitTests
                 SysRowId = rowId,
                 UserId = "demo",
                 UserName = "Demo User",
-                AccessToken = Guid.NewGuid(),
+                TokenFingerprint = AccessTokenHasher.ComputeFingerprint(Guid.NewGuid()),
                 Event = LoginEvent.LoginSucceeded,
             };
 
@@ -181,6 +182,49 @@ namespace Polhem.Hosting.UnitTests
         [DbFact(DatabaseType.PostgreSQL)]
         [DisplayName("PostgreSQL: an API anomaly written to st_log_anomaly_api can be read back")]
         public void ApiAnomaly_PostgreSQL_RoundTrip() => RunApiAnomalyRoundTrip(DatabaseType.PostgreSQL);
+
+        private void RunFingerprintRoundTrip(DatabaseType databaseType)
+        {
+            var dbAccess = _fx.GetRequiredService<IDbAccessFactory>()
+                .Create(TestDbConventions.GetDatabaseId(databaseType, "log"));
+
+            var token = Guid.NewGuid();
+            string fingerprint = AccessTokenHasher.ComputeFingerprint(token)!;
+            var rowId = Guid.NewGuid();
+            dbAccess.Execute(AuditLogWriteRepository.BuildInsert(new AccessAuditEntry
+            {
+                SysRowId = rowId,
+                UserId = "demo",
+                TokenFingerprint = fingerprint,
+                ProgId = "Order",
+                RowKey = "r1",
+            }));
+
+            var stored = dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar,
+                "SELECT token_fingerprint FROM st_log_access WHERE sys_rowid={0}", rowId)).Scalar;
+
+            Assert.Equal(fingerprint, Convert.ToString(stored, CultureInfo.InvariantCulture));
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: st_log_access stores the session fingerprint in token_fingerprint")]
+        public void TokenFingerprint_SqlServer_RoundTrip() => RunFingerprintRoundTrip(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("PostgreSQL: st_log_access stores the session fingerprint in token_fingerprint")]
+        public void TokenFingerprint_PostgreSQL_RoundTrip() => RunFingerprintRoundTrip(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: st_log_access stores the session fingerprint in token_fingerprint")]
+        public void TokenFingerprint_Sqlite_RoundTrip() => RunFingerprintRoundTrip(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("MySQL: st_log_access stores the session fingerprint in token_fingerprint")]
+        public void TokenFingerprint_MySql_RoundTrip() => RunFingerprintRoundTrip(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle: st_log_access stores the session fingerprint in token_fingerprint")]
+        public void TokenFingerprint_Oracle_RoundTrip() => RunFingerprintRoundTrip(DatabaseType.Oracle);
 
         [DbFact(DatabaseType.SQLServer)]
         [DisplayName("SQL Server: a DB anomaly written to st_log_anomaly_db can be read back")]

@@ -1,2 +1,6 @@
 #nullable enable
 const Polhem.Definition.Paging.PagingOptions.MaxPageSize = 1000 -> int
+Polhem.Definition.Identity.DeploymentAction.ReadDbAnomalyLog = 2 -> Polhem.Definition.Identity.DeploymentAction
+Polhem.Definition.Logging.AuditEntry.TokenFingerprint.get -> string?
+Polhem.Definition.Logging.AuditEntry.TokenFingerprint.init -> void
+static Polhem.Definition.Settings.DatabaseSettingsCryptor.HasPasswords(Polhem.Definition.Settings.DatabaseSettings! settings) -> bool

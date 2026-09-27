@@ -8,7 +8,6 @@ using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
 
-using Polhem.Definition;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
@@ -214,17 +213,6 @@ namespace Polhem.Business.UnitTests
             {
                 sessionService.Remove(result.AccessToken);
             }
-        }
-
-        [Fact]
-        [DisplayName("The base AuthenticateUser of SystemBusinessObject returns false by default")]
-        public void BaseAuthenticateUser_DefaultsToFalse()
-        {
-            // Without an override, `AuthenticateUser` returns false, so `Login` throws `UnauthorizedAccessException`.
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
-            var args = new LoginArgs { UserId = "u", Password = "p" };
-
-            Assert.Throws<UnauthorizedAccessException>(() => bo.Login(args));
         }
     }
 }

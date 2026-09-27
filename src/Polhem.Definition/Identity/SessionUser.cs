@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Xml.Serialization;
 
 namespace Polhem.Definition.Identity
 {
@@ -11,6 +12,13 @@ namespace Polhem.Definition.Identity
         /// <summary>
         /// Gets or sets the access token.
         /// </summary>
+        /// <remarks>
+        /// IMPORTANT: excluded from the persisted XML. The token is a bearer credential, and the seed
+        /// row is found by a hash of it, so the repository restores this property from the token the
+        /// request presented after reading the row. A seed written before the exclusion still
+        /// deserializes; the stale value it carries is overwritten on read.
+        /// </remarks>
+        [XmlIgnore]
         public Guid AccessToken { get; set; } = Guid.Empty;
 
         /// <summary>

@@ -29,11 +29,14 @@ These methods additionally declare `ReplayProtection = UniqueSequence`: each cal
 sequence number the session has not used before, or the server answers `-32005 ReplayRejected`.
 A client that reuses or replays a request frame on one of them will be refused.
 
+- `CreateApiKey`
 - `Delete`
 - `EnterCompany`
 - `ExecFunc`
 - `LeaveCompany`
 - `Save`
+- `SetApiKeyEnabled`
+- `SetApiKeyExpiry`
 
 ### Naming convention (Contract / Args / Result derivable from action)
 

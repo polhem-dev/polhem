@@ -73,6 +73,43 @@ namespace Polhem.ObjectCaching
         }
 
         /// <summary>
+        /// Gets the maximum number of miss markers this cache keeps, or zero to store them in the
+        /// shared cache provider with no limit of their own.
+        /// </summary>
+        /// <remarks>
+        /// Override with a positive value when the keys come from the caller rather than from the
+        /// framework — an access token, an API key identifier — so a stream of distinct unknown keys
+        /// cannot grow the cache without bound. Markers are then held per cache instance, capped at
+        /// this many; once full, further misses go uncached until markers expire, which costs the
+        /// data-source read that negative caching would have saved and nothing more. Only the
+        /// absolute or sliding lifetime of <see cref="GetNegativePolicy"/> and its notify key apply to
+        /// such markers.
+        /// </remarks>
+        protected virtual int MaxNegativeEntries => 0;
+
+        private BoundedMissMarkers? _boundedMisses;
+
+        /// <summary>
+        /// Gets the capped miss-marker set, created on first use; <c>null</c> when
+        /// <see cref="MaxNegativeEntries"/> is zero.
+        /// </summary>
+        private BoundedMissMarkers? BoundedMisses
+        {
+            get
+            {
+                int capacity = MaxNegativeEntries;
+                if (capacity <= 0) { return null; }
+                return LazyInitializer.EnsureInitialized(ref _boundedMisses,
+                    () => new BoundedMissMarkers(capacity, TimeProvider.System));
+            }
+        }
+
+        /// <summary>
+        /// Gets the number of capped miss markers currently held. Exposed for tests.
+        /// </summary>
+        internal int BoundedNegativeCount => _boundedMisses?.Count ?? 0;
+
+        /// <summary>
         /// Gets the cache key, normalized to lowercase to avoid case-sensitivity issues.
         /// </summary>
         /// <param name="key">The member key.</param>
@@ -104,6 +141,10 @@ namespace Polhem.ObjectCaching
         public virtual T? Get(string key)
         {
             string cacheKey = GetCacheKey(key);
+            var misses = BoundedMisses;
+            if (misses != null && misses.Contains(cacheKey))
+                return null;
+
             var cached = CacheInfo.Provider.Get(cacheKey);
 
             // Negative cache hit: short-circuit without invoking CreateInstance.
@@ -116,6 +157,8 @@ namespace Polhem.ObjectCaching
             return CacheSingleFlight<T>.GetOrCreate(cacheKey, () =>
             {
                 // Another flight may have completed between the read above and this one.
+                if (misses != null && misses.Contains(cacheKey))
+                    return null;
                 var current = CacheInfo.Provider.Get(cacheKey);
                 if (ReferenceEquals(current, KeyObjectCacheSentinel.MissMarker))
                     return null;
@@ -129,7 +172,10 @@ namespace Polhem.ObjectCaching
                 }
                 else if (BuildNegativePolicy(key) is { } negPolicy)
                 {
-                    CacheInfo.Provider.Set(cacheKey, KeyObjectCacheSentinel.MissMarker, negPolicy);
+                    if (misses != null)
+                        misses.Add(cacheKey, ExpiryOf(negPolicy), negPolicy.ChangeNotifyKey);
+                    else
+                        CacheInfo.Provider.Set(cacheKey, KeyObjectCacheSentinel.MissMarker, negPolicy);
                 }
                 return value;
             });
@@ -143,6 +189,7 @@ namespace Polhem.ObjectCaching
         public virtual void Set(string key, T value)
         {
             string cacheKey = GetCacheKey(key);
+            _boundedMisses?.Remove(cacheKey);
             CacheInfo.Provider.Set(cacheKey, value, BuildPolicy(key));
         }
 
@@ -165,6 +212,7 @@ namespace Polhem.ObjectCaching
         public virtual void Remove(string key)
         {
             string cacheKey = GetCacheKey(key);
+            _boundedMisses?.Remove(cacheKey);
             CacheInfo.Provider.Remove(cacheKey);
         }
 
@@ -190,6 +238,18 @@ namespace Polhem.ObjectCaching
             var policy = GetPolicy(key);
             policy.ChangeNotifyKey ??= CacheGroup + ":" + key;
             return policy;
+        }
+
+        /// <summary>
+        /// Converts a negative policy into the absolute time a capped marker lapses at.
+        /// </summary>
+        private static DateTimeOffset ExpiryOf(CacheItemPolicy policy)
+        {
+            if (policy.AbsoluteExpiration != DateTimeOffset.MaxValue)
+                return policy.AbsoluteExpiration;
+            return policy.SlidingExpiration > TimeSpan.Zero
+                ? DateTimeOffset.UtcNow.Add(policy.SlidingExpiration)
+                : DateTimeOffset.MaxValue;
         }
 
         /// <summary>

@@ -1,3 +1,4 @@
+using Polhem.Base;
 using Polhem.UI.Core;
 
 namespace Polhem.UI.Avalonia.Storage
@@ -101,10 +102,19 @@ namespace Polhem.UI.Avalonia.Storage
         }
 
         /// <inheritdoc/>
+        /// <remarks>
+        /// The key is a long-lived application credential, so unlike the endpoint it is written
+        /// owner-only (<see cref="FileUtilities.FileWriteOwnerOnlyText"/>): a default-permission file
+        /// would be readable by every account on a shared Unix host.
+        /// </remarks>
         public void SaveApiKey(string apiKey)
         {
             _cachedApiKey = apiKey;
-            WriteFile(_apiKeyFilePath, apiKey);
+            var directory = Path.GetDirectoryName(_apiKeyFilePath);
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+
+            FileUtilities.FileWriteOwnerOnlyText(_apiKeyFilePath, apiKey, overwrite: true);
         }
 
         /// <summary>

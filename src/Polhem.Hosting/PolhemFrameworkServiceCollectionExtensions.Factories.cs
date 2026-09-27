@@ -7,6 +7,7 @@ using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Polhem.Hosting
 {
@@ -23,17 +24,22 @@ namespace Polhem.Hosting
     {
         /// <summary>
         /// Resolves the configured <see cref="IDefineAccess"/> implementation. Supports
-        /// <c>(IDefineStorage, PathOptions, ICacheContainer, byte[], ICustomizeDefineReader)</c>
-        /// (used by <see cref="CacheDefineAccess"/> with the customization overlay),
+        /// <c>(IDefineStorage, PathOptions, ICacheContainer, byte[], ICustomizeDefineReader, ILogger)</c>
+        /// (used by <see cref="CacheDefineAccess"/>),
+        /// <c>(IDefineStorage, PathOptions, ICacheContainer, byte[], ICustomizeDefineReader)</c>,
         /// <c>(IDefineStorage, PathOptions, ICacheContainer, byte[])</c>,
         /// <c>(IDefineStorage, PathOptions)</c>, <c>(IDefineStorage)</c> (legacy), and
         /// parameterless ctors.
         /// </summary>
-        private static IDefineAccess ResolveDefineAccess(string? typeName, IDefineStorage storage, PathOptions paths, ICacheContainer cache, byte[] configEncryptionKey, ICustomizeDefineReader customizeReader)
+        private static IDefineAccess ResolveDefineAccess(string? typeName, IDefineStorage storage, PathOptions paths, ICacheContainer cache, byte[] configEncryptionKey, ICustomizeDefineReader customizeReader, ILogger? logger)
         {
             var resolvedName = string.IsNullOrWhiteSpace(typeName) ? BackendDefaultTypes.DefineAccess : typeName;
             var type = AssemblyLoader.GetType(resolvedName)
                 ?? throw new InvalidOperationException($"IDefineAccess type '{resolvedName}' not found.");
+
+            var ctorWithLogger = type.GetConstructor(new[] { typeof(IDefineStorage), typeof(PathOptions), typeof(ICacheContainer), typeof(byte[]), typeof(ICustomizeDefineReader), typeof(ILogger) });
+            if (ctorWithLogger != null)
+                return (IDefineAccess)ctorWithLogger.Invoke(new object?[] { storage, paths, cache, configEncryptionKey, customizeReader, logger });
 
             var ctorWithReader = type.GetConstructor(new[] { typeof(IDefineStorage), typeof(PathOptions), typeof(ICacheContainer), typeof(byte[]), typeof(ICustomizeDefineReader) });
             if (ctorWithReader != null)

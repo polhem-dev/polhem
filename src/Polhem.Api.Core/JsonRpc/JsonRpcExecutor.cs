@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Polhem.Base;
 using Polhem.Base.Exceptions;
+using Polhem.Base.Security;
 using Polhem.Base.Tracing;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
@@ -256,7 +257,7 @@ namespace Polhem.Api.Core.JsonRpc
                 UserId = session?.UserId,
                 UserName = session?.UserName,
                 CompanyId = session?.CompanyId,
-                AccessToken = AccessToken == Guid.Empty ? null : AccessToken,
+                TokenFingerprint = AccessTokenHasher.ComputeFingerprint(AccessToken),
                 ApiKeyId = NullIfEmpty(ApiKeyValidation.SysId),
                 ApiKeyName = NullIfEmpty(ApiKeyValidation.SysName),
                 Method = method,
@@ -302,20 +303,51 @@ namespace Polhem.Api.Core.JsonRpc
         }
 
         /// <summary>
+        /// The longest progId or action accepted from the wire.
+        /// </summary>
+        /// <remarks>
+        /// Well above any name the framework or its applications use, and short enough that a name
+        /// cannot become a lever: it is parsed, and handed to the business-object factory, before the
+        /// caller's access has been checked.
+        /// </remarks>
+        internal const int MaxMethodPartLength = 64;
+
+        /// <summary>
         /// Parses the progId and action from the Method property.
         /// </summary>
         /// <returns>A tuple containing the progId and action. Throws if the format is invalid.</returns>
+        /// <remarks>
+        /// The shape is checked here, before anything else sees the value: the progId may hold letters,
+        /// digits, <c>_</c> and <c>-</c>, the action letters, digits and <c>_</c>, each at most
+        /// <see cref="MaxMethodPartLength"/> characters. An empty progId is left to the factory's own
+        /// check. The message does not echo the value, which can be as long as the request body allows.
+        /// </remarks>
         private static (string progId, string action) ParseMethod(string method)
         {
             if (!string.IsNullOrEmpty(method))
             {
                 var parts = method.Split(s_methodSeparators, 2);
-                if (parts.Length == 2)
+                if (parts.Length == 2 && IsValidMethodPart(parts[0], allowHyphen: true)
+                    && parts[1].Length > 0 && IsValidMethodPart(parts[1], allowHyphen: false))
                 {
                     return (parts[0], parts[1]);
                 }
             }
-            throw new FormatException($"Invalid method format: {method}");
+            throw new FormatException("Invalid method format.");
+        }
+
+        /// <summary>
+        /// Checks the length and characters of one half of a <c>progId.action</c> method name.
+        /// </summary>
+        private static bool IsValidMethodPart(string part, bool allowHyphen)
+        {
+            if (part.Length > MaxMethodPartLength) { return false; }
+            foreach (char c in part)
+            {
+                if (!(char.IsAsciiLetterOrDigit(c) || c == '_' || (allowHyphen && c == '-')))
+                    return false;
+            }
+            return true;
         }
 
         /// <summary>

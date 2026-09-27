@@ -82,6 +82,31 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
+        [DisplayName("GetMasterKey with autoCreate=true creates the key file readable by its owner only")]
+        public void GetMasterKey_FileMissing_AutoCreate_CreatesOwnerOnlyFile()
+        {
+            string filePath = Path.Combine(Path.GetTempPath(), $"polhem-mk-mode-{Guid.NewGuid()}.key");
+
+            try
+            {
+                byte[] result = MasterKeyProvider.GetMasterKey(
+                    new MasterKeySource { Type = MasterKeySourceType.File, Value = filePath },
+                    definePath: string.Empty,
+                    autoCreate: true);
+
+                Assert.NotEmpty(result);
+                if (!OperatingSystem.IsWindows())
+                {
+                    Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(filePath));
+                }
+            }
+            finally
+            {
+                if (File.Exists(filePath)) File.Delete(filePath);
+            }
+        }
+
+        [Fact]
         [DisplayName("GetMasterKey throws InvalidOperationException when the file content is not Base64")]
         public void GetMasterKey_InvalidBase64Content_ThrowsInvalidOperation()
         {

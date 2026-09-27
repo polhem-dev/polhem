@@ -49,7 +49,9 @@ namespace Polhem.Business
     /// not disturb the repository bound to the same program.
     /// </para>
     /// <para>
-    /// Resolved types are cached keyed by <c>(customizeId, progId)</c>. When either the base or a
+    /// Resolved types of registered progIds are cached keyed by <c>(customizeId, progId)</c>; a progId
+    /// the registry does not name is resolved again on every call, so the cache cannot be grown by
+    /// arbitrary names from the wire. When either the base or a
     /// customization <see cref="ProgramSettings"/> instance changes (e.g. after a file-watcher
     /// reload, detected by reference inequality), the type cache is reset on the next call.
     /// Only successes are cached — a failing resolution leaves no entry, so a broken binding throws
@@ -112,6 +114,11 @@ namespace Polhem.Business
             _ = logger;
         }
 
+        /// <summary>
+        /// Gets the number of cached resolutions. Exposed for tests.
+        /// </summary>
+        internal int CachedTypeCount => _typeCache.Count;
+
         /// <inheritdoc/>
         public Type Resolve(string progId) => Resolve("", progId);
 
@@ -147,7 +154,17 @@ namespace Polhem.Business
                 ? progId
                 : customizeId + "\0" + progId;
 
-            return _typeCache.GetOrAdd(cacheKey, _ => ResolveCore(custSettings, baseSettings, customizeId, progId));
+            if (_typeCache.TryGetValue(cacheKey, out var cached))
+                return cached;
+
+            var (type, registered) = ResolveCore(custSettings, baseSettings, customizeId, progId);
+            // IMPORTANT: only progIds the registry knows are cached. The progId arrives from the wire
+            // before the caller's access has been checked, so caching every name asked for would let
+            // anonymous traffic grow this map without bound; an unregistered one resolves to the
+            // generic default at the cost of a registry lookup, which is all caching would have saved.
+            if (registered)
+                _typeCache.TryAdd(cacheKey, type);
+            return type;
         }
 
         /// <summary>
@@ -180,7 +197,14 @@ namespace Polhem.Business
             }
         }
 
-        private static Type ResolveCore(ProgramSettings? custSettings, ProgramSettings? baseSettings, string customizeId, string progId)
+        /// <summary>
+        /// Resolves the business-object type for <paramref name="progId"/>.
+        /// </summary>
+        /// <returns>
+        /// The type, and whether the progId is registered — named by either registry layer or reserved
+        /// by the framework — which is what makes the result safe to cache.
+        /// </returns>
+        private static (Type Type, bool Registered) ResolveCore(ProgramSettings? custSettings, ProgramSettings? baseSettings, string customizeId, string progId)
         {
             // Which layer wins is decided by CustomizeOverlay — the same class a client runs over
             // the two copies it fetched, so both ends resolve identically.
@@ -194,7 +218,7 @@ namespace Polhem.Business
                 // result, taking effect whether or not it managed to reach the file. Ordinary
                 // progIds get the generic CRUD object. This is the one path that does not throw:
                 // below, a binding that names a type is held to that name.
-                return reserved?.DefaultType ?? typeof(FormBusinessObject);
+                return (reserved?.DefaultType ?? typeof(FormBusinessObject), item != null || reserved != null);
             }
 
             // The merged entry no longer says which layer each binding came from, so ask the
@@ -222,7 +246,7 @@ namespace Polhem.Business
             if (!expectedBase.IsAssignableFrom(type))
                 throw NotDerived(reserved, progId, item.BusinessObject, origin, expectedBase);
 
-            return type;
+            return (type, true);
         }
 
         /// <summary>

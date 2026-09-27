@@ -113,6 +113,48 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Contains("Invalid method format", response.Error!.Message);
         }
 
+        [Theory]
+        [InlineData("<script>.GetList")]
+        [InlineData("Order.Get List")]
+        [InlineData("Order.Save.Extra")]
+        [InlineData("Order.")]
+        [DisplayName("Execute rejects a method whose progId or action has characters outside the allowed set")]
+        public void Execute_MethodWithInvalidCharacters_ReturnsFormatExceptionMessage(string method)
+        {
+            var request = new JsonRpcRequest { Method = method, Params = new JsonRpcParams(), Id = "1" };
+
+            var response = NewExecutor(Guid.Empty, isLocalCall: true).Execute(request);
+
+            Assert.NotNull(response.Error);
+            Assert.Equal("Invalid method format.", response.Error!.Message);
+        }
+
+        [Fact]
+        [DisplayName("Execute rejects a progId longer than the limit without echoing it back")]
+        public void Execute_OverlongProgId_ReturnsFormatExceptionWithoutEcho()
+        {
+            string progId = new('A', JsonRpcExecutor.MaxMethodPartLength + 1);
+            var request = new JsonRpcRequest { Method = progId + ".GetList", Params = new JsonRpcParams(), Id = "1" };
+
+            var response = NewExecutor(Guid.Empty, isLocalCall: true).Execute(request);
+
+            Assert.NotNull(response.Error);
+            Assert.Equal("Invalid method format.", response.Error!.Message);
+        }
+
+        [Fact]
+        [DisplayName("Execute accepts a progId exactly at the length limit")]
+        public void Execute_ProgIdAtLimit_PassesShapeCheck()
+        {
+            string progId = new('A', JsonRpcExecutor.MaxMethodPartLength);
+            var request = new JsonRpcRequest { Method = progId + ".NoSuchAction", Params = new JsonRpcParams(), Id = "1" };
+
+            var response = NewExecutor(Guid.Empty, isLocalCall: true).Execute(request);
+
+            Assert.NotNull(response.Error);
+            Assert.NotEqual("Invalid method format.", response.Error!.Message);
+        }
+
         [Fact]
         [DisplayName("Execute returns the ArgumentException user message when progId is an empty string")]
         public void Execute_EmptyProgId_ReturnsArgumentExceptionMessage()

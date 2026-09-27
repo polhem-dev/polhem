@@ -19,10 +19,11 @@ namespace Polhem.ObjectCaching.Database
     /// a misconfigured client retrying with a revoked key — which is a much narrower case.
     /// </para>
     /// <para>
-    /// It is therefore kept, but at the shortest lifetime the policy type expresses. The residual is
-    /// stated rather than hidden: steady-state memory is bounded by probe rate × <see cref="NegativeMinutes"/>,
-    /// and the underlying cache has no size limit. Probe traffic belongs behind a rate limit at the
-    /// edge; this cache is not the place to solve it.
+    /// It is therefore kept, at the shortest lifetime the policy type expresses, and in a set capped at
+    /// <see cref="MaxNegativeIds"/> rather than in the shared, unbounded cache provider (see
+    /// <see cref="MaxNegativeEntries"/>). Memory no longer grows with the probe rate. What remains is
+    /// stated rather than hidden: each distinct unknown identifier still costs one database read.
+    /// Probe traffic belongs behind a rate limit at the edge; this cache is not the place to solve it.
     /// </para>
     /// </remarks>
     public class ApiKeyCache : KeyObjectCache<ApiKeyInfo>
@@ -37,6 +38,11 @@ namespace Polhem.ObjectCaching.Database
         /// see the type's remarks for why the inherited five minutes was the wrong trade here.
         /// </summary>
         public const int NegativeMinutes = 1;
+
+        /// <summary>
+        /// Upper bound on the number of unknown key identifiers remembered at once.
+        /// </summary>
+        public const int MaxNegativeIds = 10_000;
 
         private readonly Func<ICacheDataSourceProvider>? _dataSource;
 
@@ -71,6 +77,9 @@ namespace Polhem.ObjectCaching.Database
         /// <param name="key">The API key identifier (unused).</param>
         protected override CacheItemPolicy? GetNegativePolicy(string key)
             => new CacheItemPolicy(CacheTimeKind.AbsoluteTime, NegativeMinutes);
+
+        /// <inheritdoc/>
+        protected override int MaxNegativeEntries => MaxNegativeIds;
 
         /// <summary>
         /// Loads the key with the specified identifier from the data source.

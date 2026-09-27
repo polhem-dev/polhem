@@ -1,4 +1,5 @@
 using Polhem.Definition.Settings;
+using Polhem.Base;
 using Polhem.Base.Security;
 
 namespace Polhem.Definition.Security
@@ -80,23 +81,19 @@ namespace Polhem.Definition.Security
 
                 // Atomically create the file so concurrent callers (e.g. parallel test hosts
                 // sharing a Define folder) don't overwrite each other's keys. If another
-                // process wins the race, fall through to read the key it just wrote.
+                // process wins the race, fall through to read the key it just wrote. The file is
+                // created owner-only in the same step (see FileWriteOwnerOnlyText), so the key never
+                // sits in a file with default permissions, not even briefly.
                 string newKey = GenerateNewKey();
                 try
                 {
-                    using (var fs = new FileStream(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
-                    using (var writer = new StreamWriter(fs))
-                    {
-                        writer.Write(newKey);
-                    }
-
-                    RestrictToOwner(filePath);
+                    FileUtilities.FileWriteOwnerOnlyText(filePath, newKey, overwrite: false);
                     return newKey;
                 }
-                catch (IOException)
+                catch (IOException) when (File.Exists(filePath))
                 {
-                    // Another process created the file between our File.Exists check and
-                    // FileMode.CreateNew; fall through to read the winning key.
+                    // Another process created the file between our File.Exists check and the
+                    // create-if-absent move; fall through to read the winning key.
                 }
             }
 
@@ -164,31 +161,6 @@ namespace Polhem.Definition.Security
         {
             // Generate a new Base64-encoded master key
             return AesCbcHmacKeyGenerator.GenerateBase64CombinedKey();
-        }
-
-        /// <summary>
-        /// Restricts a freshly created key file to the owning user on Unix-like systems.
-        /// </summary>
-        /// <param name="filePath">The key file to restrict.</param>
-        /// <remarks>
-        /// The file holds the key that protects every other secret in the deployment, in plain
-        /// Base64. A default-permission file is subject to the process umask, commonly 022, which
-        /// leaves it world-readable — any local account could then decrypt the configured database
-        /// passwords. Windows inherits usable ACLs from the parent directory, so this is a no-op
-        /// there. Failures are non-fatal: an unusual filesystem (a mounted share, a container
-        /// volume) may not support the call, and refusing to start would be a worse outcome than
-        /// running with the inherited permissions.
-        /// </remarks>
-        private static void RestrictToOwner(string filePath)
-        {
-            if (OperatingSystem.IsWindows()) { return; }
-
-            try
-            {
-                File.SetUnixFileMode(filePath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-            }
-            catch (UnauthorizedAccessException) { /* best effort — keep the inherited mode */ }
-            catch (IOException) { /* best effort — filesystem may not support mode changes */ }
         }
     }
 

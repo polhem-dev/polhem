@@ -13,9 +13,10 @@ namespace Polhem.Business.AuditLog
 {
     /// <summary>
     /// Audit-log business object (<c>AuditLog</c> axis): read-only queries over the <c>st_log_*</c>
-    /// audit tables in the log database. Every action is gated behind the <c>AuditLog</c> permission
-    /// model so a general user cannot read another's trail, results are scoped to the caller's current
-    /// company, and no action mutates the append-only log.
+    /// audit tables in the log database. The company-scoped actions are gated behind the <c>AuditLog</c>
+    /// permission model so a general user cannot read another's trail, and their results are scoped to
+    /// the caller's current company; the database anomaly actions, which carry no company, require a
+    /// deployment administrator instead. No action mutates the append-only log.
     /// </summary>
     /// <remarks>
     /// The change axis follows a list / detail split: <see cref="GetChangeLog"/> returns lightweight
@@ -176,14 +177,16 @@ namespace Polhem.Business.AuditLog
         /// </summary>
         /// <param name="args">The input arguments carrying the typed filter and optional paging.</param>
         /// <remarks>
-        /// <c>st_log_anomaly_db</c> carries no company, so this is a cross-company infrastructure view;
-        /// it is still gated behind the <c>AuditLog</c> read permission.
+        /// <c>st_log_anomaly_db</c> carries no company, so this is a cross-company infrastructure view.
+        /// It is therefore gated on <see cref="IDeploymentAuthorizationService"/>
+        /// (<see cref="DeploymentAction.ReadDbAnomalyLog"/>) rather than on the company-scoped
+        /// <c>AuditLog</c> read permission, which a company administrator can hold.
         /// </remarks>
         [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
         public virtual LogListResult GetDbAnomalyLog(GetDbAnomalyLogArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
-            EnsureAuditReadAllowed();
+            EnsureDbAnomalyReadAllowed();
 
             var query = new DbAnomalyLogQuery
             {
@@ -213,14 +216,14 @@ namespace Polhem.Business.AuditLog
         /// </summary>
         /// <param name="args">The input arguments carrying the optional time window.</param>
         /// <remarks>
-        /// <c>st_log_anomaly_db</c> carries no company, so this is a cross-company infrastructure summary;
-        /// it is still gated behind the <c>AuditLog</c> read permission.
+        /// <c>st_log_anomaly_db</c> carries no company, so this is a cross-company infrastructure summary,
+        /// gated like <see cref="GetDbAnomalyLog"/>.
         /// </remarks>
         [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
         public virtual LogAggregateResult GetDbAnomalySummary(GetDbAnomalySummaryArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
-            EnsureAuditReadAllowed();
+            EnsureDbAnomalyReadAllowed();
             var table = Repository().GetDbAnomalySummary(args.FromUtc, args.ToUtc);
             return new LogAggregateResult { Table = table };
         }
@@ -258,6 +261,23 @@ namespace Polhem.Business.AuditLog
             var authorization = Services.GetRequiredService<ICompanyAuthorizationService>();
             if (!authorization.Can(AccessToken, SysProgIds.AuditLog, PermissionAction.Read))
                 throw new UnauthorizedAccessException("Not authorized to read the audit log.");
+        }
+
+        /// <summary>
+        /// Enforces the deployment-level gate on the database anomaly log. Unlike
+        /// <see cref="EnsureAuditReadAllowed"/> it has no company context to consult, and it never
+        /// falls back to the company permission: a company administrator must not read another
+        /// tenant's database errors.
+        /// </summary>
+        /// <remarks>
+        /// A local call is held to the same check. Unlike API key management there is no bootstrap
+        /// path that needs this log before an administrator exists.
+        /// </remarks>
+        private void EnsureDbAnomalyReadAllowed()
+        {
+            var authorization = Services.GetRequiredService<IDeploymentAuthorizationService>();
+            if (!authorization.Can(AccessToken, DeploymentAction.ReadDbAnomalyLog))
+                throw new UnauthorizedAccessException("Not authorized to read the database anomaly log.");
         }
 
         /// <summary>Reads a log-time column as a UTC <see cref="DateTime"/> (the write side stores UTC).</summary>

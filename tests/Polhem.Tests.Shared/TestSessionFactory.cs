@@ -5,8 +5,8 @@ namespace Polhem.Tests.Shared
     /// <summary>
     /// Session helpers for tests.
     /// Plants a valid <c>SessionInfo</c> in the <see cref="ISessionInfoService"/> of a given
-    /// <see cref="PolhemTestFixture"/>, so tests that need an access token do not have to go through login
-    /// (<c>AuthenticateUser</c> returns false by default).
+    /// <see cref="PolhemTestFixture"/>, so tests that need an access token do not have to go through login,
+    /// which would need a user row with a stored password hash and a database.
     /// </summary>
     public static class TestSessionFactory
     {

@@ -13,6 +13,12 @@
       var (a Base64 AES-CBC-HMAC combined 64-byte key), or change Type to File
       and supply the key file path as the Value.
 
+  Required when DatabaseSettings holds passwords:
+    - BackendConfiguration/SecurityKeySettings/ConfigEncryptionKey
+      The key that encrypts the passwords in DatabaseSettings.xml (stored as "enc:..."),
+      itself encrypted with the master key. Without it, passwords are saved and read
+      in clear text, and a warning is logged when DatabaseSettings is loaded or saved.
+
   Optional fields to consider:
     - CommonConfiguration/IsDebugMode: enable verbose error responses for
       development environments.

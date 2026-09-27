@@ -27,7 +27,7 @@ public class EchoBusinessObject : FormBusinessObject
     /// <param name="accessToken">The access token (ignored for anonymous calls).</param>
     /// <param name="progId">The program identifier (expected to be "Echo").</param>
     /// <param name="isLocalCall">Whether the call originates from a local source.</param>
-    public EchoBusinessObject(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
+    public EchoBusinessObject(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
         : base(ctx, accessToken, progId, isLocalCall)
     {
     }

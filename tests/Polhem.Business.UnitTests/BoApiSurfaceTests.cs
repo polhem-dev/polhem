@@ -67,7 +67,7 @@ namespace Polhem.Business.UnitTests
             // System axis — SystemBusinessObject (system-level operations).
             // Encrypted (formerly LocalOnly): the gate is handed to `IDeploymentAuthorizationService`. A remote caller must be a
             // deployment-level administrator; being authenticated is not enough. Local calls need no administrator, which keeps the bootstrap path for the first key.
-            new ApiSurfaceEntry("SystemBusinessObject", "CreateApiKey",           ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
+            new ApiSurfaceEntry("SystemBusinessObject", "CreateApiKey",           ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated, ApiReplayProtection.UniqueSequence),
             // LocalOnly: it issues a token directly from a UserID without checking credentials, so it is a trusted-caller operation.
             // It used to be Public + Anonymous, and was only unexploited because `SessionInfoCache.CreateInstance` was not yet implemented.
             new ApiSurfaceEntry("SystemBusinessObject", "CreateSession",          ApiProtectionLevel.LocalOnly, ApiAccessRequirement.Anonymous),
@@ -92,8 +92,8 @@ namespace Polhem.Business.UnitTests
             // so any authenticated account could overwrite the other definition types (including PermissionModels, DbCategorySettings and FormSchema).
             new ApiSurfaceEntry("SystemBusinessObject", "SaveCustomizePluginSettings", ApiProtectionLevel.LocalOnly, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("SystemBusinessObject", "SaveDefine",             ApiProtectionLevel.LocalOnly, ApiAccessRequirement.Authenticated),
-            new ApiSurfaceEntry("SystemBusinessObject", "SetApiKeyEnabled",      ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
-            new ApiSurfaceEntry("SystemBusinessObject", "SetApiKeyExpiry",       ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
+            new ApiSurfaceEntry("SystemBusinessObject", "SetApiKeyEnabled",      ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated, ApiReplayProtection.UniqueSequence),
+            new ApiSurfaceEntry("SystemBusinessObject", "SetApiKeyExpiry",       ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated, ApiReplayProtection.UniqueSequence),
             // LocalOnly: appointing a deployment-level administrator is a privilege change and a deployment-time operation. For the same reason as SaveDefine / CreateApiKey,
             // a remote account that is merely authenticated must not be able to promote itself or others to administrator.
             new ApiSurfaceEntry("SystemBusinessObject", "SetDeploymentAdmin",     ApiProtectionLevel.LocalOnly, ApiAccessRequirement.Authenticated),

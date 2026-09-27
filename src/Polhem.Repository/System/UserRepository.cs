@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Polhem.Base;
 using Polhem.Base.Security;
 using Polhem.Db;
@@ -44,27 +45,79 @@ namespace Polhem.Repository.System
         }
 
         /// <inheritdoc/>
+        /// <remarks>
+        /// An unknown account, and an account with a blank stored hash, are still run through a full
+        /// PBKDF2 verification against <see cref="s_timingDecoyHash"/>, so their response time matches a
+        /// wrong password's. The results of these paths are covered by <c>UserRepositoryPasswordTests</c>;
+        /// the timing itself is not asserted. On success, a hash stored with weaker parameters than
+        /// <see cref="PasswordHasher.HashPassword"/> uses today is replaced by a fresh one.
+        /// </remarks>
         public bool VerifyPassword(string userId, string password)
         {
             if (string.IsNullOrWhiteSpace(userId)) { return false; }
+            password ??= string.Empty;
 
             var dbType = Context.ConnectionManager.GetConnectionInfo(DatabaseId).DatabaseType;
             string tbl = dbType.QuoteIdentifier(TableName);
-            string colPassword = dbType.QuoteIdentifier("password");
+            string colPassword = dbType.QuoteIdentifier(ProtectedFields.Password);
             string colId = dbType.QuoteIdentifier(SysIdColumn);
 
             string sql = $"SELECT {colPassword} FROM {tbl} WHERE {colId} = {{0}}";
             var dbAccess = CreateDbAccess();
             var result = dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar, sql, userId));
-            if (result.Scalar == null || result.Scalar == DBNull.Value) { return false; }
+            string? hash = result.Scalar == null || result.Scalar == DBNull.Value
+                ? null
+                : ValueUtilities.CStr(result.Scalar);
 
-            var hash = ValueUtilities.CStr(result.Scalar);
-            // A blank stored hash is an account with no password set, not an account that accepts
-            // any password. `VerifyPassword` would return false for it anyway; short-circuiting
-            // keeps that intent explicit rather than incidental.
-            if (string.IsNullOrEmpty(hash)) { return false; }
+            // A blank stored hash is an account with no password set, not an account that accepts any
+            // password. Whitespace counts as blank: Oracle cannot store '' in a NOT NULL column, so a
+            // single space is how such a row is written there.
+            if (string.IsNullOrWhiteSpace(hash))
+            {
+                PasswordHasher.VerifyPassword(password, s_timingDecoyHash.Value);
+                return false;
+            }
 
-            return PasswordHasher.VerifyPassword(password, hash);
+            if (!PasswordHasher.VerifyPassword(password, hash)) { return false; }
+
+            if (PasswordHasher.NeedsRehash(hash))
+            {
+                UpgradePasswordHash(userId, hash, PasswordHasher.HashPassword(password));
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// A hash of a random password nobody knows, verified in place of a missing one so every
+        /// sign-in attempt pays the same key-derivation cost.
+        /// </summary>
+        /// <remarks>
+        /// Built lazily with the current parameters, so its cost tracks <see cref="PasswordHasher.Iterations"/>
+        /// without a second constant to keep in step.
+        /// </remarks>
+        private static readonly Lazy<string> s_timingDecoyHash =
+            new(() => PasswordHasher.HashPassword(Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))));
+
+        /// <summary>
+        /// Replaces a stored hash that was just verified with one made from the current parameters.
+        /// </summary>
+        /// <param name="userId">The account whose hash is replaced.</param>
+        /// <param name="verifiedHash">The stored value the password was verified against.</param>
+        /// <param name="newHash">The replacement.</param>
+        /// <remarks>
+        /// The update is conditional on the stored value still being <paramref name="verifiedHash"/>, so a
+        /// password change that lands between the read and this write is never overwritten with the
+        /// old password.
+        /// </remarks>
+        private void UpgradePasswordHash(string userId, string verifiedHash, string newHash)
+        {
+            var dbType = Context.ConnectionManager.GetConnectionInfo(DatabaseId).DatabaseType;
+            string tbl = dbType.QuoteIdentifier(TableName);
+            string colPassword = dbType.QuoteIdentifier(ProtectedFields.Password);
+            string colId = dbType.QuoteIdentifier(SysIdColumn);
+
+            string sql = $"UPDATE {tbl} SET {colPassword} = {{0}} WHERE {colId} = {{1}} AND {colPassword} = {{2}}";
+            CreateDbAccess().Execute(new DbCommandSpec(DbCommandKind.NonQuery, sql, newHash, userId, verifiedHash));
         }
 
         /// <inheritdoc/>
