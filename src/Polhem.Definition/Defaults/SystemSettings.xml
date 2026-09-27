@@ -22,9 +22,10 @@
   Optional fields to consider:
     - CommonConfiguration/IsDebugMode: enable verbose error responses for
       development environments.
-    - CommonConfiguration/AllowedTypeNamespaces: comma-separated allow-list of
-      namespaces that may be deserialised across the API tier. Empty means no
-      consumer-defined types are accepted (framework types always allowed).
+    - CommonConfiguration/AllowedTypeNamespaces: allow-list of namespaces that may
+      be deserialised across the API tier, separated by '|' (a comma is not a
+      separator). Empty means no consumer-defined types are accepted (framework
+      types always allowed).
     - BackendConfiguration/LogOptions/DbAccess: thresholds for slow-query /
       large-resultset logging.
     - BackendConfiguration/Components: bind custom factories (e.g. a custom

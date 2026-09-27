@@ -380,8 +380,8 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("EnterCompany throws ArgumentException for an empty CompanyId")]
-        public void EnterCompany_EmptyCompanyId_ThrowsArgumentException()
+        [DisplayName("EnterCompany throws UserMessageException for an empty CompanyId")]
+        public void EnterCompany_EmptyCompanyId_ThrowsUserMessageException()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx, userId: SeedUserId);
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
@@ -389,7 +389,7 @@ namespace Polhem.Business.UnitTests
 
             try
             {
-                Assert.Throws<ArgumentException>(
+                Assert.Throws<UserMessageException>(
                     () => bo.EnterCompany(new EnterCompanyArgs { CompanyId = string.Empty }));
             }
             finally

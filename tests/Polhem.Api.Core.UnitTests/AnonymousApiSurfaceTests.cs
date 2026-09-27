@@ -20,12 +20,13 @@ namespace Polhem.Api.Core.UnitTests
     /// method marked with it asks nobody for a reason. This allow list is that request.
     /// </para>
     /// <para>
-    /// <b>Two layers guard separately, from different sources.</b> <see cref="ApiAuthorizationValidator"/>, at the
-    /// HTTP layer, decides from a hard-coded list of method names whether an <c>Authorization</c> header is required.
-    /// <see cref="ApiAccessValidator"/>, at the BO layer, reads the attribute to decide whether the token is really
-    /// validated. What happens when the two disagree is pinned in <see cref="AnonymousMethods_HttpGate_IsPinned"/>:
-    /// a method marked <c>Anonymous</c> but missing from the HTTP-layer list needs a header, yet that header
-    /// <b>is only checked for whether it parses as a Guid</b>, so any Guid passes. That check is not authentication.
+    /// <b>One source decides.</b> <see cref="ApiAuthorizationValidator"/>, at the HTTP layer, used to decide from a
+    /// hard-coded list of method names whether an <c>Authorization</c> header was required, and that list disagreed
+    /// with the attribute: it demanded a header for <c>GetCommonConfiguration</c> and <c>ExecFuncAnonymous</c> and
+    /// exempted a method that no longer existed. The header was only ever checked for whether it parsed as a Guid,
+    /// so it was never authentication. Now a request without the header proceeds with the empty token and
+    /// <see cref="ApiAccessValidator"/>, reading the attribute, is the only gate; <see cref="AnonymousMethods_HttpGate_IsPinned"/>
+    /// pins that for every framework action.
     /// </para>
     /// </remarks>
     public class AnonymousApiSurfaceTests
@@ -95,46 +96,49 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("The actual HTTP-layer gate for anonymous methods: only Ping and Login really need no header")]
+        [DisplayName("Without an Authorization header every framework action reaches the access check, which admits exactly the Anonymous ones")]
         public void AnonymousMethods_HttpGate_IsPinned()
         {
             var validator = new ApiAuthorizationValidator();
+            var actions = typeof(BusinessObject).Assembly.GetTypes()
+                .Where(t => typeof(BusinessObject).IsAssignableFrom(t))
+                .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                .Where(Polhem.Api.Core.JsonRpc.JsonRpcExecutor.IsResolvableAction)
+                .Select(m => (Method: m, Attr: ApiAccessValidator.FindAccessControl(m)))
+                .Where(x => x.Attr != null && x.Attr.ProtectionLevel != ApiProtectionLevel.LocalOnly)
+                .ToList();
 
-            // Only a method that passes without an `Authorization` header truly needs no header.
-            static ApiAuthorizationContext WithoutHeader(string method) => new()
+            // Both kinds must be present, or the loop below proves nothing about one of them.
+            Assert.Contains(actions, x => x.Attr!.AccessRequirement == ApiAccessRequirement.Anonymous);
+            Assert.Contains(actions, x => x.Attr!.AccessRequirement == ApiAccessRequirement.Authenticated);
+
+            foreach (var (method, attr) in actions)
             {
-                Method = method,
-                ApiKey = "present",          // With the key gate disabled, only non-emptiness is checked.
-                Authorization = string.Empty,
-            };
+                var name = $"{method.DeclaringType!.Name}.{method.Name}";
 
-            Assert.True(validator.Validate(WithoutHeader($"{SysProgIds.System}.Ping")).IsValid);
-            Assert.True(validator.Validate(WithoutHeader($"{SysProgIds.System}.Login")).IsValid);
-
-            // The other methods marked Anonymous still require a header at the HTTP layer.
-            string[] requireHeader =
-            [
-                $"{SysProgIds.System}.GetCommonConfiguration",
-                $"{SysProgIds.System}.ExecFuncAnonymous",
-            ];
-            foreach (var method in requireHeader)
-                Assert.False(validator.Validate(WithoutHeader(method)).IsValid, method);
-
-            // WARNING: That header is only checked for whether it parses as a Guid, so any Guid passes, and the BO
-            // layer does not validate it either because the attribute is Anonymous. These methods are therefore
-            // reachable anonymously in practice, and the header is not authentication. It is pinned here so that
-            // anyone reading only the HTTP-layer allow list does not underestimate the attack surface.
-            foreach (var method in requireHeader)
-            {
+                // The transport no longer tells the two kinds apart: no header means the empty token.
                 var result = validator.Validate(new ApiAuthorizationContext
                 {
-                    Method = method,
-                    ApiKey = "present",
-                    Authorization = $"Bearer {Guid.Empty}",
+                    Method = $"{SysProgIds.System}.{method.Name}",
+                    ApiKey = "present",          // With the key gate disabled, only non-emptiness is checked.
+                    Authorization = string.Empty,
                 });
-                Assert.True(result.IsValid, method);
+                Assert.True(result.IsValid, name);
                 Assert.Equal(Guid.Empty, result.AccessToken);
+
+                // The attribute decides, and only the attribute.
+                var context = new ApiCallContext(result.AccessToken, isLocalCall: false, Polhem.Api.Core.Messages.PayloadFormat.Encrypted);
+                var denied = Record.Exception(() => { ApiAccessValidator.ValidateAccess(method, context, new RejectAllTokens()); });
+                if (attr!.AccessRequirement == ApiAccessRequirement.Anonymous)
+                    Assert.True(denied == null, $"{name} is Anonymous but was refused without a token.");
+                else
+                    Assert.True(denied != null, $"{name} is Authenticated but was admitted without a token.");
             }
+        }
+
+        private sealed class RejectAllTokens : IAccessTokenValidator
+        {
+            public bool Validate(Guid accessToken) => false;
         }
     }
 }

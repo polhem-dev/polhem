@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Polhem.Business.UnitTests.Fakes;
 using Polhem.Definition.Security;
+using Polhem.Base.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {
@@ -22,14 +23,14 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("InvokeExecFunc calling an authenticated method anonymously throws UnauthorizedAccessException")]
+        [DisplayName("InvokeExecFunc calling an authenticated method anonymously throws AuthenticationRequiredException")]
         public void InvokeExecFunc_AnonymousCallsAuthenticated_ThrowsUnauthorized()
         {
             var handler = new FakeExecFuncHandler();
             var args = new ExecFuncArgs(nameof(FakeExecFuncHandler.Authenticated));
             var result = new ExecFuncResult();
 
-            Assert.Throws<UnauthorizedAccessException>(() =>
+            Assert.Throws<AuthenticationRequiredException>(() =>
                 handler.InvokeExecFunc(ApiAccessRequirement.Anonymous, args, result));
         }
 

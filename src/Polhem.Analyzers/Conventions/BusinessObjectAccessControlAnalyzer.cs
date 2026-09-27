@@ -16,9 +16,18 @@ namespace Polhem.Analyzers.Conventions
     /// once a client tries.
     /// </para>
     /// <para>
-    /// The attribute is looked up exactly as the framework does: on the method itself, then on the method
-    /// it overrides, then on the declaring type. A type-level attribute therefore covers all of its
-    /// methods, and only genuinely uncovered methods are reported.
+    /// The attribute is looked up exactly as the framework does: on the method itself or any method it
+    /// overrides, then on the declaring type or any of its base types (the attribute is declared
+    /// <c>Inherited = true</c>, and the runtime reads it with inheritance). A type-level attribute
+    /// therefore covers all of its methods and those of its subclasses, and only genuinely uncovered
+    /// methods are reported.
+    /// </para>
+    /// <para>
+    /// The methods considered are the ones an action name can resolve to, by the same rule as
+    /// <c>JsonRpcExecutor.IsResolvableAction</c>: public, non-static, non-generic, ordinary (not an
+    /// accessor, operator or constructor), taking exactly one parameter, and not an override of a
+    /// <see cref="object"/> member. Reporting anything else would be noise about methods that cannot be
+    /// called; missing any of them would leave a callable method unreported.
     /// </para>
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
@@ -75,8 +84,9 @@ namespace Polhem.Analyzers.Conventions
             if (type.TypeKind != TypeKind.Class || !DerivesFrom(type, businessObject))
                 return;
 
-            // A type-level attribute covers every method, so there is nothing left to report.
-            if (HasAttribute(type, accessControl))
+            // A type-level attribute, here or on a base type, covers every method, so there is nothing
+            // left to report.
+            if (HasAttributeOnTypeOrBase(type, accessControl))
                 return;
 
             foreach (var member in type.GetMembers())
@@ -103,14 +113,29 @@ namespace Polhem.Analyzers.Conventions
         /// <param name="method">The method to test.</param>
         /// <returns><c>true</c> when the method forms part of the API surface.</returns>
         /// <remarks>
-        /// Constructors and accessors are excluded because an action name never resolves to them. The
-        /// framework's own business objects mark every remaining public method, so this filter is what
-        /// keeps the rule at a near-zero false positive rate.
+        /// Mirrors <c>JsonRpcExecutor.IsResolvableAction</c>, which the executor applies before it looks
+        /// for an access declaration. Static methods, accessors and generic methods are excluded because
+        /// the executor refuses to resolve an action name to them, not because they happen to be rare.
         /// </remarks>
         private static bool IsApiCandidate(IMethodSymbol method)
             => method.MethodKind == MethodKind.Ordinary
             && !method.IsStatic
-            && method.DeclaredAccessibility == Accessibility.Public;
+            && !method.IsGenericMethod
+            && method.Parameters.Length == 1
+            && method.DeclaredAccessibility == Accessibility.Public
+            && !OverridesObjectMember(method);
+
+        /// <summary>
+        /// Determines whether the method overrides, directly or through intermediate overrides, a member
+        /// declared by <see cref="object"/>.
+        /// </summary>
+        private static bool OverridesObjectMember(IMethodSymbol method)
+        {
+            var root = method;
+            while (root.OverriddenMethod is not null)
+                root = root.OverriddenMethod;
+            return root.ContainingType?.SpecialType == SpecialType.System_Object;
+        }
 
         /// <summary>
         /// Determines whether an overridden method further up the hierarchy carries the attribute.
@@ -118,15 +143,32 @@ namespace Polhem.Analyzers.Conventions
         /// <param name="method">The overriding method.</param>
         /// <param name="accessControl">The resolved attribute symbol.</param>
         /// <returns><c>true</c> when any overridden method declares access control.</returns>
+        /// <remarks>
+        /// Only the overridden methods themselves are consulted. The types that declare them are base
+        /// types of the overriding method's own type, and those are already covered by
+        /// <see cref="HasAttributeOnTypeOrBase"/>, exactly as the runtime reads the declaring type's
+        /// attribute with inheritance.
+        /// </remarks>
         private static bool IsCoveredByOverriddenMethod(IMethodSymbol method, INamedTypeSymbol accessControl)
         {
             for (var current = method.OverriddenMethod; current is not null; current = current.OverriddenMethod)
             {
-                if (HasAttribute(current, accessControl) ||
-                    (current.ContainingType is not null && HasAttribute(current.ContainingType, accessControl)))
-                {
+                if (HasAttribute(current, accessControl))
                     return true;
-                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Determines whether the type or any of its base types carries the attribute.
+        /// </summary>
+        private static bool HasAttributeOnTypeOrBase(INamedTypeSymbol type, INamedTypeSymbol accessControl)
+        {
+            for (INamedTypeSymbol? current = type; current is not null; current = current.BaseType)
+            {
+                if (HasAttribute(current, accessControl))
+                    return true;
             }
 
             return false;

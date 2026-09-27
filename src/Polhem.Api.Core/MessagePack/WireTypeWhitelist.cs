@@ -59,6 +59,31 @@ namespace Polhem.Api.Core.MessagePack
         };
 
         /// <summary>
+        /// Runtime assemblies that hold the fixed whitelist's types, under the names a writer may
+        /// use for them: the implementation assemblies and the facades that forward to them.
+        /// </summary>
+        private static readonly HashSet<string> s_trustedAssemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "System.Private.CoreLib",
+            "System.Runtime",
+            "mscorlib",
+            "netstandard",
+            "System.Data.Common",
+            "System.Data",
+        };
+
+        /// <summary>
+        /// The attributes an assembly display name may carry after the simple name. They select a
+        /// version of an assembly that is already allowed, never a location.
+        /// </summary>
+        private static readonly HashSet<string> s_assemblyNameAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Version",
+            "Culture",
+            "PublicKeyToken",
+        };
+
+        /// <summary>
         /// Validates whether the specified type full name is in the fixed,
         /// framework-controlled whitelist (well-known primitives plus
         /// <c>System.Data.DataTable</c>).
@@ -120,6 +145,16 @@ namespace Polhem.Api.Core.MessagePack
         /// comma, which for a generic type lands inside <c>[[...]]</c> and yields a fragment that
         /// still carries an allowed namespace prefix. The generic argument was therefore never
         /// screened, and <c>Type.GetType</c> went on to resolve it.
+        /// <para>
+        /// The assembly names are screened as well, at the top level and inside every generic
+        /// argument: <c>Type.GetType</c> loads the named assembly before it looks for the type, so an
+        /// unscreened assembly name let a payload load any assembly on the probing path. An assembly
+        /// is accepted when its simple name is one of the runtime assemblies behind the fixed
+        /// whitelist, or is itself an allowed namespace or starts with one followed by a dot. A
+        /// deployment whose own types live in an assembly named outside its allowed namespaces has
+        /// to allow that name too. Only <c>Version</c>, <c>Culture</c> and <c>PublicKeyToken</c> may
+        /// follow the simple name.
+        /// </para>
         /// </remarks>
         /// <param name="assemblyQualifiedName">The name as it arrived on the wire.</param>
         /// <returns><c>true</c> when every named type is allowed; otherwise, <c>false</c>.</returns>
@@ -137,8 +172,13 @@ namespace Polhem.Api.Core.MessagePack
 
             // Anything left at the top level must be the assembly name, introduced by a comma.
             SkipWhitespace(assemblyQualifiedName, ref position);
-            if (position < assemblyQualifiedName.Length && assemblyQualifiedName[position] != ',')
-                return false;
+            if (position < assemblyQualifiedName.Length)
+            {
+                if (assemblyQualifiedName[position] != ',')
+                    return false;
+                if (!IsAssemblySpecAllowed(assemblyQualifiedName[(position + 1)..]))
+                    return false;
+            }
 
             if (names.Count == 0)
                 return false;
@@ -316,12 +356,65 @@ namespace Polhem.Api.Core.MessagePack
 
             // Whatever remains inside the brackets is the argument's assembly name.
             SkipWhitespace(text, ref inner);
-            if (inner < close && text[inner] != ',')
-                return false;
+            if (inner < close)
+            {
+                if (text[inner] != ',')
+                    return false;
+                if (!IsAssemblySpecAllowed(text[(inner + 1)..close]))
+                    return false;
+            }
 
             position = close + 1;
             return true;
         }
+
+        /// <summary>
+        /// Validates an assembly display name: an allowed simple name, optionally followed by
+        /// version, culture and public key token.
+        /// </summary>
+        /// <param name="spec">The text after the comma that separates it from the type name.</param>
+        private static bool IsAssemblySpecAllowed(string spec)
+        {
+            var parts = spec.Split(',');
+            if (!IsAssemblyNameAllowed(parts[0].Trim()))
+                return false;
+
+            for (var i = 1; i < parts.Length; i++)
+            {
+                var pair = parts[i].Split('=');
+                if (pair.Length != 2)
+                    return false;
+                var key = pair[0].Trim();
+                var value = pair[1].Trim();
+                if (!s_assemblyNameAttributes.Contains(key) || value.Length == 0 || !value.All(IsAssemblyNameChar))
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Validates an assembly simple name against the trusted runtime assemblies and the allowed
+        /// namespaces.
+        /// </summary>
+        private static bool IsAssemblyNameAllowed(string name)
+        {
+            if (name.Length == 0 || !name.All(IsAssemblyNameChar))
+                return false;
+            if (s_trustedAssemblies.Contains(name))
+                return true;
+
+            return SysInfo.AllowedTypeNamespaces.Any(ns =>
+                string.Equals(name, ns, StringComparison.Ordinal)
+                || name.StartsWith(ns + ".", StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// The characters an assembly simple name or attribute value may contain here. Excludes
+        /// path separators, quotes and anything else that could turn a name into a location.
+        /// </summary>
+        private static bool IsAssemblyNameChar(char c)
+            => char.IsAsciiLetterOrDigit(c) || c is '.' or '_' or '-';
 
         /// <summary>
         /// Determines whether a bracket group is an array rank (empty, or commas only) rather than

@@ -6,6 +6,7 @@ using Polhem.Definition;
 using Polhem.Tests.Shared;
 using Polhem.Definition.Database;
 using Polhem.Definition.Storage;
+using Polhem.Base.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {
@@ -47,20 +48,20 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefine(SystemSettings) throws NotSupportedException for a non-local call")]
+        [DisplayName("GetDefine(SystemSettings) throws UserMessageException for a non-local call")]
         public void GetDefine_SystemSettings_NonLocal_Throws()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
-            Assert.Throws<NotSupportedException>(() =>
+            Assert.Throws<UserMessageException>(() =>
                 bo.GetDefine(new GetDefineArgs { DefineType = DefineType.SystemSettings }));
         }
 
         [Fact]
-        [DisplayName("GetDefine(DatabaseSettings) throws NotSupportedException for a non-local call")]
+        [DisplayName("GetDefine(DatabaseSettings) throws UserMessageException for a non-local call")]
         public void GetDefine_DatabaseSettings_NonLocal_Throws()
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
-            Assert.Throws<NotSupportedException>(() =>
+            Assert.Throws<UserMessageException>(() =>
                 bo.GetDefine(new GetDefineArgs { DefineType = DefineType.DatabaseSettings }));
         }
 

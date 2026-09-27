@@ -19,12 +19,23 @@ namespace Polhem.Definition.Security
         /// Each call must carry a sequence number this session has not used before.
         /// </summary>
         /// <remarks>
-        /// Effective only where the caller actually sends a frame — an authenticated session over
-        /// Encoded or Encrypted, with the wire frame switched on. A Plain call carries no frame and
-        /// so is not checked; that gap is a known limitation of leaving write methods at
-        /// <see cref="ApiProtectionLevel.Public"/>, not something this setting can close.
-        /// Anonymous callers are not checked either: sequence numbers are per session, and calls
-        /// made without one have no session to count against.
+        /// <para>
+        /// IMPORTANT: this protects Encrypted payloads only. Plain carries no frame, so a Plain call
+        /// is not checked at all; Encoded frames are not authenticated — compression is not a MAC —
+        /// so a captured Encoded call can be re-framed with a fresh sequence number and replayed.
+        /// Only inside an Encrypted payload does the payload HMAC cover the frame. Leaving a method
+        /// with this setting at <see cref="ApiProtectionLevel.Public"/> or
+        /// <see cref="ApiProtectionLevel.Encoded"/> therefore leaves those formats unprotected,
+        /// which this setting cannot close.
+        /// </para>
+        /// <para>
+        /// It also requires the wire frame to be switched on (<c>ApiServiceOptions.RequireWireFrame</c>
+        /// in <c>Polhem.Api.Core</c>), which is off by default; a host built with
+        /// <c>AddPolhemFramework</c> logs a startup warning when methods declare this setting while
+        /// the frame is off. Anonymous callers are not checked
+        /// either: sequence numbers are per session, and calls made without one have no session to
+        /// count against.
+        /// </para>
         /// </remarks>
         UniqueSequence = 1
     }

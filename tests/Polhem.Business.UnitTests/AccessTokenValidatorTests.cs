@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Polhem.Business.Validator;
 using Polhem.Definition.Identity;
 using Polhem.Tests.Shared;
+using Polhem.Base.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {
@@ -17,25 +18,25 @@ namespace Polhem.Business.UnitTests
             => new(_fx.GetRequiredService<ISessionInfoService>());
 
         [Fact]
-        [DisplayName("Validate(Guid.Empty) throws UnauthorizedAccessException")]
+        [DisplayName("Validate(Guid.Empty) throws AuthenticationRequiredException")]
         public void Validate_Empty_ThrowsUnauthorized()
         {
             var provider = CreateValidator();
-            Assert.Throws<UnauthorizedAccessException>(() => provider.Validate(Guid.Empty));
+            Assert.Throws<AuthenticationRequiredException>(() => provider.Validate(Guid.Empty));
         }
 
         [Fact]
-        [DisplayName("Validate with an unknown AccessToken throws UnauthorizedAccessException")]
+        [DisplayName("Validate with an unknown AccessToken throws AuthenticationRequiredException")]
         public void Validate_UnknownToken_ThrowsUnauthorized()
         {
             var provider = CreateValidator();
             var token = Guid.NewGuid();
 
-            Assert.Throws<UnauthorizedAccessException>(() => provider.Validate(token));
+            Assert.Throws<AuthenticationRequiredException>(() => provider.Validate(token));
         }
 
         [Fact]
-        [DisplayName("Validate with an expired session throws UnauthorizedAccessException")]
+        [DisplayName("Validate with an expired session throws AuthenticationRequiredException")]
         public void Validate_ExpiredSession_ThrowsUnauthorized()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -53,7 +54,7 @@ namespace Polhem.Business.UnitTests
 
             try
             {
-                Assert.Throws<UnauthorizedAccessException>(() => provider.Validate(token));
+                Assert.Throws<AuthenticationRequiredException>(() => provider.Validate(token));
             }
             finally
             {

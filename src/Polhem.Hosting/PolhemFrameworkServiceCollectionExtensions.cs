@@ -170,6 +170,10 @@ namespace Polhem.Hosting
             //       authenticated user of the company can read and write. Logs only; never fails.
             services.AddHostedService<Registry.UnguardedFormWarningService>();
 
+            // 6b-4. Startup warning naming the methods that declare replay protection while the wire
+            //       frame it depends on is off. Logs only; never fails.
+            services.AddHostedService<Registry.ReplayProtectionWarningService>();
+
             // 6c. Cache-notify polling hosted service. The poller publishes observed versions to
             //     CacheInfo.NotifyVersions; each cache entry carrying a matching ChangeNotifyKey
             //     expires on its next read. The poller is only registered when enabled; hosts without
@@ -331,7 +335,13 @@ namespace Polhem.Hosting
 
             // 10. JsonRpcExecutor — transient (per request); its dependencies (factories,
             //     validators, key providers) are resolved from the container at construction.
-            services.AddTransient<JsonRpcExecutor>();
+            //     The logger is a property, so it is assigned here rather than by the activator.
+            services.AddTransient(sp =>
+            {
+                var executor = ActivatorUtilities.CreateInstance<JsonRpcExecutor>(sp);
+                executor.Logger = sp.GetService<ILoggerFactory>()?.CreateLogger<JsonRpcExecutor>();
+                return executor;
+            });
 
             return services;
         }

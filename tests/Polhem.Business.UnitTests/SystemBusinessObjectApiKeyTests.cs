@@ -164,7 +164,7 @@ namespace Polhem.Business.UnitTests
             var bo = new SystemBusinessObject(ctx, Guid.NewGuid(), SysProgIds.System, isLocalCall: false);
 
             // Authorization comes before input validation: even valid args are blocked, so an input error cannot mask the reason for the rejection.
-            Assert.Throws<UnauthorizedAccessException>(() =>
+            Assert.Throws<UserMessageException>(() =>
                 bo.CreateApiKey(new CreateApiKeyArgs { SysId = NewSysId(), SysName = "App" }));
         }
 
@@ -211,7 +211,7 @@ namespace Polhem.Business.UnitTests
                 // A valid session with the flag at its default of false: exactly the case that must still be blocked after the upgrade.
                 token = NewSession(userId);
 
-                Assert.Throws<UnauthorizedAccessException>(() =>
+                Assert.Throws<UserMessageException>(() =>
                     RemoteBo(token).CreateApiKey(new CreateApiKeyArgs { SysId = sysId, SysName = "App" }));
             }
             finally

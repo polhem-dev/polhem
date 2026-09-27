@@ -83,7 +83,7 @@ namespace Polhem.Business
 
                 // Evaluate the access requirement
                 if (attr.AccessRequirement == ApiAccessRequirement.Authenticated && currentRequirement == ApiAccessRequirement.Anonymous)
-                    throw new UnauthorizedAccessException($"FuncID '{args.FuncId}' requires authentication.");
+                    throw new AuthenticationRequiredException($"FuncID '{args.FuncId}' requires authentication.");
 
                 method.Invoke(handler, new object[] { args, result });
             }

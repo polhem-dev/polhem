@@ -226,7 +226,7 @@ namespace Polhem.Business.UnitTests
                 (typeof(IDeploymentAuthorizationService), new DenyingDeploymentAuthorization()));
             var bo = new SystemBusinessObject(ctx, Guid.NewGuid(), SysProgIds.System, isLocalCall: false);
 
-            Assert.Throws<UnauthorizedAccessException>(() => Invoke(bo, action));
+            Assert.Throws<UserMessageException>(() => Invoke(bo, action));
         }
 
         private static void Invoke(SystemBusinessObject bo, string action)

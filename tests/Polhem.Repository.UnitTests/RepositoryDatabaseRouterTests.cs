@@ -86,11 +86,11 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("Resolve(Company) throws UnauthorizedAccessException when there is no session")]
+        [DisplayName("Resolve(Company) throws AuthenticationRequiredException when there is no session")]
         public void Resolve_CompanyNoSession_ThrowsUnauthorized()
         {
             var (router, _, _) = NewRouter();
-            Assert.Throws<UnauthorizedAccessException>(
+            Assert.Throws<AuthenticationRequiredException>(
                 () => router.Resolve(DbScope.Company, Guid.NewGuid()));
         }
 
@@ -111,14 +111,14 @@ namespace Polhem.Repository.UnitTests
         }
 
         [Fact]
-        [DisplayName("Resolve(Company) throws InvalidOperationException without the CompanyId in the message on a CompanyInfo cache miss")]
+        [DisplayName("Resolve(Company) throws UserMessageException without the CompanyId in the message on a CompanyInfo cache miss")]
         public void Resolve_CompanyInfoCacheMiss_ThrowsAndDoesNotLeakCompanyId()
         {
             var (router, sessions, _) = NewRouter();
             var token = Guid.NewGuid();
             sessions.Set(new SessionInfo { AccessToken = token, UserId = "u", CompanyId = "SECRET_C001" });
 
-            var ex = Assert.Throws<InvalidOperationException>(
+            var ex = Assert.Throws<UserMessageException>(
                 () => router.Resolve(DbScope.Company, token));
             Assert.DoesNotContain("SECRET_C001", ex.Message);
         }

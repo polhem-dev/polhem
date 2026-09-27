@@ -203,5 +203,67 @@ namespace Polhem.Analyzers.UnitTests.Conventions
             // Assert
             Assert.Empty(diagnostics);
         }
+
+        [Fact]
+        [DisplayName("Members an action name cannot resolve to report nothing, matching the executor's rule")]
+        public void UnresolvableMembers_AreNotReported()
+        {
+            // Static, generic, zero- or two-parameter methods and an object override: the executor refuses
+            // to resolve an action name to any of them, so an access declaration on them would be noise.
+            var source = Preamble + """
+
+                public class OrderBusinessObject : BusinessObject
+                {
+                    public OrderBusinessObject(IPolhemContext ctx, Guid accessToken)
+                        : base(ctx, accessToken) { }
+
+                    public static string Lookup(string id) => id;
+                    public string Convert<T>(T value) => value?.ToString() ?? string.Empty;
+                    public string Describe() => string.Empty;
+                    public string Combine(string a, string b) => a + b;
+                    public override bool Equals(object? obj) => ReferenceEquals(this, obj);
+                    public override int GetHashCode() => 0;
+                }
+                """;
+
+            // Act
+            var diagnostics = AnalyzerRunner.RunOnSource(
+                new BusinessObjectAccessControlAnalyzer(), source, s_anchors);
+
+            // Assert
+            Assert.Empty(diagnostics);
+        }
+
+        [Fact]
+        [DisplayName("A type-level attribute on a base type covers a method a subclass declares, as the runtime reads it")]
+        public void BaseTypeLevelAttribute_CoversSubclassMethod()
+        {
+            // The attribute is Inherited = true and the runtime reads the declaring type's attribute with
+            // inheritance, so this method is callable; reporting it would contradict the runtime.
+            var source = Preamble + """
+
+                [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
+                public class BaseOrderBusinessObject : BusinessObject
+                {
+                    public BaseOrderBusinessObject(IPolhemContext ctx, Guid accessToken)
+                        : base(ctx, accessToken) { }
+                }
+
+                public class DerivedOrderBusinessObject : BaseOrderBusinessObject
+                {
+                    public DerivedOrderBusinessObject(IPolhemContext ctx, Guid accessToken)
+                        : base(ctx, accessToken) { }
+
+                    public string Approve(string id) => id;
+                }
+                """;
+
+            // Act
+            var diagnostics = AnalyzerRunner.RunOnSource(
+                new BusinessObjectAccessControlAnalyzer(), source, s_anchors);
+
+            // Assert
+            Assert.Empty(diagnostics);
+        }
     }
 }

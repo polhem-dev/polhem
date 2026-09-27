@@ -99,6 +99,12 @@ namespace Polhem.Api.Core.JsonRpc
         /// </exception>
         /// <remarks>
         /// The frame that was read is left on <see cref="ApiPayload.Frame"/> for the caller to check.
+        /// <para>
+        /// The target type is resolved from <see cref="ApiPayload.TypeName"/>, after the name has
+        /// passed the type allow-list. That suits a client reading a response. The server does not
+        /// decode requests this way: <see cref="JsonRpcExecutor"/> decodes into the type the
+        /// addressed method takes, and treats the name only as a consistency check.
+        /// </para>
         /// </remarks>
         public static void RestoreFrom(ApiPayload payload, PayloadFormat sourceFormat, byte[]? encryptionKey = null)
         {
@@ -119,6 +125,51 @@ namespace Polhem.Api.Core.JsonRpc
             if (type == null)
                 throw new InvalidOperationException("Unable to load type: " + payload.TypeName);
 
+            Decode(payload, sourceFormat, encryptionKey, type);
+        }
+
+        /// <summary>
+        /// Restores a request payload into the type the server chose for it, using the name the
+        /// caller wrote only to confirm the two agree.
+        /// </summary>
+        /// <param name="payload">The payload object to restore.</param>
+        /// <param name="sourceFormat">The source format; should be Encoded or Encrypted.</param>
+        /// <param name="encryptionKey">The decryption key; required only when <paramref name="sourceFormat"/> is Encrypted.</param>
+        /// <param name="targetType">The type to decode into, decided by <see cref="ActionPayloadType.Resolve"/>.</param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the type name is missing, is not allow-listed, or names a type other than
+        /// <paramref name="targetType"/>.
+        /// </exception>
+        /// <remarks>
+        /// The server-side counterpart of <see cref="RestoreFrom"/>, which resolves the type from the
+        /// name and so suits only a reader that trusts the writer. Internal: the executor is its only
+        /// caller.
+        /// </remarks>
+        internal static void RestoreRequest(ApiPayload payload, PayloadFormat sourceFormat, byte[]? encryptionKey, Type targetType)
+        {
+            if (sourceFormat == PayloadFormat.Plain)
+            {
+                payload.Format = PayloadFormat.Plain;
+                return;
+            }
+
+            if (string.IsNullOrEmpty(payload.TypeName))
+                throw new InvalidOperationException("TypeName is missing for deserialization.");
+
+            ValidateTypeName(payload.TypeName);
+
+            if (!ActionPayloadType.IsNamedBy(payload.TypeName, targetType))
+                throw new InvalidOperationException("The payload type does not match the parameter of the requested method.");
+
+            Decode(payload, sourceFormat, encryptionKey, targetType);
+        }
+
+        /// <summary>
+        /// Decrypts when needed, strips the frame when the deployment requires one, and decodes the
+        /// body into <paramref name="type"/>.
+        /// </summary>
+        private static void Decode(ApiPayload payload, PayloadFormat sourceFormat, byte[]? encryptionKey, Type type)
+        {
             var bytes = payload.Value as byte[];
             if (bytes == null)
                 throw new InvalidCastException("Payload.Value must be byte[].");

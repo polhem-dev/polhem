@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Polhem.Business.Form;
 using Polhem.Tests.Shared;
+using Polhem.Base.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {
@@ -37,13 +38,13 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecFuncAnonymous calling a method that requires authentication throws UnauthorizedAccessException")]
+        [DisplayName("ExecFuncAnonymous calling a method that requires authentication throws AuthenticationRequiredException")]
         public void ExecFuncAnonymous_HelloRequiresAuthentication_ThrowsUnauthorized()
         {
             // `FormExecFuncHandler.Hello` is marked Authenticated, so `InvokeExecFunc` must block an anonymous call.
             var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), "prog01");
 
-            Assert.Throws<UnauthorizedAccessException>(() =>
+            Assert.Throws<AuthenticationRequiredException>(() =>
                 bo.ExecFuncAnonymous(new ExecFuncArgs("Hello")));
         }
 

@@ -104,9 +104,10 @@ namespace Polhem.Api.Core.UnitTests.Authorization
         }
 
         [Theory]
-        [DisplayName("The Bearer exemption list is not the key exemption list: Login and GetApiPayloadOptions still need a key")]
+        [DisplayName("Needing no Bearer token does not mean needing no key: the anonymous methods other than Ping still need a key")]
         [InlineData("System.Login")]
-        [InlineData("System.GetApiPayloadOptions")]
+        [InlineData("System.GetCommonConfiguration")]
+        [InlineData("System.ExecFuncAnonymous")]
         public void Validate_BearerExemptMethods_StillRequireApiKey(string method)
         {
             var context = NewContext(new ApiKeyValidationResult(ApiKeyStatus.NotProvided),

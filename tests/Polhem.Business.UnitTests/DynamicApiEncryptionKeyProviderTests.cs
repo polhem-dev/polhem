@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Polhem.Business.Providers;
 using Polhem.Definition.Identity;
 using Polhem.Tests.Shared;
+using Polhem.Base.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {
@@ -17,21 +18,21 @@ namespace Polhem.Business.UnitTests
             => new(_fx.GetRequiredService<ISessionInfoService>());
 
         [Fact]
-        [DisplayName("GetKey(Guid.Empty) throws UnauthorizedAccessException")]
+        [DisplayName("GetKey(Guid.Empty) throws AuthenticationRequiredException")]
         public void GetKey_Empty_ThrowsUnauthorized()
         {
             var provider = CreateProvider();
-            Assert.Throws<UnauthorizedAccessException>(() => provider.GetKey(Guid.Empty));
+            Assert.Throws<AuthenticationRequiredException>(() => provider.GetKey(Guid.Empty));
         }
 
         [Fact]
-        [DisplayName("GetKey with an unknown AccessToken throws UnauthorizedAccessException")]
+        [DisplayName("GetKey with an unknown AccessToken throws AuthenticationRequiredException")]
         public void GetKey_UnknownToken_ThrowsUnauthorized()
         {
             var provider = CreateProvider();
             var unknownToken = Guid.NewGuid();
 
-            Assert.Throws<UnauthorizedAccessException>(() => provider.GetKey(unknownToken));
+            Assert.Throws<AuthenticationRequiredException>(() => provider.GetKey(unknownToken));
         }
 
         [Fact]

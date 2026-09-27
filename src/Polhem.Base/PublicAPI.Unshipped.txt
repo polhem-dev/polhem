@@ -5,3 +5,6 @@ static Polhem.Base.FileUtilities.FileWriteOwnerOnlyText(string! filePath, string
 static Polhem.Base.Security.AccessTokenHasher.ComputeFingerprint(System.Guid accessToken) -> string?
 static Polhem.Base.Security.AccessTokenHasher.ComputeStorageKey(System.Guid accessToken) -> System.Guid
 static Polhem.Base.Security.PasswordHasher.NeedsRehash(string! hashedPassword) -> bool
+Polhem.Base.Exceptions.AuthenticationRequiredException
+Polhem.Base.Exceptions.AuthenticationRequiredException.AuthenticationRequiredException(string! message) -> void
+Polhem.Base.Exceptions.AuthenticationRequiredException.AuthenticationRequiredException(string! message, System.Exception! innerException) -> void

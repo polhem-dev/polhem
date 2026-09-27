@@ -39,6 +39,48 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Theory]
+        // An allowed type name paired with an assembly outside the allowed set: Type.GetType loads the
+        // assembly before it looks for the type, so the name alone is not enough.
+        [InlineData("Polhem.Api.Core.Messages.System.LoginRequest, Evil.Assembly")]
+        [InlineData("System.Int32, Evil.Assembly")]
+        // The same, inside a generic argument.
+        [InlineData("Polhem.Base.Holder`1[[Polhem.Base.Ok, Evil.Assembly]], Polhem.Base")]
+        // A prefix that only looks like an allowed namespace.
+        [InlineData("Polhem.Base.Ok, Polhem.BaseEvil")]
+        // Attributes that name a location rather than a version, and characters that make a path.
+        [InlineData("Polhem.Base.Ok, Polhem.Base, CodeBase=file:///tmp/evil.dll")]
+        [InlineData("Polhem.Base.Ok, ../Polhem.Base")]
+        [InlineData("Polhem.Base.Ok, Polhem.Base, Version=")]
+        [InlineData("Polhem.Base.Ok, ")]
+        [DisplayName("IsAssemblyQualifiedNameAllowed rejects an allowed type name paired with an assembly name outside the allowed set")]
+        public void IsAssemblyQualifiedNameAllowed_DisallowedAssembly_ReturnsFalse(string name)
+        {
+            Assert.False(WireTypeWhitelist.IsAssemblyQualifiedNameAllowed(name));
+        }
+
+        [Theory]
+        [InlineData("System.Int32, System.Private.CoreLib")]
+        [InlineData("System.Int32, mscorlib")]
+        [InlineData("System.Data.DataTable, System.Data.Common")]
+        [InlineData("Polhem.Api.Core.UnitTests.Something, Polhem.Api.Core.UnitTests")]
+        [InlineData("Polhem.Base.Holder`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], Polhem.Base, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null")]
+        [DisplayName("IsAssemblyQualifiedNameAllowed accepts the runtime assemblies and assemblies named after an allowed namespace, with version attributes")]
+        public void IsAssemblyQualifiedNameAllowed_AllowedAssembly_ReturnsTrue(string name)
+        {
+            Assert.True(WireTypeWhitelist.IsAssemblyQualifiedNameAllowed(name));
+        }
+
+        [Fact]
+        [DisplayName("IsAssemblyQualifiedNameAllowed accepts the assembly-qualified name the runtime writes for a whitelisted generic")]
+        public void IsAssemblyQualifiedNameAllowed_RuntimeWrittenName_ReturnsTrue()
+        {
+            // What the escape hatch of the wire value formatters actually writes.
+            var name = typeof(Polhem.Base.Collections.KeyCollectionBase<Polhem.Definition.Collections.Parameter>).AssemblyQualifiedName;
+
+            Assert.True(WireTypeWhitelist.IsAssemblyQualifiedNameAllowed(name));
+        }
+
+        [Theory]
         // The regression this screen exists for: allowed outer type, disallowed generic argument.
         [InlineData("Polhem.Base.Collections.Dictionary`1[[System.Diagnostics.Process, System.Diagnostics.Process]], Polhem.Base")]
         [InlineData("Polhem.Definition.Wrapper`1[[Evil.Namespace.Exploit, Evil.Assembly]], Polhem.Definition")]

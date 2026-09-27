@@ -13,10 +13,10 @@ namespace Polhem.Base.Exceptions
     /// transport layer surfaces it via <c>UserMessage</c>.
     ///
     /// <para>
-    /// Prefer this type over BCL exceptions (<see cref="InvalidOperationException"/>,
-    /// <see cref="ArgumentException"/>, etc.) for any message that is meant to be
-    /// surfaced to end users. BCL exceptions remain available during the migration
-    /// period but will be phased out of the user-facing whitelist in future plans.
+    /// Use this type, not a BCL exception (<see cref="InvalidOperationException"/>,
+    /// <see cref="ArgumentException"/>, etc.), for any message that is meant to be
+    /// surfaced to end users: a remote caller receives a BCL exception only as a fixed,
+    /// generic message.
     /// </para>
     /// </remarks>
     public class UserMessageException : Exception

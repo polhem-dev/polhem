@@ -35,7 +35,7 @@ namespace Polhem.Business.System
             if (tracker != null && tracker.IsLockedOut(args.UserId))
             {
                 WriteLoginAudit(LoginEvent.LockedOut, args.UserId, null, null, "Account temporarily locked.", LoginSource);
-                throw new UnauthorizedAccessException("Account is temporarily locked due to too many failed login attempts. Please try again later.");
+                throw new UserMessageException("Account is temporarily locked due to too many failed login attempts. Please try again later.");
             }
 
             // 1. Authenticate credentials and retrieve the user name
@@ -43,7 +43,7 @@ namespace Polhem.Business.System
             {
                 tracker?.RecordFailure(args.UserId);
                 WriteLoginAudit(LoginEvent.LoginFailed, args.UserId, null, null, "Invalid username or password.", LoginSource);
-                throw new UnauthorizedAccessException("Invalid username or password.");
+                throw new UserMessageException("Invalid username or password.");
             }
 
             // Clear failed attempt history on successful login
@@ -95,10 +95,10 @@ namespace Polhem.Business.System
         {
             ArgumentNullException.ThrowIfNull(args);
             if (string.IsNullOrWhiteSpace(args.CompanyId))
-                throw new ArgumentException("CompanyId is required.", nameof(args));
+                throw new UserMessageException("CompanyId is required.");
 
             var sessionInfo = SessionInfoService.Get(AccessToken)
-                ?? throw new UnauthorizedAccessException("Session not found or has expired.");
+                ?? throw new AuthenticationRequiredException("Session not found or has expired.");
 
             // The same binder runs on session rebuild, so entering a company and coming back from
             // an evicted cache land on identical session state.
@@ -129,7 +129,7 @@ namespace Polhem.Business.System
             ArgumentNullException.ThrowIfNull(args);
 
             var sessionInfo = SessionInfoService.Get(AccessToken)
-                ?? throw new UnauthorizedAccessException("Session not found or has expired.");
+                ?? throw new AuthenticationRequiredException("Session not found or has expired.");
 
             if (sessionInfo.CompanyId != null)
             {
@@ -426,9 +426,9 @@ namespace Polhem.Business.System
                     "keep its lifetime short instead.");
 
             var userRepository = Services.GetRequiredService<IRepositoryFactory>().Create<IUserRepository>();
-            // The message deliberately omits the user id: InvalidOperationException is on the
-            // user-facing allow-list in JsonRpcExecutor, so its text reaches the caller verbatim
-            // and would confirm whether an account exists.
+            // The message deliberately omits the user id. A remote caller only ever sees the fixed
+            // message the error contract gives InvalidOperationException, but debug mode passes the
+            // text through, and there it would confirm whether an account exists.
             var userName = userRepository.GetName(args.UserID)
                 ?? throw new InvalidOperationException("User not found.");
 

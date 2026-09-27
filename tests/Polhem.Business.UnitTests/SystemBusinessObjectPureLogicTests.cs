@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Polhem.Business.System;
 using Polhem.Definition;
 using Polhem.Tests.Shared;
+using Polhem.Base.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {
@@ -50,13 +51,13 @@ namespace Polhem.Business.UnitTests
         // ProgramSettings became server-only when it turned into a type registry: it now holds only assembly-qualified type names,
         // and the menu the client needs moved to MenuSettings.
         [InlineData(DefineType.ProgramSettings)]
-        [DisplayName("GetDefine throws NotSupportedException for a non-local call with a server-only DefineType")]
+        [DisplayName("GetDefine throws UserMessageException for a non-local call with a server-only DefineType")]
         public void GetDefine_NonLocalCallWithSensitiveType_ThrowsNotSupported(DefineType defineType)
         {
             var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
             var args = new GetDefineArgs { DefineType = defineType };
 
-            Assert.Throws<NotSupportedException>(() => bo.GetDefine(args));
+            Assert.Throws<UserMessageException>(() => bo.GetDefine(args));
         }
 
         [Theory]

@@ -2,6 +2,7 @@ using System.Reflection;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Security;
 using Polhem.Api.Core.Messages;
+using Polhem.Base.Exceptions;
 
 namespace Polhem.Api.Core.Validator
 {
@@ -41,7 +42,7 @@ namespace Polhem.Api.Core.Validator
 
             // Check whether an AccessToken is required
             if (attr.AccessRequirement == ApiAccessRequirement.Authenticated && !IsTokenValid(context.AccessToken, tokenValidator))
-                throw new UnauthorizedAccessException("AccessToken is required or invalid.");
+                throw new AuthenticationRequiredException("AccessToken is required or invalid.");
 
             // No IsLocalCall test here: the early return above already sent every local call away,
             // so reaching this line means the call is remote. The condition used to carry

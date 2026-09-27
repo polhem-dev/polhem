@@ -32,7 +32,11 @@ namespace Polhem.Api.Core.JsonRpc
         InternalError = -32000,
 
         /// <summary>
-        /// Unauthorized access, typically due to credential validation failure (-32001).
+        /// The call needs a signed-in caller and arrived without a usable access token — none, or one
+        /// that is unknown, invalid or expired (-32001). Raised via
+        /// <see cref="Polhem.Base.Exceptions.AuthenticationRequiredException"/>, which the client
+        /// rebuilds from this code. Sent with HTTP 200 like every executor error; distinct from
+        /// <see cref="PermissionDenied"/>, where the caller is signed in but lacks the right.
         /// </summary>
         Unauthorized = -32001,
 
@@ -74,8 +78,9 @@ namespace Polhem.Api.Core.JsonRpc
 
         /// <summary>
         /// A user-facing business message produced by business logic, intended to be
-        /// shown to the end user (-32099). Acts as a catch-all container for messages
-        /// raised via <see cref="Polhem.Base.Exceptions.UserMessageException"/> or the legacy BCL-exception whitelist.
+        /// shown to the end user (-32099). Carries the text of a
+        /// <see cref="Polhem.Base.Exceptions.UserMessageException"/> verbatim; the BCL exceptions
+        /// that <see cref="JsonRpcErrorContract"/> also maps here travel with a fixed, generic message.
         /// </summary>
         /// <remarks>
         /// The value -32099 is deliberately placed at the tail of the server-defined
