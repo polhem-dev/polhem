@@ -1,7 +1,7 @@
 namespace Polhem.Definition
 {
     /// <summary>
-    /// Identifies which of the three logical databases a bo repo intends to access.
+    /// Identifies which logical database (<see cref="Common"/>, <see cref="Company"/> or <see cref="Log"/>) a repository intends to access.
     /// </summary>
     /// <remarks>
     /// Conceptually decoupled from <c>schema.CategoryId</c>: that string is a schema

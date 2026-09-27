@@ -315,8 +315,9 @@ namespace Polhem.Repository.Form
             {
                 if (!dataSet.Tables.Contains(formTable.TableName)) { continue; }
                 var dataTable = dataSet.Tables[formTable.TableName]!;
-                using var changes = dataTable.GetChanges();
-                if (changes is null) { continue; }   // nothing pending for this table
+                // A row-state scan rather than `GetChanges()`, which copies every changed row into a new
+                // table only for the result to be tested for null.
+                if (!dataTable.Rows.Cast<DataRow>().Any(row => row.RowState != DataRowState.Unchanged)) { continue; }
 
                 var tableSchema = formTable.GenerateDbTable();
                 RemoveProtectedFields(tableSchema);

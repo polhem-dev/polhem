@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Text;
 using Polhem.Base;
 using Polhem.Db.Ddl;
 using Polhem.Db.Schema;
@@ -18,28 +16,11 @@ namespace Polhem.Db.Providers.PostgreSql
     {
         /// <inheritdoc />
         public ChangeExecutionKind GetExecutionKind(ITableChange change)
-        {
-            switch (change)
-            {
-                case AddFieldChange _:
-                case RenameFieldChange _:
-                case AddIndexChange _:
-                case DropIndexChange _:
-                    return ChangeExecutionKind.Alter;
-                case AlterFieldChange alter:
-                    return AlterCompatibilityRules.GetKindForTypeChange(alter.OldField.DbType, alter.NewField.DbType);
-                default:
-                    return ChangeExecutionKind.NotSupported;
-            }
-        }
+            => AlterCompatibilityRules.GetExecutionKind(change);
 
         /// <inheritdoc />
         public bool IsNarrowingChange(ITableChange change)
-        {
-            if (change is AlterFieldChange alter)
-                return AlterCompatibilityRules.IsNarrowing(alter.OldField, alter.NewField);
-            return false;
-        }
+            => AlterCompatibilityRules.IsNarrowingChange(change);
 
         /// <inheritdoc />
         public IReadOnlyList<string> GetStatements(string tableName, ITableChange change)
@@ -127,11 +108,12 @@ namespace Polhem.Db.Providers.PostgreSql
 
             if (index.PrimaryKey)
             {
-                string pkFields = BuildIndexFieldList(index, includeSortDirection: false);
+                // PostgreSQL rejects `ASC` / `DESC` inside a `PRIMARY KEY` constraint.
+                string pkFields = DdlFragments.BuildIndexFieldList(index, PgSchemaSyntax.QuoteName, includeSortDirection: false);
                 return $"ALTER TABLE {PgSchemaSyntax.QuoteName(tableName)} ADD CONSTRAINT {PgSchemaSyntax.QuoteName(indexName)} PRIMARY KEY ({pkFields});";
             }
 
-            string fields = BuildIndexFieldList(index, includeSortDirection: true);
+            string fields = DdlFragments.BuildIndexFieldList(index, PgSchemaSyntax.QuoteName, includeSortDirection: true);
             string uniqueClause = index.Unique ? "UNIQUE " : string.Empty;
             return $"CREATE {uniqueClause}INDEX {PgSchemaSyntax.QuoteName(indexName)} ON {PgSchemaSyntax.QuoteName(tableName)} ({fields});";
         }
@@ -143,30 +125,6 @@ namespace Polhem.Db.Providers.PostgreSql
                 return $"ALTER TABLE {PgSchemaSyntax.QuoteName(tableName)} DROP CONSTRAINT {PgSchemaSyntax.QuoteName(index.Name)};";
 
             return $"DROP INDEX {PgSchemaSyntax.QuoteName(index.Name)};";
-        }
-
-        /// <summary>
-        /// Builds the comma-separated index field list. PostgreSQL rejects ASC/DESC inside
-        /// PRIMARY KEY / UNIQUE constraints; only regular indexes accept per-column sort
-        /// direction.
-        /// </summary>
-        private static string BuildIndexFieldList(DbTableIndex index, bool includeSortDirection)
-        {
-            var sb = new StringBuilder();
-            foreach (IndexField field in index.IndexFields!)
-            {
-                if (sb.Length > 0) sb.Append(", ");
-                if (includeSortDirection)
-                {
-                    sb.Append(CultureInfo.InvariantCulture,
-                        $"{PgSchemaSyntax.QuoteName(field.FieldName)} {field.SortDirection.ToString().ToUpperInvariant()}");
-                }
-                else
-                {
-                    sb.Append(PgSchemaSyntax.QuoteName(field.FieldName));
-                }
-            }
-            return sb.ToString();
         }
     }
 }

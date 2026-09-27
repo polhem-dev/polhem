@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text;
 using Polhem.Base;
-using Polhem.Base.Data;
 using Polhem.Db.Ddl;
 using Polhem.Db.Schema;
 using Polhem.Db.Schema.Changes;
@@ -71,7 +70,7 @@ namespace Polhem.Db.Providers.Oracle
 
             // 3) Copy data from the original table (excluding newly-added and identity columns).
             sb.AppendLine("-- Move data");
-            sb.AppendLine(BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames));
+            sb.AppendLine(DdlFragments.BuildInsertSelectStatement(tableName, tmpTableName, effectiveSchema, addedFieldNames, OracleSchemaSyntax.QuoteName));
 
             // 4) Drop the original table — CASCADE CONSTRAINTS removes referencing FKs and
             //    drops every index / auto-named PK constraint, freeing those names for
@@ -110,20 +109,6 @@ namespace Polhem.Db.Providers.Oracle
                    "END;";
         }
 
-        private static string BuildInsertSelectStatement(string sourceTable, string targetTable, TableSchema schema, HashSet<string> addedFieldNames)
-        {
-            var fieldBuilder = new StringBuilder();
-            foreach (DbField field in schema.Fields!)
-            {
-                if (addedFieldNames.Contains(field.FieldName)) continue;
-                if (field.DbType == FieldDbType.AutoIncrement) continue;
-                if (fieldBuilder.Length > 0) fieldBuilder.Append(", ");
-                fieldBuilder.Append(OracleSchemaSyntax.QuoteName(field.FieldName));
-            }
-            string fields = fieldBuilder.ToString();
-            return $"INSERT INTO {OracleSchemaSyntax.QuoteName(targetTable)} ({fields}) \nSELECT {fields} FROM {OracleSchemaSyntax.QuoteName(sourceTable)};";
-        }
-
         private static string BuildRenameTableStatement(string oldTable, string newTable)
         {
             return $"ALTER TABLE {OracleSchemaSyntax.QuoteName(oldTable)} RENAME TO {OracleSchemaSyntax.QuoteName(newTable)};";
@@ -135,22 +120,10 @@ namespace Polhem.Db.Providers.Oracle
             foreach (var index in schema.Indexes!.Where(i => !i.PrimaryKey))
             {
                 string name = StringUtilities.Format(index.Name, tableName);
-                string fields = BuildIndexFieldList(index);
+                string fields = DdlFragments.BuildIndexFieldList(index, OracleSchemaSyntax.QuoteName);
                 string uniqueClause = index.Unique ? "UNIQUE " : string.Empty;
                 sb.Append(CultureInfo.InvariantCulture,
                     $"CREATE {uniqueClause}INDEX {OracleSchemaSyntax.QuoteName(name)} ON {OracleSchemaSyntax.QuoteName(tableName)} ({fields});\n");
-            }
-            return sb.ToString();
-        }
-
-        private static string BuildIndexFieldList(DbTableIndex index)
-        {
-            var sb = new StringBuilder();
-            foreach (IndexField field in index.IndexFields!)
-            {
-                if (sb.Length > 0) sb.Append(", ");
-                sb.Append(CultureInfo.InvariantCulture,
-                    $"{OracleSchemaSyntax.QuoteName(field.FieldName)} {field.SortDirection.ToString().ToUpperInvariant()}");
             }
             return sb.ToString();
         }

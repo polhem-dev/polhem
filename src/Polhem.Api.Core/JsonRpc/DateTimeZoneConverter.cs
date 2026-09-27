@@ -206,61 +206,13 @@ namespace Polhem.Api.Core.JsonRpc
         /// Converts both versions of a modified row, leaving it Modified with every edit intact.
         /// </summary>
         /// <remarks>
-        /// ADO.NET offers no way to write the Original version directly. The row is therefore
-        /// rejected back to Original, given the converted Original values, accepted so those become
-        /// the new Original, then given its converted Current values again.
-        /// <para>
-        /// WARNING: <see cref="DataRow.RejectChanges"/> reverts every column, not only the instant
-        /// ones, so both versions are captured across the whole row before it runs. Restoring only the
-        /// instant columns silently discarded every other edit on the row, in any time zone.
+        /// The mechanics are in <see cref="Polhem.Base.Data.DataRowExtensions.RewriteVersions"/>. Capturing the whole row
+        /// before it is rejected is what keeps the row's other edits;
         /// <c>DateTimeZoneConverterTests.Convert_ModifiedRowWithNonInstantEdit_KeepsTheEdit</c> pins this.
-        /// </para>
         /// </remarks>
         private static void ConvertModifiedRow(DataRow row, List<DataColumn> instantColumns, TimeZoneInfo zone)
-        {
-            var original = CaptureRow(row, DataRowVersion.Original, instantColumns, zone);
-            var current = CaptureRow(row, DataRowVersion.Current, instantColumns, zone);
-
-            row.RejectChanges();
-            WriteRow(row, original);
-            row.AcceptChanges();
-            WriteRow(row, current);
-
-            // A row whose two versions happen to hold equal values must stay Modified even though
-            // the write above changed nothing.
-            if (row.RowState == DataRowState.Unchanged) { row.SetModified(); }
-        }
-
-        private static object[] CaptureRow(DataRow row, DataRowVersion version, List<DataColumn> instantColumns,
-            TimeZoneInfo zone)
-        {
-            var values = new object[row.Table.Columns.Count];
-            foreach (DataColumn column in row.Table.Columns)
-            {
-                var value = row[column, version];
-                values[column.Ordinal] = value is DateTime instant && instantColumns.Contains(column)
-                    ? ToUser(instant, zone)
-                    : value;
-            }
-            return values;
-        }
-
-        /// <summary>
-        /// Writes the columns whose value differs from what the row holds now.
-        /// </summary>
-        /// <remarks>
-        /// Skipping equal values is what lets this run over the whole row: an expression column
-        /// computes its own value and rejects a write, and a read-only column that did not change is
-        /// never assigned, so it cannot raise <see cref="ReadOnlyException"/>.
-        /// </remarks>
-        private static void WriteRow(DataRow row, object[] values)
-        {
-            foreach (DataColumn column in row.Table.Columns)
-            {
-                if (column.Expression.Length > 0 || Equals(row[column], values[column.Ordinal])) { continue; }
-                row[column] = values[column.Ordinal];
-            }
-        }
+            => row.RewriteVersions((column, _, value) =>
+                value is DateTime instant && instantColumns.Contains(column) ? ToUser(instant, zone) : value);
 
         private static void ConvertDeletedRow(DataRow row, List<DataColumn> columns, TimeZoneInfo zone)
         {

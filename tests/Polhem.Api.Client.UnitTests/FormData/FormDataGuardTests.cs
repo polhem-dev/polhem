@@ -71,6 +71,34 @@ namespace Polhem.Api.Client.UnitTests.FormData
             Assert.Equal(id, FormDataGuard.RequireMasterRowId(NewMasterRow(id.ToString(), typeof(string))));
         }
 
+        [Fact]
+        [DisplayName("TryGetRowId reads a rowid stored as a Guid or as a string")]
+        public void TryGetRowId_GuidOrString_ReturnsTrue()
+        {
+            var id = Guid.NewGuid();
+
+            Assert.True(FormDataGuard.TryGetRowId(NewMasterRow(id, typeof(Guid)), out var fromGuid));
+            Assert.True(FormDataGuard.TryGetRowId(NewMasterRow(id.ToString(), typeof(string)), out var fromString));
+            Assert.Equal(id, fromGuid);
+            Assert.Equal(id, fromString);
+        }
+
+        [Fact]
+        [DisplayName("TryGetRowId returns false with Guid.Empty for a null rowid, an unparsable string or a missing column")]
+        public void TryGetRowId_NoUsableRowId_ReturnsFalse()
+        {
+            var table = new DataTable("detail");
+            table.Columns.Add("name", typeof(string));
+            var noColumn = table.NewRow();
+
+            Assert.False(FormDataGuard.TryGetRowId(NewMasterRow(DBNull.Value), out var fromNull));
+            Assert.False(FormDataGuard.TryGetRowId(NewMasterRow("not-a-guid", typeof(string)), out var fromText));
+            Assert.False(FormDataGuard.TryGetRowId(noColumn, out var fromMissing));
+            Assert.Equal(Guid.Empty, fromNull);
+            Assert.Equal(Guid.Empty, fromText);
+            Assert.Equal(Guid.Empty, fromMissing);
+        }
+
         private static DataRow NewMasterRow(object value, Type columnType = null!)
         {
             var table = new DataTable("master");

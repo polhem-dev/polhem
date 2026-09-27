@@ -69,6 +69,27 @@ namespace Polhem.Db.UnitTests.Manager
                 _provider.Settings.Servers!.Remove(_provider.Settings.Servers[id]!);
         }
 
+        [Fact]
+        [DisplayName("GetConnectionInfo caches one entry per database id regardless of its casing, and Remove finds it by any casing")]
+        public void GetConnectionInfo_IdCasingDiffers_SharesOneCacheEntry()
+        {
+            var id = NewId("casing");
+            AddItem(id, i => i.ConnectionString = "Server=x;Database=y;");
+            try
+            {
+                var lower = _manager.GetConnectionInfo(id);
+                var upper = _manager.GetConnectionInfo(id.ToUpperInvariant());
+
+                Assert.Same(lower, upper);
+                Assert.True(_manager.Remove(id.ToUpperInvariant()));
+                Assert.False(_manager.Contains(id));
+            }
+            finally
+            {
+                RemoveItem(id);
+            }
+        }
+
         [Theory]
         [InlineData(null)]
         [InlineData("")]

@@ -1,4 +1,5 @@
 using System.Data;
+using Polhem.Api.Client;
 using System.Globalization;
 using Polhem.Definition;
 using Polhem.Definition.Layouts;
@@ -52,19 +53,10 @@ namespace Polhem.Web.Blazor.Server.Components
         private async Task OnRowClickAsync(DataRow row)
         {
             if (!OnRowSelected.HasDelegate) return;
-            if (!TryGetRowId(row, out var rowId)) return;
+            if (!FormDataGuard.TryGetRowId(row, out var rowId)) return;
             await OnRowSelected.InvokeAsync(rowId);
         }
 
-        private static bool TryGetRowId(DataRow row, out Guid rowId)
-        {
-            rowId = Guid.Empty;
-            if (!row.Table.Columns.Contains(SysFields.RowId)) return false;
-            var raw = row[SysFields.RowId];
-            if (raw is null || raw == DBNull.Value) return false;
-            if (raw is Guid g) { rowId = g; return true; }
-            return Guid.TryParse(raw.ToString(), out rowId);
-        }
 
         private static string FormatCell(DataRow row, LayoutColumn column)
         {

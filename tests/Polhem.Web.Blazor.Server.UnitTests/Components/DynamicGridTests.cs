@@ -1,3 +1,4 @@
+using Polhem.Api.Client;
 using System.ComponentModel;
 using System.Data;
 using System.Reflection;
@@ -10,20 +11,18 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
     /// Structural and pure-logic tests covering the static helper methods of <see cref="DynamicGrid"/>
-    /// (<c>TryGetRowId</c>, <c>FormatCell</c>, <c>BuildColumnStyle</c>) and
+    /// (<c>FormatCell</c>, <c>BuildColumnStyle</c>, and the row-id read it delegates to
+    /// <see cref="Polhem.Api.Client.FormDataGuard.TryGetRowId"/>) and
     /// the private computed property <c>VisibleColumns</c>.
     /// Render cycle tests that need the Blazor renderer are left to bUnit integration tests.
     /// </summary>
     public class DynamicGridTests
     {
+        // The grid reads a clicked row's id through the helper it shares with the Avalonia grid.
         private static (bool Success, Guid RowId) InvokeTryGetRowId(DataRow row)
         {
-            var method = typeof(DynamicGrid).GetMethod(
-                "TryGetRowId", BindingFlags.NonPublic | BindingFlags.Static);
-            Assert.NotNull(method);
-            var args = new object?[] { row, Guid.Empty };
-            var success = (bool)method!.Invoke(null, args)!;
-            return (success, (Guid)args[1]!);
+            var success = FormDataGuard.TryGetRowId(row, out var rowId);
+            return (success, rowId);
         }
 
         private static string InvokeFormatCell(DataRow row, LayoutColumn column)

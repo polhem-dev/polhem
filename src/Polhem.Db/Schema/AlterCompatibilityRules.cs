@@ -1,5 +1,6 @@
 using Polhem.Base;
 using Polhem.Base.Data;
+using Polhem.Db.Schema.Changes;
 using Polhem.Definition.Database;
 
 namespace Polhem.Db.Schema
@@ -39,6 +40,39 @@ namespace Polhem.Db.Schema
             AutoIncrement,
             Unknown,
         }
+
+        /// <summary>
+        /// Returns how a schema change is applied on a dialect that follows the neutral rules: adds,
+        /// renames and index changes in place, a column change by <see cref="GetKindForTypeChange"/>.
+        /// </summary>
+        /// <param name="change">The schema change.</param>
+        /// <remarks>
+        /// The alter builders of dialects with no extra restriction return this as their
+        /// <see cref="Polhem.Db.Ddl.ITableAlterCommandBuilder.GetExecutionKind"/>. Oracle and SQLite
+        /// have their own, because their engines restrict column changes further.
+        /// </remarks>
+        public static ChangeExecutionKind GetExecutionKind(ITableChange change)
+        {
+            switch (change)
+            {
+                case AddFieldChange _:
+                case RenameFieldChange _:
+                case AddIndexChange _:
+                case DropIndexChange _:
+                    return ChangeExecutionKind.Alter;
+                case AlterFieldChange alter:
+                    return GetKindForTypeChange(alter.OldField.DbType, alter.NewField.DbType);
+                default:
+                    return ChangeExecutionKind.NotSupported;
+            }
+        }
+
+        /// <summary>
+        /// Returns whether a schema change narrows a column; only a column change can.
+        /// </summary>
+        /// <param name="change">The schema change.</param>
+        public static bool IsNarrowingChange(ITableChange change)
+            => change is AlterFieldChange alter && IsNarrowing(alter.OldField, alter.NewField);
 
         /// <summary>
         /// Returns the execution kind for changing a column from <paramref name="from"/> to <paramref name="to"/>.

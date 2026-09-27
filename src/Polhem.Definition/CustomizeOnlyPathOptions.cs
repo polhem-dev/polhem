@@ -1,7 +1,7 @@
 namespace Polhem.Definition
 {
     /// <summary>
-    /// Path options for the tenant customization-override layer. Resolves the five
+    /// Path options for the tenant customization-override layer. Resolves the
     /// customizable artifact paths (Language, FormLayout, ProgramSettings, MenuSettings,
     /// PluginSettings) strictly under <c>{CustomizePath}/{customizeId}/</c> and never falls back to
     /// the base <see cref="PathOptions.DefinePath"/>.
@@ -10,7 +10,7 @@ namespace Polhem.Definition
     /// Only <see cref="GetLanguageFilePath"/>, <see cref="GetFormLayoutFilePath"/>,
     /// <see cref="GetProgramSettingsFilePath"/>, <see cref="GetMenuSettingsFilePath"/> and
     /// <see cref="GetPluginSettingsFilePath"/> are overridden — the override layer serves only
-    /// those five types. Any other path method
+    /// those types. Any other path method
     /// inherited from <see cref="PathOptions"/> resolves against an empty
     /// <see cref="PathOptions.DefinePath"/> and must not be used by override-layer code.
     /// </remarks>

@@ -147,12 +147,28 @@ namespace Polhem.Db
         }
 
         /// <summary>
-        /// Attempts to roll back a transaction, silently ignoring any exceptions during rollback.
+        /// Attempts to roll back a transaction, ignoring a rollback that fails.
         /// </summary>
+        /// <remarks>
+        /// It is called only while another exception is already propagating. A rollback failure then
+        /// usually means the server or the connection already ended the transaction, and letting it
+        /// escape would replace the original error with a less useful one.
+        /// </remarks>
         private static void TryRollbackQuiet(DbTransaction? tran)
         {
             if (tran?.Connection == null) return;
-            try { tran.Rollback(); } catch { /* ignore */ }
+            try
+            {
+                tran.Rollback();
+            }
+            catch (DbException)
+            {
+                // The original exception is the one worth reporting; see the remarks.
+            }
+            catch (InvalidOperationException)
+            {
+                // Thrown when the transaction was already committed, rolled back or its connection closed.
+            }
         }
 
         #region Sync methods

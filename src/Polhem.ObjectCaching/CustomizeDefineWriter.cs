@@ -57,6 +57,7 @@ namespace Polhem.ObjectCaching
                 Directory.CreateDirectory(directory);
 
             XmlCodec.SerializeToFile(settings, filePath);
+            OverrideFileProbe.Forget(filePath);
 
             // Evict before returning so the next read observes the write. The file watcher would
             // get there eventually, but "eventually" is the wrong contract for a maintenance tool

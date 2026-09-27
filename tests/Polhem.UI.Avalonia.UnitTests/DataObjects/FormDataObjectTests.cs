@@ -185,6 +185,22 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         [DisplayName("SetField with an empty string sets a column that allows DBNull to DBNull")]
         public void SetField_EmptyString_OnNullableColumn_SetsDbNull()
         {
+            // A date column has no empty value, so it is the column type that still allows DBNull.
+            var dataObject = new FormDataObject(BuildEmployeeSchema());
+            dataObject.InitializeNewMaster();
+            dataObject.SetField("hire_date", "2026-01-15");
+            Assert.NotEqual(DBNull.Value, dataObject.MasterRow!["hire_date"]);
+
+            dataObject.SetField("hire_date", string.Empty);
+
+            Assert.Equal(DBNull.Value, dataObject.MasterRow["hire_date"]);
+            Assert.Equal(string.Empty, dataObject.GetField("hire_date"));
+        }
+
+        [Fact]
+        [DisplayName("SetField with an empty string sets a Long column to 0, because numeric columns are NOT NULL")]
+        public void SetField_EmptyString_OnLongColumn_SetsZero()
+        {
             var dataObject = new FormDataObject(BuildEmployeeSchema());
             dataObject.InitializeNewMaster();
             dataObject.SetField("manager_rowid", "42");
@@ -192,8 +208,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
 
             dataObject.SetField("manager_rowid", string.Empty);
 
-            Assert.Equal(DBNull.Value, dataObject.MasterRow["manager_rowid"]);
-            Assert.Equal(string.Empty, dataObject.GetField("manager_rowid"));
+            Assert.Equal(0L, dataObject.MasterRow["manager_rowid"]);
         }
 
         [Fact]

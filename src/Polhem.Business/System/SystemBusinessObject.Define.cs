@@ -210,25 +210,20 @@ namespace Polhem.Business.System
         }
 
         /// <summary>
-        /// Returns a <see cref="LanguageResource"/> as a typed object — JS / TypeScript
-        /// frontends consume the result through the Plain JSON wire format.
+        /// Returns the raw <see cref="LanguageResource"/> definition as XML, or an empty string when no
+        /// resource is stored for that language and namespace.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// **JS-only API.** The <see cref="LanguageResource"/> family uses
-        /// <c>KeyCollectionBase</c> internals that do not round-trip through
-        /// MessagePack (the Encoded / Encrypted wire formats); the Plain JSON wire
-        /// path used by JS / TypeScript clients works correctly. Sibling methods
-        /// <see cref="GetFormSchema"/> and <see cref="GetFormLayout"/> follow the
-        /// same convention. .NET clients should use <see cref="GetDefine"/> with
-        /// <see cref="DefineType.Language"/> for the XML-based access path.
+        /// Serves the resource as stored, like <see cref="GetFormSchema"/> and <see cref="GetFormLayout"/>;
+        /// the XML is the same that <see cref="GetDefine"/> returns for <see cref="DefineType.Language"/>.
+        /// A missing resource is a normal scenario (a translation not written yet), not an error.
         /// </para>
         /// <para>
         /// The resource is read from the Define cache via
-        /// <see cref="IDefineAccess.GetLanguage"/> and returned as-is. Per
+        /// <see cref="IDefineAccess.GetLanguage"/>. Per
         /// <c>docs/en/development-constraints.md § Cached Data Immutability After Init</c>,
-        /// the cached instance must not be mutated; callers that need per-session
-        /// adjustments should clone the result.
+        /// the cached instance must not be mutated; it is only serialized here.
         /// </para>
         /// </remarks>
         /// <param name="args">The input arguments carrying <c>Lang</c> and <c>Namespace</c>.</param>
@@ -241,8 +236,8 @@ namespace Polhem.Business.System
             if (string.IsNullOrWhiteSpace(args.Namespace))
                 throw new UserMessageException("Namespace is required.");
 
-            // GetLanguage returns null when the resource file does not exist;
-            // that is a normal scenario (missing translation), not an error.
+            // `GetLanguage` returns null when the resource file does not exist. That is a normal
+            // scenario (a missing translation), not an error.
             var resource = DefineAccess.GetLanguage(args.Lang, args.Namespace);
             return new GetLanguageResult { Xml = resource is null ? string.Empty : SerializeDefine(resource) };
         }

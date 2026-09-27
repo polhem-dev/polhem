@@ -1,3 +1,4 @@
+using Polhem.Api.Client;
 using System.ComponentModel;
 using System.Data;
 using System.Reflection;
@@ -35,16 +36,9 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             return (bool)method!.Invoke(null, args)!;
         }
 
+        // The grid reads the selected row's id through the helper it shares with the Blazor grid.
         private static bool InvokeTryGetRowId(DataRow row, out Guid rowId)
-        {
-            var method = typeof(GridControl).GetMethod(
-                "TryGetRowId", BindingFlags.NonPublic | BindingFlags.Static);
-            Assert.NotNull(method);
-            var args = new object?[] { row, Guid.Empty };
-            var result = (bool)method!.Invoke(null, args)!;
-            rowId = (Guid)args[1]!;
-            return result;
-        }
+            => FormDataGuard.TryGetRowId(row, out rowId);
 
         private static Control InvokeBuildCellEditor(GridControl grid, DataRowView? rowView, LayoutColumn column)
         {

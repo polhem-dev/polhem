@@ -131,13 +131,21 @@ namespace Polhem.ObjectCaching.Providers
         /// policy's pre-load baseline, or a snapshot taken at construction when the policy has none.
         /// No background timer avoids the race condition
         /// where an immediately-firing polling timer evicts entries before they can be read.
-        /// MemoryCache checks HasChanged on every TryGetValue call, so lazy detection is sufficient.
         /// </summary>
+        /// <remarks>
+        /// <see cref="MemoryCache"/> reads <see cref="HasChanged"/> on every lookup, and a file-backed
+        /// definition is looked up several times per request. Stat'ing the file each time cost about a
+        /// microsecond on a local SSD and far more on a network share, so the file is re-read at most
+        /// once per <see cref="FileWriteTime.RecheckInterval"/>. The first check is not deferred (the
+        /// next-check time starts at zero), which is what catches a rewrite that landed while the value
+        /// was being loaded; <c>CacheFillInvalidationRaceTests</c> pins that case.
+        /// </remarks>
         private sealed class FileModificationToken : IChangeToken
         {
             private readonly string _filePath;
             private readonly DateTime _initialWriteTime;
             private volatile bool _hasChanged;
+            private long _nextCheckAt;
 
             public FileModificationToken(string filePath, DateTime? baseline)
             {
@@ -150,6 +158,11 @@ namespace Polhem.ObjectCaching.Providers
                 get
                 {
                     if (_hasChanged) return true;
+
+                    long now = Environment.TickCount64;
+                    if (now < Interlocked.Read(ref _nextCheckAt)) return false;
+                    Interlocked.Exchange(ref _nextCheckAt, now + (long)FileWriteTime.RecheckInterval.TotalMilliseconds);
+
                     _hasChanged = FileWriteTime.Get(_filePath) != _initialWriteTime;
                     return _hasChanged;
                 }

@@ -7,7 +7,7 @@ using Polhem.Definition.Storage;
 namespace Polhem.ObjectCaching
 {
     /// <summary>
-    /// Default <see cref="ICustomizeDefineReader"/>: reads the five customizable types from the
+    /// Default <see cref="ICustomizeDefineReader"/>: reads the customizable types from the
     /// per-customization-code override containers supplied by an
     /// <see cref="ICacheContainerProvider"/>. Hits return the cached read-only instance; a missing
     /// override file returns <c>null</c> without falling back to the base layer.
@@ -48,7 +48,7 @@ namespace Polhem.ObjectCaching
             // tenant supplies no override — this avoids both exception-driven control flow and any
             // change to the shared cache class.
             var custPaths = new CustomizeOnlyPathOptions(_paths.CustomizePath, customizeId);
-            if (!File.Exists(custPaths.GetProgramSettingsFilePath()))
+            if (!OverrideFileProbe.Exists(custPaths.GetProgramSettingsFilePath()))
                 return null;
             return _provider.For(customizeId).ProgramSettings.Get();
         }
@@ -64,7 +64,7 @@ namespace Polhem.ObjectCaching
             // "the tenant overrides the menu with an empty one" have to stay distinguishable, so
             // probe for the file and skip the cache entirely when there is no override.
             var custPaths = new CustomizeOnlyPathOptions(_paths.CustomizePath, customizeId);
-            if (!File.Exists(custPaths.GetMenuSettingsFilePath()))
+            if (!OverrideFileProbe.Exists(custPaths.GetMenuSettingsFilePath()))
                 return null;
             return _provider.For(customizeId).MenuSettings.Get();
         }
@@ -80,7 +80,7 @@ namespace Polhem.ObjectCaching
             // "the tenant adds an empty chain" have to stay distinguishable, so probe for the file
             // and skip the cache entirely when there is no override.
             var custPaths = new CustomizeOnlyPathOptions(_paths.CustomizePath, customizeId);
-            if (!File.Exists(custPaths.GetPluginSettingsFilePath()))
+            if (!OverrideFileProbe.Exists(custPaths.GetPluginSettingsFilePath()))
                 return null;
             return _provider.For(customizeId).PluginSettings.Get();
         }

@@ -56,7 +56,7 @@ namespace Polhem.Db.Providers.SqlServer
             // Parse the primary key
             ParsePrimaryKey(dbTable, indexes);
             // Parse the remaining indexes
-            ParseIndexes(dbTable, indexes);
+            IndexRowsParser.ParseIndexes(dbTable, indexes);
 
             // Retrieve the column data source
             var columns = GetColumns(tableName);
@@ -146,39 +146,6 @@ namespace Polhem.Db.Providers.SqlServer
             }
             // Remove the processed primary key rows
             table.DefaultView.DeleteRows(true);
-        }
-
-        /// <summary>
-        /// Parses and populates all remaining indexes from the index data.
-        /// </summary>
-        /// <param name="dbTable">The table schema to populate.</param>
-        /// <param name="table">The index data table.</param>
-        private static void ParseIndexes(TableSchema dbTable, DataTable table)
-        {
-            while (!table.IsEmpty())
-            {
-                var oRow = table.Rows[0];
-                string name = ValueUtilities.CStr(oRow["Name"]);  // Get the index name
-                bool isUnique = ValueUtilities.CBool(oRow["IsUnique"]);
-
-                var tableIndex = new DbTableIndex();
-                tableIndex.Name = name;
-                tableIndex.Unique = isUnique;
-                dbTable.Indexes!.Add(tableIndex);
-
-                table.DefaultView.RowFilter = $"Name='{name.Replace("'", "''")}'";
-
-                table.DefaultView.Sort = "Name,KeyOrdinal";
-                foreach (DataRowView rowView in table.DefaultView)
-                {
-                    var indexField = new IndexField();
-                    indexField.FieldName = ValueUtilities.CStr(rowView["FieldName"]);
-                    indexField.SortDirection = ValueUtilities.CBool(rowView["IsDesc"]) ? SortDirection.Desc : SortDirection.Asc;
-                    tableIndex.IndexFields!.Add(indexField);
-                }
-                // Remove the processed index rows
-                table.DefaultView.DeleteRows(true);
-            }
         }
 
         /// <summary>
@@ -345,6 +312,5 @@ namespace Polhem.Db.Providers.SqlServer
             else
                 return defaultValue;
         }
-
     }
 }

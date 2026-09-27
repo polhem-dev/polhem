@@ -29,15 +29,15 @@ namespace Polhem.Base.Serialization
         /// <param name="value">The object to save.</param>
         public static void Save(this IObjectSerializeFile value)
         {
-            string sExtension;
+            string extension;
 
             if (StringUtilities.IsEmpty(value.ObjectFilePath))
                 throw new ArgumentException("ObjectFilePath is empty");
 
-            sExtension = Path.GetExtension(value.ObjectFilePath);
-            if (StringUtilities.IsEquals(sExtension, ".xml"))
+            extension = Path.GetExtension(value.ObjectFilePath);
+            if (StringUtilities.IsEquals(extension, ".xml"))
                 XmlCodec.SerializeToFile(value, value.ObjectFilePath);
-            else if (StringUtilities.IsEquals(sExtension, ".json"))
+            else if (StringUtilities.IsEquals(extension, ".json"))
                 JsonCodec.SerializeToFile(value, value.ObjectFilePath);
             else
                 throw new NotSupportedException();

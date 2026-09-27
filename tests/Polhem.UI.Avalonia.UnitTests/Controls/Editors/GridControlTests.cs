@@ -1,3 +1,4 @@
+using Polhem.Api.Client;
 using Polhem.Definition.Collections;
 using System.ComponentModel;
 using System.Data;
@@ -762,36 +763,29 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         [DisplayName("TryGetRowId accepts a Guid column and a parsable Guid string, and returns false for DBNull")]
         public void TryGetRowId_VariantInputs_Behaviour()
         {
-            var method = typeof(GridControl).GetMethod(
-                "TryGetRowId", BindingFlags.NonPublic | BindingFlags.Static);
-            Assert.NotNull(method);
-
+            // The grid reads the selected row's id through the helper it shares with the Blazor grid.
             var guidTable = new DataTable();
             guidTable.Columns.Add(SysFields.RowId, typeof(Guid));
             var expectedGuid = Guid.NewGuid();
             guidTable.Rows.Add(expectedGuid);
-            var args1 = new object?[] { guidTable.Rows[0], Guid.Empty };
-            Assert.True((bool)method!.Invoke(null, args1)!);
-            Assert.Equal(expectedGuid, (Guid)args1[1]!);
+            Assert.True(FormDataGuard.TryGetRowId(guidTable.Rows[0], out var fromGuid));
+            Assert.Equal(expectedGuid, fromGuid);
 
             var stringTable = new DataTable();
             stringTable.Columns.Add(SysFields.RowId, typeof(string));
             stringTable.Rows.Add(expectedGuid.ToString());
-            var args2 = new object?[] { stringTable.Rows[0], Guid.Empty };
-            Assert.True((bool)method.Invoke(null, args2)!);
-            Assert.Equal(expectedGuid, (Guid)args2[1]!);
+            Assert.True(FormDataGuard.TryGetRowId(stringTable.Rows[0], out var fromString));
+            Assert.Equal(expectedGuid, fromString);
 
             var nullTable = new DataTable();
             nullTable.Columns.Add(SysFields.RowId, typeof(Guid));
             nullTable.Rows.Add(DBNull.Value);
-            var args3 = new object?[] { nullTable.Rows[0], Guid.Empty };
-            Assert.False((bool)method.Invoke(null, args3)!);
+            Assert.False(FormDataGuard.TryGetRowId(nullTable.Rows[0], out _));
 
             var noColumnTable = new DataTable();
             noColumnTable.Columns.Add("other", typeof(string));
             noColumnTable.Rows.Add("x");
-            var args4 = new object?[] { noColumnTable.Rows[0], Guid.Empty };
-            Assert.False((bool)method.Invoke(null, args4)!);
+            Assert.False(FormDataGuard.TryGetRowId(noColumnTable.Rows[0], out _));
         }
 
         [Fact]

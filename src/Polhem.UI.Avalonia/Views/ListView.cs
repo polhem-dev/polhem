@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
@@ -352,17 +353,8 @@ namespace Polhem.UI.Avalonia.Views
 
         private void OnCardSelectionChanged()
         {
-            if (_cardList.SelectedItem is not DataRowView drv
-                || !drv.Row.Table.Columns.Contains(SysFields.RowId))
-            {
-                return;
-            }
-
-            var value = drv.Row[SysFields.RowId];
-            if (value is Guid rowId)
+            if (_cardList.SelectedItem is DataRowView drv && FormDataGuard.TryGetRowId(drv.Row, out var rowId))
                 OnRowSelected(rowId);
-            else if (Guid.TryParse(value?.ToString(), out var parsed))
-                OnRowSelected(parsed);
         }
 
         private void OnInputsChanged()

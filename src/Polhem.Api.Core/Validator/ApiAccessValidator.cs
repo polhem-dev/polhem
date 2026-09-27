@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Reflection;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Security;
@@ -11,6 +12,11 @@ namespace Polhem.Api.Core.Validator
     /// </summary>
     public static class ApiAccessValidator
     {
+        // Resolving the attribute walks the method, its base definition and the declaring type on
+        // every call, which cost about half a microsecond per request. The answer is fixed by the
+        // compiled code, and the keys are the business object methods the API dispatches to.
+        private static readonly ConcurrentDictionary<MethodInfo, ApiAccessControlAttribute?> s_attributes = new();
+
         /// <summary>
         /// Validates whether the specified method satisfies the access conditions (local, encoded, encrypted),
         /// and throws an exception if the conditions are not met.
@@ -91,6 +97,9 @@ namespace Polhem.Api.Core.Validator
         /// <param name="method">The target method.</param>
         /// <returns>The attribute if found; otherwise, null.</returns>
         private static ApiAccessControlAttribute? FindAccessAttribute(MethodInfo method)
+            => s_attributes.GetOrAdd(method, ResolveAccessAttribute);
+
+        private static ApiAccessControlAttribute? ResolveAccessAttribute(MethodInfo method)
         {
             var attr = method.GetCustomAttribute<ApiAccessControlAttribute>();
             if (attr != null)

@@ -7,7 +7,7 @@ namespace Polhem.Db.CacheNotify
     /// </summary>
     /// <remarks>
     /// Lives alongside the write side rather than in the hosting layer because the statements it
-    /// issues diverge across all five dialects (server-time expression, timestamp cast, literal
+    /// issues diverge across the dialects (server-time expression, timestamp cast, literal
     /// format) and belong with the rest of the provider-aware SQL.
     /// </remarks>
     public interface ICacheNotifyReader

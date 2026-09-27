@@ -336,8 +336,7 @@ namespace Polhem.Db
 
         private string ResolveNamedKey(string key)
         {
-            var param = Parameters.FirstOrDefault(p =>
-                p.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
+            var param = Parameters.GetOrDefault(key)
                 ?? throw new InvalidOperationException(
                     $"Failed to resolve SQL parameter: Name {{{key}}} not found in Parameters collection.");
 

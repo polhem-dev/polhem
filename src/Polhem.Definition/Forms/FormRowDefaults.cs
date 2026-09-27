@@ -74,7 +74,9 @@ namespace Polhem.Definition.Forms
 
         /// <summary>
         /// The type-appropriate non-null default for a <see cref="FieldDbType"/>, or
-        /// <see cref="DBNull.Value"/> for types with no natural empty value.
+        /// <see cref="DBNull.Value"/> for types with no natural empty value. Every type except
+        /// <c>Date</c> and <c>DateTime</c> takes its value from
+        /// <see cref="Polhem.Base.Data.FieldDbTypeExtensions.GetDefaultValue(FieldDbType)"/>.
         /// </summary>
         /// <param name="dbType">The field database type.</param>
         /// <param name="timeZoneId">The user's IANA time zone id; blank means UTC.</param>
@@ -88,17 +90,9 @@ namespace Polhem.Definition.Forms
         public static object DefaultForDbType(FieldDbType dbType, string timeZoneId = "",
             DateTimeBasis basis = DateTimeBasis.UserZone) => dbType switch
         {
-            FieldDbType.String or FieldDbType.Text => string.Empty,
-            FieldDbType.Boolean => false,
-            FieldDbType.Short => (short)0,
-            FieldDbType.Integer => 0,
-            FieldDbType.Long => 0L,
-            FieldDbType.Decimal or FieldDbType.Currency => 0m,
             FieldDbType.Date => FrameworkClock.Today(timeZoneId).ToDateTime(TimeOnly.MinValue),
             FieldDbType.DateTime => FrameworkClock.Now(timeZoneId, basis),
-            FieldDbType.Guid => Guid.Empty,
-            FieldDbType.Binary => Array.Empty<byte>(),
-            _ => DBNull.Value,
+            _ => dbType.GetDefaultValue(),
         };
     }
 }

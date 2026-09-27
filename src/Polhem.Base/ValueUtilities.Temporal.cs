@@ -42,8 +42,8 @@ namespace Polhem.Base
             try
             {
                 // Convert to string and strip date separator characters
-                var sValue = CStr(value);
-                return StrToDate(sValue);
+                var text = CStr(value);
+                return StrToDate(text);
             }
             catch (FormatException)
             {
@@ -71,46 +71,46 @@ namespace Polhem.Base
         /// <param name="value">The string describing a date.</param>
         private static DateTime? StrToDate(string value)
         {
-            string sValue;
-            string sDate;
-            int iLen;
+            string digits;
+            string isoDate;
+            int length;
 
             // Remove date separator characters
-            sValue = value.Replace("/", string.Empty);
-            sValue = sValue.Replace("-", string.Empty);
+            digits = value.Replace("/", string.Empty);
+            digits = digits.Replace("-", string.Empty);
             // Only all-numeric strings are valid for date conversion
-            if (!IsNumeric(sValue)) { return null; }
+            if (!IsNumeric(digits)) { return null; }
             // Attempt date conversion based on the string length
-            iLen = sValue.Length;
-            switch (iLen)
+            length = digits.Length;
+            switch (length)
             {
                 case 8: // 8-digit Gregorian date, e.g. 20150312
-                    sDate = sValue.Insert(4, "-").Insert(7, "-");
+                    isoDate = digits.Insert(4, "-").Insert(7, "-");
                     break;
                 case 7: // 7-digit ROC date, e.g. 1040312
-                    sDate = StringUtilities.Format("{0}-{1}-{2}", CInt(sValue.Substring(0, 3)) + 1911,
-                        sValue.Substring(3, 2), sValue.Substring(5, 2));
+                    isoDate = StringUtilities.Format("{0}-{1}-{2}", CInt(digits.Substring(0, 3)) + 1911,
+                        digits.Substring(3, 2), digits.Substring(5, 2));
                     break;
                 case 6: // 6-digit Gregorian year-month, e.g. 201503
-                    sDate = CStr(value).Insert(4, "-") + "-01";
+                    isoDate = CStr(value).Insert(4, "-") + "-01";
                     break;
                 case 5: // 5-digit ROC year-month, e.g. 10403
-                    sDate = StringUtilities.Format("{0}-{1}-01", CInt(sValue.Substring(0, 3)) + 1911,
-                        sValue.Substring(3, 2));
+                    isoDate = StringUtilities.Format("{0}-{1}-01", CInt(digits.Substring(0, 3)) + 1911,
+                        digits.Substring(3, 2));
                     break;
                 case 4: // 4-digit Gregorian year, e.g. 2015
-                    sDate = StringUtilities.Format("{0}-01-01", sValue);
+                    isoDate = StringUtilities.Format("{0}-01-01", digits);
                     break;
                 case 3: // 3-digit ROC year, e.g. 104
-                    sDate = StringUtilities.Format("{0}-01-01", CInt(sValue) + 1911);
+                    isoDate = StringUtilities.Format("{0}-01-01", CInt(digits) + 1911);
                     break;
                 default:
-                    sDate = string.Empty;
+                    isoDate = string.Empty;
                     break;
             }
 
-            if (StringUtilities.IsNotEmpty(sDate))
-                return Convert.ToDateTime(sDate, CultureInfo.InvariantCulture);
+            if (StringUtilities.IsNotEmpty(isoDate))
+                return Convert.ToDateTime(isoDate, CultureInfo.InvariantCulture);
             else
                 return null;
         }

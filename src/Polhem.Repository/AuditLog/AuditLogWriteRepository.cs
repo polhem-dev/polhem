@@ -11,7 +11,7 @@ namespace Polhem.Repository.AuditLog
     /// Default <see cref="IAuditLogWriteRepository"/>. Writes parameterised INSERTs into the
     /// conventional log database via <see cref="IDbAccessFactory"/>. Table and column names match
     /// the read side (<see cref="AuditLogRepository"/>) so reads line up with writes across every
-    /// provider.
+    /// provider. A batch is written in one transaction, so a failure leaves none of its entries behind.
     /// </summary>
     internal sealed class AuditLogWriteRepository : RepositoryBase, IAuditLogWriteRepository
     {
@@ -34,11 +34,18 @@ namespace Polhem.Repository.AuditLog
 
             // Log tables live in the conventional 'log' database (a fixed databaseId, like
             // 'common'); the physical mapping is resolved by DatabaseSettings, not configured here.
-            var dbAccess = Context.DbAccessFactory.Create(DbCategoryIds.Log);
+            // One connection and one commit for the whole batch. Executing each INSERT on its own
+            // made every entry a separate pool checkout and log flush, which capped the drain at one
+            // commit latency per entry. It also made a failure half-written: the entries before the
+            // failing one were committed and then spilled to the fallback file a second time.
+            var batch = new DbBatchSpec { UseTransaction = true };
             foreach (var entry in entries)
             {
-                dbAccess.Execute(BuildInsert(entry));
+                batch.Commands.Add(BuildInsert(entry));
             }
+
+            var dbAccess = Context.DbAccessFactory.Create(DbCategoryIds.Log);
+            dbAccess.ExecuteBatch(batch);
         }
 
         /// <summary>

@@ -23,7 +23,8 @@ namespace Polhem.Definition.Logging
         /// <summary>
         /// Records an anomaly entry. Non-blocking on the default background implementation (the
         /// entry is enqueued); when the bounded queue is saturated the write degrades to
-        /// synchronous so entries are never silently dropped.
+        /// synchronous instead of dropping the entry. That covers saturation only: a write the log
+        /// store rejects is handled by the implementation's durability fallback, which can lose the entry.
         /// </summary>
         /// <param name="entry">The anomaly entry to record.</param>
         void Write(AnomalyEntry entry);

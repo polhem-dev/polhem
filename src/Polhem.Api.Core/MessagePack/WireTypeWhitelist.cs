@@ -11,7 +11,8 @@ namespace Polhem.Api.Core.MessagePack
     /// boundary, and keeping it here is what lets `Polhem.Definition` stay free of any MessagePack
     /// reference.
     /// <para>
-    /// Two callers apply it. <see cref="SafeMessagePackSerializerOptions"/> checks
+    /// <see cref="SafeMessagePackSerializerOptions"/> and <see cref="WireValueFormatter"/> apply it.
+    /// <see cref="SafeMessagePackSerializerOptions"/> checks
     /// <b>before</b> the object is constructed, and <see cref="WireValueFormatter"/> checks the
     /// name it is about to resolve. The whitelist itself was previously carried by
     /// <c>SafeTypelessFormatter</c>, which is gone: its formatter half resolved values through

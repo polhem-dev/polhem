@@ -8,14 +8,24 @@ namespace Polhem.Base.UnitTests
         [Theory]
         [InlineData(FieldDbType.String, "")]
         [InlineData(FieldDbType.Text, "")]
+        [InlineData(FieldDbType.Time, "")]
         [InlineData(FieldDbType.Boolean, false)]
+        [InlineData(FieldDbType.Short, (short)0)]
         [InlineData(FieldDbType.Integer, 0)]
-        [InlineData(FieldDbType.Decimal, 0)]
-        [InlineData(FieldDbType.Currency, 0)]
-        [DisplayName("GetDefaultValue returns the matching default value for primitive types")]
+        [InlineData(FieldDbType.Long, 0L)]
+        [DisplayName("GetDefaultValue returns the matching default value, boxed as the column's CLR type, for primitive types")]
         public void GetDefaultValue_ReturnsExpectedForPrimitiveTypes(FieldDbType type, object expected)
         {
             Assert.Equal(expected, type.GetDefaultValue());
+        }
+
+        [Theory]
+        [InlineData(FieldDbType.Decimal)]
+        [InlineData(FieldDbType.Currency)]
+        [DisplayName("GetDefaultValue returns a decimal zero for Decimal and Currency")]
+        public void GetDefaultValue_DecimalTypes_ReturnsDecimalZero(FieldDbType type)
+        {
+            Assert.Equal(0m, Assert.IsType<decimal>(type.GetDefaultValue()));
         }
 
         [Fact]
@@ -33,14 +43,19 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetDefaultValue returns DBNull.Value for unmapped types")]
-        public void GetDefaultValue_UnmappedType_ReturnsDbNull()
+        [DisplayName("GetDefaultValue returns an empty byte array for Binary")]
+        public void GetDefaultValue_Binary_ReturnsEmptyByteArray()
         {
-            Assert.Equal(DBNull.Value, FieldDbType.Binary.GetDefaultValue());
-            Assert.Equal(DBNull.Value, FieldDbType.Unknown.GetDefaultValue());
-            Assert.Equal(DBNull.Value, FieldDbType.AutoIncrement.GetDefaultValue());
-            Assert.Equal(DBNull.Value, FieldDbType.Short.GetDefaultValue());
-            Assert.Equal(DBNull.Value, FieldDbType.Long.GetDefaultValue());
+            Assert.Empty(Assert.IsType<byte[]>(FieldDbType.Binary.GetDefaultValue()));
+        }
+
+        [Theory]
+        [InlineData(FieldDbType.AutoIncrement)]
+        [InlineData(FieldDbType.Unknown)]
+        [DisplayName("GetDefaultValue returns DBNull.Value for types with no empty value")]
+        public void GetDefaultValue_NoEmptyValue_ReturnsDbNull(FieldDbType type)
+        {
+            Assert.Equal(DBNull.Value, type.GetDefaultValue());
         }
     }
 }

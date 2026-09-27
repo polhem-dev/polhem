@@ -12,14 +12,21 @@ namespace Polhem.Base.Serialization
         /// </summary>
         private const long MaxDecompressedBytes = 50 * 1024 * 1024;
         /// <summary>
-        /// Compresses the specified byte array using GZip.
+        /// Compresses the specified byte array using GZip at <see cref="CompressionLevel.Fastest"/>.
         /// </summary>
+        /// <remarks>
+        /// The API payload pipeline compresses every Encoded and Encrypted body in both directions, so
+        /// compression time is paid on every call. On a large list response <see cref="CompressionLevel.Fastest"/>
+        /// took about a third of the time of <see cref="CompressionLevel.Optimal"/> for an output about 40% larger,
+        /// which is the better trade on a LAN or an encrypted link. The level only affects the compressor;
+        /// <see cref="Decompress"/> reads any level.
+        /// </remarks>
         /// <param name="bytes">The raw byte data to compress.</param>
         public static byte[] Compress(byte[] bytes)
         {
             using (MemoryStream stream = new MemoryStream())
             {
-                using (GZipStream gZipStream = new GZipStream(stream, CompressionMode.Compress, true))
+                using (GZipStream gZipStream = new GZipStream(stream, CompressionLevel.Fastest, true))
                 {
                     gZipStream.Write(bytes, 0, bytes.Length);
                 }

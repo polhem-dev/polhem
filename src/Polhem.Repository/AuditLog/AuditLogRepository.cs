@@ -69,7 +69,7 @@ namespace Polhem.Repository.AuditLog
         /// <exception cref="InvalidOperationException">The scope is missing.</exception>
         /// <remarks>
         /// WARNING: the company filter is a **tenant boundary**, not an optional filter, and the two
-        /// used to be expressed identically — both went through <c>WhereBuilder.Eq</c>, which drops
+        /// used to be expressed identically — both went through <see cref="AuditLogFilter.Eq(string, string)"/>, which drops
         /// the clause when the value is null. A caller that had not entered a company therefore did
         /// not get "no rows"; it got **every company's audit trail**. Failing closed here means the
         /// isolation no longer rests on an unrelated type — <c>Can</c>
@@ -90,7 +90,7 @@ namespace Polhem.Repository.AuditLog
         public AuditLogPage GetChangeLog(ChangeLogQuery query, PagingOptions paging)
         {
             ArgumentNullException.ThrowIfNull(query);
-            var where = new WhereBuilder()
+            var where = new AuditLogFilter()
                 .Eq(ColCompanyId, RequireCompanyScope(query.CompanyId, nameof(GetChangeLog)))
                 .Eq("prog_id", query.ProgId)
                 .Eq("row_key", query.RowKey)
@@ -117,7 +117,7 @@ namespace Polhem.Repository.AuditLog
         public AuditLogPage GetLoginLog(LoginLogQuery query, PagingOptions paging)
         {
             ArgumentNullException.ThrowIfNull(query);
-            var where = new WhereBuilder()
+            var where = new AuditLogFilter()
                 .Eq(ColCompanyId, RequireCompanyScope(query.CompanyId, nameof(GetLoginLog)))
                 .Eq(ColUserId, query.UserId)
                 .Eq("event", (int?)query.Event)
@@ -130,7 +130,7 @@ namespace Polhem.Repository.AuditLog
         public AuditLogPage GetAccessLog(AccessLogQuery query, PagingOptions paging)
         {
             ArgumentNullException.ThrowIfNull(query);
-            var where = new WhereBuilder()
+            var where = new AuditLogFilter()
                 .Eq(ColCompanyId, RequireCompanyScope(query.CompanyId, nameof(GetAccessLog)))
                 .Eq("prog_id", query.ProgId)
                 .Eq("row_key", query.RowKey)
@@ -144,7 +144,7 @@ namespace Polhem.Repository.AuditLog
         public AuditLogPage GetApiAnomalyLog(ApiAnomalyLogQuery query, PagingOptions paging)
         {
             ArgumentNullException.ThrowIfNull(query);
-            var where = new WhereBuilder()
+            var where = new AuditLogFilter()
                 .Eq(ColCompanyId, RequireCompanyScope(query.CompanyId, nameof(GetApiAnomalyLog)))
                 .Eq(ColUserId, query.UserId)
                 .Eq("method", query.Method)
@@ -160,7 +160,7 @@ namespace Polhem.Repository.AuditLog
             ArgumentNullException.ThrowIfNull(query);
             // st_log_anomaly_db carries no who / company (DbAccess has no session context), so this is a
             // cross-company infrastructure view — no company scope filter is possible or applied.
-            var where = new WhereBuilder()
+            var where = new AuditLogFilter()
                 .Eq("database_id", query.DatabaseId)
                 .Eq("anomaly_kind", (int?)query.Kind)
                 .Gte(ColLogTime, query.FromUtc)
@@ -174,7 +174,7 @@ namespace Polhem.Repository.AuditLog
         /// <inheritdoc/>
         public DataTable GetApiAnomalySummary(DateTime? fromUtc, DateTime? toUtc, string? companyId)
         {
-            var where = new WhereBuilder()
+            var where = new AuditLogFilter()
                 .Eq(ColCompanyId, RequireCompanyScope(companyId, nameof(GetApiAnomalySummary)))
                 .Gte(ColLogTime, fromUtc)
                 .Lte(ColLogTime, toUtc);
@@ -188,7 +188,7 @@ namespace Polhem.Repository.AuditLog
         public DataTable GetDbAnomalySummary(DateTime? fromUtc, DateTime? toUtc)
         {
             // st_log_anomaly_db carries no company — a cross-company infrastructure summary.
-            var where = new WhereBuilder()
+            var where = new AuditLogFilter()
                 .Gte(ColLogTime, fromUtc)
                 .Lte(ColLogTime, toUtc);
             var (whereSql, values) = where.Build();
@@ -202,7 +202,7 @@ namespace Polhem.Repository.AuditLog
         {
             int take = Math.Clamp(topN, 1, MaxTopN);
             var dbType = Context.ConnectionManager.GetConnectionInfo(DatabaseId).DatabaseType;
-            var where = new WhereBuilder()
+            var where = new AuditLogFilter()
                 .Eq(ColCompanyId, RequireCompanyScope(companyId, nameof(GetTopApiMethods)))
                 .Gte(ColLogTime, fromUtc)
                 .Lte(ColLogTime, toUtc);
@@ -229,7 +229,7 @@ namespace Polhem.Repository.AuditLog
         /// dialect <see cref="LimitBuilder"/>; when the total count is not requested a probe row computes
         /// <c>HasMore</c> without an extra round-trip.
         /// </summary>
-        private AuditLogPage QueryPage(string table, string columns, WhereBuilder where, PagingOptions paging)
+        private AuditLogPage QueryPage(string table, string columns, AuditLogFilter where, PagingOptions paging)
         {
             ArgumentNullException.ThrowIfNull(paging);
 
@@ -292,30 +292,30 @@ namespace Polhem.Repository.AuditLog
         /// Fluent <see cref="Eq(string, string)"/> / <see cref="Gte"/> / <see cref="Lte"/> skip null
         /// (or empty-string) values, so an unset filter simply adds no clause.
         /// </summary>
-        private sealed class WhereBuilder
+        private sealed class AuditLogFilter
         {
             private readonly List<string> _clauses = [];
             private readonly List<object> _values = [];
 
-            public WhereBuilder Eq(string column, string? value)
+            public AuditLogFilter Eq(string column, string? value)
             {
                 if (!string.IsNullOrEmpty(value)) { Add(column, "=", value); }
                 return this;
             }
 
-            public WhereBuilder Eq(string column, int? value)
+            public AuditLogFilter Eq(string column, int? value)
             {
                 if (value.HasValue) { Add(column, "=", value.Value); }
                 return this;
             }
 
-            public WhereBuilder Gte(string column, DateTime? value)
+            public AuditLogFilter Gte(string column, DateTime? value)
             {
                 if (value.HasValue) { Add(column, ">=", value.Value); }
                 return this;
             }
 
-            public WhereBuilder Lte(string column, DateTime? value)
+            public AuditLogFilter Lte(string column, DateTime? value)
             {
                 if (value.HasValue) { Add(column, "<=", value.Value); }
                 return this;

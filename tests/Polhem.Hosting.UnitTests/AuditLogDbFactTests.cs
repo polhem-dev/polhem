@@ -233,5 +233,90 @@ namespace Polhem.Hosting.UnitTests
         [DbFact(DatabaseType.PostgreSQL)]
         [DisplayName("PostgreSQL: a DB anomaly written to st_log_anomaly_db can be read back")]
         public void DbAnomaly_PostgreSQL_RoundTrip() => RunDbAnomalyRoundTrip(DatabaseType.PostgreSQL);
+
+        private AuditLogWriteRepository CreateWriteRepository(DatabaseType databaseType)
+        {
+            var factory = new RedirectingDbAccessFactory(
+                _fx.GetRequiredService<IDbAccessFactory>(), TestDbConventions.GetDatabaseId(databaseType, "log"));
+            return new AuditLogWriteRepository(
+                TestRepositoryContext.Create(dbAccessFactory: factory), Guid.Empty, string.Empty);
+        }
+
+        private long CountLoginRows(DatabaseType databaseType, Guid rowId)
+        {
+            var dbAccess = _fx.GetRequiredService<IDbAccessFactory>()
+                .Create(TestDbConventions.GetDatabaseId(databaseType, "log"));
+            var result = dbAccess.Execute(new DbCommandSpec(DbCommandKind.Scalar,
+                "SELECT COUNT(*) FROM st_log_login WHERE sys_rowid={0}", rowId));
+            return Convert.ToInt64(result.Scalar, CultureInfo.InvariantCulture);
+        }
+
+        private static LoginAuditEntry NewLoginEntry(Guid rowId) => new()
+        {
+            SysRowId = rowId,
+            UserId = "demo",
+            Event = LoginEvent.LoginSucceeded,
+        };
+
+        private void RunWriteBatchPersistsEveryEntry(DatabaseType databaseType)
+        {
+            var first = Guid.NewGuid();
+            var second = Guid.NewGuid();
+
+            CreateWriteRepository(databaseType).WriteBatch([NewLoginEntry(first), NewLoginEntry(second)]);
+
+            Assert.Equal(1L, CountLoginRows(databaseType, first));
+            Assert.Equal(1L, CountLoginRows(databaseType, second));
+        }
+
+        private void RunWriteBatchFailureWritesNothing(DatabaseType databaseType)
+        {
+            var first = Guid.NewGuid();
+            var duplicate = Guid.NewGuid();
+            var repository = CreateWriteRepository(databaseType);
+
+            // The second and third entries share a `sys_rowid`, so the third violates the unique index.
+            Assert.ThrowsAny<InvalidOperationException>(() => repository.WriteBatch(
+                [NewLoginEntry(first), NewLoginEntry(duplicate), NewLoginEntry(duplicate)]));
+
+            Assert.Equal(0L, CountLoginRows(databaseType, first));
+            Assert.Equal(0L, CountLoginRows(databaseType, duplicate));
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: WriteBatch persists every entry of the batch")]
+        public void WriteBatch_SqlServer_PersistsEveryEntry() => RunWriteBatchPersistsEveryEntry(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: WriteBatch persists every entry of the batch")]
+        public void WriteBatch_Sqlite_PersistsEveryEntry() => RunWriteBatchPersistsEveryEntry(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server: a WriteBatch whose last entry fails leaves none of the batch's entries behind")]
+        public void WriteBatch_SqlServer_FailureWritesNothing() => RunWriteBatchFailureWritesNothing(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("PostgreSQL: a WriteBatch whose last entry fails leaves none of the batch's entries behind")]
+        public void WriteBatch_PostgreSQL_FailureWritesNothing() => RunWriteBatchFailureWritesNothing(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("SQLite: a WriteBatch whose last entry fails leaves none of the batch's entries behind")]
+        public void WriteBatch_Sqlite_FailureWritesNothing() => RunWriteBatchFailureWritesNothing(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("MySQL: a WriteBatch whose last entry fails leaves none of the batch's entries behind")]
+        public void WriteBatch_MySql_FailureWritesNothing() => RunWriteBatchFailureWritesNothing(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle: a WriteBatch whose last entry fails leaves none of the batch's entries behind")]
+        public void WriteBatch_Oracle_FailureWritesNothing() => RunWriteBatchFailureWritesNothing(DatabaseType.Oracle);
+
+        /// <summary>
+        /// Sends the repository's conventional <c>log</c> database id to the test log database of one dialect.
+        /// </summary>
+        private sealed class RedirectingDbAccessFactory(IDbAccessFactory inner, string databaseId) : IDbAccessFactory
+        {
+            public DbAccess Create(string requestedId) => inner.Create(databaseId);
+        }
     }
 }

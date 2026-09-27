@@ -11,11 +11,11 @@ namespace Polhem.Definition.Storage
     /// <summary>
     /// Read-only define storage for the tenant customization-override layer. Resolves files
     /// strictly under <c>{CustomizePath}/{customizeId}/</c> (via <see cref="CustomizeOnlyPathOptions"/>)
-    /// and serves only the five customizable types: Language, FormLayout, ProgramSettings,
+    /// and serves only the customizable types: Language, FormLayout, ProgramSettings,
     /// MenuSettings, PluginSettings.
     /// </summary>
     /// <remarks>
-    /// A missing customization file is a normal scenario, so the five supported getters return
+    /// A missing customization file is a normal scenario, so the supported getters return
     /// <c>null</c> rather than throwing or falling back to the base layer. Every other member
     /// throws <see cref="NotSupportedException"/> — the override layer never owns FormSchema,
     /// TableSchema, DbCategorySettings, nor any write operation.
@@ -167,7 +167,7 @@ namespace Polhem.Definition.Storage
         /// <inheritdoc/>
         /// <remarks>
         /// <para>
-        /// Only the five customizable types report a signal, and each resolves through the same
+        /// Only the customizable types report a signal, and each resolves through the same
         /// <see cref="CustomizeOnlyPathOptions"/> the getters use, so a consumer watches exactly the
         /// file this storage would read. Every other type reports no signal rather than throwing —
         /// unlike the getters, a consumer may ask about any define type here without first knowing

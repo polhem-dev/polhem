@@ -13,3 +13,4 @@ static Polhem.Base.Serialization.JsonCodec.Serialize(object! value, bool ignoreD
 Polhem.Base.BeeNameHint
 static Polhem.Base.BeeNameHint.AppendTo(string! message, string? name) -> string!
 static Polhem.Base.BeeNameHint.Matches(string? name) -> bool
+static Polhem.Base.Data.DataRowExtensions.RewriteVersions(this System.Data.DataRow! row, System.Func<System.Data.DataColumn!, System.Data.DataRowVersion, object!, object!>! rewrite) -> void

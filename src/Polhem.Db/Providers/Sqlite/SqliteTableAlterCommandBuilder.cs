@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Text;
 using Polhem.Base;
 using Polhem.Db.Ddl;
 using Polhem.Db.Schema;
@@ -35,11 +33,7 @@ namespace Polhem.Db.Providers.Sqlite
 
         /// <inheritdoc />
         public bool IsNarrowingChange(ITableChange change)
-        {
-            if (change is AlterFieldChange alter)
-                return AlterCompatibilityRules.IsNarrowing(alter.OldField, alter.NewField);
-            return false;
-        }
+            => AlterCompatibilityRules.IsNarrowingChange(change);
 
         /// <inheritdoc />
         public IReadOnlyList<string> GetStatements(string tableName, ITableChange change)
@@ -89,7 +83,7 @@ namespace Polhem.Db.Providers.Sqlite
                     "SQLite cannot add a PRIMARY KEY to an existing table via ALTER; this requires a rebuild.");
 
             string indexName = StringUtilities.Format(index.Name, tableName);
-            string fields = BuildIndexFieldList(index);
+            string fields = DdlFragments.BuildIndexFieldList(index, SqliteSchemaSyntax.QuoteName);
             string uniqueClause = index.Unique ? "UNIQUE " : string.Empty;
             return $"CREATE {uniqueClause}INDEX {SqliteSchemaSyntax.QuoteName(indexName)} ON {SqliteSchemaSyntax.QuoteName(tableName)} ({fields});";
         }
@@ -105,18 +99,6 @@ namespace Polhem.Db.Providers.Sqlite
                     "SQLite cannot drop a PRIMARY KEY from an existing table via ALTER; this requires a rebuild.");
 
             return $"DROP INDEX {SqliteSchemaSyntax.QuoteName(index.Name)};";
-        }
-
-        private static string BuildIndexFieldList(DbTableIndex index)
-        {
-            var sb = new StringBuilder();
-            foreach (IndexField field in index.IndexFields!)
-            {
-                if (sb.Length > 0) sb.Append(", ");
-                sb.Append(CultureInfo.InvariantCulture,
-                    $"{SqliteSchemaSyntax.QuoteName(field.FieldName)} {field.SortDirection.ToString().ToUpperInvariant()}");
-            }
-            return sb.ToString();
         }
     }
 }

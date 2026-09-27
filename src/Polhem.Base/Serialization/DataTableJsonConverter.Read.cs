@@ -148,8 +148,11 @@ namespace Polhem.Base.Serialization
             if (reader.TokenType != JsonTokenType.StartArray)
                 return list;
 
-            // Build type lookup for value conversion
-            var typeLookup = columns.ToDictionary(c => c.Name, c => DbTypeConverter.ToType(c.FieldType));
+            // Case-insensitive like `DataColumnCollection`, so a value key whose casing differs from its
+            // column definition still finds the column's type instead of staying an unconverted string.
+            var typeLookup = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+            foreach (var column in columns)
+                typeLookup.TryAdd(column.Name, DbTypeConverter.ToType(column.FieldType));
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
             {
@@ -185,7 +188,7 @@ namespace Polhem.Base.Serialization
 
         private static Dictionary<string, object?> ReadValueMap(ref Utf8JsonReader reader, Dictionary<string, Type> typeLookup)
         {
-            var map = new Dictionary<string, object?>();
+            var map = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
             if (reader.TokenType != JsonTokenType.StartObject)
                 return map;
 
