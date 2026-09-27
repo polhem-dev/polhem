@@ -97,7 +97,9 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Equal(expected, SerializeValue(inner));
         }
 
-        [DynamicCodeFact(DisplayName = "Enums of every underlying width serialize to the same bytes the non-generic MessagePack overload writes")]
+        [DynamicCodeFact]
+
+        [DisplayName("Enums of every underlying width serialize to the same bytes the non-generic MessagePack overload writes")]
         public void Serialize_Enums_MatchNonGenericPayload()
         {
             // The non-generic overload is what the named-type branch used for every value before enums had an AOT-safe
@@ -118,7 +120,9 @@ namespace Polhem.Api.Core.UnitTests
             }
         }
 
-        [DynamicCodeFact(DisplayName = "An allow-listed type with no AOT-safe path still round-trips where dynamic code is available")]
+        [DynamicCodeFact]
+
+        [DisplayName("An allow-listed type with no AOT-safe path still round-trips where dynamic code is available")]
         public void ParameterValue_CustomAllowListedType_RoundTripsWithDynamicCode()
         {
             var restored = RoundTripValue(new CustomPayload { Name = "custom" });

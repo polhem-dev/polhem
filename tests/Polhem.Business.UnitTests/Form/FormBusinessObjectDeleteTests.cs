@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using Polhem.Business.Form;
 using Polhem.Db.Dml;
 using Polhem.Definition;
@@ -103,7 +104,7 @@ namespace Polhem.Business.UnitTests.Form
                     .Build(CrudTestContext.ProgId, FilterCondition.Equal(SysFields.RowId, rowId));
                 ctx.DbAccess.Execute(spec);
             }
-            catch (Exception ex)
+            catch (DbException ex)
             {
                 Console.WriteLine($"DeleteTests cleanup of Employee#{rowId} failed — {ex.GetType().Name}: {ex.Message}");
             }

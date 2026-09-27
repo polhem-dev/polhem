@@ -11,7 +11,7 @@ namespace Polhem.Db.UnitTests
 {
     /// <summary>
     /// MySQL provider/dialect smoke tests. Verifies that the test fixture
-    /// (<see cref="Polhem.Tests.Shared.GlobalFixture"/>) registers both the ADO.NET
+    /// (<see cref="SharedDatabaseState.EnsureRegistered"/>, run once per process) registers both the ADO.NET
     /// provider factory and the dialect factory at startup, so subsequent MySQL
     /// builder/integration tests can resolve them via the registries.
     /// </summary>
@@ -41,7 +41,7 @@ namespace Polhem.Db.UnitTests
         {
             var factory = DbProviderRegistry.Get(DatabaseType.MySQL);
 
-            Assert.NotNull(factory);
+            Assert.Same(MySqlConnector.MySqlConnectorFactory.Instance, factory);
         }
 
         [Fact]
@@ -64,9 +64,9 @@ namespace Polhem.Db.UnitTests
 
             // Only builders without external dependencies are checked: CREATE / ALTER / Rebuild produce plain strings
             // and need no connection or FormSchema lookup.
-            Assert.NotNull(factory.CreateCreateTableCommandBuilder());
-            Assert.NotNull(factory.CreateTableAlterCommandBuilder());
-            Assert.NotNull(factory.CreateTableRebuildCommandBuilder());
+            Assert.IsType<MySqlCreateTableCommandBuilder>(factory.CreateCreateTableCommandBuilder());
+            Assert.IsType<MySqlTableAlterCommandBuilder>(factory.CreateTableAlterCommandBuilder());
+            Assert.IsType<MySqlTableRebuildCommandBuilder>(factory.CreateTableRebuildCommandBuilder());
             // `CreateTableSchemaProvider` constructs `new DbAccess(databaseId)` in its constructor. When CI has no
             // POLHEM_TEST_CONNSTR_MYSQL, 'common_mysql' is not registered in `DbConnectionManager` and it throws
             // `KeyNotFoundException`, so `MySqlIntegrationTests` covers it instead.

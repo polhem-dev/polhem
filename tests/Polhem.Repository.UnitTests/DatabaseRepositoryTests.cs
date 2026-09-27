@@ -9,7 +9,7 @@ namespace Polhem.Repository.UnitTests
 {
     /// <summary>
     /// Pure logic tests for the default implementation of <see cref="IDatabaseRepository"/>.
-    /// The instance comes from <see cref="SystemRepositoryFactory"/> (to avoid depending on the internal type directly).
+    /// The instance comes from the fixture's <see cref="IRepositoryFactory"/> (to avoid depending on the internal type directly).
     /// </summary>
     public class DatabaseRepositoryTests : IClassFixture<SharedDbFixture>
     {
@@ -102,8 +102,7 @@ namespace Polhem.Repository.UnitTests
 
             // Expect `Open` to throw `SqlException` or a compatible exception (connection failure).
             var ex = Record.Exception(() => repo.TestConnection(item));
-            Assert.NotNull(ex);
-            Assert.IsNotType<ArgumentException>(ex);
+            Assert.IsType<Microsoft.Data.SqlClient.SqlException>(ex);
         }
 
         [Fact]
@@ -121,8 +120,7 @@ namespace Polhem.Repository.UnitTests
             };
 
             var ex = Record.Exception(() => repo.TestConnection(item));
-            Assert.NotNull(ex);
-            Assert.IsNotType<ArgumentException>(ex);
+            Assert.IsType<Microsoft.Data.SqlClient.SqlException>(ex);
         }
 
         [Fact]
@@ -141,8 +139,7 @@ namespace Polhem.Repository.UnitTests
             };
 
             var ex = Record.Exception(() => repo.TestConnection(item));
-            Assert.NotNull(ex);
-            Assert.IsNotType<ArgumentException>(ex);
+            Assert.IsType<Microsoft.Data.SqlClient.SqlException>(ex);
         }
     }
 }

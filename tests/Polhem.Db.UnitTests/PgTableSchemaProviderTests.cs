@@ -20,7 +20,8 @@ namespace Polhem.Db.UnitTests
         {
             var helper = new PgTableSchemaProvider(DatabaseId, _fx.GetRequiredService<IDbConnectionManager>());
             var dbTable = helper.GetTableSchema("st_user");
-            Assert.NotNull(dbTable);
+            Assert.Equal("st_user", dbTable!.TableName, ignoreCase: true);
+            Assert.True(dbTable.Fields!.Contains("sys_id"));
         }
 
         [DbFact(DatabaseType.PostgreSQL)]

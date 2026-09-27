@@ -8,6 +8,7 @@ using Polhem.Definition.Language;
 using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
+using Polhem.Definition.Database;
 
 namespace Polhem.Api.Core.UnitTests.System
 {
@@ -55,7 +56,7 @@ namespace Polhem.Api.Core.UnitTests.System
                 Id = Guid.NewGuid().ToString(),
             };
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("System.Logout removes the SessionInfo and succeeds")]
         public async Task Logout_ValidSession_RemovesSessionInfo()
         {
@@ -69,8 +70,8 @@ namespace Polhem.Api.Core.UnitTests.System
             Assert.Null(sessionService.Get(accessToken));
         }
 
-        [Fact]
-        [DisplayName("System.Logout removes a session that has already entered a company")]
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("System.Logout clears CompanyId on the held SessionInfo and removes the session")]
         public async Task Logout_AfterEnteredCompany_ClearsThenRemoves()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -78,10 +79,12 @@ namespace Polhem.Api.Core.UnitTests.System
             var session = sessionService.Get(accessToken)!;
             session.CompanyScope = new SessionCompanyScope("C001", string.Empty, [], Guid.Empty, Guid.Empty, Guid.Empty);
             sessionService.Set(session);
+            Assert.Equal("C001", session.CompanyId);
 
             var response = await BuildExecutor(accessToken).ExecuteAsync(BuildRequest());
 
             Assert.Null(response.Error);
+            Assert.Null(session.CompanyId);
             Assert.Null(sessionService.Get(accessToken));
         }
     }

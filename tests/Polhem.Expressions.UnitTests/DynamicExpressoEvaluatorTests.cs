@@ -43,9 +43,10 @@ namespace Polhem.Expressions.UnitTests
         {
             // At any moment at least one of the two zones has a today that differs from UTC,
             // so the assertion is never vacuous.
+            var before = FrameworkClock.Today(timeZoneId);
             var result = _evaluator.Evaluate<DateOnly>("Today()", Vars(), timeZoneId, DateTimeBasis.Utc);
 
-            Assert.Equal(FrameworkClock.Today(timeZoneId), result);
+            Assert.InRange(result, before, FrameworkClock.Today(timeZoneId));
         }
 
         [Fact]
@@ -94,11 +95,12 @@ namespace Polhem.Expressions.UnitTests
         [DisplayName("Today() returns DateOnly, the type used for dates outside a DataSet")]
         public void Evaluate_TodayFunction_ReturnsDateOnly()
         {
+            var before = DateOnly.FromDateTime(DateTime.UtcNow);
             var result = _evaluator.Evaluate<DateOnly>(
                 "Today()", new Dictionary<string, object?>(StringComparer.Ordinal));
 
             // Without a time zone, the evaluator uses UTC as its basis (see `FrameworkClock`).
-            Assert.Equal(DateOnly.FromDateTime(DateTime.UtcNow), result);
+            Assert.InRange(result, before, DateOnly.FromDateTime(DateTime.UtcNow));
         }
 
         [Fact]
@@ -108,14 +110,13 @@ namespace Polhem.Expressions.UnitTests
             // The zone is far enough from UTC that its local today differs from the UTC today for most of the day.
             // The assertion still holds when they coincide, because it compares with that zone's today, not with UTC.
             // One evaluator serves every time zone: the zone is an argument, not evaluator state (ADR-032 D13).
-            var expected = DateOnly.FromDateTime(
-                TimeZoneInfo.ConvertTimeFromUtc(
-                    DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Pacific/Kiritimati")));
+            var zone = TimeZoneInfo.FindSystemTimeZoneById("Pacific/Kiritimati");
+            var before = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zone));
 
             var result = _evaluator.Evaluate<DateOnly>(
                 "Today()", new Dictionary<string, object?>(StringComparer.Ordinal), "Pacific/Kiritimati");
 
-            Assert.Equal(expected, result);
+            Assert.InRange(result, before, DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zone)));
         }
 
         [Fact]

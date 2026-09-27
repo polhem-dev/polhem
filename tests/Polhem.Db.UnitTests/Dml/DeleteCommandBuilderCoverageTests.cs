@@ -71,7 +71,7 @@ namespace Polhem.Db.UnitTests.Dml
             var builder = new DeleteCommandBuilder(BuildSchema("st_employee"), DatabaseType.SQLServer);
             var exception = Record.Exception(() => builder.Build("Employee", new UnknownFilterNode()));
 
-            Assert.NotNull(exception);
+            Assert.IsType<NotSupportedException>(exception);
         }
 
         private sealed class UnknownFilterNode : FilterNode

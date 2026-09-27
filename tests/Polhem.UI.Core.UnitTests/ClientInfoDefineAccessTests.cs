@@ -10,7 +10,7 @@ namespace Polhem.UI.Core.UnitTests
     /// the cache being cleared when AccessToken changes (two accesses return different instances).
     /// It mutates static state, so it runs serially in the <c>ClientInfoState</c> collection.
     /// </summary>
-    [Collection("ClientInfoState")]
+    [Collection(ClientInfoStateCollection.Name)]
     public class ClientInfoDefineAccessTests
     {
         private static readonly FieldInfo s_defineAccessField =

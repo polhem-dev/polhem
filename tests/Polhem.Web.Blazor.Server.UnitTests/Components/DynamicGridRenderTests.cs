@@ -51,7 +51,9 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 .Add(c => c.Layout, layout)
                 .Add(c => c.Rows, table));
 
-            Assert.NotNull(cut.Find("table.polhem-dynamic-grid"));
+            var cells = cut.FindAll("td.polhem-dynamic-grid__cell");
+            Assert.Equal("Alice", Assert.Single(cells).TextContent);
+            Assert.Contains("Name", cut.Find("th.polhem-dynamic-grid__header").TextContent, StringComparison.Ordinal);
         }
     }
 }

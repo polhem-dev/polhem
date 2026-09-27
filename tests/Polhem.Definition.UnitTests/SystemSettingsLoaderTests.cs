@@ -6,8 +6,8 @@ namespace Polhem.Definition.UnitTests
 {
     /// <summary>
     /// Tests for reading files at startup with SystemSettingsLoader.
-    /// Every test that writes files uses its own temp directory (through <see cref="TempDir"/>) and does not touch
-    /// process-wide statics such as <c>DefinePathInfo</c>, so it can run in parallel with other test classes.
+    /// Every test that writes files uses its own temp directory (through <see cref="TempDir"/>) and touches no
+    /// process-wide state.
     /// </summary>
     public class SystemSettingsLoaderTests
     {

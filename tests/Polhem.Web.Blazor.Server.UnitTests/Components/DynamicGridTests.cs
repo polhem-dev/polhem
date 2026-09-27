@@ -15,7 +15,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     /// (<c>FormatCell</c>, <c>BuildColumnStyle</c>, and the row-id read it delegates to
     /// <see cref="Polhem.Api.Client.FormDataGuard.TryGetRowId"/>) and
     /// the private computed property <c>VisibleColumns</c>.
-    /// Render cycle tests that need the Blazor renderer are left to bUnit integration tests.
+    /// The render cycle is covered with bUnit by <see cref="DynamicGridRenderTests"/>.
     /// </summary>
     public class DynamicGridTests
     {

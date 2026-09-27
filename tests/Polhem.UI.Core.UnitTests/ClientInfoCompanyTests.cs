@@ -9,7 +9,7 @@ namespace Polhem.UI.Core.UnitTests
     /// the company from the EnterCompany response and <see cref="ClientInfo.ClearCompanyContext"/> clears it. It mutates
     /// static state, so it runs serially in the <c>ClientInfoState</c> collection and restores the state at the end.
     /// </summary>
-    [Collection("ClientInfoState")]
+    [Collection(ClientInfoStateCollection.Name)]
     public class ClientInfoCompanyTests
     {
         [Fact]

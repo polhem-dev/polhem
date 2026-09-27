@@ -17,10 +17,14 @@ namespace Polhem.Base.UnitTests
         [DisplayName("Today returns the local calendar date of the given zone")]
         public void Today_UsesGivenZone()
         {
-            var expected = DateOnly.FromDateTime(
-                TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(Taipei)));
+            var zone = TimeZoneInfo.FindSystemTimeZoneById(Taipei);
+            // The expected day is read before and after the call and the result may equal either, so a run that
+            // crosses midnight cannot fail it.
+            var before = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zone));
+            var actual = FrameworkClock.Today(Taipei);
+            var after = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zone));
 
-            Assert.Equal(expected, FrameworkClock.Today(Taipei));
+            Assert.InRange(actual, before, after);
         }
 
         [Theory]
@@ -29,7 +33,9 @@ namespace Polhem.Base.UnitTests
         [DisplayName("A blank zone means UTC, not the machine zone")]
         public void Today_BlankZone_MeansUtc(string timeZoneId)
         {
-            Assert.Equal(DateOnly.FromDateTime(DateTime.UtcNow), FrameworkClock.Today(timeZoneId));
+            var before = DateOnly.FromDateTime(DateTime.UtcNow);
+            var actual = FrameworkClock.Today(timeZoneId);
+            Assert.InRange(actual, before, DateOnly.FromDateTime(DateTime.UtcNow));
         }
 
         [Fact]
@@ -45,7 +51,9 @@ namespace Polhem.Base.UnitTests
         [DisplayName("Now and Today agree for the same zone")]
         public void Now_AndToday_AgreeOnTheSameZone()
         {
-            Assert.Equal(DateOnly.FromDateTime(FrameworkClock.Now(Taipei)), FrameworkClock.Today(Taipei));
+            var before = DateOnly.FromDateTime(FrameworkClock.Now(Taipei));
+            var today = FrameworkClock.Today(Taipei);
+            Assert.InRange(today, before, DateOnly.FromDateTime(FrameworkClock.Now(Taipei)));
         }
 
         [Fact]

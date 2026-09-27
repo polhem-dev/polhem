@@ -62,7 +62,7 @@ namespace Polhem.Api.Core.UnitTests
             var converted = DateTimeZoneConverter.UtcToUser(BuildTableWithRow(), Taipei);
 
             Assert.NotNull(converted);
-            Assert.Equal(new DateTime(2026, 1, 1, 0, 0, 0), (DateTime)converted.Rows[0]["order_date"]);
+            Assert.Equal(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), (DateTime)converted.Rows[0]["order_date"]);
         }
 
         [Fact]
@@ -83,7 +83,7 @@ namespace Polhem.Api.Core.UnitTests
 
             // The marker read back is a string. If it were not parsed, the Date column would be treated as an instant and shifted to Taipei time.
             Assert.NotNull(converted);
-            Assert.Equal(new DateTime(2026, 1, 1, 0, 0, 0), (DateTime)converted.Rows[0]["order_date"]);
+            Assert.Equal(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), (DateTime)converted.Rows[0]["order_date"]);
         }
 
         [Fact]
@@ -149,7 +149,7 @@ namespace Polhem.Api.Core.UnitTests
         public void Convert_AddedRow_KeepsState()
         {
             var table = BuildTable();
-            table.Rows.Add(s_utc9Am, new DateTime(2026, 1, 1), "a");
+            table.Rows.Add(s_utc9Am, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), "a");
             Assert.Equal(DataRowState.Added, table.Rows[0].RowState);
 
             var converted = DateTimeZoneConverter.UtcToUser(table, Taipei);
@@ -207,7 +207,7 @@ namespace Polhem.Api.Core.UnitTests
         {
             var table = BuildTable();
             table.Columns["created_at"]!.AllowDBNull = true;
-            table.Rows.Add(DBNull.Value, new DateTime(2026, 1, 1), "a");
+            table.Rows.Add(DBNull.Value, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), "a");
             table.AcceptChanges();
 
             var converted = DateTimeZoneConverter.UtcToUser(table, Taipei);

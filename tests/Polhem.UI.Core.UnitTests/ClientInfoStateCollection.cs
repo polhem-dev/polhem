@@ -5,8 +5,10 @@ namespace Polhem.UI.Core.UnitTests
     /// xUnit runs every class in one collection sequentially; snapshot and restore alone only hold under serial
     /// execution.
     /// </summary>
-    [CollectionDefinition("ClientInfoState")]
-    public sealed class ClientInfoStateCollection
+    [CollectionDefinition(Name)]
+    public static class ClientInfoStateCollection
     {
+        /// <summary>The collection name. Reference this constant instead of repeating the string.</summary>
+        public const string Name = "ClientInfoState";
     }
 }

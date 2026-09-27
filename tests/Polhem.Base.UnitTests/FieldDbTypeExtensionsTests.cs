@@ -34,7 +34,9 @@ namespace Polhem.Base.UnitTests
         {
             // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
             // Asserting the local date always fails locally between 00:00 and 08:00 at UTC+8, and CI runs in UTC so it never sees it.
-            Assert.Equal(DateTime.UtcNow.Date, FieldDbType.Date.GetDefaultValue());
+            var dayBefore = DateTime.UtcNow.Date;
+            var actual = Assert.IsType<DateTime>(FieldDbType.Date.GetDefaultValue());
+            Assert.InRange(actual, dayBefore, DateTime.UtcNow.Date);
 
             var now = FieldDbType.DateTime.GetDefaultValue();
             Assert.IsType<DateTime>(now);

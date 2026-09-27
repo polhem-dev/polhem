@@ -33,7 +33,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 .Add(c => c.Layout, layout)
                 .Add(c => c.DataObject, dataObject));
 
-            Assert.NotNull(cut.Find("input[type='month']"));
+            Assert.Single(cut.FindAll("input[type='month']"));
         }
 
         [Fact]
@@ -50,7 +50,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
                 .Add(c => c.Layout, layout)
                 .Add(c => c.DataObject, dataObject));
 
-            Assert.NotNull(cut.Find("textarea.polhem-dynamic-form__input--memo"));
+            Assert.Single(cut.FindAll("textarea.polhem-dynamic-form__input--memo"));
         }
 
         [Fact]

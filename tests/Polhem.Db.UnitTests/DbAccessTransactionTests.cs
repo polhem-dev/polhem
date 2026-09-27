@@ -63,8 +63,8 @@ namespace Polhem.Db.UnitTests
 
             var result = await dbAccess.ExecuteAsync(spec);
 
-            Assert.NotNull(result);
-            Assert.NotNull(result.Scalar);
+            // The fixture seeds exactly one user with sys_id "001".
+            Assert.Equal(1, Convert.ToInt32(result.Scalar, System.Globalization.CultureInfo.InvariantCulture));
         }
 
         // ── Execute(spec, transaction) - Scalar + DataTable branches ────────
@@ -83,8 +83,8 @@ namespace Polhem.Db.UnitTests
             var result = dbAccess.Execute(spec, tran);
             tran.Rollback();
 
-            Assert.NotNull(result);
-            Assert.NotNull(result.Scalar);
+            // The fixture seeds exactly one user with sys_id "001".
+            Assert.Equal(1, Convert.ToInt32(result.Scalar, System.Globalization.CultureInfo.InvariantCulture));
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -101,8 +101,7 @@ namespace Polhem.Db.UnitTests
             var result = dbAccess.Execute(spec, tran);
             tran.Rollback();
 
-            Assert.NotNull(result);
-            Assert.NotNull(result.Table);
+            Assert.Equal("001", Assert.Single(result.Table!.Rows.Cast<System.Data.DataRow>())["sys_id"]);
         }
 
         // ── ExecuteAsync(spec, transaction) - Scalar + DataTable branches ───
@@ -121,8 +120,8 @@ namespace Polhem.Db.UnitTests
             var result = await dbAccess.ExecuteAsync(spec, tran);
             await tran.RollbackAsync();
 
-            Assert.NotNull(result);
-            Assert.NotNull(result.Scalar);
+            // The fixture seeds exactly one user with sys_id "001".
+            Assert.Equal(1, Convert.ToInt32(result.Scalar, System.Globalization.CultureInfo.InvariantCulture));
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -139,8 +138,7 @@ namespace Polhem.Db.UnitTests
             var result = await dbAccess.ExecuteAsync(spec, tran);
             await tran.RollbackAsync();
 
-            Assert.NotNull(result);
-            Assert.NotNull(result.Table);
+            Assert.Equal("001", Assert.Single(result.Table!.Rows.Cast<System.Data.DataRow>())["sys_id"]);
         }
     }
 }

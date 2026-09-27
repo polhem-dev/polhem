@@ -4,6 +4,8 @@ using Polhem.Definition.Identity;
 using Polhem.Tests.Shared;
 
 using Polhem.Definition;
+using Polhem.Definition.Database;
+
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
@@ -15,7 +17,7 @@ namespace Polhem.Business.UnitTests
 
         public SystemBusinessObjectLogoutTests(SharedDbFixture fx) { _fx = fx; }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("Logout removes the SessionInfo of a valid session")]
         public void Logout_ValidSession_RemovesSessionInfo()
         {
@@ -29,8 +31,8 @@ namespace Polhem.Business.UnitTests
             Assert.Null(sessionService.Get(accessToken));
         }
 
-        [Fact]
-        [DisplayName("Logout clears CompanyId and removes the session for a session that has entered a company")]
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("Logout clears CompanyId on the held SessionInfo and removes the session")]
         public void Logout_AfterEnteredCompany_ClearsCompanyIdAndRemoves()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
@@ -39,13 +41,16 @@ namespace Polhem.Business.UnitTests
             session.CompanyScope = new SessionCompanyScope("C001", string.Empty, [], Guid.Empty, Guid.Empty, Guid.Empty);
             sessionService.Set(session);
             var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
+            Assert.Equal("C001", session.CompanyId);
 
             bo.Logout(new LogoutArgs());
 
+            // The held reference is how a consumer that still has the SessionInfo observes the clear.
+            Assert.Null(session.CompanyId);
             Assert.Null(sessionService.Get(accessToken));
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("Logout is idempotent and succeeds for a session that does not exist")]
         public void Logout_UnknownSession_Idempotent()
         {
@@ -53,7 +58,7 @@ namespace Polhem.Business.UnitTests
 
             var result = bo.Logout(new LogoutArgs());
 
-            Assert.NotNull(result);
+            Assert.IsType<LogoutResult>(result);
         }
 
         [Fact]

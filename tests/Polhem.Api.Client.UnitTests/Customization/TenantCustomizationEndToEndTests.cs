@@ -39,7 +39,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
     /// <c>ApiClientInfo.ConnectType</c>, which the other classes in that collection mutate.
     /// </para>
     /// </remarks>
-    [Collection("ApiClientInfoState")]
+    [Collection(ApiClientInfoStateCollection.Name)]
     public class TenantCustomizationEndToEndTests : IClassFixture<TenantCustomizationFixture>
     {
         private const string SeedUserId = "001";

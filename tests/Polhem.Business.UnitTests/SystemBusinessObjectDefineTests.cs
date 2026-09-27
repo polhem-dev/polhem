@@ -16,11 +16,11 @@ namespace Polhem.Business.UnitTests
     /// <summary>
     /// Pure logic tests of <see cref="SystemBusinessObject"/> integrated with <c>IDefineAccess</c> (resolved through DI), using in-memory access without a DB.
     /// </summary>
-    public class SystemBusinessObjectDefineTests : IClassFixture<SharedDbFixture>
+    public class SystemBusinessObjectDefineTests : IClassFixture<PolhemTestFixture>
     {
-        private readonly SharedDbFixture _fx;
+        private readonly PolhemTestFixture _fx;
 
-        public SystemBusinessObjectDefineTests(SharedDbFixture fx) { _fx = fx; }
+        public SystemBusinessObjectDefineTests(PolhemTestFixture fx) { _fx = fx; }
         [Fact]
         [DisplayName("GetCommonConfiguration returns non-empty XML")]
         public void GetCommonConfiguration_ReturnsNonEmptyXml()

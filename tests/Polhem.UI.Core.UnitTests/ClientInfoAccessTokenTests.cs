@@ -10,7 +10,7 @@ namespace Polhem.UI.Core.UnitTests
     /// Covers that the <c>AccessToken</c> setter does not reset the connector cache when given the same token.
     /// It mutates static state, so it shares the collection with the other ClientInfoState tests to run serially.
     /// </summary>
-    [Collection("ClientInfoState")]
+    [Collection(ClientInfoStateCollection.Name)]
     public class ClientInfoAccessTokenTests
     {
         private static readonly FieldInfo s_systemConnectorField =

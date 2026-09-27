@@ -8,6 +8,7 @@ using Polhem.Definition.Language;
 using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
+using Polhem.Definition.Database;
 
 namespace Polhem.Api.Core.UnitTests.System
 {
@@ -27,7 +28,7 @@ namespace Polhem.Api.Core.UnitTests.System
 
         public EnterCompanyJsonRpcRoundTripTests(SharedDbFixture fx) { _fx = fx; }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("System.EnterCompany dispatches through JsonRpcExecutor and writes SessionInfo.CompanyId")]
         public async Task EnterCompany_ThroughJsonRpc_DispatchesAndBindsCompany()
         {
@@ -79,7 +80,7 @@ namespace Polhem.Api.Core.UnitTests.System
             Assert.Equal("C001", session.CompanyId);
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("System.EnterCompany returns an RpcError for an unknown CompanyId and leaves SessionInfo.CompanyId unchanged")]
         public async Task EnterCompany_UnknownCompany_ReturnsRpcError()
         {

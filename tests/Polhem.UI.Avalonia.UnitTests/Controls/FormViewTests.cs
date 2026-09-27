@@ -621,7 +621,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         /// Overrides the <c>Resolve*</c> hooks so tests never read <c>ClientInfo</c>, and
         /// surfaces the <c>OnFormModeChanged</c> hook for assertions.
         /// </summary>
-        // ---- live recomputation wiring (Phase 2 PR5b) ----
+        // ---- live recomputation wiring ----
 
         private const string OrderProgId = "Order";
 
@@ -701,6 +701,8 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         [DisplayName("After NewAsync, empty master fields are filled immediately from DefaultValueExpression (order_date = Today())")]
         public async Task LiveRecompute_NewAsync_AppliesDefaultValueExpression()
         {
+            // Read before the act as well as after it, so a run that crosses midnight cannot fail.
+            var dayBefore = DateTime.UtcNow.Date;
             var connector = new FakeFormApiConnector
             {
                 GetNewDataHandler = () =>
@@ -722,7 +724,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
             // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
             // Asserting the local date always fails locally between 00:00 and 08:00 at UTC+8, which CI running in UTC never sees.
-            Assert.Equal(DateTime.UtcNow.Date, view.DataObject!.MasterRow!["order_date"]);
+            Assert.InRange((DateTime)view.DataObject!.MasterRow!["order_date"], dayBefore, DateTime.UtcNow.Date);
         }
 
         [Fact]

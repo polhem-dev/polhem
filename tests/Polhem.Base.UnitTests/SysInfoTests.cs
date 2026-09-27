@@ -5,7 +5,7 @@ namespace Polhem.Base.UnitTests
     /// <summary>
     /// Tests for the SysInfo properties and initialization that are not security related.
     /// </summary>
-    [Collection("SysInfoStatic")]
+    [Collection(SysInfoStaticCollection.Name)]
     public class SysInfoTests : IDisposable
     {
         private readonly string _originalVersion;

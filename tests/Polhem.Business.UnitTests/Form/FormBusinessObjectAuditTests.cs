@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using Polhem.Business.AuditLog;
 using Polhem.Business.Form;
 using Polhem.Business.UnitTests.Fakes;
@@ -45,7 +46,7 @@ namespace Polhem.Business.UnitTests.Form
         /// <summary>Records whether the extension points after commit ran.</summary>
         private sealed class AfterStepProbeBo : FormBusinessObject
         {
-            public AfterStepProbeBo(IBusinessObjectContext ctx) : base(ctx, Guid.NewGuid(), CrudTestContext.ProgId) { }
+            public AfterStepProbeBo(IBusinessObjectContext ctx, Guid accessToken) : base(ctx, accessToken, CrudTestContext.ProgId) { }
 
             public bool AfterSaveRan { get; private set; }
 
@@ -82,7 +83,7 @@ namespace Polhem.Business.UnitTests.Form
             => Assert.IsType<ChangeAuditEntry>(Assert.Single(writer.Entries));
 
         [DbFact(DatabaseType.SQLite)]
-        [DisplayName("Save of an added row writes an Insert audit entry carrying the master table name and sys_rowid")]
+        [DisplayName("Save of an added row writes an Insert audit entry carrying the master table, sys_rowid and the session identity")]
         public void Save_AddedRow_WritesInsertAudit()
         {
             var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
@@ -108,6 +109,9 @@ namespace Polhem.Business.UnitTests.Form
                 Assert.Equal($"{CrudTestContext.ProgId}.Save", entry.Source);
                 Assert.False(entry.IsSensitive);
                 Assert.False(string.IsNullOrEmpty(entry.ChangesXml));
+                Assert.Equal(CrudTestContext.UserId, entry.UserId);
+                Assert.Equal(CrudTestContext.CompanyId, entry.CompanyId);
+                Assert.Equal(CrudTestContext.CompanyName, entry.CompanyName);
             }
             finally
             {
@@ -215,6 +219,7 @@ namespace Polhem.Business.UnitTests.Form
                 Assert.Equal(CrudTestContext.ProgId, entry.ProgId);
                 Assert.Equal(rowId.ToString(), entry.RowKey);
                 Assert.Equal($"{CrudTestContext.ProgId}.GetData", entry.Source);
+                Assert.Equal(CrudTestContext.CompanyId, entry.CompanyId);
             }
             finally
             {
@@ -364,7 +369,7 @@ namespace Polhem.Business.UnitTests.Form
                 master.Rows[0][SysFields.Name] = "稽核失敗仍存檔";
 
                 var bo = new AfterStepProbeBo(ctx.CreateContextWithOverrides(
-                    [.. AuditOverrides(new ThrowingAuditLogWriter()), (typeof(ILoggerFactory), loggers)]));
+                    [.. AuditOverrides(new ThrowingAuditLogWriter()), (typeof(ILoggerFactory), loggers)]), ctx.CreateSessionToken());
                 bo.Save(new SaveArgs { DataSet = dataSet });
 
                 Assert.True(bo.AfterSaveRan);
@@ -393,7 +398,7 @@ namespace Polhem.Business.UnitTests.Form
                 InsertEmployee(ctx, rowId, $"G{runId}", "稽核失敗仍刪除");
 
                 var bo = new AfterStepProbeBo(ctx.CreateContextWithOverrides(
-                    [.. AuditOverrides(new ThrowingAuditLogWriter()), (typeof(ILoggerFactory), loggers)]));
+                    [.. AuditOverrides(new ThrowingAuditLogWriter()), (typeof(ILoggerFactory), loggers)]), ctx.CreateSessionToken());
                 var result = bo.Delete(new DeleteArgs { RowId = rowId });
 
                 Assert.Equal(1, result.RowsAffected);
@@ -431,7 +436,7 @@ namespace Polhem.Business.UnitTests.Form
                 ctx.DbAccess.Execute(new DeleteCommandBuilder(ctx.EmployeeSchema, ctx.DbType)
                     .Build(CrudTestContext.ProgId, FilterCondition.Equal(SysFields.RowId, rowId)));
             }
-            catch (Exception ex)
+            catch (DbException ex)
             {
                 Console.WriteLine($"AuditTests cleanup of Employee#{rowId} failed — {ex.GetType().Name}: {ex.Message}");
             }

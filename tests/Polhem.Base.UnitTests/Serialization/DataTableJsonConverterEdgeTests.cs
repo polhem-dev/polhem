@@ -212,7 +212,7 @@ namespace Polhem.Base.UnitTests.Serialization
         {
             var result = DataTableJsonConverter.ConvertValue("2026-04-17T08:30:00", typeof(DateTime));
             var typed = Assert.IsType<DateTime>(result);
-            Assert.Equal(new DateTime(2026, 4, 17, 8, 30, 0), typed);
+            Assert.Equal(new DateTime(2026, 4, 17, 8, 30, 0, DateTimeKind.Unspecified), typed);
         }
 
         [Fact]
@@ -282,8 +282,9 @@ namespace Polhem.Base.UnitTests.Serialization
             }
             """;
             var dt = JsonSerializer.Deserialize<DataTable>(json, Options())!;
-            // The value is converted to a string through `Convert.ChangeType`.
-            Assert.NotNull(dt.Rows[0]["Big"]);
+            // The value is converted to a string through `Convert.ChangeType`; no digits are lost on the way.
+            var text = Assert.IsType<string>(dt.Rows[0]["Big"]);
+            Assert.Equal(1.5e20, double.Parse(text, System.Globalization.CultureInfo.InvariantCulture));
         }
 
         private static DataTable BuildSampleTable()
@@ -404,7 +405,7 @@ namespace Polhem.Base.UnitTests.Serialization
         public void ReadWrite_UnchangedRow_RoundTrip()
         {
             // `Write_UnchangedRow_WritesCurrentOnly` checks only the write side. This test runs a full round-trip so
-            // the restore logic enters the `DataRowState.Unchanged` case (line 418-422) and calls `AcceptChanges`.
+            // the restore logic enters its `DataRowState.Unchanged` case and calls `AcceptChanges`.
             var dt = BuildSampleTable();
             dt.Rows.Add(1, "Alice");
             dt.AcceptChanges();

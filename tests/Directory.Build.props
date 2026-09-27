@@ -11,9 +11,11 @@
          some analyzer rules. WarningsAsErrors hardens them by name, and the Sonar ruleset cannot override it. -->
     <WarningsAsErrors>$(WarningsAsErrors);IDE0005;CA1861;S2699</WarningsAsErrors>
 
-    <!-- IDE0005 is only detected at compile time when GenerateDocumentationFile is also enabled.
-         Test projects have no public API to document, so every XML comment warning is turned off. -->
+    <!-- IDE0005 is only detected at compile time when GenerateDocumentationFile is also enabled, which also makes
+         the compiler check every XML comment. Test code does not have to document each member (CS1591), but the
+         comments it does write keep the same guard as src: a <see cref> to a type or member that no longer exists
+         fails the build (CS1574), and malformed XML does too (CS1570). -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1570;CS1572;CS1573;CS1574;CS1580;CS1581;CS1584;CS1587;CS1589;CS1591;CS1592</NoWarn>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 </Project>

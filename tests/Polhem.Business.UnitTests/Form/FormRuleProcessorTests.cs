@@ -92,6 +92,8 @@ namespace Polhem.Business.UnitTests.Form
         [DisplayName("Default value expression: an empty column on an Added row is filled with Today()")]
         public void ApplyBeforeSave_FillsDefaultValueExpression_WhenEmpty()
         {
+            // Read before the act as well as after it, so a run that crosses midnight cannot fail.
+            var dayBefore = DateTime.UtcNow.Date;
             var schema = BuildOrderSchema();
             var dataSet = BuildOrderDataSet(price: 1m, qty: 1m, status: "Draft");
 
@@ -99,7 +101,7 @@ namespace Polhem.Business.UnitTests.Form
 
             // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
             // Asserting the local date would always fail locally at 00:00–08:00 in UTC+8, and CI running in UTC would never see it.
-            Assert.Equal(DateTime.UtcNow.Date, dataSet.Tables["Order"]!.Rows[0]["order_date"]);
+            Assert.InRange((DateTime)dataSet.Tables["Order"]!.Rows[0]["order_date"], dayBefore, DateTime.UtcNow.Date);
         }
 
         [Fact]

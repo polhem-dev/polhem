@@ -18,8 +18,11 @@ namespace Polhem.Definition.UnitTests.Logging
         [DisplayName("LogOptions default constructor initializes the DbAccess sub-options")]
         public void DefaultConstructor_InitializesDbAccess()
         {
-            var options = new LogOptions();
-            Assert.NotNull(options.DbAccess);
+            var first = new LogOptions();
+            var second = new LogOptions();
+            Assert.NotNull(first.DbAccess);
+            // Each instance owns its sub-options; a shared default would let one host's change leak into another.
+            Assert.NotSame(first.DbAccess, second.DbAccess);
         }
 
         [Fact]

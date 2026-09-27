@@ -13,9 +13,10 @@ namespace Polhem.Api.Core.UnitTests
     /// A collection does not span assemblies, so the definition of the same name in <c>Polhem.Base.UnitTests</c>
     /// does not apply here; each assembly declares its own.
     /// </remarks>
-    [CollectionDefinition("SysInfoStatic")]
-    public class SysInfoStaticCollection
+    [CollectionDefinition(Name)]
+    public static class SysInfoStaticCollection
     {
-        // A pure marker with no fixture.
+        /// <summary>The collection name. Reference this constant instead of repeating the string.</summary>
+        public const string Name = "SysInfoStatic";
     }
 }

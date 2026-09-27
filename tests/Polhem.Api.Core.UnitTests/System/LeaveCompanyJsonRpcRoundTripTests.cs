@@ -8,6 +8,7 @@ using Polhem.Definition.Language;
 using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
+using Polhem.Definition.Database;
 
 namespace Polhem.Api.Core.UnitTests.System
 {
@@ -55,7 +56,7 @@ namespace Polhem.Api.Core.UnitTests.System
                 Id = Guid.NewGuid().ToString(),
             };
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("System.LeaveCompany clears SessionInfo.CompanyId and succeeds")]
         public async Task LeaveCompany_AfterEntered_ClearsCompanyId()
         {

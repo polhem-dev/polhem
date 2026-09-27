@@ -104,9 +104,11 @@ namespace Polhem.Definition.UnitTests.Forms
         [DisplayName("DefaultForDbType returns the UTC date for Date and a DateTime value for DateTime")]
         public void DefaultForDbType_DateTypes_ReturnTodayAndNow()
         {
+            // Read before the act as well as after it, so a run that crosses midnight cannot fail.
+            var dayBefore = DateTime.UtcNow.Date;
             // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
             // Asserting the local date would always fail locally between 00:00 and 08:00 in UTC+8, and CI running in UTC would never see it.
-            Assert.Equal(DateTime.UtcNow.Date, FormRowDefaults.DefaultForDbType(FieldDbType.Date));
+            Assert.InRange((DateTime)FormRowDefaults.DefaultForDbType(FieldDbType.Date), dayBefore, DateTime.UtcNow.Date);
             Assert.IsType<DateTime>(FormRowDefaults.DefaultForDbType(FieldDbType.DateTime));
         }
 
@@ -169,6 +171,8 @@ namespace Polhem.Definition.UnitTests.Forms
         [DisplayName("Apply on a table built with AddColumn sets Date to today in the user's time zone and DateTime to now by basis")]
         public void Apply_OnAddColumnTable_SeedsDateOnUserDayAndDateTimeOnBasis(string timeZoneId)
         {
+            // Read before the act as well as after it, so a run that crosses midnight cannot fail.
+            var zoneDayBefore = FrameworkClock.Today(timeZoneId).ToDateTime(TimeOnly.MinValue);
             // The server's `GetNewData` and the client's `BuildEmptyDataSet` both build tables with `AddColumn`. If a column carried a clock
             // default from when it was created, `NewRow()` would already have a value, and `Apply` would skip it and leave a UTC reading (ADR-032 D12).
             // At any moment at least one of the two time zones has a "today" different from UTC, so the Date assertion is never vacuous.
@@ -184,7 +188,7 @@ namespace Polhem.Definition.UnitTests.Forms
 
             FormRowDefaults.Apply(formTable, row, null, timeZoneId, DateTimeBasis.Utc);
 
-            Assert.Equal(FrameworkClock.Today(timeZoneId).ToDateTime(TimeOnly.MinValue), (DateTime)row["order_date"]);
+            Assert.InRange((DateTime)row["order_date"], zoneDayBefore, FrameworkClock.Today(timeZoneId).ToDateTime(TimeOnly.MinValue));
             Assert.InRange((DateTime)row["created_at"], utcBefore, DateTime.UtcNow);
         }
     }

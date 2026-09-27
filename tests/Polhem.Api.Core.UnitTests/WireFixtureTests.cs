@@ -9,6 +9,7 @@ using Polhem.Api.Core.Wire;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Sorting;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Api.Core.UnitTests
 {
@@ -180,12 +181,7 @@ namespace Polhem.Api.Core.UnitTests
 
         private static string FixtureDirectory()
         {
-            var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "Polhem.slnx")))
-                dir = dir.Parent;
-
-            Assert.NotNull(dir);   // Not finding the repository root must not pass silently.
-            return Path.Combine(dir!.FullName, "wire-fixtures", "bodies");
+            return Path.Combine(RepoRoot.Find(), "wire-fixtures", "bodies");
         }
 
         private static bool RegenerateRequested =>

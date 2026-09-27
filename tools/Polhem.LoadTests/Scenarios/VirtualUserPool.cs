@@ -102,7 +102,7 @@ namespace Polhem.LoadTests.Scenarios
         /// </summary>
         /// <param name="virtualUserIndex">The virtual user index.</param>
         /// <returns>The account id.</returns>
-        private string ResolveUserId(int virtualUserIndex)
+        internal string ResolveUserId(int virtualUserIndex)
         {
             var index = _auth.TokenStrategy == TokenStrategy.Shared
                 ? 0

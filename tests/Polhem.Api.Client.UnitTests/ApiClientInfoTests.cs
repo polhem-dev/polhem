@@ -5,9 +5,9 @@ namespace Polhem.Api.Client.UnitTests
     /// <summary>
     /// Pure logic tests for the static properties of <see cref="ApiClientInfo"/>. Like <c>ApiConnectValidatorTests</c>
     /// it mutates the process-wide static <c>ApiClientInfo.SupportedConnectTypes</c>, so both are in
-    /// <c>[Collection("ApiClientInfoState")]</c> and run serially, avoiding races between parallel classes.
+    /// <c>[Collection(ApiClientInfoStateCollection.Name)]</c> and run serially, avoiding races between parallel classes.
     /// </summary>
-    [Collection("ApiClientInfoState")]
+    [Collection(ApiClientInfoStateCollection.Name)]
     public class ApiClientInfoTests
     {
         /// <summary>

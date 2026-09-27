@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using Polhem.Business.Form;
 using Polhem.Db;
 using Polhem.Db.Dml;
@@ -166,7 +167,7 @@ namespace Polhem.Business.UnitTests.Form
                     .Build("Employee", FilterCondition.Equal("sys_rowid", rowId));
                 ctx.DbAccess.Execute(spec);
             }
-            catch (Exception ex)
+            catch (DbException ex)
             {
                 // Cleanup is best-effort: the row may not exist if the seed INSERT failed, and this must not mask the assertion failure message.
                 Console.WriteLine($"FormBusinessObjectGetLookupTests: cleanup of Employee#{rowId} failed — {ex.GetType().Name}: {ex.Message}");
@@ -202,13 +203,13 @@ namespace Polhem.Business.UnitTests.Form
             public FormBusinessObject CreateBo()
             {
                 var ctx = CreateContext();
-                return new FormBusinessObject(ctx, Guid.NewGuid(), ProgId);
+                return new FormBusinessObject(ctx, TestSessionFactory.CreateAccessToken(_fx), ProgId);
             }
 
             public FilteredLookupBo CreateFilteredBo(FilterNode filter)
             {
                 var ctx = CreateContext();
-                return new FilteredLookupBo(ctx, Guid.NewGuid(), ProgId, filter);
+                return new FilteredLookupBo(ctx, TestSessionFactory.CreateAccessToken(_fx), ProgId, filter);
             }
 
             private IBusinessObjectContext CreateContext()

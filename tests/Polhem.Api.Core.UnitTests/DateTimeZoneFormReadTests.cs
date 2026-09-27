@@ -118,7 +118,7 @@ namespace Polhem.Api.Core.UnitTests
                     "VALUES ({0}, {1}, {2})",
                     rowId, s_storedUtc, s_storedDay);
 
-                var loaded = new FormBusinessObject(form.CreateContext(), Guid.NewGuid(), progId)
+                var loaded = new FormBusinessObject(form.CreateContext(), TestSessionFactory.CreateAccessToken(_fx), progId)
                     .GetData(new GetDataArgs { RowId = rowId }).DataSet!;
                 return DateTimeZoneConverter.UtcToUser(transport(loaded), Taipei)!.Tables[progId]!.Rows[0];
             }

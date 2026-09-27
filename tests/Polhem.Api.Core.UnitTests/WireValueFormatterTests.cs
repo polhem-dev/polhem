@@ -17,7 +17,8 @@ namespace Polhem.Api.Core.UnitTests
     /// </remarks>
     public class WireValueFormatterTests
     {
-        [Fact(DisplayName = "ParameterCollection round-trips safe primitive types")]
+        [Fact]
+        [DisplayName("ParameterCollection round-trips safe primitive types")]
         public void ParameterCollection_AllowedPrimitiveTypes_RoundTrip()
         {
             var original = new ParameterCollection
@@ -89,7 +90,9 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Equal(guid, restored[2]);
         }
 
-        [Fact(DisplayName = "ParameterCollection round-trips DateOnly (a calendar-date filter value)")]
+        [Fact]
+
+        [DisplayName("ParameterCollection round-trips DateOnly (a calendar-date filter value)")]
         public void ParameterCollection_DateOnly_RoundTrip()
         {
             var original = new ParameterCollection
@@ -104,7 +107,9 @@ namespace Polhem.Api.Core.UnitTests
             Assert.Equal(new DateOnly(2026, 7, 25), restored["DateOnlyValue"].Value);
         }
 
-        [Fact(DisplayName = "A DateOnly condition value of FilterCondition round-trips")]
+        [Fact]
+
+        [DisplayName("A DateOnly condition value of FilterCondition round-trips")]
         public void FilterCondition_DateOnlyValue_RoundTrip()
         {
             var original = FilterCondition.Equal("hire_date", new DateOnly(2026, 7, 25));

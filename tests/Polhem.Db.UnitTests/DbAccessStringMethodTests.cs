@@ -17,7 +17,8 @@ namespace Polhem.Db.UnitTests
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             int affected = dbAccess.ExecuteNonQuery(
                 "UPDATE st_user SET note={1} WHERE sys_id={0}", "001", "test-string-overload");
-            Assert.True(affected >= 0);
+            // The fixture seeds exactly one user with sys_id "001".
+            Assert.Equal(1, affected);
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -27,7 +28,7 @@ namespace Polhem.Db.UnitTests
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             object? value = dbAccess.ExecuteScalar(
                 "SELECT COUNT(*) FROM st_user WHERE sys_id={0}", "001");
-            Assert.NotNull(value);
+            Assert.Equal(1, Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture));
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -37,7 +38,7 @@ namespace Polhem.Db.UnitTests
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             var table = dbAccess.ExecuteDataTable(
                 "SELECT sys_id FROM st_user WHERE sys_id={0}", "001");
-            Assert.NotNull(table);
+            Assert.Equal("001", Assert.Single(table!.Rows.Cast<System.Data.DataRow>())["sys_id"]);
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -47,7 +48,7 @@ namespace Polhem.Db.UnitTests
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             int affected = await dbAccess.ExecuteNonQueryAsync(
                 "UPDATE st_user SET note={1} WHERE sys_id={0}", "001", "test-async-overload");
-            Assert.True(affected >= 0);
+            Assert.Equal(1, affected);
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -57,7 +58,7 @@ namespace Polhem.Db.UnitTests
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             object? value = await dbAccess.ExecuteScalarAsync(
                 "SELECT COUNT(*) FROM st_user WHERE sys_id={0}", "001");
-            Assert.NotNull(value);
+            Assert.Equal(1, Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture));
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -67,7 +68,7 @@ namespace Polhem.Db.UnitTests
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             var table = await dbAccess.ExecuteDataTableAsync(
                 "SELECT sys_id FROM st_user WHERE sys_id={0}", "001");
-            Assert.NotNull(table);
+            Assert.Equal("001", Assert.Single(table!.Rows.Cast<System.Data.DataRow>())["sys_id"]);
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -81,8 +82,7 @@ namespace Polhem.Db.UnitTests
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             var result = dbAccess.ExecuteBatch(batch);
 
-            Assert.NotNull(result);
-            Assert.Single(result.Results);
+            Assert.Equal(1, Convert.ToInt32(Assert.Single(result.Results).Scalar, System.Globalization.CultureInfo.InvariantCulture));
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -96,8 +96,7 @@ namespace Polhem.Db.UnitTests
             var dbAccess = _fx.NewDbAccess("common_sqlserver");
             var result = await dbAccess.ExecuteBatchAsync(batch);
 
-            Assert.NotNull(result);
-            Assert.Single(result.Results);
+            Assert.Equal(1, Convert.ToInt32(Assert.Single(result.Results).Scalar, System.Globalization.CultureInfo.InvariantCulture));
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -114,7 +113,8 @@ namespace Polhem.Db.UnitTests
             var result = dbAccess.Execute(spec, tran);
             tran.Rollback();
 
-            Assert.NotNull(result);
+            Assert.Equal(DbCommandKind.NonQuery, result.Kind);
+            Assert.Equal(1, result.RowsAffected);
         }
 
         [DbFact(DatabaseType.SQLServer)]
@@ -131,7 +131,8 @@ namespace Polhem.Db.UnitTests
             var result = await dbAccess.ExecuteAsync(spec, tran);
             await tran.RollbackAsync();
 
-            Assert.NotNull(result);
+            Assert.Equal(DbCommandKind.NonQuery, result.Kind);
+            Assert.Equal(1, result.RowsAffected);
         }
     }
 }

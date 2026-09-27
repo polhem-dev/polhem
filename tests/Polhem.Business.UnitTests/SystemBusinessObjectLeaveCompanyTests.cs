@@ -5,6 +5,8 @@ using Polhem.Tests.Shared;
 
 using Polhem.Definition;
 using Polhem.Base.Exceptions;
+using Polhem.Definition.Database;
+
 namespace Polhem.Business.UnitTests
 {
     /// <summary>
@@ -16,7 +18,7 @@ namespace Polhem.Business.UnitTests
 
         public SystemBusinessObjectLeaveCompanyTests(SharedDbFixture fx) { _fx = fx; }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("LeaveCompany clears CompanyId for a session that has entered a company")]
         public void LeaveCompany_WhenEntered_ClearsCompanyId()
         {
@@ -79,7 +81,7 @@ namespace Polhem.Business.UnitTests
             }
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("LeaveCompany throws AuthenticationRequiredException for an invalid session")]
         public void LeaveCompany_NoSession_ThrowsAuthenticationRequiredException()
         {

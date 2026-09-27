@@ -33,7 +33,7 @@ namespace Polhem.Api.Core.UnitTests
     /// must not be skipped with <c>[DbFact]</c>, and such a red light is to be fixed directly.
     /// </para>
     /// </remarks>
-    [Collection("ApiServiceOptionsState")]
+    [Collection(ApiServiceOptionsStateCollection.Name)]
     public class WireFrameReplayTests : IClassFixture<PolhemTestFixture>
     {
         private readonly PolhemTestFixture _fx;

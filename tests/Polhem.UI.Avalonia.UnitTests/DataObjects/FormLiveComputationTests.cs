@@ -121,6 +121,8 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         [DisplayName("ApplyDefaults: empty fields of a new row are filled from DefaultValueExpression")]
         public void ApplyDefaults_FillsEmptyDefaultExpression()
         {
+            // Read before the act as well as after it, so a run that crosses midnight cannot fail.
+            var dayBefore = DateTime.UtcNow.Date;
             var live = new FormLiveComputation(BuildOrderSchema());
             var table = BuildOrderTable(price: 1m, qty: 1m);
 
@@ -128,7 +130,7 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
 
             // UTC, not `DateTime.Today`: the framework's date default is `UtcNow.Date` (ADR-032 D12).
             // Asserting the local date always fails locally between 00:00 and 08:00 at UTC+8, which CI running in UTC never sees.
-            Assert.Equal(DateTime.UtcNow.Date, table.Rows[0]["order_date"]);
+            Assert.InRange((DateTime)table.Rows[0]["order_date"], dayBefore, DateTime.UtcNow.Date);
             Assert.Contains("order_date", changed);
         }
 
@@ -171,11 +173,13 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
-        [DisplayName("Uppercase column names (the real DataSet shape): a trigger with an uppercase column name still recomputes without degrading (identifier casing)")]
+        [DisplayName("Column names cased differently from the declared field names still recompute without degrading (identifier casing)")]
         public void Recompute_UppercaseColumnNames_StillRecomputes()
         {
             var live = new FormLiveComputation(BuildOrderSchema());
-            // AddColumn stores column names uppercased; the change event carries that casing too.
+            // `AddColumn` stores lowercase names (ADR-029), which happen to equal the declared field names. Uppercase
+            // column names are used here so the test still proves the variable table is keyed by
+            // `FormField.FieldName` and not by whatever casing the DataSet holds; the change event carries that casing too.
             var table = new DataTable("Order");
             table.Columns.Add("SYS_ROWID", typeof(Guid));
             table.Columns.Add("PRICE", typeof(decimal));

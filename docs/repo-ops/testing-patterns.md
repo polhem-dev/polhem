@@ -164,20 +164,20 @@ When you need to protect a process-wide static that has not been moved into DI y
 are in `rules/testing.md`):
 
 ```csharp
-// 1. Declare the collection at the root of the test project.
-[CollectionDefinition("DbConnectionState")]
-public class DbConnectionStateCollection
+// 1. Declare the collection at the root of the test project: a pure marker with no fixture, whose name is a const.
+[CollectionDefinition(Name)]
+public static class DbConnectionStateCollection
 {
-    // A pure marker, with no fixture.
+    public const string Name = "DbConnectionState";
 }
 
-// 2. Every test class that modifies that static gets the same [Collection].
-[Collection("DbConnectionState")]
+// 2. Every test class that modifies that static references the constant.
+[Collection(DbConnectionStateCollection.Name)]
 public class DbConnectionManagerTests { ... }
 
-[Collection("DbConnectionState")]
+[Collection(DbConnectionStateCollection.Name)]
 public class DbAccessFactoryTests { ... }
 ```
 
-**Use a `const` rather than a string literal** (such as `ProcessWideStateCollection.Name`): a mistyped literal makes
-xUnit create an implicit group that nobody shares. It looks serialized but is not, and there is no compile error.
+**Reference the `const`, never repeat the string**: a mistyped literal makes xUnit create an implicit group that
+nobody shares. It looks serialized but is not, and there is no compile error; a mistyped constant does not compile.

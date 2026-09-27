@@ -3,6 +3,7 @@ using Polhem.Business.Validator;
 using Polhem.Definition.Identity;
 using Polhem.Tests.Shared;
 using Polhem.Base.Exceptions;
+using Polhem.Definition.Database;
 
 namespace Polhem.Business.UnitTests
 {
@@ -25,7 +26,7 @@ namespace Polhem.Business.UnitTests
             Assert.Throws<AuthenticationRequiredException>(() => provider.Validate(Guid.Empty));
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("Validate with an unknown AccessToken throws AuthenticationRequiredException")]
         public void Validate_UnknownToken_ThrowsUnauthorized()
         {

@@ -7,10 +7,9 @@ namespace Polhem.Tests.Shared
     /// <summary>
     /// Per-class test fixture (xUnit <see cref="IClassFixture{TFixture}"/> compatible).
     /// Each instance owns its own <see cref="IServiceProvider"/> built via
-    /// <c>AddPolhemFramework</c>; the underlying process-wide statics
-    /// (<see cref="DefinePathInfo"/>, <c>CacheContainer</c>, <c>DbConnectionManager</c>,
-    /// <c>SysInfo</c>, DB provider registry) are initialised once by
-    /// <see cref="TestProcessBootstrap.EnsureInitialized"/> on the first construction.
+    /// <c>AddPolhemFramework</c>. The remaining process-wide setup (the shared define directory copied from
+    /// <c>tests/Define</c>, <c>SysInfo</c>, the DB provider registry and the master key environment variable) runs
+    /// once through <see cref="TestProcessBootstrap.EnsureInitialized"/> on the first construction.
     /// </summary>
     /// <remarks>
     /// <para>

@@ -150,7 +150,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
 
             Assert.Equal("2026-05-21", dataObject.GetField("hire_date"));
             var stored = (DateTime)dataObject.MasterRow!["hire_date"];
-            Assert.Equal(new DateTime(2026, 5, 21), stored);
+            Assert.Equal(new DateTime(2026, 5, 21, 0, 0, 0, DateTimeKind.Unspecified), stored);
         }
 
         [Fact]
@@ -253,7 +253,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DataObjects
             Assert.Throws<ArgumentException>(() => new FormDataObject(schema));
         }
 
-        // --- Phase 1b: server round-trip via FormApiConnector ---
+        // --- server round-trip via FormApiConnector ---
 
         [Fact]
         [DisplayName("LoadAsync throws InvalidOperationException when there is no connector")]

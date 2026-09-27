@@ -150,8 +150,9 @@ namespace Polhem.Db.UnitTests
             Assert.Null(exception);
         }
 
-        // Inserts a customization-override row (customize_id != base) directly, so the reader can be
-        // exercised without a customize-write API (writing tenant overrides is out of this phase).
+        // Inserts a customization-override row (customize_id != base) directly. The only customize-write API,
+        // `SaveCustomizePluginSettings`, covers plugin settings alone, and seeding the row by hand keeps the
+        // reader tests independent of the writer.
         private void SeedCustomizeRow(DatabaseType databaseType, string defineType, string customizeId, string defineKey, string contentXml)
         {
             var dbAccess = _fx.NewDbAccess(TestDbConventions.GetDatabaseId(databaseType));
@@ -221,6 +222,65 @@ namespace Polhem.Db.UnitTests
                 Assert.Single(storage.GetPluginSettings()!.GetPluginBindings("Order")));
             // A different tenant has no override.
             Assert.Null(storage.GetCustomizePluginSettings("other_" + Guid.NewGuid().ToString("N")));
+        }
+
+        // The customize-write API: a tenant's plugin chain lands in its own row (the base row and other tenants are
+        // untouched), a second save overwrites it, and each save bumps the cache-notify version.
+        private void RunSaveCustomizePluginSettings(DatabaseType databaseType)
+        {
+            var storage = NewStorage(databaseType);
+            string customizeId = "cust_" + Guid.NewGuid().ToString("N");
+            string otherId = "other_" + Guid.NewGuid().ToString("N");
+
+            var basePlugins = new PluginSettings();
+            basePlugins.Items!.Add("Order").Plugins!.Add("Pkg.Audit, Pkg", PluginStage.AfterSave);
+            storage.SavePluginSettings(basePlugins);
+            long before = CacheVersion(databaseType, "PluginSettings:*");
+
+            var first = new PluginSettings();
+            first.Items!.Add("Order").Plugins!.Add("Cust.First, Cust", PluginStage.BeforeSave);
+            storage.SaveCustomizePluginSettings(customizeId, first);
+
+            Assert.Equal(new PluginBinding("Cust.First, Cust", PluginStage.BeforeSave),
+                Assert.Single(storage.GetCustomizePluginSettings(customizeId)!.GetPluginBindings("Order")));
+            Assert.Equal(new PluginBinding("Pkg.Audit, Pkg", PluginStage.AfterSave),
+                Assert.Single(storage.GetPluginSettings()!.GetPluginBindings("Order")));
+            Assert.Null(storage.GetCustomizePluginSettings(otherId));
+            long afterFirst = CacheVersion(databaseType, "PluginSettings:*");
+            Assert.True(afterFirst > before, $"expected the notify version to advance past {before}, got {afterFirst}");
+
+            var second = new PluginSettings();
+            second.Items!.Add("Order").Plugins!.Add("Cust.Second, Cust", PluginStage.AfterSave);
+            storage.SaveCustomizePluginSettings(customizeId, second);
+
+            Assert.Equal(new PluginBinding("Cust.Second, Cust", PluginStage.AfterSave),
+                Assert.Single(storage.GetCustomizePluginSettings(customizeId)!.GetPluginBindings("Order")));
+            Assert.True(CacheVersion(databaseType, "PluginSettings:*") > afterFirst);
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("SQL Server SaveCustomizePluginSettings upserts the tenant row only and bumps the notify version")]
+        public void SaveCustomizePluginSettings_SqlServer() => RunSaveCustomizePluginSettings(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("PostgreSQL SaveCustomizePluginSettings upserts the tenant row only and bumps the notify version")]
+        public void SaveCustomizePluginSettings_PostgreSQL() => RunSaveCustomizePluginSettings(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("MySQL SaveCustomizePluginSettings upserts the tenant row only and bumps the notify version")]
+        public void SaveCustomizePluginSettings_MySQL() => RunSaveCustomizePluginSettings(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("Oracle SaveCustomizePluginSettings upserts the tenant row only and bumps the notify version")]
+        public void SaveCustomizePluginSettings_Oracle() => RunSaveCustomizePluginSettings(DatabaseType.Oracle);
+
+        [Fact]
+        [DisplayName("SaveCustomizePluginSettings rejects a blank customizeId before touching the database")]
+        public void SaveCustomizePluginSettings_BlankCustomizeId_Throws()
+        {
+            var storage = new DbDefineStorage(new ThrowingServiceProvider());
+
+            Assert.Throws<ArgumentException>(() => storage.SaveCustomizePluginSettings(" ", new PluginSettings()));
         }
 
         [DbFact(DatabaseType.SQLServer)]

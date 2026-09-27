@@ -11,7 +11,7 @@ namespace Polhem.UI.Core.UnitTests
     /// and that calling ClearCache does not throw when _defineAccess is a ClientDefineAccess.
     /// It mutates static state, so it runs serially in the ClientInfoState collection.
     /// </summary>
-    [Collection("ClientInfoState")]
+    [Collection(ClientInfoStateCollection.Name)]
     public class ClientInfoResetDefineCacheTests
     {
         private static readonly FieldInfo s_defineAccessField =

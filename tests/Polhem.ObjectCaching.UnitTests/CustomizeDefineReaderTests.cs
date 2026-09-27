@@ -16,7 +16,7 @@ namespace Polhem.ObjectCaching.UnitTests
     {
         private readonly string _root;
         // Unique per-test customization codes keep the prefixed cache entries isolated across
-        // the shared process-wide cache provider, so this class runs in parallel with others.
+        // the shared process-wide cache provider, so no test sees another's entries.
         private readonly string _customizeId = "cust" + Guid.NewGuid().ToString("N");
 
         public CustomizeDefineReaderTests()

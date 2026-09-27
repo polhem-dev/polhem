@@ -5,7 +5,7 @@ using Polhem.Base.Exceptions;
 namespace Polhem.Base.UnitTests
 {
     /// <summary>
-    /// Tests for <see cref="ExceptionExtensions.Unwrap(Exception)"/> covering plain
+    /// Tests for <see cref="Polhem.Base.Exceptions.ExceptionExtensions.Unwrap(System.Exception)"/> covering plain
     /// exceptions, <see cref="AggregateException"/>, <see cref="TargetInvocationException"/>,
     /// and recursive unwrap scenarios.
     /// </summary>

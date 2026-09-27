@@ -68,6 +68,7 @@ namespace Polhem.Definition.UnitTests.Layouts
             var grid = new LayoutGrid();
 
             Assert.NotNull(grid.Columns);
+            Assert.Empty(grid.Columns!);
         }
 
         [Fact]

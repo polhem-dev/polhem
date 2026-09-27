@@ -31,7 +31,7 @@ namespace Polhem.Api.Core.UnitTests
     /// assignment were replaced with a hard-coded string.
     /// </para>
     /// </remarks>
-    [Collection("ApiServiceOptionsState")]
+    [Collection(ApiServiceOptionsStateCollection.Name)]
     public class JsonRpcExecutorCodecSymmetryTests : IClassFixture<PolhemTestFixture>
     {
         private readonly PolhemTestFixture _fx;

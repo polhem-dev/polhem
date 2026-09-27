@@ -45,7 +45,8 @@ namespace Polhem.ObjectCaching.UnitTests
 
             var result = cache.Get();
 
-            Assert.NotNull(result);
+            // Values from `tests/Define/SystemSettings.xml`.
+            Assert.Equal("1.0.0", result!.CommonConfiguration.Version);
         }
     }
 }

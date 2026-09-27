@@ -94,6 +94,7 @@ namespace Polhem.Definition.UnitTests.Layouts
             var field = new LayoutField();
 
             Assert.NotNull(field.ExtendedProperties);
+            Assert.Empty(field.ExtendedProperties!);
         }
 
         [Fact]

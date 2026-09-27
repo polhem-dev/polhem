@@ -10,7 +10,7 @@ namespace Polhem.UI.Core.UnitTests
     /// A lightweight fake replaces the real UI service, so the try-catch path is covered without a backend.
     /// It shares the <c>ClientInfoState</c> collection with the other tests that mutate static state, so they run serially.
     /// </summary>
-    [Collection("ClientInfoState")]
+    [Collection(ClientInfoStateCollection.Name)]
     public class ClientInfoInitializeTests
     {
         private sealed class FakeUIViewService : IUIViewService

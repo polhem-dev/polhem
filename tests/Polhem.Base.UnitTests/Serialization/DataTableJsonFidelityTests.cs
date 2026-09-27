@@ -169,7 +169,7 @@ namespace Polhem.Base.UnitTests.Serialization
             // An unparseable string is passed on as is, so `DataRow` reports the error against the real column type.
             // Swallowing it here would turn a broken payload into a normal-looking 0.
             var ex = Record.Exception(() => JsonSerializer.Deserialize<DataTable>(json, s_options));
-            Assert.NotNull(ex);
+            Assert.IsType<ArgumentException>(ex);
         }
 }
 }

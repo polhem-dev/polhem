@@ -13,7 +13,7 @@ using Polhem.Tests.Shared;
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
-    /// Covers the success path of <see cref="PolhemLoginPanel.OnSubmitAsync"/>.
+    /// Covers the success path of <c>PolhemLoginPanel.OnSubmitAsync</c> (private, so not a cref).
     /// A fake Factory and a fake IJsonRpcProvider make LoginAsync return a controllable <see cref="LoginResponse"/>
     /// without a real API service, covering these paths:
     /// 1. Empty AccessToken: sets an error message and returns early.

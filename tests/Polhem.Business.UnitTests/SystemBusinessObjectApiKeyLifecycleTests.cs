@@ -143,8 +143,9 @@ namespace Polhem.Business.UnitTests
                 bo.SetApiKeyEnabled(new SetApiKeyEnabledArgs { SysId = sysId, Enabled = false });
                 bo.SetApiKeyEnabled(new SetApiKeyEnabledArgs { SysId = sysId, Enabled = true });
 
-                Assert.NotNull(_fx.GetRequiredService<IRepositoryFactory>()
-                    .Create<IApiKeyRepository>().GetEnabledById(sysId));
+                var key = _fx.GetRequiredService<IRepositoryFactory>()
+                    .Create<IApiKeyRepository>().GetEnabledById(sysId);
+                Assert.Equal(sysId, key!.SysId);
             }
             finally
             {

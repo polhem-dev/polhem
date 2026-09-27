@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Text.RegularExpressions;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Web.Blazor.Server.UnitTests
 {
@@ -22,7 +23,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests
         [DisplayName("Every polhem- selector in the Blazor demo stylesheet matches a class in the component markup")]
         public void DemoStylesheet_SelectorsMatchRenderedClasses()
         {
-            var root = FindRepositoryRoot();
+            var root = RepoRoot.Find();
             var stylesheet = File.ReadAllText(Path.Combine(root, "samples", "Blazor.Server.Demo", "wwwroot", "css", "site.css"));
             var selectors = s_selector.Matches(stylesheet).Select(m => m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
 
@@ -40,17 +41,6 @@ namespace Polhem.Web.Blazor.Server.UnitTests
 
             var unmatched = selectors.Where(s => !rendered.Contains(s)).OrderBy(s => s, StringComparer.Ordinal).ToList();
             Assert.True(unmatched.Count == 0, "Selectors with no matching class in any component: " + string.Join(", ", unmatched));
-        }
-
-        private static string FindRepositoryRoot()
-        {
-            var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null && dir.GetDirectories(".git").Length == 0)
-            {
-                dir = dir.Parent;
-            }
-            Assert.True(dir != null, "No repository root (.git) above the test output directory.");
-            return dir!.FullName;
         }
     }
 }

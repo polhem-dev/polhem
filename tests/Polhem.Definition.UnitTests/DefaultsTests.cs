@@ -15,7 +15,7 @@ namespace Polhem.Definition.UnitTests
     /// </summary>
     public class DefaultsTests
     {
-        // Expected manifest contents after Phase 1.1 migration:
+        // Expected manifest contents:
         // - 18 TableSchemas (7 common + 6 company + 5 log)
         // - 3 FormSchemas (Department, Employee, AuditRule)
         // - 3 FormLayouts (Department, Employee, AuditRule)
@@ -293,6 +293,8 @@ namespace Polhem.Definition.UnitTests
             using var stream = Defaults.OpenEmbedded("TableSchema\\common\\st_user.TableSchema.xml");
 
             Assert.NotNull(stream);
+            using var reader = new StreamReader(stream!);
+            Assert.Contains("st_user", reader.ReadToEnd(), StringComparison.Ordinal);
         }
 
         [Fact]

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using Polhem.Business.Form;
 using Polhem.Db;
 using Polhem.Db.Dml;
@@ -58,7 +59,7 @@ namespace Polhem.Business.UnitTests.Form
         public void GetList_SqlServer_FilterAndSort()
             => RunFilterAndSort(DatabaseType.SQLServer);
 
-        // -------- Record-scope shaped filters (Phase 3) --------
+        // -------- Record-scope shaped filters --------
 
         [DbFact(DatabaseType.SQLite)]
         [DisplayName("SQLite: GetList with dept_rowid IN (the scope shape) returns only that department's rows without a remap error")]
@@ -630,7 +631,7 @@ namespace Polhem.Business.UnitTests.Form
                     .Build(tableName, FilterCondition.Equal("sys_rowid", rowId));
                 ctx.DbAccess.Execute(spec);
             }
-            catch (Exception ex)
+            catch (DbException ex)
             {
                 // Cleanup is best-effort: the row may not exist if the seed INSERT failed, and this must not mask the assertion failure message.
                 Console.WriteLine($"FormBusinessObjectGetListTests: cleanup of {tableName}#{rowId} failed — {ex.GetType().Name}: {ex.Message}");
@@ -640,7 +641,7 @@ namespace Polhem.Business.UnitTests.Form
         /// <summary>
         /// Per-test wiring: binds <see cref="FormBusinessObject"/> to a <see cref="DataFormRepository"/>
         /// constructed against the test-specific <c>{categoryId}_{dbtype}</c> databaseId.
-        /// The production <see cref="FormRepositoryFactory"/> uses <c>CategoryId</c> directly,
+        /// The production <see cref="Polhem.Repository.Factories.RepositoryFactory"/> routes by the schema's <c>CategoryId</c>,
         /// which doesn't match the multi-DB-per-category test layout.
         /// </summary>
         private sealed class TestContext
@@ -673,7 +674,7 @@ namespace Polhem.Business.UnitTests.Form
             {
                 var factory = new StubFactory(_repository);
                 var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx, (typeof(IRepositoryFactory), factory));
-                return new FormBusinessObject(ctx, Guid.NewGuid(), ProgId);
+                return new FormBusinessObject(ctx, TestSessionFactory.CreateAccessToken(_fx), ProgId);
             }
         }
 

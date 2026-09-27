@@ -53,10 +53,10 @@ namespace Polhem.ObjectCaching.UnitTests
         public void DbCategorySettings_Get_ReturnsSettings()
         {
             var settings = Cache.DbCategorySettings.Get();
-            Assert.NotNull(settings);
+            Assert.True(settings!.Categories!.Contains("common"));
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("SessionInfo.Get returns the same object after Set and null after Remove")]
         public void SessionInfo_SetGetRemove_BehavesCorrectly()
         {

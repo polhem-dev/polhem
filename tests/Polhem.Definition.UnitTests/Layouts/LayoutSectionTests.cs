@@ -35,6 +35,7 @@ namespace Polhem.Definition.UnitTests.Layouts
             var section = new LayoutSection();
 
             Assert.NotNull(section.Fields);
+            Assert.Empty(section.Fields!);
         }
 
         [Fact]

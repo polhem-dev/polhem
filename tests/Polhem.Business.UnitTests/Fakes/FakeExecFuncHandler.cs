@@ -46,8 +46,8 @@ namespace Polhem.Business.UnitTests.Fakes
         }
 
         /// <summary>
-        /// Tests exception unwrapping: reflection wraps the original exception in <see cref="System.Reflection.TargetInvocationException"/>,
-        /// and <c>ExceptionExtensions.Unwrap</c> restores the original type.
+        /// Tests exception unwrapping: reflection wraps the original exception in <see cref="global::System.Reflection.TargetInvocationException"/>,
+        /// and <see cref="Polhem.Base.Exceptions.ExceptionExtensions.Unwrap"/> restores the original type.
         /// </summary>
         [ExecFuncAccessControl(ApiAccessRequirement.Anonymous)]
         public static void Throws(ExecFuncArgs args, ExecFuncResult result)

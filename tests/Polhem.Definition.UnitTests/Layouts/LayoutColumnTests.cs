@@ -51,6 +51,7 @@ namespace Polhem.Definition.UnitTests.Layouts
             var column = new LayoutColumn();
 
             Assert.NotNull(column.ExtendedProperties);
+            Assert.Empty(column.ExtendedProperties!);
         }
 
         [Fact]

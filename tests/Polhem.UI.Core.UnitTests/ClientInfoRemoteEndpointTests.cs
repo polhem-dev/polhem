@@ -13,7 +13,7 @@ namespace Polhem.UI.Core.UnitTests
     /// </para>
     /// It mutates static state, so it shares the collection with the other ClientInfoState tests to run serially.
     /// </summary>
-    [Collection("ClientInfoState")]
+    [Collection(ClientInfoStateCollection.Name)]
     public class ClientInfoRemoteEndpointTests
     {
         private sealed class FakeEndpointStorage : IEndpointStorage

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
+using Polhem.Definition.Database;
 
 namespace Polhem.ObjectCaching.UnitTests
 {
@@ -50,7 +51,7 @@ namespace Polhem.ObjectCaching.UnitTests
             }
         }
 
-        [Fact]
+        [DbFact(DatabaseType.SQLServer)]
         [DisplayName("A cached session can be read after Set and returns null after Remove")]
         public void SessionInfo_SetAndRemove_BehavesCorrectly()
         {

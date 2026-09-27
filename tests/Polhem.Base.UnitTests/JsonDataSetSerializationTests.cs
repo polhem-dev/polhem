@@ -138,8 +138,8 @@ namespace Polhem.Base.UnitTests
                 { "LongCol", typeof(long), long.MaxValue },
                 { "DecimalCol", typeof(decimal), 123456.789m },
                 { "CurrencyCol", typeof(decimal), 99999.99m },
-                { "DateCol", typeof(DateTime), new DateTime(2026, 4, 15) },
-                { "DateTimeCol", typeof(DateTime), new DateTime(2026, 4, 15, 10, 30, 45) },
+                { "DateCol", typeof(DateTime), new DateTime(2026, 4, 15, 0, 0, 0, DateTimeKind.Unspecified) },
+                { "DateTimeCol", typeof(DateTime), new DateTime(2026, 4, 15, 10, 30, 45, DateTimeKind.Unspecified) },
                 { "GuidCol", typeof(Guid), new Guid("a1b2c3d4-e5f6-7890-abcd-ef1234567890") },
                 { "BinaryCol", typeof(byte[]), new byte[] { 0x01, 0x02, 0xAB, 0xFF } },
             };

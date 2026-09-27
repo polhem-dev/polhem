@@ -4,11 +4,11 @@ namespace Polhem.Definition.UnitTests
 {
     /// <summary>
     /// File path composition tests for <see cref="PathOptions"/>. They work directly on a PathOptions instance
-    /// and do not touch process-wide statics such as <c>DefinePathInfo</c>, so they can run in parallel with other test classes.
+    /// and touch no process-wide state.
     /// </summary>
     /// <remarks>
     /// The earlier <c>DefinePathInfoTests</c> switched the global state of <c>DefinePathInfo.CurrentOptions</c>
-    /// in try/finally and needed <c>[Collection("Initialize")]</c> to avoid races. They were rewritten as pure
+    /// in try/finally and needed a shared collection to avoid races. They were rewritten as pure
     /// PathOptions instance tests: <c>DefinePathInfo</c> was only a thin facade (every method delegated directly
     /// to PathOptions), so testing PathOptions gives the same coverage. The facade itself has since been removed.
     /// </remarks>

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Security.Cryptography;
 using Polhem.Base.Security;
 using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
@@ -227,7 +228,7 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("GetMasterKey applies the default file name Master.key for a blank file path")]
+        [DisplayName("GetMasterKey looks up the default file name Master.key under the define path for a blank file path")]
         public void GetMasterKey_EmptyFilePath_UsesDefaultFileName()
         {
             // Arrange: a blank value is replaced with "Master.key" and looked up under DefinePath.
@@ -243,9 +244,15 @@ namespace Polhem.Definition.UnitTests.Security
                     Value = "   "
                 };
 
-                // Act & Assert: definePath is an empty temp folder, so the default Master.key does not exist and the call throws.
-                var ex = Record.Exception(() => MasterKeyProvider.GetMasterKey(source, tempPath));
-                Assert.NotNull(ex);
+                // Act & Assert: definePath is an empty temp folder, so the default Master.key does not exist and the
+                // call throws. The message names the path it looked up, which shows the default file name was applied.
+                var missing = Assert.Throws<FileNotFoundException>(() => MasterKeyProvider.GetMasterKey(source, tempPath));
+                Assert.EndsWith(Path.Combine(tempPath, "Master.key"), missing.Message, StringComparison.Ordinal);
+
+                // Once the default file exists, the blank value resolves to it.
+                var key = RandomNumberGenerator.GetBytes(32);
+                File.WriteAllText(Path.Combine(tempPath, "Master.key"), Convert.ToBase64String(key));
+                Assert.Equal(key, MasterKeyProvider.GetMasterKey(source, tempPath));
             }
             finally
             {

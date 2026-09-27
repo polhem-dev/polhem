@@ -22,9 +22,10 @@ namespace Polhem.Api.Core.UnitTests
     /// classes change the static components".
     /// </para>
     /// </remarks>
-    [CollectionDefinition("ApiServiceOptionsState")]
-    public class ApiServiceOptionsStateCollection
+    [CollectionDefinition(Name)]
+    public static class ApiServiceOptionsStateCollection
     {
-        // A pure marker with no fixture.
+        /// <summary>The collection name. Reference this constant instead of repeating the string.</summary>
+        public const string Name = "ApiServiceOptionsState";
     }
 }

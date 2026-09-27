@@ -20,9 +20,7 @@ namespace Polhem.Definition.UnitTests.Language
         [DisplayName("LanguageService constructor throws ArgumentNullException for null")]
         public void Constructor_NullDefineAccess_ThrowsArgumentNullException()
         {
-            var exception = Record.Exception(() => new LanguageService(null!, null));
-            Assert.NotNull(exception);
-            Assert.IsType<ArgumentNullException>(exception);
+            Assert.Throws<ArgumentNullException>(() => new LanguageService(null!, null));
         }
 
         [Fact]

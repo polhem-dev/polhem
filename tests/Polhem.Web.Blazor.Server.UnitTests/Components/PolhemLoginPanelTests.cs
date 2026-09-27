@@ -10,9 +10,9 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     /// <summary>
     /// Structural smoke tests for <see cref="PolhemLoginPanel"/>: confirms the
     /// public parameter surface, the <see cref="PolhemApiConnectorFactory"/>
-    /// injection, and the labels' defaults. Submitting against a real backend
-    /// is exercised by the Phase 2 sample (BlazorHostApp), not by an in-memory
-    /// unit test.
+    /// injection, and the labels' defaults. The submit paths are driven through a fake
+    /// connector factory by <see cref="PolhemLoginPanelSuccessPathTests"/>; submitting
+    /// against a real backend is not covered by this project.
     /// </summary>
     public class PolhemLoginPanelTests
     {

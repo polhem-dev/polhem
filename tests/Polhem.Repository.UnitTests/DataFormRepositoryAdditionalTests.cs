@@ -125,8 +125,10 @@ namespace Polhem.Repository.UnitTests
             var schema = new FormSchema("Employee", "Employee");
             var master = schema.Tables!.Add("Employee", "Employee");
             master.Fields!.Add(SysFields.No, "No", FieldDbType.Integer);
-            var result = method!.Invoke(null, new object[] { schema });
-            Assert.NotNull(result);
+            var result = Assert.IsType<Polhem.Definition.Sorting.SortFieldCollection>(method!.Invoke(null, new object[] { schema }));
+            var sort = Assert.Single(result);
+            Assert.Equal(SysFields.No, sort.FieldName);
+            Assert.Equal(Polhem.Definition.Sorting.SortDirection.Asc, sort.Direction);
         }
 
         #endregion

@@ -16,9 +16,11 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
     /// calls, failed calls, the AnomalyEnabled combinations) and the encryption key branch.
     /// </summary>
     /// <remarks>
-    /// The fixture must be <see cref="SharedDbFixture"/>: the executors in this file receive a bare
-    /// <c>Guid.NewGuid()</c> token, so the real <see cref="IAccessTokenValidator"/> always misses the session cache
-    /// and takes the rebuild path, which reads <c>st_session</c>. Only <c>SharedDbFixture</c> creates the schema.
+    /// <see cref="PolhemTestFixture"/> is enough because no test here reaches the database. Every executor runs under
+    /// either <see cref="Guid.Empty"/> (no session to look up) or a token planted with
+    /// <see cref="TestSessionFactory.CreateAccessToken"/>. A bare <c>Guid.NewGuid()</c> would miss the session cache,
+    /// and both <see cref="IAccessTokenValidator"/> and the business object factory would then rebuild the session
+    /// from <c>st_session</c>, which this fixture does not create.
     /// </remarks>
     public class JsonRpcExecutorCoverageTests : IClassFixture<PolhemTestFixture>
     {
@@ -94,6 +96,28 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             Id = "1",
         };
 
+        /// <summary>
+        /// Delays every business object creation, which happens after the executor starts timing the call, so a
+        /// successful call reliably exceeds a small slow threshold without depending on how fast the machine is.
+        /// </summary>
+        private sealed class DelayingBusinessObjectFactory : IBusinessObjectFactory
+        {
+            private readonly IBusinessObjectFactory _inner;
+            private readonly TimeSpan _delay;
+
+            public DelayingBusinessObjectFactory(IBusinessObjectFactory inner, TimeSpan delay)
+            {
+                _inner = inner;
+                _delay = delay;
+            }
+
+            public object CreateBusinessObject(Guid accessToken, string progId, bool isLocalCall)
+            {
+                Thread.Sleep(_delay);
+                return _inner.CreateBusinessObject(accessToken, progId, isLocalCall);
+            }
+        }
+
         private static AuditLogOptions EnabledOptions(int slowThresholdMs = 3000) => new()
         {
             Enabled = true,
@@ -101,7 +125,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             ApiSlowThresholdMs = slowThresholdMs,
         };
 
-        // ---- Constructor null guards (lines 50-52) ----
+        // ---- Constructor null guards ----
 
         [Fact]
         [DisplayName("Constructor throws ArgumentNullException for a null boFactory")]
@@ -130,7 +154,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             Assert.Equal("keyProvider", ex.ParamName);
         }
 
-        // ---- Anomaly records for failures (lines 94/136-137, 153-158, 163-183, 188-189) ----
+        // ---- Anomaly records for failures (`LogApiFailureAnomaly`) ----
 
         [Fact]
         [DisplayName("A failed call with anomaly logging enabled writes an Error anomaly")]
@@ -179,13 +203,16 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         public async Task Execute_AnomalyEnabled_CarriesApiKeyIdentity()
         {
             var writer = new CapturingAnomalyLogWriter();
-            var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()), Guid.NewGuid());
+            var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()),
+                TestSessionFactory.CreateAccessToken(_fx));
             executor.ApiKeyValidation = new ApiKeyValidationResult(
                 ApiKeyStatus.Valid, "northwind-desktop", "Northwind Desktop");
 
             await executor.ExecuteAsync(UnknownActionRequest());
 
             var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
+            // Pins the failure to the unknown action, not to a session lookup that reached a database.
+            Assert.Equal(nameof(MissingMethodException), anomaly.ErrorType);
             Assert.Equal("northwind-desktop", anomaly.ApiKeyId);
             Assert.Equal("Northwind Desktop", anomaly.ApiKeyName);
         }
@@ -195,16 +222,18 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         public async Task Execute_AnomalyEnabledWithoutApiKey_LeavesIdentityNull()
         {
             var writer = new CapturingAnomalyLogWriter();
-            var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()), Guid.NewGuid());
+            var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()),
+                TestSessionFactory.CreateAccessToken(_fx));
 
             await executor.ExecuteAsync(UnknownActionRequest());
 
             var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
+            Assert.Equal(nameof(MissingMethodException), anomaly.ErrorType);
             Assert.Null(anomaly.ApiKeyId);
             Assert.Null(anomaly.ApiKeyName);
         }
 
-        // ---- Anomaly records for successful calls (lines 143-148; slow calls) ----
+        // ---- Anomaly records for successful calls (`LogApiSlowAnomaly`) ----
 
         [Fact]
         [DisplayName("A successful call under the slow threshold with anomaly logging enabled writes no record")]
@@ -221,21 +250,33 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         }
 
         [Fact]
-        [DisplayName("With anomaly logging enabled and the slow threshold exceeded, any record written is a Slow anomaly")]
-        public async Task Execute_AnomalyEnabledSlowSuccess_WritesSlowAnomalyWhenExceeded()
+        [DisplayName("A successful call that exceeds the slow threshold writes exactly one Slow anomaly carrying the threshold and elapsed time")]
+        public async Task Execute_AnomalyEnabledSlowSuccess_WritesSlowAnomaly()
         {
+            const int thresholdMs = 10;
             var writer = new CapturingAnomalyLogWriter();
-            // A 1 ms threshold: the reflection invoke plus tracing almost certainly exceeds it and triggers the Slow write (line 147).
-            var executor = NewAuditExecutor(writer, EnabledOptions(slowThresholdMs: 1), new StubSessionInfoService(NewSession()), Guid.Empty);
+            var executor = new JsonRpcExecutor(
+                new DelayingBusinessObjectFactory(BoFactory, TimeSpan.FromMilliseconds(thresholdMs * 5)),
+                TokenValidator, KeyProvider, writer, EnabledOptions(slowThresholdMs: thresholdMs),
+                new StubSessionInfoService(NewSession()))
+            {
+                AccessToken = Guid.Empty,
+                IsLocalCall = true,
+            };
 
             var response = await executor.ExecuteAsync(PingRequest());
 
             Assert.Null(response.Error);
-            // The assertion holds whether or not the threshold was exceeded (any record must be Slow), so timing cannot make it flaky.
-            Assert.All(writer.Entries, e => Assert.Equal(AnomalyKind.Slow, Assert.IsType<ApiAnomalyEntry>(e).Kind));
+            var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
+            Assert.Equal(AnomalyKind.Slow, anomaly.Kind);
+            Assert.Equal(thresholdMs, anomaly.ThresholdMs);
+            Assert.True(anomaly.ElapsedMs > thresholdMs, $"ElapsedMs {anomaly.ElapsedMs} should exceed {thresholdMs}.");
+            Assert.Equal($"{SysProgIds.System}.Ping", anomaly.Method);
+            Assert.Null(anomaly.ErrorType);
+            Assert.Equal("u1", anomaly.UserId);
         }
 
-        // ---- AnomalyEnabled combinations (line 137 br7/8) ----
+        // ---- AnomalyEnabled combinations (`AnomalyEnabled`) ----
 
         [Fact]
         [DisplayName("A failure writes no record when a writer exists but auditOptions is disabled")]
@@ -291,15 +332,15 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             Assert.Empty(writer.Entries);
         }
 
-        // ---- Encryption key branch (line 200: the Encrypted branch) ----
+        // ---- Encryption key branch (`GetApiEncryptionKey`) ----
 
         [Fact]
         [DisplayName("A remote call in Encrypted format enters the encryption key branch")]
         public async Task Execute_EncryptedFormatRemoteCall_HitsEncryptionKeyBranch()
         {
             // Ping is Public/Anonymous, so an Encrypted request passes access validation and fetches the encryption key
-            // (the Encrypted branch at line 200). Decrypting the unencrypted payload then fails and an error is returned.
-            // The point is to cover the Encrypted branch.
+            // (the Encrypted branch of `GetApiEncryptionKey`). Decrypting the unencrypted payload then fails and an
+            // error is returned. The point is to cover the Encrypted branch.
             var request = new JsonRpcRequest
             {
                 Method = $"{SysProgIds.System}.Ping",

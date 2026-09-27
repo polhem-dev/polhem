@@ -5,14 +5,14 @@ namespace Polhem.Base.UnitTests
     /// (<c>Version</c> / <c>IsDebugMode</c> / <c>AllowedTypeNamespaces</c>).
     /// </summary>
     /// <remarks>
-    /// This name was used by <c>[Collection("SysInfoStatic")]</c> before, but **had no matching definition**.
-    /// xUnit's implicit grouping still made it work, but without a definition there is no compile-time protection:
-    /// a typo in the name does not fail the build, serialization silently stops working, and the result is a race
-    /// that only reproduces in CI.
+    /// Users write <c>[Collection(SysInfoStaticCollection.Name)]</c>, never the string itself. A mistyped literal
+    /// makes xUnit create an implicit collection that no other class shares: the class looks serialized but is not,
+    /// and nothing fails at compile time. Referencing the constant turns a typo into a compile error.
     /// </remarks>
-    [CollectionDefinition("SysInfoStatic")]
-    public class SysInfoStaticCollection
+    [CollectionDefinition(Name)]
+    public static class SysInfoStaticCollection
     {
-        // Marker only, no fixture.
+        /// <summary>The collection name. Reference this constant instead of repeating the string.</summary>
+        public const string Name = "SysInfoStatic";
     }
 }

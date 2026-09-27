@@ -262,7 +262,7 @@ namespace Polhem.Business.UnitTests.AuditLog
             Assert.Equal(DeploymentAction.ReadDbAnomalyLog, deploymentAuth.LastAction);
         }
 
-        // ---- anomaly aggregates (Phase 3a) ----
+        // ---- anomaly aggregates ----
 
         [Fact]
         [DisplayName("GetApiAnomalySummary returns the aggregated Table")]

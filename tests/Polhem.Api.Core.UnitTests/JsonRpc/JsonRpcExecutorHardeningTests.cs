@@ -21,7 +21,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
     /// once recommended, so every member below is covered by an access declaration and only the resolution rule
     /// stands between a caller and it.
     /// </remarks>
-    [Collection("SysInfoStatic")]
+    [Collection(SysInfoStaticCollection.Name)]
     public class JsonRpcExecutorHardeningTests
     {
         private static JsonRpcExecutor NewExecutor(ExposedBusinessObject businessObject, ILogger? logger = null)

@@ -215,7 +215,7 @@ namespace Polhem.Base.UnitTests.Serialization
 
         [Fact]
         [DisplayName("Read parses a date string in a DateTime column through TryGetDateTime")]
-        public void ReadRows_DateLikeStringInStringColumn_ParsedViaDateTimeBranch()
+        public void ReadRows_DateStringInDateTimeColumn_ParsedViaDateTimeBranch()
         {
             const string json = """
             {
@@ -227,7 +227,7 @@ namespace Polhem.Base.UnitTests.Serialization
             """;
             var dt = JsonSerializer.Deserialize<DataTable>(json, Options())!;
 
-            Assert.Equal(new DateTime(2026, 4, 17, 8, 30, 0), dt.Rows[0]["When"]);
+            Assert.Equal(new DateTime(2026, 4, 17, 8, 30, 0, DateTimeKind.Unspecified), dt.Rows[0]["When"]);
         }
     }
 }

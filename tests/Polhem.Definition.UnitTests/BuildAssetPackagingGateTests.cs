@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Definition.UnitTests
 {
@@ -65,15 +66,7 @@ namespace Polhem.Definition.UnitTests
         /// </summary>
         private static string GetDefinitionProjectDirectory()
         {
-            var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null && dir.GetDirectories(".git").Length == 0)
-            {
-                dir = dir.Parent;
-            }
-
-            Assert.True(dir != null, "Could not find the repository root (.git) above the test output directory.");
-
-            var projectDir = Path.Combine(dir!.FullName, "src", "Polhem.Definition");
+            var projectDir = Path.Combine(RepoRoot.Find(), "src", "Polhem.Definition");
             Assert.True(Directory.Exists(projectDir), $"{projectDir} not found.");
 
             return projectDir;

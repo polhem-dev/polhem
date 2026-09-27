@@ -50,6 +50,8 @@ namespace Polhem.Definition.UnitTests
         /// Loads the key settings.
         /// </summary>
         /// <param name="settings">The key settings.</param>
+        /// <param name="apiKey">Receives the API encryption key.</param>
+        /// <param name="cookieKey">Receives the cookie encryption key.</param>
         private static void LoadSecurityKey(SecurityKeySettings settings, out byte[] apiKey, out byte[] cookieKey)
         {
             byte[] masterKey = MasterKeyProvider.GetMasterKey(settings.MasterKeySource, definePath: string.Empty);
