@@ -69,11 +69,13 @@ to write a plan.
   only to the public API surface, the public documents and the public samples; it must be **version-controlled,
   published and maintained with each version**; and it is packaged as a Claude Code **plugin**.
 
-**Distribution and anchor**: make it one plugin (such as `polhem-dotnet`), **anchored on the public
-`bee-northwind-avalonia` repo after it graduates** as the living example (not the internal `apps/`).
+**Distribution and anchor**: make it one plugin (such as `polhem-dotnet`), **anchored on a public standalone
+Northwind repository built on the `Polhem.*` packages** as the living example (not the internal `apps/`).
 
-**What to wait for**: **it follows naturally after Northwind graduates**; only then is there a public reference
-implementation to point to. Nothing needs to happen now.
+**What to wait for**: **a standalone Northwind on the `Polhem.*` packages.** The mirror created on 2026-06-15,
+`bee-northwind-avalonia`, still holds the Bee.NET copy on the `Bee.*` packages; it can only be switched (or replaced)
+once the `Polhem.*` packages are on NuGet (see [gotchas/northwind-heads.md](gotchas/northwind-heads.md) § Graduation
+and periodic sync). Only then is there a public reference implementation to point to. Nothing needs to happen now.
 
 **Planned contents** (consumer-side rewrites of existing knowledge, plus an onboarding path): `polhem-quickstart`
 (install NuGet → minimal app → run it), `polhem-app-scaffold` (PackageReference version), `polhem-add-form`,
@@ -178,7 +180,8 @@ from imagination.
 ## Bringing `tools/` into SonarCloud's analysis scope
 
 **Idea (dug up on 2026-09-10 while fixing the scan findings of `Polhem.LoadTests`)**: SonarCloud currently analyzes
-only `src/` and `tests/` in practice. Of the 1,760 analyzed files in the whole project, `tools/` accounts for only 2,
+only `src/` and `tests/` in practice. Of the 1,760 analyzed files in the whole project (measured on the old
+bee-library SonarCloud project, before the move to `polhem-dev_polhem`), `tools/` accounts for only 2,
 and neither is C# (one `.py` and one `.sh`, picked up by generic file detection). **Not a single `tools/**/*.cs`.**
 
 **Why it is worth doing**: not to make the numbers look good, but because **a 0 there is misread as clean**. It
@@ -197,8 +200,9 @@ project scope, or the `--no-incremental` of the `Build (for Sonar coverage)` ste
 **Do not skip this step and change the settings directly.** If you change them without knowing the cause, you will
 not know afterwards whether the change really took effect.
 
-**What to wait for**: no hurry. `tools/` does not ship (`IsPackable=false`), so the risk of the scan missing it is
-lower than for `src/`. But **every claim that "some Sonar rule is clean in `tools/`" is false**. Until it is brought
+**What to wait for**: no hurry. Most of `tools/` does not ship (`IsPackable=false` in `tools/Directory.Build.props`),
+so the risk of the scan missing it is lower than for `src/`. The exception is `tools/Polhem.Cli`, which overrides it
+and is published as a dotnet tool; its code is outside the scan too. But **every claim that "some Sonar rule is clean in `tools/`" is false**. Until it is brought
 in, such a claim only counts after running the local reproduction in that gotchas file (temporarily add
 `SonarAnalyzer.CSharp` and build once).
 

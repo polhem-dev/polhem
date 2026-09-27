@@ -17,14 +17,19 @@ databases to `st_user.sys_rowid` in common. "st_ in common, ft_ in company" is o
 The authoritative list is `docs/en/framework-reserved-names.md`.
 
 `FormSchema.CategoryId` (and `DbCategory.Id`, `DatabaseItem.CategoryId`) **is not a free-form string**:
-`FormRepositoryFactory.ParseCategoryId` accepts only the three values and throws `Unknown schema.CategoryId` for
-anything else.
+`RepositoryFactory.ParseCategoryId` (`src/Polhem.Repository/Factories/RepositoryFactory.cs`) accepts only the three
+`DbCategoryIds` values and throws `Unknown schema.CategoryId` for anything else. Analyzers `POLHEM1001` / `POLHEM1002`
+report an invalid value in a definition file at build time.
 
 - **`company`** = data that is separate per company. **Business tables (`ft_*`) and the application organization
   tables (`st_department`/`st_employee`) must all be company.** The router goes
   `session.CompanyId → ICompanyInfoService.Get → CompanyInfo.CompanyDatabaseId`.
-- **`common`** = framework tables shared across companies (`st_session`, `st_cache_notify`). The framework enforces
-  `DatabaseItem.Id == CategoryId == "common"`. **Putting a business table in common is wrong.**
+- **`common`** = framework tables shared across companies (`st_session`, `st_cache_notify`). The router resolves the
+  common scope to the literal database id `common` (`RepositoryDatabaseRouter`), so `DatabaseSettings` needs a
+  `DatabaseItem` whose `Id` is `common`. `IDatabaseSettingsProvider.ValidateRequired` checks that, but nothing in the
+  framework calls it at startup today: a missing item surfaces only on first use, as an `InvalidOperationException`
+  from the connection manager.
+  **Putting a business table in common is wrong.**
 - The `TableSchema/{categoryId}/` folder name = CategoryId (used by the seeder; the form runtime's DML reads only
   FormSchema).
 
@@ -32,8 +37,8 @@ anything else.
 
 Without a specified default, the value is an empty string or `0`; **do not use nullable**. Reason: once the DB holds
 NULLs, every future hand-written SQL has to guard against null everywhere (`WHERE col=''` does not match NULL rows).
-The framework already has this built in for SQL Server / MySQL / PostgreSQL / SQLite (each
-`SchemaSyntax.GetDefaultValue`). **When adding a column, mark it `AllowNull=false` by default; do not reflexively add
+The framework already has this built in for SQL Server / MySQL / PostgreSQL / SQLite (each dialect's
+`<Dialect>SchemaSyntax.GetDefaultValueExpression`); Oracle is the exception in item 4 below. **When adding a column, mark it `AllowNull=false` by default; do not reflexively add
 `AllowNull="true"`.**
 
 **Add-column checklist**:
@@ -42,11 +47,16 @@ The framework already has this built in for SQL Server / MySQL / PostgreSQL / SQ
 2. Confirm that **every** INSERT (including the `SharedDatabaseState` seed and test helpers) supplies a value.
 3. For a `DbType="Text"` column: MySQL TEXT/BLOB **cannot have a DEFAULT**, so the framework emits no DEFAULT
    → every hand-written INSERT must supply the value explicitly (`''`). **Do not make it nullable because of MySQL.**
-4. A String column whose "normal value is empty" and that must support Oracle: in Oracle `''` == `NULL`, so
-   `VARCHAR2(n) DEFAULT '' NOT NULL` contradicts itself, and under a fresh CREATE an INSERT that omits the column
-   raises `ORA-01400`. Until the dialect fix lands, use `AllowNull="true"` as a stopgap.
-5. **Do not rely on local results alone**: the persistent local container goes through ALTER ADD (which makes the
-   column nullable) and cannot reproduce the fresh CREATE behaviour of CI.
+4. Oracle needs nothing in the definition: `''` == `NULL` there, so `OracleSchemaSyntax.GetNullabilityClause` emits
+   every `String` / `Text` / `Time` column as nullable and without `DEFAULT ''`, whatever `AllowNull` says, and
+   `ValueUtilities.CStr` turns the `NULL` back into `""` on read. **Keep `AllowNull=false`; do not mark a column
+   nullable because of Oracle.** Hand-written SQL that must run on Oracle cannot match these columns with
+   `col = ''` (see `docs/en/database-dialect-differences.md` §3.1).
+5. **Do not rely on local results alone**: the persistent local container reaches the new column through the upgrade
+   path (`ALTER TABLE ... ADD`, which emits the same column definition, `NOT NULL` and `DEFAULT` included, and
+   backfills existing rows), while CI creates every table fresh. An INSERT that omits the column can behave
+   differently on the two paths (MySQL `TEXT` has no default, Oracle strings are nullable), so only CI's fresh
+   `CREATE` proves the seed and the test helpers.
 
 ## Numeric precision: round-then-sum, and the framework must round explicitly
 

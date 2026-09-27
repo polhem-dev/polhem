@@ -58,8 +58,8 @@ Depends on the front-end decision + whether auth is needed:
 | WinForms | Either Local or Remote | Same as above |
 
 **Key facts**:
-- `QuickStart.Server` currently hosts `Polhem.Samples.Shared.DemoBackend`, so it **has** `demo/demo` login + Employee
-  schema seed data. Samples other than Console that want auth all connect to this server
+- `QuickStart.Server` currently hosts `Polhem.Samples.Shared.DemoBackend`, so it **has** `demo/demo` login + the
+  Employee / Department / Project seed data. Samples other than Console that want auth all connect to this server
 - in-process mode is for Blazor Server only; Avalonia and other non-web hosts cannot run in-process (there is no
   `WebApplicationBuilder`); instead pass the `IServiceProvider` to the local connector constructors (or set
   `ClientInfo.LocalServiceProvider` on a native head) and use local mode
@@ -70,10 +70,10 @@ Ask the user which BO actions the sample should show:
 
 | Action category | Example BO method | auth? |
 |-----------------|-------------------|-------|
-| `system.ping` (connectivity test) | `SystemApiConnector.PingAsync` | No (Plain) |
+| `Ping` (connectivity test) | `SystemApiConnector.PingAsync` | No (Public / Anonymous) |
 | `Echo` custom BO | `EchoBusinessObject.Echo` | No (Public / Anonymous) |
-| `GetDefine` to read a schema | `SystemApiConnector.GetDefineAsync` | **Yes** (Encrypted / Authenticated) |
-| FormBO CRUD (`GetList` / `GetData` / `Save` / `Delete`) | `FormApiConnector.*` | **Yes** (Encrypted / Authenticated) |
+| `GetDefine` to read a schema | `SystemApiConnector.GetDefineAsync` | **Yes** (Public / Authenticated) |
+| FormBO CRUD (`GetList` / `GetData` / `Save` / `Delete`) | `FormApiConnector.*` | **Yes** (Public / Authenticated) |
 | Custom ExecFunc | A custom method in `Polhem.Business` | Depends on its attribute |
 
 If any action is `Authenticated` → the backend must host `DemoBackend` (for demo/demo), and the demo code must include a
@@ -83,12 +83,19 @@ Login step.
 
 | Define needed | How to reference it |
 |---------------|---------------------|
-| Employee FormSchema (existing) | The backend reads `samples/Define/FormSchema/Employee.FormSchema.xml` (already handled by `DemoBackend.ResolveDefinePath()`) |
-| Custom FormSchema | Add the XML to `samples/Define/FormSchema/<ProgId>.FormSchema.xml`, add the TableSchema to `samples/Define/TableSchema/common/`, and add matching seed data to `DemoSchemaSeeder` (edit `Polhem.Samples.Shared`) |
+| An existing FormSchema (`Employee`, `Department`, `Project`) | The backend reads `samples/Define/FormSchema/` (the directory is found by `DemoBackend.ResolveDefinePath()`) |
+| Custom FormSchema | Add `samples/Define/FormSchema/<ProgId>.FormSchema.xml` and its `samples/Define/FormLayout/<ProgId>.FormLayout.xml` (required: opening a form without one fails; generate it with `polhem-scaffold-from-formschema`), the TableSchema under `samples/Define/TableSchema/common/`, a `TableItem` under the `common` category in `samples/Define/DbCategorySettings.xml`, and in `Polhem.Samples.Shared/DemoSchemaSeeder.cs` a `builder.Execute("common", "<table>")` line in `EnsureSchema` (this seeder lists its tables by hand; it does not walk `DbCategorySettings`) plus seed data if the list should not start empty |
 | No schema at all | A pure Echo / Ping demo, no Define dependency |
 
 When adding a new FormSchema, also update the file list in the `/Define/` folder of `Polhem.Samples.slnx` (not required,
 but it keeps the IDE tree tidier).
+
+> **Samples keep their `ft_*` tables in `common`, which `.claude/rules/database.md` calls wrong for business data.**
+> It is what the sample hosts do today: they never call `EnterCompany` (see the comment in `DemoBackend.cs`), so a
+> `CategoryId="company"` form would throw `CompanyNotEnteredException`, and `samples/Define/DatabaseSettings.xml` /
+> `DbCategorySettings.xml` define only `common`. Follow it inside `samples/` so the new form works with the shared
+> hosts, and do not copy it anywhere else: an app outside `samples/` puts business tables in `company` and enters the
+> company after login (`polhem-app-scaffold` Part 1 and Part 3).
 
 ### Decision 5: which slnx folder
 
@@ -248,10 +255,15 @@ Edit `samples/Polhem.Samples.slnx` and add to the matching folder:
 
 ### Step 6: README
 
-Write `samples/<Sample.Name>/README.md` following the template below:
+Samples READMEs are bilingual: write `samples/<Sample.Name>/README.md` (English) and `README.zh-TW.md` (Traditional
+Chinese) together, following the template below. Each file starts with the language switch line the existing samples
+use (`**English** | [繁體中文](README.zh-TW.md)` in the English file, `[English](README.md) | **繁體中文**` in the
+Chinese one); the Chinese file translates the same sections.
 
 ```markdown
 # {Sample.DisplayName}
+
+**English** | [繁體中文](README.zh-TW.md)
 
 {One sentence on what the sample sets out to prove, e.g. "A console app calls a remote BO over JSON-RPC"}
 
@@ -283,6 +295,8 @@ Write `samples/<Sample.Name>/README.md` following the template below:
 {Deliberately excluded scope, so it is not mistaken for a missing feature}
 ```
 
+Also add the sample to the list in `samples/README.md` and `samples/README.zh-TW.md`.
+
 ### Step 7: build + one run
 
 ```bash
@@ -312,8 +326,10 @@ feat(samples): add {Sample.Name} — {one-line description}
 - **DemoBackend is shared**: `QuickStart.Server` and `Blazor.Server.Demo` share `DemoBackend`; changing it affects both
 - **`Polhem.Samples.slnx` and `Polhem.slnx` are separate solutions**: samples are not in the main solution and CI does
   not build samples; to verify sample changes locally you must run the build by hand
-- **`samples/Define/Master.key` and `samples/**/quickstart.db` are both gitignored**: they are generated automatically
-  on the first run; do not commit them
+- **`samples/**/quickstart.db` is gitignored**: it is created on the first run; do not commit it. There is no master
+  key file: `samples/Define/SystemSettings.xml` reads the key from the `POLHEM_MASTER_KEY` environment variable, and
+  `DemoBackend.AddPolhemBackend` sets it to `DemoCredentials.DemoMasterKey` when it is unset (see "Master key" in
+  `samples/README.md`)
 - **The Echo BO is anonymous Public** — to add a new anonymous BO, copy `EchoBusinessObject` + bind its progId in
   `samples/Define/ProgramSettings.xml` (the `BusinessObject` attribute); to add an authenticated BO, go through the
   DemoBackend path in `samples/Polhem.Samples.Shared`

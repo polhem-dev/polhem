@@ -1,14 +1,14 @@
 ---
 name: polhem-add-cache-object
-description: The full cross-file procedure for adding a framework cache object to polhem, in two kinds — the Define cache (source is a definition file, through IDefineAccess) and the Database-dependent cache (source is the DB, self-loaded through ICacheDataSourceProvider + invalidated by cache-notify). Includes the ObjectCache vs KeyObjectCache decision tree, keeping ICacheContainer + CacheContainerService in sync (missing one always gives CS0535), deferred resolution for the DI dependency cycle, and the cache-notify invalidation chain. Use when the user wants to "add a cache object", "add a cache", "cache some definition / database data", "KeyObjectCache / ObjectCache", "cache-notify invalidation", "permission checks / settings lookups with zero DB hits", or similar requests.
+description: The full cross-file procedure for adding a framework cache object to polhem, in two kinds — the Define cache (source is a definition file, read through IDefineStorage and exposed through IDefineAccess) and the Database-dependent cache (source is the DB, self-loaded through ICacheDataSourceProvider + invalidated by cache-notify). Includes the ObjectCache vs KeyObjectCache decision tree, keeping ICacheContainer + CacheContainerService in sync (a missing property fails the build with CS0535, a missing constructor initialisation is a null reference at run time), deferred resolution for the DI dependency cycle, and the cache-notify invalidation chain. Use when the user wants to "add a cache object", "add a cache", "cache some definition / database data", "KeyObjectCache / ObjectCache", "cache-notify invalidation", "permission checks / settings lookups with zero DB hits", or similar requests.
 ---
 
 # polhem: add a cache object
 
-polhem has **two kinds** of cache. They differ in source and invalidation mechanism, and their file chains differ too. Locate yours with the decision tree first, then follow the matching path. Every path touches `ICacheContainer` + `CacheContainerService` + two `CacheNotify` test stubs; miss any one of these three and the build fails with `CS0535` (building an individual project does not catch it; **it only shows up when `dotnet build Polhem.slnx` reproduces the CI strict build**).
+polhem has **two kinds** of cache. They differ in source and invalidation mechanism, and their file chains differ too. Locate yours with the decision tree first, then follow the matching path. Every path touches `ICacheContainer` + `CacheContainerService`, which is the only implementation of `ICacheContainer` in the repository; a property declared on the interface but not on `CacheContainerService` fails the `Polhem.ObjectCaching` build with `CS0535`.
 
 > Templates to compare against (keep them open while reading code):
-> - Define cache (single): `PermissionModelsCache` (`ObjectCache<PermissionModels>`)
+> - Define cache (single): `MenuSettingsCache` (`ObjectCache<MenuSettings>`, reads through `IDefineStorage`)
 > - Define cache (keyed): `FormSchemaCache` (`KeyObjectCache<FormSchema>`, by progId)
 > - Database cache (keyed): `CompanyRolePermissionsCache` / `CompanyInfoCache` (`KeyObjectCache<T>`, by id, `CreateInstance` self-loads through `ICacheDataSourceProvider`)
 
@@ -18,7 +18,7 @@ polhem has **two kinds** of cache. They differ in source and invalidation mechan
 
 | Source | Kind | Folder | Invalidation mechanism | Template |
 |------|------|--------|---------|------|
-| **Definition file** (XML, through `IDefineAccess`) | **Define cache** | `Polhem.ObjectCaching/Define/` | `CreateInstance` self-loads; cleared on `SaveDefine` | `PermissionModelsCache` / `FormSchemaCache` |
+| **Definition file** (XML, through `IDefineStorage` behind `IDefineAccess`) | **Define cache** | `Polhem.ObjectCaching/Define/` | `CreateInstance` self-loads; cleared on `SaveDefine`, and by the storage's change source (file watch, or cache-notify for DB storage) | `MenuSettingsCache` / `FormSchemaCache` |
 | **Database** (runtime data) | **Database cache** | `Polhem.ObjectCaching/Database/` | `CreateInstance` self-loads through `ICacheDataSourceProvider`; cleared by cache-notify polling | `CompanyRolePermissionsCache` / `CompanyInfoCache` |
 
 ### Second cut: single or keyed? (applies to both kinds)
@@ -29,7 +29,7 @@ polhem has **two kinds** of cache. They differ in source and invalidation mechan
 | `KeyObjectCache<T>` | **Many instances, by key** (progId / company id / token) | `FormSchema` / `TableSchema` (by progId), `CompanyInfo` / `SessionInfo` / `CompanyRolePermissions` (by id) |
 
 - `KeyObjectCache<T>` requires `T` to implement `IKeyObject` (`string GetKey()`).
-- **In both kinds `CreateInstance(key)` self-loads**: the Define cache takes from `IDefineAccess`, the Database cache
+- **In both kinds `CreateInstance(key)` self-loads**: the Define cache takes from `IDefineStorage`, the Database cache
   goes through `ICacheDataSourceProvider`. The difference is only the data source and the invalidation mechanism,
   not where loading happens.
 
@@ -37,29 +37,33 @@ polhem has **two kinds** of cache. They differ in source and invalidation mechan
 > service doing "`Get` misses → repository → `Set` to backfill". That amounted to hand-writing a read-through in every
 > service, and it bypassed the negative caching already built into the base class. All of them now self-load:
 > `CompanyInfoCache` / `CompanyRolePermissionsCache` / `DepartmentTreeCache` all do.
-> **Do not reuse the old `=> null` template for a new cache** (`SessionInfoCache` still returns `null`; that is a
-> pending item waiting for persistence to be wired up, not a template).
+> **Do not reuse the old `=> null` template for a new cache.** Every Database cache in
+> `src/Polhem.ObjectCaching/Database/` self-loads now, `SessionInfoCache` included.
 
 ---
 
 ## Path A: Define cache
 
-The source is a definition file, accessed through `IDefineAccess`. Adding one (such as line A's `PermissionModels`) spans the **Definition + ObjectCaching** projects.
+The source is a definition file, read through `IDefineStorage` (file or database storage) and exposed through
+`IDefineAccess`. Adding one (such as `MenuSettings`) spans the **Definition + Db + ObjectCaching** projects, plus
+**Api.Client** when clients read it. Following an existing type through the tree
+(`grep -rln MenuSettings src --include='*.cs'`) is the reliable way to find every place.
 
 ### File chain
 
-| # | File | Convention |
-|---|------|------|
-| 1 | `src/Polhem.Definition/<Area>/<Name>.cs` | POCO definition class; the keyed variant implements `IKeyObject` |
-| 2 | `src/Polhem.Definition/DefineType.cs` | Add the enum value `<Name>` |
-| 3 | `src/Polhem.Definition/DefineTypeExtensions.cs` | Map `{ DefineType.<Name>, "<full type name>" }` |
-| 4 | `src/Polhem.Definition/PathOptions.cs` | Add `Get<Name>FilePath()` |
-| 5 | `src/Polhem.Definition/Storage/IDefineAccess.cs` | Add the DIM `<Name> Get<Name>() => (<Name>)GetDefine(DefineType.<Name>);` |
-| 6 | `src/Polhem.ObjectCaching/Define/<Name>Cache.cs` | `: ObjectCache<T>` (single) or `: KeyObjectCache<T>` (keyed); `CreateInstance` loads from `DefineAccess` |
-| 7 | `src/Polhem.ObjectCaching/CacheDefineAccess.cs` (server side), `src/Polhem.Api.Client/ClientDefineAccess.cs` (client side) | If both sides need to read the definition. (Rechecked 2026-08-06: the old `LocalDefineAccess` / `RemoteDefineAccess` no longer exist) |
-| 8 | `src/Polhem.ObjectCaching/ICacheContainer.cs` | Add `<Name>Cache <Name> { get; }` |
-| 9 | `src/Polhem.ObjectCaching/CacheContainerService.cs` | **Two places** (see the shared section below) |
-| 10 | Two test stubs | **Must be added** (see the shared section below) |
+| File | Convention |
+|------|------|
+| `src/Polhem.Definition/<Area>/<Name>.cs` | POCO definition class; the keyed variant implements `IKeyObject` |
+| `src/Polhem.Definition/DefineType.cs` | Add the enum value `<Name>` |
+| `src/Polhem.Definition/DefineTypeExtensions.cs` | Add the arm `DefineType.<Name> => typeof(<Name>)` to `ToClrType`; `ToClrType_EveryDefineType_IsMapped` fails when it is missing |
+| `src/Polhem.Definition/PathOptions.cs` (+ `CustomizeOnlyPathOptions.cs` if it can be customized) | Add `Get<Name>FilePath()` |
+| `src/Polhem.Definition/Storage/IDefineStorage.cs` + `FileDefineStorage.cs`, `CustomizeOnlyStorage.cs`, `src/Polhem.Db/Storage/DbDefineStorage.cs` | `Get<Name>()` / `Save<Name>()`, and an arm in each storage's `GetChangeSource` |
+| `src/Polhem.Definition/Storage/IDefineAccess.cs` | Add the DIMs `<Name> Get<Name>() => (<Name>)GetDefine(DefineType.<Name>);` and `Save<Name>` |
+| `src/Polhem.ObjectCaching/Define/<Name>Cache.cs` | `: ObjectCache<T>` (single) or `: KeyObjectCache<T>` (keyed), `public sealed`; `CreateInstance` loads from `IDefineStorage`, `GetPolicy` takes its watch list and notify key from `GetChangeSource` |
+| `src/Polhem.ObjectCaching/CacheDefineAccess.cs` + `CacheDefineAccess.Settings.cs` / `.Schemas.cs` | The `GetDefine` / `SaveDefine` switch arms and the typed `Get<Name>` / `Save<Name>` (the save removes the cache entry) |
+| `src/Polhem.Api.Client/ClientDefineAccess.cs` | Only if clients read it. Remote `GetDefine` serves an allow-list (`SystemBusinessObject.Define.cs`); a new type is refused remotely until it is added there on purpose |
+| `src/Polhem.ObjectCaching/ICacheContainer.cs` | Add `<Name>Cache <Name> { get; }` |
+| `src/Polhem.ObjectCaching/CacheContainerService.cs` | **Two places** (see the shared section below) |
 
 - The DIM (default interface method) means existing `IDefineAccess` implementers need no changes.
 - The type name mapped in `DefineTypeExtensions` must match the POCO's full name (used for deserialization).
@@ -80,12 +84,11 @@ The source is the database; it is loaded at runtime and invalidated by cache-not
 | 4 | `src/Polhem.ObjectCaching/Database/<Name>Cache.cs` | `: KeyObjectCache<T>`; `CreateInstance` calls the provider (see the template) |
 | 5 | `src/Polhem.Definition/<Area>/I<Name>Service.cs` | `Get(string key)` / `Remove(string key)`; the layer boundary that keeps upper layers from depending on `Polhem.ObjectCaching` |
 | 6 | `src/Polhem.ObjectCaching/Services/<Name>Service.cs` | **Single-line delegation** to the cache; loading logic is not here |
-| 7 | `src/Polhem.Repository.Abstractions/.../I<X>Repository.cs` + `src/Polhem.Repository/.../<X>Repository.cs` | The data source (DB reads); **also add the matching `Create<T>()` resolution to `IRepositoryFactory`** |
+| 7 | `src/Polhem.Repository.Abstractions/.../I<X>Repository.cs` + `src/Polhem.Repository/.../<X>Repository.cs` | The data source (DB reads); **also add the interface → implementation entry to the framework type table in `src/Polhem.Repository/Factories/RepositoryFactory.cs`**, which is what `IRepositoryFactory.Create<T>()` resolves from |
 | 8 | `src/Polhem.ObjectCaching/ICacheContainer.cs` | Add `<Name>Cache <Name> { get; }` |
 | 9 | `src/Polhem.ObjectCaching/CacheContainerService.cs` | **Two places** (see the shared section below); the ctor passes `dataSource` to the new cache |
 | 10 | `src/Polhem.Hosting/PolhemFrameworkServiceCollectionExtensions.cs` | Register only the service; do **not** register repositories one by one (see below) |
-| 11 | Two test stubs | **Must be added** (see the shared section below) |
-| (12) | cache-notify bump point | The BO/Repository that writes the configuration calls `ICacheNotifyService.Touch(cacheKey, tx, dbType)` in the **same transaction** (see below) |
+| (11) | cache-notify bump point | The BO/Repository that writes the configuration calls `ICacheNotifyService.Touch(cacheKey, transaction, databaseType)` in the **same transaction** (see below) |
 
 ### Dependency constraint: why the data-fetch method returns a domain type
 
@@ -101,7 +104,7 @@ So: the POCO goes in `Polhem.Definition`, the provider returns that POCO, and `P
 ```csharp
 namespace Polhem.ObjectCaching.Database
 {
-    public class <Name>Cache : KeyObjectCache<<T>>
+    public sealed class <Name>Cache : KeyObjectCache<<T>>
     {
         private readonly Func<ICacheDataSourceProvider>? _dataSource;
 
@@ -136,7 +139,7 @@ namespace Polhem.ObjectCaching.Database
 The loading logic is already in the cache, so the service reduces to a single-line delegation on the layer boundary:
 
 ```csharp
-public class <Name>Service : I<Name>Service
+public sealed class <Name>Service : I<Name>Service
 {
     private readonly ICacheContainer _cache;
 
@@ -188,7 +191,9 @@ services.AddSingleton<ICacheContainer>(sp =>
 The invalidation **infrastructure is already in place**, and a new cache hooks into it automatically. **You do not need
 to register the cache anywhere**:
 
-1. `KeyObjectCache<T>`'s `GetCacheKey(key)` = `cachePrefix + CacheGroup + ":" + key`; `CacheGroup` defaults to `typeof(T).Name`.
+1. Each entry's `ChangeNotifyKey` defaults to `CacheGroup + ":" + key` (`KeyObjectCache<T>`), and `CacheGroup`
+   defaults to `typeof(T).Name`. This is the notification key, not the memory key (`GetCacheKey` builds that one
+   separately, lower-cased and prefixed).
 2. The poller polls the cache-notify table in common and writes the version numbers it observes into `CacheInfo.NotifyVersions`
    (`CacheNotifyPollSession` → `SetVersion(cacheKey, version)`). **The poller holds no cache references.**
 3. Each cache entry records the current version number of its `ChangeNotifyKey` when it is created
@@ -198,7 +203,7 @@ to register the cache anywhere**:
 In other words, invalidation is **pulled by the entry itself** (pull), not pushed to the container (push). That is why a
 new cache does not need to be registered in any array.
 
-**The only thing you add is the bump point**: the BO/Repository that writes the database data calls `ICacheNotifyService.Touch("<CacheGroup>:<key>", transaction, dbType)` **within the same transaction**, so the next poller round clears it. If there is no management interface that writes the configuration, the bump point waits until that management BO is built (line B's `CompanyRolePermissions` is in this state).
+**The only thing you add is the bump point**: the BO/Repository that writes the database data calls `ICacheNotifyService.Touch("<CacheGroup>:<key>", transaction, databaseType)` **within the same transaction**, so the next poller round clears it. If there is no management interface that writes the configuration, the bump point waits until that management BO is built (line B's `CompanyRolePermissions` is in this state).
 
 ---
 
@@ -211,9 +216,9 @@ new cache does not need to be registered in any array.
 <Name>Cache <Name> { get; }
 
 // (2) Initialise it in the CacheContainerService ctor
-//     Define cache: new <Name>Cache(storage, paths, CachePrefix)
+//     Define cache: new <Name>Cache(storage, CachePrefix)
 //     Database cache: pass dataSource in — new <Name>Cache(dataSource, CachePrefix)
-<Name> = new <Name>Cache(CachePrefix);
+<Name> = new <Name>Cache(storage, CachePrefix);
 
 // (3) Add the matching public property to CacheContainerService (`/// <inheritdoc/>`)
 public <Name>Cache <Name> { get; }
@@ -226,9 +231,9 @@ Missing the interface property or the implementing property → `CS0535` (interf
 > mechanism is that **the poller only publishes the observed version numbers to `CacheInfo.NotifyVersions`, and cache
 > entries with a matching `ChangeNotifyKey` invalidate themselves**; a new cache does not need to be registered in any array.
 >
-> The same recheck also confirmed: **the CacheNotify tests in `tests/Polhem.Hosting.UnitTests` no longer implement
-> `ICacheContainer`** (the poller no longer holds cache references), so the "two stubs that must be added" do not exist.
-> The only implementation of `ICacheContainer` in the whole repository is `CacheContainerService`.
+> The same recheck also confirmed that **no test implements `ICacheContainer`** (the poller no longer holds cache
+> references), so there are no test stubs to update. The only implementation in the whole repository is
+> `CacheContainerService`.
 
 ---
 
@@ -239,14 +244,14 @@ Missing the interface property or the implementing property → `CS0535` (interf
 | Define cache | Access returns the correct object; invalidated after `SaveDefine` | Get `IDefineAccess.Get<Name>()` through `PolhemTestFixture` |
 | Database cache POCO | Pure query logic (such as OR-merging multiple roles) | Pure unit test: build the POCO from synthetic data and assert directly (**no DB needed**) |
 | Database service | Load on cache miss + short-circuit on cache hit | Fake repository + fake source service; verify that two `Get` calls load only once |
-| Repository | DB round-trip | `[DbFact]` 5 DBs, `IClassFixture<SharedDbFixture>` |
+| Repository | DB round-trip | `[DbFact(DatabaseType.X)]` / `[DbTheory]` per provider, `IClassFixture<SharedDbFixture>` |
 
 Put check / lookup logic in **the POCO's methods** where possible (such as `CompanyRolePermissions.GetAllowed`), so the core logic can be unit tested with synthetic data and is not tied to a DB.
 
 ## Common pitfalls
 
 1. **Missing the property declaration on `CacheContainerService` → CS0535**: once `ICacheContainer` gains a property, it needs an implementation.
-2. **Building individual projects only, without the slnx**: the stubs' CS0535 only appears in `dotnet build tests/Polhem.Hosting.UnitTests`; **always run `dotnet build Polhem.slnx -c Release` to reproduce the CI strict build**.
+2. **Building individual projects only, without the slnx**: a new cache touches several projects; **run `dotnet build Polhem.slnx -c Release` to reproduce the CI strict build**.
 3. **Changing only one of the two places in `CacheContainerService`**: ctor initialisation missing → NRE; property declaration missing → CS0535.
 4. **Reusing the old `CreateInstance => null` template** (the convention before 2026-07-29): Database caches now
    **should self-load** through `ICacheDataSourceProvider`. Returning `null` means hand-writing the read-through into the
@@ -268,9 +273,10 @@ Put check / lookup logic in **the POCO's methods** where possible (such as `Comp
 - [ ] Shape: single (`ObjectCache<T>`) or keyed (`KeyObjectCache<T>` + `IKeyObject`)
 
 **Path A (Define cache)**:
-- [ ] POCO definition class + `DefineType` enum value + `DefineTypeExtensions` mapping + `PathOptions.Get<Name>FilePath`
-- [ ] `IDefineAccess` DIM `Get<Name>()`
-- [ ] `Define/<Name>Cache.cs` (`CreateInstance` self-loads)
+- [ ] POCO definition class + `DefineType` enum value + `DefineTypeExtensions.ToClrType` arm + `PathOptions.Get<Name>FilePath`
+- [ ] `IDefineStorage` members in every storage (`FileDefineStorage`, `CustomizeOnlyStorage`, `DbDefineStorage`), including `GetChangeSource`
+- [ ] `IDefineAccess` DIMs `Get<Name>()` / `Save<Name>()` + the `CacheDefineAccess` arms
+- [ ] `Define/<Name>Cache.cs` (`CreateInstance` self-loads from `IDefineStorage`)
 
 **Path B (Database cache)**:
 - [ ] POCO implementing `IKeyObject` (in `Polhem.Definition`); check / lookup logic in POCO methods
@@ -278,7 +284,7 @@ Put check / lookup logic in **the POCO's methods** where possible (such as `Comp
 - [ ] Implement it in `CacheDataSourceProvider` (get the repository through `IRepositoryFactory`, assemble the POCO)
 - [ ] `Database/<Name>Cache.cs` (`CreateInstance` calls the provider; the constructor that takes `dataSource` is `internal`)
 - [ ] `I<Name>Service` + `<Name>Service` (**single-line delegation**, no loading logic)
-- [ ] Repository abstraction + implementation + the matching `Create<T>()` resolution on `IRepositoryFactory`
+- [ ] Repository abstraction + implementation + the entry in `RepositoryFactory`'s framework type table
 - [ ] DI registers only the service (does **not** register repositories one by one)
 - [ ] The `CacheContainerService` ctor passes `dataSource` to the new cache
 - [ ] cache-notify bump point (`Touch` in the same transaction as the configuration write; deferred if there is no management interface)
@@ -293,7 +299,7 @@ Put check / lookup logic in **the POCO's methods** where possible (such as `Comp
 
 | Purpose | File |
 |------|------|
-| Define cache (single) template | `src/Polhem.ObjectCaching/Define/PermissionModelsCache.cs` |
+| Define cache (single) template | `src/Polhem.ObjectCaching/Define/MenuSettingsCache.cs` |
 | Define cache (keyed) template | `src/Polhem.ObjectCaching/Define/FormSchemaCache.cs` |
 | Database cache template | `src/Polhem.ObjectCaching/Database/CompanyInfoCache.cs` (includes the WARNING comment on the `Func<T>` dependency cycle) |
 | Database cache (needs to resolve the source DB) | `src/Polhem.ObjectCaching/Database/DepartmentTreeCache.cs` / `CompanyRolePermissionsCache.cs` |

@@ -26,7 +26,8 @@ all have constraints.
 
 ### Connection string
 
-The console app **does not read `.runsettings`**; you must use environment variables:
+The console app **does not read `.runsettings`**; you must use environment variables. A dedicated
+`POLHEM_LOADTEST_CONNSTR_<PROVIDER>` wins; otherwise the test suite's variable is used:
 
 ```bash
 export POLHEM_TEST_CONNSTR_SQLSERVER='...'
@@ -103,7 +104,7 @@ drifts; see `.claude/rules/single-source.md`).
 
 | Symptom | Cause and handling |
 |---------|--------------------|
-| `Environment variable 'POLHEM_TEST_CONNSTR_*' is not set` | Not exported; set it as the message says |
+| `Neither 'POLHEM_LOADTEST_CONNSTR_*' nor 'POLHEM_TEST_CONNSTR_*' is set` | Not exported; set it as the message says |
 | Many `HttpRequestException` 401 | Remote mode is missing `X-Api-Key`; the configured `target.apiKey` was not sent |
 | Every scenario fails and the message points at DI resolution | The backend cannot start; run `verify` first to isolate the problem |
 | `Unknown scenario 'X'` | Scenario name misspelled in the settings file. **This is deliberately not skipped** — silently skipping would produce a report that looks complete |

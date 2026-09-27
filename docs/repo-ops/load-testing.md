@@ -41,7 +41,7 @@ SQL
 ```
 
 `<ORACLE_PWD>` is the container's `ORACLE_PWD` environment variable (readable with `docker inspect`); this file does
-not copy it. Once it is created, point `POLHEM_LOADTEST_CONNSTR_ORACLE` at it, and `prepare` builds all 25 tables and
+not copy it. Once it is created, point `POLHEM_LOADTEST_CONNSTR_ORACLE` at it, and `prepare` builds all its tables and
 the seed data there, without touching `testuser`:
 
 ```bash

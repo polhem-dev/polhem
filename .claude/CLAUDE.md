@@ -20,7 +20,7 @@ model, with an emphasis on security, pluggable serialization and cross-platform 
 
 - **Version**: see `Version.props` at the repository root (shared by `src/` and `tools/`)
 - **License**: MIT
-- **Target framework**: `net10.0` (every project)
+- **Target framework**: `net10.0` for every package except `Polhem.Analyzers` (`netstandard2.0`, as Roslyn requires); the Northwind mobile and browser heads target the platform variants
 
 ```
 src/         # the packages (Polhem.Base, Polhem.Definition, Polhem.Api.Core, ...)
@@ -48,17 +48,14 @@ Container detection, automatic skipping and environment variable overrides for `
 
 ## Architecture layers
 
-| Layer | Projects |
-|-------|----------|
-| API | Polhem.Api.AspNetCore, Polhem.Api.Core, Polhem.Api.Client |
-| Business logic | Polhem.Business |
-| Data access | Polhem.Repository, Polhem.Repository.Abstractions, Polhem.Db |
-| Infrastructure | Polhem.Base, Polhem.Definition, Polhem.ObjectCaching |
+The projects, their layers and every allowed dependency edge are in `docs/en/dependency-map.md`; this file does not
+keep a copy.
 
 > ⚠️ **`Polhem.Base` and `Polhem.Definition` are the two lowest assemblies.** Every project depends on
 > `Polhem.Base`, and the direct consumers of `Polhem.Definition` span every layer. **Do not add package references
 > to these two projects unless it is necessary**: any dependency added here spreads along the dependency chain to
-> every consumer. The criteria, the correct approach and the gates are in `rules/dependency-boundary.md`.
+> every consumer. `Polhem.Api.Contracts` is locked the same way. The criteria, the correct approach and the gates are
+> in `rules/dependency-boundary.md`.
 
 ## Workflow
 

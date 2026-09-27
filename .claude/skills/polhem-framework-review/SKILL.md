@@ -5,7 +5,7 @@ description: A repeatable methodology for a "full health check" of the polhem fr
 
 # Full health check of the polhem framework
 
-Run a structured health check over the whole framework (17 `src/` projects) and produce a **graded refactoring plan**
+Run a structured health check over the whole framework (every project under `src/`) and produce a **graded refactoring plan**
 and a **10-point score per dimension**. The core method is **read-only scanning per dimension by parallel subagents**,
 followed by cross-deduplication and consolidation.
 
@@ -13,8 +13,10 @@ followed by cross-deduplication and consolidation.
 
 - **Trigger**: the user asks for a full review / health check / architecture audit / scoring / finding scattered classes /
   a refactoring plan.
-- **Output**: a graded refactoring plan (graded findings + execution order) written to `local/plans/`, for example
-  `local/plans/<review-date>-framework-review.md`, plus a score table in the conversation. `local/` is ignored by git:
+- **Output**: one report per dimension plus a graded refactoring plan (graded findings + execution order) and a score
+  table in the conversation. **Every report goes to a durable location the moment it is written**: each subagent
+  writes its own report into `local/internal/health-<review-date>/<dimension>.md`, and the plan goes to
+  `local/plans/`. Never leave reports in the scratchpad (see the 2026-09-26 lessons). `local/` is ignored by git:
   **never commit the report** (never `git add -f` it), because it can list unfixed security issues. If it lists unfixed
   vulnerabilities, keep those details in `local/internal/` instead. If the user only wants a verbal conclusion you can
   skip writing the file, but writing it is the default (in line with the "Plan before you build" section of
@@ -28,7 +30,7 @@ Ask each question with explicit options and mark the recommended one:
 
 1. **Extra dimensions** (multi-select): the default eleven dimensions are covered; ask whether to add more (for example
    cross-platform trim/AOT, i18n coverage).
-2. **Scope** (single): all 17 projects (recommended) / core backend only (excludes the UI heads Avalonia/Blazor.Server;
+2. **Scope** (single): every `src/` project (recommended) / core backend only (excludes the UI heads Avalonia/Blazor.Server;
    highest density of refactoring signals) / including apps+samples+tools.
 3. **Mode** (single): read-only review + plan document (recommended) / verbal report only / multi-agent workflow deep scan
    (requires the user's explicit consent to large-scale orchestration).
@@ -42,7 +44,7 @@ Ask each question with explicit options and mark the recommended one:
 | 3 | Security | Encryption pipeline, Session/Token, SQL injection, XXE, randomness, resource disposal, access control |
 | 4 | Maintainability | Naming consistency, comments, one type per file, culture in identifier comparison, large files |
 | 5 | Scattered/unnecessary classes | Grab-bags, pure facades, `*Func` leftovers, multiple types per file, dead code |
-| 6 | Serialization consistency | XML/JSON/MessagePack triple attributes, `[Union]` polymorphism, typeless allowlist, trim/AOT |
+| 6 | Serialization consistency | Explicit wire registration, Plain/JSON/MessagePack carrying the same values, the `object` value envelope, decoder limits, trim/AOT |
 | 7 | Public API surface | Contract-axis namespace consistency, BO interface purity, breaking-change surface, four-layer alignment |
 | 8 | Test quality and coverage | Ineffective assertions (S2699), coverage gaps, fixture pollution, flaky tests, `[Collection]` serialization |
 | 9 | Documentation drift | Public doc claims vs actual code, dead links, bilingual gaps, breaking changes missing from CHANGELOG |
@@ -65,7 +67,8 @@ Ask each question with explicit options and mark the recommended one:
 
 Dispatch **10 `general-purpose` subagents** (in the background, in parallel), one per dimension (architecture and
 dependencies together, one each for the rest). Each agent:
-- Is **strictly read-only**; the prompt states explicitly "you must not modify or write any file; only report findings".
+- Is **strictly read-only on the repository**; the prompt states explicitly "you must not modify any repository file;
+  the only file you write is your own report", and names the report path under `local/internal/health-<review-date>/`.
 - Receives **the full checklist for its dimension + known pitfalls** (see below) + a summary of the relevant rules
   (distilled from `.claude/rules/`; do not tell the agent to go read the whole set itself).
 - Reports in a uniform format: three levels, each item with `project/file:line`, the problem (WHY) and a recommendation.
@@ -73,7 +76,7 @@ dependencies together, one each for the rest). Each agent:
   accepted).
 
 After all reports are in, the main agent **cross-deduplicates**: a finding reported independently by two agents gets
-higher confidence and higher priority (this time the `MessagePackKeyCollectionBase` comparer was confirmed by both the
+higher confidence and higher priority (in the 2026-08-07 round, a collection comparer bug was confirmed by both the
 maintainability and the serialization agents).
 
 > This uses ordinary subagent delegation (not billed large-scale workflow orchestration). Only if the user chooses the
@@ -119,8 +122,9 @@ judgement.
 ### 3. Security (rule sources: `.claude/rules/security.md` + `.claude/rules/scanning.md`)
 - SQL: always the `{0}` placeholders of `DbCommandSpec`; grep `$"...SELECT/INSERT/UPDATE` and SQL built with
   `string.Format`; identifiers must be escaped via `QuoteIdentifier`.
-- Encryption: AES-CBC-HMAC (256-bit + SHA-256 + random IV); HMAC uses the constant-time `CompareBytes` (not `==`); the
-  payload pipeline serialize→compress→encrypt must not be reordered; access validation must happen **before decryption**.
+- Encryption: AES-CBC-HMAC (256-bit + SHA-256 + random IV); HMAC uses the constant-time
+  `CryptographicOperations.FixedTimeEquals` (not `==`); the payload pipeline serialize→compress→encrypt must not be
+  reordered; access validation must happen **before decryption**.
 - Randomness: security uses always `RandomNumberGenerator`; `System.Random` is forbidden.
 - XXE: parsing untrusted XML requires `DtdProcessing.Prohibit` + `XmlResolver=null`.
 - Exceptions: no `catch(Exception)` on base types, no empty catch, no `throw ex;`; exceptions/logs must not leak
@@ -128,7 +132,11 @@ judgement.
 - Resources: `IDisposable` uses `using`; no scattered manual `.Dispose()`.
 - Access control: do all externally exposed methods have an appropriate `[ApiAccessControl]`; is the unannotated case
   fail-closed (deny rather than allow); does the default validator actually verify the key value (not only that it is
-  non-empty).
+  non-empty). **What an action name can reach** is decided by `JsonRpcExecutor.IsResolvableAction`; check that
+  POLHEM3001 and the runtime agree on it (the 2026-09-26 round found accessors and static methods reachable while the
+  analyzer assumed they were not).
+- Anonymous surface: everything reachable before authentication (the decoder, anonymous actions, replay protection)
+  is a denial-of-service surface; `AnonymousApiSurfaceTests` pins the anonymous action list.
 - Hardcoding: keys/certificates/passwords in connection strings; MD5/SHA1 used for security hashing; whether
   `NoEncryptionEncryptor` can be enabled outside debug.
 
@@ -152,25 +160,32 @@ judgement.
 - **Clarification trap**: the `ExecFunc*` family is a domain type (the JSON-RPC "execute function" pattern), not a
   deprecated `*Func` static class; do not report it.
 
-### 6. Serialization consistency (rule source: the `polhem-serialization` skill)
-- **The default wire is MessagePack** (`Polhem.Api.Core/ApiServiceOptions.cs`), which amplifies the "fine in JSON/XML,
-  broken in MessagePack" class of problems.
-- **Typeless allowlist** (the most concrete pitfall): `object`-typed fields go through `SafeTypelessFormatter`, and the
-  value type must be on the `AllowedPrimitiveTypes` + `SysInfo.IsTypeNameAllowed` allowlist. Check in particular paths
-  such as `FilterCondition.In()` that set an `object` to `List<object>`/`object[]`; if it is not on the allowlist,
-  deserialization throws.
-- For MessagePack items with a parameterised ctor, the ctor parameter order must match the `[Key]` order (types that have
-  a parameterless ctor and go through setters are not affected).
-- `[Union]` polymorphism ⊥ keyAsPropertyName: polymorphic types keep integer `[Key]`; non-polymorphic types use
-  name-based keys (adr-030).
-- Complete triple attributes: derived/computed/transient fields must be ignored by all three
-  (`[XmlIgnore, JsonIgnore, IgnoreMember]`); do not rely on a private setter to keep something off the wire implicitly
-  (under contractless, changing it to a public setter leaks it silently).
-- Collections: `MessagePackCollectionBase<>` subtypes must have a formatter explicitly registered in `MessagePackCodec`,
-  otherwise **deserialization** throws `MessagePackSerializationException` (the serializing side is correct, so it only
-  shows up on read-back). The build-time rule that guarded this was Bee.NET's BEE4001; Polhem has no such rule
-  (POLHEM4001–4004 are reserved), so `WireContractDriftTests` is the guard. Definition collections must not be bare
-  `List<T>`/`Collection<T>`.
+### 6. Serialization consistency (rule sources: `.claude/rules/serialization.md`, `src/Polhem.Api.Core/CLAUDE.md`, the `polhem-serialization` skill)
+- **Three wires, one set of values**: `Plain` (the envelope's System.Text.Json), the JSON body codec and MessagePack
+  (the codec is negotiated per request, adr-044; undeclared means MessagePack). Look for a value that survives one wire
+  and changes or fails on another, above all `object`-typed members (`Parameter.Value`, `FilterCondition.Value`) and
+  `DataTable` rows. Measure the suspicious ones: in the 2026-09-26 round the Plain path turned a valued filter into a
+  `JsonElement` and a `DataTable` into an empty table, and only a probe proved it.
+- **Explicit registration**: every wire type is registered in `WireContracts.*.cs`. The gates are
+  `WireContractDriftTests` (registration and member list), `WireCodecParityTests` (every contract through both codecs,
+  member by member), `WireDefaultOmissionTests` (non-default initializers are always written). Check that each gate is
+  not vacuous (canaries, lower bounds), and look for what it cannot see: hand-written formatters outside
+  `WireContract`, closed generic instantiations in `WireContracts.Generics.cs`.
+- **The `object` envelope**: `WireValueFormatter`'s closed set, the named-type table and the escape hatch. The
+  allow-list (`WireTypeWhitelist`) must be applied symmetrically on both ends and both codecs; the escape hatch needs
+  dynamic code, so it fails on iOS.
+- **Decoder limits**: nesting depth (`MessagePackCodec.MaxObjectGraphDepth`, the depth steps inside hand-written
+  formatters such as `FilterNodeFormatter`, `MessagePackDepthLimitTests`) and sizes. The decoder runs before
+  authentication, so a missing limit is an anonymous denial of service.
+- **Cross-language contract**: `wire-contracts/messages.d.ts` and `wire-fixtures/` are the authority
+  (`WireFixtureTests`, `WireContractGeneratorTests`); a wire change without a diff there is a finding.
+- **Definition types**: no transport attributes in `Polhem.Definition` (adr-036); collections inherit
+  `KeyCollectionBase<T>` / `CollectionBase<T>`; empty collections are omitted by get-only `XSpecified`, not
+  `ShouldSerializeX`; serializing a cached instance has no side effects (`CachedDefinitionSerializationTests`); the
+  reflection-only `XmlSerializer` shape rules (`XmlSerializerShapeGateTests`, POLHEM4005, POLHEM4006).
+- **Trim/AOT**: which test projects the CI AOT gate (`DynamicCodeSupport=false` in `build-ci.yml`) covers, and which
+  wire paths none of them exercise; the supported trim modes and `POLHEM9004`; the trim descriptors
+  (`ILLink.Descriptors.xml` in `Polhem.Definition` and `Polhem.Expressions`, `TrimmerDescriptorGateTests`).
 - Newtonsoft.Json leftovers (should be 0).
 
 ### 7. Public API surface
@@ -197,8 +212,11 @@ judgement.
   round-trips and public BO methods must be tested; look for critical paths with zero coverage, such as `In` over
   MessagePack.
 - Fixture pollution: `SaveDefine`-family tests must switch to a temp directory; writing to `tests/Define/` is forbidden.
-- `[Collection]` serialization (the rules claim it was cleared after Phase 7; verify no regression), tests modifying
-  production statics, real wall-clock flakiness (recommend `TimeProvider` + `FakeTimeProvider`).
+- `[Collection]` serialization (every collection is a `const` name on a definition class, per `tests/CLAUDE.md`;
+  `grep -rn '\[Collection("' tests --include='*.cs'` finds literals that crept back), tests modifying production
+  statics, real wall-clock flakiness (recommend `TimeProvider` + `FakeTimeProvider`).
+- Database tests that CI would silently skip: `RequiredTestDatabaseGateTests` must still match the workflow's
+  database list.
 
 ### 9. Documentation drift (rule source: `.claude/rules/public-docs.md`)
 
@@ -221,7 +239,7 @@ The scope is **public documentation** (written for NuGet package consumers): the
   subdirectory they gain one extra level, and all 404 on GitHub).
 - **Bilingual sync**: compare section structure and amount of content in bilingual pairs; find one-sided updates; find
   documents that should be bilingual but exist in only one language.
-- **CHANGELOG**: the `Directory.Build.props` version vs the commits after the tag; are all commits marked `!` recorded;
+- **CHANGELOG**: the `Version.props` version vs the commits after the tag; are all commits marked `!` recorded;
   is there an Unreleased section; have existing statements been overturned by later commits.
 - **Quantitative baselines**: project counts / dependency edges / package lists claimed by docs vs the actual csproj
   files.
@@ -267,8 +285,9 @@ safe; trace every write site.
 - **Shared cache instance mutated** (highest value; an explicit hard constraint of the framework): trace every call site
   of `IDefineAccess.GetX(...)` exhaustively, and confirm for each whether the object obtained is written to afterwards
   (property assignment, collection Add/Remove, mutation of child objects). Only safe with `Clone()`.
-  **Note that `XmlCodec.Serialize(cached)` also counts as mutation**: it flips `SetSerializeState` on the source and
-  propagates it recursively. Look for "the guard only covers some types": on 2026-08-07 the review found that the only
+  Serializing a cached instance used to count as mutation (per-object serialize state, removed before Polhem 1.0);
+  confirm nothing has brought back state that serialization writes onto the value. Look for "the guard only covers
+  some types": on 2026-08-07 the review found that the only
   implementer of the `ISerializableClone` guard in `SerializeDefine` was exactly the one type that **did not need** it
   (server-only), while every definition type that actually goes over the wire bypassed it, and the XML doc claimed it
   was protected, **which is more dangerous than no protection at all**. (That interface was removed the same day; it is
@@ -316,6 +335,25 @@ top, `**狀態:📝 擬定中(YYYY-MM-DD)**` (Status: 📝 drafting), + a multi-
 in the reply.
 
 ## Methodology lessons (cumulative; reuse them next time)
+
+### Learned in the 2026-09-26 round
+
+**F. Write every report to a durable location the moment it exists.** The subagents wrote their reports to the
+scratchpad, and the scratchpad was cleared before the round was consolidated. The reports had to be rewritten from the
+agents' replies without rescanning, two rewrites were blocked and had to be pieced together by the main session, and
+the probe projects behind the measured findings were lost with it, so the numbers in the reports are now their only
+record. **Each subagent writes its own report into `local/internal/health-<review-date>/` and keeps its probe
+projects under `local/`; the scratchpad is for throwaway files only.**
+
+**G. A finding is a pointer, not a specification: re-verify it against the code before fixing it.** The fixes ran as
+a series of batches, and by the time a later batch reached a finding, earlier batches had often fixed it, fixed part
+of it, or renamed the types it named. Every fixing agent re-greps and re-reads the code before editing, and reports
+"already fixed" as a result in its own right, instead of copying the finding's claim into the code or a document.
+
+**H. Parallel fix batches collide on shared files and shared names.** Batches that run at the same time in separate
+clones conflict when they touch the same files, and a rename or move in one batch leaves stale names in files another
+batch is editing. Draw batch boundaries by file ownership, land renames and moves before anything that documents
+them, and run the documentation batches last, starting each with a grep for the old names.
 
 ### Learned in the 2026-08-07 round
 
@@ -375,34 +413,51 @@ definition type as a wire DTO); **before sending a recommendation, confirm the s
 
 ## Known baseline (results of the last health check, for regression comparison)
 
-Last run **2026-08-07** (v4.17.0, 17 `src/` projects):
-nine-dimension average **7.96**, eight dimensions (excluding docs) **8.20**, eleven dimensions **7.69**.
+Last run **2026-09-26**: the first round on the Polhem repository, before the 1.0.0 release (the earlier rounds ran on
+Bee.NET, `jeff377/bee-library`; the Bee.NET 4.17.0 numbers are kept as a record). Eleven-dimension average about
+**7.1**. The deeper scan (first measurements of the JSON and Plain wires, first compile check of every `docs/en`
+sample) explains most of the drop, not a code regression. **These scores were taken before the pre-1.0 fix batches**;
+the next round measures the fixed code and should expect them to rise.
 
-| Dimension | 2026-07-28 | 2026-08-07 |
-|------|-----------|-----------|
-| Architecture layering | 8.8 | 8.6 |
-| Dependency layering | 9.2 | 9.0 |
-| Security | 7.8 | 7.0 |
-| Maintainability | 8.5 | 8.5 |
-| Scattered/unnecessary classes | 7.5 | 7.0 |
-| Serialization consistency | 7.0 | 8.5 |
-| Public API surface | 8.5 | 8.5 |
-| Test quality and coverage | 8.2 | 8.5 |
-| Documentation drift | 4.5 | 6.0 |
-| Performance/hot paths | — | 6.0 (new) |
-| Concurrency and global state | — | 7.0 (new) |
+| Dimension | 2026-07-28 (Bee.NET) | 2026-08-07 (Bee.NET) | 2026-09-26 |
+|------|-----------|-----------|-----------|
+| Architecture layering | 8.8 | 8.6 | 8.5 |
+| Dependency layering | 9.2 | 9.0 | 9.0 |
+| Security | 7.8 | 7.0 | 6.0 |
+| Maintainability | 8.5 | 8.5 | 7.0 |
+| Scattered/unnecessary classes | 7.5 | 7.0 | 6.8 |
+| Serialization consistency | 7.0 | 8.5 | 6.5 |
+| Public API surface | 8.5 | 8.5 | 7.5 |
+| Test quality and coverage | 8.2 | 8.5 | 7.4 |
+| Documentation drift | 4.5 | 6.0 | about 5.5 |
+| Performance/hot paths | — | 6.0 (new) | 7.0 |
+| Concurrency and global state | — | 7.0 (new) | 6.5 |
 
-**Should stay clean** (going from clean to not clean is a regression; flag it red and prioritise it):
-30 dependency edges with no cycles, BO has no Db reference, backend has no Client reference, Repository abstraction not
-bypassed, Contracts with zero implementation pollution, mermaid dependency graph matching the csproj files edge for
-edge, `*Func` leftovers 0, `*Helper` types 0, Newtonsoft 0, `[Obsolete]` 0, empty classes 0,
-`CurrentCultureIgnoreCase` 0, `new DateTime(` without Kind 0, `Regex` without timeout 0, public mutable fields 0,
-contract axes 100% aligned, `[Union]`⊥keyAsPropertyName, `MessagePackCollectionBase<>` formatter registration 8/8,
-SQL injection 0 (all values parameterised + all identifiers escaped), XXE 0, `new Random(` 0, hardcoded secrets 0,
-MD5 0, bare manual `Dispose` 0, `throw ex;` 0, S2699 0, fixture pollution 0, wall-clock flakiness 0,
-`[DisplayName]` 100%, dead links 0 (1291 links + 108 anchors), XML docs with zero Chinese and zero `<param>` mismatches,
-`./check-public-docs.sh` checks (1) to (3) empty (no pointers into `local/`, no plan file names), DI captive dependencies 0, `async void` 0, `Task.Run` wrapping synchronous
-code 0, **per-row LINQ linear field lookups 0**, N+1 queries 0.
+The 2026-09-26 round also scored three extra dimensions: release readiness 7.5, trim/AOT 6.5, i18n 5.0.
+
+**Should stay clean** (going from clean to not clean is a regression; flag it red and prioritise it). **Compute every
+quantity from the code at review time; never compare against a number carried over from an earlier round** (the 30
+dependency edges recorded for Bee.NET no longer matched after legitimate moves, and comparing against the old number
+would have reported a regression that was not one):
+
+- Dependencies: no cycles (topological sort of every `<ProjectReference>` in `src/`, leaving out the build-ordering
+  references to `Polhem.Analyzers`); the mermaid graph in `docs/en/dependency-map.md` matches the csproj files edge for
+  edge; BO has no Db reference; the backend has no `Polhem.Api.Client` reference; the Repository abstraction is not
+  bypassed; `Polhem.Api.Contracts` has no implementation types.
+- Code: `*Func` leftovers 0, `*Helper` types 0, Newtonsoft 0, `[Obsolete]` 0, `CurrentCultureIgnoreCase` 0,
+  `new DateTime(` without Kind 0, `Regex` without timeout 0, public mutable fields 0, files over 500 lines only where
+  the type has no seam (`FormField`, a property bag).
+- Wire: every wire type registered and the gates non-vacuous (`WireContractDriftTests`, `WireCodecParityTests`,
+  `WireDefaultOmissionTests`); contract axes aligned across the four layers.
+- Security: SQL injection 0 (all values parameterised, all identifiers escaped), XXE 0, `new Random(` 0, hardcoded
+  secrets 0, MD5/SHA1 for security 0, bare manual `Dispose` 0, `throw ex;` 0.
+- Tests: S2699 0, fixture pollution 0, wall-clock flakiness 0, `[DisplayName]` on every test, `[Collection("` string
+  literals 0.
+- Docs: `./check-md-links.sh`, `./check-public-docs.sh` checks (1) to (3), `./check-docs-i18n.sh` and
+  `./check-xmldoc-refs.sh` all clean (the Docs Check workflow runs them); XML docs with zero Chinese and zero `<param>`
+  mismatches.
+- Concurrency and performance: DI captive dependencies 0, `async void` 0, `Task.Run` wrapping synchronous code 0,
+  per-row LINQ linear field lookups 0, N+1 queries 0.
 
 **⚠️ Read this paragraph before reading the list.** The 2026-08-07 health check tripped here once: it saw the
 struck-through dead-code list in the previous round's plan and re-listed "items not on the deleted list" as "missed
@@ -414,29 +469,50 @@ the decision was written in another table **below** the struck-through list, and
 
 | Item | Reason kept |
 |------|---------|
-| `TreeNodeIgnoreAttribute` (together with `TreeNodeAttribute`/`IDisplayName`, 71 annotations) | Re-judged as "a design not yet wired up"; handed over to a separate plan (the tree view builder) |
+| `TreeNodeIgnoreAttribute` (together with `TreeNodeAttribute` / `IDisplayName`) | Re-judged as "a design not yet wired up"; the tree view builder that consumes it is separate future work |
+| The designer attributes on definition types: `[Description]`, `[Category]` (with the `PropertyCategories` constants), `[Browsable]`, `[NotifyParentProperty]`, `[TypeConverter(typeof(ExpandableObjectConverter))]` | Decided in the 2026-09-26 round: kept for the planned Avalonia property grid editor, which is to read them. Nothing reads them today, which is expected until that editor exists. `[DefaultValue]` is not in this row: `XmlSerializer` honours it |
 | `IDefineField` | Implemented by `DbField`; an abstraction not yet consumed, not dead code |
-| `IElementCapabilityResolver` | Its implementation `ElementCapabilityResolver.Default` has 5 production call sites (`LayoutCapabilityApplier` / `ListView.Commands` / `FormView` / DemoCenter ×3) |
-| The full `CheckPackageUpdate` / `GetPackage` stack (12 files) | A deliberate extension point whose base throws `NotSupportedException`; already listed in `docs/<lang>/api-method-reference` and `jsonrpc-frontend-integration` |
-| The `IUIViewService` seam | Kept by decision on 2026-08-07: although all four heads go through `InitializeAsync(string)` and there are zero production implementations, it is a documented host extension point (cookbook tutorial step / terminology entry / adr-013 argument / the family criterion in dependency-map) |
-| `PermissionBindingValidator` | Decided 2026-08-07: keep the code and fix the docs instead; three public docs claimed it takes effect at load time, now changed to "a validation API the host calls itself" |
+| `IElementCapabilityResolver` | Its implementation `ElementCapabilityResolver.Default` (now in `Polhem.Api.Client`) is called by `LayoutCapabilityApplier`, `FormView.Commands` and `ListView.Commands`, and by DemoCenter |
+| The `IUIViewService` seam | Kept by decision on 2026-08-07: it has no production implementation, but it is a documented host extension point (cookbook tutorial step / terminology entry / adr-013 argument / the family criterion in dependency-map) |
+| `PermissionBindingValidator` | Decided 2026-08-07: keep the code and fix the docs instead; it is a validation API the host calls itself, not something that takes effect at load time |
 | `DateTimeExtensions.GetYearMonth` | Zero production callers, but the BCL has no equivalent of "first day of the month" and it is not a pure wrapper; kept under code-style's "keep 0-caller framework public APIs" |
 
-**(b) Removed**: the `ExecFuncLocal` public surface (2026-08-07, 3 Shipped API entries);
-an earlier round removed `IEnterpriseObjectService`, `EnterpriseObjectService`, `InitializeOptions`,
-`ApplicationType`, `SysFuncIDs`, `VersionFiles`, `DefaultBoolean`, `NotSetBoolean`,
-`SystemActions.GetLocalDefine`/`SaveLocalDefine`, `DateTimeExtensions.IsEmpty`.
+**(b) Removed** (a record, so the next round does not look for them):
+- Before Polhem 1.0.0 (the 2026-09-26 fix batches; the commit messages and `PublicAPI.*.txt` diffs list the rest):
+  the per-object serialize state (`IObjectSerialize`, `SerializeState`, `SerializationUtilities`); the tracing
+  subsystem; `DateInterval`, `IPValidator`, `VersionInfo`, `DataTableComparer`, `DefaultBoTypeResolver`;
+  `TableSchemaBuilder.Compare` and the legacy schema comparison path (`DbUpgradeAction`); the one-time session flag.
+  Renamed: `IPolhemContext` → `IBusinessObjectContext`, `PolhemStringLocalizer` → `LanguageResourceStringLocalizer`,
+  `NullAuditLogWriter` → `NullLogWriter`, the Log axis → `AuditLog*`.
+- Earlier: the `CheckPackageUpdate` / `GetPackage` stack and `ApiErrorInfo` (Bee.NET, 2026-09-04 and before); the
+  `ExecFuncLocal` public surface (2026-08-07); `IEnterpriseObjectService`, `EnterpriseObjectService`,
+  `InitializeOptions`, `ApplicationType`, `SysFuncIDs`, `VersionFiles`, `DefaultBoolean`, `NotSetBoolean`,
+  `SystemActions.GetLocalDefine`/`SaveLocalDefine`, `DateTimeExtensions.IsEmpty`.
 
-**(c) Not yet re-verified; check next round**: `ApiErrorInfo`, `GetFormSchemaRequest`/`Response`.
+**(c) Reserved identifiers**: POLHEM4001–POLHEM4004 are never reused (they were Bee.NET's BEE4001–BEE4004, and a
+project migrated from Bee.NET maps its suppressions by number); `DiagnosticIds.ReservedIds` records them.
 
-**Established guard mechanisms** (the next health check should confirm they still exist and work):
-`BoApiSurfaceTests`, `ApiContractPairingTests` (including `WireMessageTypes_IsNotEmpty` against false greens),
-`comparedCount > 0` in `TestFunc`, the **public API snapshot** (`PublicApiAnalyzers` + 16 pairs of baseline files +
-`docs/repo-ops/public-api-baseline.md` + `tools/scripts/gen-public-api.py`; the highest-leverage gap of the previous round
-is closed), the POLHEM4005–4006 serialization rules of `Polhem.Analyzers` (POLHEM4001–4004 are reserved: they were
-Bee.NET's BEE4001–4004, retired before Polhem), **POLHEM3003** (ExecFunc access control,
-added 2026-08-07).
+**Established guard mechanisms** (the next health check confirms each still exists, still runs in CI, and is not
+vacuous; read the list from the code rather than trusting this one):
+- API surface: `BoApiSurfaceTests` (baseline, `docs/<lang>/api-method-reference.md` entry by entry, replay
+  protection), `ActionSurfaceTests`, `ConnectorSurfaceTests`, `ClientAsyncSurfaceTests`, `ApiContractPairingTests`
+  (with `WireMessageTypes_IsNotEmpty`), `AnonymousApiSurfaceTests`, `ApiAccessControlPinTests`, and the public API
+  snapshot (`PublicApiAnalyzers` + the `PublicAPI.*.txt` baselines + `docs/repo-ops/public-api-baseline.md` +
+  `tools/scripts/gen-public-api.py`).
+- Wire: `WireContractDriftTests`, `WireCodecParityTests`, `WireDefaultOmissionTests`, `WireFixtureTests`,
+  `WireContractGeneratorTests`, `MessagePackDepthLimitTests`, `comparedCount > 0` in `TestFunc`.
+- Definitions and trim: `XmlSerializerShapeGateTests`, `CachedDefinitionSerializationTests`,
+  `TrimmerDescriptorGateTests`, the CI AOT gate (`DynamicCodeSupport=false`), `POLHEM9004` (unsupported trim/AOT
+  configurations, `buildTransitive`).
+- Boundaries: `POLHEM9001` with `DefinitionDependencyGateTests`, `ArchitectureBoundaryGateTests`,
+  `BaseLayerCapabilityGateTests`; `POLHEM9002` (one version), `POLHEM9003` (definition files found).
+- Analyzers: the POLHEM1xxx/2xxx definition rules (`FieldDbTypesSyncTests`, `DbCategoryScopesSyncTests` keep their
+  tables in step with the runtime), POLHEM3001 and POLHEM3003 (access control), POLHEM4005 and POLHEM4006
+  (collection shape).
+- Tests and docs: `RequiredTestDatabaseGateTests`, `ReservedProgIdConstructionTests`, and the four `check-*.sh`
+  scripts in the Docs Check workflow.
 
-**The single highest-leverage improvement for next round**: extend `BoApiSurfaceTests` to "every baseline item can be
-found in `docs/en/api-method-reference.md`, and every action constant resolves to a BO method"; one test closes three
-classes of problems at once: "broken public API", "missing from the docs" and "half-finished across the four layers".
+**The highest-leverage improvement recorded by the previous round is done**: `BoApiSurfaceTests` checks the baseline
+against the method reference, `ActionSurfaceTests` resolves every action constant to a BO method, and
+`ConnectorSurfaceTests` maps each action to its connector method. Pick the next one from the round's own findings;
+do not carry this line forward unchanged.

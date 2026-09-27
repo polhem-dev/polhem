@@ -5,10 +5,13 @@ Since 2026-06-26, `apps/Polhem.Northwind` has had **four heads: Desktop / Browse
 The web case is an **Avalonia Browser (WASM) backend**, **not a separate Blazor app** (`.UseBrowser` vs `.UseDesktop`
 are symmetric).
 
-`apps/` does not trigger polhem's CI (see [test-ci-release.md](test-ci-release.md)): if **this copy** breaks, nobody
-will tell you. The mirror repository `bee-northwind-avalonia` has had its own CI since 2026-09-02 (see "The mirror
-repository's CI" below), but it verifies the copy built on **the published NuGet packages**, and cannot catch the
-in-repo copy drifting against `src/`.
+`apps/` is not built by polhem's CI (see [test-ci-release.md](test-ci-release.md)): if **this copy** breaks, nobody
+will tell you. **Where the heads get built today**: the in-repo heads (Desktop, Browser, iOS, Android) are built only
+by hand, with the commands in test-ci-release.md and below. The CI of the mirror repository (see "The mirror
+repository's CI" below) builds the mirror's own copy against published NuGet packages; it cannot catch the in-repo
+copy drifting against `src/`, and at the moment it builds the Bee.NET copy (see "Graduation and periodic sync").
+The unit test projects of the packages a head ships run under `-p:DynamicCodeSupport=false` in the mobile AOT gate of
+`build-ci.yml`, which covers the no-dynamic-code half but builds no head.
 
 ## Android head
 
@@ -19,9 +22,9 @@ in-repo copy drifting against `src/`.
   find android.jar".
 - The `maui-android` workload already includes `Microsoft.Android.Sdk.Darwin` → `dotnet workload install android` is
   **not needed**.
-- Local paths: JDK `brew openjdk@17`, `ANDROID_HOME=/opt/homebrew/share/android-commandlinetools`,
-  AVD `bee_pixel`. **Non-interactive Bash does not read `~/.zshrc`** → bring your own `JAVA_HOME` / `ANDROID_HOME`
-  before running dotnet/adb.
+- A JDK (17) and the Android command-line tools are needed; where they live is machine-specific. **Non-interactive
+  Bash does not read `~/.zshrc`** → export your own `JAVA_HOME` / `ANDROID_HOME` before running dotnet/adb, and pick
+  an AVD from `emulator -list-avds`.
 - The emulator's loopback to the host is **`10.0.2.2`** (not localhost); set the endpoint to
   `http://10.0.2.2:5100/api`; AndroidManifest needs `<application android:usesCleartextTraffic="true">` (dev only;
   Android 9+ blocks cleartext by default).
@@ -33,11 +36,14 @@ wiring (`ApiClientInfo` / `ClientInfo.EndpointStorage`) goes here (the counterpa
 
 `FileEndpointStorage` is writable in the Android sandbox (`/data/data/<pkg>/files/...`), but the ConnectionView field
 is always prefilled with `AppDefaults.Endpoint` and does not read back from storage. That is existing behavior of the
-shared UI, the same on all three heads.
+shared UI, the same on every head.
 
 ## iOS head
 
 **.NET for iOS is tied to an exact Xcode version, so when macOS updates Xcode the build breaks.**
+
+The error names the Xcode version the SDK wants and the one currently selected (an example as it was once seen; the
+numbers move with the workload):
 
 ```
 error : This version of .NET for iOS (26.5.10284) requires Xcode 26.5.
@@ -45,18 +51,19 @@ The current version of Xcode is 26.6. Either install Xcode 26.5, or use a
 different version of .NET for iOS.
 ```
 
-The fix is to **install the matching Xcode side by side and select it with `DEVELOPER_DIR`**; do not touch
-`xcode-select`. The latter is a machine-wide setting, needs sudo, and also affects other work that needs the newer
-Xcode. This machine already has `/Applications/Xcode-26.5.0.app` and `/Applications/Xcode.app` (26.6) side by side:
+The fix is to **install the Xcode that the error message names side by side and select it with `DEVELOPER_DIR`**;
+do not touch `xcode-select`. The latter is a machine-wide setting, needs sudo, and also affects other work that needs
+the newer Xcode. First look at what is installed, then point `DEVELOPER_DIR` at the matching one:
 
 ```bash
-export DEVELOPER_DIR=/Applications/Xcode-26.5.0.app/Contents/Developer
+ls -d /Applications/Xcode*.app
+export DEVELOPER_DIR=/Applications/<the Xcode the error names>.app/Contents/Developer
 ```
 
-The error message only says "install 26.5 or switch the workload" and does not mention the `DEVELOPER_DIR` route, so
-it is easily judged as "the environment is broken, it can only be shelved". That is exactly how the 4.21.0 sync on
-2026-08-13 recorded iOS as an environment problem and exempted it, when in fact both Xcodes were already on the
-machine.
+The error message only says "install that version or switch the workload" and does not mention the `DEVELOPER_DIR`
+route, so it is easily judged as "the environment is broken, it can only be shelved". That is exactly how the mirror
+sync to Bee.NET 4.21.0 on 2026-08-13 recorded iOS as an environment problem and exempted it, when in fact both Xcodes
+were already on the machine. (`.claude/rules/apple-mobile-trim.md` holds the same rule.)
 
 **The required version moves with the workload, so no script should hard-code it**; read it from the SDK itself
 instead (`_RecommendedXcodeVersion` is declared in `Microsoft.iOS.Sdk.Versions.props` and available after restore):
@@ -81,7 +88,7 @@ invocation, the app bundle does not exist yet when the Run target computes the l
 Run:
 
 ```bash
-export DEVELOPER_DIR=/Applications/Xcode-26.5.0.app/Contents/Developer
+export DEVELOPER_DIR=/Applications/<the Xcode the SDK names>.app/Contents/Developer
 dotnet build Polhem.Northwind.iOS -f net10.0-ios -c Debug
 dotnet build Polhem.Northwind.iOS -t:Run -f net10.0-ios -c Debug \
   -p:_DeviceName=:v2:udid=<simulator UDID>
@@ -119,8 +126,8 @@ former `SyncExecutor.Run`, since removed) throws **"Cannot wait on monitors on t
 single-threaded browser-wasm runtime: it blocks the only thread waiting for the task, and completing the task needs the
 same thread to pump the event loop → deadlock. Desktop/WinForms tolerate it;
 WASM does not.
-**The client connection of any WASM head always uses `await ClientInfo.InitializeAsync(endpoint)`**; the sync
-`Initialize` and `Task.Run(() => sync())` wrappers are forbidden. The underlying HTTP is already `HttpClient` (WASM goes
+**The client connection of any WASM head uses `await ClientInfo.InitializeAsync(endpoint)`**; there is no synchronous
+`Initialize` any more, and wrapping an async call in `Task.Run(...).GetAwaiter().GetResult()` must not come back. The underlying HTTP is already `HttpClient` (WASM goes
 through `BrowserHttpHandler`/fetch), so async is safe all the way. Likewise, load definitions through the async
 `ClientDefineAccess` (`GetFormSchemaAsync` and the other `Get…Async` members); the synchronous remote define access that
 wrapped such a wait no longer exists, so do not reintroduce one.
@@ -137,6 +144,12 @@ list → close the tab (`FormsView.TryHandleBack()`), no tabs → exit the app. 
 key benefit at the same time.
 
 ## Graduation and periodic sync
+
+> **Current state (checked 2026-09-27)**: the mirror repository `jeff377/bee-northwind-avalonia` still holds the
+> Bee.NET copy (`Bee.Northwind.*` projects on the `Bee.*` packages); nothing has been pushed to it since the Polhem
+> rename. It cannot be synced from this repository until the `Polhem.*` packages are published on NuGet, because the
+> sync process below starts with "publish the framework first". Whether the mirror is renamed, re-created under
+> `polhem-dev` or retired is an open decision. The sections below record how the sync worked in the Bee.NET era.
 
 **Graduation means "copy", not "move"** (user instruction, 2026-06-15): when the standalone repository
 `bee-northwind-avalonia` was created, `apps/Polhem.Northwind` was copied over (ProjectReference → PackageReference),
@@ -160,30 +173,35 @@ CI will be green.
 1. **rsync needs `--exclude '*.csproj' --exclude 'README*.md'`** and syncs only source. csproj files are handled
    individually and READMEs are ported by hand; otherwise the files specific to the standalone repository (paths
    relative to the root, the NuGet framework description) get overwritten.
-   `.smoke.yaml` likewise (standalone uses `Polhem.Northwind.Server`, polhem uses `apps/Polhem.Northwind/...`).
+   `.smoke.yaml` likewise (its paths are relative to the root of each repository: the project folder in the mirror,
+   `apps/Polhem.Northwind/...` in polhem).
 2. **Copying over brings the in-repo src ProjectReferences back into the standalone repository**: they must be changed
    back to PackageReference + bump. This is the step most easily missed.
 3. **`gh secret set` syntax pitfall**: `gh secret set <key value>` creates a secret whose **name** is the key value (and
    leaks the key in the UI); the correct form is `gh secret set NUGET_API_KEY --body "<value>"`, then confirm with the
    Updated timestamp in `gh secret list`. **Before publishing, confirm that the secret is the new, valid key.**
+   (A Bee.NET-era record: polhem's publish workflow holds no NuGet API key; see
+   [test-ci-release.md](test-ci-release.md) § Publishing: NuGet Trusted Publishing. The `gh secret set` syntax pitfall
+   applies to any secret, `NUGET_USER` included.)
 
 ## The mirror repository's CI
 
-Since 2026-09-02, `bee-northwind-avalonia` has `.github/workflows/build-ci.yml` with two jobs: ubuntu builds five heads
-(Server / UI / Desktop / Browser / Android) and runs a runtime smoke test, and macOS builds iOS on its own. **It
-verifies the build against the published NuGet packages**, which is exactly the path external users will take.
+Since 2026-09-02, `bee-northwind-avalonia` has `.github/workflows/build-ci.yml` with two jobs: ubuntu builds the
+Server, the UI project and three heads (Desktop / Browser / Android) and runs a runtime smoke test, and macOS builds
+iOS on its own. **It verifies the build against the published NuGet packages**, which is exactly the path external
+users will take.
 
 **When the solution contains cross-platform heads, you cannot run `dotnet restore` at the solution level.**
 
 ```
 error NETSDK1178: The project depends on the following workload packs that do not exist
 in any of the workloads available in this installation: Microsoft.iOS.Sdk.net10.0_26.5
-[.../Polhem.Northwind.iOS.csproj]
+[.../Bee.Northwind.iOS.csproj]
 ```
 
 `dotnet restore` without arguments restores **the whole solution**, and the solution contains the iOS head. Its
 workload pack does not and cannot exist on Linux, so the restore aborts before it reaches any project that could be
-built, and all five heads are skipped.
+built, and every project is skipped.
 The fix is to let each project restore itself (the build steps do not pass `--no-restore`), which also keeps the list
 of projects in a single place, the build step.
 

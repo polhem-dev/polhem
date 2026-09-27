@@ -8,50 +8,61 @@ The matching hard rules are in `.claude/rules/serialization.md`; for mobile trim
 What the investigation found (2026-07-22):
 
 - **`PayloadFormat` (Plain / Encoded / Encrypted) = the encryption / compression dimension**, not JSON-vs-MessagePack.
-- At the time, the body serializer was decided by `ApiPayloadOptions.Serializer`, and the switch in
-  `ApiPayloadOptionsFactory.CreateSerializer` had only one case, `messagepack`. ⚠️ **This half has been out of date
-  since 4.27.0**: that setting was removed, the codec is now declared per request, and a JSON body codec exists
-  (adr-044). **The conclusion above that "the dimensions are orthogonal" holds even more strongly now**: `PayloadFormat`
-  governs encryption / compression and `codec` governs how the body is spelled, each on its own.
-- `FormApiConnector` defaults to `Encrypted` and `Login` uses `Encoded` → the body of an authenticated call always goes
-  through MessagePack, **on both the client and the server** (client = `Polhem.Api.Client`, which runs on the
-  iOS/Android/WASM heads).
+- At the time, the body serializer was decided by `ApiPayloadOptions.Serializer`, and a factory switch had only one
+  case, `messagepack`. ⚠️ **This half has been out of date since Bee.NET 4.27.0**: that setting was removed, the codec
+  is now declared per request, and a JSON body codec exists (adr-044). The factory method is gone on purpose (see the
+  remarks of `ApiPayloadOptionsFactory`); the codec names live in `PayloadCodecNames`, and a declared name is resolved
+  by `ApiServiceOptions.ResolvePayloadSerializer`. **The conclusion above that "the dimensions are orthogonal" holds
+  even more strongly now**: `PayloadFormat` governs encryption / compression and `codec` governs how the body is
+  spelled, each on its own.
+- `FormApiConnector` defaults to `Encrypted` and `Login` uses `Encoded` → the body of such a call goes through
+  MessagePack **whenever the request declares no codec**, on both the client and the server (client =
+  `Polhem.Api.Client`, which runs on the iOS/Android/WASM heads). A .NET client declares nothing unless
+  `ApiConnector.PayloadCodec` is set.
 
 **Conclusion: MessagePack really is on the mobile wire path.** The assumption "mobile uses JSON, MessagePack is only
 between desktop/server" does not hold; this misunderstanding once led to hanging the AOT risk assessment on the wrong
 engine.
 
-## MessagePack item ctor parameter order ≠ `[Key]` order → fields silently swapped
+## MessagePack item ctor parameter order ≠ `[Key]` order → fields silently swapped (resolved 2026-08-09, adr-036)
 
-**Symptom**: only a MessagePack wire round-trip gives it away; XML / JSON round-trips **are always correct** (they go
-by property name). So the definition file tests alone are all green, while the data that reaches the client is wrong.
+> **Historical record.** Since adr-036 there are no integer `[Key]`s anywhere in the repository: wire binding goes by
+> property name or through a formatter that names each member, so this pitfall no longer exists. The current state is
+> in `src/Polhem.Api.Core/CLAUDE.md` § "Constructor parameter order of collection items". The account below is kept
+> because the symptom (only a MessagePack round-trip gives it away) is the reason wire round-trip tests exist.
 
-**Root cause**: `CollectionBaseFormatter` calls `MessagePackSerializer.Serialize(item)` for each item, which follows the
-standard `[MessagePackObject]`+`[Key]` contract. Deserialization picks "the constructor with the most parameters" and
-feeds values to the ctor parameters **by position in Key order** (position-based, not by name).
+**Symptom**: only a MessagePack wire round-trip gave it away; XML / JSON round-trips were correct (they go by property
+name). So the definition file tests alone were all green, while the data that reached the client was wrong.
 
-**Instance**: the Key order of `UnitItem` is Code(100)/Decimals(101)/Dimension(102)/Name(103), and the ctor was
+**Root cause at the time**: `CollectionBaseFormatter` serialized each item under the `[MessagePackObject]`+`[Key]`
+contract. Deserialization picked "the constructor with the most parameters" and fed values to the ctor parameters
+**by position in Key order** (position-based, not by name).
+
+**Instance**: the Key order of `UnitItem` was Code(100)/Decimals(101)/Dimension(102)/Name(103), and the ctor was
 originally `(code, decimals, name, dimension)` → the round-trip swapped Dimension / Name
 (commit [`eb10bc0c`](https://github.com/jeff377/bee-library/commit/eb10bc0c) corrected it to `(code, decimals, dimension, name)`).
 
-**Fix**: ctor parameter order = Key order, and **add a MessagePack wire round-trip test for every such item**
+**What still applies**: add a MessagePack wire round-trip test for wire-carried items
 (template: `UnitSettingsMessagePackTests`).
 
-## `[Union]` polymorphism is incompatible with `keyAsPropertyName` (permanent constraint)
+## `[Union]` polymorphism is incompatible with `keyAsPropertyName` (superseded 2026-08-09, adr-036)
+
+> **Historical record.** The "permanent constraint" below no longer holds: there is no `[Union]` or `[Key]` anywhere
+> in `src/`, and `FilterNode` polymorphism is handled by the hand-written `FilterNodeFormatter` with a named `Kind`
+> discriminator. The status block of adr-030 records the same amendment. A new polymorphic wire hierarchy gets its
+> own formatter registered in `WireContracts.*.cs` (see `.claude/rules/serialization.md`).
 
 On 2026-07-22 the name-based migration was carried out: 72 types were converted to
 `[MessagePackObject(keyAsPropertyName:true)]` (57 contracts + 15 DTOs/items), and the Definition serialization tests
-(201) + Api.Core tests (237) all passed. The decision is in `docs/adr/adr-030-messagepack-name-based-keys.md`
-(accepted).
+(201) + Api.Core tests (237) all passed. The decision is in `docs/adr/adr-030-messagepack-name-based-keys.md`.
 
 The go/no-go finally chose "do it now" because **there are no external consumers → a breaking change costs nothing**
 (overturning the earlier decision to postpone). `keyAsPropertyName` was chosen over "simply removing the attributes"
-because **keeping the attributes = keeping the door open for source generation**.
+because **keeping the attributes = keeping the door open for source generation** (adr-036 later removed the attributes
+anyway).
 
-**⚠️ Permanent constraint**: `[Union]` uses an integer-keyed array + a discriminator, which is incompatible with
-`keyAsPropertyName`. The only Union type in the whole repository, `FilterNode` (+`FilterCondition` / `FilterGroup`),
-**keeps integer `[Key]` permanently**; any new polymorphic hierarchy always uses integer `[Key]` + `[Union]`. Collection
-containers (custom formatter/proxy) and `SerializableData*` (DataSet plumbing) also stay on integers.
+The constraint at the time: `[Union]` uses an integer-keyed array + a discriminator, which is incompatible with
+`keyAsPropertyName`, so `FilterNode` (+`FilterCondition` / `FilterGroup`) kept integer `[Key]`.
 
 ## AOT risk assessment: two guesses, both overturned by measurement
 
@@ -134,10 +145,11 @@ always-loaded rules and are not repeated here.
 **Symptom**: on the client, "the field is not computed live" (no crash); on the server, saving returns JSON-RPC
 **-32000**. The two symptoms look completely unrelated, but they have the same root cause.
 
-**Root cause**: `DataTableExtensions.AddColumn` stores column names in **uppercase** (`fieldName.ToUpper()`);
-`FormExpressionCalculator.BuildVariables` at one point used `column.ColumnName` (uppercase `QUANTITY`) as the variable
-key, but expressions refer to **the declared field names** (lowercase `quantity`), and **DynamicExpresso identifiers
-are case-sensitive** → `UnknownIdentifierException` → wrapped as `ExpressionEvaluationException`.
+**Root cause**: at the time `DataTableExtensions.AddColumn` stored column names in **uppercase**
+(`fieldName.ToUpper()`); `FormExpressionCalculator.BuildVariables` at one point used `column.ColumnName` (uppercase
+`QUANTITY`) as the variable key, but expressions refer to **the declared field names** (lowercase `quantity`), and
+**DynamicExpresso identifiers are case-sensitive** → `UnknownIdentifierException` → wrapped as
+`ExpressionEvaluationException`.
 
 The front end and the back end share `BuildVariables`, so both were hit: the client's recompute was caught by
 `RunGuarded` → latched off; the server's save had no guard → unhandled exception → -32000.
@@ -147,7 +159,12 @@ tested the uppercase column names of a real wire/DataSet.
 
 **Fix (commit [`96821c04`](https://github.com/jeff377/bee-library/commit/96821c04))**: use `FormField.FieldName` (the casing declared in the schema) as the variable key.
 `DataRow` indexing and `Fields.Contains` are case-insensitive anyway, so writing back is unaffected.
-**Regression tests must build the DataTable with uppercase column names.**
+
+**Since then**: ADR-029 changed `AddColumn` to store lowercase (`ToLowerInvariant`), which happens to match the
+declared field names and hides the symptom of code that keys by `DataColumn.ColumnName`. The rule is unchanged:
+key by the declared field name, decoupled from the stored casing. **Regression tests must build the DataTable with
+column names whose casing differs from the declared field names** (under the current implementation, uppercase);
+the hard rule is in `.claude/rules/serialization.md`.
 
 ## Expression engine pitfall 2: coercing string-typed Guid/Binary columns
 
