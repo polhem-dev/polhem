@@ -1,4 +1,4 @@
-<!-- source: en/formschema-data-access.md blob: 03e49cb6f389549052dccf68cfb491e7a2963832 -->
+<!-- source: en/formschema-data-access.md blob: 67bdc39a0522db2cfe30391e2a3d8edc02ad7b8b -->
 # FormSchema 驅動的資料庫存取
 
 [English](../en/formschema-data-access.md) · [← 文件索引](README.md)
@@ -97,7 +97,7 @@ Definition-Driven Architecture（整體架構）
 └── FormSchema（Single Source of Truth）
     ├── 驅動 UI    → FormLayout
     ├── 驅動 DB    → TableSchema
-    ├── 驅動驗證  → ValidationRules
+    ├── 驅動驗證  → Rules（FormRule）
     └── 驅動資料存取 → SQL 產生（本文件）
 ```
 
@@ -107,7 +107,7 @@ Definition-Driven Architecture（整體架構）
 
 ## 4. 範例
 
-下列範例使用三張 `FormSchema`（簡化版）：
+下列範例使用三張 `FormSchema`（簡化版）。所列 SQL 為 `SqlFormCommandBuilder` 的產出，換行經過壓縮：
 
 - `Project`（專案）— `pm_rowid` 參照 `Employee`、`owner_dept_rowid` 參照 `Department`
 - `Employee`（員工）— `dept_rowid` 參照 `Department`
@@ -224,9 +224,9 @@ ORDER BY A.[sys_id] ASC
 | `Polhem.Db.Dml.FromBuilder` | 產生 `FROM` 子句（含 JOIN） |
 | `Polhem.Db.Dml.WhereBuilder` | 產生 `WHERE` 子句與參數化 |
 | `Polhem.Db.Dml.SortBuilder` | 產生 `ORDER BY` 子句 |
-| `Polhem.Db.Dml.SelectCommandBuilder` | 整合上述四個 builder，產出最終 SELECT `DbCommandSpec` |
+| `Polhem.Db.Dml.SelectCommandBuilder` | 整合上述四個 builder（加上處理 `skip` / `take` 分頁的 `LimitBuilder`），產出最終 SELECT `DbCommandSpec`；產生前會拒絕表單資料表未宣告的篩選或排序欄位，以及框架保護的欄位（見 [`ProtectedFields`](../../src/Polhem.Definition/ProtectedFields.cs)） |
 | `Polhem.Db.Dml.DeleteCommandBuilder` | 從 `FormSchema` 與 `FilterNode` 產出單表 DELETE `DbCommandSpec`（`Delete()` 使用；無 JOIN、識別子依方言 quote）。Insert/Update 不再逐列：`DataFormRepository.Save` 改以 `TableSchemaCommandBuilder` 產 `DataTableUpdateSpec`、經 `DataAdapter.Update` 套用（見 [ADR-024](../adr/adr-024-dataform-save-dataadapter.zh-TW.md)） |
-| `Polhem.Db.Dml.IFormCommandBuilder` | 各 DB 方言的入口介面（`SqlFormCommandBuilder` / `PgFormCommandBuilder`），方法 `Build{Select,Count,Delete}` 委派至上述共用核心 |
+| `Polhem.Db.Dml.IFormCommandBuilder` | 各 DB 方言的入口介面（`SqlFormCommandBuilder`、`PgFormCommandBuilder`、`MySqlFormCommandBuilder`、`OracleFormCommandBuilder`、`SqliteFormCommandBuilder`），方法 `Build{Select,Count,Delete}` 委派至上述共用核心 |
 
 ---
 
@@ -260,6 +260,7 @@ ORDER BY A.[sys_id] ASC
 | JOIN 必為單欄位等值（FK = PK） | `FormSchema` 的 RelationField 一律經 `RowId` 等值參照 |
 | JOIN 對象必為實體表（無子查詢 / CTE / TVF） | `FormSchema` 對映實體表，沒有「子查詢式表單」的概念 |
 | 主表別名固定為 `A` | 與 `SelectContextBuilder` 的別名生成器一致（`A → B → ... → Z → ZA → ZB`，跳過 SQL 保留字） |
+| 篩選與排序只能使用表單宣告的欄位 | 可以比較的欄位就能被逐次比較讀出，所以表單的欄位清單就是查詢能觸及的範圍；未宣告或受保護的欄位會拋出 `InvalidOperationException` |
 | 不支援多層 master-detail 同時組裝 | 主檔／明細透過 `DataSet` 多 `DataTable` 組裝，由 BO 層處理 |
 
 ---

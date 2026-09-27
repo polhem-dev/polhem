@@ -1,4 +1,4 @@
-<!-- source: en/expression-rules.md blob: dade8ddf64e60030691df7d3e3f7b072b9555e8d -->
+<!-- source: en/expression-rules.md blob: edf0a754d245c0726c5a368a38998dfccdbb5236 -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../en/expression-rules.md) · [← 文件索引](README.md)
@@ -15,13 +15,13 @@
 | 欄位預設值 | `FormField.DefaultValueExpression` | 新增列時，欄位為空才填 |
 | 驗證 / 前置檢查 | `FormSchema` 下的 `FormRule` | `BeforeSave` / `BeforeDelete` |
 
-> **後端為權威**：存檔時後端一定依定義重算計算欄並覆蓋前端送來的值；驗證也在後端執行。前端即時運算（規劃中）只是 UX 預覽，正確性不依賴前端。
+> **後端為權威**：存檔時 `FormBusinessObject.DoBeforeSave` 依定義重算計算欄並覆蓋前端送來的值，接著執行驗證規則；`DoBeforeDelete` 執行刪除規則。Avalonia UI 的即時運算（`FormLiveComputation`；Blazor 元件沒有這項功能）會在使用者編輯時重算欄位，但它只是 UX 預覽：捨入用的是框架預設的小數位數，存檔時由伺服端修正。
 
 ## 運算式語法
 
 - **變數 = 欄位名**：直接寫欄位名即可，如 `unit_price * qty`。同列所有欄位都可用。
 - **運算子**：C# 語法子集（`+ - * /`、`> >= < <= == !=`、`&& || !`、三元 `? :`、字串 `==`）。
-- **可用函式/型別**（沙箱白名單）：`Math`（`Math.Round`、`Math.Abs`…）、`Today()`、`Now()`、`UtcNow()`、`IsNullOrEmpty(s)`、`IsNullOrWhiteSpace(s)`、`Guid`（如 `customer_rowid != Guid.Empty`）。
+- **可用函式/型別**：輔助函式 `Today()`、`Now()`、`UtcNow()`、`IsNullOrEmpty(s)`、`IsNullOrWhiteSpace(s)`；運算式可直接指名的型別，例如 `Math`（`Math.Round`、`Math.Abs`…）、`Convert`、`DateTime`、`TimeSpan`、`Guid`（如 `customer_rowid != Guid.Empty`）；以及欄位值本身的成員（`name.Length`、`Today().AddDays(1)`）。這些型別來自 DynamicExpresso 的預設集合，加上 `DynamicExpressoEvaluator` 自行加入的；[`ILLink.Descriptors.xml`](../../src/Polhem.Expressions/ILLink.Descriptors.xml) 列出運算式能觸及其成員的每個型別，並由 `TrimmerDescriptorGateTests` 確保這份清單與直譯器一致。
 
   **時間函式的語意**（見 [ADR-032](../adr/adr-032-datetime-timezone.zh-TW.md)）：
 
@@ -39,7 +39,9 @@
   > 以使用者時區呈現，即時預覽時把 `UtcNow()` 寫進儲存格，畫面上的值會差一個時差。存檔時伺服端
   > 不採用用戶端送來的 `DateTime`，會重新求值或保留資料庫的值，所以存下的資料不受影響；
   > 錯的是存檔前畫面上的值。
-- **禁用**：反射、IO、任意型別載入——未在白名單的識別字會在解析期直接報錯（設定錯誤）。
+- **未知識別字**：未開放的型別名（`File`、`Process`…）或拼錯的欄位名會解析失敗。在伺服端，該次存檔或刪除隨之失敗；在用戶端，該表單的即時運算會自行關閉。
+- **這不是安全沙箱。** 值的成員是以反射解析的，解析器擋不住運算式往更深處觸及。運算式之所以安全，是因為它們的來源：遠端呼叫者無法寫入的定義檔（`SaveDefine` 為 `LocalOnly`）。絕對不要用使用者輸入組出運算式文字。
+- **經裁剪的應用程式**：運算式呼叫的成員是以反射找到的，裁剪器看不到。`Polhem.Expressions` 內附一份保留這些成員的裁剪描述檔，見[平台支援](platform-support.md#套件內附的裁剪描述檔)。
 - **空值**：空欄（`DBNull`）以型別預設值代入（數值 0、字串空字串、`Guid.Empty`…），所以 `unit_price * qty` 遇空值算 0 而不會出錯。
 
 ## 計算欄：`ValueExpression`
@@ -51,7 +53,7 @@
 ```
 
 - 存檔前對 `Added` / `Modified` 列重算（`Unchanged` 列不動，避免誤標為已異動）。
-- **捨入**：數值結果依欄位 `NumberKind` 捨入（`Amount`→2 位、`Quantity`→0、`UnitPrice`→保留精度…，公司/幣別/單位可調；見 [ADR-026](../adr/adr-026-numeric-semantics-rounding.zh-TW.md)）。故明細先各自捨入、加總才不會對不上帳（round-then-sum）。
+- **捨入**：數值結果依欄位 `NumberKind` 捨入（框架預設：`Amount`→2 位、`Quantity`→0、`UnitPrice`→保留精度…；小數位數取自幣別、單位或公司，見 [ADR-026](../adr/adr-026-numeric-semantics-rounding.zh-TW.md)）。`Quantity` 或 `Weight` 的計算欄必須宣告 `UnitField`，否則運算時拋出例外。每筆明細先各自捨入，因此由捨入後明細加總而得的合計（round-then-sum）會與明細對得上。
 - 計算欄通常搭配 `ReadOnly="true"`。
 - 同列多個計算欄可相依：**依宣告順序**求值，後面的看得到前面剛算好的值。
 
@@ -62,8 +64,8 @@
            DefaultValueExpression="Today()" />
 ```
 
-- 新增列時求值；**只在欄位為空時填**，不覆寫已有值。
-- 與字面值 `DefaultValue` 併存時，運算式優先。
+- 新增列時求值；**只在欄位仍為空時填**（沒有值，或為空字串），不覆寫已有值。
+- 框架建立的新列會在運算式執行前先填入初值：文字欄位從空值開始，但數值欄位從 `0`、`Guid` 欄位從 `Guid.Empty`、`Date` 欄位從今天開始，而新的主檔記錄還會套上該欄位的字面值 `DefaultValue`。填好的初值不算空，所以運算式不會取代它。
 
 ## 驗證與前置檢查：`FormRule`
 
@@ -86,7 +88,7 @@
 |------|------|
 | `Condition` | **必須成立**的條件（回傳 bool）；為 `false` 即違規，中斷動作並顯示 `Message` |
 | `When` | 選填的**適用條件**；空＝一律套用，`false`＝略過整條規則（視同通過），`true` 才檢查 `Condition` |
-| `Message` | 不通過時顯示給使用者的訊息 |
+| `Message` | 不通過時顯示給使用者的訊息。這是基底文字；表單語系資源中的 `Rule.{RuleId}.Message` 項目負責翻譯，由伺服端依 session 的語系解析 |
 | `Trigger` | `BeforeSave`（預設）或 `BeforeDelete` |
 | `TargetTable` | 空＝主檔；填明細表名＝對該表**逐列**檢查 |
 | `Order` | 同一 trigger 內的求值順序（小的先） |
@@ -98,7 +100,7 @@
 
 ## 何時仍需寫 BO（當前邊界）
 
-Phase 1 的運算式是**逐列（per-row）**模型。以下情境還不能純宣告，需在自訂 BO 覆寫 `DoBeforeSave` / `DoBeforeDelete`：
+運算式引擎是**逐列（per-row）**模型。以下情境還不能純宣告，需在自訂 BO 覆寫 `DoBeforeSave` / `DoBeforeDelete`：
 
 - **跨列聚合**：如「表頭合計 = 明細金額加總」「至少一筆明細」——需跨列運算。
 - **需查資料庫**：如「狀態轉移須比對資料庫既存狀態」「自動單號取序列」。

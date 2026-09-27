@@ -1,4 +1,4 @@
-<!-- source: en/database-naming-conventions.md blob: 80bcb7052970b11733e468f3998c1c85bc32bc96 -->
+<!-- source: en/database-naming-conventions.md blob: 8f00a94ff2e6e12e6a456f0df78a8d225dd0427a -->
 # 資料庫命名規範  
 
 [English](../en/database-naming-conventions.md) · [← 文件索引](README.md)
@@ -44,6 +44,7 @@
 | **一般索引** | `ix_表名_欄位名` | `ix_users_email` | 查詢加速用（可複合或部分索引） |
 | **預設值約束** | `df_表名_欄位名` | `df_users_created_at` | 欄位預設值定義 |
 
+在 `TableSchema` 檔中，索引名稱的表名部分寫成 `{0}`（例如 `pk_{0}`、`fk_{0}_dept_rowid`），產生 DDL 時再替換成表名。`TableSchemaGenerator` 由 FormSchema 衍生 TableSchema 時，會產生 `pk_`、`rx_`、`uk_` 與 `fk_` 索引；其他索引需手動寫進 TableSchema。預設值約束只有在 SQL Server 上、schema 升級以 `ALTER TABLE ... ADD CONSTRAINT` 新增時才會命名；`CREATE TABLE` 以 inline 方式宣告預設值，名稱交由資料庫決定。
 
 ---
 
@@ -68,7 +69,7 @@
 ## 5️⃣ 跨資料庫大小寫敏感性對照  
 
 不同資料庫對「識別符」（table、column、index 名）與「資料內容」（字串值比對）的大小寫處理規則差異很大。  
-此節列出 Polhem 支援的 5 種資料庫的實際行為，作為 schema 設計與手寫 SQL 的參考依據。  
+此節列出 Polhem 支援的各資料庫的實際行為，作為 schema 設計與手寫 SQL 的參考依據。  
 
 ### 5.1 識別符（table、column、index 名）  
 
@@ -103,10 +104,10 @@ PostgreSQL 與 Oracle 是「**相反方向**」的 fold：同一支未加引號 
 | **SQL Server** | 不分大小寫¹ | 維持預設 |
 | **PostgreSQL** | **分大小寫**（byte 比對） | 維持預設；應用層需顯式使用 `ILIKE` 或 `LOWER()` |
 | **MySQL** | 不分大小寫¹ | 維持預設 |
-| **SQLite** | **分大小寫**（`BINARY`） | 可在 column 上加 `COLLATE NOCASE` |
-| **Oracle** | **分大小寫**（`BINARY`） | 連線啟動時設定 session NLS：`NLS_COMP='LINGUISTIC'` + `NLS_SORT='BINARY_CI'`，使 `=`、`LIKE` 改為不分大小寫 |
+| **SQLite** | **分大小寫**（`BINARY`） | 產生的 DDL 會對 `String`、`Text` 與 `Guid` 欄加上 `COLLATE NOCASE`，因此這些欄位的比對不分大小寫 |
+| **Oracle** | **分大小寫**（`BINARY`） | 框架不會變更。想讓 `=`、`LIKE` 不分大小寫的 host，需為 session 設定 `NLS_COMP='LINGUISTIC'` + `NLS_SORT='BINARY_CI'`，例如透過 `DbProviderRegistry.Register(DatabaseType.Oracle, factory, connectionInitializer)` 的連線初始化動作，或資料庫的 logon trigger（初始化動作對每個命令的成本，見 `DbProviderRegistry.Register` 的 remarks） |
 
-¹ 取決於 column collation，預設 collation（SQL Server `*_CI_*`、MySQL `*_ci`）即不分大小寫。  
+¹ 取決於 column collation，預設 collation（SQL Server `*_CI_*`、MySQL `*_ci`）即不分大小寫。框架建立 MySQL 資料表時使用 `COLLATE=utf8mb4_0900_ai_ci`。  
 
 > **注意：識別符與資料內容是兩個獨立層次**  
 > - 識別符敏感性由 SQL parser 階段決定，影響 schema 物件的查找  
@@ -115,7 +116,7 @@ PostgreSQL 與 Oracle 是「**相反方向**」的 fold：同一支未加引號 
 
 ### 5.3 Polhem adapter 的識別符策略  
 
-Framework 對 5 DB 採「**統一加引號 + DB 各自最自然的大小寫**」策略，由 adapter 在邊界處理 case 翻譯：  
+Framework 對所有支援的 DB 採「**統一加引號 + DB 各自最自然的大小寫**」策略，由 adapter 在邊界處理 case 翻譯：  
 
 | DB | DDL/DML 中識別符儲存形式 | 引號方式 |
 |----|---------------------|---------|
@@ -133,7 +134,7 @@ Oracle 是 outlier：framework 在 emit DDL/DML 時將識別符 `.ToUpperInvaria
 #### 為什麼 Oracle 採 UPPERCASE 儲存  
 
 1. **與 Oracle 慣例對齊**：DBA 在 SQL Developer / DBeaver / sqlplus 看到的物件名為 `ST_USER`，符合 Oracle 預設 unquoted-fold-to-UPPER 行為的視覺結果  
-2. **手寫 SQL 對 Oracle 友善**：`SELECT * FROM st_user` 由 Oracle parser fold 為 `ST_USER` 剛好對應 storage，**不必每處都加引號**（與其他 4 DB 維持 lowercase 直觀寫法一致）  
+2. **手寫 SQL 對 Oracle 友善**：`SELECT * FROM st_user` 由 Oracle parser fold 為 `ST_USER` 剛好對應 storage，**不必每處都加引號**（與其他資料庫維持 lowercase 直觀寫法一致）  
 3. **Reserved word 仍能用作欄位**：因為 framework 仍 emit `"COMMENT"`、`"ORDER"` 加引號形式，Oracle parser 視為 quoted identifier 而非 reserved word token，命名上不需禁用 reserved words  
 
 #### 命名規範的驗證面  
@@ -142,8 +143,8 @@ Oracle 是 outlier：framework 在 emit DDL/DML 時將識別符 `.ToUpperInvaria
 
 1. **跨 DB 抽象上一律小寫**：FormSchema 中的識別符宣告永遠是 lowercase，由 framework 各 DB adapter 翻譯成該 DB 的儲存形式  
 2. **Oracle 內部 UPPERCASE 是封裝細節**：開發者寫 FormSchema、Repository、BO 時不需感知 Oracle 用 UPPERCASE，這是 adapter 邊界內部行為  
-3. **Reserved words 建議避開**：雖然 framework 加引號可規避 reserved word 衝突（5 DB 都豁免於 quoted identifier 規則），但仍建議避開 `comment`、`order`、`user`、`size`、`group`、`level`、`number` 等常見 reserved words，降低手寫 SQL 與工具相容的麻煩  
-4. **資料內容比對 case-insensitive**：framework 已抹平 5 DB 差異（Oracle 以 session NLS 補齊），手寫 SQL 寫 `WHERE name = 'jeff'` 在 5 DB 上行為一致  
+3. **Reserved words 建議避開**：雖然 framework 加引號可規避 reserved word 衝突（所有支援的資料庫都讓 quoted identifier 不受 reserved word 規則限制），但仍建議避開 `comment`、`order`、`user`、`size`、`group`、`level`、`number` 等常見 reserved words，降低手寫 SQL 與工具相容的麻煩  
+4. **資料內容比對並不一致**：SQL Server 與 MySQL（預設 collation）、SQLite（框架加上的 `COLLATE NOCASE`）比對文字時不分大小寫；PostgreSQL 分大小寫，Oracle 在 host 未設定 session NLS 時也分大小寫（§5.2）。因此手寫的 `WHERE name = 'jeff'` 在各資料庫上行為不同；要在所有資料庫上執行的 SQL 應明確統一大小寫（例如 `LOWER(name) = LOWER(...)`）  
 
 ---
 

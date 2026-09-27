@@ -1,4 +1,4 @@
-<!-- source: en/datetime-timezone.md blob: 271650b16c97d7ab34fbba9e254053e22e55a5b9 -->
+<!-- source: en/datetime-timezone.md blob: b557a6206bef8af0b4abe48bf5902c5c7c24b02e -->
 # 時區處理
 
 [English](../en/datetime-timezone.md) · [← 文件索引](README.md)
@@ -93,7 +93,8 @@ FilterCondition.Equal("created_at", someDateTime);     // 時間點——送出�
 
 ## 4. 設定使用者時區
 
-`st_user.time_zone` 存 IANA id（`Asia/Taipei`、`America/New_York`）。登入時複製到 session 並回傳給用戶端。
+`st_user.time_zone` 存 IANA id（`Asia/Taipei`、`America/New_York`）。登入時複製到 session 並隨登入回應傳回，
+完成登入的 connector 會把它用於該 session——因此每一端（包括 Blazor Server 的 circuit）都以登入使用者的時區換算。
 
 使用者若沒有自己的值，會退回 `BackendConfiguration.DefaultTimeZone`，其出廠預設為 `Asia/Taipei`。
 請把它設成部署實際所在的時區——或設為空字串以採用 UTC，因為**所有轉換點對空時區一律視為 UTC**。
@@ -104,6 +105,8 @@ FilterCondition.Equal("created_at", someDateTime);     // 時間點——送出�
 框架**刻意不提供**公司層級或欄位層級的覆寫。若某個值必須以**另一個**時區呈現——例如出勤紀錄要看
 員工工作地的時區——請以「UTC 時間欄 + 自訂的時區欄」建模，因為那個需求是逐列的，任何欄位層級的
 設定都表達不了。
+
+換算時是透過 `TimeZoneInfo` 查找時區，因此瀏覽器與行動端必須帶著時區資料；見[平台支援](platform-support.md)。
 
 ## 5. `DataSet` 以外的日期
 

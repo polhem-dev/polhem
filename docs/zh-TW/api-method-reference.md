@@ -1,4 +1,4 @@
-<!-- source: en/api-method-reference.md blob: 73db76f965503e0d5aa36dadaa1fbc4192028862 -->
+<!-- source: en/api-method-reference.md blob: fb5d66b27640c74ca020b9853d6839d43183faa5 -->
 # API 方法參考
 
 [English](../en/api-method-reference.md) · [← 文件索引](README.md)
@@ -8,8 +8,10 @@
 BO 層 Args / Result 型別、`[ApiAccessControl]` 設定，與一行用途說明。
 
 > **真相來源。** 本參考由 `BoApiSurfaceTests`（位於
-> `tests/Polhem.Business.UnitTests/`）與 BO 源碼即時對照。新增或修改方法時必須
-> 同步更新本文件與測試 baseline，否則 build 會失敗。
+> `tests/Polhem.Business.UnitTests/`）與 BO 源碼對照：它逐列比對下方表格的方法、
+> Protection 與 Auth，以及重放防護清單，與 `Polhem.Business` 裡的 `[ApiAccessControl]`
+> 宣告是否一致。新增或修改方法時必須同步更新本文件與測試 baseline，否則該測試會失敗。
+> 用途欄與敘述文字不在檢查範圍內。
 
 > 想知道框架保留哪些 `progId`？見 [框架保留命名](framework-reserved-names.md)。
 
@@ -17,7 +19,7 @@ BO 層 Args / Result 型別、`[ApiAccessControl]` 設定，與一行用途說�
 
 | 欄位 | 意義 |
 |------|------|
-| **Method** | JSON-RPC `method` 欄位 — `progId.action`。對應 `SystemActions` / `FormActions` / `LogActions` 常數。 |
+| **Method** | JSON-RPC `method` 欄位 — `progId.action`。對應 `SystemActions` / `FormActions` / `AuditLogActions` 常數。 |
 | **Protection** | `[ApiAccessControl]` 第一參數。可用值與各自語意見 `ApiProtectionLevel` 的 XML doc（[`src/Polhem.Definition/Security/ApiProtectionLevel.cs`](../../src/Polhem.Definition/Security/ApiProtectionLevel.cs)）。注意下表除了傳輸層級外也用到 `LocalOnly`。 |
 | **Auth** | `[ApiAccessControl]` 第二參數，見 [`src/Polhem.Definition/Security/ApiAccessRequirement.cs`](../../src/Polhem.Definition/Security/ApiAccessRequirement.cs)。 |
 | **用途** | 一行摘要；完整說明見對應 BO 方法的 XML doc。 |
@@ -25,7 +27,9 @@ BO 層 Args / Result 型別、`[ApiAccessControl]` 設定，與一行用途說�
 ### 重放防護
 
 下列方法另外宣告了 `ReplayProtection = UniqueSequence`：每次呼叫都必須帶一個該 session 沒用過的
-序號，否則伺服端回 `-32005 ReplayRejected`。在這些方法上重送同一個 request frame 會被拒絕。
+序號，否則伺服端回 `-32005 ReplayRejected`。此檢查只作用於已登入 session 的 Encrypted 呼叫，且 host 須開啟
+wire frame（`ApiServiceOptions.RequireWireFrame`，預設關閉）；Plain 呼叫不帶 frame，不受檢查。
+其他格式為何無法防護，見 `ApiReplayProtection` 的 XML doc。
 
 - `CreateApiKey`
 - `Delete`
@@ -40,19 +44,25 @@ BO 層 Args / Result 型別、`[ApiAccessControl]` 設定，與一行用途說�
 
 下方表列的每一個 `<Action>`，對應的合約 / BO 型別都依固定 pattern 推導：
 
-- **Wire 合約**：`Polhem.Api.Contracts.I<Action>Request` / `I<Action>Response`
+- **Wire 合約**：`Polhem.Api.Contracts.<Axis>.I<Action>Request` / `I<Action>Response`
 - **Wire DTO**：`Polhem.Api.Core.Messages.<Axis>.<Action>Request` / `<Action>Response`
 - **BO Args / Result**：`Polhem.Business.<Axis>.<Action>Args` / `<Action>Result`
 
+`<Axis>` 為 `System`、`Form` 或 `AuditLog`。Base 軸的 `ExecFunc` 相關型別位於各命名空間的根
+（`Polhem.Api.Contracts.IExecFuncRequest`、`Polhem.Api.Core.Messages.ExecFuncRequest`、
+`Polhem.Business.ExecFuncArgs`）。
+
 例如 `GetLanguage` → `IGetLanguageRequest` / `IGetLanguageResponse` /
-`GetLanguageArgs` / `GetLanguageResult`。IDE「跳至符號」即可從 action 名
+`GetLanguageArgs` / `GetLanguageResult`，皆屬 `System` 軸。IDE「跳至符號」即可從 action 名
 直達任一型別，無需在表格內重複列出。
 
-**請求側恆依此 pattern，回應側則否。** 多個 action 回應形狀相同時共用同一個回應型別，
-不各自宣告一份一模一樣的。AuditLog 軸全軸如此：五個清單查詢回
-`LogListResponse` / `LogListResult`、三個聚合查詢回
-`LogAggregateResponse` / `LogAggregateResult`，只有 `GetChangeDetail`
-的回應型別與 action 同名。請求型別可由 action 名推導，回應型別請看 BO 方法簽章。
+**請求側依此 pattern，但有三個例外；回應側則不依此 pattern。** 例外的三者沿用其延伸對象的型別：
+`ExecFuncAnonymous` 用 `ExecFuncArgs` / `ExecFuncRequest`，`GetCustomizeFormLayout` 用
+`GetFormLayoutArgs`，`GetCustomizeLanguage` 用 `GetLanguageArgs`（結果型別亦同）。
+多個 action 回應形狀相同時共用同一個回應型別，不各自宣告一份一模一樣的。AuditLog 軸全軸如此：
+五個清單查詢回 `AuditLogListResponse` / `AuditLogListResult`、三個聚合查詢回
+`AuditLogAggregateResponse` / `AuditLogAggregateResult`，只有 `GetChangeDetail`
+的回應型別與 action 同名。不確定時，請看 BO 方法簽章。
 
 ## 軸：Base（`BusinessObject`）
 
@@ -70,13 +80,13 @@ BO 層 Args / Result 型別、`[ApiAccessControl]` 設定，與一行用途說�
 | Method | Protection | Auth | 用途 |
 |--------|------------|------|------|
 | `Ping` | Public | Anonymous | Liveness 探針;回傳 server timestamp。 |
-| `GetCommonConfiguration` | Public | Anonymous | 回傳 `CommonConfiguration`（payload options、debug flag、預設語系等）。 |
-| `Login` | Public | Anonymous | 使用者驗證；回傳 access token 與動態 API 加密金鑰。 |
-| `CreateSession` | LocalOnly | Anonymous | 為指定 UserID 發行 session token，**不驗憑證** —— 這正是它與 `Login` 的差異。屬受信任呼叫端操作，遠端呼叫一律拒絕。 |
+| `GetCommonConfiguration` | Public | Anonymous | 以 XML 回傳伺服端的 `CommonConfiguration`（payload options、debug flag、預設語系等）。 |
+| `Login` | Public | Anonymous | 使用者驗證；回傳 access token、以 RSA 加密的 session 加密金鑰，以及使用者的時區與語系。 |
+| `CreateSession` | LocalOnly | Anonymous | 為指定 user id 發行 session token，**不驗憑證** —— 這正是它與 `Login` 的差異。屬受信任呼叫端操作，遠端呼叫一律拒絕。 |
 | `EnterCompany` | Public | Authenticated | 將 session 切換至指定 company（多租戶範圍）。 |
 | `LeaveCompany` | Public | Authenticated | 清除 company context，session 維持登入。 |
 | `Logout` | Public | Authenticated | 銷毀目前 session（同時清除 company context）。 |
-| `GetDefine` | Public | Authenticated | XML envelope 取定義資料（通用 — .NET client FormSchema / FormLayout / LanguageResource 都走此方法）。 |
+| `GetDefine` | Public | Authenticated | 以 XML 原樣回傳任一定義型別（選單則套用 session 租戶的覆寫）。遠端呼叫者只能讀取 client 渲染表單與選單所需的型別 —— `FormSchema`、`FormLayout`、`Language`、`MenuSettings`、`CurrencySettings`、`UnitSettings`；其餘型別遠端一律拒絕。本機呼叫可讀取任何型別。 |
 | `SaveDefine` | LocalOnly | Authenticated | XML envelope 持久化定義資料；同時失效對應 cache slot。寫入定義屬部署期作業，遠端呼叫一律拒絕 —— 讀取請用 `GetDefine`。 |
 | `GetCustomizePluginSettings` | LocalOnly | Authenticated | 以 XML 讀回單一租戶的業務 plugin 綁定；該租戶沒有客製時回空字串。LocalOnly 的理由同 `SaveCustomizePluginSettings`。 |
 | `SaveCustomizePluginSettings` | LocalOnly | Authenticated | 儲存單一租戶的業務 plugin 綁定，整份取代。寫入前逐一驗證每個綁定型別——必須可載入、繼承 `FormBusinessPlugin`、且至少 override 一個時點——一筆不合格就整份拒存。這些綁定決定「哪些程式碼會在存檔與刪除流程裡執行」，因此遠端呼叫一律拒絕。 |
@@ -85,17 +95,18 @@ BO 層 Args / Result 型別、`[ApiAccessControl]` 設定，與一行用途說�
 | `SetApiKeyEnabled` | Encrypted | Authenticated | 啟用或停用金鑰。停用即撤銷路徑，**立即**在所有伺服器行程生效，不等快取過期。把關同 `CreateApiKey`。 |
 | `SetApiKeyExpiry` | Encrypted | Authenticated | 設定或清除金鑰的到期時間。與 `CreateApiKey` 不同，此處接受已過去的時間（退役既有金鑰的正當手段）。把關同 `CreateApiKey`。 |
 | `SetDeploymentAdmin` | LocalOnly | Authenticated | 設定或撤銷使用者的部署層管理員旗標（`st_user.deployment_admin`）—— 該身分管的是整個部署的資產，不是任何公司的資料。指派管理員屬部署期作業，遠端呼叫一律拒絕；這也是該欄唯一的寫入路徑。 |
-| `GetFormSchema` | Public | Authenticated | **JS-only。** 以 typed JSON tree 回傳 `FormSchema`（依 session `Culture` 自動本地化）。 |
-| `GetFormLayout` | Public | Authenticated | **JS-only。** 原樣回傳 base 層的 `FormLayout` 定義；未存檔時回空值。 |
+| `GetFormSchema` | Public | Authenticated | 以 XML 原樣回傳單一 `FormSchema` —— 不做在地化，也不套客製覆寫。 |
+| `GetFormLayout` | Public | Authenticated | 以 XML 原樣回傳 base 層的 `FormLayout`；未存檔時回空字串。 |
 | `GetDepartmentTree` | Public | Authenticated | 以 typed 物件（JSON / MessagePack）回傳當前公司的部門樹（per-company 組織階層）；未進公司時為 `null`。 |
-| `GetLanguage` | Public | Authenticated | **JS-only。** 取單一 `(Lang, Namespace)` 配對的 `LanguageResource`。 |
+| `GetLanguage` | Public | Authenticated | 以 XML 原樣回傳單一 `(Lang, Namespace)` 配對的 `LanguageResource`；未存檔時回空字串。 |
 | `GetCustomizeFormLayout` | Public | Authenticated | 以 XML 回傳 session 租戶的 `FormLayout` 覆寫；該租戶沒有客製時回空字串。customize code 取自 session，絕不由呼叫端提供。 |
 | `GetCustomizeLanguage` | Public | Authenticated | 以 XML 回傳 session 租戶的 `LanguageResource` 覆寫；該租戶沒有客製時回空字串。 |
 
-> **JS-only 方法。** `GetFormSchema` / `GetFormLayout` / `GetLanguage` 內部走
-> `KeyCollectionBase`，在 MessagePack（Encoded / Encrypted wire format）下
-> 會掉 collection 元素。設計上為 JS / TypeScript 端透過 Plain JSON wire 取用，
-> .NET client 請改用 `GetDefine` 配對應 `DefineType`。
+> **定義以存檔原樣的 XML 傳輸。** `GetFormSchema`、`GetFormLayout`、`GetLanguage`
+> 是逐型別的入口，回傳的 XML 與 `GetDefine` 對同一型別回傳的相同，在每種 payload 格式與
+> codec 下都能用。在地化與客製層由呼叫端處理：`GetCustomize*` 方法回傳租戶層，
+> `FormSchemaLocalizer` 與 `CustomizeOverlay`（都在 `Polhem.Definition`）負責套用，
+> 伺服端與每種 client 都跑同一份程式碼。
 
 ## 軸：Form（`FormBusinessObject`）
 
@@ -103,16 +114,16 @@ per-program BO 實體，wire 上以 `<progId>.<action>` 派發（例如 `Employe
 
 | Method | Protection | Auth | 用途 |
 |--------|------------|------|------|
-| `GetList` | Public | Authenticated | Master table 列表查詢；支援 `Filter` / `Sort` / `Paging`（呼叫端務必分頁）。 |
-| `GetLookup` | Public | Authenticated | Lookup 開窗候選列查詢；投影由 server 依 `FormSchema.LookupFields` 解析（未宣告 fallback `sys_id` / `sys_name`，一律附 `sys_rowid`）。`SearchText` 比對字串型 lookup 欄位；未帶分頁時套預設分頁。刻意不受表單 `Read` 權限把關。 |
+| `GetList` | Public | Authenticated | Master table 列表查詢；支援 `Filter` / `Sort` / `Paging`。過濾與排序欄位必須是表單的表所宣告的欄位，受保護欄位一律拒絕。未帶 `Paging` 時回傳第一頁、筆數為 `PagingOptions.MaxPageSize`，結果的 `Paging.HasMore` 表示是否還有未回傳的列。套用呼叫者的 `Read` record scope。 |
+| `GetLookup` | Public | Authenticated | Lookup 開窗候選列查詢；投影由 server 依 `FormSchema.LookupFields` 解析（未宣告 fallback `sys_id` / `sys_name`，一律附 `sys_rowid`）。`SearchText` 比對字串型 lookup 欄位；未帶分頁時套預設分頁。刻意不受表單 `Read` 動作權限把關，但候選列限於呼叫者的 `Read` record scope（在表單權限模型上沒有 `Read` 授權的呼叫者看不到任何候選列）；BO 可覆寫 `LookupAppliesRecordScope` 退出此限制。 |
 | `GetNewData` | Public | Authenticated | 回傳空白 `DataSet` 骨架（含 FormSchema 預設值 + server 派發的 `sys_rowid`）。 |
 | `GetData` | Public | Authenticated | 依 `RowId` 載入單筆主檔列（與其所有子表列）。 |
 | `Save` | Public | Authenticated | 將 `DataSet` 持久化，依每列 `RowState` dispatch INSERT / UPDATE / DELETE。 |
 | `Delete` | Public | Authenticated | 依 `RowId` 直接刪除單筆主檔列。 |
 
-## 軸：Audit Log（`LogBusinessObject`）
+## 軸：Audit Log（`AuditLogBusinessObject`）
 
-對 `st_log_*` 稽核表的唯讀查詢（稽核軌跡的**讀取**側；寫入側即下方副作用）。以 `AuditLog.<action>` 派發。每個 action 皆以 `AuditLog` 權限模型 gate（需 `Read` 授權），避免一般使用者讀他人軌跡，結果並限縮於呼叫者當前公司。
+對 `st_log_*` 稽核表的唯讀查詢（稽核軌跡的**讀取**側；寫入側即下方副作用）。以 `AuditLog.<action>` 派發。以公司為範圍的 action 皆以 `AuditLog` 權限模型 gate（需 `Read` 授權），避免一般使用者讀他人軌跡，結果並限縮於呼叫者當前公司。兩個 DB 異常 action 沒有公司維度，改為要求部署層管理員（`st_user.deployment_admin`），本機呼叫亦同。
 
 change 軸採**清單 / 明細**二段式：`GetChangeLog` 只回輕量事件**標頭**（分頁 `DataTable`，不含 DiffGram）；DiffGram 由 `GetChangeDetail` 依單筆事件按需還原。
 
@@ -123,9 +134,9 @@ change 軸採**清單 / 明細**二段式：`GetChangeLog` 只回輕量事件**�
 | `GetLoginLog` | Encrypted | Authenticated | `st_log_login` 事件標頭的過濾分頁清單（時間 / 使用者 / event）。回傳標頭 `DataTable` + `PagingInfo`。 |
 | `GetAccessLog` | Encrypted | Authenticated | `st_log_access` 檢視記錄標頭的過濾分頁清單（時間 / 使用者 / progId / rowKey）。回傳標頭 `DataTable` + `PagingInfo`。 |
 | `GetApiAnomalyLog` | Encrypted | Authenticated | `st_log_anomaly_api` 標頭的過濾分頁清單（時間 / 使用者 / method / anomaly-kind）。回傳標頭 `DataTable` + `PagingInfo`。 |
-| `GetDbAnomalyLog` | Encrypted | Authenticated | `st_log_anomaly_db` 標頭的過濾分頁清單（時間 / databaseId / anomaly-kind）。屬跨公司的基礎設施檢視（`st_log_anomaly_db` 無公司維度）。回傳標頭 `DataTable` + `PagingInfo`。 |
+| `GetDbAnomalyLog` | Encrypted | Authenticated | `st_log_anomaly_db` 標頭的過濾分頁清單（時間 / databaseId / anomaly-kind）。屬跨公司的基礎設施檢視（`st_log_anomaly_db` 無公司維度），因此需要部署層管理員。回傳標頭 `DataTable` + `PagingInfo`。 |
 | `GetApiAnomalySummary` | Encrypted | Authenticated | 依 `anomaly_kind` 彙總 API 異常筆數（可帶時間窗，監控摘要）。回傳聚合 `DataTable`（`anomaly_kind` / `event_count`），無分頁。 |
-| `GetDbAnomalySummary` | Encrypted | Authenticated | 依 `anomaly_kind` 彙總 DB 異常筆數（可帶時間窗）。跨公司基礎設施摘要。回傳聚合 `DataTable`（`anomaly_kind` / `event_count`），無分頁。 |
+| `GetDbAnomalySummary` | Encrypted | Authenticated | 依 `anomaly_kind` 彙總 DB 異常筆數（可帶時間窗）。跨公司基礎設施摘要；需要部署層管理員。回傳聚合 `DataTable`（`anomaly_kind` / `event_count`），無分頁。 |
 | `GetTopApiMethods` | Encrypted | Authenticated | 依異常筆數取最忙的 API 方法（可帶時間窗，監控熱點）。回傳聚合 `DataTable`（`method` / `event_count` / `max_elapsed_ms`），前 N 筆。 |
 
 ## 稽核副作用

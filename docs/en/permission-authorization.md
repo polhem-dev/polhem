@@ -12,7 +12,7 @@ Polhem permissions span **three dimensions**, applied at **two enforcement point
 
 The **Action** dimension applies at *both* points: the back end enforces it at the method layer (the real boundary), and the front end mirrors it as command/button state so users are not offered actions they cannot perform. **Record** is back-end only. **Field** is front-end only — a UX affordance, not a data boundary (see the caveat in [section 10](#10-enabling-capability-in-a-host-app-opt-in)).
 
-Both back-end dimensions run entirely from in-memory snapshots at request time (the database is touched only when loading the caches, at login, on `EnterCompany`, or when configuration changes). Authorization is **orthogonal** to `ApiAccessControlAttribute` (which governs encryption level and whether login is required). See [ADR-019](../adr/adr-019-permission-authorization-model.md) for the design rationale.
+The permission data both back-end dimensions consult — roles, grants, the department tree and the session's identity — comes from in-memory snapshots at request time (the database is read for it only when loading the caches, at login, on `EnterCompany`, or when configuration changes). The record-scope checks on writes still query the rows themselves, as described in section 5. Authorization is **orthogonal** to `ApiAccessControlAttribute` (which governs encryption level and whether login is required). See [ADR-019](../adr/adr-019-permission-authorization-model.md) for the design rationale.
 
 All three dimensions are **company-scoped**. Assets that belong to the installation rather than to any company — API keys, and whatever a deployment adds later — are governed by a separate, parallel decision described in **Part 3**.
 
@@ -20,7 +20,7 @@ All three dimensions are **company-scoped**. Assets that belong to the installat
 
 # Part 1 — Back-end enforcement (Action + Record)
 
-The Action and Record dimensions are the authoritative gate. Both run entirely from in-memory snapshots and are decoupled from forms.
+The Action and Record dimensions are the authoritative gate. Both read their permission data from in-memory snapshots and are decoupled from forms.
 
 ## 1. Define permission models
 
@@ -28,15 +28,17 @@ A **permission model** is a business entity (e.g. `PurchaseOrder`), deliberately
 
 ```xml
 <PermissionModels>
-  <PermissionModel ModelId="PurchaseOrder" DisplayName="Purchase Order">
-    <Rules>
-      <PermissionRule Action="Read"   Scope="DeptAndSub" />
-      <PermissionRule Action="Update" Scope="Own" />
-      <PermissionRule Action="Delete" Scope="Own" />
-      <PermissionRule Action="Create" Scope="All" />
-      <!-- Print / Export omit Scope → inherit the model's Read scope -->
-    </Rules>
-  </PermissionModel>
+  <Models>
+    <PermissionModel ModelId="PurchaseOrder" DisplayName="Purchase Order">
+      <Rules>
+        <PermissionRule Action="Read"   Scope="DeptAndSub" />
+        <PermissionRule Action="Update" Scope="Own" />
+        <PermissionRule Action="Delete" Scope="Own" />
+        <PermissionRule Action="Create" Scope="All" />
+        <!-- Print / Export omit Scope → inherit the model's Read scope -->
+      </Rules>
+    </PermissionModel>
+  </Models>
 </PermissionModels>
 ```
 
@@ -86,7 +88,7 @@ INSERT INTO st_role_grant (role_id, model_id, action, scope) VALUES
   ('Buyer', 'PurchaseOrder', 4 /*Update*/, 2 /*Own*/),
   ('Buyer', 'PurchaseOrder', 8 /*Delete*/, 2 /*Own*/);
 -- scope = ScopeStrategy: Inherit=0, All=1, Own=2, Dept=3, DeptAndSub=4
--- action = PermissionAction (flags): Create=1, Read=2, Update=4, Delete=8, Print=16, Export=32
+-- action = PermissionActions (flags): Create=1, Read=2, Update=4, Delete=8, Print=16, Export=32
 ```
 
 `scope = Inherit (0)` defers to the model's per-action default (section 1).
@@ -107,22 +109,28 @@ On `EnterCompany`, the framework resolves `user → employee → department` onc
 
 `FormBusinessObject` checks `(model, action)` before running:
 
-- `GetList` / `GetData` → `Read`
+- `GetList` / `GetData` / `GetNewData` → `Read`
 - `Save` → per row by `RowState`: `Added`→`Create`, `Modified`→`Update`, `Deleted`→`Delete`
 - `Delete` → `Delete`
+- `GetLookup` is **not** action-gated: a user who may not browse the target form still needs to pick a reference value from it. Its exposure is bounded by the form's `LookupFields` and by the record scope below.
 
 Multiple roles **OR-merge** (capabilities accrue). A failing check throws `ForbiddenException`.
 
 ### Layer 2 — record scope
 
-**Reads** (`GetList`, `GetData`) AND a scope filter into the query. Out-of-scope rows are filtered out; an out-of-scope single-row fetch returns `null` (indistinguishable from "not found", so a caller cannot probe records they may not see).
+**Reads** (`GetList`, `GetData`, `GetLookup`) AND the `Read` scope filter into the query. Out-of-scope rows are filtered out; an out-of-scope single-row fetch returns `null` (indistinguishable from "not found", so a caller cannot probe records they may not see). A business object whose lookup must offer every row, such as a shared unit or currency list, opts out for `GetLookup` by overriding `LookupAppliesRecordScope` to return `false`.
 
-**Writes** (`Update`, `Delete`) are gated by an **authoritative re-query** against the database — `WHERE sys_rowid = id AND <scope>` — *not* by evaluating the submitted payload. A forged DataSet cannot relabel its way past the boundary.
+`GetList` also restricts what a caller may name: filter and sort fields must be fields the form's table declares, and a protected column (see section 12) can be neither selected, filtered nor sorted on. A call without paging returns the first page of `PagingOptions.MaxPageSize` rows.
 
-- `Save` re-checks only an existing master record (any master `RowState` other than `Added`). A details-only edit leaves the master `Unchanged` but still counts as an `Update`.
-- `Delete(rowId)` returns 0 and cascades nothing when the row is out of scope.
-- **`Create` is not scope-checked** — a new row has no existing scope to violate; creation is governed by the action grant.
-- Scope is **master-only**: once the master passes, the whole record (details included) persists as a unit.
+**Writes** are gated by an **authoritative re-query** against the database — `WHERE sys_rowid = id AND <scope>` — *not* by evaluating the submitted payload. A forged DataSet cannot relabel its way past the boundary.
+
+- `Save` checks every existing master row of the payload (any master `RowState` other than `Added`) against the `Update` scope, or the `Delete` scope for a deleted row, on the row id the UPDATE or DELETE statement binds (the row's Original version). A details-only edit leaves the master `Unchanged` but still counts as an `Update`.
+- The values an `Added` or `Modified` master row leaves behind must be inside the caller's `Create` or `Update` scope too. The check runs after the `BeforeSave` step, on the row's current values, so owner or department values that a default expression, a `DoBeforeSave` override or a plugin fills in are the ones checked. Without it a user limited to their own records could create a record owned by someone else, or move one of theirs into another department.
+- A row whose Original and Current `sys_rowid` differ is refused, and so is a payload that carries detail rows without the master table they belong to.
+- Detail rows follow the master: each written detail row must name a master row of the payload, and every modified or deleted detail row must already belong, in the database, to an existing master row of the payload.
+- `Delete(rowId)` affects no rows and cascades nothing when the row is out of scope.
+
+A refusal throws `ForbiddenException`.
 
 ### Scope strategies
 
@@ -172,18 +180,18 @@ The category gate is **company-wide and orthogonal to the form's own model**: se
 
 ## 8. How the capability snapshot reaches the client
 
-On `EnterCompany`, the back end computes the per-model action mask for the session's roles (`CompanyRolePermissions.GetAllowedByModel`) and returns it on `EnterCompanyResponse.Capabilities` — a `Dictionary<modelId, PermissionAction>` — riding the existing `EnterCompany` round-trip, so there is **no extra request**. Only models the user holds a grant on appear in the map.
+On `EnterCompany`, the back end computes the per-model action mask for the session's roles (`CompanyRolePermissions.GetAllowedByModel`) and returns it on `EnterCompanyResponse.Capabilities` — a `Dictionary<modelId, PermissionActions>` — riding the existing `EnterCompany` round-trip, so there is **no extra request**. Only models the user holds a grant on appear in the map.
 
 ## 9. How the client degrades
 
-`ClientInfo.Capabilities` caches the snapshot (nullable), and `Polhem.UI.Core.Permissions.ElementCapabilityResolver` (a pure, UI-agnostic resolver) reads it:
+`ClientInfo.Capabilities` (`Polhem.UI.Core`) caches the snapshot (nullable), and `Polhem.Api.Client.Permissions.ElementCapabilityResolver` (a pure, UI-agnostic resolver) reads it. The Avalonia views (`FormView`, `ListView`) apply it today; the Blazor components do not read the snapshot.
 
 - **`null` → capability inactive → nothing is degraded.** An app that never enters a company, or does not use permissions, renders exactly as before.
 - **Non-null → active.** A model absent from the map means *no permission* on it.
 
 Two element kinds consume the resolver:
 
-- **Commands** (toolbar buttons). Each button is tagged at creation with the `PermissionAction` it needs (`New`→`Create`, `Save`→`Create|Update`, `Delete`→`Delete`, `View`→`Read`); the resolver's `Can(...)` checks the form's `PermissionModelId` with **any-of** semantics (`Save` shows if the user holds either `Create` or `Update`). An un-permitted button is hidden. This is the front-end **projection of the Action dimension** as UX.
+- **Commands** (toolbar buttons). Each button is tagged at creation with the `PermissionActions` it needs (`New`→`Create`, `Edit`→`Update`, `Save`→`Create|Update`, `Delete`→`Delete`, `View`→`Read`); the resolver's `Can(...)` checks the form's `PermissionModelId` with **any-of** semantics (`Save` shows if the user holds either `Create` or `Update`). An un-permitted button is hidden. This is the front-end **projection of the Action dimension** as UX.
 - **Sensitive fields.** `ResolveField(...)` reads the field's `SensitiveCategory`, looks up the category model, and degrades on **two independent sub-gates** — `Read` controls *visibility*, `Update` controls *editability* — so a field can be viewable but not editable. Applied to master fields and detail grid columns alike.
 
   | `<category>.Read` | `<category>.Update` | Result |
@@ -206,10 +214,9 @@ Capability is **inert until wired**, so existing apps are unaffected. To turn it
 2. After `SystemApiConnector.EnterCompanyAsync`, hand the response to the client cache:
    ```csharp
    var response = await ClientInfo.SystemApiConnector.EnterCompanyAsync(companyId);
-   ClientInfo.ApplyEnterCompanyResult(response);   // caches the capability snapshot
-   ClientInfo.ResetDefineCache();                  // (existing) drop stale tenant defines
+   ClientInfo.ApplyEnterCompanyResult(response);   // caches the capability snapshot and drops the previous tenant's definitions
    ```
-3. On `LeaveCompany`, clear it: `ClientInfo.ClearCompanyContext();`.
+3. On `LeaveCompany` or logout, clear it: `ClientInfo.ClearCompanyContext();` (which drops the cached definitions too).
 
 > **Caveat — the Field dimension is UX, not a data boundary.** `GetList` / `GetData` still return the sensitive column's value; the client merely hides or locks it. A client that bypasses the standard UI could still receive the raw value over the API. Treat field permission as *presentation*. Anything that must never leave the server belongs behind an **Action** or **Record** boundary (Part 1), or its own permission model — not solely a `SensitiveCategory`. Server-side column masking is a separate future concern (see Non-goals).
 
@@ -232,23 +239,24 @@ Some assets belong to the **installation** rather than to any company — an API
 
 ## 11. What deployment authorization covers
 
-`DeploymentAction` is a deliberately small enumeration; today it has one member:
+`DeploymentAction` is a deliberately small enumeration; it lists only the actions the framework performs:
 
-| Action | Gated operation |
-|--------|-----------------|
-| `ManageApiKey` | `SystemBO.CreateApiKey` — issuing an API key |
+| Action | Gated operations |
+|--------|------------------|
+| `ManageApiKey` | `SystemBusinessObject.CreateApiKey`, `ListApiKeys`, `SetApiKeyEnabled`, `SetApiKeyExpiry` — issuing, listing, enabling or disabling, and expiring API keys |
+| `ReadDbAnomalyLog` | `AuditLogBusinessObject.GetDbAnomalyLog` — the database anomaly log (`st_log_anomaly_db`), which carries no company and records every tenant's database ids and SQL command templates |
 
-`CreateApiKey` runs the check only for **remote** callers. An in-process call passes without an administrator, which is what keeps a fresh deployment able to mint its first key on the host before any administrator exists.
+The API key methods run the check only for **remote** callers. An in-process call passes without an administrator, which is what keeps a fresh deployment able to mint its first key on the host before any administrator exists. The database anomaly log has no such bootstrap need, so a local call is held to the same check.
 
 The check reads the flag from the database **on every call**, deliberately unlike the company path (which answers from cache and touches no database). Deployment operations are rare, and revoking an administrator has to take effect immediately — any cached form of the flag would delay it.
 
 ## 12. Appointing an administrator
 
-`SystemBO.SetDeploymentAdmin(userId, isDeploymentAdmin)` is the **only** write path to `st_user.deployment_admin`, and it is `LocalOnly`: the first administrator is appointed on the host, after which appointments can be made through whatever administration surface the deployment builds on top of it.
+`SystemBusinessObject.SetDeploymentAdmin` (`SystemApiConnector.SetDeploymentAdminAsync(userId, isDeploymentAdmin)` from a client) is the **only** write path the framework provides to `st_user.deployment_admin`, and it is `LocalOnly`: the first administrator is appointed on the host, after which appointments can be made through whatever administration surface the deployment builds on top of it.
 
-The framework enforces "only write path" at runtime, not by convention: `ProtectedFields` lists the column, and the FormSchema-driven write path (`DataFormRepository.Save`) strips it from every INSERT and UPDATE **even if a form declares it**. Without that, a deployment that built its own user-maintenance form over `st_user` would have handed its ordinary users a route to promote themselves. Reads are unaffected — a form may display the column, it simply cannot store it.
+The framework keeps the FormSchema-driven data path away from the column at runtime, not by convention: `ProtectedFields` lists it, and the write path (`DataFormRepository.Save`) strips it from every INSERT and UPDATE **even if a form declares it**. Without that, a deployment that built its own user-maintenance form over `st_user` would have handed its ordinary users a route to promote themselves. Reads are guarded too, because a column that can be filtered or sorted on can be read one comparison at a time: a query that names a protected column in its select list, filter or sort is refused, and a query that asks for every field leaves it out.
 
-`st_user.password` is protected the same way, and for a sharper reason: the column grants the privilege of *being* the user, and its contents are load-bearing — `PasswordHasher.VerifyPassword` parses the iteration count, salt and hash out of the stored string. A form writing that column would be storing values the verifier never produced. The framework itself has no write path for it at all.
+`st_user.password` is protected the same way, and for a sharper reason: the column grants the privilege of *being* the user, and its contents are load-bearing — `PasswordHasher.VerifyPassword` parses the iteration count, salt and hash out of the stored string. A form writing that column would be storing values the verifier never produced. The framework itself writes the column only to replace a weaker stored hash after a successful sign-in; it has no password-change operation.
 
 > **Upgrading:** a deployment that set passwords through its own maintenance form over `st_user` will find that column silently dropped from the save after this change. Move it to a dedicated operation that hashes what it stores; a form has no way to produce a value `VerifyPassword` will accept.
 
@@ -256,7 +264,7 @@ The framework ships no `st_user` rows, so seeding a first administrator on a bra
 
 ## 13. Audit trail
 
-Deployment operations are recorded on the change axis (`st_log_change`) under the `System` prog id, with `source` naming the operation (`System.SetDeploymentAdmin`, `System.CreateApiKey`) and the acting user denormalised into `user_id` / `user_name` as with any other audit row. The `changes_xml` payload carries before/after values, so the trail distinguishes a **grant** from a **revoke** — both are an `Update` and would otherwise be indistinguishable.
+Deployment operations are recorded on the change axis (`st_log_change`) under the `System` prog id, with `source` naming the operation (for example `System.SetDeploymentAdmin`, `System.CreateApiKey`, `System.SetApiKeyEnabled`, `System.SetApiKeyExpiry`) and the acting user denormalised into `user_id` / `user_name` as with any other audit row. The `changes_xml` payload carries before/after values, so the trail distinguishes a **grant** from a **revoke** — both are an `Update` and would otherwise be indistinguishable.
 
 Two properties are worth knowing:
 
@@ -280,12 +288,18 @@ permission registry: every `FormSchema.PermissionModelId` references an existing
 is marked on master tables only, and every non-`None` `SensitiveCategory` has a matching well-known
 model. It returns one message per violation and an empty list when the definitions are valid.
 
-**The framework does not call it for you.** There is no automatic load-time scan — an invalid
-binding will not stop the application from starting; it surfaces later as a permission check that
-silently does nothing (an empty `PermissionModelId` means *unscoped*, so a typo in a model id
-degrades to "no enforcement" rather than to an error). Invoke the validator yourself where a
-failure is cheap to act on: at host startup, in a deployment smoke test, or in a CI step over the
-definitions in your `DefinePath`.
+**The framework does not call it for you.** An invalid binding does not stop the application from
+starting; it surfaces later as a permission check that behaves differently from what was intended.
+A `PermissionModelId` that names no model in the registry still runs the action gate against
+whatever grants carry that id, but an `Inherit` grant then finds no model default and resolves to
+`All`, so the record scope silently disappears. Invoke the validator yourself where a failure is
+cheap to act on: at host startup, in a deployment smoke test, or in a CI step over the definitions
+in your `DefinePath`.
+
+What the framework does check at startup is the opposite case: a host built with
+`AddPolhemFramework` logs one warning listing the forms registered in `ProgramSettings` whose
+`FormSchema` declares no `PermissionModelId`, because every authenticated user of the company can
+read and write such a form. The warning never stops the host.
 
 ```csharp
 var errors = PermissionBindingValidator.Validate(allFormSchemas, permissionModels);
@@ -296,16 +310,16 @@ if (errors.Count > 0)
 ## Caching & invalidation
 
 - Role/grant/user-role tables load into a per-company `CompanyRolePermissions` cache; the department tree into a per-company `DepartmentTree` cache. Both are DB-sourced and evicted via the common cache-notify poller.
-- `SessionInfo` holds the request-time snapshot (`Roles`, `UserRowId`, `EmployeeRowId`, `DeptRowId`), populated at `EnterCompany`, cleared at `LeaveCompany` / `Logout`.
+- `SessionInfo.CompanyScope` (a `SessionCompanyScope`) holds the request-time snapshot (`Roles`, `UserRowId`, `EmployeeRowId`, `DeptRowId`), populated at `EnterCompany`, cleared at `LeaveCompany` / `Logout`. It is replaced as a whole, so a check never sees roles from one company and row ids from another.
 - The client capability snapshot (`ClientInfo.Capabilities`) is also point-in-time: populated at `EnterCompany`, cleared on `LeaveCompany` / token change. Re-enter the company to refresh it after a grant change.
 - Snapshots are point-in-time: configuration changed mid-session is reflected for cache-backed checks (`Can` reads the live cache) but role/employee/department snapshots on an already-entered session update on the next `EnterCompany`.
 
 ## Transport & credential hardening (production)
 
-- **Require HTTPS.** The login request carries the password under `PayloadFormat.Encoded` (serialize + compress + Base64 — *not* encryption); the RSA handshake only protects the session key the server returns. Transport confidentiality therefore rests entirely on TLS. Serve every production endpoint over HTTPS (and enable HSTS); never expose the JSON-RPC endpoint over plain HTTP.
-- **Override the API key validator.** The default `ApiAuthorizationValidator` only checks that the `X-Api-Key` header is non-empty, not its value — real authentication runs on the Bearer access token. If you treat the API key as an access gate, override `ApiServiceOptions.AuthorizationValidator` to compare the key against a configured set with a constant-time comparison. `UsePolhemFramework` logs a startup warning while the default validator is in place.
+- **Require HTTPS.** `Login` is declared `ApiProtectionLevel.Public`: `SystemApiConnector.LoginAsync` sends the password as `PayloadFormat.Encoded` (serialize + compress + Base64 — *not* encryption), and a JavaScript client may send it as Plain. The RSA handshake only protects the session key the server returns, and a browser (WebAssembly) client skips it. Transport confidentiality therefore rests entirely on TLS. Serve every production endpoint over HTTPS (and enable HSTS); never expose the JSON-RPC endpoint over plain HTTP.
+- **Issue an API key.** Until `st_api_key` holds an enabled key, the default `ApiAuthorizationValidator` accepts any non-empty `X-Api-Key`; once one exists, only issued, enabled, unexpired keys pass. `UsePolhemFramework` logs the missing gate at startup, as an error outside the Development environment. The API key identifies the calling application; user authentication runs on the Bearer access token either way. See [API Key Management](api-key-management.md). A host that needs a different transport check can still replace `ApiServiceOptions.AuthorizationValidator`.
 
 ## Non-goals
 
-- **Declarative custom-command model** — standard toolbar commands are tagged in code (section 9); Print / Export / Approve as *data-defined* `FormLayout` elements are not modelled yet. When added, custom commands will carry their own opt-in `PermissionAction`.
+- **Declarative custom-command model** — standard toolbar commands are tagged in code (section 9); Print / Export / Approve as *data-defined* `FormLayout` elements are not modelled yet. When added, custom commands will carry their own opt-in `PermissionActions`.
 - **Back-end field masking** — the Field dimension is front-end UX. Server-side masking of sensitive columns (so their values never leave the server) is not yet implemented; use an Action/Record boundary for hard data confidentiality today.

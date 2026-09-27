@@ -22,7 +22,7 @@ Contract Interface (ILoginRequest / ILoginResponse)   <-- Single source of truth
 
 - Clients (`Polhem.Api.Client`) only interact with API types, without knowing BO implementation details
 - The BO layer has no dependency on API assemblies, enabling independent testing and evolution
-- BOs can add internal-only properties beyond the contract without affecting the API
+- BOs can add properties beyond the contract for BO-to-BO calls without changing the API types (a remote caller can still set them; see Scenario 2)
 
 ---
 
@@ -49,6 +49,8 @@ namespace Polhem.Api.Contracts.System
         string ApiEncryptionKey { get; }
         string UserId { get; }
         string UserName { get; }
+        string TimeZone { get; }
+        string Culture { get; }
     }
 }
 ```
@@ -60,20 +62,22 @@ Inherit `ApiRequest` / `ApiResponse` and implement the contract interfaces. Clie
 They carry **no serialization attributes at all** — a plain class with public read/write properties is the whole recipe:
 
 ```csharp
-public class LoginRequest : ApiRequest, ILoginRequest
+public sealed class LoginRequest : ApiRequest, ILoginRequest
 {
     public string UserId { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string ClientPublicKey { get; set; } = string.Empty;
 }
 
-public class LoginResponse : ApiResponse, ILoginResponse
+public sealed class LoginResponse : ApiResponse, ILoginResponse
 {
     public Guid AccessToken { get; set; } = Guid.Empty;
     public DateTime ExpiredAt { get; set; }
     public string ApiEncryptionKey { get; set; } = string.Empty;
     public string UserId { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
+    public string TimeZone { get; set; } = string.Empty;
+    public string Culture { get; set; } = string.Empty;
 }
 ```
 
@@ -83,7 +87,7 @@ Where the wire binding lives instead:
 - **MessagePack** — a hand-written contract in `src/Polhem.Api.Core/MessagePack/WireContracts.*.cs`
   names each member explicitly. **A new message type has to be registered there**, because the
   resolver has no reflection fallback on platforms that forbid dynamic code; `WireContractDriftTests`
-  fails the build when the wire closure and the registrations disagree.
+  (in `tests/Polhem.Api.Core.UnitTests`) fails when the wire closure and the registrations disagree.
 
 This is why the attributes are gone: keeping them would have put a transport package on the dependency
 surface of every consumer of the definition layer. See
@@ -99,17 +103,14 @@ surface of every consumer of the definition layer. See
 
 ### BO Parameter Types (Polhem.Business)
 
-Inherit `BusinessArgs` / `BusinessResult`, implement contract interfaces, and are pure POCOs. May include additional BO-specific properties beyond the contract.
+Inherit `BusinessArgs` / `BusinessResult`, implement contract interfaces, and are pure POCOs. May include additional BO-specific properties beyond the contract (see Scenario 2 below).
 
 ```csharp
-public class LoginArgs : BusinessArgs, ILoginRequest
+public sealed class LoginArgs : BusinessArgs, ILoginRequest
 {
     public string UserId { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string ClientPublicKey { get; set; } = string.Empty;
-
-    // BO-specific property (not in the contract interface)
-    public bool IsAutoLogin { get; set; }
 }
 ```
 
@@ -143,22 +144,23 @@ property rather than a signature change that breaks every existing override.
 
 ## Three Usage Scenarios
 
+An API method always has all three layers: the BO method takes the concrete `XxxArgs` and returns the
+concrete `XxxResult`, and the executor converts the API request into the args and the result into the
+API response by copying the properties they share. The scenarios differ in what the BO types carry.
+
 ### Scenario 1: API Method, BO Needs No Extra Properties (Most Common)
 
-API and BO parameter properties are identical; no Args / Result types are needed.
+API and BO parameter properties are identical: the `XxxArgs` / `XxxResult` types implement the same
+contract interfaces as the API types and add nothing.
 
-**Types to create:** Contract interfaces + API contract types
+**Types to create:** Contract interfaces + API contract types + BO parameter types that mirror them
 **BO method signature:** Use the concrete `XxxArgs` / `XxxResult` types for parameters and return types
 
 ```csharp
-public LoginResult Login(LoginArgs args)
+public GetOrderResult GetOrder(GetOrderArgs args)
 {
-    // The executor passes a LoginArgs; BO-to-BO calls also pass LoginArgs directly.
-    return new LoginResult
-    {
-        AccessToken = Guid.NewGuid(),
-        UserId = args.UserId
-    };
+    // The executor passes a GetOrderArgs; BO-to-BO calls also pass GetOrderArgs directly.
+    return new GetOrderResult { OrderId = args.OrderId };
 }
 ```
 
@@ -166,25 +168,29 @@ public LoginResult Login(LoginArgs args)
 
 BO-to-BO calls require internal properties not visible to the API.
 
-**Types to create:** Contract interfaces + API contract types + BO parameter types
+**Types to create:** Contract interfaces + API contract types + BO parameter types with the extra properties
 
 ```csharp
 // BO parameter with extra properties
-public class LoginArgs : BusinessArgs, ILoginRequest
+public sealed class GetOrderArgs : BusinessArgs, IGetOrderRequest
 {
-    public string UserId { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-    public string ClientPublicKey { get; set; } = string.Empty;
-    public bool IsAutoLogin { get; set; }  // BO-specific
+    public string OrderId { get; set; } = string.Empty;
+    public bool IncludeCancelledLines { get; set; }  // BO-specific
 }
 
 // BO method takes the concrete args type, so the extra property is directly available
-public LoginResult Login(LoginArgs args)
+public GetOrderResult GetOrder(GetOrderArgs args)
 {
-    bool isAutoLogin = args.IsAutoLogin;
+    bool includeCancelled = args.IncludeCancelledLines;
     // ...
 }
 ```
+
+> **WARNING:** a BO-specific property is not in the API types, but that does not keep it out of a
+> remote caller's reach. A Plain request body is bound to the method's parameter type — the `XxxArgs`
+> itself — so any public setter on it can be set by the caller. Treat such a property as caller input
+> like the rest of the args (see *Naming Conventions* above), and check `IsLocalCall` where only a
+> BO-to-BO call may set it.
 
 ### Scenario 3: BO-Only Method (Not Exposed as API)
 
@@ -193,9 +199,9 @@ Internal methods used only within the BO layer, not published as JSON-RPC APIs.
 **Types to create:** BO parameter types only (no contract interfaces, no API types)
 
 ```csharp
-public class RecalcArgs : BusinessArgs
+public sealed class RecalcArgs : BusinessArgs
 {
-    public string OrderId { get; set; }
+    public string OrderId { get; set; } = string.Empty;
     public bool ForceRecalc { get; set; }
 }
 ```
@@ -204,11 +210,11 @@ public class RecalcArgs : BusinessArgs
 
 ## Serialization Rules
 
-| Layer | Serialization attributes | Wire registration | `IObjectSerialize` |
-|-------|:---:|:---:|:---:|
-| Contract interface | None | — | No |
-| API type | **None** | `WireContracts.*.cs` (framework repository) | Yes (provided by base) |
-| BO type | None | — | No |
+| Layer | Serialization attributes | Wire registration |
+|-------|:---:|:---:|
+| Contract interface | None | — |
+| API type | **None** | `WireContracts.*.cs` (framework repository) |
+| BO type | None | — |
 
 No layer carries MessagePack attributes. XML annotations belong to the definition types that are
 persisted as files, not to these wire messages.
@@ -220,10 +226,10 @@ persisted as files, not to these wire messages.
 When calling APIs through `SystemApiConnector`, always use `Request` / `Response` types:
 
 ```csharp
-var connector = new SystemApiConnector(endpoint, accessToken);
+var connector = new SystemApiConnector(endpoint, Guid.Empty);
 
 // Use API types, not BO types
-var response = await connector.LoginAsync("admin", "password");
+LoginResponse response = await connector.LoginAsync("admin", "password");
 Console.WriteLine(response.AccessToken);
 ```
 
@@ -258,13 +264,18 @@ Convention:
 {Action}Result  ──reflection lookup in Polhem.Api.Core──▶  {Action}Response
 ```
 
-For example, `PingResult` is automatically mapped to `PingResponse`. Reflection results are cached per BO type so each type is resolved only once.
+For example, `PingResult` is automatically mapped to `PingResponse`. The lookup is cached per result type, so each type is resolved only once.
 
-> The convention is enforced: any BO result type that does not follow `{Action}Result` / `{Action}Response` naming cannot be auto-converted. See [ADR-007](../adr/adr-007-convention-based-type-resolution.md) for background.
+> Nothing checks the convention. A result type whose name does not end in `Result`, or that has no
+> `{Action}Response` in `Polhem.Api.Core`, is not converted: `ApiOutputConverter` returns the BO result
+> itself, which then travels as it is. See [ADR-007](../adr/adr-007-convention-based-type-resolution.md) for background.
 
 ### ExecFunc Pattern
 
-`ExecFunc` uses `ParameterCollection` as a generic parameter mechanism and does not follow the Request/Response layering pattern described here. It continues to use the existing approach.
+`ExecFunc` has the same layers (`IExecFuncRequest`, `ExecFuncRequest`, `ExecFuncArgs` and their
+response counterparts), but its only typed member is `FuncId`. The data of each function travels in
+the `Parameters` collection (`ParameterCollection`) that every Args / Result and Request / Response
+inherits, so adding a function needs no new type.
 
 ---
 
@@ -272,15 +283,15 @@ For example, `PingResult` is automatically mapped to `PingResponse`. Reflection 
 
 Using `GetOrder` as an example:
 
-1. **Define contract interfaces** (`src/Polhem.Api.Contracts/`)
+1. **Define contract interfaces** (`src/Polhem.Api.Contracts/<Axis>/`, namespace `Polhem.Api.Contracts.<Axis>`)
    - `IGetOrderRequest.cs` — input properties
    - `IGetOrderResponse.cs` — output properties
 
-2. **Create API contract types** (`src/Polhem.Api.Core/Messages/System/` or `Messages/Form/` etc.; namespace is `Polhem.Api.Core.Messages.<Module>`)
+2. **Create API contract types** (`src/Polhem.Api.Core/Messages/<Axis>/`; namespace is `Polhem.Api.Core.Messages.<Axis>`)
    - `GetOrderRequest.cs` — inherits `ApiRequest`, implements `IGetOrderRequest`; no attributes
    - `GetOrderResponse.cs` — inherits `ApiResponse`, implements `IGetOrderResponse`; no attributes
    - Register both in `src/Polhem.Api.Core/MessagePack/WireContracts.*.cs` — `WireContractDriftTests`
-     fails the build if you forget
+     fails if you forget
 
 3. **Implement BO method**
    - Method signature uses the concrete `GetOrderArgs` / `GetOrderResult` types
@@ -290,7 +301,7 @@ Using `GetOrder` as an example:
 4. **Update client Connector** (if needed)
    - Add a corresponding method using `GetOrderRequest` / `GetOrderResponse`
 
-> No manual registration is required. Response mapping is resolved automatically by naming convention (see [ADR-007](../adr/adr-007-convention-based-type-resolution.md)).
+> Apart from the wire registration in step 2, nothing is registered: response mapping is resolved by naming convention (see [ADR-007](../adr/adr-007-convention-based-type-resolution.md)).
 
 ---
 
@@ -306,4 +317,4 @@ Polhem.Api.Contracts           <-- Contract interfaces (shared by API & BO)
     +-- Polhem.Business        <-- BO types (pure POCO) + BO interfaces
 ```
 
-**Principle:** Arrows indicate dependency direction. `Polhem.Api.Core` and `Polhem.Business` do not depend on each other; each depends only on `Polhem.Api.Contracts`.
+**Principle:** Arrows indicate dependency direction. `Polhem.Api.Core` and `Polhem.Business` do not depend on each other; the contracts they share live in `Polhem.Api.Contracts`. Both have other dependencies as well (such as `Polhem.Definition`); the full graph is in the [Project Dependency Map](dependency-map.md).

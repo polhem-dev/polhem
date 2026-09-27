@@ -43,6 +43,8 @@ A unified naming style avoids cross-database case and semantic inconsistencies a
 | **Generic index** | `ix_table_column` | `ix_users_email` | Query acceleration (composite or partial indexes allowed) |
 | **Default value constraint** | `df_table_column` | `df_users_created_at` | Column default value definition |
 
+In a `TableSchema` file the table part of an index name is written as `{0}` (for example `pk_{0}`, `fk_{0}_dept_rowid`) and is replaced by the table name when the DDL is generated. `TableSchemaGenerator` produces the `pk_`, `rx_`, `uk_` and `fk_` indexes when it derives a TableSchema from a FormSchema; other indexes are written into the TableSchema by hand. Default value constraints are named only on SQL Server, when a schema upgrade adds one with `ALTER TABLE ... ADD CONSTRAINT`; a `CREATE TABLE` declares defaults inline and leaves their names to the database.
+
 ---
 
 ## 4️⃣ System Field Definitions
@@ -66,7 +68,7 @@ A unified naming style avoids cross-database case and semantic inconsistencies a
 ## 5️⃣ Cross-Database Case Sensitivity Reference
 
 Different databases handle the case of "identifiers" (table / column / index names) and "data values" (string comparisons) very differently.
-This section lists the actual behavior of the 5 databases supported by Polhem, as a reference for schema design and hand-written SQL.
+This section lists the actual behavior of each database Polhem supports, as a reference for schema design and hand-written SQL.
 
 ### 5.1 Identifiers (Table / Column / Index Names)
 
@@ -101,10 +103,10 @@ This is the root cause of most cross-database problems involving these two DBs.
 | **SQL Server** | Case-insensitive¹ | Use defaults |
 | **PostgreSQL** | **Case-sensitive** (byte comparison) | Use defaults; the application must explicitly use `ILIKE` or `LOWER()` |
 | **MySQL** | Case-insensitive¹ | Use defaults |
-| **SQLite** | **Case-sensitive** (`BINARY`) | Add `COLLATE NOCASE` on the column if needed |
-| **Oracle** | **Case-sensitive** (`BINARY`) | Set session NLS at connection startup: `NLS_COMP='LINGUISTIC'` + `NLS_SORT='BINARY_CI'`, making `=` and `LIKE` case-insensitive |
+| **SQLite** | **Case-sensitive** (`BINARY`) | The generated DDL adds `COLLATE NOCASE` to `String`, `Text` and `Guid` columns, so comparisons on them are case-insensitive |
+| **Oracle** | **Case-sensitive** (`BINARY`) | Not changed by the framework. A host that wants `=` and `LIKE` to be case-insensitive sets `NLS_COMP='LINGUISTIC'` + `NLS_SORT='BINARY_CI'` for the session, for example with the connection initializer of `DbProviderRegistry.Register(DatabaseType.Oracle, factory, connectionInitializer)` or a database logon trigger (the remarks of `DbProviderRegistry.Register` explain the per-command cost of an initializer) |
 
-¹ Depends on column collation; the default collations (SQL Server `*_CI_*`, MySQL `*_ci`) are case-insensitive.
+¹ Depends on column collation; the default collations (SQL Server `*_CI_*`, MySQL `*_ci`) are case-insensitive. The framework creates MySQL tables with `COLLATE=utf8mb4_0900_ai_ci`.
 
 > **Note: identifiers and data values are two independent layers**
 > - Identifier sensitivity is determined at the SQL parser stage and affects schema object lookup
@@ -113,7 +115,7 @@ This is the root cause of most cross-database problems involving these two DBs.
 
 ### 5.3 Polhem Adapter's Identifier Strategy
 
-The framework adopts a "**uniformly quoted + each DB's most natural case**" strategy across the 5 DBs, with adapters handling case translation at the boundary:
+The framework adopts a "**uniformly quoted + each DB's most natural case**" strategy across every supported DB, with adapters handling case translation at the boundary:
 
 | DB | Identifier Storage Form in DDL/DML | Quoting |
 |----|------------------------------------|---------|
@@ -131,7 +133,7 @@ On the read side, `OracleTableSchemaProvider` `.ToLowerInvariant()`s identifiers
 #### Why Oracle Uses UPPERCASE Storage
 
 1. **Aligns with Oracle conventions**: in SQL Developer / DBeaver / sqlplus, DBAs see object names like `ST_USER`, matching the visual result of Oracle's default unquoted-fold-to-UPPER behavior.
-2. **Friendly to hand-written SQL on Oracle**: `SELECT * FROM st_user` is folded by the Oracle parser to `ST_USER`, matching storage exactly — **no need to quote everywhere** (consistent with the intuitive lowercase style used on the other 4 DBs).
+2. **Friendly to hand-written SQL on Oracle**: `SELECT * FROM st_user` is folded by the Oracle parser to `ST_USER`, matching storage exactly — **no need to quote everywhere** (consistent with the intuitive lowercase style used on the other databases).
 3. **Reserved words remain usable as columns**: because the framework still emits `"COMMENT"`, `"ORDER"` in quoted form, the Oracle parser treats them as quoted identifiers rather than reserved word tokens, so naming need not avoid reserved words.
 
 #### Validation Side of the Naming Convention
@@ -140,8 +142,8 @@ The "all-lowercase + snake_case" naming convention in sections 1–4 corresponds
 
 1. **Cross-DB abstraction is uniformly lowercase**: identifier declarations in FormSchema are always lowercase; the framework's per-DB adapters translate to that DB's storage form.
 2. **Oracle's internal UPPERCASE is an encapsulated detail**: when developers write FormSchema, Repository, or BO code, they need not be aware that Oracle uses UPPERCASE — that is internal adapter behavior at the boundary.
-3. **Avoiding reserved words is recommended**: although the framework's quoting can sidestep reserved word collisions (all 5 DBs exempt quoted identifiers from reserved-word rules), it's still recommended to avoid common reserved words like `comment`, `order`, `user`, `size`, `group`, `level`, `number` to reduce friction with hand-written SQL and tools.
-4. **Data value comparison is case-insensitive**: the framework smooths over the differences across the 5 DBs (Oracle's session NLS makes up the gap), so hand-written `WHERE name = 'jeff'` behaves consistently across all 5 DBs.
+3. **Avoiding reserved words is recommended**: although the framework's quoting can sidestep reserved word collisions (every supported database exempts quoted identifiers from reserved-word rules), it's still recommended to avoid common reserved words like `comment`, `order`, `user`, `size`, `group`, `level`, `number` to reduce friction with hand-written SQL and tools.
+4. **Data value comparison is not uniform**: SQL Server and MySQL (default collations) and SQLite (the framework's `COLLATE NOCASE`) compare text case-insensitively; PostgreSQL compares case-sensitively, and so does Oracle unless the host sets the session NLS (§5.2). A hand-written `WHERE name = 'jeff'` therefore does not behave the same on every database; SQL meant to run on all of them should normalise case explicitly (for example `LOWER(name) = LOWER(...)`).
 
 ---
 

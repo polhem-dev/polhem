@@ -111,27 +111,15 @@ graph TD
     DT --> DB["Database creation and maintenance"]
 ```
 
-### Override Mechanism
+### Adjusting Derived Definitions
 
-FormLayout and TableSchema are derived from FormSchema at design time and saved as definition files, then support independent adjustments:
-
-```
-FormSchema updated
-    |
-Re-derive "default values"
-    |
-Diff against existing FormLayout / TableSchema
-    |-- Unmodified parts -> Updated
-    +-- Manually overridden parts -> Preserved
-```
-
-This ensures that when FormSchema evolves, manually adjusted custom settings are not overwritten.
+FormLayout and TableSchema are derived from FormSchema at design time and saved as definition files, which can then be adjusted by hand. Regeneration does not merge: `FormLayoutGenerator` and `TableSchemaGenerator` build a fresh definition from the FormSchema alone, and saving the result replaces the existing file (the DefineEditor asks before it overwrites a FormLayout). When a FormSchema changes after its derived files were adjusted, edit those files directly, or regenerate them and reapply the adjustments.
 
 ### Tenant Customization Overlay
 
-For deployments serving multiple tenants, Polhem adds a **per-tenant read-only customization overlay** on top of the base definitions. A `CustomizeId` (resolved from `SessionInfo.CustomizeId`, loaded from the company record at `EnterCompany`) drives an override layer for **Language / FormLayout / ProgramSettings / MenuSettings only** — `FormSchema` / `TableSchema` / settings stay tenant-agnostic so the database schema never diverges per tenant.
+For deployments serving multiple tenants, Polhem adds a **per-tenant customization overlay** on top of the base definitions. A `CustomizeId` (resolved from `SessionInfo.CustomizeId`, loaded from the company record at `EnterCompany`) drives an override layer for **Language / FormLayout / ProgramSettings / MenuSettings / PluginSettings only** — `FormSchema` / `TableSchema` stay tenant-agnostic so the database schema does not diverge per tenant.
 
-The overlay is **two independent read-only layers, never merged**: the base package cache is never mutated, and lookups overlay per key / progId / whole-file at the consumer. An empty `CustomizeId` short-circuits to pure base, bit-for-bit identical to a single-tenant deployment. See [ADR-016](../adr/adr-016-multitenant-customization-overlay.md).
+The overlay is **two independent layers**: the base definition cache is never mutated, and the consumer decides per lookup (per key, progId or whole file) which layer wins. Plugin bindings are the one artifact where both layers apply: the base chain runs first, then the tenant's. The override layer is read-only at runtime except for `PluginSettings`, which a local-only maintenance API writes. An empty `CustomizeId` resolves against the base layer alone, as in a single-tenant deployment. See [Tenant Customization](customization.md) and [ADR-016](../adr/adr-016-multitenant-customization-overlay.md).
 
 ---
 
@@ -185,7 +173,7 @@ TableSchema default: DECIMAL(18, 2)
 TableSchema actual: DECIMAL(24, 6)  +  INDEX  +  DEFAULT 0
 ```
 
-FormSchema does not need to know database-layer optimization details; TableSchema can evolve independently.
+FormSchema does not need to know database-layer optimization details; TableSchema can evolve independently (regenerating it from the FormSchema replaces such adjustments, see [Adjusting Derived Definitions](#adjusting-derived-definitions)).
 
 ---
 
@@ -224,25 +212,35 @@ DataSet is purely a **data container** and contains no business logic whatsoever
 ```csharp
 public class SalesOrderBO : BusinessObject
 {
+    public SalesOrderBO(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
+        : base(ctx, accessToken, progId, isLocalCall) { }
+
     // CRUD: via FormSchema-driven Repository (auto-routed to the right DB)
-    public void Save(DataSet ds)
+    [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
+    public DataSet? Save(DataSet ds)
     {
         // 1. Validate DataSet data based on FormSchema
         // 2. Use the BO base helper — DB routing is automatic
         var repository = CreateDataFormRepository(ProgId);
         // 3. Repository executes INSERT / UPDATE on the resolved database
+        var (refreshed, _) = repository.Save(ds);
+        return refreshed;
     }
 
     // Reports: BO selects DB scope explicitly, implements SQL directly
+    // (ReportFilter and SalesReportRepo are your own types)
+    [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
     public DataSet GetSalesSummaryReport(ReportFilter filter)
     {
         var dbId = ResolveDatabaseId(DbScope.Company);   // type-safe, no magic string
         var repo = new SalesReportRepo(
             Services.GetRequiredService<IDbAccessFactory>(), dbId);
-        // ... custom SQL via repo
+        return repo.GetSummary(filter);   // custom SQL inside the repository
     }
 }
 ```
+
+A public instance method of a business object that takes one parameter is reachable as a JSON-RPC action, so each one declares its protection level with `[ApiAccessControl]`; the POLHEM3001 analyzer warns about one that does not.
 
 A single BO can mix both Repository strategies; the caller does not need to know which track is used underneath.
 
@@ -284,17 +282,11 @@ This 80% of workload is handled by FormSchema-driven operations -- developers on
 
 Reports and batch operations often involve multi-table JOINs + GROUP BY + dynamic conditions, or require control over transaction boundaries and batching strategies. Forcing them into FormSchema would only add unnecessary complexity.
 
-### Shared Infrastructure
+### Shared Infrastructure and Transaction Boundaries
 
-Both tracks share underlying connection management and transaction management:
+Both tracks run on the same data access infrastructure: `Polhem.Db` (`DbAccess`, the provider registries and the dialects) and the database routing of `IRepositoryDatabaseRouter`.
 
-```
-FormSchema-driven Repository --+
-                                +--> Shared UnitOfWork / ConnectionFactory
-AnyCode Repository -------------+
-```
-
-This ensures cross-track operations (e.g., CRUD on the main order + batch inventory update) can collaborate within **the same transaction**, keeping commit / rollback consistent.
+They do **not** share a transaction. The transaction boundary is one repository call: `IDataFormRepository.Save` writes the master and detail tables of one DataSet in a single transaction, and `Delete` removes a master row and its details in another. An AnyCode repository controls its own transactions through `DbAccess` (for example a `DbBatchSpec` with `UseTransaction`, or `Execute` with a `DbTransaction` of its own). The framework does not enlist a FormSchema-driven call and an AnyCode call in one transaction, so a write that must be atomic across both (e.g. saving an order and adjusting inventory) has to be done inside one AnyCode transaction.
 
 ---
 
@@ -360,7 +352,7 @@ Common patterns discovered during each AnyCode customization can be distilled ba
 ```
 +------------------------------------------------------+
 |  View                                                |
-|  Avalonia / Blazor Server / your own WinForms, WPF or JS host |  MVVM: View
+|  Avalonia (desktop / browser / mobile) / Blazor Server / your own host |  MVVM: View
 +------------------------------------------------------+
 |  ViewModel                                           |  MVVM: ViewModel
 |  (binding structure derived from FormSchema)         |
@@ -389,7 +381,6 @@ Common patterns discovered during each AnyCode customization can be distilled ba
 |  Repository                                          |  Clean Arch: Interface Adapter
 |  +- FormSchema-driven (CRUD SQL auto-generated)      |
 |  +- AnyCode (reports/batch, BO-implemented)          |
-|  +- Shared UnitOfWork / ConnectionFactory            |
 +------------------------------------------------------+
 |  Polhem.Db (data access infrastructure)                 |  N-Tier: Data Layer
 |  +- IDialectFactory routes per DatabaseType          |
@@ -400,6 +391,9 @@ Common patterns discovered during each AnyCode customization can be distilled ba
 +------------------------------------------------------+
 ```
 
+> Which heads `Polhem.UI.Avalonia` runs on, and what each one needs, is in
+> [Platform Support](platform-support.md).
+>
 > Provider registration is explicit: the host app calls
 > `DbProviderRegistry.Register(...)` and
 > `DbDialectRegistry.Register(...)` for each database it actually uses.
@@ -421,4 +415,4 @@ Common patterns discovered during each AnyCode customization can be distilled ba
 | **UI definition** | FormLayout (not XAML) | Designed for standardized form layouts; constrained structure, more concise syntax |
 | **DB maintenance** | TableSchema derivation + adjustable | Auto-sync with definitions; DBA can still independently optimize indexes and types |
 | **Architecture hybrid** | N-Tier + Clean Arch + MVVM | Borrowing the most suitable concepts for enterprise information systems from each; not forcing pure theoretical application |
-| **Audit trail** | Opt-in `st_log_*` tables via `IAuditLogWriter` (`AuditLogOptions`) | Five-axis data trail — login / change (DiffGram before-after) / access / API+DB anomaly; background, best-effort, self-sufficient (denormalised) log rows |
+| **Audit trail** | Opt-in `st_log_*` tables via `IAuditLogWriter` / `IAnomalyLogWriter` (`AuditLogOptions`) | Data trail on the login, change (DiffGram before-after), access, API anomaly and DB anomaly axes; background, best-effort, self-sufficient (denormalised) log rows |

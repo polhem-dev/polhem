@@ -4,7 +4,7 @@
 
 Polhem generates DDL (CREATE TABLE / ALTER TABLE) from a single `TableSchema` definition and hides the per-database differences behind dialect adapters under `src/Polhem.Db/Providers/<Dialect>/`. Application developers usually never see these differences — the framework's own CRUD, seeding, and schema-upgrade paths handle them uniformly.
 
-This document consolidates the DDL rules and **exceptions** that *do* leak through when you write schema definitions or hand-written SQL by hand (for example, an `INSERT` in a test helper or a migration script). It covers all five supported engines: **SQL Server, PostgreSQL, MySQL, Oracle, SQLite**.
+This document consolidates the DDL rules and **exceptions** that *do* leak through when you write schema definitions or hand-written SQL by hand (for example, an `INSERT` in a test helper or a migration script). It covers every supported engine: **SQL Server, PostgreSQL, MySQL, Oracle, SQLite**.
 
 > Related, more focused documents:
 > - [database-naming-conventions.md](database-naming-conventions.md) §5 — identifier case sensitivity and quoting.
@@ -21,9 +21,11 @@ This is a deliberate framework design decision, so it is stated first because it
 
 | Column category | Nullability | Default value |
 |-----------------|-------------|---------------|
-| **Text** (`String`, `Text`) | `NOT NULL` | empty string `''` |
+| **Text** (`String`, `Text`, `Time`) | `NOT NULL` | empty string `''` |
 | **Numeric** (`Short`, `Integer`, `Long`, `Decimal`, `Currency`, `Boolean`) | `NOT NULL` | `0` |
-| **Date / DateTime** | `NOT NULL` unless marked otherwise | current timestamp |
+| **Date / DateTime** | `NOT NULL` unless marked otherwise | current UTC date / timestamp |
+| **Guid** | `NOT NULL` unless marked otherwise | a new GUID |
+| **Binary** | `NOT NULL` unless marked otherwise | none: every `INSERT` must supply the value |
 | Columns that genuinely need null (e.g. an "invalid/expiry time", optional binary) | set `AllowNull="true"` **explicitly** | none |
 
 ### Rationale
@@ -48,11 +50,15 @@ For a `NOT NULL` column with no explicit `DefaultValue`, each dialect emits its 
 
 | `FieldDbType` | SQL Server | PostgreSQL | MySQL | Oracle | SQLite |
 |---------------|-----------|------------|-------|--------|--------|
-| `String` / `Text` | `N''` | `''` | `''` | *(nullable — see §3)* | `''` |
-| `Short`/`Integer`/`Long`/`Decimal`/`Currency`/`Boolean` | `0` | `0` | `0` | `0` | `0` |
-| `Date` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `(UTC_DATE)` | `SYS_EXTRACT_UTC(SYSTIMESTAMP)` | `CURRENT_TIMESTAMP` |
-| `DateTime` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `UTC_TIMESTAMP(6)` | `SYS_EXTRACT_UTC(SYSTIMESTAMP)` | `CURRENT_TIMESTAMP` |
+| `String` / `Time` | `N''` | `''` | `''` | *(nullable — see §3.1)* | `''` |
+| `Text` | `N''` | `''` | *(none — see §3.2)* | *(nullable — see §3.1)* | `''` |
+| `Short`/`Integer`/`Long`/`Decimal`/`Currency`/`Boolean` | `0` | `0` (`FALSE` for `Boolean`) | `0` | `0` | `0` |
+| `Date` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `(UTC_DATE())` | `SYS_EXTRACT_UTC(SYSTIMESTAMP)` | `CURRENT_TIMESTAMP` |
+| `DateTime` | `getutcdate()` | `(NOW() AT TIME ZONE 'UTC')` | `(UTC_TIMESTAMP(6))` | `SYS_EXTRACT_UTC(SYSTIMESTAMP)` | `CURRENT_TIMESTAMP` |
 | `Guid` | `newid()` | `gen_random_uuid()` | `(UUID())` | `SYS_GUID()` | `(hex(randomblob(16)))` |
+| `Binary`, `AutoIncrement` | *(none)* | *(none)* | *(none)* | *(none)* | *(none)* |
+
+SQL Server wraps whatever expression it emits in one more pair of parentheses (`DEFAULT (N'')`).
 
 Notes:
 
@@ -60,15 +66,23 @@ Notes:
   [Time Zones](datetime-timezone.md)), and a `DEFAULT` is the path that actually writes when the
   SQL does not name the column: a hand-written INSERT that omits it, and `ALTER TABLE ADD COLUMN`
   backfilling existing rows. See D9b in [ADR-032](../adr/adr-032-datetime-timezone.md).
-- **MySQL** wraps function-call defaults in parentheses (`(UUID())`, `(CURRENT_DATE)`) because MySQL only allows non-literal defaults in the parenthesised *expression* form.
+- **MySQL** wraps function-call defaults in parentheses (`(UUID())`, `(UTC_DATE())`, `(UTC_TIMESTAMP(6))`) because MySQL 8.0.13+ accepts a bare function as a default only for `CURRENT_TIMESTAMP`; every other non-literal default must use the parenthesised *expression* form.
 - **SQLite** has no native UUID generator; `hex(randomblob(16))` is a unique-but-not-strictly-v4 surrogate, sufficient for framework-managed defaults.
 - **Boolean literals**: the framework's canonical form is `"1"` / `"0"`. PostgreSQL rejects those for a `BOOLEAN` column, so the PG dialect translates them to `TRUE` / `FALSE` at the SQL-emission boundary. All other dialects accept `1` / `0`.
+
+### Explicit `DefaultValue`
+
+A `DbField.DefaultValue` replaces the built-in default, and how it reaches the DDL depends on the column type ([DefaultValueLiteral.cs](../../src/Polhem.Db/Providers/DefaultValueLiteral.cs)):
+
+- **`String`, `Text`, `Time`**: quoted and escaped by each dialect (`N'...'` on SQL Server; MySQL also escapes backslashes). MySQL and Oracle still emit no default for a `Text` column (§3).
+- **`Short`, `Integer`, `Long`, `Decimal`, `Currency`, `Boolean`**: written into the DDL unquoted, so the value must be a plain literal of the column's type: a signed integer, a decimal with `.` as the separator, or `0` / `1` for `Boolean`. Anything else makes DDL generation throw `InvalidOperationException` ("... is not a valid ... literal").
+- **`Date`, `DateTime`, `Guid`, `Binary`**: these types have no unquoted literal form, so an explicit value is rejected the same way (Oracle drops it for `Binary` instead). Leave `DefaultValue` empty to get the built-in default.
 
 ---
 
 ## 3. The two hard nullability exceptions
 
-These are the rules most likely to cause a "works on 4 databases, fails on the 5th" surprise.
+These are the rules most likely to cause a "works everywhere else, fails on one engine" surprise.
 
 ### 3.1 Oracle: `''` is `NULL`
 
@@ -76,7 +90,7 @@ Oracle has no concept of a non-null empty string — `''` **is** `NULL`. So `VAR
 
 **How the framework handles it** ([OracleSchemaSyntax.cs](../../src/Polhem.Db/Providers/Oracle/OracleSchemaSyntax.cs)):
 
-- `String` / `Text` columns are emitted **nullable** (no `NOT NULL`, no `DEFAULT ''`) on Oracle only.
+- `String`, `Time` and `Text` columns are emitted **nullable** (no `NOT NULL`, no `DEFAULT ''`) on Oracle only.
 - The "text is never null" contract is upheld at the C# layer: `ValueUtilities.CStr(null)` returns `""`, so callers still only ever see an empty string.
 - `OracleTableSchemaProvider` reads such columns back as `AllowNull = false` to keep the schema diff stable against the definition.
 - An explicit *non-empty* default is still a valid non-null literal on a nullable Oracle column, so it is preserved.
@@ -96,8 +110,6 @@ On the other four engines the same partial `INSERT` succeeds, because their `NOT
 
 > **Rule when adding a `NOT NULL` `Text` column:** keep it `NOT NULL` (do **not** switch it to nullable to work around MySQL), and make sure every hand-written `INSERT` supplies the value explicitly (an empty string is fine). This matches the framework principle in §1; the fix belongs in the INSERT, not in the column's nullability.
 
-> **Testing caveat:** a *persistent* local MySQL container adds new columns via `ALTER TABLE ... ADD COLUMN`, which **forces the new column nullable** regardless of `AllowNull`. That masks this bug locally while CI (fresh `CREATE TABLE`) makes it `NOT NULL` and fails. To reproduce CI locally: `ALTER TABLE <t> MODIFY <col> LONGTEXT NOT NULL;` (after `UPDATE ... SET <col> = '' WHERE <col> IS NULL`).
-
 ---
 
 ## 4. Identifier quoting and case
@@ -108,7 +120,7 @@ On the other four engines the same partial `INSERT` succeeds, because their `NOT
 | PostgreSQL | `"name"` (`"` → `""`) | quoted lowercase |
 | MySQL | `` `name` `` | quoted lowercase; case-insensitive comparison via table-level `COLLATE utf8mb4_0900_ai_ci` |
 | Oracle | `"NAME"` (`"` → `""`) | **quoted UPPERCASE** — Oracle has a wide reserved-word set (`COMMENT`, `SIZE`, `LEVEL`, `SESSION`, …) so every identifier is quoted; the adapter folds to uppercase to match Oracle's native unquoted behaviour, and normalises back to lowercase on read-back |
-| SQLite | `"name"` (`"` → `""`) | quoted lowercase; text columns get `COLLATE NOCASE` for case-insensitive comparison |
+| SQLite | `"name"` (`"` → `""`) | quoted lowercase; `String`, `Text` and `Guid` columns get `COLLATE NOCASE` for case-insensitive comparison |
 
 See [database-naming-conventions.md](database-naming-conventions.md) §5 for the full case-sensitivity matrix (identifier folding vs. data comparison).
 
@@ -132,11 +144,12 @@ See [database-naming-conventions.md](database-naming-conventions.md) §5 for the
 
 When a schema upgrade changes a column, some changes can be done with `ALTER`, others require rebuilding the table (create-new + copy + swap). The decision and the per-dialect capabilities are documented in [database-schema-upgrade.md](database-schema-upgrade.md) §4. Highlights:
 
-- **SQLite** supports only `ADD COLUMN` / `RENAME COLUMN` / `DROP COLUMN` via `ALTER`; anything else (type change, nullability change, constraint change) requires a rebuild.
-- **SQL Server** rebuilds on cross-type-family changes and on toggling AutoIncrement.
+- **Every dialect** rebuilds on a change across type families (for example text to number) and on turning AutoIncrement on or off; adds, renames and index changes are applied with `ALTER`.
+- **SQLite** cannot change a column in place at all (its `ALTER TABLE` only adds, renames and drops columns), so every column change is a rebuild.
+- **Oracle** also rebuilds when a text column crosses the LOB boundary (`VARCHAR2` ↔ `CLOB`), which `ALTER ... MODIFY` rejects.
 - **Oracle** `ALTER TABLE ... MODIFY` must be **diff-based** for nullability: re-issuing `NOT NULL` on an already-`NOT NULL` column raises `ORA-01442`, so the adapter only emits the `NULL` / `NOT NULL` hint when it actually changes.
 - **MySQL** `ALTER ADD` of a `Guid` column with a non-deterministic default (`UUID()`) is split into two statements to stay replication-safe under statement-based binlog.
-- Table rename differs too: `sp_rename` (SQL Server) vs `RENAME TABLE` (MySQL) vs `ALTER TABLE ... RENAME` (PostgreSQL / Oracle / SQLite).
+- The rebuild's table rename differs too: `sp_rename` (SQL Server) vs `ALTER TABLE ... RENAME TO` (the others).
 
 ---
 
@@ -145,13 +158,13 @@ When a schema upgrade changes a column, some changes can be done with `ALTER`, o
 1. **Choose nullability by principle, not reflex.** Text / numeric → leave `AllowNull=false` (NOT NULL, default `''` / `0`). Only set `AllowNull="true"` for a genuine "unknown / not-set" state (e.g. a `DateTime` expiry, optional binary).
 2. **Update every hand-written `INSERT`** that targets the table so it lists the new column — mandatory for a `NOT NULL` `Text` column because MySQL gives it no DB-side default (§3.2). The framework's own CRUD/seed already lists all columns.
 3. **If the column is normally empty and you need Oracle**, be aware it will be physically nullable there (§3.1); the C# layer still reads it as an empty string, so no application change is needed.
-4. **Do not judge correctness from a persistent local container alone.** New columns added via `ALTER` are forced nullable locally and hide the fresh-`CREATE` `NOT NULL` behaviour that CI (and production first-time setup) exercises.
+4. **If you set a `DefaultValue` on a non-text column**, make it a plain literal of the column's type (§2, Explicit `DefaultValue`).
 
 ---
 
 ## Reference
 
 - Dialect implementations: `src/Polhem.Db/Providers/<Dialect>/<Dialect>SchemaSyntax.cs`, `…TableSchemaProvider.cs`.
-- Dialect-neutral ALTER-vs-rebuild and narrowing rules, shared by all five providers: `src/Polhem.Db/Schema/AlterCompatibilityRules.cs` (SQLite overrides only `GetKindForTypeChange`, in `src/Polhem.Db/Providers/Sqlite/SqliteAlterCompatibilityRules.cs`).
+- Dialect-neutral ALTER-vs-rebuild and narrowing rules, shared by every provider: `src/Polhem.Db/Schema/AlterCompatibilityRules.cs` (SQLite replaces `GetKindForTypeChange` in `src/Polhem.Db/Providers/Sqlite/SqliteAlterCompatibilityRules.cs`; Oracle adds the LOB rule in `OracleTableAlterCommandBuilder.GetExecutionKind`).
 - Column model: [DbField.cs](../../src/Polhem.Definition/Database/DbField.cs).
 - Related docs: [database-naming-conventions.md](database-naming-conventions.md), [database-schema-upgrade.md](database-schema-upgrade.md), [src/Polhem.Db/README.md](../../src/Polhem.Db/README.md).

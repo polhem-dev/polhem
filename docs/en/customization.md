@@ -15,14 +15,15 @@ against the base layer, bit for bit as if the feature were not there — which i
 costs nothing.
 
 The tenant is never chosen by the caller. It comes from the session: `st_company.customize_id` is
-copied onto `SessionInfo.CustomizeId` when the session enters a company, and every server-side
-consumer reads it from there and nowhere else.
+copied onto `SessionInfo.CustomizeId` when the session enters a company, and the server-side
+consumers read it from there. The one exception is the local-only plugin maintenance API
+([below](#read-only-except-for-plugins)), which names the tenant it maintains.
 
 ## What to reach for
 
 | You want to change | Use | Where it lives |
 |---|---|---|
-| Field labels, form names, messages, option text | **Language resource** | `{CustomizePath}/{customizeId}/Language/{lang}/{namespace}.Language.xml` |
+| Field labels, form names, rule messages, option text | **Language resource** | `{CustomizePath}/{customizeId}/Language/{lang}/{namespace}.Language.xml` |
 | Which fields appear, their arrangement on screen | **FormLayout** | `{CustomizePath}/{customizeId}/FormLayout/{layoutId}.FormLayout.xml` |
 | How the menu is grouped, ordered, labelled, and which entries are visible | **MenuSettings** | `{CustomizePath}/{customizeId}/MenuSettings.xml` |
 | A program's whole behaviour — validation, workflow, AnyCode SQL | **Custom business object** | `{CustomizePath}/{customizeId}/ProgramSettings.xml` |
@@ -62,13 +63,21 @@ The most common customization, and definition-only. Overlay is **per key**: the 
 only the keys it changes, and every other key — including translations added to the base later —
 comes from the base layer.
 
-The namespace is the form's `ProgId`. Three sub-key shapes cover a form:
+The namespace is the form's `ProgId`. These sub-key shapes cover a form:
 
 | Sub-key | Overrides |
 |---|---|
 | `Schema.DisplayName` | The form's own name |
 | `Table.{TableName}.DisplayName` | A table's name within the form |
 | `Field.{FieldName}.Caption` | A field's label |
+| `Rule.{RuleId}.Message` | The message of a schema rule that fails on save |
+
+The text written in the definition files is the base text, in English. A key that no language
+resource declares keeps it.
+
+A rule message is resolved on the server when the rule fails, in the session's culture and with the
+session's customization code, so a tenant's language file can reword it like any other key. The
+rule needs a `RuleId`; a rule without one always shows its base text.
 
 To call the customer field "Account" for tenant `acme`, in Traditional Chinese:
 
@@ -104,10 +113,12 @@ is a decision, made by editing that tenant's layout file.
 Captions are **not** part of the layout file: a UI head applies them from the localized schema after
 picking the layout, so label changes belong in the language resource even for a customized layout.
 
-> **How it reaches the screen.** The API always serves the raw definitions; the assembly happens on
-> the client, in `FormDefinitionLoader`, which fetches both layers, picks the tenant's layout when
-> there is one, and falls back to generating a layout from the schema when neither layer defines
-> one. A UI head that does not go through `FormDefinitionLoader` will not see layout customization.
+> **How it reaches the screen.** The API serves the raw layout definitions; the assembly happens on
+> the client, in `FormDefinitionLoader`, which fetches both layers and picks the tenant's layout when
+> there is one. When neither layer defines one, `GetRuntimeLayoutAsync` throws
+> `InvalidOperationException`: layouts are authored at design time, and the runtime never generates
+> one from the schema. A UI head that does not go through `FormDefinitionLoader` will not see layout
+> customization.
 
 ## Business object and repository: replacing a program's behaviour
 
@@ -161,19 +172,19 @@ Plugins are the one artifact where the two layers **add up**: the base chain run
 tenant's. A tenant therefore cannot suppress a packaged plugin — to remove packaged behaviour,
 subclass the business object and override the step.
 
-See [Business Plugins](development-cookbook.md) in the cookbook for the four stages, the
+See [Business Plugins](development-cookbook.md) in the cookbook for the stages, the
 per-operation lifetime, and where side effects that reach other systems belong.
 
 ## Read-only, except for plugins
 
 Customization files are produced by deployment tooling and read at runtime; every other write on
-the override layer throws. **`PluginSettings` is the exception** — a deployment maintains its plugin
-bindings through `SystemBO.GetCustomizePluginSettings` / `SaveCustomizePluginSettings`.
+the file-backed override layer throws `NotSupportedException` (`CustomizeOnlyStorage`). **`PluginSettings` is the exception** — a deployment maintains its plugin
+bindings through `SystemBusinessObject.GetCustomizePluginSettings` / `SaveCustomizePluginSettings`.
 
 Both are `LocalOnly`: these bindings decide which code runs inside the save and delete pipelines, so
 they are reachable only in-process, by a maintenance tool running on the host. Saving validates
-every bound type — it must load, derive from `FormBusinessPlugin`, and override at least one stage —
-and one bad entry rejects the whole definition.
+every bound type — it must load, derive from `FormBusinessPlugin`, and override exactly the stage
+its binding names — and one bad entry rejects the whole definition.
 
 With file-backed storage the write lands on the machine that served the call, so a multi-node
 deployment needs `CustomizePath` on shared storage, or the database-backed storage, which is shared

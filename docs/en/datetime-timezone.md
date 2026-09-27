@@ -110,7 +110,8 @@ types arrive in the payload, so the client can tell the two apart without extra 
 ## 4. Configuring a user's time zone
 
 `st_user.time_zone` holds an IANA id (`Asia/Taipei`, `America/New_York`). Login copies it onto the
-session and returns it to the client.
+session and returns it in the login response, and the connector that signed in adopts it for that
+session — so every head, a Blazor Server circuit included, converts with the signed-in user's zone.
 
 A user with no value of their own falls back to `BackendConfiguration.DefaultTimeZone`, which ships
 as `Asia/Taipei`. Set it to the zone your deployment actually runs in — or to an empty string to use
@@ -124,6 +125,9 @@ There is deliberately no per-company or per-column override. When a value must b
 *other* zone — an attendance record read in the employee's work-site zone, say — model it as a UTC
 instant plus a time zone column of your own, because that requirement is per-row and no
 column-level setting can express it.
+
+The conversion looks the zone up through `TimeZoneInfo`, so a browser or mobile head must ship time
+zone data; see [Platform Support](platform-support.md).
 
 ## 5. Dates outside the `DataSet`
 

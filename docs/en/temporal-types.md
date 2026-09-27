@@ -302,8 +302,8 @@ col created_at: clr=DateTime marker=DateTime value=2026-07-27 08:30:15
 col work_start: clr=String   marker=Time     value=08:30
 ```
 
-Because the integer is positional, **new `FieldDbType` members are only ever appended** — inserting
-one mid-enum would shift every later value and break existing payloads.
+Because the integer is positional, **a new `FieldDbType` member must be appended at the end** —
+inserting one mid-enum would shift every later value and break existing payloads.
 
 ### Filter conditions
 

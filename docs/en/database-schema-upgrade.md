@@ -7,7 +7,7 @@
 
 ## 1. Core Concepts
 
-Polhem adopts a **define-driven schema** model: the table structure is sourced from FormSchema / TableSchema XML definitions as the single source of truth. At application startup or during operations, the framework compares the definitions against the live database and automatically generates and runs the required upgrade statements.
+Polhem adopts a **define-driven schema** model: the table structure is sourced from FormSchema / TableSchema XML definitions as the single source of truth. When the host calls the upgrade API (at startup or during operations; the framework does not run it on its own), the framework compares the definitions against the live database and generates and runs the required upgrade statements.
 
 As a developer you only need to:
 
@@ -17,7 +17,7 @@ As a developer you only need to:
 
 ### Success Contract
 
-> **After a successful upgrade returns, the database must contain at least every column listed in the definition, and each column's type / length / nullability must match the definition.**
+> **After a successful upgrade returns, the database contains at least every column listed in the definition, and each column's type / length / nullability matches the definition** — except where a dialect cannot express the definition, such as Oracle's text columns, which are always nullable ([Database Dialect Differences §3.1](database-dialect-differences.md#31-oracle--is-null)).
 
 This is the only thing that matters from the application's perspective. Whether the framework chooses `ALTER TABLE` or a full table rebuild internally is a library implementation detail; callers do not need to care.
 
@@ -133,14 +133,16 @@ The following changes are handled with `ALTER TABLE` in seconds, without copying
 
 ### Cases that trigger a rebuild
 
-The table below uses **SQL Server as the example**; each dialect classifies changes into Alter / Rebuild / NotSupported by its own rules.
+Every dialect starts from the same dialect-neutral rules, shown below; SQLite and Oracle add restrictions of their own.
 
 | Category | Examples |
 |----------|----------|
 | **Cross-family type change** | `String → Integer`, numeric → `Date`, `Boolean → anything else`, `Binary → non-Binary`, `Guid ↔ String` |
-| **AutoIncrement state toggle** | Plain column ↔ IDENTITY column (SQL Server `ALTER COLUMN` cannot toggle IDENTITY) |
+| **AutoIncrement state toggle** | Plain column ↔ AutoIncrement column (for example, SQL Server `ALTER COLUMN` cannot toggle IDENTITY) |
 
 > **SQLite** is the extreme case: its `ALTER TABLE` supports only `ADD` / `RENAME` / `DROP COLUMN`, so **any** change to a column's type, nullability, or default triggers a rebuild.
+>
+> **Oracle** also rebuilds when a text column crosses the LOB boundary (`VARCHAR2` ↔ `CLOB`), which its `ALTER ... MODIFY` rejects.
 
 **Rebuild mechanism**: create a temporary table → `INSERT INTO tmp SELECT FROM original` → drop the old table → rename. For large tables (tens of millions of rows) this can take from minutes to hours and holds a table-level lock for the duration.
 
@@ -151,30 +153,38 @@ The orchestrator inspects every change in the `TableSchemaDiff`:
 - All changes ALTER-capable → ALTER path
 - Any change requires rebuild → the whole table goes through rebuild
 - Any change unsupported by the provider → throws and aborts
+- A rebuild combined with a column rename (§6) → throws; split the two across deploys
 
 > The design **intentionally exposes no Strategy option**: callers should not need to decide "ALTER or rebuild this time" — the choice is fully determined by the diff content.
 
 ## 5. UpgradeOptions
 
-There is currently a single option:
+The options, as declared in [UpgradeOptions](../../src/Polhem.Db/Schema/UpgradeOptions.cs) (comments shortened):
 
 ```csharp
-public class UpgradeOptions
+public sealed class UpgradeOptions
 {
     /// <summary>
     /// Allow ALTER COLUMN with reduced length / precision (may truncate data).
     /// Default false: narrowing is rejected to avoid silent data loss.
     /// </summary>
-    public bool AllowColumnNarrowing { get; set; } = false;
+    public bool AllowColumnNarrowing { get; init; } = false;
+
+    /// <summary>A shared instance with every option at its default.</summary>
+    public static UpgradeOptions Default { get; } = new UpgradeOptions();
 }
 ```
+
+The properties are `init`-only, so options are set when the instance is created (`new UpgradeOptions { ... }`) and the shared `Default` cannot be changed.
 
 ### What `AllowColumnNarrowing` controls
 
 When the definition specifies a length / precision smaller than the current column in the database:
 
-- Default: **rejected with an exception** to avoid silent truncation
+- Default: **rejected with an exception** (`InvalidOperationException`) to avoid silent truncation
 - Enabled: truncation is explicitly accepted and recorded under the plan's `Warnings`
+
+The check belongs to the ALTER path. A plan that rebuilds the table (every column change on SQLite, or any plan containing a change that needs a rebuild) does not consult this option: the copy step inserts the old values into the new column, and what happens to a value that no longer fits is up to the database. Dry-run first (§9) whenever a rebuild would also narrow a column.
 
 ```csharp
 var options = new UpgradeOptions { AllowColumnNarrowing = true };
@@ -191,15 +201,16 @@ By default Polhem will not infer "this column in the database that has no matchi
 <DbField FieldName="employee_no" OriginalFieldName="emp_no" Caption="Employee No." />
 ```
 
-The comparer detects the `emp_no → employee_no` rename intent during upgrade and emits a `RenameFieldChange`, executed via `sp_rename` (data preserved).
+The comparer detects the `emp_no → employee_no` rename intent during upgrade and emits a `RenameFieldChange`, executed with the dialect's column rename (`sp_rename` on SQL Server, `ALTER TABLE ... RENAME COLUMN` on the others), which preserves the data.
 
 ### Rules
 
 | Scenario | Behaviour |
 |----------|-----------|
-| DB has the old name `emp_no`, no new name | Run `sp_rename` |
-| DB already has the new name `employee_no` | No-op (idempotent, safe to re-run) |
-| DB has neither old nor new name | Warning + falls back to adding a new column |
+| DB has the old name `emp_no`, no new name | Rename the column |
+| DB already has the new name `employee_no` | No rename; the column is compared as usual (idempotent, safe to re-run) |
+| DB has neither old nor new name | Adds `employee_no` as a new column, without a warning |
+| The same upgrade also needs a rebuild | Rejected with an exception (§4) |
 | Multiple cumulative renames across versions | **Not supported**: clear `OriginalFieldName` after each release |
 
 ### When to use it
@@ -259,14 +270,14 @@ The following are **outside the scope of automatic upgrade** and must be handled
 For large tables (tens of millions of rows), **strongly recommend a dry-run** to confirm the execution mode:
 
 ```csharp
-var diff = builder.CompareToDiff("common", "ft_orders");
+var diff = builder.CompareToDiff("company", "ft_orders");
 var plan = new TableUpgradeOrchestrator("myDb", connectionManager).Plan(diff);
 
 if (plan.Mode == UpgradeExecutionMode.Rebuild)
 {
     // This run will rebuild — schedule a maintenance window
     Console.WriteLine("Rebuild will be triggered:");
-    Console.WriteLine(builder.GetCommandText("common", "ft_orders"));
+    Console.WriteLine(builder.GetCommandText("company", "ft_orders"));
 }
 ```
 
@@ -298,7 +309,7 @@ If the dry-run shows a rebuild but downtime is unacceptable, consider:
 
 ## 10. Renaming framework tables
 
-> Manual rename DDL. Provided so deployments can match a framework rename release (e.g. the `ft_department` / `ft_employee` → `st_*` rename in the upcoming version) without losing data. Run against the **company database**.
+> Manual rename DDL, for a database that holds a framework table under an earlier name. The example is the rename of `ft_department` / `ft_employee` to `st_department` / `st_employee`, made before Polhem 1.0: a database created by an earlier release that used the old names needs it to keep its data. Run against the **company database**.
 
 The framework's auto-upgrade pipeline never renames tables on its own (see §8 Unsupported Scenarios). When the framework changes a system-table name across releases, deployments that pre-created the old name must rename manually.
 
@@ -322,7 +333,7 @@ ALTER TABLE ft_department RENAME TO st_department;
 ALTER TABLE ft_employee   RENAME TO st_employee;
 ```
 
-Indexes / foreign keys named after the old table prefix (e.g. `pk_ft_employee`) are left alone by `RENAME TABLE`; they keep working under the new table. The framework's index-name templates use `{0}` to bind to the table name at create time, so freshly-created indexes from now on will pick up `pk_st_employee` automatically.
+Indexes named after the old table (e.g. `pk_ft_employee`, `rx_ft_employee`) are left alone by the rename and keep working on the renamed table. The framework's index-name templates use `{0}` for the table name, so the definition now expects `rx_st_employee` and so on. The next schema upgrade finds the primary key regardless of its name, but matches every other index by its formatted name: it does not find `rx_st_employee`, and creates it next to the old `rx_ft_employee`. Drop the old-named indexes by hand if you do not want the duplicates.
 
 ## 11. References
 

@@ -1,4 +1,4 @@
-<!-- source: en/architecture-overview.md blob: e697e7b9ebad65ed6c12088819d7d0b1c15ade76 -->
+<!-- source: en/architecture-overview.md blob: c8babb4aa1e91695f4f856d331bfbf8f18c2dc81 -->
 # Polhem 框架架構總覽
 
 [English](../en/architecture-overview.md) · [← 文件索引](README.md)
@@ -91,6 +91,7 @@ Polhem 以 **DataSet 取代強型別 Entity**，帶來：
 - **SQL 產生依據**：Repository CRUD 從 FormSchema 動態產生 SQL
 - **UI 推導來源**：FormLayout 在**設計階段**從 FormSchema 推導版面結構；執行階段一律讀已存檔的 FormLayout 定義，不會即時推導
 - **DB 推導來源**：TableSchema 從 FormSchema 推導資料表結構
+- **DbCategory 路由**：`FormSchema.CategoryId`（必填）決定推導出的 TableSchema 屬於哪個 `DbCategory`（進而決定目標連線與檔案路徑 `TableSchema/{categoryId}/`）
 
 ### 定義生成流程
 
@@ -111,27 +112,15 @@ graph TD
     DT --> DB["資料庫建立與維護"]
 ```
 
-### Override 機制
+### 調整衍生定義
 
-FormLayout 與 TableSchema 在設計階段由 FormSchema 推導產生並存成定義檔，之後支援獨立調整：
-
-```
-FormSchema 更新
-    ↓
-重新推導「預設值」
-    ↓
-與現有 FormLayout / TableSchema 做 diff
-    ├─ 未手動調整的部分 → 更新
-    └─ 已手動覆寫的部分 → 保留
-```
-
-這確保 FormSchema 演進時，人工調整的客製設定不會被覆蓋。
+FormLayout 與 TableSchema 在設計階段由 FormSchema 推導產生並存成定義檔，之後可以手動調整。重新產生不會合併：`FormLayoutGenerator` 與 `TableSchemaGenerator` 只依 FormSchema 建出一份全新的定義，存檔即取代既有檔案（DefineEditor 覆寫既有 FormLayout 前會先詢問）。衍生檔調整過之後 FormSchema 若有變動，請直接修改那些檔案，或重新產生後再把調整套回去。
 
 ### 多租戶客製化覆蓋層
 
-針對多租戶部署，Polhem 在 base 定義之上加一層 **per-租戶唯讀客製化覆蓋**。`CustomizeId`（由 `SessionInfo.CustomizeId` 取得，於 `EnterCompany` 時自公司記錄載入）驅動覆蓋層，**僅服務 Language / FormLayout / ProgramSettings / MenuSettings 四類**——`FormSchema` / `TableSchema` / 設定維持全租戶共用，使資料庫結構不會逐租戶分歧。
+針對多租戶部署，Polhem 在 base 定義之上加一層 **per-租戶客製化覆蓋**。`CustomizeId`（由 `SessionInfo.CustomizeId` 取得，於 `EnterCompany` 時自公司記錄載入）驅動覆蓋層，**僅服務 Language / FormLayout / ProgramSettings / MenuSettings / PluginSettings**——`FormSchema` / `TableSchema` 維持全租戶共用，使資料庫結構不會逐租戶分歧。
 
-此覆蓋為**兩層獨立唯讀、永不合併**：base 套裝快取絕不異動，疊加在消費端以 key / progId / 整檔粒度擇一。`CustomizeId` 為空時短路至純 base，與單租戶部署逐位元一致。見 [ADR-016](../adr/adr-016-multitenant-customization-overlay.zh-TW.md)。
+此覆蓋為**兩層獨立**：base 定義快取絕不異動，由消費端逐次查找（以 key、progId 或整檔為粒度）決定哪一層勝出。外掛綁定是唯一兩層都生效的項目：先跑 base 的外掛鏈，再跑租戶的。覆蓋層在執行期為唯讀，唯一例外是 `PluginSettings`，由僅限本機的維護 API 寫入。`CustomizeId` 為空時只依 base 層解析，與單租戶部署相同。見[租戶客製化](customization.md)與 [ADR-016](../adr/adr-016-multitenant-customization-overlay.zh-TW.md)。
 
 ---
 
@@ -185,7 +174,7 @@ TableSchema 預設：DECIMAL(18, 2)
 TableSchema 實際：DECIMAL(24, 6)  +  INDEX  +  DEFAULT 0
 ```
 
-FormSchema 不需要知道資料庫層的最佳化細節，TableSchema 可獨立演進。
+FormSchema 不需要知道資料庫層的最佳化細節，TableSchema 可獨立演進（從 FormSchema 重新產生會取代這類調整，見[調整衍生定義](#調整衍生定義)）。
 
 ---
 
@@ -224,25 +213,35 @@ DataSet 只是**資料的容器**，本身不包含任何業務邏輯。所有�
 ```csharp
 public class SalesOrderBO : BusinessObject
 {
+    public SalesOrderBO(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
+        : base(ctx, accessToken, progId, isLocalCall) { }
+
     // CRUD：透過 FormSchema 驅動的 Repository（DB 路由自動完成）
-    public void Save(DataSet ds)
+    [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
+    public DataSet? Save(DataSet ds)
     {
         // 1. 依 FormSchema 驗證 DataSet 資料
         // 2. 用 BO 基底 helper —— DB 路由自動處理
         var repository = CreateDataFormRepository(ProgId);
         // 3. Repository 在路由出的資料庫上執行 INSERT / UPDATE
+        var (refreshed, _) = repository.Save(ds);
+        return refreshed;
     }
 
     // 報表：BO 顯式指定 DB scope、自行撰寫 SQL
+    // （ReportFilter 與 SalesReportRepo 是你自己的型別）
+    [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
     public DataSet GetSalesSummaryReport(ReportFilter filter)
     {
         var dbId = ResolveDatabaseId(DbScope.Company);  // 型別安全，無 magic string
         var repo = new SalesReportRepo(
             Services.GetRequiredService<IDbAccessFactory>(), dbId);
-        // ... 自訂 SQL via repo
+        return repo.GetSummary(filter);   // 自訂 SQL 寫在 repository 內
     }
 }
 ```
+
+BO 上接受單一參數的 public instance 方法都可作為 JSON-RPC action 被呼叫，因此每一個都要以 `[ApiAccessControl]` 宣告保護等級；缺少宣告時 POLHEM3001 analyzer 會發出警告。
 
 同一個 BO 內可混用兩種 Repository 策略，上層呼叫端無需感知底層走哪條路。
 
@@ -284,17 +283,11 @@ Repository 採用**雙軌並行**設計，依作業性質選擇適合的實作�
 
 報表與批次作業的 SQL 往往是多表 JOIN + GROUP BY + 動態條件，或需要控制交易邊界與分批策略，強行套入 FormSchema 反而增加不必要的複雜度。
 
-### 基礎設施共用
+### 基礎設施共用與交易邊界
 
-兩軌共用底層的連線管理與交易管理：
+兩軌共用同一套資料存取基礎設施：`Polhem.Db`（`DbAccess`、provider registry 與 dialect）以及 `IRepositoryDatabaseRouter` 的資料庫路由。
 
-```
-FormSchema-driven Repository ─┐
-                               ├─→ 共用 UnitOfWork / ConnectionFactory
-AnyCode Repository ────────────┘
-```
-
-這確保跨軌的操作（例如：CRUD 主單 + 批次更新庫存）可以在**同一個交易**內協作，commit / rollback 保持一致。
+兩軌**不共用**交易。交易邊界是單次 repository 呼叫：`IDataFormRepository.Save` 在一個交易內寫入同一個 DataSet 的主檔與明細表，`Delete` 則在另一個交易內刪除主檔列及其明細。AnyCode repository 透過 `DbAccess` 自行控制交易（例如 `UseTransaction` 的 `DbBatchSpec`，或以自己的 `DbTransaction` 呼叫 `Execute`）。框架不會把 FormSchema 驅動的呼叫與 AnyCode 呼叫納入同一個交易，因此必須跨兩軌維持原子性的寫入（例如存訂單同時調整庫存）要在同一個 AnyCode 交易內完成。
 
 ---
 
@@ -360,7 +353,7 @@ flowchart LR
 ```
 ┌──────────────────────────────────────────────────────┐
 │  View                                                │
-│  Avalonia / Blazor Server / 自行撰寫的 WinForms、WPF 或 JS host │  MVVM: View
+│  Avalonia（桌面 / 瀏覽器 / 行動）/ Blazor Server / 自行撰寫的 host │  MVVM: View
 ├──────────────────────────────────────────────────────┤
 │  ViewModel                                          │  MVVM: ViewModel
 │  （由 FormSchema 推導 binding 結構）                 │
@@ -388,7 +381,6 @@ flowchart LR
 │  Repository                                         │  Clean Arch: Interface Adapter
 │  ├─ FormSchema-driven（CRUD SQL 自動產生）           │
 │  └─ AnyCode（報表/批次，BO 自行實作）               │
-│  └─ 共用 UnitOfWork / ConnectionFactory             │
 ├──────────────────────────────────────────────────────┤
 │  Polhem.Db（資料存取基礎設施）                          │  N-Tier: Data Layer
 │  ├─ IDialectFactory 依 DatabaseType 路由             │
@@ -399,6 +391,8 @@ flowchart LR
 └──────────────────────────────────────────────────────┘
 ```
 
+> `Polhem.UI.Avalonia` 能跑在哪些端、各端需要什麼，見[平台支援](platform-support.md)。
+>
 > Provider 註冊由 host 應用程式明示完成：對每個實際使用的資料庫，呼叫
 > `DbProviderRegistry.Register(...)` 與 `DbDialectRegistry.Register(...)`。
 > `Polhem.Db` 本身不引用任何 ADO.NET driver。註冊範例見
@@ -418,4 +412,4 @@ flowchart LR
 | **介面定義** | FormLayout（非 XAML） | 專為制式表單版面；結構收斂，語法更簡潔 |
 | **DB 維護** | TableSchema 推導 + 可調整 | 自動同步定義；DBA 仍可獨立最佳化索引與型別 |
 | **架構混合** | N-Tier + Clean Arch + MVVM | 各取最適合企業資訊系統的概念；不強迫純理論套用 |
-| **稽核軌跡** | opt-in `st_log_*` 表，經 `IAuditLogWriter`（`AuditLogOptions`） | 五軸資料軌跡——登入／異動（DiffGram 新舊值）／檢視／API+DB 異常；背景、best-effort、自足（去正規化）的 log 列 |
+| **稽核軌跡** | opt-in `st_log_*` 表，經 `IAuditLogWriter` / `IAnomalyLogWriter`（`AuditLogOptions`） | 登入、異動（DiffGram 新舊值）、檢視、API 異常與 DB 異常各軸的資料軌跡；背景、best-effort、自足（去正規化）的 log 列 |

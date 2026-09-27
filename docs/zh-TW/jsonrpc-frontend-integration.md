@@ -1,4 +1,4 @@
-<!-- source: en/jsonrpc-frontend-integration.md blob: d3498099fe7ba31542269e694a92505e9cc65a4d -->
+<!-- source: en/jsonrpc-frontend-integration.md blob: 41be822b6d9091f49e275b7578cf9c17db5a04a9 -->
 # JSON-RPC 前端整合指引
 
 [English](../en/jsonrpc-frontend-integration.md) · [← 文件索引](README.md)
@@ -6,7 +6,7 @@
 如何從 JavaScript / TypeScript 前端（React、Vue、Angular、Svelte、vanilla）
 呼叫 Polhem 的 JSON-RPC 後端，**client 端完全不需要 .NET**。
 
-整套大約 150 行純 JS。可跑的範例在
+整套只需一個小小的純 JS 模組。可跑的範例在
 [`samples/Web.Js.Demo/`](../../samples/Web.Js.Demo/README.zh-TW.md)，
 本文檔解釋它「為什麼這樣寫」。
 
@@ -25,12 +25,14 @@
 如果前端能跑 .NET runtime，請用 `Polhem.Api.Client` — 你會免費拿到強型別契約、
 MessagePack 效能、payload 加密。如果前端是 JS，走本指引。
 
-payload 加密**不是 .NET 專屬能力**。JS 用戶端要用 `Encoded` 或 `Encrypted`，
-只需在 payload 信封宣告 `"codec": "json"`，伺服端會以同一個 codec 回應 ——
-那正是 [ADR-044](../adr/adr-044-payload-codec-negotiation.zh-TW.md) 存在的理由。
-這條路徑的跨語言素材是 [`wire-contracts/`](../../wire-contracts/README.md)
-（由訊息型別產生的 TypeScript 合約）與 [`wire-fixtures/`](../../wire-fixtures/README.md)
-（可拿來對照自家實作的 golden body 樣本）。
+payload 加密**不是 .NET 專屬能力**。body codec 是逐請求協商的：JS 用戶端要用 `Encoded` 或
+`Encrypted`，只需在 payload 信封宣告 `"codec": "json"`，伺服端會以同一個 codec 回應；未宣告 codec 的
+請求則以 MessagePack 解讀 —— 那正是 [ADR-044](../adr/adr-044-payload-codec-negotiation.zh-TW.md)
+存在的理由。這條路徑的跨語言素材是 [`wire-contracts/`](../../wire-contracts/README.md)
+（由訊息型別產生的 TypeScript 合約，是每個請求與回應形狀的權威描述）與
+[`wire-fixtures/`](../../wire-fixtures/README.md)（可拿來對照自家實作的 golden body 樣本）。
+[`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js) 是建立在它們之上的
+TypeScript client。
 
 整體策略見 [ADR-013：前端 API 連線策略](../adr/adr-013-frontend-api-connection-strategy.zh-TW.md)。
 
@@ -49,7 +51,7 @@ POST /api HTTP/1.1
 Host: your.backend
 Content-Type: application/json
 X-Api-Key: <api-key>
-Authorization: Bearer <access-token>     // anonymous 方法可省略
+Authorization: Bearer <access-token>     // 匿名呼叫可省略
 
 {
   "jsonrpc": "2.0",
@@ -79,8 +81,11 @@ Authorization: Bearer <access-token>     // anonymous 方法可省略
     "value": {
       "accessToken": "f32bcd07-be16-44b9-be4a-db2bc669a6c2",
       "expiredAt": "2026-05-25T15:53:47.408399Z",
+      "apiEncryptionKey": "",
       "userId": "demo",
-      "userName": "Demo User"
+      "userName": "Demo User",
+      "timeZone": "Asia/Taipei",
+      "culture": "en-US"
     },
     "type": ""
   },
@@ -103,25 +108,43 @@ Authorization: Bearer <access-token>     // anonymous 方法可省略
 }
 ```
 
-互斥：response 一定**只有** `result` 或 `error`，不會兩者並存。
+互斥：response 一定**只有** `result` 或 `error`，不會兩者並存。像這樣的框架訊息在離開伺服端前會先翻譯：
+翻成 session 的語系；沒有 session 的呼叫（例如登入失敗）則翻成部署的預設語系。
 
 ### 為什麼 JS 不需要 `params.type`
 
 .NET client 的 wire format 永遠帶 `params.type`（例如
 `"Polhem.Api.Core.Messages.System.LoginRequest, Polhem.Api.Core"`），因為
-Encoded / Encrypted 格式需要型別資訊把 MessagePack binary 還原為強型別物件。
-Plain 格式不需要：
+Encoded / Encrypted 的 body 是不透明的位元組。即使在那條路徑上，伺服端也不採用呼叫端給的型別：
+它把 body 解碼成請求所指方法的參數型別，`type` 指名的若是別的型別就拒絕呼叫。`type` 只是一致性檢查，
+不是選擇權。Plain 格式則完全不需要它：
 
-- Server 把 `params.value` 當 `JsonElement`（通用 JSON 樹）處理
-- 目標型別來自 `MethodInfo.GetParameters()[0].ParameterType`，靠 reflection
-  從 BO 方法簽名拿
-- `RestoreFrom` 步驟在 Plain 分支 early-return，根本沒讀 `type`
+- 目標型別是所指 BO 方法的參數型別，靠 reflection 解析
+- Server 直接把 `params.value` 讀成該型別；Plain 請求從不經由 `type` 解碼
 - 多型欄位（例如 `GetListArgs.Filter` → `FilterNode` 多個 subclass）由
-  自訂 `JsonConverter` inline 處理 discriminator，不依賴外層 `type`
+  自訂 `JsonConverter` 以 inline 的 `kind` discriminator 處理，不依賴外層 `type`
 
 你想送 `params.type` 也可以（Plain 路徑會忽略），省略則 payload 較小。
 回歸保障：[`JsonRpcExecutorTests.Ping_PlainWith*`](../../tests/Polhem.Api.Core.UnitTests/JsonRpcExecutorTests.cs)
 驗證了省略 / 空字串 / 帶錯誤型別字串三種情境都會成功。
+
+### Plain body 裡的值
+
+伺服端型別為 `object` 的成員 —— 過濾條件的 `value` 與 `secondValue`、`parameters` 的項目 —— 在 Plain body
+裡沒有指名 CLR 型別，因此伺服端依 JSON 種類綁定：字串仍是字串，放得下的整數成為 `long`、其他數字成為
+`decimal`，布林值成為 `bool`，陣列成為 `object[]`（`In` 運算子要的形狀）。**日期或 `Guid` 以字串送出，
+也維持字串**：伺服端不會從文字猜型別。需要帶型別的值時，client 改用 JSON body codec（`"codec": "json"`
+搭配 `Encoded` 或 `Encrypted`），它的 `[code, value]` 信封會帶上型別 —— `wire-contracts/messages.d.ts`
+裡的 `WireValueEnvelope` 描述的正是這個信封；Plain body 帶的則是裸值。
+
+`DataTable` 的儲存格依其欄位的 `type` 解讀：
+
+- **`Decimal` 與 `Int64` 儲存格是 JSON 字串**，以免在 JavaScript 只有 double 的數字裡失去精度。
+- **`Date`** 表示日曆日：不顯示時刻，且不要透過瀏覽器時區位移。
+- **`DateTime`** 為時間點，回應裡一律是 UTC：顯示前需自行換算。存檔送出時不必換算，伺服端不採用其中的值；
+  過濾條件的值則要換回 UTC 再送出。
+
+見 [時間型別總覽](temporal-types.md) 與 [時區處理](datetime-timezone.md)。
 
 ---
 
@@ -130,8 +153,12 @@ Plain 格式不需要：
 | Header | 必要 | 值 | 說明 |
 |--------|------|-----|------|
 | `Content-Type` | 是 | `application/json` | JSON-RPC 信封 |
-| `X-Api-Key` | 是 | 預設為任意非空字串 | 預設的 `ApiAuthorizationValidator` 只檢查非空。Production host 應註冊更嚴格的 validator 比對註冊清單。 |
-| `Authorization` | Authenticated 方法必要 | `Bearer <accessToken>` | 從 `System.Login` 拿到的 GUID |
+| `X-Api-Key` | 是，`System.Ping` 除外 | 應用程式的 API 金鑰 | 部署發出第一把啟用中的金鑰（`st_api_key`）之前，任何非空值都會通過；之後只有已發出、啟用中且未到期的金鑰才會通過。見 [API 金鑰管理](api-key-management.md)。 |
+| `Authorization` | 宣告為 `Authenticated` 的方法 | `Bearer <accessToken>` | 從 `System.Login` 回應拿到的 GUID。不帶此 header 的請求即為匿名呼叫，只有宣告為 `Anonymous` 的方法會接受。 |
+
+金鑰被拒，或 `Authorization` header 不是格式正確的 `Bearer <guid>`，會在派遣前以 **HTTP 401** 拒絕，
+body 仍是 JSON-RPC 錯誤（`-32600`）。需要 token 的方法若 token 缺漏、未知或已過期，會進到方法的存取檢查，
+以 HTTP 200 回 `-32001`。
 
 Host 必須設好 CORS。Demo 後端在
 [`samples/QuickStart.Server/Program.cs`](../../samples/QuickStart.Server/Program.cs)
@@ -142,7 +169,7 @@ Host 必須設好 CORS。Demo 後端在
 ## 認證流程
 
 ```
-1. POST System.Login        →  { accessToken, expiredAt, userId, userName }
+1. POST System.Login        →  { accessToken, expiredAt, userId, userName, timeZone, culture, ... }
 2. POST <Method>（帶 token）
    ...
 3. POST System.Logout       →  {}
@@ -152,47 +179,59 @@ Host 必須設好 CORS。Demo 後端在
 （JS Plain 路徑不需要加密金鑰），AccessToken 直接以明文回在
 `result.value.accessToken`。
 
-Token 是 `Guid` 字串。Token 有效期限預設 1 小時；過期後 backend 會以
-`JsonRpcErrorCode.Unauthorized` 拒絕 authenticated 呼叫，client 必須重新登入。
+Token 是 `Guid` 字串。Token 在登入回應所帶的 `expiredAt` 時間到期；之後 backend 會以 `-32001`
+（`Unauthorized`）回應 authenticated 呼叫，client 必須重新登入。
 
 某些方法需要先進入公司（`System.EnterCompany`）以設定 `SessionInfo.CompanyId`，
-讓 form CRUD 路由到公司專屬資料庫。Demo 的 `Employee` 屬於 `Common` scope，
-**不需要 EnterCompany 也能跑**；綁在公司 scope 的方法若跳過 EnterCompany 會
-回 `CompanyNotEntered`。
+讓 form CRUD 路由到公司專屬資料庫。`CategoryId` 為 `company` 的表單若在未進公司時呼叫，會回 `-32002`
+（`CompanyNotEntered`）。範例的 `Employee` 表單宣告在 `common` scope，demo 因此不需要 `EnterCompany`
+也能跑；它取代了框架自帶的 `Employee` 表單，後者屬公司 scope（`st_employee`，見
+[框架保留命名](framework-reserved-names.md)）。你自己的業務表單應放在 `company`。
 
 ---
 
 ## 可呼叫的方法
 
 完整方法清單（含每方法 `[ApiAccessControl]` 設定）見
-[`docs/zh-TW/api-method-reference.md`](api-method-reference.md)。
-摘要：
+[`docs/zh-TW/api-method-reference.md`](api-method-reference.md)。其中兩個欄位決定瀏覽器能呼叫什麼：
+
+- **Protection。** Plain 呼叫只能到達保護等級為 `Public` 的方法。`Encoded` 方法需要 Encoded 或
+  Encrypted body，`Encrypted` 方法（稽核記錄查詢與 API 金鑰管理）需要 Encrypted body —— 也就是上述的
+  JSON codec 路徑。`LocalOnly` 方法（如 `System.CreateSession`、`System.SaveDefine`）不論格式，
+  一律拒絕遠端呼叫。
+- **Auth。** `Anonymous` 方法不需要 token；`Authenticated` 方法需要。
+
+Plain client 可呼叫的 `Public` 方法：
 
 | 類別 | 方法 |
 |------|------|
-| Anonymous | `System.Ping`、`System.GetCommonConfiguration`、`System.Login`、`System.CreateSession` |
+| Anonymous | `System.Ping`、`System.GetCommonConfiguration`、`System.Login`、`<ProgId>.ExecFuncAnonymous` |
 | Authenticated — Session | `System.EnterCompany`、`System.LeaveCompany`、`System.Logout`、`System.GetDepartmentTree` |
-| Authenticated — Definition | `System.GetDefine`、`System.SaveDefine`（SystemSettings / DatabaseSettings 限 local call）；`System.GetFormSchema`、`System.GetFormLayout`、`System.GetLanguage`（JSON-native，JS 優先用） |
-| Authenticated — Form CRUD | `<ProgId>.GetList`、`GetNewData`、`GetData`、`Save`、`Delete` |
+| Authenticated — Definition | `System.GetDefine`、`System.GetFormSchema`、`System.GetFormLayout`、`System.GetLanguage`、`System.GetCustomizeFormLayout`、`System.GetCustomizeLanguage` |
+| Authenticated — Form | `<ProgId>.GetList`、`GetLookup`、`GetNewData`、`GetData`、`Save`、`Delete`、`ExecFunc` |
 
-**JSON-native 取得 schema / layout / language**
+**定義以 XML 傳回**
 
-`System.GetDefine` 把要求的 definition 物件以 XML 字串包裝（`result.Xml`），
-對 .NET client 方便（`XmlCodec.Deserialize<T>`）但 JS 不友善（要解兩層）。
-JS 路徑有三個 JSON-native 姊妹方法：
+每個定義方法都以 XML 回傳存檔原樣的定義，放在 `result.value.xml` —— 與 `System.GetDefine` 對該型別回傳的
+XML 相同。定義在每條路徑上都以 XML 傳輸，因為它們的巢狀集合在 .NET 端是 get-only：XmlSerializer 會填入
+既有的實體，JSON 與 MessagePack 則依可寫性綁定，會把這些集合丟掉。
 
 | 方法 | Args | 回傳 |
 |------|------|------|
-| `System.GetFormSchema` | `{ progId }` | `{ schema: FormSchema }` — 欄位、DB 型別、relations（依 session `Culture` 自動本地化） |
-| `System.GetFormLayout` | `{ progId, layoutId? }` | `{ layout: FormLayout }` — sections、fields、controlType、行列 span，原樣回傳已存檔的定義；未存檔時回空值 |
-| `System.GetLanguage` | `{ lang, namespace }` | `{ resource: LanguageResource }` — 單一 namespace × 單一 lang 的 `Items` + `Enums` |
+| `System.GetFormSchema` | `{ progId }` | `{ xml }` — `FormSchema`：tables、fields、DB 型別、relations |
+| `System.GetFormLayout` | `{ progId, layoutId? }` | `{ xml }` — base 層的 `FormLayout`：sections、fields、controlType、行列 span；未存檔時為空字串 |
+| `System.GetLanguage` | `{ lang, namespace }` | `{ xml }` — 單一 namespace × 單一語系的 `LanguageResource`（`Items` + `Enums`）；未存檔時為空字串 |
+| `System.GetDefine` | `{ defineType, keys }` | `{ xml }` — 遠端呼叫者可讀的任一定義型別：`FormSchema`、`FormLayout`、`Language`、`MenuSettings`、`CurrencySettings`、`UnitSettings`。其他型別一律拒絕。 |
 
-兩者都原樣回傳已存檔的定義——`FormLayout` 於設計階段產出，**不會**由 `FormSchema`
-推導——JS 可獨立呼叫任一個。schema-driven UI 渲染通常會兩者都拿
-（`GetFormSchema` 拿驗證規則與欄位標題、`GetFormLayout` 拿 UI 結構）。
-版面檔只描述結構，標題取自 schema；回空值代表沒有存檔的定義，
-那屬設定錯誤，不是「自己組一份」的訊號。需要直接查語系文字（按鈕標籤、共用詞典、
-或 FormSchema 自動本地化覆蓋不到的下拉選項）時呼叫 `GetLanguage`。
+用瀏覽器的 `DOMParser` 解析 XML；範例的 `parseDefineXml`（以及下方的 TypeScript wrapper）會把它轉成一般物件。
+伺服端不做在地化也不做合併：schema 裡的標題是基底文字，租戶的客製層則是另外的呼叫
+（`System.GetCustomizeFormLayout`、`System.GetCustomizeLanguage`）。要以使用者的語言顯示標題，
+以使用者的語系與表單的 `progId`（作為 namespace）呼叫 `System.GetLanguage`，再依 `FormSchemaLocalizer`
+使用的 key（`Schema.DisplayName`、`Table.<TableName>.DisplayName`、`Field.<FieldName>.Caption`）套用其 `Items`。
+
+版面於設計階段產出，**不會**由 `FormSchema` 推導，JS 可獨立呼叫任一個。schema-driven UI 渲染通常會兩者都拿
+（`GetFormSchema` 拿驗證規則與欄位標題、`GetFormLayout` 拿 UI 結構）。版面檔只描述結構，標題取自 schema；
+回空值代表沒有存檔的定義，那屬設定錯誤，不是「自己組一份」的訊號。
 
 方法名稱**大小寫敏感** — `system.ping` 不會派遣到 `System.Ping`。
 
@@ -200,23 +239,25 @@ JS 路徑有三個 JSON-native 姊妹方法：
 
 ## 錯誤處理
 
-`response.error.code` 對應 [`JsonRpcErrorCode`](../../src/Polhem.Api.Core/JsonRpc/JsonRpcErrorCode.cs)：
+`response.error.code` 對應 [`JsonRpcErrorCode`](../../src/Polhem.Api.Core/JsonRpc/JsonRpcErrorCode.cs)。
+方法執行期間產生的錯誤以 HTTP 200 回應；傳輸層自己的拒絕（`-32700`、`-32600`）以 4xx 狀態回應，
+body 仍是 JSON-RPC 錯誤。
 
 | Code | Name | 意義 | 對應動作 |
 |------|------|------|---------|
-| `-32700` | `ParseError` | request body 不是合法 JSON | 修 client 序列化 |
-| `-32600` | `InvalidRequest` | 缺 method、缺 API key、Bearer 格式錯 | 檢查 headers |
-| `-32601` | `MethodNotFound` | 找不到 `progId.action` | 檢查方法名稱 / 大小寫 |
-| `-32602` | `InvalidParams` | args 驗證失敗 | 看 `message` 內容 |
-| `-32000` | `InternalError` | 未處理的 server 端例外 | 訊息不適合對使用者顯示。正式環境為遮蔽訊息，僅 debug 模式帶原始訊息 |
-| `-32001` | `Unauthorized` | 保留碼，**目前無產生者**。金鑰或 token 被拒實際回 `-32600` 加 HTTP 401 | 併入 `-32600` 處理 |
+| `-32700` | `ParseError` | request body 不是合法 JSON（HTTP 400） | 修 client 序列化 |
+| `-32600` | `InvalidRequest` | content type 錯誤（HTTP 415）、body 為空或缺 method（HTTP 400）、金鑰被拒或 `Authorization` header 格式錯誤（HTTP 401） | 檢查 headers 與 body |
+| `-32601` | `MethodNotFound` | 已宣告，目前無產生者。未知的 `progId.action` 目前回 `-32000` | 檢查方法名稱 / 大小寫 |
+| `-32602` | `InvalidParams` | 已宣告，目前無產生者。參數不合法目前回 `-32099` | 看 `message` 內容 |
+| `-32000` | `InternalError` | 未處理的 server 端例外 | 訊息不適合對使用者顯示。除非伺服端在 debug 模式，訊息一律為「Internal server error」 |
+| `-32001` | `Unauthorized` | 方法需要已登入的呼叫者，而 access token 缺漏、未知或已過期 | 重新登入 |
 | `-32002` | `CompanyNotEntered` | 方法需要公司 context | 先呼叫 `System.EnterCompany` |
-| `-32003` | `CompanyAccessDenied` | 使用者沒有此公司權限 | 顯示拒絕、切換公司 |
+| `-32003` | `CompanyAccessDenied` | 公司不存在，或使用者沒有此公司權限 | 顯示拒絕、切換公司 |
 | `-32004` | `PermissionDenied` | 已登入但對此 model/action 無權限 | 顯示拒絕 |
-| `-32005` | `ReplayRejected` | wire frame 缺漏、無法讀取，或時間戳超出容許區間 | 重試無用；檢查 client 時鐘 |
-| `-32099` | `UserMessage` | 業務規則違反（驗證、權限、領域規則） | 直接把 `message` 顯示給使用者 |
+| `-32005` | `ReplayRejected` | wire frame 缺漏、無法讀取、序號重複，或時間戳超出容許區間 | 重送同一個 frame 無用；檢查 client 時鐘 |
+| `-32099` | `UserMessage` | 違反業務規則（驗證、領域規則），訊息是寫給終端使用者的；被拒的呼叫也會回這個碼，例如以 Plain 呼叫 `Encrypted` 方法、或遠端呼叫 `LocalOnly` 方法，這時帶的是固定的通用訊息（「Access denied.」、「The request is not valid.」），真正原因記在伺服端 log | 直接把 `message` 顯示給使用者 |
 
-User-facing 範圍（特別是 `-32099`）的 `message` 可以原樣顯示給終端使用者。
+除 `-32000` 外，每個碼的 `message` 都是寫給呼叫端的，可以顯示給終端使用者。
 `-32000` 絕對不要直接顯示 — 內部 log 記下，UI 顯示通用「請求失敗」訊息。
 
 ---
@@ -224,11 +265,18 @@ User-facing 範圍（特別是 `-32099`）的 `message` 可以原樣顯示給終
 ## TypeScript wrapper
 
 [`samples/Web.Js.Demo/polhem-api-client.js`](../../samples/Web.Js.Demo/polhem-api-client.js)
-的 TypeScript 版本，可直接複製到 TS 專案。獨立檔案、無框架依賴，
-state 管理請自行接（Zustand / Redux / Context 都可）。
+的 TypeScript 對應版本，可直接複製到 TS 專案。獨立檔案、無框架依賴，state 管理請自行接。
+訊息形狀取自產生出來的合約 [`wire-contracts/messages.d.ts`](../../wire-contracts/messages.d.ts)，
+而不是在這裡另寫一份：把該檔複製或同步到專案中，命名為 `messages.d.ts`。
 
 ```typescript
 // polhem-api-client.ts
+import type {
+  DeleteResponse, GetDataResponse, GetFormLayoutResponse, GetFormSchemaResponse,
+  GetLanguageResponse, GetListResponse, GetNewDataResponse, LoginResponse,
+  PagingOptions, SaveResponse, DataSet,
+} from './messages';
+
 const ENDPOINT = '/api';
 const API_KEY = 'your-api-key';
 
@@ -266,104 +314,110 @@ async function rpcCall<T>(method: string, value: object): Promise<T> {
   if (_accessToken) headers.Authorization = `Bearer ${_accessToken}`;
 
   const res = await fetch(ENDPOINT, { method: 'POST', headers, body: JSON.stringify(body) });
-  if (!res.ok) throw new RpcError(res.status, `HTTP ${res.status} ${res.statusText}`);
-
-  const data: JsonRpcResponse<T> = await res.json();
-  if (data.error) throw new RpcError(data.error.code, data.error.message, data.error.data);
-  return data.result!.value;
+  // 派遣前的拒絕（API 金鑰、Authorization header、無法解析的 body）帶 4xx 狀態，
+  // body 仍是 JSON-RPC 錯誤，所以先讀 body。
+  const data = (await res.json().catch(() => undefined)) as JsonRpcResponse<T> | undefined;
+  if (data?.error) throw new RpcError(data.error.code, data.error.message, data.error.data);
+  if (!res.ok || !data?.result) throw new RpcError(res.status, `HTTP ${res.status} ${res.statusText}`);
+  return data.result.value;
 }
 
-// ---- DTO 型別（依需要擴充）----
+// ---- 定義：把存檔原樣的 XML 解析成一般物件 ----
 
-export interface LoginResponse {
-  accessToken: string;
-  expiredAt: string;
-  userId: string;
-  userName: string;
+export type DefineValue = string | number | boolean | DefineNode | DefineNode[];
+export interface DefineNode { [name: string]: DefineValue | undefined }
+
+// 屬性轉成 camelCase 的 property，包裝元素（Sections、Fields、Tables、Items…）轉成陣列。
+// XmlSerializer 會省略值為預設值的屬性，因此每個 property 都當作 optional。
+export function parseDefineXml(xml: string | undefined): DefineNode | null {
+  if (!xml) return null;
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  const failure = doc.querySelector('parsererror');
+  if (failure) throw new Error(`Definition XML is malformed: ${failure.textContent}`);
+  return elementToObject(doc.documentElement);
 }
 
-export interface DataTableColumn {
-  name: string;
-  /**
-   * 宣告的 FieldDbType，例如 'String' | 'Date' | 'DateTime' | 'Decimal' | 'Guid'。
-   * 'Date' 表示日曆日——不顯示時刻，且不要透過瀏覽器時區位移。
-   * 'DateTime' 為時間點，回應裡一律是 UTC：顯示前需自行換算。存檔送出時不必換算，伺服端不採用其中的值；
-   * 過濾條件的值則要換回 UTC 再送出。
-   * 見 docs/zh-TW/temporal-types.md 與 docs/zh-TW/datetime-timezone.md。
-   */
-  type: string;
-  allowNull: boolean;
-  readOnly: boolean;
-  maxLength: number;
-  caption: string;
-  defaultValue: unknown;
+const camelCase = (name: string) => name.charAt(0).toLowerCase() + name.slice(1);
+
+function elementToObject(el: Element): DefineNode {
+  const obj: DefineNode = {};
+  for (const attr of Array.from(el.attributes)) {
+    if (attr.name.startsWith('xmlns')) continue;
+    obj[camelCase(attr.name)] = coerce(attr.value);
+  }
+  for (const child of Array.from(el.children)) {
+    const items = Array.from(child.children);
+    const isWrapper = child.attributes.length === 0 && items.length > 0
+      && items.every(item => item.tagName !== child.tagName);
+    const key = camelCase(child.tagName);
+    const value = isWrapper ? items.map(elementToObject) : elementToObject(child);
+    const existing = obj[key];
+    // 沒有包裝元素的重複元素（LanguageEnum 的 entry）收集成陣列。
+    if (existing === undefined) obj[key] = value;
+    else if (Array.isArray(existing) && !isWrapper) existing.push(value as DefineNode);
+    else obj[key] = [existing as DefineNode, value as DefineNode];
+  }
+  return obj;
 }
 
-export type RowState = 'Unchanged' | 'Added' | 'Modified' | 'Deleted';
-
-export interface DataRow {
-  state: RowState;
-  current: Record<string, unknown>;
-  original?: Record<string, unknown>;
+function coerce(value: string): string | number | boolean {
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  if (/^-?\d+$/.test(value)) return Number(value);
+  return value;
 }
 
-export interface DataTable {
-  tableName: string;
-  columns: DataTableColumn[];
-  primaryKeys: string[];
-  rows: DataRow[];
-}
-
-export interface DataSet {
-  dataSetName: string;
-  tables: DataTable[];
-  relations: unknown[];
-}
-
-// FormSchema / FormLayout 結構較深 —— 此處的 stub 涵蓋常見路徑。
-// 用到更深的欄位時，依 app 需要擴充或特化。
-export interface FormSchema {
-  progId: string;
-  displayName: string;
-  categoryId: string;
-  listFields: string;
-  tables: Array<{ tableName: string; displayName: string; fields: unknown[] }>;
-}
-
+// 此處的 stub 涵蓋常見路徑；用到定義的更多部分時再擴充。
+// ControlType 的成員即 Polhem.Definition.Layouts.ControlType 的成員。
 export type ControlType =
-  | 'TextEdit' | 'DateEdit' | 'YearMonthEdit'
-  | 'CheckEdit' | 'MemoEdit' | 'DropDownEdit' | 'ButtonEdit';
+  | 'Auto' | 'TextEdit' | 'ButtonEdit' | 'DateEdit' | 'YearMonthEdit' | 'DropDownEdit'
+  | 'MemoEdit' | 'CheckEdit' | 'NumericEdit' | 'TimeEdit';
 
 export interface LayoutField {
   fieldName: string;
-  caption: string;
-  controlType: ControlType;
-  rowSpan: number;
-  columnSpan: number;
-  visible: boolean;
+  caption?: string;
+  controlType?: ControlType;   // 省略即預設值 TextEdit
+  rowSpan?: number;
+  columnSpan?: number;
+  visible?: boolean;
 }
 
 export interface LayoutSection {
   name: string;
-  caption: string;
-  showCaption: boolean;
-  fields: LayoutField[];
+  caption?: string;
+  showCaption?: boolean;
+  fields?: LayoutField[];
 }
 
 export interface LayoutGrid {
   tableName: string;
-  caption: string;
-  allowActions: string;
-  columns: Array<{ fieldName: string; caption: string; controlType: ControlType; visible: boolean }>;
+  caption?: string;
+  allowActions?: string;
+  columns?: Array<{ fieldName: string; caption?: string; controlType?: ControlType; visible?: boolean }>;
 }
 
 export interface FormLayout {
   layoutId: string;
   progId: string;
-  caption: string;
-  columnCount: number;
-  sections: LayoutSection[];
-  details: LayoutGrid[];
+  caption?: string;
+  columnCount?: number;
+  sections?: LayoutSection[];
+  details?: LayoutGrid[];
+}
+
+export interface FormSchema {
+  progId: string;
+  displayName?: string;
+  categoryId?: string;
+  listFields?: string;
+  tables?: Array<{ tableName: string; displayName?: string; fields?: DefineNode[] }>;
+}
+
+export interface LanguageResource {
+  namespace: string;
+  lang: string;
+  items?: Array<{ key: string; value: string }>;
+  enums?: DefineNode[];
 }
 
 // ---- API surface ----
@@ -375,39 +429,43 @@ export const systemApi = {
   enterCompany: (companyId: string) =>
     rpcCall<unknown>('System.EnterCompany', { companyId }),
   logout: () => rpcCall<unknown>('System.Logout', {}),
-  getFormSchema: (progId: string) =>
-    rpcCall<{ schema: FormSchema }>('System.GetFormSchema', { progId }),
-  getFormLayout: (progId: string, layoutId = '') =>
-    rpcCall<{ layout: FormLayout }>('System.GetFormLayout', { progId, layoutId }),
-  getLanguage: (lang: string, namespace: string) =>
-    rpcCall<{ resource: LanguageResource }>('System.GetLanguage', { lang, namespace }),
+  getFormSchema: async (progId: string) =>
+    parseDefineXml((await rpcCall<GetFormSchemaResponse>('System.GetFormSchema', { progId })).xml) as FormSchema | null,
+  getFormLayout: async (progId: string, layoutId = '') =>
+    parseDefineXml((await rpcCall<GetFormLayoutResponse>('System.GetFormLayout', { progId, layoutId })).xml) as FormLayout | null,
+  getLanguage: async (lang: string, namespace: string) =>
+    parseDefineXml((await rpcCall<GetLanguageResponse>('System.GetLanguage', { lang, namespace })).xml) as LanguageResource | null,
 };
 
 export const formApi = (progId: string) => ({
-  getList: (selectFields = 'sys_id,sys_name,sys_rowid') =>
-    rpcCall<{ table: DataTable }>(`${progId}.GetList`,
-      { selectFields, filter: null, sortFields: null, paging: null }),
+  getList: (selectFields = 'sys_id,sys_name,sys_rowid', paging: PagingOptions | null = null) =>
+    rpcCall<GetListResponse>(`${progId}.GetList`,
+      { selectFields, filter: null, sortFields: null, paging }),
   getNewData: () =>
-    rpcCall<{ dataSet: DataSet }>(`${progId}.GetNewData`, {}),
+    rpcCall<GetNewDataResponse>(`${progId}.GetNewData`, {}),
   getData: (rowId: string) =>
-    rpcCall<{ dataSet: DataSet }>(`${progId}.GetData`, { rowId }),
+    rpcCall<GetDataResponse>(`${progId}.GetData`, { rowId }),
   save: (dataSet: DataSet) =>
-    rpcCall<{ dataSet: DataSet; affectedRows: Record<string, number> }>(`${progId}.Save`, { dataSet }),
+    rpcCall<SaveResponse>(`${progId}.Save`, { dataSet }),
   delete: (rowId: string) =>
-    rpcCall<{ rowsAffected: number }>(`${progId}.Delete`, { rowId }),
+    rpcCall<DeleteResponse>(`${progId}.Delete`, { rowId }),
 });
 ```
 
-需要新方法就擴充 DTO 介面。完整 args / result 型別在
-`src/Polhem.Api.Core/Messages/`（C# source）— 如果要同步的 DTO 變多，
-比起手工維護，可以考慮跑一個小型 codegen。
+未帶 `paging` 時，`GetList` 回傳第一頁、筆數為 `PagingOptions.MaxPageSize`，回應的 `paging.hasMore`
+表示是否還有未回傳的列。其他方法的請求與回應形狀都在 `wire-contracts/messages.d.ts`；請重新產生而不要手改
+（做法見該檔的 [README](../../wire-contracts/README.md)）。Plain body 與該檔有兩處不同：型別為 `object` 的成員
+（例如過濾條件的值）是裸的 JSON 值而非 `WireValueEnvelope`（見 [Plain body 裡的值](#plain-body-裡的值)），
+而定義是上文所述的 `xml` 字串。
 
 ---
 
 ## 相關連結
 
-- [`samples/Web.Js.Demo/README.zh-TW.md`](../../samples/Web.Js.Demo/README.zh-TW.md) — 上述所有方法的可跑 demo
+- [`samples/Web.Js.Demo/README.zh-TW.md`](../../samples/Web.Js.Demo/README.zh-TW.md) — 上述呼叫的可跑 demo
 - [`docs/zh-TW/api-method-reference.md`](api-method-reference.md) — 完整方法清單含每方法 `[ApiAccessControl]` 設定
+- [`wire-contracts/README.md`](../../wire-contracts/README.md) — 產生出來的 TypeScript 合約，以及它如何與伺服端保持一致
 - [`docs/adr/adr-013-frontend-api-connection-strategy.md`](../adr/adr-013-frontend-api-connection-strategy.zh-TW.md) — 前端連線策略全景
+- [ADR-044](../adr/adr-044-payload-codec-negotiation.zh-TW.md) — 逐請求的 codec 協商
 - [`src/Polhem.Api.Core/README.md`](../../src/Polhem.Api.Core/README.zh-TW.md) — server 端派遣內部細節
 - [`src/Polhem.Api.Client/README.md`](../../src/Polhem.Api.Client/README.zh-TW.md) — 本指引對應的 .NET client

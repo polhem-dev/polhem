@@ -18,26 +18,29 @@ entry point (service locator).
 │ 2. settings = SystemSettingsLoader.Load(paths)      │
 │ 3. SysInfo.Initialize(settings.CommonConfiguration) │
 ├─────────────────────────────────────────────────────┤
-│ 4. services.AddPolhemFramework(                        │
+│ 4. services.AddPolhemFramework(                     │
 │      settings.BackendConfiguration,                 │
 │      paths,                                         │
 │      autoCreateMasterKey: true)                     │
-│    → from Polhem.Hosting (composition root)            │
+│    → from Polhem.Hosting (composition root)         │
 │    → Registers IDefineStorage / IDefineAccess /     │
 │      ICacheContainer / IDbConnectionManager /       │
 │      ISessionInfoService / ILanguageService /       │
 │      IBusinessObjectFactory / JsonRpcExecutor       │
 ├─────────────────────────────────────────────────────┤
-│ 5. provider = services.BuildServiceProvider()       │
-│ 6. app.UsePolhemFramework() (ASP.NET only — startup   │
-│    checks; registers no middleware or endpoint)    │
+│ 5. build the provider (builder.Build() in ASP.NET   │
+│    Core, services.BuildServiceProvider() elsewhere) │
+│ 6. app.UsePolhemFramework() (ASP.NET only —         │
+│    startup checks; no middleware or endpoint)       │
 └─────────────────────────────────────────────────────┘
 ```
 
 Host package selection:
 
-- **ASP.NET Core web host**: reference `Polhem.Api.AspNetCore` (it transitively pulls in `Polhem.Hosting`). Add `using Polhem.Hosting;` for `AddPolhemFramework` and `using Polhem.Api.AspNetCore;` for `UsePolhemFramework`.
-- **Non-ASP.NET Core host** (WinForms / WPF / Console / Worker Service / integration tests): reference `Polhem.Hosting` directly. No `Microsoft.AspNetCore.App` dependency. After `BuildServiceProvider()`, set `ApiClientInfo.LocalServiceProvider = sp` to enable `Polhem.Api.Client`'s near-end (in-process) mode.
+- **ASP.NET Core web host**: reference `Polhem.Api.AspNetCore` (it transitively pulls in `Polhem.Hosting`). Add `using Polhem.Hosting;` for `AddPolhemFramework` and `using Polhem.Api.AspNetCore;` for `UsePolhemFramework`. The `POST /api` endpoint is a controller of your own deriving from `ApiServiceController`, so the host also calls `AddControllers()` and `MapControllers()`.
+- **Non-ASP.NET Core host** (Console / Worker Service / a desktop app that runs the backend in its own process / integration tests): reference `Polhem.Hosting` directly. No `Microsoft.AspNetCore.App` dependency. To call the backend in process, hand the built provider to the client side: pass it to a connector constructor (`new SystemApiConnector(provider, accessToken)`), or, in a head that uses `Polhem.UI.Core`, assign it to `ClientInfo.LocalServiceProvider`.
+
+`AddPolhemFramework` also registers hosted services, among them the startup registration of the reserved progIds, the cross-process cache-notify poller and the expired-session cleanup. They start only when the provider belongs to a .NET Generic Host (`WebApplication`, `Host.CreateApplicationBuilder`); a provider built with `BuildServiceProvider()` alone does not start them.
 
 Reference implementation: `tests/Polhem.Tests.Shared/TestProcessBootstrap.cs` — applies
 the same flow for the test process with `tests/Define/` (merged with the embedded
@@ -46,8 +49,9 @@ framework defaults at process start) as the `DefinePath`.
 ### First-time `DefinePath` setup
 
 Step 1 of the startup flow requires `DefinePath` to exist with the framework's
-minimum define files (`st_*` TableSchemas, `SystemSettings.xml`, `DatabaseSettings.xml`,
-`DbCategorySettings.xml`, framework-shipped Department / Employee forms). The
+own define files: `SystemSettings.xml`, `DatabaseSettings.xml`, `DbCategorySettings.xml`,
+the `st_*` TableSchemas and the framework's forms (Department, Employee, AuditRule) with
+their layouts and language files; `dotnet polhem defines list` prints the full set. The
 framework ships these as embedded resources in `Polhem.Definition.dll`; consumers
 materialise them once into the target directory before first run.
 
@@ -64,8 +68,9 @@ dotnet polhem defines materialize --path ./Define
 
 The CLI is a thin shell over `Polhem.Definition.Defaults.MaterializeTo(...)`; the
 same API is available programmatically for hosts that prefer to materialise from
-code, and `tools/DefineEditor` calls it automatically when you open a folder.
-Skip-existing is the default so re-running never overwrites your customisations.
+code, and `tools/DefineEditor` calls it when you open a folder.
+Files that already exist are skipped unless you pass `--overwrite` (`MaterializeOptions.Overwrite`
+in code), so re-running keeps your customisations.
 
 See [Framework-Reserved Names](framework-reserved-names.md) for the complete
 list of files and consumer extension guidelines.
@@ -84,22 +89,24 @@ sequenceDiagram
 
     C->>C: Build JsonRpcRequest method = ProgId.Action
     C->>C: Payload conversion Serialize Compress Encrypt
-    C->>P: Execute(request)
+    C->>P: ExecuteAsync(request)
 
     alt Remote HTTP
-        P->>S: POST /api Headers: ApiKey, Bearer Token
+        P->>S: POST /api Headers X-Api-Key and Bearer token when signed in
         S->>S: Validate Content-Type
         S->>S: Parse JsonRpcRequest
-        S->>S: Validate Authorization
+        S->>S: Validate API key and Authorization header
         S->>E: ExecuteAsync(request)
     else Local in-process
         P->>E: ExecuteAsync(request)
     end
 
     E->>E: Parse Method into ProgId + Action
-    E->>E: Restore Payload Decrypt Decompress Deserialize
     E->>B: Build BO via BusinessObjectFactory
+    E->>E: Resolve the action method
     E->>E: ApiAccessValidator validates access
+    E->>E: Restore Payload Decrypt Decompress Deserialize
+    E->>E: Check replay frame when the method requires one
     E->>E: ApiInputConverter converts argument types
     E->>B: Reflection-invoke Action method
     B-->>E: Return result
@@ -107,6 +114,11 @@ sequenceDiagram
     E->>E: Convert Payload format
     E-->>C: JsonRpcResponse
 ```
+
+Access is validated **before** the payload is decrypted, so a call that is not allowed costs no decryption
+work (`JsonRpcExecutor.ExecuteAsync`). A request without an `Authorization` header is an anonymous call:
+only methods declared `ApiAccessRequirement.Anonymous` accept it, and the others answer JSON-RPC error
+`-32001` (Unauthorized).
 
 ### Payload Formats
 
@@ -116,7 +128,9 @@ sequenceDiagram
 | Encoded | Serialize → Compress | General API calls |
 | Encrypted | Serialize → Compress → Encrypt | Sensitive data transmission |
 
-Downgrade rule: requesting Encrypted without an encryption key automatically downgrades to Encoded.
+Downgrade rule: when a connector is asked for Encrypted but holds no encryption key yet (before sign-in), it
+sends Encoded instead. A method whose `[ApiAccessControl]` requires Encrypted then rejects the call. A connector
+using the in-process provider sends Plain unless `SysInfo.IsDebugMode` is on.
 
 ## API Contract Three-Tier Separation
 
@@ -127,25 +141,25 @@ The framework separates API types into three tiers, preventing serialization att
 | Tier | Assembly | Base Class | Characteristics |
 |------|----------|------------|-----------------|
 | Contract | Polhem.Api.Contracts | None (pure interface) | `ILoginRequest`, `ILoginResponse`, etc. |
-| API Type | Polhem.Api.Core | `ApiRequest` / `ApiResponse` | Implements Contract interface + MessagePack `[Key]` attributes |
+| API Type | Polhem.Api.Core | `ApiRequest` / `ApiResponse` | Implements Contract interface; no serialization attributes — the MessagePack formatters are hand-written in `src/Polhem.Api.Core/MessagePack/` |
 | BO Type | Polhem.Business | `BusinessArgs` / `BusinessResult` | Implements Contract interface, pure POCO |
 
 ### Type Conversion Flow
 
 ```text
-Client sends → LoginRequest (API Type, MessagePack)
+Client sends → LoginRequest (API Type, encoded with the request's codec)
     ↓ JsonRpcExecutor
     ↓ ApiInputConverter property mapping ({Action}Request → {Action}Args)
 BO receives → LoginArgs (BO Type, POCO)
     ↓ business logic
 BO returns → LoginResult (BO Type, POCO)
     ↓ ApiOutputConverter naming convention ({Action}Result → {Action}Response)
-Client receives → LoginResponse (API Type, MessagePack)
+Client receives → LoginResponse (API Type, encoded with the same codec)
 ```
 
 ### Key Components
 
-- **ApiInputConverter**: maps API Request property values to BO Args (matched by property name) and handles `JsonElement` from HTTP input
+- **ApiInputConverter** (internal): maps API Request property values to BO Args (matched by property name). A `Plain` body arrives as a `JsonElement` and is deserialized straight into the BO type; `object`-typed members such as filter values bind by their JSON kind (string, integer, decimal, boolean, array)
 - **ApiOutputConverter**: after execution, automatically maps BO `{Action}Result` to `{Action}Response` via reflection; results cached in `ConcurrentDictionary` (see [ADR-007](../adr/adr-007-convention-based-type-resolution.md))
 - The wire body is written by the codec the request declares (`messagepack` or `json`); it plays no part in output mapping. See [ADR-044](../adr/adr-044-payload-codec-negotiation.md).
 
@@ -155,88 +169,112 @@ ExecFunc is the framework's extension mechanism, allowing developers to add cust
 
 ### Development Steps
 
-#### 1. Define a Handler Class
+The framework's own handlers are internal. An application adds functions with a handler of its own and
+dispatches to it from the business object bound to the progId.
 
-Inherit or implement `IExecFuncHandler`, and add methods to the corresponding handler class:
+#### 1. Write a handler
 
-- Form-level: `FormExecFuncHandler`
-- System-level: `SystemExecFuncHandler`
-
-#### 2. Implement Methods
+A handler implements the marker interface `IExecFuncHandler` (`Polhem.Business`). Each public method with the
+signature `(ExecFuncArgs args, ExecFuncResult result)` is a function, and its name is the `FuncId` a client sends.
+Every such method declares `[ExecFuncAccessControl]` (`Polhem.Business.Attributes`): dispatch rejects a method
+without one (`ExecFuncHandlerExtensions.InvokeExecFunc`), and analyzer rule POLHEM3003 reports the omission at
+build time. Set `LocalOnly = true` on an operation that must not be reachable from a remote client.
 
 ```csharp
-// Form-level example
-public class FormExecFuncHandler
+using Polhem.Business;
+using Polhem.Business.Attributes;
+using Polhem.Definition.Collections;   // the ParameterCollection.Add extension
+using Polhem.Definition.Security;
+
+public sealed class CustomerFuncHandler : IExecFuncHandler
 {
-    /// <summary>
-    /// A simple greeting function.
-    /// </summary>
-    public void Hello(ExecFuncArgs args, ExecFuncResult result)
-    {
-        result.Parameters.Add("Hello", "Hello form-level BusinessObject");
-    }
-}
-
-// System-level example (authentication required)
-public class SystemExecFuncHandler
-{
-    private readonly IRepositoryFactory _repositoryFactory;
-
-    public SystemExecFuncHandler(IRepositoryFactory repositoryFactory)
-    {
-        _repositoryFactory = repositoryFactory;
-    }
-
-    /// <summary>
-    /// Upgrades the table schema for the specified database.
-    /// </summary>
     [ExecFuncAccessControl(ApiAccessRequirement.Authenticated)]
-    public void UpgradeTableSchema(ExecFuncArgs args, ExecFuncResult result)
+    public void Greet(ExecFuncArgs args, ExecFuncResult result)
     {
-        string databaseId = args.Parameters.GetValue<string>("DatabaseId");
-        string dbName = args.Parameters.GetValue<string>("DbName");
-        string tableName = args.Parameters.GetValue<string>("TableName");
+        string name = args.Parameters.GetValue<string>("Name", "customer");
+        result.Parameters.Add("Greeting", $"Hello, {name}");
+    }
 
-        var repo = _repositoryFactory.Create<IDatabaseRepository>();
-        bool upgraded = repo.UpgradeTableSchema(databaseId, dbName, tableName);
-        result.Parameters.Add("Upgraded", upgraded);
+    // Maintenance operation: in-process callers only.
+    [ExecFuncAccessControl(ApiAccessRequirement.Authenticated, LocalOnly = true)]
+    public void RebuildBalances(ExecFuncArgs args, ExecFuncResult result)
+    {
+        // ...
+        result.Parameters.Add("Rebuilt", true);
     }
 }
 ```
 
-#### 3. Client-Side Invocation
+#### 2. Dispatch to it from the business object
+
+`ExecFunc` and `ExecFuncAnonymous` call the protected virtual `DoExecFunc` / `DoExecFuncAnonymous` of
+`BusinessObject`. Override the one you need in the business object bound to the progId (see "Customising the BO
+for a ProgId" below) and invoke the handler, passing the access requirement of that entry point and `IsLocalCall`.
+Hand a `FuncId` your handler does not declare to the base implementation, so the framework's own functions stay
+reachable:
 
 ```csharp
-// Form-level
-var connector = new FormApiConnector(accessToken, "Employee");
-var response = await connector.ExecFuncAsync(new ExecFuncRequest { FuncId = "Hello" });
+protected override void DoExecFunc(ExecFuncArgs args, ExecFuncResult result)
+{
+    var handler = new CustomerFuncHandler();
+    if (handler.GetType().GetMethod(args.FuncId) is null)
+    {
+        base.DoExecFunc(args, result);
+        return;
+    }
+    handler.InvokeExecFunc(ApiAccessRequirement.Authenticated, IsLocalCall, args, result);
+}
+```
 
-// System-level
-var sysConnector = new SystemApiConnector(accessToken);
-var response = await sysConnector.ExecFuncAsync(new ExecFuncRequest
+The `System` progId works the same way, through a subclass of `SystemBusinessObject` bound in
+`ProgramSettings.xml`.
+
+#### 3. Client-side invocation
+
+```csharp
+// Form-level: the request goes to the business object of progId "Customer".
+var connector = new FormApiConnector(endpoint, accessToken, "Customer");
+var response = await connector.ExecFuncAsync(new ExecFuncRequest
+{
+    FuncId = "Greet",
+    Parameters = new ParameterCollection { { "Name", "Contoso" } }
+});
+string greeting = response.Parameters!.GetValue<string>("Greeting");
+```
+
+System-level functions go through `SystemApiConnector.ExecFuncAsync` in the same way. The framework's own system
+functions `UpgradeTableSchema` and `TestConnection` are `LocalOnly`, so only a connector that dispatches in
+process — one constructed with the backend's `IServiceProvider` — can run them:
+
+```csharp
+var sysConnector = new SystemApiConnector(serviceProvider, accessToken);
+var upgrade = await sysConnector.ExecFuncAsync(new ExecFuncRequest
 {
     FuncId = "UpgradeTableSchema",
     Parameters = new ParameterCollection
     {
-        { "DatabaseId", "main" },
-        { "DbName", "MyDb" },
-        { "TableName", "Employee" }
+        { "DatabaseId", "company01" },
+        { "CategoryId", "company" },
+        { "TableName", "ft_customer" }
     }
 });
+bool upgraded = upgrade.Parameters!.GetValue<bool>("Upgraded");
 ```
 
 ### Execution Flow
 
 ```text
-Client: await connector.ExecFuncAsync(new ExecFuncRequest { FuncId = "Hello" })
-  → ApiConnector.ExecuteAsync<ExecFuncResponse>("ExecFunc", args)
-  → JsonRpcRequest { method: "Employee.ExecFunc" }
-  → JsonRpcExecutor calls FormBusinessObject.ExecFunc()
-  → BusinessObject.DoExecFunc()
-  → handler.InvokeExecFunc()  // ExecFuncHandlerExtensions extension method
-    → handler.GetType().GetMethod("Hello")  // reflection lookup
-    → check [ExecFuncAccessControl] attribute
-    → method.Invoke(handler, args, result)  // reflection invocation
+Client: await connector.ExecFuncAsync(new ExecFuncRequest { FuncId = "Greet" })
+  → ApiConnector.ExecuteAsync<ExecFuncResponse>("ExecFunc", request)
+  → JsonRpcRequest { method: "Customer.ExecFunc" }
+  → JsonRpcExecutor calls CustomerBo.ExecFunc()        // BusinessObject.ExecFunc
+  → CustomerBo.DoExecFunc()                            // your override
+  → handler.InvokeExecFunc(...)                        // ExecFuncHandlerExtensions
+    → handler.GetType().GetMethod("Greet")             // reflection lookup
+    → no [ExecFuncAccessControl] → rejected
+    → LocalOnly and a remote caller → rejected
+    → Authenticated method on the anonymous entry point → rejected (-32001)
+    → method.Invoke(handler, args, result)
   → return ExecFuncResult
 ```
 
@@ -248,16 +286,17 @@ FormSchema is the framework's definition hub, simultaneously driving UI, databas
 
 ```text
 FormSchema (Single Source of Truth)
-├── ProgId: "Employee"
-├── DisplayName: "Employee Management"
-├── CategoryId: "common"        ← required, determines which DbCategory the derived TableSchema belongs to
+├── ProgId: "Customer"
+├── DisplayName: "Customers"
+├── CategoryId: "company"       ← required: common / company / log
 ├── Tables: FormTableCollection
-│   ├── Master: FormTable
-│   │   ├── TableName: "Employee"
-│   │   ├── DbTableName: "dbo.Employee"
+│   ├── Master: FormTable (TableName equals ProgId)
+│   │   ├── TableName: "Customer"
+│   │   ├── DbTableName: "ft_customer"
 │   │   └── Fields: FormFieldCollection
 │   └── Detail: FormTable (detail table)
-│       ├── TableName: "EmployeeHistory"
+│       ├── TableName: "CustomerContact"
+│       ├── DbTableName: "ft_customer_contact"
 │       └── Fields: FormFieldCollection
 │
 ├── → derives TableSchema (database dimension)
@@ -267,10 +306,12 @@ FormSchema (Single Source of Truth)
 
 ### CategoryId and DbCategory Routing
 
-Every FormSchema must specify `CategoryId`, which corresponds to the `Id` of a `<DbCategory Id="...">` in `DbCategorySettings.xml`. `CategoryId` simultaneously determines:
+Every FormSchema must specify `CategoryId`, which corresponds to the `Id` of a `<DbCategory Id="...">` in `DbCategorySettings.xml`. It accepts only `common`, `company` and `log`: the form repository maps the value to a `DbScope` and throws `InvalidOperationException` ("Unknown schema.CategoryId") for anything else. `CategoryId` simultaneously determines:
 
 - TableSchemas derived from this FormSchema are persisted under the `TableSchema/{categoryId}/` subdirectory
-- Which database connection the tables of this FormSchema belong to (derived via DbCategory → `DbScope` → `IRepositoryDatabaseRouter`)
+- Which database the tables of this FormSchema live in (`CategoryId` → `DbScope` → `IRepositoryDatabaseRouter`)
+
+Business tables (`ft_*`) belong in `company`, the per-company database. `common` holds the framework tables shared across companies, and `log` the audit and anomaly logs. The framework ships its own `Employee` and `Department` forms (company tables `st_employee` / `st_department`), so an application does not reuse those progIds; see [Framework-Reserved Names](framework-reserved-names.md).
 
 `SaveFormSchema` validates that `CategoryId` is non-empty (via `TableSchemaGenerator.GetCategoryId(formSchema)`); throws `InvalidOperationException` when missing.
 
@@ -286,9 +327,9 @@ var repository = CreateDataFormRepository(ProgId);
 //         .CreateFormRepository<IDataFormRepository>(AccessToken, ProgId);
 
 // Custom bo repo — resolve databaseId for the target scope, then build the repo
-var dbId = ResolveDatabaseId(DbScope.Log);   // "log" (no session needed)
-var dbId = ResolveDatabaseId(DbScope.Company); // routes via session.CompanyId → CompanyInfo.CompanyDatabaseId
-var repo = new MonthlySalesReportRepo(Services.GetRequiredService<IDbAccessFactory>(), dbId);
+var logDbId = ResolveDatabaseId(DbScope.Log);         // "log" (no session needed)
+var companyDbId = ResolveDatabaseId(DbScope.Company); // routes via session.CompanyId → CompanyInfo.CompanyDatabaseId
+var repo = new MonthlySalesReportRepo(Services.GetRequiredService<IDbAccessFactory>(), companyDbId);
 ```
 
 `DbScope` resolution rules:
@@ -297,7 +338,7 @@ var repo = new MonthlySalesReportRepo(Services.GetRequiredService<IDbAccessFacto
 |-----------|----------------------|-------------------|
 | `Common` | Fixed `"common"` | No |
 | `Log` | Fixed `"log"` | No (Login / Logout etc. can write audit log pre-EnterCompany) |
-| `Company` | `SessionInfo.CompanyId` → `CompanyInfo.CompanyDatabaseId` | Yes — throws `UnauthorizedAccessException` / `CompanyNotEntered` if not ready |
+| `Company` | `SessionInfo.CompanyId` → `CompanyInfo.CompanyDatabaseId` | Yes — throws `AuthenticationRequiredException` without a session and `CompanyNotEnteredException` before `EnterCompany` |
 
 See [ADR-010 § "Later extension: runtime routing"](../adr/adr-010-logical-database-category.md) for the routing design and [ADR-012](../adr/adr-012-session-company-context.md) for the session lifecycle that drives `DbScope.Company`.
 
@@ -312,7 +353,7 @@ namespace MyErp.Business;
 
 public class CustomerBo : FormBusinessObject
 {
-    public CustomerBo(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
+    public CustomerBo(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
         : base(ctx, accessToken, progId, isLocalCall) { }
 
     // Override a Do* hook (see the next section) or add custom methods
@@ -341,9 +382,9 @@ public class CustomerBo : FormBusinessObject
 
 Incremental adoption is still safe, because **declaring nothing is not a failure**: a progId the registry does not mention, or one whose `BusinessObject` is empty, resolves to `FormBusinessObject` as before. Only declare `BusinessObject` for the progIds you actually customise.
 
-The **reserved progIds** `System` and `AuditLog` follow the same policy with a tighter base-type constraint: they must resolve to the framework object for that axis, or a subclass of it. The host registers both progIds at startup when they are absent, so an existing `ProgramSettings.xml` needs no manual edit.
+The **reserved progIds** (`ReservedProgIds.All`: `System`, `AuditLog`, `AuditRule`) follow the same policy with a tighter base-type constraint: `System` and `AuditLog` must resolve to the framework object for that axis or a subclass of it, and `AuditRule` to a `FormBusinessObject`. When one of them has no entry, the resolver uses the framework's own type, and at startup a Generic Host writes the missing entries to the registry (`SaveProgramSettings`), so an existing `ProgramSettings.xml` needs no manual edit.
 
-Resolved types are cached for the lifetime of the in-memory `ProgramSettings` instance; when `ProgramSettingsCache` reloads the file (via its file watcher), the cache resets automatically.
+A resolved type is reused only while the `ProgramSettings` instance it was resolved from is still the cached one; after the file changes and the definition cache loads a new instance, the next call resolves again.
 
 ### BO Extension Points and the Transaction Boundary
 
@@ -368,28 +409,40 @@ connection pools drain and distributed deadlocks appear.
 
 #### Aborting the operation
 
-Throw `UserMessageException` — the framework's business-flow interruption signal. It travels to the
-client as `JsonRpcErrorCode.UserMessage` and is rebuilt there as the same type, so the message
-reaches the end user unchanged. The schema-driven rule engine uses the same mechanism for its
-`BeforeSave` validation rules.
+Throw `UserMessageException` (`Polhem.Base.Exceptions`) — the framework's business-flow interruption
+signal. It travels to the client as `JsonRpcErrorCode.UserMessage` and is rebuilt there as the same type,
+so its message reaches the end user. Any other exception reaches a remote caller only as a fixed, generic
+message. The schema-driven rule engine uses the same mechanism for its `BeforeSave` validation rules.
+
+For a message that should follow the user's language, use the keyed constructor: a language key
+(`"{namespace}.{subKey}"`), the English text as a composite format, and its arguments.
 
 ```csharp
 protected override void DoBeforeSave(SaveContext context)
 {
     base.DoBeforeSave(context);
     if (/* business condition fails */)
-        throw new UserMessageException("The credit limit for this customer has been exceeded.");
+        throw new UserMessageException(
+            "Customer.CreditLimitExceeded",
+            "The credit limit of {0} has been exceeded.",
+            creditLimit);
 }
 ```
+
+Before the error leaves the server, the key is looked up in the deployment's language resources (namespace
+`Customer`, item `CreditLimitExceeded`) in the session's culture, walking the same fallback chain as every
+other lookup (`LanguageFallback`: the culture, its parent cultures, then `CommonConfiguration.DefaultLanguage`,
+except that an English culture stops at the English text). When no culture on the chain translates the key,
+the English text is sent. The constructors without a key send their message as written.
 
 #### Three consequences to design around
 
 **Validation in `DoBeforeSave` has a time-of-check to time-of-use gap.** A read that finds stock
 sufficient can be invalidated by another transaction before `DoSave` runs, and the save still
 proceeds. Throwing an exception settles *how* to abort; it does not make the check current at write
-time. Checks that must be atomic belong inside the transaction — a conditional UPDATE, a unique
-index, or a check constraint in a repository subclass. Reads in `DoBeforeSave` are for rejecting
-obviously wrong input, not for guarding against concurrency.
+time. Checks that must be atomic belong inside the transaction or the database — a conditional UPDATE,
+a unique index, or a check constraint. Reads in `DoBeforeSave` are for rejecting obviously wrong input,
+not for guarding against concurrency.
 
 **The change audit is not atomic with the data.** It is written after `DoSave` returns, so a record
 can persist while its audit entry fails. Raising the audit into the transaction would make `DoSave`
@@ -403,8 +456,14 @@ synchronously and then failing leaves nothing to retry from.
 
 #### When logic must be atomic with the record
 
-Put it in the repository, not the business object. Subclass `DataFormRepository` and extend its
-`Save` so the extra statements join the same batch — see the next section.
+`DataFormRepository.Save` is not virtual and offers no hook for adding statements to its transaction,
+which `DbAccess.UpdateDataTables` opens and commits. What commits atomically with the record is therefore
+either enforced by the database (unique indexes, check and foreign key constraints) or written by a write
+path you own: a method on a custom repository (see "Customising the Repository for a ProgId" below) that
+opens a connection, begins a `DbTransaction`, runs every statement through
+`new DbAccess(connection, databaseType).Execute(command, transaction)` and commits once — the pattern the
+framework's own repositories use. A `DoSave` override then calls it in place of `base.DoSave(context)` and
+sets `context.RefreshedDataSet` and `context.AffectedRows` itself.
 
 ### Business Plugins
 
@@ -428,19 +487,20 @@ exactly one stage** — a requirement spanning two of them is two classes.
 ```csharp
 public class CreditLimitPlugin : FormBusinessPlugin
 {
-    public CreditLimitPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+    public CreditLimitPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
         : base(ctx, accessToken, progId) { }
 
     public override void BeforeSave(SaveContext context)
     {
         if (/* over the limit */)
-            throw new UserMessageException("The credit limit for this customer has been exceeded.");
+            throw new UserMessageException(
+                "Customer.CreditLimitExceeded", "The credit limit of {0} has been exceeded.", creditLimit);
     }
 }
 ```
 
-The constructor takes the same three arguments a custom repository does, and may declare further
-dependencies after them — they are injected from the container.
+The constructor takes the per-call business context, the access token and the progId, and may declare
+further dependencies after them — they are injected from the container.
 
 #### The four stages
 
@@ -498,9 +558,10 @@ A base-layer file at `{DefinePath}/PluginSettings.xml` is also read, and the two
 base chain runs first, then the tenant's. A tenant therefore cannot suppress a packaged plugin —
 to remove packaged behaviour, subclass the business object and override the step.
 
-Maintain the tenant file through `SystemBO.GetCustomizePluginSettings` /
-`SaveCustomizePluginSettings`. Both are `LocalOnly`: these bindings decide which code runs inside
-the save and delete pipelines, so the maintenance tool runs on the host, in-process. Saving
+Maintain the tenant file through `SystemBusinessObject.GetCustomizePluginSettings` /
+`SaveCustomizePluginSettings` (`SystemApiConnector.GetCustomizePluginSettingsAsync` /
+`SaveCustomizePluginSettingsAsync` on the client). Both are `LocalOnly`: these bindings decide which code
+runs inside the save and delete pipelines, so the maintenance tool runs on the host, in-process. Saving
 validates every binding — the type must load, derive from `FormBusinessPlugin`, and override exactly
 the stage the binding declares — and one bad entry rejects the whole definition.
 
@@ -514,7 +575,7 @@ That matters most for the common case of propagating a change to another system:
 
 | Reliability required | Where it belongs |
 |---|---|
-| Must not be lost (finance, stock, external commitments) | Register an outbox row inside the transaction, in a custom repository, and send from a background worker |
+| Must not be lost (finance, stock, external commitments) | Write an outbox row in the same transaction as the record, through a write path you own (see "When logic must be atomic with the record"), and send from a background worker |
 | Best effort, or a reconciliation job catches misses | An `AfterSave` / `AfterDelete` plugin sending directly |
 
 A plugin talking to another system should also decide for itself whether a failure warrants
@@ -548,7 +609,12 @@ public sealed class OrderRepository : DataFormRepository, IOrderRepository
     public OrderRepository(IRepositoryContext ctx, Guid accessToken, string progId)
         : base(ctx, accessToken, progId) { }
 
-    public string GetStoredStatus(Guid rowId) { /* CreateDbAccess().Execute(...) */ }
+    public string GetStoredStatus(Guid rowId)
+    {
+        var spec = new DbCommandSpec(DbCommandKind.Scalar,
+            "SELECT status FROM ft_order WHERE sys_rowid = {0}", rowId);
+        return CreateDbAccess().Execute(spec).Scalar as string ?? string.Empty;
+    }
 }
 ```
 
@@ -569,18 +635,22 @@ private IOrderRepository Repository() => CreateFormRepository<IOrderRepository>(
 
 A subclass may add its own dependencies — the factory builds it with `ActivatorUtilities`, so interface-typed constructor parameters are injected from DI. It must not add a second `string` or `Guid` parameter, since those are already supplied by the factory.
 
+A subclass adds members; it does not change the inherited ones. `DataFormRepository`'s `GetList`, `GetData`, `Save`, `Delete` and the other `IDataFormRepository` members are not virtual. The protected `CreateDbAccess()`, `DatabaseId` and `Context` (connection manager, cache-notify service) are what its own members build on.
+
 ### FormSchema → SQL Generation
 
 ```text
-FormApiConnector queries data
-  → FormBusinessObject handles the request
-  → IFormCommandBuilder (per-DB provider) is used
-    → Retrieves FormSchema from IDefineAccess (DI ctor injected)
-    → SelectCommandBuilder.Build(tableName, fields, filter, sort)
-      → FromBuilder: produce FROM clause (with JOIN)
-      → WhereBuilder: produce WHERE clause from FilterCondition
-      → SelectBuilder: produce SELECT field list
-      → SortBuilder: produce ORDER BY clause
+FormApiConnector.GetListAsync(...)
+  → FormBusinessObject.GetList handles the request
+  → DataFormRepository (bound to the progId) runs the query
+    → IFormCommandBuilder, created for the connection's database type by
+      DbDialectRegistry.Get(databaseType).CreateFormCommandBuilder(formSchema, defineAccess)
+    → BuildSelect(tableName, selectFields, filter, sortFields, ...)
+      → SelectCommandBuilder.Build(...)
+        → SelectBuilder: produce SELECT field list
+        → FromBuilder: produce FROM clause (with JOINs for relation fields)
+        → WhereBuilder: produce WHERE clause from the FilterNode tree
+        → SortBuilder: produce ORDER BY clause
     → returns parameterized DbCommandSpec
   → DbAccess.Execute(spec) executes the query
 ```
@@ -588,16 +658,20 @@ FormApiConnector queries data
 ### FilterCondition Query Construction
 
 ```csharp
-// Build a filter
-var filter = new FilterGroup(LogicalOperator.And)
-{
-    FilterCondition.Equal("Department", "IT"),
-    FilterCondition.Contains("Name", "Wang"),
-    FilterCondition.Between("Salary", 30000, 80000)
-};
+// Build a filter: all three conditions must hold
+FilterNode filter = FilterGroup.All(
+    FilterCondition.Equal("region", "North"),
+    FilterCondition.Contains("sys_name", "Trading"),
+    FilterCondition.Between("credit_limit", 30000m, 80000m));
+
+var list = await formConnector.GetListAsync(selectFields: "sys_id,sys_name", filter: filter);
 ```
 
-Available comparison operators: `Equal`, `Like`, `Contains`, `StartsWith`, `Between`, `In`, `GreaterThan`, `LessThan`, etc.
+`FilterGroup.All` combines with AND and `FilterGroup.Any` with OR; groups nest. `FilterCondition` has factory
+methods for `Equal`, `NotEqual`, `Contains`, `StartsWith`, `EndsWith`, `Between` and `In`; every other
+operator of `ComparisonOperator` (for example `GreaterThan`) goes through the constructor
+`new FilterCondition(fieldName, ComparisonOperator.GreaterThan, value)`. Field names are the form's field
+names, and `GetList` refuses a filter or sort on a field the form does not declare.
 
 ## Numeric Semantics, Company Decimals, and Rounding
 
@@ -661,29 +735,29 @@ In-process caches (`Polhem.ObjectCaching`) are evicted immediately on the writin
 
 ### Making a cache invalidatable — nothing to do
 
-A cache participates in cross-process invalidation by declaring a notify key in its `GetPolicy()`:
+A cache built on `ObjectCache<T>` or `KeyObjectCache<T>` participates in cross-process invalidation by default. When its `GetPolicy()` leaves `ChangeNotifyKey` unset, the base class applies `"{CacheGroup}:*"` (single-object cache) or `"{CacheGroup}:{key}"` (keyed cache), where `CacheGroup` defaults to the cached type's name. Entries carrying the key are given an expiration token bound to the key's published version.
+
+Set the key yourself only when the cache should listen to a different one:
 
 ```csharp
 policy.ChangeNotifyKey = changeSource.NotifyKey;
 ```
-
-Entries carrying that key are given an expiration token bound to the key's published version. **This declaration is required** — a cache that does not set `ChangeNotifyKey` is never invalidated by the poller, however it is registered.
 
 ### Triggering an invalidation — bump in the same transaction
 
 When a writer changes source data in a way that matters to a cache, it bumps the notification row **in the same transaction as the data change**:
 
 ```csharp
-// "group:entity" key whose group equals the target cache's type name
+// "group:entity" key whose group equals the target cache's CacheGroup (its type name by default)
 _cacheNotify.Touch($"CompanyInfo:{companyId}", transaction, databaseType);
 ```
 
 Conventions for the `"group:entity"` key:
 
-- **group** = the cached type's name (`CompanyInfo`, `FormSchema`, `LanguageResource`, …).
+- **group** = the cache's `CacheGroup`, which is the cached type's name unless the cache overrides it (`CompanyInfo`, `FormSchema`, `LanguageResource`, …).
 - **entity** = exactly the key the cache's `Remove` uses. Single-key caches pass the key as-is (`progId`, `layoutId`); composite-key caches use the **dot** form (`TableSchema` → `"common.st_user"`, `LanguageResource` → `"zh-TW.common"`); single-object caches use `"*"` (`"DbCategorySettings:*"`).
 
-> ⚠️ The bump **must** commit in the same transaction as the data change. Committing it separately lets the poller observe the new version before the data is visible, which reloads a stale value and marks it fresh — permanently stale. `DbDefineStorage.SaveX` already does this; custom repositories must pass their write `DbTransaction` to `Touch`.
+> ⚠️ The bump **must** commit in the same transaction as the data change. Committing it separately lets the poller observe the new version before the data is visible, which reloads a stale value and marks it fresh — permanently stale. `DbDefineStorage.SaveX` already does this; a custom repository passes its write `DbTransaction` to `Touch` (the service is `ICacheNotifyService`, available to repositories as `Context.CacheNotify`, which is `null` when the host registers none).
 
 ### How eviction reaches other nodes
 
@@ -702,7 +776,7 @@ Conventions for the `"group:entity"` key:
 
 ## Frontend API Connection Patterns
 
-Polhem supports three categories of frontend hosts, each consuming the API in a structurally different way. For the design rationale see [ADR-013](../adr/adr-013-frontend-api-connection-strategy.md); this section covers the **practical usage** for each category.
+The two .NET UI families consume the API in structurally different ways. For the design rationale see [ADR-013](../adr/adr-013-frontend-api-connection-strategy.md); this section covers the **practical usage** of each. Which platforms each one runs on, and what a browser or mobile head has to set up, is in [Platform Support](platform-support.md).
 
 ### Decision Tree
 
@@ -711,41 +785,50 @@ Polhem supports three categories of frontend hosts, each consuming the API in a 
 ```
 What kind of frontend are you building?
 │
-├── Desktop / native UI (Avalonia, or your own WinForms / WPF host)
+├── Avalonia (desktop, browser, iOS, Android), or your own WinForms / WPF host
 │   → Use the Polhem.UI.* family via the ClientInfo static singleton
-│   → See "Desktop" section below
+│   → See "Polhem.UI.* heads" below
 │
-└── Blazor Server (ASP.NET Core server-rendered)
-    → Use Polhem.Web.Blazor.Server with DI-scoped connectors
-    → See "Blazor Server" section below
+├── Blazor Server (ASP.NET Core server-rendered)
+│   → Use Polhem.Web.Blazor.Server with circuit-scoped connectors
+│   → See "Blazor Server" below
+│
+└── No .NET (JavaScript, TypeScript, …)
+    → Call the JSON-RPC endpoint directly
+    → See JSON-RPC Frontend Integration
 ```
 
-> The framework ships two UI heads: `Polhem.UI.Avalonia` and `Polhem.Web.Blazor.Server`.
-> Any other .NET frontend — WinForms, WPF, a Blazor WASM app of your own — talks to the
-> backend through `Polhem.Api.Client` directly; there is no framework package for it.
+> The framework ships two UI packages: `Polhem.UI.Avalonia` and `Polhem.Web.Blazor.Server`.
+> Any other .NET frontend — WinForms, WPF, a Blazor WebAssembly app of your own — has no framework UI
+> package and uses `Polhem.UI.Core` (`ClientInfo`) or `Polhem.Api.Client` directly. A client without .NET
+> follows [JSON-RPC Frontend Integration](jsonrpc-frontend-integration.md).
 
-### Desktop (Polhem.UI.* family)
+### Polhem.UI.* heads (ClientInfo)
 
-Desktop frontends manage connection state through the `Polhem.UI.Core.ClientInfo` static singleton, which fits the "one process = one user" model.
+These heads manage connection state through the `Polhem.UI.Core.ClientInfo` static singleton, which fits the "one process = one user" model. The code below is the same in every head that uses it: the Avalonia desktop, browser (WebAssembly), iOS and Android heads, and a WinForms or WPF host of your own. What differs per platform is setup — the endpoint and API key storage in the browser, the publish settings, and which connection types apply — and that is covered by [Platform Support § Checklist for a browser or mobile head](platform-support.md#3-checklist-for-a-browser-or-mobile-head). A Local connection (the backend in the same process) is a desktop option; the browser and mobile heads connect Remote.
 
-**1. Call `Initialize` at app startup**:
+**1. Call `InitializeAsync` at app startup**:
 
 ```csharp
-// MyApp/Program.cs (or App.xaml.cs / MainActivity, etc.)
+// MyApp/Program.cs (or App.axaml.cs, etc.)
+using Polhem.Api.Client;
 using Polhem.UI.Core;
 
 // 1. Implement IUIViewService (provides the connection settings dialog)
-public class MyUIViewService : IUIViewService
+public sealed class MyUIViewService : IUIViewService
 {
     public async Task<bool> ShowApiConnectAsync()
     {
-        // Show a dialog asking the user for the endpoint; return true if confirmed.
-        // Concrete implementation depends on the UI framework (Avalonia Window / WinForms Form, etc.).
+        // Ask the user for the endpoint with your own dialog (an Avalonia view, a WinForms Form, …).
+        string? endpoint = await ShowEndpointDialogAsync();
+        if (endpoint is null) { return false; }      // the user cancelled
+        await ClientInfo.SetEndpointAsync(endpoint);  // validates, connects and stores it
+        return true;
     }
 }
 
 // 2. Initialize at startup — the accessors are asynchronous end-to-end, so await it.
-var supportedConnectTypes = SupportedConnectTypes.Both; // both Local and Remote allowed
+var supportedConnectTypes = SupportedConnectTypes.Remote; // Both allows Local as well (desktop only)
 if (!await ClientInfo.InitializeAsync(new MyUIViewService(), supportedConnectTypes))
 {
     // The user cancelled connection setup; exit the app.
@@ -753,107 +836,127 @@ if (!await ClientInfo.InitializeAsync(new MyUIViewService(), supportedConnectTyp
 }
 ```
 
-Internally `InitializeAsync` reads the `{ExeName}.Settings.xml` file, tries the endpoint, and falls back to `IUIViewService.ShowApiConnectAsync()` if unreachable.
+`InitializeAsync` reads the stored endpoint from `ClientInfo.EndpointStorage`, validates it and initializes the system connector; when the endpoint is missing or unreachable it calls `IUIViewService.ShowApiConnectAsync()`. The default storage is `FileEndpointStorage` (`Polhem.UI.Core`), which keeps the endpoint and the API key in a folder named after the entry assembly under the per-user local application data directory. An `Endpoint=<url>` or `ApiKey=<key>` command-line argument overrides the stored value for that run. A browser head replaces both `ClientInfo.EndpointStorage` and `ClientInfo.ApiKeyStorage`, because WebAssembly has no persistent file system.
 
-**2. Apply login result**:
+**2. Sign in, apply the result, enter a company**:
 
 ```csharp
 var loginResponse = await ClientInfo.SystemApiConnector.LoginAsync(userId, password);
 ClientInfo.ApplyLoginResult(loginResponse);
 // ClientInfo.AccessToken / UserInfo are now populated
+
+var enterResponse = await ClientInfo.SystemApiConnector.EnterCompanyAsync(companyId);
+ClientInfo.ApplyEnterCompanyResult(enterResponse);
+// ClientInfo.Company / Capabilities are now populated
 ```
+
+`ApplyLoginResult` also makes the culture the server returns — the user's `st_user.culture`, or the deployment's `CommonConfiguration.DefaultLanguage` — the process's current and default culture. The framework's own UI text, localized definition captions and the display and input of numbers and dates all read it, so a user whose account says `en-US` gets English on a Chinese operating system. Forms whose `CategoryId` is `company` need `EnterCompany` first; before it, their calls fail with `CompanyNotEnteredException`.
 
 **3. Use connectors via `ClientInfo`**:
 
 ```csharp
 // System-level API
-await ClientInfo.SystemApiConnector.PingAsync();   // returns Task — no result to assign
+PingResponse ping = await ClientInfo.SystemApiConnector.PingAsync();
 
 // Form-level API (FormBO)
-var formConnector = ClientInfo.CreateFormApiConnector("Employee");
-var listResult = await formConnector.GetListAsync(selectFields: "EmpId,EmpName");
+var formConnector = ClientInfo.CreateFormApiConnector("Customer");
+var listResult = await formConnector.GetListAsync(selectFields: "sys_id,sys_name");
 
-// Definition data (FormSchema, TableSchema, etc.)
-var schema = ClientInfo.DefineAccess.GetFormSchema("Employee");
+// Definition data (FormSchema, TableSchema, etc.), exactly as stored
+FormSchema schema = await ClientInfo.DefineAccess.GetFormSchemaAsync("Customer");
 ```
+
+`GetListAsync` without paging options returns the first page of `PagingOptions.MaxPageSize` rows; pass a `PagingOptions` to page through more. `ClientInfo.DefineAccess` returns definitions as stored, with no localization or tenant overlay. Setting `ClientInfo.UseDefinitionLoader = true` at startup makes the Avalonia `FormView`, `ListView` and `LookupDialog` load their definitions through `ClientInfo.DefinitionLoader` instead — captions in the user's language, the tenant's customization layer and the company's number formats — and code can call `ClientInfo.DefinitionLoader.GetLocalizedSchemaAsync(progId, CultureInfo.CurrentUICulture.Name)` itself. The default is off, which renders definitions as stored and costs no extra round trips.
 
 **4. Switch endpoint (user changes server)**:
 
 ```csharp
-ClientInfo.SetEndpointAsync("https://new-server.example.com/api");
-// Internally resets AccessToken and re-triggers the ApplyLoginResult flow.
+await ClientInfo.SetEndpointAsync("https://new-server.example.com/api");
+// Clears AccessToken, so the user signs in again.
 ```
+
+`SetEndpointAsync` validates the endpoint, switches the connection type, clears the access token and the user's time zone, initializes the system connector and stores the endpoint through `ClientInfo.EndpointStorage`. It does not sign in: call `LoginAsync` and `ApplyLoginResult` again.
 
 ### Blazor Server (Polhem.Web.Blazor.Server)
 
-Blazor Server uses ASP.NET Core DI to inject connectors. **Each SignalR circuit gets its own DI scope**, preventing cross-user data leakage.
+Blazor Server uses ASP.NET Core DI to build connectors. **Each SignalR circuit gets its own DI scope** — `AddPolhemBlazor` registers the connector factory and the `ApiSessionContext` as scoped — preventing cross-user data leakage. Blazor Server runs in the server process, so the trimming and platform questions of the other heads do not apply to it.
 
 **1. Register in `Program.cs`**:
 
 ```csharp
-using Polhem.Hosting; // AddPolhemFramework
+using Polhem.Hosting;                               // AddPolhemFramework
+using Polhem.Web.Blazor.Server.DependencyInjection; // AddPolhemBlazor
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Backend services (IDbConnectionManager / IDefineAccess / BO, etc.)
+// Backend services (IDbConnectionManager / IDefineAccess / BO, etc.) — the Local provider dispatches to them
 builder.Services.AddPolhemFramework(backendConfiguration, pathOptions);
 
-// Polhem.Web.Blazor.Server RCL services
-builder.Services.AddPolhemBlazor();
+// Polhem.Web.Blazor.Server services: options, connector factory, the components' UI text
+builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
 
 // Standard Blazor Server setup
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 var app = builder.Build();
-app.UsePolhemFramework();  // startup checks only — see note below
+app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.Run();
 ```
 
-> `UsePolhemFramework` registers no middleware and no endpoint — it performs startup checks (notably
-> warning when the default `ApiAuthorizationValidator` is still in place). The `POST /api` endpoint
-> comes from a controller deriving from `ApiServiceController`, so the host still needs
-> `AddControllers()` and `MapControllers()`.
+> A Blazor host that also exposes the `POST /api` endpoint — a controller deriving from `ApiServiceController`,
+> with `AddControllers()` and `MapControllers()` — calls `app.UsePolhemFramework()` as well, once the database
+> it reads exists. `UsePolhemFramework` registers no middleware and no endpoint; it runs startup checks, and
+> currently logs an error (a warning in Development) while `st_api_key` holds no enabled key, because the
+> `X-Api-Key` header is then checked for presence only. See [API Key Management](api-key-management.md).
 
-**2. Inject connectors in a Razor component**:
+**2. Build connectors in a Razor component**:
 
 ```razor
-@page "/employees"
-@inject SystemApiConnector SystemConnector
+@page "/customers"
+@using Polhem.Api.Core.Messages.Form
+@using Polhem.Web.Blazor.Server.DependencyInjection
+@inject PolhemApiConnectorFactory ConnectorFactory
 
-<h3>Employees</h3>
+<h3>Customers</h3>
 
 @code {
+    // Cascaded by a PolhemAccessTokenProvider around the page.
+    [CascadingParameter] public Guid AccessToken { get; set; }
+
     private GetListResponse? listResult;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        var formConnector = new FormApiConnector(/* via DI or factory */);
-        listResult = await formConnector.GetListAsync(selectFields: "EmpId,EmpName");
+        if (AccessToken == Guid.Empty) { return; }
+        var formConnector = ConnectorFactory.CreateFormConnector(AccessToken, "Customer");
+        listResult = await formConnector.GetListAsync(selectFields: "sys_id,sys_name");
     }
 }
 ```
 
+`PolhemAccessTokenProvider` holds the circuit's access token and cascades it; `PolhemLoginPanel` signs in and hands the token to it; `FormPage` renders a whole form from its `ProgId`. [`samples/Blazor.Server.Demo`](../../samples/Blazor.Server.Demo/README.md) wires the three together. The components' own text comes from the `IStringLocalizer<PolhemUIText>` that `AddPolhemBlazor` registers — a `LanguageResourceStringLocalizer` that reads the host's language resources, then the translations shipped with the framework, in the circuit's current UI culture. A host that registers its own localizer for `PolhemUIText` keeps it.
+
 **3. Local vs Remote mode**:
 
-- **Local mode (in-process)**: `Polhem.Web.Blazor.Server` and the backend share the same ASP.NET Core process, so `LocalApiProvider` can call directly without HTTP overhead.
-- **Remote mode (HTTP)**: Blazor Server and the backend run in different processes / servers and communicate via `RemoteApiProvider` over HTTP.
+The mode is chosen in `AddPolhemBlazor`, and `PolhemApiConnectorFactory` builds every connector accordingly:
 
-The host application registers an `IJsonRpcProvider` implementation at startup to choose the mode (`LocalApiProvider` / `RemoteApiProvider`).
+- **Local mode (in-process)** — `options.UseLocalProvider()`, the default: the components and the backend share the ASP.NET Core process, and connectors dispatch through `LocalApiProvider` with no HTTP. **Every call is a trusted local call**: the access token check and the `LocalOnly` restriction are skipped. Use it only when every user of the site may see the whole backend, such as an internal administration tool.
+- **Remote mode (HTTP)** — `options.UseRemoteProvider("https://api.example.com/api")`: the backend runs in another process or server, connectors go through `RemoteApiProvider`, and each call is checked like any other API client's. The Blazor host then needs no `AddPolhemFramework`.
 
-### Avalonia desktop (Polhem.UI.Avalonia)
+### Avalonia (Polhem.UI.Avalonia)
 
-`Polhem.UI.Avalonia` belongs to the **`Polhem.UI.*` family**, so its API-connection pattern matches the "Desktop" section above — through the `ClientInfo` static singleton with a per-process token model.
+`Polhem.UI.Avalonia` belongs to the **`Polhem.UI.*` family**, so its API-connection pattern is the one in "Polhem.UI.* heads" above — the `ClientInfo` static singleton with a per-process token model — on every Avalonia head.
 
-Ships FormSchema-driven controls (`FormView` for a single record, `ListView` for the list, `GridControl` for grids, plus a field-editor family with `FormScope` ambient binding, all backed by `FormDataObject`) plus a file-backed `FileEndpointStorage` (persists endpoint at `Environment.SpecialFolder.LocalApplicationData/<appName>/endpoint.txt`). Single `net10.0` TFM; lower-bound pins are `Avalonia 12.0.0` + `Avalonia.Controls.DataGrid 12.0.0` (latest stable for the DataGrid sub-package). Hosts may bring a newer `Avalonia 12.0.x` transitively.
+It ships FormSchema-driven controls: `FormView` for a single record, `ListView` for the list, `GridControl` for grids, plus a field-editor family with `FormScope` ambient binding, all backed by `FormDataObject`. The package targets `net10.0`; the platform target framework belongs to each head project.
 
 ```csharp
-// Avalonia host bootstrap — wire EndpointStorage BEFORE any UI control instantiates.
+// Avalonia desktop head — configure ClientInfo BEFORE any UI control instantiates.
 public static void Main(string[] args)
 {
-    ApiClientInfo.ApiKey = "my-app";
     ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Remote;
-    ClientInfo.EndpointStorage = new FileEndpointStorage("MyApp");
+    // The shipped key seeds empty storage on first run; after that the stored value wins.
+    ClientInfo.ApplyApiKey("my-app-key");
 
     BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
 }
@@ -861,13 +964,13 @@ public static void Main(string[] args)
 
 `FormView` resolves `Schema` / `FormConnector` / `AccessToken` from `ClientInfo` when the host only sets `ProgId`. `GridControl` (a `ContentControl` composite exposing an inner `DataGrid` as `InnerGrid`) renders cells through `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` + code-fetch (not `Binding "[FieldName]"`) — see [ADR-020](../adr/adr-020-avalonia-datagrid-binding-strategy.md) for why — and offers two editing models through `GridEditMode` (`InCell` cell editing / `EditForm` popup row editing); see [ADR-021](../adr/adr-021-avalonia-datagrid-editing-strategy.md). Field editors bind ambiently: set `FormScope.DataObject` once on a container and every descendant editor with a `FieldName` wires itself.
 
-Worked examples: [`apps/Polhem.Northwind`](../../apps/Polhem.Northwind/README.md) (full CRUD flow, four heads) and [`samples/Avalonia.DemoCenter`](../../samples/Avalonia.DemoCenter/README.md) (control demo center).
+Worked examples: [`apps/Polhem.Northwind`](../../apps/Polhem.Northwind/README.md) (full CRUD flow; desktop, browser, iOS and Android heads over one shared UI project) and [`samples/Avalonia.DemoCenter`](../../samples/Avalonia.DemoCenter/README.md) (control demo center).
 
 ### Quick Reference
 
 | Frontend | Connection abstraction | Token tenancy | Endpoint persistence | Mode | Registration |
 |---------|-----------------------|---------------|--------------------|------|-------------|
-| Desktop (Avalonia, or your own WinForms / WPF host) | `ClientInfo` static | **1 user / process** (`ClientInfo._accessToken` static) | Local file + `IEndpointStorage` | Local or Remote | `ClientInfo.InitializeAsync` at startup |
-| Blazor Server | DI scope | **N users / process** (per SignalR circuit) | appsettings / startup injection | Local or Remote | `AddPolhemFramework` + `AddPolhemBlazor` |
+| `Polhem.UI.*` heads (Avalonia on desktop, browser, iOS, Android; your own WinForms / WPF host) | `ClientInfo` static | **1 user / process** (a static field behind `ClientInfo.AccessToken`) | `ClientInfo.EndpointStorage` (`FileEndpointStorage` by default; replaced in the browser) | Remote; Local on desktop | `ClientInfo.InitializeAsync` at startup |
+| Blazor Server | DI scope | **N users / process** (per SignalR circuit) | Startup configuration (`UseRemoteProvider(endpoint)`) | Local or Remote | `AddPolhemBlazor` (+ `AddPolhemFramework` for Local) |
 
-> ⚠️ **Do not use `Polhem.UI.Core.ClientInfo` in Blazor environments.** Its `_accessToken` is a `private static Guid` — only **one** AccessToken per process. In Blazor Server, where one process serves N concurrent user circuits, a later login overwrites the prior user's token, causing cross-user data leakage. See [ADR-013](../adr/adr-013-frontend-api-connection-strategy.md).
+> ⚠️ **Do not use `Polhem.UI.Core.ClientInfo` in Blazor Server.** It keeps the access token in a single static field — only **one** AccessToken per process. In Blazor Server, where one process serves N concurrent user circuits, a later login overwrites the prior user's token, causing cross-user data leakage. See [ADR-013](../adr/adr-013-frontend-api-connection-strategy.md).
