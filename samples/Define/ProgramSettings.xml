@@ -2,7 +2,7 @@
 <ProgramSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Items>
     <ProgramItem ProgId="System" DisplayName="System" BusinessObject="Polhem.Samples.Shared.DemoAuthenticatingSystemBusinessObject, Polhem.Samples.Shared" />
-    <ProgramItem ProgId="AuditLog" DisplayName="AuditLog" BusinessObject="Polhem.Business.AuditLog.LogBusinessObject, Polhem.Business" />
+    <ProgramItem ProgId="AuditLog" DisplayName="AuditLog" BusinessObject="Polhem.Business.AuditLog.AuditLogBusinessObject, Polhem.Business" />
     <!-- QuickStart.Server's anonymous Echo method. Only that host ships the assembly; another sample host that is
          asked for "Echo" fails with a message naming this binding. -->
     <ProgramItem ProgId="Echo" DisplayName="Echo" BusinessObject="QuickStart.Server.BusinessObjects.EchoBusinessObject, QuickStart.Server" />

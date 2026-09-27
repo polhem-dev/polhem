@@ -1,12 +1,12 @@
 using System.ComponentModel;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Organization;
-using Polhem.ObjectCaching.Services;
+using Polhem.Business.Session;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Repository.Abstractions.Form;
 using Polhem.Repository.Abstractions.System;
 
-namespace Polhem.ObjectCaching.UnitTests.Services
+namespace Polhem.Business.UnitTests.Session
 {
     /// <summary>
     /// Tests of how <c>EmployeeContextResolver.Resolve</c> chains its lookups, isolated with a fake user and employee

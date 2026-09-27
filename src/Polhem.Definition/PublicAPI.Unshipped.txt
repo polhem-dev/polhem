@@ -75,3 +75,63 @@ Polhem.Definition.Security.ApiKeyInfo.KeyType.init -> void
 Polhem.Definition.Security.ApiKeyInfo.SysId.init -> void
 Polhem.Definition.Security.ApiKeyInfo.SysName.init -> void
 Polhem.Definition.Organization.DepartmentNode.Children.init -> void
+Polhem.Definition.AuditLogActions
+Polhem.Definition.BusinessObjectContext
+Polhem.Definition.BusinessObjectContext.BoFactory.get -> Polhem.Definition.IBusinessObjectFactory!
+Polhem.Definition.BusinessObjectContext.BoFactory.init -> void
+Polhem.Definition.BusinessObjectContext.BusinessObjectContext() -> void
+Polhem.Definition.BusinessObjectContext.DefineAccess.get -> Polhem.Definition.Storage.IDefineAccess!
+Polhem.Definition.BusinessObjectContext.DefineAccess.init -> void
+Polhem.Definition.BusinessObjectContext.LanguageService.get -> Polhem.Definition.Language.ILanguageService!
+Polhem.Definition.BusinessObjectContext.LanguageService.init -> void
+Polhem.Definition.BusinessObjectContext.Services.get -> System.IServiceProvider!
+Polhem.Definition.BusinessObjectContext.Services.init -> void
+Polhem.Definition.BusinessObjectContext.SessionInfoService.get -> Polhem.Definition.Identity.ISessionInfoService!
+Polhem.Definition.BusinessObjectContext.SessionInfoService.init -> void
+Polhem.Definition.IBusinessObjectContext
+Polhem.Definition.IBusinessObjectContext.BoFactory.get -> Polhem.Definition.IBusinessObjectFactory!
+Polhem.Definition.IBusinessObjectContext.DefineAccess.get -> Polhem.Definition.Storage.IDefineAccess!
+Polhem.Definition.IBusinessObjectContext.LanguageService.get -> Polhem.Definition.Language.ILanguageService!
+Polhem.Definition.IBusinessObjectContext.Services.get -> System.IServiceProvider!
+Polhem.Definition.IBusinessObjectContext.SessionInfoService.get -> Polhem.Definition.Identity.ISessionInfoService!
+Polhem.Definition.Identity.CompanyRolePermissions.GetAllowed(System.Collections.Generic.IEnumerable<string!>! roleIds, string! modelId) -> Polhem.Definition.Settings.PermissionActions
+Polhem.Definition.Identity.CompanyRolePermissions.GetAllowedByModel(System.Collections.Generic.IEnumerable<string!>! roleIds) -> System.Collections.Generic.Dictionary<string!, Polhem.Definition.Settings.PermissionActions>!
+Polhem.Definition.Identity.CompanyRolePermissions.GetEffectiveScopes(System.Collections.Generic.IEnumerable<string!>! roleIds, string! modelId, Polhem.Definition.Settings.PermissionActions action) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Settings.ScopeStrategy>!
+Polhem.Definition.Identity.DeploymentAction.None = 0 -> Polhem.Definition.Identity.DeploymentAction
+Polhem.Definition.Identity.ICompanyAuthorizationService.Can(System.Guid accessToken, string! modelId, Polhem.Definition.Settings.PermissionActions action) -> bool
+Polhem.Definition.Identity.IScopeResolver.ResolveFilter(System.Guid accessToken, string! modelId, Polhem.Definition.Settings.PermissionActions action, Polhem.Definition.Forms.FormSchema! formSchema) -> Polhem.Definition.Filters.FilterNode?
+Polhem.Definition.Identity.RoleGrantRow.Action.get -> Polhem.Definition.Settings.PermissionActions
+Polhem.Definition.Identity.RoleGrantRow.Deconstruct(out string! RoleId, out string! ModelId, out Polhem.Definition.Settings.PermissionActions Action, out Polhem.Definition.Settings.ScopeStrategy Scope) -> void
+Polhem.Definition.Identity.RoleGrantRow.RoleGrantRow(string! RoleId, string! ModelId, Polhem.Definition.Settings.PermissionActions Action, Polhem.Definition.Settings.ScopeStrategy Scope) -> void
+Polhem.Definition.Identity.SessionUser.UserId.get -> string!
+Polhem.Definition.Identity.SessionUser.UserId.set -> void
+Polhem.Definition.Language.LanguageResourceStringLocalizer<T>
+Polhem.Definition.Language.LanguageResourceStringLocalizer<T>.GetAllStrings(bool includeParentCultures) -> System.Collections.Generic.IEnumerable<Microsoft.Extensions.Localization.LocalizedString!>!
+Polhem.Definition.Language.LanguageResourceStringLocalizer<T>.LanguageResourceStringLocalizer(Polhem.Definition.Language.ILanguageService! service) -> void
+Polhem.Definition.Language.LanguageResourceStringLocalizer<T>.LanguageResourceStringLocalizer(Polhem.Definition.Language.ILanguageService! service, System.Func<string!>! langProvider) -> void
+Polhem.Definition.Language.LanguageResourceStringLocalizer<T>.LanguageResourceStringLocalizer(Polhem.Definition.Language.ILanguageService! service, System.Func<string!>! langProvider, System.Func<string!>! customizeIdProvider) -> void
+Polhem.Definition.Language.LanguageResourceStringLocalizer<T>.this[string! name, params object![]! arguments].get -> Microsoft.Extensions.Localization.LocalizedString!
+Polhem.Definition.Language.LanguageResourceStringLocalizer<T>.this[string! name].get -> Microsoft.Extensions.Localization.LocalizedString!
+Polhem.Definition.Logging.AnomalyKind.None = 0 -> Polhem.Definition.Logging.AnomalyKind
+Polhem.Definition.Logging.ChangeKind.None = 0 -> Polhem.Definition.Logging.ChangeKind
+Polhem.Definition.Security.ApiKeyType.None = 0 -> Polhem.Definition.Security.ApiKeyType
+Polhem.Definition.Settings.PermissionActions
+Polhem.Definition.Settings.PermissionActions.Create = 1 -> Polhem.Definition.Settings.PermissionActions
+Polhem.Definition.Settings.PermissionActions.Delete = 8 -> Polhem.Definition.Settings.PermissionActions
+Polhem.Definition.Settings.PermissionActions.Export = 32 -> Polhem.Definition.Settings.PermissionActions
+Polhem.Definition.Settings.PermissionActions.None = 0 -> Polhem.Definition.Settings.PermissionActions
+Polhem.Definition.Settings.PermissionActions.Print = 16 -> Polhem.Definition.Settings.PermissionActions
+Polhem.Definition.Settings.PermissionActions.Read = 2 -> Polhem.Definition.Settings.PermissionActions
+Polhem.Definition.Settings.PermissionActions.Update = 4 -> Polhem.Definition.Settings.PermissionActions
+Polhem.Definition.Settings.PermissionRule.Action.get -> Polhem.Definition.Settings.PermissionActions
+Polhem.Definition.Settings.PermissionRule.PermissionRule(Polhem.Definition.Settings.PermissionActions action, Polhem.Definition.Settings.ScopeStrategy scope = Polhem.Definition.Settings.ScopeStrategy.Inherit) -> void
+const Polhem.Definition.AuditLogActions.GetAccessLog = "GetAccessLog" -> string!
+const Polhem.Definition.AuditLogActions.GetApiAnomalyLog = "GetApiAnomalyLog" -> string!
+const Polhem.Definition.AuditLogActions.GetApiAnomalySummary = "GetApiAnomalySummary" -> string!
+const Polhem.Definition.AuditLogActions.GetChangeDetail = "GetChangeDetail" -> string!
+const Polhem.Definition.AuditLogActions.GetChangeLog = "GetChangeLog" -> string!
+const Polhem.Definition.AuditLogActions.GetDbAnomalyLog = "GetDbAnomalyLog" -> string!
+const Polhem.Definition.AuditLogActions.GetDbAnomalySummary = "GetDbAnomalySummary" -> string!
+const Polhem.Definition.AuditLogActions.GetLoginLog = "GetLoginLog" -> string!
+const Polhem.Definition.AuditLogActions.GetTopApiMethods = "GetTopApiMethods" -> string!
+static Polhem.Definition.Settings.PermissionRuleCollectionExtensions.Add(this Polhem.Definition.Settings.PermissionRuleCollection? collection, Polhem.Definition.Settings.PermissionActions action, Polhem.Definition.Settings.ScopeStrategy scope = Polhem.Definition.Settings.ScopeStrategy.Inherit) -> Polhem.Definition.Settings.PermissionRule!

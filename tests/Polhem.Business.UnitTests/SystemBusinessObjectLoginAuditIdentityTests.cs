@@ -37,7 +37,7 @@ namespace Polhem.Business.UnitTests
         /// </summary>
         private LoginAuditEntry RunFailedLogin(ApiKeyValidationResult validation, CapturingAuditLogWriter writer)
         {
-            var ctx = TestPolhemContext.CreateWithOverrides(_fx,
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx,
                 (typeof(IAuditLogWriter), writer),
                 (typeof(AuditLogOptions), s_loginAuditEnabled));
             var bo = new TestableSystemBusinessObject(ctx, Guid.Empty, _ => (false, string.Empty));

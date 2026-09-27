@@ -16,10 +16,10 @@ namespace Polhem.Business
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecFuncArgs"/> class with the specified function identifier.
         /// </summary>
-        /// <param name="funcID">The custom method identifier.</param>
-        public ExecFuncArgs(string funcID)
+        /// <param name="funcId">The custom method identifier.</param>
+        public ExecFuncArgs(string funcId)
         {
-            FuncId = funcID;
+            FuncId = funcId;
         }
 
         /// <summary>

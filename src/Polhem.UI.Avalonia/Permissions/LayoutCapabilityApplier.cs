@@ -1,7 +1,7 @@
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
-using Polhem.UI.Core.Permissions;
+using Polhem.Api.Client.Permissions;
 
 namespace Polhem.UI.Avalonia.Permissions
 {
@@ -24,7 +24,7 @@ namespace Polhem.UI.Avalonia.Permissions
         /// Degrades every master section field and detail grid of a form layout. No-op when the
         /// capability snapshot is <c>null</c> (enforcement inactive) or the schema is missing.
         /// </summary>
-        public static void Apply(FormLayout? layout, FormSchema? schema, IReadOnlyDictionary<string, PermissionAction>? capabilities)
+        public static void Apply(FormLayout? layout, FormSchema? schema, IReadOnlyDictionary<string, PermissionActions>? capabilities)
         {
             if (layout == null || schema == null || capabilities == null) { return; }
 
@@ -44,14 +44,14 @@ namespace Polhem.UI.Avalonia.Permissions
         /// Hides / marks read-only any sensitive columns of a single grid. No-op when the snapshot
         /// is <c>null</c>. Grid actions are not touched — they follow the form's edit mode.
         /// </summary>
-        public static void ApplyGrid(LayoutGrid? grid, FormSchema? schema, IReadOnlyDictionary<string, PermissionAction>? capabilities)
+        public static void ApplyGrid(LayoutGrid? grid, FormSchema? schema, IReadOnlyDictionary<string, PermissionActions>? capabilities)
         {
             if (grid == null || schema == null || capabilities == null) { return; }
 
             ApplyFields(grid.Columns, schema, grid.TableName, capabilities);
         }
 
-        private static void ApplyFields<T>(IEnumerable<T>? fields, FormSchema schema, string tableName, IReadOnlyDictionary<string, PermissionAction> capabilities)
+        private static void ApplyFields<T>(IEnumerable<T>? fields, FormSchema schema, string tableName, IReadOnlyDictionary<string, PermissionActions> capabilities)
             where T : LayoutFieldBase
         {
             if (fields == null) { return; }

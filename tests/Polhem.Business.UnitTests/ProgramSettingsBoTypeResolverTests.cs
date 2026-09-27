@@ -19,7 +19,7 @@ namespace Polhem.Business.UnitTests
         // Reachable via its assembly-qualified type name from inside the same test assembly.
         public class TestableCustomFormBo : FormBusinessObject
         {
-            public TestableCustomFormBo(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
+            public TestableCustomFormBo(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
                 : base(ctx, accessToken, progId, isLocalCall) { }
         }
 

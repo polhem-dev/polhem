@@ -140,11 +140,11 @@ public sealed partial class PermissionModelsDocumentViewModel : SingletonDocumen
 
     private bool CanAddRule() => FindAncestor(SelectedTreeNode, KindModel) is not null;
 
-    private static PermissionAction? PickAvailableAction(PermissionModel model)
+    private static PermissionActions? PickAvailableAction(PermissionModel model)
     {
-        var taken = new HashSet<PermissionAction>(
+        var taken = new HashSet<PermissionActions>(
             (model.Rules ?? Enumerable.Empty<PermissionRule>()).Select(r => r.Action));
-        foreach (var candidate in EditorOptions.PermissionActions)
+        foreach (var candidate in EditorOptions.PermissionActionValues)
             if (!taken.Contains(candidate)) return candidate;
         return null;
     }

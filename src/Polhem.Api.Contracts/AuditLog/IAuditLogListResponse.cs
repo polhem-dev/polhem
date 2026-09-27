@@ -8,7 +8,7 @@ namespace Polhem.Api.Contracts.AuditLog
     /// metadata. Used by every <c>st_log_*</c> list query (login / access / anomaly); the
     /// <see cref="Table"/> carries whichever columns that axis projects.
     /// </summary>
-    public interface ILogListResponse
+    public interface IAuditLogListResponse
     {
         /// <summary>Gets the event header rows for this page.</summary>
         DataTable? Table { get; }

@@ -94,7 +94,7 @@ namespace Polhem.Business.UnitTests
         {
             var resolver = new PluginSettingsResolver(new StubDefineAccess(null), new StubCustomizeReader());
 
-            var runner = resolver.Resolve("acme", "Order").CreateRunner(new StubPolhemContext(), Guid.NewGuid(), "Order");
+            var runner = resolver.Resolve("acme", "Order").CreateRunner(new StubBusinessObjectContext(), Guid.NewGuid(), "Order");
 
             // Nothing throws and nothing is constructed, so `FormBusinessObject` can call it unconditionally.
             var exception = Record.Exception(() =>
@@ -227,7 +227,7 @@ namespace Polhem.Business.UnitTests
 
         public sealed class SamplePlugin : FormBusinessPlugin
         {
-            public SamplePlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public SamplePlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void BeforeSave(SaveContext context) { }
@@ -235,7 +235,7 @@ namespace Polhem.Business.UnitTests
 
         public sealed class OtherPlugin : FormBusinessPlugin
         {
-            public OtherPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public OtherPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void AfterSave(SaveContext context) { }
@@ -245,7 +245,7 @@ namespace Polhem.Business.UnitTests
         public sealed class NotAPlugin { }
 
         /// <summary>A runner with an empty chain never touches the context, so no member needs an implementation.</summary>
-        private sealed class StubPolhemContext : IPolhemContext
+        private sealed class StubBusinessObjectContext : IBusinessObjectContext
         {
             public IDefineAccess DefineAccess => throw new NotImplementedException();
             public Polhem.Definition.Identity.ISessionInfoService SessionInfoService => throw new NotImplementedException();

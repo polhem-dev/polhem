@@ -36,7 +36,7 @@ namespace Polhem.Business.Permission
         }
 
         /// <inheritdoc/>
-        public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionAction action, FormSchema formSchema)
+        public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionActions action, FormSchema formSchema)
         {
             // One snapshot for the whole resolution; see SessionInfo.CompanyScope.
             var session = _sessionInfoService.Get(accessToken)?.CompanyScope;
@@ -63,7 +63,7 @@ namespace Polhem.Business.Permission
 
         // Returns null for an unrestricted scope (any role grants All); otherwise the distinct set of
         // restrictive strategies to OR-union. An empty set means deny (no usable grant — fail closed).
-        private IReadOnlyList<ScopeStrategy>? ResolveScopes(SessionCompanyScope? session, string modelId, PermissionAction action)
+        private IReadOnlyList<ScopeStrategy>? ResolveScopes(SessionCompanyScope? session, string modelId, PermissionActions action)
         {
             if (session == null || string.IsNullOrEmpty(session.CompanyId)) { return []; }
 
@@ -91,14 +91,14 @@ namespace Polhem.Business.Permission
 
         // Resolves an Inherit grant scope to a concrete strategy: the model's per-action default, else
         // the model's Read default (egress inherits Read), else All (no scope configured → unrestricted).
-        private static ScopeStrategy ResolveInherit(PermissionModels models, string modelId, PermissionAction action)
+        private static ScopeStrategy ResolveInherit(PermissionModels models, string modelId, PermissionActions action)
         {
             var scope = ModelDefault(models, modelId, action);
-            if (scope == ScopeStrategy.Inherit) { scope = ModelDefault(models, modelId, PermissionAction.Read); }
+            if (scope == ScopeStrategy.Inherit) { scope = ModelDefault(models, modelId, PermissionActions.Read); }
             return scope == ScopeStrategy.Inherit ? ScopeStrategy.All : scope;
         }
 
-        private static ScopeStrategy ModelDefault(PermissionModels models, string modelId, PermissionAction action)
+        private static ScopeStrategy ModelDefault(PermissionModels models, string modelId, PermissionActions action)
         {
             if (models?.Models == null || !models.Models.Contains(modelId)) { return ScopeStrategy.Inherit; }
             var rules = models.Models[modelId].Rules;

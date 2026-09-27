@@ -35,7 +35,7 @@ namespace Polhem.Business.UnitTests.Form
         private readonly PolhemTestFixture _fx;
         public FormBusinessObjectPermissionGateTests(PolhemTestFixture fx) { _fx = fx; }
 
-        private FormBusinessObject Bo(PermissionAction allowed, IDataFormRepository? repo = null, string progId = GatedProgId)
+        private FormBusinessObject Bo(PermissionActions allowed, IDataFormRepository? repo = null, string progId = GatedProgId)
         {
             var overrides = new List<(Type, object?)>
             {
@@ -43,7 +43,7 @@ namespace Polhem.Business.UnitTests.Form
                 (typeof(IScopeResolver), new StubScopeResolver()),
             };
             if (repo != null) { overrides.Add((typeof(IRepositoryFactory), new FakeFactory(repo))); }
-            var ctx = TestPolhemContext.CreateWithOverrides(_fx, overrides.ToArray());
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx, overrides.ToArray());
             return new FormBusinessObject(ctx, TestSessionFactory.CreateAccessToken(_fx), progId);
         }
 
@@ -214,24 +214,24 @@ namespace Polhem.Business.UnitTests.Form
         [Fact]
         [DisplayName("GetList without the Read grant throws ForbiddenException")]
         public void GetList_NoReadGrant_ThrowsForbidden()
-            => Assert.Throws<ForbiddenException>(() => Bo(PermissionAction.None).GetList(new GetListArgs()));
+            => Assert.Throws<ForbiddenException>(() => Bo(PermissionActions.None).GetList(new GetListArgs()));
 
         [Fact]
         [DisplayName("GetData without the Read grant throws ForbiddenException")]
         public void GetData_NoReadGrant_ThrowsForbidden()
-            => Assert.Throws<ForbiddenException>(() => Bo(PermissionAction.None).GetData(new GetDataArgs { RowId = Guid.NewGuid() }));
+            => Assert.Throws<ForbiddenException>(() => Bo(PermissionActions.None).GetData(new GetDataArgs { RowId = Guid.NewGuid() }));
 
         [Fact]
         [DisplayName("Delete without the Delete grant throws ForbiddenException")]
         public void Delete_NoDeleteGrant_ThrowsForbidden()
-            => Assert.Throws<ForbiddenException>(() => Bo(PermissionAction.None).Delete(new DeleteArgs { RowId = Guid.NewGuid() }));
+            => Assert.Throws<ForbiddenException>(() => Bo(PermissionActions.None).Delete(new DeleteArgs { RowId = Guid.NewGuid() }));
 
         [Fact]
         [DisplayName("Save with an Added row is blocked without the Create grant (each row's RowState maps to Create)")]
         public void Save_AddedRow_NoCreateGrant_ThrowsForbidden()
         {
             // Holding Update|Delete but not Create, so the Create required by the Added row is blocked.
-            var bo = Bo(PermissionAction.Update | PermissionAction.Delete);
+            var bo = Bo(PermissionActions.Update | PermissionActions.Delete);
             Assert.Throws<ForbiddenException>(() => bo.Save(new SaveArgs { DataSet = AddedRowDataSet() }));
         }
 
@@ -239,7 +239,7 @@ namespace Polhem.Business.UnitTests.Form
         [DisplayName("GetList with the Read grant passes through to the repository")]
         public void GetList_WithReadGrant_PassesGate()
         {
-            var bo = Bo(PermissionAction.Read, new StubRepo());
+            var bo = Bo(PermissionActions.Read, new StubRepo());
 
             var ex = Record.Exception(() => bo.GetList(new GetListArgs()));
 
@@ -250,7 +250,7 @@ namespace Polhem.Business.UnitTests.Form
         [DisplayName("Save with an Added row passes with the Create grant")]
         public void Save_AddedRow_WithCreateGrant_PassesGate()
         {
-            var bo = Bo(PermissionAction.Create, new StubRepo());
+            var bo = Bo(PermissionActions.Create, new StubRepo());
 
             var ex = Record.Exception(() => bo.Save(new SaveArgs { DataSet = AddedRowDataSet() }));
 
@@ -263,7 +263,7 @@ namespace Polhem.Business.UnitTests.Form
         {
             // The Update grant passes layer one, but the target record is out of scope (the authoritative re-query returns false), so layer two blocks it.
             var repo = new StubRepo { InScope = false };
-            var bo = Bo(PermissionAction.Update, repo);
+            var bo = Bo(PermissionActions.Update, repo);
             Assert.Throws<ForbiddenException>(() => bo.Save(new SaveArgs { DataSet = ModifiedRowDataSet() }));
         }
 
@@ -272,7 +272,7 @@ namespace Polhem.Business.UnitTests.Form
         public void Save_ModifiedRow_InScope_PassesGate()
         {
             var repo = new StubRepo { InScope = true };
-            var bo = Bo(PermissionAction.Update, repo);
+            var bo = Bo(PermissionActions.Update, repo);
             var ex = Record.Exception(() => bo.Save(new SaveArgs { DataSet = ModifiedRowDataSet() }));
             Assert.Null(ex);
         }
@@ -283,7 +283,7 @@ namespace Polhem.Business.UnitTests.Form
         {
             // Master Unchanged and detail Modified is still an edit of that existing record, so it goes through the layer-two Update check.
             var repo = new StubRepo { InScope = false };
-            var bo = Bo(PermissionAction.Update, repo);
+            var bo = Bo(PermissionActions.Update, repo);
             Assert.Throws<ForbiddenException>(() => bo.Save(new SaveArgs { DataSet = DetailOnlyEditDataSet() }));
         }
 
@@ -294,7 +294,7 @@ namespace Polhem.Business.UnitTests.Form
             // `InScope=true`: even though the record scope check would pass, this payload shape has no master to check,
             // so the block is structural rather than about scope. Only true proves that.
             var repo = new StubRepo { InScope = true };
-            var bo = Bo(PermissionAction.Update, repo);
+            var bo = Bo(PermissionActions.Update, repo);
 
             Assert.Throws<ForbiddenException>(
                 () => bo.Save(new SaveArgs { DataSet = DetailRowsWithoutMasterTableDataSet() }));
@@ -307,7 +307,7 @@ namespace Polhem.Business.UnitTests.Form
         public void Save_DetailOwnedByAbsentMaster_ThrowsForbidden(DataRowState state)
         {
             var repo = new StubRepo { InScope = true };
-            var bo = Bo(PermissionAction.Create | PermissionAction.Update, repo);
+            var bo = Bo(PermissionActions.Create | PermissionActions.Update, repo);
 
             Assert.Throws<ForbiddenException>(
                 () => bo.Save(new SaveArgs { DataSet = MasterWithDetailOwnedByAbsentMaster(state) }));
@@ -318,7 +318,7 @@ namespace Polhem.Business.UnitTests.Form
         public void Save_DetailReparentedFromAbsentMaster_ThrowsForbidden()
         {
             var repo = new StubRepo { InScope = true };
-            var bo = Bo(PermissionAction.Update, repo);
+            var bo = Bo(PermissionActions.Update, repo);
 
             Assert.Throws<ForbiddenException>(
                 () => bo.Save(new SaveArgs { DataSet = MasterWithDetailReparentedFromAbsentMaster() }));
@@ -330,7 +330,7 @@ namespace Polhem.Business.UnitTests.Form
         {
             // Without this one, the tests above could all be satisfied by rejecting everything.
             var repo = new StubRepo { InScope = true };
-            var bo = Bo(PermissionAction.Update, repo);
+            var bo = Bo(PermissionActions.Update, repo);
 
             var ex = Record.Exception(() => bo.Save(new SaveArgs { DataSet = WellFormedDetailEditDataSet() }));
 
@@ -342,7 +342,7 @@ namespace Polhem.Business.UnitTests.Form
         public void EmptyPermissionModelId_SkipsGate()
         {
             // Employee has no PermissionModelId, so even with Can denying everything the gate does not check and passes.
-            var bo = Bo(PermissionAction.None, new StubRepo(), UngatedProgId);
+            var bo = Bo(PermissionActions.None, new StubRepo(), UngatedProgId);
 
             var ex = Record.Exception(() => bo.GetList(new GetListArgs()));
 
@@ -351,9 +351,9 @@ namespace Polhem.Business.UnitTests.Form
 
         private sealed class FakeAuth : ICompanyAuthorizationService
         {
-            private readonly PermissionAction _allowed;
-            public FakeAuth(PermissionAction allowed) { _allowed = allowed; }
-            public bool Can(Guid accessToken, string modelId, PermissionAction action) => _allowed.HasFlag(action);
+            private readonly PermissionActions _allowed;
+            public FakeAuth(PermissionActions allowed) { _allowed = allowed; }
+            public bool Can(Guid accessToken, string modelId, PermissionActions action) => _allowed.HasFlag(action);
         }
 
         /// <summary>
@@ -367,8 +367,8 @@ namespace Polhem.Business.UnitTests.Form
         /// </remarks>
         private sealed class StubScopeResolver : IScopeResolver
         {
-            public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionAction action, Polhem.Definition.Forms.FormSchema formSchema)
-                => action == PermissionAction.Create ? null : new FilterGroup();
+            public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionActions action, Polhem.Definition.Forms.FormSchema formSchema)
+                => action == PermissionActions.Create ? null : new FilterGroup();
         }
 
         private sealed class FakeFactory : IRepositoryFactory

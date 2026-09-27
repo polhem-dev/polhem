@@ -4,7 +4,7 @@ namespace Polhem.Definition
     /// Action name constants for the audit-log business object (<c>AuditLog</c> axis).
     /// All actions are read-only queries over the <c>st_log_*</c> audit tables.
     /// </summary>
-    public static class LogActions
+    public static class AuditLogActions
     {
         /// <summary>
         /// Gets a filtered, paged list of <c>st_log_change</c> event headers across records (form + period,

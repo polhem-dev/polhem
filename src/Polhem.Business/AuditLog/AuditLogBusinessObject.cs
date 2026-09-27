@@ -24,16 +24,16 @@ namespace Polhem.Business.AuditLog
     /// event headers (no DiffGram), and <see cref="GetChangeDetail"/> restores one event's
     /// <c>changes_xml</c> into structured before/after values on demand.
     /// </remarks>
-    public class LogBusinessObject : BusinessObject
+    public class AuditLogBusinessObject : BusinessObject
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="LogBusinessObject"/> class.
+        /// Initializes a new instance of the <see cref="AuditLogBusinessObject"/> class.
         /// </summary>
         /// <param name="ctx">The per-call context aggregating cross-cutting services.</param>
         /// <param name="accessToken">The access token.</param>
         /// <param name="progId">The program identifier; always <see cref="SysProgIds.AuditLog"/>, accepted for signature uniformity and not read.</param>
         /// <param name="isLocalCall">Whether the call originates from a local source.</param>
-        public LogBusinessObject(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
+        public AuditLogBusinessObject(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
             : base(ctx, accessToken, progId, isLocalCall)
         { }
 
@@ -48,7 +48,7 @@ namespace Polhem.Business.AuditLog
         /// <see cref="GetChangeDetail"/>.
         /// </remarks>
         [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
-        public virtual LogListResult GetChangeLog(GetChangeLogArgs args)
+        public virtual AuditLogListResult GetChangeLog(GetChangeLogArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
 
@@ -113,7 +113,7 @@ namespace Polhem.Business.AuditLog
         /// </summary>
         /// <param name="args">The input arguments carrying the typed filter and optional paging.</param>
         [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
-        public virtual LogListResult GetLoginLog(GetLoginLogArgs args)
+        public virtual AuditLogListResult GetLoginLog(GetLoginLogArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
             EnsureAuditReadAllowed();
@@ -134,7 +134,7 @@ namespace Polhem.Business.AuditLog
         /// </summary>
         /// <param name="args">The input arguments carrying the typed filter and optional paging.</param>
         [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
-        public virtual LogListResult GetAccessLog(GetAccessLogArgs args)
+        public virtual AuditLogListResult GetAccessLog(GetAccessLogArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
             EnsureAuditReadAllowed();
@@ -156,7 +156,7 @@ namespace Polhem.Business.AuditLog
         /// </summary>
         /// <param name="args">The input arguments carrying the typed filter and optional paging.</param>
         [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
-        public virtual LogListResult GetApiAnomalyLog(GetApiAnomalyLogArgs args)
+        public virtual AuditLogListResult GetApiAnomalyLog(GetApiAnomalyLogArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
             EnsureAuditReadAllowed();
@@ -184,7 +184,7 @@ namespace Polhem.Business.AuditLog
         /// <c>AuditLog</c> read permission, which a company administrator can hold.
         /// </remarks>
         [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
-        public virtual LogListResult GetDbAnomalyLog(GetDbAnomalyLogArgs args)
+        public virtual AuditLogListResult GetDbAnomalyLog(GetDbAnomalyLogArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
             EnsureDbAnomalyReadAllowed();
@@ -204,12 +204,12 @@ namespace Polhem.Business.AuditLog
         /// </summary>
         /// <param name="args">The input arguments carrying the optional time window.</param>
         [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
-        public virtual LogAggregateResult GetApiAnomalySummary(GetApiAnomalySummaryArgs args)
+        public virtual AuditLogAggregateResult GetApiAnomalySummary(GetApiAnomalySummaryArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
             EnsureAuditReadAllowed();
             var table = Repository().GetApiAnomalySummary(args.FromUtc, args.ToUtc, CurrentCompanyId());
-            return new LogAggregateResult { Table = table };
+            return new AuditLogAggregateResult { Table = table };
         }
 
         /// <summary>
@@ -221,12 +221,12 @@ namespace Polhem.Business.AuditLog
         /// gated like <see cref="GetDbAnomalyLog"/>.
         /// </remarks>
         [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
-        public virtual LogAggregateResult GetDbAnomalySummary(GetDbAnomalySummaryArgs args)
+        public virtual AuditLogAggregateResult GetDbAnomalySummary(GetDbAnomalySummaryArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
             EnsureDbAnomalyReadAllowed();
             var table = Repository().GetDbAnomalySummary(args.FromUtc, args.ToUtc);
-            return new LogAggregateResult { Table = table };
+            return new AuditLogAggregateResult { Table = table };
         }
 
         /// <summary>
@@ -234,17 +234,17 @@ namespace Polhem.Business.AuditLog
         /// </summary>
         /// <param name="args">The input arguments carrying the optional time window and top-N.</param>
         [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
-        public virtual LogAggregateResult GetTopApiMethods(GetTopApiMethodsArgs args)
+        public virtual AuditLogAggregateResult GetTopApiMethods(GetTopApiMethodsArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
             EnsureAuditReadAllowed();
             var table = Repository().GetTopApiMethods(args.FromUtc, args.ToUtc, args.TopN, CurrentCompanyId());
-            return new LogAggregateResult { Table = table };
+            return new AuditLogAggregateResult { Table = table };
         }
 
         /// <summary>Maps a repository <see cref="AuditLogPage"/> to the shared list result.</summary>
-        private static LogListResult ToResult(AuditLogPage page)
-            => new LogListResult { Table = page.Table, Paging = page.Paging };
+        private static AuditLogListResult ToResult(AuditLogPage page)
+            => new AuditLogListResult { Table = page.Table, Paging = page.Paging };
 
         /// <summary>Resolves the log-scoped repository from the DI escape hatch.</summary>
         private IAuditLogRepository Repository()
@@ -254,13 +254,13 @@ namespace Polhem.Business.AuditLog
         private string? CurrentCompanyId() => SessionInfoService.Get(AccessToken)?.CompanyId;
 
         /// <summary>
-        /// Enforces the audit-read permission gate: only roles granted <see cref="PermissionAction.Read"/>
+        /// Enforces the audit-read permission gate: only roles granted <see cref="PermissionActions.Read"/>
         /// on the <c>AuditLog</c> model may query the trail.
         /// </summary>
         private void EnsureAuditReadAllowed()
         {
             var authorization = Services.GetRequiredService<ICompanyAuthorizationService>();
-            if (!authorization.Can(AccessToken, SysProgIds.AuditLog, PermissionAction.Read))
+            if (!authorization.Can(AccessToken, SysProgIds.AuditLog, PermissionActions.Read))
                 throw new UserMessageException("Not authorized to read the audit log.");
         }
 

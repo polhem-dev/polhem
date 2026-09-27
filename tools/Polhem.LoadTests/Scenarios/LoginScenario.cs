@@ -20,6 +20,7 @@ namespace Polhem.LoadTests.Scenarios
     {
         private readonly AuthOptions _auth;
         private readonly string? _endpoint;
+        private readonly IServiceProvider? _localServices;
 
         /// <summary>
         /// Initializes a new instance.
@@ -28,10 +29,12 @@ namespace Polhem.LoadTests.Scenarios
         /// <param name="endpoint">
         /// The remote endpoint, or null to dispatch in-process.
         /// </param>
-        public LoginScenario(AuthOptions auth, string? endpoint = null)
+        /// <param name="localServices">The in-process backend, required when <paramref name="endpoint"/> is null.</param>
+        public LoginScenario(AuthOptions auth, string? endpoint = null, IServiceProvider? localServices = null)
         {
             _auth = auth ?? throw new ArgumentNullException(nameof(auth));
             _endpoint = string.IsNullOrWhiteSpace(endpoint) ? null : endpoint;
+            _localServices = localServices;
         }
 
         /// <inheritdoc/>
@@ -44,7 +47,7 @@ namespace Polhem.LoadTests.Scenarios
             var session = new ApiSessionContext();
 
             var connector = _endpoint is null
-                ? new SystemApiConnector(Guid.Empty, session)
+                ? new SystemApiConnector(_localServices ?? throw new InvalidOperationException("In-process dispatch needs the backend's service provider."), Guid.Empty, session)
                 : new SystemApiConnector(_endpoint, Guid.Empty, session);
 
             await connector.LoginAsync(userId, _auth.Password).ConfigureAwait(false);

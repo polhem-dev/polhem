@@ -59,6 +59,6 @@ namespace Polhem.Business.UnitTests
         }
 
         private SystemBusinessObject Bo(bool isLocalCall)
-            => new(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall);
+            => new(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall);
     }
 }

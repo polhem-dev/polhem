@@ -10,16 +10,16 @@ using Polhem.Definition;
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// Routing tests for the methods of <see cref="LogApiConnector"/>.
+    /// Routing tests for the methods of <see cref="AuditLogApiConnector"/>.
     /// </summary>
     /// <remarks>
     /// These methods are thin wrappers, and the real risk is **a copy-paste routing error**: several share
-    /// <c>LogListResponse</c> and several share <c>LogAggregateResponse</c>, so writing <c>GetDbAnomalyLog</c> as
+    /// <c>AuditLogListResponse</c> and several share <c>AuditLogAggregateResponse</c>, so writing <c>GetDbAnomalyLog</c> as
     /// <c>GetApiAnomalyLog</c> returns data that looks perfectly reasonable, and neither the type system nor the
     /// round-trip tests notice. These tests pin down the <c>Method</c> sent (<c>progId.action</c>) for each one,
     /// and that the request object is passed on unchanged.
     /// </remarks>
-    public class LogApiConnectorRoutingTests
+    public class AuditLogApiConnectorRoutingTests
     {
         private sealed class CapturingProvider : IJsonRpcProvider
         {
@@ -38,9 +38,9 @@ namespace Polhem.Api.Client.UnitTests
             }
         }
 
-        private static (LogApiConnector Connector, CapturingProvider Provider) Create(object resultValue)
+        private static (AuditLogApiConnector Connector, CapturingProvider Provider) Create(object resultValue)
         {
-            var connector = new LogApiConnector(Guid.NewGuid());
+            var connector = new AuditLogApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid());
             var provider = new CapturingProvider { ResultValue = resultValue };
             typeof(ApiConnector)
                 .GetProperty(nameof(ApiConnector.Provider), BindingFlags.Public | BindingFlags.Instance)!
@@ -53,15 +53,15 @@ namespace Polhem.Api.Client.UnitTests
         /// </summary>
         public static TheoryData<string, string> RoutedActions => new()
         {
-            { nameof(LogApiConnector.GetChangeLogAsync),          LogActions.GetChangeLog },
-            { nameof(LogApiConnector.GetChangeDetailAsync),       LogActions.GetChangeDetail },
-            { nameof(LogApiConnector.GetLoginLogAsync),           LogActions.GetLoginLog },
-            { nameof(LogApiConnector.GetAccessLogAsync),          LogActions.GetAccessLog },
-            { nameof(LogApiConnector.GetApiAnomalyLogAsync),      LogActions.GetApiAnomalyLog },
-            { nameof(LogApiConnector.GetDbAnomalyLogAsync),       LogActions.GetDbAnomalyLog },
-            { nameof(LogApiConnector.GetApiAnomalySummaryAsync),  LogActions.GetApiAnomalySummary },
-            { nameof(LogApiConnector.GetDbAnomalySummaryAsync),   LogActions.GetDbAnomalySummary },
-            { nameof(LogApiConnector.GetTopApiMethodsAsync),      LogActions.GetTopApiMethods },
+            { nameof(AuditLogApiConnector.GetChangeLogAsync),          AuditLogActions.GetChangeLog },
+            { nameof(AuditLogApiConnector.GetChangeDetailAsync),       AuditLogActions.GetChangeDetail },
+            { nameof(AuditLogApiConnector.GetLoginLogAsync),           AuditLogActions.GetLoginLog },
+            { nameof(AuditLogApiConnector.GetAccessLogAsync),          AuditLogActions.GetAccessLog },
+            { nameof(AuditLogApiConnector.GetApiAnomalyLogAsync),      AuditLogActions.GetApiAnomalyLog },
+            { nameof(AuditLogApiConnector.GetDbAnomalyLogAsync),       AuditLogActions.GetDbAnomalyLog },
+            { nameof(AuditLogApiConnector.GetApiAnomalySummaryAsync),  AuditLogActions.GetApiAnomalySummary },
+            { nameof(AuditLogApiConnector.GetDbAnomalySummaryAsync),   AuditLogActions.GetDbAnomalySummary },
+            { nameof(AuditLogApiConnector.GetTopApiMethodsAsync),      AuditLogActions.GetTopApiMethods },
         };
 
         [Theory]
@@ -113,7 +113,7 @@ namespace Polhem.Api.Client.UnitTests
         /// </summary>
         private static async Task<(CapturingProvider Provider, Type RequestType)> InvokeAsync(string methodName)
         {
-            var method = typeof(LogApiConnector).GetMethod(methodName)
+            var method = typeof(AuditLogApiConnector).GetMethod(methodName)
                 ?? throw new InvalidOperationException($"{methodName} not found.");
             var responseType = method.ReturnType.GetGenericArguments()[0];
             var (connector, provider) = Create(Activator.CreateInstance(responseType)!);

@@ -132,7 +132,7 @@ namespace Polhem.Business.Form
             foreach (DataRow row in dataSet.Tables[masterTableName]!.Rows)
             {
                 var action = NewValueScopeActionForRowState(row.RowState);
-                if (action == PermissionAction.None) { continue; }
+                if (action == PermissionActions.None) { continue; }
 
                 var scopeFilter = scopeFilterFor(action);
                 if (scopeFilter != null && !ScopeFilterEvaluator.Matches(scopeFilter, row, DataRowVersion.Current))
@@ -152,10 +152,10 @@ namespace Polhem.Business.Form
         /// Resolution happens on first use, so a save that needs no scope resolves nothing, and N rows
         /// of the same action reuse one filter.
         /// </remarks>
-        private Func<PermissionAction, FilterNode?> CreateScopeFilterCache(FormSchema schema)
+        private Func<PermissionActions, FilterNode?> CreateScopeFilterCache(FormSchema schema)
         {
             IScopeResolver? resolver = null;
-            var scopeByAction = new Dictionary<PermissionAction, FilterNode?>();
+            var scopeByAction = new Dictionary<PermissionActions, FilterNode?>();
 
             return action =>
             {
@@ -209,7 +209,7 @@ namespace Polhem.Business.Form
             foreach (DataRow row in masterTable.Rows)
             {
                 var action = WriteScopeActionForRowState(row.RowState);
-                if (action == PermissionAction.None) { continue; }
+                if (action == PermissionActions.None) { continue; }
 
                 var scopeFilter = scopeFilterFor(action);
                 if (scopeFilter == null) { continue; }
@@ -402,29 +402,29 @@ namespace Polhem.Business.Form
         };
 
         /// <summary>
-        /// Maps a master row's <c>RowState</c> to the <see cref="PermissionAction"/> whose record
-        /// scope must be enforced on write. <c>Added</c> (Create) returns <see cref="PermissionAction.None"/>
+        /// Maps a master row's <c>RowState</c> to the <see cref="PermissionActions"/> whose record
+        /// scope must be enforced on write. <c>Added</c> (Create) returns <see cref="PermissionActions.None"/>
         /// because a new row has no existing scope to violate; <c>Modified</c> and <c>Unchanged</c>
-        /// both map to <see cref="PermissionAction.Update"/> (a details-only edit leaves the master
+        /// both map to <see cref="PermissionActions.Update"/> (a details-only edit leaves the master
         /// Unchanged but still persists the record).
         /// </summary>
-        private static PermissionAction WriteScopeActionForRowState(DataRowState state) => state switch
+        private static PermissionActions WriteScopeActionForRowState(DataRowState state) => state switch
         {
-            DataRowState.Added => PermissionAction.None,
-            DataRowState.Deleted => PermissionAction.Delete,
-            _ => PermissionAction.Update,
+            DataRowState.Added => PermissionActions.None,
+            DataRowState.Deleted => PermissionActions.Delete,
+            _ => PermissionActions.Update,
         };
 
         /// <summary>
-        /// Maps a master row's <c>RowState</c> to the <see cref="PermissionAction"/> whose record scope
+        /// Maps a master row's <c>RowState</c> to the <see cref="PermissionActions"/> whose record scope
         /// its new values must satisfy: <c>Added</c> → Create, <c>Modified</c> → Update. Other states
-        /// store no new master values and return <see cref="PermissionAction.None"/>.
+        /// store no new master values and return <see cref="PermissionActions.None"/>.
         /// </summary>
-        private static PermissionAction NewValueScopeActionForRowState(DataRowState state) => state switch
+        private static PermissionActions NewValueScopeActionForRowState(DataRowState state) => state switch
         {
-            DataRowState.Added => PermissionAction.Create,
-            DataRowState.Modified => PermissionAction.Update,
-            _ => PermissionAction.None,
+            DataRowState.Added => PermissionActions.Create,
+            DataRowState.Modified => PermissionActions.Update,
+            _ => PermissionActions.None,
         };
     }
 }

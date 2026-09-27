@@ -1,4 +1,4 @@
-namespace Polhem.UI.Core.Permissions
+namespace Polhem.Api.Client.Permissions
 {
     /// <summary>
     /// The resolved client-side capability of a single form field: whether it should render and,

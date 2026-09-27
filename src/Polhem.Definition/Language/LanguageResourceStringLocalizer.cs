@@ -11,16 +11,16 @@ namespace Polhem.Definition.Language
     /// </summary>
     /// <remarks>
     /// The resource namespace is derived from <c>typeof(T).Name</c>. For example,
-    /// <c>PolhemStringLocalizer&lt;CustomerPage&gt;</c> resolves keys against
+    /// <c>LanguageResourceStringLocalizer&lt;CustomerPage&gt;</c> resolves keys against
     /// <c>{LanguagePath}/{lang}/CustomerPage.Language.xml</c>. Place <c>typeof(T)</c>
     /// in a class whose name matches a namespace (e.g. <c>Common</c>, <c>Sys</c>).
     ///
     /// The current language defaults to <see cref="CultureInfo.CurrentUICulture"/>
     /// — callers wanting an explicit source (HTTP request, session lookup) should use the
-    /// <see cref="PolhemStringLocalizer{T}(ILanguageService, Func{string})"/> overload.
+    /// <see cref="LanguageResourceStringLocalizer{T}(ILanguageService, Func{string})"/> overload.
     /// </remarks>
     /// <typeparam name="T">A marker type whose simple name matches the resource namespace.</typeparam>
-    public sealed class PolhemStringLocalizer<T> : IStringLocalizer<T>
+    public sealed class LanguageResourceStringLocalizer<T> : IStringLocalizer<T>
     {
         private readonly ILanguageService _service;
         private readonly Func<string> _langProvider;
@@ -28,28 +28,28 @@ namespace Polhem.Definition.Language
         private readonly string _namespace;
 
         /// <summary>
-        /// Initializes a new <see cref="PolhemStringLocalizer{T}"/> using
+        /// Initializes a new <see cref="LanguageResourceStringLocalizer{T}"/> using
         /// <see cref="CultureInfo.CurrentUICulture"/> as the language source. Suitable
         /// for ASP.NET Core's standard request-localization middleware.
         /// </summary>
         /// <param name="service">The underlying language resource service.</param>
-        public PolhemStringLocalizer(ILanguageService service)
+        public LanguageResourceStringLocalizer(ILanguageService service)
             : this(service, static () => CultureInfo.CurrentUICulture.Name)
         { }
 
         /// <summary>
-        /// Initializes a new <see cref="PolhemStringLocalizer{T}"/> with an explicit
+        /// Initializes a new <see cref="LanguageResourceStringLocalizer{T}"/> with an explicit
         /// language provider — typically wired to <see cref="Polhem.Definition.Identity.SessionInfo.Culture"/> or another
         /// per-request value.
         /// </summary>
         /// <param name="service">The underlying language resource service.</param>
         /// <param name="langProvider">A delegate returning the BCP-47 language code for the current call.</param>
-        public PolhemStringLocalizer(ILanguageService service, Func<string> langProvider)
+        public LanguageResourceStringLocalizer(ILanguageService service, Func<string> langProvider)
             : this(service, langProvider, static () => string.Empty)
         { }
 
         /// <summary>
-        /// Initializes a new <see cref="PolhemStringLocalizer{T}"/> with an explicit language
+        /// Initializes a new <see cref="LanguageResourceStringLocalizer{T}"/> with an explicit language
         /// provider and an explicit tenant-customization provider — the customization delegate
         /// mirrors <paramref name="langProvider"/>, so a host wires both from the same per-request
         /// state (typically <c>ClientInfo.Company?.CustomizeId</c> on the UI side).
@@ -66,7 +66,7 @@ namespace Polhem.Definition.Language
         /// yields localizes that client's own UI; server-side lookups always read
         /// <see cref="Polhem.Definition.Identity.SessionInfo.CustomizeId"/> instead and never a client-supplied code.
         /// </remarks>
-        public PolhemStringLocalizer(ILanguageService service, Func<string> langProvider, Func<string> customizeIdProvider)
+        public LanguageResourceStringLocalizer(ILanguageService service, Func<string> langProvider, Func<string> customizeIdProvider)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _langProvider = langProvider ?? throw new ArgumentNullException(nameof(langProvider));

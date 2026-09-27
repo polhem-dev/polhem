@@ -390,7 +390,7 @@ namespace Polhem.Api.Core.UnitTests
             // Arrange
             var args = new CreateSessionRequest
             {
-                UserID = "TestUser",
+                UserId = "TestUser",
                 ExpiresIn = 7200
             };
 

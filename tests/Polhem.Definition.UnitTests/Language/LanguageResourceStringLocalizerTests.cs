@@ -10,10 +10,10 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition.UnitTests.Language
 {
     /// <summary>
-    /// Behavior tests for <see cref="PolhemStringLocalizer{T}"/>: resolving the namespace through typeof(T).Name,
+    /// Behavior tests for <see cref="LanguageResourceStringLocalizer{T}"/>: resolving the namespace through typeof(T).Name,
     /// hits and missing translations through ILanguageService, the format overload, and the ResourceNotFound flag.
     /// </summary>
-    public class PolhemStringLocalizerTests
+    public class LanguageResourceStringLocalizerTests
     {
         // Marker type whose name maps to the "CommonResources" language namespace.
         // Avoids the BCL "Common" / System.Data.Common collision flagged by CA1724.
@@ -26,7 +26,7 @@ namespace Polhem.Definition.UnitTests.Language
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddResource("zh-TW", "CommonResources", ("OK", "確定"));
             var svc = new LanguageService(defineAccess, null);
-            var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW");
+            var localizer = new LanguageResourceStringLocalizer<CommonResources>(svc, () => "zh-TW");
 
             var result = localizer["OK"];
 
@@ -41,7 +41,7 @@ namespace Polhem.Definition.UnitTests.Language
         {
             var defineAccess = new StubDefineAccess("en-US"); // Neither language has it.
             var svc = new LanguageService(defineAccess, null);
-            var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW");
+            var localizer = new LanguageResourceStringLocalizer<CommonResources>(svc, () => "zh-TW");
 
             var result = localizer["Nonexistent"];
 
@@ -58,7 +58,7 @@ namespace Polhem.Definition.UnitTests.Language
             // Missing in zh-TW, present in en-US.
             defineAccess.AddResource("en-US", "CommonResources", ("OK", "OK"));
             var svc = new LanguageService(defineAccess, null);
-            var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW");
+            var localizer = new LanguageResourceStringLocalizer<CommonResources>(svc, () => "zh-TW");
 
             var result = localizer["OK"];
 
@@ -73,7 +73,7 @@ namespace Polhem.Definition.UnitTests.Language
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddResource("zh-TW", "CommonResources", ("Greeting", "你好，{0}！"));
             var svc = new LanguageService(defineAccess, null);
-            var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW");
+            var localizer = new LanguageResourceStringLocalizer<CommonResources>(svc, () => "zh-TW");
 
             var result = localizer["Greeting", "Jeff"];
 
@@ -87,7 +87,7 @@ namespace Polhem.Definition.UnitTests.Language
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddResource("ja-JP", "CommonResources", ("OK", "確認"));
             var svc = new LanguageService(defineAccess, null);
-            var localizer = new PolhemStringLocalizer<CommonResources>(svc);
+            var localizer = new LanguageResourceStringLocalizer<CommonResources>(svc);
 
             var previous = CultureInfo.CurrentUICulture;
             try
@@ -109,7 +109,7 @@ namespace Polhem.Definition.UnitTests.Language
             var defineAccess = new StubDefineAccess("en-US");
             defineAccess.AddResource("zh-TW", "CommonResources", ("OK", "確定"));
             var svc = new LanguageService(defineAccess, null);
-            var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW");
+            var localizer = new LanguageResourceStringLocalizer<CommonResources>(svc, () => "zh-TW");
 
             Assert.Empty(localizer.GetAllStrings(includeParentCultures: false));
         }

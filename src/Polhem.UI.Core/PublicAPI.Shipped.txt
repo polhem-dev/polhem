@@ -20,23 +20,6 @@ Polhem.UI.Core.IEndpointStorage.SaveEndpoint(string! endpoint) -> void
 Polhem.UI.Core.IEndpointStorage.SetEndpoint(string! endpoint) -> void
 Polhem.UI.Core.IUIViewService
 Polhem.UI.Core.IUIViewService.ShowApiConnectAsync() -> System.Threading.Tasks.Task<bool>!
-Polhem.UI.Core.Permissions.ElementCapabilityResolver
-Polhem.UI.Core.Permissions.ElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionAction action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionAction>? capabilities) -> bool
-Polhem.UI.Core.Permissions.ElementCapabilityResolver.ElementCapabilityResolver() -> void
-Polhem.UI.Core.Permissions.ElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionAction>? capabilities) -> Polhem.UI.Core.Permissions.FieldCapability
-Polhem.UI.Core.Permissions.FieldCapability
-Polhem.UI.Core.Permissions.FieldCapability.Deconstruct(out bool Visible, out bool ReadOnly) -> void
-Polhem.UI.Core.Permissions.FieldCapability.Equals(Polhem.UI.Core.Permissions.FieldCapability other) -> bool
-Polhem.UI.Core.Permissions.FieldCapability.FieldCapability() -> void
-Polhem.UI.Core.Permissions.FieldCapability.FieldCapability(bool Visible, bool ReadOnly) -> void
-Polhem.UI.Core.Permissions.FieldCapability.ReadOnly.get -> bool
-Polhem.UI.Core.Permissions.FieldCapability.ReadOnly.init -> void
-Polhem.UI.Core.Permissions.FieldCapability.Visible.get -> bool
-Polhem.UI.Core.Permissions.FieldCapability.Visible.init -> void
-Polhem.UI.Core.Permissions.IElementCapabilityResolver
-Polhem.UI.Core.Permissions.IElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionAction action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionAction>? capabilities) -> bool
-Polhem.UI.Core.Permissions.IElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionAction>? capabilities) -> Polhem.UI.Core.Permissions.FieldCapability
-override Polhem.UI.Core.Permissions.FieldCapability.GetHashCode() -> int
 static Polhem.UI.Core.ClientInfo.AccessToken.get -> System.Guid
 static Polhem.UI.Core.ClientInfo.AllowGenerateSettings.get -> bool
 static Polhem.UI.Core.ClientInfo.AllowGenerateSettings.set -> void
@@ -45,12 +28,10 @@ static Polhem.UI.Core.ClientInfo.ApiKeyStorage.set -> void
 static Polhem.UI.Core.ClientInfo.ApplyApiKey(string! defaultApiKey = "") -> void
 static Polhem.UI.Core.ClientInfo.ApplyEnterCompanyResult(Polhem.Api.Core.Messages.System.EnterCompanyResponse! response) -> void
 static Polhem.UI.Core.ClientInfo.ApplyLoginResult(Polhem.Api.Core.Messages.System.LoginResponse! loginResponse) -> void
-static Polhem.UI.Core.ClientInfo.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionAction>?
 static Polhem.UI.Core.ClientInfo.ClearCompanyContext() -> void
 static Polhem.UI.Core.ClientInfo.ClientSettings.get -> Polhem.Definition.Settings.ClientSettings!
 static Polhem.UI.Core.ClientInfo.Company.get -> Polhem.Definition.Identity.CompanyInfo?
 static Polhem.UI.Core.ClientInfo.CreateFormApiConnector(string! progId) -> Polhem.Api.Client.Connectors.FormApiConnector!
-static Polhem.UI.Core.ClientInfo.CreateLogApiConnector() -> Polhem.Api.Client.Connectors.LogApiConnector!
 static Polhem.UI.Core.ClientInfo.DefineAccess.get -> Polhem.Api.Client.ClientDefineAccess!
 static Polhem.UI.Core.ClientInfo.EndpointStorage.get -> Polhem.UI.Core.IEndpointStorage!
 static Polhem.UI.Core.ClientInfo.EndpointStorage.set -> void
@@ -64,9 +45,3 @@ static Polhem.UI.Core.ClientInfo.SetEndpointAsync(string! endpoint) -> System.Th
 static Polhem.UI.Core.ClientInfo.SystemApiConnector.get -> Polhem.Api.Client.Connectors.SystemApiConnector!
 static Polhem.UI.Core.ClientInfo.UIViewService.get -> Polhem.UI.Core.IUIViewService?
 static Polhem.UI.Core.ClientInfo.UserInfo.get -> Polhem.Definition.Identity.UserInfo?
-static Polhem.UI.Core.Permissions.FieldCapability.operator !=(Polhem.UI.Core.Permissions.FieldCapability left, Polhem.UI.Core.Permissions.FieldCapability right) -> bool
-static Polhem.UI.Core.Permissions.FieldCapability.operator ==(Polhem.UI.Core.Permissions.FieldCapability left, Polhem.UI.Core.Permissions.FieldCapability right) -> bool
-static readonly Polhem.UI.Core.Permissions.ElementCapabilityResolver.Default -> Polhem.UI.Core.Permissions.ElementCapabilityResolver!
-static readonly Polhem.UI.Core.Permissions.FieldCapability.Allowed -> Polhem.UI.Core.Permissions.FieldCapability
-~override Polhem.UI.Core.Permissions.FieldCapability.Equals(object obj) -> bool
-~override Polhem.UI.Core.Permissions.FieldCapability.ToString() -> string

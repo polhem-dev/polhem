@@ -33,7 +33,7 @@ namespace Polhem.Business.UnitTests
 
         private IDbConnectionManager ConnectionManager => _fx.GetRequiredService<IDbConnectionManager>();
 
-        private SystemBusinessObject NewBo() => new(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+        private SystemBusinessObject NewBo() => new(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System);
 
         /// <summary>
         /// Runs <paramref name="test"/> against a fresh user row whose stored hash is <paramref name="storedHash"/>.

@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using Polhem.Business.Providers;
+using Polhem.Definition.Identity;
 using Polhem.Repository.Abstractions.Factories;
+using Polhem.Repository.Abstractions.System;
 using Polhem.Tests.Shared;
 using Polhem.Definition.Database;
 
@@ -30,6 +32,29 @@ namespace Polhem.Business.UnitTests
             var result = provider.GetSessionInfo(Guid.NewGuid());
 
             Assert.Null(result);
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("GetSessionInfo returns null for a stored seed that names no user")]
+        public void GetSessionInfo_SeedWithoutUserId_ReturnsNull()
+        {
+            var token = Guid.NewGuid();
+            var sessions = _fx.GetRequiredService<IRepositoryFactory>().Create<ISessionRepository>();
+            sessions.InsertSession(new SessionUser
+            {
+                AccessToken = token,
+                UserId = string.Empty,
+                UserName = "nobody",
+                EndTime = DateTime.UtcNow.AddMinutes(10),
+            });
+            try
+            {
+                Assert.Null(CreateProvider().GetSessionInfo(token));
+            }
+            finally
+            {
+                sessions.DeleteSession(token);
+            }
         }
 
         [DbFact(DatabaseType.SQLServer)]

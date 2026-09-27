@@ -2,7 +2,7 @@ using Polhem.Definition.Identity;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Repository.Abstractions.System;
 
-namespace Polhem.ObjectCaching.Services
+namespace Polhem.Business.Security
 {
     /// <summary>
     /// Default <see cref="IDeploymentAuthorizationService"/>: resolves the session, then reads the

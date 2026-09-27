@@ -41,6 +41,17 @@ namespace Polhem.Business.UnitTests
         /// </summary>
         private static readonly IReadOnlyList<ApiSurfaceEntry> s_expectedSurface = new[]
         {
+            // Audit-log axis — AuditLogBusinessObject (read-only queries over st_log_*).
+            new ApiSurfaceEntry("AuditLogBusinessObject", "GetAccessLog",        ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
+            new ApiSurfaceEntry("AuditLogBusinessObject", "GetApiAnomalyLog",    ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
+            new ApiSurfaceEntry("AuditLogBusinessObject", "GetApiAnomalySummary",ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
+            new ApiSurfaceEntry("AuditLogBusinessObject", "GetChangeDetail",     ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
+            new ApiSurfaceEntry("AuditLogBusinessObject", "GetChangeLog",        ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
+            new ApiSurfaceEntry("AuditLogBusinessObject", "GetDbAnomalyLog",     ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
+            new ApiSurfaceEntry("AuditLogBusinessObject", "GetDbAnomalySummary", ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
+            new ApiSurfaceEntry("AuditLogBusinessObject", "GetLoginLog",         ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
+            new ApiSurfaceEntry("AuditLogBusinessObject", "GetTopApiMethods",    ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
+
             // Base axis — defined on BusinessObject, inherited by every BO.
             new ApiSurfaceEntry("BusinessObject", "ExecFunc",          ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated, ApiReplayProtection.UniqueSequence),
             new ApiSurfaceEntry("BusinessObject", "ExecFuncAnonymous", ApiProtectionLevel.Public, ApiAccessRequirement.Anonymous),
@@ -53,22 +64,11 @@ namespace Polhem.Business.UnitTests
             new ApiSurfaceEntry("FormBusinessObject", "GetNewData", ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated),
             new ApiSurfaceEntry("FormBusinessObject", "Save",       ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated, ApiReplayProtection.UniqueSequence),
 
-            // Audit-log axis — LogBusinessObject (read-only queries over st_log_*).
-            new ApiSurfaceEntry("LogBusinessObject", "GetAccessLog",        ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
-            new ApiSurfaceEntry("LogBusinessObject", "GetApiAnomalyLog",    ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
-            new ApiSurfaceEntry("LogBusinessObject", "GetApiAnomalySummary",ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
-            new ApiSurfaceEntry("LogBusinessObject", "GetChangeDetail",     ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
-            new ApiSurfaceEntry("LogBusinessObject", "GetChangeLog",        ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
-            new ApiSurfaceEntry("LogBusinessObject", "GetDbAnomalyLog",     ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
-            new ApiSurfaceEntry("LogBusinessObject", "GetDbAnomalySummary", ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
-            new ApiSurfaceEntry("LogBusinessObject", "GetLoginLog",         ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
-            new ApiSurfaceEntry("LogBusinessObject", "GetTopApiMethods",    ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated),
-
             // System axis — SystemBusinessObject (system-level operations).
             // Encrypted (formerly LocalOnly): the gate is handed to `IDeploymentAuthorizationService`. A remote caller must be a
             // deployment-level administrator; being authenticated is not enough. Local calls need no administrator, which keeps the bootstrap path for the first key.
             new ApiSurfaceEntry("SystemBusinessObject", "CreateApiKey",           ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated, ApiReplayProtection.UniqueSequence),
-            // LocalOnly: it issues a token directly from a UserID without checking credentials, so it is a trusted-caller operation.
+            // LocalOnly: it issues a token directly from a UserId without checking credentials, so it is a trusted-caller operation.
             // It used to be Public + Anonymous, and was only unexploited because `SessionInfoCache.CreateInstance` was not yet implemented.
             new ApiSurfaceEntry("SystemBusinessObject", "CreateSession",          ApiProtectionLevel.LocalOnly, ApiAccessRequirement.Anonymous),
             new ApiSurfaceEntry("SystemBusinessObject", "EnterCompany",           ApiProtectionLevel.Public,  ApiAccessRequirement.Authenticated, ApiReplayProtection.UniqueSequence),

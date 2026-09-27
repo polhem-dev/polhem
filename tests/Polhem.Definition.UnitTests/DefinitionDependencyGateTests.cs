@@ -53,7 +53,7 @@ namespace Polhem.Definition.UnitTests
         /// Matches <c>PolhemAllowedDependency</c> in <c>src/Directory.Build.targets</c> entry by entry.
         /// The list for <c>Polhem.Base</c> is deliberately empty: it must not have any dependency that flows to consumers.
         /// <c>Microsoft.Extensions.Localization.Abstractions</c> (used by
-        /// <c>Language/PolhemStringLocalizer.cs</c>) is a Microsoft first-party pure abstraction package versioned with .NET.
+        /// <c>Language/LanguageResourceStringLocalizer.cs</c>) is a Microsoft first-party pure abstraction package versioned with .NET.
         /// It carries no implementation and locks in no engine, so it is allowed. Third-party implementation packages must not
         /// appear here.
         /// </remarks>

@@ -45,7 +45,7 @@ namespace Polhem.Business.UnitTests.Contracts
         [
             (typeof(SystemActions), typeof(SystemBusinessObject)),
             (typeof(FormActions), typeof(FormBusinessObject)),
-            (typeof(LogActions), typeof(LogBusinessObject)),
+            (typeof(AuditLogActions), typeof(AuditLogBusinessObject)),
         ];
 
         /// <summary>

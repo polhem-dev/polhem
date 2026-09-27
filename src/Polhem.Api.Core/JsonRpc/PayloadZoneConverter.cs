@@ -94,10 +94,10 @@ namespace Polhem.Api.Core.JsonRpc
                 case GetLookupResponse response:
                     response.Table = DateTimeZoneConverter.UtcToUser(response.Table, timeZoneId);
                     break;
-                case LogListResponse response:
+                case AuditLogListResponse response:
                     response.Table = DateTimeZoneConverter.UtcToUser(response.Table, timeZoneId);
                     break;
-                case LogAggregateResponse response:
+                case AuditLogAggregateResponse response:
                     response.Table = DateTimeZoneConverter.UtcToUser(response.Table, timeZoneId);
                     break;
                 case GetChangeDetailResponse response:

@@ -5,10 +5,10 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition
 {
     /// <summary>
-    /// Default <see cref="IPolhemContext"/> implementation; a plain POCO assembled
+    /// Default <see cref="IBusinessObjectContext"/> implementation; a plain POCO assembled
     /// by <c>BusinessObjectFactory</c> at BO construction time.
     /// </summary>
-    public sealed class PolhemContext : IPolhemContext
+    public sealed class BusinessObjectContext : IBusinessObjectContext
     {
         /// <inheritdoc/>
         public required IDefineAccess DefineAccess { get; init; }

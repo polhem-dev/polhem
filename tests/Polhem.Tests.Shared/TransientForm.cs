@@ -133,11 +133,11 @@ namespace Polhem.Tests.Shared
         /// Builds a context whose define access and repository factory point at this form.
         /// </summary>
         /// <param name="overrides">Further service overrides layered on the fixture's provider.</param>
-        public IPolhemContext CreateContext(params (Type ServiceType, object? Instance)[] overrides)
+        public IBusinessObjectContext CreateContext(params (Type ServiceType, object? Instance)[] overrides)
         {
             var all = new List<(Type, object?)> { (typeof(IRepositoryFactory), new RepositoryFactoryStub(Repository)) };
             all.AddRange(overrides);
-            return new PolhemContext
+            return new BusinessObjectContext
             {
                 DefineAccess = DefineAccess,
                 SessionInfoService = _fx.GetRequiredService<ISessionInfoService>(),

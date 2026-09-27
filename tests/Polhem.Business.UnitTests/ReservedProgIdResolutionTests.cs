@@ -32,7 +32,7 @@ namespace Polhem.Business.UnitTests
 
         [Theory]
         [InlineData(SysProgIds.System, typeof(SystemBusinessObject))]
-        [InlineData(SysProgIds.AuditLog, typeof(LogBusinessObject))]
+        [InlineData(SysProgIds.AuditLog, typeof(AuditLogBusinessObject))]
         [DisplayName("Resolve returns the framework default BO when the registry does not declare the reserved progId (so a read-only deployment starts even when self-registration cannot write the file)")]
         public void Resolve_ReservedProgIdAbsent_ReturnsFrameworkDefault(string progId, Type expected)
         {
@@ -92,7 +92,7 @@ namespace Polhem.Business.UnitTests
         public void Resolve_BeeTypeName_MessageHasBeeHint()
         {
             var resolver = new ProgramSettingsBoTypeResolver(
-                new StubDefineAccess(Registry((SysProgIds.AuditLog, "Bee.Business.AuditLog.LogBusinessObject, Bee.Business"))));
+                new StubDefineAccess(Registry((SysProgIds.AuditLog, "Bee.Business.AuditLog.AuditLogBusinessObject, Bee.Business"))));
 
             var ex = Assert.Throws<InvalidOperationException>(() => resolver.Resolve(SysProgIds.AuditLog));
 
@@ -170,7 +170,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("The resolution target is widened to BusinessObject, so an ordinary progId bound to a LogBusinessObject subclass is accepted")]
+        [DisplayName("The resolution target is widened to BusinessObject, so an ordinary progId bound to a AuditLogBusinessObject subclass is accepted")]
         public void Resolve_OrdinaryProgIdBoundToNonFormBusinessObject_IsAccepted()
         {
             var resolver = new ProgramSettingsBoTypeResolver(
@@ -205,13 +205,13 @@ namespace Polhem.Business.UnitTests
 
         public sealed class CustomSystemBo : SystemBusinessObject
         {
-            public CustomSystemBo(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
+            public CustomSystemBo(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
                 : base(ctx, accessToken, progId, isLocalCall) { }
         }
 
-        public sealed class CustomLogBo : LogBusinessObject
+        public sealed class CustomLogBo : AuditLogBusinessObject
         {
-            public CustomLogBo(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
+            public CustomLogBo(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
                 : base(ctx, accessToken, progId, isLocalCall) { }
         }
 

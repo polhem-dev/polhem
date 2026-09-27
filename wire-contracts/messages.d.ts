@@ -69,13 +69,13 @@ export interface DataSet {
   relations: DataRelationShape[];
 }
 
-export type AnomalyKind = 'Error' | 'Timeout' | 'Slow' | 'LargeAffected' | 'LargeResult' | 'Unauthorized' | 'Replay';
+export type AnomalyKind = 'None' | 'Error' | 'Timeout' | 'Slow' | 'LargeAffected' | 'LargeResult' | 'Unauthorized' | 'Replay';
 
 export type ApiKeyStatus = 'NotChecked' | 'NotConfigured' | 'NotProvided' | 'Invalid' | 'Valid';
 
-export type ApiKeyType = 'Internal' | 'ThirdParty';
+export type ApiKeyType = 'None' | 'Internal' | 'ThirdParty';
 
-export type ChangeKind = 'Insert' | 'Update' | 'Delete';
+export type ChangeKind = 'None' | 'Insert' | 'Update' | 'Delete';
 
 export type ComparisonOperator = 'Equal' | 'NotEqual' | 'GreaterThan' | 'GreaterThanOrEqual' | 'LessThan' | 'LessThanOrEqual' | 'Like' | 'In' | 'Between' | 'StartsWith' | 'EndsWith' | 'Contains';
 
@@ -87,7 +87,7 @@ export type LoginEvent = 'LoginSucceeded' | 'LoginFailed' | 'LockedOut' | 'Logou
 
 export type NumberKind = 'None' | 'Quantity' | 'Weight' | 'Amount' | 'Percent' | 'UnitPrice' | 'Cost' | 'ExchangeRate';
 
-export type PermissionAction = 'None' | 'Create' | 'Read' | 'Update' | 'Delete' | 'Print' | 'Export';
+export type PermissionActions = 'None' | 'Create' | 'Read' | 'Update' | 'Delete' | 'Print' | 'Export';
 
 export type SortDirection = 'Asc' | 'Desc';
 
@@ -103,6 +103,17 @@ export interface ApiKeySummary {
   keyType: ApiKeyType;
   sysId?: string;
   sysName?: string;
+}
+
+export interface AuditLogAggregateResponse {
+  parameters?: Parameter[];
+  table?: DataTable;
+}
+
+export interface AuditLogListResponse {
+  paging?: PagingInfo;
+  parameters?: Parameter[];
+  table?: DataTable;
 }
 
 export interface CashRoundingItem {
@@ -139,7 +150,7 @@ export interface CreateApiKeyResponse {
 export interface CreateSessionRequest {
   expiresIn: number;
   parameters?: Parameter[];
-  userID?: string;
+  userId?: string;
 }
 
 export interface CreateSessionResponse {
@@ -177,7 +188,7 @@ export interface EnterCompanyRequest {
 }
 
 export interface EnterCompanyResponse {
-  capabilities?: Record<string, PermissionAction>;
+  capabilities?: Record<string, PermissionActions>;
   company?: CompanyInfo;
   parameters?: Parameter[];
 }
@@ -427,17 +438,6 @@ export interface ListApiKeysRequest {
 export interface ListApiKeysResponse {
   apiKeys?: ApiKeySummary[];
   parameters?: Parameter[];
-}
-
-export interface LogAggregateResponse {
-  parameters?: Parameter[];
-  table?: DataTable;
-}
-
-export interface LogListResponse {
-  paging?: PagingInfo;
-  parameters?: Parameter[];
-  table?: DataTable;
 }
 
 export interface LoginRequest {

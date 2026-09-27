@@ -45,9 +45,9 @@ namespace Polhem.Business.Form
         public virtual GetListResult GetList(GetListArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
-            Authorize(PermissionAction.Read);
+            Authorize(PermissionActions.Read);
 
-            var filter = CombineWithScope(args.Filter, ResolveScopeFilter(PermissionAction.Read));
+            var filter = CombineWithScope(args.Filter, ResolveScopeFilter(PermissionActions.Read));
             var paging = args.Paging ?? new PagingOptions { PageSize = PagingOptions.MaxPageSize };
             var repository = CreateDataFormRepository(ProgId);
             var listResult = repository.GetList(args.SelectFields, filter, args.SortFields, paging);
@@ -97,7 +97,7 @@ namespace Polhem.Business.Form
                 lookupFields.Select(f => f.FieldName).Prepend(SysFields.RowId));
             var filter = CombineWithScope(
                 CombineWithScope(BuildLookupSearchFilter(lookupFields, args.SearchText), GetLookupFilter()),
-                LookupAppliesRecordScope ? ResolveScopeFilter(PermissionAction.Read) : null);
+                LookupAppliesRecordScope ? ResolveScopeFilter(PermissionActions.Read) : null);
             var paging = args.Paging ?? new PagingOptions { PageSize = DefaultLookupPageSize };
 
             var repository = CreateDataFormRepository(ProgId);
@@ -172,7 +172,7 @@ namespace Polhem.Business.Form
         public virtual GetNewDataResult GetNewData(GetNewDataArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
-            Authorize(PermissionAction.Read);
+            Authorize(PermissionActions.Read);
 
             var repository = CreateDataFormRepository(ProgId);
             // The user's zone travels as an argument rather than being resolved from ambient state:
@@ -193,10 +193,10 @@ namespace Polhem.Business.Form
         public virtual GetDataResult GetData(GetDataArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
-            Authorize(PermissionAction.Read);
+            Authorize(PermissionActions.Read);
 
             var repository = CreateDataFormRepository(ProgId);
-            var dataSet = repository.GetData(args.RowId, ResolveScopeFilter(PermissionAction.Read));
+            var dataSet = repository.GetData(args.RowId, ResolveScopeFilter(PermissionActions.Read));
 
             // Record the detail view (who viewed which record). Opt-in and best-effort; field-level
             // detail is intentionally not recorded — a detail view loads the whole record.

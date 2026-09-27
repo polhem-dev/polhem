@@ -84,19 +84,19 @@ namespace Polhem.UI.Avalonia.Views
             // Tag each command with the permission action it requires; the capability resolver
             // hides an un-permitted button. Untagged controls stay visible (opt-in).
             _viewButton = new Button { Content = "View", IsEnabled = false };
-            PermissionScope.SetAction(_viewButton, PermissionAction.Read);
+            PermissionScope.SetAction(_viewButton, PermissionActions.Read);
             _viewButton.Click += (_, _) => OnViewClicked();
 
             _newButton = new Button { Content = "New", IsEnabled = false };
-            PermissionScope.SetAction(_newButton, PermissionAction.Create);
+            PermissionScope.SetAction(_newButton, PermissionActions.Create);
             _newButton.Click += (_, _) => OnNewClicked();
 
             _editButton = new Button { Content = "Edit", IsEnabled = false };
-            PermissionScope.SetAction(_editButton, PermissionAction.Update);
+            PermissionScope.SetAction(_editButton, PermissionActions.Update);
             _editButton.Click += (_, _) => OnEditClicked();
 
             _deleteButton = new Button { Content = "Delete", IsEnabled = false };
-            PermissionScope.SetAction(_deleteButton, PermissionAction.Delete);
+            PermissionScope.SetAction(_deleteButton, PermissionActions.Delete);
             _deleteButton.Click += async (_, _) => await OnDeleteClickedAsync().ConfigureAwait(true);
 
             var toolbar = new StackPanel

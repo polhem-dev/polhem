@@ -7,7 +7,7 @@ using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.DataObjects;
-using Polhem.UI.Core.Permissions;
+using Polhem.Api.Client.Permissions;
 
 namespace Avalonia.DemoCenter.Modules.Permissions
 {
@@ -19,7 +19,7 @@ namespace Avalonia.DemoCenter.Modules.Permissions
     /// <see cref="ElementCapabilityResolver"/> — no back end involved.
     /// </summary>
     /// <remarks>
-    /// The capability snapshot is just a <c>Dictionary&lt;modelId, PermissionAction&gt;</c>, so a demo
+    /// The capability snapshot is just a <c>Dictionary&lt;modelId, PermissionActions&gt;</c>, so a demo
     /// can fabricate it in memory and exercise the exact same resolver the shipped views use. Field
     /// permission spans both tables: the master's <c>Handler ID number</c> (PersonalData) and the detail
     /// grid's <c>Unit price</c> (Cost) column each degrade by their category — the resolver reverse-looks-up
@@ -54,10 +54,10 @@ namespace Avalonia.DemoCenter.Modules.Permissions
             var detailData = BuildData(schema);
 
             // ---- Right: master fields + a real detail grid ----
-            var newBtn = MakeCommand("New", PermissionAction.Create);
-            var saveBtn = MakeCommand("Save", PermissionAction.Create | PermissionAction.Update);
-            var deleteBtn = MakeCommand("Delete", PermissionAction.Delete);
-            var viewBtn = MakeCommand("View", PermissionAction.Read);
+            var newBtn = MakeCommand("New", PermissionActions.Create);
+            var saveBtn = MakeCommand("Save", PermissionActions.Create | PermissionActions.Update);
+            var deleteBtn = MakeCommand("Delete", PermissionActions.Delete);
+            var viewBtn = MakeCommand("View", PermissionActions.Read);
             var commands = new[] { newBtn, saveBtn, deleteBtn, viewBtn };
             var toolbar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { newBtn, saveBtn, deleteBtn, viewBtn } };
 
@@ -104,12 +104,12 @@ namespace Avalonia.DemoCenter.Modules.Permissions
 
             void Refresh()
             {
-                IReadOnlyDictionary<string, PermissionAction>? snapshot = active.IsChecked == true
-                    ? new Dictionary<string, PermissionAction>(StringComparer.Ordinal)
+                IReadOnlyDictionary<string, PermissionActions>? snapshot = active.IsChecked == true
+                    ? new Dictionary<string, PermissionActions>(StringComparer.Ordinal)
                     {
-                        [FormModel] = Mask((poCreate, PermissionAction.Create), (poRead, PermissionAction.Read), (poUpdate, PermissionAction.Update), (poDelete, PermissionAction.Delete)),
-                        [PiiModel] = Mask((piiRead, PermissionAction.Read), (piiUpdate, PermissionAction.Update)),
-                        [CostModel] = Mask((costRead, PermissionAction.Read), (costUpdate, PermissionAction.Update)),
+                        [FormModel] = Mask((poCreate, PermissionActions.Create), (poRead, PermissionActions.Read), (poUpdate, PermissionActions.Update), (poDelete, PermissionActions.Delete)),
+                        [PiiModel] = Mask((piiRead, PermissionActions.Read), (piiUpdate, PermissionActions.Update)),
+                        [CostModel] = Mask((costRead, PermissionActions.Read), (costUpdate, PermissionActions.Update)),
                     }
                     : null; // null snapshot = capability inactive = allow all (the resolver's safe default).
 
@@ -183,7 +183,7 @@ namespace Avalonia.DemoCenter.Modules.Permissions
 
         // Builds a fresh detail grid each refresh: a fresh layout with capability applied to its
         // columns (narrowing only), then bound. Fresh layout means re-granting Cost.Read re-shows the column.
-        private static Control BuildDetailGrid(FormSchema schema, FormDataObject data, IReadOnlyDictionary<string, PermissionAction>? snapshot)
+        private static Control BuildDetailGrid(FormSchema schema, FormDataObject data, IReadOnlyDictionary<string, PermissionActions>? snapshot)
         {
             var layout = new LayoutGrid(DetailTable, "Items");
             layout.Columns!.Add(new LayoutColumn("item_name", "Item", ControlType.TextEdit));
@@ -202,7 +202,7 @@ namespace Avalonia.DemoCenter.Modules.Permissions
             return grid;
         }
 
-        private static Button MakeCommand(string text, PermissionAction action)
+        private static Button MakeCommand(string text, PermissionActions action)
         {
             var button = new Button { Content = text };
             PermissionScope.SetAction(button, action);   // the same tagging the shipped views use
@@ -233,9 +233,9 @@ namespace Avalonia.DemoCenter.Modules.Permissions
             return DataEditorParts.Section(title, null, stack);
         }
 
-        private static PermissionAction Mask(params (CheckBox toggle, PermissionAction action)[] items)
+        private static PermissionActions Mask(params (CheckBox toggle, PermissionActions action)[] items)
         {
-            var mask = PermissionAction.None;
+            var mask = PermissionActions.None;
             foreach (var (toggle, action) in items)
                 if (toggle.IsChecked == true) { mask |= action; }
             return mask;

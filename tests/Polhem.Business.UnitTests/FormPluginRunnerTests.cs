@@ -13,11 +13,11 @@ namespace Polhem.Business.UnitTests
     /// </summary>
     public class FormPluginRunnerTests : IClassFixture<PolhemTestFixture>
     {
-        private readonly IPolhemContext _ctx;
+        private readonly IBusinessObjectContext _ctx;
 
         public FormPluginRunnerTests(PolhemTestFixture fixture)
         {
-            _ctx = TestPolhemContext.Create(fixture);
+            _ctx = TestBusinessObjectContext.Create(fixture);
         }
 
         private static FormPluginChain Chain(params FormPluginBinding[] bindings)
@@ -213,7 +213,7 @@ namespace Polhem.Business.UnitTests
         /// <summary>A shared call log, isolated between tests with <see cref="Reset"/>.</summary>
         public abstract class RecordingPlugin : FormBusinessPlugin
         {
-            protected RecordingPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            protected RecordingPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId)
             {
                 ConstructedCount++;
@@ -234,7 +234,7 @@ namespace Polhem.Business.UnitTests
 
         public sealed class BeforeSaveOnlyPlugin : RecordingPlugin
         {
-            public BeforeSaveOnlyPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public BeforeSaveOnlyPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void BeforeSave(SaveContext context) => Record("BeforeSaveOnly.BeforeSave");
@@ -242,7 +242,7 @@ namespace Polhem.Business.UnitTests
 
         public sealed class AfterSaveOnlyPlugin : RecordingPlugin
         {
-            public AfterSaveOnlyPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public AfterSaveOnlyPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void AfterSave(SaveContext context) => Record("AfterSaveOnly.AfterSave");
@@ -250,7 +250,7 @@ namespace Polhem.Business.UnitTests
 
         public sealed class BeforeDeleteOnlyPlugin : RecordingPlugin
         {
-            public BeforeDeleteOnlyPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public BeforeDeleteOnlyPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void BeforeDelete(DeleteContext context) => Record("BeforeDeleteOnly.BeforeDelete");
@@ -259,7 +259,7 @@ namespace Polhem.Business.UnitTests
         /// <summary>Overrides two stages; used to verify that a plugin with more than one stage is rejected.</summary>
         public sealed class BothSaveStagesPlugin : RecordingPlugin
         {
-            public BothSaveStagesPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public BothSaveStagesPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void BeforeSave(SaveContext context) => Record("Both.BeforeSave");
@@ -270,7 +270,7 @@ namespace Polhem.Business.UnitTests
         /// <summary>Overrides nothing, so binding it would do nothing.</summary>
         public sealed class NoStagePlugin : RecordingPlugin
         {
-            public NoStagePlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public NoStagePlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
         }
 
@@ -279,7 +279,7 @@ namespace Polhem.Business.UnitTests
         {
             private int _seen;
 
-            public CountingPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public CountingPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void BeforeSave(SaveContext context)
@@ -294,7 +294,7 @@ namespace Polhem.Business.UnitTests
         {
             private readonly IDefineAccess _defineAccess;
 
-            public InjectedPlugin(IPolhemContext ctx, Guid accessToken, string progId, IDefineAccess defineAccess)
+            public InjectedPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId, IDefineAccess defineAccess)
                 : base(ctx, accessToken, progId)
             {
                 _defineAccess = defineAccess;
@@ -306,7 +306,7 @@ namespace Polhem.Business.UnitTests
 
         public sealed class FirstPlugin : RecordingPlugin
         {
-            public FirstPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public FirstPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void BeforeSave(SaveContext context) => Record("First.BeforeSave");
@@ -314,7 +314,7 @@ namespace Polhem.Business.UnitTests
 
         public sealed class SecondPlugin : RecordingPlugin
         {
-            public SecondPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public SecondPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void BeforeSave(SaveContext context) => Record("Second.BeforeSave");

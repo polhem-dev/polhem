@@ -182,7 +182,7 @@ namespace Polhem.Hosting.UnitTests
 
         public sealed class CustomSystemBo : SystemBusinessObject
         {
-            public CustomSystemBo(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
+            public CustomSystemBo(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
                 : base(ctx, accessToken, progId, isLocalCall) { }
         }
 

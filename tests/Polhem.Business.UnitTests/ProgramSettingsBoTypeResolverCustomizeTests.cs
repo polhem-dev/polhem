@@ -18,7 +18,7 @@ namespace Polhem.Business.UnitTests
     {
         public class TenantFormBo : FormBusinessObject
         {
-            public TenantFormBo(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
+            public TenantFormBo(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
                 : base(ctx, accessToken, progId, isLocalCall) { }
         }
 

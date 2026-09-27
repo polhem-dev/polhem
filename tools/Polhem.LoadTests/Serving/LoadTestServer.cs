@@ -1,4 +1,3 @@
-using Polhem.Api.Client;
 using Polhem.LoadTests.Bootstrap;
 using Polhem.LoadTests.Configuration;
 using Microsoft.AspNetCore.Builder;
@@ -52,10 +51,6 @@ namespace Polhem.LoadTests.Serving
             builder.Services.AddControllers();
 
             var app = builder.Build();
-
-            // The server dispatches in-process from inside the request, so it needs the same
-            // service provider hookup a Local run makes.
-            ApiClientInfo.LocalServiceProvider = app.Services;
             app.MapControllers();
 
             Console.WriteLine($"Definitions  : {workspace.DefinePath}");

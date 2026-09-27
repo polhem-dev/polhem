@@ -19,9 +19,10 @@ namespace Polhem.Api.Client.Connectors
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiConnector"/> class using a local connection.
         /// </summary>
+        /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
         /// <param name="accessToken">The access token.</param>
-        protected ApiConnector(Guid accessToken)
-            : this(accessToken, ApiSessionContext.Ambient)
+        protected ApiConnector(IServiceProvider services, Guid accessToken)
+            : this(services, accessToken, ApiSessionContext.Ambient)
         {
         }
 
@@ -29,17 +30,19 @@ namespace Polhem.Api.Client.Connectors
         /// Initializes a new instance of the <see cref="ApiConnector"/> class using a local connection
         /// and the given session state.
         /// </summary>
+        /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
         /// <param name="accessToken">The access token.</param>
         /// <param name="session">
         /// The per-session state. A host serving several users from one process must give each session
         /// its own instance; sharing one makes the last login's transmission key overwrite the rest.
         /// </param>
-        protected ApiConnector(Guid accessToken, ApiSessionContext session)
+        protected ApiConnector(IServiceProvider services, Guid accessToken, ApiSessionContext session)
         {
+            ArgumentNullException.ThrowIfNull(services);
             ArgumentNullException.ThrowIfNull(session);
             AccessToken = accessToken;
             Session = session;
-            Provider = new LocalApiProvider(accessToken);
+            Provider = new LocalApiProvider(services, accessToken);
         }
 
         /// <summary>

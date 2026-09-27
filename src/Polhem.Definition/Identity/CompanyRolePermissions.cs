@@ -50,19 +50,19 @@ namespace Polhem.Definition.Identity
         public string GetKey() => CompanyId;
 
         // Identifier keys → Ordinal (culture-invariant and fastest); see rules/code-style.md.
-        private readonly Dictionary<string, Dictionary<string, PermissionAction>> _allowedByRole;
-        private readonly Dictionary<(string RoleId, string ModelId, PermissionAction Action), List<ScopeStrategy>> _scopesByRoleModelAction;
+        private readonly Dictionary<string, Dictionary<string, PermissionActions>> _allowedByRole;
+        private readonly Dictionary<(string RoleId, string ModelId, PermissionActions Action), List<ScopeStrategy>> _scopesByRoleModelAction;
         private readonly Dictionary<string, List<string>> _rolesByUser;
 
-        private static Dictionary<string, Dictionary<string, PermissionAction>> BuildAllowedByRole(
+        private static Dictionary<string, Dictionary<string, PermissionActions>> BuildAllowedByRole(
             IReadOnlyList<RoleGrantRow> grants)
         {
-            var byRole = new Dictionary<string, Dictionary<string, PermissionAction>>(StringComparer.Ordinal);
+            var byRole = new Dictionary<string, Dictionary<string, PermissionActions>>(StringComparer.Ordinal);
             foreach (var grant in grants)
             {
                 if (!byRole.TryGetValue(grant.RoleId, out var byModel))
                 {
-                    byModel = new Dictionary<string, PermissionAction>(StringComparer.Ordinal);
+                    byModel = new Dictionary<string, PermissionActions>(StringComparer.Ordinal);
                     byRole[grant.RoleId] = byModel;
                 }
                 byModel.TryGetValue(grant.ModelId, out var current);
@@ -71,10 +71,10 @@ namespace Polhem.Definition.Identity
             return byRole;
         }
 
-        private static Dictionary<(string, string, PermissionAction), List<ScopeStrategy>> BuildScopes(
+        private static Dictionary<(string, string, PermissionActions), List<ScopeStrategy>> BuildScopes(
             IReadOnlyList<RoleGrantRow> grants)
         {
-            var byKey = new Dictionary<(string, string, PermissionAction), List<ScopeStrategy>>();
+            var byKey = new Dictionary<(string, string, PermissionActions), List<ScopeStrategy>>();
             foreach (var grant in grants)
             {
                 var key = (grant.RoleId, grant.ModelId, grant.Action);
@@ -114,17 +114,17 @@ namespace Polhem.Definition.Identity
 
         /// <summary>
         /// Returns the OR-merged allowed action mask for the given roles on the model — the layer-1
-        /// multi-role union (capability accrues across roles). Returns <see cref="PermissionAction.None"/>
+        /// multi-role union (capability accrues across roles). Returns <see cref="PermissionActions.None"/>
         /// when none of the roles grants anything on the model.
         /// </summary>
         /// <param name="roleIds">The role business ids the user holds (e.g. <see cref="SessionInfo.Roles"/>).</param>
         /// <param name="modelId">The permission model id to check.</param>
-        public PermissionAction GetAllowed(IEnumerable<string> roleIds, string modelId)
+        public PermissionActions GetAllowed(IEnumerable<string> roleIds, string modelId)
         {
             ArgumentNullException.ThrowIfNull(roleIds);
 
             // Iterates the roles the user holds (a handful) rather than every grant in the company.
-            var allowed = PermissionAction.None;
+            var allowed = PermissionActions.None;
             foreach (var roleId in roleIds)
             {
                 if (_allowedByRole.TryGetValue(roleId, out var byModel) &&
@@ -144,12 +144,12 @@ namespace Polhem.Definition.Identity
         /// call, so the caller owns the returned dictionary.
         /// </summary>
         /// <param name="roleIds">The role business ids the user holds (e.g. <see cref="SessionInfo.Roles"/>).</param>
-        public Dictionary<string, PermissionAction> GetAllowedByModel(IEnumerable<string> roleIds)
+        public Dictionary<string, PermissionActions> GetAllowedByModel(IEnumerable<string> roleIds)
         {
             ArgumentNullException.ThrowIfNull(roleIds);
 
             // Model ids are identifiers → Ordinal comparison (culture-invariant, fastest).
-            var result = new Dictionary<string, PermissionAction>(StringComparer.Ordinal);
+            var result = new Dictionary<string, PermissionActions>(StringComparer.Ordinal);
             foreach (var roleId in roleIds)
             {
                 if (!_allowedByRole.TryGetValue(roleId, out var byModel)) { continue; }
@@ -171,7 +171,7 @@ namespace Polhem.Definition.Identity
         /// <param name="roleIds">The role business ids the user holds (e.g. <see cref="SessionInfo.Roles"/>).</param>
         /// <param name="modelId">The permission model id to check.</param>
         /// <param name="action">The single action to check.</param>
-        public IReadOnlyList<ScopeStrategy> GetEffectiveScopes(IEnumerable<string> roleIds, string modelId, PermissionAction action)
+        public IReadOnlyList<ScopeStrategy> GetEffectiveScopes(IEnumerable<string> roleIds, string modelId, PermissionActions action)
         {
             ArgumentNullException.ThrowIfNull(roleIds);
 

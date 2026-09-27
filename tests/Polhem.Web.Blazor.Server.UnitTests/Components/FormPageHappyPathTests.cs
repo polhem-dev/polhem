@@ -24,7 +24,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
     {
         private sealed class FakeFormConnector : FormApiConnector
         {
-            public FakeFormConnector() : base(Guid.Empty, "TestProg") { }
+            public FakeFormConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.Empty, "TestProg") { }
 
             public override Task<GetListResponse> GetListAsync(
                 string selectFields = "",
@@ -38,7 +38,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             private readonly FormSchema _schema;
 
-            public FakeSystemConnector(FormSchema schema) : base(Guid.Empty)
+            public FakeSystemConnector(FormSchema schema) : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.Empty)
             {
                 _schema = schema;
             }
@@ -61,7 +61,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             private readonly FakeSystemConnector _systemConnector;
 
             public FakeFactory(FormSchema schema)
-                : base(new PolhemBlazorOptions().UseLocalProvider(), new Polhem.Api.Client.ApiSessionContext())
+                : base(new PolhemBlazorOptions().UseLocalProvider(), new Polhem.Api.Client.ApiSessionContext(), Polhem.Tests.Shared.EmptyServiceProvider.Instance)
             {
                 _systemConnector = new FakeSystemConnector(schema);
             }

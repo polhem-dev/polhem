@@ -124,8 +124,8 @@ namespace Polhem.Business.UnitTests
 
         // Only LanguageService and SessionInfoService are exercised; the remaining context members
         // are never touched by the localization path, so they stay unset.
-        private static PolhemContext BuildContext(ILanguageService lang, ISessionInfoService sessions)
-            => new PolhemContext
+        private static BusinessObjectContext BuildContext(ILanguageService lang, ISessionInfoService sessions)
+            => new BusinessObjectContext
             {
                 DefineAccess = null!,
                 SessionInfoService = sessions,
@@ -139,7 +139,7 @@ namespace Polhem.Business.UnitTests
         /// </summary>
         private sealed class LangProbeBusinessObject : BusinessObject
         {
-            public LangProbeBusinessObject(IPolhemContext ctx, Guid accessToken) : base(ctx, accessToken, "TestProg") { }
+            public LangProbeBusinessObject(IBusinessObjectContext ctx, Guid accessToken) : base(ctx, accessToken, "TestProg") { }
 
             public string CallGetLangText(string fullKey) => GetLangText(fullKey);
 

@@ -30,9 +30,8 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
 
         /// <summary>
         /// Configures the in-process (<see cref="PolhemBlazorProviderMode.Local"/>)
-        /// provider. The host must also call <c>AddPolhemFramework</c> and assign
-        /// <see cref="Polhem.Api.Client.ApiClientInfo.LocalServiceProvider"/> so connector calls can be
-        /// dispatched in process.
+        /// provider. The host must also call <c>AddPolhemFramework</c> on the same service collection,
+        /// so that <see cref="PolhemApiConnectorFactory"/> can dispatch connector calls in process.
         /// </summary>
         /// <remarks>
         /// WARNING: for trusted users only. Every call becomes a trusted local call that skips the

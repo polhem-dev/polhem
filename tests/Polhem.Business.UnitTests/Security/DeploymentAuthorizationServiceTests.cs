@@ -1,11 +1,11 @@
 using System.ComponentModel;
 using Polhem.Definition.Identity;
-using Polhem.ObjectCaching.Services;
+using Polhem.Business.Security;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Repository.Abstractions.Form;
 using Polhem.Repository.Abstractions.System;
 
-namespace Polhem.ObjectCaching.UnitTests.Services
+namespace Polhem.Business.UnitTests.Security
 {
     /// <summary>
     /// Checks the decisions of <see cref="DeploymentAuthorizationService"/>: the flag decides everything, and it holds

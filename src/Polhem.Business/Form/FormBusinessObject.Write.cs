@@ -261,10 +261,10 @@ namespace Polhem.Business.Form
         public virtual DeleteResult Delete(DeleteArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
-            Authorize(PermissionAction.Delete);
+            Authorize(PermissionActions.Delete);
 
             var repository = CreateDataFormRepository(ProgId);
-            var scopeFilter = ResolveScopeFilter(PermissionAction.Delete);
+            var scopeFilter = ResolveScopeFilter(PermissionActions.Delete);
             var schema = DefineAccess.GetFormSchema(ProgId);
             var context = new DeleteContext(args, repository, scopeFilter, schema);
 

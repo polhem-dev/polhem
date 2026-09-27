@@ -22,7 +22,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
 {
     /// <summary>
     /// An end-to-end round trip through <see cref="JsonRpcExecutor"/>: the <c>AuditLog.*</c> actions are dispatched
-    /// through the dispatch branch to <see cref="Polhem.Business.AuditLog.LogBusinessObject"/>, and a stub repository
+    /// through the dispatch branch to <see cref="Polhem.Business.AuditLog.AuditLogBusinessObject"/>, and a stub repository
     /// returns known data, verifying the axis routing and the input/output converters. A fake
     /// ICompanyAuthorizationService grants permission; no real database is involved.
     /// </summary>
@@ -69,11 +69,11 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         public async Task GetChangeLog_ThroughJsonRpc_Dispatches()
         {
             var repo = new StubAuditLogRepository(HeaderPage(2), null);
-            var response = await Dispatch(repo, LogActions.GetChangeLog,
+            var response = await Dispatch(repo, AuditLogActions.GetChangeLog,
                 new GetChangeLogRequest { ProgId = "Employee", ChangeKind = ChangeKind.Update });
 
             Assert.Null(response.Error);
-            var result = Assert.IsType<LogListResponse>(response.Result!.Value);
+            var result = Assert.IsType<AuditLogListResponse>(response.Result!.Value);
             Assert.Equal(2, result.Table!.Rows.Count);
             Assert.NotNull(result.Paging);
         }
@@ -84,7 +84,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         {
             var sysRowId = Guid.NewGuid();
             var repo = new StubAuditLogRepository(HeaderPage(0), DetailRow(sysRowId));
-            var response = await Dispatch(repo, LogActions.GetChangeDetail,
+            var response = await Dispatch(repo, AuditLogActions.GetChangeDetail,
                 new GetChangeDetailRequest { SysRowId = sysRowId });
 
             Assert.Null(response.Error);
@@ -102,7 +102,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
             var repo = new StubAuditLogRepository(HeaderPage(0),
                 DetailRow(sysRowId, ChangeKind.Update, SchemaBoundChangePayload()));
 
-            var response = await Dispatch(repo, LogActions.GetChangeDetail,
+            var response = await Dispatch(repo, AuditLogActions.GetChangeDetail,
                 new GetChangeDetailRequest { SysRowId = sysRowId });
 
             Assert.Null(response.Error);
@@ -140,7 +140,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         [InlineData("GetAccessLog")]
         [InlineData("GetApiAnomalyLog")]
         [InlineData("GetDbAnomalyLog")]
-        [DisplayName("Each AuditLog list action dispatches through the executor and returns a LogListResponse")]
+        [DisplayName("Each AuditLog list action dispatches through the executor and returns a AuditLogListResponse")]
         public async Task ListActions_ThroughJsonRpc_ReturnLogListResponse(string action)
         {
             var repo = new StubAuditLogRepository(HeaderPage(2), null);
@@ -155,7 +155,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
             var response = await Dispatch(repo, action, request);
 
             Assert.Null(response.Error);
-            var result = Assert.IsType<LogListResponse>(response.Result!.Value);
+            var result = Assert.IsType<AuditLogListResponse>(response.Result!.Value);
             Assert.Equal(2, result.Table!.Rows.Count);
             Assert.NotNull(result.Paging);
         }
@@ -164,7 +164,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         [InlineData("GetApiAnomalySummary")]
         [InlineData("GetDbAnomalySummary")]
         [InlineData("GetTopApiMethods")]
-        [DisplayName("Each AuditLog aggregate action dispatches through the executor and returns a LogAggregateResponse")]
+        [DisplayName("Each AuditLog aggregate action dispatches through the executor and returns a AuditLogAggregateResponse")]
         public async Task AggregateActions_ThroughJsonRpc_ReturnLogAggregateResponse(string action)
         {
             var repo = new StubAuditLogRepository(HeaderPage(0), null);
@@ -178,7 +178,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
             var response = await Dispatch(repo, action, request);
 
             Assert.Null(response.Error);
-            var result = Assert.IsType<LogAggregateResponse>(response.Result!.Value);
+            var result = Assert.IsType<AuditLogAggregateResponse>(response.Result!.Value);
             Assert.NotNull(result.Table);
             Assert.Single(result.Table!.Rows);
         }
@@ -228,7 +228,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
 
         private sealed class FakeAuth : ICompanyAuthorizationService
         {
-            public bool Can(Guid accessToken, string modelId, PermissionAction action) => true;
+            public bool Can(Guid accessToken, string modelId, PermissionActions action) => true;
         }
 
         private sealed class FakeDeploymentAuth : IDeploymentAuthorizationService

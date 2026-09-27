@@ -33,7 +33,7 @@
 
   <ItemGroup Condition="'$(MSBuildProjectName)' == 'Polhem.Definition'">
     <!-- Microsoft first-party, abstraction-only, versioned with .NET itself: it makes no technology
-         choice on the consumer's behalf. Used by Language/PolhemStringLocalizer.cs. -->
+         choice on the consumer's behalf. Used by Language/LanguageResourceStringLocalizer.cs. -->
     <PolhemAllowedDependency Include="Microsoft.Extensions.Localization.Abstractions" />
     <PolhemAllowedDependency Include="Polhem.Base" />
   </ItemGroup>

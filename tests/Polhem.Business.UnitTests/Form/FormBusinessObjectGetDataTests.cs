@@ -25,7 +25,7 @@ namespace Polhem.Business.UnitTests.Form
         [DisplayName("GetData throws ArgumentNullException for null")]
         public void GetData_NullArgs_Throws()
         {
-            var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(),
+            var bo = new FormBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid(),
                 CrudTestContext.ProgId);
             Assert.Throws<ArgumentNullException>(() => bo.GetData(null!));
         }

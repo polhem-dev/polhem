@@ -29,7 +29,7 @@ namespace Polhem.Business.UnitTests
 
         private SystemBusinessObject CreateBo()
             // The guard of `SetDeploymentAdmin` only admits local calls, so this must be declared explicitly.
-            => new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
+            => new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
 
         private IDbConnectionManager ConnectionManager => _fx.GetRequiredService<IDbConnectionManager>();
 

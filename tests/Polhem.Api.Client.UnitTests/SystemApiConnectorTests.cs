@@ -9,7 +9,7 @@ namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
     /// Uses <see cref="SharedDbFixture"/> to trigger the GlobalFixture's initialization of
-    /// <c>ApiClientInfo.LocalServiceProvider</c> and SharedDatabaseState. The local-mode [DbFact] tests go through
+    /// <c>TestProcessBootstrap.LocalServices</c> and SharedDatabaseState. The local-mode [DbFact] tests go through
     /// LocalApiProvider to resolve the backend JsonRpcExecutor, and complete the CreateSession flow on SQL Server.
     /// </summary>
     public class SystemApiConnectorTests : IClassFixture<SharedDbFixture>
@@ -17,7 +17,7 @@ namespace Polhem.Api.Client.UnitTests
         public SystemApiConnectorTests(SharedDbFixture _)
         {
             // The fixture only triggers the GlobalFixture and SharedDatabaseState initialization. The test methods
-            // use the process-wide `ApiClientInfo.LocalServiceProvider` directly.
+            // pass the process-wide `TestProcessBootstrap.LocalServices` to the local connectors.
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace Polhem.Api.Client.UnitTests
 
             // A random access token is only needed to construct the connector. `CreateSession` returns a new token.
             Guid accessToken = Guid.NewGuid();
-            var connector = new SystemApiConnector(accessToken);
+            var connector = new SystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, accessToken);
 
             // Act
             Guid newToken = await connector.CreateSessionAsync(userId, expiresIn);
@@ -47,7 +47,7 @@ namespace Polhem.Api.Client.UnitTests
         public void Constructor_Local_SetsAccessTokenAndLocalProvider()
         {
             var token = Guid.NewGuid();
-            var connector = new SystemApiConnector(token);
+            var connector = new SystemApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, token);
 
             Assert.Equal(token, connector.AccessToken);
             Assert.IsType<LocalApiProvider>(connector.Provider);
@@ -80,7 +80,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("SystemApiConnector.ExecuteAsync throws ArgumentException for an empty action")]
         public async Task ExecuteAsync_EmptyAction_ThrowsArgumentException(string? action)
         {
-            var connector = new SystemApiConnector(Guid.NewGuid());
+            var connector = new SystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, Guid.NewGuid());
             await Assert.ThrowsAsync<ArgumentException>(async () =>
                 await connector.ExecuteAsync<object>(action!, new object(), PayloadFormat.Plain));
         }
@@ -89,7 +89,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("SystemApiConnector.PingAsync succeeds over a local connection")]
         public async Task PingAsync_LocalConnector_Succeeds()
         {
-            var connector = new SystemApiConnector(Guid.NewGuid());
+            var connector = new SystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, Guid.NewGuid());
             var exception = await Record.ExceptionAsync(() => connector.PingAsync());
             Assert.Null(exception);
         }

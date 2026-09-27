@@ -34,7 +34,7 @@ namespace Polhem.Business.UnitTests.Form
         [DisplayName("GetList throws ArgumentNullException for null")]
         public void GetList_NullArgs_Throws()
         {
-            var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), ProgId);
+            var bo = new FormBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid(), ProgId);
             Assert.Throws<ArgumentNullException>(() => bo.GetList(null!));
         }
 
@@ -672,7 +672,7 @@ namespace Polhem.Business.UnitTests.Form
             public FormBusinessObject CreateBo()
             {
                 var factory = new StubFactory(_repository);
-                var ctx = TestPolhemContext.CreateWithOverrides(_fx, (typeof(IRepositoryFactory), factory));
+                var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx, (typeof(IRepositoryFactory), factory));
                 return new FormBusinessObject(ctx, Guid.NewGuid(), ProgId);
             }
         }

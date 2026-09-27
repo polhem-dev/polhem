@@ -10,7 +10,7 @@ namespace Polhem.Definition
     /// touches, plus an <see cref="IServiceProvider"/> escape hatch for rare
     /// per-method needs (e.g. login-only helpers).
     /// </summary>
-    public interface IPolhemContext
+    public interface IBusinessObjectContext
     {
         /// <summary>The definition data access service.</summary>
         IDefineAccess DefineAccess { get; }

@@ -251,19 +251,8 @@ Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest.ToUtc.get -> System.Da
 Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest.ToUtc.set -> void
 Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest.TopN.get -> int
 Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest.TopN.set -> void
-Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse
-Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse.LogAggregateResponse() -> void
-Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse.Table.get -> System.Data.DataTable?
-Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse.Table.set -> void
-Polhem.Api.Core.Messages.AuditLog.LogListResponse
-Polhem.Api.Core.Messages.AuditLog.LogListResponse.LogListResponse() -> void
-Polhem.Api.Core.Messages.AuditLog.LogListResponse.Paging.get -> Polhem.Definition.Paging.PagingInfo?
-Polhem.Api.Core.Messages.AuditLog.LogListResponse.Paging.set -> void
-Polhem.Api.Core.Messages.AuditLog.LogListResponse.Table.get -> System.Data.DataTable?
-Polhem.Api.Core.Messages.AuditLog.LogListResponse.Table.set -> void
 Polhem.Api.Core.Messages.ExecFuncRequest
 Polhem.Api.Core.Messages.ExecFuncRequest.ExecFuncRequest() -> void
-Polhem.Api.Core.Messages.ExecFuncRequest.ExecFuncRequest(string! funcID) -> void
 Polhem.Api.Core.Messages.ExecFuncRequest.FuncId.get -> string!
 Polhem.Api.Core.Messages.ExecFuncRequest.FuncId.set -> void
 Polhem.Api.Core.Messages.ExecFuncResponse
@@ -354,8 +343,6 @@ Polhem.Api.Core.Messages.System.CreateSessionRequest
 Polhem.Api.Core.Messages.System.CreateSessionRequest.CreateSessionRequest() -> void
 Polhem.Api.Core.Messages.System.CreateSessionRequest.ExpiresIn.get -> int
 Polhem.Api.Core.Messages.System.CreateSessionRequest.ExpiresIn.set -> void
-Polhem.Api.Core.Messages.System.CreateSessionRequest.UserID.get -> string!
-Polhem.Api.Core.Messages.System.CreateSessionRequest.UserID.set -> void
 Polhem.Api.Core.Messages.System.CreateSessionResponse
 Polhem.Api.Core.Messages.System.CreateSessionResponse.AccessToken.get -> System.Guid
 Polhem.Api.Core.Messages.System.CreateSessionResponse.AccessToken.set -> void
@@ -367,7 +354,6 @@ Polhem.Api.Core.Messages.System.EnterCompanyRequest.CompanyId.get -> string!
 Polhem.Api.Core.Messages.System.EnterCompanyRequest.CompanyId.set -> void
 Polhem.Api.Core.Messages.System.EnterCompanyRequest.EnterCompanyRequest() -> void
 Polhem.Api.Core.Messages.System.EnterCompanyResponse
-Polhem.Api.Core.Messages.System.EnterCompanyResponse.Capabilities.get -> System.Collections.Generic.Dictionary<string!, Polhem.Definition.Settings.PermissionAction>!
 Polhem.Api.Core.Messages.System.EnterCompanyResponse.Capabilities.set -> void
 Polhem.Api.Core.Messages.System.EnterCompanyResponse.Company.get -> Polhem.Definition.Identity.CompanyInfo!
 Polhem.Api.Core.Messages.System.EnterCompanyResponse.Company.set -> void

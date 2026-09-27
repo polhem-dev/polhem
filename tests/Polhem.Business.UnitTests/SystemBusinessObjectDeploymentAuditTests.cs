@@ -51,7 +51,7 @@ namespace Polhem.Business.UnitTests
         private SystemBusinessObject CreateBo(IAuditLogWriter writer, ILoggerFactory? loggers,
             bool enabled = true, bool changeEnabled = true)
         {
-            var ctx = TestPolhemContext.CreateWithOverrides(_fx,
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx,
                 (typeof(AuditLogOptions), new AuditLogOptions { Enabled = enabled, ChangeEnabled = changeEnabled }),
                 (typeof(IAuditLogWriter), writer),
                 (typeof(ILoggerFactory), loggers));

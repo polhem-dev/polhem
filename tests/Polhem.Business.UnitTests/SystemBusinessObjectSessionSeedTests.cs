@@ -31,12 +31,12 @@ namespace Polhem.Business.UnitTests
         private Guid LoginAsSeedUser()
         {
             var bo = new TestableSystemBusinessObject(
-                TestPolhemContext.Create(_fx), Guid.Empty, _ => (true, "Seed User"));
+                TestBusinessObjectContext.Create(_fx), Guid.Empty, _ => (true, "Seed User"));
             return bo.Login(new LoginArgs { UserId = "001", Password = "pwd" }).AccessToken;
         }
 
         private SystemBusinessObject CreateBo(Guid accessToken)
-            => new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
+            => new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
 
         [DbFact(DatabaseType.SQLServer)]
         [DisplayName("Login writes a seed without a company")]
@@ -48,7 +48,7 @@ namespace Polhem.Business.UnitTests
                 var seed = SessionRepository.GetSession(accessToken);
                 Assert.NotNull(seed);
                 Assert.Equal(accessToken, seed!.AccessToken);
-                Assert.Equal("001", seed.UserID);
+                Assert.Equal("001", seed.UserId);
                 Assert.Null(seed.CompanyId);
                 Assert.True(seed.EndTime > DateTime.UtcNow);
             }

@@ -23,7 +23,7 @@ namespace Polhem.Api.Client.UnitTests.Customization
         /// <param name="accessToken">The access token.</param>
         /// <param name="progId">The program identifier.</param>
         /// <param name="isLocalCall">Whether the call originates from a local source.</param>
-        public TenantCustomerBusinessObject(IPolhemContext context, Guid accessToken, string progId, bool isLocalCall = true)
+        public TenantCustomerBusinessObject(IBusinessObjectContext context, Guid accessToken, string progId, bool isLocalCall = true)
             : base(context, accessToken, progId, isLocalCall)
         {
         }

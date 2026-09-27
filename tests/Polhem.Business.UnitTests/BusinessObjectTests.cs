@@ -18,7 +18,7 @@ namespace Polhem.Business.UnitTests
         public void Constructor_SetsProperties()
         {
             var token = Guid.NewGuid();
-            var bo = new TestableBusinessObject(TestPolhemContext.Create(_fx), token, isLocalCall: false);
+            var bo = new TestableBusinessObject(TestBusinessObjectContext.Create(_fx), token, isLocalCall: false);
 
             Assert.Equal(token, bo.AccessToken);
             Assert.False(bo.IsLocalCall);
@@ -28,7 +28,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("The TestableBusinessObject fake defaults IsLocalCall to true")]
         public void Constructor_DefaultIsLocalCall_IsTrue()
         {
-            var bo = new TestableBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());
+            var bo = new TestableBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid());
             Assert.True(bo.IsLocalCall);
         }
 
@@ -36,7 +36,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("ExecFunc delegates to the DoExecFunc override")]
         public void ExecFunc_DelegatesToDoExecFunc()
         {
-            var bo = new TestableBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());
+            var bo = new TestableBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid());
             var args = new ExecFuncArgs("Hello");
 
             var result = bo.ExecFunc(args);
@@ -51,7 +51,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("ExecFuncAnonymous delegates to the DoExecFuncAnonymous override")]
         public void ExecFuncAnonymous_DelegatesToDoExecFuncAnonymous()
         {
-            var bo = new TestableBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());
+            var bo = new TestableBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid());
             var args = new ExecFuncArgs("Hi");
 
             var result = bo.ExecFuncAnonymous(args);
@@ -66,7 +66,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("ExecFunc returns an empty result without throwing when DoExecFunc is not overridden")]
         public void ExecFunc_WithoutOverride_ReturnsEmptyResult()
         {
-            var bo = new BareBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());
+            var bo = new BareBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid());
 
             var result = bo.ExecFunc(new ExecFuncArgs("Anything"));
 
@@ -78,7 +78,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("ExecFuncAnonymous returns an empty result without throwing when DoExecFuncAnonymous is not overridden")]
         public void ExecFuncAnonymous_WithoutOverride_ReturnsEmptyResult()
         {
-            var bo = new BareBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());
+            var bo = new BareBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid());
 
             var result = bo.ExecFuncAnonymous(new ExecFuncArgs("Anything"));
 

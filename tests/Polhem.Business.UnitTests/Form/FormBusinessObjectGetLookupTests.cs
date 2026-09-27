@@ -34,7 +34,7 @@ namespace Polhem.Business.UnitTests.Form
         [DisplayName("GetLookup throws ArgumentNullException for null")]
         public void GetLookup_NullArgs_Throws()
         {
-            var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), ProgId);
+            var bo = new FormBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid(), ProgId);
             Assert.Throws<ArgumentNullException>(() => bo.GetLookup(null!));
         }
 
@@ -133,7 +133,7 @@ namespace Polhem.Business.UnitTests.Form
         {
             private readonly FilterNode _filter;
 
-            public FilteredLookupBo(IPolhemContext ctx, Guid accessToken, string progId, FilterNode filter)
+            public FilteredLookupBo(IBusinessObjectContext ctx, Guid accessToken, string progId, FilterNode filter)
                 : base(ctx, accessToken, progId)
             {
                 _filter = filter;
@@ -211,10 +211,10 @@ namespace Polhem.Business.UnitTests.Form
                 return new FilteredLookupBo(ctx, Guid.NewGuid(), ProgId, filter);
             }
 
-            private IPolhemContext CreateContext()
+            private IBusinessObjectContext CreateContext()
             {
                 var factory = new StubFactory(_repository);
-                return TestPolhemContext.CreateWithOverrides(_fx, (typeof(IRepositoryFactory), factory));
+                return TestBusinessObjectContext.CreateWithOverrides(_fx, (typeof(IRepositoryFactory), factory));
             }
         }
 

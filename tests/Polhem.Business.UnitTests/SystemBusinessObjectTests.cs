@@ -17,10 +17,10 @@ namespace Polhem.Business.UnitTests
         public void CreateSession_ValidArgs_ReturnsTokenWithExpiry()
         {
             // Arrange
-            var business = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
+            var business = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
             var args = new CreateSessionArgs
             {
-                UserID = "001",
+                UserId = "001",
                 ExpiresIn = 600
             };
 
@@ -53,8 +53,8 @@ namespace Polhem.Business.UnitTests
         [DisplayName("CreateSession with a user ID that does not exist throws InvalidOperationException")]
         public void CreateSession_NonExistentUserId_ThrowsInvalidOperation()
         {
-            var business = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
-            var args = new CreateSessionArgs { UserID = "__nonexistent_user_xyz__", ExpiresIn = 600 };
+            var business = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
+            var args = new CreateSessionArgs { UserId = "__nonexistent_user_xyz__", ExpiresIn = 600 };
 
             Assert.Throws<InvalidOperationException>(() => business.CreateSession(args));
         }
@@ -65,8 +65,8 @@ namespace Polhem.Business.UnitTests
         {
             // The LocalOnly attribute is enforced only on the JSON-RPC dispatch path. A business object constructed
             // directly with isLocalCall: false must refuse to mint a token without a credential.
-            var business = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
-            var args = new CreateSessionArgs { UserID = "001", ExpiresIn = 600 };
+            var business = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            var args = new CreateSessionArgs { UserId = "001", ExpiresIn = 600 };
 
             var ex = Assert.Throws<NotSupportedException>(() => business.CreateSession(args));
             Assert.Contains("local calls", ex.Message);

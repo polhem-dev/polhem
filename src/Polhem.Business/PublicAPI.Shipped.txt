@@ -5,7 +5,6 @@ Polhem.Business.Attributes.ExecFuncAccessControlAttribute.ExecFuncAccessControlA
 Polhem.Business.Attributes.ExecFuncAccessControlAttribute.LocalOnly.get -> bool
 Polhem.Business.Attributes.ExecFuncAccessControlAttribute.LocalOnly.set -> void
 Polhem.Business.AuditLog.AuditRuleBusinessObject
-Polhem.Business.AuditLog.AuditRuleBusinessObject.AuditRuleBusinessObject(Polhem.Definition.IPolhemContext! ctx, System.Guid accessToken, string! progId, bool isLocalCall = false) -> void
 Polhem.Business.AuditLog.GetAccessLogArgs
 Polhem.Business.AuditLog.GetAccessLogArgs.FromUtc.get -> System.DateTime?
 Polhem.Business.AuditLog.GetAccessLogArgs.FromUtc.set -> void
@@ -122,18 +121,6 @@ Polhem.Business.AuditLog.GetTopApiMethodsArgs.ToUtc.get -> System.DateTime?
 Polhem.Business.AuditLog.GetTopApiMethodsArgs.ToUtc.set -> void
 Polhem.Business.AuditLog.GetTopApiMethodsArgs.TopN.get -> int
 Polhem.Business.AuditLog.GetTopApiMethodsArgs.TopN.set -> void
-Polhem.Business.AuditLog.LogAggregateResult
-Polhem.Business.AuditLog.LogAggregateResult.LogAggregateResult() -> void
-Polhem.Business.AuditLog.LogAggregateResult.Table.get -> System.Data.DataTable?
-Polhem.Business.AuditLog.LogAggregateResult.Table.set -> void
-Polhem.Business.AuditLog.LogBusinessObject
-Polhem.Business.AuditLog.LogBusinessObject.LogBusinessObject(Polhem.Definition.IPolhemContext! ctx, System.Guid accessToken, string! progId, bool isLocalCall = false) -> void
-Polhem.Business.AuditLog.LogListResult
-Polhem.Business.AuditLog.LogListResult.LogListResult() -> void
-Polhem.Business.AuditLog.LogListResult.Paging.get -> Polhem.Definition.Paging.PagingInfo?
-Polhem.Business.AuditLog.LogListResult.Paging.set -> void
-Polhem.Business.AuditLog.LogListResult.Table.get -> System.Data.DataTable?
-Polhem.Business.AuditLog.LogListResult.Table.set -> void
 Polhem.Business.BusinessArgs
 Polhem.Business.BusinessArgs.BusinessArgs() -> void
 Polhem.Business.BusinessArgs.Parameters.get -> Polhem.Definition.Collections.ParameterCollection!
@@ -144,8 +131,6 @@ Polhem.Business.BusinessObject.ApiKeyId.get -> string?
 Polhem.Business.BusinessObject.ApiKeyName.get -> string?
 Polhem.Business.BusinessObject.ApiKeyValidation.get -> Polhem.Definition.Security.ApiKeyValidationResult!
 Polhem.Business.BusinessObject.BoFactory.get -> Polhem.Definition.IBusinessObjectFactory!
-Polhem.Business.BusinessObject.BusinessObject(Polhem.Definition.IPolhemContext! ctx, System.Guid accessToken, string! progId, bool isLocalCall = false) -> void
-Polhem.Business.BusinessObject.Context.get -> Polhem.Definition.IPolhemContext!
 Polhem.Business.BusinessObject.CreateDataFormRepository(string! progId) -> Polhem.Repository.Abstractions.Form.IDataFormRepository!
 Polhem.Business.BusinessObject.CreateFormRepository<T>() -> T!
 Polhem.Business.BusinessObject.CreateFormRepository<T>(string! progId) -> T!
@@ -172,7 +157,6 @@ Polhem.Business.BusinessResult.Parameters.get -> Polhem.Definition.Collections.P
 Polhem.Business.BusinessResult.Parameters.set -> void
 Polhem.Business.ExecFuncArgs
 Polhem.Business.ExecFuncArgs.ExecFuncArgs() -> void
-Polhem.Business.ExecFuncArgs.ExecFuncArgs(string! funcID) -> void
 Polhem.Business.ExecFuncArgs.FuncId.get -> string!
 Polhem.Business.ExecFuncArgs.FuncId.set -> void
 Polhem.Business.ExecFuncHandlerExtensions
@@ -197,11 +181,8 @@ Polhem.Business.Form.DeleteResult.DeleteResult() -> void
 Polhem.Business.Form.DeleteResult.RowsAffected.get -> int
 Polhem.Business.Form.DeleteResult.RowsAffected.set -> void
 Polhem.Business.Form.FormBusinessObject
-Polhem.Business.Form.FormBusinessObject.FormBusinessObject(Polhem.Definition.IPolhemContext! ctx, System.Guid accessToken, string! progId, bool isLocalCall = false) -> void
 Polhem.Business.Form.FormBusinessPlugin
 Polhem.Business.Form.FormBusinessPlugin.AccessToken.get -> System.Guid
-Polhem.Business.Form.FormBusinessPlugin.Context.get -> Polhem.Definition.IPolhemContext!
-Polhem.Business.Form.FormBusinessPlugin.FormBusinessPlugin(Polhem.Definition.IPolhemContext! ctx, System.Guid accessToken, string! progId) -> void
 Polhem.Business.Form.FormBusinessPlugin.ProgId.get -> string!
 Polhem.Business.Form.FormPluginBinding
 Polhem.Business.Form.FormPluginBinding.Deconstruct(out System.Type! Type, out Polhem.Definition.Settings.PluginStage Stage) -> void
@@ -213,7 +194,6 @@ Polhem.Business.Form.FormPluginBinding.Stage.init -> void
 Polhem.Business.Form.FormPluginBinding.Type.get -> System.Type!
 Polhem.Business.Form.FormPluginBinding.Type.init -> void
 Polhem.Business.Form.FormPluginChain
-Polhem.Business.Form.FormPluginChain.CreateRunner(Polhem.Definition.IPolhemContext! ctx, System.Guid accessToken, string! progId) -> Polhem.Business.Form.FormPluginRunner!
 Polhem.Business.Form.FormPluginChain.HasStage(Polhem.Definition.Settings.PluginStage stage) -> bool
 Polhem.Business.Form.FormPluginChain.IsEmpty.get -> bool
 Polhem.Business.Form.FormPluginChain.Types.get -> System.Collections.Generic.IReadOnlyList<System.Type!>!
@@ -314,7 +294,6 @@ Polhem.Business.IBusinessObject.ExecFunc(Polhem.Business.ExecFuncArgs! args) -> 
 Polhem.Business.IBusinessObject.ExecFuncAnonymous(Polhem.Business.ExecFuncArgs! args) -> Polhem.Business.ExecFuncResult!
 Polhem.Business.IExecFuncHandler
 Polhem.Business.Permission.ScopeResolver
-Polhem.Business.Permission.ScopeResolver.ResolveFilter(System.Guid accessToken, string! modelId, Polhem.Definition.Settings.PermissionAction action, Polhem.Definition.Forms.FormSchema! formSchema) -> Polhem.Definition.Filters.FilterNode?
 Polhem.Business.Permission.ScopeResolver.ScopeResolver(Polhem.Definition.Identity.ISessionInfoService! sessionInfoService, Polhem.Definition.Identity.IRolePermissionService! rolePermissionService, Polhem.Definition.Organization.IDepartmentTreeService! departmentTreeService, Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
 Polhem.Business.ProgramSettingsBoTypeResolver
 Polhem.Business.ProgramSettingsBoTypeResolver.ProgramSettingsBoTypeResolver(Polhem.Definition.Storage.IDefineAccess! defineAccess) -> void
@@ -374,13 +353,10 @@ Polhem.Business.Session.SessionCompanyBinder.Bind(Polhem.Definition.Identity.Ses
 Polhem.Business.Session.SessionCompanyBinder.SessionCompanyBinder(Polhem.Definition.Identity.ICompanyInfoService! companyInfoService, Polhem.Repository.Abstractions.Factories.IRepositoryFactory! repositoryFactory, Polhem.Definition.Identity.IRolePermissionService! rolePermissionService, Polhem.Definition.Identity.IEmployeeContextResolver! employeeContextResolver) -> void
 Polhem.Business.Session.SessionCompanyBinding
 Polhem.Business.Session.SessionCompanyBinding.<Clone>$() -> Polhem.Business.Session.SessionCompanyBinding!
-Polhem.Business.Session.SessionCompanyBinding.Capabilities.get -> System.Collections.Generic.Dictionary<string!, Polhem.Definition.Settings.PermissionAction>!
 Polhem.Business.Session.SessionCompanyBinding.Capabilities.init -> void
 Polhem.Business.Session.SessionCompanyBinding.Company.get -> Polhem.Definition.Identity.CompanyInfo!
 Polhem.Business.Session.SessionCompanyBinding.Company.init -> void
-Polhem.Business.Session.SessionCompanyBinding.Deconstruct(out Polhem.Definition.Identity.CompanyInfo! Company, out System.Collections.Generic.Dictionary<string!, Polhem.Definition.Settings.PermissionAction>! Capabilities) -> void
 Polhem.Business.Session.SessionCompanyBinding.Equals(Polhem.Business.Session.SessionCompanyBinding? other) -> bool
-Polhem.Business.Session.SessionCompanyBinding.SessionCompanyBinding(Polhem.Definition.Identity.CompanyInfo! Company, System.Collections.Generic.Dictionary<string!, Polhem.Definition.Settings.PermissionAction>! Capabilities) -> void
 Polhem.Business.System.CreateApiKeyArgs
 Polhem.Business.System.CreateApiKeyArgs.Contact.get -> string?
 Polhem.Business.System.CreateApiKeyArgs.Contact.set -> void
@@ -403,8 +379,6 @@ Polhem.Business.System.CreateSessionArgs
 Polhem.Business.System.CreateSessionArgs.CreateSessionArgs() -> void
 Polhem.Business.System.CreateSessionArgs.ExpiresIn.get -> int
 Polhem.Business.System.CreateSessionArgs.ExpiresIn.set -> void
-Polhem.Business.System.CreateSessionArgs.UserID.get -> string!
-Polhem.Business.System.CreateSessionArgs.UserID.set -> void
 Polhem.Business.System.CreateSessionResult
 Polhem.Business.System.CreateSessionResult.AccessToken.get -> System.Guid
 Polhem.Business.System.CreateSessionResult.AccessToken.set -> void
@@ -416,7 +390,6 @@ Polhem.Business.System.EnterCompanyArgs.CompanyId.get -> string!
 Polhem.Business.System.EnterCompanyArgs.CompanyId.set -> void
 Polhem.Business.System.EnterCompanyArgs.EnterCompanyArgs() -> void
 Polhem.Business.System.EnterCompanyResult
-Polhem.Business.System.EnterCompanyResult.Capabilities.get -> System.Collections.Generic.Dictionary<string!, Polhem.Definition.Settings.PermissionAction>!
 Polhem.Business.System.EnterCompanyResult.Capabilities.set -> void
 Polhem.Business.System.EnterCompanyResult.Company.get -> Polhem.Definition.Identity.CompanyInfo!
 Polhem.Business.System.EnterCompanyResult.Company.set -> void
@@ -596,7 +569,6 @@ Polhem.Business.System.SetDeploymentAdminResult.SetDeploymentAdminResult() -> vo
 Polhem.Business.System.SetDeploymentAdminResult.UserId.get -> string!
 Polhem.Business.System.SetDeploymentAdminResult.UserId.set -> void
 Polhem.Business.System.SystemBusinessObject
-Polhem.Business.System.SystemBusinessObject.SystemBusinessObject(Polhem.Definition.IPolhemContext! ctx, System.Guid accessToken, string! progId, bool isLocalCall = false) -> void
 Polhem.Business.Validator.AccessTokenValidator
 Polhem.Business.Validator.AccessTokenValidator.AccessTokenValidator(Polhem.Definition.Identity.ISessionInfoService! sessionInfoService) -> void
 Polhem.Business.Validator.AccessTokenValidator.Validate(System.Guid accessToken) -> bool
@@ -631,15 +603,6 @@ static Polhem.Business.ReservedProgIds.All.get -> System.Collections.Generic.IRe
 static Polhem.Business.ReservedProgIds.Find(string! progId) -> Polhem.Business.ReservedProgIdBinding?
 static Polhem.Business.Session.SessionCompanyBinding.operator !=(Polhem.Business.Session.SessionCompanyBinding? left, Polhem.Business.Session.SessionCompanyBinding? right) -> bool
 static Polhem.Business.Session.SessionCompanyBinding.operator ==(Polhem.Business.Session.SessionCompanyBinding? left, Polhem.Business.Session.SessionCompanyBinding? right) -> bool
-virtual Polhem.Business.AuditLog.LogBusinessObject.GetAccessLog(Polhem.Business.AuditLog.GetAccessLogArgs! args) -> Polhem.Business.AuditLog.LogListResult!
-virtual Polhem.Business.AuditLog.LogBusinessObject.GetApiAnomalyLog(Polhem.Business.AuditLog.GetApiAnomalyLogArgs! args) -> Polhem.Business.AuditLog.LogListResult!
-virtual Polhem.Business.AuditLog.LogBusinessObject.GetApiAnomalySummary(Polhem.Business.AuditLog.GetApiAnomalySummaryArgs! args) -> Polhem.Business.AuditLog.LogAggregateResult!
-virtual Polhem.Business.AuditLog.LogBusinessObject.GetChangeDetail(Polhem.Business.AuditLog.GetChangeDetailArgs! args) -> Polhem.Business.AuditLog.GetChangeDetailResult!
-virtual Polhem.Business.AuditLog.LogBusinessObject.GetChangeLog(Polhem.Business.AuditLog.GetChangeLogArgs! args) -> Polhem.Business.AuditLog.LogListResult!
-virtual Polhem.Business.AuditLog.LogBusinessObject.GetDbAnomalyLog(Polhem.Business.AuditLog.GetDbAnomalyLogArgs! args) -> Polhem.Business.AuditLog.LogListResult!
-virtual Polhem.Business.AuditLog.LogBusinessObject.GetDbAnomalySummary(Polhem.Business.AuditLog.GetDbAnomalySummaryArgs! args) -> Polhem.Business.AuditLog.LogAggregateResult!
-virtual Polhem.Business.AuditLog.LogBusinessObject.GetLoginLog(Polhem.Business.AuditLog.GetLoginLogArgs! args) -> Polhem.Business.AuditLog.LogListResult!
-virtual Polhem.Business.AuditLog.LogBusinessObject.GetTopApiMethods(Polhem.Business.AuditLog.GetTopApiMethodsArgs! args) -> Polhem.Business.AuditLog.LogAggregateResult!
 virtual Polhem.Business.BusinessObject.DoExecFunc(Polhem.Business.ExecFuncArgs! args, Polhem.Business.ExecFuncResult! result) -> void
 virtual Polhem.Business.BusinessObject.DoExecFuncAnonymous(Polhem.Business.ExecFuncArgs! args, Polhem.Business.ExecFuncResult! result) -> void
 virtual Polhem.Business.Form.FormBusinessObject.Delete(Polhem.Business.Form.DeleteArgs! args) -> Polhem.Business.Form.DeleteResult!

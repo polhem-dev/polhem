@@ -19,7 +19,7 @@ namespace Polhem.Business
         public static IReadOnlyList<ReservedProgIdBinding> All { get; } =
         [
             new(SysProgIds.System, typeof(SystemBusinessObject), typeof(SystemBusinessObject)),
-            new(SysProgIds.AuditLog, typeof(LogBusinessObject), typeof(LogBusinessObject)),
+            new(SysProgIds.AuditLog, typeof(AuditLogBusinessObject), typeof(AuditLogBusinessObject)),
             new(SysProgIds.AuditRule, typeof(AuditRuleBusinessObject), typeof(FormBusinessObject)),
         ];
 

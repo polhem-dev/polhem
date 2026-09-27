@@ -163,7 +163,7 @@ namespace Polhem.Api.Core.UnitTests
             var generated = WireContractGenerator.Generate();
 
             Assert.Contains("  affectedRows?: Record<string, number>;", generated, StringComparison.Ordinal);
-            Assert.Contains("  capabilities?: Record<string, PermissionAction>;", generated, StringComparison.Ordinal);
+            Assert.Contains("  capabilities?: Record<string, PermissionActions>;", generated, StringComparison.Ordinal);
             Assert.DoesNotContain("affectedRows?: string[];", generated, StringComparison.Ordinal);
         }
     }

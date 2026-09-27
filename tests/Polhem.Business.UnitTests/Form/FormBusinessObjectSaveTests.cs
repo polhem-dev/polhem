@@ -24,7 +24,7 @@ namespace Polhem.Business.UnitTests.Form
         [DisplayName("Save throws ArgumentNullException for null args")]
         public void Save_NullArgs_Throws()
         {
-            var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(),
+            var bo = new FormBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid(),
                 CrudTestContext.ProgId);
             Assert.Throws<ArgumentNullException>(() => bo.Save(null!));
         }
@@ -33,7 +33,7 @@ namespace Polhem.Business.UnitTests.Form
         [DisplayName("Save throws ArgumentException when args.DataSet is null")]
         public void Save_NullDataSet_Throws()
         {
-            var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(),
+            var bo = new FormBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid(),
                 CrudTestContext.ProgId);
             Assert.Throws<ArgumentException>(() => bo.Save(new SaveArgs { DataSet = null }));
         }

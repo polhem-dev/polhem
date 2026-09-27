@@ -216,7 +216,7 @@ namespace Polhem.Business.UnitTests.Form
         {
             var defineAccess = new FormSchemaOverlayDefineAccess(
                 _fx.GetRequiredService<IDefineAccess>(), BuildSchema(permissionModelId));
-            var ctx = new PolhemContext
+            var ctx = new BusinessObjectContext
             {
                 DefineAccess = defineAccess,
                 SessionInfoService = _fx.GetRequiredService<ISessionInfoService>(),
@@ -292,13 +292,13 @@ namespace Polhem.Business.UnitTests.Form
 
         private sealed class AllowAll : ICompanyAuthorizationService
         {
-            public bool Can(Guid accessToken, string modelId, PermissionAction action) => true;
+            public bool Can(Guid accessToken, string modelId, PermissionActions action) => true;
         }
 
         /// <summary>The <c>Own</c> strategy for every action: the owner column must be the caller.</summary>
         private sealed class OwnScopeResolver : IScopeResolver
         {
-            public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionAction action, FormSchema formSchema)
+            public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionActions action, FormSchema formSchema)
                 => FilterCondition.In(OwnerField, [s_me]);
         }
 

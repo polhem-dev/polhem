@@ -22,7 +22,7 @@ namespace Polhem.Api.Client.UnitTests
         /// </summary>
         private sealed class TestApiConnector : ApiConnector
         {
-            public TestApiConnector(Guid accessToken) : base(accessToken) { }
+            public TestApiConnector(Guid accessToken) : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, accessToken) { }
 
             public new Task<T> ExecuteAsync<T>(string progId, string action, object value, PayloadFormat format)
                 => base.ExecuteAsync<T>(progId, action, value, format);

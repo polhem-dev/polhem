@@ -19,7 +19,7 @@ namespace Polhem.Api.Core.MessagePack
             list.Add(new WireEnumFormatter<Polhem.Definition.NumberKind>());
             list.Add(new WireEnumFormatter<Polhem.Definition.Security.ApiKeyStatus>());
             list.Add(new WireEnumFormatter<Polhem.Definition.Security.ApiKeyType>());
-            list.Add(new WireEnumFormatter<Polhem.Definition.Settings.PermissionAction>());
+            list.Add(new WireEnumFormatter<Polhem.Definition.Settings.PermissionActions>());
             list.Add(new WireEnumFormatter<Polhem.Definition.Sorting.SortDirection>());
             list.Add(new WireEnumFormatter<System.Data.DataRowState>());
 
@@ -37,7 +37,7 @@ namespace Polhem.Api.Core.MessagePack
             list.Add(new ListFormatter<Polhem.Definition.Security.ApiKeySummary>());
             list.Add(new ListFormatter<System.String>());
 
-            list.Add(new DictionaryFormatter<System.String, Polhem.Definition.Settings.PermissionAction>());
+            list.Add(new DictionaryFormatter<System.String, Polhem.Definition.Settings.PermissionActions>());
             list.Add(new DictionaryFormatter<System.String, System.Int32>());
             list.Add(new DictionaryFormatter<System.String, System.Object>());
 

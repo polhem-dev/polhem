@@ -95,7 +95,7 @@ namespace Polhem.Business.UnitTests
         public void CreateSessionArgs_Defaults()
         {
             var args = new CreateSessionArgs();
-            Assert.Equal(string.Empty, args.UserID);
+            Assert.Equal(string.Empty, args.UserId);
             Assert.Equal(3600, args.ExpiresIn);
         }
 

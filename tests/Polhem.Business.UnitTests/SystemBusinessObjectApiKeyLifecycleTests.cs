@@ -38,7 +38,7 @@ namespace Polhem.Business.UnitTests
 
         private SystemBusinessObject CreateBo()
             // The local call path; see the helper of the same name in `SystemBusinessObjectApiKeyTests`.
-            => new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
+            => new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
 
         private static string NewSysId() => "life-" + Guid.NewGuid().ToString("N");
 
@@ -222,7 +222,7 @@ namespace Polhem.Business.UnitTests
         [InlineData("expiry")]
         public void ManagementActions_RemoteNonAdmin_ThrowUnauthorized(string action)
         {
-            var ctx = TestPolhemContext.CreateWithOverrides(_fx,
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx,
                 (typeof(IDeploymentAuthorizationService), new DenyingDeploymentAuthorization()));
             var bo = new SystemBusinessObject(ctx, Guid.NewGuid(), SysProgIds.System, isLocalCall: false);
 
@@ -253,7 +253,7 @@ namespace Polhem.Business.UnitTests
             try
             {
                 var writer = new CapturingAuditLogWriter();
-                var ctx = TestPolhemContext.CreateWithOverrides(_fx,
+                var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx,
                     (typeof(AuditLogOptions), new AuditLogOptions { Enabled = true }),
                     (typeof(IAuditLogWriter), writer));
                 var bo = new SystemBusinessObject(ctx, Guid.Empty, SysProgIds.System, isLocalCall: true);

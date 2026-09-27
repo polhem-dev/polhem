@@ -27,7 +27,7 @@ namespace Polhem.Business.System
         public virtual LoginResult Login(LoginArgs args)
         {
             // Rare per-method needs (ILoginAttemptTracker, IApiEncryptionKeyProvider) are resolved
-            // through the IPolhemContext.Services escape hatch. AddPolhemFramework registers a
+            // through the IBusinessObjectContext.Services escape hatch. AddPolhemFramework registers a
             // tracker by default; a host that removes it runs without lockout, hence the null checks.
             var tracker = Services.GetService<ILoginAttemptTracker>();
 
@@ -257,7 +257,7 @@ namespace Polhem.Business.System
             return new SessionUser
             {
                 AccessToken = sessionInfo.AccessToken,
-                UserID = sessionInfo.UserId,
+                UserId = sessionInfo.UserId,
                 UserName = sessionInfo.UserName,
                 EndTime = sessionInfo.ExpiredAt,
                 CompanyId = sessionInfo.CompanyId,
@@ -266,7 +266,7 @@ namespace Polhem.Business.System
 
         /// <summary>
         /// Writes a login-axis audit entry when audit logging and its login category are both
-        /// enabled. Resolved through the <see cref="IPolhemContext.Services"/> escape hatch (same
+        /// enabled. Resolved through the <see cref="IBusinessObjectContext.Services"/> escape hatch (same
         /// pattern as <see cref="ILoginAttemptTracker"/>); a no-op when disabled.
         /// </summary>
         private void WriteLoginAudit(LoginEvent loginEvent, string? userId, string? userName, Guid? accessToken, string? failReason, string source)
@@ -412,10 +412,10 @@ namespace Polhem.Business.System
             // The message deliberately omits the user id. A remote caller only ever sees the fixed
             // message the error contract gives InvalidOperationException, but debug mode passes the
             // text through, and there it would confirm whether an account exists.
-            var userName = userRepository.GetName(args.UserID)
+            var userName = userRepository.GetName(args.UserId)
                 ?? throw new InvalidOperationException("User not found.");
 
-            var sessionInfo = CreateSessionInfo(args.UserID, userName, TimeSpan.FromSeconds(args.ExpiresIn));
+            var sessionInfo = CreateSessionInfo(args.UserId, userName, TimeSpan.FromSeconds(args.ExpiresIn));
             // Issuing a token for someone without their credentials is worth a trail of its own.
             WriteLoginAudit(LoginEvent.ServiceSessionCreated, sessionInfo.UserId, sessionInfo.UserName,
                 sessionInfo.AccessToken, null, CreateSessionSource);

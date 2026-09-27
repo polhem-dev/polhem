@@ -58,8 +58,8 @@ namespace Polhem.Business.UnitTests.Form
         {
             var factory = new StubFactory(_repository);
             var ctx = pluginResolver == null
-                ? TestPolhemContext.CreateWithOverrides(_fx, (typeof(IRepositoryFactory), factory))
-                : TestPolhemContext.CreateWithOverrides(_fx,
+                ? TestBusinessObjectContext.CreateWithOverrides(_fx, (typeof(IRepositoryFactory), factory))
+                : TestBusinessObjectContext.CreateWithOverrides(_fx,
                     (typeof(IRepositoryFactory), factory),
                     (typeof(IFormPluginResolver), pluginResolver));
             return new FormBusinessObject(ctx, Guid.NewGuid(), ProgId);
@@ -77,14 +77,14 @@ namespace Polhem.Business.UnitTests.Form
         /// Builds the context <see cref="CreateBoWithOverrides"/> uses, for tests that construct a
         /// <see cref="FormBusinessObject"/> subclass of their own.
         /// </summary>
-        public IPolhemContext CreateContextWithOverrides(params (Type ServiceType, object? Instance)[] overrides)
+        public IBusinessObjectContext CreateContextWithOverrides(params (Type ServiceType, object? Instance)[] overrides)
         {
             var all = new List<(Type, object?)>
             {
                 (typeof(IRepositoryFactory), new StubFactory(_repository))
             };
             all.AddRange(overrides);
-            return TestPolhemContext.CreateWithOverrides(_fx, [.. all]);
+            return TestBusinessObjectContext.CreateWithOverrides(_fx, [.. all]);
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace Polhem.Business.UnitTests.Form
             }
             all.AddRange(overrides);
             return new FormBusinessObject(
-                TestPolhemContext.CreateWithOverrides(_fx, [.. all]), accessToken, ProgId);
+                TestBusinessObjectContext.CreateWithOverrides(_fx, [.. all]), accessToken, ProgId);
         }
 
         private sealed class StubFactory : IRepositoryFactory

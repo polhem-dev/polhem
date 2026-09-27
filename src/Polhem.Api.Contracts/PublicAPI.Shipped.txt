@@ -57,11 +57,6 @@ Polhem.Api.Contracts.AuditLog.IGetTopApiMethodsRequest
 Polhem.Api.Contracts.AuditLog.IGetTopApiMethodsRequest.FromUtc.get -> System.DateTime?
 Polhem.Api.Contracts.AuditLog.IGetTopApiMethodsRequest.ToUtc.get -> System.DateTime?
 Polhem.Api.Contracts.AuditLog.IGetTopApiMethodsRequest.TopN.get -> int
-Polhem.Api.Contracts.AuditLog.ILogAggregateResponse
-Polhem.Api.Contracts.AuditLog.ILogAggregateResponse.Table.get -> System.Data.DataTable?
-Polhem.Api.Contracts.AuditLog.ILogListResponse
-Polhem.Api.Contracts.AuditLog.ILogListResponse.Paging.get -> Polhem.Definition.Paging.PagingInfo?
-Polhem.Api.Contracts.AuditLog.ILogListResponse.Table.get -> System.Data.DataTable?
 Polhem.Api.Contracts.AuditLog.RecordFieldChange
 Polhem.Api.Contracts.AuditLog.RecordFieldChange.FieldName.get -> string!
 Polhem.Api.Contracts.AuditLog.RecordFieldChange.FieldName.set -> void
@@ -120,14 +115,12 @@ Polhem.Api.Contracts.System.ICreateApiKeyResponse.ApiKey.get -> string!
 Polhem.Api.Contracts.System.ICreateApiKeyResponse.SysId.get -> string!
 Polhem.Api.Contracts.System.ICreateSessionRequest
 Polhem.Api.Contracts.System.ICreateSessionRequest.ExpiresIn.get -> int
-Polhem.Api.Contracts.System.ICreateSessionRequest.UserID.get -> string!
 Polhem.Api.Contracts.System.ICreateSessionResponse
 Polhem.Api.Contracts.System.ICreateSessionResponse.AccessToken.get -> System.Guid
 Polhem.Api.Contracts.System.ICreateSessionResponse.ExpiredAt.get -> System.DateTime
 Polhem.Api.Contracts.System.IEnterCompanyRequest
 Polhem.Api.Contracts.System.IEnterCompanyRequest.CompanyId.get -> string!
 Polhem.Api.Contracts.System.IEnterCompanyResponse
-Polhem.Api.Contracts.System.IEnterCompanyResponse.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionAction>!
 Polhem.Api.Contracts.System.IEnterCompanyResponse.Company.get -> Polhem.Definition.Identity.CompanyInfo!
 Polhem.Api.Contracts.System.IGetCommonConfigurationRequest
 Polhem.Api.Contracts.System.IGetCommonConfigurationResponse

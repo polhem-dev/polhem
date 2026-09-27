@@ -27,16 +27,19 @@ namespace Polhem.LoadTests.Scenarios
         private readonly ConcurrentDictionary<int, Lazy<Task<VirtualUser>>> _users = new();
         private readonly AuthOptions _auth;
         private readonly string? _endpoint;
+        private readonly IServiceProvider? _localServices;
 
         /// <summary>
         /// Initializes a new instance.
         /// </summary>
         /// <param name="auth">Authentication configuration.</param>
         /// <param name="endpoint">The remote endpoint, or null to dispatch in-process.</param>
-        public VirtualUserPool(AuthOptions auth, string? endpoint = null)
+        /// <param name="localServices">The in-process backend, required when <paramref name="endpoint"/> is null.</param>
+        public VirtualUserPool(AuthOptions auth, string? endpoint = null, IServiceProvider? localServices = null)
         {
             _auth = auth ?? throw new ArgumentNullException(nameof(auth));
             _endpoint = string.IsNullOrWhiteSpace(endpoint) ? null : endpoint;
+            _localServices = localServices;
         }
 
         /// <summary>
@@ -113,7 +116,7 @@ namespace Polhem.LoadTests.Scenarios
 
             var session = new ApiSessionContext();
             var system = _endpoint is null
-                ? new SystemApiConnector(Guid.Empty, session)
+                ? new SystemApiConnector(RequireLocalServices(), Guid.Empty, session)
                 : new SystemApiConnector(_endpoint, Guid.Empty, session);
 
             var login = await system.LoginAsync(userId, _auth.Password).ConfigureAwait(false);
@@ -121,11 +124,14 @@ namespace Polhem.LoadTests.Scenarios
             // Entering a company is a separate step the framework requires before form data is
             // reachable; a session that skipped it has no company to route category "company" to.
             var entered = _endpoint is null
-                ? new SystemApiConnector(login.AccessToken, session)
+                ? new SystemApiConnector(RequireLocalServices(), login.AccessToken, session)
                 : new SystemApiConnector(_endpoint, login.AccessToken, session);
             await entered.EnterCompanyAsync(_auth.CompanyId).ConfigureAwait(false);
 
-            return new VirtualUser(login.AccessToken, session, _endpoint);
+            return new VirtualUser(login.AccessToken, session, _endpoint, _localServices);
         }
+
+        private IServiceProvider RequireLocalServices()
+            => _localServices ?? throw new InvalidOperationException("In-process dispatch needs the backend's service provider.");
     }
 }

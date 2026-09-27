@@ -18,9 +18,10 @@ namespace Polhem.Api.Client.Connectors
         /// <summary>
         /// Initializes a new instance of the <see cref="FormApiConnector"/> class using a local connection.
         /// </summary>
+        /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
         /// <param name="accessToken">The access token.</param>
         /// <param name="progId">The program identifier.</param>
-        public FormApiConnector(Guid accessToken, string progId) : base(accessToken)
+        public FormApiConnector(IServiceProvider services, Guid accessToken, string progId) : base(services, accessToken)
         {
             ProgId = progId;
         }
@@ -40,11 +41,12 @@ namespace Polhem.Api.Client.Connectors
         /// Initializes a new instance of the <see cref="FormApiConnector"/> class using a local connection and
         /// the given session state.
         /// </summary>
+        /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
         /// <param name="accessToken">The access token.</param>
         /// <param name="progId">The program identifier.</param>
         /// <param name="session">The per-session state. Give each user their own in a host that serves several from one
         /// process; omitting it shares <see cref="ApiSessionContext.Ambient"/>.</param>
-        public FormApiConnector(Guid accessToken, string progId, ApiSessionContext session) : base(accessToken, session)
+        public FormApiConnector(IServiceProvider services, Guid accessToken, string progId, ApiSessionContext session) : base(services, accessToken, session)
         {
             ProgId = progId;
         }

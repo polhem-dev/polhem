@@ -1,12 +1,12 @@
 using Polhem.Definition.Forms;
 using Polhem.Definition.Settings;
 
-namespace Polhem.UI.Core.Permissions
+namespace Polhem.Api.Client.Permissions
 {
     /// <summary>
     /// Resolves the client-side capability of UI elements (commands and sensitive fields) from a
     /// per-model permission snapshot. UI-agnostic and pure: every method takes the capability
-    /// snapshot as a parameter (typically <see cref="ClientInfo.Capabilities"/>) so the same logic
+    /// snapshot as a parameter (on a native head, typically <c>Polhem.UI.Core.ClientInfo.Capabilities</c>) so the same logic
     /// serves every front end while each UI applies the result its own way.
     /// </summary>
     /// <remarks>
@@ -18,14 +18,14 @@ namespace Polhem.UI.Core.Permissions
     {
         /// <summary>
         /// Returns whether a command requiring the given action is permitted. Returns <c>true</c>
-        /// (permitted) when the action is <see cref="PermissionAction.None"/> (untagged command),
+        /// (permitted) when the action is <see cref="PermissionActions.None"/> (untagged command),
         /// the snapshot is <c>null</c>, or the form declares no <see cref="FormSchema.PermissionModelId"/>.
         /// Otherwise permitted when the model's mask grants any of the requested action flags.
         /// </summary>
         /// <param name="schema">The form schema whose permission model gates the command.</param>
         /// <param name="action">The action(s) the command requires (may combine flags, e.g. Create|Update).</param>
         /// <param name="capabilities">The per-model capability snapshot, or <c>null</c> when inactive.</param>
-        bool Can(FormSchema schema, PermissionAction action, IReadOnlyDictionary<string, PermissionAction>? capabilities);
+        bool Can(FormSchema schema, PermissionActions action, IReadOnlyDictionary<string, PermissionActions>? capabilities);
 
         /// <summary>
         /// Resolves a field's capability from its <see cref="FormField.SensitiveCategory"/>. A field
@@ -37,6 +37,6 @@ namespace Polhem.UI.Core.Permissions
         /// <param name="fieldName">The field name to resolve.</param>
         /// <param name="tableName">The owning table name; empty resolves to the master table.</param>
         /// <param name="capabilities">The per-model capability snapshot, or <c>null</c> when inactive.</param>
-        FieldCapability ResolveField(FormSchema schema, string fieldName, string tableName, IReadOnlyDictionary<string, PermissionAction>? capabilities);
+        FieldCapability ResolveField(FormSchema schema, string fieldName, string tableName, IReadOnlyDictionary<string, PermissionActions>? capabilities);
     }
 }

@@ -37,7 +37,7 @@ namespace Polhem.Business.UnitTests
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             var bo = new TestableSystemBusinessObject(
-                TestPolhemContext.Create(_fx),
+                TestBusinessObjectContext.Create(_fx),
                 Guid.Empty,
                 _ => (true, "User One"));
             var args = new LoginArgs { UserId = "user01", Password = "pwd" };
@@ -72,7 +72,7 @@ namespace Polhem.Business.UnitTests
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             RsaCryptor.GenerateRsaKeyPair(out var publicKey, out var privateKey);
             var bo = new TestableSystemBusinessObject(
-                TestPolhemContext.Create(_fx),
+                TestBusinessObjectContext.Create(_fx),
                 Guid.Empty,
                 _ => (true, "RSA User"));
             var args = new LoginArgs
@@ -106,7 +106,7 @@ namespace Polhem.Business.UnitTests
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             var bo = new TestableSystemBusinessObject(
-                TestPolhemContext.Create(_fx),
+                TestBusinessObjectContext.Create(_fx),
                 Guid.Empty,
                 _ => (true, "測試管理員"));
 
@@ -133,7 +133,7 @@ namespace Polhem.Business.UnitTests
             var backend = _fx.GetRequiredService<IDefineAccess>()
                 .GetSystemSettings().BackendConfiguration;
             var bo = new TestableSystemBusinessObject(
-                TestPolhemContext.Create(_fx),
+                TestBusinessObjectContext.Create(_fx),
                 Guid.Empty,
                 _ => (true, "No Row"));
 
@@ -157,7 +157,7 @@ namespace Polhem.Business.UnitTests
         public void Login_AuthenticateFails_ThrowsAndRecordsFailure()
         {
             var tracker = new RecordingTracker();
-            var ctx = TestPolhemContext.CreateWithOverrides(_fx, (typeof(ILoginAttemptTracker), tracker));
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx, (typeof(ILoginAttemptTracker), tracker));
             var bo = new TestableSystemBusinessObject(
                 ctx,
                 Guid.Empty,
@@ -175,7 +175,7 @@ namespace Polhem.Business.UnitTests
         {
             var tracker = new RecordingTracker { LockedOut = true };
             var authCalls = 0;
-            var ctx = TestPolhemContext.CreateWithOverrides(_fx, (typeof(ILoginAttemptTracker), tracker));
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx, (typeof(ILoginAttemptTracker), tracker));
             var bo = new TestableSystemBusinessObject(
                 ctx,
                 Guid.Empty,
@@ -197,7 +197,7 @@ namespace Polhem.Business.UnitTests
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             var tracker = new RecordingTracker();
-            var ctx = TestPolhemContext.CreateWithOverrides(_fx, (typeof(ILoginAttemptTracker), tracker));
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx, (typeof(ILoginAttemptTracker), tracker));
             var bo = new TestableSystemBusinessObject(
                 ctx,
                 Guid.Empty,

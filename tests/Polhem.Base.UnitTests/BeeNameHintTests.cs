@@ -5,7 +5,7 @@ namespace Polhem.Base.UnitTests
     public class BeeNameHintTests
     {
         [Theory]
-        [InlineData("Bee.Business.AuditLog.LogBusinessObject, Bee.Business")]
+        [InlineData("Bee.Business.AuditLog.AuditLogBusinessObject, Bee.Business")]
         [InlineData("Bee.Business.dll")]
         [InlineData("MyApp.Orders.OrderBo, Bee.Business")]
         [InlineData("Polhem.Base.KeyCollectionBase`1[[Bee.Definition.Forms.FormField, Bee.Definition]], Polhem.Base")]
@@ -16,7 +16,7 @@ namespace Polhem.Base.UnitTests
         }
 
         [Theory]
-        [InlineData("Polhem.Business.AuditLog.LogBusinessObject, Polhem.Business")]
+        [InlineData("Polhem.Business.AuditLog.AuditLogBusinessObject, Polhem.Business")]
         [InlineData("MyApp.Beekeeping.HiveBo, MyApp")]
         [InlineData("Beetle.Types.X, Beetle")]
         [InlineData("")]

@@ -33,7 +33,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
 
                 public class OrderBusinessObject : BusinessObject
                 {
-                    public OrderBusinessObject(IPolhemContext ctx, Guid accessToken)
+                    public OrderBusinessObject(IBusinessObjectContext ctx, Guid accessToken)
                         : base(ctx, accessToken) { }
 
                     public string Approve(string id) => id;
@@ -62,7 +62,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
 
                 public class OrderBusinessObject : BusinessObject
                 {
-                    public OrderBusinessObject(IPolhemContext ctx, Guid accessToken)
+                    public OrderBusinessObject(IBusinessObjectContext ctx, Guid accessToken)
                         : base(ctx, accessToken) { }
 
                     [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
@@ -87,7 +87,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
                 [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
                 public class OrderBusinessObject : BusinessObject
                 {
-                    public OrderBusinessObject(IPolhemContext ctx, Guid accessToken)
+                    public OrderBusinessObject(IBusinessObjectContext ctx, Guid accessToken)
                         : base(ctx, accessToken) { }
 
                     public string Approve(string id) => id;
@@ -112,7 +112,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
 
                 public class OrderBusinessObject : BusinessObject
                 {
-                    public OrderBusinessObject(IPolhemContext ctx, Guid accessToken)
+                    public OrderBusinessObject(IBusinessObjectContext ctx, Guid accessToken)
                         : base(ctx, accessToken) { }
 
                     public string Label { get; set; } = string.Empty;
@@ -135,7 +135,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
 
                 public class OrderBusinessObject : BusinessObject
                 {
-                    public OrderBusinessObject(IPolhemContext ctx, Guid accessToken)
+                    public OrderBusinessObject(IBusinessObjectContext ctx, Guid accessToken)
                         : base(ctx, accessToken) { }
 
                     protected string Prepare(string id) => id;
@@ -180,7 +180,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
 
                 public class BaseOrderBusinessObject : BusinessObject
                 {
-                    public BaseOrderBusinessObject(IPolhemContext ctx, Guid accessToken)
+                    public BaseOrderBusinessObject(IBusinessObjectContext ctx, Guid accessToken)
                         : base(ctx, accessToken) { }
 
                     [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
@@ -189,7 +189,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
 
                 public class DerivedOrderBusinessObject : BaseOrderBusinessObject
                 {
-                    public DerivedOrderBusinessObject(IPolhemContext ctx, Guid accessToken)
+                    public DerivedOrderBusinessObject(IBusinessObjectContext ctx, Guid accessToken)
                         : base(ctx, accessToken) { }
 
                     public override string Approve(string id) => id;
@@ -214,7 +214,7 @@ namespace Polhem.Analyzers.UnitTests.Conventions
 
                 public class OrderBusinessObject : BusinessObject
                 {
-                    public OrderBusinessObject(IPolhemContext ctx, Guid accessToken)
+                    public OrderBusinessObject(IBusinessObjectContext ctx, Guid accessToken)
                         : base(ctx, accessToken) { }
 
                     public static string Lookup(string id) => id;
@@ -245,13 +245,13 @@ namespace Polhem.Analyzers.UnitTests.Conventions
                 [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
                 public class BaseOrderBusinessObject : BusinessObject
                 {
-                    public BaseOrderBusinessObject(IPolhemContext ctx, Guid accessToken)
+                    public BaseOrderBusinessObject(IBusinessObjectContext ctx, Guid accessToken)
                         : base(ctx, accessToken) { }
                 }
 
                 public class DerivedOrderBusinessObject : BaseOrderBusinessObject
                 {
-                    public DerivedOrderBusinessObject(IPolhemContext ctx, Guid accessToken)
+                    public DerivedOrderBusinessObject(IBusinessObjectContext ctx, Guid accessToken)
                         : base(ctx, accessToken) { }
 
                     public string Approve(string id) => id;

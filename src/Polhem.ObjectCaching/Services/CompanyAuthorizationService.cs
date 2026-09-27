@@ -25,7 +25,7 @@ namespace Polhem.ObjectCaching.Services
         }
 
         /// <inheritdoc/>
-        public bool Can(Guid accessToken, string modelId, PermissionAction action)
+        public bool Can(Guid accessToken, string modelId, PermissionActions action)
         {
             // One snapshot for the whole check: the company and the roles must come from the same
             // company entry, and a concurrent EnterCompany / LeaveCompany swaps the whole scope.

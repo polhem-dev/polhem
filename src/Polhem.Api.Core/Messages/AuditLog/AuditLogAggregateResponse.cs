@@ -8,7 +8,7 @@ namespace Polhem.Api.Core.Messages.AuditLog
     /// unpaged summary result set. The <see cref="Table"/> carries whichever dimension / metric columns
     /// the aggregate projects.
     /// </summary>
-    public class LogAggregateResponse : ApiResponse, ILogAggregateResponse
+    public class AuditLogAggregateResponse : ApiResponse, IAuditLogAggregateResponse
     {
         /// <summary>Gets or sets the aggregate result rows.</summary>
         public DataTable? Table { get; set; }

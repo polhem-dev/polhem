@@ -171,8 +171,8 @@ when empty).
 ## Hard rules
 
 1. **The Server must not `ProjectReference Polhem.Api.Client`**. The backend is the backend, the client is the client.
-   The only temptation is `ApiClientInfo.LocalServiceProvider` (the in-process client bridge) — remote heads go over
-   HTTP and do not need it; delete it.
+   The only temptation is the in-process client bridge (local connectors built with the host's `IServiceProvider`)
+   — remote heads go over HTTP and do not need it; delete it.
 2. **CategoryId ∈ {common, company, log}**, business data = company (Part 1).
 3. **TableSchema folder name = CategoryId**.
 4. **The slnx does not list `Define/` files**: they are runtime data and go stale; the server reads the whole directory

@@ -191,8 +191,8 @@ internal static class Smoke
         {
             var root = new PermissionModels();
             var model = new PermissionModel("PurchaseOrder", "採購單");
-            model.Rules!.Add(new PermissionRule(PermissionAction.Read, ScopeStrategy.Dept));
-            model.Rules!.Add(new PermissionRule(PermissionAction.Create));
+            model.Rules!.Add(new PermissionRule(PermissionActions.Read, ScopeStrategy.Dept));
+            model.Rules!.Add(new PermissionRule(PermissionActions.Create));
             root.Models!.Add(model);
             Polhem.Base.Serialization.XmlCodec.SerializeToFile(root, target);
 
@@ -200,7 +200,7 @@ internal static class Smoke
             var loaded = vm.Root.Models!.FirstOrDefault(m => m.ModelId == "PurchaseOrder");
             if (loaded is null) return Fail(41, "PermissionModel missing after reload");
             if (loaded.Rules?.Count != 2) return Fail(42, "PermissionRule count mismatch");
-            var readRule = loaded.Rules.FirstOrDefault(r => r.Action == PermissionAction.Read);
+            var readRule = loaded.Rules.FirstOrDefault(r => r.Action == PermissionActions.Read);
             if (readRule?.Scope != ScopeStrategy.Dept)
                 return Fail(43, $"Read rule Scope expected Dept got {readRule?.Scope}");
 

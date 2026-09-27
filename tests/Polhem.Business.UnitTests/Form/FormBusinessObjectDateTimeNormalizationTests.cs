@@ -239,7 +239,7 @@ namespace Polhem.Business.UnitTests.Form
         /// </summary>
         private sealed class AcceptsEventTimeBo : FormBusinessObject
         {
-            public AcceptsEventTimeBo(IPolhemContext ctx, string progId) : base(ctx, Guid.NewGuid(), progId) { }
+            public AcceptsEventTimeBo(IBusinessObjectContext ctx, string progId) : base(ctx, Guid.NewGuid(), progId) { }
 
             protected override void NormalizeDateTimes(SaveContext context)
             {

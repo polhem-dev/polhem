@@ -5,7 +5,7 @@ using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Permissions;
 using Polhem.UI.Core;
-using Polhem.UI.Core.Permissions;
+using Polhem.Api.Client.Permissions;
 
 namespace Polhem.UI.Avalonia.Views
 {
@@ -121,7 +121,7 @@ namespace Polhem.UI.Avalonia.Views
             _deleteButton.IsVisible = CanCommand(_deleteButton);
         }
 
-        // Resolves whether the button's tagged PermissionAction is permitted for the current schema
+        // Resolves whether the button's tagged PermissionActions is permitted for the current schema
         // and cached capability snapshot. Untagged buttons and a missing schema resolve to permitted.
         private bool CanCommand(Control button)
             => Schema is null

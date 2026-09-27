@@ -198,7 +198,7 @@ namespace Polhem.Definition.UnitTests
             var model = models!.Models!["AuditRule"];
 
             Assert.NotNull(model);
-            Assert.Contains(model!.Rules!, r => r.Action == PermissionAction.Update);
+            Assert.Contains(model!.Rules!, r => r.Action == PermissionActions.Update);
         }
 
         [Fact]

@@ -1,4 +1,3 @@
-using Polhem.Api.Client;
 using Polhem.Api.Core;
 using Polhem.Base;
 using Polhem.Definition;
@@ -19,7 +18,7 @@ namespace Polhem.LoadTests.Bootstrap
     /// <remarks>
     /// <para>
     /// This is what makes <c>LocalApiProvider</c> able to dispatch: it needs a built service
-    /// provider on <see cref="ApiClientInfo.LocalServiceProvider"/> holding a
+    /// provider (<see cref="Services"/>) holding a
     /// <c>JsonRpcExecutor</c>, and everything that executor reaches — definitions, cache,
     /// database access, business-object resolution — has to be registered first.
     /// </para>
@@ -109,8 +108,6 @@ namespace Polhem.LoadTests.Bootstrap
 
                 var provider = services.BuildServiceProvider();
 
-                ApiClientInfo.LocalServiceProvider = provider;
-
                 // IMPORTANT: this has to come after AddPolhemFramework. That call runs
                 // CacheInfo.Initialize synchronously, which assigns the configured provider —
                 // wrapping first would simply be overwritten, and the failure is silent: the run
@@ -134,7 +131,6 @@ namespace Polhem.LoadTests.Bootstrap
         public void Dispose()
         {
             CacheInfo.Provider = _originalCacheProvider;
-            ApiClientInfo.LocalServiceProvider = null;
             _services.Dispose();
             _workspace.Dispose();
         }

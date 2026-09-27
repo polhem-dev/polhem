@@ -17,7 +17,7 @@ namespace Polhem.Business.Form
 
         /// <summary>
         /// Whether data-change auditing applies to this form. Resolved through the
-        /// <see cref="IPolhemContext.Services"/> escape hatch; false gates out all capture work.
+        /// <see cref="IBusinessObjectContext.Services"/> escape hatch; false gates out all capture work.
         /// </summary>
         /// <remarks>
         /// Two levels, and only the first is a gate: <see cref="AuditLogOptions.Enabled"/> switches

@@ -389,9 +389,9 @@ audience is form-based information systems such as ERP, CRM and HRM, and BPM / w
 state transitions) is a future direction. **It is not being done at this stage**; that is the user's decision.
 
 **Starting point: this layer does not exist today, and it is left empty on purpose.**
-The XML doc of `PermissionAction` states that state transitions such as Approve, Post and Confirm are **deliberately
+The XML doc of `PermissionActions` states that state transitions such as Approve, Post and Confirm are **deliberately
 not on the action axis**, but belong to "a separate workflow permission layer"
-(`src/Polhem.Definition/Settings/Permission/PermissionAction.cs`).
+(`src/Polhem.Definition/Settings/Permission/PermissionActions.cs`).
 That layer is only named; it has no interface and no implementation yet. What the framework has now is the form half:
 form definitions, data access, and two layers of authorization (the action gate plus record scope; see
 [ADR-019](../adr/adr-019-permission-authorization-model.md)).
@@ -405,7 +405,7 @@ claim with no mechanism behind it. The repositioning of the public documents alr
 
 1. **Build our own flow engine, or provide seams to integrate an external engine?** This question decides the shape
    of the other three.
-2. **How do state transition permissions stack on the existing two layers of authorization?** `PermissionAction`
+2. **How do state transition permissions stack on the existing two layers of authorization?** `PermissionActions`
    already reserves "a separate layer", but the order of evaluation and the way it combines with the action gate and
    record scope are not defined yet.
 3. **Where is the document state stored?** If it is a new `sys_*` system field, that extends the framework-reserved

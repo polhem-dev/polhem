@@ -37,7 +37,7 @@ namespace Polhem.Business.UnitTests
         private SystemBusinessObject CreateBo()
             // `isLocalCall: true` is the point here, not boilerplate: these tests verify exactly the path where a local call can mint a key
             // without being a deployment admin. Since the default changed to false it must be written out.
-            => new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
+            => new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
 
         private static string NewSysId() => "bo-" + Guid.NewGuid().ToString("N");
 
@@ -159,7 +159,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("CreateApiKey rejects a remote call from a caller who is not a deployment-level administrator")]
         public void CreateApiKey_RemoteNonAdmin_ThrowsUnauthorized()
         {
-            var ctx = TestPolhemContext.CreateWithOverrides(_fx,
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx,
                 (typeof(IDeploymentAuthorizationService), new FakeDeploymentAuthorization(allowed: false)));
             var bo = new SystemBusinessObject(ctx, Guid.NewGuid(), SysProgIds.System, isLocalCall: false);
 
@@ -232,7 +232,7 @@ namespace Polhem.Business.UnitTests
                 token = NewSession(userId);
 
                 // A deployment without an administrator must be able to mint its first key, otherwise the bootstrap path is broken.
-                var result = new SystemBusinessObject(TestPolhemContext.Create(_fx), token, SysProgIds.System, isLocalCall: true)
+                var result = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), token, SysProgIds.System, isLocalCall: true)
                     .CreateApiKey(new CreateApiKeyArgs { SysId = sysId, SysName = "Bootstrap" });
 
                 Assert.Equal(sysId, result.SysId);
@@ -247,10 +247,10 @@ namespace Polhem.Business.UnitTests
         /// A remote caller (<c>isLocalCall: false</c>) that goes through the real <see cref="IDeploymentAuthorizationService"/>.
         /// </summary>
         private SystemBusinessObject RemoteBo(Guid accessToken)
-            => new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System, isLocalCall: false);
+            => new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System, isLocalCall: false);
 
         private Guid NewSession(string userId)
-            => CreateBo().CreateSession(new CreateSessionArgs { UserID = userId, ExpiresIn = 600 }).AccessToken;
+            => CreateBo().CreateSession(new CreateSessionArgs { UserId = userId, ExpiresIn = 600 }).AccessToken;
 
         private void Cleanup(Guid token, string userId, string sysId)
         {

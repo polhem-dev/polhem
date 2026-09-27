@@ -9,6 +9,7 @@ namespace Polhem.LoadTests.Scenarios
     public sealed class VirtualUser
     {
         private readonly string? _endpoint;
+        private readonly IServiceProvider? _localServices;
 
         /// <summary>
         /// Initializes a new instance.
@@ -16,11 +17,13 @@ namespace Polhem.LoadTests.Scenarios
         /// <param name="accessToken">The token obtained at sign-in.</param>
         /// <param name="session">This user's own session state.</param>
         /// <param name="endpoint">The remote endpoint, or null for in-process dispatch.</param>
-        public VirtualUser(Guid accessToken, ApiSessionContext session, string? endpoint)
+        /// <param name="localServices">The in-process backend, required when <paramref name="endpoint"/> is null.</param>
+        public VirtualUser(Guid accessToken, ApiSessionContext session, string? endpoint, IServiceProvider? localServices = null)
         {
             AccessToken = accessToken;
             Session = session ?? throw new ArgumentNullException(nameof(session));
             _endpoint = endpoint;
+            _localServices = localServices;
         }
 
         /// <summary>Gets the access token.</summary>
@@ -41,7 +44,7 @@ namespace Polhem.LoadTests.Scenarios
         /// </remarks>
         public FormApiConnector CreateFormConnector(string progId)
             => _endpoint is null
-                ? new FormApiConnector(AccessToken, progId, Session)
+                ? new FormApiConnector(_localServices ?? throw new InvalidOperationException("In-process dispatch needs the backend's service provider."), AccessToken, progId, Session)
                 : new FormApiConnector(_endpoint, AccessToken, progId, Session);
     }
 }

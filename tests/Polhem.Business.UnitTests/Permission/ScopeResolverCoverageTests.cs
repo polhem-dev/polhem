@@ -97,7 +97,7 @@ namespace Polhem.Business.UnitTests.Permission
         {
             var resolver = Build(session: null, grants: []);
 
-            var node = resolver.ResolveFilter(Guid.NewGuid(), Model, PermissionAction.Read, Schema());
+            var node = resolver.ResolveFilter(Guid.NewGuid(), Model, PermissionActions.Read, Schema());
 
             AssertDenyAll(node!, "buyer_rowid");
         }
@@ -109,7 +109,7 @@ namespace Polhem.Business.UnitTests.Permission
             var session = Session(s_user, s_employee, s_dept, "Buyer");
             var resolver = Build(session, grants: null, nullSnapshot: true);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema());
 
             AssertDenyAll(node!, "buyer_rowid");
         }
@@ -121,7 +121,7 @@ namespace Polhem.Business.UnitTests.Permission
             var session = Session(s_user, s_employee, s_dept, "Buyer");
             var resolver = Build(session, grants: []);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema());
 
             AssertDenyAll(node!, "buyer_rowid");
         }
@@ -133,7 +133,7 @@ namespace Polhem.Business.UnitTests.Permission
             var session = Session(s_user, s_employee, s_dept, "Buyer");
             var resolver = Build(session, grants: []);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema(owner: false));
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema(owner: false));
 
             AssertDenyAll(node!, "dept_rowid");
         }
@@ -145,7 +145,7 @@ namespace Polhem.Business.UnitTests.Permission
             var session = Session(s_user, s_employee, s_dept, "Buyer");
             var resolver = Build(session, grants: []);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, EmptyFieldSchema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, EmptyFieldSchema());
 
             AssertDenyAll(node!, "sys_rowid");
         }
@@ -159,13 +159,13 @@ namespace Polhem.Business.UnitTests.Permission
             var session = Session(s_user, s_employee, s_dept, "Buyer");
             var models = new PermissionModels();
             var model = models.Models!.Add(Model, "採購單");
-            model.Rules!.Add(PermissionAction.Read, ScopeStrategy.Dept);
+            model.Rules!.Add(PermissionActions.Read, ScopeStrategy.Dept);
 
             var resolver = Build(session,
-                [new("Buyer", Model, PermissionAction.Print, ScopeStrategy.Inherit)],
+                [new("Buyer", Model, PermissionActions.Print, ScopeStrategy.Inherit)],
                 tree: DeptTree(), models: models);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Print, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Print, Schema());
 
             // Print inherits Read=Dept → (dept=..) OR Own group.
             var group = Assert.IsType<FilterGroup>(node);
@@ -181,10 +181,10 @@ namespace Polhem.Business.UnitTests.Permission
             models.Models!.Add(Model, "採購單"); // No rules.
 
             var resolver = Build(session,
-                [new("Buyer", Model, PermissionAction.Print, ScopeStrategy.Inherit)],
+                [new("Buyer", Model, PermissionActions.Print, ScopeStrategy.Inherit)],
                 models: models);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Print, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Print, Schema());
 
             Assert.Null(node);
         }
@@ -198,10 +198,10 @@ namespace Polhem.Business.UnitTests.Permission
             models.Models!.Add("OtherModel", "他"); // Does not contain the target model.
 
             var resolver = Build(session,
-                [new("Buyer", Model, PermissionAction.Print, ScopeStrategy.Inherit)],
+                [new("Buyer", Model, PermissionActions.Print, ScopeStrategy.Inherit)],
                 models: models);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Print, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Print, Schema());
 
             Assert.Null(node);
         }
@@ -213,9 +213,9 @@ namespace Polhem.Business.UnitTests.Permission
         public void ResolveFilter_DeptScope_NoDept_OwnOnly()
         {
             var session = Session(s_user, s_employee, Guid.Empty, "Buyer");
-            var resolver = Build(session, [new("Buyer", Model, PermissionAction.Read, ScopeStrategy.Dept)]);
+            var resolver = Build(session, [new("Buyer", Model, PermissionActions.Read, ScopeStrategy.Dept)]);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema());
 
             var c = Assert.IsType<FilterCondition>(node);
             Assert.Equal("buyer_rowid", c.FieldName);
@@ -228,9 +228,9 @@ namespace Polhem.Business.UnitTests.Permission
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
             var resolver = Build(session,
-                [new("Buyer", Model, PermissionAction.Read, ScopeStrategy.DeptAndSub)], tree: DeptTree());
+                [new("Buyer", Model, PermissionActions.Read, ScopeStrategy.DeptAndSub)], tree: DeptTree());
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema(dept: false));
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema(dept: false));
 
             var c = Assert.IsType<FilterCondition>(node);
             Assert.Equal("buyer_rowid", c.FieldName);
@@ -242,9 +242,9 @@ namespace Polhem.Business.UnitTests.Permission
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
             var resolver = Build(session,
-                [new("Buyer", Model, PermissionAction.Read, ScopeStrategy.DeptAndSub)], tree: null);
+                [new("Buyer", Model, PermissionActions.Read, ScopeStrategy.DeptAndSub)], tree: null);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema());
 
             var c = Assert.IsType<FilterCondition>(node);
             Assert.Equal("buyer_rowid", c.FieldName);

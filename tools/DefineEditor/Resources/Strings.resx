@@ -159,7 +159,7 @@
   <data name="SystemSettings_SecurityWarning" xml:space="preserve"><value>(Keys are shown as plain text — this editor is for local dev only; manage production keys via KMS.)</value></data>
   <data name="SystemSettings_CacheNotifyProps" xml:space="preserve"><value>CacheNotifyOptions properties</value></data>
   <data name="SystemSettings_BackendComponentsProps" xml:space="preserve"><value>BackendComponents properties</value></data>
-  <data name="SystemSettings_BackendComponentsHint" xml:space="preserve"><value>Each backend component's AssemblyQualifiedName (defaults come from BackendDefaultTypes).</value></data>
+  <data name="SystemSettings_BackendComponentsHint" xml:space="preserve"><value>Each backend component's AssemblyQualifiedName (leave blank for the framework default).</value></data>
   <data name="SystemSettings_ExtendedPropertyProps" xml:space="preserve"><value>ExtendedProperty</value></data>
 
   <!-- FormSchema -->
@@ -221,7 +221,7 @@
   <data name="Status_SolutionLoaded" xml:space="preserve"><value>Loaded {0} FormSchemas</value></data>
   <data name="Status_FrameworkDefaultsMaterialised" xml:space="preserve"><value>Materialised {0} framework default file(s)</value></data>
   <data name="Status_OpenSolutionFailed" xml:space="preserve"><value>Open failed: {0}</value></data>
-  <data name="Status_PermissionRuleCovered" xml:space="preserve"><value>This model already covers every PermissionAction — no more rules to add.</value></data>
+  <data name="Status_PermissionRuleCovered" xml:space="preserve"><value>This model already covers every PermissionActions — no more rules to add.</value></data>
   <data name="Status_SingletonHint" xml:space="preserve"><value>(Property edits commit to memory on focus loss; Save (⌘S) refreshes the tree headers and writes back to XML.)</value></data>
 
   <!-- Confirmation dialogs -->

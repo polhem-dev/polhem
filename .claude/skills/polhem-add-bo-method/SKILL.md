@@ -90,7 +90,7 @@ Answer these 3 questions before adding the method:
    - `BusinessObject._ctx` already exposes `DefineAccess`, `SessionInfoService`,
      `BoFactory` and `Services` (the IServiceProvider escape hatch)
    - Other services (such as `IRepositoryFactory`) go through `Services.GetRequiredService<T>()`.
-     Do not widen the public `IPolhemContext` signature for a single method
+     Do not widen the public `IBusinessObjectContext` signature for a single method
    - Do **not** "call `IFormCommandBuilder` / `DbAccess` directly", which violates rule 1
 
 2. **Whether the parameter types can be serialized across the wire**

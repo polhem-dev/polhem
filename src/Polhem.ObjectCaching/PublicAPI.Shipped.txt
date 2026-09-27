@@ -184,7 +184,6 @@ Polhem.ObjectCaching.Services.AuditRuleService.AuditRuleService(Polhem.ObjectCac
 Polhem.ObjectCaching.Services.AuditRuleService.Get(string! companyId) -> Polhem.Definition.Logging.CompanyAuditRules?
 Polhem.ObjectCaching.Services.AuditRuleService.Remove(string! companyId) -> void
 Polhem.ObjectCaching.Services.CompanyAuthorizationService
-Polhem.ObjectCaching.Services.CompanyAuthorizationService.Can(System.Guid accessToken, string! modelId, Polhem.Definition.Settings.PermissionAction action) -> bool
 Polhem.ObjectCaching.Services.CompanyAuthorizationService.CompanyAuthorizationService(Polhem.Definition.Identity.ISessionInfoService! sessionInfoService, Polhem.Definition.Identity.IRolePermissionService! rolePermissionService) -> void
 Polhem.ObjectCaching.Services.CompanyInfoService
 Polhem.ObjectCaching.Services.CompanyInfoService.CompanyInfoService(Polhem.ObjectCaching.ICacheContainer! cache) -> void
@@ -195,12 +194,6 @@ Polhem.ObjectCaching.Services.DepartmentTreeService
 Polhem.ObjectCaching.Services.DepartmentTreeService.DepartmentTreeService(Polhem.ObjectCaching.ICacheContainer! cache) -> void
 Polhem.ObjectCaching.Services.DepartmentTreeService.Get(string! companyId) -> Polhem.Definition.Organization.DepartmentTree?
 Polhem.ObjectCaching.Services.DepartmentTreeService.Remove(string! companyId) -> void
-Polhem.ObjectCaching.Services.DeploymentAuthorizationService
-Polhem.ObjectCaching.Services.DeploymentAuthorizationService.Can(System.Guid accessToken, Polhem.Definition.Identity.DeploymentAction action) -> bool
-Polhem.ObjectCaching.Services.DeploymentAuthorizationService.DeploymentAuthorizationService(Polhem.Definition.Identity.ISessionInfoService! sessionInfoService, Polhem.Repository.Abstractions.Factories.IRepositoryFactory! repositoryFactory) -> void
-Polhem.ObjectCaching.Services.EmployeeContextResolver
-Polhem.ObjectCaching.Services.EmployeeContextResolver.EmployeeContextResolver(Polhem.Repository.Abstractions.Factories.IRepositoryFactory! repositoryFactory) -> void
-Polhem.ObjectCaching.Services.EmployeeContextResolver.Resolve(string! userId, string! databaseId) -> Polhem.Definition.Identity.EmployeeContext!
 Polhem.ObjectCaching.Services.RolePermissionService
 Polhem.ObjectCaching.Services.RolePermissionService.Get(string! companyId) -> Polhem.Definition.Identity.CompanyRolePermissions?
 Polhem.ObjectCaching.Services.RolePermissionService.Remove(string! companyId) -> void

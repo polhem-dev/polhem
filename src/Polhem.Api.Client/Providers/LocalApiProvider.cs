@@ -6,20 +6,23 @@ namespace Polhem.Api.Client.Providers
     /// Local API service provider that accesses backend business logic directly within the same process.
     /// </summary>
     /// <remarks>
-    /// Near-end mode requires a fully built backend service provider — set via
-    /// <see cref="ApiClientInfo.LocalServiceProvider"/> once at startup. The provider resolves a
-    /// <see cref="JsonRpcExecutor"/> per request to honour JsonRpcExecutor's transient lifetime.
-    /// Phase 4 transitional: <c>Polhem.Api.Client</c> near-end mode keeps a static service-provider
-    /// holder until a follow-up phase migrates it to constructor injection (out-of-scope per main plan).
+    /// Near-end mode needs the in-process backend's service provider, the one built by
+    /// <c>services.AddPolhemFramework(...)</c>. The provider resolves a <see cref="JsonRpcExecutor"/>
+    /// per request to honour the executor's transient lifetime.
     /// </remarks>
     public class LocalApiProvider : IJsonRpcProvider
     {
+        private readonly IServiceProvider _services;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalApiProvider"/> class.
         /// </summary>
+        /// <param name="services">The in-process backend's service provider; it must register <see cref="JsonRpcExecutor"/>.</param>
         /// <param name="accessToken">The access token.</param>
-        public LocalApiProvider(Guid accessToken)
+        public LocalApiProvider(IServiceProvider services, Guid accessToken)
         {
+            ArgumentNullException.ThrowIfNull(services);
+            _services = services;
             AccessToken = accessToken;
         }
 
@@ -34,14 +37,10 @@ namespace Polhem.Api.Client.Providers
         /// <param name="request">The JSON-RPC request model.</param>
         public async Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request)
         {
-            var services = ApiClientInfo.LocalServiceProvider
+            var executor = _services.GetService(typeof(JsonRpcExecutor)) as JsonRpcExecutor
                 ?? throw new InvalidOperationException(
-                    "ApiClientInfo.LocalServiceProvider is not configured. " +
-                    "Local API calls require an in-process backend; assign a service provider " +
-                    "built via services.AddPolhemFramework(configuration).BuildServiceProvider() before use.");
-            var executor = services.GetService(typeof(JsonRpcExecutor)) as JsonRpcExecutor
-                ?? throw new InvalidOperationException(
-                    "JsonRpcExecutor is not registered in ApiClientInfo.LocalServiceProvider.");
+                    "JsonRpcExecutor is not registered in the service provider given to LocalApiProvider. " +
+                    "Local API calls need the provider built from services.AddPolhemFramework(...).");
             executor.AccessToken = AccessToken;
             executor.IsLocalCall = true;
             return await executor.ExecuteAsync(request).ConfigureAwait(false);

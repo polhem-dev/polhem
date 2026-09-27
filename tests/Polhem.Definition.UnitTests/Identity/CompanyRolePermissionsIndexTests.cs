@@ -17,11 +17,11 @@ namespace Polhem.Definition.UnitTests.Identity
         {
             var grants = new List<RoleGrantRow>
             {
-                new("admin",  "order", PermissionAction.Read,   ScopeStrategy.All),
-                new("admin",  "order", PermissionAction.Update, ScopeStrategy.Own),
-                new("clerk",  "order", PermissionAction.Read,   ScopeStrategy.Dept),
-                new("clerk",  "item",  PermissionAction.Read,   ScopeStrategy.All),
-                new("other",  "order", PermissionAction.Delete, ScopeStrategy.All),
+                new("admin",  "order", PermissionActions.Read,   ScopeStrategy.All),
+                new("admin",  "order", PermissionActions.Update, ScopeStrategy.Own),
+                new("clerk",  "order", PermissionActions.Read,   ScopeStrategy.Dept),
+                new("clerk",  "item",  PermissionActions.Read,   ScopeStrategy.All),
+                new("other",  "order", PermissionActions.Delete, ScopeStrategy.All),
             };
             var userRoles = new List<UserRoleRow>
             {
@@ -38,7 +38,7 @@ namespace Polhem.Definition.UnitTests.Identity
         {
             var allowed = Build().GetAllowed(["admin", "clerk"], "order");
 
-            Assert.Equal(PermissionAction.Read | PermissionAction.Update, allowed);
+            Assert.Equal(PermissionActions.Read | PermissionActions.Update, allowed);
         }
 
         [Fact]
@@ -48,15 +48,15 @@ namespace Polhem.Definition.UnitTests.Identity
             // "other" has Delete on order, but the user holds only clerk, so it must not leak in.
             var allowed = Build().GetAllowed(["clerk"], "order");
 
-            Assert.Equal(PermissionAction.Read, allowed);
-            Assert.False(allowed.HasFlag(PermissionAction.Delete));
+            Assert.Equal(PermissionActions.Read, allowed);
+            Assert.False(allowed.HasFlag(PermissionActions.Delete));
         }
 
         [Fact]
         [DisplayName("GetAllowed returns None for a model with no grants")]
         public void GetAllowed_UnknownModel_ReturnsNone()
         {
-            Assert.Equal(PermissionAction.None, Build().GetAllowed(["admin"], "nowhere"));
+            Assert.Equal(PermissionActions.None, Build().GetAllowed(["admin"], "nowhere"));
         }
 
         [Fact]
@@ -66,15 +66,15 @@ namespace Polhem.Definition.UnitTests.Identity
             var byModel = Build().GetAllowedByModel(["admin", "clerk"]);
 
             Assert.Equal(2, byModel.Count);
-            Assert.Equal(PermissionAction.Read | PermissionAction.Update, byModel["order"]);
-            Assert.Equal(PermissionAction.Read, byModel["item"]);
+            Assert.Equal(PermissionActions.Read | PermissionActions.Update, byModel["order"]);
+            Assert.Equal(PermissionActions.Read, byModel["item"]);
         }
 
         [Fact]
         [DisplayName("GetEffectiveScopes matches the action exactly and covers every role held")]
         public void GetEffectiveScopes_MatchesActionExactly()
         {
-            var scopes = Build().GetEffectiveScopes(["admin", "clerk"], "order", PermissionAction.Read);
+            var scopes = Build().GetEffectiveScopes(["admin", "clerk"], "order", PermissionActions.Read);
 
             // The admin Read scope is All and the clerk Read scope is Dept. The admin Update (Own) scope must not mix in.
             Assert.Equal(2, scopes.Count);
@@ -108,12 +108,12 @@ namespace Polhem.Definition.UnitTests.Identity
         {
             var grants = new List<RoleGrantRow>
             {
-                new("r", "m", PermissionAction.Read,   ScopeStrategy.All),
-                new("r", "m", PermissionAction.Delete, ScopeStrategy.All),
+                new("r", "m", PermissionActions.Read,   ScopeStrategy.All),
+                new("r", "m", PermissionActions.Delete, ScopeStrategy.All),
             };
             var perms = new CompanyRolePermissions("C1", grants, []);
 
-            Assert.Equal(PermissionAction.Read | PermissionAction.Delete, perms.GetAllowed(["r"], "m"));
+            Assert.Equal(PermissionActions.Read | PermissionActions.Delete, perms.GetAllowed(["r"], "m"));
         }
     }
 }

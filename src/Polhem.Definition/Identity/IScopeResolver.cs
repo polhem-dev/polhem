@@ -34,6 +34,6 @@ namespace Polhem.Definition.Identity
         /// <param name="modelId">The permission model id.</param>
         /// <param name="action">The single action being authorized (<c>Read</c> / <c>Update</c> / <c>Delete</c>).</param>
         /// <param name="formSchema">The form schema (supplies the owner/department columns via <see cref="ScopeRole"/>).</param>
-        FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionAction action, FormSchema formSchema);
+        FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionActions action, FormSchema formSchema);
     }
 }

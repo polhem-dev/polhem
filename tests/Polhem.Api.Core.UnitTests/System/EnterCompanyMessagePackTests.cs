@@ -69,10 +69,10 @@ namespace Polhem.Api.Core.UnitTests.System
             var response = new EnterCompanyResponse
             {
                 Company = new CompanyInfo { CompanyId = "C001" },
-                Capabilities = new Dictionary<string, PermissionAction>
+                Capabilities = new Dictionary<string, PermissionActions>
                 {
-                    ["PurchaseOrder"] = PermissionAction.Read | PermissionAction.Update,
-                    ["Cost"] = PermissionAction.Read,
+                    ["PurchaseOrder"] = PermissionActions.Read | PermissionActions.Update,
+                    ["Cost"] = PermissionActions.Read,
                 }
             };
 
@@ -80,8 +80,8 @@ namespace Polhem.Api.Core.UnitTests.System
             var restored = MessagePackCodec.Deserialize<EnterCompanyResponse>(bytes);
 
             Assert.NotNull(restored);
-            Assert.Equal(PermissionAction.Read | PermissionAction.Update, restored!.Capabilities["PurchaseOrder"]);
-            Assert.Equal(PermissionAction.Read, restored.Capabilities["Cost"]);
+            Assert.Equal(PermissionActions.Read | PermissionActions.Update, restored!.Capabilities["PurchaseOrder"]);
+            Assert.Equal(PermissionActions.Read, restored.Capabilities["Cost"]);
         }
 
         [Fact]

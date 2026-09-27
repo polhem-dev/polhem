@@ -7,6 +7,10 @@ namespace Polhem.Api.Client
     public enum SupportedConnectTypes
     {
         /// <summary>
+        /// No connection type.
+        /// </summary>
+        None = 0,
+        /// <summary>
         /// Local connection (in-process).
         /// </summary>
         Local = 1,
