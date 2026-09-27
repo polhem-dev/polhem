@@ -4,6 +4,7 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Avalonia.DataObjects;
+using Polhem.Tests.Shared;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
@@ -101,29 +102,33 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("ReadOnlyText is formatted as yyyy-MM-dd after Bind")]
+        [DisplayName("ReadOnlyText shows the date in the user's culture after Bind, and the bound value stays invariant")]
         public void ReadOnlyText_AfterBind_FormatsSelectedDate()
         {
+            using var culture = new CultureScope("de-DE");
             var dataObject = BuildDataObject();
             dataObject.SetField("hire_date", "2026-06-11");
 
             var editor = new DateEdit();
             editor.Bind(dataObject, "hire_date");
 
-            Assert.Equal("2026-06-11", editor.ReadOnlyText);
+            Assert.Equal("11.06.2026", editor.ReadOnlyText);
+            // The bound value keeps the invariant form the wire carries.
+            Assert.Equal("2026-06-11", dataObject.GetField("hire_date"));
         }
 
         [Fact]
-        [DisplayName("ReadOnlyText of YearMonthEdit is formatted as yyyy-MM")]
+        [DisplayName("ReadOnlyText of YearMonthEdit is formatted as the culture's year-month pattern")]
         public void ReadOnlyText_YearMonthEdit_FormatsYearMonth()
         {
+            using var culture = new CultureScope("en-US");
             var dataObject = BuildDataObject();
             dataObject.SetField("pay_month", "2026-06");
 
             var editor = new YearMonthEdit();
             editor.Bind(dataObject, "pay_month");
 
-            Assert.Equal("2026-06", editor.ReadOnlyText);
+            Assert.Equal("June 2026", editor.ReadOnlyText);
         }
     }
 }

@@ -14,3 +14,21 @@ Polhem.Base.BeeNameHint
 static Polhem.Base.BeeNameHint.AppendTo(string! message, string? name) -> string!
 static Polhem.Base.BeeNameHint.Matches(string? name) -> bool
 static Polhem.Base.Data.DataRowExtensions.RewriteVersions(this System.Data.DataRow! row, System.Func<System.Data.DataColumn!, System.Data.DataRowVersion, object!, object!>! rewrite) -> void
+Polhem.Base.Exceptions.AuthenticationRequiredException.AuthenticationRequiredException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
+Polhem.Base.Exceptions.AuthenticationRequiredException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
+Polhem.Base.Exceptions.AuthenticationRequiredException.MessageKey.get -> string!
+Polhem.Base.Exceptions.CompanyAccessDeniedException.CompanyAccessDeniedException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
+Polhem.Base.Exceptions.CompanyAccessDeniedException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
+Polhem.Base.Exceptions.CompanyAccessDeniedException.MessageKey.get -> string!
+Polhem.Base.Exceptions.CompanyNotEnteredException.CompanyNotEnteredException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
+Polhem.Base.Exceptions.CompanyNotEnteredException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
+Polhem.Base.Exceptions.CompanyNotEnteredException.MessageKey.get -> string!
+Polhem.Base.Exceptions.ForbiddenException.ForbiddenException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
+Polhem.Base.Exceptions.ForbiddenException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
+Polhem.Base.Exceptions.ForbiddenException.MessageKey.get -> string!
+Polhem.Base.Exceptions.ILocalizableMessage
+Polhem.Base.Exceptions.ILocalizableMessage.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
+Polhem.Base.Exceptions.ILocalizableMessage.MessageKey.get -> string!
+Polhem.Base.Exceptions.UserMessageException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
+Polhem.Base.Exceptions.UserMessageException.MessageKey.get -> string!
+Polhem.Base.Exceptions.UserMessageException.UserMessageException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void

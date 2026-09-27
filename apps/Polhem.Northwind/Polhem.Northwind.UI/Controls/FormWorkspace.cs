@@ -4,20 +4,21 @@ using Polhem.UI.Avalonia.Views;
 namespace Polhem.Northwind.UI.Controls;
 
 /// <summary>
-/// One form's workspace: hosts the <see cref="LocalizedListView"/> browse surface and swaps in a
+/// One form's workspace: hosts the <see cref="ListView"/> browse surface and swaps in a
 /// <see cref="FormView"/> for the selected record, switching back to the list when the record
 /// is saved or dismissed. This is the host-side orchestration of the ERP list/record flow —
 /// the framework ships <see cref="ListView"/> and <see cref="FormView"/> as independent
 /// controls and leaves the switching to the host.
 /// <para>
-/// Both surfaces are given a <see cref="NorthwindDefinitions"/> loader, which is what puts the
-/// demo on the localization and tenant-customization paths at all.
+/// Both surfaces localize through the client-wide definition loader the application turns on at
+/// startup (<c>ClientInfo.UseDefinitionLoader</c>), which is what puts the demo on the localization
+/// and tenant-customization paths at all.
 /// </para>
 /// </summary>
 public sealed class FormWorkspace : UserControl
 {
     private readonly string _progId;
-    private readonly LocalizedListView _list;
+    private readonly ListView _list;
     private readonly ContentControl _host;
 
     /// <summary>
@@ -27,7 +28,7 @@ public sealed class FormWorkspace : UserControl
     {
         _progId = progId;
 
-        _list = new LocalizedListView { ProgId = progId };
+        _list = new ListView { ProgId = progId };
         _list.ViewRequested += (_, id) => ShowRecord(record => record.ViewAsync(id));
         _list.EditRequested += (_, id) => ShowRecord(record => record.EditAsync(id));
         _list.AddRequested += (_, _) => ShowRecord(record => record.NewAsync());
@@ -60,15 +61,9 @@ public sealed class FormWorkspace : UserControl
 
     private void ShowRecord(Func<FormView, Task> start)
     {
-        // The loader is what layers the packaged zh-TW captions and the tenant's overrides in
-        // `Customize/northwind-demo/` over the stored definitions. A form left without one still
-        // renders `Define/FormLayout/*.xml`, because `FormView` falls back to the stored base layout,
-        // but with that file's English captions and without the tenant's replacement layout.
-        var record = new FormView
-        {
-            ProgId = _progId,
-            DefinitionLoader = NorthwindDefinitions.CreateLoader(),
-        };
+        // No loader of its own: the client-wide one layers the packaged zh-TW captions and the
+        // tenant's overrides in `Customize/northwind-demo/` over the stored definitions.
+        var record = new FormView { ProgId = _progId };
         record.Saved += (_, _) => ReturnToList(reload: true);
         record.Closed += (_, _) => ReturnToList(reload: false);
 

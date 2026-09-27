@@ -27,13 +27,28 @@ namespace Polhem.Definition.Settings
         public bool IsDebugMode { get; set; } = false;
 
         /// <summary>
-        /// Default language (BCP-47 specific, e.g. <c>"zh-TW"</c>, <c>"en-US"</c>).
-        /// Used as the fall-back when the current session's language has no matching
-        /// translation, and as the seed for newly created sessions that did not specify one.
+        /// Gets or sets the deployment's default language (a BCP-47 culture such as <c>zh-TW</c> or
+        /// <c>en-US</c>).
         /// </summary>
-        [Description("Default BCP-47 language code (e.g. zh-TW, en-US).")]
-        [DefaultValue("en-US")]
-        public string DefaultLang { get; set; } = "en-US";
+        /// <remarks>
+        /// <para>
+        /// One setting with two uses. It is the culture a session receives when the user has no
+        /// <c>st_user.culture</c> of their own, and it is the last hop of the language fall-back
+        /// chain (<see cref="Language.LanguageFallback"/>): a caption, option set, UI text or message
+        /// with no translation in the user's culture or its parents is looked up in this language
+        /// before the base text is used. An English user skips this hop and gets the English base
+        /// text. Clients receive it with the rest of this configuration.
+        /// </para>
+        /// <para>
+        /// The default is <c>zh-TW</c>. A deployment serving another language sets it explicitly;
+        /// an empty value gives users without a culture no session culture, so the client uses its
+        /// own UI culture, and drops the fall-back hop, so an untranslated key shows the base text.
+        /// </para>
+        /// </remarks>
+        [Category("Localization")]
+        [Description("Default BCP-47 culture: the culture of users without one, and the last language fall-back (e.g. zh-TW, en-US).")]
+        [DefaultValue("zh-TW")]
+        public string DefaultLanguage { get; set; } = "zh-TW";
 
         /// <summary>
         /// List of allowed type namespaces for JSON-RPC data transfer (separated by '|').

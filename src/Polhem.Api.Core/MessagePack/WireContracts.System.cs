@@ -125,6 +125,7 @@ namespace Polhem.Api.Core.MessagePack
                 .Member(nameof(Polhem.Api.Core.Messages.System.LoginResponse.UserId), static x => x.UserId, static (x, v) => x.UserId = v)
                 .Member(nameof(Polhem.Api.Core.Messages.System.LoginResponse.UserName), static x => x.UserName, static (x, v) => x.UserName = v)
                 .Member(nameof(Polhem.Api.Core.Messages.System.LoginResponse.TimeZone), static x => x.TimeZone, static (x, v) => x.TimeZone = v)
+                .Member(nameof(Polhem.Api.Core.Messages.System.LoginResponse.Culture), static x => x.Culture, static (x, v) => x.Culture = v)
                 .Build());
             list.Add(WireContract.For<Polhem.Api.Core.Messages.System.LogoutRequest>()
                 .Member(nameof(Polhem.Api.Core.Messages.System.LogoutRequest.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)

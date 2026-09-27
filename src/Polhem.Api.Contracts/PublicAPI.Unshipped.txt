@@ -6,3 +6,4 @@ Polhem.Api.Contracts.AuditLog.IAuditLogListResponse.Paging.get -> Polhem.Definit
 Polhem.Api.Contracts.AuditLog.IAuditLogListResponse.Table.get -> System.Data.DataTable?
 Polhem.Api.Contracts.System.ICreateSessionRequest.UserId.get -> string!
 Polhem.Api.Contracts.System.IEnterCompanyResponse.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>!
+Polhem.Api.Contracts.System.ILoginResponse.Culture.get -> string!

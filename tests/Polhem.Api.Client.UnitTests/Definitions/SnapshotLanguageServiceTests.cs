@@ -114,6 +114,49 @@ namespace Polhem.Api.Client.UnitTests.Definitions
             params (string Lang, string Ns, LanguageResource? Base, LanguageResource? Customize)[] entries)
             => Build(string.Empty, entries);
 
+        [Fact]
+        [DisplayName("A parent culture in the snapshot answers before the default language, for text and enums alike")]
+        public void Resolve_ParentCulture_BeatsDefaultLang()
+        {
+            var english = ResEnum("Gender", ("M", "Male"));
+            english.Items.Add("OK", "Okay");
+            var chinese = ResEnum("Gender", ("M", "男"));
+            chinese.Items.Add("OK", "確定");
+            var svc = Build(
+                defaultLang: "zh-TW",
+                ("en", "Common", english, null),
+                ("zh-TW", "Common", chinese, null));
+
+            Assert.Equal("Okay", svc.GetLangText("en-GB", "Common", "OK"));
+            Assert.True(svc.TryResolveLangText("", "en-GB", "Common", "OK", out string text));
+            Assert.Equal("Okay", text);
+            Assert.Equal("Male", svc.GetLangEnumText("en-GB", "Common.Gender", "M"));
+        }
+
+        [Fact]
+        [DisplayName("With only zh-TW in the snapshot, en-GB misses (keeps base text) while fr-FR and zh-TW resolve zh-TW")]
+        public void TryResolveLangText_EnglishStopsBeforeDefault()
+        {
+            var svc = Build(defaultLang: "zh-TW", ("zh-TW", "Common", Res(("OK", "確定")), null));
+
+            Assert.False(svc.TryResolveLangText("", "en-GB", "Common", "OK", out _));
+            Assert.True(svc.TryResolveLangText("", "fr-FR", "Common", "OK", out string fr));
+            Assert.Equal("確定", fr);
+            Assert.True(svc.TryResolveLangText("", "zh-TW", "Common", "OK", out string zh));
+            Assert.Equal("確定", zh);
+        }
+
+        [Fact]
+        [DisplayName("An enum missing in the requested culture and its parent resolves in the default language")]
+        public void GetLangEnum_ParentMissing_FallsBackToDefaultLang()
+        {
+            var svc = Build(
+                defaultLang: "zh-TW",
+                ("zh-TW", "Common", ResEnum("Gender", ("M", "男")), null));
+
+            Assert.Equal("男", svc.GetLangEnumText("fr-FR", "Common.Gender", "M"));
+        }
+
         private static SnapshotLanguageService Build(
             string defaultLang,
             params (string Lang, string Ns, LanguageResource? Base, LanguageResource? Customize)[] entries)

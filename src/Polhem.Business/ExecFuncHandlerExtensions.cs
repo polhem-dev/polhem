@@ -2,6 +2,7 @@ using System.Runtime.ExceptionServices;
 using Polhem.Base.Exceptions;
 using Polhem.Business.Attributes;
 using Polhem.Definition.Security;
+using Polhem.Definition.Language;
 
 namespace Polhem.Business
 {
@@ -83,7 +84,7 @@ namespace Polhem.Business
 
                 // Evaluate the access requirement
                 if (attr.AccessRequirement == ApiAccessRequirement.Authenticated && currentRequirement == ApiAccessRequirement.Anonymous)
-                    throw new AuthenticationRequiredException($"FuncID '{args.FuncId}' requires authentication.");
+                    throw new AuthenticationRequiredException(PolhemMessages.FuncAuthenticationRequired, "FuncID '{0}' requires authentication.", args.FuncId);
 
                 method.Invoke(handler, new object[] { args, result });
             }

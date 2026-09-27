@@ -11,11 +11,8 @@ Polhem.Web.Blazor.Server.Components.PolhemLoginPanel
 Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.PolhemLoginPanel() -> void
 Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.OnLoggedIn.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Api.Core.Messages.System.LoginResponse!>
 Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.OnLoggedIn.set -> void
-Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.PasswordLabel.get -> string!
 Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.PasswordLabel.set -> void
-Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.SubmitLabel.get -> string!
 Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.SubmitLabel.set -> void
-Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.UserIdLabel.get -> string!
 Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.UserIdLabel.set -> void
 Polhem.Web.Blazor.Server.Components.DynamicForm
 Polhem.Web.Blazor.Server.Components.DynamicForm.DataObject.get -> Polhem.Web.Blazor.Server.DataObjects.FormDataObject?
@@ -27,7 +24,6 @@ Polhem.Web.Blazor.Server.Components.DynamicForm.Layout.get -> Polhem.Definition.
 Polhem.Web.Blazor.Server.Components.DynamicForm.Layout.set -> void
 Polhem.Web.Blazor.Server.Components.DynamicGrid
 Polhem.Web.Blazor.Server.Components.DynamicGrid.DynamicGrid() -> void
-Polhem.Web.Blazor.Server.Components.DynamicGrid.EmptyText.get -> string!
 Polhem.Web.Blazor.Server.Components.DynamicGrid.EmptyText.set -> void
 Polhem.Web.Blazor.Server.Components.DynamicGrid.Layout.get -> Polhem.Definition.Layouts.LayoutGrid?
 Polhem.Web.Blazor.Server.Components.DynamicGrid.Layout.set -> void

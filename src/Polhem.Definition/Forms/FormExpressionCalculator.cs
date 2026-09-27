@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Data;
+using System.Globalization;
 using Polhem.Base;
 using Polhem.Base.Data;
 using Polhem.Base.Exceptions;
@@ -181,7 +182,7 @@ namespace Polhem.Definition.Forms
                 if (formTable == null) { continue; }
                 var dataTable = FindDataTable(dataSet, formTable.TableName);
                 if (dataTable == null) { continue; }
-                ValidateRuleRows(rule, formTable, dataTable, timeZoneId, DateTimeBasis.Utc);
+                ValidateRuleRows(rule, schema.ProgId, formTable, dataTable, timeZoneId, DateTimeBasis.Utc);
             }
         }
 
@@ -189,8 +190,13 @@ namespace Polhem.Definition.Forms
         /// Evaluates a single rule against every live row of its table; a row that passes the rule's
         /// applicability guard (<see cref="FormRule.When"/>) but fails its condition aborts with the message.
         /// </summary>
-        /// <exception cref="UserMessageException">A row's condition fails; carries the rule message.</exception>
-        private void ValidateRuleRows(FormRule rule, FormTable formTable, DataTable dataTable, string timeZoneId,
+        /// <exception cref="UserMessageException">
+        /// A row's condition fails. Carries the rule message as its English text and, when the rule
+        /// and the schema are both named, the language key <c>{progId}.Rule.{RuleId}.Message</c>
+        /// (<see cref="Language.FormSchemaLocalizer.RuleMessageKeyFormat"/>), which the server
+        /// resolves in the session's culture before the message reaches the user.
+        /// </exception>
+        private void ValidateRuleRows(FormRule rule, string progId, FormTable formTable, DataTable dataTable, string timeZoneId,
             DateTimeBasis basis)
         {
             foreach (DataRow row in dataTable.Rows)
@@ -204,8 +210,21 @@ namespace Polhem.Definition.Forms
                     continue;
                 }
                 if (!_evaluator.Evaluate<bool>(rule.Condition, NarrowVariables(rule.Condition, variables), timeZoneId, basis))
-                    throw new UserMessageException(rule.Message);
+                    throw CreateRuleViolation(rule, progId);
             }
+        }
+
+        /// <summary>
+        /// Builds the exception a failed rule raises: keyed for translation when both the rule and
+        /// the schema have a name, literal otherwise.
+        /// </summary>
+        private static UserMessageException CreateRuleViolation(FormRule rule, string progId)
+        {
+            if (StringUtilities.IsEmpty(progId) || StringUtilities.IsEmpty(rule.RuleId))
+                return new UserMessageException(rule.Message);
+
+            string subKey = string.Format(CultureInfo.InvariantCulture, Language.FormSchemaLocalizer.RuleMessageKeyFormat, rule.RuleId);
+            return new UserMessageException($"{progId}.{subKey}", rule.Message);
         }
 
         /// <summary>

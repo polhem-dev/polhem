@@ -8,8 +8,9 @@ namespace Polhem.Analyzers.Definitions
     /// Reports POLHEM2007: a language resource is missing keys that its sibling cultures translate.
     /// </summary>
     /// <remarks>
-    /// A missing key is not an error at run time — it falls back to another culture — so an untranslated
-    /// caption shows up in the wrong language rather than as a failure. That makes it easy to ship and
+    /// A missing key is not an error at run time — it walks the fall-back chain (parent cultures, then the
+    /// default language) and, when no culture declares it, shows the base text written in the definition —
+    /// so an untranslated caption shows up in the wrong language rather than as a failure. That makes it easy to ship and
     /// hard to notice, but also legitimate in some projects, hence the informational severity.
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
@@ -24,8 +25,9 @@ namespace Polhem.Analyzers.Definitions
             id: DiagnosticIds.InconsistentLanguageCoverage,
             title: "Language resources should cover the same keys across cultures",
             messageFormat: "Language resource '{0}' for culture '{1}' is missing {2} key(s) that other "
-                         + "cultures translate ({3}). Missing keys fall back to another culture rather "
-                         + "than failing, so the caption appears in the wrong language. "
+                         + "cultures translate ({3}). A missing key falls back to a parent culture, the "
+                         + "default language or the definition's base text rather than failing, so the "
+                         + "caption appears in the wrong language. "
                          + "Fix: add the missing entries.",
             category: "Polhem.Definition",
             defaultSeverity: DiagnosticSeverity.Info,

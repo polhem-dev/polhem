@@ -118,6 +118,9 @@ namespace Polhem.Business.UnitTests
                 Assert.NotNull(session);
                 Assert.Equal("Asia/Taipei", session!.TimeZone);
                 Assert.Equal("zh-TW", session.Culture);
+                // The client renders in the account's culture, so the login result carries it.
+                Assert.Equal(session.Culture, result.Culture);
+                Assert.Equal(session.TimeZone, result.TimeZone);
             }
             finally
             {
@@ -130,8 +133,7 @@ namespace Polhem.Business.UnitTests
         public void Login_UserWithoutRow_FallsBackToDeploymentDefaults()
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
-            var backend = _fx.GetRequiredService<IDefineAccess>()
-                .GetSystemSettings().BackendConfiguration;
+            var settings = _fx.GetRequiredService<IDefineAccess>().GetSystemSettings();
             var bo = new TestableSystemBusinessObject(
                 TestBusinessObjectContext.Create(_fx),
                 Guid.Empty,
@@ -143,8 +145,9 @@ namespace Polhem.Business.UnitTests
             {
                 var session = sessionService.Get(result.AccessToken);
                 Assert.NotNull(session);
-                Assert.Equal(backend.DefaultTimeZone, session!.TimeZone);
-                Assert.Equal(backend.DefaultLanguage, session.Culture);
+                Assert.Equal(settings.BackendConfiguration.DefaultTimeZone, session!.TimeZone);
+                Assert.Equal(settings.CommonConfiguration.DefaultLanguage, session.Culture);
+                Assert.Equal(session.Culture, result.Culture);
             }
             finally
             {

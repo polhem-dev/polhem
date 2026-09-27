@@ -11,6 +11,7 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.DataObjects;
+using Polhem.Tests.Shared;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
@@ -789,9 +790,10 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FormatCell returns the expected string for dates, format strings, null and missing columns")]
+        [DisplayName("FormatCell returns the expected string for dates, format strings, null and missing columns in the user's culture (de-DE)")]
         public void FormatCell_VariantInputs_FormatsExpectedString()
         {
+            using var culture = new CultureScope("de-DE");
             var method = typeof(GridControl).GetMethod(
                 "FormatCell", BindingFlags.NonPublic | BindingFlags.Static);
             Assert.NotNull(method);
@@ -811,10 +813,10 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             string Format(string fieldName, string displayFormat = "", string numberFormat = "")
                 => (string)method!.Invoke(null, new object?[] { row, fieldName, displayFormat, numberFormat })!;
 
-            Assert.Equal("2026-05-23", Format("date_only"));
-            Assert.Equal("2026-05-23 09:30:15", Format("ts"));
-            Assert.Equal("1,234.56", Format("amount", displayFormat: "N2"));
-            Assert.Equal("1234.6", Format("amount", numberFormat: "F1"));
+            Assert.Equal("23.05.2026", Format("date_only"));
+            Assert.Equal("23.05.2026 09:30:15", Format("ts"));
+            Assert.Equal("1.234,56", Format("amount", displayFormat: "N2"));
+            Assert.Equal("1234,6", Format("amount", numberFormat: "F1"));
             Assert.Equal(string.Empty, Format("nullable"));
             Assert.Equal(string.Empty, Format("not_a_column"));
 

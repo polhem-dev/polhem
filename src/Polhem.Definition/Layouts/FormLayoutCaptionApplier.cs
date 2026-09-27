@@ -22,6 +22,12 @@ namespace Polhem.Definition.Layouts
     /// the form unreadable rather than correct.
     /// </para>
     /// <para>
+    /// A section caption is taken from the master table only when the layout has a single section,
+    /// the shape where the section and the table are one and the same. The sections of a layout
+    /// with several ("Basic", "Address") are named by their author, not by the table, so they keep
+    /// the captions the layout file gives them; the schema has no text that could replace them.
+    /// </para>
+    /// <para>
     /// The layout is mutated in place, so callers must not pass a shared cache instance — clone
     /// first (<see cref="Polhem.Definition.Layouts.FormLayout.Clone"/>). This mirrors <see cref="Polhem.Definition.Language.FormSchemaLocalizer"/>, which makes
     /// the same demand for the same reason.
@@ -44,9 +50,11 @@ namespace Polhem.Definition.Layouts
             var master = schema.MasterTable;
             if (layout.Sections != null && master != null)
             {
+                bool singleSection = layout.Sections.Count == 1;
                 foreach (var section in layout.Sections)
                 {
-                    section.Caption = master.DisplayName;
+                    if (singleSection)
+                        section.Caption = master.DisplayName;
                     ApplyFieldCaptions(section, master);
                 }
             }

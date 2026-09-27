@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableSchema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" DbName="common" TableName="st_user" DisplayName="用戶">
+<TableSchema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" DbName="common" TableName="st_user" DisplayName="User">
 	<Fields>
-		<DbField FieldName="sys_no" Caption="流水號" DbType="AutoIncrement" />
-		<DbField FieldName="sys_rowid" Caption="唯一識別" DbType="Guid" />
-		<DbField FieldName="sys_id" Caption="用戶帳號" DbType="String" Length="20" />
-		<DbField FieldName="sys_name" Caption="用戶名稱" DbType="String" Length="20" />
-		<DbField FieldName="password" Caption="登入密碼" DbType="String" Length="200" />
-		<DbField FieldName="email" Caption="電子郵件" DbType="String" Length="100" />
-		<DbField FieldName="note" Caption="備註" DbType="String" Length="200" />
-		<DbField FieldName="time_zone" Caption="時區" DbType="String" Length="50" />
-		<DbField FieldName="culture" Caption="語系" DbType="String" Length="10" />
-		<DbField FieldName="deployment_admin" Caption="部署管理員" DbType="Boolean" />
-		<DbField FieldName="sys_insert_time" DisplayName="寫入時間" DbType="DateTime" />
+		<DbField FieldName="sys_no" Caption="Sequence No." DbType="AutoIncrement" />
+		<DbField FieldName="sys_rowid" Caption="Row Id" DbType="Guid" />
+		<DbField FieldName="sys_id" Caption="User Id" DbType="String" Length="20" />
+		<DbField FieldName="sys_name" Caption="User Name" DbType="String" Length="20" />
+		<DbField FieldName="password" Caption="Password" DbType="String" Length="200" />
+		<DbField FieldName="email" Caption="Email" DbType="String" Length="100" />
+		<DbField FieldName="note" Caption="Note" DbType="String" Length="200" />
+		<DbField FieldName="time_zone" Caption="Time Zone" DbType="String" Length="50" />
+		<DbField FieldName="culture" Caption="Culture" DbType="String" Length="10" />
+		<DbField FieldName="deployment_admin" Caption="Deployment Admin" DbType="Boolean" />
+		<DbField FieldName="sys_insert_time" Caption="Created At" DbType="DateTime" />
 	</Fields>
 	<Indexes>
 		<DbTableIndex Name="pk_{0}" Unique="true" PrimaryKey="true">

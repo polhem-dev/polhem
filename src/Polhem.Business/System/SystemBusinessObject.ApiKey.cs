@@ -10,6 +10,7 @@ using Polhem.Definition.Security;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Repository.Abstractions.System;
 using Microsoft.Extensions.Logging;
+using Polhem.Definition.Language;
 
 namespace Polhem.Business.System
 {
@@ -50,17 +51,18 @@ namespace Polhem.Business.System
 
             if (!ApiKeyFormat.IsValidSysId(args.SysId))
             {
-                throw new UserMessageException(
-                    $"Invalid API key id. Use {ApiKeyFormat.MinSysIdLength}-{ApiKeyFormat.MaxSysIdLength} " +
-                    "characters of lowercase letters, digits and hyphens, not starting or ending with a hyphen.");
+                throw new UserMessageException(PolhemMessages.ApiKeyInvalidId,
+                    "Invalid API key id. Use {0}-{1} " +
+                    "characters of lowercase letters, digits and hyphens, not starting or ending with a hyphen.",
+                    ApiKeyFormat.MinSysIdLength, ApiKeyFormat.MaxSysIdLength);
             }
             if (StringUtilities.IsEmpty(args.SysName))
             {
-                throw new UserMessageException("An application name is required for an API key.");
+                throw new UserMessageException(PolhemMessages.ApiKeyNameRequired, "An application name is required for an API key.");
             }
             if (args.ExpiredAt.HasValue && args.ExpiredAt.Value <= DateTime.UtcNow)
             {
-                throw new UserMessageException("The expiry time must be in the future.");
+                throw new UserMessageException(PolhemMessages.ApiKeyExpiryInPast, "The expiry time must be in the future.");
             }
 
             var repository = Services.GetRequiredService<IRepositoryFactory>().Create<IApiKeyRepository>();
@@ -68,7 +70,7 @@ namespace Polhem.Business.System
             // unique-index violation from the provider.
             if (repository.Exists(args.SysId))
             {
-                throw new UserMessageException($"An API key with id '{args.SysId}' already exists.");
+                throw new UserMessageException(PolhemMessages.ApiKeyAlreadyExists, "An API key with id '{0}' already exists.", args.SysId);
             }
 
             string secret = ApiKeyFormat.CreateSecret();
@@ -165,7 +167,7 @@ namespace Polhem.Business.System
 
             if (!repository.SetEnabled(args.SysId, args.Enabled))
             {
-                throw new UserMessageException($"No API key with id '{args.SysId}' exists.");
+                throw new UserMessageException(PolhemMessages.ApiKeyNotFound, "No API key with id '{0}' exists.", args.SysId);
             }
 
             if (auditing)
@@ -239,7 +241,7 @@ namespace Polhem.Business.System
 
             if (!repository.SetExpiry(args.SysId, args.ExpiredAt))
             {
-                throw new UserMessageException($"No API key with id '{args.SysId}' exists.");
+                throw new UserMessageException(PolhemMessages.ApiKeyNotFound, "No API key with id '{0}' exists.", args.SysId);
             }
 
             if (auditing)
@@ -272,7 +274,8 @@ namespace Polhem.Business.System
             if (!Services.GetRequiredService<IDeploymentAuthorizationService>()
                          .Can(AccessToken, DeploymentAction.ManageApiKey))
             {
-                throw new UserMessageException($"Not authorized to {what}.");
+                // The English text names the operation; a translation may state the denial generally.
+                throw new UserMessageException(PolhemMessages.ApiKeyManagementDenied, "Not authorized to {0}.", what);
             }
         }
 

@@ -1,6 +1,6 @@
 <form class="polhem-login-panel" @onsubmit="OnSubmitAsync" @onsubmit:preventDefault="true">
     <div class="polhem-login-panel__field">
-        <label class="polhem-login-panel__label" for="@_userIdInputId">@UserIdLabel</label>
+        <label class="polhem-login-panel__label" for="@_userIdInputId">@DisplayedUserIdLabel</label>
         <input id="@_userIdInputId"
                class="polhem-login-panel__input"
                type="text"
@@ -9,7 +9,7 @@
                @bind="_userId" />
     </div>
     <div class="polhem-login-panel__field">
-        <label class="polhem-login-panel__label" for="@_passwordInputId">@PasswordLabel</label>
+        <label class="polhem-login-panel__label" for="@_passwordInputId">@DisplayedPasswordLabel</label>
         <input id="@_passwordInputId"
                class="polhem-login-panel__input"
                type="password"
@@ -20,7 +20,7 @@
     <button type="submit"
             class="polhem-login-panel__submit"
             disabled="@_isBusy">
-        @SubmitLabel
+        @DisplayedSubmitLabel
     </button>
     @if (!string.IsNullOrEmpty(_error))
     {

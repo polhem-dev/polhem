@@ -15,6 +15,10 @@ namespace Polhem.Definition.Language
     /// <c>{LanguagePath}/{lang}/CustomerPage.Language.xml</c>. Place <c>typeof(T)</c>
     /// in a class whose name matches a namespace (e.g. <c>Common</c>, <c>Sys</c>).
     ///
+    /// Keys resolve through the language fall-back chain of the underlying service
+    /// (<see cref="ILanguageService.TryResolveLangText"/>): the requested culture, its parent
+    /// cultures, then the default language.
+    ///
     /// The current language defaults to <see cref="CultureInfo.CurrentUICulture"/>
     /// — callers wanting an explicit source (HTTP request, session lookup) should use the
     /// <see cref="LanguageResourceStringLocalizer{T}(ILanguageService, Func{string})"/> overload.
@@ -82,17 +86,12 @@ namespace Polhem.Definition.Language
                 ArgumentNullException.ThrowIfNull(name);
                 string lang = _langProvider() ?? string.Empty;
                 string customizeId = _customizeIdProvider() ?? string.Empty;
-                bool hit = _service.TryGetLangText(customizeId, lang, _namespace, name, out string text);
-                if (!hit)
-                {
-                    // Fall through to the service-level default-lang fall-back, then return
-                    // the full key as the LocalizedString value with ResourceNotFound=true
-                    // so consumers can detect missing translations via the standard surface.
-                    string fallback = _service.GetLangText(customizeId, lang, _namespace, name);
-                    bool resourceNotFound = string.Equals(fallback, $"{_namespace}.{name}", StringComparison.Ordinal);
-                    return new LocalizedString(name, fallback, resourceNotFound);
-                }
-                return new LocalizedString(name, text, resourceNotFound: false);
+                // One lookup through the whole fall-back chain (requested culture, parent cultures,
+                // default language). A miss returns the full key with ResourceNotFound=true so
+                // consumers can detect missing translations via the standard surface.
+                if (_service.TryResolveLangText(customizeId, lang, _namespace, name, out string text))
+                    return new LocalizedString(name, text, resourceNotFound: false);
+                return new LocalizedString(name, $"{_namespace}.{name}", resourceNotFound: true);
             }
         }
 

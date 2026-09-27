@@ -14,3 +14,6 @@ static Polhem.UI.Core.ClientInfo.Capabilities.get -> System.Collections.Generic.
 static Polhem.UI.Core.ClientInfo.CreateAuditLogApiConnector() -> Polhem.Api.Client.Connectors.AuditLogApiConnector!
 static Polhem.UI.Core.ClientInfo.LocalServiceProvider.get -> System.IServiceProvider?
 static Polhem.UI.Core.ClientInfo.LocalServiceProvider.set -> void
+static Polhem.UI.Core.ClientInfo.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
+static Polhem.UI.Core.ClientInfo.UseDefinitionLoader.get -> bool
+static Polhem.UI.Core.ClientInfo.UseDefinitionLoader.set -> void

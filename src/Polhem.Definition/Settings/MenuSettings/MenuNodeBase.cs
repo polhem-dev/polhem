@@ -44,6 +44,10 @@ namespace Polhem.Definition.Settings
         /// translations live in the <c>Menu</c> language namespace and are keyed by
         /// <see cref="Id"/> rather than by this text.
         /// </summary>
+        /// <remarks>
+        /// <see cref="Language.MenuLocalizer"/> resolves the translation; a client obtains one for the
+        /// signed-in user's culture from <c>FormDefinitionLoader.GetMenuLocalizerAsync</c>.
+        /// </remarks>
         [XmlAttribute]
         [Description("Caption (authoring-language original; translations live in the Menu language namespace).")]
         [DefaultValue("")]

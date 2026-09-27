@@ -14,11 +14,28 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// precision — the rounded display form is never written back. Partial or invalid input (for
     /// example <c>"12."</c>) keeps the last valid value.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Display and input follow <see cref="CultureInfo.CurrentCulture"/>, the signed-in user's
+    /// culture: a <c>de-DE</c> user sees and types <c>1,5</c>, an <c>en-US</c> user <c>1.5</c>. The
+    /// bound value stays in the invariant form the wire carries, whatever the user's culture.
+    /// </para>
+    /// <para>
+    /// Input accepts a sign and the culture's decimal separator only, not group separators. A group
+    /// separator is the other culture's decimal separator, so accepting it would read a <c>de-DE</c>
+    /// user's <c>1,5</c> as fifteen under <c>en-US</c> rules; rejecting it keeps the last valid value
+    /// instead of silently writing a different number.
+    /// </para>
+    /// </remarks>
     public sealed class NumericEdit : TextEdit
     {
         // The bound value in its raw, full-precision invariant-culture string form. The display
         // Text may be a rounded rendering of this; write-backs always use the raw value.
         private string _rawValue = string.Empty;
+
+        private const NumberStyles InputStyles =
+            NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite
+            | NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
 
         /// <summary>
         /// Initializes a new instance of <see cref="NumericEdit"/>.
@@ -29,7 +46,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             // Reveal full precision for editing; the display format only applies at rest.
             GotFocus += (_, _) =>
             {
-                Text = _rawValue;
+                Text = FormatForEditing(_rawValue);
                 SelectAll();
             };
             // Subscribed after the base TextEdit commit handler (registered in its constructor), so
@@ -117,7 +134,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         protected override void RefreshFromSource()
         {
             _rawValue = Binder.GetValue();
-            Text = IsFocused ? _rawValue : FormatForDisplay(_rawValue);
+            Text = IsFocused ? FormatForEditing(_rawValue) : FormatForDisplay(_rawValue);
         }
 
         /// <inheritdoc />
@@ -125,19 +142,31 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         {
             // Write the parsed value at full precision; reject partial/invalid input by keeping the
             // last valid raw value so a stray keystroke never corrupts the bound field.
-            if (TryParse(Text, out var value))
+            if (TryParseInput(Text, out var value))
                 _rawValue = value.ToString(CultureInfo.InvariantCulture);
             return _rawValue;
         }
 
         private string FormatForDisplay(string raw)
         {
-            if (string.IsNullOrEmpty(NumberFormat) || !TryParse(raw, out var value))
+            if (!TryParseRaw(raw, out var value))
                 return raw;
-            return CellValueFormatter.Format(value, string.Empty, NumberFormat);
+            return string.IsNullOrEmpty(NumberFormat)
+                ? FormatForEditing(raw)
+                : CellValueFormatter.Format(value, string.Empty, NumberFormat);
         }
 
-        private static bool TryParse(string? text, out decimal value)
-            => decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out value);
+        // The full-precision value in the user's culture, without group separators, so what the
+        // field shows while focused parses back to the same number.
+        private static string FormatForEditing(string raw)
+            => TryParseRaw(raw, out var value) ? value.ToString(CultureInfo.CurrentCulture) : raw;
+
+        // The bound value: the invariant form the wire carries.
+        private static bool TryParseRaw(string? raw, out decimal value)
+            => decimal.TryParse(raw, NumberStyles.Number, CultureInfo.InvariantCulture, out value);
+
+        // What the user typed: the user's culture, sign and decimal separator only.
+        internal static bool TryParseInput(string? text, out decimal value)
+            => decimal.TryParse(text, InputStyles, CultureInfo.CurrentCulture, out value);
     }
 }

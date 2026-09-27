@@ -12,6 +12,7 @@ using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Avalonia.DataObjects;
 using Polhem.UI.Core;
+using Polhem.Definition.Language;
 
 namespace Polhem.UI.Avalonia.Views
 {
@@ -119,16 +120,16 @@ namespace Polhem.UI.Avalonia.Views
 
             _errorLabel = new TextBlock { Foreground = Brushes.Red, IsVisible = false };
 
-            _saveButton = new Button { Content = "Save" };
+            _saveButton = new Button { Content = UIText.Get(PolhemUIText.Save) };
             // Save persists via Create (Add mode) or Update (Edit mode); any-of semantics show it
             // when the user holds either. Cancel / Back are navigation, not permission-controlled.
             PermissionScope.SetAction(_saveButton, PermissionActions.Create | PermissionActions.Update);
             _saveButton.Click += async (_, _) => await OnSaveClickedAsync().ConfigureAwait(true);
 
-            _cancelButton = new Button { Content = "Cancel" };
+            _cancelButton = new Button { Content = UIText.Get(PolhemUIText.Cancel) };
             _cancelButton.Click += (_, _) => OnCloseClicked();
 
-            _backButton = new Button { Content = "Back" };
+            _backButton = new Button { Content = UIText.Get(PolhemUIText.Back) };
             _backButton.Click += (_, _) => OnCloseClicked();
 
             var toolbar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };

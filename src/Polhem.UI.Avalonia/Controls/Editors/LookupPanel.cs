@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Polhem.Api.Client.Connectors;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Language;
 
 namespace Polhem.UI.Avalonia.Controls.Editors
 {
@@ -44,23 +45,23 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// </summary>
         public LookupPanel()
         {
-            _searchBox = new TextBox { PlaceholderText = "Search", MinWidth = 200 };
+            _searchBox = new TextBox { PlaceholderText = UIText.Get(PolhemUIText.Search), MinWidth = 200 };
             _searchBox.KeyDown += async (_, e) =>
             {
                 if (e.Key != Key.Enter) return;
                 e.Handled = true;
                 await ReloadAsync().ConfigureAwait(true);
             };
-            var searchButton = new Button { Content = "Search" };
+            var searchButton = new Button { Content = UIText.Get(PolhemUIText.Search) };
             searchButton.Click += async (_, _) => await ReloadAsync().ConfigureAwait(true);
 
             _grid = new GridControl { MinHeight = 240 };
             _grid.RowSelected += (_, _) => UpdateOkState();
             _grid.InnerGrid.DoubleTapped += (_, _) => Commit();
 
-            _okButton = new Button { Content = "OK", MinWidth = 80, IsEnabled = false };
+            _okButton = new Button { Content = UIText.Get(PolhemUIText.Ok), MinWidth = 80, IsEnabled = false };
             _okButton.Click += (_, _) => Commit();
-            var cancelButton = new Button { Content = "Cancel", MinWidth = 80 };
+            var cancelButton = new Button { Content = UIText.Get(PolhemUIText.Cancel), MinWidth = 80 };
             cancelButton.Click += (_, _) => Cancel();
 
             _errorLabel = new TextBlock

@@ -151,11 +151,16 @@ namespace Polhem.Base
         /// </summary>
         /// <param name="value">The value to convert.</param>
         /// <param name="defaultValue">The default value.</param>
+        /// <remarks>
+        /// <c>1</c>, <c>T</c>, <c>TRUE</c>, <c>Y</c> and <c>YES</c> are true, compared ignoring case;
+        /// any other non-empty text is false. The accepted forms are language-neutral codes, not
+        /// words of any one language: a value typed in a user's language is the UI's to convert.
+        /// </remarks>
         public static bool CBool(string value, bool defaultValue = false)
         {
             if (StringUtilities.IsEmpty(value))
                 return defaultValue;
-            if (StringUtilities.IsEqualsOr(value, "1", "T", "TRUE", "Y", "YES", "是", "真"))
+            if (StringUtilities.IsEqualsOr(value, "1", "T", "TRUE", "Y", "YES"))
                 return true;
             else
                 return false;

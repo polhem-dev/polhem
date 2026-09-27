@@ -135,3 +135,87 @@ const Polhem.Definition.AuditLogActions.GetDbAnomalySummary = "GetDbAnomalySumma
 const Polhem.Definition.AuditLogActions.GetLoginLog = "GetLoginLog" -> string!
 const Polhem.Definition.AuditLogActions.GetTopApiMethods = "GetTopApiMethods" -> string!
 static Polhem.Definition.Settings.PermissionRuleCollectionExtensions.Add(this Polhem.Definition.Settings.PermissionRuleCollection? collection, Polhem.Definition.Settings.PermissionActions action, Polhem.Definition.Settings.ScopeStrategy scope = Polhem.Definition.Settings.ScopeStrategy.Inherit) -> Polhem.Definition.Settings.PermissionRule!
+Polhem.Definition.Language.FrameworkLanguageService
+Polhem.Definition.Language.FrameworkLanguageService.DefaultLanguage.get -> string!
+Polhem.Definition.Language.FrameworkLanguageService.FrameworkLanguageService(Polhem.Definition.Language.ILanguageService? inner) -> void
+Polhem.Definition.Language.FrameworkLanguageService.FrameworkLanguageService(Polhem.Definition.Language.ILanguageService? inner, System.Func<string!>! defaultLanguageProvider) -> void
+Polhem.Definition.Language.FrameworkLanguageService.GetLangEnum(string! customizeId, string! lang, string! namespace, string! enumName) -> Polhem.Definition.Language.LanguageEnum?
+Polhem.Definition.Language.FrameworkLanguageService.GetLangEnum(string! lang, string! fullName) -> Polhem.Definition.Language.LanguageEnum?
+Polhem.Definition.Language.FrameworkLanguageService.GetLangEnum(string! lang, string! namespace, string! enumName) -> Polhem.Definition.Language.LanguageEnum?
+Polhem.Definition.Language.FrameworkLanguageService.GetLangEnumText(string! lang, string! fullName, string! code) -> string?
+Polhem.Definition.Language.FrameworkLanguageService.GetLangText(string! customizeId, string! lang, string! namespace, string! subKey) -> string!
+Polhem.Definition.Language.FrameworkLanguageService.GetLangText(string! lang, string! fullKey) -> string!
+Polhem.Definition.Language.FrameworkLanguageService.GetLangText(string! lang, string! namespace, string! subKey) -> string!
+Polhem.Definition.Language.FrameworkLanguageService.TryGetLangText(string! customizeId, string! lang, string! namespace, string! subKey, out string! text) -> bool
+Polhem.Definition.Language.FrameworkLanguageService.TryGetLangText(string! lang, string! fullKey, out string! text) -> bool
+Polhem.Definition.Language.FrameworkLanguageService.TryGetLangText(string! lang, string! namespace, string! subKey, out string! text) -> bool
+Polhem.Definition.Language.FrameworkLanguageService.TryResolveLangText(string! customizeId, string! lang, string! namespace, string! subKey, out string! text) -> bool
+Polhem.Definition.Language.ILanguageService.DefaultLanguage.get -> string!
+Polhem.Definition.Language.ILanguageService.TryResolveLangText(string! customizeId, string! lang, string! namespace, string! subKey, out string! text) -> bool
+Polhem.Definition.Language.LanguageFallback
+Polhem.Definition.Language.LanguageService.DefaultLanguage.get -> string!
+Polhem.Definition.Language.LanguageService.TryResolveLangText(string! customizeId, string! lang, string! namespace, string! subKey, out string! text) -> bool
+Polhem.Definition.Language.MenuLocalizer
+Polhem.Definition.Language.MenuLocalizer.GetCaption(Polhem.Definition.Settings.MenuNodeBase! node, string! lang) -> string!
+Polhem.Definition.Language.MenuLocalizer.MenuLocalizer(Polhem.Definition.Language.ILanguageService! languageService) -> void
+Polhem.Definition.Language.PolhemMessages
+Polhem.Definition.Language.PolhemUIText
+Polhem.Definition.Settings.CommonConfiguration.DefaultLanguage.get -> string!
+Polhem.Definition.Settings.CommonConfiguration.DefaultLanguage.set -> void
+const Polhem.Definition.Language.FormSchemaLocalizer.RuleMessageKeyFormat = "Rule.{0}.Message" -> string!
+const Polhem.Definition.Language.MenuLocalizer.EntryCaptionKeyFormat = "Entry.{0}.Caption" -> string!
+const Polhem.Definition.Language.MenuLocalizer.FolderCaptionKeyFormat = "Folder.{0}.Caption" -> string!
+const Polhem.Definition.Language.MenuLocalizer.Namespace = "Menu" -> string!
+const Polhem.Definition.Language.PolhemMessages.ApiKeyAlreadyExists = "PolhemMessages.ApiKey.AlreadyExists" -> string!
+const Polhem.Definition.Language.PolhemMessages.ApiKeyExpiryInPast = "PolhemMessages.ApiKey.ExpiryInPast" -> string!
+const Polhem.Definition.Language.PolhemMessages.ApiKeyInvalidId = "PolhemMessages.ApiKey.InvalidId" -> string!
+const Polhem.Definition.Language.PolhemMessages.ApiKeyManagementDenied = "PolhemMessages.ApiKey.ManagementDenied" -> string!
+const Polhem.Definition.Language.PolhemMessages.ApiKeyNameRequired = "PolhemMessages.ApiKey.NameRequired" -> string!
+const Polhem.Definition.Language.PolhemMessages.ApiKeyNotFound = "PolhemMessages.ApiKey.NotFound" -> string!
+const Polhem.Definition.Language.PolhemMessages.AuditLogAnomalyReadDenied = "PolhemMessages.AuditLog.AnomalyReadDenied" -> string!
+const Polhem.Definition.Language.PolhemMessages.AuditLogChangeNotFound = "PolhemMessages.AuditLog.ChangeNotFound" -> string!
+const Polhem.Definition.Language.PolhemMessages.AuditLogReadDenied = "PolhemMessages.AuditLog.ReadDenied" -> string!
+const Polhem.Definition.Language.PolhemMessages.CompanyAccessDenied = "PolhemMessages.Company.AccessDenied" -> string!
+const Polhem.Definition.Language.PolhemMessages.CompanyInfoUnavailable = "PolhemMessages.Company.InfoUnavailable" -> string!
+const Polhem.Definition.Language.PolhemMessages.CompanyNotEntered = "PolhemMessages.Company.NotEntered" -> string!
+const Polhem.Definition.Language.PolhemMessages.DeploymentAdminUserIdRequired = "PolhemMessages.DeploymentAdmin.UserIdRequired" -> string!
+const Polhem.Definition.Language.PolhemMessages.DeploymentAdminUserNotFound = "PolhemMessages.DeploymentAdmin.UserNotFound" -> string!
+const Polhem.Definition.Language.PolhemMessages.FuncAuthenticationRequired = "PolhemMessages.Func.AuthenticationRequired" -> string!
+const Polhem.Definition.Language.PolhemMessages.LoginAccountLocked = "PolhemMessages.Login.AccountLocked" -> string!
+const Polhem.Definition.Language.PolhemMessages.LoginInvalidCredentials = "PolhemMessages.Login.InvalidCredentials" -> string!
+const Polhem.Definition.Language.PolhemMessages.Namespace = "PolhemMessages" -> string!
+const Polhem.Definition.Language.PolhemMessages.PermissionDenied = "PolhemMessages.Permission.Denied" -> string!
+const Polhem.Definition.Language.PolhemMessages.PermissionMasterRowMissing = "PolhemMessages.Permission.MasterRowMissing" -> string!
+const Polhem.Definition.Language.PolhemMessages.PermissionRecordOutOfScope = "PolhemMessages.Permission.RecordOutOfScope" -> string!
+const Polhem.Definition.Language.PolhemMessages.PermissionRowKeyChanged = "PolhemMessages.Permission.RowKeyChanged" -> string!
+const Polhem.Definition.Language.PolhemMessages.PermissionSavedRecordOutOfScope = "PolhemMessages.Permission.SavedRecordOutOfScope" -> string!
+const Polhem.Definition.Language.PolhemMessages.SaveConcurrencyConflict = "PolhemMessages.Save.ConcurrencyConflict" -> string!
+const Polhem.Definition.Language.PolhemMessages.SessionAccessTokenInvalid = "PolhemMessages.Session.AccessTokenInvalid" -> string!
+const Polhem.Definition.Language.PolhemMessages.SessionAccessTokenRequired = "PolhemMessages.Session.AccessTokenRequired" -> string!
+const Polhem.Definition.Language.PolhemMessages.SessionExpired = "PolhemMessages.Session.Expired" -> string!
+const Polhem.Definition.Language.PolhemMessages.SessionNotFound = "PolhemMessages.Session.NotFound" -> string!
+const Polhem.Definition.Language.PolhemUIText.Add = "Add" -> string!
+const Polhem.Definition.Language.PolhemUIText.Back = "Back" -> string!
+const Polhem.Definition.Language.PolhemUIText.Cancel = "Cancel" -> string!
+const Polhem.Definition.Language.PolhemUIText.Delete = "Delete" -> string!
+const Polhem.Definition.Language.PolhemUIText.Edit = "Edit" -> string!
+const Polhem.Definition.Language.PolhemUIText.False = "False" -> string!
+const Polhem.Definition.Language.PolhemUIText.Loading = "Loading" -> string!
+const Polhem.Definition.Language.PolhemUIText.Namespace = "PolhemUIText" -> string!
+const Polhem.Definition.Language.PolhemUIText.New = "New" -> string!
+const Polhem.Definition.Language.PolhemUIText.NoData = "NoData" -> string!
+const Polhem.Definition.Language.PolhemUIText.Ok = "OK" -> string!
+const Polhem.Definition.Language.PolhemUIText.Password = "Password" -> string!
+const Polhem.Definition.Language.PolhemUIText.Save = "Save" -> string!
+const Polhem.Definition.Language.PolhemUIText.Search = "Search" -> string!
+const Polhem.Definition.Language.PolhemUIText.SignIn = "SignIn" -> string!
+const Polhem.Definition.Language.PolhemUIText.SignInEmptyToken = "SignInEmptyToken" -> string!
+const Polhem.Definition.Language.PolhemUIText.True = "True" -> string!
+const Polhem.Definition.Language.PolhemUIText.Unsaved = "Unsaved" -> string!
+const Polhem.Definition.Language.PolhemUIText.UserId = "UserId" -> string!
+const Polhem.Definition.Language.PolhemUIText.View = "View" -> string!
+static Polhem.Definition.Language.FrameworkLanguageService.GetBuiltIn(string! lang, string! namespace) -> Polhem.Definition.Language.LanguageResource?
+static Polhem.Definition.Language.LanguageFallback.GetChain(string? lang, string? defaultLanguage) -> System.Collections.Generic.IReadOnlyList<string!>!
+static Polhem.Definition.Language.PolhemUIText.DefaultTexts.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+static Polhem.Definition.Language.PolhemUIText.Get(Microsoft.Extensions.Localization.IStringLocalizer! localizer, string! key) -> string!
+static Polhem.Definition.Language.LanguageFallback.IsBaseLanguage(string? culture) -> bool

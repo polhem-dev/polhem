@@ -134,8 +134,7 @@ namespace Polhem.Base.UnitTests
         [InlineData("true", true)]
         [InlineData("Y", true)]
         [InlineData("YES", true)]
-        [InlineData("是", true)]
-        [InlineData("真", true)]
+        [InlineData("yes", true)]
         [InlineData("0", false)]
         [InlineData("N", false)]
         [InlineData("false", false)]
@@ -144,6 +143,16 @@ namespace Polhem.Base.UnitTests
         public void CBool_String_ReturnsExpectedResult(string value, bool expected)
         {
             Assert.Equal(expected, ValueUtilities.CBool(value));
+        }
+
+        [Theory]
+        [InlineData("是")]
+        [InlineData("真")]
+        [InlineData("ja")]
+        [DisplayName("CBool(string) accepts only language-neutral true codes, so a word of some language is false")]
+        public void CBool_String_LanguageWord_ReturnsFalse(string value)
+        {
+            Assert.False(ValueUtilities.CBool(value));
         }
 
         [Fact]

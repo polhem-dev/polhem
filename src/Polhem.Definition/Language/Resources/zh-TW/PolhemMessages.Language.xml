@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Traditional Chinese (Taiwan) translation of the framework's user-facing messages, shipped inside
+  Polhem.Definition. The keys are in PolhemMessages.cs and the English text is at each throw site;
+  PolhemTextResourceTests keeps this file and the keys in step. {0}, {1}, ... are the message arguments
+  in the order the English text places them. A host overrides an entry with a PolhemMessages
+  language resource of its own.
+-->
+<LanguageResource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Namespace="PolhemMessages" Lang="zh-TW">
+  <Items>
+    <LanguageItem Key="Login.AccountLocked" Value="登入失敗次數過多，帳號已暫時鎖定，請稍後再試。" />
+    <LanguageItem Key="Login.InvalidCredentials" Value="帳號或密碼錯誤。" />
+    <LanguageItem Key="Session.AccessTokenRequired" Value="需要存取權杖。" />
+    <LanguageItem Key="Session.AccessTokenInvalid" Value="存取權杖缺少或無效。" />
+    <LanguageItem Key="Session.NotFound" Value="找不到工作階段，或工作階段已過期。" />
+    <LanguageItem Key="Session.Expired" Value="工作階段已過期。" />
+    <LanguageItem Key="Func.AuthenticationRequired" Value="功能「{0}」需要登入後才能使用。" />
+    <LanguageItem Key="Company.AccessDenied" Value="無權進入此公司。" />
+    <LanguageItem Key="Company.NotEntered" Value="此工作階段尚未進入公司。" />
+    <LanguageItem Key="Company.InfoUnavailable" Value="無法取得公司資訊，請重新進入公司。" />
+    <LanguageItem Key="Permission.Denied" Value="權限不足：無法對模型「{1}」執行「{0}」。" />
+    <LanguageItem Key="Permission.MasterRowMissing" Value="儲存時必須包含明細所屬的「{0}」主檔資料列，否則無法判斷模型「{1}」的資料範圍。" />
+    <LanguageItem Key="Permission.SavedRecordOutOfScope" Value="儲存後的記錄將超出模型「{1}」的「{0}」資料範圍。" />
+    <LanguageItem Key="Permission.RecordOutOfScope" Value="記錄不在模型「{1}」的「{0}」資料範圍內。" />
+    <LanguageItem Key="Permission.RowKeyChanged" Value="「{0}」中有資料列變更了「{1}」；鍵值不可變更，因此無法確認模型「{2}」的資料範圍。" />
+    <LanguageItem Key="Save.ConcurrencyConflict" Value="記錄在開啟期間已被他人修改或刪除，請重新載入後再試。" />
+    <LanguageItem Key="AuditLog.ReadDenied" Value="無權讀取稽核記錄。" />
+    <LanguageItem Key="AuditLog.AnomalyReadDenied" Value="無權讀取資料庫異常記錄。" />
+    <LanguageItem Key="AuditLog.ChangeNotFound" Value="找不到異動記錄。" />
+    <LanguageItem Key="ApiKey.InvalidId" Value="API 金鑰識別碼格式錯誤：請使用 {0} 到 {1} 個小寫英文字母、數字或連字號，且開頭與結尾不可為連字號。" />
+    <LanguageItem Key="ApiKey.NameRequired" Value="API 金鑰必須填寫應用程式名稱。" />
+    <LanguageItem Key="ApiKey.ExpiryInPast" Value="到期時間必須晚於現在。" />
+    <LanguageItem Key="ApiKey.AlreadyExists" Value="識別碼為「{0}」的 API 金鑰已存在。" />
+    <LanguageItem Key="ApiKey.NotFound" Value="找不到識別碼為「{0}」的 API 金鑰。" />
+    <LanguageItem Key="ApiKey.ManagementDenied" Value="無權管理 API 金鑰。" />
+    <LanguageItem Key="DeploymentAdmin.UserIdRequired" Value="必須提供使用者帳號。" />
+    <LanguageItem Key="DeploymentAdmin.UserNotFound" Value="找不到帳號為「{0}」的使用者。" />
+  </Items>
+  <Enums />
+</LanguageResource>

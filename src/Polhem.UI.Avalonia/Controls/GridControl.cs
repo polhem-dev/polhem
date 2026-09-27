@@ -7,6 +7,7 @@ using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Avalonia.DataObjects;
+using Polhem.Definition.Language;
 
 namespace Polhem.UI.Avalonia.Controls
 {
@@ -156,9 +157,9 @@ namespace Polhem.UI.Avalonia.Controls
             _addIcon = BuildToolbarIcon();
             _editIcon = BuildToolbarIcon();
             _deleteIcon = BuildToolbarIcon();
-            _addButton = BuildToolbarButton(_addIcon, "Add");
-            _editButton = BuildToolbarButton(_editIcon, "Edit");
-            _deleteButton = BuildToolbarButton(_deleteIcon, "Delete");
+            _addButton = BuildToolbarButton(_addIcon, UIText.Get(PolhemUIText.Add));
+            _editButton = BuildToolbarButton(_editIcon, UIText.Get(PolhemUIText.Edit));
+            _deleteButton = BuildToolbarButton(_deleteIcon, UIText.Get(PolhemUIText.Delete));
             _addButton.Click += async (_, _) => await AddRowAsync().ConfigureAwait(true);
             _editButton.Click += async (_, _) => await EditSelectedRowAsync().ConfigureAwait(true);
             _deleteButton.Click += (_, _) =>

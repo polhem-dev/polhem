@@ -27,22 +27,33 @@ namespace Polhem.Api.Client.Definitions
     /// Which tenant's customization arrives is never asked for here — the server derives it from the
     /// session. This class only decides how the two layers combine.
     /// </para>
+    /// <para>
+    /// Every call localizes once, in the language it is given, and returns a copy. Nothing re-localizes
+    /// a definition already handed out, so a view built from one keeps its language after the user's
+    /// culture changes; the new language shows in views loaded afterwards.
+    /// </para>
     /// </remarks>
     public sealed class FormDefinitionLoader
     {
         private readonly ClientDefineAccess _defineAccess;
-        private readonly string _defaultLang;
+        private readonly string? _defaultLanguage;
 
         /// <summary>
         /// Initializes a new <see cref="FormDefinitionLoader"/>.
         /// </summary>
         /// <param name="defineAccess">The client define access used to fetch raw definitions.</param>
-        /// <param name="defaultLang">The system default language used for the localization fall-back hop; empty disables it.</param>
-        public FormDefinitionLoader(ClientDefineAccess defineAccess, string defaultLang = "")
+        /// <param name="defaultLanguage">
+        /// The default language, the last hop of the fall-back chain. <c>null</c> — the default —
+        /// reads <see cref="ApiClientInfo.DefaultLanguage"/>, the value the server advertised, at
+        /// each call; an empty string drops the hop.
+        /// </param>
+        public FormDefinitionLoader(ClientDefineAccess defineAccess, string? defaultLanguage = null)
         {
             _defineAccess = defineAccess ?? throw new ArgumentNullException(nameof(defineAccess));
-            _defaultLang = defaultLang ?? string.Empty;
+            _defaultLanguage = defaultLanguage;
         }
+
+        private string DefaultLanguage => _defaultLanguage ?? ApiClientInfo.DefaultLanguage;
 
         /// <summary>
         /// Gets the accessor supplying the company whose decimal places the number formats are baked
@@ -60,7 +71,12 @@ namespace Polhem.Api.Client.Definitions
         /// Fetches the raw schema for <paramref name="progId"/> and returns a localized copy.
         /// </summary>
         /// <param name="progId">The program identifier.</param>
-        /// <param name="lang">The BCP-47 language code; empty returns the schema unlocalized.</param>
+        /// <param name="lang">
+        /// The BCP-47 language code. The captions and option sets resolve through
+        /// <see cref="LanguageFallback.GetChain"/>: this culture, its parents, then the default
+        /// language; a key no culture declares keeps the schema's own base text. Empty starts the
+        /// chain at the default language.
+        /// </param>
         /// <param name="cancellationToken">A token that cancels the call.</param>
         /// <returns>A schema safe to mutate — the cached instance is never handed out.</returns>
         /// <remarks>
@@ -81,9 +97,10 @@ namespace Polhem.Api.Client.Definitions
             var raw = await _defineAccess.GetFormSchemaAsync(progId, cancellationToken).ConfigureAwait(false);
             // The client define cache hands back a shared instance; every path clones before returning.
             var schema = raw.Clone();
-            if (!string.IsNullOrWhiteSpace(lang))
+            string defaultLanguage = DefaultLanguage;
+            if (LanguageFallback.GetChain(lang, defaultLanguage).Count > 0)
             {
-                var languageService = await BuildLanguageServiceAsync(schema, lang, cancellationToken).ConfigureAwait(false);
+                var languageService = await BuildLanguageServiceAsync(schema, lang, defaultLanguage, cancellationToken).ConfigureAwait(false);
                 new FormSchemaLocalizer(languageService).Localize(schema, lang);
             }
 
@@ -135,28 +152,55 @@ namespace Polhem.Api.Client.Definitions
         }
 
         /// <summary>
+        /// Fetches the <c>Menu</c> language namespace for <paramref name="lang"/> and returns a
+        /// localizer that resolves menu captions from it.
+        /// </summary>
+        /// <param name="lang">The BCP-47 culture; empty starts the chain at the default language.</param>
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        /// <returns>
+        /// A localizer over the fetched resources; pass the same <paramref name="lang"/> to
+        /// <see cref="MenuLocalizer.GetCaption"/>.
+        /// </returns>
+        /// <remarks>
+        /// Both language layers are fetched in every culture of the fall-back chain up front, so
+        /// rendering the menu costs no further round trips. The menu itself is fetched separately,
+        /// through <see cref="ClientDefineAccess.GetMenuSettingsAsync"/>, and is not modified.
+        /// </remarks>
+        public async Task<MenuLocalizer> GetMenuLocalizerAsync(string lang, CancellationToken cancellationToken = default)
+        {
+            string defaultLanguage = DefaultLanguage;
+            var snapshot = await FetchLayersAsync([MenuLocalizer.Namespace], lang, defaultLanguage, cancellationToken)
+                .ConfigureAwait(false);
+            return new MenuLocalizer(new SnapshotLanguageService(snapshot, defaultLanguage));
+        }
+
+        /// <summary>
         /// Fetches both language layers for every namespace <paramref name="schema"/> reads from and
         /// wraps them in a synchronous service.
         /// </summary>
         /// <remarks>
         /// The namespaces are the schema's own <c>ProgId</c> plus any namespace named by a
         /// fully-qualified <see cref="FormField.LangEnumName"/> (<c>"Common.Gender"</c>), which is how a
-        /// schema borrows a shared option set. Each is fetched in the requested language and, when
-        /// different, the default language too, so the service can apply the same fall-back the
-        /// server does.
+        /// schema borrows a shared option set. Each is fetched in every culture of the fall-back
+        /// chain, so the service applies the same chain the server does.
         /// </remarks>
-        private async Task<SnapshotLanguageService> BuildLanguageServiceAsync(FormSchema schema, string lang, CancellationToken cancellationToken)
+        private async Task<SnapshotLanguageService> BuildLanguageServiceAsync(FormSchema schema, string lang,
+            string defaultLanguage, CancellationToken cancellationToken)
         {
-            var namespaces = CollectNamespaces(schema);
-            var languages = new List<string> { lang };
-            if (!string.IsNullOrEmpty(_defaultLang)
-                && !string.Equals(lang, _defaultLang, StringComparison.OrdinalIgnoreCase))
-            {
-                languages.Add(_defaultLang);
-            }
+            var snapshot = await FetchLayersAsync(CollectNamespaces(schema), lang, defaultLanguage, cancellationToken)
+                .ConfigureAwait(false);
+            return new SnapshotLanguageService(snapshot, defaultLanguage);
+        }
 
+        /// <summary>
+        /// Fetches the base and customization layers of <paramref name="namespaces"/> in every
+        /// culture of the fall-back chain.
+        /// </summary>
+        private async Task<Dictionary<string, LanguageLayers>> FetchLayersAsync(IEnumerable<string> namespaces,
+            string lang, string defaultLanguage, CancellationToken cancellationToken)
+        {
             var snapshot = new Dictionary<string, LanguageLayers>(StringComparer.Ordinal);
-            foreach (string language in languages)
+            foreach (string language in LanguageFallback.GetChain(lang, defaultLanguage))
             {
                 foreach (string ns in namespaces)
                 {
@@ -165,7 +209,7 @@ namespace Polhem.Api.Client.Definitions
                     snapshot[SnapshotLanguageService.BuildKey(language, ns)] = new LanguageLayers(@base, customize);
                 }
             }
-            return new SnapshotLanguageService(snapshot, _defaultLang);
+            return snapshot;
         }
 
         private static HashSet<string> CollectNamespaces(FormSchema schema)

@@ -29,5 +29,16 @@ namespace Polhem.Api.Client
         /// </summary>
         public static string ApiKey { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the deployment's default language, the last hop of the language fall-back
+        /// chain on this client.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Connectors.SystemApiConnector.InitializeAsync"/> sets it from the server's
+        /// <see cref="Polhem.Definition.Settings.CommonConfiguration.DefaultLanguage"/>. It is a
+        /// deployment setting rather than a user's, which is why it lives with the connection
+        /// settings; the signed-in user's own culture arrives with the login response.
+        /// </remarks>
+        public static string DefaultLanguage { get; set; } = string.Empty;
     }
 }

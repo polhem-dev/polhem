@@ -19,6 +19,12 @@
       itself encrypted with the master key. Without it, passwords are saved and read
       in clear text, and a warning is logged when DatabaseSettings is loaded or saved.
 
+  Localization (review for your users):
+    - CommonConfiguration/DefaultLanguage: the culture of users with no st_user.culture of
+      their own, and the last language fall-back for captions, UI text and messages.
+    - BackendConfiguration/DefaultTimeZone: the IANA zone of users with no st_user.time_zone of
+      their own; empty means UTC.
+
   Optional fields to consider:
     - CommonConfiguration/IsDebugMode: enable verbose error responses for
       development environments.
@@ -35,6 +41,7 @@
   <CommonConfiguration>
     <Version>1.0.0</Version>
     <IsDebugMode>false</IsDebugMode>
+    <DefaultLanguage>zh-TW</DefaultLanguage>
     <AllowedTypeNamespaces></AllowedTypeNamespaces>
     <ApiPayloadOptions>
       <Compressor>gzip</Compressor>
@@ -59,6 +66,7 @@
     <Components>
       <BusinessObjectProvider></BusinessObjectProvider>
     </Components>
+    <DefaultTimeZone>Asia/Taipei</DefaultTimeZone>
   </BackendConfiguration>
   <FrontendConfiguration />
   <WebsiteConfiguration />

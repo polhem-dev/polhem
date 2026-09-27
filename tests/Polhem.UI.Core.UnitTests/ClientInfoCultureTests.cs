@@ -1,0 +1,121 @@
+using System.ComponentModel;
+using System.Globalization;
+using Polhem.Api.Core.Messages.System;
+
+namespace Polhem.UI.Core.UnitTests
+{
+    /// <summary>
+    /// Tests for the user's culture on the client: <see cref="ClientInfo.ApplyLoginResult"/> takes it
+    /// from the login response and makes it the process culture, and the client-wide definition
+    /// loader.
+    /// </summary>
+    /// <remarks>
+    /// Applying a culture sets the process defaults (<see cref="CultureInfo.DefaultThreadCurrentCulture"/>),
+    /// so these tests share the <c>ClientInfoState</c> collection with every other class that touches
+    /// <see cref="ClientInfo"/> and restore the previous values in <c>finally</c>.
+    /// </remarks>
+    [Collection("ClientInfoState")]
+    public class ClientInfoCultureTests
+    {
+        [Fact]
+        [DisplayName("ApplyLoginResult copies the user's culture into UserInfo and makes it the current and default culture")]
+        public void ApplyLoginResult_WithCulture_AppliesUserCulture()
+        {
+            var saved = CultureSnapshot.Take();
+            try
+            {
+                ClientInfo.ApplyLoginResult(new LoginResponse { AccessToken = Guid.NewGuid(), UserId = "u1", Culture = "de-DE" });
+
+                Assert.Equal("de-DE", ClientInfo.UserInfo!.Culture);
+                Assert.Equal("de-DE", CultureInfo.CurrentUICulture.Name);
+                Assert.Equal("de-DE", CultureInfo.CurrentCulture.Name);
+                Assert.Equal("de-DE", CultureInfo.DefaultThreadCurrentUICulture?.Name);
+                Assert.Equal("de-DE", CultureInfo.DefaultThreadCurrentCulture?.Name);
+            }
+            finally
+            {
+                ClientInfo.ApplyLoginResult(new LoginResponse { AccessToken = Guid.Empty });
+                saved.Restore();
+            }
+        }
+
+        [Fact]
+        [DisplayName("ApplyLoginResult with no culture leaves UserInfo.Culture empty and the process culture as it was")]
+        public void ApplyLoginResult_WithoutCulture_KeepsProcessCulture()
+        {
+            var saved = CultureSnapshot.Take();
+            try
+            {
+                CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("fr-FR");
+
+                ClientInfo.ApplyLoginResult(new LoginResponse { AccessToken = Guid.NewGuid(), UserId = "u1" });
+
+                Assert.Empty(ClientInfo.UserInfo!.Culture);
+                Assert.Equal("fr-FR", CultureInfo.CurrentUICulture.Name);
+            }
+            finally
+            {
+                ClientInfo.ApplyLoginResult(new LoginResponse { AccessToken = Guid.Empty });
+                saved.Restore();
+            }
+        }
+
+        [Fact]
+        [DisplayName("ApplyCulture refuses a name this runtime does not know and changes nothing")]
+        public void ApplyCulture_UnknownName_ReturnsFalse()
+        {
+            var saved = CultureSnapshot.Take();
+            try
+            {
+                Assert.False(ClientInfo.ApplyCulture("@@ not a culture"));
+                Assert.False(ClientInfo.ApplyCulture(string.Empty));
+                Assert.Equal(saved.UICulture, CultureInfo.CurrentUICulture);
+            }
+            finally
+            {
+                saved.Restore();
+            }
+        }
+
+        [Fact]
+        [DisplayName("DefinitionLoader is null until UseDefinitionLoader is on, and is rebuilt when the access token changes")]
+        public void DefinitionLoader_FollowsSwitchAndToken()
+        {
+            bool savedSwitch = ClientInfo.UseDefinitionLoader;
+            try
+            {
+                ClientInfo.UseDefinitionLoader = false;
+                Assert.Null(ClientInfo.DefinitionLoader);
+
+                ClientInfo.UseDefinitionLoader = true;
+                var first = ClientInfo.DefinitionLoader;
+                Assert.NotNull(first);
+                Assert.Same(first, ClientInfo.DefinitionLoader);
+
+                ClientInfo.ApplyLoginResult(new LoginResponse { AccessToken = Guid.NewGuid() });
+                Assert.NotSame(first, ClientInfo.DefinitionLoader);
+            }
+            finally
+            {
+                ClientInfo.ApplyLoginResult(new LoginResponse { AccessToken = Guid.Empty });
+                ClientInfo.UseDefinitionLoader = savedSwitch;
+            }
+        }
+
+        private sealed record CultureSnapshot(
+            CultureInfo Culture, CultureInfo UICulture, CultureInfo? DefaultCulture, CultureInfo? DefaultUICulture)
+        {
+            public static CultureSnapshot Take() => new(
+                CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture,
+                CultureInfo.DefaultThreadCurrentCulture, CultureInfo.DefaultThreadCurrentUICulture);
+
+            public void Restore()
+            {
+                CultureInfo.DefaultThreadCurrentCulture = DefaultCulture;
+                CultureInfo.DefaultThreadCurrentUICulture = DefaultUICulture;
+                CultureInfo.CurrentCulture = Culture;
+                CultureInfo.CurrentUICulture = UICulture;
+            }
+        }
+    }
+}

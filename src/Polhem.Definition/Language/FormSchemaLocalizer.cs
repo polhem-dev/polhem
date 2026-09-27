@@ -13,10 +13,17 @@ namespace Polhem.Definition.Language
     /// <item><description><see cref="FormSchema.DisplayName"/> ← <c>Schema.DisplayName</c></description></item>
     /// <item><description><see cref="FormTable.DisplayName"/> ← <c>Table.{TableName}.DisplayName</c></description></item>
     /// <item><description><see cref="FormField.Caption"/> ← <c>Field.{FieldName}.Caption</c></description></item>
+    /// <item><description><see cref="FormField.ListItems"/> ← the <see cref="LanguageEnum"/> named by <see cref="FormField.LangEnumName"/></description></item>
+    /// <item><description><see cref="FormRule.Message"/> ← <c>Rule.{RuleId}.Message</c>, resolved on the server when the rule fails (see <see cref="RuleMessageKeyFormat"/>)</description></item>
     /// </list>
     /// <para>
-    /// Missing keys leave the existing string untouched — schema authors who do not need
-    /// i18n keep working with hard-coded labels with no behaviour change.
+    /// Every key resolves through the language fall-back chain (<see cref="LanguageFallback"/>): the
+    /// requested culture, its parent cultures, then the default language (skipped for an English
+    /// culture, whose language is the base text's). A key no culture declares
+    /// leaves the existing string untouched, so the text written in the schema is the base text —
+    /// schema authors who do not need i18n keep working with hard-coded labels with no behaviour
+    /// change. Captions and option sets follow the same chain, so one culture never gets captions
+    /// in one language next to options in another.
     /// </para>
     /// <para>
     /// The localizer mutates the schema in place. Callers that share schema instances
@@ -42,6 +49,16 @@ namespace Polhem.Definition.Language
         /// </summary>
         public const string FieldCaptionKeyFormat = "Field.{0}.Caption";
 
+        /// <summary>
+        /// Sub-key template for a rule's message. <c>{0}</c> is the rule id.
+        /// </summary>
+        /// <remarks>
+        /// Not applied by <see cref="Localize(FormSchema, string, string)"/>: a rule message is shown
+        /// only when the rule fails on the server, so the server resolves it then, in the session's
+        /// culture, and <see cref="FormRule.Message"/> stays the base text.
+        /// </remarks>
+        public const string RuleMessageKeyFormat = "Rule.{0}.Message";
+
         private readonly ILanguageService _languageService;
 
         /// <summary>
@@ -59,7 +76,7 @@ namespace Polhem.Definition.Language
         /// Properties whose keys are missing from the language resource are left as-is.
         /// </summary>
         /// <param name="schema">The schema to mutate. Must not be a shared cache instance — clone first.</param>
-        /// <param name="lang">The BCP-47 language code (e.g. <c>"zh-TW"</c>).</param>
+        /// <param name="lang">The BCP-47 language code (e.g. <c>"zh-TW"</c>); empty starts the chain at the default language.</param>
         public void Localize(FormSchema schema, string lang)
             => Localize(schema, string.Empty, lang);
 
@@ -81,15 +98,13 @@ namespace Polhem.Definition.Language
         public void Localize(FormSchema schema, string customizeId, string lang)
         {
             ArgumentNullException.ThrowIfNull(schema);
-            if (string.IsNullOrWhiteSpace(lang))
-                return;
 
             string @namespace = schema.ProgId;
             if (string.IsNullOrWhiteSpace(@namespace))
                 return;
 
             // 1. Schema.DisplayName
-            if (_languageService.TryGetLangText(customizeId, lang, @namespace, SchemaDisplayNameKey, out string schemaName))
+            if (_languageService.TryResolveLangText(customizeId, lang, @namespace, SchemaDisplayNameKey, out string schemaName))
                 schema.DisplayName = schemaName;
 
             // 2. Walk tables → fields.
@@ -105,7 +120,7 @@ namespace Polhem.Definition.Language
             if (!string.IsNullOrWhiteSpace(table.TableName))
             {
                 string tableKey = string.Format(System.Globalization.CultureInfo.InvariantCulture, TableDisplayNameKeyFormat, table.TableName);
-                if (_languageService.TryGetLangText(customizeId, lang, @namespace, tableKey, out string tableName))
+                if (_languageService.TryResolveLangText(customizeId, lang, @namespace, tableKey, out string tableName))
                     table.DisplayName = tableName;
             }
 
@@ -117,7 +132,7 @@ namespace Polhem.Definition.Language
                 if (string.IsNullOrWhiteSpace(field.FieldName))
                     continue;
                 string fieldKey = string.Format(System.Globalization.CultureInfo.InvariantCulture, FieldCaptionKeyFormat, field.FieldName);
-                if (_languageService.TryGetLangText(customizeId, lang, @namespace, fieldKey, out string caption))
+                if (_languageService.TryResolveLangText(customizeId, lang, @namespace, fieldKey, out string caption))
                     field.Caption = caption;
 
                 // Populate ListItems from the referenced LanguageEnum when LangEnumName is set.
@@ -128,7 +143,7 @@ namespace Polhem.Definition.Language
 
         /// <summary>
         /// Resolves the field's <see cref="FormField.LangEnumName"/> against the language
-        /// resource (with default-lang fall-back) and replaces <see cref="FormField.ListItems"/>
+        /// resource (through the fall-back chain) and replaces <see cref="FormField.ListItems"/>
         /// with the localized enum entries. Bare names (no dot) are resolved against
         /// the owning schema's <paramref name="schemaNamespace"/>; fully-qualified names
         /// (<c>"Common.Gender"</c>) target their own namespace.

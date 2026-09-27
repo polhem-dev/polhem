@@ -49,24 +49,36 @@ namespace Polhem.Definition.Language
             => GetLangText("", lang, @namespace, subKey);
 
         /// <inheritdoc/>
+        public string DefaultLanguage
+        {
+            get
+            {
+                var settings = _defineAccess.GetSystemSettings();
+                return settings?.CommonConfiguration?.DefaultLanguage ?? string.Empty;
+            }
+        }
+
+        /// <inheritdoc/>
         public string GetLangText(string customizeId, string lang, string @namespace, string subKey)
         {
-            // 1. Primary lookup in the requested language (customization-overlaid).
-            if (TryGetLangText(customizeId, lang, @namespace, subKey, out string text))
+            if (TryResolveLangText(customizeId, lang, @namespace, subKey, out string text))
                 return text;
 
-            // 2. Fall back to the system default language (when different).
-            string defaultLang = GetDefaultLang();
-            if (!string.IsNullOrEmpty(defaultLang)
-                && !string.Equals(lang, defaultLang, StringComparison.OrdinalIgnoreCase)
-                && TryGetLangText(customizeId, defaultLang, @namespace, subKey, out text))
-            {
-                return text;
-            }
-
-            // 3. Final fall-back: return the full key string so the missing
-            //    translation is visible in the UI (developers can spot it).
+            // Final fall-back: return the full key string so the missing
+            // translation is visible in the UI (developers can spot it).
             return $"{@namespace}.{subKey}";
+        }
+
+        /// <inheritdoc/>
+        public bool TryResolveLangText(string customizeId, string lang, string @namespace, string subKey, out string text)
+        {
+            foreach (string culture in LanguageFallback.GetChain(lang, DefaultLanguage))
+            {
+                if (TryGetLangText(customizeId, culture, @namespace, subKey, out text))
+                    return true;
+            }
+            text = string.Empty;
+            return false;
         }
 
         /// <inheritdoc/>
@@ -109,19 +121,12 @@ namespace Polhem.Definition.Language
             if (string.IsNullOrWhiteSpace(@namespace) || string.IsNullOrWhiteSpace(enumName))
                 return null;
 
-            // 1. Primary lookup in the requested language (customization-overlaid).
-            var hit = LookupEnum(customizeId, lang, @namespace, enumName);
-            if (hit != null)
-                return hit;
-
-            // 2. Fall back to the system default language (when different).
-            string defaultLang = GetDefaultLang();
-            if (!string.IsNullOrEmpty(defaultLang)
-                && !string.Equals(lang, defaultLang, StringComparison.OrdinalIgnoreCase))
+            foreach (string culture in LanguageFallback.GetChain(lang, DefaultLanguage))
             {
-                return LookupEnum(customizeId, defaultLang, @namespace, enumName);
+                var hit = LookupEnum(customizeId, culture, @namespace, enumName);
+                if (hit != null)
+                    return hit;
             }
-
             return null;
         }
 
@@ -166,16 +171,6 @@ namespace Polhem.Definition.Language
             if (string.IsNullOrEmpty(customizeId) || _customizeReader is null)
                 return null;
             return _customizeReader.GetCustomizeLanguage(customizeId, lang, @namespace);
-        }
-
-        /// <summary>
-        /// Reads the system default language from <see cref="Settings.CommonConfiguration.DefaultLang"/>.
-        /// </summary>
-        /// <returns>The default lang, or an empty string when settings are unavailable.</returns>
-        private string GetDefaultLang()
-        {
-            var settings = _defineAccess.GetSystemSettings();
-            return settings?.CommonConfiguration?.DefaultLang ?? string.Empty;
         }
     }
 }

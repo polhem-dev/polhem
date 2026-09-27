@@ -8,17 +8,17 @@
   self-contradictory and an INSERT omitting the column fails with ORA-01400 on a fresh CREATE.
   Revert to NOT NULL once the Oracle dialect handles empty-string defaults.
 -->
-<TableSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TableName="st_audit_rule" DisplayName="稽核規則">
+<TableSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TableName="st_audit_rule" DisplayName="Audit Rule">
   <Fields>
-    <DbField FieldName="sys_no" Caption="流水號" DbType="AutoIncrement" />
-    <DbField FieldName="sys_rowid" Caption="唯一識別" DbType="Guid" />
-    <DbField FieldName="sys_id" Caption="表單代碼" DbType="String" Length="50" />
-    <DbField FieldName="sys_name" Caption="表單名稱" DbType="String" Length="100" />
-    <DbField FieldName="change_mode" Caption="異動記錄" DbType="Integer" DefaultValue="0" />
-    <DbField FieldName="access_mode" Caption="檢視記錄" DbType="Integer" DefaultValue="0" />
-    <DbField FieldName="is_sensitive" Caption="敏感資料" DbType="Boolean" DefaultValue="0" />
-    <DbField FieldName="remark" Caption="備註" DbType="String" Length="255" AllowNull="true" />
-    <DbField FieldName="sys_insert_time" Caption="寫入時間" DbType="DateTime" />
+    <DbField FieldName="sys_no" Caption="Sequence No." DbType="AutoIncrement" />
+    <DbField FieldName="sys_rowid" Caption="Row Id" DbType="Guid" />
+    <DbField FieldName="sys_id" Caption="Program Id" DbType="String" Length="50" />
+    <DbField FieldName="sys_name" Caption="Form Name" DbType="String" Length="100" />
+    <DbField FieldName="change_mode" Caption="Change Log" DbType="Integer" DefaultValue="0" />
+    <DbField FieldName="access_mode" Caption="Access Log" DbType="Integer" DefaultValue="0" />
+    <DbField FieldName="is_sensitive" Caption="Sensitive" DbType="Boolean" DefaultValue="0" />
+    <DbField FieldName="remark" Caption="Remark" DbType="String" Length="255" AllowNull="true" />
+    <DbField FieldName="sys_insert_time" Caption="Created At" DbType="DateTime" />
   </Fields>
   <Indexes>
     <DbTableIndex Name="pk_{0}" Unique="true" PrimaryKey="true">

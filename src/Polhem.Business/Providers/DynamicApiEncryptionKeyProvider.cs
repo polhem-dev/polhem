@@ -3,6 +3,7 @@ using Polhem.Base;
 using Polhem.Base.Security;
 using Polhem.Base.Exceptions;
 using Polhem.Definition.Identity;
+using Polhem.Definition.Language;
 
 namespace Polhem.Business.Providers
 {
@@ -32,12 +33,12 @@ namespace Polhem.Business.Providers
             // If AccessToken is Guid.Empty, throw an unauthorized exception
             if (ValueUtilities.IsEmpty(accessToken))
             {
-                throw new AuthenticationRequiredException("Access token is required.");
+                throw new AuthenticationRequiredException(PolhemMessages.SessionAccessTokenRequired, "Access token is required.");
             }
 
             var sessionInfo = _sessionInfoService.Get(accessToken);
             return sessionInfo?.ApiEncryptionKey
-                ?? throw new AuthenticationRequiredException("Session key not found or expired.");
+                ?? throw new AuthenticationRequiredException(PolhemMessages.SessionNotFound, "Session key not found or expired.");
         }
 
         /// <summary>

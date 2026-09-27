@@ -69,13 +69,13 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         }
 
         [Fact]
-        [DisplayName("The label properties default to User ID / Password / Sign in")]
-        public void LabelProperties_HaveSensibleDefaults()
+        [DisplayName("The label properties default to null, so the panel shows its localized text unless the host overrides it")]
+        public void LabelProperties_DefaultToNull()
         {
             var panel = new PolhemLoginPanel();
-            Assert.Equal("User ID", panel.UserIdLabel);
-            Assert.Equal("Password", panel.PasswordLabel);
-            Assert.Equal("Sign in", panel.SubmitLabel);
+            Assert.Null(panel.UserIdLabel);
+            Assert.Null(panel.PasswordLabel);
+            Assert.Null(panel.SubmitLabel);
         }
 
         [Fact]

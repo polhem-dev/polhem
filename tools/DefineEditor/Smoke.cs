@@ -340,7 +340,7 @@ internal static class Smoke
             var root = new SystemSettings();
             root.CommonConfiguration.Version = "1.0.0-smoke";
             root.CommonConfiguration.IsDebugMode = true;
-            root.CommonConfiguration.DefaultLang = "zh-TW";
+            root.CommonConfiguration.DefaultLanguage = "zh-TW";
             root.BackendConfiguration.CacheNotifyOptions.IntervalSeconds = 42;
             root.BackendConfiguration.SecurityKeySettings.ApiEncryptionKey = "smoke-api-key";
             root.ExtendedProperties!.Add(new Property { Name = "SmokeProp", Value = "SmokeValue" });

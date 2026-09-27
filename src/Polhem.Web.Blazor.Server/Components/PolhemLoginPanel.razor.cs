@@ -1,5 +1,6 @@
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.System;
+using Polhem.Definition.Language;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
 
@@ -19,6 +20,12 @@ namespace Polhem.Web.Blazor.Server.Components
     /// also intentionally minimal — the backend BO ultimately decides what
     /// counts as a valid credential, and surfacing its rejection through the
     /// inline error message is enough for the sample-grade scope of Phase 1d.
+    /// <para>
+    /// The <see cref="LoginResponse"/> passed to <see cref="OnLoggedIn"/> carries the user's culture
+    /// (<see cref="LoginResponse.Culture"/>). A circuit's culture is fixed when it starts, so a host
+    /// that renders in the user's language persists that culture — typically as the ASP.NET Core
+    /// request-localization cookie — and reloads.
+    /// </para>
     /// </remarks>
     public sealed partial class PolhemLoginPanel : ComponentBase
     {
@@ -31,22 +38,25 @@ namespace Polhem.Web.Blazor.Server.Components
         private string? _error;
 
         /// <summary>
-        /// Gets or sets the label rendered above the user-id input.
+        /// Gets or sets the label rendered above the user-id input. <c>null</c> — the default —
+        /// shows the localized <see cref="PolhemUIText.UserId"/> text.
         /// </summary>
         [Parameter]
-        public string UserIdLabel { get; set; } = "User ID";
+        public string? UserIdLabel { get; set; }
 
         /// <summary>
-        /// Gets or sets the label rendered above the password input.
+        /// Gets or sets the label rendered above the password input. <c>null</c> — the default —
+        /// shows the localized <see cref="PolhemUIText.Password"/> text.
         /// </summary>
         [Parameter]
-        public string PasswordLabel { get; set; } = "Password";
+        public string? PasswordLabel { get; set; }
 
         /// <summary>
-        /// Gets or sets the caption shown on the submit button.
+        /// Gets or sets the caption shown on the submit button. <c>null</c> — the default — shows
+        /// the localized <see cref="PolhemUIText.SignIn"/> text.
         /// </summary>
         [Parameter]
-        public string SubmitLabel { get; set; } = "Sign in";
+        public string? SubmitLabel { get; set; }
 
         /// <summary>
         /// Gets or sets the callback invoked after a successful login. The
@@ -60,6 +70,18 @@ namespace Polhem.Web.Blazor.Server.Components
         [Inject]
         private PolhemApiConnectorFactory Factory { get; set; } = default!;
 
+        // Nullable: a component created outside a renderer has no services, and still renders.
+        [Inject]
+        private IServiceProvider? Services { get; set; }
+
+        private string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
+
+        private string DisplayedUserIdLabel => UserIdLabel ?? Text(PolhemUIText.UserId);
+
+        private string DisplayedPasswordLabel => PasswordLabel ?? Text(PolhemUIText.Password);
+
+        private string DisplayedSubmitLabel => SubmitLabel ?? Text(PolhemUIText.SignIn);
+
         private async Task OnSubmitAsync()
         {
             if (_isBusy) return;
@@ -72,7 +94,7 @@ namespace Polhem.Web.Blazor.Server.Components
 
                 if (response.AccessToken == Guid.Empty)
                 {
-                    _error = "Login failed: the server returned an empty access token.";
+                    _error = Text(PolhemUIText.SignInEmptyToken);
                     return;
                 }
 

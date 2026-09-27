@@ -8,6 +8,7 @@ using Polhem.Api.Core.Messages.System;
 using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
+using Polhem.Tests.Shared;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
@@ -97,6 +98,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         [DisplayName("OnSubmitAsync sets a login failure error message when LoginAsync returns an empty AccessToken")]
         public async Task OnSubmitAsync_EmptyAccessToken_SetsLoginFailedError()
         {
+            using var culture = new CultureScope("en-US");
             var panel = CreatePanelWithFakeFactory(new LoginResponse { AccessToken = Guid.Empty });
 
             await InvokeOnSubmitAsync(panel);
@@ -104,6 +106,18 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             Assert.Equal(
                 "Login failed: the server returned an empty access token.",
                 (string?)s_errorField.GetValue(panel));
+        }
+
+        [Fact]
+        [DisplayName("OnSubmitAsync shows the empty-token failure in the user's culture")]
+        public async Task OnSubmitAsync_EmptyAccessTokenUnderZhTw_SetsLocalizedError()
+        {
+            using var culture = new CultureScope("zh-TW");
+            var panel = CreatePanelWithFakeFactory(new LoginResponse { AccessToken = Guid.Empty });
+
+            await InvokeOnSubmitAsync(panel);
+
+            Assert.Equal("登入失敗：伺服器未傳回存取權杖。", (string?)s_errorField.GetValue(panel));
         }
 
         [Fact]

@@ -85,9 +85,9 @@ namespace Polhem.Business.Providers
             };
 
             var locale = _repositoryFactory.Create<IUserRepository>().GetLocale(seed.UserId);
-            var backend = _services.GetRequiredService<IDefineAccess>().GetSystemSettings().BackendConfiguration;
-            sessionInfo.TimeZone = StringUtilities.IsNotEmpty(locale.TimeZone) ? locale.TimeZone : backend.DefaultTimeZone;
-            sessionInfo.Culture = StringUtilities.IsNotEmpty(locale.Culture) ? locale.Culture : backend.DefaultLanguage;
+            var settings = _services.GetRequiredService<IDefineAccess>().GetSystemSettings();
+            sessionInfo.TimeZone = StringUtilities.IsNotEmpty(locale.TimeZone) ? locale.TimeZone : settings.BackendConfiguration.DefaultTimeZone;
+            sessionInfo.Culture = StringUtilities.IsNotEmpty(locale.Culture) ? locale.Culture : settings.CommonConfiguration.DefaultLanguage;
 
             if (StringUtilities.IsNotEmpty(seed.CompanyId))
             {

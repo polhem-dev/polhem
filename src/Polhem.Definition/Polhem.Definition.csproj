@@ -82,6 +82,20 @@
     e.g. Defaults/TableSchema/common/st_user.TableSchema.xml
          -> Polhem.Definition.Defaults/TableSchema/common/st_user.TableSchema.xml
   -->
+  <!--
+    The framework's own shipped translations (PolhemUIText, PolhemMessages), read at run time by
+    FrameworkLanguageService. Unlike Defaults/ these are not a scaffold to copy: they are served from
+    the assembly, and a host overrides them with language resources of its own.
+
+    e.g. Language/Resources/zh-TW/PolhemUIText.Language.xml
+         -> Polhem.Definition.Language/zh-TW/PolhemUIText.Language.xml
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="Language\Resources\**\*.xml">
+      <LogicalName>Polhem.Definition.Language/$([System.String]::Copy('%(RecursiveDir)').Replace('\','/'))%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="Defaults\**\*.xml">
       <LogicalName>Polhem.Definition.Defaults/$([System.String]::Copy('%(RecursiveDir)').Replace('\','/'))%(Filename)%(Extension)</LogicalName>

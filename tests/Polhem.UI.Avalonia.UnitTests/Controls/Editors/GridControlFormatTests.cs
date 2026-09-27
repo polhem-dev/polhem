@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
+using Polhem.Tests.Shared;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 {
@@ -103,9 +104,10 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         }
 
         [Fact]
-        [DisplayName("FormatCell formats a DateTime with a time part as yyyy-MM-dd HH:mm:ss")]
+        [DisplayName("FormatCell formats a DateTime with a time part as the culture's general date and time")]
         public void FormatCell_DateTimeWithTime_FormatsWithTimePart()
         {
+            using var culture = new CultureScope("de-DE");
             var dt = new DateTime(2026, 1, 15, 14, 30, 0, DateTimeKind.Unspecified);
             var table = new DataTable("T");
             table.Columns.Add("ts", typeof(DateTime));
@@ -113,13 +115,14 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             var result = InvokeFormatCell(table.DefaultView[0], "ts", string.Empty, string.Empty);
 
-            Assert.Equal("2026-01-15 14:30:00", result);
+            Assert.Equal("15.01.2026 14:30:00", result);
         }
 
         [Fact]
-        [DisplayName("FormatCell formats a DateTime without a time part as yyyy-MM-dd")]
+        [DisplayName("FormatCell formats a DateTime without a time part as the culture's short date")]
         public void FormatCell_DateTimeWithNoTime_FormatsDateOnly()
         {
+            using var culture = new CultureScope("en-US");
             var dt = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Unspecified);
             var table = new DataTable("T");
             table.Columns.Add("d", typeof(DateTime));
@@ -127,7 +130,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             var result = InvokeFormatCell(table.DefaultView[0], "d", string.Empty, string.Empty);
 
-            Assert.Equal("2026-06-01", result);
+            Assert.Equal("6/1/2026", result);
         }
 
         [Fact]

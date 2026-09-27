@@ -6,6 +6,7 @@ using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
 using Polhem.Repository.Abstractions.Form;
+using Polhem.Definition.Language;
 
 namespace Polhem.Business.Form
 {
@@ -117,7 +118,7 @@ namespace Polhem.Business.Form
             {
                 if (!stored.TryGetValue(StoredRowId(row), out var storedRow))
                 {
-                    throw new UserMessageException(
+                    throw new UserMessageException(PolhemMessages.SaveConcurrencyConflict,
                         "The record was changed or deleted by someone else while it was open. Reload it and try again.");
                 }
 

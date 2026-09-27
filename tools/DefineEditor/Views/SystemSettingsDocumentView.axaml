@@ -34,8 +34,8 @@
                     <CheckBox IsChecked="{Binding IsDebugMode, Mode=TwoWay}"/>
                 </DockPanel>
                 <DockPanel Classes="row">
-                    <TextBlock Classes="label" Text="DefaultLang"/>
-                    <TextBox Text="{Binding DefaultLang, Mode=TwoWay}"/>
+                    <TextBlock Classes="label" Text="DefaultLanguage"/>
+                    <TextBox Text="{Binding DefaultLanguage, Mode=TwoWay}"/>
                 </DockPanel>
                 <DockPanel Classes="row">
                     <TextBlock Classes="label" Text="AllowedTypeNamespaces"/>

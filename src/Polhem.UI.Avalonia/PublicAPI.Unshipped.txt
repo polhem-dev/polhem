@@ -2,3 +2,10 @@
 static Polhem.UI.Avalonia.Controls.PermissionScope.GetAction(Avalonia.Controls.Control! control) -> Polhem.Definition.Settings.PermissionActions
 static Polhem.UI.Avalonia.Controls.PermissionScope.SetAction(Avalonia.Controls.Control! control, Polhem.Definition.Settings.PermissionActions value) -> void
 static readonly Polhem.UI.Avalonia.Controls.PermissionScope.ActionProperty -> Avalonia.AttachedProperty<Polhem.Definition.Settings.PermissionActions>!
+Polhem.UI.Avalonia.UIText
+Polhem.UI.Avalonia.Views.ListView.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
+Polhem.UI.Avalonia.Views.ListView.DefinitionLoader.set -> void
+static Polhem.UI.Avalonia.UIText.Localizer.get -> Microsoft.Extensions.Localization.IStringLocalizer!
+static Polhem.UI.Avalonia.UIText.Localizer.set -> void
+virtual Polhem.UI.Avalonia.Controls.Editors.DateEdit.DisplayFormat.get -> string!
+virtual Polhem.UI.Avalonia.Views.ListView.ResolveLang() -> string!

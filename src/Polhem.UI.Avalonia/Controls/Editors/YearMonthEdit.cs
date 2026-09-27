@@ -18,5 +18,9 @@ namespace Polhem.UI.Avalonia.Controls.Editors
 
         /// <inheritdoc />
         protected override string ValueFormat => "yyyy-MM";
+
+        /// <inheritdoc />
+        /// <remarks>The culture's year-month pattern, <c>Y</c>.</remarks>
+        protected override string DisplayFormat => "Y";
     }
 }

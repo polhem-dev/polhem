@@ -99,12 +99,19 @@ namespace Polhem.Definition.Forms
         public string Condition { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the message shown to the user when <see cref="Condition"/> fails. May be a
-        /// literal string or a language-resource key resolved at API delivery time.
+        /// Gets or sets the message shown to the user when <see cref="Condition"/> fails: the base
+        /// text, written in the schema's base language.
         /// </summary>
+        /// <remarks>
+        /// Translations live in the schema's language namespace under
+        /// <c>Rule.{RuleId}.Message</c> (<see cref="Language.FormSchemaLocalizer.RuleMessageKeyFormat"/>).
+        /// When the rule fails on the server the key is resolved in the session's culture through the
+        /// language fall-back chain, and this text is sent when no culture translates it. The text is
+        /// used as it is: it is not itself looked up as a key, and braces in it are not placeholders.
+        /// </remarks>
         [XmlAttribute]
         [Category(PropertyCategories.Data)]
-        [Description("Message shown when the condition fails (literal or language-resource key).")]
+        [Description("Message shown when the condition fails (base text; translations under Rule.{RuleId}.Message).")]
         [DefaultValue("")]
         public string Message { get; set; } = string.Empty;
 

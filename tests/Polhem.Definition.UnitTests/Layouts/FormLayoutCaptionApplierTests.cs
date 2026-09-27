@@ -99,6 +99,22 @@ namespace Polhem.Definition.UnitTests.Layouts
             Assert.Equal("員工", layout.Caption);
         }
 
+        [Fact]
+        [DisplayName("A layout with several sections keeps its authored section captions and still takes the field captions")]
+        public void Apply_SeveralSections_KeepsSectionCaptions()
+        {
+            var layout = BuildLayout();
+            var address = new LayoutSection { Name = "Address", Caption = "Address (layout file)" };
+            address.Fields!.Add(new LayoutField { FieldName = "sys_name", Caption = "Name (layout file)" });
+            layout.Sections!.Add(address);
+
+            FormLayoutCaptionApplier.Apply(layout, BuildSchema());
+
+            Assert.Equal("Main (layout file)", layout.Sections![0].Caption);
+            Assert.Equal("Address (layout file)", layout.Sections![1].Caption);
+            Assert.Equal("姓名", layout.Sections![1].Fields!.First(f => f.FieldName == "sys_name").Caption);
+        }
+
         private static LayoutField Field(FormLayout layout, string fieldName)
             => layout.Sections![0].Fields!.First(f => f.FieldName == fieldName);
 

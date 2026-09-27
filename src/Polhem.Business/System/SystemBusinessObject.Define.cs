@@ -164,7 +164,7 @@ namespace Polhem.Business.System
             ArgumentNullException.ThrowIfNull(args);
 
             var sessionInfo = SessionInfoService.Get(AccessToken)
-                ?? throw new AuthenticationRequiredException("Session not found or has expired.");
+                ?? throw new AuthenticationRequiredException(PolhemMessages.SessionNotFound, "Session not found or has expired.");
 
             DepartmentTree? tree = null;
             if (!string.IsNullOrEmpty(sessionInfo.CompanyId))

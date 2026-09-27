@@ -1,6 +1,9 @@
 using System.ComponentModel;
+using Polhem.Definition.Language;
+using Polhem.Tests.Shared;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
 {
@@ -58,6 +61,33 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
 
             var factory = sp.GetRequiredService<PolhemApiConnectorFactory>();
             Assert.Equal(PolhemBlazorProviderMode.Local, factory.Mode);
+        }
+
+        [Fact]
+        [DisplayName("AddPolhemBlazor registers a localizer for the components' text that serves the shipped translations")]
+        public void AddPolhemBlazor_RegistersUITextLocalizer()
+        {
+            var services = new ServiceCollection();
+            services.AddPolhemBlazor();
+            using var sp = services.BuildServiceProvider();
+            using var culture = new CultureScope("zh-TW");
+
+            var localizer = sp.GetRequiredService<IStringLocalizer<PolhemUIText>>();
+
+            Assert.Equal("儲存", PolhemUIText.Get(localizer, PolhemUIText.Save));
+        }
+
+        [Fact]
+        [DisplayName("A localizer the host registered before AddPolhemBlazor is kept")]
+        public void AddPolhemBlazor_HostLocalizer_IsKept()
+        {
+            var hostLocalizer = new LanguageResourceStringLocalizer<PolhemUIText>(new FrameworkLanguageService(null));
+            var services = new ServiceCollection();
+            services.AddSingleton<IStringLocalizer<PolhemUIText>>(hostLocalizer);
+            services.AddPolhemBlazor();
+            using var sp = services.BuildServiceProvider();
+
+            Assert.Same(hostLocalizer, sp.GetRequiredService<IStringLocalizer<PolhemUIText>>());
         }
 
         [Theory]

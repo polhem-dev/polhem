@@ -22,18 +22,22 @@ namespace Polhem.Api.Client.Definitions
     public sealed class SnapshotLanguageService : ILanguageService
     {
         private readonly IReadOnlyDictionary<string, LanguageLayers> _snapshot;
-        private readonly string _defaultLang;
-
         /// <summary>
         /// Initializes a new <see cref="SnapshotLanguageService"/>.
         /// </summary>
-        /// <param name="snapshot">The fetched layers, keyed by <see cref="BuildKey"/>.</param>
-        /// <param name="defaultLang">The system default language used for the fall-back hop; empty disables it.</param>
-        public SnapshotLanguageService(IReadOnlyDictionary<string, LanguageLayers> snapshot, string defaultLang)
+        /// <param name="snapshot">
+        /// The fetched layers, keyed by <see cref="BuildKey"/>. A culture of the fall-back chain
+        /// missing from the snapshot counts as a miss for that culture.
+        /// </param>
+        /// <param name="defaultLanguage">The system default language, the last hop of the fall-back chain; empty drops it.</param>
+        public SnapshotLanguageService(IReadOnlyDictionary<string, LanguageLayers> snapshot, string defaultLanguage)
         {
             _snapshot = snapshot ?? throw new ArgumentNullException(nameof(snapshot));
-            _defaultLang = defaultLang ?? string.Empty;
+            DefaultLanguage = defaultLanguage ?? string.Empty;
         }
+
+        /// <inheritdoc/>
+        public string DefaultLanguage { get; }
 
         /// <summary>
         /// Builds the snapshot key for a language / namespace pair.
@@ -52,9 +56,7 @@ namespace Polhem.Api.Client.Definitions
         /// <inheritdoc/>
         public string GetLangText(string lang, string @namespace, string subKey)
         {
-            if (TryGetLangText(lang, @namespace, subKey, out string text))
-                return text;
-            if (UseDefaultLangFallback(lang) && TryGetLangText(_defaultLang, @namespace, subKey, out text))
+            if (TryResolveLangText(string.Empty, lang, @namespace, subKey, out string text))
                 return text;
             // Same last resort as the server: surface the key so a missing translation is visible.
             return $"{@namespace}.{subKey}";
@@ -75,6 +77,20 @@ namespace Polhem.Api.Client.Definitions
         }
 
         /// <inheritdoc/>
+        public bool TryResolveLangText(string customizeId, string lang, string @namespace, string subKey, out string text)
+        {
+            // The customization layer is already in the snapshot — the server chose it from the
+            // session — so the code passed here selects nothing.
+            foreach (string culture in LanguageFallback.GetChain(lang, DefaultLanguage))
+            {
+                if (TryGetLangText(culture, @namespace, subKey, out text))
+                    return true;
+            }
+            text = string.Empty;
+            return false;
+        }
+
+        /// <inheritdoc/>
         public LanguageEnum? GetLangEnum(string lang, string fullName)
         {
             (string @namespace, string enumName) = LanguageKey.Split(fullName);
@@ -87,13 +103,14 @@ namespace Polhem.Api.Client.Definitions
             if (string.IsNullOrWhiteSpace(@namespace) || string.IsNullOrWhiteSpace(enumName))
                 return null;
 
-            var layers = Find(lang, @namespace);
-            var hit = CustomizeOverlay.GetLangEnum(layers.Customize, layers.Base, enumName);
-            if (hit != null || !UseDefaultLangFallback(lang))
-                return hit;
-
-            layers = Find(_defaultLang, @namespace);
-            return CustomizeOverlay.GetLangEnum(layers.Customize, layers.Base, enumName);
+            foreach (string culture in LanguageFallback.GetChain(lang, DefaultLanguage))
+            {
+                var layers = Find(culture, @namespace);
+                var hit = CustomizeOverlay.GetLangEnum(layers.Customize, layers.Base, enumName);
+                if (hit != null)
+                    return hit;
+            }
+            return null;
         }
 
         /// <inheritdoc/>
@@ -105,9 +122,5 @@ namespace Polhem.Api.Client.Definitions
 
         private LanguageLayers Find(string lang, string @namespace)
             => _snapshot.TryGetValue(BuildKey(lang, @namespace), out var layers) ? layers : default;
-
-        private bool UseDefaultLangFallback(string lang)
-            => !string.IsNullOrEmpty(_defaultLang)
-               && !string.Equals(lang, _defaultLang, StringComparison.OrdinalIgnoreCase);
     }
 }

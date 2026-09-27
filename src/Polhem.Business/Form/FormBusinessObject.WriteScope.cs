@@ -8,6 +8,7 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 using Polhem.Repository.Abstractions.Form;
+using Polhem.Definition.Language;
 
 namespace Polhem.Business.Form
 {
@@ -76,9 +77,10 @@ namespace Polhem.Business.Form
             {
                 if (HasPendingRows(dataSet))
                 {
-                    throw new ForbiddenException(
-                        $"Save must carry the '{masterTableName}' row the details belong to; " +
-                        $"record scope on model '{schema.PermissionModelId}' cannot be resolved without it.");
+                    throw new ForbiddenException(PolhemMessages.PermissionMasterRowMissing,
+                        "Save must carry the '{0}' row the details belong to; " +
+                        "record scope on model '{1}' cannot be resolved without it.",
+                        masterTableName, schema.PermissionModelId);
                 }
                 return;
             }
@@ -137,8 +139,8 @@ namespace Polhem.Business.Form
                 var scopeFilter = scopeFilterFor(action);
                 if (scopeFilter != null && !ScopeFilterEvaluator.Matches(scopeFilter, row, DataRowVersion.Current))
                 {
-                    throw new ForbiddenException(
-                        $"The saved record would fall outside the '{action}' scope on model '{schema.PermissionModelId}'.");
+                    throw new ForbiddenException(PolhemMessages.PermissionSavedRecordOutOfScope,
+                        "The saved record would fall outside the '{0}' scope on model '{1}'.", action, schema.PermissionModelId);
                 }
             }
         }
@@ -215,7 +217,8 @@ namespace Polhem.Business.Form
                 if (scopeFilter == null) { continue; }
 
                 if (!repository.ExistsInScope(RowIdOf(row, hasRowId), scopeFilter))
-                    throw new ForbiddenException($"Record out of scope for '{action}' on model '{schema.PermissionModelId}'.");
+                    throw new ForbiddenException(PolhemMessages.PermissionRecordOutOfScope,
+                        "Record out of scope for '{0}' on model '{1}'.", action, schema.PermissionModelId);
             }
         }
 
@@ -250,9 +253,10 @@ namespace Polhem.Business.Form
 
                 if (table.Rows.Cast<DataRow>().Any(IsRekeyed))
                 {
-                    throw new ForbiddenException(
-                        $"A row in '{table.TableName}' changes its '{SysFields.RowId}'; the key cannot change, " +
-                        $"and record scope on model '{modelId}' cannot be confirmed for it.");
+                    throw new ForbiddenException(PolhemMessages.PermissionRowKeyChanged,
+                        "A row in '{0}' changes its '{1}'; the key cannot change, " +
+                        "and record scope on model '{2}' cannot be confirmed for it.",
+                        table.TableName, SysFields.RowId, modelId);
                 }
             }
         }

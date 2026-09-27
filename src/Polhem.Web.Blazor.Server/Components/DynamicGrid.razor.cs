@@ -2,6 +2,7 @@ using System.Data;
 using Polhem.Api.Client;
 using System.Globalization;
 using Polhem.Definition;
+using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Microsoft.AspNetCore.Components;
 
@@ -42,10 +43,19 @@ namespace Polhem.Web.Blazor.Server.Components
         public EventCallback<Guid> OnRowSelected { get; set; }
 
         /// <summary>
-        /// Gets or sets the placeholder text shown when there is no data.
+        /// Gets or sets the placeholder text shown when there is no data. <c>null</c> — the
+        /// default — shows the localized <see cref="PolhemUIText.NoData"/> text.
         /// </summary>
         [Parameter]
-        public string EmptyText { get; set; } = "No data.";
+        public string? EmptyText { get; set; }
+
+        // Nullable: a component created outside a renderer has no services, and still renders.
+        [Inject]
+        private IServiceProvider? Services { get; set; }
+
+        private string Text(string key) => PolhemUIText.Get(PolhemBlazorText.GetLocalizer(Services), key);
+
+        private string DisplayedEmptyText => EmptyText ?? Text(PolhemUIText.NoData);
 
         private IEnumerable<LayoutColumn> VisibleColumns
             => Layout?.Columns?.Where(c => c.Visible) ?? Enumerable.Empty<LayoutColumn>();
@@ -58,23 +68,30 @@ namespace Polhem.Web.Blazor.Server.Components
         }
 
 
-        private static string FormatCell(DataRow row, LayoutColumn column)
+        /// <summary>
+        /// Formats a cell for display in the circuit's <see cref="CultureInfo.CurrentCulture"/>:
+        /// its separators and date patterns, and localized text for Boolean values.
+        /// </summary>
+        /// <remarks>Display only; the values the grid is given, and anything it reports, stay invariant.</remarks>
+        private string FormatCell(DataRow row, LayoutColumn column)
         {
             if (!row.Table.Columns.Contains(column.FieldName)) return string.Empty;
             var raw = row[column.FieldName];
             if (raw is null || raw == DBNull.Value) return string.Empty;
 
+            var culture = CultureInfo.CurrentCulture;
             if (!string.IsNullOrEmpty(column.DisplayFormat) && raw is IFormattable formattableDisplay)
-                return formattableDisplay.ToString(column.DisplayFormat, CultureInfo.InvariantCulture);
+                return formattableDisplay.ToString(column.DisplayFormat, culture);
             if (!string.IsNullOrEmpty(column.NumberFormat) && raw is IFormattable formattableNumber)
-                return formattableNumber.ToString(column.NumberFormat, CultureInfo.InvariantCulture);
+                return formattableNumber.ToString(column.NumberFormat, culture);
 
             return raw switch
             {
+                bool b => Text(b ? PolhemUIText.True : PolhemUIText.False),
                 DateTime dt => dt.TimeOfDay == TimeSpan.Zero
-                    ? dt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
-                    : dt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
-                IFormattable f => f.ToString(null, CultureInfo.InvariantCulture),
+                    ? dt.ToString("d", culture)
+                    : dt.ToString("G", culture),
+                IFormattable f => f.ToString(null, culture),
                 _ => raw.ToString() ?? string.Empty,
             };
         }

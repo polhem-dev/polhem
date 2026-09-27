@@ -71,6 +71,12 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         protected virtual string ValueFormat => "yyyy-MM-dd";
 
         /// <summary>
+        /// Gets the standard format the read-only display renders the date with in the user's
+        /// culture (<see cref="CultureInfo.CurrentCulture"/>). Defaults to the short date, <c>d</c>.
+        /// </summary>
+        protected virtual string DisplayFormat => "d";
+
+        /// <summary>
         /// Gets or sets the bound field (column) name.
         /// </summary>
         public string FieldName
@@ -172,7 +178,8 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         {
             var date = ParseToOffset(_binder.GetValue());
             SelectedDate = date;
-            ReadOnlyText = date?.DateTime.ToString(ValueFormat, CultureInfo.InvariantCulture) ?? string.Empty;
+            // Shown to the user, so in the user's culture; the bound value keeps the invariant form.
+            ReadOnlyText = date?.DateTime.ToString(DisplayFormat, CultureInfo.CurrentCulture) ?? string.Empty;
         }
 
         private void ApplyMetadata()

@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
+using Polhem.Definition.Language;
 using Polhem.Definition.Settings;
 using Polhem.Northwind.UI.Models;
 using Polhem.UI.Core;
@@ -24,9 +26,16 @@ namespace Polhem.Northwind.UI.ViewModels;
 /// headers and links, so nested folders are flattened into successive header rows. A shell with a
 /// tree control would bind the node hierarchy directly instead.
 /// </para>
+/// <para>
+/// Captions come from the <c>Menu</c> language namespace when the client-wide definition loader is
+/// on (<see cref="MenuLocalizer"/>, keyed by node id), and from the menu file otherwise.
+/// </para>
 /// </remarks>
 public partial class FormsViewModel : ViewModelBase
 {
+    private MenuLocalizer? _menuLocalizer;
+    private string _menuLang = string.Empty;
+
     /// <summary>Grouped navigation entries shown in the left menu.</summary>
     public ObservableCollection<NavItem> NavItems { get; } = [];
 
@@ -54,11 +63,17 @@ public partial class FormsViewModel : ViewModelBase
     private async Task LoadNavItemsAsync()
     {
         MenuSettings settings;
+        string lang = CultureInfo.CurrentUICulture.Name;
         try
         {
             settings = await ClientInfo.DefineAccess
                 .GetMenuSettingsAsync()
                 .ConfigureAwait(true);
+            if (ClientInfo.DefinitionLoader is { } loader)
+            {
+                _menuLocalizer = await loader.GetMenuLocalizerAsync(lang).ConfigureAwait(true);
+                _menuLang = lang;
+            }
         }
         catch (Exception ex)
         {
@@ -86,15 +101,18 @@ public partial class FormsViewModel : ViewModelBase
             switch (node)
             {
                 case MenuFolder folder:
-                    NavItems.Add(NavItem.Header(folder.Caption));
+                    NavItems.Add(NavItem.Header(GetCaption(folder)));
                     AddNodes(folder.Items);
                     break;
                 case MenuEntry entry:
-                    NavItems.Add(NavItem.Form(entry.Caption, entry.ProgId));
+                    NavItems.Add(NavItem.Form(GetCaption(entry), entry.ProgId));
                     break;
             }
         }
     }
+
+    private string GetCaption(MenuNodeBase node)
+        => _menuLocalizer?.GetCaption(node, _menuLang) ?? node.Caption;
 
     /// <summary>Bound to the hamburger button; collapses / expands the navigation pane.</summary>
     [RelayCommand]

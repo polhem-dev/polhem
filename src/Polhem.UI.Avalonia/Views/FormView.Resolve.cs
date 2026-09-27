@@ -24,13 +24,13 @@ namespace Polhem.UI.Avalonia.Views
         /// override to supply a schema without touching the static <see cref="ClientInfo"/>.
         /// </summary>
         protected virtual async Task<FormSchema?> ResolveSchemaAsync(string progId)
-            => DefinitionLoader is null
-                ? await ClientInfo.DefineAccess.GetFormSchemaAsync(progId).ConfigureAwait(false)
-                : await DefinitionLoader.GetLocalizedSchemaAsync(progId, ResolveLang()).ConfigureAwait(false);
+            => EffectiveDefinitionLoader is { } loader
+                ? await loader.GetLocalizedSchemaAsync(progId, ResolveLang()).ConfigureAwait(false)
+                : await ClientInfo.DefineAccess.GetFormSchemaAsync(progId).ConfigureAwait(false);
 
         /// <summary>
         /// Resolves the <see cref="FormLayout"/> the record renders from, in three steps: the
-        /// <see cref="Layout"/> the host set, else the <see cref="DefinitionLoader"/>'s assembled
+        /// <see cref="Layout"/> the host set, else the effective definition loader's assembled
         /// runtime layout, else the stored base definition fetched through
         /// <see cref="ClientInfo.DefineAccess"/>.
         /// </summary>
@@ -44,9 +44,9 @@ namespace Polhem.UI.Avalonia.Views
         {
             if (Layout is not null) return Layout;
 
-            if (DefinitionLoader is not null)
+            if (EffectiveDefinitionLoader is { } loader)
             {
-                return await DefinitionLoader
+                return await loader
                     .GetRuntimeLayoutAsync(progId, Schema!)
                     .ConfigureAwait(false);
             }
@@ -63,31 +63,43 @@ namespace Polhem.UI.Avalonia.Views
 
         /// <summary>
         /// Gets or sets the assembler that turns the raw definitions the server serves into a
-        /// localized schema and a runtime layout. <c>null</c> — the default — keeps the view purely
-        /// local: the schema is fetched as stored, and the layout comes from
+        /// localized schema and a runtime layout, for this view only. <c>null</c> — the default —
+        /// uses <see cref="ClientInfo.DefinitionLoader"/>, which is itself <c>null</c> unless the
+        /// host turned on <see cref="ClientInfo.UseDefinitionLoader"/>; with neither, the view is
+        /// purely local: the schema is fetched as stored, and the layout comes from
         /// <see cref="Layout"/> or the stored definition.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Opt-in on purpose. Assembling the runtime definitions costs API round trips (both
-        /// language layers, both layout layers), and <see cref="Schema"/> is a public property, so a
-        /// host may legitimately supply a schema with no backend behind it at all. Making the loader
-        /// an explicit dependency keeps that case working and states plainly which forms pay for
-        /// tenant customization.
+        /// Assembling the runtime definitions costs API round trips (both language layers, both
+        /// layout layers), and <see cref="Schema"/> is a public property, so a host may legitimately
+        /// supply a schema with no backend behind it at all. That is why the client-wide switch is
+        /// off by default; a host turns it on once rather than wiring every view.
         /// </para>
         /// <para>
-        /// Set it to enable customized layouts, localized captions and company number formats:
-        /// <c>view.DefinitionLoader = new FormDefinitionLoader(ClientInfo.DefineAccess) { CompanyAccessor = () =&gt; ClientInfo.Company }</c>.
+        /// A loader enables customized layouts, localized captions and company number formats.
+        /// A per-view loader is built the way the client-wide one is:
+        /// <c>new FormDefinitionLoader(ClientInfo.DefineAccess) { CompanyAccessor = () =&gt; ClientInfo.Company }</c>.
         /// Pass the company accessor as a delegate, not a value — the entered company changes over
         /// the session's life and a captured value would keep baking the previous tenant's decimals.
+        /// </para>
+        /// <para>
+        /// The definitions are localized once, when the view loads. Switching the language does not
+        /// re-localize a view already on screen; reopen it to see the new language.
         /// </para>
         /// </remarks>
         public FormDefinitionLoader? DefinitionLoader { get; set; }
 
         /// <summary>
-        /// Resolves the language the form renders in. Defaults to the UI culture, the same source
-        /// <see cref="Polhem.Definition.Language.LanguageResourceStringLocalizer{T}"/> falls back to. Only consulted when
-        /// <see cref="DefinitionLoader"/> is set.
+        /// The loader this view assembles through: its own, else the client-wide one, else none.
+        /// </summary>
+        private FormDefinitionLoader? EffectiveDefinitionLoader => DefinitionLoader ?? ClientInfo.DefinitionLoader;
+
+        /// <summary>
+        /// Resolves the language the form renders in. Defaults to the UI culture, which
+        /// <see cref="ClientInfo.ApplyLoginResult"/> sets to the signed-in user's culture, and which
+        /// <see cref="Polhem.Definition.Language.LanguageResourceStringLocalizer{T}"/> falls back to as
+        /// well. Only consulted when a definition loader is in effect.
         /// </summary>
         protected virtual string ResolveLang() => CultureInfo.CurrentUICulture.Name;
 

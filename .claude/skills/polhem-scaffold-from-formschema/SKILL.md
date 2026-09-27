@@ -1,6 +1,6 @@
 ---
 name: polhem-scaffold-from-formschema
-description: "Derive / generate the three kinds of \"sidecar\" definition files for a polhem FormSchema XML: FormLayout, TableSchema and bilingual LanguageResource. Covers the throw-away xUnit fact idiom (call the framework's public generators directly and serialize their output as is), the FormSchemaLocalizer sub-key convention (Schema.DisplayName / Table.X.DisplayName / Field.X.Caption), Chinese-to-English field translation guidance (sys_/ref_/audit_ system prefixes + common ERP terms), and target conflict detection and handling. Use when the user asks to \"generate the layout / language / tableschema from X.FormSchema\", \"add i18n for X\", \"scaffold the sidecar definitions for a form\", \"convert a FormSchema to a layout / translate the language / derive the tableschema\", or similar."
+description: "Derive / generate the three kinds of \"sidecar\" definition files for a polhem FormSchema XML: FormLayout, TableSchema and bilingual LanguageResource. Covers the throw-away xUnit fact idiom (call the framework's public generators directly and serialize their output as is), the FormSchemaLocalizer sub-key convention (Schema.DisplayName / Table.X.DisplayName / Field.X.Caption), English-base caption style and English-to-zh-TW translation guidance (sys_/ref_/audit_ system prefixes + common ERP terms), and target conflict detection and handling. Use when the user asks to \"generate the layout / language / tableschema from X.FormSchema\", \"add i18n for X\", \"scaffold the sidecar definitions for a form\", \"convert a FormSchema to a layout / translate the language / derive the tableschema\", or similar."
 ---
 
 # polhem FormSchema → sidecar definition scaffold
@@ -11,10 +11,16 @@ procedure for producing the three sidecar kinds, so conventions such as sub-key 
 become pitfalls.
 
 > Reference samples (read them alongside the code):
-> - `tests/Define/FormSchema/Employee.FormSchema.xml` (input)
-> - `tests/Define/FormLayout/Employee.FormLayout.xml`
-> - `tests/Define/TableSchema/company/st_employee.TableSchema.xml`
-> - `tests/Define/Language/{zh-TW,en-US}/Employee.Language.xml`
+> - `src/Polhem.Definition/Defaults/FormSchema/Employee.FormSchema.xml` (input, English base text)
+> - `src/Polhem.Definition/Defaults/FormLayout/Employee.FormLayout.xml`
+> - `src/Polhem.Definition/Defaults/TableSchema/company/st_employee.TableSchema.xml`
+> - `src/Polhem.Definition/Defaults/Language/{zh-TW,en-US}/Employee.Language.xml` (zh-TW is the translation; en-US
+>   mirrors the schema's captions word for word)
+>
+> `tests/Define/` holds a richer Employee fixture (extra `title` / `hire_date` fields) whose FormSchema is also
+> English-base, but its language files are copies of the Defaults ones: their en-US entries reword some of the
+> schema's captions (`Employee No.` over the schema's `Employee Code`), and neither language file covers the extra
+> fields, which therefore show the schema's base text in every culture. Read it as a fixture, not as the pattern.
 
 > `st_employee` is not a typo. The `st_` prefix means **owned by the framework**; it does not mean the table lives in
 > the common database. Like `st_department`, it is in company scope (see `rules/database.md`).
@@ -27,7 +33,7 @@ become pitfalls.
 |------|-------------|---------------|
 | **FormLayout** | **Always.** The layout is produced and saved at design time, and the runtime always reads it; **if the file is missing, opening the form fails** (there is no longer any runtime auto-generation). | `FormLayoutGenerator.Generate(schema, layoutId)` (`Polhem.Definition.Layouts`); `layoutId` defaults to `ProgId` |
 | **TableSchema** | **Always.** The seeder uses it to create tables, and the folder name must equal the CategoryId | `TableSchemaGenerator.Generate(formTable)` or `formTable.GenerateDbTable()`; produce one file for **each** FormTable in the schema |
-| **LanguageResource** | When a multilingual interface is needed | No generator: build it by hand + the `FormSchemaLocalizer` sub-key constants. Bilingual: zh-TW copies the Chinese captions from the schema, en-US is derived from the translation glossary |
+| **LanguageResource** | When a multilingual interface is needed | No generator: build it by hand + the `FormSchemaLocalizer` sub-key constants. The FormSchema's own captions are the English base text; zh-TW (and any other culture) is the translation, derived with the glossary below. An en-US file is optional: omit it, or make it mirror the schema's captions |
 
 > **Division of labor with `polhem-add-form`**: adding a form to an existing app goes through `polhem-add-form`
 > (5 pure definition changes, **including the FormLayout**). This skill is the technique for producing that FormLayout
@@ -101,12 +107,12 @@ namespace Polhem.Definition.UnitTests.Scaffolding
                         $"{table.DbTableName}.TableSchema.xml"));
             }
 
-            // 4. Language zh-TW (copy the Chinese captions from the schema)
+            // 4. Language zh-TW (translated from the schema's English captions with the glossary)
             var zh = BuildResource("zh-TW",
-                schemaDisplayName: "{Chinese schema name}",
+                schemaDisplayName: "{zh-TW schema name}",
                 tableDisplayNames: new (string, string)[]
                 {
-                    ("{TableName}", "{Chinese table name}"),
+                    ("{TableName}", "{zh-TW table name}"),
                     // one entry per table
                 },
                 fieldCaptions: new (string, string)[]
@@ -117,18 +123,16 @@ namespace Polhem.Definition.UnitTests.Scaffolding
             XmlCodec.SerializeToFile(zh,
                 Path.Combine(definePath, "Language", "zh-TW", "{ProgId}.Language.xml"));
 
-            // 5. Language en-US (derived from the translation glossary)
+            // 5. Language en-US (optional). The schema already carries the English text, so this file only
+            //    mirrors it. Write it when a deployment wants every culture to have an explicit file;
+            //    otherwise delete this step.
             var en = BuildResource("en-US",
-                schemaDisplayName: "{English schema name}",
-                tableDisplayNames: new (string, string)[]
-                {
-                    ("{TableName}", "{English table name}"),
-                },
-                fieldCaptions: new (string, string)[]
-                {
-                    ("sys_no", "Sequence No."),
-                    // … one per zh-TW entry
-                });
+                schemaDisplayName: schema.DisplayName,
+                tableDisplayNames: schema.Tables!
+                    .Select(table => (table.TableName, table.DisplayName)).ToArray(),
+                fieldCaptions: schema.Tables!
+                    .SelectMany(table => table.Fields!)
+                    .Select(field => (field.FieldName, field.Caption)).ToArray());
             XmlCodec.SerializeToFile(en,
                 Path.Combine(definePath, "Language", "en-US", "{ProgId}.Language.xml"));
 
@@ -167,7 +171,8 @@ namespace Polhem.Definition.UnitTests.Scaffolding
 }
 ```
 
-(`流水號` is the zh-TW caption for `sys_no`.)
+(`流水號` is the zh-TW translation of `sys_no`'s English caption `Sequence No.`. Every other culture follows the
+same shape as the zh-TW step: one entry per key, translated from the schema's English text.)
 
 ### How to run
 
@@ -201,64 +206,76 @@ repositories whose test projects sit at a different depth, adjust the number of 
 
 **namespace = ProgId** (always: `FormSchemaLocalizer.Localize` uses `schema.ProgId` directly as the lookup namespace).
 
-**Do not add extra sub-keys "for completeness".** `FormSchemaLocalizer` only looks up the three kinds above; extra keys
-are never used by the framework and only add maintenance. Translating enums / lists is a separate topic (see
+**Fall-back chain.** For each key the localizer tries the requested culture, then its parent cultures
+(`en-GB` → `en`), then the configured default language (`CommonConfiguration.DefaultLanguage`), and finally keeps the
+base text written in the FormSchema. An English culture (`en`, `en-*`) ends the chain before the default language, so
+English users always get the English base text. So a culture with no language file of its own shows the default language's text,
+and the English base text is what shows when neither declares the key (and on every path that does not localize at
+all, such as DB column comments).
+
+**Do not add extra sub-keys "for completeness".** `FormSchemaLocalizer` only looks up the three kinds above; the one
+other key the framework reads in a form's namespace is `Rule.{RuleId}.Message`
+(`FormSchemaLocalizer.RuleMessageKeyFormat`), which the server resolves when a rule fails — add it only for rules
+whose message needs translating. Other keys are never used by the framework and only add maintenance. Translating enums / lists is a separate topic (see
 `LanguageEnum`) and outside the default scaffold scope.
 
-## Chinese → English glossary
+## English → zh-TW glossary
+
+The English column is what goes into the FormSchema (the base text); the zh-TW column is the translation target for
+the zh-TW language file.
 
 **Rule: do not translate word for word; follow common ERP terminology.** Business captions are concise (no "The ..."),
-and system prefixes have fixed translations.
+and system prefixes have fixed wording in both languages.
 
-### System prefixes (fixed translations)
+### System prefixes (fixed wording)
 
-| Chinese / FieldName | English | Notes |
-|-----------------|---------|------|
-| `sys_no` 流水號 | `Sequence No.` | DB auto-increment PK; **not** `System Number` |
-| `sys_rowid` 唯一識別 | `Row Id` | Globally unique Guid |
-| `sys_id` 編號 | `{Entity} No.` | Business key; per entity, e.g. `Employee No.` / `Department No.` |
-| `sys_name` 名稱 | `{Entity} Name` or `Name` | Same as above |
-| `sys_insert_time` 寫入時間 | `Insert Time` or `Created At` |  |
-| `sys_update_time` 更新時間 | `Update Time` or `Updated At` |  |
-| `sys_insert_user` 寫入者 | `Created By` |  |
-| `sys_update_user` 更新者 | `Updated By` |  |
-| `ref_xxx_id` / `ref_xxx_name` | `{Xxx} No.` / `{Xxx} Name` | Display fields brought in by a RelationField; no `Ref.` prefix needed, since the business user never sees the relation |
+| FieldName | English (base) | zh-TW | Notes |
+|-----------|----------------|-------|------|
+| `sys_no` | `Sequence No.` | 流水號 | DB auto-increment PK; **not** `System Number` |
+| `sys_rowid` | `Row Id` | 唯一識別 | Globally unique Guid |
+| `sys_id` | `{Entity} No.` | {實體}編號 | Business key; per entity, e.g. `Employee No.` / `Department No.` |
+| `sys_name` | `{Entity} Name` or `Name` | {實體}名稱 | Same as above |
+| `sys_insert_time` | `Created At` | 寫入時間 |  |
+| `sys_update_time` | `Updated At` | 更新時間 |  |
+| `sys_insert_user` | `Created By` | 寫入者 |  |
+| `sys_update_user` | `Updated By` | 更新者 |  |
+| `ref_xxx_id` / `ref_xxx_name` | `{Xxx} No.` / `{Xxx} Name` | {Xxx}編號 / {Xxx}名稱 | Display fields brought in by a RelationField; no `Ref.` prefix needed, since the business user never sees the relation |
 
 ### Common ERP terms (frequent in business forms)
 
-| Chinese | English |
-|------|---------|
-| 員工 | Employee |
-| 部門 | Department |
-| 主管 / 直屬主管 | Supervisor |
-| 部門主管 | Department Manager |
-| 客戶 | Customer |
-| 供應商 | Supplier / Vendor |
-| 產品 / 品項 | Product / Item |
-| 訂單 | Order |
-| 採購單 | Purchase Order |
-| 銷貨單 | Sales Order |
-| 庫存 | Inventory / Stock |
-| 出貨 | Shipment |
-| 倉庫 | Warehouse |
-| 公司 | Company |
-| 角色 | Role |
-| 權限 | Permission |
-| 使用者 / 用戶 | User |
-| 帳號 | Account |
-| 密碼 | Password |
-| 電子郵件 | Email |
-| 備註 | Note / Remarks |
-| 描述 | Description |
-| 狀態 | Status |
-| 類別 | Category |
-| 金額 / 單價 / 總價 | Amount / Unit Price / Total |
-| 數量 | Quantity |
-| 日期 / 時間 | Date / Time |
-| 起始 / 結束 | Start / End |
-| 起日 / 迄日 | Start Date / End Date |
-| 專案 | Project |
-| 任務 | Task |
+| English | zh-TW |
+|---------|------|
+| Employee | 員工 |
+| Department | 部門 |
+| Supervisor | 主管 / 直屬主管 |
+| Department Manager | 部門主管 |
+| Customer | 客戶 |
+| Supplier / Vendor | 供應商 |
+| Product / Item | 產品 / 品項 |
+| Order | 訂單 |
+| Purchase Order | 採購單 |
+| Sales Order | 銷貨單 |
+| Inventory / Stock | 庫存 |
+| Shipment | 出貨 |
+| Warehouse | 倉庫 |
+| Company | 公司 |
+| Role | 角色 |
+| Permission | 權限 |
+| User | 使用者 / 用戶 |
+| Account | 帳號 |
+| Password | 密碼 |
+| Email | 電子郵件 |
+| Remark / Note | 備註 |
+| Description | 描述 |
+| Status | 狀態 |
+| Category | 類別 |
+| Amount / Unit Price / Total | 金額 / 單價 / 總價 |
+| Quantity | 數量 |
+| Date / Time | 日期 / 時間 |
+| Start / End | 起始 / 結束 |
+| Start Date / End Date | 起日 / 迄日 |
+| Project | 專案 |
+| Task | 任務 |
 
 ### Caption style
 
@@ -266,6 +283,7 @@ and system prefixes have fixed translations.
 - Use `No.` (with the period) for numbers; not `Number` / `Id` (unless it really is a GUID/UUID rowid)
 - No sentence case (not `Employee no.`); ERP UI convention is Title Case
 - Prefer abbreviations for long words: `Department No.`, not `Department Number`
+- These rules apply to the FormSchema's base text itself, not only to an en-US file
 
 ## Conflict handling (skip existing files by default)
 
@@ -276,7 +294,7 @@ Before running, **dry-run: list every target path** and check whether it exists:
 ls tests/Define/FormLayout/Customer.FormLayout.xml \
    tests/Define/TableSchema/company/ft_customer.TableSchema.xml \
    tests/Define/Language/zh-TW/Customer.Language.xml \
-   tests/Define/Language/en-US/Customer.Language.xml 2>/dev/null
+   tests/Define/Language/en-US/Customer.Language.xml 2>/dev/null   # only if an en-US file is being written
 ```
 
 **Default rule: an existing target is always skipped, never overwritten.**
@@ -310,11 +328,13 @@ After the run, confirm each item:
 
 - [ ] The FormLayout file is produced at `{DefinePath}/FormLayout/{ProgId}.FormLayout.xml`
 - [ ] A TableSchema is produced for every FormTable in the schema (in per-CategoryId folders)
-- [ ] One zh-TW and one en-US Language file each
+- [ ] The FormSchema's `DisplayName` / `Caption` values are English (the base text)
+- [ ] One zh-TW Language file (plus one per other target culture); an en-US file only if requested, mirroring the
+      schema's captions
 - [ ] The Language XML has `Namespace="{ProgId}"`, `Lang="{lang}"`
 - [ ] The Language Items contain `Schema.DisplayName` + `Table.X.DisplayName` for each table + `Field.X.Caption` for
       each field
-- [ ] zh-TW and en-US have **the same Items.Count** and keys match one to one
+- [ ] Every Language file written has **the same Items.Count** and its keys match the schema's captions one to one
 - [ ] The FormSchema `CategoryId` is not empty (otherwise `TableSchemaGenerator` throws `InvalidOperationException`)
 - [ ] The throw-away test file is deleted (`Scaffold{ProgId}FixtureFiles.cs` must not appear in `git status`)
 - [ ] The three output kinds show as added / modified in `git status` (per the conflict policy)

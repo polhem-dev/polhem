@@ -1170,8 +1170,6 @@ Polhem.Definition.Settings.BackendConfiguration.CacheNotifyOptions.get -> Polhem
 Polhem.Definition.Settings.BackendConfiguration.CacheNotifyOptions.set -> void
 Polhem.Definition.Settings.BackendConfiguration.Components.get -> Polhem.Definition.Settings.BackendComponents!
 Polhem.Definition.Settings.BackendConfiguration.Components.set -> void
-Polhem.Definition.Settings.BackendConfiguration.DefaultLanguage.get -> string!
-Polhem.Definition.Settings.BackendConfiguration.DefaultLanguage.set -> void
 Polhem.Definition.Settings.BackendConfiguration.DefaultTimeZone.get -> string!
 Polhem.Definition.Settings.BackendConfiguration.DefaultTimeZone.set -> void
 Polhem.Definition.Settings.BackendConfiguration.LogOptions.get -> Polhem.Definition.Logging.LogOptions!
@@ -1208,8 +1206,6 @@ Polhem.Definition.Settings.CommonConfiguration.AllowedTypeNamespaces.set -> void
 Polhem.Definition.Settings.CommonConfiguration.ApiPayloadOptions.get -> Polhem.Definition.Settings.ApiPayloadOptions!
 Polhem.Definition.Settings.CommonConfiguration.ApiPayloadOptions.set -> void
 Polhem.Definition.Settings.CommonConfiguration.CommonConfiguration() -> void
-Polhem.Definition.Settings.CommonConfiguration.DefaultLang.get -> string!
-Polhem.Definition.Settings.CommonConfiguration.DefaultLang.set -> void
 Polhem.Definition.Settings.CommonConfiguration.IsDebugMode.get -> bool
 Polhem.Definition.Settings.CommonConfiguration.IsDebugMode.set -> void
 Polhem.Definition.Settings.CommonConfiguration.Version.get -> string!
