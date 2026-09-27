@@ -12,7 +12,7 @@ namespace Polhem.Business.UnitTests.Fakes
         private readonly Func<LoginArgs, (bool Authenticated, string UserName)> _authenticator;
 
         public TestableSystemBusinessObject(
-            IPolhemContext ctx,
+            IBusinessObjectContext ctx,
             Guid accessToken,
             Func<LoginArgs, (bool Authenticated, string UserName)> authenticator,
             bool isLocalCall = true)

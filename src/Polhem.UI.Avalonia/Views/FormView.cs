@@ -122,7 +122,7 @@ namespace Polhem.UI.Avalonia.Views
             _saveButton = new Button { Content = "Save" };
             // Save persists via Create (Add mode) or Update (Edit mode); any-of semantics show it
             // when the user holds either. Cancel / Back are navigation, not permission-controlled.
-            PermissionScope.SetAction(_saveButton, PermissionAction.Create | PermissionAction.Update);
+            PermissionScope.SetAction(_saveButton, PermissionActions.Create | PermissionActions.Update);
             _saveButton.Click += async (_, _) => await OnSaveClickedAsync().ConfigureAwait(true);
 
             _cancelButton = new Button { Content = "Cancel" };

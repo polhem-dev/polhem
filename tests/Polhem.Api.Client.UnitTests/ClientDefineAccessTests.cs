@@ -9,8 +9,9 @@ namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
     /// Tests for the async typed access, caching and exception propagation of <see cref="ClientDefineAccess"/>.
-    /// It is built on a local <see cref="SystemApiConnector"/>, which needs <c>ApiClientInfo.LocalServiceProvider</c>
-    /// to be wired up once by the constructor of <see cref="Polhem.Tests.Shared.PolhemTestFixture"/>.
+    /// It is built on a local <see cref="SystemApiConnector"/>, which dispatches to
+    /// <see cref="Polhem.Tests.Shared.TestProcessBootstrap.LocalServices"/>, wired up once by the constructor of
+    /// <see cref="Polhem.Tests.Shared.PolhemTestFixture"/>.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -32,14 +33,14 @@ namespace Polhem.Api.Client.UnitTests
 
         public ClientDefineAccessTests(Polhem.Tests.Shared.PolhemTestFixture fx)
         {
-            // The fixture triggers the wiring of `ApiClientInfo.LocalServiceProvider` and is the target for
-            // seeding the session. The test methods themselves use the process-wide `LocalServiceProvider`.
+            // The fixture triggers the wiring of `TestProcessBootstrap.LocalServices` and is the target for
+            // seeding the session. The test methods themselves use the process-wide `LocalServices`.
             _fx = fx;
         }
 
         private ClientDefineAccess CreateAccess()
         {
-            var connector = new SystemApiConnector(Polhem.Tests.Shared.TestSessionFactory.CreateAccessToken(_fx));
+            var connector = new SystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, Polhem.Tests.Shared.TestSessionFactory.CreateAccessToken(_fx));
             return new ClientDefineAccess(connector);
         }
 
@@ -47,7 +48,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("ClientDefineAccess constructor does not throw when given a SystemApiConnector")]
         public void Constructor_WithConnector_DoesNotThrow()
         {
-            var connector = new SystemApiConnector(Guid.NewGuid());
+            var connector = new SystemApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid());
             var access = new ClientDefineAccess(connector);
             Assert.NotNull(access);
         }
@@ -274,7 +275,7 @@ namespace Polhem.Api.Client.UnitTests
         /// </summary>
         private sealed class CountingConnector : SystemApiConnector
         {
-            public CountingConnector() : base(Guid.NewGuid()) { }
+            public CountingConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid()) { }
 
             public int GetDefineCallCount { get; private set; }
 
@@ -294,7 +295,7 @@ namespace Polhem.Api.Client.UnitTests
             private readonly TaskCompletionSource<bool> _gate =
                 new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            public GatedConnector() : base(Guid.NewGuid()) { }
+            public GatedConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid()) { }
 
             public int GetDefineCallCount { get; private set; }
 
@@ -314,7 +315,7 @@ namespace Polhem.Api.Client.UnitTests
         /// </summary>
         private sealed class FlakyConnector : SystemApiConnector
         {
-            public FlakyConnector() : base(Guid.NewGuid()) { }
+            public FlakyConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid()) { }
 
             public int GetDefineCallCount { get; private set; }
 

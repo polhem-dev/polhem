@@ -17,17 +17,17 @@ namespace Polhem.DefineEditor.ViewModels;
 public static class EditorOptions
 {
     /// <summary>
-    /// PermissionAction excludes <c>None</c> because the editor never produces
+    /// The grantable single actions: <c>None</c> is excluded because the editor never produces
     /// a no-op rule — adding one would just immediately fail validation.
     /// </summary>
-    public static PermissionAction[] PermissionActions { get; } =
+    public static PermissionActions[] PermissionActionValues { get; } =
     {
-        PermissionAction.Create,
-        PermissionAction.Read,
-        PermissionAction.Update,
-        PermissionAction.Delete,
-        PermissionAction.Print,
-        PermissionAction.Export,
+        PermissionActions.Create,
+        PermissionActions.Read,
+        PermissionActions.Update,
+        PermissionActions.Delete,
+        PermissionActions.Print,
+        PermissionActions.Export,
     };
 
     public static ScopeStrategy[] ScopeStrategies { get; } = Enum.GetValues<ScopeStrategy>();

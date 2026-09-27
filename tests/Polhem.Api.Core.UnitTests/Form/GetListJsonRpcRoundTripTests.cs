@@ -54,7 +54,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                 (typeof(IRepositoryFactory), stubFactory));
 
             // A hand-built BO factory gets the overriding `IServiceProvider`, so when the production BO resolves
-            // `IRepositoryFactory` through `PolhemContext.Services` it receives the stub.
+            // `IRepositoryFactory` through `BusinessObjectContext.Services` it receives the stub.
             var boFactory = new BusinessObjectFactory(
                 overrideServices,
                 _fx.GetRequiredService<IDefineAccess>(),

@@ -71,18 +71,20 @@ namespace Polhem.Business.Providers
             if (!HasCommonDatabase()) { return null; }
 
             var seed = _repositoryFactory.Create<ISessionRepository>().GetSession(accessToken);
-            if (seed == null) { return null; }
+            // A seed that names no user cannot say whose session it is. A row written before the
+            // seed's `UserID` element became `UserId` reads back that way.
+            if (seed == null || StringUtilities.IsEmpty(seed.UserId)) { return null; }
 
             var sessionInfo = new SessionInfo
             {
                 AccessToken = seed.AccessToken,
-                UserId = seed.UserID,
+                UserId = seed.UserId,
                 UserName = seed.UserName,
                 ExpiredAt = seed.EndTime,
                 ApiEncryptionKey = keyProvider.GetKey(seed.AccessToken),
             };
 
-            var locale = _repositoryFactory.Create<IUserRepository>().GetLocale(seed.UserID);
+            var locale = _repositoryFactory.Create<IUserRepository>().GetLocale(seed.UserId);
             var backend = _services.GetRequiredService<IDefineAccess>().GetSystemSettings().BackendConfiguration;
             sessionInfo.TimeZone = StringUtilities.IsNotEmpty(locale.TimeZone) ? locale.TimeZone : backend.DefaultTimeZone;
             sessionInfo.Culture = StringUtilities.IsNotEmpty(locale.Culture) ? locale.Culture : backend.DefaultLanguage;

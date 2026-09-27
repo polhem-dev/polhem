@@ -6,6 +6,9 @@ namespace Polhem.Definition.Security
     /// </summary>
     public enum ApiKeyType
     {
+        /// <summary>Not classified: the default value of an unset field.</summary>
+        None = 0,
+
         /// <summary>An application built and operated by the deployment itself.</summary>
         Internal = 1,
 

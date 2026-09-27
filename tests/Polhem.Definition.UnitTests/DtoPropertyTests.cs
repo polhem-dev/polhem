@@ -89,11 +89,11 @@ namespace Polhem.Definition.UnitTests
         }
 
         [Fact]
-        [DisplayName("SessionUser ToString returns the 'UserID : UserName' format")]
+        [DisplayName("SessionUser ToString returns the 'UserId : UserName' format")]
         public void SessionUser_ToString_ReturnsFormattedString()
         {
             // Arrange
-            var user = new SessionUser { UserID = "U02", UserName = "Bob" };
+            var user = new SessionUser { UserId = "U02", UserName = "Bob" };
 
             // Act & Assert
             Assert.Equal("U02 : Bob", user.ToString());

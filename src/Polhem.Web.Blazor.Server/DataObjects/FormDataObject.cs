@@ -24,7 +24,7 @@ namespace Polhem.Web.Blazor.Server.DataObjects
     /// The value rules this type used to carry privately — DataSet seeding, string/column
     /// coercion, display formatting, the CRUD preconditions — now live once in
     /// <c>Polhem.Api.Client</c> (<see cref="FormValueBinding"/> and <see cref="FormDataGuard"/>), which both this
-    /// head and <c>Polhem.Web.Blazor.Server</c> already reference. They are head-agnostic: the same
+    /// head and <c>Polhem.UI.Avalonia</c> already reference. They are head-agnostic: the same
     /// <see cref="FormSchema"/> and the same server responses drive every head.
     /// </para>
     /// <para>

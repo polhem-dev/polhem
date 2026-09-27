@@ -227,7 +227,7 @@ namespace Polhem.Business.UnitTests.Form
 
         public sealed class RuleOffBeforeDeleteProbePlugin : FormBusinessPlugin
         {
-            public RuleOffBeforeDeleteProbePlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public RuleOffBeforeDeleteProbePlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void BeforeDelete(DeleteContext context)
@@ -236,7 +236,7 @@ namespace Polhem.Business.UnitTests.Form
 
         public sealed class RuleOffAfterDeleteProbePlugin : FormBusinessPlugin
         {
-            public RuleOffAfterDeleteProbePlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public RuleOffAfterDeleteProbePlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void AfterDelete(DeleteContext context)

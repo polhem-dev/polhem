@@ -8,7 +8,7 @@ namespace Polhem.Repository
 {
     /// <summary>
     /// Construction-time context handed to every repository. The data-access counterpart of
-    /// <see cref="Polhem.Definition.IPolhemContext"/>: it aggregates the cross-cutting services a repository needs so that
+    /// <see cref="Polhem.Definition.IBusinessObjectContext"/>: it aggregates the cross-cutting services a repository needs so that
     /// every repository can share one constructor signature.
     /// </summary>
     /// <remarks>

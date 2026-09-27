@@ -9,7 +9,7 @@ namespace Polhem.Business.UnitTests.Fakes
     /// </summary>
     public class TestableBusinessObject : BusinessObject
     {
-        public TestableBusinessObject(IPolhemContext ctx, Guid accessToken, bool isLocalCall = true)
+        public TestableBusinessObject(IBusinessObjectContext ctx, Guid accessToken, bool isLocalCall = true)
             : base(ctx, accessToken, "TestProg", isLocalCall)
         {
         }
@@ -38,7 +38,7 @@ namespace Polhem.Business.UnitTests.Fakes
     /// </summary>
     public class BareBusinessObject : BusinessObject
     {
-        public BareBusinessObject(IPolhemContext ctx, Guid accessToken, bool isLocalCall = true)
+        public BareBusinessObject(IBusinessObjectContext ctx, Guid accessToken, bool isLocalCall = true)
             : base(ctx, accessToken, "TestProg", isLocalCall)
         {
         }

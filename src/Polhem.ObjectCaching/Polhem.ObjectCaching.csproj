@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Polhem.Definition\Polhem.Definition.csproj" />
-    <ProjectReference Include="..\Polhem.Repository.Abstractions\Polhem.Repository.Abstractions.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Polhem.ObjectCaching.UnitTests" />

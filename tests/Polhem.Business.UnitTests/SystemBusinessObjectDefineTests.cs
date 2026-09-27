@@ -25,7 +25,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("GetCommonConfiguration returns non-empty XML")]
         public void GetCommonConfiguration_ReturnsNonEmptyXml()
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System);
 
             var result = bo.GetCommonConfiguration(new GetCommonConfigurationArgs());
 
@@ -36,7 +36,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("GetDefine for DatabaseSettings returns XML for a local call")]
         public void GetDefine_LocalCallDatabaseSettings_ReturnsXml()
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
             var args = new GetDefineArgs { DefineType = DefineType.DatabaseSettings };
 
             var result = bo.GetDefine(args);
@@ -75,7 +75,7 @@ namespace Polhem.Business.UnitTests
                 Assert.Equal(itemPassword, cached.Items!["db"].Password);
 
                 var sp = _fx.Provider;
-                var ctx = new PolhemContext
+                var ctx = new BusinessObjectContext
                 {
                     DefineAccess = access,
                     SessionInfoService = sp.GetRequiredService<ISessionInfoService>(),
@@ -114,7 +114,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("GetDefine for SystemSettings returns XML for a local call")]
         public void GetDefine_LocalCallSystemSettings_ReturnsXml()
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
             var args = new GetDefineArgs { DefineType = DefineType.SystemSettings };
 
             var result = bo.GetDefine(args);
@@ -126,7 +126,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("SaveDefine for DbCategorySettings succeeds through the SaveDefineCore path for a local call")]
         public void SaveDefine_LocalCallDbCategorySettings_Succeeds()
         {
-            var getBo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
+            var getBo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
             var getResult = getBo.GetDefine(new GetDefineArgs { DefineType = DefineType.DbCategorySettings });
             Assert.False(string.IsNullOrWhiteSpace(getResult.Xml));
 
@@ -138,7 +138,7 @@ namespace Polhem.Business.UnitTests
                 var tempPaths = new PathOptions { DefinePath = tempDir };
                 var tempAccess = new CacheDefineAccess(new FileDefineStorage(tempPaths), tempPaths);
                 var saveBo = new SystemBusinessObject(
-                    TestPolhemContext.CreateWithDefineAccess(_fx, tempAccess), Guid.Empty, SysProgIds.System, isLocalCall: true);
+                    TestBusinessObjectContext.CreateWithDefineAccess(_fx, tempAccess), Guid.Empty, SysProgIds.System, isLocalCall: true);
 
                 var saveResult = saveBo.SaveDefine(new SaveDefineArgs
                 {

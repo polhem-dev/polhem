@@ -17,9 +17,9 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         {
             var grants = new List<RoleGrantRow>
             {
-                new("Buyer", "PurchaseOrder", PermissionAction.Read, ScopeStrategy.All),
-                new("Buyer", "PurchaseOrder", PermissionAction.Update, ScopeStrategy.All),
-                new("Manager", "PurchaseOrder", PermissionAction.Delete, ScopeStrategy.All),
+                new("Buyer", "PurchaseOrder", PermissionActions.Read, ScopeStrategy.All),
+                new("Buyer", "PurchaseOrder", PermissionActions.Update, ScopeStrategy.All),
+                new("Manager", "PurchaseOrder", PermissionActions.Delete, ScopeStrategy.All),
             };
             return new CompanyRolePermissions("C001", grants, []);
         }
@@ -36,7 +36,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         {
             var auth = Create(Session("C001", "Buyer"), BuildPerms());
 
-            Assert.True(auth.Can(s_token, "PurchaseOrder", PermissionAction.Read));
+            Assert.True(auth.Can(s_token, "PurchaseOrder", PermissionActions.Read));
         }
 
         [Fact]
@@ -46,7 +46,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
             var auth = Create(Session("C001", "Buyer"), BuildPerms());
 
             // Buyer has no Delete; only Manager has it.
-            Assert.False(auth.Can(s_token, "PurchaseOrder", PermissionAction.Delete));
+            Assert.False(auth.Can(s_token, "PurchaseOrder", PermissionActions.Delete));
         }
 
         [Fact]
@@ -56,7 +56,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
             var auth = Create(Session("C001", "Buyer", "Manager"), BuildPerms());
 
             // Buyer (Read | Update) OR Manager (Delete) gives Delete.
-            Assert.True(auth.Can(s_token, "PurchaseOrder", PermissionAction.Delete));
+            Assert.True(auth.Can(s_token, "PurchaseOrder", PermissionActions.Delete));
         }
 
         [Fact]
@@ -65,7 +65,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         {
             var auth = Create(Session(null, "Buyer"), BuildPerms());
 
-            Assert.False(auth.Can(s_token, "PurchaseOrder", PermissionAction.Read));
+            Assert.False(auth.Can(s_token, "PurchaseOrder", PermissionActions.Read));
         }
 
         [Fact]
@@ -74,7 +74,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         {
             var auth = Create(Session("C001"), BuildPerms());
 
-            Assert.False(auth.Can(s_token, "PurchaseOrder", PermissionAction.Read));
+            Assert.False(auth.Can(s_token, "PurchaseOrder", PermissionActions.Read));
         }
 
         [Fact]
@@ -83,7 +83,7 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         {
             var auth = Create(null, BuildPerms());
 
-            Assert.False(auth.Can(s_token, "PurchaseOrder", PermissionAction.Read));
+            Assert.False(auth.Can(s_token, "PurchaseOrder", PermissionActions.Read));
         }
 
         private sealed class FakeSessionInfoService : ISessionInfoService

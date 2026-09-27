@@ -6,6 +6,9 @@ namespace Polhem.Definition.Logging
     /// </summary>
     public enum AnomalyKind
     {
+        /// <summary>No anomaly kind: the default value of an unset field.</summary>
+        None = 0,
+
         /// <summary>An exception occurred — needs a bug fix.</summary>
         Error = 1,
 

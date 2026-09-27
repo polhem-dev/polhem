@@ -31,7 +31,7 @@ namespace Polhem.Business.UnitTests
 
         private SystemBusinessObject CreateBo(SpyWriter writer, SpyReader? reader = null, bool isLocalCall = true)
         {
-            var ctx = TestPolhemContext.CreateWithOverrides(_fx,
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx,
                 (typeof(ICustomizeDefineWriter), writer),
                 (typeof(ICustomizeDefineReader), reader ?? new SpyReader()));
             return new SystemBusinessObject(ctx, TestSessionFactory.CreateAccessToken(_fx), SysProgIds.System, isLocalCall);
@@ -217,7 +217,7 @@ namespace Polhem.Business.UnitTests
 
         public sealed class SamplePlugin : FormBusinessPlugin
         {
-            public SamplePlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public SamplePlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void BeforeSave(SaveContext context) { }
@@ -226,7 +226,7 @@ namespace Polhem.Business.UnitTests
         /// <summary>Inherits correctly but overrides no stage, so it would never run even when bound.</summary>
         public sealed class NoStagePlugin : FormBusinessPlugin
         {
-            public NoStagePlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public NoStagePlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
         }
 

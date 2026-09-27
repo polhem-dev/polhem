@@ -1,2 +1,6 @@
 #nullable enable
 static Polhem.UI.Core.ClientInfo.Arguments.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+static Polhem.UI.Core.ClientInfo.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>?
+static Polhem.UI.Core.ClientInfo.CreateAuditLogApiConnector() -> Polhem.Api.Client.Connectors.AuditLogApiConnector!
+static Polhem.UI.Core.ClientInfo.LocalServiceProvider.get -> System.IServiceProvider?
+static Polhem.UI.Core.ClientInfo.LocalServiceProvider.set -> void

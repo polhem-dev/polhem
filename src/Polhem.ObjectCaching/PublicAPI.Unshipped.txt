@@ -16,3 +16,4 @@ Polhem.ObjectCaching.Define.PluginSettingsCache.PluginSettingsCache(Polhem.Defin
 Polhem.ObjectCaching.Define.ProgramSettingsCache.ProgramSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.TableSchemaCache.TableSchemaCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.UnitSettingsCache.UnitSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Services.CompanyAuthorizationService.Can(System.Guid accessToken, string! modelId, Polhem.Definition.Settings.PermissionActions action) -> bool

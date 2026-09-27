@@ -208,7 +208,8 @@ namespace Polhem.LoadTests
             }
 
             var pool = new VirtualUserPool(options.Auth,
-                options.Target.Mode == TargetMode.Remote ? options.Target.Endpoint : null);
+                options.Target.Mode == TargetMode.Remote ? options.Target.Endpoint : null,
+                host.Services);
 
             // Keys for the read-by-key scenario are collected up front. Doing it inside the
             // scenario would fold the lookup into every sample.
@@ -217,7 +218,7 @@ namespace Polhem.LoadTests
                 : [];
 
             var scenarios = enabled
-                .Select(scenario => CreateScenario(scenario, options, pool, rowIds))
+                .Select(scenario => CreateScenario(scenario, options, pool, rowIds, host.Services))
                 .ToArray();
 
             Console.WriteLine($"Scenarios    : {string.Join(", ", scenarios.Select(s => s.Name))}");
@@ -283,13 +284,14 @@ namespace Polhem.LoadTests
             ScenarioOptions scenario,
             LoadTestOptions options,
             VirtualUserPool pool,
-            IReadOnlyList<Guid> rowIds)
+            IReadOnlyList<Guid> rowIds,
+            IServiceProvider localServices)
         {
             var endpoint = options.Target.Mode == TargetMode.Remote ? options.Target.Endpoint : null;
 
             return scenario.Name switch
             {
-                "Login" => new LoginScenario(options.Auth, endpoint),
+                "Login" => new LoginScenario(options.Auth, endpoint, localServices),
                 "GetList" or "GetListDeep" => new GetListScenario(
                     pool, scenario.Name, scenario.ProgId, scenario.PageSize, scenario.StartPage),
                 "GetData" => new GetDataScenario(pool, scenario.ProgId, rowIds),

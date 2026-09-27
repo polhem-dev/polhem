@@ -7,3 +7,17 @@ static Polhem.Api.Core.ApiServiceOptions.Initialize(Polhem.Api.Core.Transformers
 static Polhem.Api.Core.ApiServiceOptions.RegisterPayloadCodec(Polhem.Api.Core.Transformers.IApiPayloadSerializer! serializer) -> void
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.JsonRpcExecutor(Polhem.Definition.IBusinessObjectFactory! boFactory, Polhem.Definition.Security.IAccessTokenValidator! tokenValidator, Polhem.Definition.Security.IApiEncryptionKeyProvider! keyProvider) -> void
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.JsonRpcExecutor(Polhem.Definition.IBusinessObjectFactory! boFactory, Polhem.Definition.Security.IAccessTokenValidator! tokenValidator, Polhem.Definition.Security.IApiEncryptionKeyProvider! keyProvider, Polhem.Definition.Logging.IAnomalyLogWriter? anomalyWriter, Polhem.Definition.Settings.AuditLogOptions? auditOptions, Polhem.Definition.Identity.ISessionInfoService? sessionService) -> void
+Polhem.Api.Core.Messages.AuditLog.AuditLogAggregateResponse
+Polhem.Api.Core.Messages.AuditLog.AuditLogAggregateResponse.AuditLogAggregateResponse() -> void
+Polhem.Api.Core.Messages.AuditLog.AuditLogAggregateResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Core.Messages.AuditLog.AuditLogAggregateResponse.Table.set -> void
+Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse
+Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse.AuditLogListResponse() -> void
+Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse.Paging.get -> Polhem.Definition.Paging.PagingInfo?
+Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse.Paging.set -> void
+Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse.Table.set -> void
+Polhem.Api.Core.Messages.ExecFuncRequest.ExecFuncRequest(string! funcId) -> void
+Polhem.Api.Core.Messages.System.CreateSessionRequest.UserId.get -> string!
+Polhem.Api.Core.Messages.System.CreateSessionRequest.UserId.set -> void
+Polhem.Api.Core.Messages.System.EnterCompanyResponse.Capabilities.get -> System.Collections.Generic.Dictionary<string!, Polhem.Definition.Settings.PermissionActions>!

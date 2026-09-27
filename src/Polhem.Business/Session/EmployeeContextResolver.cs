@@ -2,7 +2,7 @@ using Polhem.Definition.Identity;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Repository.Abstractions.System;
 
-namespace Polhem.ObjectCaching.Services
+namespace Polhem.Business.Session
 {
     /// <summary>
     /// Default <see cref="IEmployeeContextResolver"/>: resolves the user's <c>st_user.sys_rowid</c>

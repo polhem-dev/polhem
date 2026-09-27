@@ -57,7 +57,7 @@ namespace Polhem.Repository.System
                 list.Add(new RoleGrantRow(
                     ValueUtilities.CStr(row[ColRoleId]),
                     ValueUtilities.CStr(row["model_id"]),
-                    (PermissionAction)ValueUtilities.CInt(row["action"]),
+                    (PermissionActions)ValueUtilities.CInt(row["action"]),
                     (ScopeStrategy)ValueUtilities.CInt(row["scope"])));
             }
             return list;

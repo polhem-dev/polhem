@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Polhem.Api.Client;
 using Polhem.Api.Client.Providers;
+using Polhem.Tests.Shared;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
@@ -15,7 +16,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         [DisplayName("CreateFormConnector in Local mode uses LocalApiProvider")]
         public void Local_CreateFormConnector_UsesLocalProvider()
         {
-            var factory = new PolhemApiConnectorFactory(new PolhemBlazorOptions().UseLocalProvider(), new ApiSessionContext());
+            var factory = new PolhemApiConnectorFactory(new PolhemBlazorOptions().UseLocalProvider(), new ApiSessionContext(), EmptyServiceProvider.Instance);
 
             var connector = factory.CreateFormConnector(Guid.NewGuid(), "Employee");
 
@@ -28,7 +29,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         public void Remote_CreateFormConnector_UsesRemoteProvider()
         {
             var options = new PolhemBlazorOptions().UseRemoteProvider("http://api.example.com/api");
-            var factory = new PolhemApiConnectorFactory(options, new ApiSessionContext());
+            var factory = new PolhemApiConnectorFactory(options, new ApiSessionContext(), EmptyServiceProvider.Instance);
 
             var connector = factory.CreateFormConnector(Guid.NewGuid(), "Employee");
 
@@ -40,7 +41,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         [DisplayName("CreateSystemConnector in Local mode uses LocalApiProvider")]
         public void Local_CreateSystemConnector_UsesLocalProvider()
         {
-            var factory = new PolhemApiConnectorFactory(new PolhemBlazorOptions(), new ApiSessionContext());
+            var factory = new PolhemApiConnectorFactory(new PolhemBlazorOptions(), new ApiSessionContext(), EmptyServiceProvider.Instance);
 
             var connector = factory.CreateSystemConnector(Guid.NewGuid());
 
@@ -52,7 +53,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         public void Remote_CreateSystemConnector_UsesRemoteProvider()
         {
             var options = new PolhemBlazorOptions().UseRemoteProvider("http://api.example.com/api");
-            var factory = new PolhemApiConnectorFactory(options, new ApiSessionContext());
+            var factory = new PolhemApiConnectorFactory(options, new ApiSessionContext(), EmptyServiceProvider.Instance);
 
             var connector = factory.CreateSystemConnector(Guid.NewGuid());
 
@@ -63,7 +64,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         [DisplayName("CreateFormConnector throws ArgumentException for a blank progId")]
         public void CreateFormConnector_BlankProgId_Throws()
         {
-            var factory = new PolhemApiConnectorFactory(new PolhemBlazorOptions(), new ApiSessionContext());
+            var factory = new PolhemApiConnectorFactory(new PolhemBlazorOptions(), new ApiSessionContext(), EmptyServiceProvider.Instance);
             Assert.Throws<ArgumentException>(() => factory.CreateFormConnector(Guid.NewGuid(), "  "));
         }
 
@@ -71,14 +72,21 @@ namespace Polhem.Web.Blazor.Server.UnitTests.DependencyInjection
         [DisplayName("PolhemApiConnectorFactory throws ArgumentNullException for null options")]
         public void Constructor_NullOptions_Throws()
         {
-            Assert.Throws<ArgumentNullException>(() => new PolhemApiConnectorFactory(null!, new ApiSessionContext()));
+            Assert.Throws<ArgumentNullException>(() => new PolhemApiConnectorFactory(null!, new ApiSessionContext(), EmptyServiceProvider.Instance));
         }
 
         [Fact]
         [DisplayName("PolhemApiConnectorFactory throws ArgumentNullException for a null session")]
         public void Constructor_NullSession_Throws()
         {
-            Assert.Throws<ArgumentNullException>(() => new PolhemApiConnectorFactory(new PolhemBlazorOptions(), null!));
+            Assert.Throws<ArgumentNullException>(() => new PolhemApiConnectorFactory(new PolhemBlazorOptions(), null!, EmptyServiceProvider.Instance));
+        }
+
+        [Fact]
+        [DisplayName("PolhemApiConnectorFactory throws ArgumentNullException for a null service provider")]
+        public void Constructor_NullServices_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() => new PolhemApiConnectorFactory(new PolhemBlazorOptions(), new ApiSessionContext(), null!));
         }
     }
 }

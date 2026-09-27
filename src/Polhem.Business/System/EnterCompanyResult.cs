@@ -18,9 +18,9 @@ namespace Polhem.Business.System
         /// Gets or sets the per-model allowed action mask (capability snapshot) for the session's
         /// roles in the entered company. Copied to the wire response by <c>ApiOutputConverter</c>.
         /// </summary>
-        public Dictionary<string, PermissionAction> Capabilities { get; set; } = [];
+        public Dictionary<string, PermissionActions> Capabilities { get; set; } = [];
 
         /// <inheritdoc />
-        IReadOnlyDictionary<string, PermissionAction> IEnterCompanyResponse.Capabilities => Capabilities;
+        IReadOnlyDictionary<string, PermissionActions> IEnterCompanyResponse.Capabilities => Capabilities;
     }
 }

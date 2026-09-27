@@ -23,18 +23,26 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
     {
         private readonly PolhemBlazorOptions _options;
         private readonly ApiSessionContext _session;
+        private readonly IServiceProvider _services;
 
         /// <summary>
         /// Initializes a new instance of <see cref="PolhemApiConnectorFactory"/> for one session.
         /// </summary>
         /// <param name="options">The resolved Blazor options.</param>
         /// <param name="session">The per-circuit session state handed to every connector it creates.</param>
-        public PolhemApiConnectorFactory(PolhemBlazorOptions options, ApiSessionContext session)
+        /// <param name="services">
+        /// The host's service provider. In <see cref="PolhemBlazorProviderMode.Local"/> mode it is the
+        /// in-process backend that local connectors dispatch to, so the host must have called
+        /// <c>AddPolhemFramework</c>.
+        /// </param>
+        public PolhemApiConnectorFactory(PolhemBlazorOptions options, ApiSessionContext session, IServiceProvider services)
         {
             ArgumentNullException.ThrowIfNull(options);
             ArgumentNullException.ThrowIfNull(session);
+            ArgumentNullException.ThrowIfNull(services);
             _options = options;
             _session = session;
+            _services = services;
         }
 
         /// <summary>
@@ -54,7 +62,7 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(progId);
             return _options.Mode == PolhemBlazorProviderMode.Local
-                ? new FormApiConnector(accessToken, progId, _session)
+                ? new FormApiConnector(_services, accessToken, progId, _session)
                 : new FormApiConnector(_options.Endpoint, accessToken, progId, _session);
         }
 
@@ -67,7 +75,7 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         public virtual SystemApiConnector CreateSystemConnector(Guid accessToken)
         {
             return _options.Mode == PolhemBlazorProviderMode.Local
-                ? new SystemApiConnector(accessToken, _session)
+                ? new SystemApiConnector(_services, accessToken, _session)
                 : new SystemApiConnector(_options.Endpoint, accessToken, _session);
         }
     }

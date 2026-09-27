@@ -79,10 +79,10 @@ namespace Polhem.Api.Core.JsonRpc
                 case IGetLookupResponse response:
                     ValidateDataTable(response.Table);
                     return;
-                case ILogListResponse response:
+                case IAuditLogListResponse response:
                     ValidateDataTable(response.Table);
                     return;
-                case ILogAggregateResponse response:
+                case IAuditLogAggregateResponse response:
                     ValidateDataTable(response.Table);
                     return;
                 case IGetChangeDetailResponse response:

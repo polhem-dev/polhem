@@ -29,17 +29,5 @@ namespace Polhem.Api.Client
         /// </summary>
         public static string ApiKey { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets the in-process backend service provider used by <see cref="Polhem.Api.Client.Providers.LocalApiProvider"/>.
-        /// Set this once at startup to the result of
-        /// <c>services.AddPolhemFramework(configuration).BuildServiceProvider()</c> when the
-        /// application wants to execute backend logic in-process.
-        /// </summary>
-        /// <remarks>
-        /// Transitional storage: <c>Polhem.Api.Client</c> near-end mode was left out of the DI
-        /// migration, so the service provider lives here rather than being constructor-injected.
-        /// </remarks>
-        public static IServiceProvider? LocalServiceProvider { get; set; }
-
     }
 }

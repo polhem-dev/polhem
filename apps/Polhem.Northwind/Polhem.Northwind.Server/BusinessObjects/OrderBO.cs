@@ -45,7 +45,7 @@ public sealed class OrderBO : FormBusinessObject
     /// <see cref="FormBusinessObject"/>: constructing a business object directly is the one path that
     /// bypasses the API access validator, so it is the path least in need of being trusted by default.
     /// </param>
-    public OrderBO(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
+    public OrderBO(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
         : base(ctx, accessToken, progId, isLocalCall)
     {
     }

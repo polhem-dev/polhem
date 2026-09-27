@@ -241,7 +241,7 @@ namespace Polhem.Business.UnitTests.Form
 
         public sealed class RenamingPlugin : FormBusinessPlugin
         {
-            public RenamingPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public RenamingPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void BeforeSave(SaveContext context)
@@ -250,7 +250,7 @@ namespace Polhem.Business.UnitTests.Form
 
         public sealed class RejectingPlugin : FormBusinessPlugin
         {
-            public RejectingPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public RejectingPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void BeforeSave(SaveContext context)
@@ -274,7 +274,7 @@ namespace Polhem.Business.UnitTests.Form
 
         public sealed class BeforeSaveTracingPlugin : FormBusinessPlugin
         {
-            public BeforeSaveTracingPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public BeforeSaveTracingPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId)
             {
                 TracingProbe.ConstructedCount++;
@@ -285,7 +285,7 @@ namespace Polhem.Business.UnitTests.Form
 
         public sealed class AfterSaveTracingPlugin : FormBusinessPlugin
         {
-            public AfterSaveTracingPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public AfterSaveTracingPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId)
             {
                 TracingProbe.ConstructedCount++;
@@ -320,7 +320,7 @@ namespace Polhem.Business.UnitTests.Form
 
         public sealed class BeforeDeleteProbePlugin : FormBusinessPlugin
         {
-            public BeforeDeleteProbePlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public BeforeDeleteProbePlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void BeforeDelete(DeleteContext context)
@@ -329,7 +329,7 @@ namespace Polhem.Business.UnitTests.Form
 
         public sealed class AfterDeleteProbePlugin : FormBusinessPlugin
         {
-            public AfterDeleteProbePlugin(IPolhemContext ctx, Guid accessToken, string progId)
+            public AfterDeleteProbePlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             public override void AfterDelete(DeleteContext context)

@@ -10,7 +10,7 @@ namespace Polhem.Definition.Settings
     /// to a separate workflow-permission layer, not the action axis.
     /// </remarks>
     [Flags]
-    public enum PermissionAction
+    public enum PermissionActions
     {
         /// <summary>No action.</summary>
         None = 0,

@@ -35,7 +35,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             private readonly LoginResponse _response;
 
-            public FakeLoginProvider(LoginResponse response) : base(Guid.Empty) => _response = response;
+            public FakeLoginProvider(LoginResponse response) : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.Empty) => _response = response;
 
             Task<JsonRpcResponse> IJsonRpcProvider.ExecuteAsync(JsonRpcRequest request)
                 => Task.FromResult(new JsonRpcResponse { Result = new JsonRpcResult { Value = _response } });
@@ -47,7 +47,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             private readonly ApiSessionContext _session;
 
             public FakeConnectorFactory(IJsonRpcProvider provider, ApiSessionContext session)
-                : base(new PolhemBlazorOptions(), session)
+                : base(new PolhemBlazorOptions(), session, Polhem.Tests.Shared.EmptyServiceProvider.Instance)
             {
                 _provider = provider;
                 _session = session;
@@ -55,7 +55,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
 
             public override SystemApiConnector CreateSystemConnector(Guid accessToken)
             {
-                var connector = new SystemApiConnector(accessToken, _session);
+                var connector = new SystemApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, accessToken, _session);
                 typeof(ApiConnector)
                     .GetProperty(nameof(ApiConnector.Provider), BindingFlags.Public | BindingFlags.Instance)!
                     .SetValue(connector, _provider);

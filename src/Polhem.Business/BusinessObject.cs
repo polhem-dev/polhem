@@ -17,7 +17,7 @@ namespace Polhem.Business
     /// </summary>
     public abstract class BusinessObject : IBusinessObject, IApiKeyContextAware
     {
-        private readonly IPolhemContext _ctx;
+        private readonly IBusinessObjectContext _ctx;
 
         #region Constructors
 
@@ -52,7 +52,7 @@ namespace Polhem.Business
         /// the answer that fails safe.
         /// </para>
         /// </remarks>
-        protected BusinessObject(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
+        protected BusinessObject(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
         {
             _ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
             AccessToken = accessToken;
@@ -124,7 +124,7 @@ namespace Polhem.Business
         /// Prefer the typed members below for the business object's own use; this exists to pass
         /// the context along, not as a second route to the same services.
         /// </remarks>
-        protected IPolhemContext Context => _ctx;
+        protected IBusinessObjectContext Context => _ctx;
 
         /// <summary>Gets the definition data access service from the per-call context.</summary>
         protected IDefineAccess DefineAccess => _ctx.DefineAccess;

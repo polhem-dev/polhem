@@ -1,6 +1,5 @@
 using Polhem.Definition;
 using Polhem.Definition.Settings;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Polhem.Business.Form
 {
@@ -27,7 +26,7 @@ namespace Polhem.Business.Form
     public sealed class FormPluginRunner
     {
         private readonly FormPluginChain _chain;
-        private readonly IPolhemContext _ctx;
+        private readonly IBusinessObjectContext _ctx;
         private readonly Guid _accessToken;
         private readonly string _progId;
         private FormBusinessPlugin?[]? _instances;
@@ -39,7 +38,7 @@ namespace Polhem.Business.Form
         /// <param name="ctx">The per-call business context.</param>
         /// <param name="accessToken">The access token of the call being extended.</param>
         /// <param name="progId">The program identifier.</param>
-        internal FormPluginRunner(FormPluginChain chain, IPolhemContext ctx, Guid accessToken, string progId)
+        internal FormPluginRunner(FormPluginChain chain, IBusinessObjectContext ctx, Guid accessToken, string progId)
         {
             _chain = chain ?? throw new ArgumentNullException(nameof(chain));
             _ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));

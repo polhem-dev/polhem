@@ -40,7 +40,7 @@ namespace Polhem.Definition.Settings
         /// <param name="collection">The collection to add to.</param>
         /// <param name="action">The permission action.</param>
         /// <param name="scope">The record-scope strategy.</param>
-        public static PermissionRule Add(this PermissionRuleCollection? collection, PermissionAction action, ScopeStrategy scope = ScopeStrategy.Inherit)
+        public static PermissionRule Add(this PermissionRuleCollection? collection, PermissionActions action, ScopeStrategy scope = ScopeStrategy.Inherit)
         {
             ArgumentNullException.ThrowIfNull(collection);
             var rule = new PermissionRule(action, scope);

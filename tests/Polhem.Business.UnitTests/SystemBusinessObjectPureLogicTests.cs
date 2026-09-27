@@ -8,7 +8,7 @@ namespace Polhem.Business.UnitTests
 {
     /// <summary>
     /// Pure logic branch tests of <see cref="SystemBusinessObject"/> that do not depend on the Repository or DefineAccess.
-    /// The BO constructor needs an IPolhemContext, which <see cref="TestPolhemContext.Create(PolhemTestFixture)"/>
+    /// The BO constructor needs an IBusinessObjectContext, which <see cref="TestBusinessObjectContext.Create(PolhemTestFixture)"/>
     /// builds from the DI services of the per-class fixture.
     /// </summary>
     public class SystemBusinessObjectPureLogicTests : IClassFixture<SharedDbFixture>
@@ -20,7 +20,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("Ping returns Status=ok, echoes the TraceId and returns a UTC ServerTime")]
         public void Ping_ReturnsExpectedValues()
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System);
             var args = new PingArgs { ClientName = "client01", TraceId = "trace-xyz" };
             var before = DateTime.UtcNow.AddSeconds(-1);
 
@@ -39,8 +39,8 @@ namespace Polhem.Business.UnitTests
         [DisplayName("CreateSession throws ArgumentOutOfRangeException for an out-of-range ExpiresIn")]
         public void CreateSession_InvalidExpiresIn_ThrowsArgumentOutOfRange(int expiresIn)
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
-            var args = new CreateSessionArgs { UserID = "u01", ExpiresIn = expiresIn };
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
+            var args = new CreateSessionArgs { UserId = "u01", ExpiresIn = expiresIn };
 
             Assert.Throws<ArgumentOutOfRangeException>(() => bo.CreateSession(args));
         }
@@ -54,7 +54,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("GetDefine throws UserMessageException for a non-local call with a server-only DefineType")]
         public void GetDefine_NonLocalCallWithSensitiveType_ThrowsNotSupported(DefineType defineType)
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
             var args = new GetDefineArgs { DefineType = defineType };
 
             Assert.Throws<UserMessageException>(() => bo.GetDefine(args));
@@ -75,7 +75,7 @@ namespace Polhem.Business.UnitTests
             // Previously only SystemSettings / DatabaseSettings were blocked, and any authenticated account could overwrite the other definition types,
             // including PermissionModels (the authorization model itself), DbCategorySettings (which database each table maps to)
             // and FormSchema (whose expressions are evaluated on the server). The whole method is now local-only.
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
             var args = new SaveDefineArgs { DefineType = defineType, Xml = "<root/>" };
 
             Assert.Throws<NotSupportedException>(() => bo.SaveDefine(args));

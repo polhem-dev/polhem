@@ -16,7 +16,7 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("The constructor that takes funcID sets FuncId")]
+        [DisplayName("The constructor that takes funcId sets FuncId")]
         public void Constructor_WithFuncId_SetsFuncId()
         {
             var args = new ExecFuncArgs("SayHello");

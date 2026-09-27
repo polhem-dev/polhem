@@ -11,7 +11,7 @@ namespace Polhem.Api.Core.Messages.System
         /// <summary>
         /// Gets or sets the user identifier.
         /// </summary>
-        public string UserID { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the session expiration time in seconds.

@@ -12,5 +12,5 @@ namespace Polhem.Definition.Identity
     /// <param name="ModelId">The permission model id (<c>st_role_grant.model_id</c>).</param>
     /// <param name="Action">The single granted action (<c>st_role_grant.action</c>).</param>
     /// <param name="Scope">The record-scope strategy for this (role, model, action).</param>
-    public sealed record RoleGrantRow(string RoleId, string ModelId, PermissionAction Action, ScopeStrategy Scope);
+    public sealed record RoleGrantRow(string RoleId, string ModelId, PermissionActions Action, ScopeStrategy Scope);
 }

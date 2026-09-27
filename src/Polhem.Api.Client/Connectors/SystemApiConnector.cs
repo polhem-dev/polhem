@@ -23,8 +23,9 @@ namespace Polhem.Api.Client.Connectors
         /// <summary>
         /// Initializes a new instance of the <see cref="SystemApiConnector"/> class using a local connection.
         /// </summary>
+        /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
         /// <param name="accessToken">The access token.</param>
-        public SystemApiConnector(Guid accessToken) : base(accessToken)
+        public SystemApiConnector(IServiceProvider services, Guid accessToken) : base(services, accessToken)
         { }
 
         /// <summary>
@@ -39,10 +40,11 @@ namespace Polhem.Api.Client.Connectors
         /// Initializes a new instance of the <see cref="SystemApiConnector"/> class using a local connection and
         /// the given session state.
         /// </summary>
+        /// <param name="services">The in-process backend's service provider, built by <c>services.AddPolhemFramework(...)</c>.</param>
         /// <param name="accessToken">The access token.</param>
         /// <param name="session">The per-session state. Give each user their own in a host that serves several from one
         /// process; omitting it shares <see cref="ApiSessionContext.Ambient"/>.</param>
-        public SystemApiConnector(Guid accessToken, ApiSessionContext session) : base(accessToken, session)
+        public SystemApiConnector(IServiceProvider services, Guid accessToken, ApiSessionContext session) : base(services, accessToken, session)
         {
         }
 
@@ -201,13 +203,13 @@ namespace Polhem.Api.Client.Connectors
         /// <summary>
         /// Asynchronously creates a new user session.
         /// </summary>
-        /// <param name="userID">The user account identifier.</param>
+        /// <param name="userId">The user account identifier.</param>
         /// <param name="expiresIn">The expiration time in seconds. Defaults to 3600.</param>
-        public async Task<Guid> CreateSessionAsync(string userID, int expiresIn = 3600)
+        public async Task<Guid> CreateSessionAsync(string userId, int expiresIn = 3600)
         {
             var request = new CreateSessionRequest()
             {
-                UserID = userID,
+                UserId = userId,
                 ExpiresIn = expiresIn
             };
             var result = await ExecuteAsync<CreateSessionResponse>(SystemActions.CreateSession, request, PayloadFormat.Plain).ConfigureAwait(false);
@@ -230,9 +232,9 @@ namespace Polhem.Api.Client.Connectors
         /// later calls on that session uses.
         /// </para>
         /// </remarks>
-        /// <param name="userID">The user account identifier.</param>
+        /// <param name="userId">The user account identifier.</param>
         /// <param name="password">The user password.</param>
-        public async Task<LoginResponse> LoginAsync(string userID, string password)
+        public async Task<LoginResponse> LoginAsync(string userId, string password)
         {
             string publicKey = string.Empty;
             string privateKey = string.Empty;
@@ -244,7 +246,7 @@ namespace Polhem.Api.Client.Connectors
 
             var request = new LoginRequest()
             {
-                UserId = userID,
+                UserId = userId,
                 Password = password,
                 ClientPublicKey = publicKey
             };

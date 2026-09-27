@@ -9,7 +9,7 @@ namespace QuickStart.Server.BusinessObjects;
 /// Demo business object that echoes a message. Inherits <see cref="FormBusinessObject"/>
 /// because the framework dispatches non-"System" progIds through
 /// <c>IBusinessObjectFactory.CreateBusinessObject</c>, which expects the
-/// <c>(IPolhemContext, Guid, string, bool)</c> constructor signature.
+/// <c>(IBusinessObjectContext, Guid, string, bool)</c> constructor signature.
 /// </summary>
 /// <remarks>
 /// The <see cref="ApiAccessControlAttribute"/> marks <see cref="Echo"/> as
@@ -27,7 +27,7 @@ public class EchoBusinessObject : FormBusinessObject
     /// <param name="accessToken">The access token (ignored for anonymous calls).</param>
     /// <param name="progId">The program identifier (expected to be "Echo").</param>
     /// <param name="isLocalCall">Whether the call originates from a local source.</param>
-    public EchoBusinessObject(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
+    public EchoBusinessObject(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
         : base(ctx, accessToken, progId, isLocalCall)
     {
     }

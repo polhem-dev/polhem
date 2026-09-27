@@ -5,7 +5,7 @@ namespace Polhem.Definition.Identity
     /// to any single company.
     /// </summary>
     /// <remarks>
-    /// Deliberately a separate axis from <see cref="Settings.PermissionAction"/>, which is company-scoped:
+    /// Deliberately a separate axis from <see cref="Settings.PermissionActions"/>, which is company-scoped:
     /// company roles live in each company's own database, so granting a company administrator any
     /// say over installation-wide assets would let one tenant act for all of them.
     /// <para>
@@ -16,6 +16,11 @@ namespace Polhem.Definition.Identity
     /// </remarks>
     public enum DeploymentAction
     {
+        /// <summary>
+        /// No action: the default value of an unset field.
+        /// </summary>
+        None = 0,
+
         /// <summary>
         /// Issue, revoke or inspect API keys (<c>st_api_key</c>).
         /// </summary>

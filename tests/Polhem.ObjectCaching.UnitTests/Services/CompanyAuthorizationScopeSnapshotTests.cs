@@ -43,11 +43,11 @@ namespace Polhem.ObjectCaching.UnitTests.Services
         {
             var session = new SessionInfo { AccessToken = s_token, UserId = "001", CompanyId = "C001", Roles = ["Buyer"] };
             var perms = new CompanyRolePermissions(
-                "C001", [new RoleGrantRow("Buyer", "PurchaseOrder", PermissionAction.Read, ScopeStrategy.All)], []);
+                "C001", [new RoleGrantRow("Buyer", "PurchaseOrder", PermissionActions.Read, ScopeStrategy.All)], []);
             var auth = new CompanyAuthorizationService(
                 new SingleSessionService(session), new SwitchingRolePermissionService(session, perms));
 
-            bool allowed = auth.Can(s_token, "PurchaseOrder", PermissionAction.Read);
+            bool allowed = auth.Can(s_token, "PurchaseOrder", PermissionActions.Read);
 
             Assert.True(allowed);
             Assert.Equal("C002", session.CompanyId);

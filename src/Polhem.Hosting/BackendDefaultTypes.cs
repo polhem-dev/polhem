@@ -1,10 +1,17 @@
-namespace Polhem.Definition
+namespace Polhem.Hosting
 {
     /// <summary>
-    /// Defines default type name constants for commonly used backend implementations.
-    /// Can be used for type specification in the SystemSettings.xml configuration file or as default fallback values.
+    /// The type names the composition root falls back to when a
+    /// <see cref="Polhem.Definition.Settings.BackendComponents"/> entry is left blank.
     /// </summary>
-    public static class BackendDefaultTypes
+    /// <remarks>
+    /// Strings rather than <c>typeof</c>: each default is loaded through the same path as a
+    /// configured name, so it exercises the code a deployment's override would.
+    /// <c>BackendDefaultTypesGateTests</c> checks that every entry resolves.
+    /// <see cref="Polhem.Definition.Settings.BackendComponents.CacheProvider"/> has no entry here:
+    /// <see cref="Polhem.ObjectCaching.CacheInfo.Initialize"/> owns its default.
+    /// </remarks>
+    internal static class BackendDefaultTypes
     {
         // ---------------- Providers ----------------
         /// <summary>
@@ -18,10 +25,6 @@ namespace Polhem.Definition
         /// </summary>
         public const string AccessTokenValidator = "Polhem.Business.Validator.AccessTokenValidator, Polhem.Business";
         // ---------------- Cache ----------------
-        /// <summary>
-        /// Default cache provider type.
-        /// </summary>
-        public const string CacheProvider = "Polhem.ObjectCaching.Providers.MemoryCacheProvider, Polhem.ObjectCaching";
         /// <summary>
         /// Default cache data source provider type.
         /// </summary>

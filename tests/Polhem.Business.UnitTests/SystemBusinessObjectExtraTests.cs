@@ -27,7 +27,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("Ping returns a PingResult with a TraceId and an OK status")]
         public void Ping_ReturnsOkResult()
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System);
             var result = bo.Ping(new PingArgs { TraceId = "T-42", ClientName = "unit" });
 
             Assert.NotNull(result);
@@ -40,7 +40,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("GetCommonConfiguration returns non-empty XML")]
         public void GetCommonConfiguration_ReturnsXml()
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System);
             var result = bo.GetCommonConfiguration(new GetCommonConfigurationArgs());
 
             Assert.NotNull(result);
@@ -51,7 +51,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("GetDefine(SystemSettings) throws UserMessageException for a non-local call")]
         public void GetDefine_SystemSettings_NonLocal_Throws()
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
             Assert.Throws<UserMessageException>(() =>
                 bo.GetDefine(new GetDefineArgs { DefineType = DefineType.SystemSettings }));
         }
@@ -60,7 +60,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("GetDefine(DatabaseSettings) throws UserMessageException for a non-local call")]
         public void GetDefine_DatabaseSettings_NonLocal_Throws()
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
             Assert.Throws<UserMessageException>(() =>
                 bo.GetDefine(new GetDefineArgs { DefineType = DefineType.DatabaseSettings }));
         }
@@ -69,7 +69,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("GetDefine(FormSchema) returns a result with XML for a local call")]
         public void GetDefine_FormSchema_ReturnsXml()
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
             var result = bo.GetDefine(new GetDefineArgs
             {
                 DefineType = DefineType.FormSchema,
@@ -84,7 +84,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("SaveDefine(SystemSettings) throws NotSupportedException for a non-local call")]
         public void SaveDefine_SystemSettings_NonLocal_Throws()
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
             Assert.Throws<NotSupportedException>(() =>
                 bo.SaveDefine(new SaveDefineArgs { DefineType = DefineType.SystemSettings, Xml = "<x/>" }));
         }
@@ -93,7 +93,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("SaveDefine(DatabaseSettings) throws NotSupportedException for a non-local call")]
         public void SaveDefine_DatabaseSettings_NonLocal_Throws()
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
             Assert.Throws<NotSupportedException>(() =>
                 bo.SaveDefine(new SaveDefineArgs { DefineType = DefineType.DatabaseSettings, Xml = "<x/>" }));
         }
@@ -103,7 +103,7 @@ namespace Polhem.Business.UnitTests
         public void ExecFuncAnonymous_Hello_ReturnsGreeting()
         {
             // `SystemExecFuncHandler.Hello` is marked `ApiAccessRequirement.Anonymous` and is called through `DoExecFuncAnonymous`.
-            var bo = new TestableSystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
+            var bo = new TestableSystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
             var args = new ExecFuncArgs("Hello");
 
             var result = bo.ExecFuncAnonymous(args);
@@ -117,7 +117,7 @@ namespace Polhem.Business.UnitTests
         public void ExecFunc_Hello_AuthenticatedCall_ReturnsGreeting()
         {
             // Hello is marked Anonymous, which an authenticated caller may access, so this covers the `DoExecFunc` path.
-            var bo = new TestableSystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
+            var bo = new TestableSystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
             var args = new ExecFuncArgs("Hello");
 
             var result = bo.ExecFunc(args);
@@ -130,7 +130,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("ExecFunc UpgradeTableSchema runs and includes the Upgraded status in the result")]
         public void ExecFunc_UpgradeTableSchema_ReturnsUpgradedStatus()
         {
-            var bo = new TestableSystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
+            var bo = new TestableSystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
             var args = new ExecFuncArgs("UpgradeTableSchema");
             args.Parameters.Add("DatabaseId", "common_sqlserver");
             args.Parameters.Add("CategoryId", "common");
@@ -145,7 +145,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("ExecFunc TestConnection with valid database settings does not throw")]
         public void ExecFunc_TestConnection_ValidDatabaseItem_Succeeds()
         {
-            var bo = new TestableSystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
+            var bo = new TestableSystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.Empty, _ => (false, string.Empty));
             var args = new ExecFuncArgs("TestConnection");
             var dbItem = _fx.GetRequiredService<IDefineAccess>().GetDatabaseSettings().Items!["common_sqlserver"];
             args.Parameters.Add("DatabaseItem", dbItem);

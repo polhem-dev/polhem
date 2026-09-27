@@ -277,8 +277,6 @@ static Polhem.UI.Avalonia.Controls.Editors.FormScope.SetDataObject(Avalonia.Cont
 static Polhem.UI.Avalonia.Controls.Editors.FormScope.SetFormMode(Avalonia.Controls.Control! element, Polhem.Definition.Layouts.SingleFormMode value) -> void
 static Polhem.UI.Avalonia.Controls.Editors.LookupDialog.ShowAsync(Avalonia.Visual! host, string! progId, Polhem.Definition.Forms.FormSchema? schema = null, Polhem.Api.Client.Connectors.FormApiConnector? connector = null) -> System.Threading.Tasks.Task<System.Data.DataRow?>!
 static Polhem.UI.Avalonia.Controls.Editors.RowEditDialog.ShowAsync(Avalonia.Visual! host, Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutGrid! layout, System.Data.DataRow! row) -> System.Threading.Tasks.Task<bool>!
-static Polhem.UI.Avalonia.Controls.PermissionScope.GetAction(Avalonia.Controls.Control! control) -> Polhem.Definition.Settings.PermissionAction
-static Polhem.UI.Avalonia.Controls.PermissionScope.SetAction(Avalonia.Controls.Control! control, Polhem.Definition.Settings.PermissionAction value) -> void
 static readonly Polhem.UI.Avalonia.Controls.Editors.CheckEdit.FieldNameProperty -> Avalonia.StyledProperty<string!>!
 static readonly Polhem.UI.Avalonia.Controls.Editors.DateEdit.FieldNameProperty -> Avalonia.StyledProperty<string!>!
 static readonly Polhem.UI.Avalonia.Controls.Editors.DateEdit.ReadOnlyTextProperty -> Avalonia.StyledProperty<string?>!
@@ -290,7 +288,6 @@ static readonly Polhem.UI.Avalonia.Controls.Editors.TextEdit.FieldNameProperty -
 static readonly Polhem.UI.Avalonia.Controls.GridControl.AllowEditProperty -> Avalonia.StyledProperty<bool>!
 static readonly Polhem.UI.Avalonia.Controls.GridControl.EditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Avalonia.Controls.GridEditMode>!
 static readonly Polhem.UI.Avalonia.Controls.GridControl.TableNameProperty -> Avalonia.StyledProperty<string!>!
-static readonly Polhem.UI.Avalonia.Controls.PermissionScope.ActionProperty -> Avalonia.AttachedProperty<Polhem.Definition.Settings.PermissionAction>!
 static readonly Polhem.UI.Avalonia.Views.FormView.AccessTokenProperty -> Avalonia.StyledProperty<System.Guid>!
 static readonly Polhem.UI.Avalonia.Views.FormView.CompactWidthThresholdProperty -> Avalonia.StyledProperty<double>!
 static readonly Polhem.UI.Avalonia.Views.FormView.DetailEditModeProperty -> Avalonia.StyledProperty<Polhem.UI.Avalonia.Controls.GridEditMode>!

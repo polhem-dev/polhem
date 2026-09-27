@@ -72,7 +72,7 @@ namespace Polhem.Business.UnitTests.Form
 
         private Guid Token() => TestSessionFactory.CreateAccessToken(_fx);
 
-        private PolhemContext Context(CapturingRepo repo, string permissionModelId)
+        private BusinessObjectContext Context(CapturingRepo repo, string permissionModelId)
         {
             var schema = new FormSchema(ProgId, "Lookup scope") { CategoryId = "company", PermissionModelId = permissionModelId };
             var table = schema.Tables!.Add(ProgId, "Lookup scope");
@@ -80,7 +80,7 @@ namespace Polhem.Business.UnitTests.Form
             table.Fields!.Add(new FormField("sys_id", "ID", FieldDbType.String) { MaxLength = 50 });
             table.Fields!.Add(new FormField("sys_name", "Name", FieldDbType.String) { MaxLength = 50 });
 
-            return new PolhemContext
+            return new BusinessObjectContext
             {
                 DefineAccess = new FormSchemaOverlayDefineAccess(_fx.GetRequiredService<IDefineAccess>(), schema),
                 SessionInfoService = _fx.GetRequiredService<ISessionInfoService>(),
@@ -101,7 +101,7 @@ namespace Polhem.Business.UnitTests.Form
         /// <summary>A shared master every user may pick from, whatever their record scope.</summary>
         private sealed class SharedMasterBo : FormBusinessObject
         {
-            public SharedMasterBo(IPolhemContext ctx, Guid accessToken, string progId)
+            public SharedMasterBo(IBusinessObjectContext ctx, Guid accessToken, string progId)
                 : base(ctx, accessToken, progId) { }
 
             protected override bool LookupAppliesRecordScope => false;
@@ -109,8 +109,8 @@ namespace Polhem.Business.UnitTests.Form
 
         private sealed class ReadScopeResolver : IScopeResolver
         {
-            public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionAction action, FormSchema formSchema)
-                => action == PermissionAction.Read ? s_readScope : null;
+            public FilterNode? ResolveFilter(Guid accessToken, string modelId, PermissionActions action, FormSchema formSchema)
+                => action == PermissionActions.Read ? s_readScope : null;
         }
 
         private sealed class RepoFactory : IRepositoryFactory

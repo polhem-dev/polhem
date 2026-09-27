@@ -26,10 +26,10 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("A framework enum in a parameter value round-trips to the same enum type and value")]
         public void ParameterValue_RegisteredFrameworkEnum_RoundTrips()
         {
-            var restored = RoundTripValue(PermissionAction.Create);
+            var restored = RoundTripValue(PermissionActions.Create);
 
-            Assert.IsType<PermissionAction>(restored);
-            Assert.Equal(PermissionAction.Create, restored);
+            Assert.IsType<PermissionActions>(restored);
+            Assert.Equal(PermissionActions.Create, restored);
         }
 
         [Fact]
@@ -67,23 +67,23 @@ namespace Polhem.Api.Core.UnitTests
         {
             var original = new ParameterCollection
             {
-                { "Child", new ParameterCollection { { "Nested", "value" }, { "Mode", PermissionAction.Update } } }
+                { "Child", new ParameterCollection { { "Nested", "value" }, { "Mode", PermissionActions.Update } } }
             };
 
             var restored = MessagePackCodec.Deserialize<ParameterCollection>(MessagePackCodec.Serialize(original));
 
             var child = Assert.IsType<ParameterCollection>(restored["Child"].Value);
             Assert.Equal("value", child["Nested"].Value);
-            Assert.Equal(PermissionAction.Update, child["Mode"].Value);
+            Assert.Equal(PermissionActions.Update, child["Mode"].Value);
         }
 
         [Fact]
         [DisplayName("An enum value is written as its assembly-qualified type name followed by its underlying integer")]
         public void Serialize_Enum_WritesTypeNameAndInteger()
         {
-            var expected = Envelope(typeof(PermissionAction), (ref MessagePackWriter writer) => writer.Write((int)PermissionAction.Create));
+            var expected = Envelope(typeof(PermissionActions), (ref MessagePackWriter writer) => writer.Write((int)PermissionActions.Create));
 
-            Assert.Equal(expected, SerializeValue(PermissionAction.Create));
+            Assert.Equal(expected, SerializeValue(PermissionActions.Create));
         }
 
         [Fact]
@@ -104,7 +104,7 @@ namespace Polhem.Api.Core.UnitTests
             // path, so matching it keeps the wire unchanged for desktop and server peers.
             object[] values =
             [
-                PermissionAction.Create, AuditRuleMode.Off, NarrowMode.Top,
+                PermissionActions.Create, AuditRuleMode.Off, NarrowMode.Top,
                 WideSignedMode.Lowest, WideSignedMode.Negative, WideSignedMode.Highest, WideUnsignedMode.Highest,
             ];
 

@@ -25,7 +25,7 @@ namespace Polhem.Definition.Identity
         /// <summary>
         /// Gets or sets the user account ID.
         /// </summary>
-        public string UserID { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the user name.
@@ -60,7 +60,7 @@ namespace Polhem.Definition.Identity
         /// </summary>
         public override string ToString()
         {
-            return $"{UserID} : {UserName}";
+            return $"{UserId} : {UserName}";
         }
     }
 }

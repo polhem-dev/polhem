@@ -21,7 +21,7 @@ namespace Polhem.Business.UnitTests
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
 
             var result = bo.Logout(new LogoutArgs());
 
@@ -38,7 +38,7 @@ namespace Polhem.Business.UnitTests
             var session = sessionService.Get(accessToken)!;
             session.CompanyScope = new SessionCompanyScope("C001", string.Empty, [], Guid.Empty, Guid.Empty, Guid.Empty);
             sessionService.Set(session);
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
 
             bo.Logout(new LogoutArgs());
 
@@ -49,7 +49,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("Logout is idempotent and succeeds for a session that does not exist")]
         public void Logout_UnknownSession_Idempotent()
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid(), SysProgIds.System);
 
             var result = bo.Logout(new LogoutArgs());
 
@@ -61,7 +61,7 @@ namespace Polhem.Business.UnitTests
         public void Logout_NullArgs_ThrowsArgumentNullException()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
 
             try

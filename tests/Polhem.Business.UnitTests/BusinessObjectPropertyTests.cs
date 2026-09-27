@@ -20,7 +20,7 @@ namespace Polhem.Business.UnitTests
         /// </summary>
         private sealed class ExposedBusinessObject : BusinessObject
         {
-            public ExposedBusinessObject(IPolhemContext ctx, Guid accessToken)
+            public ExposedBusinessObject(IBusinessObjectContext ctx, Guid accessToken)
                 : base(ctx, accessToken, "TestProg") { }
 
             public IDefineAccess ExposedDefineAccess => DefineAccess;
@@ -34,7 +34,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("The DefineAccess property forwards the IDefineAccess instance from the context")]
         public void DefineAccess_Property_ForwardsContextDefineAccess()
         {
-            var ctx = TestPolhemContext.Create(_fx);
+            var ctx = TestBusinessObjectContext.Create(_fx);
             var bo = new ExposedBusinessObject(ctx, Guid.NewGuid());
             Assert.Same(ctx.DefineAccess, bo.ExposedDefineAccess);
         }
@@ -43,7 +43,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("The SessionInfoService property forwards the ISessionInfoService instance from the context")]
         public void SessionInfoService_Property_ForwardsContextSessionInfoService()
         {
-            var ctx = TestPolhemContext.Create(_fx);
+            var ctx = TestBusinessObjectContext.Create(_fx);
             var bo = new ExposedBusinessObject(ctx, Guid.NewGuid());
             Assert.Same(ctx.SessionInfoService, bo.ExposedSessionInfoService);
         }
@@ -52,7 +52,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("The BoFactory property forwards the IBusinessObjectFactory instance from the context")]
         public void BoFactory_Property_ForwardsContextBoFactory()
         {
-            var ctx = TestPolhemContext.Create(_fx);
+            var ctx = TestBusinessObjectContext.Create(_fx);
             var bo = new ExposedBusinessObject(ctx, Guid.NewGuid());
             Assert.Same(ctx.BoFactory, bo.ExposedBoFactory);
         }
@@ -61,7 +61,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("The Services property forwards the IServiceProvider instance from the context")]
         public void Services_Property_ForwardsContextServices()
         {
-            var ctx = TestPolhemContext.Create(_fx);
+            var ctx = TestBusinessObjectContext.Create(_fx);
             var bo = new ExposedBusinessObject(ctx, Guid.NewGuid());
             Assert.Same(ctx.Services, bo.ExposedServices);
         }
@@ -70,7 +70,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("ResolveDatabaseId(Common) returns a non-empty databaseId string")]
         public void ResolveDatabaseId_CommonScope_ReturnsNonEmptyDatabaseId()
         {
-            var bo = new ExposedBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid());
+            var bo = new ExposedBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid());
             var databaseId = bo.InvokeResolveDatabaseId(DbScope.Common);
             Assert.NotEmpty(databaseId);
         }

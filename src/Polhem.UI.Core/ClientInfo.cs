@@ -58,7 +58,7 @@ namespace Polhem.UI.Core
         private static SystemApiConnector? s_systemConnector;
         private static ClientDefineAccess? s_defineAccess;
         private static Guid s_accessToken = Guid.Empty;
-        private static IReadOnlyDictionary<string, PermissionAction>? s_capabilities;
+        private static IReadOnlyDictionary<string, PermissionActions>? s_capabilities;
         private static CompanyInfo? s_company;
 
         /// <summary>
@@ -150,8 +150,35 @@ namespace Polhem.UI.Core
         private static SystemApiConnector CreateSystemApiConnector()
         {
             return ApiClientInfo.ConnectType == ConnectType.Local
-                ? new SystemApiConnector(AccessToken)
+                ? new SystemApiConnector(LocalServicesForConnector(), AccessToken)
                 : new SystemApiConnector(ApiClientInfo.Endpoint, AccessToken);
+        }
+
+        /// <summary>
+        /// Gets or sets the in-process backend's service provider, which connectors use when
+        /// <see cref="ApiClientInfo.ConnectType"/> is <see cref="ConnectType.Local"/>.
+        /// </summary>
+        /// <remarks>
+        /// A head that runs the backend in its own process assigns the provider built by
+        /// <c>services.AddPolhemFramework(...)</c> before connecting. A remote-only head leaves it
+        /// <c>null</c>. It lives here, with the rest of this head's process-wide state, rather than
+        /// in <c>Polhem.Api.Client</c>, whose connectors take the provider as a constructor argument.
+        /// </remarks>
+        public static IServiceProvider? LocalServiceProvider { get; set; }
+
+        // A connector is created before anything is sent (the getter is also read by code that never
+        // dispatches), so a missing provider is reported on the first call rather than on creation.
+        private static IServiceProvider LocalServicesForConnector()
+            => LocalServiceProvider ?? UnsetLocalServiceProvider.Instance;
+
+        private sealed class UnsetLocalServiceProvider : IServiceProvider
+        {
+            public static readonly UnsetLocalServiceProvider Instance = new();
+
+            public object? GetService(Type serviceType)
+                => throw new InvalidOperationException(
+                    "ClientInfo.LocalServiceProvider is not set. A local connection runs the backend in this process; " +
+                    "assign the service provider built by services.AddPolhemFramework(...) before connecting.");
         }
 
         /// <summary>
@@ -161,18 +188,18 @@ namespace Polhem.UI.Core
         public static FormApiConnector CreateFormApiConnector(string progId)
         {
             return ApiClientInfo.ConnectType == ConnectType.Local
-                ? new FormApiConnector(AccessToken, progId)
+                ? new FormApiConnector(LocalServicesForConnector(), AccessToken, progId)
                 : new FormApiConnector(ApiClientInfo.Endpoint, AccessToken, progId);
         }
 
         /// <summary>
         /// Creates an audit-log API connector (read-only queries over the <c>st_log_*</c> tables).
         /// </summary>
-        public static LogApiConnector CreateLogApiConnector()
+        public static AuditLogApiConnector CreateAuditLogApiConnector()
         {
             return ApiClientInfo.ConnectType == ConnectType.Local
-                ? new LogApiConnector(AccessToken)
-                : new LogApiConnector(ApiClientInfo.Endpoint, AccessToken);
+                ? new AuditLogApiConnector(LocalServicesForConnector(), AccessToken)
+                : new AuditLogApiConnector(ApiClientInfo.Endpoint, AccessToken);
         }
 
         /// <summary>
@@ -236,7 +263,7 @@ namespace Polhem.UI.Core
         /// no permission on that model. This is UX degradation only; the backend remains the
         /// authoritative security boundary.
         /// </remarks>
-        public static IReadOnlyDictionary<string, PermissionAction>? Capabilities => s_capabilities;
+        public static IReadOnlyDictionary<string, PermissionActions>? Capabilities => s_capabilities;
 
         /// <summary>
         /// Gets the current company entered through <c>EnterCompany</c>, or <c>null</c> when no company

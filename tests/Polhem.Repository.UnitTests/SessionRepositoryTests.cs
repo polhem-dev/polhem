@@ -49,7 +49,7 @@ namespace Polhem.Repository.UnitTests
             => new SessionUser
             {
                 AccessToken = Guid.NewGuid(),
-                UserID = "001",
+                UserId = "001",
                 UserName = "測試管理員",
                 EndTime = DateTime.UtcNow.AddSeconds(expiresInSeconds),
                 CompanyId = companyId,
@@ -67,7 +67,7 @@ namespace Polhem.Repository.UnitTests
             var actual = repo.GetSession(seed.AccessToken);
             Assert.NotNull(actual);
             Assert.Equal(seed.AccessToken, actual!.AccessToken);
-            Assert.Equal("001", actual.UserID);
+            Assert.Equal("001", actual.UserId);
             Assert.Equal("測試管理員", actual.UserName);
             Assert.Equal("C001", actual.CompanyId);
         }

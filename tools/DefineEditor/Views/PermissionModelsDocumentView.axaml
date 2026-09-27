@@ -32,7 +32,7 @@
                 <TextBlock Classes="h2" Text="{loc:Loc Permission_RuleProps}" Margin="0,0,0,8"/>
                 <DockPanel Classes="row">
                     <TextBlock Classes="label" Text="Action"/>
-                    <ComboBox ItemsSource="{x:Static vm:EditorOptions.PermissionActions}"
+                    <ComboBox ItemsSource="{x:Static vm:EditorOptions.PermissionActionValues}"
                               SelectedItem="{Binding Action, Mode=TwoWay}"/>
                 </DockPanel>
                 <DockPanel Classes="row">

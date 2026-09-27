@@ -86,7 +86,7 @@ namespace Polhem.UI.Avalonia.Views
 
         /// <summary>
         /// Resolves the language the form renders in. Defaults to the UI culture, the same source
-        /// <c>PolhemStringLocalizer</c> falls back to. Only consulted when
+        /// <c>LanguageResourceStringLocalizer</c> falls back to. Only consulted when
         /// <see cref="DefinitionLoader"/> is set.
         /// </summary>
         protected virtual string ResolveLang() => CultureInfo.CurrentUICulture.Name;

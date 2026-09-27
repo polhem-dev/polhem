@@ -17,7 +17,7 @@ namespace Polhem.Api.Client.UnitTests
         public void Constructor_Local_SetsProgIdAndProvider()
         {
             var token = Guid.NewGuid();
-            var connector = new FormApiConnector(token, TestProgId);
+            var connector = new FormApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, token, TestProgId);
 
             Assert.Equal(token, connector.AccessToken);
             Assert.Equal(TestProgId, connector.ProgId);
@@ -52,7 +52,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("FormApiConnector.ExecuteAsync throws ArgumentException for an empty action")]
         public async Task ExecuteAsync_EmptyAction_ThrowsArgumentException(string? action)
         {
-            var connector = new FormApiConnector(Guid.NewGuid(), TestProgId);
+            var connector = new FormApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), TestProgId);
             await Assert.ThrowsAsync<ArgumentException>(async () =>
                 await connector.ExecuteAsync<object>(action!, new object(), PayloadFormat.Plain));
         }
@@ -61,7 +61,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("FormApiConnector.SaveAsync throws ArgumentNullException for a null DataSet")]
         public async Task SaveAsync_NullDataSet_ThrowsArgumentNullException()
         {
-            var connector = new FormApiConnector(Guid.NewGuid(), TestProgId);
+            var connector = new FormApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), TestProgId);
             await Assert.ThrowsAsync<ArgumentNullException>(() => connector.SaveAsync(null!));
         }
 

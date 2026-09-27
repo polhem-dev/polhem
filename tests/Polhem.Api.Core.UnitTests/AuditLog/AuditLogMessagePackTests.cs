@@ -96,7 +96,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("LogListResponse with a DataTable and PagingInfo round-trips (shared by the login, access and anomaly logs)")]
+        [DisplayName("AuditLogListResponse with a DataTable and PagingInfo round-trips (shared by the login, access and anomaly logs)")]
         public void LogListResponse_RoundTrip()
         {
             var table = new DataTable("st_log_login");
@@ -105,13 +105,13 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
             var id = Guid.NewGuid();
             table.Rows.Add(id, (int)LoginEvent.LoginSucceeded);
 
-            var response = new LogListResponse
+            var response = new AuditLogListResponse
             {
                 Table = table,
                 Paging = new PagingInfo { Page = 1, PageSize = 50, TotalCount = 1, HasMore = false },
             };
 
-            var restored = MessagePackCodec.Deserialize<LogListResponse>(MessagePackCodec.Serialize(response));
+            var restored = MessagePackCodec.Deserialize<AuditLogListResponse>(MessagePackCodec.Serialize(response));
 
             Assert.NotNull(restored);
             Assert.Single(restored!.Table!.Rows);
@@ -135,7 +135,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         }
 
         [Fact]
-        [DisplayName("LogAggregateResponse with an aggregate DataTable round-trips (shared by summary and top-N)")]
+        [DisplayName("AuditLogAggregateResponse with an aggregate DataTable round-trips (shared by summary and top-N)")]
         public void LogAggregateResponse_RoundTrip()
         {
             var table = new DataTable("agg");
@@ -143,8 +143,8 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
             table.Columns.Add("event_count", typeof(long));
             table.Rows.Add((int)ChangeKind.Update, 42L);
 
-            var restored = MessagePackCodec.Deserialize<LogAggregateResponse>(
-                MessagePackCodec.Serialize(new LogAggregateResponse { Table = table }));
+            var restored = MessagePackCodec.Deserialize<AuditLogAggregateResponse>(
+                MessagePackCodec.Serialize(new AuditLogAggregateResponse { Table = table }));
 
             Assert.NotNull(restored);
             Assert.Single(restored!.Table!.Rows);

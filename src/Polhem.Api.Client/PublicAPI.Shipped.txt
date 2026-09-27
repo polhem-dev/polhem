@@ -39,8 +39,6 @@ Polhem.Api.Client.ConnectType.Local = 0 -> Polhem.Api.Client.ConnectType
 Polhem.Api.Client.ConnectType.Remote = 1 -> Polhem.Api.Client.ConnectType
 Polhem.Api.Client.Connectors.ApiConnector
 Polhem.Api.Client.Connectors.ApiConnector.AccessToken.get -> System.Guid
-Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(System.Guid accessToken) -> void
-Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(string! endpoint, System.Guid accessToken) -> void
 Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(string! endpoint, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.ApiConnector.ExecuteAsync<T>(string! progId, string! action, object! value, Polhem.Api.Core.Messages.PayloadFormat format) -> System.Threading.Tasks.Task<T>!
@@ -52,17 +50,9 @@ Polhem.Api.Client.Connectors.FormApiConnector
 Polhem.Api.Client.Connectors.FormApiConnector.ExecFuncAnonymousAsync(Polhem.Api.Core.Messages.ExecFuncRequest! args) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.ExecFuncResponse!>!
 Polhem.Api.Client.Connectors.FormApiConnector.ExecFuncAsync(Polhem.Api.Core.Messages.ExecFuncRequest! args) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.ExecFuncResponse!>!
 Polhem.Api.Client.Connectors.FormApiConnector.ExecuteAsync<T>(string! action, object! value, Polhem.Api.Core.Messages.PayloadFormat format = Polhem.Api.Core.Messages.PayloadFormat.Encrypted) -> System.Threading.Tasks.Task<T>!
-Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(System.Guid accessToken, string! progId) -> void
-Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(System.Guid accessToken, string! progId, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(string! endpoint, System.Guid accessToken, string! progId) -> void
 Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(string! endpoint, System.Guid accessToken, string! progId, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.FormApiConnector.ProgId.get -> string!
-Polhem.Api.Client.Connectors.LogApiConnector
-Polhem.Api.Client.Connectors.LogApiConnector.ExecuteAsync<T>(string! action, object! value, Polhem.Api.Core.Messages.PayloadFormat format = Polhem.Api.Core.Messages.PayloadFormat.Encrypted) -> System.Threading.Tasks.Task<T>!
-Polhem.Api.Client.Connectors.LogApiConnector.LogApiConnector(System.Guid accessToken) -> void
-Polhem.Api.Client.Connectors.LogApiConnector.LogApiConnector(System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
-Polhem.Api.Client.Connectors.LogApiConnector.LogApiConnector(string! endpoint, System.Guid accessToken) -> void
-Polhem.Api.Client.Connectors.LogApiConnector.LogApiConnector(string! endpoint, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.SystemApiConnector
 Polhem.Api.Client.Connectors.SystemApiConnector.CreateApiKeyAsync(string! sysId, string! sysName, Polhem.Definition.Security.ApiKeyType keyType = Polhem.Definition.Security.ApiKeyType.Internal, string? contact = null, System.DateTime? expiredAt = null) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.CreateApiKeyResponse!>!
 Polhem.Api.Client.Connectors.SystemApiConnector.EnterCompanyAsync(string! companyId) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.EnterCompanyResponse!>!
@@ -73,7 +63,6 @@ Polhem.Api.Client.Connectors.SystemApiConnector.GetCustomizePluginSettingsAsync(
 Polhem.Api.Client.Connectors.SystemApiConnector.InitializeAsync() -> System.Threading.Tasks.Task!
 Polhem.Api.Client.Connectors.SystemApiConnector.LeaveCompanyAsync() -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.LeaveCompanyResponse!>!
 Polhem.Api.Client.Connectors.SystemApiConnector.ListApiKeysAsync() -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.ListApiKeysResponse!>!
-Polhem.Api.Client.Connectors.SystemApiConnector.LoginAsync(string! userID, string! password) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.LoginResponse!>!
 Polhem.Api.Client.Connectors.SystemApiConnector.LogoutAsync() -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.LogoutResponse!>!
 Polhem.Api.Client.Connectors.SystemApiConnector.PingAsync() -> System.Threading.Tasks.Task!
 Polhem.Api.Client.Connectors.SystemApiConnector.SaveCustomizePluginSettingsAsync(string! customizeId, string! xml) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.SaveCustomizePluginSettingsResponse!>!
@@ -81,8 +70,6 @@ Polhem.Api.Client.Connectors.SystemApiConnector.SaveDefineAsync(Polhem.Definitio
 Polhem.Api.Client.Connectors.SystemApiConnector.SetApiKeyEnabledAsync(string! sysId, bool enabled) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.SetApiKeyEnabledResponse!>!
 Polhem.Api.Client.Connectors.SystemApiConnector.SetApiKeyExpiryAsync(string! sysId, System.DateTime? expiredAt) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.SetApiKeyExpiryResponse!>!
 Polhem.Api.Client.Connectors.SystemApiConnector.SetDeploymentAdminAsync(string! userId, bool isDeploymentAdmin) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.SetDeploymentAdminResponse!>!
-Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(System.Guid accessToken) -> void
-Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(string! endpoint, System.Guid accessToken) -> void
 Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(string! endpoint, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
 Polhem.Api.Client.Definitions.FormDefinitionLoader
@@ -116,7 +103,6 @@ Polhem.Api.Client.Providers.IJsonRpcProvider.ExecuteAsync(Polhem.Api.Core.JsonRp
 Polhem.Api.Client.Providers.LocalApiProvider
 Polhem.Api.Client.Providers.LocalApiProvider.AccessToken.get -> System.Guid
 Polhem.Api.Client.Providers.LocalApiProvider.ExecuteAsync(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.JsonRpc.JsonRpcResponse!>!
-Polhem.Api.Client.Providers.LocalApiProvider.LocalApiProvider(System.Guid accessToken) -> void
 Polhem.Api.Client.Providers.RemoteApiProvider
 Polhem.Api.Client.Providers.RemoteApiProvider.AccessToken.get -> System.Guid
 Polhem.Api.Client.Providers.RemoteApiProvider.Endpoint.get -> string!
@@ -133,8 +119,6 @@ static Polhem.Api.Client.ApiClientInfo.ConnectType.get -> Polhem.Api.Client.Conn
 static Polhem.Api.Client.ApiClientInfo.ConnectType.set -> void
 static Polhem.Api.Client.ApiClientInfo.Endpoint.get -> string!
 static Polhem.Api.Client.ApiClientInfo.Endpoint.set -> void
-static Polhem.Api.Client.ApiClientInfo.LocalServiceProvider.get -> System.IServiceProvider?
-static Polhem.Api.Client.ApiClientInfo.LocalServiceProvider.set -> void
 static Polhem.Api.Client.ApiClientInfo.SupportedConnectTypes.get -> Polhem.Api.Client.SupportedConnectTypes
 static Polhem.Api.Client.ApiClientInfo.SupportedConnectTypes.set -> void
 static Polhem.Api.Client.ApiConnectValidator.ValidateAsync(string! endpoint, bool allowGenerateSettings = false) -> System.Threading.Tasks.Task<Polhem.Api.Client.ConnectType>!
@@ -154,15 +138,6 @@ virtual Polhem.Api.Client.Connectors.FormApiConnector.GetListAsync(string! selec
 virtual Polhem.Api.Client.Connectors.FormApiConnector.GetLookupAsync(string! searchText = "", Polhem.Definition.Paging.PagingOptions? paging = null) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.GetLookupResponse!>!
 virtual Polhem.Api.Client.Connectors.FormApiConnector.GetNewDataAsync() -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.GetNewDataResponse!>!
 virtual Polhem.Api.Client.Connectors.FormApiConnector.SaveAsync(System.Data.DataSet! dataSet) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.Form.SaveResponse!>!
-virtual Polhem.Api.Client.Connectors.LogApiConnector.GetAccessLogAsync(Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.LogListResponse!>!
-virtual Polhem.Api.Client.Connectors.LogApiConnector.GetApiAnomalyLogAsync(Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.LogListResponse!>!
-virtual Polhem.Api.Client.Connectors.LogApiConnector.GetApiAnomalySummaryAsync(Polhem.Api.Core.Messages.AuditLog.GetApiAnomalySummaryRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse!>!
-virtual Polhem.Api.Client.Connectors.LogApiConnector.GetChangeDetailAsync(System.Guid sysRowId) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse!>!
-virtual Polhem.Api.Client.Connectors.LogApiConnector.GetChangeLogAsync(Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.LogListResponse!>!
-virtual Polhem.Api.Client.Connectors.LogApiConnector.GetDbAnomalyLogAsync(Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.LogListResponse!>!
-virtual Polhem.Api.Client.Connectors.LogApiConnector.GetDbAnomalySummaryAsync(Polhem.Api.Core.Messages.AuditLog.GetDbAnomalySummaryRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse!>!
-virtual Polhem.Api.Client.Connectors.LogApiConnector.GetLoginLogAsync(Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.LogListResponse!>!
-virtual Polhem.Api.Client.Connectors.LogApiConnector.GetTopApiMethodsAsync(Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse!>!
 virtual Polhem.Api.Client.Connectors.SystemApiConnector.GetCustomizeFormLayoutAsync(string! progId, string! layoutId = "") -> System.Threading.Tasks.Task<Polhem.Definition.Layouts.FormLayout?>!
 virtual Polhem.Api.Client.Connectors.SystemApiConnector.GetCustomizeLanguageAsync(string! lang, string! ns) -> System.Threading.Tasks.Task<Polhem.Definition.Language.LanguageResource?>!
 virtual Polhem.Api.Client.Connectors.SystemApiConnector.GetDefineAsync<T>(Polhem.Definition.DefineType defineType, string![]? keys = null) -> System.Threading.Tasks.Task<T>!

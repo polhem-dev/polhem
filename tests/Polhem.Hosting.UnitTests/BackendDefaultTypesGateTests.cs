@@ -4,7 +4,6 @@ using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
-using Polhem.ObjectCaching.Providers;
 using Polhem.Repository.Abstractions.Factories;
 
 namespace Polhem.Hosting.UnitTests
@@ -20,15 +19,10 @@ namespace Polhem.Hosting.UnitTests
     /// host only blows up at startup.
     /// </para>
     /// <para>
-    /// **Why not <c>typeof(X).AssemblyQualifiedName</c>:** that would require <c>Polhem.Definition</c> to reference
-    /// those assemblies, which <c>POLHEM9001</c> forbids (ADR-038). **Why not move the constants to the composition
-    /// layer:** <c>BackendComponents</c> uses them as **attribute arguments** of <c>[DefaultValue(...)]</c>, and an
-    /// attribute argument must be a compile-time constant visible to that assembly; moving them would mean moving
-    /// <c>BackendComponents</c> too, which is a public settings type.
-    /// </para>
-    /// <para>
-    /// So the structure cannot fix it, and this gate turns "strings that rot silently" into "a contract that goes red
-    /// when the tests run".
+    /// The constants live in <c>Polhem.Hosting</c>, which references every one of those assemblies, but they stay
+    /// strings so that a default is loaded through the same path as a name a deployment configures. That keeps
+    /// the edges invisible to the compiler, and this gate turns "strings that rot silently" into "a contract that
+    /// goes red when the tests run".
     /// </para>
     /// </remarks>
     public class BackendDefaultTypesGateTests
@@ -41,7 +35,6 @@ namespace Polhem.Hosting.UnitTests
         {
             [nameof(BackendDefaultTypes.ApiEncryptionKeyProvider)] = typeof(IApiEncryptionKeyProvider),
             [nameof(BackendDefaultTypes.AccessTokenValidator)] = typeof(IAccessTokenValidator),
-            [nameof(BackendDefaultTypes.CacheProvider)] = typeof(ICacheProvider),
             [nameof(BackendDefaultTypes.CacheDataSourceProvider)] = typeof(ICacheDataSourceProvider),
             [nameof(BackendDefaultTypes.DefineStorage)] = typeof(IDefineStorage),
             [nameof(BackendDefaultTypes.DefineAccess)] = typeof(IDefineAccess),
@@ -101,7 +94,7 @@ namespace Polhem.Hosting.UnitTests
         {
             // If the constants change to another member form (such as `static readonly`), the reflection filter
             // matches nothing and the two tests above become empty loops.
-            Assert.True(ReadConstants().Count >= 9,
+            Assert.True(ReadConstants().Count >= 8,
                 $"Only {ReadConstants().Count} constants were found; the reflection filter may no longer match the actual shape of the type.");
         }
 

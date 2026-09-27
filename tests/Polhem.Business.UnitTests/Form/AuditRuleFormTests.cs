@@ -69,7 +69,7 @@ namespace Polhem.Business.UnitTests.Form
         /// </summary>
         private sealed class AllowAllAuthorization : ICompanyAuthorizationService
         {
-            public bool Can(Guid accessToken, string modelId, PermissionAction action) => true;
+            public bool Can(Guid accessToken, string modelId, PermissionActions action) => true;
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Polhem.Business.UnitTests.Form
         private sealed class UnrestrictedScopeResolver : IScopeResolver
         {
             public Polhem.Definition.Filters.FilterNode? ResolveFilter(
-                Guid accessToken, string modelId, PermissionAction action, Polhem.Definition.Forms.FormSchema formSchema) => null;
+                Guid accessToken, string modelId, PermissionActions action, Polhem.Definition.Forms.FormSchema formSchema) => null;
         }
 
         private sealed class StubFactory : IRepositoryFactory
@@ -124,7 +124,7 @@ namespace Polhem.Business.UnitTests.Form
             Guid accessToken, CapturingAuditLogWriter writer,
             IAuditRuleService ruleService, IAuditRuleRepository auditRules)
         {
-            var ctx = TestPolhemContext.CreateWithOverrides(_fx,
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx,
                 (typeof(IRepositoryFactory), new StubFactory(_repository, auditRules)),
                 (typeof(AuditLogOptions), new AuditLogOptions
                 {

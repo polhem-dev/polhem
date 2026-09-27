@@ -25,7 +25,7 @@ namespace Polhem.Business.UnitTests
             var session = sessionService.Get(accessToken)!;
             session.CompanyScope = new SessionCompanyScope("C001", string.Empty, [], Guid.Empty, Guid.Empty, Guid.Empty);
             sessionService.Set(session);
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
 
             try
             {
@@ -46,7 +46,7 @@ namespace Polhem.Business.UnitTests
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
 
             try
             {
@@ -66,7 +66,7 @@ namespace Polhem.Business.UnitTests
         public void LeaveCompany_NullArgs_ThrowsArgumentNullException()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
 
             try
@@ -83,7 +83,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("LeaveCompany throws AuthenticationRequiredException for an invalid session")]
         public void LeaveCompany_NoSession_ThrowsAuthenticationRequiredException()
         {
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid(), SysProgIds.System);
 
             Assert.Throws<AuthenticationRequiredException>(() => bo.LeaveCompany(new LeaveCompanyArgs()));
         }

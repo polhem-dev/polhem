@@ -61,8 +61,8 @@ Depends on the front-end decision + whether auth is needed:
 - `QuickStart.Server` currently hosts `Polhem.Samples.Shared.DemoBackend`, so it **has** `demo/demo` login + Employee
   schema seed data. Samples other than Console that want auth all connect to this server
 - in-process mode is for Blazor Server only; Avalonia and other non-web hosts cannot run in-process (there is no
-  `WebApplicationBuilder`); instead hand the `IServiceProvider` to `ApiClientInfo.LocalServiceProvider` and use local
-  mode
+  `WebApplicationBuilder`); instead pass the `IServiceProvider` to the local connector constructors (or set
+  `ClientInfo.LocalServiceProvider` on a native head) and use local mode
 
 ### Decision 3: is login needed?
 

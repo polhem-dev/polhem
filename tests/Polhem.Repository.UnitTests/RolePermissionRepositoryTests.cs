@@ -11,7 +11,7 @@ namespace Polhem.Repository.UnitTests
     /// <summary>
     /// Round-trip tests of RolePermissionRepository across the database providers: insert st_role_grant and
     /// st_user_role into the company DB (every relation column uses the sys_id business key), then verify that
-    /// GetRoleGrants and GetUserRoles read them back correctly (allowed_actions restored to a PermissionAction mask,
+    /// GetRoleGrants and GetUserRoles read them back correctly (allowed_actions restored to a PermissionActions mask,
     /// user→role matched by sys_id).
     /// </summary>
     public class RolePermissionRepositoryTests : IClassFixture<SharedDbFixture>
@@ -31,7 +31,7 @@ namespace Polhem.Repository.UnitTests
             var userId = string.Concat("USER_", Guid.NewGuid().ToString("N").AsSpan(0, 6));
             var grantRowId = Guid.NewGuid();
             var userRoleRowId = Guid.NewGuid();
-            var action = (int)PermissionAction.Read;
+            var action = (int)PermissionActions.Read;
             var scope = (int)ScopeStrategy.Dept;
 
             string tblGrant = dbType.QuoteIdentifier("st_role_grant");
@@ -64,7 +64,7 @@ namespace Polhem.Repository.UnitTests
 
                 var grant = repo.GetRoleGrants(databaseId).Single(g => g.RoleId == roleId);
                 Assert.Equal("PurchaseOrder", grant.ModelId);
-                Assert.Equal(PermissionAction.Read, grant.Action);
+                Assert.Equal(PermissionActions.Read, grant.Action);
                 Assert.Equal(ScopeStrategy.Dept, grant.Scope);
 
                 var userRole = repo.GetUserRoles(databaseId).Single(u => u.RoleId == roleId);

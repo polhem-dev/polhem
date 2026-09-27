@@ -86,7 +86,7 @@ namespace Polhem.Business.Form
         /// <param name="ctx">The per-call business context.</param>
         /// <param name="accessToken">The access token of the call being extended.</param>
         /// <param name="progId">The program identifier.</param>
-        public FormPluginRunner CreateRunner(IPolhemContext ctx, Guid accessToken, string progId)
+        public FormPluginRunner CreateRunner(IBusinessObjectContext ctx, Guid accessToken, string progId)
             => new(this, ctx, accessToken, progId);
 
         /// <summary>

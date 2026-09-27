@@ -41,7 +41,7 @@ namespace Polhem.UI.Core.UnitTests
             var original = s_defineAccessField.GetValue(null);
             try
             {
-                var connector = new SystemApiConnector(Guid.Empty);
+                var connector = new SystemApiConnector(EmptyServiceProvider.Instance, Guid.Empty);
                 var remoteAccess = new ClientDefineAccess(connector);
                 s_defineAccessField.SetValue(null, remoteAccess);
                 var exception = Record.Exception(() => ClientInfo.ResetDefineCache());
@@ -51,6 +51,13 @@ namespace Polhem.UI.Core.UnitTests
             {
                 s_defineAccessField.SetValue(null, original);
             }
+        }
+
+        private sealed class EmptyServiceProvider : IServiceProvider
+        {
+            public static readonly EmptyServiceProvider Instance = new();
+
+            public object? GetService(Type serviceType) => null;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace Polhem.Business
     /// </summary>
     /// <remarks>
     /// Dependencies are supplied via constructor injection by the host DI container. The injected
-    /// <see cref="IServiceProvider"/> is the same provider that backs <see cref="IPolhemContext.Services"/>
+    /// <see cref="IServiceProvider"/> is the same provider that backs <see cref="IBusinessObjectContext.Services"/>
     /// — it is forwarded to every BO instance so the rare escape-hatch resolutions (login-only
     /// helpers etc.) reach the host's request scope.
     /// </remarks>
@@ -121,7 +121,7 @@ namespace Polhem.Business
             return _sessionInfoService.Get(accessToken)?.CustomizeId ?? string.Empty;
         }
 
-        private PolhemContext BuildContext() => new PolhemContext
+        private BusinessObjectContext BuildContext() => new BusinessObjectContext
         {
             DefineAccess = _defineAccess,
             SessionInfoService = _sessionInfoService,

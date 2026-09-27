@@ -16,7 +16,7 @@ using Polhem.Base.Exceptions;
 namespace Polhem.Business.UnitTests.AuditLog
 {
     /// <summary>
-    /// BO-level behavior tests for <see cref="LogBusinessObject"/> (a stub repository, no real DB):
+    /// BO-level behavior tests for <see cref="AuditLogBusinessObject"/> (a stub repository, no real DB):
     /// the list methods (<c>GetChangeLog</c> and others) return headers + paging and pass the filter through,
     /// the detail method (<c>GetChangeDetail</c>) restores the changes_xml DiffGram into structured before/after values
     /// and throws when nothing is found; every method has the permission gate and argument validation.
@@ -27,20 +27,20 @@ namespace Polhem.Business.UnitTests.AuditLog
     /// was not in the cache, so it took the rebuild path that reads <c>st_session</c>, and the whole class actually needed the container.
     /// It only became true after switching to <see cref="TestSessionFactory.CreateAccessToken"/>.
     /// </remarks>
-    public class LogBusinessObjectTests : IClassFixture<PolhemTestFixture>
+    public class AuditLogBusinessObjectTests : IClassFixture<PolhemTestFixture>
     {
         private const string ProgId = "Employee";
         private readonly PolhemTestFixture _fx;
 
-        public LogBusinessObjectTests(PolhemTestFixture fx) { _fx = fx; }
+        public AuditLogBusinessObjectTests(PolhemTestFixture fx) { _fx = fx; }
 
-        private LogBusinessObject Bo(StubAuditLogRepository repo, bool authorized = true, bool deploymentAdmin = true)
+        private AuditLogBusinessObject Bo(StubAuditLogRepository repo, bool authorized = true, bool deploymentAdmin = true)
         {
-            var ctx = TestPolhemContext.CreateWithOverrides(_fx,
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx,
                 (typeof(ICompanyAuthorizationService), new FakeAuth(authorized)),
                 (typeof(IDeploymentAuthorizationService), new FakeDeploymentAuth(deploymentAdmin)),
                 (typeof(IRepositoryFactory), new StubAuditLogRepositoryFactory(repo)));
-            return new LogBusinessObject(ctx, TestSessionFactory.CreateAccessToken(_fx), SysProgIds.AuditLog);
+            return new AuditLogBusinessObject(ctx, TestSessionFactory.CreateAccessToken(_fx), SysProgIds.AuditLog);
         }
 
         // ---- GetChangeLog (filtered list) ----
@@ -251,11 +251,11 @@ namespace Polhem.Business.UnitTests.AuditLog
         {
             var deploymentAuth = new FakeDeploymentAuth(true);
             var repo = new StubAuditLogRepository(HeaderPage(0));
-            var ctx = TestPolhemContext.CreateWithOverrides(_fx,
+            var ctx = TestBusinessObjectContext.CreateWithOverrides(_fx,
                 (typeof(ICompanyAuthorizationService), new FakeAuth(false)),
                 (typeof(IDeploymentAuthorizationService), deploymentAuth),
                 (typeof(IRepositoryFactory), new StubAuditLogRepositoryFactory(repo)));
-            var bo = new LogBusinessObject(ctx, TestSessionFactory.CreateAccessToken(_fx), SysProgIds.AuditLog);
+            var bo = new AuditLogBusinessObject(ctx, TestSessionFactory.CreateAccessToken(_fx), SysProgIds.AuditLog);
 
             bo.GetDbAnomalyLog(new GetDbAnomalyLogArgs());
 
@@ -361,7 +361,7 @@ namespace Polhem.Business.UnitTests.AuditLog
         {
             private readonly bool _allowed;
             public FakeAuth(bool allowed) { _allowed = allowed; }
-            public bool Can(Guid accessToken, string modelId, PermissionAction action) => _allowed;
+            public bool Can(Guid accessToken, string modelId, PermissionActions action) => _allowed;
         }
 
         private sealed class FakeDeploymentAuth : IDeploymentAuthorizationService

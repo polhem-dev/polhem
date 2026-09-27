@@ -45,7 +45,7 @@ namespace Polhem.Business.UnitTests.Form
         /// <summary>Records whether the extension points after commit ran.</summary>
         private sealed class AfterStepProbeBo : FormBusinessObject
         {
-            public AfterStepProbeBo(IPolhemContext ctx) : base(ctx, Guid.NewGuid(), CrudTestContext.ProgId) { }
+            public AfterStepProbeBo(IBusinessObjectContext ctx) : base(ctx, Guid.NewGuid(), CrudTestContext.ProgId) { }
 
             public bool AfterSaveRan { get; private set; }
 

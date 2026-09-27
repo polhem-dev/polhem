@@ -20,9 +20,9 @@ namespace Polhem.Api.Core.Messages.System
         /// capability resolver reads it to degrade toolbar commands, grid actions, and sensitive
         /// fields. A model absent from the map means no permission.
         /// </summary>
-        public Dictionary<string, PermissionAction> Capabilities { get; set; } = [];
+        public Dictionary<string, PermissionActions> Capabilities { get; set; } = [];
 
         /// <inheritdoc />
-        IReadOnlyDictionary<string, PermissionAction> IEnterCompanyResponse.Capabilities => Capabilities;
+        IReadOnlyDictionary<string, PermissionActions> IEnterCompanyResponse.Capabilities => Capabilities;
     }
 }

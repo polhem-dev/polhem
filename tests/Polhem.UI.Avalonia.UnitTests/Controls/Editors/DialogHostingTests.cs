@@ -65,7 +65,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
         private sealed class EmptyConnector : FormApiConnector
         {
-            public EmptyConnector() : base(Guid.NewGuid(), "Customer") { }
+            public EmptyConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), "Customer") { }
 
             public override Task<GetLookupResponse> GetLookupAsync(
                 string searchText = "",

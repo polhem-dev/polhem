@@ -312,7 +312,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         /// </summary>
         private sealed class FakeFormApiConnector : FormApiConnector
         {
-            public FakeFormApiConnector() : base(Guid.NewGuid(), TestProgId) { }
+            public FakeFormApiConnector() : base(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), TestProgId) { }
 
             public Func<string, GetListResponse>? GetListHandler { get; set; }
             public Func<Guid, DeleteResponse>? DeleteHandler { get; set; }

@@ -19,7 +19,7 @@ namespace Polhem.Business.UnitTests
         {
             var token = Guid.NewGuid();
 
-            var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), token, "prog01", isLocalCall: false);
+            var bo = new FormBusinessObject(TestBusinessObjectContext.Create(_fx), token, "prog01", isLocalCall: false);
 
             Assert.Equal(token, bo.AccessToken);
             Assert.Equal("prog01", bo.ProgId);
@@ -30,7 +30,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("ExecFunc Hello fills in the default message")]
         public void ExecFunc_Hello_FillsExpectedMessage()
         {
-            var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), "prog01");
+            var bo = new FormBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid(), "prog01");
 
             var result = bo.ExecFunc(new ExecFuncArgs("Hello"));
 
@@ -42,7 +42,7 @@ namespace Polhem.Business.UnitTests
         public void ExecFuncAnonymous_HelloRequiresAuthentication_ThrowsUnauthorized()
         {
             // `FormExecFuncHandler.Hello` is marked Authenticated, so `InvokeExecFunc` must block an anonymous call.
-            var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), "prog01");
+            var bo = new FormBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid(), "prog01");
 
             Assert.Throws<AuthenticationRequiredException>(() =>
                 bo.ExecFuncAnonymous(new ExecFuncArgs("Hello")));
@@ -52,7 +52,7 @@ namespace Polhem.Business.UnitTests
         [DisplayName("ExecFunc calling a method that does not exist throws MissingMethodException")]
         public void ExecFunc_UnknownMethod_ThrowsMissingMethod()
         {
-            var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(), "prog01");
+            var bo = new FormBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid(), "prog01");
 
             Assert.Throws<MissingMethodException>(() =>
                 bo.ExecFunc(new ExecFuncArgs("DoesNotExist")));

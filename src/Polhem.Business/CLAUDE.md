@@ -30,7 +30,7 @@ burden.
 >
 > **Not every axis needs an interface; only axes that "are called by another BO" do.** So `ILogBusinessObject`
 > and `CreateLogBO` were removed on 2026-08-12 (their XML doc admitted they were "reserved for future", which is a
-> reservation, not a need). The methods of `LogBusinessObject` are still exposed through `JsonRpcExecutor` as before.
+> reservation, not a need). The methods of `AuditLogBusinessObject` are still exposed through `JsonRpcExecutor` as before.
 >
 > **Count the server-side background callers too, not just the client.** This rule once wrongly listed `Login` as
 > "client-only, not on the interface" (corrected 2026-08-12). It has real internal callers: **a background job logs

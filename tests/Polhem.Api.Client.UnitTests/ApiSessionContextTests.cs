@@ -40,7 +40,7 @@ namespace Polhem.Api.Client.UnitTests
         public void Connector_WithSession_UsesThatSession()
         {
             var session = new ApiSessionContext { UserTimeZoneId = "Asia/Taipei" };
-            var connector = new SystemApiConnector(Guid.NewGuid(), session);
+            var connector = new SystemApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), session);
 
             Assert.Same(session, connector.Session);
             Assert.NotSame(ApiSessionContext.Ambient, connector.Session);
@@ -50,7 +50,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("A connector constructed without a session falls back to Ambient (existing single-user hosts are unchanged)")]
         public void Connector_WithoutSession_FallsBackToAmbient()
         {
-            var connector = new SystemApiConnector(Guid.NewGuid());
+            var connector = new SystemApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid());
 
             Assert.Same(ApiSessionContext.Ambient, connector.Session);
         }
@@ -62,7 +62,7 @@ namespace Polhem.Api.Client.UnitTests
             // Silently falling back to Ambient would turn a configuration error in a multi-user host into
             // "looks like it works, but actually shares the key".
             Assert.Throws<ArgumentNullException>(
-                () => new SystemApiConnector(Guid.NewGuid(), null!));
+                () => new SystemApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid(), null!));
         }
     }
 }

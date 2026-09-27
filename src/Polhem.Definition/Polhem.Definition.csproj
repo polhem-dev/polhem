@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Polhem.Business" />
     <InternalsVisibleTo Include="Polhem.Definition.UnitTests" />
   </ItemGroup>
 

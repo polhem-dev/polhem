@@ -24,7 +24,7 @@ namespace Polhem.Business.UnitTests.Form
         [DisplayName("Delete throws ArgumentNullException for null")]
         public void Delete_NullArgs_Throws()
         {
-            var bo = new FormBusinessObject(TestPolhemContext.Create(_fx), Guid.NewGuid(),
+            var bo = new FormBusinessObject(TestBusinessObjectContext.Create(_fx), Guid.NewGuid(),
                 CrudTestContext.ProgId);
             Assert.Throws<ArgumentNullException>(() => bo.Delete(null!));
         }

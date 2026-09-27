@@ -9,7 +9,7 @@ namespace Polhem.Api.Core.Messages.AuditLog
     /// event-header rows plus paging metadata. The <see cref="Table"/> carries whichever columns the
     /// queried axis projects.
     /// </summary>
-    public class LogListResponse : ApiResponse, ILogListResponse
+    public class AuditLogListResponse : ApiResponse, IAuditLogListResponse
     {
         /// <summary>Gets or sets the event header rows for this page.</summary>
         public DataTable? Table { get; set; }

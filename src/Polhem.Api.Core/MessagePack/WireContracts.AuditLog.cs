@@ -87,14 +87,14 @@ namespace Polhem.Api.Core.MessagePack
                 .Member(nameof(Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest.ToUtc), static x => x.ToUtc, static (x, v) => x.ToUtc = v)
                 .Member(nameof(Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest.TopN), static x => x.TopN, static (x, v) => x.TopN = v)
                 .Build());
-            list.Add(WireContract.For<Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse>()
-                .Member(nameof(Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
-                .Member(nameof(Polhem.Api.Core.Messages.AuditLog.LogAggregateResponse.Table), static x => x.Table, static (x, v) => x.Table = v)
+            list.Add(WireContract.For<Polhem.Api.Core.Messages.AuditLog.AuditLogAggregateResponse>()
+                .Member(nameof(Polhem.Api.Core.Messages.AuditLog.AuditLogAggregateResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
+                .Member(nameof(Polhem.Api.Core.Messages.AuditLog.AuditLogAggregateResponse.Table), static x => x.Table, static (x, v) => x.Table = v)
                 .Build());
-            list.Add(WireContract.For<Polhem.Api.Core.Messages.AuditLog.LogListResponse>()
-                .Member(nameof(Polhem.Api.Core.Messages.AuditLog.LogListResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
-                .Member(nameof(Polhem.Api.Core.Messages.AuditLog.LogListResponse.Table), static x => x.Table, static (x, v) => x.Table = v)
-                .Member(nameof(Polhem.Api.Core.Messages.AuditLog.LogListResponse.Paging), static x => x.Paging, static (x, v) => x.Paging = v)
+            list.Add(WireContract.For<Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse>()
+                .Member(nameof(Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse.Parameters), static x => x.Parameters, static (x, v) => x.Parameters = v)
+                .Member(nameof(Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse.Table), static x => x.Table, static (x, v) => x.Table = v)
+                .Member(nameof(Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse.Paging), static x => x.Paging, static (x, v) => x.Paging = v)
                 .Build());
         }
     }

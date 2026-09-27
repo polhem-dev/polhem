@@ -130,7 +130,7 @@ public sealed partial class SystemSettingsDocumentViewModel : SingletonDocumentV
     private static void RefreshBackendComponents(SettingsTreeNode node)
     {
         node.Header = "BackendComponents";
-        node.Detail = $"12 component types; defaults come from BackendDefaultTypes (CacheProvider etc.)";
+        node.Detail = "Assembly-qualified type names; a blank entry uses the framework default";
     }
 
     private static void RefreshCacheNotify(SettingsTreeNode node)

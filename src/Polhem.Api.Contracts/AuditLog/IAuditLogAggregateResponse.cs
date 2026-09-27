@@ -7,7 +7,7 @@ namespace Polhem.Api.Contracts.AuditLog
     /// (dimension columns plus metric columns). Used by the monitoring summary / top-N queries; the
     /// <see cref="Table"/> carries whichever columns that aggregate projects.
     /// </summary>
-    public interface ILogAggregateResponse
+    public interface IAuditLogAggregateResponse
     {
         /// <summary>Gets the aggregate result rows (e.g. one row per <c>anomaly_kind</c> or per <c>method</c>).</summary>
         DataTable? Table { get; }

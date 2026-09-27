@@ -8,7 +8,7 @@ namespace Polhem.Api.Contracts.System
         /// <summary>
         /// Gets the user identifier.
         /// </summary>
-        string UserID { get; }
+        string UserId { get; }
 
         /// <summary>
         /// Gets the session expiration time in seconds.

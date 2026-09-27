@@ -5,7 +5,7 @@ using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.DataObjects;
 using Polhem.UI.Avalonia.Permissions;
 using Polhem.UI.Core;
-using Polhem.UI.Core.Permissions;
+using Polhem.Api.Client.Permissions;
 
 namespace Polhem.UI.Avalonia.Views
 {
@@ -136,7 +136,7 @@ namespace Polhem.UI.Avalonia.Views
             _saveButton.IsEnabled = editing && !_isBusy && _dataObject?.MasterRow is not null;
         }
 
-        // Resolves whether the button's tagged PermissionAction is permitted for the current schema
+        // Resolves whether the button's tagged PermissionActions is permitted for the current schema
         // and cached capability snapshot. Untagged buttons (Action == None) and a missing schema
         // resolve to permitted, so this only ever hides a genuinely un-permitted command.
         private bool CanCommand(Control button)

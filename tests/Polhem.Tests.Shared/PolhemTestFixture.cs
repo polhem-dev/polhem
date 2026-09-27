@@ -71,7 +71,7 @@ namespace Polhem.Tests.Shared
             ArgumentNullException.ThrowIfNull(configure);
 
             // One-time initialization of the process-wide statics (`SysInfo`, the DB provider registry,
-            // `ApiClientInfo.LocalServiceProvider`).
+            // `TestProcessBootstrap.LocalServices`).
             TestProcessBootstrap.EnsureInitialized();
 
             var builder = new PolhemTestFixtureBuilder();

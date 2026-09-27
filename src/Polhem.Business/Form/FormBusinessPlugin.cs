@@ -51,7 +51,7 @@ namespace Polhem.Business.Form
         /// deliberately not passed in: it would expose its protected surface to every plugin and
         /// invite coupling to internals rather than to the context.
         /// </remarks>
-        protected FormBusinessPlugin(IPolhemContext ctx, Guid accessToken, string progId)
+        protected FormBusinessPlugin(IBusinessObjectContext ctx, Guid accessToken, string progId)
         {
             Context = ctx ?? throw new ArgumentNullException(nameof(ctx));
             AccessToken = accessToken;
@@ -59,7 +59,7 @@ namespace Polhem.Business.Form
         }
 
         /// <summary>Gets the per-call business context.</summary>
-        protected IPolhemContext Context { get; }
+        protected IBusinessObjectContext Context { get; }
 
         /// <summary>Gets the access token of the call being extended.</summary>
         protected Guid AccessToken { get; }

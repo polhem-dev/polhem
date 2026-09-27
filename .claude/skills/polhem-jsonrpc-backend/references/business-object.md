@@ -46,7 +46,7 @@ public sealed class GameBO : BusinessObject
 {
     // The 4-arg ctor must match the factory's Activator.CreateInstance(type, ctx, token, progId, isLocalCall).
     // The BusinessObject base only takes (ctx, token, isLocalCall) → just drop progId (the base does not use it).
-    public GameBO(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
+    public GameBO(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
         : base(ctx, accessToken, isLocalCall) { }
 
     // Every action must be marked [ApiAccessControl] or it is rejected. Single args in, single result out.
@@ -118,7 +118,7 @@ namespace Xxx.Server.Auth;
 
 public sealed class XxxAuthenticatingSystemBusinessObject : SystemBusinessObject
 {
-    public XxxAuthenticatingSystemBusinessObject(IPolhemContext ctx, Guid accessToken, bool isLocalCall = true)
+    public XxxAuthenticatingSystemBusinessObject(IBusinessObjectContext ctx, Guid accessToken, bool isLocalCall = true)
         : base(ctx, accessToken, isLocalCall) { }
 
     protected override bool AuthenticateUser(LoginArgs args, out string userName)
@@ -138,7 +138,7 @@ public sealed class XxxAuthenticatingSystemBusinessObject : SystemBusinessObject
 
 ```csharp
 using Polhem.Business;
-using Polhem.Business.AuditLog;   // LogBusinessObject
+using Polhem.Business.AuditLog;   // AuditLogBusinessObject
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
@@ -174,9 +174,9 @@ public sealed class XxxBusinessObjectFactory : IBusinessObjectFactory
     // IBusinessObjectFactory has had this member since 4.14.0; delegate to the framework default.
     // The compile error tells you which member is missing.
     public object CreateLogBusinessObject(Guid accessToken, bool isLocalCall = true)
-        => new LogBusinessObject(BuildContext(), accessToken, isLocalCall);
+        => new AuditLogBusinessObject(BuildContext(), accessToken, isLocalCall);
 
-    private PolhemContext BuildContext() => new()
+    private BusinessObjectContext BuildContext() => new()
     {
         DefineAccess = _defineAccess,
         SessionInfoService = _sessionInfoService,

@@ -6,6 +6,9 @@ namespace Polhem.Definition.Logging
     /// </summary>
     public enum ChangeKind
     {
+        /// <summary>No change kind: the default value of an unset field.</summary>
+        None = 0,
+
         /// <summary>A new record was inserted.</summary>
         Insert = 1,
 

@@ -93,11 +93,11 @@ namespace Polhem.Business.UnitTests
 
         public class TenantFormBo : FormBusinessObject
         {
-            public TenantFormBo(Definition.IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
+            public TenantFormBo(Definition.IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
                 : base(ctx, accessToken, progId, isLocalCall) { }
         }
 
-        // DefineAccess / LanguageService are only forwarded onto the PolhemContext and never touched by
+        // DefineAccess / LanguageService are only forwarded onto the BusinessObjectContext and never touched by
         // the resolution path under test, but the factory ctor null-checks every dependency, so
         // inert stubs stand in for them.
         private static BusinessObjectFactory CreateFactory(IBoTypeResolver resolver, ISessionInfoService sessions)

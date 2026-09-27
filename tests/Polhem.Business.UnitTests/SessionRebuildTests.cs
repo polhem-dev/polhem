@@ -28,7 +28,7 @@ namespace Polhem.Business.UnitTests
         private Guid LoginAsSeedUser()
         {
             var bo = new TestableSystemBusinessObject(
-                TestPolhemContext.Create(_fx), Guid.Empty, _ => (true, "Seed User"));
+                TestBusinessObjectContext.Create(_fx), Guid.Empty, _ => (true, "Seed User"));
             return bo.Login(new LoginArgs { UserId = "001", Password = "pwd" }).AccessToken;
         }
 
@@ -37,7 +37,7 @@ namespace Polhem.Business.UnitTests
         public void Get_AfterCacheEviction_RebuildsFromSeed()
         {
             var accessToken = LoginAsSeedUser();
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
             try
             {
                 bo.EnterCompany(new EnterCompanyArgs { CompanyId = SeedCompanyId });
@@ -61,7 +61,7 @@ namespace Polhem.Business.UnitTests
             }
             finally
             {
-                new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System).Logout(new LogoutArgs());
+                new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System).Logout(new LogoutArgs());
             }
         }
 
@@ -81,7 +81,7 @@ namespace Polhem.Business.UnitTests
             }
             finally
             {
-                new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System).Logout(new LogoutArgs());
+                new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System).Logout(new LogoutArgs());
             }
         }
 
@@ -90,7 +90,7 @@ namespace Polhem.Business.UnitTests
         public void Get_AfterLogout_DoesNotRebuild()
         {
             var accessToken = LoginAsSeedUser();
-            new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System).Logout(new LogoutArgs());
+            new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System).Logout(new LogoutArgs());
 
             Assert.Null(SessionService.Get(accessToken));
         }

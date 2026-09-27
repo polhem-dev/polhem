@@ -7,7 +7,7 @@ namespace Polhem.Business.AuditLog
     /// Shared output result for the audit-log aggregate queries (anomaly summary / top-N): a bounded,
     /// unpaged summary result set.
     /// </summary>
-    public class LogAggregateResult : BusinessResult, ILogAggregateResponse
+    public class AuditLogAggregateResult : BusinessResult, IAuditLogAggregateResponse
     {
         /// <summary>Gets or sets the aggregate result rows.</summary>
         public DataTable? Table { get; set; }

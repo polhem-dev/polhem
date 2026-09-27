@@ -10,7 +10,7 @@ namespace Polhem.Business.System
         /// <summary>
         /// Gets or sets the user account identifier.
         /// </summary>
-        public string UserID { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the expiration time in seconds. Defaults to 3600.

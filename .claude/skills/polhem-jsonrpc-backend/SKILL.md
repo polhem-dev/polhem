@@ -93,7 +93,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddXxxBackend();          // see below
 builder.Services.AddControllers();
 var app = builder.Build();
-app.UseXxxBackend();              // seeder + ApiClientInfo.LocalServiceProvider (if needed)
+app.UseXxxBackend();              // seeder
 app.MapControllers();
 app.Run();
 ```
@@ -155,7 +155,7 @@ public sealed class GameBO : BusinessObject
 {
     // 4-arg ctor (the factory uses Activator.CreateInstance(type, ctx, token, progId, isLocalCall));
     // the BusinessObject base only takes 3 args → drop progId.
-    public GameBO(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
+    public GameBO(IBusinessObjectContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
         : base(ctx, accessToken, isLocalCall) { }
 
     [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Anonymous)]
@@ -209,7 +209,7 @@ var r = await new XxxApiConnector(endpoint, Guid.Empty).GetLevelsAsync();
   fixed value keeps encrypted rows decryptable across runs); in production a real key must be injected by the
   deployment mechanism.
 - **Interface members grow between versions**: for example, in 4.14.0 `IBusinessObjectFactory` gained
-  `CreateLogBusinessObject` — a custom factory must add it (delegating to the framework's `LogBusinessObject`). The
+  `CreateLogBusinessObject` — a custom factory must add it (delegating to the framework's `AuditLogBusinessObject`). The
   compile error tells you exactly which member is missing.
 - **wire DTO deserialization**: the client deserializes Plain responses with reflection-based STJ and **does not
   register `JsonStringEnumConverter`** — declare the DTO's enum fields as `string` and parse them yourself, otherwise

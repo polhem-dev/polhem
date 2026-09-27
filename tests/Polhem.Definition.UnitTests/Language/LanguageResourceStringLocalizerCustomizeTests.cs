@@ -9,10 +9,10 @@ using Polhem.Definition.Storage;
 namespace Polhem.Definition.UnitTests.Language
 {
     /// <summary>
-    /// Tenant customization pipeline tests for <see cref="PolhemStringLocalizer{T}"/>: a customizeIdProvider hit gives the cust value,
+    /// Tenant customization pipeline tests for <see cref="LanguageResourceStringLocalizer{T}"/>: a customizeIdProvider hit gives the cust value,
     /// a key missing from cust gives the base value, and the existing 1-arg / 2-arg constructors short-circuit to the base alone (zero reader calls, bit-for-bit the same as before).
     /// </summary>
-    public class PolhemStringLocalizerCustomizeTests
+    public class LanguageResourceStringLocalizerCustomizeTests
     {
         // Marker type whose name maps to the "CommonResources" language namespace.
         // Avoids the BCL "Common" / System.Data.Common collision flagged by CA1724.
@@ -27,7 +27,7 @@ namespace Polhem.Definition.UnitTests.Language
             var reader = new SpyCustomizeReader();
             reader.AddLanguage("acme", "zh-TW", "CommonResources", ("OK", "送出"));
             var svc = new LanguageService(defineAccess, reader);
-            var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW", () => "acme");
+            var localizer = new LanguageResourceStringLocalizer<CommonResources>(svc, () => "zh-TW", () => "acme");
 
             var result = localizer["OK"];
 
@@ -44,7 +44,7 @@ namespace Polhem.Definition.UnitTests.Language
             var reader = new SpyCustomizeReader();
             reader.AddLanguage("acme", "zh-TW", "CommonResources", ("OK", "送出"));
             var svc = new LanguageService(defineAccess, reader);
-            var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW", () => "acme");
+            var localizer = new LanguageResourceStringLocalizer<CommonResources>(svc, () => "zh-TW", () => "acme");
 
             Assert.Equal("取消", localizer["Cancel"].Value);
         }
@@ -56,7 +56,7 @@ namespace Polhem.Definition.UnitTests.Language
             var defineAccess = new StubDefineAccess("zh-TW");
             var reader = new SpyCustomizeReader();
             var svc = new LanguageService(defineAccess, reader);
-            var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW", () => "acme");
+            var localizer = new LanguageResourceStringLocalizer<CommonResources>(svc, () => "zh-TW", () => "acme");
 
             var result = localizer["Nonexistent"];
 
@@ -73,7 +73,7 @@ namespace Polhem.Definition.UnitTests.Language
             var reader = new SpyCustomizeReader();
             reader.AddLanguage("acme", "zh-TW", "CommonResources", ("OK", "送出"));
             var svc = new LanguageService(defineAccess, reader);
-            var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW", () => null!);
+            var localizer = new LanguageResourceStringLocalizer<CommonResources>(svc, () => "zh-TW", () => null!);
 
             Assert.Equal("確定", localizer["OK"].Value);
             Assert.Equal(0, reader.GetCustomizeLanguageCallCount);
@@ -86,7 +86,7 @@ namespace Polhem.Definition.UnitTests.Language
             var svc = new LanguageService(new StubDefineAccess("zh-TW"), null);
 
             Assert.Throws<ArgumentNullException>(() =>
-                new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW", null!));
+                new LanguageResourceStringLocalizer<CommonResources>(svc, () => "zh-TW", null!));
         }
 
         // ---- Regression guard: a deployment without a CustomizeId must behave bit-for-bit as before ----
@@ -100,7 +100,7 @@ namespace Polhem.Definition.UnitTests.Language
             var reader = new SpyCustomizeReader();
             reader.AddLanguage("acme", "zh-TW", "CommonResources", ("OK", "送出"));
             var svc = new LanguageService(defineAccess, reader);
-            var localizer = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW");
+            var localizer = new LanguageResourceStringLocalizer<CommonResources>(svc, () => "zh-TW");
 
             Assert.Equal("確定", localizer["OK"].Value);
             Assert.Equal(0, reader.GetCustomizeLanguageCallCount);
@@ -116,8 +116,8 @@ namespace Polhem.Definition.UnitTests.Language
             reader.AddLanguage("acme", "zh-TW", "CommonResources", ("OK", "送出"));
             var svc = new LanguageService(defineAccess, reader);
 
-            var legacy = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW")["OK"];
-            var explicitEmpty = new PolhemStringLocalizer<CommonResources>(svc, () => "zh-TW", () => string.Empty)["OK"];
+            var legacy = new LanguageResourceStringLocalizer<CommonResources>(svc, () => "zh-TW")["OK"];
+            var explicitEmpty = new LanguageResourceStringLocalizer<CommonResources>(svc, () => "zh-TW", () => string.Empty)["OK"];
 
             Assert.Equal(legacy.Value, explicitEmpty.Value);
             Assert.Equal(legacy.ResourceNotFound, explicitEmpty.ResourceNotFound);

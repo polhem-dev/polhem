@@ -43,7 +43,7 @@ namespace Polhem.Business.UnitTests
                 // the built-in credential check is covered by `SystemBusinessObjectAuthenticationTests`.
                 // The user ID must match seed user '001', otherwise the `HasAccess` join finds no mapping.
                 var loginBo = new TestableSystemBusinessObject(
-                    TestPolhemContext.Create(_fx),
+                    TestBusinessObjectContext.Create(_fx),
                     Guid.Empty,
                     _ => (true, "Integration User"));
                 var loginResult = loginBo.Login(new LoginArgs { UserId = "001", Password = "pwd" });
@@ -51,7 +51,7 @@ namespace Polhem.Business.UnitTests
                 var accessToken = loginResult.AccessToken;
                 Assert.Null(sessionService.Get(accessToken)!.CompanyId);
 
-                var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
+                var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
 
                 // 2. EnterCompany(A): the first company entry.
                 var enterA = bo.EnterCompany(new EnterCompanyArgs { CompanyId = companyA });
@@ -126,10 +126,10 @@ namespace Polhem.Business.UnitTests
             try
             {
                 var loginBo = new TestableSystemBusinessObject(
-                    TestPolhemContext.Create(_fx), Guid.Empty,
+                    TestBusinessObjectContext.Create(_fx), Guid.Empty,
                     _ => (true, "User"));
                 var accessToken = loginBo.Login(new LoginArgs { UserId = "u", Password = "p" }).AccessToken;
-                var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
+                var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
                 bo.Logout(new LogoutArgs());
 
                 Assert.Throws<AuthenticationRequiredException>(
@@ -147,10 +147,10 @@ namespace Polhem.Business.UnitTests
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             var loginBo = new TestableSystemBusinessObject(
-                TestPolhemContext.Create(_fx), Guid.Empty,
+                TestBusinessObjectContext.Create(_fx), Guid.Empty,
                 _ => (true, "User"));
             var accessToken = loginBo.Login(new LoginArgs { UserId = "u", Password = "p" }).AccessToken;
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
 
             bo.Logout(new LogoutArgs());
 
@@ -163,10 +163,10 @@ namespace Polhem.Business.UnitTests
         {
             var sessionService = _fx.GetRequiredService<ISessionInfoService>();
             var loginBo = new TestableSystemBusinessObject(
-                TestPolhemContext.Create(_fx), Guid.Empty,
+                TestBusinessObjectContext.Create(_fx), Guid.Empty,
                 _ => (true, "User"));
             var accessToken = loginBo.Login(new LoginArgs { UserId = "u", Password = "p" }).AccessToken;
-            var bo = new SystemBusinessObject(TestPolhemContext.Create(_fx), accessToken, SysProgIds.System);
+            var bo = new SystemBusinessObject(TestBusinessObjectContext.Create(_fx), accessToken, SysProgIds.System);
 
             try
             {

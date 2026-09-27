@@ -54,7 +54,7 @@ namespace Polhem.Business.UnitTests.Permission
                 new DepartmentRow(s_subDept, "SUB", "子部門", s_dept, Guid.Empty),
             ]);
 
-        private static PermissionModels Models(PermissionAction action, ScopeStrategy scope)
+        private static PermissionModels Models(PermissionActions action, ScopeStrategy scope)
         {
             var models = new PermissionModels();
             var model = models.Models!.Add(Model, "採購單");
@@ -79,9 +79,9 @@ namespace Polhem.Business.UnitTests.Permission
         public void ResolveFilter_Own_OwnerInBothIdentities()
         {
             var session = Session(s_user, s_employee, Guid.Empty, "Buyer");
-            var resolver = Build(session, [new("Buyer", Model, PermissionAction.Read, ScopeStrategy.Own)]);
+            var resolver = Build(session, [new("Buyer", Model, PermissionActions.Read, ScopeStrategy.Own)]);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema());
 
             AssertIn(node!, "buyer_rowid", s_user, s_employee);
         }
@@ -91,9 +91,9 @@ namespace Polhem.Business.UnitTests.Permission
         public void ResolveFilter_Own_NoEmployee_UserOnly()
         {
             var session = Session(s_user, Guid.Empty, Guid.Empty, "Buyer");
-            var resolver = Build(session, [new("Buyer", Model, PermissionAction.Read, ScopeStrategy.Own)]);
+            var resolver = Build(session, [new("Buyer", Model, PermissionActions.Read, ScopeStrategy.Own)]);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema());
 
             AssertIn(node!, "buyer_rowid", s_user);
         }
@@ -103,9 +103,9 @@ namespace Polhem.Business.UnitTests.Permission
         public void ResolveFilter_Dept_DeptOrOwn()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
-            var resolver = Build(session, [new("Buyer", Model, PermissionAction.Read, ScopeStrategy.Dept)]);
+            var resolver = Build(session, [new("Buyer", Model, PermissionActions.Read, ScopeStrategy.Dept)]);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema());
 
             var group = Assert.IsType<FilterGroup>(node);
             Assert.Equal(LogicalOperator.Or, group.Operator);
@@ -119,9 +119,9 @@ namespace Polhem.Business.UnitTests.Permission
         public void ResolveFilter_DeptAndSub_SubtreeOrOwn()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
-            var resolver = Build(session, [new("Buyer", Model, PermissionAction.Read, ScopeStrategy.DeptAndSub)], DeptTree());
+            var resolver = Build(session, [new("Buyer", Model, PermissionActions.Read, ScopeStrategy.DeptAndSub)], DeptTree());
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema());
 
             var group = Assert.IsType<FilterGroup>(node);
             Assert.Equal(LogicalOperator.Or, group.Operator);
@@ -134,9 +134,9 @@ namespace Polhem.Business.UnitTests.Permission
         public void ResolveFilter_MultipleDeptFields_OrUnion()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
-            var resolver = Build(session, [new("Buyer", Model, PermissionAction.Read, ScopeStrategy.DeptAndSub)], DeptTree());
+            var resolver = Build(session, [new("Buyer", Model, PermissionActions.Read, ScopeStrategy.DeptAndSub)], DeptTree());
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, TransferSchema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, TransferSchema());
 
             // Flat OR: from_dept IN subtree, to_dept IN subtree, buyer_rowid IN identities, so both departments' managers can see it.
             var group = Assert.IsType<FilterGroup>(node);
@@ -169,11 +169,11 @@ namespace Polhem.Business.UnitTests.Permission
             var session = Session(s_user, s_employee, s_dept, "Buyer", "Manager");
             var resolver = Build(session,
             [
-                new("Buyer", Model, PermissionAction.Read, ScopeStrategy.Dept),
-                new("Manager", Model, PermissionAction.Read, ScopeStrategy.All),
+                new("Buyer", Model, PermissionActions.Read, ScopeStrategy.Dept),
+                new("Manager", Model, PermissionActions.Read, ScopeStrategy.All),
             ]);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema());
 
             Assert.Null(node);
         }
@@ -185,11 +185,11 @@ namespace Polhem.Business.UnitTests.Permission
             var session = Session(s_user, s_employee, s_dept, "Buyer", "Clerk");
             var resolver = Build(session,
             [
-                new("Buyer", Model, PermissionAction.Read, ScopeStrategy.Own),
-                new("Clerk", Model, PermissionAction.Read, ScopeStrategy.Dept),
+                new("Buyer", Model, PermissionActions.Read, ScopeStrategy.Own),
+                new("Clerk", Model, PermissionActions.Read, ScopeStrategy.Dept),
             ]);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema());
 
             // Top-level OR: the Own branch plus the Dept branch (Dept itself is a group of (dept=..) OR Own).
             var group = Assert.IsType<FilterGroup>(node);
@@ -205,10 +205,10 @@ namespace Polhem.Business.UnitTests.Permission
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
             var resolver = Build(session,
-                [new("Buyer", Model, PermissionAction.Read, ScopeStrategy.Inherit)],
-                models: Models(PermissionAction.Read, ScopeStrategy.Dept));
+                [new("Buyer", Model, PermissionActions.Read, ScopeStrategy.Inherit)],
+                models: Models(PermissionActions.Read, ScopeStrategy.Dept));
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema());
 
             var group = Assert.IsType<FilterGroup>(node);
             AssertEqual(FindByField(group, "dept_rowid"), "dept_rowid", s_dept);
@@ -220,10 +220,10 @@ namespace Polhem.Business.UnitTests.Permission
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
             var resolver = Build(session,
-                [new("Buyer", Model, PermissionAction.Read, ScopeStrategy.Inherit)],
-                models: Models(PermissionAction.Read, ScopeStrategy.All));
+                [new("Buyer", Model, PermissionActions.Read, ScopeStrategy.Inherit)],
+                models: Models(PermissionActions.Read, ScopeStrategy.All));
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema());
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema());
 
             Assert.Null(node);
         }
@@ -235,9 +235,9 @@ namespace Polhem.Business.UnitTests.Permission
         public void ResolveFilter_Own_NoOwnerField_DeniesAll()
         {
             var session = Session(s_user, s_employee, Guid.Empty, "Buyer");
-            var resolver = Build(session, [new("Buyer", Model, PermissionAction.Read, ScopeStrategy.Own)]);
+            var resolver = Build(session, [new("Buyer", Model, PermissionActions.Read, ScopeStrategy.Own)]);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema(owner: false));
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema(owner: false));
 
             AssertDenyAll(node!);
         }
@@ -247,9 +247,9 @@ namespace Polhem.Business.UnitTests.Permission
         public void ResolveFilter_Dept_NoFields_DeniesAll()
         {
             var session = Session(s_user, s_employee, s_dept, "Buyer");
-            var resolver = Build(session, [new("Buyer", Model, PermissionAction.Read, ScopeStrategy.Dept)]);
+            var resolver = Build(session, [new("Buyer", Model, PermissionActions.Read, ScopeStrategy.Dept)]);
 
-            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionAction.Read, Schema(owner: false, dept: false));
+            var node = resolver.ResolveFilter(session.AccessToken, Model, PermissionActions.Read, Schema(owner: false, dept: false));
 
             AssertDenyAll(node!);
         }

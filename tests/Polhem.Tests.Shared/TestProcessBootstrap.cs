@@ -9,7 +9,7 @@ namespace Polhem.Tests.Shared
 {
     /// <summary>
     /// Process-wide test bootstrap: wires up <c>DbConnectionManager</c>, <c>SysInfo</c>,
-    /// <see cref="Polhem.Api.Client.ApiClientInfo.LocalServiceProvider"/> and
+    /// the in-process backend exposed as <see cref="LocalServices"/> and
     /// <see cref="SharedDatabaseState.EnsureRegistered"/> once.
     /// </summary>
     /// <remarks>
@@ -22,6 +22,7 @@ namespace Polhem.Tests.Shared
         private static bool s_initialized;
         private static string? s_sharedDefinePath;
         private static string? s_sharedCustomizePath;
+        private static IServiceProvider? s_localServices;
 
         /// <summary>
         /// Hard-coded Base64 AES-CBC-HMAC combined key (64 bytes) used by the test
@@ -67,7 +68,7 @@ namespace Polhem.Tests.Shared
         /// </para>
         /// <para>
         /// Rooted here rather than per fixture because the near-end API path
-        /// (<c>ApiClientInfo.LocalServiceProvider</c>) runs on the bootstrap container: a fixture-only
+        /// (<see cref="LocalServices"/>) runs on the bootstrap container: a fixture-only
         /// customization root would leave every call made through a connector reading a different
         /// root from the one the test wrote to.
         /// </para>
@@ -78,6 +79,19 @@ namespace Polhem.Tests.Shared
             {
                 EnsureInitialized();
                 return s_sharedCustomizePath!;
+            }
+        }
+
+        /// <summary>
+        /// The process-wide backend container that local connectors dispatch to: pass it to the
+        /// local constructors of <c>SystemApiConnector</c>, <c>FormApiConnector</c> and the others.
+        /// </summary>
+        public static IServiceProvider LocalServices
+        {
+            get
+            {
+                EnsureInitialized();
+                return s_localServices!;
             }
         }
 
@@ -132,12 +146,7 @@ namespace Polhem.Tests.Shared
             // is resolved through constructor injection from this container.
             var services = new ServiceCollection();
             services.AddPolhemFramework(settings.BackendConfiguration, pathOptions, autoCreateMasterKey: true);
-            var provider = services.BuildServiceProvider();
-
-            // The in-process (near-end) mode of `Polhem.Api.Client` gets backend services through
-            // `ApiClientInfo.LocalServiceProvider`, and test fixtures point it at this process-wide container.
-            // NOTE: this holder is a transitional measure until `Polhem.Api.Client` is refactored.
-            Polhem.Api.Client.ApiClientInfo.LocalServiceProvider = provider;
+            s_localServices = services.BuildServiceProvider();
         }
 
         private static string FindRepoRoot(string startDir)

@@ -1,2 +1,49 @@
 #nullable enable
-Polhem.Api.Client.Connectors.SystemApiConnector.CreateSessionAsync(string! userID, int expiresIn = 3600) -> System.Threading.Tasks.Task<System.Guid>!
+Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(System.IServiceProvider! services, System.Guid accessToken) -> void
+Polhem.Api.Client.Connectors.ApiConnector.ApiConnector(System.IServiceProvider! services, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
+Polhem.Api.Client.Connectors.AuditLogApiConnector
+Polhem.Api.Client.Connectors.AuditLogApiConnector.AuditLogApiConnector(System.IServiceProvider! services, System.Guid accessToken) -> void
+Polhem.Api.Client.Connectors.AuditLogApiConnector.AuditLogApiConnector(System.IServiceProvider! services, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
+Polhem.Api.Client.Connectors.AuditLogApiConnector.AuditLogApiConnector(string! endpoint, System.Guid accessToken) -> void
+Polhem.Api.Client.Connectors.AuditLogApiConnector.AuditLogApiConnector(string! endpoint, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
+Polhem.Api.Client.Connectors.AuditLogApiConnector.ExecuteAsync<T>(string! action, object! value, Polhem.Api.Core.Messages.PayloadFormat format = Polhem.Api.Core.Messages.PayloadFormat.Encrypted) -> System.Threading.Tasks.Task<T>!
+Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(System.IServiceProvider! services, System.Guid accessToken, string! progId) -> void
+Polhem.Api.Client.Connectors.FormApiConnector.FormApiConnector(System.IServiceProvider! services, System.Guid accessToken, string! progId, Polhem.Api.Client.ApiSessionContext! session) -> void
+Polhem.Api.Client.Connectors.SystemApiConnector.CreateSessionAsync(string! userId, int expiresIn = 3600) -> System.Threading.Tasks.Task<System.Guid>!
+Polhem.Api.Client.Connectors.SystemApiConnector.LoginAsync(string! userId, string! password) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.System.LoginResponse!>!
+Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(System.IServiceProvider! services, System.Guid accessToken) -> void
+Polhem.Api.Client.Connectors.SystemApiConnector.SystemApiConnector(System.IServiceProvider! services, System.Guid accessToken, Polhem.Api.Client.ApiSessionContext! session) -> void
+Polhem.Api.Client.Permissions.ElementCapabilityResolver
+Polhem.Api.Client.Permissions.ElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionActions action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
+Polhem.Api.Client.Permissions.ElementCapabilityResolver.ElementCapabilityResolver() -> void
+Polhem.Api.Client.Permissions.ElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> Polhem.Api.Client.Permissions.FieldCapability
+Polhem.Api.Client.Permissions.FieldCapability
+Polhem.Api.Client.Permissions.FieldCapability.Deconstruct(out bool Visible, out bool ReadOnly) -> void
+Polhem.Api.Client.Permissions.FieldCapability.Equals(Polhem.Api.Client.Permissions.FieldCapability other) -> bool
+Polhem.Api.Client.Permissions.FieldCapability.FieldCapability() -> void
+Polhem.Api.Client.Permissions.FieldCapability.FieldCapability(bool Visible, bool ReadOnly) -> void
+Polhem.Api.Client.Permissions.FieldCapability.ReadOnly.get -> bool
+Polhem.Api.Client.Permissions.FieldCapability.ReadOnly.init -> void
+Polhem.Api.Client.Permissions.FieldCapability.Visible.get -> bool
+Polhem.Api.Client.Permissions.FieldCapability.Visible.init -> void
+Polhem.Api.Client.Permissions.IElementCapabilityResolver
+Polhem.Api.Client.Permissions.IElementCapabilityResolver.Can(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.Settings.PermissionActions action, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> bool
+Polhem.Api.Client.Permissions.IElementCapabilityResolver.ResolveField(Polhem.Definition.Forms.FormSchema! schema, string! fieldName, string! tableName, System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>? capabilities) -> Polhem.Api.Client.Permissions.FieldCapability
+Polhem.Api.Client.Providers.LocalApiProvider.LocalApiProvider(System.IServiceProvider! services, System.Guid accessToken) -> void
+Polhem.Api.Client.SupportedConnectTypes.None = 0 -> Polhem.Api.Client.SupportedConnectTypes
+override Polhem.Api.Client.Permissions.FieldCapability.GetHashCode() -> int
+static Polhem.Api.Client.Permissions.FieldCapability.operator !=(Polhem.Api.Client.Permissions.FieldCapability left, Polhem.Api.Client.Permissions.FieldCapability right) -> bool
+static Polhem.Api.Client.Permissions.FieldCapability.operator ==(Polhem.Api.Client.Permissions.FieldCapability left, Polhem.Api.Client.Permissions.FieldCapability right) -> bool
+static readonly Polhem.Api.Client.Permissions.ElementCapabilityResolver.Default -> Polhem.Api.Client.Permissions.ElementCapabilityResolver!
+static readonly Polhem.Api.Client.Permissions.FieldCapability.Allowed -> Polhem.Api.Client.Permissions.FieldCapability
+virtual Polhem.Api.Client.Connectors.AuditLogApiConnector.GetAccessLogAsync(Polhem.Api.Core.Messages.AuditLog.GetAccessLogRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse!>!
+virtual Polhem.Api.Client.Connectors.AuditLogApiConnector.GetApiAnomalyLogAsync(Polhem.Api.Core.Messages.AuditLog.GetApiAnomalyLogRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse!>!
+virtual Polhem.Api.Client.Connectors.AuditLogApiConnector.GetApiAnomalySummaryAsync(Polhem.Api.Core.Messages.AuditLog.GetApiAnomalySummaryRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.AuditLogAggregateResponse!>!
+virtual Polhem.Api.Client.Connectors.AuditLogApiConnector.GetChangeDetailAsync(System.Guid sysRowId) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.GetChangeDetailResponse!>!
+virtual Polhem.Api.Client.Connectors.AuditLogApiConnector.GetChangeLogAsync(Polhem.Api.Core.Messages.AuditLog.GetChangeLogRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse!>!
+virtual Polhem.Api.Client.Connectors.AuditLogApiConnector.GetDbAnomalyLogAsync(Polhem.Api.Core.Messages.AuditLog.GetDbAnomalyLogRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse!>!
+virtual Polhem.Api.Client.Connectors.AuditLogApiConnector.GetDbAnomalySummaryAsync(Polhem.Api.Core.Messages.AuditLog.GetDbAnomalySummaryRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.AuditLogAggregateResponse!>!
+virtual Polhem.Api.Client.Connectors.AuditLogApiConnector.GetLoginLogAsync(Polhem.Api.Core.Messages.AuditLog.GetLoginLogRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.AuditLogListResponse!>!
+virtual Polhem.Api.Client.Connectors.AuditLogApiConnector.GetTopApiMethodsAsync(Polhem.Api.Core.Messages.AuditLog.GetTopApiMethodsRequest! request) -> System.Threading.Tasks.Task<Polhem.Api.Core.Messages.AuditLog.AuditLogAggregateResponse!>!
+~override Polhem.Api.Client.Permissions.FieldCapability.Equals(object obj) -> bool
+~override Polhem.Api.Client.Permissions.FieldCapability.ToString() -> string

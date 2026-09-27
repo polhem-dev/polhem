@@ -38,6 +38,7 @@ namespace Polhem.ObjectCaching
         /// Called directly by <c>AddPolhemFramework</c> after settings are loaded.
         /// </summary>
         /// <remarks>
+        /// A blank <see cref="BackendComponents.CacheProvider"/> selects <see cref="MemoryCacheProvider"/>.
         /// Only replaces <see cref="Provider"/> when the configured type differs from the
         /// current provider's runtime type. This preserves cached entries when host startup
         /// invokes <see cref="Initialize"/> after the default provider has already received
@@ -52,7 +53,12 @@ namespace Polhem.ObjectCaching
         {
             ArgumentNullException.ThrowIfNull(configuration);
             var configured = configuration.Components.CacheProvider;
-            if (string.IsNullOrWhiteSpace(configured)) return;
+            if (string.IsNullOrWhiteSpace(configured))
+            {
+                // Blank selects the framework default, the rule every BackendComponents entry follows.
+                if (Provider.GetType() != typeof(MemoryCacheProvider)) Provider = new MemoryCacheProvider();
+                return;
+            }
 
             var newType = Type.GetType(configured);
             if (newType != null && newType == Provider.GetType()) return;

@@ -17,11 +17,11 @@ namespace Polhem.Definition.UnitTests.Identity
         {
             var grants = new List<RoleGrantRow>
             {
-                new("Buyer", "PurchaseOrder", PermissionAction.Read, ScopeStrategy.Dept),
-                new("Buyer", "PurchaseOrder", PermissionAction.Update, ScopeStrategy.Own),
-                new("Buyer", "Vendor", PermissionAction.Read, ScopeStrategy.All),
-                new("Manager", "PurchaseOrder", PermissionAction.Read, ScopeStrategy.All),
-                new("Manager", "PurchaseOrder", PermissionAction.Delete, ScopeStrategy.Inherit),
+                new("Buyer", "PurchaseOrder", PermissionActions.Read, ScopeStrategy.Dept),
+                new("Buyer", "PurchaseOrder", PermissionActions.Update, ScopeStrategy.Own),
+                new("Buyer", "Vendor", PermissionActions.Read, ScopeStrategy.All),
+                new("Manager", "PurchaseOrder", PermissionActions.Read, ScopeStrategy.All),
+                new("Manager", "PurchaseOrder", PermissionActions.Delete, ScopeStrategy.Inherit),
             };
             var userRoles = new List<UserRoleRow>
             {
@@ -39,7 +39,7 @@ namespace Polhem.Definition.UnitTests.Identity
 
             var allowed = perms.GetAllowed(s_buyer, "PurchaseOrder");
 
-            Assert.Equal(PermissionAction.Read | PermissionAction.Update, allowed);
+            Assert.Equal(PermissionActions.Read | PermissionActions.Update, allowed);
         }
 
         [Fact]
@@ -51,8 +51,8 @@ namespace Polhem.Definition.UnitTests.Identity
             // Buyer(Read|Update) ∪ Manager(Delete) on PurchaseOrder
             var allowed = perms.GetAllowed(s_buyerManager, "PurchaseOrder");
 
-            Assert.Equal(PermissionAction.Read | PermissionAction.Update | PermissionAction.Delete, allowed);
-            Assert.True(allowed.HasFlag(PermissionAction.Delete));
+            Assert.Equal(PermissionActions.Read | PermissionActions.Update | PermissionActions.Delete, allowed);
+            Assert.True(allowed.HasFlag(PermissionActions.Delete));
         }
 
         [Fact]
@@ -63,8 +63,8 @@ namespace Polhem.Definition.UnitTests.Identity
 
             var allowed = perms.GetAllowed(s_buyerManager, "Requisition");
 
-            Assert.Equal(PermissionAction.None, allowed);
-            Assert.False(allowed.HasFlag(PermissionAction.Read));
+            Assert.Equal(PermissionActions.None, allowed);
+            Assert.False(allowed.HasFlag(PermissionActions.Read));
         }
 
         [Fact]
@@ -76,7 +76,7 @@ namespace Polhem.Definition.UnitTests.Identity
             // Only Buyer is held, so Manager's Delete is not included.
             var allowed = perms.GetAllowed(s_buyer, "PurchaseOrder");
 
-            Assert.False(allowed.HasFlag(PermissionAction.Delete));
+            Assert.False(allowed.HasFlag(PermissionActions.Delete));
         }
 
         [Fact]
@@ -87,8 +87,8 @@ namespace Polhem.Definition.UnitTests.Identity
 
             var map = perms.GetAllowedByModel(s_buyerManager);
 
-            Assert.Equal(PermissionAction.Read | PermissionAction.Update | PermissionAction.Delete, map["PurchaseOrder"]);
-            Assert.Equal(PermissionAction.Read, map["Vendor"]);
+            Assert.Equal(PermissionActions.Read | PermissionActions.Update | PermissionActions.Delete, map["PurchaseOrder"]);
+            Assert.Equal(PermissionActions.Read, map["Vendor"]);
         }
 
         [Fact]
@@ -103,7 +103,7 @@ namespace Polhem.Definition.UnitTests.Identity
             Assert.True(map.ContainsKey("Vendor"));
             Assert.False(map.ContainsKey("Requisition"));
             // Only Buyer is held, so PurchaseOrder does not include Manager's Delete.
-            Assert.False(map["PurchaseOrder"].HasFlag(PermissionAction.Delete));
+            Assert.False(map["PurchaseOrder"].HasFlag(PermissionActions.Delete));
         }
 
         [Fact]
@@ -123,7 +123,7 @@ namespace Polhem.Definition.UnitTests.Identity
         {
             var perms = Build();
 
-            var scopes = perms.GetEffectiveScopes(s_buyer, "PurchaseOrder", PermissionAction.Read);
+            var scopes = perms.GetEffectiveScopes(s_buyer, "PurchaseOrder", PermissionActions.Read);
 
             Assert.Equal(new[] { ScopeStrategy.Dept }, scopes);
         }
@@ -135,7 +135,7 @@ namespace Polhem.Definition.UnitTests.Identity
             var perms = Build();
 
             // Buyer Read is Dept and Manager Read is All, so there are two scopes to merge (the resolver applies "any All means no filter").
-            var scopes = perms.GetEffectiveScopes(s_buyerManager, "PurchaseOrder", PermissionAction.Read);
+            var scopes = perms.GetEffectiveScopes(s_buyerManager, "PurchaseOrder", PermissionActions.Read);
 
             Assert.Equal(2, scopes.Count);
             Assert.Contains(ScopeStrategy.Dept, scopes);
@@ -149,8 +149,8 @@ namespace Polhem.Definition.UnitTests.Identity
             var perms = Build();
 
             // Buyer on PurchaseOrder has Read as Dept (can view the department) and Update as Own (can edit only their own).
-            Assert.Equal(new[] { ScopeStrategy.Dept }, perms.GetEffectiveScopes(s_buyer, "PurchaseOrder", PermissionAction.Read));
-            Assert.Equal(new[] { ScopeStrategy.Own }, perms.GetEffectiveScopes(s_buyer, "PurchaseOrder", PermissionAction.Update));
+            Assert.Equal(new[] { ScopeStrategy.Dept }, perms.GetEffectiveScopes(s_buyer, "PurchaseOrder", PermissionActions.Read));
+            Assert.Equal(new[] { ScopeStrategy.Own }, perms.GetEffectiveScopes(s_buyer, "PurchaseOrder", PermissionActions.Update));
         }
 
         [Fact]
@@ -160,7 +160,7 @@ namespace Polhem.Definition.UnitTests.Identity
             var perms = Build();
 
             // Buyer has no `PurchaseOrder.Delete` grant.
-            Assert.Empty(perms.GetEffectiveScopes(s_buyer, "PurchaseOrder", PermissionAction.Delete));
+            Assert.Empty(perms.GetEffectiveScopes(s_buyer, "PurchaseOrder", PermissionActions.Delete));
         }
 
         [Fact]

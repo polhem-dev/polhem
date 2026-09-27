@@ -34,7 +34,7 @@ Authorization: {{accessToken}}
   "params": {
     "value": {
       "$type": "Polhem.Define.ExecFuncArgs, Polhem.Define",
-      "FuncID": "Hello"
+      "funcId": "Hello"
     }
   },
   "id": "228bd7e0-603f-4433-93d9-9c03ebabc5e4"
