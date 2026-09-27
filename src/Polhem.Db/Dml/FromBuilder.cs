@@ -7,7 +7,7 @@ namespace Polhem.Db.Dml
     /// <summary>
     /// Builds the SQL FROM clause, including any JOIN statements.
     /// </summary>
-    public class FromBuilder
+    public sealed class FromBuilder
     {
         private readonly DatabaseType _databaseType;
 

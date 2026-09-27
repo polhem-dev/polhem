@@ -9,7 +9,7 @@ namespace Polhem.Definition.Forms
     /// </summary>
     [Description("Form table collection.")]
     [TreeNode("Tables", false)]
-    public class FormTableCollection : KeyCollectionBase<FormTable>
+    public sealed class FormTableCollection : KeyCollectionBase<FormTable>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="FormTableCollection"/>.

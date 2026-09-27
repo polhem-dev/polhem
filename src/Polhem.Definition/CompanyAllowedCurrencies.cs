@@ -16,7 +16,7 @@ namespace Polhem.Definition
     /// <c>CollectionBaseFormatter&lt;CompanyAllowedCurrencies, AllowedCurrencyItem&gt;</c>.
     /// </remarks>
     [Description("Company allowed-currency whitelist.")]
-    public class CompanyAllowedCurrencies : CollectionBase<AllowedCurrencyItem>
+    public sealed class CompanyAllowedCurrencies : CollectionBase<AllowedCurrencyItem>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="CompanyAllowedCurrencies"/>.

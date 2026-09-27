@@ -11,7 +11,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Permission rule.")]
     [TreeNode]
-    public class PermissionRule : KeyCollectionItem
+    public sealed class PermissionRule : KeyCollectionItem
     {
         private PermissionActions _action = PermissionActions.None;
 

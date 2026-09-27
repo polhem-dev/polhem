@@ -17,7 +17,7 @@ namespace Polhem.Definition.Settings
     /// </remarks>
     [Description("Menu entry (leaf node opening one program).")]
     [TreeNode]
-    public class MenuEntry : MenuNodeBase
+    public sealed class MenuEntry : MenuNodeBase
     {
         #region Constructors
 

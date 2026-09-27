@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Input arguments for setting or clearing an issued API key's expiry.
     /// </summary>
-    public class SetApiKeyExpiryArgs : BusinessArgs, ISetApiKeyExpiryRequest
+    public sealed class SetApiKeyExpiryArgs : BusinessArgs, ISetApiKeyExpiryRequest
     {
         /// <summary>
         /// Gets or sets the key identifier whose expiry is being set.

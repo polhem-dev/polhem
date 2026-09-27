@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for granting or revoking a user's deployment administrator flag.
     /// </summary>
-    public class SetDeploymentAdminResult : BusinessResult, ISetDeploymentAdminResponse
+    public sealed class SetDeploymentAdminResult : BusinessResult, ISetDeploymentAdminResponse
     {
         /// <summary>
         /// Gets or sets the user business id whose flag was set.

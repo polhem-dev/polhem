@@ -9,7 +9,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Database item collection.")]
     [TreeNode("Databases", true)]
-    public class DatabaseItemCollection : KeyCollectionBase<DatabaseItem>
+    public sealed class DatabaseItemCollection : KeyCollectionBase<DatabaseItem>
     {
     }
 }

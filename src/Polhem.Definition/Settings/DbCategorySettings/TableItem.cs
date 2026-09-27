@@ -10,7 +10,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Table item.")]
     [TreeNode]
-    public class TableItem : KeyCollectionItem
+    public sealed class TableItem : KeyCollectionItem
     {
         /// <summary>
         /// Gets or sets the table name.

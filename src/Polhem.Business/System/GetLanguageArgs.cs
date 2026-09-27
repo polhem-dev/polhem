@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Input arguments for retrieving a language resource as a typed object.
     /// </summary>
-    public class GetLanguageArgs : BusinessArgs, IGetLanguageRequest
+    public sealed class GetLanguageArgs : BusinessArgs, IGetLanguageRequest
     {
         /// <summary>
         /// Gets or sets the BCP-47 language code (e.g. <c>"zh-TW"</c>, <c>"en-US"</c>).

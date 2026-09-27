@@ -8,7 +8,7 @@ namespace Polhem.Base.Serialization
     /// Custom JSON converter for <see cref="DataSet"/> that preserves full metadata
     /// including dataset name, all tables, and data relations.
     /// </summary>
-    public class DataSetJsonConverter : JsonConverter<DataSet>
+    public sealed class DataSetJsonConverter : JsonConverter<DataSet>
     {
         /// <summary>
         /// Serializes a <see cref="DataSet"/> to JSON with full metadata.

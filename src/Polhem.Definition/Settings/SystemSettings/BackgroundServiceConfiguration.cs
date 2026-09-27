@@ -9,7 +9,7 @@ namespace Polhem.Definition.Settings
     [Description("Background service parameters and environment settings.")]
     [TreeNode("BackgroundService")]
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class BackgroundServiceConfiguration
+    public sealed class BackgroundServiceConfiguration
     {
         /// <summary>
         /// Returns a string representation of this object.

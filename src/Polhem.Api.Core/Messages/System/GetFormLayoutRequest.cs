@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API request for the get form layout operation.
     /// </summary>
-    public class GetFormLayoutRequest : ApiRequest, IGetFormLayoutRequest
+    public sealed class GetFormLayoutRequest : ApiRequest, IGetFormLayoutRequest
     {
         /// <summary>
         /// Gets or sets the program identifier whose layout should be retrieved.

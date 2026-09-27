@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response for storing one tenant's business plugin bindings.
     /// </summary>
-    public class SaveCustomizePluginSettingsResponse : ApiResponse, ISaveCustomizePluginSettingsResponse
+    public sealed class SaveCustomizePluginSettingsResponse : ApiResponse, ISaveCustomizePluginSettingsResponse
     {
         /// <summary>
         /// Gets or sets the number of plugin bindings stored, across every program in the definition.

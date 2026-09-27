@@ -6,7 +6,7 @@ namespace Polhem.Business.Form
     /// <summary>
     /// Output result for the FormSchema-driven <c>Save</c> operation.
     /// </summary>
-    public class SaveResult : BusinessResult, ISaveResponse
+    public sealed class SaveResult : BusinessResult, ISaveResponse
     {
         /// <summary>
         /// Gets or sets the freshly re-loaded <c>DataSet</c> after Save.

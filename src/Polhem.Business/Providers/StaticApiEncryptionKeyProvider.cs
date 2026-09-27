@@ -5,7 +5,7 @@ namespace Polhem.Business.Providers
     /// <summary>
     /// Static encryption key provider that always returns the shared key supplied at construction time.
     /// </summary>
-    public class StaticApiEncryptionKeyProvider : IApiEncryptionKeyProvider
+    public sealed class StaticApiEncryptionKeyProvider : IApiEncryptionKeyProvider
     {
         private readonly byte[] _apiEncryptionKey;
 

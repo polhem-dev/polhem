@@ -19,7 +19,7 @@ namespace Polhem.Definition.Settings
     /// </remarks>
     [Description("System-level unit-of-measure master.")]
     [XmlRoot("UnitSettings")]
-    public class UnitSettings : CollectionBase<UnitItem>
+    public sealed class UnitSettings : CollectionBase<UnitItem>
     {
         /// <summary>The decimals <see cref="GetDecimals"/> returns when a unit code is not found.</summary>
         public const int FallbackDecimals = 0;

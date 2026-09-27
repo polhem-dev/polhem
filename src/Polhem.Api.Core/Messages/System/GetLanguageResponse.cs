@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response for the get language resource operation.
     /// </summary>
-    public class GetLanguageResponse : ApiResponse, IGetLanguageResponse
+    public sealed class GetLanguageResponse : ApiResponse, IGetLanguageResponse
     {
         /// <summary>
         /// Gets or sets the raw definition serialised as XML; empty when no definition exists.

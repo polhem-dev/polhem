@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages
     /// <summary>
     /// API request type for executing a custom method.
     /// </summary>
-    public class ExecFuncRequest : ApiRequest, IExecFuncRequest
+    public sealed class ExecFuncRequest : ApiRequest, IExecFuncRequest
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecFuncRequest"/> class.

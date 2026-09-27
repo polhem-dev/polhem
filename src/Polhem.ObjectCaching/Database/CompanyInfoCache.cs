@@ -12,7 +12,7 @@ namespace Polhem.ObjectCaching.Database
     /// a missing company id is cached as a sentinel for the negative TTL, so repeated
     /// lookups of unknown company ids do not re-invoke <see cref="CreateInstance"/>.
     /// </remarks>
-    public class CompanyInfoCache : KeyObjectCache<CompanyInfo>
+    public sealed class CompanyInfoCache : KeyObjectCache<CompanyInfo>
     {
         private readonly Func<ICacheDataSourceProvider>? _dataSource;
 

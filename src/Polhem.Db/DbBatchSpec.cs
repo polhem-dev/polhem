@@ -5,7 +5,7 @@ namespace Polhem.Db
     /// <summary>
     /// Describes a batch of database commands to execute.
     /// </summary>
-    public class DbBatchSpec
+    public sealed class DbBatchSpec
     {
         /// <summary>
         /// Gets or sets the collection of commands to execute (executed in order).

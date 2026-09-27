@@ -11,7 +11,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Plugins bound to one program.")]
     [TreeNode]
-    public class ProgramPluginItem : KeyCollectionItem
+    public sealed class ProgramPluginItem : KeyCollectionItem
     {
         private PluginItemCollection? _plugins = null;
 

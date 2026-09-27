@@ -11,7 +11,7 @@ namespace Polhem.Db.Providers.PostgreSql
     /// <summary>
     /// <see cref="IDialectFactory"/> implementation for PostgreSQL.
     /// </summary>
-    public class PgDialectFactory : IDialectFactory
+    public sealed class PgDialectFactory : IDialectFactory
     {
         /// <inheritdoc />
         public ITableSchemaProvider CreateTableSchemaProvider(string databaseId, IDbConnectionManager connectionManager)

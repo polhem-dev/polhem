@@ -6,7 +6,7 @@ namespace Polhem.Definition.Organization
     /// A collection of <see cref="DepartmentNode"/>. Tri-modal serialisable (XML / JSON /
     /// MessagePack) via <see cref="CollectionBase{T}"/>.
     /// </summary>
-    public class DepartmentNodeCollection : CollectionBase<DepartmentNode>
+    public sealed class DepartmentNodeCollection : CollectionBase<DepartmentNode>
     {
         /// <summary>
         /// Initializes a new empty <see cref="DepartmentNodeCollection"/>.

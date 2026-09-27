@@ -6,7 +6,7 @@ namespace Polhem.Business.AuditLog
     /// <summary>
     /// Input arguments for the access-log list query.
     /// </summary>
-    public class GetAccessLogArgs : BusinessArgs, IGetAccessLogRequest
+    public sealed class GetAccessLogArgs : BusinessArgs, IGetAccessLogRequest
     {
         /// <summary>Gets or sets the inclusive lower bound on the event time (UTC).</summary>
         public DateTime? FromUtc { get; set; }

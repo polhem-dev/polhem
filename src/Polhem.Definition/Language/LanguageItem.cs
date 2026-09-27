@@ -8,7 +8,7 @@ namespace Polhem.Definition.Language
     /// A single localized text entry within a <see cref="LanguageResource"/>.
     /// </summary>
     [Description("Single localized text entry.")]
-    public class LanguageItem : KeyCollectionItem
+    public sealed class LanguageItem : KeyCollectionItem
     {
         /// <summary>
         /// Gets or sets the sub-key (within the parent namespace).

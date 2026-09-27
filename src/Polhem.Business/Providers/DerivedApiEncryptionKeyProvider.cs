@@ -21,7 +21,7 @@ namespace Polhem.Business.Providers
     /// login. That is acceptable because the access token is an unpredictable GUID and the root
     /// key never leaves the server; rotating the root key invalidates every live session.
     /// </remarks>
-    public class DerivedApiEncryptionKeyProvider : IApiEncryptionKeyProvider
+    public sealed class DerivedApiEncryptionKeyProvider : IApiEncryptionKeyProvider
     {
         private const int CombinedKeyLength = 64;
 

@@ -7,7 +7,7 @@ namespace Polhem.ObjectCaching.Define
     /// <summary>
     /// Form schema definition cache.
     /// </summary>
-    public class FormSchemaCache : KeyObjectCache<FormSchema>
+    public sealed class FormSchemaCache : KeyObjectCache<FormSchema>
     {
         private readonly IDefineStorage _storage;
 

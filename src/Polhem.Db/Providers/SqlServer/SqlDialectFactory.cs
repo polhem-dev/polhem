@@ -11,7 +11,7 @@ namespace Polhem.Db.Providers.SqlServer
     /// <summary>
     /// <see cref="IDialectFactory"/> implementation for SQL Server.
     /// </summary>
-    public class SqlDialectFactory : IDialectFactory
+    public sealed class SqlDialectFactory : IDialectFactory
     {
         /// <inheritdoc />
         public ITableSchemaProvider CreateTableSchemaProvider(string databaseId, IDbConnectionManager connectionManager)

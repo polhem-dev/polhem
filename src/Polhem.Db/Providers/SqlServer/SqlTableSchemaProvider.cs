@@ -11,7 +11,7 @@ namespace Polhem.Db.Providers.SqlServer
     /// <summary>
     /// Provides methods for reading and parsing SQL Server table schemas.
     /// </summary>
-    public class SqlTableSchemaProvider : ITableSchemaProvider
+    public sealed class SqlTableSchemaProvider : ITableSchemaProvider
     {
         private readonly DbAccess _dbAccess;
 

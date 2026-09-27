@@ -9,7 +9,7 @@ namespace Polhem.ObjectCaching
     /// <summary>
     /// Typed accessors for schema-shaped definitions: table schema, form schema, form layout and language resource.
     /// </summary>
-    public partial class CacheDefineAccess
+    public sealed partial class CacheDefineAccess
     {
         /// <summary>
         /// Gets the table schema for the specified category and table.

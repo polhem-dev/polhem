@@ -20,7 +20,7 @@ namespace Polhem.Business.Session
     /// entered.
     /// </para>
     /// </remarks>
-    public class EmployeeContextResolver : IEmployeeContextResolver
+    public sealed class EmployeeContextResolver : IEmployeeContextResolver
     {
         private readonly IRepositoryFactory _repositoryFactory;
 

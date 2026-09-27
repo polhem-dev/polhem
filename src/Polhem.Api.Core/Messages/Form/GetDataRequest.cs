@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.Form
     /// <summary>
     /// API request for the form GetData operation.
     /// </summary>
-    public class GetDataRequest : ApiRequest, IGetDataRequest
+    public sealed class GetDataRequest : ApiRequest, IGetDataRequest
     {
         /// <summary>
         /// Gets or sets the master row identifier (<c>sys_rowid</c>) to load.

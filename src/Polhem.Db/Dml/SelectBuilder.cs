@@ -7,7 +7,7 @@ namespace Polhem.Db.Dml
     /// <summary>
     /// Builds the SQL SELECT clause.
     /// </summary>
-    public class SelectBuilder
+    public sealed class SelectBuilder
     {
         private readonly DatabaseType _databaseType;
 

@@ -5,7 +5,7 @@ namespace Polhem.Db.Dml
     /// <summary>
     /// Describes a JOIN relationship between two tables.
     /// </summary>
-    public class TableJoin : KeyCollectionItem
+    public sealed class TableJoin : KeyCollectionItem
     {
         /// <summary>
         /// Gets or sets the unique key identifying the source of this JOIN relationship.

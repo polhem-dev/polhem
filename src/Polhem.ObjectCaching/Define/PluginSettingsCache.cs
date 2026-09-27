@@ -7,7 +7,7 @@ namespace Polhem.ObjectCaching.Define
     /// <summary>
     /// Business plugin binding cache.
     /// </summary>
-    public class PluginSettingsCache : ObjectCache<PluginSettings>
+    public sealed class PluginSettingsCache : ObjectCache<PluginSettings>
     {
         private readonly IDefineStorage _storage;
 

@@ -11,7 +11,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Database item.")]
     [TreeNode]
-    public class DatabaseItem : KeyCollectionItem
+    public sealed class DatabaseItem : KeyCollectionItem
     {
         /// <summary>
         /// Gets or sets the database ID.

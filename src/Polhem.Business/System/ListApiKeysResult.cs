@@ -6,7 +6,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for listing the issued API keys.
     /// </summary>
-    public class ListApiKeysResult : BusinessResult, IListApiKeysResponse
+    public sealed class ListApiKeysResult : BusinessResult, IListApiKeysResponse
     {
         /// <summary>
         /// Gets or sets the issued keys, without any credential material.

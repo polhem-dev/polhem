@@ -5,7 +5,7 @@ namespace Polhem.Base.Expressions
     /// reference to an identifier outside the evaluation sandbox. This signals a misconfigured
     /// expression definition, not an end-user data error.
     /// </summary>
-    public class ExpressionEvaluationException : Exception
+    public sealed class ExpressionEvaluationException : Exception
     {
         /// <summary>
         /// Initializes a new instance of <see cref="ExpressionEvaluationException"/>.

@@ -14,7 +14,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// precision — the rounded display form is never written back. Partial or invalid input (for
     /// example <c>"12."</c>) keeps the last valid value.
     /// </summary>
-    public class NumericEdit : TextEdit
+    public sealed class NumericEdit : TextEdit
     {
         // The bound value in its raw, full-precision invariant-culture string form. The display
         // Text may be a rounded rendering of this; write-backs always use the raw value.

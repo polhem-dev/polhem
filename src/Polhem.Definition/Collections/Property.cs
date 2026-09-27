@@ -8,7 +8,7 @@ namespace Polhem.Definition.Collections
     /// A custom property.
     /// </summary>
     [Description("Custom property.")]
-    public class Property : KeyCollectionItem
+    public sealed class Property : KeyCollectionItem
     {
         #region Constructors
 

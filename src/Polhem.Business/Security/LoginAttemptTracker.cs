@@ -36,7 +36,7 @@ namespace Polhem.Business.Security
     /// The state is per process: with several nodes, each one keeps its own count.
     /// </para>
     /// </remarks>
-    public class LoginAttemptTracker : ILoginAttemptTracker
+    public sealed class LoginAttemptTracker : ILoginAttemptTracker
     {
         /// <summary>
         /// Default maximum number of consecutive failed attempts before lockout.

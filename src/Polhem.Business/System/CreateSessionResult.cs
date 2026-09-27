@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for creating a user session.
     /// </summary>
-    public class CreateSessionResult : BusinessResult, ICreateSessionResponse
+    public sealed class CreateSessionResult : BusinessResult, ICreateSessionResponse
     {
         /// <summary>
         /// Gets or sets the access token used for authenticating subsequent API calls.

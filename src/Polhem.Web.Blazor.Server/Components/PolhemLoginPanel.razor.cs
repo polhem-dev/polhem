@@ -20,7 +20,7 @@ namespace Polhem.Web.Blazor.Server.Components
     /// counts as a valid credential, and surfacing its rejection through the
     /// inline error message is enough for the sample-grade scope of Phase 1d.
     /// </remarks>
-    public partial class PolhemLoginPanel : ComponentBase
+    public sealed partial class PolhemLoginPanel : ComponentBase
     {
         private readonly string _userIdInputId = $"polhem-login-user-{Guid.NewGuid():N}";
         private readonly string _passwordInputId = $"polhem-login-pwd-{Guid.NewGuid():N}";

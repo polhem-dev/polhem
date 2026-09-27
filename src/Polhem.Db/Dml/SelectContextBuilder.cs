@@ -11,7 +11,7 @@ namespace Polhem.Db.Dml
     /// Constructs the corresponding <see cref="QueryFieldMapping"/> and <see cref="TableJoin"/> collections
     /// from the specified query fields, conditions, sort orders, and other criteria.
     /// </summary>
-    public class SelectContextBuilder
+    public sealed class SelectContextBuilder
     {
         private readonly FormTable _formTable;
         private readonly HashSet<string> _usedFieldNames;

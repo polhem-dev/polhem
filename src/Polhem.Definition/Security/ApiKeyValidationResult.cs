@@ -9,7 +9,7 @@ namespace Polhem.Definition.Security
     /// context, so the authorization decision, the ping response and the audit record all read the
     /// same verdict instead of each repeating the lookup.
     /// </remarks>
-    public class ApiKeyValidationResult
+    public sealed class ApiKeyValidationResult
     {
         /// <summary>
         /// A result for a call the gate never saw (an in-process call).

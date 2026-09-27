@@ -35,7 +35,7 @@ namespace Polhem.Db.Providers.Oracle
     /// all 5 supported databases.
     /// </para>
     /// </remarks>
-    public class OracleTableSchemaProvider : ITableSchemaProvider
+    public sealed class OracleTableSchemaProvider : ITableSchemaProvider
     {
         private readonly DbAccess _dbAccess;
 

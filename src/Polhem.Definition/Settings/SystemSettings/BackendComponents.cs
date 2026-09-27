@@ -14,7 +14,7 @@ namespace Polhem.Definition.Settings
     [Description("Settings for replaceable backend components, defining the type names for various backend services.")]
     [TreeNode("Components")]
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class BackendComponents
+    public sealed class BackendComponents
     {
         /// <summary>
         /// API encryption key provider type.

@@ -13,7 +13,7 @@ namespace Polhem.ObjectCaching.Services
     /// exactly, since the cached entry carries it as its <c>ChangeNotifyKey</c>. The poller
     /// publishes the observed version, expiring the entry on its next read.
     /// </remarks>
-    public class DepartmentTreeService : IDepartmentTreeService
+    public sealed class DepartmentTreeService : IDepartmentTreeService
     {
         private readonly ICacheContainer _cache;
 

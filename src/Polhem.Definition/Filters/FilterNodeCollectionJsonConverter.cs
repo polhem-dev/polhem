@@ -6,7 +6,7 @@ namespace Polhem.Definition.Filters
     /// <summary>
     /// Custom JSON converter for <see cref="FilterNodeCollection"/>.
     /// </summary>
-    public class FilterNodeCollectionJsonConverter : JsonConverter<FilterNodeCollection>
+    public sealed class FilterNodeCollectionJsonConverter : JsonConverter<FilterNodeCollection>
     {
         /// <summary>
         /// Serializes a <see cref="FilterNodeCollection"/> object to JSON.

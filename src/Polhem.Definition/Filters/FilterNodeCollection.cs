@@ -6,7 +6,7 @@ namespace Polhem.Definition.Filters
     /// <summary>
     /// A collection of filter nodes.
     /// </summary>
-    public class FilterNodeCollection : CollectionBase<FilterNode>
+    public sealed class FilterNodeCollection : CollectionBase<FilterNode>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="FilterNodeCollection"/>.

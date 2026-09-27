@@ -10,7 +10,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Menu node collection.")]
     [TreeNode("Items", false)]
-    public class MenuNodeCollection : KeyCollectionBase<MenuNodeBase>
+    public sealed class MenuNodeCollection : KeyCollectionBase<MenuNodeBase>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="MenuNodeCollection"/>.

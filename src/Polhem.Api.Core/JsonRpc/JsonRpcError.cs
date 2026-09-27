@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.JsonRpc
     /// <summary>
     /// JSON-RPC error model.
     /// </summary>
-    public class JsonRpcError
+    public sealed class JsonRpcError
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonRpcError"/> class.

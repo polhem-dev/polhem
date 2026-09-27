@@ -10,7 +10,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Menu folder (grouping node).")]
     [TreeNode]
-    public class MenuFolder : MenuNodeBase
+    public sealed class MenuFolder : MenuNodeBase
     {
         private MenuNodeCollection? _items = null;
 

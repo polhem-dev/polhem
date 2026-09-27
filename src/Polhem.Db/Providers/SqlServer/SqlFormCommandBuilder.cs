@@ -10,7 +10,7 @@ namespace Polhem.Db.Providers.SqlServer
     /// <summary>
     /// SQL Server form-related SQL command builder, generating Select, Count, and Delete statements.
     /// </summary>
-    public class SqlFormCommandBuilder : IFormCommandBuilder
+    public sealed class SqlFormCommandBuilder : IFormCommandBuilder
     {
         private readonly IDefineAccess _defineAccess;
 

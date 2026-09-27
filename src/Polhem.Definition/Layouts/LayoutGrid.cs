@@ -11,7 +11,7 @@ namespace Polhem.Definition.Layouts
     /// </summary>
     [Description("Grid layout for tabular data.")]
     [TreeNode]
-    public class LayoutGrid : CollectionItem
+    public sealed class LayoutGrid : CollectionItem
     {
         private LayoutColumnCollection? _columns = null;
 

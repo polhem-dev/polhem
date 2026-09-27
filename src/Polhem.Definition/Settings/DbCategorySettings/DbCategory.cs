@@ -11,7 +11,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Database category.")]
     [TreeNode]
-    public class DbCategory : KeyCollectionItem
+    public sealed class DbCategory : KeyCollectionItem
     {
         private TableItemCollection? _tables = null;
 

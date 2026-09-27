@@ -226,36 +226,13 @@ Polhem.UI.Avalonia.Views.ListView.Schema.set -> void
 Polhem.UI.Avalonia.Views.ListView.ViewRequested -> System.EventHandler<System.Guid>?
 const Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.CompactWidthThreshold = 600 -> double
 const Polhem.UI.Avalonia.Views.FormView.DefaultCompactWidthThreshold = 600 -> double
-override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.ApplyMetadata() -> void
-override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
-override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.OnKeyDown(Avalonia.Input.KeyEventArgs! e) -> void
-override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
-override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.RefreshFromSource() -> void
 override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
-override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.ShouldWriteBackText.get -> bool
-override Polhem.UI.Avalonia.Controls.Editors.CheckEdit.OnApplyTemplate(Avalonia.Controls.Primitives.TemplateAppliedEventArgs! e) -> void
-override Polhem.UI.Avalonia.Controls.Editors.CheckEdit.OnAttachedToLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
-override Polhem.UI.Avalonia.Controls.Editors.CheckEdit.OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
-override Polhem.UI.Avalonia.Controls.Editors.CheckEdit.StyleKeyOverride.get -> System.Type!
 override Polhem.UI.Avalonia.Controls.Editors.DateEdit.OnAttachedToLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
 override Polhem.UI.Avalonia.Controls.Editors.DateEdit.OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
 override Polhem.UI.Avalonia.Controls.Editors.DateEdit.StyleKeyOverride.get -> System.Type!
-override Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.OnAttachedToLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
-override Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
-override Polhem.UI.Avalonia.Controls.Editors.DropDownEdit.StyleKeyOverride.get -> System.Type!
-override Polhem.UI.Avalonia.Controls.Editors.NumericEdit.GetWriteBackValue() -> string?
-override Polhem.UI.Avalonia.Controls.Editors.NumericEdit.RefreshFromSource() -> void
-override Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
 override Polhem.UI.Avalonia.Controls.Editors.TextEdit.OnAttachedToLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
 override Polhem.UI.Avalonia.Controls.Editors.TextEdit.OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
 override Polhem.UI.Avalonia.Controls.Editors.TextEdit.StyleKeyOverride.get -> System.Type!
-override Polhem.UI.Avalonia.Controls.Editors.TimeEdit.GetWriteBackValue() -> string?
-override Polhem.UI.Avalonia.Controls.Editors.TimeEdit.RefreshFromSource() -> void
-override Polhem.UI.Avalonia.Controls.Editors.YearMonthEdit.ValueFormat.get -> string!
-override Polhem.UI.Avalonia.Controls.GridControl.OnAttachedToLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
-override Polhem.UI.Avalonia.Controls.GridControl.OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
-override Polhem.UI.Avalonia.Controls.GridControl.OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
-override Polhem.UI.Avalonia.Controls.GridControl.StyleKeyOverride.get -> System.Type!
 override Polhem.UI.Avalonia.Views.FormView.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
 override Polhem.UI.Avalonia.Views.ListView.OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
 override Polhem.UI.Avalonia.Views.ListView.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void

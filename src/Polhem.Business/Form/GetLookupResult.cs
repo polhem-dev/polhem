@@ -7,7 +7,7 @@ namespace Polhem.Business.Form
     /// <summary>
     /// Output result for the form GetLookup operation.
     /// </summary>
-    public class GetLookupResult : BusinessResult, IGetLookupResponse
+    public sealed class GetLookupResult : BusinessResult, IGetLookupResponse
     {
         /// <summary>
         /// Gets or sets the lookup candidate rows.

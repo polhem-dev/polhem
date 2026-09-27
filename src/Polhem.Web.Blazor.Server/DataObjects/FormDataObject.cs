@@ -45,7 +45,7 @@ namespace Polhem.Web.Blazor.Server.DataObjects
     /// its UI thread.
     /// </para>
     /// </remarks>
-    public class FormDataObject
+    public sealed class FormDataObject
     {
         private readonly FormSchema _schema;
         private readonly FormApiConnector? _connector;

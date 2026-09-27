@@ -8,7 +8,7 @@ namespace Polhem.Api.Client.Providers
     /// <summary>
     /// Remote API service provider that accesses backend business logic over the network.
     /// </summary>
-    public class RemoteApiProvider : IJsonRpcProvider
+    public sealed class RemoteApiProvider : IJsonRpcProvider
     {
         #region Constructors
 

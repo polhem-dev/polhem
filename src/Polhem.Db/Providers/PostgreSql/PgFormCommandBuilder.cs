@@ -11,7 +11,7 @@ namespace Polhem.Db.Providers.PostgreSql
     /// PostgreSQL form-related SQL command builder, generating Select, Count, and Delete statements.
     /// Counterpart to <see cref="SqlServer.SqlFormCommandBuilder"/> for the PostgreSQL provider.
     /// </summary>
-    public class PgFormCommandBuilder : IFormCommandBuilder
+    public sealed class PgFormCommandBuilder : IFormCommandBuilder
     {
         private readonly IDefineAccess _defineAccess;
 

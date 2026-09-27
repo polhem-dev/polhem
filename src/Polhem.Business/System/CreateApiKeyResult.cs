@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for issuing an API key.
     /// </summary>
-    public class CreateApiKeyResult : BusinessResult, ICreateApiKeyResponse
+    public sealed class CreateApiKeyResult : BusinessResult, ICreateApiKeyResponse
     {
         /// <summary>
         /// Gets or sets the key identifier that was issued.

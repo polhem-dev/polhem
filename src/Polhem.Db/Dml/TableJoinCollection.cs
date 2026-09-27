@@ -5,7 +5,7 @@ namespace Polhem.Db.Dml
     /// <summary>
     /// A collection of <see cref="TableJoin"/> instances describing JOIN relationships between tables.
     /// </summary>
-    public class TableJoinCollection : KeyCollectionBase<TableJoin>
+    public sealed class TableJoinCollection : KeyCollectionBase<TableJoin>
     {
     }
 }

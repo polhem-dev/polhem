@@ -9,7 +9,7 @@ namespace Polhem.Api.Core.Messages.Form
     /// <summary>
     /// API request for the form GetList operation.
     /// </summary>
-    public class GetListRequest : ApiRequest, IGetListRequest
+    public sealed class GetListRequest : ApiRequest, IGetListRequest
     {
         /// <summary>
         /// Gets or sets the comma-separated field names; an empty value falls back to

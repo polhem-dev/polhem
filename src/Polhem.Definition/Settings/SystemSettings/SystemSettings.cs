@@ -12,7 +12,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("System settings.")]
     [TreeNode("System Settings")]
-    public class SystemSettings : IObjectSerializeFile
+    public sealed class SystemSettings : IObjectSerializeFile
     {
         private PropertyCollection? _extendedProperties = null;
 

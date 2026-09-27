@@ -3,7 +3,7 @@ namespace Polhem.Db.Schema
     /// <summary>
     /// Options controlling the behavior of the table upgrade orchestrator.
     /// </summary>
-    public class UpgradeOptions
+    public sealed class UpgradeOptions
     {
         /// <summary>
         /// When true, allows ALTER COLUMN with reduced length or precision that may cause data truncation.

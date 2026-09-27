@@ -7,7 +7,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for the EnterCompany operation.
     /// </summary>
-    public class EnterCompanyResult : BusinessResult, IEnterCompanyResponse
+    public sealed class EnterCompanyResult : BusinessResult, IEnterCompanyResponse
     {
         /// <summary>
         /// Gets or sets the company information that was bound to the session.

@@ -7,7 +7,7 @@ namespace Polhem.ObjectCaching.Define
     /// <summary>
     /// System-level unit-of-measure master cache.
     /// </summary>
-    public class UnitSettingsCache : ObjectCache<UnitSettings>
+    public sealed class UnitSettingsCache : ObjectCache<UnitSettings>
     {
         private readonly IDefineStorage _storage;
 

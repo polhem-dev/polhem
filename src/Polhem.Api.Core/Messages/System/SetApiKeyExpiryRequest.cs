@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API request for the set API key expiry operation.
     /// </summary>
-    public class SetApiKeyExpiryRequest : ApiRequest, ISetApiKeyExpiryRequest
+    public sealed class SetApiKeyExpiryRequest : ApiRequest, ISetApiKeyExpiryRequest
     {
         /// <summary>
         /// Gets or sets the key identifier whose expiry is being set.

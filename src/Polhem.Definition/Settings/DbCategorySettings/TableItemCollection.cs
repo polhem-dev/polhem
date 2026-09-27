@@ -9,7 +9,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Table item collection.")]
     [TreeNode("Tables", false)]
-    public class TableItemCollection : KeyCollectionBase<TableItem>
+    public sealed class TableItemCollection : KeyCollectionBase<TableItem>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="TableItemCollection"/>.

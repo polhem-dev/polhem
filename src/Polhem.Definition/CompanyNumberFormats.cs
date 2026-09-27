@@ -15,7 +15,7 @@ namespace Polhem.Definition
     /// recognises this base. The keyed-lookup semantics are provided by <see cref="FindDecimals"/>.
     /// </remarks>
     [Description("Company number-format override table.")]
-    public class CompanyNumberFormats : CollectionBase<NumberFormatItem>
+    public sealed class CompanyNumberFormats : CollectionBase<NumberFormatItem>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="CompanyNumberFormats"/>.

@@ -9,7 +9,7 @@ namespace Polhem.Definition.Logging
     [Description("Logging options for controlling whether each module logs information.")]
     [TreeNode("Logging")]
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class LogOptions
+    public sealed class LogOptions
     {
         /// <summary>
         /// Logging options for the DbAccess module.

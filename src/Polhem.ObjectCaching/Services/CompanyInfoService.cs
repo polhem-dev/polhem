@@ -17,7 +17,7 @@ namespace Polhem.ObjectCaching.Services
     /// <see cref="Get(string)"/> reloads from <c>st_company</c>. There is no in-framework
     /// <c>st_company</c> writer today; company master data is maintained externally.
     /// </remarks>
-    public class CompanyInfoService : ICompanyInfoService
+    public sealed class CompanyInfoService : ICompanyInfoService
     {
         private readonly ICacheContainer _cache;
 

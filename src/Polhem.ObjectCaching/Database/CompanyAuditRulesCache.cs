@@ -14,7 +14,7 @@ namespace Polhem.ObjectCaching.Database
     /// per-form keying would turn each of them into a miss, a query and a negative entry. See
     /// <see cref="CompanyAuditRules"/>.
     /// </remarks>
-    public class CompanyAuditRulesCache : KeyObjectCache<CompanyAuditRules>
+    public sealed class CompanyAuditRulesCache : KeyObjectCache<CompanyAuditRules>
     {
         private readonly Func<ICacheDataSourceProvider>? _dataSource;
 

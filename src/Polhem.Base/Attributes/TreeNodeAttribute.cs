@@ -6,7 +6,7 @@ namespace Polhem.Base.Attributes
     /// Custom attribute applied to a class to describe how the object is presented as a tree node.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class TreeNodeAttribute : Attribute
+    public sealed class TreeNodeAttribute : Attribute
     {
         #region Constructors
 

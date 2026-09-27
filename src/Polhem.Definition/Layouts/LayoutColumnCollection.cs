@@ -9,7 +9,7 @@ namespace Polhem.Definition.Layouts
     /// </summary>
     [Description("Grid layout column collection.")]
     [TreeNode("Columns", false)]
-    public class LayoutColumnCollection : CollectionBase<LayoutColumn>
+    public sealed class LayoutColumnCollection : CollectionBase<LayoutColumn>
     {
     }
 

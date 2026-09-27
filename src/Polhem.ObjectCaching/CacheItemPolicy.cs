@@ -3,7 +3,7 @@ namespace Polhem.ObjectCaching
     /// <summary>
     /// Cache item expiration policy.
     /// </summary>
-    public class CacheItemPolicy
+    public sealed class CacheItemPolicy
     {
         #region Constructors
 

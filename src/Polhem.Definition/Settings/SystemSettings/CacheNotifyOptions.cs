@@ -10,7 +10,7 @@ namespace Polhem.Definition.Settings
     [Description("Polling options for the database-backed cache notification mechanism.")]
     [TreeNode("CacheNotify")]
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class CacheNotifyOptions
+    public sealed class CacheNotifyOptions
     {
         /// <summary>
         /// Gets or sets a value indicating whether the cache-notify poller is enabled.

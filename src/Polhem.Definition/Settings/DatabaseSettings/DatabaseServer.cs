@@ -11,7 +11,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Database server.")]
     [TreeNode]
-    public class DatabaseServer : KeyCollectionItem
+    public sealed class DatabaseServer : KeyCollectionItem
     {
         /// <summary>
         /// Gets or sets the server ID.

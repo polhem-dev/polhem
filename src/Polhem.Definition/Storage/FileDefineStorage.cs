@@ -13,7 +13,7 @@ namespace Polhem.Definition.Storage
     /// Provides file access for database category settings, table schema, form schema, and form layout objects.
     /// Manages persistence of all define data through XML serialization and deserialization.
     /// </summary>
-    public class FileDefineStorage : IDefineStorage
+    public sealed class FileDefineStorage : IDefineStorage
     {
         private readonly PathOptions _paths;
 

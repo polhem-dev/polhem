@@ -8,7 +8,7 @@ namespace Polhem.Business.AuditLog
     /// Shared output result for the audit-log list queries (login / access / anomaly): a page of
     /// event-header rows plus paging metadata.
     /// </summary>
-    public class AuditLogListResult : BusinessResult, IAuditLogListResponse
+    public sealed class AuditLogListResult : BusinessResult, IAuditLogListResponse
     {
         /// <summary>Gets or sets the event header rows for this page.</summary>
         public DataTable? Table { get; set; }

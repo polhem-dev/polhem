@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response for the get form schema operation.
     /// </summary>
-    public class GetFormSchemaResponse : ApiResponse, IGetFormSchemaResponse
+    public sealed class GetFormSchemaResponse : ApiResponse, IGetFormSchemaResponse
     {
         /// <summary>
         /// Gets or sets the raw definition serialised as XML; empty when no definition exists.

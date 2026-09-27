@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for the login operation.
     /// </summary>
-    public class LoginResult : BusinessResult, ILoginResponse
+    public sealed class LoginResult : BusinessResult, ILoginResponse
     {
         /// <summary>
         /// Gets or sets the access token used for authenticating subsequent API calls.

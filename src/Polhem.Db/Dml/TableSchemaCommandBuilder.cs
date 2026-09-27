@@ -11,7 +11,7 @@ namespace Polhem.Db.Dml
     /// Generates Insert, Update, and Delete database commands based on a <see cref="TableSchema"/>;
     /// can also package them directly into a <see cref="DataTableUpdateSpec"/>.
     /// </summary>
-    public class TableSchemaCommandBuilder
+    public sealed class TableSchemaCommandBuilder
     {
         /// <summary>
         /// Initializes a new instance of <see cref="TableSchemaCommandBuilder"/>.

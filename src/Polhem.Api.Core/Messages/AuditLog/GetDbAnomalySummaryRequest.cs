@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.AuditLog
     /// <summary>
     /// API request for the DB-anomaly summary operation.
     /// </summary>
-    public class GetDbAnomalySummaryRequest : ApiRequest, IGetDbAnomalySummaryRequest
+    public sealed class GetDbAnomalySummaryRequest : ApiRequest, IGetDbAnomalySummaryRequest
     {
         /// <summary>Gets or sets the inclusive lower bound on the event time (UTC).</summary>
         public DateTime? FromUtc { get; set; }

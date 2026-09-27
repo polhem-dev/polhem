@@ -10,7 +10,7 @@ namespace Polhem.Base.Collections
     /// Base class for strongly-typed keyed collections.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
-    public class KeyCollectionBase<T> : KeyedCollection<string, T>, IKeyCollectionBase, IObjectSerializeBase, ITagProperty
+    public abstract class KeyCollectionBase<T> : KeyedCollection<string, T>, IKeyCollectionBase, IObjectSerializeBase, ITagProperty
         where T : class, IKeyCollectionItem  // Item type must implement IKeyCollectionItem
     {
         #region Constructors
@@ -18,7 +18,7 @@ namespace Polhem.Base.Collections
         /// <summary>
         /// Initializes a new instance of <see cref="KeyCollectionBase{T}"/>.
         /// </summary>
-        public KeyCollectionBase() : base(StringComparer.OrdinalIgnoreCase)
+        protected KeyCollectionBase() : base(StringComparer.OrdinalIgnoreCase)
         {
         }
 
@@ -26,7 +26,7 @@ namespace Polhem.Base.Collections
         /// Initializes a new instance of <see cref="KeyCollectionBase{T}"/> with the specified owner.
         /// </summary>
         /// <param name="owner">The owner of this collection.</param>
-        public KeyCollectionBase(object owner) : this()
+        protected KeyCollectionBase(object owner) : this()
         {
             Owner = owner;
         }

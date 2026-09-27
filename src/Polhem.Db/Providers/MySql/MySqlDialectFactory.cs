@@ -11,7 +11,7 @@ namespace Polhem.Db.Providers.MySql
     /// <summary>
     /// <see cref="IDialectFactory"/> implementation for MySQL 8.0+.
     /// </summary>
-    public class MySqlDialectFactory : IDialectFactory
+    public sealed class MySqlDialectFactory : IDialectFactory
     {
         /// <inheritdoc />
         public ITableSchemaProvider CreateTableSchemaProvider(string databaseId, IDbConnectionManager connectionManager)

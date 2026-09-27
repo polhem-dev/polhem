@@ -11,7 +11,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Database settings.")]
     [TreeNode("Database Settings")]
-    public class DatabaseSettings : IObjectSerializeFile
+    public sealed class DatabaseSettings : IObjectSerializeFile
     {
         private DatabaseServerCollection? _servers = null;
         private DatabaseItemCollection? _items = null;

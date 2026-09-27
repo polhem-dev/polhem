@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Input arguments for retrieving a form layout as a typed object.
     /// </summary>
-    public class GetFormLayoutArgs : BusinessArgs, IGetFormLayoutRequest
+    public sealed class GetFormLayoutArgs : BusinessArgs, IGetFormLayoutRequest
     {
         /// <summary>
         /// Gets or sets the program identifier whose layout should be retrieved.

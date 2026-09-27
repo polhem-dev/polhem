@@ -6,7 +6,7 @@ namespace Polhem.Definition.Forms
     /// <summary>
     /// A collection of field mappings.
     /// </summary>
-    public class FieldMappingCollection : CollectionBase<FieldMapping>
+    public sealed class FieldMappingCollection : CollectionBase<FieldMapping>
     {
         /// <summary>
         /// Finds a mapping by its destination field name.

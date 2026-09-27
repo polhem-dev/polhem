@@ -8,7 +8,7 @@ namespace Polhem.ObjectCaching.Services
     /// role-permission snapshot (both from cache — zero DB on the check path), then OR-merges the
     /// allowed action mask across the user's roles and tests the requested action.
     /// </summary>
-    public class CompanyAuthorizationService : ICompanyAuthorizationService
+    public sealed class CompanyAuthorizationService : ICompanyAuthorizationService
     {
         private readonly ISessionInfoService _sessionInfoService;
         private readonly IRolePermissionService _rolePermissionService;

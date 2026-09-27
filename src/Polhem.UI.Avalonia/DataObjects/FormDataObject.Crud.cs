@@ -8,7 +8,7 @@ namespace Polhem.UI.Avalonia.DataObjects
     /// Asynchronous CRUD half of <see cref="FormDataObject"/> (load / save / delete / new against the
     /// backend connector). Split out for file size only; behaviour is unchanged.
     /// </summary>
-    public partial class FormDataObject
+    public sealed partial class FormDataObject
     {
         /// <summary>
         /// Loads the master row (and its details) identified by <paramref name="rowId"/>

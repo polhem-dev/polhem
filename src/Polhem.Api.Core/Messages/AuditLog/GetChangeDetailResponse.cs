@@ -8,7 +8,7 @@ namespace Polhem.Api.Core.Messages.AuditLog
     /// API response for the get-change-detail operation: one change event's header plus its restored
     /// field-level before/after values and the DataSet they were flattened from.
     /// </summary>
-    public class GetChangeDetailResponse : ApiResponse, IGetChangeDetailResponse
+    public sealed class GetChangeDetailResponse : ApiResponse, IGetChangeDetailResponse
     {
         /// <summary>Gets or sets the log row's unique id (<c>st_log_change.sys_rowid</c>).</summary>
         public Guid SysRowId { get; set; }

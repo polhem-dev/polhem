@@ -6,7 +6,7 @@ namespace Polhem.Business.Attributes
     /// Attribute for declaring the access requirement of an ExecFunc method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, Inherited = true)]
-    public class ExecFuncAccessControlAttribute : Attribute
+    public sealed class ExecFuncAccessControlAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecFuncAccessControlAttribute"/> class.

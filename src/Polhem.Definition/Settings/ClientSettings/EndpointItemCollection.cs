@@ -5,7 +5,7 @@ namespace Polhem.Definition.Settings
     /// <summary>
     /// A collection of service endpoint list items.
     /// </summary>
-    public class EndpointItemCollection : CollectionBase<EndpointItem>
+    public sealed class EndpointItemCollection : CollectionBase<EndpointItem>
     {
     }
 

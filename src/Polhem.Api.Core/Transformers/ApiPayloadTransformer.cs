@@ -3,7 +3,7 @@ namespace Polhem.Api.Core.Transformers
     /// <summary>
     /// Default API payload transformer that provides data serialization, compression, and encryption/decryption.
     /// </summary>
-    public class ApiPayloadTransformer : IApiPayloadTransformer
+    public sealed class ApiPayloadTransformer : IApiPayloadTransformer
     {
         /// <summary>
         /// Serializes and compresses the specified object.

@@ -7,7 +7,7 @@ namespace Polhem.UI.Avalonia.DataObjects
     /// <see cref="FormDataObject.RowDeleted"/>. Identifies which table changed and which row
     /// was added or deleted.
     /// </summary>
-    public class RowChangedEventArgs : EventArgs
+    public sealed class RowChangedEventArgs : EventArgs
     {
         /// <summary>
         /// Initializes a new instance of <see cref="RowChangedEventArgs"/>.

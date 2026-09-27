@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API request for the ping operation.
     /// </summary>
-    public class PingRequest : ApiRequest, IPingRequest
+    public sealed class PingRequest : ApiRequest, IPingRequest
     {
         /// <summary>
         /// Gets or sets the client name.

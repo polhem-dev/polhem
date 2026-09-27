@@ -24,7 +24,7 @@ namespace Polhem.Definition.Organization
     /// <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
     /// </para>
     /// </remarks>
-    public class DepartmentTree : IKeyObject
+    public sealed class DepartmentTree : IKeyObject
     {
         /// <summary>
         /// Initializes a new empty <see cref="DepartmentTree"/> (required by serializers).

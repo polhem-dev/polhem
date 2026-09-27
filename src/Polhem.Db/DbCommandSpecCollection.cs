@@ -5,7 +5,7 @@ namespace Polhem.Db
     /// <summary>
     /// A collection of <see cref="DbCommandSpec"/> instances.
     /// </summary>
-    public class DbCommandSpecCollection : CollectionBase<DbCommandSpec>
+    public sealed class DbCommandSpecCollection : CollectionBase<DbCommandSpec>
     {
     }
 }

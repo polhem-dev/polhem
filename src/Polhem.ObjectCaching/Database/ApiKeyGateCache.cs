@@ -19,7 +19,7 @@ namespace Polhem.ObjectCaching.Database
     /// caching a failure would freeze the gate open for a whole lifetime after one blip.
     /// </para>
     /// </remarks>
-    public class ApiKeyGateCache : KeyObjectCache<ApiKeyGateState>
+    public sealed class ApiKeyGateCache : KeyObjectCache<ApiKeyGateState>
     {
         private readonly Func<ICacheDataSourceProvider>? _dataSource;
 

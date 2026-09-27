@@ -10,7 +10,7 @@ namespace Polhem.ObjectCaching.Define
     /// One cache entry per (language, namespace) pair — invalidating a single namespace
     /// in one language does not affect the others.
     /// </summary>
-    public class LanguageResourceCache : KeyObjectCache<LanguageResource>
+    public sealed class LanguageResourceCache : KeyObjectCache<LanguageResource>
     {
         private readonly IDefineStorage _storage;
 

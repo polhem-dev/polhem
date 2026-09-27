@@ -3,7 +3,7 @@ namespace Polhem.Db
     /// <summary>
     /// Represents the output of a batch command execution.
     /// </summary>
-    public class DbBatchResult
+    public sealed class DbBatchResult
     {
         /// <summary>
         /// Gets or sets the results for each command in the batch (in input order).

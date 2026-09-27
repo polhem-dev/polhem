@@ -6,7 +6,7 @@ namespace Polhem.Definition.Collections
     /// <summary>
     /// A parameter item collection with serialization support.
     /// </summary>
-    public class ParameterCollection : KeyCollectionBase<Parameter>
+    public sealed class ParameterCollection : KeyCollectionBase<Parameter>
     {
         /// <summary>
         /// Gets the value of a parameter.

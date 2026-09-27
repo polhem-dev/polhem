@@ -9,7 +9,7 @@ namespace Polhem.Definition.Logging
     /// </summary>
     [Description("Options for logging abnormal SQL executions in the DbAccess module.")]
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class DbAccessAnomalyLogOptions
+    public sealed class DbAccessAnomalyLogOptions
     {
         /// <summary>
         /// Logging level for abnormal SQL executions.

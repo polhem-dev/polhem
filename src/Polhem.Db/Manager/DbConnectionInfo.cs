@@ -6,7 +6,7 @@ namespace Polhem.Db.Manager
     /// <summary>
     /// Holds database connection information.
     /// </summary>
-    public class DbConnectionInfo
+    public sealed class DbConnectionInfo
     {
         /// <summary>
         /// Initializes a new instance of <see cref="DbConnectionInfo"/>.

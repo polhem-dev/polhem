@@ -6,7 +6,7 @@ namespace Polhem.Db.Dml
     /// Describes the mapping between a query field and its original data source.
     /// Query fields include those used in Select, Where, and Order By clauses.
     /// </summary>
-    public class QueryFieldMapping : KeyCollectionItem
+    public sealed class QueryFieldMapping : KeyCollectionItem
     {
         /// <summary>
         /// Gets or sets the field name used in the query.

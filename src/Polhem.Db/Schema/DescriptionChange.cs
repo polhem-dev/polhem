@@ -3,7 +3,7 @@ namespace Polhem.Db.Schema
     /// <summary>
     /// Represents a description (MS_Description / COMMENT) drift between the defined and the actual schema.
     /// </summary>
-    public class DescriptionChange
+    public sealed class DescriptionChange
     {
         /// <summary>
         /// Gets or sets the metadata level.

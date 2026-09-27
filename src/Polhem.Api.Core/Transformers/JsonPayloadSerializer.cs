@@ -49,7 +49,7 @@ namespace Polhem.Api.Core.Transformers
     /// <c>Encoded</c> and <c>Encrypted</c> paths — and are not Plain request bodies.
     /// </para>
     /// </remarks>
-    public class JsonPayloadSerializer : IApiPayloadSerializer
+    public sealed class JsonPayloadSerializer : IApiPayloadSerializer
     {
         /// <summary>
         /// The maximum nesting depth accepted from the wire.

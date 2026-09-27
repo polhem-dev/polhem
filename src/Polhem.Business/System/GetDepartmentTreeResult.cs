@@ -6,7 +6,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for retrieving the current company's department tree.
     /// </summary>
-    public class GetDepartmentTreeResult : BusinessResult, IGetDepartmentTreeResponse
+    public sealed class GetDepartmentTreeResult : BusinessResult, IGetDepartmentTreeResponse
     {
         /// <summary>
         /// Gets or sets the current company's department tree (<c>null</c> when no company is entered).

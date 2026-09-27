@@ -11,7 +11,7 @@ namespace Polhem.Db.Providers.Oracle
     /// <summary>
     /// <see cref="IDialectFactory"/> implementation for Oracle 19c+.
     /// </summary>
-    public class OracleDialectFactory : IDialectFactory
+    public sealed class OracleDialectFactory : IDialectFactory
     {
         /// <inheritdoc />
         public ITableSchemaProvider CreateTableSchemaProvider(string databaseId, IDbConnectionManager connectionManager)

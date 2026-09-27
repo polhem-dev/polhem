@@ -5,7 +5,7 @@ namespace Polhem.Business
     /// <summary>
     /// Output result for executing a custom method.
     /// </summary>
-    public class ExecFuncResult : BusinessResult, IExecFuncResponse
+    public sealed class ExecFuncResult : BusinessResult, IExecFuncResponse
     {
     }
 }

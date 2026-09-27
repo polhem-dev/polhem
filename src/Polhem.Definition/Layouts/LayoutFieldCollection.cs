@@ -9,7 +9,7 @@ namespace Polhem.Definition.Layouts
     /// </summary>
     [Description("Layout field collection.")]
     [TreeNode("Fields", false)]
-    public class LayoutFieldCollection : CollectionBase<LayoutField>
+    public sealed class LayoutFieldCollection : CollectionBase<LayoutField>
     {
     }
 }

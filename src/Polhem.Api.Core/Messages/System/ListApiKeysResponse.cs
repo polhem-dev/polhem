@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response for the list API keys operation.
     /// </summary>
-    public class ListApiKeysResponse : ApiResponse, IListApiKeysResponse
+    public sealed class ListApiKeysResponse : ApiResponse, IListApiKeysResponse
     {
         /// <summary>
         /// Gets or sets the issued keys, without any credential material.

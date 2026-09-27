@@ -14,7 +14,7 @@ namespace Polhem.Definition.Language
     /// DataGrid lookup binding without an explicit sort step.
     /// </remarks>
     [Description("Ordered set of code/text pairs for a single enum / dropdown.")]
-    public class LanguageEnum : KeyCollectionItem
+    public sealed class LanguageEnum : KeyCollectionItem
     {
         private LanguageEnumEntryCollection? _entries;
 

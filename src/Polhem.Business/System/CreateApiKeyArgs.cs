@@ -6,7 +6,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Input arguments for issuing an API key.
     /// </summary>
-    public class CreateApiKeyArgs : BusinessArgs, ICreateApiKeyRequest
+    public sealed class CreateApiKeyArgs : BusinessArgs, ICreateApiKeyRequest
     {
         /// <summary>
         /// Gets or sets the key identifier to issue, which becomes the leading segment of the

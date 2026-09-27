@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API request for the LeaveCompany operation. Carries no payload fields.
     /// </summary>
-    public class LeaveCompanyRequest : ApiRequest, ILeaveCompanyRequest
+    public sealed class LeaveCompanyRequest : ApiRequest, ILeaveCompanyRequest
     {
     }
 }

@@ -6,7 +6,7 @@ namespace Polhem.Business.System
     /// Input arguments for listing the issued API keys. Empty by design — see
     /// <see cref="IListApiKeysRequest"/>.
     /// </summary>
-    public class ListApiKeysArgs : BusinessArgs, IListApiKeysRequest
+    public sealed class ListApiKeysArgs : BusinessArgs, IListApiKeysRequest
     {
     }
 }

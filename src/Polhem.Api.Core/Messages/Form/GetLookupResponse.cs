@@ -7,7 +7,7 @@ namespace Polhem.Api.Core.Messages.Form
     /// <summary>
     /// API response for the form GetLookup operation.
     /// </summary>
-    public class GetLookupResponse : ApiResponse, IGetLookupResponse
+    public sealed class GetLookupResponse : ApiResponse, IGetLookupResponse
     {
         /// <summary>
         /// Gets or sets the lookup candidate rows.

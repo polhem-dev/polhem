@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using System.Xml;
+using System.Xml.Serialization;
 using Polhem.Base.Data;
 using Polhem.Base.Serialization;
 using Polhem.Definition.Forms;
@@ -14,27 +16,99 @@ namespace Polhem.Definition.UnitTests.Forms
     public class CachedDefinitionSerializationTests
     {
         /// <summary>
-        /// A schema with one property that XmlSerializer reads after the base members, so its getter runs
-        /// in the middle of serialization and records what the collections looked like at that point.
+        /// Forwards every call to an inner writer and, each time an element starts or ends, records whether
+        /// the schema's collections read as null at that moment. XmlSerializer drives the writer while it
+        /// walks the instance, so every element it writes is an observation taken in the middle of
+        /// serialization of that same instance.
         /// </summary>
-        public class ObservingFormSchema : FormSchema
+        private sealed class ObservingXmlWriter : XmlWriter
         {
-            [System.Xml.Serialization.XmlIgnore]
-            public bool RulesWereNullDuringSerialization { get; private set; }
+            private readonly XmlWriter _inner;
+            private readonly FormSchema _schema;
 
-            [System.Xml.Serialization.XmlIgnore]
-            public bool TablesWereNullDuringSerialization { get; private set; }
-
-            public string Probe
+            public ObservingXmlWriter(XmlWriter inner, FormSchema schema)
             {
-                get
-                {
-                    RulesWereNullDuringSerialization |= Rules is null;
-                    TablesWereNullDuringSerialization |= Tables is null;
-                    return string.Empty;
-                }
-                set { _ = value; }
+                _inner = inner;
+                _schema = schema;
             }
+
+            public int Observations { get; private set; }
+
+            public bool RulesWereNull { get; private set; }
+
+            public bool TablesWereNull { get; private set; }
+
+            private void Observe()
+            {
+                Observations++;
+                RulesWereNull |= _schema.Rules is null;
+                TablesWereNull |= _schema.Tables is null;
+            }
+
+            public override WriteState WriteState => _inner.WriteState;
+            public override void Flush() => _inner.Flush();
+            public override string? LookupPrefix(string ns) => _inner.LookupPrefix(ns);
+            public override void WriteBase64(byte[] buffer, int index, int count) => _inner.WriteBase64(buffer, index, count);
+            public override void WriteCData(string? text) => _inner.WriteCData(text);
+            public override void WriteCharEntity(char ch) => _inner.WriteCharEntity(ch);
+            public override void WriteChars(char[] buffer, int index, int count) => _inner.WriteChars(buffer, index, count);
+            public override void WriteComment(string? text) => _inner.WriteComment(text);
+            public override void WriteDocType(string name, string? pubid, string? sysid, string? subset) => _inner.WriteDocType(name, pubid, sysid, subset);
+            public override void WriteEndAttribute() => _inner.WriteEndAttribute();
+            public override void WriteEndDocument() => _inner.WriteEndDocument();
+            public override void WriteEntityRef(string name) => _inner.WriteEntityRef(name);
+            public override void WriteProcessingInstruction(string name, string? text) => _inner.WriteProcessingInstruction(name, text);
+            public override void WriteRaw(char[] buffer, int index, int count) => _inner.WriteRaw(buffer, index, count);
+            public override void WriteRaw(string data) => _inner.WriteRaw(data);
+            public override void WriteStartAttribute(string? prefix, string localName, string? ns) => _inner.WriteStartAttribute(prefix, localName, ns);
+            public override void WriteStartDocument() => _inner.WriteStartDocument();
+            public override void WriteStartDocument(bool standalone) => _inner.WriteStartDocument(standalone);
+            public override void WriteString(string? text) => _inner.WriteString(text);
+            public override void WriteSurrogateCharEntity(char lowChar, char highChar) => _inner.WriteSurrogateCharEntity(lowChar, highChar);
+            public override void WriteWhitespace(string? ws) => _inner.WriteWhitespace(ws);
+
+            public override void WriteStartElement(string? prefix, string localName, string? ns)
+            {
+                Observe();
+                _inner.WriteStartElement(prefix, localName, ns);
+            }
+
+            public override void WriteEndElement()
+            {
+                Observe();
+                _inner.WriteEndElement();
+            }
+
+            public override void WriteFullEndElement()
+            {
+                Observe();
+                _inner.WriteFullEndElement();
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing) _inner.Dispose();
+                base.Dispose(disposing);
+            }
+        }
+
+        /// <summary>
+        /// Serializes the schema through an <see cref="ObservingXmlWriter"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="XmlCodec.Serialize"/> owns its writer, so this builds the serializer itself. It is the
+        /// same <c>new XmlSerializer(type)</c> that <see cref="XmlCodec"/> caches, and the codec sets no state
+        /// of its own on the value, so the walk over the instance is the one the codec performs.
+        /// </remarks>
+        private static ObservingXmlWriter SerializeObserved(FormSchema schema)
+        {
+            using var text = new StringWriter();
+            var observer = new ObservingXmlWriter(XmlWriter.Create(text), schema);
+            using (observer)
+            {
+                new XmlSerializer(typeof(FormSchema)).Serialize(observer, schema);
+            }
+            return observer;
         }
 
         private static FormSchema BuildCommonShape(FormSchema schema)
@@ -50,14 +124,17 @@ namespace Polhem.Definition.UnitTests.Forms
         [DisplayName("An empty collection still reads as an empty collection while the owning schema is being serialized")]
         public void Serialize_ReadDuringSerialization_SeesCollectionsNotNull()
         {
-            var schema = (ObservingFormSchema)BuildCommonShape(new ObservingFormSchema());
-            var emptyTableSchema = new ObservingFormSchema { ProgId = "Empty" };
+            var schema = BuildCommonShape(new FormSchema());
+            var emptyTableSchema = new FormSchema { ProgId = "Empty" };
 
+            var schemaObservation = SerializeObserved(schema);
+            var emptyTableObservation = SerializeObserved(emptyTableSchema);
             string xml = XmlCodec.Serialize(schema);
-            XmlCodec.Serialize(emptyTableSchema);
 
-            Assert.False(schema.RulesWereNullDuringSerialization);
-            Assert.False(emptyTableSchema.TablesWereNullDuringSerialization);
+            Assert.NotEqual(0, schemaObservation.Observations);
+            Assert.NotEqual(0, emptyTableObservation.Observations);
+            Assert.False(schemaObservation.RulesWereNull);
+            Assert.False(emptyTableObservation.TablesWereNull);
             Assert.DoesNotContain("<Rules", xml, StringComparison.Ordinal);
         }
 

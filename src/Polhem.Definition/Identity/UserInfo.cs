@@ -3,7 +3,7 @@ namespace Polhem.Definition.Identity
     /// <summary>
     /// Frontend user information.
     /// </summary>
-    public class UserInfo : IUserInfo
+    public sealed class UserInfo : IUserInfo
     {
         /// <summary>
         /// Gets or sets the user account ID.

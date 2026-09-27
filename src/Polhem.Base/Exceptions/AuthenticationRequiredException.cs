@@ -17,7 +17,7 @@ namespace Polhem.Base.Exceptions
     /// either side of the wire — keeps catching it.
     /// </para>
     /// </remarks>
-    public class AuthenticationRequiredException : UnauthorizedAccessException
+    public sealed class AuthenticationRequiredException : UnauthorizedAccessException
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthenticationRequiredException"/> class.

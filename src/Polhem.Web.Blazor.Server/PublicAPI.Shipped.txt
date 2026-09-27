@@ -74,13 +74,6 @@ Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorServiceCollectionExtens
 Polhem.Web.Blazor.Server._Imports
 Polhem.Web.Blazor.Server._Imports.Execute() -> void
 Polhem.Web.Blazor.Server._Imports._Imports() -> void
-override Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.OnInitialized() -> void
-override Polhem.Web.Blazor.Server.Components.FormPage.OnInitializedAsync() -> System.Threading.Tasks.Task!
 static Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorServiceCollectionExtensions.AddPolhemBlazor(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 virtual Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.CreateFormConnector(System.Guid accessToken, string! progId) -> Polhem.Api.Client.Connectors.FormApiConnector!
 virtual Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.CreateSystemConnector(System.Guid accessToken) -> Polhem.Api.Client.Connectors.SystemApiConnector!
-~override Polhem.Web.Blazor.Server.Components.PolhemAccessTokenProvider.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
-~override Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
-~override Polhem.Web.Blazor.Server.Components.DynamicForm.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
-~override Polhem.Web.Blazor.Server.Components.DynamicGrid.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
-~override Polhem.Web.Blazor.Server.Components.FormPage.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

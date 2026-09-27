@@ -7,7 +7,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// Field editor for <see cref="ControlType.MemoEdit"/>: a multi-line
     /// <see cref="TextEdit"/> that accepts returns and wraps text.
     /// </summary>
-    public class MemoEdit : TextEdit
+    public sealed class MemoEdit : TextEdit
     {
         /// <summary>
         /// Initializes a new instance of <see cref="MemoEdit"/>.

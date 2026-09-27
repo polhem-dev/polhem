@@ -5,7 +5,7 @@ namespace Polhem.Definition.Forms
     /// <summary>
     /// Records the reference source of a relation field.
     /// </summary>
-    public class RelationFieldReference : KeyCollectionItem
+    public sealed class RelationFieldReference : KeyCollectionItem
     {
         /// <summary>
         /// Initializes a new instance of <see cref="RelationFieldReference"/>.

@@ -9,7 +9,7 @@ namespace Polhem.ObjectCaching.Database
     /// the company database and reads the permission tables; invalidation goes through the common
     /// cache-notify table (cache group <see cref="CompanyRolePermissions"/>).
     /// </summary>
-    public class CompanyRolePermissionsCache : KeyObjectCache<CompanyRolePermissions>
+    public sealed class CompanyRolePermissionsCache : KeyObjectCache<CompanyRolePermissions>
     {
         private readonly Func<ICacheDataSourceProvider>? _dataSource;
 

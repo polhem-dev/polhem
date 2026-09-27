@@ -7,7 +7,7 @@ namespace Polhem.ObjectCaching.Define
     /// <summary>
     /// System-level currency master cache.
     /// </summary>
-    public class CurrencySettingsCache : ObjectCache<CurrencySettings>
+    public sealed class CurrencySettingsCache : ObjectCache<CurrencySettings>
     {
         private readonly IDefineStorage _storage;
 

@@ -13,7 +13,7 @@ namespace Polhem.Definition.Forms
     /// </summary>
     [Description("Form table.")]
     [TreeNode]
-    public class FormTable : KeyCollectionItem
+    public sealed class FormTable : KeyCollectionItem
     {
         private FormFieldCollection? _fields = null;
         /// <summary>

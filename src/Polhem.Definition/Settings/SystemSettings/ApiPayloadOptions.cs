@@ -14,7 +14,7 @@ namespace Polhem.Definition.Settings
     /// </remarks>
     [TypeConverter(typeof(ExpandableObjectConverter))]
     [Description("Provides API payload handling options: compression and encryption.")]
-    public class ApiPayloadOptions
+    public sealed class ApiPayloadOptions
     {
         /// <summary>
         /// Specifies the compressor name, e.g., gzip, none.

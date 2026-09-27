@@ -8,7 +8,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Master key source.")]
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class MasterKeySource
+    public sealed class MasterKeySource
     {
         /// <summary>
         /// Master key source type.

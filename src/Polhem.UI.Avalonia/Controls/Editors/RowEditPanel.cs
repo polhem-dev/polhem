@@ -21,7 +21,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// without a window). Detaching from the logical tree cancels an in-progress
     /// edit, so closing a hosting window never leaks a half-committed session.
     /// </remarks>
-    public class RowEditPanel : UserControl
+    public sealed class RowEditPanel : UserControl
     {
         /// <summary>
         /// Default screen width (DIPs) below which the edit form collapses to a single column —

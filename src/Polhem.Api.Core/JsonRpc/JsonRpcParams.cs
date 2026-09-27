@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.JsonRpc
     /// Represents the input parameters for a JSON-RPC method invocation.
     /// </summary>
     [JsonConverter(typeof(ApiPayloadJsonConverter<JsonRpcParams>))]
-    public class JsonRpcParams : ApiPayload
+    public sealed class JsonRpcParams : ApiPayload
     {
     }
 }

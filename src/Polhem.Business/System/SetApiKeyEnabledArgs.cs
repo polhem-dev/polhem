@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Input arguments for enabling or disabling an issued API key.
     /// </summary>
-    public class SetApiKeyEnabledArgs : BusinessArgs, ISetApiKeyEnabledRequest
+    public sealed class SetApiKeyEnabledArgs : BusinessArgs, ISetApiKeyEnabledRequest
     {
         /// <summary>
         /// Gets or sets the key identifier being enabled or disabled.

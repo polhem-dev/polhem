@@ -9,7 +9,7 @@ namespace Polhem.Db.Providers.SqlServer
     /// <summary>
     /// Generates CREATE TABLE SQL statements for SQL Server.
     /// </summary>
-    public class SqlCreateTableCommandBuilder : ICreateTableCommandBuilder
+    public sealed class SqlCreateTableCommandBuilder : ICreateTableCommandBuilder
     {
         private TableSchema? _dbTable = null;
 

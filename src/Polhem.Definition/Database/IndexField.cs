@@ -9,7 +9,7 @@ namespace Polhem.Definition.Database
     /// An index field.
     /// </summary>
     [Description("Index field.")]
-    public class IndexField : KeyCollectionItem
+    public sealed class IndexField : KeyCollectionItem
     {
         /// <summary>
         /// Initializes a new instance of <see cref="IndexField"/>.

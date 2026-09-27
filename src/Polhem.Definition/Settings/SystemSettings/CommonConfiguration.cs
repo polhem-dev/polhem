@@ -11,7 +11,7 @@ namespace Polhem.Definition.Settings
     [Description("Common parameters and environment settings.")]
     [TreeNode("Common")]
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class CommonConfiguration : IObjectSerializeBase, ISysInfoConfiguration
+    public sealed class CommonConfiguration : IObjectSerializeBase, ISysInfoConfiguration
     {
         /// <summary>
         /// System major version.

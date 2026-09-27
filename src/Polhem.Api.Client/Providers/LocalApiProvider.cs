@@ -10,7 +10,7 @@ namespace Polhem.Api.Client.Providers
     /// <c>services.AddPolhemFramework(...)</c>. The provider resolves a <see cref="JsonRpcExecutor"/>
     /// per request to honour the executor's transient lifetime.
     /// </remarks>
-    public class LocalApiProvider : IJsonRpcProvider
+    public sealed class LocalApiProvider : IJsonRpcProvider
     {
         private readonly IServiceProvider _services;
 

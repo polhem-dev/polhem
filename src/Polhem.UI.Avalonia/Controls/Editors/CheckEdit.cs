@@ -12,7 +12,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// Field editor for <see cref="ControlType.CheckEdit"/>: a <see cref="CheckBox"/>
     /// two-way bound to a boolean <see cref="FormDataObject"/> field.
     /// </summary>
-    public class CheckEdit : CheckBox, IFieldEditor
+    public sealed class CheckEdit : CheckBox, IFieldEditor
     {
         /// <summary>
         /// Identifies the <see cref="FieldName"/> styled property.

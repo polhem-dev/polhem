@@ -3,7 +3,7 @@ namespace Polhem.Base.Collections
     /// <summary>
     /// A case-insensitive (ordinal) string collection that does not allow duplicate entries.
     /// </summary>
-    public class StringHashSet : HashSet<string>
+    public sealed class StringHashSet : HashSet<string>
     {
         #region Constructors
 

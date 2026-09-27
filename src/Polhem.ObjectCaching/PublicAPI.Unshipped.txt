@@ -3,8 +3,6 @@ Polhem.ObjectCaching.CacheDefineAccess.CacheDefineAccess(Polhem.Definition.Stora
 const Polhem.ObjectCaching.Database.ApiKeyCache.MaxNegativeIds = 10000 -> int
 const Polhem.ObjectCaching.Database.SessionInfoCache.MaxNegativeTokens = 10000 -> int
 const Polhem.ObjectCaching.Database.SessionInfoCache.NegativeMinutes = 1 -> int
-override Polhem.ObjectCaching.Database.ApiKeyCache.MaxNegativeEntries.get -> int
-override Polhem.ObjectCaching.Database.SessionInfoCache.MaxNegativeEntries.get -> int
 virtual Polhem.ObjectCaching.KeyObjectCache<T>.MaxNegativeEntries.get -> int
 Polhem.ObjectCaching.Define.CurrencySettingsCache.CurrencySettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
 Polhem.ObjectCaching.Define.DbCategorySettingsCache.DbCategorySettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void

@@ -34,7 +34,7 @@ namespace Polhem.Definition.Filters
     /// ignore conditions and naming policy of whatever options are in play still apply.
     /// </para>
     /// </remarks>
-    public class FilterNodeJsonConverter : JsonConverter<FilterNode>
+    public sealed class FilterNodeJsonConverter : JsonConverter<FilterNode>
     {
         /// <summary>
         /// Serializes a <see cref="FilterNode"/> using its concrete type.

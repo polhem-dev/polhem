@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Input arguments for creating a user session.
     /// </summary>
-    public class CreateSessionArgs : BusinessArgs, ICreateSessionRequest
+    public sealed class CreateSessionArgs : BusinessArgs, ICreateSessionRequest
     {
         /// <summary>
         /// Gets or sets the user account identifier.

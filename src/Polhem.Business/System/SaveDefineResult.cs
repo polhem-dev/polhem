@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for saving definition data.
     /// </summary>
-    public class SaveDefineResult : BusinessResult, ISaveDefineResponse
+    public sealed class SaveDefineResult : BusinessResult, ISaveDefineResponse
     {
     }
 }

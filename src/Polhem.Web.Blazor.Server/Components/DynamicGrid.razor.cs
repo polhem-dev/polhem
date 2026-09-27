@@ -18,7 +18,7 @@ namespace Polhem.Web.Blazor.Server.Components
     /// Keeping the fetch outside the grid lets the host coordinate refresh with
     /// the master form (e.g. re-load the list after Save / Delete).
     /// </remarks>
-    public partial class DynamicGrid : ComponentBase
+    public sealed partial class DynamicGrid : ComponentBase
     {
         /// <summary>
         /// Gets or sets the list layout that defines the visible columns.

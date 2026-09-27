@@ -9,7 +9,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Plugin item collection.")]
     [TreeNode("Plugins", false)]
-    public class PluginItemCollection : KeyCollectionBase<PluginItem>
+    public sealed class PluginItemCollection : KeyCollectionBase<PluginItem>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="PluginItemCollection"/>.

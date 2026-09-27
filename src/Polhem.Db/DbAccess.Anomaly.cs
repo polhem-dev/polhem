@@ -13,7 +13,7 @@ namespace Polhem.Db
     /// Kept apart from the execution path because it is entirely best-effort: nothing here may alter a
     /// command's outcome. `DbAnomalyDetail` lives with it — it has no other caller.
     /// </remarks>
-    public partial class DbAccess
+    public sealed partial class DbAccess
     {
         /// <summary>
         /// Runs <paramref name="exec"/>, detecting and recording anomalies (Error / Timeout on

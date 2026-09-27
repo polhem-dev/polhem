@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response for the login operation.
     /// </summary>
-    public class LoginResponse : ApiResponse, ILoginResponse
+    public sealed class LoginResponse : ApiResponse, ILoginResponse
     {
         /// <summary>
         /// Gets or sets the access token used for authenticating subsequent API calls.

@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.Messages.Form
     /// <summary>
     /// API response for the form GetNewData operation.
     /// </summary>
-    public class GetNewDataResponse : ApiResponse, IGetNewDataResponse
+    public sealed class GetNewDataResponse : ApiResponse, IGetNewDataResponse
     {
         /// <summary>
         /// Gets or sets the blank <c>DataSet</c> skeleton; the master table

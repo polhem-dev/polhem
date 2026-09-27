@@ -11,7 +11,7 @@ namespace Polhem.Definition.Settings
     [Description("Options for the audit-trail (data-history) logging subsystem.")]
     [TreeNode("AuditLog")]
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class AuditLogOptions
+    public sealed class AuditLogOptions
     {
         /// <summary>
         /// Gets or sets a value indicating whether audit-trail logging is enabled. Disabled by

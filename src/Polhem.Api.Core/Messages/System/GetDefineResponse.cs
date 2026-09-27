@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response for the get definition operation.
     /// </summary>
-    public class GetDefineResponse : ApiResponse, IGetDefineResponse
+    public sealed class GetDefineResponse : ApiResponse, IGetDefineResponse
     {
         /// <summary>
         /// Gets or sets the definition XML content.

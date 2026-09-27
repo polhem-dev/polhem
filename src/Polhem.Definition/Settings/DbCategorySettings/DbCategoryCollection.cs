@@ -9,7 +9,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Database category collection.")]
     [TreeNode("Database Categories", false)]
-    public class DbCategoryCollection : KeyCollectionBase<DbCategory>
+    public sealed class DbCategoryCollection : KeyCollectionBase<DbCategory>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="DbCategoryCollection"/>.

@@ -28,7 +28,7 @@ namespace Polhem.Definition.Settings
     /// </remarks>
     [Description("Plugin settings.")]
     [TreeNode("Plugin Settings")]
-    public class PluginSettings : IObjectSerializeFile
+    public sealed class PluginSettings : IObjectSerializeFile
     {
         private ProgramPluginItemCollection? _items = null;
 

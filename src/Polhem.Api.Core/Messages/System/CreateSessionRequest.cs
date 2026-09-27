@@ -6,7 +6,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API request for the create session operation.
     /// </summary>
-    public class CreateSessionRequest : ApiRequest, ICreateSessionRequest
+    public sealed class CreateSessionRequest : ApiRequest, ICreateSessionRequest
     {
         /// <summary>
         /// Gets or sets the user identifier.

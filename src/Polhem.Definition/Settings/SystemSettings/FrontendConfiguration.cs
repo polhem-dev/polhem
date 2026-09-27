@@ -9,7 +9,7 @@ namespace Polhem.Definition.Settings
     [Description("Frontend parameters and environment settings.")]
     [TreeNode("Frontend")]
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class FrontendConfiguration
+    public sealed class FrontendConfiguration
     {
         /// <summary>
         /// Returns a string representation of this object.

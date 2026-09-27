@@ -9,7 +9,7 @@ namespace Polhem.Definition.Settings
     /// Client settings.
     /// </summary>
     [Description("Client settings.")]
-    public class ClientSettings : IObjectSerializeFile
+    public sealed class ClientSettings : IObjectSerializeFile
     {
         private EndpointItemCollection _endpointItems = [];
 

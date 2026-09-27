@@ -5,7 +5,7 @@ namespace Polhem.Api.Core.Messages.System
     /// <summary>
     /// API response for the set deployment administrator operation.
     /// </summary>
-    public class SetDeploymentAdminResponse : ApiResponse, ISetDeploymentAdminResponse
+    public sealed class SetDeploymentAdminResponse : ApiResponse, ISetDeploymentAdminResponse
     {
         /// <summary>
         /// Gets or sets the user business id whose flag was set.

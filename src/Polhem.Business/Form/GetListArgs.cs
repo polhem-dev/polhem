@@ -10,7 +10,7 @@ namespace Polhem.Business.Form
     /// Input arguments for retrieving FormSchema-driven list-view rows from the
     /// master table of <c>ProgId</c>.
     /// </summary>
-    public class GetListArgs : BusinessArgs, IGetListRequest
+    public sealed class GetListArgs : BusinessArgs, IGetListRequest
     {
         /// <summary>
         /// Gets or sets the comma-separated field names; an empty value falls back to

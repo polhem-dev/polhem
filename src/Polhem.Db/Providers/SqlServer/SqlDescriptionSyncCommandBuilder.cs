@@ -14,7 +14,7 @@ namespace Polhem.Db.Providers.SqlServer
     /// as well, always through <c>sp_addextendedproperty</c> (a column that does not exist yet
     /// cannot already carry a property, and <c>sp_updateextendedproperty</c> would fail on it).
     /// </remarks>
-    public class SqlDescriptionSyncCommandBuilder : IDescriptionSyncCommandBuilder
+    public sealed class SqlDescriptionSyncCommandBuilder : IDescriptionSyncCommandBuilder
     {
         /// <inheritdoc />
         public IReadOnlyList<string> GetStatements(TableSchemaDiff diff)

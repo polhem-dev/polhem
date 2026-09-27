@@ -7,7 +7,7 @@ namespace Polhem.Business.AuditLog
     /// <summary>
     /// Output result for one change event's restored before/after detail.
     /// </summary>
-    public class GetChangeDetailResult : BusinessResult, IGetChangeDetailResponse
+    public sealed class GetChangeDetailResult : BusinessResult, IGetChangeDetailResponse
     {
         /// <summary>Gets or sets the log row's unique id (<c>st_log_change.sys_rowid</c>).</summary>
         public Guid SysRowId { get; set; }

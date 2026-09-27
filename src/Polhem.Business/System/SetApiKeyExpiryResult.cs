@@ -5,7 +5,7 @@ namespace Polhem.Business.System
     /// <summary>
     /// Output result for setting or clearing an issued API key's expiry.
     /// </summary>
-    public class SetApiKeyExpiryResult : BusinessResult, ISetApiKeyExpiryResponse
+    public sealed class SetApiKeyExpiryResult : BusinessResult, ISetApiKeyExpiryResponse
     {
         /// <summary>
         /// Gets or sets the key identifier whose expiry was set.

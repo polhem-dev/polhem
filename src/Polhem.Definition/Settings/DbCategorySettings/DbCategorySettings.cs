@@ -11,7 +11,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Database category settings.")]
     [TreeNode("Database Categories")]
-    public class DbCategorySettings : IObjectSerializeFile
+    public sealed class DbCategorySettings : IObjectSerializeFile
     {
         private DbCategoryCollection? _categories = null;
 

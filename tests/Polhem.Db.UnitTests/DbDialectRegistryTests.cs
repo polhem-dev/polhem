@@ -116,7 +116,7 @@ namespace Polhem.Db.UnitTests
             real.Fields!.Add("id", "Id", FieldDbType.Guid);
             var diff = new TableSchemaComparer(define, real, DatabaseType.SQLServer).CompareToDiff();
             // Force one change so that the rebuild produces non-empty SQL.
-            diff.ChangeList.Add(new AddFieldChange(new DbFieldForTest()));
+            diff.ChangeList.Add(new AddFieldChange(new DbField("note", "Note", FieldDbType.String) { Length = 10 }));
 
             var builder = _factory.CreateTableRebuildCommandBuilder();
             var sql = builder.GetCommandText(diff);
@@ -134,15 +134,6 @@ namespace Polhem.Db.UnitTests
             var builder = _factory.CreateFormCommandBuilder(schema, defineAccess);
 
             Assert.IsType<SqlFormCommandBuilder>(builder);
-        }
-
-        // A test helper, so a single smoke test does not depend on heavier schema construction.
-        private sealed class DbFieldForTest : global::Polhem.Definition.Database.DbField
-        {
-            public DbFieldForTest() : base("note", "Note", FieldDbType.String)
-            {
-                Length = 10;
-            }
         }
     }
 }

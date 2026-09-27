@@ -13,7 +13,7 @@ namespace Polhem.Definition.Settings
     /// </summary>
     [Description("Permission model.")]
     [TreeNode]
-    public class PermissionModel : KeyCollectionItem
+    public sealed class PermissionModel : KeyCollectionItem
     {
         private PermissionRuleCollection? _rules = null;
 

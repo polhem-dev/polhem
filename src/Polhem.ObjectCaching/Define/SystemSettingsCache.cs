@@ -7,7 +7,7 @@ namespace Polhem.ObjectCaching.Define
     /// <summary>
     /// System settings cache.
     /// </summary>
-    public class SystemSettingsCache : ObjectCache<SystemSettings>
+    public sealed class SystemSettingsCache : ObjectCache<SystemSettings>
     {
         private readonly PathOptions _paths;
 

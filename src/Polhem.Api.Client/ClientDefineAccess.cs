@@ -28,7 +28,7 @@ namespace Polhem.Api.Client
     /// completion and is cached; one caller giving up must not fail the others.
     /// </para>
     /// </remarks>
-    public class ClientDefineAccess
+    public sealed class ClientDefineAccess
     {
         private readonly SystemApiConnector _connector;
         private readonly ConcurrentDictionary<string, Lazy<Task<object>>> _list;
