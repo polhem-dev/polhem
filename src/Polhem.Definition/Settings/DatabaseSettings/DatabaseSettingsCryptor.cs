@@ -66,6 +66,24 @@ namespace Polhem.Definition.Settings
                 item.Password = Decrypt(item.Password, aesKey, hmacKey);
         }
 
+        /// <summary>
+        /// Determines whether any server or item in <paramref name="settings"/> carries a password,
+        /// in either plain or <c>enc:</c> form.
+        /// </summary>
+        /// <param name="settings">The database settings to inspect.</param>
+        /// <returns><c>true</c> when at least one <c>Password</c> is non-empty.</returns>
+        /// <remarks>
+        /// Callers use it to warn when passwords exist but no configuration encryption key is set:
+        /// <see cref="EncryptInPlace"/> and <see cref="DecryptInPlace"/> are then silent no-ops, so plain
+        /// passwords are saved in the clear and <c>enc:</c> values are never decrypted.
+        /// </remarks>
+        public static bool HasPasswords(DatabaseSettings settings)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+            return (settings.Servers?.Any(s => StringUtilities.IsNotEmpty(s.Password)) ?? false)
+                || (settings.Items?.Any(i => StringUtilities.IsNotEmpty(i.Password)) ?? false);
+        }
+
         private static string Encrypt(string plain, byte[] aesKey, byte[] hmacKey)
         {
             byte[] plainBytes = Encoding.UTF8.GetBytes(plain);

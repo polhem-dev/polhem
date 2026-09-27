@@ -25,7 +25,13 @@ namespace Polhem.Repository.Abstractions.System
         /// log or an exception message.
         /// <para>
         /// An unknown user and a wrong password both return <c>false</c>, and deliberately so: a
-        /// caller that could tell them apart would be an account enumeration oracle.
+        /// caller that could tell them apart would be an account enumeration oracle. An implementation
+        /// must also keep them apart in time, by paying the same key-derivation cost for an account it
+        /// cannot find.
+        /// </para>
+        /// <para>
+        /// This is not a pure read: after a successful verification, the framework implementation
+        /// replaces a hash stored with weaker parameters than the current ones.
         /// </para>
         /// </remarks>
         bool VerifyPassword(string userId, string password);

@@ -1,4 +1,8 @@
 using System.ComponentModel;
+using System.Data;
+using System.Globalization;
+using Polhem.Base.Security;
+using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Definition.Database;
 using Polhem.Definition.Identity;
@@ -15,6 +19,10 @@ namespace Polhem.Repository.UnitTests
     /// <c>st_session</c> stores a rebuild seed, not a SessionInfo snapshot: only the values that cannot be derived
     /// again (token, user, expiry, company). So the tests focus on the round-trip and on the effect of the insert,
     /// update and delete operations.
+    /// </para>
+    /// <para>
+    /// The token itself is never stored: the key column holds <see cref="AccessTokenHasher.ComputeStorageKey"/> of
+    /// it and the seed XML leaves it out, which the stored-row tests below check on each provider.
     /// </para>
     /// <para>
     /// The tests in this class use <see cref="ProviderScopedRouter"/> to route <c>DbScope.Common</c> to that
@@ -83,6 +91,57 @@ namespace Polhem.Repository.UnitTests
         [DbFact(DatabaseType.Oracle)]
         [DisplayName("A seed written by InsertSession is fully read back by GetSession (Oracle)")]
         public void InsertSession_ThenGetSession_RoundTrips_Oracle() => RunInsertThenGet(DatabaseType.Oracle);
+
+        #endregion
+
+        #region The stored row carries neither form of the token
+
+        private void RunStoredRowHoldsNoToken(DatabaseType databaseType)
+        {
+            var repo = CreateRepo(databaseType);
+            var seed = CreateSeed(companyId: "C001");
+            repo.InsertSession(seed);
+
+            var dbAccess = new DbAccess(TestDbConventions.GetDatabaseId(databaseType, DbCategoryIds.Common),
+                _fx.GetRequiredService<IDbConnectionManager>());
+            const string sql = "SELECT session_user_xml FROM st_session WHERE access_token={0}";
+
+            // The row is keyed by the storage hash; the token itself finds nothing.
+            var byToken = dbAccess.Execute(new DbCommandSpec(DbCommandKind.DataTable, sql, seed.AccessToken)).Table!;
+            var byHash = dbAccess.Execute(new DbCommandSpec(DbCommandKind.DataTable, sql,
+                AccessTokenHasher.ComputeStorageKey(seed.AccessToken))).Table!;
+            Assert.Empty(byToken.Rows.Cast<DataRow>());
+            string xml = Convert.ToString(Assert.Single(byHash.Rows.Cast<DataRow>())[0], CultureInfo.InvariantCulture)!;
+
+            // Nor does the seed XML carry the token, in any of its usual spellings.
+            Assert.DoesNotContain(seed.AccessToken.ToString("N"), xml, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(seed.AccessToken.ToString("D"), xml, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("AccessToken", xml, StringComparison.Ordinal);
+
+            // The token is restored from the request on read.
+            Assert.Equal(seed.AccessToken, repo.GetSession(seed.AccessToken)!.AccessToken);
+            repo.DeleteSession(seed.AccessToken);
+        }
+
+        [DbFact(DatabaseType.SQLServer)]
+        [DisplayName("st_session stores a hash of the token and a seed without it, and GetSession restores the token (SQL Server)")]
+        public void InsertSession_StoresNoToken_SqlServer() => RunStoredRowHoldsNoToken(DatabaseType.SQLServer);
+
+        [DbFact(DatabaseType.PostgreSQL)]
+        [DisplayName("st_session stores a hash of the token and a seed without it, and GetSession restores the token (PostgreSQL)")]
+        public void InsertSession_StoresNoToken_PostgreSql() => RunStoredRowHoldsNoToken(DatabaseType.PostgreSQL);
+
+        [DbFact(DatabaseType.SQLite)]
+        [DisplayName("st_session stores a hash of the token and a seed without it, and GetSession restores the token (SQLite)")]
+        public void InsertSession_StoresNoToken_Sqlite() => RunStoredRowHoldsNoToken(DatabaseType.SQLite);
+
+        [DbFact(DatabaseType.MySQL)]
+        [DisplayName("st_session stores a hash of the token and a seed without it, and GetSession restores the token (MySQL)")]
+        public void InsertSession_StoresNoToken_MySql() => RunStoredRowHoldsNoToken(DatabaseType.MySQL);
+
+        [DbFact(DatabaseType.Oracle)]
+        [DisplayName("st_session stores a hash of the token and a seed without it, and GetSession restores the token (Oracle)")]
+        public void InsertSession_StoresNoToken_Oracle() => RunStoredRowHoldsNoToken(DatabaseType.Oracle);
 
         #endregion
 

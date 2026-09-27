@@ -1,5 +1,6 @@
 using Polhem.Base;
 using Polhem.Base.Data;
+using Polhem.Base.Security;
 using Polhem.Base.Serialization;
 using Polhem.Db;
 using Polhem.Definition;
@@ -15,6 +16,13 @@ namespace Polhem.Repository.System
     /// <remarks>
     /// Writes are driven by the session lifecycle in <c>SystemBusinessObject</c>: sign-in inserts
     /// the seed, entering or leaving a company updates it, and sign-out deletes it.
+    /// <para>
+    /// IMPORTANT: the token itself is never stored. The <c>access_token</c> column holds
+    /// <see cref="AccessTokenHasher.ComputeStorageKey"/> of it, every statement here hashes the token
+    /// the caller presents before using it, and <see cref="SessionUser.AccessToken"/> is left out of
+    /// <c>session_user_xml</c>. Read access to <c>st_session</c> therefore yields no usable bearer token.
+    /// <c>SessionRepositoryTests</c> checks the stored row on every provider.
+    /// </para>
     /// </remarks>
     public class SessionRepository : RepositoryBase, ISessionRepository
     {
@@ -38,7 +46,8 @@ namespace Polhem.Repository.System
             string sql = "INSERT INTO st_session \n" +
                                  "(access_token, session_user_xml, sys_insert_time, sys_invalid_time) \n" +
                                  "VALUES (" + CommandTextVariable.Parameters + ")";
-            var command = new DbCommandSpec(DbCommandKind.NonQuery, sql, sessionUser.AccessToken, xml, DateTime.UtcNow, sessionUser.EndTime);
+            var command = new DbCommandSpec(DbCommandKind.NonQuery, sql,
+                AccessTokenHasher.ComputeStorageKey(sessionUser.AccessToken), xml, DateTime.UtcNow, sessionUser.EndTime);
             var dbAccess = CreateDbAccess();
             dbAccess.Execute(command);
         }
@@ -55,7 +64,8 @@ namespace Polhem.Repository.System
             string sql = "UPDATE st_session \n" +
                                  "SET session_user_xml={1}, sys_invalid_time={2} \n" +
                                  "WHERE access_token={0}";
-            var command = new DbCommandSpec(DbCommandKind.NonQuery, sql, sessionUser.AccessToken, xml, sessionUser.EndTime);
+            var command = new DbCommandSpec(DbCommandKind.NonQuery, sql,
+                AccessTokenHasher.ComputeStorageKey(sessionUser.AccessToken), xml, sessionUser.EndTime);
             var dbAccess = CreateDbAccess();
             dbAccess.Execute(command);
         }
@@ -65,7 +75,7 @@ namespace Polhem.Repository.System
         {
             string sql = "DELETE FROM st_session \n" +
                                  "WHERE access_token={0}";
-            var command = new DbCommandSpec(DbCommandKind.NonQuery, sql, accessToken);
+            var command = new DbCommandSpec(DbCommandKind.NonQuery, sql, AccessTokenHasher.ComputeStorageKey(accessToken));
             var dbAccess = CreateDbAccess();
             dbAccess.Execute(command);
         }
@@ -98,14 +108,18 @@ namespace Polhem.Repository.System
             string sql = "SELECT session_user_xml \n" +
                                  "FROM st_session \n" +
                                  "WHERE access_token={0} AND sys_invalid_time > {1}";
-            var command = new DbCommandSpec(DbCommandKind.DataTable, sql, accessToken, DateTime.UtcNow);
+            var command = new DbCommandSpec(DbCommandKind.DataTable, sql, AccessTokenHasher.ComputeStorageKey(accessToken), DateTime.UtcNow);
             var dbAccess = CreateDbAccess();
             var result = dbAccess.Execute(command);
             var table = result.Table!;
             if (table.IsEmpty()) { return null; }
 
             string xml = ValueUtilities.CStr(table.Rows[0]["session_user_xml"]);
-            return XmlCodec.Deserialize<SessionUser>(xml);
+            var seed = XmlCodec.Deserialize<SessionUser>(xml);
+            // The token is not part of the stored XML, so the seed gets it back from the request: the
+            // row was found by this token's storage key, which is what makes the pairing sound.
+            if (seed != null) { seed.AccessToken = accessToken; }
+            return seed;
         }
     }
 }

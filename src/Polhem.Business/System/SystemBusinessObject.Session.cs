@@ -26,9 +26,9 @@ namespace Polhem.Business.System
         [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Anonymous)]
         public virtual LoginResult Login(LoginArgs args)
         {
-            // Rare per-method needs (ILoginAttemptTracker, IApiEncryptionKeyProvider) resolved
-            // via IPolhemContext.Services escape hatch — ILoginAttemptTracker is an optional service
-            // apps register if they need brute-force protection.
+            // Rare per-method needs (ILoginAttemptTracker, IApiEncryptionKeyProvider) are resolved
+            // through the IPolhemContext.Services escape hatch. AddPolhemFramework registers a
+            // tracker by default; a host that removes it runs without lockout, hence the null checks.
             var tracker = Services.GetService<ILoginAttemptTracker>();
 
             // 0. Check if the account is locked out due to excessive failed attempts
@@ -284,7 +284,7 @@ namespace Polhem.Business.System
                 Event = loginEvent,
                 UserId = userId,
                 UserName = userName,
-                AccessToken = accessToken,
+                TokenFingerprint = accessToken.HasValue ? AccessTokenHasher.ComputeFingerprint(accessToken.Value) : null,
                 // Which application attempted the sign-in. This is the axis where it matters most:
                 // a burst of failures from one application reads very differently from the same
                 // burst spread across several.
@@ -313,9 +313,12 @@ namespace Polhem.Business.System
         /// hasher are all the framework's already.
         /// </para>
         /// <para>
-        /// WARNING: an unknown user and a wrong password are indistinguishable to the caller by
-        /// design. <c>Login</c> reports both as the same message so the endpoint cannot be used to
-        /// enumerate accounts.
+        /// WARNING: an unknown user and a wrong password must stay indistinguishable to the caller.
+        /// <c>Login</c> reports both with the same message, and the framework's
+        /// <see cref="IUserRepository.VerifyPassword"/> runs a full key derivation for an account it
+        /// cannot find, so the response time does not separate the two either
+        /// (<c>SystemBusinessObjectAuthenticationTests</c> covers the message). An override that
+        /// returns early for an unknown account reopens the timing difference.
         /// </para>
         /// </remarks>
         protected virtual bool AuthenticateUser(LoginArgs args, out string userName)
@@ -395,12 +398,19 @@ namespace Polhem.Business.System
         /// </remarks>
         /// <param name="args">The input arguments.</param>
         /// <exception cref="NotSupportedException">
-        /// Thrown when <c>args.OneTime</c> is set; see the remark below.
+        /// Thrown when the business object was not constructed for a local call, or when
+        /// <c>args.OneTime</c> is set.
         /// </exception>
         [ApiAccessControl(ApiProtectionLevel.LocalOnly, ApiAccessRequirement.Anonymous)]
         public virtual CreateSessionResult CreateSession(CreateSessionArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
+            // Defence in depth, as in SaveDefine: ApiAccessValidator only runs on the JSON-RPC
+            // dispatch path, so a caller constructing the BO directly never passes through it. This
+            // method mints a token for any account without a credential, which makes it the one
+            // LocalOnly method that most needs the second line.
+            if (!IsLocalCall)
+                throw new NotSupportedException("CreateSession is restricted to local calls.");
             if (args.ExpiresIn <= 0 || args.ExpiresIn > MaxExpiresInSeconds)
                 throw new ArgumentOutOfRangeException(nameof(args),
                     $"args.ExpiresIn must be between 1 and {MaxExpiresInSeconds} seconds.");

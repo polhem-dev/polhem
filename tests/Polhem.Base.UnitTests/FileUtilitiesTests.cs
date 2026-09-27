@@ -150,5 +150,67 @@ namespace Polhem.Base.UnitTests
             string path = FileUtilities.GetAssemblyPath();
             Assert.False(string.IsNullOrEmpty(path));
         }
+
+        private const UnixFileMode GroupOrOther =
+            UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute |
+            UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute;
+
+        [Fact]
+        [DisplayName("FileWriteOwnerOnlyText creates a file only its owner can read, with the given content")]
+        public void FileWriteOwnerOnlyText_NewFile_IsOwnerOnly()
+        {
+            string path = TempPath("secret.key");
+
+            FileUtilities.FileWriteOwnerOnlyText(path, "s3cret", overwrite: false);
+
+            Assert.Equal("s3cret", File.ReadAllText(path));
+            if (!OperatingSystem.IsWindows())
+            {
+                Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(path));
+            }
+        }
+
+        [Fact]
+        [DisplayName("FileWriteOwnerOnlyText replacing a world-readable file leaves an owner-only file")]
+        public void FileWriteOwnerOnlyText_Overwrite_TightensExistingFile()
+        {
+            string path = TempPath("apikey.txt");
+            File.WriteAllText(path, "old");
+            if (!OperatingSystem.IsWindows())
+            {
+                File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
+            }
+
+            FileUtilities.FileWriteOwnerOnlyText(path, "new", overwrite: true);
+
+            Assert.Equal("new", File.ReadAllText(path));
+            if (!OperatingSystem.IsWindows())
+            {
+                Assert.Equal((UnixFileMode)0, File.GetUnixFileMode(path) & GroupOrOther);
+            }
+        }
+
+        [Fact]
+        [DisplayName("FileWriteOwnerOnlyText without overwrite fails on an existing file and keeps its content")]
+        public void FileWriteOwnerOnlyText_NoOverwrite_ExistingFile_Throws()
+        {
+            string path = TempPath("taken.key");
+            File.WriteAllText(path, "first");
+
+            Assert.ThrowsAny<IOException>(() => FileUtilities.FileWriteOwnerOnlyText(path, "second", overwrite: false));
+
+            Assert.Equal("first", File.ReadAllText(path));
+            Assert.Single(Directory.GetFiles(_tempDir));
+        }
+
+        [Fact]
+        [DisplayName("FileWriteOwnerOnlyText does not create a missing directory")]
+        public void FileWriteOwnerOnlyText_MissingDirectory_Throws()
+        {
+            string path = TempPath(Path.Combine("missing", "secret.key"));
+
+            Assert.ThrowsAny<IOException>(() => FileUtilities.FileWriteOwnerOnlyText(path, "s", overwrite: true));
+            Assert.False(Directory.Exists(TempPath("missing")));
+        }
     }
 }

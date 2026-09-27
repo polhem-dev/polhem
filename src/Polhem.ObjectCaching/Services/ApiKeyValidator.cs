@@ -51,9 +51,11 @@ namespace Polhem.ObjectCaching.Services
                 return new ApiKeyValidationResult(ApiKeyStatus.NotProvided);
             }
 
-            // A value that cannot be split never reaches the database. Together with the negative
-            // caching of unknown identifiers, this is what makes the absence of rate limiting
-            // acceptable: scanning costs an attacker a string operation and a memory lookup.
+            // A value that cannot be split never reaches the database. A well-formed but unknown
+            // identifier does, once: the miss is then remembered for a minute in a capped set
+            // (`ApiKeyCache`), so repeating it costs a memory lookup, but every *distinct* identifier
+            // costs one read of `st_api_key`. Scanning is therefore bounded in memory, not in database
+            // load; limiting its rate belongs at the edge.
             if (!ApiKeyFormat.TryParse(apiKey, out string sysId, out string secret))
             {
                 return Rejected(string.Empty);

@@ -38,7 +38,8 @@ namespace Polhem.Business.UnitTests
 
             try
             {
-                // 1. Login uses `TestableSystemBusinessObject` to bypass the default `AuthenticateUser=false`.
+                // 1. Login uses `TestableSystemBusinessObject` so this test does not depend on a stored password hash;
+                // the built-in credential check is covered by `SystemBusinessObjectAuthenticationTests`.
                 // The user ID must match seed user '001', otherwise the `HasAccess` join finds no mapping.
                 var loginBo = new TestableSystemBusinessObject(
                     TestPolhemContext.Create(_fx),

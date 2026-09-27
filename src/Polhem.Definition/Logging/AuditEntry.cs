@@ -48,8 +48,17 @@ namespace Polhem.Definition.Logging
         /// </summary>
         public string? CompanyName { get; init; }
 
-        /// <summary>Gets the session correlation token, when the event occurs within a session.</summary>
-        public Guid? AccessToken { get; init; }
+        /// <summary>
+        /// Gets the fingerprint of the session the event occurred in, or <c>null</c> outside a session.
+        /// </summary>
+        /// <remarks>
+        /// IMPORTANT: a fingerprint, never the access token. The log database has its own, usually
+        /// wider, readership, and a token read from a log row would be a live bearer credential.
+        /// Producers compute it with <see cref="Polhem.Base.Security.AccessTokenHasher.ComputeFingerprint"/>,
+        /// which is enough to correlate the rows of one session with each other and with its
+        /// <c>st_session</c> row.
+        /// </remarks>
+        public string? TokenFingerprint { get; init; }
 
         /// <summary>
         /// Gets the correlation id shared by every entry produced within one API call, so an
@@ -111,7 +120,7 @@ namespace Polhem.Definition.Logging
             columns.Add(new AuditColumn("user_name", UserName));
             columns.Add(new AuditColumn("company_id", CompanyId));
             columns.Add(new AuditColumn("company_name", CompanyName));
-            columns.Add(new AuditColumn("access_token", AccessToken));
+            columns.Add(new AuditColumn("token_fingerprint", TokenFingerprint));
             columns.Add(new AuditColumn("trace_id", TraceId));
             columns.Add(new AuditColumn("client_ip", ClientIp));
             columns.Add(new AuditColumn("source", Source));

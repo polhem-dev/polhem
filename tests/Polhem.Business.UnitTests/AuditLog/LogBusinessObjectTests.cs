@@ -33,10 +33,11 @@ namespace Polhem.Business.UnitTests.AuditLog
 
         public LogBusinessObjectTests(PolhemTestFixture fx) { _fx = fx; }
 
-        private LogBusinessObject Bo(StubAuditLogRepository repo, bool authorized = true)
+        private LogBusinessObject Bo(StubAuditLogRepository repo, bool authorized = true, bool deploymentAdmin = true)
         {
             var ctx = TestPolhemContext.CreateWithOverrides(_fx,
                 (typeof(ICompanyAuthorizationService), new FakeAuth(authorized)),
+                (typeof(IDeploymentAuthorizationService), new FakeDeploymentAuth(deploymentAdmin)),
                 (typeof(IRepositoryFactory), new StubAuditLogRepositoryFactory(repo)));
             return new LogBusinessObject(ctx, TestSessionFactory.CreateAccessToken(_fx), SysProgIds.AuditLog);
         }
@@ -219,7 +220,45 @@ namespace Polhem.Business.UnitTests.AuditLog
             Assert.Throws<UnauthorizedAccessException>(() => bo.GetLoginLog(new GetLoginLogArgs()));
             Assert.Throws<UnauthorizedAccessException>(() => bo.GetAccessLog(new GetAccessLogArgs()));
             Assert.Throws<UnauthorizedAccessException>(() => bo.GetApiAnomalyLog(new GetApiAnomalyLogArgs()));
+        }
+
+        [Fact]
+        [DisplayName("The DB anomaly methods refuse a company audit reader who is not a deployment administrator")]
+        public void DbAnomalyMethods_CompanyAuditReaderWithoutDeploymentAdmin_Throw()
+        {
+            // The company permission alone used to be enough, and `st_log_anomaly_db` carries every tenant's rows.
+            var bo = Bo(new StubAuditLogRepository(HeaderPage(1)), authorized: true, deploymentAdmin: false);
+
             Assert.Throws<UnauthorizedAccessException>(() => bo.GetDbAnomalyLog(new GetDbAnomalyLogArgs()));
+            Assert.Throws<UnauthorizedAccessException>(() => bo.GetDbAnomalySummary(new GetDbAnomalySummaryArgs()));
+        }
+
+        [Fact]
+        [DisplayName("The DB anomaly methods serve a deployment administrator who has no company audit permission")]
+        public void DbAnomalyMethods_DeploymentAdminWithoutCompanyPermission_Succeed()
+        {
+            var repo = new StubAuditLogRepository(HeaderPage(1));
+            var bo = Bo(repo, authorized: false, deploymentAdmin: true);
+
+            Assert.Single(bo.GetDbAnomalyLog(new GetDbAnomalyLogArgs()).Table!.Rows);
+            Assert.Same(repo.AggregateResult, bo.GetDbAnomalySummary(new GetDbAnomalySummaryArgs()).Table);
+        }
+
+        [Fact]
+        [DisplayName("The DB anomaly methods ask the deployment authorization for ReadDbAnomalyLog")]
+        public void DbAnomalyMethods_AskForReadDbAnomalyLog()
+        {
+            var deploymentAuth = new FakeDeploymentAuth(true);
+            var repo = new StubAuditLogRepository(HeaderPage(0));
+            var ctx = TestPolhemContext.CreateWithOverrides(_fx,
+                (typeof(ICompanyAuthorizationService), new FakeAuth(false)),
+                (typeof(IDeploymentAuthorizationService), deploymentAuth),
+                (typeof(IRepositoryFactory), new StubAuditLogRepositoryFactory(repo)));
+            var bo = new LogBusinessObject(ctx, TestSessionFactory.CreateAccessToken(_fx), SysProgIds.AuditLog);
+
+            bo.GetDbAnomalyLog(new GetDbAnomalyLogArgs());
+
+            Assert.Equal(DeploymentAction.ReadDbAnomalyLog, deploymentAuth.LastAction);
         }
 
         // ---- anomaly aggregates (Phase 3a) ----
@@ -259,7 +298,6 @@ namespace Polhem.Business.UnitTests.AuditLog
         {
             var bo = Bo(new StubAuditLogRepository(HeaderPage(0)), authorized: false);
             Assert.Throws<UnauthorizedAccessException>(() => bo.GetApiAnomalySummary(new GetApiAnomalySummaryArgs()));
-            Assert.Throws<UnauthorizedAccessException>(() => bo.GetDbAnomalySummary(new GetDbAnomalySummaryArgs()));
             Assert.Throws<UnauthorizedAccessException>(() => bo.GetTopApiMethods(new GetTopApiMethodsArgs()));
         }
 
@@ -323,6 +361,18 @@ namespace Polhem.Business.UnitTests.AuditLog
             private readonly bool _allowed;
             public FakeAuth(bool allowed) { _allowed = allowed; }
             public bool Can(Guid accessToken, string modelId, PermissionAction action) => _allowed;
+        }
+
+        private sealed class FakeDeploymentAuth : IDeploymentAuthorizationService
+        {
+            private readonly bool _allowed;
+            public FakeDeploymentAuth(bool allowed) { _allowed = allowed; }
+            public DeploymentAction? LastAction { get; private set; }
+            public bool Can(Guid accessToken, DeploymentAction action)
+            {
+                LastAction = action;
+                return _allowed;
+            }
         }
 
         private sealed class StubAuditLogRepository : IAuditLogRepository

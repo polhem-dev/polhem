@@ -1,4 +1,4 @@
-<!-- source: en/api-method-reference.md blob: dc63fe7c831b931afc61fe55167c118219d490ab -->
+<!-- source: en/api-method-reference.md blob: 73db76f965503e0d5aa36dadaa1fbc4192028862 -->
 # API 方法參考
 
 [English](../en/api-method-reference.md) · [← 文件索引](README.md)
@@ -27,11 +27,14 @@ BO 層 Args / Result 型別、`[ApiAccessControl]` 設定，與一行用途說�
 下列方法另外宣告了 `ReplayProtection = UniqueSequence`：每次呼叫都必須帶一個該 session 沒用過的
 序號，否則伺服端回 `-32005 ReplayRejected`。在這些方法上重送同一個 request frame 會被拒絕。
 
+- `CreateApiKey`
 - `Delete`
 - `EnterCompany`
 - `ExecFunc`
 - `LeaveCompany`
 - `Save`
+- `SetApiKeyEnabled`
+- `SetApiKeyExpiry`
 
 ### 命名慣例（Contract / Args / Result 可由 action 推導）
 

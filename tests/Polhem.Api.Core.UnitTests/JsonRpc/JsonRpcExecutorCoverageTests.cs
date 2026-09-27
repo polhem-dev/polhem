@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Polhem.Base.Security;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
 using Polhem.Definition;
@@ -151,13 +152,14 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             Assert.Equal($"{SysProgIds.System}.DefinitelyNotAMethod", anomaly.Method);
             Assert.NotNull(anomaly.ErrorMessage);
             Assert.Null(anomaly.ThresholdMs);
-            // A non-empty `AccessToken` is kept in the record (the non-empty branch at line 170).
-            Assert.Equal(token, anomaly.AccessToken);
+            // A non-empty access token is recorded as its fingerprint, never as the token itself.
+            Assert.Equal(AccessTokenHasher.ComputeFingerprint(token), anomaly.TokenFingerprint);
+            Assert.DoesNotContain(token.ToString("N"), anomaly.TokenFingerprint!, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
-        [DisplayName("A failure record with anomaly logging enabled and an empty AccessToken keeps no token")]
-        public void Execute_AnomalyEnabledFailureEmptyToken_WritesNullAccessToken()
+        [DisplayName("A failure record with anomaly logging enabled and an empty AccessToken keeps no fingerprint")]
+        public void Execute_AnomalyEnabledFailureEmptyToken_WritesNullFingerprint()
         {
             var writer = new CapturingAnomalyLogWriter();
             var executor = NewAuditExecutor(writer, EnabledOptions(), new StubSessionInfoService(NewSession()), Guid.Empty);
@@ -166,8 +168,8 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
             Assert.NotNull(response.Error);
             var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
-            // An empty `AccessToken` is not kept in the record (the empty branch at line 170).
-            Assert.Null(anomaly.AccessToken);
+            // An empty access token means "no session" and leaves the fingerprint empty.
+            Assert.Null(anomaly.TokenFingerprint);
             Assert.Equal("u1", anomaly.UserId);
             Assert.Equal("C1", anomaly.CompanyId);
         }

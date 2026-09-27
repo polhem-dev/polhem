@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using System.Security.Cryptography;
+using System.Text;
 using Polhem.Base.Security;
 
 namespace Polhem.Base.UnitTests
@@ -64,33 +66,59 @@ namespace Polhem.Base.UnitTests
         }
 
         /// <summary>
-        /// Verifies that a hash string in the legacy SHA1 format still verifies (backward compatibility).
+        /// The unprefixed PBKDF2-SHA1 format inherited from Bee.NET no longer verifies, even with the right password.
         /// </summary>
         [Fact]
-        [DisplayName("A hash in the legacy SHA1 format passes verification")]
-        public void VerifyPassword_LegacySha1Format_ReturnsTrue()
+        [DisplayName("A hash in the retired PBKDF2-SHA1 format fails verification even with the right password")]
+        public void VerifyPassword_LegacySha1Format_ReturnsFalse()
         {
-            // Arrange: the legacy format is `{iterations}.{saltBase64}.{hashBase64}`, without the `v2.` prefix.
+            // The legacy format is `{iterations}.{saltBase64}.{hashBase64}`, without the `v2.` prefix.
             const string password = "LegacyPassword!";
             const int iterations = 10000;
-            byte[] salt = new byte[16];
-            using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
-                rng.GetBytes(salt);
-            byte[] hash = System.Security.Cryptography.Rfc2898DeriveBytes.Pbkdf2(
-                System.Text.Encoding.UTF8.GetBytes(password),
-                salt,
-                iterations,
-                System.Security.Cryptography.HashAlgorithmName.SHA1,
-                32);
+            byte[] salt = RandomNumberGenerator.GetBytes(16);
+            byte[] hash = Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(password), salt, iterations, HashAlgorithmName.SHA1, 32);
             string legacyHash = $"{iterations}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
 
-            // Act
-            bool correct = PasswordHasher.VerifyPassword(password, legacyHash);
-            bool wrong = PasswordHasher.VerifyPassword("WrongPassword", legacyHash);
+            Assert.False(PasswordHasher.VerifyPassword(password, legacyHash));
+        }
 
-            // Assert
-            Assert.True(correct);
-            Assert.False(wrong);
+        [Fact]
+        [DisplayName("HashPassword stores the current iteration count, which is at least 600,000")]
+        public void HashPassword_UsesCurrentIterationCount()
+        {
+            string stored = PasswordHasher.HashPassword("pw");
+
+            Assert.InRange(PasswordHasher.Iterations, 600_000, int.MaxValue);
+            Assert.StartsWith($"v2.{PasswordHasher.Iterations}.", stored, StringComparison.Ordinal);
+            Assert.False(PasswordHasher.NeedsRehash(stored));
+        }
+
+        [Fact]
+        [DisplayName("A v2 hash made with fewer iterations still verifies and is reported as needing a rehash")]
+        public void VerifyPassword_WeakerV2Hash_VerifiesAndNeedsRehash()
+        {
+            string weak = WeakV2Hash("pw", 1000);
+
+            Assert.True(PasswordHasher.VerifyPassword("pw", weak));
+            Assert.False(PasswordHasher.VerifyPassword("other", weak));
+            Assert.True(PasswordHasher.NeedsRehash(weak));
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("not.a.valid.hash")]
+        [InlineData("1000.AAAAAAAAAAAAAAAAAAAAAA==.AAAAAAAAAAAAAAAAAAAAAA==")]
+        [DisplayName("NeedsRehash reports a value it cannot parse as needing a new hash")]
+        public void NeedsRehash_Unparsable_ReturnsTrue(string stored)
+        {
+            Assert.True(PasswordHasher.NeedsRehash(stored));
+        }
+
+        private static string WeakV2Hash(string password, int iterations)
+        {
+            byte[] salt = RandomNumberGenerator.GetBytes(16);
+            byte[] hash = Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(password), salt, iterations, HashAlgorithmName.SHA256, 32);
+            return $"v2.{iterations}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
         }
 
         /// <summary>
@@ -112,8 +140,8 @@ namespace Polhem.Base.UnitTests
         /// <remarks>
         /// This guards against a bypass that was reproduced: asking PBKDF2 for 0 output bytes returns an empty array,
         /// and <c>CryptographicOperations.FixedTimeEquals</c> treats two empty spans as equal, so a stored value such as
-        /// <c>v2.100000..</c> returned true for <b>any</b> password. The v2 and legacy branches parse and compare
-        /// separately, so both are tested. The same applies to an empty salt.
+        /// <c>v2.100000..</c> returned true for <b>any</b> password. The unprefixed legacy shape is kept among the
+        /// cases because it once had a verifier of its own. The same applies to an empty salt.
         /// </remarks>
         [Theory]
         [InlineData("v2.100000..")]

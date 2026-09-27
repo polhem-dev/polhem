@@ -1,6 +1,7 @@
 using Polhem.Base.Serialization;
 using Polhem.Definition.Customization;
 using Polhem.Definition.Settings;
+using Microsoft.Extensions.Logging;
 
 namespace Polhem.ObjectCaching
 {
@@ -52,6 +53,12 @@ namespace Polhem.ObjectCaching
         public DatabaseSettings GetDatabaseSettings()
         {
             var settings = _cache.DatabaseSettings.Get()!;
+            // Reported once per instance: this runs on every connection, and the first read happens as
+            // the host starts talking to its databases, which is when an operator is looking.
+            if (_configEncryptionKey.Length == 0 && Interlocked.Exchange(ref _unprotectedPasswordsReported, 1) == 0)
+            {
+                WarnIfPasswordsUnprotected(settings, "loaded");
+            }
             DatabaseSettingsCryptor.DecryptInPlace(settings, _configEncryptionKey);
             return settings;
         }
@@ -62,13 +69,39 @@ namespace Polhem.ObjectCaching
         /// <c>enc:</c> values pass through) before serializing to XML.
         /// </summary>
         /// <param name="settings">The database settings.</param>
+        /// <remarks>
+        /// Without a configuration encryption key the passwords are written as they are, and a warning
+        /// is logged each time that happens.
+        /// </remarks>
         public void SaveDatabaseSettings(DatabaseSettings settings)
         {
+            ArgumentNullException.ThrowIfNull(settings);
+            if (_configEncryptionKey.Length == 0)
+            {
+                WarnIfPasswordsUnprotected(settings, "saved");
+            }
             DatabaseSettingsCryptor.EncryptInPlace(settings, _configEncryptionKey);
             string filePath = _paths.GetDatabaseSettingsFilePath();
             XmlCodec.SerializeToFile(settings, filePath);
             // Invalidate the cache
             _cache.DatabaseSettings.Remove();
+        }
+
+        /// <summary>
+        /// Logs a warning when <paramref name="settings"/> holds passwords but no configuration
+        /// encryption key is configured, so they are neither encrypted on save nor decrypted on read.
+        /// </summary>
+        /// <param name="settings">The database settings being loaded or saved.</param>
+        /// <param name="operation">"loaded" or "saved", for the message.</param>
+        private void WarnIfPasswordsUnprotected(DatabaseSettings settings, string operation)
+        {
+            if (_logger == null || !DatabaseSettingsCryptor.HasPasswords(settings)) { return; }
+
+            _logger.LogWarning(
+                "DatabaseSettings was {Operation} with database passwords, but no ConfigEncryptionKey is configured " +
+                "in SystemSettings (BackendConfiguration/SecurityKeySettings). Plain passwords are stored in clear " +
+                "text and 'enc:' values cannot be decrypted. Configure a ConfigEncryptionKey to protect them.",
+                operation);
         }
 
         /// <summary>

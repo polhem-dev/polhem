@@ -29,6 +29,7 @@ using Polhem.Repository.Abstractions.Factories;
 using Polhem.Repository.Factories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace Polhem.Hosting
 {
@@ -122,7 +123,8 @@ namespace Polhem.Hosting
                     sp.GetRequiredService<PathOptions>(),
                     sp.GetRequiredService<ICacheContainer>(),
                     keys.ConfigEncryptionKey,
-                    sp.GetRequiredService<ICustomizeDefineReader>()));
+                    sp.GetRequiredService<ICustomizeDefineReader>(),
+                    sp.GetService<ILoggerFactory>()?.CreateLogger<CacheDefineAccess>()));
 
             // 5. Database settings provider (used by DbConnectionManager bootstrap).
             services.AddSingleton<IDatabaseSettingsProvider>(sp =>

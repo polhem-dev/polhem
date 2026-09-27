@@ -65,6 +65,36 @@ namespace Polhem.UI.Avalonia.UnitTests.Storage
         }
 
         [Fact]
+        [DisplayName("SaveApiKey writes apikey.txt readable by its owner only, even over a world-readable file")]
+        public void SaveApiKey_WritesOwnerOnlyFile()
+        {
+            var appName = NewAppName();
+            try
+            {
+                var storage = new FileEndpointStorage(appName);
+                Directory.CreateDirectory(AppDirectory(appName));
+                File.WriteAllText(storage.ApiKeyFilePath, "old.secret");
+                if (!OperatingSystem.IsWindows())
+                {
+                    File.SetUnixFileMode(storage.ApiKeyFilePath,
+                        UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
+                }
+
+                storage.SaveApiKey("app-id.secret");
+
+                Assert.Equal("app-id.secret", File.ReadAllText(storage.ApiKeyFilePath));
+                if (!OperatingSystem.IsWindows())
+                {
+                    Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(storage.ApiKeyFilePath));
+                }
+            }
+            finally
+            {
+                Cleanup(appName);
+            }
+        }
+
+        [Fact]
         [DisplayName("After SaveApiKey, a new instance reads back the same key, independent of the endpoint")]
         public void SaveApiKey_RoundTripsIndependentlyOfEndpoint()
         {

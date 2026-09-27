@@ -24,6 +24,17 @@ namespace Polhem.Business.Security
     /// <b>The failure count is windowed.</b> A count that only ever increased would eventually lock
     /// out a legitimate user for typos spread across months.
     /// </para>
+    /// <para>
+    /// <b>A full map evicts, it does not refuse.</b> When <see cref="MaxTrackedAccounts"/> is reached,
+    /// a new account takes the place of the entry whose window opened longest ago, and locked
+    /// entries go only when every entry is locked. Refusing new accounts instead meant that one
+    /// burst of random user ids switched lockout off for every account not already tracked. Eviction
+    /// is not free of that lever either, but pushing out one chosen account now costs a full map's
+    /// worth of fresh failed sign-ins, each paying the full password hashing cost.
+    /// </para>
+    /// <para>
+    /// The state is per process: with several nodes, each one keeps its own count.
+    /// </para>
     /// </remarks>
     public class LoginAttemptTracker : ILoginAttemptTracker
     {
@@ -138,12 +149,10 @@ namespace Polhem.Business.Security
             var now = _timeProvider.GetUtcNow().UtcDateTime;
             SweepIfDue(now);
 
-            // The cap applies to *new* accounts only: an account already being tracked must keep
-            // accumulating, or a flood of unknown user ids would be a way to switch lockout off for
-            // the account the attacker actually wants. New accounts are dropped instead of evicting
-            // an existing entry, because eviction would hand back that same lever.
+            // The cap applies to *new* accounts only: an account already being tracked keeps
+            // accumulating without displacing anything.
             if (!_attempts.ContainsKey(userId) && _attempts.Count >= MaxTrackedAccounts)
-                return;
+                MakeRoom(now);
 
             _attempts.AddOrUpdate(userId,
                 _ => CreateFirstFailure(now),
@@ -184,6 +193,49 @@ namespace Polhem.Business.Security
                 if (pair.Value.ExpiresUtc <= now)
                     _attempts.TryRemove(pair);
             }
+        }
+
+        /// <summary>
+        /// Frees one slot for a new account: drops expired entries first, then the unlocked entry whose
+        /// window opened earliest, and a locked entry only when nothing else is left.
+        /// </summary>
+        /// <remarks>
+        /// A linear scan, which is affordable because it runs only when the map is full and each call
+        /// follows a failed sign-in that has already paid for a password hash. Concurrent callers may
+        /// each evict, or each find room, so the map can briefly exceed the cap by the number of
+        /// sign-ins in flight; that bound is what matters here, not an exact count.
+        /// </remarks>
+        private void MakeRoom(DateTime now)
+        {
+            KeyValuePair<string, AttemptInfo>? oldestUnlocked = null;
+            KeyValuePair<string, AttemptInfo>? soonestUnlock = null;
+            foreach (var pair in _attempts)
+            {
+                var info = pair.Value;
+                if (info.ExpiresUtc <= now)
+                {
+                    _attempts.TryRemove(pair);
+                    continue;
+                }
+
+                bool locked = info.LockedUntilUtc.HasValue && info.LockedUntilUtc.Value > now;
+                if (!locked)
+                {
+                    if (oldestUnlocked is null || info.WindowStartUtc < oldestUnlocked.Value.Value.WindowStartUtc)
+                        oldestUnlocked = pair;
+                }
+                else if (soonestUnlock is null || info.ExpiresUtc < soonestUnlock.Value.Value.ExpiresUtc)
+                {
+                    soonestUnlock = pair;
+                }
+            }
+
+            if (_attempts.Count < MaxTrackedAccounts)
+                return;
+
+            var victim = oldestUnlocked ?? soonestUnlock;
+            if (victim.HasValue)
+                _attempts.TryRemove(victim.Value);
         }
 
         private AttemptInfo CreateFirstFailure(DateTime now)

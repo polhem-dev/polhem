@@ -1,1 +1,7 @@
 #nullable enable
+Polhem.Base.Security.AccessTokenHasher
+const Polhem.Base.Security.PasswordHasher.Iterations = 600000 -> int
+static Polhem.Base.FileUtilities.FileWriteOwnerOnlyText(string! filePath, string! contents, bool overwrite) -> void
+static Polhem.Base.Security.AccessTokenHasher.ComputeFingerprint(System.Guid accessToken) -> string?
+static Polhem.Base.Security.AccessTokenHasher.ComputeStorageKey(System.Guid accessToken) -> System.Guid
+static Polhem.Base.Security.PasswordHasher.NeedsRehash(string! hashedPassword) -> bool

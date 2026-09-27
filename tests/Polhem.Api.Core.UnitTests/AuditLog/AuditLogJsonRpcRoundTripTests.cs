@@ -37,6 +37,7 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
             var overrideServices = new TestOverrideServiceProvider(
                 _fx.Provider,
                 (typeof(ICompanyAuthorizationService), new FakeAuth()),
+                (typeof(IDeploymentAuthorizationService), new FakeDeploymentAuth()),
                 (typeof(IRepositoryFactory), new StubAuditLogRepositoryFactory(repo)));
 
             var boFactory = new BusinessObjectFactory(
@@ -228,6 +229,11 @@ namespace Polhem.Api.Core.UnitTests.AuditLog
         private sealed class FakeAuth : ICompanyAuthorizationService
         {
             public bool Can(Guid accessToken, string modelId, PermissionAction action) => true;
+        }
+
+        private sealed class FakeDeploymentAuth : IDeploymentAuthorizationService
+        {
+            public bool Can(Guid accessToken, DeploymentAction action) => true;
         }
 
         private sealed class StubAuditLogRepository : IAuditLogRepository

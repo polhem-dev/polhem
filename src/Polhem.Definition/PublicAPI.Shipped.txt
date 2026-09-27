@@ -865,8 +865,6 @@ Polhem.Definition.Logging.AuditColumn.Name.init -> void
 Polhem.Definition.Logging.AuditColumn.Value.get -> object?
 Polhem.Definition.Logging.AuditColumn.Value.init -> void
 Polhem.Definition.Logging.AuditEntry
-Polhem.Definition.Logging.AuditEntry.AccessToken.get -> System.Guid?
-Polhem.Definition.Logging.AuditEntry.AccessToken.init -> void
 Polhem.Definition.Logging.AuditEntry.ApiKeyId.get -> string?
 Polhem.Definition.Logging.AuditEntry.ApiKeyId.init -> void
 Polhem.Definition.Logging.AuditEntry.ApiKeyName.get -> string?

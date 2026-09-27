@@ -17,7 +17,7 @@ namespace Polhem.Samples.Shared;
 /// </remarks>
 public sealed class DemoAuthenticatingSystemBusinessObject : SystemBusinessObject
 {
-    public DemoAuthenticatingSystemBusinessObject(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = true)
+    public DemoAuthenticatingSystemBusinessObject(IPolhemContext ctx, Guid accessToken, string progId, bool isLocalCall = false)
         : base(ctx, accessToken, progId, isLocalCall)
     {
     }

@@ -7,9 +7,13 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
     /// (<see cref="PolhemBlazorProviderMode.Remote"/>).
     /// </summary>
     /// <remarks>
-    /// Blazor Server hosts typically share a process with the backend
-    /// (<see cref="UseLocalProvider"/>); Server deployments that talk to a
-    /// separate API host can still opt into <see cref="UseRemoteProvider"/>.
+    /// WARNING: <see cref="PolhemBlazorProviderMode.Local"/>, the default, treats every browser user's
+    /// call as a trusted in-process call: the backend skips the access token check and the
+    /// <c>LocalOnly</c> restriction, and the business-object checks keyed on the local-call flag pass
+    /// too. That is only appropriate when every user of the site is trusted with the whole backend,
+    /// such as an internal administration tool. A site that serves users who must be held to their
+    /// own permissions should call <see cref="UseRemoteProvider"/> and reach the backend over HTTP,
+    /// where each call is checked like any other API client's.
     /// </remarks>
     public sealed class PolhemBlazorOptions
     {
@@ -30,6 +34,10 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         /// <see cref="Polhem.Api.Client.ApiClientInfo.LocalServiceProvider"/> so connector calls can be
         /// dispatched in process.
         /// </summary>
+        /// <remarks>
+        /// WARNING: for trusted users only. Every call becomes a trusted local call that skips the
+        /// token and <c>LocalOnly</c> checks; see <see cref="PolhemBlazorProviderMode.Local"/>.
+        /// </remarks>
         public PolhemBlazorOptions UseLocalProvider()
         {
             Mode = PolhemBlazorProviderMode.Local;

@@ -56,16 +56,38 @@ namespace Polhem.ObjectCaching.Database
         }
 
         /// <summary>
-        /// Disables negative caching for session lookups.
+        /// Lifetime, in minutes, of a cached miss for an unknown access token.
+        /// </summary>
+        public const int NegativeMinutes = 1;
+
+        /// <summary>
+        /// Upper bound on the number of unknown access tokens remembered at once.
+        /// </summary>
+        public const int MaxNegativeTokens = 10_000;
+
+        /// <summary>
+        /// Caches a miss for one minute, in a set capped at <see cref="MaxNegativeTokens"/>.
         /// </summary>
         /// <remarks>
-        /// Caching every unauthenticated lookup as a negative entry would let anonymous traffic
-        /// inflate the cache with markers for arbitrary access tokens. The rebuild it would be
-        /// saving is a single indexed read on <c>access_token</c> that returns nothing, so the
-        /// marker buys little and costs memory an attacker chooses the size of.
+        /// Every request resolves its session more than once before its access is decided: the
+        /// business-object factory reads the customization code, then the token validator checks the
+        /// session. Without a miss marker an unknown token paid one <c>st_session</c> read for each,
+        /// and again on every repeat. With it, a distinct unknown token costs one read and a repeated
+        /// one costs none. A stream of distinct random tokens still reaches the database once per
+        /// token; the marker cannot help there, and nothing short of a rate limit at the edge does.
+        /// <para>
+        /// The markers live in a capped set rather than in the shared cache provider (see
+        /// <see cref="MaxNegativeEntries"/>), because the key is whatever the caller put in its
+        /// <c>Authorization</c> header. Signing in writes the new session with <c>Set</c>, which
+        /// clears any marker for that token, and a token cannot be probed before sign-in issues it.
+        /// </para>
         /// </remarks>
         /// <param name="key">The access token (unused).</param>
-        protected override CacheItemPolicy? GetNegativePolicy(string key) => null;
+        protected override CacheItemPolicy? GetNegativePolicy(string key)
+            => new CacheItemPolicy(CacheTimeKind.AbsoluteTime, NegativeMinutes);
+
+        /// <inheritdoc/>
+        protected override int MaxNegativeEntries => MaxNegativeTokens;
 
         /// <summary>
         /// Gets the session information for the specified access token.

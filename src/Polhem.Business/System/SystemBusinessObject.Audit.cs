@@ -1,3 +1,4 @@
+using Polhem.Base.Security;
 using Polhem.Definition;
 using Polhem.Definition.Logging;
 using Polhem.Definition.Settings;
@@ -58,7 +59,7 @@ namespace Polhem.Business.System
                 UserName = userName,
                 CompanyId = companyId,
                 CompanyName = companyName,
-                AccessToken = AccessToken,
+                TokenFingerprint = AccessTokenHasher.ComputeFingerprint(AccessToken),
                 ApiKeyId = ApiKeyId,
                 ApiKeyName = ApiKeyName,
                 ProgId = SysProgIds.System,

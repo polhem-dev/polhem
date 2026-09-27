@@ -79,6 +79,72 @@ namespace Polhem.Base
         }
 
         /// <summary>
+        /// Writes secret text (a key, a credential) to a file that only the current user can read.
+        /// Uses UTF-8 without byte order mark. The target directory must already exist.
+        /// </summary>
+        /// <param name="filePath">The file path.</param>
+        /// <param name="contents">The string to write to the file.</param>
+        /// <param name="overwrite">
+        /// <c>true</c> to replace an existing file; <c>false</c> to fail when the file already exists,
+        /// which makes the call a safe "create if absent" when several processes race for it.
+        /// </param>
+        /// <exception cref="IOException">
+        /// Thrown when <paramref name="overwrite"/> is <c>false</c> and the file already exists, when the
+        /// directory does not exist (<see cref="DirectoryNotFoundException"/>), or when the replace step
+        /// fails.
+        /// </exception>
+        /// <remarks>
+        /// IMPORTANT: on Unix the content goes to a temporary file created with mode <c>0600</c> in the
+        /// same directory, which is then moved into place. The mode is applied by the call that creates
+        /// the file, so there is no moment at which the content sits in a file with the umask's default
+        /// permissions, and no later permission change that could fail. Replacing an existing file
+        /// takes the new file's mode, so a file an older version left world-readable is tightened too.
+        /// <para>
+        /// On Windows no mode is applied: files inherit the ACL of their folder, and the per-user
+        /// folders secrets are kept in are already private to their owner.
+        /// </para>
+        /// <para>
+        /// A reader never observes a half-written file, for the same reason as
+        /// <see cref="FileWriteTextAtomic"/>.
+        /// </para>
+        /// </remarks>
+        public static void FileWriteOwnerOnlyText(string filePath, string contents, bool overwrite)
+        {
+            // The directory is deliberately not created here: a folder made on the fly would carry the
+            // umask's default permissions, and the caller is the one who knows where secrets belong.
+            string directory = Path.GetDirectoryName(Path.GetFullPath(filePath)) ?? ".";
+            string tempPath = Path.Combine(directory, $"{Path.GetFileName(filePath)}.{Guid.NewGuid():N}.tmp");
+
+            var options = new FileStreamOptions
+            {
+                Mode = FileMode.CreateNew,
+                Access = FileAccess.Write,
+                Share = FileShare.None,
+            };
+            if (!OperatingSystem.IsWindows())
+            {
+                options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+            }
+
+            try
+            {
+                using (var stream = new FileStream(tempPath, options))
+                using (var writer = new StreamWriter(stream, new UTF8Encoding(false)))
+                {
+                    writer.Write(contents);
+                }
+                File.Move(tempPath, filePath, overwrite);
+            }
+            catch
+            {
+                // Best effort: a leftover temporary file holding a secret is exactly what this method
+                // exists to avoid, and the caller is about to see the original exception either way.
+                try { File.Delete(tempPath); } catch (IOException) { /* nothing further to try */ }
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Reads the contents of a text file. Returns empty string when the file does not exist.
         /// </summary>
         /// <param name="filePath">The file path.</param>

@@ -210,9 +210,11 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("The number of tracked accounts is capped, and new accounts are not tracked beyond the cap")]
-        public void RecordFailure_BeyondCap_StopsTrackingNewAccounts()
+        [DisplayName("A new account beyond the cap is still tracked and locks out, evicting the oldest entry instead")]
+        public void RecordFailure_BeyondCap_NewAccountStillLocksOut()
         {
+            // Dropping new accounts at the cap used to let one burst of random user ids switch lockout off for every
+            // account not already tracked.
             var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
             var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15), clock)
             {
@@ -220,13 +222,39 @@ namespace Polhem.Business.UnitTests
             };
 
             for (int i = 0; i < 10; i++)
+            {
                 tracker.RecordFailure($"filler-{i}");
+                clock.Advance(TimeSpan.FromSeconds(1));
+            }
 
-            // The capacity is full, so a new account gets no entry (and therefore is not locked out either).
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 3; i++)
                 tracker.RecordFailure("late-comer");
 
-            Assert.False(tracker.IsLockedOut("late-comer"));
+            Assert.True(tracker.IsLockedOut("late-comer"));
+        }
+
+        [Fact]
+        [DisplayName("At the cap, an active lockout is kept while unlocked entries are evicted")]
+        public void RecordFailure_BeyondCap_KeepsLockedEntries()
+        {
+            var clock = new AdvanceableTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+            var tracker = new LoginAttemptTracker(3, TimeSpan.FromMinutes(15), clock)
+            {
+                MaxTrackedAccounts = 5
+            };
+
+            // The locked account is the oldest entry, so an eviction by age alone would free it first.
+            for (int i = 0; i < 3; i++)
+                tracker.RecordFailure("locked");
+            clock.Advance(TimeSpan.FromSeconds(1));
+
+            for (int i = 0; i < 20; i++)
+            {
+                tracker.RecordFailure($"decoy-{i}");
+                clock.Advance(TimeSpan.FromSeconds(1));
+            }
+
+            Assert.True(tracker.IsLockedOut("locked"));
         }
 
         [Fact]

@@ -38,7 +38,8 @@ namespace Polhem.Business.System
         /// administrator yet has to be able to mint its first key on the host.
         /// </para>
         /// </remarks>
-        [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
+        [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated,
+            ReplayProtection = ApiReplayProtection.UniqueSequence)]
         public virtual CreateApiKeyResult CreateApiKey(CreateApiKeyArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
@@ -148,7 +149,8 @@ namespace Polhem.Business.System
         /// deployment that holds only one.
         /// </para>
         /// </remarks>
-        [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
+        [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated,
+            ReplayProtection = ApiReplayProtection.UniqueSequence)]
         public virtual SetApiKeyEnabledResult SetApiKeyEnabled(SetApiKeyEnabledArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);
@@ -223,7 +225,8 @@ namespace Polhem.Business.System
         /// is already dead is a mistake, whereas expiring a live one as of a moment that has passed
         /// is a legitimate way to retire it.
         /// </remarks>
-        [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated)]
+        [ApiAccessControl(ApiProtectionLevel.Encrypted, ApiAccessRequirement.Authenticated,
+            ReplayProtection = ApiReplayProtection.UniqueSequence)]
         public virtual SetApiKeyExpiryResult SetApiKeyExpiry(SetApiKeyExpiryArgs args)
         {
             ArgumentNullException.ThrowIfNull(args);

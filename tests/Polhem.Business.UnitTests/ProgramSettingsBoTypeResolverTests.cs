@@ -62,6 +62,35 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
+        [DisplayName("Resolving progIds the registry does not name adds nothing to the type cache")]
+        public void Resolve_UnregisteredProgIds_AreNotCached()
+        {
+            // The progId comes from the wire before the caller's access is checked, so each distinct name used to
+            // leave an entry behind.
+            var resolver = new ProgramSettingsBoTypeResolver(new ThrowingDefineAccess());
+
+            for (int i = 0; i < 100; i++)
+                Assert.Equal(typeof(FormBusinessObject), resolver.Resolve($"probe-{i}"));
+
+            Assert.Equal(0, resolver.CachedTypeCount);
+        }
+
+        [Fact]
+        [DisplayName("Resolving registered and reserved progIds caches them")]
+        public void Resolve_RegisteredAndReservedProgIds_AreCached()
+        {
+            var resolver = new ProgramSettingsBoTypeResolver(
+                new ProgramSettingsDefineAccess(BuildSettings(("P001", null), ("P002", TestableCustomFormBoFqn))));
+
+            resolver.Resolve("P001");
+            resolver.Resolve("P002");
+            resolver.Resolve(SysProgIds.System);
+            resolver.Resolve("not-registered");
+
+            Assert.Equal(3, resolver.CachedTypeCount);
+        }
+
+        [Fact]
         [DisplayName("Resolve returns FormBusinessObject when the ProgId exists but BusinessObject is an empty string")]
         public void Resolve_BusinessObjectEmpty_ReturnsFormBusinessObject()
         {

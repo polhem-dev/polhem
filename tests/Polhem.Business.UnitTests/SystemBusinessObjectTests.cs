@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Polhem.Base.Security;
 using Polhem.Business.System;
 using Polhem.Tests.Shared;
 using Polhem.Definition.Database;
@@ -18,7 +17,7 @@ namespace Polhem.Business.UnitTests
         public void CreateSession_ValidArgs_ReturnsTokenWithExpiry()
         {
             // Arrange
-            var business = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+            var business = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
             var args = new CreateSessionArgs
             {
                 UserID = "001",
@@ -55,55 +54,35 @@ namespace Polhem.Business.UnitTests
         [DisplayName("CreateSession with a user ID that does not exist throws InvalidOperationException")]
         public void CreateSession_NonExistentUserId_ThrowsInvalidOperation()
         {
-            var business = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+            var business = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
             var args = new CreateSessionArgs { UserID = "__nonexistent_user_xyz__", ExpiresIn = 600 };
 
             Assert.Throws<InvalidOperationException>(() => business.CreateSession(args));
         }
 
         [Fact]
+        [DisplayName("CreateSession on a business object built for a remote call throws NotSupportedException")]
+        public void CreateSession_NotLocalCall_ThrowsNotSupported()
+        {
+            // The LocalOnly attribute is enforced only on the JSON-RPC dispatch path. A business object constructed
+            // directly with isLocalCall: false must refuse to mint a token without a credential.
+            var business = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: false);
+            var args = new CreateSessionArgs { UserID = "001", ExpiresIn = 600 };
+
+            var ex = Assert.Throws<NotSupportedException>(() => business.CreateSession(args));
+            Assert.Contains("local calls", ex.Message);
+        }
+
+        [Fact]
         [DisplayName("CreateSession asking for a one-time token throws NotSupportedException instead of silently degrading")]
         public void CreateSession_OneTime_ThrowsNotSupported()
         {
-            var business = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
+            var business = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System, isLocalCall: true);
             var args = new CreateSessionArgs { UserID = "001", ExpiresIn = 600, OneTime = true };
 
             // Because the session is written to the cache on creation, the first use is a cache hit and delete-on-read never fires,
             // so the one-time semantics have nowhere to take effect. Letting a security guarantee fail silently is the worst option, so it is rejected explicitly.
             Assert.Throws<NotSupportedException>(() => business.CreateSession(args));
-        }
-
-        /// <summary>
-        /// Logs in and verifies the exchange of the RSA-encrypted key.
-        /// </summary>
-        // The login flow can only be verified by overriding `SystemBusinessObject.AuthenticateUser` (the base implementation always returns false).
-        // Enable this test once a test subclass exists.
-#pragma warning disable xUnit1004 // Test methods should not be skipped — placeholder retained as TODO marker; see comment above.
-        [Fact(Skip = "Requires a test subclass that overrides AuthenticateUser; not yet in place.")]
-#pragma warning restore xUnit1004
-        [DisplayName("Login with an RSA key pair returns an encrypted session key that can be decrypted")]
-        public void Login_WithRsaKeyPair_ReturnsDecryptableSessionKey()
-        {
-            // Arrange
-            RsaCryptor.GenerateRsaKeyPair(out var publicKey, out var privateKey);
-
-            var sbo = new SystemBusinessObject(TestPolhemContext.Create(_fx), Guid.Empty, SysProgIds.System);
-            var args = new LoginArgs
-            {
-                UserId = "testuser",
-                Password = "testpassword",
-                ClientPublicKey = publicKey
-            };
-
-            // Act
-            LoginResult result = sbo.Login(args);
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.NotEmpty(result.ApiEncryptionKey);
-
-            string sessionKey = RsaCryptor.DecryptWithPrivateKey(result.ApiEncryptionKey, privateKey);
-            Assert.False(string.IsNullOrWhiteSpace(sessionKey));
         }
     }
 }
