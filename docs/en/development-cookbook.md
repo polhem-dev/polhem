@@ -937,6 +937,8 @@ app.Run();
 
 `PolhemAccessTokenProvider` holds the circuit's access token and cascades it; `PolhemLoginPanel` signs in and hands the token to it; `FormPage` renders a whole form from its `ProgId`. [`samples/Blazor.Server.Demo`](../../samples/Blazor.Server.Demo/README.md) wires the three together. The components' own text comes from the `IStringLocalizer<PolhemUIText>` that `AddPolhemBlazor` registers — a `LanguageResourceStringLocalizer` that reads the host's language resources, then the translations shipped with the framework, in the circuit's current UI culture. A host that registers its own localizer for `PolhemUIText` keeps it.
 
+`FormPage` loads its definitions the way the Avalonia views do: through a `FormDefinitionLoader`, which `PolhemApiConnectorFactory.CreateDefinitionLoader` builds for each page, so the captions follow the circuit's UI culture and the tenant's customized layout applies. Set `options.UseDefinitionLoader = false` in `AddPolhemBlazor` to render the definitions as stored, or pass a loader to the page's `DefinitionLoader` parameter to change how one page assembles them (for example to give it a `CompanyAccessor` for the company's number formats). Before a save, `FormPage` checks the fields marked `Required`; when any is empty it names them above the toolbar and sends nothing. The Avalonia `FormView` does the same on its error line.
+
 **3. Local vs Remote mode**:
 
 The mode is chosen in `AddPolhemBlazor`, and `PolhemApiConnectorFactory` builds every connector accordingly:

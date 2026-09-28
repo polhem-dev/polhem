@@ -41,7 +41,6 @@ Polhem.Web.Blazor.Server.Components.FormPage.ProgId.get -> string!
 Polhem.Web.Blazor.Server.Components.FormPage.ProgId.set -> void
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.DataSet.get -> System.Data.DataSet!
-Polhem.Web.Blazor.Server.DataObjects.FormDataObject.DeleteAsync() -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.DetailTables.get -> System.Collections.Generic.IEnumerable<System.Data.DataTable!>!
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.FormDataObject(Polhem.Definition.Forms.FormSchema! schema, Polhem.Api.Client.Connectors.FormApiConnector? connector = null) -> void
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.GetField(string! fieldName) -> string!
@@ -49,11 +48,8 @@ Polhem.Web.Blazor.Server.DataObjects.FormDataObject.GetFormField(string! fieldNa
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.InitializeNewMaster() -> void
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.IsDirty.get -> bool
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.IsLoading.get -> bool
-Polhem.Web.Blazor.Server.DataObjects.FormDataObject.LoadAsync(System.Guid rowId) -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.MasterRow.get -> System.Data.DataRow?
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.MasterTable.get -> System.Data.DataTable!
-Polhem.Web.Blazor.Server.DataObjects.FormDataObject.NewAsync() -> System.Threading.Tasks.Task!
-Polhem.Web.Blazor.Server.DataObjects.FormDataObject.SaveAsync() -> System.Threading.Tasks.Task!
 Polhem.Web.Blazor.Server.DataObjects.FormDataObject.SetField(string! fieldName, string? value) -> void
 Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory
 Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.Mode.get -> Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorProviderMode

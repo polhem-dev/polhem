@@ -14,6 +14,7 @@ using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.Views;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Avalonia.DataObjects;
+using Polhem.Tests.Shared;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls
 {
@@ -813,8 +814,8 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         }
 
         [Fact]
-        [DisplayName("A Layout already set by the host is used directly without resolving it from the definition source")]
-        public async Task ResolveLayout_HostSuppliedLayout_IsUsedAsIs()
+        [DisplayName("A Layout already set by the host is rendered without resolving one from the definition source")]
+        public async Task ResolveLayout_HostSuppliedLayout_IsUsedWithoutResolving()
         {
             var connector = new FakeFormApiConnector
             {
@@ -830,6 +831,125 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             await view.EditAsync(Guid.NewGuid());
 
             Assert.Equal("host-supplied", GetPrivateField<FormLayout>(view, "_formLayout").Caption);
+        }
+
+        [Fact]
+        [DisplayName("The view degrades a copy of a host-supplied Layout, so the host's instance is left unchanged")]
+        public async Task EnsureDataObject_HostSuppliedLayout_LeavesHostInstanceUnchanged()
+        {
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = _ => new GetDataResponse { DataSet = BuildServerDataSet(Guid.NewGuid(), "n") },
+            };
+            var schema = BuildSchema();
+            var supplied = FormLayoutGenerator.Generate(schema, TestProgId);
+            var view = new TestFormView { Schema = schema, FormConnector = connector, Layout = supplied };
+
+            await view.EditAsync(Guid.NewGuid());
+
+            // The capability applier writes `Visible` and `ReadOnly` into the layout the view renders.
+            // Writing them here stands in for it without the process-wide capability snapshot.
+            var rendered = GetPrivateField<FormLayout>(view, "_formLayout");
+            Assert.NotSame(supplied, rendered);
+            foreach (var field in rendered.Sections!.SelectMany(section => section.Fields!))
+            {
+                field.Visible = false;
+                field.ReadOnly = true;
+            }
+            Assert.All(supplied.Sections!.SelectMany(section => section.Fields!), field =>
+            {
+                Assert.True(field.Visible);
+                Assert.False(field.ReadOnly);
+            });
+        }
+
+        [Fact]
+        [DisplayName("Save with an empty required field names it on the view and does not send the save")]
+        public async Task Save_RequiredFieldEmpty_ShowsPromptAndDoesNotSave()
+        {
+            using var culture = new CultureScope("en-US");
+            var saveCalled = false;
+            var connector = new FakeFormApiConnector
+            {
+                GetNewDataHandler = () => new GetNewDataResponse { DataSet = BuildNewDataSet(name: "  ") },
+                SaveHandler = _ =>
+                {
+                    saveCalled = true;
+                    return new SaveResponse();
+                },
+            };
+            var view = BuildView(connector);
+            view.Schema!.MasterTable!.Fields!["sys_name"].Required = true;
+            await view.NewAsync();
+
+            var saved = false;
+            Exception? reported = null;
+            view.Saved += (_, _) => saved = true;
+            view.ErrorOccurred += (_, ex) => reported = ex;
+
+            await InvokePrivateAsync(view, "OnSaveClickedAsync");
+
+            Assert.False(saveCalled);
+            Assert.False(saved);
+            Assert.Null(reported);
+            var label = GetPrivateField<TextBlock>(view, "_errorLabel");
+            Assert.True(label.IsVisible);
+            Assert.Equal("Fill in the required fields: Category Name", label.Text);
+        }
+
+        [Fact]
+        [DisplayName("Save with every required field filled sends the save")]
+        public async Task Save_RequiredFieldFilled_Saves()
+        {
+            var saveCalled = false;
+            var connector = new FakeFormApiConnector
+            {
+                GetNewDataHandler = () => new GetNewDataResponse { DataSet = BuildNewDataSet(name: "Beverages") },
+                SaveHandler = _ =>
+                {
+                    saveCalled = true;
+                    return new SaveResponse();
+                },
+            };
+            var view = BuildView(connector);
+            view.Schema!.MasterTable!.Fields!["sys_name"].Required = true;
+            await view.NewAsync();
+
+            await InvokePrivateAsync(view, "OnSaveClickedAsync");
+
+            Assert.True(saveCalled);
+        }
+
+        [Fact]
+        [DisplayName("A cancelled load throws OperationCanceledException to the caller instead of reporting an error")]
+        public async Task EditAsync_Cancelled_ThrowsToCallerWithoutReporting()
+        {
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = _ => throw new OperationCanceledException(),
+            };
+            var view = BuildView(connector);
+            Exception? reported = null;
+            view.ErrorOccurred += (_, ex) => reported = ex;
+            using var cancellation = new CancellationTokenSource();
+            await cancellation.CancelAsync();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => view.EditAsync(Guid.NewGuid(), cancellation.Token));
+
+            Assert.Null(reported);
+        }
+
+        // A new record as the server's `GetNewData` returns it: one added master row.
+        private static DataSet BuildNewDataSet(string name)
+        {
+            var dataSet = new DataSet(TestProgId);
+            var master = new DataTable(TestProgId);
+            master.Columns.Add(SysFields.RowId, typeof(Guid));
+            master.Columns.Add("sys_id", typeof(string));
+            master.Columns.Add("sys_name", typeof(string));
+            master.Rows.Add(Guid.NewGuid(), "C01", name);
+            dataSet.Tables.Add(master);
+            return dataSet;
         }
 
         private sealed class TestFormView : FormView
@@ -856,7 +976,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             protected override double GetViewportWidth()
                 => _viewportWidthOverride ?? base.GetViewportWidth();
 
-            protected override Task<FormSchema?> ResolveSchemaAsync(string progId)
+            protected override Task<FormSchema?> ResolveSchemaAsync(string progId, CancellationToken cancellationToken)
                 => Task.FromResult<FormSchema?>(null);
 
             protected override FormApiConnector ResolveFormConnector(string progId)
@@ -867,7 +987,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             /// <summary>Injects a rounding context for live preview without touching the static ClientInfo.</summary>
             public RoundingContext? RoundingContextOverride { get; set; }
 
-            protected override Task<RoundingContext> ResolveRoundingContextAsync()
+            protected override Task<RoundingContext> ResolveRoundingContextAsync(CancellationToken cancellationToken)
                 => Task.FromResult(RoundingContextOverride ?? new RoundingContext());
 
             protected override void OnFormModeChanged(SingleFormMode formMode)

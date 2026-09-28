@@ -9,7 +9,6 @@ Polhem.UI.Core.IEndpointStorage.LoadEndpoint() -> string!
 Polhem.UI.Core.IEndpointStorage.SaveEndpoint(string! endpoint) -> void
 Polhem.UI.Core.IEndpointStorage.SetEndpoint(string! endpoint) -> void
 Polhem.UI.Core.IUIViewService
-Polhem.UI.Core.IUIViewService.ShowApiConnectAsync() -> System.Threading.Tasks.Task<bool>!
 static Polhem.UI.Core.ClientInfo.AccessToken.get -> System.Guid
 static Polhem.UI.Core.ClientInfo.AllowGenerateSettings.get -> bool
 static Polhem.UI.Core.ClientInfo.AllowGenerateSettings.set -> void
@@ -26,11 +25,8 @@ static Polhem.UI.Core.ClientInfo.EndpointStorage.get -> Polhem.UI.Core.IEndpoint
 static Polhem.UI.Core.ClientInfo.EndpointStorage.set -> void
 static Polhem.UI.Core.ClientInfo.GetApiKey() -> string!
 static Polhem.UI.Core.ClientInfo.GetEndpoint() -> string!
-static Polhem.UI.Core.ClientInfo.InitializeAsync(Polhem.UI.Core.IUIViewService! service, Polhem.Api.Client.SupportedConnectTypes connectTypes) -> System.Threading.Tasks.Task<bool>!
-static Polhem.UI.Core.ClientInfo.InitializeAsync(string! endpoint) -> System.Threading.Tasks.Task!
 static Polhem.UI.Core.ClientInfo.ResetDefineCache() -> void
 static Polhem.UI.Core.ClientInfo.SetApiKey(string! apiKey) -> void
-static Polhem.UI.Core.ClientInfo.SetEndpointAsync(string! endpoint) -> System.Threading.Tasks.Task!
 static Polhem.UI.Core.ClientInfo.SystemApiConnector.get -> Polhem.Api.Client.Connectors.SystemApiConnector!
 static Polhem.UI.Core.ClientInfo.UIViewService.get -> Polhem.UI.Core.IUIViewService?
 static Polhem.UI.Core.ClientInfo.UserInfo.get -> Polhem.Definition.Identity.UserInfo?

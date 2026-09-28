@@ -271,37 +271,51 @@ namespace Polhem.UI.Avalonia.Views
         public event EventHandler<Exception>? ErrorOccurred;
 
         /// <summary>Loads a record read-only (<see cref="SingleFormMode.View"/>).</summary>
-        public async Task ViewAsync(Guid rowId)
+        /// <param name="rowId">The record's <see cref="SysFields.RowId"/>.</param>
+        /// <param name="cancellationToken">
+        /// A token that cancels the load. A cancelled load throws <see cref="OperationCanceledException"/>
+        /// to the caller instead of being reported on the view.
+        /// </param>
+        public async Task ViewAsync(Guid rowId, CancellationToken cancellationToken = default)
         {
-            var dataObject = await EnsureDataObjectAsync().ConfigureAwait(true);
+            var dataObject = await EnsureDataObjectAsync(cancellationToken).ConfigureAwait(true);
             if (dataObject is null) return;
             await RunGuardedAsync(async () =>
             {
-                await dataObject.LoadAsync(rowId).ConfigureAwait(true);
+                await dataObject.LoadAsync(rowId, cancellationToken).ConfigureAwait(true);
                 FormMode = SingleFormMode.View;
-            }).ConfigureAwait(true);
+            }, cancellationToken).ConfigureAwait(true);
         }
 
         /// <summary>Loads a record for editing (<see cref="SingleFormMode.Edit"/>).</summary>
-        public async Task EditAsync(Guid rowId)
+        /// <param name="rowId">The record's <see cref="SysFields.RowId"/>.</param>
+        /// <param name="cancellationToken">
+        /// A token that cancels the load. A cancelled load throws <see cref="OperationCanceledException"/>
+        /// to the caller instead of being reported on the view.
+        /// </param>
+        public async Task EditAsync(Guid rowId, CancellationToken cancellationToken = default)
         {
-            var dataObject = await EnsureDataObjectAsync().ConfigureAwait(true);
+            var dataObject = await EnsureDataObjectAsync(cancellationToken).ConfigureAwait(true);
             if (dataObject is null) return;
             await RunGuardedAsync(async () =>
             {
-                await dataObject.LoadAsync(rowId).ConfigureAwait(true);
+                await dataObject.LoadAsync(rowId, cancellationToken).ConfigureAwait(true);
                 FormMode = SingleFormMode.Edit;
-            }).ConfigureAwait(true);
+            }, cancellationToken).ConfigureAwait(true);
         }
 
         /// <summary>Starts a blank record (<see cref="SingleFormMode.Add"/>).</summary>
-        public async Task NewAsync()
+        /// <param name="cancellationToken">
+        /// A token that cancels the request for the blank record. A cancelled request throws
+        /// <see cref="OperationCanceledException"/> to the caller instead of being reported on the view.
+        /// </param>
+        public async Task NewAsync(CancellationToken cancellationToken = default)
         {
-            var dataObject = await EnsureDataObjectAsync().ConfigureAwait(true);
+            var dataObject = await EnsureDataObjectAsync(cancellationToken).ConfigureAwait(true);
             if (dataObject is null) return;
             await RunGuardedAsync(async () =>
             {
-                await dataObject.NewAsync().ConfigureAwait(true);
+                await dataObject.NewAsync(cancellationToken).ConfigureAwait(true);
                 // The server's `GetNewData` has already evaluated the `DefaultValueExpression`s, but
                 // computed fields are left to the client. Initialize the master row here so the computed
                 // fields reflect those defaults at once; the defaults are evaluated again from the same
@@ -311,7 +325,7 @@ namespace Polhem.UI.Avalonia.Views
                 if (master is not null)
                     _liveComputation?.InitializeNewRow(dataObject.MasterTable.TableName, master);
                 FormMode = SingleFormMode.Add;
-            }).ConfigureAwait(true);
+            }, cancellationToken).ConfigureAwait(true);
         }
     }
 }

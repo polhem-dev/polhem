@@ -22,6 +22,11 @@
             }
         </div>
 
+        @if (_notice is not null)
+        {
+            <div class="polhem-form-page__notice" role="alert">@_notice</div>
+        }
+
         <DynamicGrid Layout="_listLayout"
                      Rows="_listRows"
                      OnRowSelected="OnRowSelectedAsync" />

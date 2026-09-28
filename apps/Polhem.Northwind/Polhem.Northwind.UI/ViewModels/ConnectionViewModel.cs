@@ -7,7 +7,7 @@ namespace Polhem.Northwind.UI.ViewModels;
 
 /// <summary>
 /// First step of the demo flow. Lets the user edit the JSON-RPC endpoint and runs a
-/// <c>system.ping</c> through <see cref="ClientInfo.InitializeAsync(string)"/>; on success it
+/// <c>system.ping</c> through <see cref="ClientInfo.InitializeAsync(string, System.Threading.CancellationToken)"/>; on success it
 /// invokes the <c>onConnected</c> callback supplied by the parent
 /// <see cref="MainWindowViewModel"/>.
 /// </summary>
@@ -67,7 +67,7 @@ public partial class ConnectionViewModel : ViewModelBase
 
     /// <summary>
     /// Bound to the Connect button. Pings <see cref="Endpoint"/> via
-    /// <see cref="ClientInfo.InitializeAsync(string)"/> and advances on success.
+    /// <see cref="ClientInfo.InitializeAsync(string, System.Threading.CancellationToken)"/> and advances on success.
     /// </summary>
     [RelayCommand]
     private async Task ConnectAsync()

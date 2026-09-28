@@ -65,6 +65,11 @@ namespace Polhem.Definition.Language
         public const string SignIn = "SignIn";
         /// <summary>Key of the message shown when a sign-in returns no access token.</summary>
         public const string SignInEmptyToken = "SignInEmptyToken";
+        /// <summary>
+        /// Key of the prompt shown when a save is held back because required fields are empty;
+        /// argument 0 is the list of their captions.
+        /// </summary>
+        public const string RequiredFieldsEmpty = "RequiredFieldsEmpty";
 
         private PolhemUIText()
         {
@@ -94,6 +99,7 @@ namespace Polhem.Definition.Language
             [Password] = "Password",
             [SignIn] = "Sign in",
             [SignInEmptyToken] = "Login failed: the server returned an empty access token.",
+            [RequiredFieldsEmpty] = "Fill in the required fields: {0}",
         };
 
         /// <summary>

@@ -215,7 +215,11 @@ namespace Polhem.UI.Avalonia.Views
         public event EventHandler<Exception>? ErrorOccurred;
 
         /// <summary>Resolves the schema + connector inputs and runs the initial list load.</summary>
-        public async Task InitializeAsync()
+        /// <param name="cancellationToken">
+        /// A token that cancels the schema fetch and the first load. A cancelled call throws
+        /// <see cref="OperationCanceledException"/> to the caller instead of being reported on the view.
+        /// </param>
+        public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             if (_initialized || _isInitializing) return;
 
@@ -227,14 +231,14 @@ namespace Polhem.UI.Avalonia.Views
             {
                 ApplyAccessTokenFallback();
 
-                if (!await TryResolveSchemaAsync(hasProgId).ConfigureAwait(true)) return;
+                if (!await TryResolveSchemaAsync(hasProgId, cancellationToken).ConfigureAwait(true)) return;
                 ResolveFormConnectorFallback(hasProgId);
 
                 if (Schema is null || FormConnector is null) return;
                 AttachGrid();
 
                 _initialized = true;
-                await ReloadAsync().ConfigureAwait(true);
+                await ReloadAsync(cancellationToken).ConfigureAwait(true);
                 UpdateToolbarState();
             }
             finally
@@ -244,20 +248,29 @@ namespace Polhem.UI.Avalonia.Views
         }
 
         /// <summary>Reloads the list from the backend, clearing any prior selection.</summary>
-        public async Task ReloadAsync()
+        /// <param name="cancellationToken">
+        /// A token that cancels the load. A cancelled load throws <see cref="OperationCanceledException"/>
+        /// to the caller instead of being reported on the view.
+        /// </param>
+        public async Task ReloadAsync(CancellationToken cancellationToken = default)
         {
             var connector = FormConnector;
             if (connector is null) return;
 
             try
             {
-                var response = await connector.GetListAsync(ComputeSelectFields()).ConfigureAwait(true);
+                var response = await connector.GetListAsync(ComputeSelectFields(), cancellationToken: cancellationToken)
+                    .ConfigureAwait(true);
                 _grid.DataTable = response.Table;
                 _cardList.ItemsSource = response.Table?.DefaultView;
                 _hasData = response.Table is not null && response.Table.Rows.Count > 0;
                 _emptyListLabel.IsVisible = !_hasData;
                 UpdateContentVisibility();
                 _selectedRowId = Guid.Empty;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -289,10 +302,12 @@ namespace Polhem.UI.Avalonia.Views
         /// cached <see cref="ClientInfo.DefineAccess"/>; override to supply a schema without touching
         /// the static <see cref="ClientInfo"/>.
         /// </summary>
-        protected virtual async Task<FormSchema?> ResolveSchemaAsync(string progId)
+        /// <param name="progId">The program identifier.</param>
+        /// <param name="cancellationToken">A token that cancels the fetch.</param>
+        protected virtual async Task<FormSchema?> ResolveSchemaAsync(string progId, CancellationToken cancellationToken)
             => (DefinitionLoader ?? ClientInfo.DefinitionLoader) is { } loader
-                ? await loader.GetLocalizedSchemaAsync(progId, ResolveLang()).ConfigureAwait(false)
-                : await ClientInfo.DefineAccess.GetFormSchemaAsync(progId).ConfigureAwait(false);
+                ? await loader.GetLocalizedSchemaAsync(progId, ResolveLang(), cancellationToken).ConfigureAwait(false)
+                : await ClientInfo.DefineAccess.GetFormSchemaAsync(progId, cancellationToken).ConfigureAwait(false);
 
         /// <summary>
         /// Resolves the language the list renders in. Defaults to the UI culture, which
@@ -398,17 +413,21 @@ namespace Polhem.UI.Avalonia.Views
                 AccessToken = fallbackToken;
         }
 
-        private async Task<bool> TryResolveSchemaAsync(bool hasProgId)
+        private async Task<bool> TryResolveSchemaAsync(bool hasProgId, CancellationToken cancellationToken)
         {
             if (Schema is not null || !hasProgId) return true;
 
             ClearError();
             try
             {
-                var loaded = await ResolveSchemaAsync(ProgId).ConfigureAwait(true);
+                var loaded = await ResolveSchemaAsync(ProgId, cancellationToken).ConfigureAwait(true);
                 if (loaded is not null)
                     Schema = loaded;
                 return true;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {

@@ -8,7 +8,11 @@ namespace Polhem.UI.Core
         /// <summary>
         /// Shows the API connection settings dialog.
         /// </summary>
+        /// <param name="cancellationToken">
+        /// A token that cancels the setup. An implementation that honours it closes its dialog and
+        /// throws <see cref="OperationCanceledException"/>.
+        /// </param>
         /// <returns>True when the user has completed the connection setup; otherwise, false.</returns>
-        Task<bool> ShowApiConnectAsync();
+        Task<bool> ShowApiConnectAsync(CancellationToken cancellationToken = default);
     }
 }

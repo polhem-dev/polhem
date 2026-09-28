@@ -28,11 +28,18 @@ namespace Polhem.Web.Blazor.Server.Components
     /// <see cref="Polhem.Definition.Security.ApiAccessRequirement.Anonymous"/> themselves.
     /// <para>
     /// Captions, the toolbar text and the display of numbers and dates follow the circuit's
-    /// <see cref="CultureInfo.CurrentUICulture"/> and <see cref="CultureInfo.CurrentCulture"/>. A
+    /// <see cref="CultureInfo.CurrentUICulture"/> and <see cref="CultureInfo.CurrentCulture"/>; the
+    /// captions do because the page assembles its definitions through a
+    /// <see cref="FormDefinitionLoader"/> (see <see cref="DefinitionLoader"/>). A
     /// host applies the signed-in user's culture — <see cref="Polhem.Api.Core.Messages.System.LoginResponse.Culture"/>
     /// — through ASP.NET Core request localization (for example a culture cookie set after sign-in),
     /// because a circuit's culture is fixed when it starts. The page localizes when it initializes;
     /// a language switch takes effect on pages opened afterwards.
+    /// </para>
+    /// <para>
+    /// Save checks the fields marked <see cref="FormField.Required"/> first, through
+    /// <see cref="RequiredFieldCheck"/>. When any is empty the page names them above the toolbar and
+    /// sends nothing; the form stays open for the user to fill them in.
     /// </para>
     /// </remarks>
     public sealed partial class FormPage : ComponentBase
@@ -43,6 +50,8 @@ namespace Polhem.Web.Blazor.Server.Components
         private FormDataObject? _dataObject;
         private DataTable? _listRows;
         private string? _error;
+        // A message for the user that leaves the form on screen, unlike `_error`, which replaces it.
+        private string? _notice;
         private bool _isInitializing = true;
         private bool _isBusy;
 
@@ -71,11 +80,16 @@ namespace Polhem.Web.Blazor.Server.Components
 
         /// <summary>
         /// Gets or sets the assembler that turns raw definitions into a localized schema and a
-        /// runtime layout. <c>null</c> — the default — keeps the page purely local.
+        /// runtime layout, for this page only. <c>null</c> — the default — uses the one
+        /// <see cref="PolhemApiConnectorFactory.CreateDefinitionLoader"/> builds, unless the host
+        /// turned off <see cref="PolhemBlazorOptions.UseDefinitionLoader"/>; with neither, the page
+        /// renders the schema and the layout exactly as stored.
         /// </summary>
         /// <remarks>
-        /// Opt-in for the same reason as <c>DefinitionLoader</c>: assembling costs extra
-        /// round trips, so a page states plainly whether it pays for tenant customization.
+        /// A loader localizes the captions in the circuit's UI culture and applies the tenant's
+        /// customized layout and the framework's number formats. Pass one here to change how a
+        /// single page assembles, for example to give it a
+        /// <see cref="FormDefinitionLoader.CompanyAccessor"/>.
         /// </remarks>
         [Parameter]
         public FormDefinitionLoader? DefinitionLoader { get; set; }
@@ -92,13 +106,14 @@ namespace Polhem.Web.Blazor.Server.Components
 
             try
             {
-                var system = Factory.CreateSystemConnector(AccessToken);
-                // Without a loader the page stays purely local: both definitions are fetched exactly
-                // as stored. With one, both layers of language and layout are fetched and assembled
-                // so tenant customization takes effect. See FormView.DefinitionLoader for why this
-                // is opt-in rather than always on.
-                if (DefinitionLoader is null)
+                var loader = DefinitionLoader
+                    ?? (Factory.UseDefinitionLoader ? Factory.CreateDefinitionLoader(AccessToken) : null);
+                // Without a loader both definitions are fetched exactly as stored. With one, both
+                // layers of language and layout are fetched and assembled, so the captions are in the
+                // circuit's language and tenant customization takes effect.
+                if (loader is null)
                 {
+                    var system = Factory.CreateSystemConnector(AccessToken);
                     _schema = await system
                         .GetDefineAsync<FormSchema>(DefineType.FormSchema, [ProgId])
                         .ConfigureAwait(true);
@@ -113,10 +128,10 @@ namespace Polhem.Web.Blazor.Server.Components
                 }
                 else
                 {
-                    _schema = await DefinitionLoader
+                    _schema = await loader
                         .GetLocalizedSchemaAsync(ProgId, CultureInfo.CurrentUICulture.Name)
                         .ConfigureAwait(true);
-                    _formLayout = await DefinitionLoader
+                    _formLayout = await loader
                         .GetRuntimeLayoutAsync(ProgId, _schema).ConfigureAwait(true);
                 }
                 _listLayout = _schema.GetListLayout();
@@ -150,12 +165,24 @@ namespace Polhem.Web.Blazor.Server.Components
         private async Task OnNewAsync()
         {
             if (_dataObject is null) return;
-            await RunGuardedAsync(_dataObject.NewAsync).ConfigureAwait(true);
+            await RunGuardedAsync(() => _dataObject.NewAsync()).ConfigureAwait(true);
         }
 
         private async Task OnSaveAsync()
         {
-            if (_dataObject is null) return;
+            if (_dataObject is null || _isBusy) return;
+
+            // Required fields are checked before the save leaves the circuit, so the user sees every
+            // empty one named at once instead of the server's rejection of the first.
+            var missing = _schema is { } schema
+                ? RequiredFieldCheck.FindMissing(schema, _dataObject.DataSet)
+                : [];
+            if (missing.Count > 0)
+            {
+                _notice = RequiredFieldCheck.FormatPrompt(PolhemBlazorText.GetLocalizer(Services), missing);
+                return;
+            }
+
             await RunGuardedAsync(async () =>
             {
                 await _dataObject.SaveAsync().ConfigureAwait(true);
@@ -178,6 +205,7 @@ namespace Polhem.Web.Blazor.Server.Components
             if (_isBusy) return;
             _isBusy = true;
             _error = null;
+            _notice = null;
             try
             {
                 await action().ConfigureAwait(true);

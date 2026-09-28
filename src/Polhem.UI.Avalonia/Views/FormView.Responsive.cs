@@ -105,6 +105,14 @@ namespace Polhem.UI.Avalonia.Views
             ErrorOccurred?.Invoke(this, ex);
         }
 
+        // A message for the user rather than a failure: unlike `ReportError` it raises no
+        // `ErrorOccurred`, because nothing went wrong that a host needs to log.
+        private void ShowMessage(string message)
+        {
+            _errorLabel.Text = message;
+            _errorLabel.IsVisible = true;
+        }
+
         private void ClearError()
         {
             _errorLabel.Text = string.Empty;

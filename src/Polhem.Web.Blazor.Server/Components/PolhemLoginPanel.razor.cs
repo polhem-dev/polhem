@@ -17,9 +17,9 @@ namespace Polhem.Web.Blazor.Server.Components
     /// The panel ships with a no-frills default look so it can drop in unstyled;
     /// hosts that want richer UI should provide their own login page and call
     /// <see cref="PolhemAccessTokenProvider.SetToken"/> directly. Validation is
-    /// also intentionally minimal — the backend BO ultimately decides what
-    /// counts as a valid credential, and surfacing its rejection through the
-    /// inline error message is enough for the sample-grade scope of Phase 1d.
+    /// also intentionally minimal — the backend BO decides what counts as a
+    /// valid credential, and the panel shows its rejection as an inline error
+    /// message.
     /// <para>
     /// The <see cref="LoginResponse"/> passed to <see cref="OnLoggedIn"/> carries the user's culture
     /// (<see cref="LoginResponse.Culture"/>). A circuit's culture is fixed when it starts, so a host

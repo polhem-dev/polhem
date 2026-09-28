@@ -1,4 +1,4 @@
-<!-- source: en/development-cookbook.md blob: d76618e8401f46b29cf3329985ee7a9811b0ec56 -->
+<!-- source: en/development-cookbook.md blob: 22bd57986037e75a9698165f07ec5e98a180bd00 -->
 # 端到端開發指引
 
 [English](../en/development-cookbook.md) · [← 文件索引](README.md)
@@ -910,6 +910,8 @@ app.Run();
 ```
 
 `PolhemAccessTokenProvider` 保存 circuit 的 access token 並以 cascading 方式傳遞；`PolhemLoginPanel` 負責登入並把 token 交給它；`FormPage` 依 `ProgId` 呈現整張表單。[`samples/Blazor.Server.Demo`](../../samples/Blazor.Server.Demo/README.zh-TW.md) 把三者接在一起。元件自己的文字來自 `AddPolhemBlazor` 註冊的 `IStringLocalizer<PolhemUIText>` —— 一個 `LanguageResourceStringLocalizer`，依 circuit 目前的 UI culture，先讀宿主的語系資源，再讀框架內附的翻譯。宿主若自行為 `PolhemUIText` 註冊 localizer，會保留宿主的那一個。
+
+`FormPage` 載入定義的方式與 Avalonia 畫面相同：經由 `FormDefinitionLoader`，由 `PolhemApiConnectorFactory.CreateDefinitionLoader` 為每個頁面建立，因此標題依 circuit 的 UI culture 呈現，租戶客製的版面也會套用。在 `AddPolhemBlazor` 中設定 `options.UseDefinitionLoader = false` 會照原樣呈現定義；把 loader 傳給頁面的 `DefinitionLoader` 參數，則可改變單一頁面的組裝方式（例如提供 `CompanyAccessor`，套用公司的數值格式）。儲存前，`FormPage` 會檢查標記為 `Required` 的欄位；只要有空白，就在工具列上方列出這些欄位，且不送出儲存。Avalonia 的 `FormView` 也會這樣做，訊息顯示在它的錯誤列。
 
 **3. Local vs Remote 模式**：
 

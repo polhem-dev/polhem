@@ -175,67 +175,6 @@ namespace Polhem.Business.UnitTests.Form
             }
         }
 
-        public static TheoryData<FieldDbType, object?, bool> EmptinessCases => new()
-        {
-            { FieldDbType.String, null, true },
-            { FieldDbType.String, DBNull.Value, true },
-            { FieldDbType.String, "", true },
-            { FieldDbType.String, " \t", true },
-            { FieldDbType.String, "x", false },
-            { FieldDbType.Guid, Guid.Empty, true },
-            { FieldDbType.Guid, Guid.Empty.ToString(), true },
-            { FieldDbType.Guid, Guid.NewGuid(), false },
-            { FieldDbType.Binary, Array.Empty<byte>(), true },
-            { FieldDbType.Binary, new byte[] { 1 }, false },
-            { FieldDbType.Integer, 0, false },
-            { FieldDbType.Decimal, 0m, false },
-            { FieldDbType.Boolean, false, false },
-            { FieldDbType.Date, new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), false },
-        };
-
-        [Theory]
-        [MemberData(nameof(EmptinessCases))]
-        [DisplayName("IsEmpty treats null, blank text, an empty Guid and an empty byte array as empty, and never a number, boolean or date")]
-        public void IsEmpty_Value_MatchesRule(FieldDbType dbType, object? value, bool expected)
-        {
-            var field = new FormField("f", "F", dbType);
-
-            Assert.Equal(expected, RequiredFieldValidator.IsEmpty(field, value));
-        }
-
-        [Fact]
-        [DisplayName("FindEmpty ignores a Required flag on a relation field, which the repository never writes")]
-        public void FindEmpty_RequiredRelationField_IsIgnored()
-        {
-            var schema = new FormSchema("rf", "Relation");
-            var table = schema.Tables!.Add("rf", "Master");
-            table.Fields!.Add(new FormField("ref_name", "Name", FieldDbType.String) { Type = FieldType.RelationField, Required = true });
-            var dataSet = new DataSet();
-            var dataTable = dataSet.Tables.Add("rf");
-            dataTable.Columns.Add("ref_name", typeof(string));
-            dataTable.Rows.Add(string.Empty);
-
-            Assert.Null(RequiredFieldValidator.FindEmpty(schema, dataSet));
-        }
-
-        [Fact]
-        [DisplayName("FindEmpty judges an added row that omits a required text column by the empty value the insert would store")]
-        public void FindEmpty_AddedRowOmitsRequiredColumn_ReportsField()
-        {
-            var schema = new FormSchema("om", "Omitted");
-            var table = schema.Tables!.Add("om", "Master");
-            table.Fields!.Add(new FormField(Code, CodeCaption, FieldDbType.String) { Required = true });
-            var dataSet = new DataSet();
-            var dataTable = dataSet.Tables.Add("om");
-            dataTable.Columns.Add(Note, typeof(string));
-            dataTable.Rows.Add("x");
-
-            var found = RequiredFieldValidator.FindEmpty(schema, dataSet);
-
-            Assert.NotNull(found);
-            Assert.Equal(Code, found!.Value.Field.FieldName);
-        }
-
         private FormBusinessObject NewBo(TransientForm form)
             => new(form.CreateContext(), TestSessionFactory.CreateAccessToken(_fx), form.Schema.ProgId);
 

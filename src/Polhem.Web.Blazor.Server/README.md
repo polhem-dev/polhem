@@ -32,8 +32,9 @@ builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider("https://a
 ```
 
 `AddPolhemBlazor` registers `PolhemBlazorOptions`, a per-circuit `ApiSessionContext`, the
-`PolhemApiConnectorFactory` that components use to build connectors, and the localizer for the components' own
-text. It does not call `AddPolhemFramework`.
+`PolhemApiConnectorFactory` that components use to build connectors and definition loaders, and the localizer for
+the components' own text. It does not call `AddPolhemFramework`. `options.UseDefinitionLoader` (on by default)
+decides whether `FormPage` localizes its definitions; see below.
 
 > **Local mode is for trusted users only.** Every call it makes is an in-process call, which the backend treats
 > as trusted whichever browser user caused it. Use it when every user of the site is trusted with the whole
@@ -42,7 +43,11 @@ text. It does not call `AddPolhemFramework`.
 
 ## Components
 
-- `FormPage` -- list plus master-detail editing of one program, wired through a shared `FormDataObject`.
+- `FormPage` -- list plus master-record editing of one program, wired through a shared `FormDataObject`. It
+  loads its definitions through a `FormDefinitionLoader` by default, so captions follow the circuit's UI culture
+  and the tenant's customized layout applies; its `DefinitionLoader` parameter overrides the loader for one page.
+  Before a save it checks the fields marked `Required` and names the empty ones instead of sending the save.
+  Detail tables are not rendered.
 - `DynamicGrid` -- presentation-only list over a `LayoutGrid`; raises `OnRowSelected` with the row id.
 - `DynamicForm` -- renders the master section(s) of a `FormLayout`, choosing the input element from each field's
   `ControlType` (text, date, month, time, checkbox, textarea, dropdown).

@@ -1,6 +1,7 @@
 using System.Data;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.DataObjects;
 
@@ -23,7 +24,12 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// <param name="dataObject">The data object that owns the row.</param>
         /// <param name="layout">The grid layout whose columns drive the editors.</param>
         /// <param name="row">The row to edit.</param>
-        public static async Task<bool> ShowAsync(Visual host, FormDataObject dataObject, LayoutGrid layout, DataRow row)
+        /// <param name="cancellationToken">
+        /// A token that closes an open dialog as if the user had cancelled it, rolling the edit back.
+        /// A cancelled call throws <see cref="OperationCanceledException"/>.
+        /// </param>
+        public static async Task<bool> ShowAsync(Visual host, FormDataObject dataObject, LayoutGrid layout, DataRow row,
+            CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(host);
             ArgumentNullException.ThrowIfNull(dataObject);
@@ -40,7 +46,11 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             // would read as "compact" and wrongly collapse, whereas the owning window is wide.
             var topLevel = TopLevel.GetTopLevel(host);
             panel.Compact = RowEditPanel.IsCompactWidth(topLevel?.Bounds.Width ?? 0);
+            cancellationToken.ThrowIfCancellationRequested();
             panel.Bind(dataObject, layout, row);
+            // The token closes the dialog the way the Cancel button does. The callback can run on
+            // any thread, and the panel is a control, so it is posted to the UI thread.
+            using var registration = cancellationToken.Register(() => Dispatcher.UIThread.Post(panel.Cancel));
 
             // Only the desktop classic-window lifetime can parent a native modal Window. Single-view
             // hosts — browser (WASM), iOS and Android — have no native window, so host the panel on
@@ -53,6 +63,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 panel.EditCommitted += (_, _) => { committed = true; completed.TrySetResult(); };
                 panel.EditCancelled += (_, _) => completed.TrySetResult();
                 await OverlayDialogHost.ShowAsync(host, panel, title, completed.Task);
+                cancellationToken.ThrowIfCancellationRequested();
                 return committed;
             }
 
@@ -74,6 +85,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             panel.EditCancelled += (_, _) => window.Close();
 
             await window.ShowDialog(owner);
+            cancellationToken.ThrowIfCancellationRequested();
             return committed;
         }
     }

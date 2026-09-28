@@ -188,12 +188,11 @@ namespace Polhem.Business.Form
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Only persisted fields are checked; a <c>Required</c> flag on a relation or virtual field is a
-        /// caption cue only, so require the stored key field instead. Empty means <c>null</c> or
-        /// <see cref="DBNull"/>, a string that is empty or white space, <see cref="Guid.Empty"/> or a
-        /// zero-length byte array. Numbers, booleans, dates and times are never empty: their columns are
-        /// <c>NOT NULL</c> with a type default, so <c>0</c> or <c>false</c> cannot be told apart from a
-        /// value the user meant.
+        /// Which fields count as empty is decided by
+        /// <see cref="Polhem.Definition.Forms.RequiredFieldCheck.FindMissing"/>, the same method the UI heads
+        /// call before they send a save; its remarks state the rule. Only persisted fields are checked, so a
+        /// <c>Required</c> flag on a relation or virtual field is a caption cue only: require the stored key
+        /// field instead. The save is refused on the first field reported.
         /// </para>
         /// <para>
         /// The message names the field by its caption resolved in the caller's culture
@@ -205,15 +204,16 @@ namespace Polhem.Business.Form
         /// <exception cref="Polhem.Base.Exceptions.UserMessageException">A required field is empty.</exception>
         private void EnforceRequiredFields(SaveContext context)
         {
-            var empty = RequiredFieldValidator.FindEmpty(context.Schema, context.DataSet);
-            if (empty is null) { return; }
-            var (table, field) = empty.Value;
+            var missing = Polhem.Definition.Forms.RequiredFieldCheck.FindMissing(context.Schema, context.DataSet);
+            if (missing.Count == 0) { return; }
+            var table = missing[0].Table;
+            var field = missing[0].Field;
 
             string caption = ResolveSchemaText(context.Schema.ProgId,
                 string.Format(CultureInfo.InvariantCulture, FormSchemaLocalizer.FieldCaptionKeyFormat, field.FieldName),
                 field.Caption, field.FieldName);
 
-            if (ReferenceEquals(table, context.Schema.MasterTable))
+            if (!missing[0].IsDetail)
                 throw new UserMessageException(PolhemMessages.SaveFieldRequired, "'{0}' is required.", caption);
 
             string tableName = ResolveSchemaText(context.Schema.ProgId,
