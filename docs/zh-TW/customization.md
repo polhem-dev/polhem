@@ -1,4 +1,4 @@
-<!-- source: en/customization.md blob: 5a2fa388689499393de9efba722677c4ef8b343e -->
+<!-- source: en/customization.md blob: 159f8290be6df458065b60a35a97ccec0c2d0ab3 -->
 # 租戶客製化
 
 [English](../en/customization.md) · [← 文件索引](README.md)
@@ -100,6 +100,11 @@ key 一樣改寫它。規則必須有 `RuleId`；沒有的規則一律顯示基�
 
 **標題不在 layout 檔裡**：UI head 選定 layout 之後，會從已在地化的 schema 套用標題，所以即使
 客製了 layout，改標題仍然屬於語系資源的事。
+
+有一種標題例外：**多個 section** 的 layout 的 section 標題。這些 section（「基本」、「地址」）是 layout
+作者命名的，沒有對應的語系 key（沒有 `Section.*` 子鍵），所以不論哪種文化都顯示 layout 檔裡的文字。
+只有單一 section 的 layout，其 section 標題和其他標題一樣取自主表的 `Table.{TableName}.DisplayName`。
+多 section 的表單若必須在多種語言下都讀得通，請隱藏 section 標題（`ShowCaption="false"`），或寫不需要翻譯的文字。
 
 > **它怎麼到畫面上。** API 供應原始的 layout 定義，組裝發生在用戶端的 `FormDefinitionLoader`：
 > 它取回兩層、有租戶 layout 就用租戶的。兩層都沒有時，`GetRuntimeLayoutAsync` 會拋出

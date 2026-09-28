@@ -12,7 +12,7 @@ const $ = (id) => document.getElementById(id);
 
 $('endpoint').textContent = apiEndpoint;
 
-const employee = formApi('Employee');
+const staff = formApi('Staff');
 
 function log(label, payload) {
   const out = $('result');
@@ -65,7 +65,7 @@ $('btn-leave-company').addEventListener('click', () =>
   run('LeaveCompany', () => systemApi.leaveCompany()),
 );
 
-// ---------- Section 4: Employee CRUD ----------
+// ---------- Section 4: Staff CRUD ----------
 
 function renderRowList(table) {
   const container = $('rowlist-container');
@@ -103,12 +103,12 @@ function renderRowList(table) {
 }
 
 $('btn-getlist').addEventListener('click', async () => {
-  const result = await run('Employee.GetList', () => employee.getList());
+  const result = await run('Staff.GetList', () => staff.getList());
   if (result?.table) renderRowList(result.table);
 });
 
 $('btn-getnewdata').addEventListener('click', () =>
-  run('Employee.GetNewData', () => employee.getNewData()),
+  run('Staff.GetNewData', () => staff.getNewData()),
 );
 
 $('btn-getdata').addEventListener('click', () => {
@@ -117,7 +117,7 @@ $('btn-getdata').addEventListener('click', () => {
     log('GetData', '(enter a Row ID first)');
     return;
   }
-  run('Employee.GetData', () => employee.getData(rowId));
+  run('Staff.GetData', () => staff.getData(rowId));
 });
 
 $('btn-insert-sample').addEventListener('click', async () => {
@@ -126,14 +126,14 @@ $('btn-insert-sample').addEventListener('click', async () => {
   //   2. Fill sys_id / sys_name / hire_date with a timestamped sample
   //   3. POST back to Save
   const newResult = await run('Insert Sample [1/2] GetNewData', () =>
-    employee.getNewData(),
+    staff.getNewData(),
   );
   if (!newResult?.dataSet) return;
 
   const dataSet = newResult.dataSet;
-  const masterTable = dataSet.tables.find((t) => t.tableName === 'Employee');
+  const masterTable = dataSet.tables.find((t) => t.tableName === 'Staff');
   if (!masterTable || masterTable.rows.length === 0) {
-    log('Insert Sample', '(GetNewData returned no Employee table, skipping Save)');
+    log('Insert Sample', '(GetNewData returned no Staff table, skipping Save)');
     return;
   }
 
@@ -144,7 +144,7 @@ $('btn-insert-sample').addEventListener('click', async () => {
   row.current.hire_date = new Date().toISOString().slice(0, 10) + 'T00:00:00';
   row.current.is_active = true;
 
-  await run('Insert Sample [2/2] Save', () => employee.save(dataSet));
+  await run('Insert Sample [2/2] Save', () => staff.save(dataSet));
 });
 
 $('btn-delete').addEventListener('click', () => {
@@ -153,7 +153,7 @@ $('btn-delete').addEventListener('click', () => {
     log('Delete', '(enter a Row ID first)');
     return;
   }
-  run('Employee.Delete', () => employee.delete(rowId));
+  run('Staff.Delete', () => staff.delete(rowId));
 });
 
 // ---------- Section 5: FormDefinition-driven rendering ----------
@@ -167,14 +167,14 @@ $('btn-load-formdef').addEventListener('click', async () => {
     // typical Promise.all pattern that React/Vue apps would use.
     // Both APIs serve the raw definition as XML; the client parses and assembles.
     const [schema, layout] = await Promise.all([
-      systemApi.getFormSchema('Employee'),
-      systemApi.getFormLayout('Employee'),
+      systemApi.getFormSchema('Staff'),
+      systemApi.getFormLayout('Staff'),
     ]);
     log('GetFormSchema + GetFormLayout', {
       schemaProgId: schema?.progId,
       layoutId: layout?.layoutId ?? '(no layout definition — a real client would generate one from the schema)',
     });
-    if (!layout) throw new Error('No FormLayout definition is stored for Employee.');
+    if (!layout) throw new Error('No FormLayout definition is stored for Staff.');
     _formController = renderFormLayout(layout, $('rendered-form'));
   } catch (err) {
     logError('Load Form Definition', err);
@@ -187,7 +187,7 @@ $('btn-form-new').addEventListener('click', async () => {
     return;
   }
   try {
-    const result = await employee.getNewData();
+    const result = await staff.getNewData();
     log('GetNewData (for form)', { rowId: result.dataSet?.tables?.[0]?.rows?.[0]?.current?.sys_rowid });
     _formController.bindDataSet(result.dataSet);
   } catch (err) {
@@ -206,7 +206,7 @@ $('btn-form-load').addEventListener('click', async () => {
     return;
   }
   try {
-    const result = await employee.getData(rowId);
+    const result = await staff.getData(rowId);
     log('GetData (for form)', { rowId });
     _formController.bindDataSet(result.dataSet);
   } catch (err) {
@@ -221,7 +221,7 @@ $('btn-form-save').addEventListener('click', async () => {
   }
   try {
     const dataSet = _formController.collectDataSet();
-    const result = await employee.save(dataSet);
+    const result = await staff.save(dataSet);
     log('Form Save', { affectedRows: result.affectedRows });
     // Re-bind the refreshed DataSet so server-side derived values (e.g. sys_no)
     // surface back into the form.

@@ -20,7 +20,7 @@ dotnet run
 
 You should see `response : echo: hello from QuickStart.Console` in Terminal 2.
 
-To watch Blazor components render a `FormSchema` and drive a Login + Employee CRUD flow:
+To watch Blazor components render a `FormSchema` and drive a Login + Staff CRUD flow:
 
 ```bash
 # Blazor Server (in-process LocalApiProvider, no HTTP round-trip)
@@ -28,7 +28,7 @@ cd samples/Blazor.Server.Demo
 dotnet run                          # → http://localhost:5055
 ```
 
-Sign in with **`demo / demo`** to render the `Employee` FormSchema.
+Sign in with **`demo / demo`** to render the `Staff` FormSchema.
 
 ## Where should I start?
 
@@ -100,7 +100,7 @@ The files below are **not** in git — they are runtime artifacts. A fresh clone
 
 | File | Created by | Contents | gitignore rule |
 |------|------------|----------|----------------|
-| `samples/<Host>/quickstart.db` | [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) | SQLite with every table `DbCategorySettings.xml` registers, the demo user, company and grant, and a few employees and departments | `/samples/**/*.db` |
+| `samples/<Host>/quickstart.db` | [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) | SQLite with every table `DbCategorySettings.xml` registers, the demo user, company and grant, and a few staff and team rows | `/samples/**/*.db` |
 
 > Both hosts (`QuickStart.Server` / `Blazor.Server.Demo`) **each get their own `quickstart.db`** and don't interfere with each other. Re-running the same host reuses existing data (both schema creation and seeding are idempotent).
 

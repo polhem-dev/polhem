@@ -9,7 +9,7 @@ namespace Polhem.Samples.Shared;
 /// <summary>
 /// Process-once helper that creates every table <c>Define/DbCategorySettings.xml</c> registers and
 /// seeds the rows the demos need: the demo account, the demo company and its access grant, and a
-/// few employees and departments so the list views are not empty on first run. Idempotent: a
+/// few staff and team rows so the list views are not empty on first run. Idempotent: a
 /// second invocation is a no-op once schema + rows are in place.
 /// </summary>
 /// <remarks>
@@ -20,8 +20,8 @@ namespace Polhem.Samples.Shared;
 public static class DemoSchemaSeeder
 {
     private const string CommonDatabaseId = "common";
-    private const string EmployeeTable = "ft_employee";
-    private const string DepartmentTable = "ft_department";
+    private const string StaffTable = "ft_staff";
+    private const string TeamTable = "ft_team";
     private const string UserTable = "st_user";
     private const string CompanyTable = "st_company";
     private const string UserCompanyTable = "st_user_company";
@@ -41,8 +41,8 @@ public static class DemoSchemaSeeder
 
         // Business data belongs to the company, so it lands in the demo company's database.
         var company = dbAccessFactory.Create(DemoCredentials.CompanyDatabaseId);
-        SeedEmployees(company);
-        SeedDepartments(company);
+        SeedStaff(company);
+        SeedTeams(company);
     }
 
     /// <summary>
@@ -64,21 +64,21 @@ public static class DemoSchemaSeeder
         }
     }
 
-    private static void SeedEmployees(DbAccess dbAccess)
+    private static void SeedStaff(DbAccess dbAccess)
     {
-        if (CountRows(dbAccess, EmployeeTable) > 0) return;
+        if (CountRows(dbAccess, StaffTable) > 0) return;
 
-        InsertEmployee(dbAccess, "E001", "Alice Chen",   new DateTime(2024, 3, 1, 0, 0, 0, DateTimeKind.Utc), isActive: true);
-        InsertEmployee(dbAccess, "E002", "Bob Liu",      new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc), isActive: true);
-        InsertEmployee(dbAccess, "E003", "Carol Wang",   new DateTime(2023, 7, 20, 0, 0, 0, DateTimeKind.Utc), isActive: false);
+        InsertStaff(dbAccess, "S001", "Alice Chen",   new DateTime(2024, 3, 1, 0, 0, 0, DateTimeKind.Utc), isActive: true);
+        InsertStaff(dbAccess, "S002", "Bob Liu",      new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc), isActive: true);
+        InsertStaff(dbAccess, "S003", "Carol Wang",   new DateTime(2023, 7, 20, 0, 0, 0, DateTimeKind.Utc), isActive: false);
     }
 
-    private static void SeedDepartments(DbAccess dbAccess)
+    private static void SeedTeams(DbAccess dbAccess)
     {
-        if (CountRows(dbAccess, DepartmentTable) > 0) return;
+        if (CountRows(dbAccess, TeamTable) > 0) return;
 
-        InsertDepartment(dbAccess, "D001", "Engineering");
-        InsertDepartment(dbAccess, "D002", "Sales");
+        InsertTeam(dbAccess, "T001", "Engineering");
+        InsertTeam(dbAccess, "T002", "Sales");
     }
 
     /// <summary>
@@ -187,20 +187,20 @@ public static class DemoSchemaSeeder
         };
     }
 
-    private static void InsertDepartment(DbAccess dbAccess, string sysId, string name)
+    private static void InsertTeam(DbAccess dbAccess, string sysId, string name)
     {
         var spec = new DbCommandSpec(
             DbCommandKind.NonQuery,
-            $"INSERT INTO {DepartmentTable} (sys_rowid, sys_id, sys_name) VALUES ({{0}}, {{1}}, {{2}})",
+            $"INSERT INTO {TeamTable} (sys_rowid, sys_id, sys_name) VALUES ({{0}}, {{1}}, {{2}})",
             Guid.NewGuid(), sysId, name);
         dbAccess.Execute(spec);
     }
 
-    private static void InsertEmployee(DbAccess dbAccess, string sysId, string name, DateTime hireDate, bool isActive)
+    private static void InsertStaff(DbAccess dbAccess, string sysId, string name, DateTime hireDate, bool isActive)
     {
         var spec = new DbCommandSpec(
             DbCommandKind.NonQuery,
-            $"INSERT INTO {EmployeeTable} (sys_rowid, sys_id, sys_name, hire_date, is_active) " +
+            $"INSERT INTO {StaffTable} (sys_rowid, sys_id, sys_name, hire_date, is_active) " +
             "VALUES ({0}, {1}, {2}, {3}, {4})",
             Guid.NewGuid(), sysId, name, hireDate, isActive ? 1 : 0);
         dbAccess.Execute(spec);

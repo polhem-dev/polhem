@@ -116,5 +116,6 @@ A `Polhem.UI.Core` head assigns `host.Services` to `ClientInfo.LocalServiceProvi
 - `PolhemFrameworkServiceCollectionExtensions*.cs` -- `AddPolhemFramework` and its helpers
 - `Audit/` -- `IAuditLogSink` and the internal audit writers
 - `CacheNotify/` -- the cache-notify poller
+- `Database/` -- the startup check that `DatabaseSettings` has the items the framework requires
 - `Session/` -- expired session cleanup
 - `Registry/` -- startup registration and warning services

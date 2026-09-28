@@ -7,7 +7,7 @@ using Polhem.UI.Avalonia.DataObjects;
 namespace Avalonia.DemoCenter.Modules.Views
 {
     /// <summary>
-    /// Builds the shared Employee (master) + Phones (detail) schema and in-memory fake
+    /// Builds the shared Staff (master) + Phones (detail) schema and in-memory fake
     /// data used by the Grid / Views scenarios. The <see cref="FormDataObject"/> acts as
     /// the view-model: no backend connector is involved — the data is seeded locally and
     /// the front-end binds straight to it.
@@ -15,13 +15,13 @@ namespace Avalonia.DemoCenter.Modules.Views
     internal static class SampleFormData
     {
         /// <summary>
-        /// Builds a master-only Employee <see cref="FormSchema"/> (no detail), for the Layout
+        /// Builds a master-only Staff <see cref="FormSchema"/> (no detail), for the Layout
         /// scenarios. Includes a memo field so column-span layout can be shown.
         /// </summary>
         public static FormSchema BuildMasterFormSchema()
         {
-            var schema = new FormSchema("Employee", "Employee");
-            var master = schema.Tables!.Add("Employee", "Employee");
+            var schema = new FormSchema("Staff", "Staff");
+            var master = schema.Tables!.Add("Staff", "Staff");
             master.Fields!.Add("emp_code", "Code", FieldDbType.String);
             master.Fields.Add("emp_name", "Name", FieldDbType.String);
             var dept = master.Fields.Add("dept", "Department", FieldDbType.String);
@@ -36,7 +36,7 @@ namespace Avalonia.DemoCenter.Modules.Views
 
         /// <summary>
         /// Builds a master-only data object (from <paramref name="schema"/>) seeded with one
-        /// employee.
+        /// staff record.
         /// </summary>
         public static FormDataObject BuildMasterForm(FormSchema schema)
         {
@@ -65,13 +65,13 @@ namespace Avalonia.DemoCenter.Modules.Views
         }
 
         /// <summary>
-        /// Builds the Employee + Phones <see cref="FormSchema"/> (master-detail).
+        /// Builds the Staff + Phones <see cref="FormSchema"/> (master-detail).
         /// </summary>
         public static FormSchema BuildSchema()
         {
-            var schema = new FormSchema("Employee", "Employee");
+            var schema = new FormSchema("Staff", "Staff");
 
-            var master = schema.Tables!.Add("Employee", "Employee");
+            var master = schema.Tables!.Add("Staff", "Staff");
             master.Fields!.Add("emp_code", "Code", FieldDbType.String);
             master.Fields.Add("emp_name", "Name", FieldDbType.String);
             master.Fields.Add("hire_date", "Hire Date", FieldDbType.Date);
@@ -95,7 +95,7 @@ namespace Avalonia.DemoCenter.Modules.Views
 
         /// <summary>
         /// Builds a master-detail data object (from <paramref name="schema"/>) seeded with
-        /// one employee and two phone rows. A fresh instance keeps each consuming view
+        /// one staff record and two phone rows. A fresh instance keeps each consuming view
         /// isolated.
         /// </summary>
         public static FormDataObject BuildMasterDetail(FormSchema schema)
@@ -117,11 +117,11 @@ namespace Avalonia.DemoCenter.Modules.Views
         }
 
         /// <summary>
-        /// The list layout (one row per employee) used by the ListView scenario.
+        /// The list layout (one row per staff record) used by the ListView scenario.
         /// </summary>
-        public static LayoutGrid BuildEmployeeListLayout()
+        public static LayoutGrid BuildStaffListLayout()
         {
-            var layout = new LayoutGrid("Employee", "Employee list");
+            var layout = new LayoutGrid("Staff", "Staff list");
             layout.Columns!.Add(new LayoutColumn("emp_code", "Code", ControlType.TextEdit));
             layout.Columns.Add(new LayoutColumn("emp_name", "Name", ControlType.TextEdit));
             layout.Columns.Add(new LayoutColumn("dept", "Department", ControlType.DropDownEdit));
@@ -131,12 +131,12 @@ namespace Avalonia.DemoCenter.Modules.Views
         }
 
         /// <summary>
-        /// A standalone table of employees (list-mode rows), matching
-        /// <see cref="BuildEmployeeListLayout"/>'s columns.
+        /// A standalone table of staff records (list-mode rows), matching
+        /// <see cref="BuildStaffListLayout"/>'s columns.
         /// </summary>
-        public static DataTable BuildEmployeeListTable()
+        public static DataTable BuildStaffListTable()
         {
-            var table = new DataTable("Employee");
+            var table = new DataTable("Staff");
             table.Columns.Add("emp_code", typeof(string));
             table.Columns.Add("emp_name", typeof(string));
             table.Columns.Add("dept", typeof(string));

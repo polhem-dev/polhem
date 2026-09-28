@@ -120,9 +120,9 @@
     <h2>3. Enter Company (required before sections 4 and 5)</h2>
     <p class="hint">
       Calls <code>System.EnterCompany</code>. <code>Login</code> says who you are;
-      <code>EnterCompany</code> says which company you work in. The Employee form is
+      <code>EnterCompany</code> says which company you work in. The Staff form is
       company-scoped (<code>CategoryId="company"</code>), so until the session has
-      entered a company every Employee call in sections 4 and 5 fails. The demo backend seeds
+      entered a company every Staff call in sections 4 and 5 fails. The demo backend seeds
       one company, <code>DEMO</code>; any other ID returns
       <code>Company access denied</code>, which exercises the error path.
     </p>
@@ -134,10 +134,10 @@
   </section>
 
   <section>
-    <h2>4. Employee CRUD (5 FormBO methods)</h2>
+    <h2>4. Staff CRUD (5 FormBO methods)</h2>
     <p class="hint">
-      progId = <code>Employee</code>. Schema at
-      <code>samples/Define/FormSchema/Employee.FormSchema.xml</code>.
+      progId = <code>Staff</code>. Schema at
+      <code>samples/Define/FormSchema/Staff.FormSchema.xml</code>.
     </p>
 
     <p>
@@ -159,7 +159,7 @@
     <h2>5. FormDefinition-driven rendering (end-to-end demo)</h2>
     <p class="hint">
       Fetches <code>System.GetFormSchema</code> + <code>System.GetFormLayout</code>,
-      parses the definition XML they return, builds an Employee form dynamically,
+      parses the definition XML they return, builds a Staff form dynamically,
       and wires up GetData / GetNewData / Save end-to-end. Definitions travel as
       XML on every API — their nested collections are get-only server-side, so a
       JSON tree would serialise out but not back.
@@ -167,11 +167,11 @@
     <p class="hint">
       <strong>No client-side validation</strong>: the demo relies on
       <code>RpcError</code> from a failed Save and surfaces the message in the
-      output panel below. Detail tables (e.g. employee phones) render
+      output panel below. Detail tables (e.g. staff phones) render
       read-only.
     </p>
     <p>
-      <button id="btn-load-formdef">Load Form Definition (Employee)</button>
+      <button id="btn-load-formdef">Load Form Definition (Staff)</button>
       <button id="btn-form-new">New (empty)</button>
       <button id="btn-form-load">Load by Row ID (uses input above)</button>
       <button id="btn-form-save">Save Form</button>

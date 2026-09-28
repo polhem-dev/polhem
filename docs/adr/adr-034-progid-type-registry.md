@@ -20,8 +20,8 @@ continues this model: **the whole framework defines object types by ProgId**.
 
 This positioning leads to three direct inferences:
 
-1. **Every BO is an entry in the registry**, including `SystemBusinessObject`, `LogBusinessObject` and any BO added in
-   the future, not only form BOs.
+1. **Every BO is an entry in the registry**, including `SystemBusinessObject`, `AuditLogBusinessObject` (named
+   `LogBusinessObject` when this ADR was written) and any BO added in the future, not only form BOs.
 2. **Repositories follow suit**: the same progId binds both its BO and its Repository.
 3. **Customization overrides types per ProgId**, so the packaged product and the customizations are completely
    isolated and do not affect each other.

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FormLayout xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" LayoutId="Team" ProgId="Team" Caption="Team">
+  <Sections>
+    <LayoutSection Name="Main" Caption="Team" ShowCaption="false">
+      <Fields>
+        <LayoutField FieldName="sys_no" Caption="Sequence" />
+        <LayoutField FieldName="sys_rowid" Caption="Row ID" />
+        <LayoutField FieldName="sys_id" Caption="Team ID" />
+        <LayoutField FieldName="sys_name" Caption="Team Name" />
+      </Fields>
+    </LayoutSection>
+  </Sections>
+</FormLayout>

@@ -7,7 +7,7 @@
         <LayoutField FieldName="sys_rowid" Caption="Row ID" />
         <LayoutField FieldName="sys_id" Caption="Project ID" />
         <LayoutField FieldName="sys_name" Caption="Project Name" />
-        <LayoutField FieldName="owner_dept_rowid" Caption="Owner Department" ControlType="ButtonEdit" DisplayFields="ref_dept_id,ref_dept_name" />
+        <LayoutField FieldName="owner_team_rowid" Caption="Owner Team" ControlType="ButtonEdit" DisplayFields="ref_team_id,ref_team_name" />
         <LayoutField FieldName="start_date" Caption="Start Date" ControlType="DateEdit" />
       </Fields>
     </LayoutSection>

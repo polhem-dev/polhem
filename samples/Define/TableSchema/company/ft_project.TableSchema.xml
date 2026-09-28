@@ -5,7 +5,7 @@
     <DbField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" />
     <DbField FieldName="sys_id" Caption="Project ID" DbType="String" Length="20" />
     <DbField FieldName="sys_name" Caption="Project Name" DbType="String" Length="50" />
-    <DbField FieldName="owner_dept_rowid" Caption="Owner Department" DbType="Guid" />
+    <DbField FieldName="owner_team_rowid" Caption="Owner Team" DbType="Guid" />
     <DbField FieldName="start_date" Caption="Start Date" DbType="Date" />
   </Fields>
   <Indexes>

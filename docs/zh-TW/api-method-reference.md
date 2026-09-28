@@ -1,4 +1,4 @@
-<!-- source: en/api-method-reference.md blob: fb5d66b27640c74ca020b9853d6839d43183faa5 -->
+<!-- source: en/api-method-reference.md blob: 05435850272a85accc7cdb5c1cb0f3232f981933 -->
 # API 方法參考
 
 [English](../en/api-method-reference.md) · [← 文件索引](README.md)
@@ -56,12 +56,13 @@ wire frame（`ApiServiceOptions.RequireWireFrame`，預設關閉）；Plain 呼�
 `GetLanguageArgs` / `GetLanguageResult`，皆屬 `System` 軸。IDE「跳至符號」即可從 action 名
 直達任一型別，無需在表格內重複列出。
 
-**請求側依此 pattern，但有三個例外；回應側則不依此 pattern。** 例外的三者沿用其延伸對象的型別：
+**請求側依此 pattern，但有下列例外；回應側則不依此 pattern。** 這些例外沿用其延伸對象的型別：
 `ExecFuncAnonymous` 用 `ExecFuncArgs` / `ExecFuncRequest`，`GetCustomizeFormLayout` 用
 `GetFormLayoutArgs`，`GetCustomizeLanguage` 用 `GetLanguageArgs`（結果型別亦同）。
 多個 action 回應形狀相同時共用同一個回應型別，不各自宣告一份一模一樣的。AuditLog 軸全軸如此：
-五個清單查詢回 `AuditLogListResponse` / `AuditLogListResult`、三個聚合查詢回
-`AuditLogAggregateResponse` / `AuditLogAggregateResult`，只有 `GetChangeDetail`
+清單查詢（`GetChangeLog`、`GetLoginLog`、`GetAccessLog`、`GetApiAnomalyLog`、`GetDbAnomalyLog`）回
+`AuditLogListResponse` / `AuditLogListResult`，聚合查詢（`GetApiAnomalySummary`、`GetDbAnomalySummary`、
+`GetTopApiMethods`）回 `AuditLogAggregateResponse` / `AuditLogAggregateResult`，只有 `GetChangeDetail`
 的回應型別與 action 同名。不確定時，請看 BO 方法簽章。
 
 ## 軸：Base（`BusinessObject`）

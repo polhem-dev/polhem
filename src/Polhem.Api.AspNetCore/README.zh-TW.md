@@ -34,8 +34,8 @@ app.MapControllers();
 app.Run();
 ```
 
-`UsePolhemFramework` 執行 host 端的啟動檢查。目前它在尚未核發任何 API 金鑰時記錄一則警告，因為在那之前
-`X-Api-Key` 標頭只檢查是否存在。
+`UsePolhemFramework` 執行 host 端的啟動檢查。目前它在尚未核發任何 API 金鑰時記錄一筆 log，因為在那之前
+`X-Api-Key` 標頭只檢查是否存在：記為 error；host 在 Development 環境時記為 warning。兩種情況都不會中止啟動。
 
 ## 主要功能
 

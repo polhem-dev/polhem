@@ -197,7 +197,10 @@ in the same A/B (`SchemaPreparer.cs`, SonarAnalyzer 10.34.0):
 by the human review in `.claude/rules/sonarcloud.md`. Only, here in `tools/` there is not even a place to mark it
 False Positive, because SonarCloud cannot see it.
 
-## The step most easily missed when adding a src package
+## The step most easily missed when adding a published package
+
+This applies to every published package, including the ones under `tools/` (today `tools/Polhem.Cli`, a dotnet
+tool), not only the ones under `src/`.
 
 The build-and-pack step of `.github/workflows/nuget-publish.yml` and the pack step of `build-ci.yml` **enumerate
 the projects one by one; they are not a glob**. If a new package is left out:
@@ -221,7 +224,11 @@ if not, it was left out.
 ### Steps for a new package
 
 1. Add the project to the list in the build-and-pack step of `nuget-publish.yml` (dependencies before dependents)
-   and to the pack step of `build-ci.yml`.
+   and to the pack step of `build-ci.yml`. A project under `tools/` is not in `Polhem.slnx`, so the solution build
+   in `build-ci.yml` does not build it in Release (a project outside the solution reached through a
+   `ProjectReference` builds in its default Debug configuration): its pack line there has no `--no-build`, as the
+   `tools/Polhem.Cli` line shows. `nuget-publish.yml` builds every listed project itself, but restores `Polhem.slnx`
+   only, so a new `tools/` project also needs its own `dotnet restore` line there.
 2. **Add the package ID to the nuget.org Trusted Publishing policy** before the first release that contains it (see
    "Publishing: NuGet Trusted Publishing" below). Otherwise its push is rejected, even though the pack lists are
    right.

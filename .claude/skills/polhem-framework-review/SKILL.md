@@ -476,6 +476,7 @@ the decision was written in another table **below** the struck-through list, and
 | The `IUIViewService` seam | Kept by decision on 2026-08-07: it has no production implementation, but it is a documented host extension point (cookbook tutorial step / terminology entry / adr-013 argument / the family criterion in dependency-map) |
 | `PermissionBindingValidator` | Decided 2026-08-07: keep the code and fix the docs instead; it is a validation API the host calls itself, not something that takes effect at load time |
 | `DateTimeExtensions.GetYearMonth` | Zero production callers, but the BCL has no equivalent of "first day of the month" and it is not a pure wrapper; kept under code-style's "keep 0-caller framework public APIs" |
+| The `I*Request` / `I*Response` interfaces of `Polhem.Api.Contracts` | Most have no consumer that uses them as a type (a few are pattern-matched, for example in `DateTimeWireGuard`); `ApiContractPairingTests` and `BusinessContractPairingTests` find them by reflection. They are the member contract shared by a wire message and its BO args / result: `ApiInputConverter` copies between the two by property name and skips a name that does not match silently, so implementing the interface on both sides is what makes the compiler keep their members in step. Not dead code, even where the only reference is the implementing type |
 
 **(b) Removed** (a record, so the next round does not look for them):
 - Before Polhem 1.0.0 (the 2026-09-26 fix batches; the commit messages and `PublicAPI.*.txt` diffs list the rest):

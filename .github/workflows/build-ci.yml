@@ -283,6 +283,10 @@ jobs:
         dotnet pack src/Polhem.UI.Core/Polhem.UI.Core.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.UI.Avalonia/Polhem.UI.Avalonia.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Web.Blazor.Server/Polhem.Web.Blazor.Server.csproj --configuration Release --output ./nupkgs --no-build
+        # tools/Polhem.Cli is published too, but it is not in Polhem.slnx: the solution build reaches it only
+        # through the ProjectReference of tests/Polhem.Cli.UnitTests, and a project outside the solution is built
+        # in its default Debug configuration. So this pack builds it in Release itself, and has no --no-build.
+        dotnet pack tools/Polhem.Cli/Polhem.Cli.csproj --configuration Release --output ./nupkgs
 
     # Mobile AOT gate: `DynamicCodeSupport=false` is exactly what the .NET for iOS SDK sets for every
     # iOS / tvOS / MacCatalyst build, mapped to the RuntimeHostConfigurationOption of

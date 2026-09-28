@@ -198,10 +198,12 @@ in again.
 Some methods require entering a company first (`System.EnterCompany`) to set
 `SessionInfo.CompanyId` — this routes form CRUD to the company-specific database. A form whose
 `CategoryId` is `company` called without a company answers `-32002` (`CompanyNotEntered`).
-Business forms belong in `company`, and the samples' `Employee` form is no exception: every sample
-client calls `EnterCompany` right after `Login`, with the one company the demo backend seeds
-(`DEMO`). That form replaces the framework's own `Employee` form (`st_employee`, see
-[Framework-Reserved Names](framework-reserved-names.md)), which is company-scoped too.
+Business forms belong in `company`, and the samples' `Staff` form (`ft_staff`) is no exception:
+every sample client calls `EnterCompany` right after `Login`, with the one company the demo backend
+seeds (`DEMO`). The samples name it `Staff` rather than `Employee` because the framework reserves
+`Employee` for its own form (`st_employee`, see
+[Framework-Reserved Names](framework-reserved-names.md)); an application form takes a progId of its
+own.
 
 ---
 

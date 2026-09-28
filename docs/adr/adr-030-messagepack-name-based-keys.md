@@ -4,6 +4,12 @@
 
 ## Status
 
+**Accepted (2026-07-22; scope widened on 2026-07-27), partially superseded**: the decision has been carried out, and two
+of its conclusions no longer hold since [ADR-036](adr-036-wire-serialization-externalized.md) (see the note below). Contracts and most DTO /
+collection item types have switched to name-based keys (`keyAsPropertyName`), and `SerializableData*` was brought in
+line on 2026-07-27; `[Union]` polymorphic hierarchies and the like are recorded exceptions (see "Outcome and final
+scope").
+
 > **Partly amended by [ADR-036](adr-036-wire-serialization-externalized.md) (2026-08-09).**
 > The core decision (wire keys are property names) stands, but the implementation has changed to contractless plus
 > explicit formatters; the wire format of the two is the same. The following two conclusions **no longer hold**:
@@ -15,13 +21,6 @@
 >    behavior is exactly the same after removal.
 >
 > See "Revisions to ADR-030" in ADR-036 for details.
-
-
-**Accepted (2026-07-22; scope widened on 2026-07-27), partially superseded**: the decision has been carried out, and two
-of its conclusions no longer hold since [ADR-036](adr-036-wire-serialization-externalized.md) (see the note above). Contracts and most DTO /
-collection item types have switched to name-based keys (`keyAsPropertyName`), and `SerializableData*` was brought in
-line on 2026-07-27; `[Union]` polymorphic hierarchies and the like are recorded exceptions (see "Outcome and final
-scope").
 
 > **Go/no-go resolution (2026-07-22, final)**: **carry it out now**. The key fact: **there are currently no real
 > external consumers**, so a breaking wire change has no compatibility cost; the earlier reason for deferring it

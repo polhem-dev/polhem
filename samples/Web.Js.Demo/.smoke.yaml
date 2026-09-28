@@ -47,7 +47,7 @@ flow:
       - "Login"
       - "Ping"
       - "Enter Company"
-      - "Employee CRUD"
+      - "Staff CRUD"
       - "FormDefinition"            # section 5 heading
       - "Load Form Definition"      # section 5 primary button
       - "Logout"

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TableName="ft_employee_phone" DisplayName="Employee Phones">
+<TableSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TableName="ft_staff_phone" DisplayName="Staff Phones">
   <Fields>
     <DbField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" />
     <DbField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" />

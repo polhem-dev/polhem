@@ -1,4 +1,4 @@
-<!-- source: adr/adr-034-progid-type-registry.md blob: 34a7aa73bb3c4809357b8d362b39bedba2e49517 -->
+<!-- source: adr/adr-034-progid-type-registry.md blob: 00297f6ea89307055ced97f8eaf12db3435933d5 -->
 # ADR-034：ProgramSettings 作為全框架型別註冊表
 
 [English](adr-034-progid-type-registry.md)
@@ -18,8 +18,8 @@ ProgID 代表一個獨立的功能或程式。框架延續這個模型 —— **
 
 這個定位帶出三個直接推論：
 
-1. **所有 BO 都是註冊表的項目**，包含 `SystemBusinessObject`、`LogBusinessObject`
-   以及未來新增的任何 BO —— 而不是只有 form BO。
+1. **所有 BO 都是註冊表的項目**，包含 `SystemBusinessObject`、`AuditLogBusinessObject`（撰寫本 ADR 時名為
+   `LogBusinessObject`）以及未來新增的任何 BO —— 而不是只有 form BO。
 2. **Repository 比照辦理** —— 同一個 progId 底下綁定它的 BO 與 Repository。
 3. **客製化以 ProgId 為單位覆寫型別**，套裝與客製完全隔離、互不影響。
 

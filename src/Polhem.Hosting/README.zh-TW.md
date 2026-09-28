@@ -112,5 +112,6 @@ var login = await connector.LoginAsync("demo", "demo");
 - `PolhemFrameworkServiceCollectionExtensions*.cs` -- `AddPolhemFramework` 與其輔助方法
 - `Audit/` -- `IAuditLogSink` 與內部的稽核寫入器
 - `CacheNotify/` -- cache-notify 輪詢器
+- `Database/` -- 啟動時檢查 `DatabaseSettings` 具備框架必需的項目
 - `Session/` -- 過期 session 清理
 - `Registry/` -- 啟動時的註冊與警告服務
