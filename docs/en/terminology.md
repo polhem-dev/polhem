@@ -226,7 +226,7 @@ This document provides a standard term reference for technical writing, ensuring
 |---------|------|--------|
 | `FieldType` | 欄位種類 | `DbField` (database field), `RelationField` (relation field), `VirtualField` (virtual field) |
 | `FieldDbType` | 欄位資料庫型別 | `String`, `Integer`, `Decimal`, `DateTime`, `Date`, `Time`, `Boolean`, ... (the full list is the enum's XML documentation) |
-| `ControlType` | 控制項類型 | `TextEdit`, `DropDownEdit`, `DateEdit`, `TimeEdit`, `CheckEdit`, ... |
+| `ControlType` | 控制項類型 | `TextEdit`, `DropDownEdit`, `DateEdit`, `DateTimeEdit`, `TimeEdit`, `CheckEdit`, ... |
 | `SingleFormMode` | 表單模式 | `View`, `Add`, `Edit` (exposed as the `FormScope.FormMode` attached property) |
 
 ### Time Semantics
@@ -333,7 +333,7 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 |---------|------|-------------|
 | `ListView` | 清單檢視 | Avalonia `UserControl` for the list side of a form screen: loads rows, handles selection and scrolling, renders them through a `GridControl` |
 | `GridControl` | 表格控件 | `ContentControl` composite (toolbar + inner `DataGrid` exposed as `InnerGrid`) driven by a `LayoutGrid`; implements `IBindTableControl`; cell rendering goes through `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` (ADR-020) and editing follows `GridEditMode` (ADR-021) |
-| Field editors（`TextEdit` / `MemoEdit` / `ButtonEdit` / `NumericEdit` / `TimeEdit` / `DateEdit` / `YearMonthEdit` / `DropDownEdit` / `CheckEdit`） | 欄位編輯器 | Native-control subclasses (`StyleKeyOverride` keeps the theme) bound to one `FormDataObject` field; auto-apply `FormField` metadata (MaxLength / ListItems) |
+| Field editors（`TextEdit` / `MemoEdit` / `ButtonEdit` / `NumericEdit` / `TimeEdit` / `DateEdit` / `DateTimeEdit` / `YearMonthEdit` / `DropDownEdit` / `CheckEdit`） | 欄位編輯器 | Native-control subclasses (`StyleKeyOverride` keeps the theme) bound to one `FormDataObject` field; auto-apply `FormField` metadata (MaxLength / ListItems) |
 | `FormScope` | 表單作用域 | Attached inherited properties (`DataObject` / `FormMode`): set once on a container and descendant editors with a `FieldName` bind themselves |
 | `GridEditMode` | 表格編輯模式 | UI-layer editing model for `GridControl`: `InCell` (cell editing) / `EditForm` (popup row editing) |
 | `RowEditPanel` / `RowEditDialog` | 列編輯面板／彈窗 | EditForm-mode editing surface built from the field editors; uses the buffered row-edit protocol (`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit`) |

@@ -1,4 +1,4 @@
-<!-- source: en/jsonrpc-frontend-integration.md blob: ca96b765d6a871bb71dfdc9b2e8f348f1b85d947 -->
+<!-- source: en/jsonrpc-frontend-integration.md blob: a7ecb8aca3cd2116a83cd86225bd2ec42c24199d -->
 # JSON-RPC 前端整合指引
 
 [English](../en/jsonrpc-frontend-integration.md) · [← 文件索引](README.md)
@@ -372,7 +372,7 @@ function coerce(value: string): string | number | boolean {
 // ControlType 的成員即 Polhem.Definition.Layouts.ControlType 的成員。
 export type ControlType =
   | 'Auto' | 'TextEdit' | 'ButtonEdit' | 'DateEdit' | 'YearMonthEdit' | 'DropDownEdit'
-  | 'MemoEdit' | 'CheckEdit' | 'NumericEdit' | 'TimeEdit';
+  | 'MemoEdit' | 'CheckEdit' | 'NumericEdit' | 'TimeEdit' | 'DateTimeEdit';
 
 export interface LayoutField {
   fieldName: string;

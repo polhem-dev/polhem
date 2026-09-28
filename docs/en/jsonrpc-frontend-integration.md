@@ -397,7 +397,7 @@ function coerce(value: string): string | number | boolean {
 // The members of ControlType are those of Polhem.Definition.Layouts.ControlType.
 export type ControlType =
   | 'Auto' | 'TextEdit' | 'ButtonEdit' | 'DateEdit' | 'YearMonthEdit' | 'DropDownEdit'
-  | 'MemoEdit' | 'CheckEdit' | 'NumericEdit' | 'TimeEdit';
+  | 'MemoEdit' | 'CheckEdit' | 'NumericEdit' | 'TimeEdit' | 'DateTimeEdit';
 
 export interface LayoutField {
   fieldName: string;

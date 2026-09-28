@@ -131,3 +131,16 @@ Semi.Avalonia). The matching hard rules are in `.claude/rules/avalonia.md`. **Sc
 
     > User preference: **a change that compiles can be delivered; the user starts it and tests it themselves** (driving
     > the UI with an agent is too slow).
+
+## Single-view overlays (phones, browser)
+
+18. **A child's `MinWidth` beats the card's `MaxWidth`, so a phone clips the overlay on both sides.** The lookup
+    panel once carried `MinWidth = 420` for its desktop window; in the overlay card on a 402-wide iPhone the card
+    measured to the child's minimum, stayed centered and was cut off left and right. Panels hosted by
+    `OverlayDialogHost` carry no `MinWidth` of their own: the preferred width is passed to the host, which clamps it
+    to the visible width (`OverlayDialogHost.ComputeLayout`), and the desktop window path sets it on the `Window`.
+19. **On iOS the on-screen keyboard covers the overlay; the top level does not shrink for it** (observed on the iPhone
+    simulator, 2026-09-28: the row-edit OK / Cancel buttons sat under the keyboard with no way to reach them). The
+    overlay host listens to `TopLevel.InputPane` and moves the card's bottom limit above `OccludedRect`, and the
+    hosted panels dock their buttons outside a scrolled body, so the height the keyboard takes comes out of the
+    scrolled part.

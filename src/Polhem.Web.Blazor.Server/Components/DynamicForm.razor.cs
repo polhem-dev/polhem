@@ -85,6 +85,50 @@ namespace Polhem.Web.Blazor.Server.Components
                 dataObject.SetField(fieldName, normalized);
         }
 
+        // A date input accepts only yyyy-MM-dd and shows nothing for any other value, so a value that
+        // carries a time of day is cut to its date part rather than rendered blank.
+        private static string ToDateInputValue(string rawValue)
+            => TryParseBindingValue(rawValue, out var value)
+                ? value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                : rawValue;
+
+        // A datetime-local input needs the time part even at midnight, which the binding string omits.
+        private static string ToDateTimeInputValue(string rawValue)
+            => TryParseBindingValue(rawValue, out var value)
+                ? value.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture)
+                : string.Empty;
+
+        // The read-only form: the circuit culture's short date with its long time, as the grid shows it.
+        private static string ToDateTimeDisplay(string rawValue)
+            => TryParseBindingValue(rawValue, out var value)
+                ? value.ToString("G", CultureInfo.CurrentCulture)
+                : string.Empty;
+
+        private static void SetDateTimeField(FormDataObject dataObject, string fieldName, string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                dataObject.SetField(fieldName, string.Empty);
+                return;
+            }
+
+            // The browser only reports complete values, but a value that still does not parse keeps the
+            // stored one rather than throwing inside the event handler.
+            if (TryParseBindingValue(input, out _))
+                dataObject.SetField(fieldName, input);
+        }
+
+        private static bool TryParseBindingValue(string? value, out DateTime result)
+        {
+            if (!string.IsNullOrEmpty(value)
+                && DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out result))
+            {
+                return true;
+            }
+            result = default;
+            return false;
+        }
+
         private static string BuildFieldStyle(LayoutField field)
         {
             var rowSpan = field.RowSpan < 1 ? 1 : field.RowSpan;

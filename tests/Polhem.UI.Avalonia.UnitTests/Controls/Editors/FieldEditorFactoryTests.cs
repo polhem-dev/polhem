@@ -21,6 +21,8 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         [InlineData(ControlType.DropDownEdit, typeof(DropDownEdit))]
         [InlineData(ControlType.CheckEdit, typeof(CheckEdit))]
         [InlineData(ControlType.NumericEdit, typeof(NumericEdit))]
+        [InlineData(ControlType.TimeEdit, typeof(TimeEdit))]
+        [InlineData(ControlType.DateTimeEdit, typeof(DateTimeEdit))]
         [InlineData(ControlType.Auto, typeof(TextEdit))]
         [DisplayName("FieldEditorFactory creates the editor matching ControlType (Auto falls back to TextEdit)")]
         public void Create_ControlType_ReturnsMatchingEditor(ControlType controlType, Type expectedType)
@@ -40,6 +42,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
         [InlineData(typeof(DropDownEdit), typeof(ComboBox))]
         [InlineData(typeof(CheckEdit), typeof(CheckBox))]
         [InlineData(typeof(NumericEdit), typeof(TextBox))]
+        [InlineData(typeof(DateTimeEdit), typeof(TextBox))]
         [DisplayName("Each editor's StyleKeyOverride points to its native base (guards against invisible-control regressions)")]
         public void StyleKeyOverride_Editor_PointsToNativeBase(Type editorType, Type expectedStyleKey)
         {

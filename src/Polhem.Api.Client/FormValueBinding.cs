@@ -2,6 +2,7 @@ using System.Data;
 using System.Globalization;
 using Polhem.Base;
 using Polhem.Base.Data;
+using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 
 namespace Polhem.Api.Client
@@ -84,6 +85,40 @@ namespace Polhem.Api.Client
                 IFormattable f => f.ToString(null, CultureInfo.InvariantCulture),
                 _ => raw.ToString() ?? string.Empty,
             };
+        }
+
+        /// <summary>
+        /// Finds the text of the list item whose value matches a stored cell value, for showing a
+        /// drop-down field's choice in a list or a read-only cell instead of its stored code.
+        /// </summary>
+        /// <param name="raw">The cell value, which may be <c>null</c> or <see cref="DBNull"/>.</param>
+        /// <param name="items">
+        /// The field's list items. Pass the items of a localized schema to get localized text: the
+        /// definition loader fills them from the field's <see cref="FormField.LangEnumName"/>.
+        /// </param>
+        /// <param name="text">The matching item's text, or an empty string when no item matches.</param>
+        /// <returns><c>true</c> when an item's value matches the cell value.</returns>
+        /// <remarks>
+        /// The value is matched by its binding string (<see cref="ToBindingString"/>), compared ordinally,
+        /// which is how the drop-down editors of every head select the current item. A stored value that
+        /// no item declares returns <c>false</c>, so the caller can still show the value itself.
+        /// </remarks>
+        public static bool TryGetListItemText(object? raw, IEnumerable<ListItem>? items, out string text)
+        {
+            text = string.Empty;
+            if (items is null || raw is null || raw == DBNull.Value)
+                return false;
+
+            string value = ToBindingString(raw);
+            foreach (var item in items)
+            {
+                if (string.Equals(item.Value, value, StringComparison.Ordinal))
+                {
+                    text = item.Text;
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>

@@ -24,8 +24,9 @@ namespace Polhem.UI.Avalonia.Views
             // Degrade the freshly generated list layout before binding: sensitive columns the user
             // cannot Read drop out. No-op when no company context is active.
             LayoutCapabilityApplier.ApplyGrid(listLayout, Schema, ClientInfo.Capabilities);
-            // Columns render immediately; rows arrive with the first ReloadAsync.
-            _grid.Bind(listLayout, rows: null);
+            // Columns render immediately; rows arrive with the first ReloadAsync. The master table
+            // lets drop-down columns show their (localized) list item text instead of stored codes.
+            _grid.Bind(listLayout, rows: null, Schema.MasterTable);
 
             var columns = (listLayout.Columns ?? Enumerable.Empty<LayoutColumn>())
                 .Where(c => c.Visible)

@@ -3,6 +3,7 @@ using System.Data;
 using Avalonia;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
+using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Polhem.UI.Avalonia.DataObjects;
@@ -32,6 +33,7 @@ namespace Polhem.UI.Avalonia.Controls
             ArgumentNullException.ThrowIfNull(dataObject);
             ArgumentNullException.ThrowIfNull(layout);
             _layout = layout;
+            _listFormTable = null;
             TableName = layout.TableName;
             // Bind before building columns: lookup-column detection resolves the
             // FormField metadata through the bound data object.
@@ -54,11 +56,27 @@ namespace Polhem.UI.Avalonia.Controls
         /// <param name="layout">The grid layout that defines the columns.</param>
         /// <param name="rows">The data rows to render, or <c>null</c> for headers only.</param>
         public void Bind(LayoutGrid layout, DataTable? rows)
+            => Bind(layout, rows, formTable: null);
+
+        /// <summary>
+        /// Binds a caller-supplied table (list mode) together with the schema table the columns come
+        /// from, so the cells can show what the field metadata describes rather than the stored value:
+        /// a drop-down column shows its list item's text instead of the stored code.
+        /// </summary>
+        /// <param name="layout">The grid layout that defines the columns.</param>
+        /// <param name="rows">The data rows to render, or <c>null</c> for headers only.</param>
+        /// <param name="formTable">
+        /// The schema table whose fields describe the columns, typically the master table of the schema
+        /// the list layout was generated from, or <c>null</c> to render stored values as they are. Pass a
+        /// localized schema's table to show localized list item text.
+        /// </param>
+        public void Bind(LayoutGrid layout, DataTable? rows, FormTable? formTable)
         {
             ArgumentNullException.ThrowIfNull(layout);
             // List-mode rows live outside any data object; drop a previous detail
             // subscription so a stale DataSetReplaced cannot overwrite these rows.
             _binder.Unbind();
+            _listFormTable = formTable;
             _layout = layout;
             TableName = layout.TableName;
             _dataTable = rows;

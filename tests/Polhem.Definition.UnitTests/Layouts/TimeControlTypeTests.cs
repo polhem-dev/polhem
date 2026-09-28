@@ -25,13 +25,5 @@ namespace Polhem.Definition.UnitTests.Layouts
             Assert.Equal(ControlType.TextEdit,
                 LayoutColumnFactory.ResolveControlType(ControlType.TextEdit, FieldDbType.Time));
         }
-
-        [Fact]
-        [DisplayName("TimeEdit must be at the end of ControlType so existing payloads do not shift")]
-        public void TimeEdit_IsAppendedAtEndOfEnum()
-        {
-            var values = Enum.GetValues<ControlType>();
-            Assert.Equal(ControlType.TimeEdit, values[^1]);
-        }
     }
 }

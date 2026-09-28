@@ -30,6 +30,13 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// </summary>
         public static readonly double CompactWidthThreshold = 600;
 
+        /// <summary>
+        /// The narrowest the panel is laid out on a screen wide enough for it: two editor columns plus
+        /// the panel margin. A native dialog window keeps this width; the overlay card keeps it only
+        /// where the screen has room, so a phone gets a card as wide as its screen instead.
+        /// </summary>
+        internal const double PreferredMinWidth = 392;
+
         private const int WideColumnCount = 2;
         private const int CompactColumnCount = 1;
 
@@ -146,7 +153,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             Unbind();
         }
 
-        private StackPanel BuildContent(FormDataObject dataObject, LayoutGrid layout, DataRow row)
+        private DockPanel BuildContent(FormDataObject dataObject, LayoutGrid layout, DataRow row)
         {
             var columnCount = Compact ? CompactColumnCount : WideColumnCount;
             var grid = new Grid
@@ -187,19 +194,26 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 Orientation = Orientation.Horizontal,
                 Spacing = 8,
                 HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(16, 12, 16, 16),
             };
             buttons.Children.Add(okButton);
             buttons.Children.Add(cancelButton);
 
-            var host = new StackPanel
+            // The editors scroll and the buttons stay docked below them, outside the scrolled part: a
+            // host that limits the height (the overlay card above a phone's on-screen keyboard) takes the
+            // space from the editor area first, so OK / Cancel stay reachable. The structure is pinned by
+            // `RowEditPanelTests.Bind_ButtonsDockedOutsideScrolledEditors`.
+            var editorArea = new ScrollViewer
             {
-                Orientation = Orientation.Vertical,
-                Spacing = 12,
-                Margin = new Thickness(16),
-                MinWidth = 360,
+                HorizontalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+                VerticalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                Content = new Border { Padding = new Thickness(16, 16, 16, 0), Child = grid },
             };
-            host.Children.Add(grid);
+
+            var host = new DockPanel { LastChildFill = true };
+            DockPanel.SetDock(buttons, Dock.Bottom);
             host.Children.Add(buttons);
+            host.Children.Add(editorArea);
             return host;
         }
 

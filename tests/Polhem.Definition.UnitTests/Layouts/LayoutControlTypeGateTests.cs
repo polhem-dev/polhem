@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Polhem.Base.Data;
 using Polhem.Base.Serialization;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
@@ -18,7 +19,9 @@ namespace Polhem.Definition.UnitTests.Layouts
     /// silently turns a dropdown, a check box, a date or a number into a plain text box. That is how the
     /// shipped AuditRule layout came to show its mode codes as numbers and its flag as the text "False".
     /// A layout may still choose a different editor on purpose; this gate only rejects the plain text box
-    /// where the schema resolves to something else.
+    /// where the schema resolves to something else, and the date-only editor where the schema holds an
+    /// instant: <see cref="ControlType.DateEdit"/> writes the date alone back, so it would erase the time
+    /// part of a <see cref="ControlType.DateTimeEdit"/> field on the first edit.
     /// </remarks>
     public class LayoutControlTypeGateTests
     {
@@ -28,7 +31,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         };
 
         [Fact]
-        [DisplayName("No FormLayout file in the repository shows a plain text box where its FormSchema resolves to another editor")]
+        [DisplayName("No FormLayout file in the repository shows a plain text box, or a date-only editor for an instant, where its FormSchema resolves to another editor")]
         public void LayoutFiles_TextEditFields_MatchSchemaControlType()
         {
             string root = RepoRoot.Find();
@@ -61,8 +64,8 @@ namespace Polhem.Definition.UnitTests.Layouts
             }
 
             Assert.True(violations.Count == 0,
-                "These layout fields fall back to TextEdit although the schema resolves to another editor. "
-                + "Set ControlType (and DisplayFields for a lookup) as FormLayoutGenerator would: "
+                "These layout fields use TextEdit, or DateEdit for a DateTime field, although the schema resolves "
+                + "to another editor. Set ControlType (and DisplayFields for a lookup) as FormLayoutGenerator would: "
                 + string.Join("; ", violations));
         }
 
@@ -81,12 +84,34 @@ namespace Polhem.Definition.UnitTests.Layouts
             Assert.Equal(ControlType.CheckEdit, fields["is_sensitive"].ControlType);
         }
 
+        [Theory]
+        [InlineData(ControlType.TextEdit, FieldDbType.DateTime, true)]
+        [InlineData(ControlType.DateEdit, FieldDbType.DateTime, true)]
+        [InlineData(ControlType.DateTimeEdit, FieldDbType.DateTime, false)]
+        [InlineData(ControlType.DateEdit, FieldDbType.Date, false)]
+        [InlineData(ControlType.TextEdit, FieldDbType.String, false)]
+        [InlineData(ControlType.MemoEdit, FieldDbType.DateTime, false)]
+        [DisplayName("The gate rejects a plain text box or a date-only editor over an instant, and accepts other deliberate choices")]
+        public void Check_ControlTypeAgainstSchema_ReportsOnlyTheRejectedFallbacks(
+            ControlType layoutType, FieldDbType dbType, bool rejected)
+        {
+            var table = new FormTable("T", "T");
+            table.Fields!.Add(new FormField("f", "F", dbType));
+            var violations = new List<string>();
+
+            Check("layout.xml", table, new LayoutField { FieldName = "f", ControlType = layoutType }, violations);
+
+            Assert.Equal(rejected, violations.Count == 1);
+        }
+
         private static void Check(string relative, FormTable table, LayoutFieldBase field, List<string> violations)
         {
-            if (field.ControlType != ControlType.TextEdit || !table.Fields!.Contains(field.FieldName)) { return; }
+            if (!table.Fields!.Contains(field.FieldName)) { return; }
             var expected = LayoutColumnFactory.ResolveControlType(table.Fields[field.FieldName]);
-            if (expected != ControlType.TextEdit)
+            if (field.ControlType == ControlType.TextEdit && expected != ControlType.TextEdit)
                 violations.Add($"{relative}: {table.TableName}.{field.FieldName} is TextEdit, schema resolves to {expected}");
+            else if (field.ControlType == ControlType.DateEdit && expected == ControlType.DateTimeEdit)
+                violations.Add($"{relative}: {table.TableName}.{field.FieldName} is DateEdit, which drops the time part of a DateTime field");
         }
 
         private static IEnumerable<string> EnumerateLayoutFiles(string directory)

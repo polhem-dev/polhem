@@ -1,4 +1,4 @@
-<!-- source: en/temporal-types.md blob: b7845cfbf366f19bc870825adfea356d3d2cf3ce -->
+<!-- source: en/temporal-types.md blob: a0660f8f1f850181181ee2c5ae77c72eb09622ea -->
 # 時間型別總覽：`Date`、`DateTime`、`Time`
 
 [English](../en/temporal-types.md) · [← 文件索引](README.md)
@@ -34,12 +34,12 @@
 | 讀取方式 | `CDateOnly` → `DateOnly?` | `CDateTime` → `DateTime?` | `CTimeOnly` → `TimeOnly?` |
 | 未填值 | `DateTime.MinValue` → `DBNull` | `DateTime.MinValue` → `DBNull` | **空字串** |
 | 會轉時區嗎？ | **不會** —— 前提是欄位帶著標記（§4） | **會**（UTC ↔ 使用者時區） | **絕不** |
-| 預設 UI 控件 | `DateEdit` | `DateEdit` | `TimeEdit` |
+| 預設 UI 控件 | `DateEdit` | `DateTimeEdit` | `TimeEdit` |
 
 唯一的結構性差異：`Date` 與 `DateTime` **共用 CLR 型別**，日曆日語意在值離開定義層的瞬間就會消失，
 因此靠欄位上的顯式標記保留。`Time` 不需要標記 —— `string` 欄位本身已無歧義。
 
-三者的宣告都是同樣一行，版面層會據此推導編輯控件 —— 不需改動 layout 即可得到日期選擇器或時刻輸入：
+三者的宣告都是同樣一行，版面層會據此推導編輯控件 —— 不需改動 layout 即可得到日期選擇器、日期時間輸入或時刻輸入：
 
 ```xml
 <DbField FieldName="hire_date"  Caption="到職日" DbType="Date" />

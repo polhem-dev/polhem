@@ -75,7 +75,8 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 var completed = new TaskCompletionSource();
                 panel.Committed += (_, row) => { selected = row; completed.TrySetResult(); };
                 panel.Cancelled += (_, _) => completed.TrySetResult();
-                await OverlayDialogHost.ShowAsync(host, panel, schema.DisplayName, completed.Task);
+                await OverlayDialogHost.ShowAsync(host, panel, schema.DisplayName, completed.Task,
+                    LookupPanel.PreferredMinWidth);
                 cancellationToken.ThrowIfCancellationRequested();
                 return selected;
             }

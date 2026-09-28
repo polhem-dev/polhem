@@ -224,6 +224,7 @@ const Polhem.Definition.Language.PolhemMessages.SaveDetailFieldRequired = "Polhe
 const Polhem.Definition.Language.PolhemMessages.SaveFieldRequired = "PolhemMessages.Save.FieldRequired" -> string!
 Polhem.Definition.Storage.FileDefineStorage.GetFormSchemaIds() -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Definition.Storage.IDefineStorage.GetFormSchemaIds() -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Definition.Layouts.ControlType.DateTimeEdit = 10 -> Polhem.Definition.Layouts.ControlType
 *REMOVED*const Polhem.Definition.Settings.CurrencySettings.FallbackRounding = 0.01 -> decimal
 *REMOVED*const Polhem.Definition.Settings.UnitSettings.FallbackDecimals = 0 -> int
 static readonly Polhem.Definition.Paging.PagingOptions.MaxPageSize -> int

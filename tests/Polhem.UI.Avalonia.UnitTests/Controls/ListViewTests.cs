@@ -8,7 +8,9 @@ using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Base.Data;
 using Polhem.Definition;
+using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
+using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Views;
 
 namespace Polhem.UI.Avalonia.UnitTests.Controls
@@ -332,6 +334,50 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
 
             Assert.Equal(orderDate.ToString("d", CultureInfo.CurrentCulture), values["Order Date"]);
             Assert.Equal(freight.ToString("N2", CultureInfo.CurrentCulture), values["Freight"]);
+        }
+
+        [Fact]
+        [DisplayName("The compact card list shows a drop-down's list item text, a check box for a Boolean and the time of an instant")]
+        public async Task CardTemplate_DropDownBooleanAndInstant_ShowReadableValues()
+        {
+            var createdAt = new DateTime(2026, 9, 28, 0, 0, 0, DateTimeKind.Unspecified);
+            var schema = new FormSchema(TestProgId, TestProgId) { ListFields = "sys_id,change_mode,is_sensitive,created_at" };
+            var master = schema.Tables!.Add(TestProgId, TestProgId);
+            master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
+            master.Fields.Add("sys_id", "Program Id", FieldDbType.String);
+            var mode = master.Fields.Add("change_mode", "Change Log", FieldDbType.Integer);
+            mode.ControlType = ControlType.DropDownEdit;
+            mode.ListItems!.Add("0", "Inherit");
+            mode.ListItems.Add("1", "On");
+            master.Fields.Add("is_sensitive", "Sensitive", FieldDbType.Boolean);
+            master.Fields.Add("created_at", "Created At", FieldDbType.DateTime);
+
+            var table = new DataTable(TestProgId);
+            table.Columns.Add(SysFields.RowId, typeof(Guid));
+            table.Columns.Add("sys_id", typeof(string));
+            table.Columns.Add("change_mode", typeof(int));
+            table.Columns.Add("is_sensitive", typeof(bool));
+            table.Columns.Add("created_at", typeof(DateTime));
+            table.Rows.Add(Guid.NewGuid(), "Order", 1, true, createdAt);
+
+            var connector = new FakeFormApiConnector { GetListHandler = _ => new GetListResponse { Table = table } };
+            var view = new TestListView { Schema = schema, FormConnector = connector };
+            await view.InitializeAsync();
+
+            var cardList = (ListBox)typeof(ListView)
+                .GetField("_cardList", BindingFlags.NonPublic | BindingFlags.Instance)!
+                .GetValue(view)!;
+            var template = Assert.IsType<FuncDataTemplate<DataRowView>>(cardList.ItemTemplate);
+            var card = Assert.IsType<Border>(template.Build(table.DefaultView[0]));
+            var values = ((StackPanel)card.Child!).Children
+                .Cast<StackPanel>()
+                .ToDictionary(line => ((TextBlock)line.Children[0]).Text!, line => line.Children[1]);
+
+            Assert.Equal("On", Assert.IsType<TextBlock>(values["Change Log"]).Text);
+            var check = Assert.IsType<CheckBox>(values["Sensitive"]);
+            Assert.True(check.IsChecked);
+            Assert.False(check.IsEnabled);
+            Assert.Equal(createdAt.ToString("G", CultureInfo.CurrentCulture), Assert.IsType<TextBlock>(values["Created At"]).Text);
         }
 
         private sealed class TestListView : ListView

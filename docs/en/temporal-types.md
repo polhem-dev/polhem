@@ -35,14 +35,14 @@ The test: **ask whether the value needs to know which day.**
 | Read it as | `CDateOnly` → `DateOnly?` | `CDateTime` → `DateTime?` | `CTimeOnly` → `TimeOnly?` |
 | Unset value | `DateTime.MinValue` → `DBNull` | `DateTime.MinValue` → `DBNull` | **empty string** |
 | Time-zone converted? | **No** — provided the column carries the marker (§4) | **Yes** (UTC ↔ user zone) | **Never** |
-| Default UI editor | `DateEdit` | `DateEdit` | `TimeEdit` |
+| Default UI editor | `DateEdit` | `DateTimeEdit` | `TimeEdit` |
 
 The one structural difference: `Date` and `DateTime` **share a CLR type**, so the calendar-day
 semantic would be lost the moment a value left the definition layer. It is preserved by an explicit
 marker on the column. `Time` needs no marker — a `string` column is already unambiguous.
 
 Declaring any of the three is the same one line, and the layout layer derives the editor from it —
-no layout change is needed to get a date picker or a time input:
+no layout change is needed to get a date picker, a date-and-time input or a time input:
 
 ```xml
 <DbField FieldName="hire_date"  Caption="Hire Date" DbType="Date" />

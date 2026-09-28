@@ -2,6 +2,8 @@ using System.Data;
 using Polhem.Api.Client;
 using System.Globalization;
 using Polhem.Definition;
+using Polhem.Definition.Collections;
+using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Microsoft.AspNetCore.Components;
@@ -33,6 +35,15 @@ namespace Polhem.Web.Blazor.Server.Components
         /// </summary>
         [Parameter]
         public DataTable? Rows { get; set; }
+
+        /// <summary>
+        /// Gets or sets the schema table whose fields describe the columns, typically the master table
+        /// of the schema the list layout was generated from. With it a drop-down column shows its list
+        /// item's text instead of the stored code, localized when the schema was; <c>null</c> — the
+        /// default — shows stored values as they are.
+        /// </summary>
+        [Parameter]
+        public FormTable? FormTable { get; set; }
 
         /// <summary>
         /// Invoked when the user clicks a row; receives the row's
@@ -70,7 +81,9 @@ namespace Polhem.Web.Blazor.Server.Components
 
         /// <summary>
         /// Formats a cell for display in the circuit's <see cref="CultureInfo.CurrentCulture"/>:
-        /// its separators and date patterns, and localized text for Boolean values.
+        /// its separators and date patterns, the list item text of a drop-down column, the time of day
+        /// of a <see cref="ControlType.DateTimeEdit"/> column even at midnight, and localized text for
+        /// Boolean values.
         /// </summary>
         /// <remarks>Display only; the values the grid is given, and anything it reports, stay invariant.</remarks>
         private string FormatCell(DataRow row, LayoutColumn column)
@@ -79,7 +92,18 @@ namespace Polhem.Web.Blazor.Server.Components
             var raw = row[column.FieldName];
             if (raw is null || raw == DBNull.Value) return string.Empty;
 
+            if (column.ControlType == ControlType.DropDownEdit
+                && FormValueBinding.TryGetListItemText(raw, ResolveListItems(column.FieldName), out var itemText))
+            {
+                return itemText;
+            }
+
             var culture = CultureInfo.CurrentCulture;
+            if (column.ControlType == ControlType.DateTimeEdit && string.IsNullOrEmpty(column.DisplayFormat)
+                && raw is DateTime instant)
+            {
+                return instant.ToString("G", culture);
+            }
             if (!string.IsNullOrEmpty(column.DisplayFormat) && raw is IFormattable formattableDisplay)
                 return formattableDisplay.ToString(column.DisplayFormat, culture);
             if (!string.IsNullOrEmpty(column.NumberFormat) && raw is IFormattable formattableNumber)
@@ -94,6 +118,12 @@ namespace Polhem.Web.Blazor.Server.Components
                 IFormattable f => f.ToString(null, culture),
                 _ => raw.ToString() ?? string.Empty,
             };
+        }
+
+        private ListItemCollection? ResolveListItems(string fieldName)
+        {
+            var fields = FormTable?.Fields;
+            return fields is not null && fields.Contains(fieldName) ? fields[fieldName].ListItems : null;
         }
 
         private static string BuildColumnStyle(LayoutColumn column)

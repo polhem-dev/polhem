@@ -92,6 +92,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         [InlineData(ControlType.DropDownEdit)]
         [InlineData(ControlType.CheckEdit)]
         [InlineData(ControlType.MemoEdit)]
+        [InlineData(ControlType.DateTimeEdit)]
         [DisplayName("GetListLayout keeps a non-Auto ControlType as is")]
         public void GetListLayout_NonAutoControlType_PreservesValue(ControlType controlType)
         {
@@ -107,7 +108,7 @@ namespace Polhem.Definition.UnitTests.Layouts
 
         [Theory]
         [InlineData(FieldDbType.Boolean, ControlType.CheckEdit)]
-        [InlineData(FieldDbType.DateTime, ControlType.DateEdit)]
+        [InlineData(FieldDbType.DateTime, ControlType.DateTimeEdit)]
         [InlineData(FieldDbType.Text, ControlType.MemoEdit)]
         [InlineData(FieldDbType.String, ControlType.TextEdit)]
         [DisplayName("GetListLayout infers the control type from the DbType for ControlType=Auto")]

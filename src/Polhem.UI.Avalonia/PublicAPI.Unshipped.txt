@@ -30,3 +30,6 @@ virtual Polhem.UI.Avalonia.Views.FormView.ResolveRoundingContextAsync(System.Thr
 virtual Polhem.UI.Avalonia.Views.FormView.ResolveSchemaAsync(string! progId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema?>!
 virtual Polhem.UI.Avalonia.Views.ListView.ResolveSchemaAsync(string! progId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema?>!
 Polhem.UI.Avalonia.DataObjects.FormDataObject.RowEditFieldChanged -> System.EventHandler<Polhem.UI.Avalonia.DataObjects.FieldValueChangedEventArgs!>?
+Polhem.UI.Avalonia.Controls.Editors.DateTimeEdit
+Polhem.UI.Avalonia.Controls.Editors.DateTimeEdit.DateTimeEdit() -> void
+Polhem.UI.Avalonia.Controls.GridControl.Bind(Polhem.Definition.Layouts.LayoutGrid! layout, System.Data.DataTable? rows, Polhem.Definition.Forms.FormTable? formTable) -> void
