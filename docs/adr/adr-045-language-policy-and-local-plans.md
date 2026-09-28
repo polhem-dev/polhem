@@ -4,7 +4,11 @@
 
 ## Status
 
-**Accepted (2026-09-26)**
+**Accepted, partially superseded (2026-09-26)**
+
+Item 2 of the decision (public documents and ADRs are bilingual) is superseded by
+[ADR-047](adr-047-documents-split-by-reader.md): ADRs are maintainer documents and are English only, and only the
+user documents are multilingual. The rest of the decision still holds.
 
 ## Context
 
@@ -65,3 +69,7 @@ Chinese translations are `docs/zh-TW/` and the `<name>.zh-TW.md` files next to e
 covers both layouts, so the two language versions of an ADR no longer rely on being changed in the same commit: a
 translation that falls behind its source is reported as stale. The languages and their policies are listed in the
 header of that script.
+
+**2026-09-29.** Item 2 is superseded by [ADR-047](adr-047-documents-split-by-reader.md). The ADRs and `CONTRIBUTING`
+are English only, the maintainer documents move out of `docs/`, and `check-docs-i18n.sh` no longer checks ADR
+translations.

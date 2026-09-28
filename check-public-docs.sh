@@ -47,9 +47,9 @@ repo_files() {
   return 0
 }
 
-# docs/repo-ops/ holds maintainer documents, not public ones. It is still scanned by (1) and (2).
+# docs/repo-ops/ and docs/adr/ hold maintainer documents, not public ones. They are still scanned by (1) and (2).
 public_md_filter() {
-  grep -v "^docs/repo-ops/"
+  grep -vE "^docs/(repo-ops|adr)/"
   return 0
 }
 

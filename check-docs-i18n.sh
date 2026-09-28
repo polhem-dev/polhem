@@ -22,12 +22,12 @@ TRANSLATIONS="zh-TW:strict"
 # Required list of a partial language: the variable is named REQUIRED_<language code with - replaced by _>, and
 # its value is a space-separated list of paths relative to docs/<language>/, or, for a folder in SUFFIX_DIRS, the
 # source's path relative to docs/. Example:
-#   REQUIRED_ja="README.md getting-started.md adr/README.md"
+#   REQUIRED_ja="README.md getting-started.md changelogs/1.0.0.md"
 
 # Folders under docs/ whose documents pair by file name instead of by language folder: <name>.md is the source,
 # written in SOURCE_LANG, and <name>.<language>.md next to it is a translation. Only the files directly in the
 # folder count. The policies above apply to them in the same way.
-SUFFIX_DIRS="adr changelogs"
+SUFFIX_DIRS="changelogs"
 
 # The label on the language switch line is always the language's own name (autonym). A new language is added
 # both here and to TRANSLATIONS.
@@ -44,7 +44,7 @@ autonym() {
 #
 # Translation header: the first line of every translation, naming the source by its path relative to docs/
 #   <!-- source: en/caching.md blob: <40 hex digits> -->       docs/zh-TW/caching.md
-#   <!-- source: adr/adr-001-x.md blob: <40 hex digits> -->    docs/adr/adr-001-x.zh-TW.md
+#   <!-- source: changelogs/1.0.0.md blob: <40 hex digits> -->  docs/changelogs/1.0.0.zh-TW.md
 # - It records the blob hash of the source document (git hash-object), not a commit hash. Changing a source and
 #   its translation in the same commit is normal, and a commit hash only exists after the commit; a blob hash
 #   depends only on the file content and exists before. So it also does not depend on the depth of the git

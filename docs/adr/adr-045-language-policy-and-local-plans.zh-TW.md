@@ -5,7 +5,10 @@
 
 ## 狀態
 
-**已採納（Accepted，2026-09-26）**
+**已採納，部分取代（2026-09-26）**
+
+決策第 2 條（公開文件與 ADR 中英雙語）已被 [ADR-047](adr-047-documents-split-by-reader.md) 取代：ADR 屬於維護者文件，只用英文；
+只有使用者文件是多語系。其餘決策仍然有效。
 
 ## 背景
 
@@ -52,3 +55,6 @@ Polhem 以新名稱延續 Bee.NET 框架（`jeff377/bee-library`），放在預�
 是源文件，繁體中文譯本分別是 `docs/zh-TW/` 與各 ADR 旁的 `<name>.zh-TW.md`。`check-docs-i18n.sh` 已涵蓋這兩種
 配置，ADR 兩種語言版本的同步不再只靠同一個 commit 一起改：譯本落後源文件時會被判定為過期。語言清單與各自的政策
 寫在該腳本的檔頭。
+
+**2026-09-29。** 第 2 條已被 [ADR-047](adr-047-documents-split-by-reader.md) 取代。ADR 與 `CONTRIBUTING` 只用英文，
+維護者文件移出 `docs/`，`check-docs-i18n.sh` 不再檢查 ADR 譯本。
