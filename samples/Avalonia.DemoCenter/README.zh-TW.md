@@ -90,7 +90,7 @@ dotnet run --project samples/Avalonia.DemoCenter/Avalonia.DemoCenter.csproj
 
 導覽樹與 View Source 會自動帶出——`Modules/**/*.cs` 已設為 EmbeddedResource，`GetSourceText()` 依型別全名解析資源
 （**資料夾須對映命名空間**）。常用 helper：`DataEditorParts`（單欄物件 / 區塊卡 / 即時值 / Compose）、
-`SampleFormData`（Employee + Phones 假資料）、`FormLayoutRenderer`（公開 primitive 渲染 layout）。
+`SampleFormData`（Staff + Phones 假資料）、`FormLayoutRenderer`（公開 primitive 渲染 layout）。
 
 ## 對應 library 元件
 

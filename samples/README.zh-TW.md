@@ -20,7 +20,7 @@ dotnet run
 
 預期 Terminal 2 印出 `response : echo: hello from QuickStart.Console`。
 
-要看 Blazor 元件實際渲染 `FormSchema`、走 Login + Employee CRUD:
+要看 Blazor 元件實際渲染 `FormSchema`、走 Login + Staff CRUD:
 
 ```bash
 # Blazor Server(in-process LocalApiProvider,無 HTTP round-trip)
@@ -28,7 +28,7 @@ cd samples/Blazor.Server.Demo
 dotnet run                          # → http://localhost:5055
 ```
 
-以 **`demo / demo`** 登入,渲染 `Employee` FormSchema。
+以 **`demo / demo`** 登入,渲染 `Staff` FormSchema。
 
 ## 我該從哪個 demo 看起
 
@@ -100,7 +100,7 @@ Blazor.Server.Demo                ← 不需另起 server,前後端同 process
 
 | 檔案 | 由誰建立 | 內容 | gitignore 規則 |
 |------|----------|------|----------------|
-| `samples/<Host>/quickstart.db` | [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) | SQLite,含 `DbCategorySettings.xml` 登記的每張表、demo 使用者／公司／授權，以及幾筆員工與部門資料 | `/samples/**/*.db` |
+| `samples/<Host>/quickstart.db` | [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) | SQLite,含 `DbCategorySettings.xml` 登記的每張表、demo 使用者／公司／授權，以及幾筆人員與團隊資料 | `/samples/**/*.db` |
 
 > 兩個 host(`QuickStart.Server` / `Blazor.Server.Demo`)**各有自己的 `quickstart.db`**,不會互相干擾。同一個 host 重跑會沿用既有資料(schema 建立與 seed 都是 idempotent)。
 

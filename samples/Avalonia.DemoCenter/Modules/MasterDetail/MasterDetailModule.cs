@@ -6,7 +6,7 @@ using Avalonia.DemoCenter.Modules.Views;
 namespace Avalonia.DemoCenter.Modules.MasterDetail
 {
     /// <summary>
-    /// Master-detail: the generated <c>FormLayout</c> for the Employee + Phones schema,
+    /// Master-detail: the generated <c>FormLayout</c> for the Staff + Phones schema,
     /// rendering the master section above the Phones detail grid, all bound to one local
     /// data object (the same composition the production <c>FormView</c> produces).
     /// </summary>
@@ -20,7 +20,7 @@ namespace Avalonia.DemoCenter.Modules.MasterDetail
 
         /// <inheritdoc/>
         public override string Description =>
-            "An Employee master section and a Phones detail grid bound to the same FormDataObject (editable in the default Edit mode). "
+            "A Staff master section and a Phones detail grid bound to the same FormDataObject (editable in the default Edit mode). "
             + "The production back-end load/save flow is in apps/Polhem.Northwind.";
 
         /// <inheritdoc/>

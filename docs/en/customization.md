@@ -113,6 +113,14 @@ is a decision, made by editing that tenant's layout file.
 Captions are **not** part of the layout file: a UI head applies them from the localized schema after
 picking the layout, so label changes belong in the language resource even for a customized layout.
 
+One caption is the exception: the section captions of a layout with **several sections**. Those
+sections ("Basic", "Address") are named by the layout's author, and no language key exists for them
+(there is no `Section.*` sub-key), so they show the text of the layout file in every culture. A
+layout with a single section takes that section's caption from the master table's
+`Table.{TableName}.DisplayName` like any other caption. Where a multi-section form must read
+correctly in more than one language, hide the section captions (`ShowCaption="false"`) or write text
+that does not need translating.
+
 > **How it reaches the screen.** The API serves the raw layout definitions; the assembly happens on
 > the client, in `FormDefinitionLoader`, which fetches both layers and picks the tenant's layout when
 > there is one. When neither layer defines one, `GetRuntimeLayoutAsync` throws

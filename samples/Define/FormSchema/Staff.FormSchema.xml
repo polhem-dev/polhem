@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FormSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ProgId="Employee" DisplayName="Employee" CategoryId="company" ListFields="sys_id,sys_name,hire_date">
+<FormSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ProgId="Staff" DisplayName="Staff" CategoryId="company" ListFields="sys_id,sys_name,hire_date">
   <Tables>
-    <FormTable TableName="Employee" DbTableName="ft_employee" DisplayName="Employee">
+    <FormTable TableName="Staff" DbTableName="ft_staff" DisplayName="Staff">
       <Fields>
         <FormField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" />
         <FormField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" />
-        <FormField FieldName="sys_id" Caption="Employee ID" DbType="String" />
-        <FormField FieldName="sys_name" Caption="Employee Name" DbType="String" />
+        <FormField FieldName="sys_id" Caption="Staff ID" DbType="String" />
+        <FormField FieldName="sys_name" Caption="Staff Name" DbType="String" />
         <FormField FieldName="hire_date" Caption="Hire Date" DbType="Date" />
         <FormField FieldName="is_active" Caption="Active" DbType="Boolean" />
       </Fields>
     </FormTable>
-    <FormTable TableName="EmployeePhone" DbTableName="ft_employee_phone" DisplayName="Employee Phones">
+    <FormTable TableName="StaffPhone" DbTableName="ft_staff_phone" DisplayName="Staff Phones">
       <Fields>
         <FormField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" />
         <FormField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" />

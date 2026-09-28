@@ -14,8 +14,8 @@ FormLayout 定義渲染出表單：
 |------|---------|
 | Login | `System.Login` |
 | Ping | `System.Ping`（不需 auth） |
-| Enter Company | `System.EnterCompany` / `System.LeaveCompany`（Employee CRUD 之前必須先做；未知的代碼可示範錯誤路徑） |
-| Employee CRUD | `Employee.GetList` / `GetData` / `GetNewData` / `Save` / `Delete` |
+| Enter Company | `System.EnterCompany` / `System.LeaveCompany`（Staff CRUD 之前必須先做；未知的代碼可示範錯誤路徑） |
+| Staff CRUD | `Staff.GetList` / `GetData` / `GetNewData` / `Save` / `Delete` |
 | FormDefinition-driven 渲染 | `System.GetFormSchema` / `System.GetFormLayout` → 定義 XML → 動態 form |
 | Logout | `System.Logout` |
 
@@ -50,7 +50,7 @@ FormLayout 定義渲染出表單：
      然後開 `http://localhost:8080/index.html`。
 
 3. 點 **Login**（預設帳密 `demo` / `demo`），再點 **EnterCompany**（公司代碼已預填 `DEMO`），
-   再點 **GetList** —— 結果會出現在下方的輸出區。員工表單屬於公司範圍，session 進入公司之前，
+   再點 **GetList** —— 結果會出現在下方的輸出區。人員（Staff）表單屬於公司範圍，session 進入公司之前，
    CRUD 與表單按鈕都會失敗。
 
 ## 檔案

@@ -59,7 +59,7 @@ Depends on the front-end decision + whether auth is needed:
 
 **Key facts**:
 - `QuickStart.Server` currently hosts `Polhem.Samples.Shared.DemoBackend`, so it **has** `demo/demo` login + the
-  Employee / Department / Project seed data. Samples other than Console that want auth all connect to this server
+  Staff / Team / Project seed data. Samples other than Console that want auth all connect to this server
 - in-process mode is for Blazor Server only; Avalonia and other non-web hosts cannot run in-process (there is no
   `WebApplicationBuilder`); instead pass the `IServiceProvider` to the local connector constructors (or set
   `ClientInfo.LocalServiceProvider` on a native head) and use local mode
@@ -83,7 +83,7 @@ Login step. If it touches a form, it must also enter the demo company (`DEMO`) a
 
 | Define needed | How to reference it |
 |---------------|---------------------|
-| An existing FormSchema (`Employee`, `Department`, `Project`) | The backend reads `samples/Define/FormSchema/` (the directory is found by `DemoBackend.ResolveDefinePath()`) |
+| An existing FormSchema (`Staff`, `Team`, `Project`) | The backend reads `samples/Define/FormSchema/` (the directory is found by `DemoBackend.ResolveDefinePath()`) |
 | Custom FormSchema | Add `samples/Define/FormSchema/<ProgId>.FormSchema.xml` with `CategoryId="company"` and its `samples/Define/FormLayout/<ProgId>.FormLayout.xml` (required: opening a form without one fails; generate it with `polhem-scaffold-from-formschema`), the TableSchema under `samples/Define/TableSchema/company/`, and a `TableItem` under the `company` category in `samples/Define/DbCategorySettings.xml`. `DemoSchemaSeeder` builds every table that file registers, so there is no seeder edit unless the list should not start empty (then add seed rows to the company database there) |
 | No schema at all | A pure Echo / Ping demo, no Define dependency |
 

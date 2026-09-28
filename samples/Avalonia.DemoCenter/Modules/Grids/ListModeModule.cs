@@ -25,12 +25,12 @@ namespace Avalonia.DemoCenter.Modules.Grids
         public override Control BuildView()
         {
             var grid = new GridControl { MinHeight = 240 };
-            grid.Bind(SampleFormData.BuildEmployeeListLayout(), SampleFormData.BuildEmployeeListTable());
+            grid.Bind(SampleFormData.BuildStaffListLayout(), SampleFormData.BuildStaffListTable());
 
             return new ScrollViewer
             {
                 Content = DataEditorParts.Section(
-                    "Employee list (list mode)",
+                    "Staff list (list mode)",
                     "A list-mode grid is not editable and has no toolbar. The production ListView adds back-end reload and row events (see apps/Polhem.Northwind).",
                     grid),
             };

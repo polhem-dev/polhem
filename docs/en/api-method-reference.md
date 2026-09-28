@@ -59,14 +59,16 @@ E.g. `GetLanguage` → `IGetLanguageRequest` / `IGetLanguageResponse` /
 "Go to symbol" to jump to any of these from the action name; no need to list
 them in the tables.
 
-**The request side follows this pattern with three exceptions; the response side
+**The request side follows this pattern with the exceptions below; the response side
 does not follow it.** The exceptions reuse the types of the action they extend:
 `ExecFuncAnonymous` takes `ExecFuncArgs` / `ExecFuncRequest`,
 `GetCustomizeFormLayout` takes `GetFormLayoutArgs`, and `GetCustomizeLanguage`
 takes `GetLanguageArgs` (with the matching results). Where several actions return
 the same shape, they share one response type rather than each declaring an
-identical copy. On the audit-log axis every action does: the five list queries
-return `AuditLogListResponse` / `AuditLogListResult` and the three aggregates
+identical copy. On the audit-log axis every action does: the list queries
+(`GetChangeLog`, `GetLoginLog`, `GetAccessLog`, `GetApiAnomalyLog` and
+`GetDbAnomalyLog`) return `AuditLogListResponse` / `AuditLogListResult`, and the
+aggregates (`GetApiAnomalySummary`, `GetDbAnomalySummary` and `GetTopApiMethods`)
 return `AuditLogAggregateResponse` / `AuditLogAggregateResult`, so only
 `GetChangeDetail` has a response type named after its action. Look the types up
 from the BO method signature when in doubt.

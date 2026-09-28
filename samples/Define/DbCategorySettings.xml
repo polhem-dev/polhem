@@ -17,9 +17,9 @@
          empty: no form here declares a PermissionModelId, so neither permission axis applies. -->
     <DbCategory Id="company" DisplayName="Company Database">
       <Tables>
-        <TableItem TableName="ft_employee" DisplayName="Employee" />
-        <TableItem TableName="ft_employee_phone" DisplayName="Employee Phones" />
-        <TableItem TableName="ft_department" DisplayName="Department" />
+        <TableItem TableName="ft_staff" DisplayName="Staff" />
+        <TableItem TableName="ft_staff_phone" DisplayName="Staff Phones" />
+        <TableItem TableName="ft_team" DisplayName="Team" />
         <TableItem TableName="ft_project" DisplayName="Project" />
         <TableItem TableName="ft_project_member" DisplayName="Project Members" />
         <TableItem TableName="st_employee" DisplayName="Employee (framework)" />

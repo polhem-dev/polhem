@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Packaged zh-TW captions for the Order form. The FormSchema carries the English captions
-     inline, so there is no en-US resource: FormSchemaLocalizer leaves a missing key's caption
-     untouched, which lands en-US back on the schema's own text with nothing duplicated.
+<!-- Packaged zh-TW captions and rule messages for the Order form. The FormSchema carries the
+     English text inline, so there is no en-US resource: a key missing here leaves the schema's own
+     caption or rule message in place, which lands en-US on that text with nothing duplicated.
      Customize/northwind-demo/Language/zh-TW/Order.Language.xml overrides two of these keys and
      inherits the rest — that per-key inheritance is the whole point of the customization layer. -->
 <LanguageResource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Namespace="Order" Lang="zh-TW">
@@ -30,6 +30,9 @@
     <LanguageItem Key="Field.unit_price.Caption" Value="單價" />
     <LanguageItem Key="Field.discount.Caption" Value="折扣" />
     <LanguageItem Key="Field.amount.Caption" Value="小計" />
+    <LanguageItem Key="Rule.customer_required.Message" Value="請為訂單選擇客戶。" />
+    <LanguageItem Key="Rule.product_required.Message" Value="每一筆明細都必須選擇產品。" />
+    <LanguageItem Key="Rule.quantity_positive.Message" Value="每一筆明細的數量都必須大於零。" />
   </Items>
   <Enums />
 </LanguageResource>

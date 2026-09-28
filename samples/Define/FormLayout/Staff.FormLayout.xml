@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FormLayout xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" LayoutId="Employee" ProgId="Employee" Caption="Employee">
+<FormLayout xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" LayoutId="Staff" ProgId="Staff" Caption="Staff">
   <Sections>
-    <LayoutSection Name="Main" Caption="Employee" ShowCaption="false">
+    <LayoutSection Name="Main" Caption="Staff" ShowCaption="false">
       <Fields>
         <LayoutField FieldName="sys_no" Caption="Sequence" />
         <LayoutField FieldName="sys_rowid" Caption="Row ID" />
-        <LayoutField FieldName="sys_id" Caption="Employee ID" />
-        <LayoutField FieldName="sys_name" Caption="Employee Name" />
+        <LayoutField FieldName="sys_id" Caption="Staff ID" />
+        <LayoutField FieldName="sys_name" Caption="Staff Name" />
         <LayoutField FieldName="hire_date" Caption="Hire Date" ControlType="DateEdit" />
         <LayoutField FieldName="is_active" Caption="Active" ControlType="CheckEdit" />
       </Fields>
     </LayoutSection>
   </Sections>
   <Details>
-    <LayoutGrid TableName="EmployeePhone" Caption="Employee Phones">
+    <LayoutGrid TableName="StaffPhone" Caption="Staff Phones">
       <Columns>
         <LayoutColumn FieldName="sys_no" Caption="Sequence" />
         <LayoutColumn FieldName="sys_rowid" Caption="Row ID" />

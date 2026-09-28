@@ -43,7 +43,7 @@ export class RpcError extends Error {
 
 /**
  * Calls a JSON-RPC method on the Polhem backend.
- * @param {string} method   e.g. "System.Login" or "Employee.GetList"
+ * @param {string} method   e.g. "System.Login" or "Staff.GetList"
  * @param {object} value    The args object (camelCase property names accepted).
  * @returns {Promise<object>} The result.value payload from the server.
  */
@@ -179,7 +179,8 @@ function elementToObject(el) {
   for (const child of el.children) {
     const key = camelCase(child.tagName);
     if (REPEATED_ELEMENTS.has(child.tagName)) {
-      (obj[key] ??= []).push(elementToObject(child));
+      if (!obj[key]) obj[key] = [];
+      obj[key].push(elementToObject(child));
       continue;
     }
     // A wrapper element (Sections, Fields, ...) holds a list; anything else is
@@ -215,7 +216,7 @@ function coerce(value) {
 /**
  * Builds a thin form-API wrapper for the given progId. Mirrors
  * FormApiConnector on the .NET side.
- * @param {string} progId  The FormSchema ProgId (e.g. "Employee").
+ * @param {string} progId  The FormSchema ProgId (e.g. "Staff").
  */
 export function formApi(progId) {
   return {

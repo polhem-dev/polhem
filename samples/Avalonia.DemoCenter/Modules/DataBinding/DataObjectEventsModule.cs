@@ -67,7 +67,7 @@ namespace Avalonia.DemoCenter.Modules.DataBinding
             return DataEditorParts.Compose(
                 data,
                 DataEditorParts.Section(
-                    "Master (Employee)",
+                    "Master (Staff)",
                     "Edit the fields below → FieldValueChanged.",
                     DataEditorParts.LabeledRow("emp_name", new TextEdit { FieldName = "emp_name" }),
                     DataEditorParts.LabeledRow("dept", new DropDownEdit { FieldName = "dept" }),

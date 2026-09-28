@@ -109,11 +109,11 @@ Console 會列出 `System.Ping` 狀態與自訂 BO 回應的訊息。完整 demo
 
 | 桌面 | Browser（WASM） |
 |---|---|
-| <img src="https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-desktop-order-detail.png" alt="桌面 — 訂單單筆" width="420"> | <img src="https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-browser-order-detail.png" alt="Browser — 訂單單筆" width="420"> |
+| <img src="https://raw.githubusercontent.com/polhem-dev/polhem/main/apps/Polhem.Northwind/docs/images/desktop-order-detail.png" alt="桌面 — 訂單單筆" width="420"> | <img src="https://raw.githubusercontent.com/polhem-dev/polhem/main/apps/Polhem.Northwind/docs/images/browser-order-detail.png" alt="Browser — 訂單單筆" width="420"> |
 
 | iOS | Android |
 |---|---|
-| <img src="https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-ios-order-detail.png" alt="iOS — 訂單單筆" width="200"> | <img src="https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-android-order-detail.png" alt="Android — 訂單單筆" width="200"> |
+| <img src="https://raw.githubusercontent.com/polhem-dev/polhem/main/apps/Polhem.Northwind/docs/images/ios-order-detail.png" alt="iOS — 訂單單筆" width="200"> | <img src="https://raw.githubusercontent.com/polhem-dev/polhem/main/apps/Polhem.Northwind/docs/images/android-order-detail.png" alt="Android — 訂單單筆" width="200"> |
 
 更多畫面、表單清單與執行方式：[`apps/Polhem.Northwind/README.zh-TW.md`](apps/Polhem.Northwind/README.zh-TW.md)。
 
@@ -124,7 +124,7 @@ Console 會列出 `System.Ping` 狀態與自訂 BO 回應的訊息。完整 demo
 | 類別 | Demo | 重點 |
 |------|------|------|
 | QuickStart | [`QuickStart.Server`](samples/QuickStart.Server/README.zh-TW.md) + [`QuickStart.Console`](samples/QuickStart.Console/README.zh-TW.md) | 最小 JSON-RPC 端到端，含一個 anonymous 自訂 BO |
-| Blazor Server | [`Blazor.Server.Demo`](samples/Blazor.Server.Demo/README.zh-TW.md) | `PolhemLoginPanel` + `FormPage` + Employee CRUD,走 `LocalApiProvider` in-process 派遣 |
+| Blazor Server | [`Blazor.Server.Demo`](samples/Blazor.Server.Demo/README.zh-TW.md) | `PolhemLoginPanel` + `FormPage` + Staff CRUD,走 `LocalApiProvider` in-process 派遣 |
 | Avalonia | [`Avalonia.DemoCenter`](samples/Avalonia.DemoCenter/README.zh-TW.md) | 主題導向控件 demo center（DevExpress 風格）：導覽樹（主題 → 案例）+ Demo/Source 分頁 + 主題/FormMode 工具列；涵蓋資料繫結、唯讀必填、FormMode、Layout、Grid、原生 vs 繼承比對（Semi.Avalonia，無後端） |
 | 純 JS | [`Web.Js.Demo`](samples/Web.Js.Demo/README.zh-TW.md) | 用瀏覽器原生 JavaScript 呼叫 JSON-RPC API — 前端無 .NET、無 npm |
 
@@ -239,6 +239,8 @@ grep -rnE "Bee\.|Bee[A-Z]|BEE_|BEE[0-9]{4}|dotnet[- ]bee|bee-(dynamic|form|login
 [MIT](LICENSE.txt)。Copyright (c) Polhem contributors。
 
 ## 📬 聯絡與關注
-歡迎追蹤我的技術筆記與實戰經驗分享
 
-[Facebook](https://www.facebook.com/profile.php?id=61574839666569) ｜ [HackMD](https://hackmd.io/@jeff377) ｜ [GitHub](https://github.com/jeff377) ｜ [NuGet](https://www.nuget.org/profiles/jeff377)
+Polhem 由 GitHub 上的 [polhem-dev](https://github.com/polhem-dev) 組織維護。
+
+- 提問、想法與作品分享：[GitHub Discussions](https://github.com/polhem-dev/polhem/discussions)
+- 錯誤回報與功能需求：[GitHub Issues](https://github.com/polhem-dev/polhem/issues)

@@ -61,7 +61,7 @@ public static class DemoBackend
         };
 
         // Framework tables the demo cannot run without. Their TableSchema files under Define/ are
-        // the demo's own definitions, committed like the Employee ones, and DemoSchemaSeeder
+        // the demo's own definitions, committed like the Staff ones, and DemoSchemaSeeder
         // creates them alongside those tables. The embedded defaults in Polhem.Definition are only
         // the starting point those files were first imported from: once a file exists here it is
         // authoritative, and a later change to the defaults is not meant to replace it.

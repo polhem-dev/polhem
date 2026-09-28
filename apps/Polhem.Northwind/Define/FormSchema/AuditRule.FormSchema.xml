@@ -18,7 +18,7 @@
 
   Like the shipped copy, the captions are English base text.
 -->
-<FormSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ProgId="AuditRule" DisplayName="Audit Rules" CategoryId="company" ListFields="sys_id,sys_name,change_mode,access_mode,is_sensitive">
+<FormSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ProgId="AuditRule" DisplayName="Audit Rule" CategoryId="company" ListFields="sys_id,sys_name,change_mode,access_mode,is_sensitive">
   <Tables>
     <FormTable TableName="AuditRule" DbTableName="st_audit_rule" DisplayName="Audit Rule">
       <Fields>

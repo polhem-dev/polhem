@@ -26,7 +26,7 @@
                 <span>Signed in as <strong>@DemoCredentials.DisplayName</strong> · @DemoCredentials.CompanyName</span>
                 <button type="button" @onclick="auth.Clear">Sign out</button>
             </div>
-            <FormPage ProgId="Employee" />
+            <FormPage ProgId="Staff" />
         </section>
     }
 </PolhemAccessTokenProvider>
@@ -35,7 +35,7 @@
     private string? _enterCompanyError;
 
     // Sign-in is two calls. Login says who the user is; EnterCompany says which company they work
-    // in, and the Employee form is company-scoped, so the token is published to the page only once
+    // in, and the Staff form is company-scoped, so the token is published to the page only once
     // both have succeeded. The demo has one company, so it is entered without asking.
     private async Task OnLoggedInAsync(PolhemAccessTokenProvider auth, LoginResponse response)
     {

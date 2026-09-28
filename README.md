@@ -110,11 +110,11 @@ The same Order form rendered by each head — same definitions, same controls, o
 
 | Desktop | Browser (WASM) |
 |---|---|
-| <img src="https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-desktop-order-detail.png" alt="Desktop — order detail" width="420"> | <img src="https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-browser-order-detail.png" alt="Browser — order detail" width="420"> |
+| <img src="https://raw.githubusercontent.com/polhem-dev/polhem/main/apps/Polhem.Northwind/docs/images/desktop-order-detail.png" alt="Desktop — order detail" width="420"> | <img src="https://raw.githubusercontent.com/polhem-dev/polhem/main/apps/Polhem.Northwind/docs/images/browser-order-detail.png" alt="Browser — order detail" width="420"> |
 
 | iOS | Android |
 |---|---|
-| <img src="https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-ios-order-detail.png" alt="iOS — order detail" width="200"> | <img src="https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-android-order-detail.png" alt="Android — order detail" width="200"> |
+| <img src="https://raw.githubusercontent.com/polhem-dev/polhem/main/apps/Polhem.Northwind/docs/images/ios-order-detail.png" alt="iOS — order detail" width="200"> | <img src="https://raw.githubusercontent.com/polhem-dev/polhem/main/apps/Polhem.Northwind/docs/images/android-order-detail.png" alt="Android — order detail" width="200"> |
 
 More screens, the form catalog, and how to run it: [`apps/Polhem.Northwind/README.md`](https://github.com/polhem-dev/polhem/blob/main/apps/Polhem.Northwind/README.md).
 
@@ -125,7 +125,7 @@ All demos live in-repo under [`samples/`](https://github.com/polhem-dev/polhem/b
 | Category | Demo | Shows |
 |----------|------|-------|
 | QuickStart | [`QuickStart.Server`](https://github.com/polhem-dev/polhem/blob/main/samples/QuickStart.Server/README.md) + [`QuickStart.Console`](https://github.com/polhem-dev/polhem/blob/main/samples/QuickStart.Console/README.md) | Minimal JSON-RPC end-to-end with a custom anonymous BO |
-| Blazor Server | [`Blazor.Server.Demo`](https://github.com/polhem-dev/polhem/blob/main/samples/Blazor.Server.Demo/README.md) | `PolhemLoginPanel` + `FormPage` + Employee CRUD, dispatched in-process via `LocalApiProvider` |
+| Blazor Server | [`Blazor.Server.Demo`](https://github.com/polhem-dev/polhem/blob/main/samples/Blazor.Server.Demo/README.md) | `PolhemLoginPanel` + `FormPage` + Staff CRUD, dispatched in-process via `LocalApiProvider` |
 | Avalonia | [`Avalonia.DemoCenter`](https://github.com/polhem-dev/polhem/blob/main/samples/Avalonia.DemoCenter/README.md) | Theme-oriented control demo center (DevExpress-style): nav tree (theme → case) + Demo/Source tabs + theme/FormMode toolbar; covers data binding, read-only/required, FormMode, layout, grid, native-vs-inherited parity (Semi.Avalonia, no backend) |
 | Pure JS | [`Web.Js.Demo`](https://github.com/polhem-dev/polhem/blob/main/samples/Web.Js.Demo/README.md) | Calling the JSON-RPC API from vanilla JavaScript in a browser — no .NET on the client, no npm |
 
@@ -251,6 +251,8 @@ See [CONTRIBUTING.md](https://github.com/polhem-dev/polhem/blob/main/CONTRIBUTIN
 [MIT](https://github.com/polhem-dev/polhem/blob/main/LICENSE.txt). Copyright (c) Polhem contributors.
 
 ## 📬 Contact & Follow
-You're welcome to follow my technical notes and hands-on experience sharing
 
-[Facebook](https://www.facebook.com/profile.php?id=61574839666569) | [HackMD](https://hackmd.io/@jeff377) | [GitHub](https://github.com/jeff377) | [NuGet](https://www.nuget.org/profiles/jeff377)
+Polhem is maintained by the [polhem-dev](https://github.com/polhem-dev) organisation on GitHub.
+
+- Questions, ideas and show-and-tell: [GitHub Discussions](https://github.com/polhem-dev/polhem/discussions)
+- Bug reports and feature requests: [GitHub Issues](https://github.com/polhem-dev/polhem/issues)
