@@ -179,8 +179,9 @@ the inherited `Parameters`**, then `.Build()`. New closed generics and enums go 
 **Then regenerate the published contract.** `WireContractGeneratorTests` fails when the message types no longer match
 `wire-contracts/messages.d.ts`; the regeneration command is in `wire-contracts/README.md`. If the change touches the
 envelope of an `object` member or the shape of a `DataTable` / enum, `WireFixtureTests` fails as well
-(`wire-fixtures/README.md`). A diff in either folder turns the CI of `polhem-connector-js` red on purpose; arrange
-that side too (`rules/serialization.md` § Wire shape changes have a downstream in another repository).
+(`wire-fixtures/README.md`). A diff in either folder turns the CI of `polhem-connector-js` red once it is released and
+that repository moves to the new tag; plan that side for the same release (`rules/serialization.md` § Wire shape
+changes have a downstream in another repository).
 
 ### Layer 3: action constant (`Polhem.Definition/<Axis>Actions.cs`)
 
