@@ -20,9 +20,9 @@ dotnet run
 
 第一次啟動會：
 
-1. 從 `samples/Define/` 載入 `SystemSettings.xml` / `DbCategorySettings.xml` / `DatabaseSettings.xml`
+1. 載入 `samples/Define/` 下的定義，包括 `SystemSettings.xml`、`DatabaseSettings.xml` 與 `ProgramSettings.xml`（把 `Echo` progId 綁到本範例的業務物件）
 2. 從環境變數 `POLHEM_MASTER_KEY` 取得 master key。demo bootstrap (`DemoBackend.AddPolhemBackend`) 在變數未設時會自動注入硬編碼的 demo 值,所以 fresh clone 可零設定直接跑。
-3. 在工作目錄產生 `quickstart.db`(已被 `.gitignore`)
+3. 在專案資料夾產生 `quickstart.db`（SQLite，已被 `.gitignore`），並由 `DemoSchemaSeeder` 建表灌種子
 
 console 應顯示 `Now listening on: http://localhost:5050`。
 
@@ -34,15 +34,17 @@ console 應顯示 `Now listening on: http://localhost:5050`。
 
 ## 對應到哪些 library 功能
 
+`Program.cs` 之所以很短，是因為後端接線放在共用的 [`DemoBackend`](../Polhem.Samples.Shared/DemoBackend.cs)（`AddPolhemBackend` / `UsePolhemBackend`），Blazor demo 也用同一份。下表的呼叫除另有註明外都在該檔。
+
 | 程式段落 | library 功能 |
 |----------|--------------|
-| `DbProviderRegistry.Register(DatabaseType.SQLite, SqliteFactory.Instance)` | `Polhem.Db.Manager.DbProviderRegistry` — ADO.NET provider 切換 |
+| `DbProviderRegistry.Register(DatabaseType.SQLite, new SqliteProviderFactory(SqliteFactory.Instance))` | `Polhem.Db.Manager.DbProviderRegistry` — ADO.NET provider 切換。`SqliteProviderFactory` 包住驅動程式的 factory，因為後者本身沒有 data adapter |
 | `DbDialectRegistry.Register(DatabaseType.SQLite, new SqliteDialectFactory())` | `Polhem.Db.Providers.Sqlite` — SQLite dialect（form CRUD / schema 反射 / DDL） |
 | `SystemSettingsLoader.Load(paths)` | `Polhem.Definition.SystemSettingsLoader` — boot-time 載入 XML |
 | `services.AddPolhemFramework(...)` | `Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions` — backend composition root |
-| `IBoTypeResolver` override | `Polhem.Business.IBoTypeResolver` — 自訂 progId → BO type 對應 |
-| `: ApiServiceController` 空殼 controller | `Polhem.Api.AspNetCore.Controllers.ApiServiceController` — `[Route("api")]` JSON-RPC endpoint |
-| `[ApiAccessControl(Public, Anonymous)]` | `Polhem.Definition.Attributes.ApiAccessControlAttribute` — API 存取控制 |
+| `samples/Define/ProgramSettings.xml` 裡的 `<ProgramItem ProgId="Echo" BusinessObject="…" />` | `Polhem.Definition.Settings.ProgramSettings` — progId → 業務物件的註冊表；綁定不需要任何程式碼 |
+| `: ApiServiceController` 空殼 controller（`Controllers/ApiController.cs`） | `Polhem.Api.AspNetCore.Controllers.ApiServiceController` — `[Route("api")]` JSON-RPC endpoint |
+| `[ApiAccessControl(Public, Anonymous)]`（`BusinessObjects/EchoBusinessObject.cs`） | `Polhem.Definition.Attributes.ApiAccessControlAttribute` — API 存取控制 |
 
 ## 試打看看（不啟動 console demo 的情況下）
 
@@ -54,8 +56,8 @@ curl -s -X POST http://localhost:5050/api \
         "jsonrpc": "2.0",
         "id": "1",
         "method": "Echo.Echo",
-        "params": { "Value": { "Message": "hello" } }
+        "params": { "format": 0, "value": { "message": "hello" } }
       }'
 ```
 
-預期回 JSON-RPC `result.value`，其中 `Response = "echo: hello"`。
+預期回一個 JSON-RPC envelope，其 `result.value.response` 為 `"echo: hello"`。payload 的屬性名稱是精確比對的小寫（`format`、`value`）；寫成 `Value` 時業務物件收不到參數，呼叫會失敗。`format: 0` 即 `Plain`，`Echo` 宣告為 `Public`，所以接受它。

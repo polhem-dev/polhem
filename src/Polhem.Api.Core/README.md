@@ -1,6 +1,6 @@
 # Polhem.Api.Core
 
-> Core API framework handling JSON-RPC execution, payload encryption pipeline, authorization validation, and type mapping.
+> Core API framework handling JSON-RPC execution, the payload encryption pipeline, authorization validation, and type mapping.
 
 [繁體中文](README.zh-TW.md)
 
@@ -17,44 +17,62 @@
 
 ### JSON-RPC Execution
 
-- `JsonRpcExecutor` -- parses `ProgId.Action` method identifiers, creates business objects via reflection, and invokes the target method.
+- `JsonRpcExecutor` -- parses `ProgId.Action` method identifiers, obtains the business object from
+  `IBusinessObjectFactory`, and invokes the target method. Which methods an action name can reach is decided by
+  `JsonRpcExecutor.IsResolvableAction`.
 - `JsonRpcRequest` / `JsonRpcResponse` / `JsonRpcError` -- standard JSON-RPC 2.0 message types.
 - `ApiPayload` / `ApiPayloadConverter` -- payload wrapping and conversion for JSON-RPC transport.
-- Exception sanitization -- internal error details are hidden from clients in production environments.
+- Error responses -- a framework exception meant for the end user (`UserMessageException` and related types)
+  reaches the caller with its message; other exceptions answer a fixed message per error code, and the real
+  message goes to `JsonRpcExecutor.Logger`.
 
 ### Payload Security Pipeline
 
 - `ApiPayloadTransformer` -- orchestrates the Serialize -> Compress -> Encrypt pipeline (and the reverse on inbound payloads).
-- `IApiPayloadSerializer` / `MessagePackPayloadSerializer` -- pluggable serialization via MessagePack.
+- `IApiPayloadSerializer` -- the body codec. `MessagePackPayloadSerializer` and `JsonPayloadSerializer` ship with
+  the framework (names in `PayloadCodecNames`); others are added with `ApiServiceOptions.RegisterPayloadCodec`.
 - `IApiPayloadCompressor` / `GzipPayloadCompressor` -- pluggable Gzip compression.
 - `IApiPayloadEncryptor` / `AesPayloadEncryptor` -- pluggable AES-CBC-HMAC encryption.
-- `NoEncryptionEncryptor` -- bypass encryptor for testing only.
-- `ApiPayloadOptionsFactory` -- creates pipeline options based on protection level.
+- `ApiPayloadOptionsFactory` -- creates the compressor and encryptor named in the deployment's `ApiPayloadOptions`.
+
+### Body Codec Negotiation
+
+The body codec of an `Encoded` or `Encrypted` payload is not a deployment setting: each request declares it in the
+payload envelope and the server answers with the same codec. A request that declares none is read as MessagePack,
+which is what every client that predates negotiation sends. On the client, `ApiConnector.PayloadCodec`
+(`Polhem.Api.Client`) chooses it. See [ADR-044](../../docs/adr/adr-044-payload-codec-negotiation.md).
 
 ### Anti-Replay (optional, off by default)
 
-- `ApiPayloadFrame` -- timestamp and sequence number carried inside the encrypted envelope, ahead of the payload body.
-- `ReplayWindow` / `IReplayWindowStore` -- per-session sliding window of sequence numbers (64-slot bitmap, no database round trip).
+- `ApiPayloadFrame` -- timestamp and sequence number carried inside the envelope, ahead of the payload body.
+- `IReplayWindowStore` -- decides per session, in one atomic call, whether a sequence number may be accepted.
+  The default `MemoryReplayWindowStore` keeps a sliding window in process memory; a multi-node deployment can
+  implement the interface over a shared store and assign it to `ApiServiceOptions.ReplayWindowStore`.
 - `ApiServiceOptions.RequireWireFrame` -- the master switch; **client and server must be set to the same value**.
-- `ApiReplayProtection` -- third dimension of `ApiAccessControlAttribute`, declaring per method whether sequences are checked.
+- `ApiReplayProtection` -- third dimension of `ApiAccessControlAttribute`, declaring per method whether sequences
+  are checked. A host built with `AddPolhemFramework` logs a startup warning when methods declare it while the
+  frame is off.
 
-Covers `Encoded` and `Encrypted` only. `Plain` has no envelope, so any anti-replay field could be
-rewritten and none is sent; `Encoded` carries a frame but has no HMAC, so it only stops a verbatim
-resend. See [ADR-042](../../docs/adr/adr-042-api-replay-protection.md) for the full boundary,
-rollout order and known limitations.
+Sequence checks apply to `Encrypted` payloads, where the payload HMAC covers the frame. A `Plain` call carries no
+frame and is not checked, and an `Encoded` frame is not authenticated, so declare replay-protected methods at the
+`Encrypted` protection level. See [ADR-042](../../docs/adr/adr-042-api-replay-protection.md) for the rollout order
+and the details.
 
 ### Authorization & Access Control
 
 - `IApiAuthorizationValidator` / `ApiAuthorizationValidator` -- validates authorization context for incoming requests.
 - `ApiAuthorizationContext` / `ApiAuthorizationResult` -- authorization input and outcome types.
 - `ApiAccessValidator` -- enforces method-level protection via `ApiAccessControlAttribute`.
-- `ApiCallContext` -- captures per-call metadata (token, protection level, caller identity).
+- `ApiCallContext` -- per-call metadata (token, protection level, caller identity).
 
 ### Type Mapping
 
-- `ApiInputConverter` -- converts raw JSON-RPC parameters to strongly-typed request objects.
+- `ApiOutputConverter` -- converts a business object result into the wire response type (property copy by name;
+  the inbound direction is internal).
 - `ApiHeaders` -- standard header constants for API communication.
-- `PayloadFormat` -- enum defining protection levels (`Plain`, `Encoded`, `Encrypted`).
+- `PayloadFormat` -- how a payload travels: `Plain`, `Encoded` (serialized and compressed) or `Encrypted`.
+- `DateTimeWireGuard` -- enforces the date and time wire invariants of
+  [ADR-032](../../docs/adr/adr-032-datetime-timezone.md) on the responses that carry them.
 
 ### MessagePack Infrastructure
 
@@ -62,7 +80,7 @@ rollout order and known limitations.
 > they are not part of the package's public surface — use `MessagePackPayloadSerializer` (public)
 > to reach the same pipeline.
 
-- `SafeMessagePackSerializerOptions` -- type whitelist for deserialization to prevent untrusted-type attacks.
+- `SafeMessagePackSerializerOptions` / `WireTypeWhitelist` -- restrict deserialization to an allow-list of types.
 - `MessagePackCodec` -- encoder/decoder for MessagePack serialization.
 - `WireContracts` -- the explicit formatter registrations for every wire type. The contractless
   resolver is a desktop-only convenience, not the carrying mechanism: .NET for iOS turns dynamic
@@ -71,66 +89,46 @@ rollout order and known limitations.
 - `WireValueFormatter` -- discriminated envelope for `object`-typed members (filter values,
   parameter values, table cells).
 
-### Built-in System Operations
+### Built-in Messages
 
-- Built-in request/response types for `Login`, `Ping`, `CreateSession`, `GetDefine`, `SaveDefine`, `ExecFunc`, and other system-level operations.
+- Request/response types for the built-in operations live in `Messages/System/` (login, sessions, companies,
+  definitions, API keys), `Messages/Form/` (list, data, save, delete, lookup) and `Messages/AuditLog/`;
+  `ExecFuncRequest` / `ExecFuncResponse` sit in `Messages/`.
 
 ## Key Public APIs
 
 | Class / Interface | Purpose |
 |-------------------|---------|
 | `JsonRpcExecutor` | Parses `ProgId.Action`, creates BO, invokes method |
-| `ApiServiceOptions` | Static DI registry for pluggable components |
+| `ApiServiceOptions` | Process-wide configuration of the pipeline components, codecs, authorization validator and replay store |
 | `ApiPayloadTransformer` | Serialize -> Compress -> Encrypt pipeline |
 | `ApiAccessValidator` | Method-level protection via `ApiAccessControlAttribute` |
-| `PayloadFormat` | Protection level enum (`Plain`, `Encoded`, `Encrypted`) |
+| `PayloadFormat` | Payload format enum (`Plain`, `Encoded`, `Encrypted`) |
 | `ApiAuthorizationValidator` | Request authorization validation |
 | `ApiCallContext` | Per-call metadata (token, protection, identity) |
-| `ApiPayloadOptionsFactory` | Pipeline options based on protection level |
+| `IReplayWindowStore` | Replaceable per-session sequence check |
 
 ## Design Conventions
 
 - **Strategy Pattern** -- serializer, compressor, and encryptor are injected via interfaces (`IApiPayloadSerializer`, `IApiPayloadCompressor`, `IApiPayloadEncryptor`), allowing each stage to be replaced independently.
-- **Strict pipeline ordering** -- the payload transformer enforces Serialize -> Compress -> Encrypt on outbound and Decrypt -> Decompress -> Deserialize on inbound; the order must not be altered.
-- **Type whitelist** -- `SafeMessagePackSerializerOptions` restricts deserializable types to an explicit allow-list, preventing deserialization attacks.
+- **Strict pipeline ordering** -- the payload transformer runs Serialize -> Compress -> Encrypt on outbound and Decrypt -> Decompress -> Deserialize on inbound; the order must not be altered.
+- **Type whitelist** -- MessagePack deserialization accepts only an explicit allow-list of types.
 - **Reflection-based dispatch** -- `JsonRpcExecutor` resolves and invokes business object methods by name, decoupling the transport layer from concrete BO types.
-- **Exception sanitization** -- internal exception details are stripped from responses in non-development environments to avoid information leakage.
-- **Three protection levels** -- `Public` (no auth), `Encoded` (token + Base64), `Encrypted` (token + full encryption) provide graduated security via `ApiAccessControlAttribute`.
+- **Protection levels** -- `ApiAccessControlAttribute` declares a method's `ApiProtectionLevel` and `ApiAccessRequirement`; the members and their meaning are in the XML documentation of those enums (`Polhem.Definition.Security`).
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
 
 ## Directory Structure
 
-```
-Polhem.Api.Core/
-  Authorization/    IApiAuthorizationValidator, ApiAuthorizationValidator,
-                    ApiAuthorizationContext, ApiAuthorizationResult
-  Conversion/       ApiInputConverter, ApiOutputConverter
-                    (.NET object-model conversion: API type <-> BO type)
-  Json/             WireValueJsonConverter
-                    (JSON body codec's discriminated envelope for `object` members)
-  JsonRpc/          JsonRpcExecutor, JsonRpcRequest, JsonRpcResponse, JsonRpcError,
-                    JsonRpcException, ApiPayload, ApiPayloadConverter
-  Messages/         ApiMessageBase, ApiRequest, ApiResponse,
-                    ExecFuncRequest, ExecFuncResponse,
-                    ApiHeaders, PayloadFormat, ApiCallContext
-    System/         Built-in system-level request/response types
-                    (Login, Ping, CreateSession, GetDefine, SaveDefine,
-                    GetCommonConfiguration)
-  MessagePack/      SafeMessagePackSerializerOptions, MessagePackCodec,
-                    WireContracts (explicit registrations), WireValueFormatter,
-                    custom formatters for ADO.NET types
-  Transformers/     IApiPayloadTransformer, ApiPayloadTransformer,
-                    IApiPayloadSerializer, MessagePackPayloadSerializer,
-                    IApiPayloadCompressor, GzipPayloadCompressor,
-                    IApiPayloadEncryptor, AesPayloadEncryptor,
-                    NoEncryptionEncryptor, ApiPayloadOptionsFactory,
-                    JsonPayloadSerializer, PayloadCodecNames
-                    (byte-level payload pipeline; distinct from Conversion's
-                    .NET object-level type mapping)
-  Validator/        ApiAccessValidator
-  Wire/             WireValueCode (the discriminator both wires share)
-  (root)            ApiServiceOptions (user-facing startup configuration)
-```
+- `Authorization/` -- `IApiAuthorizationValidator`, `ApiAuthorizationValidator`, `ApiAuthorizationContext`, `ApiAuthorizationResult`
+- `Conversion/` -- .NET object-model conversion between API and BO types (`ApiOutputConverter`)
+- `Json/` -- JSON converters for `object`-typed members
+- `JsonRpc/` -- `JsonRpcExecutor`, the JSON-RPC message types, `ApiPayload`, `ApiPayloadFrame`, `IReplayWindowStore`, `DateTimeWireGuard`
+- `Messages/` -- `ApiRequest`, `ApiResponse`, `ApiHeaders`, `PayloadFormat`, `ExecFunc*`, and the `System/`, `Form/` and `AuditLog/` messages
+- `MessagePack/` -- the internal MessagePack infrastructure and formatters
+- `Transformers/` -- the byte-level payload pipeline (serializers, compressor, encryptor, `ApiPayloadOptionsFactory`, `PayloadCodecNames`)
+- `Validator/` -- `ApiAccessValidator`, `ApiCallContext`
+- `Wire/` -- `WireValueCode` (the discriminator both wires share)
+- project root -- `ApiServiceOptions` (startup configuration)
 
 The namespace layout follows the design principles in [ADR-008](../../docs/adr/adr-008-polhem-db-namespace-layout.md):
 contracts grouped by responsibility (`Messages` for message types, `Conversion` for type

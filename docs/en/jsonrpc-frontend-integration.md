@@ -197,11 +197,11 @@ in again.
 
 Some methods require entering a company first (`System.EnterCompany`) to set
 `SessionInfo.CompanyId` — this routes form CRUD to the company-specific database. A form whose
-`CategoryId` is `company` called without a company answers `-32002` (`CompanyNotEntered`). The
-samples' `Employee` form is declared in the `common` scope so the demo runs without
-`EnterCompany`; it replaces the framework's own `Employee` form, which is company-scoped
-(`st_employee`, see [Framework-Reserved Names](framework-reserved-names.md)). Business forms of
-your own belong in `company`.
+`CategoryId` is `company` called without a company answers `-32002` (`CompanyNotEntered`).
+Business forms belong in `company`, and the samples' `Employee` form is no exception: every sample
+client calls `EnterCompany` right after `Login`, with the one company the demo backend seeds
+(`DEMO`). That form replaces the framework's own `Employee` form (`st_employee`, see
+[Framework-Reserved Names](framework-reserved-names.md)), which is company-scoped too.
 
 ---
 

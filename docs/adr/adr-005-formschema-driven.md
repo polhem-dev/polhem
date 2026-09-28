@@ -51,13 +51,19 @@ business logic at the same time.
 - `Polhem.Definition/Forms/FormSchema.cs`: the definition hub, containing all fields, tables and relations
 - `Polhem.Definition/Database/TableSchema.cs`: the projection onto the database dimension, derived from FormSchema
 - `Polhem.Definition/Layouts/FormLayout.cs`: the projection onto the UI dimension
-- `Polhem.Db/Providers/SqlServer/SqlFormCommandBuilder.cs`: generates SQL automatically from FormSchema
+- The `IFormCommandBuilder` implementation of each provider under `Polhem.Db/Providers/` (such as
+  `SqlServer/SqlFormCommandBuilder.cs`): generates SQL automatically from FormSchema
 - `Polhem.Db/Dml/SelectCommandBuilder.cs`: assembles SELECT / FROM / WHERE / ORDER BY
 - The architecture is described in detail in `docs/en/architecture-overview.md`
 - The concrete pattern of the data access layer (FormMap) is described in `docs/formmap.zh-TW.md`
-  — **that document was removed together with the name, as described in the postscript below**.
+  — **that document was removed together with the name, as described under "Implementation evolution" below**.
 
-## Postscript (2026-08-13): the name "FormMap" has been dropped
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+### 2026-08-13: the name "FormMap" has been dropped
 
 **FormMap**, mentioned above, was the name given at the time to the approach of "dynamically generating SQL at
 runtime from the definition, one `FormSchema` at a time". The name never corresponded to any type, interface or
@@ -70,3 +76,12 @@ table, and the document now lives at [`en/formschema-data-access.md`](../en/form
 "FormSchema-Driven Database Access".
 
 The text above keeps its original wording, to preserve the context of the decision at the time.
+
+### 2026-09-27: what checks the consistency
+
+"Guaranteed consistency" under "Rationale" names no mechanism. What checks it now are the definition analyzers in
+`src/Polhem.Analyzers/`, which report at build time, among others: POLHEM2001 (a FormSchema table is not registered
+under its category in DbCategorySettings), POLHEM2002 (a FormSchema table has no TableSchema), POLHEM2005 (a FormSchema
+has no FormLayout) and POLHEM2006 (a persisted FormSchema field is missing from the TableSchema). They read the
+definition files a project supplies as `AdditionalFiles` (by default the package's `buildTransitive` targets supply
+`Define\**\*.xml`), so a definition file changed outside a build is not checked by them.

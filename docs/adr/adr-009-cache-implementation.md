@@ -180,6 +180,34 @@ negative caching.
 - Existing tests that rely on the side effect of "`CreateInstance` is called every time" will fail; when this landed,
   the related expectations in `KeyObjectCacheTests` were fixed along the way
 
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: file watching.** `ChangeMonitorFilePaths` no longer goes through `PhysicalFileProvider.Watch`, and
+  `Microsoft.Extensions.FileProviders.Physical` is not referenced. `MemoryCacheProvider` adds its own lazy
+  `FileModificationToken`, which compares the file's last write time with a baseline taken before the load, and
+  re-reads it at most once per second per entry (`FileWriteTime.RecheckInterval`). "No customization file" answers
+  are likewise remembered for a second and dropped on save. See `src/Polhem.ObjectCaching/Providers/MemoryCacheProvider.cs`.
+- **2026-09-27: fills that race an invalidation.** A cache fill reads the invalidation state before loading and
+  discards what it stored if that state changed in the meantime (`src/Polhem.ObjectCaching/CacheInvalidation.cs`),
+  for the definition file caches and the database-dependent caches alike.
+- **2026-09-27: sessions are rebuilt, and misses of caller-supplied keys are capped.** `SessionInfoCache.CreateInstance`
+  no longer always returns null: it rebuilds a session from `st_session` through
+  `ICacheDataSourceProvider.GetSessionInfo`. It therefore uses negative caching again, and so does `ApiKeyCache`: both
+  keep a miss for one minute in a capped set (`BoundedMissMarkers`) instead of in the shared provider, because their
+  keys come from the caller. The other `KeyObjectCache<T>` subclasses (the definition caches `FormSchemaCache`,
+  `TableSchemaCache`, `FormLayoutCache` and `LanguageResourceCache`, and the database-dependent `CompanyInfoCache`,
+  `CompanyRolePermissionsCache`, `CompanyAuditRulesCache`, `DepartmentTreeCache` and `ApiKeyGateCache`) keep the
+  default. The current list of caches is in [Caching](../en/caching.md).
+- **2026-09-27: cache size.** The provider still sets no `SizeLimit`, but the premise under "Default configuration"
+  (a few dozen cached objects) no longer holds: the session and API key caches hold an entry per active token or key,
+  so their size follows traffic.
+- **2026-09-27: dependency injection.** Alternative 4 was rejected for consistency with the service locator
+  (`CacheInfo.Provider`). [ADR-011](adr-011-di-replaces-service-locator.md) later moved the framework to DI; the cache
+  provider itself is still the process-wide `CacheInfo.Provider`, chosen through `BackendComponents.CacheProvider`.
+
 ## Related documents
 
 - Mechanism overview: [Caching](../en/caching.md) (read path, invalidation signals, list of caches)

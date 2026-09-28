@@ -35,7 +35,8 @@ completely unaffected.**
 
 1. **The code default changes to `Environment`**
 
-   The `MasterKeySource` ctor defaults to `Type = MasterKeySourceType.Environment`, `Value = "POLHEM_MASTER_KEY"`:
+   The `MasterKeySource` ctor defaults to `Type = MasterKeySourceType.Environment` and leaves `Value` empty;
+   `MasterKeyProvider` reads `POLHEM_MASTER_KEY` when an Environment source names no variable:
 
    - A new deployment that does not set a `<MasterKeySource>` block explicitly → reads from `$POLHEM_MASTER_KEY`
    - An existing `SystemSettings.xml` that explicitly says `<Type>File</Type>` → **unaffected**, keeps reading from
@@ -221,3 +222,19 @@ pre-stable policy the version is released as a minor (4.6.0), consistent with v4
 - **A second level of indirection for the `Value` contents (such as `$POLHEM_MASTER_KEY_FILE` pointing to a file path,
   which is then read)** — for scenarios where a secret management tool produces a short-lived file; deployment tools
   injecting the env var directly already covers this, so no second level is introduced
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing
+with the current code:
+
+- **2026-09-27: Auto-creating a missing master key is an explicit opt-in.** `AddPolhemFramework(configuration,
+  pathOptions)` fails when the master key is missing; only the overload with `autoCreateMasterKey: true` creates one
+  (`src/Polhem.Hosting/PolhemFrameworkServiceCollectionExtensions.cs`,
+  `src/Polhem.Definition/Security/MasterKeyProvider.cs`). For a File source it creates the key file with owner-only permissions in the same step; for an Environment source it
+  generates a key and sets it on the current process environment only, which is the per-run key rejected above, so
+  it suits only hosts whose encrypted data does not outlive the process. The sample and test bootstraps pass `true`
+  but set the demo or test key before, so they read the fixed key.
+- **2026-09-27: Migration hint for the Bee.NET variable.** When `POLHEM_MASTER_KEY` is missing but `BEE_MASTER_KEY`
+  (the Bee.NET default) is set, the error says so and names the two ways to fix it: rename the variable, or name it in
+  the `MasterKeySource` of `SystemSettings.xml`.

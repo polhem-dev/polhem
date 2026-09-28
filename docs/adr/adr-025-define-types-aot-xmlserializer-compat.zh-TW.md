@@ -1,4 +1,4 @@
-<!-- source: adr/adr-025-define-types-aot-xmlserializer-compat.md blob: 1e8b51643ab2659ed1a30fe24f93a18a04e90c3f -->
+<!-- source: adr/adr-025-define-types-aot-xmlserializer-compat.md blob: 99f5e8b45b1cb4649a6d50cdca2a7ec4cccf00bc -->
 # ADR-025：定義型別相容 AOT reflection XmlSerializer（單一 Add + 無參數建構子）
 
 [English](adr-025-define-types-aot-xmlserializer-compat.md)
@@ -44,4 +44,20 @@ Polhem 的定義型別（`FormSchema`、`TableSchema`、`ProgramSettings`、`For
   1. **只暴露一個 public instance `Add`**（繼承的強型別 `Add(T)`）；便利多載一律以**擴充方法**提供。
   2. **必備 public 無參數建構子**（owner-coupled 集合除了 owner 建構子外，補一個 `: base()`）。
   3. 序列化的 **item 型別亦須有 public 無參數建構子**。
-  以 reflection XmlSerializer 相容為硬性要求，避免未來新型別再於 AOT 目標踩雷。
+  以 reflection XmlSerializer 相容為硬性要求，避免未來新型別再於 AOT 目標踩雷。目前執行這些規範的 analyzer 與測試列於下方「實作演進」。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-08-09：D1 提到的 `MessagePack*CollectionBase<T>` 基底已不存在。** 它們已由
+  [ADR-036](adr-036-wire-serialization-externalized.zh-TW.md) 併回 `Polhem.Base.Collections` 的基底；D1 即適用於那些基底。
+- **2026-09-27：執行後續規範的機制。** analyzer POLHEM4005（warning）回報宣告了額外 public `Add` 多載的框架集合，
+  POLHEM4006（error）回報沒有 public 無參數建構子的框架集合或集合 item（`src/Polhem.Analyzers/DiagnosticIds.cs`）。
+  抽象型別不會由反序列化器建構，因此不在規範內；`KeyCollectionBase<T>` 與 `CollectionBase<T>` 現在都是抽象類別、
+  建構子為 protected，規範套用在它們的具體子類別上。`XmlSerializerShapeGateTests`（`tests/Polhem.Definition.UnitTests`）
+  走訪定義檔可觸及的每個型別，檢查同樣的型別形狀規範，另加一條 reflection-only 序列化器要求的：對應到重複 `[XmlElement]`
+  的集合屬性必須有 public setter。
+- **2026-09-27：空集合改由 `XSpecified` 屬性省略。** 過去決定空集合是否寫出的逐物件序列化狀態已移除，因為序列化快取中的
+  定義會改動它。空集合現在由唯讀的 `{Property}Specified` 屬性省略。沒有採用 `ShouldSerialize{Property}()`，因為 iOS 上
+  reflection-only 的 XmlSerializer 在該方法宣告於基底類別時會擲例外。

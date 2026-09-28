@@ -1,4 +1,4 @@
-<!-- source: adr/adr-036-wire-serialization-externalized.md blob: 7fae057e22fbe13f034776029346e2b55cc0ef22 -->
+<!-- source: adr/adr-036-wire-serialization-externalized.md blob: 2f5eff703de73e9398636b3e3f0cb99d8bb02e38 -->
 # ADR-036：傳輸序列化外置至 API 層，定義層不再承載 MessagePack
 
 [English](adr-036-wire-serialization-externalized.md)
@@ -229,3 +229,14 @@ ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對�
 `BEE4001`–`BEE4004` 發佈；此處的 `POLHEM` 拼法來自更名。Polhem 從未以這些編號發佈規則：它的 analyzer 發佈紀錄從
 1.0.0 開始，`POLHEM4001`–`POLHEM4004` 為保留編號、永不重用，因此從 Bee.NET 帶過來的抑制設定不會讓新規則失聲。保留編號列於
 [Analyzer 規則](../zh-TW/analyzer-rules.md)。
+
+- **2026-08-10：contractless 已不在機制之中。** 決策一節「未列出的型別由 `ContractlessStandardResolver` 處理」與
+  代價一節「由 contractless 自動處理，不需任何動作」，已由 [ADR-037](adr-037-wire-explicit-registration.zh-TW.md)
+  取代：每個 wire 型別一律顯式註冊 formatter（原因見上文〈未決事項〉）。因此決策一節的 formatter 表不是完整清單；
+  已註冊的 formatter 以 `src/Polhem.Api.Core/MessagePack/` 下的檔案與其 `WireContracts.*.cs` 的註冊為準。
+- **`WireMemberCount` 已不存在，而且它從未守住任何東西。** 〈手寫的代價與防護〉所述的防護，是拿 formatter 自己寫出的
+  map header 與同一個 formatter 自己宣告的常數比較，因此不可能失敗。現行的漂移檢查是 `WireContractDriftTests`
+  （`tests/Polhem.Api.Core.UnitTests/`）：每個手寫 formatter 實作 `IWireContract` 並公開 `WireMemberNames`，
+  測試拿這份清單與型別的現行形狀比較，並拿註冊清單與 wire 型別閉包比較。只有採預設 `Always` 條件的 `[JsonIgnore]`
+  會把成員排除在 wire 之外，遇到無法辨識的成員形狀測試即失敗。
+  `WireCodecParityTests` 讓每個已註冊的合約經兩種 body codec 來回，逐成員比較，能抓到 formatter 寫出卻沒讀回的成員。

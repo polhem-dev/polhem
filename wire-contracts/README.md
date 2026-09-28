@@ -14,7 +14,7 @@ silently missing, not an error. Generating it makes the table a derivative rathe
 | File | Contents |
 |------|----------|
 | `messages.d.ts` | The message types as TypeScript interfaces |
-| `type-names.ts` | Assembly-qualified type names, which an encoded payload must carry in its envelope |
+| `type-names.ts` | Assembly-qualified type names. An encoded payload carries one in its envelope, and it must name the type the addressed method takes |
 
 ## What these describe
 
@@ -22,7 +22,10 @@ The **JSON shape on the wire**, not the CLR declarations:
 
 - `Guid` and `DateTime` are `string`, because that is what they are in JSON.
 - Enums are string literal unions — the server writes them with `JsonStringEnumConverter`.
-- An `object`-typed member is `WireValue`, the discriminated `[code, value]` envelope.
+- An `object`-typed member is `WireValueEnvelope`, the discriminated `[code, value]` envelope.
+- A member is optional (`?`) when the JSON wires may leave it out, and absent means the CLR default.
+  A value-typed member is required only where the server always writes it, because its initial
+  value in .NET is not the CLR default.
 - `DataSet` and `DataTable` follow their custom converters, which reflection cannot see; those
   few shapes are hand-written in the generator's preamble.
 

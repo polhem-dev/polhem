@@ -1,4 +1,4 @@
-<!-- source: adr/README.md blob: bc44a7f1fdd95b5060f8bc9dd35bb8b88e480311 -->
+<!-- source: adr/README.md blob: 171192c0306d5a342c6fc897ca3ea1628de13338 -->
 # 架構決策紀錄（ADR）索引
 
 [English](README.md)
@@ -9,6 +9,11 @@ ADR 記錄**決策當下的脈絡與理由**，是理解「為何這樣設計」
 
 > ADR 不隨實作演進改寫。決策被推翻時標記為「已取代」並指向新的 ADR；
 > 實作細節偏離但決策仍成立時，於文末加〈實作演進〉段落說明，原文保留。
+
+> Polhem 以新名稱延續 Bee.NET 框架，多數決策做成時框架仍名為 Bee.NET。因此 ADR 中的 `4.x` 版號與「CHANGELOG 4.x」
+> 指標，指的是 Bee.NET 的版本，不是 Polhem（Polhem 的變更紀錄從 1.0.0 開始）。這些版本的內容見
+> [Bee.NET 變更紀錄](https://github.com/jeff377/bee-library/blob/7d6cc9d9/CHANGELOG.zh-TW.md)，以及同一 repo
+> `docs/changelogs/` 下的各版明細。
 
 | # | 決策 | 狀態 |
 |---|------|------|

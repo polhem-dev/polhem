@@ -8,7 +8,8 @@
 
 - **Layer**: Web Frontend (Razor Class Library)
 - **Hosting model**: Blazor Server — component logic executes on the ASP.NET Core server; the browser receives DOM diffs via SignalR.
-- **Provider binding**: pairs with `LocalApiProvider` from `Polhem.Api.Client` (in-process call, no HTTP round-trip).
+- **Provider binding**: chosen with `AddPolhemBlazor` (see below) — in-process through `LocalApiProvider`, or over
+  HTTP through `RemoteApiProvider`, both from `Polhem.Api.Client`.
 - **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
 - Consumed by ASP.NET Core host applications.
 
@@ -16,18 +17,45 @@
 
 - `net10.0`
 
-## Status
+## Registration
 
-CRUD UI shipped:
+```csharp
+using Polhem.Web.Blazor.Server.DependencyInjection;
 
-- `FormDataObject` derives an in-memory `DataSet` (master row + detail tables) from `FormSchema` and exposes `GetField` / `SetField` for two-way binding.
-- `DynamicForm` renders the master section(s) of a `FormLayout`, dispatching each field to the input element appropriate to its `ControlType` (text / date / month / checkbox / textarea / dropdown).
-- Round-trip server methods (`LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`) are fully implemented, calling the backend BO through the API connector.
-- `DynamicGrid` (list view) and `FormPage` (list + master-detail wired via a shared `FormDataObject`) are implemented.
+// Remote: the components call a Polhem API server over HTTP, where every call is checked like any
+// other API client's. No AddPolhemFramework is needed in this host.
+builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider("https://api.example.com/api"));
+
+// Local (the default): the host is also the backend. Register it with AddPolhemFramework
+// (Polhem.Hosting) on the same service collection, then:
+// builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
+```
+
+`AddPolhemBlazor` registers `PolhemBlazorOptions`, a per-circuit `ApiSessionContext`, the
+`PolhemApiConnectorFactory` that components use to build connectors, and the localizer for the components' own
+text. It does not call `AddPolhemFramework`.
+
+> **Local mode is for trusted users only.** Every call it makes is an in-process call, which the backend treats
+> as trusted whichever browser user caused it. Use it when every user of the site is trusted with the whole
+> backend, such as an internal administration tool; otherwise use Remote mode. The XML documentation of
+> `PolhemBlazorProviderMode.Local` lists what a local call is allowed to skip.
+
+## Components
+
+- `FormPage` -- list plus master-detail editing of one program, wired through a shared `FormDataObject`.
+- `DynamicGrid` -- presentation-only list over a `LayoutGrid`; raises `OnRowSelected` with the row id.
+- `DynamicForm` -- renders the master section(s) of a `FormLayout`, choosing the input element from each field's
+  `ControlType` (text, date, month, time, checkbox, textarea, dropdown).
+- `PolhemLoginPanel` -- a minimal sign-in form; `OnLoggedIn` receives the `LoginResponse`.
+- `PolhemAccessTokenProvider` -- holds the circuit's access token and cascades it to descendant components.
+- `FormDataObject` -- derives an in-memory `DataSet` (master row + detail tables) from `FormSchema`, exposes
+  `GetField` / `SetField` for two-way binding, and runs `LoadAsync` / `SaveAsync` / `DeleteAsync` / `NewAsync`
+  through the connector.
 
 ## Dependency Constraints
 
-Depends only on `Polhem.Api.Client`. The host application is responsible for registering backend services via `AddPolhemFramework` and choosing the `IJsonRpcProvider` implementation.
+References `Polhem.Api.Client` (and ASP.NET Core). The backend services are registered by the host: with
+`AddPolhemFramework` in Local mode, or by the remote server in Remote mode.
 
 ## License
 

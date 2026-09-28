@@ -198,7 +198,7 @@ across versions** (the old and new wires are incompatible by design, an expected
 
 ## Implementation evolution
 
-An ADR records the design at the time of the decision. The following is a later change, for readers comparing with
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
 the current code:
 
 **The analyzer rule numbers above are Bee.NET's.** This decision was taken while the framework was Bee.NET, and the
@@ -206,3 +206,14 @@ rules it names shipped as `BEE4001`–`BEE4004`; the `POLHEM` spelling here come
 rules under those numbers: its analyzer release history starts at 1.0.0, and `POLHEM4001`–`POLHEM4004` are reserved and
 never reused, so a suppression carried over from Bee.NET cannot silence a new rule. The reserved numbers are listed in
 the [analyzer rule reference](../en/analyzer-rules.md).
+
+- **2026-09-27: `DataTable` rows are positional over MessagePack.** The `SerializableData*` types of "Follow-up:
+  bringing SerializableData\* in line" are removed. `DataTableFormatter` and `DataSetFormatter`
+  (`src/Polhem.Api.Core/MessagePack/`) write a table's column list once and then each row as a positional array in
+  column order, instead of a name-keyed map per row; the column names travel once, in the column list. The JSON body
+  codec and `Plain` keep their shape. The per-row key cost described in that follow-up no longer exists.
+- **2026-09-27: what an absent member means.** With name-based keys a member can be absent from the wire. The JSON body
+  codec and `Plain` omit a member equal to its CLR default, while MessagePack writes every member, so a wire member
+  whose initializer differs from its CLR default is always written
+  (`[JsonIgnore(Condition = JsonIgnoreCondition.Never)]`); an absent member then means the CLR default on every codec.
+  `WireDefaultOmissionTests` (`tests/Polhem.Api.Core.UnitTests`) enforces the rule.

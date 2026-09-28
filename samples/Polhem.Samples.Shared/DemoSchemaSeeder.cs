@@ -7,27 +7,24 @@ using Polhem.Definition.Storage;
 namespace Polhem.Samples.Shared;
 
 /// <summary>
-/// Process-once helper that auto-creates the demo's Employee tables plus the framework
-/// tables the Login path needs, and seeds rows so the Blazor demo list view is not empty
-/// on first run. Idempotent: a second invocation is a no-op once schema + rows are in place.
+/// Process-once helper that creates every table <c>Define/DbCategorySettings.xml</c> registers and
+/// seeds the rows the demos need: the demo account, the demo company and its access grant, and a
+/// few employees and departments so the list views are not empty on first run. Idempotent: a
+/// second invocation is a no-op once schema + rows are in place.
 /// </summary>
 /// <remarks>
-/// Reads schema definitions through <see cref="IDefineAccess"/> (which the Blazor host
-/// has already wired through <c>AddPolhemFramework</c>) and writes through
-/// <see cref="IDbAccessFactory"/>. SQLite is the only target — adding other databases
-/// would need engine-specific UUID literals.
+/// Reads schema definitions through <see cref="IDefineAccess"/> (which the host has already wired
+/// through <c>AddPolhemFramework</c>) and writes through <see cref="IDbAccessFactory"/>. SQLite is
+/// the only target — adding other databases would need engine-specific UUID literals.
 /// </remarks>
 public static class DemoSchemaSeeder
 {
-    private const string DatabaseId = "common";
+    private const string CommonDatabaseId = "common";
     private const string EmployeeTable = "ft_employee";
-    private const string EmployeePhoneTable = "ft_employee_phone";
     private const string DepartmentTable = "ft_department";
-    private const string ProjectTable = "ft_project";
-    private const string ProjectMemberTable = "ft_project_member";
-    private const string CacheNotifyTable = "st_cache_notify";
-    private const string SessionTable = "st_session";
     private const string UserTable = "st_user";
+    private const string CompanyTable = "st_company";
+    private const string UserCompanyTable = "st_user_company";
 
     public static void EnsureSchemaAndSeed(IDefineAccess defineAccess, IDbConnectionManager connectionManager, IDbAccessFactory dbAccessFactory)
     {
@@ -36,51 +33,49 @@ public static class DemoSchemaSeeder
         ArgumentNullException.ThrowIfNull(dbAccessFactory);
 
         EnsureSchema(defineAccess, connectionManager);
-        SeedEmployees(dbAccessFactory);
-        SeedDepartments(dbAccessFactory);
-        SeedDemoUser(dbAccessFactory);
+
+        var common = dbAccessFactory.Create(CommonDatabaseId);
+        SeedDemoUser(common);
+        SeedDemoCompany(common);
+        SeedCompanyAccess(common);
+
+        // Business data belongs to the company, so it lands in the demo company's database.
+        var company = dbAccessFactory.Create(DemoCredentials.CompanyDatabaseId);
+        SeedEmployees(company);
+        SeedDepartments(company);
     }
 
+    /// <summary>
+    /// Builds every table registered in <c>DbCategorySettings</c>, so adding a table to the demo is
+    /// a TableSchema file plus a <c>TableItem</c> entry and no edit here. Each category id names
+    /// both the target database and the <c>TableSchema/&lt;id&gt;/</c> folder.
+    /// </summary>
     private static void EnsureSchema(IDefineAccess defineAccess, IDbConnectionManager connectionManager)
     {
-        var builder = new TableSchemaBuilder(DatabaseId, defineAccess, connectionManager);
-        builder.Execute("common", EmployeeTable);
-        builder.Execute("common", EmployeePhoneTable);
-        // Lookup demo tables: Department is the lookup source, Project carries the
-        // relation fields (master lookup + in-cell detail lookup).
-        builder.Execute("common", DepartmentTable);
-        builder.Execute("common", ProjectTable);
-        builder.Execute("common", ProjectMemberTable);
-        // Framework tables, defined under Define/ like the tables above. The demo's own files are
-        // authoritative; `DemoBackend.AddPolhemBackend` only fills in a missing one from the
-        // Polhem.Definition embedded defaults. st_cache_notify is polled by CacheNotifyPoller;
-        // st_session and st_user are both on the Login path — overriding authentication
-        // avoids stored credentials, not the session seed or the user's locale row.
-        builder.Execute("common", CacheNotifyTable);
-        builder.Execute("common", SessionTable);
-        builder.Execute("common", UserTable);
+        var settings = defineAccess.GetDbCategorySettings();
+        if (settings.Categories == null) { return; }
+
+        foreach (var category in settings.Categories)
+        {
+            if (category.Tables == null) { continue; }
+            var builder = new TableSchemaBuilder(category.Id, defineAccess, connectionManager);
+            foreach (var table in category.Tables)
+                builder.Execute(category.Id, table.TableName);
+        }
     }
 
-    private static void SeedEmployees(IDbAccessFactory dbAccessFactory)
+    private static void SeedEmployees(DbAccess dbAccess)
     {
-        var dbAccess = dbAccessFactory.Create(DatabaseId);
-
-        var countSpec = new DbCommandSpec(DbCommandKind.Scalar, $"SELECT COUNT(*) FROM {EmployeeTable}");
-        var count = Convert.ToInt32(dbAccess.Execute(countSpec).Scalar, CultureInfo.InvariantCulture);
-        if (count > 0) return;
+        if (CountRows(dbAccess, EmployeeTable) > 0) return;
 
         InsertEmployee(dbAccess, "E001", "Alice Chen",   new DateTime(2024, 3, 1, 0, 0, 0, DateTimeKind.Utc), isActive: true);
         InsertEmployee(dbAccess, "E002", "Bob Liu",      new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc), isActive: true);
         InsertEmployee(dbAccess, "E003", "Carol Wang",   new DateTime(2023, 7, 20, 0, 0, 0, DateTimeKind.Utc), isActive: false);
     }
 
-    private static void SeedDepartments(IDbAccessFactory dbAccessFactory)
+    private static void SeedDepartments(DbAccess dbAccess)
     {
-        var dbAccess = dbAccessFactory.Create(DatabaseId);
-
-        var countSpec = new DbCommandSpec(DbCommandKind.Scalar, $"SELECT COUNT(*) FROM {DepartmentTable}");
-        var count = Convert.ToInt32(dbAccess.Execute(countSpec).Scalar, CultureInfo.InvariantCulture);
-        if (count > 0) return;
+        if (CountRows(dbAccess, DepartmentTable) > 0) return;
 
         InsertDepartment(dbAccess, "D001", "Engineering");
         InsertDepartment(dbAccess, "D002", "Sales");
@@ -97,16 +92,9 @@ public static class DemoSchemaSeeder
     /// Time zone and culture stay blank too, which is what makes the session fall back to the
     /// deployment-wide defaults in <c>BackendConfiguration</c>.
     /// </remarks>
-    private static void SeedDemoUser(IDbAccessFactory dbAccessFactory)
+    private static void SeedDemoUser(DbAccess dbAccess)
     {
-        var dbAccess = dbAccessFactory.Create(DatabaseId);
-
-        var countSpec = new DbCommandSpec(
-            DbCommandKind.Scalar,
-            $"SELECT COUNT(*) FROM {UserTable} WHERE sys_id = {{0}}",
-            DemoCredentials.UserId);
-        var count = Convert.ToInt32(dbAccess.Execute(countSpec).Scalar, CultureInfo.InvariantCulture);
-        if (count > 0) return;
+        if (CountBySysId(dbAccess, UserTable, DemoCredentials.UserId) > 0) return;
 
         var spec = new DbCommandSpec(
             DbCommandKind.NonQuery,
@@ -115,6 +103,88 @@ public static class DemoSchemaSeeder
             Guid.NewGuid(), DemoCredentials.UserId, DemoCredentials.DisplayName,
             string.Empty, string.Empty, string.Empty, DateTime.UtcNow);
         dbAccess.Execute(spec);
+    }
+
+    /// <summary>
+    /// Seeds the demo company into <c>st_company</c>, which <c>EnterCompany</c> reads to find the
+    /// company's database.
+    /// </summary>
+    /// <remarks>
+    /// The XML columns get explicit empty strings rather than being left out. They are
+    /// <c>DbType="Text"</c>, and MySQL does not allow a DEFAULT on TEXT, so the framework emits no
+    /// default for them and an INSERT that omits them fails on that provider.
+    /// </remarks>
+    private static void SeedDemoCompany(DbAccess dbAccess)
+    {
+        if (CountBySysId(dbAccess, CompanyTable, DemoCredentials.CompanyId) > 0) return;
+
+        var spec = new DbCommandSpec(
+            DbCommandKind.NonQuery,
+            $"INSERT INTO {CompanyTable} (sys_rowid, sys_id, sys_name, company_database_id, customize_id, " +
+            "number_formats_xml, default_currency, cash_rounding_xml, allowed_currencies_xml, enabled, sys_insert_time) " +
+            "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10})",
+            Guid.NewGuid(), DemoCredentials.CompanyId, DemoCredentials.CompanyName,
+            DemoCredentials.CompanyDatabaseId, string.Empty, string.Empty, DemoCredentials.DefaultCurrency,
+            string.Empty, string.Empty, true, DateTime.UtcNow);
+        dbAccess.Execute(spec);
+    }
+
+    /// <summary>
+    /// Grants the demo account access to the demo company through the <c>st_user_company</c> row
+    /// <c>EnterCompany</c> checks.
+    /// </summary>
+    /// <remarks>
+    /// A missing grant aborts startup rather than being skipped: without it sign-in still succeeds
+    /// and every form then fails with "Company access denied", a long way from the cause.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">The user or company row could not be resolved.</exception>
+    private static void SeedCompanyAccess(DbAccess dbAccess)
+    {
+        var userRowId = ResolveRowId(dbAccess, UserTable, DemoCredentials.UserId);
+        var companyRowId = ResolveRowId(dbAccess, CompanyTable, DemoCredentials.CompanyId);
+        if (userRowId == Guid.Empty || companyRowId == Guid.Empty)
+        {
+            throw new InvalidOperationException(
+                $"Demo startup aborted: {UserTable} '{DemoCredentials.UserId}' and {CompanyTable} " +
+                $"'{DemoCredentials.CompanyId}' must both exist before the company grant is seeded. " +
+                "Delete quickstart.db to reseed from scratch.");
+        }
+
+        var countSpec = new DbCommandSpec(
+            DbCommandKind.Scalar,
+            $"SELECT COUNT(*) FROM {UserCompanyTable} WHERE user_rowid = {{0}} AND company_rowid = {{1}}",
+            userRowId, companyRowId);
+        if (Convert.ToInt32(dbAccess.Execute(countSpec).Scalar, CultureInfo.InvariantCulture) > 0) return;
+
+        dbAccess.Execute(new DbCommandSpec(
+            DbCommandKind.NonQuery,
+            $"INSERT INTO {UserCompanyTable} (sys_rowid, user_rowid, company_rowid) VALUES ({{0}}, {{1}}, {{2}})",
+            Guid.NewGuid(), userRowId, companyRowId));
+    }
+
+    private static int CountRows(DbAccess dbAccess, string table)
+    {
+        var spec = new DbCommandSpec(DbCommandKind.Scalar, $"SELECT COUNT(*) FROM {table}");
+        return Convert.ToInt32(dbAccess.Execute(spec).Scalar, CultureInfo.InvariantCulture);
+    }
+
+    private static int CountBySysId(DbAccess dbAccess, string table, string sysId)
+    {
+        var spec = new DbCommandSpec(DbCommandKind.Scalar, $"SELECT COUNT(*) FROM {table} WHERE sys_id = {{0}}", sysId);
+        return Convert.ToInt32(dbAccess.Execute(spec).Scalar, CultureInfo.InvariantCulture);
+    }
+
+    private static Guid ResolveRowId(DbAccess dbAccess, string table, string sysId)
+    {
+        var spec = new DbCommandSpec(DbCommandKind.Scalar, $"SELECT sys_rowid FROM {table} WHERE sys_id = {{0}}", sysId);
+        var value = dbAccess.Execute(spec).Scalar;
+        return value switch
+        {
+            Guid guid => guid,
+            string text when Guid.TryParse(text, out var parsed) => parsed,
+            byte[] bytes when bytes.Length == 16 => new Guid(bytes),
+            _ => Guid.Empty,
+        };
     }
 
     private static void InsertDepartment(DbAccess dbAccess, string sysId, string name)

@@ -1,4 +1,4 @@
-<!-- source: adr/adr-035-business-logic-plugin.md blob: 47929dcb7c134e4bdfd25b9e30ef1e81ad003444 -->
+<!-- source: adr/adr-035-business-logic-plugin.md blob: 6da8a9a4f8d279bceb9759c6f6638fdd0da47011 -->
 # ADR-035：業務邏輯 plugin（在既有流程上掛載，而非取代整個 BO）
 
 [English](adr-035-business-logic-plugin.md)
@@ -254,3 +254,14 @@ plugin 是作者刻意加上的，略過等於**客製沒生效**——靜默漏
 - [ADR-016](adr-016-multitenant-customization-overlay.zh-TW.md) —— 客製化覆蓋層
 - [ADR-028](adr-028-expression-rule-engine.zh-TW.md) —— 運算式與規則引擎
 - [ADR-034](adr-034-progid-type-registry.zh-TW.md) —— ProgId 型別註冊表
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-08-16：BO 軸也改為直接拋出，「與 BO 軸相反」已不成立。** 決策五拿 plugin 與 BO 對比，當時 BO 型別載不到時
+  會退回 `FormBusinessObject`。[ADR-034](adr-034-progid-type-registry.zh-TW.md)（實作演進，2026-08-16）改變了這點：
+  宣告的 `BusinessObject` 型別載不到、或不繼承預期的基底時，擲出 `InvalidOperationException`
+  （`src/Polhem.Business/ProgramSettingsBoTypeResolver.cs`）。plugin 解析仍如上文所述，任何失敗都直接拋
+  （`src/Polhem.Business/Form/PluginSettingsResolver.cs`），其理由也仍成立：略過 plugin 等於客製靜默沒生效。
+  消失的只有與 BO 軸的不對稱，也就是狀態一節所列兩種不對稱之一；執行期例外的不對稱不變。

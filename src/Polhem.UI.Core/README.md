@@ -1,6 +1,6 @@
 # Polhem.UI.Core
 
-> Shared client-side foundation for the `Polhem.UI.*` native front-end family (Avalonia today; WinForms / WPF in future): connection state, API connectors, endpoint persistence, and client-side permission capability resolution.
+> Shared client-side foundation for the `Polhem.UI.*` native front-end family (Avalonia today): connection state, connector creation, endpoint and API key persistence.
 
 [繁體中文](README.zh-TW.md)
 
@@ -17,37 +17,37 @@
 ## Overview
 
 `Polhem.UI.Core` is the framework-agnostic base every `Polhem.UI.*` front end builds on. It holds the
-per-process client connection state (`ClientInfo`), abstracts where the service endpoint is
-persisted (`IEndpointStorage`), and turns a server-issued permission snapshot into per-element UI
-capability decisions (`ElementCapabilityResolver`). It carries no UI-framework types, so Avalonia,
-and Blazor can each share the same connection and permission logic while rendering their own
-way.
+per-process client connection state (`ClientInfo`) and abstracts where the service endpoint and API key are
+persisted (`IEndpointStorage`, `IApiKeyStorage`). It carries no UI-framework types.
+
+`Polhem.Web.Blazor.Server` serves several users from one process, so it keeps its connection state per circuit
+instead of in `ClientInfo`. What the two families do share lives one layer down in `Polhem.Api.Client`: the
+connectors, `ClientDefineAccess`, `FormDefinitionLoader` and the permission capability resolver.
 
 ## Key Types
 
 ### Connection State
 
-- `ClientInfo` -- static client-side connection singleton. Owns the `AccessToken` (per-process token
-  model: resetting the token clears the cached `SystemApiConnector`, `ClientDefineAccess`, and
-  capability snapshot), lazily creates the `SystemApiConnector` and `ClientDefineAccess`, produces
-  form-level connectors via `CreateFormApiConnector(progId)`, resolves the endpoint (local vs.
-  remote) through `InitializeAsync` / `SetEndpointAsync`, and applies login / EnterCompany results
-  (`ApplyLoginResult`, `ApplyEnterCompanyResult`, `ClearCompanyContext`). `ResetDefineCache` discards
+- `ClientInfo` -- static client-side connection state. Owns the `AccessToken` (per-process token
+  model: resetting the token clears the cached `SystemApiConnector`, `DefineAccess` and
+  capability snapshot), lazily creates the `SystemApiConnector` and `DefineAccess` (`ClientDefineAccess`),
+  produces connectors via `CreateFormApiConnector(progId)` and `CreateAuditLogApiConnector()`, resolves the
+  endpoint (local vs. remote) through `InitializeAsync` / `SetEndpointAsync`, and applies login / EnterCompany
+  results (`ApplyLoginResult`, `ApplyEnterCompanyResult`, `ClearCompanyContext`). `ResetDefineCache` discards
   the cached definition data after a tenant switch.
+- `ClientInfo.LocalServiceProvider` -- the backend service provider of a head that runs the backend in-process
+  (built with `AddPolhemFramework`); the local connectors `ClientInfo` creates use it.
+- `ClientInfo.UseDefinitionLoader` / `DefinitionLoader` -- localized form definitions through `FormDefinitionLoader`.
 
 ### Endpoint and API Key Persistence
 
 - `IEndpointStorage` -- persistence contract for the configured service endpoint
   (`LoadEndpoint` / `SetEndpoint` / `SaveEndpoint`).
-- `EndpointStorage` -- default implementation, backed by `ClientInfo.ClientSettings`
-  (`{ExeName}.Settings.xml`). Front ends assign `ClientInfo.EndpointStorage` to a platform-specific
-  implementation when the default file location is unsuitable -- e.g. `FileEndpointStorage`
-  (in `Polhem.UI.Avalonia`).
-- `IApiKeyStorage` / `ApiKeyStorage` -- the same pair for the `X-Api-Key` value
-  (`LoadApiKey` / `SetApiKey` / `SaveApiKey`), assigned through `ClientInfo.ApiKeyStorage`. A host
-  that replaces `EndpointStorage` because its platform cannot write beside the assembly must
-  replace this too; a platform storage class may implement both interfaces and be assigned to
-  each (`FileEndpointStorage` does).
+- `IApiKeyStorage` -- the same for the `X-Api-Key` value (`LoadApiKey` / `SetApiKey` / `SaveApiKey`).
+- `FileEndpointStorage` -- the default for both `ClientInfo.EndpointStorage` and `ClientInfo.ApiKeyStorage`: one
+  single-line text file per value in a per-application folder under the per-user local application data
+  directory. Its XML documentation lists where that folder is on each platform. Browser WASM has no persistent
+  file system, so a browser host assigns both properties an implementation backed by browser storage.
 - `ClientInfo.ApplyApiKey(defaultApiKey)` -- applies the stored key, seeding empty storage with the
   value the application ships. That makes the shipped constant a first-run default instead of a
   hard-coded key: from then on the stored value wins and can be changed without recompiling.
@@ -62,27 +62,22 @@ way.
 - `IUIViewService` -- view services supplied by the host UI framework (e.g. `ShowApiConnectAsync`
   to prompt for connection setup when the endpoint is missing or unreachable).
 
-### Permission Capability Resolution
+### Permission Capabilities
 
-- `IElementCapabilityResolver` / `ElementCapabilityResolver` -- UI-agnostic, pure resolver that
-  turns a per-model permission snapshot (typically `ClientInfo.Capabilities`) into element-level
-  decisions: `Can(schema, action, capabilities)` for commands and
-  `ResolveField(schema, fieldName, tableName, capabilities)` for sensitive fields. A `null` snapshot
-  means enforcement is inactive and every element stays at full capability.
-- `FieldCapability` -- the resolved capability of a single field (`Visible` / `ReadOnly`); combined
-  with the field's layout state by the consuming UI. `FieldCapability.Allowed` is the unrestricted
-  default.
+- `ClientInfo.Capabilities` -- the per-model permission snapshot received at company entry. The resolver that
+  turns it into element-level decisions, `ElementCapabilityResolver`, is in `Polhem.Api.Client` so both UI
+  families use it.
 
 > Client-side capability resolution is **UX degradation only**. The backend remains the
 > authoritative security boundary.
 
 ## Design Conventions
 
-- **Per-process token model** -- `ClientInfo` is a static singleton holding one access token for the
+- **Per-process token model** -- `ClientInfo` is static and holds one access token for the
   process; changing it invalidates the cached connectors, define accessor, and capability snapshot.
-- **Framework-agnostic** -- no UI-framework types leak in, so the same connection and permission
-  logic serves every `Polhem.UI.*` front end.
-- **Pluggable endpoint / API key storage** -- hosts override `ClientInfo.EndpointStorage` and
+- **Framework-agnostic** -- no UI-framework types leak in, so the same connection logic serves every
+  `Polhem.UI.*` front end.
+- **Pluggable endpoint / API key storage** -- hosts replace `ClientInfo.EndpointStorage` and
   `ClientInfo.ApiKeyStorage` with platform-appropriate implementations.
 - **Async-friendly initialization** -- `InitializeAsync` / `SetEndpointAsync` validate the endpoint
   and initialize the connector without blocking, so they are safe on single-threaded runtimes
@@ -91,15 +86,7 @@ way.
 
 ## Directory Structure
 
-```
-Polhem.UI.Core/
-  ClientInfo.cs          # Client-side connection state and connector factory
-  IEndpointStorage.cs    # Endpoint persistence contract
-  EndpointStorage.cs     # Default ClientSettings-backed implementation
-  IApiKeyStorage.cs      # API key persistence contract
-  ApiKeyStorage.cs       # Default ClientSettings-backed implementation
-  IUIViewService.cs      # Host-supplied view services
-  VersionInfo.cs         # Package version metadata
-  Permissions/           # ElementCapabilityResolver, FieldCapability,
-                         # IElementCapabilityResolver
-```
+- `ClientInfo.cs` -- client-side connection state and connector creation
+- `IEndpointStorage.cs` / `IApiKeyStorage.cs` -- persistence contracts
+- `FileEndpointStorage.cs` -- the default file-backed implementation of both
+- `IUIViewService.cs` -- host-supplied view services

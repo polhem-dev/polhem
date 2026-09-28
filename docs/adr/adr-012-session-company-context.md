@@ -237,13 +237,33 @@ developers feel it is "not much use". It is kept by design for:
 
 | Scope | Impact |
 |------|------|
-| `src/Polhem.Definition.Identity` | New `CompanyInfo` class and `ICompanyInfoService` interface; `SessionInfo` gains the `CompanyId` field |
+| `src/Polhem.Definition/Identity/` | New `CompanyInfo` class and `ICompanyInfoService` interface; `SessionInfo` gains the `CompanyId` field |
 | `src/Polhem.ObjectCaching` | New `CompanyInfoCache` and `CompanyInfoService`; `ICacheContainer` gains `CompanyInfo` |
 | `src/Polhem.Business/System` | `SystemBusinessObject` gains 3 methods; the `ISystemBusinessObject` interface is updated |
 | `src/Polhem.Api.Core` | New wire DTOs and contract interfaces for `EnterCompany` / `LeaveCompany` / `Logout`; `JsonRpcErrorCode` gains 2 values |
 | `src/Polhem.Api.Client` | `SystemApiConnector` gains 3 pairs of async + sync wrappers |
-| `src/Polhem.Definition.SystemActions` | Adds 3 constants |
+| `src/Polhem.Definition/SystemActions.cs` | Adds 3 constants |
 | Tests | 11 P3 EnterCompany tests + 6 P4 LeaveCompany tests + 6 P5 Logout tests + 4 P6 lifecycle integration tests |
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing
+with the current code:
+
+- **2026-05-15: Company permission checks are implemented.** The deferral described under Trade-offs is resolved:
+  `EnterCompany` now admits a user only when the company exists, is enabled and the user is granted it in the
+  `st_user_company` table, and all three failures surface as the same `CompanyAccessDenied`. The check lives in
+  `SessionCompanyBinder` (`src/Polhem.Business/Session/SessionCompanyBinder.cs`), called from
+  `src/Polhem.Business/System/SystemBusinessObject.Session.cs`; session rebuild runs the same binder, so a revoked
+  company permission takes effect when the session is rebuilt.
+- **2026-07-23: Contract interfaces moved.** The `EnterCompany` / `LeaveCompany` / `Logout` contract interfaces now
+  live in `src/Polhem.Api.Contracts/System/`; the wire DTOs stay in `src/Polhem.Api.Core/Messages/System/`.
+- **2026-09-27: The company context is one immutable scope.** `SessionInfo.CompanyId` is no longer set on its own:
+  the company id and everything snapshotted from the company (customization code, roles, record-scope row ids) form
+  one immutable `SessionCompanyScope` (`src/Polhem.Definition/Identity/SessionCompanyScope.cs`), exposed as
+  `SessionInfo.CompanyScope`. `EnterCompany` swaps it in a single write, and `LeaveCompany` / `Logout` reset it to
+  `SessionCompanyScope.None`, so a concurrent request on the same session reads either the old company or the new
+  one as a whole.
 
 ## Related
 

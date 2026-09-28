@@ -1,6 +1,6 @@
 # Polhem.Repository
 
-> Default implementation of repository abstractions, providing session management, database operations, and form data access.
+> Default implementation of the repository abstractions: form data access, the framework system tables, and the repository factory.
 
 [繁體中文](README.zh-TW.md)
 
@@ -8,7 +8,8 @@
 
 - **Layer**: Data Access Layer (implementation)
 - **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
-- Consumed by application code; repositories are resolved through DI-registered factories.
+- Consumed by application code through the `I*Repository` interfaces of `Polhem.Repository.Abstractions`; the
+  repositories are built by `RepositoryFactory`.
 
 ## Target Framework
 
@@ -16,51 +17,51 @@
 
 ## Key Features
 
-### Session Management
-
-- `SessionRepository` -- persists sessions in the `st_session` table with XML-serialized `SessionUser` data
-- Generates GUID-based access tokens for unpredictable session identifiers
-- Supports one-time sessions that auto-delete after first retrieval
-- Expired sessions are auto-cleaned on access using UTC time comparison
-
-### Database Operations
-
-- `DatabaseRepository` (`internal`) -- connection testing with parameter substitution (`{@DbName}`, `{@UserId}`, `{@Password}`); exposed only through `IDatabaseRepository`, built by `RepositoryFactory`, not a public API
-- Schema upgrades via `TableSchemaBuilder` for FormSchema-driven table management
-
 ### Form Data Access
 
-- `DataFormRepository` -- default implementation of `IDataFormRepository` for data form CRUD, resolved by ProgId
+- `DataFormRepository` -- default `IDataFormRepository` for FormSchema-driven CRUD, resolved by ProgId. A
+  program can bind its own subclass through `ProgramItem.Repository` in `ProgramSettings`.
+
+### Framework Repositories (internal)
+
+The repositories of the framework tables (sessions, users, companies, departments, employees, roles, API keys,
+audit logs and audit rules, and database administration) are `internal`. A host reaches them through their
+interfaces in `Polhem.Repository.Abstractions` via `IRepositoryFactory.Create<T>(accessToken)`.
+
+- Sessions -- the `st_session` row holds the session seed: `SessionUser` serialized to XML, keyed by a hash of
+  the access token (`AccessTokenHasher`), so the token itself is not stored. The access token is issued by the
+  business layer at sign-in, not by the repository. Reads filter out expired rows without deleting them; the
+  expired rows are removed by the host's expired session cleanup service (`Polhem.Hosting`).
+- Database administration -- connection testing resolves the `{@DbName}`, `{@UserId}` and `{@Password}`
+  placeholders through `ConnectionStringTemplate`; schema upgrades go through `TableSchemaBuilder`.
 
 ### Factory Implementation
 
 - `RepositoryFactory` -- default `IRepositoryFactory`: builds every repository, on both axes, from one
   shared `IRepositoryContext`. The framework axis is a type table rather than a method apiece, so it
   does not grow a member per system table.
+- `IRepositoryTypeResolver` / `ProgramSettingsRepositoryTypeResolver` -- resolves the repository type bound to a progId.
 
 ## Key Public APIs
 
 | Class | Purpose |
 |-------|---------|
-| `SessionRepository` | Session CRUD against `st_session` / `st_user` tables |
 | `DataFormRepository` | Data form data access implementation |
 | `RepositoryFactory` | Default `IRepositoryFactory` implementation |
+| `RepositoryBase` | Base class of the repositories (context, access token, progId) |
+| `IRepositoryContext` / `RepositoryContext` | The shared application-lifetime services handed to every repository |
+| `RepositoryDatabaseRouter` | Default `IRepositoryDatabaseRouter` |
 
 ## Design Conventions
 
-- **XML serialization for sessions** -- `SessionUser` is serialized to XML and stored in `st_session.session_user_xml`; deserialized back on retrieval.
-- **Connection string parameter substitution** -- `DatabaseRepository.TestConnection` replaces `{@DbName}`, `{@UserId}`, and `{@Password}` placeholders before opening a connection.
-- **One-time session auto-delete** -- when `SessionUser.OneTime` is true, the session record is deleted immediately after `GetSession` returns.
-- **Expired session cleanup** -- `GetSession` compares `sys_invalid_time` against `DateTime.UtcNow` and deletes stale records transparently.
-- **Parameterized queries** -- all SQL uses `DbCommandSpec` with positional parameters to prevent SQL injection.
+- **Parameterized queries** -- the repositories pass values through `DbCommandSpec` placeholders, which the framework turns into command parameters.
+- **One factory, two axes** -- progId-bound repositories and framework repositories are both built by `RepositoryFactory`.
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
 
 ## Directory Structure
 
-```
-Polhem.Repository/
-  AuditLog/   # AuditLogRepository (read), AuditLogWriteRepository (write)
-  Form/       # DataFormRepository
-  Factories/   # RepositoryFactory, IRepositoryTypeResolver, ProgramSettingsRepositoryTypeResolver
-  System/     # SessionRepository, DatabaseRepository
-```
+- project root -- `RepositoryBase`, `IRepositoryContext`, `RepositoryContext`, `RepositoryDatabaseRouter`
+- `AuditLog/` -- the audit log and audit rule repositories (internal)
+- `Factories/` -- `RepositoryFactory`, `IRepositoryTypeResolver`, `ProgramSettingsRepositoryTypeResolver`
+- `Form/` -- `DataFormRepository`
+- `System/` -- the framework system-table repositories (internal)

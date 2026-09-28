@@ -82,7 +82,18 @@ encoded with MessagePack and embedded as Base64.
 - `Polhem.Api.Core/Registry/ApiContractRegistry.cs`: API type registration
   — **this type and the `Registry/` folder have since been removed** (they were meant for the "BO returns plain
   POCOs" scenario, which never took shape); the reasons are in `src/Polhem.Api.Contracts/README.md`.
-- The collection types of `Polhem.Definition` (FilterCondition, PackageUpdateQuery and others) are also serialized
-  with MessagePack
+- The `Polhem.Definition` types that travel on the wire (the filter nodes `FilterCondition` / `FilterGroup`, and
+  collections such as `FilterNodeCollection` and `ListItemCollection`) are also serialized with MessagePack
 - The API Payload format has three levels: Plain (no encoding), Encoded (MessagePack + GZip), Encrypted
   (MessagePack + GZip + AES)
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-03: the Consequences describe a single codec.** They call `MessagePackPayloadSerializer` "the default
+  Payload serializer" and spell Encoded and Encrypted as MessagePack + GZip (+ AES). Since
+  [ADR-044](adr-044-payload-codec-negotiation.md) the body of an Encoded or Encrypted payload is written with the codec
+  the request declares (`JsonPayloadSerializer` is the other built-in one), and MessagePack is used when none is
+  declared. The compression and encryption steps are unchanged.

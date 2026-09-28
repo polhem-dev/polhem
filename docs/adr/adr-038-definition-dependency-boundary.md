@@ -25,7 +25,8 @@ another dependency chain:
 Polhem.Definition ──ProjectReference──> Polhem.Expressions ──PackageReference──> DynamicExpresso.Core
 ```
 
-As a result, `Polhem.Definition.4.19.0.nuspec` listed `Polhem.Expressions` as a dependency, and **every consumer that
+As a result, the nuspec of the definition package (Bee.NET 4.19.0 at the time) listed the expressions package as a
+dependency, and **every consumer that
 installs `Polhem.Definition` was pulled into an expression engine**, including pure UI heads and definition file tools
 that only want to read definitions. After scanning all 17 projects under `src/`, this was the only violation.
 
@@ -165,3 +166,22 @@ which is exactly what RS0026 guards against.
 | Build-time lock | Injecting `MessagePack` once into `Polhem.Base` and once into `Polhem.Definition` stops the build with `POLHEM9001` in both; 0 warnings / 0 errors after reverting |
 | clean Release build | 0 warnings / 0 errors |
 | Full unit test suite | All 16 test projects green |
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **The build-time lock sees transitive project references; it misses only transitive packages.** The gate table says
+  the lock checks references declared **directly**. Measured on 2026-08-11: the .NET SDK folds transitive project
+  references into `@(ProjectReference)` before Build, so the lock sees every project in the reference closure, and the
+  allowlist in `src/Directory.Build.targets` has to name that whole closure, not only what a csproj writes down. What
+  the lock still cannot see is a package that arrives through a project reference, which is the half the closure test
+  covers; the reason both gates are needed is unchanged.
+- **The lock and the closure test cover `Polhem.Api.Contracts` too.** It sits in the transitive closure of every UI
+  head, so the same argument applies. The locked assemblies are `Polhem.Base`, `Polhem.Definition` and
+  `Polhem.Api.Contracts` (the `PolhemEnforceDependencyBoundary` condition), and `DefinitionDependencyGateTests` runs
+  its closure check once for each of them, each against its own allowlist.
+- **2026-09-27: the localizer that uses `Microsoft.Extensions.Localization.Abstractions` was renamed.**
+  `Language/PolhemStringLocalizer.cs` is now `src/Polhem.Definition/Language/LanguageResourceStringLocalizer.cs`; the
+  allowed dependency and the reason for allowing it are unchanged.

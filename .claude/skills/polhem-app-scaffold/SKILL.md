@@ -130,7 +130,7 @@ Implementation to compare against: `apps/Polhem.Northwind/Polhem.Northwind.Serve
 
 ## Part 4 — Authentication: the framework's `st_user` sign-in
 
-Northwind has no authentication code. The seeder writes one account into `st_user` (password hashed with
+Northwind has no authentication code. The seeder writes its demo accounts into `st_user` (password hashed with
 `PasswordHasher.HashPassword`, plus `time_zone` / `culture`, which the session reads), and `Login` runs the framework's
 own `st_user` check. The reserved progId `System` is listed in `ProgramSettings.xml` without a `BusinessObject`, so it
 resolves to the framework's `SystemBusinessObject`. Compare against `NorthwindCredentials.cs` and `SeedDemoUser` in

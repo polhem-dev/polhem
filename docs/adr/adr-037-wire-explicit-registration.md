@@ -131,3 +131,23 @@ controllable than a source generator.
   JIT at all", and that aspect is already covered by NativeAOT, so this is listed as a low-risk formal gap.
 - **The named-type escape hatch is still unusable on mobile**. Letting host-defined types onto the mobile wire as well
   needs a separate mechanism of "the host registers its own formatters", which this ADR does not address.
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **The registration list is maintained by hand.** The Costs say it is generated mechanically from the type closure
+  and maintained by re-running the closure. It was bootstrapped that way, but there is no generator to re-run: the
+  `WireContracts.*.cs` files in `src/Polhem.Api.Core/MessagePack/` are edited by hand, and `WireContractDriftTests`
+  (`tests/Polhem.Api.Core.UnitTests/`) fails when a type or a member of the closure is missing from them.
+- **2026-09-27: the named-type branch no longer needs dynamic code for enums and `ParameterCollection`.** Behind the
+  string discriminator, `WireValueFormatter` writes an allowed enum as its underlying integer and reads it back with
+  `Enum.ToObject`, and the types in its named table (`ParameterCollection`) have closed generic delegates like the
+  known set, so both work on iOS and Mac Catalyst. The bytes are the ones the non-generic overload writes, so the wire
+  is unchanged (`WireValueFormatterNamedTypeTests` pins them). Any other named type still takes the non-generic
+  overload; without dynamic code it fails with a `NotSupportedException` that names the type and suggests the JSON
+  body codec. The "Not covered" item about the escape hatch on mobile therefore still holds for host-defined types.
+- **2026-09-27: arrays of allowed element types pass the escape hatch** on both ends and on both body codecs, and the
+  writer runs the same screen as the reader in advance (`WireTypeWhitelist.IsNamedValueTypeAllowed`).
+  `WireTypeWhitelist` also screens the assembly-name part of an assembly-qualified type name.

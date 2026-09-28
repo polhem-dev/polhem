@@ -111,8 +111,22 @@ Option 4 (row-level editing) has landed as the **EditForm mode** (2026-06-11):
 
 - Popup-style columns are edited on click, dropping the ritual of "double-click into edit mode first"; text columns
   keep the standard DataGrid editing feel. Having both feels side by side is a deliberate trade-off of this strategy
-- The popup-style columns of an editable detail table keep an interactive control on every row, which has a
-  rendering cost when there are very many rows; in the detail table scenario (within a few dozen rows) it is not
-  noticeable, and list mode is unaffected (always read-only → `TextBlock`)
+- The popup-style columns of an editable detail table rest as a `TextBlock` and build an editor only for the cell
+  being edited, so at rest they cost the same as a read-only cell. Only boolean columns keep a `CheckBox` on every
+  row, which has a rendering cost when there are very many rows; in the detail table scenario (within a few dozen
+  rows) it is not noticeable, and list mode is unaffected (always read-only)
 - If the Avalonia `DataGrid` editing pipeline supports popup-style editors in the future, or `TreeDataGrid` is
   adopted, this strategy can be rolled back column by column without affecting the caller-facing API
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: dirtiness is tracked without a call.** `FormDataObject.MarkDirty()` no longer exists. `IsDirty` has a
+  private setter and is set by the bridge from the ADO.NET `ColumnChanged` / `RowChanged` events, so a write straight
+  to the `DataRow` from a cell editor marks the form dirty with no extra call
+  (`src/Polhem.UI.Avalonia/DataObjects/FormDataObject.Events.cs`).
+- **2026-09-27: `DynamicForm` was folded into `FormView`.** There is no separate `DynamicForm` control; the detail
+  editing mode is `FormView.DetailEditMode` (`src/Polhem.UI.Avalonia/Views/FormView.cs`), next to
+  `GridControl.EditMode`.

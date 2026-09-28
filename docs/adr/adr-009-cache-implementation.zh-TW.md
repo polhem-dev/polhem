@@ -1,4 +1,4 @@
-<!-- source: adr/adr-009-cache-implementation.md blob: e6d5c4db1f7f050c6b90c3d13b7f9a96cdb9d340 -->
+<!-- source: adr/adr-009-cache-implementation.md blob: 47271c5d7e52f018fd44f7e6b8f275f16c68abf4 -->
 # ADR-009：Polhem.ObjectCaching 採用 Microsoft.Extensions.Caching.Memory + IChangeToken
 
 [English](adr-009-cache-implementation.md)
@@ -131,6 +131,16 @@ Polhem 為純 .NET 10 新框架、未發佈、無相容包袱，適合一次完�
 
 - 第二次查詢已知不存在的 key 不再觸發 `CreateInstance`，預設 5 分鐘內穩定回 null
 - 既有測試若依賴「`CreateInstance` 每次都被呼叫」的副作用會 fail；本次落地時順帶修正 `KeyObjectCacheTests` 的相關預期
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：檔案監看。** `ChangeMonitorFilePaths` 不再經由 `PhysicalFileProvider.Watch`，也不再參考 `Microsoft.Extensions.FileProviders.Physical`。`MemoryCacheProvider` 加上自己的惰性 `FileModificationToken`，把檔案的最後寫入時間與載入前取得的基準比對，且每個項目每秒最多重讀一次（`FileWriteTime.RecheckInterval`）。「沒有客製化檔案」的答案同樣記住一秒，存檔時丟棄。見 `src/Polhem.ObjectCaching/Providers/MemoryCacheProvider.cs`。
+- **2026-09-27：與失效賽跑的填入。** 快取填入在載入前先讀取失效狀態，若這段期間狀態改變，就丟棄它存入的內容（`src/Polhem.ObjectCaching/CacheInvalidation.cs`），定義檔快取與資料庫相依快取皆然。
+- **2026-09-27：session 會重建，呼叫端提供之 key 的 miss 有上限。** `SessionInfoCache.CreateInstance` 不再一律回傳 null：它透過 `ICacheDataSourceProvider.GetSessionInfo` 從 `st_session` 重建 session。因此它重新使用負向快取，`ApiKeyCache` 亦同：兩者都把 miss 保留一分鐘，存在有上限的集合（`BoundedMissMarkers`）而非共用的 provider，因為它們的 key 來自呼叫端。其餘 `KeyObjectCache<T>` 子類別（定義快取 `FormSchemaCache`、`TableSchemaCache`、`FormLayoutCache`、`LanguageResourceCache`，以及資料庫相依的 `CompanyInfoCache`、`CompanyRolePermissionsCache`、`CompanyAuditRulesCache`、`DepartmentTreeCache`、`ApiKeyGateCache`）維持預設。現行的快取清單見[快取機制](../zh-TW/caching.md)。
+- **2026-09-27：快取大小。** provider 仍未設定 `SizeLimit`，但「預設組態」的前提（快取物件只有數十個）已不成立：session 與 API key 快取每個有效的 token 或 key 各佔一個項目，大小隨流量而定。
+- **2026-09-27：相依性注入。** 替代方案 4 以與 service locator（`CacheInfo.Provider`）一致為由被否決。[ADR-011](adr-011-di-replaces-service-locator.zh-TW.md) 之後把框架改為 DI；快取 provider 本身仍是行程層級的 `CacheInfo.Provider`，由 `BackendComponents.CacheProvider` 選定。
 
 ## 相關文件
 

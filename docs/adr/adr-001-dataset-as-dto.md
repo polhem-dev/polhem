@@ -46,7 +46,9 @@ Use the ADO.NET `DataSet` as the cross-layer DTO.
 
 ## Consequences
 
-- All cross-layer data transfer uses DataSet; POCO DTOs are not mixed in
+- Form data (master and detail records) crosses layers as a DataSet; no POCO DTO is generated per form. The
+  parameters and results of business object methods are plain POCOs (`{Action}Args` / `{Action}Result`, see
+  [ADR-007](adr-007-convention-based-type-resolution.md)), and they carry a DataSet where form data is involved
 - FormSchema-driven CRUD operations rely on DataRow.RowState to decide the kind of operation
 - Custom MessagePack formatters (in `Polhem.Api.Core/MessagePack/`) handle efficient serialization of DataSet
 - `Polhem.Base/Data/` provides DataTable / DataSet / DataRow extension methods to simplify common operations

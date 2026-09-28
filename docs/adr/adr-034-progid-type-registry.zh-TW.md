@@ -1,4 +1,4 @@
-<!-- source: adr/adr-034-progid-type-registry.md blob: 006dc4d0ae5253a9ccdb1fc8f82324380a9e2bce -->
+<!-- source: adr/adr-034-progid-type-registry.md blob: ec54a882b7599c8dc60e15b1c9677f8325d93190 -->
 # ADR-034：ProgramSettings 作為全框架型別註冊表
 
 [English](adr-034-progid-type-registry.md)
@@ -62,7 +62,7 @@ JSON-RPC「找不到方法 Login」，把診斷者導向 API 層或 client，而
 
 > **修訂（2026-08-16）：兩軸的失敗策略已收斂為一致，一律直接拋。**
 > 上表「一般 progId → 靜默退回」與下一節「`Repository` 與 `BusinessObject` 相反」是
-> **當時的決定，記錄保留原文**；現行行為見本 ADR 末的〈修訂紀錄〉。
+> **當時的決定，記錄保留原文**；現行行為見本 ADR 末的〈實作演進〉。
 
 ### `Repository` 的失敗策略與 `BusinessObject` 相反
 
@@ -168,7 +168,7 @@ private IOrderRepository Repository() => CreateFormRepository<IOrderRepository>(
 實例見 `apps/Polhem.Northwind/Polhem.Northwind.Server/Repositories/IOrderRepository.cs` 與
 同目錄的 `OrderRepository.cs`。
 
-## 修訂紀錄
+## 實作演進
 
 ### 2026-08-16：兩軸的失敗策略收斂為一致（一律直接拋）
 
@@ -196,6 +196,16 @@ private IOrderRepository Repository() => CreateFormRepository<IOrderRepository>(
 因此每次呼叫都會拋，不會第二次起靜默通過。
 `ProgramSettingsBoTypeResolver` 的 `ILogger` 建構子多載保留（既有呼叫端仍可編譯與繫結），
 但已無用途——退路沒了，那則 degrade log 也就沒有對象。
+
+### 2026-09-27：解析器的快取與 progId 大小寫
+
+- **`ILogger` 建構子多載已移除。** 上一段說它為既有呼叫端保留；1.0 之前它與其他被忽略的建構子參數一併移除，
+  `ProgramSettingsBoTypeResolver` 現在只有 `(IDefineAccess)` 與 `(IDefineAccess, ICustomizeDefineReader?)` 兩個建構子。
+- **type cache 不再是單純的 `GetOrAdd`。** 只有註冊表列出的 progId 才快取解析結果，因此從 wire 傳來的名稱無法撐大快取；
+  每筆快取記住它解析時所用的 `ProgramSettings` 實例，只在那些實例仍是現行實例時使用，重新載入後每筆都會重新解析。
+  失敗仍然從不快取。plugin 軸（`src/Polhem.Business/Form/PluginSettingsResolver.cs`）對設定實例採同一規則。
+- **BO 收到的是宣告的 progId 大小寫**：註冊表項目的 `ProgramItem.ProgId`，或保留字本身的拼法，與呼叫端用的大小寫無關
+  （`src/Polhem.Business/BusinessObjectFactory.cs`）。BO 內以 progId 為鍵的查詢因此每支程式只會看到一種拼法。
 
 ## 相關
 

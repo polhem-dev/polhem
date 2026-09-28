@@ -92,7 +92,7 @@ plain-text list cell was `true`, the one that slipped through.
 - [ADR-020: How the Avalonia DataGrid binds to DataTable rows](adr-020-avalonia-datagrid-binding-strategy.md): this
   ADR corrects the `supportsRecycling: true` in its example
 - [ADR-021: Avalonia DataGrid in-cell / EditForm editing strategy](adr-021-avalonia-datagrid-editing-strategy.md)
-- `src/Polhem.UI.Avalonia/Controls/GridControl.cs`: the plain-text list cell template in `BuildColumn`
+- `src/Polhem.UI.Avalonia/Controls/GridControl.Columns.cs`: the plain-text list cell template in `BuildColumn`
 
 ## Out of scope
 

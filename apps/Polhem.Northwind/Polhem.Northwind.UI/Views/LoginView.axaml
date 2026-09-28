@@ -25,7 +25,8 @@
       <StackPanel Spacing="14">
 
         <TextBlock Text="Sign in" FontSize="22" FontWeight="Bold" />
-        <TextBlock Text="Use demo / demo to sign in."
+        <TextBlock Text="Use demo / demo to sign in, or demo-tw / demo for Traditional Chinese."
+                   TextWrapping="Wrap"
                    Foreground="{DynamicResource SemiColorText2}" />
 
         <StackPanel Spacing="6">

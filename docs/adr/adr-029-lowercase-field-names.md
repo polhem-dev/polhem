@@ -93,6 +93,19 @@ Accompanying principles:
     mark it as breaking in the CHANGELOG and attach a migration guide (per `releasing.md`, the CHANGELOG accumulates
     until the release is consolidated).
 
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: the in-memory migration is complete.** In the current code `DataTableExtensions.AddColumn` lowercases
+  the column name with `ToLowerInvariant`, and `DataTableExtensions.LowercaseColumnNames` is applied to the tables that
+  `DbAccess` reads (`src/Polhem.Base/Data/DataTableExtensions.cs`, `src/Polhem.Db/DbAccess.cs`,
+  `src/Polhem.Db/DbAccess.Async.cs`), as the Status block says. "Target state; migration in progress" in the decision
+  table and "before the in-memory DataSet is migrated" in the accompanying principles describe the time of the
+  decision. The "Remaining" items (the multi-DB regression and the breaking-change mark in the CHANGELOG) belong to the
+  release history of Bee.NET, the predecessor of Polhem, and cannot be confirmed from this repository.
+
 ## Related
 
 - ADR-028 (custom expression and rule engine): the source of the second time a case-sensitive comparison bit.

@@ -77,25 +77,23 @@ Ask the user which BO actions the sample should show:
 | Custom ExecFunc | A custom method in `Polhem.Business` | Depends on its attribute |
 
 If any action is `Authenticated` → the backend must host `DemoBackend` (for demo/demo), and the demo code must include a
-Login step.
+Login step. If it touches a form, it must also enter the demo company (`DEMO`) after the login.
 
 ### Decision 4: shared Define references
 
 | Define needed | How to reference it |
 |---------------|---------------------|
 | An existing FormSchema (`Employee`, `Department`, `Project`) | The backend reads `samples/Define/FormSchema/` (the directory is found by `DemoBackend.ResolveDefinePath()`) |
-| Custom FormSchema | Add `samples/Define/FormSchema/<ProgId>.FormSchema.xml` and its `samples/Define/FormLayout/<ProgId>.FormLayout.xml` (required: opening a form without one fails; generate it with `polhem-scaffold-from-formschema`), the TableSchema under `samples/Define/TableSchema/common/`, a `TableItem` under the `common` category in `samples/Define/DbCategorySettings.xml`, and in `Polhem.Samples.Shared/DemoSchemaSeeder.cs` a `builder.Execute("common", "<table>")` line in `EnsureSchema` (this seeder lists its tables by hand; it does not walk `DbCategorySettings`) plus seed data if the list should not start empty |
+| Custom FormSchema | Add `samples/Define/FormSchema/<ProgId>.FormSchema.xml` with `CategoryId="company"` and its `samples/Define/FormLayout/<ProgId>.FormLayout.xml` (required: opening a form without one fails; generate it with `polhem-scaffold-from-formschema`), the TableSchema under `samples/Define/TableSchema/company/`, and a `TableItem` under the `company` category in `samples/Define/DbCategorySettings.xml`. `DemoSchemaSeeder` builds every table that file registers, so there is no seeder edit unless the list should not start empty (then add seed rows to the company database there) |
 | No schema at all | A pure Echo / Ping demo, no Define dependency |
 
 When adding a new FormSchema, also update the file list in the `/Define/` folder of `Polhem.Samples.slnx` (not required,
 but it keeps the IDE tree tidier).
 
-> **Samples keep their `ft_*` tables in `common`, which `.claude/rules/database.md` calls wrong for business data.**
-> It is what the sample hosts do today: they never call `EnterCompany` (see the comment in `DemoBackend.cs`), so a
-> `CategoryId="company"` form would throw `CompanyNotEnteredException`, and `samples/Define/DatabaseSettings.xml` /
-> `DbCategorySettings.xml` define only `common`. Follow it inside `samples/` so the new form works with the shared
-> hosts, and do not copy it anywhere else: an app outside `samples/` puts business tables in `company` and enters the
-> company after login (`polhem-app-scaffold` Part 1 and Part 3).
+> **Sample business tables live in `company`, like any app's.** The sample hosts seed one company
+> (`DemoCredentials.CompanyId`) and grant the demo user access to it, and every client that signs in
+> calls `EnterCompany` right after `Login`. A new sample that opens a form must do the same, or every
+> form call fails with "company not entered".
 
 ### Decision 5: which slnx folder
 
@@ -204,6 +202,11 @@ internal static class Program
 
         var login = await ClientInfo.SystemApiConnector.LoginAsync("demo", "demo");
         ClientInfo.ApplyLoginResult(login);
+
+        // The sample forms are company-scoped. Read the connector again: storing the token
+        // replaced the cached one, which still carries the empty pre-login token.
+        var company = await ClientInfo.SystemApiConnector.EnterCompanyAsync("DEMO");
+        ClientInfo.ApplyEnterCompanyResult(company);
 
         // ... do authenticated work via ClientInfo.SystemApiConnector / CreateFormApiConnector
         return 0;

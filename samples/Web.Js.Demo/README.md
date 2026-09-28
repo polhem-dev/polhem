@@ -1,23 +1,23 @@
 # Web.Js.Demo
 
-[繁體中文](README.zh-TW.md)
+**English** | [繁體中文](README.zh-TW.md)
 
 Demonstrates calling the Polhem JSON-RPC API from pure JavaScript in a browser —
 no `npm`, no build step, no framework. The JS frontend uses
 `PayloadFormat.Plain` (see [ADR-014](../../docs/adr/adr-014-jsonrpc-plain-public-default.md)),
 so all requests are plain JSON.
 
-Covers all 7 methods downgraded to `Public` for JS access, plus
-schema-driven UI rendering using the JSON-native FormSchema / FormLayout
-endpoints:
+Every method it calls is declared `Public`, which is what lets a Plain request
+reach it. The page also renders a form from the FormSchema / FormLayout
+definitions:
 
 | Section | Methods |
 |---------|---------|
 | Login | `System.Login` |
 | Ping | `System.Ping` (no auth) |
-| Enter Company | `System.EnterCompany` / `System.LeaveCompany` (error path — see UI hint) |
+| Enter Company | `System.EnterCompany` / `System.LeaveCompany` (required before Employee CRUD; an unknown ID shows the error path) |
 | Employee CRUD | `Employee.GetList` / `GetData` / `GetNewData` / `Save` / `Delete` |
-| FormDefinition-driven rendering | `System.GetFormSchema` / `System.GetFormLayout` → dynamic form |
+| FormDefinition-driven rendering | `System.GetFormSchema` / `System.GetFormLayout` → definition XML → dynamic form |
 | Logout | `System.Logout` |
 
 ## How to run
@@ -51,16 +51,19 @@ endpoints:
 
      Then open `http://localhost:8080/index.html`.
 
-3. Click **Login** (default credentials `demo` / `demo`), then **Ping** —
-   each result shows up in the output panel at the bottom.
+3. Click **Login** (default credentials `demo` / `demo`), then **EnterCompany**
+   (the company ID is pre-filled with `DEMO`), then **GetList** — each result
+   shows up in the output panel at the bottom. The Employee form is
+   company-scoped, so the CRUD and form buttons fail until the session has
+   entered the company.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
 | `index.html` | Minimal UI — Login form, CRUD buttons, dynamic form area, result panel. Vanilla CSS, no external dependencies. |
-| `polhem-api-client.js` | ES module: `rpcCall(method, value)` + `systemApi.*` + `formApi(progId)` + `RpcError` + token state. |
-| `form-renderer.js` | ES module: takes a `FormLayout` JSON tree and produces a working HTML form (CSS Grid, control-type dispatch). Exposes `bindDataSet` / `collectDataSet` for two-way data binding. |
+| `polhem-api-client.js` | ES module: exports `systemApi.*`, `formApi(progId)`, `RpcError` and the access token helpers. Every call goes through the module-private `rpcCall(method, value)`, which reads an HTTP error response for its JSON-RPC error before falling back to the status line, and the definition XML is parsed into plain objects here. |
+| `form-renderer.js` | ES module: takes the parsed `FormLayout` object and produces a working HTML form (CSS Grid, control-type dispatch). Exposes `bindDataSet` / `collectDataSet` for two-way data binding. |
 | `app.js` | UI event wiring; depends on `polhem-api-client.js` and `form-renderer.js`. |
 | `.smoke.yaml` | Config for the `demo-smoke` skill — launches both prerequisite servers and verifies the page loads with the expected section text. See file header for the browser-tier limitation (clicks blocked → load-only smoke). |
 
@@ -69,16 +72,18 @@ endpoints:
 | Header | Value | Notes |
 |--------|-------|-------|
 | `Content-Type` | `application/json` | JSON-RPC body |
-| `X-Api-Key` | `quickstart-demo` (hard-coded) | Default `ApiAuthorizationValidator` only requires the value to be non-empty. Production hosts must register a stricter validator. |
+| `X-Api-Key` | `quickstart-demo` (hard-coded) | Identifies the calling application. The default `ApiAuthorizationValidator` accepts any non-empty value only while the deployment has issued no API key; once a key is issued, the value must be that key. Production deployments issue keys. |
 | `Authorization` | `Bearer <accessToken>` | Sent only after `Login` returns an AccessToken. Required for any method whose `[ApiAccessControl]` is `Authenticated`. |
 
 ## FormDefinition-driven rendering
 
-Section 6 in the UI demonstrates the end-to-end JSON path for schema-driven
-forms — the typical workflow a React / Vue / Angular app would build on top of:
+Section 5 in the UI demonstrates the end-to-end path for schema-driven
+forms — the typical workflow a React / Vue / Angular app would build on top of.
+Definitions travel as an XML string (the `xml` member of the response), which
+`polhem-api-client.js` parses into plain objects; the data travels as JSON:
 
 ```
-GetFormSchema + GetFormLayout  (parallel) → FormLayout JSON
+GetFormSchema + GetFormLayout  (parallel) → definition XML → parsed FormLayout
         ↓
 renderFormLayout(layout, container)        ← produces a working HTML form
         ↓
@@ -122,10 +127,11 @@ or the AES-CBC-HMAC pipeline. Keeping the demo dependency-free demonstrates the
 minimum surface a real JS framework integration (React / Vue / Angular) needs to
 build on.
 
-If your project already uses a TypeScript toolchain, copy `polhem-api-client.js`
-into your `src/` and rewrite types as needed — the API surface is small enough
-that hand-maintained TypeScript interfaces are cheaper than codegen at this
-stage.
+If your project already uses a TypeScript toolchain, look at
+[`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js), the
+TypeScript client, instead of porting this file. Its types come from the
+declarations generated in [`wire-contracts/`](../../wire-contracts/README.md), so
+they follow the server's message types.
 
 ## Related
 

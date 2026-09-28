@@ -1,4 +1,4 @@
-<!-- source: adr/adr-020-avalonia-datagrid-binding-strategy.md blob: 8f17a531e8ad8206e66002bdf1e245ecf04a054c -->
+<!-- source: adr/adr-020-avalonia-datagrid-binding-strategy.md blob: 552dcbda77fd05028dc0f647bfb9375ea19d8294 -->
 # ADR-020：Avalonia DataGrid 對 DataTable 列的綁定策略
 
 [English](adr-020-avalonia-datagrid-binding-strategy.md)
@@ -9,7 +9,7 @@
 
 ## 背景
 
-[ADR-001](adr-001-dataset-as-dto.zh-TW.md) 確立 `DataSet` / `DataTable` 為框架的跨層 DTO，server 端 BO 回傳 `DataTable`，client 端直接 render 而不投影到 typed POCO。`Polhem.UI.Maui.Controls.DynamicGrid` 以「Grid + Label + TapGestureRecognizer 逐 cell 手刻」的方式跑通了這條資料流。
+[ADR-001](adr-001-dataset-as-dto.zh-TW.md) 確立 `DataSet` / `DataTable` 為框架的跨層 DTO，server 端 BO 回傳 `DataTable`，client 端直接 render 而不投影到 typed POCO。當時的 `Bee.UI.Maui` 專案（已移除）中的 `DynamicGrid` 以「Grid + Label + TapGestureRecognizer 逐 cell 手刻」的方式跑通了這條資料流。
 
 `Polhem.UI.Avalonia` 在 Phase 3 加入時，自然想沿用 Avalonia 內建的 `Avalonia.Controls.DataGrid`：理應比 MAUI 端的手刻 Grid 提供更完整的 selection / scroll / column sizing 等基礎能力。WPF 對應的慣用做法是：
 
@@ -64,14 +64,14 @@ private static DataGridTemplateColumn BuildColumn(LayoutColumn column)
 
 `row.Row` 取得底層 `DataRow`，再走 `DataRow.this[string]`（這是純 ADO.NET，反射可達）— Avalonia binding engine 不會碰到，因為它的角色被 `FuncDataTemplate` 縮成「給定 item，回傳一個 control」。
 
-連帶把欄位格式化（`DisplayFormat` / `NumberFormat` / `DateTime` ISO 8601 / `IFormattable` invariant culture）邏輯統一封裝在 `FormatCell` 靜態方法內，與 `Polhem.UI.Maui.Controls.DynamicGrid.FormatCell` 行為對稱。
+連帶把欄位格式化（`DisplayFormat` / `NumberFormat` / `DateTime` ISO 8601 / `IFormattable` invariant culture）邏輯統一封裝在 `FormatCell` 靜態方法內，與當時的 `Bee.UI.Maui` 專案（已移除）中的 `DynamicGrid.FormatCell` 行為對稱。
 
 ## 後果
 
 ### 正面
 
 - **不需投影到 typed POCO**：DataTable 仍是端到端唯一的列資料表達，與 [ADR-001](adr-001-dataset-as-dto.zh-TW.md) 一致
-- **`Polhem.UI.Avalonia.DynamicGrid` 與 `Polhem.UI.Maui.DynamicGrid` 行為對齊**：兩端都是 code-based formatting，差別只在 host control（Avalonia `DataGrid` vs MAUI `Grid` + `Label`）
+- **`Polhem.UI.Avalonia.DynamicGrid` 與當時的 `Bee.UI.Maui`（已移除）中的 `DynamicGrid` 行為對齊**：兩端都是 code-based formatting，差別只在 host control（Avalonia `DataGrid` vs MAUI `Grid` + `Label`）
 - **Avalonia binding engine 的「不會 dispatch 到 ICustomTypeDescriptor」這個事實只需在這一個 adapter 處理**：框架其他地方仍可正常使用 Avalonia binding（綁 CLR 屬性、ViewModel、`IList` 等）
 - **避免之後讀者重蹈覆轍**：本 ADR + `DynamicGrid.cs` 的 `<remarks>` 註解明確標示「不要改回 `Binding "[FieldName]"`」
 
@@ -98,21 +98,25 @@ private static DataGridTemplateColumn BuildColumn(LayoutColumn column)
 
 - **Cell-level 編輯**：目前 `DynamicGrid` 為 read-only；若日後需要 inline 編輯，可在那時再評估「自己寫 two-way binding 機制」或「投影到 ViewModel POCO」哪個成本較低
 - **Avalonia CompiledBinding 對 `DataRowView` 的支援**：是 Avalonia upstream 議題，不在 Polhem 這層處理
-- **將 `FormatCell` 抽到 `Polhem.UI.Core` 與 `Polhem.UI.Maui.DynamicGrid` 共用**：行為對稱但載體型別不同（Avalonia `DataRowView` 用 `row.Row[name]`、MAUI 直接吃 `DataRow`），抽共用需要先抽 helper signature，與本 ADR 的決策正交；本 ADR 範圍不處理
+- **將 `FormatCell` 抽到 `Polhem.UI.Core` 與當時的 `Bee.UI.Maui`（已移除）中的 `DynamicGrid` 共用**：行為對稱但載體型別不同（Avalonia `DataRowView` 用 `row.Row[name]`、MAUI 直接吃 `DataRow`），抽共用需要先抽 helper signature，與本 ADR 的決策正交；本 ADR 範圍不處理
 
-## 後記（2026-06-11）
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+### 2026-06-11：實作遷移至 `GridControl`
 
 本 ADR 的實作位置已由 `DynamicGrid`（`UserControl` 包裝，現已移除）遷移為 `GridControl`（`src/Polhem.UI.Avalonia/Controls/GridControl.cs`；最初直接繼承 `DataGrid`，後重構為 `ContentControl` 組合式、內部 `DataGrid` 以 `InnerGrid` 公開）；`DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` + code-fetch 的綁定策略不變。in-cell / EditForm 編輯策略的後續決策見 [ADR-021](adr-021-avalonia-datagrid-editing-strategy.zh-TW.md)。
 
-## 後記（2026-06-14）：清單 cell 的 `supportsRecycling` 修正
+### 2026-06-14：清單 cell 的 `supportsRecycling` 修正
 
 上方「決策」範例對唯讀清單純文字 cell 用了 `supportsRecycling: true` —— 這與「`Text` 算死、非 binding」相沖：DataGrid 跨列回收 presenter 時不重跑建立委派，導致顯示文字與底層列脫鉤（lookup picker 上表現為「看到某列、帶回別列」）。已改為 `supportsRecycling: false`，詳見 [ADR-022](adr-022-avalonia-datagrid-cell-recycling.zh-TW.md)。
 
-## 後記（2026-08-07）：`Polhem.UI.Maui` 已移除
+### 2026-08-07：`Bee.UI.Maui` 已移除
 
-本 ADR 多處以 `Polhem.UI.Maui.Controls.DynamicGrid` 為對照或共用對象（背景、`FormatCell` 行為
-對稱、〈不在範圍〉的抽共用構想）。**`Polhem.UI.Maui` 已於 2026-07-28 移除**，UI 家族收斂為
-Avalonia（涵蓋桌面 / iOS / Android / WASM）與 Blazor.Server 雙軌。
+本 ADR 多處以當時 `Bee.UI.Maui` 專案中的 `DynamicGrid` 為對照或共用對象（背景、`FormatCell` 行為
+對稱、〈不在範圍〉的抽共用構想）。**`Bee.UI.Maui` 已於 2026-07-28 移除**（在專案更名為 Polhem 之前），
+UI 家族收斂為 Avalonia（涵蓋桌面 / iOS / Android / WASM）與 Blazor.Server 雙軌。
 
 因此那些「與 MAUI 對齊 / 抽共用」的項目已無對象，不再是待辦；`FormatCell` 的行為要求本身仍
 成立，只是不再有第二個載體需要對齊。背景段落保留原文字以保存決策脈絡。

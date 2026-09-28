@@ -669,6 +669,23 @@ preserving at the switch. Local / CI / demo data can all be rebuilt.
 - **The in-process path has no serialization boundary**, so an implementation very easily falls back to the intuitive
   approach of "hooking the serialization entry".
 
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-08-09: the `CreateTime` attributes.** Definition types no longer carry MessagePack attributes
+  ([ADR-036](adr-036-wire-serialization-externalized.md)), so the `CreateTime` properties named in D7 / D8 are marked
+  `[XmlIgnore, JsonIgnore]` (for example `src/Polhem.Definition/Settings/SystemSettings/SystemSettings.cs`). They are
+  still not persisted and still initialized with `UtcNow`.
+- **2026-09-27: the trace types are removed.** The tracing subsystem that owned `TraceEvent.Time` and
+  `TraceContext.Start` (D7 / D8) no longer exists; the rule stays as it is for the remaining system timestamps.
+- **2026-09-27: where the Connector gets the time zone.** A successful login through `SystemApiConnector` stores the
+  user's time zone from the login response in the connector's session (`ApiSessionContext.UserTimeZoneId`,
+  `src/Polhem.Api.Client/Connectors/SystemApiConnector.cs`), and the conversion of D4 reads it from there. A host that
+  serves several users from one process, such as a Blazor Server app with one session per circuit, therefore converts
+  each user's values with that user's time zone.
+
 ## Related
 
 - ADR-031 (calendar day column semantics carried by an explicit marker): the basis of this ADR's D4 decisions

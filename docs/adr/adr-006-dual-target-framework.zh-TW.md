@@ -1,4 +1,4 @@
-<!-- source: adr/adr-006-dual-target-framework.md blob: e5cb267f1d88fe166f87be410c84ccec4f4270c2 -->
+<!-- source: adr/adr-006-dual-target-framework.md blob: 8fb7b0c3aa974cf0ce75e9796a4bd9800752d944 -->
 # ADR-006：雙目標框架策略（netstandard2.0 + net10.0）
 
 [English](adr-006-dual-target-framework.md)
@@ -66,3 +66,9 @@
 - 所有專案 `.csproj` 統一為 `<TargetFramework>net10.0</TargetFramework>`
 - `Polhem.Base/Security/PasswordHasher.cs` 已移除 `#if NETSTANDARD2_0` 條件編譯，統一使用 PBKDF2-SHA256
 - 開發規範中 netstandard2.0 相關的限制條文已一併移除
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：`net10.0` 以外的目標框架。** 套件與工具以 `net10.0` 為目標，例外有兩類。`src/Polhem.Analyzers` 以 `netstandard2.0` 為目標，因為 Roslyn analyzer 由編譯器載入，而編譯器要求如此。示範應用的平台 head 以平台專屬框架為目標（`apps/Polhem.Northwind/` 下的 `net10.0-ios`、`net10.0-android`、`net10.0-browser`）。

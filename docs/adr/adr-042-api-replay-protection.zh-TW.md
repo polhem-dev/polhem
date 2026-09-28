@@ -1,4 +1,4 @@
-<!-- source: adr/adr-042-api-replay-protection.md blob: 925458469ecc3a81b4eed78ca1db19a6092240f1 -->
+<!-- source: adr/adr-042-api-replay-protection.md blob: b4cae2694ea5e23c002ae9655db4c983b71fd40d -->
 # ADR-042：API 重放防護 —— 加密封套內的 wire frame
 
 [English](adr-042-api-replay-protection.md)
@@ -10,7 +10,7 @@
 ## 背景
 
 一個合法的 JSON-RPC 封包被原樣重送時，伺服器過去會完整執行第二次。
-[ADR-036](adr-036-wire-serialization-externalized.zh-TW.md) 建立的 payload 管線以
+加密的 payload 管線（Serialize → Compress → Encrypt，[ADR-004](adr-004-messagepack-payload.zh-TW.md)）以
 AES-CBC-HMAC 保證封包**改不了**，但不保證它**沒被送過第二次** —— 加密防的是機密性與竄改，
 不是重複。
 
@@ -139,3 +139,24 @@ nonce 集合需要無界儲存或每次資料庫往返。改用 per-session 單�
   —— 折進 `Error` 的話，「某 session 連續被拒」這個訊號就看不見了，而那正是判別用戶端
   時鐘偏移或有人重送封包的依據。
 - 本機呼叫（`IsLocalCall`）不受影響。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：API key 方法也受重放防護。** `CreateApiKey`、`SetApiKeyEnabled`、`SetApiKeyExpiry` 可由部署管理員
+  遠端呼叫（`Encrypted`）且有副作用，現在也宣告 `UniqueSequence`
+  （`src/Polhem.Business/System/SystemBusinessObject.ApiKey.cs`）。宣告它的方法為 `Save`、`Delete`、`ExecFunc`、
+  `EnterCompany`、`LeaveCompany`、`CreateApiKey`、`SetApiKeyEnabled` 與 `SetApiKeyExpiry`。決策六稱其清單為
+  「完整集合」，但沒有任何機制檢查這一點。實際存在的是 `BoApiSurfaceTests`（`tests/Polhem.Business.UnitTests/`）：
+  它把每個 BO action 的保護等級、存取要求與重放設定釘在一份審閱過的基準上，新增 action 或改變其重放設定時，
+  必須刻意修改基準才會通過。新的 action 是否需要 `UniqueSequence`，仍是審查時的判斷。
+- **2026-09-27：`UniqueSequence` 的文件註明只保護 Encrypted payload**
+  （`src/Polhem.Definition/Security/ApiReplayProtection.cs`），與決策三一致；`ApiServiceOptions.RequireWireFrame`
+  關閉而仍有方法宣告它時，啟動會記錄一則警告並列出這些方法，因為沒有 frame 就沒有任何呼叫會被檢查
+  （`src/Polhem.Hosting/Registry/ReplayProtectionWarningService.cs`）。
+- **2026-09-27：`IReplayWindowStore` 以單一原子呼叫 `TryAcceptAsync` 檢查並記錄**，因此可以實作跨節點共用的 store
+  （決策七），不會有先讀後寫的競態。行程內的視窗是 internal 的 `ReplayWindow`。
+- **JS 呼叫端現在可以使用 `Encrypted`。** 「明確不納入」中關於收緊 `Public` 的那一項說 JS 呼叫端無法實作整套加密管線。
+  [ADR-044](adr-044-payload-codec-negotiation.zh-TW.md) 讓 body codec 改由每個請求選擇，JS 用戶端可以宣告 JSON codec
+  並使用 `Encrypted`。`Save`、`Delete`、`ExecFunc` 的保護等級不變（`Public`）。

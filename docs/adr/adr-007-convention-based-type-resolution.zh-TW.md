@@ -1,4 +1,4 @@
-<!-- source: adr/adr-007-convention-based-type-resolution.md blob: 10d48ea8b29f4b19c936b9c9aff2bcc98e1d8149 -->
+<!-- source: adr/adr-007-convention-based-type-resolution.md blob: bc877ac24e124befe3f7b0ccd5ad69d95d668e79 -->
 # ADR-007：以命名慣例自動推導 API 型別
 
 [English](adr-007-convention-based-type-resolution.md)
@@ -96,3 +96,10 @@ BO 回傳：{Action}Result   ──反射搜尋 Polhem.Api.Core 組件──▶ 
 
 - 新增 API 方法時，只要遵守命名慣例，框架會自動完成型別轉換
 - 命名偏離慣例會導致 BO 回傳值直接流到用戶端（可能造成型別錯誤），應在程式碼審查時嚴格檢查
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-08-09：API 型別不帶序列化屬性。** 「背景」描述 `{Action}Request` / `{Action}Response` 含 MessagePack 序列化屬性。自 [ADR-036](adr-036-wire-serialization-externalized.zh-TW.md) 起它們是一般類別，wire 綁定改由在 `src/Polhem.Api.Core/MessagePack/WireContracts.*.cs` 顯式註冊的 formatter 負責（[ADR-037](adr-037-wire-explicit-registration.zh-TW.md)）。本 ADR 的命名慣例不變。
+- **2026-09-27：轉換在哪裡執行。** `ApiOutputConverter.Convert` 現在由 `JsonRpcExecutor.ExecuteAsync` 呼叫；「實作要點」提到的 `ExecuteAsyncCore` 方法已不存在。

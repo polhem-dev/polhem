@@ -11,6 +11,12 @@ understanding why the design is the way it is.
 > points to the new ADR. When the implementation details drift but the decision still holds, an "Implementation
 > evolution" section is added at the end and the original text is kept.
 
+> Polhem continues the Bee.NET framework under a new name. Most of these decisions were taken while it was Bee.NET, so
+> a version number `4.x` in an ADR, and a pointer to "CHANGELOG 4.x", refers to a Bee.NET release, not to Polhem,
+> whose changelog starts at 1.0.0. Those releases are described in the
+> [Bee.NET changelog](https://github.com/jeff377/bee-library/blob/7d6cc9d9/CHANGELOG.md) and the per-version notes
+> under `docs/changelogs/` in the same repository.
+
 | # | Decision | Status |
 |---|----------|--------|
 | [001](adr-001-dataset-as-dto.md) | Use DataSet as the cross-layer DTO | ✅ Accepted |

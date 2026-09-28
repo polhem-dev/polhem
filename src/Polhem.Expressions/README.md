@@ -25,9 +25,11 @@ only need to accept one.**
 
 ## Time zone
 
-`Evaluate` takes a `timeZoneId`. Helpers that read the clock (`Today()`, `Now()`) resolve it in
-that zone, so a row created from another region still defaults to the user's own day. `UtcNow()`
-states UTC outright. An empty zone id means UTC. See
+`Evaluate` takes a `timeZoneId` and a `DateTimeBasis`. `Today()` returns the calendar day (`DateOnly`) in the
+user's zone, so a row created from another region still defaults to the user's own day. `Now()` follows the
+basis of the data set being evaluated: the user's zone for `DateTimeBasis.UserZone` (the default, a client
+preview) and UTC for `DateTimeBasis.Utc` (the server's pre-save pass, where the stored values are UTC).
+`UtcNow()` states UTC outright. An empty zone id means UTC. See
 [ADR-032](../../docs/adr/adr-032-datetime-timezone.md).
 
 ## Security
@@ -38,14 +40,19 @@ time, but member access on a value is resolved by reflection, and `GetType()` is
 states the same limitation.
 
 What keeps this safe is the *source* of the expressions, not the parser: expressions live in
-definition files, and writing a definition is a deployment-time operation (`SystemBO.SaveDefine` is
-`LocalOnly`). Any change that would let a remote or lower-privileged caller supply expression text
+definition files, and writing a definition is a deployment-time operation (`SystemBusinessObject.SaveDefine` is
+declared `ApiProtectionLevel.LocalOnly`). Any change that would let a remote or lower-privileged caller supply expression text
 turns this into remote code execution on the server — that boundary is the control.
 
 ## AOT / trimming
 
 `Expression.Compile` falls back to the interpreter when `IsDynamicCodeSupported` is false, so the
 engine works on iOS, Android and WASM without disabling anything.
+
+Trimming is a separate matter: DynamicExpresso finds `Math.*`, `string.*` and the other members an expression
+names by reflection. The package ships an embedded `ILLink.Descriptors.xml` that keeps the types expressions
+can reach, so a trimmed head (the default partial trim of mobile builds) keeps them without further
+configuration.
 
 ## Dependencies
 

@@ -1,12 +1,12 @@
 # Polhem.DefineEditor
 
-[繁體中文](README.zh-TW.md)
+**English** | [繁體中文](README.zh-TW.md)
 
-A desktop tool for maintaining Polhem definition files (the 9 kinds of XML under DefinePath). Avalonia 12 + .NET 10 + CommunityToolkit.Mvvm, cross-platform (Windows / macOS / Linux).
+A desktop tool for maintaining the Polhem definition files (the XML under DefinePath). Avalonia 12 + .NET 10 + CommunityToolkit.Mvvm, cross-platform (Windows / macOS / Linux).
 
 ## Positioning
 
-- **A development-time tool**: not a published framework package and not a sample; it lives in `tools/`, has its own `Polhem.Tools.slnx`, is not published to NuGet and is not run in CI.
+- **A development-time tool**: not a published framework package and not a sample; it lives in `tools/`, has its own `Polhem.Tools.slnx` and is not published to NuGet. Its unit tests, `tests/Polhem.DefineEditor.UnitTests`, are part of the main `Polhem.slnx`, so CI builds the tool and runs them.
 - **Purely offline**: reads and writes the XML under DefinePath directly; it connects to no remote server and no database.
 - **In sync with the framework**: references `Polhem.Definition` and `Polhem.Base` through ProjectReference, and every read and write goes through `XmlCodec.SerializeToFile` / `DeserializeFromFile`, with zero serialization conversion.
 
@@ -16,18 +16,20 @@ After a solution is opened, the solution tree on the left lists every file under
 
 | Type | Editor | Main features |
 |------|--------|---------------|
-| **SystemSettings** (singleton) | [SystemSettingsDocumentView](Views/SystemSettingsDocumentView.axaml) | 5 Configuration child nodes + 4 embedded options of BackendConfiguration + free key/value ExtendedProperties |
+| **SystemSettings** (singleton) | [SystemSettingsDocumentView](Views/SystemSettingsDocumentView.axaml) | A tree of the Configuration sections and the BackendConfiguration options, plus free key/value ExtendedProperties. Some options have no node yet (for example `AuditLogOptions` and `SessionCleanupOptions`); edit those in the XML |
 | **DbCategorySettings** (singleton) | [DbCategorySettingsDocumentView](Views/DbCategorySettingsDocumentView.axaml) | Two levels, Categories → Tables; validates duplicate Id / TableName |
 | **ProgramSettings** (singleton) | [ProgramSettingsDocumentView](Views/ProgramSettingsDocumentView.axaml) | Two levels, Categories → Programs; a ProgramItem holds ProgId / DisplayName / BusinessObject |
 | **PermissionModels** (singleton) | [PermissionModelsDocumentView](Views/PermissionModelsDocumentView.axaml) | Two levels, Models → Rules; Action / Scope are drop-downs; integrates `PermissionModels.Validate()` |
 | **MenuSettings** (singleton) | [MenuSettingsDocumentView](Views/MenuSettingsDocumentView.axaml) | MenuFolder → MenuEntry tree; separate property panels for folders and entries |
-| **DatabaseSettings** (singleton) | [DatabaseSettingsDocumentView](Views/DatabaseSettingsDocumentView.axaml) | Two groups, Servers + Items; includes **parsing a pasted connection string** (SQL Server / PostgreSQL / MySQL / Oracle) + 4 kinds of static validation |
+| **DatabaseSettings** (singleton) | [DatabaseSettingsDocumentView](Views/DatabaseSettingsDocumentView.axaml) | Two groups, Servers + Items; includes **parsing a pasted connection string** (SQL Server / PostgreSQL / MySQL / Oracle) and static validation (`Services/DatabaseSettingsValidator.cs`) |
 | **FormSchema** (multiple) | [FormSchemaDocumentView](Views/FormSchemaDocumentView.axaml) | Tables → Fields → Relation / Lookup mappings; RelationProgId candidates come from the other FormSchemas in the solution. Right-click a schema node to **Generate FormLayout** |
 | **TableSchema** (multiple) | [TableSchemaDocumentView](Views/TableSchemaDocumentView.axaml) | Two groups, Fields + Indexes; IndexField includes SortDirection; validates that the PrimaryKey is unique |
 | **FormLayout** (multiple) | [FormLayoutDocumentView](Views/FormLayoutDocumentView.axaml) | Sections (→ LayoutField) + Details (LayoutGrid → LayoutColumn). The layout is produced and saved at design time — the runtime only reads it, and opening a form fails when the file is missing |
 | **Language** (multiple) | [LanguageDocumentView](Views/LanguageDocumentView.axaml) | Items (Key/Value) + Enums (→ Entry code/text) |
 
-Every editor has the shared toolbar (Save / Add / Validate / Delete), a status bar at the bottom, a validation results panel and an `IsDirty` indicator.
+Each editor has its own add and delete commands, a validation results panel and an unsaved-changes marker on its tab; the window has a status bar at the bottom. Save, Save All, Validate and Close Tab are commands of the **File** menu, with Open Folder and Open Recent; the **View** menu switches the theme and the UI language (English / 繁體中文), and a tab's context menu closes groups of tabs.
+
+> The File and View menus are native menus, which Avalonia renders in the macOS menu bar only. On Windows and Linux the window shows its own **File** menu with Save, Save All, Validate and Close Tab, which run the same commands; the welcome page's "Open Folder" button opens a folder. Open Recent and the View menu are macOS-only.
 
 ## Running during development
 
@@ -37,32 +39,18 @@ Start it directly from source:
 dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configuration Debug
 ```
 
-After it starts, choose "Open Folder..." at the top left and pick a DefinePath folder. `tests/Define/` contains test fixtures that can be opened directly.
+After it starts, choose "Open Folder..." and pick a DefinePath folder. The editor saves in place, so to explore with the test fixtures in `tests/Define/`, copy the folder first: the tests share those files and must not see them change.
 
 ### Headless smoke
 
-The `--smoke <FormSchema-fixture-path>` mode runs every round-trip without opening a window. **Which ones actually run is not listed here** (that would drift) — the authoritative source is `Smoke.Run`, which calls each `Run*Smoke` in turn:
+The `--smoke <FormSchema-fixture-path>` mode runs the editors' round-trips without opening a window. It copies the fixture to a temporary directory before editing it, prints one line per check, and ends with a line starting `[smoke] OK` and exit code 0 when everything passed. Which checks run is not listed here (that would drift); the authoritative source is `Smoke.Run` in [`Smoke.cs`](Smoke.cs).
 
 ```bash
 dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configuration Debug \
     -- --smoke tests/Define/FormSchema/Employee.FormSchema.xml
 ```
 
-Expected output:
-
-```
-[smoke:formschema] OK
-[smoke:permission]  OK (0 non-error issues)
-[smoke:db]          OK
-[smoke:program]     OK
-[smoke:system]      OK
-[smoke:db-settings] OK
-[smoke:parser]      OK (SQL Server + PostgreSQL + dialect-mismatch warning)
-[smoke:table-schema] OK
-[smoke:form-layout] OK
-[smoke:language]    OK
-[smoke] OK — FormSchema + 8 multi-instance editors + ConnectionStringParser all green.
-```
+A failing check prints `[smoke] FAIL(<code>)` and the process exits with that code.
 
 ## Publish (framework-dependent)
 
@@ -86,7 +74,7 @@ dotnet publish tools/DefineEditor/Polhem.DefineEditor.csproj -c Release \
     -r linux-x64 --self-contained false -p:PublishTrimmed=false
 ```
 
-The output is in `tools/DefineEditor/bin/Release/net10.0/<rid>/publish/`. Or run [publish.sh](publish.sh) to package all 4 platforms at once.
+The output is in `tools/DefineEditor/bin/Release/net10.0/<rid>/publish/`. Or run [publish.sh](publish.sh) to package every RID above at once.
 
 ### Self-contained is also possible
 
@@ -117,19 +105,24 @@ Measured on osx-arm64: a 12 MB main executable + about 18 MB for the three nativ
 For macOS users, adding `--app-bundle` wraps the publish output of the osx-* RIDs into a `Polhem.DefineEditor.app` directory: it opens on double-click, can be dragged into `/Applications`, and the Dock shows the correct name:
 
 ```bash
-./publish.sh --single-file --app-bundle           # 4 RIDs (osx-* are wrapped as .app, win/linux stay as they are)
-./publish.sh --single-file --app-bundle osx-arm64 # osx-arm64 only
+./publish.sh --app-bundle           # every RID (osx-* are wrapped as .app, win/linux stay as they are)
+./publish.sh --app-bundle osx-arm64 # osx-arm64 only
 ```
+
+`--app-bundle` implies `--single-file`: the bundle carries the executable and the native libraries, so the managed assemblies have to be inside the executable.
 
 Output location `bin/Release/net10.0/<osx-rid>/publish/Polhem.DefineEditor.app`, with this internal structure:
 
 ```
 Polhem.DefineEditor.app/
 └── Contents/
-    ├── Info.plist          ← bundle description (the version is taken from Version.props at the repo root)
-    └── MacOS/
-        ├── Polhem.DefineEditor   ← main executable
-        └── lib*.dylib × 3     ← Avalonia native
+    ├── Info.plist              ← bundle description (the version is the project's evaluated Version, from Version.props at the repo root)
+    ├── MacOS/
+    │   ├── Polhem.DefineEditor ← main executable
+    │   ├── lib*.dylib          ← Avalonia native libraries
+    │   └── *.pdb, *.xml        ← symbols and XML docs, when the publish produced them
+    └── Resources/
+        └── AppIcon.icns        ← app icon (Assets/AppIcon.icns)
 ```
 
 ### First run: clearing the Gatekeeper quarantine flag
@@ -160,4 +153,4 @@ Omitting `-r` to build a portable app is also framework-dependent, but Avalonia'
 - Connecting to a remote Polhem server / JSON-RPC API (local files only)
 - Live connection tests for DatabaseSettings (left to server-side health checks)
 - Multi-user collaboration / locking
-- Editing Customize-layer overrides (to be discussed after Phase 6 if needed; the solution tree currently does not mark overrides)
+- Editing Customize-layer overrides (the solution tree currently does not mark overrides)

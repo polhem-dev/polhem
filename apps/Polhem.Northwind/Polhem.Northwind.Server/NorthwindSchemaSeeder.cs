@@ -122,6 +122,18 @@ public static class NorthwindSchemaSeeder
         new("st_audit_rule", "AuditRule.json"),
     };
 
+    private sealed record DemoAccount(string UserId, string Password, string DisplayName, string Culture);
+
+    // Both accounts see the same company and data; the second exists so the zh-TW captions and
+    // formats can be seen without editing the database.
+    private static readonly DemoAccount[] s_accounts =
+    {
+        new(NorthwindCredentials.UserId, NorthwindCredentials.Password,
+            NorthwindCredentials.DisplayName, NorthwindCredentials.Culture),
+        new(NorthwindCredentials.ZhTwUserId, NorthwindCredentials.ZhTwPassword,
+            NorthwindCredentials.ZhTwDisplayName, NorthwindCredentials.ZhTwCulture),
+    };
+
     public static void EnsureSchemaAndSeed(
         IDefineAccess defineAccess, IDbConnectionManager connectionManager, IDbAccessFactory dbAccessFactory)
     {
@@ -184,24 +196,30 @@ public static class NorthwindSchemaSeeder
     }
 
     /// <summary>
-    /// Seeds the common-database rows sign-in depends on: the demo account, the demo company, and
-    /// the grant that lets one enter the other.
+    /// Seeds the common-database rows sign-in depends on: the demo accounts, the demo company, and
+    /// the grants that let each account enter it.
     /// </summary>
     /// <remarks>
     /// All three are required for the demo to reach a usable session, and they are required
     /// <em>together</em>: <c>EnterCompany</c> reads the company row, then the grant row, and treats
     /// a miss on either as the same refusal. Seeding one without the other produces a sign-in that
     /// succeeds and a company that cannot be entered.
+    /// <para>
+    /// Accounts and grants are checked one by one rather than by "is the table empty", so an
+    /// existing <c>northwind.db</c> picks up an account added later without being deleted.
+    /// </para>
     /// </remarks>
     private static void SeedCommon(DbAccess dbAccess)
     {
-        SeedDemoUser(dbAccess);
+        foreach (var account in s_accounts)
+            SeedDemoUser(dbAccess, account);
         SeedDemoCompany(dbAccess);
-        SeedCompanyAccess(dbAccess);
+        foreach (var account in s_accounts)
+            SeedCompanyAccess(dbAccess, account.UserId);
     }
 
     /// <summary>
-    /// Seeds the single demo account into <c>st_user</c> so sign-in runs the framework's own
+    /// Seeds one demo account into <c>st_user</c> so sign-in runs the framework's own
     /// <c>st_user</c> authentication rather than an application-supplied credential check.
     /// </summary>
     /// <remarks>
@@ -213,10 +231,9 @@ public static class NorthwindSchemaSeeder
     /// take its locale from the user rather than from the deployment defaults.
     /// </para>
     /// </remarks>
-    private static void SeedDemoUser(DbAccess dbAccess)
+    private static void SeedDemoUser(DbAccess dbAccess, DemoAccount account)
     {
-        var countSpec = new DbCommandSpec(DbCommandKind.Scalar, "SELECT COUNT(*) FROM st_user");
-        if (Convert.ToInt32(dbAccess.Execute(countSpec).Scalar, CultureInfo.InvariantCulture) > 0) { return; }
+        if (ResolveRowId(dbAccess, "st_user", account.UserId) != Guid.Empty) { return; }
 
         const string sql =
             "INSERT INTO st_user (sys_rowid, sys_id, sys_name, password, email, note, time_zone, culture, deployment_admin) " +
@@ -224,13 +241,13 @@ public static class NorthwindSchemaSeeder
 
         dbAccess.Execute(new DbCommandSpec(DbCommandKind.NonQuery, sql,
             Guid.NewGuid(),
-            NorthwindCredentials.UserId,
-            NorthwindCredentials.DisplayName,
-            PasswordHasher.HashPassword(NorthwindCredentials.Password),
+            account.UserId,
+            account.DisplayName,
+            PasswordHasher.HashPassword(account.Password),
             string.Empty,
             string.Empty,
             NorthwindCredentials.TimeZone,
-            NorthwindCredentials.Culture,
+            account.Culture,
             false));
     }
 
@@ -287,7 +304,7 @@ public static class NorthwindSchemaSeeder
     }
 
     /// <summary>
-    /// Grants the demo account access to the demo company by seeding the <c>st_user_company</c>
+    /// Grants one demo account access to the demo company by seeding the <c>st_user_company</c>
     /// row that <c>EnterCompany</c> checks.
     /// </summary>
     /// <remarks>
@@ -295,21 +312,25 @@ public static class NorthwindSchemaSeeder
     /// A missing target aborts startup rather than skipping the row: without this grant sign-in
     /// still succeeds and every company-scoped form then fails, which is a long way from the cause.
     /// </remarks>
+    /// <param name="dbAccess">The common database.</param>
+    /// <param name="userId">The account's business id.</param>
     /// <exception cref="InvalidOperationException">The user or company row could not be resolved.</exception>
-    private static void SeedCompanyAccess(DbAccess dbAccess)
+    private static void SeedCompanyAccess(DbAccess dbAccess, string userId)
     {
-        var countSpec = new DbCommandSpec(DbCommandKind.Scalar, "SELECT COUNT(*) FROM st_user_company");
-        if (Convert.ToInt32(dbAccess.Execute(countSpec).Scalar, CultureInfo.InvariantCulture) > 0) { return; }
-
-        var userRowId = ResolveRowId(dbAccess, "st_user", NorthwindCredentials.UserId);
+        var userRowId = ResolveRowId(dbAccess, "st_user", userId);
         var companyRowId = ResolveRowId(dbAccess, "st_company", NorthwindCredentials.CompanyId);
         if (userRowId == Guid.Empty || companyRowId == Guid.Empty)
         {
             throw new InvalidOperationException(
                 "Northwind startup aborted: could not resolve the rows behind the company grant — " +
-                $"st_user '{NorthwindCredentials.UserId}' and st_company '{NorthwindCredentials.CompanyId}' " +
+                $"st_user '{userId}' and st_company '{NorthwindCredentials.CompanyId}' " +
                 "must both exist before st_user_company is seeded. Delete northwind.db to reseed from scratch.");
         }
+
+        var countSpec = new DbCommandSpec(DbCommandKind.Scalar,
+            "SELECT COUNT(*) FROM st_user_company WHERE user_rowid = {0} AND company_rowid = {1}",
+            userRowId, companyRowId);
+        if (Convert.ToInt32(dbAccess.Execute(countSpec).Scalar, CultureInfo.InvariantCulture) > 0) { return; }
 
         const string sql =
             "INSERT INTO st_user_company (sys_rowid, user_rowid, company_rowid) VALUES ({0}, {1}, {2})";

@@ -1,4 +1,4 @@
-<!-- source: adr/adr-010-logical-database-category.md blob: 2799dae60583b5a206ad8e8a92eb662766987256 -->
+<!-- source: adr/adr-010-logical-database-category.md blob: 5ffb54a4ecdf03aa94d690ee78da60eb174e7418 -->
 # ADR-010：邏輯資料庫分類（DbCategory）解耦資料庫部署彈性
 
 [English](adr-010-logical-database-category.md)
@@ -207,7 +207,7 @@ public enum DbScope { Common, Company, Log }
 | `Log` | 固定 `"log"`，不需 accessToken（讓 `Login` / `Logout` 等 pre-EnterCompany 方法也能寫 audit log） |
 | `Company` | accessToken → `SessionInfo.CompanyId` → `CompanyInfo.CompanyDatabaseId` |
 
-多公司情境下，多家公司可共享同一 `CompanyDatabaseId` 字串（譬如多家中小公司共用 `"biz_shared_01"` 實體 DB），靠表上 `sys_company_rowid` 欄位做列級分區。Router 對「同 databaseId 多公司」與「獨立 databaseId」兩種設定都一視同仁——CompanyInfo 設定彈性決定，路由邏輯本身不變。
+多公司情境下，多家公司可共享同一 `CompanyDatabaseId` 字串（譬如多家中小公司共用 `"biz_shared_01"` 實體 DB），此時要區隔各公司的資料列，得靠表上的公司欄位，而框架的表單 repository 既不會加上、也不會依它過濾。Router 對「同 databaseId 多公司」與「獨立 databaseId」兩種設定都一視同仁——CompanyInfo 設定彈性決定，路由邏輯本身不變。
 
 ### 與 FormSchema 的銜接
 
@@ -233,7 +233,15 @@ BO 端不需要操心這層——`BusinessObject` 加 `ResolveDatabaseId(DbScope
 
 ### `CompanyInfo.LogDatabaseId` 移除
 
-P1 落地 `CompanyInfo` 時原本含 `LogDatabaseId` 欄位，預期某些公司想用獨立 log DB。但後續決定 `DbScope.Log` 固定 `"log"` 以支援 pre-EnterCompany 寫 log，`LogDatabaseId` 變 dead field 並移除。多公司 log 隔離由列級 `sys_company_rowid` 處理（與 company DB 一致），不需實體 DB 隔離。
+P1 落地 `CompanyInfo` 時原本含 `LogDatabaseId` 欄位，預期某些公司想用獨立 log DB。但後續決定 `DbScope.Log` 固定 `"log"` 以支援 pre-EnterCompany 寫 log，`LogDatabaseId` 變 dead field 並移除。多公司 log 隔離由 log 表的 `company_id` 欄位在列級處理，不需實體 DB 隔離。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：分類 Id 已固定。** 核心要點 1 說三個分類不寫死在框架中、專案可自訂分類。現行程式碼只接受 `common`、`company`、`log`：`RepositoryFactory.ParseCategoryId`（`src/Polhem.Repository/Factories/RepositoryFactory.cs`）對其他 `FormSchema.CategoryId` 擲出例外，analyzer 也會在建置期回報其他 Id（FormSchema 為 POLHEM1001，DbCategorySettings 中的分類為 POLHEM1002）。分類與其 DatabaseItem 之間的多對一對應不變。
+- **2026-09-27：執行期的 `CategoryId`。** 「決策」、其下的附帶說明與「三階段角色對照」把 `CategoryId` 限定在設計與部署階段。`FormSchema.CategoryId` 在執行期也會被讀取，用來選定表單 repository 路由所用的 `DbScope`（見上方「後續延伸：執行時路由」）；連線仍以 `DatabaseItem.Id` 取得。
+- **2026-09-27：驗證。** 並未加入 `DbCategoryValidator`。未知的分類 Id 由 POLHEM1001、POLHEM1002 回報，並如上所述在執行期被拒絕；POLHEM2001 則回報未在所屬分類下註冊的 FormSchema 資料表，因此 `DbCategory.Tables` 子節點不再只是文件性索引。規則清單見 [Analyzer 規則](../zh-TW/analyzer-rules.md)。
 
 ## 相關文件
 

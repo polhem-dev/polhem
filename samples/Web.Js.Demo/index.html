@@ -92,7 +92,7 @@
 
   <p>
     Backend endpoint: <code id="endpoint">...</code><br>
-    Default credentials: <code>demo</code> / <code>demo</code>
+    Default credentials: <code>demo</code> / <code>demo</code>, company <code>DEMO</code>
   </p>
 
   <section>
@@ -117,16 +117,17 @@
   </section>
 
   <section>
-    <h2>3. Enter Company (error-path demo)</h2>
+    <h2>3. Enter Company (required before sections 4 and 5)</h2>
     <p class="hint">
-      Calls <code>System.EnterCompany</code>. The default demo backend does not
-      seed <code>st_company</code> / <code>st_user_company</code>, so this call
-      <strong>is expected to return an error</strong> &mdash; useful for exercising
-      the error-handling path. Employee CRUD lives in the Common scope and
-      <strong>does not require EnterCompany</strong>.
+      Calls <code>System.EnterCompany</code>. <code>Login</code> says who you are;
+      <code>EnterCompany</code> says which company you work in. The Employee form is
+      company-scoped (<code>CategoryId="company"</code>), so until the session has
+      entered a company every Employee call in sections 4 and 5 fails. The demo backend seeds
+      one company, <code>DEMO</code>; any other ID returns
+      <code>Company access denied</code>, which exercises the error path.
     </p>
     <p>
-      <label for="companyId">Company ID:</label><input id="companyId" value="C001">
+      <label for="companyId">Company ID:</label><input id="companyId" value="DEMO">
       <button id="btn-enter-company">EnterCompany</button>
       <button id="btn-leave-company" class="secondary">LeaveCompany</button>
     </p>

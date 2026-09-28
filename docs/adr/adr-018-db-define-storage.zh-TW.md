@@ -1,4 +1,4 @@
-<!-- source: adr/adr-018-db-define-storage.md blob: 8bdb3d0a9e1ed1a5fbd9c1fc60e29709c3f73bb5 -->
+<!-- source: adr/adr-018-db-define-storage.md blob: f7dcab035c1a92c05d14754bbee3c66a29efad00 -->
 # ADR-018：定義儲存於資料庫（`st_define` 單表 XML blob）
 
 [English](adr-018-db-define-storage.md)
@@ -33,7 +33,7 @@
 
 ### 五個關鍵設計點
 
-1. **Bootstrap 切分**：`SystemSettings` / `DatabaseSettings` **維持檔案**（啟動必要設定；`DatabaseSettings` 是「怎麼連 DB」本身，不可能存在它所描述的 DB 裡）。其餘 6 型進 DB。
+1. **Bootstrap 切分**：`SystemSettings` / `DatabaseSettings` **維持檔案**（啟動必要設定；`DatabaseSettings` 是「怎麼連 DB」本身，不可能存在它所描述的 DB 裡）。其餘可存型別進 DB。
 
 2. **`define_type` = `typeof(T).Name`** → 同時是儲存鑑別字、[ADR-017](adr-017-db-cache-invalidation.zh-TW.md) 慣例分派的快取群組、bump 群組三者一致（注意 Language 的快取型別為 `LanguageResource`，故 `define_type` = `"LanguageResource"`）。`SaveX` 在同 tx 內 `Touch("<typeof(T).Name>:<define_key>")` → 失效自動路由到對應快取。
 
@@ -45,7 +45,7 @@
 
 ### 客製化 overlay 收進同表
 
-租戶客製覆寫（`Language` / `FormLayout` / `ProgramSettings`）以 `customize_id` 欄收進同一張 `st_define`（`"*"` = base）；`ICustomizeDefineReader` 的三個讀取以該 `customize_id` 查詢，缺漏回 `null`（與檔案版唯讀語意一致）。比檔案模型的雙目錄更統一。
+租戶客製覆寫（`Language` / `FormLayout` / `ProgramSettings`）以 `customize_id` 欄收進同一張 `st_define`（`"*"` = base）；`ICustomizeDefineReader` 的讀取以該 `customize_id` 查詢，缺漏回 `null`（與檔案版唯讀語意一致）。比檔案模型的雙目錄更統一。
 
 ## 結果
 
@@ -75,6 +75,14 @@
 4. **把 `CreateInstance` 接 `ICacheDataSourceProvider`** —— 拒絕：DB 載入已由 service 層（`CompanyInfoService` 等）的 load-on-miss 負責，cache 維持「笨儲存」；接 provider 會重工並把 DB 依賴塞進 `Polhem.ObjectCaching`。
 
 5. **`key1`/`key2` 兩欄拆複合鍵** —— 拒絕：與 [ADR-017](adr-017-db-cache-invalidation.zh-TW.md) 的單一字串 cache key 不一致；單一 `define_key` 對齊通知 key、未來複合度增加也不需改 schema。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-07-01 至 2026-08-06：`st_define` 收進更多型別。** `CurrencySettings` 與 `UnitSettings`（2026-07-01）、`MenuSettings`（2026-08-04，自 `ProgramSettings` 分離）與 `PluginSettings`（2026-08-06）陸續成為定義型別，並與其他型別一樣存在 `st_define`；上文「進 DB」表列的是當時的型別。現行清單以 `IDefineStorage` 的 `Get`/`Save` 成員為準，實作在 `src/Polhem.Db/Storage/DbDefineStorage.cs`。
+- **2026-08-04 至 2026-08-06：客製 reader 擴充，且有一項客製可寫入。** `ICustomizeDefineReader`（`src/Polhem.Definition/Storage/ICustomizeDefineReader.cs`）讀取 `Language`、`ProgramSettings`、`MenuSettings`、`FormLayout` 與 `PluginSettings` 的客製。plugin 綁定不再唯讀：`DbDefineStorage` 也實作 `ICustomizeDefineWriter`，其 `SaveCustomizePluginSettings` 儲存租戶的 plugin 綁定。
+- **2026-07-29：替代方案 4 成為現行做法。** DB 相依快取自行載入缺少的條目：`CreateInstance` 呼叫 `ICacheDataSourceProvider`（例如 `src/Polhem.ObjectCaching/Database/CompanyInfoCache.cs`），`CompanyInfoService` 等服務只讀取快取。`ICacheDataSourceProvider` 是 `Polhem.Definition` 中的介面，由 `Polhem.Business` 實作（`src/Polhem.Business/Providers/CacheDataSourceProvider.cs`），因此 `Polhem.ObjectCaching` 仍沒有對資料層的專案參考。另見 [ADR-017](adr-017-db-cache-invalidation.zh-TW.md)〈實作演進〉。
 
 ## 相關文件
 

@@ -1,4 +1,4 @@
-<!-- source: adr/adr-038-definition-dependency-boundary.md blob: 7870efb84d91114a644b76f5c12f841111304121 -->
+<!-- source: adr/adr-038-definition-dependency-boundary.md blob: ba735e0475faae48bffad4f12f0b0356571c7cca -->
 # ADR-038：定義層相依邊界——運算式抽象下沉至 `Polhem.Base`，判準以閘門固化
 
 [English](adr-038-definition-dependency-boundary.md)
@@ -23,7 +23,7 @@ ADR-036 把 MessagePack 趕出定義層時立下的判準是：
 Polhem.Definition ──ProjectReference──> Polhem.Expressions ──PackageReference──> DynamicExpresso.Core
 ```
 
-`Polhem.Definition.4.19.0.nuspec` 因而把 `Polhem.Expressions` 列為相依，
+定義套件的 nuspec（當時為 Bee.NET 4.19.0）因而把運算式套件列為相依，
 **任何安裝 `Polhem.Definition` 的消費者都會被拉進一個運算式引擎**——包含只想讀定義的
 純 UI head 與定義檔工具。掃過 `src/` 全部 17 個專案後，這是唯一一處違規。
 
@@ -155,3 +155,18 @@ ADR-036 的判準只說「外部套件相依」，未定義界線。本 ADR 補�
 | 建置期鎖 | 對 `Polhem.Base` / `Polhem.Definition` 各注入一次 `MessagePack`，兩者皆以 `POLHEM9001` 中止建置；還原後 0 warning / 0 error |
 | clean Release build | 0 warning / 0 error |
 | 全套單元測試 | 16 個測試專案全綠 |
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **建置期鎖看得到遞移的專案參考，只看不到遞移的套件。** 閘門表說建置期鎖檢查的是**直接**宣告的參考。
+  2026-08-11 實測：.NET SDK 在 Build 之前就把遞移的專案參考併入 `@(ProjectReference)`，因此建置期鎖看得到參考閉包中的
+  每個專案，`src/Directory.Build.targets` 的允許清單也必須列出整個閉包，而不只是 csproj 寫下的那些。建置期鎖仍然看不到的，
+  是經由專案參考帶進來的套件，那一半由閉包測試負責；兩道閘門都需要的理由不變。
+- **建置期鎖與閉包測試也涵蓋 `Polhem.Api.Contracts`。** 它位於每個 UI head 的遞移閉包中，同樣的論證適用。
+  受鎖組件為 `Polhem.Base`、`Polhem.Definition` 與 `Polhem.Api.Contracts`（`PolhemEnforceDependencyBoundary` 條件），
+  `DefinitionDependencyGateTests` 對每一個各跑一次閉包檢查，各自比對自己的允許清單。
+- **2026-09-27：使用 `Microsoft.Extensions.Localization.Abstractions` 的 localizer 已更名。**
+  `Language/PolhemStringLocalizer.cs` 現為 `src/Polhem.Definition/Language/LanguageResourceStringLocalizer.cs`；
+  允許的相依與允許的理由不變。

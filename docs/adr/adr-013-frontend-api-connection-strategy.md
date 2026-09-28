@@ -12,9 +12,9 @@ At the v4.4 stage Polhem had three kinds of front-end host at the same time:
 
 | Front-end kind | Representative packages | Deployment / runtime environment |
 |---------|---------|----------------|
-| **Desktop / native UI** | `Polhem.UI.Core` (shared), `Polhem.UI.Avalonia`, `Polhem.UI.Maui`, `Polhem.UI.WinForms` (future, separate repository) | iOS / Android / macOS / Windows / Linux / desktop OS native |
+| **Desktop / native UI** | `Polhem.UI.Core` (shared), `Polhem.UI.Avalonia`, the then `Bee.UI.Maui` (since removed), `Polhem.UI.WinForms` (future, separate repository) | iOS / Android / macOS / Windows / Linux / desktop OS native |
 | **Blazor Server** | `Polhem.Web.Blazor.Server` | ASP.NET Core server-rendered, with SignalR circuit |
-| **Blazor WASM** | `Polhem.Web.Blazor.Wasm` | Browser sandbox (WebAssembly) |
+| **Blazor WASM** | the then `Bee.Web.Blazor.Wasm` (since removed) | Browser sandbox (WebAssembly) |
 
 These three kinds of front end **have structurally different needs for "how to obtain / persist the API connection
 state"**:
@@ -67,7 +67,7 @@ Adopt **two separate families**:
   - Connectors are obtained through `ClientInfo.SystemApiConnector` / `ClientInfo.CreateFormApiConnector(progId)`
   - Persistence goes through `IEndpointStorage` (default implementation: a file); the UI dialog flow is provided by
     `IUIViewService`
-- **Current members** (for the current state see the postscript at the end):
+- **Current members** (for the current state see Implementation evolution at the end):
   - `Polhem.UI.Core` (shared)
   - `Polhem.UI.Avalonia` (desktop — Windows / macOS / Linux, Avalonia 12.x; mobile iOS / Android is covered by it
     too. For the DataGrid binding strategy see [ADR-020](adr-020-avalonia-datagrid-binding-strategy.md))
@@ -87,7 +87,7 @@ Adopt **two separate families**:
   - State management is handled by components / `CascadingValue` / Razor scoped services
   - **WASM must never depend on any backend assembly** (Repository / Business / Hosting and so on); this is enforced
     by the dependency chain
-- **Current members**: `Polhem.Web.Blazor.Server` (for the current state see the postscript at the end)
+- **Current members**: `Polhem.Web.Blazor.Server` (for the current state see Implementation evolution at the end)
 
 ### Criterion for choosing the family (apply it when adding a package)
 
@@ -146,18 +146,41 @@ should not be forced onto them**.
   affect the web family; left for a separate decision later
 - **Blazor Hybrid (Blazor embedded in MAUI)**: may need to span both families; a new ADR will evaluate it at that time
 
-## Postscript (2026-07-31) — member roster update
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing
+with the current code:
+
+### 2026-07-31: Member roster update
 
 **The decision of this ADR is unchanged**: the split into two families, and the criterion "does it consume the
 `Polhem.UI.Core` abstractions", still hold today. Only the roster has changed — on 2026-07-28 the UI converged on
-**two tracks, Avalonia + Blazor.Server**, and the two packages `Polhem.UI.Maui` and `Polhem.Web.Blazor.Wasm` were
-removed:
+**two tracks, Avalonia + Blazor.Server**, and the two packages of the time, `Bee.UI.Maui` and
+`Bee.Web.Blazor.Wasm`, were removed (before the project was renamed Polhem):
 
 | Original member | Current state | Reason |
 |--------|------|------|
-| `Polhem.UI.Maui` | **Removed** | The `net10.0-ios` / `net10.0-android` heads of `Polhem.UI.Avalonia` already cover mobile, so a second native family is not needed |
-| `Polhem.Web.Blazor.Wasm` | **Removed** | Squeezed between Avalonia (offline / native experience) and Blazor Server (SEO, embedding in an existing website, screen readers, no runtime download), it has no range of use of its own |
+| `Bee.UI.Maui` | **Removed** | The `net10.0-ios` / `net10.0-android` heads of `Polhem.UI.Avalonia` already cover mobile, so a second native family is not needed |
+| `Bee.Web.Blazor.Wasm` | **Removed** | Squeezed between Avalonia (offline / native experience) and Blazor Server (SEO, embedding in an existing website, screen readers, no runtime download), it has no range of use of its own |
 
 So the current members of Family A are `Polhem.UI.Core` + `Polhem.UI.Avalonia`, and Family B is
 `Polhem.Web.Blazor.Server`. The table of three front-end kinds in the "Context" section above describes the state at
 v4.4 and is kept to show the context of the decision.
+
+### 2026-09-27: Connection plumbing
+
+- **Default endpoint storage.** `ClientInfo.EndpointStorage` and `ClientInfo.ApiKeyStorage` default to
+  `FileEndpointStorage` (`src/Polhem.UI.Core/FileEndpointStorage.cs`), which keeps the endpoint and the API key in
+  the per-user local application data folder instead of a file beside the assembly (read-only on iOS). A browser
+  host, which has no persistent file system, replaces both. The static access-token field of `ClientInfo` is now
+  named `s_accessToken`.
+- **Local mode takes the host's service provider.** `LocalApiProvider` and the local connector constructors take an
+  `IServiceProvider`; the process-wide `ApiClientInfo.LocalServiceProvider` was removed. A Blazor Server host passes
+  its own container through `PolhemApiConnectorFactory`, and the native family keeps the provider on
+  `ClientInfo.LocalServiceProvider`.
+- **No ambient session in the Blazor connector factory.** The `PolhemApiConnectorFactory` constructor that fell back
+  to process-wide session state was removed; the factory is scoped per circuit and always receives that circuit's
+  `ApiSessionContext` (`src/Polhem.Web.Blazor.Server/DependencyInjection/PolhemApiConnectorFactory.cs`).
+- **Shared logic moved down to `Polhem.Api.Client`.** The permission capability resolver
+  (`ElementCapabilityResolver`, `src/Polhem.Api.Client/Permissions/`) moved there from `Polhem.UI.Core`, so both
+  families can use it, as the Negative consequences above anticipated.
