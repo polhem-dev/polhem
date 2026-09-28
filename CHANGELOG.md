@@ -8,7 +8,7 @@ the reasons and the background are in its detailed notes under [`docs/changelogs
 
 ## [Unreleased]
 
-## [1.0.0] - Unreleased
+## [1.0.0] - 2026-09-28
 
 > Polhem continues [Bee.NET](https://github.com/jeff377/bee-library) under a new name. Polhem 1.0.0 is Bee.NET 4.33.0,
 > the last Bee.NET release, renamed, plus the changes listed below. How to move an application over is described in
