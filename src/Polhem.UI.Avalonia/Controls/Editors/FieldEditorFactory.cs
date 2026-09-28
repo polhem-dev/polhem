@@ -27,6 +27,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 ControlType.ButtonEdit => new ButtonEdit(),
                 ControlType.NumericEdit => new NumericEdit(),
                 ControlType.TimeEdit => new TimeEdit(),
+                ControlType.DateTimeEdit => new DateTimeEdit(),
                 _ => new TextEdit(),
             };
         }

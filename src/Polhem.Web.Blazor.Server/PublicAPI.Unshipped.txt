@@ -12,3 +12,5 @@ Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.UseDefini
 Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.UseDefinitionLoader.get -> bool
 Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.UseDefinitionLoader.set -> void
 virtual Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.CreateDefinitionLoader(System.Guid accessToken) -> Polhem.Api.Client.Definitions.FormDefinitionLoader!
+Polhem.Web.Blazor.Server.Components.DynamicGrid.FormTable.get -> Polhem.Definition.Forms.FormTable?
+Polhem.Web.Blazor.Server.Components.DynamicGrid.FormTable.set -> void

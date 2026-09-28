@@ -42,8 +42,32 @@ else
                                            type="date"
                                            class="polhem-dynamic-form__input polhem-dynamic-form__input--date"
                                            readonly="@field.ReadOnly"
-                                           value="@rawValue"
+                                           value="@ToDateInputValue(rawValue)"
                                            @onchange="e => DataObject.SetField(field.FieldName, e.Value?.ToString())" />
+                                    break;
+
+                                case ControlType.DateTimeEdit:
+                                    @* An instant, already in the user's time zone (the connector converts;
+                                       ADR-032). Read-only shows it in the circuit's culture; editing uses
+                                       the browser's date-and-time input, whose value is the invariant
+                                       yyyy-MM-ddTHH:mm:ss form in both directions. *@
+                                    @if (field.ReadOnly)
+                                    {
+                                        <input id="@inputId"
+                                               type="text"
+                                               class="polhem-dynamic-form__input polhem-dynamic-form__input--datetime"
+                                               readonly
+                                               value="@ToDateTimeDisplay(rawValue)" />
+                                    }
+                                    else
+                                    {
+                                        <input id="@inputId"
+                                               type="datetime-local"
+                                               step="1"
+                                               class="polhem-dynamic-form__input polhem-dynamic-form__input--datetime"
+                                               value="@ToDateTimeInputValue(rawValue)"
+                                               @onchange="e => SetDateTimeField(DataObject, field.FieldName, e.Value?.ToString())" />
+                                    }
                                     break;
 
                                 case ControlType.YearMonthEdit:

@@ -5,8 +5,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using Polhem.Base;
-using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;
@@ -14,8 +12,9 @@ using Polhem.UI.Avalonia.Controls.Editors;
 namespace Polhem.UI.Avalonia.Controls
 {
     /// <summary>
-    /// Cell-building half of <see cref="GridControl"/> (cell rendering, lookup cells, in-cell
-    /// editors and value formatting). Split out for file size only; behaviour is unchanged.
+    /// Cell-building half of <see cref="GridControl"/> (cell rendering, lookup cells and in-cell
+    /// editors). The text a cell shows is formatted in `.Formatting`. Split out for file size only;
+    /// behaviour is unchanged.
     /// </summary>
     public partial class GridControl
     {
@@ -106,20 +105,6 @@ namespace Polhem.UI.Avalonia.Controls
                 icon.Cursor ??= new Cursor(StandardCursorType.Hand);
             };
             return icon;
-        }
-
-        private static string[] SplitDisplayFields(string displayFields)
-            => string.IsNullOrEmpty(displayFields)
-                ? []
-                : displayFields.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        // Joins the non-empty display-field values (e.g. "D001 - Engineering").
-        private static string ComposeDisplayText(
-            DataRowView? rowView, string[] displayFields, string displayFormat, string numberFormat)
-        {
-            if (displayFields.Length == 0) return string.Empty;
-            return LookupDisplay.Compose(displayFields
-                .Select(f => FormatCell(rowView, f, displayFormat, numberFormat)));
         }
 
         private async Task OpenLookupCellAsync(DataRow row, FormField lookupField)
@@ -341,8 +326,11 @@ namespace Polhem.UI.Avalonia.Controls
                 return picker;
             }
 
+            if (column.ControlType == ControlType.DateTimeEdit)
+                return BuildDateTimeCellEditor(rowView, dataColumn);
+
             if (column.ControlType == ControlType.DropDownEdit
-                && _binder.DataObject?.GetFormField(TableName, fieldName)?.ListItems is { Count: > 0 } items)
+                && ResolveFormField(fieldName)?.ListItems is { Count: > 0 } items)
             {
                 var options = items.ToList();
                 var combo = new ComboBox
@@ -374,6 +362,43 @@ namespace Polhem.UI.Avalonia.Controls
             return textBox;
         }
 
+        // The in-cell counterpart of DateTimeEdit: the same culture display and parsing, committed on
+        // leaving the cell or on Enter. An unchanged or unparseable text is not written, so the stored
+        // value keeps its full precision and a typo never replaces it.
+        private static TextBox BuildDateTimeCellEditor(DataRowView rowView, DataColumn dataColumn)
+        {
+            var raw = rowView.Row[dataColumn];
+            var display = raw is DateTime current ? DateTimeEdit.FormatDisplay(current) : string.Empty;
+            var textBox = new TextBox { Text = display };
+
+            void Commit()
+            {
+                var text = textBox.Text ?? string.Empty;
+                if (string.Equals(text, display, StringComparison.Ordinal)) return;
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    WriteCell(rowView, dataColumn, string.Empty);
+                }
+                else if (DateTimeEdit.TryParseInput(text, out var value))
+                {
+                    WriteCell(rowView, dataColumn, DateTimeEdit.ToBindingValue(value));
+                }
+                else
+                {
+                    return;
+                }
+                display = text;
+            }
+
+            textBox.LostFocus += (_, _) => Commit();
+            textBox.KeyDown += (_, e) =>
+            {
+                if (e.Key == Key.Enter)
+                    Commit();
+            };
+            return textBox;
+        }
+
         private static void WriteCell(DataRowView rowView, DataColumn column, string? value)
         {
             if (!TryConvertCellValue(value, column, out var converted)) return;
@@ -398,83 +423,6 @@ namespace Polhem.UI.Avalonia.Controls
                 converted = DBNull.Value;
                 return false;
             }
-        }
-
-        private static string FormatCell(DataRowView? row, string fieldName, string displayFormat, string numberFormat)
-        {
-            if (row is null) return string.Empty;
-            var dataRow = row.Row;
-            if (!dataRow.Table.Columns.Contains(fieldName)) return string.Empty;
-            return CellValueFormatter.Format(dataRow[fieldName], displayFormat, numberFormat);
-        }
-
-        /// <summary>
-        /// Formats the text a plain (non-editor) cell of <paramref name="column"/> shows for
-        /// <paramref name="row"/>: the composed display fields of a list-mode lookup column instead of
-        /// its raw row id, otherwise the value in the user's culture with the column's delivered or
-        /// currency/unit-resolved number format.
-        /// </summary>
-        /// <param name="row">The row to read; <c>null</c> gives an empty string.</param>
-        /// <param name="column">The layout column being rendered.</param>
-        /// <remarks>
-        /// The compact card list of <see cref="Polhem.UI.Avalonia.Views.ListView"/> renders its values
-        /// through this method too, so a phone-width list shows a value exactly as the wide grid does.
-        /// </remarks>
-        internal string FormatColumnText(DataRowView? row, LayoutColumn column)
-        {
-            var textFields = SplitDisplayFields(column.DisplayFields);
-            return textFields.Length == 0
-                ? FormatCellForColumn(row, column)
-                : ComposeDisplayText(row, textFields, column.DisplayFormat, column.NumberFormat);
-        }
-
-        // Currency-aware cell text: an Amount column resolves its decimals per row from the referenced
-        // currency (see ResolveCellNumberFormat); every other column uses the column's delivered formats.
-        private string FormatCellForColumn(DataRowView? row, LayoutColumn column)
-        {
-            if (row is null) return string.Empty;
-            var dataRow = row.Row;
-            if (!dataRow.Table.Columns.Contains(column.FieldName)) return string.Empty;
-            string numberFormat = ResolveCellNumberFormat(dataRow, column);
-            return CellValueFormatter.Format(dataRow[column.FieldName], column.DisplayFormat, numberFormat);
-        }
-
-        // Reference-bound columns (amounts by currency, quantities/weights by unit) are not baked at
-        // delivery — resolve their format from the row's reference value and the client master. Other
-        // kinds (and the no-master / no-reference cases) keep the delivered format.
-        private string ResolveCellNumberFormat(DataRow dataRow, LayoutColumn column)
-        {
-            var source = NumberKindProfile.GetDecimalsSource(column.NumberKind);
-
-            if (source == DecimalsSource.Currency && CurrencySettings is not null)
-            {
-                string code = ResolveCellReferenceCode(dataRow, column.CurrencyField, DefaultCurrencyCode);
-                return NumberFormatResolver.ResolveFormat(
-                    column.NumberKind, new RoundingContext { CurrencySettings = CurrencySettings }, code);
-            }
-
-            if (source == DecimalsSource.Unit && UnitSettings is not null)
-            {
-                string code = ResolveCellReferenceCode(dataRow, column.UnitField, string.Empty);
-                if (StringUtilities.IsNotEmpty(code))
-                    return NumberFormatResolver.ResolveFormat(
-                        column.NumberKind, new RoundingContext { UnitSettings = UnitSettings }, code);
-            }
-
-            return column.NumberFormat;
-        }
-
-        // Per-row reference code: the column's reference field (currency key / unit) on this row →
-        // the supplied fallback. Empty resolves to the framework fallback downstream.
-        private static string ResolveCellReferenceCode(DataRow dataRow, string referenceField, string fallback)
-        {
-            if (StringUtilities.IsNotEmpty(referenceField)
-                && dataRow.Table.Columns.Contains(referenceField))
-            {
-                string rowCode = ValueUtilities.CStr(dataRow[referenceField]);
-                if (StringUtilities.IsNotEmpty(rowCode)) { return rowCode; }
-            }
-            return fallback;
         }
 
         private void OnSelectionChangedCore(object? sender, SelectionChangedEventArgs e)

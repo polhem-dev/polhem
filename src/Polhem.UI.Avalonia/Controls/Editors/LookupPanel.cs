@@ -24,6 +24,13 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// </remarks>
     public sealed class LookupPanel : UserControl
     {
+        /// <summary>
+        /// The narrowest the panel is laid out on a screen wide enough for it. A native dialog window is
+        /// sized wider than this; the overlay card keeps it only where the screen has room, so a phone
+        /// gets a card as wide as its screen instead.
+        /// </summary>
+        internal const double PreferredMinWidth = 452;
+
         private readonly TextBox _searchBox;
         private readonly GridControl _grid;
         private readonly Button _okButton;
@@ -45,7 +52,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// </summary>
         public LookupPanel()
         {
-            _searchBox = new TextBox { PlaceholderText = UIText.Get(PolhemUIText.Search), MinWidth = 200 };
+            _searchBox = new TextBox { PlaceholderText = UIText.Get(PolhemUIText.Search) };
             _searchBox.KeyDown += async (_, e) =>
             {
                 if (e.Key != Key.Enter) return;
@@ -55,7 +62,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             var searchButton = new Button { Content = UIText.Get(PolhemUIText.Search) };
             searchButton.Click += async (_, _) => await ReloadAsync().ConfigureAwait(true);
 
-            _grid = new GridControl { MinHeight = 240 };
+            _grid = new GridControl { MinHeight = 160 };
             _grid.RowSelected += (_, _) => UpdateOkState();
             _grid.InnerGrid.DoubleTapped += (_, _) => Commit();
 
@@ -82,21 +89,25 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 Orientation = Orientation.Horizontal,
                 Spacing = 8,
                 HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 12, 0, 0),
             };
             buttons.Children.Add(_okButton);
             buttons.Children.Add(cancelButton);
 
-            var host = new StackPanel
-            {
-                Orientation = Orientation.Vertical,
-                Spacing = 12,
-                Margin = new Thickness(16),
-                MinWidth = 420,
-            };
+            searchRow.Margin = new Thickness(0, 0, 0, 12);
+            _errorLabel.Margin = new Thickness(0, 0, 0, 12);
+
+            // The grid fills what the search row and the buttons leave: a host that limits the height
+            // (a phone screen, or the space above its on-screen keyboard) takes the space from the grid,
+            // which scrolls its rows, rather than from the buttons.
+            var host = new DockPanel { LastChildFill = true, Margin = new Thickness(16) };
+            DockPanel.SetDock(searchRow, Dock.Top);
+            DockPanel.SetDock(_errorLabel, Dock.Top);
+            DockPanel.SetDock(buttons, Dock.Bottom);
             host.Children.Add(searchRow);
             host.Children.Add(_errorLabel);
-            host.Children.Add(_grid);
             host.Children.Add(buttons);
+            host.Children.Add(_grid);
             Content = host;
         }
 
@@ -132,7 +143,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             ArgumentNullException.ThrowIfNull(connector);
 
             _connector = connector;
-            _grid.Bind(schema.GetLookupLayout(), rows: null);
+            _grid.Bind(schema.GetLookupLayout(), rows: null, schema.MasterTable);
             UpdateOkState();
         }
 

@@ -46,10 +46,15 @@ namespace Polhem.Definition.Layouts
         /// Time-of-day input box: a fixed-width <c>"HH:mm"</c> masked text input, normalised on
         /// commit. Display format equals storage format, so no culture-aware formatting applies.
         /// </summary>
+        TimeEdit,
+        /// <summary>
+        /// Date-and-time input box for an instant (<c>DbType="DateTime"</c>): shows and parses the value
+        /// in the user's culture as a date with its time of day, so the time part is kept.
+        /// </summary>
         /// <remarks>
         /// New members must be appended here: the value rides the wire as its underlying integer,
         /// so inserting one mid-enum breaks existing payloads.
         /// </remarks>
-        TimeEdit
+        DateTimeEdit
     }
 }

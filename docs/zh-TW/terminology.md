@@ -1,4 +1,4 @@
-<!-- source: en/terminology.md blob: 0d3f5c297c6773835ac913284e6cd6a95459fe09 -->
+<!-- source: en/terminology.md blob: f5108e3f8ec024f3e4896fb035c84d6cbdef06b4 -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../en/terminology.md) · [← 文件索引](README.md)
@@ -227,7 +227,7 @@
 |----------|----------|----|
 | `FieldType` | 欄位種類 | `DbField`（資料庫欄位）、`RelationField`（關聯欄位）、`VirtualField`（虛擬欄位） |
 | `FieldDbType` | 欄位資料庫型別 | `String`、`Integer`、`Decimal`、`DateTime`、`Date`、`Time`、`Boolean` …（完整清單見該列舉的 XML 文件） |
-| `ControlType` | 控制項類型 | `TextEdit`、`DropDownEdit`、`DateEdit`、`TimeEdit`、`CheckEdit` … |
+| `ControlType` | 控制項類型 | `TextEdit`、`DropDownEdit`、`DateEdit`、`DateTimeEdit`、`TimeEdit`、`CheckEdit` … |
 | `SingleFormMode` | 表單模式 | `View`（檢視）、`Add`（新增）、`Edit`（編輯）；以 `FormScope.FormMode` attached property 對外 |
 
 ### 時間語意
@@ -332,7 +332,7 @@
 |----------|----------|------|
 | `ListView` | 清單檢視 | Avalonia `UserControl`，表單畫面的清單側：載入列、處理選取與捲動，透過 `GridControl` 渲染列 |
 | `GridControl` | 表格控件 | `ContentControl` 組合式控件（工具列 + 內部 `DataGrid`，以 `InnerGrid` 公開）、由 `LayoutGrid` 驅動；實作 `IBindTableControl`；cell 顯示走 `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>`（ADR-020），編輯依 `GridEditMode`（ADR-021） |
-| Field editors（`TextEdit` / `MemoEdit` / `ButtonEdit` / `NumericEdit` / `TimeEdit` / `DateEdit` / `YearMonthEdit` / `DropDownEdit` / `CheckEdit`） | 欄位編輯器 | 繼承原生控件（`StyleKeyOverride` 沿用主題）、各綁定 `FormDataObject` 一個欄位；自動套用 `FormField` metadata（MaxLength / ListItems） |
+| Field editors（`TextEdit` / `MemoEdit` / `ButtonEdit` / `NumericEdit` / `TimeEdit` / `DateEdit` / `DateTimeEdit` / `YearMonthEdit` / `DropDownEdit` / `CheckEdit`） | 欄位編輯器 | 繼承原生控件（`StyleKeyOverride` 沿用主題）、各綁定 `FormDataObject` 一個欄位；自動套用 `FormField` metadata（MaxLength / ListItems） |
 | `FormScope` | 表單作用域 | 可繼承的 attached properties（`DataObject` / `FormMode`）：容器設一次，子孫編輯器憑 `FieldName` 自動綁定 |
 | `GridEditMode` | 表格編輯模式 | `GridControl` 的 UI 層編輯模型：`InCell`（逐格）/ `EditForm`（彈窗整列） |
 | `RowEditPanel` / `RowEditDialog` | 列編輯面板／彈窗 | EditForm 模式的編輯面，由 field editors 組成；走暫存列編輯協定（`BeginRowEdit` / `CommitRowEdit` / `CancelRowEdit`） |

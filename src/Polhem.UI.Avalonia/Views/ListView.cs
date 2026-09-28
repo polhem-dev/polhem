@@ -362,7 +362,8 @@ namespace Polhem.UI.Avalonia.Views
         // One card per row: each visible column rendered as a "caption  value" line, read straight
         // off the DataRowView (no reflection binding, so it works under iOS AOT). The value text comes
         // from `formatValue`, which the view points at the wide grid's own cell formatter, so a date
-        // column shows the same short date on a phone as on the desktop grid.
+        // column shows the same short date on a phone as on the desktop grid. A check-box column shows
+        // the same disabled check box the grid does, not text.
         internal static FuncDataTemplate<DataRowView> BuildCardTemplate(
             IReadOnlyList<LayoutColumn> columns, Func<DataRowView?, LayoutColumn, string> formatValue)
             => new FuncDataTemplate<DataRowView>((row, _) =>
@@ -378,7 +379,9 @@ namespace Polhem.UI.Avalonia.Views
                         MinWidth = 92,
                         Opacity = 0.7,
                     });
-                    line.Children.Add(new TextBlock { Text = formatValue(row, column), TextWrapping = TextWrapping.Wrap });
+                    line.Children.Add(column.ControlType == ControlType.CheckEdit
+                        ? BuildCardCheckBox(row, column)
+                        : new TextBlock { Text = formatValue(row, column), TextWrapping = TextWrapping.Wrap });
                     stack.Children.Add(line);
                 }
 
@@ -392,6 +395,19 @@ namespace Polhem.UI.Avalonia.Views
                     Child = stack,
                 };
             });
+
+        private static CheckBox BuildCardCheckBox(DataRowView? row, LayoutColumn column)
+        {
+            var isChecked = row is not null
+                && row.Row.Table.Columns.Contains(column.FieldName)
+                && row.Row[column.FieldName] is true;
+            return new CheckBox
+            {
+                IsChecked = isChecked,
+                IsEnabled = false,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+        }
 
         private void OnCardSelectionChanged()
         {

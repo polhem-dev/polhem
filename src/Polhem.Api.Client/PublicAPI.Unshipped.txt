@@ -118,3 +118,4 @@ Polhem.Api.Client.Definitions.SnapshotLanguageService.SnapshotLanguageService(Sy
 Polhem.Api.Client.Definitions.SnapshotLanguageService.TryResolveLangText(string! customizeId, string! lang, string! namespace, string! subKey, out string! text) -> bool
 static Polhem.Api.Client.ApiClientInfo.DefaultLanguage.get -> string!
 static Polhem.Api.Client.ApiClientInfo.DefaultLanguage.set -> void
+static Polhem.Api.Client.FormValueBinding.TryGetListItemText(object? raw, System.Collections.Generic.IEnumerable<Polhem.Definition.Collections.ListItem!>? items, out string! text) -> bool

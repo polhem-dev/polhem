@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Polhem.Definition;
+using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
 using Polhem.UI.Avalonia.Controls.Editors;
@@ -95,6 +96,8 @@ namespace Polhem.UI.Avalonia.Controls
         private readonly PathIcon _deleteIcon;
         private LayoutGrid? _layout;
         private DataTable? _dataTable;
+        // The field metadata of a list-mode bind, which has no data object to resolve it from.
+        private FormTable? _listFormTable;
         private Action? _endActiveInlineEdit;
 
         static GridControl()

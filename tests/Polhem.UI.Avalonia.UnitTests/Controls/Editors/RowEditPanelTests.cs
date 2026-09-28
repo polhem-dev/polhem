@@ -44,11 +44,19 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             return layout;
         }
 
+        // The editors sit in a grid inside the scrolled area; the buttons are docked outside it.
+        private static global::Avalonia.Controls.Grid EditorGrid(RowEditPanel panel)
+        {
+            var host = Assert.IsType<global::Avalonia.Controls.DockPanel>(panel.Content);
+            var scroller = host.Children.OfType<global::Avalonia.Controls.ScrollViewer>().Single();
+            var padding = Assert.IsType<global::Avalonia.Controls.Border>(scroller.Content);
+            return Assert.IsType<global::Avalonia.Controls.Grid>(padding.Child);
+        }
+
         private static T FindEditor<T>(RowEditPanel panel)
             where T : global::Avalonia.Controls.Control
         {
-            var host = Assert.IsType<global::Avalonia.Controls.StackPanel>(panel.Content);
-            var grid = Assert.IsType<global::Avalonia.Controls.Grid>(host.Children[0]);
+            var grid = EditorGrid(panel);
             return grid.Children
                 .OfType<global::Avalonia.Controls.StackPanel>()
                 .Select(cell => cell.Children[1])
@@ -73,9 +81,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             var checkEditor = FindEditor<CheckEdit>(panel);
             Assert.False(checkEditor.IsChecked);
             // The invisible column produces no editor: one text + one check only.
-            var host = (global::Avalonia.Controls.StackPanel)panel.Content!;
-            var grid = (global::Avalonia.Controls.Grid)host.Children[0];
-            Assert.Equal(2, grid.Children.Count);
+            Assert.Equal(2, EditorGrid(panel).Children.Count);
         }
 
         [Fact]
@@ -164,9 +170,25 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
 
             panel.Bind(dataObject, BuildLayout(), row);
 
-            var host = Assert.IsType<global::Avalonia.Controls.StackPanel>(panel.Content);
-            var grid = Assert.IsType<global::Avalonia.Controls.Grid>(host.Children[0]);
-            Assert.Equal(expectedColumns, grid.ColumnDefinitions.Count);
+            Assert.Equal(expectedColumns, EditorGrid(panel).ColumnDefinitions.Count);
+        }
+
+        [Fact]
+        [DisplayName("The OK and Cancel buttons are docked below the scrolled editor area, so a height limit never hides them")]
+        public void Bind_ButtonsDockedOutsideScrolledEditors()
+        {
+            var dataObject = BuildDataObject();
+            var row = dataObject.DataSet.Tables["EmployeePhone"]!.Rows[0];
+            var panel = new RowEditPanel();
+
+            panel.Bind(dataObject, BuildLayout(), row);
+
+            var host = Assert.IsType<global::Avalonia.Controls.DockPanel>(panel.Content);
+            var buttons = host.Children.OfType<global::Avalonia.Controls.StackPanel>().Single();
+            Assert.Equal(global::Avalonia.Controls.Dock.Bottom, global::Avalonia.Controls.DockPanel.GetDock(buttons));
+            Assert.Equal(2, buttons.Children.OfType<global::Avalonia.Controls.Button>().Count());
+            // The scroller is the fill child, which a DockPanel sizes last from what the buttons leave.
+            Assert.IsType<global::Avalonia.Controls.ScrollViewer>(host.Children[^1]);
         }
 
         [Theory]

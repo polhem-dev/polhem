@@ -62,7 +62,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 var completed = new TaskCompletionSource();
                 panel.EditCommitted += (_, _) => { committed = true; completed.TrySetResult(); };
                 panel.EditCancelled += (_, _) => completed.TrySetResult();
-                await OverlayDialogHost.ShowAsync(host, panel, title, completed.Task);
+                await OverlayDialogHost.ShowAsync(host, panel, title, completed.Task, RowEditPanel.PreferredMinWidth);
                 cancellationToken.ThrowIfCancellationRequested();
                 return committed;
             }
@@ -77,6 +77,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 CanResize = true,
                 ShowInTaskbar = false,
+                MinWidth = RowEditPanel.PreferredMinWidth,
             };
             // Once the window has taken its initial content-driven size, drop SizeToContent so it
             // no longer snaps back to content size and the user's manual resize sticks.

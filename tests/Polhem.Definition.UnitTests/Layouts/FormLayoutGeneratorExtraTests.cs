@@ -28,6 +28,7 @@ namespace Polhem.Definition.UnitTests.Layouts
         [InlineData(ControlType.DropDownEdit, ControlType.DropDownEdit)]
         [InlineData(ControlType.CheckEdit, ControlType.CheckEdit)]
         [InlineData(ControlType.MemoEdit, ControlType.MemoEdit)]
+        [InlineData(ControlType.DateTimeEdit, ControlType.DateTimeEdit)]
         [DisplayName("FormLayoutGenerator.Generate keeps a non-Auto ControlType of a detail table as is")]
         public void Generate_DetailTable_NonAutoControlType_PreservesValue(
             ControlType controlType, ControlType expected)
@@ -44,7 +45,7 @@ namespace Polhem.Definition.UnitTests.Layouts
 
         [Theory]
         [InlineData(FieldDbType.Boolean, ControlType.CheckEdit)]
-        [InlineData(FieldDbType.DateTime, ControlType.DateEdit)]
+        [InlineData(FieldDbType.DateTime, ControlType.DateTimeEdit)]
         [InlineData(FieldDbType.Text, ControlType.MemoEdit)]
         [InlineData(FieldDbType.String, ControlType.TextEdit)]
         [InlineData(FieldDbType.Integer, ControlType.NumericEdit)]

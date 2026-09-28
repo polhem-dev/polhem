@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using Polhem.Base.Data;
+using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 
 namespace Polhem.Api.Client.UnitTests.FormData
@@ -184,6 +185,45 @@ namespace Polhem.Api.Client.UnitTests.FormData
             Assert.Equal(DateTime.MinValue, FormValueBinding.GetEmptyValue(typeof(DateTime)));
             Assert.Equal(Array.Empty<byte>(), FormValueBinding.GetEmptyValue(typeof(byte[])));
             Assert.Equal(0, FormValueBinding.GetEmptyValue(typeof(int)));
+        }
+
+        private static ListItemCollection ModeItems()
+            => [new ListItem("0", "Inherit"), new ListItem("1", "On"), new ListItem("2", "Off")];
+
+        [Theory]
+        [InlineData(0, "Inherit")]
+        [InlineData(2, "Off")]
+        [InlineData("1", "On")]
+        [DisplayName("TryGetListItemText finds the item whose value matches the stored value, whatever its CLR type")]
+        public void TryGetListItemText_MatchingValue_ReturnsItemText(object raw, string expected)
+        {
+            Assert.True(FormValueBinding.TryGetListItemText(raw, ModeItems(), out var text));
+            Assert.Equal(expected, text);
+        }
+
+        [Fact]
+        [DisplayName("TryGetListItemText returns false for a value no item declares, so the caller can show the value itself")]
+        public void TryGetListItemText_UndeclaredValue_ReturnsFalse()
+        {
+            Assert.False(FormValueBinding.TryGetListItemText(7, ModeItems(), out var text));
+            Assert.Equal(string.Empty, text);
+        }
+
+        [Fact]
+        [DisplayName("TryGetListItemText returns false for DBNull and for a field without list items")]
+        public void TryGetListItemText_NullValueOrNoItems_ReturnsFalse()
+        {
+            Assert.False(FormValueBinding.TryGetListItemText(DBNull.Value, ModeItems(), out _));
+            Assert.False(FormValueBinding.TryGetListItemText(1, null, out _));
+        }
+
+        [Fact]
+        [DisplayName("TryGetListItemText compares values ordinally, the way the drop-down editors select their item")]
+        public void TryGetListItemText_DifferentCase_DoesNotMatch()
+        {
+            ListItemCollection items = [new ListItem("a", "Lower")];
+
+            Assert.False(FormValueBinding.TryGetListItemText("A", items, out _));
         }
     }
 }
