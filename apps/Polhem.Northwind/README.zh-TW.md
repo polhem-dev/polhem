@@ -37,7 +37,14 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Server
 dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Desktop
 ```
 
-接著在 app 中：**Connect**（endpoint 已預填）→ 以 `demo` / `demo` **Sign in**。
+接著在 app 中：**Connect**（endpoint 已預填）→ 以下列任一個種子帳號 **Sign in**：
+
+| 帳號 | 密碼 | 文化 | 看到的是 |
+|---|---|---|---|
+| `demo` | `demo` | `en-US` | 英文標題與格式 |
+| `demo-tw` | `demo` | `zh-TW` | 繁體中文標題（含租戶客製過的那兩個）與格式 |
+
+兩個帳號進入同一間公司、看到同一份資料；session 的語言取自帳號（`st_user.culture`），不看作業系統。
 
 ### 網頁前端（Avalonia WASM）
 
@@ -86,14 +93,14 @@ manifest 已開 dev 明文 HTTP。在 **iOS 模擬器**則用 `http://localhost:
 
 | 桌面 | Browser |
 |---|---|
-| ![桌面 — 訂單單筆](https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-desktop-order-detail.png) | ![Browser — 訂單單筆](https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-browser-order-detail.png) |
+| ![桌面 — 訂單單筆](https://github.com/polhem-dev/polhem/raw/main/apps/Polhem.Northwind/docs/images/desktop-order-detail.png) | ![Browser — 訂單單筆](https://github.com/polhem-dev/polhem/raw/main/apps/Polhem.Northwind/docs/images/browser-order-detail.png) |
 
 **iOS 與 Android：**
 
 | | iOS | Android |
 |---|---|---|
-| **訂單清單** | ![iOS — 訂單清單](https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-ios-order-list.png) | ![Android — 訂單清單](https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-android-order-list.png) |
-| **訂單單筆** | ![iOS — 訂單單筆](https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-ios-order-detail.png) | ![Android — 訂單單筆](https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-android-order-detail.png) |
+| **訂單清單** | ![iOS — 訂單清單](https://github.com/polhem-dev/polhem/raw/main/apps/Polhem.Northwind/docs/images/ios-order-list.png) | ![Android — 訂單清單](https://github.com/polhem-dev/polhem/raw/main/apps/Polhem.Northwind/docs/images/android-order-list.png) |
+| **訂單單筆** | ![iOS — 訂單單筆](https://github.com/polhem-dev/polhem/raw/main/apps/Polhem.Northwind/docs/images/ios-order-detail.png) | ![Android — 訂單單筆](https://github.com/polhem-dev/polhem/raw/main/apps/Polhem.Northwind/docs/images/android-order-detail.png) |
 
 ## 表單清單
 
@@ -138,7 +145,7 @@ manifest 已開 dev 明文 HTTP。在 **iOS 模擬器**則用 `http://localhost:
 
 **兩步都跑在框架程式碼上。** 應用沒有替換任何服務，也沒有覆寫任何方法：
 
-- **認證**走框架自己的 `st_user` 檢查。seeder 在首次啟動時把 `demo` 帳號寫進 `st_user`，密碼以 `PasswordHasher` 現算雜湊存入（不是寫死的雜湊值，否則換一次雜湊參數就對不上）。比對帳號密碼在每個部署都一樣，所以那件事屬於框架。
+- **認證**走框架自己的 `st_user` 檢查。seeder 在首次啟動時把 `demo` 與 `demo-tw` 帳號寫進 `st_user`（既有的 `northwind.db` 缺哪個就補哪個），密碼以 `PasswordHasher` 現算雜湊存入（不是寫死的雜湊值，否則換一次雜湊參數就對不上）。比對帳號密碼在每個部署都一樣，所以那件事屬於框架。
 - **進公司**走框架自己的 `EnterCompany`。seeder 寫入對應的 `st_company` 與 `st_user_company` 兩列，該呼叫接著驗公司存在且啟用、查使用者的存取權，再把角色與員工脈絡快照到 session 上。
 
 `st_user` 那一列同時帶著 `time_zone` 與 `culture`，於是 session 的時區、以及 client 的語言，都取自**使用者**而不是伺服器或部署預設值。
@@ -194,7 +201,7 @@ Northwind 是正規化的關聯式 schema；polhem 是 `sys_rowid`（Guid）關�
 訂單表單的標題有兩套來源。英文那套內嵌在 `FormSchema` 的 `Caption`，所以英文根本不需要語系檔
 —— 查不到 key 時 schema 自己的字原樣留著。zh-TW 那套來自
 `Define/Language/zh-TW/Order.Language.xml`，key 的慣例到處都一樣（`Schema.DisplayName`、
-`Table.{表}.DisplayName`、`Field.{欄位}.Caption`）。
+`Table.{表}.DisplayName`、`Field.{欄位}.Caption`）。以 `demo-tw` 登入就會看到：session 的文化取自該帳號的 `st_user` 資料列。
 
 client 顯示哪種語言，取決於登入**帳號**的語系：`Login` 回傳 `st_user.culture` 的值，
 `ClientInfo.ApplyLoginResult` 再把它設為 client 的 UI 語系。種子寫入的 `demo` 帳號是 `en-US`

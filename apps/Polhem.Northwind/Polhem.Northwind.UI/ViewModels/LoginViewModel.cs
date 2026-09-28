@@ -21,7 +21,10 @@ namespace Polhem.Northwind.UI.ViewModels;
 /// </remarks>
 public partial class LoginViewModel : ViewModelBase
 {
-    /// <summary>Default user id (matches the row the server's seeder writes into <c>st_user</c>).</summary>
+    /// <summary>
+    /// Default user id (matches the row the server's seeder writes into <c>st_user</c>). The seeder
+    /// also writes <c>demo-tw</c>, the same account with a zh-TW culture; the login screen names it.
+    /// </summary>
     public const string DefaultUserId = "demo";
 
     /// <summary>Default password (matches the row the server's seeder writes into <c>st_user</c>).</summary>
@@ -50,7 +53,7 @@ public partial class LoginViewModel : ViewModelBase
 
     /// <summary>Status line text mirroring the authentication outcome.</summary>
     [ObservableProperty]
-    private string _status = "Use demo/demo to sign in.";
+    private string _status = string.Empty;
 
     /// <summary>Indicates whether <see cref="Status"/> is an error message.</summary>
     [ObservableProperty]

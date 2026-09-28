@@ -48,19 +48,6 @@
             "env": { "ASPNETCORE_ENVIRONMENT": "Development" }
         },
         {
-            "name": "Run Blazor.Wasm.Demo.Host (serve Wasm)",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build-blazor-wasm-host",
-            "program": "${workspaceFolder}/samples/Blazor.Wasm.Demo.Host/bin/Debug/net10.0/Blazor.Wasm.Demo.Host.dll",
-            "cwd": "${workspaceFolder}/samples/Blazor.Wasm.Demo.Host",
-            "serverReadyAction": {
-                "action": "openExternally",
-                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
-            },
-            "env": { "ASPNETCORE_ENVIRONMENT": "Development" }
-        },
-        {
             "name": "Run Avalonia.DemoCenter",
             "type": "coreclr",
             "request": "launch",

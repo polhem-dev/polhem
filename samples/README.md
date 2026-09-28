@@ -61,17 +61,20 @@ Web.Js.Demo        ──HTTP──▶ QuickStart.Server  ← must be started fi
 Blazor.Server.Demo                ← no separate server; front-end and back-end share the process
 ```
 
-## Shared credentials
+## Shared credentials and the demo company
 
-`Blazor.Server.Demo` and `Web.Js.Demo` (through `QuickStart.Server`) sign in with `demo / demo`:
+Every client that signs in uses `demo / demo`, then enters the single demo company:
 
 | Field | Value |
 |-------|-------|
 | User ID | `demo` |
 | Password | `demo` |
 | Display name | `Demo User` |
+| Company ID | `DEMO` |
 
-`samples/Define/ProgramSettings.xml` binds the reserved `System` progId to [`DemoAuthenticatingSystemBusinessObject`](Polhem.Samples.Shared/DemoAuthenticatingSystemBusinessObject.cs), which replaces only the credential check with a hard-coded comparison, so no password hashing or user maintenance is involved. The rest of sign-in is the framework's own, which is why [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) still creates `st_user` and `st_session` and seeds a `demo` row in `st_user` (the user's time zone and culture are read from it).
+`samples/Define/ProgramSettings.xml` binds the reserved `System` progId to [`DemoAuthenticatingSystemBusinessObject`](Polhem.Samples.Shared/DemoAuthenticatingSystemBusinessObject.cs), which replaces only the credential check with a hard-coded comparison, so no password hashing or user maintenance is involved. The rest of sign-in is the framework's own, so [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) still seeds the rows it reads: the `st_user` row (the user's time zone and culture are read from it), the `st_company` row and the `st_user_company` grant.
+
+**Sign-in is two calls.** `Login` says who the user is; `EnterCompany` says which company they work in. The demo forms are business data, so their `FormSchema` declares `CategoryId="company"`, and a session that has not entered a company cannot open them. Each client makes the second call right after the first: the Blazor demo does it on sign-in, `Web.Js.Demo` has an **Enter Company** step. The values live in [`DemoCredentials`](Polhem.Samples.Shared/DemoCredentials.cs).
 
 `QuickStart.Server`'s `Echo.Echo` BO is annotated `[ApiAccessControl(Public, Anonymous)]`, so `QuickStart.Console` **needs no login**.
 
@@ -79,13 +82,15 @@ Blazor.Server.Demo                ← no separate server; front-end and back-end
 
 [`samples/Define/`](Define/) is the shared definition directory used by every demo: the settings files, the FormSchemas and their stored FormLayouts, and the TableSchemas of both the demo tables and the framework tables the demos need. Look at the folder itself for the current file list. Each host locates it by walking up from `AppContext.BaseDirectory` looking for `Define/SystemSettings.xml` (see [`DemoBackend.ResolveDefinePath`](Polhem.Samples.Shared/DemoBackend.cs)), so one set of definitions drives every front-end.
 
-### Why the demo tables live in `common`
+### The `common` and `company` categories
 
-In an application, business tables (`ft_*`) belong to the **company** category, and `common` holds only the framework tables shared across companies. The samples deliberately put everything in `common`, with one SQLite database and no company: that keeps each demo to a single database and lets it skip the company sign-in step (`EnterCompany`). It is a simplification for the demos, not a pattern to copy. [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.md) shows the real layout, with `common`, `company` and `log` categories and a company that the session enters.
+`TableSchema/common/` holds the framework tables shared across companies (`st_user`, `st_session`, `st_company`, ...). `TableSchema/company/` holds the demo's business tables (`ft_*`) and the framework tables `EnterCompany` reads while it builds the session's company scope. `DbCategorySettings.xml` registers every one of them, and the seeder creates whatever it registers.
+
+The two categories follow the framework's database rule: framework tables shared across companies go in `common`, business data goes in `company`. This single-company demo points both at the same SQLite file; a multi-company deployment gives each company its own database, and no form definition changes.
 
 ## Master key
 
-`SystemSettings.xml` ships with `MasterKeySource.Type = Environment` and `Value = POLHEM_MASTER_KEY`, so each demo host reads the encryption master key from the environment. [`DemoBackend.AddPolhemBackend`](Polhem.Samples.Shared/DemoBackend.cs) injects a fixed demo value (`DemoCredentials.DemoMasterKey`) when `POLHEM_MASTER_KEY` is unset, so a fresh clone runs with zero setup. The per-session API encryption keys are derived from the master key, so a fixed value also keeps a signed-in session usable across a host restart.
+`SystemSettings.xml` ships with `MasterKeySource.Type = Environment` and `Value = POLHEM_MASTER_KEY`, so each demo host reads the encryption master key from the environment. [`DemoBackend.AddPolhemBackend`](Polhem.Samples.Shared/DemoBackend.cs) injects a fixed demo value (`DemoCredentials.DemoMasterKey`) when `POLHEM_MASTER_KEY` is unset, so a fresh clone runs with zero setup. A fixed key also keeps sessions alive across a restart: each session's payload key is derived from the master key, so a session restored from `st_session` only decrypts under the same key.
 
 > **Production hosts must override the demo master key.** The demo constant is committed to source and intended only for demos. Set `POLHEM_MASTER_KEY` from a deployment-managed secret (K8s Secret, env file, Vault, AWS Secrets Manager, …) **before** the process starts — the bootstrap only fills the variable when it is unset, so any externally injected value is preserved.
 
@@ -95,11 +100,11 @@ The files below are **not** in git — they are runtime artifacts. A fresh clone
 
 | File | Created by | Contents | gitignore rule |
 |------|------------|----------|----------------|
-| `samples/<Host>/quickstart.db` | [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) | SQLite with the demo tables and the framework tables, seeded with demo employees, departments and the `demo` user row | `/samples/**/*.db` |
+| `samples/<Host>/quickstart.db` | [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) | SQLite with every table `DbCategorySettings.xml` registers, the demo user, company and grant, and a few employees and departments | `/samples/**/*.db` |
 
 > Both hosts (`QuickStart.Server` / `Blazor.Server.Demo`) **each get their own `quickstart.db`** and don't interfere with each other. Re-running the same host reuses existing data (both schema creation and seeding are idempotent).
 
-To reset demo data: delete `samples/<Host>/quickstart.db` and re-run. To rotate the demo master key: change `DemoCredentials.DemoMasterKey`, or set `POLHEM_MASTER_KEY` to a different value externally. Sessions signed in under the old key stop working, so sign in again.
+To reset demo data: delete `samples/<Host>/quickstart.db` and re-run. Changing the master key (in `DemoCredentials.DemoMasterKey`, or by setting `POLHEM_MASTER_KEY` externally) invalidates the sessions signed in under the old key; sign in again.
 
 ## Local vs Remote dispatch
 
@@ -146,7 +151,8 @@ Just re-run. `ProjectReference` rebuilds automatically. No `dotnet pack` and no 
 
 ## Deliberately out of scope
 
-- Realistic ERP scenarios (orders, master-detail documents, lookups, a company database) — see [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.md)
+- Realistic ERP scenarios (orders, master-detail documents, lookups, several companies) — see [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.md)
 - SQL Server / PostgreSQL / Oracle / MySQL — SQLite is enough for demonstration
-- Full auth/authz flows (OAuth, JWT, stored password hashes, companies and roles) — the credential check is short-circuited with hard-coded `demo/demo`
+- Full auth/authz flows (OAuth, JWT, stored password hashes, roles) — the credential check is short-circuited with hard-coded `demo/demo`
+- Several companies and a company picker — the clients enter the one seeded company without asking
 - Deployment scripts (Docker / k8s / TestFlight / Microsoft Store)

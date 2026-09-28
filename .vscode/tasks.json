@@ -152,20 +152,6 @@
             "group": "build"
         },
         {
-            "label": "build-blazor-wasm-host",
-            "type": "process",
-            "command": "dotnet",
-            "args": [
-                "build",
-                "${workspaceFolder}/samples/Blazor.Wasm.Demo.Host/Blazor.Wasm.Demo.Host.csproj",
-                "--configuration",
-                "Debug",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
-            ],
-            "problemMatcher": "$msCompile",
-            "group": "build"
-        },
-        {
             "label": "build-northwind-server",
             "type": "process",
             "command": "dotnet",

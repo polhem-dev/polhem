@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TableName="st_role" DisplayName="Role">
+  <Fields>
+    <DbField FieldName="sys_no" Caption="Sequence No." DbType="AutoIncrement" />
+    <DbField FieldName="sys_rowid" Caption="Row Id" DbType="Guid" />
+    <DbField FieldName="sys_id" Caption="Role Id" DbType="String" Length="20" />
+    <DbField FieldName="sys_name" Caption="Role Name" DbType="String" Length="50" />
+    <DbField FieldName="sys_insert_time" Caption="Created At" DbType="DateTime" />
+  </Fields>
+  <Indexes>
+    <DbTableIndex Name="pk_{0}" Unique="true" PrimaryKey="true">
+      <IndexFields>
+        <IndexField FieldName="sys_no" />
+      </IndexFields>
+    </DbTableIndex>
+    <DbTableIndex Name="rx_{0}" Unique="true">
+      <IndexFields>
+        <IndexField FieldName="sys_rowid" />
+      </IndexFields>
+    </DbTableIndex>
+    <DbTableIndex Name="uk_{0}" Unique="true">
+      <IndexFields>
+        <IndexField FieldName="sys_id" />
+      </IndexFields>
+    </DbTableIndex>
+  </Indexes>
+</TableSchema>

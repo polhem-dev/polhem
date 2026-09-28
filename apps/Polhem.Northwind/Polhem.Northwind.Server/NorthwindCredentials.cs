@@ -1,9 +1,9 @@
 namespace Polhem.Northwind.Server;
 
 /// <summary>
-/// The demo account the seeder writes into <c>st_user</c>, and the single company the session
-/// enters at login. The desktop head surfaces the credentials on its login screen so a fresh
-/// visitor knows what to type.
+/// The demo accounts the seeder writes into <c>st_user</c>, and the single company the session
+/// enters at login. The login screen the heads share surfaces the credentials so a fresh visitor
+/// knows what to type.
 /// </summary>
 /// <remarks>
 /// These are seed values, not a credential check: sign-in runs the framework's own <c>st_user</c>
@@ -29,6 +29,22 @@ public static class NorthwindCredentials
 
     /// <summary>The demo user's culture, seeded into <c>st_user.culture</c>.</summary>
     public const string Culture = "en-US";
+
+    /// <summary>
+    /// The Traditional Chinese demo user id. The account sees the same company and data as
+    /// <see cref="UserId"/>; only its culture differs, so signing in with it shows the zh-TW
+    /// captions and number and date formats.
+    /// </summary>
+    public const string ZhTwUserId = "demo-tw";
+
+    /// <summary>The Traditional Chinese demo password.</summary>
+    public const string ZhTwPassword = "demo";
+
+    /// <summary>The Traditional Chinese demo user's display name.</summary>
+    public const string ZhTwDisplayName = "示範使用者";
+
+    /// <summary>The Traditional Chinese demo user's culture, seeded into <c>st_user.culture</c>.</summary>
+    public const string ZhTwCulture = "zh-TW";
 
     /// <summary>
     /// The single demo company the session auto-enters at login. Company-scoped forms
@@ -72,9 +88,12 @@ public static class NorthwindCredentials
     /// <c>POLHEM_MASTER_KEY</c> is not set in the environment.
     /// </summary>
     /// <remarks>
-    /// Demo-only: a fixed value lets a fresh clone <c>dotnet run</c> with zero setup, and
-    /// keeps rows encrypted on one run decryptable on the next. Production hosts MUST inject
-    /// a real <c>POLHEM_MASTER_KEY</c> via the deployment mechanism before
+    /// Demo-only: a fixed value lets a fresh clone <c>dotnet run</c> with zero setup. It also keeps
+    /// sessions alive across a server restart: no API encryption key is configured, so each
+    /// session's payload key is derived from this master key and its access token, and a session
+    /// restored from <c>st_session</c> after a restart only decrypts if the master key is the same.
+    /// This value is public, so anyone can derive those keys. Production hosts inject their own
+    /// <c>POLHEM_MASTER_KEY</c> through the deployment mechanism before
     /// <see cref="NorthwindBackend.AddNorthwindBackend"/> runs.
     /// </remarks>
     public const string DemoMasterKey =

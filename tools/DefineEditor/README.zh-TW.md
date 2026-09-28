@@ -29,7 +29,7 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 
 每個編輯器有各自的新增與刪除指令、驗證結果面板，分頁上有未儲存標記；視窗底部有狀態列。儲存、全部儲存、驗證、關閉分頁是 **File** 選單的指令，另有開啟資料夾與最近開啟；**View** 選單切換佈景主題與介面語言（English / 繁體中文），分頁的右鍵選單可成批關閉分頁。
 
-> File 與 View 是原生選單，Avalonia 只在 macOS 的選單列上呈現。在 Windows 與 Linux 上可用歡迎頁的「Open Folder」按鈕開啟資料夾，但編輯器目前沒有視窗內的儲存或驗證指令。
+> File 與 View 是原生選單，Avalonia 只在 macOS 的選單列上呈現。在 Windows 與 Linux 上，視窗內會顯示自己的 **File** 選單（儲存、全部儲存、驗證、關閉分頁），執行的是同一組指令；歡迎頁的「Open Folder」按鈕可開啟資料夾。最近開啟與 View 選單只在 macOS 上有。
 
 ## 開發期跑法
 
@@ -49,6 +49,8 @@ dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configurati
 dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configuration Debug \
     -- --smoke tests/Define/FormSchema/Employee.FormSchema.xml
 ```
+
+某項檢查失敗時印出 `[smoke] FAIL(<代碼>)`，程序以該代碼結束。
 
 ## Publish（framework-dependent）
 

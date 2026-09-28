@@ -16,7 +16,7 @@ namespace Avalonia.DemoCenter.Modules.Lookup
     /// This demo center has no backend, so the icon raises <see cref="ButtonEdit.ButtonClick"/>
     /// and a local picker stands in. The production lookup flow (<c>FormField.RelationProgId</c>
     /// → <c>LookupDialog</c> resolving against the backend, writing the row id + mapped fields)
-    /// is shown end-to-end in <c>Avalonia.Demo</c>.
+    /// is shown end-to-end in <c>apps/Polhem.Northwind</c>.
     /// </remarks>
     public sealed class LookupPickerModule : DemoModuleBase
     {
@@ -31,7 +31,7 @@ namespace Avalonia.DemoCenter.Modules.Lookup
         /// <inheritdoc/>
         public override string Description =>
             "Click the magnifier icon on the right of the ButtonEdit to open a picker; the selection is written back (a local picker). "
-            + "The production RelationProgId → LookupDialog back-end query flow is in Avalonia.Demo.";
+            + "The production RelationProgId → LookupDialog back-end query flow is in apps/Polhem.Northwind.";
 
         /// <inheritdoc/>
         public override Control BuildView()

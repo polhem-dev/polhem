@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableSchema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" DbName="common" TableName="st_user_company" DisplayName="User Company">
+	<Fields>
+		<DbField FieldName="sys_no" Caption="Sequence No." DbType="AutoIncrement" />
+		<DbField FieldName="sys_rowid" Caption="Row Id" DbType="Guid" />
+		<DbField FieldName="user_rowid" Caption="User Row Id" DbType="Guid" />
+		<DbField FieldName="company_rowid" Caption="Company Row Id" DbType="Guid" />
+		<DbField FieldName="sys_insert_time" Caption="Created At" DbType="DateTime" />
+	</Fields>
+	<Indexes>
+		<DbTableIndex Name="pk_{0}" Unique="true" PrimaryKey="true">
+			<IndexFields>
+				<IndexField FieldName="sys_no" />
+			</IndexFields>
+		</DbTableIndex>
+		<DbTableIndex Name="rx_{0}" Unique="true">
+			<IndexFields>
+				<IndexField FieldName="sys_rowid" />
+			</IndexFields>
+		</DbTableIndex>
+		<DbTableIndex Name="ux_{0}" Unique="true">
+			<IndexFields>
+				<IndexField FieldName="user_rowid" />
+				<IndexField FieldName="company_rowid" />
+			</IndexFields>
+		</DbTableIndex>
+	</Indexes>
+</TableSchema>

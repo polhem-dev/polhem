@@ -21,7 +21,7 @@ namespace Avalonia.DemoCenter.Modules.MasterDetail
         /// <inheritdoc/>
         public override string Description =>
             "An Employee master section and a Phones detail grid bound to the same FormDataObject (editable in the default Edit mode). "
-            + "The production back-end load/save flow is in Avalonia.Demo.";
+            + "The production back-end load/save flow is in apps/Polhem.Northwind.";
 
         /// <inheritdoc/>
         public override Control BuildView()

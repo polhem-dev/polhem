@@ -61,17 +61,20 @@ Web.Js.Demo        ──HTTP──▶ QuickStart.Server  ← 需先啟動（已
 Blazor.Server.Demo                ← 不需另起 server,前後端同 process
 ```
 
-## 共用帳號
+## 共用帳號與 demo 公司
 
-`Blazor.Server.Demo` 與 `Web.Js.Demo`（經由 `QuickStart.Server`）以 `demo / demo` 登入：
+每個需要登入的 client 都用 `demo / demo` 登入，再進入唯一的 demo 公司:
 
 | 欄位 | 值 |
 |------|-----|
 | User ID | `demo` |
 | Password | `demo` |
 | 顯示名稱 | `Demo User` |
+| 公司代碼 | `DEMO` |
 
-`samples/Define/ProgramSettings.xml` 把保留的 `System` progId 綁到 [`DemoAuthenticatingSystemBusinessObject`](Polhem.Samples.Shared/DemoAuthenticatingSystemBusinessObject.cs)，它只把帳密比對換成寫死的比較，因此不涉及密碼雜湊或使用者維護。登入的其餘流程仍是框架自己的，所以 [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) 照樣建立 `st_user` 與 `st_session`，並在 `st_user` 寫入一筆 `demo`（使用者的時區與語系從這裡讀）。
+`samples/Define/ProgramSettings.xml` 把保留的 `System` progId 綁到 [`DemoAuthenticatingSystemBusinessObject`](Polhem.Samples.Shared/DemoAuthenticatingSystemBusinessObject.cs)，它只把帳密比對換成寫死的比較，因此不涉及密碼雜湊或使用者維護。登入的其餘流程仍是框架自己的，所以 [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) 仍會寫入它會讀的資料列：`st_user`（使用者的時區與語系從這裡讀）、`st_company` 與 `st_user_company` 授權。
+
+**登入是兩次呼叫。**`Login` 回答「你是誰」，`EnterCompany` 回答「你在哪間公司」。demo 表單是業務資料，所以 `FormSchema` 宣告 `CategoryId="company"`，尚未進入公司的 session 開不了它們。每個 client 都在第一次呼叫後緊接著做第二次：Blazor demo 在登入時自動進入，`Web.Js.Demo` 有一個 **Enter Company** 步驟。各值定義在 [`DemoCredentials`](Polhem.Samples.Shared/DemoCredentials.cs)。
 
 `QuickStart.Server` / `QuickStart.Console` 的 `Echo.Echo` 標 `[ApiAccessControl(Public, Anonymous)]`，**不需要登入**。
 
@@ -79,13 +82,15 @@ Blazor.Server.Demo                ← 不需另起 server,前後端同 process
 
 [`samples/Define/`](Define/) 是所有 demo 共用的定義檔目錄：各設定檔、FormSchema 與其存檔的 FormLayout，以及 demo 資料表與 demo 需要的框架表的 TableSchema。目前有哪些檔案，請直接看該資料夾。各 host 用「從 `AppContext.BaseDirectory` 向上找 `Define/SystemSettings.xml`」的策略指向這裡（見 [`DemoBackend.ResolveDefinePath`](Polhem.Samples.Shared/DemoBackend.cs)），讓同一份定義驅動每個前端。
 
-### demo 資料表為何放在 `common`
+### `common` 與 `company` 兩個分類
 
-在實際應用中，業務表（`ft_*`）屬於 **company** 分類，`common` 只放跨公司共用的框架表。samples 刻意把全部放在 `common`、只用一個 SQLite 資料庫、也沒有公司：這讓每個 demo 只需一個資料庫，並可略過進入公司的登入步驟（`EnterCompany`）。這是 demo 的簡化，不是可以照抄的模式。正式的配置見 [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.zh-TW.md)：有 `common`、`company`、`log` 三個分類，session 也會進入公司。
+`TableSchema/common/` 放跨公司共用的框架表（`st_user`、`st_session`、`st_company`…）。`TableSchema/company/` 放 demo 的業務表（`ft_*`），以及 `EnterCompany` 建立 session 公司範圍時會讀的框架表。`DbCategorySettings.xml` 登記了其中每一張，seeder 會建立它登記的所有表。
+
+兩個 category 依框架的資料庫規則劃分：跨公司共用的框架表放 `common`,業務資料放 `company`。這個單一公司的 demo 讓兩者指向同一個 SQLite 檔；多公司部署時每間公司各有自己的資料庫，表單定義一個都不用改。
 
 ## Master key
 
-`SystemSettings.xml` 預設 `MasterKeySource.Type = Environment`、`Value = POLHEM_MASTER_KEY`,所以每個 demo host 都從環境變數讀加密 master key。[`DemoBackend.AddPolhemBackend`](Polhem.Samples.Shared/DemoBackend.cs) 在 `POLHEM_MASTER_KEY` 未設時會自動注入一個固定 demo 值(`DemoCredentials.DemoMasterKey`),fresh clone 可零設定直接跑。每個 session 的 API 加密金鑰由 master key 推導，所以固定值也讓已登入的 session 在 host 重啟後仍可使用。
+`SystemSettings.xml` 預設 `MasterKeySource.Type = Environment`、`Value = POLHEM_MASTER_KEY`,所以每個 demo host 都從環境變數讀加密 master key。[`DemoBackend.AddPolhemBackend`](Polhem.Samples.Shared/DemoBackend.cs) 在 `POLHEM_MASTER_KEY` 未設時會自動注入一個固定 demo 值(`DemoCredentials.DemoMasterKey`),fresh clone 可零設定直接跑。固定的 key 也讓 session 撐過重啟：每個 session 的 payload 金鑰由 master key 衍生，從 `st_session` 還原的 session 只有在同一把 key 下才解得開。
 
 > **Production host 必須覆寫 demo master key。** demo 常數會進 git 公開,僅供 demo 使用。真實部署必須在 process 啟動「之前」由部署機制(K8s Secret、env file、Vault、AWS Secrets Manager…)把 `POLHEM_MASTER_KEY` 設為真實 secret;bootstrap 僅在變數未設時才填值,外部已注入的值會被保留。
 
@@ -95,11 +100,11 @@ Blazor.Server.Demo                ← 不需另起 server,前後端同 process
 
 | 檔案 | 由誰建立 | 內容 | gitignore 規則 |
 |------|----------|------|----------------|
-| `samples/<Host>/quickstart.db` | [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) | SQLite，含 demo 資料表與框架表，並寫入 demo 員工、部門與 `demo` 使用者列 | `/samples/**/*.db` |
+| `samples/<Host>/quickstart.db` | [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) | SQLite,含 `DbCategorySettings.xml` 登記的每張表、demo 使用者／公司／授權，以及幾筆員工與部門資料 | `/samples/**/*.db` |
 
 > 兩個 host(`QuickStart.Server` / `Blazor.Server.Demo`)**各有自己的 `quickstart.db`**,不會互相干擾。同一個 host 重跑會沿用既有資料(schema 建立與 seed 都是 idempotent)。
 
-要重置 demo 資料:直接刪 `samples/<Host>/quickstart.db` 重跑即可。要輪換 demo master key：改 `DemoCredentials.DemoMasterKey`，或在外部把 `POLHEM_MASTER_KEY` 設成新值。以舊 key 登入的 session 會失效，重新登入即可。
+要重置 demo 資料:直接刪 `samples/<Host>/quickstart.db` 重跑即可。更換 master key(改 `DemoCredentials.DemoMasterKey`,或在外部把 `POLHEM_MASTER_KEY` 設成新值)會讓舊 key 下登入的 session 失效，重新登入即可。
 
 ## Local vs Remote 派遣模式
 
@@ -146,7 +151,8 @@ dotnet build samples/Polhem.Samples.slnx
 
 ## 刻意不做
 
-- 真實 ERP 業務情境（訂單、master-detail 單據、lookup、公司資料庫）— 見 [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.zh-TW.md)
+- 真實 ERP 業務情境（訂單、master-detail 單據、lookup、多間公司）— 見 [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.zh-TW.md)
 - SQL Server / PostgreSQL / Oracle / MySQL — SQLite 已足夠示範
-- 認證 / 授權完整流程（OAuth、JWT、存檔的密碼雜湊、公司與角色）— 帳密比對用 hard-coded `demo/demo` 帶過
+- 認證 / 授權完整流程（OAuth、JWT、存檔的密碼雜湊、角色）— 帳密比對用 hard-coded `demo/demo` 帶過
+- 多間公司與公司選擇畫面 — client 直接進入唯一的種子公司，不詢問
 - 部署腳本(Docker / k8s / TestFlight / Microsoft Store)

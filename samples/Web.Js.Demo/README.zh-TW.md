@@ -14,7 +14,7 @@ FormLayout 定義渲染出表單：
 |------|---------|
 | Login | `System.Login` |
 | Ping | `System.Ping`（不需 auth） |
-| Enter Company | `System.EnterCompany` / `System.LeaveCompany`（錯誤路徑示範 — 見 UI hint） |
+| Enter Company | `System.EnterCompany` / `System.LeaveCompany`（Employee CRUD 之前必須先做；未知的代碼可示範錯誤路徑） |
 | Employee CRUD | `Employee.GetList` / `GetData` / `GetNewData` / `Save` / `Delete` |
 | FormDefinition-driven 渲染 | `System.GetFormSchema` / `System.GetFormLayout` → 定義 XML → 動態 form |
 | Logout | `System.Logout` |
@@ -49,15 +49,16 @@ FormLayout 定義渲染出表單：
 
      然後開 `http://localhost:8080/index.html`。
 
-3. 點 **Login**（預設帳密 `demo` / `demo`），再點 **Ping** ——
-   結果會出現在下方的輸出區。
+3. 點 **Login**（預設帳密 `demo` / `demo`），再點 **EnterCompany**（公司代碼已預填 `DEMO`），
+   再點 **GetList** —— 結果會出現在下方的輸出區。員工表單屬於公司範圍，session 進入公司之前，
+   CRUD 與表單按鈕都會失敗。
 
 ## 檔案
 
 | 檔案 | 用途 |
 |------|------|
 | `index.html` | 最小 UI — Login 表單、CRUD 按鈕、動態 form 區、結果輸出區。Vanilla CSS，無外部依賴。 |
-| `polhem-api-client.js` | ES module：匯出 `systemApi.*`、`formApi(progId)`、`RpcError` 與 access token 輔助函式。所有呼叫都經過模組內部的 `rpcCall(method, value)`，定義 XML 也在這裡解析成一般物件。 |
+| `polhem-api-client.js` | ES module：匯出 `systemApi.*`、`formApi(progId)`、`RpcError` 與 access token 輔助函式。所有呼叫都經過模組內部的 `rpcCall(method, value)`，HTTP 錯誤回應會先讀出其中的 JSON-RPC 錯誤，讀不到才退回狀態列；定義 XML 也在這裡解析成一般物件。 |
 | `form-renderer.js` | ES module：吃解析後的 `FormLayout` 物件、產生可操作的 HTML 表單（CSS Grid、controlType dispatch）。匯出 `bindDataSet` / `collectDataSet` 做雙向資料綁定。 |
 | `app.js` | UI 事件綁定；依賴 `polhem-api-client.js` 與 `form-renderer.js`。 |
 | `.smoke.yaml` | `demo-smoke` skill 的設定檔 — 啟動兩個 prerequisite server 並驗證頁面載入後出現預期的區塊文字。檔案開頭註解說明瀏覽器 tier 限制（無法點擊 → 只能 load-level smoke）。 |

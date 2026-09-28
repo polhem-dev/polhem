@@ -5,8 +5,9 @@ const string DevWasmCorsPolicy = "PolhemDevWasm";
 var builder = WebApplication.CreateBuilder(args);
 
 // Polhem backend (in-process JSON-RPC dispatch). AddNorthwindBackend handles PathOptions,
-// SQLite registration and AddPolhemFramework, and registers nothing beyond it. demo/demo signs in
-// through the framework's own st_user check, then enters the seeded company through EnterCompany.
+// SQLite registration and AddPolhemFramework, and registers nothing beyond it. The demo accounts
+// sign in through the framework's own st_user check, then enter the seeded company through
+// EnterCompany.
 builder.AddNorthwindBackend();
 
 builder.Services.AddControllers();

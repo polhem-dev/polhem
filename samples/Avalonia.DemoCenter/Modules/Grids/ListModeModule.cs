@@ -31,7 +31,7 @@ namespace Avalonia.DemoCenter.Modules.Grids
             {
                 Content = DataEditorParts.Section(
                     "Employee list (list mode)",
-                    "A list-mode grid is not editable and has no toolbar. The production ListView adds back-end reload and row events (see Avalonia.Demo).",
+                    "A list-mode grid is not editable and has no toolbar. The production ListView adds back-end reload and row events (see apps/Polhem.Northwind).",
                     grid),
             };
         }

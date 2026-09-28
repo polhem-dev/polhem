@@ -24,9 +24,6 @@
         <Value>POLHEM_MASTER_KEY</Value>
       </MasterKeySource>
     </SecurityKeySettings>
-    <Components>
-      <BusinessObjectProvider></BusinessObjectProvider>
-    </Components>
   </BackendConfiguration>
   <FrontendConfiguration />
   <WebsiteConfiguration />

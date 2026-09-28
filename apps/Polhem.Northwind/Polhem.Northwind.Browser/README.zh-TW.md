@@ -32,6 +32,9 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Browser
 開啟 <http://localhost:5200/>，接著 **Connect**（endpoint 已預填
 `http://localhost:5100/api`）→ 以 `demo` / `demo` **Sign in**。
 
+這個 head 請用 `demo` 帳號。`demo-tw` 帳號也能登入，但它的 zh-TW 標題會顯示成空白方框：內嵌的 Inter
+字型沒有中日韓字形，而瀏覽器沙箱不像桌面與行動 head 那樣有系統字型可以借用。取捨的說明在 `Program.cs`。
+
 由於 dev server（`5200`）與 API（`5100`）是不同的來源（origin），server 會啟用一個僅限開發環境的
 CORS 政策（`PolhemDevWasm`，由 `IsDevelopment()` 把關），允許任何 `localhost` 來源。正式部署應該從 API
 主機以**同源（same-origin）**方式提供發佈後的 WASM，並拿掉該政策。

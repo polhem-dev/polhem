@@ -1,4 +1,7 @@
 @page "/"
+@using Polhem.Api.Core.Messages.System
+@using Polhem.Web.Blazor.Server.DependencyInjection
+@inject PolhemApiConnectorFactory Factory
 
 <PolhemAccessTokenProvider Context="auth">
     @if (!auth.IsAuthenticated)
@@ -9,17 +12,46 @@
                 Use the seeded demo account:
                 <code>@DemoCredentials.UserId</code> / <code>@DemoCredentials.Password</code>
             </p>
-            <PolhemLoginPanel OnLoggedIn="response => auth.SetToken(response.AccessToken)" />
+            <PolhemLoginPanel OnLoggedIn="response => OnLoggedInAsync(auth, response)" />
+            @if (_enterCompanyError is not null)
+            {
+                <div class="polhem-login-panel__error" role="alert">@_enterCompanyError</div>
+            }
         </section>
     }
     else
     {
         <section class="polhem-demo-section">
             <div class="polhem-demo-userbar">
-                <span>Signed in as <strong>@DemoCredentials.DisplayName</strong></span>
+                <span>Signed in as <strong>@DemoCredentials.DisplayName</strong> · @DemoCredentials.CompanyName</span>
                 <button type="button" @onclick="auth.Clear">Sign out</button>
             </div>
             <FormPage ProgId="Employee" />
         </section>
     }
 </PolhemAccessTokenProvider>
+
+@code {
+    private string? _enterCompanyError;
+
+    // Sign-in is two calls. Login says who the user is; EnterCompany says which company they work
+    // in, and the Employee form is company-scoped, so the token is published to the page only once
+    // both have succeeded. The demo has one company, so it is entered without asking.
+    private async Task OnLoggedInAsync(PolhemAccessTokenProvider auth, LoginResponse response)
+    {
+        _enterCompanyError = null;
+        try
+        {
+            await Factory.CreateSystemConnector(response.AccessToken)
+                .EnterCompanyAsync(DemoCredentials.CompanyId)
+                .ConfigureAwait(true);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // The connector reports a JSON-RPC error (such as "Company access denied") this way.
+            _enterCompanyError = $"Signed in, but entering {DemoCredentials.CompanyId} failed: {ex.Message}";
+            return;
+        }
+        auth.SetToken(response.AccessToken);
+    }
+}

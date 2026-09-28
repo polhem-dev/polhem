@@ -13,9 +13,10 @@ namespace Polhem.DefineEditor;
 
 /// <summary>
 /// Headless smoke harness driven by <c>dotnet run -- --smoke &lt;fixture-path&gt;</c>.
-/// Runs (1) the FormSchema flow against the supplied fixture, then (2) round-trip
-/// checks on all four singleton editors built from fresh in-memory instances so
-/// the smoke does not depend on extra fixture files.
+/// Runs (1) the FormSchema flow against the supplied fixture, (2) FormLayout generation, then
+/// (3) the phases listed in <see cref="RunSingletonSmoke"/>: round-trip checks on the other
+/// editors, built from fresh in-memory instances so the smoke does not depend on extra fixture
+/// files, plus the connection-string parser and the tab commands.
 /// </summary>
 internal static class Smoke
 {
@@ -30,7 +31,7 @@ internal static class Smoke
         var singletonResult = RunSingletonSmoke();
         if (singletonResult != 0) return singletonResult;
 
-        Console.WriteLine("[smoke] OK — FormSchema + FormLayout generation + 8 multi-instance editors + ConnectionStringParser + tab commands all green.");
+        Console.WriteLine("[smoke] OK — every phase passed.");
         return 0;
     }
 
