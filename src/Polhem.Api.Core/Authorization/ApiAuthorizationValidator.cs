@@ -11,7 +11,8 @@ namespace Polhem.Api.Core.Authorization
     /// Once <c>st_api_key</c> holds an enabled key, <see cref="IApiKeyValidator"/> has already
     /// compared the supplied key against its stored hash and this validator enforces the verdict.
     /// Until then a non-empty <c>X-Api-Key</c> passes, so a deployment works before its first key
-    /// is issued, and <c>UsePolhemFramework</c> logs a startup warning pointing at key management.
+    /// is issued, and <c>UsePolhemFramework</c> logs a startup error pointing at key management (a
+    /// warning when the host runs in the Development environment).
     /// <para>
     /// Either way, user authentication is the Bearer access token's job: the API key identifies the
     /// calling application, not the user.

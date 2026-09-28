@@ -204,17 +204,18 @@ namespace Polhem.UI.Core
         /// </summary>
         /// <remarks>
         /// <para>
-        /// One switch for the whole client, so a host turns localization on once instead of view by
-        /// view: the record form, the list and the lookup dialog all consult it, and a view's own
-        /// loader still wins. <c>false</c> — the default — renders definitions exactly as stored,
-        /// which costs no extra round trips and needs nothing but the stored files.
+        /// One switch for the whole client: the record form, the list and the lookup dialog all consult
+        /// it, and a view's own loader still wins. <c>true</c> — the default — gives every view
+        /// customized layouts, localized captions and company number formats. <c>false</c> renders
+        /// definitions exactly as stored, which saves the extra round trips the loader makes and needs
+        /// nothing but the stored files.
         /// </para>
         /// <para>
         /// Views localize when they load. A language switch takes effect in views opened after it;
         /// a view already on screen keeps the language it was opened in until it is reopened.
         /// </para>
         /// </remarks>
-        public static bool UseDefinitionLoader { get; set; }
+        public static bool UseDefinitionLoader { get; set; } = true;
 
         /// <summary>
         /// Gets the client-wide definition loader, or <c>null</c> when

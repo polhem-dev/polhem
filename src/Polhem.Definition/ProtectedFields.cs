@@ -21,7 +21,7 @@ namespace Polhem.Definition
     {
         /// <summary>
         /// The deployment administrator flag on <c>st_user</c>. Written only by
-        /// <c>SystemBO.SetDeploymentAdmin</c>, which is restricted to local calls.
+        /// <c>SystemBusinessObject.SetDeploymentAdmin</c>, which is restricted to local calls.
         /// </summary>
         public const string DeploymentAdmin = "deployment_admin";
 

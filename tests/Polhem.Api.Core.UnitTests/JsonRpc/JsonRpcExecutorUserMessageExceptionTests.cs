@@ -148,9 +148,14 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             {
                 if (row.IsVerbatim)
                     Assert.NotEqual(bclAssembly, row.ExceptionType.Assembly);
-                else
+                else if (row.Code is not (JsonRpcErrorCode.MethodNotFound or JsonRpcErrorCode.InvalidParams))
                     Assert.Equal(bclAssembly, row.ExceptionType.Assembly);
             }
+
+            // The protocol errors are the one place a framework type travels with a fixed message: their own
+            // text names server types for the log, and the code already tells the caller what went wrong.
+            Assert.Contains(JsonRpcErrorContract.Rows, row => row.Code == JsonRpcErrorCode.MethodNotFound && !row.IsVerbatim);
+            Assert.Contains(JsonRpcErrorContract.Rows, row => row.Code == JsonRpcErrorCode.InvalidParams && !row.IsVerbatim);
         }
 
         [Fact]

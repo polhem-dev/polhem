@@ -167,6 +167,11 @@ namespace Polhem.Business.Form
         /// Returns a blank <c>DataSet</c> skeleton seeded with FormSchema
         /// defaults and a server-issued <c>sys_rowid</c>.
         /// </summary>
+        /// <remarks>
+        /// A field with a <see cref="Polhem.Definition.Forms.FormField.DefaultValueExpression"/> takes the
+        /// expression's value, which replaces its literal
+        /// <see cref="Polhem.Definition.Forms.FormField.DefaultValue"/> and its per-type seed.
+        /// </remarks>
         /// <param name="args">The input arguments.</param>
         [ApiAccessControl(ApiProtectionLevel.Public, ApiAccessRequirement.Authenticated)]
         public virtual GetNewDataResult GetNewData(GetNewDataArgs args)
@@ -180,7 +185,9 @@ namespace Polhem.Business.Form
             // somewhere invisible behaves differently on each side (ADR-032 D13).
             // `Get` yields null when the token has no session — blank then means UTC, which is the
             // defined fallback; adopting the server machine's zone instead is what D4 rules out.
-            var dataSet = repository.GetNewData(ResolveSessionTimeZone());
+            var timeZoneId = ResolveSessionTimeZone();
+            var dataSet = repository.GetNewData(timeZoneId);
+            RuleProcessor.ApplyNewRowDefaults(DefineAccess.GetFormSchema(ProgId), dataSet, timeZoneId);
 
             return new GetNewDataResult { DataSet = dataSet };
         }

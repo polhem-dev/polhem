@@ -43,7 +43,5 @@ namespace Polhem.Api.Contracts.AuditLog
         /// Gets or sets the value after the change; <c>null</c> for a deleted row.
         /// </summary>
         public string? NewValue { get; set; }
-
-        // Add new fields starting from Key(6).
     }
 }

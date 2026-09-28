@@ -179,10 +179,9 @@ namespace Polhem.Business.Form
         /// <para>
         /// <b>Validation here has a time-of-check to time-of-use gap.</b> A read that finds stock
         /// sufficient can be invalidated by another transaction before <see cref="DoSave"/> runs,
-        /// and the save still proceeds. Checks that must be atomic belong inside
-        /// <see cref="DoSave"/>, expressed as a conditional UPDATE, a unique index or a check
-        /// constraint. Reads here are for rejecting obviously wrong input, not for guarding against
-        /// concurrency.
+        /// and the save still proceeds. Checks that must be atomic belong in the database, as a
+        /// unique index or a check constraint (see <see cref="DoSave"/>). Reads here are for
+        /// rejecting obviously wrong input, not for guarding against concurrency.
         /// </para>
         /// <para>
         /// To abort the save, throw
@@ -204,9 +203,11 @@ namespace Polhem.Business.Form
         /// <remarks>
         /// <para>
         /// <b>The only step that runs inside the database transaction</b>, which the repository
-        /// opens and commits within this call. Logic that must succeed or fail atomically with the
-        /// record belongs here — in practice, inside a repository subclass whose own <c>Save</c>
-        /// extends the same batch.
+        /// opens and commits within this call. The transaction covers the data set's own changes and
+        /// nothing else: <see cref="Polhem.Repository.Abstractions.Form.IDataFormRepository.Save"/>
+        /// takes no further commands, and the refreshed data set is read after it commits. A rule that
+        /// must hold atomically with the record therefore belongs in the database itself, as a unique
+        /// index or a check constraint.
         /// </para>
         /// <para>
         /// Work added around <c>base.DoSave(context)</c> in an override is <b>not</b> in that

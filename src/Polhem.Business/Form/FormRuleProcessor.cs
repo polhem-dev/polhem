@@ -26,6 +26,15 @@ namespace Polhem.Business.Form
         }
 
         /// <inheritdoc />
+        public void ApplyNewRowDefaults(FormSchema schema, DataSet dataSet, string timeZoneId = "")
+        {
+            ArgumentNullException.ThrowIfNull(schema);
+            ArgumentNullException.ThrowIfNull(dataSet);
+
+            _calculator.ApplyNewRowDefaults(schema, dataSet, timeZoneId);
+        }
+
+        /// <inheritdoc />
         public void ApplyBeforeSave(FormSchema schema, DataSet dataSet, RoundingContext roundingContext, string timeZoneId = "")
         {
             ArgumentNullException.ThrowIfNull(schema);

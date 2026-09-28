@@ -164,11 +164,13 @@ namespace Polhem.Api.Client
         /// </summary>
         /// <remarks>
         /// Must be called after switching tenant context (<c>EnterCompany</c> / <c>LeaveCompany</c>
-        /// changes the session's customization code). The server overlays FormLayout / Language /
-        /// ProgramSettings per the session's customization code, but this cache keys them only by
-        /// progId / layoutId / namespace — without a flush, a tenant switch would keep serving the
-        /// previous tenant's overlaid result. FormSchema / TableSchema / settings are tenant-agnostic,
-        /// so clearing them too is merely a harmless re-fetch on next access.
+        /// changes the session's customization code). The server resolves the menu against the
+        /// session's customization code, and serves the customization layers of FormLayout and
+        /// Language for that code, but this cache keys them only by progId / layoutId / language and
+        /// namespace — without a flush, a tenant switch would keep serving the previous tenant's
+        /// result. The other definitions are tenant-agnostic, so clearing them too is merely a
+        /// harmless re-fetch on next access. The UI client's <c>ClientInfo</c> calls this itself when
+        /// it applies an <c>EnterCompany</c> result or clears the company context.
         /// </remarks>
         public void ClearCache()
         {

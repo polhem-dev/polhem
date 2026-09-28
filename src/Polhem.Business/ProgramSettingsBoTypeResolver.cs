@@ -24,10 +24,12 @@ namespace Polhem.Business
     /// than at the registry. This is the same policy the repository axis has always had.
     /// </para>
     /// <para>
-    /// <b>Reserved progIds additionally constrain the base type.</b> <c>System</c> and
-    /// <c>AuditLog</c> must resolve to the framework's business object for that axis, or a subclass
-    /// of it (<see cref="ReservedProgIdBinding.ExpectedBaseType"/>); an ordinary progId only has to
-    /// derive from <see cref="BusinessObject"/>.
+    /// <b>Reserved progIds additionally constrain the base type.</b> Each progId in
+    /// <see cref="ReservedProgIds.All"/> must resolve to a subclass of its
+    /// <see cref="ReservedProgIdBinding.ExpectedBaseType"/>: <c>System</c> and <c>AuditLog</c> to the
+    /// framework's business object for that axis, <c>AuditRule</c> to a
+    /// <see cref="FormBusinessObject"/>. An ordinary progId only has to derive from
+    /// <see cref="BusinessObject"/>.
     /// </para>
     /// <para>
     /// <b>An absent entry is not a failure.</b> A progId the registry does not mention, or one whose

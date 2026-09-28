@@ -302,10 +302,11 @@ namespace Polhem.UI.Avalonia.Views
             await RunGuardedAsync(async () =>
             {
                 await dataObject.NewAsync().ConfigureAwait(true);
-                // The server's `GetNewData` seeds columns but does not evaluate the
-                // `DefaultValueExpression`. Apply the display-layer defaults (and recompute) so the blank
-                // master row shows them at once. The master row does not raise `RowAdded` because it is
-                // populated before the event bridge attaches, so seed it explicitly here.
+                // The server's `GetNewData` has already evaluated the `DefaultValueExpression`s, but
+                // computed fields are left to the client. Initialize the master row here so the computed
+                // fields reflect those defaults at once; the defaults are evaluated again from the same
+                // expressions. The master row does not raise `RowAdded` because it is populated before
+                // the event bridge attaches, so it is initialized explicitly here.
                 var master = dataObject.MasterRow;
                 if (master is not null)
                     _liveComputation?.InitializeNewRow(dataObject.MasterTable.TableName, master);

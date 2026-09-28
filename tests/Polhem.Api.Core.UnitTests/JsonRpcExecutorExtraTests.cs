@@ -174,8 +174,8 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Execute masks MissingMethodException for an unknown Action as Internal server error (outside debug mode)")]
-        public async Task Execute_UnknownAction_ReturnsGenericInternalError()
+        [DisplayName("Execute answers an unknown Action with MethodNotFound (-32601) and a fixed message (outside debug mode)")]
+        public async Task Execute_UnknownAction_ReturnsMethodNotFound()
         {
             var request = new JsonRpcRequest
             {
@@ -194,8 +194,9 @@ namespace Polhem.Api.Core.UnitTests
                 var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
 
                 Assert.NotNull(response.Error);
-                Assert.Equal((int)JsonRpcErrorCode.InternalError, response.Error!.Code);
-                Assert.Equal("Internal server error", response.Error.Message);
+                Assert.Equal((int)JsonRpcErrorCode.MethodNotFound, response.Error!.Code);
+                Assert.Equal("Method not found.", response.Error.Message);
+                Assert.DoesNotContain("DefinitelyNotAMethod", response.Error.Message, StringComparison.Ordinal);
             }
             finally
             {
@@ -204,7 +205,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Execute passes through the original exception message for an unknown Action in debug mode")]
+        [DisplayName("Execute passes through the original message for an unknown Action in debug mode, still as MethodNotFound")]
         public async Task Execute_UnknownAction_DebugMode_PassesThroughMessage()
         {
             var request = new JsonRpcRequest
@@ -221,7 +222,7 @@ namespace Polhem.Api.Core.UnitTests
                 var response = await NewExecutor(Guid.Empty, isLocalCall: true).ExecuteAsync(request);
 
                 Assert.NotNull(response.Error);
-                Assert.Equal((int)JsonRpcErrorCode.InternalError, response.Error!.Code);
+                Assert.Equal((int)JsonRpcErrorCode.MethodNotFound, response.Error!.Code);
                 Assert.Contains("DefinitelyNotAMethod", response.Error.Message, StringComparison.Ordinal);
             }
             finally
@@ -234,7 +235,7 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("Execute takes the CreateBusinessObject branch for a non-System progId")]
         public async Task Execute_NonSystemProgId_InvokesCreateBusinessObject()
         {
-            // Uses the defined Department progId with an unknown action. In debug mode the `MissingMethodException`
+            // Uses the defined Department progId with an unknown action. In debug mode the `MethodNotFoundException`
             // message passes through and names the business object type the action was looked up on, which shows
             // the form branch of `CreateBusinessObject` built it rather than the system one.
             var request = new JsonRpcRequest

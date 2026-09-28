@@ -11,6 +11,11 @@ namespace Polhem.Definition.Forms
     /// the server (the <c>GetNewData</c> master row) and the client (newly added detail rows) so
     /// both produce identically initialized rows from a single place.
     /// </summary>
+    /// <remarks>
+    /// This is only the seed. A field with a <see cref="FormField.DefaultValueExpression"/> is evaluated
+    /// afterwards and its value replaces the seed (<see cref="FormExpressionCalculator.ApplyNewRowDefaults"/>
+    /// on the server, <see cref="FormExpressionCalculator.ApplyDefaultRow"/> on a client).
+    /// </remarks>
     public static class FormRowDefaults
     {
         /// <summary>

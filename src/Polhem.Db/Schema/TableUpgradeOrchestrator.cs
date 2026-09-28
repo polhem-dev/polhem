@@ -78,7 +78,7 @@ namespace Polhem.Db.Schema
                 bool hasRename = diff.Changes.OfType<RenameFieldChange>().Any();
                 if (hasRename)
                     throw new InvalidOperationException("Rebuild combined with a field rename is not supported; split the changes across deploys or drop the OriginalFieldName hint.");
-                return BuildRebuildPlan(diff);
+                return BuildRebuildPlan(diff, options);
             }
 
             return BuildAlterPlan(diff, options);
@@ -132,12 +132,32 @@ namespace Polhem.Db.Schema
             return new UpgradePlan(UpgradeExecutionMode.Create, new[] { stage });
         }
 
-        private UpgradePlan BuildRebuildPlan(TableSchemaDiff diff)
+        private UpgradePlan BuildRebuildPlan(TableSchemaDiff diff, UpgradeOptions options)
         {
+            // A rebuild copies every row into the new table, so a narrowed column truncates or rejects data
+            // exactly as an ALTER would; the same opt-in applies.
+            var warnings = new List<string>();
+            foreach (var change in diff.Changes)
+                CheckNarrowing(change, options, warnings);
+
             var builder = _dialect.CreateTableRebuildCommandBuilder();
             var sql = builder.GetCommandText(diff);
             var stage = new UpgradeStage(UpgradeStageKind.Rebuild, new[] { sql });
-            return new UpgradePlan(UpgradeExecutionMode.Rebuild, new[] { stage });
+            return new UpgradePlan(UpgradeExecutionMode.Rebuild, new[] { stage }, warnings);
+        }
+
+        /// <summary>
+        /// Refuses a narrowing change unless <see cref="UpgradeOptions.AllowColumnNarrowing"/> is set, and
+        /// records a warning when it is.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">The change narrows a column and narrowing is not allowed.</exception>
+        private void CheckNarrowing(ITableChange change, UpgradeOptions options, List<string> warnings)
+        {
+            if (!_alterBuilder.IsNarrowingChange(change)) return;
+            if (!options.AllowColumnNarrowing)
+                throw new InvalidOperationException(
+                    $"Change narrows a column ({change.GetType().Name}); set UpgradeOptions.AllowColumnNarrowing to proceed.");
+            warnings.Add($"Narrowing change permitted: {change.Describe()}");
         }
 
         private UpgradePlan BuildAlterPlan(TableSchemaDiff diff, UpgradeOptions options)
@@ -151,13 +171,7 @@ namespace Polhem.Db.Schema
 
             foreach (var change in diff.Changes)
             {
-                if (_alterBuilder.IsNarrowingChange(change))
-                {
-                    if (!options.AllowColumnNarrowing)
-                        throw new InvalidOperationException(
-                            $"Change narrows a column ({change.GetType().Name}); set UpgradeOptions.AllowColumnNarrowing to proceed.");
-                    warnings.Add($"Narrowing change permitted: {change.Describe()}");
-                }
+                CheckNarrowing(change, options, warnings);
 
                 var stmts = _alterBuilder.GetStatements(tableName, change);
                 switch (change)

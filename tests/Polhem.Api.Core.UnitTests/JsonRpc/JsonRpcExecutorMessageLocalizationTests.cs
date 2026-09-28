@@ -13,7 +13,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
     /// translated in the session's culture before it leaves the server, and falls back to its English
     /// text whenever a translation does not apply.
     /// </summary>
-    [Collection("SysInfoStatic")]
+    [Collection(SysInfoStaticCollection.Name)]
     public class JsonRpcExecutorMessageLocalizationTests
     {
         private static readonly Guid s_token = Guid.NewGuid();

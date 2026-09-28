@@ -11,7 +11,7 @@ namespace Polhem.Definition.UnitTests.Forms
 {
     /// <summary>
     /// Tests for <see cref="FormExpressionCalculator"/>: row-level computation (including RoundByKind rounding and declaration-order chains),
-    /// default values that fill only empty columns, reporting only the columns that actually changed, and the "source column → computed column"
+    /// default values that replace a new row's seed, reporting only the columns that actually changed, and the "source column → computed column"
     /// dependency map. Uses the real <see cref="DynamicExpressoEvaluator"/>, pure logic with no database.
     /// </summary>
     public class FormExpressionCalculatorTests
@@ -207,13 +207,14 @@ namespace Polhem.Definition.UnitTests.Forms
         }
 
         [Fact]
-        [DisplayName("ApplyDefaultRow fills empty columns from expressions and reports them, without overwriting existing values")]
-        public void ApplyDefaultRow_FillsOnlyEmpty()
+        [DisplayName("ApplyDefaultRow replaces a seeded value with the expression's value and reports it; an unchanged result is not reported")]
+        public void ApplyDefaultRow_ReplacesSeededValue()
         {
             // Read before the act as well as after it, so a run that crosses midnight cannot fail.
             var dayBefore = DateTime.UtcNow.Date;
             var schema = BuildOrderSchema();
-            var table = BuildOrderTable(price: 1m, qty: 1m);
+            var seeded = DateTime.SpecifyKind(new DateTime(2000, 1, 1), DateTimeKind.Unspecified);
+            var table = BuildOrderTable(price: 1m, qty: 1m, orderDate: seeded);
 
             var changed = _calculator.ApplyDefaultRow(schema.MasterTable!, table.Rows[0]);
 
@@ -222,9 +223,9 @@ namespace Polhem.Definition.UnitTests.Forms
             Assert.InRange((DateTime)table.Rows[0]["order_date"], dayBefore, DateTime.UtcNow.Date);
             Assert.Contains("order_date", changed);
 
-            // The second call finds `order_date` already set, so it neither overwrites nor reports it.
+            // The second call evaluates the same value again, so nothing changes and nothing is reported.
             var again = _calculator.ApplyDefaultRow(schema.MasterTable!, table.Rows[0]);
-            Assert.Empty(again);
+            Assert.DoesNotContain("order_date", again);
         }
 
         [Fact]

@@ -59,7 +59,7 @@ namespace Polhem.Db.Dml
 
                 // Use "<MainTable>.<FieldName>.<SourceProgId>" as the unique JOIN key
                 string key = $"{_formTable.TableName}.{field.FieldName}.{field.RelationProgId}";
-                AddTableJoin(context, key, field, fieldMappings, _formTable.DbTableName, mainAlias);
+                AddTableJoin(context, key, field, fieldMappings, SelectFieldGuard.DbTableNameOf(_formTable), mainAlias);
             }
             return context;
         }
@@ -95,7 +95,7 @@ namespace Polhem.Db.Dml
                     LeftTable = leftTable,
                     LeftAlias = leftAlias,
                     LeftField = foreignKeyField.FieldName,
-                    RightTable = srcTable.DbTableName,
+                    RightTable = SelectFieldGuard.DbTableNameOf(srcTable),
                     RightAlias = GetActiveTableAlias(),
                     RightField = SysFields.RowId
                 };

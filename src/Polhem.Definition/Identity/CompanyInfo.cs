@@ -9,9 +9,9 @@ namespace Polhem.Definition.Identity
     /// <remarks>
     /// Returned by <c>EnterCompany</c> and resolved by company-aware repositories
     /// via the cached <see cref="ICompanyInfoService"/>. <c>CompanyDatabaseId</c> references
-    /// a logical <see cref="DatabaseSettings"/> entry; multiple companies may point at the
-    /// same id and rely on the <c>sys_company_rowid</c> column for row-level
-    /// isolation. The log database is shared across all companies under a fixed
+    /// a logical <see cref="DatabaseSettings"/> entry. Multiple companies may point at the
+    /// same id, and then share that database's tables: the framework adds no column that separates
+    /// one company's rows from another's, so keeping them apart is up to the application. The log database is shared across all companies under a fixed
     /// <c>"log"</c> databaseId (see <see cref="DbScope.Log"/>), so there is no per-company
     /// log database id property.
     /// <para>

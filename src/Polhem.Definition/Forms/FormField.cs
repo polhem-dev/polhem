@@ -119,7 +119,8 @@ namespace Polhem.Definition.Forms
         public int MaxLength { get; set; } = 0;
 
         /// <summary>
-        /// Gets or sets the default value.
+        /// Gets or sets the literal default value of a new row. A <see cref="DefaultValueExpression"/>, when
+        /// set, takes precedence.
         /// </summary>
         [XmlAttribute]
         [Category(PropertyCategories.Data)]
@@ -142,9 +143,18 @@ namespace Polhem.Definition.Forms
 
         /// <summary>
         /// Gets or sets the expression that produces this field's default value for a new row.
-        /// Evaluated by the rule engine when a record is created; takes precedence over the literal
-        /// <see cref="DefaultValue"/> when set. Empty means no expression-based default.
+        /// Empty means no expression-based default.
         /// </summary>
+        /// <remarks>
+        /// When set, a new row takes the expression's value, replacing both the literal
+        /// <see cref="DefaultValue"/> and the per-type seed (0, empty text, today, <see cref="Guid.Empty"/>).
+        /// The server evaluates it when it builds a new record (<see cref="FormExpressionCalculator.ApplyNewRowDefaults"/>)
+        /// and a UI client when it adds a row (<see cref="FormExpressionCalculator.ApplyDefaultRow"/>). At save
+        /// time a new row's field is filled from the expression only while it is still empty, so a value the user
+        /// entered is kept. The exception is a <see cref="FieldDbType.DateTime"/> field: the server discards
+        /// the caller's value on a new row and evaluates the expression again (the base
+        /// <c>FormBusinessObject.NormalizeDateTimes</c>).
+        /// </remarks>
         [XmlAttribute]
         [Category(PropertyCategories.Data)]
         [Description("Expression producing this field's default value for new rows.")]

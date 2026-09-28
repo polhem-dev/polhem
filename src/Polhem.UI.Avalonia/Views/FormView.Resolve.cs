@@ -64,17 +64,17 @@ namespace Polhem.UI.Avalonia.Views
         /// <summary>
         /// Gets or sets the assembler that turns the raw definitions the server serves into a
         /// localized schema and a runtime layout, for this view only. <c>null</c> — the default —
-        /// uses <see cref="ClientInfo.DefinitionLoader"/>, which is itself <c>null</c> unless the
-        /// host turned on <see cref="ClientInfo.UseDefinitionLoader"/>; with neither, the view is
+        /// uses <see cref="ClientInfo.DefinitionLoader"/>, which is itself <c>null</c> only when the
+        /// host turned off <see cref="ClientInfo.UseDefinitionLoader"/>; with neither, the view is
         /// purely local: the schema is fetched as stored, and the layout comes from
         /// <see cref="Layout"/> or the stored definition.
         /// </summary>
         /// <remarks>
         /// <para>
         /// Assembling the runtime definitions costs API round trips (both language layers, both
-        /// layout layers), and <see cref="Schema"/> is a public property, so a host may legitimately
-        /// supply a schema with no backend behind it at all. That is why the client-wide switch is
-        /// off by default; a host turns it on once rather than wiring every view.
+        /// layout layers). A host that supplies <see cref="Schema"/> and <see cref="Layout"/> with no
+        /// backend behind them, or wants the stored definitions as they are, turns the client-wide
+        /// switch off once rather than unwiring every view.
         /// </para>
         /// <para>
         /// A loader enables customized layouts, localized captions and company number formats.

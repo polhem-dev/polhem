@@ -135,6 +135,29 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
+        [DisplayName("ApplyDefaults: a DefaultValueExpression replaces the value FormRowDefaults seeded on a new row")]
+        public void ApplyDefaults_SeededRow_ExpressionReplacesSeed()
+        {
+            var schema = BuildOrderSchema();
+            schema.MasterTable!.Fields!.Add(new FormField("priority", "Priority", FieldDbType.Integer)
+            {
+                DefaultValueExpression = "3",
+            });
+            var live = new FormLiveComputation(schema);
+            var table = BuildOrderTable(price: 1m, qty: 1m);
+            table.Columns.Add("priority", typeof(int));
+            var row = table.NewRow();
+            FormRowDefaults.Apply(schema.MasterTable!, row);
+            table.Rows.Add(row);
+            Assert.Equal(0, row["priority"]);
+
+            var changed = live.ApplyDefaults("Order", row);
+
+            Assert.Equal(3, row["priority"]);
+            Assert.Contains("priority", changed);
+        }
+
+        [Fact]
         [DisplayName("Northwind repro: a string-typed Guid key column does not crash the numeric computed field (the wire and SQLite store GUIDs as TEXT)")]
         public void Recompute_StringTypedGuidKeyColumn_DoesNotThrow()
         {

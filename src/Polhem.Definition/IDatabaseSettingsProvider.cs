@@ -21,6 +21,9 @@ namespace Polhem.Definition
         /// Validates that the settings contain the framework-required
         /// <c>common</c> database item; throws if missing.
         /// </summary>
+        /// <remarks>
+        /// A host built with <c>AddPolhemFramework</c> calls this at startup and does not start when it throws.
+        /// </remarks>
         /// <exception cref="InvalidOperationException">When the required item is missing.</exception>
         void ValidateRequired();
     }

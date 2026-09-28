@@ -172,7 +172,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             var entry = Assert.Single(writer.Entries);
             var anomaly = Assert.IsType<ApiAnomalyEntry>(entry);
             Assert.Equal(AnomalyKind.Error, anomaly.Kind);
-            Assert.Equal(nameof(MissingMethodException), anomaly.ErrorType);
+            Assert.Equal(nameof(MethodNotFoundException), anomaly.ErrorType);
             Assert.Equal($"{SysProgIds.System}.DefinitelyNotAMethod", anomaly.Method);
             Assert.NotNull(anomaly.ErrorMessage);
             Assert.Null(anomaly.ThresholdMs);
@@ -212,7 +212,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
             var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
             // Pins the failure to the unknown action, not to a session lookup that reached a database.
-            Assert.Equal(nameof(MissingMethodException), anomaly.ErrorType);
+            Assert.Equal(nameof(MethodNotFoundException), anomaly.ErrorType);
             Assert.Equal("northwind-desktop", anomaly.ApiKeyId);
             Assert.Equal("Northwind Desktop", anomaly.ApiKeyName);
         }
@@ -228,7 +228,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             await executor.ExecuteAsync(UnknownActionRequest());
 
             var anomaly = Assert.IsType<ApiAnomalyEntry>(Assert.Single(writer.Entries));
-            Assert.Equal(nameof(MissingMethodException), anomaly.ErrorType);
+            Assert.Equal(nameof(MethodNotFoundException), anomaly.ErrorType);
             Assert.Null(anomaly.ApiKeyId);
             Assert.Null(anomaly.ApiKeyName);
         }

@@ -6,7 +6,8 @@ namespace Polhem.Db.Schema
     public sealed class UpgradeOptions
     {
         /// <summary>
-        /// When true, allows ALTER COLUMN with reduced length or precision that may cause data truncation.
+        /// When true, allows a change that reduces a column's length or precision and may truncate data,
+        /// whether it is applied by ALTER COLUMN or by rebuilding the table (SQLite).
         /// Default is false: narrowing changes are rejected to avoid silent data loss.
         /// </summary>
         /// <remarks>

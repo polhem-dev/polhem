@@ -1,9 +1,7 @@
 using System.Collections.Concurrent;
 using System.Data;
-using System.Globalization;
 using Polhem.Base;
 using Polhem.Base.Data;
-using Polhem.Base.Exceptions;
 using Polhem.Base.Expressions;
 
 namespace Polhem.Definition.Forms
@@ -24,7 +22,7 @@ namespace Polhem.Definition.Forms
     /// exposes the "which edited field forces which computed field to recompute" graph the client uses
     /// to gate recomputation.
     /// </remarks>
-    public sealed class FormExpressionCalculator
+    public sealed partial class FormExpressionCalculator
     {
         private readonly IExpressionEvaluator _evaluator;
 
@@ -88,6 +86,45 @@ namespace Polhem.Definition.Forms
         }
 
         /// <summary>
+        /// Evaluates the default-value expressions of every new (<see cref="DataRowState.Added"/>) row of a
+        /// freshly built data set and writes each result, replacing whatever the row was seeded with: the
+        /// per-type seed of <see cref="FormRowDefaults"/> and a literal <see cref="FormField.DefaultValue"/>.
+        /// This is the server's new-record pass; <see cref="ApplyDefaultRow"/> is its client-side
+        /// counterpart for a single row.
+        /// </summary>
+        /// <param name="schema">The form schema.</param>
+        /// <param name="dataSet">The new-record data set (mutated in place).</param>
+        /// <param name="timeZoneId">The user's IANA time zone id, seen by the <c>Today()</c> helper; blank means UTC.</param>
+        /// <remarks>
+        /// <c>Now()</c> is evaluated on the <see cref="DateTimeBasis.Utc"/> basis, because a server-side data
+        /// set is in UTC (ADR-032 D3). Computed fields are left to the save pass and to the client's live
+        /// computation.
+        /// </remarks>
+        public void ApplyNewRowDefaults(FormSchema schema, DataSet dataSet, string timeZoneId = "")
+        {
+            ArgumentNullException.ThrowIfNull(schema);
+            ArgumentNullException.ThrowIfNull(dataSet);
+
+            if (schema.Tables == null) { return; }
+
+            foreach (var formTable in schema.Tables)
+            {
+                if (formTable.Fields == null) { continue; }
+                var dataTable = FindDataTable(dataSet, formTable.TableName);
+                if (dataTable == null) { continue; }
+                var defaultFields = formTable.Fields
+                    .Where(f => StringUtilities.IsNotEmpty(f.DefaultValueExpression)).ToList();
+                if (defaultFields.Count == 0) { continue; }
+
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    if (row.RowState != DataRowState.Added) { continue; }
+                    ApplyDefaults(row, formTable, defaultFields, timeZoneId, DateTimeBasis.Utc, overwrite: true);
+                }
+            }
+        }
+
+        /// <summary>
         /// Fills default-value expressions on new rows and recomputes value-expression fields on
         /// new/changed rows, per table. This is the server's before-save field pass.
         /// </summary>
@@ -103,6 +140,10 @@ namespace Polhem.Definition.Forms
         /// <c>Now()</c> is evaluated on the <see cref="DateTimeBasis.Utc"/> basis. This pass runs on the
         /// server, where the data set is in UTC (ADR-032 D3), so a user-zone reading would be written off
         /// by the user's offset.
+        /// <para>
+        /// Unlike <see cref="ApplyNewRowDefaults"/>, this pass fills a default-value field only while it is
+        /// empty: by the time a row is saved, a non-empty value may be one the user entered.
+        /// </para>
         /// </remarks>
         public void ApplyFieldExpressions(FormSchema schema, DataSet dataSet, RoundingContext roundingContext,
             string timeZoneId = "")
@@ -141,90 +182,11 @@ namespace Polhem.Definition.Forms
                 if (state is DataRowState.Deleted or DataRowState.Detached) { continue; }
 
                 if (state == DataRowState.Added && defaultFields.Count > 0)
-                    ApplyDefaults(row, formTable, defaultFields, timeZoneId, basis);
+                    ApplyDefaults(row, formTable, defaultFields, timeZoneId, basis, overwrite: false);
 
                 if (state is DataRowState.Added or DataRowState.Modified && computedFields.Count > 0)
                     ApplyComputed(row, formTable, schema, computedFields, roundingContext, timeZoneId, basis);
             }
-        }
-
-        /// <summary>
-        /// Evaluates the enabled rules of the given trigger in order; a failing condition (that passes
-        /// its applicability guard) aborts the operation with the rule's message. This is the server's
-        /// before-save / before-delete validation pass; clients do not call it (the server is the
-        /// authority for validation).
-        /// </summary>
-        /// <param name="schema">The form schema.</param>
-        /// <param name="dataSet">The data set to validate.</param>
-        /// <param name="trigger">The rule trigger to evaluate.</param>
-        /// <exception cref="UserMessageException">A rule's condition fails; carries the rule message.</exception>
-        /// <param name="timeZoneId">The user's IANA time zone id, seen by the <c>Today()</c> helper; blank means UTC.</param>
-        /// <remarks>
-        /// <c>Now()</c> is evaluated on the <see cref="DateTimeBasis.Utc"/> basis, for the same reason as
-        /// <see cref="ApplyFieldExpressions"/>: a rule comparing a cell with <c>Now()</c> must compare two
-        /// UTC values.
-        /// </remarks>
-        public void ValidateRules(FormSchema schema, DataSet dataSet, FormRuleTrigger trigger, string timeZoneId = "")
-        {
-            ArgumentNullException.ThrowIfNull(schema);
-            ArgumentNullException.ThrowIfNull(dataSet);
-
-            if (schema.Rules == null) { return; }
-
-            var rules = schema.Rules
-                .Where(r => r.Enabled && r.Trigger == trigger)
-                .OrderBy(r => r.Order)
-                .ToList();
-
-            foreach (var rule in rules)
-            {
-                var formTable = ResolveRuleTable(rule, schema);
-                if (formTable == null) { continue; }
-                var dataTable = FindDataTable(dataSet, formTable.TableName);
-                if (dataTable == null) { continue; }
-                ValidateRuleRows(rule, schema.ProgId, formTable, dataTable, timeZoneId, DateTimeBasis.Utc);
-            }
-        }
-
-        /// <summary>
-        /// Evaluates a single rule against every live row of its table; a row that passes the rule's
-        /// applicability guard (<see cref="FormRule.When"/>) but fails its condition aborts with the message.
-        /// </summary>
-        /// <exception cref="UserMessageException">
-        /// A row's condition fails. Carries the rule message as its English text and, when the rule
-        /// and the schema are both named, the language key <c>{progId}.Rule.{RuleId}.Message</c>
-        /// (<see cref="Language.FormSchemaLocalizer.RuleMessageKeyFormat"/>), which the server
-        /// resolves in the session's culture before the message reaches the user.
-        /// </exception>
-        private void ValidateRuleRows(FormRule rule, string progId, FormTable formTable, DataTable dataTable, string timeZoneId,
-            DateTimeBasis basis)
-        {
-            foreach (DataRow row in dataTable.Rows)
-            {
-                if (row.RowState is DataRowState.Deleted or DataRowState.Detached) { continue; }
-
-                var variables = BuildVariables(row, formTable);
-                if (StringUtilities.IsNotEmpty(rule.When) &&
-                    !_evaluator.Evaluate<bool>(rule.When, NarrowVariables(rule.When, variables), timeZoneId, basis))
-                {
-                    continue;
-                }
-                if (!_evaluator.Evaluate<bool>(rule.Condition, NarrowVariables(rule.Condition, variables), timeZoneId, basis))
-                    throw CreateRuleViolation(rule, progId);
-            }
-        }
-
-        /// <summary>
-        /// Builds the exception a failed rule raises: keyed for translation when both the rule and
-        /// the schema have a name, literal otherwise.
-        /// </summary>
-        private static UserMessageException CreateRuleViolation(FormRule rule, string progId)
-        {
-            if (StringUtilities.IsEmpty(progId) || StringUtilities.IsEmpty(rule.RuleId))
-                return new UserMessageException(rule.Message);
-
-            string subKey = string.Format(CultureInfo.InvariantCulture, Language.FormSchemaLocalizer.RuleMessageKeyFormat, rule.RuleId);
-            return new UserMessageException($"{progId}.{subKey}", rule.Message);
         }
 
         /// <summary>
@@ -263,13 +225,17 @@ namespace Polhem.Definition.Forms
         }
 
         /// <summary>
-        /// Fills each default-value expression field on a single row, but only where the field is
-        /// currently empty, and reports the fields that were filled. Used by clients when a new row is
-        /// created (display-layer defaults, complementing the server's save-time defaults).
+        /// Evaluates each default-value expression field on a newly created row and writes the result,
+        /// replacing whatever the row was seeded with (the per-type seed of <see cref="FormRowDefaults"/> or a
+        /// literal <see cref="FormField.DefaultValue"/>), and reports the fields whose value changed. Used by
+        /// clients when a new row is created; <see cref="ApplyNewRowDefaults"/> is the server's counterpart.
         /// </summary>
+        /// <remarks>
+        /// Call it only on a row the user has not edited yet: it does not check whether a value was entered.
+        /// </remarks>
         /// <param name="formTable">The row's form table.</param>
         /// <param name="row">The new row to seed.</param>
-        /// <returns>The names of the fields that were filled (empty when none).</returns>
+        /// <returns>The names of the fields whose value changed (empty when none).</returns>
         /// <param name="timeZoneId">
         /// The user's IANA time zone id, seen by the <c>Today()</c> and <c>Now()</c> helpers; blank means UTC.
         /// <c>Now()</c> uses the user's zone here because a client-side data set is held in it.
@@ -284,7 +250,7 @@ namespace Polhem.Definition.Forms
                 .Where(f => StringUtilities.IsNotEmpty(f.DefaultValueExpression)).ToList();
             if (defaultFields.Count == 0) { return []; }
 
-            return ApplyDefaults(row, formTable, defaultFields, timeZoneId, DateTimeBasis.UserZone);
+            return ApplyDefaults(row, formTable, defaultFields, timeZoneId, DateTimeBasis.UserZone, overwrite: true);
         }
 
         /// <summary>
@@ -328,18 +294,19 @@ namespace Polhem.Definition.Forms
             new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// Fills each default-value field on a new row when it is currently empty, returning the filled
-        /// field names.
+        /// Writes each default-value field on a new row, returning the names of the fields whose value
+        /// changed. With <paramref name="overwrite"/> the expression replaces any seeded value (a row just
+        /// created); without it only an empty field is filled (a row about to be saved).
         /// </summary>
         private List<string> ApplyDefaults(DataRow row, FormTable formTable, List<FormField> defaultFields, string timeZoneId,
-            DateTimeBasis basis)
+            DateTimeBasis basis, bool overwrite)
         {
             var changed = new List<string>();
             var variables = BuildVariables(row, formTable);
             foreach (var field in defaultFields)
             {
                 if (!row.Table.Columns.Contains(field.FieldName)) { continue; }
-                if (!IsEmptyValue(row[field.FieldName])) { continue; }
+                if (!overwrite && !IsEmptyValue(row[field.FieldName])) { continue; }
                 // Evaluated without a forced return type, then coerced: the engine's value domain and the
                 // DataSet's differ for dates — `Today()` yields a DateOnly while the cell holds a
                 // DateTime (ADR-032 D12, ADR-031) — and forcing the cell's type at parse time would
@@ -458,17 +425,6 @@ namespace Polhem.Definition.Forms
             };
             if (StringUtilities.IsEmpty(codeField)) { return null; }
             return variables.TryGetValue(codeField!, out var value) ? value?.ToString() : null;
-        }
-
-        /// <summary>
-        /// Resolves the table a rule targets: the master table when <see cref="FormRule.TargetTable"/>
-        /// is empty, otherwise the named table (null when absent).
-        /// </summary>
-        private static FormTable? ResolveRuleTable(FormRule rule, FormSchema schema)
-        {
-            if (StringUtilities.IsEmpty(rule.TargetTable)) { return schema.MasterTable; }
-            return schema.Tables != null && schema.Tables.Contains(rule.TargetTable)
-                ? schema.Tables[rule.TargetTable] : null;
         }
 
         /// <summary>

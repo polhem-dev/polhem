@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Polhem.Base;
 using Polhem.Base.Exceptions;
@@ -301,7 +302,7 @@ namespace Polhem.Api.Core.JsonRpc
             var type = businessObject.GetType();
             var method = type.GetMethod(action, BindingFlags.Public | BindingFlags.Instance);
             if (method == null || !IsResolvableAction(method))
-                throw new MissingMethodException($"Method '{action}' not found in business object '{type.Name}'.");
+                throw new MethodNotFoundException($"Method '{action}' not found in business object '{type.Name}'.");
             return method;
         }
 
@@ -352,10 +353,28 @@ namespace Polhem.Api.Core.JsonRpc
         /// <param name="businessObject">The business object instance.</param>
         /// <param name="method">The resolved method to invoke.</param>
         /// <param name="value">The deserialized input argument.</param>
+        /// <remarks>
+        /// IMPORTANT: a <c>Plain</c> body (a <see cref="JsonElement"/>) is read into the same type an encoded
+        /// body is decoded into, <see cref="ActionPayloadType.Resolve"/>, and only then copied onto the
+        /// parameter. Reading it straight into the parameter type would let a caller set every public setter
+        /// of a business-layer argument, including members its wire message does not carry, while the
+        /// encoded path could not. <c>PlainBindingTests</c> pins that the two paths populate the same members.
+        /// </remarks>
         private static async Task<object?> InvokeMethodAsync(object businessObject, MethodInfo method, object? value)
         {
             // Convert the input parameter to the expected BO type if needed
             var methodParams = method.GetParameters();
+            if (methodParams.Length > 0 && value is JsonElement element)
+            {
+                try
+                {
+                    value = element.Deserialize(ActionPayloadType.Resolve(method), ApiInputConverter.PlainReadOptions);
+                }
+                catch (JsonException ex)
+                {
+                    throw new InvalidParamsException($"The body of '{method.Name}' could not be read: {ex.Message}", ex);
+                }
+            }
             if (methodParams.Length > 0 && value != null)
             {
                 var paramType = methodParams[0].ParameterType;

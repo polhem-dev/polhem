@@ -5,8 +5,9 @@ using Polhem.Api.Core.Messages;
 namespace Polhem.Api.Core.JsonRpc
 {
     /// <summary>
-    /// Decides which type an encoded request body is decoded into, from the method it is addressed
-    /// to rather than from the name the caller wrote on the envelope.
+    /// Decides which type a request body is read into, from the method it is addressed to rather than
+    /// from the name the caller wrote on the envelope. An encoded body is decoded into it, and a
+    /// <c>Plain</c> body is deserialized into it, so both paths bind the same members.
     /// </summary>
     /// <remarks>
     /// <para>

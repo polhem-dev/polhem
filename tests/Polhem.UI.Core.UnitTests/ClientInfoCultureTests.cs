@@ -14,7 +14,7 @@ namespace Polhem.UI.Core.UnitTests
     /// so these tests share the <c>ClientInfoState</c> collection with every other class that touches
     /// <see cref="ClientInfo"/> and restore the previous values in <c>finally</c>.
     /// </remarks>
-    [Collection("ClientInfoState")]
+    [Collection(ClientInfoStateCollection.Name)]
     public class ClientInfoCultureTests
     {
         [Fact]
@@ -75,6 +75,15 @@ namespace Polhem.UI.Core.UnitTests
             {
                 saved.Restore();
             }
+        }
+
+        [Fact]
+        [DisplayName("UseDefinitionLoader is on by default, so views localize without the host opting in")]
+        public void UseDefinitionLoader_DefaultsToTrue()
+        {
+            // Every other test that changes the switch sits in this class and restores it, so the value
+            // seen here is the initializer's.
+            Assert.True(ClientInfo.UseDefinitionLoader);
         }
 
         [Fact]

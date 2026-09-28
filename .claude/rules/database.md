@@ -26,9 +26,10 @@ report an invalid value in a definition file at build time.
   `session.CompanyId → ICompanyInfoService.Get → CompanyInfo.CompanyDatabaseId`.
 - **`common`** = framework tables shared across companies (`st_session`, `st_cache_notify`). The router resolves the
   common scope to the literal database id `common` (`RepositoryDatabaseRouter`), so `DatabaseSettings` needs a
-  `DatabaseItem` whose `Id` is `common`. `IDatabaseSettingsProvider.ValidateRequired` checks that, but nothing in the
-  framework calls it at startup today: a missing item surfaces only on first use, as an `InvalidOperationException`
-  from the connection manager.
+  `DatabaseItem` whose `Id` is `common`. `IDatabaseSettingsProvider.ValidateRequired` checks that, and a host built
+  with `AddPolhemFramework` calls it at startup (`DatabaseSettingsValidationService` in `Polhem.Hosting`), so a
+  missing item stops the host before the first request. A process that does not start an `IHost` (a unit-test service
+  provider) never runs the check.
   **Putting a business table in common is wrong.**
 - The `TableSchema/{categoryId}/` folder name = CategoryId (used by the seeder; the form runtime's DML reads only
   FormSchema).

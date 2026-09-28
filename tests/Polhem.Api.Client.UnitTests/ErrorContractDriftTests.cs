@@ -45,12 +45,16 @@ namespace Polhem.Api.Client.UnitTests
 
         /// <summary>
         /// Error codes deliberately not rebuilt: they arise outside the executor (transport or parsing layer), or
-        /// their message is not meant for users, so the caller always falls into the generic branch.
+        /// they report a protocol mistake whose code already says everything and whose message is not meant for
+        /// users (<see cref="JsonRpcErrorCode.MethodNotFound"/>, <see cref="JsonRpcErrorCode.InvalidParams"/>), so the
+        /// caller always falls into the generic branch.
         /// </summary>
         private static readonly JsonRpcErrorCode[] s_transportOnlyCodes =
         [
             JsonRpcErrorCode.ParseError,
             JsonRpcErrorCode.InvalidRequest,
+            JsonRpcErrorCode.MethodNotFound,
+            JsonRpcErrorCode.InvalidParams,
             JsonRpcErrorCode.InternalError,
         ];
 
@@ -59,15 +63,12 @@ namespace Polhem.Api.Client.UnitTests
         /// decided whether to add a producer or remove the member.
         /// </summary>
         /// <remarks>
-        /// <see cref="JsonRpcErrorCode.Unauthorized"/> used to be listed here: it had never been on the wire. It now
-        /// carries <see cref="AuthenticationRequiredException"/>. Putting a new code into this bucket to turn the test
-        /// green is exactly what this test is meant to prevent.
+        /// Empty today. <see cref="JsonRpcErrorCode.Unauthorized"/> used to be listed here: it had never been on the
+        /// wire. It now carries <see cref="AuthenticationRequiredException"/>. <see cref="JsonRpcErrorCode.MethodNotFound"/>
+        /// and <see cref="JsonRpcErrorCode.InvalidParams"/> left when the executor started raising them. Putting a new
+        /// code into this bucket to turn the test green is exactly what this test is meant to prevent.
         /// </remarks>
-        private static readonly JsonRpcErrorCode[] s_noProducerCodes =
-        [
-            JsonRpcErrorCode.MethodNotFound,
-            JsonRpcErrorCode.InvalidParams,
-        ];
+        private static readonly JsonRpcErrorCode[] s_noProducerCodes = [];
 
         /// <summary>
         /// The BCL exceptions that collapse, together with <see cref="UserMessageException"/>, into

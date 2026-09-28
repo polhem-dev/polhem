@@ -1,4 +1,4 @@
-<!-- source: en/terminology.md blob: b362e202e72bba79f2803116f176d0bdbf65e9c3 -->
+<!-- source: en/terminology.md blob: 0d3f5c297c6773835ac913284e6cd6a95459fe09 -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../en/terminology.md) · [← 文件索引](README.md)
@@ -307,7 +307,6 @@
 | `DbCategorySettings.xml` | 資料庫類別設定檔 | 所有邏輯資料庫類別與其包含的資料表清單 |
 | `ProgramSettings.xml` | 型別註冊表 | 每個 progId 一筆攤平項目，對映到綁定其上的型別。`BusinessObject` 綁定 `FormBusinessObject` 子類（留空回退框架預設）；`Repository` 綁定 `DataFormRepository` 子類（留空同樣回退，但型別名載不到是直接拋而非降級）。**不含任何 per-program 參數，也不含選單** —— 選單見 `MenuSettings.xml`。僅供 server 端 |
 | `MenuSettings.xml` | 選單定義檔 | 導覽選單：巢狀的 `MenuFolder` / `MenuEntry` 節點，帶標題、排序與可見性。每個 `MenuEntry` 指向一個註冊於 `ProgramSettings.xml` 的 progId；`Id` 是節點的鍵且全樹唯一 |
-| `ClientSettings.xml` | 用戶端設定檔 | 前端 / 用戶端的行為設定 |
 | `FormSchema.xml` | 表單結構定義檔 | 各功能程式的 FormSchema 序列化檔 |
 | `FormLayout.xml` | 表單版面配置檔 | 各功能程式的 FormLayout 序列化檔 |
 | `TableSchema.xml` | 資料表結構檔 | 各資料表的 TableSchema 序列化檔 |

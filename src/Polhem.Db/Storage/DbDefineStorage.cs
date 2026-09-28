@@ -230,10 +230,12 @@ namespace Polhem.Db.Storage
 
         /// <inheritdoc/>
         /// <remarks>
-        /// Optional, unlike the other base reads: a missing layout row is a normal scenario, since
-        /// the framework generates a layout from the <see cref="FormSchema"/> when none is stored.
-        /// <c>ReadOptional</c> distinguishes "no such row" (returns <c>null</c>) from a row that
-        /// fails to deserialize, which still surfaces as an error.
+        /// Optional, unlike the other base reads, matching the nullable return type of
+        /// <see cref="IDefineStorage.GetFormLayout"/> and the file storage: this layer reports whether
+        /// a row exists and nothing more, and how to read "absent" belongs to the caller. The runtime
+        /// layout path treats it as a configuration error, since layouts are authored and stored, not
+        /// generated from the <see cref="FormSchema"/>. <c>ReadOptional</c> distinguishes "no such row"
+        /// (returns <c>null</c>) from a row that fails to deserialize, which still surfaces as an error.
         /// </remarks>
         public FormLayout? GetFormLayout(string layoutId)
             => ReadOptional<FormLayout>(BaseCustomizeId, layoutId);

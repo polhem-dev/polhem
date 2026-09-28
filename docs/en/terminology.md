@@ -308,7 +308,6 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 | `DbCategorySettings.xml` | 資料庫類別設定檔 | All logical database categories and the tables they contain |
 | `ProgramSettings.xml` | 型別註冊表 | One flat entry per progId, mapping it to the types bound to it. `BusinessObject` binds a `FormBusinessObject` subclass (empty falls back to the framework default); `Repository` binds a `DataFormRepository` subclass (empty falls back likewise, but a name that will not load throws instead of degrading). Holds no per-program parameters, and no menu — see `MenuSettings.xml`. Server-side only |
 | `MenuSettings.xml` | 選單定義檔 | The navigation menu: nested `MenuFolder` / `MenuEntry` nodes carrying caption, order and visibility. Each `MenuEntry` points at a progId registered in `ProgramSettings.xml`; `Id` is the node key and is unique across the whole tree |
-| `ClientSettings.xml` | 用戶端設定檔 | Front-end / client behavior settings |
 | `FormSchema.xml` | 表單結構定義檔 | Serialized FormSchema files for each functional program |
 | `FormLayout.xml` | 表單版面配置檔 | Serialized FormLayout files for each functional program |
 | `TableSchema.xml` | 資料表結構檔 | Serialized TableSchema files for each table |
