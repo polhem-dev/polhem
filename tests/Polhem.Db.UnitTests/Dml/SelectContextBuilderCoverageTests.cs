@@ -75,6 +75,29 @@ namespace Polhem.Db.UnitTests.Dml
         }
 
         [Fact]
+        [DisplayName("Build joins on TableName when DbTableName is blank, on both the main and the relation side")]
+        public void Build_BlankDbTableName_FallsBackToTableName()
+        {
+            var table = NewMainTable();
+            table.DbTableName = string.Empty;
+            var fk = AddForeignKey(table, "category_rowid", "Category");
+            fk.RelationFieldMappings!.Add("sys_id", "ref_category_id");
+
+            var used = new HashSet<string> { "ref_category_id" };
+            var define = new StubDefineAccess(_ =>
+            {
+                var schema = NewRelationSchema("Category", "sys_id");
+                schema.MasterTable!.DbTableName = string.Empty;
+                return schema;
+            });
+            var context = new SelectContextBuilder(table, used, define).Build();
+
+            var join = Assert.Single(context.Joins);
+            Assert.Equal("Order", join.LeftTable);
+            Assert.Equal("Category", join.RightTable);
+        }
+
+        [Fact]
         [DisplayName("Build throws InvalidOperationException when the relation FormSchema does not exist")]
         public void Build_RelationSchemaNotFound_Throws()
         {

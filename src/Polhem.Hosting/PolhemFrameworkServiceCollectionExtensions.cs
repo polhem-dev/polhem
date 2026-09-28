@@ -65,7 +65,13 @@ namespace Polhem.Hosting
         /// Path configuration that locates definition files (SystemSettings.xml, FormSchema/, etc.).
         /// Registered as a singleton so framework services can ctor-inject it directly.
         /// </param>
-        /// <param name="autoCreateMasterKey">Whether to auto-create the master key file if missing.</param>
+        /// <param name="autoCreateMasterKey">
+        /// Whether to create a master key when the configured source has none. For a file source a new
+        /// owner-only key file is written and reused by later runs. For an environment-variable source
+        /// (the default) the new key is set on this process's environment only and is lost when the
+        /// process exits, so anything encrypted with it cannot be decrypted by the next run; use it for
+        /// tests and throwaway development hosts.
+        /// </param>
         public static IServiceCollection AddPolhemFramework(
             this IServiceCollection services,
             BackendConfiguration configuration,
@@ -172,9 +178,14 @@ namespace Polhem.Hosting
             services.AddSingleton<ICacheNotifyService, CacheNotifyService>();
             services.AddSingleton<ICacheNotifyReader, CacheNotifyReader>();
 
+            // 6b-1. Required database items (the `common` entry). Registered first of all hosted
+            //       services so a deployment missing it stops before anything else starts, instead of
+            //       failing on the first request that reaches a framework table.
+            services.AddHostedService<Database.DatabaseSettingsValidationService>();
+
             // 6b-2. Reserved progId self-registration. Registered ahead of every other hosted
-            //       service on purpose: hosted services start in registration order (the default,
-            //       HostOptions.ServicesStartConcurrently being false), and this one both writes the
+            //       service that uses the registry, on purpose: hosted services start in registration
+            //       order (the default, HostOptions.ServicesStartConcurrently being false), and this one both writes the
             //       registry and refuses to start a host whose reserved progIds do not resolve — a
             //       check worth failing before anything else comes up.
             services.AddHostedService<Registry.ReservedProgIdRegistrationService>();

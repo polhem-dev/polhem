@@ -15,8 +15,8 @@ namespace Polhem.UI.Avalonia.Controls.Editors
     /// wiring; pass them explicitly to bypass it (tests, custom hosts).
     /// </summary>
     /// <remarks>
-    /// The default schema is localized through <see cref="ClientInfo.DefinitionLoader"/> when the
-    /// host turned on <see cref="ClientInfo.UseDefinitionLoader"/>, so the dialog title and columns
+    /// The default schema is localized through <see cref="ClientInfo.DefinitionLoader"/> unless the
+    /// host turned off <see cref="ClientInfo.UseDefinitionLoader"/>, so the dialog title and columns
     /// read in the same language as the form that opened it.
     /// </remarks>
     public static class LookupDialog

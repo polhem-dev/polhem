@@ -45,3 +45,5 @@ virtual Polhem.Business.AuditLog.AuditLogBusinessObject.GetLoginLog(Polhem.Busin
 virtual Polhem.Business.AuditLog.AuditLogBusinessObject.GetTopApiMethods(Polhem.Business.AuditLog.GetTopApiMethodsArgs! args) -> Polhem.Business.AuditLog.AuditLogAggregateResult!
 Polhem.Business.System.LoginResult.Culture.get -> string!
 Polhem.Business.System.LoginResult.Culture.set -> void
+Polhem.Business.Form.FormRuleProcessor.ApplyNewRowDefaults(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, string! timeZoneId = "") -> void
+Polhem.Business.Form.IFormRuleProcessor.ApplyNewRowDefaults(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, string! timeZoneId = "") -> void

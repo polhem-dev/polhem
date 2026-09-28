@@ -4,6 +4,14 @@ namespace Polhem.Api.Core.JsonRpc
     /// <summary>
     /// Defines standard JSON-RPC error codes used to indicate error conditions during request processing.
     /// </summary>
+    /// <remarks>
+    /// The HTTP status says where a code was raised, not which code it is. Every code the
+    /// <see cref="JsonRpcExecutor"/> raises reaches the caller in a response with HTTP status 200.
+    /// The ASP.NET Core transport answers on its own only for a request it refuses before the executor
+    /// runs, and picks the status there: <see cref="ParseError"/> and <see cref="InvalidRequest"/> for an
+    /// unreadable request (400 or 415) or a rejected API key or <c>Authorization</c> header (401), and
+    /// <see cref="InternalError"/> (500) for a failure outside the executor.
+    /// </remarks>
     public enum JsonRpcErrorCode
     {
         /// <summary>
@@ -17,12 +25,15 @@ namespace Polhem.Api.Core.JsonRpc
         InvalidRequest = -32600,
 
         /// <summary>
-        /// The method does not exist or is not available (-32601).
+        /// The method does not exist or is not available (-32601): the action part of
+        /// <c>progId.action</c> names nothing the business object exposes as an action. Sent with a
+        /// fixed message.
         /// </summary>
         MethodNotFound = -32601,
 
         /// <summary>
-        /// Invalid method parameters or incorrect format (-32602).
+        /// Invalid method parameters or incorrect format (-32602): a <c>Plain</c> body could not be read
+        /// into the type the method takes. Sent with a fixed message.
         /// </summary>
         InvalidParams = -32602,
 
@@ -35,20 +46,20 @@ namespace Polhem.Api.Core.JsonRpc
         /// The call needs a signed-in caller and arrived without a usable access token — none, or one
         /// that is unknown, invalid or expired (-32001). Raised via
         /// <see cref="Polhem.Base.Exceptions.AuthenticationRequiredException"/>, which the client
-        /// rebuilds from this code. Sent with HTTP 200 like every executor error; distinct from
-        /// <see cref="PermissionDenied"/>, where the caller is signed in but lacks the right.
+        /// rebuilds from this code. Distinct from <see cref="PermissionDenied"/>, where the caller is
+        /// signed in but lacks the right.
         /// </summary>
         Unauthorized = -32001,
 
         /// <summary>
         /// The session has no company context (EnterCompany was not called or LeaveCompany has cleared it),
-        /// but the requested operation requires one (-32002). Maps to HTTP 409 Conflict.
+        /// but the requested operation requires one (-32002).
         /// </summary>
         CompanyNotEntered = -32002,
 
         /// <summary>
         /// The caller cannot enter the requested company because the company does not exist
-        /// or the user has no permission to access it (-32003). Maps to HTTP 403 Forbidden.
+        /// or the user has no permission to access it (-32003).
         /// </summary>
         /// <remarks>
         /// The two cases are intentionally merged into a single error code to prevent
@@ -58,8 +69,7 @@ namespace Polhem.Api.Core.JsonRpc
 
         /// <summary>
         /// An authenticated caller lacks permission for a specific action on a permission
-        /// model (-32004) — the layer-1 model+action authorization check. Maps to HTTP 403
-        /// Forbidden. Distinct from <see cref="CompanyAccessDenied"/> (company-level) and
+        /// model (-32004) — the layer-1 model+action authorization check. Distinct from <see cref="CompanyAccessDenied"/> (company-level) and
         /// <see cref="Unauthorized"/> (missing/invalid credential); raised via
         /// <see cref="Polhem.Base.Exceptions.ForbiddenException"/>.
         /// </summary>
@@ -67,7 +77,7 @@ namespace Polhem.Api.Core.JsonRpc
 
         /// <summary>
         /// The call was refused by the replay-protection gate (-32005): the wire frame is missing,
-        /// unreadable, or its timestamp falls outside the accepted window. Maps to HTTP 400 Bad Request.
+        /// unreadable, or its timestamp falls outside the accepted window.
         /// </summary>
         /// <remarks>
         /// A distinct code so the caller can tell "retrying will not help" apart from

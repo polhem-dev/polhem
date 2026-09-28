@@ -102,7 +102,11 @@ namespace Polhem.Db.Dml
             }
         }
 
-        private static string DbTableNameOf(FormTable formTable)
+        /// <summary>
+        /// Returns the physical table a form table reads from: its <see cref="FormTable.DbTableName"/>, or its
+        /// <see cref="FormTable.TableName"/> when that is blank.
+        /// </summary>
+        internal static string DbTableNameOf(FormTable formTable)
             => string.IsNullOrWhiteSpace(formTable.DbTableName) ? formTable.TableName : formTable.DbTableName;
     }
 }

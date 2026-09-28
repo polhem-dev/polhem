@@ -18,9 +18,11 @@ namespace Polhem.Definition.Database
     /// In multi-tenant or time-archived deployments, the physical
     /// <see cref="Polhem.Definition.Settings.DatabaseItem.Id"/> may diverge from the CategoryId (e.g.,
     /// <c>company001</c>, <c>log2025</c>), but the <see cref="Polhem.Definition.Settings.DatabaseItem.CategoryId"/>
-    /// remains one of these constants. For the <see cref="Common"/> category,
-    /// the framework requires Id == CategoryId == "common" (enforced at startup
-    /// by <c>services.AddPolhemFramework</c>).
+    /// remains one of these constants. The <see cref="Common"/> category is the exception: the
+    /// framework resolves it to the literal database id <c>common</c>, so the settings need a
+    /// <see cref="Polhem.Definition.Settings.DatabaseItem"/> whose Id is <c>common</c>.
+    /// <see cref="IDatabaseSettingsProvider.ValidateRequired"/> checks that, and a host built with
+    /// <c>AddPolhemFramework</c> calls it at startup.
     /// </para>
     /// </remarks>
     public static class DbCategoryIds

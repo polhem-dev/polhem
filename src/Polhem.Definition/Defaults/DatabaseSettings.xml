@@ -5,7 +5,8 @@
   Connection strings are 100% deployment-specific so the framework provides no
   default values. Add one DatabaseItem per logical database (matched to the
   CategoryId entries declared in DbCategorySettings.xml). At minimum a deployment
-  needs an entry for the `common` category (framework-mandated contract).
+  needs an entry whose Id is `common` (framework-mandated contract; a host built
+  with AddPolhemFramework refuses to start without it).
 
   Example:
 
@@ -13,11 +14,11 @@
         <Items>
           <DatabaseItem Id="common"
                         CategoryId="common"
-                        Provider="SQLServer"
+                        DatabaseType="SQLServer"
                         ConnectionString="Data Source=...;Initial Catalog=common;..." />
           <DatabaseItem Id="company001"
                         CategoryId="company"
-                        Provider="PostgreSQL"
+                        DatabaseType="PostgreSQL"
                         ConnectionString="Host=...;Database=company001;..." />
         </Items>
       </DatabaseSettings>

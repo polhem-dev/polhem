@@ -59,7 +59,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
         [InlineData(nameof(ExposedBusinessObject.GenericAction))]
         [InlineData(nameof(ExposedBusinessObject.Equals))]
         [InlineData(nameof(ExposedBusinessObject.NoArguments))]
-        [DisplayName("An action name does not resolve to accessors, static or generic methods, object overrides, or other signatures")]
+        [DisplayName("An action name does not resolve to accessors, static or generic methods, object overrides, or other signatures, and is answered with MethodNotFound")]
         public async Task Execute_UnresolvableMember_IsRefusedWithoutInvoking(string action)
         {
             var bo = new ExposedBusinessObject();
@@ -67,7 +67,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             var response = await NewExecutor(bo).ExecuteAsync(Request(action, "payload"));
 
             Assert.NotNull(response.Error);
-            Assert.Equal((int)JsonRpcErrorCode.InternalError, response.Error!.Code);
+            Assert.Equal((int)JsonRpcErrorCode.MethodNotFound, response.Error!.Code);
             Assert.Equal("original", bo.Label);
             Assert.Equal(string.Empty, bo.LastCall);
             Assert.Equal(0, ExposedBusinessObject.StaticCalls);

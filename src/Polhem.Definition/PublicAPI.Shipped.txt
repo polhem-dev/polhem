@@ -1190,16 +1190,6 @@ Polhem.Definition.Settings.CacheNotifyOptions.IntervalSeconds.get -> int
 Polhem.Definition.Settings.CacheNotifyOptions.IntervalSeconds.set -> void
 Polhem.Definition.Settings.CacheNotifyOptions.MarginSeconds.get -> int
 Polhem.Definition.Settings.CacheNotifyOptions.MarginSeconds.set -> void
-Polhem.Definition.Settings.ClientSettings
-Polhem.Definition.Settings.ClientSettings.ApiKey.get -> string!
-Polhem.Definition.Settings.ClientSettings.ApiKey.set -> void
-Polhem.Definition.Settings.ClientSettings.ClientSettings() -> void
-Polhem.Definition.Settings.ClientSettings.CreateTime.get -> System.DateTime
-Polhem.Definition.Settings.ClientSettings.Endpoint.get -> string!
-Polhem.Definition.Settings.ClientSettings.Endpoint.set -> void
-Polhem.Definition.Settings.ClientSettings.EndpointItems.get -> Polhem.Definition.Settings.EndpointItemCollection?
-Polhem.Definition.Settings.ClientSettings.ObjectFilePath.get -> string!
-Polhem.Definition.Settings.ClientSettings.SetObjectFilePath(string! filePath) -> void
 Polhem.Definition.Settings.CommonConfiguration
 Polhem.Definition.Settings.CommonConfiguration.AllowedTypeNamespaces.get -> string!
 Polhem.Definition.Settings.CommonConfiguration.AllowedTypeNamespaces.set -> void
@@ -1293,16 +1283,6 @@ Polhem.Definition.Settings.DbCategorySettings.CreateTime.get -> System.DateTime
 Polhem.Definition.Settings.DbCategorySettings.DbCategorySettings() -> void
 Polhem.Definition.Settings.DbCategorySettings.ObjectFilePath.get -> string!
 Polhem.Definition.Settings.DbCategorySettings.SetObjectFilePath(string! filePath) -> void
-Polhem.Definition.Settings.EndpointItem
-Polhem.Definition.Settings.EndpointItem.Endpoint.get -> string!
-Polhem.Definition.Settings.EndpointItem.Endpoint.set -> void
-Polhem.Definition.Settings.EndpointItem.EndpointItem() -> void
-Polhem.Definition.Settings.EndpointItem.EndpointItem(string! name, string! endpoint) -> void
-Polhem.Definition.Settings.EndpointItem.Name.get -> string!
-Polhem.Definition.Settings.EndpointItem.Name.set -> void
-Polhem.Definition.Settings.EndpointItemCollection
-Polhem.Definition.Settings.EndpointItemCollection.EndpointItemCollection() -> void
-Polhem.Definition.Settings.EndpointItemCollectionExtensions
 Polhem.Definition.Settings.FrontendConfiguration
 Polhem.Definition.Settings.FrontendConfiguration.FrontendConfiguration() -> void
 Polhem.Definition.Settings.MasterKeySource
@@ -1874,7 +1854,6 @@ static Polhem.Definition.Security.MasterKeyProvider.GetMasterKey(Polhem.Definiti
 static Polhem.Definition.Settings.CurrencySettings.DecimalsFromRounding(decimal rounding) -> int
 static Polhem.Definition.Settings.DatabaseSettingsCryptor.DecryptInPlace(Polhem.Definition.Settings.DatabaseSettings! settings, byte[]? combinedKey) -> void
 static Polhem.Definition.Settings.DatabaseSettingsCryptor.EncryptInPlace(Polhem.Definition.Settings.DatabaseSettings! settings, byte[]? combinedKey) -> void
-static Polhem.Definition.Settings.EndpointItemCollectionExtensions.Add(this Polhem.Definition.Settings.EndpointItemCollection? collection, string! name, string! endpoint) -> Polhem.Definition.Settings.EndpointItem!
 static Polhem.Definition.Settings.MenuNodeCollectionExtensions.AddEntry(this Polhem.Definition.Settings.MenuNodeCollection? collection, string! id, string! progId, string! caption) -> Polhem.Definition.Settings.MenuEntry!
 static Polhem.Definition.Settings.MenuNodeCollectionExtensions.AddFolder(this Polhem.Definition.Settings.MenuNodeCollection? collection, string! id, string! caption) -> Polhem.Definition.Settings.MenuFolder!
 static Polhem.Definition.Settings.PermissionBindingValidator.Validate(System.Collections.Generic.IEnumerable<Polhem.Definition.Forms.FormSchema!>! schemas, Polhem.Definition.Settings.PermissionModels! models) -> System.Collections.Generic.IReadOnlyList<string!>!

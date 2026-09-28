@@ -9,7 +9,8 @@ namespace Polhem.Hosting.Registry
     /// <summary>
     /// Hosted service that writes the framework's reserved progIds into the type registry at
     /// startup when they are missing, then verifies that each one resolves to a usable business
-    /// object. Registered by <c>AddPolhemFramework</c> ahead of every other hosted service.
+    /// object. Registered by <c>AddPolhemFramework</c> right after the database settings check,
+    /// ahead of every other hosted service.
     /// </summary>
     /// <remarks>
     /// <para>

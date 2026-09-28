@@ -36,7 +36,6 @@ Polhem.Definition.Layouts.FormLayout.SectionsSpecified.get -> bool
 Polhem.Definition.Layouts.LayoutFieldBase.ExtendedPropertiesSpecified.get -> bool
 Polhem.Definition.Layouts.LayoutGrid.ColumnsSpecified.get -> bool
 Polhem.Definition.Layouts.LayoutSection.FieldsSpecified.get -> bool
-Polhem.Definition.Settings.ClientSettings.EndpointItemsSpecified.get -> bool
 Polhem.Definition.Settings.DatabaseSettings.ItemsSpecified.get -> bool
 Polhem.Definition.Settings.DatabaseSettings.ServersSpecified.get -> bool
 Polhem.Definition.Settings.DbCategory.TablesSpecified.get -> bool
@@ -219,3 +218,4 @@ static Polhem.Definition.Language.LanguageFallback.GetChain(string? lang, string
 static Polhem.Definition.Language.PolhemUIText.DefaultTexts.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
 static Polhem.Definition.Language.PolhemUIText.Get(Microsoft.Extensions.Localization.IStringLocalizer! localizer, string! key) -> string!
 static Polhem.Definition.Language.LanguageFallback.IsBaseLanguage(string? culture) -> bool
+Polhem.Definition.Forms.FormExpressionCalculator.ApplyNewRowDefaults(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, string! timeZoneId = "") -> void

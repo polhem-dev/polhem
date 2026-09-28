@@ -13,10 +13,23 @@ namespace Polhem.Business.Form
     public interface IFormRuleProcessor
     {
         /// <summary>
+        /// Evaluates the default-value expressions of the new rows of a freshly built record, replacing the
+        /// per-type seed and any literal <see cref="FormField.DefaultValue"/> the rows carry. Called by
+        /// <see cref="FormBusinessObject.GetNewData(GetNewDataArgs)"/> before the record reaches the caller.
+        /// </summary>
+        /// <param name="schema">The form schema.</param>
+        /// <param name="dataSet">The new-record data set (mutated in place).</param>
+        /// <param name="timeZoneId">
+        /// The requesting user's IANA time zone id, seen by the <c>Today()</c> helper; blank means UTC.
+        /// <c>Now()</c> is evaluated in UTC, the basis of a server-side data set (ADR-032 D12).
+        /// </param>
+        void ApplyNewRowDefaults(FormSchema schema, DataSet dataSet, string timeZoneId = "");
+
+        /// <summary>
         /// Applies the before-save pipeline to <paramref name="dataSet"/>: fills default-value
-        /// expressions on new rows, recomputes value-expression fields on new/changed rows (rounding
-        /// numeric results via the number subsystem), then evaluates <c>BeforeSave</c> rules. A failing
-        /// rule throws <see cref="Polhem.Base.Exceptions.UserMessageException"/> to abort the save.
+        /// expressions on new rows where the field is still empty, recomputes value-expression fields on
+        /// new/changed rows (rounding numeric results via the number subsystem), then evaluates
+        /// <c>BeforeSave</c> rules. A failing rule throws <see cref="Polhem.Base.Exceptions.UserMessageException"/> to abort the save.
         /// </summary>
         /// <param name="schema">The form schema.</param>
         /// <param name="dataSet">The data set being saved (mutated in place).</param>

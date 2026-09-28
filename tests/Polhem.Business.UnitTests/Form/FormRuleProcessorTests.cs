@@ -181,6 +181,21 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [Fact]
+        [DisplayName("New record: ApplyNewRowDefaults replaces a seeded value with the DefaultValueExpression result")]
+        public void ApplyNewRowDefaults_ReplacesSeededValue()
+        {
+            var schema = BuildOrderSchema();
+            var seeded = DateTime.SpecifyKind(new DateTime(2000, 1, 1), DateTimeKind.Unspecified);
+            var dataSet = BuildOrderDataSet(price: 1m, qty: 1m, status: "Draft", orderDate: seeded);
+            var dayBefore = DateTime.UtcNow.Date;
+
+            _processor.ApplyNewRowDefaults(schema, dataSet);
+
+            var orderDate = (DateTime)dataSet.Tables["Order"]!.Rows[0]["order_date"];
+            Assert.InRange(orderDate, dayBefore, DateTime.UtcNow.Date);
+        }
+
+        [Fact]
         [DisplayName("Check before delete: a failing BeforeDelete rule throws UserMessageException")]
         public void ApplyBeforeDelete_FailingRule_Throws()
         {

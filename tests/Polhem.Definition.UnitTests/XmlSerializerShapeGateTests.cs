@@ -32,7 +32,6 @@ namespace Polhem.Definition.UnitTests
     {
         private static readonly Type[] s_roots =
         [
-            typeof(ClientSettings),
             typeof(CommonConfiguration),
             typeof(SessionUser),
             typeof(PermissionModels),

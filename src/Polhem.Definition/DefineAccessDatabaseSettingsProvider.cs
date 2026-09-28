@@ -43,7 +43,9 @@ namespace Polhem.Definition
             var settings = Get();
             if (settings.Items == null || !settings.Items.Contains(DbCategoryIds.Common))
                 throw new InvalidOperationException(
-                    $"DatabaseSettings must contain a DatabaseItem with Id='{DbCategoryIds.Common}'.");
+                    $"DatabaseSettings must contain a DatabaseItem with Id='{DbCategoryIds.Common}'. " +
+                    "The framework's shared tables (users, sessions, companies) are read from that database; " +
+                    "add the item to DatabaseSettings.xml.");
         }
     }
 }

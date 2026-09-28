@@ -177,7 +177,7 @@ namespace Polhem.Db.Dml
         /// <returns>The FROM clause string.</returns>
         private string BuildFromClause(FormTable formTable, TableJoinCollection joins)
         {
-            string mainTableName = !string.IsNullOrWhiteSpace(formTable.DbTableName) ? formTable.DbTableName : formTable.TableName;
+            string mainTableName = SelectFieldGuard.DbTableNameOf(formTable);
             var builder = new FromBuilder(_databaseType);
             return builder.Build(mainTableName, joins);
         }

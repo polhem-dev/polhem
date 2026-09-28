@@ -272,7 +272,7 @@ namespace Polhem.UI.Avalonia.Views
         /// <summary>
         /// Gets or sets the assembler that localizes the schema the column headers come from, for
         /// this view only. <c>null</c> — the default — uses <see cref="ClientInfo.DefinitionLoader"/>,
-        /// which is <c>null</c> unless the host turned on <see cref="ClientInfo.UseDefinitionLoader"/>;
+        /// which is <c>null</c> only when the host turned off <see cref="ClientInfo.UseDefinitionLoader"/>;
         /// with neither, the headers are the schema's stored captions.
         /// </summary>
         /// <remarks>

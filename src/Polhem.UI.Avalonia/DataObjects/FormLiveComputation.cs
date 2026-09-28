@@ -118,13 +118,13 @@ namespace Polhem.UI.Avalonia.DataObjects
         }
 
         /// <summary>
-        /// Fills the default-value expressions of a freshly created <paramref name="row"/> (only where the
-        /// field is currently empty), returning the fields that were filled. Complements the server's
-        /// save-time defaults with an immediate display value.
+        /// Evaluates the default-value expressions of a freshly created <paramref name="row"/>, replacing the
+        /// per-type seed and any literal default the row carries, and returns the fields whose value changed.
+        /// Matches what the server's <c>GetNewData</c> does for a new master row.
         /// </summary>
         /// <param name="tableName">The name of the table the row belongs to (master or detail).</param>
-        /// <param name="row">The new row to seed.</param>
-        /// <returns>The names of the fields that were filled.</returns>
+        /// <param name="row">The new row to seed; call this before the user edits it.</param>
+        /// <returns>The names of the fields whose value changed.</returns>
         public IReadOnlyList<string> ApplyDefaults(string tableName, DataRow row)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
@@ -138,8 +138,8 @@ namespace Polhem.UI.Avalonia.DataObjects
         }
 
         /// <summary>
-        /// Prepares a freshly created <paramref name="row"/> for display: fills its default-value
-        /// expressions (empty fields only), then recomputes all computed fields so any default feeding a
+        /// Prepares a freshly created <paramref name="row"/> for display: evaluates its default-value
+        /// expressions (replacing the seeded values), then recomputes all computed fields so any default feeding a
         /// computed field is reflected at once. Returns the fields whose value changed. The whole pass runs
         /// under the re-entrancy guard, so the write-backs raise no nested recompute.
         /// </summary>

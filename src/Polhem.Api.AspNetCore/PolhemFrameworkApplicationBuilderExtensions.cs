@@ -14,8 +14,9 @@ namespace Polhem.Api.AspNetCore
     public static class PolhemFrameworkApplicationBuilderExtensions
     {
         /// <summary>
-        /// Activates host-side framework startup checks. Currently emits a warning while no API key
-        /// has been issued, which leaves the <c>X-Api-Key</c> header checked for presence only.
+        /// Activates host-side framework startup checks. Currently logs while no API key has been
+        /// issued, which leaves the <c>X-Api-Key</c> header checked for presence only: an error, or a
+        /// warning when the host runs in the Development environment.
         /// </summary>
         public static IApplicationBuilder UsePolhemFramework(this IApplicationBuilder app)
         {
@@ -29,8 +30,9 @@ namespace Polhem.Api.AspNetCore
         }
 
         /// <summary>
-        /// Warns when <c>st_api_key</c> holds no enabled key, so the framework is still applying the
-        /// pre-gate behaviour of accepting any non-empty <c>X-Api-Key</c>.
+        /// Logs when <c>st_api_key</c> holds no enabled key, so the framework is still applying the
+        /// pre-gate behaviour of accepting any non-empty <c>X-Api-Key</c>: an error, or a warning in the
+        /// Development environment.
         /// </summary>
         /// <param name="services">The application service provider.</param>
         /// <param name="logger">The logger, or <c>null</c> when logging is unavailable.</param>

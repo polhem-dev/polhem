@@ -4,6 +4,7 @@ using Polhem.Db.Ddl;
 using Polhem.Db.Dml;
 using Polhem.Db.Manager;
 using Polhem.Db.Providers;
+using Polhem.Db.Providers.Sqlite;
 using Polhem.Db.Providers.SqlServer;
 using Polhem.Db.Schema;
 using Polhem.Db.Schema.Changes;
@@ -189,6 +190,35 @@ namespace Polhem.Db.UnitTests
             Assert.Equal(UpgradeExecutionMode.Alter, plan.Mode);
             Assert.NotEmpty(plan.Warnings);
             Assert.Contains(plan.Warnings, w => w.Contains("Narrowing"));
+        }
+
+        [Fact]
+        [DisplayName("SQLite: a narrowing change that goes through the rebuild path is refused under the default options")]
+        public void Plan_SqliteRebuildNarrowingDisallowed_Throws()
+        {
+            var define = BuildDefineSchema();
+            define.Fields!["name"].Length = 30;
+
+            var diff = new TableSchemaComparer(define, BuildRealSchema(), DatabaseType.SQLite).CompareToDiff();
+            var orchestrator = new TableUpgradeOrchestrator(new SqliteDialectFactory(), s_stubMgr);
+
+            var ex = Assert.Throws<InvalidOperationException>(() => orchestrator.Plan(diff));
+            Assert.Contains(nameof(UpgradeOptions.AllowColumnNarrowing), ex.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [DisplayName("SQLite: with AllowColumnNarrowing=true a narrowing change is rebuilt and the plan carries a warning")]
+        public void Plan_SqliteRebuildNarrowingAllowed_ReturnsRebuildWithWarning()
+        {
+            var define = BuildDefineSchema();
+            define.Fields!["name"].Length = 30;
+
+            var diff = new TableSchemaComparer(define, BuildRealSchema(), DatabaseType.SQLite).CompareToDiff();
+            var plan = new TableUpgradeOrchestrator(new SqliteDialectFactory(), s_stubMgr)
+                .Plan(diff, new UpgradeOptions { AllowColumnNarrowing = true });
+
+            Assert.Equal(UpgradeExecutionMode.Rebuild, plan.Mode);
+            Assert.Contains(plan.Warnings, w => w.Contains("Narrowing", StringComparison.Ordinal));
         }
 
         [Fact]
