@@ -5,7 +5,7 @@ using Polhem.Api.Client;
 namespace Polhem.UI.Core.UnitTests
 {
     /// <summary>
-    /// Covers <see cref="ClientInfo.InitializeAsync(IUIViewService,SupportedConnectTypes)"/>.
+    /// Covers <see cref="ClientInfo.InitializeAsync(IUIViewService,SupportedConnectTypes,CancellationToken)"/>.
     /// When the endpoint is invalid, this method calls <see cref="IUIViewService.ShowApiConnectAsync"/>.
     /// A lightweight fake replaces the real UI service, so the try-catch path is covered without a backend.
     /// It shares the <c>ClientInfoState</c> collection with the other tests that mutate static state, so they run serially.
@@ -17,7 +17,7 @@ namespace Polhem.UI.Core.UnitTests
         {
             private readonly bool _result;
             public FakeUIViewService(bool result) { _result = result; }
-            public Task<bool> ShowApiConnectAsync() => Task.FromResult(_result);
+            public Task<bool> ShowApiConnectAsync(CancellationToken cancellationToken = default) => Task.FromResult(_result);
         }
 
         private static readonly PropertyInfo s_uiViewServiceProp =
@@ -113,7 +113,7 @@ namespace Polhem.UI.Core.UnitTests
     }
 
     /// <summary>
-    /// Covers <see cref="ClientInfo.InitializeAsync(string)"/>.
+    /// Covers <see cref="ClientInfo.InitializeAsync(string,CancellationToken)"/>.
     /// An empty endpoint fails before <see cref="ApiConnectValidator.ValidateAsync"/>
     /// and mutates no static state, so no serializing collection is needed.
     /// </summary>

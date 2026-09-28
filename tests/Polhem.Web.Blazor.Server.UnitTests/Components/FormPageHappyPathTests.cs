@@ -60,8 +60,11 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         {
             private readonly FakeSystemConnector _systemConnector;
 
+            // The fake system connector serves stored definitions only, so the page takes the path that
+            // renders them as stored. The default loader path is covered by `FormPageBunitTests`.
             public FakeFactory(FormSchema schema)
-                : base(new PolhemBlazorOptions().UseLocalProvider(), new Polhem.Api.Client.ApiSessionContext(), Polhem.Tests.Shared.EmptyServiceProvider.Instance)
+                : base(new PolhemBlazorOptions { UseDefinitionLoader = false }.UseLocalProvider(),
+                    new Polhem.Api.Client.ApiSessionContext(), Polhem.Tests.Shared.EmptyServiceProvider.Instance)
             {
                 _systemConnector = new FakeSystemConnector(schema);
             }

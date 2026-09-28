@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
+using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
 using Polhem.UI.Avalonia.DataObjects;
@@ -27,7 +28,7 @@ namespace Polhem.UI.Avalonia.Views
         /// compiler can verify. A <c>bool</c> would leave them dereferencing the field on trust — and
         /// that trust does not survive the lambda they pass to <c>RunGuardedAsync</c>.
         /// </remarks>
-        private async Task<FormDataObject?> EnsureDataObjectAsync()
+        private async Task<FormDataObject?> EnsureDataObjectAsync(CancellationToken cancellationToken)
         {
             if (_dataObject is not null) return _dataObject;
 
@@ -37,9 +38,13 @@ namespace Polhem.UI.Avalonia.Views
             {
                 try
                 {
-                    var loaded = await ResolveSchemaAsync(ProgId).ConfigureAwait(true);
+                    var loaded = await ResolveSchemaAsync(ProgId, cancellationToken).ConfigureAwait(true);
                     if (loaded is not null)
                         Schema = loaded;
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
                 }
                 catch (Exception ex)
                 {
@@ -58,16 +63,17 @@ namespace Polhem.UI.Avalonia.Views
             // data object keeps these events across `DataSet` replacements on Load, New, and Save. The
             // rounding context (Tier 2 currency and unit masters plus company decimals) aligns previews to
             // the server, which still rounds authoritatively on save.
-            _roundingContext = await ResolveRoundingContextAsync().ConfigureAwait(true);
+            _roundingContext = await ResolveRoundingContextAsync(cancellationToken).ConfigureAwait(true);
             _liveComputation = new FormLiveComputation(Schema, _roundingContext);
             _dataObject.FieldValueChanged += OnLiveFieldValueChanged;
             _dataObject.RowAdded += OnLiveRowAdded;
             string layoutProgId = string.IsNullOrEmpty(ProgId) ? Schema.ProgId : ProgId;
-            _formLayout = await ResolveLayoutAsync(layoutProgId).ConfigureAwait(true);
+            _formLayout = await ResolveLayoutAsync(layoutProgId, cancellationToken).ConfigureAwait(true);
             // Degrade the layout against the cached capability snapshot before it
             // renders: hide sensitive fields without Read and mark them read-only without Update
             // (detail grid actions follow the form's edit mode, not permission). No-op when no
-            // company context is active.
+            // company context is active. The applier writes into the layout, which is this view's
+            // own copy: `ResolveLayoutAsync` clones on every path.
             LayoutCapabilityApplier.Apply(_formLayout, Schema, ClientInfo.Capabilities);
             return _dataObject;
         }
@@ -82,12 +88,24 @@ namespace Polhem.UI.Avalonia.Views
 
         private async Task OnSaveClickedAsync()
         {
-            if (_dataObject is null) return;
+            if (_dataObject is null || _isBusy) return;
+
+            // Required fields are checked before the save leaves the client, so the user sees every
+            // empty one named at once instead of the server's rejection of the first.
+            var missing = Schema is { } schema
+                ? RequiredFieldCheck.FindMissing(schema, _dataObject.DataSet)
+                : [];
+            if (missing.Count > 0)
+            {
+                ShowMessage(RequiredFieldCheck.FormatPrompt(UIText.Localizer, missing));
+                return;
+            }
+
             // RunGuardedAsync reports whether the action completed, rather than the action
             // mutating a captured local — the latter defeats the analyzer's data-flow
             // tracking through the closure and trips a false "always false" on the check below.
             var saved = await RunGuardedAsync(
-                () => _dataObject.SaveAsync()).ConfigureAwait(true);
+                () => _dataObject.SaveAsync(), CancellationToken.None).ConfigureAwait(true);
 
             if (saved)
                 Saved?.Invoke(this, EventArgs.Empty);
@@ -99,7 +117,7 @@ namespace Polhem.UI.Avalonia.Views
             Closed?.Invoke(this, EventArgs.Empty);
         }
 
-        private async Task<bool> RunGuardedAsync(Func<Task> action)
+        private async Task<bool> RunGuardedAsync(Func<Task> action, CancellationToken cancellationToken)
         {
             if (_isBusy) return false;
             _isBusy = true;
@@ -109,6 +127,11 @@ namespace Polhem.UI.Avalonia.Views
             {
                 await action().ConfigureAwait(true);
                 completed = true;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // The caller asked for this; it is theirs to handle, not an error to show the user.
+                throw;
             }
             catch (Exception ex)
             {

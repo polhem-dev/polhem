@@ -30,7 +30,7 @@ namespace Polhem.UI.Core.UnitTests
 
         private sealed class FakeUIViewService : IUIViewService
         {
-            public Task<bool> ShowApiConnectAsync() => Task.FromResult(false);
+            public Task<bool> ShowApiConnectAsync(CancellationToken cancellationToken = default) => Task.FromResult(false);
         }
 
         private static string CreateTempDefinePath()

@@ -13,9 +13,11 @@ namespace Polhem.Web.Blazor.Server.Components
     /// element appropriate to its <see cref="ControlType"/>.
     /// </summary>
     /// <remarks>
-    /// Phase 1a is layout-only and renders the master area only. Detail grids
-    /// (<see cref="FormLayout.Details"/>) are wired up in Phase 1b together with
-    /// <see cref="DynamicGrid"/>.
+    /// Only the master area is rendered, and only master fields are bound. The layout's detail grids
+    /// (<see cref="FormLayout.Details"/>) are not rendered by this component or by
+    /// <see cref="FormPage"/>, so detail rows cannot be viewed or edited in this package;
+    /// <see cref="DynamicGrid"/> is a read-only list, which <see cref="FormPage"/> uses for the
+    /// record list.
     /// </remarks>
     public sealed partial class DynamicForm : ComponentBase
     {

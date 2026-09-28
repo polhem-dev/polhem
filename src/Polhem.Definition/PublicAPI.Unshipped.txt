@@ -204,6 +204,7 @@ const Polhem.Definition.Language.PolhemUIText.New = "New" -> string!
 const Polhem.Definition.Language.PolhemUIText.NoData = "NoData" -> string!
 const Polhem.Definition.Language.PolhemUIText.Ok = "OK" -> string!
 const Polhem.Definition.Language.PolhemUIText.Password = "Password" -> string!
+const Polhem.Definition.Language.PolhemUIText.RequiredFieldsEmpty = "RequiredFieldsEmpty" -> string!
 const Polhem.Definition.Language.PolhemUIText.Save = "Save" -> string!
 const Polhem.Definition.Language.PolhemUIText.Search = "Search" -> string!
 const Polhem.Definition.Language.PolhemUIText.SignIn = "SignIn" -> string!
@@ -228,3 +229,13 @@ Polhem.Definition.Storage.IDefineStorage.GetFormSchemaIds() -> System.Collection
 static readonly Polhem.Definition.Paging.PagingOptions.MaxPageSize -> int
 static readonly Polhem.Definition.Settings.CurrencySettings.FallbackRounding -> decimal
 static readonly Polhem.Definition.Settings.UnitSettings.FallbackDecimals -> int
+Polhem.Definition.Forms.MissingRequiredField
+Polhem.Definition.Forms.MissingRequiredField.DisplayText.get -> string!
+Polhem.Definition.Forms.MissingRequiredField.Field.get -> Polhem.Definition.Forms.FormField!
+Polhem.Definition.Forms.MissingRequiredField.IsDetail.get -> bool
+Polhem.Definition.Forms.MissingRequiredField.MissingRequiredField(Polhem.Definition.Forms.FormTable! table, Polhem.Definition.Forms.FormField! field, bool isDetail) -> void
+Polhem.Definition.Forms.MissingRequiredField.Table.get -> Polhem.Definition.Forms.FormTable!
+Polhem.Definition.Forms.RequiredFieldCheck
+static Polhem.Definition.Forms.RequiredFieldCheck.FindMissing(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Forms.MissingRequiredField!>!
+static Polhem.Definition.Forms.RequiredFieldCheck.FormatPrompt(Microsoft.Extensions.Localization.IStringLocalizer! localizer, System.Collections.Generic.IReadOnlyList<Polhem.Definition.Forms.MissingRequiredField!>! missing) -> string!
+static Polhem.Definition.Forms.RequiredFieldCheck.IsEmpty(Polhem.Definition.Forms.FormField! field, object? value) -> bool

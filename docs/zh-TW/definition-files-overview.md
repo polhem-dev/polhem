@@ -1,4 +1,4 @@
-<!-- source: en/definition-files-overview.md blob: b8641e9ecb0d1de5d38a04d141d69e22e1c12d82 -->
+<!-- source: en/definition-files-overview.md blob: 853401cf0f578eab234f4ea8ef0ebe5627aa63cc -->
 # 定義檔全景
 
 [English](../en/definition-files-overview.md) · [← 文件索引](README.md)
@@ -51,7 +51,7 @@ Polhem 是定義驅動的：`DefinePath` 下的 XML 不是外掛在應用上的�
 
 - **對資料庫**：框架在執行期依 FormSchema 產生 SQL —— 沒有 ORM、沒有產生的 entity 類別。見 [FormSchema 驅動的資料庫存取](formschema-data-access.md)。
 - **對 UI**：`FormLayout` 排列 FormSchema 宣告的欄位；控件直接讀欄位的 metadata（最大長度、清單項目、唯讀、關聯 → lookup）。
-- **對驗證**：計算欄與 `FormRule` 就寫在 FormSchema 內。見 [運算式與規則](expression-rules.md)。標記 `Required="true"` 的欄位由伺服端強制：`FormBusinessObject.Save` 會拒絕讓該欄位留空的新增或修改資料列（主檔與明細皆然），並以使用者語言的欄位標題指出是哪個欄位。檢查在伺服端填入預設值之後、寫入任何資料之前執行。「空」指沒有值、空白文字或空的 GUID；數字、布林與日期一定有值，因為這些欄位是帶預設值的 `NOT NULL`。只檢查會儲存的欄位，因此要讓 lookup 必填，請標記它儲存的鍵值欄位，而不是用來顯示的關聯欄位。
+- **對驗證**：計算欄與 `FormRule` 就寫在 FormSchema 內。見 [運算式與規則](expression-rules.md)。標記 `Required="true"` 的欄位由伺服端強制：`FormBusinessObject.Save` 會拒絕讓該欄位留空的新增或修改資料列（主檔與明細皆然），並以使用者語言的欄位標題指出是哪個欄位。檢查在伺服端填入預設值之後、寫入任何資料之前執行。「空」指沒有值、空白文字或空的 GUID；數字、布林與日期一定有值，因為這些欄位是帶預設值的 `NOT NULL`。只檢查會儲存的欄位，因此要讓 lookup 必填，請標記它儲存的鍵值欄位，而不是用來顯示的關聯欄位。Avalonia 的 `FormView` 與 Blazor 的 `FormPage` 在送出儲存前套用同一條規則（`Polhem.Definition` 的 `RequiredFieldCheck`），一次列出所有空白欄位，且不送出儲存。
 
 實務結果是：**一般 CRUD 不需要任何程式碼**。一份 FormSchema、對應的 TableSchema 與 FormLayout，加上一筆 `DbCategorySettings` 登錄，就是一張能用的表單；`MenuSettings` 的一個 `MenuEntry` 讓它出現在選單上。只有要綁定客製的商業物件或 Repository 時才需要 `ProgramSettings` 項目：註冊表沒提到的 progId 會解析為 `FormBusinessObject` 與 `DataFormRepository`（§4）。
 

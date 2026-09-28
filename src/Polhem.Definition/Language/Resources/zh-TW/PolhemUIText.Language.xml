@@ -26,6 +26,7 @@
     <LanguageItem Key="Password" Value="密碼" />
     <LanguageItem Key="SignIn" Value="登入" />
     <LanguageItem Key="SignInEmptyToken" Value="登入失敗：伺服器未傳回存取權杖。" />
+    <LanguageItem Key="RequiredFieldsEmpty" Value="請填寫必填欄位：{0}" />
   </Items>
   <Enums />
 </LanguageResource>

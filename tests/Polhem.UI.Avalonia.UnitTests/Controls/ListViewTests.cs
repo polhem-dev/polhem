@@ -297,7 +297,7 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         /// </summary>
         private sealed class TestListView : ListView
         {
-            protected override Task<FormSchema?> ResolveSchemaAsync(string progId)
+            protected override Task<FormSchema?> ResolveSchemaAsync(string progId, CancellationToken cancellationToken)
                 => Task.FromResult<FormSchema?>(null);
 
             protected override FormApiConnector ResolveFormConnector(string progId)

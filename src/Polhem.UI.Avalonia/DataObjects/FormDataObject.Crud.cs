@@ -15,11 +15,12 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// from the backend BO and replaces the local <see cref="DataSet"/>.
         /// </summary>
         /// <param name="rowId">The master row identifier (<c>sys_rowid</c>).</param>
+        /// <param name="cancellationToken">A token that cancels the round trip.</param>
         /// <exception cref="InvalidOperationException">
         /// Thrown when no <see cref="FormApiConnector"/> was supplied to the constructor,
         /// or when the server responds with a null <see cref="DataSet"/> (no row matched).
         /// </exception>
-        public async Task LoadAsync(Guid rowId)
+        public async Task LoadAsync(Guid rowId, CancellationToken cancellationToken = default)
         {
             var connector = FormDataGuard.RequireConnector(_connector, nameof(LoadAsync));
 
@@ -30,7 +31,7 @@ namespace Polhem.UI.Avalonia.DataObjects
                 // the continuation mutates the DataSet and raises change events that
                 // Avalonia controls consume, and those are thread-affine, so it must
                 // resume on the captured UI context.
-                var response = await connector.GetDataAsync(rowId);
+                var response = await connector.GetDataAsync(rowId, cancellationToken);
                 if (response.DataSet is null)
                     throw new InvalidOperationException(
                         $"No master row found for {SysFields.RowId} = {rowId}.");
@@ -49,17 +50,18 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// the local <see cref="DataSet"/> with the refreshed copy returned by the server
         /// (so that server-generated columns surface back to the caller).
         /// </summary>
+        /// <param name="cancellationToken">A token that cancels the round trip.</param>
         /// <exception cref="InvalidOperationException">
         /// Thrown when no <see cref="FormApiConnector"/> was supplied to the constructor.
         /// </exception>
-        public async Task SaveAsync()
+        public async Task SaveAsync(CancellationToken cancellationToken = default)
         {
             var connector = FormDataGuard.RequireConnector(_connector, nameof(SaveAsync));
 
             IsLoading = true;
             try
             {
-                var response = await connector.SaveAsync(DataSet);
+                var response = await connector.SaveAsync(DataSet, cancellationToken);
                 if (response.DataSet is not null)
                     ReplaceDataSet(response.DataSet);
                 IsDirty = false;
@@ -74,12 +76,13 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// Deletes the current master row through the backend BO and resets the local
         /// <see cref="DataSet"/> to the empty schema-derived skeleton.
         /// </summary>
+        /// <param name="cancellationToken">A token that cancels the round trip.</param>
         /// <exception cref="InvalidOperationException">
         /// Thrown when no <see cref="FormApiConnector"/> was supplied to the constructor,
         /// when there is no master row to delete, or when the master table does not carry
         /// a <c>sys_rowid</c> column.
         /// </exception>
-        public async Task DeleteAsync()
+        public async Task DeleteAsync(CancellationToken cancellationToken = default)
         {
             var connector = FormDataGuard.RequireConnector(_connector, nameof(DeleteAsync));
             var rowId = FormDataGuard.RequireMasterRowId(MasterRow);
@@ -87,7 +90,7 @@ namespace Polhem.UI.Avalonia.DataObjects
             IsLoading = true;
             try
             {
-                await connector.DeleteAsync(rowId);
+                await connector.DeleteAsync(rowId, cancellationToken);
                 ReplaceDataSet(FormValueBinding.BuildEmptyDataSet(_schema));
                 IsDirty = false;
             }
@@ -102,18 +105,19 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// and a server-issued <c>sys_rowid</c> from the backend BO, and replaces the
         /// local <see cref="DataSet"/>.
         /// </summary>
+        /// <param name="cancellationToken">A token that cancels the round trip.</param>
         /// <exception cref="InvalidOperationException">
         /// Thrown when no <see cref="FormApiConnector"/> was supplied to the constructor,
         /// or when the server responds with a null <see cref="DataSet"/>.
         /// </exception>
-        public async Task NewAsync()
+        public async Task NewAsync(CancellationToken cancellationToken = default)
         {
             var connector = FormDataGuard.RequireConnector(_connector, nameof(NewAsync));
 
             IsLoading = true;
             try
             {
-                var response = await connector.GetNewDataAsync();
+                var response = await connector.GetNewDataAsync(cancellationToken);
                 if (response.DataSet is null)
                     throw new InvalidOperationException(
                         "GetNewData returned a null DataSet; cannot initialize a new master row.");

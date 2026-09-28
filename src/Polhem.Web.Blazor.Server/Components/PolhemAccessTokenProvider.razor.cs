@@ -14,10 +14,10 @@ namespace Polhem.Web.Blazor.Server.Components
     /// (e.g. from <see cref="PolhemLoginPanel"/>'s <c>OnLoggedIn</c> callback):
     /// the provider re-renders, propagates the new value via the inner
     /// <c>CascadingValue&lt;Guid&gt;</c>, and authenticated children re-fetch.
-    /// State lives in memory only — Blazor Server scopes it to the SignalR
-    /// circuit; Blazor WASM scopes it to the component instance. Persistence
-    /// across reconnect / refresh (ProtectedSessionStorage, sessionStorage,
-    /// etc.) is deliberately out of scope for Phase 1d.
+    /// State lives in memory only, scoped to the SignalR circuit. It does not
+    /// survive a reconnect to a new circuit or a page refresh; a host that needs
+    /// that persists the token itself (for example in ProtectedSessionStorage)
+    /// and passes it back through <see cref="SetToken"/>.
     /// </remarks>
     public sealed partial class PolhemAccessTokenProvider : ComponentBase
     {

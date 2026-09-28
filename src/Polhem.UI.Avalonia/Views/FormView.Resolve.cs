@@ -23,10 +23,12 @@ namespace Polhem.UI.Avalonia.Views
         /// not pre-set <see cref="Schema"/>. Defaults to the cached <see cref="ClientInfo.DefineAccess"/>;
         /// override to supply a schema without touching the static <see cref="ClientInfo"/>.
         /// </summary>
-        protected virtual async Task<FormSchema?> ResolveSchemaAsync(string progId)
+        /// <param name="progId">The program identifier.</param>
+        /// <param name="cancellationToken">A token that cancels the fetch.</param>
+        protected virtual async Task<FormSchema?> ResolveSchemaAsync(string progId, CancellationToken cancellationToken)
             => EffectiveDefinitionLoader is { } loader
-                ? await loader.GetLocalizedSchemaAsync(progId, ResolveLang()).ConfigureAwait(false)
-                : await ClientInfo.DefineAccess.GetFormSchemaAsync(progId).ConfigureAwait(false);
+                ? await loader.GetLocalizedSchemaAsync(progId, ResolveLang(), cancellationToken).ConfigureAwait(false)
+                : await ClientInfo.DefineAccess.GetFormSchemaAsync(progId, cancellationToken).ConfigureAwait(false);
 
         /// <summary>
         /// Resolves the <see cref="FormLayout"/> the record renders from, in three steps: the
@@ -35,25 +37,36 @@ namespace Polhem.UI.Avalonia.Views
         /// <see cref="ClientInfo.DefineAccess"/>.
         /// </summary>
         /// <param name="progId">The program identifier, which doubles as the layout identifier.</param>
+        /// <param name="cancellationToken">A token that cancels the fetch.</param>
+        /// <returns>A layout this view owns: the view degrades it in place for the user's permissions.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown when no layout definition is stored under <paramref name="progId"/>. Layouts are
         /// authored at design time and saved as definition files; neither this view nor the loader
         /// generates one from the schema.
         /// </exception>
-        protected virtual async Task<FormLayout> ResolveLayoutAsync(string progId)
+        /// <remarks>
+        /// IMPORTANT: the view hides and marks read-only the fields the user may not read or update by
+        /// writing into the returned layout, so every path returns an instance of its own. An override
+        /// must do the same; returning a shared instance lets one view's permissions leak into another.
+        /// The host-supplied path is pinned by
+        /// <c>FormViewTests.EnsureDataObject_HostSuppliedLayout_LeavesHostInstanceUnchanged</c>.
+        /// </remarks>
+        protected virtual async Task<FormLayout> ResolveLayoutAsync(string progId, CancellationToken cancellationToken)
         {
-            if (Layout is not null) return Layout;
+            // The host may hand the same layout to several views, or keep using it, so the view
+            // degrades a copy rather than the host's instance.
+            if (Layout is not null) return Layout.Clone();
 
             if (EffectiveDefinitionLoader is { } loader)
             {
                 return await loader
-                    .GetRuntimeLayoutAsync(progId, Schema!)
+                    .GetRuntimeLayoutAsync(progId, Schema!, cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
             }
 
             // The define cache hands back a shared instance, and the capability applier mutates the
             // layout in place, so this path clones what it fetched. The loader path clones already.
-            var definition = await ClientInfo.DefineAccess.GetFormLayoutAsync(progId).ConfigureAwait(false);
+            var definition = await ClientInfo.DefineAccess.GetFormLayoutAsync(progId, cancellationToken).ConfigureAwait(false);
             return definition?.Clone()
                 ?? throw new InvalidOperationException(
                     $"No FormLayout definition found for '{progId}'. Author one at design time and save "
@@ -120,14 +133,15 @@ namespace Polhem.UI.Avalonia.Views
         /// each part is optional and degrades to framework-default decimal places when absent. Override
         /// to supply a context without touching the static <see cref="ClientInfo"/> (the unit tests do).
         /// </summary>
-        protected virtual async Task<RoundingContext> ResolveRoundingContextAsync()
+        /// <param name="cancellationToken">A token that cancels the fetches.</param>
+        protected virtual async Task<RoundingContext> ResolveRoundingContextAsync(CancellationToken cancellationToken)
         {
             return new RoundingContext
             {
                 Company = ClientInfo.Company,
-                CurrencySettings = await TryResolveSettingAsync(() => ClientInfo.DefineAccess.GetCurrencySettingsAsync())
+                CurrencySettings = await TryResolveSettingAsync(() => ClientInfo.DefineAccess.GetCurrencySettingsAsync(cancellationToken))
                     .ConfigureAwait(true),
-                UnitSettings = await TryResolveSettingAsync(() => ClientInfo.DefineAccess.GetUnitSettingsAsync())
+                UnitSettings = await TryResolveSettingAsync(() => ClientInfo.DefineAccess.GetUnitSettingsAsync(cancellationToken))
                     .ConfigureAwait(true),
             };
         }

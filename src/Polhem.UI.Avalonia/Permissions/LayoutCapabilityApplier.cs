@@ -7,16 +7,25 @@ namespace Polhem.UI.Avalonia.Permissions
 {
     /// <summary>
     /// Applies a client capability snapshot onto a form's layout by hiding / marking read-only its
-    /// sensitive fields in place. Mutating in place is safe because every caller hands over a
-    /// per-view instance — a clone of the cached definition, or a list layout projected from the
-    /// schema — never the cached <see cref="FormSchema"/> itself: capability only narrows, never
-    /// widens.
+    /// sensitive fields in place. Capability only narrows, never widens.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// IMPORTANT: mutating in place is safe only because each caller hands over a layout that belongs
+    /// to one view. <see cref="Polhem.UI.Avalonia.Views.FormView"/> gets its layout from
+    /// <see cref="Polhem.UI.Avalonia.Views.FormView.ResolveLayoutAsync"/>, whose default clones on
+    /// every path, the host-supplied <see cref="Polhem.UI.Avalonia.Views.FormView.Layout"/> included
+    /// (pinned by <c>FormViewTests.EnsureDataObject_HostSuppliedLayout_LeavesHostInstanceUnchanged</c>),
+    /// and whose remarks require an override to do the same;
+    /// <see cref="Polhem.UI.Avalonia.Views.ListView"/> projects a fresh list layout from the schema on
+    /// each attach. A new caller that passes a cached or host-owned layout must clone it first.
+    /// </para>
+    /// <para>
     /// Detail grid actions (Add / Edit / Delete rows) are deliberately NOT gated here. A detail grid
     /// belongs to the same aggregate as its master, so whether its rows can be edited follows the
     /// form's edit mode — permission is already enforced upstream at the toolbar commands (entering
     /// Add / Edit requires the master model's Create / Update). Only sensitive columns are degraded.
+    /// </para>
     /// </remarks>
     internal static class LayoutCapabilityApplier
     {

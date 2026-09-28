@@ -17,3 +17,7 @@ static Polhem.UI.Core.ClientInfo.LocalServiceProvider.set -> void
 static Polhem.UI.Core.ClientInfo.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
 static Polhem.UI.Core.ClientInfo.UseDefinitionLoader.get -> bool
 static Polhem.UI.Core.ClientInfo.UseDefinitionLoader.set -> void
+Polhem.UI.Core.IUIViewService.ShowApiConnectAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
+static Polhem.UI.Core.ClientInfo.InitializeAsync(Polhem.UI.Core.IUIViewService! service, Polhem.Api.Client.SupportedConnectTypes connectTypes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
+static Polhem.UI.Core.ClientInfo.InitializeAsync(string! endpoint, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+static Polhem.UI.Core.ClientInfo.SetEndpointAsync(string! endpoint, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!

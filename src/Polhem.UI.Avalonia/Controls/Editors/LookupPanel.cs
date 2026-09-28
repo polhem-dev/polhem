@@ -140,7 +140,11 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// Reloads the lookup rows from the server using the current
         /// <see cref="SearchText"/>.
         /// </summary>
-        public async Task ReloadAsync()
+        /// <param name="cancellationToken">
+        /// A token that cancels the load. A cancelled load throws <see cref="OperationCanceledException"/>
+        /// to the caller instead of being shown on the panel.
+        /// </param>
+        public async Task ReloadAsync(CancellationToken cancellationToken = default)
         {
             var connector = _connector;
             if (connector is null) return;
@@ -148,9 +152,14 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             try
             {
                 ClearError();
-                var response = await connector.GetLookupAsync(SearchText).ConfigureAwait(true);
+                var response = await connector.GetLookupAsync(SearchText, cancellationToken: cancellationToken)
+                    .ConfigureAwait(true);
                 _grid.DataTable = response.Table;
                 UpdateOkState();
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {

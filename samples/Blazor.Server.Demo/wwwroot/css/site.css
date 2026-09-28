@@ -38,3 +38,4 @@ body {
 .polhem-form-page__dirty { color: #bf8700; font-size: 0.85rem; }
 .polhem-form-page__error { color: #cf222e; padding: 10px; background: #ffebe9; border-radius: 4px; }
 .polhem-form-page__loading { color: #57606a; }
+.polhem-form-page__notice { color: #9a6700; padding: 8px 10px; margin: 8px 0; background: #fff8c5; border: 1px solid #d4a72c; border-radius: 4px; }

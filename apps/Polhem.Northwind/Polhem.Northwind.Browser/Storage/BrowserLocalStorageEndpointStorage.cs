@@ -13,7 +13,7 @@ namespace Polhem.Northwind.Browser.Storage;
 /// Hosts opt in by assigning
 /// <c>ClientInfo.EndpointStorage = new BrowserLocalStorageEndpointStorage("Polhem.Northwind");</c>
 /// in the head's <c>Program.Main</c>, before any code calls
-/// <see cref="ClientInfo.InitializeAsync(string)"/> or <see cref="ClientInfo.SetEndpointAsync(string)"/>.
+/// <see cref="ClientInfo.InitializeAsync(string, System.Threading.CancellationToken)"/> or <see cref="ClientInfo.SetEndpointAsync(string, System.Threading.CancellationToken)"/>.
 /// <para>
 /// Mirroring <see cref="FileEndpointStorage"/>, <see cref="SetEndpoint"/> mutates an in-memory cache
 /// only; the localStorage entry is written solely by <see cref="SaveEndpoint"/> so a bound

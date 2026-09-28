@@ -29,7 +29,7 @@ namespace Polhem.UI.Core.UnitTests
         {
             private readonly bool _result;
             public FakeUIViewService(bool result) => _result = result;
-            public Task<bool> ShowApiConnectAsync() => Task.FromResult(_result);
+            public Task<bool> ShowApiConnectAsync(CancellationToken cancellationToken = default) => Task.FromResult(_result);
         }
 
         [Fact]
@@ -49,6 +49,42 @@ namespace Polhem.UI.Core.UnitTests
             {
                 ClientInfo.EndpointStorage = originalStorage;
                 ApiClientInfo.SupportedConnectTypes = originalSupportedTypes;
+            }
+        }
+
+        [Fact]
+        [DisplayName("InitializeAsync(IUIViewService) with a cancelled token throws instead of opening the connection setup")]
+        public async Task InitializeAsync_CancelledToken_ThrowsWithoutShowingSetup()
+        {
+            var originalStorage = ClientInfo.EndpointStorage;
+            var originalSupportedTypes = ApiClientInfo.SupportedConnectTypes;
+            var service = new CountingUIViewService();
+            using var cancellation = new CancellationTokenSource();
+            await cancellation.CancelAsync();
+            try
+            {
+                ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
+                ClientInfo.EndpointStorage = new FakeEndpointStorage("http://localhost:19999");
+
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                    () => ClientInfo.InitializeAsync(service, SupportedConnectTypes.Both, cancellation.Token));
+                Assert.Equal(0, service.ShowCount);
+            }
+            finally
+            {
+                ClientInfo.EndpointStorage = originalStorage;
+                ApiClientInfo.SupportedConnectTypes = originalSupportedTypes;
+            }
+        }
+
+        private sealed class CountingUIViewService : IUIViewService
+        {
+            public int ShowCount { get; private set; }
+
+            public Task<bool> ShowApiConnectAsync(CancellationToken cancellationToken = default)
+            {
+                ShowCount++;
+                return Task.FromResult(false);
             }
         }
 

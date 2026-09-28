@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
@@ -64,7 +65,7 @@ namespace Polhem.UI.Core
         private static CompanyInfo? s_company;
 
         /// <summary>
-        /// Command-line arguments parsed at <see cref="InitializeAsync(IUIViewService, SupportedConnectTypes)"/>.
+        /// Command-line arguments parsed at <see cref="InitializeAsync(IUIViewService, SupportedConnectTypes, CancellationToken)"/>.
         /// </summary>
         public static IReadOnlyDictionary<string, string>? Arguments { get; private set; }
 
@@ -76,7 +77,7 @@ namespace Polhem.UI.Core
         /// application data directory, in a folder named after the entry assembly. It is the same instance as the
         /// default <see cref="ApiKeyStorage"/>. A browser WASM host has no persistent file system and replaces
         /// both; see <see cref="FileEndpointStorage"/>. Assign it before
-        /// <see cref="InitializeAsync(IUIViewService, SupportedConnectTypes)"/> or <see cref="SetEndpointAsync(string)"/>.
+        /// <see cref="InitializeAsync(IUIViewService, SupportedConnectTypes, CancellationToken)"/> or <see cref="SetEndpointAsync(string, CancellationToken)"/>.
         /// </remarks>
         public static IEndpointStorage EndpointStorage { get; set; } = s_defaultStorage;
 
@@ -363,16 +364,18 @@ namespace Polhem.UI.Core
         /// initialization instead of blocking on them.
         /// </summary>
         /// <param name="endpoint">URL for remote connections; local file path for local connections.</param>
+        /// <param name="cancellationToken">A token that cancels the validation and the connector initialization.</param>
         /// <remarks>
         /// Validates the endpoint and initializes the connector without blocking, so it is safe on
         /// single-threaded runtimes (browser WASM), where blocking on async work throws
         /// "Cannot wait on monitors on this runtime".
         /// </remarks>
-        public static async Task SetEndpointAsync(string endpoint)
+        public static async Task SetEndpointAsync(string endpoint, CancellationToken cancellationToken = default)
         {
-            var connectType = await ApiConnectValidator.ValidateAsync(endpoint, AllowGenerateSettings).ConfigureAwait(false);
+            var connectType = await ApiConnectValidator.ValidateAsync(endpoint, AllowGenerateSettings, cancellationToken)
+                .ConfigureAwait(false);
             SetConnectType(connectType, endpoint);
-            await SystemApiConnector.InitializeAsync().ConfigureAwait(false);
+            await SystemApiConnector.InitializeAsync(cancellationToken).ConfigureAwait(false);
             EndpointStorage.SaveEndpoint(endpoint);
         }
 
@@ -432,19 +435,24 @@ namespace Polhem.UI.Core
             ApiClientInfo.ApiKey = stored;
         }
 
-        private static async Task<bool> InitializeConnectAsync(SupportedConnectTypes supportedConnectTypes)
+        private static async Task<bool> InitializeConnectAsync(SupportedConnectTypes supportedConnectTypes,
+            CancellationToken cancellationToken)
         {
             ApiClientInfo.SupportedConnectTypes = supportedConnectTypes;
             try
             {
                 string endpoint = GetEndpoint();
-                var connectType = await ApiConnectValidator.ValidateAsync(endpoint, AllowGenerateSettings).ConfigureAwait(false);
+                var connectType = await ApiConnectValidator.ValidateAsync(endpoint, AllowGenerateSettings, cancellationToken)
+                    .ConfigureAwait(false);
                 SetConnectType(connectType, endpoint);
-                await SystemApiConnector.InitializeAsync().ConfigureAwait(false);
+                await SystemApiConnector.InitializeAsync(cancellationToken).ConfigureAwait(false);
                 return true;
             }
+            // A cancellation the caller asked for is not an unreachable endpoint: it propagates rather
+            // than sending the user to the connection-setup view.
             catch (Exception ex) when (ex is InvalidOperationException or ArgumentException
-                or OperationCanceledException or IOException or SocketException or UriFormatException)
+                or IOException or SocketException or UriFormatException
+                || (ex is OperationCanceledException && !cancellationToken.IsCancellationRequested))
             {
                 // Returning false sends the caller to the connection-setup view, so only "the
                 // endpoint is missing, malformed or unreachable" belongs here. The first two entries
@@ -461,7 +469,15 @@ namespace Polhem.UI.Core
         /// </summary>
         /// <param name="service">UI view service supplied by the host application.</param>
         /// <param name="connectTypes">Connection types supported by the application.</param>
-        public static async Task<bool> InitializeAsync(IUIViewService service, SupportedConnectTypes connectTypes)
+        /// <param name="cancellationToken">
+        /// A token that cancels the connection attempt and is passed on to
+        /// <see cref="IUIViewService.ShowApiConnectAsync"/>. A cancelled call throws
+        /// <see cref="OperationCanceledException"/> rather than falling back to the setup view.
+        /// </param>
+        [SuppressMessage("ApiDesign", "RS0026:Do not add multiple overloads with optional parameters",
+            Justification = "The only optional parameter is the trailing cancellation token, and the two overloads differ in their first parameter (an IUIViewService or an endpoint string), so no call can rebind from one to the other, which is the hazard RS0026 guards against.")]
+        public static async Task<bool> InitializeAsync(IUIViewService service, SupportedConnectTypes connectTypes,
+            CancellationToken cancellationToken = default)
         {
             UIViewService = service;
             Arguments = ParseCommandLineArgs();
@@ -477,8 +493,8 @@ namespace Polhem.UI.Core
             {
                 ApiKeyStorage.SetApiKey(apiKeyArg);
             }
-            if (!await InitializeConnectAsync(connectTypes).ConfigureAwait(false)
-                && !await UIViewService.ShowApiConnectAsync().ConfigureAwait(false))
+            if (!await InitializeConnectAsync(connectTypes, cancellationToken).ConfigureAwait(false)
+                && !await UIViewService.ShowApiConnectAsync(cancellationToken).ConfigureAwait(false))
             {
                 return false;
             }
@@ -490,13 +506,16 @@ namespace Polhem.UI.Core
         /// initialization without blocking.
         /// </summary>
         /// <param name="endpoint">URL for remote connections; local file path for local connections.</param>
+        /// <param name="cancellationToken">A token that cancels the validation and the connector initialization.</param>
         /// <remarks>
         /// Safe on single-threaded runtimes (browser WASM), where blocking on async work throws
         /// "Cannot wait on monitors".
         /// </remarks>
-        public static Task InitializeAsync(string endpoint)
+        [SuppressMessage("ApiDesign", "RS0026:Do not add multiple overloads with optional parameters",
+            Justification = "The only optional parameter is the trailing cancellation token, and the two overloads differ in their first parameter (an IUIViewService or an endpoint string), so no call can rebind from one to the other, which is the hazard RS0026 guards against.")]
+        public static Task InitializeAsync(string endpoint, CancellationToken cancellationToken = default)
         {
-            return SetEndpointAsync(endpoint);
+            return SetEndpointAsync(endpoint, cancellationToken);
         }
 
         /// <summary>

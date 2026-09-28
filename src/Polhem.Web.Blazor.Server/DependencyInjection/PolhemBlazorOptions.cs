@@ -29,6 +29,20 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         public string Endpoint { get; private set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets whether a <see cref="Polhem.Web.Blazor.Server.Components.FormPage"/> that was not given a definition
+        /// loader of its own assembles its definitions through
+        /// <see cref="PolhemApiConnectorFactory.CreateDefinitionLoader"/>.
+        /// </summary>
+        /// <remarks>
+        /// The counterpart of the desktop client's <c>ClientInfo.UseDefinitionLoader</c>, and on by
+        /// default for the same reason: pages show captions in the circuit's UI culture, the tenant's
+        /// customized layouts and the framework's number formats. <c>false</c> renders definitions
+        /// exactly as stored, which saves the loader's extra round trips for both language layers and
+        /// both layout layers.
+        /// </remarks>
+        public bool UseDefinitionLoader { get; set; } = true;
+
+        /// <summary>
         /// Configures the in-process (<see cref="PolhemBlazorProviderMode.Local"/>)
         /// provider. The host must also call <c>AddPolhemFramework</c> on the same service collection,
         /// so that <see cref="PolhemApiConnectorFactory"/> can dispatch connector calls in process.

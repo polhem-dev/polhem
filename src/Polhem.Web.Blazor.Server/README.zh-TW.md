@@ -31,8 +31,9 @@ builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider("https://a
 // builder.Services.AddPolhemBlazor(options => options.UseLocalProvider());
 ```
 
-`AddPolhemBlazor` 註冊 `PolhemBlazorOptions`、每個 circuit 一個的 `ApiSessionContext`、元件用來建立連接器的
-`PolhemApiConnectorFactory`，以及元件自身文字的 localizer。它不會呼叫 `AddPolhemFramework`。
+`AddPolhemBlazor` 註冊 `PolhemBlazorOptions`、每個 circuit 一個的 `ApiSessionContext`、元件用來建立連接器與定義
+載入器的 `PolhemApiConnectorFactory`，以及元件自身文字的 localizer。它不會呼叫 `AddPolhemFramework`。
+`options.UseDefinitionLoader`（預設開啟）決定 `FormPage` 是否在地化定義，見下文。
 
 > **Local 模式只適用於受信任的使用者。** 它發出的每次呼叫都是行程內呼叫，不論是哪位瀏覽器使用者觸發，
 > 後端都視為受信任。只有當網站的每位使用者都被信任可使用整個後端時（例如內部管理工具）才使用它；
@@ -40,7 +41,9 @@ builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider("https://a
 
 ## 元件
 
-- `FormPage` -- 單一程式的清單加主檔／明細編輯，透過共用的 `FormDataObject` 串接。
+- `FormPage` -- 單一程式的清單加主檔記錄編輯，透過共用的 `FormDataObject` 串接。預設經由 `FormDefinitionLoader`
+  載入定義，因此標題依 circuit 的 UI culture 呈現，租戶客製的版面也會套用；`DefinitionLoader` 參數可覆寫單一頁面的
+  載入器。儲存前會檢查標記為 `Required` 的欄位，有空白時列出這些欄位，不送出儲存。明細資料表不會呈現。
 - `DynamicGrid` -- 以 `LayoutGrid` 呈現的純顯示清單；點選資料列時以列 id 觸發 `OnRowSelected`。
 - `DynamicForm` -- 渲染 `FormLayout` 的主檔 section，依欄位的 `ControlType` 選擇輸入元素（text、date、month、
   time、checkbox、textarea、dropdown）。
