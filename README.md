@@ -81,7 +81,7 @@ dotnet add package Polhem.Db
 
 | Package | Install | Description |
 |---|---|---|
-| **Polhem.Cli** | `dotnet tool install -g Polhem.Cli` <br/>Upgrade: `dotnet tool update -g Polhem.Cli` | Framework CLI invoked as `dotnet polhem`. The `defines` commands materialise and list the framework default define files embedded in `Polhem.Definition.dll` (to bootstrap a new consumer's `DefinePath`) and split a menu out of an old `ProgramSettings.xml`; the `keys` commands generate protected keys for `SystemSettings.xml`. See the [Polhem.Cli README](https://github.com/polhem-dev/polhem/blob/main/tools/Polhem.Cli/README.md); `dotnet polhem --help` lists the options. |
+| **Polhem.Cli** | `dotnet tool install -g Polhem.Cli` <br/>Upgrade: `dotnet tool update -g Polhem.Cli` | Framework CLI invoked as `dotnet polhem`. The `defines` commands materialise and list the framework default define files embedded in `Polhem.Definition.dll` (to bootstrap a new consumer's `DefinePath`); the `keys` commands generate protected keys for `SystemSettings.xml`. See the [Polhem.Cli README](https://github.com/polhem-dev/polhem/blob/main/tools/Polhem.Cli/README.md); `dotnet polhem --help` lists the options. |
 
 
 ## 🚀 Quick Start
