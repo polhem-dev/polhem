@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using System.Reflection;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.Form;
 using Polhem.Base.Data;
@@ -295,6 +297,43 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
         /// <c>ClientInfo</c> statics; <c>ResolveFormConnector</c> throws to flag any
         /// unexpected ProgId-fallback path.
         /// </summary>
+        [Fact]
+        [DisplayName("The compact card list formats a date as a short date and a number by its format, as the wide grid does")]
+        public async Task CardTemplate_DateAndNumberColumns_UseGridCellFormatting()
+        {
+            var orderDate = new DateTime(1996, 7, 4, 0, 0, 0, DateTimeKind.Unspecified);
+            const decimal freight = 1234.5m;
+            var schema = new FormSchema(TestProgId, TestProgId) { ListFields = "sys_id,order_date,freight" };
+            var master = schema.Tables!.Add(TestProgId, TestProgId);
+            master.Fields!.Add(SysFields.RowId, "Row Id", FieldDbType.Guid);
+            master.Fields.Add("sys_id", "Order No.", FieldDbType.String);
+            master.Fields.Add("order_date", "Order Date", FieldDbType.Date);
+            master.Fields.Add("freight", "Freight", FieldDbType.Decimal).NumberFormat = "N2";
+
+            var table = new DataTable(TestProgId);
+            table.Columns.Add(SysFields.RowId, typeof(Guid));
+            table.Columns.Add("sys_id", typeof(string));
+            table.Columns.Add("order_date", typeof(DateTime));
+            table.Columns.Add("freight", typeof(decimal));
+            table.Rows.Add(Guid.NewGuid(), "O001", orderDate, freight);
+
+            var connector = new FakeFormApiConnector { GetListHandler = _ => new GetListResponse { Table = table } };
+            var view = new TestListView { Schema = schema, FormConnector = connector };
+            await view.InitializeAsync();
+
+            var cardList = (ListBox)typeof(ListView)
+                .GetField("_cardList", BindingFlags.NonPublic | BindingFlags.Instance)!
+                .GetValue(view)!;
+            var template = Assert.IsType<FuncDataTemplate<DataRowView>>(cardList.ItemTemplate);
+            var card = Assert.IsType<Border>(template.Build(table.DefaultView[0]));
+            var values = ((StackPanel)card.Child!).Children
+                .Cast<StackPanel>()
+                .ToDictionary(line => ((TextBlock)line.Children[0]).Text!, line => ((TextBlock)line.Children[1]).Text);
+
+            Assert.Equal(orderDate.ToString("d", CultureInfo.CurrentCulture), values["Order Date"]);
+            Assert.Equal(freight.ToString("N2", CultureInfo.CurrentCulture), values["Freight"]);
+        }
+
         private sealed class TestListView : ListView
         {
             protected override Task<FormSchema?> ResolveSchemaAsync(string progId, CancellationToken cancellationToken)

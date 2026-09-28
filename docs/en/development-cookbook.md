@@ -944,7 +944,7 @@ app.Run();
 The mode is chosen in `AddPolhemBlazor`, and `PolhemApiConnectorFactory` builds every connector accordingly:
 
 - **Local mode (in-process)** — `options.UseLocalProvider()`, the default: the components and the backend share the ASP.NET Core process, and connectors dispatch through `LocalApiProvider` with no HTTP. **Every call is a trusted local call**: the access token check and the `LocalOnly` restriction are skipped. Use it only when every user of the site may see the whole backend, such as an internal administration tool.
-- **Remote mode (HTTP)** — `options.UseRemoteProvider("https://api.example.com/api")`: the backend runs in another process or server, connectors go through `RemoteApiProvider`, and each call is checked like any other API client's. The Blazor host then needs no `AddPolhemFramework`.
+- **Remote mode (HTTP)** — `options.UseRemoteProvider("https://api.example.com/api")`: the backend runs in another process or server, connectors go through `RemoteApiProvider`, and each call is checked like any other API client's. The Blazor host then needs no `AddPolhemFramework`, but it must set `Polhem.Api.Client.ApiClientInfo.ApiKey` to the key the server issued for this application before the first call: `RemoteApiProvider` sends that process-wide value as the `X-Api-Key` header, `UseRemoteProvider` takes no key of its own, and without one the server answers every method except `System.Ping` with `401 Unauthorized`, so the sign-in fails first. The key identifies the application, not a user, which is why every circuit shares it.
 
 ### Avalonia (Polhem.UI.Avalonia)
 

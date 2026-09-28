@@ -121,7 +121,8 @@ In a Blazor Server host, switching modes is one line in `AddPolhemBlazor`; elsew
 // Local
 builder.Services.AddPolhemBlazor(o => o.UseLocalProvider());
 
-// Remote
+// Remote (the server rejects calls without this application's API key with 401)
+Polhem.Api.Client.ApiClientInfo.ApiKey = "<issued api key>";
 builder.Services.AddPolhemBlazor(o => o.UseRemoteProvider("http://host:5050/api"));
 ```
 

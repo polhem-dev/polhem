@@ -133,14 +133,40 @@ namespace Polhem.Base.UnitTests
         [Theory]
         [InlineData(@"C:\temp\file.txt", true)]
         [InlineData(@"D:\folder", true)]
+        [InlineData("C:/define", true)]
         [InlineData(@"\\server\share\file", true)]
         [InlineData("http://example.com", false)]
+        [InlineData("https://example.com/api", false)]
+        [InlineData("file:///srv/define", false)]
         [InlineData("relative/path", false)]
+        [InlineData(@"relative\path", false)]
+        [InlineData("./define", false)]
+        [InlineData("C:", false)]
         [InlineData("", false)]
-        [DisplayName("IsLocalPath recognizes Windows drive and UNC paths")]
-        public void IsLocalPath_RecognizesLocalPaths(string input, bool expected)
+        [InlineData("   ", false)]
+        [DisplayName("IsLocalPath gives the same answer on every operating system for Windows paths, URLs and relative paths")]
+        public void IsLocalPath_OsIndependentInputs_ReturnsExpected(string input, bool expected)
         {
             Assert.Equal(expected, FileUtilities.IsLocalPath(input));
+        }
+
+        [Theory]
+        [InlineData("/Users/someone/Define")]
+        [InlineData("/srv/polhem/define")]
+        [InlineData("/")]
+        [DisplayName("IsLocalPath accepts a Unix absolute path on macOS and Linux")]
+        public void IsLocalPath_UnixAbsolutePath_ReturnsTrueOffWindows(string input)
+        {
+            // A path rooted at `/` has no drive, so Windows treats it as relative to the current drive
+            // and does not call it fully qualified.
+            Assert.Equal(!OperatingSystem.IsWindows(), FileUtilities.IsLocalPath(input));
+        }
+
+        [Fact]
+        [DisplayName("IsLocalPath accepts the absolute temporary directory of the current operating system")]
+        public void IsLocalPath_CurrentOsTempPath_ReturnsTrue()
+        {
+            Assert.True(FileUtilities.IsLocalPath(Path.GetTempPath()));
         }
 
         [Fact]

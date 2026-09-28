@@ -26,6 +26,8 @@ namespace Polhem.Api.Client.UnitTests
         [InlineData("abc")]
         [InlineData("not-a-url")]
         [InlineData("ftp://example.com")]
+        [InlineData("file:///srv/define")]
+        [InlineData("relative/define")]
         [DisplayName("ApiConnectValidator.ValidateAsync throws InvalidOperationException for an unrecognized format")]
         public async Task ValidateAsync_UnknownFormat_ThrowsInvalidOperationException(string endpoint)
         {
@@ -67,12 +69,31 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ApiConnectValidator.ValidateAsync throws FileNotFoundException when the local path exists but has no SystemSettings.xml")]
+        [DisplayName("ApiConnectValidator.ValidateAsync reports a missing Unix absolute path as nonexistent on macOS and Linux instead of unrecognized")]
+        public async Task ValidateAsync_UnixAbsolutePath_NotExists_ThrowsArgumentExceptionOffWindows()
+        {
+            const string endpoint = "/nonexistent_polhem_test_abc123/Define";
+            var original = ApiClientInfo.SupportedConnectTypes;
+            try
+            {
+                ApiClientInfo.SupportedConnectTypes = SupportedConnectTypes.Both;
+                // Windows resolves a path rooted at `/` against the current drive, so there it is not a
+                // fully qualified path and the endpoint stays unrecognized.
+                if (OperatingSystem.IsWindows())
+                    await Assert.ThrowsAsync<InvalidOperationException>(() => ApiConnectValidator.ValidateAsync(endpoint));
+                else
+                    await Assert.ThrowsAsync<ArgumentException>(() => ApiConnectValidator.ValidateAsync(endpoint));
+            }
+            finally
+            {
+                ApiClientInfo.SupportedConnectTypes = original;
+            }
+        }
+
+        [Fact]
+        [DisplayName("ApiConnectValidator.ValidateAsync treats the absolute temporary directory of the current operating system as a local path and throws FileNotFoundException without SystemSettings.xml")]
         public async Task ValidateAsync_LocalPath_MissingSystemSettings_ThrowsFileNotFoundException()
         {
-            // This test relies on Windows-style paths (drive:\) and the real file system, so it is skipped on Linux CI.
-            if (!OperatingSystem.IsWindows()) return;
-
             var tempDir = Path.Combine(Path.GetTempPath(), "polhem_api_client_tests_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
             var originalSupported = ApiClientInfo.SupportedConnectTypes;
@@ -94,9 +115,6 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("ApiConnectValidator.ValidateAsync with allowGenerateSettings creates SystemSettings.xml and DatabaseSettings.xml")]
         public async Task ValidateAsync_LocalPath_AllowGenerateSettings_CreatesFiles()
         {
-            // This test relies on Windows-style paths and writing to the real file system.
-            if (!OperatingSystem.IsWindows()) return;
-
             var tempDir = Path.Combine(Path.GetTempPath(), "polhem_api_client_tests_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
             var originalSupported = ApiClientInfo.SupportedConnectTypes;

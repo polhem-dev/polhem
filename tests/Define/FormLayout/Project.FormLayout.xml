@@ -7,16 +7,16 @@
         <LayoutField FieldName="sys_rowid" Caption="唯一識別" />
         <LayoutField FieldName="sys_id" Caption="專案代碼" />
         <LayoutField FieldName="sys_name" Caption="專案名稱" />
-        <LayoutField FieldName="owner_dept_rowid" Caption="負責部門" />
+        <LayoutField FieldName="owner_dept_rowid" Caption="負責部門" ControlType="ButtonEdit" DisplayFields="ref_owner_dept_id,ref_owner_dept_name" />
         <LayoutField FieldName="ref_owner_dept_id" Caption="負責部門代碼" />
         <LayoutField FieldName="ref_owner_dept_name" Caption="負責部門名稱" />
-        <LayoutField FieldName="pm_rowid" Caption="專案經理" />
+        <LayoutField FieldName="pm_rowid" Caption="專案經理" ControlType="ButtonEdit" DisplayFields="ref_pm_id,ref_pm_name" />
         <LayoutField FieldName="ref_pm_id" Caption="PM 員工代碼" />
         <LayoutField FieldName="ref_pm_name" Caption="PM 姓名" />
         <LayoutField FieldName="ref_pm_dept_id" Caption="PM 部門代碼" />
         <LayoutField FieldName="ref_pm_dept_name" Caption="PM 部門名稱" />
-        <LayoutField FieldName="start_date" Caption="開始日" />
-        <LayoutField FieldName="end_date" Caption="結束日" />
+        <LayoutField FieldName="start_date" Caption="開始日" ControlType="DateEdit" />
+        <LayoutField FieldName="end_date" Caption="結束日" ControlType="DateEdit" />
       </Fields>
     </LayoutSection>
   </Sections>

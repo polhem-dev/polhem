@@ -30,7 +30,7 @@ namespace Polhem.UI.Avalonia.Views
             var columns = (listLayout.Columns ?? Enumerable.Empty<LayoutColumn>())
                 .Where(c => c.Visible)
                 .ToArray();
-            _cardList.ItemTemplate = BuildCardTemplate(columns);
+            _cardList.ItemTemplate = BuildCardTemplate(columns, _grid.FormatColumnText);
         }
 
         // FormSchema.ListFields drives the server SELECT but omits sys_rowid; prepend it so

@@ -63,6 +63,15 @@ namespace Polhem.Web.Blazor.Server.DependencyInjection
         /// provider. Connector calls are dispatched to <paramref name="endpoint"/>.
         /// </summary>
         /// <param name="endpoint">The remote API endpoint URL (must be non-empty).</param>
+        /// <remarks>
+        /// IMPORTANT: set <see cref="Polhem.Api.Client.ApiClientInfo.ApiKey"/> to the key the server issued
+        /// for this application before the first call. <see cref="Polhem.Api.Client.Providers.RemoteApiProvider"/>
+        /// sends that process-wide value as the <c>X-Api-Key</c> header, and it is empty until the host sets
+        /// it. The server's default <see cref="Polhem.Api.Core.Authorization.ApiAuthorizationValidator"/> refuses
+        /// every method except <c>System.Ping</c> without an accepted key, so the first call (usually the
+        /// sign-in) fails with <c>401 Unauthorized</c>. This method takes no key because the key identifies the
+        /// calling application, not a circuit's user: every circuit in the process sends the same one.
+        /// </remarks>
         public PolhemBlazorOptions UseRemoteProvider(string endpoint)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(endpoint);

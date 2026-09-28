@@ -42,7 +42,9 @@ the head, not to the Polhem packages.
   do not apply to it. It keeps one API session per circuit rather than per process. Its default Local mode treats
   every browser user's call as a trusted in-process call (the access token and `LocalOnly` checks are skipped): use
   it only when every user of the site may see the whole backend, and call `UseRemoteProvider(endpoint)` in
-  `AddPolhemBlazor` otherwise. The remarks on `PolhemBlazorOptions` spell out what Local skips; see also
+  `AddPolhemBlazor` otherwise. Remote mode also needs the application's API key in `ApiClientInfo.ApiKey`, set at
+  startup, or the server refuses the first call with `401 Unauthorized`. The remarks on `PolhemBlazorOptions` spell
+  out what Local skips and why Remote reads the key from there; see also
   [`samples/Blazor.Server.Demo`](../../samples/Blazor.Server.Demo/README.md).
 
 ---

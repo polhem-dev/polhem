@@ -7,8 +7,8 @@
         <LayoutField FieldName="sys_name" Caption="Product Name" />
         <LayoutField FieldName="supplier_rowid" Caption="Supplier" ControlType="ButtonEdit" DisplayFields="ref_supplier_id,ref_supplier_name" />
         <LayoutField FieldName="category_rowid" Caption="Category" ControlType="ButtonEdit" DisplayFields="ref_category_id,ref_category_name" />
-        <LayoutField FieldName="unit_price" Caption="Unit Price" />
-        <LayoutField FieldName="units_in_stock" Caption="Units In Stock" />
+        <LayoutField FieldName="unit_price" Caption="Unit Price" ControlType="NumericEdit" />
+        <LayoutField FieldName="units_in_stock" Caption="Units In Stock" ControlType="NumericEdit" />
       </Fields>
     </LayoutSection>
   </Sections>
