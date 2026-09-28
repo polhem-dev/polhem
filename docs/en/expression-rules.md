@@ -11,7 +11,7 @@ For the background and the decision itself, see [ADR-028](../adr/adr-028-express
 | Capability | Carrier | When it runs |
 |------------|---------|--------------|
 | Computed field | `FormField.ValueExpression` | Before save, recomputed and written back for added / modified rows |
-| Field default | `FormField.DefaultValueExpression` | On row insert, only when the field is empty |
+| Field default | `FormField.DefaultValueExpression` | When a new row is created (over the literal default); at save, only where a new row's field is still empty |
 | Validation / precondition | `FormRule` under `FormSchema` | `BeforeSave` / `BeforeDelete` |
 
 > **The backend is authoritative.** On save, `FormBusinessObject.DoBeforeSave` recomputes computed fields from the definition and overwrites whatever the client submitted, then runs the validation rules; `DoBeforeDelete` runs the delete rules. The Avalonia UI's live computation (`FormLiveComputation`; the Blazor components have none) recomputes fields as the user edits, but it is a UX preview only: it rounds with the framework's default decimal places, and the server corrects the values on save.
@@ -58,8 +58,8 @@ For the background and the decision itself, see [ADR-028](../adr/adr-028-express
            DefaultValueExpression="Today()" />
 ```
 
-- Evaluated on row insert, and **only applied when the field is still empty** (no value, or an empty string) — an existing value is never overwritten.
-- Rows the framework creates are seeded before the expression runs. A text field starts empty, but a numeric field starts at `0`, a `Guid` field at `Guid.Empty` and a `Date` field at today, and a new master record also receives the field's literal `DefaultValue`. A seeded value is not empty, so the expression does not replace it.
+- **When a new row is created, the expression wins.** The server's `GetNewData` and the UI client's new row both evaluate it and write the result over whatever the row was seeded with: the per-type seed (`0` for numbers, an empty string for text, `Guid.Empty`, today for a `Date`) and the field's literal `DefaultValue`. A field without an expression keeps its seed or `DefaultValue`.
+- **At save, it fills only empty fields.** The server's before-save pass evaluates the expression again for a new row only where the field is still empty (no value, or an empty string), so a value the user entered is kept. The exception is a `DateTime` field: the server discards the caller's value on a new row and evaluates the expression again (see [Time Zones](datetime-timezone.md)).
 
 ## Validation and Preconditions: `FormRule`
 

@@ -17,7 +17,8 @@
 > See "Revisions to ADR-030" in ADR-036 for details.
 
 
-**Accepted (2026-07-22; scope widened on 2026-07-27)**: the decision has been carried out. Contracts and most DTO /
+**Accepted (2026-07-22; scope widened on 2026-07-27), partially superseded**: the decision has been carried out, and two
+of its conclusions no longer hold since [ADR-036](adr-036-wire-serialization-externalized.md) (see the note above). Contracts and most DTO /
 collection item types have switched to name-based keys (`keyAsPropertyName`), and `SerializableData*` was brought in
 line on 2026-07-27; `[Union]` polymorphic hierarchies and the like are recorded exceptions (see "Outcome and final
 scope").

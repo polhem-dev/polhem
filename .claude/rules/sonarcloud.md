@@ -18,7 +18,7 @@ Rules that commonly show up after SonarCloud scans this project. Follow them pro
 | **S2094** | Empty classes should not exist; remove them or make them an interface |
 | **S3260** | A `private` nested class that is not inherited should be `sealed` |
 | **S2344** | An `enum` should not explicitly specify `int` as its underlying type (it is the default) |
-| **S2342** | Enums with collection / flags semantics end in `s` (e.g. `TraceLayers`) |
+| **S2342** | Enums with collection / flags semantics end in `s` (e.g. `PermissionActions`) |
 | **S101** | Class names are Pascal case; in a run of capitals only the first letter of an acronym is capitalized (`Utf8StringWriter`, not `UTF8StringWriter`) |
 | **S1006** | An override / implementing method must keep the same default parameter values as the base |
 | **S4144** | Methods with identical implementations should be merged, or one should call the other |

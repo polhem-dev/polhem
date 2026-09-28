@@ -1,4 +1,4 @@
-<!-- source: en/jsonrpc-frontend-integration.md blob: 868c564c2f905dcb40f0cadcc6036b27bdb82468 -->
+<!-- source: en/jsonrpc-frontend-integration.md blob: 95ca2af8ae49d8c14e45e5ac148f01b386626d3d -->
 # JSON-RPC 前端整合指引
 
 [English](../en/jsonrpc-frontend-integration.md) · [← 文件索引](README.md)
@@ -247,8 +247,8 @@ body 仍是 JSON-RPC 錯誤。
 |------|------|------|---------|
 | `-32700` | `ParseError` | request body 不是合法 JSON（HTTP 400） | 修 client 序列化 |
 | `-32600` | `InvalidRequest` | content type 錯誤（HTTP 415）、body 為空或缺 method（HTTP 400）、金鑰被拒或 `Authorization` header 格式錯誤（HTTP 401） | 檢查 headers 與 body |
-| `-32601` | `MethodNotFound` | 已宣告，目前無產生者。未知的 `progId.action` 目前回 `-32000` | 檢查方法名稱 / 大小寫 |
-| `-32602` | `InvalidParams` | 已宣告，目前無產生者。參數不合法目前回 `-32099` | 看 `message` 內容 |
+| `-32601` | `MethodNotFound` | `progId.action` 的 action 部分不對應業務物件公開為 action 的任何方法；訊息固定為「Method not found.」 | 檢查方法名稱 / 大小寫 |
+| `-32602` | `InvalidParams` | `Plain` 本文無法讀成方法所接受的型別；訊息固定為「Invalid params.」。讀得進來但內容不合法的參數回 `-32099` | 修正 `params` 的結構 |
 | `-32000` | `InternalError` | 未處理的 server 端例外 | 訊息不適合對使用者顯示。除非伺服端在 debug 模式，訊息一律為「Internal server error」 |
 | `-32001` | `Unauthorized` | 方法需要已登入的呼叫者，而 access token 缺漏、未知或已過期 | 重新登入 |
 | `-32002` | `CompanyNotEntered` | 方法需要公司 context | 先呼叫 `System.EnterCompany` |

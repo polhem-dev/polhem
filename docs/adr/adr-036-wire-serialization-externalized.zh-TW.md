@@ -1,11 +1,13 @@
-<!-- source: adr/adr-036-wire-serialization-externalized.md blob: 2f5eff703de73e9398636b3e3f0cb99d8bb02e38 -->
+<!-- source: adr/adr-036-wire-serialization-externalized.md blob: 286db5dafc9d2509306ee116e61514ed197c4403 -->
 # ADR-036：傳輸序列化外置至 API 層，定義層不再承載 MessagePack
 
 [English](adr-036-wire-serialization-externalized.md)
 
 ## 狀態
 
-**已採納（Accepted，2026-08-09）** —— 決策已執行。
+**已採納（Accepted，2026-08-09），部分取代** —— 決策已執行。其中 contractless 的後備機制由
+[ADR-037](adr-037-wire-explicit-registration.zh-TW.md) 取代（見〈實作演進〉），「只有一種格式」的前提由
+[ADR-044](adr-044-payload-codec-negotiation.zh-TW.md) 解除（見下方註記）。
 
 本 ADR 修訂 [ADR-030](adr-030-messagepack-name-based-keys.zh-TW.md) 的兩項結論
 （見下方「對 ADR-030 的修訂」），但不改變 [ADR-004](adr-004-messagepack-payload.zh-TW.md)

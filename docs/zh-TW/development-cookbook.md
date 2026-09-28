@@ -1,4 +1,4 @@
-<!-- source: en/development-cookbook.md blob: d06e3ccddd03011d6311a2e52b53f01aa4026d1f -->
+<!-- source: en/development-cookbook.md blob: d76618e8401f46b29cf3329985ee7a9811b0ec56 -->
 # 端到端開發指引
 
 [English](../en/development-cookbook.md) · [← 文件索引](README.md)
@@ -154,7 +154,7 @@ Client 接收 → LoginResponse (API Type，以同一 codec 編碼)
 
 ### 關鍵元件
 
-- **ApiInputConverter**（internal）：將 API Request 的屬性值對應到 BO Args（依屬性名稱匹配）。`Plain` body 以 `JsonElement` 抵達，會直接反序列化成 BO 型別；`object` 型別的成員（例如篩選值）依其 JSON 種類綁定（字串、整數、小數、布林、陣列）
+- **ApiInputConverter**（internal）：將 API Request 的屬性值對應到 BO Args（依屬性名稱匹配）。`Plain` body 以 `JsonElement` 抵達，會讀成該 action 的框架請求型別（`{Action}Request`；沒有對應型別時為方法的參數型別），再與解碼後的 body 一樣複製到 BO Args，因此無法設定契約未宣告的成員；`object` 型別的成員（例如篩選值）依其 JSON 種類綁定（字串、整數、小數、布林、陣列）
 - **ApiOutputConverter**：執行後將 BO `{Action}Result` 以反射自動對應到 `{Action}Response`，結果以 `ConcurrentDictionary` 快取（詳見 [ADR-007](../adr/adr-007-convention-based-type-resolution.zh-TW.md)）
 - wire body 由該次請求宣告的 codec（`messagepack` 或 `json`）寫出，與輸出映射無關。見 [ADR-044](../adr/adr-044-payload-codec-negotiation.zh-TW.md)。
 
@@ -840,7 +840,7 @@ var listResult = await formConnector.GetListAsync(selectFields: "sys_id,sys_name
 FormSchema schema = await ClientInfo.DefineAccess.GetFormSchemaAsync("Customer");
 ```
 
-沒有傳分頁選項的 `GetListAsync` 回傳第一頁、最多 `PagingOptions.MaxPageSize` 筆；要取得更多，傳入 `PagingOptions` 逐頁讀取。`ClientInfo.DefineAccess` 照原樣回傳定義，不做在地化，也不套租戶覆寫層。啟動時設定 `ClientInfo.UseDefinitionLoader = true`，Avalonia 的 `FormView`、`ListView` 與 `LookupDialog` 就會改由 `ClientInfo.DefinitionLoader` 載入定義——使用者語言的標題、租戶客製層與公司的數值格式——程式碼也可以自己呼叫 `ClientInfo.DefinitionLoader.GetLocalizedSchemaAsync(progId, CultureInfo.CurrentUICulture.Name)`。預設為關閉，照原樣呈現定義，不需額外往返。
+沒有傳分頁選項的 `GetListAsync` 回傳第一頁、最多 `PagingOptions.MaxPageSize` 筆；要取得更多，傳入 `PagingOptions` 逐頁讀取。`ClientInfo.DefineAccess` 照原樣回傳定義，不做在地化，也不套租戶覆寫層。Avalonia 的 `FormView`、`ListView` 與 `LookupDialog` 則改由 `ClientInfo.DefinitionLoader` 載入定義——使用者語言的標題、租戶客製層與公司的數值格式——程式碼也可以自己呼叫 `ClientInfo.DefinitionLoader.GetLocalizedSchemaAsync(progId, CultureInfo.CurrentUICulture.Name)`。`ClientInfo.UseDefinitionLoader` 預設為開啟；啟動時設為 `false` 會照原樣呈現定義，省下載入器額外的往返。
 
 **4. 切換 endpoint（使用者更換 server）**：
 

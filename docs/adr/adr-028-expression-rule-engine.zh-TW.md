@@ -1,11 +1,12 @@
-<!-- source: adr/adr-028-expression-rule-engine.md blob: 6698511b8650e378764936cf03e491e786b2c3a8 -->
+<!-- source: adr/adr-028-expression-rule-engine.md blob: bcdce2ff7bb4773b13b9e0c6f3e6563a93ed18fc -->
 # ADR-028：自訂運算式與規則引擎（減少 BO 手寫程式碼）
 
 [English](adr-028-expression-rule-engine.md)
 
 ## 狀態
 
-已採納（2026-07-09）
+已採納（2026-07-09），部分取代：組件配置由 [ADR-038](adr-038-definition-dependency-boundary.zh-TW.md)
+取代（見下方註記）。
 
 > **組件配置已由 [ADR-038](adr-038-definition-dependency-boundary.zh-TW.md) 修訂（2026-08-11）**：
 > `IExpressionEvaluator` / `ExpressionPolicy` / `ExpressionEvaluationException` 三個抽象型別

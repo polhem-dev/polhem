@@ -7,7 +7,9 @@
 
 ## Status
 
-Accepted (2026-05-10)
+Accepted (2026-05-10), partially superseded: the category ids are fixed to `common`, `company` and `log`, and
+`FormSchema.CategoryId` is read at runtime, which overturns key point 1 of the Decision and its "not involved at
+runtime" (see "Implementation evolution").
 
 ## Context
 

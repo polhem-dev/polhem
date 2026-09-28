@@ -1,4 +1,4 @@
-<!-- source: adr/adr-043-error-contract-single-registry.md blob: d299e8638b380efe8a384951d59f7be96af292ca -->
+<!-- source: adr/adr-043-error-contract-single-registry.md blob: 1e2b55ec2ec2d4929f4a27c762572337898044a4 -->
 # ADR-043：錯誤契約以單一登錄表達，兩端從同一份宣告消費
 
 [English](adr-043-error-contract-single-registry.md)
@@ -115,8 +115,10 @@ ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對�
 - **2026-09-27：`Unauthorized` 有了產生者。** 認證失敗（access token 缺少、無效或過期）現在經由
   `AuthenticationRequiredException` 回 `JsonRpcErrorCode.Unauthorized`（-32001）；登錄表把它排在其基底
   `UnauthorizedAccessException` 那列之前，用戶端則還原為 `UnauthorizedAccessException`。後果一節「認證失敗回
-  `InvalidRequest` 加 HTTP 401」已不成立，沒有 `Authorization` 標頭的請求視為匿名呼叫。`MethodNotFound` 與
-  `InvalidParams` 仍然沒有產生者。
+  `InvalidRequest` 加 HTTP 401」已不成立，沒有 `Authorization` 標頭的請求視為匿名呼叫。
 - **2026-09-27：`UserMessageException` 可攜帶訊息鍵與參數**，在地化時以 session 的 culture 解析
   （`src/Polhem.Base/Exceptions/UserMessageException.cs`）。
+- **2026-09-28：`MethodNotFound` 與 `InvalidParams` 有了產生者。** 解析不到任何方法的 action 名稱擲出 internal 的
+  `MethodNotFoundException`，無法讀成方法型別的 `Plain` 本文擲出 internal 的 `InvalidParamsException`（兩者都在
+  `src/Polhem.Api.Core/JsonRpc/`）。登錄表把它們對應到 -32601 與 -32602，附固定訊息，用戶端不重建型別。
 

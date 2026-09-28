@@ -1,4 +1,4 @@
-<!-- source: en/database-schema-upgrade.md blob: 5dcf6ce7af86f4f0bd9f5a5a0c530f04e5388e0d -->
+<!-- source: en/database-schema-upgrade.md blob: 2d1afff300cddec98244be1d095d6527ea66db8b -->
 # 資料庫 Schema 升級指引
 
 [English](../en/database-schema-upgrade.md) · [← 文件索引](README.md)
@@ -166,7 +166,8 @@ Orchestrator 會逐一檢查 `TableSchemaDiff` 內每一筆 change：
 public sealed class UpgradeOptions
 {
     /// <summary>
-    /// 允許縮小欄位長度／精度的 ALTER COLUMN（可能截斷資料）。
+    /// 允許縮小欄位長度／精度的變更（可能截斷資料），
+    /// 不論是以 ALTER COLUMN 還是重建資料表套用。
     /// 預設 false：拒絕縮小，避免靜默資料遺失。
     /// </summary>
     public bool AllowColumnNarrowing { get; init; } = false;
@@ -185,7 +186,7 @@ public sealed class UpgradeOptions
 - 預設：**直接拒絕並拋例外**（`InvalidOperationException`），避免靜默資料截斷
 - 開啟：明確同意截斷，並在 plan 的 `Warnings` 中記錄
 
-這項檢查屬於 ALTER 路徑。會重建資料表的 plan（SQLite 上的任何欄位變更，或含有需要重建之變更的 plan）不會參考這個選項：搬資料步驟會把舊值寫進新欄位，放不下的值如何處理由資料庫決定。重建同時會縮小欄位時，務必先 dry-run（§9）。
+這項檢查兩條路徑都適用。會重建資料表的 plan（SQLite 上的任何欄位變更，或含有需要重建之變更的 plan）會把每一列複製進新欄位，所以縮小的欄位會像 `ALTER` 一樣截斷或拒收資料，同樣需要明確開啟這個選項。
 
 ```csharp
 var options = new UpgradeOptions { AllowColumnNarrowing = true };

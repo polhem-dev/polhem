@@ -6,7 +6,7 @@ The `docs/` folder contains the public-facing developer documentation for the Po
 
 The first line of every translation is an HTML comment recording which version of the source it was translated from (the source file's git blob hash). When the source changes and the translation is not re-checked and its comment updated, [`check-docs-i18n.sh`](../../check-docs-i18n.sh) reports the translation as stale. Whether a stale translation fails CI or is only reported depends on the language; that policy lives in the script's header.
 
-The listing is ordered by **where you are in the journey**, not by subject. Each entry is tagged with its **kind** (Tutorial / Concept / Guide / Reference) and its **length** (Short < 150 lines, Medium 150–350, Long > 350) so you can judge the commitment before opening it. If you would rather browse by subject, see [Find by Topic](#find-by-topic) at the bottom.
+The listing is ordered by **where you are in the journey**, not by subject. Each entry is tagged with its **kind** (Tutorial / Concept / Guide / Reference). If you would rather browse by subject, see [Find by Topic](#find-by-topic) at the bottom.
 
 **Reading paths**
 
@@ -21,11 +21,11 @@ The listing is ordered by **where you are in the journey**, not by subject. Each
 
 Read these three and you can build your first application.
 
-| Document | Kind | Length | Description |
-|----------|------|--------|-------------|
-| [Getting Started](getting-started.md) | Tutorial | Medium | Build your first Polhem backend from scratch: packages, `DefinePath`, DI wiring, your first form and business object, then calling it from a client |
-| [Architecture Overview](architecture-overview.md) | Concept | Long | Definition-Driven Architecture: the design philosophy and the practical patterns behind it |
-| [Definition Files Overview](definition-files-overview.md) | Concept | Medium | The map of every definition file: what each one owns, how they connect, and what changing one affects |
+| Document | Kind | Description |
+|----------|------|-------------|
+| [Getting Started](getting-started.md) | Tutorial | Build your first Polhem backend from scratch: packages, `DefinePath`, DI wiring, your first form and business object, then calling it from a client |
+| [Architecture Overview](architecture-overview.md) | Concept | Definition-Driven Architecture: the design philosophy and the practical patterns behind it |
+| [Definition Files Overview](definition-files-overview.md) | Concept | The map of every definition file: what each one owns, how they connect, and what changing one affects |
 
 > Unfamiliar term? Keep [Terminology](terminology.md) open in another tab.
 >
@@ -35,47 +35,47 @@ Read these three and you can build your first application.
 
 Why the framework is built the way it is.
 
-| Document | Kind | Length | Description |
-|----------|------|--------|-------------|
-| [FormSchema-Driven Database Access](formschema-data-access.md) | Concept | Medium | How Polhem.Db generates SQL dynamically from a FormSchema, and why it is not an ORM |
-| [API ↔ BO Contract Design](api-bo-contract-design.md) | Concept | Medium | Three-tier API contract separation (Contracts / API Type / BO Type) and the naming conventions that drive it |
-| [Project Dependency Map](dependency-map.md) | Concept | Short | How the `src/` projects depend on each other, and the rules that keep the graph acyclic |
-| [Caching](caching.md) | Concept | Long | How definition and database-backed caches work: the read path, the invalidation signals, and the notification-table mechanism for cross-process / multi-node deployments |
+| Document | Kind | Description |
+|----------|------|-------------|
+| [FormSchema-Driven Database Access](formschema-data-access.md) | Concept | How Polhem.Db generates SQL dynamically from a FormSchema, and why it is not an ORM |
+| [API ↔ BO Contract Design](api-bo-contract-design.md) | Concept | Three-tier API contract separation (Contracts / API Type / BO Type) and the naming conventions that drive it |
+| [Project Dependency Map](dependency-map.md) | Concept | How the `src/` projects depend on each other, and the rules that keep the graph acyclic |
+| [Caching](caching.md) | Concept | How definition and database-backed caches work: the read path, the invalidation signals, and the notification-table mechanism for cross-process / multi-node deployments |
 
 ## 3. Guides
 
 How to actually do a thing.
 
-| Document | Kind | Length | Description |
-|----------|------|--------|-------------|
-| [End-to-End Development Cookbook](development-cookbook.md) | Guide | Long | The core development flow from definition to API: initialization order, request pipeline, ExecFunc pattern, cache invalidation |
-| [Expressions and Rules](expression-rules.md) | Guide | Short | Declarative field computation and pre-save / pre-delete validation in FormSchema, instead of hand-written BO code |
-| [Tenant Customization](customization.md) | Guide | Medium | Giving one company different labels, a different form arrangement or extra behaviour, without forking the base definitions: which mechanism to reach for, how each one is written, and what cannot be customized |
-| [Permission & Authorization](permission-authorization.md) | Guide | Medium | The two-layer authorization model (action gate + record scope): PermissionModels, `FormField.ScopeRole`, the role/grant tables, read filtering and authoritative write-side re-query — plus the separate deployment-level axis for installation-wide assets |
-| [API Key Management](api-key-management.md) | Guide | Short | What an API key identifies (the calling application, not the user), how the gate turns itself on, who may manage keys, and the rotation procedure |
-| [JSON-RPC Frontend Integration](jsonrpc-frontend-integration.md) | Guide | Long | Calling the JSON-RPC API from a JavaScript / TypeScript frontend with no .NET on the client: wire format, auth flow, TypeScript wrapper |
-| [Wire Contract](../../wire-contracts/README.md) | Reference | Short | The TypeScript contract generated from the message types — what a non-.NET client codes against |
-| [Wire Fixtures](../../wire-fixtures/README.md) | Reference | Short | Golden body samples for every wire message, to check a client implementation against |
-| [DatabaseSettings & DbCategorySettings Guide](database-settings-guide.md) | Guide | Long | Structure, access patterns and runtime behaviour of the two database-related settings files |
-| [Database Schema Upgrade](database-schema-upgrade.md) | Guide | Long | Synchronising definition changes to a live database: the diff → plan → execute pipeline, ALTER vs rebuild, dry runs |
-| [Platform Support](platform-support.md) | Guide | Medium | The supported heads (desktop, browser, iOS, Android, Blazor Server), the trim and AOT configurations that work, and the checklist for a browser or mobile head |
+| Document | Kind | Description |
+|----------|------|-------------|
+| [End-to-End Development Cookbook](development-cookbook.md) | Guide | The core development flow from definition to API: initialization order, request pipeline, ExecFunc pattern, cache invalidation |
+| [Expressions and Rules](expression-rules.md) | Guide | Declarative field computation and pre-save / pre-delete validation in FormSchema, instead of hand-written BO code |
+| [Tenant Customization](customization.md) | Guide | Giving one company different labels, a different form arrangement or extra behaviour, without forking the base definitions: which mechanism to reach for, how each one is written, and what cannot be customized |
+| [Permission & Authorization](permission-authorization.md) | Guide | The two-layer authorization model (action gate + record scope): PermissionModels, `FormField.ScopeRole`, the role/grant tables, read filtering and authoritative write-side re-query — plus the separate deployment-level axis for installation-wide assets |
+| [API Key Management](api-key-management.md) | Guide | What an API key identifies (the calling application, not the user), how the gate turns itself on, who may manage keys, and the rotation procedure |
+| [JSON-RPC Frontend Integration](jsonrpc-frontend-integration.md) | Guide | Calling the JSON-RPC API from a JavaScript / TypeScript frontend with no .NET on the client: wire format, auth flow, TypeScript wrapper |
+| [Wire Contract](../../wire-contracts/README.md) | Reference | The TypeScript contract generated from the message types — what a non-.NET client codes against |
+| [Wire Fixtures](../../wire-fixtures/README.md) | Reference | Golden body samples for every wire message, to check a client implementation against |
+| [DatabaseSettings & DbCategorySettings Guide](database-settings-guide.md) | Guide | Structure, access patterns and runtime behaviour of the two database-related settings files |
+| [Database Schema Upgrade](database-schema-upgrade.md) | Guide | Synchronising definition changes to a live database: the diff → plan → execute pipeline, ALTER vs rebuild, dry runs |
+| [Platform Support](platform-support.md) | Guide | The supported heads (desktop, browser, iOS, Android, Blazor Server), the trim and AOT configurations that work, and the checklist for a browser or mobile head |
 
 ## 4. Reference
 
 Look things up while you work.
 
-| Document | Kind | Length | Description |
-|----------|------|--------|-------------|
-| [Framework Capabilities](framework-capabilities.md) | Reference | Medium | Single-page catalogue of every mechanism the framework provides, grouped by area, one line each |
-| [Terminology](terminology.md) | Reference | Long | English ↔ Chinese term reference, organised by layer |
-| [API Method Reference](api-method-reference.md) | Reference | Medium | Every BO method exposed through JSON-RPC on one page, with its `[ApiAccessControl]` settings and purpose |
-| [Framework-Reserved Names](framework-reserved-names.md) | Reference | Short | Registry of the `st_*` system tables and reserved `progId`s owned by the framework |
-| [Database Naming Conventions](database-naming-conventions.md) | Reference | Medium | Naming rules for tables, columns, indexes and system fields; cross-database case-sensitivity reference |
-| [Database Dialect Differences (DDL)](database-dialect-differences.md) | Reference | Medium | Cross-dialect DDL rules and exceptions (defaults, nullability, quoting, AutoIncrement); why text and numeric columns are NOT NULL |
-| [Temporal Types: Date, DateTime and Time](temporal-types.md) | Reference | Long | Choosing between the three, and how each is carried in the database, the `DataSet`, code and all three serialization formats |
-| [Time Zones](datetime-timezone.md) | Reference | Short | UTC storage, where conversion happens, configuring a user's zone, and what hand-written SQL and non-.NET clients must do |
-| [Analyzer Rules](analyzer-rules.md) | Reference | Medium | The build diagnostics shipped with the packages: rule list, how to adjust severity, versioning policy |
-| [Development Constraints and Anti-Patterns](development-constraints.md) | Reference | Long | Framework constraints and forbidden practices; also useful as a reference for AI coding tools |
+| Document | Kind | Description |
+|----------|------|-------------|
+| [Framework Capabilities](framework-capabilities.md) | Reference | Single-page catalogue of every mechanism the framework provides, grouped by area, one line each |
+| [Terminology](terminology.md) | Reference | English ↔ Chinese term reference, organised by layer |
+| [API Method Reference](api-method-reference.md) | Reference | Every BO method exposed through JSON-RPC on one page, with its `[ApiAccessControl]` settings and purpose |
+| [Framework-Reserved Names](framework-reserved-names.md) | Reference | Registry of the `st_*` system tables and reserved `progId`s owned by the framework |
+| [Database Naming Conventions](database-naming-conventions.md) | Reference | Naming rules for tables, columns, indexes and system fields; cross-database case-sensitivity reference |
+| [Database Dialect Differences (DDL)](database-dialect-differences.md) | Reference | Cross-dialect DDL rules and exceptions (defaults, nullability, quoting, AutoIncrement); why text and numeric columns are NOT NULL |
+| [Temporal Types: Date, DateTime and Time](temporal-types.md) | Reference | Choosing between the three, and how each is carried in the database, the `DataSet`, code and all three serialization formats |
+| [Time Zones](datetime-timezone.md) | Reference | UTC storage, where conversion happens, configuring a user's zone, and what hand-written SQL and non-.NET clients must do |
+| [Analyzer Rules](analyzer-rules.md) | Reference | The build diagnostics shipped with the packages: rule list, how to adjust severity, versioning policy |
+| [Development Constraints and Anti-Patterns](development-constraints.md) | Reference | Framework constraints and forbidden practices; also useful as a reference for AI coding tools |
 
 ## 5. Deep Dive
 

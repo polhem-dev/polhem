@@ -1,4 +1,4 @@
-<!-- source: adr/adr-030-messagepack-name-based-keys.md blob: 90fc591aaf5c50550010d68eb5a16bcb5c8660fe -->
+<!-- source: adr/adr-030-messagepack-name-based-keys.md blob: af75b13739cfdac1bd02996660d00eb8f7fb8197 -->
 # ADR-030：MessagePack 合約改採 property-name key（keyAsPropertyName）
 
 [English](adr-030-messagepack-name-based-keys.md)
@@ -16,7 +16,7 @@
 > 詳見 ADR-036「對 ADR-030 的修訂」。
 
 
-**已採納（Accepted，2026-07-22；範圍於 2026-07-27 擴大）** —— 決策已執行。合約與多數 DTO / 集合 item 型別改為 name-based（`keyAsPropertyName`），`SerializableData*` 於 2026-07-27 補做收斂；`[Union]` 多型階層等為記錄在案的例外（見「執行結果與最終範圍」）。
+**已採納（Accepted，2026-07-22；範圍於 2026-07-27 擴大），部分取代** —— 決策已執行，其中兩項結論自 [ADR-036](adr-036-wire-serialization-externalized.zh-TW.md) 起不再成立（見上方註記）。合約與多數 DTO / 集合 item 型別改為 name-based（`keyAsPropertyName`），`SerializableData*` 於 2026-07-27 補做收斂；`[Union]` 多型階層等為記錄在案的例外（見「執行結果與最終範圍」）。
 
 > **go/no-go 決議（2026-07-22，定案）**：**立即執行**。關鍵事實 —— **目前無外部實際消費者**，故 breaking wire change 無相容性成本；先前「綁下一個 major」的暫緩理由（相容性衝擊）消失。以極低代價拿下「消滅 ctor-order footgun + 消滅跨繼承 key 編號協調 + 統一 JSON/MessagePack 心智」。
 

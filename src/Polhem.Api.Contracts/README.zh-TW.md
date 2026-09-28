@@ -1,12 +1,12 @@
 # Polhem.Api.Contracts
 
-> API 層與商業邏輯層之間的契約介面庫，定義 Request/Response 介面。
+> API 層與商業邏輯層共用的契約介面庫，定義 Request/Response 介面。
 
 [English](README.md)
 
 ## 架構定位
 
-- **層級**：API 層（契約）
+- **層級**：共用契約層。名稱雖有 API，但不屬於 API 層：`Polhem.Business` 與 `Polhem.Api.Core` 都相依於它，所以它位於兩者之下
 - **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
 
 ## 目標框架

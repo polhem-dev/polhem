@@ -10,6 +10,10 @@ understanding why the design is the way it is.
 > An ADR is not rewritten as the implementation evolves. When a decision is overturned, it is marked "Superseded" and
 > points to the new ADR. When the implementation details drift but the decision still holds, an "Implementation
 > evolution" section is added at the end and the original text is kept.
+>
+> When part of a decision is overturned and the rest still holds, the status is "Accepted, partially superseded". The
+> Status section of the ADR names the part that no longer holds and what replaced it: a later ADR, or an entry in its
+> Implementation evolution section.
 
 > Polhem continues the Bee.NET framework under a new name. Most of these decisions were taken while it was Bee.NET, so
 > a version number `4.x` in an ADR, and a pointer to "CHANGELOG 4.x", refers to a Bee.NET release, not to Polhem,
@@ -22,13 +26,13 @@ understanding why the design is the way it is.
 | [001](adr-001-dataset-as-dto.md) | Use DataSet as the cross-layer DTO | ✅ Accepted |
 | [002](adr-002-newtonsoft-json.md) | Choosing and migrating the JSON serialization library | 🔁 Superseded |
 | [003](adr-003-static-service-locator.md) | Use a static Service Locator instead of dependency injection | 🔁 Superseded |
-| [004](adr-004-messagepack-payload.md) | Use MessagePack as the API Payload serialization format | ✅ Accepted |
+| [004](adr-004-messagepack-payload.md) | Use MessagePack as the API Payload serialization format | ✅ Accepted, partially superseded |
 | [005](adr-005-formschema-driven.md) | FormSchema definition-driven architecture | ✅ Accepted |
 | [006](adr-006-dual-target-framework.md) | Dual target framework strategy (netstandard2.0 + net10.0) | 🔁 Superseded |
 | [007](adr-007-convention-based-type-resolution.md) | Derive API types automatically by naming convention | ✅ Accepted |
 | [008](adr-008-polhem-db-namespace-layout.md) | Polhem.Db namespace layout: separating the syntax layer from the model layer | ✅ Accepted |
 | [009](adr-009-cache-implementation.md) | Polhem.ObjectCaching adopts Microsoft.Extensions.Caching.Memory + IChangeToken | ✅ Accepted |
-| [010](adr-010-logical-database-category.md) | Logical database categories (DbCategory) decouple database deployment flexibility | ✅ Accepted |
+| [010](adr-010-logical-database-category.md) | Logical database categories (DbCategory) decouple database deployment flexibility | ✅ Accepted, partially superseded |
 | [011](adr-011-di-replaces-service-locator.md) | Adopt DI to replace the static Service Locator | ✅ Accepted |
 | [012](adr-012-session-company-context.md) | Session company context model (two-phase session lifecycle) | ✅ Accepted |
 | [013](adr-013-frontend-api-connection-strategy.md) | Front-end API connection strategy — separate `Polhem.UI.*` and `Polhem.Web.*` families | ✅ Accepted |
@@ -46,15 +50,15 @@ understanding why the design is the way it is.
 | [025](adr-025-define-types-aot-xmlserializer-compat.md) | Definition types compatible with the AOT reflection XmlSerializer (a single Add + parameterless constructors) | ✅ Accepted |
 | [026](adr-026-numeric-semantics-rounding.md) | Numeric semantics, company/currency/unit decimals, and round-then-sum | ✅ Accepted |
 | [027](adr-027-audit-trail.md) | Data trail / audit log (the six-axis `st_log_*` design) | ✅ Accepted |
-| [028](adr-028-expression-rule-engine.md) | Custom expressions and a rule engine (less hand-written BO code) | ✅ Accepted |
+| [028](adr-028-expression-rule-engine.md) | Custom expressions and a rule engine (less hand-written BO code) | ✅ Accepted, partially superseded |
 | [029](adr-029-lowercase-field-names.md) | Field names are always lowercase (consistent across the definition, data and UI layers) | ✅ Accepted |
-| [030](adr-030-messagepack-name-based-keys.md) | MessagePack contracts switch to property-name keys (keyAsPropertyName) | ✅ Accepted |
+| [030](adr-030-messagepack-name-based-keys.md) | MessagePack contracts switch to property-name keys (keyAsPropertyName) | ✅ Accepted, partially superseded |
 | [031](adr-031-calendar-day-column-semantics.md) | Calendar-day column semantics are carried by an explicit marker, not by changing the CLR type | ✅ Accepted |
 | [032](adr-032-datetime-timezone.md) | DateTime uses UTC as the single time zone source, and the Connector is the only conversion point | ✅ Accepted |
 | [033](adr-033-time-of-day-semantics.md) | Time-of-day semantics (`FieldDbType.Time`) carried as a fixed-width string | ✅ Accepted |
 | [034](adr-034-progid-type-registry.md) | ProgramSettings as the framework-wide type registry | ✅ Accepted |
 | [035](adr-035-business-logic-plugin.md) | Business logic plugins (hooking into the existing flow rather than replacing the whole BO) | ✅ Accepted |
-| [036](adr-036-wire-serialization-externalized.md) | Wire serialization moves out to the API layer; the definition layer no longer carries MessagePack | ✅ Accepted |
+| [036](adr-036-wire-serialization-externalized.md) | Wire serialization moves out to the API layer; the definition layer no longer carries MessagePack | ✅ Accepted, partially superseded |
 | [037](adr-037-wire-explicit-registration.md) | Every wire type registers a formatter explicitly; `object` values use a discriminated envelope | ✅ Accepted |
 | [038](adr-038-definition-dependency-boundary.md) | The definition layer's dependency boundary: the expression abstraction moves down to `Polhem.Base`, and the criterion is enforced by gates | ✅ Accepted |
 | [039](adr-039-formlayout-design-time-only.md) | `FormLayout` returns to design time; the runtime no longer derives it from `FormSchema` | ✅ Accepted |

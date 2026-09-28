@@ -4,7 +4,9 @@
 
 ## Status
 
-**Accepted (2026-08-09)**: the decision has been carried out.
+**Accepted (2026-08-09), partially superseded**: the decision has been carried out. Its contractless fallback was
+replaced by [ADR-037](adr-037-wire-explicit-registration.md) (see "Implementation evolution"), and its single-format
+premise was lifted by [ADR-044](adr-044-payload-codec-negotiation.md) (see the note below).
 
 This ADR revises two conclusions of [ADR-030](adr-030-messagepack-name-based-keys.md) (see "Revisions to ADR-030"
 below), but does not change the decision of [ADR-004](adr-004-messagepack-payload.md) itself, "MessagePack as the API

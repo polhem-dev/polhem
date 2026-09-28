@@ -34,8 +34,9 @@
       types always allowed).
     - BackendConfiguration/LogOptions/DbAccess: thresholds for slow-query /
       large-resultset logging.
-    - BackendConfiguration/Components: bind custom factories (e.g. a custom
-      BusinessObjectProvider) when overriding framework defaults.
+    - BackendConfiguration/Components: assembly-qualified type names that replace
+      framework services (e.g. CacheProvider, DefineStorage); omitted or blank
+      means the framework default.
 -->
 <SystemSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <CommonConfiguration>
@@ -63,9 +64,6 @@
         <Value>POLHEM_MASTER_KEY</Value>
       </MasterKeySource>
     </SecurityKeySettings>
-    <Components>
-      <BusinessObjectProvider></BusinessObjectProvider>
-    </Components>
     <DefaultTimeZone>Asia/Taipei</DefaultTimeZone>
   </BackendConfiguration>
   <FrontendConfiguration />

@@ -184,3 +184,5 @@ v4.4 and is kept to show the context of the decision.
 - **Shared logic moved down to `Polhem.Api.Client`.** The permission capability resolver
   (`ElementCapabilityResolver`, `src/Polhem.Api.Client/Permissions/`) moved there from `Polhem.UI.Core`, so both
   families can use it, as the Negative consequences above anticipated.
+- **`VersionInfo` removed.** The `VersionInfo` listed under "What it consumes" had no callers and was removed before
+  1.0; `Polhem.UI.Core` holds `ClientInfo`, the endpoint and API key storage abstractions and `IUIViewService`.

@@ -165,7 +165,8 @@ The options, as declared in [UpgradeOptions](../../src/Polhem.Db/Schema/UpgradeO
 public sealed class UpgradeOptions
 {
     /// <summary>
-    /// Allow ALTER COLUMN with reduced length / precision (may truncate data).
+    /// Allow a change that reduces a column's length / precision (may truncate data),
+    /// whether it is applied by ALTER COLUMN or by rebuilding the table.
     /// Default false: narrowing is rejected to avoid silent data loss.
     /// </summary>
     public bool AllowColumnNarrowing { get; init; } = false;
@@ -184,7 +185,7 @@ When the definition specifies a length / precision smaller than the current colu
 - Default: **rejected with an exception** (`InvalidOperationException`) to avoid silent truncation
 - Enabled: truncation is explicitly accepted and recorded under the plan's `Warnings`
 
-The check belongs to the ALTER path. A plan that rebuilds the table (every column change on SQLite, or any plan containing a change that needs a rebuild) does not consult this option: the copy step inserts the old values into the new column, and what happens to a value that no longer fits is up to the database. Dry-run first (§9) whenever a rebuild would also narrow a column.
+The check applies to both paths. A plan that rebuilds the table (every column change on SQLite, or any plan containing a change that needs a rebuild) copies every row into the new column, so a narrowed column truncates or rejects data exactly as an `ALTER` would, and the same opt-in is required.
 
 ```csharp
 var options = new UpgradeOptions { AllowColumnNarrowing = true };

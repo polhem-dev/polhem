@@ -159,6 +159,9 @@ with the current code:
 - **2026-09-27: The capability resolver moved.** `ElementCapabilityResolver` is now
   `Polhem.Api.Client.Permissions.ElementCapabilityResolver` (`src/Polhem.Api.Client/Permissions/`), so both UI heads
   can use it; the frontend capability entry above names its location at the time.
+- **2026-09-27: The action enum is `PermissionActions`.** The `PermissionAction` in a rule's `(PermissionAction,
+  ScopeStrategy)` pair above is now the flags enum `PermissionActions`
+  (`src/Polhem.Definition/Settings/Permission/PermissionActions.cs`); the pair is otherwise unchanged.
 
 ## References
 

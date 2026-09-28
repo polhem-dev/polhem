@@ -1,12 +1,12 @@
 # Polhem.Api.Contracts
 
-> Contract interface library between the API layer and business logic layer, defining the Request/Response interfaces.
+> Contract interface library shared by the API layer and the business logic layer, defining the Request/Response interfaces.
 
 [繁體中文](README.zh-TW.md)
 
 ## Architecture Position
 
-- **Layer**: API Layer (contracts)
+- **Layer**: Shared Contracts. Despite the name it is not part of the API layer: `Polhem.Business` and `Polhem.Api.Core` both depend on it, so it sits below them
 - **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
 
 ## Target Framework

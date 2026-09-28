@@ -1,4 +1,4 @@
-<!-- source: en/database-settings-guide.md blob: 42fe7243a4b97f87e12b0fa52d9e98061c1500c0 -->
+<!-- source: en/database-settings-guide.md blob: 4adab0eaebb2b153871d464634f87cb9667fb223 -->
 # DatabaseSettings 與 DbCategorySettings 指引
 
 [English](../en/database-settings-guide.md) · [← 文件索引](README.md)
@@ -273,7 +273,7 @@ DbCategorySettings
 
 自訂的表，包括應用程式自己的 log 表，都登錄在這三個分類之一。
 
-**`common` 為框架契約**：框架的系統服務（session、使用者、公司、API 金鑰、快取通知）連線到固定的 `databaseId = "common"`，所以部署需要一筆 `Id="common"` 的 `DatabaseItem`，慣例上它的 `CategoryId` 也是 `common`。啟動時沒有任何檢查：缺少這一筆時，要到其中某個服務第一次連線才失敗（查找會拋出 `KeyNotFoundException`）。想提早失敗的 host 可以在 service provider 建好後呼叫 `IDatabaseSettingsProvider.ValidateRequired()`；沒有 `common` 項目時它會拋出例外。
+**`common` 為框架契約**：框架的系統服務（session、使用者、公司、API 金鑰、快取通知）連線到固定的 `databaseId = "common"`，所以部署需要一筆 `Id="common"` 的 `DatabaseItem`，慣例上它的 `CategoryId` 也是 `common`。以 `AddPolhemFramework` 建立的 host 會在啟動時檢查這一點：它在其他 hosted service 啟動之前呼叫 `IDatabaseSettingsProvider.ValidateRequired()`，沒有 `common` 項目時會拋出 `InvalidOperationException`，host 不會啟動。
 
 `company` 與 `log` 是框架的另外兩個分類。框架在 `log` 提供 opt-in 的 `st_log_*` 表（由 `AuditLogOptions` 控制、預設關閉），並透過 `Id="log"` 那一筆存取（§5.4）。單租戶只有在稽核與異常記錄都停用時，才可以不設 `log` 項目。
 

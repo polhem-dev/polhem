@@ -132,8 +132,11 @@ the current code:
   token) now answers `JsonRpcErrorCode.Unauthorized` (-32001) through `AuthenticationRequiredException`, which the
   registry lists ahead of the `UnauthorizedAccessException` row it derives from; the client restores it as an
   `UnauthorizedAccessException`. The Consequences' "authentication failure returns `InvalidRequest` plus HTTP 401" no
-  longer holds, and a request without an `Authorization` header is treated as an anonymous call. `MethodNotFound` and
-  `InvalidParams` still have no producer.
+  longer holds, and a request without an `Authorization` header is treated as an anonymous call.
 - **2026-09-27: `UserMessageException` can carry a message key and arguments**, resolved with the session culture
   when the message is localized (`src/Polhem.Base/Exceptions/UserMessageException.cs`).
+- **2026-09-28: `MethodNotFound` and `InvalidParams` have producers.** An action name that resolves to no method throws
+  the internal `MethodNotFoundException`, and a `Plain` body that cannot be read into the method's type throws the
+  internal `InvalidParamsException` (both in `src/Polhem.Api.Core/JsonRpc/`). The registry maps them to -32601 and
+  -32602 with a fixed message and rebuilds no type on the client.
 
