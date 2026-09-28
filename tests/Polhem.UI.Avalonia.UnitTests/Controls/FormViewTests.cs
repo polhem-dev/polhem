@@ -763,6 +763,50 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls
             Assert.Equal(28m, detailRow["amount"]);
         }
 
+        [Theory]
+        [InlineData(true, 28)]
+        [InlineData(false, 14)]
+        [DisplayName("Editing a detail row in the edit form recomputes its computed field during the session, and Cancel rolls it back")]
+        public async Task LiveRecompute_DetailRowEditSession_RecomputesProposedValue(bool commit, int expectedAfter)
+        {
+            var rowId = Guid.NewGuid();
+            var dataSet = new DataSet(OrderProgId);
+            dataSet.Tables.Add(BuildOrderMasterTable(rowId, price: 0m, qty: 0m, amount: 0m));
+            var detail = new DataTable("OrderItem");
+            detail.Columns.Add(SysFields.RowId, typeof(Guid));
+            detail.Columns.Add(SysFields.MasterRowId, typeof(Guid));
+            detail.Columns.Add("price", typeof(decimal));
+            detail.Columns.Add("qty", typeof(decimal));
+            detail.Columns.Add("amount", typeof(decimal));
+            detail.Rows.Add(Guid.NewGuid(), rowId, 7m, 2m, 14m);
+            dataSet.Tables.Add(detail);
+            dataSet.AcceptChanges();
+            var connector = new FakeFormApiConnector
+            {
+                GetDataHandler = _ => new GetDataResponse { DataSet = dataSet },
+            };
+            var computedSchema = BuildComputedSchema(withDetail: true);
+            var view = new TestFormView
+            {
+                Schema = computedSchema,
+                FormConnector = connector,
+                Layout = FormLayoutGenerator.Generate(computedSchema, TestProgId),
+            };
+
+            await view.EditAsync(rowId);
+            var dataObject = view.DataObject!;
+            var detailRow = dataObject.DataSet.Tables["OrderItem"]!.Rows[0];
+            dataObject.BeginRowEdit(detailRow);
+            dataObject.SetField(detailRow, "qty", "4");
+
+            Assert.Equal(28m, detailRow["amount"]);
+            if (commit)
+                dataObject.CommitRowEdit(detailRow);
+            else
+                dataObject.CancelRowEdit(detailRow);
+            Assert.Equal((decimal)expectedAfter, detailRow["amount"]);
+        }
+
         [Fact]
         [DisplayName("Tier 2: with CurrencySettings injected, the computed field rounds to the currency's decimals (BHD 3 places, Tier 1 would be 2)")]
         public async Task LiveRecompute_Tier2Currency_RoundsByCurrencyDecimals()

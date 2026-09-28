@@ -72,12 +72,23 @@ and a member the formatter writes but does not read back, or that the two body c
 > it.** How it was disproved, and the record of the time it broke the entire iOS wire, are kept in
 > `src/Polhem.Api.Core/CLAUDE.md`.
 
-## DynamicExpresso: AOT needs nothing, trimming needs the descriptor
+## DynamicExpresso: AOT needs the fixed invoker shape, trimming needs the descriptor
 
-The two halves have opposite answers, and reading "needs nothing" as covering both is how the trim half was missed.
+Both halves need something, and each has its own gate.
 
-- **Dynamic code (AOT): nothing to do.** DynamicExpresso's `Expression.Compile()` falls back to the **interpreter**
-  when `IsDynamicCodeSupported=false`. Mobile does not need to disable live computation for AOT.
+- **Dynamic code (AOT): every expression compiles to `Func<object?[], object?>`.** Without dynamic code
+  `LambdaExpression.Compile()` does fall back to the interpreter, but it still has to hand back a delegate of the
+  lambda's exact signature. On iOS and Mac Catalyst (Mono, AOT-only) a signature with more than two parameters needs a
+  `DynamicMethod` thunk and throws `ExecutionEngineException`; under NativeAOT a signature with any value type has no
+  code at all. `DynamicExpressoEvaluator.BuildInvoker` wraps DynamicExpresso's parsed body in the fixed signature, which
+  needs neither. **Never call DynamicExpresso's `Lambda.Invoke` or `Lambda.Compile`**: both compile the typed
+  delegate. `InterpretedInvokerGateTests` (tests/Polhem.Expressions.UnitTests) forces interpretation on the desktop and
+  fails when a compiled expression sits behind a runtime-generated thunk.
+  > **Measured correction (2026-09-28).** This bullet used to say "nothing to do: `Compile()` falls back to the
+  > interpreter". Editing an order line on the iOS simulator (`quantity * unit_price * (1 - discount)`) terminated the
+  > Northwind app. `-p:DynamicCodeSupport=false` could not see it, because CoreCLR still JITs the emitted thunk; the
+  > 2026-07-09 measurement that produced the old conclusion ran only there. The account is in
+  > `docs/repo-ops/gotchas/serialization-and-expressions.md`.
 - **Trimming: `src/Polhem.Expressions/ILLink.Descriptors.xml` is required.** DynamicExpresso finds `Math.*`,
   `string.*`, `DateOnly.*` and every other member an expression names by reflection, so the default mobile trim
   (`TrimMode=partial`) removes the ones nothing else references. Measured on 2026-09-26 without the descriptor:

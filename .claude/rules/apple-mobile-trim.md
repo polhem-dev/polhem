@@ -108,8 +108,13 @@ The same failure throws **different** exceptions on three runtimes: CoreCLR with
 **Test: does it pass with the switch removed? If it passes without the switch and fails with it, you really hit the
 no-dynamic-code path.**
 
-When you need a real Apple runtime, Mac Catalyst is cheapest, then the iOS simulator. When you need "really no Emit",
-use a local NativeAOT console. Command recipes are in gotchas.
+**A pass with the switch is not proof.** CoreCLR with the switch off still JITs code that the runtime itself emits,
+and NativeAOT and Mono fail on different shapes. Measured on 2026-09-28 with interpreted LINQ lambdas: the desktop
+switch passed everything, NativeAOT failed every signature with a value type, and Mono (iOS simulator and Mac
+Catalyst Release) failed every signature with more than two parameters.
+
+When you need a real Apple runtime, a Mac Catalyst Release build is cheapest, then the iOS simulator. When you need
+"really no Emit", use a local NativeAOT console, but it is not a stand-in for Mono. Command recipes are in gotchas.
 
 ## Combining AOT and the interpreter
 
@@ -154,9 +159,10 @@ rules over every type the definition roots reach, so a violation turns the build
 - `rules/avalonia.md`: Avalonia-specific rules (version compatibility, control pitfalls)
 - `rules/serialization.md`: the AOT conclusions for MessagePack / DynamicExpresso. **The two conclusions are
   opposite**: MessagePack's contractless resolver has **no** reflection fallback, so every wire type needs an
-  explicitly registered formatter; DynamicExpresso automatically falls back to the interpreter and needs nothing for
-  AOT. **Trimming is different**: DynamicExpresso needs `src/Polhem.Expressions/ILLink.Descriptors.xml`.
-  ("MessagePack also has a fallback" is an old conclusion disproved by measurement on 2026-08-10; do not reason
-  from it.)
+  explicitly registered formatter; DynamicExpresso's interpreter fallback works only because the evaluator compiles
+  every expression to one fixed delegate shape (`InterpretedInvokerGateTests`). **Trimming is separate**: DynamicExpresso
+  needs `src/Polhem.Expressions/ILLink.Descriptors.xml`. ("MessagePack also has a fallback", disproved on 2026-08-10,
+  and "DynamicExpresso needs nothing for AOT", disproved on 2026-09-28, are old conclusions; do not reason from
+  them.)
 - `src/Polhem.Definition/ILLink.Descriptors.xml`: the file that implements the adopted fix
 - `src/Polhem.Expressions/ILLink.Descriptors.xml`: the trim roots for the members expressions reach by reflection

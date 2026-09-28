@@ -40,8 +40,15 @@ UI head）才引用本套件。見 [ADR-038](../../docs/adr/adr-038-definition-d
 
 ## AOT / trimming
 
-`IsDynamicCodeSupported` 為 false 時，`Expression.Compile` 會退回直譯器，
-因此本引擎在 iOS、Android 與 WASM 上無需停用任何功能即可運作。
+`IsDynamicCodeSupported` 為 false 時，`Expression.Compile` 會退回直譯器，但它仍須建立與所編譯 lambda
+簽章相同的委派，而沒有 JIT 的執行環境無法建立所有簽章：在 iOS 上，參數超過兩個的 lambda 會以
+`ExecutionEngineException` 失敗；在 NativeAOT 下，含實值型別參數的簽章則沒有對應的程式碼。因此
+`DynamicExpressoEvaluator` 把每個運算式都編譯成同一種委派 `Func<object?[], object?>`，兩種執行環境都能建立，
+本引擎在 iOS、Android 與 WASM 上無需停用任何功能即可運作。有一項測試會在桌面上強制走直譯器，運算式若被編譯成
+其他形狀就會失敗。
+
+若你不經過 `IExpressionEvaluator`、而是直接用 DynamicExpresso 求值，你的程式碼也有相同限制：
+`Lambda.Invoke` 與 `Lambda.Compile` 都會建立具型別的委派。
 
 Trimming 則是另一回事：DynamicExpresso 以反射找出運算式指名的 `Math.*`、`string.*` 等成員。本套件內嵌
 `ILLink.Descriptors.xml`，保留運算式可觸及的型別，因此經過 trim 的 head（行動端建置預設的 partial trim）

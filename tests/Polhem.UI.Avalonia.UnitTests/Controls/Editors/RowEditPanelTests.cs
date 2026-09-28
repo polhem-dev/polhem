@@ -135,6 +135,23 @@ namespace Polhem.UI.Avalonia.UnitTests.Controls.Editors
             Assert.False(dataObject.IsDirty);
         }
 
+        [Fact]
+        [DisplayName("An editor in the edit form refreshes when another party writes its field during the session")]
+        public void Session_WriteByAnotherParty_RefreshesEditor()
+        {
+            var dataObject = BuildDataObject();
+            var row = dataObject.DataSet.Tables["EmployeePhone"]!.Rows[0];
+            var panel = new RowEditPanel();
+            panel.Bind(dataObject, BuildLayout(), row);
+
+            // What a live recompute of a computed field does while the edit form is open.
+            row["phone"] = "07-999-8888";
+
+            Assert.Equal("07-999-8888", FindEditor<TextEdit>(panel).Text);
+            panel.Cancel();
+            Assert.Equal("02-1234-5678", row["phone"]);
+        }
+
         [Theory]
         [InlineData(false, 2)]  // wide screen → two columns
         [InlineData(true, 1)]   // compact screen → single column

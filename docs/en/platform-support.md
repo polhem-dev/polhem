@@ -95,6 +95,14 @@ the application added to `SysInfo.AllowedTypeNamespaces`. Over MessagePack it go
 serializer, and on iOS it fails with a `NotSupportedException` that names the type. Send such values as framework
 value types instead (strings, numbers, `Guid`, dates, a `ParameterCollection`).
 
+The expression engine (`Polhem.Expressions`) is interpreted on iOS, but the interpreter still has to create a delegate
+of each compiled expression's signature, and iOS cannot create one with more than two parameters. So
+`DynamicExpressoEvaluator` compiles every expression to a single `object?[]` parameter, and
+`InterpretedInvokerGateTests` fails when it does not. Until this was measured on 2026-09-28, an expression over three
+or more fields, such as a detail line's `quantity * unit_price * (1 - discount)`, terminated an iOS app when it was
+computed. Code that evaluates expressions with DynamicExpresso directly, not through `IExpressionEvaluator`, has the
+same limit.
+
 ### Trimmer descriptors shipped in the packages
 
 Two packages embed an `ILLink.Descriptors.xml` that the trimmer applies automatically. A head needs no linker file of

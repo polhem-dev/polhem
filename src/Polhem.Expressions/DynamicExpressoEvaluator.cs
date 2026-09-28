@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 using System.Text;
 using DynamicExpresso;
 using DynamicExpresso.Exceptions;
@@ -13,6 +14,17 @@ namespace Polhem.Expressions
     /// compiled once, cached by their text and parameter signature, then invoked per row.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// IMPORTANT: every expression is compiled to a <see cref="Func{T, TResult}"/> of <c>object?[]</c> to
+    /// <c>object?</c>, whatever its variables are, and never to the typed delegate DynamicExpresso would build.
+    /// Without dynamic code, <see cref="LambdaExpression.Compile()"/> interprets the expression but still has to
+    /// produce a delegate of the lambda's exact signature. On iOS (Mono, AOT-only) a signature with more than two
+    /// parameters needs a <c>DynamicMethod</c> thunk, which throws <see cref="ExecutionEngineException"/>; under NativeAOT
+    /// a signature that includes a value type has no native code. The fixed signature needs neither: it is a
+    /// closed generic type known at compile time, and it takes one reference-type parameter.
+    /// <c>InterpretedInvokerGateTests</c> fails when an interpreted expression ends up behind a runtime-generated
+    /// thunk.
+    /// </para>
     /// <para>
     /// The evaluator exposes the supplied variables, primitive types, a small set of common types
     /// (such as <see cref="Math"/>), and the helper functions registered in the constructor. A
@@ -37,14 +49,27 @@ namespace Polhem.Expressions
     public sealed class DynamicExpressoEvaluator : IExpressionEvaluator
     {
         private readonly Interpreter _interpreter;
-        private readonly ConcurrentDictionary<string, Lambda> _cache = new(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, Func<object?[], object?>> _cache = new(StringComparer.Ordinal);
         private readonly object _parseLock = new();
+        private readonly bool _preferInterpretation;
 
         /// <summary>
         /// Initializes a new instance of <see cref="DynamicExpressoEvaluator"/>.
         /// </summary>
         public DynamicExpressoEvaluator()
+            : this(preferInterpretation: false)
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance that interprets its expressions even where the runtime can compile them.
+        /// </summary>
+        /// <param name="preferInterpretation">
+        /// <c>true</c> to take the path a runtime without dynamic code takes, so a desktop test can inspect it.
+        /// </param>
+        internal DynamicExpressoEvaluator(bool preferInterpretation)
+        {
+            _preferInterpretation = preferInterpretation;
             // Default options register primitive and common types (Math, Convert, ...) but no
             // reflection, IO, or arbitrary type loading — those remain unknown identifiers.
             _interpreter = new Interpreter(InterpreterOptions.Default);
@@ -64,6 +89,15 @@ namespace Polhem.Expressions
             _interpreter.ReferencedTypes.Select(reference => reference.Type)
                 .Concat(s_helperFunctions.Select(helper => helper.Function.Method.ReturnType))
                 .ToHashSet();
+
+        /// <summary>
+        /// Gets the compiled delegates in the cache.
+        /// </summary>
+        /// <remarks>
+        /// Exposed for <c>InterpretedInvokerGateTests</c>, which checks that none of them is a runtime-generated
+        /// thunk when the evaluator interprets.
+        /// </remarks>
+        internal IReadOnlyCollection<Delegate> CompiledInvokers => _cache.Values.ToArray();
 
         /// <summary>
         /// The time zone the helper functions read, for the duration of one <c>Evaluate</c> call.
@@ -141,15 +175,16 @@ namespace Polhem.Expressions
             var names = variables.Keys.ToArray();
             Array.Sort(names, StringComparer.Ordinal);
 
-            var lambda = GetOrCompile(expression, returnType, names, variables);
+            var invoker = GetOrCompile(expression, returnType, names, variables);
 
-            var arguments = new Parameter[names.Length];
+            // Positional, in the sorted name order the invoker was compiled against.
+            var arguments = new object?[names.Length];
             for (int i = 0; i < names.Length; i++)
             {
-                arguments[i] = new Parameter(names[i], variables[names[i]] ?? (object)string.Empty);
+                arguments[i] = variables[names[i]] ?? string.Empty;
             }
 
-            return InvokeWithZone(lambda, arguments, timeZoneId, basis);
+            return InvokeWithZone(invoker, arguments, timeZoneId, basis);
         }
 
         /// <inheritdoc />
@@ -163,11 +198,11 @@ namespace Polhem.Expressions
         }
 
         /// <summary>
-        /// Invokes a compiled lambda with <see cref="t_timeZoneId"/> and <see cref="t_basis"/> set for
+        /// Invokes a compiled expression with <see cref="t_timeZoneId"/> and <see cref="t_basis"/> set for
         /// the call.
         /// </summary>
-        /// <param name="lambda">The compiled expression to invoke.</param>
-        /// <param name="arguments">The bound parameters.</param>
+        /// <param name="invoker">The compiled expression to invoke.</param>
+        /// <param name="arguments">The variable values, in the order the invoker was compiled against.</param>
         /// <param name="timeZoneId">The zone the helper functions should observe for this invocation.</param>
         /// <param name="basis">The data-set basis <c>Now()</c> should observe for this invocation.</param>
         /// <remarks>
@@ -175,7 +210,8 @@ namespace Polhem.Expressions
         /// computed field's expression can be evaluated inside another evaluation. Kept static so the
         /// whole read/write protocol for the ambient fields sits next to the fields themselves.
         /// </remarks>
-        private static object? InvokeWithZone(Lambda lambda, Parameter[] arguments, string timeZoneId, DateTimeBasis basis)
+        private static object? InvokeWithZone(Func<object?[], object?> invoker, object?[] arguments, string timeZoneId,
+            DateTimeBasis basis)
         {
             var previousZone = t_timeZoneId;
             var previousBasis = t_basis;
@@ -183,7 +219,7 @@ namespace Polhem.Expressions
             t_basis = basis;
             try
             {
-                return lambda.Invoke(arguments);
+                return invoker(arguments);
             }
             finally
             {
@@ -211,10 +247,10 @@ namespace Polhem.Expressions
         }
 
         /// <summary>
-        /// Returns the cached compiled lambda for the expression/return-type/parameter signature,
+        /// Returns the cached compiled expression for the expression/return-type/parameter signature,
         /// compiling and caching it on first use.
         /// </summary>
-        private Lambda GetOrCompile(string expression, Type returnType, string[] names,
+        private Func<object?[], object?> GetOrCompile(string expression, Type returnType, string[] names,
             IReadOnlyDictionary<string, object?> variables)
         {
             var key = BuildCacheKey(expression, returnType, names, variables);
@@ -226,11 +262,12 @@ namespace Polhem.Expressions
                     var type = variables[names[i]]?.GetType() ?? typeof(object);
                     parameters[i] = new Parameter(names[i], type);
                 }
+                Lambda lambda;
                 try
                 {
                     lock (_parseLock)
                     {
-                        return _interpreter.Parse(expression, returnType, parameters);
+                        lambda = _interpreter.Parse(expression, returnType, parameters);
                     }
                 }
                 catch (ParseException ex)
@@ -238,7 +275,39 @@ namespace Polhem.Expressions
                     throw new ExpressionEvaluationException(
                         $"Failed to parse expression: {ex.Message}", ex) { Expression = expression };
                 }
+                // Never `lambda.Invoke` or `lambda.Compile`: both compile the typed delegate that a runtime
+                // without dynamic code cannot create (see the class remarks).
+                return BuildInvoker(lambda, names).Compile(_preferInterpretation);
             });
+        }
+
+        /// <summary>
+        /// Wraps a parsed expression in a lambda that takes the variable values as one positional
+        /// <c>object?[]</c> and returns the boxed result.
+        /// </summary>
+        /// <param name="lambda">The parsed expression.</param>
+        /// <param name="names">The sorted variable names; a value's position in the argument array is its name's
+        /// position here.</param>
+        /// <returns>The lambda to compile.</returns>
+        /// <remarks>
+        /// The parameters the expression uses become block variables, each assigned by unboxing its array slot to
+        /// the type it was parsed with, so the body DynamicExpresso built is reused unchanged.
+        /// </remarks>
+        private static Expression<Func<object?[], object?>> BuildInvoker(Lambda lambda, string[] names)
+        {
+            var arguments = Expression.Parameter(typeof(object[]), "arguments");
+            var variables = new List<ParameterExpression>();
+            var statements = new List<Expression>();
+            foreach (var parameter in lambda.UsedParameters)
+            {
+                var index = Array.IndexOf(names, parameter.Name);
+                var slot = Expression.ArrayIndex(arguments, Expression.Constant(index));
+                variables.Add(parameter.Expression);
+                statements.Add(Expression.Assign(parameter.Expression, Expression.Convert(slot, parameter.Type)));
+            }
+            statements.Add(Expression.Convert(lambda.Expression, typeof(object)));
+            return Expression.Lambda<Func<object?[], object?>>(
+                Expression.Block(typeof(object), variables, statements), arguments);
         }
 
         /// <summary>
