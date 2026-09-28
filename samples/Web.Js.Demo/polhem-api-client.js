@@ -183,13 +183,7 @@ function elementToObject(el) {
       obj[key].push(elementToObject(child));
       continue;
     }
-    // A wrapper element (Sections, Fields, ...) holds a list; anything else is
-    // a nested object. Wrappers are recognised by having element children whose
-    // tag differs from their own, which is how XmlSerializer writes XmlArray.
-    const items = Array.from(child.children);
-    const value = items.length > 0 && items[0].tagName !== child.tagName
-      ? items.map(elementToObject)
-      : elementToObject(child);
+    const value = childValue(child);
     // An unlisted tag that still repeats is collected into an array rather than
     // letting the last occurrence overwrite the others.
     if (collected.has(key)) {
@@ -202,6 +196,16 @@ function elementToObject(el) {
     }
   }
   return obj;
+}
+
+// A wrapper element (Sections, Fields, ...) holds a list; anything else is a
+// nested object. Wrappers are recognised by having element children whose tag
+// differs from their own, which is how XmlSerializer writes XmlArray.
+function childValue(child) {
+  const items = Array.from(child.children);
+  return items.length > 0 && items[0].tagName !== child.tagName
+    ? items.map(elementToObject)
+    : elementToObject(child);
 }
 
 // XML carries everything as text; restore the booleans and integers the

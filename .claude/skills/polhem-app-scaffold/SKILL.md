@@ -171,8 +171,7 @@ Two definition files, with different readers:
    `BusinessObject="Ns.Type, Asm"` → `ProgramSettingsBoTypeResolver` (the default `IBoTypeResolver`) loads the custom
    `FormBusinessObject`; `Repository` binds a `DataFormRepository` subclass the same way. Empty or absent → framework
    default (pure definition CRUD). A name that is present but will not load throws. Remote `GetDefine` refuses this
-   type (`SystemBusinessObject.GetDefine` serves remote callers an allow-list of client-side types only), and the old
-   nested `<Categories><ProgramCategory>` layout is rejected on load by `ProgramSettingsFormat.EnsureCurrentFormat`.
+   type (`SystemBusinessObject.GetDefine` serves remote callers an allow-list of client-side types only).
 2. **`Define/MenuSettings.xml` — the navigation menu**, read by the client through
    `ClientDefineAccess.GetMenuSettingsAsync()`: `<MenuFolder>` groups (nesting allowed) of `<MenuEntry Id="..."
    ProgId="...">`, with `Order`, `Caption` and a design-time `Visible` switch (not a permission). `Id` is unique across

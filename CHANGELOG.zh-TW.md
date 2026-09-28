@@ -91,8 +91,6 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   ([#15](https://github.com/polhem-dev/polhem/pull/15))
 - `BackendComponents` 各項預設為空白，代表框架預設。`CacheProvider` 或元件型別名稱錯誤時，在啟動時失敗並指出是哪個設定。
   ([#8](https://github.com/polhem-dev/polhem/pull/8), [#11](https://github.com/polhem-dev/polhem/pull/11))
-- 無法解析且以 `Bee.` 開頭的型別名稱會附上遷移提示（`BeeNameHint`）；找不到 `POLHEM_MASTER_KEY` 而 `BEE_MASTER_KEY`
-  有設定時，錯誤訊息會指出這一點。([#10](https://github.com/polhem-dev/polhem/pull/10))
 - 用戶端把端點與 API 金鑰存成每位使用者本機應用程式資料資料夾下的 `endpoint.txt` 與 `apikey.txt`
   （`FileEndpointStorage`，現在位於 `Polhem.UI.Core`），不再寫在組件旁的設定檔。
   ([#12](https://github.com/polhem-dev/polhem/pull/12))

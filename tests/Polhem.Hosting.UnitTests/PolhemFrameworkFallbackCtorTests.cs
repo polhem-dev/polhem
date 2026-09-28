@@ -194,28 +194,6 @@ namespace Polhem.Hosting.UnitTests
             }
         }
 
-        [Fact]
-        [DisplayName("A BackendComponents type name from Bee.NET fails with a hint that it looks like a Bee.NET name")]
-        public void CreateConfigurableService_BeeTypeName_MessageHasBeeHint()
-        {
-            string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-bee-{Guid.NewGuid():N}");
-            Directory.CreateDirectory(tempDir);
-            try
-            {
-                using var sp = BuildProviderWithAccessTokenValidator(
-                    "Bee.Business.Providers.AccessTokenValidator, Bee.Business", tempDir);
-
-                var ex = Assert.Throws<InvalidOperationException>(() => sp.GetRequiredService<IAccessTokenValidator>());
-
-                Assert.Contains("BackendComponents.AccessTokenValidator", ex.Message, StringComparison.Ordinal);
-                Assert.Contains("Bee.NET", ex.Message, StringComparison.Ordinal);
-            }
-            finally
-            {
-                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
-            }
-        }
-
         private static ServiceProvider BuildProviderWithAccessTokenValidator(string typeName, string tempDir)
         {
             var configuration = new BackendConfiguration();

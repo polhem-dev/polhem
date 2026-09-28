@@ -8,9 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Polhem.Tests.Shared
 {
     /// <summary>
-    /// Process-wide test bootstrap: wires up <c>DbConnectionManager</c>, <c>SysInfo</c>,
-    /// the in-process backend exposed as <see cref="LocalServices"/> and
-    /// <see cref="SharedDatabaseState.EnsureRegistered"/> once.
+    /// Process-wide test bootstrap: wires up <see cref="SysInfo"/>, the in-process backend exposed as
+    /// <see cref="LocalServices"/> and <see cref="SharedDatabaseState.EnsureRegistered"/> once.
     /// </summary>
     /// <remarks>
     /// <c>ICacheContainer</c> and <c>IDefineAccess</c> are provided by the DI container, so the bootstrap no longer

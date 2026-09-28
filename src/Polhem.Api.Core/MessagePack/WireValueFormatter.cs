@@ -1,4 +1,3 @@
-using Polhem.Base;
 using System.Data;
 using System.Globalization;
 using System.Runtime.CompilerServices;
@@ -306,7 +305,7 @@ namespace Polhem.Api.Core.MessagePack
                 if (!WireTypeWhitelist.IsAssemblyQualifiedNameAllowed(typeName))
                 {
                     throw new InvalidOperationException(
-                        BeeNameHint.AppendTo($"MessagePack deserialization blocked: type '{typeName}' is not in the allowed type whitelist.", typeName));
+                        $"MessagePack deserialization blocked: type '{typeName}' is not in the allowed type whitelist.");
                 }
 
                 var type = Type.GetType(typeName)

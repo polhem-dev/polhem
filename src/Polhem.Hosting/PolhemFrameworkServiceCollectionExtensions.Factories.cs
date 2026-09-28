@@ -139,13 +139,13 @@ namespace Polhem.Hosting
             catch (Exception ex) when (ex is FileNotFoundException or FileLoadException or BadImageFormatException)
             {
                 throw new InvalidOperationException(
-                    BeeNameHint.AppendTo($"BackendComponents.{settingName} names '{typeName}', whose assembly could not be loaded.", typeName), ex);
+                    $"BackendComponents.{settingName} names '{typeName}', whose assembly could not be loaded.", ex);
             }
 
             if (type == null)
             {
                 throw new InvalidOperationException(
-                    BeeNameHint.AppendTo($"BackendComponents.{settingName} names '{typeName}', which was not found in its assembly.", typeName));
+                    $"BackendComponents.{settingName} names '{typeName}', which was not found in its assembly.");
             }
             if (!contract.IsAssignableFrom(type))
             {

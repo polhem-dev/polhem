@@ -239,3 +239,6 @@ Polhem.Definition.Forms.RequiredFieldCheck
 static Polhem.Definition.Forms.RequiredFieldCheck.FindMissing(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet) -> System.Collections.Generic.IReadOnlyList<Polhem.Definition.Forms.MissingRequiredField!>!
 static Polhem.Definition.Forms.RequiredFieldCheck.FormatPrompt(Microsoft.Extensions.Localization.IStringLocalizer! localizer, System.Collections.Generic.IReadOnlyList<Polhem.Definition.Forms.MissingRequiredField!>! missing) -> string!
 static Polhem.Definition.Forms.RequiredFieldCheck.IsEmpty(Polhem.Definition.Forms.FormField! field, object? value) -> bool
+*REMOVED*Polhem.Definition.Settings.ProgramSettingsFormat
+*REMOVED*static Polhem.Definition.Settings.ProgramSettingsFormat.EnsureCurrentFormat(string! xml, string! source) -> void
+*REMOVED*static Polhem.Definition.Settings.ProgramSettingsFormat.IsLegacyFormat(string! xml) -> bool

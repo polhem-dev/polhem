@@ -37,7 +37,7 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("JsonRpcExecutor.IsLocalCall defaults to false (the basis of LocalOnly protection)")]
         public void IsLocalCall_Default_IsFalse()
         {
-            // The whole protection of LocalOnly methods (such as `SystemBO.CreateSession` and `SaveDefine`) rests on
+            // The whole protection of LocalOnly methods (such as `SystemBusinessObject.CreateSession` and `SaveDefine`) rests on
             // this default: `ApiAccessValidator` blocks remote calls only when `IsLocalCall` is false.
             // A false default means "forgot to set it" lands on the safe side. Changing it to true or removing the
             // initial value would give local call rights to any call path that does not set it explicitly.

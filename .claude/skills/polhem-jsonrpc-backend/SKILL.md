@@ -224,8 +224,7 @@ var r = await new XxxApiConnector(endpoint, Guid.Empty).GetLevelsAsync();
   .NET for iOS has none. Use `PayloadFormat.Plain` for Public actions, or set the connector's `PayloadCodec` to
   `PayloadCodecNames.Json`.
 - **A binding in `ProgramSettings.xml` that does not load fails the request** (`ProgramSettingsBoTypeResolver`
-  remarks). It does not fall back to `FormBusinessObject`. The old nested `<Categories><ProgramCategory>` layout is
-  refused at load (`ProgramSettingsFormat.EnsureCurrentFormat`).
+  remarks). It does not fall back to `FormBusinessObject`.
 - **Define is located by walking up**: it is not copied to output by default, so run from inside the checkout
   (`dotnet run`), or set `CopyToOutputDirectory` on Define yourself.
 - **master key**: in dev you can use `autoCreateMasterKey: true` + the environment variable `POLHEM_MASTER_KEY` (a

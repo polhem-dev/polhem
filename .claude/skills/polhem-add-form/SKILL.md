@@ -41,8 +41,7 @@ On a Polhem backend that is already wired up (see `polhem-app-scaffold`), adding
 | `Define/MenuSettings.xml`: a `<MenuEntry Id="..." ProgId="<ProgId>" />` in a `<MenuFolder>` | Puts the form on the client's navigation menu | The form works but does not appear in the menu |
 | `Define/ProgramSettings.xml`: a `<ProgramItem ProgId="<ProgId>" />` | The server-side type registry: binds a custom `BusinessObject` / `Repository` to the progId | **Required only when you bind a BO or Repository.** Without an entry the progId resolves to the framework's `FormBusinessObject` and `DataFormRepository`. Northwind still lists every form: the entry supplies the progId's canonical spelling and puts the form in the startup check that warns about forms without a `PermissionModelId` |
 
-`ProgramSettings` is not the menu: it is a flat `<Items>` list, server-side only (remote `GetDefine` refuses it), and
-the old nested `<Categories><ProgramCategory>` layout is rejected on load by `ProgramSettingsFormat.EnsureCurrentFormat`.
+`ProgramSettings` is not the menu: it is a flat `<Items>` list, server-side only (remote `GetDefine` refuses it).
 The menu layout (folders, order, captions, `Visible`) is `MenuSettings`; see `docs/en/definition-files-overview.md`
 § 4 and § 4b.
 

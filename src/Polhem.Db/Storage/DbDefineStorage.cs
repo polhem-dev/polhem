@@ -154,18 +154,8 @@ namespace Polhem.Db.Storage
         }
 
         /// <inheritdoc/>
-        /// <exception cref="NotSupportedException">
-        /// Thrown when the stored row still uses the pre-flattening nested layout, which
-        /// XmlSerializer would otherwise read as an empty registry without complaint.
-        /// </exception>
         public ProgramSettings? GetProgramSettings()
-        {
-            var xml = ReadContent(nameof(ProgramSettings), BaseCustomizeId, SingletonKey)
-                ?? throw new InvalidOperationException($"Definition not found: {nameof(ProgramSettings)} / {BaseCustomizeId} / {SingletonKey}.");
-            ProgramSettingsFormat.EnsureCurrentFormat(xml, $"{nameof(ProgramSettings)} / {BaseCustomizeId}");
-            return XmlCodec.Deserialize<ProgramSettings>(xml)
-                ?? throw new InvalidOperationException($"Failed to deserialize definition: {nameof(ProgramSettings)} / {BaseCustomizeId} / {SingletonKey}.");
-        }
+            => ReadRequired<ProgramSettings>(BaseCustomizeId, SingletonKey);
 
         /// <inheritdoc/>
         public void SaveProgramSettings(ProgramSettings settings)
@@ -297,12 +287,7 @@ namespace Polhem.Db.Storage
 
         /// <inheritdoc/>
         public ProgramSettings? GetCustomizeProgramSettings(string customizeId)
-        {
-            var xml = ReadContent(nameof(ProgramSettings), customizeId, SingletonKey);
-            if (xml == null) { return null; }
-            ProgramSettingsFormat.EnsureCurrentFormat(xml, $"{nameof(ProgramSettings)} / {customizeId}");
-            return XmlCodec.Deserialize<ProgramSettings>(xml);
-        }
+            => ReadOptional<ProgramSettings>(customizeId, SingletonKey);
 
         /// <inheritdoc/>
         public MenuSettings? GetCustomizeMenuSettings(string customizeId)

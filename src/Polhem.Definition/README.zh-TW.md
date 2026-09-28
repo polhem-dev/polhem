@@ -12,11 +12,11 @@ Polhem.Definition 位於 Polhem 框架的最底層，提供所有上層共用的
 
 此套件不包含商業邏輯：介面、POCO、列舉與屬性標籤。此處的 API 異動會向上波及整個技術堆疊，因此 API 表面採保守演進策略。
 
-但它**目前並非零 I/O**，這點在推敲分層時有差別。`Storage/`（檔案式定義儲存）、
-`Security/MasterKeyProvider`、`PathOptions` / `CustomizeOnlyPathOptions` 與 `Defaults`
-會讀寫磁碟上的檔案。要把它們搬走屬於資料遷移而非重構 —— 部署的 `SystemSettings.xml` 可以用
-assembly-qualified name 指定儲存型別（`BackendComponents.DefineStorage`），搬家必須配套舊型別名的
-相容對映 —— 在那之前它們留在這裡。
+但它**並非零 I/O**，這點在推敲分層時有差別。`Storage/`（檔案式定義儲存）、`SystemSettingsLoader`、
+`Security/MasterKeyProvider` 與 `Defaults` 會讀或寫磁碟上的檔案，`MasterKeyProvider` 也會讀取環境變數；
+`PathOptions` / `CustomizeOnlyPathOptions` 只負責組出其他型別所用的路徑。它們放在這裡，是因為它們只需要 BCL，
+不會替 POLHEM9001 閘門把關的相依閉包加入任何套件；也因為有些呼叫端只參考這個組件：`Polhem.Cli` 使用
+`Defaults` 與 `MasterKeyProvider`，定義檔編輯器使用 `Defaults`。
 
 - **層級**：最底層 —— 所有上層共用的型別系統。
 - **相依**：由建置期閘門 **POLHEM9001** 鎖定在一份明確的允許清單上。加在這裡的任何東西都會被框架的

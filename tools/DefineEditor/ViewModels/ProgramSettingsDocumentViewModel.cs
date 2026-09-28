@@ -1,4 +1,3 @@
-using Polhem.Base;
 using Polhem.Base.Serialization;
 using Polhem.Definition.Settings;
 using Polhem.DefineEditor.Models;
@@ -43,13 +42,8 @@ public sealed partial class ProgramSettingsDocumentViewModel : SingletonDocument
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         if (!File.Exists(filePath))
             throw new FileNotFoundException("ProgramSettings file not found.", filePath);
-        // The same guard the runtime storages apply: an un-migrated file would otherwise open as an
-        // empty registry, and saving it would silently discard every entry it still contains.
-        var xml = FileUtilities.FileReadText(filePath);
-        ProgramSettingsFormat.EnsureCurrentFormat(xml, filePath);
-        var root = XmlCodec.Deserialize<ProgramSettings>(xml)
+        var root = XmlCodec.DeserializeFromFile<ProgramSettings>(filePath)
             ?? throw new InvalidOperationException($"ProgramSettings deserialized to null: {filePath}");
-        root.SetObjectFilePath(filePath);
         return new ProgramSettingsDocumentViewModel(filePath, root);
     }
 
@@ -118,8 +112,7 @@ public sealed partial class ProgramSettingsDocumentViewModel : SingletonDocument
             return issues;
         }
 
-        // The registry is flat, so duplicate detection is global — which is the point of the flat
-        // shape. Under the earlier nested layout this check only ever ran within one category.
+        // The registry is flat, so duplicate detection is global: the progId is the registry's key.
         var seenProgIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var program in items)
         {

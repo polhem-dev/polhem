@@ -312,54 +312,6 @@ namespace Polhem.Definition.UnitTests.Security
         }
 
         [Fact]
-        [DisplayName("A missing POLHEM_MASTER_KEY while BEE_MASTER_KEY is set says the Bee.NET variable should be renamed")]
-        public void GetMasterKey_DefaultVarMissingButBeeVarSet_MessageNamesBeeVar()
-        {
-            string? original = Environment.GetEnvironmentVariable("POLHEM_MASTER_KEY");
-            string? originalBee = Environment.GetEnvironmentVariable("BEE_MASTER_KEY");
-            Environment.SetEnvironmentVariable("POLHEM_MASTER_KEY", null);
-            Environment.SetEnvironmentVariable("BEE_MASTER_KEY", Convert.ToBase64String(new byte[64]));
-            try
-            {
-                var source = new MasterKeySource { Type = MasterKeySourceType.Environment, Value = string.Empty };
-
-                var ex = Assert.Throws<InvalidOperationException>(() => MasterKeyProvider.GetMasterKey(source, definePath: string.Empty));
-
-                Assert.Contains("POLHEM_MASTER_KEY", ex.Message, StringComparison.Ordinal);
-                Assert.Contains("BEE_MASTER_KEY", ex.Message, StringComparison.Ordinal);
-                Assert.Contains("Migrating from Bee.NET", ex.Message, StringComparison.Ordinal);
-            }
-            finally
-            {
-                Environment.SetEnvironmentVariable("POLHEM_MASTER_KEY", original);
-                Environment.SetEnvironmentVariable("BEE_MASTER_KEY", originalBee);
-            }
-        }
-
-        [Fact]
-        [DisplayName("A missing POLHEM_MASTER_KEY without BEE_MASTER_KEY carries no Bee.NET hint")]
-        public void GetMasterKey_DefaultVarMissingNoBeeVar_MessageHasNoBeeHint()
-        {
-            string? original = Environment.GetEnvironmentVariable("POLHEM_MASTER_KEY");
-            string? originalBee = Environment.GetEnvironmentVariable("BEE_MASTER_KEY");
-            Environment.SetEnvironmentVariable("POLHEM_MASTER_KEY", null);
-            Environment.SetEnvironmentVariable("BEE_MASTER_KEY", null);
-            try
-            {
-                var source = new MasterKeySource { Type = MasterKeySourceType.Environment, Value = string.Empty };
-
-                var ex = Assert.Throws<InvalidOperationException>(() => MasterKeyProvider.GetMasterKey(source, definePath: string.Empty));
-
-                Assert.DoesNotContain("BEE_MASTER_KEY", ex.Message, StringComparison.Ordinal);
-            }
-            finally
-            {
-                Environment.SetEnvironmentVariable("POLHEM_MASTER_KEY", original);
-                Environment.SetEnvironmentVariable("BEE_MASTER_KEY", originalBee);
-            }
-        }
-
-        [Fact]
         [DisplayName("GetMasterKey throws InvalidOperationException for an unsupported Type (the default branch)")]
         public void GetMasterKey_UnsupportedType_ThrowsInvalidOperation()
         {

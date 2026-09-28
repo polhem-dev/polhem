@@ -112,8 +112,6 @@ The renaming was done before the repository took pull requests, so these entries
 - `BackendComponents` entries default to blank, which selects the framework default. A wrong `CacheProvider` or
   component type name fails at startup and names the setting.
   ([#8](https://github.com/polhem-dev/polhem/pull/8), [#11](https://github.com/polhem-dev/polhem/pull/11))
-- A type name that cannot be resolved and starts with `Bee.` gets a migration hint (`BeeNameHint`), and a missing
-  `POLHEM_MASTER_KEY` says so when `BEE_MASTER_KEY` is set. ([#10](https://github.com/polhem-dev/polhem/pull/10))
 - The client stores the endpoint and the API key in `endpoint.txt` and `apikey.txt` under the per-user local
   application data folder (`FileEndpointStorage`, now in `Polhem.UI.Core`) instead of a settings file beside the
   assembly. ([#12](https://github.com/polhem-dev/polhem/pull/12))

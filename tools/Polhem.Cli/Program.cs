@@ -81,7 +81,7 @@ internal static class Program
         writer.WriteLine("Usage: dotnet polhem <command> [options]");
         writer.WriteLine();
         writer.WriteLine("Commands:");
-        writer.WriteLine("  defines       Manage define files (materialize / list / split-menu)");
+        writer.WriteLine("  defines       Manage define files (materialize / list)");
         writer.WriteLine("  keys          Produce encrypted key values for SystemSettings.xml (protect)");
         writer.WriteLine();
         writer.WriteLine("Options:");

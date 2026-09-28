@@ -70,16 +70,10 @@ namespace Polhem.Hosting.Registry
         /// Returns the progIds, stored or registered, whose form schema declares no permission model.
         /// </summary>
         internal List<string> FindUnguardedForms()
-        {
-            var progIds = new List<string>();
-            foreach (var progId in CandidateProgIds().Where(IsFormProgId))
-            {
-                var schema = TryGetFormSchema(progId);
-                if (schema != null && string.IsNullOrEmpty(schema.PermissionModelId))
-                    progIds.Add(progId);
-            }
-            return progIds;
-        }
+            => CandidateProgIds()
+                .Where(IsFormProgId)
+                .Where(progId => TryGetFormSchema(progId) is { } schema && string.IsNullOrEmpty(schema.PermissionModelId))
+                .ToList();
 
         /// <summary>
         /// The stored form schemas and the registry entries, each progId once whatever its casing,
@@ -88,18 +82,13 @@ namespace Polhem.Hosting.Registry
         /// <remarks>
         /// The stored spelling comes first because it is the one the schema is read by: on a
         /// case-sensitive file system a registry entry spelled differently from the file does not find
-        /// it, and the form would be skipped instead of reported.
+        /// it, and the form would be skipped instead of reported. <c>Distinct</c> keeps the first
+        /// occurrence of each progId; <c>FindUnguardedForms_StoredAndRegisteredInOtherCasing_NamesItOnce</c>
+        /// fails if the registry spelling wins instead.
         /// </remarks>
-        private List<string> CandidateProgIds()
-        {
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var candidates = new List<string>();
-            foreach (var progId in StoredFormIds().Concat(RegisteredProgIds()))
-            {
-                if (seen.Add(progId)) { candidates.Add(progId); }
-            }
-            return candidates;
-        }
+        private IEnumerable<string> CandidateProgIds()
+            => StoredFormIds().Concat(RegisteredProgIds())
+                .Distinct(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// The form schemas the storage holds; empty, with a warning, when a database-backed storage

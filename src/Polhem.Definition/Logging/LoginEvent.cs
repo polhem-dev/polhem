@@ -22,7 +22,7 @@ namespace Polhem.Definition.Logging
 
         /// <summary>
         /// A session created for a trusted local caller without a credential check
-        /// (<c>SystemBO.CreateSession</c>), acting on behalf of the recorded user.
+        /// (<c>SystemBusinessObject.CreateSession</c>), acting on behalf of the recorded user.
         /// </summary>
         /// <remarks>
         /// Appended at the end of the enum on purpose: the values are persisted in

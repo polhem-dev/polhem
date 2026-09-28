@@ -300,29 +300,6 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
-        [DisplayName("A legacy nested ProgramSettings.xml throws at load time and points to the migration command, instead of silently reading as an empty registry")]
-        public void GetProgramSettings_LegacyLayout_ThrowsPointingAtMigration()
-        {
-            WithTempDefinePath(paths =>
-            {
-                File.WriteAllText(paths.GetProgramSettingsFilePath(), """
-                    <?xml version="1.0" encoding="utf-8"?>
-                    <ProgramSettings>
-                      <Categories>
-                        <ProgramCategory Id="master-data" DisplayName="主檔">
-                          <Items><ProgramItem ProgId="Customer" DisplayName="客戶" /></Items>
-                        </ProgramCategory>
-                      </Categories>
-                    </ProgramSettings>
-                    """);
-                var storage = new FileDefineStorage(paths);
-
-                var ex = Assert.Throws<NotSupportedException>(() => storage.GetProgramSettings());
-                Assert.Contains("split-menu", ex.Message, StringComparison.Ordinal);
-            });
-        }
-
-        [Fact]
         [DisplayName("Flattened registry items (including BusinessObject) write and read back")]
         public void SaveAndGetProgramSettings_FlatItems_RoundTrip()
         {

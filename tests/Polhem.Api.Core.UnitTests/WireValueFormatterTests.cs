@@ -188,19 +188,6 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
-        [DisplayName("Deserialize blocks a Bee.NET type name with a hint that it looks like a Bee.NET name")]
-        public void Deserialize_BeeTypeName_MessageHasBeeHint()
-        {
-            var bytes = BuildNamedEnvelope("Bee.Definition.Collections.ListItem, Bee.Definition");
-
-            var exception = Assert.Throws<InvalidOperationException>(
-                () => DeserializeViaFormatter(bytes));
-
-            Assert.Contains("blocked", exception.Message, StringComparison.Ordinal);
-            Assert.Contains("Bee.NET", exception.Message, StringComparison.Ordinal);
-        }
-
-        [Fact]
         [DisplayName("Deserialize throws MessagePackSerializationException for an unknown discriminator")]
         public void Deserialize_UnknownCode_Throws()
         {

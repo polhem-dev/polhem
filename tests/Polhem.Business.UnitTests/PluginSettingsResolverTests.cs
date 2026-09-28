@@ -130,17 +130,6 @@ namespace Polhem.Business.UnitTests
         }
 
         [Fact]
-        [DisplayName("A plugin type with a Bee.NET name that cannot be loaded says it looks like a Bee.NET name")]
-        public void Resolve_UnloadableBeeType_MessageHasBeeHint()
-        {
-            var access = new StubDefineAccess(Build("Order", ("Bee.Business.Plugins.AuditPlugin, Bee.Business", PluginStage.BeforeSave)));
-            var resolver = new PluginSettingsResolver(access);
-
-            var ex = Assert.Throws<InvalidOperationException>(() => resolver.Resolve("", "Order"));
-            Assert.Contains("Bee.NET", ex.Message, StringComparison.Ordinal);
-        }
-
-        [Fact]
         [DisplayName("A type that does not inherit FormBusinessPlugin throws")]
         public void Resolve_TypeNotAPlugin_Throws()
         {

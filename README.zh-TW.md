@@ -174,8 +174,8 @@ Bee.NET 4.33.0 改名之後，再加上 [CHANGELOG](CHANGELOG.zh-TW.md) 所列�
 
 | 項目 | Bee.NET | Polhem | 沿用舊名稱時 |
 |------|---------|--------|--------------|
-| 定義檔中的型別名稱：`ProgramSettings.xml` 的 `BusinessObject` 與 `Repository`、`SystemSettings.xml` 中 `BackendConfiguration/Components` 底下的各元素，以及自家程式碼中的型別名稱 | `Bee.Business.AuditLog.LogBusinessObject, Bee.Business` | `Polhem.Business.AuditLog.AuditLogBusinessObject, Polhem.Business` | 執行時找不到型別；錯誤訊息會指出這個名稱看起來是 Bee.NET 的名稱 |
-| 主金鑰的預設環境變數 | `BEE_MASTER_KEY` | `POLHEM_MASTER_KEY` | 只影響沿用預設變數名稱的 `SystemSettings.xml`，而且 `BEE_MASTER_KEY` 有設定時，錯誤訊息會提到它。`MasterKeySource` 的 `Value` 寫明變數名稱時，照樣使用該名稱；`dotnet bee defines materialize` 寫出的預設檔寫的是 `BEE_MASTER_KEY` |
+| 定義檔中的型別名稱：`ProgramSettings.xml` 的 `BusinessObject` 與 `Repository`、`SystemSettings.xml` 中 `BackendConfiguration/Components` 底下的各元素，以及自家程式碼中的型別名稱 | `Bee.Business.AuditLog.LogBusinessObject, Bee.Business` | `Polhem.Business.AuditLog.AuditLogBusinessObject, Polhem.Business` | 執行時找不到型別 |
+| 主金鑰的預設環境變數 | `BEE_MASTER_KEY` | `POLHEM_MASTER_KEY` | 只影響沿用預設變數名稱的 `SystemSettings.xml`：啟動時找不到主金鑰。`MasterKeySource` 的 `Value` 寫明變數名稱時，照樣使用該名稱；`dotnet bee defines materialize` 寫出的預設檔寫的是 `BEE_MASTER_KEY` |
 | `.editorconfig`、`#pragma warning`、`NoWarn` 與 `[SuppressMessage]` 中的 analyzer 診斷代號 | `BEE1001` | `POLHEM1001`（數字不變） | 設定被靜默忽略 |
 | 定義檔檢查用的 MSBuild 屬性 | `BeeDefinitionFilesGlob`、`BeeRequireDefinitionFiles`、`BeeAnalyzeDefinitionFiles` | `PolhemDefinitionFilesGlob`、`PolhemRequireDefinitionFiles`、`PolhemAnalyzeDefinitionFiles` | 設定被靜默忽略，改用預設值 |
 | Blazor 元件的 CSS class | `bee-dynamic-form`、`bee-dynamic-grid`、`bee-form-page`、`bee-login-panel` | `polhem-dynamic-form`、`polhem-dynamic-grid`、`polhem-form-page`、`polhem-login-panel` | 自訂的樣式規則不再套用 |
