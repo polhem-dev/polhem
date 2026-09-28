@@ -7,9 +7,10 @@ are symmetric).
 
 `apps/` is not built by polhem's CI (see [test-ci-release.md](test-ci-release.md)): if **this copy** breaks, nobody
 will tell you. **Where the heads get built today**: the in-repo heads (Desktop, Browser, iOS, Android) are built only
-by hand, with the commands in test-ci-release.md and below. The CI of the mirror repository (see "The mirror
-repository's CI" below) builds the mirror's own copy against published NuGet packages; it cannot catch the in-repo
-copy drifting against `src/`, and at the moment it builds the Bee.NET copy (see "Graduation and periodic sync").
+by hand, with the commands in test-ci-release.md and below. The CI of the standalone repository
+[`polhem-dev/polhem-northwind`](https://github.com/polhem-dev/polhem-northwind) (see "The standalone repository's
+CI" below) builds that repository's own copy against published NuGet packages; it cannot catch the in-repo copy
+drifting against `src/`.
 The unit test projects of the packages a head ships run under `-p:DynamicCodeSupport=false` in the mobile AOT gate of
 `build-ci.yml`, which covers the no-dynamic-code half but builds no head.
 
@@ -145,14 +146,14 @@ key benefit at the same time.
 
 ## Graduation and periodic sync
 
-> **Current state (checked 2026-09-27)**: the mirror repository `jeff377/bee-northwind-avalonia` still holds the
-> Bee.NET copy (`Bee.Northwind.*` projects on the `Bee.*` packages); nothing has been pushed to it since the Polhem
-> rename. It cannot be synced from this repository until the `Polhem.*` packages are published on NuGet, because the
-> sync process below starts with "publish the framework first". Whether the mirror is renamed, re-created under
-> `polhem-dev` or retired is an open decision. The sections below record how the sync worked in the Bee.NET era.
+> **Current state (2026-09-28)**: the standalone repository is
+> [`polhem-dev/polhem-northwind`](https://github.com/polhem-dev/polhem-northwind), on the `Polhem.*` packages. It was
+> created from `apps/Polhem.Northwind` at the `v1.0.0` tag, without history. The Bee.NET-era mirror
+> `jeff377/bee-northwind-avalonia` was not its starting point: its last sync predated the Polhem rename, so it lacked
+> the fixes made to this copy since. That mirror stays on the `Bee.*` packages and receives no further syncs.
 
-**Graduation means "copy", not "move"** (user instruction, 2026-06-15): when the standalone repository
-`bee-northwind-avalonia` was created, `apps/Polhem.Northwind` was copied over (ProjectReference → PackageReference),
+**Graduation means "copy", not "move"** (user instruction, 2026-06-15): when the first standalone repository (the
+Bee.NET-era `bee-northwind-avalonia`) was created, `apps/Polhem.Northwind` was copied over (ProjectReference → PackageReference),
 **but `apps/Polhem.Northwind` inside polhem stays; it is not `git rm`ed yet**.
 
 **Why**: `Polhem.UI.Avalonia` is still filling in controls and architecture, and keeping the in-repo demo on
@@ -162,7 +163,8 @@ from "an external point of view, pure NuGet"; the two coexist.
 
 **Sync process**: **publish the new framework version first** (the src changes that the new in-repo features depend on
 must be on NuGet first) → copy the changed files over → reapply ProjectReference→PackageReference and bump → sync docs
-and launch files → local build + smoke test → push directly to main (ask the user before pushing).
+and launch files → local build + smoke test → a pull request in `polhem-northwind`. Its `main` is protected like
+polhem's (required checks, squash merge only), so nobody pushes to it directly.
 
 **After verifying locally, still take a look at CI.** That repository has CI, and the environment differences between
 local and the runner really do bite (Xcode version, whether a workload is installed): all green locally does not mean
@@ -173,8 +175,12 @@ CI will be green.
 1. **rsync needs `--exclude '*.csproj' --exclude 'README*.md'`** and syncs only source. csproj files are handled
    individually and READMEs are ported by hand; otherwise the files specific to the standalone repository (paths
    relative to the root, the NuGet framework description) get overwritten.
-   `.smoke.yaml` likewise (its paths are relative to the root of each repository: the project folder in the mirror,
-   `apps/Polhem.Northwind/...` in polhem).
+   `.smoke.yaml` likewise (its paths are relative to the root of each repository: the project folder in the
+   standalone repository, `apps/Polhem.Northwind/...` in polhem).
+   The Server csproj also differs in shape, not only in reference type: in polhem the convention analyzer is a
+   ProjectReference and the definitions are listed as `AdditionalFiles`, because `buildTransitive/` only reaches a
+   package consumer; the standalone repository gets both from the `Polhem.Definition` package and only sets
+   `PolhemDefinitionFilesGlob`.
 2. **Copying over brings the in-repo src ProjectReferences back into the standalone repository**: they must be changed
    back to PackageReference + bump. This is the step most easily missed.
 3. **`gh secret set` syntax pitfall**: `gh secret set <key value>` creates a secret whose **name** is the key value (and
@@ -184,9 +190,10 @@ CI will be green.
    [test-ci-release.md](test-ci-release.md) § Publishing: NuGet Trusted Publishing. The `gh secret set` syntax pitfall
    applies to any secret, `NUGET_USER` included.)
 
-## The mirror repository's CI
+## The standalone repository's CI
 
-Since 2026-09-02, `bee-northwind-avalonia` has `.github/workflows/build-ci.yml` with two jobs: ubuntu builds the
+`polhem-northwind` has `.github/workflows/build-ci.yml` (carried over from `bee-northwind-avalonia`, where it was
+added on 2026-09-02) with two jobs: ubuntu builds the
 Server, the UI project and three heads (Desktop / Browser / Android) and runs a runtime smoke test, and macOS builds
 iOS on its own. **It verifies the build against the published NuGet packages**, which is exactly the path external
 users will take.

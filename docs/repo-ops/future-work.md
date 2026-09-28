@@ -72,10 +72,10 @@ to write a plan.
 **Distribution and anchor**: make it one plugin (such as `polhem-dotnet`), **anchored on a public standalone
 Northwind repository built on the `Polhem.*` packages** as the living example (not the internal `apps/`).
 
-**What to wait for**: **a standalone Northwind on the `Polhem.*` packages.** The mirror created on 2026-06-15,
-`bee-northwind-avalonia`, still holds the Bee.NET copy on the `Bee.*` packages; it can only be switched (or replaced)
-once the `Polhem.*` packages are on NuGet (see [gotchas/northwind-heads.md](gotchas/northwind-heads.md) § Graduation
-and periodic sync). Only then is there a public reference implementation to point to. Nothing needs to happen now.
+**The anchor exists**: [`polhem-dev/polhem-northwind`](https://github.com/polhem-dev/polhem-northwind) runs on the
+`Polhem.*` 1.0.0 packages (created 2026-09-28; how it is kept in sync is in
+[gotchas/northwind-heads.md](gotchas/northwind-heads.md) § Graduation and periodic sync). The pack itself has not
+been started.
 
 **Planned contents** (consumer-side rewrites of existing knowledge, plus an onboarding path): `polhem-quickstart`
 (install NuGet → minimal app → run it), `polhem-app-scaffold` (PackageReference version), `polhem-add-form`,
