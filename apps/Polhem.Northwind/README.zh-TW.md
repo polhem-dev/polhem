@@ -205,9 +205,8 @@ Northwind 是正規化的關聯式 schema；polhem 是 `sys_rowid`（Guid）關�
 
 client 顯示哪種語言，取決於登入**帳號**的語系：`Login` 回傳 `st_user.culture` 的值，
 `ClientInfo.ApplyLoginResult` 再把它設為 client 的 UI 語系。種子寫入的 `demo` 帳號是 `en-US`
-（`NorthwindCredentials.Culture`），所以 demo 以英文開啟。要看 zh-TW 標題與下面租戶的標題覆寫，
-把該帳號的 `culture` 設成 `zh-TW`：在首次執行前改 `NorthwindCredentials.Culture`，或更新
-`st_user` 裡的 `demo` 那一列，然後重新登入。
+（`NorthwindCredentials.Culture`），所以以英文開啟；種子寫入的 `demo-tw` 帳號是 `zh-TW`
+（`NorthwindCredentials.ZhTwCulture`）。要看 zh-TW 標題與下面租戶的標題覆寫，登出後改以 `demo-tw` 登入。
 
 客製層疊在它上面。demo 公司指名了一個客製化代碼（`NorthwindCredentials.CustomizeId`），
 登入時被抄進 session，之後每次定義查詢都會**先**看 `Customize/{customizeId}/`、再看套裝的

@@ -9,7 +9,9 @@ Accepted (2026-05-31)
 ## Context
 
 Polhem's tenant concept originally reached only the **database layer** (`SessionInfo.CompanyId` + `EnterCompany` /
-`LeaveCompany` of [ADR-012](adr-012-session-company-context.md), with row-level isolation by `sys_company_rowid`),
+`LeaveCompany` of [ADR-012](adr-012-session-company-context.md), with each company's data kept apart by routing the
+session to that company's own database, `CompanyInfo.CompanyDatabaseId`, as described in
+[ADR-010](adr-010-logical-database-category.md)),
 while **definition files were shared by the whole system**: every `GetXxxFilePath()` was derived from the single
 `PathOptions.DefinePath` root directory.
 

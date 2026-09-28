@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TableName="ft_employee" DisplayName="Employee">
+<TableSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TableName="ft_staff" DisplayName="Staff">
   <Fields>
     <DbField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" />
     <DbField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" />
-    <DbField FieldName="sys_id" Caption="Employee ID" DbType="String" Length="20" />
-    <DbField FieldName="sys_name" Caption="Employee Name" DbType="String" Length="50" />
+    <DbField FieldName="sys_id" Caption="Staff ID" DbType="String" Length="20" />
+    <DbField FieldName="sys_name" Caption="Staff Name" DbType="String" Length="50" />
     <DbField FieldName="hire_date" Caption="Hire Date" DbType="Date" />
     <DbField FieldName="is_active" Caption="Active" DbType="Boolean" />
   </Fields>

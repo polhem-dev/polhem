@@ -89,5 +89,5 @@
   `SupportedConnectTypes`, `FormDataGuard`, `FormValueBinding`
 - `Connectors/` -- `ApiConnector`, `SystemApiConnector`, `FormApiConnector`, `AuditLogApiConnector`
 - `Providers/` -- `IJsonRpcProvider`, `LocalApiProvider`, `RemoteApiProvider`
-- `Definitions/` -- `FormDefinitionLoader`, `SnapshotLanguageService`
-- `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`
+- `Definitions/` -- `FormDefinitionLoader`, `LanguageLayers`, `SnapshotLanguageService`
+- `Permissions/` -- `IElementCapabilityResolver`, `ElementCapabilityResolver`, `FieldCapability`

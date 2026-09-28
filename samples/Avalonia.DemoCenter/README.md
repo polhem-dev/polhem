@@ -96,7 +96,7 @@ is generated from the registry, grouped into two levels by `Category`.
 
 The navigation tree and View Source pick it up automatically: `Modules/**/*.cs` is already an EmbeddedResource, and
 `GetSourceText()` resolves the resource by the type's full name (**the folder must match the namespace**). Useful
-helpers: `DataEditorParts` (single-field object / section card / live values / Compose), `SampleFormData` (Employee +
+helpers: `DataEditorParts` (single-field object / section card / live values / Compose), `SampleFormData` (Staff +
 Phones sample data), `FormLayoutRenderer` (renders a layout with the public primitives).
 
 ## Matching library components

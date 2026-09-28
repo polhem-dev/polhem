@@ -210,10 +210,9 @@ Sign in as `demo-tw` to see them: the session's culture comes from that account'
 
 Which language a client shows is the signed-in **account's** culture: `Login` returns the
 `st_user.culture` value, and `ClientInfo.ApplyLoginResult` makes it the client's UI culture. The
-seeded `demo` account is `en-US` (`NorthwindCredentials.Culture`), so the demo opens in English.
-To see the zh-TW captions and the tenant's caption overrides below, set that account's `culture` to `zh-TW`:
-change `NorthwindCredentials.Culture` before the first run, or update the `demo` row in `st_user`,
-then sign in again.
+seeded `demo` account is `en-US` (`NorthwindCredentials.Culture`), so it opens in English; the
+seeded `demo-tw` account is `zh-TW` (`NorthwindCredentials.ZhTwCulture`). To see the zh-TW captions
+and the tenant's caption overrides below, sign out and sign in as `demo-tw`.
 
 On top of that sits the customization layer. The demo company names a customization code
 (`NorthwindCredentials.CustomizeId`), the session picks it up at sign-in, and every definition

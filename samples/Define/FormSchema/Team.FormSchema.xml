@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lookup source form. `LookupFields` declares the fields exposed to GetLookup
+     callers (declared here for demonstration; omitting it falls back to the same
+     `sys_id` / `sys_name` default). -->
+<FormSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ProgId="Team" DisplayName="Team" CategoryId="company" ListFields="sys_id,sys_name" LookupFields="sys_id,sys_name">
+  <Tables>
+    <FormTable TableName="Team" DbTableName="ft_team" DisplayName="Team">
+      <Fields>
+        <FormField FieldName="sys_no" Caption="Sequence" DbType="AutoIncrement" />
+        <FormField FieldName="sys_rowid" Caption="Row ID" DbType="Guid" />
+        <FormField FieldName="sys_id" Caption="Team ID" DbType="String" />
+        <FormField FieldName="sys_name" Caption="Team Name" DbType="String" />
+      </Fields>
+    </FormTable>
+  </Tables>
+</FormSchema>

@@ -4,8 +4,9 @@ This file records the mobile build pitfalls that are **independent of the UI fra
 strips reflection dependencies, and AOT disables `Reflection.Emit`. Both break reflection-based mechanisms such as
 `XmlSerializer`.
 
-It applies to every mobile / Apple platform head. Currently that is `net10.0-ios` / `net10.0-android` of
-`Polhem.UI.Avalonia` (see `apps/Polhem.Northwind/Polhem.Northwind.iOS` and `.Android`).
+It applies to every mobile / Apple platform head. Currently those are the `net10.0-ios` / `net10.0-android` heads
+that consume `Polhem.UI.Avalonia` (`apps/Polhem.Northwind/Polhem.Northwind.iOS` and `.Android`);
+`Polhem.UI.Avalonia` itself targets `net10.0` only.
 
 > The reasoning, measured data and complete build / verification command recipes are in
 > `docs/repo-ops/gotchas/mobile-trim-aot.md` (read on demand, not always loaded).

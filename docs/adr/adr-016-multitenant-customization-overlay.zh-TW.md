@@ -1,4 +1,4 @@
-<!-- source: adr/adr-016-multitenant-customization-overlay.md blob: fa1a4eda7b2eef3a86265258a640afbbb36f41aa -->
+<!-- source: adr/adr-016-multitenant-customization-overlay.md blob: 669c96230734168f16639535cc7ad7989956134a -->
 # ADR-016：多租戶客製化覆蓋層（雙層唯讀疊加）
 
 [English](adr-016-multitenant-customization-overlay.md)
@@ -9,7 +9,7 @@
 
 ## 背景
 
-Polhem 的租戶概念原本只到**資料庫層**（[ADR-012](adr-012-session-company-context.zh-TW.md) 的 `SessionInfo.CompanyId` + `EnterCompany`/`LeaveCompany`，row-level 以 `sys_company_rowid` 隔離），**定義檔則全系統共用**——所有 `GetXxxFilePath()` 都從單一 `PathOptions.DefinePath` 根目錄衍生。
+Polhem 的租戶概念原本只到**資料庫層**（[ADR-012](adr-012-session-company-context.zh-TW.md) 的 `SessionInfo.CompanyId` + `EnterCompany`/`LeaveCompany`，各公司的資料靠把 session 路由到該公司自己的資料庫 `CompanyInfo.CompanyDatabaseId` 分開，見 [ADR-010](adr-010-logical-database-category.zh-TW.md)），**定義檔則全系統共用**——所有 `GetXxxFilePath()` 都從單一 `PathOptions.DefinePath` 根目錄衍生。
 
 多租戶部署下，不同租戶需要不同的客製化：
 

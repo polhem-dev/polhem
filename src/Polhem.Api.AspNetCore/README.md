@@ -34,8 +34,9 @@ app.MapControllers();
 app.Run();
 ```
 
-`UsePolhemFramework` runs the host-side startup checks. Today it logs a warning while no API key has been issued,
-because until then the `X-Api-Key` header is only checked for presence.
+`UsePolhemFramework` runs the host-side startup checks. Today it logs while no API key has been issued, because until
+then the `X-Api-Key` header is only checked for presence: an error, or a warning when the host runs in the Development
+environment. Startup still proceeds either way.
 
 ## Key Features
 

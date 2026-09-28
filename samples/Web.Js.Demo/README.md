@@ -15,8 +15,8 @@ definitions:
 |---------|---------|
 | Login | `System.Login` |
 | Ping | `System.Ping` (no auth) |
-| Enter Company | `System.EnterCompany` / `System.LeaveCompany` (required before Employee CRUD; an unknown ID shows the error path) |
-| Employee CRUD | `Employee.GetList` / `GetData` / `GetNewData` / `Save` / `Delete` |
+| Enter Company | `System.EnterCompany` / `System.LeaveCompany` (required before Staff CRUD; an unknown ID shows the error path) |
+| Staff CRUD | `Staff.GetList` / `GetData` / `GetNewData` / `Save` / `Delete` |
 | FormDefinition-driven rendering | `System.GetFormSchema` / `System.GetFormLayout` → definition XML → dynamic form |
 | Logout | `System.Logout` |
 
@@ -53,7 +53,7 @@ definitions:
 
 3. Click **Login** (default credentials `demo` / `demo`), then **EnterCompany**
    (the company ID is pre-filled with `DEMO`), then **GetList** — each result
-   shows up in the output panel at the bottom. The Employee form is
+   shows up in the output panel at the bottom. The Staff form is
    company-scoped, so the CRUD and form buttons fail until the session has
    entered the company.
 

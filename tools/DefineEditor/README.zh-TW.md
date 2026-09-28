@@ -18,7 +18,7 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 |------|--------|---------|
 | **SystemSettings**（單例） | [SystemSettingsDocumentView](Views/SystemSettingsDocumentView.axaml) | Configuration 各區段與 BackendConfiguration 各 options 的樹狀結構，加上 ExtendedProperties 自由 KV。部分 options 尚無節點（例如 `AuditLogOptions` 與 `SessionCleanupOptions`），請直接改 XML |
 | **DbCategorySettings**（單例） | [DbCategorySettingsDocumentView](Views/DbCategorySettingsDocumentView.axaml) | Categories → Tables 兩層；驗證重複 Id / TableName |
-| **ProgramSettings**（單例） | [ProgramSettingsDocumentView](Views/ProgramSettingsDocumentView.axaml) | Categories → Programs 兩層；ProgramItem 含 ProgId / DisplayName / BusinessObject |
+| **ProgramSettings**（單例） | [ProgramSettingsDocumentView](Views/ProgramSettingsDocumentView.axaml) | 扁平的 ProgramItem 清單（`<Items>`）；每項含 ProgId / DisplayName / BusinessObject / Repository；驗證空白或重複的 ProgId。仍是舊 Categories 格式的檔案開啟時會被拒絕 |
 | **PermissionModels**（單例） | [PermissionModelsDocumentView](Views/PermissionModelsDocumentView.axaml) | Models → Rules 兩層；Action / Scope 為下拉；含 `PermissionModels.Validate()` 整合 |
 | **MenuSettings**（單例） | [MenuSettingsDocumentView](Views/MenuSettingsDocumentView.axaml) | MenuFolder → MenuEntry 樹狀結構；資料夾與項目各自的屬性面板 |
 | **DatabaseSettings**（單例） | [DatabaseSettingsDocumentView](Views/DatabaseSettingsDocumentView.axaml) | Servers + Items 兩個 group；含 **連線字串貼上拆解**（SQL Server / PostgreSQL / MySQL / Oracle） 與靜態驗證（`Services/DatabaseSettingsValidator.cs`） |

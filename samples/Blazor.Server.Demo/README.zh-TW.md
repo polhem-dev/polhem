@@ -16,17 +16,17 @@ dotnet run
 
 1. 從 `POLHEM_MASTER_KEY` 環境變數讀 master key；`DemoBackend.AddPolhemBackend` 在變數未設時自動注入硬編碼的 demo 值(production host 必須覆寫,見 [`samples/README.zh-TW.md`](../README.zh-TW.md#master-key))
 2. 自動建立 `samples/Blazor.Server.Demo/quickstart.db`（SQLite），內含 [`Define/DbCategorySettings.xml`](../Define/DbCategorySettings.xml) 登記的每張表：demo 自己的 `ft_*` 表與 backend 需要的框架表（登入、進入公司、cache-notify poller），定義都在 [`samples/Define/TableSchema/`](../Define/TableSchema/)
-3. 寫入登入時讀取語系設定的 `demo` 使用者列、demo 公司 `DEMO` 與使用者的公司授權，以及 demo 員工與部門
+3. 寫入登入時讀取語系設定的 `demo` 使用者列、demo 公司 `DEMO` 與使用者的公司授權，以及 demo 人員與團隊
 
 ## 預期畫面
 
 1. 進入首頁先看到 **Sign in** 區塊，預填提示 `demo / demo`
-2. 按下 Sign in（送 `SystemApiConnector.LoginAsync`，由 `DemoAuthenticatingSystemBusinessObject` 接住）；接著頁面呼叫 `EnterCompanyAsync("DEMO")`，因為員工表單屬於公司範圍，兩次呼叫都成功後才顯示表單（[`Components/Pages/Home.razor`](Components/Pages/Home.razor)）
-3. 登入成功後顯示 `<FormPage ProgId="Employee" />`：
+2. 按下 Sign in（送 `SystemApiConnector.LoginAsync`，由 `DemoAuthenticatingSystemBusinessObject` 接住）；接著頁面呼叫 `EnterCompanyAsync("DEMO")`，因為人員（Staff）表單屬於公司範圍，兩次呼叫都成功後才顯示表單（[`Components/Pages/Home.razor`](Components/Pages/Home.razor)）
+3. 登入成功後顯示 `<FormPage ProgId="Staff" />`：
    - 上方 toolbar：`New` / `Save` / `Delete`
-   - 中段：員工列表（`DynamicGrid` 依 `FormSchema.ListFields` 動態渲染）
+   - 中段：人員列表（`DynamicGrid` 依 `FormSchema.ListFields` 動態渲染）
    - 下段：選中 row 後出現的編輯表單（`DynamicForm`）
-4. 點 `New` → 改欄位 → `Save`，新員工會出現在列表
+4. 點 `New` → 改欄位 → `Save`，新人員會出現在列表
 
 ## 對應到 library
 
@@ -35,8 +35,8 @@ dotnet run
 | Login 表單 | `PolhemLoginPanel` |
 | 進入公司 | `SystemApiConnector.EnterCompanyAsync` |
 | AccessToken cascading | `PolhemAccessTokenProvider` |
-| 員工列表渲染 | `DynamicGrid` + `FormSchema.GetListLayout()` |
-| 員工編輯表單 | `DynamicForm` + 已存檔的 `FormLayout` 定義（`Define/FormLayout/Employee.FormLayout.xml`） |
+| 人員列表渲染 | `DynamicGrid` + `FormSchema.GetListLayout()` |
+| 人員編輯表單 | `DynamicForm` + 已存檔的 `FormLayout` 定義（`Define/FormLayout/Staff.FormLayout.xml`） |
 | 列表 + 表單整合 | `FormPage` |
 | CRUD 走 Polhem | `FormDataObject.LoadAsync / SaveAsync / NewAsync / DeleteAsync` |
 | Local 模式 in-process 派遣 | `PolhemBlazorOptions.UseLocalProvider()` |
