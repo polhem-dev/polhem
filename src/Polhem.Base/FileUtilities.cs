@@ -1,12 +1,11 @@
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Polhem.Base
 {
     /// <summary>
     /// Framework-level file utilities not covered by BCL <see cref="System.IO.File"/> /
     /// <see cref="System.IO.Path"/>: text I/O with UTF-8 no-BOM default and auto-create
-    /// directory, missing-file-as-empty read, Windows local-path detection, and assembly
+    /// directory, missing-file-as-empty read, local-path detection, and assembly
     /// path resolution.
     /// </summary>
     public static class FileUtilities
@@ -177,14 +176,37 @@ namespace Polhem.Base
         }
 
         /// <summary>
-        /// Determines whether the specified input is a local Windows path (drive letter or UNC).
+        /// Determines whether the specified input is an absolute file-system path rather than a URL
+        /// or a relative path.
         /// </summary>
         /// <param name="input">The input path.</param>
+        /// <returns>
+        /// True for a path that is fully qualified on the current operating system (a Unix path such
+        /// as <c>/srv/define</c> on macOS and Linux), and for the Windows drive (<c>C:\define</c>,
+        /// <c>C:/define</c>) and UNC (<c>\\server\share</c>) forms on every operating system;
+        /// false for blank input, relative paths, and URLs such as <c>http://…</c> or <c>file://…</c>.
+        /// </returns>
+        /// <remarks>
+        /// The Windows forms are recognized everywhere so that a Windows path typed on another
+        /// operating system is reported as a path that does not exist rather than as an input of
+        /// unknown kind. A <c>file://</c> URI is not a path: callers use the input as a directory
+        /// as-is, so it would never resolve.
+        /// </remarks>
         public static bool IsLocalPath(string input)
         {
-            // Check whether it is a Windows path or UNC network path
-            string pattern = @"^([a-zA-Z]:\\|\\\\)";
-            return Regex.IsMatch(input, pattern, RegexOptions.None, TimeSpan.FromSeconds(1));
+            if (string.IsNullOrWhiteSpace(input))
+                return false;
+            return Path.IsPathFullyQualified(input) || IsWindowsAbsolutePath(input);
+        }
+
+        private static bool IsWindowsAbsolutePath(string input)
+        {
+            if (input.StartsWith(@"\\", StringComparison.Ordinal))
+                return true;
+            return input.Length >= 3
+                && char.IsAsciiLetter(input[0])
+                && input[1] == ':'
+                && (input[2] == '\\' || input[2] == '/');
         }
 
         /// <summary>

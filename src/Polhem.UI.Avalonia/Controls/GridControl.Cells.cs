@@ -408,6 +408,26 @@ namespace Polhem.UI.Avalonia.Controls
             return CellValueFormatter.Format(dataRow[fieldName], displayFormat, numberFormat);
         }
 
+        /// <summary>
+        /// Formats the text a plain (non-editor) cell of <paramref name="column"/> shows for
+        /// <paramref name="row"/>: the composed display fields of a list-mode lookup column instead of
+        /// its raw row id, otherwise the value in the user's culture with the column's delivered or
+        /// currency/unit-resolved number format.
+        /// </summary>
+        /// <param name="row">The row to read; <c>null</c> gives an empty string.</param>
+        /// <param name="column">The layout column being rendered.</param>
+        /// <remarks>
+        /// The compact card list of <see cref="Polhem.UI.Avalonia.Views.ListView"/> renders its values
+        /// through this method too, so a phone-width list shows a value exactly as the wide grid does.
+        /// </remarks>
+        internal string FormatColumnText(DataRowView? row, LayoutColumn column)
+        {
+            var textFields = SplitDisplayFields(column.DisplayFields);
+            return textFields.Length == 0
+                ? FormatCellForColumn(row, column)
+                : ComposeDisplayText(row, textFields, column.DisplayFormat, column.NumberFormat);
+        }
+
         // Currency-aware cell text: an Amount column resolves its decimals per row from the referenced
         // currency (see ResolveCellNumberFormat); every other column uses the column's delivered formats.
         private string FormatCellForColumn(DataRowView? row, LayoutColumn column)

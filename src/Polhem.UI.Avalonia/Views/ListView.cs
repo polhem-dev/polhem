@@ -360,8 +360,11 @@ namespace Polhem.UI.Avalonia.Views
         }
 
         // One card per row: each visible column rendered as a "caption  value" line, read straight
-        // off the DataRowView (no reflection binding, so it works under iOS AOT).
-        private static FuncDataTemplate<DataRowView> BuildCardTemplate(IReadOnlyList<LayoutColumn> columns)
+        // off the DataRowView (no reflection binding, so it works under iOS AOT). The value text comes
+        // from `formatValue`, which the view points at the wide grid's own cell formatter, so a date
+        // column shows the same short date on a phone as on the desktop grid.
+        internal static FuncDataTemplate<DataRowView> BuildCardTemplate(
+            IReadOnlyList<LayoutColumn> columns, Func<DataRowView?, LayoutColumn, string> formatValue)
             => new FuncDataTemplate<DataRowView>((row, _) =>
             {
                 var stack = new StackPanel { Spacing = 3 };
@@ -375,10 +378,7 @@ namespace Polhem.UI.Avalonia.Views
                         MinWidth = 92,
                         Opacity = 0.7,
                     });
-                    var value = row is not null && row.Row.Table.Columns.Contains(column.FieldName)
-                        ? row[column.FieldName]?.ToString()
-                        : string.Empty;
-                    line.Children.Add(new TextBlock { Text = value, TextWrapping = TextWrapping.Wrap });
+                    line.Children.Add(new TextBlock { Text = formatValue(row, column), TextWrapping = TextWrapping.Wrap });
                     stack.Children.Add(line);
                 }
 

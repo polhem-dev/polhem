@@ -121,7 +121,8 @@ Polhem 的 `Polhem.Api.Client` 對呼叫端有**一致的 API 表面**,差異只
 // Local
 builder.Services.AddPolhemBlazor(o => o.UseLocalProvider());
 
-// Remote
+// Remote（伺服器會以 401 拒絕沒有此應用程式 API key 的呼叫）
+Polhem.Api.Client.ApiClientInfo.ApiKey = "<issued api key>";
 builder.Services.AddPolhemBlazor(o => o.UseRemoteProvider("http://host:5050/api"));
 ```
 

@@ -23,7 +23,9 @@
 using Polhem.Web.Blazor.Server.DependencyInjection;
 
 // Remote: the components call a Polhem API server over HTTP, where every call is checked like any
-// other API client's. No AddPolhemFramework is needed in this host.
+// other API client's. No AddPolhemFramework is needed in this host. Set the API key issued for this
+// application first: every circuit's RemoteApiProvider sends the process-wide ApiClientInfo.ApiKey.
+Polhem.Api.Client.ApiClientInfo.ApiKey = builder.Configuration["Polhem:ApiKey"] ?? string.Empty;
 builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider("https://api.example.com/api"));
 
 // Local (the default): the host is also the backend. Register it with AddPolhemFramework
@@ -35,6 +37,14 @@ builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider("https://a
 `PolhemApiConnectorFactory` that components use to build connectors and definition loaders, and the localizer for
 the components' own text. It does not call `AddPolhemFramework`. `options.UseDefinitionLoader` (on by default)
 decides whether `FormPage` localizes its definitions; see below.
+
+> **Remote mode needs the application's API key.** The server's default `ApiAuthorizationValidator` refuses every
+> method except `System.Ping` when the `X-Api-Key` header is missing or not an enabled key, and the request is
+> answered with `401 Unauthorized`. `UseRemoteProvider` takes no key: the key identifies the calling application rather than a
+> user, so it lives in the process-wide `ApiClientInfo.ApiKey`, which is empty until the host sets it. Without it the
+> first call, usually the sign-in, fails with "Response status code does not indicate success: 401 (Unauthorized)."
+> Until the server has issued any key, a non-empty value is enough; once one is enabled, only an enabled key passes.
+> The configuration key in the example is a placeholder: read the value from wherever the host keeps its secrets.
 
 > **Local mode is for trusted users only.** Every call it makes is an in-process call, which the backend treats
 > as trusted whichever browser user caused it. Use it when every user of the site is trusted with the whole

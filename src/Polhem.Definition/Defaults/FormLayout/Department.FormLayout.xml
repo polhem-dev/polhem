@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FormLayout xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" LayoutId="Department" ProgId="Department" Caption="Department">
   <Sections>
-    <LayoutSection Name="Main" Caption="Department">
+    <LayoutSection Name="Main" Caption="Department" ShowCaption="false">
       <Fields>
-        <LayoutField FieldName="sys_no" Caption="Sequence No." />
-        <LayoutField FieldName="sys_rowid" Caption="Row Id" />
         <LayoutField FieldName="sys_id" Caption="Department No." />
         <LayoutField FieldName="sys_name" Caption="Department Name" />
-        <LayoutField FieldName="manager_rowid" Caption="Manager Row Id" />
-        <LayoutField FieldName="ref_manager_id" Caption="Manager No." />
-        <LayoutField FieldName="ref_manager_name" Caption="Manager Name" />
+        <LayoutField FieldName="manager_rowid" Caption="Manager Row Id" ControlType="ButtonEdit" DisplayFields="ref_manager_id,ref_manager_name" />
       </Fields>
     </LayoutSection>
   </Sections>

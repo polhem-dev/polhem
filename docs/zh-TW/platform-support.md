@@ -1,4 +1,4 @@
-<!-- source: en/platform-support.md blob: a5d1db87e6a2faa32683b9c17b77b35b58213715 -->
+<!-- source: en/platform-support.md blob: 3590b4fe6e19e26bac802282150e1f97ffce3465 -->
 # 平台支援
 
 [English](../en/platform-support.md) · [← 文件索引](README.md)
@@ -39,7 +39,9 @@
 - **Blazor Server** 的元件在 ASP.NET Core 伺服器行程中執行，因此下文的裁剪與 AOT 問題與它無關。它的 API session 是每個
   circuit 一份，而不是每個行程一份。它預設的 Local 模式會把每位瀏覽器使用者的呼叫都當成受信任的行程內呼叫（略過存取權杖與
   `LocalOnly` 檢查）：只有在網站的每位使用者都可以看到整個後端時才使用，否則請在 `AddPolhemBlazor` 中呼叫
-  `UseRemoteProvider(endpoint)`。`PolhemBlazorOptions` 的 remarks 詳細說明 Local 會略過哪些檢查；另見
+  `UseRemoteProvider(endpoint)`。Remote 模式還需要在啟動時把應用程式的 API key 設到 `ApiClientInfo.ApiKey`，否則伺服器會以
+  `401 Unauthorized` 拒絕第一個呼叫。`PolhemBlazorOptions` 的 remarks 詳細說明 Local 會略過哪些檢查，以及 Remote 為何從那裡讀取
+  key；另見
   [`samples/Blazor.Server.Demo`](../../samples/Blazor.Server.Demo/README.zh-TW.md)。
 
 ---

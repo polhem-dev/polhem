@@ -4,13 +4,13 @@
     <LayoutSection Name="Main" Caption="Order">
       <Fields>
         <LayoutField FieldName="sys_id" Caption="Order No" />
-        <LayoutField FieldName="order_date" Caption="Order Date" />
+        <LayoutField FieldName="order_date" Caption="Order Date" ControlType="DateEdit" />
         <LayoutField FieldName="customer_rowid" Caption="Customer" ControlType="ButtonEdit" DisplayFields="ref_customer_id,ref_customer_name" />
         <LayoutField FieldName="employee_rowid" Caption="Employee" ControlType="ButtonEdit" DisplayFields="ref_employee_id,ref_employee_name" />
         <LayoutField FieldName="shipper_rowid" Caption="Shipper" ControlType="ButtonEdit" DisplayFields="ref_shipper_id,ref_shipper_name" />
-        <LayoutField FieldName="freight" Caption="Freight" />
+        <LayoutField FieldName="freight" Caption="Freight" ControlType="NumericEdit" />
         <LayoutField FieldName="status" Caption="Status" ControlType="DropDownEdit" />
-        <LayoutField FieldName="total_amount" Caption="Total Amount" ReadOnly="true" />
+        <LayoutField FieldName="total_amount" Caption="Total Amount" ControlType="NumericEdit" ReadOnly="true" />
       </Fields>
     </LayoutSection>
   </Sections>
@@ -18,10 +18,10 @@
     <LayoutGrid TableName="OrderDetail" Caption="Order Details">
       <Columns>
         <LayoutColumn FieldName="product_rowid" Caption="Product" ControlType="ButtonEdit" DisplayFields="ref_product_id,ref_product_name" />
-        <LayoutColumn FieldName="quantity" Caption="Quantity" />
-        <LayoutColumn FieldName="unit_price" Caption="Unit Price" />
-        <LayoutColumn FieldName="discount" Caption="Discount" />
-        <LayoutColumn FieldName="amount" Caption="Amount" ReadOnly="true" />
+        <LayoutColumn FieldName="quantity" Caption="Quantity" ControlType="NumericEdit" />
+        <LayoutColumn FieldName="unit_price" Caption="Unit Price" ControlType="NumericEdit" />
+        <LayoutColumn FieldName="discount" Caption="Discount" ControlType="NumericEdit" />
+        <LayoutColumn FieldName="amount" Caption="Amount" ControlType="NumericEdit" ReadOnly="true" />
         <LayoutColumn FieldName="sys_rowid" Caption="Row ID" Visible="false" />
         <LayoutColumn FieldName="sys_master_rowid" Caption="Master Row ID" Visible="false" />
       </Columns>

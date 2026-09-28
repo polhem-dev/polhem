@@ -23,7 +23,9 @@
 using Polhem.Web.Blazor.Server.DependencyInjection;
 
 // Remote：元件透過 HTTP 呼叫 Polhem API 伺服器，每次呼叫都與其他 API 用戶端一樣受檢查。
-// 此宿主不需要 AddPolhemFramework。
+// 此宿主不需要 AddPolhemFramework。先設定核發給此應用程式的 API key：每個 circuit 的
+// RemoteApiProvider 送出的都是行程共用的 ApiClientInfo.ApiKey。
+Polhem.Api.Client.ApiClientInfo.ApiKey = builder.Configuration["Polhem:ApiKey"] ?? string.Empty;
 builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider("https://api.example.com/api"));
 
 // Local（預設）：宿主本身就是後端。先在同一個 service collection 以 AddPolhemFramework
@@ -34,6 +36,13 @@ builder.Services.AddPolhemBlazor(options => options.UseRemoteProvider("https://a
 `AddPolhemBlazor` 註冊 `PolhemBlazorOptions`、每個 circuit 一個的 `ApiSessionContext`、元件用來建立連接器與定義
 載入器的 `PolhemApiConnectorFactory`，以及元件自身文字的 localizer。它不會呼叫 `AddPolhemFramework`。
 `options.UseDefinitionLoader`（預設開啟）決定 `FormPage` 是否在地化定義，見下文。
+
+> **Remote 模式需要應用程式的 API key。** 伺服器預設的 `ApiAuthorizationValidator` 在 `X-Api-Key` 標頭缺少或不是
+> 已啟用的 key 時，會拒絕 `System.Ping` 以外的每個方法，該請求以 `401 Unauthorized` 回應。`UseRemoteProvider` 不接受 key：
+> key 識別的是呼叫端應用程式而不是使用者，所以放在行程共用的 `ApiClientInfo.ApiKey`，宿主設定之前它是空字串。
+> 沒有設定時，第一個呼叫（通常是登入）會失敗，訊息為「Response status code does not indicate success: 401
+> (Unauthorized).」。伺服器尚未核發任何 key 時，任何非空值都能通過；一旦有已啟用的 key，就只有已啟用的 key 能通過。
+> 範例中的設定鍵只是示意：請從宿主存放機密的地方讀取這個值。
 
 > **Local 模式只適用於受信任的使用者。** 它發出的每次呼叫都是行程內呼叫，不論是哪位瀏覽器使用者觸發，
 > 後端都視為受信任。只有當網站的每位使用者都被信任可使用整個後端時（例如內部管理工具）才使用它；
