@@ -8,10 +8,11 @@
 
 const ENDPOINT = 'http://localhost:5050/api';
 
-// The default ApiAuthorizationValidator only requires X-Api-Key to be non-empty;
-// the actual value is not checked against a registry. Production hosts must
-// register a stricter validator. Using "quickstart-demo" to match the value
-// shown in samples/QuickStart.Server/README.md.
+// Every call except System.Ping carries an X-Api-Key, which identifies the calling
+// application (the Bearer token identifies the user). Until a deployment issues its
+// first key in st_api_key, any non-empty value passes, which is why this demo value
+// works against QuickStart.Server. Once a key is issued, the server checks the
+// value against the stored hash and this constant must hold a real key.
 const API_KEY = 'quickstart-demo';
 
 let _accessToken = null;
@@ -25,13 +26,18 @@ export function getAccessToken() { return _accessToken; }
 /** Clears the AccessToken (after Logout or session expiry). */
 export function clearAccessToken() { _accessToken = null; }
 
-/** JSON-RPC error surfaced to callers with the server-side error code. */
+/**
+ * JSON-RPC error surfaced to callers with the server-side error code. When the
+ * server answered with an HTTP error status, `httpStatus` carries it; `code` is
+ * the JSON-RPC error code from the body, or the HTTP status when the body had none.
+ */
 export class RpcError extends Error {
-  constructor(code, message, data) {
+  constructor(code, message, data, httpStatus = null) {
     super(message);
     this.name = 'RpcError';
     this.code = code;
     this.data = data;
+    this.httpStatus = httpStatus;
   }
 }
 
@@ -59,15 +65,28 @@ async function rpcCall(method, value) {
     headers,
     body: JSON.stringify(body),
   });
+  // The server reports most failures (a rejected API key, a malformed request) as
+  // an HTTP error status with a JSON-RPC error envelope in the body, so read the
+  // body before falling back to the bare status line.
+  const data = await readJson(res);
+  if (data?.error) {
+    throw new RpcError(data.error.code, data.error.message, data.error.data, res.ok ? null : res.status);
+  }
   if (!res.ok) {
-    throw new RpcError(res.status, `HTTP ${res.status} ${res.statusText}`);
+    throw new RpcError(res.status, `HTTP ${res.status} ${res.statusText}`, undefined, res.status);
   }
+  return data?.result?.value ?? null;
+}
 
-  const data = await res.json();
-  if (data.error) {
-    throw new RpcError(data.error.code, data.error.message, data.error.data);
+/** Parses a response body as JSON, or returns null when it is empty or not JSON. */
+async function readJson(res) {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
   }
-  return data.result?.value ?? null;
 }
 
 export const systemApi = {
@@ -83,9 +102,10 @@ export const systemApi = {
     rpcCall('System.Login', { userId, password, clientPublicKey: '' }),
 
   /**
-   * Enter the specified company. The default demo backend has no seeded
-   * st_company / st_user_company rows, so this call returns an
-   * "Company access denied" RpcError — useful for demonstrating the error path.
+   * Enter the specified company. Company-scoped forms (every form in the demo)
+   * refuse calls until the session has entered one. The demo backend seeds a
+   * single company, "DEMO"; an ID it does not know, or one the user has no
+   * access to, returns a "Company access denied" RpcError.
    */
   enterCompany: (companyId) =>
     rpcCall('System.EnterCompany', { companyId }),
@@ -107,9 +127,12 @@ export const systemApi = {
 
   /**
    * Fetch the raw base-layer FormLayout definition for the given progId.
-   * Returns null when no layout is stored — the caller then generates one from
-   * the schema, exactly as the .NET clients do. An empty layoutId resolves to
-   * the progId server-side, matching the {ProgId}.FormLayout.xml convention.
+   * Returns null when no layout is stored. Layouts are authored at design time,
+   * so a missing one is a configuration error for the caller to report; the
+   * .NET clients report it too rather than generating a layout from the schema.
+   * An empty layoutId resolves to the progId server-side, matching the
+   * {ProgId}.FormLayout.xml convention. This is the base layer only: a tenant
+   * customization layout is a separate call (System.GetCustomizeFormLayout).
    */
   getFormLayout: async (progId, layoutId = '') =>
     parseDefineXml((await rpcCall('System.GetFormLayout', { progId, layoutId })).xml),
@@ -139,21 +162,43 @@ function parseDefineXml(xml) {
 
 const camelCase = (name) => name.charAt(0).toLowerCase() + name.slice(1);
 
+// Collections .NET maps with a repeated [XmlElement] have no wrapper element:
+// XmlSerializer writes their items straight into the owner, one element each
+// (LanguageEnum's <Entry> items, for example). These tags always become an
+// array, even with a single item, so callers can iterate them unconditionally.
+const REPEATED_ELEMENTS = new Set(['Entry']);
+
 function elementToObject(el) {
   const obj = {};
+  const collected = new Set();
   for (const attr of el.attributes) {
     // Skip the xsi/xsd namespace declarations XmlSerializer emits on the root.
     if (attr.name.startsWith('xmlns')) continue;
     obj[camelCase(attr.name)] = coerce(attr.value);
   }
   for (const child of el.children) {
+    const key = camelCase(child.tagName);
+    if (REPEATED_ELEMENTS.has(child.tagName)) {
+      (obj[key] ??= []).push(elementToObject(child));
+      continue;
+    }
     // A wrapper element (Sections, Fields, ...) holds a list; anything else is
     // a nested object. Wrappers are recognised by having element children whose
     // tag differs from their own, which is how XmlSerializer writes XmlArray.
     const items = Array.from(child.children);
-    obj[camelCase(child.tagName)] = items.length > 0 && items[0].tagName !== child.tagName
+    const value = items.length > 0 && items[0].tagName !== child.tagName
       ? items.map(elementToObject)
       : elementToObject(child);
+    // An unlisted tag that still repeats is collected into an array rather than
+    // letting the last occurrence overwrite the others.
+    if (collected.has(key)) {
+      obj[key].push(value);
+    } else if (key in obj) {
+      obj[key] = [obj[key], value];
+      collected.add(key);
+    } else {
+      obj[key] = value;
+    }
   }
   return obj;
 }

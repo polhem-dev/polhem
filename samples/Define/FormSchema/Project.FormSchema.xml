@@ -4,7 +4,7 @@
      picks an Employee (in-cell grid lookup). Relation fields resolve to
      `ButtonEdit` automatically; the `ref_*` fields are filled by the lookup
      write-back locally and re-derived by the server-side JOIN on reload. -->
-<FormSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ProgId="Project" DisplayName="Project" CategoryId="common" ListFields="sys_id,sys_name,ref_dept_name">
+<FormSchema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ProgId="Project" DisplayName="Project" CategoryId="company" ListFields="sys_id,sys_name,ref_dept_name">
   <Tables>
     <FormTable TableName="Project" DbTableName="ft_project" DisplayName="Project">
       <Fields>

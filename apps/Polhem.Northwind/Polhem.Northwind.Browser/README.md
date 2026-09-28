@@ -33,6 +33,10 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Browser
 Open <http://localhost:5200/>, then **Connect** (endpoint pre-filled with
 `http://localhost:5100/api`) → **Sign in** with `demo` / `demo`.
 
+Use the `demo` account in this head. The `demo-tw` account signs in too, but its zh-TW captions
+render as empty boxes: the bundled Inter font has no CJK glyphs, and unlike the desktop and mobile
+heads the browser sandbox has no system font to fall back to. `Program.cs` explains the trade-off.
+
 Because the dev server (`5200`) and the API (`5100`) are different origins, the server enables
 a development-only CORS policy (`PolhemDevWasm`, gated by `IsDevelopment()`) that allows any
 `localhost` origin. A production deployment should serve the published WASM **same-origin** from

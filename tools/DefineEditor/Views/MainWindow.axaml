@@ -20,9 +20,25 @@
     </Design.DataContext>
 
     <DockPanel>
-        <!-- The menus live in the macOS system menu bar at the top of the screen (set up by
-             App.ConfigureApplicationMenu / ConfigureWindowMenu), not inside the window. This follows the
-             VS Code convention on macOS: File, View and the rest are all at the top. -->
+        <!-- On macOS the menus live in the system menu bar at the top of the screen (set up by
+             App.ConfigureApplicationMenu / ConfigureWindowMenu), following the VS Code convention there.
+             Windows and Linux do not render that menu, so this in-window File menu carries the document
+             commands instead. It stays hidden until App calls ShowInWindowFileMenu, which it does off
+             macOS only, and its items run the same commands as the macOS File menu. -->
+        <Menu x:Name="InWindowMenu" DockPanel.Dock="Top" IsVisible="False">
+            <MenuItem Header="{loc:Loc Menu_File}">
+                <MenuItem x:Name="SaveMenuItem" Header="{loc:Loc MenuItem_Save}"
+                          InputGesture="Ctrl+S" HotKey="Ctrl+S"/>
+                <!-- NOTE: no shortcut for Save All. The macOS one is Cmd+Option+S, but Ctrl+Alt is AltGr on
+                     Windows, where it types characters on several keyboard layouts. -->
+                <MenuItem x:Name="SaveAllMenuItem" Header="{loc:Loc MenuItem_SaveAll}"/>
+                <MenuItem x:Name="ValidateMenuItem" Header="{loc:Loc MenuItem_Validate}"
+                          InputGesture="Ctrl+Shift+B" HotKey="Ctrl+Shift+B"/>
+                <Separator/>
+                <MenuItem x:Name="CloseTabMenuItem" Header="{loc:Loc MenuItem_CloseActiveTab}"
+                          InputGesture="Ctrl+W" HotKey="Ctrl+W"/>
+            </MenuItem>
+        </Menu>
 
         <!-- Bottom status bar in the VS Code style.
              Left: [solution path] › [relative path of the current definition file]
@@ -93,7 +109,8 @@
                                 <TextBlock Text="{loc:Loc Welcome_OpenFolderButton}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <TextBlock Classes="muted" HorizontalAlignment="Center"
+                        <TextBlock x:Name="MenuAlternativeHint"
+                                   Classes="muted" HorizontalAlignment="Center"
                                    TextWrapping="Wrap" MaxWidth="240"
                                    TextAlignment="Center"
                                    Text="{loc:Loc Welcome_MenuAlternative}"/>

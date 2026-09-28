@@ -37,7 +37,14 @@ dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Server
 dotnet run --project apps/Polhem.Northwind/Polhem.Northwind.Desktop
 ```
 
-Then in the app: **Connect** (the endpoint is pre-filled) → **Sign in** with `demo` / `demo`.
+Then in the app: **Connect** (the endpoint is pre-filled) → **Sign in** with one of the two seeded accounts:
+
+| Account | Password | Culture | What you see |
+|---|---|---|---|
+| `demo` | `demo` | `en-US` | English captions and formats |
+| `demo-tw` | `demo` | `zh-TW` | Traditional Chinese captions (including the tenant's customized ones) and formats |
+
+Both accounts enter the same company and see the same data; the session takes its language from the account (`st_user.culture`), not from the operating system.
 
 ### Web client (Avalonia WASM)
 
@@ -90,14 +97,14 @@ The same Order form rendered by all four Avalonia heads — same definitions, sa
 
 | Desktop | Browser |
 |---|---|
-| ![Desktop — order detail](https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-desktop-order-detail.png) | ![Browser — order detail](https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-browser-order-detail.png) |
+| ![Desktop — order detail](https://github.com/polhem-dev/polhem/raw/main/apps/Polhem.Northwind/docs/images/desktop-order-detail.png) | ![Browser — order detail](https://github.com/polhem-dev/polhem/raw/main/apps/Polhem.Northwind/docs/images/browser-order-detail.png) |
 
 **iOS and Android:**
 
 | | iOS | Android |
 |---|---|---|
-| **Order list** | ![iOS — order list](https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-ios-order-list.png) | ![Android — order list](https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-android-order-list.png) |
-| **Order detail** | ![iOS — order detail](https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-ios-order-detail.png) | ![Android — order detail](https://raw.githubusercontent.com/jeff377/blog-images/main/avalonia-mobile-frontend-android-order-detail.png) |
+| **Order list** | ![iOS — order list](https://github.com/polhem-dev/polhem/raw/main/apps/Polhem.Northwind/docs/images/ios-order-list.png) | ![Android — order list](https://github.com/polhem-dev/polhem/raw/main/apps/Polhem.Northwind/docs/images/android-order-list.png) |
+| **Order detail** | ![iOS — order detail](https://github.com/polhem-dev/polhem/raw/main/apps/Polhem.Northwind/docs/images/ios-order-detail.png) | ![Android — order detail](https://github.com/polhem-dev/polhem/raw/main/apps/Polhem.Northwind/docs/images/android-order-detail.png) |
 
 ## The forms
 
@@ -142,7 +149,7 @@ Signing in answers two questions, and the framework asks them separately. `Login
 
 **Both steps run entirely on framework code.** The application substitutes no service and overrides no method:
 
-- **Authentication** is the framework's own `st_user` check. The seeder writes a `demo` account on first start, with the password hashed through `PasswordHasher` at seed time (not a literal hash, which would silently stop matching the first time the hashing parameters change). Comparing an account and a password is the same operation in every deployment, so it belongs to the framework.
+- **Authentication** is the framework's own `st_user` check. The seeder writes the `demo` and `demo-tw` accounts on first start (and adds either one to an existing `northwind.db` that lacks it), with the password hashed through `PasswordHasher` at seed time (not a literal hash, which would silently stop matching the first time the hashing parameters change). Comparing an account and a password is the same operation in every deployment, so it belongs to the framework.
 - **Company entry** is the framework's own `EnterCompany`. The seeder writes the matching `st_company` and `st_user_company` rows, and the call then validates the company exists and is enabled, checks the user's access, and snapshots roles and the employee context onto the session.
 
 That `st_user` row also carries `time_zone` and `culture`, so the session takes its zone, and the client its language, from the **user** rather than from the server or a deployment default.
@@ -199,6 +206,7 @@ The Order form is captioned twice over. `FormSchema` carries the English caption
 English needs no resource file at all — a missing key leaves the schema's own text in place.
 `Define/Language/zh-TW/Order.Language.xml` supplies the zh-TW captions, keyed by the same
 convention everywhere (`Schema.DisplayName`, `Table.{table}.DisplayName`, `Field.{field}.Caption`).
+Sign in as `demo-tw` to see them: the session's culture comes from that account's `st_user` row.
 
 Which language a client shows is the signed-in **account's** culture: `Login` returns the
 `st_user.culture` value, and `ClientInfo.ApplyLoginResult` makes it the client's UI culture. The

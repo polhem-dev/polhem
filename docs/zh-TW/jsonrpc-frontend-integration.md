@@ -1,4 +1,4 @@
-<!-- source: en/jsonrpc-frontend-integration.md blob: 41be822b6d9091f49e275b7578cf9c17db5a04a9 -->
+<!-- source: en/jsonrpc-frontend-integration.md blob: 868c564c2f905dcb40f0cadcc6036b27bdb82468 -->
 # JSON-RPC 前端整合指引
 
 [English](../en/jsonrpc-frontend-integration.md) · [← 文件索引](README.md)
@@ -184,9 +184,9 @@ Token 是 `Guid` 字串。Token 在登入回應所帶的 `expiredAt` 時間到�
 
 某些方法需要先進入公司（`System.EnterCompany`）以設定 `SessionInfo.CompanyId`，
 讓 form CRUD 路由到公司專屬資料庫。`CategoryId` 為 `company` 的表單若在未進公司時呼叫，會回 `-32002`
-（`CompanyNotEntered`）。範例的 `Employee` 表單宣告在 `common` scope，demo 因此不需要 `EnterCompany`
-也能跑；它取代了框架自帶的 `Employee` 表單，後者屬公司 scope（`st_employee`，見
-[框架保留命名](framework-reserved-names.md)）。你自己的業務表單應放在 `company`。
+（`CompanyNotEntered`）。業務表單應放在 `company`，範例的 `Employee` 表單也不例外：每個範例 client
+都在 `Login` 之後緊接著呼叫 `EnterCompany`，進入 demo 後端種下的唯一一間公司（`DEMO`）。那個表單取代了
+框架自帶的 `Employee` 表單（`st_employee`，見 [框架保留命名](framework-reserved-names.md)），後者同樣屬公司 scope。
 
 ---
 

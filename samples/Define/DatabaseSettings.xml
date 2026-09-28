@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <DatabaseSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Items>
+    <!-- common: framework tables shared across companies (st_user, st_session, st_company, ...). -->
     <DatabaseItem
         Id="common"
         CategoryId="common"
         DisplayName="Common Database (SQLite)"
+        DatabaseType="SQLite"
+        ConnectionString="Data Source=quickstart.db;Cache=Shared" />
+    <!-- company: the demo company's business data. A real multi-company deployment gives each company
+         its own database; this single-company demo keeps both categories in one SQLite file. -->
+    <DatabaseItem
+        Id="company"
+        CategoryId="company"
+        DisplayName="Demo Company Database (SQLite)"
         DatabaseType="SQLite"
         ConnectionString="Data Source=quickstart.db;Cache=Shared" />
   </Items>

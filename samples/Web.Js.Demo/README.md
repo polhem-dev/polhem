@@ -15,7 +15,7 @@ definitions:
 |---------|---------|
 | Login | `System.Login` |
 | Ping | `System.Ping` (no auth) |
-| Enter Company | `System.EnterCompany` / `System.LeaveCompany` (error path — see UI hint) |
+| Enter Company | `System.EnterCompany` / `System.LeaveCompany` (required before Employee CRUD; an unknown ID shows the error path) |
 | Employee CRUD | `Employee.GetList` / `GetData` / `GetNewData` / `Save` / `Delete` |
 | FormDefinition-driven rendering | `System.GetFormSchema` / `System.GetFormLayout` → definition XML → dynamic form |
 | Logout | `System.Logout` |
@@ -51,15 +51,18 @@ definitions:
 
      Then open `http://localhost:8080/index.html`.
 
-3. Click **Login** (default credentials `demo` / `demo`), then **Ping** —
-   each result shows up in the output panel at the bottom.
+3. Click **Login** (default credentials `demo` / `demo`), then **EnterCompany**
+   (the company ID is pre-filled with `DEMO`), then **GetList** — each result
+   shows up in the output panel at the bottom. The Employee form is
+   company-scoped, so the CRUD and form buttons fail until the session has
+   entered the company.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
 | `index.html` | Minimal UI — Login form, CRUD buttons, dynamic form area, result panel. Vanilla CSS, no external dependencies. |
-| `polhem-api-client.js` | ES module: exports `systemApi.*`, `formApi(progId)`, `RpcError` and the access token helpers. Every call goes through the module-private `rpcCall(method, value)`, and the definition XML is parsed into plain objects here. |
+| `polhem-api-client.js` | ES module: exports `systemApi.*`, `formApi(progId)`, `RpcError` and the access token helpers. Every call goes through the module-private `rpcCall(method, value)`, which reads an HTTP error response for its JSON-RPC error before falling back to the status line, and the definition XML is parsed into plain objects here. |
 | `form-renderer.js` | ES module: takes the parsed `FormLayout` object and produces a working HTML form (CSS Grid, control-type dispatch). Exposes `bindDataSet` / `collectDataSet` for two-way data binding. |
 | `app.js` | UI event wiring; depends on `polhem-api-client.js` and `form-renderer.js`. |
 | `.smoke.yaml` | Config for the `demo-smoke` skill — launches both prerequisite servers and verifies the page loads with the expected section text. See file header for the browser-tier limitation (clicks blocked → load-only smoke). |

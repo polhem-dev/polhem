@@ -15,17 +15,19 @@ internal sealed partial class Program
     /// </summary>
     private static Task Main(string[] args)
     {
-        // This head renders in English regardless of the browser's language.
+        // Starts the head in English whatever the browser's language is.
         //
-        // Definitions are localized off CultureInfo.CurrentUICulture, which in the browser comes
-        // from the user's browser language. A Chinese browser therefore loads Define/Language/zh-TW
-        // — and Inter, the bundled font, carries no CJK glyphs. Every other head borrows PingFang
-        // or Noto CJK from the operating system when a glyph is missing; the browser sandbox has no
-        // system font to borrow, so those labels render as tofu boxes.
+        // In the browser the process culture comes from the browser language, and it holds until
+        // sign-in, when ClientInfo.ApplyLoginResult replaces it with the account's culture
+        // (st_user.culture, or the deployment's default language when that is empty). So this pin
+        // only covers the screens before sign-in.
         //
-        // Pinning the culture is the proportionate fix for a demo: the alternative is shipping a
-        // CJK font, and the smallest usable one costs 5.4 MB to render 24 localized keys. The other
-        // heads keep following the system language and still show the zh-TW resources.
+        // That includes the demo-tw account, whose culture is zh-TW: this head then loads the zh-TW
+        // resources, and Inter, the bundled font, carries no CJK glyphs. The other heads borrow
+        // PingFang or Noto CJK from the operating system when a glyph is missing; the browser
+        // sandbox has no system font to borrow, so those labels render as tofu boxes. Shipping a
+        // CJK font would fix it, and the smallest usable one costs 5.4 MB, so the demo documents
+        // the gap instead: use the demo account in this head.
         CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");
 
         // Same client contract as the desktop head (Remote connector to the JSON-RPC

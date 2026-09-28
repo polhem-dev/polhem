@@ -14,18 +14,19 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Polhem.Samples.Shared;
 
 /// <summary>
-/// One-line bootstrap for the Blazor demos. Resolves the shared
-/// <c>samples/Define</c> directory, registers SQLite, loads SystemSettings,
+/// One-line bootstrap shared by the sample hosts (QuickStart.Server and Blazor.Server.Demo).
+/// Resolves the shared <c>samples/Define</c> directory, registers SQLite, loads SystemSettings,
 /// wires <c>AddPolhemFramework</c>; <c>Define/ProgramSettings.xml</c> binds the reserved "System" progId
-/// so the login panel can authenticate against <see cref="DemoCredentials"/> rather than
-/// against stored credentials.
+/// so sign-in authenticates against <see cref="DemoCredentials"/> rather than against stored
+/// credentials.
 /// </summary>
 /// <remarks>
 /// Overriding authentication removes the need for stored credentials, but not the need for the
-/// common system tables themselves: <c>Login</c> still reads the user's locale from
-/// <c>st_user</c> and persists the session seed to <c>st_session</c> on every successful sign-in.
-/// Both are therefore defined under <c>Define/</c> and created here — without them the demo
-/// authenticates fine and then fails inside session construction.
+/// framework tables themselves: <c>Login</c> still reads the user's locale from <c>st_user</c> and
+/// persists the session seed to <c>st_session</c>, and the <c>EnterCompany</c> call every client
+/// makes next reads <c>st_company</c> and <c>st_user_company</c>. They are therefore defined under
+/// <c>Define/</c> and created here — without them the demo authenticates fine and then fails
+/// inside session construction.
 /// </remarks>
 public static class DemoBackend
 {
@@ -50,8 +51,8 @@ public static class DemoBackend
         // DefinePath is — the host computes it and hands both to AddPolhemFramework; the framework has
         // no configuration binding of its own. The directory need not exist: a tenant with no
         // override files resolves every lookup to the base layer, which is what this demo does
-        // (it is single-company and never calls EnterCompany, so SessionInfo.CustomizeId stays
-        // empty and the overlay short-circuits before it ever touches the filesystem).
+        // (its one company names no customization code, so SessionInfo.CustomizeId stays empty
+        // after EnterCompany and the overlay short-circuits before it touches the filesystem).
         string definePath = ResolveDefinePath();
         var paths = new PathOptions
         {
@@ -71,11 +72,20 @@ public static class DemoBackend
         //   st_cache_notify — polled by the cache-notify poller AddPolhemFramework registers.
         //   st_session      — the session seed every successful Login persists.
         //   st_user         — read for the signing-in user's time zone and culture.
+        //   st_company, st_user_company — the company and the grant EnterCompany checks.
+        //   st_employee, st_role, st_role_grant, st_user_role — read by EnterCompany while it
+        //     snapshots the session's record-scope identity and roles; the demo leaves them empty.
         var requiredFrameworkTables = new HashSet<string>(StringComparer.Ordinal)
         {
             "TableSchema/common/st_cache_notify.TableSchema.xml",
             "TableSchema/common/st_session.TableSchema.xml",
             "TableSchema/common/st_user.TableSchema.xml",
+            "TableSchema/common/st_company.TableSchema.xml",
+            "TableSchema/common/st_user_company.TableSchema.xml",
+            "TableSchema/company/st_employee.TableSchema.xml",
+            "TableSchema/company/st_role.TableSchema.xml",
+            "TableSchema/company/st_role_grant.TableSchema.xml",
+            "TableSchema/company/st_user_role.TableSchema.xml",
         };
         Defaults.MaterializeTo(paths.DefinePath, new MaterializeOptions
         {

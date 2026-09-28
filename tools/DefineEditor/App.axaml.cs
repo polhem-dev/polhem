@@ -134,6 +134,14 @@ public partial class App : Application
             // macOS treat each sub-menu as a separate top-level menu bar
             // entry instead of folding them into the App menu.
             ConfigureWindowMenu(mainWindow);
+
+            // Off macOS the native menu above is not rendered, so the window shows its own File menu
+            // bound to the same commands.
+            if (!OperatingSystem.IsMacOS())
+            {
+                mainWindow.ShowInWindowFileMenu(
+                    SaveActiveCommand, SaveAllCommand, ValidateActiveCommand, CloseActiveTabCommand);
+            }
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -169,8 +177,9 @@ public partial class App : Application
     {
         // Window-level NativeMenu produces the additional top-level menus
         // that appear to the right of the App menu (File / View / ...).
-        // On Windows / Linux it's not rendered; the welcome panel's
-        // "Open Folder" button serves as the fallback entry point there.
+        // On Windows / Linux it's not rendered: MainWindow's in-window File
+        // menu carries Save / Save All / Validate / Close Tab there, and the
+        // welcome panel's "Open Folder" button opens a solution.
         var menu = new NativeMenu();
 
         // ── File menu ───────────────────────────────────────────────
