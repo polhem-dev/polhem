@@ -203,8 +203,6 @@ Polhem.ObjectCaching.Services.SessionInfoService.Get(System.Guid accessToken) ->
 Polhem.ObjectCaching.Services.SessionInfoService.Remove(System.Guid accessToken) -> void
 Polhem.ObjectCaching.Services.SessionInfoService.SessionInfoService(Polhem.ObjectCaching.ICacheContainer! cache) -> void
 Polhem.ObjectCaching.Services.SessionInfoService.Set(Polhem.Definition.Identity.SessionInfo! sessionInfo) -> void
-const Polhem.ObjectCaching.Database.ApiKeyCache.AbsoluteMinutes = 60 -> int
-const Polhem.ObjectCaching.Database.ApiKeyCache.NegativeMinutes = 1 -> int
 override Polhem.ObjectCaching.Database.ApiKeyGateCache.CacheGroup.get -> string!
 static Polhem.ObjectCaching.CacheInfo.Initialize(Polhem.Definition.Settings.BackendConfiguration! configuration) -> void
 static Polhem.ObjectCaching.CacheInfo.NotifyVersions.get -> Polhem.ObjectCaching.ICacheNotifyVersionStore!
@@ -227,3 +225,21 @@ virtual Polhem.ObjectCaching.ObjectCache<T>.GetKey() -> string!
 virtual Polhem.ObjectCaching.ObjectCache<T>.GetPolicy() -> Polhem.ObjectCaching.CacheItemPolicy!
 virtual Polhem.ObjectCaching.ObjectCache<T>.Remove() -> void
 virtual Polhem.ObjectCaching.ObjectCache<T>.Set(T! value) -> void
+Polhem.ObjectCaching.CacheDefineAccess.CacheDefineAccess(Polhem.Definition.Storage.IDefineStorage! storage, Polhem.Definition.PathOptions! paths, Polhem.ObjectCaching.ICacheContainer! cache, byte[]! configEncryptionKey, Polhem.Definition.Storage.ICustomizeDefineReader? customizeReader, Microsoft.Extensions.Logging.ILogger<Polhem.ObjectCaching.CacheDefineAccess!>? logger) -> void
+Polhem.ObjectCaching.Define.CurrencySettingsCache.CurrencySettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.DbCategorySettingsCache.DbCategorySettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.FormLayoutCache.FormLayoutCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.FormSchemaCache.FormSchemaCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.LanguageResourceCache.LanguageResourceCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.MenuSettingsCache.MenuSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.PluginSettingsCache.PluginSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.ProgramSettingsCache.ProgramSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.TableSchemaCache.TableSchemaCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Define.UnitSettingsCache.UnitSettingsCache(Polhem.Definition.Storage.IDefineStorage! storage, string! cachePrefix = "") -> void
+Polhem.ObjectCaching.Services.CompanyAuthorizationService.Can(System.Guid accessToken, string! modelId, Polhem.Definition.Settings.PermissionActions action) -> bool
+static readonly Polhem.ObjectCaching.Database.ApiKeyCache.AbsoluteMinutes -> int
+static readonly Polhem.ObjectCaching.Database.ApiKeyCache.MaxNegativeIds -> int
+static readonly Polhem.ObjectCaching.Database.ApiKeyCache.NegativeMinutes -> int
+static readonly Polhem.ObjectCaching.Database.SessionInfoCache.MaxNegativeTokens -> int
+static readonly Polhem.ObjectCaching.Database.SessionInfoCache.NegativeMinutes -> int
+virtual Polhem.ObjectCaching.KeyObjectCache<T>.MaxNegativeEntries.get -> int

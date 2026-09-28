@@ -54,8 +54,9 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 - `GetList` 與 `GetCount` 只接受表單宣告過的過濾與排序欄位，且不接受受保護欄位；`GetLookup` 套用讀取的記錄範圍
   （`FormBusinessObject.LookupAppliesRecordScope` 可退出）。([#4](https://github.com/polhem-dev/polhem/pull/4))
 - 遠端 `GetDefine` 只提供明列允許的定義類型。([#4](https://github.com/polhem-dev/polhem/pull/4))
-- 業務物件以 `ProgramSettings` 宣告的 ProgId 大小寫建立，不論呼叫端怎麼寫 ProgId，稽核規則都對得上。
-  ([#4](https://github.com/polhem-dev/polhem/pull/4))
+- 呼叫端無法靠改變 ProgId 的大小寫避開稽核規則：業務物件以 `ProgramSettings` 宣告的大小寫建立，稽核規則以不分大小寫
+  的方式查找，稽核紀錄寫入 FormSchema 的 ProgId 寫法。([#4](https://github.com/polhem-dev/polhem/pull/4),
+  [#26](https://github.com/polhem-dev/polhem/pull/26))
 - Encoded 與 Encrypted 請求依解析出的 action 的參數型別解碼；兩種 codec 對巢狀過濾條件都套用深度上限；action
   只解析到公開、非泛型、單一參數且不是屬性存取子的執行個體方法（`JsonRpcExecutor.IsResolvableAction`，
   `POLHEM3001` 以同一規則檢查）。([#6](https://github.com/polhem-dev/polhem/pull/6))
@@ -72,6 +73,8 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   ([#5](https://github.com/polhem-dev/polhem/pull/5))
 - DDL 會跳脫 SQL Server 的字串預設值，非字串預設值必須是該型別的字面值；連線字串的佔位字以
   `DbConnectionStringBuilder` 解析（`ConnectionStringTemplate`）。([#4](https://github.com/polhem-dev/polhem/pull/4))
+- 找不到定義檔時，錯誤訊息只寫檔名，不含伺服端上的路徑（`FileUtilities.EnsureFileExists`）。
+  ([#26](https://github.com/polhem-dev/polhem/pull/26))
 
 ### 行為變更
 
@@ -100,8 +103,10 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   種類繫結 `object` 型別的過濾與參數值。([#9](https://github.com/polhem-dev/polhem/pull/9))
 - 序列化快取中的定義不再改動它：空集合改由唯讀的 `XSpecified` 屬性省略，不再使用每個物件的序列化狀態。
   ([#8](https://github.com/polhem-dev/polhem/pull/8))
-- 方法要求 `ApiReplayProtection.UniqueSequence` 而 `RequireWireFrame` 關閉時，啟動時記錄警告，並列出未宣告權限模型的表單。
-  ([#4](https://github.com/polhem-dev/polhem/pull/4), [#6](https://github.com/polhem-dev/polhem/pull/6))
+- 方法要求 `ApiReplayProtection.UniqueSequence` 而 `RequireWireFrame` 關閉時，啟動時記錄警告，並列出未宣告權限模型的表單，
+  包括 `ProgramSettings` 沒有列出的已儲存表單（`IDefineStorage.GetFormSchemaIds`）。
+  ([#4](https://github.com/polhem-dev/polhem/pull/4), [#6](https://github.com/polhem-dev/polhem/pull/6),
+  [#26](https://github.com/polhem-dev/polhem/pull/26))
 - `Short`、`Long`、`Decimal`、`Binary` 欄位的預設值具型別且不為 null。
   ([#14](https://github.com/polhem-dev/polhem/pull/14))
 - 建立新列時以 `DefaultValueExpression` 為準：`GetNewData` 與用戶端新增的列會把運算式的值寫過字面值 `DefaultValue` 與依型別的初值。存檔時仍只填空的欄位。
@@ -112,6 +117,24 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   ([#22](https://github.com/polhem-dev/polhem/pull/22))
 - 未知的 action 回應 JSON-RPC `-32601`，無法讀取的 Plain 本文回應 `-32602`，各有固定訊息。
   ([#22](https://github.com/polhem-dev/polhem/pull/22))
+- 儲存時強制檢查 `FormField.Required`：新增或修改的資料列（主檔或明細）有必填欄位是空的，會以在地化訊息拒絕；Avalonia
+  的 `FormView` 與 Blazor 的 `FormPage` 在送出儲存前列出所有這類欄位。請檢查各 FormSchema 的 `Required` 旗標：補上資料，
+  或取消該旗標。([#26](https://github.com/polhem-dev/polhem/pull/26), [#27](https://github.com/polhem-dev/polhem/pull/27))
+- `ProgramSettings` 沒有列出的表單，其稽核紀錄改寫入 FormSchema 的 ProgId 寫法，而不是呼叫端的寫法；之前寫入的紀錄維持
+  原樣，因此比對較舊的 `prog_id` 時請不分大小寫。([#26](https://github.com/polhem-dev/polhem/pull/26))
+- `BackendComponents` 指定的自訂 `DefineAccess` 或 `DefineStorage` 改以 `ActivatorUtilities` 建立，建構子可以接收任何已註冊
+  的服務，不再限於固定幾種簽章。([#26](https://github.com/polhem-dev/polhem/pull/26))
+- Blazor 的 `FormPage` 預設透過定義載入器在地化定義（`PolhemBlazorOptions.UseDefinitionLoader`）；設為 `false` 則照原樣
+  呈現定義。([#27](https://github.com/polhem-dev/polhem/pull/27))
+- 巢狀 `<Categories>` 版面的 `ProgramSettings.xml` 不再被拒絕，而是載入成空的註冊表。Bee.NET 4.33.0 會拒絕這種檔案，
+  所以只有從未在該版執行過的部署受影響：請先以 Bee.NET 的 `dotnet bee defines split-menu` 轉換該檔。
+  ([#28](https://github.com/polhem-dev/polhem/pull/28))
+- 隨附的 `AuditRule`、`Department`、`Employee` 版面依其 schema 重新產生（下拉選單、核取方塊與 lookup，取代文字框）。
+  materialize 會略過已存在的檔案，因此已有這些版面的部署會保留舊版，直到自行覆寫或修改。
+  ([#29](https://github.com/polhem-dev/polhem/pull/29))
+- 產生的版面與 `Auto` 控制項類型，為 `DateTime` 欄位改用新的 `DateTimeEdit`，不再是 `DateEdit`。已儲存的版面維持
+  `DateEdit`，它只編輯日期、會丟掉時間；時間有意義的欄位請改為 `DateTimeEdit`。
+  ([#33](https://github.com/polhem-dev/polhem/pull/33))
 
 ### 破壞性 API 變更
 
@@ -134,8 +157,10 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 - `LocalApiProvider` 與本機 connector 的建構子接收 `IServiceProvider`；移除 `ApiClientInfo.LocalServiceProvider`、
   `ApiClientInfo.ApiEncryptionKey`、`ApiClientInfo.UserTimeZoneId`（改用 `ApiSessionContext`）。
   ([#10](https://github.com/polhem-dev/polhem/pull/10), [#11](https://github.com/polhem-dev/polhem/pull/11))
-- 用戶端所有公開的非同步成員與 `JsonRpcExecutor.ExecuteAsync` 都多一個結尾的 `CancellationToken`；connector 的
-  action 方法皆為 virtual。([#12](https://github.com/polhem-dev/polhem/pull/12))
+- 用戶端與 UI 套件所有公開的非同步成員，以及 `JsonRpcExecutor.ExecuteAsync`，都多一個結尾的 `CancellationToken`；
+  connector 的 action 方法皆為 virtual。`IUIViewService` 的實作，以及覆寫 `FormView`、`ListView` 受保護的
+  `Resolve*Async` 掛勾者，簽章隨之改變。
+  ([#12](https://github.com/polhem-dev/polhem/pull/12), [#27](https://github.com/polhem-dev/polhem/pull/27))
 - `IReplayWindowStore` 改為單一原子操作 `TryAcceptAsync`，因此可以實作多節點共用的儲存。
   ([#12](https://github.com/polhem-dev/polhem/pull/12))
 - 自訂 payload codec 以 `ApiServiceOptions.RegisterPayloadCodec` 加入；未宣告時的預設仍是 MessagePack，不能替換。
@@ -152,6 +177,13 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   [#15](https://github.com/polhem-dev/polhem/pull/15))
 - `IFormRuleProcessor` 新增 `ApplyNewRowDefaults`；其他實作必須補上。
   ([#22](https://github.com/polhem-dev/polhem/pull/22))
+- 可調整的上限與預設值由 `const` 改為 `static readonly`：`ApiKeyFormat.MinSysIdLength`、`ApiKeyFormat.MaxSysIdLength`、
+  `LoginAttemptTracker.DefaultLockoutMinutes`、`DefaultMaxFailedAttempts`、`DefaultMaxTrackedAccounts`、
+  `CurrencySettings.FallbackRounding`、`UnitSettings.FallbackDecimals`、`ApiKeyCache.AbsoluteMinutes`、`NegativeMinutes`、
+  `RowEditPanel.CompactWidthThreshold`、`FormView.DefaultCompactWidthThreshold`。在常數運算式中使用它們的程式碼必須修改。
+  ([#26](https://github.com/polhem-dev/polhem/pull/26))
+- `SystemApiConnector` 與 `AuditLogApiConnector` 的 `ExecuteAsync<T>` 改為 protected；`FormApiConnector.ExecuteAsync<T>`
+  維持公開，供呼叫表單自己的 action。([#26](https://github.com/polhem-dev/polhem/pull/26))
 
 ### 移除
 
@@ -172,6 +204,9 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   [#12](https://github.com/polhem-dev/polhem/pull/12))
 - 未使用的設定型別 `ClientSettings`、`EndpointItem`、`EndpointItemCollection`。
   ([#22](https://github.com/polhem-dev/polhem/pull/22))
+- `StringHashSet` 與 `SysInfo.Version` 的公開 setter。([#26](https://github.com/polhem-dev/polhem/pull/26))
+- `ProgramSettingsFormat` 與 `dotnet polhem defines split-menu`，它們用來轉換較早 Bee.NET 版本的巢狀 `ProgramSettings`
+  版面。([#28](https://github.com/polhem-dev/polhem/pull/28))
 
 ### 新增
 
@@ -187,6 +222,16 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   ([#4](https://github.com/polhem-dev/polhem/pull/4), [#6](https://github.com/polhem-dev/polhem/pull/6),
   [#8](https://github.com/polhem-dev/polhem/pull/8), [#14](https://github.com/polhem-dev/polhem/pull/14))
 - ADR-046 記錄 1.0 的 API 政策。([#12](https://github.com/polhem-dev/polhem/pull/12))
+- 伺服端與 UI head 共用的必填欄位規則 `RequiredFieldCheck` 與 `MissingRequiredField`，以及訊息
+  `PolhemMessages.SaveFieldRequired`、`SaveDetailFieldRequired`、`PolhemUIText.RequiredFieldsEmpty`。
+  ([#26](https://github.com/polhem-dev/polhem/pull/26), [#27](https://github.com/polhem-dev/polhem/pull/27))
+- `IDefineStorage.GetFormSchemaIds`、`FileUtilities.EnsureFileExists`。([#26](https://github.com/polhem-dev/polhem/pull/26))
+- `PolhemBlazorOptions.UseDefinitionLoader`、`PolhemApiConnectorFactory.CreateDefinitionLoader`。
+  ([#27](https://github.com/polhem-dev/polhem/pull/27))
+- Avalonia 的 `FormDataObject.RowEditFieldChanged`。([#30](https://github.com/polhem-dev/polhem/pull/30))
+- `ControlType.DateTimeEdit`，搭配 Avalonia 的 `DateTimeEdit` 編輯器與 Blazor 的 `datetime-local` 輸入框；
+  `FormValueBinding.TryGetListItemText`、接收 `FormTable` 的 `GridControl.Bind` 多載，以及 `DynamicGrid.FormTable`。
+  ([#33](https://github.com/polhem-dev/polhem/pull/33))
 
 ### 效能
 
@@ -211,6 +256,12 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   ([#7](https://github.com/polhem-dev/polhem/pull/7))
 - HTTP 用戶端在瀏覽器、Android 與 Apple 行動端 head 使用平台預設的處理器。
   ([#17](https://github.com/polhem-dev/polhem/pull/17))
+- 超過兩個變數的運算式不再讓 iOS 與 Mac Catalyst 上的 App 終止：`DynamicExpressoEvaluator` 把每個運算式編譯成單一個以
+  物件陣列為參數的委派，不需要動態程式碼。([#30](https://github.com/polhem-dev/polhem/pull/30))
+- macOS 與 Linux 上的桌面 head 可以用 Local 模式連線：`FileUtilities.IsLocalPath` 接受目前作業系統上的完整路徑，
+  不再只認 Windows 磁碟機與 UNC 路徑。([#29](https://github.com/polhem-dev/polhem/pull/29))
+- 手機上的 lookup 與明細列編輯覆蓋層符合螢幕大小，避開安全區域與螢幕鍵盤，按鈕也留在捲動內容之外。
+  ([#33](https://github.com/polhem-dev/polhem/pull/33))
 
 ### 修正
 
@@ -229,6 +280,20 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   ([#22](https://github.com/polhem-dev/polhem/pull/22))
 - 表單資料表未宣告 `DbTableName` 時，關聯欄位的 JOIN 使用空白的資料表名稱；現在改用 `TableName`。
   ([#22](https://github.com/polhem-dev/polhem/pull/22))
+- macOS 與 iOS 回報的文化是 `zh-Hant-TW`，原本找不到 `zh-TW` 資源；`LanguageFallback` 在 `zh-Hant` 之後接 `zh-TW`，
+  在 `zh-Hans` 之後接 `zh-CN`。([#26](https://github.com/polhem-dev/polhem/pull/26))
+- 明細列屬於此次儲存未包含的記錄而被拒絕時，訊息沒有在地化（`PolhemMessages.PermissionDetailOutOfScope`）。
+  ([#26](https://github.com/polhem-dev/polhem/pull/26))
+- `FormView` 把權限能力套用在主機指定的 `Layout` 本身，而不是副本。([#27](https://github.com/polhem-dev/polhem/pull/27))
+- Avalonia 手機寬度的卡片清單在日期上顯示時間部分，也不理會數值格式；現在與表格以相同方式格式化。
+  ([#29](https://github.com/polhem-dev/polhem/pull/29))
+- 照 Blazor Server 的 README 以 Remote 模式執行會得到 401；README 與 `UseRemoteProvider` 現在寫明必須設定
+  `ApiClientInfo.ApiKey`。([#29](https://github.com/polhem-dev/polhem/pull/29))
+- Avalonia 的明細列編輯覆蓋層要到確認該列才重算計算欄位；現在編輯時即重算，按取消則還原。
+  ([#30](https://github.com/polhem-dev/polhem/pull/30))
+- 清單（Avalonia 與 Blazor 的表格、卡片清單、lookup 與明細表格）顯示下拉欄位儲存的值；現在顯示在地化的清單項目文字，
+  布林值在卡片清單顯示核取方塊，其他地方顯示在地化的是／否。([#33](https://github.com/polhem-dev/polhem/pull/33))
+- Blazor 的 `DateEdit` 遇到帶時間的值時顯示空白；現在顯示日期。([#33](https://github.com/polhem-dev/polhem/pull/33))
 
 ### 範例與工具
 
@@ -236,6 +301,9 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 - Northwind 新增 zh-TW 示範帳號（`demo-tw`），README 的截圖改放在 repo 內。
   ([#23](https://github.com/polhem-dev/polhem/pull/23))
 - DefineEditor 在 Windows 與 Linux 的視窗內顯示檔案選單。([#23](https://github.com/polhem-dev/polhem/pull/23))
+- 範例的 `Employee` 與 `Department` 表單改名為 `Staff`（`ft_staff`、`ft_staff_phone`）與 `Team`（`ft_team`），不再取代
+  框架同名的保留表單。([#25](https://github.com/polhem-dev/polhem/pull/25))
+- Northwind 隨附訂單規則的 `zh-TW` 訊息。([#25](https://github.com/polhem-dev/polhem/pull/25))
 
 [Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.0.0

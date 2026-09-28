@@ -1,18 +1,1 @@
 #nullable enable
-Polhem.Db.Manager.ConnectionStringTemplate
-static Polhem.Db.Manager.ConnectionStringTemplate.Resolve(string! template, string! dbName, string! userId, string! password) -> string!
-Polhem.Db.DbAccess.DbAccess(System.Data.Common.DbConnection! externalConnection, Polhem.Definition.Database.DatabaseType databaseType) -> void
-Polhem.Db.DbAccess.DbAccess(System.Data.Common.DbConnection! externalConnection, Polhem.Definition.Database.DatabaseType databaseType, int maxCommandTimeout) -> void
-Polhem.Db.DbAccess.DbAccess(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
-Polhem.Db.DbAccess.DbAccess(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager, int maxCommandTimeout, Polhem.Definition.Logging.IAnomalyLogWriter? anomalyWriter, Polhem.Definition.Logging.DbAccessAnomalyLogOptions? anomalyOptions) -> void
-Polhem.Db.DbAccessFactory.DbAccessFactory(Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> void
-Polhem.Db.DbAccessFactory.DbAccessFactory(Polhem.Db.Manager.IDbConnectionManager! connectionManager, int maxCommandTimeout, System.Func<Polhem.Definition.Logging.IAnomalyLogWriter?>? anomalyWriterFactory, Polhem.Definition.Logging.DbAccessAnomalyLogOptions? anomalyOptions) -> void
-Polhem.Db.Dml.WhereBuildResult.Parameters.init -> void
-Polhem.Db.Dml.WhereBuildResult.WhereClause.init -> void
-Polhem.Db.Schema.TableSchemaDiff.Changes.get -> System.Collections.Generic.IReadOnlyList<Polhem.Db.Schema.Changes.ITableChange!>!
-Polhem.Db.Schema.TableSchemaDiff.DescriptionChanges.get -> System.Collections.Generic.IReadOnlyList<Polhem.Db.Schema.DescriptionChange!>!
-Polhem.Db.Schema.UpgradePlan.Stages.get -> System.Collections.Generic.IReadOnlyList<Polhem.Db.Schema.UpgradeStage!>!
-Polhem.Db.Schema.UpgradePlan.Warnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
-Polhem.Db.Storage.DbDefineStorage.DbDefineStorage(Polhem.Db.Manager.IDbConnectionManager! connectionManager, Polhem.Db.CacheNotify.ICacheNotifyService! cacheNotify) -> void
-Polhem.Db.Storage.DbDefineStorage.DbDefineStorage(Polhem.Db.Manager.IDbConnectionManager! connectionManager, Polhem.Db.CacheNotify.ICacheNotifyService! cacheNotify, string! databaseId) -> void
-Polhem.Db.Storage.DbDefineStorage.GetFormSchemaIds() -> System.Collections.Generic.IReadOnlyList<string!>!
