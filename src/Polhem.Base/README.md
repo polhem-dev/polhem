@@ -49,7 +49,6 @@
 ### Collections
 
 - `CollectionBase<T>` / `KeyCollectionBase<T>` -- abstract base classes for the framework's (keyed) collections
-- `StringHashSet` -- a string set that compares ignoring case (ordinal)
 
 ### Data Access Helpers
 

@@ -305,7 +305,7 @@ namespace Polhem.Api.Client.UnitTests
             var exception = await Record.ExceptionAsync(() =>
                 ApiConnectorTestHost.ExecuteWithErrorAsync(code, message));
 
-            var unauthorized = Assert.IsAssignableFrom<UnauthorizedAccessException>(exception);
+            var unauthorized = Assert.IsType<UnauthorizedAccessException>(exception, exactMatch: false);
             Assert.IsType<AuthenticationRequiredException>(unauthorized);
             Assert.Equal("AccessToken is required or invalid.", unauthorized.Message);
         }

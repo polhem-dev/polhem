@@ -78,9 +78,10 @@ namespace Polhem.Db.UnitTests
             Assert.IsType<PgFormCommandBuilder>(factory.CreateFormCommandBuilder(schema, defineAccess));
         }
 
-        // The constructor of `PgTableSchemaProvider` eagerly creates `new DbAccess(databaseId)`. Without
-        // POLHEM_TEST_CONNSTR_POSTGRESQL, 'common_postgresql' is not registered in `DbConnectionManager`, so a bare
-        // `[Fact]` would fail hard instead of skipping. `[DbFact]` skips it automatically where there is no container.
+        // The constructor of `PgTableSchemaProvider` eagerly builds a `DbAccess` through the injected
+        // `IDbConnectionManager`. Without POLHEM_TEST_CONNSTR_POSTGRESQL that manager does not know
+        // 'common_postgresql', so a bare `[Fact]` would fail hard instead of skipping. `[DbFact]` skips it
+        // automatically where there is no container.
         [DbFact(DatabaseType.PostgreSQL)]
         [DisplayName("PG DialectFactory creates a TableSchemaProvider")]
         public void DialectFactory_CreateTableSchemaProvider_ReturnsInstance()

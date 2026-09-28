@@ -31,18 +31,18 @@ namespace Polhem.ObjectCaching.Database
         /// <summary>
         /// Absolute lifetime, in minutes, of a cached key.
         /// </summary>
-        public const int AbsoluteMinutes = 60;
+        public static readonly int AbsoluteMinutes = 60;
 
         /// <summary>
         /// Lifetime, in minutes, of a cached miss. Deliberately the shortest the policy type allows —
         /// see the type's remarks for why the inherited five minutes was the wrong trade here.
         /// </summary>
-        public const int NegativeMinutes = 1;
+        public static readonly int NegativeMinutes = 1;
 
         /// <summary>
         /// Upper bound on the number of unknown key identifiers remembered at once.
         /// </summary>
-        public const int MaxNegativeIds = 10_000;
+        public static readonly int MaxNegativeIds = 10_000;
 
         private readonly Func<ICacheDataSourceProvider>? _dataSource;
 

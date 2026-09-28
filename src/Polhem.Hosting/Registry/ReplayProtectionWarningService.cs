@@ -94,7 +94,7 @@ namespace Polhem.Hosting.Registry
             return result;
         }
 
-        private IEnumerable<string> CandidateProgIds()
+        private SortedSet<string> CandidateProgIds()
         {
             var progIds = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var binding in ReservedProgIds.All)

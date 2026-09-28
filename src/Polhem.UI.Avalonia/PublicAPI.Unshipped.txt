@@ -9,3 +9,7 @@ static Polhem.UI.Avalonia.UIText.Localizer.get -> Microsoft.Extensions.Localizat
 static Polhem.UI.Avalonia.UIText.Localizer.set -> void
 virtual Polhem.UI.Avalonia.Controls.Editors.DateEdit.DisplayFormat.get -> string!
 virtual Polhem.UI.Avalonia.Views.ListView.ResolveLang() -> string!
+*REMOVED*const Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.CompactWidthThreshold = 600 -> double
+*REMOVED*const Polhem.UI.Avalonia.Views.FormView.DefaultCompactWidthThreshold = 600 -> double
+static readonly Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.CompactWidthThreshold -> double
+static readonly Polhem.UI.Avalonia.Views.FormView.DefaultCompactWidthThreshold -> double

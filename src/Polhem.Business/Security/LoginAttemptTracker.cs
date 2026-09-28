@@ -41,12 +41,12 @@ namespace Polhem.Business.Security
         /// <summary>
         /// Default maximum number of consecutive failed attempts before lockout.
         /// </summary>
-        public const int DefaultMaxFailedAttempts = 5;
+        public static readonly int DefaultMaxFailedAttempts = 5;
 
         /// <summary>
         /// Default lockout duration in minutes.
         /// </summary>
-        public const int DefaultLockoutMinutes = 15;
+        public static readonly int DefaultLockoutMinutes = 15;
 
         /// <summary>
         /// Default upper bound on the number of accounts tracked at once.
@@ -55,7 +55,7 @@ namespace Polhem.Business.Security
         /// Well above any real concurrent-login population, and low enough that the map cannot
         /// become a memory-exhaustion lever for an unauthenticated caller.
         /// </remarks>
-        public const int DefaultMaxTrackedAccounts = 10_000;
+        public static readonly int DefaultMaxTrackedAccounts = 10_000;
 
         private readonly ConcurrentDictionary<string, AttemptInfo> _attempts
             = new ConcurrentDictionary<string, AttemptInfo>(StringComparer.OrdinalIgnoreCase);

@@ -84,11 +84,8 @@ namespace Polhem.ObjectCaching
             if (ChangeMonitorFilePaths != null)
             {
                 var baselines = new Dictionary<string, DateTime>(StringComparer.Ordinal);
-                foreach (var path in ChangeMonitorFilePaths)
-                {
-                    if (!string.IsNullOrEmpty(path))
-                        baselines[path] = FileWriteTime.Get(path);
-                }
+                foreach (var path in ChangeMonitorFilePaths.Where(path => !string.IsNullOrEmpty(path)))
+                    baselines[path] = FileWriteTime.Get(path);
                 FileWriteTimeBaselines = baselines;
             }
         }

@@ -3,7 +3,7 @@ using Polhem.Api.Contracts.System;
 namespace Polhem.Business.System
 {
     /// <summary>
-    /// Input arguments for retrieving a language resource as a typed object.
+    /// Input arguments for retrieving a language resource as its stored XML.
     /// </summary>
     public sealed class GetLanguageArgs : BusinessArgs, IGetLanguageRequest
     {

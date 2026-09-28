@@ -100,7 +100,10 @@ namespace Polhem.Definition.Storage
             if (!File.Exists(filePath))
                 return null;
             string xml = FileUtilities.FileReadText(filePath);
-            ProgramSettingsFormat.EnsureCurrentFormat(xml, filePath);
+            // The tenant folder and file name, not the path: the message can reach a remote caller of a
+            // debug-mode host.
+            ProgramSettingsFormat.EnsureCurrentFormat(xml,
+                $"{Path.GetFileName(Path.GetDirectoryName(filePath))}/{Path.GetFileName(filePath)}");
             var settings = XmlCodec.Deserialize<ProgramSettings>(xml);
             settings?.SetObjectFilePath(filePath);
             return settings;

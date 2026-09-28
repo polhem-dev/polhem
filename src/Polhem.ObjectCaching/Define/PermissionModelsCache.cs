@@ -1,3 +1,4 @@
+using Polhem.Base;
 using Polhem.Base.Serialization;
 using Polhem.Definition;
 using Polhem.Definition.Settings;
@@ -39,8 +40,7 @@ namespace Polhem.ObjectCaching.Define
         protected override PermissionModels? CreateInstance()
         {
             string filePath = _paths.GetPermissionModelsFilePath();
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException($"The file {filePath} does not exist.");
+            FileUtilities.EnsureFileExists(filePath);
 
             var models = XmlCodec.DeserializeFromFile<PermissionModels>(filePath);
             if (models != null)

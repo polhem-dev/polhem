@@ -106,13 +106,14 @@ namespace Polhem.Base.Serialization
             }
             catch (Exception ex)
             {
-                // WARNING: the file name only, never the path. InvalidOperationException maps to
-                // JsonRpcErrorCode.UserMessage, and that mapping returns Message verbatim to the
-                // caller — so an authenticated remote caller hitting a corrupt definition file
-                // would otherwise be handed the server's absolute directory layout. The full path
-                // goes in Data for the server's own log, which is where it belongs.
+                // WARNING: the file name only, never the path. A debug-mode host passes this message
+                // to the remote caller, so an authenticated caller hitting a corrupt definition file
+                // would otherwise be handed the server's absolute directory layout. The message of an
+                // I/O failure names the path itself, so only its type is kept. The full path goes in
+                // Data for the server's own log, which is where it belongs.
+                string detail = ex is IOException or UnauthorizedAccessException ? ex.GetType().Name : ex.Message;
                 var error = new InvalidOperationException(
-                    $"DeserializeFromFile Error: {ex.Message}\nFileName: {Path.GetFileName(filePath)}", ex);
+                    $"DeserializeFromFile Error: {detail}\nFileName: {Path.GetFileName(filePath)}", ex);
                 error.Data[SerializationErrorData.FilePath] = filePath;
                 throw error;
             }

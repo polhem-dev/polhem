@@ -22,11 +22,8 @@ namespace Polhem.Base
         {
             if (string.IsNullOrWhiteSpace(name)) { return false; }
 
-            foreach (var part in name.Split([',', '[', ']'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            {
-                if (part.StartsWith(BeePrefix, StringComparison.Ordinal)) { return true; }
-            }
-            return false;
+            return name.Split([',', '[', ']'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Any(part => part.StartsWith(BeePrefix, StringComparison.Ordinal));
         }
 
         /// <summary>

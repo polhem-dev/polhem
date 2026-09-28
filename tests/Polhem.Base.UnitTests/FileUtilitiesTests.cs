@@ -212,5 +212,34 @@ namespace Polhem.Base.UnitTests
             Assert.ThrowsAny<IOException>(() => FileUtilities.FileWriteOwnerOnlyText(path, "s", overwrite: true));
             Assert.False(Directory.Exists(TempPath("missing")));
         }
+
+        [Fact]
+        [DisplayName("EnsureFileExists names only the file in the message and keeps the full path on FileName")]
+        public void EnsureFileExists_MissingFile_MessageHasNoDirectory()
+        {
+            string directory = Path.Combine(Path.GetTempPath(), "polhem-missing-" + Guid.NewGuid().ToString("N"));
+            string filePath = Path.Combine(directory, "Employee.FormSchema.xml");
+
+            var ex = Assert.Throws<FileNotFoundException>(() => FileUtilities.EnsureFileExists(filePath));
+
+            Assert.Contains("'Employee.FormSchema.xml'", ex.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain(directory, ex.Message, StringComparison.Ordinal);
+            Assert.Equal(filePath, ex.FileName);
+        }
+
+        [Fact]
+        [DisplayName("EnsureFileExists returns for a file that exists")]
+        public void EnsureFileExists_ExistingFile_DoesNotThrow()
+        {
+            string filePath = Path.GetTempFileName();
+            try
+            {
+                Assert.Null(Record.Exception(() => FileUtilities.EnsureFileExists(filePath)));
+            }
+            finally
+            {
+                File.Delete(filePath);
+            }
+        }
     }
 }

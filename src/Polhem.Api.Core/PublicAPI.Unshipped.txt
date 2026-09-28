@@ -25,8 +25,8 @@ Polhem.Api.Core.JsonRpc.IReplayWindowStore.TryAcceptAsync(System.Guid accessToke
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.ExecuteAsync(Polhem.Api.Core.JsonRpc.JsonRpcRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Polhem.Api.Core.JsonRpc.JsonRpcResponse!>!
 const Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.WindowSize = 64 -> int
 Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.TryAcceptAsync(System.Guid accessToken, long sequence, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
-const Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.MaxForwardJump = 1000000 -> long
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.LanguageService.get -> Polhem.Definition.Language.ILanguageService?
 Polhem.Api.Core.JsonRpc.JsonRpcExecutor.LanguageService.set -> void
 Polhem.Api.Core.Messages.System.LoginResponse.Culture.get -> string!
 Polhem.Api.Core.Messages.System.LoginResponse.Culture.set -> void
+static readonly Polhem.Api.Core.JsonRpc.MemoryReplayWindowStore.MaxForwardJump -> long

@@ -1,5 +1,4 @@
 #nullable enable
-const Polhem.Definition.Paging.PagingOptions.MaxPageSize = 1000 -> int
 Polhem.Definition.Identity.DeploymentAction.ReadDbAnomalyLog = 2 -> Polhem.Definition.Identity.DeploymentAction
 Polhem.Definition.Logging.AuditEntry.TokenFingerprint.get -> string?
 Polhem.Definition.Logging.AuditEntry.TokenFingerprint.init -> void
@@ -219,3 +218,13 @@ static Polhem.Definition.Language.PolhemUIText.DefaultTexts.get -> System.Collec
 static Polhem.Definition.Language.PolhemUIText.Get(Microsoft.Extensions.Localization.IStringLocalizer! localizer, string! key) -> string!
 static Polhem.Definition.Language.LanguageFallback.IsBaseLanguage(string? culture) -> bool
 Polhem.Definition.Forms.FormExpressionCalculator.ApplyNewRowDefaults(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, string! timeZoneId = "") -> void
+const Polhem.Definition.Language.PolhemMessages.PermissionDetailOutOfScope = "PolhemMessages.Permission.DetailOutOfScope" -> string!
+const Polhem.Definition.Language.PolhemMessages.SaveDetailFieldRequired = "PolhemMessages.Save.DetailFieldRequired" -> string!
+const Polhem.Definition.Language.PolhemMessages.SaveFieldRequired = "PolhemMessages.Save.FieldRequired" -> string!
+Polhem.Definition.Storage.FileDefineStorage.GetFormSchemaIds() -> System.Collections.Generic.IReadOnlyList<string!>!
+Polhem.Definition.Storage.IDefineStorage.GetFormSchemaIds() -> System.Collections.Generic.IReadOnlyList<string!>!
+*REMOVED*const Polhem.Definition.Settings.CurrencySettings.FallbackRounding = 0.01 -> decimal
+*REMOVED*const Polhem.Definition.Settings.UnitSettings.FallbackDecimals = 0 -> int
+static readonly Polhem.Definition.Paging.PagingOptions.MaxPageSize -> int
+static readonly Polhem.Definition.Settings.CurrencySettings.FallbackRounding -> decimal
+static readonly Polhem.Definition.Settings.UnitSettings.FallbackDecimals -> int

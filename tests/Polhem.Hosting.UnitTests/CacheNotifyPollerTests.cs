@@ -58,7 +58,7 @@ namespace Polhem.Hosting.UnitTests
             return new CacheContainerService(new FileDefineStorage(paths), paths, "poller_" + Guid.NewGuid().ToString("N"), dataSource: null);
         }
 
-        private static CompanyInfo SeedCompany(ICacheContainer container, string companyId)
+        private static CompanyInfo SeedCompany(CacheContainerService container, string companyId)
         {
             var info = new CompanyInfo { CompanyId = companyId, CompanyName = "RT " + companyId };
             container.CompanyInfo.Set(info);

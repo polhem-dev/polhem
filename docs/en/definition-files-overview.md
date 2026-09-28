@@ -51,7 +51,7 @@ One `FormSchema` drives three layers at once. This is the single most important 
 
 - **Against the database**: the framework generates SQL per FormSchema at runtime — no ORM, no generated entity classes. See [FormSchema-Driven Database Access](formschema-data-access.md).
 - **Against the UI**: `FormLayout` arranges the fields a FormSchema declares; controls read the field metadata (max length, list items, read-only, relation → lookup) directly.
-- **Against validation**: computed fields and `FormRule` entries live inside the FormSchema itself. See [Expressions and Rules](expression-rules.md).
+- **Against validation**: computed fields and `FormRule` entries live inside the FormSchema itself. See [Expressions and Rules](expression-rules.md). A field marked `Required="true"` is enforced on the server: `FormBusinessObject.Save` refuses an added or modified row, master or detail, that leaves it empty, and names the field by its caption in the user's language. The check runs after the server fills default values and before anything is written. Empty means no value, text that is blank, or an empty GUID; a number, a boolean or a date always has a value, because those columns are `NOT NULL` with a default. Only stored fields are checked, so to require a lookup mark its stored key field, not the relation field that displays it.
 
 The practical consequence: **ordinary CRUD requires no code**. A FormSchema, its TableSchema, its FormLayout and a `DbCategorySettings` entry are a working form, and a `MenuEntry` in `MenuSettings` puts it on the menu. A `ProgramSettings` item is needed only to bind a custom business object or repository: a progId the registry does not name resolves to `FormBusinessObject` and `DataFormRepository` (§4).
 

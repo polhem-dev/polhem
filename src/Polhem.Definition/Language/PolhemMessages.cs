@@ -57,9 +57,15 @@ namespace Polhem.Definition.Language
         public const string PermissionRecordOutOfScope = Namespace + ".Permission.RecordOutOfScope";
         /// <summary>A row changes its key; arguments are the table, the key field and the model.</summary>
         public const string PermissionRowKeyChanged = Namespace + ".Permission.RowKeyChanged";
+        /// <summary>A detail row belongs to a record the save does not carry; arguments are the table and the model.</summary>
+        public const string PermissionDetailOutOfScope = Namespace + ".Permission.DetailOutOfScope";
 
         /// <summary>Someone else changed or deleted the record while it was open.</summary>
         public const string SaveConcurrencyConflict = Namespace + ".Save.ConcurrencyConflict";
+        /// <summary>A required master field is empty; argument 0 is the field caption.</summary>
+        public const string SaveFieldRequired = Namespace + ".Save.FieldRequired";
+        /// <summary>A required detail field is empty; arguments are the field caption and the table name.</summary>
+        public const string SaveDetailFieldRequired = Namespace + ".Save.DetailFieldRequired";
 
         /// <summary>The caller may not read the audit log.</summary>
         public const string AuditLogReadDenied = Namespace + ".AuditLog.ReadDenied";

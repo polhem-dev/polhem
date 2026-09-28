@@ -1,6 +1,5 @@
 #nullable enable
 Polhem.Base.Security.AccessTokenHasher
-const Polhem.Base.Security.PasswordHasher.Iterations = 600000 -> int
 static Polhem.Base.FileUtilities.FileWriteOwnerOnlyText(string! filePath, string! contents, bool overwrite) -> void
 static Polhem.Base.Security.AccessTokenHasher.ComputeFingerprint(System.Guid accessToken) -> string?
 static Polhem.Base.Security.AccessTokenHasher.ComputeStorageKey(System.Guid accessToken) -> System.Guid
@@ -32,3 +31,13 @@ Polhem.Base.Exceptions.ILocalizableMessage.MessageKey.get -> string!
 Polhem.Base.Exceptions.UserMessageException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!
 Polhem.Base.Exceptions.UserMessageException.MessageKey.get -> string!
 Polhem.Base.Exceptions.UserMessageException.UserMessageException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
+static Polhem.Base.FileUtilities.EnsureFileExists(string! filePath) -> void
+*REMOVED*const Polhem.Base.Security.ApiKeyFormat.MaxSysIdLength = 50 -> int
+*REMOVED*const Polhem.Base.Security.ApiKeyFormat.MinSysIdLength = 3 -> int
+*REMOVED*static Polhem.Base.SysInfo.Version.set -> void
+static readonly Polhem.Base.Security.ApiKeyFormat.MaxSysIdLength -> int
+static readonly Polhem.Base.Security.ApiKeyFormat.MinSysIdLength -> int
+static readonly Polhem.Base.Security.PasswordHasher.Iterations -> int
+*REMOVED*Polhem.Base.Collections.StringHashSet
+*REMOVED*Polhem.Base.Collections.StringHashSet.Add(string! s, string! delimiter) -> void
+*REMOVED*Polhem.Base.Collections.StringHashSet.StringHashSet() -> void

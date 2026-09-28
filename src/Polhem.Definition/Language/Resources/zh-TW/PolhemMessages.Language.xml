@@ -23,7 +23,10 @@
     <LanguageItem Key="Permission.SavedRecordOutOfScope" Value="儲存後的記錄將超出模型「{1}」的「{0}」資料範圍。" />
     <LanguageItem Key="Permission.RecordOutOfScope" Value="記錄不在模型「{1}」的「{0}」資料範圍內。" />
     <LanguageItem Key="Permission.RowKeyChanged" Value="「{0}」中有資料列變更了「{1}」；鍵值不可變更，因此無法確認模型「{2}」的資料範圍。" />
+    <LanguageItem Key="Permission.DetailOutOfScope" Value="「{0}」中有明細資料列屬於此次儲存未包含的記錄，因此無法確認模型「{1}」的資料範圍。" />
     <LanguageItem Key="Save.ConcurrencyConflict" Value="記錄在開啟期間已被他人修改或刪除，請重新載入後再試。" />
+    <LanguageItem Key="Save.FieldRequired" Value="「{0}」為必填欄位。" />
+    <LanguageItem Key="Save.DetailFieldRequired" Value="「{1}」的「{0}」為必填欄位。" />
     <LanguageItem Key="AuditLog.ReadDenied" Value="無權讀取稽核記錄。" />
     <LanguageItem Key="AuditLog.AnomalyReadDenied" Value="無權讀取資料庫異常記錄。" />
     <LanguageItem Key="AuditLog.ChangeNotFound" Value="找不到異動記錄。" />

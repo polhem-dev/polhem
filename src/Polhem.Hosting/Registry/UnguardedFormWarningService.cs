@@ -1,3 +1,4 @@
+using System.Data.Common;
 using Polhem.Business;
 using Polhem.Business.Form;
 using Polhem.Definition.Forms;
@@ -17,26 +18,33 @@ namespace Polhem.Hosting.Registry
     /// Such a form is not permission-checked at all: every authenticated user of the company can read
     /// and write every row of it. That is intended during gradual adoption, but it is also what a
     /// forgotten attribute looks like, and nothing else would ever say so. The warning names the
-    /// progIds so the list can be reviewed; it never stops the host.
+    /// progIds so the list can be reviewed; finding such forms does not stop the host.
     /// </para>
     /// <para>
-    /// The candidates are the <see cref="ProgramSettings"/> entries, minus the reserved progIds whose
-    /// business object is not a form. An entry without a readable form schema is skipped.
+    /// The candidates are the form schemas the definition storage holds
+    /// (<see cref="IDefineStorage.GetFormSchemaIds"/>) together with the <see cref="ProgramSettings"/>
+    /// entries, minus the reserved progIds whose business object is not a form. A form does not have
+    /// to be registered to be served: a progId the registry does not name resolves to
+    /// <see cref="FormBusinessObject"/>. A candidate without a readable form schema is skipped.
     /// </para>
     /// </remarks>
     internal sealed class UnguardedFormWarningService : IHostedService
     {
         private readonly IDefineAccess _defineAccess;
+        private readonly IDefineStorage _defineStorage;
         private readonly ILogger<UnguardedFormWarningService> _logger;
 
         /// <summary>
         /// Initializes a new <see cref="UnguardedFormWarningService"/>.
         /// </summary>
         /// <param name="defineAccess">Reads the registry and the form schemas.</param>
+        /// <param name="defineStorage">Lists the form schemas the deployment holds.</param>
         /// <param name="logger">Logger.</param>
-        public UnguardedFormWarningService(IDefineAccess defineAccess, ILogger<UnguardedFormWarningService> logger)
+        public UnguardedFormWarningService(IDefineAccess defineAccess, IDefineStorage defineStorage,
+            ILogger<UnguardedFormWarningService> logger)
         {
             _defineAccess = defineAccess ?? throw new ArgumentNullException(nameof(defineAccess));
+            _defineStorage = defineStorage ?? throw new ArgumentNullException(nameof(defineStorage));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -59,9 +67,59 @@ namespace Polhem.Hosting.Registry
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         /// <summary>
-        /// Returns the registered progIds whose form schema declares no permission model.
+        /// Returns the progIds, stored or registered, whose form schema declares no permission model.
         /// </summary>
         internal List<string> FindUnguardedForms()
+        {
+            var progIds = new List<string>();
+            foreach (var progId in CandidateProgIds().Where(IsFormProgId))
+            {
+                var schema = TryGetFormSchema(progId);
+                if (schema != null && string.IsNullOrEmpty(schema.PermissionModelId))
+                    progIds.Add(progId);
+            }
+            return progIds;
+        }
+
+        /// <summary>
+        /// The stored form schemas and the registry entries, each progId once whatever its casing,
+        /// in the stored spelling when the storage holds it.
+        /// </summary>
+        /// <remarks>
+        /// The stored spelling comes first because it is the one the schema is read by: on a
+        /// case-sensitive file system a registry entry spelled differently from the file does not find
+        /// it, and the form would be skipped instead of reported.
+        /// </remarks>
+        private List<string> CandidateProgIds()
+        {
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var candidates = new List<string>();
+            foreach (var progId in StoredFormIds().Concat(RegisteredProgIds()))
+            {
+                if (seen.Add(progId)) { candidates.Add(progId); }
+            }
+            return candidates;
+        }
+
+        /// <summary>
+        /// The form schemas the storage holds; empty, with a warning, when a database-backed storage
+        /// cannot be read at startup.
+        /// </summary>
+        private IReadOnlyList<string> StoredFormIds()
+        {
+            try
+            {
+                return _defineStorage.GetFormSchemaIds();
+            }
+            catch (DbException ex)
+            {
+                _logger.LogWarning(ex,
+                    "The stored form schemas could not be listed, so only the ProgramSettings entries were checked for a PermissionModelId.");
+                return [];
+            }
+        }
+
+        private IEnumerable<string> RegisteredProgIds()
         {
             ProgramSettings registry;
             try
@@ -72,17 +130,7 @@ namespace Polhem.Hosting.Registry
             {
                 return [];
             }
-
-            var progIds = new List<string>();
-            foreach (var item in registry.Items ?? [])
-            {
-                if (!IsFormProgId(item.ProgId)) { continue; }
-
-                var schema = TryGetFormSchema(item.ProgId);
-                if (schema != null && string.IsNullOrEmpty(schema.PermissionModelId))
-                    progIds.Add(item.ProgId);
-            }
-            return progIds;
+            return (registry.Items ?? []).Select(item => item.ProgId);
         }
 
         private static bool IsFormProgId(string progId)

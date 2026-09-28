@@ -28,7 +28,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
         /// Default screen width (DIPs) below which the edit form collapses to a single column —
         /// phones and narrow windows. Mirrors <see cref="Polhem.UI.Avalonia.Views.FormView.DefaultCompactWidthThreshold"/>.
         /// </summary>
-        public const double CompactWidthThreshold = 600;
+        public static readonly double CompactWidthThreshold = 600;
 
         private const int WideColumnCount = 2;
         private const int CompactColumnCount = 1;

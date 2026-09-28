@@ -61,7 +61,11 @@ namespace Polhem.Api.Client.Connectors
         /// <param name="value">The input parameter for the action.</param>
         /// <param name="format">The payload encoding format for transmission.</param>
         /// <param name="cancellationToken">A token that cancels the call.</param>
-        public async Task<T> ExecuteAsync<T>(string action, object value, PayloadFormat format = PayloadFormat.Encrypted,
+        /// <remarks>
+        /// Protected: every framework action on <c>AuditLog</c> has a typed method on this connector. A host
+        /// that adds actions to its own audit-log business object exposes them from a subclass.
+        /// </remarks>
+        protected async Task<T> ExecuteAsync<T>(string action, object value, PayloadFormat format = PayloadFormat.Encrypted,
             CancellationToken cancellationToken = default)
         {
             return await base.ExecuteAsync<T>(SysProgIds.AuditLog, action, value, format, cancellationToken).ConfigureAwait(false);

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Reflection;
 using Polhem.Definition;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Database;
@@ -345,8 +346,8 @@ namespace Polhem.Db.UnitTests.Manager
         }
 
         [Fact]
-        [DisplayName("The DatabaseSettingsChanged event clears the cache")]
-        public void RaiseDatabaseSettingsChanged_ClearsCache()
+        [DisplayName("The manager's DatabaseSettingsChanged subscription clears its cache")]
+        public void DatabaseSettingsChangedSubscription_ClearsCache()
         {
             var id = NewId("event");
             AddItem(id, i => i.ConnectionString = "Server=a;");
@@ -355,7 +356,14 @@ namespace Polhem.Db.UnitTests.Manager
                 _manager.GetConnectionInfo(id);
                 Assert.True(_manager.Contains(id));
 
-                GlobalEvents.RaiseDatabaseSettingsChanged();
+                // Invokes this manager's own subscription rather than `GlobalEvents.RaiseDatabaseSettingsChanged`,
+                // which would clear the connection cache of every manager in the process, including those of test
+                // classes running in parallel. Finding the delegate on the event also proves the subscription exists.
+                var subscribers = (EventHandler?)typeof(GlobalEvents)
+                    .GetField(nameof(GlobalEvents.DatabaseSettingsChanged), BindingFlags.NonPublic | BindingFlags.Static)!
+                    .GetValue(null);
+                var subscription = Assert.Single(subscribers!.GetInvocationList(), d => ReferenceEquals(d.Target, _manager));
+                subscription.DynamicInvoke(null, EventArgs.Empty);
 
                 Assert.False(_manager.Contains(id));
             }

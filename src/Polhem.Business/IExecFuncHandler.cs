@@ -1,11 +1,11 @@
 namespace Polhem.Business
 {
     /// <summary>
-    /// Interface for handlers that execute methods identified by a FuncID.
+    /// Interface for handlers that execute methods identified by a FuncId.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// NOTE: this interface is deliberately empty. Dispatch resolves a FuncID to a method by name
+    /// NOTE: this interface is deliberately empty. Dispatch resolves a FuncId to a method by name
     /// through reflection, so handlers declare arbitrarily named methods with the signature
     /// <c>(ExecFuncArgs, ExecFuncResult)</c>; a fixed member here could not express that and would
     /// only get in the way.

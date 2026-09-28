@@ -3,7 +3,7 @@ using Polhem.Api.Contracts.System;
 namespace Polhem.Business.System
 {
     /// <summary>
-    /// Output result for retrieving a form schema as a typed object.
+    /// Output result for retrieving a form schema as its stored XML.
     /// </summary>
     public sealed class GetFormSchemaResult : BusinessResult, IGetFormSchemaResponse
     {

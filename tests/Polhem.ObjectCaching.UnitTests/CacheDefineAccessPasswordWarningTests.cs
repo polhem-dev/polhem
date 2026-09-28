@@ -14,7 +14,7 @@ namespace Polhem.ObjectCaching.UnitTests
     /// </summary>
     public class CacheDefineAccessPasswordWarningTests
     {
-        private static CacheDefineAccess CreateAccess(PathOptions paths, byte[] configKey, ILogger logger)
+        private static CacheDefineAccess CreateAccess(PathOptions paths, byte[] configKey, ILogger<CacheDefineAccess> logger)
         {
             var storage = new FileDefineStorage(paths);
             // A private cache prefix keeps this container's entries apart from any other on the process-wide provider.
@@ -125,7 +125,7 @@ namespace Polhem.ObjectCaching.UnitTests
             }
         }
 
-        private sealed class ListLogger : ILogger
+        private sealed class ListLogger : ILogger<CacheDefineAccess>
         {
             public List<(LogLevel Level, string Message)> Entries { get; } = [];
 

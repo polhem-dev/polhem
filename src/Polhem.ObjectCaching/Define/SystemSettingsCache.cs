@@ -1,3 +1,4 @@
+using Polhem.Base;
 using Polhem.Base.Serialization;
 using Polhem.Definition;
 using Polhem.Definition.Settings;
@@ -38,8 +39,7 @@ namespace Polhem.ObjectCaching.Define
         protected override SystemSettings? CreateInstance()
         {
             string filePath = _paths.GetSystemSettingsFilePath();
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException($"The file {filePath} does not exist.");
+            FileUtilities.EnsureFileExists(filePath);
 
             return XmlCodec.DeserializeFromFile<SystemSettings>(filePath);
         }

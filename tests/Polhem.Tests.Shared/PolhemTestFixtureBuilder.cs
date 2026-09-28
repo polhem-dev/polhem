@@ -101,9 +101,9 @@ namespace Polhem.Tests.Shared
 
             if (_useSharedDatabases)
             {
-                // Schema + seed are process-wide (idempotent); resolved IDefineAccess
-                // shares the same DatabaseSettings cache that SharedDatabaseState
-                // populated via GlobalFixture's bootstrap path.
+                // Schema + seed are process-wide (idempotent); the resolved IDefineAccess
+                // shares the process-wide DatabaseSettings cache that SharedDatabaseState
+                // registered the test databases into.
                 var defineAccess = provider.GetRequiredService<Polhem.Definition.Storage.IDefineAccess>();
                 // …though "shares the same cache" only holds until someone invalidates that slot,
                 // so re-apply the registrations before reading them rather than assuming.

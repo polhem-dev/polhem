@@ -1,5 +1,5 @@
 using Polhem.Definition.Forms;
-using Polhem.Base.Collections;
+using Polhem.Base;
 using Polhem.Definition.Database;
 
 namespace Polhem.Db.Dml
@@ -72,9 +72,9 @@ namespace Polhem.Db.Dml
         /// </summary>
         /// <param name="formTable">The form table.</param>
         /// <param name="selectFields">A comma-separated string of field names to retrieve; an empty string retrieves all fields.</param>
-        private static StringHashSet GetSelectFields(FormTable formTable, string selectFields)
+        private static HashSet<string> GetSelectFields(FormTable formTable, string selectFields)
         {
-            var set = new StringHashSet();
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             if (string.IsNullOrWhiteSpace(selectFields))
             {
                 // Retrieve all fields
@@ -86,7 +86,7 @@ namespace Polhem.Db.Dml
             else
             {
                 // Retrieve only the specified fields
-                set.Add(selectFields, ",");
+                set.UnionWith(StringUtilities.Split(selectFields, ","));
             }
             return set;
         }

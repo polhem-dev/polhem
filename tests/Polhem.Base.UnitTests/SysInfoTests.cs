@@ -41,8 +41,8 @@ namespace Polhem.Base.UnitTests
         }
 
         [Fact]
-        [DisplayName("Version is read-write")]
-        public void Version_IsReadWrite()
+        [DisplayName("Version can be written from inside the assembly (and from its tests through InternalsVisibleTo)")]
+        public void Version_IsInternallyWritable()
         {
             SysInfo.Version = "99.9.9";
             Assert.Equal("99.9.9", SysInfo.Version);

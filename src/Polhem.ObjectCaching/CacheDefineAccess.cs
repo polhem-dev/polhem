@@ -88,7 +88,7 @@ namespace Polhem.ObjectCaching
         /// Receives the warning that database passwords exist while no configuration encryption key is
         /// set; <c>null</c> suppresses it.
         /// </param>
-        public CacheDefineAccess(IDefineStorage storage, PathOptions paths, ICacheContainer cache, byte[] configEncryptionKey, ICustomizeDefineReader? customizeReader, ILogger? logger)
+        public CacheDefineAccess(IDefineStorage storage, PathOptions paths, ICacheContainer cache, byte[] configEncryptionKey, ICustomizeDefineReader? customizeReader, ILogger<CacheDefineAccess>? logger)
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
             _paths = paths ?? throw new ArgumentNullException(nameof(paths));

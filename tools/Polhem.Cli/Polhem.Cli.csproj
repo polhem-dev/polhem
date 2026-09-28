@@ -20,10 +20,9 @@
 
     <!--
       Version comes from Version.props at the repository root, by way of
-      tools/Directory.Build.props. It used to be hardcoded here with a comment saying to bump it
-      alongside the framework; that requirement had no way to notice it had been broken, and it
-      stayed at 4.8.0 for twelve minor versions while every published Polhem.Cli carried an assembly
-      stamped 4.8.0.0. Do not reintroduce a local copy.
+      tools/Directory.Build.props. Do not reintroduce a local copy: in the Bee.NET period the
+      predecessor Bee.Cli hardcoded its version here, nothing noticed when it was not bumped, and it
+      stayed at 4.8.0 for twelve minor versions.
     -->
 
     <!-- Published like the src/ packages, so it keeps their strictness even though tools/ opts out of it. -->

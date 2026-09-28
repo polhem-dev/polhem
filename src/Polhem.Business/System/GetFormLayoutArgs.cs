@@ -3,7 +3,7 @@ using Polhem.Api.Contracts.System;
 namespace Polhem.Business.System
 {
     /// <summary>
-    /// Input arguments for retrieving a form layout as a typed object.
+    /// Input arguments for retrieving a form layout as its stored XML.
     /// </summary>
     public sealed class GetFormLayoutArgs : BusinessArgs, IGetFormLayoutRequest
     {

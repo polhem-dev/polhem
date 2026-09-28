@@ -24,6 +24,10 @@ namespace Polhem.Api.Core.JsonRpc
         /// The number of sequence slots below the highest one seen that are still accepted once
         /// each.
         /// </summary>
+        /// <remarks>
+        /// A constant rather than a tunable value: the window is one 64-bit mask per session, so the
+        /// size is fixed by that representation and changes only with it.
+        /// </remarks>
         public const int WindowSize = 64;
 
         /// <summary>
@@ -35,7 +39,7 @@ namespace Polhem.Api.Core.JsonRpc
         /// falls below the window and is refused, with a valid token and a correct key, which is
         /// close to undiagnosable. The bound is set far above any real traffic pattern.
         /// </remarks>
-        public const long MaxForwardJump = 1_000_000;
+        public static readonly long MaxForwardJump = 1_000_000;
 
         private readonly ConcurrentDictionary<Guid, Entry> _entries = new();
         private readonly TimeProvider _clock;

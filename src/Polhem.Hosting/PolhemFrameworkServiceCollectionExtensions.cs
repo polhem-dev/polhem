@@ -98,7 +98,7 @@ namespace Polhem.Hosting
 
             // 4. IDefineStorage / IDefineAccess / ICacheContainer — singletons.
             services.AddSingleton<IDefineStorage>(sp => CreateDefineStorage(
-                components.DefineStorage, BackendDefaultTypes.DefineStorage, sp, sp.GetRequiredService<PathOptions>()));
+                sp, components.DefineStorage, BackendDefaultTypes.DefineStorage));
             //    The data source is passed as a factory, not an instance. Resolving it here would
             //    close the cycle ICacheContainer → ICacheDataSourceProvider → repositories →
             //    IDefineAccess → ICacheContainer; deferring to the first cache miss breaks it.
@@ -136,14 +136,7 @@ namespace Polhem.Hosting
                     sp.GetRequiredService<PathOptions>()));
 
             services.AddSingleton<IDefineAccess>(sp =>
-                ResolveDefineAccess(
-                    components.DefineAccess,
-                    sp.GetRequiredService<IDefineStorage>(),
-                    sp.GetRequiredService<PathOptions>(),
-                    sp.GetRequiredService<ICacheContainer>(),
-                    keys.ConfigEncryptionKey,
-                    sp.GetRequiredService<ICustomizeDefineReader>(),
-                    sp.GetService<ILoggerFactory>()?.CreateLogger<CacheDefineAccess>()));
+                CreateDefineAccess(sp, components.DefineAccess, keys.ConfigEncryptionKey));
 
             // 5. Database settings provider (used by DbConnectionManager bootstrap).
             services.AddSingleton<IDatabaseSettingsProvider>(sp =>

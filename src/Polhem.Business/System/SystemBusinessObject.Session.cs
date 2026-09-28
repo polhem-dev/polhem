@@ -312,11 +312,12 @@ namespace Polhem.Business.System
         /// </para>
         /// <para>
         /// WARNING: an unknown user and a wrong password must stay indistinguishable to the caller.
-        /// <c>Login</c> reports both with the same message, and the framework's
-        /// <see cref="IUserRepository.VerifyPassword"/> runs a full key derivation for an account it
-        /// cannot find, so the response time does not separate the two either
-        /// (<c>SystemBusinessObjectAuthenticationTests</c> covers the message). An override that
-        /// returns early for an unknown account reopens the timing difference.
+        /// <c>Login</c> reports both with the same message (<c>SystemBusinessObjectAuthenticationTests</c>
+        /// covers the message). For the timing, the framework's <see cref="IUserRepository.VerifyPassword"/>
+        /// runs a key derivation at the current iteration count for an account it cannot find, which
+        /// narrows the difference but does not remove it: an account whose hash was stored with fewer
+        /// iterations verifies faster until its next sign-in rehashes it, and nothing measures the
+        /// response time. An override that returns early for an unknown account widens the difference.
         /// </para>
         /// </remarks>
         protected virtual bool AuthenticateUser(LoginArgs args, out string userName)

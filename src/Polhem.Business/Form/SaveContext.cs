@@ -46,6 +46,11 @@ namespace Polhem.Business.Form
         /// <summary>
         /// Gets the form schema driving persistence and rule evaluation.
         /// </summary>
+        /// <remarks>
+        /// The cached instance from <see cref="Polhem.Definition.Storage.IDefineAccess.GetFormSchema"/>, which every
+        /// session shares. Do not modify it; call <see cref="FormSchema.Clone"/> first and change the copy when a
+        /// per-call variant is needed.
+        /// </remarks>
         public FormSchema Schema { get; }
 
         /// <summary>

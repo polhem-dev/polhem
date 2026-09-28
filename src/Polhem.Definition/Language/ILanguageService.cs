@@ -152,6 +152,11 @@ namespace Polhem.Definition.Language
         /// <param name="lang">The BCP-47 language code.</param>
         /// <param name="fullName">The full enum name, e.g. <c>"Common.Gender"</c>, <c>"Order.OrderStatus"</c>.</param>
         /// <returns>The matching <see cref="LanguageEnum"/>, or <c>null</c> if not found after fall-back.</returns>
+        /// <remarks>
+        /// Treat the returned <see cref="LanguageEnum"/> as read-only: in the framework's implementations it
+        /// is the cached instance every session shares. Build a new <see cref="LanguageEnum"/> from its entries
+        /// when a per-call variant is needed.
+        /// </remarks>
         LanguageEnum? GetLangEnum(string lang, string fullName);
 
         /// <summary>
@@ -163,6 +168,11 @@ namespace Polhem.Definition.Language
         /// <param name="namespace">The resource namespace.</param>
         /// <param name="enumName">The enum name within that namespace.</param>
         /// <returns>The matching <see cref="LanguageEnum"/>, or <c>null</c> if not found after fall-back.</returns>
+        /// <remarks>
+        /// Treat the returned <see cref="LanguageEnum"/> as read-only: in the framework's implementations it
+        /// is the cached instance every session shares. Build a new <see cref="LanguageEnum"/> from its entries
+        /// when a per-call variant is needed.
+        /// </remarks>
         LanguageEnum? GetLangEnum(string lang, string @namespace, string enumName);
 
         /// <summary>
@@ -180,6 +190,11 @@ namespace Polhem.Definition.Language
         /// wants the option set to have. This is deliberately coarser than the per-key overlay
         /// used for text — an enum is an ordered option set, where a partial merge would leave
         /// both the ordering and the meaning of an omitted entry ambiguous.
+        /// <para>
+        /// Treat the returned <see cref="LanguageEnum"/> as read-only: in the framework's implementations it
+        /// is the cached instance every session shares. Build a new <see cref="LanguageEnum"/> from its entries
+        /// when a per-call variant is needed.
+        /// </para>
         /// </remarks>
         LanguageEnum? GetLangEnum(string customizeId, string lang, string @namespace, string enumName)
             => GetLangEnum(lang, @namespace, enumName);

@@ -261,6 +261,36 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Fact]
+        [DisplayName("A progId with no FormSchema file answers without the server's path, even in debug mode where the message passes through")]
+        public async Task Execute_ProgIdWithoutFormSchema_DebugMode_MessageCarriesNoPath()
+        {
+            var request = new JsonRpcRequest
+            {
+                Method = "NoSuchForm" + Guid.NewGuid().ToString("N")[..8] + ".GetList",
+                Params = new JsonRpcParams { Value = new Polhem.Api.Core.Messages.Form.GetListRequest() },
+                Id = "1"
+            };
+            string definePath = _fx.GetRequiredService<PathOptions>().DefinePath;
+
+            bool original = SysInfo.IsDebugMode;
+            try
+            {
+                SysInfo.IsDebugMode = true;
+                var response = await NewExecutor(TestSessionFactory.CreateAccessToken(_fx), isLocalCall: true).ExecuteAsync(request);
+
+                Assert.NotNull(response.Error);
+                Assert.Contains(".FormSchema.xml", response.Error!.Message, StringComparison.Ordinal);
+                Assert.DoesNotContain(definePath, response.Error.Message, StringComparison.Ordinal);
+                Assert.DoesNotContain(Path.DirectorySeparatorChar + "FormSchema" + Path.DirectorySeparatorChar,
+                    response.Error.Message, StringComparison.Ordinal);
+            }
+            finally
+            {
+                SysInfo.IsDebugMode = original;
+            }
+        }
+
+        [Fact]
         [DisplayName("The Response returned by Execute echoes Method and Id")]
         public async Task Execute_Response_EchoesMethodAndId()
         {

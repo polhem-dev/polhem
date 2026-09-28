@@ -20,7 +20,7 @@ namespace Polhem.Db.UnitTests
         [DisplayName("Get throws KeyNotFoundException for an unregistered type")]
         public void Get_UnregisteredType_Throws()
         {
-            // `GlobalFixture` registers every defined `DatabaseType`, so an integer outside the enum range serves as
+            // `SharedDatabaseState.EnsureRegistered` registers every defined `DatabaseType`, so an integer outside the enum range serves as
             // a placeholder that is never registered.
             Assert.Throws<KeyNotFoundException>(() =>
                 DbProviderRegistry.Get((DatabaseType)9999));

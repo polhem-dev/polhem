@@ -22,7 +22,7 @@ namespace Polhem.Definition.Settings
     public sealed class CurrencySettings : CollectionBase<CurrencyItem>
     {
         /// <summary>The fallback rounding factor used when a currency code is not found (two decimals).</summary>
-        public const decimal FallbackRounding = 0.01m;
+        public static readonly decimal FallbackRounding = 0.01m;
 
         /// <summary>
         /// Initializes a new instance of <see cref="CurrencySettings"/>.

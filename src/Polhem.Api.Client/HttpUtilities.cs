@@ -178,35 +178,5 @@ namespace Polhem.Api.Client
                 }
             }
         }
-
-        /// <summary>
-        /// Asynchronously sends a GET request.
-        /// </summary>
-        /// <param name="endpoint">The service endpoint.</param>
-        /// <param name="headers">Custom request headers.</param>
-        /// <param name="cancellationToken">A token that cancels the request.</param>
-        public static async Task<string> GetAsync(string endpoint, NameValueCollection? headers = null,
-            CancellationToken cancellationToken = default)
-        {
-            HttpClient client = GetOrCreateClient(endpoint);
-
-            // Send GET request
-            using (var request = new HttpRequestMessage(HttpMethod.Get, endpoint))
-            {
-                if (headers != null)
-                {
-                    foreach (string key in headers)
-                    {
-                        request.Headers.TryAddWithoutValidation(key, headers[key]);
-                    }
-                }
-
-                using (HttpResponseMessage response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false))
-                {
-                    response.EnsureSuccessStatusCode();  // Verify success
-                    return await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);  // Read response content
-                }
-            }
-        }
     }
 }

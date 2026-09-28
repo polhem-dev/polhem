@@ -6,9 +6,9 @@ namespace Polhem.Base
     public static class SysInfo
     {
         /// <summary>
-        /// Gets or sets the system major version number.
+        /// Gets the system major version number, set by <see cref="Initialize"/>.
         /// </summary>
-        public static string Version { get; set; } = string.Empty;
+        public static string Version { get; internal set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets a value indicating whether debug mode is enabled.

@@ -1,7 +1,10 @@
+using System.Globalization;
 using Polhem.Base;
+using Polhem.Base.Exceptions;
 using Polhem.Business.AuditLog;
 using Polhem.Definition;
 using Polhem.Definition.Attributes;
+using Polhem.Definition.Language;
 using Polhem.Definition.Logging;
 using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
@@ -29,6 +32,7 @@ namespace Polhem.Business.Form
         /// NormalizeDateTimes  outside the transaction
         /// DoBeforeSave        outside the transaction
         /// new-value scope     outside the transaction
+        /// required fields     outside the transaction
         /// DoSave              INSIDE the transaction
         /// change audit        outside the transaction
         /// DoAfterSave         outside the transaction
@@ -45,6 +49,16 @@ namespace Polhem.Business.Form
         /// row is about to store must be inside the caller's Create or Update scope, so a save does not
         /// assign a record to an owner or department the caller could not reach. Both are covered by
         /// <c>FormBusinessObjectWriteScopeTests</c>.
+        /// </para>
+        /// <para>
+        /// After the new-value scope check, every field the FormSchema marks
+        /// <see cref="Polhem.Definition.Forms.FormField.Required"/> must be filled in each added or
+        /// modified row, master and detail alike; otherwise the save stops with a
+        /// <see cref="Polhem.Base.Exceptions.UserMessageException"/> that names the field by its
+        /// caption in the caller's language. What counts as empty is described on
+        /// <see cref="EnforceRequiredFields"/>. The check runs after <c>DoBeforeSave</c> and the
+        /// <c>BeforeSave</c> plugins, so a value they fill counts. Covered by
+        /// <c>FormBusinessObjectRequiredFieldTests</c>.
         /// </para>
         /// <para>
         /// Because the audit write sits outside the transaction, a record can persist while its
@@ -95,6 +109,10 @@ namespace Polhem.Business.Form
             // department values checked are the ones defaults and plugins leave behind.
             EnforceNewValueScope(args.DataSet);
 
+            // After BeforeSave as well, so a required field that a default expression, a custom
+            // business object or a plugin fills counts as filled.
+            EnforceRequiredFields(context);
+
             // Capture the change set (before/after) and the master key/kind before persistence,
             // because the ADO.NET adapter calls AcceptChanges on success and discards RowState /
             // original values. Runs after DoBeforeSave so the audit reflects any computed values.
@@ -111,7 +129,7 @@ namespace Polhem.Business.Form
             if (auditChange && changes is { } changeSet)
             {
                 WriteAuditBestEffort("Save", rowKey, () =>
-                    WriteChangeAudit(changeKind, rowKey, AuditDiffGram.Serialize(changeSet), masterTableName, ProgId + ".Save"));
+                    WriteChangeAudit(changeKind, rowKey, AuditDiffGram.Serialize(changeSet), masterTableName, schema.ProgId + ".Save"));
             }
 
             DoAfterSave(context);
@@ -162,6 +180,61 @@ namespace Polhem.Business.Form
             ArgumentNullException.ThrowIfNull(context);
             SaveDateTimeNormalizer.Normalize(context.Schema, context.DataSet, context.Repository,
                 FrameworkClock.Now(string.Empty, DateTimeBasis.Utc));
+        }
+
+        /// <summary>
+        /// Stops the save when a field the FormSchema marks
+        /// <see cref="Polhem.Definition.Forms.FormField.Required"/> is empty in an added or modified row.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Only persisted fields are checked; a <c>Required</c> flag on a relation or virtual field is a
+        /// caption cue only, so require the stored key field instead. Empty means <c>null</c> or
+        /// <see cref="DBNull"/>, a string that is empty or white space, <see cref="Guid.Empty"/> or a
+        /// zero-length byte array. Numbers, booleans, dates and times are never empty: their columns are
+        /// <c>NOT NULL</c> with a type default, so <c>0</c> or <c>false</c> cannot be told apart from a
+        /// value the user meant.
+        /// </para>
+        /// <para>
+        /// The message names the field by its caption resolved in the caller's culture
+        /// (<c>Field.{FieldName}.Caption</c> in the form's language namespace), falling back to the
+        /// schema caption and then the field name; a detail field also names its table.
+        /// </para>
+        /// </remarks>
+        /// <param name="context">The save context.</param>
+        /// <exception cref="Polhem.Base.Exceptions.UserMessageException">A required field is empty.</exception>
+        private void EnforceRequiredFields(SaveContext context)
+        {
+            var empty = RequiredFieldValidator.FindEmpty(context.Schema, context.DataSet);
+            if (empty is null) { return; }
+            var (table, field) = empty.Value;
+
+            string caption = ResolveSchemaText(context.Schema.ProgId,
+                string.Format(CultureInfo.InvariantCulture, FormSchemaLocalizer.FieldCaptionKeyFormat, field.FieldName),
+                field.Caption, field.FieldName);
+
+            if (ReferenceEquals(table, context.Schema.MasterTable))
+                throw new UserMessageException(PolhemMessages.SaveFieldRequired, "'{0}' is required.", caption);
+
+            string tableName = ResolveSchemaText(context.Schema.ProgId,
+                string.Format(CultureInfo.InvariantCulture, FormSchemaLocalizer.TableDisplayNameKeyFormat, table.TableName),
+                table.DisplayName, table.TableName);
+            throw new UserMessageException(PolhemMessages.SaveDetailFieldRequired,
+                "'{0}' is required in '{1}'.", caption, tableName);
+        }
+
+        /// <summary>
+        /// Resolves a schema text in the caller's culture, falling back to the schema's own text and
+        /// then to <paramref name="name"/>.
+        /// </summary>
+        private string ResolveSchemaText(string @namespace, string subKey, string baseText, string name)
+        {
+            if (LanguageService.TryResolveLangText(GetCurrentCustomizeId(), GetCurrentLang(), @namespace, subKey, out string text)
+                && !string.IsNullOrWhiteSpace(text))
+            {
+                return text;
+            }
+            return string.IsNullOrWhiteSpace(baseText) ? name : baseText;
         }
 
         /// <summary>

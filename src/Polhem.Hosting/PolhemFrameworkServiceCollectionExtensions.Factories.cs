@@ -7,7 +7,6 @@ using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 using Polhem.Definition.Storage;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Polhem.Hosting
 {
@@ -23,68 +22,50 @@ namespace Polhem.Hosting
     public static partial class PolhemFrameworkServiceCollectionExtensions
     {
         /// <summary>
-        /// Resolves the configured <see cref="IDefineAccess"/> implementation. The supported
-        /// constructors, tried in this order, are
-        /// <c>(IDefineStorage, PathOptions, ICacheContainer, byte[], ICustomizeDefineReader, ILogger)</c>
-        /// (used by <see cref="CacheDefineAccess"/>),
-        /// <c>(IDefineStorage, PathOptions, ICacheContainer, byte[], ICustomizeDefineReader)</c>,
-        /// <c>(IDefineStorage, PathOptions, ICacheContainer, byte[])</c> and
-        /// <c>(IDefineStorage, PathOptions)</c>.
+        /// Creates the configured <see cref="IDefineAccess"/> implementation. Its constructor parameters
+        /// are resolved from <paramref name="sp"/> by <see cref="ActivatorUtilities"/>, except a
+        /// <see cref="byte"/>[] parameter, which receives the decrypted configuration encryption key.
         /// </summary>
-        /// <exception cref="InvalidOperationException">The type declares none of the supported constructors.</exception>
-        private static IDefineAccess ResolveDefineAccess(string? typeName, IDefineStorage storage, PathOptions paths, ICacheContainer cache, byte[] configEncryptionKey, ICustomizeDefineReader customizeReader, ILogger? logger)
+        /// <remarks>
+        /// The key is not a service, so it is handed only to a type that has a constructor asking for
+        /// one; <see cref="ActivatorUtilities"/> rejects an argument no constructor takes. Among the
+        /// constructors it can satisfy it uses the longest, so <see cref="CacheDefineAccess"/> gets its
+        /// customization reader and logger. A constructor dependency that is not registered surfaces as
+        /// the <see cref="ActivatorUtilities"/> exception, which names the missing service.
+        /// </remarks>
+        private static IDefineAccess CreateDefineAccess(IServiceProvider sp, string? typeName, byte[] configEncryptionKey)
         {
             var resolvedName = string.IsNullOrWhiteSpace(typeName) ? BackendDefaultTypes.DefineAccess : typeName;
             var type = LoadComponentType(nameof(BackendComponents.DefineAccess), resolvedName, typeof(IDefineAccess));
 
-            var ctorWithLogger = type.GetConstructor(new[] { typeof(IDefineStorage), typeof(PathOptions), typeof(ICacheContainer), typeof(byte[]), typeof(ICustomizeDefineReader), typeof(ILogger) });
-            if (ctorWithLogger != null)
-                return (IDefineAccess)ctorWithLogger.Invoke(new object?[] { storage, paths, cache, configEncryptionKey, customizeReader, logger });
-
-            var ctorWithReader = type.GetConstructor(new[] { typeof(IDefineStorage), typeof(PathOptions), typeof(ICacheContainer), typeof(byte[]), typeof(ICustomizeDefineReader) });
-            if (ctorWithReader != null)
-                return (IDefineAccess)ctorWithReader.Invoke(new object[] { storage, paths, cache, configEncryptionKey, customizeReader });
-
-            var ctorFull = type.GetConstructor(new[] { typeof(IDefineStorage), typeof(PathOptions), typeof(ICacheContainer), typeof(byte[]) });
-            if (ctorFull != null)
-                return (IDefineAccess)ctorFull.Invoke(new object[] { storage, paths, cache, configEncryptionKey });
-
-            var ctorPaths = type.GetConstructor(new[] { typeof(IDefineStorage), typeof(PathOptions) });
-            if (ctorPaths != null)
-                return (IDefineAccess)ctorPaths.Invoke(new object[] { storage, paths });
-
-            throw new InvalidOperationException(
-                $"BackendComponents.{nameof(BackendComponents.DefineAccess)} names '{resolvedName}', which has no supported constructor. " +
-                "It needs one of (IDefineStorage, PathOptions, ICacheContainer, byte[], ICustomizeDefineReader, ILogger), " +
-                "(IDefineStorage, PathOptions, ICacheContainer, byte[], ICustomizeDefineReader), " +
-                "(IDefineStorage, PathOptions, ICacheContainer, byte[]) or (IDefineStorage, PathOptions).");
+            bool takesKey = type.GetConstructors()
+                .Any(ctor => ctor.GetParameters().Any(parameter => parameter.ParameterType == typeof(byte[])));
+            object[] arguments = takesKey ? [configEncryptionKey] : [];
+            return (IDefineAccess)ActivatorUtilities.CreateInstance(sp, type, arguments);
         }
 
         /// <summary>
-        /// Constructs the configured <see cref="IDefineStorage"/> implementation through its
-        /// <c>(IServiceProvider)</c> constructor, or else its <c>(PathOptions)</c> constructor
-        /// (used by <see cref="FileDefineStorage"/>).
+        /// Creates the configured <see cref="IDefineStorage"/> implementation: through its
+        /// <c>(IServiceProvider)</c> constructor when it has one, otherwise with its constructor
+        /// parameters resolved from <paramref name="sp"/> by <see cref="ActivatorUtilities"/>, as
+        /// <see cref="CreateConfigurableService{T}"/> does.
         /// </summary>
-        /// <exception cref="InvalidOperationException">The type declares neither constructor.</exception>
-        private static IDefineStorage CreateDefineStorage(string? configured, string fallback, IServiceProvider sp, PathOptions paths)
+        /// <remarks>
+        /// <see cref="FileDefineStorage"/> receives the registered <see cref="PathOptions"/>. The
+        /// <c>(IServiceProvider)</c> constructor wins even over a longer one that DI could satisfy: a
+        /// database-backed storage such as <c>DbDefineStorage</c> also has constructors taking
+        /// <c>IDbConnectionManager</c>, and resolving it here would close the cycle
+        /// <c>IDbConnectionManager</c> → <c>IDatabaseSettingsProvider</c> → <see cref="IDefineAccess"/> →
+        /// <see cref="IDefineStorage"/>. That constructor defers resolution to the first read.
+        /// </remarks>
+        private static IDefineStorage CreateDefineStorage(IServiceProvider sp, string? configured, string fallback)
         {
             var typeName = string.IsNullOrWhiteSpace(configured) ? fallback : configured;
             var type = LoadComponentType(nameof(BackendComponents.DefineStorage), typeName, typeof(IDefineStorage));
 
-            // Prefer an (IServiceProvider) ctor — used by DB-backed storage (e.g. DbDefineStorage),
-            // which resolves its dependencies lazily to avoid a construction cycle through
-            // IDbConnectionManager → IDatabaseSettingsProvider → IDefineAccess → IDefineStorage.
-            var ctorWithServiceProvider = type.GetConstructor(new[] { typeof(IServiceProvider) });
-            if (ctorWithServiceProvider != null)
-                return (IDefineStorage)ctorWithServiceProvider.Invoke(new object[] { sp });
-
-            var ctorWithPaths = type.GetConstructor(new[] { typeof(PathOptions) });
-            if (ctorWithPaths != null)
-                return (IDefineStorage)ctorWithPaths.Invoke(new object[] { paths });
-
-            throw new InvalidOperationException(
-                $"BackendComponents.{nameof(BackendComponents.DefineStorage)} names '{typeName}', which has no supported constructor. " +
-                "It needs an (IServiceProvider) or a (PathOptions) constructor.");
+            if (type.GetConstructor([typeof(IServiceProvider)]) is { } deferred)
+                return (IDefineStorage)deferred.Invoke([sp]);
+            return (IDefineStorage)ActivatorUtilities.CreateInstance(sp, type);
         }
 
         /// <summary>

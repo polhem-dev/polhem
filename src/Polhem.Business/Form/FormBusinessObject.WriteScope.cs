@@ -389,8 +389,10 @@ namespace Polhem.Business.Form
         }
 
         private static ForbiddenException DetailOutOfScope(string tableName, string modelId)
-            => new($"Detail row in '{tableName}' belongs to a record this save does not carry; " +
-                   $"record scope on model '{modelId}' cannot be confirmed for it.");
+            => new(PolhemMessages.PermissionDetailOutOfScope,
+                "A detail row in '{0}' belongs to a record this save does not carry; " +
+                "record scope on model '{1}' cannot be confirmed for it.",
+                tableName, modelId);
 
         /// <summary>
         /// The row versions whose <see cref="SysFields.MasterRowId"/> the repository would write for

@@ -69,7 +69,7 @@ namespace Polhem.UI.Avalonia.Views
         /// phones, narrow windows — collapse master fields to a single column and switch detail
         /// grids to <see cref="GridEditMode.EditForm"/>.
         /// </summary>
-        public const double DefaultCompactWidthThreshold = 600;
+        public static readonly double DefaultCompactWidthThreshold = 600;
 
         /// <summary>Identifies the <see cref="CompactWidthThreshold"/> styled property.</summary>
         public static readonly StyledProperty<double> CompactWidthThresholdProperty =

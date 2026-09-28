@@ -82,8 +82,6 @@ namespace Polhem.Business
         /// </summary>
         public bool IsLocalCall { get; } = false;
 
-        private ApiKeyValidationResult _apiKeyValidation = ApiKeyValidationResult.NotChecked;
-
         /// <inheritdoc/>
         /// <remarks>
         /// Implemented explicitly so that only the transport layer, which reaches it through the
@@ -92,14 +90,14 @@ namespace Polhem.Business
         /// </remarks>
         ApiKeyValidationResult IApiKeyContextAware.ApiKeyValidation
         {
-            get => _apiKeyValidation;
-            set => _apiKeyValidation = value;
+            get => ApiKeyValidation;
+            set => ApiKeyValidation = value;
         }
 
         /// <summary>
         /// Gets the API key verdict the transport layer assigned for the current call.
         /// </summary>
-        protected ApiKeyValidationResult ApiKeyValidation => _apiKeyValidation;
+        protected ApiKeyValidationResult ApiKeyValidation { get; private set; } = ApiKeyValidationResult.NotChecked;
 
         /// <summary>
         /// Gets the calling application's key identifier for audit rows, or <c>null</c> when the call

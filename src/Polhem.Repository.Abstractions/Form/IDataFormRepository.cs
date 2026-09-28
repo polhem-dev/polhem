@@ -20,11 +20,20 @@ namespace Polhem.Repository.Abstractions.Form
         /// </param>
         /// <param name="filter">The filter condition tree; <c>null</c> for an unfiltered query.</param>
         /// <param name="sortFields">The sort field collection; <c>null</c> uses the default ordering.</param>
-        /// <param name="paging">The paging options; <c>null</c> returns every matching row.</param>
+        /// <param name="paging">
+        /// The paging options; <c>null</c> returns every matching row, with no upper bound. A requested page
+        /// size is capped at <see cref="PagingOptions.MaxPageSize"/>.
+        /// </param>
         /// <returns>
         /// A <see cref="DataFormListResult"/> with the row data and, when paging was
         /// requested, the corresponding <see cref="PagingInfo"/>.
         /// </returns>
+        /// <remarks>
+        /// The unbounded read is for server-side code that means it. A client never reaches it through
+        /// <c>FormBusinessObject.GetList</c>, which replaces a missing page with one of
+        /// <see cref="PagingOptions.MaxPageSize"/> rows; server-side code that calls this repository
+        /// directly with <c>null</c> reads the whole table.
+        /// </remarks>
         DataFormListResult GetList(
             string selectFields,
             FilterNode? filter,

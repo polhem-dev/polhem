@@ -38,6 +38,16 @@ namespace Polhem.Definition.Language
         }
 
         /// <inheritdoc/>
+        public string DefaultLanguage
+        {
+            get
+            {
+                var settings = _defineAccess.GetSystemSettings();
+                return settings?.CommonConfiguration?.DefaultLanguage ?? string.Empty;
+            }
+        }
+
+        /// <inheritdoc/>
         public string GetLangText(string lang, string fullKey)
         {
             (string @namespace, string subKey) = LanguageKey.Split(fullKey);
@@ -47,16 +57,6 @@ namespace Polhem.Definition.Language
         /// <inheritdoc/>
         public string GetLangText(string lang, string @namespace, string subKey)
             => GetLangText("", lang, @namespace, subKey);
-
-        /// <inheritdoc/>
-        public string DefaultLanguage
-        {
-            get
-            {
-                var settings = _defineAccess.GetSystemSettings();
-                return settings?.CommonConfiguration?.DefaultLanguage ?? string.Empty;
-            }
-        }
 
         /// <inheritdoc/>
         public string GetLangText(string customizeId, string lang, string @namespace, string subKey)

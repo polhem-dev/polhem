@@ -40,6 +40,23 @@ namespace Polhem.Definition.UnitTests.Storage
         }
 
         [Fact]
+        [DisplayName("GetFormSchemaIds lists the progIds of the stored FormSchema files, and is empty without the folder")]
+        public void GetFormSchemaIds_ListsStoredForms()
+        {
+            WithTempDefinePath(paths =>
+            {
+                var storage = new FileDefineStorage(paths);
+                Assert.Empty(storage.GetFormSchemaIds());
+
+                storage.SaveFormSchema(new FormSchema("Beta", "Beta"));
+                storage.SaveFormSchema(new FormSchema("Alpha", "Alpha"));
+                File.WriteAllText(Path.Combine(paths.DefinePath, "FormSchema", "notes.txt"), "not a schema");
+
+                Assert.Equal(["Alpha", "Beta"], storage.GetFormSchemaIds());
+            });
+        }
+
+        [Fact]
         [DisplayName("GetFormSchema throws FileNotFoundException for a missing file")]
         public void GetFormSchema_FileNotFound_Throws()
         {

@@ -5,7 +5,7 @@ using Polhem.Definition.Settings;
 namespace Polhem.Definition.Storage
 {
     /// <summary>
-    /// Reads the tenant customization-override layer for the five customizable definition
+    /// Reads the tenant customization-override layer for the customizable definition
     /// types (Language, ProgramSettings, MenuSettings, FormLayout, PluginSettings). Each accessor returns the pure
     /// customization content for the given customization code, or <c>null</c> when the tenant
     /// provides no override (no file) — it never falls back to nor merges with the base layer.

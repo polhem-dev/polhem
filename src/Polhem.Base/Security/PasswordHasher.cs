@@ -26,7 +26,7 @@ namespace Polhem.Base.Security
         /// The PBKDF2-SHA256 iteration count used for new hashes, following the OWASP password storage
         /// recommendation for that algorithm.
         /// </summary>
-        public const int Iterations = 600_000;
+        public static readonly int Iterations = 600_000;
 
         private const string V2Prefix = "v2.";
 
