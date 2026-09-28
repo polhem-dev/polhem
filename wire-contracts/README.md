@@ -45,9 +45,11 @@ Read the resulting diff before committing it.
 ## Who consumes this
 
 [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js) — the TypeScript client — syncs
-this file rather than keeping a copy, and its CI compares what it fetched against what is here.
+this file from a framework release tag rather than keeping its own version, and its CI compares
+what it fetched against that release.
 
-That has a consequence worth expecting rather than discovering: **a wire change made here turns that
-repository's CI red**, and it is meant to. The red is the notification. Landing a change to these
-declarations or to `wire-fixtures/` without following it up there leaves the two halves of one
-contract disagreeing, with the TypeScript side reading the old shape.
+That has a consequence worth expecting rather than discovering: **a wire change made here reaches
+that repository only when it is released and connector-js moves to the new tag, and its CI turns
+red then**. Nothing turns red when the change lands on `main`, so plan the connector-js follow-up
+for the same release. Releasing a change to these declarations or to `wire-fixtures/` without it
+leaves the two halves of one contract disagreeing, with the TypeScript side reading the old shape.

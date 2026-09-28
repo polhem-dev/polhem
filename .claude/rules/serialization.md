@@ -31,12 +31,15 @@ JSON, MessagePack is only between desktop/server" still does not hold.
 ## Wire shape changes have a downstream in another repository
 
 `wire-contracts/messages.d.ts` and `wire-fixtures/` are **the authoritative source of the cross-language contract**.
-The TypeScript client [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js) syncs them (it deliberately
-does not check in a copy: a copy would be a second authority), and its CI compares what it fetches.
+The TypeScript client [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js) syncs them from a
+**framework release tag** (its `scripts/framework-ref.mjs`; it deliberately does not check in a copy of the fixtures:
+a copy would be a second authority), and its CI compares what it fetches.
 
-So **changing these two places turns that repository's CI red, and that is expected, not an accident**: the red light
-is the notification mechanism. Landing the change here without following up there leaves the two halves of the same
-contract contradicting each other, while the TS side still parses the old shape.
+So **a change to these two places does not reach that repository until it is released and connector-js moves its tag;
+its CI turns red then, and that is expected, not an accident**. Nothing goes red when the change lands here, so the
+follow-up has to be arranged on purpose: plan the connector-js change for the same release. Releasing the change
+without it leaves the two halves of the same contract contradicting each other, while the TS side still parses the
+old shape.
 
 > This rule is deliberately recorded in polhem and not in polhem-connector-js: **the person who needs it is the one
 > changing the wire here**, and that person will not open the other repository. Recording it there would guarantee
