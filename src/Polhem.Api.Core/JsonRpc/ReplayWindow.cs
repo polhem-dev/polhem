@@ -32,7 +32,7 @@ namespace Polhem.Api.Core.JsonRpc
         /// <summary>
         /// How far above the highest seen sequence a new one may jump before it is refused.
         /// </summary>
-        public const long MaxForwardJump = MemoryReplayWindowStore.MaxForwardJump;
+        public static readonly long MaxForwardJump = MemoryReplayWindowStore.MaxForwardJump;
 
         private readonly Lock _gate = new();
         private long _highest = -1;

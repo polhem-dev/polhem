@@ -52,7 +52,10 @@ namespace Polhem.Definition.Settings
         /// Throws when the supplied XML is in the pre-flattening layout; otherwise returns silently.
         /// </summary>
         /// <param name="xml">The raw <c>ProgramSettings.xml</c> content.</param>
-        /// <param name="source">Where the content came from, used in the error message (a file path, a database key).</param>
+        /// <param name="source">
+        /// Where the content came from, used in the error message (a file name, a database key). Not a
+        /// full path: the message can reach a remote caller of a debug-mode host.
+        /// </param>
         /// <exception cref="NotSupportedException">Thrown when the content is in the legacy layout.</exception>
         public static void EnsureCurrentFormat(string xml, string source)
         {

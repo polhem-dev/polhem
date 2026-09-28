@@ -60,6 +60,8 @@ namespace Polhem.Db.UnitTests
             Assert.Equal(progId, form!.ProgId);
             Assert.Equal("RT Form", form.DisplayName);
 
+            Assert.Contains(progId, storage.GetFormSchemaIds());
+
             long v1 = CacheVersion(databaseType, $"FormSchema:{progId}");
             Assert.True(v1 >= 1, $"expected bump version >= 1, got {v1}");
 

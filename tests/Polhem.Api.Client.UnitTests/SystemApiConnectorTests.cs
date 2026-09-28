@@ -8,7 +8,7 @@ using Polhem.Api.Core.Messages;
 namespace Polhem.Api.Client.UnitTests
 {
     /// <summary>
-    /// Uses <see cref="SharedDbFixture"/> to trigger the GlobalFixture's initialization of
+    /// Uses <see cref="SharedDbFixture"/> to trigger the initialization of
     /// <c>TestProcessBootstrap.LocalServices</c> and SharedDatabaseState. The local-mode [DbFact] tests go through
     /// LocalApiProvider to resolve the backend JsonRpcExecutor, and complete the CreateSession flow on SQL Server.
     /// </summary>
@@ -16,7 +16,7 @@ namespace Polhem.Api.Client.UnitTests
     {
         public SystemApiConnectorTests(SharedDbFixture _)
         {
-            // The fixture only triggers the GlobalFixture and SharedDatabaseState initialization. The test methods
+            // The fixture only triggers the TestProcessBootstrap and SharedDatabaseState initialization. The test methods
             // pass the process-wide `TestProcessBootstrap.LocalServices` to the local connectors.
         }
 
@@ -80,9 +80,19 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("SystemApiConnector.ExecuteAsync throws ArgumentException for an empty action")]
         public async Task ExecuteAsync_EmptyAction_ThrowsArgumentException(string? action)
         {
-            var connector = new SystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, Guid.NewGuid());
+            var connector = new ExposedSystemApiConnector(Polhem.Tests.Shared.TestProcessBootstrap.LocalServices, Guid.NewGuid());
             await Assert.ThrowsAsync<ArgumentException>(async () =>
-                await connector.ExecuteAsync<object>(action!, new object(), PayloadFormat.Plain));
+                await connector.CallAsync<object>(action!, new object(), PayloadFormat.Plain));
+        }
+
+        /// <summary>
+        /// Reaches the protected <c>ExecuteAsync</c> the way a host's own connector subclass would.
+        /// </summary>
+        private sealed class ExposedSystemApiConnector(IServiceProvider services, Guid accessToken)
+            : SystemApiConnector(services, accessToken)
+        {
+            public Task<T> CallAsync<T>(string action, object value, PayloadFormat format)
+                => ExecuteAsync<T>(action, value, format);
         }
 
         [DbFact(DatabaseType.SQLServer)]

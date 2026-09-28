@@ -32,6 +32,14 @@ namespace Polhem.Definition.Language
     /// <c>en-US</c>. A deployment that ships <c>en-US</c> resources and serves <c>en-GB</c> users
     /// either adds an <c>en</c> resource or relies on the default language and the base text.
     /// </para>
+    /// <para>
+    /// The one exception is the Chinese script tags, because resources are named by region
+    /// (<c>zh-TW</c>, <c>zh-CN</c>) while some platforms report the script (macOS and iOS report
+    /// <c>zh-Hant-TW</c>). <c>zh-Hant-TW</c> and <c>zh-Hant</c> are followed by <c>zh-TW</c>, and
+    /// <c>zh-Hans-CN</c> and <c>zh-Hans</c> by <c>zh-CN</c>, compared case-insensitively; so
+    /// <c>zh-Hant-TW</c> walks <c>zh-Hant-TW</c> → <c>zh-TW</c> → <c>zh-Hant</c> → <c>zh</c>. A
+    /// resource named by the script itself is still tried first.
+    /// </para>
     /// </remarks>
     public static class LanguageFallback
     {
@@ -75,11 +83,22 @@ namespace Polhem.Definition.Language
             while (current.Length > 0)
             {
                 AddDistinct(chain, current);
+                if (s_regionAliases.TryGetValue(current.Replace('_', '-'), out string? alias))
+                    AddDistinct(chain, alias);
                 reachedEnglish |= IsBaseLanguage(current);
                 current = GetParent(current);
             }
             return reachedEnglish;
         }
+
+        // Script tags some platforms report, mapped to the region-named culture resources use.
+        private static readonly Dictionary<string, string> s_regionAliases = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["zh-Hant-TW"] = "zh-TW",
+            ["zh-Hant"] = "zh-TW",
+            ["zh-Hans-CN"] = "zh-CN",
+            ["zh-Hans"] = "zh-CN",
+        };
 
         private static string GetParent(string tag)
         {

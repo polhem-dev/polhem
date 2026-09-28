@@ -205,44 +205,6 @@ namespace Polhem.Base.UnitTests
         }
     }
 
-    public class StringHashSetTests
-    {
-        [Fact]
-        [DisplayName("Strings differing only in case are treated as equal and not added twice")]
-        public void Add_IsCaseInsensitive()
-        {
-            var set = new StringHashSet { "Apple" };
-            Assert.False(set.Add("apple"));
-            Assert.Single(set);
-        }
-
-        [Fact]
-        [DisplayName("Add(string, delimiter) splits the string and adds every token")]
-        public void AddWithDelimiter_SplitsAndAddsTokens()
-        {
-            var set = new StringHashSet
-            {
-                { "a,b,c", "," }
-            };
-
-            Assert.Equal(3, set.Count);
-            Assert.Contains("a", set);
-            Assert.Contains("c", set);
-        }
-
-        [Fact]
-        [DisplayName("Add(string, delimiter) ignores an empty string")]
-        public void AddWithDelimiter_EmptyInput_NoOp()
-        {
-            var set = new StringHashSet
-            {
-                { string.Empty, "," }
-            };
-
-            Assert.Empty(set);
-        }
-    }
-
     public class CollectionExtensionsTests
     {
         [Fact]

@@ -144,6 +144,43 @@ namespace Polhem.Business.UnitTests.Form
         }
 
         [DbFact(DatabaseType.SQLite)]
+        [DisplayName("An unregistered form called with different casing still gets its audit rule, and the entry carries the schema's progId")]
+        public void Save_UnregisteredFormInOtherCasing_StillGetsItsAuditRule()
+        {
+            // `BusinessObjectFactory` canonicalizes only reserved and registered progIds, so an unregistered form
+            // called as `EMPLOYEE.Save` is built with the caller's casing. This constructs that object directly.
+            var ctx = new CrudTestContext(_fx, DatabaseType.SQLite);
+            var writer = new CapturingAuditLogWriter();
+            var rowId = Guid.NewGuid();
+            string runId = Guid.NewGuid().ToString("N")[..8];
+            string callerCasing = CrudTestContext.ProgId.ToUpperInvariant();
+
+            try
+            {
+                var dataSet = ctx.Repository.GetNewData();
+                var master = dataSet.Tables[CrudTestContext.ProgId]!;
+                master.Rows[0][SysFields.RowId] = rowId;
+                master.Rows[0]["sys_id"] = $"C{runId}";
+                master.Rows[0][SysFields.Name] = "大小寫";
+
+                var context = ctx.CreateContextWithOverrides(
+                    Overrides(writer, Rule(AuditRuleMode.On, AuditRuleMode.Off, sensitive: true),
+                        changeEnabled: false, accessEnabled: false));
+                new FormBusinessObject(context, CreateSessionToken(), callerCasing)
+                    .Save(new SaveArgs { DataSet = dataSet });
+
+                var entry = Assert.IsType<ChangeAuditEntry>(Assert.Single(writer.Entries));
+                Assert.True(entry.IsSensitive);
+                Assert.Equal(CrudTestContext.ProgId, entry.ProgId);
+                Assert.Equal(CrudTestContext.ProgId + ".Save", entry.Source);
+            }
+            finally
+            {
+                TryDelete(ctx, rowId);
+            }
+        }
+
+        [DbFact(DatabaseType.SQLite)]
         [DisplayName("Rule On enables view records the deployment disables by default")]
         public void GetData_RuleOn_OverridesDisabledDefault()
         {

@@ -37,7 +37,27 @@ namespace Polhem.Definition.UnitTests.Language
         [DisplayName("GetChain walks every subtag of a script-qualified culture")]
         public void GetChain_ScriptCulture_WalksEverySubtag()
         {
-            Assert.Equal(["zh-Hant-TW", "zh-Hant", "zh", "en-US"], LanguageFallback.GetChain("zh-Hant-TW", "en-US"));
+            Assert.Equal(["sr-Latn-RS", "sr-Latn", "sr", "en-US"], LanguageFallback.GetChain("sr-Latn-RS", "en-US"));
+        }
+
+        [Theory]
+        [InlineData("zh-Hant-TW", new[] { "zh-Hant-TW", "zh-TW", "zh-Hant", "zh" })]
+        [InlineData("zh-Hant", new[] { "zh-Hant", "zh-TW", "zh" })]
+        [InlineData("zh-Hans-CN", new[] { "zh-Hans-CN", "zh-CN", "zh-Hans", "zh" })]
+        [InlineData("zh-Hans", new[] { "zh-Hans", "zh-CN", "zh" })]
+        [InlineData("ZH-HANT-tw", new[] { "ZH-HANT-tw", "zh-TW", "ZH-HANT", "ZH" })]
+        [InlineData("zh_Hant_TW", new[] { "zh_Hant_TW", "zh-TW", "zh_Hant", "zh" })]
+        [DisplayName("GetChain follows a Chinese script tag with the region-named culture resources use, ignoring case")]
+        public void GetChain_ChineseScriptTag_AddsRegionAlias(string lang, string[] expected)
+        {
+            Assert.Equal(expected, LanguageFallback.GetChain(lang, ""));
+        }
+
+        [Fact]
+        [DisplayName("GetChain lists the Chinese alias once when the default language is the same culture")]
+        public void GetChain_ChineseScriptTagWithSameDefault_NotRepeated()
+        {
+            Assert.Equal(["zh-Hant-TW", "zh-TW", "zh-Hant", "zh"], LanguageFallback.GetChain("zh-Hant-TW", "zh-TW"));
         }
 
         [Fact]

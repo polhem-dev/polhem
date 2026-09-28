@@ -45,7 +45,6 @@
 ### 集合
 
 - `CollectionBase<T>` / `KeyCollectionBase<T>` -- 框架（鍵值）集合的抽象基底類別
-- `StringHashSet` -- 不分大小寫（ordinal）比對的字串集合
 
 ### 資料存取輔助
 

@@ -64,14 +64,28 @@ namespace Polhem.Definition.UnitTests.Logging
             Assert.Null(rules.Find("Customer"));
         }
 
-        [Fact]
-        [DisplayName("Find is case-sensitive (Ordinal), because a progId is an identifier, not display text")]
-        public void Find_DifferentCasing_ReturnsNull()
+        [Theory]
+        [InlineData("ORDER")]
+        [InlineData("order")]
+        [DisplayName("Find ignores case, because a progId resolves to its form whatever casing the caller uses")]
+        public void Find_DifferentCasing_ReturnsRule(string requested)
         {
-            var rules = new CompanyAuditRules("C001",
-                [new AuditRule("Order", AuditRuleMode.On, AuditRuleMode.On, false)]);
+            var rule = new AuditRule("Order", AuditRuleMode.On, AuditRuleMode.On, false);
+            var rules = new CompanyAuditRules("C001", [rule]);
 
-            Assert.Null(rules.Find("ORDER"));
+            Assert.Same(rule, rules.Find(requested));
+        }
+
+        [Fact]
+        [DisplayName("Rows whose progIds differ only in case keep the first one")]
+        public void DuplicateProgIdDifferingInCase_KeepsFirstRule()
+        {
+            var first = new AuditRule("Order", AuditRuleMode.On, AuditRuleMode.On, false);
+            var rules = new CompanyAuditRules("C001",
+                [first, new AuditRule("ORDER", AuditRuleMode.Off, AuditRuleMode.Off, true)]);
+
+            Assert.Equal(1, rules.Count);
+            Assert.Same(first, rules.Find("order"));
         }
 
         [Fact]

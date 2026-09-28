@@ -82,7 +82,7 @@ namespace Polhem.Api.Core.UnitTests
         };
 
         [Theory]
-        [MemberData(nameof(ValuesAcrossTheBoundary))]
+        [MemberData(nameof(ValuesAcrossTheBoundary), DisableDiscoveryEnumeration = true)]
         [DisplayName("JSON body codec: a parameter value either fails on the writer or round-trips; it never passes the writer and fails the reader")]
         public void JsonCodec_ParameterValue_FailsOnTheWriterOrRoundTrips(string label, object value)
         {
@@ -90,7 +90,7 @@ namespace Polhem.Api.Core.UnitTests
         }
 
         [Theory]
-        [MemberData(nameof(ValuesAcrossTheBoundary))]
+        [MemberData(nameof(ValuesAcrossTheBoundary), DisableDiscoveryEnumeration = true)]
         [DisplayName("MessagePack: a parameter value either fails on the writer or round-trips; it never passes the writer and fails the reader")]
         public void MessagePack_ParameterValue_FailsOnTheWriterOrRoundTrips(string label, object value)
         {

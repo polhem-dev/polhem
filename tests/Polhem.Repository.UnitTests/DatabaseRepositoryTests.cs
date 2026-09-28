@@ -60,7 +60,7 @@ namespace Polhem.Repository.UnitTests
         [DisplayName("TestConnection throws KeyNotFoundException for an unregistered DatabaseType")]
         public void TestConnection_UnregisteredDatabaseType_ThrowsKeyNotFoundException()
         {
-            // GlobalFixture registers every defined DatabaseType. To still check the guard that an unregistered
+            // `SharedDatabaseState.EnsureRegistered` registers every defined DatabaseType. To still check the guard that an unregistered
             // DatabaseType throws `KeyNotFoundException`, this casts an integer outside the enum range as a
             // placeholder that will never be registered.
             var repo = CreateRepository();

@@ -58,12 +58,12 @@ namespace Polhem.ObjectCaching.Database
         /// <summary>
         /// Lifetime, in minutes, of a cached miss for an unknown access token.
         /// </summary>
-        public const int NegativeMinutes = 1;
+        public static readonly int NegativeMinutes = 1;
 
         /// <summary>
         /// Upper bound on the number of unknown access tokens remembered at once.
         /// </summary>
-        public const int MaxNegativeTokens = 10_000;
+        public static readonly int MaxNegativeTokens = 10_000;
 
         /// <summary>
         /// Caches a miss for one minute, in a set capped at <see cref="MaxNegativeTokens"/>.

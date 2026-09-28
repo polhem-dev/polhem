@@ -22,7 +22,7 @@ namespace Polhem.Definition.Settings
     public sealed class UnitSettings : CollectionBase<UnitItem>
     {
         /// <summary>The decimals <see cref="GetDecimals"/> returns when a unit code is not found.</summary>
-        public const int FallbackDecimals = 0;
+        public static readonly int FallbackDecimals = 0;
 
         /// <summary>
         /// Initializes a new instance of <see cref="UnitSettings"/>.

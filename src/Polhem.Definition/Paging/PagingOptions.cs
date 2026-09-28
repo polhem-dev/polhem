@@ -22,7 +22,7 @@ namespace Polhem.Definition.Paging
         /// <see cref="PageSize"/> is clamped to this value, and a form's <c>GetList</c> call that
         /// supplies no paging at all is served as the first page of this size.
         /// </summary>
-        public const int MaxPageSize = 1000;
+        public static readonly int MaxPageSize = 1000;
 
         /// <summary>
         /// Gets or sets the 1-based page index. Values below 1 are clamped to 1 on the server.

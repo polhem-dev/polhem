@@ -169,9 +169,10 @@ namespace Polhem.Business.Form
             }
 
             row.RewriteVersions((column, version, value) =>
-                restored.TryGetValue(column, out var values)
-                    ? version == DataRowVersion.Original ? values.Original : values.Current
-                    : value);
+            {
+                if (!restored.TryGetValue(column, out var values)) { return value; }
+                return version == DataRowVersion.Original ? values.Original : values.Current;
+            });
         }
 
         /// <summary>

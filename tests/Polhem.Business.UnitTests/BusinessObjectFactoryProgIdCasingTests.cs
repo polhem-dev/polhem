@@ -13,10 +13,11 @@ namespace Polhem.Business.UnitTests
     /// casing the caller used.
     /// </summary>
     /// <remarks>
-    /// Resolution finds a business object case-insensitively, but the audit-policy exemption and the per-form audit
-    /// rules compare the progId exactly. Before the factory canonicalized it, a JSON-RPC call to <c>auditrule.Save</c>
-    /// reached the audit-rule form while skipping its always-audited exemption, and <c>EMPLOYEE.Save</c> missed the
-    /// <c>Employee</c> audit rule.
+    /// Resolution finds a business object case-insensitively, but the audit-policy exemption compares the progId
+    /// exactly. Before the factory canonicalized it, a JSON-RPC call to <c>auditrule.Save</c> reached the audit-rule
+    /// form while skipping its always-audited exemption. A progId the registry does not list is not canonicalized
+    /// here; that a form reached that way still gets its audit rule is covered by
+    /// <c>FormBusinessObjectAuditRuleTests.Save_UnregisteredFormInOtherCasing_StillGetsItsAuditRule</c>.
     /// </remarks>
     public class BusinessObjectFactoryProgIdCasingTests : IClassFixture<PolhemTestFixture>
     {
@@ -46,15 +47,6 @@ namespace Polhem.Business.UnitTests
             var bo = (BusinessObject)CreateFactory(defineAccess).CreateBusinessObject(Guid.Empty, "EMPLOYEE", isLocalCall: false);
 
             Assert.Equal("Employee", bo.ProgId);
-        }
-
-        [Fact]
-        [DisplayName("A progId the registry does not list keeps the caller's casing")]
-        public void CreateBusinessObject_UnregisteredProgId_KeepsCallerCasing()
-        {
-            var bo = (BusinessObject)CreateFactory(new FakeDefineAccess()).CreateBusinessObject(Guid.Empty, "AdHocForm", isLocalCall: false);
-
-            Assert.Equal("AdHocForm", bo.ProgId);
         }
 
         private BusinessObjectFactory CreateFactory(FakeDefineAccess defineAccess)

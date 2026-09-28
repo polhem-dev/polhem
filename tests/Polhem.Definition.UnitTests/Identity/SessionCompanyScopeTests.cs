@@ -29,7 +29,7 @@ namespace Polhem.Definition.UnitTests.Identity
         {
             var scope = new SessionCompanyScope("C001", string.Empty, ["Buyer"], Guid.Empty, Guid.Empty, Guid.Empty);
 
-            var list = Assert.IsAssignableFrom<IList<string>>(scope.Roles);
+            var list = Assert.IsType<IList<string>>(scope.Roles, exactMatch: false);
 
             Assert.Throws<NotSupportedException>(() => list.Add("Manager"));
         }

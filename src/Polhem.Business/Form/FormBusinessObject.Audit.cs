@@ -80,7 +80,7 @@ namespace Polhem.Business.Form
                 ? AuditDiffGram.SerializeDeletedRecord(snapshot)
                 : MinimalDeleteXml(masterTableName, rowKey);
 
-            WriteChangeAudit(ChangeKind.Delete, rowKey, xml, masterTableName, ProgId + ".Delete");
+            WriteChangeAudit(ChangeKind.Delete, rowKey, xml, masterTableName, AuditProgId + ".Delete");
         }
 
         private static bool HasAnyRows(DataSet dataSet)
@@ -112,7 +112,7 @@ namespace Polhem.Business.Form
                 TokenFingerprint = AccessTokenHasher.ComputeFingerprint(AccessToken),
                 ApiKeyId = ApiKeyId,
                 ApiKeyName = ApiKeyName,
-                ProgId = ProgId,
+                ProgId = AuditProgId,
                 ChangeTableName = masterTableName,
                 RowKey = rowKey,
                 ChangeKind = changeKind,
@@ -165,6 +165,24 @@ namespace Polhem.Business.Form
         }
 
         /// <summary>
+        /// Gets the progId written to audit entries: the loaded FormSchema's own spelling.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BusinessObjectFactory"/> gives a business object the declared spelling only for a
+        /// reserved or registered progId. A form that <see cref="ProgramSettings"/> does not list
+        /// reaches this object in the caller's casing, while its schema loads whatever the casing, so
+        /// without this one form's entries would be spread over several <c>prog_id</c> values.
+        /// </remarks>
+        private string AuditProgId
+        {
+            get
+            {
+                string schemaProgId = DefineAccess.GetFormSchema(ProgId).ProgId;
+                return string.IsNullOrEmpty(schemaProgId) ? ProgId : schemaProgId;
+            }
+        }
+
+        /// <summary>
         /// Whether this instance is the audit-policy maintenance form itself.
         /// </summary>
         private bool IsAuditPolicyForm
@@ -202,7 +220,7 @@ namespace Polhem.Business.Form
                 TokenFingerprint = AccessTokenHasher.ComputeFingerprint(AccessToken),
                 ApiKeyId = ApiKeyId,
                 ApiKeyName = ApiKeyName,
-                ProgId = ProgId,
+                ProgId = AuditProgId,
                 RowKey = rowId.ToString(),
                 Source = source,
             });

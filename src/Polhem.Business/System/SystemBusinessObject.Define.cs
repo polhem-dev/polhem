@@ -1,3 +1,4 @@
+using Polhem.Base;
 using Polhem.Base.Serialization;
 using Polhem.Base.Exceptions;
 using Polhem.Definition;
@@ -73,8 +74,7 @@ namespace Polhem.Business.System
         {
             var paths = Services.GetRequiredService<PathOptions>();
             string filePath = paths.GetDatabaseSettingsFilePath();
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException($"The file {filePath} does not exist.");
+            FileUtilities.EnsureFileExists(filePath);
 
             return XmlCodec.DeserializeFromFile<DatabaseSettings>(filePath)!;
         }
@@ -248,8 +248,9 @@ namespace Polhem.Business.System
         /// </summary>
         /// <remarks>
         /// The companion of <see cref="GetFormLayout"/>: a caller fetches both layers and picks
-        /// between them with <see cref="Polhem.Definition.Customization.CustomizeOverlay"/>. Kept as a separate call rather than a second
-        /// field on one response so the connector's existing method contracts stay as they are.
+        /// between them with <see cref="Polhem.Definition.Customization.CustomizeOverlay"/>. It is a separate call rather than a
+        /// second field on the <see cref="GetFormLayout"/> response, so a caller that does not use
+        /// tenant customization reads the base layer alone.
         /// <para>
         /// <b>Which tenant is not negotiable.</b> The customization code comes from
         /// <see cref="Polhem.Definition.Identity.SessionInfo.CustomizeId"/> and is deliberately absent from the arguments — accepting

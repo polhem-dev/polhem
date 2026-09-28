@@ -100,11 +100,9 @@ namespace Polhem.ObjectCaching
 
         private void SweepExpired(DateTimeOffset now)
         {
-            foreach (var pair in _markers)
-            {
-                if (!IsLive(pair.Value, now))
-                    _markers.TryRemove(pair);
-            }
+            // The enumerator of a `ConcurrentDictionary` tolerates removal while it runs.
+            foreach (var pair in _markers.Where(pair => !IsLive(pair.Value, now)))
+                _markers.TryRemove(pair);
         }
 
         private static bool IsLive(Marker marker, DateTimeOffset now)

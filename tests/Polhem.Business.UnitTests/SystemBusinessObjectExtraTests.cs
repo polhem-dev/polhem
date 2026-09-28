@@ -12,8 +12,7 @@ namespace Polhem.Business.UnitTests
 {
     /// <summary>
     /// Additional tests for <see cref="SystemBusinessObject"/> beyond Login:
-    /// the Ping / GetCommonConfiguration / GetDefine / SaveDefine branches,
-    /// the NotSupportedException of the unimplemented GetPackage,
+    /// the Ping / GetCommonConfiguration / GetDefine / SaveDefine branches
     /// and the basic ExecFunc path (local call).
     /// </summary>
     public class SystemBusinessObjectExtraTests : IClassFixture<SharedDbFixture>

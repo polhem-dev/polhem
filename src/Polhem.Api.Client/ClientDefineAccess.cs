@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text;
 using Polhem.Api.Client.Connectors;
+using Polhem.Api.Core.Messages.System;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
@@ -144,7 +145,8 @@ namespace Polhem.Api.Client
         /// </summary>
         /// <remarks>
         /// Every <c>Save*Async</c> method on this class routes through here, and the server-side
-        /// <c>SystemBO.SaveDefine</c> is <c>LocalOnly</c>: writing a definition is a
+        /// <c>SystemBusinessObject.SaveDefine</c> (in <c>Polhem.Business</c>, which this assembly does not
+        /// reference) is <c>LocalOnly</c>: writing a definition is a
         /// deployment-time operation. On a local connection these succeed; on a remote one the
         /// server rejects the call, which reaches the caller as a
         /// <see cref="Polhem.Base.Exceptions.UserMessageException"/>. Reading definitions works over
@@ -154,7 +156,7 @@ namespace Polhem.Api.Client
         /// <param name="defineObject">The definition data object.</param>
         /// <param name="keys">The keys used to locate where the definition data is saved.</param>
         /// <param name="cancellationToken">A token that cancels the call.</param>
-        private Task SaveDefineAsync(DefineType defineType, object defineObject, string[]? keys, CancellationToken cancellationToken)
+        private Task<SaveDefineResponse> SaveDefineAsync(DefineType defineType, object defineObject, string[]? keys, CancellationToken cancellationToken)
         {
             return this.Connector.SaveDefineAsync(defineType, defineObject, keys, cancellationToken);
         }

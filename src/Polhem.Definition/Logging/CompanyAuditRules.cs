@@ -25,17 +25,19 @@ namespace Polhem.Definition.Logging
         /// <param name="companyId">The company business id.</param>
         /// <param name="rules">Every rule row read from the company's <c>st_audit_rule</c> table.</param>
         /// <remarks>
-        /// Program ids are compared with <see cref="StringComparer.Ordinal"/>: they are identifiers,
-        /// not display text. A duplicate program id keeps the first row — the table's unique index
-        /// on <c>sys_id</c> makes that unreachable in practice, and throwing here would take the
-        /// whole company's auditing down over one bad row.
+        /// Program ids are compared with <see cref="StringComparer.OrdinalIgnoreCase"/>: they are
+        /// identifiers, and a progId resolves to its form whatever casing the caller uses, so the rule
+        /// must too. An exact comparison let a caller reach a form under a different casing and fall
+        /// back to the deployment default. A duplicate program id, including one that differs only in
+        /// case, keeps the first row: throwing here would take the whole company's auditing down over
+        /// one bad row.
         /// </remarks>
         public CompanyAuditRules(string companyId, IReadOnlyList<AuditRule> rules)
         {
             ArgumentNullException.ThrowIfNull(rules);
 
             CompanyId = companyId ?? string.Empty;
-            _byProgId = new Dictionary<string, AuditRule>(rules.Count, StringComparer.Ordinal);
+            _byProgId = new Dictionary<string, AuditRule>(rules.Count, StringComparer.OrdinalIgnoreCase);
             foreach (var rule in rules)
             {
                 _byProgId.TryAdd(rule.ProgId, rule);
@@ -49,8 +51,8 @@ namespace Polhem.Definition.Logging
         public int Count => _byProgId.Count;
 
         /// <summary>
-        /// Gets the rule declared for the specified program id, or <c>null</c> when the form has
-        /// none — which means every axis is <see cref="AuditRuleMode.Inherit"/>.
+        /// Gets the rule declared for the specified program id, compared case-insensitively, or
+        /// <c>null</c> when the form has none — which means every axis is <see cref="AuditRuleMode.Inherit"/>.
         /// </summary>
         /// <param name="progId">The form's program id.</param>
         public AuditRule? Find(string progId)

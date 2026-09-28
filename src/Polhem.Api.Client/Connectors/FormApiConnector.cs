@@ -79,6 +79,11 @@ namespace Polhem.Api.Client.Connectors
         /// <param name="value">The input parameter for the action.</param>
         /// <param name="format">The payload encoding format for transmission.</param>
         /// <param name="cancellationToken">A token that cancels the call.</param>
+        /// <remarks>
+        /// Public, unlike the base method and its counterparts on the system and audit-log connectors: a
+        /// form's business object can declare actions of its own, such as an <c>Approve</c> on an order,
+        /// and this is how a client calls them. The framework's form actions have typed methods.
+        /// </remarks>
         public async Task<T> ExecuteAsync<T>(string action, object value, PayloadFormat format = PayloadFormat.Encrypted,
             CancellationToken cancellationToken = default)
         {

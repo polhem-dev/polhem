@@ -1,4 +1,3 @@
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
@@ -41,20 +40,6 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("GetAsync sends the headers and returns the response body")]
-        public async Task GetAsync_SendsRequestAndReturnsBody()
-        {
-            await using var server = await LoopbackHttpServer.StartAsync();
-
-            var headers = new NameValueCollection { { "X-Test", "abc" } };
-            string result = await HttpUtilities.GetAsync(server.BuildUrl("/ping"), headers);
-
-            Assert.Equal("pong", result);
-            Assert.Contains("GET /ping", server.LastRequest);
-            Assert.Contains("X-Test: abc", server.LastRequest);
-        }
-
-        [Fact]
         [DisplayName("PostAsync sends the body with a JSON Content-Type and returns the response")]
         public async Task PostAsync_SendsJsonBodyAndReturnsResponse()
         {
@@ -66,16 +51,6 @@ namespace Polhem.Api.Client.UnitTests
             Assert.Contains("POST /submit", server.LastRequest);
             Assert.Contains("Content-Type: application/json", server.LastRequest);
             Assert.Contains("{\"k\":1}", server.LastRequest);
-        }
-
-        [Fact]
-        [DisplayName("GetAsync throws HttpRequestException for a non-2xx HTTP response")]
-        public async Task GetAsync_NonSuccessStatus_Throws()
-        {
-            await using var server = await LoopbackHttpServer.StartAsync(statusLine: "HTTP/1.1 500 Internal Server Error", body: "fail");
-
-            await Assert.ThrowsAsync<HttpRequestException>(
-                () => HttpUtilities.GetAsync(server.BuildUrl("/boom")));
         }
 
         [Fact]

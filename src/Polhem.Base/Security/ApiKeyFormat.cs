@@ -23,10 +23,10 @@ namespace Polhem.Base.Security
         public const char Separator = '.';
 
         /// <summary>Minimum length of the identifier segment.</summary>
-        public const int MinSysIdLength = 3;
+        public static readonly int MinSysIdLength = 3;
 
         /// <summary>Maximum length of the identifier segment.</summary>
-        public const int MaxSysIdLength = 50;
+        public static readonly int MaxSysIdLength = 50;
 
         private const int SecretByteLength = 32; // 256-bit
 

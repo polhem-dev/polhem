@@ -1,3 +1,4 @@
+using System.Data;
 using System.Globalization;
 using Polhem.Base.Data;
 using Polhem.Base.Serialization;
@@ -220,6 +221,30 @@ namespace Polhem.Db.Storage
         /// <inheritdoc/>
         public FormSchema? GetFormSchema(string progId)
             => ReadRequired<FormSchema>(BaseCustomizeId, progId);
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// The ids are the <c>define_key</c> values of the base-layer <c>FormSchema</c> rows.
+        /// </remarks>
+        public IReadOnlyList<string> GetFormSchemaIds()
+        {
+            var dbAccess = new DbAccess(_databaseId, ConnectionManager);
+            var databaseType = dbAccess.DatabaseType;
+
+            string tbl = databaseType.QuoteIdentifier(TableName);
+            string type = databaseType.QuoteIdentifier(TypeColumn);
+            string cust = databaseType.QuoteIdentifier(CustomizeColumn);
+            string key = databaseType.QuoteIdentifier(KeyColumn);
+
+            var table = dbAccess.ExecuteDataTable(
+                $"SELECT {key} FROM {tbl} WHERE {type} = {{0}} AND {cust} = {{1}} ORDER BY {key}",
+                nameof(FormSchema), BaseCustomizeId);
+            if (table == null) { return []; }
+
+            return [.. table.Rows.Cast<DataRow>()
+                .Select(row => Convert.ToString(row[0], CultureInfo.InvariantCulture) ?? string.Empty)
+                .Where(id => id.Length > 0)];
+        }
 
         /// <inheritdoc/>
         public void SaveFormSchema(FormSchema formSchema)

@@ -107,8 +107,14 @@ namespace Polhem.Definition
         /// <summary>Gets the absolute path of the FormSchema XML for the given progId.</summary>
         /// <param name="progId">The program ID.</param>
         public string GetFormSchemaFilePath(string progId)
-            => System.IO.Path.Combine(DefinePath, "FormSchema",
-                $"{ValidatePathSegment(progId, nameof(progId))}.FormSchema.xml");
+            => System.IO.Path.Combine(FormSchemaFolderPath,
+                $"{ValidatePathSegment(progId, nameof(progId))}{FormSchemaFileSuffix}");
+
+        /// <summary>The file name suffix that follows the progId of a FormSchema file.</summary>
+        internal const string FormSchemaFileSuffix = ".FormSchema.xml";
+
+        /// <summary>Gets the absolute path of the folder that holds the FormSchema files.</summary>
+        internal string FormSchemaFolderPath => System.IO.Path.Combine(DefinePath, "FormSchema");
 
         /// <summary>Gets the absolute path of the FormLayout XML for the given layout id.</summary>
         /// <param name="layoutId">The form layout ID.</param>

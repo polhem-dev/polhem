@@ -33,7 +33,7 @@ namespace Polhem.Definition.Storage
         public DbCategorySettings? GetDbCategorySettings()
         {
             string filePath = _paths.GetDbCategorySettingsFilePath();
-            ValidateFilePath(filePath);
+            FileUtilities.EnsureFileExists(filePath);
             return XmlCodec.DeserializeFromFile<DbCategorySettings>(filePath);
         }
 
@@ -103,12 +103,13 @@ namespace Polhem.Definition.Storage
         public ProgramSettings? GetProgramSettings()
         {
             string filePath = _paths.GetProgramSettingsFilePath();
-            ValidateFilePath(filePath);
+            FileUtilities.EnsureFileExists(filePath);
             // Read the text first so the layout can be checked: an un-migrated file deserializes
             // cleanly into zero entries, and the resulting "every progId falls back to the default"
             // is far harder to diagnose than an error naming the migration command.
             string xml = FileUtilities.FileReadText(filePath);
-            ProgramSettingsFormat.EnsureCurrentFormat(xml, filePath);
+            // The file name, not the path: the message can reach a remote caller of a debug-mode host.
+            ProgramSettingsFormat.EnsureCurrentFormat(xml, Path.GetFileName(filePath));
             var settings = XmlCodec.Deserialize<ProgramSettings>(xml);
             settings?.SetObjectFilePath(filePath);
             return settings;
@@ -191,7 +192,7 @@ namespace Polhem.Definition.Storage
         public TableSchema? GetTableSchema(string categoryId, string tableName)
         {
             string filePath = _paths.GetTableSchemaFilePath(categoryId, tableName);
-            ValidateFilePath(filePath);
+            FileUtilities.EnsureFileExists(filePath);
             return XmlCodec.DeserializeFromFile<TableSchema>(filePath);
         }
 
@@ -213,8 +214,25 @@ namespace Polhem.Definition.Storage
         public FormSchema? GetFormSchema(string progId)
         {
             string filePath = _paths.GetFormSchemaFilePath(progId);
-            ValidateFilePath(filePath);
+            FileUtilities.EnsureFileExists(filePath);
             return XmlCodec.DeserializeFromFile<FormSchema>(filePath);
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// The ids are the file name stems of the <c>*.FormSchema.xml</c> files under
+        /// <c>{DefinePath}/FormSchema</c>. A missing folder yields an empty list.
+        /// </remarks>
+        public IReadOnlyList<string> GetFormSchemaIds()
+        {
+            string folder = _paths.FormSchemaFolderPath;
+            if (!Directory.Exists(folder)) { return []; }
+
+            return [.. Directory.EnumerateFiles(folder, "*" + PathOptions.FormSchemaFileSuffix)
+                .Select(Path.GetFileName)
+                .Select(name => name![..^PathOptions.FormSchemaFileSuffix.Length])
+                .Where(id => id.Length > 0)
+                .Order(StringComparer.Ordinal)];
         }
 
         /// <summary>
@@ -284,15 +302,6 @@ namespace Polhem.Definition.Storage
             XmlCodec.SerializeToFile(resource, filePath);
         }
 
-        /// <summary>
-        /// Validates that the specified file exists.
-        /// </summary>
-        /// <param name="filePath">The file path.</param>
-        private static void ValidateFilePath(string filePath)
-        {
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException($"The file {filePath} does not exist.");
-        }
 
         /// <inheritdoc/>
         /// <remarks>

@@ -83,10 +83,10 @@ namespace Polhem.Api.Core.MessagePack
             {
                 // Read into locals and construct once: the properties are init-only, so the node
                 // cannot be filled in after it exists.
-                Guid rowId = default;
+                Guid rowId = Guid.Empty;
                 string deptId = string.Empty;
                 string deptName = string.Empty;
-                Guid managerRowId = default;
+                Guid managerRowId = Guid.Empty;
                 DepartmentNodeCollection? children = null;
                 var count = reader.ReadMapHeader();
                 for (var i = 0; i < count; i++)

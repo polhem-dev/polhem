@@ -145,6 +145,27 @@ namespace Polhem.Base
         }
 
         /// <summary>
+        /// Throws <see cref="FileNotFoundException"/> when <paramref name="filePath"/> does not exist.
+        /// </summary>
+        /// <param name="filePath">The absolute path of the file that must exist.</param>
+        /// <exception cref="FileNotFoundException">
+        /// The file does not exist. <see cref="Exception.Message"/> names the file only;
+        /// <see cref="FileNotFoundException.FileName"/> carries the full path.
+        /// </exception>
+        /// <remarks>
+        /// IMPORTANT: the message holds the file name and never the path. A debug-mode host passes the
+        /// message of an unmapped exception to the remote caller, and a definition file that a request
+        /// names (a FormSchema reached by its progId, for one) would otherwise hand any caller the
+        /// server's directory layout. The full path stays on <see cref="FileNotFoundException.FileName"/>,
+        /// which the server's log records. <c>FileUtilitiesTests</c> pins the message.
+        /// </remarks>
+        public static void EnsureFileExists(string filePath)
+        {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException($"The file '{Path.GetFileName(filePath)}' does not exist.", filePath);
+        }
+
+        /// <summary>
         /// Reads the contents of a text file. Returns empty string when the file does not exist.
         /// </summary>
         /// <param name="filePath">The file path.</param>

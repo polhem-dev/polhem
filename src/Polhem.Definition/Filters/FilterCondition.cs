@@ -43,11 +43,22 @@ namespace Polhem.Definition.Filters
         /// <summary>
         /// Gets or sets the primary value (used for Equal, Like, &gt;, etc.).
         /// </summary>
+        /// <remarks>
+        /// Holds a framework value type (a string, a number, a <see cref="bool"/>, a <see cref="Guid"/>, a date or
+        /// time, a <see cref="byte"/> array). A value of an application-defined type travels only
+        /// through the named-type escape hatch (a namespace added to <see cref="Polhem.Base.SysInfo.AllowedTypeNamespaces"/>),
+        /// and on iOS over the MessagePack codec it fails with a <see cref="NotSupportedException"/> that names
+        /// the type. The details are under "Code generation at run time (iOS)" in
+        /// <c>docs/en/platform-support.md</c>.
+        /// </remarks>
         public object? Value { get; set; }
 
         /// <summary>
         /// Gets or sets the second value (used for Between conditions).
         /// </summary>
+        /// <remarks>
+        /// The same value types as <see cref="Value"/>, with the same iOS limitation.
+        /// </remarks>
         public object? SecondValue { get; set; }
 
         /// <summary>

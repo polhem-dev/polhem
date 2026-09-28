@@ -47,3 +47,9 @@ Polhem.Business.System.LoginResult.Culture.get -> string!
 Polhem.Business.System.LoginResult.Culture.set -> void
 Polhem.Business.Form.FormRuleProcessor.ApplyNewRowDefaults(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, string! timeZoneId = "") -> void
 Polhem.Business.Form.IFormRuleProcessor.ApplyNewRowDefaults(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, string! timeZoneId = "") -> void
+*REMOVED*const Polhem.Business.Security.LoginAttemptTracker.DefaultLockoutMinutes = 15 -> int
+*REMOVED*const Polhem.Business.Security.LoginAttemptTracker.DefaultMaxFailedAttempts = 5 -> int
+*REMOVED*const Polhem.Business.Security.LoginAttemptTracker.DefaultMaxTrackedAccounts = 10000 -> int
+static readonly Polhem.Business.Security.LoginAttemptTracker.DefaultLockoutMinutes -> int
+static readonly Polhem.Business.Security.LoginAttemptTracker.DefaultMaxFailedAttempts -> int
+static readonly Polhem.Business.Security.LoginAttemptTracker.DefaultMaxTrackedAccounts -> int

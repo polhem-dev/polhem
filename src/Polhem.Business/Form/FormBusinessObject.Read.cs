@@ -208,7 +208,7 @@ namespace Polhem.Business.Form
             // Record the detail view (who viewed which record). Opt-in and best-effort; field-level
             // detail is intentionally not recorded — a detail view loads the whole record.
             if (dataSet != null && AccessAuditEnabled())
-                WriteAccessAudit(args.RowId, ProgId + ".GetData");
+                WriteAccessAudit(args.RowId, AuditProgId + ".GetData");
 
             return new GetDataResult { DataSet = dataSet };
         }

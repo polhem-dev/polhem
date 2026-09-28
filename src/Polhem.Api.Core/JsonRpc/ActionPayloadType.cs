@@ -39,6 +39,10 @@ namespace Polhem.Api.Core.JsonRpc
 
         private static readonly ConcurrentDictionary<Type, Type> s_cache = new();
 
+        // `Assembly.GetName()` builds a new `AssemblyName` on every call, and `IsNamedBy` runs for every
+        // encoded body.
+        private static readonly ConcurrentDictionary<Assembly, string> s_assemblyNames = new();
+
         /// <summary>
         /// Returns the type an encoded body addressed to <paramref name="method"/> is decoded into.
         /// </summary>
@@ -105,7 +109,8 @@ namespace Polhem.Api.Core.JsonRpc
             var assemblyPart = typeName[(separator + 1)..];
             var nameEnd = assemblyPart.IndexOf(',');
             var assemblyName = (nameEnd < 0 ? assemblyPart : assemblyPart[..nameEnd]).Trim();
-            return string.Equals(assemblyName, type.Assembly.GetName().Name, StringComparison.OrdinalIgnoreCase);
+            var ownName = s_assemblyNames.GetOrAdd(type.Assembly, assembly => assembly.GetName().Name ?? string.Empty);
+            return string.Equals(assemblyName, ownName, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

@@ -97,6 +97,17 @@ namespace Polhem.Definition.Storage
         FormSchema? GetFormSchema(string progId);
 
         /// <summary>
+        /// Lists the program ids of the base-layer form schemas the storage holds.
+        /// </summary>
+        /// <remarks>
+        /// For startup diagnostics that must see every form a caller can reach, including the ones
+        /// <see cref="Settings.ProgramSettings"/> does not list. The default implementation returns an
+        /// empty list, for a storage that cannot enumerate what it holds; such a caller then sees only
+        /// the forms the registry names.
+        /// </remarks>
+        IReadOnlyList<string> GetFormSchemaIds() => [];
+
+        /// <summary>
         /// Saves the form schema.
         /// </summary>
         /// <param name="formSchema">The form schema.</param>

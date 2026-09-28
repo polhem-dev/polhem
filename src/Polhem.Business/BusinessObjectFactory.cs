@@ -62,10 +62,12 @@ namespace Polhem.Business
         /// <para>
         /// The business object receives the progId in its declared casing — the reserved progId's own
         /// spelling, or the <see cref="ProgramItem.ProgId"/> of the registry entry — whatever casing the
-        /// caller used. Resolution matches a progId case-insensitively, while audit rules and the
-        /// audit-policy form compare it exactly; building every object with one canonical spelling
-        /// keeps a caller from slipping past those comparisons by changing case. A progId the registry
-        /// does not list keeps the caller's casing.
+        /// caller used. Resolution matches a progId case-insensitively, while the audit-policy form is
+        /// recognised by an exact comparison; building every object with one canonical spelling keeps a
+        /// caller from slipping past that comparison by changing case. A progId the registry does not
+        /// list keeps the caller's casing: <see cref="Polhem.Definition.Logging.CompanyAuditRules"/>
+        /// looks rules up case-insensitively, and <see cref="Form.FormBusinessObject"/> writes the
+        /// loaded FormSchema's spelling to the audit log.
         /// </para>
         /// </remarks>
         public object CreateBusinessObject(Guid accessToken, string progId, bool isLocalCall)

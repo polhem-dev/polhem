@@ -14,7 +14,7 @@ namespace Polhem.Business
         /// <summary>
         /// Invokes an ExecFunc method by reflection, treating the call as remote.
         /// </summary>
-        /// <param name="handler">The handler that implements the method identified by FuncID.</param>
+        /// <param name="handler">The handler that implements the method identified by FuncId.</param>
         /// <param name="currentRequirement">The access requirement of the current call.</param>
         /// <param name="args">The input arguments.</param>
         /// <param name="result">The output result.</param>
@@ -34,7 +34,7 @@ namespace Polhem.Business
         /// <summary>
         /// Invokes an ExecFunc method by reflection.
         /// </summary>
-        /// <param name="handler">The handler that implements the method identified by FuncID.</param>
+        /// <param name="handler">The handler that implements the method identified by FuncId.</param>
         /// <param name="currentRequirement">The access requirement of the current call.</param>
         /// <param name="isLocalCall">Whether the call originates in-process rather than from a remote client.</param>
         /// <param name="args">The input arguments.</param>
@@ -62,7 +62,7 @@ namespace Polhem.Business
         {
             try
             {
-                // Invoke the custom method corresponding to FuncID by reflection
+                // Invoke the custom method corresponding to FuncId by reflection
                 var method = handler.GetType().GetMethod(args.FuncId);
                 if (method == null)
                     throw new MissingMethodException($"Method {args.FuncId} not found.");
@@ -75,16 +75,16 @@ namespace Polhem.Business
                 if (attr == null)
                 {
                     throw new UnauthorizedAccessException(
-                        $"FuncID '{args.FuncId}' does not declare [ExecFuncAccessControl] and cannot be invoked.");
+                        $"FuncId '{args.FuncId}' does not declare [ExecFuncAccessControl] and cannot be invoked.");
                 }
 
                 // A local-only method must never be reachable from a remote client.
                 if (attr.LocalOnly && !isLocalCall)
-                    throw new UnauthorizedAccessException($"FuncID '{args.FuncId}' allows local calls only.");
+                    throw new UnauthorizedAccessException($"FuncId '{args.FuncId}' allows local calls only.");
 
                 // Evaluate the access requirement
                 if (attr.AccessRequirement == ApiAccessRequirement.Authenticated && currentRequirement == ApiAccessRequirement.Anonymous)
-                    throw new AuthenticationRequiredException(PolhemMessages.FuncAuthenticationRequired, "FuncID '{0}' requires authentication.", args.FuncId);
+                    throw new AuthenticationRequiredException(PolhemMessages.FuncAuthenticationRequired, "FuncId '{0}' requires authentication.", args.FuncId);
 
                 method.Invoke(handler, new object[] { args, result });
             }

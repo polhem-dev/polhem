@@ -56,7 +56,7 @@ namespace Polhem.ObjectCaching
             if (string.IsNullOrWhiteSpace(configured))
             {
                 // Blank selects the framework default, the rule every BackendComponents entry follows.
-                if (Provider.GetType() != typeof(MemoryCacheProvider)) Provider = new MemoryCacheProvider();
+                if (Provider is not MemoryCacheProvider) Provider = new MemoryCacheProvider();
                 return;
             }
 

@@ -10,7 +10,7 @@ namespace Polhem.Analyzers.Conventions
     /// <remarks>
     /// <para>
     /// ExecFunc is a second dispatch surface alongside ordinary business object actions: a client sends a
-    /// FuncID and the framework resolves it straight to a public method on the handler, by name. POLHEM3001
+    /// FuncId and the framework resolves it straight to a public method on the handler, by name. POLHEM3001
     /// cannot see these methods because they live on <c>IExecFuncHandler</c> implementations rather than
     /// on a business object, which left this surface with no build-time gate at all.
     /// </para>
@@ -39,7 +39,7 @@ namespace Polhem.Analyzers.Conventions
             category: "Polhem.Business",
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true,
-            description: "Public methods on an ExecFunc handler are reachable as FuncIDs and require an "
+            description: "Public methods on an ExecFunc handler are reachable as FuncIds and require an "
                        + "access-control declaration before the framework will invoke them.",
             helpLinkUri: null,
             customTags: WellKnownDiagnosticTags.CompilationEnd);
@@ -105,7 +105,7 @@ namespace Polhem.Analyzers.Conventions
         /// <param name="resultType">The resolved <c>ExecFuncResult</c> symbol.</param>
         /// <returns><c>true</c> when the method forms part of the ExecFunc surface.</returns>
         /// <remarks>
-        /// The dispatcher resolves a FuncID by name and invokes with exactly two arguments, so only
+        /// The dispatcher resolves a FuncId by name and invokes with exactly two arguments, so only
         /// methods of that shape are reachable. Matching the signature — rather than every public
         /// method — keeps helpers and properties on a handler out of the rule.
         /// </remarks>

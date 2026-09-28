@@ -50,7 +50,7 @@ namespace Polhem.Db.UnitTests
         {
             var initializer = DbProviderRegistry.GetConnectionInitializer(DatabaseType.Oracle);
 
-            // `GlobalFixture.RegisterOracle` attaches the ALTER SESSION action. Only the hook's presence is checked.
+            // `SharedDatabaseState.RegisterOracle` attaches the ALTER SESSION action. Only the hook's presence is checked.
             // The integration tests cover the actual execution when POLHEM_TEST_CONNSTR_ORACLE is enabled.
             Assert.NotNull(initializer);
         }

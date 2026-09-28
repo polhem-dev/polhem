@@ -147,55 +147,71 @@ namespace Polhem.ObjectCaching
         {
             string cacheKey = GetCacheKey(key);
             var misses = BoundedMisses;
+            if (TryAnswerFromCache(cacheKey, misses, out var cached))
+                return cached;
+
+            // Another flight may have completed between the read above and the one inside.
+            return CacheSingleFlight<T>.GetOrCreate(cacheKey, () =>
+                TryAnswerFromCache(cacheKey, misses, out var fresh) ? fresh : LoadAndStore(key, cacheKey, misses));
+        }
+
+        /// <summary>
+        /// Answers from what the cache already holds: a value, or a recorded miss of either kind.
+        /// </summary>
+        /// <returns><c>false</c> when the cache holds nothing for the key and the value must be loaded.</returns>
+        private static bool TryAnswerFromCache(string cacheKey, BoundedMissMarkers? misses, out T? value)
+        {
+            value = null;
             if (misses != null && misses.Contains(cacheKey))
-                return null;
+                return true;
 
             var cached = CacheInfo.Provider.Get(cacheKey);
-
-            // Negative cache hit: short-circuit without invoking CreateInstance.
+            // Negative cache hit: answered without invoking CreateInstance.
             if (ReferenceEquals(cached, KeyObjectCacheSentinel.MissMarker))
-                return null;
+                return true;
 
-            if (cached is T t)
-                return t;
+            value = cached as T;
+            return value != null;
+        }
 
-            return CacheSingleFlight<T>.GetOrCreate(cacheKey, () =>
+        /// <summary>
+        /// Loads the value for <paramref name="key"/> and stores it, or its absence, unless an
+        /// invalidation lands while it loads.
+        /// </summary>
+        private T? LoadAndStore(string key, string cacheKey, BoundedMissMarkers? misses)
+        {
+            // Every invalidation source is read before the load, so one that lands during the
+            // load is detected instead of being mistaken for the state the value was read at.
+            long generation = CacheInvalidation.Read(cacheKey);
+            var policy = BuildPolicy(key);
+            policy.CaptureChangeBaseline();
+            var negPolicy = BuildNegativePolicy(key);
+            negPolicy?.CaptureChangeBaseline();
+
+            var value = CreateInstance(key);
+            if (value != null)
+                CacheInvalidation.StoreIfCurrent(cacheKey, generation, value, policy);
+            else if (negPolicy != null)
+                StoreMiss(cacheKey, generation, negPolicy, misses);
+            return value;
+        }
+
+        /// <summary>
+        /// Records that <paramref name="cacheKey"/> has no value: as a marker in the cache provider, or
+        /// in the capped miss set when this cache keeps one.
+        /// </summary>
+        private static void StoreMiss(string cacheKey, long generation, CacheItemPolicy negPolicy, BoundedMissMarkers? misses)
+        {
+            if (misses == null)
             {
-                // Another flight may have completed between the read above and this one.
-                if (misses != null && misses.Contains(cacheKey))
-                    return null;
-                var current = CacheInfo.Provider.Get(cacheKey);
-                if (ReferenceEquals(current, KeyObjectCacheSentinel.MissMarker))
-                    return null;
-                if (current is T fresh)
-                    return fresh;
+                CacheInvalidation.StoreIfCurrent(cacheKey, generation, KeyObjectCacheSentinel.MissMarker, negPolicy);
+                return;
+            }
 
-                // Every invalidation source is read before the load, so one that lands during the
-                // load is detected instead of being mistaken for the state the value was read at.
-                long generation = CacheInvalidation.Read(cacheKey);
-                var policy = BuildPolicy(key);
-                policy.CaptureChangeBaseline();
-                var negPolicy = BuildNegativePolicy(key);
-                negPolicy?.CaptureChangeBaseline();
-
-                var value = CreateInstance(key);
-                if (value != null)
-                {
-                    CacheInvalidation.StoreIfCurrent(cacheKey, generation, value, policy);
-                }
-                else if (negPolicy != null)
-                {
-                    if (misses == null)
-                        CacheInvalidation.StoreIfCurrent(cacheKey, generation, KeyObjectCacheSentinel.MissMarker, negPolicy);
-                    else if (CacheInvalidation.Read(cacheKey) == generation)
-                    {
-                        misses.Add(cacheKey, ExpiryOf(negPolicy), negPolicy.ChangeNotifyKey, negPolicy.NotifyVersionBaseline);
-                        if (CacheInvalidation.Read(cacheKey) != generation)
-                            misses.Remove(cacheKey);
-                    }
-                }
-                return value;
-            });
+            if (CacheInvalidation.Read(cacheKey) != generation) { return; }
+            misses.Add(cacheKey, ExpiryOf(negPolicy), negPolicy.ChangeNotifyKey, negPolicy.NotifyVersionBaseline);
+            if (CacheInvalidation.Read(cacheKey) != generation)
+                misses.Remove(cacheKey);
         }
 
         /// <summary>

@@ -150,8 +150,8 @@ namespace Polhem.Db.UnitTests
 
             string sql = builder.GetCommandText(schema);
 
-            // Oracle uses session-level NLS settings (the ALTER SESSION
-            // in `GlobalFixture`) instead of a column-level COLLATE.
+            // Oracle uses session-level NLS settings (the ALTER SESSION that
+            // `SharedDatabaseState` attaches) instead of a column-level COLLATE.
             Assert.DoesNotContain("ENGINE=", sql);
             Assert.DoesNotContain("CHARSET=", sql);
             Assert.DoesNotContain("COLLATE", sql);

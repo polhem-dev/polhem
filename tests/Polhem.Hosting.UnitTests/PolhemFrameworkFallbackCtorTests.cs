@@ -11,8 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Polhem.Hosting.UnitTests
 {
-    // Stub with only (IDefineStorage, PathOptions) ctor — exercises ResolveDefineAccess
-    // 2-arg ctor fallback path (the 4-arg ctor is intentionally absent).
+    // Stub with only an (IDefineStorage, PathOptions) ctor: it takes no configuration key, so none is passed.
     public sealed class TwoArgDefineAccessStub : IDefineAccess
     {
         public TwoArgDefineAccessStub(IDefineStorage storage, PathOptions paths) { }
@@ -36,7 +35,7 @@ namespace Polhem.Hosting.UnitTests
         public void SaveLanguage(LanguageResource resource) => throw new NotImplementedException();
     }
 
-    // Stub with only an (IDefineStorage) ctor, which is not a supported IDefineAccess constructor.
+    // Stub with only an (IDefineStorage) ctor: every parameter is a registered service and none is the key.
     public sealed class StorageOnlyDefineAccessStub : IDefineAccess
     {
         public StorageOnlyDefineAccessStub(IDefineStorage storage) { }
@@ -60,8 +59,31 @@ namespace Polhem.Hosting.UnitTests
         public void SaveLanguage(LanguageResource resource) => throw new NotImplementedException();
     }
 
-    // Stub with only a parameterless ctor. As a define storage it has no supported constructor,
-    // and as an access token validator it implements the wrong interface.
+    // Stub whose ctor needs a service nobody registered.
+    public sealed class UnresolvableDependencyDefineAccessStub : IDefineAccess
+    {
+        public UnresolvableDependencyDefineAccessStub(IUnregisteredTestDependency dependency) { }
+        public object GetDefine(DefineType defineType, string[]? keys = null) => throw new NotImplementedException();
+        public void SaveDefine(DefineType defineType, object defineObject, string[]? keys = null) => throw new NotImplementedException();
+        public SystemSettings GetSystemSettings() => throw new NotImplementedException();
+        public void SaveSystemSettings(SystemSettings settings) => throw new NotImplementedException();
+        public DatabaseSettings GetDatabaseSettings() => throw new NotImplementedException();
+        public void SaveDatabaseSettings(DatabaseSettings settings) => throw new NotImplementedException();
+        public ProgramSettings GetProgramSettings() => throw new NotImplementedException();
+        public void SaveProgramSettings(ProgramSettings settings) => throw new NotImplementedException();
+        public DbCategorySettings GetDbCategorySettings() => throw new NotImplementedException();
+        public void SaveDbCategorySettings(DbCategorySettings settings) => throw new NotImplementedException();
+        public TableSchema GetTableSchema(string categoryId, string tableName) => throw new NotImplementedException();
+        public void SaveTableSchema(string categoryId, TableSchema tableSchema) => throw new NotImplementedException();
+        public FormSchema GetFormSchema(string progId) => throw new NotImplementedException();
+        public void SaveFormSchema(FormSchema formSchema) => throw new NotImplementedException();
+        public FormLayout GetFormLayout(string layoutId) => throw new NotImplementedException();
+        public void SaveFormLayout(FormLayout formLayout) => throw new NotImplementedException();
+        public LanguageResource GetLanguage(string lang, string ns) => throw new NotImplementedException();
+        public void SaveLanguage(LanguageResource resource) => throw new NotImplementedException();
+    }
+
+    // Stub with only a parameterless ctor, which DI-aware construction handles like any other.
     public sealed class ParameterlessDefineStorageStub : IDefineStorage
     {
         public DbCategorySettings? GetDbCategorySettings() => null;
@@ -208,8 +230,8 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResolveDefineAccess supports an IDefineAccess implementation that has only an (IDefineStorage, PathOptions) constructor")]
-        public void ResolveDefineAccess_TwoArgCtor_CreatesCorrectType()
+        [DisplayName("CreateDefineAccess builds an IDefineAccess implementation that has only an (IDefineStorage, PathOptions) constructor")]
+        public void CreateDefineAccess_TwoArgCtor_CreatesCorrectType()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-2arg-{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
@@ -237,27 +259,17 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("CreateDefineStorage rejects an IDefineStorage implementation without a supported constructor, naming the setting")]
-        public void CreateDefineStorage_ParameterlessOnly_ThrowsNamingSetting()
+        [DisplayName("CreateDefineStorage builds an IDefineStorage implementation that has only a parameterless constructor")]
+        public void CreateDefineStorage_ParameterlessOnly_CreatesCorrectType()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-pless-{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
             try
             {
-                var configuration = new BackendConfiguration();
-                configuration.Components.DefineStorage =
-                    "Polhem.Hosting.UnitTests.ParameterlessDefineStorageStub, Polhem.Hosting.UnitTests";
+                using var sp = BuildProvider(tempDir, c => c.Components.DefineStorage =
+                    "Polhem.Hosting.UnitTests.ParameterlessDefineStorageStub, Polhem.Hosting.UnitTests");
 
-                var services = new ServiceCollection();
-                services.AddPolhemFramework(
-                    configuration,
-                    new PathOptions { DefinePath = tempDir },
-                    autoCreateMasterKey: true);
-
-                using var sp = services.BuildServiceProvider();
-                var ex = Assert.Throws<InvalidOperationException>(() => sp.GetRequiredService<IDefineStorage>());
-
-                Assert.Contains("BackendComponents.DefineStorage", ex.Message, StringComparison.Ordinal);
+                Assert.IsType<ParameterlessDefineStorageStub>(sp.GetRequiredService<IDefineStorage>());
             }
             finally
             {
@@ -266,32 +278,82 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("ResolveDefineAccess rejects an IDefineAccess implementation without a supported constructor, naming the setting")]
-        public void ResolveDefineAccess_StorageOnlyCtor_ThrowsNamingSetting()
+        [DisplayName("CreateDefineAccess builds an IDefineAccess implementation whose constructor takes only registered services")]
+        public void CreateDefineAccess_StorageOnlyCtor_CreatesCorrectType()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-1arg-{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
             try
             {
-                var configuration = new BackendConfiguration();
-                configuration.Components.DefineAccess =
-                    "Polhem.Hosting.UnitTests.StorageOnlyDefineAccessStub, Polhem.Hosting.UnitTests";
+                using var sp = BuildProvider(tempDir, c => c.Components.DefineAccess =
+                    "Polhem.Hosting.UnitTests.StorageOnlyDefineAccessStub, Polhem.Hosting.UnitTests");
 
-                var services = new ServiceCollection();
-                services.AddPolhemFramework(
-                    configuration,
-                    new PathOptions { DefinePath = tempDir },
-                    autoCreateMasterKey: true);
-
-                using var sp = services.BuildServiceProvider();
-                var ex = Assert.Throws<InvalidOperationException>(() => sp.GetRequiredService<IDefineAccess>());
-
-                Assert.Contains("BackendComponents.DefineAccess", ex.Message, StringComparison.Ordinal);
+                Assert.IsType<StorageOnlyDefineAccessStub>(sp.GetRequiredService<IDefineAccess>());
             }
             finally
             {
                 try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
             }
+        }
+
+        [Fact]
+        [DisplayName("CreateDefineAccess names the missing service in the exception when a constructor dependency is not registered")]
+        public void CreateDefineAccess_UnregisteredCtorDependency_ExceptionNamesMissingService()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-unres-access-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                using var sp = BuildProvider(tempDir, c => c.Components.DefineAccess =
+                    "Polhem.Hosting.UnitTests.UnresolvableDependencyDefineAccessStub, Polhem.Hosting.UnitTests");
+
+                var ex = Assert.Throws<InvalidOperationException>(() => sp.GetRequiredService<IDefineAccess>());
+
+                Assert.Contains(nameof(IUnregisteredTestDependency), ex.Message, StringComparison.Ordinal);
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+            }
+        }
+
+        [Fact]
+        [DisplayName("The default CacheDefineAccess is built through its longest constructor, so it receives the logger")]
+        public void CreateDefineAccess_Default_ReceivesLogger()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-default-access-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                using var sp = BuildProvider(tempDir, _ => { }, services =>
+                    services.AddSingleton<Microsoft.Extensions.Logging.ILogger<Polhem.ObjectCaching.CacheDefineAccess>>(
+                        Microsoft.Extensions.Logging.Abstractions.NullLogger<Polhem.ObjectCaching.CacheDefineAccess>.Instance));
+
+                var access = Assert.IsType<Polhem.ObjectCaching.CacheDefineAccess>(sp.GetRequiredService<IDefineAccess>());
+                var loggerField = typeof(Polhem.ObjectCaching.CacheDefineAccess)
+                    .GetField("_logger", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+
+                Assert.NotNull(loggerField.GetValue(access));
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
+            }
+        }
+
+        private static ServiceProvider BuildProvider(string tempDir, Action<BackendConfiguration> configure,
+            Action<IServiceCollection>? services = null)
+        {
+            var configuration = new BackendConfiguration();
+            configure(configuration);
+
+            var collection = new ServiceCollection();
+            services?.Invoke(collection);
+            collection.AddPolhemFramework(
+                configuration,
+                new PathOptions { DefinePath = tempDir },
+                autoCreateMasterKey: true);
+            return collection.BuildServiceProvider();
         }
     }
 }

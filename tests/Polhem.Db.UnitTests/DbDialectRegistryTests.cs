@@ -46,7 +46,7 @@ namespace Polhem.Db.UnitTests
         [DisplayName("Get throws KeyNotFoundException for an unregistered type")]
         public void Get_Unregistered_Throws()
         {
-            // `GlobalFixture` registers every defined `DatabaseType`, so no enum value is naturally unregistered.
+            // `SharedDatabaseState.EnsureRegistered` registers every defined `DatabaseType`, so no enum value is naturally unregistered.
             // An integer outside the enum range serves as a placeholder that is never registered.
             Assert.Throws<KeyNotFoundException>(() => DbDialectRegistry.Get((DatabaseType)9999));
         }
@@ -64,9 +64,9 @@ namespace Polhem.Db.UnitTests
         [DisplayName("CreateTableSchemaProvider returns a SqlTableSchemaProvider")]
         public void CreateTableSchemaProvider_ReturnsSqlImpl()
         {
-            // The constructor's `new DbAccess("common_sqlserver")` needs a connection registered in
-            // `DbConnectionManager`. Without POLHEM_TEST_CONNSTR_SQLSERVER, `GlobalFixture` registers none, so
-            // `[DbFact]` skips the test.
+            // The provider's constructor builds a `DbAccess` for `common_sqlserver` through the injected
+            // `IDbConnectionManager`, which knows that database only when POLHEM_TEST_CONNSTR_SQLSERVER is set.
+            // Without it `[DbFact]` skips the test.
             var provider = _factory.CreateTableSchemaProvider("common_sqlserver", _fx.GetRequiredService<IDbConnectionManager>());
 
             Assert.IsType<SqlTableSchemaProvider>(provider);
