@@ -83,13 +83,18 @@ namespace Polhem.Hosting.Registry
 
         /// <summary>
         /// The stored form schemas and the registry entries, each progId once whatever its casing,
-        /// in the registry's spelling when it has one.
+        /// in the stored spelling when the storage holds it.
         /// </summary>
+        /// <remarks>
+        /// The stored spelling comes first because it is the one the schema is read by: on a
+        /// case-sensitive file system a registry entry spelled differently from the file does not find
+        /// it, and the form would be skipped instead of reported.
+        /// </remarks>
         private List<string> CandidateProgIds()
         {
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var candidates = new List<string>();
-            foreach (var progId in RegisteredProgIds().Concat(StoredFormIds()))
+            foreach (var progId in StoredFormIds().Concat(RegisteredProgIds()))
             {
                 if (seen.Add(progId)) { candidates.Add(progId); }
             }

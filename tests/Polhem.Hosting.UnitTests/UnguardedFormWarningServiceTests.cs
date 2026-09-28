@@ -69,7 +69,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("A form both stored and registered under another casing is named once, in the registry's spelling")]
+        [DisplayName("A form both stored and registered under another casing is named once, in the stored spelling")]
         public void FindUnguardedForms_StoredAndRegisteredInOtherCasing_NamesItOnce()
         {
             var access = CreateAccess();
@@ -78,7 +78,7 @@ namespace Polhem.Hosting.UnitTests
 
             var found = new UnguardedFormWarningService(access, new FileDefineStorage(_paths), new ListLogger()).FindUnguardedForms();
 
-            Assert.Equal(["OPENFORM"], found);
+            Assert.Equal(["OpenForm"], found);
         }
 
         [Fact]
