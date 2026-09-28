@@ -20,15 +20,17 @@ at. SonarCloud only runs in full mode after the tests, so a samples-only fix is 
 
 ### ⚠️ The related gap: three solutions are never built at all
 
-`tools/` / `samples/` / `apps/` are **neither in `Polhem.slnx` nor in the push path filter**, and no CI step builds them, so "local
+`tools/` / `samples/` / `apps/` are **neither in `Polhem.slnx` nor in the push path filter**, and no CI step builds
+their solutions (`tools/Polhem.Tools.slnx`, `samples/Polhem.Samples.slnx`, the Northwind slnx), so "local
 `dotnet build Polhem.slnx` + `./test.sh` all green" **does not mean they still compile**, and CI will not find out for
 you either.
 
-**`tools/Polhem.LoadTests` is the exception for "compiling"**: its unit test project is in the slnx and points to it
-with a `ProjectReference`, so it gets built along with it and goes red on the spot if it does not compile. **But the
-exception stops at compiling**: SonarCloud still cannot see its source code; the reason is in this file's
-section § A 0 from Sonar may mean "not looked at" rather than "clean". Do not extend it to the rest of
-`tools/`; those are not even built.
+**`tools/Polhem.LoadTests` and `tools/Polhem.Cli` are the exceptions for "compiling"**: each has a unit test project in
+`Polhem.slnx` that points to it with a `ProjectReference`, so it gets built along with it and goes red on the spot if it
+does not compile. `build-ci.yml` also packs `Polhem.Cli` in Release (its comment explains why that step builds it
+itself). **But the exception stops at compiling**: SonarCloud still cannot see their source code; the reason is in this
+file's section § A 0 from Sonar may mean "not looked at" rather than "clean". Do not extend it to the rest of `tools/`
+(`tools/DefineEditor`, for one); no CI step builds those.
 
 **Instance**: after `BackendComponents.EnterpriseObjectService` was deleted, leftover axaml bindings in
 `tools/DefineEditor` caused AVLN2000. Both local and CI were green, until `tools/Polhem.Tools.slnx` was built by hand

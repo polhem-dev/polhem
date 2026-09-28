@@ -188,7 +188,9 @@ namespace Polhem.Definition.UnitTests.Forms
         };
 
         [Theory]
-        [MemberData(nameof(EmptinessCases))]
+        // The values are deliberately `object` (a field receives whatever the DataRow holds), so they cannot be
+        // serialized into separate data rows at discovery time. Discovery enumeration is therefore disabled (xUnit1045).
+        [MemberData(nameof(EmptinessCases), DisableDiscoveryEnumeration = true)]
         [DisplayName("IsEmpty treats null, blank text, an empty Guid (also as text in a Guid field) and an empty byte array as empty, and never a number, boolean or date")]
         public void IsEmpty_Value_MatchesRule(FieldDbType dbType, object? value, bool expected)
         {

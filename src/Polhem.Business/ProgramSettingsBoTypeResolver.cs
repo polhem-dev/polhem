@@ -240,10 +240,8 @@ namespace Polhem.Business
             ReservedProgIdBinding? reserved, string progId, string typeName, string origin, Exception? inner)
         {
             return new InvalidOperationException(
-                BeeNameHint.AppendTo(
-                    $"ProgramSettings registers {Subject(reserved, progId)} as '{typeName}' ({origin}), which cannot be loaded. " +
-                    "Fix the assembly-qualified type name, or clear the binding to fall back to the framework default.",
-                    typeName),
+                $"ProgramSettings registers {Subject(reserved, progId)} as '{typeName}' ({origin}), which cannot be loaded. " +
+                "Fix the assembly-qualified type name, or clear the binding to fall back to the framework default.",
                 inner);
         }
 

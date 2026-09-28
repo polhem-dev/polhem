@@ -150,10 +150,8 @@ namespace Polhem.Repository.Factories
 
         private static InvalidOperationException Unloadable(string progId, string typeName, Exception? inner)
             => new(
-                BeeNameHint.AppendTo(
-                    $"ProgramSettings binds progId '{progId}' to repository '{typeName}', which cannot be loaded. " +
-                    "Fix the assembly-qualified type name, or clear the attribute to use the framework default.",
-                    typeName),
+                $"ProgramSettings binds progId '{progId}' to repository '{typeName}', which cannot be loaded. " +
+                "Fix the assembly-qualified type name, or clear the attribute to use the framework default.",
                 inner);
     }
 }

@@ -9,9 +9,6 @@ Polhem.Base.Exceptions.AuthenticationRequiredException.AuthenticationRequiredExc
 Polhem.Base.Exceptions.AuthenticationRequiredException.AuthenticationRequiredException(string! message, System.Exception! innerException) -> void
 static Polhem.Base.Serialization.JsonCodec.Deserialize<T>(string! json) -> T?
 static Polhem.Base.Serialization.JsonCodec.Serialize(object! value, bool ignoreDefaultValue = true, bool ignoreNullValue = true) -> string!
-Polhem.Base.BeeNameHint
-static Polhem.Base.BeeNameHint.AppendTo(string! message, string? name) -> string!
-static Polhem.Base.BeeNameHint.Matches(string? name) -> bool
 static Polhem.Base.Data.DataRowExtensions.RewriteVersions(this System.Data.DataRow! row, System.Func<System.Data.DataColumn!, System.Data.DataRowVersion, object!, object!>! rewrite) -> void
 Polhem.Base.Exceptions.AuthenticationRequiredException.AuthenticationRequiredException(string! messageKey, string! defaultMessage, params object?[]! arguments) -> void
 Polhem.Base.Exceptions.AuthenticationRequiredException.MessageArguments.get -> System.Collections.Generic.IReadOnlyList<object?>!

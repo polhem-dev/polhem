@@ -1,4 +1,3 @@
-using Polhem.Base;
 using Polhem.Base.Serialization;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
@@ -99,14 +98,7 @@ namespace Polhem.Definition.Storage
             string filePath = _paths.GetProgramSettingsFilePath();
             if (!File.Exists(filePath))
                 return null;
-            string xml = FileUtilities.FileReadText(filePath);
-            // The tenant folder and file name, not the path: the message can reach a remote caller of a
-            // debug-mode host.
-            ProgramSettingsFormat.EnsureCurrentFormat(xml,
-                $"{Path.GetFileName(Path.GetDirectoryName(filePath))}/{Path.GetFileName(filePath)}");
-            var settings = XmlCodec.Deserialize<ProgramSettings>(xml);
-            settings?.SetObjectFilePath(filePath);
-            return settings;
+            return XmlCodec.DeserializeFromFile<ProgramSettings>(filePath);
         }
 
         /// <summary>Not supported — the override layer is strictly read-only.</summary>

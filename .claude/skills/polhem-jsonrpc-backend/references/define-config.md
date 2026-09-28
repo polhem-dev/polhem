@@ -105,8 +105,6 @@ out to get the framework default.
 </ProgramSettings>
 ```
 
-- The nested `<Categories><ProgramCategory>` layout of older versions is refused at load
-  (`ProgramSettingsFormat.EnsureCurrentFormat`), because `XmlSerializer` would otherwise read it as an empty registry.
 - At startup the framework adds any missing reserved progId and rewrites the file, comments included (see the comments
   in `samples/Define/ProgramSettings.xml`). Declaring the reserved entries yourself avoids that rewrite.
 - **ProgramSettings is not the menu and is not served to clients**: `GetDefine` serves only the types on its remote

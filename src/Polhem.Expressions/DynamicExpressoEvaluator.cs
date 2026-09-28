@@ -29,7 +29,7 @@ namespace Polhem.Expressions
     /// <para>
     /// What keeps this safe in practice is the source of the expressions, not the parser:
     /// expressions live in definition files, and writing a definition is a deployment-time
-    /// operation (<c>SystemBO.SaveDefine</c> is <c>LocalOnly</c>). Anything that would let a remote
+    /// operation (<c>SystemBusinessObject.SaveDefine</c> is <c>LocalOnly</c>). Anything that would let a remote
     /// or lower-privileged caller supply expression text turns this into remote code execution on
     /// the server, so that boundary is the control — keep it intact.
     /// </para>

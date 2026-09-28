@@ -42,7 +42,7 @@ namespace Polhem.ObjectCaching.Database
         /// satisfies <c>AccessTokenValidator</c> — before this existed, only sign-in could put a
         /// session in the cache, and rows in the table were inert. Any new writer must therefore
         /// authenticate for itself or be confined to trusted callers, which is why
-        /// <c>SystemBO.CreateSession</c> (a token from a user id alone) is <c>LocalOnly</c>.
+        /// <c>SystemBusinessObject.CreateSession</c> (a token from a user id alone) is <c>LocalOnly</c>.
         ///
         /// The rebuild returns <c>null</c> for anything that is not a live session — no seed, an
         /// expired seed, revoked company access, or a key provider that cannot recover the session

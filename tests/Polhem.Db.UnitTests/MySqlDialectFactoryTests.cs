@@ -67,9 +67,9 @@ namespace Polhem.Db.UnitTests
             Assert.IsType<MySqlCreateTableCommandBuilder>(factory.CreateCreateTableCommandBuilder());
             Assert.IsType<MySqlTableAlterCommandBuilder>(factory.CreateTableAlterCommandBuilder());
             Assert.IsType<MySqlTableRebuildCommandBuilder>(factory.CreateTableRebuildCommandBuilder());
-            // `CreateTableSchemaProvider` constructs `new DbAccess(databaseId)` in its constructor. When CI has no
-            // POLHEM_TEST_CONNSTR_MYSQL, 'common_mysql' is not registered in `DbConnectionManager` and it throws
-            // `KeyNotFoundException`, so `MySqlIntegrationTests` covers it instead.
+            // `CreateTableSchemaProvider` constructs `new DbAccess(databaseId, connectionManager)` in its constructor,
+            // which resolves the connection at once. Without POLHEM_TEST_CONNSTR_MYSQL there is no 'common_mysql'
+            // database item to resolve, so `MySqlIntegrationTests` covers it instead.
         }
 
         [Fact]

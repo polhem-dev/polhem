@@ -96,23 +96,11 @@ namespace Polhem.Definition.Storage
         /// <summary>
         /// Gets the program settings.
         /// </summary>
-        /// <exception cref="NotSupportedException">
-        /// Thrown when the file still uses the pre-flattening nested layout, which XmlSerializer
-        /// would otherwise read as an empty registry without complaint.
-        /// </exception>
         public ProgramSettings? GetProgramSettings()
         {
             string filePath = _paths.GetProgramSettingsFilePath();
             FileUtilities.EnsureFileExists(filePath);
-            // Read the text first so the layout can be checked: an un-migrated file deserializes
-            // cleanly into zero entries, and the resulting "every progId falls back to the default"
-            // is far harder to diagnose than an error naming the migration command.
-            string xml = FileUtilities.FileReadText(filePath);
-            // The file name, not the path: the message can reach a remote caller of a debug-mode host.
-            ProgramSettingsFormat.EnsureCurrentFormat(xml, Path.GetFileName(filePath));
-            var settings = XmlCodec.Deserialize<ProgramSettings>(xml);
-            settings?.SetObjectFilePath(filePath);
-            return settings;
+            return XmlCodec.DeserializeFromFile<ProgramSettings>(filePath);
         }
 
         /// <summary>

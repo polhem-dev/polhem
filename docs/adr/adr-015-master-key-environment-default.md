@@ -238,3 +238,5 @@ with the current code:
 - **2026-09-27: Migration hint for the Bee.NET variable.** When `POLHEM_MASTER_KEY` is missing but `BEE_MASTER_KEY`
   (the Bee.NET default) is set, the error says so and names the two ways to fix it: rename the variable, or name it in
   the `MasterKeySource` of `SystemSettings.xml`.
+- **2026-09-28: The migration hint is removed before 1.0.0.** Bee.NET compatibility is not a goal of 1.0.0, so the
+  error for a missing variable names only the variable that was looked up.

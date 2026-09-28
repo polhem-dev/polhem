@@ -52,13 +52,12 @@ namespace Polhem.Definition.Forms
                 ? schema.Tables
                 : schema.Tables.Where(t => !ReferenceEquals(t, master)).Prepend(master);
 
-            foreach (var formTable in ordered)
+            var present = ordered.Where(t => t.Fields is not null && dataSet.Tables.Contains(t.TableName));
+            foreach (var formTable in present)
             {
-                if (formTable.Fields is null || !dataSet.Tables.Contains(formTable.TableName)) { continue; }
-
                 var table = dataSet.Tables[formTable.TableName]!;
                 bool isDetail = !ReferenceEquals(formTable, master);
-                var empty = formTable.Fields
+                var empty = formTable.Fields!
                     .Where(IsChecked)
                     .Where(field => table.Rows.Cast<DataRow>().Any(row => IsEmptyInRow(field, row)));
                 missing.AddRange(empty.Select(field => new MissingRequiredField(formTable, field, isDetail)));

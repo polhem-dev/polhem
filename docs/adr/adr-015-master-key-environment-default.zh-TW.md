@@ -1,4 +1,4 @@
-<!-- source: adr/adr-015-master-key-environment-default.md blob: 1d8d89b78ed5d29bddca2b47db1ee79b1ea97e82 -->
+<!-- source: adr/adr-015-master-key-environment-default.md blob: 72fb2348aebfc427996edb5ca43f2d60b812eb5e -->
 # ADR-015：`MasterKeySource` 預設改為 `Environment` — 對齊 12-factor「config in env」
 
 [English](adr-015-master-key-environment-default.md)
@@ -176,3 +176,4 @@ ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對�
 
 - **2026-09-27：缺少 master key 時自動建立須明確選用。** `AddPolhemFramework(configuration, pathOptions)` 在 master key 缺少時直接失敗；只有帶 `autoCreateMasterKey: true` 的多載會建立一把（`src/Polhem.Hosting/PolhemFrameworkServiceCollectionExtensions.cs`、`src/Polhem.Definition/Security/MasterKeyProvider.cs`）。File 來源會在同一步驟以僅限擁有者的權限建立金鑰檔；Environment 來源則產生一把金鑰、只設定在目前 process 的環境變數，也就是上文否決的「每 run 一把」金鑰，因此只適合加密資料不會活得比 process 久的 host。sample 與測試的 bootstrap 傳入 `true`，但事先已設定 demo 或測試金鑰，因此讀到的是固定金鑰。
 - **2026-09-27：Bee.NET 變數的遷移提示。** 缺少 `POLHEM_MASTER_KEY` 但有設定 `BEE_MASTER_KEY`（Bee.NET 的預設）時，錯誤訊息會指出這點，並列出兩種修正方式：把變數改名，或在 `SystemSettings.xml` 的 `MasterKeySource` 指定該變數。
+- **2026-09-28：1.0.0 之前移除遷移提示。** 與 Bee.NET 的相容不是 1.0.0 的目標，因此變數缺少時的錯誤訊息只指出所查詢的那個變數。

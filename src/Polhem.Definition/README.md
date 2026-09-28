@@ -12,12 +12,13 @@ Polhem.Definition sits at the foundation of the Polhem framework, providing the 
 
 It holds no business logic: interfaces, POCOs, enums and attributes. Changes here ripple upward through the entire stack, so the API surface evolves conservatively.
 
-It is **not** free of I/O today, and the difference matters if you are reasoning about layering.
-`Storage/` (the file-backed definition storage), `Security/MasterKeyProvider`, `PathOptions` /
-`CustomizeOnlyPathOptions` and `Defaults` read and write files on disk. Moving them out is a data
-migration rather than a refactor — a deployment's `SystemSettings.xml` can name the storage type by its
-assembly-qualified name (`BackendComponents.DefineStorage`), so relocating it needs a compatibility
-mapping for the old type name — and they stay here until that is done.
+It is **not** free of I/O, and the difference matters if you are reasoning about layering.
+`Storage/` (the file-backed definition storages), `SystemSettingsLoader`, `Security/MasterKeyProvider` and
+`Defaults` read or write files on disk, and `MasterKeyProvider` also reads environment variables;
+`PathOptions` / `CustomizeOnlyPathOptions` only compose the paths the others use. They live here because
+they need nothing beyond the BCL, so they add no package to the dependency closure that the POLHEM9001
+gate guards, and because some of their callers reference only this assembly: `Polhem.Cli` uses
+`Defaults` and `MasterKeyProvider`, and the definition editor uses `Defaults`.
 
 - **Layer**: foundation — the shared type system every upper layer speaks.
 - **Dependencies**: locked to an explicit allowlist by the **POLHEM9001** build gate. Anything added here

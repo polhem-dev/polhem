@@ -18,7 +18,6 @@ The tool command is `dotnet-polhem`, so it runs as `dotnet polhem`.
 |---------|--------------|
 | `dotnet polhem defines materialize` | Writes the default definition files embedded in `Polhem.Definition` to a directory, so an application can start from them and customize them |
 | `dotnet polhem defines list` | Lists the relative paths of the embedded default definition files |
-| `dotnet polhem defines split-menu` | Migrates a `ProgramSettings.xml` that still carries its menu into a flat program registry plus `MenuSettings.xml` |
 | `dotnet polhem keys protect` | Generates a new key and prints it encrypted with the master key, as the value `SecurityKeySettings` in `SystemSettings.xml` stores (for example `ApiEncryptionKey`) |
 
 The options of each command are printed by the tool itself, which is the authority for them:
@@ -26,7 +25,7 @@ The options of each command are printed by the tool itself, which is the authori
 ```bash
 dotnet polhem --help
 dotnet polhem help defines
-dotnet polhem defines split-menu --help
+dotnet polhem defines materialize --help
 ```
 
 ## License
