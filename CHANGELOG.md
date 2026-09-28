@@ -65,8 +65,10 @@ The renaming was done before the repository took pull requests, so these entries
   ([#4](https://github.com/polhem-dev/polhem/pull/4))
 - Remote `GetDefine` serves only an explicit list of definition types.
   ([#4](https://github.com/polhem-dev/polhem/pull/4))
-- Business objects are created with the ProgId casing declared in `ProgramSettings`, so audit rules match however a
-  caller spells the ProgId. ([#4](https://github.com/polhem-dev/polhem/pull/4))
+- A caller cannot slip past an audit rule by changing the casing of a ProgId: business objects are created with the
+  casing `ProgramSettings` declares, audit rules are looked up case-insensitively, and audit records carry the
+  FormSchema's ProgId spelling. ([#4](https://github.com/polhem-dev/polhem/pull/4),
+  [#26](https://github.com/polhem-dev/polhem/pull/26))
 - Encoded and Encrypted requests are decoded into the parameter type of the resolved action, the depth limit applies
   to nested filters on both codecs, and actions resolve only to public, non-generic, one-parameter instance methods
   that are not accessors (`JsonRpcExecutor.IsResolvableAction`, also checked by `POLHEM3001`).
@@ -86,6 +88,8 @@ The renaming was done before the repository took pull requests, so these entries
 - DDL escapes SQL Server string defaults and requires non-string defaults to be literals of their type; connection
   string placeholders are resolved with `DbConnectionStringBuilder` (`ConnectionStringTemplate`).
   ([#4](https://github.com/polhem-dev/polhem/pull/4))
+- The error for a missing definition file names the file, never its path on the server
+  (`FileUtilities.EnsureFileExists`). ([#26](https://github.com/polhem-dev/polhem/pull/26))
 
 ### Changed behaviour
 
@@ -123,8 +127,10 @@ The renaming was done before the repository took pull requests, so these entries
 - Serializing a cached definition no longer changes it: empty collections are omitted through get-only `XSpecified`
   properties instead of a per-object serialize state. ([#8](https://github.com/polhem-dev/polhem/pull/8))
 - Startup logs a warning when methods require `ApiReplayProtection.UniqueSequence` while `RequireWireFrame` is off,
-  and lists the forms that declare no permission model.
-  ([#4](https://github.com/polhem-dev/polhem/pull/4), [#6](https://github.com/polhem-dev/polhem/pull/6))
+  and lists the forms that declare no permission model, including stored forms `ProgramSettings` does not list
+  (`IDefineStorage.GetFormSchemaIds`).
+  ([#4](https://github.com/polhem-dev/polhem/pull/4), [#6](https://github.com/polhem-dev/polhem/pull/6),
+  [#26](https://github.com/polhem-dev/polhem/pull/26))
 - Default values of `Short`, `Long`, `Decimal` and `Binary` fields are typed and non-null.
   ([#14](https://github.com/polhem-dev/polhem/pull/14))
 - `DefaultValueExpression` takes precedence when a new row is created: `GetNewData` and the client's new row write the
@@ -136,6 +142,28 @@ The renaming was done before the repository took pull requests, so these entries
   (`IDatabaseSettingsProvider.ValidateRequired`). ([#22](https://github.com/polhem-dev/polhem/pull/22))
 - An unknown action answers JSON-RPC `-32601` and an unreadable Plain body `-32602`, each with a fixed message.
   ([#22](https://github.com/polhem-dev/polhem/pull/22))
+- `FormField.Required` is enforced on save: an added or modified row, master or detail, whose required field is
+  empty is refused with a localized message, and the Avalonia `FormView` and the Blazor `FormPage` name every such
+  field before sending the save. Check the `Required` flags of your FormSchemas: fill the data or clear the flag.
+  ([#26](https://github.com/polhem-dev/polhem/pull/26), [#27](https://github.com/polhem-dev/polhem/pull/27))
+- Audit records of a form that `ProgramSettings` does not list carry the FormSchema's ProgId spelling instead of the
+  caller's; records written before keep theirs, so compare older `prog_id` values case-insensitively.
+  ([#26](https://github.com/polhem-dev/polhem/pull/26))
+- A custom `DefineAccess` or `DefineStorage` named in `BackendComponents` is created with `ActivatorUtilities`, so its
+  constructor can take any registered service instead of one of a fixed set of signatures.
+  ([#26](https://github.com/polhem-dev/polhem/pull/26))
+- The Blazor `FormPage` localizes definitions through a definition loader by default
+  (`PolhemBlazorOptions.UseDefinitionLoader`); set it to `false` to render definitions as stored.
+  ([#27](https://github.com/polhem-dev/polhem/pull/27))
+- A `ProgramSettings.xml` in the nested `<Categories>` layout is no longer refused; it loads as an empty registry.
+  Bee.NET 4.33.0 refused such a file, so only a deployment that never ran on it is affected: convert the file with
+  Bee.NET's `dotnet bee defines split-menu` first. ([#28](https://github.com/polhem-dev/polhem/pull/28))
+- The shipped `AuditRule`, `Department` and `Employee` layouts are regenerated from their schemas (drop-downs, a check
+  box and lookups instead of text boxes). Materializing skips existing files, so a deployment that already has these
+  layouts keeps the old ones until it overwrites or edits them. ([#29](https://github.com/polhem-dev/polhem/pull/29))
+- Generated layouts and the `Auto` control type give a `DateTime` field the new `DateTimeEdit` instead of `DateEdit`.
+  Layouts already saved keep `DateEdit`, which edits only the date and drops the time of day; change those fields to
+  `DateTimeEdit` where the time matters. ([#33](https://github.com/polhem-dev/polhem/pull/33))
 
 ### Breaking API changes
 
@@ -160,8 +188,10 @@ The renaming was done before the repository took pull requests, so these entries
   `ApiClientInfo.LocalServiceProvider`, `ApiClientInfo.ApiEncryptionKey` and `ApiClientInfo.UserTimeZoneId` are
   removed (use `ApiSessionContext`).
   ([#10](https://github.com/polhem-dev/polhem/pull/10), [#11](https://github.com/polhem-dev/polhem/pull/11))
-- Every public async member of the client surface and `JsonRpcExecutor.ExecuteAsync` take a trailing
-  `CancellationToken`; the connectors' action methods are virtual. ([#12](https://github.com/polhem-dev/polhem/pull/12))
+- Every public async member of the client surface, of the UI packages and `JsonRpcExecutor.ExecuteAsync` take a
+  trailing `CancellationToken`; the connectors' action methods are virtual. Implementations of `IUIViewService` and
+  overrides of the protected `Resolve*Async` hooks of `FormView` and `ListView` change their signatures.
+  ([#12](https://github.com/polhem-dev/polhem/pull/12), [#27](https://github.com/polhem-dev/polhem/pull/27))
 - `IReplayWindowStore` is one atomic `TryAcceptAsync`, so a store shared by several nodes can be implemented.
   ([#12](https://github.com/polhem-dev/polhem/pull/12))
 - Custom payload codecs are added with `ApiServiceOptions.RegisterPayloadCodec`; the undeclared default stays
@@ -179,6 +209,14 @@ The renaming was done before the repository took pull requests, so these entries
   [#15](https://github.com/polhem-dev/polhem/pull/15))
 - `IFormRuleProcessor` gains `ApplyNewRowDefaults`; another implementation must add it.
   ([#22](https://github.com/polhem-dev/polhem/pull/22))
+- Tunable limits and defaults are `static readonly` instead of `const`: `ApiKeyFormat.MinSysIdLength`,
+  `ApiKeyFormat.MaxSysIdLength`, `LoginAttemptTracker.DefaultLockoutMinutes`, `DefaultMaxFailedAttempts` and
+  `DefaultMaxTrackedAccounts`, `CurrencySettings.FallbackRounding`, `UnitSettings.FallbackDecimals`,
+  `ApiKeyCache.AbsoluteMinutes` and `NegativeMinutes`, `RowEditPanel.CompactWidthThreshold` and
+  `FormView.DefaultCompactWidthThreshold`. Code that uses them in a constant expression must change.
+  ([#26](https://github.com/polhem-dev/polhem/pull/26))
+- `ExecuteAsync<T>` of `SystemApiConnector` and `AuditLogApiConnector` is protected; `FormApiConnector.ExecuteAsync<T>`
+  stays public for a form's own actions. ([#26](https://github.com/polhem-dev/polhem/pull/26))
 
 ### Removed
 
@@ -202,6 +240,9 @@ The renaming was done before the repository took pull requests, so these entries
   [#12](https://github.com/polhem-dev/polhem/pull/12))
 - The unused settings types `ClientSettings`, `EndpointItem` and `EndpointItemCollection`.
   ([#22](https://github.com/polhem-dev/polhem/pull/22))
+- `StringHashSet` and the public setter of `SysInfo.Version`. ([#26](https://github.com/polhem-dev/polhem/pull/26))
+- `ProgramSettingsFormat` and `dotnet polhem defines split-menu`, which converted the nested `ProgramSettings` layout
+  of earlier Bee.NET versions. ([#28](https://github.com/polhem-dev/polhem/pull/28))
 
 ### Added
 
@@ -217,6 +258,17 @@ The renaming was done before the repository took pull requests, so these entries
   ([#4](https://github.com/polhem-dev/polhem/pull/4), [#6](https://github.com/polhem-dev/polhem/pull/6),
   [#8](https://github.com/polhem-dev/polhem/pull/8), [#14](https://github.com/polhem-dev/polhem/pull/14))
 - ADR-046 records the API policies for 1.0. ([#12](https://github.com/polhem-dev/polhem/pull/12))
+- `RequiredFieldCheck` and `MissingRequiredField`, the required-field rule the server and the UI heads share, with the
+  messages `PolhemMessages.SaveFieldRequired`, `SaveDetailFieldRequired` and `PolhemUIText.RequiredFieldsEmpty`.
+  ([#26](https://github.com/polhem-dev/polhem/pull/26), [#27](https://github.com/polhem-dev/polhem/pull/27))
+- `IDefineStorage.GetFormSchemaIds` and `FileUtilities.EnsureFileExists`.
+  ([#26](https://github.com/polhem-dev/polhem/pull/26))
+- `PolhemBlazorOptions.UseDefinitionLoader` and `PolhemApiConnectorFactory.CreateDefinitionLoader`.
+  ([#27](https://github.com/polhem-dev/polhem/pull/27))
+- `FormDataObject.RowEditFieldChanged` on Avalonia. ([#30](https://github.com/polhem-dev/polhem/pull/30))
+- `ControlType.DateTimeEdit`, with the Avalonia `DateTimeEdit` editor and a `datetime-local` input in Blazor;
+  `FormValueBinding.TryGetListItemText`, a `GridControl.Bind` overload that takes the `FormTable`, and
+  `DynamicGrid.FormTable`. ([#33](https://github.com/polhem-dev/polhem/pull/33))
 
 ### Performance
 
@@ -243,6 +295,13 @@ The renaming was done before the repository took pull requests, so these entries
   ([#7](https://github.com/polhem-dev/polhem/pull/7))
 - The HTTP client uses the platform default handler on the browser, Android and Apple mobile heads.
   ([#17](https://github.com/polhem-dev/polhem/pull/17))
+- An expression with more than two variables no longer terminates the app on iOS and Mac Catalyst:
+  `DynamicExpressoEvaluator` compiles each expression to one delegate over an object array, which needs no dynamic
+  code. ([#30](https://github.com/polhem-dev/polhem/pull/30))
+- Desktop heads on macOS and Linux connect in Local mode: `FileUtilities.IsLocalPath` accepts paths fully qualified on
+  the current OS, not only Windows drive and UNC paths. ([#29](https://github.com/polhem-dev/polhem/pull/29))
+- On phones the lookup and row-edit overlays fit the screen, stay clear of the safe areas and the on-screen keyboard,
+  and keep their buttons outside the scrolled content. ([#33](https://github.com/polhem-dev/polhem/pull/33))
 
 ### Fixed
 
@@ -263,6 +322,23 @@ The renaming was done before the repository took pull requests, so these entries
   ([#22](https://github.com/polhem-dev/polhem/pull/22))
 - Relation joins used a blank table name when a form table declared no `DbTableName`; they fall back to `TableName`.
   ([#22](https://github.com/polhem-dev/polhem/pull/22))
+- The `zh-TW` resources were not found for the `zh-Hant-TW` culture macOS and iOS report; `LanguageFallback` follows
+  `zh-Hant` with `zh-TW` and `zh-Hans` with `zh-CN`. ([#26](https://github.com/polhem-dev/polhem/pull/26))
+- The refusal of a detail row that belongs to a record the save does not carry was not localized
+  (`PolhemMessages.PermissionDetailOutOfScope`). ([#26](https://github.com/polhem-dev/polhem/pull/26))
+- `FormView` applied permission capabilities to a `Layout` the host assigned instead of to a copy.
+  ([#27](https://github.com/polhem-dev/polhem/pull/27))
+- The Avalonia card list at phone width showed a time part on dates and ignored number formats; it formats values
+  like the grid. ([#29](https://github.com/polhem-dev/polhem/pull/29))
+- Following the Blazor Server README in Remote mode failed with a 401; it and `UseRemoteProvider` now say that
+  `ApiClientInfo.ApiKey` must be set. ([#29](https://github.com/polhem-dev/polhem/pull/29))
+- The Avalonia row-edit overlay did not recompute computed fields until the row was confirmed; it recomputes them
+  while the row is edited, and Cancel restores them. ([#30](https://github.com/polhem-dev/polhem/pull/30))
+- Lists (grids, card lists, lookups and detail grids, in Avalonia and Blazor) showed a drop-down field's stored value;
+  they show its localized list-item text, and booleans show a check box in the card list and a localized yes or no
+  elsewhere. ([#33](https://github.com/polhem-dev/polhem/pull/33))
+- The Blazor `DateEdit` showed a blank box for a value with a time of day; it shows the date.
+  ([#33](https://github.com/polhem-dev/polhem/pull/33))
 
 ### Samples and tools
 
@@ -272,6 +348,10 @@ The renaming was done before the repository took pull requests, so these entries
   ([#23](https://github.com/polhem-dev/polhem/pull/23))
 - DefineEditor shows a File menu inside the window on Windows and Linux.
   ([#23](https://github.com/polhem-dev/polhem/pull/23))
+- The samples' `Employee` and `Department` forms are renamed `Staff` (`ft_staff`, `ft_staff_phone`) and `Team`
+  (`ft_team`), so they no longer replace the framework's reserved forms of those names.
+  ([#25](https://github.com/polhem-dev/polhem/pull/25))
+- Northwind ships `zh-TW` messages for its order rules. ([#25](https://github.com/polhem-dev/polhem/pull/25))
 
 [Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.0.0

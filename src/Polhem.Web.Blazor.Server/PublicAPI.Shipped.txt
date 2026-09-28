@@ -69,3 +69,18 @@ Polhem.Web.Blazor.Server._Imports._Imports() -> void
 static Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorServiceCollectionExtensions.AddPolhemBlazor(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 virtual Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.CreateFormConnector(System.Guid accessToken, string! progId) -> Polhem.Api.Client.Connectors.FormApiConnector!
 virtual Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.CreateSystemConnector(System.Guid accessToken) -> Polhem.Api.Client.Connectors.SystemApiConnector!
+Polhem.Web.Blazor.Server.Components.DynamicGrid.EmptyText.get -> string?
+Polhem.Web.Blazor.Server.Components.DynamicGrid.FormTable.get -> Polhem.Definition.Forms.FormTable?
+Polhem.Web.Blazor.Server.Components.DynamicGrid.FormTable.set -> void
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.PasswordLabel.get -> string?
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.SubmitLabel.get -> string?
+Polhem.Web.Blazor.Server.Components.PolhemLoginPanel.UserIdLabel.get -> string?
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.DeleteAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.LoadAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.NewAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Server.DataObjects.FormDataObject.SaveAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.PolhemApiConnectorFactory(Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions! options, Polhem.Api.Client.ApiSessionContext! session, System.IServiceProvider! services) -> void
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.UseDefinitionLoader.get -> bool
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.UseDefinitionLoader.get -> bool
+Polhem.Web.Blazor.Server.DependencyInjection.PolhemBlazorOptions.UseDefinitionLoader.set -> void
+virtual Polhem.Web.Blazor.Server.DependencyInjection.PolhemApiConnectorFactory.CreateDefinitionLoader(System.Guid accessToken) -> Polhem.Api.Client.Definitions.FormDefinitionLoader!

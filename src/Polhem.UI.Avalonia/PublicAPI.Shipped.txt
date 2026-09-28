@@ -214,8 +214,6 @@ Polhem.UI.Avalonia.Views.ListView.ProgId.set -> void
 Polhem.UI.Avalonia.Views.ListView.Schema.get -> Polhem.Definition.Forms.FormSchema?
 Polhem.UI.Avalonia.Views.ListView.Schema.set -> void
 Polhem.UI.Avalonia.Views.ListView.ViewRequested -> System.EventHandler<System.Guid>?
-const Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.CompactWidthThreshold = 600 -> double
-const Polhem.UI.Avalonia.Views.FormView.DefaultCompactWidthThreshold = 600 -> double
 override Polhem.UI.Avalonia.Controls.Editors.ButtonEdit.SetControlState(Polhem.Definition.Layouts.SingleFormMode formMode) -> void
 override Polhem.UI.Avalonia.Controls.Editors.DateEdit.OnAttachedToLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
 override Polhem.UI.Avalonia.Controls.Editors.DateEdit.OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs! e) -> void
@@ -268,3 +266,35 @@ virtual Polhem.UI.Avalonia.Views.FormView.ResolveFormConnector(string! progId) -
 virtual Polhem.UI.Avalonia.Views.FormView.ResolveLang() -> string!
 virtual Polhem.UI.Avalonia.Views.ListView.ResolveAccessToken() -> System.Guid
 virtual Polhem.UI.Avalonia.Views.ListView.ResolveFormConnector(string! progId) -> Polhem.Api.Client.Connectors.FormApiConnector!
+Polhem.UI.Avalonia.Controls.Editors.DateTimeEdit
+Polhem.UI.Avalonia.Controls.Editors.DateTimeEdit.DateTimeEdit() -> void
+Polhem.UI.Avalonia.Controls.Editors.LookupPanel.ReloadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.Controls.GridControl.Bind(Polhem.Definition.Layouts.LayoutGrid! layout, System.Data.DataTable? rows, Polhem.Definition.Forms.FormTable? formTable) -> void
+Polhem.UI.Avalonia.DataObjects.FormDataObject.DeleteAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.DataObjects.FormDataObject.LoadAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.DataObjects.FormDataObject.NewAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.DataObjects.FormDataObject.RowEditFieldChanged -> System.EventHandler<Polhem.UI.Avalonia.DataObjects.FieldValueChangedEventArgs!>?
+Polhem.UI.Avalonia.DataObjects.FormDataObject.SaveAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.UIText
+Polhem.UI.Avalonia.Views.FormView.EditAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.Views.FormView.NewAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.Views.FormView.ViewAsync(System.Guid rowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.Views.ListView.DefinitionLoader.get -> Polhem.Api.Client.Definitions.FormDefinitionLoader?
+Polhem.UI.Avalonia.Views.ListView.DefinitionLoader.set -> void
+Polhem.UI.Avalonia.Views.ListView.InitializeAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Polhem.UI.Avalonia.Views.ListView.ReloadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+static Polhem.UI.Avalonia.Controls.Editors.LookupDialog.ShowAsync(Avalonia.Visual! host, string! progId, Polhem.Definition.Forms.FormSchema? schema = null, Polhem.Api.Client.Connectors.FormApiConnector? connector = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Data.DataRow?>!
+static Polhem.UI.Avalonia.Controls.Editors.RowEditDialog.ShowAsync(Avalonia.Visual! host, Polhem.UI.Avalonia.DataObjects.FormDataObject! dataObject, Polhem.Definition.Layouts.LayoutGrid! layout, System.Data.DataRow! row, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
+static Polhem.UI.Avalonia.Controls.PermissionScope.GetAction(Avalonia.Controls.Control! control) -> Polhem.Definition.Settings.PermissionActions
+static Polhem.UI.Avalonia.Controls.PermissionScope.SetAction(Avalonia.Controls.Control! control, Polhem.Definition.Settings.PermissionActions value) -> void
+static Polhem.UI.Avalonia.UIText.Localizer.get -> Microsoft.Extensions.Localization.IStringLocalizer!
+static Polhem.UI.Avalonia.UIText.Localizer.set -> void
+static readonly Polhem.UI.Avalonia.Controls.Editors.RowEditPanel.CompactWidthThreshold -> double
+static readonly Polhem.UI.Avalonia.Controls.PermissionScope.ActionProperty -> Avalonia.AttachedProperty<Polhem.Definition.Settings.PermissionActions>!
+static readonly Polhem.UI.Avalonia.Views.FormView.DefaultCompactWidthThreshold -> double
+virtual Polhem.UI.Avalonia.Controls.Editors.DateEdit.DisplayFormat.get -> string!
+virtual Polhem.UI.Avalonia.Views.FormView.ResolveLayoutAsync(string! progId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Polhem.Definition.Layouts.FormLayout!>!
+virtual Polhem.UI.Avalonia.Views.FormView.ResolveRoundingContextAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Polhem.Definition.RoundingContext!>!
+virtual Polhem.UI.Avalonia.Views.FormView.ResolveSchemaAsync(string! progId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema?>!
+virtual Polhem.UI.Avalonia.Views.ListView.ResolveLang() -> string!
+virtual Polhem.UI.Avalonia.Views.ListView.ResolveSchemaAsync(string! progId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Polhem.Definition.Forms.FormSchema?>!

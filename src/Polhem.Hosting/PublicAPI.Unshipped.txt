@@ -1,5 +1,1 @@
 #nullable enable
-Polhem.Hosting.Audit.IAuditLogSink
-Polhem.Hosting.Audit.IAuditLogSink.WriteBatch(System.Collections.Generic.IReadOnlyList<Polhem.Definition.Logging.AuditEntry!>! entries) -> void
-static Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Definition.Settings.BackendConfiguration! configuration, Polhem.Definition.PathOptions! pathOptions) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
-static Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Polhem.Definition.Settings.BackendConfiguration! configuration, Polhem.Definition.PathOptions! pathOptions, bool autoCreateMasterKey) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

@@ -206,3 +206,11 @@ Polhem.Api.Contracts.System.ISetDeploymentAdminRequest.UserId.get -> string!
 Polhem.Api.Contracts.System.ISetDeploymentAdminResponse
 Polhem.Api.Contracts.System.ISetDeploymentAdminResponse.IsDeploymentAdmin.get -> bool
 Polhem.Api.Contracts.System.ISetDeploymentAdminResponse.UserId.get -> string!
+Polhem.Api.Contracts.AuditLog.IAuditLogAggregateResponse
+Polhem.Api.Contracts.AuditLog.IAuditLogAggregateResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Contracts.AuditLog.IAuditLogListResponse
+Polhem.Api.Contracts.AuditLog.IAuditLogListResponse.Paging.get -> Polhem.Definition.Paging.PagingInfo?
+Polhem.Api.Contracts.AuditLog.IAuditLogListResponse.Table.get -> System.Data.DataTable?
+Polhem.Api.Contracts.System.ICreateSessionRequest.UserId.get -> string!
+Polhem.Api.Contracts.System.IEnterCompanyResponse.Capabilities.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Polhem.Definition.Settings.PermissionActions>!
+Polhem.Api.Contracts.System.ILoginResponse.Culture.get -> string!
