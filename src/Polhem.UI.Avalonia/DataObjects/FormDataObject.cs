@@ -43,7 +43,8 @@ namespace Polhem.UI.Avalonia.DataObjects
         private readonly FormApiConnector? _connector;
         // Rows under an explicit BeginRowEdit session. ADO.NET does NOT suppress
         // ColumnChanged during BeginEdit (pinned by test) — the bridge consults this
-        // set to stay silent until CommitRowEdit re-publishes the session's changes.
+        // set to raise RowEditFieldChanged instead of FieldValueChanged until
+        // CommitRowEdit re-publishes the session's changes.
         private readonly HashSet<DataRow> _rowsInEdit = [];
 
         /// <summary>
@@ -133,6 +134,19 @@ namespace Polhem.UI.Avalonia.DataObjects
         /// to raise it.
         /// </summary>
         public event EventHandler<FieldValueChangedEventArgs>? FieldValueChanged;
+
+        /// <summary>
+        /// Raised after a field value changes in a row under a buffered edit session
+        /// (<see cref="BeginRowEdit"/>), in place of <see cref="FieldValueChanged"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value is only proposed: <see cref="CancelRowEdit"/> rolls it back without further events,
+        /// and <see cref="CommitRowEdit"/> re-publishes every field the session changed through
+        /// <see cref="FieldValueChanged"/>. This event therefore does not mark the object dirty. It lets the
+        /// surface editing the row preview the session, for example by recomputing computed fields and
+        /// refreshing their editors.
+        /// </remarks>
+        public event EventHandler<FieldValueChangedEventArgs>? RowEditFieldChanged;
 
         /// <summary>
         /// Raised after a row is added to any table of the <see cref="DataSet"/> (e.g. a

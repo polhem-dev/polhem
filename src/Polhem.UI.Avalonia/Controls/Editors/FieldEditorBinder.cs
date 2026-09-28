@@ -138,6 +138,7 @@ namespace Polhem.UI.Avalonia.Controls.Editors
             {
                 DataObject.DataSetReplaced -= OnDataSetReplaced;
                 DataObject.FieldValueChanged -= OnFieldValueChanged;
+                DataObject.RowEditFieldChanged -= OnFieldValueChanged;
             }
             DataObject = null;
             LayoutField = null;
@@ -259,6 +260,9 @@ namespace Polhem.UI.Avalonia.Controls.Editors
                     _editor.FieldName = fieldName;
                 dataObject.DataSetReplaced += OnDataSetReplaced;
                 dataObject.FieldValueChanged += OnFieldValueChanged;
+                // An editor on a row under an edit session (the edit form) hears proposed values
+                // through this event instead, such as a computed field the session recomputed.
+                dataObject.RowEditFieldChanged += OnFieldValueChanged;
                 RunSuppressed(_applyMetadata);
                 RunSuppressed(_refresh);
                 _editor.SetControlState(_owner.GetValue(FormScope.FormModeProperty));

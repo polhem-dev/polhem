@@ -87,17 +87,23 @@ namespace Polhem.UI.Avalonia.DataObjects
             // Seeding a detached row (NewRow before Rows.Add) stays silent; attaching
             // the row marks dirty through RowChanged instead.
             if (e.Row.RowState == DataRowState.Detached) return;
-            // Rows under an explicit edit session publish nothing until commit —
-            // CommitRowEdit re-publishes the session's changes; a cancelled session
-            // must leak no events for values that were rolled back.
-            if (_rowsInEdit.Contains(e.Row)) return;
-
-            IsDirty = true;
-            FieldValueChanged?.Invoke(this, new FieldValueChangedEventArgs(
+            var args = new FieldValueChangedEventArgs(
                 ((DataTable)sender!).TableName,
                 e.Column!.ColumnName,
                 FormValueBinding.ToBindingString(e.ProposedValue),
-                e.Row));
+                e.Row);
+            // Rows under an explicit edit session publish FieldValueChanged only at
+            // commit, when CommitRowEdit re-publishes the session's changes; a cancelled
+            // session must leak none for values that were rolled back. The session
+            // itself still hears about each proposed value, so its editors can preview.
+            if (_rowsInEdit.Contains(e.Row))
+            {
+                RowEditFieldChanged?.Invoke(this, args);
+                return;
+            }
+
+            IsDirty = true;
+            FieldValueChanged?.Invoke(this, args);
         }
 
         private void OnTableRowChanged(object? sender, DataRowChangeEventArgs e)

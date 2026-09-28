@@ -64,10 +64,11 @@ anyway).
 The constraint at the time: `[Union]` uses an integer-keyed array + a discriminator, which is incompatible with
 `keyAsPropertyName`, so `FilterNode` (+`FilterCondition` / `FilterGroup`) kept integer `[Key]`.
 
-## AOT risk assessment: two guesses, both overturned by measurement
+## AOT risk assessment: two guesses, both "overturned" by measurement, and both right in the end
 
-These two are worth keeping because **the direction of each guess was reasonable, and both were wrong**. When a similar
-doubt comes up, measure first before changing the architecture.
+These two are worth keeping because **each guess was dismissed by a measurement whose sample missed the path the guess
+was about, and each came back as a production failure**: MessagePack broke the whole iOS wire, DynamicExpresso crashed
+the iOS app. When a similar doubt comes up, measure first, and then ask what the measurement did not cover.
 
 ### MessagePack
 
@@ -113,6 +114,56 @@ it.**
 The degrade mechanism of `FormLiveComputation.IsDegraded` protects against "syntax/identifier errors in customer-written
 expressions" (`ExpressionEvaluationException`), so that they do not spread into the `FieldValueChanged` handler and
 break the form. **It is unrelated to AOT**; do not treat it as an AOT remedy.
+
+**Correction (2026-09-28): the conclusion "no need to disable it" was only true on CoreCLR.** Editing an order line in
+the row-edit overlay of the Northwind iOS head (quantity 40 → 405, OK) terminated the app:
+
+```
+System.ExecutionEngineException: Attempting to JIT compile method '(wrapper dynamic-method)
+object object:Thunk1ret_Object_Int32_Decimal_Decimal (System.Func`2<object[], object>,int,System.Decimal,System.Decimal)'
+while running in aot-only mode.
+   at System.Dynamic.Utils.DelegateHelpers.CreateObjectArrayDelegateRefEmit(Type , Func`2 )
+   at System.Linq.Expressions.Interpreter.LightLambda.MakeDelegate(Type )
+   at System.Linq.Expressions.LambdaExpression.Compile()
+```
+
+What actually happens: the interpreter fallback is real, but `LightLambda.MakeDelegate` must still return a delegate of
+the lambda's **exact signature**, here `(int, decimal, decimal) → object` for `quantity * unit_price * (1 - discount)`.
+`DelegateHelpers.CreateObjectArrayDelegateRefEmit` (the same code in the CoreCLR and Mono builds of
+`System.Linq.Expressions`) uses a precompiled C# thunk (`FuncThunk1` / `FuncThunk2`) only for **at most two
+parameters**, and emits a `DynamicMethod` otherwise. Each runtime then fails differently:
+
+| Runtime | Result for DynamicExpresso's typed lambda (before the fix) |
+|---------|------|
+| CoreCLR, `-p:DynamicCodeSupport=false` | **Passes.** The emitted thunk runs under `ForceAllowDynamicCode`, and a JIT exists |
+| NativeAOT (`osx-arm64` console) | Fails **every signature with a value type**, including one or zero parameters: `Expression<Func<decimal, decimal>>` "is missing native code or metadata". String-only signatures pass |
+| Mono, iOS simulator and Mac Catalyst Release | Fails **every signature with more than two parameters**, value types or not (`int, decimal, string → bool` too): `ExecutionEngineException`. Up to two parameters passes, value types included |
+
+The 2026-07-09 measurement ran only the first row, and its samples (`price*qty`, a condition) had two parameters or
+fewer, so even Mono would have passed them.
+
+**Fix**: `DynamicExpressoEvaluator` no longer calls `Lambda.Invoke` (which compiles the typed delegate lazily). It
+wraps DynamicExpresso's parsed body in `Expression<Func<object?[], object?>>`, unboxing each used variable from its
+array slot into a block variable, and compiles that. One reference-type parameter hits `FuncThunk1` on Mono, and a
+closed generic type known at compile time has code under NativeAOT. The desktop keeps compiling to IL as before.
+
+**Probe results** (the nine cases of the probe: the order-line expression, three- and four-variable arithmetic, a
+three-variable rule, `Math.Round`, string functions, `DateOnly`, no variables, `Guid`):
+
+| Runtime | Before | After |
+|---------|--------|-------|
+| NativeAOT console, `PublishAot=true`, `osx-arm64` | 8 of 9 fail | 9 of 9 pass |
+| iOS simulator (iPhone 17), Release `iossimulator-arm64` | 3 of 9 fail (the three- and four-parameter ones) | 9 of 9 pass |
+| Mac Catalyst, Release `maccatalyst-arm64` | the same 3 of 9 fail | 9 of 9 pass |
+
+**The gate**: `InterpretedInvokerGateTests` builds the evaluator with its internal `preferInterpretation` switch, so the
+desktop takes the same `LightLambda` → `DelegateHelpers` path as iOS, then checks that no compiled expression is a
+delegate over a `DynamicMethod` (such a delegate has no declaring type). With the old code it fails exactly the three
+cases the iOS simulator failed, with the same thunk names. A positive-control test compiles the typed three-parameter
+lambda and asserts it **is** detected, so the gate notices if a future runtime changes how it picks thunks.
+
+**The general lesson** is the one in the MessagePack section, and it is in `.claude/rules/apple-mobile-trim.md` now: the
+desktop switch and NativeAOT are not stand-ins for Mono. A pass there does not mean iOS passes.
 
 ### Reproduction without a device (the tool shared by both measurements)
 

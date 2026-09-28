@@ -1,4 +1,4 @@
-<!-- source: en/platform-support.md blob: 3590b4fe6e19e26bac802282150e1f97ffce3465 -->
+<!-- source: en/platform-support.md blob: b7e4e41bacab55b77480ba65f6dbcd7c10f29ff7 -->
 # 平台支援
 
 [English](../en/platform-support.md) · [← 文件索引](README.md)
@@ -86,6 +86,12 @@ POLHEM9004 是 MSBuild 警告，不是編譯器診斷。它只會送達套件使
 具名型別逃生口傳遞，也就是該型別的命名空間被應用程式加進了 `SysInfo.AllowedTypeNamespaces`。在 MessagePack 上它走非泛型
 序列化器，在 iOS 上會擲出指出該型別名稱的 `NotSupportedException`。請改用框架的值型別傳送這類值（字串、數字、`Guid`、
 日期、`ParameterCollection`）。
+
+運算式引擎（`Polhem.Expressions`）在 iOS 上以直譯方式執行，但直譯器仍須為每個編譯後的運算式建立與其簽章相同的委派，
+而 iOS 無法建立參數超過兩個的委派。因此 `DynamicExpressoEvaluator` 把每個運算式都編譯成只有一個 `object?[]` 參數的委派，
+不是這個形狀時 `InterpretedInvokerGateTests` 會失敗。在 2026-09-28 實測發現之前，引用三個以上欄位的運算式（例如明細列的
+`quantity * unit_price * (1 - discount)`）一經計算就會讓 iOS App 終止。不經過 `IExpressionEvaluator`、直接以
+DynamicExpresso 求值的程式碼也有相同限制。
 
 ### 套件內附的裁剪描述檔
 

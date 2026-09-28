@@ -126,10 +126,20 @@ The same failing case throws different exceptions on three runtimes:
 |---------|------|
 | CoreCLR + switch off (desktop reproduction) | `InvalidProgramException` (a JIT exists but is declared unavailable, reflection invoke goes through an interpreted thunk, and `MessagePackWriter` is a `ref struct`) |
 | NativeAOT (really no dynamic code) | `InvalidOperationException` / `NotSupportedException` / `MissingMethodException` |
-| Mono (Mac Catalyst / iOS simulator) | Purely managed decisions such as `FormatterNotRegisteredException` match the desktop; no sample was obtained for generic instantiation failures |
+| Mono (Mac Catalyst / iOS simulator) | Purely managed decisions such as `FormatterNotRegisteredException` match the desktop. Code the runtime emits for itself: `ExecutionEngineException` "Attempting to JIT compile method '(wrapper dynamic-method) …' while running in aot-only mode" (2026-09-28) |
 
 `InvalidProgramException` **is** a symptom specific to the desktop reproduction, but that only means the **symptom**
 is distorted; **it does not mean the failure is fake**.
+
+### A pass on the desktop or under NativeAOT does not mean Mono passes (measured 2026-09-28)
+
+The reverse also happens. When the BCL itself emits code, CoreCLR with the switch off lets it (the emitting code runs
+under `ForceAllowDynamicCode`, and a JIT exists), so the desktop reproduction **passes**. NativeAOT and Mono then fail
+on **different** shapes. The case was interpreted LINQ lambdas, whose typed delegate needs a thunk: NativeAOT failed
+every signature with a value type, Mono every signature with more than two parameters. The iOS app crashed on a case
+the desktop and a two-parameter sample had both passed. The details and the probe are in
+`serialization-and-expressions.md` § DynamicExpresso. When the doubt is about Mono, run the Mac Catalyst or iOS
+simulator recipe below; nothing else answers it.
 
 ---
 

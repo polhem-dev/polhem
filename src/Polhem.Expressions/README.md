@@ -46,8 +46,16 @@ turns this into remote code execution on the server — that boundary is the con
 
 ## AOT / trimming
 
-`Expression.Compile` falls back to the interpreter when `IsDynamicCodeSupported` is false, so the
-engine works on iOS, Android and WASM without disabling anything.
+`Expression.Compile` falls back to the interpreter when `IsDynamicCodeSupported` is false, but it still
+has to create a delegate of the compiled lambda's signature, and a runtime without a JIT cannot create
+every signature: on iOS a lambda with more than two parameters fails with `ExecutionEngineException`, and
+under NativeAOT one with a value-type parameter has no code. `DynamicExpressoEvaluator` therefore compiles
+every expression to the same delegate, `Func<object?[], object?>`, which both runtimes can create, so the
+engine works on iOS, Android and WASM without disabling anything. A test that forces the interpreter on the
+desktop fails if an expression is compiled to any other shape.
+
+If you evaluate expressions with DynamicExpresso directly rather than through `IExpressionEvaluator`, the
+same limit applies to your code: `Lambda.Invoke` and `Lambda.Compile` build the typed delegate.
 
 Trimming is a separate matter: DynamicExpresso finds `Math.*`, `string.*` and the other members an expression
 names by reflection. The package ships an embedded `ILLink.Descriptors.xml` that keeps the types expressions

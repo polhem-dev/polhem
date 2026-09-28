@@ -513,6 +513,34 @@ namespace Polhem.UI.Avalonia.UnitTests.DataObjects
         }
 
         [Fact]
+        [DisplayName("A write to a row under an edit session raises RowEditFieldChanged instead of FieldValueChanged and does not mark dirty")]
+        public void RowUnderEditSessionWrite_RaisesRowEditFieldChangedOnly()
+        {
+            var dataObject = new FormDataObject(BuildEmployeeSchema());
+            dataObject.InitializeNewMaster();
+            var detail = dataObject.DataSet.Tables["EmployeePhone"]!;
+            detail.Rows.Add("02-1234-5678");
+            detail.AcceptChanges();
+            dataObject.InitializeNewMaster();
+            var row = detail.Rows[0];
+
+            var published = 0;
+            dataObject.FieldValueChanged += (_, _) => published++;
+            var proposed = new List<FieldValueChangedEventArgs>();
+            dataObject.RowEditFieldChanged += (_, e) => proposed.Add(e);
+
+            dataObject.BeginRowEdit(row);
+            dataObject.SetField(row, "phone", "0912-345-678");
+
+            var args = Assert.Single(proposed);
+            Assert.Equal("phone", args.FieldName, ignoreCase: true);
+            Assert.Equal("0912-345-678", args.Value);
+            Assert.Same(row, args.Row);
+            Assert.Equal(0, published);
+            Assert.False(dataObject.IsDirty);
+        }
+
+        [Fact]
         [DisplayName("A write to a detached row (NewRow without Add) does not raise FieldValueChanged")]
         public void DetachedRowWrite_DoesNotRaiseFieldValueChanged()
         {

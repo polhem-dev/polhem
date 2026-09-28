@@ -66,6 +66,7 @@ namespace Polhem.UI.Avalonia.Views
             _roundingContext = await ResolveRoundingContextAsync(cancellationToken).ConfigureAwait(true);
             _liveComputation = new FormLiveComputation(Schema, _roundingContext);
             _dataObject.FieldValueChanged += OnLiveFieldValueChanged;
+            _dataObject.RowEditFieldChanged += OnLiveRowEditFieldChanged;
             _dataObject.RowAdded += OnLiveRowAdded;
             string layoutProgId = string.IsNullOrEmpty(ProgId) ? Schema.ProgId : ProgId;
             _formLayout = await ResolveLayoutAsync(layoutProgId, cancellationToken).ConfigureAwait(true);
@@ -181,6 +182,19 @@ namespace Polhem.UI.Avalonia.Views
             var changed = _liveComputation.Recompute(e.TableName, e.FieldName, e.Row);
             if (changed.Count > 0)
                 RefreshDetailGrid(e.TableName);
+        }
+
+        /// <summary>
+        /// Recomputes the computed fields of a row under an edit session (the detail edit form) as the user
+        /// edits it. The results land in the row's proposed version with the edit, so Cancel rolls them back
+        /// and Commit re-publishes them; the edit form's own editors refresh through
+        /// <see cref="FormDataObject.RowEditFieldChanged"/>. The detail grid is deliberately not refreshed: it
+        /// would show values the session may still cancel, and the grid refreshes itself after a commit.
+        /// </summary>
+        private void OnLiveRowEditFieldChanged(object? sender, FieldValueChangedEventArgs e)
+        {
+            if (_liveComputation is null || _liveComputation.IsRecomputing) { return; }
+            _liveComputation.Recompute(e.TableName, e.FieldName, e.Row);
         }
 
         /// <summary>
