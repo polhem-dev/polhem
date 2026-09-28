@@ -9,8 +9,8 @@
 ## Context
 
 When a legitimate JSON-RPC packet was resent unchanged, the server used to execute it a second time in full.
-The payload pipeline established by [ADR-036](adr-036-wire-serialization-externalized.md) uses AES-CBC-HMAC to
-guarantee that a packet **cannot be altered**, but not that it **has not been sent a second time**: encryption
+The encrypted payload pipeline (Serialize → Compress → Encrypt, [ADR-004](adr-004-messagepack-payload.md)) uses
+AES-CBC-HMAC to guarantee that a packet **cannot be altered**, but not that it **has not been sent a second time**: encryption
 protects confidentiality and integrity, not against repetition.
 
 An attacker does not need to be able to decrypt the packet; resending the whole request unchanged is enough. The ways
@@ -155,3 +155,29 @@ nodes can replace it with a shared implementation without changing the framework
   into `Error`, the signal "a session is being rejected repeatedly" would disappear, and that is exactly what tells a
   client clock skew from someone resending packets.
 - Local calls (`IsLocalCall`) are not affected.
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: the API key methods are replay-protected too.** `CreateApiKey`, `SetApiKeyEnabled` and
+  `SetApiKeyExpiry` are remotely callable by a deployment administrator (`Encrypted`) and have side effects; they now
+  declare `UniqueSequence` as well (`src/Polhem.Business/System/SystemBusinessObject.ApiKey.cs`). The methods that
+  declare it are `Save`, `Delete`, `ExecFunc`, `EnterCompany`, `LeaveCompany`, `CreateApiKey`, `SetApiKeyEnabled` and
+  `SetApiKeyExpiry`. Decision 6 calls its list "the complete set"; nothing checks that mechanically. What does exist is
+  `BoApiSurfaceTests` (`tests/Polhem.Business.UnitTests/`), which pins the protection level, access requirement and
+  replay setting of every business object action to a reviewed baseline, so adding an action or changing its replay
+  setting fails until the baseline is edited on purpose. Whether a new action needs `UniqueSequence` remains a review
+  decision.
+- **2026-09-27: `UniqueSequence` is documented as protecting Encrypted payloads only**
+  (`src/Polhem.Definition/Security/ApiReplayProtection.cs`), matching decision 3, and startup logs a warning naming
+  the methods that declare it while `ApiServiceOptions.RequireWireFrame` is off, since without the frame no call is
+  checked (`src/Polhem.Hosting/Registry/ReplayProtectionWarningService.cs`).
+- **2026-09-27: `IReplayWindowStore` checks and records in one atomic call**, `TryAcceptAsync`, so a shared
+  multi-node store (decision 7) can be implemented without a read-then-write race. The process-local window is the
+  internal `ReplayWindow`.
+- **JS callers can use `Encrypted` now.** The out-of-scope item on tightening `Public` says JS callers cannot implement
+  the whole encrypted pipeline. [ADR-044](adr-044-payload-codec-negotiation.md) made the body codec a per-request
+  choice, so a JS client can declare the JSON codec and use `Encrypted`. The protection levels of `Save`, `Delete` and
+  `ExecFunc` are unchanged (`Public`).

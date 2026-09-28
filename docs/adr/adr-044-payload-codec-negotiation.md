@@ -193,3 +193,14 @@ shape only this framework knows.
 - Time zone responsibility does not move with the codec. [ADR-032](adr-032-datetime-timezone.md) places the conversion
   point in the Connector, and the server neither converts nor checks; a client in another language must take care of
   UTC normalization itself, and **the symptom of missing it is dates silently shifting, not an error**.
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: the programmatic override of the default codec is gone too.** Decision 5 removed the `Serializer`
+  setting, but `ApiServiceOptions.PayloadSerializer` could still be replaced in code. It is now read-only, and
+  `ApiServiceOptions.Initialize` no longer takes a serializer. A codec the framework does not ship is added with
+  `ApiServiceOptions.RegisterPayloadCodec`, which refuses the built-in names; a request that names no codec is always
+  read with MessagePack (`src/Polhem.Api.Core/ApiServiceOptions.cs`).

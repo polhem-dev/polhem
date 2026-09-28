@@ -21,11 +21,12 @@ The tool command is `dotnet-polhem`, so it runs as `dotnet polhem`.
 | `dotnet polhem defines split-menu` | Migrates a `ProgramSettings.xml` that still carries its menu into a flat program registry plus `MenuSettings.xml` |
 | `dotnet polhem keys protect` | Generates a new key and prints it encrypted with the master key, as the value `SecurityKeySettings` in `SystemSettings.xml` stores (for example `ApiEncryptionKey`) |
 
-The options of each command are printed by the tool itself:
+The options of each command are printed by the tool itself, which is the authority for them:
 
 ```bash
+dotnet polhem --help
 dotnet polhem help defines
-dotnet polhem help keys
+dotnet polhem defines split-menu --help
 ```
 
 ## License

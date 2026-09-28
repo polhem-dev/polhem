@@ -106,3 +106,22 @@ hence this ADR. The user guide is `docs/en/expression-rules.md`.
   `Expression.Compile()`, so live calculation on mobile/WASM AOT targets needs separate measurement (the same
   trim/AOT context as ADR-025); but because the backend is authoritative, this risk only affects the frontend preview,
   not data correctness.
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: the sandbox functions.** The function list in "Decision" is the one at the time of the decision; the
+  sandbox has gained more since (for example `UtcNow` and `IsNullOrWhiteSpace`). The authoritative list is
+  `s_helperFunctions` in `src/Polhem.Expressions/DynamicExpressoEvaluator.cs`.
+- **2026-09-27: AOT and trimming on mobile heads.** The AOT question of "Dependency" is answered: `Expression.Compile()`
+  falls back to DynamicExpresso's interpreter when dynamic code is unsupported, so live calculation needs nothing
+  disabled. The CI Mobile AOT gate in `.github/workflows/build-ci.yml` runs `tests/Polhem.Expressions.UnitTests` with
+  `-p:DynamicCodeSupport=false`. Trimming is a separate matter: DynamicExpresso reaches the members an expression names
+  by reflection, so `Polhem.Expressions` ships `src/Polhem.Expressions/ILLink.Descriptors.xml`, which roots the types
+  the sandbox exposes; `TrimmerDescriptorGateTests` (`tests/Polhem.Expressions.UnitTests`) fails when the descriptor
+  and the exposed types disagree.
+- **2026-09-27: rule messages are localized.** A failing `FormRule` carries its `Message` as the English text and, when
+  the rule and the schema are named, the language key `{ProgId}.Rule.{RuleId}.Message`, which the server resolves in
+  the session's culture (`src/Polhem.Definition/Forms/FormExpressionCalculator.cs`).

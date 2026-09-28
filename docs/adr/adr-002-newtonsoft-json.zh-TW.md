@@ -1,4 +1,4 @@
-<!-- source: adr/adr-002-newtonsoft-json.md blob: 97a1e56b267915ae07369292127b3784729611c6 -->
+<!-- source: adr/adr-002-newtonsoft-json.md blob: f44ff080c71d560d079ef2752c3a0d1b543a8bd4 -->
 # ADR-002：JSON 序列化函式庫的選擇與遷移
 
 [English](adr-002-newtonsoft-json.md)
@@ -42,8 +42,8 @@
 
 兩項主要障礙均已解除：
 
-- **netstandard2.0 已棄**：所有專案於 2026-04-14 遷移至 net10.0 單一目標框架（見 [ADR-006](adr-006-dual-target-framework.zh-TW.md)），STJ 在 net10.0 功能完整。
-- **DataSet 安全限制可控**：將 DataSet 欄位型別限制為 `FieldDbType` 列舉（13 種固定型別，全部為 STJ 原生支援的基本型別），消除了任意 `System.Type` 的安全風險。
+- **netstandard2.0 已棄**：所有專案於 2026-04-14 遷移至 net10.0 單一目標框架（見 [ADR-006](adr-006-dual-target-framework.zh-TW.md)，其中也註記了後來的例外），STJ 在 net10.0 功能完整。
+- **DataSet 安全限制可控**：將 DataSet 欄位型別限制為 `FieldDbType` 列舉（一組固定的基本型別，全部為 STJ 原生支援），消除了任意 `System.Type` 的安全風險。
 
 加上 STJ 為框架內建（無第三方相依）、效能較高、官方持續投入，遷移時機成熟。
 
@@ -51,7 +51,7 @@
 
 採用 `System.Text.Json` 作為唯一的 JSON 序列化函式庫，禁止再引入 `Newtonsoft.Json`。
 
-封裝點：`Polhem.Base/Serialization/JsonCodec.cs`，預設 camelCase 屬性命名、indented 輸出，並掛載框架自訂 Converter：
+封裝點：`Polhem.Base/Serialization/JsonCodec.cs`，採 camelCase 屬性命名、輸出不縮排（只有 `SerializeToFile` 縮排，因為檔案是給人讀的），並掛載框架自訂 Converter：
 
 | Converter | 用途 |
 |-----------|------|
@@ -85,11 +85,17 @@
 |------|------|
 | `JsonSerializationBinder.cs` | 已移除（跨 runtime 名稱對應 `mscorlib` ↔ `System.Private.CoreLib` 在 net10.0 單一目標下不再需要） |
 | `Newtonsoft.Json` NuGet 相依 | 已自所有 `*.csproj` 移除 |
-| `code-style.md` 序列化規範 | 已更新為「JSON 序列化使用 System.Text.Json」 |
+| 本 repo 程式碼風格規範中的序列化規則 | 已更新為「JSON 序列化使用 System.Text.Json」 |
 
 ## 影響
 
-- 所有 JSON 操作經由 `JsonCodec` 進行；不再直接呼叫 `JsonSerializer`，以維持框架預設選項一致
+- 一般用途的 JSON（JSON 檔、JSON-RPC 信封）經由 `JsonCodec` 進行，以維持框架預設選項一致。API 層在 wire 需要不同設定之處保有自己的共用選項：JSON payload body 用 `JsonPayloadSerializer`、Plain 請求值用 `ApiInputConverter`（皆在 `src/Polhem.Api.Core/`）；自訂 Converter 在內部呼叫 `JsonSerializer`
 - 三種序列化各司其職維持不變：XML 存定義、MessagePack 傳內部 Payload、JSON 接外部系統
 - 三個前端 repo 均為新建，無既有客戶端的 JSON 格式相容問題；遷移過程未保留向後相容層
 - 移除 `JsonSerializationBinder` 後，跨 runtime 型別名稱差異透過框架單一 net10.0 目標自然消解
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-03：JSON 也承載 payload body。** 「背景」的表格與「影響」只賦予 JSON 外部介接的角色。自 [ADR-044](adr-044-payload-codec-negotiation.zh-TW.md) 起，每個請求宣告自己的 body codec，`Encoded` / `Encrypted` 的 payload body 除了 MessagePack 也可用 JSON（未宣告時仍為 MessagePack）。

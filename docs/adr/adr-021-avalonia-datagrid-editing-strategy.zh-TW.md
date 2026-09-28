@@ -1,4 +1,4 @@
-<!-- source: adr/adr-021-avalonia-datagrid-editing-strategy.md blob: 840403b609899e1029ec1305a24c05d0a4b42433 -->
+<!-- source: adr/adr-021-avalonia-datagrid-editing-strategy.md blob: b52717c71d9c2ea06c56f35061afe26f41384bed -->
 # ADR-021：Avalonia DataGrid 的 in-cell 編輯策略
 
 [English](adr-021-avalonia-datagrid-editing-strategy.md)
@@ -61,5 +61,15 @@ Gallery 實測結果：**文字欄（`TextEdit`）編輯正常，popup 型編輯
 ## 影響
 
 - popup 型欄位點擊即編輯，少了「先雙擊進入編輯模式」的儀式；文字欄維持標準 DataGrid 編輯手感——兩種手感並存是本策略的有意取捨
-- 可編輯明細表的 popup 型欄位每列常駐一個互動控件，列數極大時有渲染成本；明細表情境（數十列內）無感，列表模式不受影響（恆唯讀 → `TextBlock`）
+- 可編輯明細表的 popup 型欄位平時為 `TextBlock`，只為正在編輯的儲存格建立編輯器，平時成本與唯讀儲存格相同。只有布林欄每列常駐一個 `CheckBox`，列數極大時有渲染成本；明細表情境（數十列內）無感，列表模式不受影響（恆唯讀）
 - 若未來 Avalonia `DataGrid` 編輯管線支援 popup 型編輯器，或改採 `TreeDataGrid`，本策略可逐欄位回退而不影響呼叫端 API
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：dirty 狀態不需呼叫即可追蹤。** `FormDataObject.MarkDirty()` 已不存在。`IsDirty` 的 setter 為 private，由
+  ADO.NET `ColumnChanged` / `RowChanged` 事件的橋接設定，因此儲存格編輯器直接寫入 `DataRow` 就會把表單標為 dirty，不需額外呼叫
+  （`src/Polhem.UI.Avalonia/DataObjects/FormDataObject.Events.cs`）。
+- **2026-09-27：`DynamicForm` 已併入 `FormView`。** 不再有獨立的 `DynamicForm` 控件；明細編輯模式為 `FormView.DetailEditMode`
+  （`src/Polhem.UI.Avalonia/Views/FormView.cs`），與 `GridControl.EditMode` 並列。

@@ -1,4 +1,4 @@
-<!-- source: adr/adr-043-error-contract-single-registry.md blob: 1d01f832bff9ef58500191db84456098a29c4053 -->
+<!-- source: adr/adr-043-error-contract-single-registry.md blob: d299e8638b380efe8a384951d59f7be96af292ca -->
 # ADR-043：錯誤契約以單一登錄表達，兩端從同一份宣告消費
 
 [English](adr-043-error-contract-single-registry.md)
@@ -99,5 +99,24 @@
   **全 repo 零產生者**——`Unauthorized` 尤其容易誤導，認證失敗實際回的是
   `InvalidRequest` 加 HTTP 401。本決策不處理它們的去留，但測試現在強制每個成員都要被歸類，
   因此它們不再是隱形的。
-- 收斂 `UserMessage` 那六個過渡期 BCL 例外仍是待辦。它與本決策正交：
-  收完之後兩端的分支數不變，因為那六個型別從來就不在造成分歧的那一段裡。
+- 收斂 `UserMessage` 的過渡期列仍是待辦：BCL 例外 `UnauthorizedAccessException`、`ArgumentException`、
+  `InvalidOperationException`、`NotSupportedException`、`FormatException`，以及框架自己的 `JsonRpcException`。
+  它與本決策正交：收完之後兩端的分支數不變，因為這些型別從來就不在造成分歧的那一段裡。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：BCL 例外不再原文傳給遠端呼叫端。** 登錄表中的 BCL 列保留錯誤碼，但每列改帶固定訊息，
+  真正的訊息記錄在伺服器端（`JsonRpcExecutor.Logger`）。只有框架自己的例外型別會把訊息原文帶給呼叫端；
+  文字本來就要給使用者看的擲出點改擲 `UserMessageException`。`JsonRpcExecutorUserMessageExceptionTests`
+  （`tests/Polhem.Api.Core.UnitTests/JsonRpc/`）釘住這兩半，各列名稱見
+  `src/Polhem.Api.Core/JsonRpc/JsonRpcErrorContract.cs`。
+- **2026-09-27：`Unauthorized` 有了產生者。** 認證失敗（access token 缺少、無效或過期）現在經由
+  `AuthenticationRequiredException` 回 `JsonRpcErrorCode.Unauthorized`（-32001）；登錄表把它排在其基底
+  `UnauthorizedAccessException` 那列之前，用戶端則還原為 `UnauthorizedAccessException`。後果一節「認證失敗回
+  `InvalidRequest` 加 HTTP 401」已不成立，沒有 `Authorization` 標頭的請求視為匿名呼叫。`MethodNotFound` 與
+  `InvalidParams` 仍然沒有產生者。
+- **2026-09-27：`UserMessageException` 可攜帶訊息鍵與參數**，在地化時以 session 的 culture 解析
+  （`src/Polhem.Base/Exceptions/UserMessageException.cs`）。
+

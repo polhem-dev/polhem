@@ -140,6 +140,18 @@ the type force callers to handle the unfilled case.
 databases, round-trips values, and asserts that the schema comparison of time-of-day columns converges; as soon as the
 physical shape reduction is lost, that assertion fails. Unit tests cannot catch this regression.
 
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: the UI layer and the public documents exist.** "The UI layer and the public documents are not
+  implemented yet" in "Consequences" describes the time of the decision. The Avalonia editor is
+  `src/Polhem.UI.Avalonia/Controls/Editors/TimeEdit.cs`, and the Blazor Server form handles `ControlType.TimeEdit` in
+  `src/Polhem.Web.Blazor.Server/Components/DynamicForm.razor` and `DynamicForm.razor.cs`; both normalize input with
+  `ValueUtilities.CTimeString` and store an empty string for an emptied box. The consumer guidance is
+  [Temporal Types](../en/temporal-types.md).
+
 ## Related
 
 - [ADR-031: Calendar day column semantics](adr-031-calendar-day-column-semantics.md): the first time semantics, using

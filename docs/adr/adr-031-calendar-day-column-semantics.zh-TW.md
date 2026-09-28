@@ -1,4 +1,4 @@
-<!-- source: adr/adr-031-calendar-day-column-semantics.md blob: 2c5c2f00e834c5c7174454d47f30799b5d70e7dc -->
+<!-- source: adr/adr-031-calendar-day-column-semantics.md blob: bcbf23df99313e5ee729417bfd1b6a7008cee6ef -->
 # ADR-031：日曆日欄位語意以顯式標記承載，不改 CLR 型別
 
 [English](adr-031-calendar-day-column-semantics.md)
@@ -142,6 +142,16 @@ wire 序列化有 MessagePack 與 JSON 兩份平行實作，且分居不同套�
   框架內呼叫端僅一處。
 - **需持續留意**：`ExtendedProperties` 在 `DataTable.Merge()` / `DataView.ToTable()` 等
   複製路徑的保留行為。漏失處會靜默退回「反推 CLR 型別」，症狀是 wire 上標記變回 `DateTime`。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：MessagePack 上承載標記的位置。** 〈背景〉、選項 3 與決策表提到的 `SerializableDataColumn` 已移除。
+  `DataTableFormatter`（`src/Polhem.Api.Core/MessagePack/DataTableFormatter.cs`）現在於每個欄位項目寫入取自
+  `ResolveFieldDbType` 的 `fieldDbType` 元素，讀取端以 `ApplyFieldDbType` 還原，因此決策不變：沒有另設語意欄位、
+  優先讀標記。新形狀也改變了 MessagePack payload 的結構與大小，〈後果〉中「payload 結構與大小不變」只就本決策而言
+  （見 [ADR-030](adr-030-messagepack-name-based-keys.zh-TW.md)〈實作演進〉）。
 
 ## 相關
 

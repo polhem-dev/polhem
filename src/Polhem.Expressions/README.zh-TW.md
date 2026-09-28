@@ -22,9 +22,11 @@ UI head）才引用本套件。見 [ADR-038](../../docs/adr/adr-038-definition-d
 
 ## 時區
 
-`Evaluate` 接收 `timeZoneId`。讀取時鐘的 helper（`Today()`、`Now()`）依該時區解析，
-因此從其他地區建立的資料列仍以使用者自己的今天為預設。`UtcNow()` 則明示 UTC。
-時區 id 為空即代表 UTC。見 [ADR-032](../../docs/adr/adr-032-datetime-timezone.zh-TW.md)。
+`Evaluate` 接收 `timeZoneId` 與 `DateTimeBasis`。`Today()` 回傳使用者時區的日曆日（`DateOnly`），
+因此從其他地區建立的資料列仍以使用者自己的今天為預設。`Now()` 跟隨被求值資料集的基準：
+`DateTimeBasis.UserZone`（預設，用戶端預覽）為使用者時區，`DateTimeBasis.Utc`（伺服端存檔前的計算，
+儲存值為 UTC）為 UTC。`UtcNow()` 則明示 UTC。時區 id 為空即代表 UTC。見
+[ADR-032](../../docs/adr/adr-032-datetime-timezone.zh-TW.md)。
 
 ## 安全性
 
@@ -33,13 +35,17 @@ UI head）才引用本套件。見 [ADR-038](../../docs/adr/adr-038-definition-d
 都是通往反射 API 的起點。上游 DynamicExpresso 本身也聲明同樣的限制。
 
 真正的控制點是運算式的**來源**而非解析器：運算式存在定義檔中，而寫入定義是部署期作業
-（`SystemBO.SaveDefine` 為 `LocalOnly`）。任何讓遠端或低權限呼叫端得以提供運算式文字的改動，
+（`SystemBusinessObject.SaveDefine` 宣告為 `ApiProtectionLevel.LocalOnly`）。任何讓遠端或低權限呼叫端得以提供運算式文字的改動，
 都會使此處變成伺服端的遠端程式碼執行——請維持該邊界。
 
 ## AOT / trimming
 
 `IsDynamicCodeSupported` 為 false 時，`Expression.Compile` 會退回直譯器，
 因此本引擎在 iOS、Android 與 WASM 上無需停用任何功能即可運作。
+
+Trimming 則是另一回事：DynamicExpresso 以反射找出運算式指名的 `Math.*`、`string.*` 等成員。本套件內嵌
+`ILLink.Descriptors.xml`，保留運算式可觸及的型別，因此經過 trim 的 head（行動端建置預設的 partial trim）
+不需額外設定就能保有它們。
 
 ## 相依
 

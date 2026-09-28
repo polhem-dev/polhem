@@ -1,6 +1,6 @@
 # Polhem.Repository
 
-> Repository 抽象的預設實作，提供 Session 管理、資料庫操作與表單資料存取。
+> Repository 抽象的預設實作：表單資料存取、框架系統資料表，以及 Repository 工廠。
 
 [English](README.md)
 
@@ -8,58 +8,57 @@
 
 - **層級**：資料存取層（實作）
 - **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
-- 由應用程式消費；repository 經 DI 註冊的 factory 解析注入。
+- 應用程式透過 `Polhem.Repository.Abstractions` 的 `I*Repository` 介面使用；Repository 由 `RepositoryFactory` 建立。
 
 ## 目標框架
 
-- `net10.0` -- 使用現代執行階段 API 與效能改進
+- `net10.0` -- 存取現代執行階段 API 與效能改進
 
 ## 主要功能
 
-### Session 管理
-
-- `SessionRepository` -- 將 Session 持久化於 `st_session` 資料表，以 XML 序列化 `SessionUser` 資料
-- 產生 GUID 格式的 Access Token，確保不可預測的 Session 識別碼
-- 支援一次性 Session，取得後自動刪除
-- 存取時自動清理過期 Session，使用 UTC 時間比較
-
-### 資料庫操作
-
-- `DatabaseRepository`（`internal`）-- 連線測試，支援參數替換（`{@DbName}`、`{@UserId}`、`{@Password}`）；僅透過 `IDatabaseRepository` 對外公開，由 `RepositoryFactory` 建構，非公開 API
-- 透過 `TableSchemaBuilder` 進行結構升級，配合 FormSchema 驅動的資料表管理
-
 ### 表單資料存取
 
-- `DataFormRepository` -- `IDataFormRepository` 的預設實作，依 ProgId 解析，處理資料表單 CRUD
+- `DataFormRepository` -- `IDataFormRepository` 的預設實作，負責以 FormSchema 驅動的 CRUD，依 ProgId 解析。
+  程式可以透過 `ProgramSettings` 的 `ProgramItem.Repository` 綁定自己的子類別。
+
+### 框架 Repository（internal）
+
+框架資料表（session、使用者、公司、部門、員工、角色、API 金鑰、稽核紀錄與稽核規則，以及資料庫管理）的
+Repository 皆為 `internal`。Host 透過 `Polhem.Repository.Abstractions` 中的介面，以
+`IRepositoryFactory.Create<T>(accessToken)` 取得。
+
+- Session -- `st_session` 的資料列保存 session 種子：序列化為 XML 的 `SessionUser`，以存取權杖的雜湊值
+  （`AccessTokenHasher`）為鍵，因此權杖本身不會被儲存。存取權杖由商業層在登入時核發，而不是由 Repository
+  產生。讀取時會篩掉過期的資料列但不刪除；過期資料列由 host 的過期 session 清理服務（`Polhem.Hosting`）移除。
+- 資料庫管理 -- 連線測試透過 `ConnectionStringTemplate` 解析 `{@DbName}`、`{@UserId}`、`{@Password}` 佔位符；
+  結構升級透過 `TableSchemaBuilder` 進行。
 
 ### 工廠實作
 
-- `RepositoryFactory` -- `IRepositoryFactory` 的預設實作：兩軸的每個 Repository 都由它以共用的
-  `IRepositoryContext` 建構。框架軸是一張型別對應表而非一個方法一個，因此不會每加一張系統表就長一個成員。
+- `RepositoryFactory` -- 預設的 `IRepositoryFactory`：以單一共用的 `IRepositoryContext` 建出兩個軸向上的
+  所有 Repository。框架軸是一張型別對照表，而不是一個 Repository 一個方法，因此不會每多一張系統表就多一個成員。
+- `IRepositoryTypeResolver` / `ProgramSettingsRepositoryTypeResolver` -- 解析 progId 綁定的 Repository 型別。
 
 ## 主要公開 API
 
 | 類別 | 用途 |
 |------|------|
-| `SessionRepository` | 針對 `st_session` / `st_user` 資料表的 Session CRUD |
-| `DataFormRepository` | 資料表單資料存取實作 |
-| `RepositoryFactory` | 預設 `IRepositoryFactory` 實作 |
+| `DataFormRepository` | 資料表單的資料存取實作 |
+| `RepositoryFactory` | 預設的 `IRepositoryFactory` 實作 |
+| `RepositoryBase` | Repository 的基底類別（上下文、存取權杖、progId） |
+| `IRepositoryContext` / `RepositoryContext` | 交給每個 Repository 的共用應用程式生命週期服務 |
+| `RepositoryDatabaseRouter` | 預設的 `IRepositoryDatabaseRouter` |
 
 ## 設計慣例
 
-- **Session 的 XML 序列化** -- `SessionUser` 序列化為 XML 並儲存於 `st_session.session_user_xml`；取得時反序列化還原。
-- **連線字串參數替換** -- `DatabaseRepository.TestConnection` 在開啟連線前，替換 `{@DbName}`、`{@UserId}`、`{@Password}` 預留位置。
-- **一次性 Session 自動刪除** -- 當 `SessionUser.OneTime` 為 true 時，`GetSession` 回傳後立即刪除該 Session 記錄。
-- **過期 Session 清理** -- `GetSession` 比較 `sys_invalid_time` 與 `DateTime.UtcNow`，透明地刪除過時記錄。
-- **參數化查詢** -- 所有 SQL 使用 `DbCommandSpec` 搭配位置參數，防止 SQL 注入。
-- **啟用 Nullable Reference Types**（`<Nullable>enable</Nullable>`）。
+- **參數化查詢** -- Repository 透過 `DbCommandSpec` 佔位符傳值，由框架轉成命令參數。
+- **一個工廠、兩個軸向** -- progId 綁定的 Repository 與框架 Repository 都由 `RepositoryFactory` 建立。
+- 啟用 **Nullable Reference Types**（`<Nullable>enable</Nullable>`）。
 
 ## 目錄結構
 
-```
-Polhem.Repository/
-  AuditLog/   # AuditLogRepository（讀）、AuditLogWriteRepository（寫）
-  Form/       # DataFormRepository
-  Factories/   # RepositoryFactory、IRepositoryTypeResolver、ProgramSettingsRepositoryTypeResolver
-  System/     # SessionRepository、DatabaseRepository
-```
+- 專案根目錄 -- `RepositoryBase`、`IRepositoryContext`、`RepositoryContext`、`RepositoryDatabaseRouter`
+- `AuditLog/` -- 稽核紀錄與稽核規則 Repository（internal）
+- `Factories/` -- `RepositoryFactory`、`IRepositoryTypeResolver`、`ProgramSettingsRepositoryTypeResolver`
+- `Form/` -- `DataFormRepository`
+- `System/` -- 框架系統資料表 Repository（internal）

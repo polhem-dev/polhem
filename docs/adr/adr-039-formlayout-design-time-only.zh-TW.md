@@ -1,4 +1,4 @@
-<!-- source: adr/adr-039-formlayout-design-time-only.md blob: d40996e757eb7729a37e57181ab018290727ee37 -->
+<!-- source: adr/adr-039-formlayout-design-time-only.md blob: 5e6f4db80fe4136af7c5b20a85db99ddd93a9141 -->
 # ADR-039：`FormLayout` 收回設計階段，執行階段不再由 `FormSchema` 推導
 
 [English](adr-039-formlayout-design-time-only.md)
@@ -131,3 +131,13 @@ Blazor 的 `FormPage` 對稱地改讀 `GetDefineAsync<FormLayout>`。
   `{DefinePath}/FormLayout/{ProgId}.FormLayout.xml`。**既有檔案覆寫前先確認**——
   重新產生會丟掉人工調整過的版面，是該功能唯一的破壞性動作。
 - `samples/Define/` 補上三份先前完全依賴推導的版面檔。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **`tools/DefineEditor` 現在有測試專案**：`tests/Polhem.DefineEditor.UnitTests/`。產生器留在 `Polhem.Definition`
+  的三個理由中，第一個已不適用；另外兩個仍成立，產生器也沒有搬動。
+- **DemoCenter 的版面模組不再直接把 schema 放進 `FormView.Schema`。** 它以 `FormLayoutGenerator.Generate` 產生版面，
+  再以 `FormLayoutRenderer.Render` 繪製（`samples/Avalonia.DemoCenter/Modules/Layouts/AutoFormLayoutModule.cs`）。
+  `FormView.Layout` 與可覆寫的 `ResolveLayoutAsync` 不變，主機若不接後端而直接設定 `FormView.Schema`，仍然需要它們。

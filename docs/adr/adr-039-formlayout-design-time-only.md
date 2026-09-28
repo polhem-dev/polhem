@@ -150,3 +150,16 @@ their own producers, and the rule itself is not tied to `DefineEditor`.
   `{DefinePath}/FormLayout/{ProgId}.FormLayout.xml`. **It asks for confirmation before overwriting an existing file**:
   regenerating throws away a manually adjusted layout, and it is the only destructive action of the feature.
 - `samples/Define/` gains the three layout files that previously relied entirely on derivation.
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **`tools/DefineEditor` has a test project now**: `tests/Polhem.DefineEditor.UnitTests/`. The first of the three
+  reasons for keeping the generator in `Polhem.Definition` no longer applies; the other two still do, and the generator
+  has not moved.
+- **The DemoCenter layout module no longer puts a schema into `FormView.Schema`.** It generates a layout with
+  `FormLayoutGenerator.Generate` and renders it with `FormLayoutRenderer.Render`
+  (`samples/Avalonia.DemoCenter/Modules/Layouts/AutoFormLayoutModule.cs`). `FormView.Layout` and the overridable
+  `ResolveLayoutAsync` are unchanged, and a host that sets `FormView.Schema` without a backend still needs them.

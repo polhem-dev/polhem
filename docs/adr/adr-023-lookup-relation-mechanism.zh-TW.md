@@ -1,4 +1,4 @@
-<!-- source: adr/adr-023-lookup-relation-mechanism.md blob: a7520ad2f5f3ec68f8f2bbcd59111d34c0e18e93 -->
+<!-- source: adr/adr-023-lookup-relation-mechanism.md blob: 133c99fa69b1d85b54d9d2e4969f0c3a6305d6d6 -->
 # ADR-023：定義驅動的 lookup 關連機制
 
 [English](adr-023-lookup-relation-mechanism.md)
@@ -23,7 +23,7 @@
 
 1. **呼叫端自行接 lookup**：每個表單自己寫「開窗 + 寫回」程式碼。最大彈性但完全違背「定義驅動、零 CRUD 程式碼」目標，且每張表單重複同一套樣板。
 2. **以獨立的 lookup 定義節點描述**（另立 `<Lookup>` 元素與既有 relation 欄並存）：表達力強，但與既有 `RelationProgId` / `RelationFieldMappings` 語意重疊，造成「兩套關連定義」的認知負擔與不一致風險。
-3. **沿用既有 relation 欄語意 + layout 產生器自動解析（採用）**：relation 欄已含「指向哪個表單、帶回哪些欄」的完整資訊，缺的只是「顯示欄」與「開窗 UI」。補上 `DisplayField` / `LookupFields` 兩個定義屬性，由 `FormLayoutGenerator` 把 relation 欄自動產為開窗式編輯器，不新增平行的關連定義。
+3. **沿用既有 relation 欄語意 + layout 產生器自動解析（採用）**：relation 欄已含「指向哪個表單、帶回哪些欄」的完整資訊，缺的只是「顯示欄」與「開窗 UI」。補上 `DisplayFields` / `LookupFields` 定義屬性，由 `FormLayoutGenerator` 把 relation 欄自動產為開窗式編輯器，不新增平行的關連定義。
 
 ## 決策
 
@@ -32,7 +32,7 @@
 ### 定義層（`Polhem.Definition`）
 
 - relation 欄維持 `RelationProgId` + `RelationFieldMappings`（來源 → `ref_*`）作為**單一關連事實來源**。
-- 新增 `DisplayField` / `DisplayFields`：lookup 編輯器與清單以「編號 - 名稱」複合顯示（分隔符為「 - 」，避免與含空格的名稱混淆）。
+- 新增 `DisplayFields`：lookup 編輯器與清單以「編號 - 名稱」複合顯示（分隔符為「 - 」，避免與含空格的名稱混淆）。
 - 新增 `FormSchema.LookupFields`：開窗清單要呈現的欄位集合。
 - `FormLayoutGenerator` 涵蓋規則：relation 欄自動解析為 `ButtonEdit`（開窗式編輯器）；對應的 `ref_*` 目的欄由 relation 欄承載顯示、**不另外產生獨立編輯器**（避免同一筆關連在版面上出現兩次）。
 
@@ -56,3 +56,16 @@
 - **Desktop-only**：`LookupDialog` 依賴 `Window.ShowDialog`（多視窗）；Avalonia WASM／Mobile 為 single-view、無 `Window`，跨平台需 `Polhem.UI.Avalonia` 改 single-view overlay 的 dialog 抽象（`IDialogPresenter` 或採社群 overlay 方案）——屬另立 plan 的框架工作，本決策範圍只到 Desktop。
 - relation 欄自動成 `ButtonEdit` 後，純展示（不可挑選）的關連顯示需求需另以唯讀欄表達；目前以 `FormField.ReadOnly`（見 CHANGELOG 4.10.0）涵蓋。
 - 與 [ADR-021](adr-021-avalonia-datagrid-editing-strategy.zh-TW.md) 的 in-cell 編輯策略一致：明細關連欄走「點擊置換編輯器」路徑，lookup 開窗不被 DataGrid 編輯管線撕掉。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：lookup 不再只限 Desktop。** `LookupDialog` 與 `RowEditDialog` 共用
+  `src/Polhem.UI.Avalonia/Controls/Editors/DialogHosting.cs` 的同一個呈現決策：只有桌面 classic-window lifetime 提供
+  `Window` owner 時才開原生 modal `Window`，其餘情況（browser、iOS、Android head）經 `OverlayDialogHost` 把面板開在
+  top level 的 overlay 層。沒有引入 `IDialogPresenter` 抽象。此決策由 `tests/Polhem.UI.Avalonia.UnitTests` 的
+  `DialogHostingTests` 涵蓋。
+- **2026-09-27：`GetLookup` 套用 `Read` 記錄範圍。** lookup 候選列限縮在呼叫者的 `Read` 記錄範圍內，與搜尋條件及
+  `GetLookupFilter()` 以 AND 結合。lookup 必須提供所有列的 BO（例如共用的主檔清單）以覆寫 `LookupAppliesRecordScope` 退出
+  （`src/Polhem.Business/Form/FormBusinessObject.Read.cs`）。

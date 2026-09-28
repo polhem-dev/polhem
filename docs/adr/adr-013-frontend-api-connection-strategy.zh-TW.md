@@ -1,4 +1,4 @@
-<!-- source: adr/adr-013-frontend-api-connection-strategy.md blob: 3609e7bba249cadb10164cf0a10c0b1864dda135 -->
+<!-- source: adr/adr-013-frontend-api-connection-strategy.md blob: 4d83a32b193feb7eba25c29c737a3dc63d754f4b -->
 # ADR-013：前端 API 連線策略 — `Polhem.UI.*` 與 `Polhem.Web.*` 兩條 family 分流
 
 [English](adr-013-frontend-api-connection-strategy.md)
@@ -13,9 +13,9 @@ Polhem 在 v4.4 階段同時擁有三類前端 host:
 
 | 前端類型 | 代表套件 | 部署 / 執行環境 |
 |---------|---------|----------------|
-| **桌面端 / native UI** | `Polhem.UI.Core`(共通)、`Polhem.UI.Avalonia`、`Polhem.UI.Maui`、`Polhem.UI.WinForms`(未來,獨立 repo) | iOS / Android / macOS / Windows / Linux / 桌面 OS native |
+| **桌面端 / native UI** | `Polhem.UI.Core`(共通)、`Polhem.UI.Avalonia`、當時的 `Bee.UI.Maui`(已移除)、`Polhem.UI.WinForms`(未來,獨立 repo) | iOS / Android / macOS / Windows / Linux / 桌面 OS native |
 | **Blazor Server** | `Polhem.Web.Blazor.Server` | ASP.NET Core server-rendered,with SignalR circuit |
-| **Blazor WASM** | `Polhem.Web.Blazor.Wasm` | Browser sandbox(WebAssembly) |
+| **Blazor WASM** | 當時的 `Bee.Web.Blazor.Wasm`(已移除) | Browser sandbox(WebAssembly) |
 
 這三類前端**對「如何取得 / 持久化 API 連線狀態」的需求結構性不同**:
 
@@ -59,7 +59,7 @@ v4.4 加入 Blazor RCL 時若強行讓 Blazor 走 `Polhem.UI.Core`,就會踩到�
   - `ClientInfo.ApplyLoginResult(loginResponse)` 套用登入結果
   - 透過 `ClientInfo.SystemApiConnector` / `ClientInfo.CreateFormApiConnector(progId)` 取得 connector
   - 持久化由 `IEndpointStorage`(預設實作:檔案);UI 對話流程由 `IUIViewService` 提供
-- **目前成員**(現況見文末後記):
+- **目前成員**(現況見文末「實作演進」):
   - `Polhem.UI.Core`(共通)
   - `Polhem.UI.Avalonia`(桌面 — Windows / macOS / Linux,Avalonia 12.x;行動端 iOS / Android 亦由此覆蓋。DataGrid binding 策略見 [ADR-020](adr-020-avalonia-datagrid-binding-strategy.zh-TW.md))
   - 未來:`Polhem.UI.WinForms`、`Polhem.UI.Wpf` 等同理
@@ -74,7 +74,7 @@ v4.4 加入 Blazor RCL 時若強行讓 Blazor 走 `Polhem.UI.Core`,就會踩到�
   - `SystemApiConnector` / `FormApiConnector` 由 DI scope 注入到 Razor component
   - 狀態管理由 component / `CascadingValue` / Razor scoped service 處理
   - **WASM 嚴禁相依任何後端組件**(Repository / Business / Hosting 等),由相依鏈強制
-- **目前成員**:`Polhem.Web.Blazor.Server`(現況見文末後記)
+- **目前成員**:`Polhem.Web.Blazor.Server`(現況見文末「實作演進」)
 
 ### Family 判別準則(新加套件時依此判斷)
 
@@ -121,16 +121,36 @@ Web / Blazor 環境結構性不同,**不該勉強套用**。
 - **`Polhem.UI.Core` 本身的 static state DI 化**:屬於桌面端 family 內的重構,不影響 Web family,留後續獨立決策
 - **Blazor Hybrid(MAUI 內嵌 Blazor)**:可能需要橫跨兩 family,屆時開新 ADR 評估
 
-## 後記(2026-07-31)—— 成員名冊更新
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+### 2026-07-31：成員名冊更新
 
 **本 ADR 的決策不變**:兩條 family 分流、以及「是否消費 `Polhem.UI.Core` 抽象」的判別準則,
 今日仍然有效。變的只是名冊 —— UI 於 2026-07-28 收斂為 **Avalonia + Blazor.Server 雙軌**,
-`Polhem.UI.Maui` 與 `Polhem.Web.Blazor.Wasm` 兩個套件已移除:
+當時的 `Bee.UI.Maui` 與 `Bee.Web.Blazor.Wasm` 兩個套件已移除(在專案更名為 Polhem 之前):
 
 | 原成員 | 現況 | 原因 |
 |--------|------|------|
-| `Polhem.UI.Maui` | **已移除** | `Polhem.UI.Avalonia` 的 `net10.0-ios` / `net10.0-android` head 已覆蓋行動端,不需第二套 native family |
-| `Polhem.Web.Blazor.Wasm` | **已移除** | 夾在 Avalonia(離線 / native 體驗)與 Blazor Server(SEO、嵌入既有網站、螢幕閱讀器、免下載 runtime)之間,無獨有的適用區間 |
+| `Bee.UI.Maui` | **已移除** | `Polhem.UI.Avalonia` 的 `net10.0-ios` / `net10.0-android` head 已覆蓋行動端,不需第二套 native family |
+| `Bee.Web.Blazor.Wasm` | **已移除** | 夾在 Avalonia(離線 / native 體驗)與 Blazor Server(SEO、嵌入既有網站、螢幕閱讀器、免下載 runtime)之間,無獨有的適用區間 |
 
 因此 Family A 現存成員為 `Polhem.UI.Core` + `Polhem.UI.Avalonia`,Family B 為 `Polhem.Web.Blazor.Server`。
 上文「背景」一節的三類前端表格描述的是 v4.4 當時的狀態,保留以呈現決策脈絡。
+
+### 2026-09-27：連線相關實作
+
+- **預設的 endpoint 儲存。** `ClientInfo.EndpointStorage` 與 `ClientInfo.ApiKeyStorage` 預設為
+  `FileEndpointStorage`(`src/Polhem.UI.Core/FileEndpointStorage.cs`),把 endpoint 與 API key 存在每位使用者的
+  本機應用程式資料夾,而不是組件旁的檔案(iOS 上為唯讀)。沒有持久檔案系統的瀏覽器 host 會替換這兩者。
+  `ClientInfo` 的 static access token 欄位現名為 `s_accessToken`。
+- **Local 模式接收 host 的 service provider。** `LocalApiProvider` 與 local connector 的建構子接收
+  `IServiceProvider`;process 層級的 `ApiClientInfo.LocalServiceProvider` 已移除。Blazor Server host 經由
+  `PolhemApiConnectorFactory` 傳入自己的容器,native family 則把 provider 放在 `ClientInfo.LocalServiceProvider`。
+- **Blazor connector factory 不再退回共用 session。** 會退回 process 層級 session 狀態的
+  `PolhemApiConnectorFactory` 建構子已移除;factory 以每個 circuit 為 scope,一律接收該 circuit 的
+  `ApiSessionContext`(`src/Polhem.Web.Blazor.Server/DependencyInjection/PolhemApiConnectorFactory.cs`)。
+- **共用邏輯下移到 `Polhem.Api.Client`。** 權限 capability resolver
+  (`ElementCapabilityResolver`,`src/Polhem.Api.Client/Permissions/`)從 `Polhem.UI.Core` 移到該處,讓兩個
+  family 都能使用,與上文「負面」後果所預期的做法一致。

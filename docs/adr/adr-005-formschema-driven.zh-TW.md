@@ -1,4 +1,4 @@
-<!-- source: adr/adr-005-formschema-driven.md blob: 24d72642e0207ac1c2ccc39721e1a23dfa8680ea -->
+<!-- source: adr/adr-005-formschema-driven.md blob: e4575894d66cc49338ce74d13b264f8d2eb419f7 -->
 # ADR-005：FormSchema 定義驅動架構
 
 [English](adr-005-formschema-driven.md)
@@ -39,13 +39,17 @@
 - `Polhem.Definition/Forms/FormSchema.cs`：定義中樞，包含所有欄位、表格、關聯
 - `Polhem.Definition/Database/TableSchema.cs`：資料庫維度的投影，由 FormSchema 衍生
 - `Polhem.Definition/Layouts/FormLayout.cs`：UI 維度的投影
-- `Polhem.Db/Providers/SqlServer/SqlFormCommandBuilder.cs`：依據 FormSchema 自動產生 SQL
+- `Polhem.Db/Providers/` 下各 provider 的 `IFormCommandBuilder` 實作（如 `SqlServer/SqlFormCommandBuilder.cs`）：依據 FormSchema 自動產生 SQL
 - `Polhem.Db/Dml/SelectCommandBuilder.cs`：組合 SELECT / FROM / WHERE / ORDER BY
 - 架構詳細說明於 `docs/en/architecture-overview.md`
 - 資料存取層的具體模式（FormMap）說明於 `docs/formmap.zh-TW.md`
-  —— **該文件已隨下方後記所述的名稱取消一併移除**。
+  —— **該文件已隨下方「實作演進」所述的名稱取消一併移除**。
 
-## 後記（2026-08-13）：「FormMap」這個名稱已取消
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+### 2026-08-13：「FormMap」這個名稱已取消
 
 上文提到的 **FormMap** 是當時為「以 `FormSchema` 為單位、在執行期依定義動態產生 SQL」這個做法取的名字。
 該名稱在 `src/` 從未對應任何型別、介面或命名空間——實際做這件事的是 `Polhem.Db` 的
@@ -57,3 +61,11 @@
 標題為「FormSchema 驅動的資料庫存取」。
 
 上文維持原用語，以保留當時的決策脈絡。
+
+### 2026-09-27：由什麼檢查一致性
+
+「理由」中的「一致性保證」沒有指出執行機制。現在檢查它的是 `src/Polhem.Analyzers/` 的定義 analyzer，會在建置期回報，其中包括：
+POLHEM2001（FormSchema 的資料表未在 DbCategorySettings 對應的分類下註冊）、POLHEM2002（FormSchema 的資料表沒有 TableSchema）、
+POLHEM2005（FormSchema 沒有 FormLayout）與 POLHEM2006（FormSchema 中會持久化的欄位不在 TableSchema 裡）。
+它們讀取專案以 `AdditionalFiles` 提供的定義檔（預設由套件的 `buildTransitive` targets 提供 `Define\**\*.xml`），
+因此在建置之外修改的定義檔不受它們檢查。

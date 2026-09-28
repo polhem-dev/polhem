@@ -15,7 +15,7 @@ The premises of ADR-003 (use a static Service Locator) no longer apply:
 - The framework has moved from netstandard2.0 to **net10.0** and can use `Microsoft.Extensions.DependencyInjection`
   directly; there is no longer any need to avoid a DI container to stay compatible across targets
 - The test isolation cost accumulated by the static facades exceeds the original benefit of "simpler
-  initialization": the inventory in the main plan showed that the BackendInfo family of static classes was referenced
+  initialization": an inventory at the time showed that the BackendInfo family of static classes was referenced
   by **159 tests**, which needed several mechanisms such as `GlobalFixture` / `TempDefinePath` /
   `[Collection("Initialize")]` to stay isolated, and process-wide static races still occurred frequently
 - BOs have implicit dependencies (a caller's dependencies are not declared explicitly in its constructor), are
@@ -53,8 +53,7 @@ The design scope, invariants and design principles are in the "Decision" and "Co
 - **BO subclasses still need zero DI registration**: an ERP application will have thousands of `FormBusinessObject`
   subclasses, dispatched from the progId XML table; application developers writing a new BO should not have to touch
   the DI API. Instead, `IPolhemContext` aggregates the core services every BO needs, and the factory constructs the
-  BO with `ActivatorUtilities.CreateInstance(sp, boType, accessToken, progId, isLocalCall)` (see the main plan
-  § "Design principles §4")
+  BO with `ActivatorUtilities.CreateInstance(sp, boType, accessToken, progId, isLocalCall)`
 - **The migration is a v5.0 breaking change**: it takes the full DI path, leaves no `[Obsolete]` transition layer,
   and introduces no dual constructors or compatibility adapters. Each phase removes every reference to that layer's
   static facades within a single PR
@@ -73,7 +72,7 @@ The design scope, invariants and design principles are in the "Decision" and "Co
 
 ### Process-wide statics kept (registry-style, written once, no effect on concurrency)
 
-- `SysInfo` — process-wide debug flag / payload options (written once)
+- `SysInfo` — process-wide version, debug flag and the type namespaces allowed on the wire (written once)
 - `CacheInfo.Provider` — the cache backend (set once per host)
 - `DbProviderRegistry` — the registry of ADO.NET `DbProviderFactory`s
 - `DbDialectRegistry` — the registry of the framework's `IDialectFactory`s
@@ -109,6 +108,25 @@ For the full reference see
 - Replaced by `IClassFixture<PolhemTestFixture>` (a per-class `IServiceProvider`) + `SharedDbFixture` (process-wide
   shared DB schema/seed)
 - xUnit parallelism restored: a local wall-clock parallel speedup of about 2.7x (2749 tests)
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: how a BO is constructed.** `BusinessObjectFactory.CreateBusinessObject`
+  (`src/Polhem.Business/BusinessObjectFactory.cs`) builds the BO with
+  `Activator.CreateInstance(type, ctx, accessToken, progId, isLocalCall)`: the context is passed explicitly, so a BO
+  constructor cannot ask the container for further services. `IPolhemContext` has been renamed
+  `IBusinessObjectContext`.
+- **2026-09-27: the local-mode holder.** `ApiClientInfo.LocalServiceProvider` has been removed. `LocalApiProvider` and
+  the local connector constructors take the `IServiceProvider`, and the native UI heads keep it on
+  `ClientInfo.LocalServiceProvider` (`src/Polhem.UI.Core/ClientInfo.cs`).
+- **2026-09-27: test parallelism.** Several test assemblies disable parallelization for the whole assembly again,
+  because their tests share process-wide state such as `ApiServiceOptions` (for example `Polhem.Api.Core.UnitTests`
+  and `Polhem.ObjectCaching.UnitTests`; each states its reason next to its `CollectionBehavior` attribute). In
+  `Polhem.Api.Core.UnitTests` the `ApiServiceOptionsState` collection named in the addendum is kept only as a marker.
+  The other test assemblies still run in parallel.
 
 ## Implementation references
 

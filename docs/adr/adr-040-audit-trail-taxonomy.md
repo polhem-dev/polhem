@@ -178,7 +178,7 @@ the common columns as usual; only `DbAnomalyEntry` does not have one. It overrid
 that stays as it is. What a shared structure has to decide is not which columns are common, but who may do without the
 whole set.
 
-**Not included this time**: the read side is still served entirely by `LogBusinessObject`, and its nine query methods
+**Not included this time**: the read side is still served entirely by `LogBusinessObject`, and its query methods
 share the authorization of the reserved progId `AuditLog`. In an ERP, compliance auditing and operational
 troubleshooting are two different roles, so splitting read permissions would be more valuable, but that is a question
 for the permission model, not for the write interface, and is handled separately.
@@ -330,4 +330,29 @@ ProgIds get change / access logging, matching Odoo `auditlog.rule`; see [ADR-041
 - The design direction for retention and partitioning (databases split by year, append-only, hash chain) is in the
   multi-database scenarios of the [database settings guide](../en/database-settings-guide.md).
 - Related ADRs: [ADR-017](adr-017-db-cache-invalidation.md), [ADR-018](adr-018-db-define-storage.md),
-  [ADR-019](adr-019-permission-authorization-model.md).
+  [ADR-019](adr-019-permission-authorization-model.md), [ADR-027](adr-027-audit-trail.md) (the earlier audit trail
+  design this ADR classifies), [ADR-041](adr-041-per-form-audit-rule.md).
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **The diagnostic types named in the Context and in decision 2 are gone.** `ILogWriter` / `LogEntry` were removed as
+  dead code (see [ADR-027](adr-027-audit-trail.md), Implementation evolution), and on 2026-09-27 the hand-rolled
+  tracing subsystem (`Tracer` / `TraceContext`) was removed as well. Purely technical observability now goes through
+  the host's `ILogger` only; the separation from business auditing that decision 2 makes is unchanged.
+- **The optional EAV level was never built.** Decision 5 and the Consequences describe it as the way to get field-level
+  statistics; nothing in `src/` implements it, and [ADR-041](adr-041-per-form-audit-rule.md) deliberately does not copy
+  Odoo's full / fast levels. Field-level queries on the change log parse the DiffGram.
+- **There is no per-entry synchronous write.** Decision 6 says change log entries can be forced to write synchronously.
+  What exists is the deployment-wide switch `AuditLogOptions.UseBackgroundWriter` (`false` writes every entry
+  synchronously), and the background writer falls back to a synchronous write when its bounded queue is full
+  (`src/Polhem.Definition/Settings/SystemSettings/AuditLogOptions.cs`). The background writer persists each batch in
+  one transaction (`src/Polhem.Repository/AuditLog/AuditLogWriteRepository.cs`).
+- **2026-09-27: names on the read and write sides.** The read-side business object is now `AuditLogBusinessObject`
+  (`src/Polhem.Business/AuditLog/`), still under the reserved progId `AuditLog`; its database anomaly queries require a
+  deployment administrator (`DeploymentAction.ReadDbAnomalyLog`) rather than the company-scoped `AuditLog` read
+  permission. The no-op writer is `NullLogWriter`, and the terminal sink behind the background and synchronous writers is
+  the public, replaceable `IAuditLogSink` (`src/Polhem.Hosting/Audit/`). The log tables store a token fingerprint (`token_fingerprint`) instead
+  of the access token.

@@ -274,8 +274,8 @@ The mapping from `DbScope` → `databaseId` is performed in one place by
 | `Company` | accessToken → `SessionInfo.CompanyId` → `CompanyInfo.CompanyDatabaseId` |
 
 In a multi-company setup, several companies can share the same `CompanyDatabaseId` string (for example, several small
-companies sharing the `"biz_shared_01"` physical DB), with row-level partitioning through the `sys_company_rowid`
-column on the tables. The router treats the "several companies on one databaseId" and "separate databaseId" setups
+companies sharing the `"biz_shared_01"` physical DB); separating their rows then relies on a company column on the
+tables, which the framework's form repositories neither add nor filter by. The router treats the "several companies on one databaseId" and "separate databaseId" setups
 exactly the same: the flexibility is decided by the CompanyInfo settings, and the routing logic itself does not
 change.
 
@@ -314,7 +314,26 @@ DatabaseItem a business operation should use". Once the session model was settle
 When `CompanyInfo` landed in P1, it originally had a `LogDatabaseId` field, in anticipation of some companies wanting
 a separate log DB. But it was later decided that `DbScope.Log` is always `"log"`, to support writing logs before
 EnterCompany, so `LogDatabaseId` became a dead field and was removed. Log isolation between companies is handled at
-row level by `sys_company_rowid` (the same as the company DB), with no need for physical DB isolation.
+row level by the `company_id` column of the log tables, with no need for physical DB isolation.
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-09-27: the category ids are fixed.** Key point 1 says the three categories are not hardcoded and that a
+  project can define its own. The current code accepts only `common`, `company` and `log`:
+  `RepositoryFactory.ParseCategoryId` (`src/Polhem.Repository/Factories/RepositoryFactory.cs`) throws for any other
+  `FormSchema.CategoryId`, and the analyzers report other ids at build time (POLHEM1001 for a FormSchema, POLHEM1002
+  for a category in DbCategorySettings). The many-to-one mapping between a category and its DatabaseItems is unchanged.
+- **2026-09-27: `CategoryId` at runtime.** The Decision, the side note under it and "Roles across the three stages"
+  limit `CategoryId` to design and deployment. `FormSchema.CategoryId` is also read at runtime, where it selects the
+  `DbScope` a form repository routes through (see "Later extension: runtime routing" above); connections are still
+  obtained by `DatabaseItem.Id`.
+- **2026-09-27: validation.** No `DbCategoryValidator` was added. Unknown category ids are reported by POLHEM1001 and
+  POLHEM1002 and refused at runtime as described above, and POLHEM2001 reports a FormSchema table that is not
+  registered under its category, so the `DbCategory.Tables` child nodes are no longer only a documentary index. The
+  rules are listed in [Analyzer rules](../en/analyzer-rules.md).
 
 ## Related documents
 

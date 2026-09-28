@@ -1,6 +1,6 @@
 # Polhem.UI.Core
 
-> `Polhem.UI.*` native 前端家族（目前為 Avalonia；未來 WinForms / WPF）共享的用戶端基礎層：連線狀態、API 連接器、endpoint 持久化，以及用戶端權限能力解析。
+> `Polhem.UI.*` native 前端家族（目前為 Avalonia）共享的用戶端基礎層：連線狀態、連接器建立、endpoint 與 API 金鑰持久化。
 
 [English](README.md)
 
@@ -17,73 +17,67 @@
 ## 概觀
 
 `Polhem.UI.Core` 是所有 `Polhem.UI.*` 前端共用、與 UI 框架無關的基礎層。它持有 per-process 的用戶端連線
-狀態（`ClientInfo`）、抽象化服務 endpoint 的持久化位置（`IEndpointStorage`），並將 server 下發的
-權限快照轉換為每個 UI 元素的能力決策（`ElementCapabilityResolver`）。它不含任何 UI 框架型別，因此
-Avalonia 與 Blazor 可共用同一套連線與權限邏輯，各自以自己的方式渲染。
+狀態（`ClientInfo`），並抽象化服務 endpoint 與 API 金鑰的持久化位置（`IEndpointStorage`、`IApiKeyStorage`）。
+它不含任何 UI 框架型別。
+
+`Polhem.Web.Blazor.Server` 在同一行程服務多位使用者，因此把連線狀態放在各 circuit，而不是 `ClientInfo`。
+兩個家族真正共用的部分在下一層的 `Polhem.Api.Client`：連接器、`ClientDefineAccess`、`FormDefinitionLoader`
+與權限能力解析器。
 
 ## 主要型別
 
 ### 連線狀態
 
-- `ClientInfo` -- 用戶端連線的靜態單例。持有 `AccessToken`（per-process token 模型：重設 token 會
-  清掉快取的 `SystemApiConnector`、`ClientDefineAccess` 與能力快照）、延遲建立 `SystemApiConnector`
-  與 `ClientDefineAccess`、透過 `CreateFormApiConnector(progId)` 產生表單層級連接器、經
-  `InitializeAsync` / `SetEndpointAsync` 解析 endpoint（本機 vs. 遠端），並套用登入 / EnterCompany
-  結果（`ApplyLoginResult`、`ApplyEnterCompanyResult`、`ClearCompanyContext`）。`ResetDefineCache`
-  在切換租戶後丟棄快取的定義資料。
+- `ClientInfo` -- 用戶端的靜態連線狀態。持有 `AccessToken`（per-process token 模型：重設 token 會
+  清掉快取的 `SystemApiConnector`、`DefineAccess` 與能力快照）、延遲建立 `SystemApiConnector` 與
+  `DefineAccess`（`ClientDefineAccess`）、透過 `CreateFormApiConnector(progId)` 與 `CreateAuditLogApiConnector()`
+  產生連接器、經 `InitializeAsync` / `SetEndpointAsync` 解析 endpoint（本機或遠端），並套用登入 /
+  EnterCompany 結果（`ApplyLoginResult`、`ApplyEnterCompanyResult`、`ClearCompanyContext`）。
+  `ResetDefineCache` 在切換租戶後丟棄快取的定義資料。
+- `ClientInfo.LocalServiceProvider` -- 在行程內執行後端的 head 的後端服務提供者（以 `AddPolhemFramework`
+  建立）；`ClientInfo` 建立的本機連接器使用它。
+- `ClientInfo.UseDefinitionLoader` / `DefinitionLoader` -- 透過 `FormDefinitionLoader` 取得在地化的表單定義。
 
-### Endpoint 持久化
+### Endpoint 與 API 金鑰持久化
 
-- `IEndpointStorage` -- 服務 endpoint 的持久化契約（`LoadEndpoint` / `SetEndpoint` / `SaveEndpoint`）。
-- `EndpointStorage` -- 預設實作，backing 為 `ClientInfo.ClientSettings`（`{ExeName}.Settings.xml`）。
-  當預設檔案位置不適用時，前端會將 `ClientInfo.EndpointStorage` 指派為平台專屬實作 —— 例如
-  `FileEndpointStorage`（於 `Polhem.UI.Avalonia`）。
-- `IApiKeyStorage` / `ApiKeyStorage` -- `X-Api-Key` 值的同一組契約與預設實作
-  （`LoadApiKey` / `SetApiKey` / `SaveApiKey`），經 `ClientInfo.ApiKeyStorage` 指派。**凡是因為平台
-  無法寫入組件路徑而替換 `EndpointStorage` 的 host，也必須替換這個**；平台 storage 類別可同時實作
-  兩個介面並指派給兩者（`FileEndpointStorage` 即如此）。
-- `ClientInfo.ApplyApiKey(defaultApiKey)` -- 套用存放的金鑰，存放為空時以應用內建值作為種子寫入。
-  這讓內建常數變成「首次啟動的預設值」而非硬編碼金鑰：此後以存放值為準，更換不需重新編譯。
-  `ClientInfo.SetApiKey` 則持久化新金鑰並立即套用到後續呼叫。
+- `IEndpointStorage` -- 已設定服務 endpoint 的持久化合約（`LoadEndpoint` / `SetEndpoint` / `SaveEndpoint`）。
+- `IApiKeyStorage` -- `X-Api-Key` 值的同一組合約（`LoadApiKey` / `SetApiKey` / `SaveApiKey`）。
+- `FileEndpointStorage` -- `ClientInfo.EndpointStorage` 與 `ClientInfo.ApiKeyStorage` 兩者的預設：在每位使用者
+  的本機應用程式資料目錄下、每個應用程式一個資料夾，每個值一個單行文字檔。各平台的資料夾位置列在它的
+  XML 文件中。Browser WASM 沒有持久的檔案系統，因此瀏覽器 host 會把兩個屬性指派為以瀏覽器儲存為後端的實作。
+- `ClientInfo.ApplyApiKey(defaultApiKey)` -- 套用已儲存的金鑰；儲存為空時以應用程式出貨時帶的值初始化。
+  如此出貨常數只是首次執行的預設值而非寫死的金鑰：之後以儲存值為準，不需重新編譯即可變更。
+  `ClientInfo.SetApiKey` 會持久化新金鑰，並套用到後續呼叫。
 
-> 用戶端持有的 API 金鑰在密碼學意義上並非機密 —— 它可以從已發佈的應用還原出來。它識別的是
-> **哪個應用**在呼叫；**使用者**的鑑別仍是 access token 的職責。
+> 用戶端持有的 API 金鑰在密碼學意義上**不是機密** —— 它可以從出貨的應用程式中取回。它識別的是
+> *哪個應用程式*在呼叫；驗證*使用者*仍是存取權杖（access token）的職責。
 
-### 主機服務
+### Host 服務
 
-- `IUIViewService` -- 由主機 UI 框架提供的檢視服務（例如 `ShowApiConnectAsync`，在 endpoint 缺失或
-  無法連線時彈出連線設定）。
+- `IUIViewService` -- 由 host UI 框架提供的檢視服務（例如 endpoint 缺漏或無法連線時，以
+  `ShowApiConnectAsync` 提示使用者設定連線）。
 
-### 權限能力解析
+### 權限能力
 
-- `IElementCapabilityResolver` / `ElementCapabilityResolver` -- 與 UI 無關的純解析器，將 per-model
-  權限快照（通常為 `ClientInfo.Capabilities`）轉換為元素層級決策：`Can(schema, action, capabilities)`
-  判斷命令、`ResolveField(schema, fieldName, tableName, capabilities)` 判斷敏感欄位。快照為 `null`
-  代表停用強制，所有元素維持完整能力。
-- `FieldCapability` -- 單一欄位解析後的能力（`Visible` / `ReadOnly`），由消費端 UI 與欄位的 layout
-  狀態合併。`FieldCapability.Allowed` 為不受限的預設值。
+- `ClientInfo.Capabilities` -- 進入公司時取得的 per-model 權限快照。把它轉成元素層級決策的
+  `ElementCapabilityResolver` 位於 `Polhem.Api.Client`，兩個 UI 家族都使用它。
 
-> 用戶端能力解析**僅為 UX 降級**。後端始終是權威的安全邊界。
+> 用戶端能力解析**僅為 UX 降級**。後端仍是權威的安全邊界。
 
 ## 設計慣例
 
-- **per-process token 模型** -- `ClientInfo` 是持有整個行程單一 access token 的靜態單例；變更 token
-  會使快取的連接器、定義存取器與能力快照失效。
-- **與 UI 框架無關** -- 不滲入任何 UI 框架型別，因此同一套連線與權限邏輯服務所有 `Polhem.UI.*` 前端。
-- **可插拔的 endpoint 儲存** -- 主機以平台適用的 `IEndpointStorage` 實作覆寫 `ClientInfo.EndpointStorage`。
-- **async-friendly 初始化** -- `InitializeAsync` / `SetEndpointAsync` 驗證 endpoint 並初始化連接器
-  時不阻塞，因此在單執行緒執行環境（browser WASM）上安全。
-- **啟用 Nullable Reference Types**（`<Nullable>enable</Nullable>`）。
+- **Per-process token 模型** -- `ClientInfo` 為靜態類別，整個 process 持有一個 access token；變更 token 會
+  使快取的連接器、定義存取器與能力快照失效。
+- **與 UI 框架無關** -- 不引入任何 UI 框架型別，因此同一套連線邏輯可服務所有 `Polhem.UI.*` 前端。
+- **可插拔的 endpoint / API 金鑰儲存** -- host 以適合平台的實作替換 `ClientInfo.EndpointStorage` 與
+  `ClientInfo.ApiKeyStorage`。
+- **非同步友善的初始化** -- `InitializeAsync` / `SetEndpointAsync` 以非阻塞方式驗證 endpoint 並初始化
+  連接器，因此在單執行緒 runtime（browser WASM）上也安全。
+- 啟用 **Nullable Reference Types**（`<Nullable>enable</Nullable>`）。
 
 ## 目錄結構
 
-```
-Polhem.UI.Core/
-  ClientInfo.cs          # 用戶端連線狀態與連接器工廠
-  IEndpointStorage.cs    # Endpoint 持久化契約
-  EndpointStorage.cs     # 預設的 ClientSettings-backed 實作
-  IUIViewService.cs      # 主機提供的檢視服務
-  VersionInfo.cs         # 套件版本中繼資料
-  Permissions/           # ElementCapabilityResolver、FieldCapability、
-                         # IElementCapabilityResolver
-```
+- `ClientInfo.cs` -- 用戶端連線狀態與連接器建立
+- `IEndpointStorage.cs` / `IApiKeyStorage.cs` -- 持久化合約
+- `FileEndpointStorage.cs` -- 兩者預設的檔案式實作
+- `IUIViewService.cs` -- host 提供的檢視服務

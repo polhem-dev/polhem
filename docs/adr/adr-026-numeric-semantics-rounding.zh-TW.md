@@ -1,4 +1,4 @@
-<!-- source: adr/adr-026-numeric-semantics-rounding.md blob: c2e49cc5ae83397a09c1a4f0db1c10b417b52369 -->
+<!-- source: adr/adr-026-numeric-semantics-rounding.md blob: 2fa68fe964970314c413585d1e3de899e5316283 -->
 # ADR-026：數值語意、公司/貨幣/單位位數與 round-then-sum
 
 [English](adr-026-numeric-semantics-rounding.md)
@@ -34,7 +34,7 @@ ERP 數值（單價、成本、數量、重量、金額、百分比、匯率）�
 
 4. **per-company / per-currency 調整 DB 欄位 scale**（讓儲存精度貼齊業務位數）：省儲存空間、schema 語意精確。**否決**——會導致每加一間公司或一種貨幣就要 `ALTER TABLE`，運維不可行。DB scale 應是與顯示/計算正交的單一高容量上限。
 
-5. **公司覆寫表用 `Dictionary<NumberKind,int>`**：語意直觀。**否決**——`XmlSerializer` 無法乾淨序列化 `Dictionary`，且違反 `definition-collection-convention`（定義層集合一律走 `KeyCollectionBase`）。改用鍵值集合。
+5. **公司覆寫表用 `Dictionary<NumberKind,int>`**：語意直觀。**否決**——`XmlSerializer` 無法乾淨序列化 `Dictionary`，且違反定義層慣例：集合屬性一律繼承框架集合基底（`KeyCollectionBase<T>` 或 `CollectionBase<T>`），不用裸 BCL 集合。改用鍵值集合。
 
 6. **沿用 `NumberFormatPresets` 靜態表**：不動既有碼。**否決**——它是孤立、非語意驅動、0 production caller 的格式字串表，無法承載捨入策略與位數來源。重構為 `NumberKind` enum + `NumberKindProfile`。
 
@@ -71,9 +71,17 @@ ERP 數值（單價、成本、數量、重量、金額、百分比、匯率）�
 - **相容性（既有資料不需遷移）**：`FormField`/`LayoutFieldBase` 加 `NumberKind`、`FormSchema` 加 `CurrencyField`，皆 `[DefaultValue]` 空 → 既有 XML 反序列化不變；`st_company` 新增四欄（`number_formats_xml`/`default_currency`/`cash_rounding_xml`/`allowed_currencies_xml`）與 `CompanyInfo` `[Key(4)]`~`[Key(7)]`，舊資料欄空即全退框架預設；MessagePack 尾端加 key 相容。
 - **新定義型別**：`DefineType.CurrencySettings`（TCURX 式，系統層 ISO 4217 curated 表）與 `DefineType.UnitSettings`（T006 式），走既有 `IDefineStorage` 雙模式（檔案/`st_define`）+ 三棲序列化 + 隨 `GetDefine` ship 給 client；無定義則各自 fallback。
 - **後續規範（新增數值欄時）**：宣告語意欄一律設 `NumberKind`；金額欄視需要綁 `CurrencyField`（原幣可省，走主檔 `sys_currency`）、數量/重量欄綁 `UnitField`；BO 計算一律 `decimal` 且走 `RoundByKind` round-then-sum，禁止全精度加總後才捨、禁止對 `Preserve` 類捨入。
-- **未做（未來項）**：匯率 factor（TCURF）、price unit（KPEIN）、header DIFF 捨入差吸收、Maui/Blazor `NumericEdit` 移植。
+- **未做（未來項）**：匯率 factor（TCURF）、price unit（KPEIN）、header DIFF 捨入差吸收、把 `NumericEdit` 移植到當時的 `Bee.UI.Maui` 專案（已移除）與 Blazor。
 
-## 修訂紀錄
+## 實作演進
+
+### 2026-07-22：`CompanyInfo` 不再有整數 key
+
+「相容性」一項說 `CompanyInfo` 新增 `[Key(4)]`~`[Key(7)]`，且 MessagePack 尾端加 key 相容。
+[ADR-030](adr-030-messagepack-name-based-keys.zh-TW.md) 已把 wire 改為屬性名稱 key，而自
+[ADR-036](adr-036-wire-serialization-externalized.zh-TW.md) 起 `CompanyInfo` 不帶任何 MessagePack attribute：它以名稱為 key
+的 map 傳輸，由 `src/Polhem.Api.Core/MessagePack/CompanyInfoFormatter.cs` 寫出，新增成員必須加在那裡（漏加時
+`WireContractDriftTests` 會回報）。
 
 ### 2026-09-10：公司本幣改為必填
 
@@ -132,6 +140,5 @@ ERP 數值（單價、成本、數量、重量、金額、百分比、匯率）�
 
 - cookbook：`docs/en/development-cookbook.md` §Numeric Semantics, Company Decimals, and Rounding（how-to 與 API 入口）
 - 相關 ADR：[ADR-005](adr-005-formschema-driven.zh-TW.md)（FormSchema 驅動）、[ADR-012](adr-012-session-company-context.zh-TW.md)（session 公司上下文）、[ADR-017](adr-017-db-cache-invalidation.zh-TW.md)（cache 失效）
-- 記憶：`erp-round-then-sum`、`db-param-scale-not-enforced`
 - SAP：ABAP CURR/QUAN 必綁 CUKY/UNIT、ALV `CFIELDNAME`、幣別小數 TCURX、單位小數 T006（ANDEC/DECAN）、逐行捨入/現金捨入 T001R
 - Odoo：`res_currency`（decimal_places/rounding）、`float_round`、稅務 `round_per_line`（預設）vs `round_globally`

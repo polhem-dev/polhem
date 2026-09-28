@@ -1,4 +1,4 @@
-<!-- source: adr/adr-012-session-company-context.md blob: 0b6b78a703959bdd78751af6368d1fe850a6b485 -->
+<!-- source: adr/adr-012-session-company-context.md blob: 656892e0c9609cb2c87bdced2b65d50a760dd138 -->
 # ADR-012：Session 公司情境模型（兩階段 session lifecycle）
 
 [English](adr-012-session-company-context.md)
@@ -196,13 +196,21 @@ EnterCompany(companyId)    ←→  LeaveCompany()
 
 | 範圍 | 影響 |
 |------|------|
-| `src/Polhem.Definition.Identity` | 新增 `CompanyInfo` 類別、`ICompanyInfoService` 介面；`SessionInfo` 加 `CompanyId` 欄位 |
+| `src/Polhem.Definition/Identity/` | 新增 `CompanyInfo` 類別、`ICompanyInfoService` 介面；`SessionInfo` 加 `CompanyId` 欄位 |
 | `src/Polhem.ObjectCaching` | 新增 `CompanyInfoCache`、`CompanyInfoService`；`ICacheContainer` 加 `CompanyInfo` |
 | `src/Polhem.Business/System` | `SystemBusinessObject` 加 3 個方法；`ISystemBusinessObject` 介面更新 |
 | `src/Polhem.Api.Core` | 新增 `EnterCompany` / `LeaveCompany` / `Logout` 的 wire DTO 與 contract 介面；`JsonRpcErrorCode` 加 2 個值 |
 | `src/Polhem.Api.Client` | `SystemApiConnector` 加 3 組 async + sync wrapper |
-| `src/Polhem.Definition.SystemActions` | 加 3 個常數 |
+| `src/Polhem.Definition/SystemActions.cs` | 加 3 個常數 |
 | 測試 | 11 個 P3 EnterCompany 測試 + 6 個 P4 LeaveCompany 測試 + 6 個 P5 Logout 測試 + 4 個 P6 lifecycle 整合測試 |
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-05-15：公司權限驗證已實作。** 「取捨」一節所述的延後已解決：`EnterCompany` 現在只在公司存在、已啟用，且使用者在 `st_user_company` 表中被授權時才放行，三種失敗一律以同一個 `CompanyAccessDenied` 回應。檢查位於 `SessionCompanyBinder`（`src/Polhem.Business/Session/SessionCompanyBinder.cs`），由 `src/Polhem.Business/System/SystemBusinessObject.Session.cs` 呼叫；session 重建也走同一個 binder，因此撤銷的公司權限會在 session 重建時生效。
+- **2026-07-23：contract 介面搬移。** `EnterCompany` / `LeaveCompany` / `Logout` 的 contract 介面現在位於 `src/Polhem.Api.Contracts/System/`；wire DTO 仍在 `src/Polhem.Api.Core/Messages/System/`。
+- **2026-09-27：公司情境改為單一不可變的 scope。** `SessionInfo.CompanyId` 不再單獨設定：公司 ID 與從公司快照下來的所有值（客製代碼、角色、record-scope 的 row id）組成一個不可變的 `SessionCompanyScope`（`src/Polhem.Definition/Identity/SessionCompanyScope.cs`），以 `SessionInfo.CompanyScope` 公開。`EnterCompany` 以單次寫入替換它，`LeaveCompany` / `Logout` 將它重設為 `SessionCompanyScope.None`，因此同一 session 上並行的請求讀到的要嘛整份是舊公司、要嘛整份是新公司。
 
 ## 相關文件
 

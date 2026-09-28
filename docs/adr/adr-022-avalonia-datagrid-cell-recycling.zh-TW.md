@@ -1,4 +1,4 @@
-<!-- source: adr/adr-022-avalonia-datagrid-cell-recycling.md blob: be5721664aa5adcfabe028ddbc5e3920a51075e9 -->
+<!-- source: adr/adr-022-avalonia-datagrid-cell-recycling.md blob: b595c0a0a86355ab717fdf58b8249a512c6ce6c6 -->
 # ADR-022：Avalonia DataGrid 清單儲存格不啟用模板回收
 
 [English](adr-022-avalonia-datagrid-cell-recycling.md)
@@ -62,7 +62,7 @@ templateColumn.CellTemplate = new FuncDataTemplate<DataRowView>(
 
 - [ADR-020：Avalonia DataGrid 對 DataTable 列的綁定策略](adr-020-avalonia-datagrid-binding-strategy.zh-TW.md) — 本 ADR 修正其範例中的 `supportsRecycling: true`
 - [ADR-021：Avalonia DataGrid in-cell / EditForm 編輯策略](adr-021-avalonia-datagrid-editing-strategy.zh-TW.md)
-- `src/Polhem.UI.Avalonia/Controls/GridControl.cs` — `BuildColumn` 清單純文字 cell 模板
+- `src/Polhem.UI.Avalonia/Controls/GridControl.Columns.cs` — `BuildColumn` 清單純文字 cell 模板
 
 ## 不在範圍
 

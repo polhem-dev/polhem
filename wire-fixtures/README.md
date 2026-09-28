@@ -5,7 +5,8 @@ written in another language can verify it encodes and decodes bodies the way the
 
 ## Why these exist
 
-The framework's default body codec is MessagePack, assembled from hand-written per-type formatters.
+A request that declares no codec is read as MessagePack, the wire every client before codec
+negotiation speaks, and that wire is assembled from hand-written per-type formatters.
 Mirroring those in another language would create a second authority for the same contract with
 nothing to catch the two drifting apart. The JSON codec exists so a browser client does not have to,
 and these samples are what keeps the two ends honest: the .NET side generates and verifies them, and
@@ -17,9 +18,10 @@ A fixture body is what the **JSON body codec** produces, which is the `Encoded` 
 paths. It is **not** a valid `Plain` request body, and the difference is silent rather than loud:
 
 - `object`-typed members carry a discriminated envelope — `"value": [12, "100"]`. Plain writes and
-  reads the **bare** value (`"value": 100`). Posting a fixture body as Plain does not fail; the
-  member deserializes to a `JsonElement` holding the array and travels on, so a filter value reaches
-  WHERE construction as `[12,"100"]` with no exception and no log line.
+  reads the **bare** value (`"value": 100`), binding it by JSON kind: a string, an integer, a
+  decimal, a boolean, or an array of those. Posting a fixture body as Plain does not fail: the
+  envelope is itself a JSON array, so the member arrives as a two-element array holding `12` and
+  `"100"` and travels on as a list value, with no exception and no log line.
 - Empty collections appear (`"parameters": []`) where a Plain body omits them.
 
 If you are building a `Plain` client, follow
@@ -63,7 +65,10 @@ library gets right; what needs pinning is the JSON shape, which only this framew
   (serialize + compress + encrypt).
 - `codec` names the body codec. Omit it and the body is read as MessagePack, which is what every
   client predating codec negotiation sends. The response comes back in the same codec.
-- `type` is required whenever the body is encoded; the server resolves it against an allow-list.
+- `type` is required whenever the body is encoded. The server does not decode into the type it
+  names: it decodes into the type the addressed method takes, and refuses the request when `type`
+  names a different type or one outside the allowed namespaces. `wire-contracts/type-names.ts` has
+  the names.
 - The pipeline order is always serialize → compress → encrypt, and reverses on the way back.
 
 ## Rules a reader has to get right
@@ -77,8 +82,12 @@ These are the places where a plausible-looking implementation is silently wrong:
   holds neither a decimal's precision nor an integer past 2^53, and `JSON.parse` has already done
   the damage before your own code sees the value. The `datatable` fixture uses `decimal.MaxValue`
   and 2^53+1 for exactly this reason: read them as numbers and they will not match.
-- **A null `object`-typed member is absent**, not written as `null`. Treat a missing property as
-  null.
+- **A member at its default is absent.** `null` (an `object`-typed member included), `0`,
+  `false`, an enum's first member, an empty Guid and `0001-01-01T00:00:00` are left out rather than
+  written, so treat a missing property as that default. The exception is a member whose initial
+  value in .NET is not the CLR default: it is always written, and `wire-contracts/messages.d.ts`
+  declares it required. `WireDefaultOmissionTests` in `tests/Polhem.Api.Core.UnitTests` fails when
+  a member breaks this rule.
 - **`DataTable` cells carry no discriminator** — their types come from the column metadata in the
   same document, so the table shape is identical to a Plain payload's. That is what makes the
   quoting rule above load-bearing here: a cell has nothing else to say "this is a decimal".

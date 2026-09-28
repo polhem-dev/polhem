@@ -62,8 +62,9 @@ rejected" (the adopted design is in the next section).
    orthogonal to display/calculation.
 
 5. **Use `Dictionary<NumberKind,int>` for the company override table**: semantically intuitive. **Rejected**:
-   `XmlSerializer` cannot serialize a `Dictionary` cleanly, and it violates `definition-collection-convention`
-   (definition-layer collections always use `KeyCollectionBase`). A key-value collection is used instead.
+   `XmlSerializer` cannot serialize a `Dictionary` cleanly, and it violates the definition-layer convention that a
+   collection property inherits a framework collection base (`KeyCollectionBase<T>` or `CollectionBase<T>`) rather
+   than being a bare BCL collection. A key-value collection is used instead.
 
 6. **Keep the static `NumberFormatPresets` table**: no change to existing code. **Rejected**: it is an isolated table
    of format strings, not semantics-driven, with 0 production callers, and it cannot carry the rounding strategy or
@@ -144,9 +145,17 @@ rounding, and storage precision kept orthogonal". Six core decisions:
   round-then-sum; summing at full precision and rounding afterwards is forbidden, and so is rounding a `Preserve`
   kind.
 - **Not done (future items)**: exchange rate factors (TCURF), price unit (KPEIN), absorbing the DIFF rounding
-  difference in the header, porting `NumericEdit` to Maui/Blazor.
+  difference in the header, porting `NumericEdit` to the then `Bee.UI.Maui` project (since removed) and to Blazor.
 
-## Revision history
+## Implementation evolution
+
+### 2026-07-22: `CompanyInfo` has no integer keys
+
+The "Compatibility" item says `CompanyInfo` gained `[Key(4)]`~`[Key(7)]` and that appending keys at the end is
+MessagePack compatible. [ADR-030](adr-030-messagepack-name-based-keys.md) switched the wire to property-name keys,
+and since [ADR-036](adr-036-wire-serialization-externalized.md) `CompanyInfo` carries no MessagePack attributes: it
+travels as a name-keyed map written by `src/Polhem.Api.Core/MessagePack/CompanyInfoFormatter.cs`, where a new
+member has to be added (`WireContractDriftTests` reports one that is missing).
 
 ### 2026-09-10: the company's home currency becomes mandatory
 
@@ -224,7 +233,6 @@ As a consequence:
 - Related ADRs: [ADR-005](adr-005-formschema-driven.md) (FormSchema-driven),
   [ADR-012](adr-012-session-company-context.md) (session company context),
   [ADR-017](adr-017-db-cache-invalidation.md) (cache invalidation)
-- Memory: `erp-round-then-sum`, `db-param-scale-not-enforced`
 - SAP: ABAP CURR/QUAN must bind CUKY/UNIT, ALV `CFIELDNAME`, currency decimals TCURX, unit decimals T006
   (ANDEC/DECAN), per-line rounding / cash rounding T001R
 - Odoo: `res_currency` (decimal_places/rounding), `float_round`, tax `round_per_line` (default) vs `round_globally`

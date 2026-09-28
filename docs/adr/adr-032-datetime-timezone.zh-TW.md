@@ -1,4 +1,4 @@
-<!-- source: adr/adr-032-datetime-timezone.md blob: 79ebb6bc7df17806b8d52dac2949efa260df19c3 -->
+<!-- source: adr/adr-032-datetime-timezone.md blob: 49197ccd2262a8040f9726dc3403fc44c9810061 -->
 # ADR-032：DateTime 以 UTC 為單一時區來源，Connector 為唯一轉換點
 
 [English](adr-032-datetime-timezone.md)
@@ -549,6 +549,21 @@ D1 對「`FieldDbType.DateTime` 欄位存 UTC」是**強制條件**，而 SQL �
   依賴 ICU 與 tz database，trim + AOT 下失敗形態是 `TimeZoneNotFoundException`，
   桌面完全不重現。
 - **in-process 路徑無序列化邊界**，實作時極易退回「掛序列化入口」的直覺做法。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-08-09：`CreateTime` 的 attribute。** 定義型別已不帶 MessagePack attribute
+  （[ADR-036](adr-036-wire-serialization-externalized.zh-TW.md)），因此 D7 / D8 提到的 `CreateTime` 屬性標的是
+  `[XmlIgnore, JsonIgnore]`（例如 `src/Polhem.Definition/Settings/SystemSettings/SystemSettings.cs`）。它們仍不會被持久化，
+  也仍以 `UtcNow` 初始化。
+- **2026-09-27：trace 型別已移除。** 擁有 `TraceEvent.Time` 與 `TraceContext.Start`（D7 / D8）的追蹤子系統已不存在；
+  其餘系統時間戳仍適用同一規則。
+- **2026-09-27：Connector 取得時區的位置。** 經 `SystemApiConnector` 登入成功時，登入回應中的使用者時區會存進該 connector
+  的 session（`ApiSessionContext.UserTimeZoneId`，`src/Polhem.Api.Client/Connectors/SystemApiConnector.cs`），D4 的轉換即
+  從這裡讀取。因此在單一行程服務多位使用者的宿主（例如每個 circuit 一個 session 的 Blazor Server 應用）中，每位使用者的
+  值都以其本人的時區轉換。
 
 ## 相關
 

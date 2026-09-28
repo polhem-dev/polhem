@@ -1,4 +1,4 @@
-<!-- source: adr/adr-029-lowercase-field-names.md blob: e9561415ff9ce54d2af16b87146310995cbadbe8 -->
+<!-- source: adr/adr-029-lowercase-field-names.md blob: 5aee8e7f1fb00031624e9e2e2616bd19d428a2a7 -->
 # ADR-029：欄位名稱一律小寫（定義 / 資料 / UI 三層一致）
 
 [English](adr-029-lowercase-field-names.md)
@@ -52,6 +52,16 @@
   - 稽核既有資料以「解析端相容新舊大小寫」處理（下游比對本就大小寫無關），不回填改寫不可變的稽核歷史。
   - **前置稽核已完成**：C# 端 0 處大寫字面比較（皆走大小寫無關 `DataColumnCollection`）；Avalonia head 繫結大小寫無關；其餘 UI head（WinForms / Blazor / MAUI）尚未實作，趁此時遷移使其天生一致。
   - **剩餘**：多 DB provider 容器全回歸（SQLite 已驗證）；**發佈時**於 CHANGELOG 標 breaking + 附遷移指南（依 `releasing.md`，CHANGELOG 累積至發版統整）。
+
+## 實作演進
+
+ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對照現行程式碼：
+
+- **2026-09-27：記憶體端的遷移已完成。** 現行程式碼中 `DataTableExtensions.AddColumn` 以 `ToLowerInvariant` 把欄名轉小寫，
+  `DbAccess` 讀回的資料表會套用 `DataTableExtensions.LowercaseColumnNames`（`src/Polhem.Base/Data/DataTableExtensions.cs`、
+  `src/Polhem.Db/DbAccess.cs`、`src/Polhem.Db/DbAccess.Async.cs`），與〈狀態〉區塊所述一致。決策表的「目標狀態；遷移中」
+  與配套原則的「即使記憶體 DataSet 尚未遷移到小寫」描述的是決策當下。「剩餘」項目（多 DB 全回歸、CHANGELOG 的破壞性
+  標註）屬於 Polhem 前身 Bee.NET 的發版歷史，無法從本 repo 確認。
 
 ## 相關
 

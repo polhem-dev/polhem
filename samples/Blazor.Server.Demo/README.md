@@ -15,8 +15,8 @@ dotnet run
 On first run:
 
 1. Reads the master key from `POLHEM_MASTER_KEY`; `DemoBackend.AddPolhemBackend` auto-injects a hard-coded demo value when the variable is unset (production hosts must override — see [`samples/README.md`](../README.md#master-key))
-2. Creates `samples/Blazor.Server.Demo/quickstart.db` (SQLite) with `ft_employee` + `ft_employee_phone`
-3. Seeds 3 demo employees (Alice / Bob / Carol)
+2. Creates `samples/Blazor.Server.Demo/quickstart.db` (SQLite) with the demo's `ft_*` tables and the framework tables the backend needs (`st_session` and `st_user` for sign-in, `st_cache_notify` for the cache-notify poller), all defined under [`samples/Define/TableSchema/`](../Define/TableSchema/)
+3. Seeds demo employees and departments, plus the `demo` user row that sign-in reads the locale from
 
 ## What you'll see
 
@@ -32,8 +32,8 @@ On first run:
 
 | Demo behavior | Library component |
 |---------------|-------------------|
-| Login form | `PolhemLoginPanel` (Phase 1d) |
-| AccessToken cascading | `PolhemAccessTokenProvider` (Phase 1d) |
+| Login form | `PolhemLoginPanel` |
+| AccessToken cascading | `PolhemAccessTokenProvider` |
 | Employee grid rendering | `DynamicGrid` + `FormSchema.GetListLayout()` |
 | Employee edit form | `DynamicForm` + the stored `FormLayout` definition (`Define/FormLayout/Employee.FormLayout.xml`) |
 | Grid + form integration | `FormPage` |
@@ -43,6 +43,8 @@ On first run:
 
 ## Simplifications vs production
 
-- **`DemoAuthenticatingSystemBusinessObject`** matches credentials with a hard-coded `demo/demo` comparison and does not query the `st_user` table — so this demo needs **no system tables** (`st_user` / `st_session` / `st_company` / `st_user_company`)
-- **Single process sharing `ApiClientInfo.LocalServiceProvider` and `ApiClientInfo.ApiEncryptionKey`**: concurrent logins from multiple users would clobber each other's keys. The demo is fine for a single user at a time; production needs a per-connection scheme
+- **Local mode trusts every browser user.** `UseLocalProvider()` makes each call a trusted in-process call: the backend skips the access token check and the `LocalOnly` restriction for it. That suits a site whose users are all trusted with the whole backend, such as this single-user demo or an internal administration tool. A site whose users must be held to their own permissions uses `UseRemoteProvider(endpoint)` instead (see the `PolhemBlazorOptions` remarks)
+- **`DemoAuthenticatingSystemBusinessObject`** replaces only the credential check: it accepts the hard-coded `demo/demo` instead of verifying a password stored in `st_user`. The rest of sign-in is the framework's, so `st_user` (the user's time zone and culture) and `st_session` (the session seed) are still created and seeded. The demo never enters a company, so it has no `st_company` / `st_user_company` rows
 - SQLite is a single file (`quickstart.db`), same as `QuickStart.Server`
+
+Session state is not a simplification: `AddPolhemBlazor` registers one `ApiSessionContext` per circuit, so concurrent users each keep their own transmission key and time zone.

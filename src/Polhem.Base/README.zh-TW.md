@@ -1,6 +1,6 @@
 # Polhem.Base
 
-> 跨層共用工具程式庫，提供型別轉換、加密、序列化、集合、追蹤與背景服務等功能。
+> 跨層共用工具程式庫：型別轉換、加密原語、序列化、集合、ADO.NET 輔助與運算式抽象。
 
 [English](README.md)
 
@@ -19,44 +19,44 @@
 
 - `ValueUtilities` -- 安全型別轉換（`CInt`、`CStr`、`CBool` 等）。時間家族（`CDateOnly`、
   `CDateTime`、`CTimeOnly`）的單參數多載回傳 nullable，雙參數多載才顯式帶預設值——無法解析的
-  輸入回 `null`，而不是一個可能流進報表的 sentinel 日期
-- `FrameworkClock` -- 框架時鐘。時間點用 `UtcNow()`；某時區的牆上時間用 `Now(timeZoneId)`，
-  回傳 `Unspecified`（絕不回 `Local`）。時區 id 為空即代表 UTC
-- `StringExtensions` / `StringUtilities` -- 字串操作輔助方法（編碼、格式化、比較）
-- `DateTimeExtensions` -- 日期工具，包含民國曆支援
+  輸入回 `null`，而不是一個可能流進報表的 sentinel 日期。`CDateTime` 也能解析民國曆日期字串。
+  `CBool` 只接受與語言無關的代碼（`1`、`T`、`TRUE`、`Y`、`YES`，不分大小寫），詳見其 XML 文件
+- `FrameworkClock` -- 使用者時區的「今天」與「現在」：`Today(timeZoneId)` 與 `Now(timeZoneId)`，
+  回傳 `Unspecified`（絕不回 `Local`）；時區 id 為空即代表 UTC。`Now(timeZoneId, DateTimeBasis)`
+  在連線器的伺服端改用 UTC。系統時間戳記直接使用 `DateTime.UtcNow`
+- `StringExtensions` / `StringUtilities` -- 字串切割、裁切與不分大小寫比較的輔助方法
+- `DateTimeExtensions` -- `DateTime` 擴充方法
 
 ### 加密與安全
 
 - `AesCbcHmacCryptor` -- AES-256-CBC 加密搭配 HMAC-SHA256 驗證（每次加密使用隨機 IV）
 - `RsaCryptor` -- RSA 非對稱加密
 - `PasswordHasher` -- PBKDF2-SHA256 密碼雜湊
+- `ApiKeyHasher` / `AccessTokenHasher` -- API 金鑰密鑰與存取權杖在儲存前的雜湊
 - `FileHashValidator` -- 透過 SHA-256 驗證檔案完整性
 - `AesCbcHmacKeyGenerator` -- 加密金鑰產生器
 
 ### 序列化與壓縮
 
-- `XmlCodec` / `JsonCodec` -- 統一的 XML / JSON 序列化，採用 `System.Text.Json`
-- `XmlSerializerCache` -- 快取 XML 序列化器實例，避免重複反射
+- `XmlCodec` -- 透過 `XmlSerializer` 的 XML 序列化
+- `JsonCodec` -- 透過 `System.Text.Json` 的 JSON 序列化（camelCase）
 - `Gzip` -- Gzip 壓縮 / 解壓縮，用於 Payload 處理
 
 ### 集合
 
-- `KeyCollectionBase<T>` -- 泛型鍵值集合基底類別
-- `StringHashSet` -- 可控制大小寫的字串 HashSet
-- `CollectionExtensions` -- LINQ 風格的集合擴充方法
+- `CollectionBase<T>` / `KeyCollectionBase<T>` -- 框架（鍵值）集合的抽象基底類別
+- `StringHashSet` -- 不分大小寫（ordinal）比對的字串集合
 
 ### 資料存取輔助
 
-- `DataTable` / `DataSet` / `DataRow` / `DataRowView` 擴充方法，簡化 ADO.NET 操作
+- `DataTable` / `DataSet` / `DataRow` / `DataRowView` / `DataView` 擴充方法，簡化 ADO.NET 操作
   （`DataRowViewExtensions.GetFieldValue<T>` 是 `DataRowExtensions` 在資料繫結場景的對應版本）
 - `FieldDbType` 與 `DbTypeConverter` -- 資料庫型別對應工具
-- `DataTableComparer.IsEqual` —— 比對兩個 `DataTable` 的結構、資料列狀態與儲存格值，
-  用於斷言序列化 round-trip 完整還原
 
-### 追蹤與診斷
+### 例外
 
-- `Tracer` / `TraceContext` -- 結構化診斷追蹤
-- `TraceDispatcher` / `ITraceWriter` -- 可插拔的追蹤輸出目標
+- `UserMessageException` -- 給終端使用者看的訊息，帶有依使用者文化解析的鍵值與參數；
+  `ForbiddenException`、`AuthenticationRequiredException` 與公司範圍相關例外同在 `Exceptions/`
 
 ### 運算式抽象
 
@@ -72,35 +72,25 @@
 | 類別 / 介面 | 用途 |
 |-------------|------|
 | `ValueUtilities` | 安全型別轉換（含預設值） |
-| `StringExtensions` / `StringUtilities` | 字串編碼、格式化、比較 |
-| `DateTimeExtensions` | 日期工具與民國曆 |
+| `FrameworkClock` | 使用者時區的今天／現在 |
+| `StringExtensions` / `StringUtilities` | 字串切割、裁切、比較 |
 | `AesCbcHmacCryptor` | 認證式對稱加密 |
 | `PasswordHasher` | 密碼雜湊（PBKDF2-SHA256） |
 | `XmlCodec` / `JsonCodec` | XML / JSON 序列化 |
-| `IObjectSerialize` | 序列化提供者介面 |
+| `IObjectSerializeFile` | 綁定序列化檔案路徑的物件 |
 | `IKeyObject` | 跨層鍵值實體介面 |
-| `Tracer` | 診斷追蹤進入點 |
+| `UserMessageException` | 帶可在地化鍵值的終端使用者訊息 |
 | `IExpressionEvaluator` | 運算式求值抽象（實作位於 `Polhem.Expressions`） |
 | `ExpressionPolicy` | 運算式變數的共用型別／null 政策 |
 
 ## 設計慣例
 
-- **靜態工具類別** -- `ValueUtilities`、`StringUtilities`、`DateTimeExtensions` 以靜態方法公開功能，不持有實例狀態。
+- **靜態工具類別** -- `ValueUtilities`、`StringUtilities`、`FileUtilities` 以靜態方法公開功能，不持有實例狀態。
 - **常數時間比較** -- `CryptographicOperations.FixedTimeEquals` 用於 HMAC / 雜湊驗證，防止時序攻擊（Timing Attack）。
-- **介面導向擴充** -- 序列化透過 `IObjectSerialize` 抽象化。
 - **啟用 Nullable Reference Types**（`<Nullable>enable</Nullable>`）。
 
 ## 目錄結構
 
-```
-Polhem.Base/
-  Attributes/          # TreeNodeAttribute、TreeNodeIgnoreAttribute
-  Collections/         # KeyCollectionBase<T>、StringHashSet、CollectionExtensions
-  Data/                # DataTable/DataSet 擴充、FieldDbType、DbTypeConverter
-  Expressions/         # IExpressionEvaluator、ExpressionPolicy、ExpressionEvaluationException
-  Security/            # AES、RSA、PBKDF2、檔案雜湊工具
-  Serialization/       # JSON/XML 序列化、GZip 壓縮
-  Tracing/             # Tracer、TraceContext、TraceDispatcher、ITraceListener、ITraceWriter
-  *.cs（根目錄）        # ValueUtilities、StringExtensions、StringUtilities、DateTimeExtensions、FileUtilities、
-                       # IPValidator、SysInfo、IKeyObject 等
-```
+資料夾依功能分組原始碼：`Attributes/`、`Collections/`、`Data/`、`Exceptions/`、`Expressions/`、
+`Security/`、`Serialization/`。通用工具（`ValueUtilities`、`FrameworkClock`、`StringUtilities`、
+`FileUtilities`、`SysInfo`、`IKeyObject` 等）放在專案根目錄。

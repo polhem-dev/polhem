@@ -289,3 +289,17 @@ hardest kind of difference to track down.
 - [ADR-016](adr-016-multitenant-customization-overlay.md): the customization overlay
 - [ADR-028](adr-028-expression-rule-engine.md): expressions and the rule engine
 - [ADR-034](adr-034-progid-type-registry.md): the ProgId type registry
+
+## Implementation evolution
+
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
+the current code:
+
+- **2026-08-16: the BO axis now throws too, so "the opposite of the BO axis" no longer holds.** Decision 5 contrasts
+  plugins with business objects, which at the time fell back to `FormBusinessObject` when their type could not be
+  loaded. [ADR-034](adr-034-progid-type-registry.md) (Implementation evolution, 2026-08-16) changed that: a declared
+  `BusinessObject` type that cannot be loaded, or does not derive from the expected base, throws
+  `InvalidOperationException` (`src/Polhem.Business/ProgramSettingsBoTypeResolver.cs`). Plugin resolution throws on
+  every failure as described above (`src/Polhem.Business/Form/PluginSettingsResolver.cs`), and the reason given for it
+  still holds: skipping a plugin means the customization silently did not take effect. Only the asymmetry with the BO
+  axis, listed in the Status as one of the two asymmetries, is gone; the asymmetry in runtime exceptions is unchanged.

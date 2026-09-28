@@ -228,7 +228,7 @@ dotnet test tests/Polhem.Api.Core.UnitTests/Polhem.Api.Core.UnitTests.csproj -c 
 
 ## Implementation evolution
 
-An ADR records the design at the time of the decision. The following is a later change, for readers comparing with
+An ADR records the design at the time of the decision. The following are later changes, for readers comparing with
 the current code:
 
 **The analyzer rule numbers above are Bee.NET's.** This decision was taken while the framework was Bee.NET, and the
@@ -236,3 +236,17 @@ rules it names shipped as `BEE4001`–`BEE4004`; the `POLHEM` spelling here come
 rules under those numbers: its analyzer release history starts at 1.0.0, and `POLHEM4001`–`POLHEM4004` are reserved and
 never reused, so a suppression carried over from Bee.NET cannot silence a new rule. The reserved numbers are listed in
 the [analyzer rule reference](../en/analyzer-rules.md).
+
+- **2026-08-10: contractless is no longer part of the mechanism.** The Decision's "types not listed are handled by
+  `ContractlessStandardResolver`" and the Costs' "handled automatically by contractless, with no action required" were
+  replaced by [ADR-037](adr-037-wire-explicit-registration.md): every wire type registers a formatter explicitly (see
+  "Open issues" above for why). The formatter table in the Decision is therefore not the full list; the registered
+  formatters are the files in `src/Polhem.Api.Core/MessagePack/` and the registrations in its `WireContracts.*.cs`.
+- **`WireMemberCount` no longer exists, and it never guarded anything.** The safeguard described under "The cost of
+  hand-writing and the safeguard" compared the map header a formatter wrote with a constant the same formatter
+  declared, so it could not fail. The drift check today is `WireContractDriftTests`
+  (`tests/Polhem.Api.Core.UnitTests/`): each hand-written formatter implements `IWireContract` and exposes
+  `WireMemberNames`, and the test compares that list with the type's current shape and the registrations with the wire
+  type closure. Only `[JsonIgnore]` with its default `Always` condition takes a member off the wire, and the test fails
+  on member shapes it does not recognize. `WireCodecParityTests` round-trips every registered contract through both body
+  codecs and compares it member by member, which catches a member the formatter writes but does not read back.

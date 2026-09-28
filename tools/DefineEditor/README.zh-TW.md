@@ -1,12 +1,12 @@
 # Polhem.DefineEditor
 
-[English](README.md)
+[English](README.md) | **繁體中文**
 
-Polhem 定義檔（DefinePath 下的 9 種 XML）的桌面維護工具。Avalonia 12 + .NET 10 + CommunityToolkit.Mvvm，跨平台（Windows / macOS / Linux）。
+Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 + .NET 10 + CommunityToolkit.Mvvm，跨平台（Windows / macOS / Linux）。
 
 ## 定位
 
-- **開發期工具**：非框架發布套件、非 sample；放在 `tools/`，獨立 `Polhem.Tools.slnx`，不上 NuGet、不跑 CI。
+- **開發期工具**：非框架發布套件、非 sample；放在 `tools/`，獨立 `Polhem.Tools.slnx`，不上 NuGet。它的單元測試 `tests/Polhem.DefineEditor.UnitTests` 屬於主 `Polhem.slnx`，所以 CI 會建置此工具並執行這些測試。
 - **純 offline**：直接讀寫 DefinePath 下的 XML，不連遠端 server、不連資料庫。
 - **與框架同步**：以 ProjectReference 連 `Polhem.Definition` 與 `Polhem.Base`，所有讀寫走 `XmlCodec.SerializeToFile` / `DeserializeFromFile`，零序列化轉換。
 
@@ -16,18 +16,20 @@ Polhem 定義檔（DefinePath 下的 9 種 XML）的桌面維護工具。Avaloni
 
 | 型別 | 編輯器 | 主要功能 |
 |------|--------|---------|
-| **SystemSettings**（單例） | [SystemSettingsDocumentView](Views/SystemSettingsDocumentView.axaml) | 5 個 Configuration 子節點 + BackendConfiguration 4 個內嵌 options + ExtendedProperties 自由 KV |
+| **SystemSettings**（單例） | [SystemSettingsDocumentView](Views/SystemSettingsDocumentView.axaml) | Configuration 各區段與 BackendConfiguration 各 options 的樹狀結構，加上 ExtendedProperties 自由 KV。部分 options 尚無節點（例如 `AuditLogOptions` 與 `SessionCleanupOptions`），請直接改 XML |
 | **DbCategorySettings**（單例） | [DbCategorySettingsDocumentView](Views/DbCategorySettingsDocumentView.axaml) | Categories → Tables 兩層；驗證重複 Id / TableName |
 | **ProgramSettings**（單例） | [ProgramSettingsDocumentView](Views/ProgramSettingsDocumentView.axaml) | Categories → Programs 兩層；ProgramItem 含 ProgId / DisplayName / BusinessObject |
 | **PermissionModels**（單例） | [PermissionModelsDocumentView](Views/PermissionModelsDocumentView.axaml) | Models → Rules 兩層；Action / Scope 為下拉；含 `PermissionModels.Validate()` 整合 |
 | **MenuSettings**（單例） | [MenuSettingsDocumentView](Views/MenuSettingsDocumentView.axaml) | MenuFolder → MenuEntry 樹狀結構；資料夾與項目各自的屬性面板 |
-| **DatabaseSettings**（單例） | [DatabaseSettingsDocumentView](Views/DatabaseSettingsDocumentView.axaml) | Servers + Items 兩個 group；含 **連線字串貼上拆解**（SQL Server / PostgreSQL / MySQL / Oracle） + 4 類靜態驗證 |
+| **DatabaseSettings**（單例） | [DatabaseSettingsDocumentView](Views/DatabaseSettingsDocumentView.axaml) | Servers + Items 兩個 group；含 **連線字串貼上拆解**（SQL Server / PostgreSQL / MySQL / Oracle） 與靜態驗證（`Services/DatabaseSettingsValidator.cs`） |
 | **FormSchema**（多份） | [FormSchemaDocumentView](Views/FormSchemaDocumentView.axaml) | Tables → Fields → Relation / Lookup 對應；RelationProgId 來自方案內其他 FormSchema 候選。schema 節點右鍵可**產生 FormLayout** |
 | **TableSchema**（多份） | [TableSchemaDocumentView](Views/TableSchemaDocumentView.axaml) | Fields + Indexes 兩個 group；IndexField 含 SortDirection；驗證 PrimaryKey 唯一性 |
 | **FormLayout**（多份） | [FormLayoutDocumentView](Views/FormLayoutDocumentView.axaml) | Sections（→ LayoutField）+ Details（LayoutGrid → LayoutColumn）。版面於設計階段產出並存檔——執行階段只讀它，缺檔開表單即失敗 |
 | **Language**（多份） | [LanguageDocumentView](Views/LanguageDocumentView.axaml) | Items（Key/Value）+ Enums（→ Entry code/text） |
 
-每個編輯器都有共用的工具列（儲存 / 新增 / 驗證 / 刪除）、底部狀態列、驗證結果面板與 `IsDirty` 指示。
+每個編輯器有各自的新增與刪除指令、驗證結果面板，分頁上有未儲存標記；視窗底部有狀態列。儲存、全部儲存、驗證、關閉分頁是 **File** 選單的指令，另有開啟資料夾與最近開啟；**View** 選單切換佈景主題與介面語言（English / 繁體中文），分頁的右鍵選單可成批關閉分頁。
+
+> File 與 View 是原生選單，Avalonia 只在 macOS 的選單列上呈現。在 Windows 與 Linux 上可用歡迎頁的「Open Folder」按鈕開啟資料夾，但編輯器目前沒有視窗內的儲存或驗證指令。
 
 ## 開發期跑法
 
@@ -37,31 +39,15 @@ Polhem 定義檔（DefinePath 下的 9 種 XML）的桌面維護工具。Avaloni
 dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configuration Debug
 ```
 
-啟動後左上「開啟方案...」選一個 DefinePath 資料夾即可。`tests/Define/` 內含可直接開啟的測試 fixture。
+啟動後以「Open Folder...」選一個 DefinePath 資料夾即可。編輯器會就地存檔，所以要拿 `tests/Define/` 的測試 fixture 來試，請先複製該資料夾：測試共用那些檔案，不能讓它們被改動。
 
 ### Headless smoke
 
-`--smoke <FormSchema-fixture-path>` 模式跑全部 round-trip，不啟動視窗。**實際跑哪幾個不列在這裡**（那會漂）—— 權威來源是 `Smoke.Run`，它逐一呼叫各個 `Run*Smoke`：
+`--smoke <FormSchema-fixture-path>` 模式在不開視窗的情況下跑各編輯器的 round-trip。它會先把 fixture 複製到暫存目錄再編輯，每項檢查印一行，全部通過時最後一行以 `[smoke] OK` 開頭、結束碼為 0。實際跑哪幾項不列在這裡（那會漂），權威來源是 [`Smoke.cs`](Smoke.cs) 的 `Smoke.Run`。
 
 ```bash
 dotnet run --project tools/DefineEditor/Polhem.DefineEditor.csproj --configuration Debug \
     -- --smoke tests/Define/FormSchema/Employee.FormSchema.xml
-```
-
-預期輸出：
-
-```
-[smoke:formschema] OK
-[smoke:permission]  OK (0 non-error issues)
-[smoke:db]          OK
-[smoke:program]     OK
-[smoke:system]      OK
-[smoke:db-settings] OK
-[smoke:parser]      OK (SQL Server + PostgreSQL + dialect-mismatch warning)
-[smoke:table-schema] OK
-[smoke:form-layout] OK
-[smoke:language]    OK
-[smoke] OK — FormSchema + 8 multi-instance editors + ConnectionStringParser all green.
 ```
 
 ## Publish（framework-dependent）
@@ -86,7 +72,7 @@ dotnet publish tools/DefineEditor/Polhem.DefineEditor.csproj -c Release \
     -r linux-x64 --self-contained false -p:PublishTrimmed=false
 ```
 
-輸出在 `tools/DefineEditor/bin/Release/net10.0/<rid>/publish/`。或執行 [publish.sh](publish.sh) 一次打包 4 個平台。
+輸出在 `tools/DefineEditor/bin/Release/net10.0/<rid>/publish/`。或執行 [publish.sh](publish.sh) 一次打包上面每個 RID。
 
 ### 也可以 self-contained
 
@@ -117,19 +103,24 @@ osx-arm64 實測：12 MB 主執行檔 + 約 18 MB 三個 native dylib（HarfBuzz
 對 macOS 使用者，加 `--app-bundle` 會把 osx-* RID 的 publish 內容包成 `Polhem.DefineEditor.app` 目錄，雙擊就開、可拖進 `/Applications`、Dock 顯示正確名稱：
 
 ```bash
-./publish.sh --single-file --app-bundle           # 4 個 RID（osx-* 包 .app，win/linux 維持原樣）
-./publish.sh --single-file --app-bundle osx-arm64 # 只 osx-arm64
+./publish.sh --app-bundle           # 每個 RID（osx-* 包 .app，win/linux 維持原樣）
+./publish.sh --app-bundle osx-arm64 # 只 osx-arm64
 ```
+
+`--app-bundle` 隱含 `--single-file`：bundle 只帶主執行檔與原生函式庫，所以 managed 組件必須嵌在主執行檔內。
 
 產出位置 `bin/Release/net10.0/<osx-rid>/publish/Polhem.DefineEditor.app`，內部結構：
 
 ```
 Polhem.DefineEditor.app/
 └── Contents/
-    ├── Info.plist          ← bundle 描述（版號從 repo 根的 Version.props 抓）
-    └── MacOS/
-        ├── Polhem.DefineEditor   ← 主執行檔
-        └── lib*.dylib × 3     ← Avalonia 原生
+    ├── Info.plist              ← bundle 描述（版號為專案評估後的 Version，來自 repo 根的 Version.props）
+    ├── MacOS/
+    │   ├── Polhem.DefineEditor ← 主執行檔
+    │   ├── lib*.dylib          ← Avalonia 原生函式庫
+    │   └── *.pdb、*.xml        ← 符號檔與 XML 文件（publish 有產出時）
+    └── Resources/
+        └── AppIcon.icns        ← App 圖示（Assets/AppIcon.icns）
 ```
 
 ### 第一次跑：解 Gatekeeper 隔離旗標
@@ -160,4 +151,4 @@ Polhem.DefineEditor.app/
 - 連遠端 Polhem server / JSON-RPC API（純本機檔）
 - DatabaseSettings 實連測試（交 server 端健康檢查）
 - 多人協作 / 鎖定機制
-- Customize 層覆蓋編輯（Phase 6 後若需要另議；目前在方案樹上不標示覆蓋）
+- Customize 層覆蓋編輯（目前在方案樹上不標示覆蓋）
