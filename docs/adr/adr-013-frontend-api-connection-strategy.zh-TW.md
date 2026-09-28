@@ -1,4 +1,4 @@
-<!-- source: adr/adr-013-frontend-api-connection-strategy.md blob: 4d83a32b193feb7eba25c29c737a3dc63d754f4b -->
+<!-- source: adr/adr-013-frontend-api-connection-strategy.md blob: a6460c411bb8ad8d3edc0d079a520dd27edb8786 -->
 # ADR-013：前端 API 連線策略 — `Polhem.UI.*` 與 `Polhem.Web.*` 兩條 family 分流
 
 [English](adr-013-frontend-api-connection-strategy.md)
@@ -154,3 +154,5 @@ ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對�
 - **共用邏輯下移到 `Polhem.Api.Client`。** 權限 capability resolver
   (`ElementCapabilityResolver`,`src/Polhem.Api.Client/Permissions/`)從 `Polhem.UI.Core` 移到該處,讓兩個
   family 都能使用,與上文「負面」後果所預期的做法一致。
+- **`VersionInfo` 已移除。** 「消費對象」列出的 `VersionInfo` 沒有呼叫端，已在 1.0 之前移除；`Polhem.UI.Core` 保有
+  `ClientInfo`、endpoint 與 API key 儲存的抽象，以及 `IUIViewService`。

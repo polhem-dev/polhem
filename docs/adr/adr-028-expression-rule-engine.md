@@ -4,7 +4,8 @@
 
 ## Status
 
-Accepted (2026-07-09)
+Accepted (2026-07-09), partially superseded: the assembly layout by
+[ADR-038](adr-038-definition-dependency-boundary.md) (see the note below).
 
 > **The assembly layout was revised by [ADR-038](adr-038-definition-dependency-boundary.md) (2026-08-11)**:
 > the three abstract types `IExpressionEvaluator` / `ExpressionPolicy` / `ExpressionEvaluationException`

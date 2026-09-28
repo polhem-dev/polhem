@@ -269,8 +269,8 @@ Errors raised while the method runs come with HTTP 200; the transport's own refu
 |------|------|---------|----------------|
 | `-32700` | `ParseError` | Malformed JSON in the request body (HTTP 400) | Fix client serialization |
 | `-32600` | `InvalidRequest` | Wrong content type (HTTP 415), empty body or missing method (HTTP 400), rejected API key or malformed `Authorization` header (HTTP 401) | Inspect headers and body |
-| `-32601` | `MethodNotFound` | Declared; no producer today. An unknown `progId.action` currently answers `-32000` | Check method name / casing |
-| `-32602` | `InvalidParams` | Declared; no producer today. Invalid arguments currently answer `-32099` | Inspect `message` |
+| `-32601` | `MethodNotFound` | The action part of `progId.action` names no method the business object exposes as an action; the message is always "Method not found." | Check method name / casing |
+| `-32602` | `InvalidParams` | A `Plain` body could not be read into the type the method takes; the message is always "Invalid params.". Arguments that are readable but invalid answer `-32099` | Fix the `params` shape |
 | `-32000` | `InternalError` | Unhandled server-side exception | Not user-facing. The message is "Internal server error" unless the server runs in debug mode |
 | `-32001` | `Unauthorized` | The method needs a signed-in caller and the access token is missing, unknown or expired | Sign in again |
 | `-32002` | `CompanyNotEntered` | Method needs company context | Call `System.EnterCompany` first |

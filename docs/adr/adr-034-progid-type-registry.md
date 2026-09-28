@@ -232,6 +232,9 @@ bind), but it no longer has a purpose: with the fallback gone, that degrade log 
 - **The business object receives the progId in its declared casing**: the `ProgramItem.ProgId` of the registry entry,
   or the reserved name's own spelling, whatever casing the caller used (`src/Polhem.Business/BusinessObjectFactory.cs`).
   Lookups keyed by the progId inside the business object therefore see one spelling per program.
+- **The audit log business object is `AuditLogBusinessObject`.** The `LogBusinessObject` named in Decision 1 was renamed
+  with the rest of the audit log axis (`src/Polhem.Business/AuditLog/`); it is still registered under the reserved
+  progId `AuditLog`.
 
 ## Related
 

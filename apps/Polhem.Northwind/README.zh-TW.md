@@ -230,9 +230,9 @@ session 的客製化代碼，以及 [`NorthwindBackend`](Polhem.Northwind.Server
 常態，demo 只是剛好各一。
 
 把這些組裝起來是 client 的工作、不是 server 的：API 一律把定義原樣送出，由
-`FormDefinitionLoader` 取回兩層、套用疊加，再把在地化後的 schema 交給畫面。demo 在整個 client
-只開一次 —— [`App.axaml.cs`](Polhem.Northwind.UI/App.axaml.cs) 裡的
-`ClientInfo.UseDefinitionLoader = true` —— 單筆表單、清單與 lookup 對話框都使用
+`FormDefinitionLoader` 取回兩層、套用疊加，再把在地化後的 schema 交給畫面。整個 client 只有一個
+開關 —— `ClientInfo.UseDefinitionLoader`，預設開啟，demo 也在
+[`App.axaml.cs`](Polhem.Northwind.UI/App.axaml.cs) 裡明確設定 —— 單筆表單、清單與 lookup 對話框都使用
 `ClientInfo.DefinitionLoader`。關掉時，畫面照原樣渲染定義：英文標題，版面也是
 `Define/FormLayout/` 裡的套裝版面而非租戶的。
 

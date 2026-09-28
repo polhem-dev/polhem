@@ -1,4 +1,4 @@
-<!-- source: adr/adr-010-logical-database-category.md blob: 5ffb54a4ecdf03aa94d690ee78da60eb174e7418 -->
+<!-- source: adr/adr-010-logical-database-category.md blob: bd5cbd059b42af58e92b24332c6c7661eb53853c -->
 # ADR-010：邏輯資料庫分類（DbCategory）解耦資料庫部署彈性
 
 [English](adr-010-logical-database-category.md)
@@ -7,7 +7,8 @@
 
 ## 狀態
 
-已採納（2026-05-10）
+已採納（2026-05-10），部分取代：分類 Id 固定為 `common`、`company` 與 `log`，且 `FormSchema.CategoryId`
+會在執行期讀取，推翻了〈決策〉的第 1 個重點與「不參與執行期」一句（見〈實作演進〉）。
 
 ## 背景
 

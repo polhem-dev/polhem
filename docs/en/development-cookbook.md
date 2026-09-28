@@ -159,7 +159,7 @@ Client receives → LoginResponse (API Type, encoded with the same codec)
 
 ### Key Components
 
-- **ApiInputConverter** (internal): maps API Request property values to BO Args (matched by property name). A `Plain` body arrives as a `JsonElement` and is deserialized straight into the BO type; `object`-typed members such as filter values bind by their JSON kind (string, integer, decimal, boolean, array)
+- **ApiInputConverter** (internal): maps API Request property values to BO Args (matched by property name). A `Plain` body arrives as a `JsonElement` and is read into the action's framework request type (`{Action}Request`) when there is one, or the method's parameter type otherwise, then copied into the BO Args like a decoded body, so it cannot set members the contract does not declare; `object`-typed members such as filter values bind by their JSON kind (string, integer, decimal, boolean, array)
 - **ApiOutputConverter**: after execution, automatically maps BO `{Action}Result` to `{Action}Response` via reflection; results cached in `ConcurrentDictionary` (see [ADR-007](../adr/adr-007-convention-based-type-resolution.md))
 - The wire body is written by the codec the request declares (`messagepack` or `json`); it plays no part in output mapping. See [ADR-044](../adr/adr-044-payload-codec-negotiation.md).
 
@@ -866,7 +866,7 @@ var listResult = await formConnector.GetListAsync(selectFields: "sys_id,sys_name
 FormSchema schema = await ClientInfo.DefineAccess.GetFormSchemaAsync("Customer");
 ```
 
-`GetListAsync` without paging options returns the first page of `PagingOptions.MaxPageSize` rows; pass a `PagingOptions` to page through more. `ClientInfo.DefineAccess` returns definitions as stored, with no localization or tenant overlay. Setting `ClientInfo.UseDefinitionLoader = true` at startup makes the Avalonia `FormView`, `ListView` and `LookupDialog` load their definitions through `ClientInfo.DefinitionLoader` instead — captions in the user's language, the tenant's customization layer and the company's number formats — and code can call `ClientInfo.DefinitionLoader.GetLocalizedSchemaAsync(progId, CultureInfo.CurrentUICulture.Name)` itself. The default is off, which renders definitions as stored and costs no extra round trips.
+`GetListAsync` without paging options returns the first page of `PagingOptions.MaxPageSize` rows; pass a `PagingOptions` to page through more. `ClientInfo.DefineAccess` returns definitions as stored, with no localization or tenant overlay. The Avalonia `FormView`, `ListView` and `LookupDialog` load their definitions through `ClientInfo.DefinitionLoader` instead — captions in the user's language, the tenant's customization layer and the company's number formats — and code can call `ClientInfo.DefinitionLoader.GetLocalizedSchemaAsync(progId, CultureInfo.CurrentUICulture.Name)` itself. `ClientInfo.UseDefinitionLoader` is on by default; setting it to `false` at startup renders definitions as stored and saves the loader's extra round trips.
 
 **4. Switch endpoint (user changes server)**:
 

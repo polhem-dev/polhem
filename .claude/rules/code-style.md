@@ -5,7 +5,7 @@
 | Element | Rule | Example |
 |---------|------|---------|
 | Interface | `I` prefix + PascalCase | `IKeyObject` |
-| Class / property / method | PascalCase | `TraceContext`, `ValidateAccess` |
+| Class / property / method | PascalCase | `SessionInfo`, `ValidateAccess` |
 | Attribute | PascalCase + `Attribute` suffix | `ApiAccessControlAttribute` |
 | Private field | `_camelCase` | `_accessToken` |
 | Parameter | camelCase | `accessToken` |

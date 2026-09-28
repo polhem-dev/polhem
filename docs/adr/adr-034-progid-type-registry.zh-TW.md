@@ -1,4 +1,4 @@
-<!-- source: adr/adr-034-progid-type-registry.md blob: ec54a882b7599c8dc60e15b1c9677f8325d93190 -->
+<!-- source: adr/adr-034-progid-type-registry.md blob: 34a7aa73bb3c4809357b8d362b39bedba2e49517 -->
 # ADR-034：ProgramSettings 作為全框架型別註冊表
 
 [English](adr-034-progid-type-registry.md)
@@ -206,6 +206,8 @@ private IOrderRepository Repository() => CreateFormRepository<IOrderRepository>(
   失敗仍然從不快取。plugin 軸（`src/Polhem.Business/Form/PluginSettingsResolver.cs`）對設定實例採同一規則。
 - **BO 收到的是宣告的 progId 大小寫**：註冊表項目的 `ProgramItem.ProgId`，或保留字本身的拼法，與呼叫端用的大小寫無關
   （`src/Polhem.Business/BusinessObjectFactory.cs`）。BO 內以 progId 為鍵的查詢因此每支程式只會看到一種拼法。
+- **稽核記錄 BO 現名 `AuditLogBusinessObject`。** 決策 1 提到的 `LogBusinessObject` 已隨稽核記錄這一軸一併改名
+  （`src/Polhem.Business/AuditLog/`），仍以保留 progId `AuditLog` 註冊。
 
 ## 相關
 

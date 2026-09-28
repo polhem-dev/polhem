@@ -1,11 +1,12 @@
-<!-- source: adr/adr-004-messagepack-payload.md blob: 5f32e0632ddffbd05945dd389f41f6f76dd65db7 -->
+<!-- source: adr/adr-004-messagepack-payload.md blob: 2552797fb4e996de92962a852028cb8ed13919df -->
 # ADR-004：使用 MessagePack 作為 API Payload 序列化格式
 
 [English](adr-004-messagepack-payload.md)
 
 ## 狀態
 
-已採納
+已採納，部分取代：整數鍵策略由 [ADR-030](adr-030-messagepack-name-based-keys.zh-TW.md) 取代，
+「MessagePack 是唯一的 payload 格式」由 [ADR-044](adr-044-payload-codec-negotiation.zh-TW.md) 取代（見下方各註）。
 
 > **註（2026-07-22，superseded-in-part）**：本 ADR「MessagePack 作為 API Payload 格式」的決策維持不變；惟下方「理由 › Schema Evolution」所述的**整數 `[Key]` 鍵策略**，已由 [ADR-030](adr-030-messagepack-name-based-keys.zh-TW.md)（**已採納/已執行**）改為 property-name key（`keyAsPropertyName`）—— 合約、多數 DTO 與非-Union 集合 item 皆改以屬性名為 wire 鍵。**例外**：`[Union]` 多型階層（如 `FilterNode`）與 DataSet wire plumbing 仍維持整數 `[Key]`。新增一般 MessagePack 合約型別時採 `keyAsPropertyName`，新增多型階層時採整數 `[Key]` + `[Union]`。
 >

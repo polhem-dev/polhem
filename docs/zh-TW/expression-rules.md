@@ -1,4 +1,4 @@
-<!-- source: en/expression-rules.md blob: edf0a754d245c0726c5a368a38998dfccdbb5236 -->
+<!-- source: en/expression-rules.md blob: 2586069e3cfe5ad934aaa4d739447b477e20e706 -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../en/expression-rules.md) · [← 文件索引](README.md)
@@ -12,7 +12,7 @@
 | 能力 | 載體 | 時機 |
 |------|------|------|
 | 計算欄 | `FormField.ValueExpression` | 存檔前對新增/異動列重算回填 |
-| 欄位預設值 | `FormField.DefaultValueExpression` | 新增列時，欄位為空才填 |
+| 欄位預設值 | `FormField.DefaultValueExpression` | 建立新列時（蓋過字面預設值）；存檔時只填新列中仍為空的欄位 |
 | 驗證 / 前置檢查 | `FormSchema` 下的 `FormRule` | `BeforeSave` / `BeforeDelete` |
 
 > **後端為權威**：存檔時 `FormBusinessObject.DoBeforeSave` 依定義重算計算欄並覆蓋前端送來的值，接著執行驗證規則；`DoBeforeDelete` 執行刪除規則。Avalonia UI 的即時運算（`FormLiveComputation`；Blazor 元件沒有這項功能）會在使用者編輯時重算欄位，但它只是 UX 預覽：捨入用的是框架預設的小數位數，存檔時由伺服端修正。
@@ -64,8 +64,8 @@
            DefaultValueExpression="Today()" />
 ```
 
-- 新增列時求值；**只在欄位仍為空時填**（沒有值，或為空字串），不覆寫已有值。
-- 框架建立的新列會在運算式執行前先填入初值：文字欄位從空值開始，但數值欄位從 `0`、`Guid` 欄位從 `Guid.Empty`、`Date` 欄位從今天開始，而新的主檔記錄還會套上該欄位的字面值 `DefaultValue`。填好的初值不算空，所以運算式不會取代它。
+- **建立新列時以運算式為準。** 伺服器的 `GetNewData` 與 UI 用戶端新增的列都會求值，並把結果寫過該列原本的初值：依型別的初值（數值為 `0`、文字為空字串、`Guid.Empty`、`Date` 為今天）以及該欄位的字面值 `DefaultValue`。沒有運算式的欄位保留初值或 `DefaultValue`。
+- **存檔時只填空欄位。** 伺服器的存檔前處理只對新列中仍為空（沒有值，或為空字串）的欄位再求值一次，所以使用者輸入的值會保留。例外是 `DateTime` 欄位：伺服器會捨棄呼叫端在新列上送來的值，重新以運算式求值（見[時區處理](datetime-timezone.md)）。
 
 ## 驗證與前置檢查：`FormRule`
 

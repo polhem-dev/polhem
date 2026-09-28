@@ -1,4 +1,4 @@
-<!-- source: adr/adr-019-permission-authorization-model.md blob: b9466ce988a8fa5d526ebaccb29e298a6d85b804 -->
+<!-- source: adr/adr-019-permission-authorization-model.md blob: 9f0856e1c62a635d7da9a6584b66583e1623f19b -->
 # ADR-019：權限授權模型（兩層 enforcement + record scope）
 
 [English](adr-019-permission-authorization-model.md)
@@ -83,6 +83,9 @@ ADR 記錄的是決策當下的設計，以下為後續的變化，供讀者對�
 - **2026-09-27：啟動時回報未受保護的表單。** host 會記錄警告，列出 FormSchema 未宣告 `PermissionModelId` 的已註冊表單（`src/Polhem.Hosting/Registry/UnguardedFormWarningService.cs`）。
 - **2026-09-27：session 快照是單一不可變物件。** `EnterCompany` 快照的角色與 `UserRowId` / `EmployeeRowId` / `DeptRowId` 身分，現在組成一個 `SessionCompanyScope`，以單次寫入替換；見 [ADR-012](adr-012-session-company-context.zh-TW.md)〈實作演進〉。
 - **2026-09-27：capability resolver 搬移。** `ElementCapabilityResolver` 現為 `Polhem.Api.Client.Permissions.ElementCapabilityResolver`（`src/Polhem.Api.Client/Permissions/`），讓兩個 UI head 都能使用；上文前端 capability 一項寫的是當時的位置。
+- **2026-09-27：action 列舉現名 `PermissionActions`。** 上文 rule 的 `(PermissionAction, ScopeStrategy)` 組合中的
+  `PermissionAction`，現為 flags 列舉 `PermissionActions`（`src/Polhem.Definition/Settings/Permission/PermissionActions.cs`）；
+  組合本身不變。
 
 ## 參考
 

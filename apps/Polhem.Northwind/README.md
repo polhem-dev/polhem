@@ -240,9 +240,9 @@ just happens to have one of each.
 
 Assembling all of this is the client's job, not the server's: the APIs serve definitions exactly
 as stored, and `FormDefinitionLoader` fetches both layers, applies the overlay, and hands the view
-a localized schema. The demo turns it on once for the whole client —
-`ClientInfo.UseDefinitionLoader = true` in [`App.axaml.cs`](Polhem.Northwind.UI/App.axaml.cs) — and
-the record form, the list and the lookup dialog all use `ClientInfo.DefinitionLoader`. With it off,
+a localized schema. One switch covers the whole client — `ClientInfo.UseDefinitionLoader`, on by
+default and set explicitly in [`App.axaml.cs`](Polhem.Northwind.UI/App.axaml.cs) — and the record
+form, the list and the lookup dialog all use `ClientInfo.DefinitionLoader`. With it off,
 a view renders the definitions as stored: English captions, and the packaged layout from
 `Define/FormLayout/` instead of the tenant's.
 

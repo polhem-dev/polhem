@@ -18,6 +18,8 @@ the reasons and the background are in its detailed notes under [`docs/changelogs
 
 ### Renamed from Bee.NET
 
+The renaming was done before the repository took pull requests, so these entries have no link.
+
 - Package IDs and namespaces are renamed from `Bee.*` to `Polhem.*`, and versions restart at 1.0.0. The split into
   packages is unchanged.
 - Types and members named after Bee are renamed: `AddBeeFramework` → `AddPolhemFramework`, `UseBeeFramework` →
@@ -30,7 +32,7 @@ the reasons and the background are in its detailed notes under [`docs/changelogs
 - The command-line tool `Bee.Cli` is now `Polhem.Cli`, invoked as `dotnet polhem`.
 - Analyzer diagnostic IDs are renamed from `BEE` to `POLHEM` with the same numbers, for example `BEE1008` →
   `POLHEM1008`. `POLHEM4001`–`POLHEM4004` are reserved: they were Bee.NET's `BEE4001`–`BEE4004` and are never
-  reused.
+  reused. ([#10](https://github.com/polhem-dev/polhem/pull/10))
 - The MSBuild properties for definition file checks are renamed: `BeeDefinitionFilesGlob`, `BeeRequireDefinitionFiles`
   and `BeeAnalyzeDefinitionFiles` → `PolhemDefinitionFilesGlob`, `PolhemRequireDefinitionFiles` and
   `PolhemAnalyzeDefinitionFiles`.
@@ -44,69 +46,98 @@ the reasons and the background are in its detailed notes under [`docs/changelogs
   `Bee.FieldDbType`, and `SerializationErrorData.FilePath` is `Polhem.FilePath` instead of `Bee.FilePath`.
 - Package metadata: the authors and the copyright holder are Polhem contributors, the repository is
   `polhem-dev/polhem`, and the packages have a new icon. `Polhem.Cli` ships the same metadata, a README and a symbol
-  package.
+  package. ([#3](https://github.com/polhem-dev/polhem/pull/3))
 
 ### Security
 
 - Access tokens are no longer stored: `st_session` is keyed by a SHA-256 derived key (`AccessTokenHasher`), and the log
   tables keep a short token fingerprint (`token_fingerprint`) instead of the `access_token` column.
+  ([#5](https://github.com/polhem-dev/polhem/pull/5))
 - Passwords are hashed with PBKDF2-SHA256 at 600,000 iterations; weaker stored hashes are replaced at the next
   successful sign-in, and hashes in the PBKDF2-SHA1 format inherited from Bee.NET no longer verify.
+  ([#5](https://github.com/polhem-dev/polhem/pull/5))
 - An unknown user name runs a decoy hash, so sign-in timing does not reveal whether the account exists, and the login
-  attempt tracker stays bounded.
+  attempt tracker stays bounded. ([#5](https://github.com/polhem-dev/polhem/pull/5))
 - Record scope is also checked on the stored row an update or delete targets, on modified and deleted detail rows, and
-  on the values a saved master row leaves behind.
+  on the values a saved master row leaves behind. ([#4](https://github.com/polhem-dev/polhem/pull/4))
 - `GetList` and `GetCount` accept filter and sort fields only when the form declares them, and never on protected
   fields; `GetLookup` applies the Read record scope (`FormBusinessObject.LookupAppliesRecordScope` opts out).
+  ([#4](https://github.com/polhem-dev/polhem/pull/4))
 - Remote `GetDefine` serves only an explicit list of definition types.
+  ([#4](https://github.com/polhem-dev/polhem/pull/4))
 - Business objects are created with the ProgId casing declared in `ProgramSettings`, so audit rules match however a
-  caller spells the ProgId.
+  caller spells the ProgId. ([#4](https://github.com/polhem-dev/polhem/pull/4))
 - Encoded and Encrypted requests are decoded into the parameter type of the resolved action, the depth limit applies
   to nested filters on both codecs, and actions resolve only to public, non-generic, one-parameter instance methods
   that are not accessors (`JsonRpcExecutor.IsResolvableAction`, also checked by `POLHEM3001`).
+  ([#6](https://github.com/polhem-dev/polhem/pull/6))
+- `Plain` bodies are read into the action's request type and then copied into its arguments, like Encoded ones, so a
+  Plain call cannot set members the contract does not declare. ([#22](https://github.com/polhem-dev/polhem/pull/22))
 - Messages of BCL exceptions no longer reach remote callers; each error code has a fixed message and the original is
-  logged through `JsonRpcExecutor.Logger`.
+  logged through `JsonRpcExecutor.Logger`. ([#6](https://github.com/polhem-dev/polhem/pull/6))
 - `CreateSession` accepts only local calls. `CreateApiKey`, `SetApiKeyEnabled` and `SetApiKeyExpiry` are
-  replay-protected.
+  replay-protected. ([#5](https://github.com/polhem-dev/polhem/pull/5))
 - The database anomaly log is readable only by a deployment administrator.
+  ([#5](https://github.com/polhem-dev/polhem/pull/5))
 - The client refuses a server-advertised "none" encryptor unless it runs in debug mode itself, and no longer adopts the
-  server's debug flag or type namespaces.
+  server's debug flag or type namespaces. ([#6](https://github.com/polhem-dev/polhem/pull/6))
 - The master key file and the client's `apikey.txt` are written with owner-only permissions; a warning is logged when
-  database passwords exist without a `ConfigEncryptionKey`.
+  database passwords exist without a `ConfigEncryptionKey`. ([#5](https://github.com/polhem-dev/polhem/pull/5))
 - DDL escapes SQL Server string defaults and requires non-string defaults to be literals of their type; connection
   string placeholders are resolved with `DbConnectionStringBuilder` (`ConnectionStringTemplate`).
+  ([#4](https://github.com/polhem-dev/polhem/pull/4))
 
 ### Changed behaviour
 
 - A request without an `Authorization` header is an anonymous call: `[ApiAccessControl]` alone decides, and a method
   that needs a session answers JSON-RPC `-32001` (Unauthorized) instead of HTTP 401. The client turns it into an
   `UnauthorizedAccessException`, and `RemoteApiProvider` sends no `Authorization` header before sign-in.
+  ([#6](https://github.com/polhem-dev/polhem/pull/6), [#18](https://github.com/polhem-dev/polhem/pull/18))
 - `GetList` without paging returns the first page, capped at `PagingOptions.MaxPageSize`.
+  ([#4](https://github.com/polhem-dev/polhem/pull/4))
 - English is the base language of every built-in definition file and UI text; Chinese moves to the shipped `zh-TW`
   language resources. Captions, enums, menus, rule messages and framework text share one fall-back chain
   (`LanguageFallback`): the requested culture, its parents, `CommonConfiguration.DefaultLanguage`, then the base text.
+  ([#15](https://github.com/polhem-dev/polhem/pull/15))
 - The login response carries the user's culture, which the client adopts. `CommonConfiguration.DefaultLang` and
   `BackendConfiguration.DefaultLanguage` merge into `CommonConfiguration.DefaultLanguage` (default `zh-TW`).
+  ([#15](https://github.com/polhem-dev/polhem/pull/15))
 - Framework messages meant for end users carry a key and arguments (`UserMessageException`) and are resolved in the
   session culture; form rule messages resolve `{ProgId}.Rule.{RuleId}.Message`.
+  ([#15](https://github.com/polhem-dev/polhem/pull/15))
 - Numbers and dates are displayed and parsed in the user's culture; the wire stays culture-invariant.
+  ([#15](https://github.com/polhem-dev/polhem/pull/15))
 - `ValueUtilities.CBool` accepts only `1`, `T`, `TRUE`, `Y` and `YES` (ignoring case) as true; the Chinese words for
-  yes and true are no longer recognized.
+  yes and true are no longer recognized. ([#15](https://github.com/polhem-dev/polhem/pull/15))
 - `BackendComponents` entries default to blank, which selects the framework default. A wrong `CacheProvider` or
   component type name fails at startup and names the setting.
+  ([#8](https://github.com/polhem-dev/polhem/pull/8), [#11](https://github.com/polhem-dev/polhem/pull/11))
 - A type name that cannot be resolved and starts with `Bee.` gets a migration hint (`BeeNameHint`), and a missing
-  `POLHEM_MASTER_KEY` says so when `BEE_MASTER_KEY` is set.
+  `POLHEM_MASTER_KEY` says so when `BEE_MASTER_KEY` is set. ([#10](https://github.com/polhem-dev/polhem/pull/10))
 - The client stores the endpoint and the API key in `endpoint.txt` and `apikey.txt` under the per-user local
   application data folder (`FileEndpointStorage`, now in `Polhem.UI.Core`) instead of a settings file beside the
-  assembly.
+  assembly. ([#12](https://github.com/polhem-dev/polhem/pull/12))
 - Over MessagePack, a `DataTable` is written as one column table and positional rows. JSON and Plain are unchanged.
+  ([#12](https://github.com/polhem-dev/polhem/pull/12))
 - Every wire member whose initializer is not the CLR default is always written, so an absent member means the CLR
   default on every codec. Plain requests bind object-typed filter and parameter values by JSON kind.
+  ([#9](https://github.com/polhem-dev/polhem/pull/9))
 - Serializing a cached definition no longer changes it: empty collections are omitted through get-only `XSpecified`
-  properties instead of a per-object serialize state.
+  properties instead of a per-object serialize state. ([#8](https://github.com/polhem-dev/polhem/pull/8))
 - Startup logs a warning when methods require `ApiReplayProtection.UniqueSequence` while `RequireWireFrame` is off,
   and lists the forms that declare no permission model.
+  ([#4](https://github.com/polhem-dev/polhem/pull/4), [#6](https://github.com/polhem-dev/polhem/pull/6))
 - Default values of `Short`, `Long`, `Decimal` and `Binary` fields are typed and non-null.
+  ([#14](https://github.com/polhem-dev/polhem/pull/14))
+- `DefaultValueExpression` takes precedence when a new row is created: `GetNewData` and the client's new row write the
+  expression's value over the literal `DefaultValue` and the per-type seed. At save it still fills only fields that are
+  empty. ([#22](https://github.com/polhem-dev/polhem/pull/22))
+- `ClientInfo.UseDefinitionLoader` is on by default, so the Avalonia views show localized captions, the tenant's layout
+  and the company's number formats without setup. ([#22](https://github.com/polhem-dev/polhem/pull/22))
+- A host built with `AddPolhemFramework` does not start without a `common` database item
+  (`IDatabaseSettingsProvider.ValidateRequired`). ([#22](https://github.com/polhem-dev/polhem/pull/22))
+- An unknown action answers JSON-RPC `-32601` and an unreadable Plain body `-32602`, each with a fixed message.
+  ([#22](https://github.com/polhem-dev/polhem/pull/22))
 
 ### Breaking API changes
 
@@ -114,85 +145,135 @@ the reasons and the background are in its detailed notes under [`docs/changelogs
   exceptions, caches, service implementations without hooks, database dialects and builders, and leaf UI controls and
   Blazor components. Business objects, repository and collection bases, `TextEdit`, `DateEdit`, `ListView`, `FormView`,
   the connectors and `AuditRuleBusinessObject` stay open. `KeyCollectionBase<T>` is abstract.
+  ([#13](https://github.com/polhem-dev/polhem/pull/13))
 - Renamed: `IBeeContext` / `BeeContext` → `IBusinessObjectContext` / `BusinessObjectContext`;
   `BeeStringLocalizer<T>` → `LanguageResourceStringLocalizer<T>`; the audit log axis `LogBusinessObject`,
   `LogListResult`, `LogAggregateResult`, `LogApiConnector`, `LogListResponse`, `LogAggregateResponse`,
   `ILogListResponse`, `ILogAggregateResponse` and `LogActions` → `AuditLog…`; `PermissionAction` →
   `PermissionActions`; `NullAuditLogWriter` → `NullLogWriter`; `UserID` → `UserId` (also `userId` / `funcId`
   parameters); `AuditEntry.AccessToken` → `TokenFingerprint`.
+  ([#5](https://github.com/polhem-dev/polhem/pull/5), [#10](https://github.com/polhem-dev/polhem/pull/10),
+  [#11](https://github.com/polhem-dev/polhem/pull/11))
 - Moved: `DeploymentAuthorizationService` to `Polhem.Business.Security`, `EmployeeContextResolver` to
   `Polhem.Business.Session`, `ElementCapabilityResolver`, `IElementCapabilityResolver` and `FieldCapability` to
   `Polhem.Api.Client.Permissions`, `FileEndpointStorage` to `Polhem.UI.Core`.
+  ([#11](https://github.com/polhem-dev/polhem/pull/11), [#12](https://github.com/polhem-dev/polhem/pull/12))
 - `LocalApiProvider` and the local connector constructors take the `IServiceProvider`;
   `ApiClientInfo.LocalServiceProvider`, `ApiClientInfo.ApiEncryptionKey` and `ApiClientInfo.UserTimeZoneId` are
   removed (use `ApiSessionContext`).
+  ([#10](https://github.com/polhem-dev/polhem/pull/10), [#11](https://github.com/polhem-dev/polhem/pull/11))
 - Every public async member of the client surface and `JsonRpcExecutor.ExecuteAsync` take a trailing
-  `CancellationToken`; the connectors' action methods are virtual.
+  `CancellationToken`; the connectors' action methods are virtual. ([#12](https://github.com/polhem-dev/polhem/pull/12))
 - `IReplayWindowStore` is one atomic `TryAcceptAsync`, so a store shared by several nodes can be implemented.
+  ([#12](https://github.com/polhem-dev/polhem/pull/12))
 - Custom payload codecs are added with `ApiServiceOptions.RegisterPayloadCodec`; the undeclared default stays
-  MessagePack and cannot be replaced.
+  MessagePack and cannot be replaced. ([#10](https://github.com/polhem-dev/polhem/pull/10))
 - Cached database-dependent types (`CompanyInfo`, `DepartmentTree`, `ApiKeyInfo` and the like) have init-only
   properties; the session's company scope is one immutable `SessionCompanyScope`.
+  ([#8](https://github.com/polhem-dev/polhem/pull/8), [#10](https://github.com/polhem-dev/polhem/pull/10))
 - `ICacheDataSourceProvider.GetCompanyAuditRules` has no default implementation.
+  ([#14](https://github.com/polhem-dev/polhem/pull/14))
 - `PolhemLoginPanel` label parameters and `DynamicGrid.EmptyText` are `string?`; `null` shows the localized text.
+  ([#15](https://github.com/polhem-dev/polhem/pull/15))
 - Wire: `CreateSessionRequest.userID` is `userId` and has no `oneTime`; `LoginResponse` gains `culture`; the audit log
   response types are renamed. `polhem-connector-js` follows.
+  ([#10](https://github.com/polhem-dev/polhem/pull/10), [#11](https://github.com/polhem-dev/polhem/pull/11),
+  [#15](https://github.com/polhem-dev/polhem/pull/15))
+- `IFormRuleProcessor` gains `ApplyNewRowDefaults`; another implementation must add it.
+  ([#22](https://github.com/polhem-dev/polhem/pull/22))
 
 ### Removed
 
 - The tracing subsystem (`Polhem.Base.Tracing`, `SysInfo.TraceListener`).
+  ([#10](https://github.com/polhem-dev/polhem/pull/10))
 - The serialize state: `IObjectSerialize`, `IObjectSerializeEmpty`, `SerializeState`, `SerializationUtilities`.
+  ([#8](https://github.com/polhem-dev/polhem/pull/8))
 - Compatibility leftovers: ignored constructor parameters and overloads, `JsonCodec`'s `includeTypeName`,
   `TableSchemaBuilder.Compare` and the legacy schema comparison path (`DbUpgradeAction`), the Hosting factories'
   constructor fallbacks, the one-time session flag, the synchronous `JsonRpcExecutor.Execute`,
   `BusinessObject.SessionInfo`, and `ClientInfo.ClientSettings`.
+  ([#10](https://github.com/polhem-dev/polhem/pull/10), [#12](https://github.com/polhem-dev/polhem/pull/12))
 - Types and members without callers: `DateInterval`, `IPValidator`, `DataTableComparer`, `Dictionary<T>`,
   `DefaultBoTypeResolver`, `VersionInfo`, `SysInfo.IsToolMode`, `SysInfo.IsSingleFile` and several pure wrappers.
+  ([#10](https://github.com/polhem-dev/polhem/pull/10))
 - Implementation types that are now internal: the Hosting background services, `NoEncryptionEncryptor`,
   `NoCompressionCompressor`, the payload converters, `HttpUtilities`, `ILMapper<T>`, `XmlSerializerCache`,
   `ReplayWindow`, `BackendDefaultTypes`, and the framework repository implementations (use the `I*Repository`
   interfaces).
+  ([#10](https://github.com/polhem-dev/polhem/pull/10), [#11](https://github.com/polhem-dev/polhem/pull/11),
+  [#12](https://github.com/polhem-dev/polhem/pull/12))
+- The unused settings types `ClientSettings`, `EndpointItem` and `EndpointItemCollection`.
+  ([#22](https://github.com/polhem-dev/polhem/pull/22))
 
 ### Added
 
-- `dotnet polhem keys protect`.
+- `dotnet polhem keys protect`. ([#10](https://github.com/polhem-dev/polhem/pull/10))
 - `GetFormSchemaAsync`, `GetFormLayoutAsync`, `GetLanguageAsync` and `GetCommonConfigurationAsync` on the connectors.
+  ([#12](https://github.com/polhem-dev/polhem/pull/12))
 - Localization: `LanguageFallback`, `MenuLocalizer`, `FrameworkLanguageService`, `PolhemMessages`, `PolhemUIText`,
   `ILocalizableMessage`, and English defaults with `zh-TW` translations for the Avalonia and Blazor UI text.
   `FormView`, `ListView` and `LookupDialog` localize definitions through `ClientInfo.DefinitionLoader` by default.
+  ([#15](https://github.com/polhem-dev/polhem/pull/15), [#22](https://github.com/polhem-dev/polhem/pull/22))
 - `AuthenticationRequiredException`, `IAuditLogSink` as a replaceable service, `PagingOptions.MaxPageSize`,
   `DataRowExtensions.RewriteVersions` and `FormDataGuard.TryGetRowId`.
-- ADR-046 records the API policies for 1.0.
+  ([#4](https://github.com/polhem-dev/polhem/pull/4), [#6](https://github.com/polhem-dev/polhem/pull/6),
+  [#8](https://github.com/polhem-dev/polhem/pull/8), [#14](https://github.com/polhem-dev/polhem/pull/14))
+- ADR-046 records the API policies for 1.0. ([#12](https://github.com/polhem-dev/polhem/pull/12))
 
 ### Performance
 
 - Definition cache hits check their source file at most once per second per entry.
+  ([#14](https://github.com/polhem-dev/polhem/pull/14))
 - Gzip compresses at the fastest level by default; `AesCbcHmacCryptor` uses span APIs with the same output format.
+  ([#14](https://github.com/polhem-dev/polhem/pull/14))
 - Per-request reflection is cached, and the Avalonia heads share one expression evaluator.
-- The audit batch writer persists a batch in one transaction.
+  ([#14](https://github.com/polhem-dev/polhem/pull/14))
+- The audit batch writer persists a batch in one transaction. ([#14](https://github.com/polhem-dev/polhem/pull/14))
 - `DataTable` over MessagePack is smaller and faster to serialize (see *Changed behaviour*).
+  ([#12](https://github.com/polhem-dev/polhem/pull/12))
 
 ### Platform support
 
 - Polhem supports untrimmed and partial-trim builds. `POLHEM9004` warns when a project publishes with NativeAOT, trims
   with `TrimMode=full` or disables System.Text.Json reflection (`PolhemSuppressTrimSupportWarning=true` silences it).
+  ([#17](https://github.com/polhem-dev/polhem/pull/17))
 - `Polhem.Expressions` ships an ILLink descriptor, so the default mobile trim keeps the members expressions use.
+  ([#7](https://github.com/polhem-dev/polhem/pull/7))
 - `LookupDialog` and `RowEditDialog` open a native window only on desktop and use the overlay host elsewhere, so
-  lookups work on iOS, Android and the browser.
+  lookups work on iOS, Android and the browser. ([#7](https://github.com/polhem-dev/polhem/pull/7))
 - The MessagePack value formatter handles Polhem enums and nested `ParameterCollection`s without dynamic code.
+  ([#7](https://github.com/polhem-dev/polhem/pull/7))
 - The HTTP client uses the platform default handler on the browser, Android and Apple mobile heads.
+  ([#17](https://github.com/polhem-dev/polhem/pull/17))
 
 ### Fixed
 
 - Plain `GetList` with a valued filter failed at the SQL parameter, and the client read Plain `DataTable` results as
-  empty tables.
+  empty tables. ([#9](https://github.com/polhem-dev/polhem/pull/9))
 - Concurrent saves and deletes could fail while a cached definition was being serialized; cache fills that raced an
-  invalidation could keep stale values.
-- Saving a language resource from a client always failed.
+  invalidation could keep stale values. ([#8](https://github.com/polhem-dev/polhem/pull/8))
+- Saving a language resource from a client always failed. ([#17](https://github.com/polhem-dev/polhem/pull/17))
 - The shipped AuditRule form showed empty mode dropdowns without a definition loader.
+  ([#7](https://github.com/polhem-dev/polhem/pull/7))
 - Blazor: sign-in did not set the circuit's time zone, and `FormDataObject` did not resume on the circuit context.
+  ([#8](https://github.com/polhem-dev/polhem/pull/8))
 - `SaveDatabaseSettings` encrypted the passwords of the instance it was given instead of a copy.
+  ([#8](https://github.com/polhem-dev/polhem/pull/8))
 - A nil element in a `KeyCollectionBase` payload is rejected instead of skipped.
+  ([#9](https://github.com/polhem-dev/polhem/pull/9), [#14](https://github.com/polhem-dev/polhem/pull/14))
+- Rebuilding a table (every column change on SQLite) narrowed columns without `UpgradeOptions.AllowColumnNarrowing`.
+  ([#22](https://github.com/polhem-dev/polhem/pull/22))
+- Relation joins used a blank table name when a form table declared no `DbTableName`; they fall back to `TableName`.
+  ([#22](https://github.com/polhem-dev/polhem/pull/22))
+
+### Samples and tools
+
+- The samples keep their business tables in the company scope and enter a demo company after sign-in.
+  ([#23](https://github.com/polhem-dev/polhem/pull/23))
+- Northwind adds a zh-TW demo account (`demo-tw`) and keeps its README screenshots in the repository.
+  ([#23](https://github.com/polhem-dev/polhem/pull/23))
+- DefineEditor shows a File menu inside the window on Windows and Linux.
+  ([#23](https://github.com/polhem-dev/polhem/pull/23))
 
 [Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.0.0

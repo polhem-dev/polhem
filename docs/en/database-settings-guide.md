@@ -273,7 +273,7 @@ No other category id is accepted for a form or a `DbCategory` (a `DatabaseItem.C
 
 Custom tables, including an application's own log tables, are registered under one of the three categories.
 
-**`common` is a framework contract**: the framework's system services (sessions, users, companies, API keys, cache notifications) connect to the fixed `databaseId = "common"`, so a deployment needs a `DatabaseItem` with `Id="common"`, and by convention its `CategoryId` is `common` too. Nothing checks this at startup: a missing entry fails the first time one of those services connects (the lookup throws `KeyNotFoundException`). A host that wants to fail fast can call `IDatabaseSettingsProvider.ValidateRequired()` once its service provider is built; it throws when there is no `common` entry.
+**`common` is a framework contract**: the framework's system services (sessions, users, companies, API keys, cache notifications) connect to the fixed `databaseId = "common"`, so a deployment needs a `DatabaseItem` with `Id="common"`, and by convention its `CategoryId` is `common` too. A host built with `AddPolhemFramework` checks this at startup: it calls `IDatabaseSettingsProvider.ValidateRequired()` before any other hosted service starts, and without a `common` entry that throws an `InvalidOperationException` and the host does not start.
 
 `company` and `log` are the other framework categories. The framework ships opt-in `st_log_*` tables in `log` (off by default via `AuditLogOptions`) and reaches them through the entry with `Id="log"` (§5.4). A single-tenant setup may leave out the `log` entry only while auditing and anomaly logging stay disabled.
 

@@ -4,7 +4,8 @@
 
 ## Status
 
-Accepted
+Accepted, partially superseded: the integer-key strategy by [ADR-030](adr-030-messagepack-name-based-keys.md),
+and MessagePack as the only payload format by [ADR-044](adr-044-payload-codec-negotiation.md) (see the notes below).
 
 > **Note (2026-07-22, superseded-in-part)**: this ADR's decision "MessagePack as the API Payload format" stands.
 > However, the **integer `[Key]` key strategy** described under "Rationale › Schema Evolution" below has been changed
