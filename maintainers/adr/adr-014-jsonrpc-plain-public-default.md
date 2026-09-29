@@ -237,7 +237,9 @@ runtime side, and JS front ends have no matching need.
 - [JSON-RPC front-end integration guide](../../docs/en/api/jsonrpc-frontend-integration.md) — the public document for JS / TS
   developers
 - [Polhem.Api.Core README](../../src/Polhem.Api.Core/README.md) — the level-checking logic of `ApiAccessValidator`
-- `samples/Web.Js.Demo/` — a pure JS demo that verifies full CRUD on the Plain path end to end
+- [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js) — the TypeScript client for JS front ends. The
+  pure JS sample `samples/Web.Js.Demo/` that first verified full CRUD on the Plain path was removed once JS clients
+  standardised on it.
 
 ## Out of scope
 

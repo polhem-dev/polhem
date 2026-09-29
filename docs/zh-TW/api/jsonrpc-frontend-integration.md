@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: 2dcc5ceac06b246a9afbbc0a76df559c7293aee9 -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: 32748148be71c9168853b8c86be9e6e6ffef8a83 -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -6,9 +6,8 @@
 如何從 JavaScript / TypeScript 前端（React、Vue、Angular、Svelte、vanilla）
 呼叫 Polhem 的 JSON-RPC 後端，**client 端完全不需要 .NET**。
 
-整套只需一個小小的純 JS 模組。可跑的範例在
-[`samples/Web.Js.Demo/`](../../../samples/Web.Js.Demo/README.zh-TW.md)，
-本文檔解釋它「為什麼這樣寫」。
+現成的 client 是 TypeScript 套件 [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js)；
+本文檔解釋它所用的 wire，給想知道它「為什麼這樣寫」或需要自己寫 client 的人。
 
 ---
 
@@ -265,8 +264,7 @@ body 仍是 JSON-RPC 錯誤。
 
 ## TypeScript wrapper
 
-[`samples/Web.Js.Demo/polhem-api-client.js`](../../../samples/Web.Js.Demo/polhem-api-client.js)
-的 TypeScript 對應版本，可直接複製到 TS 專案。獨立檔案、無框架依賴，state 管理請自行接。
+給不使用 `polhem-connector-js` 的專案的最小 TypeScript wrapper，可直接複製到 TS 專案。獨立檔案、無框架依賴，state 管理請自行接。
 訊息形狀取自產生出來的合約 [`wire-contracts/messages.d.ts`](../../../wire-contracts/messages.d.ts)，
 而不是在這裡另寫一份：把該檔複製或同步到專案中，命名為 `messages.d.ts`。
 
@@ -463,7 +461,7 @@ export const formApi = (progId: string) => ({
 
 ## 相關連結
 
-- [`samples/Web.Js.Demo/README.zh-TW.md`](../../../samples/Web.Js.Demo/README.zh-TW.md) — 上述呼叫的可跑 demo
+- [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js) — 建立在這套 wire 上的 TypeScript client
 - [`docs/zh-TW/api/api-method-reference.md`](api-method-reference.md) — 完整方法清單含每方法 `[ApiAccessControl]` 設定
 - [`wire-contracts/README.md`](../../../wire-contracts/README.md) — 產生出來的 TypeScript 合約，以及它如何與伺服端保持一致
 - [`maintainers/adr/adr-013-frontend-api-connection-strategy.md`](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md) — 前端連線策略全景

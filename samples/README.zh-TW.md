@@ -39,7 +39,6 @@ dotnet run                          # → http://localhost:5055
 | 如何在 Blazor 內用 `Polhem.Web.Blazor.Server` 元件（Local，in-process 派遣） | [`Blazor.Server.Demo`](Blazor.Server.Demo/README.zh-TW.md) |
 | 同一份 `FormSchema` 在桌面／瀏覽器／行動端 Avalonia 上如何渲染 | [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.zh-TW.md) |
 | 主題導向控件 demo center（導覽樹 主題→案例、Demo/Source 分頁、主題/FormMode 工具列）：資料繫結、唯讀必填、FormMode、Layout、Grid、原生 vs 繼承比對 | [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.zh-TW.md) |
-| 如何用純 JavaScript 從瀏覽器呼叫 Polhem（前端無 .NET，走 Plain wire format） | [`Web.Js.Demo`](Web.Js.Demo/README.zh-TW.md) |
 
 ## Demo 清單
 
@@ -49,14 +48,12 @@ dotnet run                          # → http://localhost:5055
 | [`QuickStart.Console`](QuickStart.Console/README.zh-TW.md) | API client | — | `dotnet run` | Polhem.Api.Client |
 | [`Blazor.Server.Demo`](Blazor.Server.Demo/README.zh-TW.md) | 全端 Blazor Server | `5055` | `dotnet run` | Polhem.Web.Blazor.Server + Polhem.Samples.Shared |
 | [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.zh-TW.md) | 桌面 Avalonia 控件 demo center | —(無後端) | `dotnet run -c Debug` | Polhem.UI.Avalonia |
-| [`Web.Js.Demo`](Web.Js.Demo/README.zh-TW.md) | 純 JS 瀏覽器客戶端 | —(連 5050) | `open index.html` | (無 .NET — vanilla HTML/JS) |
 | [`Polhem.Samples.Shared`](Polhem.Samples.Shared/) | 共用後端 wiring | — | (被引用) | Polhem.Business + Polhem.Db + Polhem.Hosting + Polhem.Api.Client |
 
 ### Demo 之間的依賴
 
 ```
 QuickStart.Console ──HTTP──▶ QuickStart.Server
-Web.Js.Demo        ──HTTP──▶ QuickStart.Server  ← 需先啟動（已開 CORS）
 
 Blazor.Server.Demo                ← 不需另起 server,前後端同 process
 ```
@@ -74,7 +71,7 @@ Blazor.Server.Demo                ← 不需另起 server,前後端同 process
 
 `samples/Define/ProgramSettings.xml` 把保留的 `System` progId 綁到 [`DemoAuthenticatingSystemBusinessObject`](Polhem.Samples.Shared/DemoAuthenticatingSystemBusinessObject.cs)，它只把帳密比對換成寫死的比較，因此不涉及密碼雜湊或使用者維護。登入的其餘流程仍是框架自己的，所以 [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) 仍會寫入它會讀的資料列：`st_user`（使用者的時區與語系從這裡讀）、`st_company` 與 `st_user_company` 授權。
 
-**登入是兩次呼叫。**`Login` 回答「你是誰」，`EnterCompany` 回答「你在哪間公司」。demo 表單是業務資料，所以 `FormSchema` 宣告 `CategoryId="company"`，尚未進入公司的 session 開不了它們。每個 client 都在第一次呼叫後緊接著做第二次：Blazor demo 在登入時自動進入，`Web.Js.Demo` 有一個 **Enter Company** 步驟。各值定義在 [`DemoCredentials`](Polhem.Samples.Shared/DemoCredentials.cs)。
+**登入是兩次呼叫。**`Login` 回答「你是誰」，`EnterCompany` 回答「你在哪間公司」。demo 表單是業務資料，所以 `FormSchema` 宣告 `CategoryId="company"`，尚未進入公司的 session 開不了它們。每個 client 都在第一次呼叫後緊接著做第二次：Blazor demo 在登入時自動進入。各值定義在 [`DemoCredentials`](Polhem.Samples.Shared/DemoCredentials.cs)。
 
 `QuickStart.Server` / `QuickStart.Console` 的 `Echo.Echo` 標 `[ApiAccessControl(Public, Anonymous)]`，**不需要登入**。
 
