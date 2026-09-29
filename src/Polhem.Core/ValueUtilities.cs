@@ -1,0 +1,418 @@
+using System.Collections;
+using System.Globalization;
+
+namespace Polhem.Core
+{
+    /// <summary>
+    /// Framework-level value utilities. Encapsulates business-application defaults
+    /// (<see cref="CultureInfo.InvariantCulture"/> formatting, ROC date parsing,
+    /// null/DBNull-safe handling) inside these helpers so call sites do not have to
+    /// pass <see cref="CultureInfo"/> or <see cref="NumberStyles"/> repeatedly. Provides
+    /// emptiness checks (<c>IsEmpty</c>, <c>IsNullOrDBNull</c>) and the framework's
+    /// public type-conversion API (the <c>Cxxx</c> family).
+    /// </summary>
+    public static partial class ValueUtilities
+    {
+        #region IsNullOrDBNull / IsEmpty
+
+        /// <summary>
+        /// Determines whether the specified value is null or DBNull.
+        /// </summary>
+        /// <param name="value">The value to check.</param>
+        public static bool IsNullOrDBNull(object? value)
+        {
+            return value == null || Convert.IsDBNull(value);
+        }
+
+        /// <summary>
+        /// Determines whether the specified value is empty; null and DBNull are both treated as empty.
+        /// </summary>
+        /// <remarks>
+        /// Emptiness is judged per type: <c>Guid.Empty</c>, a date before the SQL minimum, an empty
+        /// or whitespace string, and an empty list all count as empty. That is a different question
+        /// from <see cref="StringUtilities.IsEmptyText(object?)"/>, which asks whether the value's
+        /// text form is empty — the two disagree for <c>Guid.Empty</c> and <c>DateTime.MinValue</c>.
+        /// </remarks>
+        /// <param name="value">The value to check.</param>
+        public static bool IsEmpty(object value)
+        {
+            switch (value)
+            {
+                case null:
+                    return true;
+                case DateTime dateTimeValue:
+                    return IsEmpty(dateTimeValue);
+                case string stringValue:
+                    return IsEmpty(stringValue);
+                case Guid guidValue:
+                    return IsEmpty(guidValue);
+                case IList listValue:
+                    return IsEmpty(listValue);
+                default:
+                    return IsNullOrDBNull(value);
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the specified string is empty.
+        /// </summary>
+        /// <param name="value">The string to check.</param>
+        public static bool IsEmpty(string value)
+        {
+            return StringUtilities.IsEmpty(value, true);
+        }
+
+        /// <summary>
+        /// Determines whether the specified Guid value is empty.
+        /// </summary>
+        /// <param name="value">The Guid value to check.</param>
+        public static bool IsEmpty(Guid value)
+        {
+            return (value == Guid.Empty);
+        }
+
+        /// <summary>
+        /// Determines whether the specified date value is empty.
+        /// </summary>
+        /// <param name="value">The date value to check.</param>
+        public static bool IsEmpty(DateTime value)
+        {
+            // The minimum DateTime value in SQL databases is 1753/1/1; values earlier than this are treated as empty.
+            // Null, DbNull, and DateTime.MinValue are all treated as empty.
+            return (IsNullOrDBNull(value) || value < new DateTime(1753, 1, 1, 0, 0, 0, DateTimeKind.Unspecified));
+        }
+
+        /// <summary>
+        /// Determines whether the specified IList collection has no elements.
+        /// </summary>
+        /// <param name="value">The collection to check.</param>
+        public static bool IsEmpty(IList value)
+        {
+            if (value != null && value.Count != 0)
+                return false;
+            else
+                return true;
+        }
+
+        /// <summary>
+        /// Determines whether the specified IEnumerable collection has no elements.
+        /// </summary>
+        /// <param name="enumerable">The collection to check.</param>
+        public static bool IsEmpty(IEnumerable enumerable)
+        {
+            if (enumerable == null) return true;
+
+            var enumerator = enumerable.GetEnumerator();
+            return !enumerator.MoveNext(); // Check whether there is at least one element
+        }
+
+        /// <summary>
+        /// Determines whether the specified byte array is empty (null or zero length).
+        /// </summary>
+        /// <param name="data">The byte array to check.</param>
+        /// <returns>True if null or empty; otherwise, false.</returns>
+        public static bool IsEmpty(byte[] data)
+        {
+            return data == null || data.Length == 0;
+        }
+
+        #endregion
+
+        #region CStr / CBool
+
+        /// <summary>
+        /// Converts the specified value to a string.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <param name="defaultValue">The default value returned when conversion fails.</param>
+        public static string CStr(object value, string defaultValue)
+        {
+            // Return the default value if null or DBNull
+            if (IsNullOrDBNull(value))
+                return defaultValue;
+            // Return the enum name if the value is an enum type
+            if (value is Enum e)
+                return Enum.GetName(e.GetType(), e) ?? string.Empty;
+            // Convert to string
+            return value.ToString() ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Converts the specified value to a string.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        public static string CStr(object value)
+        {
+            return CStr(value, string.Empty);
+        }
+
+        /// <summary>
+        /// Converts the specified value to a boolean.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <param name="defaultValue">The default value.</param>
+        /// <remarks>
+        /// <c>1</c>, <c>T</c>, <c>TRUE</c>, <c>Y</c> and <c>YES</c> are true, compared ignoring case;
+        /// any other non-empty text is false. The accepted forms are language-neutral codes, not
+        /// words of any one language: a value typed in a user's language is the UI's to convert.
+        /// </remarks>
+        public static bool CBool(string value, bool defaultValue = false)
+        {
+            if (StringUtilities.IsEmpty(value))
+                return defaultValue;
+            if (StringUtilities.IsEqualsOr(value, "1", "T", "TRUE", "Y", "YES"))
+                return true;
+            else
+                return false;
+        }
+
+        /// <summary>
+        /// Converts the specified value to a boolean.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <param name="defaultValue">The default value.</param>
+        public static bool CBool(object value, bool defaultValue = false)
+        {
+            return value is bool ? (bool)value : CBool(CStr(value), defaultValue);
+        }
+
+        #endregion
+
+        #region CEnum
+
+        /// <summary>
+        /// Converts the specified string to an enum value (case-insensitive).
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <param name="type">The enum type.</param>
+        public static object CEnum(string value, Type type)
+        {
+            return Enum.Parse(type, value, true);
+        }
+
+        /// <summary>
+        /// Converts the specified string to an enum value (case-insensitive).
+        /// </summary>
+        /// <typeparam name="T">The enum type.</typeparam>
+        /// <param name="value">The value to convert.</param>
+        public static T CEnum<T>(string value)
+        {
+            return (T)CEnum(value, typeof(T));
+        }
+
+        #endregion
+
+        #region IsNumeric / ConvertToNumber
+
+        /// <summary>
+        /// Determines whether the specified object can be treated as a numeric value (supports string, bool, and enum).
+        /// </summary>
+        /// <param name="value">The value to check.</param>
+        /// <returns>True if the value can be converted to a number.</returns>
+        public static bool IsNumeric(object value)
+        {
+            if (value == null)
+                return false;
+
+            // bool and enum are treated as convertible to numeric
+            if (value is bool || value is Enum)
+                return true;
+
+            // Special handling for string
+            var s = value as string;
+            if (s != null)
+                return double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out _);
+
+            // Primitive numeric types
+            if (value is byte || value is sbyte ||
+                value is short || value is ushort ||
+                value is int || value is uint ||
+                value is long || value is ulong ||
+                value is float || value is double || value is decimal)
+                return true;
+
+            // Last resort: convert to string and try parsing (handles reflection/dynamic objects)
+            return double.TryParse(value.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out _);
+        }
+
+        /// <summary>
+        /// Determines whether the specified string is a numeric value of the given length.
+        /// </summary>
+        /// <param name="value">The value to check.</param>
+        /// <param name="length">The expected length.</param>
+        public static bool IsNumeric(string value, int length)
+        {
+            if (IsNumeric(value) && value.Length == length)
+                return true;
+            else
+                return false;
+        }
+
+        /// <summary>
+        /// Converts the specified object to a numeric type. Supports string, bool, enum, and standard numeric types.
+        /// Throws <see cref="InvalidCastException"/> if conversion is not possible.
+        /// </summary>
+        /// <param name="value">The value to convert; can be string, bool, enum, or a numeric type.</param>
+        /// <returns>The converted number. Strings are converted to double, bools to 1 or 0, and enums to their integer value.</returns>
+        /// <exception cref="InvalidCastException">Thrown when the value cannot be converted to a number.</exception>
+        public static object ConvertToNumber(object value)
+        {
+            if (IsNullOrDBNull(value))
+                return 0;
+
+            var s = value as string;
+            if (s != null)
+            {
+                if (IsEmpty(s))
+                    return 0;
+
+                if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out double result))
+                    return result;
+            }
+
+            if (value is bool b)
+                return b ? 1 : 0;
+
+            if (value is Enum)
+                return Convert.ToInt32(value, CultureInfo.InvariantCulture);
+
+            if (value is byte || value is sbyte ||
+                value is short || value is ushort ||
+                value is int || value is uint ||
+                value is long || value is ulong ||
+                value is float || value is double || value is decimal)
+                return value;
+
+            if (double.TryParse(value.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out double fallback))
+                return fallback;
+
+            throw new InvalidCastException($"Cannot convert '{value}' to number.");
+        }
+
+        #endregion
+
+        #region CInt / CDouble / CDecimal
+
+        /// <summary>
+        /// Converts the specified value to an integer; returns the default value if conversion fails.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <param name="defaultValue">The default value.</param>
+        public static int CInt(object value, int defaultValue = 0)
+        {
+            if (IsNullOrDBNull(value)) { return defaultValue; }
+
+            try
+            {
+                if (value is Enum)
+                    return Convert.ToInt32(value, CultureInfo.InvariantCulture);
+                else
+                    return Convert.ToInt32(ConvertToNumber(value), CultureInfo.InvariantCulture);
+            }
+            catch (InvalidCastException)
+            {
+                return defaultValue;
+            }
+            catch (FormatException)
+            {
+                return defaultValue;
+            }
+            catch (OverflowException)
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Converts the specified value to a double; returns the default value if conversion fails.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <param name="defaultValue">The default value.</param>
+        public static double CDouble(object value, double defaultValue = 0)
+        {
+            if (IsNullOrDBNull(value)) { return defaultValue; }
+
+            try
+            {
+                return Convert.ToDouble(ConvertToNumber(value == null ? defaultValue : value), CultureInfo.InvariantCulture);
+            }
+            catch (InvalidCastException)
+            {
+                return defaultValue;
+            }
+            catch (FormatException)
+            {
+                return defaultValue;
+            }
+            catch (OverflowException)
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Converts the specified value to a decimal with up to 28-29 significant digits; returns the default value if conversion fails.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <param name="defaultValue">The default value.</param>
+        public static decimal CDecimal(object value, decimal defaultValue = 0)
+        {
+            if (IsNullOrDBNull(value)) { return defaultValue; }
+
+            try
+            {
+                return Convert.ToDecimal(ConvertToNumber(value == null ? defaultValue : value), CultureInfo.InvariantCulture);
+            }
+            catch (InvalidCastException)
+            {
+                return defaultValue;
+            }
+            catch (FormatException)
+            {
+                return defaultValue;
+            }
+            catch (OverflowException)
+            {
+                return defaultValue;
+            }
+        }
+
+        #endregion
+
+        #region CGuid
+
+        /// <summary>
+        /// Converts the specified string to a Guid value.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        public static Guid CGuid(string value)
+        {
+            if (IsEmpty(value))
+                return Guid.Empty;
+            else
+                return new Guid(value);
+        }
+
+        /// <summary>
+        /// Converts the specified object to a Guid value.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        public static Guid CGuid(object value)
+        {
+            if (IsNullOrDBNull(value))
+                return Guid.Empty;
+            else if (value is Guid g)
+                return g;
+            else if (value is string s)
+                return CGuid(s);
+            // Oracle stores Guid columns as RAW(16); the provider reads them back as a 16-byte
+            // array (round-trips with `Guid.ToByteArray()`), so coerce that form here too.
+            else if (value is byte[] b && b.Length == 16)
+                return new Guid(b);
+            else
+                return Guid.Empty;
+        }
+
+        #endregion
+    }
+}

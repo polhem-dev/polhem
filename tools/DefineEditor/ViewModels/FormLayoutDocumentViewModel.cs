@@ -1,4 +1,4 @@
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Layouts;
 using Polhem.DefineEditor.Models;
 using CommunityToolkit.Mvvm.Input;

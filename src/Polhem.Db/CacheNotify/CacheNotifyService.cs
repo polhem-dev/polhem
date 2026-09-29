@@ -1,5 +1,5 @@
 using System.Data.Common;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Db.Manager;
 using Polhem.Definition.Database;
 

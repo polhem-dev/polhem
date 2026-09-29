@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Polhem.Api.Contracts.AuditLog;
 using Polhem.Api.Core.MessagePack;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Logging;
 
 namespace Polhem.Api.Core.UnitTests.MessagePack

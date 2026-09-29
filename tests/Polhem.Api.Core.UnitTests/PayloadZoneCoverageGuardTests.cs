@@ -3,7 +3,7 @@ using System.Data;
 using System.Reflection;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition.Filters;
 
 namespace Polhem.Api.Core.UnitTests

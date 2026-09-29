@@ -1,6 +1,6 @@
 using System.ComponentModel;
-using Polhem.Base.Collections;
-using Polhem.Base;
+using Polhem.Core.Collections;
+using Polhem.Core;
 
 namespace Polhem.Definition.Collections
 {
@@ -46,7 +46,7 @@ namespace Polhem.Definition.Collections
         /// <remarks>
         /// Holds a framework value type (a string, a number, a <see cref="bool"/>, a <see cref="Guid"/>, a date or
         /// time, a <see cref="byte"/> array) or a nested <see cref="ParameterCollection"/>. A value of an application-defined type travels only
-        /// through the named-type escape hatch (a namespace added to <see cref="Polhem.Base.SysInfo.AllowedTypeNamespaces"/>),
+        /// through the named-type escape hatch (a namespace added to <see cref="Polhem.Core.SysInfo.AllowedTypeNamespaces"/>),
         /// and on iOS over the MessagePack codec it fails with a <see cref="NotSupportedException"/> that names
         /// the type. The details are under "Code generation at run time (iOS)" in
         /// <c>docs/en/getting-started/platform-support.md</c>.

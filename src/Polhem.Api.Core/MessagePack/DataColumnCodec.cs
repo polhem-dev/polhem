@@ -1,7 +1,7 @@
 using System.Globalization;
 using MessagePack;
 using MessagePack.Formatters;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 
 namespace Polhem.Api.Core.MessagePack
 {

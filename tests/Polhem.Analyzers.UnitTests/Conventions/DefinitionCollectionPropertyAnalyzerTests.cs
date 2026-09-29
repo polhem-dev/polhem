@@ -1,4 +1,4 @@
-using Polhem.Base.Collections;
+using Polhem.Core.Collections;
 using System.ComponentModel;
 using System.Globalization;
 using Polhem.Analyzers.Conventions;

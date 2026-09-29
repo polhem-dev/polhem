@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
-using Polhem.Base.Attributes;
-using Polhem.Base.Serialization;
+using Polhem.Core.Attributes;
+using Polhem.Core.Serialization;
 
 namespace Polhem.Definition.Settings
 {
@@ -54,7 +54,7 @@ namespace Polhem.Definition.Settings
 
         /// <summary>
         /// Gets whether <see cref="Models"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
-        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// and <see cref="Polhem.Core.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
         /// </summary>
         [XmlIgnore, JsonIgnore]
         [Browsable(false)]

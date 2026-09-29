@@ -1,4 +1,4 @@
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
@@ -122,7 +122,7 @@ internal static class Smoke
             master.Fields!.Add("sys_name", "名稱", FieldDbType.String);
             var detail = schema.Tables!.Add($"{progId}Detail", "明細");
             detail.Fields!.Add("line_no", "項次", FieldDbType.Integer);
-            Polhem.Base.Serialization.XmlCodec.SerializeToFile(schema, schemaPath);
+            Polhem.Core.Serialization.XmlCodec.SerializeToFile(schema, schemaPath);
 
             var vm = FormSchemaDocumentViewModel.Load(schemaPath, SolutionContext.Empty);
             // The command only applies to the schema node, which is what the context menu binds to.
@@ -195,7 +195,7 @@ internal static class Smoke
             model.Rules!.Add(new PermissionRule(PermissionActions.Read, ScopeStrategy.Dept));
             model.Rules!.Add(new PermissionRule(PermissionActions.Create));
             root.Models!.Add(model);
-            Polhem.Base.Serialization.XmlCodec.SerializeToFile(root, target);
+            Polhem.Core.Serialization.XmlCodec.SerializeToFile(root, target);
 
             var vm = PermissionModelsDocumentViewModel.Load(target);
             var loaded = vm.Root.Models!.FirstOrDefault(m => m.ModelId == "PurchaseOrder");
@@ -234,7 +234,7 @@ internal static class Smoke
             var category = new DbCategory { Id = "common", DisplayName = "通用資料庫" };
             category.Tables!.Add(new TableItem { TableName = "st_user", DisplayName = "使用者" });
             root.Categories!.Add(category);
-            Polhem.Base.Serialization.XmlCodec.SerializeToFile(root, target);
+            Polhem.Core.Serialization.XmlCodec.SerializeToFile(root, target);
 
             var vm = DbCategorySettingsDocumentViewModel.Load(target);
             var loaded = vm.Root.Categories!.FirstOrDefault(c => c.Id == "common");
@@ -268,7 +268,7 @@ internal static class Smoke
         {
             var root = new ProgramSettings();
             root.Items!.Add(new ProgramItem { ProgId = "Employee", DisplayName = "員工", BusinessObject = "EmployeeBO" });
-            Polhem.Base.Serialization.XmlCodec.SerializeToFile(root, target);
+            Polhem.Core.Serialization.XmlCodec.SerializeToFile(root, target);
 
             var vm = ProgramSettingsDocumentViewModel.Load(target);
             var loadedProg = vm.Root.Items?.FirstOrDefault(p => p.ProgId == "Employee");
@@ -303,7 +303,7 @@ internal static class Smoke
             var root = new MenuSettings();
             var folder = root.Items!.AddFolder("hr", "人事");
             folder.Items!.AddEntry("employee", "Employee", "員工");
-            Polhem.Base.Serialization.XmlCodec.SerializeToFile(root, target);
+            Polhem.Core.Serialization.XmlCodec.SerializeToFile(root, target);
 
             var vm = MenuSettingsDocumentViewModel.Load(target);
             if (vm.Root.FindNode("hr") is not MenuFolder loadedFolder)
@@ -345,7 +345,7 @@ internal static class Smoke
             root.BackendConfiguration.CacheNotifyOptions.IntervalSeconds = 42;
             root.BackendConfiguration.SecurityKeySettings.ApiEncryptionKey = "smoke-api-key";
             root.ExtendedProperties!.Add(new Property { Name = "SmokeProp", Value = "SmokeValue" });
-            Polhem.Base.Serialization.XmlCodec.SerializeToFile(root, target);
+            Polhem.Core.Serialization.XmlCodec.SerializeToFile(root, target);
 
             var vm = SystemSettingsDocumentViewModel.Load(target);
             if (vm.Root.CommonConfiguration.Version != "1.0.0-smoke")
@@ -401,7 +401,7 @@ internal static class Smoke
                 ServerId = "common-server",
                 DbName = "common",
             });
-            Polhem.Base.Serialization.XmlCodec.SerializeToFile(root, target);
+            Polhem.Core.Serialization.XmlCodec.SerializeToFile(root, target);
 
             var vm = DatabaseSettingsDocumentViewModel.Load(target);
             var server = vm.Root.Servers!.FirstOrDefault(s => s.Id == "common-server");
@@ -488,7 +488,7 @@ internal static class Smoke
             var pk = new DbTableIndex { Name = "PK_employee", PrimaryKey = true, Unique = true };
             pk.IndexFields!.Add(new IndexField("sys_no", SortDirection.Asc));
             root.Indexes!.Add(pk);
-            Polhem.Base.Serialization.XmlCodec.SerializeToFile(root, target);
+            Polhem.Core.Serialization.XmlCodec.SerializeToFile(root, target);
 
             var vm = TableSchemaDocumentViewModel.Load(target);
             if (vm.Root.Fields!.FirstOrDefault(f => f.FieldName == "sys_id")?.Length != 30)
@@ -531,7 +531,7 @@ internal static class Smoke
             grid.Columns!.Add(new LayoutColumn { FieldName = "skill_code", Caption = "技能代碼", Width = 120 });
             grid.Columns!.Add(new LayoutColumn { FieldName = "skill_level", Caption = "等級", Width = 80 });
             root.Details!.Add(grid);
-            Polhem.Base.Serialization.XmlCodec.SerializeToFile(root, target);
+            Polhem.Core.Serialization.XmlCodec.SerializeToFile(root, target);
 
             var vm = FormLayoutDocumentViewModel.Load(target);
             if (vm.Root.LayoutId != "default" || vm.Root.ProgId != "Employee")
@@ -576,7 +576,7 @@ internal static class Smoke
             enumDef.Entries.Add(new LanguageEnumEntry { Code = "M", Text = "男" });
             enumDef.Entries.Add(new LanguageEnumEntry { Code = "F", Text = "女" });
             root.Enums.Add(enumDef);
-            Polhem.Base.Serialization.XmlCodec.SerializeToFile(root, target);
+            Polhem.Core.Serialization.XmlCodec.SerializeToFile(root, target);
 
             var vm = LanguageDocumentViewModel.Load(target);
             if (vm.Root.Namespace != "Employee" || vm.Root.Lang != "zh-TW")
@@ -622,7 +622,7 @@ internal static class Smoke
             PermissionModelsDocumentViewModel Open(string name)
             {
                 var path = Path.Combine(tempDir, name);
-                Polhem.Base.Serialization.XmlCodec.SerializeToFile(new PermissionModels(), path);
+                Polhem.Core.Serialization.XmlCodec.SerializeToFile(new PermissionModels(), path);
                 var doc = PermissionModelsDocumentViewModel.Load(path);
                 vm.OpenDocuments.Add(doc);
                 vm.ActiveDocument = doc;

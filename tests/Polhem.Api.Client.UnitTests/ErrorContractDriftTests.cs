@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using Polhem.Api.Client.UnitTests.Connectors;
 using Polhem.Api.Core.JsonRpc;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 
 namespace Polhem.Api.Client.UnitTests
 {

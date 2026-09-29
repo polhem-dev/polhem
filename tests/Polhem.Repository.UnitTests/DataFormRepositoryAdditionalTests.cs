@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Reflection;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Definition;

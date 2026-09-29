@@ -1,11 +1,11 @@
-# Dependency boundary rules (`Polhem.Base` / `Polhem.Definition`)
+# Dependency boundary rules (`Polhem.Core` / `Polhem.Definition`)
 
-## `Polhem.Base` and `Polhem.Definition` are the two lowest assemblies
+## `Polhem.Core` and `Polhem.Definition` are the two lowest assemblies
 
 **Unless it is necessary, do not add any further package reference (`PackageReference`) to these two projects.**
 
 They are the bottom of the framework's dependency graph: the direct downstream of `Polhem.Definition` spans the
-contracts, data access, caching, business logic, API and UI layers, and `Polhem.Base` is a dependency of **every**
+contracts, data access, caching, business logic, API and UI layers, and `Polhem.Core` is a dependency of **every**
 project. **Any package added to these two layers spreads along the dependency chain to every consumer**, including
 pure UI heads and definition file tools that only want to read definitions.
 
@@ -36,13 +36,13 @@ and [adr-036](../../maintainers/adr/adr-036-wire-serialization-externalized.md).
 
 Abstraction and implementation live in two layers: **the abstraction sinks down, the implementation stays up**.
 
-- If the abstraction uses only BCL types → put it in `Polhem.Base` (for example
-  `Polhem.Base.Expressions.IExpressionEvaluator`).
+- If the abstraction uses only BCL types → put it in `Polhem.Core` (for example
+  `Polhem.Core.Expressions.IExpressionEvaluator`).
 - An implementation that brings a third-party package → stays in its own assembly (for example
   `Polhem.Expressions.DynamicExpressoEvaluator`), and the **composition layer** (`Polhem.Hosting`, each UI head)
   decides which implementation to use.
 
-`Polhem.Base` is not a junk drawer either: only move in abstractions that have "zero external dependencies and are
+`Polhem.Core` is not a junk drawer either: only move in abstractions that have "zero external dependencies and are
 shared by several layers".
 
 ## Two gates (complementary, not duplicates)
@@ -66,7 +66,7 @@ about "the correct approach" in the previous section.
 > **Correction (measured 2026-08-11): the build-time lock can see transitive *project references*; it only cannot
 > see transitive *packages*.** The .NET SDK's `IncludeTransitiveProjectReferences` merges transitive project
 > references into `@(ProjectReference)` before Build. Evidence: the csproj of `Polhem.Api.Contracts` lists only
-> `Polhem.Definition`, yet as soon as the gate was enabled it reported POLHEM9001 for `Polhem.Base`. Therefore
+> `Polhem.Definition`, yet as soon as the gate was enabled it reported POLHEM9001 for `Polhem.Core`. Therefore
 > **the allowlist must list the whole project reference closure**, not only the entries written in the csproj.
 
 The build-time lock checks only references that **flow to consumers**: packages with `PrivateAssets="all"`

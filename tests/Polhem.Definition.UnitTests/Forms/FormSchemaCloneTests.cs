@@ -1,6 +1,6 @@
 using Polhem.Definition.Collections;
 using System.ComponentModel;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 
 namespace Polhem.Definition.UnitTests.Forms

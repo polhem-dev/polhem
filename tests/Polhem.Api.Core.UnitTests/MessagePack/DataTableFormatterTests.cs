@@ -3,8 +3,8 @@ using System.Data;
 using System.Globalization;
 using System.Text.Json;
 using Polhem.Api.Core.MessagePack;
-using Polhem.Base.Data;
-using Polhem.Base.Serialization;
+using Polhem.Core.Data;
+using Polhem.Core.Serialization;
 
 namespace Polhem.Api.Core.UnitTests.MessagePack
 {

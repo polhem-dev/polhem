@@ -1,4 +1,4 @@
-using Polhem.Base;
+using Polhem.Core;
 
 namespace Polhem.Definition.Security
 {
@@ -7,7 +7,7 @@ namespace Polhem.Definition.Security
     /// </summary>
     /// <remarks>
     /// Carries the hashed secret, never the plaintext key: the framework cannot recover a key once
-    /// issued (see <see cref="Polhem.Base.Security.ApiKeyHasher"/>). Disabled rows are excluded by the repository, so an
+    /// issued (see <see cref="Polhem.Core.Security.ApiKeyHasher"/>). Disabled rows are excluded by the repository, so an
     /// instance of this type always represents an enabled key — the same treatment
     /// <c>CompanyRepository</c> gives disabled companies, and the reason there is no
     /// <c>Enabled</c> property here.
@@ -38,7 +38,7 @@ namespace Polhem.Definition.Security
 
         /// <summary>
         /// Gets the hashed secret segment, in the <c>v1.{salt}.{hash}</c> form produced by
-        /// <see cref="Polhem.Base.Security.ApiKeyHasher.HashSecret"/>.
+        /// <see cref="Polhem.Core.Security.ApiKeyHasher.HashSecret"/>.
         /// </summary>
         public string HashedKey { get; init; } = string.Empty;
 

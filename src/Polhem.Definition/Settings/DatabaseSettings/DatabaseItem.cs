@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Xml.Serialization;
-using Polhem.Base.Attributes;
-using Polhem.Base.Collections;
+using Polhem.Core.Attributes;
+using Polhem.Core.Collections;
 using Polhem.Definition.Database;
 
 namespace Polhem.Definition.Settings

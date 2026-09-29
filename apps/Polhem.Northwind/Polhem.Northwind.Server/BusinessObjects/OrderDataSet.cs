@@ -1,6 +1,6 @@
 using System.Data;
-using Polhem.Base;
-using Polhem.Base.Exceptions;
+using Polhem.Core;
+using Polhem.Core.Exceptions;
 
 namespace Polhem.Northwind.Server.BusinessObjects;
 

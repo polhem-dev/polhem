@@ -1,6 +1,6 @@
 using Polhem.Api.Core;
 using Polhem.Api.Core.JsonRpc;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Api.Client.Providers;
 using Polhem.Api.Core.Conversion;
 using Polhem.Api.Core.Messages;

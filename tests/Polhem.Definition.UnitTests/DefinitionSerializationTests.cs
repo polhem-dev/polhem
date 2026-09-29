@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Data;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Settings;

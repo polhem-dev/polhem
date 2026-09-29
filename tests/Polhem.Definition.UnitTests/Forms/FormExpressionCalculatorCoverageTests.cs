@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Data;
-using Polhem.Base.Data;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Data;
+using Polhem.Core.Exceptions;
 using Polhem.Definition.Forms;
 using Polhem.Expressions;
 

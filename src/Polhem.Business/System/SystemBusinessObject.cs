@@ -1,5 +1,5 @@
-using Polhem.Base;
-using Polhem.Base.Serialization;
+using Polhem.Core;
+using Polhem.Core.Serialization;
 using Polhem.Definition;
 using Polhem.Definition.Attributes;
 using Polhem.Repository.Abstractions.Factories;

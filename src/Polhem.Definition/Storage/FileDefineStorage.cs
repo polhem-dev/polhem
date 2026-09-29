@@ -3,8 +3,8 @@ using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;
-using Polhem.Base;
-using Polhem.Base.Serialization;
+using Polhem.Core;
+using Polhem.Core.Serialization;
 
 namespace Polhem.Definition.Storage
 {

@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 using Polhem.Business.System;
 using Polhem.Business.UnitTests.Fakes;
 using Polhem.Definition.Identity;
@@ -7,7 +7,7 @@ using Polhem.Definition.Database;
 using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {

@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text;
 using Polhem.Api.Core.MessagePack;
 using Polhem.Api.Core.Messages;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 
 namespace Polhem.Api.Core.UnitTests.Contracts
 {

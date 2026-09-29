@@ -1,0 +1,84 @@
+using System.Globalization;
+using Polhem.Core.Data;
+
+namespace Polhem.Core.Expressions
+{
+    /// <summary>
+    /// The shared type/null policy applied when feeding field values into the expression engine.
+    /// Both the server (before save) and UI clients (live preview) route values through this policy
+    /// so that a computed field yields an identical result on either side.
+    /// </summary>
+    /// <remarks>
+    /// Numeric rounding is deliberately not handled here: a computed value is produced at full
+    /// precision and rounded at write-back by the number subsystem (keyed by the field's
+    /// <c>NumberKind</c>), so the round-then-store invariant stays in one place.
+    /// </remarks>
+    public static class ExpressionPolicy
+    {
+
+        /// <summary>
+        /// Coerces a raw field value into a non-null value of the field's CLR type. A
+        /// <c>null</c>/<see cref="DBNull"/> value becomes the type's default (0 for numerics,
+        /// empty string for text, <see cref="Guid.Empty"/>, and so on), so an arithmetic expression
+        /// such as <c>unit_price * qty</c> treats a blank operand as zero rather than throwing.
+        /// </summary>
+        /// <param name="value">The raw value (for example a <see cref="System.Data.DataRow"/> cell).</param>
+        /// <param name="dbType">The field's database type.</param>
+        public static object CoerceValue(object? value, FieldDbType dbType)
+        {
+            var clrType = DbTypeConverter.ToType(dbType);
+            if (value is null || value is DBNull) { return DefaultOf(clrType); }
+            if (clrType.IsInstanceOfType(value)) { return value; }
+            // `Guid` and `byte[]` are not `IConvertible`, so `Convert.ChangeType` throws for them. A
+            // wire-deserialized or SQLite-sourced cell frequently arrives as a string (GUIDs are stored
+            // as TEXT, binary as base64), so parse those forms explicitly before the general path. This
+            // matters on the client even for a numeric-only expression, because the variable map exposes
+            // every column of the row — including a `Guid` key column an expression never references.
+            // An empty/whitespace string is the field's empty value (an unset key, a text-typed GUID
+            // column with no selection), so it maps to the type default rather than throwing from a
+            // `Guid.Parse("")` / `FromBase64String("")` — matching the null/DBNull policy above.
+            if (clrType == typeof(Guid))
+            {
+                var text = value.ToString();
+                return string.IsNullOrWhiteSpace(text) ? Guid.Empty : Guid.Parse(text);
+            }
+            if (clrType == typeof(byte[]))
+            {
+                var text = value.ToString();
+                return string.IsNullOrEmpty(text) ? Array.Empty<byte>() : Convert.FromBase64String(text);
+            }
+            // `DateOnly` is the third non-`IConvertible` type on this path. A calendar day is a
+            // `DateOnly` everywhere in the framework except inside a `DataSet`, where the column must
+            // stay `typeof(DateTime)` — so a value arriving from `ValueUtilities.CDateOnly` or the
+            // `Today()` expression helper is widened here, at the boundary (ADR-032 D12, ADR-031).
+            if (clrType == typeof(DateTime) && value is DateOnly dateOnly)
+            {
+                return dateOnly.ToDateTime(TimeOnly.MinValue);
+            }
+            // `TimeOnly` is the fourth. A time of day is a `TimeOnly` at the point of use but a
+            // fixed-width `"HH:mm"` string in storage, so a value coming back from
+            // `ValueUtilities.CTimeOnly` is narrowed here rather than throwing out of
+            // `Convert.ChangeType`, which rejects every non-`IConvertible` type (ADR-033).
+            if (clrType == typeof(string) && value is TimeOnly timeOnly)
+            {
+                return timeOnly.ToString(ValueUtilities.TimeOnlyFormat, CultureInfo.InvariantCulture);
+            }
+            // The value's runtime type differs from the field's CLR type (for example an int cell
+            // feeding a decimal field). Convert when possible; incompatible types surface as an
+            // InvalidCastException from the framework, which the caller treats as a config error.
+            return Convert.ChangeType(value, clrType, CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Returns the non-null default value for a CLR type: empty string for
+        /// <see cref="string"/>, an empty array for <c>byte[]</c>, otherwise the value type's
+        /// zero-initialized default.
+        /// </summary>
+        private static object DefaultOf(Type clrType)
+        {
+            if (clrType == typeof(string)) { return string.Empty; }
+            if (clrType == typeof(byte[])) { return Array.Empty<byte>(); }
+            return Activator.CreateInstance(clrType)!;
+        }
+    }
+}

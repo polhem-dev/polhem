@@ -1,5 +1,5 @@
 using System.Xml.Serialization;
-using Polhem.Base;
+using Polhem.Core;
 
 namespace Polhem.Definition.Organization
 {

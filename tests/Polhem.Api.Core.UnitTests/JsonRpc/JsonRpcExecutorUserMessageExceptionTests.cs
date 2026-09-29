@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Polhem.Api.Core.JsonRpc;
-using Polhem.Base;
-using Polhem.Base.Exceptions;
+using Polhem.Core;
+using Polhem.Core.Exceptions;
 
 namespace Polhem.Api.Core.UnitTests.JsonRpc
 {

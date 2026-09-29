@@ -1,5 +1,5 @@
-using Polhem.Base.Data;
-using Polhem.Base.Serialization;
+using Polhem.Core.Data;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Database;
 using Polhem.Definition.Sorting;
 using Polhem.DefineEditor.Models;

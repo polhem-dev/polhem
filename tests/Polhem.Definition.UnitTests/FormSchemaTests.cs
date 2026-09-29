@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Polhem.Definition.Forms;
-using Polhem.Base.Data;
-using Polhem.Base.Serialization;
+using Polhem.Core.Data;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Database;
 
 namespace Polhem.Definition.UnitTests

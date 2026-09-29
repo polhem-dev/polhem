@@ -1,6 +1,6 @@
 using System.Data;
 using System.Globalization;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Definition;
@@ -449,7 +449,7 @@ namespace Polhem.Repository.Form
         }
 
         /// <remarks>
-        /// Accepts the same shapes as <see cref="Polhem.Base.ValueUtilities.CGuid(object)"/>, the
+        /// Accepts the same shapes as <see cref="Polhem.Core.ValueUtilities.CGuid(object)"/>, the
         /// framework-wide converter, and differs from it only in the answer for a value that is
         /// no kind of Guid: null here, <see cref="Guid.Empty"/> there. That distinction is what
         /// <see cref="ExtractMasterRowId"/> uses to skip a row rather than read it as unset.

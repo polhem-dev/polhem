@@ -1,7 +1,7 @@
 using Polhem.Definition.Database;
 using System.Globalization;
 using System.Text;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Db.Ddl;
 
 namespace Polhem.Db.Providers.SqlServer

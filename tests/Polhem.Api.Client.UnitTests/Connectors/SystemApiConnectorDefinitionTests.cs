@@ -5,7 +5,7 @@ using Polhem.Api.Client.Providers;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Messages.System;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;

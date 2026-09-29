@@ -1,4 +1,4 @@
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 
 namespace Polhem.Definition.Security
 {

@@ -30,7 +30,7 @@ namespace Polhem.Business.Form
     /// </para>
     /// <para>
     /// <b>Throwing aborts the operation.</b> Use
-    /// <see cref="Polhem.Base.Exceptions.UserMessageException"/> for a message meant to reach the end
+    /// <see cref="Polhem.Core.Exceptions.UserMessageException"/> for a message meant to reach the end
     /// user. At an <c>After</c> stage the data is already committed, so an exception fails the call
     /// against saved data: side effects there must tolerate retries, or be queued rather than
     /// performed inline. A plugin that talks to another system should decide for itself whether a

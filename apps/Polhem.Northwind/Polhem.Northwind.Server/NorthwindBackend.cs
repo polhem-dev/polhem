@@ -1,6 +1,6 @@
 using Polhem.Api.AspNetCore;
 using Polhem.Api.Core;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Business;
 using Polhem.Db;
 using Polhem.Db.Manager;

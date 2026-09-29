@@ -1,6 +1,6 @@
 using Polhem.Definition.Logging;
 using System.ComponentModel;
-using Polhem.Base.Attributes;
+using Polhem.Core.Attributes;
 
 namespace Polhem.Definition.Settings
 {

@@ -132,7 +132,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData("System.Byte[]")]
         [InlineData("System.DBNull")]
         [InlineData("System.Data.DataTable")]
-        [InlineData("Polhem.Base.SomeClass")]
+        [InlineData("Polhem.Core.SomeClass")]
         [InlineData("Polhem.Definition.Collections.Parameter")]
         [InlineData("Polhem.Api.Contracts.SomeDto")]
         [InlineData("Polhem.Api.Core.Something")]

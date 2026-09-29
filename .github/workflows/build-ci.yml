@@ -267,7 +267,7 @@ jobs:
 
     - name: Pack NuGet packages (verification only, not pushed)
       run: |
-        dotnet pack src/Polhem.Base/Polhem.Base.csproj --configuration Release --output ./nupkgs --no-build
+        dotnet pack src/Polhem.Core/Polhem.Core.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Expressions/Polhem.Expressions.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Definition/Polhem.Definition.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.ObjectCaching/Polhem.ObjectCaching.csproj --configuration Release --output ./nupkgs --no-build
@@ -296,7 +296,7 @@ jobs:
     # It needs a rebuild (a different runtimeconfig), so it has no --no-build and is the last step of the job,
     # so that it does not disturb the outputs used by the earlier --no-build steps.
     # It covers both halves: the MessagePack wire (Polhem.Api.Core) and the reflection-only XmlSerializer path
-    # (Polhem.Definition / Polhem.Base). The latter was not gated before, and it is the kind that has actually
+    # (Polhem.Definition / Polhem.Core). The latter was not gated before, and it is the kind that has actually
     # broken: the get-only setter defect of LanguageEnum.Entries (https://github.com/jeff377/bee-library/commit/5e748b08)
     # was found by a manual scan, not by CI.
     # The other projects in the list test the rest of what a mobile head ships: the expression interpreter
@@ -316,7 +316,7 @@ jobs:
         for proj in \
           tests/Polhem.Api.Core.UnitTests/Polhem.Api.Core.UnitTests.csproj \
           tests/Polhem.Definition.UnitTests/Polhem.Definition.UnitTests.csproj \
-          tests/Polhem.Base.UnitTests/Polhem.Base.UnitTests.csproj \
+          tests/Polhem.Core.UnitTests/Polhem.Core.UnitTests.csproj \
           tests/Polhem.Expressions.UnitTests/Polhem.Expressions.UnitTests.csproj \
           tests/Polhem.Api.Client.UnitTests/Polhem.Api.Client.UnitTests.csproj \
           tests/Polhem.UI.Core.UnitTests/Polhem.UI.Core.UnitTests.csproj \

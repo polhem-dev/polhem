@@ -1,4 +1,4 @@
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 
 namespace Polhem.Api.Core.Transformers
 {

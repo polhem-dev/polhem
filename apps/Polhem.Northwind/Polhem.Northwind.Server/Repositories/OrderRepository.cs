@@ -1,4 +1,4 @@
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Db;
 using Polhem.Repository;
 using Polhem.Repository.Form;

@@ -1,5 +1,5 @@
 using Polhem.Definition.Settings;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Db.Manager;
 using Polhem.Definition;
 using Polhem.Db.Schema;

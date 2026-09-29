@@ -6,7 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core.Messages.Form;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;

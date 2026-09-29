@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Security.Cryptography;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 

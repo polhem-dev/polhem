@@ -1,5 +1,5 @@
 using System.Security.Cryptography;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 
 namespace Polhem.Api.Core.Transformers
 {

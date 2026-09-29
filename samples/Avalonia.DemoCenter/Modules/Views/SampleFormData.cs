@@ -1,5 +1,5 @@
 using System.Data;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.DataObjects;

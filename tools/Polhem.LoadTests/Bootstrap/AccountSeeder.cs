@@ -1,6 +1,6 @@
 using System.Globalization;
-using Polhem.Base;
-using Polhem.Base.Security;
+using Polhem.Core;
+using Polhem.Core.Security;
 using Polhem.Db;
 using Polhem.LoadTests.Configuration;
 

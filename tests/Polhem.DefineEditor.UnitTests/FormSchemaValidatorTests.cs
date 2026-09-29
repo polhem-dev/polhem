@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.DefineEditor.Models;
 using Polhem.DefineEditor.Services;
 using Polhem.Definition;

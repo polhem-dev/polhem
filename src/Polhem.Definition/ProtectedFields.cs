@@ -32,7 +32,7 @@ namespace Polhem.Definition
         /// <remarks>
         /// WARNING: this column grants the privilege of <i>being</i> the user, so the FormSchema path
         /// must not write it whatever a deployment's user-maintenance form declares. Its shape is
-        /// also load-bearing — <see cref="Polhem.Base.Security.PasswordHasher.VerifyPassword"/> reads the iteration count, salt
+        /// also load-bearing — <see cref="Polhem.Core.Security.PasswordHasher.VerifyPassword"/> reads the iteration count, salt
         /// and hash out of the stored string — so a form writing it would be storing values the
         /// verifier never produced.
         /// </remarks>

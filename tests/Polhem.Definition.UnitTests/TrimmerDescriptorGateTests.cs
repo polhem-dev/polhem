@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
-using Polhem.Base.Collections;
+using Polhem.Core.Collections;
 using Polhem.Definition.Forms;
 
 namespace Polhem.Definition.UnitTests

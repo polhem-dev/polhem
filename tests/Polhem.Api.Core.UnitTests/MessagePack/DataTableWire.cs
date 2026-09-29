@@ -127,7 +127,7 @@ namespace Polhem.Api.Core.UnitTests.MessagePack
         }
 
         private static void WriteInt32Column(ref MessagePackWriter writer, string name)
-            => WriteColumn(ref writer, name, (int)Polhem.Base.Data.FieldDbType.Integer);
+            => WriteColumn(ref writer, name, (int)Polhem.Core.Data.FieldDbType.Integer);
 
         private static void WriteColumn(ref MessagePackWriter writer, string name, int fieldDbType)
         {

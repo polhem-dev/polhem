@@ -1,4 +1,4 @@
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 using Polhem.Definition;
 using Polhem.Definition.Logging;
 using Polhem.Definition.Settings;

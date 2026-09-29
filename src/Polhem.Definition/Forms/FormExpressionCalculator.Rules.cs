@@ -1,7 +1,7 @@
 using System.Data;
 using System.Globalization;
-using Polhem.Base;
-using Polhem.Base.Exceptions;
+using Polhem.Core;
+using Polhem.Core.Exceptions;
 
 namespace Polhem.Definition.Forms
 {

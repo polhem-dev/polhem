@@ -7,7 +7,7 @@ using Polhem.Definition.Identity;
 using Polhem.Tests.Shared;
 
 using Polhem.Definition;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 namespace Polhem.Business.UnitTests
 {
     /// <summary>

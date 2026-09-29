@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Polhem.Api.Core.Json;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 
 namespace Polhem.Api.Core.Transformers
 {
@@ -41,7 +41,7 @@ namespace Polhem.Api.Core.Transformers
     /// </item>
     /// <item>
     /// <b>Empty collections are written, not omitted.</b> Plain goes through
-    /// <see cref="Polhem.Base.Serialization.JsonCodec"/>, which honours <c>{Property}Specified</c>
+    /// <see cref="Polhem.Core.Serialization.JsonCodec"/>, which honours <c>{Property}Specified</c>
     /// properties; this codec's options do not, so a member such as <c>parameters</c> appears as <c>[]</c>.
     /// </item>
     /// </list>
@@ -78,7 +78,7 @@ namespace Polhem.Api.Core.Transformers
                 MaxDepth = MaxDepth
             };
 
-            // Keep this list aligned with Polhem.Base.Serialization.JsonCodec: a body that
+            // Keep this list aligned with Polhem.Core.Serialization.JsonCodec: a body that
             // deserialized DataSet, DataTable or enum values differently from a Plain payload
             // would make the same call mean two things depending on the format it arrived in.
             options.Converters.Add(new DataTableJsonConverter());

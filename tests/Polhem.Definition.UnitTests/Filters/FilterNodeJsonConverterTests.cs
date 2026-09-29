@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Filters;
 
 namespace Polhem.Definition.UnitTests.Filters

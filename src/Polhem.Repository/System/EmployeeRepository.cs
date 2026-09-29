@@ -1,5 +1,5 @@
 using System.Data;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Db;
 using Polhem.Definition.Organization;
 using Polhem.Repository.Abstractions.System;

@@ -1,4 +1,4 @@
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Definition.Identity;
 
 namespace Polhem.Definition.Forms

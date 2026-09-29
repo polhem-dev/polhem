@@ -1,4 +1,4 @@
-using Polhem.Base;
+using Polhem.Core;
 
 namespace Polhem.Definition.Identity
 {
@@ -114,7 +114,7 @@ namespace Polhem.Definition.Identity
         /// </summary>
         /// <remarks>
         /// The default is deliberately empty rather than a named zone. Every layer that consumes
-        /// this value — <see cref="Polhem.Base.FrameworkClock"/>, <c>DateTimeZoneConverter</c> and
+        /// this value — <see cref="Polhem.Core.FrameworkClock"/>, <c>DateTimeZoneConverter</c> and
         /// <c>PayloadZoneConverter</c> — already treats a blank zone as UTC, and hard-coding a
         /// zone here made that path unreachable while silently binding the framework to a single
         /// region. Login fills this from <c>st_user.time_zone</c>, falling back to

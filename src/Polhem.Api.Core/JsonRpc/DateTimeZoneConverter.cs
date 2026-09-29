@@ -1,5 +1,5 @@
 using System.Data;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 
 namespace Polhem.Api.Core.JsonRpc
 {
@@ -206,7 +206,7 @@ namespace Polhem.Api.Core.JsonRpc
         /// Converts both versions of a modified row, leaving it Modified with every edit intact.
         /// </summary>
         /// <remarks>
-        /// The mechanics are in <see cref="Polhem.Base.Data.DataRowExtensions.RewriteVersions"/>. Capturing the whole row
+        /// The mechanics are in <see cref="Polhem.Core.Data.DataRowExtensions.RewriteVersions"/>. Capturing the whole row
         /// before it is rejected is what keeps the row's other edits;
         /// <c>DateTimeZoneConverterTests.Convert_ModifiedRowWithNonInstantEdit_KeepsTheEdit</c> pins this.
         /// </remarks>

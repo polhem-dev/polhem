@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Polhem.Business.Form;
 using Polhem.Tests.Shared;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {

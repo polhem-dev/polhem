@@ -1,5 +1,5 @@
 using Polhem.Api.Core;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Hosting;
 using Polhem.LoadTests.Caching;

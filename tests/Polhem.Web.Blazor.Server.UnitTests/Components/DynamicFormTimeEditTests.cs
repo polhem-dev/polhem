@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Reflection;
 using AngleSharp.Dom;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Server.Components;

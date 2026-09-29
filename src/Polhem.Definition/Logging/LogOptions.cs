@@ -1,4 +1,4 @@
-using Polhem.Base.Attributes;
+using Polhem.Core.Attributes;
 using System.ComponentModel;
 
 namespace Polhem.Definition.Logging

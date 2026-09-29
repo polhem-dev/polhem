@@ -13,21 +13,21 @@ namespace Polhem.Analyzers.Serialization
         /// <summary>
         /// The framework base type for keyed collections.
         /// </summary>
-        public const string KeyCollectionBase = "Polhem.Base.Collections.KeyCollectionBase`1";
+        public const string KeyCollectionBase = "Polhem.Core.Collections.KeyCollectionBase`1";
 
         /// <summary>
         /// The framework base type for collections.
         /// </summary>
-        public const string CollectionBase = "Polhem.Base.Collections.CollectionBase`1";
+        public const string CollectionBase = "Polhem.Core.Collections.CollectionBase`1";
 
         /// <summary>
         /// The framework base type for keyed collection items.
         /// </summary>
-        public const string KeyCollectionItem = "Polhem.Base.Collections.KeyCollectionItem";
+        public const string KeyCollectionItem = "Polhem.Core.Collections.KeyCollectionItem";
 
         /// <summary>
         /// The framework base type for collection items.
         /// </summary>
-        public const string CollectionItem = "Polhem.Base.Collections.CollectionItem";
+        public const string CollectionItem = "Polhem.Core.Collections.CollectionItem";
     }
 }

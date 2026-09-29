@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Db.Providers.MySql;
 using Polhem.Db.Schema;
 using Polhem.Db.Schema.Changes;

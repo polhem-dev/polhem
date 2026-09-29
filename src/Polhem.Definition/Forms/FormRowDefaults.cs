@@ -1,6 +1,6 @@
 using System.Data;
-using Polhem.Base;
-using Polhem.Base.Data;
+using Polhem.Core;
+using Polhem.Core.Data;
 using Polhem.Definition.Database;
 
 namespace Polhem.Definition.Forms
@@ -81,7 +81,7 @@ namespace Polhem.Definition.Forms
         /// The type-appropriate non-null default for a <see cref="FieldDbType"/>, or
         /// <see cref="DBNull.Value"/> for types with no natural empty value. Every type except
         /// <c>Date</c> and <c>DateTime</c> takes its value from
-        /// <see cref="Polhem.Base.Data.FieldDbTypeExtensions.GetDefaultValue(FieldDbType)"/>.
+        /// <see cref="Polhem.Core.Data.FieldDbTypeExtensions.GetDefaultValue(FieldDbType)"/>.
         /// </summary>
         /// <param name="dbType">The field database type.</param>
         /// <param name="timeZoneId">The user's IANA time zone id; blank means UTC.</param>

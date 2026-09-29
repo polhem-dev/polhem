@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Client.Definitions;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Business.Form;
 using Polhem.Db;
 using Polhem.Definition;

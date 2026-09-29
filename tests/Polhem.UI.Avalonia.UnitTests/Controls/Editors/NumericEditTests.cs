@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Avalonia.Input;
 using Avalonia.Media;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;

@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Polhem.Api.Core.Json;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 
 namespace Polhem.Api.Core.Conversion
 {

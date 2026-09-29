@@ -1,5 +1,5 @@
 using Avalonia.Controls;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Identity;

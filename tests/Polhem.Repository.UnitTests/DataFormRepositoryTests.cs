@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using System.Data.Common;
 using System.Reflection;
-using Polhem.Base;
-using Polhem.Base.Data;
+using Polhem.Core;
+using Polhem.Core.Data;
 using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Definition;

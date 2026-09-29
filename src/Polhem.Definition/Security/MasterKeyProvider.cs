@@ -1,6 +1,6 @@
 using Polhem.Definition.Settings;
-using Polhem.Base;
-using Polhem.Base.Security;
+using Polhem.Core;
+using Polhem.Core.Security;
 
 namespace Polhem.Definition.Security
 {

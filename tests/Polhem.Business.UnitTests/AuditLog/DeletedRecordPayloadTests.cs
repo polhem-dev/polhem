@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using Polhem.Api.Contracts.AuditLog;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Business.AuditLog;
 using Polhem.Definition.Logging;
 

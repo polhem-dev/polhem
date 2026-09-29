@@ -28,10 +28,10 @@ a type, first decide which kind it is:
 
 | Layer | Location | Contents | Examples |
 |----|------|------|------|
-| **Primitives** | `Polhem.Base/Security/` | Stateless cryptographic operations | `AesCbcHmacCryptor`, `RsaCryptor`, `PasswordHasher`, `FileHashValidator`, `AesCbcHmacKeyGenerator` |
+| **Primitives** | `Polhem.Core/Security/` | Stateless cryptographic operations | `AesCbcHmacCryptor`, `RsaCryptor`, `PasswordHasher`, `FileHashValidator`, `AesCbcHmacKeyGenerator` |
 | **Policy / key protocol** | `Polhem.Definition/Security/` | Key sources, access policy, verification protocols | `MasterKeyProvider`, `EncryptionKeyProtector`, `IAccessTokenValidator`, `ILoginAttemptTracker` |
 
-Dividing principle: pure computation (given input, compute output, no business meaning) goes in `Polhem.Base`;
+Dividing principle: pure computation (given input, compute output, no business meaning) goes in `Polhem.Core`;
 policy involving "where the key comes from, who may access it, how it is verified" goes in `Polhem.Definition`.
 
 ## API access control

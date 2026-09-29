@@ -1,4 +1,4 @@
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Definition.Settings;
 using Polhem.ObjectCaching.Providers;
 

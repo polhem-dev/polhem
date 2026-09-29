@@ -1,6 +1,6 @@
 using System.ComponentModel;
-using Polhem.Base;
-using Polhem.Base.Expressions;
+using Polhem.Core;
+using Polhem.Core.Expressions;
 
 namespace Polhem.Expressions.UnitTests
 {

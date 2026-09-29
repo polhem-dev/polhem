@@ -1,5 +1,5 @@
 using Avalonia.Controls;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.UI.Avalonia.Controls.Editors;
 using Avalonia.DemoCenter.Modules.DataEditors;
 

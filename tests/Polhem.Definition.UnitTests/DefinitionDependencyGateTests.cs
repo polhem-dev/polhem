@@ -31,7 +31,7 @@ namespace Polhem.Definition.UnitTests
     /// <para>
     /// <b>Why all three roots are guarded.</b> <c>POLHEM9001</c> is enabled by a string comparison against three project
     /// names in <c>src/Directory.Build.targets</c>: if a project is renamed, or someone edits that file and drops one, the
-    /// target silently stops running and <b>nothing turns red</b>. <c>Polhem.Base</c> used to have a backstop in practice
+    /// target silently stops running and <b>nothing turns red</b>. <c>Polhem.Core</c> used to have a backstop in practice
     /// (it is inside the closure of <c>Polhem.Definition</c>), but <c>Polhem.Api.Contracts</c> is <b>downstream</b> and
     /// outside every closure being observed, so its only guard was that name string. With all three listed as roots,
     /// this test still catches it when the build-time lock stops working.
@@ -51,7 +51,7 @@ namespace Polhem.Definition.UnitTests
         /// </summary>
         /// <remarks>
         /// Matches <c>PolhemAllowedDependency</c> in <c>src/Directory.Build.targets</c> entry by entry.
-        /// The list for <c>Polhem.Base</c> is deliberately empty: it must not have any dependency that flows to consumers.
+        /// The list for <c>Polhem.Core</c> is deliberately empty: it must not have any dependency that flows to consumers.
         /// <c>Microsoft.Extensions.Localization.Abstractions</c> (used by
         /// <c>Language/LanguageResourceStringLocalizer.cs</c>) is a Microsoft first-party pure abstraction package versioned with .NET.
         /// It carries no implementation and locks in no engine, so it is allowed. Third-party implementation packages must not
@@ -60,9 +60,9 @@ namespace Polhem.Definition.UnitTests
         private static readonly Dictionary<string, string[]> s_lockedLibraries =
             new(StringComparer.OrdinalIgnoreCase)
             {
-                ["Polhem.Base"] = [],
-                ["Polhem.Definition"] = ["Polhem.Base", "Microsoft.Extensions.Localization.Abstractions"],
-                ["Polhem.Api.Contracts"] = ["Polhem.Definition", "Polhem.Base", "Microsoft.Extensions.Localization.Abstractions"],
+                ["Polhem.Core"] = [],
+                ["Polhem.Definition"] = ["Polhem.Core", "Microsoft.Extensions.Localization.Abstractions"],
+                ["Polhem.Api.Contracts"] = ["Polhem.Definition", "Polhem.Core", "Microsoft.Extensions.Localization.Abstractions"],
             };
 
         public static TheoryData<string> LockedLibraries()
@@ -100,12 +100,12 @@ namespace Polhem.Definition.UnitTests
             // If the node names in deps.json change and resolving the BFS root returns an empty set, the test above would pass
             // unconditionally. This test turns "the gate is looking at something" into an assertion as well.
             Assert.Equal(3, s_lockedLibraries.Count);
-            Assert.Contains("Polhem.Base", ResolveDependencyClosure("Polhem.Definition"), StringComparer.OrdinalIgnoreCase);
+            Assert.Contains("Polhem.Core", ResolveDependencyClosure("Polhem.Definition"), StringComparer.OrdinalIgnoreCase);
             Assert.Contains("Polhem.Definition", ResolveDependencyClosure("Polhem.Api.Contracts"), StringComparer.OrdinalIgnoreCase);
 
-            // The closure of `Polhem.Base` is empty (that is its constraint), so check that the node itself is in the graph.
+            // The closure of `Polhem.Core` is empty (that is its constraint), so check that the node itself is in the graph.
             // Otherwise "zero dependencies outside the allowlist" would always hold because the node was never found.
-            Assert.True(ReadDependencyGraph().ContainsKey("Polhem.Base"));
+            Assert.True(ReadDependencyGraph().ContainsKey("Polhem.Core"));
         }
 
         /// <summary>

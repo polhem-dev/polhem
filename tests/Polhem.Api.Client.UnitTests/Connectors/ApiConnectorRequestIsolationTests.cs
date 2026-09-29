@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Data;
 using Polhem.Api.Core.Messages.Form;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 
 namespace Polhem.Api.Client.UnitTests.Connectors
 {

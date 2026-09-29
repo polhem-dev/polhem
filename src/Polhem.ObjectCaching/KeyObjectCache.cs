@@ -1,4 +1,4 @@
-using Polhem.Base;
+using Polhem.Core;
 
 namespace Polhem.ObjectCaching
 {

@@ -57,7 +57,7 @@ jobs:
         $ErrorActionPreference = 'Stop'
         $ver = "${{ steps.version.outputs.VERSION }}"
         $projects = @(
-          'src/Polhem.Base/Polhem.Base.csproj'
+          'src/Polhem.Core/Polhem.Core.csproj'
           'src/Polhem.Expressions/Polhem.Expressions.csproj'
           'src/Polhem.Definition/Polhem.Definition.csproj'
           'src/Polhem.ObjectCaching/Polhem.ObjectCaching.csproj'

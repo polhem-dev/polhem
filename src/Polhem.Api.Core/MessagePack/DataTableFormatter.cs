@@ -1,7 +1,7 @@
 using System.Data;
 using MessagePack;
 using MessagePack.Formatters;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 
 namespace Polhem.Api.Core.MessagePack
 {
@@ -26,7 +26,7 @@ namespace Polhem.Api.Core.MessagePack
     /// <para>
     /// The reader accepts extra trailing elements in a table or column entry and skips them, so a later version can
     /// append metadata without breaking this one. The column metadata is the set the JSON shape
-    /// (<see cref="Polhem.Base.Serialization.DataTableJsonConverter"/>) carries, and
+    /// (<see cref="Polhem.Core.Serialization.DataTableJsonConverter"/>) carries, and
     /// <c>DataTableFormatterTests.BothCodecs_RebuildTheSameTable</c> compares the tables the two rebuild.
     /// </para>
     /// <para>

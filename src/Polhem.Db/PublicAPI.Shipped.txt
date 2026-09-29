@@ -259,7 +259,7 @@ Polhem.Db.Providers.IDialectFactory.CreateFormCommandBuilder(Polhem.Definition.F
 Polhem.Db.Providers.IDialectFactory.CreateTableAlterCommandBuilder() -> Polhem.Db.Ddl.ITableAlterCommandBuilder!
 Polhem.Db.Providers.IDialectFactory.CreateTableRebuildCommandBuilder() -> Polhem.Db.Ddl.ITableRebuildCommandBuilder!
 Polhem.Db.Providers.IDialectFactory.CreateTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> Polhem.Db.Schema.ITableSchemaProvider!
-Polhem.Db.Providers.IDialectFactory.GetDefaultValueExpression(Polhem.Base.Data.FieldDbType dbType) -> string!
+Polhem.Db.Providers.IDialectFactory.GetDefaultValueExpression(Polhem.Core.Data.FieldDbType dbType) -> string!
 Polhem.Db.Providers.MySql.MySqlCreateTableCommandBuilder
 Polhem.Db.Providers.MySql.MySqlCreateTableCommandBuilder.GetCommandText(Polhem.Definition.Database.TableSchema! tableSchema) -> string!
 Polhem.Db.Providers.MySql.MySqlCreateTableCommandBuilder.MySqlCreateTableCommandBuilder() -> void
@@ -273,7 +273,7 @@ Polhem.Db.Providers.MySql.MySqlDialectFactory.CreateFormCommandBuilder(Polhem.De
 Polhem.Db.Providers.MySql.MySqlDialectFactory.CreateTableAlterCommandBuilder() -> Polhem.Db.Ddl.ITableAlterCommandBuilder!
 Polhem.Db.Providers.MySql.MySqlDialectFactory.CreateTableRebuildCommandBuilder() -> Polhem.Db.Ddl.ITableRebuildCommandBuilder!
 Polhem.Db.Providers.MySql.MySqlDialectFactory.CreateTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> Polhem.Db.Schema.ITableSchemaProvider!
-Polhem.Db.Providers.MySql.MySqlDialectFactory.GetDefaultValueExpression(Polhem.Base.Data.FieldDbType dbType) -> string!
+Polhem.Db.Providers.MySql.MySqlDialectFactory.GetDefaultValueExpression(Polhem.Core.Data.FieldDbType dbType) -> string!
 Polhem.Db.Providers.MySql.MySqlDialectFactory.MySqlDialectFactory() -> void
 Polhem.Db.Providers.MySql.MySqlFormCommandBuilder
 Polhem.Db.Providers.MySql.MySqlFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
@@ -302,7 +302,7 @@ Polhem.Db.Providers.Oracle.OracleDialectFactory.CreateFormCommandBuilder(Polhem.
 Polhem.Db.Providers.Oracle.OracleDialectFactory.CreateTableAlterCommandBuilder() -> Polhem.Db.Ddl.ITableAlterCommandBuilder!
 Polhem.Db.Providers.Oracle.OracleDialectFactory.CreateTableRebuildCommandBuilder() -> Polhem.Db.Ddl.ITableRebuildCommandBuilder!
 Polhem.Db.Providers.Oracle.OracleDialectFactory.CreateTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> Polhem.Db.Schema.ITableSchemaProvider!
-Polhem.Db.Providers.Oracle.OracleDialectFactory.GetDefaultValueExpression(Polhem.Base.Data.FieldDbType dbType) -> string!
+Polhem.Db.Providers.Oracle.OracleDialectFactory.GetDefaultValueExpression(Polhem.Core.Data.FieldDbType dbType) -> string!
 Polhem.Db.Providers.Oracle.OracleDialectFactory.OracleDialectFactory() -> void
 Polhem.Db.Providers.Oracle.OracleFormCommandBuilder
 Polhem.Db.Providers.Oracle.OracleFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
@@ -331,7 +331,7 @@ Polhem.Db.Providers.PostgreSql.PgDialectFactory.CreateFormCommandBuilder(Polhem.
 Polhem.Db.Providers.PostgreSql.PgDialectFactory.CreateTableAlterCommandBuilder() -> Polhem.Db.Ddl.ITableAlterCommandBuilder!
 Polhem.Db.Providers.PostgreSql.PgDialectFactory.CreateTableRebuildCommandBuilder() -> Polhem.Db.Ddl.ITableRebuildCommandBuilder!
 Polhem.Db.Providers.PostgreSql.PgDialectFactory.CreateTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> Polhem.Db.Schema.ITableSchemaProvider!
-Polhem.Db.Providers.PostgreSql.PgDialectFactory.GetDefaultValueExpression(Polhem.Base.Data.FieldDbType dbType) -> string!
+Polhem.Db.Providers.PostgreSql.PgDialectFactory.GetDefaultValueExpression(Polhem.Core.Data.FieldDbType dbType) -> string!
 Polhem.Db.Providers.PostgreSql.PgDialectFactory.PgDialectFactory() -> void
 Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder
 Polhem.Db.Providers.PostgreSql.PgFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
@@ -360,7 +360,7 @@ Polhem.Db.Providers.SqlServer.SqlDialectFactory.CreateFormCommandBuilder(Polhem.
 Polhem.Db.Providers.SqlServer.SqlDialectFactory.CreateTableAlterCommandBuilder() -> Polhem.Db.Ddl.ITableAlterCommandBuilder!
 Polhem.Db.Providers.SqlServer.SqlDialectFactory.CreateTableRebuildCommandBuilder() -> Polhem.Db.Ddl.ITableRebuildCommandBuilder!
 Polhem.Db.Providers.SqlServer.SqlDialectFactory.CreateTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> Polhem.Db.Schema.ITableSchemaProvider!
-Polhem.Db.Providers.SqlServer.SqlDialectFactory.GetDefaultValueExpression(Polhem.Base.Data.FieldDbType dbType) -> string!
+Polhem.Db.Providers.SqlServer.SqlDialectFactory.GetDefaultValueExpression(Polhem.Core.Data.FieldDbType dbType) -> string!
 Polhem.Db.Providers.SqlServer.SqlDialectFactory.SqlDialectFactory() -> void
 Polhem.Db.Providers.SqlServer.SqlExtendedPropertyCommandBuilder
 Polhem.Db.Providers.SqlServer.SqlFormCommandBuilder
@@ -390,7 +390,7 @@ Polhem.Db.Providers.Sqlite.SqliteDialectFactory.CreateFormCommandBuilder(Polhem.
 Polhem.Db.Providers.Sqlite.SqliteDialectFactory.CreateTableAlterCommandBuilder() -> Polhem.Db.Ddl.ITableAlterCommandBuilder!
 Polhem.Db.Providers.Sqlite.SqliteDialectFactory.CreateTableRebuildCommandBuilder() -> Polhem.Db.Ddl.ITableRebuildCommandBuilder!
 Polhem.Db.Providers.Sqlite.SqliteDialectFactory.CreateTableSchemaProvider(string! databaseId, Polhem.Db.Manager.IDbConnectionManager! connectionManager) -> Polhem.Db.Schema.ITableSchemaProvider!
-Polhem.Db.Providers.Sqlite.SqliteDialectFactory.GetDefaultValueExpression(Polhem.Base.Data.FieldDbType dbType) -> string!
+Polhem.Db.Providers.Sqlite.SqliteDialectFactory.GetDefaultValueExpression(Polhem.Core.Data.FieldDbType dbType) -> string!
 Polhem.Db.Providers.Sqlite.SqliteDialectFactory.SqliteDialectFactory() -> void
 Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder
 Polhem.Db.Providers.Sqlite.SqliteFormCommandBuilder.BuildCount(string! tableName, Polhem.Definition.Filters.FilterNode? filter = null) -> Polhem.Db.DbCommandSpec!
@@ -569,17 +569,17 @@ static Polhem.Db.Manager.DbProviderRegistry.GetConnectionInitializer(Polhem.Defi
 static Polhem.Db.Manager.DbProviderRegistry.IsRegistered(Polhem.Definition.Database.DatabaseType type) -> bool
 static Polhem.Db.Manager.DbProviderRegistry.Register(Polhem.Definition.Database.DatabaseType type, System.Data.Common.DbProviderFactory! factory) -> void
 static Polhem.Db.Manager.DbProviderRegistry.Register(Polhem.Definition.Database.DatabaseType type, System.Data.Common.DbProviderFactory! factory, System.Action<System.Data.Common.DbConnection!>? connectionInitializer) -> void
-static Polhem.Db.Providers.MySql.MySqlTableSchemaProvider.GetFieldDbType(string! dataType, int dataPrecision, int dataScale, int length) -> Polhem.Base.Data.FieldDbType
+static Polhem.Db.Providers.MySql.MySqlTableSchemaProvider.GetFieldDbType(string! dataType, int dataPrecision, int dataScale, int length) -> Polhem.Core.Data.FieldDbType
 static Polhem.Db.Providers.MySql.MySqlTableSchemaProvider.ParseDBDefaultValue(string! dataType, string! defaultValue, string! originalDefaultValue) -> string!
-static Polhem.Db.Providers.Oracle.OracleTableSchemaProvider.GetFieldDbType(string! dataType, int dataPrecision, int dataScale, int length) -> Polhem.Base.Data.FieldDbType
+static Polhem.Db.Providers.Oracle.OracleTableSchemaProvider.GetFieldDbType(string! dataType, int dataPrecision, int dataScale, int length) -> Polhem.Core.Data.FieldDbType
 static Polhem.Db.Providers.Oracle.OracleTableSchemaProvider.ParseDBDefaultValue(string! dataType, string! defaultValue, string! originalDefaultValue) -> string!
-static Polhem.Db.Providers.PostgreSql.PgTableSchemaProvider.GetFieldDbType(string! dataType, int dataPrecision, int dataScale, int length) -> Polhem.Base.Data.FieldDbType
+static Polhem.Db.Providers.PostgreSql.PgTableSchemaProvider.GetFieldDbType(string! dataType, int dataPrecision, int dataScale, int length) -> Polhem.Core.Data.FieldDbType
 static Polhem.Db.Providers.PostgreSql.PgTableSchemaProvider.ParseDBDefaultValue(string! dataType, string! defaultValue, string! originalDefaultValue) -> string!
 static Polhem.Db.Providers.SqlServer.SqlExtendedPropertyCommandBuilder.GetCommandText(string! tableName, System.Collections.Generic.IReadOnlyList<Polhem.Db.Schema.DescriptionChange!>? changes) -> string!
-static Polhem.Db.Providers.SqlServer.SqlTableSchemaProvider.GetFieldDbType(string! dataType, int dataPrecision, int dataScale, int length) -> Polhem.Base.Data.FieldDbType
+static Polhem.Db.Providers.SqlServer.SqlTableSchemaProvider.GetFieldDbType(string! dataType, int dataPrecision, int dataScale, int length) -> Polhem.Core.Data.FieldDbType
 static Polhem.Db.Providers.SqlServer.SqlTableSchemaProvider.ParseDBDefaultValue(string! dataType, string! defaultValue, string! originalDefaultValue) -> string!
-static Polhem.Db.Providers.Sqlite.SqliteTableSchemaProvider.MapToFieldDbType(string! baseType, bool isPrimaryKey) -> Polhem.Base.Data.FieldDbType
-static Polhem.Db.Providers.Sqlite.SqliteTableSchemaProvider.ParseDefaultValue(string! rawDefault, Polhem.Base.Data.FieldDbType dbType, string! originalDefault) -> string!
+static Polhem.Db.Providers.Sqlite.SqliteTableSchemaProvider.MapToFieldDbType(string! baseType, bool isPrimaryKey) -> Polhem.Core.Data.FieldDbType
+static Polhem.Db.Providers.Sqlite.SqliteTableSchemaProvider.ParseDefaultValue(string! rawDefault, Polhem.Core.Data.FieldDbType dbType, string! originalDefault) -> string!
 static Polhem.Db.Schema.UpgradeOptions.Default.get -> Polhem.Db.Schema.UpgradeOptions!
 ~override Polhem.Db.CacheNotify.CacheNotifyChange.Equals(object obj) -> bool
 ~override Polhem.Db.CacheNotify.CacheNotifyChange.ToString() -> string

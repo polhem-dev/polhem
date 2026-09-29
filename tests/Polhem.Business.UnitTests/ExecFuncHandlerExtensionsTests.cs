@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Polhem.Business.UnitTests.Fakes;
 using Polhem.Definition.Security;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {

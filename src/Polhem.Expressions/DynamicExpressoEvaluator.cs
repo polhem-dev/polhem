@@ -4,8 +4,8 @@ using System.Linq.Expressions;
 using System.Text;
 using DynamicExpresso;
 using DynamicExpresso.Exceptions;
-using Polhem.Base;
-using Polhem.Base.Expressions;
+using Polhem.Core;
+using Polhem.Core.Expressions;
 
 namespace Polhem.Expressions
 {

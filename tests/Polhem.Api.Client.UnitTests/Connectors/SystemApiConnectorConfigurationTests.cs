@@ -14,7 +14,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
     /// </remarks>
     public class SystemApiConnectorConfigurationTests
     {
-        private static readonly string[] s_clientNamespaces = ["Polhem.Base", "Polhem.Definition"];
+        private static readonly string[] s_clientNamespaces = ["Polhem.Core", "Polhem.Definition"];
 
         private static CommonConfiguration ServerConfiguration(string encryptor, bool isDebugMode = true,
             string allowedTypeNamespaces = "")
@@ -67,7 +67,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
                 ServerConfiguration("aes-cbc-hmac", allowedTypeNamespaces: "System.Diagnostics|Evil.Gadgets"),
                 clientIsDebugMode: false, s_clientNamespaces);
 
-            Assert.Equal("Polhem.Base|Polhem.Definition", adopted.AllowedTypeNamespaces);
+            Assert.Equal("Polhem.Core|Polhem.Definition", adopted.AllowedTypeNamespaces);
             Assert.DoesNotContain("Evil", adopted.AllowedTypeNamespaces, StringComparison.Ordinal);
         }
     }

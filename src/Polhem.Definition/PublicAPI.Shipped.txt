@@ -85,8 +85,8 @@ Polhem.Definition.Database.DbField.Caption.set -> void
 Polhem.Definition.Database.DbField.Clone() -> Polhem.Definition.Database.DbField!
 Polhem.Definition.Database.DbField.Compare(Polhem.Definition.Database.DbField! source) -> bool
 Polhem.Definition.Database.DbField.DbField() -> void
-Polhem.Definition.Database.DbField.DbField(string! fieldName, string! caption, Polhem.Base.Data.FieldDbType dbType) -> void
-Polhem.Definition.Database.DbField.DbType.get -> Polhem.Base.Data.FieldDbType
+Polhem.Definition.Database.DbField.DbField(string! fieldName, string! caption, Polhem.Core.Data.FieldDbType dbType) -> void
+Polhem.Definition.Database.DbField.DbType.get -> Polhem.Core.Data.FieldDbType
 Polhem.Definition.Database.DbField.DbType.set -> void
 Polhem.Definition.Database.DbField.DefaultValue.get -> string!
 Polhem.Definition.Database.DbField.DefaultValue.set -> void
@@ -127,7 +127,7 @@ Polhem.Definition.Database.FieldType.VirtualField = 2 -> Polhem.Definition.Datab
 Polhem.Definition.Database.IDefineField
 Polhem.Definition.Database.IDefineField.Caption.get -> string!
 Polhem.Definition.Database.IDefineField.Caption.set -> void
-Polhem.Definition.Database.IDefineField.DbType.get -> Polhem.Base.Data.FieldDbType
+Polhem.Definition.Database.IDefineField.DbType.get -> Polhem.Core.Data.FieldDbType
 Polhem.Definition.Database.IDefineField.DbType.set -> void
 Polhem.Definition.Database.IDefineField.FieldName.get -> string!
 Polhem.Definition.Database.IDefineField.FieldName.set -> void
@@ -253,7 +253,7 @@ Polhem.Definition.Forms.FormExpressionCalculator.ApplyComputedRow(Polhem.Definit
 Polhem.Definition.Forms.FormExpressionCalculator.ApplyDefaultRow(Polhem.Definition.Forms.FormTable! formTable, System.Data.DataRow! row, string! timeZoneId = "") -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Definition.Forms.FormExpressionCalculator.ApplyFieldExpressions(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.RoundingContext! roundingContext, string! timeZoneId = "") -> void
 Polhem.Definition.Forms.FormExpressionCalculator.BuildDependencyMap(Polhem.Definition.Forms.FormTable! formTable) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
-Polhem.Definition.Forms.FormExpressionCalculator.FormExpressionCalculator(Polhem.Base.Expressions.IExpressionEvaluator! evaluator) -> void
+Polhem.Definition.Forms.FormExpressionCalculator.FormExpressionCalculator(Polhem.Core.Expressions.IExpressionEvaluator! evaluator) -> void
 Polhem.Definition.Forms.FormExpressionCalculator.ValidateRules(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.Forms.FormRuleTrigger trigger, string! timeZoneId = "") -> void
 Polhem.Definition.Forms.FormField
 Polhem.Definition.Forms.FormField.Caption.get -> string!
@@ -263,7 +263,7 @@ Polhem.Definition.Forms.FormField.ControlType.get -> Polhem.Definition.Layouts.C
 Polhem.Definition.Forms.FormField.ControlType.set -> void
 Polhem.Definition.Forms.FormField.CurrencyField.get -> string!
 Polhem.Definition.Forms.FormField.CurrencyField.set -> void
-Polhem.Definition.Forms.FormField.DbType.get -> Polhem.Base.Data.FieldDbType
+Polhem.Definition.Forms.FormField.DbType.get -> Polhem.Core.Data.FieldDbType
 Polhem.Definition.Forms.FormField.DbType.set -> void
 Polhem.Definition.Forms.FormField.DefaultValue.get -> string!
 Polhem.Definition.Forms.FormField.DefaultValue.set -> void
@@ -276,8 +276,8 @@ Polhem.Definition.Forms.FormField.DisplayFormat.set -> void
 Polhem.Definition.Forms.FormField.FieldName.get -> string!
 Polhem.Definition.Forms.FormField.FieldName.set -> void
 Polhem.Definition.Forms.FormField.FormField() -> void
-Polhem.Definition.Forms.FormField.FormField(string! fieldName, string! caption, Polhem.Base.Data.FieldDbType dbType) -> void
-Polhem.Definition.Forms.FormField.FormField(string! fieldName, string! caption, Polhem.Base.Data.FieldDbType dbType, Polhem.Definition.Database.FieldType type) -> void
+Polhem.Definition.Forms.FormField.FormField(string! fieldName, string! caption, Polhem.Core.Data.FieldDbType dbType) -> void
+Polhem.Definition.Forms.FormField.FormField(string! fieldName, string! caption, Polhem.Core.Data.FieldDbType dbType, Polhem.Definition.Database.FieldType type) -> void
 Polhem.Definition.Forms.FormField.GetDisplayFields() -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.Definition.Forms.FormField.LangEnumName.get -> string!
 Polhem.Definition.Forms.FormField.LangEnumName.set -> void
@@ -1774,7 +1774,7 @@ static Polhem.Definition.Customization.CustomizeOverlay.GetPluginBindings(Polhem
 static Polhem.Definition.Customization.CustomizeOverlay.PickFormLayout(Polhem.Definition.Layouts.FormLayout? customize, Polhem.Definition.Layouts.FormLayout? base) -> Polhem.Definition.Layouts.FormLayout?
 static Polhem.Definition.Customization.CustomizeOverlay.PickMenuSettings(Polhem.Definition.Settings.MenuSettings? customize, Polhem.Definition.Settings.MenuSettings? base) -> Polhem.Definition.Settings.MenuSettings?
 static Polhem.Definition.Customization.CustomizeOverlay.TryGetLangText(Polhem.Definition.Language.LanguageResource? customize, Polhem.Definition.Language.LanguageResource? base, string! subKey, out string! text) -> bool
-static Polhem.Definition.Database.DbFieldCollectionExtensions.Add(this Polhem.Definition.Database.DbFieldCollection? collection, string! fieldName, string! caption, Polhem.Base.Data.FieldDbType dbType, int length = 0) -> Polhem.Definition.Database.DbField!
+static Polhem.Definition.Database.DbFieldCollectionExtensions.Add(this Polhem.Definition.Database.DbFieldCollection? collection, string! fieldName, string! caption, Polhem.Core.Data.FieldDbType dbType, int length = 0) -> Polhem.Definition.Database.DbField!
 static Polhem.Definition.Database.DbTableIndexCollectionExtensions.Add(this Polhem.Definition.Database.DbTableIndexCollection? collection, string! name, string! fields, bool unique) -> Polhem.Definition.Database.DbTableIndex!
 static Polhem.Definition.Database.IndexFieldCollectionExtensions.Add(this Polhem.Definition.Database.IndexFieldCollection? collection, string! fieldName, Polhem.Definition.Sorting.SortDirection sortDirection = Polhem.Definition.Sorting.SortDirection.Asc) -> Polhem.Definition.Database.IndexField!
 static Polhem.Definition.Database.TableSchemaGenerator.Generate(Polhem.Definition.Forms.FormTable! formTable) -> Polhem.Definition.Database.TableSchema!
@@ -1793,9 +1793,9 @@ static Polhem.Definition.Filters.FilterCondition.StartsWith(string! fieldName, s
 static Polhem.Definition.Filters.FilterGroup.All(params Polhem.Definition.Filters.FilterNode![]! nodes) -> Polhem.Definition.Filters.FilterGroup!
 static Polhem.Definition.Filters.FilterGroup.Any(params Polhem.Definition.Filters.FilterNode![]! nodes) -> Polhem.Definition.Filters.FilterGroup!
 static Polhem.Definition.Forms.FieldMappingCollectionExtensions.Add(this Polhem.Definition.Forms.FieldMappingCollection? collection, string! sourceField, string! destinationField) -> Polhem.Definition.Forms.FieldMapping!
-static Polhem.Definition.Forms.FormFieldCollectionExtensions.Add(this Polhem.Definition.Forms.FormFieldCollection? collection, string! fieldName, string! caption, Polhem.Base.Data.FieldDbType dbType) -> Polhem.Definition.Forms.FormField!
-static Polhem.Definition.Forms.FormRowDefaults.Apply(Polhem.Definition.Forms.FormTable! formTable, System.Data.DataRow! row, object? masterRowId = null, string! timeZoneId = "", Polhem.Base.DateTimeBasis basis = Polhem.Base.DateTimeBasis.UserZone) -> void
-static Polhem.Definition.Forms.FormRowDefaults.DefaultForDbType(Polhem.Base.Data.FieldDbType dbType, string! timeZoneId = "", Polhem.Base.DateTimeBasis basis = Polhem.Base.DateTimeBasis.UserZone) -> object!
+static Polhem.Definition.Forms.FormFieldCollectionExtensions.Add(this Polhem.Definition.Forms.FormFieldCollection? collection, string! fieldName, string! caption, Polhem.Core.Data.FieldDbType dbType) -> Polhem.Definition.Forms.FormField!
+static Polhem.Definition.Forms.FormRowDefaults.Apply(Polhem.Definition.Forms.FormTable! formTable, System.Data.DataRow! row, object? masterRowId = null, string! timeZoneId = "", Polhem.Core.DateTimeBasis basis = Polhem.Core.DateTimeBasis.UserZone) -> void
+static Polhem.Definition.Forms.FormRowDefaults.DefaultForDbType(Polhem.Core.Data.FieldDbType dbType, string! timeZoneId = "", Polhem.Core.DateTimeBasis basis = Polhem.Core.DateTimeBasis.UserZone) -> object!
 static Polhem.Definition.Forms.FormRuleCollectionExtensions.Add(this Polhem.Definition.Forms.FormRuleCollection? collection, string! ruleId, string! condition, string! message) -> Polhem.Definition.Forms.FormRule!
 static Polhem.Definition.Forms.FormTableCollectionExtensions.Add(this Polhem.Definition.Forms.FormTableCollection? collection, string! tableName, string! displayName) -> Polhem.Definition.Forms.FormTable!
 static Polhem.Definition.Forms.FormTableExtensions.ApplyFieldDbTypes(this Polhem.Definition.Forms.FormTable! formTable, System.Data.DataTable! table) -> void

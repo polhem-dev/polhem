@@ -215,7 +215,7 @@ protects a process-wide static that has not been moved to DI yet:
 | Collection (the constant users reference) | Protects |
 |---|---|
 | `ClientInfoStateCollection.Name` | `ClientInfo.*` |
-| `SysInfoStaticCollection.Name` | `SysInfo.*` (`Polhem.Base` and `Polhem.Api.Core` each define their own; across assemblies it has to be this way) |
+| `SysInfoStaticCollection.Name` | `SysInfo.*` (`Polhem.Core` and `Polhem.Api.Core` each define their own; across assemblies it has to be this way) |
 | `ApiClientInfoStateCollection.Name` | `ApiClientInfo.*` |
 | `ProcessWideStateCollection.Name` | the `POLHEM_MASTER_KEY` environment variable, `GlobalEvents`, DI containers built inside a test body |
 | `ApiServiceOptionsStateCollection.Name` | `ApiServiceOptions.*` |

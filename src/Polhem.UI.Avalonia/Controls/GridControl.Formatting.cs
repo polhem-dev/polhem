@@ -1,6 +1,6 @@
 using System.Data;
 using Polhem.Api.Client;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;

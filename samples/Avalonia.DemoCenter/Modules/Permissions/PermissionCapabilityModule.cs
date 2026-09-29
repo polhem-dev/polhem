@@ -1,7 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.DemoCenter.Modules.DataEditors;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;

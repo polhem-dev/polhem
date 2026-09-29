@@ -46,7 +46,7 @@ namespace Polhem.Definition.Filters
         /// <remarks>
         /// Holds a framework value type (a string, a number, a <see cref="bool"/>, a <see cref="Guid"/>, a date or
         /// time, a <see cref="byte"/> array). A value of an application-defined type travels only
-        /// through the named-type escape hatch (a namespace added to <see cref="Polhem.Base.SysInfo.AllowedTypeNamespaces"/>),
+        /// through the named-type escape hatch (a namespace added to <see cref="Polhem.Core.SysInfo.AllowedTypeNamespaces"/>),
         /// and on iOS over the MessagePack codec it fails with a <see cref="NotSupportedException"/> that names
         /// the type. The details are under "Code generation at run time (iOS)" in
         /// <c>docs/en/getting-started/platform-support.md</c>.

@@ -3,7 +3,7 @@ using System.Data;
 using System.Text;
 using MessagePack;
 using Polhem.Api.Core.MessagePack;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 
 namespace Polhem.Api.Core.UnitTests.MessagePack
 {

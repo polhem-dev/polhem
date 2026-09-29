@@ -1,5 +1,5 @@
 using System.Collections.ObjectModel;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.DefineEditor.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;

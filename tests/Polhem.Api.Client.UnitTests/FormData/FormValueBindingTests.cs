@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Data;
 using System.Globalization;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Forms;
 

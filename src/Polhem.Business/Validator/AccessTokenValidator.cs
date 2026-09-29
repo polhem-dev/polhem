@@ -1,6 +1,6 @@
 using Polhem.Definition.Security;
-using Polhem.Base;
-using Polhem.Base.Exceptions;
+using Polhem.Core;
+using Polhem.Core.Exceptions;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
 

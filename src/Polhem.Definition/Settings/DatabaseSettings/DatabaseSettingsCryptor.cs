@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
-using Polhem.Base;
-using Polhem.Base.Security;
+using Polhem.Core;
+using Polhem.Core.Security;
 
 namespace Polhem.Definition.Settings
 {

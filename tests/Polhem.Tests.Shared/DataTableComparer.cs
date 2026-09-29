@@ -6,7 +6,7 @@ namespace Polhem.Tests.Shared
     /// Compares two DataTables by row state and column values, for serialization round-trip tests.
     /// </summary>
     /// <remarks>
-    /// Also compiled into <c>Polhem.Base.UnitTests</c> as a linked file, because that project does not
+    /// Also compiled into <c>Polhem.Core.UnitTests</c> as a linked file, because that project does not
     /// reference this one.
     /// </remarks>
     public static class DataTableComparer

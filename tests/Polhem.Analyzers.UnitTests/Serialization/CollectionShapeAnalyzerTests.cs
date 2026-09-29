@@ -1,4 +1,4 @@
-using Polhem.Base.Collections;
+using Polhem.Core.Collections;
 using System.ComponentModel;
 using System.Globalization;
 using Polhem.Analyzers.Serialization;
@@ -20,7 +20,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         };
 
         private const string KeyItemDeclaration = """
-            using Polhem.Base.Collections;
+            using Polhem.Core.Collections;
 
             public sealed class SampleKeyItem : KeyCollectionItem
             {
@@ -29,7 +29,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
             """;
 
         private const string ItemDeclaration = """
-            using Polhem.Base.Collections;
+            using Polhem.Core.Collections;
 
             public sealed class SampleItem : CollectionItem
             {
@@ -89,7 +89,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
             // Same reason as the keyed-collection case above: KeyCollectionItem is looked up by its
             // metadata name and has no other test that fails when that name is wrong.
             const string source = """
-                using Polhem.Base.Collections;
+                using Polhem.Core.Collections;
 
                 public sealed class SampleKeyItem : KeyCollectionItem
                 {
@@ -173,7 +173,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         public void ContractTypeWithoutParameterlessCtor_ReportsDiagnostic()
         {
             const string source = """
-                using Polhem.Base.Collections;
+                using Polhem.Core.Collections;
 
                 public sealed class Sample : CollectionItem
                 {
@@ -195,7 +195,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         public void BothConstructors_ReportNothing()
         {
             const string source = """
-                using Polhem.Base.Collections;
+                using Polhem.Core.Collections;
 
                 public sealed class Sample : CollectionItem
                 {
@@ -219,7 +219,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         public void ImplicitConstructor_ReportsNothing()
         {
             const string source = """
-                using Polhem.Base.Collections;
+                using Polhem.Core.Collections;
 
                 public sealed class Sample : CollectionItem
                 {
@@ -239,7 +239,7 @@ namespace Polhem.Analyzers.UnitTests.Serialization
         public void AbstractType_ReportsNothing()
         {
             const string source = """
-                using Polhem.Base.Collections;
+                using Polhem.Core.Collections;
 
                 public abstract class Sample : CollectionItem
                 {

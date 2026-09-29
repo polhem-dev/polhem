@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Globalization;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Db.Manager;
 using Polhem.Db.Schema;
 using Polhem.Tests.Shared;

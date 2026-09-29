@@ -1,7 +1,7 @@
 using System.Data;
 using System.Globalization;
-using Polhem.Base.Data;
-using Polhem.Base.Serialization;
+using Polhem.Core.Data;
+using Polhem.Core.Serialization;
 using Polhem.Db.CacheNotify;
 using Polhem.Db.Manager;
 using Polhem.Definition;

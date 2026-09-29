@@ -1,5 +1,5 @@
 using Polhem.Api.Core.JsonRpc;
-using Polhem.Base.Expressions;
+using Polhem.Core.Expressions;
 using Polhem.Business;
 using Polhem.Business.Form;
 using Polhem.Business.Permission;

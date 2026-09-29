@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using Polhem.Api.Core.JsonRpc;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Definition;
 using Polhem.Definition.Security;

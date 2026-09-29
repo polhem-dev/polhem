@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using Polhem.Analyzers.Definitions;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 
 namespace Polhem.Analyzers.UnitTests.Definitions
 {

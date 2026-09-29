@@ -1,6 +1,6 @@
 using System.ComponentModel;
-using Polhem.Base;
-using Polhem.Base.Collections;
+using Polhem.Core;
+using Polhem.Core.Collections;
 
 namespace Polhem.Definition.Collections
 {

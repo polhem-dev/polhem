@@ -1,7 +1,7 @@
 using System.Data;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Business.AuditLog;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 using Polhem.Definition;
 using Polhem.Definition.Logging;
 using Polhem.Definition.Settings;

@@ -186,7 +186,7 @@ public class SysInfoTests { ... }
 public class SysInfoSecurityTests { ... }
 ```
 
-The example is the real one in `tests/Polhem.Base.UnitTests`; the list of existing collections is in
+The example is the real one in `tests/Polhem.Core.UnitTests`; the list of existing collections is in
 `tests/CLAUDE.md`.
 
 **Reference the `const`, never repeat the string**: a mistyped literal makes xUnit create an implicit group that

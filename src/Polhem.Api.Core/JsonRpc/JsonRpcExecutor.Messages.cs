@@ -1,6 +1,6 @@
 using System.Data.Common;
 using System.Globalization;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
 

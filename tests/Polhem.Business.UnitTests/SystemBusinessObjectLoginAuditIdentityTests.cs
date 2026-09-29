@@ -5,7 +5,7 @@ using Polhem.Definition.Logging;
 using Polhem.Definition.Security;
 using Polhem.Definition.Settings;
 using Polhem.Tests.Shared;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {

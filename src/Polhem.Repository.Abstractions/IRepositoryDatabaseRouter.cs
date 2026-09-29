@@ -24,16 +24,16 @@ namespace Polhem.Repository.Abstractions
         /// <param name="accessToken">The current request's access token. Ignored for
         /// <see cref="DbScope.Common"/> and <see cref="DbScope.Log"/>; required for
         /// <see cref="DbScope.Company"/>.</param>
-        /// <exception cref="Polhem.Base.Exceptions.AuthenticationRequiredException">
+        /// <exception cref="Polhem.Core.Exceptions.AuthenticationRequiredException">
         /// <paramref name="scope"/> is <see cref="DbScope.Company"/> but the session
         /// cannot be found in the cache or has expired.
         /// </exception>
-        /// <exception cref="Polhem.Base.Exceptions.CompanyNotEnteredException">
+        /// <exception cref="Polhem.Core.Exceptions.CompanyNotEnteredException">
         /// <paramref name="scope"/> is <see cref="DbScope.Company"/> but the session has not
         /// entered a company. This is the single choke point for that condition: a company-scoped
         /// database cannot be resolved without one, so no business method needs its own guard.
         /// </exception>
-        /// <exception cref="Polhem.Base.Exceptions.UserMessageException">
+        /// <exception cref="Polhem.Core.Exceptions.UserMessageException">
         /// <paramref name="scope"/> is <see cref="DbScope.Company"/> and a company was entered,
         /// but the corresponding <see cref="Polhem.Definition.Identity.CompanyInfo"/> is not available in the cache.
         /// </exception>

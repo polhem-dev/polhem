@@ -1,6 +1,6 @@
 using System.Data;
-using Polhem.Base;
-using Polhem.Base.Expressions;
+using Polhem.Core;
+using Polhem.Core.Expressions;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Expressions;

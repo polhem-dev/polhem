@@ -1,6 +1,6 @@
 using System.Globalization;
 using Avalonia.Media;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Definition.Layouts;
 using Polhem.Definition.Settings;

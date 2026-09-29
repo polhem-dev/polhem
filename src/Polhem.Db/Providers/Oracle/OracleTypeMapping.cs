@@ -1,4 +1,4 @@
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition.Database;
 
 namespace Polhem.Db.Providers.Oracle

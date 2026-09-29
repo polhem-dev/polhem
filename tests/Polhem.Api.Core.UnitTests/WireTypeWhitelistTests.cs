@@ -22,7 +22,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData("System.Data.DataTable")]
         [InlineData("Polhem.Definition.Collections.ParameterCollection, Polhem.Definition")]
         [InlineData("Polhem.Api.Core.Messages.System.LoginRequest, Polhem.Api.Core")]
-        [InlineData("Polhem.Base.Something, Polhem.Base, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null")]
+        [InlineData("Polhem.Core.Something, Polhem.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null")]
         [DisplayName("IsAssemblyQualifiedNameAllowed accepts names on the whitelist")]
         public void IsAssemblyQualifiedNameAllowed_AllowedName_ReturnsTrue(string name)
         {
@@ -44,14 +44,14 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData("Polhem.Api.Core.Messages.System.LoginRequest, Evil.Assembly")]
         [InlineData("System.Int32, Evil.Assembly")]
         // The same, inside a generic argument.
-        [InlineData("Polhem.Base.Holder`1[[Polhem.Base.Ok, Evil.Assembly]], Polhem.Base")]
+        [InlineData("Polhem.Core.Holder`1[[Polhem.Core.Ok, Evil.Assembly]], Polhem.Core")]
         // A prefix that only looks like an allowed namespace.
-        [InlineData("Polhem.Base.Ok, Polhem.BaseEvil")]
+        [InlineData("Polhem.Core.Ok, Polhem.CoreEvil")]
         // Attributes that name a location rather than a version, and characters that make a path.
-        [InlineData("Polhem.Base.Ok, Polhem.Base, CodeBase=file:///tmp/evil.dll")]
-        [InlineData("Polhem.Base.Ok, ../Polhem.Base")]
-        [InlineData("Polhem.Base.Ok, Polhem.Base, Version=")]
-        [InlineData("Polhem.Base.Ok, ")]
+        [InlineData("Polhem.Core.Ok, Polhem.Core, CodeBase=file:///tmp/evil.dll")]
+        [InlineData("Polhem.Core.Ok, ../Polhem.Core")]
+        [InlineData("Polhem.Core.Ok, Polhem.Core, Version=")]
+        [InlineData("Polhem.Core.Ok, ")]
         [DisplayName("IsAssemblyQualifiedNameAllowed rejects an allowed type name paired with an assembly name outside the allowed set")]
         public void IsAssemblyQualifiedNameAllowed_DisallowedAssembly_ReturnsFalse(string name)
         {
@@ -63,7 +63,7 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData("System.Int32, mscorlib")]
         [InlineData("System.Data.DataTable, System.Data.Common")]
         [InlineData("Polhem.Api.Core.UnitTests.Something, Polhem.Api.Core.UnitTests")]
-        [InlineData("Polhem.Base.Holder`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], Polhem.Base, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null")]
+        [InlineData("Polhem.Core.Holder`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], Polhem.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null")]
         [DisplayName("IsAssemblyQualifiedNameAllowed accepts the runtime assemblies and assemblies named after an allowed namespace, with version attributes")]
         public void IsAssemblyQualifiedNameAllowed_AllowedAssembly_ReturnsTrue(string name)
         {
@@ -75,22 +75,22 @@ namespace Polhem.Api.Core.UnitTests
         public void IsAssemblyQualifiedNameAllowed_RuntimeWrittenName_ReturnsTrue()
         {
             // What the escape hatch of the wire value formatters actually writes.
-            var name = typeof(Polhem.Base.Collections.KeyCollectionBase<Polhem.Definition.Collections.Parameter>).AssemblyQualifiedName;
+            var name = typeof(Polhem.Core.Collections.KeyCollectionBase<Polhem.Definition.Collections.Parameter>).AssemblyQualifiedName;
 
             Assert.True(WireTypeWhitelist.IsAssemblyQualifiedNameAllowed(name));
         }
 
         [Theory]
         // The regression this screen exists for: allowed outer type, disallowed generic argument.
-        [InlineData("Polhem.Base.Collections.Dictionary`1[[System.Diagnostics.Process, System.Diagnostics.Process]], Polhem.Base")]
+        [InlineData("Polhem.Core.Collections.Dictionary`1[[System.Diagnostics.Process, System.Diagnostics.Process]], Polhem.Core")]
         [InlineData("Polhem.Definition.Wrapper`1[[Evil.Namespace.Exploit, Evil.Assembly]], Polhem.Definition")]
         // Two allowed arguments plus one disallowed.
-        [InlineData("Polhem.Base.Pair`2[[System.String],[Evil.Namespace.Exploit, Evil.Assembly]], Polhem.Base")]
+        [InlineData("Polhem.Core.Pair`2[[System.String],[Evil.Namespace.Exploit, Evil.Assembly]], Polhem.Core")]
         // Disallowed type buried one level deeper.
-        [InlineData("Polhem.Base.A`1[[Polhem.Base.B`1[[Evil.Namespace.Exploit, Evil.Assembly]], Polhem.Base]], Polhem.Base")]
+        [InlineData("Polhem.Core.A`1[[Polhem.Core.B`1[[Evil.Namespace.Exploit, Evil.Assembly]], Polhem.Core]], Polhem.Core")]
         // Array forms.
         [InlineData("Evil.Namespace.Exploit[], Evil.Assembly")]
-        [InlineData("Polhem.Base.Holder`1[[Evil.Namespace.Exploit[], Evil.Assembly]], Polhem.Base")]
+        [InlineData("Polhem.Core.Holder`1[[Evil.Namespace.Exploit[], Evil.Assembly]], Polhem.Core")]
         [DisplayName("IsAssemblyQualifiedNameAllowed rejects types smuggled in as generic arguments or array elements")]
         public void IsAssemblyQualifiedNameAllowed_SmuggledArgument_ReturnsFalse(string name)
         {
@@ -103,14 +103,14 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData(null)]
         // Unbalanced brackets, empty segments and stray separators must fail closed rather than
         // be handed to `Type.GetType`.
-        [InlineData("Polhem.Base.Broken`1[[Polhem.Base.Ok, Polhem.Base], Polhem.Base")]
-        [InlineData("Polhem.Base.Broken`1[[]], Polhem.Base")]
-        [InlineData("Polhem.Base.Broken`1[, Polhem.Base")]
-        [InlineData("[[Polhem.Base.Ok, Polhem.Base]]")]
-        [InlineData(", Polhem.Base")]
+        [InlineData("Polhem.Core.Broken`1[[Polhem.Core.Ok, Polhem.Core], Polhem.Core")]
+        [InlineData("Polhem.Core.Broken`1[[]], Polhem.Core")]
+        [InlineData("Polhem.Core.Broken`1[, Polhem.Core")]
+        [InlineData("[[Polhem.Core.Ok, Polhem.Core]]")]
+        [InlineData(", Polhem.Core")]
         // Pointer and by-ref forms never appear on this wire.
-        [InlineData("Polhem.Base.Ok*, Polhem.Base")]
-        [InlineData("Polhem.Base.Ok&, Polhem.Base")]
+        [InlineData("Polhem.Core.Ok*, Polhem.Core")]
+        [InlineData("Polhem.Core.Ok&, Polhem.Core")]
         [DisplayName("IsAssemblyQualifiedNameAllowed fails closed for empty and malformed names")]
         public void IsAssemblyQualifiedNameAllowed_MalformedName_ReturnsFalse(string? name)
         {
@@ -121,7 +121,7 @@ namespace Polhem.Api.Core.UnitTests
         [DisplayName("IsAssemblyQualifiedNameAllowed rejects overlong names")]
         public void IsAssemblyQualifiedNameAllowed_OverlongName_ReturnsFalse()
         {
-            var name = "Polhem.Base." + new string('a', 2000);
+            var name = "Polhem.Core." + new string('a', 2000);
 
             Assert.False(WireTypeWhitelist.IsAssemblyQualifiedNameAllowed(name));
         }
@@ -132,10 +132,10 @@ namespace Polhem.Api.Core.UnitTests
         {
             // Ten levels of nesting, every named type allowed. Depth alone must reject it, so a
             // crafted payload cannot drive unbounded recursion.
-            var name = "Polhem.Base.Ok, Polhem.Base";
+            var name = "Polhem.Core.Ok, Polhem.Core";
             for (var i = 0; i < 10; i++)
             {
-                name = $"Polhem.Base.Wrap`1[[{name}]], Polhem.Base";
+                name = $"Polhem.Core.Wrap`1[[{name}]], Polhem.Core";
             }
 
             Assert.False(WireTypeWhitelist.IsAssemblyQualifiedNameAllowed(name));

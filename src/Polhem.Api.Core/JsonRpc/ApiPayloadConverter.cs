@@ -1,5 +1,5 @@
 using System.Collections.Concurrent;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Api.Core.MessagePack;
 using Polhem.Api.Core.Messages;
 

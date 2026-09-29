@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Security.Cryptography;
 using System.Text;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 using Polhem.Db.Manager;
 using Polhem.Definition.Database;
 using Polhem.Repository.System;
