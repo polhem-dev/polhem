@@ -28,10 +28,10 @@ By the `single-source` criterion, this is a structural problem, not a discipline
 
 [ADR-014](adr-014-jsonrpc-plain-public-default.md) already paved a path for pure JavaScript front ends: HTTPS as the
 trust boundary, `PayloadFormat.Plain`, and for that purpose seven BO methods were downgraded from `Encrypted` to
-`Public`. `samples/Web.Js.Demo` demonstrates that path: zero build, zero npm, plain `fetch`.
+`Public`.
 
 **That decision still stands, and this decision does not replace it.** Plain is still the default path for JS front
-ends, those seven methods are still `Public`, and the existing demo does not need to change.
+ends, and those seven methods are still `Public`.
 
 What this decision addresses is the half ADR-014 explicitly placed out of scope: **what a JS front end should do when
 a deployment really does need application-layer encryption.** ADR-014 evaluated and rejected this in its section "Why

@@ -80,8 +80,7 @@ Accompanying principles:
 - **Done (breaking)**: changing the in-memory `DataSet` column names from uppercase to lowercase is a **wire breaking
   change**. It affects the keys of both JSON and MessagePack payloads, first-party and third-party JS/TS front ends,
   and the existing DiffGram history of the change audit (whose field names are uppercase). How it landed:
-  - The core switch (`AddColumn` / `LowercaseColumnNames` / `DbAccess`) + the first-party front end (`Web.Js.Demo`)
-    have been updated; the wire converter emits `ColumnName` directly, so it is lowercase automatically.
+  - The core switch (`AddColumn` / `LowercaseColumnNames` / `DbAccess`) has been updated; the wire converter emits `ColumnName` directly, so it is lowercase automatically.
   - Existing audit data is handled by "the parsing side accepts both the old and the new case" (downstream comparisons
     are case-insensitive anyway); the immutable audit history is not backfilled or rewritten.
   - **The preliminary audit is complete**: 0 literal uppercase comparisons on the C# side (all go through the
