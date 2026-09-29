@@ -16,7 +16,7 @@ This document provides a standard term reference for technical writing, ensuring
 6. [API Layer (Polhem.Api.Core / Polhem.Api.AspNetCore)](#6-api-layer-polhemapicore--polhemapiaspnetcore)
 7. [Caching Layer (Polhem.ObjectCaching)](#7-caching-layer-polhemobjectcaching)
 8. [Connector Layer (Polhem.Api.Client)](#8-connector-layer-polhemapiclient)
-9. [Infrastructure (Polhem.Base)](#9-infrastructure-polhembase)
+9. [Infrastructure (Polhem.Core)](#9-infrastructure-polhemcore)
 10. [Enumerations](#10-enumerations)
 11. [System Fields](#11-system-fields)
 12. [Configuration Files](#12-configuration-files)
@@ -206,12 +206,12 @@ This document provides a standard term reference for technical writing, ensuring
 
 ---
 
-## 9. Infrastructure (Polhem.Base)
+## 9. Infrastructure (Polhem.Core)
 
 | English | 中文 | Description |
 |---------|------|-------------|
 | `IKeyObject` | 鍵值物件介面 | Abstract interface for objects with a unique identifying key |
-| `XmlCodec` | XML 序列化工具 | Static utility class for XML serialization / deserialization (`Polhem.Base.Serialization`) |
+| `XmlCodec` | XML 序列化工具 | Static utility class for XML serialization / deserialization (`Polhem.Core.Serialization`) |
 | `FileHashValidator` | 檔案雜湊驗證器 | Validates file integrity using hash values |
 | `AesCbcHmacKeyGenerator` | AES-CBC-HMAC 金鑰產生器 | Utility class for generating AES and HMAC keys |
 | `TreeNodeAttribute` | 樹狀節點屬性 | Marks the display name of a class within a tree structure |

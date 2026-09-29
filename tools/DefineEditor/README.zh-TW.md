@@ -8,7 +8,7 @@ Polhem 定義檔（DefinePath 下的 XML）的桌面維護工具。Avalonia 12 +
 
 - **開發期工具**：非框架發布套件、非 sample；放在 `tools/`，獨立 `Polhem.Tools.slnx`，不上 NuGet。它的單元測試 `tests/Polhem.DefineEditor.UnitTests` 屬於主 `Polhem.slnx`，所以 CI 會建置此工具並執行這些測試。
 - **純 offline**：直接讀寫 DefinePath 下的 XML，不連遠端 server、不連資料庫。
-- **與框架同步**：以 ProjectReference 連 `Polhem.Definition` 與 `Polhem.Base`，所有讀寫走 `XmlCodec.SerializeToFile` / `DeserializeFromFile`，零序列化轉換。
+- **與框架同步**：以 ProjectReference 連 `Polhem.Definition` 與 `Polhem.Core`，所有讀寫走 `XmlCodec.SerializeToFile` / `DeserializeFromFile`，零序列化轉換。
 
 ## 支援的定義型別
 

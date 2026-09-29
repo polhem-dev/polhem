@@ -12,15 +12,15 @@ while typing), so a computed field yields the same result on both sides.
 |------|---------|
 | `DynamicExpressoEvaluator` | The default `IExpressionEvaluator`. Parses and compiles once, caches by expression text plus parameter signature, then invokes per row |
 
-## The abstraction lives in `Polhem.Base`
+## The abstraction lives in `Polhem.Core`
 
 `IExpressionEvaluator`, `ExpressionPolicy` and `ExpressionEvaluationException` are in
-`Polhem.Base.Expressions`, not here. That split keeps `Polhem.Definition` and `Polhem.Business` free of any
+`Polhem.Core.Expressions`, not here. That split keeps `Polhem.Definition` and `Polhem.Business` free of any
 DynamicExpresso dependency — they consume the engine through the abstraction, and only a
 composition root (`Polhem.Hosting`, or a UI head building its own evaluator) references this package.
 See [ADR-038](../../maintainers/adr/adr-038-definition-dependency-boundary.md).
 
-**Reference this package when you need to pick an implementation. Reference `Polhem.Base` when you
+**Reference this package when you need to pick an implementation. Reference `Polhem.Core` when you
 only need to accept one.**
 
 ## Time zone
@@ -64,4 +64,4 @@ configuration.
 
 ## Dependencies
 
-`Polhem.Base` (for the `IExpressionEvaluator` abstraction it implements) · DynamicExpresso
+`Polhem.Core` (for the `IExpressionEvaluator` abstraction it implements) · DynamicExpresso

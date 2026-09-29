@@ -119,7 +119,7 @@ The whole `Program.cs`, starting with the two registrations of step 3:
 using Microsoft.Data.Sqlite;
 using Polhem.Api.AspNetCore;
 using Polhem.Api.Core;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Db.Providers.Sqlite;
