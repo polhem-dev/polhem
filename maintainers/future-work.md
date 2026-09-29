@@ -73,7 +73,7 @@ to write a plan.
 Northwind repository built on the `Polhem.*` packages** as the living example (not the internal `apps/`).
 
 **The anchor exists**: [`polhem-dev/polhem-northwind`](https://github.com/polhem-dev/polhem-northwind) runs on the
-`Polhem.*` 1.0.0 packages (created 2026-09-28; how it is kept in sync is in
+published `Polhem.*` packages (created 2026-09-28; how it is kept in sync is in
 [gotchas/northwind-heads.md](gotchas/northwind-heads.md) § Graduation and periodic sync). The pack itself has not
 been started.
 

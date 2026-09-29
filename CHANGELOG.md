@@ -8,21 +8,41 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ## [Unreleased]
 
-### Breaking API changes
+## [1.1.0] - 2026-09-30
 
-> **A deliberate break within 1.x, made once.** The rename below breaks source and binary compatibility for code
-> built against 1.0.0, which semantic versioning would hold back until 2.0.0. It ships in 1.1.0 because 1.0.0 had
-> no known adopters when it was made, and every 1.0.0 package is unlisted. From 1.1.0 on, 1.x follows semantic
-> versioning without exceptions. The reasons are in
+> `Polhem.Base` is renamed to `Polhem.Core`. Semantic versioning would hold that back until 2.0.0; it ships in 1.1.0 as
+> a one-time exception, because 1.0.0 had no known adopters and every 1.0.0 package is unlisted. From 1.1.0 on, 1.x
+> follows semantic versioning without exceptions. The reasons are in
 > [ADR-048](maintainers/adr/adr-048-rename-base-to-core-in-1-1.md).
 
-- `Polhem.Base` is renamed to `Polhem.Core`: the package ID and every namespace (`Polhem.Base.Serialization` →
-  `Polhem.Core.Serialization`, and so on). To upgrade from 1.0.0, replace the package reference `Polhem.Base` with
-  `Polhem.Core` (only if you reference it directly; the other packages bring it in) and every `Polhem.Base`
-  namespace in `using` directives and qualified names with `Polhem.Core`. The compiler reports each place that is
-  left. The wire fixtures are unchanged by the rename, but the JSON-RPC type allowlist now names `Polhem.Core`, so a
-  custom `AllowedTypeNamespaces` entry that lists `Polhem.Base` no longer matches anything.
-  ([#42](https://github.com/polhem-dev/polhem/pull/42))
+📄 Full notes and background: [docs/en/changelogs/1.1.0.md](docs/en/changelogs/1.1.0.md)
+
+### Breaking API changes
+
+- `Polhem.Base` is renamed to `Polhem.Core`: the package ID and every namespace. ([#42](https://github.com/polhem-dev/polhem/pull/42))
+
+To upgrade from 1.0.0 (the package reference only if you reference `Polhem.Base` directly):
+
+```diff
+- <PackageReference Include="Polhem.Base" Version="1.0.0" />
++ <PackageReference Include="Polhem.Core" Version="1.1.0" />
+- using Polhem.Base.Serialization;
++ using Polhem.Core.Serialization;
+```
+
+### Changed behaviour
+
+- The built-in JSON-RPC type namespace allowlist names `Polhem.Core` instead of `Polhem.Base`. ([#42](https://github.com/polhem-dev/polhem/pull/42))
+
+### Samples and tools
+
+- The `Web.Js.Demo` sample is removed; browser clients use
+  [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js). ([#41](https://github.com/polhem-dev/polhem/pull/41))
+
+### Documentation
+
+- The user documents are grouped into topic folders under `docs/<lang>/`, and the maintainer documents and ADRs move
+  to `maintainers/`. ([#38](https://github.com/polhem-dev/polhem/pull/38), [#39](https://github.com/polhem-dev/polhem/pull/39), [#40](https://github.com/polhem-dev/polhem/pull/40))
 
 ## [1.0.0] - 2026-09-28
 
@@ -369,5 +389,6 @@ The renaming was done before the repository took pull requests, so these entries
   ([#25](https://github.com/polhem-dev/polhem/pull/25))
 - Northwind ships `zh-TW` messages for its order rules. ([#25](https://github.com/polhem-dev/polhem/pull/25))
 
-[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.1.0
 [1.0.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.0.0

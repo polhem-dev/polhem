@@ -8,19 +8,39 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
-### 破壞性 API 變更
+## [1.1.0] - 2026-09-30
 
-> **1.x 之內一次性、刻意的破壞。** 下面的改名會破壞以 1.0.0 建置之程式碼的原始碼與二進位相容性，依語意化版本
-> 應等到 2.0.0。它在 1.1.0 發佈，是因為做這個決定時 1.0.0 沒有已知的使用者，而且所有 1.0.0 套件都已下架
-> （unlist）。從 1.1.0 起，1.x 依語意化版本演進，不再有例外。理由見
+> `Polhem.Base` 改名為 `Polhem.Core`。依語意化版本，這應等到 2.0.0；它以一次性例外在 1.1.0 發佈，因為 1.0.0 沒有
+> 已知的使用者，而且所有 1.0.0 套件都已下架（unlist）。從 1.1.0 起，1.x 依語意化版本演進，不再有例外。理由見
 > [ADR-048](maintainers/adr/adr-048-rename-base-to-core-in-1-1.md)（英文）。
 
-- `Polhem.Base` 改名為 `Polhem.Core`：套件 ID 與所有命名空間（`Polhem.Base.Serialization` →
-  `Polhem.Core.Serialization`，依此類推）。從 1.0.0 升級時，把套件參考 `Polhem.Base` 換成 `Polhem.Core`（只在直接
-  參考它時才需要；其他套件會帶入它），並把 `using` 與完整限定名稱中的 `Polhem.Base` 命名空間全部換成
-  `Polhem.Core`。剩下沒改到的地方編譯器會逐一回報。wire fixtures 不受改名影響，但 JSON-RPC 型別白名單現在列的是
-  `Polhem.Core`，自訂的 `AllowedTypeNamespaces` 若列了 `Polhem.Base`，將不再比對到任何型別。
-  ([#42](https://github.com/polhem-dev/polhem/pull/42))
+📄 完整說明與背景：[docs/zh-TW/changelogs/1.1.0.md](docs/zh-TW/changelogs/1.1.0.md)
+
+### 破壞性 API 變更
+
+- `Polhem.Base` 改名為 `Polhem.Core`：套件 ID 與所有命名空間。([#42](https://github.com/polhem-dev/polhem/pull/42))
+
+從 1.0.0 升級（套件參考只在直接參考 `Polhem.Base` 時才需要改）：
+
+```diff
+- <PackageReference Include="Polhem.Base" Version="1.0.0" />
++ <PackageReference Include="Polhem.Core" Version="1.1.0" />
+- using Polhem.Base.Serialization;
++ using Polhem.Core.Serialization;
+```
+
+### 行為變更
+
+- 內建的 JSON-RPC 型別命名空間白名單列的是 `Polhem.Core`，不再是 `Polhem.Base`。([#42](https://github.com/polhem-dev/polhem/pull/42))
+
+### 範例與工具
+
+- 移除 `Web.Js.Demo` 範例；瀏覽器端改用
+  [polhem-connector-js](https://github.com/polhem-dev/polhem-connector-js)。([#41](https://github.com/polhem-dev/polhem/pull/41))
+
+### 文件
+
+- 使用者文件在 `docs/<lang>/` 下依主題分資料夾，維護者文件與 ADR 移到 `maintainers/`。([#38](https://github.com/polhem-dev/polhem/pull/38)、[#39](https://github.com/polhem-dev/polhem/pull/39)、[#40](https://github.com/polhem-dev/polhem/pull/40))
 
 ## [1.0.0] - 2026-09-28
 
@@ -319,5 +339,6 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
   框架同名的保留表單。([#25](https://github.com/polhem-dev/polhem/pull/25))
 - Northwind 隨附訂單規則的 `zh-TW` 訊息。([#25](https://github.com/polhem-dev/polhem/pull/25))
 
-[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.1.0
 [1.0.0]: https://github.com/polhem-dev/polhem/releases/tag/v1.0.0
