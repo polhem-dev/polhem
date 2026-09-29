@@ -7,11 +7,14 @@
   under `.claude/` and every `CLAUDE.md`.
 - This overrides any personal or user-level setting that asks for another language for prose, including an
   instruction to write in Traditional Chinese. Replies in a conversation may still follow the user's language.
-- Public Markdown documents and ADRs are bilingual. How each kind is kept in sync is in `rules/public-docs.md`.
+- Documents are split by reader. User documents (for developers who build applications with Polhem) are
+  multilingual; maintainer documents, the ADRs included, are English only. Which is which, and how translations are
+  kept in sync, is in `rules/public-docs.md`.
 - Parts of the repository still contain Chinese from before this policy; they are being translated. Write new
   content in English regardless of the language of the surrounding text.
 
-The reasons are recorded in `docs/adr/adr-045-language-policy-and-local-plans.md`.
+The reasons are recorded in `docs/adr/adr-045-language-policy-and-local-plans.md` and
+`docs/adr/adr-047-documents-split-by-reader.md`.
 
 ## Project overview
 

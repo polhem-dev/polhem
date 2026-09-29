@@ -67,5 +67,6 @@ understanding why the design is the way it is.
 | [042](adr-042-api-replay-protection.md) | API replay protection: a wire frame inside the encrypted envelope | ✅ Accepted |
 | [043](adr-043-error-contract-single-registry.md) | The error contract is expressed as a single registry that both ends consume from one declaration | ✅ Accepted |
 | [044](adr-044-payload-codec-negotiation.md) | The body codec is declared by each request; JSON and MessagePack coexist | ✅ Accepted |
-| [045](adr-045-language-policy-and-local-plans.md) | English for everything maintained together; plans stay out of the repository | ✅ Accepted |
+| [045](adr-045-language-policy-and-local-plans.md) | English for everything maintained together; plans stay out of the repository | ✅ Accepted, partially superseded |
 | [046](adr-046-api-evolution-policies-for-1-0.md) | API evolution policies for 1.0: a synchronous server path, growable host interfaces, process-wide configuration | ✅ Accepted |
+| [047](adr-047-documents-split-by-reader.md) | Documents are split by reader: user documents are multilingual, maintainer documents are English only | ✅ Accepted |

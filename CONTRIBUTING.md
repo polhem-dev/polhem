@@ -43,14 +43,16 @@ dotnet build Polhem.slnx --configuration Release
 ## Conventions
 
 - **Language**: everything maintained together is in English: code, XML documentation, comments, test names and
-  `[DisplayName]` text, and commit messages. Public documents and ADRs are bilingual (English and Traditional
-  Chinese). Some parts of the repository still contain Chinese from before this policy; write new content in English.
-  The reasons are in [ADR-045](docs/adr/adr-045-language-policy-and-local-plans.md).
+  `[DisplayName]` text, and commit messages. User documents, written for developers who build applications with
+  Polhem, are multilingual (English and Traditional Chinese); maintainer documents, the ADRs and this guide included,
+  are English only. Some parts of the repository still contain Chinese from before this policy; write new content in
+  English. The reasons are in [ADR-045](docs/adr/adr-045-language-policy-and-local-plans.md) and
+  [ADR-047](docs/adr/adr-047-documents-split-by-reader.md).
 - **Commit messages**: English, in the imperative mood, with a subject that says what changed. Use the body to
   explain why.
 - **Design decisions**: a decision that others need to understand later is recorded as an ADR in `docs/adr/`.
 - **Documents**: after changing Markdown documents, run `./check-md-links.sh` and `./check-public-docs.sh`.
-  English is the source of the documents under `docs/<lang>/` and of the ADRs; `./check-docs-i18n.sh` reports a
+  English is the source of the documents under `docs/<lang>/`; `./check-docs-i18n.sh` reports a
   Traditional Chinese translation that has fallen behind its source. If you cannot update the translation, say so in
   the pull request.
 - **Personal working documents**: plans, drafts and notes go in `local/` at the repository root, which git ignores.

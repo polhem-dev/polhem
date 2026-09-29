@@ -154,8 +154,8 @@ in `Polhem.Definition.Settings`).
 
 ## Document language
 
-Documents maintained together with the code (`.claude/`, `docs/repo-ops/`, other maintainer documents) are a single
-`xxx.md` written in **English**. Public Markdown documents are bilingual (see the Language section of
+Maintainer documents (`.claude/`, `docs/repo-ops/`, the ADRs, `CONTRIBUTING`) are a single `xxx.md` written in
+**English**, with no translation in the repository. User documents are multilingual (see the Language section of
 `.claude/CLAUDE.md`).
 
 A bilingual single document (such as `README.md` / `README.zh-TW.md`) **must have both files changed together**:

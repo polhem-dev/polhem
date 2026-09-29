@@ -38,12 +38,14 @@ dotnet build Polhem.slnx --configuration Release
 ## 慣例
 
 - **語言**：共同維護的內容一律用英文：程式碼、XML 文件、註解、測試名稱與 `[DisplayName]` 文字、commit message。
-  公開文件與 ADR 中英雙語（英文與繁體中文）。repo 裡仍有部分內容是這項政策之前留下的中文；新寫的內容一律用英文。
-  理由見 [ADR-045](docs/adr/adr-045-language-policy-and-local-plans.zh-TW.md)。
+  給使用 Polhem 開發應用程式的開發者看的使用者文件是多語系（英文與繁體中文）；維護者文件（包括 ADR 與本指南）只用英文。
+  repo 裡仍有部分內容是這項政策之前留下的中文；新寫的內容一律用英文。理由見
+  [ADR-045](docs/adr/adr-045-language-policy-and-local-plans.zh-TW.md) 與
+  [ADR-047](docs/adr/adr-047-documents-split-by-reader.md)。
 - **commit message**：英文、祈使語氣，標題說明改了什麼；在內文說明為什麼。
 - **設計決策**：日後需要讓其他人理解的決策，以 ADR 記錄在 `docs/adr/`。
 - **文件**：修改 Markdown 文件後，執行 `./check-md-links.sh` 與 `./check-public-docs.sh`。
-  `docs/<lang>/` 下的文件與 ADR 以英文為源；繁體中文譯本落後源文件時，`./check-docs-i18n.sh` 會回報。
+  `docs/<lang>/` 下的文件以英文為源；繁體中文譯本落後源文件時，`./check-docs-i18n.sh` 會回報。
   無法一併更新譯本時，請在 pull request 中說明。
 - **個人工作文件**：計畫、草稿與筆記放在 repo 根目錄的 `local/`，git 會忽略它。不要 commit，也不要從已 commit
   的檔案連過去：其他人都開不到。
