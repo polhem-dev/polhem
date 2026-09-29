@@ -1,4 +1,4 @@
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Customization;
 using Polhem.Definition.Settings;
 using Microsoft.Extensions.Logging;

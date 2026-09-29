@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Security.Cryptography;
 using System.Text;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 using Polhem.Business.System;
 using Polhem.Db.Manager;
 using Polhem.Definition;
@@ -9,7 +9,7 @@ using Polhem.Definition.Database;
 using Polhem.Definition.Identity;
 using Polhem.Repository.Abstractions.System;
 using Polhem.Tests.Shared;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {

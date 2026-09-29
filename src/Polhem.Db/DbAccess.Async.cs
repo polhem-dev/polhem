@@ -1,6 +1,6 @@
 using System.Data;
 using System.Data.Common;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 
 namespace Polhem.Db
 {

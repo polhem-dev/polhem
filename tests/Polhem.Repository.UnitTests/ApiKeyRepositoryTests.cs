@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Definition.Database;

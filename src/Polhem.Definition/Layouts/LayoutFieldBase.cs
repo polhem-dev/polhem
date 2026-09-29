@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using Polhem.Base.Collections;
+using Polhem.Core.Collections;
 using Polhem.Definition.Collections;
 
 namespace Polhem.Definition.Layouts
@@ -154,7 +154,7 @@ namespace Polhem.Definition.Layouts
 
         /// <summary>
         /// Gets whether <see cref="ExtendedProperties"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
-        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// and <see cref="Polhem.Core.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
         /// </summary>
         [XmlIgnore, JsonIgnore]
         [Browsable(false)]

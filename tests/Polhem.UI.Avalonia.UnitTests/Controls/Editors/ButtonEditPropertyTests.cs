@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Reflection;
 using Avalonia.Controls;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls.Editors;

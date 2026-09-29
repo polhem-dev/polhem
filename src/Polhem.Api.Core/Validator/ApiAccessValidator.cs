@@ -3,7 +3,7 @@ using System.Reflection;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Security;
 using Polhem.Api.Core.Messages;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 using Polhem.Definition.Language;
 
 namespace Polhem.Api.Core.Validator

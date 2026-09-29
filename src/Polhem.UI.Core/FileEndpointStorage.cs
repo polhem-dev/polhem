@@ -1,5 +1,5 @@
 using System.Reflection;
-using Polhem.Base;
+using Polhem.Core;
 
 namespace Polhem.UI.Core
 {

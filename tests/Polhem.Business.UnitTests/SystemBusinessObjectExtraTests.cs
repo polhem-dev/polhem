@@ -6,7 +6,7 @@ using Polhem.Definition;
 using Polhem.Tests.Shared;
 using Polhem.Definition.Database;
 using Polhem.Definition.Storage;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {

@@ -1,6 +1,6 @@
-using Polhem.Base;
-using Polhem.Base.Collections;
-using Polhem.Base.Data;
+using Polhem.Core;
+using Polhem.Core.Collections;
+using Polhem.Core.Data;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;
@@ -228,7 +228,7 @@ namespace Polhem.Db
         /// <summary>
         /// Normalizes a parameter value for the target provider. Oracle.ManagedDataAccess does
         /// not accept a <see cref="Guid"/> instance as the value of a <c>RAW(16)</c> parameter
-        /// (the framework's <see cref="Polhem.Base.Data.FieldDbType.Guid"/> mapping), and throws
+        /// (the framework's <see cref="Polhem.Core.Data.FieldDbType.Guid"/> mapping), and throws
         /// <c>ArgumentException : Value does not fall within the expected range</c>; convert to
         /// <c>byte[]</c> via <see cref="Guid.ToByteArray()"/> for Oracle only. All other providers
         /// pass the value through unchanged.
@@ -253,7 +253,7 @@ namespace Polhem.Db
         /// <list type="bullet">
         /// <item>Oracle.ManagedDataAccess rejects <c>DbType.Guid</c> on
         /// <see cref="System.Data.Common.DbParameter.DbType"/> assignment (Oracle has no native UUID type —
-        /// the framework maps <see cref="Polhem.Base.Data.FieldDbType.Guid"/> to <c>RAW(16)</c>); rewrite to
+        /// the framework maps <see cref="Polhem.Core.Data.FieldDbType.Guid"/> to <c>RAW(16)</c>); rewrite to
         /// <see cref="DbType.Binary"/> for Oracle. This pairs with <see cref="NormalizeParameterValue"/>,
         /// which converts the value side from <see cref="Guid"/> to <c>byte[]</c>.</item>
         /// <item>SQL Server upgrades <c>DbType.DateTime</c> to <c>DbType.DateTime2</c> so the full .NET

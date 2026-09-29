@@ -2,7 +2,7 @@ using System.Data;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using Polhem.Api.Core.MessagePack;
-using Polhem.Base.Collections;
+using Polhem.Core.Collections;
 
 namespace Polhem.Api.Core.UnitTests
 {

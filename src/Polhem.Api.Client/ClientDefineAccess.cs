@@ -149,7 +149,7 @@ namespace Polhem.Api.Client
         /// reference) is <c>LocalOnly</c>: writing a definition is a
         /// deployment-time operation. On a local connection these succeed; on a remote one the
         /// server rejects the call, which reaches the caller as a
-        /// <see cref="Polhem.Base.Exceptions.UserMessageException"/>. Reading definitions works over
+        /// <see cref="Polhem.Core.Exceptions.UserMessageException"/>. Reading definitions works over
         /// both.
         /// </remarks>
         /// <param name="defineType">The definition data type.</param>

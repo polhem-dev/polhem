@@ -1,4 +1,4 @@
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Db.Schema;
 
 namespace Polhem.Db.Providers.Sqlite

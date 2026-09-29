@@ -1,7 +1,7 @@
 using System.Data.Common;
 using System.Globalization;
 using System.Text.Json;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Db.Providers;

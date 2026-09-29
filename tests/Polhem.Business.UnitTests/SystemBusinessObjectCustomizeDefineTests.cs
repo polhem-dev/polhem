@@ -1,6 +1,6 @@
 using System.ComponentModel;
-using Polhem.Base.Exceptions;
-using Polhem.Base.Serialization;
+using Polhem.Core.Exceptions;
+using Polhem.Core.Serialization;
 using Polhem.Business.System;
 using Polhem.Definition;
 using Polhem.Definition.Identity;

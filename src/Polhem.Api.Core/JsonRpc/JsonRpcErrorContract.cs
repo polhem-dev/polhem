@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 
 namespace Polhem.Api.Core.JsonRpc
 {
@@ -28,7 +28,7 @@ namespace Polhem.Api.Core.JsonRpc
     /// <para>
     /// Two things deliberately stay out of this table. The fallback to
     /// <see cref="JsonRpcErrorCode.InternalError"/> is a policy about what an unrecognized failure
-    /// may reveal (and reads <see cref="Polhem.Base.SysInfo.IsDebugMode"/> to decide), not a correspondence between a
+    /// may reveal (and reads <see cref="Polhem.Core.SysInfo.IsDebugMode"/> to decide), not a correspondence between a
     /// type and a code; and the client's generic branch is a message format, not a mapping. Both
     /// live where they are applied.
     /// </para>

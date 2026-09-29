@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Definition.Layouts;
 
 namespace Polhem.UI.Avalonia.Controls.Editors

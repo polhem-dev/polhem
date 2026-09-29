@@ -12,7 +12,7 @@ for the type shape requirements on mobile see `.claude/rules/apple-mobile-trim.m
 ## Collection properties always inherit a base class
 
 Child collections in definition files (FormSchema / FormLayout / TableSchema / LanguageResource, etc.) always inherit
-`Polhem.Base.Collections.KeyCollectionBase<T>` (items have a key) or `CollectionBase<T>` (items have no key).
+`Polhem.Core.Collections.KeyCollectionBase<T>` (items have a key) or `CollectionBase<T>` (items have no key).
 **Do not use** bare BCL collections such as `List<T>`, `Collection<T>`, `IList<T>` as public property types.
 
 **Why:** it centralizes serialization handling, `ITagProperty`, Owner back-navigation and key uniqueness checks in a

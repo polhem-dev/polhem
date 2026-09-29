@@ -5,7 +5,7 @@ using System.Data;
 using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;

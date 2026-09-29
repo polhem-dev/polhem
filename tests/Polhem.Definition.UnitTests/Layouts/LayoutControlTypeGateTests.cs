@@ -1,6 +1,6 @@
 using System.ComponentModel;
-using Polhem.Base.Data;
-using Polhem.Base.Serialization;
+using Polhem.Core.Data;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;
 using Polhem.Tests.Shared;

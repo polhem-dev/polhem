@@ -60,7 +60,7 @@ metadata that was stripped**.
 - Embedded in `Polhem.Definition` as `<EmbeddedResource LogicalName="ILLink.Descriptors.xml">`. The trimmer scans this
   logical name automatically, so **every downstream trim/AOT app (including external framework users) benefits
   automatically**.
-- A wildcard `preserve="all"` roots `Polhem.Definition.*` + `Polhem.Base.Collections.*`. "FormSchema has too many
+- A wildcard `preserve="all"` roots `Polhem.Definition.*` + `Polhem.Core.Collections.*`. "FormSchema has too many
   subtypes" is exactly why a wildcard covers everything at once.
 - Measured: a full trim on the Android emulator strips 57% without the descriptor and keeps ~98% with it; the
   round-trip passes in both.
@@ -272,7 +272,7 @@ collapsing differs.
 
 ### Where the warnings actually come from
 
-The 13 assemblies named by `IL2104`: `Polhem.Base`, `Polhem.Definition`, `Polhem.Api.Core`, `Polhem.Api.Client`,
+The 13 assemblies named by `IL2104`: `Polhem.Core`, `Polhem.Definition`, `Polhem.Api.Core`, `Polhem.Api.Client`,
 `Polhem.UI.Core`, `Polhem.UI.Avalonia`, `Avalonia.Controls.DataGrid`, `Avalonia.DesignerSupport`,
 `DynamicExpresso.Core`, `MessagePack`, `MessagePack.Annotations`, `System.Private.CoreLib`,
 `System.Private.Xml`. It is only a summary saying "this assembly has trim warnings"; by itself it does not point at any

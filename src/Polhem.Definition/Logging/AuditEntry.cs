@@ -54,7 +54,7 @@ namespace Polhem.Definition.Logging
         /// <remarks>
         /// IMPORTANT: a fingerprint, never the access token. The log database has its own, usually
         /// wider, readership, and a token read from a log row would be a live bearer credential.
-        /// Producers compute it with <see cref="Polhem.Base.Security.AccessTokenHasher.ComputeFingerprint"/>,
+        /// Producers compute it with <see cref="Polhem.Core.Security.AccessTokenHasher.ComputeFingerprint"/>,
         /// which is enough to correlate the rows of one session with each other and with its
         /// <c>st_session</c> row.
         /// </remarks>

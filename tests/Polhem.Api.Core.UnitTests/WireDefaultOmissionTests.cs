@@ -7,7 +7,7 @@ using Polhem.Api.Core.Conversion;
 using Polhem.Api.Core.Messages.AuditLog;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Api.Core.Transformers;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Paging;
 using Polhem.Definition.Sorting;
 

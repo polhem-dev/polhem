@@ -1,4 +1,4 @@
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Db;
 using Polhem.Definition;
 using Polhem.Repository.Abstractions.System;

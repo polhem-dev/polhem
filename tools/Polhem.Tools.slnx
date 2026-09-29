@@ -9,6 +9,6 @@
   </Folder>
   <Folder Name="/ref-src/">
     <Project Path="../src/Polhem.Definition/Polhem.Definition.csproj" />
-    <Project Path="../src/Polhem.Base/Polhem.Base.csproj" />
+    <Project Path="../src/Polhem.Core/Polhem.Core.csproj" />
   </Folder>
 </Solution>

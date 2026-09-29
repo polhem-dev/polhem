@@ -74,7 +74,7 @@ belongs to no existing type.
 The build failure message itself contains the line in the correct format, for example:
 
 ```text
-error RS0016: Symbol 'Polhem.Base.Foo.Bar() -> void' is not part of the declared public API
+error RS0016: Symbol 'Polhem.Core.Foo.Bar() -> void' is not part of the declared public API
 ```
 
 Paste the string inside the single quotes as a whole line into that project's `PublicAPI.Unshipped.txt` (keeping it

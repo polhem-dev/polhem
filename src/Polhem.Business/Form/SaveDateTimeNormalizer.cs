@@ -1,7 +1,7 @@
 using System.Data;
-using Polhem.Base;
-using Polhem.Base.Data;
-using Polhem.Base.Exceptions;
+using Polhem.Core;
+using Polhem.Core.Data;
+using Polhem.Core.Exceptions;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;
@@ -156,7 +156,7 @@ namespace Polhem.Business.Form
         /// </summary>
         /// <remarks>
         /// The mechanics, including why the whole row has to be captured before
-        /// <see cref="DataRow.RejectChanges"/>, are in <see cref="Polhem.Base.Data.DataRowExtensions.RewriteVersions"/>.
+        /// <see cref="DataRow.RejectChanges"/>, are in <see cref="Polhem.Core.Data.DataRowExtensions.RewriteVersions"/>.
         /// </remarks>
         private static void RestoreModifiedRow(DataRow row, List<(FormField Field, DataColumn Column)> fields,
             DataRow storedRow, DateTime utcNow)

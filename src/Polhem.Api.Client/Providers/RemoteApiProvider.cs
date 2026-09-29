@@ -1,6 +1,6 @@
 using System.Collections.Specialized;
 using Polhem.Api.Core.JsonRpc;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Api.Core.Messages;
 
 namespace Polhem.Api.Client.Providers

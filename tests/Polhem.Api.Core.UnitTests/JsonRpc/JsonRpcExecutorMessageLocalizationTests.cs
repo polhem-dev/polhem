@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using Polhem.Api.Core.JsonRpc;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;

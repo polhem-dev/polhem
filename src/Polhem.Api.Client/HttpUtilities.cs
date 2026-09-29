@@ -8,11 +8,11 @@ namespace Polhem.Api.Client
     /// Utility library for HTTP operations.
     /// </summary>
     /// <remarks>
-    /// Lives here rather than in <c>Polhem.Base</c>: every project in the framework inherits that
+    /// Lives here rather than in <c>Polhem.Core</c>: every project in the framework inherits that
     /// assembly — including UI heads that only read definitions and tools that never open a socket —
     /// so a network primitive there put an unused capability on every consumer's public surface.
     /// Its callers have always been in this package. See <c>rules/dependency-boundary.md</c>:
-    /// <c>Polhem.Base</c> takes abstractions that are genuinely shared across layers, not everything
+    /// <c>Polhem.Core</c> takes abstractions that are genuinely shared across layers, not everything
     /// that happens to have no dependencies.
     /// </remarks>
     internal static class HttpUtilities

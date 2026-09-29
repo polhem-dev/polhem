@@ -207,7 +207,7 @@ Polhem.Business.Form.FormPluginRunner.RunBeforeSave(Polhem.Business.Form.SaveCon
 Polhem.Business.Form.FormRuleProcessor
 Polhem.Business.Form.FormRuleProcessor.ApplyBeforeDelete(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! snapshot, string! timeZoneId = "") -> void
 Polhem.Business.Form.FormRuleProcessor.ApplyBeforeSave(Polhem.Definition.Forms.FormSchema! schema, System.Data.DataSet! dataSet, Polhem.Definition.RoundingContext! roundingContext, string! timeZoneId = "") -> void
-Polhem.Business.Form.FormRuleProcessor.FormRuleProcessor(Polhem.Base.Expressions.IExpressionEvaluator! evaluator) -> void
+Polhem.Business.Form.FormRuleProcessor.FormRuleProcessor(Polhem.Core.Expressions.IExpressionEvaluator! evaluator) -> void
 Polhem.Business.Form.GetDataArgs
 Polhem.Business.Form.GetDataArgs.GetDataArgs() -> void
 Polhem.Business.Form.GetDataArgs.RowId.get -> System.Guid

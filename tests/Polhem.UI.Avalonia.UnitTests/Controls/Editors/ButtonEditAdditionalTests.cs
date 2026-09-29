@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Reflection;
 using Avalonia.Input;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Forms;

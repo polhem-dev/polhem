@@ -4,7 +4,7 @@ using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Client.Definitions;
 using Polhem.Api.Core.Messages.System;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 using System.Net.Sockets;

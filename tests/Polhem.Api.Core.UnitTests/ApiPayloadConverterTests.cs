@@ -179,7 +179,7 @@ namespace Polhem.Api.Core.UnitTests
         [Theory]
         [InlineData("Polhem.Api.Core.Messages.System.LoginRequest, Polhem.Api.Core")]
         [InlineData("Polhem.Definition.Collections.ParameterCollection, Polhem.Definition")]
-        [InlineData("Polhem.Base.SomeClass, Polhem.Base")]
+        [InlineData("Polhem.Core.SomeClass, Polhem.Core")]
         [InlineData("Polhem.Api.Contracts.SomeDto, Polhem.Api.Contracts")]
         [InlineData("System.Int32")]
         [DisplayName("RestoreFrom allows a TypeName inside the allow list")]
@@ -209,16 +209,16 @@ namespace Polhem.Api.Core.UnitTests
         [InlineData("System.Runtime.Serialization.Formatters.Binary.BinaryFormatter, mscorlib")]
         // A disallowed type smuggled in as a generic argument of an allowed outer type. The
         // argument's own comma comes before the assembly separator, so splitting on the first
-        // comma yields a fragment that still starts with `Polhem.Base.` and the argument goes
+        // comma yields a fragment that still starts with `Polhem.Core.` and the argument goes
         // unscreened.
-        [InlineData("Polhem.Base.Collections.Dictionary`1[[System.Diagnostics.Process, System.Diagnostics.Process]], Polhem.Base")]
+        [InlineData("Polhem.Core.Collections.Dictionary`1[[System.Diagnostics.Process, System.Diagnostics.Process]], Polhem.Core")]
         [InlineData("Polhem.Definition.Something`1[[Evil.Namespace.Exploit, Evil.Assembly]], Polhem.Definition")]
         // Nested one level deeper: the outer two types are allowed, the innermost is not.
-        [InlineData("Polhem.Base.A`1[[Polhem.Base.B`1[[Evil.Namespace.Exploit, Evil.Assembly]], Polhem.Base]], Polhem.Base")]
+        [InlineData("Polhem.Core.A`1[[Polhem.Core.B`1[[Evil.Namespace.Exploit, Evil.Assembly]], Polhem.Core]], Polhem.Core")]
         // An array of a disallowed element type.
         [InlineData("Evil.Namespace.Exploit[], Evil.Assembly")]
         // Malformed names must fail closed rather than fall through to `Type.GetType`.
-        [InlineData("Polhem.Base.Broken`1[[Evil.Namespace.Exploit, Evil.Assembly], Polhem.Base")]
+        [InlineData("Polhem.Core.Broken`1[[Evil.Namespace.Exploit, Evil.Assembly], Polhem.Core")]
         [DisplayName("RestoreFrom rejects a TypeName outside the allow list")]
         public void RestoreFrom_DisallowedTypeName_ThrowsInvalidOperationException(string typeName)
         {

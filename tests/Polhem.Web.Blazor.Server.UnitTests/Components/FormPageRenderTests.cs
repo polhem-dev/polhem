@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Reflection;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DataObjects;

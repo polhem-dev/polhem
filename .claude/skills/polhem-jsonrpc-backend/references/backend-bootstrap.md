@@ -26,7 +26,7 @@ app.Run();
 
 ```csharp
 using Polhem.Api.Core;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Db.Manager;
 using Polhem.Db.Providers.Sqlite;
 using Polhem.Db.Schema;

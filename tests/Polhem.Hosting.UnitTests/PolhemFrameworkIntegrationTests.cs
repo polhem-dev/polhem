@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 using Polhem.Business.Providers;
 using Polhem.Definition;
 using Polhem.Definition.Security;

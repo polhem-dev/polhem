@@ -1,6 +1,6 @@
-using Polhem.Base;
-using Polhem.Base.Exceptions;
-using Polhem.Base.Serialization;
+using Polhem.Core;
+using Polhem.Core.Exceptions;
+using Polhem.Core.Serialization;
 using Polhem.Business.AuditLog;
 using Polhem.Business.Form;
 using Polhem.Definition;

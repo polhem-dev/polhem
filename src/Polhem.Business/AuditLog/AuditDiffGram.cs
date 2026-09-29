@@ -2,7 +2,7 @@ using System.Data;
 using System.Globalization;
 using System.Text;
 using System.Xml;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Definition;
 
 namespace Polhem.Business.AuditLog

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Text.Json;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Organization;
 
 namespace Polhem.Definition.UnitTests.Organization

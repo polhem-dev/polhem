@@ -1,9 +1,9 @@
 using Polhem.Definition.Layouts;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using Polhem.Base;
-using Polhem.Base.Attributes;
-using Polhem.Base.Serialization;
+using Polhem.Core;
+using Polhem.Core.Attributes;
+using Polhem.Core.Serialization;
 using System.Text.Json.Serialization;
 
 namespace Polhem.Definition.Forms
@@ -156,7 +156,7 @@ namespace Polhem.Definition.Forms
 
         /// <summary>
         /// Gets whether <see cref="Tables"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
-        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// and <see cref="Polhem.Core.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
         /// </summary>
         [XmlIgnore, JsonIgnore]
         [Browsable(false)]
@@ -204,7 +204,7 @@ namespace Polhem.Definition.Forms
 
         /// <summary>
         /// Gets whether <see cref="Rules"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
-        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// and <see cref="Polhem.Core.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
         /// </summary>
         [XmlIgnore, JsonIgnore]
         [Browsable(false)]

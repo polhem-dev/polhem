@@ -1,4 +1,4 @@
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Settings;
 using Polhem.DefineEditor.Models;

@@ -1,8 +1,8 @@
 using Polhem.Definition.Settings;
 using Polhem.Api.Core;
-using Polhem.Base;
-using Polhem.Base.Security;
-using Polhem.Base.Serialization;
+using Polhem.Core;
+using Polhem.Core.Security;
+using Polhem.Core.Serialization;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Definition;
 using Polhem.Definition.Forms;

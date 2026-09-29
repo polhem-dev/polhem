@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
 using System.Data;
-using Polhem.Base;
-using Polhem.Base.Data;
-using Polhem.Base.Expressions;
+using Polhem.Core;
+using Polhem.Core.Data;
+using Polhem.Core.Expressions;
 
 namespace Polhem.Definition.Forms
 {

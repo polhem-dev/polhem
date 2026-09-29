@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 

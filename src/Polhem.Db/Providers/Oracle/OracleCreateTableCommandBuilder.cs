@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
-using Polhem.Base;
-using Polhem.Base.Data;
+using Polhem.Core;
+using Polhem.Core.Data;
 using Polhem.Db.Ddl;
 using Polhem.Definition.Database;
 

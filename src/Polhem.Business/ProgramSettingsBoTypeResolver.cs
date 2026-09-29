@@ -1,5 +1,5 @@
 using System.Collections.Concurrent;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Business.Form;
 using Polhem.Definition.Customization;
 using Polhem.Definition.Settings;

@@ -1,6 +1,6 @@
 ---
 name: polhem-serialization
-description: "Design guidance for \"triple serialization\" (XML / JSON / MessagePack) of polhem objects. Two core axes of use: XML for persistence (saved files / definition files / snapshots / written to the DB); JSON + MessagePack for API transport (the JSON-RPC envelope is always JSON; the body of Encoded/Encrypted payloads uses the codec each request declares, and MessagePack when none is declared). Covers the object recipe (parameterless ctor + XML/JSON attributes; the definition layer carries no serialization-package attributes), collections (inherit a Polhem.Base.Collections base + must register a formatter explicitly in WireContracts), wire transport patterns (the object itself vs an XML string), mobile AOT type-shape requirements, pitfalls, and a triple round-trip test template. Use when the user wants \"an object that supports XML/JSON/MessagePack\", \"serialization\", \"send to the front end and also save to disk\", \"send an object across the wire\", \"KeyCollectionBase collection serialization\", \"add a wire type\", \"serializable object design\", or similar."
+description: "Design guidance for \"triple serialization\" (XML / JSON / MessagePack) of polhem objects. Two core axes of use: XML for persistence (saved files / definition files / snapshots / written to the DB); JSON + MessagePack for API transport (the JSON-RPC envelope is always JSON; the body of Encoded/Encrypted payloads uses the codec each request declares, and MessagePack when none is declared). Covers the object recipe (parameterless ctor + XML/JSON attributes; the definition layer carries no serialization-package attributes), collections (inherit a Polhem.Core.Collections base + must register a formatter explicitly in WireContracts), wire transport patterns (the object itself vs an XML string), mobile AOT type-shape requirements, pitfalls, and a triple round-trip test template. Use when the user wants \"an object that supports XML/JSON/MessagePack\", \"serialization\", \"send to the front end and also save to disk\", \"send an object across the wire\", \"KeyCollectionBase collection serialization\", \"add a wire type\", \"serializable object design\", or similar."
 ---
 
 # polhem triple serialization (XML / JSON / MessagePack)
@@ -82,7 +82,7 @@ public sealed class FooNode : CollectionItem
     [XmlAttribute] public Guid RowId { get; set; }
 }
 
-// Collection: a base from Polhem.Base.Collections
+// Collection: a base from Polhem.Core.Collections
 public class FooNodeCollection : CollectionBase<FooNode> { }
 ```
 
@@ -96,8 +96,8 @@ list.Add(new CollectionBaseFormatter<FooNodeCollection, FooNode>());
 
 | Base | Use |
 |------|------|
-| `Polhem.Base.Collections.CollectionBase<T>` | Collections whose items have no key |
-| `Polhem.Base.Collections.KeyCollectionBase<T>` | Items have a key and need keyed indexing (e.g. `ParameterCollection`) |
+| `Polhem.Core.Collections.CollectionBase<T>` | Collections whose items have no key |
+| `Polhem.Core.Collections.KeyCollectionBase<T>` | Items have a key and need keyed indexing (e.g. `ParameterCollection`) |
 
 - **Public collection properties in the definition layer must not use bare `List<T>` / `Collection<T>` / `IList<T>`**
   (`rules/definition.md`); `POLHEM3002` enforces this at build time.
@@ -219,9 +219,9 @@ var fromMp = MessagePackCodec.Deserialize<Foo>(bytes)!;
 |------|------|
 | Triple-serializable object + collection sample | `src/Polhem.Definition/Organization/DepartmentTree.cs` / `DepartmentNode.cs` / `DepartmentNodeCollection.cs` |
 | Polymorphic collection (with JsonConverter) | `src/Polhem.Definition/Filters/FilterNodeCollection.cs` / `FilterGroup.cs` |
-| Collection bases | `src/Polhem.Base/Collections/CollectionBase.cs` / `KeyCollectionBase.cs` / `CollectionItem.cs` / `KeyCollectionItem.cs` |
+| Collection bases | `src/Polhem.Core/Collections/CollectionBase.cs` / `KeyCollectionBase.cs` / `CollectionItem.cs` / `KeyCollectionItem.cs` |
 | **Everything on the wire side** (registration list, formatters, resolver chain, `object` envelope, whitelist, drift gate) | `src/Polhem.Api.Core/MessagePack/` (**for the file list see `src/Polhem.Api.Core/CLAUDE.md`**; not listed here) |
-| XML persistence codec | `src/Polhem.Base/Serialization/XmlCodec.cs` |
+| XML persistence codec | `src/Polhem.Core/Serialization/XmlCodec.cs` |
 | Omitting empty collections (`{Property}Specified`) | `src/Polhem.Definition/CLAUDE.md`; `FormSchema.TablesSpecified` is the reference |
 | Round-trip test samples | `tests/Polhem.Api.Core.UnitTests/TestFunc.cs`, `tests/Polhem.Api.Core.UnitTests/WireFormatterTests.cs` |
 

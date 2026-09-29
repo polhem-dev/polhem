@@ -6,7 +6,7 @@ namespace Polhem.Analyzers.Definitions
     /// The field data types accepted by <c>FormField/@DbType</c> and <c>DbField/@DbType</c>.
     /// </summary>
     /// <remarks>
-    /// IMPORTANT: These values duplicate the <c>Polhem.Base.Data.FieldDbType</c> enumeration. The
+    /// IMPORTANT: These values duplicate the <c>Polhem.Core.Data.FieldDbType</c> enumeration. The
     /// duplication is unavoidable because analyzers target netstandard2.0 and cannot reference the
     /// net10.0 framework assembly. <c>FieldDbTypesSyncTests</c> asserts that this list stays equal to
     /// the enumeration, so adding a member there fails that test run until it is added here too.

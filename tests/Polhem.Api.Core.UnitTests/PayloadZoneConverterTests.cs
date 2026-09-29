@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Data;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages.Form;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition.Filters;
 
 namespace Polhem.Api.Core.UnitTests

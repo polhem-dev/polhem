@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Polhem.Base\Polhem.Base.csproj" />
+    <ProjectReference Include="..\Polhem.Core\Polhem.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

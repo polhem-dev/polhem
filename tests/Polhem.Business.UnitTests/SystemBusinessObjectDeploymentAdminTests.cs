@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 using Polhem.Business.System;
 using Polhem.Db.Manager;
 using Polhem.Definition.Database;

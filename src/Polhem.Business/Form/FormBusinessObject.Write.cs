@@ -1,6 +1,6 @@
 using System.Globalization;
-using Polhem.Base;
-using Polhem.Base.Exceptions;
+using Polhem.Core;
+using Polhem.Core.Exceptions;
 using Polhem.Business.AuditLog;
 using Polhem.Definition;
 using Polhem.Definition.Attributes;
@@ -54,7 +54,7 @@ namespace Polhem.Business.Form
         /// After the new-value scope check, every field the FormSchema marks
         /// <see cref="Polhem.Definition.Forms.FormField.Required"/> must be filled in each added or
         /// modified row, master and detail alike; otherwise the save stops with a
-        /// <see cref="Polhem.Base.Exceptions.UserMessageException"/> that names the field by its
+        /// <see cref="Polhem.Core.Exceptions.UserMessageException"/> that names the field by its
         /// caption in the caller's language. What counts as empty is described on
         /// <see cref="EnforceRequiredFields"/>. The check runs after <c>DoBeforeSave</c> and the
         /// <c>BeforeSave</c> plugins, so a value they fill counts. Covered by
@@ -143,7 +143,7 @@ namespace Polhem.Business.Form
         }
 
         /// <summary>
-        /// Replaces the <see cref="Polhem.Base.Data.FieldDbType.DateTime"/> values of the data set with the
+        /// Replaces the <see cref="Polhem.Core.Data.FieldDbType.DateTime"/> values of the data set with the
         /// values the server owns, before <see cref="DoBeforeSave"/> runs.
         /// </summary>
         /// <remarks>
@@ -171,7 +171,7 @@ namespace Polhem.Business.Form
         /// <para>
         /// Reads the stored values in one query per table that has modified or deleted rows. A row that
         /// is no longer in the database aborts the save with
-        /// <see cref="Polhem.Base.Exceptions.UserMessageException"/> before anything is written.
+        /// <see cref="Polhem.Core.Exceptions.UserMessageException"/> before anything is written.
         /// </para>
         /// </remarks>
         /// <param name="context">The save context.</param>
@@ -201,7 +201,7 @@ namespace Polhem.Business.Form
         /// </para>
         /// </remarks>
         /// <param name="context">The save context.</param>
-        /// <exception cref="Polhem.Base.Exceptions.UserMessageException">A required field is empty.</exception>
+        /// <exception cref="Polhem.Core.Exceptions.UserMessageException">A required field is empty.</exception>
         private void EnforceRequiredFields(SaveContext context)
         {
             var missing = Polhem.Definition.Forms.RequiredFieldCheck.FindMissing(context.Schema, context.DataSet);
@@ -258,7 +258,7 @@ namespace Polhem.Business.Form
         /// </para>
         /// <para>
         /// To abort the save, throw
-        /// <see cref="Polhem.Base.Exceptions.UserMessageException"/> — the framework's
+        /// <see cref="Polhem.Core.Exceptions.UserMessageException"/> — the framework's
         /// business-flow interruption signal, which reaches the end user as its message.
         /// </para>
         /// </remarks>
@@ -386,7 +386,7 @@ namespace Polhem.Business.Form
         /// <b>Runs outside the database transaction</b>, which covers <see cref="DoDelete"/> alone.
         /// The same time-of-check to time-of-use gap described on <see cref="DoBeforeSave"/> applies
         /// to any guard written here. To abort the delete, throw
-        /// <see cref="Polhem.Base.Exceptions.UserMessageException"/>.
+        /// <see cref="Polhem.Core.Exceptions.UserMessageException"/>.
         /// </remarks>
         /// <param name="context">The delete context.</param>
         protected virtual void DoBeforeDelete(DeleteContext context)

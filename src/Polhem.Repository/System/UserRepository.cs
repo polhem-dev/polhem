@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
-using Polhem.Base;
-using Polhem.Base.Security;
+using Polhem.Core;
+using Polhem.Core.Security;
 using Polhem.Db;
 using Polhem.Definition;
 using Polhem.Repository.Abstractions.System;

@@ -1,7 +1,7 @@
 using System.Data;
 using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 

@@ -1,4 +1,4 @@
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Business.AuditLog;
 using Polhem.Business.Form;
 using Polhem.Business.System;

@@ -1,6 +1,6 @@
 using System.ComponentModel;
-using Polhem.Base.Security;
-using Polhem.Base.Serialization;
+using Polhem.Core.Security;
+using Polhem.Core.Serialization;
 using Polhem.Business.System;
 using Polhem.Definition;
 using Polhem.Definition.Identity;

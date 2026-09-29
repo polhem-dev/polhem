@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 
 namespace Polhem.Definition.Language
 {

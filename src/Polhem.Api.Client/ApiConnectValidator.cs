@@ -1,6 +1,6 @@
 using Polhem.Definition.Settings;
-using Polhem.Base;
-using Polhem.Base.Serialization;
+using Polhem.Core;
+using Polhem.Core.Serialization;
 using Polhem.Api.Client.Connectors;
 
 namespace Polhem.Api.Client

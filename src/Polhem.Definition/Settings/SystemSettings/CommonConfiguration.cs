@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using Polhem.Base;
-using Polhem.Base.Attributes;
-using Polhem.Base.Serialization;
+using Polhem.Core;
+using Polhem.Core.Attributes;
+using Polhem.Core.Serialization;
 
 namespace Polhem.Definition.Settings
 {
@@ -54,7 +54,7 @@ namespace Polhem.Definition.Settings
         /// List of allowed type namespaces for JSON-RPC data transfer (separated by '|').
         /// Only types in these namespaces are allowed for deserialization to ensure security.
         /// Example: Custom.Module|ThirdParty.Dto
-        /// Note: Polhem.Base and Polhem.Definition are built-in system namespaces and do not need to be specified.
+        /// Note: Polhem.Core and Polhem.Definition are built-in system namespaces and do not need to be specified.
         /// </summary>
         [Category("API")]
         [Description("List of allowed type namespaces for JSON-RPC data transfer, separated by '|'.")]

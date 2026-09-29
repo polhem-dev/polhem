@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Data;
-using Polhem.Base;
-using Polhem.Base.Data;
+using Polhem.Core;
+using Polhem.Core.Data;
 using Polhem.Definition.Forms;
 
 namespace Polhem.Definition.UnitTests.Forms

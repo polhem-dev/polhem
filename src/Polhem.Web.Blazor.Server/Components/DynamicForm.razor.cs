@@ -1,5 +1,5 @@
 using System.Globalization;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Definition.Collections;
 using Polhem.Definition.Layouts;
 using Polhem.Web.Blazor.Server.DataObjects;

@@ -107,7 +107,7 @@ failure was silent: the form just stopped computing live.
 
 ## Two hard requirements for the expression variable table
 
-This spans two places, `Polhem.Base` (`ExpressionPolicy`) and each UI head (`FormLiveComputation`), so it stays
+This spans two places, `Polhem.Core` (`ExpressionPolicy`) and each UI head (`FormLiveComputation`), so it stays
 always loaded.
 
 1. **Variable keys always use `FormField.FieldName` (the casing declared in the schema)**, not
@@ -117,7 +117,7 @@ always loaded.
    case-insensitive anyway, so writing back is unaffected.
 
    > **`AddColumn` now stores lowercase, not uppercase** (`fieldName.ToLowerInvariant()`,
-   > `src/Polhem.Base/Data/DataTableExtensions.cs`). Historically it stored uppercase, and using uppercase as the
+   > `src/Polhem.Core/Data/DataTableExtensions.cs`). Historically it stored uppercase, and using uppercase as the
    > key threw `UnknownIdentifierException` outright; ADR-029 migrated the stored casing to lowercase, which
    > **happens to match the declared field names**. This **does not make this rule obsolete**: the conclusion was
    > always "decouple from the stored casing", not "avoid uppercase"; the coincidental match only hides the symptom

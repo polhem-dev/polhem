@@ -35,9 +35,9 @@ namespace Polhem.Repository
         /// The logical database this repository reads and writes, or <c>null</c> when it has none of
         /// its own and every method is told which database to use.
         /// </param>
-        /// <exception cref="Polhem.Base.Exceptions.AuthenticationRequiredException">Thrown when the scope is company-bound and the session is missing or expired.</exception>
-        /// <exception cref="Polhem.Base.Exceptions.UserMessageException">Thrown when the scope is company-bound and the session's company is unavailable.</exception>
-        /// <exception cref="Polhem.Base.Exceptions.CompanyNotEnteredException">Thrown when the scope is company-bound and the session has not entered a company.</exception>
+        /// <exception cref="Polhem.Core.Exceptions.AuthenticationRequiredException">Thrown when the scope is company-bound and the session is missing or expired.</exception>
+        /// <exception cref="Polhem.Core.Exceptions.UserMessageException">Thrown when the scope is company-bound and the session's company is unavailable.</exception>
+        /// <exception cref="Polhem.Core.Exceptions.CompanyNotEnteredException">Thrown when the scope is company-bound and the session has not entered a company.</exception>
         /// <remarks>
         /// The resolution is eager so a bad route fails while the repository is being built, before
         /// any data has been touched — the timing the form factory already had. Scope is a

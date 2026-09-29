@@ -12,7 +12,7 @@
     <Project Path="src/Polhem.Api.Client/Polhem.Api.Client.csproj" />
     <Project Path="src/Polhem.Api.Contracts/Polhem.Api.Contracts.csproj" />
     <Project Path="src/Polhem.Api.Core/Polhem.Api.Core.csproj" />
-    <Project Path="src/Polhem.Base/Polhem.Base.csproj" />
+    <Project Path="src/Polhem.Core/Polhem.Core.csproj" />
     <Project Path="src/Polhem.Business/Polhem.Business.csproj" />
     <Project Path="src/Polhem.Db/Polhem.Db.csproj" />
     <Project Path="src/Polhem.Definition/Polhem.Definition.csproj" />
@@ -30,7 +30,7 @@
     <Project Path="tests/Polhem.Api.AspNetCore.UnitTests/Polhem.Api.AspNetCore.UnitTests.csproj" />
     <Project Path="tests/Polhem.Api.Client.UnitTests/Polhem.Api.Client.UnitTests.csproj" />
     <Project Path="tests/Polhem.Api.Core.UnitTests/Polhem.Api.Core.UnitTests.csproj" />
-    <Project Path="tests/Polhem.Base.UnitTests/Polhem.Base.UnitTests.csproj" />
+    <Project Path="tests/Polhem.Core.UnitTests/Polhem.Core.UnitTests.csproj" />
     <Project Path="tests/Polhem.Cli.UnitTests/Polhem.Cli.UnitTests.csproj" />
     <Project Path="tests/Polhem.Business.UnitTests/Polhem.Business.UnitTests.csproj" />
     <Project Path="tests/Polhem.Db.UnitTests/Polhem.Db.UnitTests.csproj" />

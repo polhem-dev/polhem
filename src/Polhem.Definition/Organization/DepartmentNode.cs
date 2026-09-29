@@ -1,4 +1,4 @@
-using Polhem.Base.Collections;
+using Polhem.Core.Collections;
 using System.Xml.Serialization;
 
 namespace Polhem.Definition.Organization

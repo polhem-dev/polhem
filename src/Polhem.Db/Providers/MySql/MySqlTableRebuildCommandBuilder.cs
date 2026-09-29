@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Text;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Db.Ddl;
 using Polhem.Db.Schema;
 using Polhem.Db.Schema.Changes;

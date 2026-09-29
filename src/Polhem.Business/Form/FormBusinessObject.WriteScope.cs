@@ -1,6 +1,6 @@
 using System.Data;
-using Polhem.Base;
-using Polhem.Base.Exceptions;
+using Polhem.Core;
+using Polhem.Core.Exceptions;
 using Polhem.Business.Permission;
 using Polhem.Definition;
 using Polhem.Definition.Filters;

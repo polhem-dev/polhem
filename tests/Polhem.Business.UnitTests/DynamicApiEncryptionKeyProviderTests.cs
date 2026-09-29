@@ -2,7 +2,7 @@ using System.ComponentModel;
 using Polhem.Business.Providers;
 using Polhem.Definition.Identity;
 using Polhem.Tests.Shared;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 using Polhem.Definition.Database;
 
 namespace Polhem.Business.UnitTests

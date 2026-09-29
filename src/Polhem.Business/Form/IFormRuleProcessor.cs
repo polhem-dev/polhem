@@ -29,7 +29,7 @@ namespace Polhem.Business.Form
         /// Applies the before-save pipeline to <paramref name="dataSet"/>: fills default-value
         /// expressions on new rows where the field is still empty, recomputes value-expression fields on
         /// new/changed rows (rounding numeric results via the number subsystem), then evaluates
-        /// <c>BeforeSave</c> rules. A failing rule throws <see cref="Polhem.Base.Exceptions.UserMessageException"/> to abort the save.
+        /// <c>BeforeSave</c> rules. A failing rule throws <see cref="Polhem.Core.Exceptions.UserMessageException"/> to abort the save.
         /// </summary>
         /// <param name="schema">The form schema.</param>
         /// <param name="dataSet">The data set being saved (mutated in place).</param>
@@ -43,7 +43,7 @@ namespace Polhem.Business.Form
         /// <summary>
         /// Evaluates the form's <c>BeforeDelete</c> rules against the pre-delete
         /// <paramref name="snapshot"/>. A failing rule throws
-        /// <see cref="Polhem.Base.Exceptions.UserMessageException"/> to abort the delete.
+        /// <see cref="Polhem.Core.Exceptions.UserMessageException"/> to abort the delete.
         /// </summary>
         /// <param name="schema">The form schema.</param>
         /// <param name="snapshot">The pre-delete record snapshot (master + details).</param>

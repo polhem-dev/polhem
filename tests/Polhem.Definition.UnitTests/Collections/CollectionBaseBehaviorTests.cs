@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Polhem.Base.Collections;
+using Polhem.Core.Collections;
 using Polhem.Definition.Sorting;
 
 namespace Polhem.Definition.UnitTests.Collections

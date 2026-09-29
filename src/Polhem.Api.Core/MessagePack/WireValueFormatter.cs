@@ -36,7 +36,7 @@ namespace Polhem.Api.Core.MessagePack
     /// their underlying integer and read back with <see cref="Enum.ToObject(Type, long)"/>, and the
     /// types in the named table (<see cref="ParameterCollection"/>) have closed generic delegates
     /// like the known set; neither needs dynamic code. Everything else is the escape hatch for the
-    /// application-configured namespaces (<see cref="Polhem.Base.SysInfo.AllowedTypeNamespaces"/>):
+    /// application-configured namespaces (<see cref="Polhem.Core.SysInfo.AllowedTypeNamespaces"/>):
     /// it goes through the non-generic overload, so it only works where dynamic code does, and
     /// elsewhere fails with a <see cref="NotSupportedException"/> that names the type. That is a
     /// deliberate trade — it keeps the existing extensibility on the server without holding the

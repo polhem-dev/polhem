@@ -171,7 +171,7 @@ namespace Polhem.Business.UnitTests
         {
             foreach (var binding in ReservedProgIds.All)
             {
-                var loaded = Polhem.Base.AssemblyLoader.GetType(binding.DefaultTypeName);
+                var loaded = Polhem.Core.AssemblyLoader.GetType(binding.DefaultTypeName);
                 Assert.Equal(binding.DefaultType, loaded);
             }
         }

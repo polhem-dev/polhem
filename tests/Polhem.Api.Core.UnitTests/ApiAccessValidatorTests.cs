@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using Polhem.Api.Core.Validator;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Security;
 using Polhem.Api.Core.Messages;

@@ -1,6 +1,6 @@
-using Polhem.Base;
-using Polhem.Base.Serialization;
-using Polhem.Base.Exceptions;
+using Polhem.Core;
+using Polhem.Core.Serialization;
+using Polhem.Core.Exceptions;
 using Polhem.Definition;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Forms;

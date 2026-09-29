@@ -45,7 +45,7 @@ namespace Polhem.Api.Core.JsonRpc
         /// <summary>
         /// The call needs a signed-in caller and arrived without a usable access token — none, or one
         /// that is unknown, invalid or expired (-32001). Raised via
-        /// <see cref="Polhem.Base.Exceptions.AuthenticationRequiredException"/>, which the client
+        /// <see cref="Polhem.Core.Exceptions.AuthenticationRequiredException"/>, which the client
         /// rebuilds from this code. Distinct from <see cref="PermissionDenied"/>, where the caller is
         /// signed in but lacks the right.
         /// </summary>
@@ -71,7 +71,7 @@ namespace Polhem.Api.Core.JsonRpc
         /// An authenticated caller lacks permission for a specific action on a permission
         /// model (-32004) — the layer-1 model+action authorization check. Distinct from <see cref="CompanyAccessDenied"/> (company-level) and
         /// <see cref="Unauthorized"/> (missing/invalid credential); raised via
-        /// <see cref="Polhem.Base.Exceptions.ForbiddenException"/>.
+        /// <see cref="Polhem.Core.Exceptions.ForbiddenException"/>.
         /// </summary>
         PermissionDenied = -32004,
 
@@ -89,7 +89,7 @@ namespace Polhem.Api.Core.JsonRpc
         /// <summary>
         /// A user-facing business message produced by business logic, intended to be
         /// shown to the end user (-32099). Carries the text of a
-        /// <see cref="Polhem.Base.Exceptions.UserMessageException"/> verbatim; the BCL exceptions
+        /// <see cref="Polhem.Core.Exceptions.UserMessageException"/> verbatim; the BCL exceptions
         /// that <see cref="JsonRpcErrorContract"/> also maps here travel with a fixed, generic message.
         /// </summary>
         /// <remarks>

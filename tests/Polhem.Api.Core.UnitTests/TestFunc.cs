@@ -1,7 +1,7 @@
 using Polhem.Api.Core.MessagePack;
 using Polhem.Definition.Collections;
 using System.Reflection;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using System.Text.Json.Serialization;
 
 namespace Polhem.Api.Core.UnitTests

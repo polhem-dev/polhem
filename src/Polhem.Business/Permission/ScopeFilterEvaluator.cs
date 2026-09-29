@@ -1,6 +1,6 @@
 using System.Data;
 using System.Globalization;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Definition.Filters;
 
 namespace Polhem.Business.Permission

@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using Polhem.Api.Core.JsonRpc;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Definition;
 using Polhem.Api.Core.Messages;
 

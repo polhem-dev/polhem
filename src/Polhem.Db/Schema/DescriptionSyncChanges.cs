@@ -1,4 +1,4 @@
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Db.Schema.Changes;
 using Polhem.Definition.Database;
 

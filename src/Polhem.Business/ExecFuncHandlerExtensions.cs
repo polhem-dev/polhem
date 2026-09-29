@@ -1,5 +1,5 @@
 using System.Runtime.ExceptionServices;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 using Polhem.Business.Attributes;
 using Polhem.Definition.Security;
 using Polhem.Definition.Language;

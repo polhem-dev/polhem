@@ -1,6 +1,6 @@
-using Polhem.Base;
-using Polhem.Base.Exceptions;
-using Polhem.Base.Security;
+using Polhem.Core;
+using Polhem.Core.Exceptions;
+using Polhem.Core.Security;
 using Polhem.Business.AuditLog;
 using Polhem.Definition;
 using Polhem.Definition.Attributes;

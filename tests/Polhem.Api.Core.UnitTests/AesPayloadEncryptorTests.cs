@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Security.Cryptography;
 using Polhem.Api.Core.Transformers;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 
 namespace Polhem.Api.Core.UnitTests
 {

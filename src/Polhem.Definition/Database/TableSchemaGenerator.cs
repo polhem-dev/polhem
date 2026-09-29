@@ -1,5 +1,5 @@
 using Polhem.Definition.Forms;
-using Polhem.Base;
+using Polhem.Core;
 
 namespace Polhem.Definition.Database
 {

@@ -1,7 +1,7 @@
 using System.Globalization;
 using Avalonia.Controls;
-using Polhem.Base;
-using Polhem.Base.Data;
+using Polhem.Core;
+using Polhem.Core.Data;
 using Polhem.Definition;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Layouts;

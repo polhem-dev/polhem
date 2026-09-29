@@ -166,7 +166,7 @@ Polhem.UI.Avalonia.DataObjects.FormDataObject.SetField(System.Data.DataRow! row,
 Polhem.UI.Avalonia.DataObjects.FormDataObject.SetField(string! fieldName, string? value) -> void
 Polhem.UI.Avalonia.DataObjects.FormLiveComputation
 Polhem.UI.Avalonia.DataObjects.FormLiveComputation.ApplyDefaults(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
-Polhem.UI.Avalonia.DataObjects.FormLiveComputation.FormLiveComputation(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.RoundingContext? roundingContext = null, Polhem.Base.Expressions.IExpressionEvaluator? evaluator = null) -> void
+Polhem.UI.Avalonia.DataObjects.FormLiveComputation.FormLiveComputation(Polhem.Definition.Forms.FormSchema! schema, Polhem.Definition.RoundingContext? roundingContext = null, Polhem.Core.Expressions.IExpressionEvaluator? evaluator = null) -> void
 Polhem.UI.Avalonia.DataObjects.FormLiveComputation.InitializeNewRow(string! tableName, System.Data.DataRow! row) -> System.Collections.Generic.IReadOnlyList<string!>!
 Polhem.UI.Avalonia.DataObjects.FormLiveComputation.IsDegraded.get -> bool
 Polhem.UI.Avalonia.DataObjects.FormLiveComputation.IsRecomputing.get -> bool

@@ -1,5 +1,5 @@
 using System.Data;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 
 namespace Polhem.Definition.Forms
 {
@@ -24,7 +24,7 @@ namespace Polhem.Definition.Forms
         /// Columns absent from the schema are left alone: a query may legitimately return more than the
         /// declared fields, and an unmarked column still falls back to inferring its type from the CLR
         /// type. Hand-written SQL has no schema to replay and declares its calendar-day columns through
-        /// <see cref="Polhem.Base.Data.DataTableExtensions.SetDateColumns"/> instead.
+        /// <see cref="Polhem.Core.Data.DataTableExtensions.SetDateColumns"/> instead.
         /// </para>
         /// </remarks>
         public static void ApplyFieldDbTypes(this FormTable formTable, DataTable table)

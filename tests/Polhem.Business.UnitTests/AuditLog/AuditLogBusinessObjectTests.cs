@@ -12,7 +12,7 @@ using Polhem.Repository.Abstractions.Factories;
 using Polhem.Tests.Shared;
 
 using Polhem.Definition;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 namespace Polhem.Business.UnitTests.AuditLog
 {
     /// <summary>

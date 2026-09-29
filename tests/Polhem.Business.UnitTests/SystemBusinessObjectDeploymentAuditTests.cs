@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 using Polhem.Business.AuditLog;
 using Polhem.Business.System;
 using Polhem.Business.UnitTests.Fakes;

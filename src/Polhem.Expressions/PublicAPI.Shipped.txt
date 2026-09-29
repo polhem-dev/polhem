@@ -1,6 +1,6 @@
 #nullable enable
 Polhem.Expressions.DynamicExpressoEvaluator
 Polhem.Expressions.DynamicExpressoEvaluator.DynamicExpressoEvaluator() -> void
-Polhem.Expressions.DynamicExpressoEvaluator.Evaluate(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! variables, System.Type! returnType, string! timeZoneId = "", Polhem.Base.DateTimeBasis basis = Polhem.Base.DateTimeBasis.UserZone) -> object?
-Polhem.Expressions.DynamicExpressoEvaluator.Evaluate<T>(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! variables, string! timeZoneId = "", Polhem.Base.DateTimeBasis basis = Polhem.Base.DateTimeBasis.UserZone) -> T
+Polhem.Expressions.DynamicExpressoEvaluator.Evaluate(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! variables, System.Type! returnType, string! timeZoneId = "", Polhem.Core.DateTimeBasis basis = Polhem.Core.DateTimeBasis.UserZone) -> object?
+Polhem.Expressions.DynamicExpressoEvaluator.Evaluate<T>(string! expression, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! variables, string! timeZoneId = "", Polhem.Core.DateTimeBasis basis = Polhem.Core.DateTimeBasis.UserZone) -> T
 Polhem.Expressions.DynamicExpressoEvaluator.GetReferencedVariables(string! expression) -> System.Collections.Generic.IReadOnlyList<string!>!

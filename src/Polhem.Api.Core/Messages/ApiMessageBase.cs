@@ -2,7 +2,7 @@ using System.Xml.Serialization;
 using System.Text.Json.Serialization;
 using System.ComponentModel;
 using Polhem.Definition.Collections;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 
 namespace Polhem.Api.Core.Messages
 {
@@ -24,7 +24,7 @@ namespace Polhem.Api.Core.Messages
         /// <para>
         /// A custom (AnyCode) method that needs to pass an instant should agree its own basis with
         /// the caller — UTC is the framework-consistent choice — or carry the value in a
-        /// <c>DataTable</c>, where the <see cref="Polhem.Base.Data.FieldDbType"/> marker makes the intent explicit and the
+        /// <c>DataTable</c>, where the <see cref="Polhem.Core.Data.FieldDbType"/> marker makes the intent explicit and the
         /// connector converts it. See <c>maintainers/adr/adr-032-datetime-timezone.md</c> (D4).
         /// </para>
         /// </remarks>
@@ -43,7 +43,7 @@ namespace Polhem.Api.Core.Messages
 
         /// <summary>
         /// Gets whether <see cref="Parameters"/> is written; <c>false</c> while it is empty. <c>XmlSerializer</c>
-        /// and <see cref="Polhem.Base.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
+        /// and <see cref="Polhem.Core.Serialization.JsonCodec"/> read this <c>{Property}Specified</c> member.
         /// </summary>
         [XmlIgnore, JsonIgnore]
         [Browsable(false)]

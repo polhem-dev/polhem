@@ -4,6 +4,9 @@
 
 **Accepted (2026-09-27)**
 
+The renaming of `Polhem.Base` to `Polhem.Core` in 1.1.0 is a one-time exception to the compatibility rule stated
+below; see [ADR-048](adr-048-rename-base-to-core-in-1-1.md).
+
 ## Context
 
 Polhem 1.0 fixes the public API baseline. From then on, the `PublicAPI.Shipped.txt` file of each package records the

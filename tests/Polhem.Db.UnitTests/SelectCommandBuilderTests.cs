@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Polhem.Base.Data;
+using Polhem.Core.Data;
 using Polhem.Db.Dml;
 using Polhem.Definition.Filters;
 using Polhem.Definition.Forms;

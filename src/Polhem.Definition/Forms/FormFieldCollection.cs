@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using Polhem.Base.Attributes;
-using Polhem.Base.Data;
-using Polhem.Base.Collections;
+using Polhem.Core.Attributes;
+using Polhem.Core.Data;
+using Polhem.Core.Collections;
 
 namespace Polhem.Definition.Forms
 {

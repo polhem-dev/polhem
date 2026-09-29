@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Security.Cryptography;
 using System.Text;
 using Polhem.Business.Providers;
-using Polhem.Base.Exceptions;
+using Polhem.Core.Exceptions;
 
 namespace Polhem.Business.UnitTests
 {

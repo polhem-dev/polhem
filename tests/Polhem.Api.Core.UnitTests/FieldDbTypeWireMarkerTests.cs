@@ -3,14 +3,14 @@ using System.Data;
 using System.Text.Json;
 using Polhem.Api.Core.MessagePack;
 using Polhem.Api.Core.UnitTests.MessagePack;
-using Polhem.Base.Data;
-using Polhem.Base.Serialization;
+using Polhem.Core.Data;
+using Polhem.Core.Serialization;
 
 namespace Polhem.Api.Core.UnitTests
 {
     /// <summary>
     /// Verifies that column semantic markers are carried over the MessagePack wire path and agree with the JSON path.
-    /// Wire serialization has parallel MessagePack and JSON implementations (in Polhem.Api.Core and Polhem.Base),
+    /// Wire serialization has parallel MessagePack and JSON implementations (in Polhem.Api.Core and Polhem.Core),
     /// so changing one and forgetting the other is the most likely mistake. A deployment usually runs only one
     /// PayloadFormat and breaks only when it switches, so consistency between the formats must be pinned by tests.
     /// </summary>

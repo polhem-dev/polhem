@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Globalization;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 using Polhem.Db;
 using Polhem.Definition.Database;
 using Polhem.Definition.Logging;

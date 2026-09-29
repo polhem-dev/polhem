@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Xml.Serialization;
-using Polhem.Base.Collections;
+using Polhem.Core.Collections;
 using Polhem.Definition.Sorting;
 
 namespace Polhem.Definition.Database

@@ -261,13 +261,13 @@ namespace Polhem.Business.AuditLog
         /// </summary>
         /// <remarks>
         /// IMPORTANT: use <see cref="XmlConvert"/>, not <c>ToString()</c> or
-        /// <see cref="Polhem.Base.ValueUtilities.CStr(object)"/>. Those are culture-sensitive, which would both diverge from the
+        /// <see cref="Polhem.Core.ValueUtilities.CStr(object)"/>. Those are culture-sensitive, which would both diverge from the
         /// schemaless reader (which returns the payload's own XML text) and make a stored value render
         /// differently on a server whose culture happens to differ — the very thing the write side
         /// avoids by building its tables with an invariant locale.
         /// <para>
         /// NOTE: agreement with the schemaless reader on <see cref="DateTime"/> columns also depends on
-        /// <see cref="Polhem.Base.Data.DataTableExtensions.AddColumn(DataTable, string, Polhem.Base.Data.FieldDbType)"/> setting
+        /// <see cref="Polhem.Core.Data.DataTableExtensions.AddColumn(DataTable, string, Polhem.Core.Data.FieldDbType)"/> setting
         /// <see cref="DataSetDateTime.Unspecified"/>. A <see cref="DataTable"/> built by hand defaults
         /// to <c>UnspecifiedLocal</c>, whose DiffGram carries a timezone offset that the restored value
         /// does not — so the two shapes would disagree on that column.

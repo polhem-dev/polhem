@@ -116,7 +116,7 @@ deployment runs into after connecting to the framework.
 
 | Home | Trade-off |
 |------|------|
-| `dotnet polhem apikey ...` / `dotnet polhem admin ...` | A CLI is naturally a deployment-time tool and can go into scripts. But `tools/Polhem.Cli` currently declares only `Polhem.Definition` (its transitive closure is `Polhem.Definition` + `Polhem.Base`; since ADR-038 it no longer includes `Polhem.Expressions`). Reaching the DB means pulling in `Polhem.Business` and the repositories as well. **This is the main decision of this item**: it turns the CLI from a "definition file tool" into "an operations tool that must reach a database" |
+| `dotnet polhem apikey ...` / `dotnet polhem admin ...` | A CLI is naturally a deployment-time tool and can go into scripts. But `tools/Polhem.Cli` currently declares only `Polhem.Definition` (its transitive closure is `Polhem.Definition` + `Polhem.Core`; since ADR-038 it no longer includes `Polhem.Expressions`). Reaching the DB means pulling in `Polhem.Business` and the repositories as well. **This is the main decision of this item**: it turns the CLI from a "definition file tool" into "an operations tool that must reach a database" |
 | Add a tab to DefineEditor | Already a local Avalonia tool with a DI host. But its role is editing definition files, and keys and the administrator flag live in the DB, not in definition files |
 
 **How more consumers change the trade-off**: the cost in the CLI cell (pulling `Polhem.Business` and the repositories

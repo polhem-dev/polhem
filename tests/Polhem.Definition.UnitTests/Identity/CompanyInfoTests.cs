@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Settings;
 

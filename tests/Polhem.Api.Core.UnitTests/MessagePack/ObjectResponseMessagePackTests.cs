@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Polhem.Api.Core.MessagePack;
 using Polhem.Api.Core.Messages.System;
-using Polhem.Base.Serialization;
+using Polhem.Core.Serialization;
 using Polhem.Definition.Forms;
 using Polhem.Definition.Language;
 using Polhem.Definition.Layouts;

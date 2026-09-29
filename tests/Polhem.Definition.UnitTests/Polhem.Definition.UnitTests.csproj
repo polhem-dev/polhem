@@ -23,10 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Polhem.Base\Polhem.Base.csproj" />
+    <ProjectReference Include="..\..\src\Polhem.Core\Polhem.Core.csproj" />
     <ProjectReference Include="..\..\src\Polhem.Definition\Polhem.Definition.csproj" />
     <!--
-      Polhem.Definition no longer references Polhem.Expressions (the abstraction now lives in Polhem.Base;
+      Polhem.Definition no longer references Polhem.Expressions (the abstraction now lives in Polhem.Core;
       see adr-038). The FormExpressionCalculator tests still exercise the real DynamicExpresso
       implementation on purpose — the point of those tests is that client and server agree on the
       computed value — so the test project takes the same explicit reference a composition root

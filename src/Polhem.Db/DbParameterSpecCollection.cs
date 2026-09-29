@@ -1,6 +1,6 @@
 using Polhem.Definition.Database;
-using Polhem.Base.Data;
-using Polhem.Base.Collections;
+using Polhem.Core.Data;
+using Polhem.Core.Collections;
 using System.Data;
 
 namespace Polhem.Db

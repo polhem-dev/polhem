@@ -120,7 +120,7 @@ Fix mode uses `/loop` to repeat until an end condition holds.
 - Adding tests only adds files or `[Fact]`s under `tests/<Module>.UnitTests/`; existing assertions are not changed
 - **Never** touch:
   - public API signatures (method signature, class visibility)
-  - the encryption / session pipeline: cryptographic primitives (`src/Polhem.Base/Security/`), key and access
+  - the encryption / session pipeline: cryptographic primitives (`src/Polhem.Core/Security/`), key and access
     policy (`src/Polhem.Definition/Security/`), the payload pipeline (`src/Polhem.Api.Core/Transformers/`), and
     session handling (`src/Polhem.Business/System/SystemBusinessObject.Session.cs`, `src/Polhem.Business/Session/`,
     `src/Polhem.Business/Validator/`, `src/Polhem.Repository/System/SessionRepository.cs`,

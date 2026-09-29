@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 using Polhem.Definition.Logging;
 
 namespace Polhem.Api.Core.JsonRpc

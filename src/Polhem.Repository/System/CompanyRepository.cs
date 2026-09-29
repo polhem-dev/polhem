@@ -1,6 +1,6 @@
-using Polhem.Base;
-using Polhem.Base.Data;
-using Polhem.Base.Serialization;
+using Polhem.Core;
+using Polhem.Core.Data;
+using Polhem.Core.Serialization;
 using Polhem.Db;
 using Polhem.Definition;
 using Polhem.Definition.Identity;

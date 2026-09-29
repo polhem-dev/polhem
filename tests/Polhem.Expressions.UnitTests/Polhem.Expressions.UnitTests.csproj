@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Polhem.Base\Polhem.Base.csproj" />
+    <ProjectReference Include="..\..\src\Polhem.Core\Polhem.Core.csproj" />
     <ProjectReference Include="..\..\src\Polhem.Expressions\Polhem.Expressions.csproj" />
   </ItemGroup>
 

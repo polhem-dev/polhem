@@ -1,5 +1,5 @@
 using System.Text;
-using Polhem.Base;
+using Polhem.Core;
 
 namespace Polhem.Api.Core.MessagePack
 {
@@ -109,7 +109,7 @@ namespace Polhem.Api.Core.MessagePack
         /// carry generic arguments. Callers holding a name that came off the wire must use
         /// <see cref="IsAssemblyQualifiedNameAllowed"/> instead — a generic argument's own comma
         /// sits <i>before</i> the assembly separator, so naive splitting hands this method a
-        /// fragment such as <c>Polhem.Base.Collections.Dictionary`1[[Evil.Type</c>, which passes the
+        /// fragment such as <c>Polhem.Core.Collections.Dictionary`1[[Evil.Type</c>, which passes the
         /// namespace prefix test while the argument goes unchecked.
         /// </remarks>
         /// <param name="fullName">The full name of the type to validate.</param>

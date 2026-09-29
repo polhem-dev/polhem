@@ -1,4 +1,4 @@
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Business.Session;
 using Polhem.Definition;
 using Polhem.Definition.Database;

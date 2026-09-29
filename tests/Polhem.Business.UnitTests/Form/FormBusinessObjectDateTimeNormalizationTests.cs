@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using System.Data;
-using Polhem.Base;
-using Polhem.Base.Data;
-using Polhem.Base.Exceptions;
+using Polhem.Core;
+using Polhem.Core.Data;
+using Polhem.Core.Exceptions;
 using Polhem.Business.AuditLog;
 using Polhem.Business.Form;
 using Polhem.Definition;

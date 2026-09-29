@@ -1,6 +1,6 @@
 using System.ComponentModel;
-using Polhem.Base.Exceptions;
-using Polhem.Base.Security;
+using Polhem.Core.Exceptions;
+using Polhem.Core.Security;
 using Polhem.Business.System;
 using Polhem.Db;
 using Polhem.Db.Manager;

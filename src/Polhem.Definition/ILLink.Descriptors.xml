@@ -34,10 +34,10 @@
   </assembly>
 
   <!--
-    The definition collections derive from the base collection types in Polhem.Base; the
+    The definition collections derive from the base collection types in Polhem.Core; the
     reflection-only serializer walks their inherited construct / add / enumerate members.
   -->
-  <assembly fullname="Polhem.Base">
-    <type fullname="Polhem.Base.Collections.*" preserve="all" />
+  <assembly fullname="Polhem.Core">
+    <type fullname="Polhem.Core.Collections.*" preserve="all" />
   </assembly>
 </linker>

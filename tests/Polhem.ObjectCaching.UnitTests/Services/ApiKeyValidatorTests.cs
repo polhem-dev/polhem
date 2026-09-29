@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Polhem.Base.Security;
+using Polhem.Core.Security;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Organization;
