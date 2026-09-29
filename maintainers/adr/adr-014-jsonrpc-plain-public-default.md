@@ -237,7 +237,7 @@ runtime side, and JS front ends have no matching need.
 - [JSON-RPC front-end integration guide](../../docs/en/api/jsonrpc-frontend-integration.md) — the public document for JS / TS
   developers
 - [Polhem.Api.Core README](../../src/Polhem.Api.Core/README.md) — the level-checking logic of `ApiAccessValidator`
-- `samples/Web.Js.Demo/` — a pure JS demo that verifies full CRUD on the Plain path end to end
+- [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js) — the TypeScript client for JS front ends
 
 ## Out of scope
 
@@ -248,8 +248,8 @@ runtime side, and JS front ends have no matching need.
 - **DTO codegen / automatic TypeScript generation** — a toolchain topic, unrelated to the `ProtectionLevel` decision
 - **The CORS default for cross-origin calls** — each host decides, independently of the protection level of BO
   methods
-- **Packaging as an NPM package** — the upgrade path has three stages (pure JS sample → TS + Vite → NPM package); it
-  does not start until the trigger conditions are met
+- **Packaging as an NPM package** — the TypeScript client is its own repository,
+  [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js)
 
 ## Implementation evolution
 

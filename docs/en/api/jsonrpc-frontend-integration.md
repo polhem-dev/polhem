@@ -5,9 +5,9 @@
 How to call the Polhem JSON-RPC backend from a JavaScript / TypeScript frontend
 (React, Vue, Angular, Svelte, or vanilla) **without any .NET on the client**.
 
-The whole thing fits in one small module of plain JS. See the working sample at
-[`samples/Web.Js.Demo/`](../../../samples/Web.Js.Demo/README.md) — this guide explains
-*why* it works.
+The ready-made client is [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js),
+a TypeScript package; this guide explains the wire it speaks, for anyone who needs to know *why*
+it works or has to write a client of their own.
 
 ---
 
@@ -289,8 +289,7 @@ failed" instead.
 
 ## TypeScript wrapper
 
-A TypeScript counterpart of [`samples/Web.Js.Demo/polhem-api-client.js`](../../../samples/Web.Js.Demo/polhem-api-client.js)
-for TS projects. Standalone, no framework — bring your own state management. The message shapes
+A minimal TypeScript wrapper for projects that do not use `polhem-connector-js`. Standalone, no framework — bring your own state management. The message shapes
 come from [`wire-contracts/messages.d.ts`](../../../wire-contracts/messages.d.ts), the generated contract,
 rather than from copies written here: copy or sync that file into your project as `messages.d.ts`.
 
@@ -490,7 +489,7 @@ to a Plain body: an `object`-typed member such as a filter value is a bare JSON 
 
 ## See also
 
-- [`samples/Web.Js.Demo/README.md`](../../../samples/Web.Js.Demo/README.md) — runnable demo of the calls above
+- [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js) — the TypeScript client built on this wire
 - [`docs/en/api/api-method-reference.md`](api-method-reference.md) — full method catalog with `[ApiAccessControl]` per method
 - [`wire-contracts/README.md`](../../../wire-contracts/README.md) — the generated TypeScript contract and how it is kept in step with the server
 - [`maintainers/adr/adr-013-frontend-api-connection-strategy.md`](../../../maintainers/adr/adr-013-frontend-api-connection-strategy.md) — broader frontend connection policy

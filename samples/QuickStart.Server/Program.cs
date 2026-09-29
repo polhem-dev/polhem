@@ -18,7 +18,7 @@ internal static class Program
         // does not remove the rest of the login path.
         builder.AddPolhemBackend();
 
-        // CORS for the Web.Js.Demo sample (cross-origin JS calling the JSON-RPC endpoint).
+        // CORS for browser clients (for example a polhem-connector-js app) calling the JSON-RPC endpoint cross-origin.
         // Demo-only permissive policy — production hosts must restrict origins explicitly.
         builder.Services.AddCors(options =>
         {

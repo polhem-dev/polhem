@@ -39,7 +39,6 @@ Sign in with **`demo / demo`** to render the `Staff` FormSchema.
 | How to use `Polhem.Web.Blazor.Server` components (Local, in-process dispatch) | [`Blazor.Server.Demo`](Blazor.Server.Demo/README.md) |
 | How the same `FormSchema` renders inside a desktop / browser / mobile Avalonia app | [`apps/Polhem.Northwind`](../apps/Polhem.Northwind/README.md) |
 | Theme-oriented control demo center (theme → case nav, Demo/Source tabs, theme/FormMode toolbar): data binding, read-only/required, FormMode, layout, grid, native-vs-inherited parity | [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.md) |
-| How to call Polhem from pure JavaScript (no .NET on the client, Plain wire format) | [`Web.Js.Demo`](Web.Js.Demo/README.md) |
 
 ## Demo catalog
 
@@ -49,14 +48,12 @@ Sign in with **`demo / demo`** to render the `Staff` FormSchema.
 | [`QuickStart.Console`](QuickStart.Console/README.md) | API client | — | `dotnet run` | Polhem.Api.Client |
 | [`Blazor.Server.Demo`](Blazor.Server.Demo/README.md) | Full-stack Blazor Server | `5055` | `dotnet run` | Polhem.Web.Blazor.Server + Polhem.Samples.Shared |
 | [`Avalonia.DemoCenter`](Avalonia.DemoCenter/README.md) | Desktop Avalonia control demo center | — (no backend) | `dotnet run -c Debug` | Polhem.UI.Avalonia |
-| [`Web.Js.Demo`](Web.Js.Demo/README.md) | Pure-JS browser client | — (talks to 5050) | `open index.html` | (no .NET — vanilla HTML/JS) |
 | [`Polhem.Samples.Shared`](Polhem.Samples.Shared/) | Shared backend wiring | — | (consumed by other demos) | Polhem.Business + Polhem.Db + Polhem.Hosting + Polhem.Api.Client |
 
 ### Inter-demo dependencies
 
 ```
 QuickStart.Console ──HTTP──▶ QuickStart.Server
-Web.Js.Demo        ──HTTP──▶ QuickStart.Server  ← must be started first (CORS enabled)
 
 Blazor.Server.Demo                ← no separate server; front-end and back-end share the process
 ```
@@ -74,7 +71,7 @@ Every client that signs in uses `demo / demo`, then enters the single demo compa
 
 `samples/Define/ProgramSettings.xml` binds the reserved `System` progId to [`DemoAuthenticatingSystemBusinessObject`](Polhem.Samples.Shared/DemoAuthenticatingSystemBusinessObject.cs), which replaces only the credential check with a hard-coded comparison, so no password hashing or user maintenance is involved. The rest of sign-in is the framework's own, so [`DemoSchemaSeeder`](Polhem.Samples.Shared/DemoSchemaSeeder.cs) still seeds the rows it reads: the `st_user` row (the user's time zone and culture are read from it), the `st_company` row and the `st_user_company` grant.
 
-**Sign-in is two calls.** `Login` says who the user is; `EnterCompany` says which company they work in. The demo forms are business data, so their `FormSchema` declares `CategoryId="company"`, and a session that has not entered a company cannot open them. Each client makes the second call right after the first: the Blazor demo does it on sign-in, `Web.Js.Demo` has an **Enter Company** step. The values live in [`DemoCredentials`](Polhem.Samples.Shared/DemoCredentials.cs).
+**Sign-in is two calls.** `Login` says who the user is; `EnterCompany` says which company they work in. The demo forms are business data, so their `FormSchema` declares `CategoryId="company"`, and a session that has not entered a company cannot open them. Each client makes the second call right after the first: the Blazor demo does it on sign-in. The values live in [`DemoCredentials`](Polhem.Samples.Shared/DemoCredentials.cs).
 
 `QuickStart.Server`'s `Echo.Echo` BO is annotated `[ApiAccessControl(Public, Anonymous)]`, so `QuickStart.Console` **needs no login**.
 
