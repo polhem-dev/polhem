@@ -42,7 +42,7 @@ On a Polhem backend that is already wired up (see `polhem-app-scaffold`), adding
 | `Define/ProgramSettings.xml`: a `<ProgramItem ProgId="<ProgId>" />` | The server-side type registry: binds a custom `BusinessObject` / `Repository` to the progId | **Required only when you bind a BO or Repository.** Without an entry the progId resolves to the framework's `FormBusinessObject` and `DataFormRepository`. Northwind still lists every form: the entry supplies the progId's canonical spelling and puts the form in the startup check that warns about forms without a `PermissionModelId` |
 
 `ProgramSettings` is not the menu: it is a flat `<Items>` list, server-side only (remote `GetDefine` refuses it).
-The menu layout (folders, order, captions, `Visible`) is `MenuSettings`; see `docs/en/definition-files-overview.md`
+The menu layout (folders, order, captions, `Visible`) is `MenuSettings`; see `docs/en/definitions/definition-files-overview.md`
 § 4 and § 4b.
 
 > **Business tables all use `company` scope**: FormSchema `CategoryId="company"`, TableSchema under

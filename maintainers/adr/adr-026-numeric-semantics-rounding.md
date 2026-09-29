@@ -226,7 +226,7 @@ As a consequence:
 
 ## References
 
-- Cookbook: `docs/en/development-cookbook.md` §Numeric Semantics, Company Decimals, and Rounding (how-to and API
+- Cookbook: `docs/en/guides/development-cookbook.md` §Numeric Semantics, Company Decimals, and Rounding (how-to and API
   entry points)
 - Related ADRs: [ADR-005](adr-005-formschema-driven.md) (FormSchema-driven),
   [ADR-012](adr-012-session-company-context.md) (session company context),

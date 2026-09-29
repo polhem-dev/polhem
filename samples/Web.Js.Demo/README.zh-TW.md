@@ -124,6 +124,6 @@ TypeScript client [`polhem-connector-js`](https://github.com/polhem-dev/polhem-c
 
 ## 相關文件
 
-- 整合指引：[docs/zh-TW/jsonrpc-frontend-integration.md](../../docs/zh-TW/jsonrpc-frontend-integration.md)
+- 整合指引：[docs/zh-TW/api/jsonrpc-frontend-integration.md](../../docs/zh-TW/api/jsonrpc-frontend-integration.md)
 - 後端 host：[samples/QuickStart.Server](../QuickStart.Server/)
 - Demo 帳密：[samples/Polhem.Samples.Shared/DemoCredentials.cs](../Polhem.Samples.Shared/DemoCredentials.cs)

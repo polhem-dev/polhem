@@ -10,7 +10,7 @@
 - **Hosting model**: Blazor Server — component logic executes on the ASP.NET Core server; the browser receives DOM diffs via SignalR.
 - **Provider binding**: chosen with `AddPolhemBlazor` (see below) — in-process through `LocalApiProvider`, or over
   HTTP through `RemoteApiProvider`, both from `Polhem.Api.Client`.
-- **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
+- **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/architecture/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
 - Consumed by ASP.NET Core host applications.
 
 ## Target Framework

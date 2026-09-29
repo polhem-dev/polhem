@@ -60,7 +60,7 @@ into four items at implementation time:
 The common minimal field model: `who` (user) / `when` (UTC) / `what` (object + key + field, or the action name) /
 `where` (method / channel / IP / session) / `before-after` (changes only) / `result`.
 
-> The actual table and column names follow [Framework-Reserved Names](../../docs/en/framework-reserved-names.md) §1 and the
+> The actual table and column names follow [Framework-Reserved Names](../../docs/en/reference/framework-reserved-names.md) §1 and the
 > source code; this ADR does not copy them.
 
 ### 2. "Log every execution" is dropped in favor of an anomaly log
@@ -326,7 +326,7 @@ ProgIds get change / access logging, matching Odoo `auditlog.rule`; see [ADR-041
 ## References
 
 - The design direction for retention and partitioning (databases split by year, append-only, hash chain) is in the
-  multi-database scenarios of the [database settings guide](../../docs/en/database-settings-guide.md).
+  multi-database scenarios of the [database settings guide](../../docs/en/database/database-settings-guide.md).
 - Related ADRs: [ADR-017](adr-017-db-cache-invalidation.md), [ADR-018](adr-018-db-define-storage.md),
   [ADR-019](adr-019-permission-authorization-model.md), [ADR-027](adr-027-audit-trail.md) (the earlier audit trail
   design this ADR classifies), [ADR-041](adr-041-per-form-audit-rule.md).

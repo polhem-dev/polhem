@@ -23,7 +23,7 @@
         </Items>
       </DatabaseSettings>
 
-  See `docs/en/database-settings-guide.md` for the full schema, multi-tenant
+  See `docs/en/database/database-settings-guide.md` for the full schema, multi-tenant
   patterns, and CategoryId wiring.
 -->
 <DatabaseSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">

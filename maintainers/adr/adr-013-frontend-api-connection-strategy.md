@@ -131,8 +131,8 @@ should not be forced onto them**.
 
 ## Related
 
-- Visualization of the dependencies: `docs/en/dependency-map.md`
-- Working examples for each front end: `docs/en/development-cookbook.md` § "Frontend API Connection Patterns"
+- Visualization of the dependencies: `docs/en/architecture/dependency-map.md`
+- Working examples for each front end: `docs/en/guides/development-cookbook.md` § "Frontend API Connection Patterns"
 - Backend DI replaces the static Service Locator (affects how a Blazor host registers):
   [ADR-011](adr-011-di-replaces-service-locator.md)
 

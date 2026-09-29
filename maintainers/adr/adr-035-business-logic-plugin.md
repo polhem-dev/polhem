@@ -282,8 +282,8 @@ hardest kind of difference to track down.
 
 ### Related documents
 
-- [Tenant Customization](../../docs/en/customization.md): the decision table and how-to for the five mechanisms
-- [End-to-End Development Cookbook](../../docs/en/development-cookbook.md): the "Business Plugins" section
+- [Tenant Customization](../../docs/en/definitions/customization.md): the decision table and how-to for the five mechanisms
+- [End-to-End Development Cookbook](../../docs/en/guides/development-cookbook.md): the "Business Plugins" section
 - [ADR-016](adr-016-multitenant-customization-overlay.md): the customization overlay
 - [ADR-028](adr-028-expression-rule-engine.md): expressions and the rule engine
 - [ADR-034](adr-034-progid-type-registry.md): the ProgId type registry

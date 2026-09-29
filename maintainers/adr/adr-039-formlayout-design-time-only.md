@@ -6,7 +6,7 @@
 
 [ADR-016](adr-016-multitenant-customization-overlay.md) established the **whole-file replacement** semantics of the
 customization layer, and "`FormLayout` is the authoritative source of the screen" is a corollary of those semantics,
-stated explicitly in the [Definition Files Overview](../../docs/en/definition-files-overview.md) (commit
+stated explicitly in the [Definition Files Overview](../../docs/en/definitions/definition-files-overview.md) (commit
 [`53025c34`](https://github.com/jeff377/bee-library/commit/53025c34)). This ADR fills in how that corollary behaves
 **when the file is missing**; the two-layer read-only overlay semantics of ADR-016 are unchanged.
 
@@ -14,7 +14,7 @@ stated explicitly in the [Definition Files Overview](../../docs/en/definition-fi
 
 `FormLayout` is the projection of `FormSchema` in the UI dimension and describes the visual arrangement of a form. The
 framework had long established that **"`FormLayout` is the authoritative source of what is on the screen"**
-([Definition Files Overview](../../docs/en/definition-files-overview.md)): the customization layer uses whole-file
+([Definition Files Overview](../../docs/en/definitions/definition-files-overview.md)): the customization layer uses whole-file
 replacement, so a field added to the base schema **does not** automatically appear on the screen of a tenant that has
 customized it. What a tenant sees is decided by that tenant's layout file.
 

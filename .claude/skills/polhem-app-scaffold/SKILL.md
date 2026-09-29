@@ -177,7 +177,7 @@ Two definition files, with different readers:
    ProgId="...">`, with `Order`, `Caption` and a design-time `Visible` switch (not a permission). `Id` is unique across
    the tree and independent of `ProgId`.
 
-The full description is `docs/en/definition-files-overview.md` § 4 and § 4b; compare against
+The full description is `docs/en/definitions/definition-files-overview.md` § 4 and § 4b; compare against
 `apps/Polhem.Northwind/Define/ProgramSettings.xml` and `MenuSettings.xml`.
 
 ---

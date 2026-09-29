@@ -130,7 +130,7 @@ Each file defines `<Fields>` (`<DbField FieldName DbType Length>`) and `<Indexes
 convention columns: `sys_no` (AutoIncrement PK), `sys_rowid` (Guid relation key, unique `rx_`), `sys_id` (string
 business code, unique `uk_`), `sys_name`. A foreign key is a `*_rowid` Guid column + an `fk_` index. The `{0}`
 placeholder in an index name = the table name. The framework's reserved table names and progIds are listed in
-`docs/en/framework-reserved-names.md`.
+`docs/en/reference/framework-reserved-names.md`.
 
 > **dev runs without business tables**: as long as the `common` DB and the framework tables above exist,
 > `System.Ping` / `Login` and BOs that return in-memory/seed data work. Business tables can be added gradually later.

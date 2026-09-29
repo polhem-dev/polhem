@@ -8,9 +8,9 @@ Avalonia 控制項套件，適用桌面（Windows / macOS / Linux）、瀏覽器
 
 **層級**：UI（Avalonia head：桌面、瀏覽器、iOS、Android）
 
-支援哪些修剪模式、各 head 需要什麼，見[平台支援](../../docs/zh-TW/platform-support.md)。
+支援哪些修剪模式、各 head 需要什麼，見[平台支援](../../docs/zh-TW/getting-started/platform-support.md)。
 
-屬於 `Polhem.UI.*` 家族：透過靜態的 `ClientInfo`（`Polhem.UI.Core`）連接後端，採 per-process token 模型。套件相依見[相依關係圖](../../docs/zh-TW/dependency-map.md)。
+屬於 `Polhem.UI.*` 家族：透過靜態的 `ClientInfo`（`Polhem.UI.Core`）連接後端，採 per-process token 模型。套件相依見[相依關係圖](../../docs/zh-TW/architecture/dependency-map.md)。
 
 ## 目標框架
 

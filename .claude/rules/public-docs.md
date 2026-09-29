@@ -11,8 +11,7 @@ with no translation in the repository. The reasons are in
 | Scope | Content |
 |-------|---------|
 | Repository root | `README.md` / `README.zh-TW.md`, `CHANGELOG.md` / `CHANGELOG.zh-TW.md` |
-| `docs/changelogs/` | The detailed notes of each version behind the root changelog, `<version>.md` / `<version>.zh-TW.md` |
-| `docs/README.md` and `docs/<lang>/` | The language entry page and every `.md` under each language folder (architecture overview, API reference, database guides, glossary, development guidelines and constraints, and each language's `README.md` index) |
+| `docs/README.md` and `docs/<lang>/` | The language entry page and every `.md` under each language folder, subfolders included (architecture overview, API reference, database guides, glossary, development guidelines and constraints, the detailed notes of each version in `changelogs/`, and each language's `README.md` index) |
 | **Every** `README.md` / `README.zh-TW.md` | Wherever it is: `src/*/`, `samples/*/`, `apps/*/`, `tools/*/` |
 | XML documentation (`///`) in `src/**/*.cs` | Ships in the package's `.xml` file and appears in the consumer's IntelliSense, so it has the same readers as a README |
 
@@ -74,11 +73,9 @@ the ADRs included, `CONTRIBUTING`) and the agent guidance itself may point to fi
 
 ### 4. Keeping languages in sync
 
-**Under `docs/`**: `docs/en/` is the source and every other language folder is a translation. The detailed
-changelogs in `docs/changelogs/` pair by file name instead: `<name>.md` is the English source and `<name>.zh-TW.md`
-next to it is a translation. The
-list of languages, each one's policy (strict / partial) and the folders that pair by file name are written only in the
-header of `check-docs-i18n.sh`; they are not repeated here. That script enforces them, and the Docs Check workflow runs
+**Under `docs/`**: `docs/en/` is the source and every other language folder is a translation with the same
+structure, subfolders included. The list of languages and each one's policy (strict / partial) are written only in
+the header of `check-docs-i18n.sh`; they are not repeated here. That script enforces them, and the Docs Check workflow runs
 it on every push.
 
 - After changing a source document, update the matching translations before pushing and restamp them with
@@ -109,7 +106,7 @@ The reasons for each check are in the script header. **Do not narrow the scope o
 
 | False positive | Example | Why it is not a violation |
 |----------------|---------|---------------------------|
-| `plan` is an API or type name | `Orchestrator.Plan(diff)`, `UpgradePlan`, `plan.Warnings` in `docs/*/database-schema-upgrade.md` | It names code, not a working document |
+| `plan` is an API or type name | `Orchestrator.Plan(diff)`, `UpgradePlan`, `plan.Warnings` in `docs/*/database/database-schema-upgrade.md` | It names code, not a working document |
 | Future work that has no document yet | "a separate plan" in adr-023 | It means "handled separately" and points to nothing readable |
 | Describing the plan convention itself | adr-045 on why plans are kept out of the repository | It explains the rule, not a document to open |
 

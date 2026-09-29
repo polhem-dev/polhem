@@ -98,7 +98,7 @@ The design scope, invariants and design principles are in the "Decision" and "Co
 ```
 
 For the full reference see
-[docs/en/development-cookbook.md § Framework Initialization Order](../../docs/en/development-cookbook.md#framework-initialization-order).
+[docs/en/guides/development-cookbook.md § Framework Initialization Order](../../docs/en/guides/development-cookbook.md#framework-initialization-order).
 
 ### Test infrastructure
 
@@ -130,5 +130,5 @@ the current code:
 
 | Document | Content |
 |----------|---------|
-| [docs/en/development-cookbook.md](../../docs/en/development-cookbook.md) | The initialization flow and request pipeline after the move to DI |
-| [docs/en/development-constraints.md](../../docs/en/development-constraints.md) | Initialization order constraints (DI model) |
+| [docs/en/guides/development-cookbook.md](../../docs/en/guides/development-cookbook.md) | The initialization flow and request pipeline after the move to DI |
+| [docs/en/architecture/development-constraints.md](../../docs/en/architecture/development-constraints.md) | Initialization order constraints (DI model) |

@@ -131,7 +131,7 @@ invariant culture) is encapsulated in one static method, `FormatCell`, which beh
 - `src/Polhem.UI.Avalonia/Controls/GridControl.cs` (later renamed from `DynamicGrid`, and split by responsibility into
   files such as `GridControl.Columns` / `.Cells` / `.Rows` / `.Binding`): the implementation plus a detailed
   `<remarks>` comment
-- `docs/en/development-cookbook.md` section "Avalonia desktop (Polhem.UI.Avalonia)": explains the binding strategy
+- `docs/en/guides/development-cookbook.md` section "Avalonia desktop (Polhem.UI.Avalonia)": explains the binding strategy
   from the user's point of view
 
 ## Out of scope

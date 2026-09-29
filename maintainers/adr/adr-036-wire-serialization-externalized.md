@@ -235,7 +235,7 @@ the current code:
 rules it names shipped as `BEE4001`–`BEE4004`; the `POLHEM` spelling here comes from the rename. Polhem never shipped
 rules under those numbers: its analyzer release history starts at 1.0.0, and `POLHEM4001`–`POLHEM4004` are reserved and
 never reused, so a suppression carried over from Bee.NET cannot silence a new rule. The reserved numbers are listed in
-the [analyzer rule reference](../../docs/en/analyzer-rules.md).
+the [analyzer rule reference](../../docs/en/reference/analyzer-rules.md).
 
 - **2026-08-10: contractless is no longer part of the mechanism.** The Decision's "types not listed are handled by
   `ContractlessStandardResolver`" and the Costs' "handled automatically by contractless, with no action required" were

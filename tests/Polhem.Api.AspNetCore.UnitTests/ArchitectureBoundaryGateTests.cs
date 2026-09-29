@@ -10,7 +10,7 @@ namespace Polhem.Api.AspNetCore.UnitTests
     /// <remarks>
     /// <para>
     /// These constraints are the core of the framework's layering claims (see
-    /// <c>docs/en/development-constraints.md</c> and <c>docs/en/dependency-map.md</c>). They used to be confirmed
+    /// <c>docs/en/architecture/development-constraints.md</c> and <c>docs/en/architecture/dependency-map.md</c>). They used to be confirmed
     /// <b>only by a person or agent rescanning during each health check</b>, while the ADR-038 edge had two
     /// gates. Health checks run a few times a year, so weeks passed between a violation reaching main and its
     /// discovery.
@@ -132,8 +132,8 @@ namespace Polhem.Api.AspNetCore.UnitTests
             Assert.False(
                 closure.Contains(forbidden),
                 $"The transitive dependency closure of {root} contains {forbidden}, which violates a hard layering constraint. " +
-                $"If this is a deliberate architectural change, update docs/en/development-constraints.md and " +
-                "docs/en/dependency-map.md as well, state the reason here and remove the entry.");
+                $"If this is a deliberate architectural change, update docs/en/architecture/development-constraints.md and " +
+                "docs/en/architecture/dependency-map.md as well, state the reason here and remove the entry.");
         }
 
         [Fact]

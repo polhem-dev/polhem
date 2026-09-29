@@ -198,7 +198,7 @@ the current code:
   keys come from the caller. The other `KeyObjectCache<T>` subclasses (the definition caches `FormSchemaCache`,
   `TableSchemaCache`, `FormLayoutCache` and `LanguageResourceCache`, and the database-dependent `CompanyInfoCache`,
   `CompanyRolePermissionsCache`, `CompanyAuditRulesCache`, `DepartmentTreeCache` and `ApiKeyGateCache`) keep the
-  default. The current list of caches is in [Caching](../../docs/en/caching.md).
+  default. The current list of caches is in [Caching](../../docs/en/guides/caching.md).
 - **2026-09-27: cache size.** The provider still sets no `SizeLimit`, but the premise under "Default configuration"
   (a few dozen cached objects) no longer holds: the session and API key caches hold an entry per active token or key,
   so their size follows traffic.
@@ -208,7 +208,7 @@ the current code:
 
 ## Related documents
 
-- Mechanism overview: [Caching](../../docs/en/caching.md) (read path, invalidation signals, list of caches)
+- Mechanism overview: [Caching](../../docs/en/guides/caching.md) (read path, invalidation signals, list of caches)
 - Package README: [`src/Polhem.ObjectCaching/README.md`](../../src/Polhem.ObjectCaching/README.md)
 - Related commits: [`8099d03`](https://github.com/jeff377/bee-library/commit/8099d03) (removed the `DbChangeMonitor`
   placeholder), [`715c159e`](https://github.com/jeff377/bee-library/commit/715c159e) (negative caching)

@@ -107,7 +107,7 @@ judgement.
 ## Checklist per dimension (paste these when dispatching agents)
 
 ### 1+2. Architecture layering and dependencies
-- Read `docs/en/dependency-map.md`, `docs/en/architecture-overview.md`, `docs/en/development-constraints.md` to build the
+- Read `docs/en/architecture/dependency-map.md`, `docs/en/architecture/architecture-overview.md`, `docs/en/architecture/development-constraints.md` to build the
   baseline.
 - Extract `<ProjectReference>` from every `.csproj`, draw the actual dependency graph, and verify **no cycles** with a
   topological sort.
@@ -221,7 +221,7 @@ judgement.
 ### 9. Documentation drift (rule source: `.claude/rules/public-docs.md`)
 
 The scope is **public documentation** (written for NuGet package consumers): the repository-root `README*` /
-`CHANGELOG*`, `docs/README.md` and every `.md` under `docs/<lang>/` and `docs/changelogs/`, and `README.md` /
+`CHANGELOG*`, `docs/README.md` and every `.md` under `docs/<lang>/`, and `README.md` /
 `README.zh-TW.md` **in every location** (`src/` `samples/` `apps/` `tools/`).
 `local/` (plans and internal notes), `maintainers/` (the ADRs included) and `.claude/` are not public documentation.
 
@@ -235,7 +235,7 @@ The scope is **public documentation** (written for NuGet package consumers): the
   `grep -rn "<old name>" --include="*.md"` been cleaned up? This is the source of about sixty percent of the problems
   in this dimension.
 - **Dead links**: check all relative links and anchors exhaustively. Watch in particular for batch errors in
-  **subdirectories** such as `docs/changelogs/*.md` that wrongly use repository-root relative paths (resolved from a
+  **subdirectories** such as `docs/<lang>/changelogs/*.md` that wrongly use repository-root relative paths (resolved from a
   subdirectory they gain one extra level, and all 404 on GitHub).
 - **Bilingual sync**: compare section structure and amount of content in bilingual pairs; find one-sided updates; find
   documents that should be bilingual but exist in only one language.
@@ -441,7 +441,7 @@ dependency edges recorded for Bee.NET no longer matched after legitimate moves, 
 would have reported a regression that was not one):
 
 - Dependencies: no cycles (topological sort of every `<ProjectReference>` in `src/`, leaving out the build-ordering
-  references to `Polhem.Analyzers`); the mermaid graph in `docs/en/dependency-map.md` matches the csproj files edge for
+  references to `Polhem.Analyzers`); the mermaid graph in `docs/en/architecture/dependency-map.md` matches the csproj files edge for
   edge; BO has no Db reference; the backend has no `Polhem.Api.Client` reference; the Repository abstraction is not
   bypassed; `Polhem.Api.Contracts` has no implementation types.
 - Code: `*Func` leftovers 0, `*Helper` types 0, Newtonsoft 0, `[Obsolete]` 0, `CurrentCultureIgnoreCase` 0,
@@ -495,7 +495,7 @@ project migrated from Bee.NET maps its suppressions by number); `DiagnosticIds.R
 
 **Established guard mechanisms** (the next health check confirms each still exists, still runs in CI, and is not
 vacuous; read the list from the code rather than trusting this one):
-- API surface: `BoApiSurfaceTests` (baseline, `docs/<lang>/api-method-reference.md` entry by entry, replay
+- API surface: `BoApiSurfaceTests` (baseline, `docs/<lang>/api/api-method-reference.md` entry by entry, replay
   protection), `ActionSurfaceTests`, `ConnectorSurfaceTests`, `ClientAsyncSurfaceTests`, `ApiContractPairingTests`
   (with `WireMessageTypes_IsNotEmpty`), `AnonymousApiSurfaceTests`, `ApiAccessControlPinTests`, and the public API
   snapshot (`PublicApiAnalyzers` + the `PublicAPI.*.txt` baselines + `maintainers/public-api-baseline.md` +

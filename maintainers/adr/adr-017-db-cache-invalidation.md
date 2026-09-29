@@ -36,7 +36,7 @@ dispatch**":
    - `cache_version` (bigint) = a monotonically increasing per-key version number.
    - `sys_update_time` = DB server time, the cursor for incremental fetching (the column name has the `sys_` prefix
      because it is the `SysFields.UpdateTime` system field; `cache_key` / `cache_version` are not system fields and
-     have no prefix, see [database-naming-conventions](../../docs/en/database-naming-conventions.md)).
+     have no prefix, see [database-naming-conventions](../../docs/en/database/database-naming-conventions.md)).
 
 2. **The bump primitive `ICacheNotifyService.Touch(cacheKey, transaction, databaseType)`** (in `Polhem.Db`): within
    **the same transaction passed in by the caller**, a single UPSERT atomically increments `cache_version` and
@@ -170,8 +170,8 @@ the cache. The invariant is unchanged: nothing is reloaded until it is read agai
 ## Related
 
 - [ADR-009](adr-009-cache-implementation.md): the `Polhem.ObjectCaching` cache implementation
-- Mechanism overview: [Caching](../../docs/en/caching.md) (where this mechanism sits in the overall cache layer)
+- Mechanism overview: [Caching](../../docs/en/guides/caching.md) (where this mechanism sits in the overall cache layer)
 - [ADR-018](adr-018-db-define-storage.md): definitions stored in the database (one of the main consumers of this
   mechanism)
-- Usage guide: [`development-cookbook.md`](../../docs/en/development-cookbook.md) § Cross-Process Cache Invalidation
-- Naming conventions: [`database-naming-conventions.md`](../../docs/en/database-naming-conventions.md)
+- Usage guide: [`development-cookbook.md`](../../docs/en/guides/development-cookbook.md) § Cross-Process Cache Invalidation
+- Naming conventions: [`database-naming-conventions.md`](../../docs/en/database/database-naming-conventions.md)

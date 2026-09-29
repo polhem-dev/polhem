@@ -9,9 +9,9 @@ Avalonia control library for desktop (Windows / macOS / Linux), browser (WebAsse
 **Layer**: UI (Avalonia heads: desktop, browser, iOS, Android)
 
 Which trim modes are supported and what each head needs is described in
-[Platform support](../../docs/en/platform-support.md).
+[Platform support](../../docs/en/getting-started/platform-support.md).
 
-Belongs to the `Polhem.UI.*` family: connects to the backend through the static `ClientInfo` (`Polhem.UI.Core`) with a per-process token model. Its package dependencies are in the [dependency map](../../docs/en/dependency-map.md).
+Belongs to the `Polhem.UI.*` family: connects to the backend through the static `ClientInfo` (`Polhem.UI.Core`) with a per-process token model. Its package dependencies are in the [dependency map](../../docs/en/architecture/dependency-map.md).
 
 ## Target Framework
 

@@ -51,7 +51,7 @@ Container detection, automatic skipping and environment variable overrides for `
 
 ## Architecture layers
 
-The projects, their layers and every allowed dependency edge are in `docs/en/dependency-map.md`; this file does not
+The projects, their layers and every allowed dependency edge are in `docs/en/architecture/dependency-map.md`; this file does not
 keep a copy.
 
 > ⚠️ **`Polhem.Base` and `Polhem.Definition` are the two lowest assemblies.** Every project depends on

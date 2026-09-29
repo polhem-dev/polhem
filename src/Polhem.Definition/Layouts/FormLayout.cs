@@ -147,7 +147,7 @@ namespace Polhem.Definition.Layouts
         /// <remarks>
         /// Layouts obtained through <see cref="Polhem.Definition.Storage.IDefineAccess"/> are process-wide cached instances shared
         /// by every session — clone before mutating. See
-        /// <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
+        /// <c>docs/en/architecture/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
         /// </remarks>
         public FormLayout Clone()
         {

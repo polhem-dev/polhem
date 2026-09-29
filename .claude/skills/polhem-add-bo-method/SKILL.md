@@ -21,7 +21,7 @@ These 3 rules are the project's architectural baseline. Violating one is a desig
 
 ### Rule 1: a BO must never access `Polhem.Db` directly
 
-- `Polhem.Business.csproj` does **not** reference `Polhem.Db` (the allowed edges are in `docs/en/dependency-map.md`)
+- `Polhem.Business.csproj` does **not** reference `Polhem.Db` (the allowed edges are in `docs/en/architecture/dependency-map.md`)
 - FormSchema-driven SELECT / INSERT / UPDATE / DELETE **must** run through
   `IDataFormRepository` (the Repository abstraction)
 - A BO is a "thin shell": unpack args, call the Repository, assemble the Result.
@@ -84,7 +84,7 @@ support a rare child-table query.
 | (10b) | BO interface declaration | `src/Polhem.Business/<Axis>/I<Axis>BusinessObject.cs` | Only when server-side code calls the method (see Layer 8b) |
 | (11) | Repository (only for FormSchema-driven CRUD) | `IDataFormRepository.cs` + `DataFormRepository*.cs` | Follows rule 1 |
 | (12) | Client | `src/Polhem.Api.Client/Connectors/<Axis>ApiConnector.cs` | `<Action>Async`, async only |
-| 13 | Surface sync | `tests/Polhem.Business.UnitTests/BoApiSurfaceTests.cs` + `docs/<lang>/api-method-reference.md` | Baseline and reference updated together |
+| 13 | Surface sync | `tests/Polhem.Business.UnitTests/BoApiSurfaceTests.cs` + `docs/<lang>/api/api-method-reference.md` | Baseline and reference updated together |
 
 `<Axis>` = `System`, `Form` or `AuditLog` (or a future axis).
 
@@ -527,7 +527,7 @@ When adding an `<Action>` method, complete every step below in order.
 - [ ] Release build 0w/0e + tests pass, including the `-p:DynamicCodeSupport=false` gate for `Polhem.Api.Core.UnitTests`
 
 **P4 surface sync** (in the same commit as either P2 or P3):
-- [ ] Update `docs/en/api-method-reference.md` + `docs/zh-TW/api-method-reference.md`: add / change the method in the table for its axis (restamp the translation, `rules/public-docs.md`)
+- [ ] Update `docs/en/api/api-method-reference.md` + `docs/zh-TW/api/api-method-reference.md`: add / change the method in the table for its axis (restamp the translation, `rules/public-docs.md`)
 - [ ] Update the `s_expectedSurface` baseline in `tests/Polhem.Business.UnitTests/BoApiSurfaceTests.cs` (additions, removals and `[ApiAccessControl]` changes all require it)
 - [ ] `BoApiSurfaceTests` pass: they compare the baseline with reflection and with the method reference in each language
 
@@ -553,5 +553,5 @@ When adding an `<Action>` method, complete every step below in order.
 | BO integration test template | `tests/Polhem.Business.UnitTests/Form/FormBusinessObjectGetListTests.cs` |
 | Wire round-trip template | `tests/Polhem.Api.Core.UnitTests/Form/GetListMessagePackTests.cs` |
 | Executor dispatch template | `tests/Polhem.Api.Core.UnitTests/Form/GetListJsonRpcRoundTripTests.cs` |
-| Single-page API method overview | `docs/en/api-method-reference.md` (must be updated for every new method) |
+| Single-page API method overview | `docs/en/api/api-method-reference.md` (must be updated for every new method) |
 | Surface audit test | `tests/Polhem.Business.UnitTests/BoApiSurfaceTests.cs` |
