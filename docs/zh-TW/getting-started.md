@@ -1,4 +1,4 @@
-<!-- source: en/getting-started.md blob: 92afa1caabe0ba082bea250228614eb76aecaab0 -->
+<!-- source: en/getting-started.md blob: f3bea725b712776c49223d76ed6a4f7bfc73a350 -->
 # 快速上手
 
 [English](../en/getting-started.md) · [← 文件索引](README.md)
@@ -252,7 +252,7 @@ progId 與型別的綁定寫在 `ProgramSettings.xml` —— 它是全框架的�
 Repository，兩個屬性彼此獨立。
 
 啟動時框架會補上檔案中缺少的保留 progId 並寫回檔案（檔案不存在時就建立它），所以第一次執行後，
-你會在 `Echo` 旁邊看到 `System`、`AuditLog` 與 `AuditRule` 三筆。詳見 [ADR-034](../adr/adr-034-progid-type-registry.zh-TW.md)。
+你會在 `Echo` 旁邊看到 `System`、`AuditLog` 與 `AuditRule` 三筆。詳見 [ADR-034](../../maintainers/adr/adr-034-progid-type-registry.md)。
 
 → `Args` / `Result` 的命名規則與契約三層分離：[API ↔ BO 契約設計](api-bo-contract-design.md)。哪些方法該放介面：[開發限制與反模式](development-constraints.md)。
 

@@ -67,7 +67,7 @@ ClientInfo.ApplyApiKey("my-app");
 
 - Every control subclass overrides `StyleKeyOverride` to its native base type so the host theme keeps applying (a missing override renders the control invisible).
 - `FieldValueChanged` is bridged from the ADO.NET `DataTable` events, so a write through any path (editors, grid cells, direct `DataRow` writes) publishes it; a writer does not need to raise it.
-- DataGrid binding and editing strategies are recorded in [ADR-020](../../docs/adr/adr-020-avalonia-datagrid-binding-strategy.md) and [ADR-021](../../docs/adr/adr-021-avalonia-datagrid-editing-strategy.md).
+- DataGrid binding and editing strategies are recorded in [ADR-020](../../maintainers/adr/adr-020-avalonia-datagrid-binding-strategy.md) and [ADR-021](../../maintainers/adr/adr-021-avalonia-datagrid-editing-strategy.md).
 
 ## Samples
 

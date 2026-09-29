@@ -64,7 +64,7 @@ around.
 
 **Local reproduction** (CI runs Sonar only in full mode): S3776 is not enabled by default in the NuGet analyzer
 package. You need to temporarily add a `PackageReference` and enable it explicitly in `.editorconfig`; details are in
-`docs/repo-ops/gotchas/test-ci-release.md`.
+`maintainers/gotchas/test-ci-release.md`.
 
 ## S6444 — Always pass a timeout to Regex (ReDoS protection)
 

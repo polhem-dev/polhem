@@ -3,7 +3,7 @@
 ## Language
 
 - Everything maintained together is written in **English**: source code, XML documentation, comments, test method
-  names and `[DisplayName]` text, commit messages, the maintainer documents under `docs/repo-ops/`, and the files
+  names and `[DisplayName]` text, commit messages, the maintainer documents under `maintainers/`, and the files
   under `.claude/` and every `CLAUDE.md`.
 - This overrides any personal or user-level setting that asks for another language for prose, including an
   instruction to write in Traditional Chinese. Replies in a conversation may still follow the user's language.
@@ -13,8 +13,8 @@
 - Parts of the repository still contain Chinese from before this policy; they are being translated. Write new
   content in English regardless of the language of the surrounding text.
 
-The reasons are recorded in `docs/adr/adr-045-language-policy-and-local-plans.md` and
-`docs/adr/adr-047-documents-split-by-reader.md`.
+The reasons are recorded in `maintainers/adr/adr-045-language-policy-and-local-plans.md` and
+`maintainers/adr/adr-047-documents-split-by-reader.md`.
 
 ## Project overview
 
@@ -73,7 +73,7 @@ Any task that needs planning first (a refactoring, a new feature, an architectur
 4. **When the plan is done, mark it completed at the top of the file straight away.**
 
 A plan records what someone intended at the time; it is not a specification. Decisions of lasting value are promoted
-to an ADR in `docs/adr/`; work that other maintainers need to see belongs in a GitHub issue or pull request.
+to an ADR in `maintainers/adr/`; work that other maintainers need to see belongs in a GitHub issue or pull request.
 
 ### Local working documents
 
@@ -96,13 +96,13 @@ that apply even when nobody asked for a release: `rules/releasing.md`.
 Before implementing a feature or a module, read `docs/en/README.md` (the source; `docs/zh-TW/README.md` is its
 translation): the index of the public documents, covering the architecture overview, development guidelines and
 constraints, databases and design concepts. Then open the documents it points to. The background of design
-decisions is in `docs/adr/`; the details of each package are in the `README.md` of each `src/` project.
+decisions is in `maintainers/adr/`; the details of each package are in the `README.md` of each `src/` project.
 
-**The pitfall log `docs/repo-ops/gotchas/`** (maintainer documents, not public) records pitfalls that have been hit
+**The pitfall log `maintainers/gotchas/`** (maintainer documents, not public) records pitfalls that have been hit
 and are likely to be hit again, with the symptom, the root cause and the fix. Hard rules are already in `rules/`
 (always loaded); the gotchas are context to read on demand. Before touching one of these areas, read the matching
 file: **databases and provider dialects**, **serialization and the expression engine**, **Avalonia controls**,
-**tests, CI and publishing**, **the Northwind heads**. The index is `docs/repo-ops/gotchas/README.md`.
+**tests, CI and publishing**, **the Northwind heads**. The index is `maintainers/gotchas/README.md`.
 
 The core mental model (anchors for implementation; the details are in the documents above):
 - **FormSchema** is the definition hub. It drives the UI (FormLayout), the database (DbTable) and validation rules.

@@ -119,7 +119,7 @@ FormLayout and TableSchema are derived from FormSchema at design time and saved 
 
 For deployments serving multiple tenants, Polhem adds a **per-tenant customization overlay** on top of the base definitions. A `CustomizeId` (resolved from `SessionInfo.CustomizeId`, loaded from the company record at `EnterCompany`) drives an override layer for **Language / FormLayout / ProgramSettings / MenuSettings / PluginSettings only** — `FormSchema` / `TableSchema` stay tenant-agnostic so the database schema does not diverge per tenant.
 
-The overlay is **two independent layers**: the base definition cache is never mutated, and the consumer decides per lookup (per key, progId or whole file) which layer wins. Plugin bindings are the one artifact where both layers apply: the base chain runs first, then the tenant's. The override layer is read-only at runtime except for `PluginSettings`, which a local-only maintenance API writes. An empty `CustomizeId` resolves against the base layer alone, as in a single-tenant deployment. See [Tenant Customization](customization.md) and [ADR-016](../adr/adr-016-multitenant-customization-overlay.md).
+The overlay is **two independent layers**: the base definition cache is never mutated, and the consumer decides per lookup (per key, progId or whole file) which layer wins. Plugin bindings are the one artifact where both layers apply: the base chain runs first, then the tenant's. The override layer is read-only at runtime except for `PluginSettings`, which a local-only maintenance API writes. An empty `CustomizeId` resolves against the base layer alone, as in a single-tenant deployment. See [Tenant Customization](customization.md) and [ADR-016](../../maintainers/adr/adr-016-multitenant-customization-overlay.md).
 
 ---
 
@@ -246,7 +246,7 @@ A single BO can mix both Repository strategies; the caller does not need to know
 
 ### Session Lifecycle and Database Scope
 
-BO method execution is bracketed by a two-phase session lifecycle (see [ADR-012](../adr/adr-012-session-company-context.md)):
+BO method execution is bracketed by a two-phase session lifecycle (see [ADR-012](../../maintainers/adr/adr-012-session-company-context.md)):
 
 ```
 Login(account, password)   ──→  Logged-in (SessionInfo.CompanyId = null)

@@ -186,7 +186,7 @@ namespace Polhem.Base.Data
         /// and then persisted as XML (the audit DiffGram does exactly this) carries an offset that a
         /// reader in another zone applies on the way back in — shifting the value, possibly across a
         /// day boundary. MessagePack and JSON are unaffected either way. See
-        /// docs/adr/adr-032-datetime-timezone.md.
+        /// maintainers/adr/adr-032-datetime-timezone.md.
         ///
         /// Only <see cref="DataSetDateTime.UnspecifiedLocal"/> columns are converted. The
         /// <c>Utc</c> and <c>Local</c> modes carry a deliberate declaration and cannot be switched

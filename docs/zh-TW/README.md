@@ -1,4 +1,4 @@
-<!-- source: en/README.md blob: e902d74d0304c3c9c66d563316c4c0acb18c62d0 -->
+<!-- source: en/README.md blob: b038fb60f4b495a0ab72c8a3aa100b5c6670249b -->
 # Polhem 文件
 
 [English](../en/README.md)
@@ -82,7 +82,7 @@
 
 | 目錄 | 說明 |
 |------|------|
-| [`adr/`](../adr/README.zh-TW.md) | 架構決策紀錄 —— 理解「為何這樣設計」的主要來源。索引列出全部 ADR 與其狀態（已採納 / 已取代） |
+| [`maintainers/adr/`](../../maintainers/adr/README.md) | 架構決策紀錄 —— 理解「為何這樣設計」的主要來源。索引列出全部 ADR 與其狀態（已採納 / 已取代）。寫給維護者，只有英文 |
 | [`changelogs/`](../changelogs/) | 根 `CHANGELOG.zh-TW.md` 背後的逐版變更明細 |
 
 ---
@@ -108,4 +108,4 @@
 
 不列入上方清單，視需要直接參閱。
 
-- **`repo-ops/`** — 本 repo 的維運文件（CI / 分支保護），與框架使用者無關。
+- **`maintainers/`**（位於 repo 根目錄）— 寫給 Polhem 維護者的文件：ADR、本 repo 的維運文件（CI / 分支保護）與踩雷誌。只有英文；除了 ADR 以外，與框架使用者無關。

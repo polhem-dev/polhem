@@ -228,11 +228,11 @@ grep -rnE "Bee\.|Bee[A-Z]|BEE_|BEE[0-9]{4}|dotnet[- ]bee|bee-(dynamic|form|login
 
 ## 設計決策
 
-設計背後的理由記錄在[架構決策紀錄](docs/adr/README.zh-TW.md)。
+設計背後的理由記錄在[架構決策紀錄](maintainers/adr/README.md)。
 
 ## 參與貢獻
 
-見 [CONTRIBUTING.zh-TW.md](CONTRIBUTING.zh-TW.md)。
+見 [CONTRIBUTING.md](CONTRIBUTING.md)（英文）。
 
 ## 授權
 

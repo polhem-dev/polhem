@@ -53,7 +53,7 @@
 
     Releasing therefore has a third baseline to move, alongside the two PublicAPI ones:
     AnalyzerReleases.Unshipped.md -> AnalyzerReleases.Shipped.md under a "## Release x.y.z" heading.
-    See docs/repo-ops/public-api-baseline.md.
+    See maintainers/public-api-baseline.md.
   -->
   <ItemGroup>
     <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />

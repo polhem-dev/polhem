@@ -49,7 +49,7 @@ namespace Polhem.UI.Avalonia.Controls
                 // which would tear a CellEditingTemplate down mid-edit, so lookup
                 // columns bypass the DataGrid edit pipeline entirely and open the
                 // dialog from the display template instead.
-                // See docs/adr/adr-021-avalonia-datagrid-editing-strategy.md.
+                // See maintainers/adr/adr-021-avalonia-datagrid-editing-strategy.md.
                 templateColumn.IsReadOnly = true;
                 templateColumn.CellTemplate = new FuncDataTemplate<DataRowView>(
                     (row, _) => BuildLookupCell(row, column, lookupField),
@@ -62,7 +62,7 @@ namespace Polhem.UI.Avalonia.Controls
                 // of the cell and the grid tears the editing template down. These
                 // columns manage their own click-to-edit swap inside the display
                 // template instead and bypass the edit pipeline entirely.
-                // See docs/adr/adr-021-avalonia-datagrid-editing-strategy.md.
+                // See maintainers/adr/adr-021-avalonia-datagrid-editing-strategy.md.
                 templateColumn.IsReadOnly = true;
                 templateColumn.CellTemplate = new FuncDataTemplate<DataRowView>(
                     (row, _) => BuildInteractiveCell(row, column),

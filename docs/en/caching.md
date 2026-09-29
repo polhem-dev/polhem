@@ -234,7 +234,7 @@ requires no registration anywhere — the convention *is* the routing.
   through process A leaves process B serving the old one until its sliding window lapses.
 - Data loaded from database tables (`CompanyInfo`, role permissions, the department tree) has no
   file to watch, so the free file-watch signal does not apply.
-- Once definitions are stored in a database rather than files ([ADR-018](../adr/adr-018-db-define-storage.md)),
+- Once definitions are stored in a database rather than files ([ADR-018](../../maintainers/adr/adr-018-db-define-storage.md)),
   the file-watch signal disappears for definitions too.
 
 A shared filesystem is not an acceptable answer for a multi-node deployment, and neither is a
@@ -304,7 +304,7 @@ in per-tenant and per-fixture containers a single injected container could never
 ### 6.4 The invariants
 
 The properties this design guarantees. Their full rationale, and the alternatives rejected to
-get here, are in [ADR-017](../adr/adr-017-db-cache-invalidation.md).
+get here, are in [ADR-017](../../maintainers/adr/adr-017-db-cache-invalidation.md).
 
 1. **The bump must commit in the same transaction as the data change.** Otherwise a poller can see
    the notification before the data is visible, reload the old value, and mark it fresh — stale
@@ -513,11 +513,11 @@ in the provider. Note that this pushes two requirements onto any distributed imp
 
 ## 12. Further Reading
 
-- [ADR-009: Cache Implementation](../adr/adr-009-cache-implementation.md) — why
+- [ADR-009: Cache Implementation](../../maintainers/adr/adr-009-cache-implementation.md) — why
   `Microsoft.Extensions.Caching.Memory` + `IChangeToken`, and the negative-caching extension
-- [ADR-017: Database Cache Invalidation](../adr/adr-017-db-cache-invalidation.md) — the notify-table
+- [ADR-017: Database Cache Invalidation](../../maintainers/adr/adr-017-db-cache-invalidation.md) — the notify-table
   design, its invariants, and the alternatives rejected
-- [ADR-018: Database-Backed Define Storage](../adr/adr-018-db-define-storage.md) — the main consumer of
+- [ADR-018: Database-Backed Define Storage](../../maintainers/adr/adr-018-db-define-storage.md) — the main consumer of
   cache-notify on the definition side
 - [End-to-End Development Cookbook](development-cookbook.md) — § Cross-Process Cache Invalidation:
   the writer-side recipe and configuration

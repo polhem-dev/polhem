@@ -1,7 +1,5 @@
 # Contributing to Polhem
 
-**English** | [繁體中文](CONTRIBUTING.zh-TW.md)
-
 Thank you for your interest in Polhem. This guide describes how changes reach the repository and the conventions
 they follow.
 
@@ -11,7 +9,7 @@ they follow.
 - For a larger change (a new feature, a change to public API, a new dependency), open an issue first so the approach
   can be agreed on before you spend time on it.
 - Read the [developer documentation](docs/en/README.md) for the architecture, and the
-  [architecture decision records](docs/adr/README.md) for why the design is the way it is.
+  [architecture decision records](maintainers/adr/README.md) for why the design is the way it is.
 
 ## Workflow
 
@@ -46,11 +44,11 @@ dotnet build Polhem.slnx --configuration Release
   `[DisplayName]` text, and commit messages. User documents, written for developers who build applications with
   Polhem, are multilingual (English and Traditional Chinese); maintainer documents, the ADRs and this guide included,
   are English only. Some parts of the repository still contain Chinese from before this policy; write new content in
-  English. The reasons are in [ADR-045](docs/adr/adr-045-language-policy-and-local-plans.md) and
-  [ADR-047](docs/adr/adr-047-documents-split-by-reader.md).
+  English. The reasons are in [ADR-045](maintainers/adr/adr-045-language-policy-and-local-plans.md) and
+  [ADR-047](maintainers/adr/adr-047-documents-split-by-reader.md).
 - **Commit messages**: English, in the imperative mood, with a subject that says what changed. Use the body to
   explain why.
-- **Design decisions**: a decision that others need to understand later is recorded as an ADR in `docs/adr/`.
+- **Design decisions**: a decision that others need to understand later is recorded as an ADR in `maintainers/adr/`.
 - **Documents**: after changing Markdown documents, run `./check-md-links.sh` and `./check-public-docs.sh`.
   English is the source of the documents under `docs/<lang>/`; `./check-docs-i18n.sh` reports a
   Traditional Chinese translation that has fallen behind its source. If you cannot update the translation, say so in

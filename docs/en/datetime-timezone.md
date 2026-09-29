@@ -12,7 +12,7 @@ are not used. The server fills them in, or keeps the value already stored in the
 This document covers what the framework does for you, the cases where you have to act, and how to
 configure a user's zone.
 
-> Design rationale and the measurements behind it: [ADR-032](../adr/adr-032-datetime-timezone.md).
+> Design rationale and the measurements behind it: [ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md).
 > Calendar-day versus instant semantics, and the other two temporal types:
 > [Temporal Types](temporal-types.md).
 
@@ -140,4 +140,4 @@ outright. See [Expression Rules](expression-rules.md) for the full function list
 
 - [Temporal Types: `Date`, `DateTime` and `Time`](temporal-types.md) — the cross-layer reference:
   choosing between the three semantics, and how each is carried at every layer.
-- [ADR-032](../adr/adr-032-datetime-timezone.md) — the decision itself, with the measurements behind it.
+- [ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md) — the decision itself, with the measurements behind it.

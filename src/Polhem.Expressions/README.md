@@ -18,7 +18,7 @@ while typing), so a computed field yields the same result on both sides.
 `Polhem.Base.Expressions`, not here. That split keeps `Polhem.Definition` and `Polhem.Business` free of any
 DynamicExpresso dependency — they consume the engine through the abstraction, and only a
 composition root (`Polhem.Hosting`, or a UI head building its own evaluator) references this package.
-See [ADR-038](../../docs/adr/adr-038-definition-dependency-boundary.md).
+See [ADR-038](../../maintainers/adr/adr-038-definition-dependency-boundary.md).
 
 **Reference this package when you need to pick an implementation. Reference `Polhem.Base` when you
 only need to accept one.**
@@ -30,7 +30,7 @@ user's zone, so a row created from another region still defaults to the user's o
 basis of the data set being evaluated: the user's zone for `DateTimeBasis.UserZone` (the default, a client
 preview) and UTC for `DateTimeBasis.Utc` (the server's pre-save pass, where the stored values are UTC).
 `UtcNow()` states UTC outright. An empty zone id means UTC. See
-[ADR-032](../../docs/adr/adr-032-datetime-timezone.md).
+[ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md).
 
 ## Security
 

@@ -129,7 +129,7 @@ Host=localhost;Port=5432;Database={@DbName};Username={@UserId};Password={@Passwo
 
 `Time` 以固定寬度的 `"HH:mm"` 字串承載，而非各家原生時間型別。原生時間型別在範圍、精度、
 以及「代表間隔還是時鐘讀數」上差異太大，無法可靠地 round-trip 一個牆上時間；且時刻永遠不做
-時區轉換——見 [ADR-033](../../docs/adr/adr-033-time-of-day-semantics.zh-TW.md)。
+時區轉換——見 [ADR-033](../../maintainers/adr/adr-033-time-of-day-semantics.md)。
 
 > 要自訂 dialect？`GetDefaultValueExpression(FieldDbType)` 與型別對映**都**必須處理 `Time`。
 > 它是附加在列舉末端的，所以既有的 `switch` 編譯照樣通過，只會靜默落入 default 分支。
@@ -164,7 +164,7 @@ Host=localhost;Port=5432;Database={@DbName};Username={@UserId};Password={@Passwo
 - `Ddl/` -- DDL 字串產生契約（`ICreateTableCommandBuilder`、`ITableAlterCommandBuilder` 等）
 - `Dml/` -- DML 字串產生契約與構件（`IFormCommandBuilder`、`SelectCommandBuilder`、各子句建構器、
   `SelectContext`、`TableSchemaCommandBuilder`）；insert 與 update 改走 `DbDataAdapter`
-  （見 [ADR-024](../../docs/adr/adr-024-dataform-save-dataadapter.zh-TW.md)）
+  （見 [ADR-024](../../maintainers/adr/adr-024-dataform-save-dataadapter.md)）
 - `Schema/` -- `TableSchema` 比對與升級流程（`TableSchemaBuilder`、`TableSchemaComparer`、
   `TableUpgradeOrchestrator`、`ITableSchemaProvider`），本身不產 SQL。`Schema/Changes/` 放各種變更型別
 - `CacheNotify/` -- `st_cache_notify` 讀寫兩端：`ICacheNotifyService`（版本遞增）與 `ICacheNotifyReader`（輪詢讀取）
@@ -173,7 +173,7 @@ Host=localhost;Port=5432;Database={@DbName};Username={@UserId};Password={@Passwo
 - `Manager/` -- `IDbConnectionManager`、`DbProviderRegistry`、`DbDialectRegistry`、`DbConnectionInfo`、`ConnectionStringTemplate`
 - 專案根目錄 -- `DbAccess`、`DbCommandSpec`、`DbBatchSpec`、`DbConnectionScope` 及其結果與參數型別
 
-命名空間佈局遵循三項原則（見 [ADR-008](../../docs/adr/adr-008-polhem-db-namespace-layout.zh-TW.md)）：
+命名空間佈局遵循三項原則（見 [ADR-008](../../maintainers/adr/adr-008-polhem-db-namespace-layout.md)）：
 
 1. **語法層（`Polhem.Db.Ddl` / `Polhem.Db.Dml`）vs 模型層（`Polhem.Db.Schema`）** — 產 SQL 字串者歸 `Ddl` / `Dml`；操作 `TableSchema` 模型者歸 `Schema`。
 2. **契約依職能歸類，實作依 provider 歸類** — 抽象契約進對應職能命名空間；具體 per-provider 實作不論是 DDL、DML、或 schema 讀取都統一歸 `Polhem.Db.Providers.{X}`。

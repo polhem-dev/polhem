@@ -427,7 +427,7 @@ Application code chooses `databaseId` based on "which logical category the data 
 
 Regardless of the underlying scenario, the application always uses the same entry `IDatabaseSettingsProvider.GetItem(databaseId)`; the only difference is "how to derive the databaseId string from the current context".
 
-For bo repos (the BO-layer Repositories) the framework provides `IRepositoryDatabaseRouter` (see [ADR-010 § "Later extension: runtime routing"](../adr/adr-010-logical-database-category.md)) so that BO code does not have to derive the databaseId by hand:
+For bo repos (the BO-layer Repositories) the framework provides `IRepositoryDatabaseRouter` (see [ADR-010 § "Later extension: runtime routing"](../../maintainers/adr/adr-010-logical-database-category.md)) so that BO code does not have to derive the databaseId by hand:
 
 | Source | How the databaseId is derived |
 |--------|------------------------------|
@@ -537,5 +537,5 @@ Start from the file the framework ships, [`src/Polhem.Definition/Defaults/DbCate
 - [Architecture Overview](architecture-overview.md) — Definition-Driven architecture overview
 - [Development Cookbook](development-cookbook.md) — framework initialization and development flow
 - [Database Naming Conventions](database-naming-conventions.md) — table / column naming rules
-- [ADR-005: FormSchema-Driven Architecture](../adr/adr-005-formschema-driven.md)
-- [ADR-010: Logical Database Category](../adr/adr-010-logical-database-category.md) — why DbCategory was introduced
+- [ADR-005: FormSchema-Driven Architecture](../../maintainers/adr/adr-005-formschema-driven.md)
+- [ADR-010: Logical Database Category](../../maintainers/adr/adr-010-logical-database-category.md) — why DbCategory was introduced

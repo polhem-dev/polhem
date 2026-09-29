@@ -9,7 +9,7 @@ that consume `Polhem.UI.Avalonia` (`apps/Polhem.Northwind/Polhem.Northwind.iOS` 
 `Polhem.UI.Avalonia` itself targets `net10.0` only.
 
 > The reasoning, measured data and complete build / verification command recipes are in
-> `docs/repo-ops/gotchas/mobile-trim-aot.md` (read on demand, not always loaded).
+> `maintainers/gotchas/mobile-trim-aot.md` (read on demand, not always loaded).
 > This file keeps only the criteria and hard requirements.
 
 ## Before building iOS, check which Xcode you are using
@@ -155,7 +155,7 @@ rules over every type the definition roots reach, so a violation turns the build
 
 ## Related
 
-- `docs/repo-ops/gotchas/mobile-trim-aot.md`: reasoning, measured data, command recipes
+- `maintainers/gotchas/mobile-trim-aot.md`: reasoning, measured data, command recipes
 - `rules/avalonia.md`: Avalonia-specific rules (version compatibility, control pitfalls)
 - `rules/serialization.md`: the AOT conclusions for MessagePack / DynamicExpresso. **The two conclusions are
   opposite**: MessagePack's contractless resolver has **no** reflection fallback, so every wire type needs an

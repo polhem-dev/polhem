@@ -1,11 +1,11 @@
-<!-- source: en/expression-rules.md blob: 2586069e3cfe5ad934aaa4d739447b477e20e706 -->
+<!-- source: en/expression-rules.md blob: f2ecef1d72c4312db7b75052589a91989bb04639 -->
 # 運算式與規則（欄位運算與存檔/刪除前驗證）
 
 [English](../en/expression-rules.md) · [← 文件索引](README.md)
 
 用**宣告式運算式**在 `FormSchema` 定義檔裡做欄位運算與驗證，取代手寫 BO 程式碼。客戶/顧問於設計期即可自訂，不需改程式、重編、重佈。
 
-設計背景與決策見 [ADR-028](../adr/adr-028-expression-rule-engine.zh-TW.md)。
+設計背景與決策見 [ADR-028](../../maintainers/adr/adr-028-expression-rule-engine.md)。
 
 ## 三種能力
 
@@ -23,7 +23,7 @@
 - **運算子**：C# 語法子集（`+ - * /`、`> >= < <= == !=`、`&& || !`、三元 `? :`、字串 `==`）。
 - **可用函式/型別**：輔助函式 `Today()`、`Now()`、`UtcNow()`、`IsNullOrEmpty(s)`、`IsNullOrWhiteSpace(s)`；運算式可直接指名的型別，例如 `Math`（`Math.Round`、`Math.Abs`…）、`Convert`、`DateTime`、`TimeSpan`、`Guid`（如 `customer_rowid != Guid.Empty`）；以及欄位值本身的成員（`name.Length`、`Today().AddDays(1)`）。這些型別來自 DynamicExpresso 的預設集合，加上 `DynamicExpressoEvaluator` 自行加入的；[`ILLink.Descriptors.xml`](../../src/Polhem.Expressions/ILLink.Descriptors.xml) 列出運算式能觸及其成員的每個型別，並由 `TrimmerDescriptorGateTests` 確保這份清單與直譯器一致。
 
-  **時間函式的語意**（見 [ADR-032](../adr/adr-032-datetime-timezone.zh-TW.md)）：
+  **時間函式的語意**（見 [ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md)）：
 
   | 函式 | 回傳 | 基準 |
   |------|------|------|
@@ -53,7 +53,7 @@
 ```
 
 - 存檔前對 `Added` / `Modified` 列重算（`Unchanged` 列不動，避免誤標為已異動）。
-- **捨入**：數值結果依欄位 `NumberKind` 捨入（框架預設：`Amount`→2 位、`Quantity`→0、`UnitPrice`→保留精度…；小數位數取自幣別、單位或公司，見 [ADR-026](../adr/adr-026-numeric-semantics-rounding.zh-TW.md)）。`Quantity` 或 `Weight` 的計算欄必須宣告 `UnitField`，否則運算時拋出例外。每筆明細先各自捨入，因此由捨入後明細加總而得的合計（round-then-sum）會與明細對得上。
+- **捨入**：數值結果依欄位 `NumberKind` 捨入（框架預設：`Amount`→2 位、`Quantity`→0、`UnitPrice`→保留精度…；小數位數取自幣別、單位或公司，見 [ADR-026](../../maintainers/adr/adr-026-numeric-semantics-rounding.md)）。`Quantity` 或 `Weight` 的計算欄必須宣告 `UnitField`，否則運算時拋出例外。每筆明細先各自捨入，因此由捨入後明細加總而得的合計（round-then-sum）會與明細對得上。
 - 計算欄通常搭配 `ReadOnly="true"`。
 - 同列多個計算欄可相依：**依宣告順序**求值，後面的看得到前面剛算好的值。
 

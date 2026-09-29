@@ -63,7 +63,7 @@ The navigation tree has two levels: **topic (`Category`) → case (`Title`)**. T
 | **Lookup** | ButtonEdit lookup picker | The icon opens a local picker that writes the value back (the production flow, `RelationProgId` → `LookupDialog` against a back end, runs in `apps/Polhem.Northwind`) |
 | **Layout** | FormLayout generated at design time | `FormLayoutGenerator.Generate` produces sections and field placement from the schema as a design-time starting point |
 | | Multi-column layout (ColumnCount / ColumnSpan) | `ColumnCount=2`, with fields spanning columns through `ColumnSpan` |
-| **Grid** | In-cell editing | Double-click a cell, or swap in a popup editor (the strategy is in [ADR-021](../../docs/adr/adr-021-avalonia-datagrid-editing-strategy.md)) |
+| **Grid** | In-cell editing | Double-click a cell, or swap in a popup editor (the strategy is in [ADR-021](../../maintainers/adr/adr-021-avalonia-datagrid-editing-strategy.md)) |
 | | EditForm dialog | The grid is read-only; a dialog edits the whole row |
 | | Ambient binding | Only `TableName` is set; the grid binds automatically and generates its columns |
 | | List mode (read-only list) | Bound to a standalone `DataTable`: a read-only list with the toolbar hidden |

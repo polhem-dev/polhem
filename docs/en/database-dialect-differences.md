@@ -65,7 +65,7 @@ Notes:
 - **Temporal defaults are all UTC-returning.** Framework time columns are stored in UTC (see
   [Time Zones](datetime-timezone.md)), and a `DEFAULT` is the path that actually writes when the
   SQL does not name the column: a hand-written INSERT that omits it, and `ALTER TABLE ADD COLUMN`
-  backfilling existing rows. See D9b in [ADR-032](../adr/adr-032-datetime-timezone.md).
+  backfilling existing rows. See D9b in [ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md).
 - **MySQL** wraps function-call defaults in parentheses (`(UUID())`, `(UTC_DATE())`, `(UTC_TIMESTAMP(6))`) because MySQL 8.0.13+ accepts a bare function as a default only for `CURRENT_TIMESTAMP`; every other non-literal default must use the parenthesised *expression* form.
 - **SQLite** has no native UUID generator; `hex(randomblob(16))` is a unique-but-not-strictly-v4 surrogate, sufficient for framework-managed defaults.
 - **Boolean literals**: the framework's canonical form is `"1"` / `"0"`. PostgreSQL rejects those for a `BOOLEAN` column, so the PG dialect translates them to `TRUE` / `FALSE` at the SQL-emission boundary. All other dialects accept `1` / `0`.

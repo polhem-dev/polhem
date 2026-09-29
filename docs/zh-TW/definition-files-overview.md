@@ -1,4 +1,4 @@
-<!-- source: en/definition-files-overview.md blob: 853401cf0f578eab234f4ea8ef0ebe5627aa63cc -->
+<!-- source: en/definition-files-overview.md blob: 6fdef885b782859f360a96a9642d3a99a3af8cc1 -->
 # 定義檔全景
 
 [English](../en/definition-files-overview.md) · [← 文件索引](README.md)
@@ -184,11 +184,11 @@ host 無法啟動。補寫時 `Repository` 留空：`System` 與 `AuditLog` 改�
 
 ### 儲存體可抽換
 
-上述檔案佈局是預設實作（`FileDefineStorage`）。定義也可存放於資料庫 —— 見 [ADR-018](../adr/adr-018-db-define-storage.zh-TW.md)。兩種情況下 `IDefineAccess` 都是同一套介面，變的只是背後的儲存體。
+上述檔案佈局是預設實作（`FileDefineStorage`）。定義也可存放於資料庫 —— 見 [ADR-018](../../maintainers/adr/adr-018-db-define-storage.md)。兩種情況下 `IDefineAccess` 都是同一套介面，變的只是背後的儲存體。
 
 ## 7. `CustomizePath` 與租戶客製覆蓋層
 
-`DefinePath` 放的是所有租戶共用的 base 定義。`CustomizePath` 是可選的第二個根目錄，讓單一公司在**不分叉 base** 的前提下覆蓋其中一部分 —— 設計背景見 [ADR-016](../adr/adr-016-multitenant-customization-overlay.zh-TW.md)。
+`DefinePath` 放的是所有租戶共用的 base 定義。`CustomizePath` 是可選的第二個根目錄，讓單一公司在**不分叉 base** 的前提下覆蓋其中一部分 —— 設計背景見 [ADR-016](../../maintainers/adr/adr-016-multitenant-customization-overlay.md)。
 
 ### 怎麼打開
 

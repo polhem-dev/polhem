@@ -45,7 +45,7 @@ namespace Polhem.Repository.Abstractions.System
         /// <remarks>
         /// The caller decides the fallback for each value. An empty entry is expected rather than
         /// exceptional: rows seeded before the columns existed carry no value, and a deployment may
-        /// leave them unset entirely. See docs/adr/adr-032-datetime-timezone.md (D12) for why the
+        /// leave them unset entirely. See maintainers/adr/adr-032-datetime-timezone.md (D12) for why the
         /// user's zone — not the device's and not the server's — is the authority for user-facing
         /// dates; the culture is stored per user for the same reason plus one more, namely that a
         /// background service sending a notification has no session to read it from.

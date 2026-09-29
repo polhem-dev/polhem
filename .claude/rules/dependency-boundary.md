@@ -29,8 +29,8 @@ was an extra dependency in the nuspec, but grepping for the package name never f
 
 Test: **does this dependency make a technology choice on the consumer's behalf?** A pure abstraction package does
 not: it carries no implementation and does not lock in an engine.
-For the full criteria and reasoning see [adr-038](../../docs/adr/adr-038-definition-dependency-boundary.md)
-and [adr-036](../../docs/adr/adr-036-wire-serialization-externalized.md).
+For the full criteria and reasoning see [adr-038](../../maintainers/adr/adr-038-definition-dependency-boundary.md)
+and [adr-036](../../maintainers/adr/adr-036-wire-serialization-externalized.md).
 
 ## The correct approach when you want to add something
 

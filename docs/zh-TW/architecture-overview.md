@@ -1,4 +1,4 @@
-<!-- source: en/architecture-overview.md blob: c8babb4aa1e91695f4f856d331bfbf8f18c2dc81 -->
+<!-- source: en/architecture-overview.md blob: f48c415535fbaafe7cb24f3649ee07d97ef52a7e -->
 # Polhem 框架架構總覽
 
 [English](../en/architecture-overview.md) · [← 文件索引](README.md)
@@ -120,7 +120,7 @@ FormLayout 與 TableSchema 在設計階段由 FormSchema 推導產生並存成�
 
 針對多租戶部署，Polhem 在 base 定義之上加一層 **per-租戶客製化覆蓋**。`CustomizeId`（由 `SessionInfo.CustomizeId` 取得，於 `EnterCompany` 時自公司記錄載入）驅動覆蓋層，**僅服務 Language / FormLayout / ProgramSettings / MenuSettings / PluginSettings**——`FormSchema` / `TableSchema` 維持全租戶共用，使資料庫結構不會逐租戶分歧。
 
-此覆蓋為**兩層獨立**：base 定義快取絕不異動，由消費端逐次查找（以 key、progId 或整檔為粒度）決定哪一層勝出。外掛綁定是唯一兩層都生效的項目：先跑 base 的外掛鏈，再跑租戶的。覆蓋層在執行期為唯讀，唯一例外是 `PluginSettings`，由僅限本機的維護 API 寫入。`CustomizeId` 為空時只依 base 層解析，與單租戶部署相同。見[租戶客製化](customization.md)與 [ADR-016](../adr/adr-016-multitenant-customization-overlay.zh-TW.md)。
+此覆蓋為**兩層獨立**：base 定義快取絕不異動，由消費端逐次查找（以 key、progId 或整檔為粒度）決定哪一層勝出。外掛綁定是唯一兩層都生效的項目：先跑 base 的外掛鏈，再跑租戶的。覆蓋層在執行期為唯讀，唯一例外是 `PluginSettings`，由僅限本機的維護 API 寫入。`CustomizeId` 為空時只依 base 層解析，與單租戶部署相同。見[租戶客製化](customization.md)與 [ADR-016](../../maintainers/adr/adr-016-multitenant-customization-overlay.md)。
 
 ---
 
@@ -247,7 +247,7 @@ BO 上接受單一參數的 public instance 方法都可作為 JSON-RPC action �
 
 ### Session 生命週期與資料庫範疇
 
-BO 方法的執行被兩階段 session lifecycle 框住（見 [ADR-012](../adr/adr-012-session-company-context.zh-TW.md)）：
+BO 方法的執行被兩階段 session lifecycle 框住（見 [ADR-012](../../maintainers/adr/adr-012-session-company-context.md)）：
 
 ```
 Login(account, password)   ──→  已登入（SessionInfo.CompanyId = null）

@@ -4,7 +4,7 @@ This file loads automatically when the agent reads any file under `tests/` (a ne
 confirmed by a top-level session on 2026-08-12. **Whether "only Write a new file, never Read" triggers it has not been
 verified**, so the always-loaded file keeps the safeguard "Read this file before you start writing"). The skeleton and
 the five hard constraints you "must know before you start writing" are in `.claude/rules/testing.md` (always loaded);
-paste-ready code templates are in `docs/repo-ops/testing-patterns.md`.
+paste-ready code templates are in `maintainers/testing-patterns.md`.
 
 When the two conflict, this file wins. The always-loaded one is a summary.
 
@@ -136,7 +136,7 @@ skip condition from the database that actually runs.
 > Of those, 50 tests never touched the declared database at all, and 8 passed vacuously. Correcting them surfaced two
 > framework defects on the spot (Common scope repositories picked the SQL dialect from `DbCategoryIds.Common` instead
 > of their own `DatabaseId`; SQLite date columns were rejected by an `is DateTime` check). Details in
-> `docs/repo-ops/gotchas/database.md`.
+> `maintainers/gotchas/database.md`.
 
 ### Needs a local service: `[LocalOnlyFact]` / `[LocalOnlyTheory]`
 
@@ -205,7 +205,7 @@ is tests contaminating each other. Restoring in `try/finally` "looks" safe but o
 
 Declare a pure marker `[CollectionDefinition("<name>")]` (no fixture) at the root of the test project, and put every
 test class that modifies that static in the same `[Collection("<name>")]`. Template in
-`docs/repo-ops/testing-patterns.md`.
+`maintainers/testing-patterns.md`.
 
 ### Narrow serializations that still exist
 
@@ -271,7 +271,7 @@ If you need to `GetDefine` an existing fixture first and then `SaveDefine`: **Ge
 first (from `tests/Define`) → construct a temp `IDefineAccess` → Save**, so that Get does not find nothing in an empty
 temp directory.
 
-Full template in `docs/repo-ops/testing-patterns.md`.
+Full template in `maintainers/testing-patterns.md`.
 
 ---
 
@@ -297,7 +297,7 @@ The strict build stage of `build-ci.yml` blocks the PR outright. These are espec
 
 The local environment is "more complete" than CI (it has the DatabaseSettings in `tests/Define`, persistent DB
 containers, and possibly leftover old seed data), so the gaps below **can never be detected locally**. Pitfall
-instances and the investigation are in `../docs/repo-ops/gotchas/test-ci-release.md`.
+instances and the investigation are in `../maintainers/gotchas/test-ci-release.md`.
 
 ### 1. Tests that touch the DB must use `SharedDbFixture`
 

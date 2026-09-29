@@ -23,7 +23,7 @@
       (XmlSerializer for FormSchema, System.Text.Json, MessagePack) emits IL2026 / IL2104
       trim warnings that are expected here. The head keeps the SDK's default partial trim
       (AndroidLinkMode=SdkOnly), the only trim mode Polhem supports; the reasons are in
-      docs/repo-ops/gotchas/mobile-trim-aot.md.
+      maintainers/gotchas/mobile-trim-aot.md.
     -->
   </PropertyGroup>
 

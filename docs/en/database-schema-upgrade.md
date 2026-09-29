@@ -3,7 +3,7 @@
 [繁體中文](../zh-TW/database-schema-upgrade.md) · [← Docs Index](README.md)
 
 > This guide explains how a Polhem application maintains database table schemas: how definition changes are synchronized to the live database, the upgrade strategy used under the hood, and operational considerations.
-> For naming rules see [Database Naming Conventions](database-naming-conventions.md); for the underlying definition-driven philosophy see [ADR-005 FormSchema-Driven](../adr/adr-005-formschema-driven.md).
+> For naming rules see [Database Naming Conventions](database-naming-conventions.md); for the underlying definition-driven philosophy see [ADR-005 FormSchema-Driven](../../maintainers/adr/adr-005-formschema-driven.md).
 
 ## 1. Core Concepts
 
@@ -350,4 +350,4 @@ Indexes named after the old table (e.g. `pk_ft_employee`, `rx_ft_employee`) are 
 - [Architecture Overview](architecture-overview.md)
 - [Development Cookbook](development-cookbook.md)
 - [Development Constraints](development-constraints.md)
-- [ADR-005: FormSchema-Driven](../adr/adr-005-formschema-driven.md)
+- [ADR-005: FormSchema-Driven](../../maintainers/adr/adr-005-formschema-driven.md)

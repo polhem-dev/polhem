@@ -3,7 +3,7 @@
 > **Before touching any file under `tests/`, Read `tests/CLAUDE.md` first.** The full rules are there. It loads
 > automatically when you touch that directory, but **creating a new file does not always trigger it**, so read it
 > once yourself.
-> Copy-ready code templates are in `docs/repo-ops/testing-patterns.md`.
+> Copy-ready code templates are in `maintainers/testing-patterns.md`.
 >
 > This file keeps only what "you must know before writing, and would be too late if loaded later".
 

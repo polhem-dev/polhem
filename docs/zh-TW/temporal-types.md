@@ -1,4 +1,4 @@
-<!-- source: en/temporal-types.md blob: a0660f8f1f850181181ee2c5ae77c72eb09622ea -->
+<!-- source: en/temporal-types.md blob: 30e7da13c96cbe94d8a434d0b7968a8b687b5023 -->
 # 時間型別總覽：`Date`、`DateTime`、`Time`
 
 [English](../en/temporal-types.md) · [← 文件索引](README.md)
@@ -64,7 +64,7 @@
 - **`Time` 不使用資料庫原生時刻型別。** 除 Oracle 外每家都有，但它們的語意彼此不一致
   （MySQL 的 `TIME` 是**時距**，跨越 ±838 小時），且 .NET `DataSet` 承載不了它們回傳的 CLR 型別。
   定寬字串一次繞開全部問題，且在 raw `SELECT` 下仍可讀。完整實測見
-  [ADR-033](../adr/adr-033-time-of-day-semantics.zh-TW.md)。
+  [ADR-033](../../maintainers/adr/adr-033-time-of-day-semantics.md)。
 
 ### 排序與範圍查詢
 
@@ -342,10 +342,10 @@ FilterCondition.Equal("work_start", "08:30");                      // string —
 
 ## 相關文件
 
-- [ADR-031](../adr/adr-031-calendar-day-column-semantics.zh-TW.md) —— 日曆日語意為何需要顯式標記、
+- [ADR-031](../../maintainers/adr/adr-031-calendar-day-column-semantics.md) —— 日曆日語意為何需要顯式標記、
   被否決的替代方案，以及背後的 `DataColumn`/`DateOnly` 實測數據。
-- [ADR-033](../adr/adr-033-time-of-day-semantics.zh-TW.md) —— `Time` 為何採定寬字串而非資料庫原生時刻型別，
+- [ADR-033](../../maintainers/adr/adr-033-time-of-day-semantics.md) —— `Time` 為何採定寬字串而非資料庫原生時刻型別，
   含決策背後的實測數據。
 - [時區處理](datetime-timezone.md) —— 時間點的 UTC 儲存與轉換。
-  [ADR-032](../adr/adr-032-datetime-timezone.zh-TW.md)。
+  [ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md)。
 - [術語表](terminology.md) —— 日曆日 / 時刻 / 時間點 / 時距 四詞的定義。

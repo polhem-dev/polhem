@@ -1,6 +1,6 @@
 # Database rules
 
-> Per-provider pitfall details and the reasoning behind them are in `docs/repo-ops/gotchas/database.md`
+> Per-provider pitfall details and the reasoning behind them are in `maintainers/gotchas/database.md`
 > (read on demand, not always loaded).
 
 ## Two orthogonal dimensions: table prefix vs CategoryId

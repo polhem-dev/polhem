@@ -40,7 +40,7 @@
 The body codec of an `Encoded` or `Encrypted` payload is not a deployment setting: each request declares it in the
 payload envelope and the server answers with the same codec. A request that declares none is read as MessagePack,
 which is what every client that predates negotiation sends. On the client, `ApiConnector.PayloadCodec`
-(`Polhem.Api.Client`) chooses it. See [ADR-044](../../docs/adr/adr-044-payload-codec-negotiation.md).
+(`Polhem.Api.Client`) chooses it. See [ADR-044](../../maintainers/adr/adr-044-payload-codec-negotiation.md).
 
 ### Anti-Replay (optional, off by default)
 
@@ -55,7 +55,7 @@ which is what every client that predates negotiation sends. On the client, `ApiC
 
 Sequence checks apply to `Encrypted` payloads, where the payload HMAC covers the frame. A `Plain` call carries no
 frame and is not checked, and an `Encoded` frame is not authenticated, so declare replay-protected methods at the
-`Encrypted` protection level. See [ADR-042](../../docs/adr/adr-042-api-replay-protection.md) for the rollout order
+`Encrypted` protection level. See [ADR-042](../../maintainers/adr/adr-042-api-replay-protection.md) for the rollout order
 and the details.
 
 ### Authorization & Access Control
@@ -72,7 +72,7 @@ and the details.
 - `ApiHeaders` -- standard header constants for API communication.
 - `PayloadFormat` -- how a payload travels: `Plain`, `Encoded` (serialized and compressed) or `Encrypted`.
 - `DateTimeWireGuard` -- enforces the date and time wire invariants of
-  [ADR-032](../../docs/adr/adr-032-datetime-timezone.md) on the responses that carry them.
+  [ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md) on the responses that carry them.
 
 ### MessagePack Infrastructure
 
@@ -85,7 +85,7 @@ and the details.
 - `WireContracts` -- the explicit formatter registrations for every wire type. The contractless
   resolver is a desktop-only convenience, not the carrying mechanism: .NET for iOS turns dynamic
   code off, and an unregistered type fails there outright (see
-  [ADR-037](../../docs/adr/adr-037-wire-explicit-registration.md)).
+  [ADR-037](../../maintainers/adr/adr-037-wire-explicit-registration.md)).
 - `WireValueFormatter` -- discriminated envelope for `object`-typed members (filter values,
   parameter values, table cells).
 
@@ -130,7 +130,7 @@ and the details.
 - `Wire/` -- `WireValueCode` (the discriminator both wires share)
 - project root -- `ApiServiceOptions` (startup configuration)
 
-The namespace layout follows the design principles in [ADR-008](../../docs/adr/adr-008-polhem-db-namespace-layout.md):
+The namespace layout follows the design principles in [ADR-008](../../maintainers/adr/adr-008-polhem-db-namespace-layout.md):
 contracts grouped by responsibility (`Messages` for message types, `Conversion` for type
 conversion, `Transformers` for the byte-level pipeline, etc.); the root reserved for cross-cutting
 infrastructure (here, only `ApiServiceOptions`).

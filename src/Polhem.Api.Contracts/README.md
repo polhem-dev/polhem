@@ -71,7 +71,7 @@
 
 - **Axis-based namespaces** -- interfaces are grouped into `System` / `Form` / `AuditLog` sub-namespaces that mirror the `Polhem.Business.*` and `Polhem.Api.Core.Messages.*` layers, so a contract, its message implementation, and its business object share the same axis. The generic cross-BO `IExecFunc*` dispatch contract stays at the root `Polhem.Api.Contracts` (mirroring the root-level `ExecFunc*` implementation in `Polhem.Api.Core.Messages`).
 - **Pure interface definitions** -- each API operation is defined as an `IXxxRequest` / `IXxxResponse` pair; no implementation logic in this project.
-- **No serialization attributes** -- data classes such as `RecordFieldChange` are plain types with public read/write properties. Their binding to the wire lives in `Polhem.Api.Core` as hand-written formatters, so this package takes no dependency on a transport format ([ADR-036](../../docs/adr/adr-036-wire-serialization-externalized.md)).
+- **No serialization attributes** -- data classes such as `RecordFieldChange` are plain types with public read/write properties. Their binding to the wire lives in `Polhem.Api.Core` as hand-written formatters, so this package takes no dependency on a transport format ([ADR-036](../../maintainers/adr/adr-036-wire-serialization-externalized.md)).
 - **RSA-based security** -- the login contract includes `ClientPublicKey` (client-generated) and `ApiEncryptionKey` (server-generated) for secure key exchange.
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
 

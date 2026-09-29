@@ -76,7 +76,7 @@ rules over every type the definition roots reach, so a violation fails the deskt
   that keeps the owner link intact (example: `Entries` in `Language/LanguageEnum.cs`).
 
 For the reflection scan that inventories the whole definition layer for the same kind of problem, see
-`../../docs/repo-ops/gotchas/mobile-trim-aot.md`.
+`../../maintainers/gotchas/mobile-trim-aot.md`.
 
 ## `Defaults/` is only a scaffold source; the runtime does not use it
 

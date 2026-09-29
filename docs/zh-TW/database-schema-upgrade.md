@@ -1,10 +1,10 @@
-<!-- source: en/database-schema-upgrade.md blob: 2d1afff300cddec98244be1d095d6527ea66db8b -->
+<!-- source: en/database-schema-upgrade.md blob: 37f2dbbf2f3d6f19265b6bf4975a7d86bd949b08 -->
 # 資料庫 Schema 升級指引
 
 [English](../en/database-schema-upgrade.md) · [← 文件索引](README.md)
 
 > 本文件說明 Polhem 應用如何維護資料庫資料表結構：定義變更後如何同步到實際資料庫、底層採用何種升級策略、以及維運上的注意事項。
-> 命名規範請參閱 [資料庫命名規範](database-naming-conventions.md)，定義驅動的整體理念請參閱 [ADR-005 FormSchema-Driven](../adr/adr-005-formschema-driven.zh-TW.md)。
+> 命名規範請參閱 [資料庫命名規範](database-naming-conventions.md)，定義驅動的整體理念請參閱 [ADR-005 FormSchema-Driven](../../maintainers/adr/adr-005-formschema-driven.md)。
 
 ## 1. 核心觀念
 
@@ -350,4 +350,4 @@ ALTER TABLE ft_employee   RENAME TO st_employee;
 - [架構總覽](architecture-overview.md)
 - [開發指引](development-cookbook.md)
 - [開發限制](development-constraints.md)
-- [ADR-005：FormSchema-Driven](../adr/adr-005-formschema-driven.zh-TW.md)
+- [ADR-005：FormSchema-Driven](../../maintainers/adr/adr-005-formschema-driven.md)

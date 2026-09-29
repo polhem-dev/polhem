@@ -4,7 +4,7 @@
 
 Demonstrates calling the Polhem JSON-RPC API from pure JavaScript in a browser —
 no `npm`, no build step, no framework. The JS frontend uses
-`PayloadFormat.Plain` (see [ADR-014](../../docs/adr/adr-014-jsonrpc-plain-public-default.md)),
+`PayloadFormat.Plain` (see [ADR-014](../../maintainers/adr/adr-014-jsonrpc-plain-public-default.md)),
 so all requests are plain JSON.
 
 Every method it calls is declared `Public`, which is what lets a Plain request

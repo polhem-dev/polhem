@@ -14,7 +14,7 @@ namespace Polhem.Api.Core.UnitTests
     /// <remarks>
     /// Expected values are always derived from <see cref="TimeZoneInfo"/> at run time, never hard-coded offsets, so the
     /// tests hold both on a development machine (Asia/Taipei) and in CI (UTC). The design is in
-    /// docs/adr/adr-032-datetime-timezone.md (D4).
+    /// maintainers/adr/adr-032-datetime-timezone.md (D4).
     /// </remarks>
     public class DateTimeZoneConverterTests
     {
