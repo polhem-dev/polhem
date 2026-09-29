@@ -92,7 +92,7 @@ namespace Polhem.Api.Core.JsonRpc
                 throw new InvalidOperationException(
                     $"Time zone '{timeZoneId}' was not found. Check the id is a valid IANA name, and " +
                     "that the runtime ships time zone data — a trimmed WASM or mobile build with " +
-                    "InvariantGlobalization enabled has none. See docs/adr/adr-032-datetime-timezone.md.", ex);
+                    "InvariantGlobalization enabled has none. See maintainers/adr/adr-032-datetime-timezone.md.", ex);
             }
         }
 

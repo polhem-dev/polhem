@@ -28,14 +28,14 @@ frontend is JS, this guide is the path.
 Payload encryption is **not** a .NET-only capability. The body codec is negotiated per request: a JS
 client that wants `Encoded` or `Encrypted` declares `"codec": "json"` on the payload envelope and the
 server answers with the same codec, while a request that declares no codec is read as MessagePack —
-that is what [ADR-044](../adr/adr-044-payload-codec-negotiation.md) exists for. The cross-language
+that is what [ADR-044](../../maintainers/adr/adr-044-payload-codec-negotiation.md) exists for. The cross-language
 artefacts for that path are [`wire-contracts/`](../../wire-contracts/README.md) (a TypeScript contract
 generated from the message types, the authoritative description of every request and response shape)
 and [`wire-fixtures/`](../../wire-fixtures/README.md) (golden body samples to check an implementation
 against). [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js) is a TypeScript
 client built on them.
 
-See [ADR-013: Frontend API connection strategy](../adr/adr-013-frontend-api-connection-strategy.md)
+See [ADR-013: Frontend API connection strategy](../../maintainers/adr/adr-013-frontend-api-connection-strategy.md)
 for the broader policy.
 
 ---
@@ -67,7 +67,7 @@ Authorization: Bearer <access-token>     // omit for anonymous calls
 ```
 
 - `method` — `<ProgId>.<Action>`, dispatched to the BO by reflection
-- `params.format` — `0` (`PayloadFormat.Plain`) for the plain path this guide covers. It is **not** restricted to that: since [ADR-044](../adr/adr-044-payload-codec-negotiation.md) a JS client can also use `Encoded` / `Encrypted` by declaring `"codec": "json"` on the envelope, which needs only JSON, gzip, AES-CBC-HMAC and RSA — all available in the browser
+- `params.format` — `0` (`PayloadFormat.Plain`) for the plain path this guide covers. It is **not** restricted to that: since [ADR-044](../../maintainers/adr/adr-044-payload-codec-negotiation.md) a JS client can also use `Encoded` / `Encrypted` by declaring `"codec": "json"` on the envelope, which needs only JSON, gzip, AES-CBC-HMAC and RSA — all available in the browser
 - `params.value` — your args object, with **camelCase or PascalCase property names**
   (server deserializes case-insensitive)
 - `id` — any client-chosen identifier echoed back in the response
@@ -493,7 +493,7 @@ to a Plain body: an `object`-typed member such as a filter value is a bare JSON 
 - [`samples/Web.Js.Demo/README.md`](../../samples/Web.Js.Demo/README.md) — runnable demo of the calls above
 - [`docs/en/api-method-reference.md`](api-method-reference.md) — full method catalog with `[ApiAccessControl]` per method
 - [`wire-contracts/README.md`](../../wire-contracts/README.md) — the generated TypeScript contract and how it is kept in step with the server
-- [`docs/adr/adr-013-frontend-api-connection-strategy.md`](../adr/adr-013-frontend-api-connection-strategy.md) — broader frontend connection policy
-- [ADR-044](../adr/adr-044-payload-codec-negotiation.md) — per-request codec negotiation
+- [`maintainers/adr/adr-013-frontend-api-connection-strategy.md`](../../maintainers/adr/adr-013-frontend-api-connection-strategy.md) — broader frontend connection policy
+- [ADR-044](../../maintainers/adr/adr-044-payload-codec-negotiation.md) — per-request codec negotiation
 - [`src/Polhem.Api.Core/README.md`](../../src/Polhem.Api.Core/README.md) — server-side dispatch internals
 - [`src/Polhem.Api.Client/README.md`](../../src/Polhem.Api.Client/README.md) — the .NET client this guide is the JS counterpart to

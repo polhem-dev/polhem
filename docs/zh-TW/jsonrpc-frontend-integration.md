@@ -1,4 +1,4 @@
-<!-- source: en/jsonrpc-frontend-integration.md blob: a7ecb8aca3cd2116a83cd86225bd2ec42c24199d -->
+<!-- source: en/jsonrpc-frontend-integration.md blob: df6c88eaf5a1c2ec00cd63ca41265151eaeda818 -->
 # JSON-RPC 前端整合指引
 
 [English](../en/jsonrpc-frontend-integration.md) · [← 文件索引](README.md)
@@ -27,14 +27,14 @@ MessagePack 效能、payload 加密。如果前端是 JS，走本指引。
 
 payload 加密**不是 .NET 專屬能力**。body codec 是逐請求協商的：JS 用戶端要用 `Encoded` 或
 `Encrypted`，只需在 payload 信封宣告 `"codec": "json"`，伺服端會以同一個 codec 回應；未宣告 codec 的
-請求則以 MessagePack 解讀 —— 那正是 [ADR-044](../adr/adr-044-payload-codec-negotiation.zh-TW.md)
+請求則以 MessagePack 解讀 —— 那正是 [ADR-044](../../maintainers/adr/adr-044-payload-codec-negotiation.md)
 存在的理由。這條路徑的跨語言素材是 [`wire-contracts/`](../../wire-contracts/README.md)
 （由訊息型別產生的 TypeScript 合約，是每個請求與回應形狀的權威描述）與
 [`wire-fixtures/`](../../wire-fixtures/README.md)（可拿來對照自家實作的 golden body 樣本）。
 [`polhem-connector-js`](https://github.com/polhem-dev/polhem-connector-js) 是建立在它們之上的
 TypeScript client。
 
-整體策略見 [ADR-013：前端 API 連線策略](../adr/adr-013-frontend-api-connection-strategy.zh-TW.md)。
+整體策略見 [ADR-013：前端 API 連線策略](../../maintainers/adr/adr-013-frontend-api-connection-strategy.md)。
 
 ---
 
@@ -65,7 +65,7 @@ Authorization: Bearer <access-token>     // 匿名呼叫可省略
 ```
 
 - `method` — `<ProgId>.<Action>`，server 用 reflection 派遣到對應 BO
-- `params.format` — 本指引涵蓋的 plain 路徑用 `0`（`PayloadFormat.Plain`）。**並非只能如此**：自 [ADR-044](../adr/adr-044-payload-codec-negotiation.zh-TW.md) 起，JS 用戶端只要在信封宣告 `"codec": "json"` 就能走 `Encoded` / `Encrypted`，所需的 JSON、gzip、AES-CBC-HMAC 與 RSA 瀏覽器全都有
+- `params.format` — 本指引涵蓋的 plain 路徑用 `0`（`PayloadFormat.Plain`）。**並非只能如此**：自 [ADR-044](../../maintainers/adr/adr-044-payload-codec-negotiation.md) 起，JS 用戶端只要在信封宣告 `"codec": "json"` 就能走 `Encoded` / `Encrypted`，所需的 JSON、gzip、AES-CBC-HMAC 與 RSA 瀏覽器全都有
 - `params.value` — args 物件，**camelCase 或 PascalCase 屬性名都可以**
   （server 反序列化 case-insensitive）
 - `id` — client 任選的識別字串，response 會原樣回傳
@@ -466,7 +466,7 @@ export const formApi = (progId: string) => ({
 - [`samples/Web.Js.Demo/README.zh-TW.md`](../../samples/Web.Js.Demo/README.zh-TW.md) — 上述呼叫的可跑 demo
 - [`docs/zh-TW/api-method-reference.md`](api-method-reference.md) — 完整方法清單含每方法 `[ApiAccessControl]` 設定
 - [`wire-contracts/README.md`](../../wire-contracts/README.md) — 產生出來的 TypeScript 合約，以及它如何與伺服端保持一致
-- [`docs/adr/adr-013-frontend-api-connection-strategy.md`](../adr/adr-013-frontend-api-connection-strategy.zh-TW.md) — 前端連線策略全景
-- [ADR-044](../adr/adr-044-payload-codec-negotiation.zh-TW.md) — 逐請求的 codec 協商
+- [`maintainers/adr/adr-013-frontend-api-connection-strategy.md`](../../maintainers/adr/adr-013-frontend-api-connection-strategy.md) — 前端連線策略全景
+- [ADR-044](../../maintainers/adr/adr-044-payload-codec-negotiation.md) — 逐請求的 codec 協商
 - [`src/Polhem.Api.Core/README.md`](../../src/Polhem.Api.Core/README.zh-TW.md) — server 端派遣內部細節
 - [`src/Polhem.Api.Client/README.md`](../../src/Polhem.Api.Client/README.zh-TW.md) — 本指引對應的 .NET client

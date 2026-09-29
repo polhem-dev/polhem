@@ -59,7 +59,7 @@ dotnet run --project samples/Avalonia.DemoCenter/Avalonia.DemoCenter.csproj
 | **Lookup** | ButtonEdit lookup picker | 點圖示開本機 picker 寫回值（生產環境 `RelationProgId` → `LookupDialog` 的後端流程在 `apps/Polhem.Northwind`） |
 | **Layout** | FormLayout generated at design time | `FormLayoutGenerator.Generate` 由 schema 產生區段 + 欄位擺放，作為設計階段的起點 |
 | | Multi-column layout (ColumnCount / ColumnSpan) | `ColumnCount=2` + 欄位 `ColumnSpan` 跨欄擺放 |
-| **Grid** | In-cell editing | 雙擊 cell / popup 編輯器置換（策略見 [ADR-021](../../docs/adr/adr-021-avalonia-datagrid-editing-strategy.zh-TW.md)） |
+| **Grid** | In-cell editing | 雙擊 cell / popup 編輯器置換（策略見 [ADR-021](../../maintainers/adr/adr-021-avalonia-datagrid-editing-strategy.md)） |
 | | EditForm dialog | grid 唯讀、彈窗編輯整列 |
 | | Ambient binding | 只設 `TableName` 自動綁定、欄位自動產生 |
 | | List mode (read-only list) | 綁獨立 `DataTable`，唯讀清單、工具列隱藏 |

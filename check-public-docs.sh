@@ -47,12 +47,6 @@ repo_files() {
   return 0
 }
 
-# docs/repo-ops/ and docs/adr/ hold maintainer documents, not public ones. They are still scanned by (1) and (2).
-public_md_filter() {
-  grep -vE "^docs/(repo-ops|adr)/"
-  return 0
-}
-
 # A full URL to the old repository is a pointer readers can follow: its plans stay readable
 # in jeff377/bee-library, which is frozen and will be archived. Links to a URL, and bare URLs,
 # are removed before matching.
@@ -70,11 +64,11 @@ report "$(repo_files | xargs -0 grep -InE "$LOCAL_FILE_RE" 2>/dev/null)"
 # CLAUDE.md files are agent guidance themselves, so they may point into .claude/.
 section 3 "public markdown — points to a file under .claude/ (expected empty)"
 report "$(grep -rnE --include="*.md" "$CLAUDE_FILE_RE" "${MD_ROOTS[@]}" 2>/dev/null \
-  | grep -v "/CLAUDE\.md:" | public_md_filter)"
+  | grep -v "/CLAUDE\.md:")"
 
 section 4 "public markdown — refers to a plan in prose (known false positives; read each hit)"
 grep -rnE --include="*.md" "見 plan|本 plan|plan (的|內|各)|(see|the|migration|integration) plan" \
-  "${MD_ROOTS[@]}" 2>/dev/null | public_md_filter
+  "${MD_ROOTS[@]}" 2>/dev/null
 
 echo
 exit "$failed"

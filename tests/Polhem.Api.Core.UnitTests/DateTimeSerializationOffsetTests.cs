@@ -19,7 +19,7 @@ namespace Polhem.Api.Core.UnitTests
     /// XML is the only format that decides by <c>DateTimeMode</c> whether to write an offset, and the .NET default
     /// <c>UnspecifiedLocal</c> is exactly the value that writes one. Once an offset is in the XML, reading it back in
     /// another time zone shifts the value, possibly across a date boundary. The design background is in
-    /// docs/adr/adr-032-datetime-timezone.md.
+    /// maintainers/adr/adr-032-datetime-timezone.md.
     ///
     /// The tests must hold in any time zone (developer machines are mostly Asia/Taipei, CI is UTC), so every expected
     /// value that depends on the local time zone is derived from <see cref="TimeZoneInfo.Local"/> instead of a

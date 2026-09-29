@@ -224,7 +224,7 @@ Only `FormSchema` definitions actually referenced are joined — unused relation
 | `Polhem.Db.Dml.WhereBuilder` | builds the `WHERE` clause with parameterization |
 | `Polhem.Db.Dml.SortBuilder` | builds the `ORDER BY` clause |
 | `Polhem.Db.Dml.SelectCommandBuilder` | combines the four sub-builders (plus `LimitBuilder` for `skip` / `take` paging) into a final SELECT `DbCommandSpec`; before building, it refuses a filter or sort field the form table does not declare, and any field the framework protects (see [`ProtectedFields`](../../src/Polhem.Definition/ProtectedFields.cs)) |
-| `Polhem.Db.Dml.DeleteCommandBuilder` | produces a single-table DELETE `DbCommandSpec` from a `FormSchema` and a `FilterNode` (used by `Delete()`; no JOIN, identifiers quoted per dialect). Insert/Update are no longer per-row: `DataFormRepository.Save` builds a `DataTableUpdateSpec` via `TableSchemaCommandBuilder` and applies it through `DataAdapter.Update` (see [ADR-024](../adr/adr-024-dataform-save-dataadapter.md)) |
+| `Polhem.Db.Dml.DeleteCommandBuilder` | produces a single-table DELETE `DbCommandSpec` from a `FormSchema` and a `FilterNode` (used by `Delete()`; no JOIN, identifiers quoted per dialect). Insert/Update are no longer per-row: `DataFormRepository.Save` builds a `DataTableUpdateSpec` via `TableSchemaCommandBuilder` and applies it through `DataAdapter.Update` (see [ADR-024](../../maintainers/adr/adr-024-dataform-save-dataadapter.md)) |
 | `Polhem.Db.Dml.IFormCommandBuilder` | per-dialect entry point (`SqlFormCommandBuilder`, `PgFormCommandBuilder`, `MySqlFormCommandBuilder`, `OracleFormCommandBuilder`, `SqliteFormCommandBuilder`); methods `Build{Select,Count,Delete}` delegate to the shared cores above |
 
 ---
@@ -267,7 +267,7 @@ The following "limitations" are deliberate tradeoffs aligned with the `FormSchem
 ## 8. Further Reading
 
 - [Architecture Overview](architecture-overview.md): the overall Polhem architecture
-- [ADR-005: FormSchema-Driven Architecture](../adr/adr-005-formschema-driven.md): the upstream design decision behind this approach
+- [ADR-005: FormSchema-Driven Architecture](../../maintainers/adr/adr-005-formschema-driven.md): the upstream design decision behind this approach
 - [Terminology Reference](terminology.md): EN/ZH terminology mapping
 - [Polhem.Db README](../../src/Polhem.Db/README.md): Polhem.Db package overview
 - [Development Cookbook](development-cookbook.md): FormSchema-driven development and the dual-track strategy

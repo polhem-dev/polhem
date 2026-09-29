@@ -167,4 +167,4 @@ When the corresponding `AuditLogOptions` category is enabled (opt-in, off by def
 
 - [API Contract & BO Parameter Design](api-bo-contract-design.md) — Layered design rationale for Contract / Args / Result
 - [Permission & Authorization](permission-authorization.md) — what each `[ApiAccessControl]` requirement means at run time
-- [ADR-004](../adr/adr-004-messagepack-payload.md) and [ADR-044](../adr/adr-044-payload-codec-negotiation.md) — the payload pipeline and per-request codec negotiation
+- [ADR-004](../../maintainers/adr/adr-004-messagepack-payload.md) and [ADR-044](../../maintainers/adr/adr-044-payload-codec-negotiation.md) — the payload pipeline and per-request codec negotiation

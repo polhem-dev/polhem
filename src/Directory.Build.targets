@@ -68,7 +68,7 @@
 
     <Error Condition="'@(_PolhemBoundaryViolation)' != ''"
            Code="POLHEM9001"
-           Text="$(MSBuildProjectName) is inherited by every consumer of the framework and is locked to an explicit dependency allowlist (ADR-038). Unexpected consumer-facing reference(s): @(_PolhemBoundaryViolation, ', '). Anything added here is inherited by every consumer of the framework. Prefer keeping the abstraction here and the implementation in a separate assembly that only a composition root references. If the dependency really belongs here, add it to PolhemAllowedDependency in src/Directory.Build.targets, add it to the whitelist in tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs, and record why in docs/adr/adr-038-definition-dependency-boundary.md." />
+           Text="$(MSBuildProjectName) is inherited by every consumer of the framework and is locked to an explicit dependency allowlist (ADR-038). Unexpected consumer-facing reference(s): @(_PolhemBoundaryViolation, ', '). Anything added here is inherited by every consumer of the framework. Prefer keeping the abstraction here and the implementation in a separate assembly that only a composition root references. If the dependency really belongs here, add it to PolhemAllowedDependency in src/Directory.Build.targets, add it to the whitelist in tests/Polhem.Definition.UnitTests/DefinitionDependencyGateTests.cs, and record why in maintainers/adr/adr-038-definition-dependency-boundary.md." />
   </Target>
 
 </Project>

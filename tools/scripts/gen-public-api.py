@@ -5,7 +5,7 @@ Reads RS0016 ("not part of the declared public API") results out of a SARIF log 
 merges their APIName into the target baseline file, keeping any entries already there.
 
 Only needed for a bulk rebuild of the baselines — day to day, paste the single line the
-build error gives you into PublicAPI.Unshipped.txt. See docs/repo-ops/public-api-baseline.md.
+build error gives you into PublicAPI.Unshipped.txt. See maintainers/public-api-baseline.md.
 
 Usage: gen-public-api.py <project.sarif> <path/to/PublicAPI.Shipped.txt>
 """

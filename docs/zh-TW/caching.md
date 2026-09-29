@@ -1,4 +1,4 @@
-<!-- source: en/caching.md blob: f90e59c1afcdbc7315185a38f261305abe9a8cb2 -->
+<!-- source: en/caching.md blob: 62639327760edfcc07a736b02b80a44e2fbf9f73 -->
 # 快取機制
 
 [English](../en/caching.md) · [← 文件索引](README.md)
@@ -212,7 +212,7 @@ policy.ChangeNotifyKey        = changeSource.NotifyKey;   // 資料庫式 storag
   在 process B 會一直是舊的，直到它的 sliding 視窗過期。
 - 由資料表載入的資料（`CompanyInfo`、角色權限、部門樹）沒有檔案可監看，
   檔案監看這條免費信號用不上。
-- 一旦定義改存資料庫而非檔案（[ADR-018](../adr/adr-018-db-define-storage.zh-TW.md)），
+- 一旦定義改存資料庫而非檔案（[ADR-018](../../maintainers/adr/adr-018-db-define-storage.md)），
   連定義也失去檔案監看信號。
 
 多節點部署不該依賴共用檔案系統，也不值得為此引進一套框架其他地方都用不到的訊息匯流排。
@@ -276,7 +276,7 @@ MySQL 用 `ON DUPLICATE KEY`、SQL Server（加 `HOLDLOCK`）與 Oracle 用 `MER
 ### 6.4 不變式
 
 以下是這個設計要保證的性質。完整理由與被否決的替代方案見
-[ADR-017](../adr/adr-017-db-cache-invalidation.zh-TW.md)。
+[ADR-017](../../maintainers/adr/adr-017-db-cache-invalidation.md)。
 
 1. **bump 必須與資料變更在同一 transaction 提交。** 否則 poller 可能在資料可見之前就看到通知，
    重載到舊值又把它標記為新鮮 —— 永久 stale。`Touch` 顯式收 `DbTransaction`，就是為了讓這件事
@@ -472,11 +472,11 @@ key 命名空間。正式環境的容器用空字串；測試 fixture 用唯一�
 
 ## 12. 延伸閱讀
 
-- [ADR-009：快取實作](../adr/adr-009-cache-implementation.zh-TW.md) —— 為何選
+- [ADR-009：快取實作](../../maintainers/adr/adr-009-cache-implementation.md) —— 為何選
   `Microsoft.Extensions.Caching.Memory` + `IChangeToken`，以及負向快取的後續延伸
-- [ADR-017：資料庫快取相依/失效機制](../adr/adr-017-db-cache-invalidation.zh-TW.md) —— 通知表設計、
+- [ADR-017：資料庫快取相依/失效機制](../../maintainers/adr/adr-017-db-cache-invalidation.md) —— 通知表設計、
   其不變式，以及被否決的替代方案
-- [ADR-018：定義儲存於資料庫](../adr/adr-018-db-define-storage.zh-TW.md) —— 定義側最主要的 cache-notify 消費端
+- [ADR-018：定義儲存於資料庫](../../maintainers/adr/adr-018-db-define-storage.md) —— 定義側最主要的 cache-notify 消費端
 - [端到端開發指引](development-cookbook.md) —— § 跨 process 快取失效：寫入端配方與設定
 - [開發限制與反模式](development-constraints.md) —— 不可異動規則的完整條文
 - [租戶客製化](customization.md) —— 覆蓋層容器的使用方式

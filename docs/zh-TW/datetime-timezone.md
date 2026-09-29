@@ -1,4 +1,4 @@
-<!-- source: en/datetime-timezone.md blob: b557a6206bef8af0b4abe48bf5902c5c7c24b02e -->
+<!-- source: en/datetime-timezone.md blob: 6bb0b93065057098400b5375f07023139a21f0fc -->
 # 時區處理
 
 [English](../en/datetime-timezone.md) · [← 文件索引](README.md)
@@ -11,7 +11,7 @@
 
 本文說明框架替你做了什麼、哪些情況需要你動手，以及如何設定使用者時區。
 
-> 設計理由與背後的實測：[ADR-032](../adr/adr-032-datetime-timezone.zh-TW.md)。
+> 設計理由與背後的實測：[ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md)。
 > 日曆日與時間點的語意區別，以及另外兩種時間型別：[時間型別總覽](temporal-types.md)。
 
 ---
@@ -118,4 +118,4 @@ FilterCondition.Equal("created_at", someDateTime);     // 時間點——送出�
 
 - [時間型別總覽：`Date`、`DateTime`、`Time`](temporal-types.md) —— 跨層對照參考：
   三種語意如何選擇，以及各自在每一層的承載方式。
-- [ADR-032](../adr/adr-032-datetime-timezone.zh-TW.md) —— 決策本身與背後的實測數據。
+- [ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md) —— 決策本身與背後的實測數據。

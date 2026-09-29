@@ -25,7 +25,7 @@ namespace Polhem.Api.Core.Messages
         /// A custom (AnyCode) method that needs to pass an instant should agree its own basis with
         /// the caller — UTC is the framework-consistent choice — or carry the value in a
         /// <c>DataTable</c>, where the <see cref="Polhem.Base.Data.FieldDbType"/> marker makes the intent explicit and the
-        /// connector converts it. See <c>docs/adr/adr-032-datetime-timezone.md</c> (D4).
+        /// connector converts it. See <c>maintainers/adr/adr-032-datetime-timezone.md</c> (D4).
         /// </para>
         /// </remarks>
         public ParameterCollection? Parameters

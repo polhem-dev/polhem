@@ -67,7 +67,7 @@
 - `IExpressionEvaluator` -- evaluates an expression against a named variable set. The
   DynamicExpresso-backed implementation lives in `Polhem.Expressions`; the abstraction sits here so
   the definition and business layers can consume the engine without a third-party dependency
-  ([ADR-038](../../docs/adr/adr-038-definition-dependency-boundary.md))
+  ([ADR-038](../../maintainers/adr/adr-038-definition-dependency-boundary.md))
 - `ExpressionPolicy` -- the shared type / null policy applied when feeding field values in, so a
   computed field yields the same result on the server and on a UI client
 - `ExpressionEvaluationException` -- thrown when an expression cannot be parsed or compiled

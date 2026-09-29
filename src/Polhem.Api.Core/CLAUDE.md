@@ -3,7 +3,7 @@
 This file loads automatically when an agent touches any file under `src/Polhem.Api.Core/` (nested `CLAUDE.md`
 files are lazily loaded). The cross-layer serialization conclusions (per-request negotiation of the body codec, no
 wire format packages in the definition layer) are in `.claude/rules/serialization.md` (always loaded). For the
-pitfall background see `../../docs/repo-ops/gotchas/serialization-and-expressions.md`.
+pitfall background see `../../maintainers/gotchas/serialization-and-expressions.md`.
 
 ## Every wire type is registered explicitly (adr-037)
 

@@ -186,7 +186,7 @@ public void MaintenanceMethod(ExecFuncArgs args, ExecFuncResult result) { }
 
 ### Client-Visible Exception Types
 
-`JsonRpcExecutor` maps an exception to a JSON-RPC error code through [`JsonRpcErrorContract`](../../src/Polhem.Api.Core/JsonRpc/JsonRpcErrorContract.cs), the single declaration both ends read. See [ADR-043](../adr/adr-043-error-contract-single-registry.md) for the reasoning. What reaches the caller falls into three groups:
+`JsonRpcExecutor` maps an exception to a JSON-RPC error code through [`JsonRpcErrorContract`](../../src/Polhem.Api.Core/JsonRpc/JsonRpcErrorContract.cs), the single declaration both ends read. See [ADR-043](../../maintainers/adr/adr-043-error-contract-single-registry.md) for the reasoning. What reaches the caller falls into three groups:
 
 - **The framework's own exceptions carry their message to the caller.** `UserMessageException` (**preferred** for anything an end user should read) and `JsonRpcException` travel as `JsonRpcErrorCode.UserMessage` (`-32099`); `AuthenticationRequiredException`, `CompanyNotEnteredException`, `CompanyAccessDeniedException`, `ForbiddenException` and `ReplayRejectedException` each travel under a code of their own. Client-side error handling that assumes every user-facing failure arrives as `-32099` will misclassify these.
 - **BCL exceptions keep a code but not their message.** `UnauthorizedAccessException`, `ArgumentException`, `InvalidOperationException`, `NotSupportedException` and `FormatException` (each with its subclasses) travel as `-32099` with a fixed, generic message such as "The request is not valid."; the real message is logged on the server (`JsonRpcExecutor.Logger`). These types are what the BCL, database drivers and infrastructure throw with table names, parameter names and server details in the text, so none of it is shown to a remote caller.
@@ -290,11 +290,11 @@ dynamic code off and an unregistered type fails there outright. Adding a message
 definition type reachable from one, or a new closed generic instantiation (`List<T>`,
 `Dictionary<K,V>`, `T?`, an enum) means adding a registration. The drift tests walk the same type
 closure, and `WireContractDriftTests` fails when one is missing (a failing test, not a failing build). See
-[ADR-037](../adr/adr-037-wire-explicit-registration.md).
+[ADR-037](../../maintainers/adr/adr-037-wire-explicit-registration.md).
 
 ### API Contract Naming Convention (Mandatory)
 
-API Request / Response and BO Args / Result types must follow naming conventions so that `ApiOutputConverter` can automatically map BO return values to API types (see [ADR-007](../adr/adr-007-convention-based-type-resolution.md)):
+API Request / Response and BO Args / Result types must follow naming conventions so that `ApiOutputConverter` can automatically map BO return values to API types (see [ADR-007](../../maintainers/adr/adr-007-convention-based-type-resolution.md)):
 
 | Layer | Input | Output |
 |-------|-------|--------|
@@ -303,7 +303,7 @@ API Request / Response and BO Args / Result types must follow naming conventions
 | Contract (`Polhem.Api.Contracts`) | `I{Action}Request` | `I{Action}Response` |
 
 - Types deviating from the naming convention will not be auto-converted; BO return values will pass through to the client and cause type errors
-- Response mapping needs **no manual registration**: it is resolved by the naming convention above. The registry that once required `Register` calls is gone, and so is the Typeless serialization it whitelisted for — see [ADR-007](../adr/adr-007-convention-based-type-resolution.md) and [ADR-037](../adr/adr-037-wire-explicit-registration.md)
+- Response mapping needs **no manual registration**: it is resolved by the naming convention above. The registry that once required `Register` calls is gone, and so is the Typeless serialization it whitelisted for — see [ADR-007](../../maintainers/adr/adr-007-convention-based-type-resolution.md) and [ADR-037](../../maintainers/adr/adr-037-wire-explicit-registration.md)
 
 ## Account Security Constraints
 
@@ -339,7 +339,7 @@ frame whose timestamp is further from server time than `ApiServiceOptions.WireFr
 (five minutes by default), and, for a method whose `[ApiAccessControl]` declares
 `ReplayProtection = ApiReplayProtection.UniqueSequence`, a sequence number the session has already
 used. Both refusals are `ReplayRejectedException` (`-32005`). See
-[ADR-042](../adr/adr-042-api-replay-protection.md) for the reasoning. These constraints follow:
+[ADR-042](../../maintainers/adr/adr-042-api-replay-protection.md) for the reasoning. These constraints follow:
 
 - **Both ends must be set to the same value.** Whether a frame is present is a deployment-level
   fact and is never read from the packet — were the server to "detect" it, an attacker could turn

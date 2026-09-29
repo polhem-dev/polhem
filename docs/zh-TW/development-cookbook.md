@@ -1,4 +1,4 @@
-<!-- source: en/development-cookbook.md blob: 910d142654c85c2a286070782f9f5193656886b2 -->
+<!-- source: en/development-cookbook.md blob: b74ee176787929a3d33b3277be0a79075e0cefce -->
 # 端到端開發指引
 
 [English](../en/development-cookbook.md) · [← 文件索引](README.md)
@@ -155,8 +155,8 @@ Client 接收 → LoginResponse (API Type，以同一 codec 編碼)
 ### 關鍵元件
 
 - **ApiInputConverter**（internal）：將 API Request 的屬性值對應到 BO Args（依屬性名稱匹配）。`Plain` body 以 `JsonElement` 抵達，會讀成該 action 的框架請求型別（`{Action}Request`；沒有對應型別時為方法的參數型別），再與解碼後的 body 一樣複製到 BO Args，因此無法設定契約未宣告的成員；`object` 型別的成員（例如篩選值）依其 JSON 種類綁定（字串、整數、小數、布林、陣列）
-- **ApiOutputConverter**：執行後將 BO `{Action}Result` 以反射自動對應到 `{Action}Response`，結果以 `ConcurrentDictionary` 快取（詳見 [ADR-007](../adr/adr-007-convention-based-type-resolution.zh-TW.md)）
-- wire body 由該次請求宣告的 codec（`messagepack` 或 `json`）寫出，與輸出映射無關。見 [ADR-044](../adr/adr-044-payload-codec-negotiation.zh-TW.md)。
+- **ApiOutputConverter**：執行後將 BO `{Action}Result` 以反射自動對應到 `{Action}Response`，結果以 `ConcurrentDictionary` 快取（詳見 [ADR-007](../../maintainers/adr/adr-007-convention-based-type-resolution.md)）
+- wire body 由該次請求宣告的 codec（`messagepack` 或 `json`）寫出，與輸出映射無關。見 [ADR-044](../../maintainers/adr/adr-044-payload-codec-negotiation.md)。
 
 ## ExecFunc 自訂函式模式
 
@@ -333,7 +333,7 @@ var repo = new MonthlySalesReportRepo(Services.GetRequiredService<IDbAccessFacto
 | `Log` | 固定 `"log"` | 否（Login / Logout 等 pre-EnterCompany 方法可寫 audit log） |
 | `Company` | `SessionInfo.CompanyId` → `CompanyInfo.CompanyDatabaseId` | 是——沒有 session 時拋 `AuthenticationRequiredException`，尚未 `EnterCompany` 時拋 `CompanyNotEnteredException` |
 
-詳見 [ADR-010 §「後續延伸：執行時路由」](../adr/adr-010-logical-database-category.zh-TW.md) 與 [ADR-012](../adr/adr-012-session-company-context.zh-TW.md)。
+詳見 [ADR-010 §「後續延伸：執行時路由」](../../maintainers/adr/adr-010-logical-database-category.md) 與 [ADR-012](../../maintainers/adr/adr-012-session-company-context.md)。
 
 ### 客製化 ProgId 對應的 BO
 
@@ -649,7 +649,7 @@ var list = await formConnector.GetListAsync(selectFields: "sys_id,sys_name", fil
 
 ## 數值語意、公司小數位與捨入
 
-數值欄位在 `FormField` 上宣告一個語意化的 **`NumberKind`**（會傳遞到 `LayoutFieldBase`）。這個 kind 驅動三件事 —— 顯示格式、寫入時是否捨入、以及小數位數的來源。各成員、框架預設值，以及設計理由（為何 round-then-sum、為何金額於執行時解析、為何 DB scale 與此正交）為已簽核的合約，見 [ADR-026](../adr/adr-026-numeric-semantics-rounding.zh-TW.md)。
+數值欄位在 `FormField` 上宣告一個語意化的 **`NumberKind`**（會傳遞到 `LayoutFieldBase`）。這個 kind 驅動三件事 —— 顯示格式、寫入時是否捨入、以及小數位數的來源。各成員、框架預設值，以及設計理由（為何 round-then-sum、為何金額於執行時解析、為何 DB scale 與此正交）為已簽核的合約，見 [ADR-026](../../maintainers/adr/adr-026-numeric-semantics-rounding.md)。
 
 | `NumberKind` | 捨入策略 | 小數位來源 | 框架預設 | 用途 |
 |-------------|---------|-----------|:-------:|-----|
@@ -662,7 +662,7 @@ var list = await formConnector.GetListAsync(selectFields: "sys_id,sys_name", fil
 ### 兩條容易寫錯的規則
 
 - **Round-then-sum（合計不變量）。** 對 `Round` 類 kind，合計必須等於**已個別捨入的明細之和**，絕不是全精度加總後才在最後捨入一次。每筆明細先以 `NumberFormatResolver.RoundByKind(value, kind, company)` 捨入 —— 金額與數量／重量則用參照感知的 `RoundByKind(value, kind, ctx, refCode)`，並傳入其幣別或單位代碼（見下）—— 再把已捨入的值相加。這保證 `Σ 明細 == 合計`。
-- **`Preserve` 絕不寫入捨入後的值。** `UnitPrice` / `Cost` / `ExchangeRate` 以輸入精度儲存；其小數位僅供顯示。`RoundByKind` 對這些值原樣返回。對來源值捨入會把誤差注入下游 —— 不要這麼做。（就 API 匯入而言，唯一的硬邊界是 DB scale；見 [ADR-026](../adr/adr-026-numeric-semantics-rounding.zh-TW.md) 中的持久化邊界決策 D6。）
+- **`Preserve` 絕不寫入捨入後的值。** `UnitPrice` / `Cost` / `ExchangeRate` 以輸入精度儲存；其小數位僅供顯示。`RoundByKind` 對這些值原樣返回。對來源值捨入會把誤差注入下游 —— 不要這麼做。（就 API 匯入而言，唯一的硬邊界是 DB scale；見 [ADR-026](../../maintainers/adr/adr-026-numeric-semantics-rounding.md) 中的持久化邊界決策 D6。）
 
 ### 顯示格式於交付時烘焙（bake）
 
@@ -705,7 +705,7 @@ var list = await formConnector.GetListAsync(selectFields: "sys_id,sys_name", fil
 
 ## 跨 process 快取失效
 
-in-process 快取（`Polhem.ObjectCaching`）在發生寫入的那個 process 會即時失效（`SaveX → Remove()`）。要把失效傳播到**其他 process / 節點** —— 多節點部署、以及由資料庫載入的快取（如 `CompanyInfo`，或 `DbDefineStorage` 下的定義）需要此能力 —— 使用資料庫通知機制。設計理由見 [ADR-017](../adr/adr-017-db-cache-invalidation.zh-TW.md)，完整機制見[快取機制](caching.md)；本節講實務用法。
+in-process 快取（`Polhem.ObjectCaching`）在發生寫入的那個 process 會即時失效（`SaveX → Remove()`）。要把失效傳播到**其他 process / 節點** —— 多節點部署、以及由資料庫載入的快取（如 `CompanyInfo`，或 `DbDefineStorage` 下的定義）需要此能力 —— 使用資料庫通知機制。設計理由見 [ADR-017](../../maintainers/adr/adr-017-db-cache-invalidation.md)，完整機制見[快取機制](caching.md)；本節講實務用法。
 
 ### 讓快取可被失效 —— 不用做任何事
 
@@ -746,11 +746,11 @@ _cacheNotify.Touch($"CompanyInfo:{companyId}", transaction, databaseType);
 | `MarginSeconds` | `5` | 增量重疊回看，cover 長交易邊界情況。 |
 | `DatabaseId` | `common` | 被輪詢的 `st_cache_notify` 所在資料庫。 |
 
-> 本機制**只用資料庫伺服器時鐘**（從不用 app 端時鐘）且全程不轉時區，故不受主機時區影響。將資料庫伺服器設為 **UTC**，存入的 `sys_update_time` 即為 UTC（見 [ADR-017](../adr/adr-017-db-cache-invalidation.zh-TW.md)）。
+> 本機制**只用資料庫伺服器時鐘**（從不用 app 端時鐘）且全程不轉時區，故不受主機時區影響。將資料庫伺服器設為 **UTC**，存入的 `sys_update_time` 即為 UTC（見 [ADR-017](../../maintainers/adr/adr-017-db-cache-invalidation.md)）。
 
 ## Frontend API 連線模式
 
-兩個 .NET UI 家族消費 API 的方式結構不同。設計理由見 [ADR-013](../adr/adr-013-frontend-api-connection-strategy.zh-TW.md)，本節說明各自的**實際使用方式**。各家族能跑在哪些平台、瀏覽器或行動裝置 head 需要自行設定什麼，見 [平台支援](platform-support.md)。
+兩個 .NET UI 家族消費 API 的方式結構不同。設計理由見 [ADR-013](../../maintainers/adr/adr-013-frontend-api-connection-strategy.md)，本節說明各自的**實際使用方式**。各家族能跑在哪些平台、瀏覽器或行動裝置 head 需要自行設定什麼，見 [平台支援](platform-support.md)。
 
 ### 決策樹
 
@@ -938,7 +938,7 @@ public static void Main(string[] args)
 }
 ```
 
-`FormView` 在 host 只設 `ProgId` 時自動向 `ClientInfo` 取得 `Schema` / `FormConnector` / `AccessToken`。`GridControl`（`ContentControl` 組合式控件，內部 `DataGrid` 以 `InnerGrid` 公開）的 cell 走 `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` + code-fetch（**不**走 `Binding "[FieldName]"`，原因詳見 [ADR-020](../adr/adr-020-avalonia-datagrid-binding-strategy.zh-TW.md)），並以 `GridEditMode` 提供兩種編輯模型（`InCell` 逐格 / `EditForm` 彈窗整列，詳見 [ADR-021](../adr/adr-021-avalonia-datagrid-editing-strategy.zh-TW.md)）。field editor 支援 ambient 綁定：容器設一次 `FormScope.DataObject`，子孫編輯器憑 `FieldName` 自動接線。
+`FormView` 在 host 只設 `ProgId` 時自動向 `ClientInfo` 取得 `Schema` / `FormConnector` / `AccessToken`。`GridControl`（`ContentControl` 組合式控件，內部 `DataGrid` 以 `InnerGrid` 公開）的 cell 走 `DataGridTemplateColumn` + `FuncDataTemplate<DataRowView>` + code-fetch（**不**走 `Binding "[FieldName]"`，原因詳見 [ADR-020](../../maintainers/adr/adr-020-avalonia-datagrid-binding-strategy.md)），並以 `GridEditMode` 提供兩種編輯模型（`InCell` 逐格 / `EditForm` 彈窗整列，詳見 [ADR-021](../../maintainers/adr/adr-021-avalonia-datagrid-editing-strategy.md)）。field editor 支援 ambient 綁定：容器設一次 `FormScope.DataObject`，子孫編輯器憑 `FieldName` 自動接線。
 
 實際範例：[`apps/Polhem.Northwind`](../../apps/Polhem.Northwind/README.zh-TW.md)（完整 CRUD 流程；桌面、瀏覽器、iOS 與 Android head 共用一個 UI 專案）與 [`samples/Avalonia.DemoCenter`](../../samples/Avalonia.DemoCenter/README.zh-TW.md)（控件 demo center）。
 
@@ -949,4 +949,4 @@ public static void Main(string[] args)
 | `Polhem.UI.*` head（桌面、瀏覽器、iOS、Android 上的 Avalonia；你自己的 WinForms / WPF host） | `ClientInfo` static | **1 個使用者 / process**（`ClientInfo.AccessToken` 背後的 static 欄位） | `ClientInfo.EndpointStorage`（預設 `FileEndpointStorage`；瀏覽器中替換） | Remote；桌面可用 Local | 啟動時 `ClientInfo.InitializeAsync` |
 | Blazor Server | DI scope | **N 個使用者 / process**（per SignalR circuit） | 啟動設定（`UseRemoteProvider(endpoint)`） | Local 或 Remote | `AddPolhemBlazor`（Local 另加 `AddPolhemFramework`） |
 
-> ⚠️ **不要在 Blazor Server 使用 `Polhem.UI.Core.ClientInfo`**：它把 access token 存在單一 static 欄位，一個 process 內只能存 **1 個** AccessToken。Blazor Server 同 process 服務 N 個 user circuit 時，後登入者會覆蓋前者，造成 cross-user data leak。詳見 [ADR-013](../adr/adr-013-frontend-api-connection-strategy.zh-TW.md)。
+> ⚠️ **不要在 Blazor Server 使用 `Polhem.UI.Core.ClientInfo`**：它把 access token 存在單一 static 欄位，一個 process 內只能存 **1 個** AccessToken。Blazor Server 同 process 服務 N 個 user circuit 時，後登入者會覆蓋前者，造成 cross-user data leak。詳見 [ADR-013](../../maintainers/adr/adr-013-frontend-api-connection-strategy.md)。

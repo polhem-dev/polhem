@@ -1,4 +1,4 @@
-<!-- source: en/database-settings-guide.md blob: 4adab0eaebb2b153871d464634f87cb9667fb223 -->
+<!-- source: en/database-settings-guide.md blob: 6c80fcf7cc10466266df711c86e022c2d85681d9 -->
 # DatabaseSettings 與 DbCategorySettings 指引
 
 [English](../en/database-settings-guide.md) · [← 文件索引](README.md)
@@ -427,7 +427,7 @@ DatabaseItem item = dbSettingsProvider.GetItem(databaseId);
 
 無論底層是哪種狀況，業務端程式碼都是同一個入口 `IDatabaseSettingsProvider.GetItem(databaseId)`，差異只在「依當前情境推導 databaseId 字串」這一步。
 
-對於 bo repo（BO 層消費的 Repository），框架透過 `IRepositoryDatabaseRouter`（見 [ADR-010 §「後續延伸：執行時路由」](../adr/adr-010-logical-database-category.zh-TW.md)）統一推導，BO 程式碼不需手寫：
+對於 bo repo（BO 層消費的 Repository），框架透過 `IRepositoryDatabaseRouter`（見 [ADR-010 §「後續延伸：執行時路由」](../../maintainers/adr/adr-010-logical-database-category.md)）統一推導，BO 程式碼不需手寫：
 
 | 來源 | databaseId 推導方式 |
 |------|---------------------|
@@ -537,5 +537,5 @@ BO 方法透過 `BusinessObject.ResolveDatabaseId(DbScope)` 或（FormSchema-dri
 - [架構總覽](architecture-overview.md) — Definition-Driven 架構全貌
 - [開發指引](development-cookbook.md) — 框架初始化順序與開發流程
 - [資料庫命名規範](database-naming-conventions.md) — 表名 / 欄位命名規則
-- [ADR-005：FormSchema 定義驅動架構](../adr/adr-005-formschema-driven.zh-TW.md)
-- [ADR-010：邏輯資料庫分類設計](../adr/adr-010-logical-database-category.zh-TW.md) — 為何引入 DbCategory 抽象層
+- [ADR-005：FormSchema 定義驅動架構](../../maintainers/adr/adr-005-formschema-driven.md)
+- [ADR-010：邏輯資料庫分類設計](../../maintainers/adr/adr-010-logical-database-category.md) — 為何引入 DbCategory 抽象層

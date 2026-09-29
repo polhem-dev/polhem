@@ -1,4 +1,4 @@
-<!-- source: en/terminology.md blob: f5108e3f8ec024f3e4896fb035c84d6cbdef06b4 -->
+<!-- source: en/terminology.md blob: ebe58c656721c9812188cddbccb1363bfd51460d -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../en/terminology.md) · [← 文件索引](README.md)
@@ -32,7 +32,7 @@
 | Enterprise Information System | 企業資訊系統 | Polhem 的目標系統：以表單為基礎的企業資訊系統，例如 ERP、CRM、HRM。英文同義詞為 line-of-business (LOB) application |
 | Definition-Driven Architecture | 定義導向架構 | Polhem 核心架構模式，以結構定義統一驅動 UI、資料庫與業務邏輯 |
 | Single Source of Truth | 唯一定義來源 | `FormSchema` 作為系統唯一結構規格，避免三層重複實作 |
-| `progId` | 程式識別碼 | 一支功能程式的唯一識別字串，也是型別註冊表的鍵：`ProgramSettings.xml` 以它綁定 BO 與 Repository，JSON-RPC 的 `method` 為 `progId.action`。模型沿自 COM+ 的 ProgID（登錄檔以機碼對映元件型別），見 [ADR-034](../adr/adr-034-progid-type-registry.zh-TW.md)。C# 屬性與 XML 屬性上寫作 `ProgId`。框架保留的 progId 見[框架保留命名](framework-reserved-names.md) |
+| `progId` | 程式識別碼 | 一支功能程式的唯一識別字串，也是型別註冊表的鍵：`ProgramSettings.xml` 以它綁定 BO 與 Repository，JSON-RPC 的 `method` 為 `progId.action`。模型沿自 COM+ 的 ProgID（登錄檔以機碼對映元件型別），見 [ADR-034](../../maintainers/adr/adr-034-progid-type-registry.md)。C# 屬性與 XML 屬性上寫作 `ProgId`。框架保留的 progId 見[框架保留命名](framework-reserved-names.md) |
 | NoCode | 零程式碼 | 定義於設計階段完全由 `FormSchema` 產生，無需撰寫程式碼 |
 | LowCode | 低程式碼 | 以 `FormSchema` 為基礎，搭配少量覆寫擴充行為 |
 | AnyCode | 全程式碼 | 完全由開發者自行實作，不受 `FormSchema` 驅動 |

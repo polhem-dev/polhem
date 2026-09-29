@@ -92,7 +92,7 @@ a consumer project cannot trigger them. POLHEM9003 ships in the package and is o
 by default; its conditions, and the `PolhemSuppressTrimSupportWarning` property that turns it off, are documented in
 `buildTransitive/Polhem.Definition.targets` inside the package. POLHEM9001 exists because anything
 added to the assemblies at the bottom of the dependency graph is inherited by every consumer of the
-framework ([ADR-038](../adr/adr-038-definition-dependency-boundary.md)). Which assemblies are locked is
+framework ([ADR-038](../../maintainers/adr/adr-038-definition-dependency-boundary.md)). Which assemblies are locked is
 not listed here — `src/Directory.Build.targets` declares them and nothing would catch this copy
 drifting; it already did, staying at two after a third was added; POLHEM9002 exists because a release that
 bumps only `Version` ships packages whose assemblies still claim the previous version, and a

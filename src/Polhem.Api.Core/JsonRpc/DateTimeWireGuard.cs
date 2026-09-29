@@ -117,7 +117,7 @@ namespace Polhem.Api.Core.JsonRpc
                         $"'{column.DateTimeMode}'. Wire payloads require DataSetDateTime.Unspecified " +
                         "so XML serialization cannot introduce a time-zone offset. Call " +
                         "DataTableExtensions.NormalizeDateTimeMode on tables built by ADO.NET. " +
-                        "See docs/adr/adr-032-datetime-timezone.md (D6).");
+                        "See maintainers/adr/adr-032-datetime-timezone.md (D6).");
                 }
             }
         }
@@ -151,7 +151,7 @@ namespace Polhem.Api.Core.JsonRpc
                     $"Filter condition on '{fieldName}' carries a DateTime with Kind=Local. " +
                     "Local values shift on both wires (MessagePack converts to UTC on write, JSON " +
                     "writes an offset the reader re-applies), so only Unspecified or Utc may cross " +
-                    "the wire. See docs/adr/adr-032-datetime-timezone.md (D6).");
+                    "the wire. See maintainers/adr/adr-032-datetime-timezone.md (D6).");
             }
 
             if (value is IEnumerable<object?> items)

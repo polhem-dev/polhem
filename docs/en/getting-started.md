@@ -258,7 +258,7 @@ attributes are independent.
 
 At startup the framework adds any reserved progId the file is missing and writes the file back (it creates the
 file when it is absent), so you will find `System`, `AuditLog` and `AuditRule` entries next to `Echo` after the
-first run. See [ADR-034](../adr/adr-034-progid-type-registry.md).
+first run. See [ADR-034](../../maintainers/adr/adr-034-progid-type-registry.md).
 
 → Naming rules for `Args` / `Result` and the three-tier contract separation: [API ↔ BO Contract Design](api-bo-contract-design.md). Which methods belong on an interface: [Development Constraints](development-constraints.md).
 

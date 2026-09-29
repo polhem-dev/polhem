@@ -26,18 +26,18 @@ The `st_` prefix means "framework-owned table". It is **orthogonal to which data
 | `st_session` | Session seeds, keyed by a hash of the access token (the token itself is not stored). |
 | `st_api_key` | Issued API keys (`X-Api-Key`): application identity, stored as a hash. |
 | `st_define` | DB-backed definition storage (FormSchema / TableSchema / etc., when not stored as XML files). |
-| `st_cache_notify` | Cross-node cache invalidation channel ([ADR-017](../adr/adr-017-db-cache-invalidation.md)). |
+| `st_cache_notify` | Cross-node cache invalidation channel ([ADR-017](../../maintainers/adr/adr-017-db-cache-invalidation.md)). |
 
 ### 1.2 Company database (per-tenant)
 
 | Table | Purpose |
 |-------|---------|
-| `st_role` | Role definitions ([ADR-019](../adr/adr-019-permission-authorization-model.md)). |
+| `st_role` | Role definitions ([ADR-019](../../maintainers/adr/adr-019-permission-authorization-model.md)). |
 | `st_role_grant` | Role-to-resource grants (per model / action). |
 | `st_user_role` | User-to-role bindings. |
 | `st_department` | Organisational departments. |
 | `st_employee` | Employees (links a common-DB `st_user` to a per-company organisational position). |
-| `st_audit_rule` | Per-form audit rules (which forms record changes / views, see [ADR-027](../adr/adr-027-audit-trail.md)). |
+| `st_audit_rule` | Per-form audit rules (which forms record changes / views, see [ADR-027](../../maintainers/adr/adr-027-audit-trail.md)). |
 
 > `st_department` / `st_employee` live in the company database despite their `st_` prefix — they are **framework-owned** (the record-scope and organisation tree features need them), not business data. Per-company business tables should use the `ft_` prefix.
 
@@ -51,9 +51,9 @@ The `st_` prefix means "framework-owned table". It is **orthogonal to which data
 | `st_log_anomaly_api` | API-layer anomalies — which action deviated (the kinds are the `(API)` and shared members of `AnomalyKind`). |
 | `st_log_anomaly_db` | DB-layer anomalies — which database + command deviated (the `(DB)` and shared members of `AnomalyKind`). |
 
-> These tables are two different things sharing one database. `st_log_login`, `st_log_change` and `st_log_access` are the **audit trail** — who did what to which record, written through `IAuditLogWriter`. The two `st_log_anomaly_*` tables are **execution anomalies** — which execution deviated from the normal envelope, written through `IAnomalyLogWriter`; they are an operational signal rather than a business record, which is why `st_log_anomaly_db` has no acting user at all. See [ADR-040](../adr/adr-040-audit-trail-taxonomy.md).
+> These tables are two different things sharing one database. `st_log_login`, `st_log_change` and `st_log_access` are the **audit trail** — who did what to which record, written through `IAuditLogWriter`. The two `st_log_anomaly_*` tables are **execution anomalies** — which execution deviated from the normal envelope, written through `IAnomalyLogWriter`; they are an operational signal rather than a business record, which is why `st_log_anomaly_db` has no acting user at all. See [ADR-040](../../maintainers/adr/adr-040-audit-trail-taxonomy.md).
 >
-> Log tables are **opt-in** (`AuditLogOptions.Enabled` is off by default) and self-sufficient: they denormalise the acting user / company so a query never joins across databases (the log database may be physically separate). Rows that refer to a session store a token fingerprint (`token_fingerprint`), never the access token. Writes go to the fixed `log` database id today; splitting the log database by year is a direction recorded in [ADR-027](../adr/adr-027-audit-trail.md), not a current feature.
+> Log tables are **opt-in** (`AuditLogOptions.Enabled` is off by default) and self-sufficient: they denormalise the acting user / company so a query never joins across databases (the log database may be physically separate). Rows that refer to a session store a token fingerprint (`token_fingerprint`), never the access token. Writes go to the fixed `log` database id today; splitting the log database by year is a direction recorded in [ADR-027](../../maintainers/adr/adr-027-audit-trail.md), not a current feature.
 
 ---
 
@@ -102,4 +102,4 @@ When extending polhem or building applications on top of it:
 - [Database Naming Conventions](database-naming-conventions.md) — naming rules behind the `st_` / `ft_` split.
 - [API Method Reference](api-method-reference.md) — full BO method catalogue.
 - [Architecture Overview](architecture-overview.md) — how `st_*` tables fit into the broader N-tier + clean architecture.
-- [ADR-019: Permission Authorisation Model](../adr/adr-019-permission-authorization-model.md) — why `st_role` / `st_user_role` / `st_employee` are framework-owned.
+- [ADR-019: Permission Authorisation Model](../../maintainers/adr/adr-019-permission-authorization-model.md) — why `st_role` / `st_user_role` / `st_employee` are framework-owned.

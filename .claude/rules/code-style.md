@@ -154,7 +154,7 @@ in `Polhem.Definition.Settings`).
 
 ## Document language
 
-Maintainer documents (`.claude/`, `docs/repo-ops/`, the ADRs, `CONTRIBUTING`) are a single `xxx.md` written in
+Maintainer documents (`.claude/`, `maintainers/`, the ADRs, `CONTRIBUTING`) are a single `xxx.md` written in
 **English**, with no translation in the repository. User documents are multilingual (see the Language section of
 `.claude/CLAUDE.md`).
 
@@ -184,7 +184,7 @@ written.**
 - **Structured prefixes**: `WARNING:` / `IMPORTANT:` (changing this breaks functionality or security), `NOTE:`
   (a non-obvious design consideration), `HACK:` (technical debt, with the reason), `TODO:` (preferably with an
   issue link).
-- **Move long background out to `docs/adr/`**; the source keeps only the conclusion and cites the ADR number.
+- **Move long background out to `maintainers/adr/`**; the source keeps only the conclusion and cites the ADR number.
 - **Cross-file constraints** are written on both sides; where possible, replace the comment with a compile-time
   mechanism (a source generator, a test assertion).
 - **Never comment out old code** (S125, see `sonarcloud.md`). Use `git log` to keep history.

@@ -240,7 +240,7 @@ grep -rnE "Bee\.|Bee[A-Z]|BEE_|BEE[0-9]{4}|dotnet[- ]bee|bee-(dynamic|form|login
 ## Design decisions
 
 The reasons behind the design are recorded in the
-[architecture decision records](https://github.com/polhem-dev/polhem/blob/main/docs/adr/README.md).
+[architecture decision records](https://github.com/polhem-dev/polhem/blob/main/maintainers/adr/README.md).
 
 ## Contributing
 

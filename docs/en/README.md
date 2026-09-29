@@ -81,7 +81,7 @@ Look things up while you work.
 
 | Folder | Description |
 |--------|-------------|
-| [`adr/`](../adr/README.md) | Architecture Decision Records — the primary source for *why* a design is the way it is. The index lists every ADR with its status (accepted / superseded) |
+| [`maintainers/adr/`](../../maintainers/adr/README.md) | Architecture Decision Records — the primary source for *why* a design is the way it is. The index lists every ADR with its status (accepted / superseded). Written for maintainers, in English only |
 | [`changelogs/`](../changelogs/) | Per-version change detail behind the root `CHANGELOG.md` |
 
 ---
@@ -107,4 +107,4 @@ The same documents, grouped by subject. A document appearing under several topic
 
 Excluded from the listing above; consult them directly when needed.
 
-- **`repo-ops/`** — Operational documentation for this repository (CI / branch protection); not relevant to framework users.
+- **`maintainers/`** (at the repository root) — Documents for the people who maintain Polhem: the ADRs, operational documentation (CI / branch protection) and pitfall logs. English only; apart from the ADRs, not relevant to framework users.

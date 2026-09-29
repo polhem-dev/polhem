@@ -91,13 +91,13 @@ Where the wire binding lives instead:
 
 This is why the attributes are gone: keeping them would have put a transport package on the dependency
 surface of every consumer of the definition layer. See
-[ADR-036](../adr/adr-036-wire-serialization-externalized.md).
+[ADR-036](../../maintainers/adr/adr-036-wire-serialization-externalized.md).
 
 > **Framework repository only.** `WireContract`, `WireContracts` and `MessagePackCodec` are `internal`,
 > so an application outside this repository cannot register a formatter for a message type of its own.
 > Such a type reaches the MessagePack wire only through the reflection-based resolver — which works on
 > desktop and server, and throws on a runtime without dynamic code. Declaring `codec: json` per request
-> ([ADR-044](../adr/adr-044-payload-codec-negotiation.md)) avoids the question entirely.
+> ([ADR-044](../../maintainers/adr/adr-044-payload-codec-negotiation.md)) avoids the question entirely.
 
 > **Polymorphic hierarchies** (`FilterNode` and its subtypes) need more than a member list, so they have a dedicated hand-written formatter — `FilterNodeFormatter` — that writes a discriminator alongside the members. Same file family, same registration; only the formatter is bespoke.
 
@@ -268,7 +268,7 @@ For example, `PingResult` is automatically mapped to `PingResponse`. The lookup 
 
 > Nothing checks the convention. A result type whose name does not end in `Result`, or that has no
 > `{Action}Response` in `Polhem.Api.Core`, is not converted: `ApiOutputConverter` returns the BO result
-> itself, which then travels as it is. See [ADR-007](../adr/adr-007-convention-based-type-resolution.md) for background.
+> itself, which then travels as it is. See [ADR-007](../../maintainers/adr/adr-007-convention-based-type-resolution.md) for background.
 
 ### ExecFunc Pattern
 
@@ -301,7 +301,7 @@ Using `GetOrder` as an example:
 4. **Update client Connector** (if needed)
    - Add a corresponding method using `GetOrderRequest` / `GetOrderResponse`
 
-> Apart from the wire registration in step 2, nothing is registered: response mapping is resolved by naming convention (see [ADR-007](../adr/adr-007-convention-based-type-resolution.md)).
+> Apart from the wire registration in step 2, nothing is registered: response mapping is resolved by naming convention (see [ADR-007](../../maintainers/adr/adr-007-convention-based-type-resolution.md)).
 
 ---
 

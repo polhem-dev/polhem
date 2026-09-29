@@ -202,7 +202,7 @@ by construction.
 
 **`FormSchema` and `TableSchema` are permanently excluded.** Both drive the database schema and the
 validation rules as well as the UI; letting them diverge per tenant would split the physical schema.
-This is a decision, not a gap — see [ADR-016](../adr/adr-016-multitenant-customization-overlay.md).
+This is a decision, not a gap — see [ADR-016](../../maintainers/adr/adr-016-multitenant-customization-overlay.md).
 
 The consequence worth planning around: a tenant cannot have an extra column. What it can have is a
 different label for an existing one, a form that hides one, a business object that treats one
@@ -219,5 +219,5 @@ goes in a plugin or a custom business object.
 |---|---|
 | The overlay mechanism: every path, the granularity of each type, how `customizeId` is resolved | [Definition Files Overview](definition-files-overview.md), §7 |
 | Writing a custom business object, repository or plugin | [End-to-End Development Cookbook](development-cookbook.md) |
-| Why the design is the way it is | [ADR-016](../adr/adr-016-multitenant-customization-overlay.md) |
+| Why the design is the way it is | [ADR-016](../../maintainers/adr/adr-016-multitenant-customization-overlay.md) |
 | The maintenance API's access control | [API Method Reference](api-method-reference.md) |

@@ -8,7 +8,7 @@ argument-hint: "[--mode=fix, the default and only mode]"
 Run a quality sweep of the SonarCloud project `polhem-dev_polhem` in fix mode (a manual local session with the
 complete fix loop). `$1` may be omitted or given as `--mode=fix`.
 
-State files: `docs/.sonar-fix-state/` (created on the first run)
+State files: `.claude/sonar-fix-state/` (created on the first run)
 
 ## FETCH phase
 
@@ -46,7 +46,7 @@ Fix mode uses `/loop` to repeat until an end condition holds.
 ### Initialization
 
 1. FETCH the current issue list and coverage
-2. Read `docs/.sonar-fix-state/skip.json` and filter out issue keys and file paths that have been given up on
+2. Read `.claude/sonar-fix-state/skip.json` and filter out issue keys and file paths that have been given up on
 3. Record the starting point: issue set, overall coverage, quality gate
 
 ### Main loop (each round)
@@ -69,7 +69,7 @@ Fix mode uses `/loop` to repeat until an end condition holds.
 
 4. Fix issues (maps to step 2 of the user's workflow):
    a. **Rule pre-filter (rule-level blocklist)**: the rules below are not fixed automatically. Write them directly
-      into the `humanReview` block of docs/.sonar-fix-state/skip.json, with the component path
+      into the `humanReview` block of .claude/sonar-fix-state/skip.json, with the component path
       and textRange, and wait for a human to tell them apart and handle them in the SonarCloud UI:
       - `csharpsquid:S125` (commented-out code): high false-positive rate on English WHY comments.
         An LLM has no reliable way to tell a "legitimate WHY explanation" from "code that really was commented out",
@@ -82,7 +82,7 @@ Fix mode uses `/loop` to repeat until an end condition holds.
       dotnet build Polhem.slnx --configuration Release --no-restore
       dotnet test <affected project>.csproj --configuration Release --settings .runsettings
    e. Verification passes → keep the staged change; fails → git restore, attempts+1
-   f. attempts >= 3 → write to docs/.sonar-fix-state/skip.json (issues block), with the reason
+   f. attempts >= 3 → write to .claude/sonar-fix-state/skip.json (issues block), with the reason
 
 5. Add coverage (maps to step 3 of the user's workflow):
    a. Add [Fact] / [Theory] following the naming rules in .claude/rules/testing.md
@@ -148,7 +148,7 @@ If after 2 rounds the total issue count, coverage and skip list are all unchange
   - `files`: files whose coverage test additions failed and were given up (same as above)
   - `humanReview`: issues hit by the rule-level blocklist (such as S125), waiting for human review.
     After the user marks one False Positive in the SonarCloud UI or fixes it by hand, it can be removed from skip.json
-- If the user later fixes an item, it can be removed by hand from `docs/.sonar-fix-state/skip.json`
+- If the user later fixes an item, it can be removed by hand from `.claude/sonar-fix-state/skip.json`
 - skip.json changes go into the same `chore(sonar-fix): ...` commit
 
 ---

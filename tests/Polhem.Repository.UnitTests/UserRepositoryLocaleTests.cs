@@ -19,7 +19,7 @@ namespace Polhem.Repository.UnitTests
     /// An empty value is an expected state, not an exceptional one: rows that existed before the columns were added
     /// have no value, and a deployment with custom authentication (not using <c>st_user</c>) has no matching row at
     /// all. The caller decides the fallback from that.
-    /// For the design background see docs/adr/adr-032-datetime-timezone.md (D12).
+    /// For the design background see maintainers/adr/adr-032-datetime-timezone.md (D12).
     /// </remarks>
     public class UserRepositoryLocaleTests : IClassFixture<SharedDbFixture>
     {

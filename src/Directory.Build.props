@@ -19,7 +19,7 @@
 
     <!-- Opt-in per-project SARIF diagnostics, used to regenerate the PublicAPI baselines in bulk.
          Off unless PolhemSarifDir is passed, so normal builds are unaffected. Procedure:
-         docs/repo-ops/public-api-baseline.md -->
+         maintainers/public-api-baseline.md -->
     <ErrorLog Condition="'$(PolhemSarifDir)' != ''">$(PolhemSarifDir)/$(MSBuildProjectName).sarif,version=2.1</ErrorLog>
   </PropertyGroup>
 
@@ -32,7 +32,7 @@
          removed or changed" into a build failure unless the baseline below is updated in the same
          commit, so a breaking change can no longer reach a release without someone noticing.
          Adopted because the commit-subject `!` convention was previously the only gate and it
-         missed real breaks twice. Baseline maintenance: docs/repo-ops/public-api-baseline.md. -->
+         missed real breaks twice. Baseline maintenance: maintainers/public-api-baseline.md. -->
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="4.14.0" PrivateAssets="All" />
   </ItemGroup>
 

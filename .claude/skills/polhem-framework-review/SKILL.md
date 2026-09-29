@@ -221,9 +221,9 @@ judgement.
 ### 9. Documentation drift (rule source: `.claude/rules/public-docs.md`)
 
 The scope is **public documentation** (written for NuGet package consumers): the repository-root `README*` /
-`CHANGELOG*`, `docs/README.md` and every `.md` under `docs/<lang>/`, `docs/adr/`, `docs/changelogs/`, and `README.md` /
+`CHANGELOG*`, `docs/README.md` and every `.md` under `docs/<lang>/` and `docs/changelogs/`, and `README.md` /
 `README.zh-TW.md` **in every location** (`src/` `samples/` `apps/` `tools/`).
-`local/` (plans and internal notes), `docs/repo-ops/` and `.claude/` are not public documentation.
+`local/` (plans and internal notes), `maintainers/` (the ADRs included) and `.claude/` are not public documentation.
 
 - **Compilability (highest value)**: check every type name, method name, DI extension method and enum member in the
   docs against the source code: does it exist, with matching case? Prioritise the passages external developers copy on
@@ -498,7 +498,7 @@ vacuous; read the list from the code rather than trusting this one):
 - API surface: `BoApiSurfaceTests` (baseline, `docs/<lang>/api-method-reference.md` entry by entry, replay
   protection), `ActionSurfaceTests`, `ConnectorSurfaceTests`, `ClientAsyncSurfaceTests`, `ApiContractPairingTests`
   (with `WireMessageTypes_IsNotEmpty`), `AnonymousApiSurfaceTests`, `ApiAccessControlPinTests`, and the public API
-  snapshot (`PublicApiAnalyzers` + the `PublicAPI.*.txt` baselines + `docs/repo-ops/public-api-baseline.md` +
+  snapshot (`PublicApiAnalyzers` + the `PublicAPI.*.txt` baselines + `maintainers/public-api-baseline.md` +
   `tools/scripts/gen-public-api.py`).
 - Wire: `WireContractDriftTests`, `WireCodecParityTests`, `WireDefaultOmissionTests`, `WireFixtureTests`,
   `WireContractGeneratorTests`, `MessagePackDepthLimitTests`, `comparedCount > 0` in `TestFunc`.

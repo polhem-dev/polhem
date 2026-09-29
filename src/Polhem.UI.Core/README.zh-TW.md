@@ -8,7 +8,7 @@
 
 - **層級**：UI 層（共享用戶端基礎）
 - **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
-- Blazor 家族**不**消費 `Polhem.UI.Core`，見 [ADR-013](../../docs/adr/adr-013-frontend-api-connection-strategy.zh-TW.md)。
+- Blazor 家族**不**消費 `Polhem.UI.Core`，見 [ADR-013](../../maintainers/adr/adr-013-frontend-api-connection-strategy.md)。
 
 ## 目標框架
 

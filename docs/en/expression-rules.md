@@ -4,7 +4,7 @@
 
 Use **declarative expressions** inside the `FormSchema` definition file for field computation and validation, instead of hand-written business object code. Customers and consultants can customise the behaviour at design time — no code change, no rebuild, no redeployment.
 
-For the background and the decision itself, see [ADR-028](../adr/adr-028-expression-rule-engine.md).
+For the background and the decision itself, see [ADR-028](../../maintainers/adr/adr-028-expression-rule-engine.md).
 
 ## Three Capabilities
 
@@ -22,7 +22,7 @@ For the background and the decision itself, see [ADR-028](../adr/adr-028-express
 - **Operators**: a subset of C# syntax (`+ - * /`, `> >= < <= == !=`, `&& || !`, the ternary `? :`, and string `==`).
 - **Available functions and types**: the helper functions `Today()`, `Now()`, `UtcNow()`, `IsNullOrEmpty(s)` and `IsNullOrWhiteSpace(s)`; the types an expression can name, such as `Math` (`Math.Round`, `Math.Abs`, …), `Convert`, `DateTime`, `TimeSpan` and `Guid` (e.g. `customer_rowid != Guid.Empty`); and the members of a field's value (`name.Length`, `Today().AddDays(1)`). The types come from DynamicExpresso's default set plus the ones `DynamicExpressoEvaluator` adds; [`ILLink.Descriptors.xml`](../../src/Polhem.Expressions/ILLink.Descriptors.xml) lists every type whose members an expression can reach, and `TrimmerDescriptorGateTests` keeps that list in line with the interpreter.
 
-  **Semantics of the time functions** (see [ADR-032](../adr/adr-032-datetime-timezone.md)):
+  **Semantics of the time functions** (see [ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md)):
 
   | Function | Returns | Basis |
   |----------|---------|-------|
@@ -47,7 +47,7 @@ For the background and the decision itself, see [ADR-028](../adr/adr-028-express
 ```
 
 - Recomputed before save for `Added` / `Modified` rows. `Unchanged` rows are left alone, so they are never falsely marked as modified.
-- **Rounding** follows the field's `NumberKind` (framework defaults: `Amount` → 2 decimals, `Quantity` → 0, `UnitPrice` → full precision, …; the decimals come from the currency, the unit or the company — see [ADR-026](../adr/adr-026-numeric-semantics-rounding.md)). A computed `Quantity` or `Weight` field must declare its `UnitField`; without one the computation throws. Each detail row is rounded first, so a total summed from the rounded rows (round-then-sum) reconciles with them.
+- **Rounding** follows the field's `NumberKind` (framework defaults: `Amount` → 2 decimals, `Quantity` → 0, `UnitPrice` → full precision, …; the decimals come from the currency, the unit or the company — see [ADR-026](../../maintainers/adr/adr-026-numeric-semantics-rounding.md)). A computed `Quantity` or `Weight` field must declare its `UnitField`; without one the computation throws. Each detail row is rounded first, so a total summed from the rounded rows (round-then-sum) reconciles with them.
 - Computed fields are usually paired with `ReadOnly="true"`.
 - Several computed fields on the same row may depend on each other: evaluation follows **declaration order**, so a later expression sees the values just computed by earlier ones.
 

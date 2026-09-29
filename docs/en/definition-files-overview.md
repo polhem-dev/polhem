@@ -197,11 +197,11 @@ See [Development Constraints § Cached Data Immutability After Init](development
 
 ### Storage is pluggable
 
-The file layout above is the default (`FileDefineStorage`). Definitions can also live in a database — see [ADR-018](../adr/adr-018-db-define-storage.md). `IDefineAccess` is the same either way; only the backing store changes.
+The file layout above is the default (`FileDefineStorage`). Definitions can also live in a database — see [ADR-018](../../maintainers/adr/adr-018-db-define-storage.md). `IDefineAccess` is the same either way; only the backing store changes.
 
 ## 7. `CustomizePath` and the Tenant Customization Overlay
 
-`DefinePath` holds the base definitions every tenant shares. `CustomizePath` is the optional second root that lets one company override parts of them without forking the base — see [ADR-016](../adr/adr-016-multitenant-customization-overlay.md) for the design.
+`DefinePath` holds the base definitions every tenant shares. `CustomizePath` is the optional second root that lets one company override parts of them without forking the base — see [ADR-016](../../maintainers/adr/adr-016-multitenant-customization-overlay.md) for the design.
 
 ### Turning it on
 

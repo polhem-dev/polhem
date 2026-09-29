@@ -3,7 +3,7 @@
 > The wire formatter registration procedure, the three easy misjudgements, the `object` envelope, AOT measurements
 > and the regression gates → `src/Polhem.Api.Core/CLAUDE.md` (loaded automatically when you touch that project).
 > Type shape requirements for mobile trim / AOT → `rules/apple-mobile-trim.md`.
-> Pitfall background → `docs/repo-ops/gotchas/serialization-and-expressions.md`.
+> Pitfall background → `maintainers/gotchas/serialization-and-expressions.md`.
 
 ## The wire body codec is negotiated per request (adr-044)
 
@@ -91,7 +91,7 @@ Both halves need something, and each has its own gate.
   > interpreter". Editing an order line on the iOS simulator (`quantity * unit_price * (1 - discount)`) terminated the
   > Northwind app. `-p:DynamicCodeSupport=false` could not see it, because CoreCLR still JITs the emitted thunk; the
   > 2026-07-09 measurement that produced the old conclusion ran only there. The account is in
-  > `docs/repo-ops/gotchas/serialization-and-expressions.md`.
+  > `maintainers/gotchas/serialization-and-expressions.md`.
 - **Trimming: `src/Polhem.Expressions/ILLink.Descriptors.xml` is required.** DynamicExpresso finds `Math.*`,
   `string.*`, `DateOnly.*` and every other member an expression names by reflection, so the default mobile trim
   (`TrimMode=partial`) removes the ones nothing else references. Measured on 2026-09-26 without the descriptor:

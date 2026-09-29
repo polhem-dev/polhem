@@ -131,7 +131,7 @@ Host=localhost;Port=5432;Database={@DbName};Username={@UserId};Password={@Passwo
 `Time` is carried as a fixed-width `"HH:mm"` string rather than a native time type. Native time
 types differ too much across providers (range, precision, whether they are an interval or a
 clock reading) to round-trip a wall-clock value reliably, and a time of day is never time-zone
-converted — see [ADR-033](../../docs/adr/adr-033-time-of-day-semantics.md).
+converted — see [ADR-033](../../maintainers/adr/adr-033-time-of-day-semantics.md).
 
 > Writing a custom dialect? `GetDefaultValueExpression(FieldDbType)` and your type mapping must
 > both handle `Time`. It was appended to the enum, so an existing `switch` compiles fine and
@@ -167,7 +167,7 @@ converted — see [ADR-033](../../docs/adr/adr-033-time-of-day-semantics.md).
 - `Ddl/` -- DDL string-generation contracts (`ICreateTableCommandBuilder`, `ITableAlterCommandBuilder`, …)
 - `Dml/` -- DML string-generation contracts and builders (`IFormCommandBuilder`, `SelectCommandBuilder`,
   the clause builders, `SelectContext`, `TableSchemaCommandBuilder`); insert and update go through the
-  `DbDataAdapter` (see [ADR-024](../../docs/adr/adr-024-dataform-save-dataadapter.md))
+  `DbDataAdapter` (see [ADR-024](../../maintainers/adr/adr-024-dataform-save-dataadapter.md))
 - `Schema/` -- the `TableSchema` comparison and upgrade flow (`TableSchemaBuilder`, `TableSchemaComparer`,
   `TableUpgradeOrchestrator`, `ITableSchemaProvider`); it emits no SQL itself. `Schema/Changes/` holds the change types
 - `CacheNotify/` -- both directions of `st_cache_notify`: `ICacheNotifyService` (version bump) and
@@ -179,7 +179,7 @@ converted — see [ADR-033](../../docs/adr/adr-033-time-of-day-semantics.md).
   `ConnectionStringTemplate`
 - project root -- `DbAccess`, `DbCommandSpec`, `DbBatchSpec`, `DbConnectionScope` and their result and parameter types
 
-The namespace layout follows three principles (see [ADR-008](../../docs/adr/adr-008-polhem-db-namespace-layout.md)):
+The namespace layout follows three principles (see [ADR-008](../../maintainers/adr/adr-008-polhem-db-namespace-layout.md)):
 
 1. **Syntax layer (`Polhem.Db.Ddl` / `Polhem.Db.Dml`) vs model layer (`Polhem.Db.Schema`)** — namespaces emitting SQL strings live under `Ddl` or `Dml`; namespaces operating on the `TableSchema` model live under `Schema`.
 2. **Contracts by responsibility, implementations by provider** — abstract contracts go to the responsibility-named namespace; concrete per-provider implementations all live in `Polhem.Db.Providers.{X}` regardless of whether they implement DDL, DML, or schema-reading contracts.

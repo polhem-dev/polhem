@@ -5,7 +5,7 @@ description: Run load tests against the polhem framework with tools/Polhem.LoadT
 
 # polhem load test execution
 
-**The authoritative source for operation and policy is `docs/repo-ops/load-testing.md`**, the list of settings is
+**The authoritative source for operation and policy is `maintainers/load-testing.md`**, the list of settings is
 `tools/Polhem.LoadTests/loadtest.sample.json` (every item is commented), and the flags are `--help`.
 This file does not duplicate those; it holds only **the judgement and discipline needed while running** — that is,
 the part an agent most easily gets wrong.
@@ -55,7 +55,7 @@ dotnet run --project tools/Polhem.LoadTests -c Release -- run --vu 20 --duration
 ```
 
 Remote needs two terminals: first `serve`, then `run --mode Remote --endpoint ...`;
-the full commands are in `docs/repo-ops/load-testing.md`.
+the full commands are in `maintainers/load-testing.md`.
 
 ## 3. Interpretation discipline
 
@@ -93,7 +93,7 @@ it `Not observed`; **that means "not measured", not "0% hit rate"**. To measure 
 
 ### Save reports together with their metadata
 
-Reports are written to the gitignored `artifacts/loadtest/`. Copy the ones worth keeping to `docs/repo-ops/`,
+Reports are written to the gitignored `artifacts/loadtest/`. Copy the ones worth keeping to `maintainers/`,
 **together with the metadata section** — if only the latency numbers are excerpted, nobody will later know under what
 conditions they were measured.
 
@@ -126,6 +126,6 @@ The `verify` command starts the backend, resolves services, reads one FormSchema
 
 ## Related
 
-- `docs/repo-ops/load-testing.md` — the authoritative source for operation and policy, including known limitations
+- `maintainers/load-testing.md` — the authoritative source for operation and policy, including known limitations
 - `tools/Polhem.LoadTests/loadtest.sample.json` — the authoritative source for settings
 - `.claude/rules/testing.md` — unit test policy (unrelated to load testing; do not mix them up)

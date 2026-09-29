@@ -52,7 +52,7 @@ visually here first, then carry them back to the other platforms.
 Proven pitfalls (centering with Stretch+MaxWidth, a control's semantic events not firing when the value is set from
 code, the DataGrid editing pipeline conflicting with popup editors, the mandatory `StyleKeyOverride` fix, display
 desync caused by template recycling, hidden parts of the read-only appearance template…) are in
-`../../docs/repo-ops/gotchas/avalonia-controls.md`. **Read it before changing this project's controls.**
+`../../maintainers/gotchas/avalonia-controls.md`. **Read it before changing this project's controls.**
 
 > The user's preference: **a change is ready to hand over once it compiles; the user launches and tests it
 > themselves** (an agent driving the UI is too slow).

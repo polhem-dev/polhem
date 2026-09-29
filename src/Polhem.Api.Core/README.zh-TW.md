@@ -37,7 +37,7 @@
 
 `Encoded` 或 `Encrypted` payload 的 body codec 不是部署設定：每個請求在 payload 封套中宣告，伺服器以同一個
 codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制之前的所有用戶端送出的格式。用戶端由
-`ApiConnector.PayloadCodec`（`Polhem.Api.Client`）選擇。見 [ADR-044](../../docs/adr/adr-044-payload-codec-negotiation.zh-TW.md)。
+`ApiConnector.PayloadCodec`（`Polhem.Api.Client`）選擇。見 [ADR-044](../../maintainers/adr/adr-044-payload-codec-negotiation.md)。
 
 ### 防重放（選用，預設關閉）
 
@@ -51,7 +51,7 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 
 序號檢查適用於 `Encrypted` payload，此時 payload HMAC 涵蓋 frame。`Plain` 呼叫不帶 frame、不做檢查；
 `Encoded` 的 frame 沒有經過驗證，因此需要防重放的方法請宣告為 `Encrypted` 保護等級。推行順序與細節見
-[ADR-042](../../docs/adr/adr-042-api-replay-protection.zh-TW.md)。
+[ADR-042](../../maintainers/adr/adr-042-api-replay-protection.md)。
 
 ### 授權與存取控制
 
@@ -65,7 +65,7 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 - `ApiOutputConverter` -- 把商業物件結果轉成 wire 回應型別（依名稱複製屬性；入站方向為 internal）。
 - `ApiHeaders` -- API 通訊的標準 Header 常數。
 - `PayloadFormat` -- payload 的傳輸方式：`Plain`、`Encoded`（序列化並壓縮）或 `Encrypted`。
-- `DateTimeWireGuard` -- 對帶有日期時間的回應強制 [ADR-032](../../docs/adr/adr-032-datetime-timezone.zh-TW.md)
+- `DateTimeWireGuard` -- 對帶有日期時間的回應強制 [ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md)
   的 wire 不變式。
 
 ### MessagePack 基礎設施
@@ -77,7 +77,7 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 - `MessagePackCodec` -- MessagePack 序列化的編碼器/解碼器。
 - `WireContracts` -- 每個 wire 型別的顯式 formatter 註冊。contractless resolver 只是桌面端的
   便利，不是承載機制：.NET for iOS 關閉動態程式碼，未註冊的型別在那裡會直接失敗（見
-  [ADR-037](../../docs/adr/adr-037-wire-explicit-registration.zh-TW.md)）。
+  [ADR-037](../../maintainers/adr/adr-037-wire-explicit-registration.md)）。
 - `WireValueFormatter` -- `object` 型別成員（篩選值、參數值、表格儲存格）的鑑別式信封。
 
 ### 內建訊息
@@ -121,6 +121,6 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 - `Wire/` -- `WireValueCode`（兩種 wire 共用的鑑別碼）
 - 專案根目錄 -- `ApiServiceOptions`（啟動設定）
 
-命名空間佈局遵循 [ADR-008](../../docs/adr/adr-008-polhem-db-namespace-layout.zh-TW.md) 的設計原則：
+命名空間佈局遵循 [ADR-008](../../maintainers/adr/adr-008-polhem-db-namespace-layout.md) 的設計原則：
 依職責分組（`Messages` 放訊息型別、`Conversion` 放型別轉換、`Transformers` 放位元組層級管線等）；
 根層保留給跨切面基礎設施（在此僅有 `ApiServiceOptions`）。

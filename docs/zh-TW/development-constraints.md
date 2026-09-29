@@ -1,4 +1,4 @@
-<!-- source: en/development-constraints.md blob: 7025445ab69bbc6be54c739c9004b9e79f5572f0 -->
+<!-- source: en/development-constraints.md blob: 12b628f2b592266668446b81a28b2be33c3ab460 -->
 # 開發限制與反模式
 
 [English](../en/development-constraints.md) · [← 文件索引](README.md)
@@ -175,7 +175,7 @@ public void MaintenanceMethod(ExecFuncArgs args, ExecFuncResult result) { }
 
 ### Client 可見的例外類型
 
-`JsonRpcExecutor` 透過 [`JsonRpcErrorContract`](../../src/Polhem.Api.Core/JsonRpc/JsonRpcErrorContract.cs) 把例外對映到 JSON-RPC 錯誤碼，伺服端與呼叫端都讀這一份宣告。設計理由見 [ADR-043](../adr/adr-043-error-contract-single-registry.zh-TW.md)。送到呼叫端的內容分為三類：
+`JsonRpcExecutor` 透過 [`JsonRpcErrorContract`](../../src/Polhem.Api.Core/JsonRpc/JsonRpcErrorContract.cs) 把例外對映到 JSON-RPC 錯誤碼，伺服端與呼叫端都讀這一份宣告。設計理由見 [ADR-043](../../maintainers/adr/adr-043-error-contract-single-registry.md)。送到呼叫端的內容分為三類：
 
 - **框架自有的例外會把訊息帶給呼叫端。** `UserMessageException`（凡是要給終端使用者看的訊息，**優先選用**）與 `JsonRpcException` 以 `JsonRpcErrorCode.UserMessage`（`-32099`）傳送；`AuthenticationRequiredException`、`CompanyNotEnteredException`、`CompanyAccessDeniedException`、`ForbiddenException` 與 `ReplayRejectedException` 各自使用專屬的錯誤碼。用戶端若假設「所有 user-facing 失敗都是 `-32099`」，會誤判這些例外。
 - **BCL 例外保留錯誤碼、不保留訊息。** `UnauthorizedAccessException`、`ArgumentException`、`InvalidOperationException`、`NotSupportedException` 與 `FormatException`（含各自的子類別）以 `-32099` 傳送，但訊息換成固定的通用文字，例如「The request is not valid.」；真正的訊息記錄在伺服端（`JsonRpcExecutor.Logger`）。這些型別正是 BCL、資料庫驅動程式與基礎設施拋出時會在文字中夾帶表名、參數名與伺服器細節的例外，所以一律不給遠端呼叫者看。
@@ -277,11 +277,11 @@ catch (InvalidOperationException ex)
 不是承載機制：.NET for iOS 關閉動態碼，未註冊的型別在那裡直接失敗。新增訊息合約、
 新增其可達的定義層型別、或引入新的封閉泛型具現（`List<T>`、`Dictionary<K,V>`、`T?`、列舉）
 時都必須補上註冊。漂移測試會走同一條型別閉包，漏補時 `WireContractDriftTests` 失敗（是測試失敗，不是建置失敗）。
-詳見 [ADR-037](../adr/adr-037-wire-explicit-registration.zh-TW.md)。
+詳見 [ADR-037](../../maintainers/adr/adr-037-wire-explicit-registration.md)。
 
 ### API 契約命名慣例（強制）
 
-API Request/Response 與 BO Args/Result 型別必須遵守命名慣例，`ApiOutputConverter` 才能自動將 BO 回傳值對應到 API 型別（詳見 [ADR-007](../adr/adr-007-convention-based-type-resolution.zh-TW.md)）：
+API Request/Response 與 BO Args/Result 型別必須遵守命名慣例，`ApiOutputConverter` 才能自動將 BO 回傳值對應到 API 型別（詳見 [ADR-007](../../maintainers/adr/adr-007-convention-based-type-resolution.md)）：
 
 | 層級 | 輸入 | 輸出 |
 |------|------|------|
@@ -290,7 +290,7 @@ API Request/Response 與 BO Args/Result 型別必須遵守命名慣例，`ApiOut
 | Contract（`Polhem.Api.Contracts`） | `I{Action}Request` | `I{Action}Response` |
 
 - 偏離命名慣例的型別將無法自動轉換，BO 回傳值會直接流至用戶端造成型別錯誤
-- 回應映射**不需任何手動註冊**，由上表的命名慣例解析。當年需要 `Register` 的那個註冊表已移除，它所白名單的 Typeless 序列化也已移除 —— 見 [ADR-007](../adr/adr-007-convention-based-type-resolution.zh-TW.md) 與 [ADR-037](../adr/adr-037-wire-explicit-registration.zh-TW.md)
+- 回應映射**不需任何手動註冊**，由上表的命名慣例解析。當年需要 `Register` 的那個註冊表已移除，它所白名單的 Typeless 序列化也已移除 —— 見 [ADR-007](../../maintainers/adr/adr-007-convention-based-type-resolution.md) 與 [ADR-037](../../maintainers/adr/adr-037-wire-explicit-registration.md)
 
 ## 帳號安全限制
 
@@ -320,7 +320,7 @@ API Request/Response 與 BO Args/Result 型別必須遵守命名慣例，`ApiOut
 `ApiServiceOptions.WireFrameTimestampTolerance`（預設五分鐘）的 frame；對於 `[ApiAccessControl]`
 宣告 `ReplayProtection = ApiReplayProtection.UniqueSequence` 的方法，也會拒絕該 session 已用過的
 序號。兩種拒絕都是 `ReplayRejectedException`（`-32005`）。設計背景見
-[ADR-042](../adr/adr-042-api-replay-protection.zh-TW.md)。由此衍生以下限制：
+[ADR-042](../../maintainers/adr/adr-042-api-replay-protection.md)。由此衍生以下限制：
 
 - **兩端必須設成同一個值。** frame 的有無是部署層級的事實，不由封包自述——伺服器若「偵測」
   frame 在不在，攻擊者只要把 frame 拿掉就能關閉防護。因此兩端設定不一致必然失敗，這是刻意的。

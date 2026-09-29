@@ -1,4 +1,4 @@
-<!-- source: en/database-dialect-differences.md blob: ef8825ff383faa6d77a69d11838301f57384a1b7 -->
+<!-- source: en/database-dialect-differences.md blob: 2207e0e7d61caeeea55b0dd034cbb11ee9bc47a4 -->
 # 資料庫方言差異（DDL）
 
 [English](../en/database-dialect-differences.md) · [← 文件索引](README.md)
@@ -66,7 +66,7 @@ SQL Server 會在輸出的運算式外再包一層括號（`DEFAULT (N'')`）。
 - **時間類預設值一律採 UTC 形式**。框架的時間欄位以 UTC 儲存（見
   [時區處理](datetime-timezone.md)），而 `DEFAULT` 正是「SQL 未指定該欄位值」時實際寫入
   資料的路徑：呼叫端自寫 INSERT 而省略該欄，以及 `ALTER TABLE ADD COLUMN` 對既有列的回填。
-  詳見 [ADR-032](../adr/adr-032-datetime-timezone.zh-TW.md) 的 D9b。
+  詳見 [ADR-032](../../maintainers/adr/adr-032-datetime-timezone.md) 的 D9b。
 - **MySQL** 的函式型預設值需用括號包成*運算式*形式（`(UUID())`、`(UTC_DATE())`、`(UTC_TIMESTAMP(6))`），因為 MySQL 8.0.13+ 只有 `CURRENT_TIMESTAMP` 可以不加括號當預設值；其他非字面值的預設值都必須以括號*運算式*形式呈現。
 - **SQLite** 無原生 UUID 產生器；`hex(randomblob(16))` 是「唯一但非嚴格 v4」的替代，對框架託管的預設值已足夠。
 - **Boolean 字面值**：框架的標準形式是 `"1"` / `"0"`。PostgreSQL 的 `BOOLEAN` 欄不接受這兩者，故 PG 方言在輸出 SQL 的邊界將其轉為 `TRUE` / `FALSE`。其他方言皆接受 `1` / `0`。
