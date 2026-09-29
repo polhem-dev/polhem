@@ -89,8 +89,47 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "pack failed: $proj" }
         }
 
-    # Trusted Publishing: the nuget.org policy for this repository and workflow lists the package IDs it may push.
-    # A package added to the pack list above must be added to that policy too, or its push is rejected.
+    # Trusted Publishing only pushes the package IDs its nuget.org policy lists, and CI cannot read the policy
+    # (reading it needs a nuget.org sign-in). A package ID that is not on nuget.org yet is therefore the one case
+    # where the policy may be missing an entry. This gate stops the job before anything is pushed, so a missing
+    # entry cannot leave half a release on nuget.org. That happened in 1.1.0: `Polhem.Core`, a renamed and so a
+    # new ID, was rejected after the packages that depend on it had been pushed.
+    #
+    # A new ID passes only when the repository variable `NUGET_NEW_PACKAGE_IDS` names it, which a maintainer sets
+    # after adding the ID to the policy. The error message below gives the steps.
+    - name: Check for package IDs new to nuget.org
+      env:
+        VER: ${{ steps.version.outputs.VERSION }}
+        CONFIRMED_NEW_IDS: ${{ vars.NUGET_NEW_PACKAGE_IDS }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $confirmed = @($env:CONFIRMED_NEW_IDS -split '[\s,]+' | Where-Object { $_ })
+        $ids = Get-ChildItem -Path ./nupkgs |
+          Where-Object { $_.Extension -eq '.nupkg' } |
+          ForEach-Object { $_.Name -replace "\.$([regex]::Escape($env:VER))\.nupkg$", '' }
+        $unconfirmed = @()
+        foreach ($id in $ids) {
+          $url = "https://api.nuget.org/v3-flatcontainer/$($id.ToLowerInvariant())/index.json"
+          $status = (Invoke-WebRequest -Uri $url -Method Head -SkipHttpErrorCheck).StatusCode
+          if ($status -eq 200) { continue }
+          if ($status -ne 404) { throw "Could not tell whether $id exists on nuget.org: HTTP $status from $url" }
+          # NuGet package IDs are case-insensitive, and PowerShell's -contains compares case-insensitively.
+          if ($confirmed -contains $id) {
+            Write-Host "$id is new to nuget.org and confirmed by NUGET_NEW_PACKAGE_IDS."
+          } else {
+            $unconfirmed += $id
+          }
+        }
+        if ($unconfirmed) {
+          $list = $unconfirmed -join ', '
+          Write-Host "::error::New package ID(s) not confirmed: $list. Nothing was pushed."
+          Write-Host "1. On nuget.org, add each ID to the Trusted Publishing policy of this repository and workflow."
+          Write-Host "   On 2026-09-30 the policy edit form opened with an empty list: if it still does, enter every ID again."
+          Write-Host "2. Set the repository variable: gh variable set NUGET_NEW_PACKAGE_IDS --body '$list'"
+          Write-Host "3. Re-run this job. After the release, delete the variable: gh variable delete NUGET_NEW_PACKAGE_IDS"
+          exit 1
+        }
+
     # The temporary key expires after one hour, so it is requested after the packages are built.
     - name: Log in to NuGet
       id: login

@@ -218,6 +218,13 @@ the projects one by one; they are not a glob**. If a new package is left out:
 the pack line to both workflows, commit, **delete the tag and push it again** onto the commit containing the fix to
 trigger publish; `--skip-duplicate` skips what was already published and pushes only the new package.
 
+**Instance, 2026-09-30 (1.1.0)**: `Polhem.Base` was renamed to `Polhem.Core`. The pack lists were updated, but
+nobody treated the renamed package as a new one, so the policy still listed only `Polhem.Base`. The push runs in file
+name order: the `Polhem.Api.*`, `Polhem.Business` and `Polhem.Cli` packages were pushed, then `Polhem.Core` was
+rejected with 403 and the job stopped, leaving six 1.1.0 packages on nuget.org that depend on a `Polhem.Core 1.1.0`
+that did not exist. Fix: add the ID to the policy and re-run the failed job; `--skip-duplicate` skipped the six. The
+gate described in step 2 below was added so that the next miss stops the release before the first push.
+
 **Signs to look for**: the publish workflow is green, but
 `curl https://api.nuget.org/v3-flatcontainer/<pkg-lowercase>/index.json` returns BlobNotFound
 (and it is not index delay). Check whether the push step log has `Pushing <Pkg>.nupkg... Your package was pushed.`;
@@ -233,7 +240,9 @@ if not, it was left out.
    only, so a new `tools/` project also needs its own `dotnet restore` line there.
 2. **Add the package ID to the nuget.org Trusted Publishing policy** before the first release that contains it (see
    "Publishing: NuGet Trusted Publishing" below). Otherwise its push is rejected, even though the pack lists are
-   right.
+   right. **A renamed package is a new package ID too.** The step "Check for package IDs new to nuget.org" in
+   `nuget-publish.yml` stops the release before anything is pushed when a packed ID is not on nuget.org yet and not
+   confirmed; its error message gives the steps.
 3. Update the documents that list packages (for bilingual documents, both languages change):
    - `docs/en/architecture/dependency-map.md` (then its translation under `docs/zh-TW/`, restamped with
      `./check-docs-i18n.sh --stamp`): add the node + dependency edges to the mermaid diagram, a row to the external
@@ -254,8 +263,9 @@ pushes one on its own). It holds **no long-lived NuGet API key**:
   Renaming the workflow file or moving the repository to another owner changes what the OIDC token claims, and the
   login step fails until the policy is updated.
 - **The policy's scopes decide which package IDs it may push** (a package glob, and whether pushing a *new* package
-  is allowed at all). The comment above the login step records that this repository's policy lists the package IDs,
-  so a new package ID has to be added there before its first publish, or its push is rejected.
+  is allowed at all). This repository's policy lists the package IDs, so a new package ID has to be added there
+  before its first publish, or its push is rejected. CI cannot read the policy; the gate step before the login step
+  stops the job instead when a packed ID is not on nuget.org yet.
 - The temporary key is valid for about an hour, which is why the login step runs after the build and pack.
 
 The nuget.org side is described in Microsoft's "Trusted Publishing" page for nuget.org.
