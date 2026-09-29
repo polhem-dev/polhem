@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/getting-started.md blob: ad47e8cae18ff46f67340ab2c7c6732e6c9e2ca3 -->
+<!-- source: en/getting-started/getting-started.md blob: 118ca205eb2f291749eada6ad91724645a16049c -->
 # 快速上手
 
 [English](../../en/getting-started/getting-started.md) · [← 文件索引](../README.md)
@@ -118,7 +118,7 @@ DbDialectRegistry.Register(DatabaseType.SQLServer, new SqlDialectFactory());
 using Microsoft.Data.Sqlite;
 using Polhem.Api.AspNetCore;
 using Polhem.Api.Core;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Db;
 using Polhem.Db.Manager;
 using Polhem.Db.Providers.Sqlite;

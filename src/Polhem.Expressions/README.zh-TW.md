@@ -11,14 +11,14 @@ UI 用戶端（輸入時的即時預覽）共用，因此同一個計算欄位�
 |------|------|
 | `DynamicExpressoEvaluator` | 預設的 `IExpressionEvaluator`。解析與編譯一次，以「運算式文字 + 參數簽章」快取，之後逐列呼叫 |
 
-## 抽象位於 `Polhem.Base`
+## 抽象位於 `Polhem.Core`
 
 `IExpressionEvaluator`、`ExpressionPolicy`、`ExpressionEvaluationException` 在
-`Polhem.Base.Expressions`，不在本套件。這個分界讓 `Polhem.Definition` 與 `Polhem.Business` 完全不相依
+`Polhem.Core.Expressions`，不在本套件。這個分界讓 `Polhem.Definition` 與 `Polhem.Business` 完全不相依
 DynamicExpresso——它們透過抽象消費引擎，只有組裝層（`Polhem.Hosting`，或自建 evaluator 的
 UI head）才引用本套件。見 [ADR-038](../../maintainers/adr/adr-038-definition-dependency-boundary.md)。
 
-**需要「挑一個實作」時引用本套件；只需要「接受一個實作」時引用 `Polhem.Base` 即可。**
+**需要「挑一個實作」時引用本套件；只需要「接受一個實作」時引用 `Polhem.Core` 即可。**
 
 ## 時區
 
@@ -56,4 +56,4 @@ Trimming 則是另一回事：DynamicExpresso 以反射找出運算式指名的 
 
 ## 相依
 
-`Polhem.Base`（本套件實作其中的 `IExpressionEvaluator` 抽象）· DynamicExpresso
+`Polhem.Core`（本套件實作其中的 `IExpressionEvaluator` 抽象）· DynamicExpresso

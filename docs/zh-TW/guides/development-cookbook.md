@@ -1,4 +1,4 @@
-<!-- source: en/guides/development-cookbook.md blob: 90506d4cf8d39af6757d206f15b82c8ad2efa082 -->
+<!-- source: en/guides/development-cookbook.md blob: 8640ad810123cfef968625adc1fa59faa37b9de5 -->
 # 端到端開發指引
 
 [English](../../en/guides/development-cookbook.md) · [← 文件索引](../README.md)
@@ -400,7 +400,7 @@ Delete: DoBeforeDelete → DoDelete → [刪除稽核]  → DoAfterDelete
 
 #### 中止流程
 
-丟 `UserMessageException`（`Polhem.Base.Exceptions`）——框架的業務流程中止訊號。它以
+丟 `UserMessageException`（`Polhem.Core.Exceptions`）——框架的業務流程中止訊號。它以
 `JsonRpcErrorCode.UserMessage` 傳到用戶端並還原成同一型別，所以它的訊息會送到使用者面前。其他任何例外
 對遠端呼叫者都只會呈現為固定的通用訊息。schema 驅動的規則引擎，其 `BeforeSave` 驗證規則走的也是同一個機制。
 

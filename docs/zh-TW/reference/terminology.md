@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: 7e9364021de47d27171e1ac17aa15b04ed8fad3c -->
+<!-- source: en/reference/terminology.md blob: 808a924659b42f8f5fcd855ab208ca4a742e1c7c -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -17,7 +17,7 @@
 6. [API 層（Polhem.Api.Core / Polhem.Api.AspNetCore）](#6-api-層polhemapicore--polhemapiaspnetcore)
 7. [快取層（Polhem.ObjectCaching）](#7-快取層polhemobjectcaching)
 8. [連線層（Polhem.Api.Client）](#8-連線層polhemapiclient)
-9. [基礎設施（Polhem.Base）](#9-基礎設施polhembase)
+9. [基礎設施（Polhem.Core）](#9-基礎設施polhemcore)
 10. [列舉型別（Enumerations）](#10-列舉型別enumerations)
 11. [系統欄位（System Fields）](#11-系統欄位system-fields)
 12. [設定檔（Configuration Files）](#12-設定檔configuration-files)
@@ -207,12 +207,12 @@
 
 ---
 
-## 9. 基礎設施（Polhem.Base）
+## 9. 基礎設施（Polhem.Core）
 
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
 | `IKeyObject` | 鍵值物件介面 | 具有唯一識別鍵的物件抽象介面 |
-| `XmlCodec` | XML 序列化工具 | XML 序列化與反序列化的靜態工具類別（位於 `Polhem.Base.Serialization`） |
+| `XmlCodec` | XML 序列化工具 | XML 序列化與反序列化的靜態工具類別（位於 `Polhem.Core.Serialization`） |
 | `FileHashValidator` | 檔案雜湊驗證器 | 使用雜湊值驗證檔案完整性 |
 | `AesCbcHmacKeyGenerator` | AES-CBC-HMAC 金鑰產生器 | 產生 AES 與 HMAC 所需金鑰的工具類別 |
 | `TreeNodeAttribute` | 樹狀節點屬性 | 標記類別在樹狀結構中的顯示名稱 |

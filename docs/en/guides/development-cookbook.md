@@ -409,7 +409,7 @@ connection pools drain and distributed deadlocks appear.
 
 #### Aborting the operation
 
-Throw `UserMessageException` (`Polhem.Base.Exceptions`) — the framework's business-flow interruption
+Throw `UserMessageException` (`Polhem.Core.Exceptions`) — the framework's business-flow interruption
 signal. It travels to the client as `JsonRpcErrorCode.UserMessage` and is rebuilt there as the same type,
 so its message reaches the end user. Any other exception reaches a remote caller only as a fixed, generic
 message. The schema-driven rule engine uses the same mechanism for its `BeforeSave` validation rules.

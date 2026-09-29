@@ -8,6 +8,20 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+### 破壞性 API 變更
+
+> **1.x 之內一次性、刻意的破壞。** 下面的改名會破壞以 1.0.0 建置之程式碼的原始碼與二進位相容性，依語意化版本
+> 應等到 2.0.0。它在 1.1.0 發佈，是因為做這個決定時 1.0.0 沒有已知的使用者，而且所有 1.0.0 套件都已下架
+> （unlist）。從 1.1.0 起，1.x 依語意化版本演進，不再有例外。理由見
+> [ADR-048](maintainers/adr/adr-048-rename-base-to-core-in-1-1.md)（英文）。
+
+- `Polhem.Base` 改名為 `Polhem.Core`：套件 ID 與所有命名空間（`Polhem.Base.Serialization` →
+  `Polhem.Core.Serialization`，依此類推）。從 1.0.0 升級時，把套件參考 `Polhem.Base` 換成 `Polhem.Core`（只在直接
+  參考它時才需要；其他套件會帶入它），並把 `using` 與完整限定名稱中的 `Polhem.Base` 命名空間全部換成
+  `Polhem.Core`。剩下沒改到的地方編譯器會逐一回報。wire fixtures 不受改名影響，但 JSON-RPC 型別白名單現在列的是
+  `Polhem.Core`，自訂的 `AllowedTypeNamespaces` 若列了 `Polhem.Base`，將不再比對到任何型別。
+  ([#42](https://github.com/polhem-dev/polhem/pull/42))
+
 ## [1.0.0] - 2026-09-28
 
 > Polhem 以新名稱延續 [Bee.NET](https://github.com/jeff377/bee-library)。Polhem 1.0.0 是 Bee.NET 最後發佈的 4.33.0

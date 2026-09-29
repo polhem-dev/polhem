@@ -8,6 +8,22 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ## [Unreleased]
 
+### Breaking API changes
+
+> **A deliberate break within 1.x, made once.** The rename below breaks source and binary compatibility for code
+> built against 1.0.0, which semantic versioning would hold back until 2.0.0. It ships in 1.1.0 because 1.0.0 had
+> no known adopters when it was made, and every 1.0.0 package is unlisted. From 1.1.0 on, 1.x follows semantic
+> versioning without exceptions. The reasons are in
+> [ADR-048](maintainers/adr/adr-048-rename-base-to-core-in-1-1.md).
+
+- `Polhem.Base` is renamed to `Polhem.Core`: the package ID and every namespace (`Polhem.Base.Serialization` →
+  `Polhem.Core.Serialization`, and so on). To upgrade from 1.0.0, replace the package reference `Polhem.Base` with
+  `Polhem.Core` (only if you reference it directly; the other packages bring it in) and every `Polhem.Base`
+  namespace in `using` directives and qualified names with `Polhem.Core`. The compiler reports each place that is
+  left. The wire fixtures are unchanged by the rename, but the JSON-RPC type allowlist now names `Polhem.Core`, so a
+  custom `AllowedTypeNamespaces` entry that lists `Polhem.Base` no longer matches anything.
+  ([#42](https://github.com/polhem-dev/polhem/pull/42))
+
 ## [1.0.0] - 2026-09-28
 
 > Polhem continues [Bee.NET](https://github.com/jeff377/bee-library) under a new name. Polhem 1.0.0 is Bee.NET 4.33.0,

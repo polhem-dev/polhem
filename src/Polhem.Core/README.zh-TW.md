@@ -1,4 +1,4 @@
-# Polhem.Base
+# Polhem.Core
 
 > 跨層共用工具程式庫：型別轉換、加密原語、序列化、集合、ADO.NET 輔助與運算式抽象。
 

@@ -49,7 +49,7 @@ Register the database providers first (see the `Polhem.Db` README).
 ```csharp
 using Polhem.Api.AspNetCore;
 using Polhem.Api.Core;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Hosting;
 
@@ -82,7 +82,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Core;
-using Polhem.Base;
+using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Hosting;
 

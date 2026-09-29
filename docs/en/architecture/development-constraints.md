@@ -277,7 +277,7 @@ A value in an `object`-typed member — a filter value, a `ParameterCollection` 
 
 - The fixed BCL set: `Boolean`, `Byte`, `SByte`, `Int16`, `UInt16`, `Int32`, `UInt32`, `Int64`, `UInt64`, `Single`, `Double`, `Decimal`, `String`, `DateTime`, `DateTimeOffset`, `TimeSpan`, `DateOnly`, `Guid`, `Byte[]`, `DBNull`, `System.Data.DataTable`, `Object` and `Object[]` (the `System.` prefix is omitted here)
 - Single-dimensional arrays of an allowed element type, such as `int[]`, `string[]` or `Guid[]`; multi-dimensional arrays are refused
-- Types in the namespaces of `SysInfo.AllowedTypeNamespaces`: the framework's own (`Polhem.Base`, `Polhem.Definition`, `Polhem.Api.Contracts`, `Polhem.Api.Core`, `Polhem.Business`) plus the `|`-separated list in `CommonConfiguration.AllowedTypeNamespaces`. The generic arguments of a generic type are screened too
+- Types in the namespaces of `SysInfo.AllowedTypeNamespaces`: the framework's own (`Polhem.Core`, `Polhem.Definition`, `Polhem.Api.Contracts`, `Polhem.Api.Core`, `Polhem.Business`) plus the `|`-separated list in `CommonConfiguration.AllowedTypeNamespaces`. The generic arguments of a generic type are screened too
 - The assembly part of the name must be one of the runtime assemblies behind the fixed set, or an assembly whose name is an allowed namespace or starts with one. A deployment whose own types live in an assembly named outside its allowed namespaces has to add that name as well
 
 Enums and `ParameterCollection` values work on every platform. A value of any other type from an allowed namespace needs dynamic code to serialize over MessagePack, so where dynamic code is unavailable (iOS, Mac Catalyst) it fails with a `NotSupportedException` that names the type.

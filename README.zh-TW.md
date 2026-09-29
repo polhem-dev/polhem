@@ -50,7 +50,7 @@ dotnet add package Polhem.Db
 
 | 組件名稱 | 說明 |
 |---|---|
-| **Polhem.Base.dll** | 提供基礎函式與工具（序列化、加密等），作為共通基礎模組。 |
+| **Polhem.Core.dll** | 提供基礎函式與工具（序列化、加密等），作為共通基礎模組。 |
 | **Polhem.Definition.dll** | 定義系統結構化資料，包含 FormSchema、欄位結構描述與版面配置。 |
 | **Polhem.Expressions.dll** | 可攜、沙箱化的運算式求值引擎（DynamicExpresso 封裝），供計算欄與驗證規則使用；後端存檔與 Avalonia 前端即時預覽共用，兩端算法一致。 |
 | **Polhem.Api.Contracts.dll** | 前後端共用的資料契約（請求 / 回應模型）。 |
@@ -137,6 +137,9 @@ Bee.NET 4.33.0 改名之後，再加上 [CHANGELOG](CHANGELOG.zh-TW.md) 所列�
 
 - 每個 `Bee.<名稱>` 套件改為 `Polhem.<名稱>`，套件的切分不變：`Bee.Hosting` 改為 `Polhem.Hosting`，上方表格中的
   每個套件依此類推。命名空間照同一規則：`Bee.Definition.Forms` 改為 `Polhem.Definition.Forms`。
+- 唯一的例外是 `Bee.Base`，改為 `Polhem.Core`，套件與命名空間皆然：`Bee.Base.Serialization` 改為
+  `Polhem.Core.Serialization`。Polhem 1.0.0 仍稱它為 `Polhem.Base`；改名的原因見 [CHANGELOG](CHANGELOG.zh-TW.md)
+  的 1.1.0 條目。
 - 型別或成員名稱中的 `Bee` 改為 `Polhem`：`AddBeeFramework` 改為 `AddPolhemFramework`、`UseBeeFramework` 改為
   `UsePolhemFramework`、`BeeLoginPanel` 改為 `PolhemLoginPanel`。
 - 命令列工具 `Bee.Cli`（`dotnet bee`）改為 `Polhem.Cli`（`dotnet polhem`）。先移除舊工具，再以

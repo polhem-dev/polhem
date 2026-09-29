@@ -1,4 +1,4 @@
-# Polhem.Base
+# Polhem.Core
 
 > Cross-layer shared utility library: type conversion, cryptographic primitives, serialization, collections,
 > ADO.NET helpers and the expression abstraction.

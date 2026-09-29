@@ -1,4 +1,4 @@
-<!-- source: en/architecture/development-constraints.md blob: 3bbbca61937a307345b55a477ab6ced6d3b72b32 -->
+<!-- source: en/architecture/development-constraints.md blob: 98da92f9ecca9f41ed98bf66190b37f190b60ea8 -->
 # 開發限制與反模式
 
 [English](../../en/architecture/development-constraints.md) · [← 文件索引](../README.md)
@@ -266,7 +266,7 @@ catch (InvalidOperationException ex)
 
 - 固定的 BCL 集合：`Boolean`、`Byte`、`SByte`、`Int16`、`UInt16`、`Int32`、`UInt32`、`Int64`、`UInt64`、`Single`、`Double`、`Decimal`、`String`、`DateTime`、`DateTimeOffset`、`TimeSpan`、`DateOnly`、`Guid`、`Byte[]`、`DBNull`、`System.Data.DataTable`、`Object` 與 `Object[]`（此處省略 `System.` 前綴）
 - 元素型別為允許型別的一維陣列，例如 `int[]`、`string[]` 或 `Guid[]`；多維陣列一律拒絕
-- `SysInfo.AllowedTypeNamespaces` 命名空間中的型別：框架自己的（`Polhem.Base`、`Polhem.Definition`、`Polhem.Api.Contracts`、`Polhem.Api.Core`、`Polhem.Business`），加上 `CommonConfiguration.AllowedTypeNamespaces` 中以 `|` 分隔的清單。泛型型別的泛型參數也會一併檢查
+- `SysInfo.AllowedTypeNamespaces` 命名空間中的型別：框架自己的（`Polhem.Core`、`Polhem.Definition`、`Polhem.Api.Contracts`、`Polhem.Api.Core`、`Polhem.Business`），加上 `CommonConfiguration.AllowedTypeNamespaces` 中以 `|` 分隔的清單。泛型型別的泛型參數也會一併檢查
 - 名稱中的組件部分必須是固定集合背後的 runtime 組件之一，或名稱等於某個允許命名空間、或以它開頭的組件。部署端自有型別所在的組件若命名在允許命名空間之外，也必須把該名稱加進去
 
 列舉與 `ParameterCollection` 的值在所有平台都能用。允許命名空間中其他型別的值經 MessagePack 序列化需要動態程式碼，所以在沒有動態程式碼的平台（iOS、Mac Catalyst）會以指名該型別的 `NotSupportedException` 失敗。

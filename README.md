@@ -50,7 +50,7 @@ dotnet add package Polhem.Db
 
 | Assembly Name | Description |
 |---|---|
-| **Polhem.Base.dll** | Core utilities such as serialization, encryption, and general-purpose helpers. |
+| **Polhem.Core.dll** | Core utilities such as serialization, encryption, and general-purpose helpers. |
 | **Polhem.Definition.dll** | Defines system-wide structured types including FormSchema, field schemas, and layout configurations. |
 | **Polhem.Expressions.dll** | Portable, sandboxed expression evaluator (DynamicExpresso-backed) for computed fields and validation rules; shared by backend save and Avalonia client live preview so both sides compute identically. |
 | **Polhem.Api.Contracts.dll** | Shared data contracts (request/response models) used by both frontend and backend. |
@@ -142,6 +142,9 @@ to change.
 - Every `Bee.<Name>` package becomes `Polhem.<Name>`, and the split into packages is unchanged: `Bee.Hosting` becomes
   `Polhem.Hosting`, and so on for each package in the tables above. Namespaces follow the same pattern:
   `Bee.Definition.Forms` becomes `Polhem.Definition.Forms`.
+- The one exception is `Bee.Base`, which becomes `Polhem.Core`, the package and its namespaces alike:
+  `Bee.Base.Serialization` becomes `Polhem.Core.Serialization`. Polhem 1.0.0 still called it `Polhem.Base`; the
+  [CHANGELOG](https://github.com/polhem-dev/polhem/blob/main/CHANGELOG.md) entry for 1.1.0 explains the rename.
 - `Bee` in a type or member name becomes `Polhem`: `AddBeeFramework` becomes `AddPolhemFramework`, `UseBeeFramework`
   becomes `UsePolhemFramework`, `BeeLoginPanel` becomes `PolhemLoginPanel`.
 - The command-line tool `Bee.Cli` (`dotnet bee`) becomes `Polhem.Cli` (`dotnet polhem`). Uninstall the old tool and
