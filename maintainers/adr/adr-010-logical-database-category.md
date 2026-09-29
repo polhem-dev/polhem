@@ -333,12 +333,12 @@ the current code:
 - **2026-09-27: validation.** No `DbCategoryValidator` was added. Unknown category ids are reported by POLHEM1001 and
   POLHEM1002 and refused at runtime as described above, and POLHEM2001 reports a FormSchema table that is not
   registered under its category, so the `DbCategory.Tables` child nodes are no longer only a documentary index. The
-  rules are listed in [Analyzer rules](../../docs/en/analyzer-rules.md).
+  rules are listed in [Analyzer rules](../../docs/en/reference/analyzer-rules.md).
 
 ## Related documents
 
 - [ADR-005: FormSchema definition-driven architecture](adr-005-formschema-driven.md)
 - [ADR-012: Session company context model](adr-012-session-company-context.md) — the session model that
   `DbScope.Company` routing depends on
-- [DatabaseSettings & DbCategorySettings Guide](../../docs/en/database-settings-guide.md) — structure and operational
+- [DatabaseSettings & DbCategorySettings Guide](../../docs/en/database/database-settings-guide.md) — structure and operational
   details

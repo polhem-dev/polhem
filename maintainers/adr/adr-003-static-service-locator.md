@@ -44,7 +44,7 @@ Use the static Service Locator pattern, providing global access through static c
 - **Implicit dependencies**: a caller's dependencies are not declared explicitly in its constructor, so they are hard
   to see when reading the code.
 - **Sensitive to initialization order**: the initialization order must be followed strictly (see
-  `docs/en/development-constraints.md`), and a violation is only discovered at runtime.
+  `docs/en/architecture/development-constraints.md`), and a violation is only discovered at runtime.
 - **Not in line with modern .NET conventions**: new .NET projects generally use DI.
 
 ## Consequences
@@ -55,5 +55,5 @@ Use the static Service Locator pattern, providing global access through static c
 - `ApiServiceOptions` (Polhem.Api.Core): the global configuration of the API serialization / compression /
   encryption components
 - `ApiClientInfo` (Polhem.Api.Client): the global entry point for client connection configuration
-- The initialization order is documented in `docs/en/development-constraints.md` and
-  `docs/en/development-cookbook.md`
+- The initialization order is documented in `docs/en/architecture/development-constraints.md` and
+  `docs/en/guides/development-cookbook.md`

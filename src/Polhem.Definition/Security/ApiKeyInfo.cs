@@ -19,7 +19,7 @@ namespace Polhem.Definition.Security
     /// This is a cache-shared instance: every caller presenting the same key receives the same
     /// reference, and this record decides whether the call is authenticated. Its properties are
     /// init-only, so the compiler rejects a change after it is loaded. See
-    /// <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
+    /// <c>docs/en/architecture/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
     /// </para>
     /// </remarks>
     public sealed class ApiKeyInfo : IKeyObject

@@ -111,7 +111,7 @@ Introduce a **per-`CustomizeId` read-only customization overlay** that forms, to
    > The stacking algorithm was later centralized in `CustomizeOverlay` (`Polhem.Definition.Customization`), a pure
    > decision component shared by server and client (no storage / session / DI dependencies), so the two ends no
    > longer derive it separately. For the full usage description see
-   > [Tenant customization](../../docs/en/customization.md).
+   > [Tenant customization](../../docs/en/definitions/customization.md).
 
 3. **`CustomizeId` is an independent code, not the same as `CompanyId`**
 

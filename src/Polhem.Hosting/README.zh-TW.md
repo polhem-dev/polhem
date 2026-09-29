@@ -7,7 +7,7 @@
 ## 架構定位
 
 - **層級**：組合根（DI 註冊）
-- **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
+- **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/architecture/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
 - 也可由沒有 ASP.NET Core 的宿主使用：在行程內執行後端的桌面 head、主控台、Worker Service 與整合測試。
 
 組合根本質上橫跨所有層，因此「API 層不得引用 Repository 層」這條約束不適用於此。適用的是：此套件目前**沒有

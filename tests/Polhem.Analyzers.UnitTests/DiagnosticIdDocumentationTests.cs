@@ -10,7 +10,7 @@ namespace Polhem.Analyzers.UnitTests
     /// </summary>
     /// <remarks>
     /// Consumers configure severities by ID in their own <c>.editorconfig</c>, copying the IDs from
-    /// <c>docs/*/analyzer-rules.md</c>. An ID that is documented but not reported, or the reverse, makes
+    /// <c>docs/*/reference/analyzer-rules.md</c>. An ID that is documented but not reported, or the reverse, makes
     /// such a setting silently do nothing, and nothing in the build reads the documentation.
     /// </remarks>
     public class DiagnosticIdDocumentationTests
@@ -24,7 +24,7 @@ namespace Polhem.Analyzers.UnitTests
         public void AnalyzerRules_ListExactlyTheAnalyzerIds(string language)
         {
             var root = RepoRoot.Find();
-            var documented = IdsIn(File.ReadAllText(Path.Combine(root, "docs", language, "analyzer-rules.md")))
+            var documented = IdsIn(File.ReadAllText(Path.Combine(root, "docs", language, "reference", "analyzer-rules.md")))
                 .Where(id => id[6] != '9')
                 .ToHashSet(StringComparer.Ordinal);
             var declared = DeclaredIds();
@@ -43,7 +43,7 @@ namespace Polhem.Analyzers.UnitTests
         public void AnalyzerRules_ReservedIdsAreDocumentedAndUnused(string language)
         {
             var root = RepoRoot.Find();
-            var documented = IdsIn(File.ReadAllText(Path.Combine(root, "docs", language, "analyzer-rules.md")))
+            var documented = IdsIn(File.ReadAllText(Path.Combine(root, "docs", language, "reference", "analyzer-rules.md")))
                 .ToHashSet(StringComparer.Ordinal);
             var declared = DeclaredIds();
 
@@ -69,7 +69,7 @@ namespace Polhem.Analyzers.UnitTests
         public void AnalyzerRules_BuildGateIdsAreRaisedByTargets(string language)
         {
             var root = RepoRoot.Find();
-            var documented = IdsIn(File.ReadAllText(Path.Combine(root, "docs", language, "analyzer-rules.md")))
+            var documented = IdsIn(File.ReadAllText(Path.Combine(root, "docs", language, "reference", "analyzer-rules.md")))
                 .Where(id => id[6] == '9')
                 .ToList();
             var targets = string.Concat(

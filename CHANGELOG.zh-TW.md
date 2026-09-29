@@ -4,7 +4,7 @@
 
 Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版號依循
 [語意化版本](https://semver.org/lang/zh-TW/)。每個版本在這裡以一行列一項變更；理由與背景寫在
-[`docs/changelogs/`](docs/changelogs/) 下該版本的明細。
+[`docs/zh-TW/changelogs/`](docs/zh-TW/changelogs/) 下該版本的明細。
 
 ## [Unreleased]
 
@@ -13,7 +13,7 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 > Polhem 以新名稱延續 [Bee.NET](https://github.com/jeff377/bee-library)。Polhem 1.0.0 是 Bee.NET 最後發佈的 4.33.0
 > 改名之後，再加上以下各項變更。應用程式如何遷移，見 [從 Bee.NET 遷移](README.zh-TW.md#從-beenet-遷移)。
 
-📄 完整說明與背景：[docs/changelogs/1.0.0.zh-TW.md](docs/changelogs/1.0.0.zh-TW.md)
+📄 完整說明與背景：[docs/zh-TW/changelogs/1.0.0.md](docs/zh-TW/changelogs/1.0.0.md)
 
 ### 由 Bee.NET 改名
 

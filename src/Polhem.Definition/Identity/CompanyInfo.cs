@@ -20,7 +20,7 @@ namespace Polhem.Definition.Identity
     /// selects which database that company's repositories read and write, so a mutation redirects
     /// other sessions' data access. The properties are init-only; the override tables are still
     /// mutable collections, so treat an instance handed to you by the cache as frozen. See
-    /// <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
+    /// <c>docs/en/architecture/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
     /// </para>
     /// </remarks>
     public sealed class CompanyInfo : IKeyObject

@@ -12,8 +12,8 @@ found one after another between 2026-08-12 and 08-13):
 | Document | What it said at the time | What it left out |
 |------|---------|---------|
 | The 2026-08-06 revision table in `maintainers/adr/adr-016-*.md` | "currently **five kinds**" | `MenuSettings` was not in the table at all |
-| The "which one to use" table in `docs/en/customization.md` (and its `docs/zh-TW/` translation) | five rows | same as above |
-| §7 of `docs/en/definition-files-overview.md` (and its translation) | "**four types**, three granularities" | `PluginSettings`, which is the only granularity that "adds" |
+| The "which one to use" table in `docs/en/definitions/customization.md` (and its `docs/zh-TW/` translation) | five rows | same as above |
+| §7 of `docs/en/definitions/definition-files-overview.md` (and its translation) | "**four types**, three granularities" | `PluginSettings`, which is the only granularity that "adds" |
 
 The three places **did not leave out the same item**, so cross-checking them does not catch it either: the first two
 left out `MenuSettings`, the third left out `PluginSettings`.
@@ -88,7 +88,7 @@ Putting both in the same box and writing only the first one makes the most disti
 **Fixed**: [`7160afd2`](https://github.com/jeff377/bee-library/commit/7160afd2); the box was changed to `TableSchema ＋ 執行期 SQL` (in the English source today: `+ runtime SQL`), and the caption row was changed to "where it is stored · how it goes in and out".
 
 ⚠️ **One place that was re-checked and needs no change**: the overall architecture diagram in §11 of
-`docs/en/architecture-overview.md` (and its translation) also has the two nodes `FormSchema → FormLayout / TableSchema`, which at first glance
+`docs/en/architecture/architecture-overview.md` (and its translation) also has the two nodes `FormSchema → FormLayout / TableSchema`, which at first glance
 looks like the same problem. **It is not**: that is a **layered** architecture diagram, and SQL generation hangs off
 the Repository layer below it ("FormSchema-driven (CRUD SQL auto-generated)"), which is the correct place.
 It is recorded here so that the next person who sees those two nodes does not reopen the same check.

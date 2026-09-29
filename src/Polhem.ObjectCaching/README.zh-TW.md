@@ -7,7 +7,7 @@
 ## 架構定位
 
 - **層級**：基礎設施層（快取）
-- **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
+- **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/architecture/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
 - 由應用程式消費。
 
 ## 目標框架
@@ -70,7 +70,7 @@
 - **DI 注入** -- 消費端以建構子注入 `ICacheContainer`；`CacheContainerService` 實作由 `AddPolhemFramework` 以 Singleton 註冊，呼叫端透過注入的合約取得各快取類別，而非靜態 facade。
 - **樣板方法模式（Template Method Pattern）** -- `ObjectCache<T>` 子類別覆寫 `GetPolicy`、`GetKey`、`CreateInstance` 以定義快取行為，無需修改基底擷取邏輯。
 - **鍵值正規化** -- `MemoryCacheProvider` 以 `ToLowerInvariant()` 將鍵轉為小寫，因此查找不分大小寫。
-- **快取實例為共用** -- 每個 session 拿到的是同一個實例，因此載入後不可修改；需要 per-session 版本的呼叫端先複製。見[開發限制](../../docs/zh-TW/development-constraints.md)。
+- **快取實例為共用** -- 每個 session 拿到的是同一個實例，因此載入後不可修改；需要 per-session 版本的呼叫端先複製。見[開發限制](../../docs/zh-TW/architecture/development-constraints.md)。
 - **底層儲存** -- `MemoryCacheProvider` 包裝 `Microsoft.Extensions.Caching.Memory.IMemoryCache`；公開的 `CacheItemPolicy` 於內部對映為 `MemoryCacheEntryOptions`。
 - 啟用 **Nullable Reference Types**（`<Nullable>enable</Nullable>`）。
 

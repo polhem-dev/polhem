@@ -21,7 +21,7 @@ namespace Polhem.Definition.Security
     /// This is a cache-shared instance: the whole deployment reads the same reference, so flipping
     /// <see cref="InForce"/> on it would open or close the gate for every caller at once.
     /// <see cref="InForce"/> is init-only, so the compiler rejects that. See
-    /// <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
+    /// <c>docs/en/architecture/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
     /// </para>
     /// </remarks>
     public sealed class ApiKeyGateState : IKeyObject

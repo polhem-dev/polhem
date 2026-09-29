@@ -23,7 +23,7 @@ because **several subsystems compare field names as strings, case-sensitively**:
   the server saved without handling it, it became a JSON-RPC `-32000`.
 
 These two are **the same kind of problem**: a case-sensitive name comparison meets "the same field name has a
-different case in different layers". The database naming conventions (see `docs/en/database-naming-conventions.md`
+different case in different layers". The database naming conventions (see `docs/en/database/database-naming-conventions.md`
 §1–2) already require all-lowercase `snake_case`, and `FormField.FieldName` is lowercase by convention as well. The
 only inconsistency is the historical normalization "the in-memory `DataSet` stores column names in uppercase", and it
 also leaks onto the wire through serialization.
@@ -107,5 +107,5 @@ the current code:
 ## Related
 
 - ADR-028 (custom expression and rule engine): the source of the second time a case-sensitive comparison bit.
-- `docs/en/database-naming-conventions.md` §1–2, §6: the lowercase field name convention and cross-layer
+- `docs/en/database/database-naming-conventions.md` §1–2, §6: the lowercase field name convention and cross-layer
   consistency.

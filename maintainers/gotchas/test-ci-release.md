@@ -235,7 +235,7 @@ if not, it was left out.
    "Publishing: NuGet Trusted Publishing" below). Otherwise its push is rejected, even though the pack lists are
    right.
 3. Update the documents that list packages (for bilingual documents, both languages change):
-   - `docs/en/dependency-map.md` (then its translation under `docs/zh-TW/`, restamped with
+   - `docs/en/architecture/dependency-map.md` (then its translation under `docs/zh-TW/`, restamped with
      `./check-docs-i18n.sh --stamp`): add the node + dependency edges to the mermaid diagram, a row to the external
      package table if it brings one, and the Architectural Notes. The document deliberately states no project count.
    - `README.md` + `README.zh-TW.md`: add a row to one of the package tables.

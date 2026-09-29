@@ -10,7 +10,7 @@
 - **Hosting 模式**：Blazor Server —— 元件邏輯在 ASP.NET Core server 端執行；瀏覽器透過 SignalR 接收 DOM 差異。
 - **Provider 綁定**：以 `AddPolhemBlazor` 選擇（見下方）——經 `LocalApiProvider` 在行程內呼叫，或經
   `RemoteApiProvider` 走 HTTP，兩者皆來自 `Polhem.Api.Client`。
-- **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
+- **在相依圖中的位置**：見[專案相依性全景圖](../../docs/zh-TW/architecture/dependency-map.md)。**此處不逐一列出** —— 權威來源是 csproj，而散落在每份套件 README 的散文拷貝會漂且無人察覺。它們確實漂了：`Polhem.Hosting` 抽出後，有四份 README 的下游數個月都沒把它補上。
 - 由 ASP.NET Core 宿主應用程式消費。
 
 ## 目標框架

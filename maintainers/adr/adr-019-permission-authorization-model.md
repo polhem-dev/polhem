@@ -116,7 +116,7 @@ Line B layer 2 (scope)        filters / guards rows by the scope of (model, acti
 - ⚠️ **Fail-closed boundary**: if a column the scope needs is missing or the identity is empty → no rows match (a safe
   default). `PermissionBindingValidator` can detect such definition gaps in advance, but **the framework does not run
   it automatically**; the host has to wire it up itself (see the
-  [user guide](../../docs/en/permission-authorization.md#definition-validation-host-invoked)).
+  [user guide](../../docs/en/security/permission-authorization.md#definition-validation-host-invoked)).
 - ✅ **Frontend capability (fine-grained element degradation) implemented (2026-07-03)**: layers 1 and 2 are still
   enforced authoritatively at the backend method layer and do not rely on the frontend. Permissions can be seen as
   **three dimensions × two checkpoints**: the **action** dimension is gated authoritatively in the backend and is also
@@ -126,7 +126,7 @@ Line B layer 2 (scope)        filters / guards rows by the scope of (model, acti
   (`EnterCompanyResponse.Capabilities`), is cached in `ClientInfo.Capabilities`, and is resolved by
   `Polhem.UI.Core.Permissions.ElementCapabilityResolver`. The frontend is **pure UX, not a data boundary** (the
   backend does not mask sensitive column values). See Part 2 of the
-  [user guide](../../docs/en/permission-authorization.md) for details.
+  [user guide](../../docs/en/security/permission-authorization.md) for details.
 
 ## Implementation evolution
 
@@ -167,4 +167,4 @@ with the current code:
   [ADR-010 (logical DB categories)](adr-010-logical-database-category.md),
   [ADR-012 (session company context)](adr-012-session-company-context.md),
   [ADR-017 (DB cache invalidation)](adr-017-db-cache-invalidation.md)
-- User guide: [en/permission-authorization.md](../../docs/en/permission-authorization.md)
+- User guide: [en/permission-authorization.md](../../docs/en/security/permission-authorization.md)

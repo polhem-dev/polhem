@@ -112,7 +112,7 @@ denormalized and self-contained". Core decisions:
   optional EAV can be turned on if needed); best-effort has a very small window for loss (upgrade to a transactional
   outbox if needed, with the entries / schema unchanged).
 - **Related**: the registration of the system tables is in
-  [framework-reserved-names §1.3](../../docs/en/framework-reserved-names.md); `DbScope.Log` routing is in
+  [framework-reserved-names §1.3](../../docs/en/reference/framework-reserved-names.md); `DbScope.Log` routing is in
   [ADR-010](adr-010-logical-database-category.md); the DataForm Save pipeline is in
   [ADR-024](adr-024-dataform-save-dataadapter.md); the classification axes and write strategy of the audit trail,
   recorded afterwards, are in [ADR-040](adr-040-audit-trail-taxonomy.md).

@@ -135,6 +135,6 @@ they follow the server's message types.
 
 ## Related
 
-- Integration guide: [docs/en/jsonrpc-frontend-integration.md](../../docs/en/jsonrpc-frontend-integration.md)
+- Integration guide: [docs/en/api/jsonrpc-frontend-integration.md](../../docs/en/api/jsonrpc-frontend-integration.md)
 - Backend host: [samples/QuickStart.Server](../QuickStart.Server/)
 - Demo credentials: [samples/Polhem.Samples.Shared/DemoCredentials.cs](../Polhem.Samples.Shared/DemoCredentials.cs)

@@ -222,7 +222,7 @@ namespace Polhem.Business.System
         /// <para>
         /// The resource is read from the Define cache via
         /// <see cref="IDefineAccess.GetLanguage"/>. Per
-        /// <c>docs/en/development-constraints.md § Cached Data Immutability After Init</c>,
+        /// <c>docs/en/architecture/development-constraints.md § Cached Data Immutability After Init</c>,
         /// the cached instance must not be mutated; it is only serialized here.
         /// </para>
         /// </remarks>

@@ -234,7 +234,7 @@ runtime side, and JS front ends have no matching need.
 
 - [ADR-013: Front-end API connection strategy](adr-013-frontend-api-connection-strategy.md) — the HTTPS + Bearer Token
   security model of Family B (`Polhem.Web.*`) is consistent with this ADR
-- [JSON-RPC front-end integration guide](../../docs/en/jsonrpc-frontend-integration.md) — the public document for JS / TS
+- [JSON-RPC front-end integration guide](../../docs/en/api/jsonrpc-frontend-integration.md) — the public document for JS / TS
   developers
 - [Polhem.Api.Core README](../../src/Polhem.Api.Core/README.md) — the level-checking logic of `ApiAccessValidator`
 - `samples/Web.Js.Demo/` — a pure JS demo that verifies full CRUD on the Plain path end to end

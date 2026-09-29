@@ -4,7 +4,7 @@
 
 Notable changes to the Polhem packages. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow [Semantic Versioning](https://semver.org/). Each version lists its changes here in one line each;
-the reasons and the background are in its detailed notes under [`docs/changelogs/`](docs/changelogs/).
+the reasons and the background are in its detailed notes under [`docs/en/changelogs/`](docs/en/changelogs/).
 
 ## [Unreleased]
 
@@ -14,7 +14,7 @@ the reasons and the background are in its detailed notes under [`docs/changelogs
 > the last Bee.NET release, renamed, plus the changes listed below. How to move an application over is described in
 > [Migrating from Bee.NET](README.md#migrating-from-beenet).
 
-📄 Full notes and background: [docs/changelogs/1.0.0.md](docs/changelogs/1.0.0.md)
+📄 Full notes and background: [docs/en/changelogs/1.0.0.md](docs/en/changelogs/1.0.0.md)
 
 ### Renamed from Bee.NET
 

@@ -7,7 +7,7 @@ Accepted (2026-04-16)
 ## Context
 
 The framework separates types into an API layer and a BO layer (see
-[API Contract and BO Parameter Design Principles](../../docs/en/api-bo-contract-design.md)):
+[API Contract and BO Parameter Design Principles](../../docs/en/api/api-bo-contract-design.md)):
 
 - **BO layer**: `{Action}Args` / `{Action}Result` (plain POCOs)
 - **API layer**: `{Action}Request` / `{Action}Response` (with MessagePack serialization attributes)
@@ -103,11 +103,11 @@ For example: `PingResult` → `PingResponse`, `LoginResult` → `LoginResponse`.
 ### Documents
 
 - This ADR
-- Updated [API Contract and BO Parameter Design Principles](../../docs/en/api-bo-contract-design.md) to remove the manual
+- Updated [API Contract and BO Parameter Design Principles](../../docs/en/api/api-bo-contract-design.md) to remove the manual
   registration step
-- Updated the [End-to-End Development Cookbook](../../docs/en/development-cookbook.md) to explain the role of
+- Updated the [End-to-End Development Cookbook](../../docs/en/guides/development-cookbook.md) to explain the role of
   `ApiOutputConverter`
-- Updated the API contract section of [Development Constraints and Anti-Patterns](../../docs/en/development-constraints.md)
+- Updated the API contract section of [Development Constraints and Anti-Patterns](../../docs/en/architecture/development-constraints.md)
 
 ### What it means for developers
 

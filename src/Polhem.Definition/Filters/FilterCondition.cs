@@ -49,7 +49,7 @@ namespace Polhem.Definition.Filters
         /// through the named-type escape hatch (a namespace added to <see cref="Polhem.Base.SysInfo.AllowedTypeNamespaces"/>),
         /// and on iOS over the MessagePack codec it fails with a <see cref="NotSupportedException"/> that names
         /// the type. The details are under "Code generation at run time (iOS)" in
-        /// <c>docs/en/platform-support.md</c>.
+        /// <c>docs/en/getting-started/platform-support.md</c>.
         /// </remarks>
         public object? Value { get; set; }
 

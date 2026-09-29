@@ -146,4 +146,4 @@ with the current code:
   semantics of `customize_id` come from)
 - [ADR-009](adr-009-cache-implementation.md): the cache implementation (the layering of dumb cache storage vs
   service loading)
-- Naming conventions: [`database-naming-conventions.md`](../../docs/en/database-naming-conventions.md)
+- Naming conventions: [`database-naming-conventions.md`](../../docs/en/database/database-naming-conventions.md)

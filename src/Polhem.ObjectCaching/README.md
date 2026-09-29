@@ -7,7 +7,7 @@
 ## Architecture Position
 
 - **Layer**: Infrastructure (caching)
-- **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
+- **Position in the dependency graph**: see [Project Dependency Map](../../docs/en/architecture/dependency-map.md). Not enumerated here — the csproj files are the authority, and a prose copy in every package README drifts with nothing to catch it. These did: `Polhem.Hosting` was missing as a dependent from four of them for months after it was extracted.
 - Consumed by application code.
 
 ## Target Framework
@@ -73,7 +73,7 @@
 - **DI injection** -- consumers ctor-inject `ICacheContainer`; the `CacheContainerService` implementation is registered as a Singleton by `AddPolhemFramework`, so callers reach the individual cache classes through the injected contract rather than a static facade.
 - **Template Method Pattern** -- `ObjectCache<T>` subclasses override `GetPolicy`, `GetKey`, and `CreateInstance` to define caching behavior without modifying the base retrieval logic.
 - **Key normalization** -- `MemoryCacheProvider` lowercases keys with `ToLowerInvariant()`, so lookups ignore case.
-- **Cached instances are shared** -- every session receives the same instance, so it is not modified after loading; a caller that needs a per-session variant clones it. See [Development Constraints](../../docs/en/development-constraints.md).
+- **Cached instances are shared** -- every session receives the same instance, so it is not modified after loading; a caller that needs a per-session variant clones it. See [Development Constraints](../../docs/en/architecture/development-constraints.md).
 - **Backing store** -- `MemoryCacheProvider` wraps `Microsoft.Extensions.Caching.Memory.IMemoryCache`; the public `CacheItemPolicy` is mapped internally to `MemoryCacheEntryOptions`.
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
 

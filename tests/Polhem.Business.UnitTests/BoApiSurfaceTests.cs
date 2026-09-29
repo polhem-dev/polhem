@@ -24,7 +24,7 @@ namespace Polhem.Business.UnitTests
     ///   security level.</description></item>
     /// <item><description>Update the <see cref="s_expectedSurface"/> baseline
     ///   below to match the new API surface.</description></item>
-    /// <item><description>Update <c>docs/en/api-method-reference.md</c>
+    /// <item><description>Update <c>docs/en/api/api-method-reference.md</c>
     ///   (and the zh-TW counterpart) so the human-facing reference does not
     ///   drift from the code.</description></item>
     /// </list>
@@ -101,7 +101,7 @@ namespace Polhem.Business.UnitTests
         };
 
         [Fact]
-        [DisplayName("The BO API public surface matches the baseline, which is checked against docs/{lang}/api-method-reference.md")]
+        [DisplayName("The BO API public surface matches the baseline, which is checked against docs/{lang}/api/api-method-reference.md")]
         public void PublicApiSurface_MatchesBaseline()
         {
             var actual = ScanBusinessAssembly();
@@ -115,7 +115,7 @@ namespace Polhem.Business.UnitTests
         }
 
         /// <summary>
-        /// Every baseline row must appear in the bilingual <c>docs/{lang}/api-method-reference.md</c>, and vice versa.
+        /// Every baseline row must appear in the bilingual <c>docs/{lang}/api/api-method-reference.md</c>, and vice versa.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -132,10 +132,10 @@ namespace Polhem.Business.UnitTests
         [Theory]
         [InlineData("en")]
         [InlineData("zh-TW")]
-        [DisplayName("The BO API baseline matches docs/{lang}/api-method-reference.md entry by entry")]
+        [DisplayName("The BO API baseline matches docs/{lang}/api/api-method-reference.md entry by entry")]
         public void Baseline_MatchesPublicMethodReference(string lang)
         {
-            string path = Path.Combine(RepoRoot.Find(), "docs", lang, "api-method-reference.md");
+            string path = Path.Combine(RepoRoot.Find(), "docs", lang, "api", "api-method-reference.md");
             Assert.True(File.Exists(path), $"Cannot find {path}.");
 
             var documented = new HashSet<string>(StringComparer.Ordinal);
@@ -154,7 +154,7 @@ namespace Polhem.Business.UnitTests
 
             Assert.True(
                 missing.Count == 0 && extra.Count == 0,
-                $"docs/{lang}/api-method-reference.md is out of sync with the baseline.\nMissing from the document:\n  {string.Join("\n  ", missing)}\n" +
+                $"docs/{lang}/api/api-method-reference.md is out of sync with the baseline.\nMissing from the document:\n  {string.Join("\n  ", missing)}\n" +
                 $"Extra in the document (or column values differ):\n  {string.Join("\n  ", extra)}");
         }
 
@@ -169,10 +169,10 @@ namespace Polhem.Business.UnitTests
         [Theory]
         [InlineData("en")]
         [InlineData("zh-TW")]
-        [DisplayName("The methods that declare replay protection match the list in docs/{lang}/api-method-reference.md")]
+        [DisplayName("The methods that declare replay protection match the list in docs/{lang}/api/api-method-reference.md")]
         public void ReplayProtectedMethods_MatchPublicMethodReference(string lang)
         {
-            string text = File.ReadAllText(Path.Combine(RepoRoot.Find(), "docs", lang, "api-method-reference.md"));
+            string text = File.ReadAllText(Path.Combine(RepoRoot.Find(), "docs", lang, "api", "api-method-reference.md"));
 
             var expected = s_expectedSurface
                 .Where(e => e.ReplayProtection == ApiReplayProtection.UniqueSequence)

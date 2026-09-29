@@ -180,7 +180,7 @@ intercept any method of any model; we do not, and giving up this advantage to "l
   separately on all five providers.
 - **Upgrade path**: field-level sensitivity and action-level switches are both additive, so adding them later does not
   require working around this design.
-- **Related**: the table and progId registration are in [Framework-Reserved Names](../../docs/en/framework-reserved-names.md);
+- **Related**: the table and progId registration are in [Framework-Reserved Names](../../docs/en/reference/framework-reserved-names.md);
   the classification axes are in [ADR-040](adr-040-audit-trail-taxonomy.md); the cross-node invalidation mechanism is
   in [ADR-017](adr-017-db-cache-invalidation.md); the permission model is in
   [ADR-019](adr-019-permission-authorization-model.md).

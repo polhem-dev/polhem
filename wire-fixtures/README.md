@@ -25,7 +25,7 @@ paths. It is **not** a valid `Plain` request body, and the difference is silent 
 - Empty collections appear (`"parameters": []`) where a Plain body omits them.
 
 If you are building a `Plain` client, follow
-[JSON-RPC Frontend Integration](../docs/en/jsonrpc-frontend-integration.md) instead. Use these fixtures
+[JSON-RPC Frontend Integration](../docs/en/api/jsonrpc-frontend-integration.md) instead. Use these fixtures
 when your client declares `"codec": "json"` on the payload envelope.
 
 ## What a fixture contains

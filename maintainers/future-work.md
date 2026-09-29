@@ -28,7 +28,7 @@ with today is right, but **filling `hire_date` with today only keeps it from bei
 
 **Four questions to answer first**:
 
-1. `sys_*` are framework-reserved names (`docs/en/framework-reserved-names.md`). Adding one extends the reserved
+1. `sys_*` are framework-reserved names (`docs/en/reference/framework-reserved-names.md`). Adding one extends the reserved
    word list, and existing applications may already use that field name.
 2. **Truly separating the semantics means that `Date` fields not marked `sys_date` stop being filled with today
    automatically, and that is a breaking behavior change.** It has to go through the version number and the

@@ -52,7 +52,7 @@ business logic at the same time.
 - The `IFormCommandBuilder` implementation of each provider under `Polhem.Db/Providers/` (such as
   `SqlServer/SqlFormCommandBuilder.cs`): generates SQL automatically from FormSchema
 - `Polhem.Db/Dml/SelectCommandBuilder.cs`: assembles SELECT / FROM / WHERE / ORDER BY
-- The architecture is described in detail in `docs/en/architecture-overview.md`
+- The architecture is described in detail in `docs/en/architecture/architecture-overview.md`
 - The concrete pattern of the data access layer (FormMap) is described in `docs/formmap.zh-TW.md`
   — **that document was removed together with the name, as described under "Implementation evolution" below**.
 
@@ -70,7 +70,7 @@ taken up by the code or by external articles.
 
 On 2026-08-13 it was decided to **drop its status as a pattern name**: the mechanism and the content of the document
 are unchanged; they just no longer claim to be a named pattern. The entry has been removed from the `terminology`
-table, and the document now lives at [`en/formschema-data-access.md`](../../docs/en/formschema-data-access.md), titled
+table, and the document now lives at [`en/formschema-data-access.md`](../../docs/en/definitions/formschema-data-access.md), titled
 "FormSchema-Driven Database Access".
 
 The text above keeps its original wording, to preserve the context of the decision at the time.

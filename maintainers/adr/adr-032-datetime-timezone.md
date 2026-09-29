@@ -5,7 +5,7 @@
 Accepted (2026-07-25)
 
 > P0–P3 are fully implemented (2026-07-26). How consumers use it is described in
-> [datetime-timezone.md](../../docs/en/datetime-timezone.md).
+> [datetime-timezone.md](../../docs/en/database/datetime-timezone.md).
 >
 > The only verification not carried out: time zone availability on **real** mobile / WASM devices. Each head pins
 > `InvariantGlobalization=false` and `InvariantTimezone=false`, but that is a configuration guardrail, not

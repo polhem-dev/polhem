@@ -28,7 +28,7 @@ customers can customize it at design time:
 
 This capability spans the definition layer (`Polhem.Definition`), a new evaluation engine (`Polhem.Expressions`) and
 the business logic layer (`Polhem.Business`), and is a structural contract of the framework's external API surface,
-hence this ADR. The user guide is `docs/en/expression-rules.md`.
+hence this ADR. The user guide is `docs/en/definitions/expression-rules.md`.
 
 ## Options considered
 

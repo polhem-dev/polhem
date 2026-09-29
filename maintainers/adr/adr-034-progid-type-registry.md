@@ -241,4 +241,4 @@ bind), but it no longer has a purpose: with the fallback gone, that degrade log 
   replacement reuses its mechanism
 - [ADR-010](adr-010-logical-database-category.md): logical database categories, which decide the routing target of
   form-track Repositories
-- [Definition Files Overview](../../docs/en/definition-files-overview.md): how to use the two definition files
+- [Definition Files Overview](../../docs/en/definitions/definition-files-overview.md): how to use the two definition files

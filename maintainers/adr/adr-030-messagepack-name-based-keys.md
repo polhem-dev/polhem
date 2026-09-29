@@ -179,7 +179,7 @@ When adopted and carried out:
   opt-out membership audit adds `[IgnoreMember]` where needed.
 - Collection container types (the `ItemsForSerialization` proxy of `MessagePackKeyCollectionBase<T>`, and the types
   registered as arrays with `CollectionBaseFormatter<T>`) are handled individually; only their item types switch.
-- The public document `docs/en/api-bo-contract-design.md` (bilingual) updates its description of wire keys.
+- The public document `docs/en/api/api-bo-contract-design.md` (bilingual) updates its description of wire keys.
 - (Conditional) introduce the MessagePack source generator and `[GeneratedMessagePackResolver]`.
 
 **Regression guard**: `tests/Polhem.Api.Core.UnitTests/Contracts/ApiContractSerializationTests.cs` (scans every
@@ -203,7 +203,7 @@ the current code:
 rules it names shipped as `BEE4001`–`BEE4004`; the `POLHEM` spelling here comes from the rename. Polhem never shipped
 rules under those numbers: its analyzer release history starts at 1.0.0, and `POLHEM4001`–`POLHEM4004` are reserved and
 never reused, so a suppression carried over from Bee.NET cannot silence a new rule. The reserved numbers are listed in
-the [analyzer rule reference](../../docs/en/analyzer-rules.md).
+the [analyzer rule reference](../../docs/en/reference/analyzer-rules.md).
 
 - **2026-09-27: `DataTable` rows are positional over MessagePack.** The `SerializableData*` types of "Follow-up:
   bringing SerializableData\* in line" are removed. `DataTableFormatter` and `DataSetFormatter`

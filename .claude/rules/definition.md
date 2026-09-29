@@ -22,7 +22,7 @@ is shared**, regardless of where the data is loaded from, so it applies to both 
 `SessionInfo` is the exception (it is per-session by nature; the cache key is the access token). The one admitted
 in-place mutation is `CacheDefineAccess.GetDatabaseSettings`, which decrypts passwords on the cached instance; its
 WARNING remarks list the three conditions that make it safe, and they do not generalise. Do not copy the shape.
-**The complete type list lives only in `docs/en/development-constraints.md`; this file does not copy it.**
+**The complete type list lives only in `docs/en/architecture/development-constraints.md`; this file does not copy it.**
 
 - Need a per-session change → `cached.Clone()` first, then mutate. Not every definition type has `Clone()` today
   (the settings types and `LanguageResource` have none); if you need a per-session variant of one that lacks it,
@@ -40,4 +40,4 @@ WARNING remarks list the three conditions that make it safe, and they do not gen
   [`aa843f71`](https://github.com/jeff377/bee-library/commit/aa843f71)).
 - In code review, "directly mutating an instance taken from the cache" must be blocked.
 
-For the full rules see `docs/en/development-constraints.md` § Cached Data Immutability After Init.
+For the full rules see `docs/en/architecture/development-constraints.md` § Cached Data Immutability After Init.

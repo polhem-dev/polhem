@@ -1,9 +1,9 @@
-<!-- source: en/README.md blob: b038fb60f4b495a0ab72c8a3aa100b5c6670249b -->
+<!-- source: en/README.md blob: b66f85c2d75aa0d6b77ec56392b3dd7800d6eefa -->
 # Polhem 文件
 
 [English](../en/README.md)
 
-`docs/` 存放 Polhem 框架對外公開的開發者文件。以下所列文件皆有英文與繁體中文兩個版本，檔名相同：英文版在 `docs/en/`，繁體中文版在 `docs/zh-TW/`。英文為源文件，其他語言皆為譯本。
+`docs/` 存放 Polhem 框架對外公開的開發者文件。以下所列文件皆有英文與繁體中文兩個版本，路徑相同：英文版在 `docs/en/`，繁體中文版在 `docs/zh-TW/`，兩邊的子資料夾一致。英文為源文件，其他語言皆為譯本。
 
 每份譯本的第一行是一段 HTML 註解，記錄它對照的源文件版本（檔案內容的 git blob hash）。源文件改動後，若譯本沒有重新對照並更新這段註解，[`check-docs-i18n.sh`](../../check-docs-i18n.sh) 就會判定該譯本過期。過期譯本會讓 CI 失敗、還是只列報告，依語言而定，設定在該腳本的檔頭。
 
@@ -24,13 +24,13 @@
 
 | 文件 | 類型 | 說明 |
 |------|------|------|
-| [快速上手](getting-started.md) | 教學 | 從零建出第一個 Polhem 後端：套件、`DefinePath`、DI 接線、第一張表單與商業物件，再由用戶端呼叫 |
-| [架構總覽](architecture-overview.md) | 概念 | 定義導向架構（Definition-Driven Architecture）的設計理念與實踐模式 |
-| [定義檔全景](definition-files-overview.md) | 概念 | 所有定義檔的全景圖：各自管什麼、彼此怎麼串、改了哪個會影響哪一層 |
+| [快速上手](getting-started/getting-started.md) | 教學 | 從零建出第一個 Polhem 後端：套件、`DefinePath`、DI 接線、第一張表單與商業物件，再由用戶端呼叫 |
+| [架構總覽](architecture/architecture-overview.md) | 概念 | 定義導向架構（Definition-Driven Architecture）的設計理念與實踐模式 |
+| [定義檔全景](definitions/definition-files-overview.md) | 概念 | 所有定義檔的全景圖：各自管什麼、彼此怎麼串、改了哪個會影響哪一層 |
 
-> 遇到不熟的術語？另開一頁擺著[術語對照表](terminology.md)。
+> 遇到不熟的術語？另開一頁擺著[術語對照表](reference/terminology.md)。
 >
-> 想先看框架已經替你做掉哪些事？見[框架機制清單](framework-capabilities.md)。
+> 想先看框架已經替你做掉哪些事？見[框架機制清單](getting-started/framework-capabilities.md)。
 
 ## 2. 核心概念
 
@@ -38,10 +38,10 @@
 
 | 文件 | 類型 | 說明 |
 |------|------|------|
-| [FormSchema 驅動的資料庫存取](formschema-data-access.md) | 概念 | Polhem.Db 如何以 FormSchema 為單位動態產生 SQL，以及它為何不是 ORM |
-| [API ↔ BO 契約設計](api-bo-contract-design.md) | 概念 | API 契約三層分離（Contracts / API Type / BO Type）與驅動它的命名慣例 |
-| [專案相依性全景圖](dependency-map.md) | 概念 | `src/` 專案之間的相依關係，以及維持相依圖無環的規則 |
-| [快取機制](caching.md) | 概念 | 定義快取與資料庫相依快取如何運作：讀取路徑、失效信號，以及跨 process / 多節點的通知表機制 |
+| [FormSchema 驅動的資料庫存取](definitions/formschema-data-access.md) | 概念 | Polhem.Db 如何以 FormSchema 為單位動態產生 SQL，以及它為何不是 ORM |
+| [API ↔ BO 契約設計](api/api-bo-contract-design.md) | 概念 | API 契約三層分離（Contracts / API Type / BO Type）與驅動它的命名慣例 |
+| [專案相依性全景圖](architecture/dependency-map.md) | 概念 | `src/` 專案之間的相依關係，以及維持相依圖無環的規則 |
+| [快取機制](guides/caching.md) | 概念 | 定義快取與資料庫相依快取如何運作：讀取路徑、失效信號，以及跨 process / 多節點的通知表機制 |
 
 ## 3. 開發指引
 
@@ -49,17 +49,17 @@
 
 | 文件 | 類型 | 說明 |
 |------|------|------|
-| [端到端開發指引](development-cookbook.md) | 指引 | 從定義到 API 的核心開發流程：初始化順序、請求管線、ExecFunc 模式、快取失效 |
-| [運算式與規則](expression-rules.md) | 指引 | 在 FormSchema 以宣告式運算式做欄位運算與存檔/刪除前驗證，取代手寫 BO 程式碼 |
-| [租戶客製化](customization.md) | 指引 | 讓某一家公司得到不同的標題、版面或行為，而不分岔套裝定義：該用哪一種機制、各自怎麼寫、以及什麼不能客製 |
-| [權限與授權指南](permission-authorization.md) | 指引 | 兩層授權（動作 gate + record scope）的設定與運作：PermissionModels、`FormField.ScopeRole`、roles/grants 三表、讀取過濾與寫入端權威 re-query；另含部署層授權（管的是整個部署的資產，與公司權限互不授予） |
-| [API 金鑰管理](api-key-management.md) | 指引 | API 金鑰識別的是「呼叫的應用程式」而非使用者：閘門如何自行啟用、誰能管理金鑰、以及輪替流程 |
-| [JSON-RPC 前端整合指引](jsonrpc-frontend-integration.md) | 指引 | 從 JavaScript / TypeScript 前端呼叫 JSON-RPC API（前端無 .NET）：wire format、認證流程、TypeScript wrapper |
+| [端到端開發指引](guides/development-cookbook.md) | 指引 | 從定義到 API 的核心開發流程：初始化順序、請求管線、ExecFunc 模式、快取失效 |
+| [運算式與規則](definitions/expression-rules.md) | 指引 | 在 FormSchema 以宣告式運算式做欄位運算與存檔/刪除前驗證，取代手寫 BO 程式碼 |
+| [租戶客製化](definitions/customization.md) | 指引 | 讓某一家公司得到不同的標題、版面或行為，而不分岔套裝定義：該用哪一種機制、各自怎麼寫、以及什麼不能客製 |
+| [權限與授權指南](security/permission-authorization.md) | 指引 | 兩層授權（動作 gate + record scope）的設定與運作：PermissionModels、`FormField.ScopeRole`、roles/grants 三表、讀取過濾與寫入端權威 re-query；另含部署層授權（管的是整個部署的資產，與公司權限互不授予） |
+| [API 金鑰管理](security/api-key-management.md) | 指引 | API 金鑰識別的是「呼叫的應用程式」而非使用者：閘門如何自行啟用、誰能管理金鑰、以及輪替流程 |
+| [JSON-RPC 前端整合指引](api/jsonrpc-frontend-integration.md) | 指引 | 從 JavaScript / TypeScript 前端呼叫 JSON-RPC API（前端無 .NET）：wire format、認證流程、TypeScript wrapper |
 | [Wire 合約](../../wire-contracts/README.md) | 參考 | 由訊息型別產生的 TypeScript 合約 —— 非 .NET 用戶端據以實作的對象 |
 | [Wire Fixtures](../../wire-fixtures/README.md) | 參考 | 每個 wire 訊息的 golden body 樣本，供用戶端實作對照驗證 |
-| [DatabaseSettings 與 DbCategorySettings 指引](database-settings-guide.md) | 指引 | 兩個資料庫相關設定檔的結構、存取方式與運作流程 |
-| [資料庫 Schema 升級](database-schema-upgrade.md) | 指引 | 將定義變更同步到線上資料庫：diff → plan → execute 管線、ALTER vs 重建、乾跑 |
-| [平台支援](platform-support.md) | 指引 | 支援的 head（桌面、瀏覽器、iOS、Android、Blazor Server）、可用的裁剪與 AOT 設定，以及瀏覽器或行動裝置 head 的檢查清單 |
+| [DatabaseSettings 與 DbCategorySettings 指引](database/database-settings-guide.md) | 指引 | 兩個資料庫相關設定檔的結構、存取方式與運作流程 |
+| [資料庫 Schema 升級](database/database-schema-upgrade.md) | 指引 | 將定義變更同步到線上資料庫：diff → plan → execute 管線、ALTER vs 重建、乾跑 |
+| [平台支援](getting-started/platform-support.md) | 指引 | 支援的 head（桌面、瀏覽器、iOS、Android、Blazor Server）、可用的裁剪與 AOT 設定，以及瀏覽器或行動裝置 head 的檢查清單 |
 
 ## 4. 查詢參考
 
@@ -67,23 +67,23 @@
 
 | 文件 | 類型 | 說明 |
 |------|------|------|
-| [框架機制清單](framework-capabilities.md) | 參考 | 單頁列出框架提供的所有機制，依領域分組，每項一行 |
-| [術語對照表](terminology.md) | 參考 | 框架中英文術語對照，依層別編排 |
-| [API 方法參考](api-method-reference.md) | 參考 | 透過 JSON-RPC 對外公開的所有 BO 方法單頁總覽，含 `[ApiAccessControl]` 設定與用途 |
-| [框架保留命名](framework-reserved-names.md) | 參考 | 框架擁有的 `st_*` 系統表與保留 `progId` registry |
-| [資料庫命名規範](database-naming-conventions.md) | 參考 | 表名、欄位、索引、系統欄位的命名規則；跨資料庫大小寫敏感性對照 |
-| [資料庫方言差異（DDL）](database-dialect-differences.md) | 參考 | 跨方言的 DDL 規則與例外（預設值、nullability、引號、AutoIncrement）；文字/數值欄為何 NOT NULL |
-| [時間型別總覽：Date、DateTime、Time](temporal-types.md) | 參考 | 三者如何選擇，以及各自在資料庫、`DataSet`、程式碼與三種序列化中的承載方式 |
-| [時區處理](datetime-timezone.md) | 參考 | UTC 儲存、轉換發生在哪裡、使用者時區的設定，以及自寫 SQL 與非 .NET 用戶端該做什麼 |
-| [Analyzer 規則](analyzer-rules.md) | 參考 | 隨套件提供的建置期診斷：規則清單、如何調整嚴重度、版本政策 |
-| [開發限制與反模式](development-constraints.md) | 參考 | 框架的設計限制與禁止事項，亦適合供 AI Coding 工具參考 |
+| [框架機制清單](getting-started/framework-capabilities.md) | 參考 | 單頁列出框架提供的所有機制，依領域分組，每項一行 |
+| [術語對照表](reference/terminology.md) | 參考 | 框架中英文術語對照，依層別編排 |
+| [API 方法參考](api/api-method-reference.md) | 參考 | 透過 JSON-RPC 對外公開的所有 BO 方法單頁總覽，含 `[ApiAccessControl]` 設定與用途 |
+| [框架保留命名](reference/framework-reserved-names.md) | 參考 | 框架擁有的 `st_*` 系統表與保留 `progId` registry |
+| [資料庫命名規範](database/database-naming-conventions.md) | 參考 | 表名、欄位、索引、系統欄位的命名規則；跨資料庫大小寫敏感性對照 |
+| [資料庫方言差異（DDL）](database/database-dialect-differences.md) | 參考 | 跨方言的 DDL 規則與例外（預設值、nullability、引號、AutoIncrement）；文字/數值欄為何 NOT NULL |
+| [時間型別總覽：Date、DateTime、Time](database/temporal-types.md) | 參考 | 三者如何選擇，以及各自在資料庫、`DataSet`、程式碼與三種序列化中的承載方式 |
+| [時區處理](database/datetime-timezone.md) | 參考 | UTC 儲存、轉換發生在哪裡、使用者時區的設定，以及自寫 SQL 與非 .NET 用戶端該做什麼 |
+| [Analyzer 規則](reference/analyzer-rules.md) | 參考 | 隨套件提供的建置期診斷：規則清單、如何調整嚴重度、版本政策 |
+| [開發限制與反模式](architecture/development-constraints.md) | 參考 | 框架的設計限制與禁止事項，亦適合供 AI Coding 工具參考 |
 
 ## 5. 深入閱讀
 
 | 目錄 | 說明 |
 |------|------|
 | [`maintainers/adr/`](../../maintainers/adr/README.md) | 架構決策紀錄 —— 理解「為何這樣設計」的主要來源。索引列出全部 ADR 與其狀態（已採納 / 已取代）。寫給維護者，只有英文 |
-| [`changelogs/`](../changelogs/) | 根 `CHANGELOG.zh-TW.md` 背後的逐版變更明細 |
+| [`changelogs/`](changelogs/) | 根 `CHANGELOG.zh-TW.md` 背後的逐版變更明細 |
 
 ---
 
@@ -93,14 +93,14 @@
 
 | 主題 | 文件 |
 |------|------|
-| **資料庫** | [命名規範](database-naming-conventions.md) · [保留命名](framework-reserved-names.md) · [設定指引](database-settings-guide.md) · [Schema 升級](database-schema-upgrade.md) · [方言差異](database-dialect-differences.md) · [FormSchema 驅動存取](formschema-data-access.md) |
-| **定義層** | [定義檔全景](definition-files-overview.md) · [架構總覽](architecture-overview.md) · [運算式與規則](expression-rules.md) · [保留命名](framework-reserved-names.md) |
-| **多租戶** | [租戶客製化](customization.md) · [定義檔全景](definition-files-overview.md) · [開發指引](development-cookbook.md) · [快取機制](caching.md) |
-| **快取與效能** | [快取機制](caching.md) · [開發指引](development-cookbook.md) · [開發限制與反模式](development-constraints.md) |
-| **用戶端 head 與平台** | [平台支援](platform-support.md) · [JSON-RPC 前端整合](jsonrpc-frontend-integration.md) · [開發指引](development-cookbook.md) |
-| **API 與前端** | [契約設計](api-bo-contract-design.md) · [API 方法參考](api-method-reference.md) · [JSON-RPC 前端整合](jsonrpc-frontend-integration.md) · [權限與授權](permission-authorization.md) · [API 金鑰管理](api-key-management.md) |
-| **型別與時間** | [時間型別總覽](temporal-types.md) · [時區處理](datetime-timezone.md) |
-| **品質與規範** | [Analyzer 規則](analyzer-rules.md) · [開發限制與反模式](development-constraints.md) · [命名規範](database-naming-conventions.md) |
+| **資料庫** | [命名規範](database/database-naming-conventions.md) · [保留命名](reference/framework-reserved-names.md) · [設定指引](database/database-settings-guide.md) · [Schema 升級](database/database-schema-upgrade.md) · [方言差異](database/database-dialect-differences.md) · [FormSchema 驅動存取](definitions/formschema-data-access.md) |
+| **定義層** | [定義檔全景](definitions/definition-files-overview.md) · [架構總覽](architecture/architecture-overview.md) · [運算式與規則](definitions/expression-rules.md) · [保留命名](reference/framework-reserved-names.md) |
+| **多租戶** | [租戶客製化](definitions/customization.md) · [定義檔全景](definitions/definition-files-overview.md) · [開發指引](guides/development-cookbook.md) · [快取機制](guides/caching.md) |
+| **快取與效能** | [快取機制](guides/caching.md) · [開發指引](guides/development-cookbook.md) · [開發限制與反模式](architecture/development-constraints.md) |
+| **用戶端 head 與平台** | [平台支援](getting-started/platform-support.md) · [JSON-RPC 前端整合](api/jsonrpc-frontend-integration.md) · [開發指引](guides/development-cookbook.md) |
+| **API 與前端** | [契約設計](api/api-bo-contract-design.md) · [API 方法參考](api/api-method-reference.md) · [JSON-RPC 前端整合](api/jsonrpc-frontend-integration.md) · [權限與授權](security/permission-authorization.md) · [API 金鑰管理](security/api-key-management.md) |
+| **型別與時間** | [時間型別總覽](database/temporal-types.md) · [時區處理](database/datetime-timezone.md) |
+| **品質與規範** | [Analyzer 規則](reference/analyzer-rules.md) · [開發限制與反模式](architecture/development-constraints.md) · [命名規範](database/database-naming-conventions.md) |
 
 ---
 

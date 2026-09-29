@@ -21,7 +21,7 @@ namespace Polhem.Definition.Organization
     /// authorization, so a mutation changes what other sessions may read. The properties are
     /// init-only; the node collections are still mutable, so treat an instance handed to you by the
     /// cache as frozen. See
-    /// <c>docs/en/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
+    /// <c>docs/en/architecture/development-constraints.md</c> § <i>Cached Data Immutability After Init</i>.
     /// </para>
     /// </remarks>
     public sealed class DepartmentTree : IKeyObject

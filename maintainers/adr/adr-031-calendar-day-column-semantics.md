@@ -8,7 +8,7 @@ Accepted (2026-07-25)
 > [`fddb38f6`](https://github.com/jeff377/bee-library/commit/fddb38f6) /
 > [`c7782308`](https://github.com/jeff377/bee-library/commit/c7782308) /
 > [`c5578a42`](https://github.com/jeff377/bee-library/commit/c5578a42)).
-> For how consumers use it, see `docs/en/temporal-types.md`.
+> For how consumers use it, see `docs/en/database/temporal-types.md`.
 
 ## Context
 
@@ -180,5 +180,5 @@ the current code:
 - ADR-029 (field names are always lowercase): likewise a decision to "align the wire representation with the
   definition layer".
 - ADR-030 (MessagePack name-based keys): another decision about the wire representation.
-- `docs/en/temporal-types.md`: guidance for consumers (including JS/TS), and the cross-layer comparison of the three
+- `docs/en/database/temporal-types.md`: guidance for consumers (including JS/TS), and the cross-layer comparison of the three
   time semantics.

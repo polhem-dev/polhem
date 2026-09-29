@@ -148,7 +148,7 @@ the current code:
   `src/Polhem.UI.Avalonia/Controls/Editors/TimeEdit.cs`, and the Blazor Server form handles `ControlType.TimeEdit` in
   `src/Polhem.Web.Blazor.Server/Components/DynamicForm.razor` and `DynamicForm.razor.cs`; both normalize input with
   `ValueUtilities.CTimeString` and store an empty string for an emptied box. The consumer guidance is
-  [Temporal Types](../../docs/en/temporal-types.md).
+  [Temporal Types](../../docs/en/database/temporal-types.md).
 
 ## Related
 

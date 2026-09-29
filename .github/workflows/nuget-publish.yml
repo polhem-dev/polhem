@@ -166,8 +166,8 @@ jobs:
           NuGet packages for version ${{ steps.version.outputs.VERSION }} have been published.
 
           Release notes:
-          - [English](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/docs/changelogs/${{ steps.version.outputs.VERSION }}.md)
-          - [繁體中文](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/docs/changelogs/${{ steps.version.outputs.VERSION }}.zh-TW.md)
+          - [English](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/docs/en/changelogs/${{ steps.version.outputs.VERSION }}.md)
+          - [繁體中文](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/docs/zh-TW/changelogs/${{ steps.version.outputs.VERSION }}.md)
 
           ### Packages in this release
 

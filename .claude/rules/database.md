@@ -14,7 +14,7 @@
 framework (needed by the record-scope and organization tree features) yet live in the **company database**; the
 permission tables `st_role` / `st_role_grant` / `st_user_role` are the same, and `user_rowid` logically points across
 databases to `st_user.sys_rowid` in common. "st_ in common, ft_ in company" is only a common combination, not a rule.
-The authoritative list is `docs/en/framework-reserved-names.md`.
+The authoritative list is `docs/en/reference/framework-reserved-names.md`.
 
 `FormSchema.CategoryId` (and `DbCategory.Id`, `DatabaseItem.CategoryId`) **is not a free-form string**:
 `RepositoryFactory.ParseCategoryId` (`src/Polhem.Repository/Factories/RepositoryFactory.cs`) accepts only the three
@@ -52,7 +52,7 @@ The framework already has this built in for SQL Server / MySQL / PostgreSQL / SQ
    every `String` / `Text` / `Time` column as nullable and without `DEFAULT ''`, whatever `AllowNull` says, and
    `ValueUtilities.CStr` turns the `NULL` back into `""` on read. **Keep `AllowNull=false`; do not mark a column
    nullable because of Oracle.** Hand-written SQL that must run on Oracle cannot match these columns with
-   `col = ''` (see `docs/en/database-dialect-differences.md` §3.1).
+   `col = ''` (see `docs/en/database/database-dialect-differences.md` §3.1).
 5. **Do not rely on local results alone**: the persistent local container reaches the new column through the upgrade
    path (`ALTER TABLE ... ADD`, which emits the same column definition, `NOT NULL` and `DEFAULT` included, and
    backfills existing rows), while CI creates every table fresh. An INSERT that omits the column can behave
