@@ -68,4 +68,5 @@ understanding why the design is the way it is.
 | [045](adr-045-language-policy-and-local-plans.md) | English for everything maintained together; plans stay out of the repository | ✅ Accepted, partially superseded |
 | [046](adr-046-api-evolution-policies-for-1-0.md) | API evolution policies for 1.0: a synchronous server path, growable host interfaces, process-wide configuration | ✅ Accepted |
 | [047](adr-047-documents-split-by-reader.md) | Documents are split by reader: user documents are multilingual, maintainer documents are English only | ✅ Accepted |
-| [048](adr-048-rename-base-to-core-in-1-1.md) | `Polhem.Base` is renamed to `Polhem.Core` in 1.1.0, a one-time break within 1.x | ✅ Accepted |
+| [048](adr-048-rename-base-to-core-in-1-1.md) | `Polhem.Base` is renamed to `Polhem.Core` in 1.1.0, a one-time break within 1.x | ✅ Accepted, amended |
+| [049](adr-049-jsonrpc-packages-in-1-2.md) | Polhem's JSON-RPC runs on the `Polhem.JsonRpc` packages, and `Polhem.Api.AspNetCore` is removed in 1.2.0 | ✅ Accepted |

@@ -1,4 +1,4 @@
-<!-- source: en/security/api-key-management.md blob: 2a686b30f58c58eb293286f8fc4e0d6aff32cdc7 -->
+<!-- source: en/security/api-key-management.md blob: 1a97b175faa142c0b393b7476f6539e9765614e9 -->
 # API 金鑰管理
 
 [English](../../en/security/api-key-management.md) · [← 文件索引](../README.md)
@@ -17,7 +17,7 @@ API 金鑰回答的是**哪個應用程式在呼叫**。它不是使用者鑑別
 
 | 狀態 | 行為 |
 |---|---|
-| `st_api_key` 不存在，或無任何啟用中的金鑰 | 閘門未生效：任何非空標頭皆通過。`UsePolhemFramework` 會在啟動時回報 —— 在 Development 環境為警告，其他環境為錯誤。 |
+| `st_api_key` 不存在，或無任何啟用中的金鑰 | 閘門未生效：任何非空標頭皆通過。`AddPolhemApiKeyGateCheck` 會在啟動時回報 —— 在 Development 環境為警告，其他環境為錯誤。 |
 | 至少一把啟用中的金鑰 | 閘門生效：標頭必須帶有效、啟用中、未過期的金鑰。 |
 
 預設驗證器只讓一個方法免金鑰：`System.Ping`，讓健康檢查在金鑰存放讀不到時仍能回應。

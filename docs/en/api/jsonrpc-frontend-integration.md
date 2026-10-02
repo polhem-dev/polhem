@@ -131,7 +131,7 @@ choice. Plain format does not need it at all:
 
 You may send `params.type` if you want (it's ignored on Plain); leaving it out
 keeps payloads smaller. Regression coverage:
-[`JsonRpcExecutorTests.Ping_PlainWith*`](../../../tests/Polhem.Api.Core.UnitTests/JsonRpcExecutorTests.cs)
+[`DispatchTests.Ping_PlainWith*`](../../../tests/Polhem.Api.Core.UnitTests/Dispatch/DispatchTests.cs)
 asserts omitted, empty, and bogus `type` values all succeed.
 
 ### Values in a Plain body

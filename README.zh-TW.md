@@ -37,10 +37,11 @@ Polhem Framework 是一套採用 **N-Tier + Clean Architecture + MVVM** 混合�
 
 ## 📦 組件說明
 
-下列每個組件都以同名的 NuGet 套件發佈。JSON-RPC 伺服端從其中兩個開始：
+下列每個組件都以同名的 NuGet 套件發佈。JSON-RPC 伺服端從其中兩個開始，再加上提供 HTTP 端點的 `Polhem.JsonRpc.AspNetCore`：
 
 ```bash
-dotnet add package Polhem.Api.AspNetCore
+dotnet add package Polhem.Hosting
+dotnet add package Polhem.JsonRpc.AspNetCore
 dotnet add package Polhem.Db
 ```
 
@@ -66,7 +67,6 @@ dotnet add package Polhem.Db
 | **Polhem.Repository.dll** | 提供共用的 Repository 基底類別與 FormSchema 驅動的資料存取機制。 |
 | **Polhem.Business.dll** | 實作業務邏輯核心（Business Object / BO），負責 Use Case 工作流程。 |
 | **Polhem.Hosting.dll** | Composition root — 提供 `AddPolhemFramework` 擴充方法，將所有後端服務註冊至 `IServiceCollection`（不依賴 ASP.NET Core），可用於 ASP.NET Core、WinForms、Console、Worker Service 等各種宿主。 |
-| **Polhem.Api.AspNetCore.dll** | ASP.NET Core 的 JSON-RPC 2.0 API 整合（`ApiServiceController`），另有 `UsePolhemFramework` 執行宿主的啟動檢查。 |
 
 ### 前端
 
@@ -136,12 +136,14 @@ Bee.NET 4.33.0 改名之後，再加上 [CHANGELOG](CHANGELOG.zh-TW.md) 所列�
 ### 套件、命名空間與型別
 
 - 每個 `Bee.<名稱>` 套件改為 `Polhem.<名稱>`，套件的切分不變：`Bee.Hosting` 改為 `Polhem.Hosting`，上方表格中的
-  每個套件依此類推。命名空間照同一規則：`Bee.Definition.Forms` 改為 `Polhem.Definition.Forms`。
+  每個套件依此類推。命名空間照同一規則：`Bee.Definition.Forms` 改為 `Polhem.Definition.Forms`。例外是
+  `Bee.Api.AspNetCore`：它的後繼 `Polhem.Api.AspNetCore` 已在 1.2.0 移除，host 改用 `Polhem.JsonRpc.AspNetCore`
+  提供 API（見 [CHANGELOG](CHANGELOG.zh-TW.md)）。
 - 唯一的例外是 `Bee.Base`，改為 `Polhem.Core`，套件與命名空間皆然：`Bee.Base.Serialization` 改為
   `Polhem.Core.Serialization`。Polhem 1.0.0 仍稱它為 `Polhem.Base`；改名的原因見 [CHANGELOG](CHANGELOG.zh-TW.md)
   的 1.1.0 條目。
-- 型別或成員名稱中的 `Bee` 改為 `Polhem`：`AddBeeFramework` 改為 `AddPolhemFramework`、`UseBeeFramework` 改為
-  `UsePolhemFramework`、`BeeLoginPanel` 改為 `PolhemLoginPanel`。
+- 型別或成員名稱中的 `Bee` 改為 `Polhem`：`AddBeeFramework` 改為 `AddPolhemFramework`、`BeeLoginPanel` 改為
+  `PolhemLoginPanel`。`UseBeeFramework` 自 1.2.0 起沒有對應成員，改呼叫 `services.AddPolhemApiKeyGateCheck()`。
 - 命令列工具 `Bee.Cli`（`dotnet bee`）改為 `Polhem.Cli`（`dotnet polhem`）。先移除舊工具，再以
   `dotnet tool install -g Polhem.Cli` 安裝新工具。
 
@@ -161,7 +163,7 @@ Bee.NET 4.33.0 改名之後，再加上 [CHANGELOG](CHANGELOG.zh-TW.md) 所列�
 | `Bee.UI.Avalonia.Storage.FileEndpointStorage` | `Polhem.UI.Core.FileEndpointStorage` |
 | `Bee.UI.Core.Permissions` 中的 `ElementCapabilityResolver`、`IElementCapabilityResolver`、`FieldCapability` | `Polhem.Api.Client.Permissions` 中的同名型別 |
 | `Bee.ObjectCaching.Services` 中的 `DeploymentAuthorizationService`、`EmployeeContextResolver` | `Polhem.Business.Security.DeploymentAuthorizationService`、`Polhem.Business.Session.EmployeeContextResolver` |
-| `JsonRpcExecutor.Execute` | `JsonRpcExecutor.ExecuteAsync` |
+| `JsonRpcExecutor.Execute`、`ApiServiceController` | 1.2.0 起移除：改由 `Polhem.JsonRpc.Server` 的 dispatcher 處理，以 `app.MapJsonRpc("/api")` 發布 |
 | `BusinessObject.SessionInfo` | 在業務物件內使用 `SessionInfoService.Get(AccessToken)` |
 | `Bee.Base.Tracing` | 已移除 |
 
@@ -181,7 +183,7 @@ Bee.NET 4.33.0 改名之後，再加上 [CHANGELOG](CHANGELOG.zh-TW.md) 所列�
 | `.editorconfig`、`#pragma warning`、`NoWarn` 與 `[SuppressMessage]` 中的 analyzer 診斷代號 | `BEE1001` | `POLHEM1001`（數字不變） | 設定被靜默忽略 |
 | 定義檔檢查用的 MSBuild 屬性 | `BeeDefinitionFilesGlob`、`BeeRequireDefinitionFiles`、`BeeAnalyzeDefinitionFiles` | `PolhemDefinitionFilesGlob`、`PolhemRequireDefinitionFiles`、`PolhemAnalyzeDefinitionFiles` | 設定被靜默忽略，改用預設值 |
 | Blazor 元件的 CSS class | `bee-dynamic-form`、`bee-dynamic-grid`、`bee-form-page`、`bee-login-panel` | `polhem-dynamic-form`、`polhem-dynamic-grid`、`polhem-form-page`、`polhem-login-panel` | 自訂的樣式規則不再套用 |
-| logging category，例如 `Logging:LogLevel` 底下的篩選 | `Bee.Api.AspNetCore` | `Polhem.Api.AspNetCore` | 篩選不再符合 |
+| logging category，例如 `Logging:LogLevel` 底下的篩選 | `Bee.Api.AspNetCore` | `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService` | 篩選不再符合 |
 | `SerializationErrorData.FilePath` 這個 `Exception.Data` 的 key | `Bee.FilePath` | `Polhem.FilePath` | 讀取該 key 的程式碼找不到值 |
 
 在自家 repo 的根目錄執行下列指令即可找出這些地方：

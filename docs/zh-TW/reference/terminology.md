@@ -1,4 +1,4 @@
-<!-- source: en/reference/terminology.md blob: 808a924659b42f8f5fcd855ab208ca4a742e1c7c -->
+<!-- source: en/reference/terminology.md blob: 2950aa3b3a87f024fa7e5fd0073e4ced8d725ac7 -->
 # Polhem 框架專有名詞中英文對照表
 
 [English](../../en/reference/terminology.md) · [← 文件索引](../README.md)
@@ -14,7 +14,7 @@
 3. [資料庫層（Polhem.Db）](#3-資料庫層polhemdb)
 4. [業務邏輯層（Polhem.Business）](#4-業務邏輯層polhembusiness)
 5. [Repository 層（Polhem.Repository）](#5-repository-層polhemrepository)
-6. [API 層（Polhem.Api.Core / Polhem.Api.AspNetCore）](#6-api-層polhemapicore--polhemapiaspnetcore)
+6. [API 層（Polhem.Api.Core）](#6-api-層polhemapicore)
 7. [快取層（Polhem.ObjectCaching）](#7-快取層polhemobjectcaching)
 8. [連線層（Polhem.Api.Client）](#8-連線層polhemapiclient)
 9. [基礎設施（Polhem.Core）](#9-基礎設施polhemcore)
@@ -163,13 +163,12 @@
 
 ---
 
-## 6. API 層（Polhem.Api.Core / Polhem.Api.AspNetCore）
+## 6. API 層（Polhem.Api.Core）
 
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
 | `ApiPayload` | API 傳遞資料結構 | 包裝傳輸資料，支援壓縮與加密 |
-| `JsonRpcRequest` | JSON-RPC 請求 | JSON-RPC 2.0 協定的請求物件 |
-| `JsonRpcResponse` | JSON-RPC 回應 | JSON-RPC 2.0 協定的回應物件 |
+| `JsonRpcParams` / `JsonRpcResult` | JSON-RPC 參數／結果外殼 | 一次呼叫的 `params` 與 `result` 所帶的 payload 外殼；JSON-RPC 訊息本身來自 `Polhem.JsonRpc` |
 | `ExecFuncArgs` | 自訂函式執行參數 | 呼叫自訂業務函式時傳遞的參數物件 |
 | `ApiAccessControlAttribute` | API 存取控制屬性 | 宣告 API 端點的保護等級與認證需求 |
 
@@ -353,6 +352,6 @@
 
 | 英文名稱 | 中文名稱 | 說明 |
 |----------|----------|------|
-| `IJsonRpcProvider` | API 提供者介面 | 抽象連接器如何抵達後端；由宿主在啟動時選擇實作 |
+| `IJsonRpcTransport` | JSON-RPC 傳輸介面 | 來自 `Polhem.JsonRpc`：連接器如何抵達後端；下列兩個提供者實作它，由宿主在啟動時選擇 |
 | `LocalApiProvider` | 近端 API 提供者 | In-process 實作，前後端共用同一個 process，直接呼叫 BO 方法（無 HTTP 開銷） |
 | `RemoteApiProvider` | 遠端 API 提供者 | 基於 HTTP 的實作，前端透過 JSON-RPC 連到後端（Blazor WASM 必須使用此實作） |

@@ -3,7 +3,7 @@
 [繁體中文](../../zh-TW/api/api-method-reference.md) · [← Docs Index](../README.md)
 
 This is the single-page reference of every public BO method exposed through
-`JsonRpcExecutor`, grouped by BO axis. Each row lists the method's wire-level
+JSON-RPC, grouped by BO axis. Each row lists the method's wire-level
 [contract interface](api-bo-contract-design.md), BO-level Args / Result types,
 `[ApiAccessControl]` settings, and a one-line purpose summary.
 

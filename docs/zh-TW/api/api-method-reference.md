@@ -1,9 +1,9 @@
-<!-- source: en/api/api-method-reference.md blob: 05c529659c0a403dbbaf8dcb206f880ac81edbce -->
+<!-- source: en/api/api-method-reference.md blob: 6591c1183a5abc73ef4e73d07d15d4a3ed3bf1b0 -->
 # API 方法參考
 
 [English](../../en/api/api-method-reference.md) · [← 文件索引](../README.md)
 
-本文件為**單頁總覽**：列出所有透過 `JsonRpcExecutor` 對外公開的 BO 方法，
+本文件為**單頁總覽**：列出所有透過 JSON-RPC 對外公開的 BO 方法，
 依 BO 軸分組。每列標註該方法的 wire-level [合約介面](api-bo-contract-design.md)、
 BO 層 Args / Result 型別、`[ApiAccessControl]` 設定，與一行用途說明。
 

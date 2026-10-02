@@ -1,4 +1,4 @@
-<!-- source: en/architecture/architecture-overview.md blob: 3b00442c5c70b1809c8ddde5c0473ab8f8dddcae -->
+<!-- source: en/architecture/architecture-overview.md blob: 9f0b1b1f7f5db3c0d87641cda0df7e98e3ec07ee -->
 # Polhem 框架架構總覽
 
 [English](../../en/architecture/architecture-overview.md) · [← 文件索引](../README.md)
@@ -358,7 +358,7 @@ flowchart LR
 │  ViewModel                                          │  MVVM: ViewModel
 │  （由 FormSchema 推導 binding 結構）                 │
 ├──────────────────────────────────────────────────────┤
-│  API Layer  (Polhem.Api.AspNetCore / JSON-RPC 2.0)     │  N-Tier: Presentation
+│  API Layer  (Polhem.JsonRpc / JSON-RPC 2.0)           │  N-Tier: Presentation
 ├──────────────────────────────────────────────────────┤
 │                                                      │
 │  Business Object (BO)                               │  Clean Arch: Use Case

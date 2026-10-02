@@ -40,7 +40,7 @@ dotnet run
 | 列表 + 表單整合 | `FormPage` |
 | CRUD 走 Polhem | `FormDataObject.LoadAsync / SaveAsync / NewAsync / DeleteAsync` |
 | Local 模式 in-process 派遣 | `PolhemBlazorOptions.UseLocalProvider()` |
-| In-process JSON-RPC | `LocalApiProvider` → `JsonRpcExecutor` → `FormBusinessObject` |
+| In-process JSON-RPC | `LocalApiProvider` → `JsonRpcDispatcher` → `FormBusinessObject` |
 
 ## 簡化措施（與 production 不同）
 

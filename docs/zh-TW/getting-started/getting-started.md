@@ -1,4 +1,4 @@
-<!-- source: en/getting-started/getting-started.md blob: 118ca205eb2f291749eada6ad91724645a16049c -->
+<!-- source: en/getting-started/getting-started.md blob: 3d162a9f0eb2a393c97cbd73ca431200fd19201a -->
 # 快速上手
 
 [English](../../en/getting-started/getting-started.md) · [← 文件索引](../README.md)
@@ -21,7 +21,8 @@
 ```bash
 dotnet new web -o MyApp.Server
 cd MyApp.Server
-dotnet add package Polhem.Api.AspNetCore
+dotnet add package Polhem.Hosting
+dotnet add package Polhem.JsonRpc.AspNetCore
 dotnet add package Polhem.Db
 dotnet add package Microsoft.Data.Sqlite
 ```
@@ -29,7 +30,7 @@ dotnet add package Microsoft.Data.Sqlite
 `Microsoft.Data.Sqlite` 是下文所用 SQLite 資料庫的 ADO.NET driver。框架本身不附任何 driver；
 步驟 3 列出各資料庫對應的套件。
 
-**該選哪個 host 套件？** `Polhem.Api.AspNetCore` 會遞移帶入組合根 `Polhem.Hosting`。若你的 host 不是 ASP.NET Core —— WinForms、WPF、Console、Worker Service —— 改為直接參考 `Polhem.Hosting`，並略過步驟 4 的 `UsePolhemFramework` 呼叫。
+**該選哪些 host 套件？** `Polhem.Hosting` 是組合根，`Polhem.JsonRpc.AspNetCore` 以 HTTP 提供 API。若你的 host 不是 ASP.NET Core —— WinForms、WPF、Console、Worker Service —— 只參考 `Polhem.Hosting`，並略過步驟 5。
 
 ## 2. 備妥 `DefinePath`
 
@@ -116,7 +117,6 @@ DbDialectRegistry.Register(DatabaseType.SQLServer, new SqlDialectFactory());
 
 ```csharp
 using Microsoft.Data.Sqlite;
-using Polhem.Api.AspNetCore;
 using Polhem.Api.Core;
 using Polhem.Core;
 using Polhem.Db;
@@ -127,6 +127,7 @@ using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Storage;
 using Polhem.Hosting;
+using Polhem.JsonRpc.AspNetCore;
 
 DbProviderRegistry.Register(DatabaseType.SQLite, new SqliteProviderFactory(SqliteFactory.Instance));
 DbDialectRegistry.Register(DatabaseType.SQLite, new SqliteDialectFactory());
@@ -146,7 +147,8 @@ builder.Services.AddPolhemFramework(
     paths,
     autoCreateMasterKey: true);
 
-builder.Services.AddControllers();
+builder.Services.AddJsonRpcServer();
+builder.Services.AddPolhemApiKeyGateCheck();
 
 var app = builder.Build();
 
@@ -158,8 +160,7 @@ var schemaBuilder = new TableSchemaBuilder("common", defineAccess, connectionMan
 foreach (var table in common.Tables!)
     schemaBuilder.Execute("common", table.TableName);
 
-app.UsePolhemFramework();
-app.MapControllers();
+app.MapJsonRpc("/api");
 app.Run();
 ```
 
@@ -170,8 +171,8 @@ app.Run();
   `DbCategorySettings.xml` 在 `common` 底下登記的每一張表，之後每次啟動再依 TableSchema 把它們調整一致。
   實際的應用程式也用同樣方式建自己的資料表，每個資料庫一個 `TableSchemaBuilder`
   （見[資料庫 Schema 升級](../database/database-schema-upgrade.md)）。
-- `UsePolhemFramework` 不註冊任何 middleware 或端點。它執行 host 端的啟動檢查；目前會在尚未發出任何 API key
-  時記錄一筆 log（Development 環境為警告，其他環境為錯誤）。它會讀 `st_api_key`，所以要在資料表建好之後呼叫。
+- `AddPolhemApiKeyGateCheck` 會在尚未發出任何 API key 時，於啟動時記錄一筆 log（Development 環境為警告，其他環境為
+  錯誤）。它在 host 啟動時（`app.Run()`）讀 `st_api_key`，那時上面的資料表已經建好。只有以 HTTP 提供 API 的 host 需要它。
 - `autoCreateMasterKey: true` 會在主金鑰不存在時建立一把。搭配步驟 2 的 `File` 來源，這只發生一次。若用
   `Environment` 來源，產生的金鑰只存在於該程序的環境變數中，因此每次啟動都是不同的金鑰，先前以舊金鑰加密的值
   從此無法解密。除了用完即丟的示範之外，不要把 `Environment` 與 `autoCreateMasterKey: true` 搭配使用。
@@ -181,19 +182,11 @@ app.Run();
 
 ## 5. 發布 JSON-RPC 端點
 
-`ApiServiceController` 已宣告 `[Route("api")]` 與 POST handler，因此一個空的子類別就是整個端點：
+步驟 4 的兩個呼叫就是整個端點：`AddJsonRpcServer()` 沿用 `AddPolhemFramework` 註冊的 JSON-RPC 選項，
+`app.MapJsonRpc("/api")` 把它們對應到路由。不需要撰寫 controller。
 
-```csharp
-using Polhem.Api.AspNetCore.Controllers;
-
-namespace MyApp.Server.Controllers;
-
-public class ApiController : ApiServiceController
-{
-}
-```
-
-`POST /api` 現在已能接受 JSON-RPC 2.0 請求。
+`POST /api` 現在已能接受 JSON-RPC 2.0 請求。若要對每次呼叫執行自己的檢查，加入 filter：
+`AddJsonRpcServer(options => options.Filters.Add(new MyFilter()))`。它在框架自己的檢查之內執行。
 
 ## 6. 寫第一個商業物件
 
@@ -305,7 +298,7 @@ public class EchoResponse
 用戶端的 request / response DTO 請與伺服端的 `Args` / `Result` 分開宣告 —— 這才是第三方整合者看到契約的樣子，也能讓 wire 形狀誠實反映實際約定。
 
 每次呼叫都帶 `X-Api-Key` 標頭。尚未發出任何 API key 時（`st_api_key` 中沒有啟用的 key），任何非空值都會被接受，
-這正是 `UsePolhemFramework` 在啟動時警告的狀況。一旦發出 key，就只接受已發出的 key。
+這正是 `AddPolhemApiKeyGateCheck` 在啟動時警告的狀況。一旦發出 key，就只接受已發出的 key。
 → [API 金鑰管理](../security/api-key-management.md)。
 
 `PayloadFormat.Plain` 對應上面宣告的 `Public` + `Anonymous`。需要認證或加密的方法都得先 `Login`，由它發出 access token，並透過 RSA 握手交付 session 加密金鑰。

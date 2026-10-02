@@ -81,7 +81,7 @@ They are not decorative markers. Two mechanisms depend on them at runtime and at
 
 **1. They make a silent reflective copy total.** Every API call converts in both directions through
 the internal `ApiInputConverter.Convert`, which copies public properties **by matching name** — inbound from the
-wire message to the BO argument (called by `JsonRpcExecutor`), outbound from the BO result to the
+wire message to the BO argument (called by the server's parameter binder), outbound from the BO result to the
 wire response (called by `ApiOutputConverter`). A name that does not match is skipped silently: no
 exception, no warning, and the call appears to succeed with that field left empty. Because both
 `LoginRequest` and `LoginArgs` implement `ILoginRequest`, the compiler forces the two sides to carry

@@ -8,6 +8,57 @@ the reasons and the background are in its detailed notes under [`docs/en/changel
 
 ## [Unreleased]
 
+> JSON-RPC now runs on the [`Polhem.JsonRpc`](https://github.com/polhem-dev/polhem-jsonrpc) packages, and
+> `Polhem.Api.AspNetCore` is removed. That removal breaks the hosts that referenced it, in a minor version: a second
+> exception within 1.x, after the one in 1.1.0. Successful requests and responses on the wire are unchanged. The
+> reasons, and the framework types this release treats as internal plumbing, are in
+> [ADR-049](maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md).
+
+### Breaking API changes
+
+- The `Polhem.Api.AspNetCore` package is removed, with `ApiServiceController` and `UsePolhemFramework()`. A host
+  serves the API with `Polhem.JsonRpc.AspNetCore`.
+- `IJsonRpcProvider` is removed. `RemoteApiProvider` and `LocalApiProvider` implement the package's
+  `IJsonRpcTransport`, and `ApiConnector.Provider` has that type.
+- `JsonRpcExecutor` and the message types `JsonRpcRequest`, `JsonRpcResponse` and `JsonRpcError` of
+  `Polhem.Api.Core.JsonRpc` are removed.
+
+To upgrade a host that serves the API over HTTP:
+
+```diff
+- <PackageReference Include="Polhem.Api.AspNetCore" Version="1.1.0" />
++ <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="…" />
+```
+
+```diff
+  builder.Services.AddPolhemFramework(configuration, paths);
+- builder.Services.AddControllers();
++ builder.Services.AddJsonRpcServer();
++ builder.Services.AddPolhemApiKeyGateCheck();
+  var app = builder.Build();
+- app.UsePolhemFramework();
+- app.MapControllers();
++ app.MapJsonRpc("/api");
+```
+
+Delete the controller derived from `ApiServiceController`. A check that overrode one of its members becomes a filter,
+added with `AddJsonRpcServer(options => options.Filters.Add(...))`.
+
+### Added
+
+- `AddPolhemApiKeyGateCheck()` in `Polhem.Hosting`: the startup log while no API key has been issued, for hosts that
+  serve the API over HTTP.
+
+### Changed behaviour
+
+- A rejected API key or `Authorization` header is answered with HTTP 200 and a JSON-RPC error instead of 401, so the
+  .NET client throws the error contract's exception instead of `HttpRequestException`.
+- A malformed method name is answered with `MethodNotFound` (-32601) instead of `UserMessage`. An unknown method name
+  is answered with a fixed message, also in debug mode, and leaves no anomaly record.
+- In-process calls serialize their parameters, like remote calls.
+- Log categories: masked failures log under `Polhem.Api.Core.Dispatch.PolhemExceptionMapper`, and the API key startup
+  check under `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService`.
+
 ## [1.1.0] - 2026-09-30
 
 > `Polhem.Base` is renamed to `Polhem.Core`. Semantic versioning would hold that back until 2.0.0; it ships in 1.1.0 as

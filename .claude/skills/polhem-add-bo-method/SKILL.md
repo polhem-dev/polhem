@@ -244,7 +244,7 @@ public virtual <Action>Result <Action>(<Action>Args args)
   `ApiAccessRequirement` are in their XML docs (`src/Polhem.Definition/Security/`); choose the lowest protection level
   the data allows. A method with no attribute on itself, its base definition or its class is refused at call time,
   and `POLHEM3001` reports it at build time
-- What an action name can reach is decided by `JsonRpcExecutor.IsResolvableAction`: a public, non-generic instance
+- What an action name can reach is decided by `JsonRpcMethod.IsResolvableAction` (Polhem.JsonRpc.Server): a public, non-generic instance
   method with exactly one parameter. Keep helper methods with one parameter non-public, or they become reachable
   under a class-level attribute
 - The BO does not reimplement fallback logic (fallback belongs to the Repository)
@@ -253,7 +253,7 @@ public virtual <Action>Result <Action>(<Action>Args args)
 
 A public BO method has two usage scenarios:
 
-1. **API call**: dispatched by `JsonRpcExecutor` reflecting on `progId.action`. **This only needs a `public` method + `[ApiAccessControl]` on the BO class**; no interface declaration is required
+1. **API call**: dispatched by the JSON-RPC dispatcher reflecting on `progId.action`. **This only needs a `public` method + `[ApiAccessControl]` on the BO class**; no interface declaration is required
 2. **Server-side call**: another BO, a background job or a scheduler obtains an instance through `IBusinessObjectFactory` and calls the method directly. The caller then holds an `I<Axis>BusinessObject` → **the method must be on the interface** to be callable
 
 **Convention: add the method to the interface only when server-side code calls it (or is about to).** The remarks on
@@ -346,7 +346,7 @@ public virtual async Task<<Action>Response> <Action>Async(
   allows it
 - Exception propagation: which exception travels as which JSON-RPC error code, and whether its message travels with
   it, is declared once in `JsonRpcErrorContract` (src/Polhem.Api.Core/JsonRpc). Anything it does not cover is
-  collapsed into `"Internal server error"` outside debug mode (`JsonRpcExecutor.MapException`)
+  collapsed into `"Internal server error"` outside debug mode (`PolhemExceptionMapper.MapCode`)
 
 ## Tests (three layers of coverage)
 
@@ -383,7 +383,7 @@ public class <Action>MessagePackTests
 }
 ```
 
-### Executor dispatch test template (stub Repository)
+### Dispatch test template (stub Repository)
 
 Copy the private `StubFormRepositoryFactory` / `StubDataFormRepository` pair from
 `tests/Polhem.Api.Core.UnitTests/Form/GetListJsonRpcRoundTripTests.cs`.
@@ -392,7 +392,7 @@ Copy the private `StubFormRepositoryFactory` / `StubDataFormRepository` pair fro
 public class <Action>JsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
 {
     [Fact]
-    [DisplayName("<ProgId>.<Action> through JsonRpcExecutor dispatches to the BO and returns the stub result")]
+    [DisplayName("<ProgId>.<Action> through the JSON-RPC dispatcher dispatches to the BO and returns the stub result")]
     public async Task <Action>_ThroughJsonRpc_DispatchesAndReturnsTable()
     {
         var stubRepository = new StubDataFormRepository(/* fixed DataTable */);
@@ -408,23 +408,20 @@ public class <Action>JsonRpcRoundTripTests : IClassFixture<PolhemTestFixture>
             _fx.GetRequiredService<ILanguageService>(),
             _fx.GetRequiredService<IBoTypeResolver>());
 
-        var executor = new JsonRpcExecutor(
-            boFactory,
-            _fx.GetRequiredService<IAccessTokenValidator>(),
-            _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+        // `TestDispatcher` (tests/Polhem.Api.Core.UnitTests/Dispatch) sends the request as JSON, in process.
+        var dispatcher = new TestDispatcher(_fx.Provider, boFactory)
         {
             AccessToken = TestSessionFactory.CreateAccessToken(_fx),
-            IsLocalCall = true,
         };
 
-        var request = new JsonRpcRequest
+        var request = new TestRpcRequest
         {
             Method = $"<ProgId>.{<Axis>Actions.<Action>}",
             Params = new JsonRpcParams { Value = new <Action>Request { /* ... */ } },
             Id = Guid.NewGuid().ToString(),
         };
 
-        var response = await executor.ExecuteAsync(request);
+        var response = await dispatcher.ExecuteAsync(request);
         Assert.Null(response.Error);
         var result = Assert.IsType<<Action>Response>(response.Result!.Value);
         // ... assertions on result + the stub's recorded arguments
@@ -548,7 +545,7 @@ When adding an `<Action>` method, complete every step below in order.
 | Repository abstraction / implementation | `src/Polhem.Repository.Abstractions/Form/IDataFormRepository.cs` / `src/Polhem.Repository/Form/DataFormRepository.cs` |
 | Repository Factory | `src/Polhem.Repository/Factories/RepositoryFactory.cs` |
 | Client connector | `src/Polhem.Api.Client/Connectors/SystemApiConnector.cs` / `FormApiConnector.cs` |
-| JSON-RPC dispatch | `src/Polhem.Api.Core/JsonRpc/JsonRpcExecutor.cs` |
+| JSON-RPC dispatch | `src/Polhem.Api.Core/Dispatch/` (the Polhem components on the `Polhem.JsonRpc.Server` dispatcher) |
 | Naming-convention conversion | `src/Polhem.Api.Core/Conversion/ApiOutputConverter.cs` / `ApiInputConverter.cs` |
 | BO integration test template | `tests/Polhem.Business.UnitTests/Form/FormBusinessObjectGetListTests.cs` |
 | Wire round-trip template | `tests/Polhem.Api.Core.UnitTests/Form/GetListMessagePackTests.cs` |

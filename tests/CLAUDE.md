@@ -316,8 +316,8 @@ and reads `st_session`. How to recognize it: the test uses `Guid.NewGuid()` dire
 `TestSessionFactory.CreateAccessToken(fx)`, which writes the SessionInfo into the cache and therefore never reaches the
 DB).
 
-**The third path: every request that goes through the controller touches `st_api_key`.**
-`ApiServiceController.ValidateApiKey` → `ApiKeyValidator.Validate` → `ApiKeyGate.GetState()`
+**The third path: every request that arrives over HTTP touches `st_api_key`.**
+`PolhemObjectFactory` (its API key check) → `ApiKeyValidator.Validate` → `ApiKeyGate.GetState()`
 is a read-through that opens a common connection and reads `st_api_key` on a miss. `AddPolhemFramework` **always**
 registers the real `ApiKeyValidator`, so this path has nothing to do with the access token. Any test that hits the
 controller takes it.

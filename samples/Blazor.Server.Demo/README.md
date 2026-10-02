@@ -40,7 +40,7 @@ On first run:
 | Grid + form integration | `FormPage` |
 | CRUD through Polhem | `FormDataObject.LoadAsync / SaveAsync / NewAsync / DeleteAsync` |
 | Local in-process dispatch | `PolhemBlazorOptions.UseLocalProvider()` |
-| In-process JSON-RPC | `LocalApiProvider` → `JsonRpcExecutor` → `FormBusinessObject` |
+| In-process JSON-RPC | `LocalApiProvider` → `JsonRpcDispatcher` → `FormBusinessObject` |
 
 ## Simplifications vs production
 

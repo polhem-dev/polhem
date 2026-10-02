@@ -14,7 +14,7 @@ The framework registers itself in the standard `IServiceCollection` DI container
 3. `SysInfo.Initialize(settings.CommonConfiguration)` — process-wide debug flag and allowed type namespaces (a host that serves the API also runs `ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode)` for the payload compressor and encryptor; a remote client adopts the server's options in `SystemApiConnector.InitializeAsync`)
 4. `services.AddPolhemFramework(settings.BackendConfiguration, paths)` — register framework services (extension from `Polhem.Hosting`)
 5. Build the service provider, then:
-   - **ASP.NET Core hosts** call `app.UsePolhemFramework()` on the built application. It registers no middleware; it runs the host-side startup checks (today: whether an API key gate is in force, see [API Key Management](../security/api-key-management.md)).
+   - **ASP.NET Core hosts** call `services.AddJsonRpcServer()` and `services.AddPolhemApiKeyGateCheck()` before building, and `app.MapJsonRpc("/api")` on the built application. The gate check runs when the host starts (see [API Key Management](../security/api-key-management.md)).
    - **Non-web hosts** that run the backend in process hand the resulting `IServiceProvider` to the client side: the `Polhem.Api.Client` connectors take it as a constructor argument, and a native UI head assigns it to `ClientInfo.LocalServiceProvider` (`Polhem.UI.Core`).
 
 See [development-cookbook.md § Framework Initialization Order](../guides/development-cookbook.md#framework-initialization-order) for the canonical reference.
@@ -146,7 +146,7 @@ other sessions.
 
 | Forbidden | Reason | Correct Approach |
 |-----------|--------|------------------|
-| API layer directly references the Repository layer (`Polhem.Api.Core`, `Polhem.Api.AspNetCore`; **not** the composition root `Polhem.Hosting`, whose job is to wire every layer) | Violates layered architecture | Access indirectly through a Business Object |
+| API layer directly references the Repository layer (`Polhem.Api.Core`; **not** the composition root `Polhem.Hosting`, whose job is to wire every layer) | Violates layered architecture | Access indirectly through a Business Object |
 | Business Object directly creates a `DbConnection` | Bypasses connection management and logging | Put the query in a repository (next row); the repository uses `DbAccess` |
 | BO references `Polhem.Db` (`Polhem.Business.csproj` has no `ProjectReference` to `Polhem.Db`) | BO is a thin shell over business logic; data access belongs to Repository | FormSchema-driven CRUD → `IDataFormRepository`; custom queries → ad-hoc bo repo with `IDbAccessFactory` |
 | BO hard-codes a `databaseId` string or reads `SessionInfo.CompanyId` / `CompanyInfo` directly | Couples BO to the routing implementation; breaks when deployments change | Use `BusinessObject.ResolveDatabaseId(DbScope)` (custom bo repo) or `CreateDataFormRepository(progId)` (FormSchema CRUD); the helpers delegate to `IRepositoryDatabaseRouter` which is the single source of truth |
@@ -186,10 +186,10 @@ public void MaintenanceMethod(ExecFuncArgs args, ExecFuncResult result) { }
 
 ### Client-Visible Exception Types
 
-`JsonRpcExecutor` maps an exception to a JSON-RPC error code through [`JsonRpcErrorContract`](../../../src/Polhem.Api.Core/JsonRpc/JsonRpcErrorContract.cs), the single declaration both ends read. See [ADR-043](../../../maintainers/adr/adr-043-error-contract-single-registry.md) for the reasoning. What reaches the caller falls into three groups:
+The server maps an exception to a JSON-RPC error code (`PolhemExceptionMapper`) through [`JsonRpcErrorContract`](../../../src/Polhem.Api.Core/JsonRpc/JsonRpcErrorContract.cs), the single declaration both ends read. See [ADR-043](../../../maintainers/adr/adr-043-error-contract-single-registry.md) for the reasoning. What reaches the caller falls into three groups:
 
 - **The framework's own exceptions carry their message to the caller.** `UserMessageException` (**preferred** for anything an end user should read) and `JsonRpcException` travel as `JsonRpcErrorCode.UserMessage` (`-32099`); `AuthenticationRequiredException`, `CompanyNotEnteredException`, `CompanyAccessDeniedException`, `ForbiddenException` and `ReplayRejectedException` each travel under a code of their own. Client-side error handling that assumes every user-facing failure arrives as `-32099` will misclassify these.
-- **BCL exceptions keep a code but not their message.** `UnauthorizedAccessException`, `ArgumentException`, `InvalidOperationException`, `NotSupportedException` and `FormatException` (each with its subclasses) travel as `-32099` with a fixed, generic message such as "The request is not valid."; the real message is logged on the server (`JsonRpcExecutor.Logger`). These types are what the BCL, database drivers and infrastructure throw with table names, parameter names and server details in the text, so none of it is shown to a remote caller.
+- **BCL exceptions keep a code but not their message.** `UnauthorizedAccessException`, `ArgumentException`, `InvalidOperationException`, `NotSupportedException` and `FormatException` (each with its subclasses) travel as `-32099` with a fixed, generic message such as "The request is not valid."; the real message is logged on the server (by `PolhemExceptionMapper`). These types are what the BCL, database drivers and infrastructure throw with table names, parameter names and server details in the text, so none of it is shown to a remote caller.
 - **Everything else** is masked as `"Internal server error"` under `JsonRpcErrorCode.InternalError` (`-32000`), and the real message is logged.
 
 When debug mode is on (`SysInfo.IsDebugMode`, set from `CommonConfiguration.IsDebugMode`), the original message is passed through instead of the fixed or masked one; the codes stay the same. The stack trace is never included, in either mode.

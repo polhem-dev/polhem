@@ -5,7 +5,9 @@
 **Accepted (2026-09-27)**
 
 The renaming of `Polhem.Base` to `Polhem.Core` in 1.1.0 is a one-time exception to the compatibility rule stated
-below; see [ADR-048](adr-048-rename-base-to-core-in-1-1.md).
+below; see [ADR-048](adr-048-rename-base-to-core-in-1-1.md). The removal of `Polhem.Api.AspNetCore` in 1.2.0 is a
+second one, and [ADR-049](adr-049-jsonrpc-packages-in-1-2.md) also exempts the framework pipeline types it names from
+that rule.
 
 ## Context
 

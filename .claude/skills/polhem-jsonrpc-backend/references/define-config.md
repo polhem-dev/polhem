@@ -141,4 +141,4 @@ placeholder in an index name = the table name. The framework's reserved table na
   Connection strings are in DatabaseSettings.xml.
 - `launchSettings.json`: `applicationUrl` determines the dev port.
 - **The API key is sent by the client** in `X-Api-Key`. Until the deployment issues a key (stored hashed in
-  `st_api_key`), any non-empty value passes; `UsePolhemFramework` logs that state at startup.
+  `st_api_key`), any non-empty value passes; `AddPolhemApiKeyGateCheck` logs that state at startup.

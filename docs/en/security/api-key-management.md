@@ -18,7 +18,7 @@ gate**, after which only issued keys are accepted. There is no setting to flip.
 
 | State | Behaviour |
 |---|---|
-| `st_api_key` absent, or holds no enabled key | Gate not in force: any non-empty header passes. `UsePolhemFramework` reports it at startup — as a warning in the Development environment, as an error everywhere else. |
+| `st_api_key` absent, or holds no enabled key | Gate not in force: any non-empty header passes. `AddPolhemApiKeyGateCheck` reports it at startup — as a warning in the Development environment, as an error everywhere else. |
 | At least one enabled key | Gate in force: the header must carry a valid, enabled, unexpired key. |
 
 The default validator exempts one method from the key, `System.Ping`, so a health check still

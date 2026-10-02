@@ -20,7 +20,8 @@ Each step links to the document that covers it in depth. Everything shown here i
 ```bash
 dotnet new web -o MyApp.Server
 cd MyApp.Server
-dotnet add package Polhem.Api.AspNetCore
+dotnet add package Polhem.Hosting
+dotnet add package Polhem.JsonRpc.AspNetCore
 dotnet add package Polhem.Db
 dotnet add package Microsoft.Data.Sqlite
 ```
@@ -28,7 +29,7 @@ dotnet add package Microsoft.Data.Sqlite
 `Microsoft.Data.Sqlite` is the ADO.NET driver for the SQLite database used below. The framework ships no driver;
 step 3 lists the package for each database.
 
-**Which host package?** `Polhem.Api.AspNetCore` transitively pulls in `Polhem.Hosting`, the composition root. If you are hosting outside ASP.NET Core — WinForms, WPF, Console, Worker Service — reference `Polhem.Hosting` directly instead and skip step 4's `UsePolhemFramework` call.
+**Which host packages?** `Polhem.Hosting` is the composition root. `Polhem.JsonRpc.AspNetCore` serves the API over HTTP. If you are hosting outside ASP.NET Core — WinForms, WPF, Console, Worker Service — reference `Polhem.Hosting` alone and skip step 5.
 
 ## 2. Materialise the `DefinePath`
 
@@ -117,7 +118,6 @@ The whole `Program.cs`, starting with the two registrations of step 3:
 
 ```csharp
 using Microsoft.Data.Sqlite;
-using Polhem.Api.AspNetCore;
 using Polhem.Api.Core;
 using Polhem.Core;
 using Polhem.Db;
@@ -128,6 +128,7 @@ using Polhem.Definition;
 using Polhem.Definition.Database;
 using Polhem.Definition.Storage;
 using Polhem.Hosting;
+using Polhem.JsonRpc.AspNetCore;
 
 DbProviderRegistry.Register(DatabaseType.SQLite, new SqliteProviderFactory(SqliteFactory.Instance));
 DbDialectRegistry.Register(DatabaseType.SQLite, new SqliteDialectFactory());
@@ -147,7 +148,8 @@ builder.Services.AddPolhemFramework(
     paths,
     autoCreateMasterKey: true);
 
-builder.Services.AddControllers();
+builder.Services.AddJsonRpcServer();
+builder.Services.AddPolhemApiKeyGateCheck();
 
 var app = builder.Build();
 
@@ -159,8 +161,7 @@ var schemaBuilder = new TableSchemaBuilder("common", defineAccess, connectionMan
 foreach (var table in common.Tables!)
     schemaBuilder.Execute("common", table.TableName);
 
-app.UsePolhemFramework();
-app.MapControllers();
+app.MapJsonRpc("/api");
 app.Run();
 ```
 
@@ -171,9 +172,9 @@ app.Run();
   `st_cache_notify`. The loop creates every table `DbCategorySettings.xml` registers under `common`, and on later
   starts brings them in line with their TableSchema. A real application creates its own tables the same way, with
   one `TableSchemaBuilder` per database (see [Database Schema Upgrade](../database/database-schema-upgrade.md)).
-- `UsePolhemFramework` registers no middleware and no endpoint. It runs host-side startup checks; today it logs
-  while no API key has been issued (a warning in the Development environment, an error elsewhere). It reads
-  `st_api_key`, so call it after the tables exist.
+- `AddPolhemApiKeyGateCheck` logs at startup while no API key has been issued (a warning in the Development
+  environment, an error elsewhere). It reads `st_api_key` when the host starts, in `app.Run()`, so the tables created
+  above exist by then. Only a host that serves the API over HTTP needs it.
 - `autoCreateMasterKey: true` creates the master key when it is missing. With the `File` source of step 2 that
   happens once. With the `Environment` source the generated key only lives in the process's environment, so every
   start gets a different key, and values encrypted with the previous one can no longer be decrypted. Do not combine
@@ -185,19 +186,11 @@ app.Run();
 
 ## 5. Publish the JSON-RPC endpoint
 
-`ApiServiceController` already declares `[Route("api")]` and the POST handler, so an empty subclass is the whole endpoint:
+The two calls of step 4 are the whole endpoint: `AddJsonRpcServer()` builds on the JSON-RPC options
+`AddPolhemFramework` registered, and `app.MapJsonRpc("/api")` maps them to a route. There is no controller to write.
 
-```csharp
-using Polhem.Api.AspNetCore.Controllers;
-
-namespace MyApp.Server.Controllers;
-
-public class ApiController : ApiServiceController
-{
-}
-```
-
-`POST /api` now speaks JSON-RPC 2.0.
+`POST /api` now speaks JSON-RPC 2.0. To run checks of your own on every call, add a filter:
+`AddJsonRpcServer(options => options.Filters.Add(new MyFilter()))`. It runs inside the framework's own checks.
 
 ## 6. Write your first business object
 
@@ -311,7 +304,7 @@ public class EchoResponse
 Keep the client's request / response DTOs separate from the server's `Args` / `Result` — that is how a third-party integrator sees the contract, and it keeps the wire shape honest.
 
 Every call carries the `X-Api-Key` header. While no API key has been issued (`st_api_key` holds no enabled key), any
-non-empty value is accepted, which is what `UsePolhemFramework` warned about at startup. Once a key is issued, only
+non-empty value is accepted, which is what `AddPolhemApiKeyGateCheck` warned about at startup. Once a key is issued, only
 issued keys are. → [API Key Management](../security/api-key-management.md).
 
 `PayloadFormat.Plain` matches the `Public` + `Anonymous` declaration above. A method that requires authentication or encryption needs `Login` first, which issues the access token and, through an RSA handshake, the session encryption key.

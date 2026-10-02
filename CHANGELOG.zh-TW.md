@@ -8,6 +8,54 @@ Polhem 套件的重要變更。格式依循 [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+> JSON-RPC 改建在 [`Polhem.JsonRpc`](https://github.com/polhem-dev/polhem-jsonrpc) 套件上，並移除
+> `Polhem.Api.AspNetCore`。這項移除會讓參考它的 host 編譯失敗，卻在次版號發佈：繼 1.1.0 之後，1.x 內的第二次例外。
+> 成功呼叫的請求與回應在線路上沒有改變。理由，以及本版視為框架內部管線的型別，見
+> [ADR-049](maintainers/adr/adr-049-jsonrpc-packages-in-1-2.md)（英文）。
+
+### 破壞性 API 變更
+
+- 移除 `Polhem.Api.AspNetCore` 套件，連同 `ApiServiceController` 與 `UsePolhemFramework()`。host 改用
+  `Polhem.JsonRpc.AspNetCore` 提供 API。
+- 移除 `IJsonRpcProvider`。`RemoteApiProvider` 與 `LocalApiProvider` 改實作套件的 `IJsonRpcTransport`，
+  `ApiConnector.Provider` 也改為該型別。
+- 移除 `Polhem.Api.Core.JsonRpc` 的 `JsonRpcExecutor`，以及訊息型別 `JsonRpcRequest`、`JsonRpcResponse`、`JsonRpcError`。
+
+以 HTTP 提供 API 的 host 升級方式：
+
+```diff
+- <PackageReference Include="Polhem.Api.AspNetCore" Version="1.1.0" />
++ <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="…" />
+```
+
+```diff
+  builder.Services.AddPolhemFramework(configuration, paths);
+- builder.Services.AddControllers();
++ builder.Services.AddJsonRpcServer();
++ builder.Services.AddPolhemApiKeyGateCheck();
+  var app = builder.Build();
+- app.UsePolhemFramework();
+- app.MapControllers();
++ app.MapJsonRpc("/api");
+```
+
+刪除衍生自 `ApiServiceController` 的 controller。覆寫過其成員的檢查改寫成 filter，以
+`AddJsonRpcServer(options => options.Filters.Add(...))` 加入。
+
+### 新增
+
+- `Polhem.Hosting` 的 `AddPolhemApiKeyGateCheck()`：尚未發行 API key 時於啟動時記錄 log，供以 HTTP 提供 API 的 host 使用。
+
+### 行為變更
+
+- API key 或 `Authorization` header 被拒時，回 HTTP 200 與 JSON-RPC 錯誤，不再回 401；因此 .NET 用戶端丟出的是錯誤合約重建的
+  例外，而不是 `HttpRequestException`。
+- 方法名稱格式錯誤時回 `MethodNotFound`（-32601），不再回 `UserMessage`。找不到的方法以固定訊息回應，debug 模式也一樣，
+  且不寫異常紀錄。
+- in-process 呼叫與遠端呼叫一樣會序列化參數。
+- log category：被遮蔽的失敗記在 `Polhem.Api.Core.Dispatch.PolhemExceptionMapper`，API key 啟動檢查記在
+  `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService`。
+
 ## [1.1.0] - 2026-09-30
 
 > `Polhem.Base` 改名為 `Polhem.Core`。依語意化版本，這應等到 2.0.0；它以一次性例外在 1.1.0 發佈，因為 1.0.0 沒有

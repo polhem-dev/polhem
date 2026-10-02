@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: 32748148be71c9168853b8c86be9e6e6ffef8a83 -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: 9535de520af4fe5fc299bf1a7acb5de07f8fda68 -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -124,7 +124,7 @@ Encoded / Encrypted 的 body 是不透明的位元組。即使在那條路徑上
   自訂 `JsonConverter` 以 inline 的 `kind` discriminator 處理，不依賴外層 `type`
 
 你想送 `params.type` 也可以（Plain 路徑會忽略），省略則 payload 較小。
-回歸保障：[`JsonRpcExecutorTests.Ping_PlainWith*`](../../../tests/Polhem.Api.Core.UnitTests/JsonRpcExecutorTests.cs)
+回歸保障：[`DispatchTests.Ping_PlainWith*`](../../../tests/Polhem.Api.Core.UnitTests/Dispatch/DispatchTests.cs)
 驗證了省略 / 空字串 / 帶錯誤型別字串三種情境都會成功。
 
 ### Plain body 裡的值

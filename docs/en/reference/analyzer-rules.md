@@ -109,8 +109,8 @@ rule applies to consumer projects, including POLHEM4005: a collection you derive
 POLHEM1xxx and POLHEM2xxx analyse XML rather than C#, which MSBuild has to hand to the compiler explicitly.
 The package does that for you: `buildTransitive/Polhem.Definition.targets` adds `Define\**\*.xml` to
 `AdditionalFiles`, rooted at the project directory and excluding build output. This applies whether
-`Polhem.Definition` is referenced directly or arrives through `Polhem.Business`, `Polhem.Db`,
-`Polhem.Api.AspNetCore` or `Polhem.Hosting`.
+`Polhem.Definition` is referenced directly or arrives through `Polhem.Business`, `Polhem.Db` or
+`Polhem.Hosting`.
 
 **The glob is rooted at the project directory and is not searched for above it.** The usual layout
 keeps the definitions beside the solution file rather than beside the server project, and that needs

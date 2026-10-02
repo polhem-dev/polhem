@@ -1,4 +1,4 @@
-<!-- source: en/reference/analyzer-rules.md blob: 231651845d4663951c536e4e9ce2837f3e9615ec -->
+<!-- source: en/reference/analyzer-rules.md blob: b1e47ea578539ec6eb8397d711d54601aef882de -->
 # Analyzer 規則
 
 [English](../../en/reference/analyzer-rules.md) · [← 文件索引](../README.md)
@@ -100,7 +100,7 @@ POLHEM9001 / POLHEM9002 只在本 repository 內執行。列出僅為完整性�
 POLHEM1xxx 與 POLHEM2xxx 分析的是 XML 而非 C#，這需要 MSBuild 明確地把檔案交給編譯器。套件已代為處理：
 `buildTransitive/Polhem.Definition.targets` 會把 `Define\**\*.xml` 加入 `AdditionalFiles`，以專案目錄
 為根並排除建置輸出。不論 `Polhem.Definition` 是直接引用、或是經由 `Polhem.Business`、`Polhem.Db`、
-`Polhem.Api.AspNetCore`、`Polhem.Hosting` 遞移而來，都同樣適用。
+`Polhem.Hosting` 遞移而來，都同樣適用。
 
 **這個 glob 以專案目錄為根，不會往上層搜尋。** 常見佈局是把定義檔放在方案根目錄而非 server 專案
 目錄下，那需要一行設定——且只加在「擁有這些定義檔」的那一個專案上，同一批問題才不會在方案中

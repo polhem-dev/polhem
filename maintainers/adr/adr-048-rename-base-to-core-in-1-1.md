@@ -2,7 +2,7 @@
 
 ## Status
 
-**Accepted (2026-09-30)**
+**Accepted (2026-09-30)**, decision 5 amended by [ADR-049](adr-049-jsonrpc-packages-in-1-2.md)
 
 A one-time exception to the compatibility rule stated in the context of
 [ADR-046](adr-046-api-evolution-policies-for-1-0.md) ("a change that breaks it waits for the next major version").
@@ -35,6 +35,8 @@ A package that new collects that many from mirrors and crawlers alone; no applic
    recorded as removals and additions. With 1.0.0 unlisted, the baseline stands for the 1.x line; a thousand
    `*REMOVED*` entries would have no reader.
 5. **This is the only exception.** From 1.1.0 on, 1.x follows ADR-046 without exceptions.
+   *Amended 2026-10-02:* [ADR-049](adr-049-jsonrpc-packages-in-1-2.md) makes a second one in 1.2.0, the removal of
+   `Polhem.Api.AspNetCore`. Each further exception needs an ADR of its own.
 
 The earlier ADRs keep the name `Polhem.Base` where they describe what was decided at the time; read it as
 `Polhem.Core`.
