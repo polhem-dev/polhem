@@ -1,3 +1,4 @@
+using Polhem.Api.Core.Dispatch;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Core.Expressions;
 using Polhem.Business;
@@ -27,6 +28,7 @@ using Polhem.Repository.Abstractions;
 using Polhem.Repository.Abstractions.AuditLog;
 using Polhem.Repository.Abstractions.Factories;
 using Polhem.Repository.Factories;
+using Polhem.JsonRpc.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -368,6 +370,14 @@ namespace Polhem.Hosting
                 executor.LanguageService = sp.GetService<ILanguageService>();
                 return executor;
             });
+
+            // 11. The JSON-RPC dispatcher (Polhem.JsonRpc.Server), set up the way the framework serves its API.
+            //     The options are registered as an instance, so an HTTP host's AddJsonRpcServer adds its own
+            //     settings and filters to these instead of starting over; the framework's filters run first.
+            //     Every Polhem component resolves its services from the call's scope, so the options need none here.
+            var jsonRpcOptions = PolhemJsonRpc.CreateServerOptions();
+            services.AddSingleton(jsonRpcOptions);
+            services.TryAddSingleton(_ => new JsonRpcDispatcher(jsonRpcOptions));
 
             return services;
         }

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -25,6 +25,14 @@
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false"
                       PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- The JSON-RPC dispatcher. PolhemJsonRpcSource switches to a local checkout; see src/Directory.Build.props. -->
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' == ''">
+    <PackageReference Include="Polhem.JsonRpc.Server" Version="$(PolhemJsonRpcVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' != ''">
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Server/Polhem.JsonRpc.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>

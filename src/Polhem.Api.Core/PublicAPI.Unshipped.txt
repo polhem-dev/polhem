@@ -1,1 +1,18 @@
 #nullable enable
+Polhem.Api.Core.Dispatch.PolhemExceptionMapper
+Polhem.Api.Core.Dispatch.PolhemJsonRpc
+Polhem.Api.Core.Dispatch.PolhemMethodPolicy
+Polhem.Api.Core.Dispatch.PolhemMethodPolicy.IsCallable(System.Reflection.MethodInfo! method) -> bool
+Polhem.Api.Core.Dispatch.PolhemMethodPolicy.PolhemMethodPolicy() -> void
+Polhem.Api.Core.Dispatch.PolhemObjectFactory
+Polhem.Api.Core.Dispatch.PolhemObjectFactory.CreateObject(string! progId, Polhem.JsonRpc.Server.JsonRpcRequestContext! context) -> object?
+Polhem.Api.Core.Dispatch.PolhemObjectFactory.PolhemObjectFactory() -> void
+Polhem.Api.Core.Dispatch.PolhemParameterBinder
+Polhem.Api.Core.Dispatch.PolhemParameterBinder.Bind(Polhem.JsonRpc.Server.JsonRpcRequestContext! context) -> object?
+Polhem.Api.Core.Dispatch.PolhemParameterBinder.PolhemParameterBinder() -> void
+Polhem.Api.Core.Dispatch.PolhemPayloadFilter
+Polhem.Api.Core.Dispatch.PolhemPayloadFilter.InvokeAsync(Polhem.JsonRpc.Server.JsonRpcRequestContext! context, Polhem.JsonRpc.Server.JsonRpcFilterDelegate! next) -> System.Threading.Tasks.ValueTask
+Polhem.Api.Core.Dispatch.PolhemPayloadFilter.PolhemPayloadFilter() -> void
+const Polhem.Api.Core.Dispatch.PolhemJsonRpc.AccessTokenItem = "Polhem.AccessToken" -> string!
+static Polhem.Api.Core.Dispatch.PolhemExceptionMapper.Map(System.Exception! exception, Polhem.JsonRpc.Server.JsonRpcRequestContext! context) -> Polhem.JsonRpc.JsonRpcError!
+static Polhem.Api.Core.Dispatch.PolhemJsonRpc.CreateServerOptions() -> Polhem.JsonRpc.Server.JsonRpcServerOptions!

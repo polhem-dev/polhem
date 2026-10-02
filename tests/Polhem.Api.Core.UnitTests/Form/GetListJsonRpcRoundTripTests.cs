@@ -184,7 +184,7 @@ namespace Polhem.Api.Core.UnitTests.Form
             Assert.True(result.Paging.HasMore);
         }
 
-        private sealed class StubFormRepositoryFactory : IRepositoryFactory
+        internal sealed class StubFormRepositoryFactory : IRepositoryFactory
         {
             private readonly IDataFormRepository _data;
             public StubFormRepositoryFactory(IDataFormRepository data) { _data = data; }
@@ -193,7 +193,7 @@ namespace Polhem.Api.Core.UnitTests.Form
                 => throw new NotSupportedException();
         }
 
-        private sealed class StubDataFormRepository : IDataFormRepository
+        internal sealed class StubDataFormRepository : IDataFormRepository
         {
             private readonly DataTable _table;
             private readonly PagingInfo? _paging;

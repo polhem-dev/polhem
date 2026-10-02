@@ -1,9 +1,25 @@
-﻿<Project>
+<Project>
 
   <!-- The single source of version information; tools/ imports the same file. POLHEM9002 checks at build time that the three version properties agree. -->
   <Import Project="$(MSBuildThisFileDirectory)../Version.props" />
   <!-- Package metadata shared with the published dotnet tool (tools/Polhem.Cli). -->
   <Import Project="$(MSBuildThisFileDirectory)../Package.props" />
+
+  <!--
+    The JSON-RPC packages (polhem-dev/polhem-jsonrpc). Polhem.Api.Core references them as packages of this version.
+    A maintainer changing both repositories at once sets PolhemJsonRpcSource to a local checkout of polhem-jsonrpc,
+    and the same projects then reference its source instead. Set it in PolhemJsonRpc.local.props at the repository
+    root, which git ignores, for example:
+
+      <Project><PropertyGroup><PolhemJsonRpcSource>$(MSBuildThisFileDirectory)../polhem-jsonrpc</PolhemJsonRpcSource></PropertyGroup></Project>
+
+    CI and the release workflow never set it, so what they build and publish depends on the released packages.
+  -->
+  <PropertyGroup>
+    <PolhemJsonRpcVersion>0.1.0</PolhemJsonRpcVersion>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../PolhemJsonRpc.local.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)../PolhemJsonRpc.local.props')" />
 
   <PropertyGroup>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
