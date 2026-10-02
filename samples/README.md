@@ -109,7 +109,7 @@ To reset demo data: delete `samples/<Host>/quickstart.db` and re-run. Changing t
 
 | Mode | Path | Used by | Sample demo |
 |------|------|---------|-------------|
-| **Local** | client → `LocalApiProvider` → `JsonRpcExecutor` → BO (same process) | Blazor Server, in-process tooling, BO-to-BO calls | `Blazor.Server.Demo` |
+| **Local** | client → `LocalApiProvider` → `JsonRpcDispatcher` → BO (same process) | Blazor Server, in-process tooling, BO-to-BO calls | `Blazor.Server.Demo` |
 | **Remote** | client → `RemoteApiProvider` → HTTP POST → `MapJsonRpc` → `JsonRpcDispatcher` → BO | Console, desktop, mobile, cross-machine | `QuickStart.Console` |
 
 In a Blazor Server host, switching modes is one line in `AddPolhemBlazor`; elsewhere it is the choice of connector constructor (an endpoint for Remote, the backend's `IServiceProvider` for Local, as in [`QuickStart.Console`](QuickStart.Console/README.md#local-vs-remote-modes)):

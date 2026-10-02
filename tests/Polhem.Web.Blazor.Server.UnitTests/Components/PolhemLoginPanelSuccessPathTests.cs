@@ -2,19 +2,23 @@ using System.ComponentModel;
 using System.Reflection;
 using Polhem.Api.Client;
 using Polhem.Api.Client.Connectors;
-using Polhem.Api.Client.Providers;
+using System.Text.Json;
 using Polhem.Api.Core.JsonRpc;
+using Polhem.Core.Serialization;
+using Polhem.JsonRpc;
 using Polhem.Api.Core.Messages.System;
 using Polhem.Web.Blazor.Server.Components;
 using Polhem.Web.Blazor.Server.DependencyInjection;
 using Microsoft.AspNetCore.Components;
 using Polhem.Tests.Shared;
+using JsonRpcRequest = Polhem.JsonRpc.JsonRpcRequest;
+using JsonRpcResponse = Polhem.JsonRpc.JsonRpcResponse;
 
 namespace Polhem.Web.Blazor.Server.UnitTests.Components
 {
     /// <summary>
     /// Covers the success path of <c>PolhemLoginPanel.OnSubmitAsync</c> (private, so not a cref).
-    /// A fake Factory and a fake IJsonRpcProvider make LoginAsync return a controllable <see cref="LoginResponse"/>
+    /// A fake Factory and a fake transport make LoginAsync return a controllable <see cref="LoginResponse"/>
     /// without a real API service, covering these paths:
     /// 1. Empty AccessToken: sets an error message and returns early.
     /// 2. Valid AccessToken: clears the password field.
@@ -33,30 +37,31 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
             typeof(PolhemLoginPanel).GetProperty("Factory", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         /// <summary>
-        /// Answers every call with the given login response. The connector treats any provider other than the
-        /// in-process one as a remote transport and encodes the request, so this encodes the response in the
-        /// request's format and codec, the way a server answers, and the connector's decode path accepts it.
+        /// Answers every call with the given login response. The connector treats any transport other than the
+        /// in-process one as remote and encodes the request, so this encodes the response in the request's format
+        /// and codec, the way a server answers, and the connector's decode path accepts it.
         /// </summary>
-        private sealed class FakeLoginProvider : IJsonRpcProvider
+        private sealed class FakeLoginTransport(LoginResponse response) : IJsonRpcTransport
         {
-            private readonly LoginResponse _response;
-
-            public FakeLoginProvider(LoginResponse response) => _response = response;
-
-            public Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
+            public Task<JsonRpcResponse?> SendAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
             {
-                var result = new JsonRpcResult { Value = _response, Codec = request.Params.Codec };
-                ApiPayloadConverter.TransformTo(result, request.Params.Format);
-                return Task.FromResult(new JsonRpcResponse(request) { Result = result });
+                var parameters = JsonCodec.Deserialize<JsonRpcParams>(request.Params!.Value.GetRawText())!;
+                var result = new JsonRpcResult { Value = response, Codec = parameters.Codec };
+                ApiPayloadConverter.TransformTo(result, parameters.Format);
+                using var document = JsonDocument.Parse(JsonCodec.Serialize(result));
+                return Task.FromResult<JsonRpcResponse?>(JsonRpcResponse.Success(request.Id, document.RootElement.Clone()));
             }
+
+            public Task<IReadOnlyList<JsonRpcResponse>> SendBatchAsync(IReadOnlyList<JsonRpcRequest> requests, CancellationToken cancellationToken = default)
+                => throw new NotSupportedException();
         }
 
         private sealed class FakeConnectorFactory : PolhemApiConnectorFactory
         {
-            private readonly IJsonRpcProvider _provider;
+            private readonly IJsonRpcTransport _provider;
             private readonly ApiSessionContext _session;
 
-            public FakeConnectorFactory(IJsonRpcProvider provider, ApiSessionContext session)
+            public FakeConnectorFactory(IJsonRpcTransport provider, ApiSessionContext session)
                 : base(new PolhemBlazorOptions(), session, Polhem.Tests.Shared.EmptyServiceProvider.Instance)
             {
                 _provider = provider;
@@ -89,7 +94,7 @@ namespace Polhem.Web.Blazor.Server.UnitTests.Components
         private static PolhemLoginPanel CreatePanelWithFakeFactory(LoginResponse response, ApiSessionContext? session = null)
         {
             var panel = new PolhemLoginPanel();
-            var factory = new FakeConnectorFactory(new FakeLoginProvider(response), session ?? new ApiSessionContext());
+            var factory = new FakeConnectorFactory(new FakeLoginTransport(response), session ?? new ApiSessionContext());
             s_factoryProp.SetValue(panel, factory);
             return panel;
         }

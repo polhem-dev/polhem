@@ -40,20 +40,6 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("PostAsync sends the body with a JSON Content-Type and returns the response")]
-        public async Task PostAsync_SendsJsonBodyAndReturnsResponse()
-        {
-            await using var server = await LoopbackHttpServer.StartAsync();
-
-            var result = await HttpUtilities.PostAsync(server.BuildUrl("/submit"), "{\"k\":1}");
-
-            Assert.Equal("pong", result);
-            Assert.Contains("POST /submit", server.LastRequest);
-            Assert.Contains("Content-Type: application/json", server.LastRequest);
-            Assert.Contains("{\"k\":1}", server.LastRequest);
-        }
-
-        [Fact]
         [DisplayName("IsEndpointReachableAsync returns true for a running endpoint")]
         public async Task IsEndpointReachableAsync_RunningServer_ReturnsTrue()
         {

@@ -1,12 +1,13 @@
+using System.Text.Json;
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Api.Client.Connectors;
 using Polhem.Api.Client.Providers;
-using Polhem.Api.Core.JsonRpc;
-using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Messages.Form;
+using Polhem.JsonRpc;
 using Polhem.Definition;
 using Polhem.Tests.Shared;
+using JsonRpcRequest = Polhem.JsonRpc.JsonRpcRequest;
 
 namespace Polhem.Api.Client.UnitTests.Connectors
 {
@@ -42,23 +43,10 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         /// <summary>
-        /// Records the token each call receives and answers with an empty Encoded result.
+        /// Records the token each call receives and answers with an empty result.
         /// </summary>
-        private sealed class CapturingProvider : IJsonRpcProvider
-        {
-            public int CallCount { get; private set; }
-
-            public CancellationToken LastToken { get; private set; }
-
-            public Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
-            {
-                CallCount++;
-                LastToken = cancellationToken;
-                var result = new JsonRpcResult { Value = new GetListResponse() };
-                ApiPayloadConverter.TransformTo(result, PayloadFormat.Encoded);
-                return Task.FromResult(new JsonRpcResponse(request) { Result = result });
-            }
-        }
+        private static FakeApiTransport NewCapturingTransport()
+            => new(call => FakeApiTransport.Answer(call, new GetListResponse()));
 
         /// <summary>
         /// A definition fetch that stays pending until released, and ignores cancellation on purpose: the
@@ -82,19 +70,17 @@ namespace Polhem.Api.Client.UnitTests.Connectors
             }
         }
 
-        private static JsonRpcRequest NewRequest() => new()
-        {
-            Method = $"{SysProgIds.System}.{SystemActions.Ping}",
-            Params = new JsonRpcParams(),
-            Id = Guid.NewGuid().ToString(),
-        };
+        private static JsonRpcRequest NewRequest() => new(
+            $"{SysProgIds.System}.{SystemActions.Ping}",
+            JsonSerializer.Deserialize<JsonElement>("{}"),
+            JsonRpcId.FromString(Guid.NewGuid().ToString()));
 
-        private static FormApiConnector NewFormConnector(IJsonRpcProvider provider)
+        private static FormApiConnector NewFormConnector(FakeApiTransport transport)
         {
             var connector = new FormApiConnector(EmptyServiceProvider.Instance, Guid.NewGuid(), "Employee", new ApiSessionContext());
             typeof(ApiConnector)
                 .GetProperty(nameof(ApiConnector.Provider), BindingFlags.Public | BindingFlags.Instance)!
-                .SetValue(connector, provider);
+                .SetValue(connector, transport);
             return connector;
         }
 
@@ -103,11 +89,10 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         public async Task RemoteApiProvider_CancelledDuringHttpCall_AbortsRequest()
         {
             var handler = new HangingHandler();
-            using var client = new HttpClient(handler);
-            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, client);
+            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, handler);
             using var cts = new CancellationTokenSource();
 
-            var call = provider.ExecuteAsync(NewRequest(), cts.Token);
+            var call = provider.SendAsync(NewRequest(), cts.Token);
             await handler.Entered.Task;
             await cts.CancelAsync();
 
@@ -118,16 +103,16 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         }
 
         [Fact]
-        [DisplayName("LocalApiProvider with a cancelled token throws before resolving the executor")]
+        [DisplayName("LocalApiProvider with a cancelled token throws before resolving the dispatcher")]
         public async Task LocalApiProvider_CancelledToken_ThrowsBeforeDispatch()
         {
-            // The empty provider has no executor, so getting past the cancellation check would throw
+            // The empty provider has no dispatcher, so getting past the cancellation check would throw
             // InvalidOperationException instead.
             var provider = new LocalApiProvider(EmptyServiceProvider.Instance, Guid.Empty);
             using var cts = new CancellationTokenSource();
             await cts.CancelAsync();
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => provider.ExecuteAsync(NewRequest(), cts.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => provider.SendAsync(NewRequest(), cts.Token));
         }
 
         [Fact]
@@ -138,33 +123,33 @@ namespace Polhem.Api.Client.UnitTests.Connectors
             using var cts = new CancellationTokenSource();
             await cts.CancelAsync();
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => provider.ExecuteAsync(NewRequest(), cts.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => provider.SendAsync(NewRequest(), cts.Token));
         }
 
         [Fact]
         [DisplayName("A connector method passes its cancellation token down to the provider")]
         public async Task ConnectorMethod_Token_ReachesProvider()
         {
-            var provider = new CapturingProvider();
-            var connector = NewFormConnector(provider);
+            var transport = NewCapturingTransport();
+            var connector = NewFormConnector(transport);
             using var cts = new CancellationTokenSource();
 
             await connector.GetListAsync(cancellationToken: cts.Token);
 
-            Assert.Equal(cts.Token, provider.LastToken);
+            Assert.Equal(cts.Token, transport.LastToken);
         }
 
         [Fact]
         [DisplayName("A connector method with a cancelled token throws without calling the provider")]
         public async Task ConnectorMethod_CancelledToken_DoesNotCallProvider()
         {
-            var provider = new CapturingProvider();
-            var connector = NewFormConnector(provider);
+            var transport = NewCapturingTransport();
+            var connector = NewFormConnector(transport);
             using var cts = new CancellationTokenSource();
             await cts.CancelAsync();
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connector.GetListAsync(cancellationToken: cts.Token));
-            Assert.Equal(0, provider.CallCount);
+            Assert.Empty(transport.Calls);
         }
 
         [Fact]

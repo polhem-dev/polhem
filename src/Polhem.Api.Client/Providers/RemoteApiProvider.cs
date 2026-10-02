@@ -1,16 +1,22 @@
-using System.Collections.Specialized;
-using Polhem.Api.Core.JsonRpc;
-using Polhem.Core.Serialization;
 using Polhem.Api.Core.Messages;
+using Polhem.JsonRpc;
+using Polhem.JsonRpc.Client;
 
 namespace Polhem.Api.Client.Providers
 {
     /// <summary>
     /// Remote API service provider that accesses backend business logic over the network.
     /// </summary>
-    public sealed class RemoteApiProvider : IJsonRpcProvider
+    /// <remarks>
+    /// Requests travel through an <see cref="HttpTransport"/>. The <c>X-Api-Key</c> and <c>Authorization</c> headers
+    /// are added by a handler in front of a connection pool the process shares, so every provider has its own
+    /// headers without opening connections of its own.
+    /// </remarks>
+    public sealed class RemoteApiProvider : IJsonRpcTransport
     {
-        #region Constructors
+        private static readonly TimeSpan s_timeout = TimeSpan.FromSeconds(30);
+
+        private readonly HttpTransport _transport;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RemoteApiProvider"/> class.
@@ -22,74 +28,80 @@ namespace Polhem.Api.Client.Providers
         }
 
         /// <summary>
-        /// Initializes a new instance that sends through <paramref name="httpClient"/> instead of the
-        /// shared per-host client.
+        /// Initializes a new instance that sends through <paramref name="innerHandler"/> instead of the
+        /// shared connection pool.
         /// </summary>
         /// <param name="endpoint">The API service endpoint.</param>
         /// <param name="accessToken">The access token.</param>
-        /// <param name="httpClient">The client to send with, or <c>null</c> for the shared per-host client.</param>
+        /// <param name="innerHandler">The handler to send with, or <c>null</c> for the shared connection pool.</param>
         /// <remarks>Internal: the seam exists so tests can observe the HTTP call through a fake handler.</remarks>
-        internal RemoteApiProvider(string endpoint, Guid accessToken, HttpClient? httpClient)
+        internal RemoteApiProvider(string endpoint, Guid accessToken, HttpMessageHandler? innerHandler)
         {
-            _httpClient = httpClient;
             if (string.IsNullOrWhiteSpace(endpoint))
                 throw new ArgumentException("Endpoint cannot be null or empty.", nameof(endpoint));
 
             Endpoint = endpoint;
             AccessToken = accessToken;  // Note: AccessToken may be Guid.Empty for unauthenticated calls (e.g., Login, Ping)
+
+            var headers = new ApiHeaderHandler(accessToken)
+            {
+                InnerHandler = innerHandler ?? HttpUtilities.SharedHandler
+            };
+            // The client does not own the shared pool, and the header handler holds nothing to release, so the
+            // client is never disposed.
+            var client = new HttpClient(headers, disposeHandler: false) { Timeout = s_timeout };
+            _transport = new HttpTransport(client, new Uri(endpoint));
         }
 
-        #endregion
-
-        private readonly HttpClient? _httpClient;
-
         /// <summary>
-        /// Gets or sets the service endpoint.
+        /// Gets the service endpoint.
         /// </summary>
-        public string Endpoint { get; private set; }
+        public string Endpoint { get; }
 
         /// <summary>
         /// Gets the access token.
         /// </summary>
-        public Guid AccessToken { get; } = Guid.Empty;
+        public Guid AccessToken { get; }
 
         /// <summary>
-        /// Asynchronously executes an API method.
+        /// Sends one request.
         /// </summary>
-        /// <param name="request">The JSON-RPC request model.</param>
+        /// <param name="request">The request.</param>
         /// <param name="cancellationToken">A token that cancels the HTTP call.</param>
-        public async Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
-        {
-            var headers = CreateHeaders();
-            string body = request.ToJson();  // Serialize input parameters to JSON
-            string json = _httpClient == null
-                ? await HttpUtilities.PostAsync(Endpoint, body, headers, cancellationToken).ConfigureAwait(false)
-                : await HttpUtilities.PostAsync(_httpClient, Endpoint, body, headers, cancellationToken).ConfigureAwait(false);
-            var response = JsonCodec.Deserialize<JsonRpcResponse>(json);  // Deserialize JSON response
-            return response!;
-        }
+        /// <returns>The response, or <c>null</c> for a notification.</returns>
+        public Task<JsonRpcResponse?> SendAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
+            => _transport.SendAsync(request, cancellationToken);
 
         /// <summary>
-        /// Creates the HTTP header collection for the request.
+        /// Sends a batch of requests.
+        /// </summary>
+        /// <param name="requests">The requests.</param>
+        /// <param name="cancellationToken">A token that cancels the HTTP call.</param>
+        /// <returns>The responses; notifications have none.</returns>
+        public Task<IReadOnlyList<JsonRpcResponse>> SendBatchAsync(IReadOnlyList<JsonRpcRequest> requests, CancellationToken cancellationToken = default)
+            => _transport.SendBatchAsync(requests, cancellationToken);
+
+        /// <summary>
+        /// Adds the API key and the access token to every request.
         /// </summary>
         /// <remarks>
-        /// The <c>Authorization</c> header is sent only when there is an access token. The server treats a request
-        /// without the header as an anonymous call and leaves the decision to the method's access control, and a
-        /// deployment that overrides <c>IsAuthorizationRequired</c> to refuse such requests must not be bypassed by a
-        /// placeholder token.
+        /// The API key is read per request, because <see cref="ApiClientInfo.ApiKey"/> can be set after the provider
+        /// is created. The <c>Authorization</c> header is sent only when there is an access token. The server treats a
+        /// request without the header as an anonymous call and leaves the decision to the method's access control,
+        /// and a deployment that overrides <c>IsAuthorizationRequired</c> to refuse such requests must not be
+        /// bypassed by a placeholder token.
         /// </remarks>
-        private NameValueCollection CreateHeaders()
+        private sealed class ApiHeaderHandler(Guid accessToken) : DelegatingHandler
         {
-            var headers = new NameValueCollection
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
-                { ApiHeaders.ApiKey, ApiClientInfo.ApiKey }
-            };
-            if (AccessToken != Guid.Empty)
-            {
-                headers.Add(ApiHeaders.Authorization, $"Bearer {AccessToken}");
+                request.Headers.TryAddWithoutValidation(ApiHeaders.ApiKey, ApiClientInfo.ApiKey);
+                if (accessToken != Guid.Empty)
+                {
+                    request.Headers.TryAddWithoutValidation(ApiHeaders.Authorization, $"Bearer {accessToken}");
+                }
+                return base.SendAsync(request, cancellationToken);
             }
-            return headers;
         }
-
     }
 }

@@ -10,7 +10,7 @@ namespace Polhem.Api.Client.UnitTests
     /// <summary>
     /// Uses <see cref="SharedDbFixture"/> to trigger the initialization of
     /// <c>TestProcessBootstrap.LocalServices</c> and SharedDatabaseState. The local-mode [DbFact] tests go through
-    /// LocalApiProvider to resolve the backend JsonRpcExecutor, and complete the CreateSession flow on SQL Server.
+    /// LocalApiProvider to resolve the backend JsonRpcDispatcher, and complete the CreateSession flow on SQL Server.
     /// </summary>
     public class SystemApiConnectorTests : IClassFixture<SharedDbFixture>
     {

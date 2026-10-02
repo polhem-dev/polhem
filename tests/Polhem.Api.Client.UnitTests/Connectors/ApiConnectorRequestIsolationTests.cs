@@ -11,11 +11,12 @@ namespace Polhem.Api.Client.UnitTests.Connectors
     /// (ADR-032 D4).
     /// </summary>
     /// <remarks>
-    /// An in-process call (<c>LocalApiProvider</c> + <c>Plain</c>) has no serialization boundary, so the server
-    /// receives the very object the Connector handed over. <c>FormBusinessObject.Save</c> rewrites the time
-    /// columns, and after writing, the adapter also calls <c>AcceptChanges</c>. Without the copy, the document on
-    /// screen would turn into UTC values and lose its unsaved state. Here a fake provider rewrites the received
-    /// object in place on the "server", reproducing the same shape.
+    /// <c>FormBusinessObject.Save</c> rewrites the time columns, and after writing, the adapter also calls
+    /// <c>AcceptChanges</c>. Before 1.2.0 an in-process call (<c>LocalApiProvider</c> + <c>Plain</c>) had no
+    /// serialization boundary, so without the copy the document on screen turned into UTC values and lost its
+    /// unsaved state. Every transport now serializes the request; this test keeps the caller's data safe should one
+    /// ever hand the object over again. Here a fake transport rewrites the received object on the "server",
+    /// reproducing the same shape.
     /// </remarks>
     public class ApiConnectorRequestIsolationTests
     {
@@ -33,9 +34,9 @@ namespace Polhem.Api.Client.UnitTests.Connectors
             DataSet? received = null;
             DateTime? receivedValue = null;
 
-            await ApiConnectorTestHost.ExecuteAsUserAsync(request, userTimeZoneId, serverRequest =>
+            await ApiConnectorTestHost.ExecuteAsUserAsync(request, userTimeZoneId, call =>
             {
-                var save = Assert.IsType<SaveRequest>(serverRequest.Params!.Value);
+                var save = call.SentValue<SaveRequest>();
                 received = save.DataSet;
                 var row = save.DataSet!.Tables[0].Rows[0];
                 receivedValue = (DateTime)row["created_at"];

@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using Polhem.Api.Client.Providers;
-using Polhem.Api.Core.JsonRpc;
+using System.Text.Json;
+using Polhem.JsonRpc;
+using Polhem.JsonRpc.Server;
 using Polhem.Tests.Shared;
 
 namespace Polhem.Api.Client.UnitTests
@@ -37,15 +39,15 @@ namespace Polhem.Api.Client.UnitTests
         }
 
         [Fact]
-        [DisplayName("ExecuteAsync throws InvalidOperationException naming JsonRpcExecutor when the provider does not register it")]
-        public async Task ExecuteAsync_ExecutorNotRegistered_ThrowsInvalidOperationException()
+        [DisplayName("SendAsync throws InvalidOperationException naming JsonRpcDispatcher when the provider does not register it")]
+        public async Task SendAsync_DispatcherNotRegistered_ThrowsInvalidOperationException()
         {
             var provider = new LocalApiProvider(EmptyServiceProvider.Instance, Guid.Empty);
+            var request = new JsonRpcRequest("System.Ping", JsonSerializer.Deserialize<JsonElement>("{}"), JsonRpcId.FromString("1"));
 
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => provider.ExecuteAsync(new JsonRpcRequest()));
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => provider.SendAsync(request));
 
-            Assert.Contains(nameof(JsonRpcExecutor), ex.Message, StringComparison.Ordinal);
+            Assert.Contains(nameof(JsonRpcDispatcher), ex.Message, StringComparison.Ordinal);
         }
     }
 }

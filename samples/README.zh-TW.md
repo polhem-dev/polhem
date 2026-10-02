@@ -109,7 +109,7 @@ Polhem 的 `Polhem.Api.Client` 對呼叫端有**一致的 API 表面**,差異只
 
 | 模式 | 路徑 | 用於 | 範例 demo |
 |------|------|------|-----------|
-| **Local** | client → `LocalApiProvider` → `JsonRpcExecutor` → BO(同 process) | Blazor Server、in-process 工具、跨 BO 直接呼叫 | `Blazor.Server.Demo` |
+| **Local** | client → `LocalApiProvider` → `JsonRpcDispatcher` → BO(同 process) | Blazor Server、in-process 工具、跨 BO 直接呼叫 | `Blazor.Server.Demo` |
 | **Remote** | client → `RemoteApiProvider` → HTTP POST → `MapJsonRpc` → `JsonRpcDispatcher` → BO | Console、桌面、行動端、跨機器 | `QuickStart.Console` |
 
 在 Blazor Server host 裡，切換只是 `AddPolhemBlazor` 的一行設定；其他情境則是選用哪個 connector 建構子（Remote 傳 endpoint，Local 傳 backend 的 `IServiceProvider`，見 [`QuickStart.Console`](QuickStart.Console/README.zh-TW.md)）：

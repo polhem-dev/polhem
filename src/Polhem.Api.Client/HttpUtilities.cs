@@ -1,7 +1,3 @@
-using System.Collections.Concurrent;
-using System.Collections.Specialized;
-using System.Text;
-
 namespace Polhem.Api.Client
 {
     /// <summary>
@@ -17,41 +13,36 @@ namespace Polhem.Api.Client
     /// </remarks>
     internal static class HttpUtilities
     {
-        private static readonly ConcurrentDictionary<string, HttpClient> s_clientMap = new ConcurrentDictionary<string, HttpClient>();
-
         /// <summary>
-        /// Creates or retrieves a <see cref="HttpClient"/> instance for the given host.
+        /// Gets the handler every client in the process sends through, so they share one connection pool.
         /// </summary>
-        /// <param name="fullUrl">The full URL of the API, e.g. https://api.example.com/v1/login.</param>
-        /// <returns>A shared <see cref="HttpClient"/> instance that reuses the same connection pool.</returns>
         /// <remarks>
-        /// This method creates a unique cache key based on the URL's <c>Schema + Host + Port</c> to avoid
-        /// creating too many <c>HttpClient</c> instances for the same host, preventing Socket Exhaustion and DNS cache issues.
+        /// One pool for the whole process prevents socket exhaustion and stale DNS entries, which a client per call
+        /// would cause. Per-provider settings, such as headers, go in a handler placed in front of this one.
         /// </remarks>
-        private static HttpClient GetOrCreateClient(string fullUrl)
+        internal static HttpMessageHandler SharedHandler { get; } = CreateSharedHandler();
+
+        private static readonly HttpClient s_probeClient = new(SharedHandler, disposeHandler: false)
         {
-            var baseUri = new Uri(fullUrl);
-            string cacheKey = $"{baseUri.Scheme}://{baseUri.Host}:{baseUri.Port}";
+            Timeout = TimeSpan.FromSeconds(30)
+        };
 
-            return s_clientMap.GetOrAdd(cacheKey, _ =>
+        private static HttpMessageHandler CreateSharedHandler()
+        {
+            // `HttpClientHandler` is the runtime's default handler, which the mobile and browser runtimes route to
+            // their native stack.
+            if (UsesPlatformDefaultHandler())
             {
-                var baseAddress = new Uri($"{baseUri.Scheme}://{baseUri.Host}:{baseUri.Port}/");
-                var timeout = TimeSpan.FromSeconds(30);
-                if (UsesPlatformDefaultHandler())
-                {
-                    return new HttpClient { BaseAddress = baseAddress, Timeout = timeout };
-                }
-
-                var handler = new SocketsHttpHandler
-                {
-                    PooledConnectionLifetime = TimeSpan.FromMinutes(5)
-                };
-                return new HttpClient(handler) { BaseAddress = baseAddress, Timeout = timeout };
-            });
+                return new HttpClientHandler();
+            }
+            return new SocketsHttpHandler
+            {
+                PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+            };
         }
 
         /// <summary>
-        /// Gets whether the current platform builds its shared clients on the runtime's default handler
+        /// Gets whether the current platform builds its shared handler on the runtime's default handler
         /// rather than on an explicit <see cref="SocketsHttpHandler"/>.
         /// </summary>
         internal static bool UsesPlatformDefaultHandler()
@@ -61,7 +52,7 @@ namespace Polhem.Api.Client
                 OperatingSystem.IsIOS() || OperatingSystem.IsTvOS() || OperatingSystem.IsMacCatalyst());
 
         /// <summary>
-        /// Decides whether a platform builds its shared clients on the runtime's default handler.
+        /// Decides whether a platform builds its shared handler on the runtime's default handler.
         /// </summary>
         /// <param name="isBrowser">Whether the host is browser-wasm.</param>
         /// <param name="isAndroid">Whether the host is Android.</param>
@@ -119,9 +110,8 @@ namespace Polhem.Api.Client
             cts.CancelAfter(timeout ?? TimeSpan.FromSeconds(5));
             try
             {
-                HttpClient client = GetOrCreateClient(endpoint);
                 using var request = new HttpRequestMessage(HttpMethod.Head, endpoint);
-                using var response = await client.SendAsync(request, cts.Token).ConfigureAwait(false);
+                using var response = await s_probeClient.SendAsync(request, cts.Token).ConfigureAwait(false);
                 return true;
             }
             catch (HttpRequestException)
@@ -131,51 +121,6 @@ namespace Polhem.Api.Client
             catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
                 return false;
-            }
-        }
-
-        /// <summary>
-        /// Asynchronously sends a POST request.
-        /// </summary>
-        /// <param name="endpoint">The service endpoint.</param>
-        /// <param name="body">The JSON string to pass in the request body.</param>
-        /// <param name="headers">Custom request headers.</param>
-        /// <param name="cancellationToken">A token that cancels the request.</param>
-        public static Task<string> PostAsync(string endpoint, string body, NameValueCollection? headers = null,
-            CancellationToken cancellationToken = default)
-        {
-            return PostAsync(GetOrCreateClient(endpoint), endpoint, body, headers, cancellationToken);
-        }
-
-        /// <summary>
-        /// Asynchronously sends a POST request through the given client.
-        /// </summary>
-        /// <param name="client">The client to send with.</param>
-        /// <param name="endpoint">The service endpoint.</param>
-        /// <param name="body">The JSON string to pass in the request body.</param>
-        /// <param name="headers">Custom request headers.</param>
-        /// <param name="cancellationToken">A token that cancels the request.</param>
-        public static async Task<string> PostAsync(HttpClient client, string endpoint, string body, NameValueCollection? headers,
-            CancellationToken cancellationToken)
-        {
-            // Send POST request
-            using (var request = new HttpRequestMessage(HttpMethod.Post, endpoint))
-            {
-                request.Content = new StringContent(body, Encoding.UTF8, "application/json");
-
-                if (headers != null)
-                {
-                    foreach (string key in headers)
-                    {
-                        request.Headers.TryAddWithoutValidation(key, headers[key]);
-                    }
-                }
-
-                using (HttpResponseMessage response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false))
-                {
-                    response.EnsureSuccessStatusCode();  // Verify success
-                    return await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false); // Read response content
-                }
             }
         }
     }

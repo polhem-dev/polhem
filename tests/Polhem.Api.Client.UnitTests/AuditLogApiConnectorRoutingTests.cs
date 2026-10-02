@@ -1,9 +1,6 @@
 using System.ComponentModel;
 using System.Reflection;
 using Polhem.Api.Client.Connectors;
-using Polhem.Api.Client.Providers;
-using Polhem.Api.Core.JsonRpc;
-using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Messages.AuditLog;
 using Polhem.Definition;
 
@@ -21,31 +18,16 @@ namespace Polhem.Api.Client.UnitTests
     /// </remarks>
     public class AuditLogApiConnectorRoutingTests
     {
-        private sealed class CapturingProvider : IJsonRpcProvider
-        {
-            public JsonRpcRequest? LastRequest { get; private set; }
-            public object? ResultValue { get; set; }
-
-            public Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
-            {
-                LastRequest = request;
-                var result = new JsonRpcResult { Value = ResultValue };
-
-                // The connector asks for Encrypted by default but degrades to Encoded when not logged in (no
-                // transport key). Replying in the same format lets the whole restore path run.
-                ApiPayloadConverter.TransformTo(result, PayloadFormat.Encoded);
-                return Task.FromResult(new JsonRpcResponse(request) { Result = result });
-            }
-        }
-
-        private static (AuditLogApiConnector Connector, CapturingProvider Provider) Create(object resultValue)
+        private static (AuditLogApiConnector Connector, FakeApiTransport Transport) Create(object resultValue)
         {
             var connector = new AuditLogApiConnector(Polhem.Tests.Shared.EmptyServiceProvider.Instance, Guid.NewGuid());
-            var provider = new CapturingProvider { ResultValue = resultValue };
+            // The connector asks for Encrypted by default but degrades to Encoded when not logged in (no transport
+            // key). Answering in the same format lets the whole restore path run.
+            var transport = new FakeApiTransport(call => FakeApiTransport.Answer(call, resultValue));
             typeof(ApiConnector)
                 .GetProperty(nameof(ApiConnector.Provider), BindingFlags.Public | BindingFlags.Instance)!
-                .SetValue(connector, provider);
-            return (connector, provider);
+                .SetValue(connector, transport);
+            return (connector, transport);
         }
 
         /// <summary>
@@ -69,15 +51,15 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("Each method sends its own action with the AuditLog progId")]
         public async Task Method_RoutesToItsOwnAction(string methodName, string expectedAction)
         {
-            var (provider, expectedRequestType) = await InvokeAsync(methodName);
+            var (transport, expectedRequestType) = await InvokeAsync(methodName);
 
-            Assert.NotNull(provider.LastRequest);
-            Assert.Equal($"{SysProgIds.AuditLog}.{expectedAction}", provider.LastRequest!.Method);
+            Assert.NotNull(transport.LastCall);
+            Assert.Equal($"{SysProgIds.AuditLog}.{expectedAction}", transport.LastCall!.Method);
 
             // Also pin down the request type sent. Comparing only the action string would still pass a
             // copy-paste error with the right action but the wrong request type (several methods share one
             // response type, so the difference would not show).
-            Assert.StartsWith(expectedRequestType.FullName!, provider.LastRequest.Params.TypeName, StringComparison.Ordinal);
+            Assert.StartsWith(expectedRequestType.FullName!, transport.LastCall.Params.TypeName, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -93,7 +75,7 @@ namespace Polhem.Api.Client.UnitTests
         [DisplayName("GetChangeDetailAsync sends the request's sysRowId unchanged")]
         public async Task GetChangeDetailAsync_SendsSysRowId()
         {
-            var (connector, provider) = Create(new GetChangeDetailResponse());
+            var (connector, transport) = Create(new GetChangeDetailResponse());
             var sysRowId = Guid.NewGuid();
 
             await connector.GetChangeDetailAsync(new GetChangeDetailRequest { SysRowId = sysRowId });
@@ -101,22 +83,20 @@ namespace Polhem.Api.Client.UnitTests
             // The payload was converted to Encoded before sending (`Value` is serialized into bytes), so restore
             // it before checking. This also shows the request really went onto the wire intact, not just its
             // type name.
-            var payload = provider.LastRequest!.Params;
-            ApiPayloadConverter.RestoreFrom(payload, PayloadFormat.Encoded);
-            var sent = Assert.IsType<GetChangeDetailRequest>(payload.Value);
+            var sent = transport.LastCall!.SentValue<GetChangeDetailRequest>();
             Assert.Equal(sysRowId, sent.SysRowId);
         }
 
         /// <summary>
-        /// Invokes the method by name and returns its provider. The response value is a new instance of the
+        /// Invokes the method by name and returns its transport. The response value is a new instance of the
         /// method's declared return type.
         /// </summary>
-        private static async Task<(CapturingProvider Provider, Type RequestType)> InvokeAsync(string methodName)
+        private static async Task<(FakeApiTransport Transport, Type RequestType)> InvokeAsync(string methodName)
         {
             var method = typeof(AuditLogApiConnector).GetMethod(methodName)
                 ?? throw new InvalidOperationException($"{methodName} not found.");
             var responseType = method.ReturnType.GetGenericArguments()[0];
-            var (connector, provider) = Create(Activator.CreateInstance(responseType)!);
+            var (connector, transport) = Create(Activator.CreateInstance(responseType)!);
 
             // Every action method takes its request message followed by a cancellation token.
             var parameter = method.GetParameters()[0];
@@ -125,7 +105,7 @@ namespace Polhem.Api.Client.UnitTests
             await (Task)method.Invoke(connector, [argument, CancellationToken.None])!;
 
             var requestType = parameter.ParameterType;
-            return (provider, requestType);
+            return (transport, requestType);
         }
     }
 }

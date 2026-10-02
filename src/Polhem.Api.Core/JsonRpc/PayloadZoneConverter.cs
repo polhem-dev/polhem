@@ -31,11 +31,11 @@ namespace Polhem.Api.Core.JsonRpc
         /// <param name="timeZoneId">The user's IANA time zone id; blank leaves filter values as they are.</param>
         /// <remarks>
         /// <para>
-        /// A data set is copied whether or not there is a zone to convert to. An in-process call
-        /// (<c>LocalApiProvider</c> with <c>Plain</c>) hands the server the very object it was given,
-        /// and the server rewrites a saved data set in place: its <c>DateTime</c> values first, then
-        /// its row states once the rows are written. Without the copy both would land in the caller's
-        /// own <c>DataSet</c>.
+        /// A data set is copied whether or not there is a zone to convert to, so the server never holds
+        /// the caller's own <c>DataSet</c>, whatever the transport does. The server rewrites a saved data
+        /// set in place: its <c>DateTime</c> values first, then its row states once the rows are written.
+        /// A transport that handed the object over, as the in-process call did before 1.2.0, would
+        /// otherwise land both in the caller's data.
         /// </para>
         /// <para>
         /// The caller keeps using its request object after the call, so the swap is undone in a

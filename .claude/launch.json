@@ -39,6 +39,19 @@
       ],
       "port": 5055,
       "autoPort": false
+    },
+    {
+      "name": "quickstart-server",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "samples/QuickStart.Server/QuickStart.Server.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "port": 5050,
+      "autoPort": false
     }
   ]
 }
