@@ -29,9 +29,8 @@ namespace Polhem.Api.Core.JsonRpc
     /// introduces a DateTime-bearing member is therefore not covered automatically; extend the
     /// switch in <see cref="Validate"/> when adding one.
     ///
-    /// This runs at the Connector boundary rather than at a serializer entry point on purpose:
-    /// in-process calls (<c>LocalApiProvider</c> with <c>Plain</c>) never serialize,
-    /// so a serializer-level guard would leave that path unguarded.
+    /// This runs at the Connector boundary rather than at a serializer entry point on purpose: it
+    /// checks the caller's own value, whatever the transport then does with it.
     ///
     /// IMPORTANT: validate a request before <see cref="PayloadZoneConverter.IsolateRequest"/>, not after it.
     /// The conversion rewrites every filter value to <see cref="DateTimeKind.Unspecified"/>, so a

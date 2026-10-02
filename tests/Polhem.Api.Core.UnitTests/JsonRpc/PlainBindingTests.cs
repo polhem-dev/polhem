@@ -7,6 +7,8 @@ using Polhem.Business;
 using Polhem.Definition;
 using Polhem.Definition.Attributes;
 using Polhem.Definition.Security;
+using Polhem.Api.Core.UnitTests.Dispatch;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Polhem.Api.Core.UnitTests.JsonRpc
 {
@@ -22,22 +24,31 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
     /// </remarks>
     public class PlainBindingTests
     {
+        /// <summary>
+        /// Sends calls over HTTP to <paramref name="businessObject"/>, whatever the progId.
+        /// </summary>
+        private static TestDispatcher NewDispatcher(object businessObject)
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton<IBusinessObjectFactory>(new SingleObjectFactory(businessObject));
+            services.AddSingleton<IAccessTokenValidator>(new RejectAllTokens());
+            services.AddSingleton<IApiEncryptionKeyProvider>(new NoKeys());
+            return new TestDispatcher(services.BuildServiceProvider()) { IsLocalCall = false };
+        }
+
         [Fact]
         [DisplayName("A Plain body cannot set an argument member that its wire message does not carry")]
-        public async Task Execute_PlainBodyWithExtraMember_DoesNotSetIt()
+        public async Task PlainBodyWithExtraMember_DoesNotSetIt()
         {
             var bo = new ProbeBusinessObject();
             using var document = JsonDocument.Parse("""{"traceId":"t-1","elevated":true}""");
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"Probe.{nameof(ProbeBusinessObject.Probe)}",
                 Params = new JsonRpcParams { Value = document.RootElement.Clone() },
                 Id = "1",
             };
-            var executor = new JsonRpcExecutor(new SingleObjectFactory(bo), new RejectAllTokens(), new NoKeys())
-            {
-                AccessToken = Guid.Empty,
-            };
+            var executor = NewDispatcher(bo);
 
             var response = await executor.ExecuteAsync(request);
 
@@ -49,20 +60,17 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
 
         [Fact]
         [DisplayName("A Plain body that cannot be read into the method's type is answered with InvalidParams (-32602) and a fixed message")]
-        public async Task Execute_UnreadablePlainBody_ReturnsInvalidParams()
+        public async Task UnreadablePlainBody_ReturnsInvalidParams()
         {
             var bo = new ProbeBusinessObject();
             using var document = JsonDocument.Parse("""{"traceId":{"nested":1}}""");
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"Probe.{nameof(ProbeBusinessObject.Probe)}",
                 Params = new JsonRpcParams { Value = document.RootElement.Clone() },
                 Id = "1",
             };
-            var executor = new JsonRpcExecutor(new SingleObjectFactory(bo), new RejectAllTokens(), new NoKeys())
-            {
-                AccessToken = Guid.Empty,
-            };
+            var executor = NewDispatcher(bo);
 
             var response = await executor.ExecuteAsync(request);
 
@@ -78,7 +86,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             var argumentTypes = typeof(BusinessObject).Assembly.GetTypes()
                 .Where(t => typeof(BusinessObject).IsAssignableFrom(t))
                 .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance))
-                .Where(JsonRpcExecutor.IsResolvableAction)
+                .Where(Polhem.JsonRpc.Server.JsonRpcMethod.IsResolvableAction)
                 .Select(m => m.GetParameters()[0].ParameterType)
                 .Where(t => typeof(BusinessArgs).IsAssignableFrom(t))
                 .Distinct()

@@ -32,7 +32,7 @@ namespace Polhem.Api.Core.UnitTests.JsonRpc
             var actions = typeof(BusinessObject).Assembly.GetTypes()
                 .Where(t => typeof(BusinessObject).IsAssignableFrom(t))
                 .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-                .Where(JsonRpcExecutor.IsResolvableAction)
+                .Where(Polhem.JsonRpc.Server.JsonRpcMethod.IsResolvableAction)
                 .ToList();
             Assert.NotEmpty(actions);
 

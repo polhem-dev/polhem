@@ -5,15 +5,15 @@ using Polhem.Business;
 using Polhem.Definition;
 using Polhem.Definition.Identity;
 using Polhem.Definition.Language;
-using Polhem.Definition.Security;
 using Polhem.Definition.Storage;
 using Polhem.Tests.Shared;
+using Polhem.Api.Core.UnitTests.Dispatch;
 
 namespace Polhem.Api.Core.UnitTests.System
 {
     /// <summary>
-    /// An end-to-end round-trip through <see cref="JsonRpcExecutor"/>: <c>System.GetDepartmentTree</c> is dispatched by
-    /// the executor to <see cref="Polhem.Business.System.SystemBusinessObject.GetDepartmentTree"/>, verifying action
+    /// An end-to-end round-trip through the JSON-RPC dispatcher: <c>System.GetDepartmentTree</c> is dispatched by
+    /// the dispatcher to <see cref="Polhem.Business.System.SystemBusinessObject.GetDepartmentTree"/>, verifying action
     /// routing, ApiInputConverter (Request→Args) and ApiOutputConverter (Result→Response).
     /// Without EnterCompany it returns a null tree (no DB access, so the test focuses on the dispatch path).
     /// </summary>
@@ -23,7 +23,7 @@ namespace Polhem.Api.Core.UnitTests.System
         public GetDepartmentTreeJsonRpcRoundTripTests(PolhemTestFixture fx) { _fx = fx; }
 
         [Fact]
-        [DisplayName("System.GetDepartmentTree dispatches through JsonRpcExecutor and returns a null tree before a company is entered")]
+        [DisplayName("System.GetDepartmentTree dispatches through the JSON-RPC dispatcher and returns a null tree before a company is entered")]
         public async Task GetDepartmentTree_ThroughJsonRpc_NoCompany_ReturnsNullTree()
         {
             var accessToken = TestSessionFactory.CreateAccessToken(_fx);
@@ -35,16 +35,13 @@ namespace Polhem.Api.Core.UnitTests.System
                 _fx.GetRequiredService<ILanguageService>(),
                 _fx.GetRequiredService<IBoTypeResolver>());
 
-            var executor = new JsonRpcExecutor(
-                boFactory,
-                _fx.GetRequiredService<IAccessTokenValidator>(),
-                _fx.GetRequiredService<IApiEncryptionKeyProvider>())
+            var executor = new TestDispatcher(_fx.Provider, boFactory)
             {
                 AccessToken = accessToken,
                 IsLocalCall = true,
             };
 
-            var request = new JsonRpcRequest
+            var request = new TestRpcRequest
             {
                 Method = $"{SysProgIds.System}.{SystemActions.GetDepartmentTree}",
                 Params = new JsonRpcParams { Value = new GetDepartmentTreeRequest() },

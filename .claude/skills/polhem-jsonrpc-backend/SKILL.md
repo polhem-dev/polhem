@@ -16,7 +16,7 @@ description: >
 Polhem is a **definition-driven (XML) + reflection-dispatch** JSON-RPC backend framework. The server has almost no C#:
 the framework's API executor, action string parsing, payload serialization, `[ApiAccessControl]` checks and CRUD
 base methods all live in the `Polhem.*` NuGet packages. The host project is a thin shell: one csproj, `Program.cs`, a
-bootstrap class, an empty controller, a few custom BOs, and the `Define/` settings tree.
+bootstrap class, a few custom BOs, and the `Define/` settings tree.
 
 **Understanding this saves a lot of trial and error**: most behavior is triggered by `Define/*.xml`, not by code you
 write. That includes which class serves each progId.
@@ -24,7 +24,7 @@ write. That includes which class serves each progId.
 ## Authoritative references (the sources to copy from)
 
 `polhem/samples` (same version as the framework, **the best blueprint**):
-- `samples/QuickStart.Server/` — minimal server (Program.cs, empty controller, `EchoBusinessObject`)
+- `samples/QuickStart.Server/` — minimal server (Program.cs, `EchoBusinessObject`)
 - `samples/QuickStart.Console/` — minimal client (calls `Polhem.Api.Client` directly)
 - `samples/Polhem.Samples.Shared/` — `DemoBackend` (`AddPolhemBackend` / `UsePolhemBackend`),
   `DemoAuthenticatingSystemBusinessObject`, `DemoCredentials`, `DemoSchemaSeeder`
@@ -48,25 +48,26 @@ Full app (with seeder, company scope, sign-in against `st_user`): `apps/Polhem.N
 ## Request flow (build the mental model first)
 
 ```
-client ──POST /api──▶ ApiServiceController
+client ──POST /api──▶ MapJsonRpc endpoint (Polhem.JsonRpc.AspNetCore) ─▶ JsonRpcDispatcher
    body: {jsonrpc:"2.0", method:"Game.GetLevels", params:{format, codec, type, value}, id}
    headers: X-Api-Key (every method except System.Ping)
             Authorization: Bearer <token> (optional; without it the call is anonymous)
         │
         ▼
-  check X-Api-Key → split method at the first "." = (ProgId, Action)
+  split method at the first "." = (ProgId, Action)
+        │  PolhemObjectFactory: check X-Api-Key and Authorization (HTTP only), then
         │  IBusinessObjectFactory.CreateBusinessObject(token, progId, isLocalCall)
         │    → IBoTypeResolver (default ProgramSettingsBoTypeResolver: ProgramItem.BusinessObject)
         ▼
   Activator.CreateInstance(boType, ctx, token, progId, isLocalCall)
-  GetMethod(Action) → check [ApiAccessControl] → decode the body into the parameter type → invoke
+  resolve Action → PolhemAccessFilter checks [ApiAccessControl] → PolhemPayloadFilter decodes the body → invoke
         │
         ▼
   result → ApiPayload in the same format and codec as the request; the client deserializes it to TResult
 ```
 
 **Single args / single result** is the hard rule for every action: `TResult Action(TArgs args)` (or
-`async Task<TResult>`). `JsonRpcExecutor.IsResolvableAction` decides what an action name can reach.
+`async Task<TResult>`). `JsonRpcMethod.IsResolvableAction` (Polhem.JsonRpc.Server) decides what an action name can reach.
 
 ## Build steps
 
@@ -78,7 +79,7 @@ Web project (`Microsoft.NET.Sdk.Web`, `net10.0`). Add the packages (with central
 `Directory.Packages.props`):
 
 ```xml
-<PackageReference Include="Polhem.Api.AspNetCore" />  <!-- controller + API pipeline -->
+<PackageReference Include="Polhem.JsonRpc.AspNetCore" />  <!-- the POST /api endpoint -->
 <PackageReference Include="Polhem.Business" />         <!-- BO base classes -->
 <PackageReference Include="Polhem.Db" />               <!-- data access / dialect -->
 <PackageReference Include="Polhem.Hosting" />          <!-- AddPolhemFramework -->
@@ -97,12 +98,12 @@ current choice and why.
 ```csharp
 // Program.cs
 var builder = WebApplication.CreateBuilder(args);
-builder.AddXxxBackend();          // see below
-builder.Services.AddControllers();
+builder.AddXxxBackend();                       // see below
+builder.Services.AddJsonRpcServer();           // on the options AddPolhemFramework registered
+builder.Services.AddPolhemApiKeyGateCheck();   // startup log while no API key is issued
 var app = builder.Build();
-app.UseXxxBackend();              // create the tables / seed
-app.UsePolhemFramework();         // startup checks (Polhem.Api.AspNetCore)
-app.MapControllers();
+app.UseXxxBackend();                           // create the tables / seed, before the host starts
+app.MapJsonRpc("/api");
 app.Run();
 ```
 
@@ -123,13 +124,11 @@ builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths, autoCr
 For the full template (with `ResolveDefinePath`, the materialized tables, master key fallback) see
 `references/backend-bootstrap.md`.
 
-### 3. Empty controller
+### 3. No controller
 
-```csharp
-public class ApiController : Polhem.Api.AspNetCore.Controllers.ApiServiceController { }
-```
-The base class already declares `[Route("api")]` + a POST handler and publishes `POST /api`; you do not write it
-yourself.
+`app.MapJsonRpc("/api")` of step 2 publishes `POST /api`; there is no controller to write. A check of your own on
+every call is a filter: `AddJsonRpcServer(options => options.Filters.Add(new MyFilter()))`, which runs inside the
+framework's checks.
 
 ### 4. The `Define/` settings tree
 

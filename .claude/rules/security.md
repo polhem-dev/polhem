@@ -46,7 +46,7 @@ public class OrderBO : FormBusinessObject
 }
 ```
 
-What an action name can reach is decided by `JsonRpcExecutor.IsResolvableAction`: a public, non-generic instance
+What an action name can reach is decided by `JsonRpcMethod.IsResolvableAction` (Polhem.JsonRpc.Server): a public, non-generic instance
 method with exactly one parameter that is not a property or event accessor and does not override an `object` member.
 Static methods and accessors are not reachable, so a class-level attribute no longer publishes them. It still
 publishes **every** such method the class and its subclasses declare (the attribute is inherited), including methods

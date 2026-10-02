@@ -37,10 +37,11 @@ For the full developer documentation index, see [docs/en/README.md](https://gith
 
 ## 📦 Assembly
 
-Each assembly below ships as a NuGet package of the same name. A JSON-RPC server starts with two of them:
+Each assembly below ships as a NuGet package of the same name. A JSON-RPC server starts with two of them, plus `Polhem.JsonRpc.AspNetCore` for the HTTP endpoint:
 
 ```bash
-dotnet add package Polhem.Api.AspNetCore
+dotnet add package Polhem.Hosting
+dotnet add package Polhem.JsonRpc.AspNetCore
 dotnet add package Polhem.Db
 ```
 
@@ -66,7 +67,6 @@ dotnet add package Polhem.Db
 | **Polhem.Repository.dll** | Common repository base classes and FormSchema-driven data access mechanisms. |
 | **Polhem.Business.dll** | Core business logic (Business Object / BO) implementing use-case workflows. |
 | **Polhem.Hosting.dll** | Composition root — `AddPolhemFramework` extension registering all backend services into any `IServiceCollection` (no ASP.NET Core dependency). Used by ASP.NET Core, WinForms, Console, and Worker Service hosts. |
-| **Polhem.Api.AspNetCore.dll** | JSON-RPC 2.0 API controller for ASP.NET Core (`ApiServiceController`), plus `UsePolhemFramework` for the host's startup checks. |
 
 ### Frontend
 
@@ -140,13 +140,16 @@ to change.
 ### Packages, namespaces and types
 
 - Every `Bee.<Name>` package becomes `Polhem.<Name>`, and the split into packages is unchanged: `Bee.Hosting` becomes
-  `Polhem.Hosting`, and so on for each package in the tables above. Namespaces follow the same pattern:
+  `Polhem.Hosting`, and so on for each package in the tables above. The exception is `Bee.Api.AspNetCore`: its
+  successor `Polhem.Api.AspNetCore` was removed in 1.2.0, and a host serves the API with `Polhem.JsonRpc.AspNetCore`
+  (see the [CHANGELOG](https://github.com/polhem-dev/polhem/blob/main/CHANGELOG.md)). Namespaces follow the same pattern:
   `Bee.Definition.Forms` becomes `Polhem.Definition.Forms`.
 - The one exception is `Bee.Base`, which becomes `Polhem.Core`, the package and its namespaces alike:
   `Bee.Base.Serialization` becomes `Polhem.Core.Serialization`. Polhem 1.0.0 still called it `Polhem.Base`; the
   [CHANGELOG](https://github.com/polhem-dev/polhem/blob/main/CHANGELOG.md) entry for 1.1.0 explains the rename.
-- `Bee` in a type or member name becomes `Polhem`: `AddBeeFramework` becomes `AddPolhemFramework`, `UseBeeFramework`
-  becomes `UsePolhemFramework`, `BeeLoginPanel` becomes `PolhemLoginPanel`.
+- `Bee` in a type or member name becomes `Polhem`: `AddBeeFramework` becomes `AddPolhemFramework`, `BeeLoginPanel`
+  becomes `PolhemLoginPanel`. `UseBeeFramework` has no counterpart from 1.2.0: call
+  `services.AddPolhemApiKeyGateCheck()` instead.
 - The command-line tool `Bee.Cli` (`dotnet bee`) becomes `Polhem.Cli` (`dotnet polhem`). Uninstall the old tool and
   install the new one with `dotnet tool install -g Polhem.Cli`.
 
@@ -166,7 +169,7 @@ The review also renamed, moved or removed public types. These are the ones a Bee
 | `Bee.UI.Avalonia.Storage.FileEndpointStorage` | `Polhem.UI.Core.FileEndpointStorage` |
 | `ElementCapabilityResolver`, `IElementCapabilityResolver`, `FieldCapability` in `Bee.UI.Core.Permissions` | The same types in `Polhem.Api.Client.Permissions` |
 | `DeploymentAuthorizationService`, `EmployeeContextResolver` in `Bee.ObjectCaching.Services` | `Polhem.Business.Security.DeploymentAuthorizationService`, `Polhem.Business.Session.EmployeeContextResolver` |
-| `JsonRpcExecutor.Execute` | `JsonRpcExecutor.ExecuteAsync` |
+| `JsonRpcExecutor.Execute`, `ApiServiceController` | Removed in 1.2.0: the dispatcher of `Polhem.JsonRpc.Server`, published with `app.MapJsonRpc("/api")` |
 | `BusinessObject.SessionInfo` | `SessionInfoService.Get(AccessToken)` inside the business object |
 | `Bee.Base.Tracing` | Removed |
 
@@ -187,7 +190,7 @@ These are strings. A build with the old names succeeds, and the problem only sho
 | Analyzer diagnostic IDs in `.editorconfig`, `#pragma warning`, `NoWarn` and `[SuppressMessage]` | `BEE1001` | `POLHEM1001` (same numbers) | The setting is silently ignored |
 | MSBuild properties for definition file checks | `BeeDefinitionFilesGlob`, `BeeRequireDefinitionFiles`, `BeeAnalyzeDefinitionFiles` | `PolhemDefinitionFilesGlob`, `PolhemRequireDefinitionFiles`, `PolhemAnalyzeDefinitionFiles` | The setting is silently ignored and the default applies |
 | CSS classes of the Blazor components | `bee-dynamic-form`, `bee-dynamic-grid`, `bee-form-page`, `bee-login-panel` | `polhem-dynamic-form`, `polhem-dynamic-grid`, `polhem-form-page`, `polhem-login-panel` | Your own style rules no longer apply |
-| Logging categories, such as filters under `Logging:LogLevel` | `Bee.Api.AspNetCore` | `Polhem.Api.AspNetCore` | The filter no longer matches |
+| Logging categories, such as filters under `Logging:LogLevel` | `Bee.Api.AspNetCore` | `Polhem.Hosting.ApiKeys.ApiKeyGateWarningService` | The filter no longer matches |
 | The `Exception.Data` key of `SerializationErrorData.FilePath` | `Bee.FilePath` | `Polhem.FilePath` | Code that reads the key finds nothing |
 
 To find them, run this in the root of your repository:

@@ -11,6 +11,14 @@
     <ProjectReference Include="..\Polhem.Api.Core\Polhem.Api.Core.csproj" />
   </ItemGroup>
 
+  <!-- The JSON-RPC connector. PolhemJsonRpcSource switches to a local checkout; see PolhemJsonRpc.props. -->
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' == ''">
+    <PackageReference Include="Polhem.JsonRpc.Client" Version="$(PolhemJsonRpcVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' != ''">
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Client/Polhem.JsonRpc.Client.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <!-- Lets the tests check how a server's unauthenticated configuration is adopted without
          touching the process-wide SysInfo and ApiServiceOptions statics. -->

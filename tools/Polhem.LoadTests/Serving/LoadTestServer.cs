@@ -1,5 +1,6 @@
 using Polhem.LoadTests.Bootstrap;
 using Polhem.LoadTests.Configuration;
+using Polhem.JsonRpc.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,10 +49,10 @@ namespace Polhem.LoadTests.Serving
             builder.Logging.SetMinimumLevel(LogLevel.Warning);
 
             LoadTestHost.ConfigureFramework(builder.Services, options, workspace);
-            builder.Services.AddControllers();
+            builder.Services.AddJsonRpcServer();
 
             var app = builder.Build();
-            app.MapControllers();
+            app.MapJsonRpc("/api");
 
             Console.WriteLine($"Definitions  : {workspace.DefinePath}");
             if (workspace.DroppedBindings.Count > 0)

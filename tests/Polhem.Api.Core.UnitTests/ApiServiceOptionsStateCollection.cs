@@ -7,7 +7,7 @@ namespace Polhem.Api.Core.UnitTests
     /// <remarks>
     /// These tests snapshot and restore the static values with try/finally, but that only holds when they **run
     /// serially**. xUnit's default collection-per-class runs different test classes in parallel, and
-    /// <c>ApiPayloadTransformer</c> reads these static values directly on the path every <c>JsonRpcExecutor</c>
+    /// <c>ApiPayloadTransformer</c> reads these static values directly on the path every dispatched call
     /// payload takes to be encrypted or encoded. Loose scheduling on a many-core local machine does not always
     /// trigger it; it goes red on 2-core CI, and the failure message is
     /// <c>NoEncryptionEncryptor is only permitted in debug/development mode</c>, which looks like a production

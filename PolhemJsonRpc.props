@@ -1,0 +1,26 @@
+<Project>
+
+  <!--
+    The JSON-RPC packages (polhem-dev/polhem-jsonrpc): the version the framework and its hosts reference, and the
+    switch that builds against a local checkout instead.
+
+    Imported by src/Directory.Build.props and by the HTTP hosts (samples/QuickStart.Server,
+    apps/Polhem.Northwind/Polhem.Northwind.Server, tools/Polhem.LoadTests), which reference
+    Polhem.JsonRpc.AspNetCore. Like Version.props it is not named Directory.Build.props, so it attaches only where it
+    is imported.
+
+    A maintainer changing both repositories at once sets PolhemJsonRpcSource to a local checkout of polhem-jsonrpc in
+    PolhemJsonRpc.local.props next to this file, which git ignores, for example:
+
+      <Project><PropertyGroup><PolhemJsonRpcSource>$(MSBuildThisFileDirectory)../polhem-jsonrpc</PolhemJsonRpcSource></PropertyGroup></Project>
+
+    The projects then reference its source instead of the packages. CI and the release workflow never set it, so what
+    they build and publish depends on the released packages.
+  -->
+  <PropertyGroup>
+    <PolhemJsonRpcVersion>0.1.0</PolhemJsonRpcVersion>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)PolhemJsonRpc.local.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)PolhemJsonRpc.local.props')" />
+
+</Project>

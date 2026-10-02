@@ -43,7 +43,8 @@ console 應顯示 `Now listening on: http://localhost:5050`。
 | `SystemSettingsLoader.Load(paths)` | `Polhem.Definition.SystemSettingsLoader` — boot-time 載入 XML |
 | `services.AddPolhemFramework(...)` | `Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions` — backend composition root |
 | `samples/Define/ProgramSettings.xml` 裡的 `<ProgramItem ProgId="Echo" BusinessObject="…" />` | `Polhem.Definition.Settings.ProgramSettings` — progId → 業務物件的註冊表；綁定不需要任何程式碼 |
-| `: ApiServiceController` 空殼 controller（`Controllers/ApiController.cs`） | `Polhem.Api.AspNetCore.Controllers.ApiServiceController` — `[Route("api")]` JSON-RPC endpoint |
+| `services.AddJsonRpcServer()` + `app.MapJsonRpc("/api")`（`Program.cs`） | `Polhem.JsonRpc.AspNetCore` — JSON-RPC endpoint，沿用 `AddPolhemFramework` 註冊的選項 |
+| `services.AddPolhemApiKeyGateCheck()`（`Program.cs`） | `Polhem.Hosting` — 尚未發行 API key 時，於啟動時記錄 log |
 | `[ApiAccessControl(Public, Anonymous)]`（`BusinessObjects/EchoBusinessObject.cs`） | `Polhem.Definition.Attributes.ApiAccessControlAttribute` — API 存取控制 |
 
 ## 試打看看（不啟動 console demo 的情況下）

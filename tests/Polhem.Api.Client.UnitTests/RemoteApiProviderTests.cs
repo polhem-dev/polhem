@@ -2,8 +2,9 @@ using System.ComponentModel;
 using System.Net;
 using System.Text;
 using Polhem.Api.Client.Providers;
-using Polhem.Api.Core.JsonRpc;
+using System.Text.Json;
 using Polhem.Api.Core.Messages;
+using Polhem.JsonRpc;
 
 namespace Polhem.Api.Client.UnitTests
 {
@@ -44,13 +45,12 @@ namespace Polhem.Api.Client.UnitTests
     
         [Fact]
         [DisplayName("RemoteApiProvider sends no Authorization header before sign-in")]
-        public async Task ExecuteAsync_EmptyAccessToken_SendsNoAuthorizationHeader()
+        public async Task SendAsync_EmptyAccessToken_SendsNoAuthorizationHeader()
         {
             var handler = new CapturingHandler();
-            using var client = new HttpClient(handler);
-            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, client);
+            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, handler);
 
-            await provider.ExecuteAsync(new JsonRpcRequest { Method = "System.Ping" });
+            await provider.SendAsync(PingRequest());
 
             Assert.NotNull(handler.Request);
             Assert.False(handler.Request!.Headers.Contains(ApiHeaders.Authorization));
@@ -58,18 +58,46 @@ namespace Polhem.Api.Client.UnitTests
 
         [Fact]
         [DisplayName("RemoteApiProvider sends the access token as a Bearer header after sign-in")]
-        public async Task ExecuteAsync_AccessToken_SendsBearerHeader()
+        public async Task SendAsync_AccessToken_SendsBearerHeader()
         {
             var handler = new CapturingHandler();
-            using var client = new HttpClient(handler);
             var token = Guid.NewGuid();
-            var provider = new RemoteApiProvider("http://example.invalid/api", token, client);
+            var provider = new RemoteApiProvider("http://example.invalid/api", token, handler);
 
-            await provider.ExecuteAsync(new JsonRpcRequest { Method = "System.Ping" });
+            await provider.SendAsync(PingRequest());
 
             Assert.NotNull(handler.Request);
             Assert.Equal($"Bearer {token}", string.Join(",", handler.Request!.Headers.GetValues(ApiHeaders.Authorization)));
         }
+
+        [Fact]
+        [DisplayName("RemoteApiProvider sends the API key header on every request")]
+        public async Task SendAsync_SendsApiKeyHeader()
+        {
+            var handler = new CapturingHandler();
+            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, handler);
+
+            await provider.SendAsync(PingRequest());
+
+            Assert.NotNull(handler.Request);
+            Assert.True(handler.Request!.Headers.Contains(ApiHeaders.ApiKey));
+        }
+
+        [Fact]
+        [DisplayName("RemoteApiProvider posts the request to its endpoint")]
+        public async Task SendAsync_PostsToEndpoint()
+        {
+            var handler = new CapturingHandler();
+            var provider = new RemoteApiProvider("http://example.invalid/api", Guid.Empty, handler);
+
+            await provider.SendAsync(PingRequest());
+
+            Assert.Equal(HttpMethod.Post, handler.Request!.Method);
+            Assert.Equal(new Uri("http://example.invalid/api"), handler.Request.RequestUri);
+        }
+
+        private static JsonRpcRequest PingRequest()
+            => new("System.Ping", JsonSerializer.Deserialize<JsonElement>("{}"), JsonRpcId.FromString("1"));
 
         private sealed class CapturingHandler : HttpMessageHandler
         {

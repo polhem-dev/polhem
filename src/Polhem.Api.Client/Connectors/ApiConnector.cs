@@ -1,11 +1,15 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using Polhem.Api.Core;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Core;
+using Polhem.Core.Serialization;
 using Polhem.Api.Client.Providers;
 using Polhem.Api.Core.Conversion;
 using Polhem.Api.Core.Messages;
 using Polhem.Api.Core.Transformers;
-
+using Polhem.JsonRpc;
+using Polhem.JsonRpc.Client;
 
 namespace Polhem.Api.Client.Connectors
 {
@@ -42,7 +46,7 @@ namespace Polhem.Api.Client.Connectors
             ArgumentNullException.ThrowIfNull(session);
             AccessToken = accessToken;
             Session = session;
-            Provider = new LocalApiProvider(services, accessToken);
+            SetProvider(new LocalApiProvider(services, accessToken));
         }
 
         /// <summary>
@@ -74,7 +78,7 @@ namespace Polhem.Api.Client.Connectors
 
             AccessToken = accessToken;
             Session = session;
-            Provider = new RemoteApiProvider(endpoint, accessToken);
+            SetProvider(new RemoteApiProvider(endpoint, accessToken));
         }
 
         #endregion
@@ -93,10 +97,36 @@ namespace Polhem.Api.Client.Connectors
         /// </remarks>
         public ApiSessionContext Session { get; } = ApiSessionContext.Ambient;
 
+        private static readonly JsonRpcClientOptions s_clientOptions = new()
+        {
+            // Only `JsonElement` values pass through the package connector: the payload is written and read by
+            // `JsonCodec`, whose settings the wire depends on.
+            SerializerOptions = JsonSerializerOptions.Default,
+            // GUID strings, as the requests carried before the connector was built on Polhem.JsonRpc.Client.
+            IdGenerator = () => JsonRpcId.FromString(Guid.NewGuid().ToString()),
+            ErrorMapper = error => MapError(error.Code, error.Message),
+        };
+
+        private IJsonRpcTransport _provider;
+        private JsonRpcConnector _connector;
+
         /// <summary>
-        /// Gets or sets the API service provider.
+        /// Gets the transport this connector's calls go through: a <see cref="LocalApiProvider"/> or a
+        /// <see cref="RemoteApiProvider"/>.
         /// </summary>
-        public IJsonRpcProvider Provider { get; private set; }
+        public IJsonRpcTransport Provider
+        {
+            get => _provider;
+            private set => SetProvider(value);
+        }
+
+        [MemberNotNull(nameof(_provider), nameof(_connector))]
+        private void SetProvider(IJsonRpcTransport provider)
+        {
+            ArgumentNullException.ThrowIfNull(provider);
+            _provider = provider;
+            _connector = new JsonRpcConnector(provider, s_clientOptions);
+        }
 
         /// <summary>
         /// Gets or sets the body codec this connector speaks, blank for the framework default
@@ -139,20 +169,20 @@ namespace Polhem.Api.Client.Connectors
 
             // Guard the caller's own value before the filter conversion (ADR-032 D6). Conversion
             // rewrites filter values to Kind=Unspecified, so a guard placed after it would pass
-            // every Kind=Local value on any signed-in call. It also sits ahead of every transform
-            // because in-process calls skip serialization, making this the one point both
-            // transports pass through.
+            // every Kind=Local value on any signed-in call. It also sits ahead of every transform,
+            // the one point both transports pass through with the caller's own value.
             DateTimeWireGuard.Validate(value);
 
             T result;
             using (PayloadZoneConverter.IsolateRequest(value, timeZoneId))
             {
-                var (request, actualFormat) = PrepareRequest(progId, action, value, format);
+                var (parameters, actualFormat) = PrepareParams(value, format);
 
                 // Invoke the JSON-RPC method (remote or local)
-                var response = await this.Provider.ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
+                var element = await _connector.InvokeAsync<JsonElement>(
+                    $"{progId}.{action}", ToElement(parameters), cancellationToken).ConfigureAwait(false);
 
-                result = FinalizeResponse<T>(response, actualFormat);
+                result = FinalizeResult<T>(element, actualFormat);
             }
             PayloadZoneConverter.ToUserZone(result, timeZoneId);
             return result;
@@ -179,23 +209,48 @@ namespace Polhem.Api.Client.Connectors
         }
 
         /// <summary>
-        /// Builds the JSON-RPC request and transforms its payload to the target format.
+        /// Builds the request parameters and transforms their payload to the target format.
         /// </summary>
-        private (JsonRpcRequest request, PayloadFormat actualFormat) PrepareRequest(
-            string progId, string action, object value, PayloadFormat format)
+        private (JsonRpcParams parameters, PayloadFormat actualFormat) PrepareParams(object value, PayloadFormat format)
         {
-            var request = CreateRequest(progId, action, value);
-            var actualFormat = TransformRequestPayload(request, format);
-            return (request, actualFormat);
+            var parameters = new JsonRpcParams { Value = value };
+            var actualFormat = TransformRequestPayload(parameters, format);
+            return (parameters, actualFormat);
         }
 
         /// <summary>
-        /// Checks the response for errors, restores the payload, and converts the result value.
+        /// Writes the parameters with <see cref="JsonCodec"/>, the settings every Polhem payload is written with.
+        /// </summary>
+        private static JsonElement ToElement(JsonRpcParams parameters)
+        {
+            using var document = JsonDocument.Parse(JsonCodec.Serialize(parameters));
+            return document.RootElement.Clone();
+        }
+
+        /// <summary>
+        /// Restores the result payload and converts the result value.
+        /// </summary>
+        private T FinalizeResult<T>(JsonElement element, PayloadFormat actualFormat)
+        {
+            var payload = element.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null
+                ? null
+                : JsonCodec.Deserialize<JsonRpcResult>(element.GetRawText());
+            if (payload == null)
+                throw new InvalidOperationException("The API answered without a result.");
+
+            RestoreResponsePayload(payload, actualFormat);
+            var result = ApiOutputConverter.ConvertResultValue<T>(payload.Value!)!;
+            DateTimeWireGuard.Validate(result);
+            return result;
+        }
+
+        /// <summary>
+        /// Turns an error response into the exception the caller sees.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Error mapping reverses what the executor did on the way out, and both directions read
-        /// the same declaration in <see cref="JsonRpcErrorContract"/> — a code that declares an
+        /// Error mapping reverses what the server did on the way out, and both directions read
+        /// the same declaration in <see cref="JsonRpcErrorContract"/>: a code that declares an
         /// exception type is rebuilt as that type carrying the original message with no prefix, so
         /// callers can <c>catch</c> the type instead of comparing integers. Everything else wraps
         /// into <see cref="InvalidOperationException"/> with the message
@@ -209,44 +264,15 @@ namespace Polhem.Api.Client.Connectors
         /// documentation promises unreachable.
         /// </para>
         /// </remarks>
-        private T FinalizeResponse<T>(JsonRpcResponse response, PayloadFormat actualFormat)
-        {
-            if (response.Error != null)
-            {
-                if (JsonRpcErrorContract.TryRebuild(response.Error.Code, response.Error.Message, out var rebuilt))
-                    throw rebuilt;
-                throw new InvalidOperationException($"API error: {response.Error.Code} - {response.Error.Message}");
-            }
-            RestoreResponsePayload(response, actualFormat);
-            var result = ApiOutputConverter.ConvertResultValue<T>(response.Result!.Value!)!;
-            DateTimeWireGuard.Validate(result);
-            return result;
-        }
-
-        /// <summary>
-        /// Creates a JSON-RPC request object.
-        /// </summary>
-        /// <param name="progId">The program identifier (e.g., Employee, Login).</param>
-        /// <param name="action">The action name to invoke (e.g., Hello, GetList).</param>
-        /// <param name="value">The parameter object to pass to the server.</param>
-        /// <returns>The composed JSON-RPC request object.</returns>
-        private static JsonRpcRequest CreateRequest(string progId, string action, object value)
-        {
-            return new JsonRpcRequest()
-            {
-                Method = $"{progId}.{action}",
-                Params = new JsonRpcParams
-                {
-                    Value = value
-                },
-                Id = Guid.NewGuid().ToString()
-            };
-        }
+        private static Exception MapError(int code, string message)
+            => JsonRpcErrorContract.TryRebuild(code, message, out var rebuilt)
+                ? rebuilt
+                : new InvalidOperationException($"API error: {code} - {message}");
 
         /// <summary>
         /// Transforms the specified JSON-RPC request payload to the target transmission format (Plain, Encoded, or Encrypted).
         /// </summary>
-        /// <param name="request">The JSON-RPC request object to process.</param>
+        /// <param name="parameters">The request parameters to process.</param>
         /// <param name="format">
         /// The desired payload format:
         /// <list type="bullet">
@@ -256,7 +282,7 @@ namespace Polhem.Api.Client.Connectors
         /// </list>
         /// </param>
         /// <returns>The actual format applied, which may be downgraded to Plain depending on the runtime environment.</returns>
-        private PayloadFormat TransformRequestPayload(JsonRpcRequest request, PayloadFormat format)
+        private PayloadFormat TransformRequestPayload(JsonRpcParams parameters, PayloadFormat format)
         {
             // For local providers in non-debug mode, force Plain format to skip encoding/encryption and improve performance.
             if (this.Provider is LocalApiProvider && !SysInfo.IsDebugMode)
@@ -274,25 +300,25 @@ namespace Polhem.Api.Client.Connectors
             {
                 // Stamped before the transform, which reads it off the payload the same way the
                 // receiving end does.
-                request.Params.Codec = PayloadCodec;
+                parameters.Codec = PayloadCodec;
 
                 if (ApiServiceOptions.RequireWireFrame)
                 {
                     // Numbered here rather than inside the converter: only the connector knows
                     // which session the call belongs to, and the counter is per session.
-                    request.Params.Frame = new ApiPayloadFrame(
+                    parameters.Frame = new ApiPayloadFrame(
                         DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), Session.NextSequence());
                 }
-                ApiPayloadConverter.TransformTo(request.Params, format, Session.ApiEncryptionKey);
+                ApiPayloadConverter.TransformTo(parameters, format, Session.ApiEncryptionKey);
             }
 
             return format;
         }
 
         /// <summary>
-        /// Restores the JSON-RPC response payload by decoding or decrypting it back to the original object.
+        /// Restores the result payload by decoding or decrypting it back to the original object.
         /// </summary>
-        /// <param name="response">The JSON-RPC response object to restore.</param>
+        /// <param name="result">The result payload to restore.</param>
         /// <param name="format">
         /// The response payload format:
         /// <list type="bullet">
@@ -300,12 +326,12 @@ namespace Polhem.Api.Client.Connectors
         /// <item><description><see cref="PayloadFormat.Encoded"/> or <see cref="PayloadFormat.Encrypted"/>: Decode or decrypt the payload.</description></item>
         /// </list>
         /// </param>
-        private void RestoreResponsePayload(JsonRpcResponse response, PayloadFormat format)
+        private void RestoreResponsePayload(JsonRpcResult result, PayloadFormat format)
         {
             if (format == PayloadFormat.Plain)
                 return;
 
-            ApiPayloadConverter.RestoreFrom(response.Result!, format, Session.ApiEncryptionKey);
+            ApiPayloadConverter.RestoreFrom(result, format, Session.ApiEncryptionKey);
         }
     }
 }

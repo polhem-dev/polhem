@@ -462,3 +462,6 @@ Master.key
 **/*.local.env
 !.env.example
 !**/.env.example
+
+# A maintainer's switch to build against a local checkout of polhem-jsonrpc (src/Directory.Build.props)
+/PolhemJsonRpc.local.props

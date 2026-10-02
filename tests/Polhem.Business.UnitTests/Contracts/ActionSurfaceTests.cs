@@ -17,7 +17,7 @@ namespace Polhem.Business.UnitTests.Contracts
     /// <para>
     /// <b>Why the type symmetry gates cannot catch this.</b> <c>ApiContractPairingTests</c> and
     /// <c>BusinessContractPairingTests</c> guard whether a type has a paired contract interface, which assumes the type
-    /// exists. But a JSON-RPC method is a <b>string</b>: <c>JsonRpcExecutor.GetMethod</c> takes the
+    /// exists. But a JSON-RPC method is a <b>string</b>: the dispatcher takes the
     /// <c>action</c> and calls <c>GetType().GetMethod(action)</c> directly. With one letter wrong in a constant, both pairing
     /// tests stay green, and the symptom is a runtime <c>MissingMethodException</c>.
     /// </para>
@@ -86,11 +86,11 @@ namespace Polhem.Business.UnitTests.Contracts
         [DisplayName("Every action constant maps to a valid API method on the BO")]
         public void DeclaredAction_HasMatchingApiMethod(Type businessObjectType, string action)
         {
-            // The same resolution path as `JsonRpcExecutor.GetMethod`: the public method is looked up by the action string.
+            // The same resolution path as the dispatcher: the public method is looked up by the action string.
             var method = businessObjectType.GetMethod(action);
             Assert.True(method != null,
                 $"{businessObjectType.Name} has no public method named '{action}'. " +
-                "JsonRpcExecutor reflects the method directly from the action string, so a mismatch is a runtime MissingMethodException.");
+                "The dispatcher reflects the method directly from the action string, so a mismatch is a runtime MissingMethodException.");
 
             var parameters = method!.GetParameters();
             Assert.True(parameters.Length == 1,

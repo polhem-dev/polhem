@@ -37,7 +37,6 @@
     <!-- The 'serve' command hosts the JSON-RPC endpoint so a Remote run has something to measure
          against; every host in this repository is SQLite-only, which a load test excludes. -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <ProjectReference Include="..\..\src\Polhem.Api.AspNetCore\Polhem.Api.AspNetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -50,6 +49,16 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Polhem.LoadTests.UnitTests" />
+  </ItemGroup>
+
+  <!-- Polhem.JsonRpc.AspNetCore serves the endpoint. PolhemJsonRpcSource switches to a local checkout; see
+       PolhemJsonRpc.props. -->
+  <Import Project="..\..\PolhemJsonRpc.props" />
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' == ''">
+    <PackageReference Include="Polhem.JsonRpc.AspNetCore" Version="$(PolhemJsonRpcVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' != ''">
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.AspNetCore/Polhem.JsonRpc.AspNetCore.csproj" />
   </ItemGroup>
 
 </Project>

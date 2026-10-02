@@ -1,8 +1,10 @@
 namespace Polhem.Api.Core.JsonRpc
 {
     /// <summary>
-    /// Thrown by <see cref="JsonRpcExecutor"/> when the action part of a <c>progId.action</c> method
-    /// names nothing the business object exposes as an action.
+    /// Signals that the action part of a <c>progId.action</c> method names nothing the business
+    /// object exposes as an action; the error contract answers it with
+    /// <see cref="JsonRpcErrorCode.MethodNotFound"/>. The framework's dispatcher answers a method it
+    /// cannot resolve on its own, without this exception.
     /// </summary>
     /// <remarks>
     /// A type of its own rather than <see cref="MissingMethodException"/>: that one is also what the

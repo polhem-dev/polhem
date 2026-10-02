@@ -1,4 +1,4 @@
-<!-- source: en/guides/development-cookbook.md blob: 8640ad810123cfef968625adc1fa59faa37b9de5 -->
+<!-- source: en/guides/development-cookbook.md blob: 54bb0ce3d0cb76d69757b50d39a6a14624532278 -->
 # 端到端開發指引
 
 [English](../../en/guides/development-cookbook.md) · [← 文件索引](../README.md)
@@ -26,18 +26,18 @@ ctor 注入解析，無靜態入口點（service locator）。
 │    → 註冊 IDefineStorage / IDefineAccess /          │
 │      ICacheContainer / IDbConnectionManager /       │
 │      ISessionInfoService / ILanguageService /       │
-│      IBusinessObjectFactory / JsonRpcExecutor       │
+│      IBusinessObjectFactory / JsonRpcDispatcher     │
 ├─────────────────────────────────────────────────────┤
 │ 5. 建出 provider（ASP.NET Core 用 builder.Build()， │
 │    其他宿主用 services.BuildServiceProvider()）     │
-│ 6. app.UsePolhemFramework()（僅 ASP.NET ——          │
-│    啟動期檢查，不註冊 middleware 或 endpoint）      │
+│ 6. app.MapJsonRpc("/api")（僅 ASP.NET，             │
+│    先呼叫 services.AddJsonRpcServer()）             │
 └─────────────────────────────────────────────────────┘
 ```
 
 宿主套件選擇：
 
-- **ASP.NET Core web host**：引用 `Polhem.Api.AspNetCore`（會透過遞移帶入 `Polhem.Hosting`）。啟動程式加上 `using Polhem.Hosting;`（取 `AddPolhemFramework`）與 `using Polhem.Api.AspNetCore;`（取 `UsePolhemFramework`）。`POST /api` 端點是你自己寫、繼承 `ApiServiceController` 的 controller，所以宿主還要呼叫 `AddControllers()` 與 `MapControllers()`。
+- **ASP.NET Core web host**：引用 `Polhem.Hosting` 與 `Polhem.JsonRpc.AspNetCore`。啟動程式加上 `using Polhem.Hosting;`（取 `AddPolhemFramework` 與 `AddPolhemApiKeyGateCheck`）與 `using Polhem.JsonRpc.AspNetCore;`（取 `AddJsonRpcServer` 與 `MapJsonRpc`）。`services.AddJsonRpcServer()` 沿用 `AddPolhemFramework` 註冊的 JSON-RPC 選項，`app.MapJsonRpc("/api")` 發布 `POST /api` 端點；不需要撰寫 controller。
 - **非 ASP.NET Core 宿主**（Console / Worker Service / 在自己 process 內跑後端的桌面 app / 整合測試）：直接引用 `Polhem.Hosting`，不會拖入 `Microsoft.AspNetCore.App`。要在 process 內呼叫後端，就把建好的 provider 交給 client 端：傳給 connector 的建構子（`new SystemApiConnector(provider, accessToken)`），或在使用 `Polhem.UI.Core` 的 head 中指定給 `ClientInfo.LocalServiceProvider`。
 
 `AddPolhemFramework` 也會註冊數個 hosted service，包括保留 progId 的啟動期註冊、跨 process 的 cache-notify poller，以及過期 session 的清理。它們只在 provider 屬於 .NET Generic Host（`WebApplication`、`Host.CreateApplicationBuilder`）時才會啟動；單純以 `BuildServiceProvider()` 建出的 provider 不會啟動它們。
@@ -79,39 +79,37 @@ code 內 materialize 可直接呼叫同一支 API，而 `tools/DefineEditor` 開
 sequenceDiagram
     participant C as Client ApiConnector
     participant P as Provider Local/Remote
-    participant S as Server ApiServiceController
-    participant E as Executor JsonRpcExecutor
+    participant H as HTTP endpoint MapJsonRpc
+    participant D as Dispatcher JsonRpcDispatcher
     participant B as Business Object
 
-    C->>C: 建立 JsonRpcRequest method = ProgId.Action
     C->>C: Payload 轉換 Serialize Compress Encrypt
-    C->>P: ExecuteAsync(request)
+    C->>P: SendAsync(request) method = ProgId.Action
 
     alt Remote HTTP
-        P->>S: POST /api Headers X-Api-Key，已登入時加 Bearer token
-        S->>S: 驗證 Content-Type
-        S->>S: 解析 JsonRpcRequest
-        S->>S: 驗證 API key 與 Authorization header
-        S->>E: ExecuteAsync(request)
+        P->>H: POST /api Headers X-Api-Key，已登入時加 Bearer token
+        H->>H: 驗證 Content-Type 與大小
+        H->>D: 以 HTTP 呼叫派發
     else Local 同進程
-        P->>E: ExecuteAsync(request)
+        P->>D: 以 in-process 呼叫派發
     end
 
-    E->>E: 解析 Method 為 ProgId + Action
-    E->>B: 建立 BO via BusinessObjectFactory
-    E->>E: 解析 Action 對應的方法
-    E->>E: ApiAccessValidator 驗證存取權限
-    E->>E: 還原 Payload 解密 解壓 反序列化
-    E->>E: 方法要求時檢查重放防護 frame
-    E->>E: ApiInputConverter 轉換參數型別
-    E->>B: 反射呼叫 Action 方法
-    B-->>E: 回傳結果
-    E->>E: ApiOutputConverter 依命名慣例轉為 API Response
-    E->>E: 轉換 Payload 格式
-    E-->>C: JsonRpcResponse
+    D->>D: 解析 Method 為 ProgId + Action
+    D->>D: PolhemObjectFactory 驗證 API key 與 Authorization header（僅 HTTP）
+    D->>B: 建立 BO via BusinessObjectFactory
+    D->>D: 解析 Action 對應的方法
+    D->>D: PolhemAccessFilter 驗證存取權限
+    D->>D: PolhemPayloadFilter 還原 Payload 解密 解壓 反序列化
+    D->>D: 方法要求時檢查重放防護 frame
+    D->>D: PolhemParameterBinder 轉換參數型別
+    D->>B: 反射呼叫 Action 方法
+    B-->>D: 回傳結果
+    D->>D: ApiOutputConverter 依命名慣例轉為 API Response
+    D->>D: 轉換 Payload 格式
+    D-->>C: JSON-RPC 回應
 ```
 
-存取權限在 payload 解密**之前**驗證，所以不被允許的呼叫不會耗費任何解密成本（`JsonRpcExecutor.ExecuteAsync`）。
+存取權限在 payload 解密**之前**驗證，所以不被允許的呼叫不會耗費任何解密成本（`PolhemAccessFilter` 在 `PolhemPayloadFilter` 之前執行）。
 沒有 `Authorization` header 的請求是匿名呼叫：只有宣告為 `ApiAccessRequirement.Anonymous` 的方法會接受，
 其餘方法回應 JSON-RPC 錯誤 `-32001`（Unauthorized）。
 
@@ -143,7 +141,7 @@ connector 除非 `SysInfo.IsDebugMode` 開啟，否則一律送 Plain。
 
 ```text
 Client 發送 → LoginRequest (API Type，以該次請求的 codec 編碼)
-    ↓ JsonRpcExecutor
+    ↓ JsonRpcDispatcher（PolhemParameterBinder）
     ↓ ApiInputConverter 屬性對應（{Action}Request → {Action}Args）
 BO 接收 → LoginArgs (BO Type, POCO)
     ↓ 商業邏輯處理
@@ -259,8 +257,8 @@ bool upgraded = upgrade.Parameters!.GetValue<bool>("Upgraded");
 ```text
 Client: await connector.ExecFuncAsync(new ExecFuncRequest { FuncId = "Greet" })
   → ApiConnector.ExecuteAsync<ExecFuncResponse>("ExecFunc", request)
-  → JsonRpcRequest { method: "Customer.ExecFunc" }
-  → JsonRpcExecutor 呼叫 CustomerBo.ExecFunc()        // BusinessObject.ExecFunc
+  → JSON-RPC 請求 { method: "Customer.ExecFunc" }
+  → JsonRpcDispatcher 呼叫 CustomerBo.ExecFunc()      // BusinessObject.ExecFunc
   → CustomerBo.DoExecFunc()                           // 你的覆寫
   → handler.InvokeExecFunc(...)                       // ExecFuncHandlerExtensions
     → handler.GetType().GetMethod("Greet")            // 反射取得方法
@@ -878,10 +876,9 @@ app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.Run();
 ```
 
-> 同時對外提供 `POST /api` 端點的 Blazor 宿主——繼承 `ApiServiceController` 的 controller，加上
-> `AddControllers()` 與 `MapControllers()`——也要在它讀取的資料庫建好之後呼叫 `app.UsePolhemFramework()`。
-> `UsePolhemFramework` 不註冊任何 middleware，也不註冊 endpoint；它執行啟動期檢查，目前會在 `st_api_key`
-> 沒有任何啟用中的 key 時記錄一筆 error（Development 環境為 warning），因為此時 `X-Api-Key` header 只檢查是否存在。
+> 同時對外提供 `POST /api` 端點的 Blazor 宿主加上 `services.AddJsonRpcServer()` 與 `app.MapJsonRpc("/api")`，
+> 並一併加上 `services.AddPolhemApiKeyGateCheck()`。這項檢查在 host 啟動時執行，`st_api_key` 沒有任何啟用中的 key 時
+> 記錄一筆 error（Development 環境為 warning），因為此時 `X-Api-Key` header 只檢查是否存在。
 > 見 [API 金鑰管理](../security/api-key-management.md)。
 
 **2. 在 Razor component 中建立 connector**：

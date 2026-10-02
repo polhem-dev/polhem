@@ -80,7 +80,7 @@
 它們不是裝飾性的標記——有兩個機制在執行期與編譯期依賴它們。
 
 **1. 讓一個靜默的反射複製保證完整。** 每一次 API 呼叫都經內部的 `ApiInputConverter.Convert` 雙向轉換，
-而它是**以屬性名稱比對**來複製的：入站由 `JsonRpcExecutor` 呼叫，把 wire 訊息轉成 BO 參數；
+而它是**以屬性名稱比對**來複製的：入站由伺服端的參數繫結器呼叫，把 wire 訊息轉成 BO 參數；
 出站由 `ApiOutputConverter` 呼叫，把 BO 結果轉成 wire 回應。名稱對不上就靜默跳過——不擲例外、
 不警告，呼叫看起來成功但該欄位是空的。正因為 `LoginRequest` 與 `LoginArgs` 都實作
 `ILoginRequest`，編譯器才會逼兩邊帶同一組成員，複製也就不可能只複製一半。

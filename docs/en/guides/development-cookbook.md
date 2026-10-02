@@ -26,18 +26,18 @@ entry point (service locator).
 │    → Registers IDefineStorage / IDefineAccess /     │
 │      ICacheContainer / IDbConnectionManager /       │
 │      ISessionInfoService / ILanguageService /       │
-│      IBusinessObjectFactory / JsonRpcExecutor       │
+│      IBusinessObjectFactory / JsonRpcDispatcher     │
 ├─────────────────────────────────────────────────────┤
 │ 5. build the provider (builder.Build() in ASP.NET   │
 │    Core, services.BuildServiceProvider() elsewhere) │
-│ 6. app.UsePolhemFramework() (ASP.NET only —         │
-│    startup checks; no middleware or endpoint)       │
+│ 6. app.MapJsonRpc("/api") (ASP.NET only, after      │
+│    services.AddJsonRpcServer())                     │
 └─────────────────────────────────────────────────────┘
 ```
 
 Host package selection:
 
-- **ASP.NET Core web host**: reference `Polhem.Api.AspNetCore` (it transitively pulls in `Polhem.Hosting`). Add `using Polhem.Hosting;` for `AddPolhemFramework` and `using Polhem.Api.AspNetCore;` for `UsePolhemFramework`. The `POST /api` endpoint is a controller of your own deriving from `ApiServiceController`, so the host also calls `AddControllers()` and `MapControllers()`.
+- **ASP.NET Core web host**: reference `Polhem.Hosting` and `Polhem.JsonRpc.AspNetCore`. Add `using Polhem.Hosting;` for `AddPolhemFramework` and `AddPolhemApiKeyGateCheck`, and `using Polhem.JsonRpc.AspNetCore;` for `AddJsonRpcServer` and `MapJsonRpc`. `services.AddJsonRpcServer()` builds on the JSON-RPC options `AddPolhemFramework` registered, and `app.MapJsonRpc("/api")` publishes the `POST /api` endpoint; there is no controller to write.
 - **Non-ASP.NET Core host** (Console / Worker Service / a desktop app that runs the backend in its own process / integration tests): reference `Polhem.Hosting` directly. No `Microsoft.AspNetCore.App` dependency. To call the backend in process, hand the built provider to the client side: pass it to a connector constructor (`new SystemApiConnector(provider, accessToken)`), or, in a head that uses `Polhem.UI.Core`, assign it to `ClientInfo.LocalServiceProvider`.
 
 `AddPolhemFramework` also registers hosted services, among them the startup registration of the reserved progIds, the cross-process cache-notify poller and the expired-session cleanup. They start only when the provider belongs to a .NET Generic Host (`WebApplication`, `Host.CreateApplicationBuilder`); a provider built with `BuildServiceProvider()` alone does not start them.
@@ -83,40 +83,38 @@ list of files and consumer extension guidelines.
 sequenceDiagram
     participant C as Client ApiConnector
     participant P as Provider Local/Remote
-    participant S as Server ApiServiceController
-    participant E as Executor JsonRpcExecutor
+    participant H as HTTP endpoint MapJsonRpc
+    participant D as Dispatcher JsonRpcDispatcher
     participant B as Business Object
 
-    C->>C: Build JsonRpcRequest method = ProgId.Action
     C->>C: Payload conversion Serialize Compress Encrypt
-    C->>P: ExecuteAsync(request)
+    C->>P: SendAsync(request) method = ProgId.Action
 
     alt Remote HTTP
-        P->>S: POST /api Headers X-Api-Key and Bearer token when signed in
-        S->>S: Validate Content-Type
-        S->>S: Parse JsonRpcRequest
-        S->>S: Validate API key and Authorization header
-        S->>E: ExecuteAsync(request)
+        P->>H: POST /api Headers X-Api-Key and Bearer token when signed in
+        H->>H: Validate Content-Type and size
+        H->>D: Dispatch as an HTTP call
     else Local in-process
-        P->>E: ExecuteAsync(request)
+        P->>D: Dispatch as an in-process call
     end
 
-    E->>E: Parse Method into ProgId + Action
-    E->>B: Build BO via BusinessObjectFactory
-    E->>E: Resolve the action method
-    E->>E: ApiAccessValidator validates access
-    E->>E: Restore Payload Decrypt Decompress Deserialize
-    E->>E: Check replay frame when the method requires one
-    E->>E: ApiInputConverter converts argument types
-    E->>B: Reflection-invoke Action method
-    B-->>E: Return result
-    E->>E: ApiOutputConverter converts to API Response by naming convention
-    E->>E: Convert Payload format
-    E-->>C: JsonRpcResponse
+    D->>D: Parse Method into ProgId + Action
+    D->>D: PolhemObjectFactory validates API key and Authorization header (HTTP only)
+    D->>B: Build BO via BusinessObjectFactory
+    D->>D: Resolve the action method
+    D->>D: PolhemAccessFilter validates access
+    D->>D: PolhemPayloadFilter restores Payload Decrypt Decompress Deserialize
+    D->>D: Check replay frame when the method requires one
+    D->>D: PolhemParameterBinder converts argument types
+    D->>B: Reflection-invoke Action method
+    B-->>D: Return result
+    D->>D: ApiOutputConverter converts to API Response by naming convention
+    D->>D: Convert Payload format
+    D-->>C: JSON-RPC response
 ```
 
 Access is validated **before** the payload is decrypted, so a call that is not allowed costs no decryption
-work (`JsonRpcExecutor.ExecuteAsync`). A request without an `Authorization` header is an anonymous call:
+work (`PolhemAccessFilter` runs before `PolhemPayloadFilter`). A request without an `Authorization` header is an anonymous call:
 only methods declared `ApiAccessRequirement.Anonymous` accept it, and the others answer JSON-RPC error
 `-32001` (Unauthorized).
 
@@ -148,7 +146,7 @@ The framework separates API types into three tiers, preventing serialization att
 
 ```text
 Client sends → LoginRequest (API Type, encoded with the request's codec)
-    ↓ JsonRpcExecutor
+    ↓ JsonRpcDispatcher (PolhemParameterBinder)
     ↓ ApiInputConverter property mapping ({Action}Request → {Action}Args)
 BO receives → LoginArgs (BO Type, POCO)
     ↓ business logic
@@ -266,8 +264,8 @@ bool upgraded = upgrade.Parameters!.GetValue<bool>("Upgraded");
 ```text
 Client: await connector.ExecFuncAsync(new ExecFuncRequest { FuncId = "Greet" })
   → ApiConnector.ExecuteAsync<ExecFuncResponse>("ExecFunc", request)
-  → JsonRpcRequest { method: "Customer.ExecFunc" }
-  → JsonRpcExecutor calls CustomerBo.ExecFunc()        // BusinessObject.ExecFunc
+  → JSON-RPC request { method: "Customer.ExecFunc" }
+  → JsonRpcDispatcher calls CustomerBo.ExecFunc()      // BusinessObject.ExecFunc
   → CustomerBo.DoExecFunc()                            // your override
   → handler.InvokeExecFunc(...)                        // ExecFuncHandlerExtensions
     → handler.GetType().GetMethod("Greet")             // reflection lookup
@@ -904,11 +902,10 @@ app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.Run();
 ```
 
-> A Blazor host that also exposes the `POST /api` endpoint — a controller deriving from `ApiServiceController`,
-> with `AddControllers()` and `MapControllers()` — calls `app.UsePolhemFramework()` as well, once the database
-> it reads exists. `UsePolhemFramework` registers no middleware and no endpoint; it runs startup checks, and
-> currently logs an error (a warning in Development) while `st_api_key` holds no enabled key, because the
-> `X-Api-Key` header is then checked for presence only. See [API Key Management](../security/api-key-management.md).
+> A Blazor host that also exposes the `POST /api` endpoint adds `services.AddJsonRpcServer()` and
+> `app.MapJsonRpc("/api")`, and `services.AddPolhemApiKeyGateCheck()` as well. The check runs when the host starts and
+> logs an error (a warning in Development) while `st_api_key` holds no enabled key, because the `X-Api-Key` header is
+> then checked for presence only. See [API Key Management](../security/api-key-management.md).
 
 **2. Build connectors in a Razor component**:
 

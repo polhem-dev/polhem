@@ -18,7 +18,7 @@
 
 ### 本機 / 遠端策略
 
-- `IJsonRpcProvider` 抽象化傳輸層；`LocalApiProvider` 透過 `JsonRpcExecutor` 在行程內呼叫商業邏輯，`RemoteApiProvider` 則以 HTTP POST 呼叫遠端端點。
+- 連接器透過 [`Polhem.JsonRpc.Client`](https://github.com/polhem-dev/polhem-jsonrpc) 送出，經由兩種實作其 `IJsonRpcTransport` 的傳輸之一：`LocalApiProvider` 把呼叫交給行程內的 dispatcher，`RemoteApiProvider` 則以 HTTP POST 呼叫遠端端點。
 - 策略由連接器建構子決定：接受 `IServiceProvider`（以 `AddPolhemFramework` 建立的後端服務提供者）的建構子走行程內，接受端點 URL 的建構子走 HTTP。
 
 ### 連接器
@@ -67,9 +67,8 @@
 | `SystemApiConnector` | 系統層級操作 |
 | `FormApiConnector` | 綁定特定 ProgId 的表單層級商業物件呼叫 |
 | `AuditLogApiConnector` | 稽核與異常紀錄查詢 |
-| `IJsonRpcProvider` | JSON-RPC 傳輸策略介面 |
-| `LocalApiProvider` | 透過 `JsonRpcExecutor` 的行程內提供者 |
-| `RemoteApiProvider` | 以 HTTP 為基礎的提供者，附帶 API 金鑰與 Bearer Token 標頭 |
+| `LocalApiProvider` | 連到後端 JSON-RPC dispatcher 的行程內傳輸 |
+| `RemoteApiProvider` | HTTP 傳輸，附帶 API 金鑰與 Bearer Token 標頭 |
 | `ClientDefineAccess` | 透過 API 的非同步快取定義存取 |
 | `FormDefinitionLoader` | 供 UI 使用的在地化表單結構與執行期版面 |
 | `ApiConnectValidator` | 驗證端點並判斷連線類型 |
@@ -78,8 +77,8 @@
 
 ## 設計慣例
 
-- **策略模式（Strategy Pattern）** -- `IJsonRpcProvider` 搭配 `LocalApiProvider` 與 `RemoteApiProvider` 實作；連接器在建構時選定策略。
-- **樣板方法（Template Method）** -- `ApiConnector.ExecuteAsync<T>` 定義固定步驟（建立請求、轉換 payload、呼叫提供者、還原回應）；子類別提供領域專屬方法。
+- **策略模式（Strategy Pattern）** -- `LocalApiProvider` 與 `RemoteApiProvider` 實作 `IJsonRpcTransport`；連接器在建構時選定其一。
+- **樣板方法（Template Method）** -- `ApiConnector.ExecuteAsync<T>` 定義固定步驟（轉換 payload、經傳輸送出、還原回應）；子類別提供領域專屬方法。
 - **雙建構子模式** -- 每個連接器提供本機與遠端兩種建構子，對應兩種提供者：`SystemApiConnector(IServiceProvider services, Guid accessToken)` / `(string endpoint, Guid accessToken)`。`FormApiConnector` 另外帶綁定的 `progId`。每個建構子都有再多帶一個 `ApiSessionContext` 的多載。
 - **Payload 格式** -- 每個動作自行選擇 `PayloadFormat`；session 尚無傳輸金鑰時，`Encrypted` 請求改以 `Encoded` 送出；本機提供者除非開啟 `SysInfo.IsDebugMode`，否則送 `Plain`。`ApiConnector.PayloadCodec` 決定 `Encoded` / `Encrypted` 請求的 body codec（空白即 MessagePack）。
 
@@ -88,6 +87,6 @@
 - 專案根目錄 -- `ApiClientInfo`、`ApiSessionContext`、`ApiConnectValidator`、`ClientDefineAccess`、`ConnectType`、
   `SupportedConnectTypes`、`FormDataGuard`、`FormValueBinding`
 - `Connectors/` -- `ApiConnector`、`SystemApiConnector`、`FormApiConnector`、`AuditLogApiConnector`
-- `Providers/` -- `IJsonRpcProvider`、`LocalApiProvider`、`RemoteApiProvider`
+- `Providers/` -- `LocalApiProvider`、`RemoteApiProvider`
 - `Definitions/` -- `FormDefinitionLoader`、`LanguageLayers`、`SnapshotLanguageService`
 - `Permissions/` -- `IElementCapabilityResolver`、`ElementCapabilityResolver`、`FieldCapability`

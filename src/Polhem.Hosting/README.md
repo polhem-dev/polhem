@@ -25,7 +25,7 @@ execution belong to those layers; new SQL added here would be a layering regress
 
 | Host type | Reference |
 |-----------|-----------|
-| ASP.NET Core web host | `Polhem.Api.AspNetCore` (transitively brings in `Polhem.Hosting`) |
+| ASP.NET Core web host | `Polhem.Hosting`, plus `Polhem.JsonRpc.AspNetCore` for the HTTP endpoint |
 | Desktop head running the backend in-process, console, Worker Service | `Polhem.Hosting` directly |
 | Integration tests | `Polhem.Hosting` directly |
 
@@ -37,7 +37,8 @@ this package. A head that runs the backend in its own process references both: i
 
 | Class / Member | Purpose |
 |----------------|---------|
-| `PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework` | Registers the framework services (`IDefineAccess`, `IDbAccessFactory`, `IBusinessObjectFactory`, `JsonRpcExecutor`, the hosted services, …) into the supplied `IServiceCollection` |
+| `PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework` | Registers the framework services (`IDefineAccess`, `IDbAccessFactory`, `IBusinessObjectFactory`, the JSON-RPC dispatcher and its options, the hosted services, …) into the supplied `IServiceCollection` |
+| `PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck` | Logs at startup while no API key has been issued. For a host that serves the API over HTTP |
 | `IAuditLogSink` | Where audit records go. The default writes to the log database; register your own before `AddPolhemFramework` to send them elsewhere |
 
 ## Usage
@@ -47,11 +48,11 @@ Register the database providers first (see the `Polhem.Db` README).
 ### ASP.NET Core host
 
 ```csharp
-using Polhem.Api.AspNetCore;
 using Polhem.Api.Core;
 using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Hosting;
+using Polhem.JsonRpc.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,15 +62,16 @@ SysInfo.Initialize(settings.CommonConfiguration);
 ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 
 builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths);
-builder.Services.AddControllers();
+builder.Services.AddJsonRpcServer();
+builder.Services.AddPolhemApiKeyGateCheck();
 
 var app = builder.Build();
-app.UsePolhemFramework();
-app.MapControllers();
+app.MapJsonRpc("/api");
 app.Run();
 ```
 
-The controller is a class derived from `ApiServiceController` (see the `Polhem.Api.AspNetCore` README).
+`AddJsonRpcServer` comes from `Polhem.JsonRpc.AspNetCore` and builds on the JSON-RPC options `AddPolhemFramework`
+registered; `MapJsonRpc` publishes them at `POST /api`.
 
 ### Host without ASP.NET Core (a desktop head running the backend in-process)
 
@@ -106,7 +108,7 @@ A `Polhem.UI.Core` head assigns `host.Services` to `ClientInfo.LocalServiceProvi
 
 ## Design Conventions
 
-- **Composition root** — DI registration lives here, separated from ASP.NET Core middleware (which stays in `Polhem.Api.AspNetCore`)
+- **Composition root** — DI registration lives here, separated from the HTTP endpoint (which `Polhem.JsonRpc.AspNetCore` provides)
 - **No ASP.NET Core dependency** — references only the `Microsoft.Extensions.DependencyInjection` and `Microsoft.Extensions.Hosting` abstractions, so non-web hosts can register the framework without pulling in the web stack
 - **Replaceable implementations by type name** — the services listed in `BackendComponents` (in `SystemSettings.xml`), such as `IDefineAccess`, `ISessionInfoService`, `ICacheDataSourceProvider` and the `RepositoryFactory`, can be replaced by naming a type there; a blank entry means the framework default. A wrong type name fails at startup, naming the setting. Other services, such as `IBusinessObjectFactory`, are registered directly
 - **Hosted services are internal** — the audit writer, cache-notify poller, expired session cleanup and startup checks are registered by `AddPolhemFramework` and configured through `BackendConfiguration`; `IAuditLogSink` is the public seam

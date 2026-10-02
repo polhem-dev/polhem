@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Reflection;
-using Polhem.Api.Core.JsonRpc;
+using Polhem.JsonRpc.Server;
 using Polhem.Db;
 using Polhem.Hosting.Audit;
 using Polhem.Db.Manager;
@@ -222,7 +222,7 @@ namespace Polhem.Hosting.UnitTests
         }
 
         [Fact]
-        [DisplayName("AddPolhemFramework with the default configuration resolves the full DI service chain (IDbConnectionManager to JsonRpcExecutor)")]
+        [DisplayName("AddPolhemFramework with the default configuration resolves the full DI service chain (IDbConnectionManager to JsonRpcDispatcher)")]
         public void AddPolhemFramework_DefaultConfig_ResolvesFullServiceChain()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"polhem-fw-fullchain-{Guid.NewGuid():N}");
@@ -257,7 +257,7 @@ namespace Polhem.Hosting.UnitTests
                 // through the factory, so resolving one from it is what this asserts.
                 Assert.NotNull(sp.GetRequiredService<IRepositoryFactory>().Create<ICompanyRepository>());
                 Assert.NotNull(sp.GetRequiredService<IRepositoryFactory>().Create<IUserCompanyRepository>());
-                Assert.NotNull(sp.GetRequiredService<JsonRpcExecutor>());
+                Assert.NotNull(sp.GetRequiredService<JsonRpcDispatcher>());
             }
             finally
             {

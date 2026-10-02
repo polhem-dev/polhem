@@ -13,7 +13,7 @@ This document provides a standard term reference for technical writing, ensuring
 3. [Database Layer (Polhem.Db)](#3-database-layer-polhemdb)
 4. [Business Logic Layer (Polhem.Business)](#4-business-logic-layer-polhembusiness)
 5. [Repository Layer (Polhem.Repository)](#5-repository-layer-polhemrepository)
-6. [API Layer (Polhem.Api.Core / Polhem.Api.AspNetCore)](#6-api-layer-polhemapicore--polhemapiaspnetcore)
+6. [API Layer (Polhem.Api.Core)](#6-api-layer-polhemapicore)
 7. [Caching Layer (Polhem.ObjectCaching)](#7-caching-layer-polhemobjectcaching)
 8. [Connector Layer (Polhem.Api.Client)](#8-connector-layer-polhemapiclient)
 9. [Infrastructure (Polhem.Core)](#9-infrastructure-polhemcore)
@@ -162,13 +162,12 @@ This document provides a standard term reference for technical writing, ensuring
 
 ---
 
-## 6. API Layer (Polhem.Api.Core / Polhem.Api.AspNetCore)
+## 6. API Layer (Polhem.Api.Core)
 
 | English | 中文 | Description |
 |---------|------|-------------|
 | `ApiPayload` | API 傳遞資料結構 | Wraps transmission data, supporting compression and encryption |
-| `JsonRpcRequest` | JSON-RPC 請求 | JSON-RPC 2.0 request object |
-| `JsonRpcResponse` | JSON-RPC 回應 | JSON-RPC 2.0 response object |
+| `JsonRpcParams` / `JsonRpcResult` | JSON-RPC 參數／結果外殼 | The payload envelope a call's `params` and `result` carry; the JSON-RPC messages themselves come from `Polhem.JsonRpc` |
 | `ExecFuncArgs` | 自訂函式執行參數 | Parameter object passed when invoking custom business functions |
 | `ApiAccessControlAttribute` | API 存取控制屬性 | Declares the protection level and authentication requirement of API endpoints |
 
@@ -354,6 +353,6 @@ System field names are the constants of `SysFields` (`Polhem.Definition`). A tab
 
 | English | 中文 | Description |
 |---------|------|-------------|
-| `IJsonRpcProvider` | API 提供者介面 | Abstracts how a connector reaches the backend; chosen by the host at startup |
+| `IJsonRpcTransport` | JSON-RPC 傳輸介面 | From `Polhem.JsonRpc`: how a connector reaches the backend; the two providers below implement it, and the host chooses one at startup |
 | `LocalApiProvider` | 近端 API 提供者 | In-process implementation; the frontend and backend share the same process, invoking BO methods directly (no HTTP) |
 | `RemoteApiProvider` | 遠端 API 提供者 | HTTP-based implementation; the frontend reaches the backend over JSON-RPC (required for Blazor WASM) |

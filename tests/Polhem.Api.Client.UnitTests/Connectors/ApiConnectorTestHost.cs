@@ -1,18 +1,18 @@
 using System.Reflection;
 using Polhem.Api.Client.Connectors;
-using Polhem.Api.Client.Providers;
 using Polhem.Api.Core.JsonRpc;
 using Polhem.Api.Core.Messages;
+using Polhem.JsonRpc;
 
 namespace Polhem.Api.Client.UnitTests.Connectors
 {
     /// <summary>
-    /// Drives <see cref="ApiConnector"/> through one complete call with a fake <see cref="IJsonRpcProvider"/>, so the
+    /// Drives <see cref="ApiConnector"/> through one complete call with a <see cref="FakeApiTransport"/>, so the
     /// tests can observe the actual behavior before the request is sent and after the response arrives, without a
     /// real server.
     /// </summary>
     /// <remarks>
-    /// <c>FinalizeResponse</c> and <c>PrepareRequest</c> are both private and are deliberately not called through
+    /// <c>FinalizeResult</c> and <c>PrepareParams</c> are both private and are deliberately not called through
     /// reflection: the tests check behavior the caller can see, and the order between steps can only be checked by
     /// going through the whole call path.
     /// </remarks>
@@ -32,16 +32,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
                 => base.ExecuteAsync<T>(progId, action, value, format, cancellationToken);
         }
 
-        private sealed class FakeJsonRpcProvider : IJsonRpcProvider
-        {
-            public Func<JsonRpcRequest, JsonRpcResponse> ResponseFactory { get; set; }
-                = req => new JsonRpcResponse(req) { Result = new JsonRpcResult { Value = "ok" } };
-
-            public Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
-                => Task.FromResult(ResponseFactory(request));
-        }
-
-        private static TestApiConnector CreateConnector(IJsonRpcProvider provider, ApiSessionContext? session = null)
+        private static TestApiConnector CreateConnector(FakeApiTransport transport, ApiSessionContext? session = null)
         {
             // A dedicated session keeps tests off ApiSessionContext.Ambient, which is process-wide.
             var connector = session == null
@@ -49,7 +40,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
                 : new TestApiConnector(Guid.NewGuid(), session);
             var prop = typeof(ApiConnector).GetProperty(nameof(ApiConnector.Provider),
                 BindingFlags.Public | BindingFlags.Instance)!;
-            prop.SetValue(connector, provider);
+            prop.SetValue(connector, transport);
             return connector;
         }
 
@@ -60,14 +51,8 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         /// <param name="message">The message the server returns.</param>
         public static Task<string> ExecuteWithErrorAsync(JsonRpcErrorCode code, string message)
         {
-            var provider = new FakeJsonRpcProvider
-            {
-                ResponseFactory = req => new JsonRpcResponse(req)
-                {
-                    Error = new JsonRpcError((int)code, message)
-                }
-            };
-            return CreateConnector(provider).ExecuteAsync<string>(
+            var transport = new FakeApiTransport(_ => throw new JsonRpcErrorException((int)code, message));
+            return CreateConnector(transport).ExecuteAsync<string>(
                 TestProgId, TestAction, new object(), PayloadFormat.Plain);
         }
 
@@ -76,7 +61,7 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         /// </summary>
         public static Task<string> ExecuteWithResultAsync()
         {
-            return CreateConnector(new FakeJsonRpcProvider()).ExecuteAsync<string>(
+            return CreateConnector(new FakeApiTransport()).ExecuteAsync<string>(
                 TestProgId, TestAction, new object(), PayloadFormat.Plain);
         }
 
@@ -99,18 +84,15 @@ namespace Polhem.Api.Client.UnitTests.Connectors
         /// The action run inside the provider on the received request. The provider does not serialize, so it
         /// receives the very object the Connector handed over, the same shape as an in-process call.
         /// </param>
-        public static Task<string> ExecuteAsUserAsync(object value, string userTimeZoneId, Action<JsonRpcRequest> onServer)
+        public static Task<string> ExecuteAsUserAsync(object value, string userTimeZoneId, Action<FakeApiCall> onServer)
         {
             var session = new ApiSessionContext { UserTimeZoneId = userTimeZoneId };
-            var provider = new FakeJsonRpcProvider
+            var transport = new FakeApiTransport(call =>
             {
-                ResponseFactory = req =>
-                {
-                    onServer(req);
-                    return new JsonRpcResponse(req) { Result = new JsonRpcResult { Value = "ok" } };
-                }
-            };
-            return CreateConnector(provider, session).ExecuteAsync<string>(
+                onServer(call);
+                return FakeApiTransport.Answer(call, "ok");
+            });
+            return CreateConnector(transport, session).ExecuteAsync<string>(
                 TestProgId, TestAction, value, PayloadFormat.Plain);
         }
     }

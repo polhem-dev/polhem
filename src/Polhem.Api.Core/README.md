@@ -17,14 +17,17 @@
 
 ### JSON-RPC Execution
 
-- `JsonRpcExecutor` -- parses `ProgId.Action` method identifiers, obtains the business object from
-  `IBusinessObjectFactory`, and invokes the target method. Which methods an action name can reach is decided by
-  `JsonRpcExecutor.IsResolvableAction`.
-- `JsonRpcRequest` / `JsonRpcResponse` / `JsonRpcError` -- standard JSON-RPC 2.0 message types.
+- The protocol is [`Polhem.JsonRpc.Server`](https://github.com/polhem-dev/polhem-jsonrpc): its dispatcher parses
+  `ProgId.Action` method identifiers and invokes the target method. Which methods an action name can reach is decided
+  by `JsonRpcMethod.IsResolvableAction` there.
+- `Dispatch/` plugs Polhem into it: `PolhemObjectFactory` checks the API key and the `Authorization` header of an HTTP
+  call and obtains the business object from `IBusinessObjectFactory`; `PolhemAccessFilter` applies
+  `[ApiAccessControl]`; `PolhemPayloadFilter` restores and writes the payload envelope; `PolhemParameterBinder` binds
+  the argument; `PolhemExceptionMapper` maps errors. `PolhemJsonRpc.CreateServerOptions` assembles them.
 - `ApiPayload` / `ApiPayloadConverter` -- payload wrapping and conversion for JSON-RPC transport.
 - Error responses -- a framework exception meant for the end user (`UserMessageException` and related types)
   reaches the caller with its message; other exceptions answer a fixed message per error code, and the real
-  message goes to `JsonRpcExecutor.Logger`.
+  message is logged by `PolhemExceptionMapper`.
 
 ### Payload Security Pipeline
 
@@ -99,7 +102,7 @@ and the details.
 
 | Class / Interface | Purpose |
 |-------------------|---------|
-| `JsonRpcExecutor` | Parses `ProgId.Action`, creates BO, invokes method |
+| `PolhemJsonRpc` | Creates the JSON-RPC server options the framework serves its API with |
 | `ApiServiceOptions` | Process-wide configuration of the pipeline components, codecs, authorization validator and replay store |
 | `ApiPayloadTransformer` | Serialize -> Compress -> Encrypt pipeline |
 | `ApiAccessValidator` | Method-level protection via `ApiAccessControlAttribute` |
@@ -113,7 +116,7 @@ and the details.
 - **Strategy Pattern** -- serializer, compressor, and encryptor are injected via interfaces (`IApiPayloadSerializer`, `IApiPayloadCompressor`, `IApiPayloadEncryptor`), allowing each stage to be replaced independently.
 - **Strict pipeline ordering** -- the payload transformer runs Serialize -> Compress -> Encrypt on outbound and Decrypt -> Decompress -> Deserialize on inbound; the order must not be altered.
 - **Type whitelist** -- MessagePack deserialization accepts only an explicit allow-list of types.
-- **Reflection-based dispatch** -- `JsonRpcExecutor` resolves and invokes business object methods by name, decoupling the transport layer from concrete BO types.
+- **Reflection-based dispatch** -- the dispatcher resolves and invokes business object methods by name, decoupling the transport layer from concrete BO types.
 - **Protection levels** -- `ApiAccessControlAttribute` declares a method's `ApiProtectionLevel` and `ApiAccessRequirement`; the members and their meaning are in the XML documentation of those enums (`Polhem.Definition.Security`).
 - **Nullable reference types** enabled (`<Nullable>enable</Nullable>`).
 
@@ -122,7 +125,8 @@ and the details.
 - `Authorization/` -- `IApiAuthorizationValidator`, `ApiAuthorizationValidator`, `ApiAuthorizationContext`, `ApiAuthorizationResult`
 - `Conversion/` -- .NET object-model conversion between API and BO types (`ApiOutputConverter`)
 - `Json/` -- JSON converters for `object`-typed members
-- `JsonRpc/` -- `JsonRpcExecutor`, the JSON-RPC message types, `ApiPayload`, `ApiPayloadFrame`, `IReplayWindowStore`, `DateTimeWireGuard`
+- `Dispatch/` -- the components that plug Polhem into the `Polhem.JsonRpc.Server` dispatcher
+- `JsonRpc/` -- the payload envelope (`ApiPayload`, `JsonRpcParams`, `JsonRpcResult`), `ApiPayloadFrame`, `IReplayWindowStore`, `DateTimeWireGuard`, the error codes and the error contract
 - `Messages/` -- `ApiRequest`, `ApiResponse`, `ApiHeaders`, `PayloadFormat`, `ExecFunc*`, and the `System/`, `Form/` and `AuditLog/` messages
 - `MessagePack/` -- the internal MessagePack infrastructure and formatters
 - `Transformers/` -- the byte-level payload pipeline (serializers, compressor, encryptor, `ApiPayloadOptionsFactory`, `PayloadCodecNames`)

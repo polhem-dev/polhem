@@ -19,7 +19,7 @@ namespace Polhem.LoadTests.Bootstrap
     /// <para>
     /// This is what makes <c>LocalApiProvider</c> able to dispatch: it needs a built service
     /// provider (<see cref="Services"/>) holding a
-    /// <c>JsonRpcExecutor</c>, and everything that executor reaches — definitions, cache,
+    /// <c>JsonRpcDispatcher</c>, and everything that dispatcher reaches — definitions, cache,
     /// database access, business-object resolution — has to be registered first.
     /// </para>
     /// <para>

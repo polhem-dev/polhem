@@ -263,5 +263,32 @@ namespace Polhem.Api.Core.UnitTests
             var json = Encoding.UTF8.GetString(stream.ToArray());
             Assert.Equal("null", json);
         }
+
+        /// <summary>
+        /// Tests serialization of the format, value and type properties of ApiPayload (through JsonRpcParams).
+        /// </summary>
+        [Theory]
+        [InlineData(PayloadFormat.Plain)]
+        [InlineData(PayloadFormat.Encoded)]
+        [InlineData(PayloadFormat.Encrypted)]
+        [DisplayName("ApiPayload JSON serialization preserves Format and TypeName")]
+        public void ApiPayload_Serialize_PreservesFormatAndTypeName(PayloadFormat format)
+        {
+            // Create payload with the specified format via JSON round-trip
+            var tempJson = JsonSerializer.Serialize(new { format = (int)format, value = "sample-data", type = "Polhem.Api.Core.Messages.System.PingRequest" });
+            var payload = JsonSerializer.Deserialize<JsonRpcParams>(tempJson)!;
+
+            var json = JsonSerializer.Serialize(payload);
+            var deserialized = JsonSerializer.Deserialize<JsonRpcParams>(json);
+
+            Assert.NotNull(deserialized);
+            Assert.Equal(format, deserialized.Format);
+            Assert.Equal("sample-data", deserialized.Value);
+            Assert.Equal("Polhem.Api.Core.Messages.System.PingRequest", deserialized.TypeName);
+
+            using var jDoc = JsonDocument.Parse(json);
+            var root = jDoc.RootElement;
+            Assert.Equal((int)format, root.GetProperty("format").GetInt32());
+        }
     }
 }

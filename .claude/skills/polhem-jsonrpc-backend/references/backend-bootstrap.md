@@ -7,18 +7,19 @@ framework); when this template and those files disagree, the samples win.
 ## Program.cs
 
 ```csharp
-using Polhem.Api.AspNetCore;   // UsePolhemFramework
+using Polhem.Hosting;               // AddPolhemApiKeyGateCheck
+using Polhem.JsonRpc.AspNetCore;    // AddJsonRpcServer, MapJsonRpc
 using Xxx.Server;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddXxxBackend();
-builder.Services.AddControllers();
+builder.Services.AddJsonRpcServer();
+// Logs while no API key has been issued. It runs when the host starts, after UseXxxBackend created the tables.
+builder.Services.AddPolhemApiKeyGateCheck();
 
 var app = builder.Build();
 app.UseXxxBackend();
-// Startup checks. Today it logs while no API key has been issued, so it runs after the tables exist.
-app.UsePolhemFramework();
-app.MapControllers();
+app.MapJsonRpc("/api");
 app.Run();
 ```
 

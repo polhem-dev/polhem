@@ -77,7 +77,6 @@ Authorization: Bearer <access-token>     // omit for anonymous calls
 ```json
 {
   "jsonrpc": "2.0",
-  "method": "System.Login",
   "result": {
     "format": 0,
     "value": {
@@ -100,11 +99,9 @@ Authorization: Bearer <access-token>     // omit for anonymous calls
 ```json
 {
   "jsonrpc": "2.0",
-  "method": "System.Login",
   "error": {
     "code": -32099,
-    "message": "Invalid username or password.",
-    "data": null
+    "message": "Invalid username or password."
   },
   "id": "<echoed>"
 }
@@ -131,7 +128,7 @@ choice. Plain format does not need it at all:
 
 You may send `params.type` if you want (it's ignored on Plain); leaving it out
 keeps payloads smaller. Regression coverage:
-[`JsonRpcExecutorTests.Ping_PlainWith*`](../../../tests/Polhem.Api.Core.UnitTests/JsonRpcExecutorTests.cs)
+[`DispatchTests.Ping_PlainWith*`](../../../tests/Polhem.Api.Core.UnitTests/Dispatch/DispatchTests.cs)
 asserts omitted, empty, and bogus `type` values all succeed.
 
 ### Values in a Plain body
@@ -264,16 +261,18 @@ Method names are **case-sensitive** — `system.ping` will not dispatch.
 ## Error handling
 
 `response.error.code` maps to [`JsonRpcErrorCode`](../../../src/Polhem.Api.Core/JsonRpc/JsonRpcErrorCode.cs).
-Errors raised while the method runs come with HTTP 200; the transport's own refusals (`-32700`,
-`-32600`) come with a 4xx status and still carry the JSON-RPC error body.
+Every JSON-RPC error comes with HTTP 200, a rejected API key included. The endpoint answers with
+another status only for a request it does not read: 415 for a body that is not JSON, 413 for one
+larger than it accepts. Up to 1.1.0 a response also echoed the method name in a `method` member;
+1.2.0 dropped it.
 
 | Code | Name | Meaning | Typical action |
 |------|------|---------|----------------|
-| `-32700` | `ParseError` | Malformed JSON in the request body (HTTP 400) | Fix client serialization |
-| `-32600` | `InvalidRequest` | Wrong content type (HTTP 415), empty body or missing method (HTTP 400), rejected API key or malformed `Authorization` header (HTTP 401) | Inspect headers and body |
-| `-32601` | `MethodNotFound` | The action part of `progId.action` names no method the business object exposes as an action; the message is always "Method not found." | Check method name / casing |
+| `-32700` | `ParseError` | Malformed JSON in the request body | Fix client serialization |
+| `-32600` | `InvalidRequest` | Not a valid JSON-RPC request (no `method`, wrong `jsonrpc`), a rejected API key, or a malformed `Authorization` header | Inspect headers and body |
+| `-32601` | `MethodNotFound` | The method name is not `progId.action`, or names no action the business object exposes; the message is fixed and does not repeat the name | Check method name / casing |
 | `-32602` | `InvalidParams` | A `Plain` body could not be read into the type the method takes; the message is always "Invalid params.". Arguments that are readable but invalid answer `-32099` | Fix the `params` shape |
-| `-32000` | `InternalError` | Unhandled server-side exception | Not user-facing. The message is "Internal server error" unless the server runs in debug mode |
+| `-32603` | `InternalError` | Unhandled server-side exception (`-32000` up to 1.1.0) | Not user-facing. The message is "Internal server error" unless the server runs in debug mode |
 | `-32001` | `Unauthorized` | The method needs a signed-in caller and the access token is missing, unknown or expired | Sign in again |
 | `-32002` | `CompanyNotEntered` | Method needs company context | Call `System.EnterCompany` first |
 | `-32003` | `CompanyAccessDenied` | The company does not exist or the user has no rights to it | Display denial, switch company |
@@ -281,8 +280,8 @@ Errors raised while the method runs come with HTTP 200; the transport's own refu
 | `-32005` | `ReplayRejected` | The wire frame is missing, unreadable, repeats a sequence number, or its timestamp is outside the accepted window | Retrying the same frame will not help; check the client clock |
 | `-32099` | `UserMessage` | A business-rule violation (validation, domain rule) with a message written for the end user; also a refused call such as a Plain call to an `Encrypted` method or a remote call to a `LocalOnly` one, which carries a fixed generic message ("Access denied.", "The request is not valid.") while the real reason is logged on the server | Display `message` to user |
 
-For every code except `-32000`, `message` is written for the caller and safe to surface to the
-end user. For `-32000`, never display the message — log internally and show a generic "request
+For every code except `-32603`, `message` is written for the caller and safe to surface to the
+end user. For `-32603`, never display the message — log internally and show a generic "request
 failed" instead.
 
 ---
@@ -318,7 +317,6 @@ export class RpcError extends Error {
 
 interface JsonRpcResponse<T> {
   jsonrpc: '2.0';
-  method: string;
   result?: { format: number; value: T; type: string };
   error?: { code: number; message: string; data?: unknown };
   id: string;

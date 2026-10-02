@@ -132,7 +132,7 @@ judgement.
 - Resources: `IDisposable` uses `using`; no scattered manual `.Dispose()`.
 - Access control: do all externally exposed methods have an appropriate `[ApiAccessControl]`; is the unannotated case
   fail-closed (deny rather than allow); does the default validator actually verify the key value (not only that it is
-  non-empty). **What an action name can reach** is decided by `JsonRpcExecutor.IsResolvableAction`; check that
+  non-empty). **What an action name can reach** is decided by `JsonRpcMethod.IsResolvableAction` (Polhem.JsonRpc.Server); check that
   POLHEM3001 and the runtime agree on it (the 2026-09-26 round found accessors and static methods reachable while the
   analyzer assumed they were not).
 - Anonymous surface: everything reachable before authentication (the decoder, anonymous actions, replay protection)

@@ -23,7 +23,7 @@
 
 | 宿主類型 | 引用方式 |
 |---------|---------|
-| ASP.NET Core web host | `Polhem.Api.AspNetCore`（透過遞移帶入 `Polhem.Hosting`）|
+| ASP.NET Core web host | `Polhem.Hosting`，HTTP 端點另加 `Polhem.JsonRpc.AspNetCore` |
 | 在行程內執行後端的桌面 head、主控台、Worker Service | 直接引用 `Polhem.Hosting` |
 | 整合測試 | 直接引用 `Polhem.Hosting` |
 
@@ -34,7 +34,8 @@
 
 | 類別 / 成員 | 用途 |
 |------------|------|
-| `PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework` | 將框架服務（`IDefineAccess`、`IDbAccessFactory`、`IBusinessObjectFactory`、`JsonRpcExecutor`、各 hosted service 等）註冊至傳入的 `IServiceCollection` |
+| `PolhemFrameworkServiceCollectionExtensions.AddPolhemFramework` | 將框架服務（`IDefineAccess`、`IDbAccessFactory`、`IBusinessObjectFactory`、JSON-RPC dispatcher 與其選項、各 hosted service 等）註冊至傳入的 `IServiceCollection` |
+| `PolhemFrameworkServiceCollectionExtensions.AddPolhemApiKeyGateCheck` | 尚未發行 API key 時於啟動時記錄 log。供以 HTTP 提供 API 的宿主使用 |
 | `IAuditLogSink` | 稽核紀錄的去處。預設寫入 log 資料庫；在 `AddPolhemFramework` 之前註冊自己的實作即可送往別處 |
 
 ## 使用方式
@@ -44,11 +45,11 @@
 ### ASP.NET Core 宿主
 
 ```csharp
-using Polhem.Api.AspNetCore;
 using Polhem.Api.Core;
 using Polhem.Core;
 using Polhem.Definition;
 using Polhem.Hosting;
+using Polhem.JsonRpc.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,15 +59,16 @@ SysInfo.Initialize(settings.CommonConfiguration);
 ApiServiceOptions.Initialize(settings.CommonConfiguration.ApiPayloadOptions, settings.CommonConfiguration.IsDebugMode);
 
 builder.Services.AddPolhemFramework(settings.BackendConfiguration, paths);
-builder.Services.AddControllers();
+builder.Services.AddJsonRpcServer();
+builder.Services.AddPolhemApiKeyGateCheck();
 
 var app = builder.Build();
-app.UsePolhemFramework();
-app.MapControllers();
+app.MapJsonRpc("/api");
 app.Run();
 ```
 
-控制器是衍生自 `ApiServiceController` 的類別（見 `Polhem.Api.AspNetCore` 的 README）。
+`AddJsonRpcServer` 來自 `Polhem.JsonRpc.AspNetCore`，沿用 `AddPolhemFramework` 註冊的 JSON-RPC 選項；`MapJsonRpc`
+把它們發布在 `POST /api`。
 
 ### 沒有 ASP.NET Core 的宿主（在行程內執行後端的桌面 head）
 
@@ -102,7 +104,7 @@ var login = await connector.LoginAsync("demo", "demo");
 
 ## 設計慣例
 
-- **組合根** — DI 註冊集中於此，與 ASP.NET Core middleware（保留在 `Polhem.Api.AspNetCore`）分離
+- **組合根** — DI 註冊集中於此，與 HTTP 端點（由 `Polhem.JsonRpc.AspNetCore` 提供）分離
 - **不依賴 ASP.NET Core** — 只引用 `Microsoft.Extensions.DependencyInjection` 與 `Microsoft.Extensions.Hosting` 的抽象套件，非 web 宿主也能註冊框架而不必拉進整個 web stack
 - **以型別名稱替換實作** — `BackendComponents`（位於 `SystemSettings.xml`）列出的服務，例如 `IDefineAccess`、`ISessionInfoService`、`ICacheDataSourceProvider` 與 `RepositoryFactory`，可在那裡指定型別加以替換；留空代表框架預設。型別名稱錯誤會在啟動時失敗，並指出是哪個設定。其他服務（例如 `IBusinessObjectFactory`）則直接註冊
 - **Hosted service 皆為 internal** — 稽核寫入器、cache-notify 輪詢器、過期 session 清理與啟動檢查由 `AddPolhemFramework` 註冊，並透過 `BackendConfiguration` 設定；`IAuditLogSink` 是公開的替換點

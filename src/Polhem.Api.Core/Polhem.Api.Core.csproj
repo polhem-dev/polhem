@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -27,6 +27,14 @@
                       PrivateAssets="all" />
   </ItemGroup>
 
+  <!-- The JSON-RPC dispatcher. PolhemJsonRpcSource switches to a local checkout; see PolhemJsonRpc.props. -->
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' == ''">
+    <PackageReference Include="Polhem.JsonRpc.Server" Version="$(PolhemJsonRpcVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PolhemJsonRpcSource)' != ''">
+    <ProjectReference Include="$(PolhemJsonRpcSource)/src/Polhem.JsonRpc.Server/Polhem.JsonRpc.Server.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Polhem.Api.Contracts\Polhem.Api.Contracts.csproj" />
     <ProjectReference Include="..\Polhem.Definition\Polhem.Definition.csproj" />
@@ -34,8 +42,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Polhem.Api.Core.UnitTests" />
-    <!-- The error contract has two halves: JsonRpcExecutor.MapException maps an exception to a
-         code, and ApiConnector.FinalizeResponse maps that code back to an exception. Only a test
+    <!-- The error contract has two halves: PolhemExceptionMapper.MapCode maps an exception to a
+         code, and ApiConnector maps that code back to an exception. Only a test
          that sees both can assert they agree, and the client test project is the one that already
          references both assemblies. -->
     <InternalsVisibleTo Include="Polhem.Api.Client.UnitTests" />

@@ -8,7 +8,7 @@ namespace Polhem.Api.Core.Validator
     /// </summary>
     /// <remarks>
     /// Lives beside <see cref="ApiAccessValidator"/> rather than under <c>Messages</c>, because it
-    /// is the validator's input and never crosses the wire — <see cref="Polhem.Api.Core.JsonRpc.JsonRpcExecutor"/> builds
+    /// is the validator's input and never crosses the wire — <see cref="Polhem.Api.Core.Dispatch.PolhemAccessFilter"/> builds
     /// one per call and hands it straight to the validator.
     /// <para>
     /// WARNING: it used to sit in the <c>Messages</c> namespace, and that had two consequences,

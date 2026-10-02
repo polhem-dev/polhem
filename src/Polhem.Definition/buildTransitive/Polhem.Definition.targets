@@ -8,7 +8,7 @@
     makes the rules work with no setup on the consumer's side.
 
     This file lives in buildTransitive/ rather than build/ because NuGet imports build/ only for a
-    *direct* PackageReference. A project referencing Polhem.Business or Polhem.Api.AspNetCore gets
+    *direct* PackageReference. A project referencing Polhem.Business or Polhem.Hosting gets
     Polhem.Definition transitively, and therefore received the analyzer assembly (analyzers do flow
     transitively) without the glob that feeds it — the definition rules loaded and then silently
     examined nothing, with no diagnostic to say so. buildTransitive/ is imported for direct and

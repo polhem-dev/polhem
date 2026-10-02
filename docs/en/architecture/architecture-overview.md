@@ -357,7 +357,7 @@ Common patterns discovered during each AnyCode customization can be distilled ba
 |  ViewModel                                           |  MVVM: ViewModel
 |  (binding structure derived from FormSchema)         |
 +------------------------------------------------------+
-|  API Layer  (Polhem.Api.AspNetCore / JSON-RPC 2.0)     |  N-Tier: Presentation
+|  API Layer  (Polhem.JsonRpc / JSON-RPC 2.0)           |  N-Tier: Presentation
 +------------------------------------------------------+
 |                                                      |
 |  Business Object (BO)                                |  Clean Arch: Use Case

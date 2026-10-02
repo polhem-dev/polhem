@@ -17,12 +17,16 @@
 
 ### JSON-RPC 執行
 
-- `JsonRpcExecutor` -- 解析 `ProgId.Action` 方法識別碼，從 `IBusinessObjectFactory` 取得商業物件並呼叫目標方法。
-  一個 action 名稱能呼叫到哪些方法，由 `JsonRpcExecutor.IsResolvableAction` 決定。
-- `JsonRpcRequest` / `JsonRpcResponse` / `JsonRpcError` -- 標準 JSON-RPC 2.0 訊息型別。
+- 協定由 [`Polhem.JsonRpc.Server`](https://github.com/polhem-dev/polhem-jsonrpc) 處理：它的 dispatcher 解析
+  `ProgId.Action` 方法識別碼並呼叫目標方法。一個 action 名稱能呼叫到哪些方法，由該套件的
+  `JsonRpcMethod.IsResolvableAction` 決定。
+- `Dispatch/` 把 Polhem 接上它：`PolhemObjectFactory` 檢查 HTTP 呼叫的 API key 與 `Authorization` header，並從
+  `IBusinessObjectFactory` 取得商業物件；`PolhemAccessFilter` 套用 `[ApiAccessControl]`；`PolhemPayloadFilter` 還原與
+  寫出 payload 外殼；`PolhemParameterBinder` 繫結參數；`PolhemExceptionMapper` 對應錯誤。
+  `PolhemJsonRpc.CreateServerOptions` 把它們組起來。
 - `ApiPayload` / `ApiPayloadConverter` -- JSON-RPC 傳輸的 Payload 包裝與轉換。
 - 錯誤回應 -- 給終端使用者看的框架例外（`UserMessageException` 及相關型別）會帶著訊息回到呼叫端；
-  其他例外則依錯誤碼回應固定訊息，實際訊息寫入 `JsonRpcExecutor.Logger`。
+  其他例外則依錯誤碼回應固定訊息，實際訊息由 `PolhemExceptionMapper` 寫入 log。
 
 ### Payload 安全管線
 
@@ -90,7 +94,7 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 
 | 類別 / 介面 | 用途 |
 |-------------|------|
-| `JsonRpcExecutor` | 解析 `ProgId.Action`、建立 BO、呼叫方法 |
+| `PolhemJsonRpc` | 建立框架提供 API 用的 JSON-RPC 伺服器選項 |
 | `ApiServiceOptions` | 管線元件、codec、授權驗證器與重放儲存的行程層級設定 |
 | `ApiPayloadTransformer` | 序列化 -> 壓縮 -> 加密管線 |
 | `ApiAccessValidator` | 透過 `ApiAccessControlAttribute` 的方法層級保護 |
@@ -104,7 +108,7 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 - **策略模式（Strategy Pattern）** -- 序列化器、壓縮器、加密器皆透過介面注入（`IApiPayloadSerializer`、`IApiPayloadCompressor`、`IApiPayloadEncryptor`），每個階段可獨立替換。
 - **嚴格管線順序** -- Payload 轉換器在出站時執行「序列化 -> 壓縮 -> 加密」，入站時執行「解密 -> 解壓縮 -> 反序列化」；此順序不可更動。
 - **型別白名單** -- MessagePack 反序列化只接受明確允許清單內的型別。
-- **反射式分派** -- `JsonRpcExecutor` 依名稱解析並呼叫商業物件方法，將傳輸層與具體 BO 型別解耦。
+- **反射式分派** -- dispatcher 依名稱解析並呼叫商業物件方法，將傳輸層與具體 BO 型別解耦。
 - **保護等級** -- `ApiAccessControlAttribute` 宣告方法的 `ApiProtectionLevel` 與 `ApiAccessRequirement`；成員與意義見這兩個列舉的 XML 文件（`Polhem.Definition.Security`）。
 - 啟用 **Nullable Reference Types**（`<Nullable>enable</Nullable>`）。
 
@@ -113,7 +117,8 @@ codec 回應。未宣告的請求以 MessagePack 解讀，這正是協商機制�
 - `Authorization/` -- `IApiAuthorizationValidator`、`ApiAuthorizationValidator`、`ApiAuthorizationContext`、`ApiAuthorizationResult`
 - `Conversion/` -- API 型別與 BO 型別之間的 .NET 物件模型轉換（`ApiOutputConverter`）
 - `Json/` -- `object` 型別成員的 JSON converter
-- `JsonRpc/` -- `JsonRpcExecutor`、JSON-RPC 訊息型別、`ApiPayload`、`ApiPayloadFrame`、`IReplayWindowStore`、`DateTimeWireGuard`
+- `Dispatch/` -- 把 Polhem 接上 `Polhem.JsonRpc.Server` dispatcher 的元件
+- `JsonRpc/` -- payload 外殼（`ApiPayload`、`JsonRpcParams`、`JsonRpcResult`）、`ApiPayloadFrame`、`IReplayWindowStore`、`DateTimeWireGuard`、錯誤碼與錯誤合約
 - `Messages/` -- `ApiRequest`、`ApiResponse`、`ApiHeaders`、`PayloadFormat`、`ExecFunc*`，以及 `System/`、`Form/`、`AuditLog/` 訊息
 - `MessagePack/` -- 內部的 MessagePack 基礎設施與 formatter
 - `Transformers/` -- 位元組層級的 payload 管線（序列化器、壓縮器、加密器、`ApiPayloadOptionsFactory`、`PayloadCodecNames`）

@@ -277,7 +277,6 @@ jobs:
         dotnet pack src/Polhem.Api.Contracts/Polhem.Api.Contracts.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Api.Core/Polhem.Api.Core.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Hosting/Polhem.Hosting.csproj --configuration Release --output ./nupkgs --no-build
-        dotnet pack src/Polhem.Api.AspNetCore/Polhem.Api.AspNetCore.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Repository.Abstractions/Polhem.Repository.Abstractions.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.Repository/Polhem.Repository.csproj --configuration Release --output ./nupkgs --no-build
         dotnet pack src/Polhem.UI.Core/Polhem.UI.Core.csproj --configuration Release --output ./nupkgs --no-build

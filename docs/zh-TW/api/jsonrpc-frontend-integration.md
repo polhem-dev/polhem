@@ -1,4 +1,4 @@
-<!-- source: en/api/jsonrpc-frontend-integration.md blob: 32748148be71c9168853b8c86be9e6e6ffef8a83 -->
+<!-- source: en/api/jsonrpc-frontend-integration.md blob: 9a19da5b4b2d21659446ca17da4fc71ea192db34 -->
 # JSON-RPC 前端整合指引
 
 [English](../../en/api/jsonrpc-frontend-integration.md) · [← 文件索引](../README.md)
@@ -74,7 +74,6 @@ Authorization: Bearer <access-token>     // 匿名呼叫可省略
 ```json
 {
   "jsonrpc": "2.0",
-  "method": "System.Login",
   "result": {
     "format": 0,
     "value": {
@@ -97,11 +96,9 @@ Authorization: Bearer <access-token>     // 匿名呼叫可省略
 ```json
 {
   "jsonrpc": "2.0",
-  "method": "System.Login",
   "error": {
     "code": -32099,
-    "message": "Invalid username or password.",
-    "data": null
+    "message": "Invalid username or password."
   },
   "id": "<echoed>"
 }
@@ -124,7 +121,7 @@ Encoded / Encrypted 的 body 是不透明的位元組。即使在那條路徑上
   自訂 `JsonConverter` 以 inline 的 `kind` discriminator 處理，不依賴外層 `type`
 
 你想送 `params.type` 也可以（Plain 路徑會忽略），省略則 payload 較小。
-回歸保障：[`JsonRpcExecutorTests.Ping_PlainWith*`](../../../tests/Polhem.Api.Core.UnitTests/JsonRpcExecutorTests.cs)
+回歸保障：[`DispatchTests.Ping_PlainWith*`](../../../tests/Polhem.Api.Core.UnitTests/Dispatch/DispatchTests.cs)
 驗證了省略 / 空字串 / 帶錯誤型別字串三種情境都會成功。
 
 ### Plain body 裡的值
@@ -240,16 +237,16 @@ XML 相同。定義在每條路徑上都以 XML 傳輸，因為它們的巢狀�
 ## 錯誤處理
 
 `response.error.code` 對應 [`JsonRpcErrorCode`](../../../src/Polhem.Api.Core/JsonRpc/JsonRpcErrorCode.cs)。
-方法執行期間產生的錯誤以 HTTP 200 回應；傳輸層自己的拒絕（`-32700`、`-32600`）以 4xx 狀態回應，
-body 仍是 JSON-RPC 錯誤。
+所有 JSON-RPC 錯誤都以 HTTP 200 回應，金鑰被拒也一樣。只有端點根本不讀的請求才回其他狀態：body 不是 JSON 回 415，
+超過上限回 413。到 1.1.0 為止，回應還會在 `method` 成員回帶方法名稱；1.2.0 已移除。
 
 | Code | Name | 意義 | 對應動作 |
 |------|------|------|---------|
-| `-32700` | `ParseError` | request body 不是合法 JSON（HTTP 400） | 修 client 序列化 |
-| `-32600` | `InvalidRequest` | content type 錯誤（HTTP 415）、body 為空或缺 method（HTTP 400）、金鑰被拒或 `Authorization` header 格式錯誤（HTTP 401） | 檢查 headers 與 body |
-| `-32601` | `MethodNotFound` | `progId.action` 的 action 部分不對應業務物件公開為 action 的任何方法；訊息固定為「Method not found.」 | 檢查方法名稱 / 大小寫 |
+| `-32700` | `ParseError` | request body 不是合法 JSON | 修 client 序列化 |
+| `-32600` | `InvalidRequest` | 不是有效的 JSON-RPC 請求（缺 `method`、`jsonrpc` 不對）、金鑰被拒，或 `Authorization` header 格式錯誤 | 檢查 headers 與 body |
+| `-32601` | `MethodNotFound` | 方法名稱不是 `progId.action` 格式，或沒有對應業務物件公開的 action；訊息固定，不會回帶名稱 | 檢查方法名稱 / 大小寫 |
 | `-32602` | `InvalidParams` | `Plain` 本文無法讀成方法所接受的型別；訊息固定為「Invalid params.」。讀得進來但內容不合法的參數回 `-32099` | 修正 `params` 的結構 |
-| `-32000` | `InternalError` | 未處理的 server 端例外 | 訊息不適合對使用者顯示。除非伺服端在 debug 模式，訊息一律為「Internal server error」 |
+| `-32603` | `InternalError` | 未處理的 server 端例外（1.1.0 以前為 `-32000`） | 訊息不適合對使用者顯示。除非伺服端在 debug 模式，訊息一律為「Internal server error」 |
 | `-32001` | `Unauthorized` | 方法需要已登入的呼叫者，而 access token 缺漏、未知或已過期 | 重新登入 |
 | `-32002` | `CompanyNotEntered` | 方法需要公司 context | 先呼叫 `System.EnterCompany` |
 | `-32003` | `CompanyAccessDenied` | 公司不存在，或使用者沒有此公司權限 | 顯示拒絕、切換公司 |
@@ -257,8 +254,8 @@ body 仍是 JSON-RPC 錯誤。
 | `-32005` | `ReplayRejected` | wire frame 缺漏、無法讀取、序號重複，或時間戳超出容許區間 | 重送同一個 frame 無用；檢查 client 時鐘 |
 | `-32099` | `UserMessage` | 違反業務規則（驗證、領域規則），訊息是寫給終端使用者的；被拒的呼叫也會回這個碼，例如以 Plain 呼叫 `Encrypted` 方法、或遠端呼叫 `LocalOnly` 方法，這時帶的是固定的通用訊息（「Access denied.」、「The request is not valid.」），真正原因記在伺服端 log | 直接把 `message` 顯示給使用者 |
 
-除 `-32000` 外，每個碼的 `message` 都是寫給呼叫端的，可以顯示給終端使用者。
-`-32000` 絕對不要直接顯示 — 內部 log 記下，UI 顯示通用「請求失敗」訊息。
+除 `-32603` 外，每個碼的 `message` 都是寫給呼叫端的，可以顯示給終端使用者。
+`-32603` 絕對不要直接顯示 — 內部 log 記下，UI 顯示通用「請求失敗」訊息。
 
 ---
 
@@ -293,7 +290,6 @@ export class RpcError extends Error {
 
 interface JsonRpcResponse<T> {
   jsonrpc: '2.0';
-  method: string;
   result?: { format: number; value: T; type: string };
   error?: { code: number; message: string; data?: unknown };
   id: string;

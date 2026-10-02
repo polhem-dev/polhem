@@ -90,7 +90,7 @@ implementations against rows the seeder writes (Part 3). What it does add:
 1. **`Defaults.MaterializeTo` lays down the framework's `TableSchema/common/` and `TableSchema/log/` definitions**
    (skip-if-exists), and `DbCategorySettings.xml` registers those tables under `common` / `log`, so the ordinary
    category loop builds them (Part 5).
-2. **`UseXxxBackend` runs the full seeder** (Part 5) before `app.UsePolhemFramework()`.
+2. **`UseXxxBackend` runs the full seeder** (Part 5) before `app.Run()`, so the hosted startup checks read seeded tables.
 
 Implementation to compare against: `apps/Polhem.Northwind/Polhem.Northwind.Server/NorthwindBackend.cs`.
 

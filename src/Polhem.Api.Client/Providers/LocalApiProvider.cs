@@ -1,4 +1,6 @@
-using Polhem.Api.Core.JsonRpc;
+using Polhem.Api.Core.Dispatch;
+using Polhem.JsonRpc;
+using Polhem.JsonRpc.Server;
 
 namespace Polhem.Api.Client.Providers
 {
@@ -7,17 +9,18 @@ namespace Polhem.Api.Client.Providers
     /// </summary>
     /// <remarks>
     /// Near-end mode needs the in-process backend's service provider, the one built by
-    /// <c>services.AddPolhemFramework(...)</c>. The provider resolves a <see cref="JsonRpcExecutor"/>
-    /// per request to honour the executor's transient lifetime.
+    /// <c>services.AddPolhemFramework(...)</c>. Each call goes to its <see cref="JsonRpcDispatcher"/> through an
+    /// <see cref="InProcessTransport"/>, which marks it as a local call and carries the access token in
+    /// <see cref="PolhemJsonRpc.AccessTokenItem"/>.
     /// </remarks>
-    public sealed class LocalApiProvider : IJsonRpcProvider
+    public sealed class LocalApiProvider : IJsonRpcTransport
     {
         private readonly IServiceProvider _services;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalApiProvider"/> class.
         /// </summary>
-        /// <param name="services">The in-process backend's service provider; it must register <see cref="JsonRpcExecutor"/>.</param>
+        /// <param name="services">The in-process backend's service provider; it must register <see cref="JsonRpcDispatcher"/>.</param>
         /// <param name="accessToken">The access token.</param>
         public LocalApiProvider(IServiceProvider services, Guid accessToken)
         {
@@ -32,25 +35,43 @@ namespace Polhem.Api.Client.Providers
         public Guid AccessToken { get; }
 
         /// <summary>
-        /// Asynchronously executes an API method.
+        /// Sends one request to the in-process dispatcher.
         /// </summary>
-        /// <param name="request">The JSON-RPC request model.</param>
+        /// <param name="request">The request.</param>
         /// <param name="cancellationToken">A token that cancels the call.</param>
+        /// <returns>The response, or <c>null</c> for a notification.</returns>
         /// <remarks>
         /// The call runs on the caller's thread, and business object methods are synchronous in
         /// 1.0 (ADR-046), so the token is observed until the method is dispatched and not while it
         /// runs.
         /// </remarks>
-        public async Task<JsonRpcResponse> ExecuteAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
+        public Task<JsonRpcResponse?> SendAsync(JsonRpcRequest request, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var executor = _services.GetService(typeof(JsonRpcExecutor)) as JsonRpcExecutor
+            return CreateTransport().SendAsync(request, cancellationToken);
+        }
+
+        /// <summary>
+        /// Sends a batch of requests to the in-process dispatcher.
+        /// </summary>
+        /// <param name="requests">The requests.</param>
+        /// <param name="cancellationToken">A token that cancels the call.</param>
+        /// <returns>The responses; notifications have none.</returns>
+        public Task<IReadOnlyList<JsonRpcResponse>> SendBatchAsync(IReadOnlyList<JsonRpcRequest> requests, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return CreateTransport().SendBatchAsync(requests, cancellationToken);
+        }
+
+        private InProcessTransport CreateTransport()
+        {
+            var dispatcher = _services.GetService(typeof(JsonRpcDispatcher)) as JsonRpcDispatcher
                 ?? throw new InvalidOperationException(
-                    "JsonRpcExecutor is not registered in the service provider given to LocalApiProvider. " +
+                    "JsonRpcDispatcher is not registered in the service provider given to LocalApiProvider. " +
                     "Local API calls need the provider built from services.AddPolhemFramework(...).");
-            executor.AccessToken = AccessToken;
-            executor.IsLocalCall = true;
-            return await executor.ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
+            var transport = new InProcessTransport(dispatcher, _services);
+            transport.Items[PolhemJsonRpc.AccessTokenItem] = AccessToken;
+            return transport;
         }
     }
 }

@@ -197,8 +197,8 @@ namespace Polhem.Business.System
         /// issued its first key — but the same condition is reached by <b>disabling the last one</b>,
         /// which is an ordinary step in key rotation.
         /// <para>
-        /// The startup check cannot see this: it is a one-time snapshot taken by
-        /// <c>UsePolhemFramework</c>, so a downgrade that happens at run time left no trace at all.
+        /// The startup check cannot see this: it is a one-time snapshot taken when the host starts
+        /// (<c>AddPolhemApiKeyGateCheck</c>), so a downgrade that happens at run time left no trace at all.
         /// This is that trace. It is logged rather than refused, because refusing would make the
         /// last key impossible to retire.
         /// </para>

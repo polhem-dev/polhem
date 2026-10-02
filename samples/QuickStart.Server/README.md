@@ -45,7 +45,8 @@ The console should print `Now listening on: http://localhost:5050`.
 | `SystemSettingsLoader.Load(paths)` | `Polhem.Definition.SystemSettingsLoader` — boot-time XML loading |
 | `services.AddPolhemFramework(...)` | `Polhem.Hosting.PolhemFrameworkServiceCollectionExtensions` — backend composition root |
 | `<ProgramItem ProgId="Echo" BusinessObject="…" />` in `samples/Define/ProgramSettings.xml` | `Polhem.Definition.Settings.ProgramSettings` — the progId → business object registry; no code registers the binding |
-| Empty `: ApiServiceController` controller (`Controllers/ApiController.cs`) | `Polhem.Api.AspNetCore.Controllers.ApiServiceController` — `[Route("api")]` JSON-RPC endpoint |
+| `services.AddJsonRpcServer()` + `app.MapJsonRpc("/api")` (`Program.cs`) | `Polhem.JsonRpc.AspNetCore` — the JSON-RPC endpoint, served on the options `AddPolhemFramework` registered |
+| `services.AddPolhemApiKeyGateCheck()` (`Program.cs`) | `Polhem.Hosting` — logs at startup while no API key has been issued |
 | `[ApiAccessControl(Public, Anonymous)]` (`BusinessObjects/EchoBusinessObject.cs`) | `Polhem.Definition.Attributes.ApiAccessControlAttribute` — API access control |
 
 ## Try it without the console demo
